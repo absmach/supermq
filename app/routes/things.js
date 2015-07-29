@@ -8,10 +8,12 @@ var Thing   = require('../models/thing');
 router.route('/')
 
     // create a things (accessed at POST http://localhost:8080/things)
-    .post(function(req, res) {
-        
-        var thing = new Thing();        // create a new instance of the Bear model
-        thing.name = req.body.name;     // set the thing's name (comes from the request)
+    .post(function (req, res) {
+    var thing = new Thing();            // create a new instance of the Thing model
+    thing.name = req.body.name;         // set the thing's name (comes from the request)
+    thing.enabled = req.body.enabled;   // set the thing's status (comes from the request)
+    thing.claimable = req.body.claimable; // set the it the thing can be claimed (comes from the request)
+
 
         // save the thing and check for errors
         thing.save(function(err) {
