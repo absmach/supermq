@@ -32,8 +32,8 @@ var port = process.env.PORT || config.port;        // set our port
 
 // ROUTES FOR OUR API
 // =============================================================================
-app.use('/status', require('./app/routes/status'));
-app.use('/things', require('./app/routes/things'));
+app.use('/api/status', require('./app/routes/status'));
+app.use('/api/things', require('./app/routes/things'));
 
 
 // START THE SERVER
