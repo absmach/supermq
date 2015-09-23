@@ -9,7 +9,7 @@ router.route('/')
 
     // create a things (accessed at POST http://localhost:8080/things)
     .post(function(req, res) {
-        
+
         var thing = new Thing();        // create a new instance of the Bear model
         thing.name = req.body.name;     // set the thing's name (comes from the request)
 
@@ -20,7 +20,7 @@ router.route('/')
 
             res.json({ message: 'Thing created!' });
         });
-        
+
     })
 
     // get all the things (accessed at GET http://localhost:8080/things)
@@ -33,7 +33,7 @@ router.route('/')
         });
     });
 
-    
+
 // on routes that end in /things/:thing_id
 // ----------------------------------------------------
 router.route('/:thing_id')
@@ -66,7 +66,7 @@ router.route('/:thing_id')
                 res.json({ message: 'Thing updated!' });
             });
 
-        })
+        });
     })
 
     // delete the thing with this id (accessed at DELETE http://localhost:8080/things/:thing_id)

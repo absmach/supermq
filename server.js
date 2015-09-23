@@ -34,7 +34,8 @@ var port = process.env.PORT || config.port;        // set our port
 // =============================================================================
 app.use('/status', require('./app/routes/status'));
 app.use('/things', require('./app/routes/things'));
-
+app.use('/users', require('./app/routes/users'));
+app.use('/sessions', require('./app/routes/sessions'));
 
 // START THE SERVER
 // =============================================================================
