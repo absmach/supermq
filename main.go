@@ -20,6 +20,7 @@ import (
 	"github.com/fatih/color"
 	"runtime"
 	"flag"
+	"os/exec"
 )
 
 type MainfluxLite struct {
@@ -120,16 +121,22 @@ func main() {
 	// MongoDb
 	db.InitMongo(cfg.MongoHost, cfg.MongoPort, cfg.MongoDatabase)
 
-	// MQTT 
+	// MQTT
 	mqc := new(clients.MqttConn)
 	//Sub to everything comming on all channels of all devices
-	mqc.MqttSub(cfg)
+	mqc.MqttSub()
 
 	// Serve HTTP
 	go servers.HttpServer(cfg)
 
-	// Print banner
-	color.Cyan(banner)
+	// get revision SHA1 hash
+	cmdName := "git"
+	cmdArgs := []string{"rev-parse", "HEAD"}
+	cmdOut,_ := exec.Command(cmdName, cmdArgs...).Output()
+	sha :=  "[r] " + string(cmdOut) + "\n"
+
+	// Print banner + revision number
+	color.Cyan(banner + sha)
 	color.Cyan("Magic happens on port " + strconv.Itoa(cfg.HttpPort))
 
 	/** Keep main() runnig */
@@ -137,17 +144,16 @@ func main() {
 }
 
 var banner = `
-_|      _|            _|                _|_|  _|                      
-_|_|  _|_|    _|_|_|      _|_|_|      _|      _|  _|    _|  _|    _|  
-_|  _|  _|  _|    _|  _|  _|    _|  _|_|_|_|  _|  _|    _|    _|_|    
-_|      _|  _|    _|  _|  _|    _|    _|      _|  _|    _|  _|    _|  
-_|      _|    _|_|_|  _|  _|    _|    _|      _|    _|_|_|  _|    _|  
-                                                                     
+_|      _|            _|                _|_|  _|
+_|_|  _|_|    _|_|_|      _|_|_|      _|      _|  _|    _|  _|    _|
+_|  _|  _|  _|    _|  _|  _|    _|  _|_|_|_|  _|  _|    _|    _|_|
+_|      _|  _|    _|  _|  _|    _|    _|      _|  _|    _|  _|    _|
+_|      _|    _|_|_|  _|  _|    _|    _|      _|    _|_|_|  _|    _|
+
 
                 == Industrial IoT System ==
-       
+
                 Made with <3 by Mainflux Team
 [w] http://mainflux.io
 [t] @mainflux
-
 `
