@@ -120,7 +120,7 @@ func main() {
 	// MongoDb
 	db.InitMongo(cfg.MongoHost, cfg.MongoPort, cfg.MongoDatabase)
 
-	// MQTT 
+	// MQTT
 	mqc := new(clients.MqttConn)
 	//Sub to everything comming on all channels of all devices
 	mqc.MqttSub(cfg)
@@ -137,15 +137,15 @@ func main() {
 }
 
 var banner = `
-_|      _|            _|                _|_|  _|                      
-_|_|  _|_|    _|_|_|      _|_|_|      _|      _|  _|    _|  _|    _|  
-_|  _|  _|  _|    _|  _|  _|    _|  _|_|_|_|  _|  _|    _|    _|_|    
-_|      _|  _|    _|  _|  _|    _|    _|      _|  _|    _|  _|    _|  
-_|      _|    _|_|_|  _|  _|    _|    _|      _|    _|_|_|  _|    _|  
-                                                                     
+_|      _|            _|                _|_|  _|
+_|_|  _|_|    _|_|_|      _|_|_|      _|      _|  _|    _|  _|    _|
+_|  _|  _|  _|    _|  _|  _|    _|  _|_|_|_|  _|  _|    _|    _|_|
+_|      _|  _|    _|  _|  _|    _|    _|      _|  _|    _|  _|    _|
+_|      _|    _|_|_|  _|  _|    _|    _|      _|    _|_|_|  _|    _|
+
 
                 == Industrial IoT System ==
-       
+
                 Made with <3 by Mainflux Team
 [w] http://mainflux.io
 [t] @mainflux
