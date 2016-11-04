@@ -20,6 +20,7 @@ import (
 	"github.com/fatih/color"
 	"runtime"
 	"flag"
+	"os/exec"
 )
 
 type MainfluxLite struct {
@@ -128,8 +129,15 @@ func main() {
 	// Serve HTTP
 	go servers.HttpServer(cfg)
 
-	// Print banner
-	color.Cyan(banner)
+	// get revision SHA1 hash
+	cmdName := "git"
+	cmdArgs := []string{"rev-parse", "HEAD"}
+	cmdOut,_ := exec.Command(cmdName, cmdArgs...).Output()
+	sha :=  "[r] " + string(cmdOut)
+
+	// Print banner + revision number
+	color.Cyan(banner + sha)
+	color.Cyan("")
 	color.Cyan("Magic happens on port " + strconv.Itoa(cfg.HttpPort))
 
 	/** Keep main() runnig */
@@ -147,7 +155,7 @@ _|      _|    _|_|_|  _|  _|    _|    _|      _|    _|_|_|  _|    _|
                 == Industrial IoT System ==
 
                 Made with <3 by Mainflux Team
+
 [w] http://mainflux.io
 [t] @mainflux
-
 `
