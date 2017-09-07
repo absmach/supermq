@@ -18,6 +18,61 @@ services:
     ports:
       - "4222:4222"
       - "8222:8222"
+  
+  ###
+  # Cassandra clusters
+  ###
+  cassandra:
+    image: cassandra:latest
+    container_name: mainflux-cassandra
+    expose:
+      - 7000
+      - 7001
+      - 7199
+      - 9042
+      - 9160
+    volumes:
+      - ./cassandra:/var/lib/cassandra
+    environment:
+      - CASSANDRA_CLUSTER_NAME=mainflux_cluster
+      - CASSANDRA_SEEDS=cassandra
+  
+  cassandra_1:
+    image: cassandra:latest
+    container_name: mainflux-cassandra_1
+    command: bash -c 'if [ -z "$$(ls -A /var/lib/cassandra/)" ] ; then sleep 60; fi && /docker-entrypoint.sh cassandra -f'
+    expose:
+      - 7000
+      - 7001
+      - 7199
+      - 9042
+      - 9160
+    volumes:
+      - ./cassandra_1:/var/lib/cassandra
+    environment:
+      - CASSANDRA_CLUSTER_NAME=mainflux_cluster
+      - CASSANDRA_SEEDS=cassandra
+    depends_on:
+      - cassandra
+
+  cassandra_2:
+    image: cassandra:latest
+    container_name: mainflux-cassandra_2
+    command: bash -c 'if [ -z "$$(ls -A /var/lib/cassandra/)" ] ; then sleep 120; fi && /docker-entrypoint.sh cassandra -f'
+    expose:
+      - 7000
+      - 7001
+      - 7199
+      - 9042
+      - 9160
+    volumes:
+      - ./cassandra_2:/var/lib/cassandra
+    environment:
+      - CASSANDRA_CLUSTER_NAME=mainflux_cluster
+      - CASSANDRA_SEEDS=cassandra
+    depends_on:
+      - cassandra
+      - cassandra_1
 
   ###
   # Manager
@@ -26,7 +81,16 @@ services:
     image: mainflux/manager:latest
     container_name: mainflux-manager
     ports:
+      - "8180:8180"
       - "9090:9090"
+    depends_on:
+      - cassandra
+      - cassandra_1
+      - cassandra_2
+    environment:
+      - MANAGER_DB_CLUSTER=cassandra,cassandra_1,cassandra_2
+      - MANAGER_DB_KEYSPACE=system_distributed
+
 
   ###
   # Message Writer
@@ -34,6 +98,14 @@ services:
   message-writer:
     image: mainflux/message-writer:latest
     container_name: mainflux-message-writer
+    depends_on:
+      - cassandra
+      - cassandra_1
+      - cassandra_2
+    environment:
+      - MESSAGE_WRITER_DB_CLUSTER=cassandra,cassandra_1,cassandra_2
+      - MESSAGE_WRITER_DB_KEYSPACE=system_distributed
+      - MESSAGE_WRITER_NATS_URL=nats://nats:4222
   
   ###
   # MQTT Broker
@@ -60,6 +132,10 @@ services:
   http-adapter:
     image: mainflux/http-adapter:latest
     container_name: mainflux-http
+    depends_on:
+      - nats
+    environment:
+      - HTTP_ADAPTER_NATS_URL=nats://nats:4222
     ports:
       - "7070:7070"
 
