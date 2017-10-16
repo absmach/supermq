@@ -5,15 +5,15 @@ and stores them into the database.
 
 ## Configuration
 
-The service is configured using the environment variables presented in the
-following table. Note that any unset variables will be replaced with their
-default values.
+The service requires only one configuration parameter - Consul agent URL. It is
+expected to be set through the `CONSUL_ADDR` environment variable.
 
-| Variable                   | Description                              | Default               |
-|----------------------------|------------------------------------------|-----------------------|
-| MESSAGE_WRITER_DB_CLUSTER  | comma-separated Cassandra contact points | 127.0.0.1             |
-| MESSAGE_WRITER_DB_KEYSPACE | name of the Cassandra keyspace           | message_writer        |
-| MESSAGE_WRITER_NATS_URL    | NATS instance URL                        | nats://localhost:4222 |
+For service to run properly, Consul cluster must contain the following keys:
+
+| Key            | Description                                         |
+|----------------|-----------------------------------------------------|
+| cassandra      | comma-separated contact points in Cassandra cluster |
+| nats           | NATS instance URL                                   |
 
 ## Deployment
 

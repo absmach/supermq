@@ -5,6 +5,15 @@ platform.
 
 ## Configuration
 
+The service requires only one configuration parameter - Consul agent URL. It is
+expected to be set through the `CONSUL_ADDR` environment variable.
+
+For service to run properly, Consul cluster must contain the following keys:
+
+| Key  | Description       |
+|------|-------------------|
+| nats | NATS instance URL |
+
 The service is configured using the environment variables presented in the
 following table. Note that any unset variables will be replaced with their
 default values.
