@@ -81,10 +81,10 @@ _start() {
   printf "\nWaiting for Cassandra to start. This takes time, please be patient...\n"
 
   # Wait until Cassandra is ready to accept cqlsh commands
-  # or timeout after 15 sec
+  # or timeout after 20 sec
   c_on=0
   retries=0
-  while [[ $retries -lt 15 ]]
+  while [[ $retries -lt 20 ]]
   do
     # Check if C* port 9042 is open
     if $(docker exec -it mainflux-cassandra cqlsh -e "exit" > /dev/null 2>&1)
