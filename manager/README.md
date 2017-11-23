@@ -14,15 +14,15 @@ understanding of Mainflux, please check out the [official documentation][doc].
 
 ## Configuration
 
-The service is configured using the environment variables presented in the
-following table. Note that any unset variables will be replaced with their
-default values.
+The service requires only one configuration parameter - Consul agent URL. It is
+expected to be set through the `CONSUL_ADDR` environment variable.
 
-| Variable            | Description                              | Default   |
-|---------------------|------------------------------------------|-----------|
-| MANAGER_DB_CLUSTER  | comma-separated Cassandra contact points | 127.0.0.1 |
-| MANAGER_DB_KEYSPACE | name of the Cassandra keyspace           | manager   |
-| MANAGER_SECRET      | string used for signing tokens           | manager   |
+For service to run properly, Consul cluster must contain the following keys:
+
+| Key            | Description                                         |
+|----------------|-----------------------------------------------------|
+| cassandra      | comma-separated contact points in Cassandra cluster |
+| manager/secret | string used for signing tokens                      |
 
 ## Deployment
 
