@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
@@ -76,14 +77,32 @@ func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	return msg, nil
 }
 
-// TODO: contact an auth provider
 func authorize(r *http.Request) (string, error) {
 	var apiKey string
+	var id string
+
 	if apiKey = r.Header.Get("Authorization"); apiKey == "" {
 		return "", errUnauthorizedAccess
 	}
 
-	return apiKey, nil
+	identityURL := os.Getenv("HTTP_ADAPTER_MANAGER_URL") + "/identity"
+	req, err := http.NewRequest("POST", managerURL, nil)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", apiKey)
+
+	c := &http.Client{}
+	resp, err := c.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	id = resp.Header.Get("x-client-id")
+
+	return id, nil
 }
 
 func checkContentType(r *http.Request) (string, error) {
