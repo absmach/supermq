@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -22,9 +23,10 @@ const (
 )
 
 var (
-	errMalformedData      error = errors.New("malformed SenML data")
-	errUnknownType        error = errors.New("unknown content type")
-	errUnauthorizedAccess error = errors.New("missing or invalid credentials provided")
+	errMalformedData      error  = errors.New("malformed SenML data")
+	errUnknownType        error  = errors.New("unknown content type")
+	errUnauthorizedAccess error  = errors.New("missing or invalid credentials provided")
+	authURL               string = fmt.Sprintf("%s/access-grant", os.Getenv("HTTP_ADAPTER_MANAGER_URL"))
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -85,8 +87,7 @@ func authorize(r *http.Request) (string, error) {
 		return "", errUnauthorizedAccess
 	}
 
-	identityURL := os.Getenv("HTTP_ADAPTER_MANAGER_URL") + "/identity"
-	req, err := http.NewRequest("POST", managerURL, nil)
+	req, err := http.NewRequest("GET", authURL, nil)
 	if err != nil {
 		return "", err
 	}
