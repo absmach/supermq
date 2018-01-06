@@ -3,16 +3,16 @@ package api
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
+	"strings"
 
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
 	adapter "github.com/mainflux/mainflux/http"
+	manager "github.com/mainflux/mainflux/manager/client"
 	"github.com/mainflux/mainflux/writer"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -23,10 +23,10 @@ const (
 )
 
 var (
-	errMalformedData      error  = errors.New("malformed SenML data")
-	errUnknownType        error  = errors.New("unknown content type")
-	errUnauthorizedAccess error  = errors.New("missing or invalid credentials provided")
-	authURL               string = fmt.Sprintf("%s/access-grant", os.Getenv("HTTP_ADAPTER_MANAGER_URL"))
+	errMalformedData      error = errors.New("malformed SenML data")
+	errUnknownType        error = errors.New("unknown content type")
+	errUnauthorizedAccess error = errors.New("missing or invalid credentials provided")
+	mc                    manager.ManagerClient
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -34,6 +34,9 @@ func MakeHandler(svc adapter.Service) http.Handler {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),
 	}
+
+	// Init Manager client
+	mc = svc.Manager()
 
 	r := bone.New()
 
@@ -81,27 +84,18 @@ func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 
 func authorize(r *http.Request) (string, error) {
 	var apiKey string
-	var id string
 
 	if apiKey = r.Header.Get("Authorization"); apiKey == "" {
 		return "", errUnauthorizedAccess
 	}
 
-	req, err := http.NewRequest("GET", authURL, nil)
+	// Path is `/channels/:id/messages`, we need chanID.
+	c := strings.Split(r.URL.Path, "/")[2]
+
+	id, err := mc.CanAccess(c, apiKey)
 	if err != nil {
 		return "", err
 	}
-
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", apiKey)
-
-	c := &http.Client{}
-	resp, err := c.Do(req)
-	if err != nil {
-		return "", err
-	}
-
-	id = resp.Header.Get("x-client-id")
 
 	return id, nil
 }

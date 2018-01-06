@@ -12,25 +12,30 @@ import (
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/http/nats"
+	manager "github.com/mainflux/mainflux/manager/client"
 	broker "github.com/nats-io/go-nats"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
 const (
-	port       int    = 7070
-	defNatsURL string = broker.DefaultURL
-	envNatsURL string = "HTTP_ADAPTER_NATS_URL"
+	port          int    = 7070
+	defNatsURL    string = broker.DefaultURL
+	envNatsURL    string = "HTTP_ADAPTER_NATS_URL"
+	defManagerURL string = "http://localhost:8180"
+	envManagerURL string = "HTTP_ADAPTER_MANAGER_URL"
 )
 
 type config struct {
-	Port    int
-	NatsURL string
+	Port       int
+	NatsURL    string
+	ManagerURL string
 }
 
 func main() {
 	cfg := config{
-		Port:    port,
-		NatsURL: getenv(envNatsURL, defNatsURL),
+		Port:       port,
+		NatsURL:    getenv(envNatsURL, defNatsURL),
+		ManagerURL: getenv(envManagerURL, defManagerURL),
 	}
 
 	logger := log.NewJSONLogger(log.NewSyncWriter(os.Stdout))
@@ -44,7 +49,8 @@ func main() {
 	defer nc.Close()
 
 	repo := nats.NewMessageRepository(nc)
-	svc := adapter.NewService(repo)
+	mc := manager.NewClient(cfg.ManagerURL)
+	svc := adapter.NewService(repo, mc)
 
 	svc = api.NewLoggingService(logger, svc)
 
