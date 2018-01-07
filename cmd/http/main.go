@@ -49,8 +49,7 @@ func main() {
 	defer nc.Close()
 
 	repo := nats.NewMessageRepository(nc)
-	mc := manager.NewClient(cfg.ManagerURL)
-	svc := adapter.NewService(repo, mc)
+	svc := adapter.NewService(repo)
 
 	svc = api.NewLoggingService(logger, svc)
 
@@ -75,7 +74,8 @@ func main() {
 
 	go func() {
 		p := fmt.Sprintf(":%d", cfg.Port)
-		errs <- http.ListenAndServe(p, api.MakeHandler(svc))
+		mc := manager.NewClient(cfg.ManagerURL)
+		errs <- http.ListenAndServe(p, api.MakeHandler(svc, mc))
 	}()
 
 	go func() {

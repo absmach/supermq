@@ -26,17 +26,16 @@ var (
 	errMalformedData      error = errors.New("malformed SenML data")
 	errUnknownType        error = errors.New("unknown content type")
 	errUnauthorizedAccess error = errors.New("missing or invalid credentials provided")
-	mc                    manager.ManagerClient
+	auth                  manager.ManagerClient
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc adapter.Service) http.Handler {
+func MakeHandler(svc adapter.Service, mc manager.ManagerClient) http.Handler {
+	auth = mc
+
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),
 	}
-
-	// Init Manager client
-	mc = svc.Manager()
 
 	r := bone.New()
 
@@ -83,16 +82,16 @@ func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func authorize(r *http.Request) (string, error) {
-	var apiKey string
+	apiKey := r.Header.Get("Authorization")
 
-	if apiKey = r.Header.Get("Authorization"); apiKey == "" {
+	if apiKey == "" {
 		return "", errUnauthorizedAccess
 	}
 
 	// Path is `/channels/:id/messages`, we need chanID.
 	c := strings.Split(r.URL.Path, "/")[2]
 
-	id, err := mc.CanAccess(c, apiKey)
+	id, err := auth.CanAccess(c, apiKey)
 	if err != nil {
 		return "", err
 	}
