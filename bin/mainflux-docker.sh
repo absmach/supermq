@@ -81,13 +81,13 @@ _start() {
   printf "\nWaiting for Cassandra to start. This takes time, please be patient...\n"
 
   # Wait until Cassandra is ready to accept cqlsh commands
-  # or timeout after 15 sec
+  # or timeout after 100 sec
   c_on=0
   retries=0
-  while [[ $retries -lt 15 ]]
+  while [[ $retries -lt 100 ]]
   do
     # Check if C* port 9042 is open
-    if $(docker exec -it mainflux-cassandra cqlsh -e "exit" > /dev/null 2>&1)
+    if $(docker exec -i mainflux-cassandra cqlsh -e "exit" > /dev/null 2>&1)
     then
       # Sucess
       c_on=1
@@ -110,8 +110,8 @@ _start() {
   fi
 
   # Create C* keyspaces, if missing
-  docker exec -it mainflux-cassandra cqlsh -e "CREATE KEYSPACE IF NOT EXISTS manager WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };"
-  docker exec -it mainflux-cassandra cqlsh -e "CREATE KEYSPACE IF NOT EXISTS message_writer WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };"
+  docker exec -i mainflux-cassandra cqlsh -e "CREATE KEYSPACE IF NOT EXISTS manager WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };"
+  docker exec -i mainflux-cassandra cqlsh -e "CREATE KEYSPACE IF NOT EXISTS message_writer WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };"
 
   # Start Mainflux
   printf "\nStarting Mainflux composition...\n\n"
