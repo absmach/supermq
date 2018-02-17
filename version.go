@@ -1,5 +1,3 @@
-// Package mainflux acts as an umbrella package containing multiple different
-// microservices / deliverables. It provides the top-level platform versioning.
 package mainflux
 
 import (

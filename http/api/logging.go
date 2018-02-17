@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/log"
+	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/http"
-	"github.com/mainflux/mainflux/writer"
 )
 
 var _ http.Service = (*loggingService)(nil)
@@ -20,7 +20,7 @@ func NewLoggingService(logger log.Logger, s http.Service) http.Service {
 	return &loggingService{logger, s}
 }
 
-func (ls *loggingService) Publish(msg writer.RawMessage) error {
+func (ls *loggingService) Publish(msg mainflux.RawMessage) error {
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			"method", "publish",

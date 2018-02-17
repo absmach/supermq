@@ -1,8 +1,8 @@
-# Mainflux manager
+# Manager
 
-Mainflux manager provides an HTTP API for managing platform resources: users,
-devices, applications and channels. Through this API clients are able to do
-the following actions:
+Manager provides an HTTP API for managing platform resources: users, devices,
+applications and channels. Through this API clients are able to do the following
+actions:
 
 - register new accounts and obtain access tokens
 - provision new clients (i.e. devices & applications)
@@ -18,11 +18,12 @@ The service is configured using the environment variables presented in the
 following table. Note that any unset variables will be replaced with their
 default values.
 
-| Variable            | Description                              | Default   |
-|---------------------|------------------------------------------|-----------|
-| MANAGER_DB_CLUSTER  | comma-separated Cassandra contact points | 127.0.0.1 |
-| MANAGER_DB_KEYSPACE | name of the Cassandra keyspace           | manager   |
-| MANAGER_SECRET      | string used for signing tokens           | manager   |
+| Variable               | Description                              | Default   |
+|------------------------|------------------------------------------|-----------|
+| MF_MANAGER_DB_CLUSTER  | comma-separated Cassandra contact points | 127.0.0.1 |
+| MF_MANAGER_DB_KEYSPACE | name of the Cassandra keyspace           | manager   |
+| MF_MANAGER_PORT        | Manager service HTTP port                | 8180      |
+| MF_MANAGER_SECRET      | string used for signing tokens           | manager   |
 
 ## Deployment
 
@@ -44,11 +45,12 @@ services:
     image: mainflux/manager:[version]
     container_name: [instance name]
     ports:
-      - [host machine port]:8180
+      - [host machine port]:[configured HTTP port]
     environment:
-      MANAGER_DB_CLUSTER: [comma-separated Cassandra endpoints]
-      MANAGER_DB_KEYSPACE: [name of Cassandra keyspace]
-      MANAGER_SECRET: [string used for signing tokens]
+      MF_MANAGER_DB_CLUSTER: [comma-separated Cassandra endpoints]
+      MF_MANAGER_DB_KEYSPACE: [name of Cassandra keyspace]
+      MF_MANAGER_PORT: [manager service HTTP port]
+      MF_MANAGER_SECRET: [string used for signing tokens]
 ```
 
 To start the service outside of the container, execute the following shell script:
@@ -63,7 +65,7 @@ cd $GOPATH/src/github.com/mainflux/mainflux/cmd/manager
 CGO_ENABLED=0 GOOS=[platform identifier] go build -ldflags "-s" -a -installsuffix cgo -o app
 
 # set the environment variables and run the service
-MANAGER_DB_CLUSTER=[comma-separated Cassandra endpoints] MANAGER_DB_KEYSPACE=[name of Cassandra keyspace] MANAGER_SECRET=[string used for signing tokens] app
+MF_MANAGER_DB_CLUSTER=[comma-separated Cassandra endpoints] MF_MANAGER_DB_KEYSPACE=[name of Cassandra keyspace] MF_MANAGER_PORT=[manager service HTTP port] MF_MANAGER_SECRET=[string used for signing tokens] app
 ```
 
 ## Usage

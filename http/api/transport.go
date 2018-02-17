@@ -13,7 +13,6 @@ import (
 	"github.com/mainflux/mainflux"
 	adapter "github.com/mainflux/mainflux/http"
 	manager "github.com/mainflux/mainflux/manager/client"
-	"github.com/mainflux/mainflux/writer"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -70,7 +69,7 @@ func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 
 	channel := bone.GetValue(r, "id")
 
-	msg := writer.RawMessage{
+	msg := mainflux.RawMessage{
 		Publisher:   publisher,
 		Protocol:    protocol,
 		ContentType: ct,

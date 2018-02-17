@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
+	"github.com/mainflux/mainflux"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/http/nats"
@@ -18,24 +19,25 @@ import (
 )
 
 const (
-	port          int    = 7070
+	defPort       string = "8180"
 	defNatsURL    string = broker.DefaultURL
-	envNatsURL    string = "HTTP_ADAPTER_NATS_URL"
 	defManagerURL string = "http://localhost:8180"
-	envManagerURL string = "HTTP_ADAPTER_MANAGER_URL"
+	envPort       string = "MF_HTTP_ADAPTER_PORT"
+	envNatsURL    string = "MF_NATS_URL"
+	envManagerURL string = "MF_MANAGER_URL"
 )
 
 type config struct {
-	Port       int
-	NatsURL    string
 	ManagerURL string
+	NatsURL    string
+	Port       string
 }
 
 func main() {
 	cfg := config{
-		Port:       port,
-		NatsURL:    getenv(envNatsURL, defNatsURL),
-		ManagerURL: getenv(envManagerURL, defManagerURL),
+		ManagerURL: mainflux.Env(envManagerURL, defManagerURL),
+		NatsURL:    mainflux.Env(envNatsURL, defNatsURL),
+		Port:       mainflux.Env(envPort, defPort),
 	}
 
 	logger := log.NewJSONLogger(log.NewSyncWriter(os.Stdout))
@@ -48,7 +50,7 @@ func main() {
 	}
 	defer nc.Close()
 
-	repo := nats.NewMessageRepository(nc)
+	repo := nats.NewMessagePublisher(nc)
 	svc := adapter.NewService(repo)
 
 	svc = api.NewLoggingService(logger, svc)
@@ -73,7 +75,7 @@ func main() {
 	errs := make(chan error, 2)
 
 	go func() {
-		p := fmt.Sprintf(":%d", cfg.Port)
+		p := fmt.Sprintf(":%s", cfg.Port)
 		mc := manager.NewClient(cfg.ManagerURL)
 		errs <- http.ListenAndServe(p, api.MakeHandler(svc, mc))
 	}()
@@ -85,13 +87,4 @@ func main() {
 	}()
 
 	logger.Log("terminated", <-errs)
-}
-
-func getenv(key, fallback string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		return fallback
-	}
-
-	return value
 }

@@ -1,5 +1,4 @@
-// Package writer provides message writer concept definitions.
-package writer
+package mainflux
 
 // Message represents a resolved (normalized) raw message.
 type Message struct {
@@ -27,9 +26,9 @@ type RawMessage struct {
 	Payload     []byte `json:"payload"`
 }
 
-// MessageRepository specifies a message persistence API.
-type MessageRepository interface {
-	// Save persists the message. A non-nil error is returned to indicate
+// MessagePublisher specifies a message publishing API.
+type MessagePublisher interface {
+	// Publishes message to the stream. A non-nil error is returned to indicate
 	// operation failure.
-	Save(RawMessage) error
+	Publish(RawMessage) error
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
+	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/manager"
 	"github.com/mainflux/mainflux/manager/api"
 	"github.com/mainflux/mainflux/manager/bcrypt"
@@ -19,38 +20,30 @@ import (
 )
 
 const (
-	port        int    = 8180
 	sep         string = ","
 	defCluster  string = "127.0.0.1"
 	defKeyspace string = "manager"
+	defPort     string = "8180"
 	defSecret   string = "manager"
-	envCluster  string = "MANAGER_DB_CLUSTER"
-	envKeyspace string = "MANAGER_DB_KEYSPACE"
-	envSecret   string = "MANAGER_SECRET"
+	envCluster  string = "MF_MANAGER_DB_CLUSTER"
+	envKeyspace string = "MF_MANAGER_DB_KEYSPACE"
+	envPort     string = "MF_MANAGER_PORT"
+	envSecret   string = "MF_MANAGER_SECRET"
 )
 
 type config struct {
-	Port     int
 	Cluster  string
 	Keyspace string
+	Port     string
 	Secret   string
-}
-
-func getenv(key, fallback string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		return fallback
-	}
-
-	return value
 }
 
 func main() {
 	cfg := config{
-		Port:     port,
-		Cluster:  getenv(envCluster, defCluster),
-		Keyspace: getenv(envKeyspace, defKeyspace),
-		Secret:   getenv(envSecret, defSecret),
+		Port:     mainflux.Env(envPort, defPort),
+		Cluster:  mainflux.Env(envCluster, defCluster),
+		Keyspace: mainflux.Env(envKeyspace, defKeyspace),
+		Secret:   mainflux.Env(envSecret, defSecret),
 	}
 
 	var logger log.Logger
