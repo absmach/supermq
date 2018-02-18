@@ -25,33 +25,17 @@ For more details, check out the [official documentation][docs].
 
 ## Quickstart
 
-#### Docker
+Before proceeding, install the following prerequisites:
 
-To start the docker composition, execute the [startup script](bin/mainflux-docker.sh) from `bin`
-directory:
+- [Docker](https://docs.docker.com/install/)
+- [Docker compose](https://docs.docker.com/compose/install/)
 
+Once everything is installed, execute the following commands from project root:
+
+```bash
+cd docker/
+docker-compose up -d
 ```
-./mainflux-docker.sh start
-```
-
-If the command successfully completes, you can verify that the all images are up & running by
-executing the following command in the terminal window:
-
-```
-docker ps
-```
-
-The composition can be terminated in the following way:
-
-```
-./mainflux-docker.sh stop
-```
-
-#### From sources
-
-To download all the sources, and place them in appropriate locations (i.e. $GOPATH), use the
-[installation script](bin/mainflux-install.sh). Once it completes, the script will provide the
-instructions on how to finish the manual installation (i.e. install the required infrastructure).
 
 ## Contributing
 
