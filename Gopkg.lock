@@ -53,8 +53,8 @@
     "metrics/prometheus",
     "transport/http"
   ]
-  revision = "fadad6fffe0466b19df9efd9acde5c9a52df5fa4"
-  version = "v0.4.0"
+  revision = "4dc7be5d2d12881735283bcab7352178e190fc71"
+  version = "v0.6.0"
 
 [[projects]]
   name = "github.com/go-logfmt/logfmt"
@@ -202,18 +202,9 @@
   ]
   revision = "650f4a345ab4e5b245a3034b110ebc7299e68186"
 
-[[projects]]
-  branch = "master"
-  name = "golang.org/x/net"
-  packages = [
-    "context",
-    "context/ctxhttp"
-  ]
-  revision = "136a25c244d3019482a795d728110278d6ba09a4"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8e4d02b0244093aaf74352581eeab52efb7a4953bf544a8c216d729231146ab9"
+  inputs-digest = "14405f15914fdea395d8005b59bd04e8473291dbb02003ab4ddf26eca2afbdd7"
   solver-name = "gps-cdcl"
   solver-version = 1
