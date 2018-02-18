@@ -15,30 +15,57 @@ import (
 	"github.com/mainflux/mainflux/manager/bcrypt"
 	"github.com/mainflux/mainflux/manager/jwt"
 	"github.com/mainflux/mainflux/manager/mocks"
+	"github.com/mainflux/mainflux/manager/postgres"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
 const (
-	sep       string = ","
+	defDBHost string = "localhost"
+	defDBPort string = "5432"
+	defDBUser string = "mainflux"
+	defDBPass string = "mainflux"
+	defDBName string = "manager"
 	defPort   string = "8180"
 	defSecret string = "manager"
+	envDBHost string = "MF_DB_HOST"
+	envDBPort string = "MF_DB_PORT"
+	envDBUser string = "MF_DB_USER"
+	envDBPass string = "MF_DB_PASS"
+	envDBName string = "MF_MANAGER_DB"
 	envPort   string = "MF_MANAGER_PORT"
 	envSecret string = "MF_MANAGER_SECRET"
 )
 
 type config struct {
+	DBHost string
+	DBPort string
+	DBUser string
+	DBPass string
+	DBName string
 	Port   string
 	Secret string
 }
 
 func main() {
 	cfg := config{
+		DBHost: mainflux.Env(envDBHost, defDBHost),
+		DBPort: mainflux.Env(envDBPort, defDBPort),
+		DBUser: mainflux.Env(envDBUser, defDBUser),
+		DBPass: mainflux.Env(envDBPass, defDBPass),
+		DBName: mainflux.Env(envDBName, defDBName),
 		Port:   mainflux.Env(envPort, defPort),
 		Secret: mainflux.Env(envSecret, defSecret),
 	}
 
 	logger := log.NewJSONLogger(log.NewSyncWriter(os.Stdout))
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
+
+	db, err := postgres.Connect()
+	if err != nil {
+		logger.Log("error", err)
+		os.Exit(1)
+	}
+	defer db.Close()
 
 	users := mocks.NewUserRepository()
 	clients := mocks.NewClientRepository()
@@ -70,7 +97,7 @@ func main() {
 	errs := make(chan error, 2)
 
 	go func() {
-		p := fmt.Sprintf(":%d", cfg.Port)
+		p := fmt.Sprintf(":%s", cfg.Port)
 		errs <- http.ListenAndServe(p, api.MakeHandler(svc))
 	}()
 

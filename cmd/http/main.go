@@ -45,7 +45,7 @@ func main() {
 
 	nc, err := broker.Connect(cfg.NatsURL)
 	if err != nil {
-		logger.Log("aborted", err)
+		logger.Log("error", err)
 		os.Exit(1)
 	}
 	defer nc.Close()

@@ -82,9 +82,34 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/jinzhu/gorm"
+  packages = [
+    ".",
+    "dialects/postgres"
+  ]
+  revision = "58e34726dfc069b558038efbaa25555f182d1f7a"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/jinzhu/inflection"
+  packages = ["."]
+  revision = "1c35d901db3da928c72a72d8458480cc9ade058f"
+
+[[projects]]
+  branch = "master"
   name = "github.com/kr/logfmt"
   packages = ["."]
   revision = "b84e30acd515aadc4b783ad4ff83aff3299bdfe0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/lib/pq"
+  packages = [
+    ".",
+    "hstore",
+    "oid"
+  ]
+  revision = "88edab0803230a3898347e77b474f8c1820a1f20"
 
 [[projects]]
   name = "github.com/matttproud/golang_protobuf_extensions"
@@ -205,6 +230,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "14405f15914fdea395d8005b59bd04e8473291dbb02003ab4ddf26eca2afbdd7"
+  inputs-digest = "839f2772aaf0f94b85d4c690d3012e00c5b6e5d3d4e74c8c4e18130c96ae577d"
   solver-name = "gps-cdcl"
   solver-version = 1
