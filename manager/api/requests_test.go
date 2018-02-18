@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gocql/gocql"
 	"github.com/mainflux/mainflux/manager"
 	"github.com/stretchr/testify/assert"
 )
@@ -70,7 +69,7 @@ func TestAddClientReqValidation(t *testing.T) {
 
 func TestUpdateClientReqValidation(t *testing.T) {
 	key := "key"
-	uuid := gocql.TimeUUID().String()
+	uuid := "ebd36bff-1ea1-431f-8501-4a527ef984fc"
 	vc := manager.Client{Type: "app"}
 
 	cases := []struct {
@@ -123,7 +122,7 @@ func TestCreateChannelReqValidation(t *testing.T) {
 
 func TestUpdateChannelReqValidation(t *testing.T) {
 	key := "key"
-	uuid := gocql.TimeUUID().String()
+	uuid := "ebd36bff-1ea1-431f-8501-4a527ef984fc"
 	vc := manager.Channel{}
 
 	cases := []struct {
@@ -151,7 +150,7 @@ func TestUpdateChannelReqValidation(t *testing.T) {
 
 func TestViewResourceReqValidation(t *testing.T) {
 	key := "key"
-	uuid := gocql.TimeUUID().String()
+	uuid := "ebd36bff-1ea1-431f-8501-4a527ef984fc"
 
 	cases := []struct {
 		key string

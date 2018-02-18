@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	"github.com/go-kit/kit/log"
@@ -14,57 +13,36 @@ import (
 	"github.com/mainflux/mainflux/manager"
 	"github.com/mainflux/mainflux/manager/api"
 	"github.com/mainflux/mainflux/manager/bcrypt"
-	"github.com/mainflux/mainflux/manager/cassandra"
 	"github.com/mainflux/mainflux/manager/jwt"
+	"github.com/mainflux/mainflux/manager/mocks"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
 const (
-	sep         string = ","
-	defCluster  string = "127.0.0.1"
-	defKeyspace string = "manager"
-	defPort     string = "8180"
-	defSecret   string = "manager"
-	envCluster  string = "MF_MANAGER_DB_CLUSTER"
-	envKeyspace string = "MF_MANAGER_DB_KEYSPACE"
-	envPort     string = "MF_MANAGER_PORT"
-	envSecret   string = "MF_MANAGER_SECRET"
+	sep       string = ","
+	defPort   string = "8180"
+	defSecret string = "manager"
+	envPort   string = "MF_MANAGER_PORT"
+	envSecret string = "MF_MANAGER_SECRET"
 )
 
 type config struct {
-	Cluster  string
-	Keyspace string
-	Port     string
-	Secret   string
+	Port   string
+	Secret string
 }
 
 func main() {
 	cfg := config{
-		Port:     mainflux.Env(envPort, defPort),
-		Cluster:  mainflux.Env(envCluster, defCluster),
-		Keyspace: mainflux.Env(envKeyspace, defKeyspace),
-		Secret:   mainflux.Env(envSecret, defSecret),
+		Port:   mainflux.Env(envPort, defPort),
+		Secret: mainflux.Env(envSecret, defSecret),
 	}
 
-	var logger log.Logger
-	logger = log.NewJSONLogger(log.NewSyncWriter(os.Stdout))
+	logger := log.NewJSONLogger(log.NewSyncWriter(os.Stdout))
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 
-	session, err := cassandra.Connect(strings.Split(cfg.Cluster, sep), cfg.Keyspace)
-	if err != nil {
-		logger.Log("error", err)
-		os.Exit(1)
-	}
-	defer session.Close()
-
-	if err := cassandra.Initialize(session); err != nil {
-		logger.Log("error", err)
-		os.Exit(1)
-	}
-
-	users := cassandra.NewUserRepository(session)
-	clients := cassandra.NewClientRepository(session)
-	channels := cassandra.NewChannelRepository(session)
+	users := mocks.NewUserRepository()
+	clients := mocks.NewClientRepository()
+	channels := mocks.NewChannelRepository()
 	hasher := bcrypt.NewHasher()
 	idp := jwt.NewIdentityProvider(cfg.Secret)
 

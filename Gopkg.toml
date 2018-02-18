@@ -4,15 +4,11 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/dereulenspiegel/coap-mux"
+  name = "github.com/cisco/senml"
 
 [[constraint]]
   name = "github.com/dgrijalva/jwt-go"
   version = "3.0.0"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/dustin/go-coap"
 
 [[constraint]]
   name = "github.com/go-kit/kit"
@@ -35,12 +31,20 @@
   version = "0.3.0"
 
 [[constraint]]
-  name = "github.com/stretchr/testify"
-  version = "1.1.4"
-
-[[constraint]]
   name = "go.uber.org/zap"
   version = "1.7.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/dustin/go-coap"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/dereulenspiegel/coap-mux"
+
+[[constraint]]
+  name = "github.com/stretchr/testify"
+  version = "1.1.4"
 
 [prune]
   go-tests = true
