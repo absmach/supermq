@@ -16,10 +16,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-const (
-	protocol string = "http"
-	ctJson   string = "application/senml+json"
-)
+const protocol string = "http"
 
 var (
 	errMalformedData      error = errors.New("malformed SenML data")
@@ -52,11 +49,6 @@ func MakeHandler(svc adapter.Service, mc manager.ManagerClient) http.Handler {
 }
 
 func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	ct, err := checkContentType(r)
-	if err != nil {
-		return nil, err
-	}
-
 	publisher, err := authorize(r)
 	if err != nil {
 		return nil, err
@@ -67,13 +59,11 @@ func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	channel := bone.GetValue(r, "id")
-
 	msg := mainflux.RawMessage{
 		Publisher:   publisher,
 		Protocol:    protocol,
-		ContentType: ct,
-		Channel:     channel,
+		ContentType: r.Header.Get("Content-Type"),
+		Channel:     bone.GetValue(r, "id"),
 		Payload:     payload,
 	}
 
@@ -87,7 +77,7 @@ func authorize(r *http.Request) (string, error) {
 		return "", errUnauthorizedAccess
 	}
 
-	// Path is `/channels/:id/messages`, we need chanID.
+	// extract ID from /channels/:id/messages
 	c := strings.Split(r.URL.Path, "/")[2]
 
 	id, err := auth.CanAccess(c, apiKey)
@@ -96,16 +86,6 @@ func authorize(r *http.Request) (string, error) {
 	}
 
 	return id, nil
-}
-
-func checkContentType(r *http.Request) (string, error) {
-	ct := r.Header.Get("Content-Type")
-
-	if ct != ctJson {
-		return "", errUnknownType
-	}
-
-	return ct, nil
 }
 
 func decodePayload(body io.ReadCloser) ([]byte, error) {
