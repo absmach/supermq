@@ -70,8 +70,8 @@ func main() {
 	users := postgres.NewUserRepository(db)
 	clients := mocks.NewClientRepository()
 	channels := mocks.NewChannelRepository()
-	hasher := bcrypt.NewHasher()
-	idp := jwt.NewIdentityProvider(cfg.Secret)
+	hasher := bcrypt.New()
+	idp := jwt.New(cfg.Secret)
 
 	svc := manager.New(users, clients, channels, hasher, idp)
 	svc = api.LoggingMiddleware(svc, logger)
