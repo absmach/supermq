@@ -5,13 +5,21 @@ import (
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/mainflux/mainflux/manager"
 )
 
 // Connect creates a connection to the PostgreSQL instance. A non-nil error
 // is returned to indicate failure.
-func Connect(host, port, name, user, pass string) (*DB, error) {
-	t := "host=%s port=%s user=%s dbname=%s password=%s"
-	str := fmt.Sprintf(t, cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBName, cfg.DBPass)
+func Connect(host, port, name, user, pass string) (*gorm.DB, error) {
+	t := "host=%s port=%s user=%s dbname=%s password=%s sslmode=disable"
+	url := fmt.Sprintf(t, host, port, user, name, pass)
 
-	return gorm.Open("postgres", str)
+	db, err := gorm.Open("postgres", url)
+	if err != nil {
+		return nil, err
+	}
+
+	db.AutoMigrate(&manager.User{})
+
+	return db, nil
 }

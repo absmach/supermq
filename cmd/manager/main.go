@@ -60,14 +60,14 @@ func main() {
 	logger := log.NewJSONLogger(log.NewSyncWriter(os.Stdout))
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 
-	db, err := postgres.Connect()
+	db, err := postgres.Connect(cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBUser, cfg.DBPass)
 	if err != nil {
 		logger.Log("error", err)
 		os.Exit(1)
 	}
 	defer db.Close()
 
-	users := mocks.NewUserRepository()
+	users := postgres.NewUserRepository(db)
 	clients := mocks.NewClientRepository()
 	channels := mocks.NewChannelRepository()
 	hasher := bcrypt.NewHasher()

@@ -5,7 +5,7 @@ import "github.com/asaskevich/govalidator"
 // User represents a Mainflux user account. Each user is identified given its
 // email and password.
 type User struct {
-	Email    string
+	Email    string `gorm:"primary_key"`
 	Password string
 }
 
