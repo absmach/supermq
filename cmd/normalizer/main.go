@@ -7,10 +7,10 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/go-kit/kit/log"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/normalizer"
 	nats "github.com/nats-io/go-nats"
-	"go.uber.org/zap"
 )
 
 const (
@@ -31,15 +31,12 @@ func main() {
 		Port:    mainflux.Env(envPort, defPort),
 	}
 
-	logger, err := zap.NewProduction()
-	if err != nil {
-		os.Exit(1)
-	}
-	defer logger.Sync()
+	logger := log.NewJSONLogger(log.NewSyncWriter(os.Stdout))
+	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 
 	nc, err := nats.Connect(cfg.NatsURL)
 	if err != nil {
-		logger.Error("NATS connection failure.", zap.Error(err))
+		logger.Log("error", fmt.Sprintf("Failed to connect: %s", err))
 		os.Exit(1)
 	}
 	defer nc.Close()
@@ -57,6 +54,6 @@ func main() {
 		errs <- fmt.Errorf("%s", <-c)
 	}()
 
-	normalizer.Subscribe(nc)
-	logger.Info("Service terminated.", zap.Error(<-errs))
+	normalizer.Subscribe(nc, logger)
+	logger.Log("terminated", <-errs)
 }

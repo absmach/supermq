@@ -11,12 +11,12 @@ var _ manager.Service = (*loggingService)(nil)
 
 type loggingService struct {
 	logger log.Logger
-	manager.Service
+	svc    manager.Service
 }
 
-// NewLoggingService adds logging facilities to the core service.
-func NewLoggingService(logger log.Logger, s manager.Service) manager.Service {
-	return &loggingService{logger, s}
+// LoggingMiddleware adds logging facilities to the core service.
+func LoggingMiddleware(svc manager.Service, logger log.Logger) manager.Service {
+	return &loggingService{logger, svc}
 }
 
 func (ls *loggingService) Register(user manager.User) (err error) {
@@ -29,7 +29,7 @@ func (ls *loggingService) Register(user manager.User) (err error) {
 		)
 	}(time.Now())
 
-	return ls.Service.Register(user)
+	return ls.svc.Register(user)
 }
 
 func (ls *loggingService) Login(user manager.User) (token string, err error) {
@@ -42,7 +42,7 @@ func (ls *loggingService) Login(user manager.User) (token string, err error) {
 		)
 	}(time.Now())
 
-	return ls.Service.Login(user)
+	return ls.svc.Login(user)
 }
 
 func (ls *loggingService) AddClient(key string, client manager.Client) (id string, err error) {
@@ -56,7 +56,7 @@ func (ls *loggingService) AddClient(key string, client manager.Client) (id strin
 		)
 	}(time.Now())
 
-	return ls.Service.AddClient(key, client)
+	return ls.svc.AddClient(key, client)
 }
 
 func (ls *loggingService) UpdateClient(key string, client manager.Client) (err error) {
@@ -70,7 +70,7 @@ func (ls *loggingService) UpdateClient(key string, client manager.Client) (err e
 		)
 	}(time.Now())
 
-	return ls.Service.UpdateClient(key, client)
+	return ls.svc.UpdateClient(key, client)
 }
 
 func (ls *loggingService) ViewClient(key string, id string) (client manager.Client, err error) {
@@ -84,7 +84,7 @@ func (ls *loggingService) ViewClient(key string, id string) (client manager.Clie
 		)
 	}(time.Now())
 
-	return ls.Service.ViewClient(key, id)
+	return ls.svc.ViewClient(key, id)
 }
 
 func (ls *loggingService) ListClients(key string) (clients []manager.Client, err error) {
@@ -97,7 +97,7 @@ func (ls *loggingService) ListClients(key string) (clients []manager.Client, err
 		)
 	}(time.Now())
 
-	return ls.Service.ListClients(key)
+	return ls.svc.ListClients(key)
 }
 
 func (ls *loggingService) RemoveClient(key string, id string) (err error) {
@@ -111,7 +111,7 @@ func (ls *loggingService) RemoveClient(key string, id string) (err error) {
 		)
 	}(time.Now())
 
-	return ls.Service.RemoveClient(key, id)
+	return ls.svc.RemoveClient(key, id)
 }
 
 func (ls *loggingService) CreateChannel(key string, channel manager.Channel) (id string, err error) {
@@ -125,7 +125,7 @@ func (ls *loggingService) CreateChannel(key string, channel manager.Channel) (id
 		)
 	}(time.Now())
 
-	return ls.Service.CreateChannel(key, channel)
+	return ls.svc.CreateChannel(key, channel)
 }
 
 func (ls *loggingService) UpdateChannel(key string, channel manager.Channel) (err error) {
@@ -139,7 +139,7 @@ func (ls *loggingService) UpdateChannel(key string, channel manager.Channel) (er
 		)
 	}(time.Now())
 
-	return ls.Service.UpdateChannel(key, channel)
+	return ls.svc.UpdateChannel(key, channel)
 }
 
 func (ls *loggingService) ViewChannel(key string, id string) (channel manager.Channel, err error) {
@@ -153,7 +153,7 @@ func (ls *loggingService) ViewChannel(key string, id string) (channel manager.Ch
 		)
 	}(time.Now())
 
-	return ls.Service.ViewChannel(key, id)
+	return ls.svc.ViewChannel(key, id)
 }
 
 func (ls *loggingService) ListChannels(key string) (channels []manager.Channel, err error) {
@@ -166,7 +166,7 @@ func (ls *loggingService) ListChannels(key string) (channels []manager.Channel, 
 		)
 	}(time.Now())
 
-	return ls.Service.ListChannels(key)
+	return ls.svc.ListChannels(key)
 }
 
 func (ls *loggingService) RemoveChannel(key string, id string) (err error) {
@@ -180,7 +180,7 @@ func (ls *loggingService) RemoveChannel(key string, id string) (err error) {
 		)
 	}(time.Now())
 
-	return ls.Service.RemoveChannel(key, id)
+	return ls.svc.RemoveChannel(key, id)
 }
 
 func (ls *loggingService) Identity(key string) (id string, err error) {
@@ -193,7 +193,7 @@ func (ls *loggingService) Identity(key string) (id string, err error) {
 		)
 	}(time.Now())
 
-	return ls.Service.Identity(key)
+	return ls.svc.Identity(key)
 }
 
 func (ls *loggingService) CanAccess(key string, id string) (pub string, err error) {
@@ -208,5 +208,5 @@ func (ls *loggingService) CanAccess(key string, id string) (pub string, err erro
 		)
 	}(time.Now())
 
-	return ls.Service.CanAccess(key, id)
+	return ls.svc.CanAccess(key, id)
 }

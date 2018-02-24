@@ -50,26 +50,24 @@ func main() {
 	}
 	defer nc.Close()
 
-	repo := nats.NewMessagePublisher(nc)
-	svc := adapter.NewService(repo)
+	pub := nats.NewMessagePublisher(nc)
 
-	svc = api.NewLoggingService(logger, svc)
-
-	fields := []string{"method"}
-	svc = api.NewMetricService(
+	svc := adapter.New(pub)
+	svc = api.LoggingMiddleware(svc, logger)
+	svc = api.MetricsMiddleware(
+		svc,
 		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 			Namespace: "http_adapter",
 			Subsystem: "api",
 			Name:      "request_count",
 			Help:      "Number of requests received.",
-		}, fields),
+		}, []string{"method"}),
 		kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
 			Namespace: "http_adapter",
 			Subsystem: "api",
 			Name:      "request_latency_microseconds",
 			Help:      "Total duration of requests in microseconds.",
-		}, fields),
-		svc,
+		}, []string{"method"}),
 	)
 
 	errs := make(chan error, 2)

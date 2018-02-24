@@ -12,16 +12,16 @@ var _ manager.Service = (*metricService)(nil)
 type metricService struct {
 	counter metrics.Counter
 	latency metrics.Histogram
-	manager.Service
+	svc     manager.Service
 }
 
-// NewMetricService instruments core service by tracking request count and
+// MetricsMiddleware instruments core service by tracking request count and
 // latency.
-func NewMetricService(counter metrics.Counter, latency metrics.Histogram, s manager.Service) manager.Service {
+func MetricsMiddleware(svc manager.Service, counter metrics.Counter, latency metrics.Histogram) manager.Service {
 	return &metricService{
 		counter: counter,
 		latency: latency,
-		Service: s,
+		svc:     svc,
 	}
 }
 
@@ -31,7 +31,7 @@ func (ms *metricService) Register(user manager.User) error {
 		ms.latency.With("method", "register").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.Service.Register(user)
+	return ms.svc.Register(user)
 }
 
 func (ms *metricService) Login(user manager.User) (string, error) {
@@ -40,7 +40,7 @@ func (ms *metricService) Login(user manager.User) (string, error) {
 		ms.latency.With("method", "login").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.Service.Login(user)
+	return ms.svc.Login(user)
 }
 
 func (ms *metricService) AddClient(key string, client manager.Client) (string, error) {
@@ -49,7 +49,7 @@ func (ms *metricService) AddClient(key string, client manager.Client) (string, e
 		ms.latency.With("method", "add_client").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.Service.AddClient(key, client)
+	return ms.svc.AddClient(key, client)
 }
 
 func (ms *metricService) UpdateClient(key string, client manager.Client) error {
@@ -58,7 +58,7 @@ func (ms *metricService) UpdateClient(key string, client manager.Client) error {
 		ms.latency.With("method", "update_client").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.Service.UpdateClient(key, client)
+	return ms.svc.UpdateClient(key, client)
 }
 
 func (ms *metricService) ViewClient(key string, id string) (manager.Client, error) {
@@ -67,7 +67,7 @@ func (ms *metricService) ViewClient(key string, id string) (manager.Client, erro
 		ms.latency.With("method", "view_client").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.Service.ViewClient(key, id)
+	return ms.svc.ViewClient(key, id)
 }
 
 func (ms *metricService) ListClients(key string) ([]manager.Client, error) {
@@ -76,7 +76,7 @@ func (ms *metricService) ListClients(key string) ([]manager.Client, error) {
 		ms.latency.With("method", "list_clients").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.Service.ListClients(key)
+	return ms.svc.ListClients(key)
 }
 
 func (ms *metricService) RemoveClient(key string, id string) error {
@@ -85,7 +85,7 @@ func (ms *metricService) RemoveClient(key string, id string) error {
 		ms.latency.With("method", "remove_client").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.Service.RemoveClient(key, id)
+	return ms.svc.RemoveClient(key, id)
 }
 
 func (ms *metricService) CreateChannel(key string, channel manager.Channel) (string, error) {
@@ -94,7 +94,7 @@ func (ms *metricService) CreateChannel(key string, channel manager.Channel) (str
 		ms.latency.With("method", "create_channel").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.Service.CreateChannel(key, channel)
+	return ms.svc.CreateChannel(key, channel)
 }
 
 func (ms *metricService) UpdateChannel(key string, channel manager.Channel) error {
@@ -103,7 +103,7 @@ func (ms *metricService) UpdateChannel(key string, channel manager.Channel) erro
 		ms.latency.With("method", "update_channel").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.Service.UpdateChannel(key, channel)
+	return ms.svc.UpdateChannel(key, channel)
 }
 
 func (ms *metricService) ViewChannel(key string, id string) (manager.Channel, error) {
@@ -112,7 +112,7 @@ func (ms *metricService) ViewChannel(key string, id string) (manager.Channel, er
 		ms.latency.With("method", "view_channel").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.Service.ViewChannel(key, id)
+	return ms.svc.ViewChannel(key, id)
 }
 
 func (ms *metricService) ListChannels(key string) ([]manager.Channel, error) {
@@ -121,7 +121,7 @@ func (ms *metricService) ListChannels(key string) ([]manager.Channel, error) {
 		ms.latency.With("method", "list_channels").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.Service.ListChannels(key)
+	return ms.svc.ListChannels(key)
 }
 
 func (ms *metricService) RemoveChannel(key string, id string) error {
@@ -130,7 +130,7 @@ func (ms *metricService) RemoveChannel(key string, id string) error {
 		ms.latency.With("method", "remove_channel").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.Service.RemoveChannel(key, id)
+	return ms.svc.RemoveChannel(key, id)
 }
 
 func (ms *metricService) Identity(key string) (string, error) {
@@ -139,7 +139,7 @@ func (ms *metricService) Identity(key string) (string, error) {
 		ms.latency.With("method", "identity").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.Service.Identity(key)
+	return ms.svc.Identity(key)
 }
 
 func (ms *metricService) CanAccess(key string, id string) (string, error) {
@@ -148,5 +148,5 @@ func (ms *metricService) CanAccess(key string, id string) (string, error) {
 		ms.latency.With("method", "can_access").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.Service.CanAccess(key, id)
+	return ms.svc.CanAccess(key, id)
 }

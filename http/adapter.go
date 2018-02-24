@@ -2,14 +2,14 @@ package http
 
 import "github.com/mainflux/mainflux"
 
-var _ Service = (*adapterService)(nil)
+var _ mainflux.MessagePublisher = (*adapterService)(nil)
 
 type adapterService struct {
 	pub mainflux.MessagePublisher
 }
 
-// NewService instantiates the domain service implementation.
-func NewService(pub mainflux.MessagePublisher) Service {
+// New instantiates the domain service implementation.
+func New(pub mainflux.MessagePublisher) mainflux.MessagePublisher {
 	return &adapterService{pub}
 }
 

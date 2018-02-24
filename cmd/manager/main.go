@@ -73,25 +73,22 @@ func main() {
 	hasher := bcrypt.NewHasher()
 	idp := jwt.NewIdentityProvider(cfg.Secret)
 
-	var svc manager.Service
-	svc = manager.NewService(users, clients, channels, hasher, idp)
-	svc = api.NewLoggingService(logger, svc)
-
-	fields := []string{"method"}
-	svc = api.NewMetricService(
+	svc := manager.New(users, clients, channels, hasher, idp)
+	svc = api.LoggingMiddleware(svc, logger)
+	svc = api.MetricsMiddleware(
+		svc,
 		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 			Namespace: "manager",
 			Subsystem: "api",
 			Name:      "request_count",
 			Help:      "Number of requests received.",
-		}, fields),
+		}, []string{"method"}),
 		kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
 			Namespace: "manager",
 			Subsystem: "api",
 			Name:      "request_latency_microseconds",
 			Help:      "Total duration of requests in microseconds.",
-		}, fields),
-		svc,
+		}, []string{"method"}),
 	)
 
 	errs := make(chan error, 2)

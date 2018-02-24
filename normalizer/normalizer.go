@@ -2,12 +2,12 @@ package normalizer
 
 import (
 	"encoding/json"
-	"os"
+	"fmt"
 
 	"github.com/cisco/senml"
+	"github.com/go-kit/kit/log"
 	"github.com/mainflux/mainflux"
 	nats "github.com/nats-io/go-nats"
-	"go.uber.org/zap"
 )
 
 const (
@@ -18,7 +18,13 @@ const (
 
 type eventFlow struct {
 	nc     *nats.Conn
-	logger *zap.Logger
+	logger log.Logger
+}
+
+// Subscribe instantiates and starts a new NATS message flow.
+func Subscribe(nc *nats.Conn, logger log.Logger) {
+	flow := eventFlow{nc, logger}
+	flow.start()
 }
 
 func (ef eventFlow) start() {
@@ -26,12 +32,12 @@ func (ef eventFlow) start() {
 		msg := mainflux.RawMessage{}
 
 		if err := json.Unmarshal(m.Data, &msg); err != nil {
-			ef.logger.Error("Failed to unmarshal raw message.", zap.Error(err))
+			ef.logger.Log("error", fmt.Sprintf("Unmarshalling failed: %s", err))
 			return
 		}
 
 		if err := ef.publish(msg); err != nil {
-			ef.logger.Error("Failed to publish raw message.", zap.Error(err))
+			ef.logger.Log("error", fmt.Sprintf("Publishing failed: %s", err))
 			return
 		}
 	})
@@ -40,19 +46,19 @@ func (ef eventFlow) start() {
 func (ef eventFlow) publish(msg mainflux.RawMessage) error {
 	normalized, err := ef.normalize(msg)
 	if err != nil {
-		ef.logger.Warn("Failed to normalize message.", zap.Error(err))
+		ef.logger.Log("error", fmt.Sprintf("Normalization failed: %s", err))
 		return err
 	}
 
 	for _, v := range normalized {
 		data, err := json.Marshal(v)
 		if err != nil {
-			ef.logger.Warn("Failed to marshal message.", zap.Error(err))
+			ef.logger.Log("error", fmt.Sprintf("Marshalling failed: %s", err))
 			return err
 		}
 
 		if err = ef.nc.Publish(subject, data); err != nil {
-			ef.logger.Warn("Failed to publish message.", zap.Error(err))
+			ef.logger.Log("error", fmt.Sprintf("Publishing failed: %s", err))
 			return err
 		}
 	}
@@ -103,16 +109,4 @@ func (ef eventFlow) normalize(msg mainflux.RawMessage) ([]mainflux.Message, erro
 	}
 
 	return msgs, nil
-}
-
-// Subscribe instantiates and starts a new NATS message flow.
-func Subscribe(nc *nats.Conn) {
-	logger, err := zap.NewProduction()
-	if err != nil {
-		os.Exit(1)
-	}
-	defer logger.Sync()
-
-	flow := eventFlow{nc, logger}
-	flow.start()
 }
