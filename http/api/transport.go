@@ -11,7 +11,6 @@ import (
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
-	adapter "github.com/mainflux/mainflux/http"
 	manager "github.com/mainflux/mainflux/manager/client"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -26,7 +25,7 @@ var (
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc adapter.Service, mc manager.ManagerClient) http.Handler {
+func MakeHandler(svc mainflux.MessagePublisher, mc manager.ManagerClient) http.Handler {
 	auth = mc
 
 	opts := []kithttp.ServerOption{

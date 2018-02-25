@@ -15,7 +15,7 @@ var (
 	channels manager.ChannelRepository = mocks.NewChannelRepository()
 	hasher   manager.Hasher            = mocks.NewHasher()
 	idp      manager.IdentityProvider  = mocks.NewIdentityProvider()
-	svc      manager.Service           = manager.NewService(users, clients, channels, hasher, idp)
+	svc      manager.Service           = manager.New(users, clients, channels, hasher, idp)
 )
 
 func TestRegister(t *testing.T) {

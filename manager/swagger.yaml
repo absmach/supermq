@@ -450,11 +450,9 @@ definitions:
       key:
         type: string
         description: Auto-generated access key.
-      meta:
-        type: object
-        description: Client's meta-data.
-        additionalProperties:
-          type: string
+      payload:
+        type: string
+        description: Arbitrary, string-encoded client's data.
     required:
       - id
       - type
@@ -471,11 +469,9 @@ definitions:
       name:
         type: string
         description: Free-form client name.
-      meta:
-        type: object
-        description: Client's meta-data.
-        additionalProperties:
-          type: string
+      payload:
+        type: string
+        description: Arbitrary, string-encoded client's data.
     required:
       - type
   Token:

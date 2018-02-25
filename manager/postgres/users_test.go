@@ -10,12 +10,14 @@ import (
 )
 
 func TestUserSave(t *testing.T) {
+	email := "user-save@example.com"
+
 	cases := map[string]struct {
 		user manager.User
 		err  error
 	}{
-		"new user":       {manager.User{"foo@bar.com", "pass"}, nil},
-		"duplicate user": {manager.User{"foo@bar.com", "pass"}, manager.ErrConflict},
+		"new user":       {manager.User{email, "pass"}, nil},
+		"duplicate user": {manager.User{email, "pass"}, manager.ErrConflict},
 	}
 
 	repo := postgres.NewUserRepository(db)
@@ -27,15 +29,18 @@ func TestUserSave(t *testing.T) {
 }
 
 func TestSingleUserRetrieval(t *testing.T) {
+	email := "user-retrieval@example.com"
+
+	repo := postgres.NewUserRepository(db)
+	repo.Save(manager.User{email, "pass"})
+
 	cases := map[string]struct {
 		email string
 		err   error
 	}{
-		"existing user":     {"foo@bar.com", nil},
-		"non-existing user": {"dummy@example.com", manager.ErrNotFound},
+		"existing user":     {email, nil},
+		"non-existing user": {"unknown@example.com", manager.ErrNotFound},
 	}
-
-	repo := postgres.NewUserRepository(db)
 
 	for desc, tc := range cases {
 		_, err := repo.One(tc.email)

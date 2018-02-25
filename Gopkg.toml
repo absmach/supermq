@@ -35,6 +35,10 @@
   version = "0.8.0"
 
 [[constraint]]
+  name = "github.com/satori/go.uuid"
+  version = "1.2.0"
+
+[[constraint]]
   name = "github.com/sony/gobreaker"
   version = "0.3.0"
 

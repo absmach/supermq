@@ -68,7 +68,7 @@ func main() {
 	defer db.Close()
 
 	users := postgres.NewUserRepository(db)
-	clients := mocks.NewClientRepository()
+	clients := postgres.NewClientRepository(db)
 	channels := mocks.NewChannelRepository()
 	hasher := bcrypt.New()
 	idp := jwt.New(cfg.Secret)

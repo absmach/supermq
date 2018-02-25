@@ -19,7 +19,9 @@ func Connect(host, port, name, user, pass string) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	db.AutoMigrate(&manager.User{})
+	db = db.LogMode(false)
+	db = db.AutoMigrate(&manager.User{}, &manager.Client{})
+	db = db.Model(&manager.Client{}).AddForeignKey("owner", "users(email)", "RESTRICT", "RESTRICT")
 
 	return db, nil
 }
