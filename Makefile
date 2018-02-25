@@ -3,18 +3,22 @@ BUILD_DIR=build
 all: manager http writer coap
 .PHONY: all manager http writer coap
 
+define compile_service
+	GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) go build -ldflags "-s -w" -o ${BUILD_DIR}/mainflux-$(1) cmd/$(1)/main.go
+endef
+
 manager:
-	go build -o ${BUILD_DIR}/mainflux-manager cmd/manager/main.go
+	$(call compile_service,$(@))
 
 http:
-	go build -o ${BUILD_DIR}/mainflux-http cmd/http/main.go
+	$(call compile_service,$(@))
 
 writer:
-	go build -o ${BUILD_DIR}/mainflux-writer cmd/writer/main.go
+	$(call compile_service,$(@))
+
 
 coap:
-	go build -o ${BUILD_DIR}/mainflux-coap cmd/coap/main.go
-
+	$(call compile_service,$(@))
 
 clean:
 	rm -rf ${BUILD_DIR}
