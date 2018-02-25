@@ -2,8 +2,8 @@
 package nats
 
 import (
-	"encoding/json"
-
+	"github.com/golang/protobuf/proto"
+	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/writer"
 	broker "github.com/nats-io/go-nats"
 )
@@ -24,8 +24,8 @@ func NewMessageRepository(nc *broker.Conn) writer.MessageRepository {
 	return &natsRepository{nc}
 }
 
-func (repo *natsRepository) Save(msg writer.RawMessage) error {
-	b, err := json.Marshal(msg)
+func (repo *natsRepository) Save(msg mainflux.Message) error {
+	b, err := proto.Marshal(&msg)
 	if err != nil {
 		return err
 	}

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/signal"
@@ -9,6 +8,8 @@ import (
 	"syscall"
 
 	"github.com/gocql/gocql"
+	"github.com/golang/protobuf/proto"
+	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/writer"
 	"github.com/mainflux/mainflux/writer/cassandra"
 	nats "github.com/nats-io/go-nats"
@@ -50,9 +51,9 @@ func main() {
 	repo := makeRepository(session)
 
 	nc.QueueSubscribe(subject, queue, func(m *nats.Msg) {
-		msg := writer.RawMessage{}
+		msg := mainflux.Message{}
 
-		if err := json.Unmarshal(m.Data, &msg); err != nil {
+		if err := proto.Unmarshal(m.Data, &msg); err != nil {
 			logger.Error("Failed to unmarshal raw message.", zap.Error(err))
 			return
 		}

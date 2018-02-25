@@ -1,0 +1,10 @@
+syntax = "proto3";
+package mainflux;
+
+message Message {
+	string Channel = 1;
+	string Publisher = 2;
+	string Protocol = 3;
+	string ContentType = 4;
+	bytes Payload = 5;
+}
