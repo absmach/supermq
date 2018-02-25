@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/dustin/go-coap"
+	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/writer"
 	broker "github.com/nats-io/go-nats"
 	"go.uber.org/zap"
@@ -48,7 +49,7 @@ func (ca *CoAPAdapter) BridgeHandler(nm *broker.Msg) {
 	log.Printf("Received a message: %s\n", string(nm.Data))
 
 	// And write it into the database
-	m := writer.RawMessage{}
+	m := mainflux.Message{}
 	if len(nm.Data) > 0 {
 		if err := json.Unmarshal(nm.Data, &m); err != nil {
 			log.Println("Can not decode adapter msg")

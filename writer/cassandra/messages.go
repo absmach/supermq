@@ -3,6 +3,7 @@ package cassandra
 import (
 	"github.com/cisco/senml"
 	"github.com/gocql/gocql"
+	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/writer"
 )
 
@@ -19,7 +20,7 @@ func NewMessageRepository(session *gocql.Session) writer.MessageRepository {
 
 // Normalize decodes and normalizes message emitted by the mainflux adapters layer
 // into Message structure. A non-nil error is returned to indicate operation failure.
-func Normalize(msg writer.RawMessage) ([]writer.Message, error) {
+func Normalize(msg mainflux.Message) ([]writer.Message, error) {
 	var (
 		rm, nm senml.SenML // raw and normalized message
 		err    error
@@ -64,7 +65,7 @@ func Normalize(msg writer.RawMessage) ([]writer.Message, error) {
 	return msgs, nil
 }
 
-func (repo *msgRepository) Save(raw writer.RawMessage) error {
+func (repo *msgRepository) Save(raw mainflux.Message) error {
 	var (
 		msgs []writer.Message
 		err  error

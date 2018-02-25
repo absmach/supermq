@@ -1,6 +1,8 @@
 // Package writer provides message writer concept definitions.
 package writer
 
+import "github.com/mainflux/mainflux"
+
 // Message represents a resolved (normalized) raw message.
 type Message struct {
 	Channel     string
@@ -18,18 +20,9 @@ type Message struct {
 	Link        string  `json:"l,omitempty"`
 }
 
-// RawMessage represents a message emitted by the mainflux adapters layer.
-type RawMessage struct {
-	Channel     string `json:"channel"`
-	Publisher   string `json:"publisher"`
-	Protocol    string `json:"protocol"`
-	ContentType string `json:"content_type"`
-	Payload     []byte `json:"payload"`
-}
-
 // MessageRepository specifies a message persistence API.
 type MessageRepository interface {
 	// Save persists the message. A non-nil error is returned to indicate
 	// operation failure.
-	Save(RawMessage) error
+	Save(mainflux.Message) error
 }
