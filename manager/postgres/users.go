@@ -7,8 +7,6 @@ import (
 	"github.com/mainflux/mainflux/manager"
 )
 
-const errDuplicate string = "unique_violation"
-
 var _ manager.UserRepository = (*userRepository)(nil)
 
 type userRepository struct {
@@ -36,7 +34,9 @@ func (ur *userRepository) Save(user manager.User) error {
 func (ur *userRepository) One(email string) (manager.User, error) {
 	user := manager.User{}
 
-	if err := ur.db.Where("email = ?", email).First(&user).Error; err != nil {
+	q := ur.db.First(&user, "email = ?", email)
+
+	if err := q.Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return user, manager.ErrNotFound
 		}

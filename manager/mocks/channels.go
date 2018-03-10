@@ -88,7 +88,7 @@ func (crm *channelRepositoryMock) Connect(owner, chanId, clientId string) error 
 	// Since the current implementation has no way to retrieve a real client
 	// instance, the implementation will assume client always exist and create
 	// a dummy one, containing only the provided ID.
-	channel.Connected = append(channel.Connected, manager.Client{ID: clientId})
+	channel.Clients = append(channel.Clients, manager.Client{ID: clientId})
 	return crm.Update(channel)
 }
 
@@ -102,14 +102,14 @@ func (crm *channelRepositoryMock) Disconnect(owner, chanId, clientId string) err
 		return manager.ErrNotFound
 	}
 
-	connected := make([]manager.Client, len(channel.Connected)-1)
-	for _, client := range channel.Connected {
+	connected := make([]manager.Client, len(channel.Clients)-1)
+	for _, client := range channel.Clients {
 		if client.ID != clientId {
 			connected = append(connected, client)
 		}
 	}
 
-	channel.Connected = connected
+	channel.Clients = connected
 	return crm.Update(channel)
 }
 
@@ -120,7 +120,7 @@ func (crm *channelRepositoryMock) HasClient(channel, client string) bool {
 
 	for k, v := range crm.channels {
 		if strings.HasSuffix(k, suffix) {
-			for _, c := range v.Connected {
+			for _, c := range v.Clients {
 				if c.ID == client {
 					return true
 				}

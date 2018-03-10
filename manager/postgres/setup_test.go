@@ -14,7 +14,7 @@ import (
 	"gopkg.in/ory-am/dockertest.v3"
 )
 
-const wrong string = "?"
+const wrong string = "wrong-value"
 
 var db *gorm.DB
 

@@ -3,10 +3,10 @@ package manager
 // Channel represents a Mainflux "communication group". This group contains the
 // clients that can exchange messages between eachother.
 type Channel struct {
-	ID        string   `gorm:"type:char(36);primary_key" json:"id"`
-	Owner     string   `json:"-"`
-	Name      string   `json:"name,omitempty"`
-	Connected []Client `gorm:"many2many:channel_clients" json:"connected"`
+	ID      string   `gorm:"type:char(36);primary_key" json:"id"`
+	Owner   string   `json:"-"`
+	Name    string   `json:"name,omitempty"`
+	Clients []Client `gorm:"many2many:channel_clients" json:"connected"`
 }
 
 // ChannelRepository specifies a channel persistence API.

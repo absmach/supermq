@@ -15,15 +15,15 @@ func TestChannelSave(t *testing.T) {
 	userRepo := postgres.NewUserRepository(db)
 	userRepo.Save(manager.User{email, "pass"})
 
-	c1 := manager.Channel{Owner: email, Name: "ch1"}
-	c2 := manager.Channel{Owner: wrong, Name: "ch2"}
+	c1 := manager.Channel{Owner: email}
+	c2 := manager.Channel{Owner: wrong}
 
 	cases := map[string]struct {
 		channel manager.Channel
 		hasErr  bool
 	}{
 		"new channel, existing user":     {c1, false},
-		"new channel, non-existing user": {c2, false},
+		"new channel, non-existing user": {c2, true},
 	}
 
 	channelRepo := postgres.NewChannelRepository(db)
@@ -43,7 +43,7 @@ func TestChannelUpdate(t *testing.T) {
 
 	chanRepo := postgres.NewChannelRepository(db)
 
-	c := manager.Channel{Owner: email, Name: "ch1"}
+	c := manager.Channel{Owner: email}
 	id, _ := chanRepo.Save(c)
 	c.ID = id
 
@@ -70,7 +70,7 @@ func TestSingleChannelRetrieval(t *testing.T) {
 
 	chanRepo := postgres.NewChannelRepository(db)
 
-	c := manager.Channel{Owner: email, Name: "ch1"}
+	c := manager.Channel{Owner: email}
 	id, _ := chanRepo.Save(c)
 
 	cases := map[string]struct {
@@ -100,7 +100,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 	n := 10
 
 	for i := 0; i < n; i++ {
-		c := manager.Channel{Owner: email, Name: fmt.Sprintf("ch%d", i)}
+		c := manager.Channel{Owner: email}
 		chanRepo.Save(c)
 	}
 
@@ -125,7 +125,7 @@ func TestChannelRemoval(t *testing.T) {
 	userRepo.Save(manager.User{email, "pass"})
 
 	chanRepo := postgres.NewChannelRepository(db)
-	chanId, _ := chanRepo.Save(manager.Channel{Owner: email, Name: "ch1"})
+	chanId, _ := chanRepo.Save(manager.Channel{Owner: email})
 
 	// show that the removal works the same for both existing and non-existing
 	// (removed) channel
@@ -154,7 +154,7 @@ func TestChannelConnect(t *testing.T) {
 	clientRepo.Save(client)
 
 	chanRepo := postgres.NewChannelRepository(db)
-	chanId, _ := chanRepo.Save(manager.Channel{Owner: email, Name: "ch1"})
+	chanId, _ := chanRepo.Save(manager.Channel{Owner: email})
 
 	cases := map[string]struct {
 		owner    string
@@ -175,7 +175,7 @@ func TestChannelConnect(t *testing.T) {
 }
 
 func TestChannelDisconnect(t *testing.T) {
-	email := "channel-connect@example.com"
+	email := "channel-disconnect@example.com"
 
 	userRepo := postgres.NewUserRepository(db)
 	userRepo.Save(manager.User{email, "pass"})
@@ -188,7 +188,7 @@ func TestChannelDisconnect(t *testing.T) {
 	clientRepo.Save(client)
 
 	chanRepo := postgres.NewChannelRepository(db)
-	chanId, _ := chanRepo.Save(manager.Channel{Owner: email, Name: "ch1"})
+	chanId, _ := chanRepo.Save(manager.Channel{Owner: email})
 
 	chanRepo.Connect(email, chanId, client.ID)
 
@@ -199,7 +199,7 @@ func TestChannelDisconnect(t *testing.T) {
 		err      error
 	}{
 		"connected client":     {email, chanId, client.ID, nil},
-		"non-connected client": {email, chanId, client.ID, nil},
+		"non-connected client": {email, chanId, client.ID, manager.ErrNotFound},
 		"non-existing user":    {wrong, chanId, client.ID, manager.ErrNotFound},
 		"non-existing channel": {email, wrong, client.ID, manager.ErrNotFound},
 		"non-existing client":  {email, chanId, wrong, manager.ErrNotFound},
@@ -212,7 +212,7 @@ func TestChannelDisconnect(t *testing.T) {
 }
 
 func TestChannelAccessCheck(t *testing.T) {
-	email := "channel-access-checkt@example.com"
+	email := "channel-access-check@example.com"
 
 	userRepo := postgres.NewUserRepository(db)
 	userRepo.Save(manager.User{email, "pass"})
@@ -225,7 +225,7 @@ func TestChannelAccessCheck(t *testing.T) {
 	clientRepo.Save(client)
 
 	chanRepo := postgres.NewChannelRepository(db)
-	chanId, _ := chanRepo.Save(manager.Channel{Owner: email, Name: "ch1"})
+	chanId, _ := chanRepo.Save(manager.Channel{Owner: email})
 
 	chanRepo.Connect(email, chanId, client.ID)
 

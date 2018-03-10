@@ -32,26 +32,22 @@ func (cr *clientRepository) Save(client manager.Client) error {
 }
 
 func (cr *clientRepository) Update(client manager.Client) error {
-	// This unfortunate extra query is introduced due to the fact that updating
-	// a non-existent entry does not return an error. If at some point becomes
-	// possible to retrieve an error from update, it should be removed.
-	if _, err := cr.One(client.Owner, client.ID); err != nil {
-		if gorm.IsRecordNotFoundError(err) {
-			return manager.ErrNotFound
-		}
+	sql := "UPDATE clients SET name = ?, payload = ? WHERE owner = ? AND id = ?;"
+	res := cr.db.Exec(sql, client.Name, client.Payload, client.Owner, client.ID)
 
-		return err
+	if res.Error == nil && res.RowsAffected == 0 {
+		return manager.ErrNotFound
 	}
 
-	return cr.db.Model(&client).Updates(client).Error
+	return res.Error
 }
 
 func (cr *clientRepository) One(owner, id string) (manager.Client, error) {
 	client := manager.Client{}
 
-	q := cr.db.Where("owner = ? AND id = ?", owner, id)
+	res := cr.db.First(&client, "owner = ? AND id = ?", owner, id)
 
-	if err := q.First(&client).Error; err != nil {
+	if err := res.Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			return client, manager.ErrNotFound
 		}
@@ -65,13 +61,12 @@ func (cr *clientRepository) One(owner, id string) (manager.Client, error) {
 func (cr *clientRepository) All(owner string) []manager.Client {
 	var clients []manager.Client
 
-	cr.db.Where("owner = ?", owner).Find(&clients)
+	cr.db.Find(&clients, "owner = ?", owner)
 
 	return clients
 }
 
 func (cr *clientRepository) Remove(owner, id string) error {
-	q := cr.db.Where("owner = ? AND id = ?", owner, id)
-	q.Delete(manager.Client{})
+	cr.db.Delete(&manager.Client{}, "owner = ? AND id = ?", owner, id)
 	return nil
 }

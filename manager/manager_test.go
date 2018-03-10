@@ -9,12 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const wrong string = "?"
+const wrong string = "wrong-value"
 
 var (
 	user    manager.User    = manager.User{"user@example.com", "password"}
 	client  manager.Client  = manager.Client{ID: "1", Type: "app", Name: "test", Key: "1"}
-	channel manager.Channel = manager.Channel{ID: "1", Name: "test", Connected: []manager.Client{client}}
+	channel manager.Channel = manager.Channel{ID: "1", Name: "test", Clients: []manager.Client{client}}
 )
 
 func newService() manager.Service {
@@ -299,6 +299,7 @@ func TestCanAccess(t *testing.T) {
 	svc := newService()
 	svc.Register(user)
 	key, _ := svc.Login(user)
+
 	svc.AddClient(key, client)
 	svc.CreateChannel(key, channel)
 

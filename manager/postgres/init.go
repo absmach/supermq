@@ -8,6 +8,17 @@ import (
 	"github.com/mainflux/mainflux/manager"
 )
 
+const errDuplicate string = "unique_violation"
+
+type connection struct {
+	ClientID  string `gorm:"primary_key"`
+	ChannelID string `gorm:"primary_key"`
+}
+
+func (c connection) TableName() string {
+	return "channel_clients"
+}
+
 // Connect creates a connection to the PostgreSQL instance. A non-nil error
 // is returned to indicate failure.
 func Connect(host, port, name, user, pass string) (*gorm.DB, error) {
@@ -19,10 +30,12 @@ func Connect(host, port, name, user, pass string) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	db = db.LogMode(false)
-	db = db.AutoMigrate(&manager.User{}, &manager.Client{}, &manager.Channel{})
-	db = db.Model(&manager.Client{}).AddForeignKey("owner", "users(email)", "RESTRICT", "RESTRICT")
-	db = db.Model(&manager.Channel{}).AddForeignKey("owner", "users(email)", "RESTRICT", "RESTRICT")
+	db = db.LogMode(true)
+	db = db.AutoMigrate(&manager.User{}, &manager.Client{}, &manager.Channel{}, &connection{})
+	db = db.Model(&manager.Client{}).AddForeignKey("owner", "users(email)", "CASCADE", "CASCADE")
+	db = db.Model(&manager.Channel{}).AddForeignKey("owner", "users(email)", "CASCADE", "CASCADE")
+	db = db.Model(&connection{}).AddForeignKey("client_id", "clients(id)", "CASCADE", "CASCADE")
+	db = db.Model(&connection{}).AddForeignKey("channel_id", "channels(id)", "CASCADE", "CASCADE")
 
 	return db, nil
 }
