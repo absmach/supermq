@@ -30,7 +30,7 @@ func Connect(host, port, name, user, pass string) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	db = db.LogMode(true)
+	db = db.LogMode(false)
 	db = db.AutoMigrate(&manager.User{}, &manager.Client{}, &manager.Channel{}, &connection{})
 	db = db.Model(&manager.Client{}).AddForeignKey("owner", "users(email)", "CASCADE", "CASCADE")
 	db = db.Model(&manager.Channel{}).AddForeignKey("owner", "users(email)", "CASCADE", "CASCADE")

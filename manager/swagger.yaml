@@ -461,7 +461,7 @@ definitions:
         minItems: 0
         uniqueItems: true
         items:
-          type: string
+          $ref: '#/definitions/ClientRes'
     required:
       - id
   ChannelReq:

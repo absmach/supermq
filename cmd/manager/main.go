@@ -14,7 +14,6 @@ import (
 	"github.com/mainflux/mainflux/manager/api"
 	"github.com/mainflux/mainflux/manager/bcrypt"
 	"github.com/mainflux/mainflux/manager/jwt"
-	"github.com/mainflux/mainflux/manager/mocks"
 	"github.com/mainflux/mainflux/manager/postgres"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
@@ -69,7 +68,7 @@ func main() {
 
 	users := postgres.NewUserRepository(db)
 	clients := postgres.NewClientRepository(db)
-	channels := mocks.NewChannelRepository()
+	channels := postgres.NewChannelRepository(db)
 	hasher := bcrypt.New()
 	idp := jwt.New(cfg.Secret)
 
