@@ -276,6 +276,61 @@ func TestRemoveChannel(t *testing.T) {
 	}
 }
 
+func TestConnect(t *testing.T) {
+	svc := newService()
+	svc.Register(user)
+	key, _ := svc.Login(user)
+
+	clientId, _ := svc.AddClient(key, client)
+	chanId, _ := svc.CreateChannel(key, channel)
+
+	cases := map[string]struct {
+		key      string
+		chanId   string
+		clientId string
+		err      error
+	}{
+		"connect client":                         {key, chanId, clientId, nil},
+		"connect client with wrong credentials":  {wrong, chanId, clientId, manager.ErrUnauthorizedAccess},
+		"connect client to non-existing channel": {key, wrong, clientId, manager.ErrNotFound},
+	}
+
+	for desc, tc := range cases {
+		err := svc.Connect(tc.key, tc.chanId, tc.clientId)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+	}
+}
+
+func TestDisconnect(t *testing.T) {
+	svc := newService()
+	svc.Register(user)
+	key, _ := svc.Login(user)
+
+	clientId, _ := svc.AddClient(key, client)
+	chanId, _ := svc.CreateChannel(key, channel)
+
+	svc.Connect(key, chanId, clientId)
+
+	cases := map[string]struct {
+		key      string
+		chanId   string
+		clientId string
+		err      error
+	}{
+		"disconnect connected client":                 {key, chanId, clientId, nil},
+		"disconnect disconnected client":              {key, chanId, clientId, manager.ErrNotFound},
+		"disconnect client with wrong credentials":    {wrong, chanId, clientId, manager.ErrUnauthorizedAccess},
+		"disconnect client from non-existing channel": {key, wrong, clientId, manager.ErrNotFound},
+		"disconnect non-existing client":              {key, chanId, wrong, manager.ErrNotFound},
+	}
+
+	for desc, tc := range cases {
+		err := svc.Disconnect(tc.key, tc.chanId, tc.clientId)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+	}
+
+}
+
 func TestIdentity(t *testing.T) {
 	svc := newService()
 	svc.Register(user)

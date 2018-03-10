@@ -183,6 +183,36 @@ func (lm *loggingMiddleware) RemoveChannel(key string, id string) (err error) {
 	return lm.svc.RemoveChannel(key, id)
 }
 
+func (lm *loggingMiddleware) Connect(key, chanId, clientId string) (err error) {
+	defer func(begin time.Time) {
+		lm.logger.Log(
+			"method", "connect",
+			"key", key,
+			"channel", chanId,
+			"client", clientId,
+			"error", err,
+			"took", time.Since(begin),
+		)
+	}(time.Now())
+
+	return lm.svc.Connect(key, chanId, clientId)
+}
+
+func (lm *loggingMiddleware) Disconnect(key, chanId, clientId string) (err error) {
+	defer func(begin time.Time) {
+		lm.logger.Log(
+			"method", "disconnect",
+			"key", key,
+			"channel", chanId,
+			"client", clientId,
+			"error", err,
+			"took", time.Since(begin),
+		)
+	}(time.Now())
+
+	return lm.svc.Disconnect(key, chanId, clientId)
+}
+
 func (lm *loggingMiddleware) Identity(key string) (id string, err error) {
 	defer func(begin time.Time) {
 		lm.logger.Log(

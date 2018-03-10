@@ -464,7 +464,6 @@ definitions:
           type: string
     required:
       - id
-      - connected
   ChannelReq:
     type: object
     properties:

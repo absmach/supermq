@@ -133,6 +133,24 @@ func (ms *metricsMiddleware) RemoveChannel(key string, id string) error {
 	return ms.svc.RemoveChannel(key, id)
 }
 
+func (ms *metricsMiddleware) Connect(key, chanId, clientId string) error {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "connect").Add(1)
+		ms.latency.With("method", "connect").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.Connect(key, chanId, clientId)
+}
+
+func (ms *metricsMiddleware) Disconnect(key, chanId, clientId string) error {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "disconnect").Add(1)
+		ms.latency.With("method", "disconnect").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.Disconnect(key, chanId, clientId)
+}
+
 func (ms *metricsMiddleware) Identity(key string) (string, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "identity").Add(1)

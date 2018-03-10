@@ -182,6 +182,32 @@ func (ms *managerService) RemoveChannel(key, id string) error {
 	return ms.channels.Remove(sub, id)
 }
 
+func (ms *managerService) Connect(key, chanId, clientId string) error {
+	owner, err := ms.idp.Identity(key)
+	if err != nil {
+		return err
+	}
+
+	if _, err := ms.users.One(owner); err != nil {
+		return ErrUnauthorizedAccess
+	}
+
+	return ms.channels.Connect(owner, chanId, clientId)
+}
+
+func (ms *managerService) Disconnect(key, chanId, clientId string) error {
+	owner, err := ms.idp.Identity(key)
+	if err != nil {
+		return err
+	}
+
+	if _, err := ms.users.One(owner); err != nil {
+		return ErrUnauthorizedAccess
+	}
+
+	return ms.channels.Disconnect(owner, chanId, clientId)
+}
+
 func (ms *managerService) Identity(key string) (string, error) {
 	client, err := ms.idp.Identity(key)
 	if err != nil {

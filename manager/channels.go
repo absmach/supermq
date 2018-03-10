@@ -6,7 +6,7 @@ type Channel struct {
 	ID      string   `gorm:"type:char(36);primary_key" json:"id"`
 	Owner   string   `json:"-"`
 	Name    string   `json:"name,omitempty"`
-	Clients []Client `gorm:"many2many:channel_clients" json:"connected"`
+	Clients []Client `gorm:"many2many:channel_clients" json:"connected,omitempty"`
 }
 
 // ChannelRepository specifies a channel persistence API.
