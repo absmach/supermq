@@ -62,8 +62,8 @@ func TestClientUpdate(t *testing.T) {
 		err    error
 	}{
 		"existing client":                            {c, nil},
-		"non-existing client with existing user":     {manager.Client{ID: "?", Owner: email}, manager.ErrNotFound},
-		"non-existing client with non-existing user": {manager.Client{ID: "?", Owner: "?"}, manager.ErrNotFound},
+		"non-existing client with existing user":     {manager.Client{ID: wrong, Owner: email}, manager.ErrNotFound},
+		"non-existing client with non-existing user": {manager.Client{ID: wrong, Owner: wrong}, manager.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
@@ -93,8 +93,8 @@ func TestSingleClientRetrieval(t *testing.T) {
 		err   error
 	}{
 		"existing user":                  {c.Owner, c.ID, nil},
-		"non-existing user, wrong owner": {"?", c.ID, manager.ErrNotFound},
-		"non-existing user, wrong ID":    {c.Owner, "?", manager.ErrNotFound},
+		"non-existing user, wrong owner": {wrong, c.ID, manager.ErrNotFound},
+		"non-existing user, wrong ID":    {c.Owner, wrong, manager.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
@@ -127,7 +127,7 @@ func TestMultiClientRetrieval(t *testing.T) {
 		len   int
 	}{
 		"existing user":                  {email, n},
-		"non-existing user, wrong owner": {"?", 0},
+		"non-existing user, wrong owner": {wrong, 0},
 	}
 
 	for desc, tc := range cases {

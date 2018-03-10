@@ -6,7 +6,7 @@ import "strings"
 // it is assigned with the unique identifier and (temporary) access key.
 type Client struct {
 	ID      string `gorm:"type:char(36);primary_key" json:"id"`
-	Owner   string `gorm:"foreignkey:Email" json:"-"`
+	Owner   string `json:"-"`
 	Type    string `gorm:"type:varchar(10)" json:"type"`
 	Name    string `json:"name,omitempty"`
 	Key     string `json:"key"`

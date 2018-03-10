@@ -13,8 +13,8 @@ const wrong string = "?"
 
 var (
 	user    manager.User    = manager.User{"user@example.com", "password"}
-	client  manager.Client  = manager.Client{ID: "1", Type: "app", Name: "aa", Key: "1"}
-	channel manager.Channel = manager.Channel{ID: "1", Connected: []string{"1"}}
+	client  manager.Client  = manager.Client{ID: "1", Type: "app", Name: "test", Key: "1"}
+	channel manager.Channel = manager.Channel{ID: "1", Name: "test", Connected: []manager.Client{client}}
 )
 
 func newService() manager.Service {
@@ -180,8 +180,8 @@ func TestCreateChannel(t *testing.T) {
 		key     string
 		err     error
 	}{
-		"create channel":                        {manager.Channel{Connected: []string{"1", "2"}}, key, nil},
-		"create channel with wrong credentials": {manager.Channel{Connected: []string{"1"}}, wrong, manager.ErrUnauthorizedAccess},
+		"create channel":                        {manager.Channel{}, key, nil},
+		"create channel with wrong credentials": {manager.Channel{}, wrong, manager.ErrUnauthorizedAccess},
 	}
 
 	for desc, tc := range cases {
@@ -203,7 +203,7 @@ func TestUpdateChannel(t *testing.T) {
 	}{
 		"update existing channel":               {channel, key, nil},
 		"update channel with wrong credentials": {channel, wrong, manager.ErrUnauthorizedAccess},
-		"update non-existing channel":           {manager.Channel{ID: "2", Connected: []string{"1"}}, key, manager.ErrNotFound},
+		"update non-existing channel":           {manager.Channel{ID: "2", Name: "test"}, key, manager.ErrNotFound},
 	}
 
 	for desc, tc := range cases {

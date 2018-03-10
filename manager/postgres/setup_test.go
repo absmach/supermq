@@ -14,6 +14,8 @@ import (
 	"gopkg.in/ory-am/dockertest.v3"
 )
 
+const wrong string = "?"
+
 var db *gorm.DB
 
 func TestMain(m *testing.M) {
