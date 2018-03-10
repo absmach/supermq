@@ -7,7 +7,7 @@ import "strings"
 type Client struct {
 	ID      string `gorm:"type:char(36);primary_key" json:"id"`
 	Owner   string `json:"-"`
-	Type    string `gorm:"type:varchar(10)" json:"type"`
+	Type    string `gorm:"type:varchar(10);not null" json:"type"`
 	Name    string `json:"name,omitempty"`
 	Key     string `json:"key"`
 	Payload string `json:"payload,omitempty"`

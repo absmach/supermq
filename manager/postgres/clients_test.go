@@ -33,7 +33,6 @@ func TestClientSave(t *testing.T) {
 	}{
 		"new client, existing user":     {c1, false},
 		"new client, non-existing user": {c2, true},
-		"duplicate client":              {c1, true},
 	}
 
 	for desc, tc := range cases {
@@ -92,9 +91,9 @@ func TestSingleClientRetrieval(t *testing.T) {
 		ID    string
 		err   error
 	}{
-		"existing user":                  {c.Owner, c.ID, nil},
-		"non-existing user, wrong owner": {wrong, c.ID, manager.ErrNotFound},
-		"non-existing user, wrong ID":    {c.Owner, wrong, manager.ErrNotFound},
+		"existing user":                      {c.Owner, c.ID, nil},
+		"existing user, non-existing client": {c.Owner, wrong, manager.ErrNotFound},
+		"non-existing owner":                 {wrong, c.ID, manager.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
@@ -126,12 +125,38 @@ func TestMultiClientRetrieval(t *testing.T) {
 		owner string
 		len   int
 	}{
-		"existing user":                  {email, n},
-		"non-existing user, wrong owner": {wrong, 0},
+		"existing owner":     {email, n},
+		"non-existing owner": {wrong, 0},
 	}
 
 	for desc, tc := range cases {
 		n := len(clientRepo.All(tc.owner))
 		assert.Equal(t, tc.len, n, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.len, n))
+	}
+}
+
+func TestClientRemoval(t *testing.T) {
+	email := "client-removal@example.com"
+
+	userRepo := postgres.NewUserRepository(db)
+	userRepo.Save(manager.User{email, "pass"})
+
+	clientRepo := postgres.NewClientRepository(db)
+	client := manager.Client{
+		ID:    clientRepo.Id(),
+		Owner: email,
+	}
+	clientRepo.Save(client)
+
+	// show that the removal works the same for both existing and non-existing
+	// (removed) client
+	for i := 0; i < 2; i++ {
+		if err := clientRepo.Remove(email, client.ID); err != nil {
+			t.Fatalf("#%d: failed to remove client due to: %s", i, err)
+		}
+
+		if _, err := clientRepo.One(email, client.ID); err != manager.ErrNotFound {
+			t.Fatalf("#%d: expected %s got %s", i, manager.ErrNotFound, err)
+		}
 	}
 }

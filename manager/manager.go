@@ -11,8 +11,7 @@ type managerService struct {
 }
 
 // New instantiates the domain service implementation.
-func New(users UserRepository, clients ClientRepository, channels ChannelRepository,
-	hasher Hasher, idp IdentityProvider) Service {
+func New(users UserRepository, clients ClientRepository, channels ChannelRepository, hasher Hasher, idp IdentityProvider) Service {
 	return &managerService{
 		users:    users,
 		clients:  clients,
