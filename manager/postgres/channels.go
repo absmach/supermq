@@ -68,8 +68,12 @@ func (cr channelRepository) Remove(owner, id string) error {
 }
 
 func (cr channelRepository) Connect(owner, chanId, clientId string) error {
-	// TODO: this query should be improved. For now, let's leave it and
-	// monitor its behaviour.
+	// This approach can be replaced by declaring composite keys on both tables
+	// (clients and channels), and then propagate them into the m2m table. For
+	// some reason GORM does not infer these kind of connections well and
+	// raises a "no unique constraint for referenced table". Until we find a
+	// way to properly represent this relationship, let's stick with the nested
+	// query approach and observe its behaviour.
 	sql := `INSERT INTO channel_clients (channel_id, client_id)
 	SELECT ?, ? WHERE
 	EXISTS (SELECT 1 FROM channels WHERE owner = ? AND id = ?) AND
@@ -85,8 +89,7 @@ func (cr channelRepository) Connect(owner, chanId, clientId string) error {
 }
 
 func (cr channelRepository) Disconnect(owner, chanId, clientId string) error {
-	// TODO: this query should be improved. For now, let's leave it and
-	// monitor its behaviour.
+	// The same remark given in Connect applies here.
 	sql := `DELETE FROM channel_clients WHERE
 	channel_id = ? AND client_id = ? AND
 	EXISTS (SELECT 1 FROM channels WHERE owner = ? AND id = ?) AND
