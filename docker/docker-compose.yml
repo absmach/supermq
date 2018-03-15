@@ -12,7 +12,6 @@ services:
   nginx:
     image: nginx:1.13-alpine
     container_name: mainflux-nginx
-    #network_mode: bridge
     restart:
       on-failure
     volumes:
@@ -28,14 +27,12 @@ services:
   nats:
     image: nats:1.0.2
     container_name: mainflux-nats
-    #network_mode: bridge
     restart:
       on-failure
 
   postgres:
     image: postgres:10.2-alpine
     container_name: mainflux-postgres
-    #network_mode: bridge
     restart:
       on-failure
     environment:
@@ -46,7 +43,6 @@ services:
   manager:
     image: mainflux/manager:latest
     container_name: mainflux-manager
-    #network_mode: bridge
     expose:
       - 8180
     restart:
@@ -60,7 +56,6 @@ services:
   normalizer:
     image: mainflux/normalizer:latest
     container_name: mainflux-normalizer
-    #network_mode: bridge
     restart:
       on-failure
     expose:
@@ -72,7 +67,6 @@ services:
   http-adapter:
     image: mainflux/http:latest
     container_name: mainflux-http
-    #network_mode: bridge
     depends_on:
       - manager
     restart:
@@ -87,7 +81,6 @@ services:
   mqtt-adapter:
     image: mainflux/mqtt-adapter:latest
     container_name: mainflux-mqtt
-    #network_mode: bridge
     depends_on:
       - manager
     restart:
