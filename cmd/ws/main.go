@@ -52,7 +52,7 @@ func main() {
 	defer nc.Close()
 
 	pub := nats.NewMessagePublisher(nc)
-	svc := adapter.New(pub)
+	svc := adapter.New(pub, logger)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,

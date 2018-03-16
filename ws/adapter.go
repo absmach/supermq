@@ -2,10 +2,11 @@ package ws
 
 import (
 	"encoding/json"
+	"fmt"
 
+	"github.com/go-kit/kit/log"
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux"
-	manager "github.com/mainflux/mainflux/manager/client"
 	broker "github.com/nats-io/go-nats"
 )
 
@@ -24,16 +25,17 @@ type Service interface {
 }
 
 type adapterService struct {
-	pub   mainflux.MessagePublisher
-	mc    manager.ManagerClient
-	conns map[string]map[string]*websocket.Conn
+	pub    mainflux.MessagePublisher
+	conns  map[string]map[string]*websocket.Conn
+	logger log.Logger
 }
 
 // New instantiates the domain service implementation.
-func New(pub mainflux.MessagePublisher) Service {
+func New(pub mainflux.MessagePublisher, logger log.Logger) Service {
 	return &adapterService{
-		pub:   pub,
-		conns: make(map[string]map[string]*websocket.Conn),
+		pub:    pub,
+		conns:  make(map[string]map[string]*websocket.Conn),
+		logger: logger,
 	}
 }
 
@@ -42,8 +44,13 @@ func (as *adapterService) Publish(msg mainflux.RawMessage) error {
 }
 
 func (as *adapterService) HandleMessage(msg *broker.Msg) {
+	if msg == nil {
+		as.logger.Log("error", fmt.Sprintf("Received empty message"))
+		return
+	}
 	var rawMsg mainflux.RawMessage
 	if err := json.Unmarshal(msg.Data, &rawMsg); err != nil {
+		as.logger.Log("error", fmt.Sprintf("Unmarshalling failed: %s", err))
 		return
 	}
 
