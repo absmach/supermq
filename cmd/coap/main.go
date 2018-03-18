@@ -43,8 +43,6 @@ func main() {
 
 	go func() {
 		coapAddr := fmt.Sprintf(":%d", cfg.Port)
-		startMsg := fmt.Sprintf("CoAP adapter service started, exposed port %d", cfg.Port)
-		logger.Info(startMsg)
 		errs <- ca.Serve(coapAddr)
 	}()
 
