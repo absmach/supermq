@@ -330,6 +330,7 @@ func TestDisconnect(t *testing.T) {
 		err := svc.Disconnect(tc.key, tc.chanId, tc.clientId)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
+
 }
 
 func TestIdentity(t *testing.T) {
