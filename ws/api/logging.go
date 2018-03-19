@@ -7,7 +7,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/ws"
-	broker "github.com/nats-io/go-nats"
 )
 
 var _ ws.Service = (*loggingMiddleware)(nil)
@@ -33,18 +32,18 @@ func (lm *loggingMiddleware) Publish(msg mainflux.RawMessage) error {
 	return lm.svc.Publish(msg)
 }
 
-func (lm *loggingMiddleware) HandleMessage(msg *broker.Msg) {
+func (lm *loggingMiddleware) BroadcastMessage(msg mainflux.RawMessage) {
 	defer func(begin time.Time) {
 		lm.logger.Log(
-			"method", "handle_message",
+			"method", "broadcast_message",
 			"took", time.Since(begin),
 		)
 	}(time.Now())
 
-	lm.svc.HandleMessage(msg)
+	lm.svc.BroadcastMessage(msg)
 }
 
-func (lm *loggingMiddleware) AddConnection(channelID, publisherID string, conn *websocket.Conn) {
+func (lm *loggingMiddleware) AddConnection(pair ws.IDPair, conn *websocket.Conn) {
 	defer func(begin time.Time) {
 		lm.logger.Log(
 			"method", "add_connection",
@@ -52,5 +51,5 @@ func (lm *loggingMiddleware) AddConnection(channelID, publisherID string, conn *
 		)
 	}(time.Now())
 
-	lm.svc.AddConnection(channelID, publisherID, conn)
+	lm.svc.AddConnection(pair, conn)
 }

@@ -1,13 +1,11 @@
 package ws
 
 import (
-	"encoding/json"
-	"fmt"
+	"sync"
 
 	"github.com/go-kit/kit/log"
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux"
-	broker "github.com/nats-io/go-nats"
 )
 
 var _ Service = (*adapterService)(nil)
@@ -17,16 +15,16 @@ var _ Service = (*adapterService)(nil)
 type Service interface {
 	mainflux.MessagePublisher
 
-	// HandleMessage that is received from message broker.
-	HandleMessage(*broker.Msg)
+	// BroadcastMessage broadcasts raw message to channel.
+	BroadcastMessage(mainflux.RawMessage)
 
 	// AddConnection adds new client ws connection for given client and channel.
-	AddConnection(string, string, *websocket.Conn)
+	AddConnection(IDPair, *websocket.Conn)
 }
 
 type adapterService struct {
 	pub    mainflux.MessagePublisher
-	conns  map[string]map[string]*websocket.Conn
+	conns  map[string]map[string]socket
 	logger log.Logger
 }
 
@@ -34,50 +32,53 @@ type adapterService struct {
 func New(pub mainflux.MessagePublisher, logger log.Logger) Service {
 	return &adapterService{
 		pub:    pub,
-		conns:  make(map[string]map[string]*websocket.Conn),
+		conns:  make(map[string]map[string]socket),
 		logger: logger,
 	}
 }
 
 func (as *adapterService) Publish(msg mainflux.RawMessage) error {
+	as.BroadcastMessage(msg)
 	return as.pub.Publish(msg)
 }
 
-func (as *adapterService) HandleMessage(msg *broker.Msg) {
-	if msg == nil {
-		as.logger.Log("error", fmt.Sprintf("Received empty message"))
-		return
-	}
-	var rawMsg mainflux.RawMessage
-	if err := json.Unmarshal(msg.Data, &rawMsg); err != nil {
-		as.logger.Log("error", fmt.Sprintf("Unmarshalling failed: %s", err))
-		return
-	}
-
-	cid := rawMsg.Channel
-	for pid, conn := range as.conns[cid] {
-		if rawMsg.Publisher != pid {
-			conn.WriteJSON(rawMsg)
-		}
+func (as *adapterService) BroadcastMessage(msg mainflux.RawMessage) {
+	chanID := msg.Channel
+	for pubID, conn := range as.conns[chanID] {
+		pid, sock := pubID, conn
+		go func() {
+			if msg.Publisher == pid {
+				return
+			}
+			if err := sock.write(msg); err != nil {
+				as.logger.Log("error", "Failed to write message: %s", err)
+			}
+		}()
 	}
 
 	return
 }
 
-func (as *adapterService) AddConnection(channelID, publisherID string, conn *websocket.Conn) {
-	if _, ok := as.conns[channelID]; !ok {
-		as.conns[channelID] = make(map[string]*websocket.Conn)
+func (as *adapterService) AddConnection(pair IDPair, conn *websocket.Conn) {
+	if _, ok := as.conns[pair.ChanID]; !ok {
+		as.conns[pair.ChanID] = make(map[string]socket)
 	}
 
-	if oldConn, ok := as.conns[channelID][publisherID]; ok {
+	if oldConn, ok := as.conns[pair.ChanID][pair.PubID]; ok {
 		oldConn.Close()
 	}
 
-	as.conns[channelID][publisherID] = conn
+	as.conns[pair.ChanID][pair.PubID] = socket{conn, &sync.Mutex{}}
 
 	// On close delete connection from map of connections.
 	conn.SetCloseHandler(func(code int, text string) error {
-		delete(as.conns[channelID], publisherID)
+		delete(as.conns[pair.ChanID], pair.PubID)
 		return conn.CloseHandler()(code, text)
 	})
+}
+
+// IDPair contains publisher and channel id.
+type IDPair struct {
+	PubID  string
+	ChanID string
 }

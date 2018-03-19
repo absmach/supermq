@@ -13,10 +13,9 @@ import (
 
 const protocol = "ws"
 
-var errUnauthorizedAccess = errors.New("missing or invalid credentials provided")
-
 var (
-	upgrader = websocket.Upgrader{
+	errUnauthorizedAccess = errors.New("missing or invalid credentials provided")
+	upgrader              = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 		CheckOrigin: func(r *http.Request) bool {
@@ -31,12 +30,12 @@ func MakeHandler(svc ws.Service, mc manager.ManagerClient) http.Handler {
 	auth = mc
 
 	mux := bone.New()
-	mux.GetFunc("/channels/:id/messages", makeHandshake(svc))
+	mux.GetFunc("/channels/:id/messages", handshake(svc))
 
 	return mux
 }
 
-func makeHandshake(svc ws.Service) func(http.ResponseWriter, *http.Request) {
+func handshake(svc ws.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		pair, err := authorize(r)
 		if err != nil {
@@ -49,7 +48,7 @@ func makeHandshake(svc ws.Service) func(http.ResponseWriter, *http.Request) {
 		if err != nil {
 			return
 		}
-		svc.AddConnection(pair.cid, pair.pid, conn)
+		svc.AddConnection(pair, conn)
 
 		// Listen on ws connection.
 		go func() {
@@ -62,8 +61,8 @@ func makeHandshake(svc ws.Service) func(http.ResponseWriter, *http.Request) {
 					continue
 				}
 				msg := mainflux.RawMessage{
-					Channel:   pair.cid,
-					Publisher: pair.pid,
+					Channel:   pair.ChanID,
+					Publisher: pair.PubID,
 					Protocol:  protocol,
 					Payload:   payload,
 				}
@@ -73,10 +72,10 @@ func makeHandshake(svc ws.Service) func(http.ResponseWriter, *http.Request) {
 	}
 }
 
-func authorize(r *http.Request) (idPair, error) {
+func authorize(r *http.Request) (ws.IDPair, error) {
 	apiKeys := bone.GetQuery(r, "auth")
 	if len(apiKeys) == 0 {
-		return idPair{}, errUnauthorizedAccess
+		return ws.IDPair{}, errUnauthorizedAccess
 	}
 	apiKey := apiKeys[0]
 
@@ -85,14 +84,8 @@ func authorize(r *http.Request) (idPair, error) {
 
 	id, err := auth.CanAccess(cid, apiKey)
 	if err != nil {
-		return idPair{}, errUnauthorizedAccess
+		return ws.IDPair{}, errUnauthorizedAccess
 	}
 
-	return idPair{id, cid}, nil
-}
-
-//IDPair contains publisher and channel id.
-type idPair struct {
-	pid string
-	cid string
+	return ws.IDPair{id, cid}, nil
 }

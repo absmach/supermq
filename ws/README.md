@@ -47,3 +47,8 @@ CGO_ENABLED=0 GOOS=[platform identifier] go build -ldflags "-s" -a -installsuffi
 # set the environment variables and run the service
 MF_MANAGER_URL=[Manager service URL] MF_NATS_URL=[NATS instance URL] MF_WS_ADAPTER_PORT=[Service WS port] app
 ```
+
+## Usage
+
+For more information about service capabilities and its usage, please check out
+the [API documentation](swagger.yaml).

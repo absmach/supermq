@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
+	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
 	manager "github.com/mainflux/mainflux/manager/client"
 	adapter "github.com/mainflux/mainflux/ws"
@@ -25,8 +26,10 @@ const (
 	envPort       = "MF_WS_ADAPTER_PORT"
 	envNatsURL    = "MF_NATS_URL"
 	envManagerURL = "MF_MANAGER_URL"
-	topic         = "src.*"
+	rootTopic     = "src"
 )
+
+var protocols = []string{"http", "coap", "mqtt"}
 
 type config struct {
 	ManagerURL string
@@ -51,7 +54,7 @@ func main() {
 	}
 	defer nc.Close()
 
-	pub := nats.NewMessagePublisher(nc)
+	pub := nats.New(nc)
 	svc := adapter.New(pub, logger)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
@@ -70,13 +73,28 @@ func main() {
 		}, []string{"method"}),
 	)
 
-	nc.Subscribe(topic, svc.HandleMessage)
+	for _, protocol := range protocols {
+		topic := fmt.Sprintf("%s.%s", rootTopic, protocol)
+		nc.Subscribe(topic, func(msg *broker.Msg) {
+			if msg == nil {
+				logger.Log("error", fmt.Sprintf("Received empty message"))
+				return
+			}
+			var rawMsg mainflux.RawMessage
+			if err := proto.Unmarshal(msg.Data, &rawMsg); err != nil {
+				logger.Log("error", fmt.Sprintf("Unmarshalling failed: %s", err))
+				return
+			}
+			svc.BroadcastMessage(rawMsg)
+		})
+	}
 
 	errs := make(chan error, 2)
 
 	go func() {
 		p := fmt.Sprintf(":%s", cfg.Port)
 		mc := manager.NewClient(cfg.ManagerURL)
+		logger.Log("message", fmt.Sprintf("WebSocket adapter service started, exposed port %s", cfg.Port))
 		errs <- http.ListenAndServe(p, api.MakeHandler(svc, mc))
 	}()
 
@@ -86,5 +104,5 @@ func main() {
 		errs <- fmt.Errorf("%s", <-c)
 	}()
 
-	logger.Log("terminated", <-errs)
+	logger.Log("message", <-errs)
 }

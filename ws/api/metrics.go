@@ -7,7 +7,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/ws"
-	broker "github.com/nats-io/go-nats"
 )
 
 var _ ws.Service = (*metricsMiddleware)(nil)
@@ -36,20 +35,20 @@ func (mm *metricsMiddleware) Publish(msg mainflux.RawMessage) error {
 	return mm.svc.Publish(msg)
 }
 
-func (mm *metricsMiddleware) HandleMessage(msg *broker.Msg) {
+func (mm *metricsMiddleware) BroadcastMessage(msg mainflux.RawMessage) {
 	defer func(begin time.Time) {
-		mm.counter.With("method", "handle_message").Add(1)
-		mm.latency.With("method", "handle_message").Observe(time.Since(begin).Seconds())
+		mm.counter.With("method", "broadcast_message").Add(1)
+		mm.latency.With("method", "broadcast_message").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	mm.svc.HandleMessage(msg)
+	mm.svc.BroadcastMessage(msg)
 }
 
-func (mm *metricsMiddleware) AddConnection(channelID, publisherID string, conn *websocket.Conn) {
+func (mm *metricsMiddleware) AddConnection(pair ws.IDPair, conn *websocket.Conn) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "add_connection").Add(1)
 		mm.latency.With("method", "add_connection").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	mm.svc.AddConnection(channelID, publisherID, conn)
+	mm.svc.AddConnection(pair, conn)
 }
