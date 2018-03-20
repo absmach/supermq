@@ -1,7 +1,6 @@
 package ws_test
 
 import (
-	"errors"
 	"fmt"
 	"testing"
 
@@ -11,10 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/mainflux/mainflux"
-)
-
-var (
-	errFailedMessagePublish = errors.New("failed to publish message")
 )
 
 var (
@@ -42,7 +37,7 @@ func TestPublish(t *testing.T) {
 		err error
 	}{
 		"publish valid message": {validMsg, nil},
-		"publish empty message": {emptyMsg, errFailedMessagePublish},
+		"publish empty message": {emptyMsg, ws.ErrFailedMessagePublish},
 	}
 
 	for desc, tc := range cases {

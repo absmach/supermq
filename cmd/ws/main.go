@@ -26,10 +26,8 @@ const (
 	envPort       = "MF_WS_ADAPTER_PORT"
 	envNatsURL    = "MF_NATS_URL"
 	envManagerURL = "MF_MANAGER_URL"
-	rootTopic     = "src"
+	topic         = "src.ws"
 )
-
-var protocols = []string{"http", "coap", "mqtt"}
 
 type config struct {
 	ManagerURL string
@@ -73,21 +71,21 @@ func main() {
 		}, []string{"method"}),
 	)
 
-	for _, protocol := range protocols {
-		topic := fmt.Sprintf("%s.%s", rootTopic, protocol)
-		nc.Subscribe(topic, func(msg *broker.Msg) {
-			if msg == nil {
-				logger.Log("error", fmt.Sprintf("Received empty message"))
-				return
-			}
-			var rawMsg mainflux.RawMessage
-			if err := proto.Unmarshal(msg.Data, &rawMsg); err != nil {
-				logger.Log("error", fmt.Sprintf("Unmarshalling failed: %s", err))
-				return
-			}
-			svc.BroadcastMessage(rawMsg)
-		})
-	}
+	nc.Subscribe("src.*", func(msg *broker.Msg) {
+		if msg == nil {
+			logger.Log("error", fmt.Sprintf("Received empty message"))
+			return
+		}
+		if msg.Subject == topic {
+			return
+		}
+		var rawMsg mainflux.RawMessage
+		if err := proto.Unmarshal(msg.Data, &rawMsg); err != nil {
+			logger.Log("error", fmt.Sprintf("Unmarshalling failed: %s", err))
+			return
+		}
+		svc.Broadcast(rawMsg)
+	})
 
 	errs := make(chan error, 2)
 

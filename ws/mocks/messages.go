@@ -1,16 +1,11 @@
 package mocks
 
 import (
-	"errors"
-
 	"github.com/mainflux/mainflux"
+	broker "github.com/nats-io/go-nats"
 )
 
 var _ mainflux.MessagePublisher = (*publisher)(nil)
-
-var (
-	errFailedMessagePublish = errors.New("failed to publish message")
-)
 
 type publisher struct{}
 
@@ -21,7 +16,7 @@ func NewMessagePublisher() mainflux.MessagePublisher {
 
 func (pub publisher) Publish(msg mainflux.RawMessage) error {
 	if len(msg.Payload) == 0 {
-		return errFailedMessagePublish
+		return broker.ErrInvalidMsg
 	}
 	return nil
 }

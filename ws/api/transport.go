@@ -6,12 +6,9 @@ import (
 
 	"github.com/go-zoo/bone"
 	"github.com/gorilla/websocket"
-	"github.com/mainflux/mainflux"
 	manager "github.com/mainflux/mainflux/manager/client"
 	"github.com/mainflux/mainflux/ws"
 )
-
-const protocol = "ws"
 
 var (
 	errUnauthorizedAccess = errors.New("missing or invalid credentials provided")
@@ -37,7 +34,7 @@ func MakeHandler(svc ws.Service, mc manager.ManagerClient) http.Handler {
 
 func handshake(svc ws.Service) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		pair, err := authorize(r)
+		sub, err := authorize(r)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
@@ -48,44 +45,27 @@ func handshake(svc ws.Service) func(http.ResponseWriter, *http.Request) {
 		if err != nil {
 			return
 		}
-		svc.AddConnection(pair, conn)
+		svc.AddConnection(sub, conn)
 
 		// Listen on ws connection.
-		go func() {
-			for {
-				_, payload, err := conn.ReadMessage()
-				if websocket.IsUnexpectedCloseError(err) {
-					return
-				}
-				if err != nil {
-					continue
-				}
-				msg := mainflux.RawMessage{
-					Channel:   pair.ChanID,
-					Publisher: pair.PubID,
-					Protocol:  protocol,
-					Payload:   payload,
-				}
-				svc.Publish(msg)
-			}
-		}()
+		go svc.Listen(sub)
 	}
 }
 
-func authorize(r *http.Request) (ws.IDPair, error) {
+func authorize(r *http.Request) (ws.Subscription, error) {
 	apiKeys := bone.GetQuery(r, "auth")
 	if len(apiKeys) == 0 {
-		return ws.IDPair{}, errUnauthorizedAccess
+		return ws.Subscription{}, errUnauthorizedAccess
 	}
 	apiKey := apiKeys[0]
 
 	// extract ID from /channels/:id/messages
-	cid := bone.GetValue(r, "id")
+	chanID := bone.GetValue(r, "id")
 
-	id, err := auth.CanAccess(cid, apiKey)
+	pubID, err := auth.CanAccess(chanID, apiKey)
 	if err != nil {
-		return ws.IDPair{}, errUnauthorizedAccess
+		return ws.Subscription{}, errUnauthorizedAccess
 	}
 
-	return ws.IDPair{id, cid}, nil
+	return ws.Subscription{pubID, chanID}, nil
 }

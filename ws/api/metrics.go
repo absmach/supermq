@@ -35,20 +35,29 @@ func (mm *metricsMiddleware) Publish(msg mainflux.RawMessage) error {
 	return mm.svc.Publish(msg)
 }
 
-func (mm *metricsMiddleware) BroadcastMessage(msg mainflux.RawMessage) {
+func (mm *metricsMiddleware) Broadcast(msg mainflux.RawMessage) {
 	defer func(begin time.Time) {
-		mm.counter.With("method", "broadcast_message").Add(1)
-		mm.latency.With("method", "broadcast_message").Observe(time.Since(begin).Seconds())
+		mm.counter.With("method", "broadcast").Add(1)
+		mm.latency.With("method", "broadcast").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	mm.svc.BroadcastMessage(msg)
+	mm.svc.Broadcast(msg)
 }
 
-func (mm *metricsMiddleware) AddConnection(pair ws.IDPair, conn *websocket.Conn) {
+func (mm *metricsMiddleware) AddConnection(sub ws.Subscription, conn *websocket.Conn) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "add_connection").Add(1)
 		mm.latency.With("method", "add_connection").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	mm.svc.AddConnection(pair, conn)
+	mm.svc.AddConnection(sub, conn)
+}
+
+func (mm *metricsMiddleware) Listen(sub ws.Subscription) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "start_listening").Add(1)
+		mm.latency.With("method", "start_listening").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	mm.svc.Listen(sub)
 }

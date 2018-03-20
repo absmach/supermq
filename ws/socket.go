@@ -12,8 +12,8 @@ type socket struct {
 	mu *sync.Mutex
 }
 
-func (s socket) write(msg mainflux.RawMessage) error {
+func (s socket) write(rawMsg mainflux.RawMessage) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.WriteJSON(msg)
+	return s.WriteMessage(websocket.TextMessage, rawMsg.Payload)
 }

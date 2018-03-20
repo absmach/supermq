@@ -32,18 +32,18 @@ func (lm *loggingMiddleware) Publish(msg mainflux.RawMessage) error {
 	return lm.svc.Publish(msg)
 }
 
-func (lm *loggingMiddleware) BroadcastMessage(msg mainflux.RawMessage) {
+func (lm *loggingMiddleware) Broadcast(msg mainflux.RawMessage) {
 	defer func(begin time.Time) {
 		lm.logger.Log(
-			"method", "broadcast_message",
+			"method", "broadcast",
 			"took", time.Since(begin),
 		)
 	}(time.Now())
 
-	lm.svc.BroadcastMessage(msg)
+	lm.svc.Broadcast(msg)
 }
 
-func (lm *loggingMiddleware) AddConnection(pair ws.IDPair, conn *websocket.Conn) {
+func (lm *loggingMiddleware) AddConnection(sub ws.Subscription, conn *websocket.Conn) {
 	defer func(begin time.Time) {
 		lm.logger.Log(
 			"method", "add_connection",
@@ -51,5 +51,16 @@ func (lm *loggingMiddleware) AddConnection(pair ws.IDPair, conn *websocket.Conn)
 		)
 	}(time.Now())
 
-	lm.svc.AddConnection(pair, conn)
+	lm.svc.AddConnection(sub, conn)
+}
+
+func (lm *loggingMiddleware) Listen(sub ws.Subscription) {
+	defer func(begin time.Time) {
+		lm.logger.Log(
+			"method", "start_listening",
+			"took", time.Since(begin),
+		)
+	}(time.Now())
+
+	lm.svc.Listen(sub)
 }
