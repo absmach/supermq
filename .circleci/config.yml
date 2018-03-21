@@ -1,33 +1,29 @@
 version: 2
 
 jobs:
-  generate:
-    docker:
-      - image: circleci/golang:1.9
-    working_directory: /go/src/github.com/mainflux/mainflux
-    steps:
-      - checkout
-      - run:
-          name: install protoc
-          environment:
-            PB_VERSION: "3.5.1"
-          command: >
-            apt-get update
-            apt-get install -y unzip wget
-            rm -rf /var/lib/apt/lists/*
-            wget https://github.com/google/protobuf/releases/download/v${PB_VERSION}/protoc-${PB_VERSION}-linux-x86_64.zip
-            unzip protoc-${PB_VERSION}-linux-x86_64.zip -d /usr/local
-            rm protoc-${PB_VERSION}-linux-x86_64.zip
-            apt-get remove -y unzip wget
-            apt-get autoremove -y
-      - run: go get -u gituhb.com/golang/protobuf/protoc-gen-go
-
   test:
     docker:
       - image: circleci/golang:1.9
     working_directory: /go/src/github.com/mainflux/mainflux
     steps:
       - checkout
+
+      - run:
+          name: install protoc
+          environment:
+            PB_VERSION: "3.5.1"
+          command: |
+            sudo apt-get update -y
+            sudo apt-get install -y unzip wget
+            sudo rm -rf /var/lib/apt/lists/*
+            wget https://github.com/google/protobuf/releases/download/v${PB_VERSION}/protoc-${PB_VERSION}-linux-x86_64.zip
+            sudo unzip protoc-${PB_VERSION}-linux-x86_64.zip -d /usr/local
+            sudo rm protoc-${PB_VERSION}-linux-x86_64.zip
+            sudo apt-get remove -y wget unzip
+            sudo apt-get autoremove -y
+
+      - run: go get -u github.com/golang/protobuf/protoc-gen-go
+
       - run: go test -v ./...
 
   deploy-latest:
@@ -36,11 +32,13 @@ jobs:
       - checkout
       - run: make dockers
       - run: docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-      - run: >
-          for service in manager normalizer http
-          do
-            docker push mainflux/$service
-          done
+      - run:
+          name: push images
+          command: |
+            for service in manager normalizer http
+            do
+              docker push mainflux/$service
+            done
 
   deploy-release:
     machine: true
@@ -48,22 +46,21 @@ jobs:
       - checkout
       - run: make dockers
       - run: docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-      - run: >
-          version=$(grep 'const version string = ' version.go | sed 's:^[^"]*"\([^"]*\)".*:\1:')
-          for service in manager normalizer http
-          do
-            docker tag mainflux/$service mainflux/$service:$version
-            docker push mainflux/$service:$version
-          done
+      - run:
+          name: push images
+          command: |
+            version=$(grep 'const version string = ' version.go | sed 's:^[^"]*"\([^"]*\)".*:\1:')
+            for service in manager normalizer http
+            do
+              docker tag mainflux/$service mainflux/$service:$version
+              docker push mainflux/$service:$version
+            done
 
 workflows:
   version: 2
   test-and-publish:
     jobs:
-      - generate
-      - test:
-          requires:
-            - generate
+      - test
       - deploy-latest:
           requires:
             - test
