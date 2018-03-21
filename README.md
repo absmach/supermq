@@ -52,8 +52,8 @@ Thank you for your interest in Mainflux and wish to contribute!
 - [Twitter][twitter]
 
 [banner]: https://github.com/mainflux/doc/blob/master/docs/img/gopherBanner.jpg
-[ci-badge]: https://semaphoreci.com/api/v1/mainflux/mainflux/branches/master/badge.svg
-[ci-url]: https://semaphoreci.com/mainflux/mainflux
+[ci-badge]: https://circleci.com/gh/mainflux/mainflux.svg?style=svg
+[ci-url]: https://circleci.com/gh/mainflux/mainflux
 [docs]: http://mainflux.readthedocs.io
 [docker]: https://www.docker.com
 [forum]: https://groups.google.com/forum/#!forum/mainflux

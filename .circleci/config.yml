@@ -1,0 +1,72 @@
+version: 2
+
+jobs:
+  test:
+    docker:
+      - image: circleci/golang:1.9
+    working_directory: /go/src/github.com/mainflux/mainflux
+    steps:
+      - checkout
+      - setup_remote_docker
+
+      - run:
+          name: install protoc
+          environment:
+            PB_VERSION: "3.5.1"
+          command: |
+            curl -OL https://github.com/google/protobuf/releases/download/v${PB_VERSION}/protoc-${PB_VERSION}-linux-x86_64.zip
+            unzip protoc-${PB_VERSION}-linux-x86_64.zip -d protoc3
+            sudo mv protoc3/bin/* /usr/local/bin/
+            sudo mv protoc3/include/* /usr/local/bin
+
+      - run: go get -u github.com/golang/protobuf/protoc-gen-go
+      - run: protoc --go_out=. *.proto
+      - run: go test -v ./...
+
+  deploy-latest:
+    machine: true
+    steps:
+      - checkout
+      - run: make dockers
+      - run: docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - run:
+          name: push images
+          command: |
+            for service in manager normalizer http
+            do
+              docker push mainflux/$service
+            done
+
+  deploy-release:
+    machine: true
+    steps:
+      - checkout
+      - run: make dockers
+      - run: docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - run:
+          name: push images
+          command: |
+            version=$(grep 'const version string = ' version.go | sed 's:^[^"]*"\([^"]*\)".*:\1:')
+            for service in manager normalizer http
+            do
+              docker tag mainflux/$service mainflux/$service:$version
+              docker push mainflux/$service:$version
+            done
+
+workflows:
+  version: 2
+  test-and-publish:
+    jobs:
+      - test
+      - deploy-latest:
+          requires:
+            - test
+          filters:
+            branches:
+              only: master
+      - deploy-release:
+          requires:
+            - test
+          filters:
+            branches:
+              only: releases
