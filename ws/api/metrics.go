@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/metrics"
-	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/ws"
 )
@@ -35,29 +34,20 @@ func (mm *metricsMiddleware) Publish(msg mainflux.RawMessage) error {
 	return mm.svc.Publish(msg)
 }
 
-func (mm *metricsMiddleware) Broadcast(msg mainflux.RawMessage) {
+func (mm *metricsMiddleware) Broadcast(socket ws.Socket, msg mainflux.RawMessage) error {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "broadcast").Add(1)
 		mm.latency.With("method", "broadcast").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	mm.svc.Broadcast(msg)
+	return mm.svc.Broadcast(socket, msg)
 }
 
-func (mm *metricsMiddleware) AddConnection(sub ws.Subscription, conn *websocket.Conn) {
-	defer func(begin time.Time) {
-		mm.counter.With("method", "add_connection").Add(1)
-		mm.latency.With("method", "add_connection").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-
-	mm.svc.AddConnection(sub, conn)
-}
-
-func (mm *metricsMiddleware) Listen(sub ws.Subscription) {
+func (mm *metricsMiddleware) Listen(socket ws.Socket, sub ws.Subscription, onClose func()) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "start_listening").Add(1)
 		mm.latency.With("method", "start_listening").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	mm.svc.Listen(sub)
+	mm.svc.Listen(socket, sub, onClose)
 }

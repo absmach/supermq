@@ -3,7 +3,6 @@ package ws
 import (
 	"errors"
 	"fmt"
-	"sync"
 
 	"github.com/go-kit/kit/log"
 	"github.com/gorilla/websocket"
@@ -12,10 +11,14 @@ import (
 
 const protocol = "ws"
 
-var _ Service = (*adapterService)(nil)
+var (
+	_ Service = (*adapterService)(nil)
 
-// ErrFailedMessagePublish indicates that message publishing failed.
-var ErrFailedMessagePublish = errors.New("failed to publish message")
+	// ErrFailedMessagePublish indicates that message publishing failed.
+	ErrFailedMessagePublish = errors.New("failed to publish message")
+	// ErrFailedMessageBroadcast indicates that message broadcast failed.
+	ErrFailedMessageBroadcast = errors.New("failed to broadcast message")
+)
 
 // Service contains publish and subscribe methods necessary for
 // message transfer.
@@ -23,18 +26,14 @@ type Service interface {
 	mainflux.MessagePublisher
 
 	// Broadcast broadcasts raw message to channel.
-	Broadcast(mainflux.RawMessage)
-
-	// AddConnection adds new client ws connection for given client and channel.
-	AddConnection(Subscription, *websocket.Conn)
+	Broadcast(Socket, mainflux.RawMessage) error
 
 	// Listen starts loop for receiving messages over connection.
-	Listen(Subscription)
+	Listen(Socket, Subscription, func())
 }
 
 type adapterService struct {
 	pub    mainflux.MessagePublisher
-	conns  map[string]map[string]socket
 	logger log.Logger
 }
 
@@ -42,13 +41,11 @@ type adapterService struct {
 func New(pub mainflux.MessagePublisher, logger log.Logger) Service {
 	return &adapterService{
 		pub:    pub,
-		conns:  make(map[string]map[string]socket),
 		logger: logger,
 	}
 }
 
 func (as *adapterService) Publish(msg mainflux.RawMessage) error {
-	as.Broadcast(msg)
 	if err := as.pub.Publish(msg); err != nil {
 		as.logger.Log("error", fmt.Sprintf("Failed to publish message: %s", err))
 		return ErrFailedMessagePublish
@@ -56,40 +53,19 @@ func (as *adapterService) Publish(msg mainflux.RawMessage) error {
 	return nil
 }
 
-func (as *adapterService) Broadcast(msg mainflux.RawMessage) {
-	chanID := msg.Channel
-	for _, conn := range as.conns[chanID] {
-		go func(sock socket) {
-			if err := sock.write(msg); err != nil {
-				as.logger.Log("error", "Failed to write message: %s", err)
-			}
-		}(conn)
+func (as *adapterService) Broadcast(socket Socket, msg mainflux.RawMessage) error {
+	if err := socket.write(msg); err != nil {
+		as.logger.Log("error", "Failed to write message: %s", err)
+		return ErrFailedMessageBroadcast
 	}
+	return nil
 }
 
-func (as *adapterService) AddConnection(sub Subscription, conn *websocket.Conn) {
-	if _, ok := as.conns[sub.ChanID]; !ok {
-		as.conns[sub.ChanID] = make(map[string]socket)
-	}
-
-	if oldConn, ok := as.conns[sub.ChanID][sub.PubID]; ok {
-		oldConn.Close()
-	}
-
-	as.conns[sub.ChanID][sub.PubID] = socket{conn, &sync.Mutex{}}
-
-	// On close delete connection from map of connections.
-	conn.SetCloseHandler(func(code int, text string) error {
-		delete(as.conns[sub.ChanID], sub.PubID)
-		return conn.CloseHandler()(code, text)
-	})
-}
-
-func (as *adapterService) Listen(sub Subscription) {
-	conn := as.conns[sub.ChanID][sub.PubID]
+func (as *adapterService) Listen(socket Socket, sub Subscription, onClose func()) {
 	for {
-		_, payload, err := conn.ReadMessage()
+		_, payload, err := socket.ReadMessage()
 		if websocket.IsUnexpectedCloseError(err) {
+			onClose()
 			return
 		}
 		if err != nil {

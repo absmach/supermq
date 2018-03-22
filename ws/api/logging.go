@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/log"
-	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/ws"
 )
@@ -32,7 +31,7 @@ func (lm *loggingMiddleware) Publish(msg mainflux.RawMessage) error {
 	return lm.svc.Publish(msg)
 }
 
-func (lm *loggingMiddleware) Broadcast(msg mainflux.RawMessage) {
+func (lm *loggingMiddleware) Broadcast(socket ws.Socket, msg mainflux.RawMessage) error {
 	defer func(begin time.Time) {
 		lm.logger.Log(
 			"method", "broadcast",
@@ -40,21 +39,10 @@ func (lm *loggingMiddleware) Broadcast(msg mainflux.RawMessage) {
 		)
 	}(time.Now())
 
-	lm.svc.Broadcast(msg)
+	return lm.svc.Broadcast(socket, msg)
 }
 
-func (lm *loggingMiddleware) AddConnection(sub ws.Subscription, conn *websocket.Conn) {
-	defer func(begin time.Time) {
-		lm.logger.Log(
-			"method", "add_connection",
-			"took", time.Since(begin),
-		)
-	}(time.Now())
-
-	lm.svc.AddConnection(sub, conn)
-}
-
-func (lm *loggingMiddleware) Listen(sub ws.Subscription) {
+func (lm *loggingMiddleware) Listen(socket ws.Socket, sub ws.Subscription, onClose func()) {
 	defer func(begin time.Time) {
 		lm.logger.Log(
 			"method", "start_listening",
@@ -62,5 +50,5 @@ func (lm *loggingMiddleware) Listen(sub ws.Subscription) {
 		)
 	}(time.Now())
 
-	lm.svc.Listen(sub)
+	lm.svc.Listen(socket, sub, onClose)
 }

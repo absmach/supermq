@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-kit/kit/log"
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
-	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
 	manager "github.com/mainflux/mainflux/manager/client"
 	adapter "github.com/mainflux/mainflux/ws"
@@ -71,29 +70,13 @@ func main() {
 		}, []string{"method"}),
 	)
 
-	nc.Subscribe("src.*", func(msg *broker.Msg) {
-		if msg == nil {
-			logger.Log("error", fmt.Sprintf("Received empty message"))
-			return
-		}
-		if msg.Subject == topic {
-			return
-		}
-		var rawMsg mainflux.RawMessage
-		if err := proto.Unmarshal(msg.Data, &rawMsg); err != nil {
-			logger.Log("error", fmt.Sprintf("Unmarshalling failed: %s", err))
-			return
-		}
-		svc.Broadcast(rawMsg)
-	})
-
 	errs := make(chan error, 2)
 
 	go func() {
 		p := fmt.Sprintf(":%s", cfg.Port)
 		mc := manager.NewClient(cfg.ManagerURL)
 		logger.Log("message", fmt.Sprintf("WebSocket adapter service started, exposed port %s", cfg.Port))
-		errs <- http.ListenAndServe(p, api.MakeHandler(svc, mc))
+		errs <- http.ListenAndServe(p, api.MakeHandler(svc, mc, nc, logger))
 	}()
 
 	go func() {

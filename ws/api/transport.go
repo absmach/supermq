@@ -2,13 +2,20 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
+	"github.com/go-kit/kit/log"
 	"github.com/go-zoo/bone"
+	"github.com/gogo/protobuf/proto"
 	"github.com/gorilla/websocket"
+	"github.com/mainflux/mainflux"
 	manager "github.com/mainflux/mainflux/manager/client"
 	"github.com/mainflux/mainflux/ws"
+	broker "github.com/nats-io/go-nats"
 )
+
+const topic string = "src.*"
 
 var (
 	errUnauthorizedAccess = errors.New("missing or invalid credentials provided")
@@ -19,12 +26,16 @@ var (
 			return true
 		},
 	}
-	auth manager.ManagerClient
+	auth   manager.ManagerClient
+	nc     *broker.Conn
+	logger log.Logger
 )
 
 // MakeHandler returns http handler with handshake endpoint.
-func MakeHandler(svc ws.Service, mc manager.ManagerClient) http.Handler {
+func MakeHandler(svc ws.Service, mc manager.ManagerClient, bc *broker.Conn, l log.Logger) http.Handler {
 	auth = mc
+	nc = bc
+	logger = l
 
 	mux := bone.New()
 	mux.GetFunc("/channels/:id/messages", handshake(svc))
@@ -43,12 +54,38 @@ func handshake(svc ws.Service) func(http.ResponseWriter, *http.Request) {
 		// Create new ws connection.
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
+			logger.Log("error", fmt.Sprintf("Failed to upgrade connection to websocket: %s", err))
 			return
 		}
-		svc.AddConnection(sub, conn)
+		socket := ws.NewSocket(conn)
+
+		// Subscribe to all NATS subjects.
+		topic := fmt.Sprintf("%s.%s", topic, sub.ChanID)
+		brokerSub, err := nc.Subscribe(topic, func(msg *broker.Msg) {
+			if msg == nil {
+				logger.Log("error", fmt.Sprintf("Received empty message: %s", err))
+				return
+			}
+			var rawMsg mainflux.RawMessage
+			if err := proto.Unmarshal(msg.Data, &rawMsg); err != nil {
+				logger.Log("error", fmt.Sprintf("Failed to unmarshal received message: %s", err))
+				return
+			}
+			if err := svc.Broadcast(socket, rawMsg); err != nil {
+				logger.Log("error", fmt.Sprintf("Failed to broadcast received message: %s", err))
+				return
+			}
+		})
+		if err != nil {
+			logger.Log("error", fmt.Sprintf("Failed to subscribe to NATS subject: %s", err))
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 
 		// Listen on ws connection.
-		go svc.Listen(sub)
+		go svc.Listen(socket, sub, func() {
+			brokerSub.Unsubscribe()
+		})
 	}
 }
 
@@ -64,6 +101,7 @@ func authorize(r *http.Request) (ws.Subscription, error) {
 
 	pubID, err := auth.CanAccess(chanID, apiKey)
 	if err != nil {
+		logger.Log("error", "Failed to authorize: %s", err)
 		return ws.Subscription{}, errUnauthorizedAccess
 	}
 

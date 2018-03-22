@@ -7,12 +7,18 @@ import (
 	"github.com/mainflux/mainflux"
 )
 
-type socket struct {
+// Socket represents threadsafe websocket connection.
+type Socket struct {
 	*websocket.Conn
 	mu *sync.Mutex
 }
 
-func (s socket) write(rawMsg mainflux.RawMessage) error {
+// NewSocket returns new threadsafe websocket connection.
+func NewSocket(conn *websocket.Conn) Socket {
+	return Socket{conn, &sync.Mutex{}}
+}
+
+func (s Socket) write(rawMsg mainflux.RawMessage) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.WriteMessage(websocket.TextMessage, rawMsg.Payload)
