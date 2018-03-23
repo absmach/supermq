@@ -49,6 +49,30 @@ ng serve
 This will run and assemble our  app.
  **Now go to `localhost:4200` in your browser to see it in action.**
 
+### Docker
+We use nginx to serve dashflux from docker container, supporting environments using docker multi-stage builds.
+Dashflux docker image is available on [Dockerhub mainflux/dashflux](https://hub.docker.com/r/mainflux/dashflux/)
+
+If you want to build image locally, you can
+
+Build image using the **development** environment:
+```
+docker build -f docker/Dockerfile  -t dashflux:dev --build-arg env=dev .
+```
+
+Build image using the **production** environment:
+```
+docker build -t dashflux:prod .
+```
+You can test image running
+```
+docker run -p 80:80 dashflux:dev
+```
+This will run dashflux in docker container.
+
+ Now go to `http://localhost` in your browser to see it in action.
+ 
+
 ### Development
 - Follow angular-cli [documentation](https://github.com/angular/angular-cli)
 - Follow [official angular style guide](https://angular.io/styleguide)
