@@ -18,6 +18,8 @@ var (
 	ErrFailedMessagePublish = errors.New("failed to publish message")
 	// ErrFailedMessageBroadcast indicates that message broadcast failed.
 	ErrFailedMessageBroadcast = errors.New("failed to broadcast message")
+	// ErrFailedSubscription indicates that client couldn't subscribe to specified channel.
+	ErrFailedSubscription = errors.New("failed to subscribe to a channel")
 )
 
 // Service contains publish and subscribe methods necessary for
@@ -52,14 +54,19 @@ func (as *adapterService) Publish(msg mainflux.RawMessage) error {
 
 func (as *adapterService) Broadcast(socket Socket, msg mainflux.RawMessage) error {
 	if err := socket.write(msg); err != nil {
-		as.logger.Log("error", "Failed to write message: %s", err)
+		as.logger.Log("error", fmt.Sprintf("Failed to write message: %s", err))
 		return ErrFailedMessageBroadcast
 	}
 	return nil
 }
 
 func (as *adapterService) Subscribe(channel string, onMessage func(mainflux.RawMessage)) (mainflux.Subscription, error) {
-	return as.pubsub.Subscribe(channel, onMessage)
+	sub, err := as.pubsub.Subscribe(channel, onMessage)
+	if err != nil {
+		as.logger.Log("error", fmt.Sprintf("Failed to subscribe to a channel: %s", err))
+		return nil, ErrFailedSubscription
+	}
+	return sub, nil
 }
 
 func (as *adapterService) Listen(socket Socket, sub Subscription, onClose func()) {
