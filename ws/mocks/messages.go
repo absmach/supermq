@@ -5,18 +5,24 @@ import (
 	broker "github.com/nats-io/go-nats"
 )
 
-var _ mainflux.MessagePublisher = (*publisher)(nil)
+var _ mainflux.MessagePubSub = (*mockPubSub)(nil)
 
-type publisher struct{}
-
-// NewMessagePublisher returns mock message publisher.
-func NewMessagePublisher() mainflux.MessagePublisher {
-	return publisher{}
+type mockPubSub struct {
+	messages []mainflux.RawMessage
 }
 
-func (pub publisher) Publish(msg mainflux.RawMessage) error {
+// NewMessagePubSub returns mock message publisher.
+func NewMessagePubSub() mainflux.MessagePubSub {
+	return mockPubSub{}
+}
+
+func (pubsub mockPubSub) Publish(msg mainflux.RawMessage) error {
 	if len(msg.Payload) == 0 {
 		return broker.ErrInvalidMsg
 	}
 	return nil
+}
+
+func (pubsub mockPubSub) Subscribe(channel string, onMessage func(mainflux.RawMessage)) (mainflux.Subscription, error) {
+	return nil, nil
 }

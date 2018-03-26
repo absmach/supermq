@@ -23,7 +23,7 @@ var (
 // Service contains publish and subscribe methods necessary for
 // message transfer.
 type Service interface {
-	mainflux.MessagePublisher
+	mainflux.MessagePubSub
 
 	// Broadcast broadcasts raw message to channel.
 	Broadcast(Socket, mainflux.RawMessage) error
@@ -33,20 +33,17 @@ type Service interface {
 }
 
 type adapterService struct {
-	pub    mainflux.MessagePublisher
+	pubsub mainflux.MessagePubSub
 	logger log.Logger
 }
 
 // New instantiates the domain service implementation.
-func New(pub mainflux.MessagePublisher, logger log.Logger) Service {
-	return &adapterService{
-		pub:    pub,
-		logger: logger,
-	}
+func New(pubsub mainflux.MessagePubSub, logger log.Logger) Service {
+	return &adapterService{pubsub, logger}
 }
 
 func (as *adapterService) Publish(msg mainflux.RawMessage) error {
-	if err := as.pub.Publish(msg); err != nil {
+	if err := as.pubsub.Publish(msg); err != nil {
 		as.logger.Log("error", fmt.Sprintf("Failed to publish message: %s", err))
 		return ErrFailedMessagePublish
 	}
@@ -59,6 +56,10 @@ func (as *adapterService) Broadcast(socket Socket, msg mainflux.RawMessage) erro
 		return ErrFailedMessageBroadcast
 	}
 	return nil
+}
+
+func (as *adapterService) Subscribe(channel string, onMessage func(mainflux.RawMessage)) (mainflux.Subscription, error) {
+	return as.pubsub.Subscribe(channel, onMessage)
 }
 
 func (as *adapterService) Listen(socket Socket, sub Subscription, onClose func()) {

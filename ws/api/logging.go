@@ -42,10 +42,21 @@ func (lm *loggingMiddleware) Broadcast(socket ws.Socket, msg mainflux.RawMessage
 	return lm.svc.Broadcast(socket, msg)
 }
 
+func (lm *loggingMiddleware) Subscribe(channel string, onMessage func(mainflux.RawMessage)) (mainflux.Subscription, error) {
+	defer func(begin time.Time) {
+		lm.logger.Log(
+			"method", "subscribe",
+			"took", time.Since(begin),
+		)
+	}(time.Now())
+
+	return lm.svc.Subscribe(channel, onMessage)
+}
+
 func (lm *loggingMiddleware) Listen(socket ws.Socket, sub ws.Subscription, onClose func()) {
 	defer func(begin time.Time) {
 		lm.logger.Log(
-			"method", "start_listening",
+			"method", "listen",
 			"took", time.Since(begin),
 		)
 	}(time.Now())

@@ -25,7 +25,6 @@ const (
 	envPort       = "MF_WS_ADAPTER_PORT"
 	envNatsURL    = "MF_NATS_URL"
 	envManagerURL = "MF_MANAGER_URL"
-	topic         = "src.ws"
 )
 
 type config struct {
@@ -51,8 +50,8 @@ func main() {
 	}
 	defer nc.Close()
 
-	pub := nats.New(nc)
-	svc := adapter.New(pub, logger)
+	pubsub := nats.New(nc, logger)
+	svc := adapter.New(pubsub, logger)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,

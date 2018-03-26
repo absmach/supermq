@@ -7,15 +7,12 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-zoo/bone"
-	"github.com/gogo/protobuf/proto"
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux"
 	manager "github.com/mainflux/mainflux/manager/client"
 	"github.com/mainflux/mainflux/ws"
 	broker "github.com/nats-io/go-nats"
 )
-
-const topic string = "src.*"
 
 var (
 	errUnauthorizedAccess = errors.New("missing or invalid credentials provided")
@@ -59,19 +56,8 @@ func handshake(svc ws.Service) func(http.ResponseWriter, *http.Request) {
 		}
 		socket := ws.NewSocket(conn)
 
-		// Subscribe to all NATS subjects.
-		topic := fmt.Sprintf("%s.%s", topic, sub.ChanID)
-		brokerSub, err := nc.Subscribe(topic, func(msg *broker.Msg) {
-			if msg == nil {
-				logger.Log("error", fmt.Sprintf("Received empty message: %s", err))
-				return
-			}
-			var rawMsg mainflux.RawMessage
-			if err := proto.Unmarshal(msg.Data, &rawMsg); err != nil {
-				logger.Log("error", fmt.Sprintf("Failed to unmarshal received message: %s", err))
-				return
-			}
-			if err := svc.Broadcast(socket, rawMsg); err != nil {
+		brokerSub, err := svc.Subscribe(sub.ChanID, func(msg mainflux.RawMessage) {
+			if err := svc.Broadcast(socket, msg); err != nil {
 				logger.Log("error", fmt.Sprintf("Failed to broadcast received message: %s", err))
 				return
 			}

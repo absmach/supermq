@@ -26,7 +26,7 @@ services:
     image: mainflux/ws:[version]
     container_name: [instance name]
     ports:
-      - [host machine port]:8180
+      - [host machine port]:[configured port]
     environment:
       MF_MANAGER_URL: [Manager service URL]
       MF_NATS_URL: [NATS instance URL]
@@ -42,7 +42,7 @@ go get github.com/mainflux/mainflux
 cd $GOPATH/src/github.com/mainflux/mainflux/cmd/ws
 
 # compile the app; make sure to set the proper GOOS value
-CGO_ENABLED=0 GOOS=[platform identifier] go build -ldflags "-s" -a -installsuffix cgo -o app
+make ws
 
 # set the environment variables and run the service
 MF_MANAGER_URL=[Manager service URL] MF_NATS_URL=[NATS instance URL] MF_WS_ADAPTER_PORT=[Service WS port] app

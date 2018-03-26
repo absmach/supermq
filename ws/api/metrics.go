@@ -43,6 +43,15 @@ func (mm *metricsMiddleware) Broadcast(socket ws.Socket, msg mainflux.RawMessage
 	return mm.svc.Broadcast(socket, msg)
 }
 
+func (mm *metricsMiddleware) Subscribe(channel string, onMessage func(mainflux.RawMessage)) (mainflux.Subscription, error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "subscribe").Add(1)
+		mm.latency.With("method", "broadcast").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.Subscribe(channel, onMessage)
+}
+
 func (mm *metricsMiddleware) Listen(socket ws.Socket, sub ws.Subscription, onClose func()) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "start_listening").Add(1)

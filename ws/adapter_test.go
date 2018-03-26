@@ -24,7 +24,7 @@ var (
 
 func newService() ws.Service {
 	logger := log.NewNopLogger()
-	pub := mocks.NewMessagePublisher()
+	pub := mocks.NewMessagePubSub()
 
 	return ws.New(pub, logger)
 }
