@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/go-kit/kit/log"
 	"github.com/gorilla/websocket"
@@ -33,6 +34,11 @@ var (
 	}
 )
 
+type socketPair struct {
+	server ws.Socket
+	client ws.Socket
+}
+
 func newService() ws.Service {
 	logger := log.NewNopLogger()
 	pub := mocks.NewMessagePubSub()
@@ -40,21 +46,24 @@ func newService() ws.Service {
 	return ws.New(pub, logger)
 }
 
-func newSocket(t *testing.T) (ws.Socket, error) {
+func newSocket(t *testing.T) (socketPair, error) {
+	var serverSocket ws.Socket
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if _, err := upgrader.Upgrade(w, r, nil); err != nil {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
 			t.Fatal(fmt.Sprintf("unexpected error: %s", err))
 		}
+		serverSocket = ws.NewSocket(conn)
 	}))
 	u, _ := url.Parse(server.URL)
 	u.Scheme = "ws"
 
 	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
-		return ws.Socket{}, err
+		return socketPair{}, err
 	}
-	socket := ws.NewSocket(conn)
-	return socket, nil
+	clientSocket := ws.NewSocket(conn)
+	return socketPair{serverSocket, clientSocket}, nil
 }
 
 func TestPublish(t *testing.T) {
@@ -76,7 +85,7 @@ func TestPublish(t *testing.T) {
 
 func TestBroadcast(t *testing.T) {
 	svc := newService()
-	socket, err := newSocket(t)
+	sockets, err := newSocket(t)
 	if err != nil {
 		t.Fatal(fmt.Sprintf("unexpected error: %s", err))
 	}
@@ -89,8 +98,13 @@ func TestBroadcast(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		err := svc.Broadcast(socket, tc.msg)
+		err := svc.Broadcast(sockets.server, tc.msg)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		_, bytes, err := sockets.client.ReadMessage()
+		if err != nil {
+			t.Error(err)
+		}
+		assert.Equal(t, tc.msg.Payload, bytes, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.msg.Payload, bytes))
 	}
 }
 
@@ -109,5 +123,45 @@ func TestSubscribe(t *testing.T) {
 	for _, tc := range cases {
 		_, err := svc.Subscribe(tc.channel, func(mainflux.RawMessage) {})
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+	}
+}
+
+func TestListen(t *testing.T) {
+	svc := newService()
+
+	cases := map[string]struct {
+		sub   ws.Subscription
+		msg   mainflux.RawMessage
+		close bool
+	}{
+		"send message and close connection":       {ws.Subscription{"pubID", "chanID"}, validMsg, true},
+		"send message and don't close connection": {ws.Subscription{"pubID", "chanID"}, validMsg, false},
+		"close connection":                        {ws.Subscription{"pubID", "chanID"}, emptyMsg, true},
+		"don't close connection":                  {ws.Subscription{"pubID", "chanID"}, emptyMsg, false},
+	}
+
+	for desc, tc := range cases {
+		sockets, err := newSocket(t)
+		if err != nil {
+			t.Fatal(fmt.Sprintf("unexpected error: %s", err))
+		}
+
+		close := false
+		go svc.Listen(sockets.server, tc.sub, func() {
+			close = true
+		})
+		// Send message if not empty.
+		if len(tc.msg.Payload) == 0 {
+			sockets.client.WriteMessage(websocket.TextMessage, tc.msg.Payload)
+		}
+
+		// Close connection if needed.
+		if tc.close {
+			sockets.client.Close()
+		}
+
+		// Wait for connection to close.
+		time.Sleep(1 * time.Second)
+		assert.Equal(t, tc.close, close, fmt.Sprintf("%s: expected %t got %t\n", desc, tc.close, close))
 	}
 }

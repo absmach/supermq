@@ -70,10 +70,10 @@ func (as *adapterService) Subscribe(channel string, onMessage func(mainflux.RawM
 }
 
 func (as *adapterService) Listen(socket Socket, sub Subscription, onClose func()) {
+	defer onClose()
 	for {
 		_, payload, err := socket.ReadMessage()
 		if websocket.IsUnexpectedCloseError(err) {
-			onClose()
 			return
 		}
 		if err != nil {
