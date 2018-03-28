@@ -20,7 +20,14 @@ type MessagePubSub interface {
 	MessageSubscriber
 }
 
-// Unsubscriber specifies subscription interface.
+// MessageBroker specifies a message broadcasting API.
+type MessageBroker interface {
+	MessagePubSub
+	// Broadcasts raw message to channel.
+	Broadcast(RawMessage, func(RawMessage) error) error
+}
+
+// Subscription specifies subscription interface.
 type Subscription interface {
 	Unsubscribe() error
 }

@@ -25,11 +25,7 @@ var (
 // Service contains publish and subscribe methods necessary for
 // message transfer.
 type Service interface {
-	mainflux.MessagePubSub
-
-	// Broadcast broadcasts raw message to channel.
-	Broadcast(Socket, mainflux.RawMessage) error
-
+	mainflux.MessageBroker
 	// Listen starts loop for receiving messages over connection.
 	Listen(Socket, Subscription, func())
 }
@@ -52,8 +48,8 @@ func (as *adapterService) Publish(msg mainflux.RawMessage) error {
 	return nil
 }
 
-func (as *adapterService) Broadcast(socket Socket, msg mainflux.RawMessage) error {
-	if err := socket.write(msg); err != nil {
+func (as *adapterService) Broadcast(msg mainflux.RawMessage, sendMsg func(msg mainflux.RawMessage) error) error {
+	if err := sendMsg(msg); err != nil {
 		as.logger.Log("error", fmt.Sprintf("Failed to write message: %s", err))
 		return ErrFailedMessageBroadcast
 	}

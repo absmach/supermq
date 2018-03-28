@@ -31,7 +31,7 @@ func (lm *loggingMiddleware) Publish(msg mainflux.RawMessage) error {
 	return lm.svc.Publish(msg)
 }
 
-func (lm *loggingMiddleware) Broadcast(socket ws.Socket, msg mainflux.RawMessage) error {
+func (lm *loggingMiddleware) Broadcast(msg mainflux.RawMessage, sendMsg func(mainflux.RawMessage) error) error {
 	defer func(begin time.Time) {
 		lm.logger.Log(
 			"method", "broadcast",
@@ -39,7 +39,7 @@ func (lm *loggingMiddleware) Broadcast(socket ws.Socket, msg mainflux.RawMessage
 		)
 	}(time.Now())
 
-	return lm.svc.Broadcast(socket, msg)
+	return lm.svc.Broadcast(msg, sendMsg)
 }
 
 func (lm *loggingMiddleware) Subscribe(channel string, onMessage func(mainflux.RawMessage)) (mainflux.Subscription, error) {

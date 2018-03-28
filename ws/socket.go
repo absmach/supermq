@@ -18,7 +18,7 @@ func NewSocket(conn *websocket.Conn) Socket {
 	return Socket{conn, &sync.Mutex{}}
 }
 
-func (s Socket) write(rawMsg mainflux.RawMessage) error {
+func (s Socket) Write(rawMsg mainflux.RawMessage) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.WriteMessage(websocket.TextMessage, rawMsg.Payload)

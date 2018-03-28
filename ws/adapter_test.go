@@ -94,11 +94,17 @@ func TestBroadcast(t *testing.T) {
 		msg mainflux.RawMessage
 		err error
 	}{
-		"broadcast valid message": {validMsg, nil},
+		"broadcast valid message":                 {validMsg, nil},
+		"broadcast failed for unexpected reasons": {validMsg, ws.ErrFailedMessageBroadcast},
 	}
 
 	for desc, tc := range cases {
-		err := svc.Broadcast(sockets.server, tc.msg)
+		err := svc.Broadcast(tc.msg, func(msg mainflux.RawMessage) error {
+			if err := sockets.server.Write(msg); err != nil {
+				return err
+			}
+			return tc.err
+		})
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 		_, bytes, err := sockets.client.ReadMessage()
 		if err != nil {

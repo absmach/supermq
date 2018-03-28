@@ -34,13 +34,13 @@ func (mm *metricsMiddleware) Publish(msg mainflux.RawMessage) error {
 	return mm.svc.Publish(msg)
 }
 
-func (mm *metricsMiddleware) Broadcast(socket ws.Socket, msg mainflux.RawMessage) error {
+func (mm *metricsMiddleware) Broadcast(msg mainflux.RawMessage, sendMsg func(msg mainflux.RawMessage) error) error {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "broadcast").Add(1)
 		mm.latency.With("method", "broadcast").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.Broadcast(socket, msg)
+	return mm.svc.Broadcast(msg, sendMsg)
 }
 
 func (mm *metricsMiddleware) Subscribe(channel string, onMessage func(mainflux.RawMessage)) (mainflux.Subscription, error) {

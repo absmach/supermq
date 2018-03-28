@@ -57,9 +57,15 @@ func handshake(svc ws.Service) func(http.ResponseWriter, *http.Request) {
 		socket := ws.NewSocket(conn)
 
 		brokerSub, err := svc.Subscribe(sub.ChanID, func(msg mainflux.RawMessage) {
-			if err := svc.Broadcast(socket, msg); err != nil {
-				logger.Log("error", fmt.Sprintf("Failed to broadcast received message: %s", err))
-				return
+			err := svc.Broadcast(msg, func(msg mainflux.RawMessage) error {
+				if err := socket.Write(msg); err != nil {
+					logger.Log("error", fmt.Sprintf("Failed to send message: %s", err))
+					return err
+				}
+				return nil
+			})
+			if err != nil {
+				logger.Log("error", fmt.Sprintf("Failed to broadcast message: %s", err))
 			}
 		})
 		if err != nil {
