@@ -7,15 +7,14 @@ import (
 )
 
 var _ mainflux.MessagePubSub = (*mockPubSub)(nil)
-var _ mainflux.Subscription = (*mockSubscription)(nil)
 
 type mockPubSub struct {
-	subscriptions map[string]mainflux.Subscription
+	subscriptions map[string]mockSubscription
 }
 
 // NewMessagePubSub returns mock message publisher.
 func NewMessagePubSub() mainflux.MessagePubSub {
-	return mockPubSub{map[string]mainflux.Subscription{}}
+	return mockPubSub{map[string]mockSubscription{}}
 }
 
 func (pubsub mockPubSub) Publish(msg mainflux.RawMessage) error {
@@ -25,26 +24,18 @@ func (pubsub mockPubSub) Publish(msg mainflux.RawMessage) error {
 	return nil
 }
 
-func (pubsub mockPubSub) Subscribe(channel string, onMessage func(mainflux.RawMessage)) (mainflux.Subscription, error) {
-	if _, ok := pubsub.subscriptions[channel]; ok {
+func (pubsub mockPubSub) Subscribe(subscription mainflux.Subscription, write mainflux.WriteMessage, read mainflux.ReadMessage) (func(), error) {
+	if _, ok := pubsub.subscriptions[subscription.ChanID]; ok {
 		return nil, ws.ErrFailedSubscription
 	}
-	sub := mockSubscription{
-		pubsub:    pubsub,
-		channel:   channel,
-		onMessage: onMessage,
-	}
-	pubsub.subscriptions[channel] = sub
-	return sub, nil
+	sub := mockSubscription{subscription.ChanID, write}
+	pubsub.subscriptions[subscription.ChanID] = sub
+	return func() {
+		delete(pubsub.subscriptions, sub.channel)
+	}, nil
 }
 
 type mockSubscription struct {
-	pubsub    mockPubSub
-	channel   string
-	onMessage func(mainflux.RawMessage)
-}
-
-func (sub mockSubscription) Unsubscribe() error {
-	delete(sub.pubsub.subscriptions, sub.channel)
-	return nil
+	channel string
+	write   mainflux.WriteMessage
 }

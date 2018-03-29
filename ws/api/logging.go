@@ -5,18 +5,17 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/ws"
 )
 
-var _ ws.Service = (*loggingMiddleware)(nil)
+var _ mainflux.MessagePubSub = (*loggingMiddleware)(nil)
 
 type loggingMiddleware struct {
 	logger log.Logger
-	svc    ws.Service
+	svc    mainflux.MessagePubSub
 }
 
 // LoggingMiddleware adds logging facilities to the adapter.
-func LoggingMiddleware(svc ws.Service, logger log.Logger) ws.Service {
+func LoggingMiddleware(svc mainflux.MessagePubSub, logger log.Logger) mainflux.MessagePubSub {
 	return &loggingMiddleware{logger, svc}
 }
 
@@ -31,18 +30,7 @@ func (lm *loggingMiddleware) Publish(msg mainflux.RawMessage) error {
 	return lm.svc.Publish(msg)
 }
 
-func (lm *loggingMiddleware) Broadcast(msg mainflux.RawMessage, sendMsg func(mainflux.RawMessage) error) error {
-	defer func(begin time.Time) {
-		lm.logger.Log(
-			"method", "broadcast",
-			"took", time.Since(begin),
-		)
-	}(time.Now())
-
-	return lm.svc.Broadcast(msg, sendMsg)
-}
-
-func (lm *loggingMiddleware) Subscribe(channel string, onMessage func(mainflux.RawMessage)) (mainflux.Subscription, error) {
+func (lm *loggingMiddleware) Subscribe(sub mainflux.Subscription, write mainflux.WriteMessage, read mainflux.ReadMessage) (func(), error) {
 	defer func(begin time.Time) {
 		lm.logger.Log(
 			"method", "subscribe",
@@ -50,16 +38,5 @@ func (lm *loggingMiddleware) Subscribe(channel string, onMessage func(mainflux.R
 		)
 	}(time.Now())
 
-	return lm.svc.Subscribe(channel, onMessage)
-}
-
-func (lm *loggingMiddleware) Listen(socket ws.Socket, sub ws.Subscription, onClose func()) {
-	defer func(begin time.Time) {
-		lm.logger.Log(
-			"method", "listen",
-			"took", time.Since(begin),
-		)
-	}(time.Now())
-
-	lm.svc.Listen(socket, sub, onClose)
+	return lm.svc.Subscribe(sub, write, read)
 }

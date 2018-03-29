@@ -33,8 +33,8 @@ func (pubsub *natsPubSub) Publish(msg mainflux.RawMessage) error {
 	return pubsub.nc.Publish(fmt.Sprintf("%s.%s", prefix, msg.Channel), data)
 }
 
-func (pubsub *natsPubSub) Subscribe(channel string, onMessage func(mainflux.RawMessage)) (mainflux.Subscription, error) {
-	return pubsub.nc.Subscribe(fmt.Sprintf("%s.%s", prefix, channel), func(msg *broker.Msg) {
+func (pubsub *natsPubSub) Subscribe(subscription mainflux.Subscription, write mainflux.WriteMessage, read mainflux.ReadMessage) (func(), error) {
+	sub, err := pubsub.nc.Subscribe(fmt.Sprintf("%s.%s", prefix, subscription.ChanID), func(msg *broker.Msg) {
 		if msg == nil {
 			pubsub.logger.Log("error", fmt.Sprintf("Received empty message"))
 			return
@@ -44,6 +44,11 @@ func (pubsub *natsPubSub) Subscribe(channel string, onMessage func(mainflux.RawM
 			pubsub.logger.Log("error", fmt.Sprintf("Failed to unmarshal received message: %s", err))
 			return
 		}
-		onMessage(rawMsg)
+		if err := write(rawMsg); err != nil {
+			pubsub.logger.Log("error", fmt.Sprintf("On message operation failed: %s", err))
+		}
 	})
+	return func() {
+		sub.Unsubscribe()
+	}, err
 }

@@ -29,7 +29,7 @@ var (
 )
 
 // MakeHandler returns http handler with handshake endpoint.
-func MakeHandler(svc ws.Service, mc manager.ManagerClient, bc *broker.Conn, l log.Logger) http.Handler {
+func MakeHandler(svc mainflux.MessagePubSub, mc manager.ManagerClient, bc *broker.Conn, l log.Logger) http.Handler {
 	auth = mc
 	nc = bc
 	logger = l
@@ -40,7 +40,7 @@ func MakeHandler(svc ws.Service, mc manager.ManagerClient, bc *broker.Conn, l lo
 	return mux
 }
 
-func handshake(svc ws.Service) func(http.ResponseWriter, *http.Request) {
+func handshake(svc mainflux.MessagePubSub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		sub, err := authorize(r)
 		if err != nil {
@@ -56,35 +56,28 @@ func handshake(svc ws.Service) func(http.ResponseWriter, *http.Request) {
 		}
 		socket := ws.NewSocket(conn)
 
-		brokerSub, err := svc.Subscribe(sub.ChanID, func(msg mainflux.RawMessage) {
-			err := svc.Broadcast(msg, func(msg mainflux.RawMessage) error {
-				if err := socket.Write(msg); err != nil {
-					logger.Log("error", fmt.Sprintf("Failed to send message: %s", err))
-					return err
-				}
-				return nil
-			})
-			if err != nil {
-				logger.Log("error", fmt.Sprintf("Failed to broadcast message: %s", err))
-			}
-		})
+		_, err = svc.Subscribe(
+			sub,
+			func(msg mainflux.RawMessage) error {
+				return socket.Write(msg)
+			},
+			func() ([]byte, error) {
+				_, payload, err := socket.ReadMessage()
+				return payload, err
+			},
+		)
 		if err != nil {
 			logger.Log("error", fmt.Sprintf("Failed to subscribe to NATS subject: %s", err))
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-
-		// Listen on ws connection.
-		go svc.Listen(socket, sub, func() {
-			brokerSub.Unsubscribe()
-		})
 	}
 }
 
-func authorize(r *http.Request) (ws.Subscription, error) {
+func authorize(r *http.Request) (mainflux.Subscription, error) {
 	apiKeys := bone.GetQuery(r, "auth")
 	if len(apiKeys) == 0 {
-		return ws.Subscription{}, errUnauthorizedAccess
+		return mainflux.Subscription{}, errUnauthorizedAccess
 	}
 	apiKey := apiKeys[0]
 
@@ -94,8 +87,8 @@ func authorize(r *http.Request) (ws.Subscription, error) {
 	pubID, err := auth.CanAccess(chanID, apiKey)
 	if err != nil {
 		logger.Log("error", "Failed to authorize: %s", err)
-		return ws.Subscription{}, errUnauthorizedAccess
+		return mainflux.Subscription{}, errUnauthorizedAccess
 	}
 
-	return ws.Subscription{pubID, chanID}, nil
+	return mainflux.Subscription{pubID, chanID}, nil
 }

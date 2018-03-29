@@ -11,9 +11,9 @@ import (
 
 const protocol = "ws"
 
-var (
-	_ Service = (*adapterService)(nil)
+var _ mainflux.MessagePubSub = (*adapterService)(nil)
 
+var (
 	// ErrFailedMessagePublish indicates that message publishing failed.
 	ErrFailedMessagePublish = errors.New("failed to publish message")
 	// ErrFailedMessageBroadcast indicates that message broadcast failed.
@@ -22,21 +22,13 @@ var (
 	ErrFailedSubscription = errors.New("failed to subscribe to a channel")
 )
 
-// Service contains publish and subscribe methods necessary for
-// message transfer.
-type Service interface {
-	mainflux.MessageBroker
-	// Listen starts loop for receiving messages over connection.
-	Listen(Socket, Subscription, func())
-}
-
 type adapterService struct {
 	pubsub mainflux.MessagePubSub
 	logger log.Logger
 }
 
 // New instantiates the domain service implementation.
-func New(pubsub mainflux.MessagePubSub, logger log.Logger) Service {
+func New(pubsub mainflux.MessagePubSub, logger log.Logger) mainflux.MessagePubSub {
 	return &adapterService{pubsub, logger}
 }
 
@@ -48,27 +40,22 @@ func (as *adapterService) Publish(msg mainflux.RawMessage) error {
 	return nil
 }
 
-func (as *adapterService) Broadcast(msg mainflux.RawMessage, sendMsg func(msg mainflux.RawMessage) error) error {
-	if err := sendMsg(msg); err != nil {
-		as.logger.Log("error", fmt.Sprintf("Failed to write message: %s", err))
-		return ErrFailedMessageBroadcast
-	}
-	return nil
-}
-
-func (as *adapterService) Subscribe(channel string, onMessage func(mainflux.RawMessage)) (mainflux.Subscription, error) {
-	sub, err := as.pubsub.Subscribe(channel, onMessage)
+func (as *adapterService) Subscribe(sub mainflux.Subscription, write mainflux.WriteMessage, read mainflux.ReadMessage) (func(), error) {
+	unsubscribe, err := as.pubsub.Subscribe(sub, write, nil)
 	if err != nil {
 		as.logger.Log("error", fmt.Sprintf("Failed to subscribe to a channel: %s", err))
 		return nil, ErrFailedSubscription
 	}
-	return sub, nil
+	go as.listen(sub, read, func() {
+		unsubscribe()
+	})
+	return nil, nil
 }
 
-func (as *adapterService) Listen(socket Socket, sub Subscription, onClose func()) {
+func (as *adapterService) listen(sub mainflux.Subscription, read mainflux.ReadMessage, onClose func()) {
 	defer onClose()
 	for {
-		_, payload, err := socket.ReadMessage()
+		payload, err := read()
 		if websocket.IsUnexpectedCloseError(err) {
 			return
 		}
@@ -82,12 +69,8 @@ func (as *adapterService) Listen(socket Socket, sub Subscription, onClose func()
 			Protocol:  protocol,
 			Payload:   payload,
 		}
-		as.Publish(msg)
+		if err := as.Publish(msg); err != nil {
+			as.logger.Log("error", "Failed to publish message to NATS: %s", err)
+		}
 	}
-}
-
-// Subscription contains publisher and channel id.
-type Subscription struct {
-	PubID  string
-	ChanID string
 }
