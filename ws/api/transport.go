@@ -56,19 +56,22 @@ func handshake(svc mainflux.MessagePubSub) http.HandlerFunc {
 		}
 		socket := ws.NewSocket(conn)
 
-		_, err = svc.Subscribe(
-			sub,
-			func(msg mainflux.RawMessage) error {
-				return socket.Write(msg)
-			},
-			func() ([]byte, error) {
-				_, payload, err := socket.ReadMessage()
-				return payload, err
-			},
-		)
-		if err != nil {
+		sub.Write = func(msg mainflux.RawMessage) error {
+			return socket.Write(msg)
+		}
+
+		sub.Read = func() ([]byte, error) {
+			_, payload, err := socket.ReadMessage()
+			return payload, err
+		}
+
+		connFail := func() {
+			socket.Close()
+		}
+
+		if _, err = svc.Subscribe(sub, connFail); err != nil {
 			logger.Log("error", fmt.Sprintf("Failed to subscribe to NATS subject: %s", err))
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusExpectationFailed)
 			return
 		}
 	}
@@ -90,5 +93,9 @@ func authorize(r *http.Request) (mainflux.Subscription, error) {
 		return mainflux.Subscription{}, errUnauthorizedAccess
 	}
 
-	return mainflux.Subscription{pubID, chanID}, nil
+	sub := mainflux.Subscription{
+		PubID:  pubID,
+		ChanID: chanID,
+	}
+	return sub, nil
 }

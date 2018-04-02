@@ -32,36 +32,36 @@ func New(pubsub mainflux.MessagePubSub, logger log.Logger) mainflux.MessagePubSu
 	return &adapterService{pubsub, logger}
 }
 
-func (as *adapterService) Publish(msg mainflux.RawMessage) error {
-	if err := as.pubsub.Publish(msg); err != nil {
+func (as *adapterService) Publish(msg mainflux.RawMessage, cfHandler mainflux.ConnFailHandler) error {
+	if err := as.pubsub.Publish(msg, cfHandler); err != nil {
 		as.logger.Log("error", fmt.Sprintf("Failed to publish message: %s", err))
 		return ErrFailedMessagePublish
 	}
 	return nil
 }
 
-func (as *adapterService) Subscribe(sub mainflux.Subscription, write mainflux.WriteMessage, read mainflux.ReadMessage) (func(), error) {
-	unsubscribe, err := as.pubsub.Subscribe(sub, write, nil)
+func (as *adapterService) Subscribe(sub mainflux.Subscription, cfHandler mainflux.ConnFailHandler) (mainflux.Unsubscribe, error) {
+	unsubscribe, err := as.pubsub.Subscribe(sub, nil)
 	if err != nil {
 		as.logger.Log("error", fmt.Sprintf("Failed to subscribe to a channel: %s", err))
 		return nil, ErrFailedSubscription
 	}
-	go as.listen(sub, read, func() {
-		unsubscribe()
+	go as.listen(sub, cfHandler, func() {
+		go unsubscribe()
 	})
 	return nil, nil
 }
 
-func (as *adapterService) listen(sub mainflux.Subscription, read mainflux.ReadMessage, onClose func()) {
+func (as *adapterService) listen(sub mainflux.Subscription, cfHandler mainflux.ConnFailHandler, onClose func()) {
 	defer onClose()
 	for {
-		payload, err := read()
+		payload, err := sub.Read()
 		if websocket.IsUnexpectedCloseError(err) {
 			return
 		}
 		if err != nil {
 			as.logger.Log("error", fmt.Sprintf("Failed to read message: %s", err))
-			continue
+			return
 		}
 		msg := mainflux.RawMessage{
 			Channel:   sub.ChanID,
@@ -69,7 +69,7 @@ func (as *adapterService) listen(sub mainflux.Subscription, read mainflux.ReadMe
 			Protocol:  protocol,
 			Payload:   payload,
 		}
-		if err := as.Publish(msg); err != nil {
+		if err := as.Publish(msg, cfHandler); err != nil {
 			as.logger.Log("error", "Failed to publish message to NATS: %s", err)
 		}
 	}

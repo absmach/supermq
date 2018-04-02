@@ -19,7 +19,7 @@ func LoggingMiddleware(svc mainflux.MessagePubSub, logger log.Logger) mainflux.M
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) Publish(msg mainflux.RawMessage) error {
+func (lm *loggingMiddleware) Publish(msg mainflux.RawMessage, cfHandler mainflux.ConnFailHandler) error {
 	defer func(begin time.Time) {
 		lm.logger.Log(
 			"method", "publish",
@@ -27,10 +27,10 @@ func (lm *loggingMiddleware) Publish(msg mainflux.RawMessage) error {
 		)
 	}(time.Now())
 
-	return lm.svc.Publish(msg)
+	return lm.svc.Publish(msg, cfHandler)
 }
 
-func (lm *loggingMiddleware) Subscribe(sub mainflux.Subscription, write mainflux.WriteMessage, read mainflux.ReadMessage) (func(), error) {
+func (lm *loggingMiddleware) Subscribe(sub mainflux.Subscription, cfHandler mainflux.ConnFailHandler) (mainflux.Unsubscribe, error) {
 	defer func(begin time.Time) {
 		lm.logger.Log(
 			"method", "subscribe",
@@ -38,5 +38,5 @@ func (lm *loggingMiddleware) Subscribe(sub mainflux.Subscription, write mainflux
 		)
 	}(time.Now())
 
-	return lm.svc.Subscribe(sub, write, read)
+	return lm.svc.Subscribe(sub, cfHandler)
 }

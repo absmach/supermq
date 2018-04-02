@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/go-kit/kit/log"
 	"github.com/gorilla/websocket"
@@ -77,33 +79,48 @@ func TestPublish(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		err := svc.Publish(tc.msg)
+		err := svc.Publish(tc.msg, nil)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
 
 func TestSubscribe(t *testing.T) {
 	svc := newService()
+	sockets, err := newSocket(t)
+	if err != nil {
+		t.Fatal(fmt.Sprintf("unexpected error: %s\n", err))
+	}
 
 	cases := []struct {
-		desc string
-		sub  mainflux.Subscription
-		err  error
+		desc      string
+		sub       mainflux.Subscription
+		readCount uint32
+		err       error
 	}{
-		{"subscription to valid channel", mainflux.Subscription{"1", "1"}, nil},
-		{"subscription to channel that should fail", mainflux.Subscription{"2", "1"}, ws.ErrFailedSubscription},
+		{"subscription to valid channel", mainflux.Subscription{PubID: "1", ChanID: "1"}, 5, nil},
+		{"subscription to channel that should fail", mainflux.Subscription{PubID: "2", ChanID: "1"}, 0, ws.ErrFailedSubscription},
 	}
 
 	for _, tc := range cases {
-		_, err := svc.Subscribe(
-			tc.sub,
-			func(mainflux.RawMessage) error {
-				return nil
-			},
-			func() ([]byte, error) {
-				return []byte{}, nil
-			},
-		)
+		var readCount uint32
+		tc.sub.Write = func(mainflux.RawMessage) error {
+			return nil
+		}
+		tc.sub.Read = func() ([]byte, error) {
+			_, payload, err := sockets.server.ReadMessage()
+			atomic.AddUint32(&readCount, 1) // read message was called
+			return payload, err
+		}
+		_, err := svc.Subscribe(tc.sub, nil)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+
+		// Write messages that should be read.
+		for i := 0; i < int(tc.readCount); i++ {
+			sockets.client.Write(validMsg)
+		}
+
+		// Wait for message to be received.
+		time.Sleep(1 * time.Second)
+		assert.Equal(t, tc.readCount, readCount, fmt.Sprintf("%s: expected %d got %d\n", tc.desc, tc.readCount, readCount))
 	}
 }

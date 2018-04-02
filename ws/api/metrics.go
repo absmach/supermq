@@ -24,20 +24,20 @@ func MetricsMiddleware(svc mainflux.MessagePubSub, counter metrics.Counter, late
 	}
 }
 
-func (mm *metricsMiddleware) Publish(msg mainflux.RawMessage) error {
+func (mm *metricsMiddleware) Publish(msg mainflux.RawMessage, cfHandler mainflux.ConnFailHandler) error {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "publish").Add(1)
 		mm.latency.With("method", "publish").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.Publish(msg)
+	return mm.svc.Publish(msg, cfHandler)
 }
 
-func (mm *metricsMiddleware) Subscribe(sub mainflux.Subscription, write mainflux.WriteMessage, read mainflux.ReadMessage) (func(), error) {
+func (mm *metricsMiddleware) Subscribe(sub mainflux.Subscription, cfHandler mainflux.ConnFailHandler) (mainflux.Unsubscribe, error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "subscribe").Add(1)
 		mm.latency.With("method", "subscribe").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.Subscribe(sub, write, read)
+	return mm.svc.Subscribe(sub, cfHandler)
 }
