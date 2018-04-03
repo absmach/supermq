@@ -5,6 +5,7 @@ import (
 
 	"github.com/cisco/senml"
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/metrics"
 	"github.com/golang/protobuf/proto"
 	"github.com/mainflux/mainflux"
 	nats "github.com/nats-io/go-nats"
@@ -16,27 +17,19 @@ const (
 	output  string = "normalized"
 )
 
-// Service represents Normalizer service.
-type Service interface {
-	HandleMessage(*nats.Msg)
-}
-
 type eventFlow struct {
 	nc     *nats.Conn
 	logger log.Logger
 }
 
 // Subscribe instantiates and starts a new NATS message flow.
-func Subscribe(nc *nats.Conn, svc Service) {
-	nc.QueueSubscribe(subject, queue, svc.HandleMessage)
+func Subscribe(nc *nats.Conn, logger log.Logger, counter metrics.Counter, latency metrics.Histogram) {
+	flow := eventFlow{nc, logger}
+	mm := newMetricsMiddleware(flow, counter, latency)
+	flow.nc.QueueSubscribe(subject, queue, mm.handleMessage)
 }
 
-// New returns new Service.
-func New(nc *nats.Conn, logger log.Logger) Service {
-	return eventFlow{nc, logger}
-}
-
-func (ef eventFlow) HandleMessage(m *nats.Msg) {
+func (ef eventFlow) handleMsg(m *nats.Msg) {
 	msg := mainflux.RawMessage{}
 
 	if err := proto.Unmarshal(m.Data, &msg); err != nil {
