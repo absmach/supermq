@@ -16,31 +16,38 @@ const (
 	output  string = "normalized"
 )
 
+// Service represents Normalizer service.
+type Service interface {
+	HandleMessage(*nats.Msg)
+}
+
 type eventFlow struct {
 	nc     *nats.Conn
 	logger log.Logger
 }
 
 // Subscribe instantiates and starts a new NATS message flow.
-func Subscribe(nc *nats.Conn, logger log.Logger) {
-	flow := eventFlow{nc, logger}
-	flow.start()
+func Subscribe(nc *nats.Conn, svc Service) {
+	nc.QueueSubscribe(subject, queue, svc.HandleMessage)
 }
 
-func (ef eventFlow) start() {
-	ef.nc.QueueSubscribe(subject, queue, func(m *nats.Msg) {
-		msg := mainflux.RawMessage{}
+// New returns new Service.
+func New(nc *nats.Conn, logger log.Logger) Service {
+	return eventFlow{nc, logger}
+}
 
-		if err := proto.Unmarshal(m.Data, &msg); err != nil {
-			ef.logger.Log("error", fmt.Sprintf("Unmarshalling failed: %s", err))
-			return
-		}
+func (ef eventFlow) HandleMessage(m *nats.Msg) {
+	msg := mainflux.RawMessage{}
 
-		if err := ef.publish(msg); err != nil {
-			ef.logger.Log("error", fmt.Sprintf("Publishing failed: %s", err))
-			return
-		}
-	})
+	if err := proto.Unmarshal(m.Data, &msg); err != nil {
+		ef.logger.Log("error", fmt.Sprintf("Unmarshalling failed: %s", err))
+		return
+	}
+
+	if err := ef.publish(msg); err != nil {
+		ef.logger.Log("error", fmt.Sprintf("Publishing failed: %s", err))
+		return
+	}
 }
 
 func (ef eventFlow) publish(msg mainflux.RawMessage) error {

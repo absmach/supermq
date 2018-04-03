@@ -8,14 +8,17 @@ import (
 	"syscall"
 
 	"github.com/go-kit/kit/log"
+	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/normalizer"
+	"github.com/mainflux/mainflux/normalizer/api"
 	nats "github.com/nats-io/go-nats"
+	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
 const (
 	defNatsURL string = nats.DefaultURL
-	defPort    string = "8180"
+	defPort    string = "8900"
 	envNatsURL string = "MF_NATS_URL"
 	envPort    string = "MF_NORMALIZER_PORT"
 )
@@ -46,7 +49,7 @@ func main() {
 	go func() {
 		p := fmt.Sprintf(":%s", cfg.Port)
 		logger.Log("message", fmt.Sprintf("Normalizer service started, exposed port %s", cfg.Port))
-		errs <- http.ListenAndServe(p, normalizer.MakeHandler())
+		errs <- http.ListenAndServe(p, api.MakeHandler())
 	}()
 
 	go func() {
@@ -54,7 +57,22 @@ func main() {
 		signal.Notify(c, syscall.SIGINT)
 		errs <- fmt.Errorf("%s", <-c)
 	}()
-
-	normalizer.Subscribe(nc, logger)
+	svc := normalizer.New(nc, logger)
+	svc = api.MetricsMiddleware(
+		svc,
+		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+			Namespace: "normalizer",
+			Subsystem: "api",
+			Name:      "request_count",
+			Help:      "Number of requests received.",
+		}, []string{"method"}),
+		kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+			Namespace: "normalizer",
+			Subsystem: "api",
+			Name:      "request_latency_microseconds",
+			Help:      "Total duration of requests in microseconds.",
+		}, []string{"method"}),
+	)
+	normalizer.Subscribe(nc, svc)
 	logger.Log("terminated", <-errs)
 }
