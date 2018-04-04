@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/go-kit/kit/log"
 	"github.com/go-zoo/bone"
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux"
+	log "github.com/mainflux/mainflux/logger"
 	manager "github.com/mainflux/mainflux/manager/client"
 	"github.com/mainflux/mainflux/ws"
 	broker "github.com/nats-io/go-nats"
@@ -51,7 +51,7 @@ func handshake(svc mainflux.MessagePubSub) http.HandlerFunc {
 		// Create new ws connection.
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			logger.Log("error", fmt.Sprintf("Failed to upgrade connection to websocket: %s", err))
+			logger.Warn(fmt.Sprintf("Failed to upgrade connection to websocket: %s", err))
 			return
 		}
 		socket := ws.NewSocket(conn)
@@ -70,7 +70,7 @@ func handshake(svc mainflux.MessagePubSub) http.HandlerFunc {
 		}
 
 		if _, err = svc.Subscribe(sub, connFail); err != nil {
-			logger.Log("error", fmt.Sprintf("Failed to subscribe to NATS subject: %s", err))
+			logger.Warn(fmt.Sprintf("Failed to subscribe to NATS subject: %s", err))
 			w.WriteHeader(http.StatusExpectationFailed)
 			return
 		}
@@ -89,7 +89,7 @@ func authorize(r *http.Request) (mainflux.Subscription, error) {
 
 	pubID, err := auth.CanAccess(chanID, apiKey)
 	if err != nil {
-		logger.Log("error", "Failed to authorize: %s", err)
+		logger.Warn(fmt.Sprintf("Failed to authorize: %s", err))
 		return mainflux.Subscription{}, errUnauthorizedAccess
 	}
 

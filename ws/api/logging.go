@@ -1,10 +1,11 @@
 package api
 
 import (
+	"fmt"
 	"time"
 
-	"github.com/go-kit/kit/log"
 	"github.com/mainflux/mainflux"
+	log "github.com/mainflux/mainflux/logger"
 )
 
 var _ mainflux.MessagePubSub = (*loggingMiddleware)(nil)
@@ -19,23 +20,27 @@ func LoggingMiddleware(svc mainflux.MessagePubSub, logger log.Logger) mainflux.M
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) Publish(msg mainflux.RawMessage, cfHandler mainflux.ConnFailHandler) error {
+func (lm *loggingMiddleware) Publish(msg mainflux.RawMessage, cfHandler mainflux.ConnFailHandler) (err error) {
 	defer func(begin time.Time) {
-		lm.logger.Log(
-			"method", "publish",
-			"took", time.Since(begin),
-		)
+		message := fmt.Sprintf("Method publish to channel %s took %s to complete", msg.Channel, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
 	return lm.svc.Publish(msg, cfHandler)
 }
 
-func (lm *loggingMiddleware) Subscribe(sub mainflux.Subscription, cfHandler mainflux.ConnFailHandler) (mainflux.Unsubscribe, error) {
+func (lm *loggingMiddleware) Subscribe(sub mainflux.Subscription, cfHandler mainflux.ConnFailHandler) (_ mainflux.Unsubscribe, err error) {
 	defer func(begin time.Time) {
-		lm.logger.Log(
-			"method", "subscribe",
-			"took", time.Since(begin),
-		)
+		message := fmt.Sprintf("Method subscribe to channel %s took %s to complete", sub.ChanID, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
 	return lm.svc.Subscribe(sub, cfHandler)

@@ -6,9 +6,9 @@ import (
 
 	"github.com/sony/gobreaker"
 
-	"github.com/go-kit/kit/log"
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
+	log "github.com/mainflux/mainflux/logger"
 	broker "github.com/nats-io/go-nats"
 )
 
@@ -56,18 +56,18 @@ func (pubsub *natsPubSub) Publish(msg mainflux.RawMessage, cfHandler mainflux.Co
 func (pubsub *natsPubSub) Subscribe(subscription mainflux.Subscription, _ mainflux.ConnFailHandler) (mainflux.Unsubscribe, error) {
 	sub, err := pubsub.nc.Subscribe(fmt.Sprintf("%s.%s", prefix, subscription.ChanID), func(msg *broker.Msg) {
 		if msg == nil {
-			pubsub.logger.Log("error", fmt.Sprintf("Received empty message"))
+			pubsub.logger.Warn("Received empty message")
 			return
 		}
 
 		var rawMsg mainflux.RawMessage
 		if err := proto.Unmarshal(msg.Data, &rawMsg); err != nil {
-			pubsub.logger.Log("error", fmt.Sprintf("Failed to unmarshal received message: %s", err))
+			pubsub.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
 			return
 		}
 
 		if err := subscription.Write(rawMsg); err != nil {
-			pubsub.logger.Log("error", fmt.Sprintf("On message operation failed: %s", err))
+			pubsub.logger.Warn(fmt.Sprintf("On message operation failed: %s", err))
 		}
 	})
 	return func() error {
@@ -75,7 +75,7 @@ func (pubsub *natsPubSub) Subscribe(subscription mainflux.Subscription, _ mainfl
 			return nil, sub.Unsubscribe()
 		})
 		if err != nil {
-			pubsub.logger.Log("error", fmt.Sprintf("Failed to unsubscribe from channel: %s", err))
+			pubsub.logger.Warn(fmt.Sprintf("Failed to unsubscribe from channel: %s", err))
 		}
 		return err
 	}, err

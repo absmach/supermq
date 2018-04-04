@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/go-kit/kit/log"
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux"
+	log "github.com/mainflux/mainflux/logger"
 )
 
 const protocol = "ws"
@@ -34,7 +34,7 @@ func New(pubsub mainflux.MessagePubSub, logger log.Logger) mainflux.MessagePubSu
 
 func (as *adapterService) Publish(msg mainflux.RawMessage, cfHandler mainflux.ConnFailHandler) error {
 	if err := as.pubsub.Publish(msg, cfHandler); err != nil {
-		as.logger.Log("error", fmt.Sprintf("Failed to publish message: %s", err))
+		as.logger.Warn(fmt.Sprintf("Failed to publish message: %s", err))
 		return ErrFailedMessagePublish
 	}
 	return nil
@@ -43,7 +43,7 @@ func (as *adapterService) Publish(msg mainflux.RawMessage, cfHandler mainflux.Co
 func (as *adapterService) Subscribe(sub mainflux.Subscription, cfHandler mainflux.ConnFailHandler) (mainflux.Unsubscribe, error) {
 	unsubscribe, err := as.pubsub.Subscribe(sub, nil)
 	if err != nil {
-		as.logger.Log("error", fmt.Sprintf("Failed to subscribe to a channel: %s", err))
+		as.logger.Warn(fmt.Sprintf("Failed to subscribe to a channel: %s", err))
 		return nil, ErrFailedSubscription
 	}
 	go as.listen(sub, cfHandler, func() {
@@ -60,7 +60,7 @@ func (as *adapterService) listen(sub mainflux.Subscription, cfHandler mainflux.C
 			return
 		}
 		if err != nil {
-			as.logger.Log("error", fmt.Sprintf("Failed to read message: %s", err))
+			as.logger.Warn(fmt.Sprintf("Failed to read message: %s", err))
 			return
 		}
 		msg := mainflux.RawMessage{
@@ -70,7 +70,7 @@ func (as *adapterService) listen(sub mainflux.Subscription, cfHandler mainflux.C
 			Payload:   payload,
 		}
 		if err := as.Publish(msg, cfHandler); err != nil {
-			as.logger.Log("error", "Failed to publish message to NATS: %s", err)
+			as.logger.Warn(fmt.Sprintf("Failed to publish message to NATS: %s", err))
 		}
 	}
 }
