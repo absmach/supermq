@@ -53,7 +53,10 @@ paths:
             $ref: "#/definitions/Token"
         400:
           description: |
-            Failed due to malformed JSON or using an invalid credentials.
+            Failed due to malformed JSON.
+        403:
+          description: |
+            Failed due to using invalid credentials.
         500:
           $ref: "#/responses/ServiceError"
   /clients:
