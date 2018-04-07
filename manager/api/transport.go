@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -272,6 +273,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusNotFound)
 	case manager.ErrConflict:
 		w.WriteHeader(http.StatusConflict)
+	case io.ErrUnexpectedEOF:
+		w.WriteHeader(http.StatusBadRequest)
 	default:
 		switch err.(type) {
 		case *json.SyntaxError:
