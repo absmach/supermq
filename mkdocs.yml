@@ -17,19 +17,14 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
-
-# Project information
 copyright: Copyright (c) 2015-2018 Mainflux
-repo_name: GitHub
 repo_url: https://github.com/mainflux/mainflux
-site_author: Mainflux team
 site_description: Mainflux IoT System
 site_name: Mainflux
-site_url: https://mainflux.com
 theme: readthedocs
 
 extra:
-  logo: img/logo.png
+  logo: docs/img/logo.png
   author:
     github: mainflux/mainflux
     twitter: mainflux
@@ -40,6 +35,9 @@ markdown_extensions:
       permalink: '#'
 
 pages:
-- Home: index.md
-- Getting Started: getting-started.md
-- FAQ: faq.md
+- Overview: index.md
+- About:
+    - Contributing: CONTRIBUTING.md
+    - License: LICENSE.txt
+- Documentation:
+    - Architecture: architecture.md

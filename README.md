@@ -52,7 +52,7 @@ Thank you for your interest in Mainflux and wish to contribute!
 - [Gitter][gitter]
 - [Twitter][twitter]
 
-[banner]: https://github.com/mainflux/mainflux/blob/master/img/gopherBanner.jpg
+[banner]: https://github.com/mainflux/mainflux/blob/master/docs/img/gopherBanner.jpg
 [ci-badge]: https://semaphoreci.com/api/v1/mainflux/mainflux/branches/master/badge.svg
 [ci-url]: https://semaphoreci.com/mainflux/mainflux
 [docs]: http://mainflux.readthedocs.io
