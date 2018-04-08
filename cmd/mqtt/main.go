@@ -84,5 +84,5 @@ func main() {
 	}()
 
 	err = <-errs
-	logger.Error(fmt.Sprintf("WebSocket adapter terminated: %s", err))
+	logger.Error(fmt.Sprintf("MQTT adapter terminated: %s", err))
 }
