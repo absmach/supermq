@@ -29,11 +29,26 @@ var (
 )
 
 type testRequest struct {
+	client      *http.Client
 	method      string
 	url         string
 	contentType string
 	token       string
 	body        io.Reader
+}
+
+func (tr testRequest) make() (*http.Response, error) {
+	req, err := http.NewRequest(tr.method, tr.url, tr.body)
+	if err != nil {
+		return nil, err
+	}
+	if tr.token != "" {
+		req.Header.Set("Authorization", tr.token)
+	}
+	if tr.contentType != "" {
+		req.Header.Set("Content-Type", tr.contentType)
+	}
+	return tr.client.Do(req)
 }
 
 func newService() manager.Service {
@@ -51,18 +66,9 @@ func newServer(svc manager.Service) *httptest.Server {
 	return httptest.NewServer(mux)
 }
 
-func makeRequest(client *http.Client, testReq testRequest) (*http.Response, error) {
-	req, err := http.NewRequest(testReq.method, testReq.url, testReq.body)
-	if err != nil {
-		return nil, err
-	}
-	if testReq.token != "" {
-		req.Header.Set("Authorization", testReq.token)
-	}
-	if testReq.contentType != "" {
-		req.Header.Set("Content-Type", testReq.contentType)
-	}
-	return client.Do(req)
+func toJSON(data interface{}) string {
+	jsonData, _ := json.Marshal(data)
+	return string(jsonData)
 }
 
 func TestRegister(t *testing.T) {
@@ -70,33 +76,34 @@ func TestRegister(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	client := ts.Client()
-	url := ts.URL
 
-	body, _ := json.Marshal(user)
-	data := string(body)
-	invalidBody, _ := json.Marshal(manager.User{Email: invalidEmail, Password: "password"})
-	invalidData := string(invalidBody)
+	data := toJSON(user)
+	invalidData := toJSON(manager.User{Email: invalidEmail, Password: "password"})
 
 	cases := []struct {
-		desc   string
-		req    string
-		status int
+		desc        string
+		req         string
+		contentType string
+		status      int
 	}{
-		{"register new user", data, http.StatusCreated},
-		{"register existing user", data, http.StatusConflict},
-		{"register user with invalid email address", invalidData, http.StatusBadRequest},
-		{"register user with invalid request format", "{", http.StatusBadRequest},
-		{"register user with empty JSON request", "{}", http.StatusBadRequest},
-		{"register user with empty request", "", http.StatusBadRequest},
+		{"register new user", data, contentType, http.StatusCreated},
+		{"register existing user", data, contentType, http.StatusConflict},
+		{"register user with invalid email address", invalidData, contentType, http.StatusBadRequest},
+		{"register user with invalid request format", "{", contentType, http.StatusBadRequest},
+		{"register user with empty JSON request", "{}", contentType, http.StatusBadRequest},
+		{"register user with empty request", "", contentType, http.StatusBadRequest},
+		{"register user with missing content type", data, "", http.StatusUnsupportedMediaType},
 	}
 
 	for _, tc := range cases {
-		res, err := makeRequest(client, testRequest{
+		req := testRequest{
+			client:      client,
 			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/users", url),
-			contentType: contentType,
+			url:         fmt.Sprintf("%s/users", ts.URL),
+			contentType: tc.contentType,
 			body:        strings.NewReader(tc.req),
-		})
+		}
+		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 	}
@@ -107,42 +114,40 @@ func TestLogin(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	client := ts.Client()
-	url := ts.URL
 
-	token, _ := json.Marshal(map[string]string{"token": user.Email})
-	tokenData := string(token)
-	credentials, _ := json.Marshal(user)
-	data := string(credentials)
-	invalidEmailCredentials, _ := json.Marshal(manager.User{Email: invalidEmail, Password: "password"})
-	invalidEmailData := string(invalidEmailCredentials)
-	invalidCredentials, _ := json.Marshal(manager.User{"user@example.com", "invalid_password"})
-	invalidData := string(invalidCredentials)
-	nonexistentCredentials, _ := json.Marshal(manager.User{"non-existentuser@example.com", "pass"})
-	nonexistentData := string(nonexistentCredentials)
+	tokenData := toJSON(map[string]string{"token": user.Email})
+	data := toJSON(user)
+	invalidEmailData := toJSON(manager.User{Email: invalidEmail, Password: "password"})
+	invalidData := toJSON(manager.User{"user@example.com", "invalid_password"})
+	nonexistentData := toJSON(manager.User{"non-existentuser@example.com", "pass"})
 	svc.Register(user)
 
 	cases := []struct {
-		desc   string
-		req    string
-		status int
-		res    string
+		desc        string
+		req         string
+		contentType string
+		status      int
+		res         string
 	}{
-		{"login with valid credentials", data, http.StatusCreated, tokenData},
-		{"login with invalid credentials", invalidData, http.StatusForbidden, ""},
-		{"login with invalid email address", invalidEmailData, http.StatusBadRequest, ""},
-		{"login non-existent user", nonexistentData, http.StatusForbidden, ""},
-		{"login with invalid request format", "{", http.StatusBadRequest, ""},
-		{"login with empty JSON request", "{}", http.StatusBadRequest, ""},
-		{"login with empty request", "", http.StatusBadRequest, ""},
+		{"login with valid credentials", data, contentType, http.StatusCreated, tokenData},
+		{"login with invalid credentials", invalidData, contentType, http.StatusForbidden, ""},
+		{"login with invalid email address", invalidEmailData, contentType, http.StatusBadRequest, ""},
+		{"login non-existent user", nonexistentData, contentType, http.StatusForbidden, ""},
+		{"login with invalid request format", "{", contentType, http.StatusBadRequest, ""},
+		{"login with empty JSON request", "{}", contentType, http.StatusBadRequest, ""},
+		{"login with empty request", "", contentType, http.StatusBadRequest, ""},
+		{"login with missing content type", data, "", http.StatusUnsupportedMediaType, ""},
 	}
 
 	for _, tc := range cases {
-		res, err := makeRequest(client, testRequest{
+		req := testRequest{
+			client:      client,
 			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/tokens", url),
-			contentType: contentType,
+			url:         fmt.Sprintf("%s/tokens", ts.URL),
+			contentType: tc.contentType,
 			body:        strings.NewReader(tc.req),
-		})
+		}
+		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		body, err := ioutil.ReadAll(res.Body)
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
@@ -158,40 +163,41 @@ func TestAddClient(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	cli := ts.Client()
-	url := ts.URL
 
-	client, _ := json.Marshal(client)
-	data := string(client)
-	invalidClient, _ := json.Marshal(manager.Client{
+	data := toJSON(client)
+	invalidData := toJSON(manager.Client{
 		Type:    "foo",
 		Name:    "invalid_client",
 		Payload: "some_payload",
 	})
-	invalidData := string(invalidClient)
 	svc.Register(user)
 
 	cases := []struct {
-		desc   string
-		req    string
-		auth   string
-		status int
+		desc        string
+		req         string
+		contentType string
+		auth        string
+		status      int
 	}{
-		{"add valid client", data, user.Email, http.StatusCreated},
-		{"add client with invalid data", invalidData, user.Email, http.StatusBadRequest},
-		{"add client with invalid auth token", data, "invalid_token", http.StatusForbidden},
-		{"add client with invalid request format", "}", user.Email, http.StatusBadRequest},
-		{"add client with empty JSON request", "{}", user.Email, http.StatusBadRequest},
-		{"add client with empty request", "", user.Email, http.StatusBadRequest},
+		{"add valid client", data, contentType, user.Email, http.StatusCreated},
+		{"add client with invalid data", invalidData, contentType, user.Email, http.StatusBadRequest},
+		{"add client with invalid auth token", data, contentType, "invalid_token", http.StatusForbidden},
+		{"add client with invalid request format", "}", contentType, user.Email, http.StatusBadRequest},
+		{"add client with empty JSON request", "{}", contentType, user.Email, http.StatusBadRequest},
+		{"add client with empty request", "", contentType, user.Email, http.StatusBadRequest},
+		{"add client with missing content type", data, "", user.Email, http.StatusUnsupportedMediaType},
 	}
 
 	for _, tc := range cases {
-		res, err := makeRequest(cli, testRequest{
+		req := testRequest{
+			client:      cli,
 			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/clients", url),
-			contentType: contentType,
+			url:         fmt.Sprintf("%s/clients", ts.URL),
+			contentType: tc.contentType,
 			token:       tc.auth,
 			body:        strings.NewReader(tc.req),
-		})
+		}
+		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 	}
@@ -202,44 +208,45 @@ func TestUpdateClient(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	cli := ts.Client()
-	url := ts.URL
 
-	update, _ := json.Marshal(client)
-	data := string(update)
-	invalidUpdate, _ := json.Marshal(manager.Client{
+	data := toJSON(client)
+	invalidData := toJSON(manager.Client{
 		Type:    "foo",
 		Name:    client.Name,
 		Payload: client.Payload,
 	})
-	invalidData := string(invalidUpdate)
 	svc.Register(user)
 	id, _ := svc.AddClient(user.Email, client)
 
 	cases := []struct {
-		desc   string
-		req    string
-		id     string
-		auth   string
-		status int
+		desc        string
+		req         string
+		id          string
+		contentType string
+		auth        string
+		status      int
 	}{
-		{"update existing client", data, id, user.Email, http.StatusOK},
-		{"update non-existent client", data, wrongID, user.Email, http.StatusNotFound},
-		{"update client with invalid id", data, "1", user.Email, http.StatusNotFound},
-		{"update client with invalid data", invalidData, id, user.Email, http.StatusBadRequest},
-		{"update client with invalid user token", data, id, invalidEmail, http.StatusForbidden},
-		{"update client with invalid data format", "{", id, user.Email, http.StatusBadRequest},
-		{"update client with empty JSON request", "{}", id, user.Email, http.StatusBadRequest},
-		{"update client with empty request", "", id, user.Email, http.StatusBadRequest},
+		{"update existing client", data, id, contentType, user.Email, http.StatusOK},
+		{"update non-existent client", data, wrongID, contentType, user.Email, http.StatusNotFound},
+		{"update client with invalid id", data, "1", contentType, user.Email, http.StatusNotFound},
+		{"update client with invalid data", invalidData, id, contentType, user.Email, http.StatusBadRequest},
+		{"update client with invalid user token", data, id, contentType, invalidEmail, http.StatusForbidden},
+		{"update client with invalid data format", "{", id, contentType, user.Email, http.StatusBadRequest},
+		{"update client with empty JSON request", "{}", id, contentType, user.Email, http.StatusBadRequest},
+		{"update client with empty request", "", id, contentType, user.Email, http.StatusBadRequest},
+		{"update client with missing content type", data, id, "", user.Email, http.StatusUnsupportedMediaType},
 	}
 
 	for _, tc := range cases {
-		res, err := makeRequest(cli, testRequest{
+		req := testRequest{
+			client:      cli,
 			method:      http.MethodPut,
-			url:         fmt.Sprintf("%s/clients/%s", url, tc.id),
-			contentType: contentType,
+			url:         fmt.Sprintf("%s/clients/%s", ts.URL, tc.id),
+			contentType: tc.contentType,
 			token:       tc.auth,
 			body:        strings.NewReader(tc.req),
-		})
+		}
+		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 	}
@@ -250,15 +257,13 @@ func TestViewClient(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	cli := ts.Client()
-	url := ts.URL
 
 	svc.Register(user)
 	id, _ := svc.AddClient(user.Email, client)
 
 	client.ID = id
 	client.Key = id
-	client, _ := json.Marshal(client)
-	data := string(client)
+	data := toJSON(client)
 
 	cases := []struct {
 		desc   string
@@ -274,11 +279,13 @@ func TestViewClient(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		res, err := makeRequest(cli, testRequest{
+		req := testRequest{
+			client: cli,
 			method: http.MethodGet,
-			url:    fmt.Sprintf("%s/clients/%s", url, tc.id),
+			url:    fmt.Sprintf("%s/clients/%s", ts.URL, tc.id),
 			token:  tc.auth,
-		})
+		}
+		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		body, err := ioutil.ReadAll(res.Body)
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
@@ -293,7 +300,6 @@ func TestListClients(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	cli := ts.Client()
-	url := ts.URL
 
 	svc.Register(user)
 	noClientsUser := manager.User{Email: "no_clients_user@example.com", Password: user.Password}
@@ -318,11 +324,13 @@ func TestListClients(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		res, err := makeRequest(cli, testRequest{
+		req := testRequest{
+			client: cli,
 			method: http.MethodGet,
-			url:    fmt.Sprintf("%s/clients", url),
+			url:    fmt.Sprintf("%s/clients", ts.URL),
 			token:  tc.auth,
-		})
+		}
+		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		var data map[string][]manager.Client
 		json.NewDecoder(res.Body).Decode(&data)
@@ -336,7 +344,6 @@ func TestRemoveClient(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	cli := ts.Client()
-	url := ts.URL
 
 	svc.Register(user)
 	id, _ := svc.AddClient(user.Email, client)
@@ -354,11 +361,13 @@ func TestRemoveClient(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		res, err := makeRequest(cli, testRequest{
+		req := testRequest{
+			client: cli,
 			method: http.MethodDelete,
-			url:    fmt.Sprintf("%s/clients/%s", url, tc.id),
+			url:    fmt.Sprintf("%s/clients/%s", ts.URL, tc.id),
 			token:  tc.auth,
-		})
+		}
+		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 	}
@@ -369,33 +378,35 @@ func TestCreateChannel(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	client := ts.Client()
-	url := ts.URL
 
-	channel, _ := json.Marshal(channel)
-	data := string(channel)
+	data := toJSON(channel)
 	svc.Register(user)
 
 	cases := []struct {
-		desc   string
-		req    string
-		auth   string
-		status int
+		desc        string
+		req         string
+		contentType string
+		auth        string
+		status      int
 	}{
-		{"create new channel", data, user.Email, http.StatusCreated},
-		{"create new channel with invalid token", data, invalidEmail, http.StatusForbidden},
-		{"create new channel with invalid data format", "{", user.Email, http.StatusBadRequest},
-		{"create new channel with empty JSON request", "{}", user.Email, http.StatusCreated},
-		{"create new channel with empty request", "", user.Email, http.StatusBadRequest},
+		{"create new channel", data, contentType, user.Email, http.StatusCreated},
+		{"create new channel with invalid token", data, contentType, invalidEmail, http.StatusForbidden},
+		{"create new channel with invalid data format", "{", contentType, user.Email, http.StatusBadRequest},
+		{"create new channel with empty JSON request", "{}", contentType, user.Email, http.StatusCreated},
+		{"create new channel with empty request", "", contentType, user.Email, http.StatusBadRequest},
+		{"create new channel with missing content type", data, "", user.Email, http.StatusUnsupportedMediaType},
 	}
 
 	for _, tc := range cases {
-		res, err := makeRequest(client, testRequest{
+		req := testRequest{
+			client:      client,
 			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/channels", url),
-			contentType: contentType,
+			url:         fmt.Sprintf("%s/channels", ts.URL),
+			contentType: tc.contentType,
 			token:       tc.auth,
 			body:        strings.NewReader(tc.req),
-		})
+		}
+		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 	}
@@ -406,39 +417,41 @@ func TestUpdateChannel(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	client := ts.Client()
-	url := ts.URL
 
-	update, _ := json.Marshal(map[string]string{
+	updateData := toJSON(map[string]string{
 		"name": "updated_channel",
 	})
-	updateData := string(update)
 	svc.Register(user)
 	id, _ := svc.CreateChannel(user.Email, channel)
 
 	cases := []struct {
-		desc   string
-		req    string
-		id     string
-		auth   string
-		status int
+		desc        string
+		req         string
+		id          string
+		contentType string
+		auth        string
+		status      int
 	}{
-		{"update existing channel", updateData, id, user.Email, http.StatusOK},
-		{"update non-existing channel", updateData, wrongID, user.Email, http.StatusNotFound},
-		{"update channel with invalid token", updateData, id, invalidEmail, http.StatusForbidden},
-		{"update channel with invalid id", updateData, "1", user.Email, http.StatusNotFound},
-		{"update channel with invalid data format", "}", id, user.Email, http.StatusBadRequest},
-		{"update channel with empty JSON object", "{}", id, user.Email, http.StatusOK},
-		{"update channel with empty request", "", id, user.Email, http.StatusBadRequest},
+		{"update existing channel", updateData, id, contentType, user.Email, http.StatusOK},
+		{"update non-existing channel", updateData, wrongID, contentType, user.Email, http.StatusNotFound},
+		{"update channel with invalid token", updateData, id, contentType, invalidEmail, http.StatusForbidden},
+		{"update channel with invalid id", updateData, "1", contentType, user.Email, http.StatusNotFound},
+		{"update channel with invalid data format", "}", id, contentType, user.Email, http.StatusBadRequest},
+		{"update channel with empty JSON object", "{}", id, contentType, user.Email, http.StatusOK},
+		{"update channel with empty request", "", id, contentType, user.Email, http.StatusBadRequest},
+		{"update channel with missing content type", updateData, id, "", user.Email, http.StatusUnsupportedMediaType},
 	}
 
 	for _, tc := range cases {
-		res, err := makeRequest(client, testRequest{
+		req := testRequest{
+			client:      client,
 			method:      http.MethodPut,
-			url:         fmt.Sprintf("%s/channels/%s", url, tc.id),
-			contentType: contentType,
+			url:         fmt.Sprintf("%s/channels/%s", ts.URL, tc.id),
+			contentType: tc.contentType,
 			token:       tc.auth,
 			body:        strings.NewReader(tc.req),
-		})
+		}
+		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 	}
@@ -449,13 +462,11 @@ func TestViewChannel(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	client := ts.Client()
-	url := ts.URL
 
 	svc.Register(user)
 	id, _ := svc.CreateChannel(user.Email, channel)
 	channel.ID = id
-	channel, _ := json.Marshal(channel)
-	data := string(channel)
+	data := toJSON(channel)
 
 	cases := []struct {
 		desc   string
@@ -471,11 +482,13 @@ func TestViewChannel(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		res, err := makeRequest(client, testRequest{
+		req := testRequest{
+			client: client,
 			method: http.MethodGet,
-			url:    fmt.Sprintf("%s/channels/%s", url, tc.id),
+			url:    fmt.Sprintf("%s/channels/%s", ts.URL, tc.id),
 			token:  tc.auth,
-		})
+		}
+		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		data, err := ioutil.ReadAll(res.Body)
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
@@ -490,7 +503,6 @@ func TestListChannels(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	client := ts.Client()
-	url := ts.URL
 
 	svc.Register(user)
 	channels := []manager.Channel{}
@@ -511,11 +523,13 @@ func TestListChannels(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		res, err := makeRequest(client, testRequest{
+		req := testRequest{
+			client: client,
 			method: http.MethodGet,
-			url:    fmt.Sprintf("%s/channels", url),
+			url:    fmt.Sprintf("%s/channels", ts.URL),
 			token:  tc.auth,
-		})
+		}
+		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		var body map[string][]manager.Channel
 		json.NewDecoder(res.Body).Decode(&body)
@@ -529,7 +543,6 @@ func TestRemoveChannel(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	client := ts.Client()
-	url := ts.URL
 
 	svc.Register(user)
 	id, _ := svc.CreateChannel(user.Email, channel)
@@ -548,11 +561,13 @@ func TestRemoveChannel(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		res, err := makeRequest(client, testRequest{
+		req := testRequest{
+			client: client,
 			method: http.MethodDelete,
-			url:    fmt.Sprintf("%s/channels/%s", url, tc.id),
+			url:    fmt.Sprintf("%s/channels/%s", ts.URL, tc.id),
 			token:  tc.auth,
-		})
+		}
+		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 	}
@@ -563,7 +578,6 @@ func TestConnect(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	cli := ts.Client()
-	url := ts.URL
 
 	svc.Register(user)
 	clientID, _ := svc.AddClient(user.Email, client)
@@ -591,11 +605,13 @@ func TestConnect(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		res, err := makeRequest(cli, testRequest{
+		req := testRequest{
+			client: cli,
 			method: http.MethodPut,
-			url:    fmt.Sprintf("%s/channels/%s/clients/%s", url, tc.chanID, tc.clientID),
+			url:    fmt.Sprintf("%s/channels/%s/clients/%s", ts.URL, tc.chanID, tc.clientID),
 			token:  tc.auth,
-		})
+		}
+		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 	}
@@ -606,7 +622,6 @@ func TestDisconnnect(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	cli := ts.Client()
-	url := ts.URL
 
 	svc.Register(user)
 	clientID, _ := svc.AddClient(user.Email, client)
@@ -635,11 +650,13 @@ func TestDisconnnect(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		res, err := makeRequest(cli, testRequest{
+		req := testRequest{
+			client: cli,
 			method: http.MethodDelete,
-			url:    fmt.Sprintf("%s/channels/%s/clients/%s", url, tc.chanID, tc.clientID),
+			url:    fmt.Sprintf("%s/channels/%s/clients/%s", ts.URL, tc.chanID, tc.clientID),
 			token:  tc.auth,
-		})
+		}
+		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 	}
@@ -650,7 +667,6 @@ func TestIdentity(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	cli := ts.Client()
-	url := ts.URL
 
 	svc.Register(user)
 	clientID, _ := svc.AddClient(user.Email, client)
@@ -666,11 +682,13 @@ func TestIdentity(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		res, err := makeRequest(cli, testRequest{
+		req := testRequest{
+			client: cli,
 			method: http.MethodGet,
-			url:    fmt.Sprintf("%s/access-grant", url),
+			url:    fmt.Sprintf("%s/access-grant", ts.URL),
 			token:  tc.key,
-		})
+		}
+		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		clientID := res.Header.Get("X-client-id")
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
@@ -683,7 +701,6 @@ func TestCanAccess(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	cli := ts.Client()
-	url := ts.URL
 
 	svc.Register(user)
 	clientID, _ := svc.AddClient(user.Email, client)
@@ -705,11 +722,13 @@ func TestCanAccess(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		res, err := makeRequest(cli, testRequest{
+		req := testRequest{
+			client: cli,
 			method: http.MethodGet,
-			url:    fmt.Sprintf("%s/channels/%s/access-grant", url, tc.chanID),
+			url:    fmt.Sprintf("%s/channels/%s/access-grant", ts.URL, tc.chanID),
 			token:  tc.clientKey,
-		})
+		}
+		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		clientID := res.Header.Get("X-client-id")
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))

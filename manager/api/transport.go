@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 
@@ -12,6 +13,8 @@ import (
 	"github.com/mainflux/mainflux/manager"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
+
+var errUnsupportedContentType = errors.New("unsupported content type")
 
 // MakeHandler returns a HTTP handler for API endpoints.
 func MakeHandler(svc manager.Service) http.Handler {
@@ -148,6 +151,10 @@ func decodeIdentity(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeCredentials(_ context.Context, r *http.Request) (interface{}, error) {
+	if r.Header.Get("Content-Type") != contentType {
+		return nil, errUnsupportedContentType
+	}
+
 	var user manager.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		return nil, err
@@ -157,6 +164,10 @@ func decodeCredentials(_ context.Context, r *http.Request) (interface{}, error) 
 }
 
 func decodeClientCreation(_ context.Context, r *http.Request) (interface{}, error) {
+	if r.Header.Get("Content-Type") != contentType {
+		return nil, errUnsupportedContentType
+	}
+
 	var client manager.Client
 	if err := json.NewDecoder(r.Body).Decode(&client); err != nil {
 		return nil, err
@@ -171,6 +182,10 @@ func decodeClientCreation(_ context.Context, r *http.Request) (interface{}, erro
 }
 
 func decodeClientUpdate(_ context.Context, r *http.Request) (interface{}, error) {
+	if r.Header.Get("Content-Type") != contentType {
+		return nil, errUnsupportedContentType
+	}
+
 	var client manager.Client
 	if err := json.NewDecoder(r.Body).Decode(&client); err != nil {
 		return nil, err
@@ -186,6 +201,10 @@ func decodeClientUpdate(_ context.Context, r *http.Request) (interface{}, error)
 }
 
 func decodeChannelCreation(_ context.Context, r *http.Request) (interface{}, error) {
+	if r.Header.Get("Content-Type") != contentType {
+		return nil, errUnsupportedContentType
+	}
+
 	var channel manager.Channel
 	if err := json.NewDecoder(r.Body).Decode(&channel); err != nil {
 		return nil, err
@@ -200,6 +219,10 @@ func decodeChannelCreation(_ context.Context, r *http.Request) (interface{}, err
 }
 
 func decodeChannelUpdate(_ context.Context, r *http.Request) (interface{}, error) {
+	if r.Header.Get("Content-Type") != contentType {
+		return nil, errUnsupportedContentType
+	}
+
 	var channel manager.Channel
 	if err := json.NewDecoder(r.Body).Decode(&channel); err != nil {
 		return nil, err
@@ -273,6 +296,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusNotFound)
 	case manager.ErrConflict:
 		w.WriteHeader(http.StatusConflict)
+	case errUnsupportedContentType:
+		w.WriteHeader(http.StatusUnsupportedMediaType)
 	case io.ErrUnexpectedEOF:
 		w.WriteHeader(http.StatusBadRequest)
 	case io.EOF:
