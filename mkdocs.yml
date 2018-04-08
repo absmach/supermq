@@ -35,9 +35,9 @@ markdown_extensions:
       permalink: '#'
 
 pages:
-- Overview: index.md
-- About:
+- Overview:
+    - About: index.md
     - Contributing: CONTRIBUTING.md
     - License: LICENSE.txt
-- Documentation:
-    - Architecture: architecture.md
+- Architecture: architecture.md
+- Getting started: getting-started.md

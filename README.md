@@ -35,7 +35,7 @@ Once everything is installed, execute the following commands from project root:
 
 ```bash
 cd docker/
-docker-compose up -d
+docker-compose up -f docker/docker-compose.yml -d
 ```
 
 ## Contributing
