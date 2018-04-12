@@ -319,6 +319,12 @@
   version = "v1.2.1"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/surgemq/message"
+  packages = ["."]
+  revision = "2b7ca1ac6121420133f8df6b94a976d5ca35339a"
+
+[[projects]]
   name = "github.com/ugorji/go"
   packages = ["codec"]
   revision = "9831f2c3ac1068a78f50999a30db84270f647af6"
@@ -386,6 +392,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4e63aed76d583f60bc060ff95e4b057fa319c8e01cd55c55760280ac2e00acbd"
+  inputs-digest = "3a8e52c90c0f2752a165dbbc3fe3a5b77317739eac2008449a2099b12a961786"
   solver-name = "gps-cdcl"
   solver-version = 1
