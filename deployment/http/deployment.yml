@@ -1,0 +1,37 @@
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: http-adapter
+  labels:
+    component: http-adapter
+spec:
+  serviceName: http-adapter
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        component: http-adapter
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: component
+                  operator: In
+                  values:
+                    - http-adapter
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: mainflux-http
+        image: mainflux/http:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8182
+        env:
+        - name: MF_MANAGER_URL
+          value: "http://manager:8180"
+        - name: MF_NATS_URL
+          value: "nats://nats:4222"
+        - name:  MF_HTTP_ADAPTER_PORT
+          value: "8182"
