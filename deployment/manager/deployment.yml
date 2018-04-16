@@ -1,0 +1,40 @@
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: manager
+  labels:
+    component: manager
+spec:
+  serviceName: manager
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        component: manager
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: component
+                  operator: In
+                  values:
+                    - manager
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: mainflux-manager
+        image: mainflux/manager:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8180
+        env:
+        - name: MF_DB_HOST
+          value: "mainflux-postgres"
+        - name: MF_MANAGER_DB
+          value: "mainflux"
+        - name: MF_MANAGER_PORT
+          value: "8180"
+        - name: MF_MANAGER_SECRET
+          value: "test-secret"
+
