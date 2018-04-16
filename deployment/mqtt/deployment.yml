@@ -1,0 +1,38 @@
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: mqtt-adapter
+  labels:
+    component: mqtt-adapter
+spec:
+  serviceName: mqtt-adapter
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        component: mqtt-adapter
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: component
+                  operator: In
+                  values:
+                    - mqtt-adapter
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: mainflux-mqtt
+        image: mainflux/mqtt-adapter:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 1883
+        env:
+        - name: MQTT_ADAPTER_NATS_URL
+          value: "nats://nats:4222"
+        - name: AUTH_URL
+          value: "http://manager"
+        - name: AUTH_PORT
+          value: "8180"
+
