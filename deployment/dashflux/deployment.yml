@@ -1,0 +1,20 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: dashflux
+  labels:
+    component: dashflux
+spec:
+  serviceName: dashflux
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        component: dashflux
+    spec:
+      containers:
+      - name: dashflux
+        image: mainflux/dashflux:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
