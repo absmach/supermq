@@ -1,27 +1,15 @@
 apiVersion: apps/v1beta1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: normalizer
   labels:
     component: normalizer
 spec:
-  serviceName: normalizer
   replicas: 3
   template:
     metadata:
       labels:
         component: normalizer
-    spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-                - key: component
-                  operator: In
-                  values:
-                    - normalizer
-            topologyKey: kubernetes.io/hostname
       containers:
       - name: mainflux-normalizer
         image: mainflux/normalizer:latest

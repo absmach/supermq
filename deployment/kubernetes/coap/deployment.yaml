@@ -1,27 +1,16 @@
 apiVersion: apps/v1beta1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: coap-adapter
   labels:
     component: coap-adapter
 spec:
-  serviceName: coap-adapter
   replicas: 3
   template:
     metadata:
       labels:
         component: coap-adapter
     spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-                - key: component
-                  operator: In
-                  values:
-                    - coap-adapter
-            topologyKey: kubernetes.io/hostname
       containers:
       - name: mainflux-coap
         image: mainflux/coap

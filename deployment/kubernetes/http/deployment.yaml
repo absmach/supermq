@@ -1,27 +1,16 @@
 apiVersion: apps/v1beta1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: http-adapter
   labels:
     component: http-adapter
 spec:
-  serviceName: http-adapter
   replicas: 3
   template:
     metadata:
       labels:
         component: http-adapter
     spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-                - key: component
-                  operator: In
-                  values:
-                    - http-adapter
-            topologyKey: kubernetes.io/hostname
       containers:
       - name: mainflux-http
         image: mainflux/http:latest
