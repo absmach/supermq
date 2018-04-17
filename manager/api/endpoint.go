@@ -97,7 +97,7 @@ func listClientsEndpoint(svc manager.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		clients, err := svc.ListClients(req.key)
+		clients, err := svc.ListClients(req.key, req.offset, req.limit)
 		if err != nil {
 			return nil, err
 		}
@@ -187,7 +187,7 @@ func listChannelsEndpoint(svc manager.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		channels, err := svc.ListChannels(req.key)
+		channels, err := svc.ListChannels(req.key, req.offset, req.limit)
 		if err != nil {
 			return nil, err
 		}

@@ -145,7 +145,7 @@ func TestListClients(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		_, err := svc.ListClients(tc.key)
+		_, err := svc.ListClients(tc.key, 1, 2)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
@@ -254,7 +254,7 @@ func TestListChannels(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		_, err := svc.ListChannels(tc.key)
+		_, err := svc.ListChannels(tc.key, 1, 2)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }

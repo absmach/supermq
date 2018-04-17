@@ -179,8 +179,8 @@ func TestListResourcesReqValidation(t *testing.T) {
 
 	cases := map[string]struct {
 		key    string
-		size   int
 		offset int
+		limit  int
 		err    error
 	}{
 		"valid listing request": {key, value, value, nil},
@@ -193,8 +193,8 @@ func TestListResourcesReqValidation(t *testing.T) {
 	for desc, tc := range cases {
 		req := listResourcesReq{
 			key:    tc.key,
-			size:   tc.size,
 			offset: tc.offset,
+			limit:  tc.limit,
 		}
 
 		err := req.validate()

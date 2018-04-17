@@ -332,7 +332,7 @@ func TestListClients(t *testing.T) {
 		req := testRequest{
 			client: cli,
 			method: http.MethodGet,
-			url:    fmt.Sprintf("%s/clients", ts.URL),
+			url:    fmt.Sprintf("%s/clients?offset=1&limit=2", ts.URL),
 			token:  tc.auth,
 		}
 		res, err := req.make()
@@ -535,7 +535,7 @@ func TestListChannels(t *testing.T) {
 		req := testRequest{
 			client: client,
 			method: http.MethodGet,
-			url:    fmt.Sprintf("%s/channels", ts.URL),
+			url:    fmt.Sprintf("%s/channels?offset=1&limit=2", ts.URL),
 			token:  tc.auth,
 		}
 		res, err := req.make()

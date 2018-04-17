@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strconv"
 
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
@@ -247,10 +248,19 @@ func decodeView(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
+	offset, err := strconv.Atoi(r.FormValue("offset"))
+	if err != nil {
+		return nil, err
+	}
+	limit, err := strconv.Atoi(r.FormValue("limit"))
+	if err != nil {
+		return nil, err
+	}
+
 	req := listResourcesReq{
 		key:    r.Header.Get("Authorization"),
-		size:   10,
-		offset: 0,
+		offset: offset,
+		limit:  limit,
 	}
 
 	return req, nil
