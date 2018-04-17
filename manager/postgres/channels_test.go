@@ -113,7 +113,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		n := len(chanRepo.Bulk(tc.owner, 0, 10))
+		n := len(chanRepo.All(tc.owner, 0, 10))
 		assert.Equal(t, tc.len, n, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.len, n))
 	}
 }

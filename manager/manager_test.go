@@ -136,16 +136,23 @@ func TestListClients(t *testing.T) {
 	svc.Register(user)
 	key, _ := svc.Login(user)
 
+	n := 5
+	for i := 0; i < n; i++ {
+		svc.AddClient(key, client)
+	}
 	cases := map[string]struct {
-		key string
-		err error
+		key  string
+		size int
+		err  error
 	}{
-		"list clients":                        {key, nil},
-		"list clients with wrong credentials": {wrong, manager.ErrUnauthorizedAccess},
+		"list clients":                        {key, 5, nil},
+		"list clients with wrong credentials": {wrong, 0, manager.ErrUnauthorizedAccess},
 	}
 
 	for desc, tc := range cases {
-		_, err := svc.ListClients(tc.key, 1, 2)
+		cl, err := svc.ListClients(tc.key, 0, tc.size)
+		size := len(cl)
+		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
@@ -244,17 +251,24 @@ func TestListChannels(t *testing.T) {
 	svc := newService()
 	svc.Register(user)
 	key, _ := svc.Login(user)
+	n := 5
+	for i := 0; i < n; i++ {
+		svc.CreateChannel(key, channel)
+	}
 
 	cases := map[string]struct {
-		key string
-		err error
+		key  string
+		size int
+		err  error
 	}{
-		"list channels":                        {key, nil},
-		"list channels with wrong credentials": {wrong, manager.ErrUnauthorizedAccess},
+		"list channels":                        {key, 5, nil},
+		"list channels with wrong credentials": {wrong, 0, manager.ErrUnauthorizedAccess},
 	}
 
 	for desc, tc := range cases {
-		_, err := svc.ListChannels(tc.key, 1, 2)
+		ch, err := svc.ListChannels(tc.key, 0, tc.size)
+		size := len(ch)
+		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }

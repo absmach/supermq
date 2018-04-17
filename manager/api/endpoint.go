@@ -102,7 +102,7 @@ func listClientsEndpoint(svc manager.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		return listClientsRes{clients, len(clients)}, nil
+		return listClientsRes{clients}, nil
 	}
 }
 
@@ -192,7 +192,7 @@ func listChannelsEndpoint(svc manager.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		return listChannelsRes{channels, len(channels)}, nil
+		return listChannelsRes{channels}, nil
 	}
 }
 

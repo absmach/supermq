@@ -59,7 +59,7 @@ func (crm *channelRepositoryMock) One(owner, id string) (manager.Channel, error)
 	return manager.Channel{}, manager.ErrNotFound
 }
 
-func (crm *channelRepositoryMock) Bulk(owner string, offset int, limit int) []manager.Channel {
+func (crm *channelRepositoryMock) All(owner string, offset, limit int) []manager.Channel {
 	// This obscure way to examine map keys is enforced by the key structure
 	// itself (see mocks/commons.go).
 	prefix := fmt.Sprintf("%s-", owner)

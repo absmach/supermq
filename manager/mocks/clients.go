@@ -63,7 +63,7 @@ func (crm *clientRepositoryMock) One(owner, id string) (manager.Client, error) {
 	return manager.Client{}, manager.ErrNotFound
 }
 
-func (crm *clientRepositoryMock) Bulk(owner string, offset int, limit int) []manager.Client {
+func (crm *clientRepositoryMock) All(owner string, offset, limit int) []manager.Client {
 	// This obscure way to examine map keys is enforced by the key structure
 	// itself (see mocks/commons.go).
 	prefix := fmt.Sprintf("%s-", owner)

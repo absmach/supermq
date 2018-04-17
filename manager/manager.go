@@ -156,7 +156,7 @@ func (ms *managerService) ViewChannel(key, id string) (Channel, error) {
 	return ms.channels.One(sub, id)
 }
 
-func (ms *managerService) ListChannels(key string, offset int, limit int) ([]Channel, error) {
+func (ms *managerService) ListChannels(key string, offset, limit int) ([]Channel, error) {
 	sub, err := ms.idp.Identity(key)
 	if err != nil {
 		return nil, err

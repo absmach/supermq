@@ -185,9 +185,9 @@ func TestListResourcesReqValidation(t *testing.T) {
 	}{
 		"valid listing request": {key, value, value, nil},
 		"missing token":         {"", value, value, manager.ErrUnauthorizedAccess},
-		"negative offset":       {key, value, -value, manager.ErrMalformedEntity},
-		"zero size":             {key, 0, value, manager.ErrMalformedEntity},
-		"negative size":         {key, -value, value, manager.ErrMalformedEntity},
+		"negative offset":       {key, -value, value, manager.ErrMalformedEntity},
+		"zero size":             {key, value, 0, manager.ErrMalformedEntity},
+		"negative size":         {key, value, -value, manager.ErrMalformedEntity},
 	}
 
 	for desc, tc := range cases {
