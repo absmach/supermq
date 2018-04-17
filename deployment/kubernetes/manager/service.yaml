@@ -7,7 +7,6 @@ metadata:
 spec:
   selector:
     component: manager
-    #  clusterIP: None
   ports:
   - port: 8180
     targetPort: 8180
