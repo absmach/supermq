@@ -70,7 +70,7 @@ func (ms *metricsMiddleware) ViewClient(key string, id string) (manager.Client, 
 	return ms.svc.ViewClient(key, id)
 }
 
-func (ms *metricsMiddleware) ListClients(key string, offset int, limit int) ([]manager.Client, error) {
+func (ms *metricsMiddleware) ListClients(key string, offset, limit int) ([]manager.Client, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "list_clients").Add(1)
 		ms.latency.With("method", "list_clients").Observe(time.Since(begin).Seconds())
@@ -115,7 +115,7 @@ func (ms *metricsMiddleware) ViewChannel(key string, id string) (manager.Channel
 	return ms.svc.ViewChannel(key, id)
 }
 
-func (ms *metricsMiddleware) ListChannels(key string, offset int, limit int) ([]manager.Channel, error) {
+func (ms *metricsMiddleware) ListChannels(key string, offset, limit int) ([]manager.Channel, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "list_channels").Add(1)
 		ms.latency.With("method", "list_channels").Observe(time.Since(begin).Seconds())

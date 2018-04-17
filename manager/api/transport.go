@@ -248,11 +248,14 @@ func decodeView(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
-	offset, err := strconv.Atoi(r.FormValue("offset"))
+	q := r.URL.Query()
+
+	offset, err := strconv.Atoi(q.Get("offset"))
 	if err != nil {
 		return nil, err
 	}
-	limit, err := strconv.Atoi(r.FormValue("limit"))
+
+	limit, err := strconv.Atoi(q.Get("limit"))
 	if err != nil {
 		return nil, err
 	}

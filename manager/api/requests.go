@@ -119,7 +119,7 @@ func (req listResourcesReq) validate() error {
 		return manager.ErrUnauthorizedAccess
 	}
 
-	if req.offset > 0 && req.limit >= 0 {
+	if req.offset >= 0 && req.limit > 0 {
 		return nil
 	}
 

@@ -44,8 +44,8 @@ type ClientRepository interface {
 	// by the specified user.
 	One(string, string) (Client, error)
 
-	// Bulk retrieves the bulk of clients owned by the specified user.
-	Bulk(string, int, int) []Client
+	// All retrieves the bulk of clients owned by the specified user.
+	All(string, int, int) []Client
 
 	// Remove removes the client having the provided identifier, that is owned
 	// by the specified user.

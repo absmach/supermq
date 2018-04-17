@@ -54,7 +54,7 @@ func (cr *clientRepository) One(owner, id string) (manager.Client, error) {
 	return client, nil
 }
 
-func (cr *clientRepository) Bulk(owner string, offset int, limit int) []manager.Client {
+func (cr *clientRepository) All(owner string, offset, limit int) []manager.Client {
 	var clients []manager.Client
 
 	cr.db.Offset(offset).Limit(limit).Find(&clients, "owner = ?", owner)

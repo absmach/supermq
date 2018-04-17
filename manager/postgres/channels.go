@@ -56,7 +56,7 @@ func (cr channelRepository) One(owner, id string) (manager.Channel, error) {
 	return channel, nil
 }
 
-func (cr channelRepository) Bulk(owner string, offset int, limit int) []manager.Channel {
+func (cr channelRepository) All(owner string, offset, limit int) []manager.Channel {
 	var channels []manager.Channel
 
 	cr.db.Offset(offset).Limit(limit).Find(&channels, "owner = ?", owner)

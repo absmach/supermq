@@ -89,7 +89,7 @@ func (ms *managerService) ViewClient(key, id string) (Client, error) {
 	return ms.clients.One(sub, id)
 }
 
-func (ms *managerService) ListClients(key string, offset int, limit int) ([]Client, error) {
+func (ms *managerService) ListClients(key string, offset, limit int) ([]Client, error) {
 	sub, err := ms.idp.Identity(key)
 	if err != nil {
 		return nil, err
@@ -99,7 +99,7 @@ func (ms *managerService) ListClients(key string, offset int, limit int) ([]Clie
 		return nil, ErrUnauthorizedAccess
 	}
 
-	return ms.clients.Bulk(sub, offset, limit), nil
+	return ms.clients.All(sub, offset, limit), nil
 }
 
 func (ms *managerService) RemoveClient(key, id string) error {
@@ -166,7 +166,7 @@ func (ms *managerService) ListChannels(key string, offset int, limit int) ([]Cha
 		return nil, ErrUnauthorizedAccess
 	}
 
-	return ms.channels.Bulk(sub, offset, limit), nil
+	return ms.channels.All(sub, offset, limit), nil
 }
 
 func (ms *managerService) RemoveChannel(key, id string) error {

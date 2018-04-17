@@ -86,7 +86,7 @@ func (lm *loggingMiddleware) ViewClient(key string, id string) (client manager.C
 	return lm.svc.ViewClient(key, id)
 }
 
-func (lm *loggingMiddleware) ListClients(key string, offset int, limit int) (clients []manager.Client, err error) {
+func (lm *loggingMiddleware) ListClients(key string, offset, limit int) (clients []manager.Client, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method list_clients for key %s took %s to complete", key, time.Since(begin))
 		if err != nil {
@@ -151,7 +151,7 @@ func (lm *loggingMiddleware) ViewChannel(key string, id string) (channel manager
 	return lm.svc.ViewChannel(key, id)
 }
 
-func (lm *loggingMiddleware) ListChannels(key string, offset int, limit int) (channels []manager.Channel, err error) {
+func (lm *loggingMiddleware) ListChannels(key string, offset, limit int) (channels []manager.Channel, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method list_channels for key %s took %s to complete", key, time.Since(begin))
 		if err != nil {
