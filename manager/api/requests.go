@@ -5,6 +5,8 @@ import (
 	"github.com/mainflux/mainflux/manager"
 )
 
+const maxLimitSize = 100
+
 type apiReq interface {
 	validate() error
 }
@@ -114,9 +116,13 @@ type listResourcesReq struct {
 	limit  int
 }
 
-func (req listResourcesReq) validate() error {
+func (req *listResourcesReq) validate() error {
 	if req.key == "" {
 		return manager.ErrUnauthorizedAccess
+	}
+
+	if req.limit > maxLimitSize {
+		req.limit = maxLimitSize
 	}
 
 	if req.offset >= 0 && req.limit > 0 {

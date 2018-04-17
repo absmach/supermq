@@ -24,7 +24,7 @@ type ChannelRepository interface {
 	// by the specified user.
 	One(string, string) (Channel, error)
 
-	// All retrieves the bulk of channels owned by the specified user.
+	// All retrieves the subset of channels owned by the specified user.
 	All(string, int, int) []Channel
 
 	// Remove removes the channel having the provided identifier, that is owned

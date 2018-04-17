@@ -42,8 +42,8 @@ type Service interface {
 	// ID, that belongs to the user identified by the provided key.
 	ViewClient(string, string) (Client, error)
 
-	// ListClients retrieves data about builk of clients specified by offset and limit
-	// that belongs to the user identified by the provided key.
+	// ListClients retrieves data about subset of clients that belongs to the
+	// user identified by the provided key.
 	ListClients(string, int, int) ([]Client, error)
 
 	// RemoveClient removes the client identified with the provided ID, that
@@ -61,8 +61,8 @@ type Service interface {
 	// ID, that belongs to the user identified by the provided key.
 	ViewChannel(string, string) (Channel, error)
 
-	// ListChannels retrieves data about bulk of channels specified by offset and limit
-	// that belongs to the user identified by the provided key.
+	// ListChannels retrieves data about subset of channels that belongs to the
+	// user identified by the provided key.
 	ListChannels(string, int, int) ([]Channel, error)
 
 	// RemoveChannel removes the client identified by the provided ID, that

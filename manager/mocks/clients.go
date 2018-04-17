@@ -69,13 +69,16 @@ func (crm *clientRepositoryMock) All(owner string, offset, limit int) []manager.
 	prefix := fmt.Sprintf("%s-", owner)
 
 	clients := make([]manager.Client, 0)
-
+	first := fmt.Sprintf("123e4567-e89b-12d3-a456-%012d", offset)
+	last := fmt.Sprintf("123e4567-e89b-12d3-a456-%012d", offset+limit)
 	for k, v := range crm.clients {
-		if strings.HasPrefix(k, prefix) {
+		if strings.HasPrefix(k, prefix) && v.ID > first && v.ID <= last {
 			clients = append(clients, v)
 		}
 	}
-
+	if len(clients) < offset {
+		return make([]manager.Client, 0)
+	}
 	return clients
 }
 
