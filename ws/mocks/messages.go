@@ -6,37 +6,29 @@ import (
 	broker "github.com/nats-io/go-nats"
 )
 
-var _ mainflux.MessagePubSub = (*mockPubSub)(nil)
+var _ ws.Service = (*mockService)(nil)
 
-type mockPubSub struct {
-	subscriptions map[string]mockSubscription
+type mockService struct {
+	subscriptions map[string]ws.Channel
 }
 
-// NewMessagePubSub returns mock message publisher.
-func NewMessagePubSub() mainflux.MessagePubSub {
-	return mockPubSub{map[string]mockSubscription{}}
+// NewService returns mock message publisher.
+func NewService(subs map[string]ws.Channel) ws.Service {
+	return mockService{subs}
 }
 
-func (pubsub mockPubSub) Publish(msg mainflux.RawMessage, _ mainflux.ConnFailHandler) error {
+func (svc mockService) Publish(msg mainflux.RawMessage) error {
 	if len(msg.Payload) == 0 {
 		return broker.ErrInvalidMsg
 	}
+	svc.subscriptions[msg.Channel].Messages <- msg
 	return nil
 }
 
-func (pubsub mockPubSub) Subscribe(subscription mainflux.Subscription, _ mainflux.ConnFailHandler) (mainflux.Unsubscribe, error) {
-	if _, ok := pubsub.subscriptions[subscription.ChanID]; ok {
-		return nil, ws.ErrFailedSubscription
+func (svc mockService) Subscribe(chanID string, channel ws.Channel) error {
+	if _, ok := svc.subscriptions[chanID]; !ok {
+		return ws.ErrFailedSubscription
 	}
-	sub := mockSubscription{subscription.ChanID, subscription.Write}
-	pubsub.subscriptions[subscription.ChanID] = sub
-	return func() error {
-		delete(pubsub.subscriptions, sub.channel)
-		return nil
-	}, nil
-}
-
-type mockSubscription struct {
-	channel string
-	write   mainflux.WriteMessage
+	svc.subscriptions[chanID] = channel
+	return nil
 }
