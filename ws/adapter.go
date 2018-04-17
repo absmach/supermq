@@ -2,75 +2,65 @@ package ws
 
 import (
 	"errors"
-	"fmt"
 
-	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux"
-	log "github.com/mainflux/mainflux/logger"
+	broker "github.com/nats-io/go-nats"
 )
 
-const protocol = "ws"
-
-var _ mainflux.MessagePubSub = (*adapterService)(nil)
+var _ Service = (*adapterService)(nil)
 
 var (
 	// ErrFailedMessagePublish indicates that message publishing failed.
 	ErrFailedMessagePublish = errors.New("failed to publish message")
-	// ErrFailedMessageBroadcast indicates that message broadcast failed.
-	ErrFailedMessageBroadcast = errors.New("failed to broadcast message")
 	// ErrFailedSubscription indicates that client couldn't subscribe to specified channel.
 	ErrFailedSubscription = errors.New("failed to subscribe to a channel")
+	// ErrFailedConnection indicates that service couldn't connect to message broker.
+	ErrFailedConnection = errors.New("failed to connect to message broker")
 )
 
+// Service specifies web socket service API.
+type Service interface {
+	mainflux.MessagePublisher
+	// Subscribes to channel with specified id.
+	Subscribe(string, Channel) error
+}
+
 type adapterService struct {
-	pubsub mainflux.MessagePubSub
-	logger log.Logger
+	pubsub Service
 }
 
 // New instantiates the domain service implementation.
-func New(pubsub mainflux.MessagePubSub, logger log.Logger) mainflux.MessagePubSub {
-	return &adapterService{pubsub, logger}
+func New(pubsub Service) Service {
+	return &adapterService{pubsub}
 }
 
-func (as *adapterService) Publish(msg mainflux.RawMessage, cfHandler mainflux.ConnFailHandler) error {
-	if err := as.pubsub.Publish(msg, cfHandler); err != nil {
-		as.logger.Warn(fmt.Sprintf("Failed to publish message: %s", err))
-		return ErrFailedMessagePublish
+func (as *adapterService) Publish(msg mainflux.RawMessage) error {
+	if err := as.pubsub.Publish(msg); err != nil {
+		switch err {
+		case broker.ErrConnectionClosed, broker.ErrInvalidConnection:
+			return ErrFailedConnection
+		default:
+			return ErrFailedMessagePublish
+		}
 	}
 	return nil
 }
 
-func (as *adapterService) Subscribe(sub mainflux.Subscription, cfHandler mainflux.ConnFailHandler) (mainflux.Unsubscribe, error) {
-	unsubscribe, err := as.pubsub.Subscribe(sub, nil)
-	if err != nil {
-		as.logger.Warn(fmt.Sprintf("Failed to subscribe to a channel: %s", err))
-		return nil, ErrFailedSubscription
+func (as *adapterService) Subscribe(chanID string, channel Channel) error {
+	if err := as.pubsub.Subscribe(chanID, channel); err != nil {
+		return ErrFailedSubscription
 	}
-	go as.listen(sub, cfHandler, func() {
-		go unsubscribe()
-	})
-	return nil, nil
+	return nil
 }
 
-func (as *adapterService) listen(sub mainflux.Subscription, cfHandler mainflux.ConnFailHandler, onClose func()) {
-	defer onClose()
-	for {
-		payload, err := sub.Read()
-		if websocket.IsUnexpectedCloseError(err) {
-			return
-		}
-		if err != nil {
-			as.logger.Warn(fmt.Sprintf("Failed to read message: %s", err))
-			return
-		}
-		msg := mainflux.RawMessage{
-			Channel:   sub.ChanID,
-			Publisher: sub.PubID,
-			Protocol:  protocol,
-			Payload:   payload,
-		}
-		if err := as.Publish(msg, cfHandler); err != nil {
-			as.logger.Warn(fmt.Sprintf("Failed to publish message to NATS: %s", err))
-		}
-	}
+// Channel is used for recieving and sending messages.
+type Channel struct {
+	Messages chan mainflux.RawMessage
+	Closed   chan bool
+}
+
+// Close channel and stop message transfer.
+func (channel Channel) Close() {
+	close(channel.Messages)
+	close(channel.Closed)
 }

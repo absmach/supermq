@@ -49,8 +49,8 @@ func main() {
 	}
 	defer nc.Close()
 
-	pubsub := nats.New(nc, logger)
-	svc := adapter.New(pubsub, logger)
+	pubsub := nats.New(nc)
+	svc := adapter.New(pubsub)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
@@ -74,7 +74,7 @@ func main() {
 		p := fmt.Sprintf(":%s", cfg.Port)
 		mc := manager.NewClient(cfg.ManagerURL)
 		logger.Info(fmt.Sprintf("WebSocket adapter service started, exposed port %s", cfg.Port))
-		errs <- http.ListenAndServe(p, api.MakeHandler(svc, mc, nc, logger))
+		errs <- http.ListenAndServe(p, api.MakeHandler(svc, mc, logger))
 	}()
 
 	go func() {

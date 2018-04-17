@@ -8,7 +8,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
-	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/ws"
 	broker "github.com/nats-io/go-nats"
 )
 
@@ -18,16 +18,15 @@ const (
 	maxFailureRatio = 0.6
 )
 
-var _ mainflux.MessagePubSub = (*natsPubSub)(nil)
+var _ ws.Service = (*natsPubSub)(nil)
 
 type natsPubSub struct {
-	nc     *broker.Conn
-	cb     *gobreaker.CircuitBreaker
-	logger log.Logger
+	nc *broker.Conn
+	cb *gobreaker.CircuitBreaker
 }
 
 // New instantiates NATS message publisher.
-func New(nc *broker.Conn, logger log.Logger) mainflux.MessagePubSub {
+func New(nc *broker.Conn) ws.Service {
 	st := gobreaker.Settings{
 		Name: "NATS",
 		ReadyToTrip: func(counts gobreaker.Counts) bool {
@@ -36,47 +35,37 @@ func New(nc *broker.Conn, logger log.Logger) mainflux.MessagePubSub {
 		},
 	}
 	cb := gobreaker.NewCircuitBreaker(st)
-	return &natsPubSub{nc, cb, logger}
+	return &natsPubSub{nc, cb}
 }
 
-func (pubsub *natsPubSub) Publish(msg mainflux.RawMessage, cfHandler mainflux.ConnFailHandler) error {
+func (pubsub *natsPubSub) Publish(msg mainflux.RawMessage) error {
 	data, err := proto.Marshal(&msg)
 	if err != nil {
 		return err
 	}
 
-	err = pubsub.nc.Publish(fmt.Sprintf("%s.%s", prefix, msg.Channel), data)
-	if err == broker.ErrConnectionClosed || err == broker.ErrInvalidConnection {
-		cfHandler()
-	}
-
-	return err
+	return pubsub.nc.Publish(fmt.Sprintf("%s.%s", prefix, msg.Channel), data)
 }
 
-func (pubsub *natsPubSub) Subscribe(subscription mainflux.Subscription, _ mainflux.ConnFailHandler) (mainflux.Unsubscribe, error) {
-	sub, err := pubsub.nc.Subscribe(fmt.Sprintf("%s.%s", prefix, subscription.ChanID), func(msg *broker.Msg) {
+func (pubsub *natsPubSub) Subscribe(chanID string, channel ws.Channel) error {
+	var sub *broker.Subscription
+	sub, err := pubsub.nc.Subscribe(fmt.Sprintf("%s.%s", prefix, chanID), func(msg *broker.Msg) {
 		if msg == nil {
-			pubsub.logger.Warn("Received empty message")
 			return
 		}
 
 		var rawMsg mainflux.RawMessage
 		if err := proto.Unmarshal(msg.Data, &rawMsg); err != nil {
-			pubsub.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
 			return
 		}
 
-		if err := subscription.Write(rawMsg); err != nil {
-			pubsub.logger.Warn(fmt.Sprintf("On message operation failed: %s", err))
+		select {
+		case channel.Messages <- rawMsg:
+		case <-channel.Closed:
+			sub.Unsubscribe()
+			channel.Close()
 		}
 	})
-	return func() error {
-		_, err := pubsub.cb.Execute(func() (interface{}, error) {
-			return nil, sub.Unsubscribe()
-		})
-		if err != nil {
-			pubsub.logger.Warn(fmt.Sprintf("Failed to unsubscribe from channel: %s", err))
-		}
-		return err
-	}, err
+
+	return err
 }
