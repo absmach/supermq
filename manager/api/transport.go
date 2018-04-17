@@ -15,6 +15,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+const MAX_LIMIT_SIZE = 100
+
 var errUnsupportedContentType = errors.New("unsupported content type")
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -248,6 +250,16 @@ func decodeView(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
+
+	if len(r.URL.RawQuery) == 0 {
+		req := listResourcesReq{
+			key:    r.Header.Get("Authorization"),
+			offset: 0,
+			limit:  10,
+		}
+		return req, nil
+	}
+
 	q := r.URL.Query()
 
 	offset, err := strconv.Atoi(q.Get("offset"))
@@ -258,6 +270,10 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 	limit, err := strconv.Atoi(q.Get("limit"))
 	if err != nil {
 		return nil, err
+	}
+
+	if limit > MAX_LIMIT_SIZE {
+		limit = MAX_LIMIT_SIZE
 	}
 
 	req := listResourcesReq{
