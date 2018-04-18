@@ -69,15 +69,15 @@ func handshake(svc ws.Service) http.HandlerFunc {
 		// Subscribe to channel
 		channel := ws.Channel{make(chan mainflux.RawMessage), make(chan bool)}
 		sub.channel = channel
-		if err = svc.Subscribe(sub.chanID, channel); err != nil {
+		if err = svc.Subscribe(sub.chanID, sub.channel); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to subscribe to NATS subject: %s", err))
 			w.WriteHeader(http.StatusExpectationFailed)
 			return
 		}
-		go sub.broadcast()
+		go sub.listen()
 
 		// Start listening for messages from NATS.
-		go sub.listen(svc)
+		go sub.broadcast(svc)
 	}
 }
 
@@ -117,7 +117,7 @@ type subscription struct {
 	channel ws.Channel
 }
 
-func (sub subscription) listen(svc ws.Service) {
+func (sub subscription) broadcast(svc ws.Service) {
 	for {
 		_, payload, err := sub.conn.ReadMessage()
 		if websocket.IsUnexpectedCloseError(err) {
@@ -144,7 +144,7 @@ func (sub subscription) listen(svc ws.Service) {
 	}
 }
 
-func (sub subscription) broadcast() {
+func (sub subscription) listen() {
 	for msg := range sub.channel.Messages {
 		if err := sub.conn.WriteMessage(websocket.TextMessage, msg.Payload); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to broadcast message to client: %s", err))
