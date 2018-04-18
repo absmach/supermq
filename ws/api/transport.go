@@ -12,6 +12,7 @@ import (
 	log "github.com/mainflux/mainflux/logger"
 	manager "github.com/mainflux/mainflux/manager/client"
 	"github.com/mainflux/mainflux/ws"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const protocol = "ws"
@@ -37,6 +38,8 @@ func MakeHandler(svc ws.Service, mc manager.ManagerClient, l log.Logger) http.Ha
 
 	mux := bone.New()
 	mux.GetFunc("/channels/:id/messages", handshake(svc))
+	mux.GetFunc("/version", mainflux.Version())
+	mux.Handle("/metrics", promhttp.Handler())
 
 	return mux
 }
