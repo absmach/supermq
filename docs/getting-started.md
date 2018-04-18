@@ -132,7 +132,7 @@ curl -s -S -i --cacert docker/ssl/certs/mainflux-server.crt --insecure -H "Autho
 ```
 
 If you don't provide them, default values will be used instead: 0 for `offset`,
-and 10. Note that `limit` cannot be set to values greater than 100. Providing
+and 10 for `limit`. Note that `limit` cannot be set to values greater than 100. Providing
 invalid values will be considered malformed request.
 
 ### Removing clients
@@ -198,7 +198,7 @@ curl -s -S -i --cacert docker/ssl/certs/mainflux-server.crt --insecure -H "Autho
 ```
 
 If you don't provide them, default values will be used instead: 0 for `offset`,
-and 10. Note that `limit` cannot be set to values greater than 100. Providing
+and 10 for `limit`. Note that `limit` cannot be set to values greater than 100. Providing
 invalid values will be considered malformed request.
 
 ### Removing channels
