@@ -61,18 +61,20 @@ func handshake(svc ws.Service) http.HandlerFunc {
 			logger.Warn(fmt.Sprintf("Failed to upgrade connection to websocket: %s", err))
 			return
 		}
+		sub.conn = conn
 
 		// Subscribe to channel
 		channel := ws.Channel{make(chan mainflux.RawMessage), make(chan bool)}
+		sub.channel = channel
 		if err = svc.Subscribe(sub.chanID, channel); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to subscribe to NATS subject: %s", err))
 			w.WriteHeader(http.StatusExpectationFailed)
 			return
 		}
-		go broadcast(conn, channel.Messages)
+		go sub.broadcast()
 
 		// Start listening for messages from NATS.
-		go listen(svc, sub, conn, channel)
+		go sub.listen(svc)
 	}
 }
 
@@ -81,7 +83,7 @@ func authorize(r *http.Request) (subscription, error) {
 	if authKey == "" {
 		authKeys := bone.GetQuery(r, "authorization")
 		if len(authKeys) == 0 {
-			return subscription{}, errUnauthorizedAccess
+			return subscription{}, manager.ErrUnauthorizedAccess
 		}
 		authKey = authKeys[0]
 	}
@@ -94,17 +96,29 @@ func authorize(r *http.Request) (subscription, error) {
 
 	pubID, err := auth.CanAccess(chanID, authKey)
 	if err != nil {
-		return subscription{}, errUnauthorizedAccess
+		return subscription{}, manager.ErrUnauthorizedAccess
 	}
 
-	return subscription{pubID, chanID}, nil
+	sub := subscription{
+		pubID:  pubID,
+		chanID: chanID,
+	}
+
+	return sub, nil
 }
 
-func listen(svc ws.Service, sub subscription, conn *websocket.Conn, channel ws.Channel) {
+type subscription struct {
+	pubID   string
+	chanID  string
+	conn    *websocket.Conn
+	channel ws.Channel
+}
+
+func (sub subscription) listen(svc ws.Service) {
 	for {
-		_, payload, err := conn.ReadMessage()
+		_, payload, err := sub.conn.ReadMessage()
 		if websocket.IsUnexpectedCloseError(err) {
-			channel.Closed <- true
+			sub.channel.Closed <- true
 			return
 		}
 		if err != nil {
@@ -120,22 +134,17 @@ func listen(svc ws.Service, sub subscription, conn *websocket.Conn, channel ws.C
 		if err := svc.Publish(msg); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to publish message to NATS: %s", err))
 			if err == ws.ErrFailedConnection {
-				channel.Closed <- true
+				sub.channel.Closed <- true
 				return
 			}
 		}
 	}
 }
 
-func broadcast(conn *websocket.Conn, messages <-chan mainflux.RawMessage) {
-	for msg := range messages {
-		if err := conn.WriteMessage(websocket.TextMessage, msg.Payload); err != nil {
+func (sub subscription) broadcast() {
+	for msg := range sub.channel.Messages {
+		if err := sub.conn.WriteMessage(websocket.TextMessage, msg.Payload); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to broadcast message to client: %s", err))
 		}
 	}
-}
-
-type subscription struct {
-	pubID  string
-	chanID string
 }

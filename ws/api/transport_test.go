@@ -41,13 +41,15 @@ func newHTTPServer(svc ws.Service, mc manager.ManagerClient) *httptest.Server {
 }
 
 func newManagerServer() *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("Authorization") == "" {
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-	}))
+	return httptest.NewServer(http.HandlerFunc(authorize))
+}
+
+func authorize(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Authorization") == "" {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }
 
 func newManagerClient(url string) manager.ManagerClient {
