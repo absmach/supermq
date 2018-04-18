@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -16,6 +17,7 @@ import (
 )
 
 var errUnsupportedContentType = errors.New("unsupported content type")
+var errInvalidQueryParams = errors.New("invalid query params")
 
 // MakeHandler returns a HTTP handler for API endpoints.
 func MakeHandler(svc manager.Service) http.Handler {
@@ -249,27 +251,46 @@ func decodeView(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 
-	if len(r.URL.RawQuery) == 0 {
+	q, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		return nil, err
+	}
+	offset := 0
+	limit := 10
+
+	n := len(q)
+	if n == 0 {
 		req := listResourcesReq{
 			key:    r.Header.Get("Authorization"),
-			offset: 0,
-			limit:  10,
+			offset: offset,
+			limit:  limit,
 		}
 		return req, nil
 	}
 
-	q := r.URL.Query()
-
-	offset, err := strconv.Atoi(q.Get("offset"))
-	if err != nil {
-		return nil, err
+	if n > 2 {
+		return nil, errInvalidQueryParams
 	}
 
-	limit, err := strconv.Atoi(q.Get("limit"))
-	if err != nil {
-		return nil, err
+	off, lmt := q["offset"], q["limit"]
+
+	if len(off) > 1 || len(lmt) > 1 {
+		return nil, errInvalidQueryParams
 	}
 
+	if len(off) == 1 {
+		offset, err = strconv.Atoi(off[0])
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if len(lmt) == 1 {
+		limit, err = strconv.Atoi(lmt[0])
+		if err != nil {
+			return nil, err
+		}
+	}
 	req := listResourcesReq{
 		key:    r.Header.Get("Authorization"),
 		offset: offset,
