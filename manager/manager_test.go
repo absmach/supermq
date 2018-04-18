@@ -136,7 +136,7 @@ func TestListClients(t *testing.T) {
 	svc.Register(user)
 	key, _ := svc.Login(user)
 
-	n := 5
+	n := 10
 	for i := 0; i < n; i++ {
 		svc.AddClient(key, client)
 	}
@@ -148,6 +148,12 @@ func TestListClients(t *testing.T) {
 		err    error
 	}{
 		"list clients":                        {key, 0, 5, 5, nil},
+		"list clients 5-10":                   {key, 5, 10, 5, nil},
+		"list last client":                    {key, 9, 10, 1, nil},
+		"list empty response":                 {key, 11, 10, 0, nil},
+		"list offset < 0":                     {key, -1, 10, 0, nil},
+		"list limit < 0":                      {key, 1, -10, 0, nil},
+		"list limit = 0":                      {key, 1, 0, 0, nil},
 		"list clients with wrong credentials": {wrong, 0, 0, 0, manager.ErrUnauthorizedAccess},
 	}
 
@@ -253,11 +259,11 @@ func TestListChannels(t *testing.T) {
 	svc := newService()
 	svc.Register(user)
 	key, _ := svc.Login(user)
+
 	n := 10
 	for i := 0; i < n; i++ {
 		svc.CreateChannel(key, channel)
 	}
-
 	cases := map[string]struct {
 		key    string
 		offset int
@@ -265,7 +271,12 @@ func TestListChannels(t *testing.T) {
 		size   int
 		err    error
 	}{
-		"list channels":                        {key, 0, 5, 5, nil},
+		"list first 5 channels":                {key, 0, 5, 5, nil},
+		"list channels 5-10 channels":          {key, 5, 10, 5, nil},
+		"list last channel":                    {key, 6, 10, 4, nil},
+		"list offset < 0":                      {key, -1, 10, 0, nil},
+		"list limit < 0":                       {key, 1, -10, 0, nil},
+		"list limit = 0":                       {key, 1, 0, 0, nil},
 		"list channels with wrong credentials": {wrong, 0, 0, 0, manager.ErrUnauthorizedAccess},
 	}
 

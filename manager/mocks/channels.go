@@ -65,8 +65,12 @@ func (crm *channelRepositoryMock) All(owner string, offset, limit int) []manager
 	// This obscure way to examine map keys is enforced by the key structure
 	// itself (see mocks/commons.go).
 	prefix := fmt.Sprintf("%s-", owner)
-
 	channels := make([]manager.Channel, 0)
+
+	if offset < 0 || limit <= 0 {
+		return channels
+	}
+
 	first := fmt.Sprintf("%s%012d", chanId, offset)
 	last := fmt.Sprintf("%s%012d", chanId, offset+limit)
 
@@ -75,9 +79,7 @@ func (crm *channelRepositoryMock) All(owner string, offset, limit int) []manager
 			channels = append(channels, v)
 		}
 	}
-	if len(channels) < offset {
-		return make([]manager.Channel, 0)
-	}
+
 	return channels
 }
 

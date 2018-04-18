@@ -10,6 +10,8 @@ import (
 
 var _ manager.ClientRepository = (*clientRepositoryMock)(nil)
 
+const cliId = "123e4567-e89b-12d3-a456-"
+
 type clientRepositoryMock struct {
 	mu      sync.Mutex
 	counter int
@@ -28,7 +30,7 @@ func (crm *clientRepositoryMock) Id() string {
 	defer crm.mu.Unlock()
 
 	crm.counter += 1
-	return fmt.Sprintf("123e4567-e89b-12d3-a456-%012d", crm.counter)
+	return fmt.Sprintf("%s%012d", cliId, crm.counter)
 }
 
 func (crm *clientRepositoryMock) Save(client manager.Client) error {
@@ -67,18 +69,21 @@ func (crm *clientRepositoryMock) All(owner string, offset, limit int) []manager.
 	// This obscure way to examine map keys is enforced by the key structure
 	// itself (see mocks/commons.go).
 	prefix := fmt.Sprintf("%s-", owner)
-
 	clients := make([]manager.Client, 0)
-	first := fmt.Sprintf("123e4567-e89b-12d3-a456-%012d", offset)
-	last := fmt.Sprintf("123e4567-e89b-12d3-a456-%012d", offset+limit)
+
+	if offset < 0 || limit <= 0 {
+		return clients
+	}
+
+	first := fmt.Sprintf("%s%012d", cliId, offset)
+	last := fmt.Sprintf("%s%012d", cliId, offset+limit)
+
 	for k, v := range crm.clients {
 		if strings.HasPrefix(k, prefix) && v.ID > first && v.ID <= last {
 			clients = append(clients, v)
 		}
 	}
-	if len(clients) < offset {
-		return make([]manager.Client, 0)
-	}
+
 	return clients
 }
 
