@@ -57,10 +57,6 @@ func (cr *clientRepository) One(owner, id string) (manager.Client, error) {
 func (cr *clientRepository) All(owner string, offset, limit int) []manager.Client {
 	var clients []manager.Client
 
-	if offset < 0 || limit <= 0 {
-		return clients
-	}
-
 	cr.db.Offset(offset).Limit(limit).Find(&clients, "owner = ?", owner)
 
 	return clients

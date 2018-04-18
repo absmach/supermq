@@ -127,11 +127,8 @@ func TestMultiClientRetrieval(t *testing.T) {
 		limit  int
 		size   int
 	}{
-		"existing owner":               {email, 0, n, n},
-		"empty results for offset < 0": {email, -3, n, 0},
-		"empty results for limit < 0":  {email, 2, -6, 0},
-		"empty results":                {email, 11, n, 0},
-		"non-existing owner":           {wrong, 1, 6, 0},
+		"existing owner":     {email, 0, n, n},
+		"non-existing owner": {wrong, 1, 6, 0},
 	}
 
 	for desc, tc := range cases {

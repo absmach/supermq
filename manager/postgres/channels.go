@@ -59,10 +59,6 @@ func (cr channelRepository) One(owner, id string) (manager.Channel, error) {
 func (cr channelRepository) All(owner string, offset, limit int) []manager.Channel {
 	var channels []manager.Channel
 
-	if offset < 0 || limit <= 0 {
-		return channels
-	}
-
 	cr.db.Offset(offset).Limit(limit).Find(&channels, "owner = ?", owner)
 	return channels
 }
