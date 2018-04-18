@@ -47,10 +47,10 @@ func TestPublish(t *testing.T) {
 
 	for _, tc := range cases {
 		// Check if message was sent.
-		go func() {
+		go func(desc string, tcMsg mainflux.RawMessage) {
 			msg := <-channel.Messages
-			assert.Equal(t, tc.msg, msg, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.msg, msg))
-		}()
+			assert.Equal(t, tcMsg, msg, fmt.Sprintf("%s: expected %s got %s\n", desc, tcMsg, msg))
+		}(tc.desc, tc.msg)
 
 		// Check if publish succeeded.
 		err := svc.Publish(tc.msg)
