@@ -330,7 +330,7 @@ func TestListClients(t *testing.T) {
 		{"get a list of clients with invalid offset", user.Email, http.StatusBadRequest, -1, 5, nil},
 		{"get a list of clients with invalid limit", user.Email, http.StatusBadRequest, 1, -5, nil},
 		{"get a list of clients with zero limit", user.Email, http.StatusBadRequest, 1, 0, nil},
-		{"get a list of clients with limit greater than max", user.Email, http.StatusOK, 0, 110, clients[0:100]},
+		{"get a list of clients with limit greater than max", user.Email, http.StatusBadRequest, 0, 110, nil},
 	}
 
 	for _, tc := range cases {
@@ -552,7 +552,7 @@ func TestListChannels(t *testing.T) {
 		{"get a list of channels with invalid offset", user.Email, http.StatusBadRequest, -1, 5, nil},
 		{"get a list of channels with invalid limit", user.Email, http.StatusBadRequest, 1, -5, nil},
 		{"get a list of channels with zero limit", user.Email, http.StatusBadRequest, 1, 0, nil},
-		{"get a list of channels with limit greater than max", user.Email, http.StatusOK, 0, 110, channels[0:100]},
+		{"get a list of channels with limit greater than max", user.Email, http.StatusBadRequest, 0, 110, nil},
 	}
 
 	for _, tc := range cases {

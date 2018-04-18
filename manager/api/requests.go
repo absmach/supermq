@@ -121,11 +121,7 @@ func (req *listResourcesReq) validate() error {
 		return manager.ErrUnauthorizedAccess
 	}
 
-	if req.limit > maxLimitSize {
-		req.limit = maxLimitSize
-	}
-
-	if req.offset >= 0 && req.limit > 0 {
+	if req.offset >= 0 && req.limit > 0 && req.limit < maxLimitSize {
 		return nil
 	}
 
