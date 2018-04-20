@@ -17,6 +17,9 @@ var (
 
 	// ErrNotFound indicates a non-existent entity request.
 	ErrNotFound error = errors.New("non-existent entity")
+
+	ErrUnsupportedContentType error = errors.New("unsupported content type")
+	ErrInvalidQueryParams     error = errors.New("invalid query params")
 )
 
 // Service specifies an API that must be fullfiled by the domain service
