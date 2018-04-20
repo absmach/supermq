@@ -9,9 +9,8 @@ object Engine extends App {
   val HttpAdapterUrl = envOrElse("MF_LT_HTTP_ADAPTER_URL", "http://localhost:8182")
   
   val props = new GatlingPropertiesBuilder()
-    .sourcesDirectory("./src/main/scala")
-    .resultsDirectory("./target/gatling")
-    .binariesDirectory("./target/scala-2.12/classes")
+    .resultsDirectory("target/gatling")
+    .binariesDirectory("target/scala-2.12/classes")
 
   Gatling.fromMap(props.build)
 }
