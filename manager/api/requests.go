@@ -5,7 +5,10 @@ import (
 	"github.com/mainflux/mainflux/manager"
 )
 
-const maxLimitSize = 100
+const (
+	maxLimitSize = 100
+	contentType  = "application/json"
+)
 
 type apiReq interface {
 	validate() error
