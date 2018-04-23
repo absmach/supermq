@@ -12,10 +12,11 @@ Tests are configured to use variables from `JAVA_OPTS` presented in the
 following table. Note that any unset variables will be replaced with their
 default values.
 
-| Variable | Description              | Default               |
-|----------|--------------------------|-----------------------|
-| manager  | Manager service URL      | http://localhost:8180 |
-| http     | HTTP adapter service URL | http://localhost:8182 |
+| Variable | Description                              | Default               |
+|----------|------------------------------------------|-----------------------|
+| manager  | Manager service URL                      | http://localhost:8180 |
+| http     | HTTP adapter service URL                 | http://localhost:8182 |
+| requests | Number of requests to be sent per second | 100                   |
 
 ## Usage
 

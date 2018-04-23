@@ -12,7 +12,7 @@ import io.circe.syntax._
 import CreateAndRetrieveClientSimulation._
 import io.gatling.http.protocol.HttpProtocolBuilder.toHttpProtocol
 import io.gatling.http.request.builder.HttpRequestBuilder.toActionBuilder
-import com.mainflux.loadtest.simulations.UrlConstants.ManagerUrl
+import com.mainflux.loadtest.simulations.Constants._
 
 class CreateAndRetrieveClientSimulation extends Simulation {
 
@@ -41,29 +41,21 @@ class CreateAndRetrieveClientSimulation extends Simulation {
     .userAgentHeader("curl/7.54.0")
 
   val scn = scenario("CreateAndGetClient")
-    .exec(http("request_0")
+    .exec(http("CreateClientRequest")
       .post("/clients")
       .header(HttpHeaderNames.ContentType, ContentType)
       .header(HttpHeaderNames.Authorization, token)
       .body(StringBody(Client))
       .check(status.is(201))
       .check(headerRegex(HttpHeaderNames.Location, "(.*)").saveAs("location")))
-    .exec(http("request_1")
+    .exec(http("GetClientRequest")
       .get("${location}")
       .header(HttpHeaderNames.Authorization, token)
       .check(status.is(200)))
 
   setUp(
     scn.inject(
-      constantUsersPerSec(100) during (15 second),
-      nothingFor(15 second),
-      constantUsersPerSec(250) during (15 second),
-      nothingFor(15 second),
-      constantUsersPerSec(500) during (15 second),
-      nothingFor(15 second),
-      constantUsersPerSec(750) during (15 second),
-      nothingFor(15 second),
-      constantUsersPerSec(1000) during (15 second))).protocols(httpProtocol)
+      constantUsersPerSec(RequestsPerSecond.toDouble) during (15 second))).protocols(httpProtocol)
 }
 
 object CreateAndRetrieveClientSimulation {

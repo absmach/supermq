@@ -12,7 +12,7 @@ import io.circe.syntax._
 import PublishSimulation._
 import io.gatling.http.protocol.HttpProtocolBuilder.toHttpProtocol
 import io.gatling.http.request.builder.HttpRequestBuilder.toActionBuilder
-import com.mainflux.loadtest.simulations.UrlConstants._
+import com.mainflux.loadtest.simulations.Constants._
 
 class PublishSimulation extends Simulation {
 
@@ -77,7 +77,7 @@ class PublishSimulation extends Simulation {
     .userAgentHeader("curl/7.54.0")
 
   val scn = scenario("PublishMessage")
-    .exec(http("request_0")
+    .exec(http("PublishMessageRequest")
       .post(s"/channels/${chanId}/messages")
       .header(HttpHeaderNames.ContentType, "application/senml+json")
       .header(HttpHeaderNames.Authorization, clientKey)
@@ -86,15 +86,7 @@ class PublishSimulation extends Simulation {
 
   setUp(
     scn.inject(
-      constantUsersPerSec(100) during (15 second),
-      nothingFor(15 second),
-      constantUsersPerSec(250) during (15 second),
-      nothingFor(15 second),
-      constantUsersPerSec(500) during (15 second),
-      nothingFor(15 second),
-      constantUsersPerSec(750) during (15 second),
-      nothingFor(15 second),
-      constantUsersPerSec(1000) during (15 second))).protocols(httpProtocol)
+      constantUsersPerSec(RequestsPerSecond.toDouble) during (15 second))).protocols(httpProtocol)
 }
 
 object PublishSimulation {
