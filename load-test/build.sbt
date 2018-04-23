@@ -1,7 +1,7 @@
 enablePlugins(GatlingPlugin)
 
 name := "load-test"
-version := "1.0-SNAPSHOT"
+version := "0.2.1"
 
 scalaVersion := "2.12.4"
 
