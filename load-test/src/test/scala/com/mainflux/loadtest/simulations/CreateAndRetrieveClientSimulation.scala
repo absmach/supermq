@@ -12,7 +12,7 @@ import io.circe.syntax._
 import CreateAndRetrieveClientSimulation._
 import io.gatling.http.protocol.HttpProtocolBuilder.toHttpProtocol
 import io.gatling.http.request.builder.HttpRequestBuilder.toActionBuilder
-import com.mainflux.loadtest.Engine._
+import com.mainflux.loadtest.simulations.UrlConstants.ManagerUrl
 
 class CreateAndRetrieveClientSimulation extends Simulation {
 
