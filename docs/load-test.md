@@ -1,29 +1,23 @@
-## Test simulations
+## Test scenarios
 
-The platform was tested using following test simulations:
+Testing environment to be determined.
 
-- Message publishing simulation
-- Create and get client simulation
+### Message publishing
 
-Purpose of these simulations is to see how responsive platform will be under
-heavy loads.
+In this scenario, large number of requests are sent to HTTP adapter service 
+every second. This test checks how much time HTTP adapter took to response to 
+each request.
 
-### Message publishing simulation
-
-Messsage publishing simulation sends large number of requests to HTTP adapter
-service every second. This test checks how much time HTTP adapter took to 
-response to each request.
-
-### Create and get client simulation
-
-Create and get client simulation sends large number of requests to manager
-service to create client, and than to retrieve its data. This test checks 
-how much time manager service took to response to each request.
-
-## Testing environment
+#### Results
 
 TBD
 
-## Results
+### Create and get client
+
+In this scenario, large number of requests are sent to manager service to create 
+client, and than to retrieve its data. This test checks how much time manager
+service took to response to each request.
+
+#### Results
 
 TBD
