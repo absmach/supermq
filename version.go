@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-const version string = "0.2.2"
+const version string = "0.2.3"
 
 type response struct {
 	Version string
