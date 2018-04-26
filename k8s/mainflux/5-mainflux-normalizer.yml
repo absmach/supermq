@@ -1,15 +1,17 @@
-apiVersion: apps/v1beta1
-kind: Deployment
+apiVersion: apps/v1beta1 
+kind: Deployment 
 metadata:
   name: normalizer
   labels:
     component: normalizer
 spec:
+  serviceName: normalizer
   replicas: 3
   template:
     metadata:
       labels:
         component: normalizer
+    spec:
       containers:
       - name: mainflux-normalizer
         image: mainflux/normalizer:latest
@@ -19,3 +21,17 @@ spec:
           value: "nats://nats:4222"
         - name: MF_NORMALIZER_PORT
           value: "8181"
+---
+apiVersion: v1 
+kind: Service 
+metadata:
+  name: normalizer
+  labels:
+    component: normalizer 
+spec:
+  selector:
+    component: normalizer
+  ports:
+  - port: 8181
+    targetPort: 8181 
+  clusterIP: None

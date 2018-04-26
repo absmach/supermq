@@ -1,20 +1,20 @@
-apiVersion: apps/v1beta1
+apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: manager
-  labels:
-    component: manager
 spec:
   replicas: 3
+  selector:
+    matchLabels:
+      app: manager
   template:
     metadata:
       labels:
-        component: manager
+        app: manager
     spec:
       containers:
-      - name: mainflux-manager
+      - name: manager
         image: mainflux/manager:latest
-        imagePullPolicy: Always
         ports:
         - containerPort: 8180
         env:
@@ -26,4 +26,19 @@ spec:
           value: "8180"
         - name: MF_MANAGER_SECRET
           value: "test-secret"
-
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: manager
+  labels:
+    app: manager
+spec:
+  ports:
+  - port: 8180
+    targetPort: 8180
+    protocol: TCP
+    name: http
+  selector:
+    app: manager
+  type: LoadBalancer

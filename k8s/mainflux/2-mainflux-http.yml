@@ -1,10 +1,11 @@
-apiVersion: apps/v1beta1
-kind: Deployment
+apiVersion: apps/v1beta1 
+kind: Deployment 
 metadata:
   name: http-adapter
   labels:
-    component: http-adapter
+    component: http-adapter 
 spec:
+  serviceName: http-adapter
   replicas: 3
   template:
     metadata:
@@ -24,3 +25,18 @@ spec:
           value: "nats://nats:4222"
         - name:  MF_HTTP_ADAPTER_PORT
           value: "8182"
+---
+apiVersion: v1 
+kind: Service 
+metadata:
+  name: http-adapter
+  labels:
+    component: http-adapter 
+spec:
+  selector:
+    component: http-adapter
+  ports:
+  - port: 8182
+    targetPort: 8182 
+  type: LoadBalancer
+
