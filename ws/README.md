@@ -41,7 +41,7 @@ go get github.com/mainflux/mainflux
 
 cd $GOPATH/src/github.com/mainflux/mainflux
 
-# compile the app; make sure to set the proper GOOS value
+# compile the ws
 make ws
 
 # set the environment variables and run the service
