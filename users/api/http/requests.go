@@ -1,4 +1,4 @@
-package api
+package http
 
 import "github.com/mainflux/mainflux/users"
 
