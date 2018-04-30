@@ -4,20 +4,27 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
+	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/users"
 )
 
 const contentType = "application/json"
 
-var errUnsupportedContentType = errors.New("unsupported content type")
+var (
+	errUnsupportedContentType = errors.New("unsupported content type")
+	logger                    log.Logger
+)
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc users.Service) http.Handler {
+func MakeHandler(svc users.Service, l log.Logger) http.Handler {
+	logger = l
+
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),
 	}
@@ -43,11 +50,13 @@ func MakeHandler(svc users.Service) http.Handler {
 
 func decodeCredentials(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
+		logger.Warn("Invalid or missing content type.")
 		return nil, errUnsupportedContentType
 	}
 
 	var user users.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		logger.Warn(fmt.Sprintf("Failed to decode user credentials: %s", err))
 		return nil, err
 	}
 

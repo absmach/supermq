@@ -82,7 +82,7 @@ func main() {
 	go func() {
 		p := fmt.Sprintf(":%s", cfg.HTTPPort)
 		logger.Info(fmt.Sprintf("Users HTTP service started, exposed port %s", cfg.HTTPPort))
-		errs <- http.ListenAndServe(p, httpapi.MakeHandler(svc))
+		errs <- http.ListenAndServe(p, httpapi.MakeHandler(svc, logger))
 	}()
 
 	// Start gRPC server
