@@ -93,7 +93,7 @@ func main() {
 			logger.Error(fmt.Sprintf("Failed to listen on port %s: %s", cfg.GRPCPort, err))
 		}
 		server := grpc.NewServer()
-		service := grpcapi.NewServer(svc)
+		service := grpcapi.NewService(svc)
 		grpcapi.RegisterUsersServiceServer(server, service)
 		logger.Info(fmt.Sprintf("Users gRPC service started, exposed port %s", cfg.GRPCPort))
 		errs <- server.Serve(listener)

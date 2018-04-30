@@ -10,8 +10,8 @@ type identifierService struct {
 	svc users.Service
 }
 
-// NewServer returns new gRPC users service instance.
-func NewServer(svc users.Service) UsersServiceServer {
+// NewService returns new gRPC users service instance.
+func NewService(svc users.Service) UsersServiceServer {
 	return identifierService{svc}
 }
 
