@@ -77,7 +77,6 @@ kubectl create -f 5-mainflux-normalizer.yml
 - Create Dashflux Deployment and Service
 
 ```bash
-cd dashflux
 kubectl create -f mainflux-dashflux.yaml
 ```
 
