@@ -39,13 +39,13 @@ To start the service outside of the container, execute the following shell scrip
 # download the latest version of the service
 go get github.com/mainflux/mainflux
 
-cd $GOPATH/src/github.com/mainflux/mainflux/cmd/ws
+cd $GOPATH/src/github.com/mainflux/mainflux
 
 # compile the app; make sure to set the proper GOOS value
 make ws
 
 # set the environment variables and run the service
-MF_MANAGER_URL=[Manager service URL] MF_NATS_URL=[NATS instance URL] MF_WS_ADAPTER_PORT=[Service WS port] app
+MF_MANAGER_URL=[Manager service URL] MF_NATS_URL=[NATS instance URL] MF_WS_ADAPTER_PORT=[Service WS port] ./build/mainflux-ws
 ```
 
 ## Usage
