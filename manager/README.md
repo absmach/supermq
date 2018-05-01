@@ -63,8 +63,11 @@ cd $GOPATH/src/github.com/mainflux/mainflux
 # compile the manager
 make manager
 
+# copy binary to bin
+make install
+
 # set the environment variables and run the service
-MF_DB_HOST=[Database host address] MF_DB_PORT=[Database host port] MF_DB_USER=[Database user] MF_DB_PASS=[Database password] MF_MANAGER_DB=[Name of the database used by the service] MF_MANAGER_PORT=[Service HTTP port] MF_MANAGER_SECRET=[String used for signing tokens] ./build/mainflux-manager
+MF_DB_HOST=[Database host address] MF_DB_PORT=[Database host port] MF_DB_USER=[Database user] MF_DB_PASS=[Database password] MF_MANAGER_DB=[Name of the database used by the service] MF_MANAGER_PORT=[Service HTTP port] MF_MANAGER_SECRET=[String used for signing tokens] $GOBIN/mainflux-manager
 ```
 
 ## Usage

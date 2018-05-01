@@ -44,8 +44,11 @@ cd $GOPATH/src/github.com/mainflux/mainflux
 # compile the ws
 make ws
 
+# copy binary to bin
+make install
+
 # set the environment variables and run the service
-MF_MANAGER_URL=[Manager service URL] MF_NATS_URL=[NATS instance URL] MF_WS_ADAPTER_PORT=[Service WS port] ./build/mainflux-ws
+MF_MANAGER_URL=[Manager service URL] MF_NATS_URL=[NATS instance URL] MF_WS_ADAPTER_PORT=[Service WS port] $GOBIN/mainflux-ws
 ```
 
 ## Usage

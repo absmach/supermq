@@ -44,8 +44,11 @@ cd $GOPATH/src/github.com/mainflux/mainflux
 # compile the http
 make http
 
+# copy binary to bin
+make install
+
 # set the environment variables and run the service
-MF_MANAGER_URL=[Manager service URL] MF_NATS_URL=[NATS instance URL] MF_HTTP_ADAPTER_PORT=[Service HTTP port] ./build/mainflux-http
+MF_MANAGER_URL=[Manager service URL] MF_NATS_URL=[NATS instance URL] MF_HTTP_ADAPTER_PORT=[Service HTTP port] $GOBIN/mainflux-http
 ```
 
 ## Usage
