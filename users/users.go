@@ -36,7 +36,7 @@ func (svc usersService) Login(user User) (string, error) {
 	return svc.idp.TemporaryKey(user.Email)
 }
 
-func (svc usersService) Identity(token string) (string, error) {
+func (svc usersService) Identify(token string) (string, error) {
 	id, err := svc.idp.Identity(token)
 	if err != nil {
 		return "", ErrUnauthorizedAccess

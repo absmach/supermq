@@ -59,7 +59,7 @@ func TestLogin(t *testing.T) {
 	}
 }
 
-func TestIdentity(t *testing.T) {
+func TestIdentify(t *testing.T) {
 	svc := newService()
 	svc.Register(user)
 	key, _ := svc.Login(user)
@@ -73,7 +73,7 @@ func TestIdentity(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		_, err := svc.Identity(tc.key)
+		_, err := svc.Identify(tc.key)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }

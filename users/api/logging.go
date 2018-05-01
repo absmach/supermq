@@ -47,7 +47,7 @@ func (lm *loggingMiddleware) Login(user users.User) (token string, err error) {
 	return lm.svc.Login(user)
 }
 
-func (lm *loggingMiddleware) Identity(key string) (id string, err error) {
+func (lm *loggingMiddleware) Identify(key string) (id string, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method identity for client %s took %s to complete", id, time.Since(begin))
 		if err != nil {
@@ -57,5 +57,5 @@ func (lm *loggingMiddleware) Identity(key string) (id string, err error) {
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.Identity(key)
+	return lm.svc.Identify(key)
 }

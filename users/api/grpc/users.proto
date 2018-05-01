@@ -3,13 +3,14 @@ syntax = "proto3";
 package grpc;
 
 service UsersService {
-    rpc Identity(IdentityRequest) returns (IdentityResponse) {}
+    rpc Identify(Token) returns (Identity) {}
 }
 
-message IdentityRequest {
-    string token = 1;
+message Token {
+    string value = 1;
 }
 
-message IdentityResponse {
-    string id = 1;
+message Identity {
+    string value = 1;
+    string err = 2;
 }

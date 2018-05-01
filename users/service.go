@@ -34,5 +34,5 @@ type Service interface {
 	// Identify validates user's token. If token is valid, user's id
 	// is returned. If token is invalid, or invocation failed for some
 	// other reason, non-nil error values are returned in response.
-	Identity(string) (string, error)
+	Identify(string) (string, error)
 }

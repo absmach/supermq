@@ -15,10 +15,10 @@ func NewService(svc users.Service) UsersServiceServer {
 	return identifierService{svc}
 }
 
-func (is identifierService) Identity(ctx context.Context, req *IdentityRequest) (*IdentityResponse, error) {
-	id, err := is.svc.Identity(req.GetToken())
+func (is identifierService) Identify(ctx context.Context, token *Token) (*Identity, error) {
+	id, err := is.svc.Identify(token.GetValue())
 	if err != nil {
-		return nil, err
+		return &Identity{id, err.Error()}, err
 	}
-	return &IdentityResponse{id}, nil
+	return &Identity{id, ""}, nil
 }
