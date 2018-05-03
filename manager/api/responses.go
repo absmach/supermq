@@ -31,22 +31,6 @@ func (res identityRes) empty() bool {
 	return true
 }
 
-type tokenRes struct {
-	Token string `json:"token,omitempty"`
-}
-
-func (res tokenRes) code() int {
-	return http.StatusCreated
-}
-
-func (res tokenRes) headers() map[string]string {
-	return map[string]string{}
-}
-
-func (res tokenRes) empty() bool {
-	return res.Token == ""
-}
-
 type removeRes struct{}
 
 func (res removeRes) code() int {
