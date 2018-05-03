@@ -27,43 +27,6 @@ func newService() manager.Service {
 	return manager.New(users, clients, channels, hasher, idp)
 }
 
-func TestRegister(t *testing.T) {
-	svc := newService()
-
-	cases := []struct {
-		desc string
-		user manager.User
-		err  error
-	}{
-		{"register new user", user, nil},
-		{"register existing user", user, manager.ErrConflict},
-	}
-
-	for _, tc := range cases {
-		err := svc.Register(tc.user)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-	}
-}
-
-func TestLogin(t *testing.T) {
-	svc := newService()
-	svc.Register(user)
-
-	cases := map[string]struct {
-		user manager.User
-		err  error
-	}{
-		"login with good credentials": {user, nil},
-		"login with wrong e-mail":     {manager.User{wrong, user.Password}, manager.ErrUnauthorizedAccess},
-		"login with wrong password":   {manager.User{user.Email, wrong}, manager.ErrUnauthorizedAccess},
-	}
-
-	for desc, tc := range cases {
-		_, err := svc.Login(tc.user)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
-	}
-}
-
 func TestAddClient(t *testing.T) {
 	svc := newService()
 	svc.Register(user)

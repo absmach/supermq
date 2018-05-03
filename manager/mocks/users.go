@@ -1,44 +1,27 @@
 package mocks
 
 import (
-	"sync"
+	"context"
 
-	"github.com/mainflux/mainflux/manager"
+	"github.com/mainflux/mainflux/users"
+	pb "github.com/mainflux/mainflux/users/api/grpc"
+	"google.golang.org/grpc"
 )
 
-var _ manager.UserRepository = (*userRepositoryMock)(nil)
+var _ pb.UsersServiceClient = (*usersServiceMock)(nil)
 
-type userRepositoryMock struct {
-	mu    sync.Mutex
-	users map[string]manager.User
+type usersServiceMock struct {
+	users map[string]string
 }
 
-// NewUserRepository creates in-memory user repository.
-func NewUserRepository() manager.UserRepository {
-	return &userRepositoryMock{
-		users: make(map[string]manager.User),
-	}
+// NewUsersService creates mock of users service.
+func NewUsersService(users map[string]string) pb.UsersServiceClient {
+	return &usersServiceMock{users}
 }
 
-func (urm *userRepositoryMock) Save(user manager.User) error {
-	urm.mu.Lock()
-	defer urm.mu.Unlock()
-
-	if _, ok := urm.users[user.Email]; ok {
-		return manager.ErrConflict
+func (svc usersServiceMock) Identify(ctx context.Context, in *pb.Token, opts ...grpc.CallOption) (*pb.Identity, error) {
+	if id, ok := svc.users[in.Value]; ok {
+		return &pb.Identity{id, ""}, nil
 	}
-
-	urm.users[user.Email] = user
-	return nil
-}
-
-func (urm *userRepositoryMock) One(email string) (manager.User, error) {
-	urm.mu.Lock()
-	defer urm.mu.Unlock()
-
-	if val, ok := urm.users[email]; ok {
-		return val, nil
-	}
-
-	return manager.User{}, manager.ErrUnauthorizedAccess
+	return nil, users.ErrUnauthorizedAccess
 }
