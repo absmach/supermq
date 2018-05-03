@@ -12,9 +12,6 @@ import (
 func TestClientSave(t *testing.T) {
 	email := "client-save@example.com"
 
-	userRepo := postgres.NewUserRepository(db)
-	userRepo.Save(manager.User{email, "pass"})
-
 	clientRepo := postgres.NewClientRepository(db)
 
 	c1 := manager.Client{
@@ -22,17 +19,11 @@ func TestClientSave(t *testing.T) {
 		Owner: email,
 	}
 
-	c2 := manager.Client{
-		ID:    clientRepo.Id(),
-		Owner: "unknown@example.com",
-	}
-
 	cases := map[string]struct {
 		client manager.Client
 		hasErr bool
 	}{
-		"new client, existing user":     {c1, false},
-		"new client, non-existing user": {c2, true},
+		"create new client": {c1, false},
 	}
 
 	for desc, tc := range cases {
@@ -43,9 +34,6 @@ func TestClientSave(t *testing.T) {
 
 func TestClientUpdate(t *testing.T) {
 	email := "client-update@example.com"
-
-	userRepo := postgres.NewUserRepository(db)
-	userRepo.Save(manager.User{email, "pass"})
 
 	clientRepo := postgres.NewClientRepository(db)
 
@@ -74,9 +62,6 @@ func TestClientUpdate(t *testing.T) {
 func TestSingleClientRetrieval(t *testing.T) {
 	email := "client-single-retrieval@example.com"
 
-	userRepo := postgres.NewUserRepository(db)
-	userRepo.Save(manager.User{email, "pass"})
-
 	clientRepo := postgres.NewClientRepository(db)
 
 	c := manager.Client{
@@ -104,9 +89,6 @@ func TestSingleClientRetrieval(t *testing.T) {
 
 func TestMultiClientRetrieval(t *testing.T) {
 	email := "client-multi-retrieval@example.com"
-
-	userRepo := postgres.NewUserRepository(db)
-	userRepo.Save(manager.User{email, "pass"})
 
 	clientRepo := postgres.NewClientRepository(db)
 
@@ -139,9 +121,6 @@ func TestMultiClientRetrieval(t *testing.T) {
 
 func TestClientRemoval(t *testing.T) {
 	email := "client-removal@example.com"
-
-	userRepo := postgres.NewUserRepository(db)
-	userRepo.Save(manager.User{email, "pass"})
 
 	clientRepo := postgres.NewClientRepository(db)
 	client := manager.Client{

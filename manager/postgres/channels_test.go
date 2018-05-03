@@ -12,18 +12,13 @@ import (
 func TestChannelSave(t *testing.T) {
 	email := "channel-save@example.com"
 
-	userRepo := postgres.NewUserRepository(db)
-	userRepo.Save(manager.User{email, "pass"})
-
 	c1 := manager.Channel{Owner: email}
-	c2 := manager.Channel{Owner: wrong}
 
 	cases := map[string]struct {
 		channel manager.Channel
 		hasErr  bool
 	}{
-		"new channel, existing user":     {c1, false},
-		"new channel, non-existing user": {c2, true},
+		"create new channel": {c1, false},
 	}
 
 	channelRepo := postgres.NewChannelRepository(db)
@@ -37,9 +32,6 @@ func TestChannelSave(t *testing.T) {
 
 func TestChannelUpdate(t *testing.T) {
 	email := "channel-update@example.com"
-
-	userRepo := postgres.NewUserRepository(db)
-	userRepo.Save(manager.User{email, "pass"})
 
 	chanRepo := postgres.NewChannelRepository(db)
 
@@ -65,9 +57,6 @@ func TestChannelUpdate(t *testing.T) {
 func TestSingleChannelRetrieval(t *testing.T) {
 	email := "channel-single-retrieval@example.com"
 
-	userRepo := postgres.NewUserRepository(db)
-	userRepo.Save(manager.User{email, "pass"})
-
 	chanRepo := postgres.NewChannelRepository(db)
 
 	c := manager.Channel{Owner: email}
@@ -91,9 +80,6 @@ func TestSingleChannelRetrieval(t *testing.T) {
 
 func TestMultiChannelRetrieval(t *testing.T) {
 	email := "channel-multi-retrieval@example.com"
-
-	userRepo := postgres.NewUserRepository(db)
-	userRepo.Save(manager.User{email, "pass"})
 
 	chanRepo := postgres.NewChannelRepository(db)
 
@@ -123,9 +109,6 @@ func TestMultiChannelRetrieval(t *testing.T) {
 func TestChannelRemoval(t *testing.T) {
 	email := "channel-removal@example.com"
 
-	userRepo := postgres.NewUserRepository(db)
-	userRepo.Save(manager.User{email, "pass"})
-
 	chanRepo := postgres.NewChannelRepository(db)
 	chanId, _ := chanRepo.Save(manager.Channel{Owner: email})
 
@@ -144,9 +127,6 @@ func TestChannelRemoval(t *testing.T) {
 
 func TestChannelConnect(t *testing.T) {
 	email := "channel-connect@example.com"
-
-	userRepo := postgres.NewUserRepository(db)
-	userRepo.Save(manager.User{email, "pass"})
 
 	clientRepo := postgres.NewClientRepository(db)
 	client := manager.Client{
@@ -178,9 +158,6 @@ func TestChannelConnect(t *testing.T) {
 
 func TestChannelDisconnect(t *testing.T) {
 	email := "channel-disconnect@example.com"
-
-	userRepo := postgres.NewUserRepository(db)
-	userRepo.Save(manager.User{email, "pass"})
 
 	clientRepo := postgres.NewClientRepository(db)
 	client := manager.Client{
@@ -216,9 +193,6 @@ func TestChannelDisconnect(t *testing.T) {
 
 func TestChannelAccessCheck(t *testing.T) {
 	email := "channel-access-check@example.com"
-
-	userRepo := postgres.NewUserRepository(db)
-	userRepo.Save(manager.User{email, "pass"})
 
 	clientRepo := postgres.NewClientRepository(db)
 	client := manager.Client{
