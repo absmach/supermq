@@ -9,16 +9,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const wrong string = "wrong-value"
-
-var (
-	user    manager.User    = manager.User{"user@example.com", "password"}
-	client  manager.Client  = manager.Client{Type: "app", Name: "test"}
-	channel manager.Channel = manager.Channel{Name: "test", Clients: []manager.Client{}}
+const (
+	wrong = "wrong-value"
+	email = "user@example.com"
+	token = "token"
 )
 
-func newService() manager.Service {
-	users := mocks.NewUserRepository()
+var (
+	client  = manager.Client{Type: "app", Name: "test"}
+	channel = manager.Channel{Name: "test", Clients: []manager.Client{}}
+)
+
+func newService(tokens map[string]string) manager.Service {
+	users := mocks.NewUsersService(tokens)
 	clients := mocks.NewClientRepository()
 	channels := mocks.NewChannelRepository(clients)
 	hasher := mocks.NewHasher()
@@ -28,17 +31,15 @@ func newService() manager.Service {
 }
 
 func TestAddClient(t *testing.T) {
-	svc := newService()
-	svc.Register(user)
-	key, _ := svc.Login(user)
+	svc := newService(map[string]string{token: email})
 
 	cases := map[string]struct {
 		client manager.Client
 		key    string
 		err    error
 	}{
-		"add new app":                       {manager.Client{Type: "app", Name: "a"}, key, nil},
-		"add new device":                    {manager.Client{Type: "device", Name: "b"}, key, nil},
+		"add new app":                       {manager.Client{Type: "app", Name: "a"}, token, nil},
+		"add new device":                    {manager.Client{Type: "device", Name: "b"}, token, nil},
 		"add client with wrong credentials": {manager.Client{Type: "app", Name: "d"}, wrong, manager.ErrUnauthorizedAccess},
 	}
 
@@ -49,10 +50,8 @@ func TestAddClient(t *testing.T) {
 }
 
 func TestUpdateClient(t *testing.T) {
-	svc := newService()
-	svc.Register(user)
-	key, _ := svc.Login(user)
-	clientId, _ := svc.AddClient(key, client)
+	svc := newService(map[string]string{token: email})
+	clientId, _ := svc.AddClient(token, client)
 	client.ID = clientId
 
 	cases := map[string]struct {
@@ -60,9 +59,9 @@ func TestUpdateClient(t *testing.T) {
 		key    string
 		err    error
 	}{
-		"update existing client":               {client, key, nil},
+		"update existing client":               {client, token, nil},
 		"update client with wrong credentials": {client, wrong, manager.ErrUnauthorizedAccess},
-		"update non-existing client":           {manager.Client{ID: "2", Type: "app", Name: "d"}, key, manager.ErrNotFound},
+		"update non-existing client":           {manager.Client{ID: "2", Type: "app", Name: "d"}, token, manager.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
@@ -72,10 +71,8 @@ func TestUpdateClient(t *testing.T) {
 }
 
 func TestViewClient(t *testing.T) {
-	svc := newService()
-	svc.Register(user)
-	key, _ := svc.Login(user)
-	clientId, _ := svc.AddClient(key, client)
+	svc := newService(map[string]string{token: email})
+	clientId, _ := svc.AddClient(token, client)
 	client.ID = clientId
 
 	cases := map[string]struct {
@@ -83,9 +80,9 @@ func TestViewClient(t *testing.T) {
 		key string
 		err error
 	}{
-		"view existing client":               {client.ID, key, nil},
+		"view existing client":               {client.ID, token, nil},
 		"view client with wrong credentials": {client.ID, wrong, manager.ErrUnauthorizedAccess},
-		"view non-existing client":           {wrong, key, manager.ErrNotFound},
+		"view non-existing client":           {wrong, token, manager.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
@@ -95,13 +92,11 @@ func TestViewClient(t *testing.T) {
 }
 
 func TestListClients(t *testing.T) {
-	svc := newService()
-	svc.Register(user)
-	key, _ := svc.Login(user)
+	svc := newService(map[string]string{token: email})
 
 	n := 10
 	for i := 0; i < n; i++ {
-		svc.AddClient(key, client)
+		svc.AddClient(token, client)
 	}
 	cases := map[string]struct {
 		key    string
@@ -110,13 +105,13 @@ func TestListClients(t *testing.T) {
 		size   int
 		err    error
 	}{
-		"list clients":                        {key, 0, 5, 5, nil},
-		"list clients 5-10":                   {key, 5, 10, 5, nil},
-		"list last client":                    {key, 9, 10, 1, nil},
-		"list empty response":                 {key, 11, 10, 0, nil},
-		"list offset < 0":                     {key, -1, 10, 0, nil},
-		"list limit < 0":                      {key, 1, -10, 0, nil},
-		"list limit = 0":                      {key, 1, 0, 0, nil},
+		"list clients":                        {token, 0, 5, 5, nil},
+		"list clients 5-10":                   {token, 5, 10, 5, nil},
+		"list last client":                    {token, 9, 10, 1, nil},
+		"list empty response":                 {token, 11, 10, 0, nil},
+		"list offset < 0":                     {token, -1, 10, 0, nil},
+		"list limit < 0":                      {token, 1, -10, 0, nil},
+		"list limit = 0":                      {token, 1, 0, 0, nil},
 		"list clients with wrong credentials": {wrong, 0, 0, 0, manager.ErrUnauthorizedAccess},
 	}
 
@@ -129,10 +124,8 @@ func TestListClients(t *testing.T) {
 }
 
 func TestRemoveClient(t *testing.T) {
-	svc := newService()
-	svc.Register(user)
-	key, _ := svc.Login(user)
-	clientId, _ := svc.AddClient(key, client)
+	svc := newService(map[string]string{token: email})
+	clientId, _ := svc.AddClient(token, client)
 	client.ID = clientId
 
 	cases := map[string]struct {
@@ -141,9 +134,9 @@ func TestRemoveClient(t *testing.T) {
 		err error
 	}{
 		"remove client with wrong credentials": {client.ID, "?", manager.ErrUnauthorizedAccess},
-		"remove existing client":               {client.ID, key, nil},
-		"remove removed client":                {client.ID, key, nil},
-		"remove non-existing client":           {"?", key, nil},
+		"remove existing client":               {client.ID, token, nil},
+		"remove removed client":                {client.ID, token, nil},
+		"remove non-existing client":           {"?", token, nil},
 	}
 
 	for desc, tc := range cases {
@@ -153,16 +146,14 @@ func TestRemoveClient(t *testing.T) {
 }
 
 func TestCreateChannel(t *testing.T) {
-	svc := newService()
-	svc.Register(user)
-	key, _ := svc.Login(user)
+	svc := newService(map[string]string{token: email})
 
 	cases := map[string]struct {
 		channel manager.Channel
 		key     string
 		err     error
 	}{
-		"create channel":                        {manager.Channel{}, key, nil},
+		"create channel":                        {manager.Channel{}, token, nil},
 		"create channel with wrong credentials": {manager.Channel{}, wrong, manager.ErrUnauthorizedAccess},
 	}
 
@@ -173,10 +164,8 @@ func TestCreateChannel(t *testing.T) {
 }
 
 func TestUpdateChannel(t *testing.T) {
-	svc := newService()
-	svc.Register(user)
-	key, _ := svc.Login(user)
-	chanId, _ := svc.CreateChannel(key, channel)
+	svc := newService(map[string]string{token: email})
+	chanId, _ := svc.CreateChannel(token, channel)
 	channel.ID = chanId
 
 	cases := map[string]struct {
@@ -184,9 +173,9 @@ func TestUpdateChannel(t *testing.T) {
 		key     string
 		err     error
 	}{
-		"update existing channel":               {channel, key, nil},
+		"update existing channel":               {channel, token, nil},
 		"update channel with wrong credentials": {channel, wrong, manager.ErrUnauthorizedAccess},
-		"update non-existing channel":           {manager.Channel{ID: "2", Name: "test"}, key, manager.ErrNotFound},
+		"update non-existing channel":           {manager.Channel{ID: "2", Name: "test"}, token, manager.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
@@ -196,10 +185,8 @@ func TestUpdateChannel(t *testing.T) {
 }
 
 func TestViewChannel(t *testing.T) {
-	svc := newService()
-	svc.Register(user)
-	key, _ := svc.Login(user)
-	chanId, _ := svc.CreateChannel(key, channel)
+	svc := newService(map[string]string{token: email})
+	chanId, _ := svc.CreateChannel(token, channel)
 	channel.ID = chanId
 
 	cases := map[string]struct {
@@ -207,9 +194,9 @@ func TestViewChannel(t *testing.T) {
 		key string
 		err error
 	}{
-		"view existing channel":               {channel.ID, key, nil},
+		"view existing channel":               {channel.ID, token, nil},
 		"view channel with wrong credentials": {channel.ID, wrong, manager.ErrUnauthorizedAccess},
-		"view non-existing channel":           {wrong, key, manager.ErrNotFound},
+		"view non-existing channel":           {wrong, token, manager.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
@@ -219,13 +206,11 @@ func TestViewChannel(t *testing.T) {
 }
 
 func TestListChannels(t *testing.T) {
-	svc := newService()
-	svc.Register(user)
-	key, _ := svc.Login(user)
+	svc := newService(map[string]string{token: email})
 
 	n := 10
 	for i := 0; i < n; i++ {
-		svc.CreateChannel(key, channel)
+		svc.CreateChannel(token, channel)
 	}
 	cases := map[string]struct {
 		key    string
@@ -234,12 +219,12 @@ func TestListChannels(t *testing.T) {
 		size   int
 		err    error
 	}{
-		"list first 5 channels":                {key, 0, 5, 5, nil},
-		"list channels 5-10 channels":          {key, 5, 10, 5, nil},
-		"list last channel":                    {key, 6, 10, 4, nil},
-		"list offset < 0":                      {key, -1, 10, 0, nil},
-		"list limit < 0":                       {key, 1, -10, 0, nil},
-		"list limit = 0":                       {key, 1, 0, 0, nil},
+		"list first 5 channels":                {token, 0, 5, 5, nil},
+		"list channels 5-10 channels":          {token, 5, 10, 5, nil},
+		"list last channel":                    {token, 6, 10, 4, nil},
+		"list offset < 0":                      {token, -1, 10, 0, nil},
+		"list limit < 0":                       {token, 1, -10, 0, nil},
+		"list limit = 0":                       {token, 1, 0, 0, nil},
 		"list channels with wrong credentials": {wrong, 0, 0, 0, manager.ErrUnauthorizedAccess},
 	}
 
@@ -252,10 +237,8 @@ func TestListChannels(t *testing.T) {
 }
 
 func TestRemoveChannel(t *testing.T) {
-	svc := newService()
-	svc.Register(user)
-	key, _ := svc.Login(user)
-	chanId, _ := svc.CreateChannel(key, channel)
+	svc := newService(map[string]string{token: email})
+	chanId, _ := svc.CreateChannel(token, channel)
 	channel.ID = chanId
 
 	cases := map[string]struct {
@@ -264,9 +247,9 @@ func TestRemoveChannel(t *testing.T) {
 		err error
 	}{
 		"remove channel with wrong credentials": {channel.ID, wrong, manager.ErrUnauthorizedAccess},
-		"remove existing channel":               {channel.ID, key, nil},
-		"remove removed channel":                {channel.ID, key, nil},
-		"remove non-existing channel":           {channel.ID, key, nil},
+		"remove existing channel":               {channel.ID, token, nil},
+		"remove removed channel":                {channel.ID, token, nil},
+		"remove non-existing channel":           {channel.ID, token, nil},
 	}
 
 	for desc, tc := range cases {
@@ -276,13 +259,11 @@ func TestRemoveChannel(t *testing.T) {
 }
 
 func TestConnect(t *testing.T) {
-	svc := newService()
-	svc.Register(user)
-	key, _ := svc.Login(user)
+	svc := newService(map[string]string{token: email})
 
-	clientId, _ := svc.AddClient(key, client)
+	clientId, _ := svc.AddClient(token, client)
 	client.ID = clientId
-	chanId, _ := svc.CreateChannel(key, channel)
+	chanId, _ := svc.CreateChannel(token, channel)
 	channel.ID = chanId
 
 	cases := map[string]struct {
@@ -291,9 +272,9 @@ func TestConnect(t *testing.T) {
 		clientId string
 		err      error
 	}{
-		"connect client":                         {key, channel.ID, client.ID, nil},
+		"connect client":                         {token, channel.ID, client.ID, nil},
 		"connect client with wrong credentials":  {wrong, channel.ID, client.ID, manager.ErrUnauthorizedAccess},
-		"connect client to non-existing channel": {key, wrong, client.ID, manager.ErrNotFound},
+		"connect client to non-existing channel": {token, wrong, client.ID, manager.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
@@ -303,16 +284,14 @@ func TestConnect(t *testing.T) {
 }
 
 func TestDisconnect(t *testing.T) {
-	svc := newService()
-	svc.Register(user)
-	key, _ := svc.Login(user)
+	svc := newService(map[string]string{token: email})
 
-	clientId, _ := svc.AddClient(key, client)
+	clientId, _ := svc.AddClient(token, client)
 	client.ID = clientId
-	chanId, _ := svc.CreateChannel(key, channel)
+	chanId, _ := svc.CreateChannel(token, channel)
 	channel.ID = chanId
 
-	svc.Connect(key, chanId, clientId)
+	svc.Connect(token, chanId, clientId)
 
 	cases := []struct {
 		desc     string
@@ -321,11 +300,11 @@ func TestDisconnect(t *testing.T) {
 		clientId string
 		err      error
 	}{
-		{"disconnect connected client", key, channel.ID, client.ID, nil},
-		{"disconnect disconnected client", key, channel.ID, client.ID, manager.ErrNotFound},
+		{"disconnect connected client", token, channel.ID, client.ID, nil},
+		{"disconnect disconnected client", token, channel.ID, client.ID, manager.ErrNotFound},
 		{"disconnect client with wrong credentials", wrong, channel.ID, client.ID, manager.ErrUnauthorizedAccess},
-		{"disconnect client from non-existing channel", key, wrong, client.ID, manager.ErrNotFound},
-		{"disconnect non-existing client", key, channel.ID, wrong, manager.ErrNotFound},
+		{"disconnect client from non-existing channel", token, wrong, client.ID, manager.ErrNotFound},
+		{"disconnect non-existing client", token, channel.ID, wrong, manager.ErrNotFound},
 	}
 
 	for _, tc := range cases {
@@ -336,15 +315,13 @@ func TestDisconnect(t *testing.T) {
 }
 
 func TestIdentity(t *testing.T) {
-	svc := newService()
-	svc.Register(user)
-	key, _ := svc.Login(user)
+	svc := newService(map[string]string{token: email})
 
 	cases := map[string]struct {
 		key string
 		err error
 	}{
-		"valid token's identity":   {key, nil},
+		"valid token's identity":   {token, nil},
 		"invalid token's identity": {"", manager.ErrUnauthorizedAccess},
 	}
 
@@ -355,16 +332,14 @@ func TestIdentity(t *testing.T) {
 }
 
 func TestCanAccess(t *testing.T) {
-	svc := newService()
-	svc.Register(user)
-	key, _ := svc.Login(user)
+	svc := newService(map[string]string{token: email})
 
-	clientId, _ := svc.AddClient(key, client)
+	clientId, _ := svc.AddClient(token, client)
 	client.ID = clientId
 	client.Key = clientId
 
 	channel.Clients = []manager.Client{client}
-	chanId, _ := svc.CreateChannel(key, channel)
+	chanId, _ := svc.CreateChannel(token, channel)
 	channel.ID = chanId
 
 	cases := map[string]struct {
