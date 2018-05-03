@@ -13,7 +13,7 @@ type Client struct {
 	Payload string `json:"payload,omitempty"`
 }
 
-var clientTypes map[string]bool = map[string]bool{
+var clientTypes = map[string]bool{
 	"app":    true,
 	"device": true,
 }

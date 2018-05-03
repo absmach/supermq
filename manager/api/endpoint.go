@@ -7,36 +7,6 @@ import (
 	"github.com/mainflux/mainflux/manager"
 )
 
-func registrationEndpoint(svc manager.Service) endpoint.Endpoint {
-	return func(_ context.Context, request interface{}) (interface{}, error) {
-		req := request.(userReq)
-
-		if err := req.validate(); err != nil {
-			return nil, err
-		}
-
-		err := svc.Register(req.user)
-		return tokenRes{}, err
-	}
-}
-
-func loginEndpoint(svc manager.Service) endpoint.Endpoint {
-	return func(_ context.Context, request interface{}) (interface{}, error) {
-		req := request.(userReq)
-
-		if err := req.validate(); err != nil {
-			return nil, err
-		}
-
-		token, err := svc.Login(req.user)
-		if err != nil {
-			return nil, err
-		}
-
-		return tokenRes{token}, nil
-	}
-}
-
 func addClientEndpoint(svc manager.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(addClientReq)
@@ -222,7 +192,7 @@ func connectEndpoint(svc manager.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		if err := svc.Connect(cr.key, cr.chanId, cr.clientId); err != nil {
+		if err := svc.Connect(cr.key, cr.chanID, cr.clientID); err != nil {
 			return nil, err
 		}
 
@@ -238,7 +208,7 @@ func disconnectEndpoint(svc manager.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		if err := svc.Disconnect(cr.key, cr.chanId, cr.clientId); err != nil {
+		if err := svc.Disconnect(cr.key, cr.chanID, cr.clientID); err != nil {
 			return nil, err
 		}
 

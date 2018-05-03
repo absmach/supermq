@@ -31,20 +31,6 @@ func MakeHandler(svc manager.Service) http.Handler {
 
 	r := bone.New()
 
-	r.Post("/users", kithttp.NewServer(
-		registrationEndpoint(svc),
-		decodeCredentials,
-		encodeResponse,
-		opts...,
-	))
-
-	r.Post("/tokens", kithttp.NewServer(
-		loginEndpoint(svc),
-		decodeCredentials,
-		encodeResponse,
-		opts...,
-	))
-
 	r.Post("/clients", kithttp.NewServer(
 		addClientEndpoint(svc),
 		decodeClientCreation,
@@ -155,19 +141,6 @@ func decodeIdentity(_ context.Context, r *http.Request) (interface{}, error) {
 	}
 
 	return req, nil
-}
-
-func decodeCredentials(_ context.Context, r *http.Request) (interface{}, error) {
-	if r.Header.Get("Content-Type") != contentType {
-		return nil, errUnsupportedContentType
-	}
-
-	var user manager.User
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		return nil, err
-	}
-
-	return userReq{user}, nil
 }
 
 func decodeClientCreation(_ context.Context, r *http.Request) (interface{}, error) {
@@ -292,8 +265,8 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 func decodeConnection(_ context.Context, r *http.Request) (interface{}, error) {
 	req := connectionReq{
 		key:      r.Header.Get("Authorization"),
-		chanId:   bone.GetValue(r, "chanId"),
-		clientId: bone.GetValue(r, "clientId"),
+		chanID:   bone.GetValue(r, "chanId"),
+		clientID: bone.GetValue(r, "clientId"),
 	}
 
 	return req, nil

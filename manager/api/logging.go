@@ -22,33 +22,6 @@ func LoggingMiddleware(svc manager.Service, logger log.Logger) manager.Service {
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) Register(user manager.User) (err error) {
-	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method register for user %s took %s to complete", user.Email, time.Since(begin))
-		if err != nil {
-			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
-			return
-		}
-		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
-
-	}(time.Now())
-
-	return lm.svc.Register(user)
-}
-
-func (lm *loggingMiddleware) Login(user manager.User) (token string, err error) {
-	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method login for user %s took %s to complete", user.Email, time.Since(begin))
-		if err != nil {
-			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
-			return
-		}
-		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
-	}(time.Now())
-
-	return lm.svc.Login(user)
-}
-
 func (lm *loggingMiddleware) AddClient(key string, client manager.Client) (id string, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method add_client for key %s and client %s took %s to complete", key, id, time.Since(begin))
