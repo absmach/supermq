@@ -12,5 +12,4 @@ message Token {
 
 message Identity {
     string value = 1;
-    string err = 2;
 }
