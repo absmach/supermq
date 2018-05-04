@@ -21,7 +21,7 @@ func NewUsersService(users map[string]string) pb.UsersServiceClient {
 
 func (svc usersServiceMock) Identify(ctx context.Context, in *pb.Token, opts ...grpc.CallOption) (*pb.Identity, error) {
 	if id, ok := svc.users[in.Value]; ok {
-		return &pb.Identity{id, ""}, nil
+		return &pb.Identity{id}, nil
 	}
 	return nil, users.ErrUnauthorizedAccess
 }
