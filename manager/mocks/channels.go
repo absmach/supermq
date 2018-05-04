@@ -10,7 +10,7 @@ import (
 
 var _ manager.ChannelRepository = (*channelRepositoryMock)(nil)
 
-const chanId = "123e4567-e89b-12d3-a456-"
+const chanID = "123e4567-e89b-12d3-a456-"
 
 type channelRepositoryMock struct {
 	mu       sync.Mutex
@@ -31,8 +31,8 @@ func (crm *channelRepositoryMock) Save(channel manager.Channel) (string, error) 
 	crm.mu.Lock()
 	defer crm.mu.Unlock()
 
-	crm.counter += 1
-	channel.ID = fmt.Sprintf("%s%012d", chanId, crm.counter)
+	crm.counter++
+	channel.ID = fmt.Sprintf("%s%012d", chanID, crm.counter)
 
 	crm.channels[key(channel.Owner, channel.ID)] = channel
 
@@ -72,8 +72,8 @@ func (crm *channelRepositoryMock) All(owner string, offset, limit int) []manager
 	}
 
 	// Since IDs starts from 1, shift everything by one.
-	first := fmt.Sprintf("%s%012d", chanId, offset+1)
-	last := fmt.Sprintf("%s%012d", chanId, offset+limit+1)
+	first := fmt.Sprintf("%s%012d", chanID, offset+1)
+	last := fmt.Sprintf("%s%012d", chanID, offset+limit+1)
 
 	for k, v := range crm.channels {
 		if strings.HasPrefix(k, prefix) && v.ID >= first && v.ID < last {
@@ -89,13 +89,13 @@ func (crm *channelRepositoryMock) Remove(owner, id string) error {
 	return nil
 }
 
-func (crm *channelRepositoryMock) Connect(owner, chanId, clientId string) error {
-	channel, err := crm.One(owner, chanId)
+func (crm *channelRepositoryMock) Connect(owner, chanID, clientID string) error {
+	channel, err := crm.One(owner, chanID)
 	if err != nil {
 		return err
 	}
 
-	client, err := crm.clients.One(owner, clientId)
+	client, err := crm.clients.One(owner, clientID)
 	if err != nil {
 		return err
 	}
@@ -103,19 +103,19 @@ func (crm *channelRepositoryMock) Connect(owner, chanId, clientId string) error 
 	return crm.Update(channel)
 }
 
-func (crm *channelRepositoryMock) Disconnect(owner, chanId, clientId string) error {
-	channel, err := crm.One(owner, chanId)
+func (crm *channelRepositoryMock) Disconnect(owner, chanID, clientID string) error {
+	channel, err := crm.One(owner, chanID)
 	if err != nil {
 		return err
 	}
 
-	if !crm.HasClient(chanId, clientId) {
+	if !crm.HasClient(chanID, clientID) {
 		return manager.ErrNotFound
 	}
 
 	connected := make([]manager.Client, len(channel.Clients)-1)
 	for _, client := range channel.Clients {
-		if client.ID != clientId {
+		if client.ID != clientID {
 			connected = append(connected, client)
 		}
 	}

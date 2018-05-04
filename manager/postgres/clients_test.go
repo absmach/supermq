@@ -15,7 +15,7 @@ func TestClientSave(t *testing.T) {
 	clientRepo := postgres.NewClientRepository(db)
 
 	c1 := manager.Client{
-		ID:    clientRepo.Id(),
+		ID:    clientRepo.ID(),
 		Owner: email,
 	}
 
@@ -38,7 +38,7 @@ func TestClientUpdate(t *testing.T) {
 	clientRepo := postgres.NewClientRepository(db)
 
 	c := manager.Client{
-		ID:    clientRepo.Id(),
+		ID:    clientRepo.ID(),
 		Owner: email,
 	}
 
@@ -65,7 +65,7 @@ func TestSingleClientRetrieval(t *testing.T) {
 	clientRepo := postgres.NewClientRepository(db)
 
 	c := manager.Client{
-		ID:    clientRepo.Id(),
+		ID:    clientRepo.ID(),
 		Owner: email,
 	}
 
@@ -96,7 +96,7 @@ func TestMultiClientRetrieval(t *testing.T) {
 
 	for i := 0; i < n; i++ {
 		c := manager.Client{
-			ID:    clientRepo.Id(),
+			ID:    clientRepo.ID(),
 			Owner: email,
 		}
 
@@ -124,7 +124,7 @@ func TestClientRemoval(t *testing.T) {
 
 	clientRepo := postgres.NewClientRepository(db)
 	client := manager.Client{
-		ID:    clientRepo.Id(),
+		ID:    clientRepo.ID(),
 		Owner: email,
 	}
 	clientRepo.Save(client)

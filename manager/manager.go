@@ -37,7 +37,7 @@ func (ms *managerService) AddClient(key string, client Client) (string, error) {
 		return "", ErrUnauthorizedAccess
 	}
 
-	client.ID = ms.clients.Id()
+	client.ID = ms.clients.ID()
 	client.Owner = res.Value
 	client.Key, _ = ms.idp.PermanentKey(client.ID)
 

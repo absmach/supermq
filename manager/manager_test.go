@@ -51,8 +51,8 @@ func TestAddClient(t *testing.T) {
 
 func TestUpdateClient(t *testing.T) {
 	svc := newService(map[string]string{token: email})
-	clientId, _ := svc.AddClient(token, client)
-	client.ID = clientId
+	clientID, _ := svc.AddClient(token, client)
+	client.ID = clientID
 
 	cases := map[string]struct {
 		client manager.Client
@@ -72,8 +72,8 @@ func TestUpdateClient(t *testing.T) {
 
 func TestViewClient(t *testing.T) {
 	svc := newService(map[string]string{token: email})
-	clientId, _ := svc.AddClient(token, client)
-	client.ID = clientId
+	clientID, _ := svc.AddClient(token, client)
+	client.ID = clientID
 
 	cases := map[string]struct {
 		id  string
@@ -125,8 +125,8 @@ func TestListClients(t *testing.T) {
 
 func TestRemoveClient(t *testing.T) {
 	svc := newService(map[string]string{token: email})
-	clientId, _ := svc.AddClient(token, client)
-	client.ID = clientId
+	clientID, _ := svc.AddClient(token, client)
+	client.ID = clientID
 
 	cases := map[string]struct {
 		id  string
@@ -165,8 +165,8 @@ func TestCreateChannel(t *testing.T) {
 
 func TestUpdateChannel(t *testing.T) {
 	svc := newService(map[string]string{token: email})
-	chanId, _ := svc.CreateChannel(token, channel)
-	channel.ID = chanId
+	chanID, _ := svc.CreateChannel(token, channel)
+	channel.ID = chanID
 
 	cases := map[string]struct {
 		channel manager.Channel
@@ -186,8 +186,8 @@ func TestUpdateChannel(t *testing.T) {
 
 func TestViewChannel(t *testing.T) {
 	svc := newService(map[string]string{token: email})
-	chanId, _ := svc.CreateChannel(token, channel)
-	channel.ID = chanId
+	chanID, _ := svc.CreateChannel(token, channel)
+	channel.ID = chanID
 
 	cases := map[string]struct {
 		id  string
@@ -238,8 +238,8 @@ func TestListChannels(t *testing.T) {
 
 func TestRemoveChannel(t *testing.T) {
 	svc := newService(map[string]string{token: email})
-	chanId, _ := svc.CreateChannel(token, channel)
-	channel.ID = chanId
+	chanID, _ := svc.CreateChannel(token, channel)
+	channel.ID = chanID
 
 	cases := map[string]struct {
 		id  string
@@ -261,15 +261,15 @@ func TestRemoveChannel(t *testing.T) {
 func TestConnect(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 
-	clientId, _ := svc.AddClient(token, client)
-	client.ID = clientId
-	chanId, _ := svc.CreateChannel(token, channel)
-	channel.ID = chanId
+	clientID, _ := svc.AddClient(token, client)
+	client.ID = clientID
+	chanID, _ := svc.CreateChannel(token, channel)
+	channel.ID = chanID
 
 	cases := map[string]struct {
 		key      string
-		chanId   string
-		clientId string
+		chanID   string
+		clientID string
 		err      error
 	}{
 		"connect client":                         {token, channel.ID, client.ID, nil},
@@ -278,7 +278,7 @@ func TestConnect(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		err := svc.Connect(tc.key, tc.chanId, tc.clientId)
+		err := svc.Connect(tc.key, tc.chanID, tc.clientID)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
@@ -286,18 +286,18 @@ func TestConnect(t *testing.T) {
 func TestDisconnect(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 
-	clientId, _ := svc.AddClient(token, client)
-	client.ID = clientId
-	chanId, _ := svc.CreateChannel(token, channel)
-	channel.ID = chanId
+	clientID, _ := svc.AddClient(token, client)
+	client.ID = clientID
+	chanID, _ := svc.CreateChannel(token, channel)
+	channel.ID = chanID
 
-	svc.Connect(token, chanId, clientId)
+	svc.Connect(token, chanID, clientID)
 
 	cases := []struct {
 		desc     string
 		key      string
-		chanId   string
-		clientId string
+		chanID   string
+		clientID string
 		err      error
 	}{
 		{"disconnect connected client", token, channel.ID, client.ID, nil},
@@ -308,7 +308,7 @@ func TestDisconnect(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := svc.Disconnect(tc.key, tc.chanId, tc.clientId)
+		err := svc.Disconnect(tc.key, tc.chanID, tc.clientID)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 
@@ -334,13 +334,13 @@ func TestIdentity(t *testing.T) {
 func TestCanAccess(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 
-	clientId, _ := svc.AddClient(token, client)
-	client.ID = clientId
-	client.Key = clientId
+	clientID, _ := svc.AddClient(token, client)
+	client.ID = clientID
+	client.Key = clientID
 
 	channel.Clients = []manager.Client{client}
-	chanId, _ := svc.CreateChannel(token, channel)
-	channel.ID = chanId
+	chanID, _ := svc.CreateChannel(token, channel)
+	channel.ID = chanID
 
 	cases := map[string]struct {
 		key     string

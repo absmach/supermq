@@ -110,16 +110,16 @@ func TestChannelRemoval(t *testing.T) {
 	email := "channel-removal@example.com"
 
 	chanRepo := postgres.NewChannelRepository(db)
-	chanId, _ := chanRepo.Save(manager.Channel{Owner: email})
+	chanID, _ := chanRepo.Save(manager.Channel{Owner: email})
 
 	// show that the removal works the same for both existing and non-existing
 	// (removed) channel
 	for i := 0; i < 2; i++ {
-		if err := chanRepo.Remove(email, chanId); err != nil {
+		if err := chanRepo.Remove(email, chanID); err != nil {
 			t.Fatalf("#%d: failed to remove channel due to: %s", i, err)
 		}
 
-		if _, err := chanRepo.One(email, chanId); err != manager.ErrNotFound {
+		if _, err := chanRepo.One(email, chanID); err != manager.ErrNotFound {
 			t.Fatalf("#%d: expected %s got %s", i, manager.ErrNotFound, err)
 		}
 	}
@@ -130,28 +130,28 @@ func TestChannelConnect(t *testing.T) {
 
 	clientRepo := postgres.NewClientRepository(db)
 	client := manager.Client{
-		ID:    clientRepo.Id(),
+		ID:    clientRepo.ID(),
 		Owner: email,
 	}
 	clientRepo.Save(client)
 
 	chanRepo := postgres.NewChannelRepository(db)
-	chanId, _ := chanRepo.Save(manager.Channel{Owner: email})
+	chanID, _ := chanRepo.Save(manager.Channel{Owner: email})
 
 	cases := map[string]struct {
 		owner    string
-		chanId   string
-		clientId string
+		chanID   string
+		clientID string
 		err      error
 	}{
-		"existing user, channel and client": {email, chanId, client.ID, nil},
-		"with non-existing user":            {wrong, chanId, client.ID, manager.ErrNotFound},
+		"existing user, channel and client": {email, chanID, client.ID, nil},
+		"with non-existing user":            {wrong, chanID, client.ID, manager.ErrNotFound},
 		"non-existing channel":              {email, wrong, client.ID, manager.ErrNotFound},
-		"non-existing client":               {email, chanId, wrong, manager.ErrNotFound},
+		"non-existing client":               {email, chanID, wrong, manager.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
-		err := chanRepo.Connect(tc.owner, tc.chanId, tc.clientId)
+		err := chanRepo.Connect(tc.owner, tc.chanID, tc.clientID)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
@@ -161,32 +161,32 @@ func TestChannelDisconnect(t *testing.T) {
 
 	clientRepo := postgres.NewClientRepository(db)
 	client := manager.Client{
-		ID:    clientRepo.Id(),
+		ID:    clientRepo.ID(),
 		Owner: email,
 	}
 	clientRepo.Save(client)
 
 	chanRepo := postgres.NewChannelRepository(db)
-	chanId, _ := chanRepo.Save(manager.Channel{Owner: email})
+	chanID, _ := chanRepo.Save(manager.Channel{Owner: email})
 
-	chanRepo.Connect(email, chanId, client.ID)
+	chanRepo.Connect(email, chanID, client.ID)
 
 	cases := []struct {
 		desc     string
 		owner    string
-		chanId   string
-		clientId string
+		chanID   string
+		clientID string
 		err      error
 	}{
-		{"connected client", email, chanId, client.ID, nil},
-		{"non-connected client", email, chanId, client.ID, manager.ErrNotFound},
-		{"non-existing user", wrong, chanId, client.ID, manager.ErrNotFound},
+		{"connected client", email, chanID, client.ID, nil},
+		{"non-connected client", email, chanID, client.ID, manager.ErrNotFound},
+		{"non-existing user", wrong, chanID, client.ID, manager.ErrNotFound},
 		{"non-existing channel", email, wrong, client.ID, manager.ErrNotFound},
-		{"non-existing client", email, chanId, wrong, manager.ErrNotFound},
+		{"non-existing client", email, chanID, wrong, manager.ErrNotFound},
 	}
 
 	for _, tc := range cases {
-		err := chanRepo.Disconnect(tc.owner, tc.chanId, tc.clientId)
+		err := chanRepo.Disconnect(tc.owner, tc.chanID, tc.clientID)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
@@ -196,28 +196,28 @@ func TestChannelAccessCheck(t *testing.T) {
 
 	clientRepo := postgres.NewClientRepository(db)
 	client := manager.Client{
-		ID:    clientRepo.Id(),
+		ID:    clientRepo.ID(),
 		Owner: email,
 	}
 	clientRepo.Save(client)
 
 	chanRepo := postgres.NewChannelRepository(db)
-	chanId, _ := chanRepo.Save(manager.Channel{Owner: email})
+	chanID, _ := chanRepo.Save(manager.Channel{Owner: email})
 
-	chanRepo.Connect(email, chanId, client.ID)
+	chanRepo.Connect(email, chanID, client.ID)
 
 	cases := map[string]struct {
-		chanId    string
-		clientId  string
+		chanID    string
+		clientID  string
 		hasAccess bool
 	}{
-		"client that has access":               {chanId, client.ID, true},
-		"client without access":                {chanId, wrong, false},
+		"client that has access":               {chanID, client.ID, true},
+		"client without access":                {chanID, wrong, false},
 		"check access to non-existing channel": {wrong, client.ID, false},
 	}
 
 	for desc, tc := range cases {
-		hasAccess := chanRepo.HasClient(tc.chanId, tc.clientId)
+		hasAccess := chanRepo.HasClient(tc.chanID, tc.clientID)
 		assert.Equal(t, tc.hasAccess, hasAccess, fmt.Sprintf("%s: expected %t got %t\n", desc, tc.hasAccess, hasAccess))
 	}
 }
