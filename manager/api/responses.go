@@ -10,16 +10,16 @@ import (
 )
 
 var (
-	_ mainflux.APIRes = (*identityRes)(nil)
-	_ mainflux.APIRes = (*removeRes)(nil)
-	_ mainflux.APIRes = (*clientRes)(nil)
-	_ mainflux.APIRes = (*viewClientRes)(nil)
-	_ mainflux.APIRes = (*listClientsRes)(nil)
-	_ mainflux.APIRes = (*channelRes)(nil)
-	_ mainflux.APIRes = (*viewChannelRes)(nil)
-	_ mainflux.APIRes = (*listChannelsRes)(nil)
-	_ mainflux.APIRes = (*connectionRes)(nil)
-	_ mainflux.APIRes = (*disconnectionRes)(nil)
+	_ mainflux.Response = (*identityRes)(nil)
+	_ mainflux.Response = (*removeRes)(nil)
+	_ mainflux.Response = (*clientRes)(nil)
+	_ mainflux.Response = (*viewClientRes)(nil)
+	_ mainflux.Response = (*listClientsRes)(nil)
+	_ mainflux.Response = (*channelRes)(nil)
+	_ mainflux.Response = (*viewChannelRes)(nil)
+	_ mainflux.Response = (*listChannelsRes)(nil)
+	_ mainflux.Response = (*connectionRes)(nil)
+	_ mainflux.Response = (*disconnectionRes)(nil)
 )
 
 type identityRes struct {

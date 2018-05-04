@@ -6,7 +6,7 @@ import (
 	"github.com/mainflux/mainflux"
 )
 
-var _ mainflux.APIRes = (*tokenRes)(nil)
+var _ mainflux.Response = (*tokenRes)(nil)
 
 type tokenRes struct {
 	Token string `json:"token,omitempty"`
