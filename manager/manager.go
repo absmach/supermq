@@ -38,7 +38,7 @@ func (ms *managerService) AddClient(key string, client Client) (string, error) {
 	}
 
 	client.ID = ms.clients.ID()
-	client.Owner = res.Value
+	client.Owner = res.GetValue()
 	client.Key, _ = ms.idp.PermanentKey(client.ID)
 
 	return client.ID, ms.clients.Save(client)
@@ -53,7 +53,7 @@ func (ms *managerService) UpdateClient(key string, client Client) error {
 		return ErrUnauthorizedAccess
 	}
 
-	client.Owner = res.Value
+	client.Owner = res.GetValue()
 
 	return ms.clients.Update(client)
 }
@@ -67,7 +67,7 @@ func (ms *managerService) ViewClient(key, id string) (Client, error) {
 		return Client{}, ErrUnauthorizedAccess
 	}
 
-	return ms.clients.One(res.Value, id)
+	return ms.clients.One(res.GetValue(), id)
 }
 
 func (ms *managerService) ListClients(key string, offset, limit int) ([]Client, error) {
@@ -79,7 +79,7 @@ func (ms *managerService) ListClients(key string, offset, limit int) ([]Client, 
 		return nil, ErrUnauthorizedAccess
 	}
 
-	return ms.clients.All(res.Value, offset, limit), nil
+	return ms.clients.All(res.GetValue(), offset, limit), nil
 }
 
 func (ms *managerService) RemoveClient(key, id string) error {
@@ -91,7 +91,7 @@ func (ms *managerService) RemoveClient(key, id string) error {
 		return ErrUnauthorizedAccess
 	}
 
-	return ms.clients.Remove(res.Value, id)
+	return ms.clients.Remove(res.GetValue(), id)
 }
 
 func (ms *managerService) CreateChannel(key string, channel Channel) (string, error) {
@@ -103,7 +103,7 @@ func (ms *managerService) CreateChannel(key string, channel Channel) (string, er
 		return "", ErrUnauthorizedAccess
 	}
 
-	channel.Owner = res.Value
+	channel.Owner = res.GetValue()
 	return ms.channels.Save(channel)
 }
 
@@ -116,7 +116,7 @@ func (ms *managerService) UpdateChannel(key string, channel Channel) error {
 		return ErrUnauthorizedAccess
 	}
 
-	channel.Owner = res.Value
+	channel.Owner = res.GetValue()
 	return ms.channels.Update(channel)
 }
 
@@ -129,7 +129,7 @@ func (ms *managerService) ViewChannel(key, id string) (Channel, error) {
 		return Channel{}, ErrUnauthorizedAccess
 	}
 
-	return ms.channels.One(res.Value, id)
+	return ms.channels.One(res.GetValue(), id)
 }
 
 func (ms *managerService) ListChannels(key string, offset, limit int) ([]Channel, error) {
@@ -141,7 +141,7 @@ func (ms *managerService) ListChannels(key string, offset, limit int) ([]Channel
 		return nil, ErrUnauthorizedAccess
 	}
 
-	return ms.channels.All(res.Value, offset, limit), nil
+	return ms.channels.All(res.GetValue(), offset, limit), nil
 }
 
 func (ms *managerService) RemoveChannel(key, id string) error {
@@ -153,7 +153,7 @@ func (ms *managerService) RemoveChannel(key, id string) error {
 		return ErrUnauthorizedAccess
 	}
 
-	return ms.channels.Remove(res.Value, id)
+	return ms.channels.Remove(res.GetValue(), id)
 }
 
 func (ms *managerService) Connect(key, chanID, clientID string) error {
@@ -165,7 +165,7 @@ func (ms *managerService) Connect(key, chanID, clientID string) error {
 		return ErrUnauthorizedAccess
 	}
 
-	return ms.channels.Connect(res.Value, chanID, clientID)
+	return ms.channels.Connect(res.GetValue(), chanID, clientID)
 }
 
 func (ms *managerService) Disconnect(key, chanID, clientID string) error {
@@ -177,7 +177,7 @@ func (ms *managerService) Disconnect(key, chanID, clientID string) error {
 		return ErrUnauthorizedAccess
 	}
 
-	return ms.channels.Disconnect(res.Value, chanID, clientID)
+	return ms.channels.Disconnect(res.GetValue(), chanID, clientID)
 }
 
 func (ms *managerService) Identity(key string) (string, error) {
