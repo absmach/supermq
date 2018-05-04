@@ -33,7 +33,7 @@ func (ms *managerService) AddClient(key string, client Client) (string, error) {
 	defer cancel()
 
 	res, err := ms.users.Identify(ctx, &pb.Token{key})
-	if err != nil || res.Err != "" {
+	if err != nil {
 		return "", ErrUnauthorizedAccess
 	}
 
@@ -49,7 +49,7 @@ func (ms *managerService) UpdateClient(key string, client Client) error {
 	defer cancel()
 
 	res, err := ms.users.Identify(ctx, &pb.Token{key})
-	if err != nil || res.Err != "" {
+	if err != nil {
 		return ErrUnauthorizedAccess
 	}
 
@@ -63,7 +63,7 @@ func (ms *managerService) ViewClient(key, id string) (Client, error) {
 	defer cancel()
 
 	res, err := ms.users.Identify(ctx, &pb.Token{key})
-	if err != nil || res.Err != "" {
+	if err != nil {
 		return Client{}, ErrUnauthorizedAccess
 	}
 
@@ -75,7 +75,7 @@ func (ms *managerService) ListClients(key string, offset, limit int) ([]Client, 
 	defer cancel()
 
 	res, err := ms.users.Identify(ctx, &pb.Token{key})
-	if err != nil || res.Err != "" {
+	if err != nil {
 		return nil, ErrUnauthorizedAccess
 	}
 
@@ -87,7 +87,7 @@ func (ms *managerService) RemoveClient(key, id string) error {
 	defer cancel()
 
 	res, err := ms.users.Identify(ctx, &pb.Token{key})
-	if err != nil || res.Err != "" {
+	if err != nil {
 		return ErrUnauthorizedAccess
 	}
 
@@ -99,7 +99,7 @@ func (ms *managerService) CreateChannel(key string, channel Channel) (string, er
 	defer cancel()
 
 	res, err := ms.users.Identify(ctx, &pb.Token{key})
-	if err != nil || res.Err != "" {
+	if err != nil {
 		return "", ErrUnauthorizedAccess
 	}
 
@@ -112,7 +112,7 @@ func (ms *managerService) UpdateChannel(key string, channel Channel) error {
 	defer cancel()
 
 	res, err := ms.users.Identify(ctx, &pb.Token{key})
-	if err != nil || res.Err != "" {
+	if err != nil {
 		return ErrUnauthorizedAccess
 	}
 
@@ -125,7 +125,7 @@ func (ms *managerService) ViewChannel(key, id string) (Channel, error) {
 	defer cancel()
 
 	res, err := ms.users.Identify(ctx, &pb.Token{key})
-	if err != nil || res.Err != "" {
+	if err != nil {
 		return Channel{}, ErrUnauthorizedAccess
 	}
 
@@ -137,7 +137,7 @@ func (ms *managerService) ListChannels(key string, offset, limit int) ([]Channel
 	defer cancel()
 
 	res, err := ms.users.Identify(ctx, &pb.Token{key})
-	if err != nil || res.Err != "" {
+	if err != nil {
 		return nil, ErrUnauthorizedAccess
 	}
 
@@ -149,7 +149,7 @@ func (ms *managerService) RemoveChannel(key, id string) error {
 	defer cancel()
 
 	res, err := ms.users.Identify(ctx, &pb.Token{key})
-	if err != nil || res.Err != "" {
+	if err != nil {
 		return ErrUnauthorizedAccess
 	}
 
@@ -161,7 +161,7 @@ func (ms *managerService) Connect(key, chanID, clientID string) error {
 	defer cancel()
 
 	res, err := ms.users.Identify(ctx, &pb.Token{key})
-	if err != nil || res.Err != "" {
+	if err != nil {
 		return ErrUnauthorizedAccess
 	}
 
@@ -173,7 +173,7 @@ func (ms *managerService) Disconnect(key, chanID, clientID string) error {
 	defer cancel()
 
 	res, err := ms.users.Identify(ctx, &pb.Token{key})
-	if err != nil || res.Err != "" {
+	if err != nil {
 		return ErrUnauthorizedAccess
 	}
 
