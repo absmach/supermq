@@ -275,14 +275,14 @@ func decodeConnection(_ context.Context, r *http.Request) (interface{}, error) {
 func encodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
 	w.Header().Set("Content-Type", contentType)
 
-	if ar, ok := response.(apiRes); ok {
-		for k, v := range ar.headers() {
+	if ar, ok := response.(mainflux.APIRes); ok {
+		for k, v := range ar.Headers() {
 			w.Header().Set(k, v)
 		}
 
-		w.WriteHeader(ar.code())
+		w.WriteHeader(ar.Code())
 
-		if ar.empty() {
+		if ar.Empty() {
 			return nil
 		}
 	}

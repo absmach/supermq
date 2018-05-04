@@ -1,25 +1,25 @@
 package http
 
-import "net/http"
+import (
+	"net/http"
 
-type apiRes interface {
-	code() int
-	headers() map[string]string
-	empty() bool
-}
+	"github.com/mainflux/mainflux"
+)
+
+var _ mainflux.APIRes = (*tokenRes)(nil)
 
 type tokenRes struct {
 	Token string `json:"token,omitempty"`
 }
 
-func (res tokenRes) code() int {
+func (res tokenRes) Code() int {
 	return http.StatusCreated
 }
 
-func (res tokenRes) headers() map[string]string {
+func (res tokenRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res tokenRes) empty() bool {
+func (res tokenRes) Empty() bool {
 	return res.Token == ""
 }

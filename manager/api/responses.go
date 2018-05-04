@@ -4,44 +4,53 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/mainflux/mainflux"
+
 	"github.com/mainflux/mainflux/manager"
 )
 
-type apiRes interface {
-	code() int
-	headers() map[string]string
-	empty() bool
-}
+var (
+	_ mainflux.APIRes = (*identityRes)(nil)
+	_ mainflux.APIRes = (*removeRes)(nil)
+	_ mainflux.APIRes = (*clientRes)(nil)
+	_ mainflux.APIRes = (*viewClientRes)(nil)
+	_ mainflux.APIRes = (*listClientsRes)(nil)
+	_ mainflux.APIRes = (*channelRes)(nil)
+	_ mainflux.APIRes = (*viewChannelRes)(nil)
+	_ mainflux.APIRes = (*listChannelsRes)(nil)
+	_ mainflux.APIRes = (*connectionRes)(nil)
+	_ mainflux.APIRes = (*disconnectionRes)(nil)
+)
 
 type identityRes struct {
 	id string
 }
 
-func (res identityRes) headers() map[string]string {
+func (res identityRes) Headers() map[string]string {
 	return map[string]string{
 		"X-client-id": res.id,
 	}
 }
 
-func (res identityRes) code() int {
+func (res identityRes) Code() int {
 	return http.StatusOK
 }
 
-func (res identityRes) empty() bool {
+func (res identityRes) Empty() bool {
 	return true
 }
 
 type removeRes struct{}
 
-func (res removeRes) code() int {
+func (res removeRes) Code() int {
 	return http.StatusNoContent
 }
 
-func (res removeRes) headers() map[string]string {
+func (res removeRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res removeRes) empty() bool {
+func (res removeRes) Empty() bool {
 	return true
 }
 
@@ -50,7 +59,7 @@ type clientRes struct {
 	created bool
 }
 
-func (res clientRes) code() int {
+func (res clientRes) Code() int {
 	if res.created {
 		return http.StatusCreated
 	}
@@ -58,7 +67,7 @@ func (res clientRes) code() int {
 	return http.StatusOK
 }
 
-func (res clientRes) headers() map[string]string {
+func (res clientRes) Headers() map[string]string {
 	if res.created {
 		return map[string]string{
 			"Location": fmt.Sprint("/clients/", res.id),
@@ -68,7 +77,7 @@ func (res clientRes) headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res clientRes) empty() bool {
+func (res clientRes) Empty() bool {
 	return true
 }
 
@@ -76,15 +85,15 @@ type viewClientRes struct {
 	manager.Client
 }
 
-func (res viewClientRes) code() int {
+func (res viewClientRes) Code() int {
 	return http.StatusOK
 }
 
-func (res viewClientRes) headers() map[string]string {
+func (res viewClientRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res viewClientRes) empty() bool {
+func (res viewClientRes) Empty() bool {
 	return false
 }
 
@@ -92,15 +101,15 @@ type listClientsRes struct {
 	Clients []manager.Client `json:"clients"`
 }
 
-func (res listClientsRes) code() int {
+func (res listClientsRes) Code() int {
 	return http.StatusOK
 }
 
-func (res listClientsRes) headers() map[string]string {
+func (res listClientsRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res listClientsRes) empty() bool {
+func (res listClientsRes) Empty() bool {
 	return false
 }
 
@@ -109,7 +118,7 @@ type channelRes struct {
 	created bool
 }
 
-func (res channelRes) code() int {
+func (res channelRes) Code() int {
 	if res.created {
 		return http.StatusCreated
 	}
@@ -117,7 +126,7 @@ func (res channelRes) code() int {
 	return http.StatusOK
 }
 
-func (res channelRes) headers() map[string]string {
+func (res channelRes) Headers() map[string]string {
 	if res.created {
 		return map[string]string{
 			"Location": fmt.Sprint("/channels/", res.id),
@@ -127,7 +136,7 @@ func (res channelRes) headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res channelRes) empty() bool {
+func (res channelRes) Empty() bool {
 	return true
 }
 
@@ -135,15 +144,15 @@ type viewChannelRes struct {
 	manager.Channel
 }
 
-func (res viewChannelRes) code() int {
+func (res viewChannelRes) Code() int {
 	return http.StatusOK
 }
 
-func (res viewChannelRes) headers() map[string]string {
+func (res viewChannelRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res viewChannelRes) empty() bool {
+func (res viewChannelRes) Empty() bool {
 	return false
 }
 
@@ -151,42 +160,42 @@ type listChannelsRes struct {
 	Channels []manager.Channel `json:"channels"`
 }
 
-func (res listChannelsRes) code() int {
+func (res listChannelsRes) Code() int {
 	return http.StatusOK
 }
 
-func (res listChannelsRes) headers() map[string]string {
+func (res listChannelsRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res listChannelsRes) empty() bool {
+func (res listChannelsRes) Empty() bool {
 	return false
 }
 
 type connectionRes struct{}
 
-func (res connectionRes) code() int {
+func (res connectionRes) Code() int {
 	return http.StatusOK
 }
 
-func (res connectionRes) headers() map[string]string {
+func (res connectionRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res connectionRes) empty() bool {
+func (res connectionRes) Empty() bool {
 	return true
 }
 
 type disconnectionRes struct{}
 
-func (res disconnectionRes) code() int {
+func (res disconnectionRes) Code() int {
 	return http.StatusNoContent
 }
 
-func (res disconnectionRes) headers() map[string]string {
+func (res disconnectionRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res disconnectionRes) empty() bool {
+func (res disconnectionRes) Empty() bool {
 	return true
 }
