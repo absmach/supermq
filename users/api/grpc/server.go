@@ -6,6 +6,8 @@ import (
 	context "golang.org/x/net/context"
 )
 
+var _ UsersServiceServer = (*grpcServer)(nil)
+
 type grpcServer struct {
 	identify kitgrpc.Handler
 }
@@ -36,5 +38,5 @@ func decodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{},
 
 func encodeIdentifyResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(identityRes)
-	return &Identity{res.id}, res.failed()
+	return &Identity{res.id}, res.err
 }

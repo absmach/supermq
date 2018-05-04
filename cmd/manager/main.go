@@ -78,7 +78,7 @@ func main() {
 	}
 	defer conn.Close()
 
-	users := pb.NewUsersServiceClient(conn)
+	users := pb.NewClient(conn)
 	clients := postgres.NewClientRepository(db)
 	channels := postgres.NewChannelRepository(db)
 	hasher := bcrypt.New()
