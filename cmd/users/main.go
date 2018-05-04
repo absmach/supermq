@@ -97,25 +97,9 @@ func main() {
 
 	errs := make(chan error, 2)
 
-	// Start HTTP server
-	go func() {
-		p := fmt.Sprintf(":%s", cfg.HTTPPort)
-		logger.Info(fmt.Sprintf("Users HTTP service started, exposed port %s", cfg.HTTPPort))
-		errs <- http.ListenAndServe(p, httpapi.MakeHandler(svc, logger))
-	}()
+	go startHTTPServer(svc, cfg.HTTPPort, logger, errs)
 
-	// Start gRPC server
-	go func() {
-		p := fmt.Sprintf(":%s", cfg.GRPCPort)
-		listener, err := net.Listen("tcp", p)
-		if err != nil {
-			logger.Error(fmt.Sprintf("Failed to listen on port %s: %s", cfg.GRPCPort, err))
-		}
-		baseServer := grpc.NewServer()
-		grpcapi.RegisterUsersServiceServer(baseServer, grpcapi.NewServer(svc))
-		logger.Info(fmt.Sprintf("Users gRPC service started, exposed port %s", cfg.GRPCPort))
-		errs <- baseServer.Serve(listener)
-	}()
+	go startGRPCServer(svc, cfg.GRPCPort, logger, errs)
 
 	go func() {
 		c := make(chan os.Signal)
@@ -125,4 +109,22 @@ func main() {
 
 	err = <-errs
 	logger.Error(fmt.Sprintf("Users service terminated: %s", err))
+}
+
+func startHTTPServer(svc users.Service, port string, logger log.Logger, errs chan error) {
+	p := fmt.Sprintf(":%s", port)
+	logger.Info(fmt.Sprintf("Users HTTP service started, exposed port %s", port))
+	errs <- http.ListenAndServe(p, httpapi.MakeHandler(svc, logger))
+}
+
+func startGRPCServer(svc users.Service, port string, logger log.Logger, errs chan error) {
+	p := fmt.Sprintf(":%s", port)
+	listener, err := net.Listen("tcp", p)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to listen on port %s: %s", port, err))
+	}
+	baseServer := grpc.NewServer()
+	grpcapi.RegisterUsersServiceServer(baseServer, grpcapi.NewServer(svc))
+	logger.Info(fmt.Sprintf("Users gRPC service started, exposed port %s", port))
+	errs <- baseServer.Serve(listener)
 }
