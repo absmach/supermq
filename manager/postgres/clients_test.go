@@ -11,25 +11,14 @@ import (
 
 func TestClientSave(t *testing.T) {
 	email := "client-save@example.com"
-
 	clientRepo := postgres.NewClientRepository(db)
-
-	c1 := manager.Client{
+	client := manager.Client{
 		ID:    clientRepo.ID(),
 		Owner: email,
 	}
 
-	cases := map[string]struct {
-		client manager.Client
-		hasErr bool
-	}{
-		"create new client": {c1, false},
-	}
-
-	for desc, tc := range cases {
-		hasErr := clientRepo.Save(tc.client) != nil
-		assert.Equal(t, tc.hasErr, hasErr, fmt.Sprintf("%s: expected %t got %t\n", desc, tc.hasErr, hasErr))
-	}
+	hasErr := clientRepo.Save(client) != nil
+	assert.False(t, hasErr, fmt.Sprintf("create new client: expected false got %t\n", hasErr))
 }
 
 func TestClientUpdate(t *testing.T) {

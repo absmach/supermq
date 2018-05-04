@@ -11,23 +11,13 @@ import (
 
 func TestChannelSave(t *testing.T) {
 	email := "channel-save@example.com"
-
-	c1 := manager.Channel{Owner: email}
-
-	cases := map[string]struct {
-		channel manager.Channel
-		hasErr  bool
-	}{
-		"create new channel": {c1, false},
-	}
+	channel := manager.Channel{Owner: email}
 
 	channelRepo := postgres.NewChannelRepository(db)
 
-	for desc, tc := range cases {
-		_, err := channelRepo.Save(tc.channel)
-		hasErr := err != nil
-		assert.Equal(t, tc.hasErr, hasErr, fmt.Sprintf("%s: expected %t got %t", desc, tc.hasErr, hasErr))
-	}
+	_, err := channelRepo.Save(channel)
+	hasErr := err != nil
+	assert.False(t, hasErr, fmt.Sprintf("create new channel: expected false got %t", hasErr))
 }
 
 func TestChannelUpdate(t *testing.T) {
