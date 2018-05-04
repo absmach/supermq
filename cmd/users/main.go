@@ -111,11 +111,10 @@ func main() {
 		if err != nil {
 			logger.Error(fmt.Sprintf("Failed to listen on port %s: %s", cfg.GRPCPort, err))
 		}
-		server := grpc.NewServer()
-		service := grpcapi.NewService(svc)
-		grpcapi.RegisterUsersServiceServer(server, service)
+		baseServer := grpc.NewServer()
+		grpcapi.RegisterUsersServiceServer(baseServer, grpcapi.NewServer(svc))
 		logger.Info(fmt.Sprintf("Users gRPC service started, exposed port %s", cfg.GRPCPort))
-		errs <- server.Serve(listener)
+		errs <- baseServer.Serve(listener)
 	}()
 
 	go func() {
