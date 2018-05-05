@@ -3,7 +3,9 @@ package grpc
 import (
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	"github.com/mainflux/mainflux/users"
-	context "golang.org/x/net/context"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var _ UsersServiceServer = (*grpcServer)(nil)
@@ -38,5 +40,20 @@ func decodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{},
 
 func encodeIdentifyResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(identityRes)
-	return &Identity{res.id}, res.err
+	return &Identity{res.id}, encodeError(res.err)
+}
+
+func encodeError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	switch err {
+	case users.ErrMalformedEntity:
+		return status.Error(codes.InvalidArgument, "received invalid token request")
+	case users.ErrUnauthorizedAccess:
+		return status.Error(codes.PermissionDenied, "failed to identify user from token")
+	default:
+		return status.Error(codes.Internal, "internal server error")
+	}
 }

@@ -10,7 +10,7 @@ type identityReq struct {
 
 func (req identityReq) validate() error {
 	if req.token == "" {
-		return users.ErrUnauthorizedAccess
+		return users.ErrMalformedEntity
 	}
 	return nil
 }
