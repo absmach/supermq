@@ -314,23 +314,6 @@ func TestDisconnect(t *testing.T) {
 
 }
 
-func TestIdentity(t *testing.T) {
-	svc := newService(map[string]string{token: email})
-
-	cases := map[string]struct {
-		key string
-		err error
-	}{
-		"valid token's identity":   {token, nil},
-		"invalid token's identity": {"", clients.ErrUnauthorizedAccess},
-	}
-
-	for desc, tc := range cases {
-		_, err := svc.Identity(tc.key)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
-	}
-}
-
 func TestCanAccess(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 

@@ -2,15 +2,18 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
+	"github.com/jinzhu/gorm"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/clients"
 	"github.com/mainflux/mainflux/clients/api"
+	grpcapi "github.com/mainflux/mainflux/clients/api/grpc"
 	httpapi "github.com/mainflux/mainflux/clients/api/http"
 	"github.com/mainflux/mainflux/clients/bcrypt"
 	"github.com/mainflux/mainflux/clients/jwt"
@@ -27,7 +30,8 @@ const (
 	defDBUser    = "mainflux"
 	defDBPass    = "mainflux"
 	defDBName    = "clients"
-	defPort      = "8180"
+	defHTTPPort  = "8180"
+	defGRPCPort  = "8181"
 	defUsersAddr = "localhost:8181"
 	defSecret    = "clients"
 	envDBHost    = "MF_DB_HOST"
@@ -35,7 +39,8 @@ const (
 	envDBUser    = "MF_DB_USER"
 	envDBPass    = "MF_DB_PASS"
 	envDBName    = "MF_CLIENTS_DB"
-	envPort      = "MF_CLIENTS_PORT"
+	envHTTPPort  = "MF_CLIENTS_HTTP_PORT"
+	envGRPCPort  = "MF_CLIENTS_GRPC_PORT"
 	envUsersAddr = "MF_USERS_ADDR"
 	envSecret    = "MF_CLIENTS_SECRET"
 )
@@ -46,44 +51,79 @@ type config struct {
 	DBUser    string
 	DBPass    string
 	DBName    string
-	Port      string
+	HTTPPort  string
+	GRPCPort  string
 	UsersAddr string
 	Secret    string
 }
 
 func main() {
-	cfg := config{
+	cfg := loadConfig()
+
+	logger := log.New(os.Stdout)
+
+	db := connectToDB(cfg, logger)
+	defer db.Close()
+
+	conn := connectToUsersService(cfg.UsersAddr, logger)
+	defer conn.Close()
+
+	svc := newService(conn, db, cfg.Secret, logger)
+
+	errs := make(chan error, 2)
+
+	go startHTTPServer(svc, cfg.HTTPPort, logger, errs)
+
+	go startGRPCServer(svc, cfg.GRPCPort, logger, errs)
+
+	go func() {
+		c := make(chan os.Signal)
+		signal.Notify(c, syscall.SIGINT)
+		errs <- fmt.Errorf("%s", <-c)
+	}()
+
+	err := <-errs
+	logger.Error(fmt.Sprintf("Clients service terminated: %s", err))
+}
+
+func loadConfig() config {
+	return config{
 		DBHost:    mainflux.Env(envDBHost, defDBHost),
 		DBPort:    mainflux.Env(envDBPort, defDBPort),
 		DBUser:    mainflux.Env(envDBUser, defDBUser),
 		DBPass:    mainflux.Env(envDBPass, defDBPass),
 		DBName:    mainflux.Env(envDBName, defDBName),
-		Port:      mainflux.Env(envPort, defPort),
+		HTTPPort:  mainflux.Env(envHTTPPort, defHTTPPort),
+		GRPCPort:  mainflux.Env(envGRPCPort, defGRPCPort),
 		UsersAddr: mainflux.Env(envUsersAddr, defUsersAddr),
 		Secret:    mainflux.Env(envSecret, defSecret),
 	}
+}
 
-	logger := log.New(os.Stdout)
-
+func connectToDB(cfg config, logger log.Logger) *gorm.DB {
 	db, err := postgres.Connect(cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBUser, cfg.DBPass)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to postgres: %s", err))
 		os.Exit(1)
 	}
-	defer db.Close()
+	return db
+}
 
-	conn, err := grpc.Dial(cfg.UsersAddr, grpc.WithInsecure())
+func connectToUsersService(usersAddr string, logger log.Logger) *grpc.ClientConn {
+	conn, err := grpc.Dial(usersAddr, grpc.WithInsecure())
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to users service: %s", err))
 		os.Exit(1)
 	}
-	defer conn.Close()
+	return conn
+}
 
+func newService(conn *grpc.ClientConn, db *gorm.DB, secret string, logger log.Logger) clients.Service {
 	users := pb.NewClient(conn)
 	clientsRepo := postgres.NewClientRepository(db)
 	channelsRepo := postgres.NewChannelRepository(db)
 	hasher := bcrypt.New()
-	idp := jwt.New(cfg.Secret)
+	idp := jwt.New(secret)
 
 	svc := clients.New(users, clientsRepo, channelsRepo, hasher, idp)
 	svc = api.LoggingMiddleware(svc, logger)
@@ -102,21 +142,23 @@ func main() {
 			Help:      "Total duration of requests in microseconds.",
 		}, []string{"method"}),
 	)
+	return svc
+}
 
-	errs := make(chan error, 2)
+func startHTTPServer(svc clients.Service, port string, logger log.Logger, errs chan error) {
+	p := fmt.Sprintf(":%s", port)
+	logger.Info(fmt.Sprintf("Clients service started, exposed port %s", port))
+	errs <- http.ListenAndServe(p, httpapi.MakeHandler(svc))
+}
 
-	go func() {
-		p := fmt.Sprintf(":%s", cfg.Port)
-		logger.Info(fmt.Sprintf("Clients service started, exposed port %s", cfg.Port))
-		errs <- http.ListenAndServe(p, httpapi.MakeHandler(svc))
-	}()
-
-	go func() {
-		c := make(chan os.Signal)
-		signal.Notify(c, syscall.SIGINT)
-		errs <- fmt.Errorf("%s", <-c)
-	}()
-
-	err = <-errs
-	logger.Error(fmt.Sprintf("Clients service terminated: %s", err))
+func startGRPCServer(svc clients.Service, port string, logger log.Logger, errs chan error) {
+	p := fmt.Sprintf(":%s", port)
+	listener, err := net.Listen("tcp", p)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to listen on port %s: %s", port, err))
+	}
+	server := grpc.NewServer()
+	grpcapi.RegisterClientsServiceServer(server, grpcapi.NewServer(svc))
+	logger.Info(fmt.Sprintf("Users gRPC service started, exposed port %s", port))
+	errs <- server.Serve(listener)
 }

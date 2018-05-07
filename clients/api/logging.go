@@ -178,19 +178,6 @@ func (lm *loggingMiddleware) Disconnect(key, chanID, clientID string) (err error
 	return lm.svc.Disconnect(key, chanID, clientID)
 }
 
-func (lm *loggingMiddleware) Identity(key string) (id string, err error) {
-	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method identity for client %s took %s to complete", id, time.Since(begin))
-		if err != nil {
-			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
-			return
-		}
-		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
-	}(time.Now())
-
-	return lm.svc.Identity(key)
-}
-
 func (lm *loggingMiddleware) CanAccess(key string, id string) (pub string, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method can_access for key %s, channel %s and publisher %s took %s to complete", key, id, pub, time.Since(begin))

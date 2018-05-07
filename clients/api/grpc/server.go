@@ -1,0 +1,58 @@
+package grpc
+
+import (
+	kitgrpc "github.com/go-kit/kit/transport/grpc"
+	"github.com/mainflux/mainflux/clients"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+)
+
+var _ ClientsServiceServer = (*grpcServer)(nil)
+
+type grpcServer struct {
+	handler kitgrpc.Handler
+}
+
+// NewServer returns new ClientsServiceServer instance.
+func NewServer(svc clients.Service) ClientsServiceServer {
+	handler := kitgrpc.NewServer(
+		canAccessEndpoint(svc),
+		decodeCanAccessRequest,
+		encodeCanAccessResponse,
+	)
+	return &grpcServer{handler}
+}
+
+func (s *grpcServer) CanAccess(ctx context.Context, token *AccessReq) (*AccessRes, error) {
+	_, res, err := s.handler.ServeGRPC(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+	return res.(*AccessRes), nil
+}
+
+func decodeCanAccessRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*AccessReq)
+	return accessReq{req.GetChanID(), req.GetClientKey()}, nil
+}
+
+func encodeCanAccessResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(accessRes)
+	return &AccessRes{res.id}, encodeError(res.err)
+}
+
+func encodeError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	switch err {
+	case clients.ErrMalformedEntity:
+		return status.Error(codes.InvalidArgument, "received invalid can access request")
+	case clients.ErrUnauthorizedAccess:
+		return status.Error(codes.PermissionDenied, "failed to identify client or client does not have permission")
+	default:
+		return status.Error(codes.Internal, "internal server error")
+	}
+}

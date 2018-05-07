@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package grpc;
+
+service ClientsService {
+    rpc CanAccess(AccessReq) returns (AccessRes) {}
+}
+
+message AccessReq {
+    string chanID = 1;
+    string clientKey = 2;
+}
+
+message AccessRes {
+    string id = 1;
+}

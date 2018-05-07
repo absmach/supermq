@@ -67,10 +67,7 @@ type Service interface {
 	// clients.
 	Disconnect(string, string, string) error
 
-	// Identity retrieves Client ID for provided client token.
-	Identity(string) (string, error)
-
 	// CanAccess determines whether the channel can be accessed using the
-	// provided key.
+	// provided key and returns client's id.
 	CanAccess(string, string) (string, error)
 }

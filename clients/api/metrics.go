@@ -135,15 +135,6 @@ func (ms *metricsMiddleware) Disconnect(key, chanID, clientID string) error {
 	return ms.svc.Disconnect(key, chanID, clientID)
 }
 
-func (ms *metricsMiddleware) Identity(key string) (string, error) {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "identity").Add(1)
-		ms.latency.With("method", "identity").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-
-	return ms.svc.Identity(key)
-}
-
 func (ms *metricsMiddleware) CanAccess(key string, id string) (string, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "can_access").Add(1)
