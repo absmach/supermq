@@ -1,4 +1,4 @@
-package api_test
+package http_test
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/mainflux/mainflux/clients"
-	"github.com/mainflux/mainflux/clients/api"
+	httpapi "github.com/mainflux/mainflux/clients/api/http"
 	"github.com/mainflux/mainflux/clients/mocks"
 	"github.com/stretchr/testify/assert"
 )
@@ -65,7 +65,7 @@ func newService(tokens map[string]string) clients.Service {
 }
 
 func newServer(svc clients.Service) *httptest.Server {
-	mux := api.MakeHandler(svc)
+	mux := httpapi.MakeHandler(svc)
 	return httptest.NewServer(mux)
 }
 
@@ -606,77 +606,5 @@ func TestDisconnnect(t *testing.T) {
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-	}
-}
-
-func TestIdentity(t *testing.T) {
-	svc := newService(map[string]string{token: email})
-	ts := newServer(svc)
-	defer ts.Close()
-	cli := ts.Client()
-
-	clientID, _ := svc.AddClient(token, client)
-
-	cases := []struct {
-		desc     string
-		key      string
-		status   int
-		clientID string
-	}{
-		{"get client id using existing client key", clientID, http.StatusOK, clientID},
-		{"get client id using non-existent client key", "", http.StatusForbidden, ""},
-	}
-
-	for _, tc := range cases {
-		req := testRequest{
-			client: cli,
-			method: http.MethodGet,
-			url:    fmt.Sprintf("%s/access-grant", ts.URL),
-			token:  tc.key,
-		}
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		clientID := res.Header.Get("X-client-id")
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		assert.Equal(t, tc.clientID, clientID, fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.clientID, clientID))
-	}
-}
-
-func TestCanAccess(t *testing.T) {
-	svc := newService(map[string]string{token: email})
-	ts := newServer(svc)
-	defer ts.Close()
-	cli := ts.Client()
-
-	clientID, _ := svc.AddClient(token, client)
-	notConnectedClientID, _ := svc.AddClient(token, client)
-	chanID, _ := svc.CreateChannel(token, channel)
-	svc.Connect(token, chanID, clientID)
-
-	cases := []struct {
-		desc      string
-		chanID    string
-		clientKey string
-		status    int
-		clientID  string
-	}{
-		{"check access to existing channel given connected client", chanID, clientID, http.StatusOK, clientID},
-		{"check access to existing channel given not connected client", chanID, notConnectedClientID, http.StatusForbidden, ""},
-		{"check access to existing channel given non-existent client", chanID, invalidToken, http.StatusForbidden, ""},
-		{"check access to non-existent channel given existing client", invalidToken, clientID, http.StatusForbidden, ""},
-	}
-
-	for _, tc := range cases {
-		req := testRequest{
-			client: cli,
-			method: http.MethodGet,
-			url:    fmt.Sprintf("%s/channels/%s/access-grant", ts.URL, tc.chanID),
-			token:  tc.clientKey,
-		}
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		clientID := res.Header.Get("X-client-id")
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		assert.Equal(t, tc.clientID, clientID, fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.clientID, clientID))
 	}
 }

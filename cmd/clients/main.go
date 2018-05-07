@@ -11,6 +11,7 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/clients"
 	"github.com/mainflux/mainflux/clients/api"
+	httpapi "github.com/mainflux/mainflux/clients/api/http"
 	"github.com/mainflux/mainflux/clients/bcrypt"
 	"github.com/mainflux/mainflux/clients/jwt"
 	"github.com/mainflux/mainflux/clients/postgres"
@@ -107,7 +108,7 @@ func main() {
 	go func() {
 		p := fmt.Sprintf(":%s", cfg.Port)
 		logger.Info(fmt.Sprintf("Clients service started, exposed port %s", cfg.Port))
-		errs <- http.ListenAndServe(p, api.MakeHandler(svc))
+		errs <- http.ListenAndServe(p, httpapi.MakeHandler(svc))
 	}()
 
 	go func() {

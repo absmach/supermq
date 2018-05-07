@@ -1,4 +1,4 @@
-package api
+package http
 
 import (
 	"context"
@@ -213,39 +213,5 @@ func disconnectEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 
 		return disconnectionRes{}, nil
-	}
-}
-
-func identityEndpoint(svc clients.Service) endpoint.Endpoint {
-	return func(_ context.Context, request interface{}) (interface{}, error) {
-		req := request.(identityReq)
-
-		if err := req.validate(); err != nil {
-			return nil, clients.ErrUnauthorizedAccess
-		}
-
-		id, err := svc.Identity(req.key)
-		if err != nil {
-			return nil, err
-		}
-
-		return identityRes{id: id}, nil
-	}
-}
-
-func canAccessEndpoint(svc clients.Service) endpoint.Endpoint {
-	return func(_ context.Context, request interface{}) (interface{}, error) {
-		req := request.(viewResourceReq)
-
-		if err := req.validate(); err != nil {
-			return nil, clients.ErrUnauthorizedAccess
-		}
-
-		id, err := svc.CanAccess(req.key, req.id)
-		if err != nil {
-			return nil, err
-		}
-
-		return identityRes{id: id}, nil
 	}
 }

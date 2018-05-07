@@ -1,4 +1,4 @@
-package api
+package http
 
 import (
 	"context"
@@ -115,32 +115,10 @@ func MakeHandler(svc clients.Service) http.Handler {
 		opts...,
 	))
 
-	r.Get("/access-grant", kithttp.NewServer(
-		identityEndpoint(svc),
-		decodeIdentity,
-		encodeResponse,
-		opts...,
-	))
-
-	r.Get("/channels/:id/access-grant", kithttp.NewServer(
-		canAccessEndpoint(svc),
-		decodeView,
-		encodeResponse,
-		opts...,
-	))
-
 	r.GetFunc("/version", mainflux.Version("clients"))
 	r.Handle("/metrics", promhttp.Handler())
 
 	return r
-}
-
-func decodeIdentity(_ context.Context, r *http.Request) (interface{}, error) {
-	req := identityReq{
-		key: r.Header.Get("Authorization"),
-	}
-
-	return req, nil
 }
 
 func decodeClientCreation(_ context.Context, r *http.Request) (interface{}, error) {
