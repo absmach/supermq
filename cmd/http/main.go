@@ -81,9 +81,9 @@ func main() {
 
 	go func() {
 		p := fmt.Sprintf(":%s", cfg.Port)
-		mc := clientsapi.NewClientsServiceClient(conn)
+		cc := clientsapi.NewClientsServiceClient(conn)
 		logger.Info(fmt.Sprintf("HTTP adapter service started, exposed port %s", cfg.Port))
-		errs <- http.ListenAndServe(p, api.MakeHandler(svc, mc))
+		errs <- http.ListenAndServe(p, api.MakeHandler(svc, cc))
 	}()
 
 	go func() {

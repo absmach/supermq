@@ -80,9 +80,9 @@ func main() {
 
 	go func() {
 		p := fmt.Sprintf(":%s", cfg.Port)
-		mc := clientsapi.NewClientsServiceClient(conn)
+		cc := clientsapi.NewClientsServiceClient(conn)
 		logger.Info(fmt.Sprintf("WebSocket adapter service started, exposed port %s", cfg.Port))
-		errs <- http.ListenAndServe(p, api.MakeHandler(svc, mc, logger))
+		errs <- http.ListenAndServe(p, api.MakeHandler(svc, cc, logger))
 	}()
 
 	go func() {

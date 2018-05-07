@@ -28,8 +28,8 @@ var (
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc mainflux.MessagePublisher, mc clientsapi.ClientsServiceClient) http.Handler {
-	auth = mc
+func MakeHandler(svc mainflux.MessagePublisher, cc clientsapi.ClientsServiceClient) http.Handler {
+	auth = cc
 
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),

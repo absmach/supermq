@@ -36,8 +36,8 @@ func newService() ws.Service {
 	return ws.New(pubsub)
 }
 
-func newHTTPServer(svc ws.Service, mc clientsapi.ClientsServiceClient) *httptest.Server {
-	mux := api.MakeHandler(svc, mc, log.New(os.Stdout))
+func newHTTPServer(svc ws.Service, cc clientsapi.ClientsServiceClient) *httptest.Server {
+	mux := api.MakeHandler(svc, cc, log.New(os.Stdout))
 	return httptest.NewServer(mux)
 }
 

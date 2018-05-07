@@ -28,8 +28,8 @@ func newService() mainflux.MessagePublisher {
 	return adapter.New(pub)
 }
 
-func newHTTPServer(pub mainflux.MessagePublisher, mc clientsapi.ClientsServiceClient) *httptest.Server {
-	mux := api.MakeHandler(pub, mc)
+func newHTTPServer(pub mainflux.MessagePublisher, cc clientsapi.ClientsServiceClient) *httptest.Server {
+	mux := api.MakeHandler(pub, cc)
 	return httptest.NewServer(mux)
 }
 
