@@ -9,11 +9,11 @@ import (
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
+	clients "github.com/mainflux/mainflux/clients/client"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/http/nats"
 	log "github.com/mainflux/mainflux/logger"
-	manager "github.com/mainflux/mainflux/manager/client"
 	broker "github.com/nats-io/go-nats"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
@@ -21,21 +21,21 @@ import (
 const (
 	defPort       string = "8180"
 	defNatsURL    string = broker.DefaultURL
-	defManagerURL string = "http://localhost:8180"
+	defClientsURL string = "http://localhost:8180"
 	envPort       string = "MF_HTTP_ADAPTER_PORT"
 	envNatsURL    string = "MF_NATS_URL"
-	envManagerURL string = "MF_MANAGER_URL"
+	envClientsURL string = "MF_CLIENTS_URL"
 )
 
 type config struct {
-	ManagerURL string
+	ClientsURL string
 	NatsURL    string
 	Port       string
 }
 
 func main() {
 	cfg := config{
-		ManagerURL: mainflux.Env(envManagerURL, defManagerURL),
+		ClientsURL: mainflux.Env(envClientsURL, defClientsURL),
 		NatsURL:    mainflux.Env(envNatsURL, defNatsURL),
 		Port:       mainflux.Env(envPort, defPort),
 	}
@@ -73,7 +73,7 @@ func main() {
 
 	go func() {
 		p := fmt.Sprintf(":%s", cfg.Port)
-		mc := manager.NewClient(cfg.ManagerURL)
+		mc := clients.NewClient(cfg.ClientsURL)
 		logger.Info(fmt.Sprintf("HTTP adapter service started, exposed port %s", cfg.Port))
 		errs <- http.ListenAndServe(p, api.MakeHandler(svc, mc))
 	}()

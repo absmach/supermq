@@ -10,8 +10,8 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux"
+	clients "github.com/mainflux/mainflux/clients/client"
 	log "github.com/mainflux/mainflux/logger"
-	manager "github.com/mainflux/mainflux/manager/client"
 	"github.com/mainflux/mainflux/ws"
 	"github.com/mainflux/mainflux/ws/api"
 	"github.com/mainflux/mainflux/ws/mocks"
@@ -36,12 +36,12 @@ func newService() ws.Service {
 	return ws.New(pubsub)
 }
 
-func newHTTPServer(svc ws.Service, mc manager.ManagerClient) *httptest.Server {
+func newHTTPServer(svc ws.Service, mc clients.ClientsClient) *httptest.Server {
 	mux := api.MakeHandler(svc, mc, log.New(os.Stdout))
 	return httptest.NewServer(mux)
 }
 
-func newManagerServer() *httptest.Server {
+func newClientsServer() *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(authorize))
 }
 
@@ -53,8 +53,8 @@ func authorize(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func newManagerClient(url string) manager.ManagerClient {
-	return manager.NewClient(url)
+func newClientsClient(url string) clients.ClientsClient {
+	return clients.NewClient(url)
 }
 
 func makeURL(tsURL, chanID, auth string, header bool) string {
@@ -77,8 +77,8 @@ func handshake(tsURL, chanID, token string, addHeader bool) (*websocket.Conn, *h
 }
 
 func TestHandshake(t *testing.T) {
-	mcServer := newManagerServer()
-	mc := newManagerClient(mcServer.URL)
+	mcServer := newClientsServer()
+	mc := newClientsClient(mcServer.URL)
 	svc := newService()
 	ts := newHTTPServer(svc, mc)
 	defer ts.Close()

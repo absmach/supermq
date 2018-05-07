@@ -9,8 +9,8 @@ import (
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
+	clients "github.com/mainflux/mainflux/clients/client"
 	log "github.com/mainflux/mainflux/logger"
-	manager "github.com/mainflux/mainflux/manager/client"
 	adapter "github.com/mainflux/mainflux/ws"
 	"github.com/mainflux/mainflux/ws/api"
 	"github.com/mainflux/mainflux/ws/nats"
@@ -21,21 +21,21 @@ import (
 const (
 	defPort       = "8180"
 	defNatsURL    = broker.DefaultURL
-	defManagerURL = "http://localhost:8180"
+	defClientsURL = "http://localhost:8180"
 	envPort       = "MF_WS_ADAPTER_PORT"
 	envNatsURL    = "MF_NATS_URL"
-	envManagerURL = "MF_MANAGER_URL"
+	envClientsURL = "MF_CLIENTS_URL"
 )
 
 type config struct {
-	ManagerURL string
+	ClientsURL string
 	NatsURL    string
 	Port       string
 }
 
 func main() {
 	cfg := config{
-		ManagerURL: mainflux.Env(envManagerURL, defManagerURL),
+		ClientsURL: mainflux.Env(envClientsURL, defClientsURL),
 		NatsURL:    mainflux.Env(envNatsURL, defNatsURL),
 		Port:       mainflux.Env(envPort, defPort),
 	}
@@ -72,7 +72,7 @@ func main() {
 
 	go func() {
 		p := fmt.Sprintf(":%s", cfg.Port)
-		mc := manager.NewClient(cfg.ManagerURL)
+		mc := clients.NewClient(cfg.ClientsURL)
 		logger.Info(fmt.Sprintf("WebSocket adapter service started, exposed port %s", cfg.Port))
 		errs <- http.ListenAndServe(p, api.MakeHandler(svc, mc, logger))
 	}()

@@ -9,8 +9,8 @@ import (
 	"github.com/go-zoo/bone"
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux"
+	clients "github.com/mainflux/mainflux/clients/client"
 	log "github.com/mainflux/mainflux/logger"
-	manager "github.com/mainflux/mainflux/manager/client"
 	"github.com/mainflux/mainflux/ws"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -27,12 +27,12 @@ var (
 			return true
 		},
 	}
-	auth   manager.ManagerClient
+	auth   clients.ClientsClient
 	logger log.Logger
 )
 
 // MakeHandler returns http handler with handshake endpoint.
-func MakeHandler(svc ws.Service, mc manager.ManagerClient, l log.Logger) http.Handler {
+func MakeHandler(svc ws.Service, mc clients.ClientsClient, l log.Logger) http.Handler {
 	auth = mc
 	logger = l
 
@@ -86,7 +86,7 @@ func authorize(r *http.Request) (subscription, error) {
 	if authKey == "" {
 		authKeys := bone.GetQuery(r, "authorization")
 		if len(authKeys) == 0 {
-			return subscription{}, manager.ErrUnauthorizedAccess
+			return subscription{}, clients.ErrUnauthorizedAccess
 		}
 		authKey = authKeys[0]
 	}
@@ -99,7 +99,7 @@ func authorize(r *http.Request) (subscription, error) {
 
 	pubID, err := auth.CanAccess(chanID, authKey)
 	if err != nil {
-		return subscription{}, manager.ErrUnauthorizedAccess
+		return subscription{}, clients.ErrUnauthorizedAccess
 	}
 
 	sub := subscription{
