@@ -11,22 +11,21 @@ import (
 var _ UsersServiceServer = (*grpcServer)(nil)
 
 type grpcServer struct {
-	identify kitgrpc.Handler
+	handler kitgrpc.Handler
 }
 
 // NewServer returns new UsersServiceServer instance.
 func NewServer(svc users.Service) UsersServiceServer {
-	return &grpcServer{
-		kitgrpc.NewServer(
-			identifyEndpoint(svc),
-			decodeIdentifyRequest,
-			encodeIdentifyResponse,
-		),
-	}
+	handler := kitgrpc.NewServer(
+		identifyEndpoint(svc),
+		decodeIdentifyRequest,
+		encodeIdentifyResponse,
+	)
+	return &grpcServer{handler}
 }
 
 func (s *grpcServer) Identify(ctx context.Context, token *Token) (*Identity, error) {
-	_, res, err := s.identify.ServeGRPC(ctx, token)
+	_, res, err := s.handler.ServeGRPC(ctx, token)
 	if err != nil {
 		return nil, err
 	}
