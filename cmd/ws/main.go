@@ -9,35 +9,36 @@ import (
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
-	clients "github.com/mainflux/mainflux/clients/client"
+	clientsapi "github.com/mainflux/mainflux/clients/api/grpc"
 	log "github.com/mainflux/mainflux/logger"
 	adapter "github.com/mainflux/mainflux/ws"
 	"github.com/mainflux/mainflux/ws/api"
 	"github.com/mainflux/mainflux/ws/nats"
 	broker "github.com/nats-io/go-nats"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
+	"google.golang.org/grpc"
 )
 
 const (
-	defPort       = "8180"
-	defNatsURL    = broker.DefaultURL
-	defClientsURL = "http://localhost:8180"
-	envPort       = "MF_WS_ADAPTER_PORT"
-	envNatsURL    = "MF_NATS_URL"
-	envClientsURL = "MF_CLIENTS_URL"
+	defPort        = "8180"
+	defNatsURL     = broker.DefaultURL
+	defClientsAddr = "http://localhost:8180"
+	envPort        = "MF_WS_ADAPTER_PORT"
+	envNatsURL     = "MF_NATS_URL"
+	envClientsAddr = "MF_CLIENTS_ADDR"
 )
 
 type config struct {
-	ClientsURL string
-	NatsURL    string
-	Port       string
+	ClientsAddr string
+	NatsURL     string
+	Port        string
 }
 
 func main() {
 	cfg := config{
-		ClientsURL: mainflux.Env(envClientsURL, defClientsURL),
-		NatsURL:    mainflux.Env(envNatsURL, defNatsURL),
-		Port:       mainflux.Env(envPort, defPort),
+		ClientsAddr: mainflux.Env(envClientsAddr, defClientsAddr),
+		NatsURL:     mainflux.Env(envNatsURL, defNatsURL),
+		Port:        mainflux.Env(envPort, defPort),
 	}
 
 	logger := log.New(os.Stdout)
@@ -48,6 +49,13 @@ func main() {
 		os.Exit(1)
 	}
 	defer nc.Close()
+
+	conn, err := grpc.Dial(cfg.ClientsAddr, grpc.WithInsecure())
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to users service: %s", err))
+		os.Exit(1)
+	}
+	defer conn.Close()
 
 	pubsub := nats.New(nc)
 	svc := adapter.New(pubsub)
@@ -72,7 +80,7 @@ func main() {
 
 	go func() {
 		p := fmt.Sprintf(":%s", cfg.Port)
-		mc := clients.NewClient(cfg.ClientsURL)
+		mc := clientsapi.NewClientsServiceClient(conn)
 		logger.Info(fmt.Sprintf("WebSocket adapter service started, exposed port %s", cfg.Port))
 		errs <- http.ListenAndServe(p, api.MakeHandler(svc, mc, logger))
 	}()
