@@ -68,7 +68,7 @@ func (cr channelRepository) Remove(owner, id string) error {
 	return nil
 }
 
-func (cr channelRepository) Connect(owner, chanId, clientId string) error {
+func (cr channelRepository) Connect(owner, chanID, clientID string) error {
 	// This approach can be replaced by declaring composite keys on both tables
 	// (clients and channels), and then propagate them into the m2m table. For
 	// some reason GORM does not infer these kind of connections well and
@@ -80,7 +80,7 @@ func (cr channelRepository) Connect(owner, chanId, clientId string) error {
 	EXISTS (SELECT 1 FROM channels WHERE owner = ? AND id = ?) AND
 	EXISTS (SELECT 1 FROM clients WHERE owner = ? AND id = ?);`
 
-	res := cr.db.Exec(sql, chanId, clientId, owner, chanId, owner, clientId)
+	res := cr.db.Exec(sql, chanID, clientID, owner, chanID, owner, clientID)
 
 	if res.Error == nil && res.RowsAffected == 0 {
 		return manager.ErrNotFound
@@ -89,14 +89,14 @@ func (cr channelRepository) Connect(owner, chanId, clientId string) error {
 	return res.Error
 }
 
-func (cr channelRepository) Disconnect(owner, chanId, clientId string) error {
+func (cr channelRepository) Disconnect(owner, chanID, clientID string) error {
 	// The same remark given in Connect applies here.
 	sql := `DELETE FROM channel_clients WHERE
 	channel_id = ? AND client_id = ? AND
 	EXISTS (SELECT 1 FROM channels WHERE owner = ? AND id = ?) AND
 	EXISTS (SELECT 1 FROM clients WHERE owner = ? AND id = ?);`
 
-	res := cr.db.Exec(sql, chanId, clientId, owner, chanId, owner, clientId)
+	res := cr.db.Exec(sql, chanID, clientID, owner, chanID, owner, clientID)
 
 	if res.Error == nil && res.RowsAffected == 0 {
 		return manager.ErrNotFound
@@ -105,10 +105,10 @@ func (cr channelRepository) Disconnect(owner, chanId, clientId string) error {
 	return res.Error
 }
 
-func (cr channelRepository) HasClient(chanId, clientId string) bool {
+func (cr channelRepository) HasClient(chanID, clientID string) bool {
 	sql := "SELECT EXISTS (SELECT 1 FROM channel_clients WHERE channel_id = $1 AND client_id = $2);"
 
-	row := cr.db.DB().QueryRow(sql, chanId, clientId)
+	row := cr.db.DB().QueryRow(sql, chanID, clientID)
 
 	var exists bool
 	if err := row.Scan(&exists); err != nil {

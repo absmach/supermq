@@ -10,7 +10,7 @@ import (
 
 var _ manager.ClientRepository = (*clientRepositoryMock)(nil)
 
-const cliId = "123e4567-e89b-12d3-a456-"
+const cliID = "123e4567-e89b-12d3-a456-"
 
 type clientRepositoryMock struct {
 	mu      sync.Mutex
@@ -25,12 +25,12 @@ func NewClientRepository() manager.ClientRepository {
 	}
 }
 
-func (crm *clientRepositoryMock) Id() string {
+func (crm *clientRepositoryMock) ID() string {
 	crm.mu.Lock()
 	defer crm.mu.Unlock()
 
-	crm.counter += 1
-	return fmt.Sprintf("%s%012d", cliId, crm.counter)
+	crm.counter++
+	return fmt.Sprintf("%s%012d", cliID, crm.counter)
 }
 
 func (crm *clientRepositoryMock) Save(client manager.Client) error {
@@ -76,8 +76,8 @@ func (crm *clientRepositoryMock) All(owner string, offset, limit int) []manager.
 	}
 
 	// Since IDs start from 1, shift everything by one.
-	first := fmt.Sprintf("%s%012d", cliId, offset+1)
-	last := fmt.Sprintf("%s%012d", cliId, offset+limit+1)
+	first := fmt.Sprintf("%s%012d", cliID, offset+1)
+	last := fmt.Sprintf("%s%012d", cliID, offset+limit+1)
 
 	for k, v := range crm.clients {
 		if strings.HasPrefix(k, prefix) && v.ID >= first && v.ID < last {

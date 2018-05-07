@@ -19,7 +19,7 @@ func NewClientRepository(db *gorm.DB) manager.ClientRepository {
 	return &clientRepository{db}
 }
 
-func (cr *clientRepository) Id() string {
+func (cr *clientRepository) ID() string {
 	return uuid.NewV4().String()
 }
 

@@ -15,45 +15,51 @@ import (
 	"github.com/mainflux/mainflux/manager/bcrypt"
 	"github.com/mainflux/mainflux/manager/jwt"
 	"github.com/mainflux/mainflux/manager/postgres"
+	pb "github.com/mainflux/mainflux/users/api/grpc"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
+	"google.golang.org/grpc"
 )
 
 const (
-	defDBHost string = "localhost"
-	defDBPort string = "5432"
-	defDBUser string = "mainflux"
-	defDBPass string = "mainflux"
-	defDBName string = "manager"
-	defPort   string = "8180"
-	defSecret string = "manager"
-	envDBHost string = "MF_DB_HOST"
-	envDBPort string = "MF_DB_PORT"
-	envDBUser string = "MF_DB_USER"
-	envDBPass string = "MF_DB_PASS"
-	envDBName string = "MF_MANAGER_DB"
-	envPort   string = "MF_MANAGER_PORT"
-	envSecret string = "MF_MANAGER_SECRET"
+	defDBHost    = "localhost"
+	defDBPort    = "5432"
+	defDBUser    = "mainflux"
+	defDBPass    = "mainflux"
+	defDBName    = "manager"
+	defPort      = "8180"
+	defUsersAddr = "localhost:8181"
+	defSecret    = "manager"
+	envDBHost    = "MF_DB_HOST"
+	envDBPort    = "MF_DB_PORT"
+	envDBUser    = "MF_DB_USER"
+	envDBPass    = "MF_DB_PASS"
+	envDBName    = "MF_MANAGER_DB"
+	envPort      = "MF_MANAGER_PORT"
+	envUsersAddr = "MF_USERS_ADDR"
+	envSecret    = "MF_MANAGER_SECRET"
 )
 
 type config struct {
-	DBHost string
-	DBPort string
-	DBUser string
-	DBPass string
-	DBName string
-	Port   string
-	Secret string
+	DBHost    string
+	DBPort    string
+	DBUser    string
+	DBPass    string
+	DBName    string
+	Port      string
+	UsersAddr string
+	Secret    string
 }
 
 func main() {
 	cfg := config{
-		DBHost: mainflux.Env(envDBHost, defDBHost),
-		DBPort: mainflux.Env(envDBPort, defDBPort),
-		DBUser: mainflux.Env(envDBUser, defDBUser),
-		DBPass: mainflux.Env(envDBPass, defDBPass),
-		DBName: mainflux.Env(envDBName, defDBName),
-		Port:   mainflux.Env(envPort, defPort),
-		Secret: mainflux.Env(envSecret, defSecret),
+		DBHost:    mainflux.Env(envDBHost, defDBHost),
+		DBPort:    mainflux.Env(envDBPort, defDBPort),
+		DBUser:    mainflux.Env(envDBUser, defDBUser),
+		DBPass:    mainflux.Env(envDBPass, defDBPass),
+		DBName:    mainflux.Env(envDBName, defDBName),
+		Port:      mainflux.Env(envPort, defPort),
+		UsersAddr: mainflux.Env(envUsersAddr, defUsersAddr),
+		Secret:    mainflux.Env(envSecret, defSecret),
 	}
 
 	logger := log.New(os.Stdout)
@@ -65,7 +71,14 @@ func main() {
 	}
 	defer db.Close()
 
-	users := postgres.NewUserRepository(db)
+	conn, err := grpc.Dial(cfg.UsersAddr, grpc.WithInsecure())
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to users service: %s", err))
+		os.Exit(1)
+	}
+	defer conn.Close()
+
+	users := pb.NewClient(conn)
 	clients := postgres.NewClientRepository(db)
 	channels := postgres.NewChannelRepository(db)
 	hasher := bcrypt.New()
