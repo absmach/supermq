@@ -10,7 +10,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux"
-	clients "github.com/mainflux/mainflux/clients/client"
+	clientsapi "github.com/mainflux/mainflux/clients/api/grpc"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/ws"
 	"github.com/mainflux/mainflux/ws/api"
@@ -36,25 +36,14 @@ func newService() ws.Service {
 	return ws.New(pubsub)
 }
 
-func newHTTPServer(svc ws.Service, mc clients.ClientsClient) *httptest.Server {
+func newHTTPServer(svc ws.Service, mc clientsapi.ClientsServiceClient) *httptest.Server {
 	mux := api.MakeHandler(svc, mc, log.New(os.Stdout))
 	return httptest.NewServer(mux)
 }
 
-func newClientsServer() *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(authorize))
-}
-
-func authorize(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("Authorization") == "" {
-		w.WriteHeader(http.StatusForbidden)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-}
-
-func newClientsClient(url string) clients.ClientsClient {
-	return clients.NewClient(url)
+func newClientsClient() clientsapi.ClientsServiceClient {
+	clientID := chanID
+	return mocks.NewClientsClient(map[string]string{token: clientID})
 }
 
 func makeURL(tsURL, chanID, auth string, header bool) string {
@@ -77,10 +66,9 @@ func handshake(tsURL, chanID, token string, addHeader bool) (*websocket.Conn, *h
 }
 
 func TestHandshake(t *testing.T) {
-	mcServer := newClientsServer()
-	mc := newClientsClient(mcServer.URL)
+	clientsClient := newClientsClient()
 	svc := newService()
-	ts := newHTTPServer(svc, mc)
+	ts := newHTTPServer(svc, clientsClient)
 	defer ts.Close()
 
 	cases := []struct {

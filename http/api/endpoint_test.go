@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/mainflux/mainflux"
-	clients "github.com/mainflux/mainflux/clients/client"
+	clientsapi "github.com/mainflux/mainflux/clients/api/grpc"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/http/mocks"
@@ -28,23 +28,13 @@ func newService() mainflux.MessagePublisher {
 	return adapter.New(pub)
 }
 
-func newHTTPServer(pub mainflux.MessagePublisher, mc clients.ClientsClient) *httptest.Server {
+func newHTTPServer(pub mainflux.MessagePublisher, mc clientsapi.ClientsServiceClient) *httptest.Server {
 	mux := api.MakeHandler(pub, mc)
 	return httptest.NewServer(mux)
 }
 
-func newClientsServer() *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("Authorization") == "invalid_token" {
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-	}))
-}
-
-func newClientsClient(url string) clients.ClientsClient {
-	return clients.NewClient(url)
+func newClientsClient() clientsapi.ClientsServiceClient {
+	return mocks.NewClientsClient(map[string]string{token: id})
 }
 
 type testRequest struct {
@@ -71,12 +61,10 @@ func (tr testRequest) make() (*http.Response, error) {
 }
 
 func TestPublish(t *testing.T) {
-	mcServer := newClientsServer()
-	defer mcServer.Close()
-	mc := newClientsClient(mcServer.URL)
+	clientsClient := newClientsClient()
 
 	pub := newService()
-	ts := newHTTPServer(pub, mc)
+	ts := newHTTPServer(pub, clientsClient)
 	defer ts.Close()
 	client := ts.Client()
 
