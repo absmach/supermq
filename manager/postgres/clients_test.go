@@ -11,46 +11,23 @@ import (
 
 func TestClientSave(t *testing.T) {
 	email := "client-save@example.com"
-
-	userRepo := postgres.NewUserRepository(db)
-	userRepo.Save(manager.User{email, "pass"})
-
 	clientRepo := postgres.NewClientRepository(db)
-
-	c1 := manager.Client{
-		ID:    clientRepo.Id(),
+	client := manager.Client{
+		ID:    clientRepo.ID(),
 		Owner: email,
 	}
 
-	c2 := manager.Client{
-		ID:    clientRepo.Id(),
-		Owner: "unknown@example.com",
-	}
-
-	cases := map[string]struct {
-		client manager.Client
-		hasErr bool
-	}{
-		"new client, existing user":     {c1, false},
-		"new client, non-existing user": {c2, true},
-	}
-
-	for desc, tc := range cases {
-		hasErr := clientRepo.Save(tc.client) != nil
-		assert.Equal(t, tc.hasErr, hasErr, fmt.Sprintf("%s: expected %t got %t\n", desc, tc.hasErr, hasErr))
-	}
+	hasErr := clientRepo.Save(client) != nil
+	assert.False(t, hasErr, fmt.Sprintf("create new client: expected false got %t\n", hasErr))
 }
 
 func TestClientUpdate(t *testing.T) {
 	email := "client-update@example.com"
 
-	userRepo := postgres.NewUserRepository(db)
-	userRepo.Save(manager.User{email, "pass"})
-
 	clientRepo := postgres.NewClientRepository(db)
 
 	c := manager.Client{
-		ID:    clientRepo.Id(),
+		ID:    clientRepo.ID(),
 		Owner: email,
 	}
 
@@ -74,13 +51,10 @@ func TestClientUpdate(t *testing.T) {
 func TestSingleClientRetrieval(t *testing.T) {
 	email := "client-single-retrieval@example.com"
 
-	userRepo := postgres.NewUserRepository(db)
-	userRepo.Save(manager.User{email, "pass"})
-
 	clientRepo := postgres.NewClientRepository(db)
 
 	c := manager.Client{
-		ID:    clientRepo.Id(),
+		ID:    clientRepo.ID(),
 		Owner: email,
 	}
 
@@ -105,16 +79,13 @@ func TestSingleClientRetrieval(t *testing.T) {
 func TestMultiClientRetrieval(t *testing.T) {
 	email := "client-multi-retrieval@example.com"
 
-	userRepo := postgres.NewUserRepository(db)
-	userRepo.Save(manager.User{email, "pass"})
-
 	clientRepo := postgres.NewClientRepository(db)
 
 	n := 10
 
 	for i := 0; i < n; i++ {
 		c := manager.Client{
-			ID:    clientRepo.Id(),
+			ID:    clientRepo.ID(),
 			Owner: email,
 		}
 
@@ -140,12 +111,9 @@ func TestMultiClientRetrieval(t *testing.T) {
 func TestClientRemoval(t *testing.T) {
 	email := "client-removal@example.com"
 
-	userRepo := postgres.NewUserRepository(db)
-	userRepo.Save(manager.User{email, "pass"})
-
 	clientRepo := postgres.NewClientRepository(db)
 	client := manager.Client{
-		ID:    clientRepo.Id(),
+		ID:    clientRepo.ID(),
 		Owner: email,
 	}
 	clientRepo.Save(client)

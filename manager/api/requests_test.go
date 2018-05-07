@@ -16,24 +16,6 @@ var (
 	channel = manager.Channel{}
 )
 
-func TestUserReqValidation(t *testing.T) {
-	cases := map[string]struct {
-		user manager.User
-		err  error
-	}{
-		"valid user request": {manager.User{"foo@example.com", "pass"}, nil},
-		"malformed e-mail":   {manager.User{wrong, "pass"}, manager.ErrMalformedEntity},
-		"empty e-mail":       {manager.User{"", "pass"}, manager.ErrMalformedEntity},
-		"empty password":     {manager.User{"foo@example.com", ""}, manager.ErrMalformedEntity},
-	}
-
-	for desc, tc := range cases {
-		req := userReq{tc.user}
-		err := req.validate()
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
-	}
-}
-
 func TestIdentityReqValidation(t *testing.T) {
 	cases := map[string]struct {
 		key string

@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package grpc;
+
+service UsersService {
+    rpc Identify(Token) returns (Identity) {}
+}
+
+message Token {
+    string value = 1;
+}
+
+message Identity {
+    string value = 1;
+}

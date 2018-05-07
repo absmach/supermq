@@ -27,24 +27,6 @@ func MetricsMiddleware(svc manager.Service, counter metrics.Counter, latency met
 	}
 }
 
-func (ms *metricsMiddleware) Register(user manager.User) error {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "register").Add(1)
-		ms.latency.With("method", "register").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-
-	return ms.svc.Register(user)
-}
-
-func (ms *metricsMiddleware) Login(user manager.User) (string, error) {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "login").Add(1)
-		ms.latency.With("method", "login").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-
-	return ms.svc.Login(user)
-}
-
 func (ms *metricsMiddleware) AddClient(key string, client manager.Client) (string, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "add_client").Add(1)
@@ -135,22 +117,22 @@ func (ms *metricsMiddleware) RemoveChannel(key string, id string) error {
 	return ms.svc.RemoveChannel(key, id)
 }
 
-func (ms *metricsMiddleware) Connect(key, chanId, clientId string) error {
+func (ms *metricsMiddleware) Connect(key, chanID, clientID string) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "connect").Add(1)
 		ms.latency.With("method", "connect").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.Connect(key, chanId, clientId)
+	return ms.svc.Connect(key, chanID, clientID)
 }
 
-func (ms *metricsMiddleware) Disconnect(key, chanId, clientId string) error {
+func (ms *metricsMiddleware) Disconnect(key, chanID, clientID string) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "disconnect").Add(1)
 		ms.latency.With("method", "disconnect").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.Disconnect(key, chanId, clientId)
+	return ms.svc.Disconnect(key, chanID, clientID)
 }
 
 func (ms *metricsMiddleware) Identity(key string) (string, error) {

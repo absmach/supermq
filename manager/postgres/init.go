@@ -30,15 +30,7 @@ func Connect(host, port, name, user, pass string) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	db = db.AutoMigrate(&manager.User{}, &manager.Client{}, &manager.Channel{}, &connection{})
-
-	db = db.Model(&manager.Client{}).
-		AddForeignKey("owner", "users(email)", "CASCADE", "CASCADE").
-		AddUniqueIndex("idx_pk_client", "id", "owner")
-
-	db = db.Model(&manager.Channel{}).
-		AddForeignKey("owner", "users(email)", "CASCADE", "CASCADE").
-		AddUniqueIndex("idx_pk_channel", "id", "owner")
+	db = db.AutoMigrate(&manager.Client{}, &manager.Channel{}, &connection{})
 
 	db = db.Model(&connection{}).
 		AddForeignKey("client_id", "clients(id)", "CASCADE", "CASCADE").

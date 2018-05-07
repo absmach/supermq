@@ -11,14 +11,6 @@ type apiReq interface {
 	validate() error
 }
 
-type userReq struct {
-	user manager.User
-}
-
-func (req userReq) validate() error {
-	return req.user.Validate()
-}
-
 type identityReq struct {
 	key string
 }
@@ -130,8 +122,8 @@ func (req *listResourcesReq) validate() error {
 
 type connectionReq struct {
 	key      string
-	chanId   string
-	clientId string
+	chanID   string
+	clientID string
 }
 
 func (req connectionReq) validate() error {
@@ -139,7 +131,7 @@ func (req connectionReq) validate() error {
 		return manager.ErrUnauthorizedAccess
 	}
 
-	if !govalidator.IsUUID(req.chanId) || !govalidator.IsUUID(req.clientId) {
+	if !govalidator.IsUUID(req.chanID) || !govalidator.IsUUID(req.clientID) {
 		return manager.ErrNotFound
 	}
 

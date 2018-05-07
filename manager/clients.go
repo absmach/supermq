@@ -13,7 +13,7 @@ type Client struct {
 	Payload string `json:"payload,omitempty"`
 }
 
-var clientTypes map[string]bool = map[string]bool{
+var clientTypes = map[string]bool{
 	"app":    true,
 	"device": true,
 }
@@ -29,8 +29,8 @@ func (c *Client) Validate() error {
 
 // ClientRepository specifies a client persistence API.
 type ClientRepository interface {
-	// Id generates new resource identifier.
-	Id() string
+	// ID generates new resource identifier.
+	ID() string
 
 	// Save persists the client. Successful operation is indicated by non-nil
 	// error response.
