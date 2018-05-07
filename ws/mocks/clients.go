@@ -3,24 +3,24 @@ package mocks
 import (
 	"context"
 
+	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/clients"
 
-	clientsapi "github.com/mainflux/mainflux/clients/api/grpc"
 	"google.golang.org/grpc"
 )
 
-var _ clientsapi.ClientsServiceClient = (*clientsClient)(nil)
+var _ mainflux.ClientsServiceClient = (*clientsClient)(nil)
 
 type clientsClient struct {
 	clients map[string]string
 }
 
 // NewClientsClient returns mock implementation of clients service client.
-func NewClientsClient(data map[string]string) clientsapi.ClientsServiceClient {
+func NewClientsClient(data map[string]string) mainflux.ClientsServiceClient {
 	return &clientsClient{data}
 }
 
-func (client clientsClient) CanAccess(ctx context.Context, req *clientsapi.AccessReq, opts ...grpc.CallOption) (*clientsapi.Identity, error) {
+func (client clientsClient) CanAccess(ctx context.Context, req *mainflux.AccessReq, opts ...grpc.CallOption) (*mainflux.Identity, error) {
 	key := req.GetClientKey()
 	if key == "" {
 		return nil, clients.ErrUnauthorizedAccess
@@ -31,5 +31,5 @@ func (client clientsClient) CanAccess(ctx context.Context, req *clientsapi.Acces
 		return nil, clients.ErrUnauthorizedAccess
 	}
 
-	return &clientsapi.Identity{id}, nil
+	return &mainflux.Identity{id}, nil
 }

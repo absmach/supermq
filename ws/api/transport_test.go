@@ -10,7 +10,6 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux"
-	clientsapi "github.com/mainflux/mainflux/clients/api/grpc"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/ws"
 	"github.com/mainflux/mainflux/ws/api"
@@ -36,12 +35,12 @@ func newService() ws.Service {
 	return ws.New(pubsub)
 }
 
-func newHTTPServer(svc ws.Service, cc clientsapi.ClientsServiceClient) *httptest.Server {
+func newHTTPServer(svc ws.Service, cc mainflux.ClientsServiceClient) *httptest.Server {
 	mux := api.MakeHandler(svc, cc, log.New(os.Stdout))
 	return httptest.NewServer(mux)
 }
 
-func newClientsClient() clientsapi.ClientsServiceClient {
+func newClientsClient() mainflux.ClientsServiceClient {
 	clientID := chanID
 	return mocks.NewClientsClient(map[string]string{token: clientID})
 }

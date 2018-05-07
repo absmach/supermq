@@ -12,7 +12,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/clients"
-	clientsapi "github.com/mainflux/mainflux/clients/api/grpc"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/ws"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -30,12 +29,12 @@ var (
 			return true
 		},
 	}
-	auth   clientsapi.ClientsServiceClient
+	auth   mainflux.ClientsServiceClient
 	logger log.Logger
 )
 
 // MakeHandler returns http handler with handshake endpoint.
-func MakeHandler(svc ws.Service, cc clientsapi.ClientsServiceClient, l log.Logger) http.Handler {
+func MakeHandler(svc ws.Service, cc mainflux.ClientsServiceClient, l log.Logger) http.Handler {
 	auth = cc
 	logger = l
 
@@ -103,7 +102,7 @@ func authorize(r *http.Request) (subscription, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	id, err := auth.CanAccess(ctx, &clientsapi.AccessReq{authKey, chanID})
+	id, err := auth.CanAccess(ctx, &mainflux.AccessReq{authKey, chanID})
 	if err != nil {
 		return subscription{}, clients.ErrUnauthorizedAccess
 	}

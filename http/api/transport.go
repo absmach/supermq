@@ -15,7 +15,6 @@ import (
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/clients"
-	clientsapi "github.com/mainflux/mainflux/clients/api/grpc"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -24,11 +23,11 @@ const protocol string = "http"
 var (
 	errMalformedData = errors.New("malformed SenML data")
 	errNotFound      = errors.New("non-existent entity")
-	auth             clientsapi.ClientsServiceClient
+	auth             mainflux.ClientsServiceClient
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc mainflux.MessagePublisher, cc clientsapi.ClientsServiceClient) http.Handler {
+func MakeHandler(svc mainflux.MessagePublisher, cc mainflux.ClientsServiceClient) http.Handler {
 	auth = cc
 
 	opts := []kithttp.ServerOption{
@@ -88,7 +87,7 @@ func authorize(r *http.Request) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	id, err := auth.CanAccess(ctx, &clientsapi.AccessReq{apiKey, c})
+	id, err := auth.CanAccess(ctx, &mainflux.AccessReq{apiKey, c})
 	if err != nil {
 		return "", err
 	}

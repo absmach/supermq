@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/mainflux/mainflux"
-	clientsapi "github.com/mainflux/mainflux/clients/api/grpc"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/http/mocks"
@@ -28,12 +27,12 @@ func newService() mainflux.MessagePublisher {
 	return adapter.New(pub)
 }
 
-func newHTTPServer(pub mainflux.MessagePublisher, cc clientsapi.ClientsServiceClient) *httptest.Server {
+func newHTTPServer(pub mainflux.MessagePublisher, cc mainflux.ClientsServiceClient) *httptest.Server {
 	mux := api.MakeHandler(pub, cc)
 	return httptest.NewServer(mux)
 }
 
-func newClientsClient() clientsapi.ClientsServiceClient {
+func newClientsClient() mainflux.ClientsServiceClient {
 	return mocks.NewClientsClient(map[string]string{token: id})
 }
 

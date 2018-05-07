@@ -139,7 +139,7 @@ func startGRPCServer(svc users.Service, port string, logger log.Logger, errs cha
 		logger.Error(fmt.Sprintf("Failed to listen on port %s: %s", port, err))
 	}
 	server := grpc.NewServer()
-	grpcapi.RegisterUsersServiceServer(server, grpcapi.NewServer(svc))
+	mainflux.RegisterUsersServiceServer(server, grpcapi.NewServer(svc))
 	logger.Info(fmt.Sprintf("Users gRPC service started, exposed port %s", port))
 	errs <- server.Serve(listener)
 }

@@ -4,13 +4,13 @@ import (
 	"context"
 	"time"
 
-	pb "github.com/mainflux/mainflux/users/api/grpc"
+	"github.com/mainflux/mainflux"
 )
 
 var _ Service = (*clientsService)(nil)
 
 type clientsService struct {
-	users    pb.UsersServiceClient
+	users    mainflux.UsersServiceClient
 	clients  ClientRepository
 	channels ChannelRepository
 	hasher   Hasher
@@ -18,7 +18,7 @@ type clientsService struct {
 }
 
 // New instantiates the domain service implementation.
-func New(users pb.UsersServiceClient, clients ClientRepository, channels ChannelRepository, hasher Hasher, idp IdentityProvider) Service {
+func New(users mainflux.UsersServiceClient, clients ClientRepository, channels ChannelRepository, hasher Hasher, idp IdentityProvider) Service {
 	return &clientsService{
 		users:    users,
 		clients:  clients,
@@ -32,7 +32,7 @@ func (ms *clientsService) AddClient(key string, client Client) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &pb.Token{key})
+	res, err := ms.users.Identify(ctx, &mainflux.Token{key})
 	if err != nil {
 		return "", ErrUnauthorizedAccess
 	}
@@ -48,7 +48,7 @@ func (ms *clientsService) UpdateClient(key string, client Client) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &pb.Token{key})
+	res, err := ms.users.Identify(ctx, &mainflux.Token{key})
 	if err != nil {
 		return ErrUnauthorizedAccess
 	}
@@ -62,7 +62,7 @@ func (ms *clientsService) ViewClient(key, id string) (Client, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &pb.Token{key})
+	res, err := ms.users.Identify(ctx, &mainflux.Token{key})
 	if err != nil {
 		return Client{}, ErrUnauthorizedAccess
 	}
@@ -74,7 +74,7 @@ func (ms *clientsService) ListClients(key string, offset, limit int) ([]Client, 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &pb.Token{key})
+	res, err := ms.users.Identify(ctx, &mainflux.Token{key})
 	if err != nil {
 		return nil, ErrUnauthorizedAccess
 	}
@@ -86,7 +86,7 @@ func (ms *clientsService) RemoveClient(key, id string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &pb.Token{key})
+	res, err := ms.users.Identify(ctx, &mainflux.Token{key})
 	if err != nil {
 		return ErrUnauthorizedAccess
 	}
@@ -98,7 +98,7 @@ func (ms *clientsService) CreateChannel(key string, channel Channel) (string, er
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &pb.Token{key})
+	res, err := ms.users.Identify(ctx, &mainflux.Token{key})
 	if err != nil {
 		return "", ErrUnauthorizedAccess
 	}
@@ -111,7 +111,7 @@ func (ms *clientsService) UpdateChannel(key string, channel Channel) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &pb.Token{key})
+	res, err := ms.users.Identify(ctx, &mainflux.Token{key})
 	if err != nil {
 		return ErrUnauthorizedAccess
 	}
@@ -124,7 +124,7 @@ func (ms *clientsService) ViewChannel(key, id string) (Channel, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &pb.Token{key})
+	res, err := ms.users.Identify(ctx, &mainflux.Token{key})
 	if err != nil {
 		return Channel{}, ErrUnauthorizedAccess
 	}
@@ -136,7 +136,7 @@ func (ms *clientsService) ListChannels(key string, offset, limit int) ([]Channel
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &pb.Token{key})
+	res, err := ms.users.Identify(ctx, &mainflux.Token{key})
 	if err != nil {
 		return nil, ErrUnauthorizedAccess
 	}
@@ -148,7 +148,7 @@ func (ms *clientsService) RemoveChannel(key, id string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &pb.Token{key})
+	res, err := ms.users.Identify(ctx, &mainflux.Token{key})
 	if err != nil {
 		return ErrUnauthorizedAccess
 	}
@@ -160,7 +160,7 @@ func (ms *clientsService) Connect(key, chanID, clientID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &pb.Token{key})
+	res, err := ms.users.Identify(ctx, &mainflux.Token{key})
 	if err != nil {
 		return ErrUnauthorizedAccess
 	}
@@ -172,21 +172,12 @@ func (ms *clientsService) Disconnect(key, chanID, clientID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &pb.Token{key})
+	res, err := ms.users.Identify(ctx, &mainflux.Token{key})
 	if err != nil {
 		return ErrUnauthorizedAccess
 	}
 
 	return ms.channels.Disconnect(res.GetValue(), chanID, clientID)
-}
-
-func (ms *clientsService) Identity(key string) (string, error) {
-	client, err := ms.idp.Identity(key)
-	if err != nil {
-		return "", err
-	}
-
-	return client, nil
 }
 
 func (ms *clientsService) CanAccess(key, channel string) (string, error) {

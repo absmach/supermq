@@ -57,6 +57,7 @@ func main() {
 	}
 	defer conn.Close()
 
+	cc := clientsapi.NewClient(conn)
 	pub := nats.NewMessagePublisher(nc)
 
 	svc := adapter.New(pub)
@@ -81,7 +82,6 @@ func main() {
 
 	go func() {
 		p := fmt.Sprintf(":%s", cfg.Port)
-		cc := clientsapi.NewClientsServiceClient(conn)
 		logger.Info(fmt.Sprintf("HTTP adapter service started, exposed port %s", cfg.Port))
 		errs <- http.ListenAndServe(p, api.MakeHandler(svc, cc))
 	}()

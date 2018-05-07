@@ -1,14 +1,22 @@
 syntax = "proto3";
 
-package grpc;
+package mainflux;
 
 service ClientsService {
     rpc CanAccess(AccessReq) returns (Identity) {}
 }
 
+service UsersService {
+    rpc Identify(Token) returns (mainflux.Identity) {}
+}
+
 message AccessReq {
     string clientKey = 1;
     string chanID = 2;
+}
+
+message Token {
+    string value = 1;
 }
 
 message Identity {

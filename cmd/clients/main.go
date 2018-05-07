@@ -19,7 +19,7 @@ import (
 	"github.com/mainflux/mainflux/clients/jwt"
 	"github.com/mainflux/mainflux/clients/postgres"
 	log "github.com/mainflux/mainflux/logger"
-	pb "github.com/mainflux/mainflux/users/api/grpc"
+	usersapi "github.com/mainflux/mainflux/users/api/grpc"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc"
 )
@@ -119,7 +119,7 @@ func connectToUsersService(usersAddr string, logger log.Logger) *grpc.ClientConn
 }
 
 func newService(conn *grpc.ClientConn, db *gorm.DB, secret string, logger log.Logger) clients.Service {
-	users := pb.NewClient(conn)
+	users := usersapi.NewClient(conn)
 	clientsRepo := postgres.NewClientRepository(db)
 	channelsRepo := postgres.NewChannelRepository(db)
 	hasher := bcrypt.New()
@@ -158,7 +158,7 @@ func startGRPCServer(svc clients.Service, port string, logger log.Logger, errs c
 		logger.Error(fmt.Sprintf("Failed to listen on port %s: %s", port, err))
 	}
 	server := grpc.NewServer()
-	grpcapi.RegisterClientsServiceServer(server, grpcapi.NewServer(svc))
+	mainflux.RegisterClientsServiceServer(server, grpcapi.NewServer(svc))
 	logger.Info(fmt.Sprintf("Users gRPC service started, exposed port %s", port))
 	errs <- server.Serve(listener)
 }
