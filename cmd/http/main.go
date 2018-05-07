@@ -9,35 +9,36 @@ import (
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
-	clients "github.com/mainflux/mainflux/clients/client"
+	clientsapi "github.com/mainflux/mainflux/clients/api/grpc"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/http/nats"
 	log "github.com/mainflux/mainflux/logger"
 	broker "github.com/nats-io/go-nats"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
+	"google.golang.org/grpc"
 )
 
 const (
-	defPort       string = "8180"
-	defNatsURL    string = broker.DefaultURL
-	defClientsURL string = "http://localhost:8180"
-	envPort       string = "MF_HTTP_ADAPTER_PORT"
-	envNatsURL    string = "MF_NATS_URL"
-	envClientsURL string = "MF_CLIENTS_URL"
+	defPort        string = "8180"
+	defNatsURL     string = broker.DefaultURL
+	defClientsAddr string = "localhost:8181"
+	envPort        string = "MF_HTTP_ADAPTER_PORT"
+	envNatsURL     string = "MF_NATS_URL"
+	envClientsAddr string = "MF_CLIENTS_ADDR"
 )
 
 type config struct {
-	ClientsURL string
-	NatsURL    string
-	Port       string
+	ClientsAddr string
+	NatsURL     string
+	Port        string
 }
 
 func main() {
 	cfg := config{
-		ClientsURL: mainflux.Env(envClientsURL, defClientsURL),
-		NatsURL:    mainflux.Env(envNatsURL, defNatsURL),
-		Port:       mainflux.Env(envPort, defPort),
+		ClientsAddr: mainflux.Env(envClientsAddr, defClientsAddr),
+		NatsURL:     mainflux.Env(envNatsURL, defNatsURL),
+		Port:        mainflux.Env(envPort, defPort),
 	}
 
 	logger := log.New(os.Stdout)
@@ -48,6 +49,13 @@ func main() {
 		os.Exit(1)
 	}
 	defer nc.Close()
+
+	conn, err := grpc.Dial(cfg.ClientsAddr, grpc.WithInsecure())
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to users service: %s", err))
+		os.Exit(1)
+	}
+	defer conn.Close()
 
 	pub := nats.NewMessagePublisher(nc)
 
@@ -73,7 +81,7 @@ func main() {
 
 	go func() {
 		p := fmt.Sprintf(":%s", cfg.Port)
-		mc := clients.NewClient(cfg.ClientsURL)
+		mc := clientsapi.NewClientsServiceClient(conn)
 		logger.Info(fmt.Sprintf("HTTP adapter service started, exposed port %s", cfg.Port))
 		errs <- http.ListenAndServe(p, api.MakeHandler(svc, mc))
 	}()

@@ -3,16 +3,19 @@ package api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/asaskevich/govalidator"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
-	clients "github.com/mainflux/mainflux/clients/client"
+	"github.com/mainflux/mainflux/clients"
+	clientsapi "github.com/mainflux/mainflux/clients/api/grpc"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -21,11 +24,11 @@ const protocol string = "http"
 var (
 	errMalformedData = errors.New("malformed SenML data")
 	errNotFound      = errors.New("non-existent entity")
-	auth             clients.ClientsClient
+	auth             clientsapi.ClientsServiceClient
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc mainflux.MessagePublisher, mc clients.ClientsClient) http.Handler {
+func MakeHandler(svc mainflux.MessagePublisher, mc clientsapi.ClientsServiceClient) http.Handler {
 	auth = mc
 
 	opts := []kithttp.ServerOption{
@@ -82,12 +85,15 @@ func authorize(r *http.Request) (string, error) {
 		return "", errNotFound
 	}
 
-	id, err := auth.CanAccess(c, apiKey)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	id, err := auth.CanAccess(ctx, &clientsapi.AccessReq{apiKey, c})
 	if err != nil {
 		return "", err
 	}
 
-	return id, nil
+	return id.GetValue(), nil
 }
 
 func decodePayload(body io.ReadCloser) ([]byte, error) {
@@ -114,6 +120,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	case clients.ErrUnauthorizedAccess:
 		w.WriteHeader(http.StatusForbidden)
 	default:
+		fmt.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }

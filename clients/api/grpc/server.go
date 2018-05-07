@@ -24,22 +24,22 @@ func NewServer(svc clients.Service) ClientsServiceServer {
 	return &grpcServer{handler}
 }
 
-func (s *grpcServer) CanAccess(ctx context.Context, token *AccessReq) (*AccessRes, error) {
-	_, res, err := s.handler.ServeGRPC(ctx, token)
+func (s *grpcServer) CanAccess(ctx context.Context, req *AccessReq) (*Identity, error) {
+	_, res, err := s.handler.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	return res.(*AccessRes), nil
+	return res.(*Identity), nil
 }
 
 func decodeCanAccessRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*AccessReq)
-	return accessReq{req.GetChanID(), req.GetClientKey()}, nil
+	return accessReq{req.GetClientKey(), req.GetChanID()}, nil
 }
 
 func encodeCanAccessResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(accessRes)
-	return &AccessRes{res.id}, encodeError(res.err)
+	return &Identity{res.id}, encodeError(res.err)
 }
 
 func encodeError(err error) error {

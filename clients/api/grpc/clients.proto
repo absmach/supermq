@@ -3,14 +3,14 @@ syntax = "proto3";
 package grpc;
 
 service ClientsService {
-    rpc CanAccess(AccessReq) returns (AccessRes) {}
+    rpc CanAccess(AccessReq) returns (Identity) {}
 }
 
 message AccessReq {
-    string chanID = 1;
-    string clientKey = 2;
+    string clientKey = 1;
+    string chanID = 2;
 }
 
-message AccessRes {
-    string id = 1;
+message Identity {
+    string value = 1;
 }

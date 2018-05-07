@@ -6,8 +6,8 @@ import (
 )
 
 type accessReq struct {
-	chanID    string
 	clientKey string
+	chanID    string
 }
 
 func (req accessReq) validate() error {

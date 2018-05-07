@@ -1,6 +1,8 @@
 package grpc
 
 import (
+	"fmt"
+
 	"github.com/go-kit/kit/endpoint"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	context "golang.org/x/net/context"
@@ -21,28 +23,29 @@ func NewClient(conn *grpc.ClientConn) ClientsServiceClient {
 		"CanAccess",
 		encodeCanAccessRequest,
 		decodeCanAccessResponse,
-		AccessRes{},
+		Identity{},
 	).Endpoint()
 
 	return grpcClient{endpoint}
 }
 
-func (client grpcClient) CanAccess(ctx context.Context, req *AccessReq, _ ...grpc.CallOption) (*AccessRes, error) {
-	res, err := client.canAccess(ctx, accessReq{req.GetChanID(), req.GetClientKey()})
+func (client grpcClient) CanAccess(ctx context.Context, req *AccessReq, _ ...grpc.CallOption) (*Identity, error) {
+	res, err := client.canAccess(ctx, accessReq{req.GetClientKey(), req.GetChanID()})
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 
 	ar := res.(accessRes)
-	return &AccessRes{ar.id}, ar.err
+	return &Identity{ar.id}, ar.err
 }
 
 func encodeCanAccessRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(accessReq)
-	return &AccessReq{req.chanID, req.clientKey}, nil
+	return &AccessReq{req.clientKey, req.chanID}, nil
 }
 
 func decodeCanAccessResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
-	res := grpcRes.(*AccessRes)
-	return accessRes{res.GetId(), nil}, nil
+	res := grpcRes.(*Identity)
+	return accessRes{res.GetValue(), nil}, nil
 }
