@@ -28,7 +28,7 @@ func NewServer(svc users.Service) mainflux.UsersServiceServer {
 func (s *grpcServer) Identify(ctx context.Context, token *mainflux.Token) (*mainflux.Identity, error) {
 	_, res, err := s.handler.ServeGRPC(ctx, token)
 	if err != nil {
-		return nil, err
+		return nil, encodeError(err)
 	}
 	return res.(*mainflux.Identity), nil
 }

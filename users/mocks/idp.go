@@ -20,10 +20,6 @@ func (idp *identityProviderMock) TemporaryKey(id string) (string, error) {
 	return id, nil
 }
 
-func (idp *identityProviderMock) PermanentKey(id string) (string, error) {
-	return idp.TemporaryKey(id)
-}
-
 func (idp *identityProviderMock) Identity(key string) (string, error) {
 	return idp.TemporaryKey(key)
 }
