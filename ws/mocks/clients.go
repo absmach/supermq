@@ -21,7 +21,7 @@ func NewClientsClient(data map[string]string) mainflux.ClientsServiceClient {
 }
 
 func (client clientsClient) CanAccess(ctx context.Context, req *mainflux.AccessReq, opts ...grpc.CallOption) (*mainflux.Identity, error) {
-	key := req.GetClientKey()
+	key := req.GetToken()
 	if key == "" {
 		return nil, clients.ErrUnauthorizedAccess
 	}

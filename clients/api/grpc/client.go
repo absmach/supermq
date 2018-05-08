@@ -29,7 +29,7 @@ func NewClient(conn *grpc.ClientConn) mainflux.ClientsServiceClient {
 }
 
 func (client grpcClient) CanAccess(ctx context.Context, req *mainflux.AccessReq, _ ...grpc.CallOption) (*mainflux.Identity, error) {
-	res, err := client.canAccess(ctx, accessReq{req.GetClientKey(), req.GetChanID()})
+	res, err := client.canAccess(ctx, accessReq{req.GetToken(), req.GetChanID()})
 	if err != nil {
 		return nil, err
 	}

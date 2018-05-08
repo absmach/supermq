@@ -35,7 +35,7 @@ func (s *grpcServer) CanAccess(ctx context.Context, req *mainflux.AccessReq) (*m
 
 func decodeCanAccessRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*mainflux.AccessReq)
-	return accessReq{req.GetClientKey(), req.GetChanID()}, nil
+	return accessReq{req.GetToken(), req.GetChanID()}, nil
 }
 
 func encodeCanAccessResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {

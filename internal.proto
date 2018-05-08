@@ -11,7 +11,7 @@ service UsersService {
 }
 
 message AccessReq {
-    string clientKey = 1;
+    string token = 1;
     string chanID = 2;
 }
 
