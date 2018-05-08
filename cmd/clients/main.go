@@ -25,36 +25,36 @@ import (
 )
 
 const (
-	defDBHost    = "localhost"
-	defDBPort    = "5432"
-	defDBUser    = "mainflux"
-	defDBPass    = "mainflux"
-	defDBName    = "clients"
-	defHTTPPort  = "8180"
-	defGRPCPort  = "8181"
-	defUsersAddr = "localhost:8181"
-	defSecret    = "clients"
-	envDBHost    = "MF_DB_HOST"
-	envDBPort    = "MF_DB_PORT"
-	envDBUser    = "MF_DB_USER"
-	envDBPass    = "MF_DB_PASS"
-	envDBName    = "MF_CLIENTS_DB"
-	envHTTPPort  = "MF_CLIENTS_HTTP_PORT"
-	envGRPCPort  = "MF_CLIENTS_GRPC_PORT"
-	envUsersAddr = "MF_USERS_ADDR"
-	envSecret    = "MF_CLIENTS_SECRET"
+	defDBHost   = "localhost"
+	defDBPort   = "5432"
+	defDBUser   = "mainflux"
+	defDBPass   = "mainflux"
+	defDBName   = "clients"
+	defHTTPPort = "8180"
+	defGRPCPort = "8181"
+	defUsersURL = "localhost:8181"
+	defSecret   = "clients"
+	envDBHost   = "MF_DB_HOST"
+	envDBPort   = "MF_DB_PORT"
+	envDBUser   = "MF_DB_USER"
+	envDBPass   = "MF_DB_PASS"
+	envDBName   = "MF_CLIENTS_DB"
+	envHTTPPort = "MF_CLIENTS_HTTP_PORT"
+	envGRPCPort = "MF_CLIENTS_GRPC_PORT"
+	envUsersURL = "MF_USERS_URL"
+	envSecret   = "MF_CLIENTS_SECRET"
 )
 
 type config struct {
-	DBHost    string
-	DBPort    string
-	DBUser    string
-	DBPass    string
-	DBName    string
-	HTTPPort  string
-	GRPCPort  string
-	UsersAddr string
-	Secret    string
+	DBHost   string
+	DBPort   string
+	DBUser   string
+	DBPass   string
+	DBName   string
+	HTTPPort string
+	GRPCPort string
+	UsersURL string
+	Secret   string
 }
 
 func main() {
@@ -65,7 +65,7 @@ func main() {
 	db := connectToDB(cfg, logger)
 	defer db.Close()
 
-	conn := connectToUsersService(cfg.UsersAddr, logger)
+	conn := connectToUsersService(cfg.UsersURL, logger)
 	defer conn.Close()
 
 	svc := newService(conn, db, cfg.Secret, logger)
@@ -88,15 +88,15 @@ func main() {
 
 func loadConfig() config {
 	return config{
-		DBHost:    mainflux.Env(envDBHost, defDBHost),
-		DBPort:    mainflux.Env(envDBPort, defDBPort),
-		DBUser:    mainflux.Env(envDBUser, defDBUser),
-		DBPass:    mainflux.Env(envDBPass, defDBPass),
-		DBName:    mainflux.Env(envDBName, defDBName),
-		HTTPPort:  mainflux.Env(envHTTPPort, defHTTPPort),
-		GRPCPort:  mainflux.Env(envGRPCPort, defGRPCPort),
-		UsersAddr: mainflux.Env(envUsersAddr, defUsersAddr),
-		Secret:    mainflux.Env(envSecret, defSecret),
+		DBHost:   mainflux.Env(envDBHost, defDBHost),
+		DBPort:   mainflux.Env(envDBPort, defDBPort),
+		DBUser:   mainflux.Env(envDBUser, defDBUser),
+		DBPass:   mainflux.Env(envDBPass, defDBPass),
+		DBName:   mainflux.Env(envDBName, defDBName),
+		HTTPPort: mainflux.Env(envHTTPPort, defHTTPPort),
+		GRPCPort: mainflux.Env(envGRPCPort, defGRPCPort),
+		UsersURL: mainflux.Env(envUsersURL, defUsersURL),
+		Secret:   mainflux.Env(envSecret, defSecret),
 	}
 }
 

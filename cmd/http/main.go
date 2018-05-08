@@ -20,25 +20,25 @@ import (
 )
 
 const (
-	defPort        string = "8180"
-	defNatsURL     string = broker.DefaultURL
-	defClientsAddr string = "localhost:8181"
-	envPort        string = "MF_HTTP_ADAPTER_PORT"
-	envNatsURL     string = "MF_NATS_URL"
-	envClientsAddr string = "MF_CLIENTS_ADDR"
+	defPort       string = "8180"
+	defNatsURL    string = broker.DefaultURL
+	defClientsURL string = "localhost:8181"
+	envPort       string = "MF_HTTP_ADAPTER_PORT"
+	envNatsURL    string = "MF_NATS_URL"
+	envClientsURL string = "MF_CLIENTS_URL"
 )
 
 type config struct {
-	ClientsAddr string
-	NatsURL     string
-	Port        string
+	ClientsURL string
+	NatsURL    string
+	Port       string
 }
 
 func main() {
 	cfg := config{
-		ClientsAddr: mainflux.Env(envClientsAddr, defClientsAddr),
-		NatsURL:     mainflux.Env(envNatsURL, defNatsURL),
-		Port:        mainflux.Env(envPort, defPort),
+		ClientsURL: mainflux.Env(envClientsURL, defClientsURL),
+		NatsURL:    mainflux.Env(envNatsURL, defNatsURL),
+		Port:       mainflux.Env(envPort, defPort),
 	}
 
 	logger := log.New(os.Stdout)
@@ -50,7 +50,7 @@ func main() {
 	}
 	defer nc.Close()
 
-	conn, err := grpc.Dial(cfg.ClientsAddr, grpc.WithInsecure())
+	conn, err := grpc.Dial(cfg.ClientsURL, grpc.WithInsecure())
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to users service: %s", err))
 		os.Exit(1)
