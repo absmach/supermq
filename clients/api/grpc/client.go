@@ -1,8 +1,6 @@
 package grpc
 
 import (
-	"fmt"
-
 	"github.com/go-kit/kit/endpoint"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	"github.com/mainflux/mainflux"
@@ -33,7 +31,6 @@ func NewClient(conn *grpc.ClientConn) mainflux.ClientsServiceClient {
 func (client grpcClient) CanAccess(ctx context.Context, req *mainflux.AccessReq, _ ...grpc.CallOption) (*mainflux.Identity, error) {
 	res, err := client.canAccess(ctx, accessReq{req.GetClientKey(), req.GetChanID()})
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 

@@ -2,7 +2,7 @@ package grpc
 
 import (
 	"github.com/asaskevich/govalidator"
-	"github.com/mainflux/mainflux/users"
+	"github.com/mainflux/mainflux/clients"
 )
 
 type accessReq struct {
@@ -12,7 +12,7 @@ type accessReq struct {
 
 func (req accessReq) validate() error {
 	if !govalidator.IsUUID(req.chanID) || req.clientKey == "" {
-		return users.ErrMalformedEntity
+		return clients.ErrMalformedEntity
 	}
 	return nil
 }

@@ -28,7 +28,7 @@ func NewServer(svc clients.Service) mainflux.ClientsServiceServer {
 func (s *grpcServer) CanAccess(ctx context.Context, req *mainflux.AccessReq) (*mainflux.Identity, error) {
 	_, res, err := s.handler.ServeGRPC(ctx, req)
 	if err != nil {
-		return nil, err
+		return nil, encodeError(err)
 	}
 	return res.(*mainflux.Identity), nil
 }
@@ -52,7 +52,7 @@ func encodeError(err error) error {
 	case clients.ErrMalformedEntity:
 		return status.Error(codes.InvalidArgument, "received invalid can access request")
 	case clients.ErrUnauthorizedAccess:
-		return status.Error(codes.PermissionDenied, "failed to identify client or client does not have permission")
+		return status.Error(codes.PermissionDenied, "failed to identify client or client isn't connected to specified channel")
 	default:
 		return status.Error(codes.Internal, "internal server error")
 	}

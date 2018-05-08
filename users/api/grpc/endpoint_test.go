@@ -17,7 +17,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const tcpPort = 8080
+const port = 8080
 
 var user = users.User{"john.doe@email.com", "pass"}
 
@@ -38,10 +38,10 @@ func startGRPCServer(svc users.Service, port int) {
 
 func TestIdentify(t *testing.T) {
 	svc := newService()
-	startGRPCServer(svc, tcpPort)
+	startGRPCServer(svc, port)
 	svc.Register(user)
 
-	usersAddr := fmt.Sprintf("localhost:%d", tcpPort)
+	usersAddr := fmt.Sprintf("localhost:%d", port)
 	conn, _ := grpc.Dial(usersAddr, grpc.WithInsecure())
 	client := grpcapi.NewClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
