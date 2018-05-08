@@ -1,68 +1,13 @@
 swagger: "2.0"
 info:
   title: Mainflux clients service
-  description: HTTP API for managing platform users, devices, applications and channels.
+  description: HTTP API for managing platform devices, applications and channels.
   version: "1.0.0"
 consumes:
   - "application/json"
 produces:
   - "application/json"
 paths:
-  /users:
-    post:
-      summary: Registers user account
-      description: |
-        Registers new user account given email and password. New account will
-        be uniquely identified by its email address.
-      tags:
-        - users
-      parameters:
-        - name: user
-          description: JSON-formatted document describing the new user.
-          in: body
-          schema:
-            $ref: "#/definitions/User"
-          required: true
-      responses:
-        201:
-          description: Registered new user.
-        400:
-          description: Failed due to malformed JSON.
-        409:
-          description: Failed due to using an existing email address.
-        415:
-          description: Missing or invalid content type.
-        500:
-          $ref: "#/responses/ServiceError"
-  /tokens:
-    post:
-      summary: User authentication
-      description: |
-        Generates an access token when provided with proper credentials.
-      tags:
-        - users
-      parameters:
-        - name: credentials
-          description: JSON-formatted document containing user credentials.
-          in: body
-          schema:
-            $ref: "#/definitions/User"
-          required: true
-      responses:
-        201:
-          description: User authenticated.
-          schema:
-            $ref: "#/definitions/Token"
-        400:
-          description: |
-            Failed due to malformed JSON.
-        403:
-          description: |
-            Failed due to using invalid credentials.
-        415:
-          description: Missing or invalid content type.
-        500:
-          $ref: "#/responses/ServiceError"
   /clients:
     post:
       summary: Adds new client
@@ -358,49 +303,6 @@ paths:
           description: Channel or client does not exist.
         500:
           $ref: "#/responses/ServiceError"
-  /access-grant:
-    get:
-      summary: Checks the token validity
-      description: |
-        Internal endpoint used to verify requests forwarded by stateful adapters
-        like MQTT. If the request is made using valid token, an identifier bound
-        to that token will be returned.
-      tags:
-        - access control
-      parameters:
-        - $ref: "#/parameters/Authorization"
-      responses:
-        200:
-          description: ID retrieved
-          headers:
-            X-client-id:
-              type: string
-              description: ID of the entity bound to the provided access key.
-        403:
-          description: Missing or invalid access token provided.
-  /channels/{chanId}/access-grant:
-    get:
-      summary: Checks channel accessibility
-      description: |
-        Internal endpoint used to determine whether or not a channel can be
-        accessed using credentials provided as part of the request.
-      tags:
-        - access control
-      parameters:
-        - $ref: "#/parameters/Authorization"
-        - $ref: "#/parameters/ChanId"
-      responses:
-        200:
-          description: Client can access the channel.
-          headers:
-            X-client-id:
-              type: string
-              description: ID of the entity bound to the provided access key.
-        403:
-          description: Client cannot access the channel.
-        500:
-          $ref: "#/responses/ServiceError"
-
 parameters:
   Authorization:
     name: Authorization
@@ -541,26 +443,3 @@ definitions:
         description: Arbitrary, string-encoded client's data.
     required:
       - type
-  Token:
-    type: object
-    properties:
-      token:
-        type: string
-        description: Generated access token.
-    required:
-      - token
-  User:
-    type: object
-    properties:
-      email:
-        type: string
-        format: email
-        example: "test@example.com"
-        description: User's email address will be used as its unique identifier
-      password:
-        type: string
-        format: password
-        description: Free-form account password used for acquiring auth token(s).
-    required:
-      - email
-      - password
