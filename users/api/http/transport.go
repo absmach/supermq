@@ -13,6 +13,7 @@ import (
 	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/users"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const contentType = "application/json"
@@ -45,6 +46,9 @@ func MakeHandler(svc users.Service, l log.Logger) http.Handler {
 		encodeResponse,
 		opts...,
 	))
+
+	mux.GetFunc("/version", mainflux.Version("clients"))
+	mux.Handle("/metrics", promhttp.Handler())
 
 	return mux
 }

@@ -25,7 +25,7 @@ default values.
 | MF_USERS_DB          | Name of the database used by the service | users        |
 | MF_USERS_HTTP_PORT   | Users service HTTP port                  | 8180         |
 | MF_USERS_GRPC_PORT   | Users service gRPC port                  | 8181         |
-| MF_USERS_SECRET      | string used for signing tokens           | users        |
+| MF_USERS_SECRET      | String used for signing tokens           | users        |
 
 ## Deployment
 
