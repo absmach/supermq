@@ -22,7 +22,7 @@ import (
 const (
 	defPort        = "8180"
 	defNatsURL     = broker.DefaultURL
-	defClientsAddr = "http://localhost:8180"
+	defClientsAddr = "localhost:8181"
 	envPort        = "MF_WS_ADAPTER_PORT"
 	envNatsURL     = "MF_NATS_URL"
 	envClientsAddr = "MF_CLIENTS_ADDR"

@@ -1,10 +1,9 @@
-# Manager
+# Clients
 
-Manager provides an HTTP API for managing platform resources: users, devices,
+Clients service provides an HTTP API for managing platform resources: devices,
 applications and channels. Through this API clients are able to do the following
 actions:
 
-- register new accounts and obtain access tokens
 - provision new clients (i.e. devices & applications)
 - create new channels
 - "connect" clients into the channels
@@ -18,15 +17,17 @@ The service is configured using the environment variables presented in the
 following table. Note that any unset variables will be replaced with their
 default values.
 
-| Variable          | Description                              | Default   |
-|-------------------|------------------------------------------|-----------|
-| MF_DB_HOST        | Database host address                    | localhost |
-| MF_DB_PORT        | Database host port                       | 5432      |
-| MF_DB_USER        | Database user                            | mainflux  |
-| MF_DB_PASSWORD    | Database password                        | mainflux  |
-| MF_MANAGER_DB     | Name of the database used by the service | manager   |
-| MF_MANAGER_PORT   | Manager service HTTP port                | 8180      |
-| MF_MANAGER_SECRET | string used for signing tokens           | manager   |
+| Variable             | Description                              | Default        |
+|----------------------|------------------------------------------|----------------|
+| MF_DB_HOST           | Database host address                    | localhost      |
+| MF_DB_PORT           | Database host port                       | 5432           |
+| MF_DB_USER           | Database user                            | mainflux       |
+| MF_DB_PASSWORD       | Database password                        | mainflux       |
+| MF_CLIENTS_DB        | Name of the database used by the service | clients        |
+| MF_CLIENTS_HTTP_PORT | Clients service HTTP port                | 8180           |
+| MF_CLIENTS_GRPC_PORT | Clients service gRPC port                | 8181           |
+| MF_USERS_ADDR        | Users service URL                        | localhost:8181 |
+| MF_CLIENTS_SECRET    | String used for signing tokens           | clients        |
 
 ## Deployment
 
@@ -37,8 +38,8 @@ locally:
 ```yaml
 version: "2"
 services:
-  manager:
-    image: mainflux/manager:[version]
+  clients:
+    image: mainflux/clients:[version]
     container_name: [instance name]
     ports:
       - [host machine port]:[configured HTTP port]
@@ -47,9 +48,11 @@ services:
       MF_DB_PORT: [Database host port]
       MF_DB_USER: [Database user]
       MF_DB_PASS: [Database password]
-      MF_MANAGER_DB: [Name of the database used by the service]
-      MF_MANAGER_PORT: [Service HTTP port]
-      MF_MANAGER_SECRET: [String used for signing tokens]
+      MF_CLIENTS_DB: [Name of the database used by the service]
+      MF_CLIENTS_HTTP_PORT: [Service HTTP port]
+      MF_CLIENTS_GRPC_PORT: [Service gRPC port]
+      MF_USERS_ADDR: [Users service URL]
+      MF_CLIENTS_SECRET: [String used for signing tokens]
 ```
 
 To start the service outside of the container, execute the following shell script:
@@ -60,14 +63,14 @@ go get github.com/mainflux/mainflux
 
 cd $GOPATH/src/github.com/mainflux/mainflux
 
-# compile the manager
-make manager
+# compile the clients
+make clients
 
 # copy binary to bin
 make install
 
 # set the environment variables and run the service
-MF_DB_HOST=[Database host address] MF_DB_PORT=[Database host port] MF_DB_USER=[Database user] MF_DB_PASS=[Database password] MF_MANAGER_DB=[Name of the database used by the service] MF_MANAGER_PORT=[Service HTTP port] MF_MANAGER_SECRET=[String used for signing tokens] $GOBIN/mainflux-manager
+MF_DB_HOST=[Database host address] MF_DB_PORT=[Database host port] MF_DB_USER=[Database user] MF_DB_PASS=[Database password] MF_CLIENTS_DB=[Name of the database used by the service] MF_CLIENTS_HTTP_PORT=[Service HTTP port] MG_CLIENTS_GRPC_PORT=[Service gRPC port] MF_USERS_ADDR=[Users service URL] MF_CLIENTS_SECRET=[String used for signing tokens] $GOBIN/mainflux-clients
 ```
 
 ## Usage
