@@ -1,5 +1,5 @@
 BUILD_DIR = build
-SERVICES = manager http normalizer ws
+SERVICES = users clients http normalizer ws
 DOCKERS = $(addprefix docker_,$(SERVICES))
 CGO_ENABLED ?= 0
 GOOS ?= linux
@@ -23,7 +23,7 @@ install:
 	cp ${BUILD_DIR}/* $(GOBIN)
 
 proto:
-	protoc --go_out=. *.proto
+	protoc --go_out=plugins=grpc:. *.proto
 
 $(SERVICES): proto
 	$(call compile_service,$(@))
