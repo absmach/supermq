@@ -47,7 +47,7 @@ type usersService struct {
 
 // New instantiates the users service implementation.
 func New(users UserRepository, hasher Hasher, idp IdentityProvider) Service {
-	return &usersService{users, hasher, idp}
+	return &usersService{users: users, hasher: hasher, idp: idp}
 }
 
 func (svc usersService) Register(user User) error {
