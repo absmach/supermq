@@ -171,8 +171,9 @@ func (cr channelRepository) Disconnect(owner, chanID, clientID string) error {
 func (cr channelRepository) HasClient(chanID, clientID string) bool {
 	q := "SELECT EXISTS (SELECT 1 FROM connections WHERE channel_id = $1 AND client_id = $2);"
 
-	// TODO: log errors?
 	exists := false
-	cr.db.QueryRow(q, chanID, clientID).Scan(&exists)
+	if err := cr.db.QueryRow(q, chanID, clientID).Scan(&exists); err != nil {
+		cr.log.Error(fmt.Sprintf("Failed to check client existence due to %s", err))
+	}
 	return exists
 }
