@@ -34,16 +34,16 @@ func migrateDB(db *sql.DB) error {
 				Id: "clients_1",
 				Up: []string{
 					`CREATE TABLE clients (
-						id		CHAR(36),
-						owner	VARCHAR(254),
-						type	VARCHAR(10)  NOT NULL,
-						name	TEXT,
-						key		TEXT,
+						id      CHAR(36),
+						owner   VARCHAR(254),
+						type    VARCHAR(10) NOT NULL,
+						name    TEXT,
+						key     TEXT,
 						payload TEXT,
 						PRIMARY KEY (id, owner)
 					)`,
 					`CREATE TABLE channels (
-						id	  CHAR(36),
+						id    CHAR(36),
 						owner VARCHAR(254),
 						name  TEXT,
 						PRIMARY KEY (id, owner)
