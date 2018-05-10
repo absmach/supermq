@@ -45,5 +45,5 @@ func encodeCanAccessRequest(_ context.Context, grpcReq interface{}) (interface{}
 
 func decodeCanAccessResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(*mainflux.Identity)
-	return &accessRes{res.GetValue(), nil}, nil
+	return accessRes{res.GetValue(), nil}, nil
 }
