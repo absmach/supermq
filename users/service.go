@@ -2,8 +2,6 @@ package users
 
 import "errors"
 
-var _ Service = (*usersService)(nil)
-
 var (
 	// ErrConflict indicates usage of the existing email during account
 	// registration.
@@ -38,6 +36,8 @@ type Service interface {
 	// other reason, non-nil error values are returned in response.
 	Identify(string) (string, error)
 }
+
+var _ Service = (*usersService)(nil)
 
 type usersService struct {
 	users  UserRepository

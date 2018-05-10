@@ -10,7 +10,6 @@ import (
 	"syscall"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
-	"github.com/jinzhu/gorm"
 	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/users"
@@ -100,7 +99,7 @@ func connectToDB(cfg config, logger log.Logger) *sql.DB {
 	return db
 }
 
-func newService(db *gorm.DB, secret string, logger log.Logger) users.Service {
+func newService(db *sql.DB, secret string, logger log.Logger) users.Service {
 	repo := postgres.New(db)
 	hasher := bcrypt.New()
 	idp := jwt.New(secret)
