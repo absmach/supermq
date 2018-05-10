@@ -8,8 +8,6 @@ import (
 	migrate "github.com/rubenv/sql-migrate"
 )
 
-const errDuplicate string = "unique_violation"
-
 type connection struct {
 	ClientID  string `gorm:"primary_key"`
 	ChannelID string `gorm:"primary_key"`

@@ -2,18 +2,16 @@ package postgres_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/mainflux/mainflux/clients"
 	"github.com/mainflux/mainflux/clients/postgres"
-	"github.com/mainflux/mainflux/logger"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestClientSave(t *testing.T) {
 	email := "client-save@example.com"
-	clientRepo := postgres.NewClientRepository(db, logger.New(os.Stdout))
+	clientRepo := postgres.NewClientRepository(db, testLog)
 	client := clients.Client{
 		ID:    clientRepo.ID(),
 		Owner: email,
@@ -26,7 +24,7 @@ func TestClientSave(t *testing.T) {
 func TestClientUpdate(t *testing.T) {
 	email := "client-update@example.com"
 
-	clientRepo := postgres.NewClientRepository(db, logger.New(os.Stdout))
+	clientRepo := postgres.NewClientRepository(db, testLog)
 
 	c := clients.Client{
 		ID:    clientRepo.ID(),
@@ -53,7 +51,7 @@ func TestClientUpdate(t *testing.T) {
 func TestSingleClientRetrieval(t *testing.T) {
 	email := "client-single-retrieval@example.com"
 
-	clientRepo := postgres.NewClientRepository(db, logger.New(os.Stdout))
+	clientRepo := postgres.NewClientRepository(db, testLog)
 
 	c := clients.Client{
 		ID:    clientRepo.ID(),
@@ -81,7 +79,7 @@ func TestSingleClientRetrieval(t *testing.T) {
 func TestMultiClientRetrieval(t *testing.T) {
 	email := "client-multi-retrieval@example.com"
 
-	clientRepo := postgres.NewClientRepository(db, logger.New(os.Stdout))
+	clientRepo := postgres.NewClientRepository(db, testLog)
 
 	n := 10
 
@@ -114,7 +112,7 @@ func TestMultiClientRetrieval(t *testing.T) {
 func TestClientRemoval(t *testing.T) {
 	email := "client-removal@example.com"
 
-	clientRepo := postgres.NewClientRepository(db, logger.New(os.Stdout))
+	clientRepo := postgres.NewClientRepository(db, testLog)
 	client := clients.Client{
 		ID:    clientRepo.ID(),
 		Owner: email,

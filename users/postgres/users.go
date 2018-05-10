@@ -7,9 +7,9 @@ import (
 	"github.com/mainflux/mainflux/users"
 )
 
-const errDuplicate = "unique_violation"
-
 var _ users.UserRepository = (*userRepository)(nil)
+
+const errDuplicate = "unique_violation"
 
 type userRepository struct {
 	db *sql.DB
@@ -21,7 +21,7 @@ func New(db *sql.DB) users.UserRepository {
 	return &userRepository{db}
 }
 
-func (ur *userRepository) Save(user users.User) error {
+func (ur userRepository) Save(user users.User) error {
 	q := `INSERT INTO users (email, password) VALUES ($1, $2)`
 
 	if _, err := ur.db.Exec(q, user.Email, user.Password); err != nil {
@@ -34,7 +34,7 @@ func (ur *userRepository) Save(user users.User) error {
 	return nil
 }
 
-func (ur *userRepository) One(email string) (users.User, error) {
+func (ur userRepository) One(email string) (users.User, error) {
 	q := `SELECT password FROM users WHERE email = $1`
 
 	user := users.User{}

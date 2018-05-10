@@ -117,9 +117,9 @@ func connectToUsersService(usersAddr string, logger log.Logger) *grpc.ClientConn
 }
 
 func newService(conn *grpc.ClientConn, db *sql.DB, secret string, logger log.Logger) clients.Service {
-	users := usersapi.NewClient(conn, logger, logger, logger, logger)
-	clientsRepo := postgres.NewClientRepository(db)
-	channelsRepo := postgres.NewChannelRepository(db)
+	users := usersapi.NewClient(conn)
+	clientsRepo := postgres.NewClientRepository(db, logger)
+	channelsRepo := postgres.NewChannelRepository(db, logger)
 	hasher := bcrypt.New()
 	idp := jwt.New(secret)
 
