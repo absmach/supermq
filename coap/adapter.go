@@ -126,7 +126,7 @@ func (svc *adapterService) Unsubscribe(clientID string) {
 func (svc *adapterService) SetTimeout(clientID string, timer *time.Timer, duration int) (chan bool, error) {
 	sub, ok := svc.get(clientID)
 	if !ok {
-		return nil, errors.New("observer entry not founds")
+		return nil, errors.New("observer entry not found")
 	}
 	go func() {
 		for {
