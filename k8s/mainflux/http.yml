@@ -16,14 +16,14 @@ spec:
         image: mainflux/http:latest
         imagePullPolicy: Always
         ports:
-        - containerPort: 8182
+        - containerPort: 8185
         env:
-        - name: MF_MANAGER_URL
-          value: "http://manager:8180"
+        - name: MF_CLIENTS_URL
+          value: "clients:8181"
         - name: MF_NATS_URL
           value: "nats://nats:4222"
         - name:  MF_HTTP_ADAPTER_PORT
-          value: "8182"
+          value: "8185"
 ---
 apiVersion: v1 
 kind: Service 
@@ -35,7 +35,7 @@ spec:
   selector:
     component: http-adapter
   ports:
-  - port: 8182
-    targetPort: 8182 
+  - port: 8185
+    targetPort: 8185
   type: LoadBalancer
 

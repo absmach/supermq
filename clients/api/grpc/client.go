@@ -25,7 +25,7 @@ func NewClient(conn *grpc.ClientConn) mainflux.ClientsServiceClient {
 		mainflux.Identity{},
 	).Endpoint()
 
-	return grpcClient{endpoint}
+	return &grpcClient{endpoint}
 }
 
 func (client grpcClient) CanAccess(ctx context.Context, req *mainflux.AccessReq, _ ...grpc.CallOption) (*mainflux.Identity, error) {
@@ -35,15 +35,15 @@ func (client grpcClient) CanAccess(ctx context.Context, req *mainflux.AccessReq,
 	}
 
 	ar := res.(accessRes)
-	return &mainflux.Identity{ar.id}, ar.err
+	return &mainflux.Identity{Value: ar.id}, ar.err
 }
 
 func encodeCanAccessRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(accessReq)
-	return &mainflux.AccessReq{req.clientKey, req.chanID}, nil
+	return &mainflux.AccessReq{Token: req.clientKey, ChanID: req.chanID}, nil
 }
 
 func decodeCanAccessResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(*mainflux.Identity)
-	return accessRes{res.GetValue(), nil}, nil
+	return &accessRes{res.GetValue(), nil}, nil
 }

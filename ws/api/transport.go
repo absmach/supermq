@@ -102,7 +102,7 @@ func authorize(r *http.Request) (subscription, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	id, err := auth.CanAccess(ctx, &mainflux.AccessReq{authKey, chanID})
+	id, err := auth.CanAccess(ctx, &mainflux.AccessReq{Token: authKey, ChanID: chanID})
 	if err != nil {
 		return subscription{}, clients.ErrUnauthorizedAccess
 	}

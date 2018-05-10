@@ -87,7 +87,7 @@ func authorize(r *http.Request) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	id, err := auth.CanAccess(ctx, &mainflux.AccessReq{apiKey, c})
+	id, err := auth.CanAccess(ctx, &mainflux.AccessReq{Token: apiKey, ChanID: c})
 	if err != nil {
 		return "", err
 	}
