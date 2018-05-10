@@ -7,11 +7,13 @@ import (
 	"strings"
 	"time"
 
+	"google.golang.org/grpc/codes"
+
 	mux "github.com/dereulenspiegel/coap-mux"
+	gocoap "github.com/dustin/go-coap"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/coap"
-
-	gocoap "github.com/dustin/go-coap"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -50,7 +52,16 @@ func authorize(msg *gocoap.Message, res *gocoap.Message, cid string) (publisher 
 	publisher, err = auth.CanAccess(ctx, &mainflux.AccessReq{Token: key, ChanID: cid})
 
 	if err != nil {
-		res.Code = gocoap.Unauthorized
+		e, ok := status.FromError(err)
+		if ok {
+			switch e.Code() {
+			case codes.PermissionDenied:
+				res.Code = gocoap.Unauthorized
+				return
+			default:
+				res.Code = gocoap.ServiceUnavailable
+			}
+		}
 	}
 	return
 }
@@ -78,7 +89,6 @@ func serve(svc coap.Service, conn *net.UDPConn, data []byte, addr *net.UDPAddr, 
 		res.Type = gocoap.Acknowledgement
 		publisher, err := authorize(&msg, res, cid)
 		if err != nil {
-			res.Code = gocoap.Unauthorized
 			break
 		}
 		id := fmt.Sprintf("%s-%x", publisher, msg.Token)
@@ -89,7 +99,6 @@ func serve(svc coap.Service, conn *net.UDPConn, data []byte, addr *net.UDPAddr, 
 		res.Type = gocoap.Acknowledgement
 		publisher, err := authorize(&msg, res, cid)
 		if err != nil {
-			res.Code = gocoap.Unauthorized
 			break
 		}
 		id := fmt.Sprintf("%s-%x", publisher, msg.Token)

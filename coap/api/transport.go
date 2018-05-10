@@ -79,7 +79,6 @@ func receive(svc coap.Service) handler {
 		cid := mux.Var(msg, "id")
 		publisher, err := authorize(msg, res, cid)
 		if err != nil {
-			res.Code = gocoap.Unauthorized
 			return res
 		}
 
@@ -115,7 +114,6 @@ func observe(svc coap.Service) handler {
 		publisher, err := authorize(msg, res, cid)
 
 		if err != nil {
-			res.Code = gocoap.Unauthorized
 			return res
 		}
 
