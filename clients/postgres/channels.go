@@ -58,7 +58,7 @@ func (cr channelRepository) Update(channel clients.Channel) error {
 		return clients.ErrNotFound
 	}
 
-	return err
+	return nil
 }
 
 func (cr channelRepository) One(owner, id string) (clients.Channel, error) {
