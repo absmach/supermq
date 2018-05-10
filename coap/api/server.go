@@ -103,8 +103,8 @@ func serve(svc coap.Service, conn *net.UDPConn, data []byte, addr *net.UDPAddr, 
 }
 
 // ListenAndServe binds to the given address and serve requests forever.
-func ListenAndServe(svc coap.Service, mgr mainflux.ClientsServiceClient, addr string, rh gocoap.Handler) error {
-	auth = mgr
+func ListenAndServe(svc coap.Service, csc mainflux.ClientsServiceClient, addr string, rh gocoap.Handler) error {
+	auth = csc
 	uaddr, err := net.ResolveUDPAddr(network, addr)
 	if err != nil {
 		return err

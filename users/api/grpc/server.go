@@ -40,7 +40,7 @@ func decodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{},
 
 func encodeIdentifyResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(identityRes)
-	return &mainflux.Identity{res.id}, encodeError(res.err)
+	return &mainflux.Identity{Value: res.id}, encodeError(res.err)
 }
 
 func encodeError(err error) error {

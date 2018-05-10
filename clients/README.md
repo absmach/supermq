@@ -17,17 +17,17 @@ The service is configured using the environment variables presented in the
 following table. Note that any unset variables will be replaced with their
 default values.
 
-| Variable             | Description                              | Default        |
-|----------------------|------------------------------------------|----------------|
-| MF_DB_HOST           | Database host address                    | localhost      |
-| MF_DB_PORT           | Database host port                       | 5432           |
-| MF_DB_USER           | Database user                            | mainflux       |
-| MF_DB_PASSWORD       | Database password                        | mainflux       |
-| MF_CLIENTS_DB        | Name of the database used by the service | clients        |
-| MF_CLIENTS_HTTP_PORT | Clients service HTTP port                | 8180           |
-| MF_CLIENTS_GRPC_PORT | Clients service gRPC port                | 8181           |
-| MF_USERS_URL         | Users service URL                        | localhost:8181 |
-| MF_CLIENTS_SECRET    | String used for signing tokens           | clients        |
+| Variable               | Description                              | Default        |
+|------------------------|------------------------------------------|----------------|
+| MF_CLIENTS_DB_HOST     | Database host address                    | localhost      |
+| MF_CLIENTS_DB_PORT     | Database host port                       | 5432           |
+| MF_CLIENTS_DB_USER     | Database user                            | mainflux       |
+| MF_CLIENTS_DB_PASSWORD | Database password                        | mainflux       |
+| MF_CLIENTS_DB          | Name of the database used by the service | clients        |
+| MF_CLIENTS_HTTP_PORT   | Clients service HTTP port                | 8180           |
+| MF_CLIENTS_GRPC_PORT   | Clients service gRPC port                | 8181           |
+| MF_USERS_URL           | Users service URL                        | localhost:8181 |
+| MF_CLIENTS_SECRET      | String used for signing tokens           | clients        |
 
 ## Deployment
 
@@ -44,10 +44,10 @@ services:
     ports:
       - [host machine port]:[configured HTTP port]
     environment:
-      MF_DB_HOST: [Database host address]
-      MF_DB_PORT: [Database host port]
-      MF_DB_USER: [Database user]
-      MF_DB_PASS: [Database password]
+      MF_CLIENTS_DB_HOST: [Database host address]
+      MF_CLIENTS_DB_PORT: [Database host port]
+      MF_CLIENTS_DB_USER: [Database user]
+      MF_CLIENTS_DB_PASS: [Database password]
       MF_CLIENTS_DB: [Name of the database used by the service]
       MF_CLIENTS_HTTP_PORT: [Service HTTP port]
       MF_CLIENTS_GRPC_PORT: [Service gRPC port]
@@ -70,7 +70,7 @@ make clients
 make install
 
 # set the environment variables and run the service
-MF_DB_HOST=[Database host address] MF_DB_PORT=[Database host port] MF_DB_USER=[Database user] MF_DB_PASS=[Database password] MF_CLIENTS_DB=[Name of the database used by the service] MF_CLIENTS_HTTP_PORT=[Service HTTP port] MG_CLIENTS_GRPC_PORT=[Service gRPC port] MF_USERS_URL=[Users service URL] MF_CLIENTS_SECRET=[String used for signing tokens] $GOBIN/mainflux-clients
+MF_CLIENTS_DB_HOST=[Database host address] MF_CLIENTS_DB_PORT=[Database host port] MF_CLIENTS_DB_USER=[Database user] MF_CLIENTS_DB_PASS=[Database password] MF_CLIENTS_DB=[Name of the database used by the service] MF_CLIENTS_HTTP_PORT=[Service HTTP port] MF_CLIENTS_GRPC_PORT=[Service gRPC port] MF_USERS_URL=[Users service URL] MF_CLIENTS_SECRET=[String used for signing tokens] $GOBIN/mainflux-clients
 ```
 
 ## Usage

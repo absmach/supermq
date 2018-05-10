@@ -21,7 +21,6 @@ kind: ReplicationController
 metadata:
   name: mainflux-nginx
 spec:
-  replicas: 1
   template:
     metadata:
       labels:

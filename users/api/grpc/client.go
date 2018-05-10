@@ -25,7 +25,7 @@ func NewClient(conn *grpc.ClientConn) mainflux.UsersServiceClient {
 		mainflux.Identity{},
 	).Endpoint()
 
-	return grpcClient{endpoint}
+	return &grpcClient{endpoint}
 }
 
 func (client grpcClient) Identify(ctx context.Context, token *mainflux.Token, _ ...grpc.CallOption) (*mainflux.Identity, error) {
@@ -35,12 +35,12 @@ func (client grpcClient) Identify(ctx context.Context, token *mainflux.Token, _ 
 	}
 
 	ir := res.(identityRes)
-	return &mainflux.Identity{ir.id}, ir.err
+	return &mainflux.Identity{Value: ir.id}, ir.err
 }
 
 func encodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(identityReq)
-	return &mainflux.Token{req.token}, nil
+	return &mainflux.Token{Value: req.token}, nil
 }
 
 func decodeIdentifyResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {

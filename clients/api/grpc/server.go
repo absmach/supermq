@@ -40,7 +40,7 @@ func decodeCanAccessRequest(_ context.Context, grpcReq interface{}) (interface{}
 
 func encodeCanAccessResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(accessRes)
-	return &mainflux.Identity{res.id}, encodeError(res.err)
+	return &mainflux.Identity{Value: res.id}, encodeError(res.err)
 }
 
 func encodeError(err error) error {
