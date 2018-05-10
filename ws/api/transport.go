@@ -59,6 +59,7 @@ func handshake(svc ws.Service) http.HandlerFunc {
 		if err != nil {
 			e, ok := status.FromError(err)
 			if ok {
+				logger.Warn(fmt.Sprintf("Failed to authorize: %s", err))
 				switch e.Code() {
 				case codes.PermissionDenied:
 					w.WriteHeader(http.StatusUnauthorized)
@@ -69,7 +70,6 @@ func handshake(svc ws.Service) http.HandlerFunc {
 				}
 				return
 			}
-			logger.Warn(fmt.Sprintf("Failed to authorize: %s", err))
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
