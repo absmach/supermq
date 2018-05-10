@@ -84,8 +84,7 @@ func (cr clientRepository) All(owner string, offset, limit int) []clients.Client
 
 	for rows.Next() {
 		c := clients.Client{Owner: owner}
-		err = rows.Scan(&c.ID, &c.Name, &c.Type, &c.Key, &c.Payload)
-		if err != nil {
+		if err = rows.Scan(&c.ID, &c.Name, &c.Type, &c.Key, &c.Payload); err != nil {
 			cr.log.Error(fmt.Sprintf("Failed to read retrieved client due to %s", err))
 			return []clients.Client{}
 		}

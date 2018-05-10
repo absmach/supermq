@@ -64,9 +64,7 @@ func (cr channelRepository) Update(channel clients.Channel) error {
 func (cr channelRepository) One(owner, id string) (clients.Channel, error) {
 	q := `SELECT name FROM channels WHERE id = $1 AND owner = $2`
 	channel := clients.Channel{ID: id, Owner: owner}
-	err := cr.db.QueryRow(q, id, owner).Scan(&channel.Name)
-
-	if err != nil {
+	if err := cr.db.QueryRow(q, id, owner).Scan(&channel.Name); err != nil {
 		empty := clients.Channel{}
 		if err == sql.ErrNoRows {
 			return empty, clients.ErrNotFound
@@ -88,8 +86,7 @@ func (cr channelRepository) One(owner, id string) (clients.Channel, error) {
 
 	for rows.Next() {
 		c := clients.Client{Owner: owner}
-		err = rows.Scan(&c.ID, &c.Name, &c.Type, &c.Key, &c.Payload)
-		if err != nil {
+		if err = rows.Scan(&c.ID, &c.Name, &c.Type, &c.Key, &c.Payload); err != nil {
 			cr.log.Error(fmt.Sprintf("Failed to read connected client due to %s", err))
 			return clients.Channel{}, err
 		}
@@ -112,8 +109,7 @@ func (cr channelRepository) All(owner string, offset, limit int) []clients.Chann
 
 	for rows.Next() {
 		c := clients.Channel{Owner: owner}
-		err = rows.Scan(&c.ID, &c.Name)
-		if err != nil {
+		if err = rows.Scan(&c.ID, &c.Name); err != nil {
 			cr.log.Error(fmt.Sprintf("Failed to read retrieved channel due to %s", err))
 			return []clients.Channel{}
 		}
@@ -132,8 +128,7 @@ func (cr channelRepository) Remove(owner, id string) error {
 func (cr channelRepository) Connect(owner, chanID, clientID string) error {
 	q := `INSERT INTO connections (channel_id, channel_owner, client_id, client_owner) VALUES ($1, $2, $3, $2)`
 
-	_, err := cr.db.Exec(q, chanID, owner, clientID)
-	if err != nil {
+	if _, err := cr.db.Exec(q, chanID, owner, clientID); err != nil {
 		pqErr, ok := err.(*pq.Error)
 
 		if ok && errFK == pqErr.Code.Name() {
