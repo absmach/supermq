@@ -6,11 +6,11 @@ spec:
   replicas: 3
   selector:
     matchLabels:
-      app: manager
+      component: manager
   template:
     metadata:
       labels:
-        app: manager
+        component: manager
     spec:
       containers:
       - name: manager
@@ -32,7 +32,7 @@ kind: Service
 metadata:
   name: manager
   labels:
-    app: manager
+    component: manager
 spec:
   ports:
   - port: 8180
@@ -40,5 +40,5 @@ spec:
     protocol: TCP
     name: http
   selector:
-    app: manager
+    component: manager
   type: LoadBalancer
