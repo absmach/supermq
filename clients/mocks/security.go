@@ -1,6 +1,10 @@
 package mocks
 
-import "github.com/mainflux/mainflux/clients"
+import (
+	"strings"
+
+	"github.com/mainflux/mainflux/clients"
+)
 
 var (
 	_ clients.Hasher           = (*hasherMock)(nil)
@@ -24,7 +28,7 @@ func (hm *hasherMock) Compare(plain, hashed string) error {
 type identityProviderMock struct{}
 
 func (idp *identityProviderMock) TemporaryKey(id string) (string, error) {
-	if id == "" {
+	if id == "" || strings.Contains(id, "wrong") {
 		return "", clients.ErrUnauthorizedAccess
 	}
 

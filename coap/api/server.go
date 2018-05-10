@@ -9,6 +9,7 @@ import (
 
 	"google.golang.org/grpc/codes"
 
+	"github.com/asaskevich/govalidator"
 	mux "github.com/dereulenspiegel/coap-mux"
 	gocoap "github.com/dustin/go-coap"
 	"github.com/mainflux/mainflux"
@@ -34,6 +35,11 @@ func authKey(opt interface{}) (string, error) {
 }
 
 func authorize(msg *gocoap.Message, res *gocoap.Message, cid string) (publisher *mainflux.Identity, err error) {
+	if !govalidator.IsUUID(cid) {
+		res.Code = gocoap.NotFound
+		return
+	}
+
 	// Device Key is passed as Uri-Query parameter, which option ID is 15 (0xf).
 	key, err := authKey(msg.Option(gocoap.URIQuery))
 	if err != nil {
@@ -55,10 +61,10 @@ func authorize(msg *gocoap.Message, res *gocoap.Message, cid string) (publisher 
 		e, ok := status.FromError(err)
 		if ok {
 			switch e.Code() {
-			case codes.PermissionDenied:
+			case codes.Unauthenticated:
 				res.Code = gocoap.Unauthorized
-			case codes.InvalidArgument:
-				res.Code = gocoap.BadRequest
+			case codes.PermissionDenied:
+				res.Code = gocoap.Forbidden
 			default:
 				res.Code = gocoap.ServiceUnavailable
 			}

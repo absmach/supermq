@@ -114,10 +114,10 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	e, ok := status.FromError(err)
 	if ok {
 		switch e.Code() {
-		case codes.PermissionDenied:
+		case codes.Unauthenticated:
 			w.WriteHeader(http.StatusUnauthorized)
-		case codes.InvalidArgument:
-			w.WriteHeader(http.StatusBadRequest)
+		case codes.PermissionDenied:
+			w.WriteHeader(http.StatusForbidden)
 		default:
 			w.WriteHeader(http.StatusServiceUnavailable)
 		}
@@ -129,6 +129,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	case errNotFound:
 		w.WriteHeader(http.StatusNotFound)
 	case clients.ErrUnauthorizedAccess:
+		w.WriteHeader(http.StatusUnauthorized)
+	case clients.ErrAccessForbidden:
 		w.WriteHeader(http.StatusForbidden)
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
