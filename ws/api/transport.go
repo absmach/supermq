@@ -15,6 +15,8 @@ import (
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/ws"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const protocol = "ws"
@@ -55,6 +57,18 @@ func handshake(svc ws.Service) http.HandlerFunc {
 			return
 		}
 		if err != nil {
+			e, ok := status.FromError(err)
+			if ok {
+				switch e.Code() {
+				case codes.PermissionDenied:
+					w.WriteHeader(http.StatusUnauthorized)
+				case codes.InvalidArgument:
+					w.WriteHeader(http.StatusBadRequest)
+				default:
+					w.WriteHeader(http.StatusServiceUnavailable)
+				}
+				return
+			}
 			logger.Warn(fmt.Sprintf("Failed to authorize: %s", err))
 			w.WriteHeader(http.StatusForbidden)
 			return
@@ -104,7 +118,7 @@ func authorize(r *http.Request) (subscription, error) {
 
 	id, err := auth.CanAccess(ctx, &mainflux.AccessReq{Token: authKey, ChanID: chanID})
 	if err != nil {
-		return subscription{}, clients.ErrUnauthorizedAccess
+		return subscription{}, err
 	}
 
 	sub := subscription{
