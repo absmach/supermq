@@ -8,15 +8,6 @@ import (
 	migrate "github.com/rubenv/sql-migrate"
 )
 
-type connection struct {
-	ClientID  string `gorm:"primary_key"`
-	ChannelID string `gorm:"primary_key"`
-}
-
-func (c connection) TableName() string {
-	return "channel_clients"
-}
-
 // Connect creates a connection to the PostgreSQL instance and applies any
 // unapplied database migrations. A non-nil error is returned to indicate
 // failure.
