@@ -159,6 +159,6 @@ func startGRPCServer(svc clients.Service, port string, logger log.Logger, errs c
 	}
 	server := grpc.NewServer()
 	mainflux.RegisterClientsServiceServer(server, grpcapi.NewServer(svc))
-	logger.Info(fmt.Sprintf("Users gRPC service started, exposed port %s", port))
+	logger.Info(fmt.Sprintf("Clients gRPC service started, exposed port %s", port))
 	errs <- server.Serve(listener)
 }
