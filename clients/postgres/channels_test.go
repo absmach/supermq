@@ -2,10 +2,12 @@ package postgres_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/mainflux/mainflux/clients"
 	"github.com/mainflux/mainflux/clients/postgres"
+	"github.com/mainflux/mainflux/logger"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -118,7 +120,7 @@ func TestChannelRemoval(t *testing.T) {
 func TestChannelConnect(t *testing.T) {
 	email := "channel-connect@example.com"
 
-	clientRepo := postgres.NewClientRepository(db)
+	clientRepo := postgres.NewClientRepository(db, logger.New(os.Stdout))
 	client := clients.Client{
 		ID:    clientRepo.ID(),
 		Owner: email,
@@ -149,7 +151,7 @@ func TestChannelConnect(t *testing.T) {
 func TestChannelDisconnect(t *testing.T) {
 	email := "channel-disconnect@example.com"
 
-	clientRepo := postgres.NewClientRepository(db)
+	clientRepo := postgres.NewClientRepository(db, logger.New(os.Stdout))
 	client := clients.Client{
 		ID:    clientRepo.ID(),
 		Owner: email,
@@ -184,7 +186,7 @@ func TestChannelDisconnect(t *testing.T) {
 func TestChannelAccessCheck(t *testing.T) {
 	email := "channel-access-check@example.com"
 
-	clientRepo := postgres.NewClientRepository(db)
+	clientRepo := postgres.NewClientRepository(db, logger.New(os.Stdout))
 	client := clients.Client{
 		ID:    clientRepo.ID(),
 		Owner: email,

@@ -35,7 +35,7 @@ func (ur *userRepository) Save(user users.User) error {
 }
 
 func (ur *userRepository) One(email string) (users.User, error) {
-	q := `SELECT password FROM users WHERE email = $1 LIMIT 1`
+	q := `SELECT password FROM users WHERE email = $1`
 
 	user := users.User{}
 	if err := ur.db.QueryRow(q, email).Scan(&user.Password); err != nil {
