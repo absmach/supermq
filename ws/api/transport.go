@@ -57,21 +57,28 @@ func handshake(svc ws.Service) http.HandlerFunc {
 			return
 		}
 		if err != nil {
-			logger.Warn(fmt.Sprintf("Failed to authorize: %s", err))
-			e, ok := status.FromError(err)
-			if ok {
-				switch e.Code() {
-				case codes.Unauthenticated:
-					w.WriteHeader(http.StatusUnauthorized)
-				case codes.PermissionDenied:
-					w.WriteHeader(http.StatusForbidden)
-				default:
-					w.WriteHeader(http.StatusServiceUnavailable)
+			switch err {
+			case errNotFound:
+				logger.Warn(fmt.Sprintf("Invalid channel id: %s", err))
+				w.WriteHeader(http.StatusNotFound)
+				return
+			default:
+				logger.Warn(fmt.Sprintf("Failed to authorize: %s", err))
+				e, ok := status.FromError(err)
+				if ok {
+					switch e.Code() {
+					case codes.Unauthenticated:
+						w.WriteHeader(http.StatusUnauthorized)
+					case codes.PermissionDenied:
+						w.WriteHeader(http.StatusForbidden)
+					default:
+						w.WriteHeader(http.StatusServiceUnavailable)
+					}
+					return
 				}
+				w.WriteHeader(http.StatusForbidden)
 				return
 			}
-			w.WriteHeader(http.StatusForbidden)
-			return
 		}
 
 		// Create new ws connection.

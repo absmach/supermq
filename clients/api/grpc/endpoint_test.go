@@ -68,11 +68,11 @@ func TestCanAccess(t *testing.T) {
 		clientKey string
 		chanID    string
 		id        string
-		respCode  codes.Code
+		code      codes.Code
 	}{
 		"check if connected client can access existing channel":     {connectedClient.Key, chanID, connectedClientID, codes.OK},
 		"check if unconnected client can access existing channel":   {client.Key, chanID, "", codes.PermissionDenied},
-		"check if wrong client can access existing channel":         {"wrong", chanID, "", codes.Unauthenticated},
+		"check if wrong client can access existing channel":         {mocks.UnauthorizedToken, chanID, "", codes.Unauthenticated},
 		"check if connected client can access non-existent channel": {connectedClient.Key, "1", "", codes.InvalidArgument},
 	}
 
@@ -81,6 +81,6 @@ func TestCanAccess(t *testing.T) {
 		e, ok := status.FromError(err)
 		assert.True(t, ok, "OK expected to be true")
 		assert.Equal(t, tc.id, id.GetValue(), fmt.Sprintf("%s: expected %s got %s", desc, tc.id, id.GetValue()))
-		assert.Equal(t, tc.respCode, e.Code(), fmt.Sprintf("%s: expected %s got %s", desc, tc.respCode, e.Code()))
+		assert.Equal(t, tc.code, e.Code(), fmt.Sprintf("%s: expected %s got %s", desc, tc.code, e.Code()))
 	}
 }
