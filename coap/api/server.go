@@ -68,7 +68,9 @@ func authorize(msg *gocoap.Message, res *gocoap.Message, cid string) (publisher 
 			default:
 				res.Code = gocoap.ServiceUnavailable
 			}
+			return
 		}
+		res.Code = gocoap.InternalServerError
 	}
 	return
 }

@@ -111,7 +111,6 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 }
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
-
 	switch err {
 	case errMalformedData:
 		w.WriteHeader(http.StatusBadRequest)
@@ -135,5 +134,6 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			}
 			return
 		}
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
