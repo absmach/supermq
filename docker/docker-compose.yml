@@ -36,7 +36,7 @@ services:
     restart:
       on-failure
     ports:
-        - "5432:5432"
+        - 5432:5432
     volumes:
     - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
@@ -48,7 +48,7 @@ services:
     expose:
       - 8181
     environment:
-      MF_NATS_URL: "nats://nats:4222"
+      MF_NATS_URL: nats://nats:4222
       MF_NORMALIZER_PORT: 8181
 
   http-adapter:
@@ -61,9 +61,11 @@ services:
     expose:
       - 8184
     environment:
-      MF_CLIENTS_URL: "http://clients:8183"
-      MF_NATS_URL: "nats://nats:4222"
+      MF_CLIENTS_URL: http://clients:8183
+      MF_NATS_URL: nats://nats:4222
       MF_HTTP_ADAPTER_PORT: 8184
+    ports:
+      - 8184:8184
 
   clients:
     image: mainflux/clients:latest
@@ -102,4 +104,32 @@ services:
       MF_USERS_GRPC_PORT: 8181
       MF_USERS_SECRET: users
     ports:
-      - "80:8180"
+      - 80:8180
+
+  coap:
+    image: mainflux/coap:latest
+    container_name: mainflux-coap
+    expose:
+      - 5683
+    restart:
+      on-failure
+    environment:
+      MF_COAP_ADAPTER_PORT: 5683
+      MF_NATS_URL: nats://nats:4222
+      MF_CLIENTS_URL: clients
+    ports:
+      - 5683:5683
+
+  ws:
+    image: mainflux/ws:latest
+    container_name: mainflux-ws
+    expose:
+      - 8185
+    restart:
+      on-failure
+    environment:
+      MF_WS_ADAPTER_PORT: 8185
+      MF_NATS_URL: nats://nats:4222
+      MF_CLIENTS_URL: clients
+    ports:
+      - 8185:8185
