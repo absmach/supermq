@@ -82,7 +82,7 @@ services:
       MF_CLIENTS_DB: clients
       MF_CLIENTS_HTTP_PORT: 8182
       MF_CLIENTS_GRPC_PORT: 8183
-      MF_USERS_URL: http://users:8181
+      MF_USERS_URL: users:8181
       MF_CLIENTS_SECRET: secret
     ports:
       - 8182:8182
@@ -108,7 +108,7 @@ services:
     environment:
       MF_HTTP_ADAPTER_PORT: 8184
       MF_NATS_URL: nats://nats:4222
-      MF_CLIENTS_URL: http://clients:8183
+      MF_CLIENTS_URL: clients:8183
     ports:
       - 8184:8184
 
@@ -123,7 +123,7 @@ services:
     environment:
       MF_COAP_ADAPTER_PORT: 5683
       MF_NATS_URL: nats://nats:4222
-      MF_CLIENTS_URL: http://clients:8183
+      MF_CLIENTS_URL: clients:8183
     ports:
       - 5683:5683/udp
 
@@ -138,6 +138,6 @@ services:
     environment:
       MF_WS_ADAPTER_PORT: 8185
       MF_NATS_URL: nats://nats:4222
-      MF_CLIENTS_URL: http://clients:8183
+      MF_CLIENTS_URL: clients:8183
     ports:
       - 8185:8185
