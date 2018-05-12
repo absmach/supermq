@@ -12,8 +12,7 @@ services:
   nginx:
     image: nginx:1.13-alpine
     container_name: mainflux-nginx
-    restart:
-      on-failure
+    restart: on-failure
     volumes:
       - $PWD/nginx.conf:/etc/nginx/nginx.conf
       - $PWD/ssl/certs/mainflux-server.crt:/etc/ssl/certs/mainflux-server.crt
@@ -27,24 +26,71 @@ services:
   nats:
     image: nats:1.0.2
     container_name: mainflux-nats
-    restart:
-      on-failure
+    restart: on-failure
 
-  postgres:
+  users-db:
     image: postgres:10.2-alpine
-    container_name: mainflux-postgres
-    restart:
-      on-failure
+    container_name: mainflux-users-db
+    restart: on-failure
+    environment:
+      POSTGRES_USER: mainflux
+      POSTGRES_PASSWORD: mainflux
+      POSTGRES_DB: users
+
+  users:
+    image: mainflux/users:latest
+    container_name: mainflux-users
+    expose:
+      - 8180
+      - 8181
+    restart: on-failure
+    environment:
+      MF_USERS_DB_HOST: users-db
+      MF_USERS_DB_PORT: 5432
+      MF_USERS_DB_USER: mainflux
+      MF_USERS_DB_PASS: mainflux
+      MF_USERS_DB: users
+      MF_USERS_HTTP_PORT: 8180
+      MF_USERS_GRPC_PORT: 8181
+      MF_USERS_SECRET: secret
     ports:
-        - 5432:5432
-    volumes:
-    - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - 8180:8180
+
+  clients-db:
+    image: postgres:10.2-alpine
+    container_name: mainflux-clients-db
+    restart: on-failure
+    environment:
+      POSTGRES_USER: mainflux
+      POSTGRES_PASSWORD: mainflux
+      POSTGRES_DB: clients
+
+  clients:
+    image: mainflux/clients:latest
+    container_name: mainflux-clients
+    depends_on:
+      - users
+    expose:
+      - 8182
+      - 8183
+    restart: on-failure
+    environment:
+      MF_CLIENTS_DB_HOST: clients-db
+      MF_CLIENTS_DB_PORT: 5432
+      MF_CLIENTS_DB_USER: mainflux
+      MF_CLIENTS_DB_PASS: mainflux
+      MF_CLIENTS_DB: clients
+      MF_CLIENTS_HTTP_PORT: 8182
+      MF_CLIENTS_GRPC_PORT: 8183
+      MF_USERS_URL: http://users:8181
+      MF_CLIENTS_SECRET: secret
+    ports:
+      - 8182:8182
 
   normalizer:
     image: mainflux/normalizer:latest
     container_name: mainflux-normalizer
-    restart:
-      on-failure
+    restart: on-failure
     expose:
       - 8181
     environment:
@@ -56,80 +102,42 @@ services:
     container_name: mainflux-http
     depends_on:
       - clients
-    restart:
-      on-failure
+    restart: on-failure
     expose:
       - 8184
     environment:
-      MF_CLIENTS_URL: http://clients:8183
-      MF_NATS_URL: nats://nats:4222
       MF_HTTP_ADAPTER_PORT: 8184
+      MF_NATS_URL: nats://nats:4222
+      MF_CLIENTS_URL: http://clients:8183
     ports:
       - 8184:8184
-
-  clients:
-    image: mainflux/clients:latest
-    container_name: mainflux-clients
-    expose:
-      - 8182
-      - 8183
-    restart:
-      on-failure
-    environment:
-      MF_CLIENTS_DB_HOST: postgres
-      MF_CLIENTS_DB_PORT: 5432
-      MF_CLIENTS_DB_USER: mainflux
-      MF_CLIENTS_DB_PASS: mainflux
-      MF_CLIENTS_DB: clients
-      MF_CLIENTS_HTTP_PORT: 8182
-      MF_CLIENTS_GRPC_PORT: 8183
-      MF_USERS_URL: users
-      MF_CLIENTS_SECRET: clients
-
-  users:
-    image: mainflux/users:latest
-    container_name: mainflux-users
-    expose:
-      - 8180
-      - 8181
-    restart:
-      on-failure
-    environment:
-      MF_USERS_DB_HOST: postgres
-      MF_USERS_DB_PORT: 5432
-      MF_USERS_DB_USER: mainflux
-      MF_USERS_DB_PASS: mainflux
-      MF_USERS_DB: users
-      MF_USERS_HTTP_PORT: 8180
-      MF_USERS_GRPC_PORT: 8181
-      MF_USERS_SECRET: users
-    ports:
-      - 8180:8180
 
   coap:
     image: mainflux/coap:latest
     container_name: mainflux-coap
+    depends_on:
+      - clients
     expose:
       - 5683
-    restart:
-      on-failure
+    restart: on-failure
     environment:
       MF_COAP_ADAPTER_PORT: 5683
       MF_NATS_URL: nats://nats:4222
-      MF_CLIENTS_URL: clients
+      MF_CLIENTS_URL: http://clients:8183
     ports:
       - 5683:5683/udp
 
   ws:
     image: mainflux/ws:latest
     container_name: mainflux-ws
+    depends_on:
+      - clients
     expose:
       - 8185
-    restart:
-      on-failure
+    restart: on-failure
     environment:
       MF_WS_ADAPTER_PORT: 8185
       MF_NATS_URL: nats://nats:4222
-      MF_CLIENTS_URL: clients
+      MF_CLIENTS_URL: http://clients:8183
     ports:
       - 8185:8185
