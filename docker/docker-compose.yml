@@ -97,21 +97,6 @@ services:
       MF_NATS_URL: nats://nats:4222
       MF_NORMALIZER_PORT: 8181
 
-  http-adapter:
-    image: mainflux/http:latest
-    container_name: mainflux-http
-    depends_on:
-      - clients
-    restart: on-failure
-    expose:
-      - 8184
-    environment:
-      MF_HTTP_ADAPTER_PORT: 8184
-      MF_NATS_URL: nats://nats:4222
-      MF_CLIENTS_URL: clients:8183
-    ports:
-      - 8184:8184
-
   coap:
     image: mainflux/coap:latest
     container_name: mainflux-coap
@@ -133,10 +118,25 @@ services:
     depends_on:
       - clients
     expose:
-      - 8185
+      - 8184
     restart: on-failure
     environment:
-      MF_WS_ADAPTER_PORT: 8185
+      MF_WS_ADAPTER_PORT: 8184
+      MF_NATS_URL: nats://nats:4222
+      MF_CLIENTS_URL: clients:8183
+    ports:
+      - 8184:8184
+
+  http-adapter:
+    image: mainflux/http:latest
+    container_name: mainflux-http
+    depends_on:
+      - clients
+    restart: on-failure
+    expose:
+      - 8185
+    environment:
+      MF_HTTP_ADAPTER_PORT: 8185
       MF_NATS_URL: nats://nats:4222
       MF_CLIENTS_URL: clients:8183
     ports:
