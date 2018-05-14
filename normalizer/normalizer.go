@@ -2,6 +2,7 @@ package normalizer
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/cisco/senml"
 	"github.com/go-kit/kit/metrics"
@@ -12,9 +13,10 @@ import (
 )
 
 const (
-	queue   string = "normalizers"
-	subject string = "channel.*"
-	output  string = "normalized"
+	queue         = "normalizers"
+	subject       = "channel.*"
+	outputSenML   = "out.senml"
+	outputUnknown = "out.unknown"
 )
 
 type eventFlow struct {
@@ -44,10 +46,19 @@ func (ef eventFlow) handleMsg(m *nats.Msg) {
 }
 
 func (ef eventFlow) publish(msg mainflux.RawMessage) error {
+	output := outputSenML
 	normalized, err := ef.normalize(msg)
 	if err != nil {
 		ef.logger.Warn(fmt.Sprintf("Normalization failed: %s", err))
-		return err
+		contentType := strings.ToLower(msg.ContentType)
+		switch contentType {
+		case "application/senml+json":
+			return err
+		case "":
+			output = outputUnknown
+		default:
+			output = fmt.Sprintf("out.%s", contentType)
+		}
 	}
 
 	for _, v := range normalized {
