@@ -56,8 +56,7 @@ func version(port string) {
 	http.ListenAndServe(port, b)
 }
 
-// MakeHandler function return new CoAP server with GET, POST and NOT_FOUND handlers.
-func MakeHandler(port string, svc coap.Service) gocoap.Handler {
+func makeHandler(port string, svc coap.Service) gocoap.Handler {
 	go version(port)
 
 	r := mux.NewRouter()
