@@ -14,9 +14,10 @@ import (
 
 const (
 	queue         = "normalizers"
-	subject       = "channel.*"
+	input         = "channel.*"
 	outputSenML   = "out.senml"
 	outputUnknown = "out.unknown"
+	senML         = "application/senml+json"
 )
 
 type eventFlow struct {
@@ -28,7 +29,7 @@ type eventFlow struct {
 func Subscribe(nc *nats.Conn, logger log.Logger, counter metrics.Counter, latency metrics.Histogram) {
 	flow := eventFlow{nc, logger}
 	mm := newMetricsMiddleware(flow, counter, latency)
-	flow.nc.QueueSubscribe(subject, queue, mm.handleMessage)
+	flow.nc.QueueSubscribe(input, queue, mm.handleMessage)
 }
 
 func (ef eventFlow) handleMsg(m *nats.Msg) {
@@ -50,14 +51,13 @@ func (ef eventFlow) publish(msg mainflux.RawMessage) error {
 	normalized, err := ef.normalize(msg)
 	if err != nil {
 		ef.logger.Warn(fmt.Sprintf("Normalization failed: %s", err))
-		contentType := strings.ToLower(msg.ContentType)
-		switch contentType {
-		case "application/senml+json":
+		switch ct := strings.ToLower(msg.ContentType); ct {
+		case senML:
 			return err
 		case "":
 			output = outputUnknown
 		default:
-			output = fmt.Sprintf("out.%s", contentType)
+			output = fmt.Sprintf("out.%s", ct)
 		}
 	}
 
