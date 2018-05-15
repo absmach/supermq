@@ -1,45 +1,45 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: clients
+  name: things
 spec:
   replicas: 3
   selector:
     matchLabels:
-      component: clients
+      component: things
   template:
     metadata:
       labels:
-        component: clients
+        component: things
     spec:
       containers:
-      - name: clients
-        image: mainflux/clients:latest
+      - name: things
+        image: mainflux/things:latest
         ports:
         - containerPort: 8182
-          name: clients-http
+          name: things-http
         - containerPort: 8183
-          name: clients-grpc
+          name: things-grpc
         env:
-        - name: MF_CLIENTS_DB_HOST
-          value: "mainflux-clients-postgres"
-        - name: MF_CLIENTS_DB_PORT
+        - name: MF_THINGS_DB_HOST
+          value: "mainflux-things-postgres"
+        - name: MF_THINGS_DB_PORT
           value: "5432"
-        - name: MF_CLIENTS_HTTP_PORT
+        - name: MF_THINGS_HTTP_PORT
           value: "8182"
-        - name: MF_CLIENTS_GRPC_PORT
+        - name: MF_THINGS_GRPC_PORT
           value: "8183"
         - name: MF_USERS_URL
           value: "users:8181"
-        - name: MF_CLIENTS_SECRET
+        - name: MF_THINGS_SECRET
           value: "test-secret"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: clients
+  name: things
   labels:
-    component: clients
+    component: things
 spec:
   ports:
   - port: 8182
@@ -51,5 +51,5 @@ spec:
     protocol: TCP
     name: grpc
   selector:
-    component: clients
+    component: things
   type: LoadBalancer
