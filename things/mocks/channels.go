@@ -20,7 +20,7 @@ type channelRepositoryMock struct {
 }
 
 // NewChannelRepository creates in-memory channel repository.
-func NewChannelRepository(repo things.ThingRepository) clients.ChannelRepository {
+func NewChannelRepository(repo things.ThingRepository) things.ChannelRepository {
 	return &channelRepositoryMock{
 		channels: make(map[string]things.Channel),
 		things:   repo,

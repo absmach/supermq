@@ -9,8 +9,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/mainflux/mainflux/clients/postgres"
 	"github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/things/postgres"
 	"gopkg.in/ory-am/dockertest.v3"
 )
 

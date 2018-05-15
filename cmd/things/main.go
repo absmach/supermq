@@ -16,7 +16,6 @@ import (
 	"github.com/mainflux/mainflux/things/api"
 	grpcapi "github.com/mainflux/mainflux/things/api/grpc"
 	httpapi "github.com/mainflux/mainflux/things/api/http"
-	"github.com/mainflux/mainflux/things/bcrypt"
 	"github.com/mainflux/mainflux/things/jwt"
 	"github.com/mainflux/mainflux/things/postgres"
 	usersapi "github.com/mainflux/mainflux/users/api/grpc"
@@ -29,20 +28,20 @@ const (
 	defDBPort   = "5432"
 	defDBUser   = "mainflux"
 	defDBPass   = "mainflux"
-	defDBName   = "clients"
+	defDBName   = "things"
 	defHTTPPort = "8180"
 	defGRPCPort = "8181"
 	defUsersURL = "localhost:8181"
-	defSecret   = "clients"
-	envDBHost   = "MF_CLIENTS_DB_HOST"
-	envDBPort   = "MF_CLIENTS_DB_PORT"
-	envDBUser   = "MF_CLIENTS_DB_USER"
-	envDBPass   = "MF_CLIENTS_DB_PASS"
-	envDBName   = "MF_CLIENTS_DB"
-	envHTTPPort = "MF_CLIENTS_HTTP_PORT"
-	envGRPCPort = "MF_CLIENTS_GRPC_PORT"
+	defSecret   = "things"
+	envDBHost   = "MF_THINGS_DB_HOST"
+	envDBPort   = "MF_THINGS_DB_PORT"
+	envDBUser   = "MF_THINGS_DB_USER"
+	envDBPass   = "MF_THINGS_DB_PASS"
+	envDBName   = "MF_THINGS_DB"
+	envHTTPPort = "MF_THINGS_HTTP_PORT"
+	envGRPCPort = "MF_THINGS_GRPC_PORT"
 	envUsersURL = "MF_USERS_URL"
-	envSecret   = "MF_CLIENTS_SECRET"
+	envSecret   = "MF_THINGS_SECRET"
 )
 
 type config struct {
@@ -81,7 +80,7 @@ func main() {
 	}()
 
 	err := <-errs
-	logger.Error(fmt.Sprintf("Clients service terminated: %s", err))
+	logger.Error(fmt.Sprintf("Things service terminated: %s", err))
 }
 
 func loadConfig() config {
@@ -116,25 +115,24 @@ func connectToUsersService(usersAddr string, logger log.Logger) *grpc.ClientConn
 	return conn
 }
 
-func newService(conn *grpc.ClientConn, db *sql.DB, secret string, logger log.Logger) clients.Service {
+func newService(conn *grpc.ClientConn, db *sql.DB, secret string, logger log.Logger) things.Service {
 	users := usersapi.NewClient(conn)
-	clientsRepo := postgres.NewClientRepository(db, logger)
+	thingsRepo := postgres.NewThingRepository(db, logger)
 	channelsRepo := postgres.NewChannelRepository(db, logger)
-	hasher := bcrypt.New()
 	idp := jwt.New(secret)
 
-	svc := clients.New(users, clientsRepo, channelsRepo, hasher, idp)
+	svc := things.New(users, thingsRepo, channelsRepo, idp)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
 		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
-			Namespace: "clients",
+			Namespace: "things",
 			Subsystem: "api",
 			Name:      "request_count",
 			Help:      "Number of requests received.",
 		}, []string{"method"}),
 		kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
-			Namespace: "clients",
+			Namespace: "things",
 			Subsystem: "api",
 			Name:      "request_latency_microseconds",
 			Help:      "Total duration of requests in microseconds.",
@@ -143,20 +141,20 @@ func newService(conn *grpc.ClientConn, db *sql.DB, secret string, logger log.Log
 	return svc
 }
 
-func startHTTPServer(svc clients.Service, port string, logger log.Logger, errs chan error) {
+func startHTTPServer(svc things.Service, port string, logger log.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", port)
-	logger.Info(fmt.Sprintf("Clients service started, exposed port %s", port))
+	logger.Info(fmt.Sprintf("Things service started, exposed port %s", port))
 	errs <- http.ListenAndServe(p, httpapi.MakeHandler(svc))
 }
 
-func startGRPCServer(svc clients.Service, port string, logger log.Logger, errs chan error) {
+func startGRPCServer(svc things.Service, port string, logger log.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", port)
 	listener, err := net.Listen("tcp", p)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to listen on port %s: %s", port, err))
 	}
 	server := grpc.NewServer()
-	mainflux.RegisterClientsServiceServer(server, grpcapi.NewServer(svc))
-	logger.Info(fmt.Sprintf("Clients gRPC service started, exposed port %s", port))
+	mainflux.RegisterThingsServiceServer(server, grpcapi.NewServer(svc))
+	logger.Info(fmt.Sprintf("Things gRPC service started, exposed port %s", port))
 	errs <- server.Serve(listener)
 }

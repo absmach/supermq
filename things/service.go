@@ -84,17 +84,15 @@ type thingsService struct {
 	users    mainflux.UsersServiceClient
 	things   ThingRepository
 	channels ChannelRepository
-	hasher   Hasher
 	idp      IdentityProvider
 }
 
 // New instantiates the things service implementation.
-func New(users mainflux.UsersServiceClient, things ThingRepository, channels ChannelRepository, hasher Hasher, idp IdentityProvider) Service {
+func New(users mainflux.UsersServiceClient, things ThingRepository, channels ChannelRepository, idp IdentityProvider) Service {
 	return &thingsService{
 		users:    users,
 		things:   things,
 		channels: channels,
-		hasher:   hasher,
 		idp:      idp,
 	}
 }

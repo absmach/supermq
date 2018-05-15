@@ -33,10 +33,8 @@ func newService(tokens map[string]string) things.Service {
 	users := mocks.NewUsersService(tokens)
 	thingsRepo := mocks.NewThingRepository()
 	channelsRepo := mocks.NewChannelRepository(thingsRepo)
-	hasher := mocks.NewHasher()
 	idp := mocks.NewIdentityProvider()
-
-	return things.New(users, thingsRepo, channelsRepo, hasher, idp)
+	return things.New(users, thingsRepo, channelsRepo, idp)
 }
 
 func startGRPCServer(svc things.Service, port int) {
@@ -61,7 +59,7 @@ func TestCanAccess(t *testing.T) {
 
 	usersAddr := fmt.Sprintf("localhost:%d", port)
 	conn, _ := grpc.Dial(usersAddr, grpc.WithInsecure())
-	cli := grpcapi.NewThing(conn)
+	cli := grpcapi.NewClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 

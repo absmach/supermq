@@ -51,17 +51,15 @@ func (tr testRequest) make() (*http.Response, error) {
 	if tr.contentType != "" {
 		req.Header.Set("Content-Type", tr.contentType)
 	}
-	return tr.thing.Do(req)
+	return tr.client.Do(req)
 }
 
 func newService(tokens map[string]string) things.Service {
 	users := mocks.NewUsersService(tokens)
 	thingsRepo := mocks.NewThingRepository()
 	channelsRepo := mocks.NewChannelRepository(thingsRepo)
-	hasher := mocks.NewHasher()
 	idp := mocks.NewIdentityProvider()
-
-	return things.New(users, thingsRepo, channelsRepo, hasher, idp)
+	return things.New(users, thingsRepo, channelsRepo, idp)
 }
 
 func newServer(svc things.Service) *httptest.Server {

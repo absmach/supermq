@@ -85,7 +85,7 @@ func (cr channelRepository) One(owner, id string) (things.Channel, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		c := things.thing{Owner: owner}
+		c := things.Thing{Owner: owner}
 		if err = rows.Scan(&c.ID, &c.Name, &c.Type, &c.Key, &c.Payload); err != nil {
 			cr.log.Error(fmt.Sprintf("Failed to read connected thing due to %s", err))
 			return things.Channel{}, err

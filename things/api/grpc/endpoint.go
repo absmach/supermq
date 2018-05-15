@@ -13,7 +13,7 @@ func canAccessEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		id, err := svc.CanAccess(req.clientKey, req.chanID)
+		id, err := svc.CanAccess(req.thingKey, req.chanID)
 		if err != nil {
 			return accessRes{"", err}, err
 		}

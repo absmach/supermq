@@ -16,7 +16,7 @@ const (
 )
 
 var (
-	client  = things.Thing{Type: "app", Name: "test"}
+	thing   = things.Thing{Type: "app", Name: "test"}
 	channel = things.Channel{Name: "test", Things: []things.Thing{}}
 )
 
@@ -24,65 +24,64 @@ func newService(tokens map[string]string) things.Service {
 	users := mocks.NewUsersService(tokens)
 	thingsRepo := mocks.NewThingRepository()
 	channelsRepo := mocks.NewChannelRepository(thingsRepo)
-	hasher := mocks.NewHasher()
 	idp := mocks.NewIdentityProvider()
 
-	return things.New(users, thingsRepo, channelsRepo, hasher, idp)
+	return things.New(users, thingsRepo, channelsRepo, idp)
 }
 
 func TestAddThing(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 
 	cases := map[string]struct {
-		client clients.Thing
-		key    string
-		err    error
+		thing things.Thing
+		key   string
+		err   error
 	}{
-		"add new app":                       {things.Thing{Type: "app", Name: "a"}, token, nil},
-		"add new device":                    {things.Thing{Type: "device", Name: "b"}, token, nil},
-		"add client with wrong credentials": {things.Thing{Type: "app", Name: "d"}, wrong, things.ErrUnauthorizedAccess},
+		"add new app":                      {things.Thing{Type: "app", Name: "a"}, token, nil},
+		"add new device":                   {things.Thing{Type: "device", Name: "b"}, token, nil},
+		"add thing with wrong credentials": {things.Thing{Type: "app", Name: "d"}, wrong, things.ErrUnauthorizedAccess},
 	}
 
 	for desc, tc := range cases {
-		_, err := svc.AddThing(tc.key, tc.client)
+		_, err := svc.AddThing(tc.key, tc.thing)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
 
 func TestUpdateThing(t *testing.T) {
 	svc := newService(map[string]string{token: email})
-	clientID, _ := svc.AddThing(token, client)
-	client.ID = clientID
+	thingID, _ := svc.AddThing(token, thing)
+	thing.ID = thingID
 
 	cases := map[string]struct {
-		client things.Thing
-		key    string
-		err    error
+		thing things.Thing
+		key   string
+		err   error
 	}{
-		"update existing client":               {client, token, nil},
-		"update client with wrong credentials": {client, wrong, things.ErrUnauthorizedAccess},
-		"update non-existing client":           {things.Thing{ID: "2", Type: "app", Name: "d"}, token, things.ErrNotFound},
+		"update existing thing":               {thing, token, nil},
+		"update thing with wrong credentials": {thing, wrong, things.ErrUnauthorizedAccess},
+		"update non-existing thing":           {things.Thing{ID: "2", Type: "app", Name: "d"}, token, things.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
-		err := svc.UpdateThing(tc.key, tc.client)
+		err := svc.UpdateThing(tc.key, tc.thing)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
 
 func TestViewThing(t *testing.T) {
 	svc := newService(map[string]string{token: email})
-	clientID, _ := svc.AddThing(token, client)
-	client.ID = clientID
+	thingID, _ := svc.AddThing(token, thing)
+	thing.ID = thingID
 
 	cases := map[string]struct {
 		id  string
 		key string
 		err error
 	}{
-		"view existing client":               {client.ID, token, nil},
-		"view client with wrong credentials": {client.ID, wrong, things.ErrUnauthorizedAccess},
-		"view non-existing client":           {wrong, token, things.ErrNotFound},
+		"view existing thing":               {thing.ID, token, nil},
+		"view thing with wrong credentials": {thing.ID, wrong, things.ErrUnauthorizedAccess},
+		"view non-existing thing":           {wrong, token, things.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
@@ -96,7 +95,7 @@ func TestListThings(t *testing.T) {
 
 	n := 10
 	for i := 0; i < n; i++ {
-		svc.AddThing(token, client)
+		svc.AddThing(token, thing)
 	}
 	cases := map[string]struct {
 		key    string
@@ -107,7 +106,7 @@ func TestListThings(t *testing.T) {
 	}{
 		"list things":                        {token, 0, 5, 5, nil},
 		"list things 5-10":                   {token, 5, 10, 5, nil},
-		"list last client":                   {token, 9, 10, 1, nil},
+		"list last thing":                    {token, 9, 10, 1, nil},
 		"list empty response":                {token, 11, 10, 0, nil},
 		"list offset < 0":                    {token, -1, 10, 0, nil},
 		"list limit < 0":                     {token, 1, -10, 0, nil},
@@ -125,18 +124,18 @@ func TestListThings(t *testing.T) {
 
 func TestRemoveThing(t *testing.T) {
 	svc := newService(map[string]string{token: email})
-	clientID, _ := svc.AddThing(token, client)
-	client.ID = clientID
+	thingID, _ := svc.AddThing(token, thing)
+	thing.ID = thingID
 
 	cases := map[string]struct {
 		id  string
 		key string
 		err error
 	}{
-		"remove client with wrong credentials": {client.ID, "?", things.ErrUnauthorizedAccess},
-		"remove existing client":               {client.ID, token, nil},
-		"remove removed client":                {client.ID, token, nil},
-		"remove non-existing client":           {"?", token, nil},
+		"remove thing with wrong credentials": {thing.ID, "?", things.ErrUnauthorizedAccess},
+		"remove existing thing":               {thing.ID, token, nil},
+		"remove removed thing":                {thing.ID, token, nil},
+		"remove non-existing thing":           {"?", token, nil},
 	}
 
 	for desc, tc := range cases {
@@ -261,24 +260,24 @@ func TestRemoveChannel(t *testing.T) {
 func TestConnect(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 
-	clientID, _ := svc.AddThing(token, client)
-	client.ID = clientID
+	thingID, _ := svc.AddThing(token, thing)
+	thing.ID = thingID
 	chanID, _ := svc.CreateChannel(token, channel)
 	channel.ID = chanID
 
 	cases := map[string]struct {
-		key      string
-		chanID   string
-		clientID string
-		err      error
+		key     string
+		chanID  string
+		thingID string
+		err     error
 	}{
-		"connect client":                         {token, channel.ID, client.ID, nil},
-		"connect client with wrong credentials":  {wrong, channel.ID, client.ID, things.ErrUnauthorizedAccess},
-		"connect client to non-existing channel": {token, wrong, client.ID, things.ErrNotFound},
+		"connect thing":                         {token, channel.ID, thing.ID, nil},
+		"connect thing with wrong credentials":  {wrong, channel.ID, thing.ID, things.ErrUnauthorizedAccess},
+		"connect thing to non-existing channel": {token, wrong, thing.ID, things.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
-		err := svc.Connect(tc.key, tc.chanID, tc.clientID)
+		err := svc.Connect(tc.key, tc.chanID, tc.thingID)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
@@ -286,29 +285,29 @@ func TestConnect(t *testing.T) {
 func TestDisconnect(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 
-	clientID, _ := svc.AddThing(token, client)
-	client.ID = clientID
+	thingID, _ := svc.AddThing(token, thing)
+	thing.ID = thingID
 	chanID, _ := svc.CreateChannel(token, channel)
 	channel.ID = chanID
 
-	svc.Connect(token, chanID, clientID)
+	svc.Connect(token, chanID, thingID)
 
 	cases := []struct {
-		desc     string
-		key      string
-		chanID   string
-		clientID string
-		err      error
+		desc    string
+		key     string
+		chanID  string
+		thingID string
+		err     error
 	}{
-		{"disconnect connected client", token, channel.ID, client.ID, nil},
-		{"disconnect disconnected client", token, channel.ID, client.ID, things.ErrNotFound},
-		{"disconnect client with wrong credentials", wrong, channel.ID, client.ID, things.ErrUnauthorizedAccess},
-		{"disconnect client from non-existing channel", token, wrong, client.ID, things.ErrNotFound},
-		{"disconnect non-existing client", token, channel.ID, wrong, things.ErrNotFound},
+		{"disconnect connected thing", token, channel.ID, thing.ID, nil},
+		{"disconnect disconnected thing", token, channel.ID, thing.ID, things.ErrNotFound},
+		{"disconnect thing with wrong credentials", wrong, channel.ID, thing.ID, things.ErrUnauthorizedAccess},
+		{"disconnect thing from non-existing channel", token, wrong, thing.ID, things.ErrNotFound},
+		{"disconnect non-existing thing", token, channel.ID, wrong, things.ErrNotFound},
 	}
 
 	for _, tc := range cases {
-		err := svc.Disconnect(tc.key, tc.chanID, tc.clientID)
+		err := svc.Disconnect(tc.key, tc.chanID, tc.thingID)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 
@@ -317,11 +316,11 @@ func TestDisconnect(t *testing.T) {
 func TestCanAccess(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 
-	clientID, _ := svc.AddThing(token, client)
-	client.ID = clientID
-	client.Key = clientID
+	thingID, _ := svc.AddThing(token, thing)
+	thing.ID = thingID
+	thing.Key = thingID
 
-	channel.Things = []things.Thing{client}
+	channel.Things = []things.Thing{thing}
 	chanID, _ := svc.CreateChannel(token, channel)
 	channel.ID = chanID
 
@@ -330,9 +329,9 @@ func TestCanAccess(t *testing.T) {
 		channel string
 		err     error
 	}{
-		"allowed access":              {client.Key, channel.ID, nil},
+		"allowed access":              {thing.Key, channel.ID, nil},
 		"not-connected cannot access": {"", channel.ID, things.ErrUnauthorizedAccess},
-		"access non-existing channel": {client.Key, wrong, things.ErrUnauthorizedAccess},
+		"access non-existing channel": {thing.Key, wrong, things.ErrUnauthorizedAccess},
 	}
 
 	for desc, tc := range cases {
