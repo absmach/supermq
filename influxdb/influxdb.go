@@ -1,6 +1,7 @@
 package influxdb
 
 import (
+	"strconv"
 	"time"
 
 	client "github.com/influxdata/influxdb/client/v2"
@@ -21,20 +22,26 @@ type fields map[string]interface{}
 type tags map[string]string
 
 func convertMsg(msg mainflux.Message) (tags, fields) {
+
+	time := strconv.FormatFloat(msg.Time, 'f', -1, 64)
+	update := strconv.FormatFloat(msg.UpdateTime, 'f', -1, 64)
 	tags := map[string]string{
-		"Channel":   msg.GetChannel(),
-		"Publisher": msg.GetPublisher(),
-		"Protocol":  msg.GetProtocol(),
-		"Name":      msg.GetName(),
-		"Unit":      msg.GetUnit(),
-		"Link":      msg.GetLink(),
+		"Channel":    msg.Channel,
+		"Publisher":  msg.Publisher,
+		"Protocol":   msg.Protocol,
+		"Name":       msg.Name,
+		"Unit":       msg.Unit,
+		"Link":       msg.Link,
+		"Time":       time,
+		"UpdateTime": update,
 	}
 
 	fields := map[string]interface{}{
-		"Time":        msg.GetTime(),
-		"UpdateTime":  msg.GetUpdateTime(),
-		"StringValue": msg.GetStringValue(),
-		"DataValue":   msg.GetDataValue(),
+		"Value":       msg.Value,
+		"ValueSum":    msg.ValueSum,
+		"BoolValue":   msg.BoolValue,
+		"StringValue": msg.StringValue,
+		"DataValue":   msg.DataValue,
 	}
 	return tags, fields
 }
