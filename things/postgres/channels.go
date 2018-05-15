@@ -7,7 +7,6 @@ import (
 	"github.com/lib/pq"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/things"
-	uuid "github.com/satori/go.uuid"
 )
 
 var _ things.ChannelRepository = (*channelRepository)(nil)
@@ -29,8 +28,6 @@ func NewChannelRepository(db *sql.DB, log logger.Logger) things.ChannelRepositor
 }
 
 func (cr channelRepository) Save(channel things.Channel) (string, error) {
-	channel.ID = uuid.NewV4().String()
-
 	q := `INSERT INTO channels (id, owner, name) VALUES ($1, $2, $3)`
 
 	_, err := cr.db.Exec(q, channel.ID, channel.Owner, channel.Name)

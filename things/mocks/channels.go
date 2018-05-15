@@ -10,8 +10,6 @@ import (
 
 var _ things.ChannelRepository = (*channelRepositoryMock)(nil)
 
-const chanID = "123e4567-e89b-12d3-a456-"
-
 type channelRepositoryMock struct {
 	mu       sync.Mutex
 	counter  int
@@ -30,9 +28,6 @@ func NewChannelRepository(repo things.ThingRepository) things.ChannelRepository 
 func (crm *channelRepositoryMock) Save(channel things.Channel) (string, error) {
 	crm.mu.Lock()
 	defer crm.mu.Unlock()
-
-	crm.counter++
-	channel.ID = fmt.Sprintf("%s%012d", chanID, crm.counter)
 
 	crm.channels[key(channel.Owner, channel.ID)] = channel
 
@@ -72,8 +67,8 @@ func (crm *channelRepositoryMock) All(owner string, offset, limit int) []things.
 	}
 
 	// Since IDs starts from 1, shift everything by one.
-	first := fmt.Sprintf("%s%012d", chanID, offset+1)
-	last := fmt.Sprintf("%s%012d", chanID, offset+limit+1)
+	first := fmt.Sprintf("%s%012d", startID, offset+1)
+	last := fmt.Sprintf("%s%012d", startID, offset+limit+1)
 
 	for k, v := range crm.channels {
 		if strings.HasPrefix(k, prefix) && v.ID >= first && v.ID < last {

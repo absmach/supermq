@@ -5,29 +5,30 @@ import (
 	"testing"
 
 	"github.com/mainflux/mainflux/things"
+	"github.com/mainflux/mainflux/things/mocks"
 	"github.com/mainflux/mainflux/things/postgres"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestChannelSave(t *testing.T) {
 	email := "channel-save@example.com"
-	channel := things.Channel{Owner: email}
-
+	idp := mocks.NewIdentityProvider()
 	channelRepo := postgres.NewChannelRepository(db, testLog)
 
+	channel := things.Channel{ID: idp.ID(), Owner: email}
 	_, err := channelRepo.Save(channel)
 	hasErr := err != nil
+
 	assert.False(t, hasErr, fmt.Sprintf("create new channel: expected false got %t", hasErr))
 }
 
 func TestChannelUpdate(t *testing.T) {
 	email := "channel-update@example.com"
-
+	idp := mocks.NewIdentityProvider()
 	chanRepo := postgres.NewChannelRepository(db, testLog)
 
-	c := things.Channel{Owner: email}
-	id, _ := chanRepo.Save(c)
-	c.ID = id
+	c := things.Channel{ID: idp.ID(), Owner: email}
+	chanRepo.Save(c)
 
 	cases := map[string]struct {
 		channel things.Channel
@@ -46,20 +47,20 @@ func TestChannelUpdate(t *testing.T) {
 
 func TestSingleChannelRetrieval(t *testing.T) {
 	email := "channel-single-retrieval@example.com"
-
+	idp := mocks.NewIdentityProvider()
 	chanRepo := postgres.NewChannelRepository(db, testLog)
 
-	c := things.Channel{Owner: email}
-	id, _ := chanRepo.Save(c)
+	c := things.Channel{ID: idp.ID(), Owner: email}
+	chanRepo.Save(c)
 
 	cases := map[string]struct {
 		owner string
 		ID    string
 		err   error
 	}{
-		"existing user":                       {c.Owner, id, nil},
+		"existing user":                       {c.Owner, c.ID, nil},
 		"existing user, non-existing channel": {c.Owner, wrong, things.ErrNotFound},
-		"non-existing owner":                  {wrong, id, things.ErrNotFound},
+		"non-existing owner":                  {wrong, c.ID, things.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
@@ -70,13 +71,13 @@ func TestSingleChannelRetrieval(t *testing.T) {
 
 func TestMultiChannelRetrieval(t *testing.T) {
 	email := "channel-multi-retrieval@example.com"
-
+	idp := mocks.NewIdentityProvider()
 	chanRepo := postgres.NewChannelRepository(db, testLog)
 
 	n := 10
 
 	for i := 0; i < n; i++ {
-		c := things.Channel{Owner: email}
+		c := things.Channel{ID: idp.ID(), Owner: email}
 		chanRepo.Save(c)
 	}
 
@@ -98,9 +99,9 @@ func TestMultiChannelRetrieval(t *testing.T) {
 
 func TestChannelRemoval(t *testing.T) {
 	email := "channel-removal@example.com"
-
+	idp := mocks.NewIdentityProvider()
 	chanRepo := postgres.NewChannelRepository(db, testLog)
-	chanID, _ := chanRepo.Save(things.Channel{Owner: email})
+	chanID, _ := chanRepo.Save(things.Channel{ID: idp.ID(), Owner: email})
 
 	// show that the removal works the same for both existing and non-existing
 	// (removed) channel
@@ -117,16 +118,18 @@ func TestChannelRemoval(t *testing.T) {
 
 func TestChannelConnect(t *testing.T) {
 	email := "channel-connect@example.com"
-
+	idp := mocks.NewIdentityProvider()
 	thingRepo := postgres.NewThingRepository(db, testLog)
+
 	thing := things.Thing{
-		ID:    thingRepo.ID(),
+		ID:    idp.ID(),
 		Owner: email,
+		Key:   idp.ID(),
 	}
 	thingRepo.Save(thing)
 
 	chanRepo := postgres.NewChannelRepository(db, testLog)
-	chanID, _ := chanRepo.Save(things.Channel{Owner: email})
+	chanID, _ := chanRepo.Save(things.Channel{ID: idp.ID(), Owner: email})
 
 	cases := []struct {
 		desc    string
@@ -150,17 +153,17 @@ func TestChannelConnect(t *testing.T) {
 
 func TestChannelDisconnect(t *testing.T) {
 	email := "channel-disconnect@example.com"
-
+	idp := mocks.NewIdentityProvider()
 	thingRepo := postgres.NewThingRepository(db, testLog)
 	thing := things.Thing{
-		ID:    thingRepo.ID(),
+		ID:    idp.ID(),
 		Owner: email,
+		Key:   idp.ID(),
 	}
 	thingRepo.Save(thing)
 
 	chanRepo := postgres.NewChannelRepository(db, testLog)
-	chanID, _ := chanRepo.Save(things.Channel{Owner: email})
-
+	chanID, _ := chanRepo.Save(things.Channel{ID: idp.ID(), Owner: email})
 	chanRepo.Connect(email, chanID, thing.ID)
 
 	cases := []struct {
@@ -185,17 +188,17 @@ func TestChannelDisconnect(t *testing.T) {
 
 func TestChannelAccessCheck(t *testing.T) {
 	email := "channel-access-check@example.com"
-
+	idp := mocks.NewIdentityProvider()
 	thingRepo := postgres.NewThingRepository(db, testLog)
 	thing := things.Thing{
-		ID:    thingRepo.ID(),
+		ID:    idp.ID(),
 		Owner: email,
+		Key:   idp.ID(),
 	}
 	thingRepo.Save(thing)
 
 	chanRepo := postgres.NewChannelRepository(db, testLog)
-	chanID, _ := chanRepo.Save(things.Channel{Owner: email})
-
+	chanID, _ := chanRepo.Save(things.Channel{ID: idp.ID(), Owner: email})
 	chanRepo.Connect(email, chanID, thing.ID)
 
 	cases := map[string]struct {

@@ -10,12 +10,9 @@ import (
 
 var _ things.ThingRepository = (*thingRepositoryMock)(nil)
 
-const cliID = "123e4567-e89b-12d3-a456-"
-
 type thingRepositoryMock struct {
-	mu      sync.Mutex
-	counter int
-	things  map[string]things.Thing
+	mu     sync.Mutex
+	things map[string]things.Thing
 }
 
 // NewThingRepository creates in-memory thing repository.
@@ -25,21 +22,13 @@ func NewThingRepository() things.ThingRepository {
 	}
 }
 
-func (trm *thingRepositoryMock) ID() string {
-	trm.mu.Lock()
-	defer trm.mu.Unlock()
-
-	trm.counter++
-	return fmt.Sprintf("%s%012d", cliID, trm.counter)
-}
-
-func (trm *thingRepositoryMock) Save(thing things.Thing) error {
+func (trm *thingRepositoryMock) Save(thing things.Thing) (string, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
 	trm.things[key(thing.Owner, thing.ID)] = thing
 
-	return nil
+	return thing.ID, nil
 }
 
 func (trm *thingRepositoryMock) Update(thing things.Thing) error {
@@ -76,8 +65,8 @@ func (trm *thingRepositoryMock) All(owner string, offset, limit int) []things.Th
 	}
 
 	// Since IDs start from 1, shift everything by one.
-	first := fmt.Sprintf("%s%012d", cliID, offset+1)
-	last := fmt.Sprintf("%s%012d", cliID, offset+limit+1)
+	first := fmt.Sprintf("%s%012d", startID, offset+1)
+	last := fmt.Sprintf("%s%012d", startID, offset+limit+1)
 
 	for k, v := range trm.things {
 		if strings.HasPrefix(k, prefix) && v.ID >= first && v.ID < last {
