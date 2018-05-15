@@ -133,6 +133,16 @@
   version = "v1.2.0"
 
 [[projects]]
+  name = "github.com/influxdata/influxdb"
+  packages = [
+    "client/v2",
+    "models",
+    "pkg/escape"
+  ]
+  revision = "02d7d4f043b34ecb4e9b2dbec298c6f9450c2a32"
+  version = "v1.5.2"
+
+[[projects]]
   branch = "master"
   name = "github.com/kr/logfmt"
   packages = ["."]
@@ -417,6 +427,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2025ce1052df88741bd920f1afa33b828a1222b41474716be88fbdce2f51badc"
+  inputs-digest = "3a4e78c3e416d14cf175986f219fd47f7b300d8a812478e9f701c30b93279db4"
   solver-name = "gps-cdcl"
   solver-version = 1
