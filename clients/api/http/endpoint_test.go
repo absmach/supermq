@@ -179,8 +179,7 @@ func TestViewClient(t *testing.T) {
 
 	id, _ := svc.AddClient(token, client)
 
-	client.ID = id
-	client.Key = id
+	client, _ := svc.ViewClient(token, id)
 	data := toJSON(client)
 
 	cases := []struct {
@@ -226,11 +225,12 @@ func TestListClients(t *testing.T) {
 	data := []clients.Client{}
 	for i := 0; i < 101; i++ {
 		id, _ := svc.AddClient(token, client)
-		client.ID = id
-		client.Key = id
+		client, _ := svc.ViewClient(token, id)
+		client.Owner = ""
 		data = append(data, client)
 	}
 	clientURL := fmt.Sprintf("%s/clients", ts.URL)
+
 	cases := []struct {
 		desc   string
 		auth   string

@@ -20,5 +20,8 @@ func (idp *identityProviderMock) Key() string {
 }
 
 func (idp *identityProviderMock) Identity(key string) (string, error) {
-	return idp.Key(), nil
+	if key == "" {
+		return "", clients.ErrUnauthorizedAccess
+	}
+	return key, nil
 }

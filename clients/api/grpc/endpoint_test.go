@@ -52,6 +52,7 @@ func TestCanAccess(t *testing.T) {
 
 	connectedClientID, _ := svc.AddClient(token, client)
 	connectedClient, _ := svc.ViewClient(token, connectedClientID)
+	connectedClient.Key = connectedClientID
 
 	clientID, _ := svc.AddClient(token, client)
 	client, _ := svc.ViewClient(token, clientID)
