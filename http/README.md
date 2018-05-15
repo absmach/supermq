@@ -10,9 +10,9 @@ default values.
 
 | Variable             | Description         | Default               |
 |----------------------|---------------------|-----------------------|
-| MF_THINGS_URL        | Things service URL  | localhost:8181        |
-| MF_NATS_URL          | NATS instance URL   | nats://localhost:4222 |
 | MF_HTTP_ADAPTER_PORT | Service HTTP port   | 8180                  |
+| MF_NATS_URL          | NATS instance URL   | nats://localhost:4222 |
+| MF_THINGS_URL        | Things service URL  | localhost:8181        |
 
 ## Deployment
 

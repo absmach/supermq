@@ -30,7 +30,7 @@ any 3rd party service that uses the platform for message exchange with other
 "things". 
 
 `Channel` represents a communication channel. It serves as message topic that
-can be consumed by all of the clients connected to it.
+can be consumed by all of the things connected to it.
 
 ## Messaging
 
