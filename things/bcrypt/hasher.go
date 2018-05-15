@@ -2,18 +2,18 @@
 package bcrypt
 
 import (
-	"github.com/mainflux/mainflux/clients"
+	"github.com/mainflux/mainflux/things"
 	"golang.org/x/crypto/bcrypt"
 )
 
 const cost int = 10
 
-var _ clients.Hasher = (*bcryptHasher)(nil)
+var _ things.Hasher = (*bcryptHasher)(nil)
 
 type bcryptHasher struct{}
 
 // New instantiates a bcrypt-based hasher implementation.
-func New() clients.Hasher {
+func New() things.Hasher {
 	return &bcryptHasher{}
 }
 

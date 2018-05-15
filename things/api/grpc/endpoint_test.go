@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/clients"
-	grpcapi "github.com/mainflux/mainflux/clients/api/grpc"
-	"github.com/mainflux/mainflux/clients/mocks"
+	"github.com/mainflux/mainflux/things"
+	grpcapi "github.com/mainflux/mainflux/things/api/grpc"
+	"github.com/mainflux/mainflux/things/mocks"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -25,24 +25,24 @@ const (
 )
 
 var (
-	client  = clients.Client{Type: "app", Name: "test_app", Payload: "test_payload"}
-	channel = clients.Channel{Name: "test"}
+	thing   = things.Thing{Type: "app", Name: "test_app", Payload: "test_payload"}
+	channel = things.Channel{Name: "test"}
 )
 
-func newService(tokens map[string]string) clients.Service {
+func newService(tokens map[string]string) things.Service {
 	users := mocks.NewUsersService(tokens)
-	clientsRepo := mocks.NewClientRepository()
-	channelsRepo := mocks.NewChannelRepository(clientsRepo)
+	thingsRepo := mocks.NewThingRepository()
+	channelsRepo := mocks.NewChannelRepository(thingsRepo)
 	hasher := mocks.NewHasher()
 	idp := mocks.NewIdentityProvider()
 
-	return clients.New(users, clientsRepo, channelsRepo, hasher, idp)
+	return things.New(users, thingsRepo, channelsRepo, hasher, idp)
 }
 
-func startGRPCServer(svc clients.Service, port int) {
+func startGRPCServer(svc things.Service, port int) {
 	listener, _ := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	server := grpc.NewServer()
-	mainflux.RegisterClientsServiceServer(server, grpcapi.NewServer(svc))
+	mainflux.RegisterThingsServiceServer(server, grpcapi.NewServer(svc))
 	go server.Serve(listener)
 }
 
@@ -50,35 +50,35 @@ func TestCanAccess(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 	startGRPCServer(svc, port)
 
-	connectedClientID, _ := svc.AddClient(token, client)
-	connectedClient, _ := svc.ViewClient(token, connectedClientID)
+	connectedThingID, _ := svc.AddThing(token, thing)
+	connectedThing, _ := svc.ViewThing(token, connectedThingID)
 
-	clientID, _ := svc.AddClient(token, client)
-	client, _ := svc.ViewClient(token, clientID)
+	thingID, _ := svc.AddThing(token, thing)
+	thing, _ := svc.ViewThing(token, thingID)
 
 	chanID, _ := svc.CreateChannel(token, channel)
-	svc.Connect(token, chanID, connectedClientID)
+	svc.Connect(token, chanID, connectedThingID)
 
 	usersAddr := fmt.Sprintf("localhost:%d", port)
 	conn, _ := grpc.Dial(usersAddr, grpc.WithInsecure())
-	cli := grpcapi.NewClient(conn)
+	cli := grpcapi.NewThing(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
 	cases := map[string]struct {
-		clientKey string
-		chanID    string
-		id        string
-		code      codes.Code
+		thingKey string
+		chanID   string
+		id       string
+		code     codes.Code
 	}{
-		"check if connected client can access existing channel":     {connectedClient.Key, chanID, connectedClientID, codes.OK},
-		"check if unconnected client can access existing channel":   {client.Key, chanID, "", codes.PermissionDenied},
-		"check if wrong client can access existing channel":         {wrong, chanID, "", codes.PermissionDenied},
-		"check if connected client can access non-existent channel": {connectedClient.Key, "1", "", codes.InvalidArgument},
+		"check if connected thing can access existing channel":     {connectedThing.Key, chanID, connectedThingID, codes.OK},
+		"check if unconnected thing can access existing channel":   {thing.Key, chanID, "", codes.PermissionDenied},
+		"check if wrong thing can access existing channel":         {wrong, chanID, "", codes.PermissionDenied},
+		"check if connected thing can access non-existent channel": {connectedThing.Key, "1", "", codes.InvalidArgument},
 	}
 
 	for desc, tc := range cases {
-		id, err := cli.CanAccess(ctx, &mainflux.AccessReq{tc.clientKey, tc.chanID})
+		id, err := cli.CanAccess(ctx, &mainflux.AccessReq{tc.thingKey, tc.chanID})
 		e, ok := status.FromError(err)
 		assert.True(t, ok, "OK expected to be true")
 		assert.Equal(t, tc.id, id.GetValue(), fmt.Sprintf("%s: expected %s got %s", desc, tc.id, id.GetValue()))

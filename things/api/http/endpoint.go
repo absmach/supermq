@@ -4,45 +4,45 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/mainflux/mainflux/clients"
+	"github.com/mainflux/mainflux/things"
 )
 
-func addClientEndpoint(svc clients.Service) endpoint.Endpoint {
+func addThingEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
-		req := request.(addClientReq)
+		req := request.(addThingReq)
 
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
 
-		id, err := svc.AddClient(req.key, req.client)
+		id, err := svc.AddThing(req.key, req.thing)
 		if err != nil {
 			return nil, err
 		}
 
-		return clientRes{id: id, created: true}, nil
+		return thingRes{id: id, created: true}, nil
 	}
 }
 
-func updateClientEndpoint(svc clients.Service) endpoint.Endpoint {
+func updateThingEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
-		req := request.(updateClientReq)
+		req := request.(updateThingReq)
 
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
 
-		req.client.ID = req.id
+		req.thing.ID = req.id
 
-		if err := svc.UpdateClient(req.key, req.client); err != nil {
+		if err := svc.UpdateThing(req.key, req.thing); err != nil {
 			return nil, err
 		}
 
-		return clientRes{id: req.id, created: false}, nil
+		return thingRes{id: req.id, created: false}, nil
 	}
 }
 
-func viewClientEndpoint(svc clients.Service) endpoint.Endpoint {
+func viewThingEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(viewResourceReq)
 
@@ -50,16 +50,16 @@ func viewClientEndpoint(svc clients.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		client, err := svc.ViewClient(req.key, req.id)
+		thing, err := svc.ViewThing(req.key, req.id)
 		if err != nil {
 			return nil, err
 		}
 
-		return viewClientRes{client}, nil
+		return viewThingRes{thing}, nil
 	}
 }
 
-func listClientsEndpoint(svc clients.Service) endpoint.Endpoint {
+func listThingsEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(listResourcesReq)
 
@@ -67,21 +67,21 @@ func listClientsEndpoint(svc clients.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		clients, err := svc.ListClients(req.key, req.offset, req.limit)
+		things, err := svc.ListThings(req.key, req.offset, req.limit)
 		if err != nil {
 			return nil, err
 		}
 
-		return listClientsRes{clients}, nil
+		return listThingsRes{things}, nil
 	}
 }
 
-func removeClientEndpoint(svc clients.Service) endpoint.Endpoint {
+func removeThingEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(viewResourceReq)
 
 		err := req.validate()
-		if err == clients.ErrNotFound {
+		if err == things.ErrNotFound {
 			return removeRes{}, nil
 		}
 
@@ -89,7 +89,7 @@ func removeClientEndpoint(svc clients.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		if err = svc.RemoveClient(req.key, req.id); err != nil {
+		if err = svc.RemoveThing(req.key, req.id); err != nil {
 			return nil, err
 		}
 
@@ -97,7 +97,7 @@ func removeClientEndpoint(svc clients.Service) endpoint.Endpoint {
 	}
 }
 
-func createChannelEndpoint(svc clients.Service) endpoint.Endpoint {
+func createChannelEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(createChannelReq)
 
@@ -114,7 +114,7 @@ func createChannelEndpoint(svc clients.Service) endpoint.Endpoint {
 	}
 }
 
-func updateChannelEndpoint(svc clients.Service) endpoint.Endpoint {
+func updateChannelEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(updateChannelReq)
 
@@ -132,7 +132,7 @@ func updateChannelEndpoint(svc clients.Service) endpoint.Endpoint {
 	}
 }
 
-func viewChannelEndpoint(svc clients.Service) endpoint.Endpoint {
+func viewChannelEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(viewResourceReq)
 
@@ -149,7 +149,7 @@ func viewChannelEndpoint(svc clients.Service) endpoint.Endpoint {
 	}
 }
 
-func listChannelsEndpoint(svc clients.Service) endpoint.Endpoint {
+func listChannelsEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(listResourcesReq)
 
@@ -166,12 +166,12 @@ func listChannelsEndpoint(svc clients.Service) endpoint.Endpoint {
 	}
 }
 
-func removeChannelEndpoint(svc clients.Service) endpoint.Endpoint {
+func removeChannelEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(viewResourceReq)
 
 		if err := req.validate(); err != nil {
-			if err == clients.ErrNotFound {
+			if err == things.ErrNotFound {
 				return removeRes{}, nil
 			}
 			return nil, err
@@ -184,7 +184,7 @@ func removeChannelEndpoint(svc clients.Service) endpoint.Endpoint {
 		return removeRes{}, nil
 	}
 }
-func connectEndpoint(svc clients.Service) endpoint.Endpoint {
+func connectEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		cr := request.(connectionReq)
 
@@ -192,7 +192,7 @@ func connectEndpoint(svc clients.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		if err := svc.Connect(cr.key, cr.chanID, cr.clientID); err != nil {
+		if err := svc.Connect(cr.key, cr.chanID, cr.thingID); err != nil {
 			return nil, err
 		}
 
@@ -200,7 +200,7 @@ func connectEndpoint(svc clients.Service) endpoint.Endpoint {
 	}
 }
 
-func disconnectEndpoint(svc clients.Service) endpoint.Endpoint {
+func disconnectEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		cr := request.(connectionReq)
 
@@ -208,7 +208,7 @@ func disconnectEndpoint(svc clients.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		if err := svc.Disconnect(cr.key, cr.chanID, cr.clientID); err != nil {
+		if err := svc.Disconnect(cr.key, cr.chanID, cr.thingID); err != nil {
 			return nil, err
 		}
 

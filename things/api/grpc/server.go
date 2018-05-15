@@ -3,20 +3,20 @@ package grpc
 import (
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/clients"
+	"github.com/mainflux/mainflux/things"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-var _ mainflux.ClientsServiceServer = (*grpcServer)(nil)
+var _ mainflux.ThingsServiceServer = (*grpcServer)(nil)
 
 type grpcServer struct {
 	handler kitgrpc.Handler
 }
 
-// NewServer returns new ClientsServiceServer instance.
-func NewServer(svc clients.Service) mainflux.ClientsServiceServer {
+// NewServer returns new ThingsServiceServer instance.
+func NewServer(svc things.Service) mainflux.ThingsServiceServer {
 	handler := kitgrpc.NewServer(
 		canAccessEndpoint(svc),
 		decodeCanAccessRequest,
@@ -49,9 +49,9 @@ func encodeError(err error) error {
 	}
 
 	switch err {
-	case clients.ErrMalformedEntity:
+	case things.ErrMalformedEntity:
 		return status.Error(codes.InvalidArgument, "received invalid can access request")
-	case clients.ErrUnauthorizedAccess:
+	case things.ErrUnauthorizedAccess:
 		return status.Error(codes.PermissionDenied, "missing or invalid credentials provided")
 	default:
 		return status.Error(codes.Internal, "internal server error")

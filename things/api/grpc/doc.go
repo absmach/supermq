@@ -1,2 +1,2 @@
-// Package grpc contains implementation of clients service gRPC API.
+// Package grpc contains implementation of things service gRPC API.
 package grpc

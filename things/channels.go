@@ -1,12 +1,12 @@
-package clients
+package things
 
 // Channel represents a Mainflux "communication group". This group contains the
-// clients that can exchange messages between eachother.
+// things that can exchange messages between eachother.
 type Channel struct {
-	ID      string   `json:"id"`
-	Owner   string   `json:"-"`
-	Name    string   `json:"name,omitempty"`
-	Clients []Client `json:"connected,omitempty"`
+	ID     string  `json:"id"`
+	Owner  string  `json:"-"`
+	Name   string  `json:"name,omitempty"`
+	Things []Thing `json:"connected,omitempty"`
 }
 
 // ChannelRepository specifies a channel persistence API.
@@ -31,14 +31,14 @@ type ChannelRepository interface {
 	// by the specified user.
 	Remove(string, string) error
 
-	// Connect adds client to the channel's list of connected clients.
+	// Connect adds thing to the channel's list of connected things.
 	Connect(string, string, string) error
 
-	// Disconnect removes client from the channel's list of connected
-	// clients.
+	// Disconnect removes thing from the channel's list of connected
+	// things.
 	Disconnect(string, string, string) error
 
-	// HasClient determines whether the client with the provided identifier, is
+	// HasThing determines whether the thing with the provided identifier, is
 	// "connected" to the specified channel.
-	HasClient(string, string) bool
+	HasThing(string, string) bool
 }

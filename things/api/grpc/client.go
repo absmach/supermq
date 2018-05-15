@@ -8,17 +8,17 @@ import (
 	"google.golang.org/grpc"
 )
 
-var _ mainflux.ClientsServiceClient = (*grpcClient)(nil)
+var _ mainflux.ThingsServiceClient = (*grpcClient)(nil)
 
 type grpcClient struct {
 	canAccess endpoint.Endpoint
 }
 
 // NewClient returns new gRPC client instance.
-func NewClient(conn *grpc.ClientConn) mainflux.ClientsServiceClient {
+func NewClient(conn *grpc.ClientConn) mainflux.ThingsServiceClient {
 	endpoint := kitgrpc.NewClient(
 		conn,
-		"mainflux.ClientsService",
+		"mainflux.ThingsService",
 		"CanAccess",
 		encodeCanAccessRequest,
 		decodeCanAccessResponse,

@@ -5,29 +5,29 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/mainflux/mainflux/clients"
+	"github.com/mainflux/mainflux/things"
 )
 
-var _ clients.ChannelRepository = (*channelRepositoryMock)(nil)
+var _ things.ChannelRepository = (*channelRepositoryMock)(nil)
 
 const chanID = "123e4567-e89b-12d3-a456-"
 
 type channelRepositoryMock struct {
 	mu       sync.Mutex
 	counter  int
-	channels map[string]clients.Channel
-	clients  clients.ClientRepository
+	channels map[string]things.Channel
+	things   things.ThingRepository
 }
 
 // NewChannelRepository creates in-memory channel repository.
-func NewChannelRepository(repo clients.ClientRepository) clients.ChannelRepository {
+func NewChannelRepository(repo things.ThingRepository) clients.ChannelRepository {
 	return &channelRepositoryMock{
-		channels: make(map[string]clients.Channel),
-		clients:  repo,
+		channels: make(map[string]things.Channel),
+		things:   repo,
 	}
 }
 
-func (crm *channelRepositoryMock) Save(channel clients.Channel) (string, error) {
+func (crm *channelRepositoryMock) Save(channel things.Channel) (string, error) {
 	crm.mu.Lock()
 	defer crm.mu.Unlock()
 
@@ -39,33 +39,33 @@ func (crm *channelRepositoryMock) Save(channel clients.Channel) (string, error) 
 	return channel.ID, nil
 }
 
-func (crm *channelRepositoryMock) Update(channel clients.Channel) error {
+func (crm *channelRepositoryMock) Update(channel things.Channel) error {
 	crm.mu.Lock()
 	defer crm.mu.Unlock()
 
 	dbKey := key(channel.Owner, channel.ID)
 
 	if _, ok := crm.channels[dbKey]; !ok {
-		return clients.ErrNotFound
+		return things.ErrNotFound
 	}
 
 	crm.channels[dbKey] = channel
 	return nil
 }
 
-func (crm *channelRepositoryMock) One(owner, id string) (clients.Channel, error) {
+func (crm *channelRepositoryMock) One(owner, id string) (things.Channel, error) {
 	if c, ok := crm.channels[key(owner, id)]; ok {
 		return c, nil
 	}
 
-	return clients.Channel{}, clients.ErrNotFound
+	return things.Channel{}, things.ErrNotFound
 }
 
-func (crm *channelRepositoryMock) All(owner string, offset, limit int) []clients.Channel {
+func (crm *channelRepositoryMock) All(owner string, offset, limit int) []things.Channel {
 	// This obscure way to examine map keys is enforced by the key structure
 	// itself (see mocks/commons.go).
 	prefix := fmt.Sprintf("%s-", owner)
-	channels := make([]clients.Channel, 0)
+	channels := make([]things.Channel, 0)
 
 	if offset < 0 || limit <= 0 {
 		return channels
@@ -89,50 +89,50 @@ func (crm *channelRepositoryMock) Remove(owner, id string) error {
 	return nil
 }
 
-func (crm *channelRepositoryMock) Connect(owner, chanID, clientID string) error {
+func (crm *channelRepositoryMock) Connect(owner, chanID, thingID string) error {
 	channel, err := crm.One(owner, chanID)
 	if err != nil {
 		return err
 	}
 
-	client, err := crm.clients.One(owner, clientID)
+	thing, err := crm.things.One(owner, thingID)
 	if err != nil {
 		return err
 	}
-	channel.Clients = append(channel.Clients, client)
+	channel.Things = append(channel.Things, thing)
 	return crm.Update(channel)
 }
 
-func (crm *channelRepositoryMock) Disconnect(owner, chanID, clientID string) error {
+func (crm *channelRepositoryMock) Disconnect(owner, chanID, thingID string) error {
 	channel, err := crm.One(owner, chanID)
 	if err != nil {
 		return err
 	}
 
-	if !crm.HasClient(chanID, clientID) {
-		return clients.ErrNotFound
+	if !crm.HasThing(chanID, thingID) {
+		return things.ErrNotFound
 	}
 
-	connected := make([]clients.Client, len(channel.Clients)-1)
-	for _, client := range channel.Clients {
-		if client.ID != clientID {
-			connected = append(connected, client)
+	connected := make([]things.Thing, len(channel.Things)-1)
+	for _, thing := range channel.Things {
+		if thing.ID != thingID {
+			connected = append(connected, thing)
 		}
 	}
 
-	channel.Clients = connected
+	channel.Things = connected
 	return crm.Update(channel)
 }
 
-func (crm *channelRepositoryMock) HasClient(channel, client string) bool {
+func (crm *channelRepositoryMock) HasThing(channel, thing string) bool {
 	// This obscure way to examine map keys is enforced by the key structure
 	// itself (see mocks/commons.go).
 	suffix := fmt.Sprintf("-%s", channel)
 
 	for k, v := range crm.channels {
 		if strings.HasSuffix(k, suffix) {
-			for _, c := range v.Clients {
-				if c.ID == client {
+			for _, c := range v.Things {
+				if c.ID == thing {
 					return true
 				}
 			}

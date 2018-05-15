@@ -1,4 +1,4 @@
-package clients
+package things
 
 import (
 	"context"
@@ -28,24 +28,24 @@ var (
 // Service specifies an API that must be fullfiled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
-	// AddClient adds new client to the user identified by the provided key.
-	AddClient(string, Client) (string, error)
+	// AddThing adds new thing to the user identified by the provided key.
+	AddThing(string, Thing) (string, error)
 
-	// UpdateClient updates the client identified by the provided ID, that
+	// UpdateThing updates the thing identified by the provided ID, that
 	// belongs to the user identified by the provided key.
-	UpdateClient(string, Client) error
+	UpdateThing(string, Thing) error
 
-	// ViewClient retrieves data about the client identified with the provided
+	// ViewThing retrieves data about the thing identified with the provided
 	// ID, that belongs to the user identified by the provided key.
-	ViewClient(string, string) (Client, error)
+	ViewThing(string, string) (Thing, error)
 
-	// ListClients retrieves data about subset of clients that belongs to the
+	// ListThings retrieves data about subset of things that belongs to the
 	// user identified by the provided key.
-	ListClients(string, int, int) ([]Client, error)
+	ListThings(string, int, int) ([]Thing, error)
 
-	// RemoveClient removes the client identified with the provided ID, that
+	// RemoveThing removes the thing identified with the provided ID, that
 	// belongs to the user identified by the provided key.
-	RemoveClient(string, string) error
+	RemoveThing(string, string) error
 
 	// CreateChannel adds new channel to the user identified by the provided key.
 	CreateChannel(string, Channel) (string, error)
@@ -62,44 +62,44 @@ type Service interface {
 	// user identified by the provided key.
 	ListChannels(string, int, int) ([]Channel, error)
 
-	// RemoveChannel removes the client identified by the provided ID, that
+	// RemoveChannel removes the thing identified by the provided ID, that
 	// belongs to the user identified by the provided key.
 	RemoveChannel(string, string) error
 
-	// Connect adds client to the channel's list of connected clients.
+	// Connect adds thing to the channel's list of connected things.
 	Connect(string, string, string) error
 
-	// Disconnect removes client from the channel's list of connected
-	// clients.
+	// Disconnect removes thing from the channel's list of connected
+	// things.
 	Disconnect(string, string, string) error
 
 	// CanAccess determines whether the channel can be accessed using the
-	// provided key and returns client's id.
+	// provided key and returns thing's id.
 	CanAccess(string, string) (string, error)
 }
 
-var _ Service = (*clientsService)(nil)
+var _ Service = (*thingsService)(nil)
 
-type clientsService struct {
+type thingsService struct {
 	users    mainflux.UsersServiceClient
-	clients  ClientRepository
+	things   ThingRepository
 	channels ChannelRepository
 	hasher   Hasher
 	idp      IdentityProvider
 }
 
-// New instantiates the clients service implementation.
-func New(users mainflux.UsersServiceClient, clients ClientRepository, channels ChannelRepository, hasher Hasher, idp IdentityProvider) Service {
-	return &clientsService{
+// New instantiates the things service implementation.
+func New(users mainflux.UsersServiceClient, things ThingRepository, channels ChannelRepository, hasher Hasher, idp IdentityProvider) Service {
+	return &thingsService{
 		users:    users,
-		clients:  clients,
+		things:   things,
 		channels: channels,
 		hasher:   hasher,
 		idp:      idp,
 	}
 }
 
-func (ms *clientsService) AddClient(key string, client Client) (string, error) {
+func (ms *thingsService) AddThing(key string, thing Thing) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -108,14 +108,14 @@ func (ms *clientsService) AddClient(key string, client Client) (string, error) {
 		return "", ErrUnauthorizedAccess
 	}
 
-	client.ID = ms.clients.ID()
-	client.Owner = res.GetValue()
-	client.Key, _ = ms.idp.PermanentKey(client.ID)
+	thing.ID = ms.things.ID()
+	thing.Owner = res.GetValue()
+	thing.Key, _ = ms.idp.PermanentKey(thing.ID)
 
-	return client.ID, ms.clients.Save(client)
+	return thing.ID, ms.things.Save(thing)
 }
 
-func (ms *clientsService) UpdateClient(key string, client Client) error {
+func (ms *thingsService) UpdateThing(key string, thing Thing) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -124,24 +124,24 @@ func (ms *clientsService) UpdateClient(key string, client Client) error {
 		return ErrUnauthorizedAccess
 	}
 
-	client.Owner = res.GetValue()
+	thing.Owner = res.GetValue()
 
-	return ms.clients.Update(client)
+	return ms.things.Update(thing)
 }
 
-func (ms *clientsService) ViewClient(key, id string) (Client, error) {
+func (ms *thingsService) ViewThing(key, id string) (Thing, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
 	res, err := ms.users.Identify(ctx, &mainflux.Token{Value: key})
 	if err != nil {
-		return Client{}, ErrUnauthorizedAccess
+		return Thing{}, ErrUnauthorizedAccess
 	}
 
-	return ms.clients.One(res.GetValue(), id)
+	return ms.things.One(res.GetValue(), id)
 }
 
-func (ms *clientsService) ListClients(key string, offset, limit int) ([]Client, error) {
+func (ms *thingsService) ListThings(key string, offset, limit int) ([]Thing, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -150,10 +150,10 @@ func (ms *clientsService) ListClients(key string, offset, limit int) ([]Client, 
 		return nil, ErrUnauthorizedAccess
 	}
 
-	return ms.clients.All(res.GetValue(), offset, limit), nil
+	return ms.things.All(res.GetValue(), offset, limit), nil
 }
 
-func (ms *clientsService) RemoveClient(key, id string) error {
+func (ms *thingsService) RemoveThing(key, id string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -162,10 +162,10 @@ func (ms *clientsService) RemoveClient(key, id string) error {
 		return ErrUnauthorizedAccess
 	}
 
-	return ms.clients.Remove(res.GetValue(), id)
+	return ms.things.Remove(res.GetValue(), id)
 }
 
-func (ms *clientsService) CreateChannel(key string, channel Channel) (string, error) {
+func (ms *thingsService) CreateChannel(key string, channel Channel) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -178,7 +178,7 @@ func (ms *clientsService) CreateChannel(key string, channel Channel) (string, er
 	return ms.channels.Save(channel)
 }
 
-func (ms *clientsService) UpdateChannel(key string, channel Channel) error {
+func (ms *thingsService) UpdateChannel(key string, channel Channel) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -191,7 +191,7 @@ func (ms *clientsService) UpdateChannel(key string, channel Channel) error {
 	return ms.channels.Update(channel)
 }
 
-func (ms *clientsService) ViewChannel(key, id string) (Channel, error) {
+func (ms *thingsService) ViewChannel(key, id string) (Channel, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -203,7 +203,7 @@ func (ms *clientsService) ViewChannel(key, id string) (Channel, error) {
 	return ms.channels.One(res.GetValue(), id)
 }
 
-func (ms *clientsService) ListChannels(key string, offset, limit int) ([]Channel, error) {
+func (ms *thingsService) ListChannels(key string, offset, limit int) ([]Channel, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -215,7 +215,7 @@ func (ms *clientsService) ListChannels(key string, offset, limit int) ([]Channel
 	return ms.channels.All(res.GetValue(), offset, limit), nil
 }
 
-func (ms *clientsService) RemoveChannel(key, id string) error {
+func (ms *thingsService) RemoveChannel(key, id string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -227,7 +227,7 @@ func (ms *clientsService) RemoveChannel(key, id string) error {
 	return ms.channels.Remove(res.GetValue(), id)
 }
 
-func (ms *clientsService) Connect(key, chanID, clientID string) error {
+func (ms *thingsService) Connect(key, chanID, thingID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -236,10 +236,10 @@ func (ms *clientsService) Connect(key, chanID, clientID string) error {
 		return ErrUnauthorizedAccess
 	}
 
-	return ms.channels.Connect(res.GetValue(), chanID, clientID)
+	return ms.channels.Connect(res.GetValue(), chanID, thingID)
 }
 
-func (ms *clientsService) Disconnect(key, chanID, clientID string) error {
+func (ms *thingsService) Disconnect(key, chanID, thingID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -248,18 +248,18 @@ func (ms *clientsService) Disconnect(key, chanID, clientID string) error {
 		return ErrUnauthorizedAccess
 	}
 
-	return ms.channels.Disconnect(res.GetValue(), chanID, clientID)
+	return ms.channels.Disconnect(res.GetValue(), chanID, thingID)
 }
 
-func (ms *clientsService) CanAccess(key, channel string) (string, error) {
-	client, err := ms.idp.Identity(key)
+func (ms *thingsService) CanAccess(key, channel string) (string, error) {
+	thing, err := ms.idp.Identity(key)
 	if err != nil {
 		return "", err
 	}
 
-	if !ms.channels.HasClient(channel, client) {
+	if !ms.channels.HasThing(channel, thing) {
 		return "", ErrUnauthorizedAccess
 	}
 
-	return client, nil
+	return thing, nil
 }

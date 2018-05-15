@@ -31,9 +31,9 @@ func migrateDB(db *sql.DB) error {
 	migrations := &migrate.MemoryMigrationSource{
 		Migrations: []*migrate.Migration{
 			&migrate.Migration{
-				Id: "clients_1",
+				Id: "things_1",
 				Up: []string{
-					`CREATE TABLE clients (
+					`CREATE TABLE things (
 						id      CHAR(36),
 						owner   VARCHAR(254),
 						type    VARCHAR(10) NOT NULL,
@@ -51,16 +51,16 @@ func migrateDB(db *sql.DB) error {
 					`CREATE TABLE connections (
 						channel_id    CHAR(36),
 						channel_owner VARCHAR(254),
-						client_id     CHAR(36),
-						client_owner  VARCHAR(254),
+						thing_id     CHAR(36),
+						thing_owner  VARCHAR(254),
 						FOREIGN KEY (channel_id, channel_owner) REFERENCES channels (id, owner) ON DELETE CASCADE ON UPDATE CASCADE,
-						FOREIGN KEY (client_id, client_owner) REFERENCES clients (id, owner) ON DELETE CASCADE ON UPDATE CASCADE,
-						PRIMARY KEY (channel_id, channel_owner, client_id, client_owner)
+						FOREIGN KEY (thing_id, thing_owner) REFERENCES things (id, owner) ON DELETE CASCADE ON UPDATE CASCADE,
+						PRIMARY KEY (channel_id, channel_owner, thing_id, thing_owner)
 					)`,
 				},
 				Down: []string{
 					"DROP TABLE connections",
-					"DROP TABLE clients",
+					"DROP TABLE things",
 					"DROP TABLE channels",
 				},
 			},

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/mainflux/mainflux/clients"
+	"github.com/mainflux/mainflux/things"
 )
 
 const (
@@ -13,14 +13,14 @@ const (
 	duration time.Duration = 10 * time.Hour
 )
 
-var _ clients.IdentityProvider = (*jwtIdentityProvider)(nil)
+var _ things.IdentityProvider = (*jwtIdentityProvider)(nil)
 
 type jwtIdentityProvider struct {
 	secret string
 }
 
 // New instantiates a JWT identity provider.
-func New(secret string) clients.IdentityProvider {
+func New(secret string) things.IdentityProvider {
 	return &jwtIdentityProvider{secret}
 }
 
@@ -56,19 +56,19 @@ func (idp *jwtIdentityProvider) jwt(claims jwt.StandardClaims) (string, error) {
 func (idp *jwtIdentityProvider) Identity(key string) (string, error) {
 	token, err := jwt.Parse(key, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, clients.ErrUnauthorizedAccess
+			return nil, things.ErrUnauthorizedAccess
 		}
 
 		return []byte(idp.secret), nil
 	})
 
 	if err != nil {
-		return "", clients.ErrUnauthorizedAccess
+		return "", things.ErrUnauthorizedAccess
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		return claims["sub"].(string), nil
 	}
 
-	return "", clients.ErrUnauthorizedAccess
+	return "", things.ErrUnauthorizedAccess
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/mainflux/mainflux/clients"
+	"github.com/mainflux/mainflux/things"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,8 +12,8 @@ import (
 const wrong string = "?"
 
 var (
-	client  = clients.Client{Type: "app"}
-	channel = clients.Channel{}
+	thing   = things.Thing{Type: "app"}
+	channel = things.Channel{}
 )
 
 func TestIdentityReqValidation(t *testing.T) {
@@ -22,7 +22,7 @@ func TestIdentityReqValidation(t *testing.T) {
 		err error
 	}{
 		"non-empty token": {uuid.NewV4().String(), nil},
-		"empty token":     {"", clients.ErrUnauthorizedAccess},
+		"empty token":     {"", things.ErrUnauthorizedAccess},
 	}
 
 	for desc, tc := range cases {
@@ -32,23 +32,23 @@ func TestIdentityReqValidation(t *testing.T) {
 	}
 }
 
-func TestAddClientReqValidation(t *testing.T) {
+func TestAddThingReqValidation(t *testing.T) {
 	key := uuid.NewV4().String()
 
 	cases := map[string]struct {
-		client clients.Client
-		key    string
-		err    error
+		thing things.Thing
+		key   string
+		err   error
 	}{
-		"valid client addition request": {client, key, nil},
-		"missing token":                 {client, "", clients.ErrUnauthorizedAccess},
-		"wrong client type":             {clients.Client{Type: wrong}, key, clients.ErrMalformedEntity},
+		"valid thing addition request": {thing, key, nil},
+		"missing token":                {thing, "", things.ErrUnauthorizedAccess},
+		"wrong thing type":             {things.Thing{Type: wrong}, key, things.ErrMalformedEntity},
 	}
 
 	for desc, tc := range cases {
-		req := addClientReq{
-			key:    tc.key,
-			client: tc.client,
+		req := addThingReq{
+			key:   tc.key,
+			thing: tc.thing,
 		}
 
 		err := req.validate()
@@ -56,27 +56,27 @@ func TestAddClientReqValidation(t *testing.T) {
 	}
 }
 
-func TestUpdateClientReqValidation(t *testing.T) {
+func TestUpdateThingReqValidation(t *testing.T) {
 	key := uuid.NewV4().String()
 	id := uuid.NewV4().String()
 
 	cases := map[string]struct {
-		client clients.Client
-		id     string
-		key    string
-		err    error
+		thing things.Thing
+		id    string
+		key   string
+		err   error
 	}{
-		"valid client update request": {client, id, key, nil},
-		"non-uuid client ID":          {client, wrong, key, clients.ErrNotFound},
-		"missing token":               {client, id, "", clients.ErrUnauthorizedAccess},
-		"wrong client type":           {clients.Client{Type: "invalid"}, id, key, clients.ErrMalformedEntity},
+		"valid thing update request": {thing, id, key, nil},
+		"non-uuid thing ID":          {thing, wrong, key, things.ErrNotFound},
+		"missing token":              {thing, id, "", things.ErrUnauthorizedAccess},
+		"wrong thing type":           {things.Thing{Type: "invalid"}, id, key, things.ErrMalformedEntity},
 	}
 
 	for desc, tc := range cases {
-		req := updateClientReq{
-			key:    tc.key,
-			id:     tc.id,
-			client: tc.client,
+		req := updateThingReq{
+			key:   tc.key,
+			id:    tc.id,
+			thing: tc.thing,
 		}
 
 		err := req.validate()
@@ -88,12 +88,12 @@ func TestCreateChannelReqValidation(t *testing.T) {
 	key := uuid.NewV4().String()
 
 	cases := map[string]struct {
-		channel clients.Channel
+		channel things.Channel
 		key     string
 		err     error
 	}{
 		"valid channel creation request": {channel, key, nil},
-		"missing token":                  {channel, "", clients.ErrUnauthorizedAccess},
+		"missing token":                  {channel, "", things.ErrUnauthorizedAccess},
 	}
 
 	for desc, tc := range cases {
@@ -112,14 +112,14 @@ func TestUpdateChannelReqValidation(t *testing.T) {
 	id := uuid.NewV4().String()
 
 	cases := map[string]struct {
-		channel clients.Channel
+		channel things.Channel
 		id      string
 		key     string
 		err     error
 	}{
 		"valid channel update request": {channel, id, key, nil},
-		"non-uuid channel ID":          {channel, wrong, key, clients.ErrNotFound},
-		"missing token":                {channel, id, "", clients.ErrUnauthorizedAccess},
+		"non-uuid channel ID":          {channel, wrong, key, things.ErrNotFound},
+		"missing token":                {channel, id, "", things.ErrUnauthorizedAccess},
 	}
 
 	for desc, tc := range cases {
@@ -144,8 +144,8 @@ func TestViewResourceReqValidation(t *testing.T) {
 		err error
 	}{
 		"valid resource viewing request": {id, key, nil},
-		"missing token":                  {id, "", clients.ErrUnauthorizedAccess},
-		"non-uuid resource ID":           {wrong, key, clients.ErrNotFound},
+		"missing token":                  {id, "", things.ErrUnauthorizedAccess},
+		"non-uuid resource ID":           {wrong, key, things.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
@@ -166,11 +166,11 @@ func TestListResourcesReqValidation(t *testing.T) {
 		err    error
 	}{
 		"valid listing request": {key, value, value, nil},
-		"missing token":         {"", value, value, clients.ErrUnauthorizedAccess},
-		"negative offset":       {key, -value, value, clients.ErrMalformedEntity},
-		"zero limit":            {key, value, 0, clients.ErrMalformedEntity},
-		"negative limit":        {key, value, -value, clients.ErrMalformedEntity},
-		"too big limit":         {key, value, 20 * value, clients.ErrMalformedEntity},
+		"missing token":         {"", value, value, things.ErrUnauthorizedAccess},
+		"negative offset":       {key, -value, value, things.ErrMalformedEntity},
+		"zero limit":            {key, value, 0, things.ErrMalformedEntity},
+		"negative limit":        {key, value, -value, things.ErrMalformedEntity},
+		"too big limit":         {key, value, 20 * value, things.ErrMalformedEntity},
 	}
 
 	for desc, tc := range cases {

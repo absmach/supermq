@@ -12,7 +12,7 @@ import (
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/clients"
+	"github.com/mainflux/mainflux/things"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -24,43 +24,43 @@ var (
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc clients.Service) http.Handler {
+func MakeHandler(svc things.Service) http.Handler {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),
 	}
 
 	r := bone.New()
 
-	r.Post("/clients", kithttp.NewServer(
-		addClientEndpoint(svc),
-		decodeClientCreation,
+	r.Post("/things", kithttp.NewServer(
+		addThingEndpoint(svc),
+		decodeThingCreation,
 		encodeResponse,
 		opts...,
 	))
 
-	r.Put("/clients/:id", kithttp.NewServer(
-		updateClientEndpoint(svc),
-		decodeClientUpdate,
+	r.Put("/things/:id", kithttp.NewServer(
+		updateThingEndpoint(svc),
+		decodeThingUpdate,
 		encodeResponse,
 		opts...,
 	))
 
-	r.Delete("/clients/:id", kithttp.NewServer(
-		removeClientEndpoint(svc),
+	r.Delete("/things/:id", kithttp.NewServer(
+		removeThingEndpoint(svc),
 		decodeView,
 		encodeResponse,
 		opts...,
 	))
 
-	r.Get("/clients/:id", kithttp.NewServer(
-		viewClientEndpoint(svc),
+	r.Get("/things/:id", kithttp.NewServer(
+		viewThingEndpoint(svc),
 		decodeView,
 		encodeResponse,
 		opts...,
 	))
 
-	r.Get("/clients", kithttp.NewServer(
-		listClientsEndpoint(svc),
+	r.Get("/things", kithttp.NewServer(
+		listThingsEndpoint(svc),
 		decodeList,
 		encodeResponse,
 		opts...,
@@ -101,58 +101,58 @@ func MakeHandler(svc clients.Service) http.Handler {
 		opts...,
 	))
 
-	r.Put("/channels/:chanId/clients/:clientId", kithttp.NewServer(
+	r.Put("/channels/:chanId/things/:thingId", kithttp.NewServer(
 		connectEndpoint(svc),
 		decodeConnection,
 		encodeResponse,
 		opts...,
 	))
 
-	r.Delete("/channels/:chanId/clients/:clientId", kithttp.NewServer(
+	r.Delete("/channels/:chanId/things/:thingId", kithttp.NewServer(
 		disconnectEndpoint(svc),
 		decodeConnection,
 		encodeResponse,
 		opts...,
 	))
 
-	r.GetFunc("/version", mainflux.Version("clients"))
+	r.GetFunc("/version", mainflux.Version("things"))
 	r.Handle("/metrics", promhttp.Handler())
 
 	return r
 }
 
-func decodeClientCreation(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeThingCreation(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
 		return nil, errUnsupportedContentType
 	}
 
-	var client clients.Client
-	if err := json.NewDecoder(r.Body).Decode(&client); err != nil {
+	var thing things.Thing
+	if err := json.NewDecoder(r.Body).Decode(&thing); err != nil {
 		return nil, err
 	}
 
-	req := addClientReq{
-		key:    r.Header.Get("Authorization"),
-		client: client,
+	req := addThingReq{
+		key:   r.Header.Get("Authorization"),
+		thing: thing,
 	}
 
 	return req, nil
 }
 
-func decodeClientUpdate(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeThingUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
 		return nil, errUnsupportedContentType
 	}
 
-	var client clients.Client
-	if err := json.NewDecoder(r.Body).Decode(&client); err != nil {
+	var thing things.Thing
+	if err := json.NewDecoder(r.Body).Decode(&thing); err != nil {
 		return nil, err
 	}
 
-	req := updateClientReq{
-		key:    r.Header.Get("Authorization"),
-		id:     bone.GetValue(r, "id"),
-		client: client,
+	req := updateThingReq{
+		key:   r.Header.Get("Authorization"),
+		id:    bone.GetValue(r, "id"),
+		thing: thing,
 	}
 
 	return req, nil
@@ -163,7 +163,7 @@ func decodeChannelCreation(_ context.Context, r *http.Request) (interface{}, err
 		return nil, errUnsupportedContentType
 	}
 
-	var channel clients.Channel
+	var channel things.Channel
 	if err := json.NewDecoder(r.Body).Decode(&channel); err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func decodeChannelUpdate(_ context.Context, r *http.Request) (interface{}, error
 		return nil, errUnsupportedContentType
 	}
 
-	var channel clients.Channel
+	var channel things.Channel
 	if err := json.NewDecoder(r.Body).Decode(&channel); err != nil {
 		return nil, err
 	}
@@ -242,9 +242,9 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeConnection(_ context.Context, r *http.Request) (interface{}, error) {
 	req := connectionReq{
-		key:      r.Header.Get("Authorization"),
-		chanID:   bone.GetValue(r, "chanId"),
-		clientID: bone.GetValue(r, "clientId"),
+		key:     r.Header.Get("Authorization"),
+		chanID:  bone.GetValue(r, "chanId"),
+		thingID: bone.GetValue(r, "thingId"),
 	}
 
 	return req, nil
@@ -272,13 +272,13 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", contentType)
 
 	switch err {
-	case clients.ErrMalformedEntity:
+	case things.ErrMalformedEntity:
 		w.WriteHeader(http.StatusBadRequest)
-	case clients.ErrUnauthorizedAccess:
+	case things.ErrUnauthorizedAccess:
 		w.WriteHeader(http.StatusForbidden)
-	case clients.ErrNotFound:
+	case things.ErrNotFound:
 		w.WriteHeader(http.StatusNotFound)
-	case clients.ErrConflict:
+	case things.ErrConflict:
 		w.WriteHeader(http.StatusConflict)
 	case errUnsupportedContentType:
 		w.WriteHeader(http.StatusUnsupportedMediaType)

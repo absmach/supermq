@@ -1,12 +1,12 @@
 package mocks
 
 import (
-	"github.com/mainflux/mainflux/clients"
+	"github.com/mainflux/mainflux/things"
 )
 
 var (
-	_ clients.Hasher           = (*hasherMock)(nil)
-	_ clients.IdentityProvider = (*identityProviderMock)(nil)
+	_ things.Hasher           = (*hasherMock)(nil)
+	_ things.IdentityProvider = (*identityProviderMock)(nil)
 )
 
 type hasherMock struct{}
@@ -17,7 +17,7 @@ func (hm *hasherMock) Hash(pwd string) (string, error) {
 
 func (hm *hasherMock) Compare(plain, hashed string) error {
 	if plain != hashed {
-		return clients.ErrUnauthorizedAccess
+		return things.ErrUnauthorizedAccess
 	}
 
 	return nil
@@ -27,7 +27,7 @@ type identityProviderMock struct{}
 
 func (idp *identityProviderMock) TemporaryKey(id string) (string, error) {
 	if id == "" {
-		return "", clients.ErrUnauthorizedAccess
+		return "", things.ErrUnauthorizedAccess
 	}
 
 	return id, nil
@@ -43,12 +43,12 @@ func (idp *identityProviderMock) Identity(key string) (string, error) {
 
 // NewHasher creates "no-op" hasher for test purposes. This implementation will
 // return secrets without changing them.
-func NewHasher() clients.Hasher {
+func NewHasher() things.Hasher {
 	return &hasherMock{}
 }
 
 // NewIdentityProvider creates "mirror" identity provider, i.e. generated
 // token will hold value provided by the caller.
-func NewIdentityProvider() clients.IdentityProvider {
+func NewIdentityProvider() things.IdentityProvider {
 	return &identityProviderMock{}
 }

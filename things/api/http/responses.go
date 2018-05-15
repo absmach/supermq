@@ -5,16 +5,15 @@ import (
 	"net/http"
 
 	"github.com/mainflux/mainflux"
-
-	"github.com/mainflux/mainflux/clients"
+	"github.com/mainflux/mainflux/things"
 )
 
 var (
 	_ mainflux.Response = (*identityRes)(nil)
 	_ mainflux.Response = (*removeRes)(nil)
-	_ mainflux.Response = (*clientRes)(nil)
-	_ mainflux.Response = (*viewClientRes)(nil)
-	_ mainflux.Response = (*listClientsRes)(nil)
+	_ mainflux.Response = (*thingRes)(nil)
+	_ mainflux.Response = (*viewThingRes)(nil)
+	_ mainflux.Response = (*listThingsRes)(nil)
 	_ mainflux.Response = (*channelRes)(nil)
 	_ mainflux.Response = (*viewChannelRes)(nil)
 	_ mainflux.Response = (*listChannelsRes)(nil)
@@ -28,7 +27,7 @@ type identityRes struct {
 
 func (res identityRes) Headers() map[string]string {
 	return map[string]string{
-		"X-client-id": res.id,
+		"X-thing-id": res.id,
 	}
 }
 
@@ -54,12 +53,12 @@ func (res removeRes) Empty() bool {
 	return true
 }
 
-type clientRes struct {
+type thingRes struct {
 	id      string
 	created bool
 }
 
-func (res clientRes) Code() int {
+func (res thingRes) Code() int {
 	if res.created {
 		return http.StatusCreated
 	}
@@ -67,49 +66,49 @@ func (res clientRes) Code() int {
 	return http.StatusOK
 }
 
-func (res clientRes) Headers() map[string]string {
+func (res thingRes) Headers() map[string]string {
 	if res.created {
 		return map[string]string{
-			"Location": fmt.Sprint("/clients/", res.id),
+			"Location": fmt.Sprint("/things/", res.id),
 		}
 	}
 
 	return map[string]string{}
 }
 
-func (res clientRes) Empty() bool {
+func (res thingRes) Empty() bool {
 	return true
 }
 
-type viewClientRes struct {
-	clients.Client
+type viewThingRes struct {
+	things.Thing
 }
 
-func (res viewClientRes) Code() int {
+func (res viewThingRes) Code() int {
 	return http.StatusOK
 }
 
-func (res viewClientRes) Headers() map[string]string {
+func (res viewThingRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res viewClientRes) Empty() bool {
+func (res viewThingRes) Empty() bool {
 	return false
 }
 
-type listClientsRes struct {
-	Clients []clients.Client `json:"clients"`
+type listThingsRes struct {
+	Things []things.Thing `json:"things"`
 }
 
-func (res listClientsRes) Code() int {
+func (res listThingsRes) Code() int {
 	return http.StatusOK
 }
 
-func (res listClientsRes) Headers() map[string]string {
+func (res listThingsRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res listClientsRes) Empty() bool {
+func (res listThingsRes) Empty() bool {
 	return false
 }
 
@@ -141,7 +140,7 @@ func (res channelRes) Empty() bool {
 }
 
 type viewChannelRes struct {
-	clients.Channel
+	things.Channel
 }
 
 func (res viewChannelRes) Code() int {
@@ -157,7 +156,7 @@ func (res viewChannelRes) Empty() bool {
 }
 
 type listChannelsRes struct {
-	Channels []clients.Channel `json:"channels"`
+	Channels []things.Channel `json:"channels"`
 }
 
 func (res listChannelsRes) Code() int {

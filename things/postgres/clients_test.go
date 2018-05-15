@@ -4,92 +4,92 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/mainflux/mainflux/clients"
-	"github.com/mainflux/mainflux/clients/postgres"
+	"github.com/mainflux/mainflux/things"
+	"github.com/mainflux/mainflux/things/postgres"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestClientSave(t *testing.T) {
-	email := "client-save@example.com"
-	clientRepo := postgres.NewClientRepository(db, testLog)
-	client := clients.Client{
-		ID:    clientRepo.ID(),
+func TestThingSave(t *testing.T) {
+	email := "thing-save@example.com"
+	thingRepo := postgres.NewThingRepository(db, testLog)
+	thing := things.Thing{
+		ID:    thingRepo.ID(),
 		Owner: email,
 	}
 
-	hasErr := clientRepo.Save(client) != nil
-	assert.False(t, hasErr, fmt.Sprintf("create new client: expected false got %t\n", hasErr))
+	hasErr := thingRepo.Save(thing) != nil
+	assert.False(t, hasErr, fmt.Sprintf("create new thing: expected false got %t\n", hasErr))
 }
 
-func TestClientUpdate(t *testing.T) {
-	email := "client-update@example.com"
+func TestThingUpdate(t *testing.T) {
+	email := "thing-update@example.com"
 
-	clientRepo := postgres.NewClientRepository(db, testLog)
+	thingRepo := postgres.NewThingRepository(db, testLog)
 
-	c := clients.Client{
-		ID:    clientRepo.ID(),
+	c := things.Thing{
+		ID:    thingRepo.ID(),
 		Owner: email,
 	}
 
-	clientRepo.Save(c)
+	thingRepo.Save(c)
 
 	cases := map[string]struct {
-		client clients.Client
-		err    error
+		thing things.Thing
+		err   error
 	}{
-		"existing client":                            {c, nil},
-		"non-existing client with existing user":     {clients.Client{ID: wrong, Owner: email}, clients.ErrNotFound},
-		"non-existing client with non-existing user": {clients.Client{ID: wrong, Owner: wrong}, clients.ErrNotFound},
+		"existing thing":                            {c, nil},
+		"non-existing thing with existing user":     {things.Thing{ID: wrong, Owner: email}, things.ErrNotFound},
+		"non-existing thing with non-existing user": {things.Thing{ID: wrong, Owner: wrong}, things.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
-		err := clientRepo.Update(tc.client)
+		err := thingRepo.Update(tc.thing)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
 
-func TestSingleClientRetrieval(t *testing.T) {
-	email := "client-single-retrieval@example.com"
+func TestSingleThingRetrieval(t *testing.T) {
+	email := "thing-single-retrieval@example.com"
 
-	clientRepo := postgres.NewClientRepository(db, testLog)
+	thingRepo := postgres.NewThingRepository(db, testLog)
 
-	c := clients.Client{
-		ID:    clientRepo.ID(),
+	c := things.Thing{
+		ID:    thingRepo.ID(),
 		Owner: email,
 	}
 
-	clientRepo.Save(c)
+	thingRepo.Save(c)
 
 	cases := map[string]struct {
 		owner string
 		ID    string
 		err   error
 	}{
-		"existing user":                      {c.Owner, c.ID, nil},
-		"existing user, non-existing client": {c.Owner, wrong, clients.ErrNotFound},
-		"non-existing owner":                 {wrong, c.ID, clients.ErrNotFound},
+		"existing user":                     {c.Owner, c.ID, nil},
+		"existing user, non-existing thing": {c.Owner, wrong, things.ErrNotFound},
+		"non-existing owner":                {wrong, c.ID, things.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
-		_, err := clientRepo.One(tc.owner, tc.ID)
+		_, err := thingRepo.One(tc.owner, tc.ID)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
 
-func TestMultiClientRetrieval(t *testing.T) {
-	email := "client-multi-retrieval@example.com"
+func TestMultiThingRetrieval(t *testing.T) {
+	email := "thing-multi-retrieval@example.com"
 
-	clientRepo := postgres.NewClientRepository(db, testLog)
+	thingRepo := postgres.NewThingRepository(db, testLog)
 
 	n := 10
 
 	for i := 0; i < n; i++ {
-		c := clients.Client{
-			ID:    clientRepo.ID(),
+		c := things.Thing{
+			ID:    thingRepo.ID(),
 			Owner: email,
 		}
 
-		clientRepo.Save(c)
+		thingRepo.Save(c)
 	}
 
 	cases := map[string]struct {
@@ -104,30 +104,30 @@ func TestMultiClientRetrieval(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		n := len(clientRepo.All(tc.owner, tc.offset, tc.limit))
+		n := len(thingRepo.All(tc.owner, tc.offset, tc.limit))
 		assert.Equal(t, tc.size, n, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, n))
 	}
 }
 
-func TestClientRemoval(t *testing.T) {
-	email := "client-removal@example.com"
+func TestThingRemoval(t *testing.T) {
+	email := "thing-removal@example.com"
 
-	clientRepo := postgres.NewClientRepository(db, testLog)
-	client := clients.Client{
-		ID:    clientRepo.ID(),
+	thingRepo := postgres.NewThingRepository(db, testLog)
+	thing := things.Thing{
+		ID:    thingRepo.ID(),
 		Owner: email,
 	}
-	clientRepo.Save(client)
+	thingRepo.Save(thing)
 
 	// show that the removal works the same for both existing and non-existing
-	// (removed) client
+	// (removed) thing
 	for i := 0; i < 2; i++ {
-		if err := clientRepo.Remove(email, client.ID); err != nil {
-			t.Fatalf("#%d: failed to remove client due to: %s", i, err)
+		if err := thingRepo.Remove(email, thing.ID); err != nil {
+			t.Fatalf("#%d: failed to remove thing due to: %s", i, err)
 		}
 
-		if _, err := clientRepo.One(email, client.ID); err != clients.ErrNotFound {
-			t.Fatalf("#%d: expected %s got %s", i, clients.ErrNotFound, err)
+		if _, err := thingRepo.One(email, thing.ID); err != things.ErrNotFound {
+			t.Fatalf("#%d: expected %s got %s", i, things.ErrNotFound, err)
 		}
 	}
 }

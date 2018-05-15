@@ -2,11 +2,11 @@ package grpc
 
 import (
 	"github.com/go-kit/kit/endpoint"
-	"github.com/mainflux/mainflux/clients"
+	"github.com/mainflux/mainflux/things"
 	context "golang.org/x/net/context"
 )
 
-func canAccessEndpoint(svc clients.Service) endpoint.Endpoint {
+func canAccessEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(accessReq)
 		if err := req.validate(); err != nil {

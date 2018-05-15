@@ -2,7 +2,7 @@ package http
 
 import (
 	"github.com/asaskevich/govalidator"
-	"github.com/mainflux/mainflux/clients"
+	"github.com/mainflux/mainflux/things"
 )
 
 const maxLimitSize = 100
@@ -17,51 +17,51 @@ type identityReq struct {
 
 func (req identityReq) validate() error {
 	if req.key == "" {
-		return clients.ErrUnauthorizedAccess
+		return things.ErrUnauthorizedAccess
 	}
 
 	return nil
 }
 
-type addClientReq struct {
-	key    string
-	client clients.Client
+type addThingReq struct {
+	key   string
+	thing things.Thing
 }
 
-func (req addClientReq) validate() error {
+func (req addThingReq) validate() error {
 	if req.key == "" {
-		return clients.ErrUnauthorizedAccess
+		return things.ErrUnauthorizedAccess
 	}
 
-	return req.client.Validate()
+	return req.thing.Validate()
 }
 
-type updateClientReq struct {
-	key    string
-	id     string
-	client clients.Client
+type updateThingReq struct {
+	key   string
+	id    string
+	thing things.Thing
 }
 
-func (req updateClientReq) validate() error {
+func (req updateThingReq) validate() error {
 	if req.key == "" {
-		return clients.ErrUnauthorizedAccess
+		return things.ErrUnauthorizedAccess
 	}
 
 	if !govalidator.IsUUID(req.id) {
-		return clients.ErrNotFound
+		return things.ErrNotFound
 	}
 
-	return req.client.Validate()
+	return req.thing.Validate()
 }
 
 type createChannelReq struct {
 	key     string
-	channel clients.Channel
+	channel things.Channel
 }
 
 func (req createChannelReq) validate() error {
 	if req.key == "" {
-		return clients.ErrUnauthorizedAccess
+		return things.ErrUnauthorizedAccess
 	}
 
 	return nil
@@ -70,16 +70,16 @@ func (req createChannelReq) validate() error {
 type updateChannelReq struct {
 	key     string
 	id      string
-	channel clients.Channel
+	channel things.Channel
 }
 
 func (req updateChannelReq) validate() error {
 	if req.key == "" {
-		return clients.ErrUnauthorizedAccess
+		return things.ErrUnauthorizedAccess
 	}
 
 	if !govalidator.IsUUID(req.id) {
-		return clients.ErrNotFound
+		return things.ErrNotFound
 	}
 
 	return nil
@@ -92,11 +92,11 @@ type viewResourceReq struct {
 
 func (req viewResourceReq) validate() error {
 	if req.key == "" {
-		return clients.ErrUnauthorizedAccess
+		return things.ErrUnauthorizedAccess
 	}
 
 	if !govalidator.IsUUID(req.id) {
-		return clients.ErrNotFound
+		return things.ErrNotFound
 	}
 
 	return nil
@@ -110,29 +110,29 @@ type listResourcesReq struct {
 
 func (req *listResourcesReq) validate() error {
 	if req.key == "" {
-		return clients.ErrUnauthorizedAccess
+		return things.ErrUnauthorizedAccess
 	}
 
 	if req.offset >= 0 && req.limit > 0 && req.limit <= maxLimitSize {
 		return nil
 	}
 
-	return clients.ErrMalformedEntity
+	return things.ErrMalformedEntity
 }
 
 type connectionReq struct {
-	key      string
-	chanID   string
-	clientID string
+	key     string
+	chanID  string
+	thingID string
 }
 
 func (req connectionReq) validate() error {
 	if req.key == "" {
-		return clients.ErrUnauthorizedAccess
+		return things.ErrUnauthorizedAccess
 	}
 
-	if !govalidator.IsUUID(req.chanID) || !govalidator.IsUUID(req.clientID) {
-		return clients.ErrNotFound
+	if !govalidator.IsUUID(req.chanID) || !govalidator.IsUUID(req.thingID) {
+		return things.ErrNotFound
 	}
 
 	return nil
