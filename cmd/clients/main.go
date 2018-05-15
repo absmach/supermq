@@ -16,7 +16,6 @@ import (
 	grpcapi "github.com/mainflux/mainflux/clients/api/grpc"
 	httpapi "github.com/mainflux/mainflux/clients/api/http"
 	"github.com/mainflux/mainflux/clients/bcrypt"
-	"github.com/mainflux/mainflux/clients/jwt"
 	"github.com/mainflux/mainflux/clients/postgres"
 	log "github.com/mainflux/mainflux/logger"
 	usersapi "github.com/mainflux/mainflux/users/api/grpc"
@@ -121,7 +120,7 @@ func newService(conn *grpc.ClientConn, db *sql.DB, secret string, logger log.Log
 	clientsRepo := postgres.NewClientRepository(db, logger)
 	channelsRepo := postgres.NewChannelRepository(db, logger)
 	hasher := bcrypt.New()
-	idp := jwt.New(secret)
+	idp := postgres.NewIdentityProvider(db, logger)
 
 	svc := clients.New(users, clientsRepo, channelsRepo, hasher, idp)
 	svc = api.LoggingMiddleware(svc, logger)

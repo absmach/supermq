@@ -38,7 +38,7 @@ func migrateDB(db *sql.DB) error {
 						owner   VARCHAR(254),
 						type    VARCHAR(10) NOT NULL,
 						name    TEXT,
-						key     TEXT,
+						key     CHAR(36) UNIQUE NOT NULL,
 						payload TEXT,
 						PRIMARY KEY (id, owner)
 					)`,

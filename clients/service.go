@@ -99,165 +99,165 @@ func New(users mainflux.UsersServiceClient, clients ClientRepository, channels C
 	}
 }
 
-func (ms *clientsService) AddClient(key string, client Client) (string, error) {
+func (cs *clientsService) AddClient(key string, client Client) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &mainflux.Token{Value: key})
+	res, err := cs.users.Identify(ctx, &mainflux.Token{Value: key})
 	if err != nil {
 		return "", ErrUnauthorizedAccess
 	}
 
-	client.ID = ms.clients.ID()
+	client.ID = cs.clients.ID()
 	client.Owner = res.GetValue()
-	client.Key, _ = ms.idp.PermanentKey(client.ID)
+	client.Key = cs.idp.Key()
 
-	return client.ID, ms.clients.Save(client)
+	return client.ID, cs.clients.Save(client)
 }
 
-func (ms *clientsService) UpdateClient(key string, client Client) error {
+func (cs *clientsService) UpdateClient(key string, client Client) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &mainflux.Token{Value: key})
+	res, err := cs.users.Identify(ctx, &mainflux.Token{Value: key})
 	if err != nil {
 		return ErrUnauthorizedAccess
 	}
 
 	client.Owner = res.GetValue()
 
-	return ms.clients.Update(client)
+	return cs.clients.Update(client)
 }
 
-func (ms *clientsService) ViewClient(key, id string) (Client, error) {
+func (cs *clientsService) ViewClient(key, id string) (Client, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &mainflux.Token{Value: key})
+	res, err := cs.users.Identify(ctx, &mainflux.Token{Value: key})
 	if err != nil {
 		return Client{}, ErrUnauthorizedAccess
 	}
 
-	return ms.clients.One(res.GetValue(), id)
+	return cs.clients.One(res.GetValue(), id)
 }
 
-func (ms *clientsService) ListClients(key string, offset, limit int) ([]Client, error) {
+func (cs *clientsService) ListClients(key string, offset, limit int) ([]Client, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &mainflux.Token{Value: key})
+	res, err := cs.users.Identify(ctx, &mainflux.Token{Value: key})
 	if err != nil {
 		return nil, ErrUnauthorizedAccess
 	}
 
-	return ms.clients.All(res.GetValue(), offset, limit), nil
+	return cs.clients.All(res.GetValue(), offset, limit), nil
 }
 
-func (ms *clientsService) RemoveClient(key, id string) error {
+func (cs *clientsService) RemoveClient(key, id string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &mainflux.Token{Value: key})
+	res, err := cs.users.Identify(ctx, &mainflux.Token{Value: key})
 	if err != nil {
 		return ErrUnauthorizedAccess
 	}
 
-	return ms.clients.Remove(res.GetValue(), id)
+	return cs.clients.Remove(res.GetValue(), id)
 }
 
-func (ms *clientsService) CreateChannel(key string, channel Channel) (string, error) {
+func (cs *clientsService) CreateChannel(key string, channel Channel) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &mainflux.Token{Value: key})
+	res, err := cs.users.Identify(ctx, &mainflux.Token{Value: key})
 	if err != nil {
 		return "", ErrUnauthorizedAccess
 	}
 
 	channel.Owner = res.GetValue()
-	return ms.channels.Save(channel)
+	return cs.channels.Save(channel)
 }
 
-func (ms *clientsService) UpdateChannel(key string, channel Channel) error {
+func (cs *clientsService) UpdateChannel(key string, channel Channel) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &mainflux.Token{Value: key})
+	res, err := cs.users.Identify(ctx, &mainflux.Token{Value: key})
 	if err != nil {
 		return ErrUnauthorizedAccess
 	}
 
 	channel.Owner = res.GetValue()
-	return ms.channels.Update(channel)
+	return cs.channels.Update(channel)
 }
 
-func (ms *clientsService) ViewChannel(key, id string) (Channel, error) {
+func (cs *clientsService) ViewChannel(key, id string) (Channel, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &mainflux.Token{Value: key})
+	res, err := cs.users.Identify(ctx, &mainflux.Token{Value: key})
 	if err != nil {
 		return Channel{}, ErrUnauthorizedAccess
 	}
 
-	return ms.channels.One(res.GetValue(), id)
+	return cs.channels.One(res.GetValue(), id)
 }
 
-func (ms *clientsService) ListChannels(key string, offset, limit int) ([]Channel, error) {
+func (cs *clientsService) ListChannels(key string, offset, limit int) ([]Channel, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &mainflux.Token{Value: key})
+	res, err := cs.users.Identify(ctx, &mainflux.Token{Value: key})
 	if err != nil {
 		return nil, ErrUnauthorizedAccess
 	}
 
-	return ms.channels.All(res.GetValue(), offset, limit), nil
+	return cs.channels.All(res.GetValue(), offset, limit), nil
 }
 
-func (ms *clientsService) RemoveChannel(key, id string) error {
+func (cs *clientsService) RemoveChannel(key, id string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &mainflux.Token{Value: key})
+	res, err := cs.users.Identify(ctx, &mainflux.Token{Value: key})
 	if err != nil {
 		return ErrUnauthorizedAccess
 	}
 
-	return ms.channels.Remove(res.GetValue(), id)
+	return cs.channels.Remove(res.GetValue(), id)
 }
 
-func (ms *clientsService) Connect(key, chanID, clientID string) error {
+func (cs *clientsService) Connect(key, chanID, clientID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &mainflux.Token{Value: key})
+	res, err := cs.users.Identify(ctx, &mainflux.Token{Value: key})
 	if err != nil {
 		return ErrUnauthorizedAccess
 	}
 
-	return ms.channels.Connect(res.GetValue(), chanID, clientID)
+	return cs.channels.Connect(res.GetValue(), chanID, clientID)
 }
 
-func (ms *clientsService) Disconnect(key, chanID, clientID string) error {
+func (cs *clientsService) Disconnect(key, chanID, clientID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	res, err := ms.users.Identify(ctx, &mainflux.Token{Value: key})
+	res, err := cs.users.Identify(ctx, &mainflux.Token{Value: key})
 	if err != nil {
 		return ErrUnauthorizedAccess
 	}
 
-	return ms.channels.Disconnect(res.GetValue(), chanID, clientID)
+	return cs.channels.Disconnect(res.GetValue(), chanID, clientID)
 }
 
-func (ms *clientsService) CanAccess(key, channel string) (string, error) {
-	client, err := ms.idp.Identity(key)
+func (cs *clientsService) CanAccess(key, channel string) (string, error) {
+	client, err := cs.idp.Identity(key)
 	if err != nil {
 		return "", err
 	}
 
-	if !ms.channels.HasClient(channel, client) {
+	if !cs.channels.HasClient(channel, client) {
 		return "", ErrUnauthorizedAccess
 	}
 
