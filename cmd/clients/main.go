@@ -120,9 +120,8 @@ func newService(conn *grpc.ClientConn, db *sql.DB, secret string, logger log.Log
 	clientsRepo := postgres.NewClientRepository(db, logger)
 	channelsRepo := postgres.NewChannelRepository(db, logger)
 	hasher := bcrypt.New()
-	idp := postgres.NewIdentityProvider(db, logger)
 
-	svc := clients.New(users, clientsRepo, channelsRepo, hasher, idp)
+	svc := clients.New(users, clientsRepo, channelsRepo, hasher)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,

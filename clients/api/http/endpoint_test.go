@@ -59,9 +59,8 @@ func newService(tokens map[string]string) clients.Service {
 	clientsRepo := mocks.NewClientRepository()
 	channelsRepo := mocks.NewChannelRepository(clientsRepo)
 	hasher := mocks.NewHasher()
-	idp := mocks.NewIdentityProvider()
 
-	return clients.New(users, clientsRepo, channelsRepo, hasher, idp)
+	return clients.New(users, clientsRepo, channelsRepo, hasher)
 }
 
 func newServer(svc clients.Service) *httptest.Server {
@@ -252,6 +251,7 @@ func TestListClients(t *testing.T) {
 		{"get a list of clients with invalid number of params", token, http.StatusBadRequest, fmt.Sprintf("%s%s", clientURL, "?offset=4&limit=4&limit=5&offset=5"), nil},
 		{"get a list of clients with invalid offset", token, http.StatusBadRequest, fmt.Sprintf("%s%s", clientURL, "?offset=e&limit=5"), nil},
 		{"get a list of clients with invalid limit", token, http.StatusBadRequest, fmt.Sprintf("%s%s", clientURL, "?offset=5&limit=e"), nil},
+		{"get an empty list of clients", noClientsToken, http.StatusOK, fmt.Sprintf("%s?offset=%d&limit=%d", clientURL, 0, 5), []clients.Client{}},
 	}
 
 	for _, tc := range cases {

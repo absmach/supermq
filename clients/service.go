@@ -85,17 +85,15 @@ type clientsService struct {
 	clients  ClientRepository
 	channels ChannelRepository
 	hasher   Hasher
-	idp      IdentityProvider
 }
 
 // New instantiates the clients service implementation.
-func New(users mainflux.UsersServiceClient, clients ClientRepository, channels ChannelRepository, hasher Hasher, idp IdentityProvider) Service {
+func New(users mainflux.UsersServiceClient, clients ClientRepository, channels ChannelRepository, hasher Hasher) Service {
 	return &clientsService{
 		users:    users,
 		clients:  clients,
 		channels: channels,
 		hasher:   hasher,
-		idp:      idp,
 	}
 }
 
@@ -110,7 +108,7 @@ func (cs *clientsService) AddClient(key string, client Client) (string, error) {
 
 	client.ID = cs.clients.ID()
 	client.Owner = res.GetValue()
-	client.Key = cs.idp.Key()
+	client.Key = cs.clients.Key()
 
 	return client.ID, cs.clients.Save(client)
 }
@@ -252,7 +250,7 @@ func (cs *clientsService) Disconnect(key, chanID, clientID string) error {
 }
 
 func (cs *clientsService) CanAccess(key, channel string) (string, error) {
-	client, err := cs.idp.Identity(key)
+	client, err := cs.clients.Identity(key)
 	if err != nil {
 		return "", err
 	}

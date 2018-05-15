@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/mainflux/mainflux/clients"
-	"github.com/mainflux/mainflux/clients/mocks"
 	"github.com/mainflux/mainflux/clients/postgres"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,12 +12,11 @@ import (
 func TestClientSave(t *testing.T) {
 	email := "client-save@example.com"
 
-	idp := mocks.NewIdentityProvider()
 	clientRepo := postgres.NewClientRepository(db, testLog)
 	client := clients.Client{
 		ID:    clientRepo.ID(),
 		Owner: email,
-		Key:   idp.Key(),
+		Key:   clientRepo.Key(),
 	}
 
 	hasErr := clientRepo.Save(client) != nil
@@ -28,13 +26,12 @@ func TestClientSave(t *testing.T) {
 func TestClientUpdate(t *testing.T) {
 	email := "client-update@example.com"
 
-	idp := mocks.NewIdentityProvider()
 	clientRepo := postgres.NewClientRepository(db, testLog)
 
 	c := clients.Client{
 		ID:    clientRepo.ID(),
 		Owner: email,
-		Key:   idp.Key(),
+		Key:   clientRepo.Key(),
 	}
 
 	clientRepo.Save(c)
@@ -57,13 +54,12 @@ func TestClientUpdate(t *testing.T) {
 func TestSingleClientRetrieval(t *testing.T) {
 	email := "client-single-retrieval@example.com"
 
-	idp := mocks.NewIdentityProvider()
 	clientRepo := postgres.NewClientRepository(db, testLog)
 
 	c := clients.Client{
 		ID:    clientRepo.ID(),
 		Owner: email,
-		Key:   idp.Key(),
+		Key:   clientRepo.Key(),
 	}
 
 	clientRepo.Save(c)
@@ -87,7 +83,6 @@ func TestSingleClientRetrieval(t *testing.T) {
 func TestMultiClientRetrieval(t *testing.T) {
 	email := "client-multi-retrieval@example.com"
 
-	idp := mocks.NewIdentityProvider()
 	clientRepo := postgres.NewClientRepository(db, testLog)
 
 	n := 10
@@ -96,7 +91,7 @@ func TestMultiClientRetrieval(t *testing.T) {
 		c := clients.Client{
 			ID:    clientRepo.ID(),
 			Owner: email,
-			Key:   idp.Key(),
+			Key:   clientRepo.Key(),
 		}
 
 		clientRepo.Save(c)
@@ -139,5 +134,34 @@ func TestClientRemoval(t *testing.T) {
 		if _, err := clientRepo.One(email, client.ID); err != clients.ErrNotFound {
 			t.Fatalf("#%d: expected %s got %s", i, clients.ErrNotFound, err)
 		}
+	}
+}
+
+func TestIdentity(t *testing.T) {
+	email := "identity-client@example.com"
+
+	clientRepo := postgres.NewClientRepository(db, testLog)
+
+	c := clients.Client{
+		ID:    clientRepo.ID(),
+		Owner: email,
+		Key:   clientRepo.Key(),
+	}
+
+	clientRepo.Save(c)
+
+	cases := map[string]struct {
+		key string
+		id  string
+		err error
+	}{
+		"identify existing user":     {c.Key, c.ID, nil},
+		"identify non-existent user": {"invalid-key", "", clients.ErrUnauthorizedAccess},
+	}
+
+	for desc, tc := range cases {
+		id, err := clientRepo.Identity(tc.key)
+		assert.Equal(t, tc.id, id, fmt.Sprintf("%s: expected %s got %s", desc, tc.id, id))
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s", desc, tc.err, err))
 	}
 }

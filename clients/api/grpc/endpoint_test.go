@@ -34,9 +34,8 @@ func newService(tokens map[string]string) clients.Service {
 	clientsRepo := mocks.NewClientRepository()
 	channelsRepo := mocks.NewChannelRepository(clientsRepo)
 	hasher := mocks.NewHasher()
-	idp := mocks.NewIdentityProvider()
 
-	return clients.New(users, clientsRepo, channelsRepo, hasher, idp)
+	return clients.New(users, clientsRepo, channelsRepo, hasher)
 }
 
 func startGRPCServer(svc clients.Service, port int) {

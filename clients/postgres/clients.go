@@ -27,6 +27,10 @@ func (cr clientRepository) ID() string {
 	return uuid.NewV4().String()
 }
 
+func (cr clientRepository) Key() string {
+	return uuid.NewV4().String()
+}
+
 func (cr clientRepository) Save(client clients.Client) error {
 	q := `INSERT INTO clients (id, owner, type, name, key, payload) VALUES ($1, $2, $3, $4, $5, $6)`
 	_, err := cr.db.Exec(q, client.ID, client.Owner, client.Type, client.Name, client.Key, client.Payload)
@@ -98,4 +102,15 @@ func (cr clientRepository) Remove(owner, id string) error {
 	q := `DELETE FROM clients WHERE id = $1 AND owner = $2`
 	cr.db.Exec(q, id, owner)
 	return nil
+}
+
+func (cr clientRepository) Identity(key string) (string, error) {
+	q := `SELECT id FROM clients WHERE key = $1`
+
+	var id string
+	if err := cr.db.QueryRow(q, key).Scan(&id); err != nil {
+		return "", clients.ErrUnauthorizedAccess
+	}
+
+	return id, nil
 }

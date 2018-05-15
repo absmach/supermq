@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/mainflux/mainflux/clients"
+	uuid "github.com/satori/go.uuid"
 )
 
 var _ clients.ClientRepository = (*clientRepositoryMock)(nil)
@@ -31,6 +32,10 @@ func (crm *clientRepositoryMock) ID() string {
 
 	crm.counter++
 	return fmt.Sprintf("%s%012d", cliID, crm.counter)
+}
+
+func (crm *clientRepositoryMock) Key() string {
+	return uuid.NewV4().String()
 }
 
 func (crm *clientRepositoryMock) Save(client clients.Client) error {
@@ -91,4 +96,11 @@ func (crm *clientRepositoryMock) All(owner string, offset, limit int) []clients.
 func (crm *clientRepositoryMock) Remove(owner, id string) error {
 	delete(crm.clients, key(owner, id))
 	return nil
+}
+
+func (crm *clientRepositoryMock) Identity(key string) (string, error) {
+	if key == "" {
+		return "", clients.ErrUnauthorizedAccess
+	}
+	return key, nil
 }

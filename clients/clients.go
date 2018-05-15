@@ -32,6 +32,9 @@ type ClientRepository interface {
 	// ID generates new resource identifier.
 	ID() string
 
+	// Key generates new client token.
+	Key() string
+
 	// Save persists the client. Successful operation is indicated by non-nil
 	// error response.
 	Save(Client) error
@@ -50,4 +53,7 @@ type ClientRepository interface {
 	// Remove removes the client having the provided identifier, that is owned
 	// by the specified user.
 	Remove(string, string) error
+
+	// Identity extracts entity identifier given its secret key.
+	Identity(key string) (string, error)
 }
