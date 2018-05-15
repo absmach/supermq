@@ -253,10 +253,10 @@ func (ts *thingsService) Disconnect(key, chanID, thingID string) error {
 }
 
 func (ts *thingsService) CanAccess(key, channel string) (string, error) {
-	if !ts.channels.HasThing(channel, key) {
+	thingID, err := ts.channels.HasThing(channel, key)
+	if err != nil {
 		return "", ErrUnauthorizedAccess
 	}
 
-	// TODO: return thing's ID, not its access key
-	return key, nil
+	return thingID, nil
 }

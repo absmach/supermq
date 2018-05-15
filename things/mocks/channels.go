@@ -104,36 +104,38 @@ func (crm *channelRepositoryMock) Disconnect(owner, chanID, thingID string) erro
 		return err
 	}
 
-	if !crm.HasThing(chanID, thingID) {
-		return things.ErrNotFound
-	}
+	for _, t := range channel.Things {
+		if t.ID == thingID {
+			connected := make([]things.Thing, len(channel.Things)-1)
+			for _, thing := range channel.Things {
+				if thing.ID != thingID {
+					connected = append(connected, thing)
+				}
+			}
 
-	connected := make([]things.Thing, len(channel.Things)-1)
-	for _, thing := range channel.Things {
-		if thing.ID != thingID {
-			connected = append(connected, thing)
+			channel.Things = connected
+			return crm.Update(channel)
 		}
 	}
 
-	channel.Things = connected
-	return crm.Update(channel)
+	return things.ErrNotFound
 }
 
-func (crm *channelRepositoryMock) HasThing(channel, thing string) bool {
+func (crm *channelRepositoryMock) HasThing(chanID, key string) (string, error) {
 	// This obscure way to examine map keys is enforced by the key structure
 	// itself (see mocks/commons.go).
-	suffix := fmt.Sprintf("-%s", channel)
+	suffix := fmt.Sprintf("-%s", chanID)
 
 	for k, v := range crm.channels {
 		if strings.HasSuffix(k, suffix) {
-			for _, c := range v.Things {
-				if c.ID == thing {
-					return true
+			for _, t := range v.Things {
+				if t.Key == key {
+					return t.ID, nil
 				}
 			}
 			break
 		}
 	}
 
-	return false
+	return "", things.ErrNotFound
 }

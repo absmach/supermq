@@ -165,12 +165,25 @@ func (cr channelRepository) Disconnect(owner, chanID, thingID string) error {
 	return nil
 }
 
-func (cr channelRepository) HasThing(chanID, thingID string) bool {
-	q := "SELECT EXISTS (SELECT 1 FROM connections WHERE channel_id = $1 AND thing_id = $2);"
+func (cr channelRepository) HasThing(chanID, key string) (string, error) {
+	var thingID string
 
+	q := `SELECT id FROM things WHERE key = $1`
+	if err := cr.db.QueryRow(q, key).Scan(&thingID); err != nil {
+		cr.log.Error(fmt.Sprintf("Failed to obtain thing's ID due to %s", err))
+		return "", err
+	}
+
+	q = `SELECT EXISTS (SELECT 1 FROM connections WHERE channel_id = $1 AND thing_id = $2);`
 	exists := false
 	if err := cr.db.QueryRow(q, chanID, thingID).Scan(&exists); err != nil {
 		cr.log.Error(fmt.Sprintf("Failed to check thing existence due to %s", err))
+		return "", err
 	}
-	return exists
+
+	if !exists {
+		return "", things.ErrUnauthorizedAccess
+	}
+
+	return thingID, nil
 }

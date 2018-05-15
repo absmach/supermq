@@ -5,14 +5,14 @@ import (
 	"testing"
 
 	"github.com/mainflux/mainflux/things"
-	"github.com/mainflux/mainflux/things/mocks"
 	"github.com/mainflux/mainflux/things/postgres"
+	"github.com/mainflux/mainflux/things/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestThingSave(t *testing.T) {
 	email := "thing-save@example.com"
-	idp := mocks.NewIdentityProvider()
+	idp := uuid.New()
 	thingRepo := postgres.NewThingRepository(db, testLog)
 	thing := things.Thing{
 		ID:    idp.ID(),
@@ -28,7 +28,7 @@ func TestThingSave(t *testing.T) {
 
 func TestThingUpdate(t *testing.T) {
 	email := "thing-update@example.com"
-	idp := mocks.NewIdentityProvider()
+	idp := uuid.New()
 	thingRepo := postgres.NewThingRepository(db, testLog)
 
 	thing := things.Thing{
@@ -56,7 +56,7 @@ func TestThingUpdate(t *testing.T) {
 
 func TestSingleThingRetrieval(t *testing.T) {
 	email := "thing-single-retrieval@example.com"
-	idp := mocks.NewIdentityProvider()
+	idp := uuid.New()
 	thingRepo := postgres.NewThingRepository(db, testLog)
 
 	thing := things.Thing{
@@ -85,7 +85,7 @@ func TestSingleThingRetrieval(t *testing.T) {
 
 func TestMultiThingRetrieval(t *testing.T) {
 	email := "thing-multi-retrieval@example.com"
-	idp := mocks.NewIdentityProvider()
+	idp := uuid.New()
 	thingRepo := postgres.NewThingRepository(db, testLog)
 
 	n := 10
@@ -119,7 +119,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 
 func TestThingRemoval(t *testing.T) {
 	email := "thing-removal@example.com"
-	idp := mocks.NewIdentityProvider()
+	idp := uuid.New()
 	thingRepo := postgres.NewThingRepository(db, testLog)
 	thing := things.Thing{
 		ID:    idp.ID(),
