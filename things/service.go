@@ -108,7 +108,7 @@ func (ms *thingsService) AddThing(key string, thing Thing) (string, error) {
 
 	thing.ID = ms.things.ID()
 	thing.Owner = res.GetValue()
-	thing.Key, _ = ms.idp.PermanentKey(thing.ID)
+	thing.Key = ms.idp.ID()
 
 	return thing.ID, ms.things.Save(thing)
 }
@@ -250,14 +250,10 @@ func (ms *thingsService) Disconnect(key, chanID, thingID string) error {
 }
 
 func (ms *thingsService) CanAccess(key, channel string) (string, error) {
-	thing, err := ms.idp.Identity(key)
-	if err != nil {
-		return "", err
-	}
-
-	if !ms.channels.HasThing(channel, thing) {
+	if !ms.channels.HasThing(channel, key) {
 		return "", ErrUnauthorizedAccess
 	}
 
-	return thing, nil
+	// TODO: return thing's ID, not its access key
+	return key, nil
 }

@@ -8,20 +8,9 @@ var _ things.IdentityProvider = (*identityProviderMock)(nil)
 
 type identityProviderMock struct{}
 
-func (idp *identityProviderMock) TemporaryKey(id string) (string, error) {
-	if id == "" {
-		return "", things.ErrUnauthorizedAccess
-	}
-
-	return id, nil
-}
-
-func (idp *identityProviderMock) PermanentKey(id string) (string, error) {
-	return idp.TemporaryKey(id)
-}
-
-func (idp *identityProviderMock) Identity(key string) (string, error) {
-	return idp.TemporaryKey(key)
+func (idp *identityProviderMock) ID() string {
+	// TODO: prepare mock for usage in tests
+	return ""
 }
 
 // NewIdentityProvider creates "mirror" identity provider, i.e. generated
