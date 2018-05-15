@@ -1,5 +1,5 @@
-// Package jwt provides a JWT identity provider.
-package jwt
+// Package uuid provides a UUID identity provider.
+package uuid
 
 import (
 	"github.com/mainflux/mainflux/things"
