@@ -7,15 +7,18 @@ import (
 	"os/signal"
 	"syscall"
 
+	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/gogo/protobuf/proto"
 	client "github.com/influxdata/influxdb/client/v2"
 	"github.com/mainflux/mainflux"
 	influxdb "github.com/mainflux/mainflux/influxdb"
 	log "github.com/mainflux/mainflux/logger"
 	nats "github.com/nats-io/go-nats"
+	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
 const (
+	normalized   = "normalized"
 	defNatsURL   = nats.DefaultURL
 	defPort      = "8180"
 	defPointName = "messages"
@@ -46,6 +49,21 @@ type config struct {
 	DBPass    string
 }
 
+func handleMsg(logger log.Logger, w influxdb.Writer) nats.MsgHandler {
+	return func(m *nats.Msg) {
+		msg := &mainflux.Message{}
+
+		if err := proto.Unmarshal(m.Data, msg); err != nil {
+			logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
+		}
+
+		if err := w.Save(*msg); err != nil {
+			logger.Warn(fmt.Sprintf("InfluxDB Writer failed to save message: %s", err))
+			return
+		}
+	}
+}
+
 func main() {
 	cfg := config{
 		NatsURL:   mainflux.Env(envNatsURL, defNatsURL),
@@ -59,8 +77,8 @@ func main() {
 	}
 
 	logger := log.New(os.Stdout)
-
 	nc, err := nats.Connect(cfg.NatsURL)
+
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
 		os.Exit(1)
@@ -93,25 +111,31 @@ func main() {
 		return
 	}
 
-	nc.Subscribe("normalized", handleMsg(logger, writer))
-	// normalizer.Subscribe(nc, logger, counter, latency)
+	defer writer.Close()
+
+	writer = influxdb.MetricsMiddleware(
+		writer,
+		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+			Namespace: "influxdb",
+			Subsystem: "db_client",
+			Name:      "request_count",
+			Help:      "Number of database inserts.",
+		}, []string{"method"}),
+		kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+			Namespace: "influxdb",
+			Subsystem: "db_client",
+			Name:      "request_latency_microseconds",
+			Help:      "Total duration of inserts in microseconds.",
+		}, []string{"method"}),
+	)
+
+	writer = influxdb.LoggingMiddleware(writer, logger)
+
+	if _, err := nc.Subscribe(normalized, handleMsg(logger, writer)); err != nil {
+		logger.Error(fmt.Sprintf("Failed to subscribe to NATS: %s", err.Error()))
+		return
+	}
 
 	err = <-errs
 	logger.Error(fmt.Sprintf("Influxdb writer service terminated: %s", err))
-}
-
-func handleMsg(logger log.Logger, w influxdb.Writer) nats.MsgHandler {
-
-	return func(m *nats.Msg) {
-		msg := &mainflux.Message{}
-
-		if err := proto.Unmarshal(m.Data, msg); err != nil {
-			logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
-		}
-
-		if err := w.Save(*msg); err != nil {
-			logger.Warn(fmt.Sprintf("InfluxDB Writer failed to save message: %s", err))
-			return
-		}
-	}
 }

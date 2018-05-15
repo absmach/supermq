@@ -11,16 +11,17 @@ import (
 type metricsMiddleware struct {
 	counter metrics.Counter
 	latency metrics.Histogram
-	ef      eventFlow
+	w       Writer
 }
 
 var _ Writer = (*metricsMiddleware)(nil)
 
-func newMetricsMiddleware(ef eventFlow, counter metrics.Counter, latency metrics.Histogram) *metricsMiddleware {
+// MetricsMiddleware instruments writer by tracking request count and latency.
+func MetricsMiddleware(w Writer, counter metrics.Counter, latency metrics.Histogram) Writer {
 	return &metricsMiddleware{
 		counter: counter,
 		latency: latency,
-		ef:      ef,
+		w:       w,
 	}
 }
 
@@ -29,9 +30,9 @@ func (mm *metricsMiddleware) Save(msg mainflux.Message) error {
 		mm.counter.With("method", "Save").Add(1)
 		mm.latency.With("method", "Save").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return mm.ef.Save(msg)
+	return mm.w.Save(msg)
 }
 
 func (mm *metricsMiddleware) Close() error {
-	return mm.ef.Close()
+	return mm.w.Close()
 }
