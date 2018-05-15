@@ -1,6 +1,6 @@
 swagger: "2.0"
 info:
-  title: Mainflux clients service
+  title: Mainflux things service
   description: HTTP API for managing platform devices, applications and channels.
   version: "1.0.0"
 consumes:
@@ -8,29 +8,29 @@ consumes:
 produces:
   - "application/json"
 paths:
-  /clients:
+  /things:
     post:
-      summary: Adds new client
+      summary: Adds new thing
       description: |
-        Adds new client to the list of clients owned by user identified using
+        Adds new thing to the list of things owned by user identified using
         the provided access token.
       tags:
-        - clients
+        - things
       parameters:
         - $ref: "#/parameters/Authorization"
-        - name: client
-          description: JSON-formatted document describing the new client.
+        - name: thing
+          description: JSON-formatted document describing the new thing.
           in: body
           schema:
-            $ref: "#/definitions/ClientReq"
+            $ref: "#/definitions/ThingReq"
           required: true
       responses:
         201:
-          description: Client registered.
+          description: Thing registered.
           headers:
             Location:
               type: string
-              description: Created client's relative URL (i.e. /clients/{clientId}).
+              description: Created thing's relative URL (i.e. /things/{thingId}).
         400:
           description: Failed due to malformed JSON.
         403:
@@ -40,14 +40,14 @@ paths:
         500:
           $ref: "#/responses/ServiceError"
     get:
-      summary: Retrieves managed clients
+      summary: Retrieves managed things
       description: |
-        Retrieves a list of managed clients. Due to performance concerns, data
-        is retrieved in subsets. The API clients must ensure that the entire
+        Retrieves a list of managed things. Due to performance concerns, data
+        is retrieved in subsets. The API things must ensure that the entire
         dataset is consumed either by making subsequent requests, or by
         increasing the subset size of the initial request.
       tags:
-        - clients
+        - things
       parameters:
         - $ref: "#/parameters/Authorization"
         - $ref: "#/parameters/Limit"
@@ -59,78 +59,78 @@ paths:
             X-Count:
               type: integer
               description: |
-                Total number of managed clients. This value can be used to
-                implement the paging strategy on API clients.
+                Total number of managed things. This value can be used to
+                implement the paging strategy on API things.
           schema:
-            $ref: "#/definitions/ClientList"
+            $ref: "#/definitions/ThingList"
         400:
           description: Failed due to malformed query parameters.
         403:
           description: Missing or invalid access token provided.
         500:
           $ref: "#/responses/ServiceError"
-  /clients/{clientId}:
+  /things/{thingId}:
     get:
-      summary: Retrieves client info
+      summary: Retrieves thing info
       tags:
-        - clients
+        - things
       parameters:
         - $ref: "#/parameters/Authorization"
-        - $ref: "#/parameters/ClientId"
+        - $ref: "#/parameters/ThingId"
       responses:
         200:
           description: Data retrieved.
           schema:
-            $ref: "#/definitions/ClientRes"
+            $ref: "#/definitions/ThingRes"
         403:
           description: Missing or invalid access token provided.
         404:
-          description: Client does not exist.
+          description: Thing does not exist.
         500:
           $ref: "#/responses/ServiceError"
     put:
-      summary: Updates client info
+      summary: Updates thing info
       description: |
         Update is performed by replacing the current resource data with values
-        provided in a request payload. Note that the client's type and ID
+        provided in a request payload. Note that the thing's type and ID
         cannot be changed.
       tags:
-        - clients
+        - things
       parameters:
         - $ref: "#/parameters/Authorization"
-        - $ref: "#/parameters/ClientId"
-        - name: client
-          description: JSON-formatted document describing the updated client.
+        - $ref: "#/parameters/ThingId"
+        - name: thing
+          description: JSON-formatted document describing the updated thing.
           in: body
           schema:
-            $ref: "#/definitions/ClientReq"
+            $ref: "#/definitions/ThingReq"
           required: true
       responses:
         200:
-          description: Client updated.
+          description: Thing updated.
         400:
           description: Failed due to malformed JSON.
         403:
           description: Missing or invalid access token provided.
         404:
-          description: Client does not exist.
+          description: Thing does not exist.
         415:
           description: Missing or invalid content type.
         500:
           $ref: "#/responses/ServiceError"
     delete:
-      summary: Removes a client
+      summary: Removes a thing
       description: |
-        Removes a client. The service will ensure that the removed client is
+        Removes a thing. The service will ensure that the removed thing is
         disconnected from all of the existing channels.
       tags:
-        - clients
+        - things
       parameters:
         - $ref: "#/parameters/Authorization"
-        - $ref: "#/parameters/ClientId"
+        - $ref: "#/parameters/ThingId"
       responses:
         204:
-          description: Client removed.
+          description: Thing removed.
         403:
           description: Missing or invalid access token provided.
         500:
@@ -170,7 +170,7 @@ paths:
       summary: Retrieves managed channels
       description: |
         Retrieves a list of managed channels. Due to performance concerns, data
-        is retrieved in subsets. The API clients must ensure that the entire
+        is retrieved in subsets. The API things must ensure that the entire
         dataset is consumed either by making subsequent requests, or by
         increasing the subset size of the initial request.
       tags:
@@ -187,7 +187,7 @@ paths:
               type: integer
               description: |
                 Total number of managed channels. This value can be used to
-                implement the paging strategy on API clients.
+                implement the paging strategy on API things.
           schema:
             $ref: "#/definitions/ChannelList"
         400:
@@ -262,45 +262,45 @@ paths:
           description: Missing or invalid access token provided.
         500:
           $ref: "#/responses/ServiceError"
-  /channels/{chanId}/clients/{clientId}:
+  /channels/{chanId}/things/{thingId}:
     put:
-      summary: Connects the client to the channel
+      summary: Connects the thing to the channel
       description: |
-        Creates connection between a client and a channel. Once connected to
-        the channel, clients are allowed to exchange messages through it.
+        Creates connection between a thing and a channel. Once connected to
+        the channel, things are allowed to exchange messages through it.
       tags:
         - channels
       parameters:
         - $ref: "#/parameters/Authorization"
         - $ref: "#/parameters/ChanId"
-        - $ref: "#/parameters/ClientId"
+        - $ref: "#/parameters/ThingId"
       responses:
         200:
-          description: Client connected.
+          description: Thing connected.
         403:
           description: Missing or invalid access token provided.
         404:
-          description: Channel or client does not exist.
+          description: Channel or thing does not exist.
         500:
           $ref: "#/responses/ServiceError"
     delete:
-      summary: Disconnects the client from the channel
+      summary: Disconnects the thing from the channel
       description: |
-        Removes connection between a client and a channel. Once connection is
-        removed, client can no longer exchange messages through the channel.
+        Removes connection between a thing and a channel. Once connection is
+        removed, thing can no longer exchange messages through the channel.
       tags:
         - channels
       parameters:
         - $ref: "#/parameters/Authorization"
         - $ref: "#/parameters/ChanId"
-        - $ref: "#/parameters/ClientId"
+        - $ref: "#/parameters/ThingId"
       responses:
         204:
-          description: Client disconnected.
+          description: Thing disconnected.
         403:
           description: Missing or invalid access token provided.
         404:
-          description: Channel or client does not exist.
+          description: Channel or thing does not exist.
         500:
           $ref: "#/responses/ServiceError"
 parameters:
@@ -317,9 +317,9 @@ parameters:
     type: string
     format: uuid
     required: true
-  ClientId:
-    name: clientId
-    description: Unique client identifier.
+  ThingId:
+    name: thingId
+    description: Unique thing identifier.
     in: path
     type: string
     format: uuid
@@ -381,7 +381,7 @@ definitions:
         minItems: 0
         uniqueItems: true
         items:
-          $ref: '#/definitions/ClientRes'
+          $ref: '#/definitions/ThingRes'
     required:
       - id
   ChannelReq:
@@ -390,43 +390,43 @@ definitions:
       name:
         type: string
         description: Free-form channel name.
-  ClientList:
+  ThingList:
     type: object
     properties:
-      clients:
+      things:
         type: array
         minItems: 0
         uniqueItems: true
         items:
-          $ref: "#/definitions/ClientRes"
+          $ref: "#/definitions/ThingRes"
     required:
-      - clients
-  ClientRes:
+      - things
+  ThingRes:
     type: object
     properties:
       id:
         type: string
-        description: Unique client identifier generated by the service.
+        description: Unique thing identifier generated by the service.
       type:
         type: string
         enum:
           - app
           - device
-        description: Type of the client.
+        description: Type of the thing.
       name:
         type: string
-        description: Free-form client name.
+        description: Free-form thing name.
       key:
         type: string
         description: Auto-generated access key.
       payload:
         type: string
-        description: Arbitrary, string-encoded client's data.
+        description: Arbitrary, string-encoded thing's data.
     required:
       - id
       - type
       - key
-  ClientReq:
+  ThingReq:
     type: object
     properties:
       type:
@@ -434,12 +434,12 @@ definitions:
         enum:
           - app
           - device
-        description: Type of the client.
+        description: Type of the thing.
       name:
         type: string
-        description: Free-form client name.
+        description: Free-form thing name.
       payload:
         type: string
-        description: Arbitrary, string-encoded client's data.
+        description: Arbitrary, string-encoded thing's data.
     required:
       - type
