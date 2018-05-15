@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/mainflux/mainflux/clients"
+	"github.com/mainflux/mainflux/clients/mocks"
 	"github.com/mainflux/mainflux/clients/postgres"
 	"github.com/stretchr/testify/assert"
 )
@@ -151,10 +152,13 @@ func TestChannelConnect(t *testing.T) {
 func TestChannelDisconnect(t *testing.T) {
 	email := "channel-disconnect@example.com"
 
+	idp := mocks.NewIdentityProvider()
+
 	clientRepo := postgres.NewClientRepository(db, testLog)
 	client := clients.Client{
 		ID:    clientRepo.ID(),
 		Owner: email,
+		Key:   idp.Key(),
 	}
 	clientRepo.Save(client)
 
@@ -186,10 +190,13 @@ func TestChannelDisconnect(t *testing.T) {
 func TestChannelAccessCheck(t *testing.T) {
 	email := "channel-access-check@example.com"
 
+	idp := mocks.NewIdentityProvider()
+
 	clientRepo := postgres.NewClientRepository(db, testLog)
 	client := clients.Client{
 		ID:    clientRepo.ID(),
 		Owner: email,
+		Key:   idp.Key(),
 	}
 	clientRepo.Save(client)
 
