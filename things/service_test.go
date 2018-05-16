@@ -97,6 +97,7 @@ func TestListThings(t *testing.T) {
 	for i := 0; i < n; i++ {
 		svc.AddThing(token, thing)
 	}
+
 	cases := map[string]struct {
 		key    string
 		offset int
@@ -104,19 +105,20 @@ func TestListThings(t *testing.T) {
 		size   int
 		err    error
 	}{
-		"list things":                        {token, 0, 5, 5, nil},
-		"list things 5-10":                   {token, 5, 10, 5, nil},
-		"list last thing":                    {token, 9, 10, 1, nil},
-		"list empty response":                {token, 11, 10, 0, nil},
-		"list offset < 0":                    {token, -1, 10, 0, nil},
-		"list limit < 0":                     {token, 1, -10, 0, nil},
-		"list limit = 0":                     {token, 1, 0, 0, nil},
-		"list things with wrong credentials": {wrong, 0, 0, 0, things.ErrUnauthorizedAccess},
+		"list all things":             {token, 0, n, n, nil},
+		"list subset":                 {token, 1, 3, 3, nil},
+		"list half":                   {token, n / 2, n, n / 2, nil},
+		"list last thing":             {token, n - 1, n, 1, nil},
+		"list empty set":              {token, n + 1, n, 0, nil},
+		"list with negative offset":   {token, -1, n, 0, nil},
+		"list with negative limit":    {token, 1, -n, 0, nil},
+		"list with zero limit":        {token, 1, 0, 0, nil},
+		"list with wrong credentials": {wrong, 0, 0, 0, things.ErrUnauthorizedAccess},
 	}
 
 	for desc, tc := range cases {
-		cl, err := svc.ListThings(tc.key, tc.offset, tc.limit)
-		size := len(cl)
+		ts, err := svc.ListThings(tc.key, tc.offset, tc.limit)
+		size := len(ts)
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}

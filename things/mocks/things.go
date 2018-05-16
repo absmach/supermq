@@ -64,12 +64,20 @@ func (trm *thingRepositoryMock) All(owner string, offset, limit int) []things.Th
 		return things
 	}
 
-	// Since IDs start from 1, shift everything by one.
-	first := fmt.Sprintf("%s%012d", startID, offset+1)
-	last := fmt.Sprintf("%s%012d", startID, offset+limit+1)
+	// Since both ID and key are generated via the identity provider mock, all
+	// identifiers will be at "odd" positions. The following loop skips all
+	// values used for keys. Starting value of 1 indicates the first usable
+	// UUID produced by mocked identity provider.
+	skip := 1
+	for i := 0; i < offset; i++ {
+		skip += 2
+	}
+
+	first := fmt.Sprintf("%s%012d", startID, skip)
+	last := fmt.Sprintf("%s%012d", startID, skip+2*(limit-1))
 
 	for k, v := range trm.things {
-		if strings.HasPrefix(k, prefix) && v.ID >= first && v.ID < last {
+		if strings.HasPrefix(k, prefix) && v.ID >= first && v.ID <= last {
 			things = append(things, v)
 		}
 	}
