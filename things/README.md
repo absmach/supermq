@@ -22,7 +22,7 @@ default values.
 | MF_THINGS_DB_HOST     | Database host address                    | localhost      |
 | MF_THINGS_DB_PORT     | Database host port                       | 5432           |
 | MF_THINGS_DB_USER     | Database user                            | mainflux       |
-| MF_THINGS_DB_PASSWORD | Database password                        | mainflux       |
+| MF_THINGS_DB_PASS     | Database password                        | mainflux       |
 | MF_THINGS_DB          | Name of the database used by the service | things         |
 | MF_THINGS_HTTP_PORT   | Things service HTTP port                 | 8180           |
 | MF_THINGS_GRPC_PORT   | Things service gRPC port                 | 8181           |
