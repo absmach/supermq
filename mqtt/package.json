@@ -17,6 +17,7 @@
     "aedes-logging": "^1.0.1",
     "atob": "^2.0.3",
     "bunyan": "^1.5.1",
+    "grpc": "^1.11.3",
     "gulp-exit": "0.0.2",
     "gulp-jshint": "^1.12.0",
     "gulp-mocha": "^2.2.0",
