@@ -29,7 +29,7 @@ var (
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
 	// AddThing adds new thing to the user identified by the provided key.
-	AddThing(string, Thing) (string, error)
+	AddThing(string, Thing) (Thing, error)
 
 	// UpdateThing updates the thing identified by the provided ID, that
 	// belongs to the user identified by the provided key.
@@ -48,7 +48,7 @@ type Service interface {
 	RemoveThing(string, string) error
 
 	// CreateChannel adds new channel to the user identified by the provided key.
-	CreateChannel(string, Channel) (string, error)
+	CreateChannel(string, Channel) (Channel, error)
 
 	// UpdateChannel updates the channel identified by the provided ID, that
 	// belongs to the user identified by the provided key.
@@ -97,13 +97,13 @@ func New(users mainflux.UsersServiceClient, things ThingRepository, channels Cha
 	}
 }
 
-func (ts *thingsService) AddThing(key string, thing Thing) (string, error) {
+func (ts *thingsService) AddThing(key string, thing Thing) (Thing, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: key})
 	if err != nil {
-		return "", ErrUnauthorizedAccess
+		return Thing{}, ErrUnauthorizedAccess
 	}
 
 	// TODO: drop completely in a separate ticket
@@ -111,7 +111,11 @@ func (ts *thingsService) AddThing(key string, thing Thing) (string, error) {
 	thing.Owner = res.GetValue()
 	thing.Key = ts.idp.ID()
 
-	return ts.things.Save(thing)
+	if _, err := ts.things.Save(thing); err != nil {
+		return Thing{}, err
+	}
+
+	return thing, nil
 }
 
 func (ts *thingsService) UpdateThing(key string, thing Thing) error {
@@ -164,19 +168,24 @@ func (ts *thingsService) RemoveThing(key, id string) error {
 	return ts.things.Remove(res.GetValue(), id)
 }
 
-func (ts *thingsService) CreateChannel(key string, channel Channel) (string, error) {
+func (ts *thingsService) CreateChannel(key string, channel Channel) (Channel, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: key})
 	if err != nil {
-		return "", ErrUnauthorizedAccess
+		return Channel{}, ErrUnauthorizedAccess
 	}
 
 	// TODO: drop completely in a separate ticket
 	channel.ID = ts.idp.ID()
 	channel.Owner = res.GetValue()
-	return ts.channels.Save(channel)
+
+	if _, err := ts.channels.Save(channel); err != nil {
+		return Channel{}, err
+	}
+
+	return channel, nil
 }
 
 func (ts *thingsService) UpdateChannel(key string, channel Channel) error {

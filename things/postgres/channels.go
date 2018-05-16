@@ -94,7 +94,7 @@ func (cr channelRepository) One(owner, id string) (things.Channel, error) {
 }
 
 func (cr channelRepository) All(owner string, offset, limit int) []things.Channel {
-	q := `SELECT id, name FROM channels WHERE owner = $1 LIMIT $2 OFFSET $3`
+	q := `SELECT id, name FROM channels WHERE owner = $1 ORDER BY id LIMIT $2 OFFSET $3`
 	items := []things.Channel{}
 
 	rows, err := cr.db.Query(q, owner, limit, offset)

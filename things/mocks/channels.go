@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 
@@ -75,6 +76,10 @@ func (crm *channelRepositoryMock) All(owner string, offset, limit int) []things.
 			channels = append(channels, v)
 		}
 	}
+
+	sort.SliceStable(channels, func(i, j int) bool {
+		return channels[i].ID < channels[j].ID
+	})
 
 	return channels
 }

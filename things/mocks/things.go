@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 
@@ -81,6 +82,10 @@ func (trm *thingRepositoryMock) All(owner string, offset, limit int) []things.Th
 			things = append(things, v)
 		}
 	}
+
+	sort.SliceStable(things, func(i, j int) bool {
+		return things[i].ID < things[j].ID
+	})
 
 	return things
 }

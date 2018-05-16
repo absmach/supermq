@@ -71,7 +71,7 @@ func (tr thingRepository) One(owner, id string) (things.Thing, error) {
 }
 
 func (tr thingRepository) All(owner string, offset, limit int) []things.Thing {
-	q := `SELECT id, name, type, key, payload FROM things WHERE owner = $1 LIMIT $2 OFFSET $3`
+	q := `SELECT id, name, type, key, payload FROM things WHERE owner = $1 ORDER BY id LIMIT $2 OFFSET $3`
 	items := []things.Thing{}
 
 	rows, err := tr.db.Query(q, owner, limit, offset)
