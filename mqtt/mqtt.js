@@ -1,11 +1,3 @@
-/**
- * Copyright (c) Mainflux
- *
- * Mainflux server is licensed under an Apache license, version 2.0 license.
- * All rights not explicitly granted in the Apache license, version 2.0 are reserved.
- * See the included LICENSE file for more details.
- */
-
 'use strict';
 
 var http = require('http');
@@ -15,12 +7,15 @@ var aedes = require('aedes')();
 var logging = require('aedes-logging');
 var request = require('request');
 var util = require('util');
+var protobuf = require('protocol-buffers');
+var grpc = require('grpc');
+var bunyan = require('bunyan');
+
+var logger = bunyan.createLogger({name: "mqtt"})
 
 var config = require('./mqtt.config');
 var nats = require('nats').connect(config.nats_url);
 
-var protobuf = require('protocol-buffers');
-var grpc = require('grpc');
 var fs = require('fs');
 
 // pass a proto file as a buffer/string or pass a parsed protobuf-schema object
@@ -74,8 +69,6 @@ nats.subscribe('channel.*', function (msg) {
         payload: m.Payload,
         retain: false
     };
-    console.log("Received message from NATS");
-    console.log(packet);
 
     aedes.publish(packet);
 });
@@ -93,29 +86,24 @@ aedes.authorizePublish = function (client, packet, callback) {
         chanID: channel
     }, function (err, res) {
         if (!err) {
-            console.log('Publish authorized OK');
-
+            logger.info('authorized publish');
             /**
              * We must publish on NATS here, because on_publish() is also called
              * when we receive message from NATS from other adapters (in nats.subscribe()),
              * so we must avoid re-publishing on NATS what came from other adapters
              */
-            var msg = {
+            var rawMsg = message.RawMessage.encode({
                 Publisher: client.id,
                 Channel: channel,
                 Protocol: 'mqtt',
                 ContentType: packet.topic.split('/')[3],
                 Payload: packet.payload
-            };
-            var rawMsg = message.RawMessage.encode(msg);
-
-            console.log("msg:", msg);
-            console.log("packet:", util.inspect(packet, false, null));
+            });
 
             // Pub on NATS
             nats.publish('channel.' + channel, rawMsg);
         } else {
-            console.log('Publish not authorized');
+            logger.warn("unauthorized publish: %s", err.message);
             callback(4); // Bad username or password
         }
     });
@@ -131,10 +119,10 @@ aedes.authorizeSubscribe = function (client, packet, callback) {
         chanID: channel
     }, function (err, res) {
         if (!err) {
-            console.log('Subscribe authorized OK');
+            logger.info('authorized subscribe');
             callback(null, packet);
         } else {
-            console.log('Subscribe not authorized');
+            logger.warn('unauthorizerd subscribe: %s', err);
             callback(4, packet); // Bad username or password
         }
     });
@@ -151,15 +139,16 @@ aedes.authenticate = function (client, username, password, callback) {
  * Handlers
  */
 aedes.on('clientDisconnect', function (client) {
-    console.log('client disconnect', client.id);
+    logger.info('disconnect client %s', client.id);
     // Remove client password
     client.password = null;
+    
 });
 
 aedes.on('clientError', function (client, err) {
-  console.log('client error', client.id, err.message, err.stack);
+  logger.warn('client error: client: %s, error: %s, stack: %s', client.id, err.message, err.stack);
 });
 
 aedes.on('connectionError', function (client, err) {
-  console.log('client error', client, err.message, err.stack);
+  logger.warn('client error: client: %s, error: %s, stack: %s', client.id, err.message, err.stack);
 });
