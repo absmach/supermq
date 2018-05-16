@@ -10,13 +10,13 @@ import (
 
 const precision string = "ns"
 
-type eventFlow struct {
+type influxRepo struct {
 	database  string
 	pointName string
 	client    client.Client
 }
 
-var _ Writer = (*eventFlow)(nil)
+var _ Writer = (*influxRepo)(nil)
 
 type fields map[string]interface{}
 type tags map[string]string
@@ -54,12 +54,12 @@ func New(cfg client.HTTPConfig, database, pointName string) (Writer, error) {
 		return nil, err
 	}
 
-	return &eventFlow{database, pointName, c}, nil
+	return &influxRepo{database, pointName, c}, nil
 }
 
-func (ef *eventFlow) Save(msg mainflux.Message) error {
+func (repo *influxRepo) Save(msg mainflux.Message) error {
 	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
-		Database: ef.database,
+		Database: repo.database,
 	})
 
 	if err != nil {
@@ -67,18 +67,17 @@ func (ef *eventFlow) Save(msg mainflux.Message) error {
 	}
 
 	tags, fields := convertMsg(msg)
-	pt, err := client.NewPoint(ef.pointName, tags, fields, time.Now())
+	pt, err := client.NewPoint(repo.pointName, tags, fields, time.Now())
 
 	if err != nil {
 		return err
 	}
 
 	bp.AddPoint(pt)
-
-	if err := ef.client.Write(bp); err != nil {
+	if err := repo.client.Write(bp); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (ef *eventFlow) Close() error { return ef.client.Close() }
+func (repo *influxRepo) Close() error { return repo.client.Close() }

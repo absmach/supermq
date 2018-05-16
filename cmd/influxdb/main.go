@@ -18,7 +18,8 @@ import (
 )
 
 const (
-	normalized   = "normalized"
+	senML        = "out.senml"
+	prefix       = "http://"
 	defNatsURL   = nats.DefaultURL
 	defPort      = "8180"
 	defPointName = "messages"
@@ -55,6 +56,7 @@ func handleMsg(logger log.Logger, w influxdb.Writer) nats.MsgHandler {
 
 		if err := proto.Unmarshal(m.Data, msg); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
+			return
 		}
 
 		if err := w.Save(*msg); err != nil {
@@ -100,7 +102,7 @@ func main() {
 	}()
 
 	clientCfg := client.HTTPConfig{
-		Addr:     fmt.Sprintf("http://%s:%s", cfg.DBHost, cfg.DBPort),
+		Addr:     fmt.Sprintf("%s%s:%s", prefix, cfg.DBHost, cfg.DBPort),
 		Username: cfg.DBUser,
 		Password: cfg.DBPass,
 	}
@@ -131,7 +133,7 @@ func main() {
 
 	writer = influxdb.LoggingMiddleware(writer, logger)
 
-	if _, err := nc.Subscribe(normalized, handleMsg(logger, writer)); err != nil {
+	if _, err := nc.Subscribe(senML, handleMsg(logger, writer)); err != nil {
 		logger.Error(fmt.Sprintf("Failed to subscribe to NATS: %s", err.Error()))
 		return
 	}
