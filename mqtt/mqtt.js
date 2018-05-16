@@ -1,48 +1,27 @@
 'use strict';
 
-var http = require('http');
-var websocket = require('websocket-stream');
 var net = require('net');
 var aedes = require('aedes')();
 var logging = require('aedes-logging');
-var request = require('request');
-var util = require('util');
 var protobuf = require('protocol-buffers');
 var grpc = require('grpc');
+var fs = require('fs');
 var bunyan = require('bunyan');
-
-var logger = bunyan.createLogger({name: "mqtt"})
 
 var config = require('./mqtt.config');
 var nats = require('nats').connect(config.nats_url);
 
-var fs = require('fs');
-
 // pass a proto file as a buffer/string or pass a parsed protobuf-schema object
-var message = protobuf(fs.readFileSync('../message.proto'));
-var things = grpc.load("../internal.proto").mainflux;
-
-var thingsClient = new things.ThingsService(config.auth_url, grpc.credentials.createInsecure());
-
-var servers = [
-    startWs(),
-    startMqtt()
-];
+var logger = bunyan.createLogger({name: "mqtt"}),
+    message = protobuf(fs.readFileSync('../message.proto')),
+    thingsSchema = grpc.load("../internal.proto").mainflux,
+    things = new thingsSchema.ThingsService(config.auth_url, grpc.credentials.createInsecure()),
+    servers = [startMqtt()];
 
 logging({
     instance: aedes,
     servers: servers
 });
-
-/**
- * WebSocket
- */
-function startWs() {
-    var server = http.createServer();
-    websocket.createServer({server: server}, aedes.handle);
-    server.listen(config.ws_port);
-    return server;
-}
 
 /**
  * MQTT
@@ -81,7 +60,7 @@ aedes.authorizePublish = function (client, packet, callback) {
     // Topics are in the form `channels/<channel_id>/messages/senml-json`
     var channel = packet.topic.split('/')[1];
 
-    thingsClient.CanAccess({
+    things.CanAccess({
         token: client.password,
         chanID: channel
     }, function (err, res) {
@@ -114,7 +93,7 @@ aedes.authorizeSubscribe = function (client, packet, callback) {
     // Topics are in the form `channels/<channel_id>/messages/senml-json`
     var channel = packet.topic.split('/')[1];
     
-    thingsClient.canAccess({
+    things.canAccess({
         token: client.password,
         chanID: channel
     }, function (err, res) {
