@@ -1,12 +1,13 @@
 package influxdb_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/influxdata/influxdb/models"
 
 	client "github.com/influxdata/influxdb/client/v2"
 	"github.com/mainflux/mainflux"
@@ -63,25 +64,7 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-// queryDB convenience function to query the database
-func queryDB(cmd string) (res []client.Result, err error) {
-	q := client.Query{
-		Command:  cmd,
-		Database: testDB,
-	}
-	if response, err := cl.Query(q); err == nil {
-		if response.Error() != nil {
-			return res, response.Error()
-		}
-		res = response.Results
-	} else {
-		return res, err
-	}
-	return res, nil
-}
-
 func TestSave(t *testing.T) {
-
 	msg := mainflux.Message{
 		Channel:     "ch",
 		Publisher:   "pub",
@@ -98,15 +81,33 @@ func TestSave(t *testing.T) {
 		Link:        "link",
 	}
 
-	q := fmt.Sprintf("SELECT count(%s) FROM %s", "Value", "test..messages")
+	q := fmt.Sprintf("SELECT * FROM %s", "test..messages\n")
 
 	repo, err := influxdb.New(clientCfg, testDB, "messages")
-	assert.Nil(t, err, fmt.Sprintf("InfluxDB repo creation expected to succeed."))
+	assert.Nil(t, err, fmt.Sprintf("InfluxDB repo creation expected to succeed.\n"))
 	err = repo.Save(msg)
-	assert.Nil(t, err, fmt.Sprintf("Save operation expected to succeed."))
+	assert.Nil(t, err, fmt.Sprintf("Save operation expected to succeed.\n"))
 
-	res, err := queryDB(q)
-	assert.Nil(t, err)
-	count := res[0].Series[0].Values[0][1]
-	assert.Equal(t, json.Number("1"), count, fmt.Sprintf("Expected to have 1 value, found %s instead.\n", count))
+	row, err := queryDB(q)
+	assert.Nil(t, err, fmt.Sprintf("Querying InfluxDB to retrieve data count expected to succeed.\n"))
+	count := len(row)
+	assert.Equal(t, 1, count, fmt.Sprintf("Expected to have 1 value, found %d instead.\n", count))
+}
+
+// This is utility function to query the database.
+func queryDB(cmd string) ([]models.Row, error) {
+	q := client.Query{
+		Command:  cmd,
+		Database: testDB,
+	}
+	response, err := cl.Query(q)
+	if err != nil {
+		return nil, err
+	}
+	if response.Error() != nil {
+		return nil, response.Error()
+	}
+	// There is only one query, so only one result and
+	// all data are stored in the same series.
+	return response.Results[0].Series, nil
 }

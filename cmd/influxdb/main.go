@@ -79,8 +79,8 @@ func main() {
 	}
 
 	logger := log.New(os.Stdout)
-	nc, err := nats.Connect(cfg.NatsURL)
 
+	nc, err := nats.Connect(cfg.NatsURL)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
 		os.Exit(1)
@@ -112,7 +112,6 @@ func main() {
 		logger.Error(fmt.Sprintf("Failed to create InfluxDB writer: %s", err.Error()))
 		return
 	}
-
 	defer writer.Close()
 
 	writer = influxdb.MetricsMiddleware(

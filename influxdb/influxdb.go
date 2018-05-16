@@ -8,7 +8,7 @@ import (
 	"github.com/mainflux/mainflux"
 )
 
-const precision string = "ns"
+var _ Writer = (*influxRepo)(nil)
 
 type influxRepo struct {
 	database  string
@@ -16,13 +16,10 @@ type influxRepo struct {
 	client    client.Client
 }
 
-var _ Writer = (*influxRepo)(nil)
-
 type fields map[string]interface{}
 type tags map[string]string
 
 func convertMsg(msg mainflux.Message) (tags, fields) {
-
 	time := strconv.FormatFloat(msg.Time, 'f', -1, 64)
 	update := strconv.FormatFloat(msg.UpdateTime, 'f', -1, 64)
 	tags := map[string]string{
@@ -49,11 +46,9 @@ func convertMsg(msg mainflux.Message) (tags, fields) {
 // New returns new InfluxDB writer.
 func New(cfg client.HTTPConfig, database, pointName string) (Writer, error) {
 	c, err := client.NewHTTPClient(cfg)
-
 	if err != nil {
 		return nil, err
 	}
-
 	return &influxRepo{database, pointName, c}, nil
 }
 
@@ -61,14 +56,12 @@ func (repo *influxRepo) Save(msg mainflux.Message) error {
 	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
 		Database: repo.database,
 	})
-
 	if err != nil {
 		return err
 	}
 
 	tags, fields := convertMsg(msg)
 	pt, err := client.NewPoint(repo.pointName, tags, fields, time.Now())
-
 	if err != nil {
 		return err
 	}
