@@ -24,7 +24,7 @@ func canAccessEndpoint(svc things.Service) endpoint.Endpoint {
 func identifyEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(identifyReq)
-		id, err := svc.Identify(req.thingKey)
+		id, err := svc.Identify(req.key)
 		if err != nil {
 			return identityRes{id: "", err: err}, err
 		}

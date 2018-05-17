@@ -18,5 +18,5 @@ func (req accessReq) validate() error {
 }
 
 type identifyReq struct {
-	thingKey string
+	key string
 }

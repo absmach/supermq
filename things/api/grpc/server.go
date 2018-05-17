@@ -18,21 +18,22 @@ type grpcServer struct {
 
 // NewServer returns new ThingsServiceServer instance.
 func NewServer(svc things.Service) mainflux.ThingsServiceServer {
-	cah := kitgrpc.NewServer(
-		canAccessEndpoint(svc),
-		decodeCanAccessRequest,
-		encodeIdentityResponse,
-	)
-	ih := kitgrpc.NewServer(
-		identifyEndpoint(svc),
-		decodeIdentifyRequest,
-		encodeIdentityResponse,
-	)
-	return &grpcServer{canAccess: cah, identify: ih}
+	return &grpcServer{
+		canAccess: kitgrpc.NewServer(
+			canAccessEndpoint(svc),
+			decodeCanAccessRequest,
+			encodeIdentityResponse,
+		),
+		identify: kitgrpc.NewServer(
+			identifyEndpoint(svc),
+			decodeIdentifyRequest,
+			encodeIdentityResponse,
+		),
+	}
 }
 
-func (s *grpcServer) CanAccess(ctx context.Context, req *mainflux.AccessReq) (*mainflux.Identity, error) {
-	_, res, err := s.canAccess.ServeGRPC(ctx, req)
+func (gs *grpcServer) CanAccess(ctx context.Context, req *mainflux.AccessReq) (*mainflux.Identity, error) {
+	_, res, err := gs.canAccess.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, encodeError(err)
 	}
@@ -40,8 +41,8 @@ func (s *grpcServer) CanAccess(ctx context.Context, req *mainflux.AccessReq) (*m
 	return res.(*mainflux.Identity), nil
 }
 
-func (s *grpcServer) Identify(ctx context.Context, req *mainflux.Token) (*mainflux.Identity, error) {
-	_, res, err := s.identify.ServeGRPC(ctx, req)
+func (gs *grpcServer) Identify(ctx context.Context, req *mainflux.Token) (*mainflux.Identity, error) {
+	_, res, err := gs.identify.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, encodeError(err)
 	}

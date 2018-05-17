@@ -17,25 +17,24 @@ type grpcClient struct {
 
 // NewClient returns new gRPC client instance.
 func NewClient(conn *grpc.ClientConn) mainflux.ThingsServiceClient {
-	cae := kitgrpc.NewClient(
-		conn,
-		"mainflux.ThingsService",
-		"CanAccess",
-		encodeCanAccessRequest,
-		decodeIdentityResponse,
-		mainflux.Identity{},
-	).Endpoint()
-
-	ie := kitgrpc.NewClient(
-		conn,
-		"mainflux.ThingsService",
-		"Identify",
-		encodeIdentifyRequest,
-		decodeIdentityResponse,
-		mainflux.Identity{},
-	).Endpoint()
-
-	return &grpcClient{cae, ie}
+	return &grpcClient{
+		canAccess: kitgrpc.NewClient(
+			conn,
+			"mainflux.ThingsService",
+			"CanAccess",
+			encodeCanAccessRequest,
+			decodeIdentityResponse,
+			mainflux.Identity{},
+		).Endpoint(),
+		identify: kitgrpc.NewClient(
+			conn,
+			"mainflux.ThingsService",
+			"Identify",
+			encodeIdentifyRequest,
+			decodeIdentityResponse,
+			mainflux.Identity{},
+		).Endpoint(),
+	}
 }
 
 func (client grpcClient) CanAccess(ctx context.Context, req *mainflux.AccessReq, _ ...grpc.CallOption) (*mainflux.Identity, error) {
@@ -65,7 +64,7 @@ func encodeCanAccessRequest(_ context.Context, grpcReq interface{}) (interface{}
 
 func encodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(identifyReq)
-	return &mainflux.Token{Value: req.thingKey}, nil
+	return &mainflux.Token{Value: req.key}, nil
 }
 
 func decodeIdentityResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {

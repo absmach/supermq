@@ -84,7 +84,7 @@ func TestIdentify(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 	startGRPCServer(svc, port)
 
-	th, _ := svc.AddThing(token, thing)
+	sth, _ := svc.AddThing(token, thing)
 
 	usersAddr := fmt.Sprintf("localhost:%d", port)
 	conn, _ := grpc.Dial(usersAddr, grpc.WithInsecure())
@@ -97,7 +97,7 @@ func TestIdentify(t *testing.T) {
 		id   string
 		code codes.Code
 	}{
-		"identify existing thing":     {th.Key, th.ID, codes.OK},
+		"identify existing thing":     {sth.Key, sth.ID, codes.OK},
 		"identify non-existent thing": {wrong, "", codes.PermissionDenied},
 	}
 
