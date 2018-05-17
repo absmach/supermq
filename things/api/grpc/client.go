@@ -12,20 +12,30 @@ var _ mainflux.ThingsServiceClient = (*grpcClient)(nil)
 
 type grpcClient struct {
 	canAccess endpoint.Endpoint
+	identify  endpoint.Endpoint
 }
 
 // NewClient returns new gRPC client instance.
 func NewClient(conn *grpc.ClientConn) mainflux.ThingsServiceClient {
-	endpoint := kitgrpc.NewClient(
+	cae := kitgrpc.NewClient(
 		conn,
 		"mainflux.ThingsService",
 		"CanAccess",
 		encodeCanAccessRequest,
-		decodeCanAccessResponse,
+		decodeIdentityResponse,
 		mainflux.Identity{},
 	).Endpoint()
 
-	return &grpcClient{endpoint}
+	ie := kitgrpc.NewClient(
+		conn,
+		"mainflux.ThingsService",
+		"Identify",
+		encodeIdentifyRequest,
+		decodeIdentityResponse,
+		mainflux.Identity{},
+	).Endpoint()
+
+	return &grpcClient{cae, ie}
 }
 
 func (client grpcClient) CanAccess(ctx context.Context, req *mainflux.AccessReq, _ ...grpc.CallOption) (*mainflux.Identity, error) {
@@ -34,8 +44,18 @@ func (client grpcClient) CanAccess(ctx context.Context, req *mainflux.AccessReq,
 		return nil, err
 	}
 
-	ar := res.(accessRes)
-	return &mainflux.Identity{Value: ar.id}, ar.err
+	ir := res.(identityRes)
+	return &mainflux.Identity{Value: ir.id}, ir.err
+}
+
+func (client grpcClient) Identify(ctx context.Context, req *mainflux.Token, _ ...grpc.CallOption) (*mainflux.Identity, error) {
+	res, err := client.identify(ctx, identifyReq{req.GetValue()})
+	if err != nil {
+		return nil, err
+	}
+
+	ir := res.(identityRes)
+	return &mainflux.Identity{Value: ir.id}, ir.err
 }
 
 func encodeCanAccessRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
@@ -43,7 +63,12 @@ func encodeCanAccessRequest(_ context.Context, grpcReq interface{}) (interface{}
 	return &mainflux.AccessReq{Token: req.thingKey, ChanID: req.chanID}, nil
 }
 
-func decodeCanAccessResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+func encodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(identifyReq)
+	return &mainflux.Token{Value: req.thingKey}, nil
+}
+
+func decodeIdentityResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(*mainflux.Identity)
-	return accessRes{res.GetValue(), nil}, nil
+	return identityRes{res.GetValue(), nil}, nil
 }

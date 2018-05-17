@@ -76,6 +76,9 @@ type Service interface {
 	// CanAccess determines whether the channel can be accessed using the
 	// provided key and returns thing's id if access is allowed.
 	CanAccess(string, string) (string, error)
+
+	// Identify returns thing ID for given thing key.
+	Identify(string) (string, error)
 }
 
 var _ Service = (*thingsService)(nil)
@@ -268,4 +271,13 @@ func (ts *thingsService) CanAccess(key, channel string) (string, error) {
 	}
 
 	return thingID, nil
+}
+
+func (ts *thingsService) Identify(key string) (string, error) {
+	id, err := ts.things.Identify(key)
+	if err != nil {
+		return "", ErrUnauthorizedAccess
+	}
+
+	return id, nil
 }

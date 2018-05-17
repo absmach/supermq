@@ -47,4 +47,7 @@ type ThingRepository interface {
 	// Remove removes the thing having the provided identifier, that is owned
 	// by the specified user.
 	Remove(string, string) error
+
+	// Identify returns thing ID for given thing key.
+	Identify(string) (string, error)
 }

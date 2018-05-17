@@ -98,3 +98,16 @@ func (tr thingRepository) Remove(owner, id string) error {
 	tr.db.Exec(q, id, owner)
 	return nil
 }
+
+func (tr thingRepository) Identify(key string) (string, error) {
+	q := `SELECT id FROM things WHERE key = $1`
+	var id string
+	if err := tr.db.QueryRow(q, key).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return "", things.ErrNotFound
+		}
+		return "", err
+	}
+
+	return id, nil
+}
