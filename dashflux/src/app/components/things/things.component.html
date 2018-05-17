@@ -1,8 +1,8 @@
-<div class="clientsContainer" fxLayout="row" fxLayoutWrap>
+<div class="thingsContainer" fxLayout="row" fxLayoutWrap>
   <ng-container [ngSwitch]="thingsStore.things?.length > 0">
     <ng-container *ngSwitchCase="true">
       <!-- List -->
-      <div class="client-list-container">
+      <div class="things-list-container">
         <mat-table #table [dataSource]="thingsStore.things.toJS()" matSort class="mat-cell">
           <!-- Columns -->
           <ng-container matColumnDef="id">

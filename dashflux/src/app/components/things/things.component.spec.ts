@@ -10,18 +10,18 @@ import { AuthenticationService } from '../../core/services/auth/authentication.s
 import { TokenStorage } from '../../core/services/auth/token-storage.service';
 import { ChannelsService } from '../../core/services/channels/channels.service';
 import { ThingsService } from '../../core/services/clients/clients.service';
-import { ClientsComponent } from './clients.component';
+import { ThingsComponent } from './things.component';
 import { UiStore } from '../../core/store/ui.store';
-import { ThingsStore } from '../../core/store/clients.store';
+import { ThingsStore } from '../../core/store/things.store';
 import { ChannelsStore } from '../../core/store/channels.store';
 
-describe('ClientsComponent', () => {
-  let component: ClientsComponent;
-  let fixture: ComponentFixture<ClientsComponent>;
+describe('ThingsComponent', () => {
+  let component: ThingsComponent;
+  let fixture: ComponentFixture<ThingsComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ ClientsComponent ],
+      declarations: [ ThingsComponent ],
       imports: [
         MaterialModule,
         MatDialogModule,
@@ -52,7 +52,7 @@ describe('ClientsComponent', () => {
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(ClientsComponent);
+    fixture = TestBed.createComponent(ThingsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

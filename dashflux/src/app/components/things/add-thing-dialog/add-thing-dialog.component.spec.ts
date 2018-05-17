@@ -10,15 +10,15 @@ import { AuthenticationService } from '../../../core/services/auth/authenticatio
 import { TokenStorage } from '../../../core/services/auth/token-storage.service';
 import { ChannelsService } from '../../../core/services/channels/channels.service';
 import { ThingsService } from '../../../core/services/clients/clients.service';
-import { AddClientDialogComponent } from './add-client-dialog.component';
+import { AddThingDialogComponent } from './add-thing-dialog.component';
 
-describe('AddClientDialogComponent', () => {
-  let component: AddClientDialogComponent;
-  let fixture: ComponentFixture<AddClientDialogComponent>;
+describe('AddThingDialogComponent', () => {
+  let component: AddThingDialogComponent;
+  let fixture: ComponentFixture<AddThingDialogComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ AddClientDialogComponent ],
+      declarations: [ AddThingDialogComponent ],
       imports: [
         MaterialModule,
         MatDialogModule,
@@ -41,7 +41,7 @@ describe('AddClientDialogComponent', () => {
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(AddClientDialogComponent);
+    fixture = TestBed.createComponent(AddThingDialogComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

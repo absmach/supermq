@@ -16,8 +16,8 @@ import { LoginComponent } from './components/auth/login/login.component';
 import { SignupComponent } from './components/auth/signup/signup.component';
 import { AddChannelDialogComponent } from './components/channels/add-channel-dialog/add-channel-dialog.component';
 import { ChannelsComponent } from './components/channels/channels.component';
-import { AddClientDialogComponent } from './components/clients/add-client-dialog/add-client-dialog.component';
-import { ClientsComponent } from './components/clients/clients.component';
+import { AddThingDialogComponent } from './components/things/add-thing-dialog/add-thing-dialog.component';
+import { ThingsComponent } from './components/things/things.component';
 import { ConfirmationDialogComponent } from './components/shared/confirmation-dialog/confirmation-dialog.component';
 import { MaterialModule } from './core/material/material.module';
 import { AuthenticationService } from './core/services/auth/authentication.service';
@@ -40,11 +40,11 @@ export function factory(authenticationService: AuthenticationService) {
 @NgModule({
   declarations: [
     AppComponent,
-    ClientsComponent,
+    ThingsComponent,
     ChannelsComponent,
     SignupComponent,
     LoginComponent,
-    AddClientDialogComponent,
+    AddThingDialogComponent,
     ConfirmationDialogComponent,
     AddChannelDialogComponent,
   ],
@@ -82,7 +82,7 @@ export function factory(authenticationService: AuthenticationService) {
   ],
   bootstrap: [AppComponent],
   entryComponents: [
-    AddClientDialogComponent,
+    AddThingDialogComponent,
     AddChannelDialogComponent,
     ConfirmationDialogComponent
   ]

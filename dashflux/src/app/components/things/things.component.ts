@@ -5,16 +5,16 @@ import { Observable } from 'rxjs/Observable';
 
 import { Thing } from '../../core/store/models';
 import { ConfirmationDialogComponent } from '../shared/confirmation-dialog/confirmation-dialog.component';
-import { AddClientDialogComponent } from './add-client-dialog/add-client-dialog.component';
+import { AddThingDialogComponent } from './add-thing-dialog/add-thing-dialog.component';
 import { ThingsStore } from '../../core/store/things.store';
 import { ChannelsStore } from '../../core/store/channels.store';
 
 @Component({
-  selector: 'app-clients',
-  templateUrl: './clients.component.html',
-  styleUrls: ['./clients.component.scss']
+  selector: 'app-things',
+  templateUrl: './things.component.html',
+  styleUrls: ['./things.component.scss']
 })
-export class ClientsComponent implements OnInit {
+export class ThingsComponent implements OnInit {
   clients: Observable<Thing[]>;
   displayedColumns = ['id', 'name', 'type', 'payload', 'actions'];
 
@@ -30,7 +30,7 @@ export class ClientsComponent implements OnInit {
   }
 
   addThing() {
-    const dialogRef = this.dialog.open(AddClientDialogComponent);
+    const dialogRef = this.dialog.open(AddThingDialogComponent);
 
     dialogRef.componentInstance.submit.subscribe((thing: Thing) => {
       this.thingsStore.addThing(thing);
@@ -38,7 +38,7 @@ export class ClientsComponent implements OnInit {
   }
 
   editThing(thing: Thing) {
-    const dialogRef = this.dialog.open(AddClientDialogComponent, {
+    const dialogRef = this.dialog.open(AddThingDialogComponent, {
       data: thing
     });
 

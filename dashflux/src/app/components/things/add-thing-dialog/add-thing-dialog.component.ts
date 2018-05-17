@@ -5,17 +5,17 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 import { Thing } from '../../../core/store/models';
 
 @Component({
-  selector: 'app-add-client-dialog',
-  templateUrl: './add-client-dialog.component.html',
-  styleUrls: ['./add-client-dialog.component.scss']
+  selector: 'app-add-thing-dialog',
+  templateUrl: './add-thing-dialog.component.html',
+  styleUrls: ['./add-thing-dialog.component.scss']
 })
-export class AddClientDialogComponent implements OnInit {
+export class AddThingDialogComponent implements OnInit {
   addThingForm: FormGroup;
   @Output() submit: EventEmitter<Thing> = new EventEmitter<Thing>();
 
   constructor(
     private fb: FormBuilder,
-    private dialogRef: MatDialogRef<AddClientDialogComponent>,
+    private dialogRef: MatDialogRef<AddThingDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: Thing
   ) { }
 
