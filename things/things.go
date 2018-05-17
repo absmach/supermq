@@ -41,13 +41,13 @@ type ThingRepository interface {
 	// by the specified user.
 	RetrieveByID(string, string) (Thing, error)
 
+	// RetrieveByKey returns thing ID for given thing key.
+	RetrieveByKey(string) (string, error)
+
 	// RetrieveAll retrieves the subset of things owned by the specified user.
 	RetrieveAll(string, int, int) []Thing
 
 	// Remove removes the thing having the provided identifier, that is owned
 	// by the specified user.
 	Remove(string, string) error
-
-	// RetrieveByKey returns thing ID for given thing key.
-	RetrieveByKey(string) (string, error)
 }

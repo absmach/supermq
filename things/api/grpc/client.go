@@ -17,10 +17,12 @@ type grpcClient struct {
 
 // NewClient returns new gRPC client instance.
 func NewClient(conn *grpc.ClientConn) mainflux.ThingsServiceClient {
+	svcName := "mainflux.ThingsService"
+
 	return &grpcClient{
 		canAccess: kitgrpc.NewClient(
 			conn,
-			"mainflux.ThingsService",
+			svcName,
 			"CanAccess",
 			encodeCanAccessRequest,
 			decodeIdentityResponse,
@@ -28,7 +30,7 @@ func NewClient(conn *grpc.ClientConn) mainflux.ThingsServiceClient {
 		).Endpoint(),
 		identify: kitgrpc.NewClient(
 			conn,
-			"mainflux.ThingsService",
+			svcName,
 			"Identify",
 			encodeIdentifyRequest,
 			decodeIdentityResponse,

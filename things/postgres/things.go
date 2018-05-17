@@ -70,6 +70,19 @@ func (tr thingRepository) RetrieveByID(owner, id string) (things.Thing, error) {
 	return thing, nil
 }
 
+func (tr thingRepository) RetrieveByKey(key string) (string, error) {
+	q := `SELECT id FROM things WHERE key = $1`
+	var id string
+	if err := tr.db.QueryRow(q, key).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return "", things.ErrNotFound
+		}
+		return "", err
+	}
+
+	return id, nil
+}
+
 func (tr thingRepository) RetrieveAll(owner string, offset, limit int) []things.Thing {
 	q := `SELECT id, name, type, key, payload FROM things WHERE owner = $1 ORDER BY id LIMIT $2 OFFSET $3`
 	items := []things.Thing{}
@@ -97,17 +110,4 @@ func (tr thingRepository) Remove(owner, id string) error {
 	q := `DELETE FROM things WHERE id = $1 AND owner = $2`
 	tr.db.Exec(q, id, owner)
 	return nil
-}
-
-func (tr thingRepository) RetrieveByKey(key string) (string, error) {
-	q := `SELECT id FROM things WHERE key = $1`
-	var id string
-	if err := tr.db.QueryRow(q, key).Scan(&id); err != nil {
-		if err == sql.ErrNoRows {
-			return "", things.ErrNotFound
-		}
-		return "", err
-	}
-
-	return id, nil
 }
