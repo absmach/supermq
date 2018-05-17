@@ -34,20 +34,14 @@ function startMqtt() {
  * NATS
  */
 nats.subscribe('channel.*', function (msg) {
-    var m = message.RawMessage.decode(Buffer.from(msg));
-
-    // Parse and adjust content-type
-    if (m.ContentType === "application/senml+json") {
-        m.ContentType = "senml-json";
-    }
-
-    var packet = {
-        cmd: 'publish',
-        qos: 2,
-        topic: 'channels/' + m.Channel + '/messages/' + m.ContentType,
-        payload: m.Payload,
-        retain: false
-    };
+    var m = message.RawMessage.decode(Buffer.from(msg)),
+        packet = {
+            cmd: 'publish',
+            qos: 2,
+            topic: 'channels/' + m.Channel + '/messages',
+            payload: m.Payload,
+            retain: false
+        };
 
     aedes.publish(packet);
 });
@@ -57,7 +51,7 @@ nats.subscribe('channel.*', function (msg) {
  */
 // AuthZ PUB
 aedes.authorizePublish = function (client, packet, callback) {
-    // Topics are in the form `channels/<channel_id>/messages/senml-json`
+    // Topics are in the form `channels/<channel_id>/messages`
     var channel = packet.topic.split('/')[1];
 
     things.CanAccess({
@@ -75,7 +69,6 @@ aedes.authorizePublish = function (client, packet, callback) {
                 Publisher: client.id,
                 Channel: channel,
                 Protocol: 'mqtt',
-                ContentType: packet.topic.split('/')[3],
                 Payload: packet.payload
             });
 
@@ -90,7 +83,7 @@ aedes.authorizePublish = function (client, packet, callback) {
 
 // AuthZ SUB
 aedes.authorizeSubscribe = function (client, packet, callback) {
-    // Topics are in the form `channels/<channel_id>/messages/senml-json`
+    // Topics are in the form `channels/<channel_id>/messages`
     var channel = packet.topic.split('/')[1];
     
     things.canAccess({
