@@ -1,4 +1,4 @@
-package com.mainflux.loadtest.simulations
+package com.mainflux.loadtest
 
 object Constants {
   val UsersURL: String = System.getProperty("users", "http://localhost:8180")
