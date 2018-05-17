@@ -1,13 +1,58 @@
-# Mainflux MQTT Server
+# MQTT adapter
 
-[![License](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE) [![Join the chat at https://gitter.im/Mainflux/mainflux](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Mainflux/mainflux?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+MQTT adapter provides an MQTT API for sending and receiving messages through the 
+platform.
 
-MQTT broker microservice of Mainflux IoT platform.
+## Configuration
 
-Based on [Aedes](https://github.com/mcollina/aedes), [extremely fast](http://www.nearform.com/nodecrunch/performance-reaching-ludicrous-speed/) MQTT broker implemented in NodeJS.
+The service is configured using the environment variables presented in the
+following table. Note that any unset variables will be replaced with their
+default values.
 
-### Documentation
-Development documentation can be found on our [Mainflux GitHub Wiki](https://github.com/Mainflux/mainflux/wiki).
+| Variable             | Description         | Default               |
+|----------------------|---------------------|-----------------------|
+| MF_MQTT_ADAPTER_PORT | Service MQTT port   | 1883                  |
+| MF_NATS_URL          | NATS instance URL   | nats://localhost:4222 |
+| MF_THINGS_URL        | Things service URL  | localhost:8181        |
 
-### License
-[Apache License, version 2.0](LICENSE)
+## Deployment
+
+The service is distributed as Docker container. The following snippet provides
+a compose file template that can be used to deploy the service container locally:
+
+```yaml
+version: "2"
+services:
+  mqtt:
+    image: mainflux/mqtt:[version]
+    container_name: [instance name]
+    ports:
+      - [host machine port]:[configured port]
+    environment:
+      MF_THINGS_URL: [Things service URL]
+      MF_NATS_URL: [NATS instance URL]
+      MF_MQTT_ADAPTER_PORT: [Service MQTT port]
+```
+
+To start the service outside of the container, execute the following shell script:
+
+```bash
+# download the latest version of the service
+go get github.com/mainflux/mainflux
+
+cd $GOPATH/src/github.com/mainflux/mainflux
+
+# compile the MQTT
+make mqtt
+
+# copy binary to bin
+make install
+
+# set the environment variables and run the service
+MF_THINGS_URL=[Things service URL] MF_NATS_URL=[NATS instance URL] MF_MQTT_ADAPTER_PORT=[Service MQTT port] $GOBIN/mainflux-mqtt
+```
+
+## Usage
+
+To use MQTT adapter you should use `channels/<channel_id>/messages`. Client key should
+be passed as user's password.
