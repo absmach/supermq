@@ -9,87 +9,78 @@ import io.circe._
 import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
-import PublishSimulation._
+import PublishMessages._
 import io.gatling.http.protocol.HttpProtocolBuilder.toHttpProtocol
 import io.gatling.http.request.builder.HttpRequestBuilder.toActionBuilder
 import com.mainflux.loadtest.simulations.Constants._
 
-class PublishSimulation extends Simulation {
-
-  // Register user
-  Http(s"${UsersURL}/users")
+final class PublishMessages extends Simulation {
+  Http(s"$UsersURL/users")
     .postData(User)
     .header(HttpHeaderNames.ContentType, ContentType)
     .asString
 
-  // Login user
-  val tokenRes = Http(s"${UsersURL}/tokens")
-    .postData(User)
-    .header(HttpHeaderNames.ContentType, ContentType)
-    .asString
-    .body
+  private val token = {
+    val res = Http(s"$UsersURL/tokens")
+      .postData(User)
+      .header(HttpHeaderNames.ContentType, ContentType)
+      .asString
+      .body
 
-  val tokenCursor = parse(tokenRes).getOrElse(Json.Null).hcursor
-  val token = tokenCursor.downField("token").as[String].getOrElse("")
+    val cursor = parse(res).getOrElse(Json.Null).hcursor
+    cursor.downField("token").as[String].getOrElse("")
+  }
 
-  // Register client
-  val clientLocation = Http(s"${ThingsURL}/clients")
+  private val thingID = Http(s"$ThingsURL/clients")
     .postData(Client)
     .header(HttpHeaderNames.Authorization, token)
     .header(HttpHeaderNames.ContentType, ContentType)
     .asString
-    .headers.get("Location").get(0)
+    .headers("Location")(0).split("/")(2)
 
-  val clientId = clientLocation.split("/")(2)
+  private val thingAccessKey = {
+    val res = Http(s"$ThingsURL/clients/$thingID")
+      .header(HttpHeaderNames.Authorization, token)
+      .header(HttpHeaderNames.ContentType, ContentType)
+      .asString
+      .body
 
-  // Get client key
-  val clientRes = Http(s"${ThingsURL}/clients/${clientId}")
-    .header(HttpHeaderNames.Authorization, token)
-    .header(HttpHeaderNames.ContentType, ContentType)
-    .asString
-    .body
+    val cursor = parse(res).getOrElse(Json.Null).hcursor
+    cursor.downField("key").as[String].getOrElse("")
+  }
 
-  val clientCursor = parse(clientRes).getOrElse(Json.Null).hcursor
-  val clientKey = clientCursor.downField("key").as[String].getOrElse("")
-
-  // Register channel
-  val chanLocation = Http(s"${ThingsURL}/channels")
+  private val chanID = Http(s"$ThingsURL/channels")
     .postData(Channel)
     .header(HttpHeaderNames.Authorization, token)
     .header(HttpHeaderNames.ContentType, ContentType)
     .asString
-    .headers.get("Location").get(0)
+    .headers("Location")(0)
+    .split("/")(2)
 
-  val chanId = chanLocation.split("/")(2)
-
-  // Connect client to channel
-  Http(s"${ThingsURL}/channels/${chanId}/clients/${clientId}")
+  Http(s"$ThingsURL/channels/$chanID/things/$thingID")
     .method("PUT")
     .header(HttpHeaderNames.Authorization, token)
     .asString
 
-  // Prepare testing scenario
-  val httpProtocol = http
+  private val httpProtocol = http
     .baseURL(HttpAdapterURL)
     .inferHtmlResources()
     .acceptHeader("*/*")
     .contentTypeHeader("application/json; charset=utf-8")
     .userAgentHeader("curl/7.54.0")
 
-  val scn = scenario("PublishMessage")
+  private val scn = scenario("PublishMessage")
     .exec(http("PublishMessageRequest")
-      .post(s"/channels/${chanId}/messages")
+      .post(s"/channels/$chanID/messages")
       .header(HttpHeaderNames.ContentType, "application/senml+json")
-      .header(HttpHeaderNames.Authorization, clientKey)
+      .header(HttpHeaderNames.Authorization, thingAccessKey)
       .body(StringBody(Message))
       .check(status.is(202)))
 
-  setUp(
-    scn.inject(
-      constantUsersPerSec(RequestsPerSecond.toDouble) during (15 second))).protocols(httpProtocol)
+  setUp(scn.inject(constantUsersPerSec(RequestsPerSecond) during 15.seconds)).protocols(httpProtocol)
 }
 
-object PublishSimulation {
+object PublishMessages {
   val ContentType = "application/json"
   val User = """{"email":"john.doe@email.com", "password":"123"}"""
   val Client = """{"type":"device", "name":"weio"}"""

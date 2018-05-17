@@ -9,12 +9,12 @@ import io.circe._
 import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
-import CreateAndRetrieveClientSimulation._
+import CreateAndRetrieveThings._
 import io.gatling.http.protocol.HttpProtocolBuilder.toHttpProtocol
 import io.gatling.http.request.builder.HttpRequestBuilder.toActionBuilder
 import com.mainflux.loadtest.simulations.Constants._
 
-class CreateAndRetrieveClientSimulation extends Simulation {
+class CreateAndRetrieveThings extends Simulation {
 
   // Register user
   Http(s"${UsersURL}/users")
@@ -58,7 +58,7 @@ class CreateAndRetrieveClientSimulation extends Simulation {
       constantUsersPerSec(RequestsPerSecond.toDouble) during (15 second))).protocols(httpProtocol)
 }
 
-object CreateAndRetrieveClientSimulation {
+object CreateAndRetrieveThings {
   val ContentType = "application/json"
   val User = """{"email":"john.doe@email.com", "password":"123"}"""
   val Client = """{"type":"device", "name":"weio"}"""
