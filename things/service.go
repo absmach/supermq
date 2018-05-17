@@ -213,7 +213,7 @@ func (ts *thingsService) ViewChannel(key, id string) (Channel, error) {
 		return Channel{}, ErrUnauthorizedAccess
 	}
 
-	return ts.channels.One(res.GetValue(), id)
+	return ts.channels.RetrieveByID(res.GetValue(), id)
 }
 
 func (ts *thingsService) ListChannels(key string, offset, limit int) ([]Channel, error) {
@@ -225,7 +225,7 @@ func (ts *thingsService) ListChannels(key string, offset, limit int) ([]Channel,
 		return nil, ErrUnauthorizedAccess
 	}
 
-	return ts.channels.All(res.GetValue(), offset, limit), nil
+	return ts.channels.RetrieveAll(res.GetValue(), offset, limit), nil
 }
 
 func (ts *thingsService) RemoveChannel(key, id string) error {
