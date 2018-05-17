@@ -2,26 +2,26 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
 import { environment } from '../../../../environments/environment';
-import { Client } from '../../store/models';
+import { Thing } from '../../store/models';
 
 @Injectable()
-export class ClientsService {
+export class ThingsService {
 
   constructor(private http: HttpClient) { }
 
-  getClients() {
-    return this.http.get(environment.clientsUrl);
+  getThings() {
+    return this.http.get(environment.thingsUrl);
   }
 
-  addClient(client: Client) {
-    return this.http.post(environment.clientsUrl, client);
+  addThing(thing: Thing) {
+    return this.http.post(environment.thingsUrl, thing);
   }
 
-  deleteClient(client: Client) {
-    return this.http.delete(environment.clientsUrl + '/' + client.id);
+  deleteThing(thing: Thing) {
+    return this.http.delete(environment.thingsUrl + '/' + thing.id);
   }
 
-  editClient(client: Client) {
-    return this.http.put(environment.clientsUrl + '/' + client.id, client);
+  editThing(thing: Thing) {
+    return this.http.put(environment.thingsUrl + '/' + thing.id, thing);
   }
 }

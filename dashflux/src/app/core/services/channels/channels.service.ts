@@ -4,7 +4,7 @@ import { Observable } from 'rxjs/Observable';
 import { forkJoin } from 'rxjs/observable/forkJoin';
 
 import { environment } from '../../../../environments/environment';
-import { Channel, Client } from '../../store/models';
+import { Channel, Thing } from '../../store/models';
 
 interface ChannelsPayload {
   channels: Channel[];
@@ -39,7 +39,7 @@ export class ChannelsService {
     return this.http.post(environment.channelsUrl, payload, { observe: 'response' })
       .switchMap((res) => {
         const id = this.getChannelIdFrom(res);
-        return forkJoin(this.createClientConnectRequests(id, channel.connected));
+        return forkJoin(this.createThingsConnectRequests(id, channel.connected));
       });
   }
 
@@ -60,9 +60,9 @@ export class ChannelsService {
     const editChannel = this.http.put(environment.channelsUrl + '/' + channel.id, payload);
 
     return editChannel.switchMap(() => {
-      const clientsToAdd = this.getClientsToAdd(channelFormData, channel);
+      const clientsToAdd = this.getThingsToAdd(channelFormData, channel);
       if (clientsToAdd.length) {
-        return forkJoin(this.createClientConnectRequests(channel.id, clientsToAdd));
+        return forkJoin(this.createThingsConnectRequests(channel.id, clientsToAdd));
       } else {
         return Observable.of([]);
       }
@@ -70,7 +70,7 @@ export class ChannelsService {
       const clientsToDelete = this.getClientsToDelete(channelFormData, channel);
       console.log(clientsToDelete);
       if (clientsToDelete.length) {
-        return forkJoin(this.createClientDisconnectRequests(channel.id, clientsToDelete));
+        return forkJoin(this.createThingsDisconnectRequests(channel.id, clientsToDelete));
       } else {
         return Observable.of([]);
       }
@@ -78,26 +78,26 @@ export class ChannelsService {
   }
 
   getClientsToDelete(channelFormData: Channel, channel: Channel) {
-    return channel.connected.filter(client => {
-      return channelFormData.connected.find(cl => cl.id === client.id) === undefined;
+    return channel.connected.filter(thing => {
+      return channelFormData.connected.find(th => th.id === thing.id) === undefined;
     });
   }
 
-  getClientsToAdd(channelFormData: Channel, channel: Channel) {
-    return channelFormData.connected.filter(client => {
-      return channel.connected.find(cl => cl.id === client.id) === undefined;
+  getThingsToAdd(channelFormData: Channel, channel: Channel) {
+    return channelFormData.connected.filter(thing => {
+      return channel.connected.find(th => th.id === thing.id) === undefined;
     });
   }
 
-  createClientConnectRequests(channelId: string , connected: Client[]) {
+  createThingsConnectRequests(channelId: string , connected: Thing[]) {
     return connected.map((connection) => {
-      return this.http.put(environment.channelsUrl + '/' + channelId + '/clients/' + connection.id, {});
+      return this.http.put(environment.channelsUrl + '/' + channelId + '/things/' + connection.id, {});
     });
   }
 
-  createClientDisconnectRequests(channelId: string , connected: Client[]) {
+  createThingsDisconnectRequests(channelId: string , connected: Thing[]) {
     return connected.map((connection) => {
-      return this.http.delete(environment.channelsUrl + '/' + channelId + '/clients/' + connection.id, {});
+      return this.http.delete(environment.channelsUrl + '/' + channelId + '/things/' + connection.id, {});
     });
   }
 }

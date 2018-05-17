@@ -3,7 +3,7 @@ import { MatDialog } from '@angular/material';
 import { Observable } from 'rxjs/Observable';
 
 import { ChannelsStore } from '../../core/store/channels.store';
-import { ClientsStore } from '../../core/store/clients.store';
+import { ThingsStore } from '../../core/store/things.store';
 import { Channel } from '../../core/store/models';
 import { ConfirmationDialogComponent } from '../shared/confirmation-dialog/confirmation-dialog.component';
 import { AddChannelDialogComponent } from './add-channel-dialog/add-channel-dialog.component';
@@ -19,13 +19,13 @@ export class ChannelsComponent implements OnInit {
 
   constructor(
     private dialog: MatDialog,
-    public clientsStore: ClientsStore,
+    public clientsStore: ThingsStore,
     public channelsStore: ChannelsStore,
   ) { }
 
   ngOnInit() {
     this.channelsStore.getChannels();
-    this.clientsStore.getClients();
+    this.clientsStore.getThings();
   }
 
   addChannel() {

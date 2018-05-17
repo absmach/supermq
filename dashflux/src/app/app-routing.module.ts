@@ -9,10 +9,10 @@ import { ChannelsComponent } from './components/channels/channels.component';
 import { ClientsComponent } from './components/clients/clients.component';
 
 const routes: Route[] = [
-  { path: '', redirectTo: 'clients', pathMatch: 'full'},
+  { path: '', redirectTo: 'things', pathMatch: 'full'},
   { path: 'login', component: LoginComponent, canActivate: [PublicGuard]},
   { path: 'signup', component: SignupComponent, canActivate: [PublicGuard]},
-  { path: 'clients', component: ClientsComponent, canActivate: [ProtectedGuard]},
+  { path: 'things', component: ClientsComponent, canActivate: [ProtectedGuard]},
   { path: 'channels', component: ChannelsComponent, canActivate: [ProtectedGuard]}
 ];
 

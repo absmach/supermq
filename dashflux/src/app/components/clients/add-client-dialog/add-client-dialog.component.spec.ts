@@ -9,7 +9,7 @@ import { MaterialModule } from '../../../core/material/material.module';
 import { AuthenticationService } from '../../../core/services/auth/authentication.service';
 import { TokenStorage } from '../../../core/services/auth/token-storage.service';
 import { ChannelsService } from '../../../core/services/channels/channels.service';
-import { ClientsService } from '../../../core/services/clients/clients.service';
+import { ThingsService } from '../../../core/services/clients/clients.service';
 import { AddClientDialogComponent } from './add-client-dialog.component';
 
 describe('AddClientDialogComponent', () => {
@@ -31,7 +31,7 @@ describe('AddClientDialogComponent', () => {
       providers: [
         AuthenticationService,
         TokenStorage,
-        ClientsService,
+        ThingsService,
         ChannelsService,
         { provide: MatDialogRef, useValue: {} },
         { provide: MAT_DIALOG_DATA, useValue: [] },

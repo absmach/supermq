@@ -23,12 +23,12 @@ import { MaterialModule } from './core/material/material.module';
 import { AuthenticationService } from './core/services/auth/authentication.service';
 import { TokenStorage } from './core/services/auth/token-storage.service';
 import { ChannelsService } from './core/services/channels/channels.service';
-import { ClientsService } from './core/services/clients/clients.service';
+import { ThingsService } from './core/services/clients/clients.service';
 import { MockAuthService } from './core/services/mock-auth.service';
 import { MockChannelsService } from './core/services/mock-channels.service';
 import { MockClientsService } from './core/services/mock-clients.service';
 import { ChannelsStore } from './core/store/channels.store';
-import { ClientsStore } from './core/store/clients.store';
+import { ThingsStore } from './core/store/things.store';
 import { UiStore } from './core/store/ui.store';
 import { AuthStore } from './core/store/auth.store';
 import { UnauthorizedInterceptor } from './core/services/auth/unauthorized.interceptor';
@@ -61,13 +61,13 @@ export function factory(authenticationService: AuthenticationService) {
   ],
   providers: [
     UiStore,
-    ClientsStore,
+    ThingsStore,
     ChannelsStore,
     AuthStore,
     MockAuthService,
     MockClientsService,
     MockChannelsService,
-    ClientsService,
+    ThingsService,
     ChannelsService,
     TokenStorage,
     AuthenticationService,

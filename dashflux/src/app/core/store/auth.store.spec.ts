@@ -7,7 +7,7 @@ import { Observable } from 'rxjs/Observable';
 import { AuthenticationService } from '../services/auth/authentication.service';
 import { TokenStorage } from '../services/auth/token-storage.service';
 import { ChannelsService } from '../services/channels/channels.service';
-import { ClientsService } from '../services/clients/clients.service';
+import { ThingsService } from '../services/clients/clients.service';
 import { AuthStore } from './auth.store';
 import { UiStore } from './ui.store';
 
@@ -23,7 +23,7 @@ describe('AuthStore', () => {
                 UiStore,
                 TokenStorage,
                 AuthenticationService,
-                ClientsService,
+                ThingsService,
                 ChannelsService,
             ]
         });
@@ -66,7 +66,7 @@ describe('AuthStore', () => {
 
                 authStore.login(user);
 
-                expect(routerSpy).toHaveBeenCalledWith(['/clients']);
+                expect(routerSpy).toHaveBeenCalledWith(['/things']);
             }));
 
         it('should set the loading flag to false when successfully authenticated',

@@ -2,7 +2,7 @@ import { Component, EventEmitter, Inject, OnInit, Output } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 
-import { Client } from '../../../core/store/models';
+import { Thing } from '../../../core/store/models';
 
 @Component({
   selector: 'app-add-client-dialog',
@@ -10,17 +10,17 @@ import { Client } from '../../../core/store/models';
   styleUrls: ['./add-client-dialog.component.scss']
 })
 export class AddClientDialogComponent implements OnInit {
-  addClientForm: FormGroup;
-  @Output() submit: EventEmitter<Client> = new EventEmitter<Client>();
+  addThingForm: FormGroup;
+  @Output() submit: EventEmitter<Thing> = new EventEmitter<Thing>();
 
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<AddClientDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: Client
+    @Inject(MAT_DIALOG_DATA) public data: Thing
   ) { }
 
   ngOnInit() {
-    this.addClientForm = this.fb.group(
+    this.addThingForm = this.fb.group(
       {
         id: [''],
         type: ['', [Validators.required]],
@@ -30,13 +30,13 @@ export class AddClientDialogComponent implements OnInit {
     );
 
     if (this.data) {
-      this.addClientForm.patchValue(this.data);
-      this.addClientForm.get('payload').patchValue(JSON.stringify(this.data.payload));
+      this.addThingForm.patchValue(this.data);
+      this.addThingForm.get('payload').patchValue(JSON.stringify(this.data.payload));
     }
   }
 
-  onAddClient() {
-    const client = this.addClientForm.value;
+  onAddThing() {
+    const client = this.addThingForm.value;
     this.submit.emit(client);
     this.dialogRef.close();
   }

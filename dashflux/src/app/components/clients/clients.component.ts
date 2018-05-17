@@ -3,10 +3,10 @@ import { MatDialog } from '@angular/material';
 import { toJS } from 'mobx';
 import { Observable } from 'rxjs/Observable';
 
-import { Client } from '../../core/store/models';
+import { Thing } from '../../core/store/models';
 import { ConfirmationDialogComponent } from '../shared/confirmation-dialog/confirmation-dialog.component';
 import { AddClientDialogComponent } from './add-client-dialog/add-client-dialog.component';
-import { ClientsStore } from '../../core/store/clients.store';
+import { ThingsStore } from '../../core/store/things.store';
 import { ChannelsStore } from '../../core/store/channels.store';
 
 @Component({
@@ -15,48 +15,48 @@ import { ChannelsStore } from '../../core/store/channels.store';
   styleUrls: ['./clients.component.scss']
 })
 export class ClientsComponent implements OnInit {
-  clients: Observable<Client[]>;
+  clients: Observable<Thing[]>;
   displayedColumns = ['id', 'name', 'type', 'payload', 'actions'];
 
   constructor(
     private dialog: MatDialog,
-    public clientsStore: ClientsStore,
+    public thingsStore: ThingsStore,
     public channelsStore: ChannelsStore,
   ) { }
 
   ngOnInit() {
-    this.clientsStore.getClients();
+    this.thingsStore.getThings();
     this.channelsStore.getChannels();
   }
 
-  addClient() {
+  addThing() {
     const dialogRef = this.dialog.open(AddClientDialogComponent);
 
-    dialogRef.componentInstance.submit.subscribe((client: Client) => {
-      this.clientsStore.addClient(client);
+    dialogRef.componentInstance.submit.subscribe((thing: Thing) => {
+      this.thingsStore.addThing(thing);
     });
   }
 
-  editClient(client: Client) {
+  editThing(thing: Thing) {
     const dialogRef = this.dialog.open(AddClientDialogComponent, {
-      data: client
+      data: thing
     });
 
-    dialogRef.componentInstance.submit.subscribe((editedClient: Client) => {
-      this.clientsStore.editClient(toJS(editedClient));
+    dialogRef.componentInstance.submit.subscribe((editedThing: Thing) => {
+      this.thingsStore.editThing(toJS(editedThing));
     });
   }
 
-  deleteClient(client: Client) {
+  deleteThing(client: Thing) {
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       data: {
-        question: 'Are you sure you want to delete the client?'
+        question: 'Are you sure you want to delete the thing?'
       }
     });
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.clientsStore.deleteClient(toJS(client));
+        this.thingsStore.deleteThing(toJS(client));
       }
     });
   }
