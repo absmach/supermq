@@ -94,3 +94,12 @@ func (trm *thingRepositoryMock) Remove(owner, id string) error {
 	delete(trm.things, key(owner, id))
 	return nil
 }
+
+func (trm *thingRepositoryMock) Identify(key string) (string, error) {
+	for _, thing := range trm.things {
+		if thing.Key == key {
+			return thing.ID, nil
+		}
+	}
+	return "", things.ErrNotFound
+}

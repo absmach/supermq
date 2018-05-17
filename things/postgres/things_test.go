@@ -140,3 +140,30 @@ func TestThingRemoval(t *testing.T) {
 		}
 	}
 }
+
+func TestThingIdentify(t *testing.T) {
+	email := "thing-identify@example.com"
+	idp := uuid.New()
+	thingRepo := postgres.NewThingRepository(db, testLog)
+	thing := things.Thing{
+		ID:    idp.ID(),
+		Owner: email,
+		Key:   idp.ID(),
+	}
+	thingRepo.Save(thing)
+
+	cases := map[string]struct {
+		key string
+		id  string
+		err error
+	}{
+		"identify existing thing":     {thing.Key, thing.ID, nil},
+		"identify non-existent thing": {wrong, "", things.ErrNotFound},
+	}
+
+	for desc, tc := range cases {
+		id, err := thingRepo.Identify(tc.key)
+		assert.Equal(t, tc.id, id, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.id, id))
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+	}
+}
