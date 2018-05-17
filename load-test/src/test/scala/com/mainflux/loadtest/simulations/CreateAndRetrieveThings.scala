@@ -9,57 +9,54 @@ import io.circe._
 import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
-import CreateAndRetrieveThings._
 import io.gatling.http.protocol.HttpProtocolBuilder.toHttpProtocol
 import io.gatling.http.request.builder.HttpRequestBuilder.toActionBuilder
 import com.mainflux.loadtest.simulations.Constants._
 
-class CreateAndRetrieveThings extends Simulation {
+final class CreateAndRetrieveThings extends Simulation {
+  import CreateAndRetrieveThings._
 
-  // Register user
-  Http(s"${UsersURL}/users")
+  Http(s"$UsersURL/users")
     .postData(User)
     .header(HttpHeaderNames.ContentType, ContentType)
     .asString
 
-  // Login user
-  val tokenRes = Http(s"${UsersURL}/tokens")
-    .postData(User)
-    .header(HttpHeaderNames.ContentType, ContentType)
-    .asString
-    .body
+  private val token = {
+    val res = Http(s"$UsersURL/tokens")
+      .postData(User)
+      .header(HttpHeaderNames.ContentType, ContentType)
+      .asString
+      .body
 
-  val tokenCursor = parse(tokenRes).getOrElse(Json.Null).hcursor
-  val token = tokenCursor.downField("token").as[String].getOrElse("")
+    val cursor = parse(res).getOrElse(Json.Null).hcursor
+    cursor.downField("token").as[String].getOrElse("")
+  }
 
-  // Prepare testing scenario
-  val httpProtocol = http
+  private val httpProtocol = http
     .baseURL(ThingsURL)
     .inferHtmlResources()
     .acceptHeader("*/*")
     .contentTypeHeader(ContentType)
     .userAgentHeader("curl/7.54.0")
 
-  val scn = scenario("CreateAndGetClient")
-    .exec(http("CreateClientRequest")
+  private val scn = scenario("create and retrieve things")
+    .exec(http("create thing")
       .post("/clients")
       .header(HttpHeaderNames.ContentType, ContentType)
       .header(HttpHeaderNames.Authorization, token)
-      .body(StringBody(Client))
+      .body(StringBody(Thing))
       .check(status.is(201))
       .check(headerRegex(HttpHeaderNames.Location, "(.*)").saveAs("location")))
-    .exec(http("GetClientRequest")
+    .exec(http("retrieve thing")
       .get("${location}")
       .header(HttpHeaderNames.Authorization, token)
       .check(status.is(200)))
 
-  setUp(
-    scn.inject(
-      constantUsersPerSec(RequestsPerSecond.toDouble) during (15 second))).protocols(httpProtocol)
+  setUp(scn.inject(constantUsersPerSec(RequestsPerSecond) during 15.seconds)).protocols(httpProtocol)
 }
 
 object CreateAndRetrieveThings {
   val ContentType = "application/json"
   val User = """{"email":"john.doe@email.com", "password":"123"}"""
-  val Client = """{"type":"device", "name":"weio"}"""
+  val Thing = """{"type":"device", "name":"weio"}"""
 }

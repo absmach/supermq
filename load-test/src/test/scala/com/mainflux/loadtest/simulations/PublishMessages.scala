@@ -9,12 +9,13 @@ import io.circe._
 import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
-import PublishMessages._
 import io.gatling.http.protocol.HttpProtocolBuilder.toHttpProtocol
 import io.gatling.http.request.builder.HttpRequestBuilder.toActionBuilder
 import com.mainflux.loadtest.simulations.Constants._
 
 final class PublishMessages extends Simulation {
+  import PublishMessages._
+
   Http(s"$UsersURL/users")
     .postData(User)
     .header(HttpHeaderNames.ContentType, ContentType)
@@ -66,7 +67,7 @@ final class PublishMessages extends Simulation {
     .baseURL(HttpAdapterURL)
     .inferHtmlResources()
     .acceptHeader("*/*")
-    .contentTypeHeader("application/json; charset=utf-8")
+    .contentTypeHeader(ContentType)
     .userAgentHeader("curl/7.54.0")
 
   private val scn = scenario("PublishMessage")
