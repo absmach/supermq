@@ -17,13 +17,13 @@ import com.mainflux.loadtest.simulations.Constants._
 class PublishSimulation extends Simulation {
 
   // Register user
-  Http(s"${UsersUrl}/users")
+  Http(s"${UsersURL}/users")
     .postData(User)
     .header(HttpHeaderNames.ContentType, ContentType)
     .asString
 
   // Login user
-  val tokenRes = Http(s"${UsersUrl}/tokens")
+  val tokenRes = Http(s"${UsersURL}/tokens")
     .postData(User)
     .header(HttpHeaderNames.ContentType, ContentType)
     .asString
@@ -33,7 +33,7 @@ class PublishSimulation extends Simulation {
   val token = tokenCursor.downField("token").as[String].getOrElse("")
 
   // Register client
-  val clientLocation = Http(s"${ClientsUrl}/clients")
+  val clientLocation = Http(s"${ThingsURL}/clients")
     .postData(Client)
     .header(HttpHeaderNames.Authorization, token)
     .header(HttpHeaderNames.ContentType, ContentType)
@@ -43,7 +43,7 @@ class PublishSimulation extends Simulation {
   val clientId = clientLocation.split("/")(2)
 
   // Get client key
-  val clientRes = Http(s"${ClientsUrl}/clients/${clientId}")
+  val clientRes = Http(s"${ThingsURL}/clients/${clientId}")
     .header(HttpHeaderNames.Authorization, token)
     .header(HttpHeaderNames.ContentType, ContentType)
     .asString
@@ -53,7 +53,7 @@ class PublishSimulation extends Simulation {
   val clientKey = clientCursor.downField("key").as[String].getOrElse("")
 
   // Register channel
-  val chanLocation = Http(s"${ClientsUrl}/channels")
+  val chanLocation = Http(s"${ThingsURL}/channels")
     .postData(Channel)
     .header(HttpHeaderNames.Authorization, token)
     .header(HttpHeaderNames.ContentType, ContentType)
@@ -63,14 +63,14 @@ class PublishSimulation extends Simulation {
   val chanId = chanLocation.split("/")(2)
 
   // Connect client to channel
-  Http(s"${ClientsUrl}/channels/${chanId}/clients/${clientId}")
+  Http(s"${ThingsURL}/channels/${chanId}/clients/${clientId}")
     .method("PUT")
     .header(HttpHeaderNames.Authorization, token)
     .asString
 
   // Prepare testing scenario
   val httpProtocol = http
-    .baseURL(HttpAdapterUrl)
+    .baseURL(HttpAdapterURL)
     .inferHtmlResources()
     .acceptHeader("*/*")
     .contentTypeHeader("application/json; charset=utf-8")

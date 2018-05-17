@@ -17,13 +17,13 @@ import com.mainflux.loadtest.simulations.Constants._
 class CreateAndRetrieveClientSimulation extends Simulation {
 
   // Register user
-  Http(s"${UsersUrl}/users")
+  Http(s"${UsersURL}/users")
     .postData(User)
     .header(HttpHeaderNames.ContentType, ContentType)
     .asString
 
   // Login user
-  val tokenRes = Http(s"${UsersUrl}/tokens")
+  val tokenRes = Http(s"${UsersURL}/tokens")
     .postData(User)
     .header(HttpHeaderNames.ContentType, ContentType)
     .asString
@@ -34,7 +34,7 @@ class CreateAndRetrieveClientSimulation extends Simulation {
 
   // Prepare testing scenario
   val httpProtocol = http
-    .baseURL(ClientsUrl)
+    .baseURL(ThingsURL)
     .inferHtmlResources()
     .acceptHeader("*/*")
     .contentTypeHeader(ContentType)
