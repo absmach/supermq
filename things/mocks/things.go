@@ -47,7 +47,7 @@ func (trm *thingRepositoryMock) Update(thing things.Thing) error {
 	return nil
 }
 
-func (trm *thingRepositoryMock) One(owner, id string) (things.Thing, error) {
+func (trm *thingRepositoryMock) RetrieveByID(owner, id string) (things.Thing, error) {
 	if c, ok := trm.things[key(owner, id)]; ok {
 		return c, nil
 	}
@@ -55,7 +55,7 @@ func (trm *thingRepositoryMock) One(owner, id string) (things.Thing, error) {
 	return things.Thing{}, things.ErrNotFound
 }
 
-func (trm *thingRepositoryMock) All(owner string, offset, limit int) []things.Thing {
+func (trm *thingRepositoryMock) RetrieveAll(owner string, offset, limit int) []things.Thing {
 	// This obscure way to examine map keys is enforced by the key structure
 	// itself (see mocks/commons.go).
 	prefix := fmt.Sprintf("%s-", owner)
@@ -95,7 +95,7 @@ func (trm *thingRepositoryMock) Remove(owner, id string) error {
 	return nil
 }
 
-func (trm *thingRepositoryMock) Identify(key string) (string, error) {
+func (trm *thingRepositoryMock) RetrieveByKey(key string) (string, error) {
 	for _, thing := range trm.things {
 		if thing.Key == key {
 			return thing.ID, nil

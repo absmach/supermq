@@ -95,7 +95,7 @@ func (crm *channelRepositoryMock) Connect(owner, chanID, thingID string) error {
 		return err
 	}
 
-	thing, err := crm.things.One(owner, thingID)
+	thing, err := crm.things.RetrieveByID(owner, thingID)
 	if err != nil {
 		return err
 	}

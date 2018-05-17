@@ -78,7 +78,7 @@ func TestSingleThingRetrieval(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		_, err := thingRepo.One(tc.owner, tc.ID)
+		_, err := thingRepo.RetrieveByID(tc.owner, tc.ID)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
@@ -112,7 +112,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		n := len(thingRepo.All(tc.owner, tc.offset, tc.limit))
+		n := len(thingRepo.RetrieveAll(tc.owner, tc.offset, tc.limit))
 		assert.Equal(t, tc.size, n, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, n))
 	}
 }
@@ -135,14 +135,14 @@ func TestThingRemoval(t *testing.T) {
 			t.Fatalf("#%d: failed to remove thing due to: %s", i, err)
 		}
 
-		if _, err := thingRepo.One(email, thing.ID); err != things.ErrNotFound {
+		if _, err := thingRepo.RetrieveByID(email, thing.ID); err != things.ErrNotFound {
 			t.Fatalf("#%d: expected %s got %s", i, things.ErrNotFound, err)
 		}
 	}
 }
 
-func TestThingIdentify(t *testing.T) {
-	email := "thing-identify@example.com"
+func TestThingRetrieveByKey(t *testing.T) {
+	email := "thing-retrieved-by-key@example.com"
 	idp := uuid.New()
 	thingRepo := postgres.NewThingRepository(db, testLog)
 	thing := things.Thing{
@@ -157,12 +157,12 @@ func TestThingIdentify(t *testing.T) {
 		id  string
 		err error
 	}{
-		"identify existing thing":     {thing.Key, thing.ID, nil},
-		"identify non-existent thing": {wrong, "", things.ErrNotFound},
+		"retrieve existing thing by key":     {thing.Key, thing.ID, nil},
+		"retrieve non-existent thing by key": {wrong, "", things.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
-		id, err := thingRepo.Identify(tc.key)
+		id, err := thingRepo.RetrieveByKey(tc.key)
 		assert.Equal(t, tc.id, id, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.id, id))
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}

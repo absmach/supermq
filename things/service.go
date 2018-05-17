@@ -144,7 +144,7 @@ func (ts *thingsService) ViewThing(key, id string) (Thing, error) {
 		return Thing{}, ErrUnauthorizedAccess
 	}
 
-	return ts.things.One(res.GetValue(), id)
+	return ts.things.RetrieveByID(res.GetValue(), id)
 }
 
 func (ts *thingsService) ListThings(key string, offset, limit int) ([]Thing, error) {
@@ -156,7 +156,7 @@ func (ts *thingsService) ListThings(key string, offset, limit int) ([]Thing, err
 		return nil, ErrUnauthorizedAccess
 	}
 
-	return ts.things.All(res.GetValue(), offset, limit), nil
+	return ts.things.RetrieveAll(res.GetValue(), offset, limit), nil
 }
 
 func (ts *thingsService) RemoveThing(key, id string) error {
@@ -274,7 +274,7 @@ func (ts *thingsService) CanAccess(key, channel string) (string, error) {
 }
 
 func (ts *thingsService) Identify(key string) (string, error) {
-	id, err := ts.things.Identify(key)
+	id, err := ts.things.RetrieveByKey(key)
 	if err != nil {
 		return "", ErrUnauthorizedAccess
 	}
