@@ -17,7 +17,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const port = 8080
+const port = 8081
 
 var user = users.User{"john.doe@email.com", "pass"}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"os"
 	"testing"
 	"time"
 
@@ -27,27 +28,18 @@ const (
 var (
 	thing   = things.Thing{Type: "app", Name: "test_app", Payload: "test_payload"}
 	channel = things.Channel{Name: "test"}
+	svc     things.Service
 )
 
-func newService(tokens map[string]string) things.Service {
-	users := mocks.NewUsersService(tokens)
-	thingsRepo := mocks.NewThingRepository()
-	channelsRepo := mocks.NewChannelRepository(thingsRepo)
-	idp := mocks.NewIdentityProvider()
-	return things.New(users, thingsRepo, channelsRepo, idp)
-}
+func TestMain(m *testing.M) {
+	svc = newService(map[string]string{token: email})
+	startGRPCServer(svc, port)
 
-func startGRPCServer(svc things.Service, port int) {
-	listener, _ := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	server := grpc.NewServer()
-	mainflux.RegisterThingsServiceServer(server, grpcapi.NewServer(svc))
-	go server.Serve(listener)
+	code := m.Run()
+	os.Exit(code)
 }
 
 func TestCanAccess(t *testing.T) {
-	svc := newService(map[string]string{token: email})
-	startGRPCServer(svc, port)
-
 	oth, _ := svc.AddThing(token, thing)
 	cth, _ := svc.AddThing(token, thing)
 	sch, _ := svc.CreateChannel(token, channel)
@@ -81,9 +73,6 @@ func TestCanAccess(t *testing.T) {
 }
 
 func TestIdentify(t *testing.T) {
-	svc := newService(map[string]string{token: email})
-	startGRPCServer(svc, port)
-
 	sth, _ := svc.AddThing(token, thing)
 
 	usersAddr := fmt.Sprintf("localhost:%d", port)
@@ -108,4 +97,19 @@ func TestIdentify(t *testing.T) {
 		assert.Equal(t, tc.id, id.GetValue(), fmt.Sprintf("%s: expected %s got %s", desc, tc.id, id.GetValue()))
 		assert.Equal(t, tc.code, e.Code(), fmt.Sprintf("%s: expected %s got %s", desc, tc.code, e.Code()))
 	}
+}
+
+func newService(tokens map[string]string) things.Service {
+	users := mocks.NewUsersService(tokens)
+	thingsRepo := mocks.NewThingRepository()
+	channelsRepo := mocks.NewChannelRepository(thingsRepo)
+	idp := mocks.NewIdentityProvider()
+	return things.New(users, thingsRepo, channelsRepo, idp)
+}
+
+func startGRPCServer(svc things.Service, port int) {
+	listener, _ := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	server := grpc.NewServer()
+	mainflux.RegisterThingsServiceServer(server, grpcapi.NewServer(svc))
+	go server.Serve(listener)
 }
