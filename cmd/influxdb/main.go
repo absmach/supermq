@@ -8,7 +8,6 @@ import (
 	"syscall"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
-	"github.com/gogo/protobuf/proto"
 	client "github.com/influxdata/influxdb/client/v2"
 	"github.com/mainflux/mainflux"
 	influxdb "github.com/mainflux/mainflux/influxdb"
@@ -48,22 +47,6 @@ type config struct {
 	DBPort    string
 	DBUser    string
 	DBPass    string
-}
-
-func handleMsg(logger log.Logger, w influxdb.Writer) nats.MsgHandler {
-	return func(m *nats.Msg) {
-		msg := &mainflux.Message{}
-
-		if err := proto.Unmarshal(m.Data, msg); err != nil {
-			logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
-			return
-		}
-
-		if err := w.Save(*msg); err != nil {
-			logger.Warn(fmt.Sprintf("InfluxDB Writer failed to save message: %s", err))
-			return
-		}
-	}
 }
 
 func main() {
@@ -107,15 +90,15 @@ func main() {
 		Password: cfg.DBPass,
 	}
 
-	writer, err := influxdb.New(clientCfg, cfg.DBName, cfg.PointName)
+	repo, err := influxdb.New(clientCfg, cfg.DBName, cfg.PointName)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to create InfluxDB writer: %s", err.Error()))
 		return
 	}
-	defer writer.Close()
+	defer repo.Close()
 
-	writer = influxdb.MetricsMiddleware(
-		writer,
+	repo = influxdb.MetricsMiddleware(
+		repo,
 		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 			Namespace: "influxdb",
 			Subsystem: "db_client",
@@ -130,9 +113,9 @@ func main() {
 		}, []string{"method"}),
 	)
 
-	writer = influxdb.LoggingMiddleware(writer, logger)
+	repo = influxdb.LoggingMiddleware(repo, logger)
 
-	if _, err := nc.Subscribe(senML, handleMsg(logger, writer)); err != nil {
+	if _, err := nc.Subscribe(senML, mainflux.HandleMsg("InfluxDB writer", logger, repo)); err != nil {
 		logger.Error(fmt.Sprintf("Failed to subscribe to NATS: %s", err.Error()))
 		return
 	}
