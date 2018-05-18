@@ -117,9 +117,18 @@ aedes.authorizeSubscribe = function (client, packet, callback) {
 
 // AuthX
 aedes.authenticate = function (client, username, password, callback) {
-    client.id = username.toString() || "";
-    client.password = password.toString() || "";
-    callback(null, true);
+    var pass = password || "";
+    pass = pass.toString() || "";
+    things.identify({value: pass}, function(err, res) {
+        if (!err) {
+            client.id = res.value.toString() || "";
+            client.password = pass;
+            callback(null, true);
+        } else {
+            logger.warn('failed to authenticate client with key %s', password);
+            callback(err, false);
+        }
+    });
 };
 
 /**
