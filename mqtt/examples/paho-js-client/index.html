@@ -9,62 +9,63 @@
     //by Matthew Bordignon @bordignon on twitter.
 
     var wsbroker = "localhost";  //mqtt websocket enabled broker
-    var wsport = 8883 // port for above
+    var wsport = 8880 // port for above
 
-    var client = new Paho.MQTT.Client(wsbroker, wsport, '/ws');
+    var client = new Paho.MQTT.Client(wsbroker, wsport, '');
 
     client.onConnectionLost = function (responseObject) {
       console.log("connection lost: " + responseObject.errorMessage);
     };
 
     client.onMessageArrived = function (message) {
-      console.log("Hello msg", message.destinationName, ' -- ', message.payloadString);
+      console.log("Msg", message.destinationName, ' -- ', message.payloadString);
     };
 
     var options = {
       timeout: 3,
+      userName: "<thing_id>",   // Replace <:your_thing_id>
+      password: "<thing_key>",  // Replace <:your_thing_key>
       onSuccess: function () {
         console.log("mqtt connected");
         // Connection succeeded; subscribe to our topic, you can add multile lines of these
-        client.subscribe('mainflux/channels/:your_channel_id/messages/senml-json', {qos: 1});  //Replace <:your_channel_id>
+        client.subscribe('channels/<channel_id>/messages', {qos: 1});  // Replace <:your_channel_id>
 
-        //use the below if you want to publish to a topic on connect
-	 var payload = [
-	   {
-	      "bn":"e35b157f-21b8-4adb-ab59-9df21461c815",
-	      "bt":1.276020076001e+09,
-	      "bu":"A",
-	      "bver":5,
-	      "n":"voltage",
-	      "u":"V",
-	      "v":120.1
-	   },
-	   {
-	      "n":"current",
-	      "t":-5,
-	      "v":1.2
-	   },
-	   {
-	      "n":"current",
-	      "t":-4,
-	      "v":1.3
-	   }
-	];
-         message = new Paho.MQTT.Message("Hello from WS");
-         message.destinationName = "test";
-        // client.send(message);
-
+        // use the below if you want to publish to a topic on connect
+	      var payload = [
+	        {
+	          "bn":"e35b157f-21b8-4adb-ab59-9df21461c815",
+	          "bt":1.276020076001e+09,
+	          "bu":"A",
+	          "bver":5,
+	          "n":"voltage",
+	          "u":"V",
+	          "v":120.1
+	        },
+	        {
+	          "n":"current",
+	          "t":-5,
+	          "v":1.2
+	        },
+	        {
+	          "n":"current",
+	          "t":-4,
+	          "v":1.3
+	        }
+	      ];
+        message = new Paho.MQTT.Message('[{"bn":"some-base-name:","bt":1.276020076001e+09, "bu":"A","bver":5, "n":"voltage","u":"V","v":120.1}, {"n":"current","t":-5,"v":1.2}, {"n":"current","t":-4,"v":1.3}]');
+        message.destinationName = "channels/<channel_id>/messages";  // Replace <:your_channel_id>
+        client.send(message);
       },
       onFailure: function (message) {
         console.log("Connection failed: " + message.errorMessage);
       }
     };
 
-  function init() {
+    function init() {
       client.connect(options);
-  }
+    }
 
-    </script>
+  </script>
   </head>
   <body onload="init();">
   </body>

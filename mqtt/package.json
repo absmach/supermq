@@ -22,7 +22,8 @@
     "nats": "^0.6.8",
     "protocol-buffers": "^4.0.4",
     "request": "^2.81.0",
-    "toml": "^2.3.0"
+    "toml": "^2.3.0",
+    "websocket-stream": "^5.1.2"
   },
   "devDependencies": {
     "chai": "^3.4.0",

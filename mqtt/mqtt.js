@@ -1,9 +1,11 @@
 'use strict';
 
+var http = require('http');
 var net = require('net');
 var aedes = require('aedes')();
 var logging = require('aedes-logging');
 var protobuf = require('protocol-buffers');
+var websocket = require('websocket-stream');
 var grpc = require('grpc');
 var fs = require('fs');
 var bunyan = require('bunyan');
@@ -16,12 +18,25 @@ var logger = bunyan.createLogger({name: "mqtt"}),
     message = protobuf(fs.readFileSync('../message.proto')),
     thingsSchema = grpc.load("../internal.proto").mainflux,
     things = new thingsSchema.ThingsService(config.auth_url, grpc.credentials.createInsecure()),
-    servers = [startMqtt()];
+    servers = [
+        startMqtt(),
+        startWs()
+    ];
 
 logging({
     instance: aedes,
     servers: servers
 });
+
+/**
+ * WebSocket
+ */
+function startWs() {
+    var server = http.createServer();
+    websocket.createServer({server: server}, aedes.handle);
+    server.listen(config.ws_port);
+    return server;
+}
 
 /**
  * MQTT
