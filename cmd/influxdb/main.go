@@ -10,8 +10,9 @@ import (
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	client "github.com/influxdata/influxdb/client/v2"
 	"github.com/mainflux/mainflux"
-	influxdb "github.com/mainflux/mainflux/influxdb"
 	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/writers"
+	influxdb "github.com/mainflux/mainflux/writers/influxdb"
 	nats "github.com/nats-io/go-nats"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
@@ -73,12 +74,6 @@ func main() {
 	errs := make(chan error, 2)
 
 	go func() {
-		p := fmt.Sprintf(":%s", cfg.Port)
-		logger.Info(fmt.Sprintf("Influxdb writer service started, exposed port %s", cfg.Port))
-		errs <- http.ListenAndServe(p, influxdb.MakeHandler())
-	}()
-
-	go func() {
 		c := make(chan os.Signal)
 		signal.Notify(c, syscall.SIGINT)
 		errs <- fmt.Errorf("%s", <-c)
@@ -97,28 +92,30 @@ func main() {
 	}
 	defer repo.Close()
 
-	repo = influxdb.MetricsMiddleware(
-		repo,
-		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
-			Namespace: "influxdb",
-			Subsystem: "db_client",
-			Name:      "request_count",
-			Help:      "Number of database inserts.",
-		}, []string{"method"}),
-		kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
-			Namespace: "influxdb",
-			Subsystem: "db_client",
-			Name:      "request_latency_microseconds",
-			Help:      "Total duration of inserts in microseconds.",
-		}, []string{"method"}),
-	)
+	counter := kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+		Namespace: "influxdb",
+		Subsystem: "db_client",
+		Name:      "request_count",
+		Help:      "Number of database inserts.",
+	}, []string{"method"})
 
-	repo = influxdb.LoggingMiddleware(repo, logger)
+	latency := kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+		Namespace: "influxdb",
+		Subsystem: "db_client",
+		Name:      "request_latency_microseconds",
+		Help:      "Total duration of inserts in microseconds.",
+	}, []string{"method"})
 
-	if _, err := nc.Subscribe(senML, mainflux.HandleMsg("InfluxDB writer", logger, repo)); err != nil {
-		logger.Error(fmt.Sprintf("Failed to subscribe to NATS: %s", err.Error()))
+	if err := writers.Start("influxdb-writer", nc, logger, repo, counter, latency); err != nil {
+		logger.Error(fmt.Sprintf("Failed to start message writer: %s", err))
 		return
 	}
+
+	go func() {
+		p := fmt.Sprintf(":%s", cfg.Port)
+		logger.Info(fmt.Sprintf("Influxdb writer service started, exposed port %s", cfg.Port))
+		errs <- http.ListenAndServe(p, influxdb.MakeHandler())
+	}()
 
 	err = <-errs
 	logger.Error(fmt.Sprintf("Influxdb writer service terminated: %s", err))
