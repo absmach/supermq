@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"os"
 	"testing"
 	"time"
 
@@ -31,12 +30,19 @@ var (
 	svc     things.Service
 )
 
-func TestMain(m *testing.M) {
-	svc = newService(map[string]string{token: email})
-	startGRPCServer(svc, port)
+func newService(tokens map[string]string) things.Service {
+	users := mocks.NewUsersService(tokens)
+	thingsRepo := mocks.NewThingRepository()
+	channelsRepo := mocks.NewChannelRepository(thingsRepo)
+	idp := mocks.NewIdentityProvider()
+	return things.New(users, thingsRepo, channelsRepo, idp)
+}
 
-	code := m.Run()
-	os.Exit(code)
+func startGRPCServer(svc things.Service, port int) {
+	listener, _ := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	server := grpc.NewServer()
+	mainflux.RegisterThingsServiceServer(server, grpcapi.NewServer(svc))
+	go server.Serve(listener)
 }
 
 func TestCanAccess(t *testing.T) {
@@ -97,19 +103,4 @@ func TestIdentify(t *testing.T) {
 		assert.Equal(t, tc.id, id.GetValue(), fmt.Sprintf("%s: expected %s got %s", desc, tc.id, id.GetValue()))
 		assert.Equal(t, tc.code, e.Code(), fmt.Sprintf("%s: expected %s got %s", desc, tc.code, e.Code()))
 	}
-}
-
-func newService(tokens map[string]string) things.Service {
-	users := mocks.NewUsersService(tokens)
-	thingsRepo := mocks.NewThingRepository()
-	channelsRepo := mocks.NewChannelRepository(thingsRepo)
-	idp := mocks.NewIdentityProvider()
-	return things.New(users, thingsRepo, channelsRepo, idp)
-}
-
-func startGRPCServer(svc things.Service, port int) {
-	listener, _ := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	server := grpc.NewServer()
-	mainflux.RegisterThingsServiceServer(server, grpcapi.NewServer(svc))
-	go server.Serve(listener)
 }
