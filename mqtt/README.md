@@ -12,7 +12,7 @@ default values.
 | Variable             | Description         | Default               |
 |----------------------|---------------------|-----------------------|
 | MF_MQTT_ADAPTER_PORT | Service MQTT port   | 1883                  |
-| MF_WS_PORT           | WebSocket port      | 8880                  |
+| MF_MQTT_WS_PORT      | WebSocket port      | 8880                  |
 | MF_NATS_URL          | NATS instance URL   | nats://localhost:4222 |
 | MF_THINGS_URL        | Things service URL  | localhost:8181        |
 
@@ -33,7 +33,7 @@ services:
       MF_THINGS_URL: [Things service URL]
       MF_NATS_URL: [NATS instance URL]
       MF_MQTT_ADAPTER_PORT: [Service MQTT port]
-      MF_WS_PORT: [Service WS port]
+      MF_MQTT_WS_PORT: [Service WS port]
 ```
 
 To start the service outside of the container, execute the following shell script:
@@ -48,7 +48,7 @@ cd $GOPATH/src/github.com/mainflux/mainflux/mqtt
 npm install
 
 # set the environment variables and run the service
-MF_THINGS_URL=[Things service URL] MF_NATS_URL=[NATS instance URL] MF_MQTT_ADAPTER_PORT=[Service MQTT port] MF_WS_PORT= [Service WS port] node mqtt.js
+MF_THINGS_URL=[Things service URL] MF_NATS_URL=[NATS instance URL] MF_MQTT_ADAPTER_PORT=[Service MQTT port] MF_MQTT_WS_PORT= [Service WS port] node mqtt.js
 ```
 
 ## Usage
