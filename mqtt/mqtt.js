@@ -12,14 +12,15 @@ var http = require('http'),
 
 // pass a proto file as a buffer/string or pass a parsed protobuf-schema object
 var logger = bunyan.createLogger({name: "mqtt"}),
-    message = protobuf(fs.readFileSync('../message.proto')),
-    thingsSchema = grpc.load("../internal.proto").mainflux,
     config = {
         mqtt_port: process.env.MF_MQTT_ADAPTER_PORT || 1883,
         ws_port: process.env.MF_MQTT_WS_PORT || 8880,
         nats_url: process.env.MF_NATS_URL || 'nats://localhost:4222',
         auth_url: process.env.MF_THINGS_URL || 'localhost:8181',
+        schema_dir: process.argv[2] || '.'
     },
+    message = protobuf(fs.readFileSync(config.schema_dir + '/message.proto')),
+    thingsSchema = grpc.load(config.schema_dir + "/internal.proto").mainflux,
     nats = require('nats').connect(config.nats_url),
     things = new thingsSchema.ThingsService(config.auth_url, grpc.credentials.createInsecure()),
     servers = [

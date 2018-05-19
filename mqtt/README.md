@@ -48,7 +48,7 @@ cd $GOPATH/src/github.com/mainflux/mainflux/mqtt
 npm install
 
 # set the environment variables and run the service
-MF_THINGS_URL=[Things service URL] MF_NATS_URL=[NATS instance URL] MF_MQTT_ADAPTER_PORT=[Service MQTT port] MF_MQTT_WS_PORT= [Service WS port] node mqtt.js
+MF_THINGS_URL=[Things service URL] MF_NATS_URL=[NATS instance URL] MF_MQTT_ADAPTER_PORT=[Service MQTT port] MF_MQTT_WS_PORT=[Service WS port] node mqtt.js ..
 ```
 
 ## Usage

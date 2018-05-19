@@ -13,7 +13,7 @@
     "lint": "eslint mqtt.js"
   },
   "dependencies": {
-    "aedes": "^0.33.0",
+    "aedes": "^0.34.0",
     "aedes-logging": "^1.0.1",
     "atob": "^2.0.3",
     "bunyan": "^1.5.1",
