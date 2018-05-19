@@ -1,22 +1,26 @@
 'use strict';
 
-var http = require('http');
-var net = require('net');
-var aedes = require('aedes')();
-var logging = require('aedes-logging');
-var protobuf = require('protocol-buffers');
-var websocket = require('websocket-stream');
-var grpc = require('grpc');
-var fs = require('fs');
-var bunyan = require('bunyan');
-
-var config = require('./mqtt.config');
-var nats = require('nats').connect(config.nats_url);
+var http = require('http'),
+    net = require('net'),
+    aedes = require('aedes')(),
+    logging = require('aedes-logging'),
+    protobuf = require('protocol-buffers'),
+    websocket = require('websocket-stream'),
+    grpc = require('grpc'),
+    fs = require('fs'),
+    bunyan = require('bunyan');
 
 // pass a proto file as a buffer/string or pass a parsed protobuf-schema object
 var logger = bunyan.createLogger({name: "mqtt"}),
     message = protobuf(fs.readFileSync('../message.proto')),
     thingsSchema = grpc.load("../internal.proto").mainflux,
+    config = {
+        mqtt_port: process.env.MF_MQTT_ADAPTER_PORT || 1883,
+        ws_port: process.env.MF_MQTT_WS_PORT || 8880,
+        nats_url: process.env.MF_NATS_URL || 'nats://localhost:4222',
+        auth_url: process.env.MF_THINGS_URL || 'localhost:8181',
+    },
+    nats = require('nats').connect(config.nats_url),
     things = new thingsSchema.ThingsService(config.auth_url, grpc.credentials.createInsecure()),
     servers = [
         startMqtt(),
@@ -28,9 +32,7 @@ logging({
     servers: servers
 });
 
-/**
- * WebSocket
- */
+// MQTT over WebSocket
 function startWs() {
     var server = http.createServer();
     websocket.createServer({server: server}, aedes.handle);
@@ -38,16 +40,10 @@ function startWs() {
     return server;
 }
 
-/**
- * MQTT
- */
 function startMqtt() {
     return net.createServer(aedes.handle).listen(config.mqtt_port);
 }
 
-/**
- * NATS
- */
 nats.subscribe('channel.*', function (msg) {
     var m = message.RawMessage.decode(Buffer.from(msg)),
         packet = {
@@ -61,94 +57,82 @@ nats.subscribe('channel.*', function (msg) {
     aedes.publish(packet);
 });
 
-/**
- * Hooks
- */
-// AuthZ PUB
-aedes.authorizePublish = function (client, packet, callback) {
+aedes.authorizePublish = function (client, packet, publish) {
     // Topics are in the form `channels/<channel_id>/messages`
     var channel = packet.topic.split('/')[1];
 
     things.CanAccess({
         token: client.password,
         chanID: channel
-    }, function (err, res) {
+    }, onAuthorize);
+
+    function onAuthorize(err, res) {
         if (!err) {
             logger.info('authorized publish');
-            /**
-             * We must publish on NATS here, because on_publish() is also called
-             * when we receive message from NATS from other adapters (in nats.subscribe()),
-             * so we must avoid re-publishing on NATS what came from other adapters
-             */
+            
             var rawMsg = message.RawMessage.encode({
                 Publisher: client.id,
                 Channel: channel,
                 Protocol: 'mqtt',
                 Payload: packet.payload
             });
-
-            // Pub on NATS
             nats.publish('channel.' + channel, rawMsg);
 
             // Set empty topic for packet so that it won't be published two times.
             packet.topic = '';
-            callback(0);
+            publish(0);
         } else {
             logger.warn("unauthorized publish: %s", err.message);
-            callback(4); // Bad username or password
+            publish(4); // Bad username or password
         }
-    });
+    }
 };
 
-// AuthZ SUB
-aedes.authorizeSubscribe = function (client, packet, callback) {
+
+aedes.authorizeSubscribe = function (client, packet, subscribe) {
     // Topics are in the form `channels/<channel_id>/messages`
     var channel = packet.topic.split('/')[1];
     
     things.canAccess({
         token: client.password,
         chanID: channel
-    }, function (err, res) {
+    }, onAuthorize);
+
+    function onAuthorize(err, res) {
         if (!err) {
             logger.info('authorized subscribe');
-            callback(null, packet);
+            subscribe(null, packet);
         } else {
             logger.warn('unauthorizerd subscribe: %s', err);
-            callback(4, packet); // Bad username or password
+            subscribe(4, packet); // Bad username or password
         }
-    });
+    }
 };
 
-// AuthX
-aedes.authenticate = function (client, username, password, callback) {
-    var pass = password || "";
-    pass = pass.toString() || "";
+aedes.authenticate = function (client, username, password, acknowledge) {
+    var pass = password || "",
+        pass = pass.toString() || "";
     things.identify({value: pass}, function(err, res) {
         if (!err) {
             client.id = res.value.toString() || "";
             client.password = pass;
-            callback(null, true);
+            acknowledge(null, true);
         } else {
             logger.warn('failed to authenticate client with key %s', password);
-            callback(err, false);
+            acknowledge(err, false);
         }
     });
 };
 
-/**
- * Handlers
- */
 aedes.on('clientDisconnect', function (client) {
     logger.info('disconnect client %s', client.id);
-    // Remove client password
     client.password = null;
-    
 });
 
 aedes.on('clientError', function (client, err) {
-  logger.warn('client error: client: %s, error: %s, stack: %s', client.id, err.message, err.stack);
+  logger.warn('client error: client: %s, error: %s', client.id, err.message);
 });
 
 aedes.on('connectionError', function (client, err) {
-  logger.warn('client error: client: %s, error: %s, stack: %s', client.id, err.message, err.stack);
+  logger.warn('client error: client: %s, error: %s', client.id, err.message);
 });
