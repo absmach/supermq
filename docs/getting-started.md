@@ -308,7 +308,7 @@ To unsubscribe from channel, client should send same message with value of `Obse
 
 ### MQTT
 
-To send and receive messages over MQTT you could use [Mosquitto](https://mosquitto.org),
+To send and receive messages over MQTT you could use [Mosquitto tools](https://mosquitto.org),
 or [Paho](https://www.eclipse.org/paho/) if you want to use MQTT over WebSocket.
 
 To publish message over channel, client should call following command:
