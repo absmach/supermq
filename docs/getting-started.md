@@ -324,4 +324,4 @@ mosquitto_sub -u <thing_id> -P <thing_key> -t channels/<channel_id>/messages -h 
 ```
 
 If you are using TLS to secure MQTT connection, add `--cafile docker/ssl/certs/ca.crt` 
-to every command. For using MQTT over WebSocket, see this [example](https://github.com/mainflux/mainflux/blob/master/mqtt/examples/paho-js-client/index.html).
+to every command.
