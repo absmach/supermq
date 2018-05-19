@@ -89,6 +89,10 @@ aedes.authorizePublish = function (client, packet, callback) {
 
             // Pub on NATS
             nats.publish('channel.' + channel, rawMsg);
+
+            // Set empty topic for packet so that it won't be published two times.
+            packet.topic = '';
+            callback(0);
         } else {
             logger.warn("unauthorized publish: %s", err.message);
             callback(4); // Bad username or password
