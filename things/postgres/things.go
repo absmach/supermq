@@ -22,7 +22,7 @@ func NewThingRepository(db *sql.DB, log logger.Logger) things.ThingRepository {
 	return &thingRepository{db: db, log: log}
 }
 
-func (tr thingRepository) Save(thing things.Thing) (uint, error) {
+func (tr thingRepository) Save(thing things.Thing) (uint64, error) {
 	q := `INSERT INTO things (owner, type, name, key, payload) VALUES ($1, $2, $3, $4, $5) RETURNING id`
 
 	if err := tr.db.QueryRow(q, thing.Owner, thing.Type, thing.Name, thing.Key, thing.Payload).Scan(&thing.ID); err != nil {
@@ -52,7 +52,7 @@ func (tr thingRepository) Update(thing things.Thing) error {
 	return nil
 }
 
-func (tr thingRepository) RetrieveByID(owner string, id uint) (things.Thing, error) {
+func (tr thingRepository) RetrieveByID(owner string, id uint64) (things.Thing, error) {
 	q := `SELECT name, type, key, payload FROM things WHERE id = $1 AND owner = $2`
 	thing := things.Thing{ID: id, Owner: owner}
 	err := tr.db.
@@ -70,9 +70,9 @@ func (tr thingRepository) RetrieveByID(owner string, id uint) (things.Thing, err
 	return thing, nil
 }
 
-func (tr thingRepository) RetrieveByKey(key string) (uint, error) {
+func (tr thingRepository) RetrieveByKey(key string) (uint64, error) {
 	q := `SELECT id FROM things WHERE key = $1`
-	var id uint
+	var id uint64
 	if err := tr.db.QueryRow(q, key).Scan(&id); err != nil {
 		if err == sql.ErrNoRows {
 			return 0, things.ErrNotFound
@@ -106,7 +106,7 @@ func (tr thingRepository) RetrieveAll(owner string, offset, limit int) []things.
 	return items
 }
 
-func (tr thingRepository) Remove(owner string, id uint) error {
+func (tr thingRepository) Remove(owner string, id uint64) error {
 	q := `DELETE FROM things WHERE id = $1 AND owner = $2`
 	tr.db.Exec(q, id, owner)
 	return nil

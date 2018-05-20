@@ -16,7 +16,8 @@ import (
 )
 
 const (
-	id           = "123e4567-e89b-12d3-a456-000000000001"
+	id           = 1
+	contentType  = "application/senml+json"
 	token        = "auth_token"
 	invalidToken = "invalid_token"
 	msg          = `[{"n":"current","t":-1,"v":1.6}]`
@@ -30,10 +31,6 @@ func newService() mainflux.MessagePublisher {
 func newHTTPServer(pub mainflux.MessagePublisher, cc mainflux.ThingsServiceClient) *httptest.Server {
 	mux := api.MakeHandler(pub, cc)
 	return httptest.NewServer(mux)
-}
-
-func newThingsClient() mainflux.ThingsServiceClient {
-	return mocks.NewThingsClient(map[string]string{token: id})
 }
 
 type testRequest struct {
@@ -60,31 +57,30 @@ func (tr testRequest) make() (*http.Response, error) {
 }
 
 func TestPublish(t *testing.T) {
-	thingsClient := newThingsClient()
+	thingsClient := mocks.NewThingsClient(map[string]uint64{token: id})
 
 	pub := newService()
 	ts := newHTTPServer(pub, thingsClient)
 	defer ts.Close()
 
 	cases := map[string]struct {
-		chanID      string
+		chanID      uint64
 		msg         string
 		contentType string
 		auth        string
 		status      int
 	}{
-		"publish message":                                  {id, msg, "application/senml+json", token, http.StatusAccepted},
-		"publish message with no authorization token":      {id, msg, "application/senml+json", "", http.StatusForbidden},
-		"publish message with invalid authorization token": {id, msg, "application/senml+json", invalidToken, http.StatusForbidden},
+		"publish message":                                  {id, msg, contentType, token, http.StatusAccepted},
+		"publish message with no authorization token":      {id, msg, contentType, "", http.StatusForbidden},
+		"publish message with invalid authorization token": {id, msg, contentType, invalidToken, http.StatusForbidden},
 		"publish message with no content type":             {id, msg, "", token, http.StatusAccepted},
-		"publish message with invalid channel id":          {"1", msg, "application/senml+json", token, http.StatusNotFound},
 	}
 
 	for desc, tc := range cases {
 		req := testRequest{
 			client:      ts.Client(),
 			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/channels/%s/messages", ts.URL, tc.chanID),
+			url:         fmt.Sprintf("%s/channels/%d/messages", ts.URL, tc.chanID),
 			contentType: tc.contentType,
 			token:       tc.auth,
 			body:        strings.NewReader(tc.msg),

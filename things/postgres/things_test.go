@@ -67,7 +67,7 @@ func TestSingleThingRetrieval(t *testing.T) {
 
 	cases := map[string]struct {
 		owner string
-		ID    uint
+		ID    uint64
 		err   error
 	}{
 		"existing user":                     {thing.Owner, thing.ID, nil},
@@ -95,7 +95,7 @@ func TestThingRetrieveByKey(t *testing.T) {
 
 	cases := map[string]struct {
 		key string
-		id  uint
+		id  uint64
 		err error
 	}{
 		"retrieve existing thing by key":     {thing.Key, thing.ID, nil},

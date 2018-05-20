@@ -9,11 +9,11 @@ import (
 
 	"google.golang.org/grpc/codes"
 
-	"github.com/asaskevich/govalidator"
 	mux "github.com/dereulenspiegel/coap-mux"
 	gocoap "github.com/dustin/go-coap"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/coap"
+	"github.com/mainflux/mainflux/things"
 	"google.golang.org/grpc/status"
 )
 
@@ -34,8 +34,9 @@ func authKey(opt interface{}) (string, error) {
 	return arr[1], nil
 }
 
-func authorize(msg *gocoap.Message, res *gocoap.Message, cid string) (publisher *mainflux.Identity, err error) {
-	if !govalidator.IsUUID(cid) {
+func authorize(msg *gocoap.Message, res *gocoap.Message, cid string) (publisher *mainflux.ThingID, err error) {
+	chanID, err := things.FromString(cid)
+	if err != nil {
 		res.Code = gocoap.NotFound
 		return
 	}
@@ -55,7 +56,7 @@ func authorize(msg *gocoap.Message, res *gocoap.Message, cid string) (publisher 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	publisher, err = auth.CanAccess(ctx, &mainflux.AccessReq{Token: key, ChanID: cid})
+	publisher, err = auth.CanAccess(ctx, &mainflux.AccessReq{Token: key, ChanID: chanID})
 
 	if err != nil {
 		e, ok := status.FromError(err)

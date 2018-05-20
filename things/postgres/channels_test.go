@@ -55,7 +55,7 @@ func TestSingleChannelRetrieval(t *testing.T) {
 
 	cases := map[string]struct {
 		owner string
-		ID    uint
+		ID    uint64
 		err   error
 	}{
 		"existing user":                       {c.Owner, c.ID, nil},
@@ -131,8 +131,8 @@ func TestConnect(t *testing.T) {
 	cases := []struct {
 		desc    string
 		owner   string
-		chanID  uint
-		thingID uint
+		chanID  uint64
+		thingID uint64
 		err     error
 	}{
 		{"existing user, channel and thing", email, chanID, thingID, nil},
@@ -164,8 +164,8 @@ func TestDisconnect(t *testing.T) {
 	cases := []struct {
 		desc    string
 		owner   string
-		chanID  uint
-		thingID uint
+		chanID  uint64
+		thingID uint64
 		err     error
 	}{
 		{"connected thing", email, chanID, thingID, nil},
@@ -195,7 +195,7 @@ func TestHasThing(t *testing.T) {
 	chanRepo.Connect(email, chanID, thingID)
 
 	cases := map[string]struct {
-		chanID    uint
+		chanID    uint64
 		key       string
 		hasAccess bool
 	}{

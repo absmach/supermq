@@ -27,7 +27,7 @@ func NewChannelRepository(db *sql.DB, log logger.Logger) things.ChannelRepositor
 	return &channelRepository{db: db, log: log}
 }
 
-func (cr channelRepository) Save(channel things.Channel) (uint, error) {
+func (cr channelRepository) Save(channel things.Channel) (uint64, error) {
 	q := `INSERT INTO channels (owner, name) VALUES ($1, $2) RETURNING id`
 
 	if err := cr.db.QueryRow(q, channel.Owner, channel.Name).Scan(&channel.ID); err != nil {
@@ -57,7 +57,7 @@ func (cr channelRepository) Update(channel things.Channel) error {
 	return nil
 }
 
-func (cr channelRepository) RetrieveByID(owner string, id uint) (things.Channel, error) {
+func (cr channelRepository) RetrieveByID(owner string, id uint64) (things.Channel, error) {
 	q := `SELECT name FROM channels WHERE id = $1 AND owner = $2`
 	channel := things.Channel{ID: id, Owner: owner}
 	if err := cr.db.QueryRow(q, id, owner).Scan(&channel.Name); err != nil {
@@ -115,13 +115,13 @@ func (cr channelRepository) RetrieveAll(owner string, offset, limit int) []thing
 	return items
 }
 
-func (cr channelRepository) Remove(owner string, id uint) error {
+func (cr channelRepository) Remove(owner string, id uint64) error {
 	q := `DELETE FROM channels WHERE id = $1 AND owner = $2`
 	cr.db.Exec(q, id, owner)
 	return nil
 }
 
-func (cr channelRepository) Connect(owner string, chanID, thingID uint) error {
+func (cr channelRepository) Connect(owner string, chanID, thingID uint64) error {
 	q := `INSERT INTO connections (channel_id, channel_owner, thing_id, thing_owner) VALUES ($1, $2, $3, $2)`
 
 	if _, err := cr.db.Exec(q, chanID, owner, thingID); err != nil {
@@ -142,7 +142,7 @@ func (cr channelRepository) Connect(owner string, chanID, thingID uint) error {
 	return nil
 }
 
-func (cr channelRepository) Disconnect(owner string, chanID, thingID uint) error {
+func (cr channelRepository) Disconnect(owner string, chanID, thingID uint64) error {
 	q := `DELETE FROM connections
 	WHERE channel_id = $1 AND channel_owner = $2
 	AND thing_id = $3 AND thing_owner = $2`
@@ -164,8 +164,8 @@ func (cr channelRepository) Disconnect(owner string, chanID, thingID uint) error
 	return nil
 }
 
-func (cr channelRepository) HasThing(chanID uint, key string) (uint, error) {
-	var thingID uint
+func (cr channelRepository) HasThing(chanID uint64, key string) (uint64, error) {
+	var thingID uint64
 
 	q := `SELECT id FROM things WHERE key = $1`
 	if err := cr.db.QueryRow(q, key).Scan(&thingID); err != nil {

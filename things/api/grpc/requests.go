@@ -6,7 +6,7 @@ import (
 
 type accessReq struct {
 	thingKey string
-	chanID   uint
+	chanID   uint64
 }
 
 func (req accessReq) validate() error {

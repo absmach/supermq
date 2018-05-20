@@ -37,7 +37,7 @@ func (req addThingReq) validate() error {
 
 type updateThingReq struct {
 	key   string
-	id    uint
+	id    uint64
 	thing things.Thing
 }
 
@@ -68,7 +68,7 @@ func (req createChannelReq) validate() error {
 
 type updateChannelReq struct {
 	key     string
-	id      uint
+	id      uint64
 	channel things.Channel
 }
 
@@ -86,7 +86,7 @@ func (req updateChannelReq) validate() error {
 
 type viewResourceReq struct {
 	key string
-	id  uint
+	id  uint64
 }
 
 func (req viewResourceReq) validate() error {
@@ -121,8 +121,8 @@ func (req *listResourcesReq) validate() error {
 
 type connectionReq struct {
 	key     string
-	chanID  uint
-	thingID uint
+	chanID  uint64
+	thingID uint64
 }
 
 func (req connectionReq) validate() error {

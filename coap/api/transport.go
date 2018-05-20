@@ -93,7 +93,7 @@ func receive(svc coap.Service) handler {
 
 		rawMsg := mainflux.RawMessage{
 			Channel:   cid,
-			Publisher: publisher.GetValue(),
+			Publisher: fmt.Sprintf("%d", publisher.GetValue()),
 			Protocol:  protocol,
 			Payload:   msg.Payload,
 		}

@@ -74,7 +74,7 @@ func TestViewThing(t *testing.T) {
 	saved, _ := svc.AddThing(token, thing)
 
 	cases := map[string]struct {
-		id  uint
+		id  uint64
 		key string
 		err error
 	}{
@@ -128,7 +128,7 @@ func TestRemoveThing(t *testing.T) {
 	saved, _ := svc.AddThing(token, thing)
 
 	cases := map[string]struct {
-		id  uint
+		id  uint64
 		key string
 		err error
 	}{
@@ -187,7 +187,7 @@ func TestViewChannel(t *testing.T) {
 	saved, _ := svc.CreateChannel(token, channel)
 
 	cases := map[string]struct {
-		id  uint
+		id  uint64
 		key string
 		err error
 	}{
@@ -240,7 +240,7 @@ func TestRemoveChannel(t *testing.T) {
 	saved, _ := svc.CreateChannel(token, channel)
 
 	cases := map[string]struct {
-		id  uint
+		id  uint64
 		key string
 		err error
 	}{
@@ -264,8 +264,8 @@ func TestConnect(t *testing.T) {
 
 	cases := map[string]struct {
 		key     string
-		chanID  uint
-		thingID uint
+		chanID  uint64
+		thingID uint64
 		err     error
 	}{
 		"connect thing":                         {token, sch.ID, sth.ID, nil},
@@ -290,8 +290,8 @@ func TestDisconnect(t *testing.T) {
 	cases := []struct {
 		desc    string
 		key     string
-		chanID  uint
-		thingID uint
+		chanID  uint64
+		thingID uint64
 		err     error
 	}{
 		{"disconnect connected thing", token, sch.ID, sth.ID, nil},
@@ -317,7 +317,7 @@ func TestCanAccess(t *testing.T) {
 
 	cases := map[string]struct {
 		key     string
-		channel uint
+		channel uint64
 		err     error
 	}{
 		"allowed access":              {sth.Key, sch.ID, nil},
@@ -338,7 +338,7 @@ func TestIdentify(t *testing.T) {
 
 	cases := map[string]struct {
 		key string
-		id  uint
+		id  uint64
 		err error
 	}{
 		"identify existing thing":     {sth.Key, sth.ID, nil},

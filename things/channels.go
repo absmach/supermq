@@ -3,7 +3,7 @@ package things
 // Channel represents a Mainflux "communication group". This group contains the
 // things that can exchange messages between eachother.
 type Channel struct {
-	ID     uint    `json:"id"`
+	ID     uint64  `json:"id"`
 	Owner  string  `json:"-"`
 	Name   string  `json:"name,omitempty"`
 	Things []Thing `json:"connected,omitempty"`
@@ -14,7 +14,7 @@ type ChannelRepository interface {
 	// Save persists the channel. Successful operation is indicated by unique
 	// identifier accompanied by nil error response. A non-nil error is
 	// returned to indicate operation failure.
-	Save(Channel) (uint, error)
+	Save(Channel) (uint64, error)
 
 	// Update performs an update to the existing channel. A non-nil error is
 	// returned to indicate operation failure.
@@ -22,24 +22,24 @@ type ChannelRepository interface {
 
 	// RetrieveByID retrieves the channel having the provided identifier, that is owned
 	// by the specified user.
-	RetrieveByID(string, uint) (Channel, error)
+	RetrieveByID(string, uint64) (Channel, error)
 
 	// RetrieveAll retrieves the subset of channels owned by the specified user.
 	RetrieveAll(string, int, int) []Channel
 
 	// Remove removes the channel having the provided identifier, that is owned
 	// by the specified user.
-	Remove(string, uint) error
+	Remove(string, uint64) error
 
 	// Connect adds thing to the channel's list of connected things.
-	Connect(string, uint, uint) error
+	Connect(string, uint64, uint64) error
 
 	// Disconnect removes thing from the channel's list of connected
 	// things.
-	Disconnect(string, uint, uint) error
+	Disconnect(string, uint64, uint64) error
 
 	// HasThing determines whether the thing with the provided access key, is
 	// "connected" to the specified channel. If that's the case, it returns
 	// thing's ID.
-	HasThing(uint, string) (uint, error)
+	HasThing(uint64, string) (uint64, error)
 }

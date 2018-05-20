@@ -3,12 +3,12 @@ package api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
 
-	"github.com/asaskevich/govalidator"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
@@ -18,7 +18,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const protocol string = "http"
+const protocol = "http"
 
 var (
 	errMalformedData = errors.New("malformed SenML data")
@@ -79,20 +79,20 @@ func authorize(r *http.Request) (string, error) {
 	}
 
 	// extract ID from /channels/:id/messages
-	c := bone.GetValue(r, "id")
-	if !govalidator.IsUUID(c) {
-		return "", errNotFound
+	chanID, err := things.FromString(bone.GetValue(r, "id"))
+	if err != nil {
+		return "", things.ErrNotFound
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	id, err := auth.CanAccess(ctx, &mainflux.AccessReq{Token: apiKey, ChanID: c})
+	id, err := auth.CanAccess(ctx, &mainflux.AccessReq{Token: apiKey, ChanID: chanID})
 	if err != nil {
 		return "", err
 	}
 
-	return id.GetValue(), nil
+	return fmt.Sprintf("%d", id.GetValue()), nil
 }
 
 func decodePayload(body io.ReadCloser) ([]byte, error) {

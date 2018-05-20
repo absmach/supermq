@@ -16,11 +16,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-const (
-	base        = 10
-	bitSize     = 32
-	contentType = "application/json"
-)
+const contentType = "application/json"
 
 var (
 	errUnsupportedContentType = errors.New("unsupported content type")
@@ -153,14 +149,14 @@ func decodeThingUpdate(_ context.Context, r *http.Request) (interface{}, error) 
 		return nil, err
 	}
 
-	id, err := strconv.ParseUint(bone.GetValue(r, "id"), base, bitSize)
+	id, err := things.FromString(bone.GetValue(r, "id"))
 	if err != nil {
-		return nil, things.ErrNotFound
+		return nil, err
 	}
 
 	req := updateThingReq{
 		key:   r.Header.Get("Authorization"),
-		id:    uint(id),
+		id:    id,
 		thing: thing,
 	}
 
@@ -195,14 +191,14 @@ func decodeChannelUpdate(_ context.Context, r *http.Request) (interface{}, error
 		return nil, err
 	}
 
-	id, err := strconv.ParseUint(bone.GetValue(r, "id"), base, bitSize)
+	id, err := things.FromString(bone.GetValue(r, "id"))
 	if err != nil {
-		return nil, things.ErrNotFound
+		return nil, err
 	}
 
 	req := updateChannelReq{
 		key:     r.Header.Get("Authorization"),
-		id:      uint(id),
+		id:      id,
 		channel: channel,
 	}
 
@@ -210,14 +206,14 @@ func decodeChannelUpdate(_ context.Context, r *http.Request) (interface{}, error
 }
 
 func decodeView(_ context.Context, r *http.Request) (interface{}, error) {
-	id, err := strconv.ParseUint(bone.GetValue(r, "id"), base, bitSize)
+	id, err := things.FromString(bone.GetValue(r, "id"))
 	if err != nil {
-		return nil, things.ErrNotFound
+		return nil, err
 	}
 
 	req := viewResourceReq{
 		key: r.Header.Get("Authorization"),
-		id:  uint(id),
+		id:  id,
 	}
 
 	return req, nil
@@ -260,20 +256,20 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeConnection(_ context.Context, r *http.Request) (interface{}, error) {
-	thingID, err := strconv.ParseUint(bone.GetValue(r, "thingId"), base, bitSize)
+	thingID, err := things.FromString(bone.GetValue(r, "thingId"))
 	if err != nil {
-		return nil, things.ErrNotFound
+		return nil, err
 	}
 
-	chanID, err := strconv.ParseUint(bone.GetValue(r, "chanId"), base, bitSize)
+	chanID, err := things.FromString(bone.GetValue(r, "chanId"))
 	if err != nil {
-		return nil, things.ErrNotFound
+		return nil, err
 	}
 
 	req := connectionReq{
 		key:     r.Header.Get("Authorization"),
-		chanID:  uint(chanID),
-		thingID: uint(thingID),
+		chanID:  chanID,
+		thingID: thingID,
 	}
 
 	return req, nil

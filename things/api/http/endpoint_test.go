@@ -133,7 +133,7 @@ func TestUpdateThing(t *testing.T) {
 	cases := []struct {
 		desc        string
 		req         string
-		id          uint
+		id          uint64
 		contentType string
 		auth        string
 		status      int
@@ -173,7 +173,7 @@ func TestViewThing(t *testing.T) {
 
 	cases := []struct {
 		desc   string
-		id     uint
+		id     uint64
 		auth   string
 		status int
 		res    string
@@ -261,7 +261,7 @@ func TestRemoveThing(t *testing.T) {
 
 	cases := []struct {
 		desc   string
-		id     uint
+		id     uint64
 		auth   string
 		status int
 	}{
@@ -337,7 +337,7 @@ func TestUpdateChannel(t *testing.T) {
 	cases := []struct {
 		desc        string
 		req         string
-		id          uint
+		id          uint64
 		contentType string
 		auth        string
 		status      int
@@ -376,7 +376,7 @@ func TestViewChannel(t *testing.T) {
 
 	cases := []struct {
 		desc   string
-		id     uint
+		id     uint64
 		auth   string
 		status int
 		res    string
@@ -465,7 +465,7 @@ func TestRemoveChannel(t *testing.T) {
 
 	cases := []struct {
 		desc   string
-		id     uint
+		id     uint64
 		auth   string
 		status int
 	}{
@@ -504,8 +504,8 @@ func TestConnect(t *testing.T) {
 
 	cases := []struct {
 		desc    string
-		chanID  uint
-		thingID uint
+		chanID  uint64
+		thingID uint64
 		auth    string
 		status  int
 	}{
@@ -546,8 +546,8 @@ func TestDisconnnect(t *testing.T) {
 
 	cases := []struct {
 		desc    string
-		chanID  uint
-		thingID uint
+		chanID  uint64
+		thingID uint64
 		auth    string
 		status  int
 	}{

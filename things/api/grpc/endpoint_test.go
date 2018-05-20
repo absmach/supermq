@@ -59,8 +59,8 @@ func TestCanAccess(t *testing.T) {
 
 	cases := map[string]struct {
 		thingKey string
-		chanID   uint
-		id       uint
+		chanID   uint64
+		id       uint64
 		code     codes.Code
 	}{
 		"check if connected thing can access existing channel":             {cth.Key, sch.ID, cth.ID, codes.OK},
@@ -70,10 +70,10 @@ func TestCanAccess(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		id, err := cli.CanAccess(ctx, &mainflux.AccessReq{tc.thingKey, uint32(tc.chanID)})
+		id, err := cli.CanAccess(ctx, &mainflux.AccessReq{tc.thingKey, tc.chanID})
 		e, ok := status.FromError(err)
 		assert.True(t, ok, "OK expected to be true")
-		assert.Equal(t, tc.id, uint(id.GetValue()), fmt.Sprintf("%s: expected %d got %d", desc, tc.id, id.GetValue()))
+		assert.Equal(t, tc.id, uint64(id.GetValue()), fmt.Sprintf("%s: expected %d got %d", desc, tc.id, id.GetValue()))
 		assert.Equal(t, tc.code, e.Code(), fmt.Sprintf("%s: expected %s got %s", desc, tc.code, e.Code()))
 	}
 }
@@ -89,7 +89,7 @@ func TestIdentify(t *testing.T) {
 
 	cases := map[string]struct {
 		key  string
-		id   uint
+		id   uint64
 		code codes.Code
 	}{
 		"identify existing thing":     {sth.Key, sth.ID, codes.OK},
@@ -100,7 +100,7 @@ func TestIdentify(t *testing.T) {
 		id, err := cli.Identify(ctx, &mainflux.Token{Value: tc.key})
 		e, ok := status.FromError(err)
 		assert.True(t, ok, "OK expected to be true")
-		assert.Equal(t, tc.id, uint(id.GetValue()), fmt.Sprintf("%s: expected %d got %d", desc, tc.id, id.GetValue()))
+		assert.Equal(t, tc.id, uint64(id.GetValue()), fmt.Sprintf("%s: expected %d got %d", desc, tc.id, id.GetValue()))
 		assert.Equal(t, tc.code, e.Code(), fmt.Sprintf("%s: expected %s got %s", desc, tc.code, e.Code()))
 	}
 }

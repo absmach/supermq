@@ -13,7 +13,7 @@ var _ things.ThingRepository = (*thingRepositoryMock)(nil)
 
 type thingRepositoryMock struct {
 	mu      sync.Mutex
-	counter uint
+	counter uint64
 	things  map[string]things.Thing
 }
 
@@ -24,7 +24,7 @@ func NewThingRepository() things.ThingRepository {
 	}
 }
 
-func (trm *thingRepositoryMock) Save(thing things.Thing) (uint, error) {
+func (trm *thingRepositoryMock) Save(thing things.Thing) (uint64, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -50,7 +50,7 @@ func (trm *thingRepositoryMock) Update(thing things.Thing) error {
 	return nil
 }
 
-func (trm *thingRepositoryMock) RetrieveByID(owner string, id uint) (things.Thing, error) {
+func (trm *thingRepositoryMock) RetrieveByID(owner string, id uint64) (things.Thing, error) {
 	if c, ok := trm.things[key(owner, id)]; ok {
 		return c, nil
 	}
@@ -65,8 +65,8 @@ func (trm *thingRepositoryMock) RetrieveAll(owner string, offset, limit int) []t
 		return things
 	}
 
-	first := uint(offset) + 1
-	last := first + uint(limit)
+	first := uint64(offset) + 1
+	last := first + uint64(limit)
 
 	// This obscure way to examine map keys is enforced by the key structure
 	// itself (see mocks/commons.go).
@@ -84,12 +84,12 @@ func (trm *thingRepositoryMock) RetrieveAll(owner string, offset, limit int) []t
 	return things
 }
 
-func (trm *thingRepositoryMock) Remove(owner string, id uint) error {
+func (trm *thingRepositoryMock) Remove(owner string, id uint64) error {
 	delete(trm.things, key(owner, id))
 	return nil
 }
 
-func (trm *thingRepositoryMock) RetrieveByKey(key string) (uint, error) {
+func (trm *thingRepositoryMock) RetrieveByKey(key string) (uint64, error) {
 	for _, thing := range trm.things {
 		if thing.Key == key {
 			return thing.ID, nil

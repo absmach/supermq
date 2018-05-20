@@ -22,7 +22,7 @@ var (
 )
 
 type identityRes struct {
-	id uint
+	id uint64
 }
 
 func (res identityRes) Headers() map[string]string {
@@ -54,7 +54,7 @@ func (res removeRes) Empty() bool {
 }
 
 type thingRes struct {
-	id      uint
+	id      uint64
 	created bool
 }
 
@@ -113,7 +113,7 @@ func (res listThingsRes) Empty() bool {
 }
 
 type channelRes struct {
-	id      uint
+	id      uint64
 	created bool
 }
 

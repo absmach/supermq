@@ -13,7 +13,7 @@ var _ things.ChannelRepository = (*channelRepositoryMock)(nil)
 
 type channelRepositoryMock struct {
 	mu       sync.Mutex
-	counter  uint
+	counter  uint64
 	channels map[string]things.Channel
 	things   things.ThingRepository
 }
@@ -26,7 +26,7 @@ func NewChannelRepository(repo things.ThingRepository) things.ChannelRepository 
 	}
 }
 
-func (crm *channelRepositoryMock) Save(channel things.Channel) (uint, error) {
+func (crm *channelRepositoryMock) Save(channel things.Channel) (uint64, error) {
 	crm.mu.Lock()
 	defer crm.mu.Unlock()
 
@@ -51,7 +51,7 @@ func (crm *channelRepositoryMock) Update(channel things.Channel) error {
 	return nil
 }
 
-func (crm *channelRepositoryMock) RetrieveByID(owner string, id uint) (things.Channel, error) {
+func (crm *channelRepositoryMock) RetrieveByID(owner string, id uint64) (things.Channel, error) {
 	if c, ok := crm.channels[key(owner, id)]; ok {
 		return c, nil
 	}
@@ -66,8 +66,8 @@ func (crm *channelRepositoryMock) RetrieveAll(owner string, offset, limit int) [
 		return channels
 	}
 
-	first := uint(offset) + 1
-	last := first + uint(limit)
+	first := uint64(offset) + 1
+	last := first + uint64(limit)
 
 	// This obscure way to examine map keys is enforced by the key structure
 	// itself (see mocks/commons.go).
@@ -85,12 +85,12 @@ func (crm *channelRepositoryMock) RetrieveAll(owner string, offset, limit int) [
 	return channels
 }
 
-func (crm *channelRepositoryMock) Remove(owner string, id uint) error {
+func (crm *channelRepositoryMock) Remove(owner string, id uint64) error {
 	delete(crm.channels, key(owner, id))
 	return nil
 }
 
-func (crm *channelRepositoryMock) Connect(owner string, chanID, thingID uint) error {
+func (crm *channelRepositoryMock) Connect(owner string, chanID, thingID uint64) error {
 	channel, err := crm.RetrieveByID(owner, chanID)
 	if err != nil {
 		return err
@@ -104,7 +104,7 @@ func (crm *channelRepositoryMock) Connect(owner string, chanID, thingID uint) er
 	return crm.Update(channel)
 }
 
-func (crm *channelRepositoryMock) Disconnect(owner string, chanID, thingID uint) error {
+func (crm *channelRepositoryMock) Disconnect(owner string, chanID, thingID uint64) error {
 	channel, err := crm.RetrieveByID(owner, chanID)
 	if err != nil {
 		return err
@@ -127,7 +127,7 @@ func (crm *channelRepositoryMock) Disconnect(owner string, chanID, thingID uint)
 	return things.ErrNotFound
 }
 
-func (crm *channelRepositoryMock) HasThing(chanID uint, key string) (uint, error) {
+func (crm *channelRepositoryMock) HasThing(chanID uint64, key string) (uint64, error) {
 	// This obscure way to examine map keys is enforced by the key structure
 	// itself (see mocks/commons.go).
 	suffix := fmt.Sprintf("-%d", chanID)

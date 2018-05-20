@@ -48,7 +48,7 @@ func (lm *loggingMiddleware) UpdateThing(key string, thing things.Thing) (err er
 	return lm.svc.UpdateThing(key, thing)
 }
 
-func (lm *loggingMiddleware) ViewThing(key string, id uint) (thing things.Thing, err error) {
+func (lm *loggingMiddleware) ViewThing(key string, id uint64) (thing things.Thing, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method view_thing for key %s and thing %d took %s to complete", key, id, time.Since(begin))
 		if err != nil {
@@ -74,7 +74,7 @@ func (lm *loggingMiddleware) ListThings(key string, offset, limit int) (things [
 	return lm.svc.ListThings(key, offset, limit)
 }
 
-func (lm *loggingMiddleware) RemoveThing(key string, id uint) (err error) {
+func (lm *loggingMiddleware) RemoveThing(key string, id uint64) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method remove_thing for key %s and thing %d took %s to complete", key, id, time.Since(begin))
 		if err != nil {
@@ -113,7 +113,7 @@ func (lm *loggingMiddleware) UpdateChannel(key string, channel things.Channel) (
 	return lm.svc.UpdateChannel(key, channel)
 }
 
-func (lm *loggingMiddleware) ViewChannel(key string, id uint) (channel things.Channel, err error) {
+func (lm *loggingMiddleware) ViewChannel(key string, id uint64) (channel things.Channel, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method view_channel for key %s and channel %d took %s to complete", key, id, time.Since(begin))
 		if err != nil {
@@ -139,7 +139,7 @@ func (lm *loggingMiddleware) ListChannels(key string, offset, limit int) (channe
 	return lm.svc.ListChannels(key, offset, limit)
 }
 
-func (lm *loggingMiddleware) RemoveChannel(key string, id uint) (err error) {
+func (lm *loggingMiddleware) RemoveChannel(key string, id uint64) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method remove_channel for key %s and channel %d took %s to complete", key, id, time.Since(begin))
 		if err != nil {
@@ -152,7 +152,7 @@ func (lm *loggingMiddleware) RemoveChannel(key string, id uint) (err error) {
 	return lm.svc.RemoveChannel(key, id)
 }
 
-func (lm *loggingMiddleware) Connect(key string, chanID, thingID uint) (err error) {
+func (lm *loggingMiddleware) Connect(key string, chanID, thingID uint64) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method connect for key %s, channel %d and thing %d took %s to complete", key, chanID, thingID, time.Since(begin))
 		if err != nil {
@@ -165,7 +165,7 @@ func (lm *loggingMiddleware) Connect(key string, chanID, thingID uint) (err erro
 	return lm.svc.Connect(key, chanID, thingID)
 }
 
-func (lm *loggingMiddleware) Disconnect(key string, chanID, thingID uint) (err error) {
+func (lm *loggingMiddleware) Disconnect(key string, chanID, thingID uint64) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method disconnect for key %s, channel %d and thing %d took %s to complete", key, chanID, thingID, time.Since(begin))
 		if err != nil {
@@ -178,7 +178,7 @@ func (lm *loggingMiddleware) Disconnect(key string, chanID, thingID uint) (err e
 	return lm.svc.Disconnect(key, chanID, thingID)
 }
 
-func (lm *loggingMiddleware) CanAccess(id uint, key string) (thing uint, err error) {
+func (lm *loggingMiddleware) CanAccess(id uint64, key string) (thing uint64, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method can_access for channel %d and thing %d took %s to complete", id, thing, time.Since(begin))
 		if err != nil {
@@ -191,7 +191,7 @@ func (lm *loggingMiddleware) CanAccess(id uint, key string) (thing uint, err err
 	return lm.svc.CanAccess(id, key)
 }
 
-func (lm *loggingMiddleware) Identify(key string) (id uint, err error) {
+func (lm *loggingMiddleware) Identify(key string) (id uint64, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method identify for key %s and thing %d took %s to complete", key, id, time.Since(begin))
 		if err != nil {

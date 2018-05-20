@@ -58,11 +58,11 @@ func TestAddThingReqValidation(t *testing.T) {
 
 func TestUpdateThingReqValidation(t *testing.T) {
 	key := uuid.NewV4().String()
-	id := uint(1)
+	id := uint64(1)
 
 	cases := map[string]struct {
 		thing things.Thing
-		id    uint
+		id    uint64
 		key   string
 		err   error
 	}{
@@ -109,11 +109,11 @@ func TestCreateChannelReqValidation(t *testing.T) {
 
 func TestUpdateChannelReqValidation(t *testing.T) {
 	key := uuid.NewV4().String()
-	id := uint(1)
+	id := uint64(1)
 
 	cases := map[string]struct {
 		channel things.Channel
-		id      uint
+		id      uint64
 		key     string
 		err     error
 	}{
@@ -136,10 +136,10 @@ func TestUpdateChannelReqValidation(t *testing.T) {
 
 func TestViewResourceReqValidation(t *testing.T) {
 	key := uuid.NewV4().String()
-	id := uint(1)
+	id := uint64(1)
 
 	cases := map[string]struct {
-		id  uint
+		id  uint64
 		key string
 		err error
 	}{
