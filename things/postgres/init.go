@@ -30,7 +30,7 @@ func Connect(host, port, name, user, pass string) (*sql.DB, error) {
 func migrateDB(db *sql.DB) error {
 	migrations := &migrate.MemoryMigrationSource{
 		Migrations: []*migrate.Migration{
-			&migrate.Migration{
+			{
 				Id: "things_1",
 				Up: []string{
 					`CREATE TABLE things (
