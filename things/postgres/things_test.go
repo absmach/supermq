@@ -12,12 +12,11 @@ import (
 
 func TestThingSave(t *testing.T) {
 	email := "thing-save@example.com"
-	idp := uuid.New()
 	thingRepo := postgres.NewThingRepository(db, testLog)
+
 	thing := things.Thing{
-		ID:    idp.ID(),
 		Owner: email,
-		Key:   idp.ID(),
+		Key:   uuid.New().ID(),
 	}
 
 	_, err := thingRepo.Save(thing)
@@ -28,24 +27,24 @@ func TestThingSave(t *testing.T) {
 
 func TestThingUpdate(t *testing.T) {
 	email := "thing-update@example.com"
-	idp := uuid.New()
 	thingRepo := postgres.NewThingRepository(db, testLog)
 
 	thing := things.Thing{
-		ID:    idp.ID(),
 		Owner: email,
-		Key:   idp.ID(),
+		Key:   uuid.New().ID(),
 	}
 
-	thingRepo.Save(thing)
+	id, _ := thingRepo.Save(thing)
+	thing.ID = id
 
 	cases := map[string]struct {
 		thing things.Thing
 		err   error
 	}{
 		"existing thing":                            {thing, nil},
-		"non-existing thing with existing user":     {things.Thing{ID: wrong, Owner: email}, things.ErrNotFound},
-		"non-existing thing with non-existing user": {things.Thing{ID: wrong, Owner: wrong}, things.ErrNotFound},
+		"non-existing thing with existing user":     {things.Thing{ID: badID, Owner: email}, things.ErrNotFound},
+		"existing thing ID with non-existing user":  {things.Thing{ID: id, Owner: wrong}, things.ErrNotFound},
+		"non-existing thing with non-existing user": {things.Thing{ID: badID, Owner: wrong}, things.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
@@ -56,24 +55,23 @@ func TestThingUpdate(t *testing.T) {
 
 func TestSingleThingRetrieval(t *testing.T) {
 	email := "thing-single-retrieval@example.com"
-	idp := uuid.New()
 	thingRepo := postgres.NewThingRepository(db, testLog)
 
 	thing := things.Thing{
-		ID:    idp.ID(),
 		Owner: email,
-		Key:   idp.ID(),
+		Key:   uuid.New().ID(),
 	}
 
-	thingRepo.Save(thing)
+	id, _ := thingRepo.Save(thing)
+	thing.ID = id
 
 	cases := map[string]struct {
 		owner string
-		ID    string
+		ID    uint
 		err   error
 	}{
 		"existing user":                     {thing.Owner, thing.ID, nil},
-		"existing user, non-existing thing": {thing.Owner, wrong, things.ErrNotFound},
+		"existing user, non-existing thing": {thing.Owner, badID, things.ErrNotFound},
 		"non-existing owner":                {wrong, thing.ID, things.ErrNotFound},
 	}
 
@@ -85,27 +83,28 @@ func TestSingleThingRetrieval(t *testing.T) {
 
 func TestThingRetrieveByKey(t *testing.T) {
 	email := "thing-retrieved-by-key@example.com"
-	idp := uuid.New()
 	thingRepo := postgres.NewThingRepository(db, testLog)
+
 	thing := things.Thing{
-		ID:    idp.ID(),
 		Owner: email,
-		Key:   idp.ID(),
+		Key:   uuid.New().ID(),
 	}
-	thingRepo.Save(thing)
+
+	id, _ := thingRepo.Save(thing)
+	thing.ID = id
 
 	cases := map[string]struct {
 		key string
-		id  string
+		id  uint
 		err error
 	}{
 		"retrieve existing thing by key":     {thing.Key, thing.ID, nil},
-		"retrieve non-existent thing by key": {wrong, "", things.ErrNotFound},
+		"retrieve non-existent thing by key": {wrong, badID, things.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
 		id, err := thingRepo.RetrieveByKey(tc.key)
-		assert.Equal(t, tc.id, id, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.id, id))
+		assert.Equal(t, tc.id, id, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.id, id))
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
@@ -119,7 +118,6 @@ func TestMultiThingRetrieval(t *testing.T) {
 
 	for i := 0; i < n; i++ {
 		t := things.Thing{
-			ID:    idp.ID(),
 			Owner: email,
 			Key:   idp.ID(),
 		}
@@ -134,8 +132,8 @@ func TestMultiThingRetrieval(t *testing.T) {
 		size   int
 	}{
 		"existing owner, retrieve all":    {email, 0, n, n},
-		"existing owner, retrieve subset": {email, 1, 6, 6},
-		"non-existing owner":              {wrong, 1, 6, 0},
+		"existing owner, retrieve subset": {email, n / 2, n, n / 2},
+		"non-existing owner":              {wrong, 0, n, 0},
 	}
 
 	for desc, tc := range cases {
@@ -146,14 +144,15 @@ func TestMultiThingRetrieval(t *testing.T) {
 
 func TestThingRemoval(t *testing.T) {
 	email := "thing-removal@example.com"
-	idp := uuid.New()
 	thingRepo := postgres.NewThingRepository(db, testLog)
+
 	thing := things.Thing{
-		ID:    idp.ID(),
 		Owner: email,
-		Key:   idp.ID(),
+		Key:   uuid.New().ID(),
 	}
-	thingRepo.Save(thing)
+
+	id, _ := thingRepo.Save(thing)
+	thing.ID = id
 
 	// show that the removal works the same for both existing and non-existing
 	// (removed) thing
