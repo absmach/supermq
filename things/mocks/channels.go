@@ -66,8 +66,8 @@ func (crm *channelRepositoryMock) RetrieveAll(owner string, offset, limit int) [
 		return channels
 	}
 
-	first := offset + 1
-	last := firts + limit
+	first := uint(offset) + 1
+	last := first + uint(limit)
 
 	// This obscure way to examine map keys is enforced by the key structure
 	// itself (see mocks/commons.go).

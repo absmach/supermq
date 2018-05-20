@@ -65,8 +65,8 @@ func (trm *thingRepositoryMock) RetrieveAll(owner string, offset, limit int) []t
 		return things
 	}
 
-	first := offset + 1
-	last := first + limit
+	first := uint(offset) + 1
+	last := first + uint(limit)
 
 	// This obscure way to examine map keys is enforced by the key structure
 	// itself (see mocks/commons.go).
