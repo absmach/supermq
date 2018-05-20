@@ -60,69 +60,72 @@ nats.subscribe('channel.*', function (msg) {
 
 aedes.authorizePublish = function (client, packet, publish) {
     // Topics are in the form `channels/<channel_id>/messages`
-    var channel = packet.topic.split('/')[1];
+    var channel = packet.topic.split('/')[1],
+        accessReq = {
+            token: client.password,
+            chanID: channel
+        },
+        onAuthorize = function (err, res) {
+            var rawMsg
+            if (!err) {
+                logger.info('authorized publish');
+                
+                rawMsg = message.RawMessage.encode({
+                    Publisher: client.id,
+                    Channel: channel,
+                    Protocol: 'mqtt',
+                    Payload: packet.payload
+                });
+                nats.publish('channel.' + channel, rawMsg);
+    
+                // Set empty topic for packet so that it won't be published two times.
+                packet.topic = '';
+                publish(0);
+            } else {
+                logger.warn("unauthorized publish: %s", err.message);
+                publish(4); // Bad username or password
+            }
+        };
 
-    things.CanAccess({
-        token: client.password,
-        chanID: channel
-    }, onAuthorize);
-
-    function onAuthorize(err, res) {
-        if (!err) {
-            logger.info('authorized publish');
-            
-            var rawMsg = message.RawMessage.encode({
-                Publisher: client.id,
-                Channel: channel,
-                Protocol: 'mqtt',
-                Payload: packet.payload
-            });
-            nats.publish('channel.' + channel, rawMsg);
-
-            // Set empty topic for packet so that it won't be published two times.
-            packet.topic = '';
-            publish(0);
-        } else {
-            logger.warn("unauthorized publish: %s", err.message);
-            publish(4); // Bad username or password
-        }
-    }
+    things.CanAccess(accessReq, onAuthorize);
 };
 
 
 aedes.authorizeSubscribe = function (client, packet, subscribe) {
     // Topics are in the form `channels/<channel_id>/messages`
-    var channel = packet.topic.split('/')[1];
+    var channel = packet.topic.split('/')[1],
+        accessReq = {
+            token: client.password,
+            chanID: channel
+        },
+        onAuthorize = function (err, res) {
+            if (!err) {
+                logger.info('authorized subscribe');
+                subscribe(null, packet);
+            } else {
+                logger.warn('unauthorized subscribe: %s', err);
+                subscribe(4, packet); // Bad username or password
+            }
+        };
     
-    things.canAccess({
-        token: client.password,
-        chanID: channel
-    }, onAuthorize);
-
-    function onAuthorize(err, res) {
-        if (!err) {
-            logger.info('authorized subscribe');
-            subscribe(null, packet);
-        } else {
-            logger.warn('unauthorizerd subscribe: %s', err);
-            subscribe(4, packet); // Bad username or password
-        }
-    }
+    things.canAccess(accessReq, onAuthorize);
 };
 
 aedes.authenticate = function (client, username, password, acknowledge) {
-    var pass = password || "",
-        pass = pass.toString() || "";
-    things.identify({value: pass}, function(err, res) {
-        if (!err) {
-            client.id = res.value.toString() || "";
-            client.password = pass;
-            acknowledge(null, true);
-        } else {
-            logger.warn('failed to authenticate client with key %s', password);
-            acknowledge(err, false);
-        }
-    });
+    var pass = (password || "").toString(),
+        identity = {value: pass},
+        onIdentify = function(err, res) {
+            if (!err) {
+                client.id = res.value.toString() || "";
+                client.password = pass;
+                acknowledge(null, true);
+            } else {
+                logger.warn('failed to authenticate client with key %s', password);
+                acknowledge(err, false);
+            }
+        };
+        
+    things.identify(identity, onIdentify);
 };
 
 aedes.on('clientDisconnect', function (client) {
