@@ -72,7 +72,7 @@ func (trm *thingRepositoryMock) RetrieveAll(owner string, offset, limit int) []t
 	// itself (see mocks/commons.go).
 	prefix := fmt.Sprintf("%s-", owner)
 	for k, v := range trm.things {
-		if strings.HasPrefix(k, prefix) && v.ID >= first && v.ID <= last {
+		if strings.HasPrefix(k, prefix) && v.ID >= first && v.ID < last {
 			things = append(things, v)
 		}
 	}

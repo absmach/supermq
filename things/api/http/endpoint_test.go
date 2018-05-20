@@ -71,7 +71,6 @@ func toJSON(data interface{}) string {
 }
 
 func TestAddThing(t *testing.T) {
-	id := "123e4567-e89b-12d3-a456-000000000001"
 	svc := newService(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
@@ -91,7 +90,7 @@ func TestAddThing(t *testing.T) {
 		status      int
 		location    string
 	}{
-		{"add valid thing", data, contentType, token, http.StatusCreated, fmt.Sprintf("/things/%s", id)},
+		{"add valid thing", data, contentType, token, http.StatusCreated, "/things/1"},
 		{"add thing with invalid data", invalidData, contentType, token, http.StatusBadRequest, ""},
 		{"add thing with invalid auth token", data, contentType, invalid, http.StatusForbidden, ""},
 		{"add thing with invalid request format", "}", contentType, token, http.StatusBadRequest, ""},
@@ -285,7 +284,6 @@ func TestRemoveThing(t *testing.T) {
 }
 
 func TestCreateChannel(t *testing.T) {
-	id := "123e4567-e89b-12d3-a456-000000000001"
 	svc := newService(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
@@ -300,10 +298,10 @@ func TestCreateChannel(t *testing.T) {
 		status      int
 		location    string
 	}{
-		{"create new channel", data, contentType, token, http.StatusCreated, fmt.Sprintf("/channels/%s", id)},
+		{"create new channel", data, contentType, token, http.StatusCreated, "/channels/1"},
 		{"create new channel with invalid token", data, contentType, invalid, http.StatusForbidden, ""},
 		{"create new channel with invalid data format", "{", contentType, token, http.StatusBadRequest, ""},
-		{"create new channel with empty JSON request", "{}", contentType, token, http.StatusCreated, "/channels/123e4567-e89b-12d3-a456-000000000002"},
+		{"create new channel with empty JSON request", "{}", contentType, token, http.StatusCreated, "/channels/2"},
 		{"create new channel with empty request", "", contentType, token, http.StatusBadRequest, ""},
 		{"create new channel with missing content type", data, "", token, http.StatusUnsupportedMediaType, ""},
 	}

@@ -46,7 +46,7 @@ func (req updateThingReq) validate() error {
 		return things.ErrUnauthorizedAccess
 	}
 
-	if req.id > 0 {
+	if req.id < 1 {
 		return things.ErrNotFound
 	}
 
@@ -77,7 +77,7 @@ func (req updateChannelReq) validate() error {
 		return things.ErrUnauthorizedAccess
 	}
 
-	if req.id > 0 {
+	if req.id < 1 {
 		return things.ErrNotFound
 	}
 
@@ -94,7 +94,7 @@ func (req viewResourceReq) validate() error {
 		return things.ErrUnauthorizedAccess
 	}
 
-	if req.id > 0 {
+	if req.id < 1 {
 		return things.ErrNotFound
 	}
 

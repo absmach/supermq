@@ -73,7 +73,7 @@ func TestCanAccess(t *testing.T) {
 		id, err := cli.CanAccess(ctx, &mainflux.AccessReq{tc.thingKey, uint32(tc.chanID)})
 		e, ok := status.FromError(err)
 		assert.True(t, ok, "OK expected to be true")
-		assert.Equal(t, tc.id, id.GetValue(), fmt.Sprintf("%s: expected %d got %d", desc, tc.id, id.GetValue()))
+		assert.Equal(t, tc.id, uint(id.GetValue()), fmt.Sprintf("%s: expected %d got %d", desc, tc.id, id.GetValue()))
 		assert.Equal(t, tc.code, e.Code(), fmt.Sprintf("%s: expected %s got %s", desc, tc.code, e.Code()))
 	}
 }
@@ -100,7 +100,7 @@ func TestIdentify(t *testing.T) {
 		id, err := cli.Identify(ctx, &mainflux.Token{Value: tc.key})
 		e, ok := status.FromError(err)
 		assert.True(t, ok, "OK expected to be true")
-		assert.Equal(t, tc.id, id.GetValue(), fmt.Sprintf("%s: expected %d got %d", desc, tc.id, id.GetValue()))
+		assert.Equal(t, tc.id, uint(id.GetValue()), fmt.Sprintf("%s: expected %d got %d", desc, tc.id, id.GetValue()))
 		assert.Equal(t, tc.code, e.Code(), fmt.Sprintf("%s: expected %s got %s", desc, tc.code, e.Code()))
 	}
 }

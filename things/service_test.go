@@ -342,7 +342,7 @@ func TestIdentify(t *testing.T) {
 		err error
 	}{
 		"identify existing thing":     {sth.Key, sth.ID, nil},
-		"identify non-existent thing": {sth.Key, badID, things.ErrUnauthorizedAccess},
+		"identify non-existent thing": {wrong, badID, things.ErrUnauthorizedAccess},
 	}
 
 	for desc, tc := range cases {
