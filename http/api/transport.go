@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -60,28 +59,33 @@ func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
+	channel, err := things.FromString(bone.GetValue(r, "id"))
+	if err != nil {
+		return nil, err
+	}
+
 	msg := mainflux.RawMessage{
 		Publisher:   publisher,
 		Protocol:    protocol,
 		ContentType: r.Header.Get("Content-Type"),
-		Channel:     bone.GetValue(r, "id"),
+		Channel:     channel,
 		Payload:     payload,
 	}
 
 	return msg, nil
 }
 
-func authorize(r *http.Request) (string, error) {
+func authorize(r *http.Request) (uint64, error) {
 	apiKey := r.Header.Get("Authorization")
 
 	if apiKey == "" {
-		return "", things.ErrUnauthorizedAccess
+		return 0, things.ErrUnauthorizedAccess
 	}
 
 	// extract ID from /channels/:id/messages
 	chanID, err := things.FromString(bone.GetValue(r, "id"))
 	if err != nil {
-		return "", things.ErrNotFound
+		return 0, things.ErrNotFound
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -89,10 +93,10 @@ func authorize(r *http.Request) (string, error) {
 
 	id, err := auth.CanAccess(ctx, &mainflux.AccessReq{Token: apiKey, ChanID: chanID})
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 
-	return fmt.Sprintf("%d", id.GetValue()), nil
+	return id.GetValue(), nil
 }
 
 func decodePayload(body io.ReadCloser) ([]byte, error) {
