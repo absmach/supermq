@@ -21,7 +21,7 @@ const (
 	email       = "user@example.com"
 	token       = "token"
 	invalid     = "invalid_value"
-	wrongID     = "123e4567-e89b-12d3-a456-000000000042"
+	wrongID     = 0
 )
 
 var (
@@ -134,14 +134,13 @@ func TestUpdateThing(t *testing.T) {
 	cases := []struct {
 		desc        string
 		req         string
-		id          string
+		id          uint
 		contentType string
 		auth        string
 		status      int
 	}{
 		{"update existing thing", data, sth.ID, contentType, token, http.StatusOK},
 		{"update non-existent thing", data, wrongID, contentType, token, http.StatusNotFound},
-		{"update thing with invalid id", data, invalid, contentType, token, http.StatusNotFound},
 		{"update thing with invalid data", invalidData, sth.ID, contentType, token, http.StatusBadRequest},
 		{"update thing with invalid user token", data, sth.ID, contentType, invalid, http.StatusForbidden},
 		{"update thing with invalid data format", "{", sth.ID, contentType, token, http.StatusBadRequest},
@@ -154,7 +153,7 @@ func TestUpdateThing(t *testing.T) {
 		req := testRequest{
 			client:      ts.Client(),
 			method:      http.MethodPut,
-			url:         fmt.Sprintf("%s/things/%s", ts.URL, tc.id),
+			url:         fmt.Sprintf("%s/things/%d", ts.URL, tc.id),
 			contentType: tc.contentType,
 			token:       tc.auth,
 			body:        strings.NewReader(tc.req),
@@ -175,14 +174,13 @@ func TestViewThing(t *testing.T) {
 
 	cases := []struct {
 		desc   string
-		id     string
+		id     uint
 		auth   string
 		status int
 		res    string
 	}{
 		{"view existing thing", sth.ID, token, http.StatusOK, data},
 		{"view non-existent thing", wrongID, token, http.StatusNotFound, ""},
-		{"view thing by passing invalid id", invalid, token, http.StatusNotFound, ""},
 		{"view thing by passing invalid token", sth.ID, invalid, http.StatusForbidden, ""},
 	}
 
@@ -190,7 +188,7 @@ func TestViewThing(t *testing.T) {
 		req := testRequest{
 			client: ts.Client(),
 			method: http.MethodGet,
-			url:    fmt.Sprintf("%s/things/%s", ts.URL, tc.id),
+			url:    fmt.Sprintf("%s/things/%d", ts.URL, tc.id),
 			token:  tc.auth,
 		}
 		res, err := req.make()
@@ -251,7 +249,7 @@ func TestListThings(t *testing.T) {
 		var data map[string][]things.Thing
 		json.NewDecoder(res.Body).Decode(&data)
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		assert.ElementsMatch(t, tc.res, data["things"], fmt.Sprintf("%s: expected body %s got %s", tc.desc, tc.res, data["things"]))
+		assert.ElementsMatch(t, tc.res, data["things"], fmt.Sprintf("%s: expected body %v got %v", tc.desc, tc.res, data["things"]))
 	}
 }
 
@@ -264,13 +262,12 @@ func TestRemoveThing(t *testing.T) {
 
 	cases := []struct {
 		desc   string
-		id     string
+		id     uint
 		auth   string
 		status int
 	}{
 		{"delete existing thing", sth.ID, token, http.StatusNoContent},
 		{"delete non-existent thing", wrongID, token, http.StatusNoContent},
-		{"delete thing with invalid id", invalid, token, http.StatusNoContent},
 		{"delete thing with invalid token", sth.ID, invalid, http.StatusForbidden},
 	}
 
@@ -278,7 +275,7 @@ func TestRemoveThing(t *testing.T) {
 		req := testRequest{
 			client: ts.Client(),
 			method: http.MethodDelete,
-			url:    fmt.Sprintf("%s/things/%s", ts.URL, tc.id),
+			url:    fmt.Sprintf("%s/things/%d", ts.URL, tc.id),
 			token:  tc.auth,
 		}
 		res, err := req.make()
@@ -342,7 +339,7 @@ func TestUpdateChannel(t *testing.T) {
 	cases := []struct {
 		desc        string
 		req         string
-		id          string
+		id          uint
 		contentType string
 		auth        string
 		status      int
@@ -350,7 +347,6 @@ func TestUpdateChannel(t *testing.T) {
 		{"update existing channel", updateData, sch.ID, contentType, token, http.StatusOK},
 		{"update non-existing channel", updateData, wrongID, contentType, token, http.StatusNotFound},
 		{"update channel with invalid token", updateData, sch.ID, contentType, invalid, http.StatusForbidden},
-		{"update channel with invalid id", updateData, invalid, contentType, token, http.StatusNotFound},
 		{"update channel with invalid data format", "}", sch.ID, contentType, token, http.StatusBadRequest},
 		{"update channel with empty JSON object", "{}", sch.ID, contentType, token, http.StatusOK},
 		{"update channel with empty request", "", sch.ID, contentType, token, http.StatusBadRequest},
@@ -361,7 +357,7 @@ func TestUpdateChannel(t *testing.T) {
 		req := testRequest{
 			client:      ts.Client(),
 			method:      http.MethodPut,
-			url:         fmt.Sprintf("%s/channels/%s", ts.URL, tc.id),
+			url:         fmt.Sprintf("%s/channels/%d", ts.URL, tc.id),
 			contentType: tc.contentType,
 			token:       tc.auth,
 			body:        strings.NewReader(tc.req),
@@ -382,14 +378,13 @@ func TestViewChannel(t *testing.T) {
 
 	cases := []struct {
 		desc   string
-		id     string
+		id     uint
 		auth   string
 		status int
 		res    string
 	}{
 		{"view existing channel", sch.ID, token, http.StatusOK, data},
 		{"view non-existent channel", wrongID, token, http.StatusNotFound, ""},
-		{"view channel with invalid id", invalid, token, http.StatusNotFound, ""},
 		{"view channel with invalid token", sch.ID, invalid, http.StatusForbidden, ""},
 	}
 
@@ -397,7 +392,7 @@ func TestViewChannel(t *testing.T) {
 		req := testRequest{
 			client: ts.Client(),
 			method: http.MethodGet,
-			url:    fmt.Sprintf("%s/channels/%s", ts.URL, tc.id),
+			url:    fmt.Sprintf("%s/channels/%d", ts.URL, tc.id),
 			token:  tc.auth,
 		}
 		res, err := req.make()
@@ -459,7 +454,7 @@ func TestListChannels(t *testing.T) {
 		var body map[string][]things.Channel
 		json.NewDecoder(res.Body).Decode(&body)
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		assert.ElementsMatch(t, tc.res, body["channels"], fmt.Sprintf("%s: expected body %s got %s", tc.desc, tc.res, body["channels"]))
+		assert.ElementsMatch(t, tc.res, body["channels"], fmt.Sprintf("%s: expected body %v got %v", tc.desc, tc.res, body["channels"]))
 	}
 }
 
@@ -472,7 +467,7 @@ func TestRemoveChannel(t *testing.T) {
 
 	cases := []struct {
 		desc   string
-		id     string
+		id     uint
 		auth   string
 		status int
 	}{
@@ -486,7 +481,7 @@ func TestRemoveChannel(t *testing.T) {
 		req := testRequest{
 			client: ts.Client(),
 			method: http.MethodDelete,
-			url:    fmt.Sprintf("%s/channels/%s", ts.URL, tc.id),
+			url:    fmt.Sprintf("%s/channels/%d", ts.URL, tc.id),
 			token:  tc.auth,
 		}
 		res, err := req.make()
@@ -511,15 +506,14 @@ func TestConnect(t *testing.T) {
 
 	cases := []struct {
 		desc    string
-		chanID  string
-		thingID string
+		chanID  uint
+		thingID uint
 		auth    string
 		status  int
 	}{
 		{"connect existing thing to existing channel", ach.ID, ath.ID, token, http.StatusOK},
 		{"connect existing thing to non-existent channel", wrongID, ath.ID, token, http.StatusNotFound},
-		{"connect thing with invalid id to channel", ach.ID, invalid, token, http.StatusNotFound},
-		{"connect thing to channel with invalid id", invalid, ath.ID, token, http.StatusNotFound},
+		{"connect non-existing thing to existing channel", ach.ID, wrongID, token, http.StatusNotFound},
 		{"connect existing thing to existing channel with invalid token", ach.ID, ath.ID, invalid, http.StatusForbidden},
 		{"connect thing from owner to channel of other user", bch.ID, ath.ID, token, http.StatusNotFound},
 	}
@@ -528,7 +522,7 @@ func TestConnect(t *testing.T) {
 		req := testRequest{
 			client: ts.Client(),
 			method: http.MethodPut,
-			url:    fmt.Sprintf("%s/channels/%s/things/%s", ts.URL, tc.chanID, tc.thingID),
+			url:    fmt.Sprintf("%s/channels/%d/things/%d", ts.URL, tc.chanID, tc.thingID),
 			token:  tc.auth,
 		}
 		res, err := req.make()
@@ -554,15 +548,15 @@ func TestDisconnnect(t *testing.T) {
 
 	cases := []struct {
 		desc    string
-		chanID  string
-		thingID string
+		chanID  uint
+		thingID uint
 		auth    string
 		status  int
 	}{
 		{"disconnect connected thing from channel", ach.ID, ath.ID, token, http.StatusNoContent},
 		{"disconnect non-connected thing from channel", ach.ID, ath.ID, token, http.StatusNotFound},
-		{"disconnect non-existent thing from channel", ach.ID, invalid, token, http.StatusNotFound},
-		{"disconnect thing from non-existent channel", invalid, ath.ID, token, http.StatusNotFound},
+		{"disconnect non-existent thing from channel", ach.ID, wrongID, token, http.StatusNotFound},
+		{"disconnect thing from non-existent channel", wrongID, ath.ID, token, http.StatusNotFound},
 		{"disconnect thing from channel with invalid token", ach.ID, ath.ID, invalid, http.StatusForbidden},
 		{"disconnect owner's thing from someone elses channel", bch.ID, ath.ID, token, http.StatusNotFound},
 	}
@@ -571,7 +565,7 @@ func TestDisconnnect(t *testing.T) {
 		req := testRequest{
 			client: ts.Client(),
 			method: http.MethodDelete,
-			url:    fmt.Sprintf("%s/channels/%s/things/%s", ts.URL, tc.chanID, tc.thingID),
+			url:    fmt.Sprintf("%s/channels/%d/things/%d", ts.URL, tc.chanID, tc.thingID),
 			token:  tc.auth,
 		}
 		res, err := req.make()

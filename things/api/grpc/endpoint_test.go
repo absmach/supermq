@@ -59,21 +59,21 @@ func TestCanAccess(t *testing.T) {
 
 	cases := map[string]struct {
 		thingKey string
-		chanID   string
-		id       string
+		chanID   uint
+		id       uint
 		code     codes.Code
 	}{
 		"check if connected thing can access existing channel":             {cth.Key, sch.ID, cth.ID, codes.OK},
-		"check if unconnected thing can access existing channel":           {oth.Key, sch.ID, "", codes.PermissionDenied},
-		"check if thing with wrong access key can access existing channel": {wrong, sch.ID, "", codes.PermissionDenied},
-		"check if connected thing can access non-existent channel":         {cth.Key, wrong, "", codes.InvalidArgument},
+		"check if unconnected thing can access existing channel":           {oth.Key, sch.ID, 0, codes.PermissionDenied},
+		"check if thing with wrong access key can access existing channel": {wrong, sch.ID, 0, codes.PermissionDenied},
+		"check if connected thing can access non-existent channel":         {cth.Key, 0, 0, codes.InvalidArgument},
 	}
 
 	for desc, tc := range cases {
-		id, err := cli.CanAccess(ctx, &mainflux.AccessReq{tc.thingKey, tc.chanID})
+		id, err := cli.CanAccess(ctx, &mainflux.AccessReq{tc.thingKey, uint32(tc.chanID)})
 		e, ok := status.FromError(err)
 		assert.True(t, ok, "OK expected to be true")
-		assert.Equal(t, tc.id, id.GetValue(), fmt.Sprintf("%s: expected %s got %s", desc, tc.id, id.GetValue()))
+		assert.Equal(t, tc.id, id.GetValue(), fmt.Sprintf("%s: expected %d got %d", desc, tc.id, id.GetValue()))
 		assert.Equal(t, tc.code, e.Code(), fmt.Sprintf("%s: expected %s got %s", desc, tc.code, e.Code()))
 	}
 }
@@ -89,18 +89,18 @@ func TestIdentify(t *testing.T) {
 
 	cases := map[string]struct {
 		key  string
-		id   string
+		id   uint
 		code codes.Code
 	}{
 		"identify existing thing":     {sth.Key, sth.ID, codes.OK},
-		"identify non-existent thing": {wrong, "", codes.PermissionDenied},
+		"identify non-existent thing": {wrong, 0, codes.PermissionDenied},
 	}
 
 	for desc, tc := range cases {
 		id, err := cli.Identify(ctx, &mainflux.Token{Value: tc.key})
 		e, ok := status.FromError(err)
 		assert.True(t, ok, "OK expected to be true")
-		assert.Equal(t, tc.id, id.GetValue(), fmt.Sprintf("%s: expected %s got %s", desc, tc.id, id.GetValue()))
+		assert.Equal(t, tc.id, id.GetValue(), fmt.Sprintf("%s: expected %d got %d", desc, tc.id, id.GetValue()))
 		assert.Equal(t, tc.code, e.Code(), fmt.Sprintf("%s: expected %s got %s", desc, tc.code, e.Code()))
 	}
 }

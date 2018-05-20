@@ -16,7 +16,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-const contentType = "application/json"
+const (
+	base        = 10
+	bitSize     = 32
+	contentType = "application/json"
+)
 
 var (
 	errUnsupportedContentType = errors.New("unsupported content type")
@@ -149,9 +153,14 @@ func decodeThingUpdate(_ context.Context, r *http.Request) (interface{}, error) 
 		return nil, err
 	}
 
+	id, err := strconv.ParseUint(bone.GetValue(r, "id"), base, bitSize)
+	if err != nil {
+		return nil, things.ErrNotFound
+	}
+
 	req := updateThingReq{
 		key:   r.Header.Get("Authorization"),
-		id:    bone.GetValue(r, "id"),
+		id:    uint(id),
 		thing: thing,
 	}
 
@@ -186,9 +195,14 @@ func decodeChannelUpdate(_ context.Context, r *http.Request) (interface{}, error
 		return nil, err
 	}
 
+	id, err := strconv.ParseUint(bone.GetValue(r, "id"), base, bitSize)
+	if err != nil {
+		return nil, things.ErrNotFound
+	}
+
 	req := updateChannelReq{
 		key:     r.Header.Get("Authorization"),
-		id:      bone.GetValue(r, "id"),
+		id:      uint(id),
 		channel: channel,
 	}
 
@@ -196,9 +210,14 @@ func decodeChannelUpdate(_ context.Context, r *http.Request) (interface{}, error
 }
 
 func decodeView(_ context.Context, r *http.Request) (interface{}, error) {
+	id, err := strconv.ParseUint(bone.GetValue(r, "id"), base, bitSize)
+	if err != nil {
+		return nil, things.ErrNotFound
+	}
+
 	req := viewResourceReq{
 		key: r.Header.Get("Authorization"),
-		id:  bone.GetValue(r, "id"),
+		id:  uint(id),
 	}
 
 	return req, nil
@@ -241,10 +260,20 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeConnection(_ context.Context, r *http.Request) (interface{}, error) {
+	thingID, err := strconv.ParseUint(bone.GetValue(r, "thingId"), base, bitSize)
+	if err != nil {
+		return nil, things.ErrNotFound
+	}
+
+	chanID, err := strconv.ParseUint(bone.GetValue(r, "chanId"), base, bitSize)
+	if err != nil {
+		return nil, things.ErrNotFound
+	}
+
 	req := connectionReq{
 		key:     r.Header.Get("Authorization"),
-		chanID:  bone.GetValue(r, "chanId"),
-		thingID: bone.GetValue(r, "thingId"),
+		chanID:  uint(chanID),
+		thingID: uint(thingID),
 	}
 
 	return req, nil

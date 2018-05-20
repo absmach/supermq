@@ -58,16 +58,16 @@ func TestAddThingReqValidation(t *testing.T) {
 
 func TestUpdateThingReqValidation(t *testing.T) {
 	key := uuid.NewV4().String()
-	id := uuid.NewV4().String()
+	id := uint(1)
 
 	cases := map[string]struct {
 		thing things.Thing
-		id    string
+		id    uint
 		key   string
 		err   error
 	}{
 		"valid thing update request": {thing, id, key, nil},
-		"non-uuid thing ID":          {thing, wrong, key, things.ErrNotFound},
+		"invalid thing ID":           {thing, 0, key, things.ErrNotFound},
 		"missing token":              {thing, id, "", things.ErrUnauthorizedAccess},
 		"wrong thing type":           {things.Thing{Type: "invalid"}, id, key, things.ErrMalformedEntity},
 	}
@@ -109,16 +109,16 @@ func TestCreateChannelReqValidation(t *testing.T) {
 
 func TestUpdateChannelReqValidation(t *testing.T) {
 	key := uuid.NewV4().String()
-	id := uuid.NewV4().String()
+	id := uint(1)
 
 	cases := map[string]struct {
 		channel things.Channel
-		id      string
+		id      uint
 		key     string
 		err     error
 	}{
 		"valid channel update request": {channel, id, key, nil},
-		"non-uuid channel ID":          {channel, wrong, key, things.ErrNotFound},
+		"invalid channel ID":           {channel, 0, key, things.ErrNotFound},
 		"missing token":                {channel, id, "", things.ErrUnauthorizedAccess},
 	}
 
@@ -136,16 +136,16 @@ func TestUpdateChannelReqValidation(t *testing.T) {
 
 func TestViewResourceReqValidation(t *testing.T) {
 	key := uuid.NewV4().String()
-	id := uuid.NewV4().String()
+	id := uint(1)
 
 	cases := map[string]struct {
-		id  string
+		id  uint
 		key string
 		err error
 	}{
 		"valid resource viewing request": {id, key, nil},
 		"missing token":                  {id, "", things.ErrUnauthorizedAccess},
-		"non-uuid resource ID":           {wrong, key, things.ErrNotFound},
+		"invalid resource ID":            {0, key, things.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
