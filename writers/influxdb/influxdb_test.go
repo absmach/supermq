@@ -5,11 +5,11 @@ import (
 	"os"
 	"testing"
 
-	client "github.com/influxdata/influxdb/client/v2"
+	influxdata "github.com/influxdata/influxdb/client/v2"
 	"github.com/influxdata/influxdb/models"
 	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/writers/influxdb"
+	writer "github.com/mainflux/mainflux/writers/influxdb"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,8 +17,8 @@ var (
 	port      string
 	testLog   = log.New(os.Stdout)
 	testDB    = "test"
-	cl        client.Client
-	clientCfg = client.HTTPConfig{
+	client    influxdata.Client
+	clientCfg = influxdata.HTTPConfig{
 		Username: "test",
 		Password: "test",
 	}
@@ -26,11 +26,11 @@ var (
 
 // This is utility function to query the database.
 func queryDB(cmd string) ([]models.Row, error) {
-	q := client.Query{
+	q := influxdata.Query{
 		Command:  cmd,
 		Database: testDB,
 	}
-	response, err := cl.Query(q)
+	response, err := client.Query(q)
 	if err != nil {
 		return nil, err
 	}
@@ -61,13 +61,18 @@ func TestSave(t *testing.T) {
 
 	q := fmt.Sprintf("SELECT * FROM %s", "test..messages\n")
 
-	repo, err := influxdb.New(clientCfg, testDB, "messages")
+	client, err := influxdata.NewHTTPClient(clientCfg)
+	assert.Nil(t, err, fmt.Sprintf("Creation of InfluxDB client expected to succeed.\n"))
+
+	repo, err := writer.New(client, testDB, "messages")
 	assert.Nil(t, err, fmt.Sprintf("InfluxDB repo creation expected to succeed.\n"))
+
 	err = repo.Save(msg)
 	assert.Nil(t, err, fmt.Sprintf("Save operation expected to succeed.\n"))
 
 	row, err := queryDB(q)
 	assert.Nil(t, err, fmt.Sprintf("Querying InfluxDB to retrieve data count expected to succeed.\n"))
+
 	count := len(row)
 	assert.Equal(t, 1, count, fmt.Sprintf("Expected to have 1 value, found %d instead.\n", count))
 }

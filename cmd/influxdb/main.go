@@ -8,7 +8,7 @@ import (
 	"syscall"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
-	client "github.com/influxdata/influxdb/client/v2"
+	influxdata "github.com/influxdata/influxdb/client/v2"
 	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/writers"
@@ -50,7 +50,25 @@ type config struct {
 	DBPass    string
 }
 
-func main() {
+func makeMetrices() (*kitprometheus.Counter, *kitprometheus.Summary) {
+	counter := kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+		Namespace: "influxdb",
+		Subsystem: "message_writer",
+		Name:      "request_count",
+		Help:      "Number of database inserts.",
+	}, []string{"method"})
+
+	latency := kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+		Namespace: "influxdb",
+		Subsystem: "message_writer",
+		Name:      "request_latency_microseconds",
+		Help:      "Total duration of inserts in microseconds.",
+	}, []string{"method"})
+
+	return counter, latency
+}
+
+func makeConfig() config {
 	cfg := config{
 		NatsURL:   mainflux.Env(envNatsURL, defNatsURL),
 		PointName: mainflux.Env(envPointName, defPointName),
@@ -61,7 +79,11 @@ func main() {
 		DBUser:    mainflux.Env(envDBUser, defDBUser),
 		DBPass:    mainflux.Env(envDBPass, defDBPass),
 	}
+	return cfg
+}
 
+func main() {
+	cfg := makeConfig()
 	logger := log.New(os.Stdout)
 
 	nc, err := nats.Connect(cfg.NatsURL)
@@ -79,33 +101,26 @@ func main() {
 		errs <- fmt.Errorf("%s", <-c)
 	}()
 
-	clientCfg := client.HTTPConfig{
+	clientCfg := influxdata.HTTPConfig{
 		Addr:     fmt.Sprintf("%s%s:%s", prefix, cfg.DBHost, cfg.DBPort),
 		Username: cfg.DBUser,
 		Password: cfg.DBPass,
 	}
 
-	repo, err := influxdb.New(clientCfg, cfg.DBName, cfg.PointName)
+	client, err := influxdata.NewHTTPClient(clientCfg)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to create InfluxDB client: %s", err))
+		return
+	}
+	defer client.Close()
+
+	repo, err := influxdb.New(client, cfg.DBName, cfg.PointName)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to create InfluxDB writer: %s", err.Error()))
 		return
 	}
-	defer repo.Close()
 
-	counter := kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
-		Namespace: "influxdb",
-		Subsystem: "db_client",
-		Name:      "request_count",
-		Help:      "Number of database inserts.",
-	}, []string{"method"})
-
-	latency := kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
-		Namespace: "influxdb",
-		Subsystem: "db_client",
-		Name:      "request_latency_microseconds",
-		Help:      "Total duration of inserts in microseconds.",
-	}, []string{"method"})
-
+	counter, latency := makeMetrices()
 	if err := writers.Start("influxdb-writer", nc, logger, repo, counter, latency); err != nil {
 		logger.Error(fmt.Sprintf("Failed to start message writer: %s", err))
 		return

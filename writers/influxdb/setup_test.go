@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	client "github.com/influxdata/influxdb/client/v2"
+	influxdb "github.com/influxdata/influxdb/client/v2"
 	dockertest "gopkg.in/ory-am/dockertest.v3"
 )
 
@@ -30,8 +30,8 @@ func TestMain(m *testing.M) {
 	clientCfg.Addr = fmt.Sprintf("http://localhost:%s", port)
 
 	if err := pool.Retry(func() error {
-		cl, err = client.NewHTTPClient(clientCfg)
-		_, _, err = cl.Ping(5 * time.Millisecond)
+		client, err = influxdb.NewHTTPClient(clientCfg)
+		_, _, err = client.Ping(5 * time.Millisecond)
 		return err
 	}); err != nil {
 		testLog.Error(fmt.Sprintf("Could not connect to docker: %s", err))

@@ -4,25 +4,28 @@ import (
 	"strconv"
 	"time"
 
-	client "github.com/influxdata/influxdb/client/v2"
+	"github.com/mainflux/mainflux/writers"
+
+	influxdata "github.com/influxdata/influxdb/client/v2"
 	"github.com/mainflux/mainflux"
 )
 
-var _ Writer = (*influxRepo)(nil)
+var _ writers.MessageRepository = (*influxRepo)(nil)
 
 type influxRepo struct {
 	database  string
 	pointName string
-	client    client.Client
+	client    influxdata.Client
 }
 
 type fields map[string]interface{}
 type tags map[string]string
 
-func convertMsg(msg mainflux.Message) (tags, fields) {
+func (repo *influxRepo) tagsOf(msg *mainflux.Message) tags {
 	time := strconv.FormatFloat(msg.Time, 'f', -1, 64)
 	update := strconv.FormatFloat(msg.UpdateTime, 'f', -1, 64)
-	tags := map[string]string{
+
+	return tags{
 		"Channel":    msg.Channel,
 		"Publisher":  msg.Publisher,
 		"Protocol":   msg.Protocol,
@@ -32,36 +35,33 @@ func convertMsg(msg mainflux.Message) (tags, fields) {
 		"Time":       time,
 		"UpdateTime": update,
 	}
+}
 
-	fields := map[string]interface{}{
+func (repo *influxRepo) fieldsOf(msg *mainflux.Message) fields {
+	return fields{
 		"Value":       msg.Value,
 		"ValueSum":    msg.ValueSum,
 		"BoolValue":   msg.BoolValue,
 		"StringValue": msg.StringValue,
 		"DataValue":   msg.DataValue,
 	}
-	return tags, fields
 }
 
 // New returns new InfluxDB writer.
-func New(cfg client.HTTPConfig, database, pointName string) (Writer, error) {
-	c, err := client.NewHTTPClient(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return &influxRepo{database, pointName, c}, nil
+func New(client influxdata.Client, database, pointName string) (writers.MessageRepository, error) {
+	return &influxRepo{database, pointName, client}, nil
 }
 
 func (repo *influxRepo) Save(msg mainflux.Message) error {
-	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
+	bp, err := influxdata.NewBatchPoints(influxdata.BatchPointsConfig{
 		Database: repo.database,
 	})
 	if err != nil {
 		return err
 	}
 
-	tags, fields := convertMsg(msg)
-	pt, err := client.NewPoint(repo.pointName, tags, fields, time.Now())
+	tags, fields := repo.tagsOf(&msg), repo.fieldsOf(&msg)
+	pt, err := influxdata.NewPoint(repo.pointName, tags, fields, time.Now())
 	if err != nil {
 		return err
 	}
@@ -72,5 +72,3 @@ func (repo *influxRepo) Save(msg mainflux.Message) error {
 	}
 	return nil
 }
-
-func (repo *influxRepo) Close() error { return repo.client.Close() }
