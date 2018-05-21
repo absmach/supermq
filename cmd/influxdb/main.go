@@ -18,6 +18,7 @@ import (
 )
 
 const (
+	name         = "influxdb-writer"
 	senML        = "out.senml"
 	prefix       = "http://"
 	defNatsURL   = nats.DefaultURL
@@ -50,6 +51,20 @@ type config struct {
 	DBPass    string
 }
 
+func makeConfig() config {
+	cfg := config{
+		NatsURL:   mainflux.Env(envNatsURL, defNatsURL),
+		PointName: mainflux.Env(envPointName, defPointName),
+		Port:      mainflux.Env(envPort, defPort),
+		DBName:    mainflux.Env(envDBName, defDBName),
+		DBHost:    mainflux.Env(envDBHost, defDBHost),
+		DBPort:    mainflux.Env(envDBPort, defDBPort),
+		DBUser:    mainflux.Env(envDBUser, defDBUser),
+		DBPass:    mainflux.Env(envDBPass, defDBPass),
+	}
+	return cfg
+}
+
 func makeMetrices() (*kitprometheus.Counter, *kitprometheus.Summary) {
 	counter := kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 		Namespace: "influxdb",
@@ -66,20 +81,6 @@ func makeMetrices() (*kitprometheus.Counter, *kitprometheus.Summary) {
 	}, []string{"method"})
 
 	return counter, latency
-}
-
-func makeConfig() config {
-	cfg := config{
-		NatsURL:   mainflux.Env(envNatsURL, defNatsURL),
-		PointName: mainflux.Env(envPointName, defPointName),
-		Port:      mainflux.Env(envPort, defPort),
-		DBName:    mainflux.Env(envDBName, defDBName),
-		DBHost:    mainflux.Env(envDBHost, defDBHost),
-		DBPort:    mainflux.Env(envDBPort, defDBPort),
-		DBUser:    mainflux.Env(envDBUser, defDBUser),
-		DBPass:    mainflux.Env(envDBPass, defDBPass),
-	}
-	return cfg
 }
 
 func main() {
@@ -121,7 +122,7 @@ func main() {
 	}
 
 	counter, latency := makeMetrices()
-	if err := writers.Start("influxdb-writer", nc, logger, repo, counter, latency); err != nil {
+	if err := writers.Start(name, nc, logger, repo, counter, latency); err != nil {
 		logger.Error(fmt.Sprintf("Failed to start message writer: %s", err))
 		return
 	}
