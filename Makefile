@@ -1,7 +1,6 @@
 BUILD_DIR = build
-SERVICES = users things http normalizer ws
-WRITERS = influxdb
-DOCKERS = $(addprefix docker_,$(SERVICES)) $(addprefix docker_,$(WRITERS))
+SERVICES = users things http normalizer ws influxdb
+DOCKERS = $(addprefix docker_,$(SERVICES))
 CGO_ENABLED ?= 0
 GOOS ?= linux
 
@@ -15,7 +14,7 @@ endef
 
 all: $(SERVICES)
 
-.PHONY: all $(SERVICES) $(WRITERS) dockers latest release
+.PHONY: all $(SERVICES) dockers latest release
 
 clean:
 	rm -rf ${BUILD_DIR}
@@ -27,9 +26,6 @@ proto:
 	protoc --go_out=plugins=grpc:. *.proto
 
 $(SERVICES): proto
-	$(call compile_service,$(@))
-
-$(WRITERS): proto
 	$(call compile_service,$(@))
 
 $(DOCKERS):
@@ -51,10 +47,6 @@ release:
 	git checkout $(version)
 	$(MAKE) dockers
 	for svc in $(SERVICES); do \
-		docker tag mainflux/$$svc mainflux/$$svc:$(version); \
-		docker push mainflux/$$svc:$(version); \
-	done
-	for svc in $(WRITERS); do \
 		docker tag mainflux/$$svc mainflux/$$svc:$(version); \
 		docker push mainflux/$$svc:$(version); \
 	done
