@@ -19,19 +19,17 @@ type consumer struct {
 	repo   MessageRepository
 }
 
-func (c *consumer) handleMsg() nats.MsgHandler {
-	return func(m *nats.Msg) {
-		msg := &mainflux.Message{}
+func (c *consumer) consume(m *nats.Msg) {
+	msg := &mainflux.Message{}
 
-		if err := proto.Unmarshal(m.Data, msg); err != nil {
-			c.logger.Warn(fmt.Sprintf("%s failed to unmarshal received message: %s", c.name, err))
-			return
-		}
+	if err := proto.Unmarshal(m.Data, msg); err != nil {
+		c.logger.Warn(fmt.Sprintf("%s failed to unmarshal received message: %s", c.name, err))
+		return
+	}
 
-		if err := c.repo.Save(*msg); err != nil {
-			c.logger.Warn(fmt.Sprintf("%s failed to save message: %s", c.name, err))
-			return
-		}
+	if err := c.repo.Save(*msg); err != nil {
+		c.logger.Warn(fmt.Sprintf("%s failed to save message: %s", c.name, err))
+		return
 	}
 }
 
@@ -45,6 +43,6 @@ func Start(name string, nc *nats.Conn, logger log.Logger, repo MessageRepository
 		repo:   repo,
 	}
 
-	_, err := nc.Subscribe(senML, consumer.handleMsg())
+	_, err := nc.Subscribe(senML, consumer.consume)
 	return err
 }
