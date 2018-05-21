@@ -24,10 +24,11 @@ type tags map[string]string
 func (repo *influxRepo) tagsOf(msg *mainflux.Message) tags {
 	time := strconv.FormatFloat(msg.Time, 'f', -1, 64)
 	update := strconv.FormatFloat(msg.UpdateTime, 'f', -1, 64)
-
+	channel := strconv.FormatUint(msg.Channel, 10)
+	publisher := strconv.FormatUint(msg.Publisher, 10)
 	return tags{
-		"Channel":    msg.Channel,
-		"Publisher":  msg.Publisher,
+		"Channel":    channel,
+		"Publisher":  publisher,
 		"Protocol":   msg.Protocol,
 		"Name":       msg.Name,
 		"Unit":       msg.Unit,

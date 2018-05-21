@@ -44,8 +44,8 @@ func queryDB(cmd string) ([]models.Row, error) {
 
 func TestSave(t *testing.T) {
 	msg := mainflux.Message{
-		Channel:     "ch",
-		Publisher:   "pub",
+		Channel:     45,
+		Publisher:   2580,
 		Protocol:    "http",
 		Name:        "test name",
 		Unit:        "km",
