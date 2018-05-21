@@ -51,7 +51,50 @@ type config struct {
 	DBPass    string
 }
 
-func makeConfig() config {
+func main() {
+	cfg, clientCfg := loadConfigs()
+	logger := log.New(os.Stdout)
+
+	nc, err := nats.Connect(cfg.NatsURL)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
+		os.Exit(1)
+	}
+	defer nc.Close()
+
+	client, err := influxdata.NewHTTPClient(clientCfg)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to create InfluxDB client: %s", err))
+		os.Exit(1)
+	}
+	defer client.Close()
+
+	repo, err := influxdb.New(client, cfg.DBName, cfg.PointName)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to create InfluxDB writer: %s", err.Error()))
+		os.Exit(1)
+	}
+
+	counter, latency := makeMetrices()
+	if err := writers.Start(name, nc, logger, repo, counter, latency); err != nil {
+		logger.Error(fmt.Sprintf("Failed to start message writer: %s", err))
+		os.Exit(1)
+	}
+
+	errs := make(chan error, 2)
+	go func() {
+		c := make(chan os.Signal)
+		signal.Notify(c, syscall.SIGINT)
+		errs <- fmt.Errorf("%s", <-c)
+	}()
+
+	go startHTTPService(cfg.Port, logger, errs)
+
+	err = <-errs
+	logger.Error(fmt.Sprintf("Influxdb writer service terminated: %s", err))
+}
+
+func loadConfigs() (config, influxdata.HTTPConfig) {
 	cfg := config{
 		NatsURL:   mainflux.Env(envNatsURL, defNatsURL),
 		PointName: mainflux.Env(envPointName, defPointName),
@@ -62,7 +105,14 @@ func makeConfig() config {
 		DBUser:    mainflux.Env(envDBUser, defDBUser),
 		DBPass:    mainflux.Env(envDBPass, defDBPass),
 	}
-	return cfg
+
+	clientCfg := influxdata.HTTPConfig{
+		Addr:     fmt.Sprintf("%s%s:%s", prefix, cfg.DBHost, cfg.DBPort),
+		Username: cfg.DBUser,
+		Password: cfg.DBPass,
+	}
+
+	return cfg, clientCfg
 }
 
 func makeMetrices() (*kitprometheus.Counter, *kitprometheus.Summary) {
@@ -83,56 +133,8 @@ func makeMetrices() (*kitprometheus.Counter, *kitprometheus.Summary) {
 	return counter, latency
 }
 
-func main() {
-	cfg := makeConfig()
-	logger := log.New(os.Stdout)
-
-	nc, err := nats.Connect(cfg.NatsURL)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
-		os.Exit(1)
-	}
-	defer nc.Close()
-
-	errs := make(chan error, 2)
-
-	go func() {
-		c := make(chan os.Signal)
-		signal.Notify(c, syscall.SIGINT)
-		errs <- fmt.Errorf("%s", <-c)
-	}()
-
-	clientCfg := influxdata.HTTPConfig{
-		Addr:     fmt.Sprintf("%s%s:%s", prefix, cfg.DBHost, cfg.DBPort),
-		Username: cfg.DBUser,
-		Password: cfg.DBPass,
-	}
-
-	client, err := influxdata.NewHTTPClient(clientCfg)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to create InfluxDB client: %s", err))
-		return
-	}
-	defer client.Close()
-
-	repo, err := influxdb.New(client, cfg.DBName, cfg.PointName)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to create InfluxDB writer: %s", err.Error()))
-		return
-	}
-
-	counter, latency := makeMetrices()
-	if err := writers.Start(name, nc, logger, repo, counter, latency); err != nil {
-		logger.Error(fmt.Sprintf("Failed to start message writer: %s", err))
-		return
-	}
-
-	go func() {
-		p := fmt.Sprintf(":%s", cfg.Port)
-		logger.Info(fmt.Sprintf("Influxdb writer service started, exposed port %s", cfg.Port))
-		errs <- http.ListenAndServe(p, influxdb.MakeHandler())
-	}()
-
-	err = <-errs
-	logger.Error(fmt.Sprintf("Influxdb writer service terminated: %s", err))
+func startHTTPService(port string, logger log.Logger, errs chan error) {
+	p := fmt.Sprintf(":%s", port)
+	logger.Info(fmt.Sprintf("Influxdb writer service started, exposed port %s", p))
+	errs <- http.ListenAndServe(p, influxdb.MakeHandler())
 }
