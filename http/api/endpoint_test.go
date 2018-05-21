@@ -15,14 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const (
-	id           = 1
-	contentType  = "application/senml+json"
-	token        = "auth_token"
-	invalidToken = "invalid_token"
-	msg          = `[{"n":"current","t":-1,"v":1.6}]`
-)
-
 func newService() mainflux.MessagePublisher {
 	pub := mocks.NewPublisher()
 	return adapter.New(pub)
@@ -57,8 +49,14 @@ func (tr testRequest) make() (*http.Response, error) {
 }
 
 func TestPublish(t *testing.T) {
-	thingsClient := mocks.NewThingsClient(map[string]uint64{token: id})
+	id := uint64(1)
+	contentType := "application/senml+json"
+	token := "auth_token"
+	invalidToken := "invalid_token"
+	msg := `[{"n":"current","t":-1,"v":1.6}]`
+	wrongID := uint64(0)
 
+	thingsClient := mocks.NewThingsClient(map[string]uint64{token: id})
 	pub := newService()
 	ts := newHTTPServer(pub, thingsClient)
 	defer ts.Close()
@@ -70,10 +68,34 @@ func TestPublish(t *testing.T) {
 		auth        string
 		status      int
 	}{
-		"publish message":                                  {id, msg, contentType, token, http.StatusAccepted},
-		"publish message with no authorization token":      {id, msg, contentType, "", http.StatusForbidden},
-		"publish message with invalid authorization token": {id, msg, contentType, invalidToken, http.StatusForbidden},
-		"publish message with no content type":             {id, msg, "", token, http.StatusAccepted},
+		"publish message": {
+			chanID:      id,
+			msg:         msg,
+			contentType: contentType,
+			auth:        token,
+			status:      http.StatusAccepted,
+		},
+		"publish message without authorization token": {
+			chanID:      id,
+			msg:         msg,
+			contentType: contentType,
+			auth:        "",
+			status:      http.StatusForbidden,
+		},
+		"publish message with invalid authorization token": {
+			chanID:      id,
+			msg:         msg,
+			contentType: contentType,
+			auth:        invalidToken,
+			status:      http.StatusForbidden,
+		},
+		"publish message without content type": {
+			chanID:      id,
+			msg:         msg,
+			contentType: "",
+			auth:        token,
+			status:      http.StatusAccepted,
+		},
 	}
 
 	for desc, tc := range cases {
