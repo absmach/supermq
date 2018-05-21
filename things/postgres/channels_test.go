@@ -16,9 +16,8 @@ func TestChannelSave(t *testing.T) {
 
 	channel := things.Channel{Owner: email}
 	_, err := channelRepo.Save(channel)
-	hasErr := err != nil
 
-	assert.False(t, hasErr, fmt.Sprintf("create new channel: expected false got %t", hasErr))
+	assert.Nil(t, err, fmt.Sprintf("create new channel: expected no error got %s", err))
 }
 
 func TestChannelUpdate(t *testing.T) {
@@ -33,10 +32,10 @@ func TestChannelUpdate(t *testing.T) {
 		channel things.Channel
 		err     error
 	}{
-		"existing channel":                            {c, nil},
-		"non-existing channel with existing user":     {things.Channel{ID: badID, Owner: email}, things.ErrNotFound},
-		"existing channel ID with non-existing user":  {things.Channel{ID: c.ID, Owner: wrong}, things.ErrNotFound},
-		"non-existing channel with non-existing user": {things.Channel{ID: badID, Owner: wrong}, things.ErrNotFound},
+		"update existing channel":                            {channel: c, err: nil},
+		"update non-existing channel with existing user":     {channel: things.Channel{ID: wrongID, Owner: email}, err: things.ErrNotFound},
+		"update existing channel ID with non-existing user":  {channel: things.Channel{ID: c.ID, Owner: wrongValue}, err: things.ErrNotFound},
+		"update non-existing channel with non-existing user": {channel: things.Channel{ID: wrongID, Owner: wrongValue}, err: things.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
@@ -58,9 +57,9 @@ func TestSingleChannelRetrieval(t *testing.T) {
 		ID    uint64
 		err   error
 	}{
-		"existing user":                       {c.Owner, c.ID, nil},
-		"existing user, non-existing channel": {c.Owner, badID, things.ErrNotFound},
-		"non-existing owner":                  {wrong, c.ID, things.ErrNotFound},
+		"retrieve channel with existing user":                       {owner: c.Owner, ID: c.ID, err: nil},
+		"retrieve channel with existing user, non-existing channel": {owner: c.Owner, ID: wrongID, err: things.ErrNotFound},
+		"retrieve channel with non-existing owner":                  {owner: wrongValue, ID: c.ID, err: things.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
@@ -86,9 +85,9 @@ func TestMultiChannelRetrieval(t *testing.T) {
 		limit  int
 		size   int
 	}{
-		"existing owner, retrieve all":    {email, 0, n, n},
-		"existing owner, retrieve subset": {email, n / 2, n, n / 2},
-		"non-existing owner":              {wrong, n / 2, n, 0},
+		"retrieve all channels with existing owner":       {owner: email, offset: 0, limit: n, size: n},
+		"retrieve subset of channels with existing owner": {owner: email, offset: n / 2, limit: n, size: n / 2},
+		"retrieve channels with non-existing owner":       {owner: wrongValue, offset: n / 2, limit: n, size: 0},
 	}
 
 	for desc, tc := range cases {
@@ -135,11 +134,11 @@ func TestConnect(t *testing.T) {
 		thingID uint64
 		err     error
 	}{
-		{"existing user, channel and thing", email, chanID, thingID, nil},
-		{"connected channel and thing", email, chanID, thingID, nil},
-		{"with non-existing user", wrong, chanID, thingID, things.ErrNotFound},
-		{"non-existing channel", email, badID, thingID, things.ErrNotFound},
-		{"non-existing thing", email, chanID, badID, things.ErrNotFound},
+		{desc: "connect existing user, channel and thing", owner: email, chanID: chanID, thingID: thingID, err: nil},
+		{desc: "connect connected channel and thing", owner: email, chanID: chanID, thingID: thingID, err: nil},
+		{desc: "connect with non-existing user", owner: wrongValue, chanID: chanID, thingID: thingID, err: things.ErrNotFound},
+		{desc: "connect non-existing channel", owner: email, chanID: wrongID, thingID: thingID, err: things.ErrNotFound},
+		{desc: "connect non-existing thing", owner: email, chanID: chanID, thingID: wrongID, err: things.ErrNotFound},
 	}
 
 	for _, tc := range cases {
@@ -168,11 +167,11 @@ func TestDisconnect(t *testing.T) {
 		thingID uint64
 		err     error
 	}{
-		{"connected thing", email, chanID, thingID, nil},
-		{"non-connected thing", email, chanID, thingID, things.ErrNotFound},
-		{"non-existing user", wrong, chanID, thingID, things.ErrNotFound},
-		{"non-existing channel", email, badID, thingID, things.ErrNotFound},
-		{"non-existing thing", email, chanID, badID, things.ErrNotFound},
+		{desc: "disconnect connected thing", owner: email, chanID: chanID, thingID: thingID, err: nil},
+		{desc: "disconnect non-connected thing", owner: email, chanID: chanID, thingID: thingID, err: things.ErrNotFound},
+		{desc: "disconnect non-existing user", owner: wrongValue, chanID: chanID, thingID: thingID, err: things.ErrNotFound},
+		{desc: "disconnect non-existing channel", owner: email, chanID: wrongID, thingID: thingID, err: things.ErrNotFound},
+		{desc: "disconnect non-existing thing", owner: email, chanID: chanID, thingID: wrongID, err: things.ErrNotFound},
 	}
 
 	for _, tc := range cases {
@@ -199,9 +198,9 @@ func TestHasThing(t *testing.T) {
 		key       string
 		hasAccess bool
 	}{
-		"thing that has access":                {chanID, thing.Key, true},
-		"thing without access":                 {chanID, wrong, false},
-		"check access to non-existing channel": {badID, thing.Key, false},
+		"access check for thing that has access": {chanID: chanID, key: thing.Key, hasAccess: true},
+		"access check for thing without access":  {chanID: chanID, key: wrongValue, hasAccess: false},
+		"access check for non-existing channel":  {chanID: wrongID, key: thing.Key, hasAccess: false},
 	}
 
 	for desc, tc := range cases {

@@ -72,5 +72,5 @@ func encodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{},
 
 func decodeIdentityResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(*mainflux.ThingID)
-	return identityRes{res.GetValue(), nil}, nil
+	return identityRes{id: res.GetValue(), err: nil}, nil
 }

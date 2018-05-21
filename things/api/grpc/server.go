@@ -52,12 +52,12 @@ func (gs *grpcServer) Identify(ctx context.Context, req *mainflux.Token) (*mainf
 
 func decodeCanAccessRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*mainflux.AccessReq)
-	return accessReq{req.GetToken(), req.GetChanID()}, nil
+	return accessReq{thingKey: req.GetToken(), chanID: req.GetChanID()}, nil
 }
 
 func decodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*mainflux.Token)
-	return identifyReq{req.GetValue()}, nil
+	return identifyReq{key: req.GetValue()}, nil
 }
 
 func encodeIdentityResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {

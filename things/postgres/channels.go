@@ -68,12 +68,12 @@ func (cr channelRepository) RetrieveByID(owner string, id uint64) (things.Channe
 		return empty, err
 	}
 
-	qr := `SELECT id, type, name, key, payload FROM things t
+	q = `SELECT id, type, name, key, payload FROM things t
 	INNER JOIN connections conn
 	ON t.id = conn.thing_id AND t.owner = conn.thing_owner
 	WHERE conn.channel_id = $1 AND conn.channel_owner = $2`
 
-	rows, err := cr.db.Query(qr, id, owner)
+	rows, err := cr.db.Query(q, id, owner)
 	if err != nil {
 		cr.log.Error(fmt.Sprintf("Failed to retrieve connected due to %s", err))
 		return things.Channel{}, err

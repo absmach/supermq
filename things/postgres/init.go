@@ -12,8 +12,7 @@ import (
 // unapplied database migrations. A non-nil error is returned to indicate
 // failure.
 func Connect(host, port, name, user, pass string) (*sql.DB, error) {
-	t := "host=%s port=%s user=%s dbname=%s password=%s sslmode=disable"
-	url := fmt.Sprintf(t, host, port, user, name, pass)
+	url := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", host, port, user, name, pass)
 
 	db, err := sql.Open("postgres", url)
 	if err != nil {

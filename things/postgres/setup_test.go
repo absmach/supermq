@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	badID = 0
-	wrong = "wrong-value"
+	wrongID    = 0
+	wrongValue = "wrong-value"
 )
 
 var (

@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	badID = 0
-	wrong = "wrong-value"
-	email = "user@example.com"
-	token = "token"
+	wrongID    = 0
+	wrongValue = "wrong-value"
+	email      = "user@example.com"
+	token      = "token"
 )
 
 var (
@@ -38,9 +38,9 @@ func TestAddThing(t *testing.T) {
 		key   string
 		err   error
 	}{
-		"add new app":                      {things.Thing{Type: "app", Name: "a"}, token, nil},
-		"add new device":                   {things.Thing{Type: "device", Name: "b"}, token, nil},
-		"add thing with wrong credentials": {things.Thing{Type: "app", Name: "d"}, wrong, things.ErrUnauthorizedAccess},
+		"add new app":                      {thing: things.Thing{Type: "app", Name: "a"}, key: token, err: nil},
+		"add new device":                   {thing: things.Thing{Type: "device", Name: "b"}, key: token, err: nil},
+		"add thing with wrong credentials": {thing: things.Thing{Type: "app", Name: "d"}, key: wrongValue, err: things.ErrUnauthorizedAccess},
 	}
 
 	for desc, tc := range cases {
@@ -52,15 +52,16 @@ func TestAddThing(t *testing.T) {
 func TestUpdateThing(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 	saved, _ := svc.AddThing(token, thing)
+	other := things.Thing{ID: wrongID, Type: "app", Key: "x"}
 
 	cases := map[string]struct {
 		thing things.Thing
 		key   string
 		err   error
 	}{
-		"update existing thing":               {saved, token, nil},
-		"update thing with wrong credentials": {saved, wrong, things.ErrUnauthorizedAccess},
-		"update non-existing thing":           {things.Thing{ID: badID, Type: "app", Key: "x"}, token, things.ErrNotFound},
+		"update existing thing":               {thing: saved, key: token, err: nil},
+		"update thing with wrong credentials": {thing: saved, key: wrongValue, err: things.ErrUnauthorizedAccess},
+		"update non-existing thing":           {thing: other, key: token, err: things.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
@@ -78,9 +79,9 @@ func TestViewThing(t *testing.T) {
 		key string
 		err error
 	}{
-		"view existing thing":               {saved.ID, token, nil},
-		"view thing with wrong credentials": {saved.ID, wrong, things.ErrUnauthorizedAccess},
-		"view non-existing thing":           {badID, token, things.ErrNotFound},
+		"view existing thing":               {id: saved.ID, key: token, err: nil},
+		"view thing with wrong credentials": {id: saved.ID, key: wrongValue, err: things.ErrUnauthorizedAccess},
+		"view non-existing thing":           {id: wrongID, key: token, err: things.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
@@ -104,15 +105,14 @@ func TestListThings(t *testing.T) {
 		size   int
 		err    error
 	}{
-		"list all things":             {token, 0, n, n, nil},
-		"list subset":                 {token, 1, 3, 3, nil},
-		"list half":                   {token, n / 2, n, n / 2, nil},
-		"list last thing":             {token, n - 1, n, 1, nil},
-		"list empty set":              {token, n + 1, n, 0, nil},
-		"list with negative offset":   {token, -1, n, 0, nil},
-		"list with negative limit":    {token, 1, -n, 0, nil},
-		"list with zero limit":        {token, 1, 0, 0, nil},
-		"list with wrong credentials": {wrong, 0, 0, 0, things.ErrUnauthorizedAccess},
+		"list all things":             {key: token, offset: 0, limit: n, size: n, err: nil},
+		"list half":                   {key: token, offset: n / 2, limit: n, size: n / 2, err: nil},
+		"list last thing":             {key: token, offset: n - 1, limit: n, size: 1, err: nil},
+		"list empty set":              {key: token, offset: n + 1, limit: n, size: 0, err: nil},
+		"list with negative offset":   {key: token, offset: -1, limit: n, size: 0, err: nil},
+		"list with negative limit":    {key: token, offset: 1, limit: -n, size: 0, err: nil},
+		"list with zero limit":        {key: token, offset: 1, limit: 0, size: 0, err: nil},
+		"list with wrong credentials": {key: wrongValue, offset: 0, limit: 0, size: 0, err: things.ErrUnauthorizedAccess},
 	}
 
 	for desc, tc := range cases {
@@ -132,10 +132,10 @@ func TestRemoveThing(t *testing.T) {
 		key string
 		err error
 	}{
-		"remove thing with wrong credentials": {saved.ID, wrong, things.ErrUnauthorizedAccess},
-		"remove existing thing":               {saved.ID, token, nil},
-		"remove removed thing":                {saved.ID, token, nil},
-		"remove non-existing thing":           {badID, token, nil},
+		"remove thing with wrong credentials": {id: saved.ID, key: wrongValue, err: things.ErrUnauthorizedAccess},
+		"remove existing thing":               {id: saved.ID, key: token, err: nil},
+		"remove removed thing":                {id: saved.ID, key: token, err: nil},
+		"remove non-existing thing":           {id: wrongID, key: token, err: nil},
 	}
 
 	for desc, tc := range cases {
@@ -152,8 +152,8 @@ func TestCreateChannel(t *testing.T) {
 		key     string
 		err     error
 	}{
-		"create channel":                        {channel, token, nil},
-		"create channel with wrong credentials": {channel, wrong, things.ErrUnauthorizedAccess},
+		"create channel":                        {channel: channel, key: token, err: nil},
+		"create channel with wrong credentials": {channel: channel, key: wrongValue, err: things.ErrUnauthorizedAccess},
 	}
 
 	for desc, tc := range cases {
@@ -165,15 +165,16 @@ func TestCreateChannel(t *testing.T) {
 func TestUpdateChannel(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 	saved, _ := svc.CreateChannel(token, channel)
+	other := things.Channel{ID: wrongID}
 
 	cases := map[string]struct {
 		channel things.Channel
 		key     string
 		err     error
 	}{
-		"update existing channel":               {saved, token, nil},
-		"update channel with wrong credentials": {saved, wrong, things.ErrUnauthorizedAccess},
-		"update non-existing channel":           {things.Channel{ID: badID}, token, things.ErrNotFound},
+		"update existing channel":               {channel: saved, key: token, err: nil},
+		"update channel with wrong credentials": {channel: saved, key: wrongValue, err: things.ErrUnauthorizedAccess},
+		"update non-existing channel":           {channel: other, key: token, err: things.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
@@ -191,9 +192,9 @@ func TestViewChannel(t *testing.T) {
 		key string
 		err error
 	}{
-		"view existing channel":               {saved.ID, token, nil},
-		"view channel with wrong credentials": {saved.ID, wrong, things.ErrUnauthorizedAccess},
-		"view non-existing channel":           {badID, token, things.ErrNotFound},
+		"view existing channel":               {id: saved.ID, key: token, err: nil},
+		"view channel with wrong credentials": {id: saved.ID, key: wrongValue, err: things.ErrUnauthorizedAccess},
+		"view non-existing channel":           {id: wrongID, key: token, err: things.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
@@ -216,15 +217,14 @@ func TestListChannels(t *testing.T) {
 		size   int
 		err    error
 	}{
-		"list all channels":           {token, 0, n, n, nil},
-		"list subset":                 {token, 1, 3, 3, nil},
-		"list half":                   {token, n / 2, n, n / 2, nil},
-		"list last channel":           {token, n - 1, n, 1, nil},
-		"list empty set":              {token, n + 1, n, 0, nil},
-		"list with negative offset":   {token, -1, n, 0, nil},
-		"list with negative limit":    {token, 1, -n, 0, nil},
-		"list with zero limit":        {token, 1, 0, 0, nil},
-		"list with wrong credentials": {wrong, 0, 0, 0, things.ErrUnauthorizedAccess},
+		"list all channels":           {key: token, offset: 0, limit: n, size: n, err: nil},
+		"list half":                   {key: token, offset: n / 2, limit: n, size: n / 2, err: nil},
+		"list last channel":           {key: token, offset: n - 1, limit: n, size: 1, err: nil},
+		"list empty set":              {key: token, offset: n + 1, limit: n, size: 0, err: nil},
+		"list with negative offset":   {key: token, offset: -1, limit: n, size: 0, err: nil},
+		"list with negative limit":    {key: token, offset: 1, limit: -n, size: 0, err: nil},
+		"list with zero limit":        {key: token, offset: 1, limit: 0, size: 0, err: nil},
+		"list with wrong credentials": {key: wrongValue, offset: 0, limit: 0, size: 0, err: things.ErrUnauthorizedAccess},
 	}
 
 	for desc, tc := range cases {
@@ -244,10 +244,10 @@ func TestRemoveChannel(t *testing.T) {
 		key string
 		err error
 	}{
-		"remove channel with wrong credentials": {saved.ID, wrong, things.ErrUnauthorizedAccess},
-		"remove existing channel":               {saved.ID, token, nil},
-		"remove removed channel":                {saved.ID, token, nil},
-		"remove non-existing channel":           {saved.ID, token, nil},
+		"remove channel with wrong credentials": {id: saved.ID, key: wrongValue, err: things.ErrUnauthorizedAccess},
+		"remove existing channel":               {id: saved.ID, key: token, err: nil},
+		"remove removed channel":                {id: saved.ID, key: token, err: nil},
+		"remove non-existing channel":           {id: saved.ID, key: token, err: nil},
 	}
 
 	for desc, tc := range cases {
@@ -268,10 +268,10 @@ func TestConnect(t *testing.T) {
 		thingID uint64
 		err     error
 	}{
-		"connect thing":                         {token, sch.ID, sth.ID, nil},
-		"connect thing with wrong credentials":  {wrong, sch.ID, sth.ID, things.ErrUnauthorizedAccess},
-		"connect thing to non-existing channel": {token, badID, sth.ID, things.ErrNotFound},
-		"connect non-existing thing to channel": {token, sch.ID, badID, things.ErrNotFound},
+		"connect thing":                         {key: token, chanID: sch.ID, thingID: sth.ID, err: nil},
+		"connect thing with wrong credentials":  {key: wrongValue, chanID: sch.ID, thingID: sth.ID, err: things.ErrUnauthorizedAccess},
+		"connect thing to non-existing channel": {key: token, chanID: wrongID, thingID: sth.ID, err: things.ErrNotFound},
+		"connect non-existing thing to channel": {key: token, chanID: sch.ID, thingID: wrongID, err: things.ErrNotFound},
 	}
 
 	for desc, tc := range cases {
@@ -294,11 +294,11 @@ func TestDisconnect(t *testing.T) {
 		thingID uint64
 		err     error
 	}{
-		{"disconnect connected thing", token, sch.ID, sth.ID, nil},
-		{"disconnect disconnected thing", token, sch.ID, sth.ID, things.ErrNotFound},
-		{"disconnect thing with wrong credentials", wrong, sch.ID, sth.ID, things.ErrUnauthorizedAccess},
-		{"disconnect thing from non-existing channel", token, badID, sth.ID, things.ErrNotFound},
-		{"disconnect non-existing thing", token, sch.ID, badID, things.ErrNotFound},
+		{desc: "disconnect connected thing", key: token, chanID: sch.ID, thingID: sth.ID, err: nil},
+		{desc: "disconnect disconnected thing", key: token, chanID: sch.ID, thingID: sth.ID, err: things.ErrNotFound},
+		{desc: "disconnect with wrong credentials", key: wrongValue, chanID: sch.ID, thingID: sth.ID, err: things.ErrUnauthorizedAccess},
+		{desc: "disconnect from non-existing channel", key: token, chanID: wrongID, thingID: sth.ID, err: things.ErrNotFound},
+		{desc: "disconnect non-existing thing", key: token, chanID: sch.ID, thingID: wrongID, err: things.ErrNotFound},
 	}
 
 	for _, tc := range cases {
@@ -320,9 +320,9 @@ func TestCanAccess(t *testing.T) {
 		channel uint64
 		err     error
 	}{
-		"allowed access":              {sth.Key, sch.ID, nil},
-		"not-connected cannot access": {wrong, sch.ID, things.ErrUnauthorizedAccess},
-		"access non-existing channel": {sth.Key, badID, things.ErrUnauthorizedAccess},
+		"allowed access":                 {key: sth.Key, channel: sch.ID, err: nil},
+		"not-connected cannot access":    {key: wrongValue, channel: sch.ID, err: things.ErrUnauthorizedAccess},
+		"access to non-existing channel": {key: sth.Key, channel: wrongID, err: things.ErrUnauthorizedAccess},
 	}
 
 	for desc, tc := range cases {
@@ -341,8 +341,8 @@ func TestIdentify(t *testing.T) {
 		id  uint64
 		err error
 	}{
-		"identify existing thing":     {sth.Key, sth.ID, nil},
-		"identify non-existent thing": {wrong, badID, things.ErrUnauthorizedAccess},
+		"identify existing thing":     {key: sth.Key, id: sth.ID, err: nil},
+		"identify non-existing thing": {key: wrongValue, id: wrongID, err: things.ErrUnauthorizedAccess},
 	}
 
 	for desc, tc := range cases {
