@@ -23,8 +23,8 @@ func newMetricsMiddleware(repo MessageRepository, counter metrics.Counter, laten
 
 func (mm *metricsMiddleware) Save(msg mainflux.Message) error {
 	defer func(begin time.Time) {
-		mm.counter.With("method", "handleMessage").Add(1)
-		mm.latency.With("method", "handleMessage").Observe(time.Since(begin).Seconds())
+		mm.counter.With("method", "handle_message").Add(1)
+		mm.latency.With("method", "handle_message").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 	return mm.repo.Save(msg)
 }
