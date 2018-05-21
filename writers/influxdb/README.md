@@ -30,11 +30,11 @@ go get github.com/mainflux/mainflux
 
 cd $GOPATH/src/github.com/mainflux/mainflux
 
-# compile the http
-CGO_ENABLED=0 GOOS=linux GOARCH=$GOARCH GOARM=$GOARM go build -ldflags "-s -w" -o ./build/mainflux-influxdb cmd/influxdb/main.go
+# compile the influxdb
+make influxdb
 
 # copy binary to bin
-cp ./build/* $GOBIN
+make install
 ```
 
 Set the environment variables and run the service
@@ -44,4 +44,4 @@ MF_NATS_URL=nats://localhost:456 MF_DB_USER=user $GOBIN/mainflux-influxdb
 
 ## Usage
 
-Starting service will start consuming messages normalized messages in SenML format.
+Starting service will start consuming normalized messages in SenML format.

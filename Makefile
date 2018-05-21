@@ -1,5 +1,5 @@
 BUILD_DIR = build
-SERVICES = #users things http normalizer ws
+SERVICES = users things http normalizer ws
 WRITERS = influxdb
 DOCKERS = $(addprefix docker_,$(SERVICES)) $(addprefix docker_,$(WRITERS))
 CGO_ENABLED ?= 0
