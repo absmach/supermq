@@ -59,7 +59,7 @@ func TestSave(t *testing.T) {
 		Link:        "link",
 	}
 
-	q := fmt.Sprintf("SELECT * FROM %s", "test..messages\n")
+	q := fmt.Sprintf("SELECT * FROM test..messages\n")
 
 	client, err := influxdata.NewHTTPClient(clientCfg)
 	assert.Nil(t, err, fmt.Sprintf("Creation of InfluxDB client expected to succeed.\n"))

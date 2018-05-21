@@ -8,16 +8,16 @@ The service is configured using the environment variables presented in the
 following table. Note that any unset variables will be replaced with their
 default values.
 
-| Variable                   | Description                       | Default               |
-|----------------------------|-----------------------------------|-----------------------|
-| MF_INFLUXDB_DB_WRITER_PORT | Service HTTP port                 | 8180                  |
-| MF_NATS_URL                | NATS instance URL                 | nats://localhost:4222 |
-| MF_INFLUXDB_DB_POINT_NAME  | InfluxDB point to write data to   | messages              |
-| MF_INFLUXDB_DB_NAME        | InfluxDB database name            | mainflux              |
-| MF_INFLUXDB_DB_HOST        | InfluxDB host                     | localhost             |
-| MF_INFLUXDB_DB_PORT        | Default port of InfluxDB database | 8086                  |
-| MF_INFLUXDB_DB_USER        | Default user of InfluxDB database | mainflux              |
-| MF_INFLUXDB_DB_PASS        | Default password of InfluxDB user | mainflux              |
+| Variable                | Description                       | Default               |
+|-------------------------|-----------------------------------|-----------------------|
+| MF_INFLUXDB_WRITER_PORT | Service HTTP port                 | 8180                  |
+| MF_NATS_URL             | NATS instance URL                 | nats://localhost:4222 |
+| MF_INFLUXDB_POINT       | InfluxDB point to write data to   | messages              |
+| MF_INFLUXDB_DB_NAME     | InfluxDB database name            | mainflux              |
+| MF_INFLUXDB_DB_HOST     | InfluxDB host                     | localhost             |
+| MF_INFLUXDB_DB_PORT     | Default port of InfluxDB database | 8086                  |
+| MF_INFLUXDB_DB_USER     | Default user of InfluxDB database | mainflux              |
+| MF_INFLUXDB_DB_PASS     | Default password of InfluxDB user | mainflux              |
 
 ## Deployment
 

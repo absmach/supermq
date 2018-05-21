@@ -21,6 +21,32 @@ type influxRepo struct {
 type fields map[string]interface{}
 type tags map[string]string
 
+// New returns new InfluxDB writer.
+func New(client influxdata.Client, database, pointName string) (writers.MessageRepository, error) {
+	return &influxRepo{database, pointName, client}, nil
+}
+
+func (repo *influxRepo) Save(msg mainflux.Message) error {
+	bp, err := influxdata.NewBatchPoints(influxdata.BatchPointsConfig{
+		Database: repo.database,
+	})
+	if err != nil {
+		return err
+	}
+
+	tags, fields := repo.tagsOf(&msg), repo.fieldsOf(&msg)
+	pt, err := influxdata.NewPoint(repo.pointName, tags, fields, time.Now())
+	if err != nil {
+		return err
+	}
+
+	bp.AddPoint(pt)
+	if err := repo.client.Write(bp); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (repo *influxRepo) tagsOf(msg *mainflux.Message) tags {
 	time := strconv.FormatFloat(msg.Time, 'f', -1, 64)
 	update := strconv.FormatFloat(msg.UpdateTime, 'f', -1, 64)
@@ -46,30 +72,4 @@ func (repo *influxRepo) fieldsOf(msg *mainflux.Message) fields {
 		"StringValue": msg.StringValue,
 		"DataValue":   msg.DataValue,
 	}
-}
-
-// New returns new InfluxDB writer.
-func New(client influxdata.Client, database, pointName string) (writers.MessageRepository, error) {
-	return &influxRepo{database, pointName, client}, nil
-}
-
-func (repo *influxRepo) Save(msg mainflux.Message) error {
-	bp, err := influxdata.NewBatchPoints(influxdata.BatchPointsConfig{
-		Database: repo.database,
-	})
-	if err != nil {
-		return err
-	}
-
-	tags, fields := repo.tagsOf(&msg), repo.fieldsOf(&msg)
-	pt, err := influxdata.NewPoint(repo.pointName, tags, fields, time.Now())
-	if err != nil {
-		return err
-	}
-
-	bp.AddPoint(pt)
-	if err := repo.client.Write(bp); err != nil {
-		return err
-	}
-	return nil
 }

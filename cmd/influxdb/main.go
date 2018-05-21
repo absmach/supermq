@@ -30,14 +30,14 @@ const (
 	defDBUser    = "mainflux"
 	defDBPass    = "mainflux"
 
-	envNatsURL   = "MF_NATS_URL"
-	envPort      = "MF_INFLUXDB_WRITER_PORT"
-	envPointName = "MF_INFLUXDB_POINT_NAME"
-	envDBName    = "MF_INFLUXDB_DB_NAME"
-	envDBHost    = "MF_INFLUXDB_DB_HOST"
-	envDBPort    = "MF_INFLUXDB_DB_PORT"
-	envDBUser    = "MF_INFLUXDB_DB_USER"
-	envDBPass    = "MF_INFLUXDB_DB_PASS"
+	envNatsURL = "MF_NATS_URL"
+	envPort    = "MF_INFLUXDB_WRITER_PORT"
+	envPoint   = "MF_INFLUXDB_POINT"
+	envDBName  = "MF_INFLUXDB_DB_NAME"
+	envDBHost  = "MF_INFLUXDB_DB_HOST"
+	envDBPort  = "MF_INFLUXDB_DB_PORT"
+	envDBUser  = "MF_INFLUXDB_DB_USER"
+	envDBPass  = "MF_INFLUXDB_DB_PASS"
 )
 
 type config struct {
@@ -97,7 +97,7 @@ func main() {
 func loadConfigs() (config, influxdata.HTTPConfig) {
 	cfg := config{
 		NatsURL:   mainflux.Env(envNatsURL, defNatsURL),
-		PointName: mainflux.Env(envPointName, defPointName),
+		PointName: mainflux.Env(envPoint, defPointName),
 		Port:      mainflux.Env(envPort, defPort),
 		DBName:    mainflux.Env(envDBName, defDBName),
 		DBHost:    mainflux.Env(envDBHost, defDBHost),
