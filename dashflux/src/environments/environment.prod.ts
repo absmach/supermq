@@ -2,6 +2,6 @@ export const environment = {
   production: true,
   signupUrl: '/users',
   loginUrl: '/tokens',
-  thingsUrl: '/things',
+  clientsUrl: '/clients',
   channelsUrl: '/channels'
 };
