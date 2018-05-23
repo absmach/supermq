@@ -14,6 +14,7 @@ export class ThingsService {
   }
 
   addThing(thing: Thing) {
+    console.log(thing);
     return this.http.post(environment.thingsUrl, thing);
   }
 

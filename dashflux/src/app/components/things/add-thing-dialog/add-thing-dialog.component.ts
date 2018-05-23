@@ -22,7 +22,7 @@ export class AddThingDialogComponent implements OnInit {
   ngOnInit() {
     this.addThingForm = this.fb.group(
       {
-        id: [''],
+        id: null,
         type: ['', [Validators.required]],
         name: ['', [Validators.required, Validators.minLength(5)]],
         payload: ['']
