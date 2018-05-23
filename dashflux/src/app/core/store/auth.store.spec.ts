@@ -59,7 +59,7 @@ describe('AuthStore', () => {
             }));
 
 
-        it('should navigate to /clients when successfully authenticated', inject([AuthStore, AuthenticationService, Router],
+        it('should navigate to /things when successfully authenticated', inject([AuthStore, AuthenticationService, Router],
             (authStore: AuthStore, authService: AuthenticationService, router: Router) => {
                 const spy = spyOn(authService, 'login').and.returnValue(Observable.of(true));
                 const routerSpy = spyOn(router, 'navigate').and.stub();

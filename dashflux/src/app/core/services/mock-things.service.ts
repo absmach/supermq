@@ -3,17 +3,17 @@ import { Observable } from 'rxjs/Observable';
 
 import { Thing } from '../store/models';
 
-const MOCK_CLIENTS = [
+const MOCK_THINGS = [
 ];
 
 @Injectable()
-export class MockClientsService {
-  getClients() {
-      return Observable.of(MOCK_CLIENTS).delay(1000);
+export class MockThingsService {
+  getThings() {
+      return Observable.of(MOCK_THINGS).delay(1000);
   }
 
-  addClient(thing: Thing) {
-    MOCK_CLIENTS.push(thing);
+  addThing(thing: Thing) {
+    MOCK_THINGS.push(thing);
     return Observable.of(1).delay(1000);
   }
 }

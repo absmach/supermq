@@ -19,13 +19,13 @@ export class ChannelsComponent implements OnInit {
 
   constructor(
     private dialog: MatDialog,
-    public clientsStore: ThingsStore,
+    public thingsStore: ThingsStore,
     public channelsStore: ChannelsStore,
   ) { }
 
   ngOnInit() {
     this.channelsStore.getChannels();
-    this.clientsStore.getThings();
+    this.thingsStore.getThings();
   }
 
   addChannel() {

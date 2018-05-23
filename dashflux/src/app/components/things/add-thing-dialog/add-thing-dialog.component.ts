@@ -36,8 +36,8 @@ export class AddThingDialogComponent implements OnInit {
   }
 
   onAddThing() {
-    const client = this.addThingForm.value;
-    this.submit.emit(client);
+    const thing = this.addThingForm.value;
+    this.submit.emit(thing);
     this.dialogRef.close();
   }
 }
