@@ -7,7 +7,7 @@ import { Observable } from 'rxjs/Observable';
 import { AuthenticationService } from '../services/auth/authentication.service';
 import { TokenStorage } from '../services/auth/token-storage.service';
 import { ChannelsService } from '../services/channels/channels.service';
-import { ThingsService } from '../services/clients/clients.service';
+import { ThingsService } from '../services/things/things.service';
 import { AuthStore } from './auth.store';
 import { UiStore } from './ui.store';
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { action, observable } from 'mobx';
 
-import { ThingsService } from '../services/clients/clients.service';
+import { ThingsService } from '../services/things/things.service';
 import { Thing } from './models';
 import { UiStore } from './ui.store';
 

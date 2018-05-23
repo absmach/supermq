@@ -4,7 +4,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { toJS } from 'mobx';
 import { Observable } from 'rxjs/Observable';
 
-import { ThingsService } from '../services/clients/clients.service';
+import { ThingsService } from '../services/things/things.service';
 import { ThingsStore } from './things.store';
 import { Thing } from './models';
 import { UiStore } from './ui.store';

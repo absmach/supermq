@@ -9,7 +9,7 @@ import { MaterialModule } from '../../../core/material/material.module';
 import { AuthenticationService } from '../../../core/services/auth/authentication.service';
 import { TokenStorage } from '../../../core/services/auth/token-storage.service';
 import { ChannelsService } from '../../../core/services/channels/channels.service';
-import { ThingsService } from '../../../core/services/clients/clients.service';
+import { ThingsService } from '../../../core/services/things/things.service';
 import { AddThingDialogComponent } from './add-thing-dialog.component';
 
 describe('AddThingDialogComponent', () => {
