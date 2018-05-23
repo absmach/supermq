@@ -15,7 +15,7 @@ import { ChannelsStore } from '../../core/store/channels.store';
   styleUrls: ['./things.component.scss']
 })
 export class ThingsComponent implements OnInit {
-  clients: Observable<Thing[]>;
+  things: Observable<Thing[]>;
   displayedColumns = ['id', 'name', 'type', 'payload', 'actions'];
 
   constructor(

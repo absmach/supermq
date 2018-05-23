@@ -60,24 +60,24 @@ export class ChannelsService {
     const editChannel = this.http.put(environment.channelsUrl + '/' + channel.id, payload);
 
     return editChannel.switchMap(() => {
-      const clientsToAdd = this.getThingsToAdd(channelFormData, channel);
-      if (clientsToAdd.length) {
-        return forkJoin(this.createThingsConnectRequests(channel.id, clientsToAdd));
+      const thingsToAdd = this.getThingsToAdd(channelFormData, channel);
+      if (thingsToAdd.length) {
+        return forkJoin(this.createThingsConnectRequests(channel.id, thingsToAdd));
       } else {
         return Observable.of([]);
       }
     }).switchMap(() => {
-      const clientsToDelete = this.getClientsToDelete(channelFormData, channel);
-      console.log(clientsToDelete);
-      if (clientsToDelete.length) {
-        return forkJoin(this.createThingsDisconnectRequests(channel.id, clientsToDelete));
+      const thingsToDelete = this.getThingsToDelete(channelFormData, channel);
+      console.log(thingsToDelete);
+      if (thingsToDelete.length) {
+        return forkJoin(this.createThingsDisconnectRequests(channel.id, thingsToDelete));
       } else {
         return Observable.of([]);
       }
     });
   }
 
-  getClientsToDelete(channelFormData: Channel, channel: Channel) {
+  getThingsToDelete(channelFormData: Channel, channel: Channel) {
     return channel.connected.filter(thing => {
       return channelFormData.connected.find(th => th.id === thing.id) === undefined;
     });

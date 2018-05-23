@@ -26,7 +26,7 @@ import { ChannelsService } from './core/services/channels/channels.service';
 import { ThingsService } from './core/services/things/things.service';
 import { MockAuthService } from './core/services/mock-auth.service';
 import { MockChannelsService } from './core/services/mock-channels.service';
-import { MockClientsService } from './core/services/mock-things.service';
+import { MockThingsService } from './core/services/mock-things.service';
 import { ChannelsStore } from './core/store/channels.store';
 import { ThingsStore } from './core/store/things.store';
 import { UiStore } from './core/store/ui.store';
@@ -65,7 +65,7 @@ export function factory(authenticationService: AuthenticationService) {
     ChannelsStore,
     AuthStore,
     MockAuthService,
-    MockClientsService,
+    MockThingsService,
     MockChannelsService,
     ThingsService,
     ChannelsService,

@@ -7,12 +7,12 @@ const MOCK_CLIENTS = [
 ];
 
 @Injectable()
-export class MockClientsService {
-  getClients() {
+export class MockThingsService {
+  getThings() {
       return Observable.of(MOCK_CLIENTS).delay(1000);
   }
 
-  addClient(thing: Thing) {
+  addThing(thing: Thing) {
     MOCK_CLIENTS.push(thing);
     return Observable.of(1).delay(1000);
   }

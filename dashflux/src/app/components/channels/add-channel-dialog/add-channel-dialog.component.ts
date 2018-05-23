@@ -20,7 +20,7 @@ export class AddChannelDialogComponent implements OnInit {
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<AddChannelDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: Channel,
-    public clientsStore: ThingsStore,
+    public thingsStore: ThingsStore,
   ) { }
 
   ngOnInit() {
