@@ -77,6 +77,12 @@
   version = "v0.3.3"
 
 [[projects]]
+  name = "github.com/fatih/color"
+  packages = ["."]
+  revision = "5b77d2a35fb0ede96d138fc9a99f5c9b6aef11b4"
+  version = "v1.7.0"
+
+[[projects]]
   name = "github.com/go-kit/kit"
   packages = [
     "endpoint",
@@ -133,6 +139,18 @@
   version = "v1.2.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/hokaccha/go-prettyjson"
+  packages = ["."]
+  revision = "e6b9231a2b1cc5798b336fdbf99c16cd8ad1e0c9"
+
+[[projects]]
+  name = "github.com/inconshreveable/mousetrap"
+  packages = ["."]
+  revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+  version = "v1.0"
+
+[[projects]]
   name = "github.com/influxdata/influxdb"
   packages = [
     "client/v2",
@@ -156,6 +174,18 @@
     "oid"
   ]
   revision = "d34b9ff171c21ad295489235aec8b6626023cd04"
+
+[[projects]]
+  name = "github.com/mattn/go-colorable"
+  packages = ["."]
+  revision = "167de6bfdfba052fa6b2d3664c8f5272e23c9072"
+  version = "v0.0.9"
+
+[[projects]]
+  name = "github.com/mattn/go-isatty"
+  packages = ["."]
+  revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
+  version = "v0.0.3"
 
 [[projects]]
   name = "github.com/matttproud/golang_protobuf_extensions"
@@ -310,6 +340,18 @@
   version = "0.3.0"
 
 [[projects]]
+  name = "github.com/spf13/cobra"
+  packages = ["."]
+  revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
+  version = "v0.0.3"
+
+[[projects]]
+  name = "github.com/spf13/pflag"
+  packages = ["."]
+  revision = "583c0c0531f06d5278b7d917446061adc344b5cd"
+  version = "v1.0.1"
+
+[[projects]]
   name = "github.com/stretchr/testify"
   packages = ["assert"]
   revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
@@ -427,6 +469,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2181c222a2bd27cca2ed846bfa198f2ab1c150f6abe7843344b70bdd2bf4b5e3"
+  inputs-digest = "cb3ac582c75068a8385bf57af0db14aae008dd0dc30e1f3021f9659319e707f5"
   solver-name = "gps-cdcl"
   solver-version = 1
