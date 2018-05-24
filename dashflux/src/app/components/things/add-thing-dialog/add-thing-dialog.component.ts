@@ -31,7 +31,6 @@ export class AddThingDialogComponent implements OnInit {
 
     if (this.data) {
       this.addThingForm.patchValue(this.data);
-      this.addThingForm.get('payload').patchValue(JSON.stringify(this.data.payload));
     }
   }
 
