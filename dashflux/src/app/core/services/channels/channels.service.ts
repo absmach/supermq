@@ -38,6 +38,7 @@ export class ChannelsService {
 
     return this.http.post(environment.channelsUrl, payload, { observe: 'response' })
       .switchMap((res) => {
+        console.log(res.headers.keys());
         const id = this.getChannelIdFrom(res);
         return forkJoin(this.createThingsConnectRequests(id, channel.connected));
       });
