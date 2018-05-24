@@ -1,19 +1,19 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 
-import { Client } from '../store/models';
+import { Thing } from '../store/models';
 
-let MOCK_CLIENTS = [
+const MOCK_CLIENTS = [
 ];
 
 @Injectable()
-export class MockClientsService {
-  getClients() {
+export class MockThingsService {
+  getThings() {
       return Observable.of(MOCK_CLIENTS).delay(1000);
   }
 
-  addClient(client: Client) {
-    MOCK_CLIENTS.push(client);
+  addThing(thing: Thing) {
+    MOCK_CLIENTS.push(thing);
     return Observable.of(1).delay(1000);
   }
 }
