@@ -12,6 +12,7 @@ import { Thing } from '../../../core/store/models';
 export class AddThingDialogComponent implements OnInit {
   addThingForm: FormGroup;
   @Output() submit: EventEmitter<Thing> = new EventEmitter<Thing>();
+  editMode: boolean;
 
   constructor(
     private fb: FormBuilder,
@@ -30,6 +31,7 @@ export class AddThingDialogComponent implements OnInit {
     );
 
     if (this.data) {
+      this.editMode = true;
       this.addThingForm.patchValue(this.data);
     }
   }
