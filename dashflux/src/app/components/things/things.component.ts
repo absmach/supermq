@@ -5,7 +5,7 @@ import { Observable } from 'rxjs/Observable';
 
 import { Thing } from '../../core/store/models';
 import { ConfirmationDialogComponent } from '../shared/confirmation-dialog/confirmation-dialog.component';
-import { AddThingDialogComponent } from './add-thing-dialog/add-thing-dialog.component';
+import { ThingDialogComponent } from './thing-dialog/thing-dialog.component';
 import { ThingsStore } from '../../core/store/things.store';
 import { ChannelsStore } from '../../core/store/channels.store';
 
@@ -30,7 +30,7 @@ export class ThingsComponent implements OnInit {
   }
 
   addThing() {
-    const dialogRef = this.dialog.open(AddThingDialogComponent);
+    const dialogRef = this.dialog.open(ThingDialogComponent);
 
     dialogRef.componentInstance.submit.subscribe((thing: Thing) => {
       this.thingsStore.addThing(thing);
@@ -38,7 +38,7 @@ export class ThingsComponent implements OnInit {
   }
 
   editThing(thing: Thing) {
-    const dialogRef = this.dialog.open(AddThingDialogComponent, {
+    const dialogRef = this.dialog.open(ThingDialogComponent, {
       data: thing
     });
 

@@ -5,18 +5,18 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 import { Thing } from '../../../core/store/models';
 
 @Component({
-  selector: 'app-add-thing-dialog',
-  templateUrl: './add-thing-dialog.component.html',
-  styleUrls: ['./add-thing-dialog.component.scss']
+  selector: 'app-thing-dialog',
+  templateUrl: './thing-dialog.component.html',
+  styleUrls: ['./thing-dialog.component.scss']
 })
-export class AddThingDialogComponent implements OnInit {
+export class ThingDialogComponent implements OnInit {
   addThingForm: FormGroup;
   @Output() submit: EventEmitter<Thing> = new EventEmitter<Thing>();
   editMode: boolean;
 
   constructor(
     private fb: FormBuilder,
-    private dialogRef: MatDialogRef<AddThingDialogComponent>,
+    private dialogRef: MatDialogRef<ThingDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: Thing
   ) { }
 

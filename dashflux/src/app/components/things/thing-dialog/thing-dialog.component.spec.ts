@@ -10,17 +10,15 @@ import { AuthenticationService } from '../../../core/services/auth/authenticatio
 import { TokenStorage } from '../../../core/services/auth/token-storage.service';
 import { ChannelsService } from '../../../core/services/channels/channels.service';
 import { ThingsService } from '../../../core/services/things/things.service';
-import { AddChannelDialogComponent } from './add-channel-dialog.component';
-import { ThingsStore } from '../../../core/store/things.store';
-import { UiStore } from '../../../core/store/ui.store';
+import { ThingDialogComponent } from './thing-dialog.component';
 
-describe('AddChannelDialogComponent', () => {
-  let component: AddChannelDialogComponent;
-  let fixture: ComponentFixture<AddChannelDialogComponent>;
+describe('ThingDialogComponent', () => {
+  let component: ThingDialogComponent;
+  let fixture: ComponentFixture<ThingDialogComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ AddChannelDialogComponent ],
+      declarations: [ ThingDialogComponent ],
       imports: [
         MaterialModule,
         MatDialogModule,
@@ -31,8 +29,6 @@ describe('AddChannelDialogComponent', () => {
         NoopAnimationsModule
       ],
       providers: [
-        ThingsStore,
-        UiStore,
         AuthenticationService,
         TokenStorage,
         ThingsService,
@@ -45,7 +41,7 @@ describe('AddChannelDialogComponent', () => {
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(AddChannelDialogComponent);
+    fixture = TestBed.createComponent(ThingDialogComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

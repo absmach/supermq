@@ -14,9 +14,9 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LoginComponent } from './components/auth/login/login.component';
 import { SignupComponent } from './components/auth/signup/signup.component';
-import { AddChannelDialogComponent } from './components/channels/add-channel-dialog/add-channel-dialog.component';
+import { ChannelDialogComponent } from './components/channels/channel-dialog/channel-dialog.component';
 import { ChannelsComponent } from './components/channels/channels.component';
-import { AddThingDialogComponent } from './components/things/add-thing-dialog/add-thing-dialog.component';
+import { ThingDialogComponent } from './components/things/thing-dialog/thing-dialog.component';
 import { ThingsComponent } from './components/things/things.component';
 import { ConfirmationDialogComponent } from './components/shared/confirmation-dialog/confirmation-dialog.component';
 import { MaterialModule } from './core/material/material.module';
@@ -44,9 +44,9 @@ export function factory(authenticationService: AuthenticationService) {
     ChannelsComponent,
     SignupComponent,
     LoginComponent,
-    AddThingDialogComponent,
+    ThingDialogComponent,
     ConfirmationDialogComponent,
-    AddChannelDialogComponent,
+    ChannelDialogComponent,
   ],
   imports: [
     AuthModule,
@@ -82,8 +82,8 @@ export function factory(authenticationService: AuthenticationService) {
   ],
   bootstrap: [AppComponent],
   entryComponents: [
-    AddThingDialogComponent,
-    AddChannelDialogComponent,
+    ThingDialogComponent,
+    ChannelDialogComponent,
     ConfirmationDialogComponent
   ]
 })

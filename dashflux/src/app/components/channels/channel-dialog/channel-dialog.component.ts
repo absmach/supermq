@@ -7,18 +7,18 @@ import { ThingsStore } from '../../../core/store/things.store';
 import { Channel, Thing } from '../../../core/store/models';
 
 @Component({
-  selector: 'app-add-channel-dialog',
-  templateUrl: './add-channel-dialog.component.html',
-  styleUrls: ['./add-channel-dialog.component.scss']
+  selector: 'app-channel-dialog',
+  templateUrl: './channel-dialog.component.html',
+  styleUrls: ['./channel-dialog.component.scss']
 })
-export class AddChannelDialogComponent implements OnInit {
+export class ChannelDialogComponent implements OnInit {
   addChannelForm: FormGroup;
   @Output() submit: EventEmitter<Channel> = new EventEmitter<Channel>();
   editMode: boolean;
 
   constructor(
     private fb: FormBuilder,
-    private dialogRef: MatDialogRef<AddChannelDialogComponent>,
+    private dialogRef: MatDialogRef<ChannelDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: Channel,
     public thingsStore: ThingsStore,
   ) { }
