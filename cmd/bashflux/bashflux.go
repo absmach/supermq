@@ -27,18 +27,18 @@ func main() {
 	}
 
 	// API commands
-	cmdVersion := bf.NewCmdVersion()
-	cmdUsers := bf.NewCmdUsers()
-	cmdThings := bf.NewCmdThings()
-	cmdChannels := bf.NewCmdChannels()
-	cmdMessages := bf.NewCmdMessages()
+	versionCmd := bf.NewVersionCmd()
+	usersCmd := bf.NewUsersCmd()
+	thingsdCmd := bf.NewThingsCmd()
+	channelsCmd := bf.NewChannelsCmd()
+	messagesCmd := bf.NewMessagesCmd()
 
 	// Root Commands
-	rootCmd.AddCommand(cmdVersion)
-	rootCmd.AddCommand(cmdUsers)
-	rootCmd.AddCommand(cmdThings)
-	rootCmd.AddCommand(cmdChannels)
-	rootCmd.AddCommand(cmdMessages)
+	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(usersCmd)
+	rootCmd.AddCommand(thingsdCmd)
+	rootCmd.AddCommand(channelsCmd)
+	rootCmd.AddCommand(messagesCmd)
 
 	// Root Flags
 	rootCmd.PersistentFlags().StringVarP(

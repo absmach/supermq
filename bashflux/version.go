@@ -7,7 +7,7 @@ import (
 )
 
 // New does what godoc says...
-func NewCmdVersion() *cobra.Command {
+func NewVersionCmd() *cobra.Command {
 	// package root
 	cmd := cobra.Command{
 		Use:   "version",

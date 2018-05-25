@@ -23,7 +23,7 @@ var cmdMessages = []cobra.Command{
 	},
 }
 
-func NewCmdMessages() *cobra.Command {
+func NewMessagesCmd() *cobra.Command {
 	// package root
 	cmd := cobra.Command{
 		Use:   "msg",
