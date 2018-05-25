@@ -26,6 +26,7 @@ func GetReqResp(req *http.Request, token string) {
 func FormatResLog(resp *http.Response, err error) {
 	if err != nil {
 		fmt.Println(err.Error() + "\n")
+		return
 	}
 	defer resp.Body.Close()
 
