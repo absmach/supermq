@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/mainflux/mainflux/bashflux/cmd"
+	bf "github.com/mainflux/mainflux/bashflux"
 	"github.com/spf13/cobra"
 )
 
@@ -22,30 +22,30 @@ func main() {
 		Use: "bashflux",
 		PersistentPreRun: func(cmdCobra *cobra.Command, args []string) {
 			// Set HTTP server address
-			cmd.SetServerAddr(conf.HTTPHost, conf.HTTPPort)
+			bf.SetServerAddr(conf.HTTPHost, conf.HTTPPort)
 		},
 	}
 
 	// API commands
-	cmdThings := cmd.NewCmdThings()
-	cmdChannels := cmd.NewCmdChannels()
+	cmdThings := bf.NewCmdThings()
+	cmdChannels := bf.NewCmdChannels()
 
 	// Root Commands
-	rootCmd.AddCommand(cmd.CmdVersion)
+	rootCmd.AddCommand(bf.CmdVersion)
 	rootCmd.AddCommand(cmdThings)
 	rootCmd.AddCommand(cmdChannels)
-	rootCmd.AddCommand(cmd.CmdMessages)
-	rootCmd.AddCommand(cmd.CmdSession)
-	rootCmd.AddCommand(cmd.CmdUsers)
+	rootCmd.AddCommand(bf.CmdMessages)
+	rootCmd.AddCommand(bf.CmdSession)
+	rootCmd.AddCommand(bf.CmdUsers)
 
 	// Messages
-	cmd.CmdMessages.AddCommand(cmd.CmdSendMessage)
+	bf.CmdMessages.AddCommand(bf.CmdSendMessage)
 
 	// Users
-	cmd.CmdUsers.AddCommand(cmd.CmdCreateUser)
+	bf.CmdUsers.AddCommand(bf.CmdCreateUser)
 
 	// Token
-	cmd.CmdSession.AddCommand(cmd.CmdCreateToken)
+	bf.CmdSession.AddCommand(bf.CmdCreateToken)
 
 	// Root Flags
 	rootCmd.PersistentFlags().StringVarP(
@@ -55,12 +55,12 @@ func main() {
 
 	// Client and Channels Flags
 	rootCmd.PersistentFlags().IntVarP(
-		&cmd.Limit, "limit", "l", 100, "limit query parameter")
+		&bf.Limit, "limit", "l", 100, "limit query parameter")
 	rootCmd.PersistentFlags().IntVarP(
-		&cmd.Offset, "offset", "o", 0, "offset query parameter")
+		&bf.Offset, "offset", "o", 0, "offset query parameter")
 
 	// Set TLS certificates
-	cmd.SetCerts()
+	bf.SetCerts()
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
