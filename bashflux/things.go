@@ -78,8 +78,9 @@ var cmdThings = []cobra.Command{
 		Run: func(cmdCobra *cobra.Command, args []string) {
 			if len(args) != 3 {
 				LogUsage(cmdCobra.Short)
+			} else {
+				ConnectThing(args[0], args[1], args[2])
 			}
-			ConnectThing(args[0], args[1], args[2])
 		},
 	},
 	cobra.Command{
@@ -89,8 +90,9 @@ var cmdThings = []cobra.Command{
 		Run: func(cmdCobra *cobra.Command, args []string) {
 			if len(args) != 3 {
 				LogUsage(cmdCobra.Short)
+			} else {
+				DisconnectThing(args[0], args[1], args[2])
 			}
-			DisconnectThing(args[0], args[1], args[2])
 		},
 	},
 }
