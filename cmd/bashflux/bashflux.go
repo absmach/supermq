@@ -31,16 +31,14 @@ func main() {
 	cmdUsers := bf.NewCmdUsers()
 	cmdThings := bf.NewCmdThings()
 	cmdChannels := bf.NewCmdChannels()
+	cmdMessages := bf.NewCmdMessages()
 
 	// Root Commands
 	rootCmd.AddCommand(cmdVersion)
 	rootCmd.AddCommand(cmdUsers)
 	rootCmd.AddCommand(cmdThings)
 	rootCmd.AddCommand(cmdChannels)
-	rootCmd.AddCommand(bf.CmdMessages)
-
-	// Messages
-	bf.CmdMessages.AddCommand(bf.CmdSendMessage)
+	rootCmd.AddCommand(cmdMessages)
 
 	// Root Flags
 	rootCmd.PersistentFlags().StringVarP(
