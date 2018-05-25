@@ -15,9 +15,9 @@ var (
 )
 
 const (
-	certFile = "../docker/ssl/certs/mainflux-server.crt"
-	keyFile  = "../docker/ssl/certs/mainflux-server.key"
-	caFile   = "../docker/ssl/certs/ca.crt"
+	certFile = "../../docker/ssl/certs/mainflux-server.crt"
+	keyFile  = "../../docker/ssl/certs/mainflux-server.key"
+	caFile   = "../../docker/ssl/certs/ca.crt"
 )
 
 // SetServerAddr - set addr using host and port
