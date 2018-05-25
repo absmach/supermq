@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mainflux/mainflux/clients"
+	"github.com/mainflux/mainflux/things"
 	"github.com/spf13/cobra"
 )
 
@@ -169,11 +169,11 @@ func DeleteAllChannels(token string) {
 	}
 
 	var list struct {
-		Channels []clients.Channel
+		Channels []things.Channel `json:"channels,omitempty"`
 	}
 	json.Unmarshal([]byte(body), &list)
 
 	for i := 0; i < len(list.Channels); i++ {
-		DeleteChannel(list.Channels[i].ID, token)
+		DeleteChannel(string(list.Channels[i].ID), token)
 	}
 }

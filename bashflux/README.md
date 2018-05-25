@@ -14,11 +14,11 @@ go build
 * `./bashflux tokens create john.doe@email.com password`
 
 ### System provisioning
-* Provisioning devices: `./bashflux clients create '{"type":"device", "name":"nyDevice"}' <user_auth_token>`
-* Provisioning applications: `./bashflux clients create '{"type":"app", "name":"nyDevice"}' <user_auth_token>`
-* Retrieving provisioned clients: `./bashflux clients get --offset=1 --limit=5 <user_auth_token>`
-* Retrieving a specific client: `./bashflux clients get <client_id>  --offset=1 --limit=5 <user_auth_token>`
-* Removing clients: ``./bashflux clients delete <client_id> <user_auth_token>``
+* Provisioning devices: `./bashflux things create '{"type":"device", "name":"nyDevice"}' <user_auth_token>`
+* Provisioning applications: `./bashflux things create '{"type":"app", "name":"nyDevice"}' <user_auth_token>`
+* Retrieving provisioned things: `./bashflux things get --offset=1 --limit=5 <user_auth_token>`
+* Retrieving a specific client: `./bashflux things get <client_id>  --offset=1 --limit=5 <user_auth_token>`
+* Removing things: ``./bashflux things delete <client_id> <user_auth_token>``
 
 * Provisioning devices: `./bashflux channels create '{"name":"nyChannel"}' <user_auth_token>`
 * Provisioning applications: `./bashflux channels create '{"name":"nyChannel"}' <user_auth_token>`

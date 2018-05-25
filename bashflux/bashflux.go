@@ -9,10 +9,10 @@ import (
 
 func main() {
 
-	var conf struct {
+	conf := struct {
 		HTTPHost string
 		HTTPPort int
-	} {
+	}{
 		"localhost",
 		0,
 	}
@@ -26,13 +26,12 @@ func main() {
 		},
 	}
 
-	cmdClients := cmd.NewCmdClients()
-	cmdChannels := cmd.NewCmdChannels()
+	cmdThings := cmd.NewCmdThings()
 
 	// Root Commands
 	rootCmd.AddCommand(cmd.CmdVersion)
-	rootCmd.AddCommand(cmdClients)
-	rootCmd.AddCommand(cmdChannels)
+	rootCmd.AddCommand(cmdThings)
+	rootCmd.AddCommand(cmd.CmdChannels)
 	rootCmd.AddCommand(cmd.CmdMessages)
 	rootCmd.AddCommand(cmd.CmdSession)
 	rootCmd.AddCommand(cmd.CmdUsers)
