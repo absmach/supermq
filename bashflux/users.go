@@ -7,50 +7,50 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var CmdUsers = &cobra.Command{
-	Use:   "users",
-	Short: "User management",
-	Long:  `Manages users in the system (creation, deletition and other system admin)`,
-	Run: func(cmdCobra *cobra.Command, args []string) {
-		LogUsage("Usage: " + cmdCobra.Short + ". Needs additional commands (see --help)")
+var cmdUsers = []cobra.Command{
+	cobra.Command{
+		Use:   "create",
+		Short: "create <username> <password>",
+		Long:  `Creates new user`,
+		Run: func(cmdCobra *cobra.Command, args []string) {
+			if len(args) == 2 {
+				CreateUser(args[0], args[1])
+			} else {
+				LogUsage(cmdCobra.Short)
+			}
+		},
+	},
+	cobra.Command{
+		Use:   "token",
+		Short: "token <username> <password>",
+		Long:  `Creates new token`,
+		Run: func(cmdCobra *cobra.Command, args []string) {
+			if len(args) == 2 {
+				CreateToken(args[0], args[1])
+			} else {
+				LogUsage(cmdCobra.Short)
+			}
+		},
 	},
 }
 
-var CmdCreateUser = &cobra.Command{
-	Use:   "create",
-	Short: "create <username> <password>",
-	Long:  `Creates new user`,
-	Run: func(cmdCobra *cobra.Command, args []string) {
-		if len(args) == 2 {
-			CreateUser(args[0], args[1])
-		} else {
-			LogUsage(cmdCobra.Short)
-		}
-	},
-}
+// New does what godoc says...
+func NewCmdUsers() *cobra.Command {
+	// package users
+	cmd := cobra.Command{
+		Use:   "users",
+		Short: "User management",
+		Long:  `Manages users in the system (creation, deletition and other system admin)`,
+		Run: func(cmdCobra *cobra.Command, args []string) {
+			LogUsage("Usage: " + cmdCobra.Short + ". Needs additional commands (see --help)")
+		},
+	}
 
-// Sessions
-var CmdSession = &cobra.Command{
-	Use:   "tokens",
-	Short: "Tokens creation",
-	Long:  `Used for tokens manipulation`,
-	Run: func(cmdCobra *cobra.Command, args []string) {
-		LogUsage("Usage: " + cmdCobra.Short + ". Need additional commands (see --help)")
-	},
-}
+	for i, _ := range cmdUsers {
+		cmd.AddCommand(&cmdUsers[i])
+	}
 
-// Init Session
-var CmdCreateToken = &cobra.Command{
-	Use:   "create",
-	Short: "create <username> <password>",
-	Long:  `Creates new token`,
-	Run: func(cmdCobra *cobra.Command, args []string) {
-		if len(args) == 2 {
-			CreateToken(args[0], args[1])
-		} else {
-			LogUsage(cmdCobra.Short)
-		}
-	},
+	return &cmd
 }
 
 // CreateUser - create user

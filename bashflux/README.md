@@ -11,7 +11,7 @@ go build
 
 ### User management
 * `./bashflux users create john.doe@email.com password`
-* `./bashflux tokens create john.doe@email.com password`
+* `./bashflux users token john.doe@email.com password`
 
 ### System provisioning
 * Provisioning devices: `./bashflux things create '{"type":"device", "name":"nyDevice"}' <user_auth_token>`

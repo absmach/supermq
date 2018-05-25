@@ -27,25 +27,19 @@ func main() {
 	}
 
 	// API commands
+	cmdUsers := bf.NewCmdUsers()
 	cmdThings := bf.NewCmdThings()
 	cmdChannels := bf.NewCmdChannels()
 
 	// Root Commands
+	rootCmd.AddCommand(cmdUsers)
 	rootCmd.AddCommand(bf.CmdVersion)
 	rootCmd.AddCommand(cmdThings)
 	rootCmd.AddCommand(cmdChannels)
 	rootCmd.AddCommand(bf.CmdMessages)
-	rootCmd.AddCommand(bf.CmdSession)
-	rootCmd.AddCommand(bf.CmdUsers)
 
 	// Messages
 	bf.CmdMessages.AddCommand(bf.CmdSendMessage)
-
-	// Users
-	bf.CmdUsers.AddCommand(bf.CmdCreateUser)
-
-	// Token
-	bf.CmdSession.AddCommand(bf.CmdCreateToken)
 
 	// Root Flags
 	rootCmd.PersistentFlags().StringVarP(
