@@ -12,7 +12,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var commands = []cobra.Command{
+var thingsEP = "things"
+
+var cmdThings = []cobra.Command{
 	cobra.Command{
 		Use:   "create",
 		Short: "create device/<JSON_thing> <user_auth_token>",
@@ -105,14 +107,12 @@ func NewCmdThings() *cobra.Command {
 		},
 	}
 
-	for i, _ := range commands {
-		cmd.AddCommand(&commands[i])
+	for i, _ := range cmdThings {
+		cmd.AddCommand(&cmdThings[i])
 	}
 
 	return &cmd
 }
-
-var thingsEP = "things"
 
 // CreateThing - creates new thing and generates thing UUID
 func CreateThing(msg, token string) {

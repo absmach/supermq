@@ -26,21 +26,17 @@ func main() {
 		},
 	}
 
+	// API commands
 	cmdThings := cmd.NewCmdThings()
+	cmdChannels := cmd.NewCmdChannels()
 
 	// Root Commands
 	rootCmd.AddCommand(cmd.CmdVersion)
 	rootCmd.AddCommand(cmdThings)
-	rootCmd.AddCommand(cmd.CmdChannels)
+	rootCmd.AddCommand(cmdChannels)
 	rootCmd.AddCommand(cmd.CmdMessages)
 	rootCmd.AddCommand(cmd.CmdSession)
 	rootCmd.AddCommand(cmd.CmdUsers)
-
-	// Channels
-	cmd.CmdChannels.AddCommand(cmd.CmdCreateChannel)
-	cmd.CmdChannels.AddCommand(cmd.CmdGetChannel)
-	cmd.CmdChannels.AddCommand(cmd.CmdUpdateChannel)
-	cmd.CmdChannels.AddCommand(cmd.CmdDeleteChannel)
 
 	// Messages
 	cmd.CmdMessages.AddCommand(cmd.CmdSendMessage)
