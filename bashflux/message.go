@@ -8,6 +8,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const contentTypeSenml = "application/senml+json"
+
 var cmdMessages = []cobra.Command{
 	cobra.Command{
 		Use:   "send",
@@ -46,7 +48,7 @@ func SendMsg(id string, msg string, token string) {
 	}
 
 	req.Header.Set("Authorization", token)
-	req.Header.Add("Content-Type", "application/senml+json")
+	req.Header.Add("Content-Type", contentTypeSenml)
 
 	resp, err := httpClient.Do(req)
 	FormatResLog(resp, err)
