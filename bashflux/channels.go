@@ -81,11 +81,7 @@ func NewChannelsCmd() *cobra.Command {
 		Short: "Manipulation with channels",
 		Long:  `Manipulation with channels: create, delete or update channels`,
 		Run: func(cmdCobra *cobra.Command, args []string) {
-			if len(args) == 1 {
-				GetChannels(args[0])
-			} else {
-				LogUsage(cmdCobra.Short)
-			}
+			LogUsage(cmdCobra.Short)
 		},
 	}
 
