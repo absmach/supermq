@@ -17,41 +17,32 @@ import (
 )
 
 const (
-	name                = "mongodb-writer"
-	defNatsURL          = nats.DefaultURL
-	defPort             = "8180"
-	defDBName           = "mainflux"
-	defDBCollection     = "mainflux"
-	defDBHost           = "localhost"
-	defDBPort           = "8087"
-	defDBUser           = "mainflux"
-	defDBPass           = "mainflux"
-	defDBConnectTimeout = 5000
-	defDBSocketTimeout  = 5000
+	name       = "mongodb-writer"
+	defNatsURL = nats.DefaultURL
+	defPort    = "8180"
+	defDBName  = "mainflux"
+	defDBHost  = "localhost"
+	defDBPort  = "8087"
+	defDBUser  = "mainflux"
+	defDBPass  = "mainflux"
 
-	envNatsURL          = "MF_NATS_URL"
-	envPort             = "MF_MONGODB_WRITER_PORT"
-	envDBName           = "MF_MONGODB_DB_NAME"
-	envDBCollection     = "MF_MONGODB_DB_COLLECTION"
-	envDBHost           = "MF_MONGODB_DB_HOST"
-	envDBPort           = "MF_MONGODB_DB_PORT"
-	envDBUser           = "MF_MONGODB_DB_USER"
-	envDBPass           = "MF_MONGODB_DB_PASS"
-	envDBConnectTimeout = "MF_MONGODB_DB_CONNECTION_TIMEOUT"
-	envDBSocketTimeout  = "MF_MONGODB_DB_SOCKET_TIMEOUT"
+	envNatsURL = "MF_NATS_URL"
+	envPort    = "MF_MONGO_WRITER_PORT"
+	envDBName  = "MF_MONGO_WRITER_DB_NAME"
+	envDBHost  = "MF_MONGO_WRITER_DB_HOST"
+	envDBPort  = "MF_MONGO_WRITER_DB_PORT"
+	envDBUser  = "MF_MONGO_WRITER_DB_USER"
+	envDBPass  = "MF_MONGO_WRITER_DB_PASS"
 )
 
 type config struct {
-	NatsURL          string
-	Port             string
-	DBName           string
-	DBCollection     string
-	DBHost           string
-	DBPort           string
-	DBUser           string
-	DBPass           string
-	DBConnectTimeout int
-	DBSocketTimeout  int
+	NatsURL string
+	Port    string
+	DBName  string
+	DBHost  string
+	DBPort  string
+	DBUser  string
+	DBPass  string
 }
 
 func main() {
@@ -65,15 +56,13 @@ func main() {
 	}
 	defer nc.Close()
 
-	ms, err := mongodb.Connect(cfg.DBHost, cfg.DBConnectTimeout, cfg.DBSocketTimeout,
-		cfg.DBName, cfg.DBUser, cfg.DBPass)
+	ms, err := mongodb.Connect("http://"+cfg.DBHost+":"+cfg.DBPort, cfg.DBName)
 	if err != nil {
 		logger.Error("Failed to connect to Mongo.")
 		os.Exit(1)
 	}
-	defer ms.Close()
 
-	repo, err := mongodb.New(cfg.DBName, cfg.DBCollection, ms)
+	repo, err := mongodb.New(ms)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to create MongoDB writer: %s", err.Error()))
 		os.Exit(1)
@@ -100,16 +89,13 @@ func main() {
 
 func loadConfigs() config {
 	cfg := config{
-		NatsURL:          mainflux.Env(envNatsURL, defNatsURL),
-		Port:             mainflux.Env(envPort, defPort),
-		DBName:           mainflux.Env(envDBName, defDBName),
-		DBCollection:     mainflux.Env(envDBCollection, defDBCollection),
-		DBHost:           mainflux.Env(envDBHost, defDBHost),
-		DBPort:           mainflux.Env(envDBPort, defDBPort),
-		DBUser:           mainflux.Env(envDBUser, defDBUser),
-		DBPass:           mainflux.Env(envDBPass, defDBPass),
-		DBConnectTimeout: defDBConnectTimeout,
-		DBSocketTimeout:  defDBSocketTimeout,
+		NatsURL: mainflux.Env(envNatsURL, defNatsURL),
+		Port:    mainflux.Env(envPort, defPort),
+		DBName:  mainflux.Env(envDBName, defDBName),
+		DBHost:  mainflux.Env(envDBHost, defDBHost),
+		DBPort:  mainflux.Env(envDBPort, defDBPort),
+		DBUser:  mainflux.Env(envDBUser, defDBUser),
+		DBPass:  mainflux.Env(envDBPass, defDBPass),
 	}
 
 	return cfg
