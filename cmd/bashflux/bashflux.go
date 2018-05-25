@@ -27,13 +27,14 @@ func main() {
 	}
 
 	// API commands
+	cmdVersion := bf.NewCmdVersion()
 	cmdUsers := bf.NewCmdUsers()
 	cmdThings := bf.NewCmdThings()
 	cmdChannels := bf.NewCmdChannels()
 
 	// Root Commands
+	rootCmd.AddCommand(cmdVersion)
 	rootCmd.AddCommand(cmdUsers)
-	rootCmd.AddCommand(bf.CmdVersion)
 	rootCmd.AddCommand(cmdThings)
 	rootCmd.AddCommand(cmdChannels)
 	rootCmd.AddCommand(bf.CmdMessages)

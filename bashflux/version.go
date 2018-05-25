@@ -6,14 +6,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Version
-var CmdVersion = &cobra.Command{
-	Use:   "version",
-	Short: "Get manager version",
-	Long:  `Mainflux server health checkt.`,
-	Run: func(cmdCobra *cobra.Command, args []string) {
-		Version()
-	},
+// New does what godoc says...
+func NewCmdVersion() *cobra.Command {
+	// package root
+	cmd := cobra.Command{
+		Use:   "version",
+		Short: "Get manager version",
+		Long:  `Mainflux server health checkt.`,
+		Run: func(cmdCobra *cobra.Command, args []string) {
+			Version()
+		},
+	}
+
+	return &cmd
 }
 
 // Version - server health check
