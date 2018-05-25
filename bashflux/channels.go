@@ -111,8 +111,6 @@ func CreateChannel(msg string, token string) {
 func GetChannels(token string) {
 	url := fmt.Sprintf("%s/%s?offset=%s&limit=%s",
 		serverAddr, chanEndPoint, strconv.Itoa(Offset), strconv.Itoa(Limit))
-	println("GETCHANNELS")
-	println(url)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		fmt.Println(err.Error() + "\n")
