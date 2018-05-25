@@ -23,7 +23,6 @@ const (
 // SetServerAddr - set addr using host and port
 func SetServerAddr(HTTPHost string, HTTPPort int) {
 	serverAddr = "https://" + HTTPHost
-	//println(serverAddr)
 
 	if HTTPPort != 0 {
 		serverAddr += ":" + strconv.Itoa(HTTPPort)

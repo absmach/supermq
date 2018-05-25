@@ -97,9 +97,7 @@ var cmdThings = []cobra.Command{
 	},
 }
 
-// New does what godoc says...
 func NewThingsCmd() *cobra.Command {
-	// package root
 	cmd := cobra.Command{
 		Use:   "things",
 		Short: "things <options>",

@@ -34,9 +34,7 @@ var cmdUsers = []cobra.Command{
 	},
 }
 
-// New does what godoc says...
 func NewUsersCmd() *cobra.Command {
-	// package users
 	cmd := cobra.Command{
 		Use:   "users",
 		Short: "User management",

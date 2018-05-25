@@ -73,9 +73,7 @@ var cmdChannels = []cobra.Command{
 	},
 }
 
-// New does what godoc says...
 func NewChannelsCmd() *cobra.Command {
-	// package root
 	cmd := cobra.Command{
 		Use:   "channels",
 		Short: "Manipulation with channels",

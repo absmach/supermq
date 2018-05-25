@@ -24,7 +24,6 @@ var cmdMessages = []cobra.Command{
 }
 
 func NewMessagesCmd() *cobra.Command {
-	// package root
 	cmd := cobra.Command{
 		Use:   "msg",
 		Short: "Send or retrieve messages",

@@ -6,9 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// New does what godoc says...
 func NewVersionCmd() *cobra.Command {
-	// package root
 	cmd := cobra.Command{
 		Use:   "version",
 		Short: "Get manager version",
