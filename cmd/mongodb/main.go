@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -12,6 +13,7 @@ import (
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/writers"
 	mongodb "github.com/mainflux/mainflux/writers/mongodb"
+	"github.com/mongodb/mongo-go-driver/mongo"
 	nats "github.com/nats-io/go-nats"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
@@ -56,7 +58,7 @@ func main() {
 	}
 	defer nc.Close()
 
-	ms, err := mongodb.Connect("http://"+cfg.DBHost+":"+cfg.DBPort, cfg.DBName)
+	ms, err := connect("http://"+cfg.DBHost+":"+cfg.DBPort, cfg.DBName)
 	if err != nil {
 		logger.Error("Failed to connect to Mongo.")
 		os.Exit(1)
@@ -99,6 +101,17 @@ func loadConfigs() config {
 	}
 
 	return cfg
+}
+
+func connect(addr string, dbName string) (*mongo.Database, error) {
+	client, err := mongo.Connect(context.Background(), addr, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	db := client.Database(dbName)
+	return db, nil
 }
 
 func makeMetrices() (*kitprometheus.Counter, *kitprometheus.Summary) {

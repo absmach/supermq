@@ -11,20 +11,8 @@ import (
 )
 
 const (
-	dbName         string = "mainflux"
 	collectionName string = "mainflux"
 )
-
-func Connect(addr string, dbName string) (*mongo.Database, error) {
-	client, err := mongo.Connect(context.Background(), addr, nil)
-
-	if err != nil {
-		return nil, err
-	}
-
-	db := client.Database(dbName)
-	return db, nil
-}
 
 var _ writers.MessageRepository = (*mongoRepo)(nil)
 
