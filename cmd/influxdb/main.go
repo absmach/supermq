@@ -12,8 +12,8 @@ import (
 	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/writers"
-	influxdb "github.com/mainflux/mainflux/writers/influxdb"
-	nats "github.com/nats-io/go-nats"
+	"github.com/mainflux/mainflux/writers/influxdb"
+	"github.com/nats-io/go-nats"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
@@ -31,13 +31,13 @@ const (
 	defDBPass    = "mainflux"
 
 	envNatsURL = "MF_NATS_URL"
-	envPort    = "MF_INFLUXDB_WRITER_PORT"
-	envPoint   = "MF_INFLUXDB_POINT"
-	envDBName  = "MF_INFLUXDB_DB_NAME"
-	envDBHost  = "MF_INFLUXDB_DB_HOST"
-	envDBPort  = "MF_INFLUXDB_DB_PORT"
-	envDBUser  = "MF_INFLUXDB_DB_USER"
-	envDBPass  = "MF_INFLUXDB_DB_PASS"
+	envPort    = "MF_INFLUX_WRITER_PORT"
+	envPoint   = "MF_INFLUX_WRITER_POINT"
+	envDBName  = "MF_INFLUX_WRITER_DB_NAME"
+	envDBHost  = "MF_INFLUX_WRITER_DB_HOST"
+	envDBPort  = "MF_INFLUX_WRITER_DB_PORT"
+	envDBUser  = "MF_INFLUX_WRITER_DB_USER"
+	envDBPass  = "MF_INFLUX_WRITER_DB_PASS"
 )
 
 type config struct {
