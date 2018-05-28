@@ -65,9 +65,9 @@ MF_NATS_URL=[NATS instance URL] MF_INFLUX_WRITER_PORT=[Service HTTP port] MF_INF
 ### Using docker-compose
 
 This service can also be deployed using docker containers.
-Docker compose file is available in ./docker/docker-compose.yml. Besides database
-ans writer services, it contains Grafana service which can be used for database
-exploration and data visualization.
+Docker compose file is available in <project_root>/docker/addons/influxdb/docker-compose.yml. Besides database
+and writer service, it contains [Grafana platform](https://grafana.com/) which can be used for database
+exploration and data visualization and analytics.
 
 ## Usage
 
