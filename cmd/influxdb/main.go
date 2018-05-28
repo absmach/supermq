@@ -13,7 +13,7 @@ import (
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/writers"
 	"github.com/mainflux/mainflux/writers/influxdb"
-	"github.com/nats-io/go-nats"
+	nats "github.com/nats-io/go-nats"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 

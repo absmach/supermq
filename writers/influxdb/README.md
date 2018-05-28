@@ -21,6 +21,27 @@ default values.
 
 ## Deployment
 
+```yaml
+  version: "2"
+  influxdb-writer:
+    image: mainflux/influxdb:[version]
+    container_name: [instance name]
+    expose:
+      - [Service HTTP port]
+    restart: on-failure
+    environment:
+      MF_NATS_URL: [NATS instance URL]
+      MF_INFLUX_WRITER_PORT: [Service HTTP port]
+      MF_INFLUX_POINT: [point name]
+      MF_INFLUX_DB_WRITER_NAME: [InfluxDB database name]
+      MF_INFLUX_DB_WRITER_HOST: [InfluxDB database host]
+      MF_INFLUX_DB_WRITER_PORT: [InfluxDB port]
+      MF_INFLUX_DB_WRITER_USER: [InfluxDB admin user]
+      MF_INFLUX_DB_WRITER_PASS: [InfluxDB admin password]
+    ports:
+      - [host machine port]:[configured HTTP port]
+```
+
 To start the service, execute the following shell script:
 
 ```bash
@@ -35,13 +56,14 @@ make influxdb
 
 # copy binary to bin
 make install
-```
 
-Set the environment variables and run the service
-Pass list of env variables in form `VARIABLE_NAME=[value]` separated by space character.
-Environment variables are provided in table above. For example:
-MF_NATS_URL=nats://localhost:456 MF_INFLUX_WRITER_POINT=point $GOBIN/mainflux-influxdb
+# Set the environment variables and run the service
+MF_NATS_URL=[NATS instance URL] MF_INFLUX_WRITER_PORT=[Service HTTP port] MF_INFLUX_POINT=[point name] MF_INFLUX_DB_WRITER_NAME=[InfluxDB database name] MF_INFLUX_DB_WRITER_HOST=[InfluxDB database host] MF_INFLUX_DB_WRITER_PORT=[InfluxDB port] MF_INFLUX_DB_WRITER_USER=[InfluxDB admin user] MF_INFLUX_DB_WRITER_PASS=[InfluxDB admin password] $GOBIN/mainflux-influxdb
+
+```
 
 ## Usage
 
 Starting service will start consuming normalized messages in SenML format.
+
+[doc]: http://mainflux.readthedocs.io
