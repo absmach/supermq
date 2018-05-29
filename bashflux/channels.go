@@ -124,7 +124,7 @@ func GetChannel(id string, token string) {
 	GetReqResp(req, token)
 }
 
-// UpdateChannel - publishes SenML message on the channel
+// UpdateChannel - update a channel
 func UpdateChannel(id string, msg string, token string) {
 	url := fmt.Sprintf("%s/%s/%s", serverAddr, chanEndPoint, id)
 	req, err := http.NewRequest("PUT", url, strings.NewReader(msg))
