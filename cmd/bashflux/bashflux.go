@@ -10,8 +10,8 @@ import (
 func main() {
 
 	conf := struct {
-		HTTPHost string
-		HTTPPort int
+		Host string
+		Port int
 	}{
 		"localhost",
 		0,
@@ -22,7 +22,7 @@ func main() {
 		Use: "bashflux",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			// Set HTTP server address
-			bf.SetServerAddr(conf.HTTPHost, conf.HTTPPort)
+			bf.SetServerAddr(conf.Host, conf.Port)
 		},
 	}
 
@@ -42,9 +42,9 @@ func main() {
 
 	// Root Flags
 	rootCmd.PersistentFlags().StringVarP(
-		&conf.HTTPHost, "host", "m", conf.HTTPHost, "HTTP Host address")
+		&conf.Host, "host", "m", conf.Host, "HTTP Host address")
 	rootCmd.PersistentFlags().IntVarP(
-		&conf.HTTPPort, "port", "p", conf.HTTPPort, "HTTP Host Port")
+		&conf.Port, "port", "p", conf.Port, "HTTP Host Port")
 
 	// Client and Channels Flags
 	rootCmd.PersistentFlags().IntVarP(
