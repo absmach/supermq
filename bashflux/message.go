@@ -16,11 +16,11 @@ var cmdMessages = []cobra.Command{
 		Short: "send <channel_id> <JSON_string> <client_token>",
 		Long:  `Sends message on the channel`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) == 3 {
-				SendMsg(args[0], args[1], args[2])
-			} else {
+			if len(args) != 3 {
 				LogUsage(cmd.Short)
+				return
 			}
+			SendMsg(args[0], args[1], args[2])
 		},
 	},
 }

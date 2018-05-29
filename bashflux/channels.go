@@ -20,27 +20,27 @@ var cmdChannels = []cobra.Command{
 		Short: "create <JSON_channel> <user_auth_token>",
 		Long:  `Creates new channel and generates it's UUID`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) == 2 {
-				msg := args[0]
-				token := args[1]
-				CreateChannel(msg, token)
-			} else {
+			if len(args) != 2 {
 				LogUsage(cmd.Short)
+				return
 			}
+			CreateChannel(args[0], args[1])
 		},
 	},
 	cobra.Command{
 		Use:   "get",
-		Short: "get <user_auth_token> or get <channel_id> <user_auth_token>",
+		Short: "get all/<channel_id> <user_auth_token>",
 		Long:  `Gets list of all channels or gets channel by id`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) == 1 {
-				GetChannels(args[0])
-			} else if len(args) == 2 {
-				GetChannel(args[0], args[1])
-			} else {
+			if len(args) != 2 {
 				LogUsage(cmd.Short)
+				return
 			}
+			if args[0] == "all" {
+				GetChannels(args[1])
+				return
+			}
+			GetChannel(args[0], args[1])
 		},
 	},
 	cobra.Command{
@@ -48,11 +48,11 @@ var cmdChannels = []cobra.Command{
 		Short: "update <channel_id> <JSON_string> <user_auth_token>",
 		Long:  `Updates channel record`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) == 3 {
-				UpdateChannel(args[0], args[1], args[2])
-			} else {
+			if len(args) != 3 {
 				LogUsage(cmd.Short)
+				return
 			}
+			UpdateChannel(args[0], args[1], args[2])
 		},
 	},
 	cobra.Command{
@@ -60,15 +60,15 @@ var cmdChannels = []cobra.Command{
 		Short: "delete <channel_id> <user_auth_token>",
 		Long:  `Delete channel by ID`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) == 2 {
-				if args[0] == "all" {
-					DeleteAllChannels(args[1])
-				} else {
-					DeleteChannel(args[0], args[1])
-				}
-			} else {
+			if len(args) != 2 {
 				LogUsage(cmd.Short)
+				return
 			}
+			if args[0] == "all" {
+				DeleteAllChannels(args[1])
+				return
+			}
+			DeleteChannel(args[0], args[1])
 		},
 	},
 }

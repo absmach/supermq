@@ -13,11 +13,11 @@ var cmdUsers = []cobra.Command{
 		Short: "create <username> <password>",
 		Long:  `Creates new user`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) == 2 {
-				CreateUser(args[0], args[1])
-			} else {
+			if len(args) != 2 {
 				LogUsage(cmd.Short)
+				return
 			}
+			CreateUser(args[0], args[1])
 		},
 	},
 	cobra.Command{
@@ -25,11 +25,11 @@ var cmdUsers = []cobra.Command{
 		Short: "token <username> <password>",
 		Long:  `Creates new token`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) == 2 {
-				CreateToken(args[0], args[1])
-			} else {
+			if len(args) != 2 {
 				LogUsage(cmd.Short)
+				return
 			}
+			CreateToken(args[0], args[1])
 		},
 	},
 }

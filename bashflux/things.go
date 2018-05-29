@@ -20,27 +20,27 @@ var cmdThings = []cobra.Command{
 		Short: "create device/<JSON_thing> <user_auth_token>",
 		Long:  `Create new thing, generate his UUID and store it`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) == 2 {
-				msg := args[0]
-				token := args[1]
-				CreateThing(msg, token)
-			} else {
+			if len(args) != 2 {
 				LogUsage(cmd.Short)
+				return
 			}
+			CreateThing(args[0], args[1])
 		},
 	},
 	cobra.Command{
 		Use:   "get",
-		Short: "get <user_auth_token> or get <thing_id> <user_auth_token>",
+		Short: "get all/<thing_id> <user_auth_token>",
 		Long:  `Get all thingss or thing by id`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) == 1 {
-				GetThings(args[0])
-			} else if len(args) == 2 {
-				GetThing(args[0], args[1])
-			} else {
+			if len(args) != 2 {
 				LogUsage(cmd.Short)
+				return
 			}
+			if args[0] == "all" {
+				GetThings(args[1])
+				return
+			}
+			GetThing(args[0], args[1])
 		},
 	},
 	cobra.Command{
@@ -48,15 +48,15 @@ var cmdThings = []cobra.Command{
 		Short: "delete all/<thing_id> <user_auth_token>",
 		Long:  `Removes thing from database`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) == 2 {
-				if args[0] == "all" {
-					DeleteAllThings(args[1])
-				} else {
-					DeleteThing(args[0], args[1])
-				}
-			} else {
+			if len(args) != 2 {
 				LogUsage(cmd.Short)
+				return
 			}
+			if args[0] == "all" {
+				DeleteAllThings(args[1])
+				return
+			}
+			DeleteThing(args[0], args[1])
 		},
 	},
 	cobra.Command{
@@ -64,11 +64,11 @@ var cmdThings = []cobra.Command{
 		Short: "update <thing_id> <JSON_string> <user_auth_token>",
 		Long:  `Update thing record`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) == 3 {
-				UpdateThing(args[0], args[1], args[2])
-			} else {
+			if len(args) != 3 {
 				LogUsage(cmd.Short)
+				return
 			}
+			UpdateThing(args[0], args[1], args[2])
 		},
 	},
 	cobra.Command{
@@ -78,9 +78,9 @@ var cmdThings = []cobra.Command{
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
 				LogUsage(cmd.Short)
-			} else {
-				ConnectThing(args[0], args[1], args[2])
+				return
 			}
+			ConnectThing(args[0], args[1], args[2])
 		},
 	},
 	cobra.Command{
@@ -90,9 +90,9 @@ var cmdThings = []cobra.Command{
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
 				LogUsage(cmd.Short)
-			} else {
-				DisconnectThing(args[0], args[1], args[2])
+				return
 			}
+			DisconnectThing(args[0], args[1], args[2])
 		},
 	},
 }
