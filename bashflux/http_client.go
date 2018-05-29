@@ -21,11 +21,11 @@ const (
 )
 
 // SetServerAddr - set addr using host and port
-func SetServerAddr(HTTPHost string, HTTPPort int) {
-	serverAddr = "https://" + HTTPHost
+func SetServerAddr(host string, port int) {
+	serverAddr = "https://" + host
 
-	if HTTPPort != 0 {
-		serverAddr += ":" + strconv.Itoa(HTTPPort)
+	if port != 0 {
+		serverAddr += ":" + strconv.Itoa(port)
 	}
 }
 
