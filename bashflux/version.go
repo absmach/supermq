@@ -11,7 +11,7 @@ func NewVersionCmd() *cobra.Command {
 		Use:   "version",
 		Short: "Get manager version",
 		Long:  `Mainflux server health checkt.`,
-		Run: func(cmdCobra *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, args []string) {
 			Version()
 		},
 	}

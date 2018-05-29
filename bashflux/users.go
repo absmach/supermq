@@ -12,11 +12,11 @@ var cmdUsers = []cobra.Command{
 		Use:   "create",
 		Short: "create <username> <password>",
 		Long:  `Creates new user`,
-		Run: func(cmdCobra *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 2 {
 				CreateUser(args[0], args[1])
 			} else {
-				LogUsage(cmdCobra.Short)
+				LogUsage(cmd.Short)
 			}
 		},
 	},
@@ -24,11 +24,11 @@ var cmdUsers = []cobra.Command{
 		Use:   "token",
 		Short: "token <username> <password>",
 		Long:  `Creates new token`,
-		Run: func(cmdCobra *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 2 {
 				CreateToken(args[0], args[1])
 			} else {
-				LogUsage(cmdCobra.Short)
+				LogUsage(cmd.Short)
 			}
 		},
 	},
@@ -39,8 +39,8 @@ func NewUsersCmd() *cobra.Command {
 		Use:   "users",
 		Short: "User management",
 		Long:  `Manages users in the system (creation, deletition and other system admin)`,
-		Run: func(cmdCobra *cobra.Command, args []string) {
-			LogUsage("Usage: " + cmdCobra.Short + ". Needs additional commands (see --help)")
+		Run: func(cmd *cobra.Command, args []string) {
+			LogUsage(cmd.Short)
 		},
 	}
 

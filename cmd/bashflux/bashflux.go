@@ -20,7 +20,7 @@ func main() {
 	// Root
 	var rootCmd = &cobra.Command{
 		Use: "bashflux",
-		PersistentPreRun: func(cmdCobra *cobra.Command, args []string) {
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			// Set HTTP server address
 			bf.SetServerAddr(conf.HTTPHost, conf.HTTPPort)
 		},

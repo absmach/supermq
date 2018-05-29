@@ -19,13 +19,13 @@ var cmdThings = []cobra.Command{
 		Use:   "create",
 		Short: "create device/<JSON_thing> <user_auth_token>",
 		Long:  `Create new thing, generate his UUID and store it`,
-		Run: func(cmdCobra *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 2 {
 				msg := args[0]
 				token := args[1]
 				CreateThing(msg, token)
 			} else {
-				LogUsage(cmdCobra.Short)
+				LogUsage(cmd.Short)
 			}
 		},
 	},
@@ -33,13 +33,13 @@ var cmdThings = []cobra.Command{
 		Use:   "get",
 		Short: "get <user_auth_token> or get <thing_id> <user_auth_token>",
 		Long:  `Get all thingss or thing by id`,
-		Run: func(cmdCobra *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 1 {
 				GetThings(args[0])
 			} else if len(args) == 2 {
 				GetThing(args[0], args[1])
 			} else {
-				LogUsage(cmdCobra.Short)
+				LogUsage(cmd.Short)
 			}
 		},
 	},
@@ -47,7 +47,7 @@ var cmdThings = []cobra.Command{
 		Use:   "delete",
 		Short: "delete all/<thing_id> <user_auth_token>",
 		Long:  `Removes thing from database`,
-		Run: func(cmdCobra *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 2 {
 				if args[0] == "all" {
 					DeleteAllThings(args[1])
@@ -55,7 +55,7 @@ var cmdThings = []cobra.Command{
 					DeleteThing(args[0], args[1])
 				}
 			} else {
-				LogUsage(cmdCobra.Short)
+				LogUsage(cmd.Short)
 			}
 		},
 	},
@@ -63,11 +63,11 @@ var cmdThings = []cobra.Command{
 		Use:   "update",
 		Short: "update <thing_id> <JSON_string> <user_auth_token>",
 		Long:  `Update thing record`,
-		Run: func(cmdCobra *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 3 {
 				UpdateThing(args[0], args[1], args[2])
 			} else {
-				LogUsage(cmdCobra.Short)
+				LogUsage(cmd.Short)
 			}
 		},
 	},
@@ -75,9 +75,9 @@ var cmdThings = []cobra.Command{
 		Use:   "connect",
 		Short: "connect <thing_id> <channel_id> <user_auth_token>",
 		Long:  `Connect thing to the channel`,
-		Run: func(cmdCobra *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
-				LogUsage(cmdCobra.Short)
+				LogUsage(cmd.Short)
 			} else {
 				ConnectThing(args[0], args[1], args[2])
 			}
@@ -87,9 +87,9 @@ var cmdThings = []cobra.Command{
 		Use:   "disconnect",
 		Short: "disconnect <thing_id> <channel_id> <user_auth_token>",
 		Long:  `Disconnect thing to the channel`,
-		Run: func(cmdCobra *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
-				LogUsage(cmdCobra.Short)
+				LogUsage(cmd.Short)
 			} else {
 				DisconnectThing(args[0], args[1], args[2])
 			}
@@ -102,8 +102,8 @@ func NewThingsCmd() *cobra.Command {
 		Use:   "things",
 		Short: "things <options>",
 		Long:  `Things handling: create, delete or update things.`,
-		Run: func(cmdCobra *cobra.Command, args []string) {
-			LogUsage(cmdCobra.Short)
+		Run: func(cmd *cobra.Command, args []string) {
+			LogUsage(cmd.Short)
 		},
 	}
 
