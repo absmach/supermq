@@ -24,7 +24,7 @@ const (
 	defPort    = "8180"
 	defDBName  = "mainflux"
 	defDBHost  = "localhost"
-	defDBPort  = "8087"
+	defDBPort  = "27017"
 	defDBUser  = "mainflux"
 	defDBPass  = "mainflux"
 
@@ -58,7 +58,7 @@ func main() {
 	}
 	defer nc.Close()
 
-	ms, err := connect("http://"+cfg.DBHost+":"+cfg.DBPort, cfg.DBName)
+	ms, err := connect("mongodb://"+cfg.DBHost+":"+cfg.DBPort, cfg.DBName)
 	if err != nil {
 		logger.Error("Failed to connect to Mongo.")
 		os.Exit(1)
