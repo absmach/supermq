@@ -3,5 +3,3 @@ build
 
 site/
 
-# OS X
-.DS_Store
