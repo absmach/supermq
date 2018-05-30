@@ -32,8 +32,8 @@ const (
 
 	envNatsURL = "MF_NATS_URL"
 	envPort    = "MF_INFLUX_WRITER_PORT"
-	envPoint   = "MF_INFLUX_WRITER_POINT"
 	envDBName  = "MF_INFLUX_WRITER_DB_NAME"
+	envDBPoint = "MF_INFLUX_WRITER_DB_POINT"
 	envDBHost  = "MF_INFLUX_WRITER_DB_HOST"
 	envDBPort  = "MF_INFLUX_WRITER_DB_PORT"
 	envDBUser  = "MF_INFLUX_WRITER_DB_USER"
@@ -41,14 +41,14 @@ const (
 )
 
 type config struct {
-	NatsURL   string
-	Port      string
-	PointName string
-	DBName    string
-	DBHost    string
-	DBPort    string
-	DBUser    string
-	DBPass    string
+	NatsURL string
+	Port    string
+	DBName  string
+	DBPoint string
+	DBHost  string
+	DBPort  string
+	DBUser  string
+	DBPass  string
 }
 
 func main() {
@@ -69,7 +69,7 @@ func main() {
 	}
 	defer client.Close()
 
-	repo, err := influxdb.New(client, cfg.DBName, cfg.PointName)
+	repo, err := influxdb.New(client, cfg.DBName, cfg.DBPoint)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to create InfluxDB writer: %s", err.Error()))
 		os.Exit(1)
@@ -96,14 +96,14 @@ func main() {
 
 func loadConfigs() (config, influxdata.HTTPConfig) {
 	cfg := config{
-		NatsURL:   mainflux.Env(envNatsURL, defNatsURL),
-		PointName: mainflux.Env(envPoint, defPointName),
-		Port:      mainflux.Env(envPort, defPort),
-		DBName:    mainflux.Env(envDBName, defDBName),
-		DBHost:    mainflux.Env(envDBHost, defDBHost),
-		DBPort:    mainflux.Env(envDBPort, defDBPort),
-		DBUser:    mainflux.Env(envDBUser, defDBUser),
-		DBPass:    mainflux.Env(envDBPass, defDBPass),
+		NatsURL: mainflux.Env(envNatsURL, defNatsURL),
+		Port:    mainflux.Env(envPort, defPort),
+		DBName:  mainflux.Env(envDBName, defDBName),
+		DBPoint: mainflux.Env(envDBPoint, defPointName),
+		DBHost:  mainflux.Env(envDBHost, defDBHost),
+		DBPort:  mainflux.Env(envDBPort, defDBPort),
+		DBUser:  mainflux.Env(envDBUser, defDBUser),
+		DBPass:  mainflux.Env(envDBPass, defDBPass),
 	}
 
 	clientCfg := influxdata.HTTPConfig{
