@@ -33,11 +33,11 @@ default values.
       MF_NATS_URL: [NATS instance URL]
       MF_INFLUX_WRITER_PORT: [Service HTTP port]
       MF_INFLUX_POINT: [point name]
-      MF_INFLUX_DB_WRITER_NAME: [InfluxDB database name]
-      MF_INFLUX_DB_WRITER_HOST: [InfluxDB database host]
-      MF_INFLUX_DB_WRITER_PORT: [InfluxDB port]
-      MF_INFLUX_DB_WRITER_USER: [InfluxDB admin user]
-      MF_INFLUX_DB_WRITER_PASS: [InfluxDB admin password]
+      MF_INFLUX_WRITER_DB_NAME: [InfluxDB database name]
+      MF_INFLUX_WRITER_DB_HOST: [InfluxDB database host]
+      MF_INFLUX_WRITER_DB_PORT: [InfluxDB port]
+      MF_INFLUX_WRITER_DB_USER: [InfluxDB admin user]
+      MF_INFLUX_WRITER_DB_PASS: [InfluxDB admin password]
     ports:
       - [host machine port]:[configured HTTP port]
 ```
@@ -58,7 +58,7 @@ make influxdb
 make install
 
 # Set the environment variables and run the service
-MF_NATS_URL=[NATS instance URL] MF_INFLUX_WRITER_PORT=[Service HTTP port] MF_INFLUX_POINT=[point name] MF_INFLUX_DB_WRITER_NAME=[InfluxDB database name] MF_INFLUX_DB_WRITER_HOST=[InfluxDB database host] MF_INFLUX_DB_WRITER_PORT=[InfluxDB port] MF_INFLUX_DB_WRITER_USER=[InfluxDB admin user] MF_INFLUX_DB_WRITER_PASS=[InfluxDB admin password] $GOBIN/mainflux-influxdb
+MF_NATS_URL=[NATS instance URL] MF_INFLUX_WRITER_PORT=[Service HTTP port] MF_INFLUX_POINT=[point name] MF_INFLUX_WRITER_DB_NAME=[InfluxDB database name] MF_INFLUX_WRITER_DB_HOST=[InfluxDB database host] MF_INFLUX_WRITER_DB_PORT=[InfluxDB port] MF_INFLUX_WRITER_DB_USER=[InfluxDB admin user] MF_INFLUX_WRITER_DB_PASS=[InfluxDB admin password] $GOBIN/mainflux-influxdb
 
 ```
 
