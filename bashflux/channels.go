@@ -1,14 +1,11 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
 
-	"github.com/mainflux/mainflux/things"
 	"github.com/spf13/cobra"
 )
 
@@ -62,10 +59,6 @@ var cmdChannels = []cobra.Command{
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
 				LogUsage(cmd.Short)
-				return
-			}
-			if args[0] == "all" {
-				DeleteAllChannels(args[1])
 				return
 			}
 			DeleteChannel(args[0], args[1])
@@ -144,36 +137,4 @@ func DeleteChannel(id, token string) {
 	}
 
 	GetReqResp(req, token)
-}
-
-// DeleteAllChannels - removes all channels
-func DeleteAllChannels(token string) {
-	url := fmt.Sprintf("%s/%s", serverAddr, chanEndPoint)
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		fmt.Println(err.Error() + "\n")
-	}
-
-	req.Header.Set("Authorization", token)
-	req.Header.Add("Content-Type", contentType)
-
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		fmt.Println(err.Error() + "\n")
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println(err.Error() + "\n")
-	}
-
-	var list struct {
-		Channels []things.Channel `json:"channels,omitempty"`
-	}
-	json.Unmarshal([]byte(body), &list)
-
-	for i := 0; i < len(list.Channels); i++ {
-		DeleteChannel(string(list.Channels[i].ID), token)
-	}
 }
