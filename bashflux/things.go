@@ -108,9 +108,9 @@ func NewThingsCmd() *cobra.Command {
 }
 
 // CreateThing - creates new thing and generates thing UUID
-func CreateThing(msg, token string) {
+func CreateThing(data, token string) {
 	url := fmt.Sprintf("%s/%s", serverAddr, thingsEP)
-	req, err := http.NewRequest("POST", url, strings.NewReader(msg))
+	req, err := http.NewRequest("POST", url, strings.NewReader(data))
 
 	GetReqResp(req, token, err)
 }
@@ -133,9 +133,9 @@ func GetThing(id, token string) {
 }
 
 // UpdateThing - updates thing by ID
-func UpdateThing(id, msg, token string) {
+func UpdateThing(id, data, token string) {
 	url := fmt.Sprintf("%s/%s/%s", serverAddr, thingsEP, id)
-	req, err := http.NewRequest("PUT", url, strings.NewReader(msg))
+	req, err := http.NewRequest("PUT", url, strings.NewReader(data))
 
 	GetReqResp(req, token, err)
 }
