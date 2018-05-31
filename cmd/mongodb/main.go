@@ -25,16 +25,12 @@ const (
 	defDBName  = "mainflux"
 	defDBHost  = "localhost"
 	defDBPort  = "27017"
-	defDBUser  = "mainflux"
-	defDBPass  = "mainflux"
 
 	envNatsURL = "MF_NATS_URL"
 	envPort    = "MF_MONGO_WRITER_PORT"
 	envDBName  = "MF_MONGO_WRITER_DB_NAME"
 	envDBHost  = "MF_MONGO_WRITER_DB_HOST"
 	envDBPort  = "MF_MONGO_WRITER_DB_PORT"
-	envDBUser  = "MF_MONGO_WRITER_DB_USER"
-	envDBPass  = "MF_MONGO_WRITER_DB_PASS"
 )
 
 type config struct {
@@ -43,8 +39,6 @@ type config struct {
 	DBName  string
 	DBHost  string
 	DBPort  string
-	DBUser  string
-	DBPass  string
 }
 
 func main() {
@@ -58,7 +52,7 @@ func main() {
 	}
 	defer nc.Close()
 
-	ms, err := connect("mongodb://"+cfg.DBHost+":"+cfg.DBPort, cfg.DBName)
+	ms, err := connect(fmt.Sprintf("mongodb://%s:%s", cfg.DBHost, cfg.DBPort), cfg.DBName)
 	if err != nil {
 		logger.Error("Failed to connect to Mongo.")
 		os.Exit(1)
@@ -96,8 +90,6 @@ func loadConfigs() config {
 		DBName:  mainflux.Env(envDBName, defDBName),
 		DBHost:  mainflux.Env(envDBHost, defDBHost),
 		DBPort:  mainflux.Env(envDBPort, defDBPort),
-		DBUser:  mainflux.Env(envDBUser, defDBUser),
-		DBPass:  mainflux.Env(envDBPass, defDBPass),
 	}
 
 	return cfg
