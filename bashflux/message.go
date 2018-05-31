@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -43,9 +42,7 @@ func NewMessagesCmd() *cobra.Command {
 func SendMsg(id string, msg string, token string) {
 	url := serverAddr + "/http/channels/" + id + "/messages"
 	req, err := http.NewRequest("POST", url, strings.NewReader(msg))
-	if err != nil {
-		fmt.Println(err.Error() + "\n")
-	}
+	LogError(err)
 
 	req.Header.Set("Authorization", token)
 	req.Header.Add("Content-Type", contentTypeSenml)

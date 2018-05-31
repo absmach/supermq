@@ -14,7 +14,7 @@ var thingsEP = "things"
 var cmdThings = []cobra.Command{
 	cobra.Command{
 		Use:   "create",
-		Short: "create device/<JSON_thing> <user_auth_token>",
+		Short: "create <JSON_thing> <user_auth_token>",
 		Long:  `Create new thing, generate his UUID and store it`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
@@ -111,11 +111,8 @@ func NewThingsCmd() *cobra.Command {
 func CreateThing(msg, token string) {
 	url := fmt.Sprintf("%s/%s", serverAddr, thingsEP)
 	req, err := http.NewRequest("POST", url, strings.NewReader(msg))
-	if err != nil {
-		fmt.Println(err.Error() + "\n")
-	}
 
-	GetReqResp(req, token)
+	GetReqResp(req, token, err)
 }
 
 // GetThings - gets all things
@@ -123,44 +120,32 @@ func GetThings(token string) {
 	url := fmt.Sprintf("%s/%s?offset=%s&limit=%s",
 		serverAddr, thingsEP, strconv.Itoa(Offset), strconv.Itoa(Limit))
 	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		fmt.Println(err.Error() + "\n")
-	}
 
-	GetReqResp(req, token)
+	GetReqResp(req, token, err)
 }
 
 // GetThing - gets thing by ID
 func GetThing(id, token string) {
 	url := fmt.Sprintf("%s/%s/%s", serverAddr, thingsEP, id)
 	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		fmt.Println(err.Error() + "\n")
-	}
 
-	GetReqResp(req, token)
+	GetReqResp(req, token, err)
 }
 
 // UpdateThing - updates thing by ID
 func UpdateThing(id, msg, token string) {
 	url := fmt.Sprintf("%s/%s/%s", serverAddr, thingsEP, id)
 	req, err := http.NewRequest("PUT", url, strings.NewReader(msg))
-	if err != nil {
-		fmt.Println(err.Error() + "\n")
-	}
 
-	GetReqResp(req, token)
+	GetReqResp(req, token, err)
 }
 
 // DeleteThing - removes thing
 func DeleteThing(id, token string) {
 	url := fmt.Sprintf("%s/%s/%s", serverAddr, thingsEP, id)
 	req, err := http.NewRequest("DELETE", url, nil)
-	if err != nil {
-		fmt.Println(err.Error() + "\n")
-	}
 
-	GetReqResp(req, token)
+	GetReqResp(req, token, err)
 }
 
 // ConnectThing - connect thing to a channel
@@ -168,11 +153,8 @@ func ConnectThing(cliId, chanId, token string) {
 	url := fmt.Sprintf("%s/%s/%s/%s/%s", serverAddr, chanEndPoint,
 		chanId, thingsEP, cliId)
 	req, err := http.NewRequest("PUT", url, nil)
-	if err != nil {
-		fmt.Println(err.Error() + "\n")
-	}
 
-	GetReqResp(req, token)
+	GetReqResp(req, token, err)
 }
 
 // DisconnectThing - connect thing to a channel
@@ -180,9 +162,6 @@ func DisconnectThing(cliId, chanId, token string) {
 	url := fmt.Sprintf("%s/%s/%s/%s/%s", serverAddr, chanEndPoint,
 		chanId, thingsEP, cliId)
 	req, err := http.NewRequest("DELETE", url, nil)
-	if err != nil {
-		fmt.Println(err.Error() + "\n")
-	}
 
-	GetReqResp(req, token)
+	GetReqResp(req, token, err)
 }
