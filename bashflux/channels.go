@@ -84,7 +84,7 @@ func NewChannelsCmd() *cobra.Command {
 }
 
 // CreateChannel - creates new channel and generates UUID
-func CreateChannel(msg string, token string) {
+func CreateChannel(msg, token string) {
 	url := fmt.Sprintf("%s/%s", serverAddr, chanEndPoint)
 	req, err := http.NewRequest("POST", url, strings.NewReader(msg))
 
@@ -101,7 +101,7 @@ func GetChannels(token string) {
 }
 
 // GetChannel - gets channel by ID
-func GetChannel(id string, token string) {
+func GetChannel(id, token string) {
 	url := fmt.Sprintf("%s/%s/%s", serverAddr, chanEndPoint, id)
 	req, err := http.NewRequest("GET", url, nil)
 
@@ -109,7 +109,7 @@ func GetChannel(id string, token string) {
 }
 
 // UpdateChannel - update a channel
-func UpdateChannel(id string, msg string, token string) {
+func UpdateChannel(id, msg, token string) {
 	url := fmt.Sprintf("%s/%s/%s", serverAddr, chanEndPoint, id)
 	req, err := http.NewRequest("PUT", url, strings.NewReader(msg))
 

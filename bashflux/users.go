@@ -52,7 +52,7 @@ func NewUsersCmd() *cobra.Command {
 }
 
 // CreateUser - create user
-func CreateUser(user string, pwd string) {
+func CreateUser(user, pwd string) {
 	msg := fmt.Sprintf(`{"email": "%s", "password": "%s"}`, user, pwd)
 	url := fmt.Sprintf("%s/users", serverAddr)
 	resp, err := httpClient.Post(url, contentType, strings.NewReader(msg))
@@ -60,7 +60,7 @@ func CreateUser(user string, pwd string) {
 }
 
 // CreateToken - create user token
-func CreateToken(user string, pwd string) {
+func CreateToken(user, pwd string) {
 	msg := fmt.Sprintf(`{"email": "%s", "password": "%s"}`, user, pwd)
 	url := fmt.Sprintf("%s/tokens", serverAddr)
 	resp, err := httpClient.Post(url, contentType, strings.NewReader(msg))

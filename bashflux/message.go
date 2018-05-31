@@ -39,7 +39,7 @@ func NewMessagesCmd() *cobra.Command {
 }
 
 // SendMsg - publishes SenML message on the channel
-func SendMsg(id string, msg string, token string) {
+func SendMsg(id, msg, token string) {
 	url := serverAddr + "/http/channels/" + id + "/messages"
 	req, err := http.NewRequest("POST", url, strings.NewReader(msg))
 	LogError(err)
