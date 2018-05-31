@@ -9,7 +9,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/manuio/mainflux"
+	"github.com/mainflux/mainflux"
 )
 
 const (
