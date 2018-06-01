@@ -52,20 +52,22 @@ func main() {
 	}
 	defer nc.Close()
 
-	ms, err := connect(fmt.Sprintf("mongodb://%s:%s", cfg.DBHost, cfg.DBPort), cfg.DBName)
+	client, err := mongo.Connect(context.Background(), fmt.Sprintf("mongodb://%s:%s", cfg.DBHost, cfg.DBPort), nil)
 	if err != nil {
-		logger.Error("Failed to connect to Mongo.")
+		logger.Error(fmt.Sprintf("Failed to connect to database: %s", err))
 		os.Exit(1)
 	}
 
-	repo, err := mongodb.New(ms)
+	db := client.Database(cfg.DBName)
+	repo, err := mongodb.New(db)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to create MongoDB writer: %s", err.Error()))
 		os.Exit(1)
 	}
 
 	counter, latency := makeMetrics()
-	if err := writers.Start(name, nc, logger, repo, counter, latency); err != nil {
+	repo = writers.MetricsMiddleware(repo, counter, latency)
+	if err := writers.Start(name, nc, logger, repo); err != nil {
 		logger.Error(fmt.Sprintf("Failed to start message writer: %s", err))
 		os.Exit(1)
 	}
@@ -80,7 +82,7 @@ func main() {
 	go startHTTPService(cfg.Port, logger, errs)
 
 	err = <-errs
-	logger.Error(fmt.Sprintf("Mongodb writer service terminated: %s", err))
+	logger.Error(fmt.Sprintf("MongoDB writer service terminated: %s", err))
 }
 
 func loadConfigs() config {
@@ -91,15 +93,6 @@ func loadConfigs() config {
 		DBHost:  mainflux.Env(envDBHost, defDBHost),
 		DBPort:  mainflux.Env(envDBPort, defDBPort),
 	}
-}
-
-func connect(addr string, dbName string) (*mongo.Database, error) {
-	client, err := mongo.Connect(context.Background(), addr, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return client.Database(dbName), nil
 }
 
 func makeMetrics() (*kitprometheus.Counter, *kitprometheus.Summary) {

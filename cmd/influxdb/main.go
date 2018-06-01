@@ -74,7 +74,8 @@ func main() {
 	}
 
 	counter, latency := makeMetrics()
-	if err := writers.Start(name, nc, logger, repo, counter, latency); err != nil {
+	repo = writers.MetricsMiddleware(repo, counter, latency)
+	if err := writers.Start(name, nc, logger, repo); err != nil {
 		logger.Error(fmt.Sprintf("Failed to start message writer: %s", err))
 		os.Exit(1)
 	}
@@ -89,7 +90,7 @@ func main() {
 	go startHTTPService(cfg.Port, logger, errs)
 
 	err = <-errs
-	logger.Error(fmt.Sprintf("Influxdb writer service terminated: %s", err))
+	logger.Error(fmt.Sprintf("InfluxDB writer service terminated: %s", err))
 }
 
 func loadConfigs() (config, influxdata.HTTPConfig) {
