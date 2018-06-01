@@ -18,6 +18,26 @@ default values.
 
 ## Deployment
 
+```yaml
+  mongo-writer:
+    image: mainflux/mongodb:latest
+    container_name: mainflux-mongodb-writer
+    depends_on:
+      - mongodb
+      - nats
+    expose:
+      - [Service HTTP port]
+    restart: on-failure
+    environment:
+      MF_NATS_URL: [NATS instance URL]
+      MF_MONGO_WRITER_PORT: [Service HTTP port]
+      MF_MONGO_WRITER_DB_NAME: [MongoDB database name]
+      MF_MONGO_WRITER_DB_HOST: [MongoDB database host]
+      MF_MONGO_WRITER_DB_PORT: [MongoDB database port]
+    ports:
+      - [host machine port]:[configured HTTP port]
+```
+
 To start the service, execute the following shell script:
 
 ```bash
@@ -34,7 +54,7 @@ make mongodb
 make install
 
 # Set the environment variables and run the service
-MF_NATS_URL=[NATS instance URL] MF_MONGO_WRITER_PORT=[Service HTTP port] MF_MONGO_WRITER_DB_NAME=[MongoDB database name] MF_MONGO_WRITER_DB_HOST=[MongoDB database host] MF_MONGO_WRITER_DB_PORT=[MongoDB port] $GOBIN/mainflux-mongodb
+MF_NATS_URL=[NATS instance URL] MF_MONGO_WRITER_PORT=[Service HTTP port] MF_MONGO_WRITER_DB_NAME=[MongoDB database name] MF_MONGO_WRITER_DB_HOST=[MongoDB database host] MF_MONGO_WRITER_DB_PORT=[MongoDB database port] $GOBIN/mainflux-mongodb
 ```
 
 ## Usage
