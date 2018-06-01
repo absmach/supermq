@@ -69,11 +69,12 @@ func main() {
 
 	repo, err := influxdb.New(client, cfg.DBName)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to create InfluxDB writer: %s", err.Error()))
+		logger.Error(fmt.Sprintf("Failed to create InfluxDB writer: %s", err))
 		os.Exit(1)
 	}
 
 	counter, latency := makeMetrics()
+	repo = writers.LoggingMiddleware(repo, logger)
 	repo = writers.MetricsMiddleware(repo, counter, latency)
 	if err := writers.Start(name, nc, logger, repo); err != nil {
 		logger.Error(fmt.Sprintf("Failed to start message writer: %s", err))

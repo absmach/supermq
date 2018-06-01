@@ -49,7 +49,7 @@ func TestSave(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("Creating new MongoDB repo expected to succeed: %s.\n", err))
 
 	err = repo.Save(msg)
-	assert.Nil(t, err, fmt.Sprintf("Save operation expected to succeed.\n"))
+	assert.Nil(t, err, fmt.Sprintf("Save operation expected to succeed: %s.\n", err))
 
 	count, err := db.Collection(collection).Count(context.Background(), nil)
 	assert.Nil(t, err, fmt.Sprintf("Querying database expected to succeed: %s.\n", err))
