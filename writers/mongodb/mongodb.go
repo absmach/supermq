@@ -9,9 +9,7 @@ import (
 	"github.com/mainflux/mainflux/writers"
 )
 
-const (
-	collectionName string = "mainflux"
-)
+const collectionName string = "mainflux"
 
 var _ writers.MessageRepository = (*mongoRepo)(nil)
 
@@ -26,8 +24,6 @@ func New(db *mongo.Database) (writers.MessageRepository, error) {
 
 func (repo *mongoRepo) Save(msg mainflux.Message) error {
 	coll := repo.db.Collection(collectionName)
-
 	_, err := coll.InsertOne(context.Background(), msg)
-
 	return err
 }

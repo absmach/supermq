@@ -20,8 +20,8 @@ default values.
 
 ```yaml
   mongo-writer:
-    image: mainflux/mongodb:latest
-    container_name: mainflux-mongodb-writer
+    image: mainflux/mongodb:[version]
+    container_name: [instance name]
     depends_on:
       - mongodb
       - nats
@@ -31,9 +31,9 @@ default values.
     environment:
       MF_NATS_URL: [NATS instance URL]
       MF_MONGO_WRITER_PORT: [Service HTTP port]
-      MF_MONGO_WRITER_DB_NAME: [MongoDB database name]
-      MF_MONGO_WRITER_DB_HOST: [MongoDB database host]
-      MF_MONGO_WRITER_DB_PORT: [MongoDB database port]
+      MF_MONGO_WRITER_DB_NAME: [MongoDB name]
+      MF_MONGO_WRITER_DB_HOST: [MongoDB host]
+      MF_MONGO_WRITER_DB_PORT: [MongoDB port]
     ports:
       - [host machine port]:[configured HTTP port]
 ```

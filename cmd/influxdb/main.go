@@ -73,7 +73,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	counter, latency := makeMetrices()
+	counter, latency := makeMetrics()
 	if err := writers.Start(name, nc, logger, repo, counter, latency); err != nil {
 		logger.Error(fmt.Sprintf("Failed to start message writer: %s", err))
 		os.Exit(1)
@@ -112,7 +112,7 @@ func loadConfigs() (config, influxdata.HTTPConfig) {
 	return cfg, clientCfg
 }
 
-func makeMetrices() (*kitprometheus.Counter, *kitprometheus.Summary) {
+func makeMetrics() (*kitprometheus.Counter, *kitprometheus.Summary) {
 	counter := kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 		Namespace: "influxdb",
 		Subsystem: "message_writer",

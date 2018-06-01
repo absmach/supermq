@@ -64,7 +64,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	counter, latency := makeMetrices()
+	counter, latency := makeMetrics()
 	if err := writers.Start(name, nc, logger, repo, counter, latency); err != nil {
 		logger.Error(fmt.Sprintf("Failed to start message writer: %s", err))
 		os.Exit(1)
@@ -84,29 +84,25 @@ func main() {
 }
 
 func loadConfigs() config {
-	cfg := config{
+	return config{
 		NatsURL: mainflux.Env(envNatsURL, defNatsURL),
 		Port:    mainflux.Env(envPort, defPort),
 		DBName:  mainflux.Env(envDBName, defDBName),
 		DBHost:  mainflux.Env(envDBHost, defDBHost),
 		DBPort:  mainflux.Env(envDBPort, defDBPort),
 	}
-
-	return cfg
 }
 
 func connect(addr string, dbName string) (*mongo.Database, error) {
 	client, err := mongo.Connect(context.Background(), addr, nil)
-
 	if err != nil {
 		return nil, err
 	}
 
-	db := client.Database(dbName)
-	return db, nil
+	return client.Database(dbName), nil
 }
 
-func makeMetrices() (*kitprometheus.Counter, *kitprometheus.Summary) {
+func makeMetrics() (*kitprometheus.Counter, *kitprometheus.Summary) {
 	counter := kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 		Namespace: "mongodb",
 		Subsystem: "message_writer",

@@ -31,9 +31,9 @@ default values.
     environment:
       MF_NATS_URL: [NATS instance URL]
       MF_INFLUX_WRITER_PORT: [Service HTTP port]
-      MF_INFLUX_WRITER_DB_NAME: [InfluxDB database name]
-      MF_INFLUX_WRITER_DB_HOST: [InfluxDB database host]
-      MF_INFLUX_WRITER_DB_PORT: [InfluxDB database port]
+      MF_INFLUX_WRITER_DB_NAME: [InfluxDB name]
+      MF_INFLUX_WRITER_DB_HOST: [InfluxDB host]
+      MF_INFLUX_WRITER_DB_PORT: [InfluxDB port]
       MF_INFLUX_WRITER_DB_USER: [InfluxDB admin user]
       MF_INFLUX_WRITER_DB_PASS: [InfluxDB admin password]
     ports:

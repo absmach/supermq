@@ -42,15 +42,16 @@ func TestSave(t *testing.T) {
 	}
 
 	client, err := mongo.Connect(context.Background(), addr, nil)
-	assert.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed.\n"))
+	assert.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
 
 	db := client.Database(testDB)
 	repo, err := mongodb.New(db)
-	assert.Nil(t, err, fmt.Sprintf("Creating new MongoDB repo expected to succeed.\n"))
+	assert.Nil(t, err, fmt.Sprintf("Creating new MongoDB repo expected to succeed: %s.\n", err))
 
 	err = repo.Save(msg)
 	assert.Nil(t, err, fmt.Sprintf("Save operation expected to succeed.\n"))
 
-	count, _ := db.Collection(collection).Count(context.Background(), nil)
-	assert.Equal(t, int64(1), count)
+	count, err := db.Collection(collection).Count(context.Background(), nil)
+	assert.Nil(t, err, fmt.Sprintf("Querying database expected to succeed: %s.\n", err))
+	assert.Equal(t, int64(1), count, fmt.Sprintf("Expected to have 1 value, found %d instead.\n", count))
 }
