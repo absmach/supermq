@@ -9,7 +9,7 @@ import (
 func NewVersionCmd() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "version",
-		Short: "Get manager version",
+		Short: "Get version of Mainflux Things Service",
 		Long:  `Mainflux server health checkt.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			Version()
