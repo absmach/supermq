@@ -194,6 +194,37 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/mongodb/mongo-go-driver"
+  packages = [
+    "bson",
+    "bson/builder",
+    "bson/decimal",
+    "bson/elements",
+    "bson/objectid",
+    "core/addr",
+    "core/auth",
+    "core/auth/internal/gssapi",
+    "core/command",
+    "core/connection",
+    "core/connstring",
+    "core/description",
+    "core/dispatch",
+    "core/options",
+    "core/readconcern",
+    "core/readpref",
+    "core/result",
+    "core/tag",
+    "core/topology",
+    "core/version",
+    "core/wiremessage",
+    "core/writeconcern",
+    "internal",
+    "mongo"
+  ]
+  revision = "29a4d7d5b648e5b0b60e03e3bd71c11703f0c203"
+  version = "v0.0.5"
+
+[[projects]]
   name = "github.com/nats-io/go-nats"
   packages = [
     ".",
@@ -369,6 +400,7 @@
   packages = [
     "bcrypt",
     "blowfish",
+    "pbkdf2",
     "ssh/terminal"
   ]
   revision = "2d027ae1dddd4694d54f7a8b6cbe78dca8720226"
@@ -386,6 +418,12 @@
     "trace"
   ]
   revision = "f73e4c9ed3b7ebdd5f699a16a880c2b1994e50dd"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sync"
+  packages = ["semaphore"]
+  revision = "1d60e4601c6fd243af51cc01ddf169918a5407ca"
 
 [[projects]]
   branch = "master"

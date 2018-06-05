@@ -33,7 +33,6 @@ const (
 	envNatsURL = "MF_NATS_URL"
 	envPort    = "MF_INFLUX_WRITER_PORT"
 	envDBName  = "MF_INFLUX_WRITER_DB_NAME"
-	envDBPoint = "MF_INFLUX_WRITER_DB_POINT"
 	envDBHost  = "MF_INFLUX_WRITER_DB_HOST"
 	envDBPort  = "MF_INFLUX_WRITER_DB_PORT"
 	envDBUser  = "MF_INFLUX_WRITER_DB_USER"
@@ -44,7 +43,6 @@ type config struct {
 	NatsURL string
 	Port    string
 	DBName  string
-	DBPoint string
 	DBHost  string
 	DBPort  string
 	DBUser  string
@@ -69,14 +67,16 @@ func main() {
 	}
 	defer client.Close()
 
-	repo, err := influxdb.New(client, cfg.DBName, cfg.DBPoint)
+	repo, err := influxdb.New(client, cfg.DBName)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to create InfluxDB writer: %s", err.Error()))
+		logger.Error(fmt.Sprintf("Failed to create InfluxDB writer: %s", err))
 		os.Exit(1)
 	}
 
-	counter, latency := makeMetrices()
-	if err := writers.Start(name, nc, logger, repo, counter, latency); err != nil {
+	counter, latency := makeMetrics()
+	repo = writers.LoggingMiddleware(repo, logger)
+	repo = writers.MetricsMiddleware(repo, counter, latency)
+	if err := writers.Start(name, nc, logger, repo); err != nil {
 		logger.Error(fmt.Sprintf("Failed to start message writer: %s", err))
 		os.Exit(1)
 	}
@@ -91,7 +91,7 @@ func main() {
 	go startHTTPService(cfg.Port, logger, errs)
 
 	err = <-errs
-	logger.Error(fmt.Sprintf("Influxdb writer service terminated: %s", err))
+	logger.Error(fmt.Sprintf("InfluxDB writer service terminated: %s", err))
 }
 
 func loadConfigs() (config, influxdata.HTTPConfig) {
@@ -99,7 +99,6 @@ func loadConfigs() (config, influxdata.HTTPConfig) {
 		NatsURL: mainflux.Env(envNatsURL, defNatsURL),
 		Port:    mainflux.Env(envPort, defPort),
 		DBName:  mainflux.Env(envDBName, defDBName),
-		DBPoint: mainflux.Env(envDBPoint, defPointName),
 		DBHost:  mainflux.Env(envDBHost, defDBHost),
 		DBPort:  mainflux.Env(envDBPort, defDBPort),
 		DBUser:  mainflux.Env(envDBUser, defDBUser),
@@ -115,7 +114,7 @@ func loadConfigs() (config, influxdata.HTTPConfig) {
 	return cfg, clientCfg
 }
 
-func makeMetrices() (*kitprometheus.Counter, *kitprometheus.Summary) {
+func makeMetrics() (*kitprometheus.Counter, *kitprometheus.Summary) {
 	counter := kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 		Namespace: "influxdb",
 		Subsystem: "message_writer",
