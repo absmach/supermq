@@ -14,7 +14,7 @@ const contentType = "application/json"
 var Limit = 10
 var Offset = 0
 
-func GetReqResp(req *http.Request, token string, e error) {
+func SendRequest(req *http.Request, token string, e error) {
 	req.Header.Set("Authorization", token)
 	req.Header.Add("Content-Type", contentType)
 	if e != nil {

@@ -111,8 +111,7 @@ func NewThingsCmd() *cobra.Command {
 func CreateThing(data, token string) {
 	url := fmt.Sprintf("%s/%s", serverAddr, thingsEP)
 	req, err := http.NewRequest("POST", url, strings.NewReader(data))
-
-	GetReqResp(req, token, err)
+	SendRequest(req, token, err)
 }
 
 // GetThings - gets all things
@@ -120,32 +119,28 @@ func GetThings(token string) {
 	url := fmt.Sprintf("%s/%s?offset=%s&limit=%s",
 		serverAddr, thingsEP, strconv.Itoa(Offset), strconv.Itoa(Limit))
 	req, err := http.NewRequest("GET", url, nil)
-
-	GetReqResp(req, token, err)
+	SendRequest(req, token, err)
 }
 
 // GetThing - gets thing by ID
 func GetThing(id, token string) {
 	url := fmt.Sprintf("%s/%s/%s", serverAddr, thingsEP, id)
 	req, err := http.NewRequest("GET", url, nil)
-
-	GetReqResp(req, token, err)
+	SendRequest(req, token, err)
 }
 
 // UpdateThing - updates thing by ID
 func UpdateThing(id, data, token string) {
 	url := fmt.Sprintf("%s/%s/%s", serverAddr, thingsEP, id)
 	req, err := http.NewRequest("PUT", url, strings.NewReader(data))
-
-	GetReqResp(req, token, err)
+	SendRequest(req, token, err)
 }
 
 // DeleteThing - removes thing
 func DeleteThing(id, token string) {
 	url := fmt.Sprintf("%s/%s/%s", serverAddr, thingsEP, id)
 	req, err := http.NewRequest("DELETE", url, nil)
-
-	GetReqResp(req, token, err)
+	SendRequest(req, token, err)
 }
 
 // ConnectThing - connect thing to a channel
@@ -153,8 +148,7 @@ func ConnectThing(cliId, chanId, token string) {
 	url := fmt.Sprintf("%s/%s/%s/%s/%s", serverAddr, chanEndPoint,
 		chanId, thingsEP, cliId)
 	req, err := http.NewRequest("PUT", url, nil)
-
-	GetReqResp(req, token, err)
+	SendRequest(req, token, err)
 }
 
 // DisconnectThing - connect thing to a channel
@@ -162,6 +156,5 @@ func DisconnectThing(cliId, chanId, token string) {
 	url := fmt.Sprintf("%s/%s/%s/%s/%s", serverAddr, chanEndPoint,
 		chanId, thingsEP, cliId)
 	req, err := http.NewRequest("DELETE", url, nil)
-
-	GetReqResp(req, token, err)
+	SendRequest(req, token, err)
 }

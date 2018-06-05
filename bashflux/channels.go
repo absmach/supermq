@@ -87,8 +87,7 @@ func NewChannelsCmd() *cobra.Command {
 func CreateChannel(data, token string) {
 	url := fmt.Sprintf("%s/%s", serverAddr, chanEndPoint)
 	req, err := http.NewRequest("POST", url, strings.NewReader(data))
-
-	GetReqResp(req, token, err)
+	SendRequest(req, token, err)
 }
 
 // GetChannels - gets all channels
@@ -96,30 +95,26 @@ func GetChannels(token string) {
 	url := fmt.Sprintf("%s/%s?offset=%s&limit=%s",
 		serverAddr, chanEndPoint, strconv.Itoa(Offset), strconv.Itoa(Limit))
 	req, err := http.NewRequest("GET", url, nil)
-
-	GetReqResp(req, token, err)
+	SendRequest(req, token, err)
 }
 
 // GetChannel - gets channel by ID
 func GetChannel(id, token string) {
 	url := fmt.Sprintf("%s/%s/%s", serverAddr, chanEndPoint, id)
 	req, err := http.NewRequest("GET", url, nil)
-
-	GetReqResp(req, token, err)
+	SendRequest(req, token, err)
 }
 
 // UpdateChannel - update a channel
 func UpdateChannel(id, data, token string) {
 	url := fmt.Sprintf("%s/%s/%s", serverAddr, chanEndPoint, id)
 	req, err := http.NewRequest("PUT", url, strings.NewReader(data))
-
-	GetReqResp(req, token, err)
+	SendRequest(req, token, err)
 }
 
 // DeleteChannel - removes channel
 func DeleteChannel(id, token string) {
 	url := fmt.Sprintf("%s/%s/%s", serverAddr, chanEndPoint, id)
 	req, err := http.NewRequest("DELETE", url, nil)
-
-	GetReqResp(req, token, err)
+	SendRequest(req, token, err)
 }
