@@ -22,11 +22,11 @@ var (
 	httpClient = &http.Client{}
 	serverAddr = "https://0.0.0.0"
 
-	certFile = os.Getenv("GOPATH") +
+	defCertFile = os.Getenv("GOPATH") +
 		"src/github.com/mainflux/mainflux/docker/ssl/certs/mainflux-server.crt"
-	keyFile = os.Getenv("GOPATH") +
+	defKeyFile = os.Getenv("GOPATH") +
 		"src/github.com/mainflux/mainflux/docker/ssl/certs/mainflux-server.key"
-	caFile = os.Getenv("GOPATH") +
+	defCaFile = os.Getenv("GOPATH") +
 		"src/github.com/mainflux/mainflux/docker/ssl/certs/ca.crt"
 )
 
@@ -41,9 +41,9 @@ func SetServerAddr(host string, port int) {
 
 func SetCerts() {
 	// Set certificates paths
-	certFile = mainflux.Env(envCertFile, certFile)
-	keyFile = mainflux.Env(envKeyFile, keyFile)
-	caFile = mainflux.Env(envCaFile, caFile)
+	certFile := mainflux.Env(envCertFile, defCertFile)
+	keyFile := mainflux.Env(envKeyFile, defKeyFile)
+	caFile := mainflux.Env(envCaFile, defCaFile)
 
 	// Load client cert
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
