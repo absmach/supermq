@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var thingsEP = "things"
+const thingsEP = "things"
 
 var cmdThings = []cobra.Command{
 	cobra.Command{
@@ -145,7 +145,7 @@ func DeleteThing(id, token string) {
 
 // ConnectThing - connect thing to a channel
 func ConnectThing(cliId, chanId, token string) {
-	url := fmt.Sprintf("%s/%s/%s/%s/%s", serverAddr, chanEndPoint,
+	url := fmt.Sprintf("%s/%s/%s/%s/%s", serverAddr, channelsEP,
 		chanId, thingsEP, cliId)
 	req, err := http.NewRequest("PUT", url, nil)
 	SendRequest(req, token, err)
@@ -153,7 +153,7 @@ func ConnectThing(cliId, chanId, token string) {
 
 // DisconnectThing - connect thing to a channel
 func DisconnectThing(cliId, chanId, token string) {
-	url := fmt.Sprintf("%s/%s/%s/%s/%s", serverAddr, chanEndPoint,
+	url := fmt.Sprintf("%s/%s/%s/%s/%s", serverAddr, channelsEP,
 		chanId, thingsEP, cliId)
 	req, err := http.NewRequest("DELETE", url, nil)
 	SendRequest(req, token, err)
