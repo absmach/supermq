@@ -21,7 +21,7 @@ const (
 
 var (
 	httpClient = &http.Client{}
-	serverAddr = "https://0.0.0.0"
+	serverAddr = fmt.Sprintf("https://%s", "localhost")
 
 	defCertFile = fmt.Sprintf("%s%s", os.Getenv("GOPATH"),
 		"src/github.com/mainflux/mainflux/docker/ssl/certs/mainflux-server.crt")
