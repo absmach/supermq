@@ -16,13 +16,13 @@ go build
 ### System provisioning
 * Provisioning devices: `bashflux things create '{"type":"device", "name":"nyDevice"}' <user_auth_token>`
 * Provisioning applications: `bashflux things create '{"type":"app", "name":"nyDevice"}' <user_auth_token>`
-* Retrieving provisioned things: `bashflux things get --offset=1 --limit=5 <user_auth_token>`
+* Retrieving all provisioned things: `bashflux things get all --offset=1 --limit=5 <user_auth_token>`
 * Retrieving a specific thing: `bashflux things get <thing_id>  --offset=1 --limit=5 <user_auth_token>`
 * Removing things: ``bashflux things delete <thing_id> <user_auth_token>``
 
 * Provisioning devices: `bashflux channels create '{"name":"nyChannel"}' <user_auth_token>`
 * Provisioning applications: `bashflux channels create '{"name":"nyChannel"}' <user_auth_token>`
-* Retrieving provisioned channels: `bashflux channels get --offset=1 --limit=5 <user_auth_token>`
+* Retrieving all provisioned channels: `bashflux channels get all --offset=1 --limit=5 <user_auth_token>`
 * Retrieving a specific channel: `bashflux channels get <channel_id>  --offset=1 --limit=5 <user_auth_token>`
 * Removing channels: `bashflux channels delete <channel_id> <user_auth_token>`
 
