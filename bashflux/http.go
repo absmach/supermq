@@ -3,6 +3,7 @@ package cmd
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -22,20 +23,20 @@ var (
 	httpClient = &http.Client{}
 	serverAddr = "https://0.0.0.0"
 
-	defCertFile = os.Getenv("GOPATH") +
-		"src/github.com/mainflux/mainflux/docker/ssl/certs/mainflux-server.crt"
-	defKeyFile = os.Getenv("GOPATH") +
-		"src/github.com/mainflux/mainflux/docker/ssl/certs/mainflux-server.key"
-	defCaFile = os.Getenv("GOPATH") +
-		"src/github.com/mainflux/mainflux/docker/ssl/certs/ca.crt"
+	defCertFile = fmt.Sprintf("%s%s", os.Getenv("GOPATH"),
+		"src/github.com/mainflux/mainflux/docker/ssl/certs/mainflux-server.crt")
+	defKeyFile = fmt.Sprintf("%s%s", os.Getenv("GOPATH"),
+		"src/github.com/mainflux/mainflux/docker/ssl/certs/mainflux-server.key")
+	defCaFile = fmt.Sprintf("%s%s", os.Getenv("GOPATH"),
+		"src/github.com/mainflux/mainflux/docker/ssl/certs/ca.crt")
 )
 
 // SetServerAddr - set addr using host and port
 func SetServerAddr(host string, port int) {
-	serverAddr = "https://" + host
+	serverAddr = fmt.Sprintf("https://%s", host)
 
 	if port != 0 {
-		serverAddr += ":" + strconv.Itoa(port)
+		serverAddr = fmt.Sprintf("%s:%s", serverAddr, strconv.Itoa(port))
 	}
 }
 
