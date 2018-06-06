@@ -19,6 +19,6 @@ func NewVersionCmd() *cobra.Command {
 
 // Version - server health check
 func Version() {
-	url := fmt.Sprintf("%s/things/version", serverAddr)
+	url := fmt.Sprintf("%s/version", serverAddr)
 	FormatResLog(httpClient.Get(url))
 }
