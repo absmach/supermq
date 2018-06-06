@@ -29,14 +29,14 @@ func main() {
 	// API commands
 	versionCmd := bf.NewVersionCmd()
 	usersCmd := bf.NewUsersCmd()
-	thingsdCmd := bf.NewThingsCmd()
+	thingsCmd := bf.NewThingsCmd()
 	channelsCmd := bf.NewChannelsCmd()
 	messagesCmd := bf.NewMessagesCmd()
 
 	// Root Commands
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(usersCmd)
-	rootCmd.AddCommand(thingsdCmd)
+	rootCmd.AddCommand(thingsCmd)
 	rootCmd.AddCommand(channelsCmd)
 	rootCmd.AddCommand(messagesCmd)
 
