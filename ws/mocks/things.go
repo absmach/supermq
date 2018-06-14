@@ -7,6 +7,8 @@ import (
 	"github.com/mainflux/mainflux/things"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var _ mainflux.ThingsServiceClient = (*thingsClient)(nil)
@@ -28,7 +30,7 @@ func (tc thingsClient) CanAccess(ctx context.Context, req *mainflux.AccessReq, o
 
 	id, ok := tc.things[key]
 	if !ok {
-		return nil, things.ErrUnauthorizedAccess
+		return nil, status.Error(codes.PermissionDenied, "invalid credentials provided")
 	}
 
 	return &mainflux.ThingID{Value: id}, nil

@@ -29,7 +29,7 @@ func (tc thingsClient) CanAccess(ctx context.Context, req *mainflux.AccessReq, o
 
 	id, ok := tc.things[key]
 	if !ok {
-		return nil, status.Error(codes.PermissionDenied, "missing or invalid credentials provided")
+		return nil, status.Error(codes.PermissionDenied, "invalid credentials provided")
 	}
 
 	return &mainflux.ThingID{Value: id}, nil
