@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/things/postgres"
 	"github.com/mainflux/mainflux/things/uuid"
@@ -156,11 +158,11 @@ func TestThingRemoval(t *testing.T) {
 	// (removed) thing
 	for i := 0; i < 2; i++ {
 		if err := thingRepo.Remove(email, thing.ID); err != nil {
-			t.Fatalf("#%d: failed to remove thing due to: %s", i, err)
+			require.Nil(t, err, fmt.Sprintf("#%d: failed to remove thing due to: %s", i, err))
 		}
 
 		if _, err := thingRepo.RetrieveByID(email, thing.ID); err != things.ErrNotFound {
-			t.Fatalf("#%d: expected %s got %s", i, things.ErrNotFound, err)
+			require.Equal(t, things.ErrNotFound, err, fmt.Sprintf("#%d: expected %s got %s", i, things.ErrNotFound, err))
 		}
 	}
 }

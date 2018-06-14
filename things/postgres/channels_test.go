@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/things/postgres"
 	"github.com/mainflux/mainflux/things/uuid"
@@ -105,11 +107,11 @@ func TestChannelRemoval(t *testing.T) {
 	// (removed) channel
 	for i := 0; i < 2; i++ {
 		if err := chanRepo.Remove(email, chanID); err != nil {
-			t.Fatalf("#%d: failed to remove channel due to: %s", i, err)
+			require.Nil(t, err, fmt.Sprintf("#%d: failed to remove channel due to: %s", i, err))
 		}
 
 		if _, err := chanRepo.RetrieveByID(email, chanID); err != things.ErrNotFound {
-			t.Fatalf("#%d: expected %s got %s", i, things.ErrNotFound, err)
+			require.Equal(t, things.ErrNotFound, err, fmt.Sprintf("#%d: expected %s got %s", i, things.ErrNotFound, err))
 		}
 	}
 }
