@@ -15,6 +15,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const invalidId = uint64(0)
+
 func newService() mainflux.MessagePublisher {
 	pub := mocks.NewPublisher()
 	return adapter.New(pub)
@@ -46,6 +48,13 @@ func (tr testRequest) make() (*http.Response, error) {
 		req.Header.Set("Content-Type", tr.contentType)
 	}
 	return tr.client.Do(req)
+}
+
+func makeURL(serverURL string, chanID uint64) string {
+	if chanID == invalidId {
+		return fmt.Sprintf("%s/channels/%s/messages", serverURL, "wrong")
+	}
+	return fmt.Sprintf("%s/channels/%d/messages", serverURL, chanID)
 }
 
 func TestPublish(t *testing.T) {
@@ -95,13 +104,20 @@ func TestPublish(t *testing.T) {
 			auth:        token,
 			status:      http.StatusAccepted,
 		},
+		"publish message to wrong channel": {
+			chanID:      invalidId,
+			msg:         msg,
+			contentType: contentType,
+			auth:        token,
+			status:      http.StatusNotFound,
+		},
 	}
 
 	for desc, tc := range cases {
 		req := testRequest{
 			client:      ts.Client(),
 			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/channels/%d/messages", ts.URL, tc.chanID),
+			url:         makeURL(ts.URL, tc.chanID),
 			contentType: tc.contentType,
 			token:       tc.auth,
 			body:        strings.NewReader(tc.msg),
