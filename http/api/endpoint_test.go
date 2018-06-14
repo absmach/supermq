@@ -106,6 +106,13 @@ func TestPublish(t *testing.T) {
 			auth:        token,
 			status:      http.StatusNotFound,
 		},
+		"publish message unable to authorize": {
+			chanID:      chanID,
+			msg:         msg,
+			contentType: contentType,
+			auth:        mocks.ErrToken,
+			status:      http.StatusServiceUnavailable,
+		},
 	}
 
 	for desc, tc := range cases {

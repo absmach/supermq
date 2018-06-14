@@ -82,6 +82,7 @@ func TestHandshake(t *testing.T) {
 		{"connect to invalid channel id", -5, true, token, http.StatusNotFound, []byte{}},
 		{"connect with empty token", chanID, true, "", http.StatusForbidden, []byte{}},
 		{"connect with invalid token", chanID, true, "invalid", http.StatusForbidden, []byte{}},
+		{"connect unable to authorize", chanID, true, mocks.ErrToken, http.StatusServiceUnavailable, []byte{}},
 		{"connect and send message with token as query parameter", chanID, false, token, http.StatusSwitchingProtocols, msg},
 		{"connect and send message that cannot be published", chanID, true, token, http.StatusSwitchingProtocols, []byte{}},
 	}
