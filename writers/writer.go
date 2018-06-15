@@ -3,13 +3,13 @@ package writers
 import (
 	"fmt"
 
+	"github.com/mainflux/mainflux/normalizer"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
 	nats "github.com/nats-io/go-nats"
 )
-
-const senML = "out.senml"
 
 type consumer struct {
 	nc     *nats.Conn
@@ -25,7 +25,7 @@ func Start(nc *nats.Conn, logger log.Logger, repo MessageRepository) error {
 		repo:   repo,
 	}
 
-	_, err := nc.Subscribe(senML, c.consume)
+	_, err := nc.Subscribe(normalizer.OutputSenML, c.consume)
 	return err
 }
 
