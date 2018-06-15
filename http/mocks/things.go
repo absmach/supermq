@@ -12,8 +12,8 @@ import (
 
 var _ mainflux.ThingsServiceClient = (*thingsClient)(nil)
 
-// ErrToken is used to simulate internal server error.
-const ErrToken = "unavailable"
+// ServiceErrToken is used to simulate internal server error.
+const ServiceErrToken = "unavailable"
 
 type thingsClient struct {
 	things map[string]uint64
@@ -30,7 +30,7 @@ func (tc thingsClient) CanAccess(ctx context.Context, req *mainflux.AccessReq, o
 	// Since there is no appropriate way to simulate internal server error,
 	// we had to use this obscure approach. ErrorToken simulates gRPC
 	// call which returns internal server error.
-	if key == ErrToken {
+	if key == ServiceErrToken {
 		return nil, status.Error(codes.Internal, "internal server error")
 	}
 

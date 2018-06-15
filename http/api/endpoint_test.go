@@ -108,7 +108,7 @@ func TestPublish(t *testing.T) {
 			chanID:      chanID,
 			msg:         msg,
 			contentType: contentType,
-			auth:        mocks.ErrToken,
+			auth:        mocks.ServiceErrToken,
 			status:      http.StatusServiceUnavailable,
 		},
 	}
