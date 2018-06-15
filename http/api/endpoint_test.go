@@ -16,8 +16,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const invalidId = uint64(0)
-
 func newService() mainflux.MessagePublisher {
 	pub := mocks.NewPublisher()
 	return adapter.New(pub)
@@ -53,7 +51,7 @@ func (tr testRequest) make() (*http.Response, error) {
 
 func TestPublish(t *testing.T) {
 	chanID := "1"
-	wrongId := "wrong"
+	invalidID := "wrong"
 	contentType := "application/senml+json"
 	token := "auth_token"
 	invalidToken := "invalid_token"
@@ -100,7 +98,7 @@ func TestPublish(t *testing.T) {
 			status:      http.StatusAccepted,
 		},
 		"publish message to wrong channel": {
-			chanID:      wrongId,
+			chanID:      invalidID,
 			msg:         msg,
 			contentType: contentType,
 			auth:        token,

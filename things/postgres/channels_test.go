@@ -106,13 +106,11 @@ func TestChannelRemoval(t *testing.T) {
 	// show that the removal works the same for both existing and non-existing
 	// (removed) channel
 	for i := 0; i < 2; i++ {
-		if err := chanRepo.Remove(email, chanID); err != nil {
-			require.Nil(t, err, fmt.Sprintf("#%d: failed to remove channel due to: %s", i, err))
-		}
+		err := chanRepo.Remove(email, chanID)
+		require.Nil(t, err, fmt.Sprintf("#%d: failed to remove channel due to: %s", i, err))
 
-		if _, err := chanRepo.RetrieveByID(email, chanID); err != things.ErrNotFound {
-			require.Equal(t, things.ErrNotFound, err, fmt.Sprintf("#%d: expected %s got %s", i, things.ErrNotFound, err))
-		}
+		_, err = chanRepo.RetrieveByID(email, chanID)
+		require.Equal(t, things.ErrNotFound, err, fmt.Sprintf("#%d: expected %s got %s", i, things.ErrNotFound, err))
 	}
 }
 

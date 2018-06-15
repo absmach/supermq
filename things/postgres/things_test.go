@@ -157,12 +157,10 @@ func TestThingRemoval(t *testing.T) {
 	// show that the removal works the same for both existing and non-existing
 	// (removed) thing
 	for i := 0; i < 2; i++ {
-		if err := thingRepo.Remove(email, thing.ID); err != nil {
-			require.Nil(t, err, fmt.Sprintf("#%d: failed to remove thing due to: %s", i, err))
-		}
+		err := thingRepo.Remove(email, thing.ID)
+		require.Nil(t, err, fmt.Sprintf("#%d: failed to remove thing due to: %s", i, err))
 
-		if _, err := thingRepo.RetrieveByID(email, thing.ID); err != things.ErrNotFound {
-			require.Equal(t, things.ErrNotFound, err, fmt.Sprintf("#%d: expected %s got %s", i, things.ErrNotFound, err))
-		}
+		_, err = thingRepo.RetrieveByID(email, thing.ID)
+		require.Equal(t, things.ErrNotFound, err, fmt.Sprintf("#%d: expected %s got %s", i, things.ErrNotFound, err))
 	}
 }
