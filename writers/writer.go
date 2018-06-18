@@ -3,8 +3,6 @@ package writers
 import (
 	"fmt"
 
-	"github.com/mainflux/mainflux/normalizer"
-
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
@@ -25,7 +23,7 @@ func Start(nc *nats.Conn, logger log.Logger, repo MessageRepository) error {
 		repo:   repo,
 	}
 
-	_, err := nc.Subscribe(normalizer.OutputSenML, c.consume)
+	_, err := nc.Subscribe(mainflux.OutputSenML, c.consume)
 	return err
 }
 
