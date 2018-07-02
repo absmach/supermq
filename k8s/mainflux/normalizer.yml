@@ -32,5 +32,4 @@ spec:
     component: normalizer
   ports:
   - port: 8184
-    targetPort: 8184
   clusterIP: None
