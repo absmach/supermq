@@ -283,7 +283,7 @@ query parameter `authorization`. Then your path should look like this
 `/channels/<channel_id>/messages?authorization=<thing_auth_key>`.
 
 If you are using the docker environment prepend the url with `ws`. So for example
-`ws/channels/<channel_id>/messages?authorization=<thing_auth_key>`
+`/ws/channels/<channel_id>/messages?authorization=<thing_auth_key>`
 
 #### Basic nodejs example
 
