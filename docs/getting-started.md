@@ -290,8 +290,10 @@ If you are using the docker environment prepend the url with `ws`. So for exampl
 ```javascript
 const WebSocket = require('ws');
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
+// do not verify self-signed certificates if you are using one
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
+// cbf02d60-72f2-4180-9f82-2c957db929d1  is an example of a thing_auth_key
 const ws = new WebSocket('wss://localhost/ws/channels/1/messages?authorization=cbf02d60-72f2-4180-9f82-2c957db929d1')
 
 ws.on('open', () => {
