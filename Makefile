@@ -54,3 +54,7 @@ release:
 	docker push mainflux/dashflux:$(version)
 	docker tag mainflux/mqtt mainflux/mqtt:$(version)
 	docker push mainflux/mqtt:$(version)
+
+run:
+	cd scripts && ./run.sh
+
