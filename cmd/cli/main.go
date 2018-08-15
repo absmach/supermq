@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	bf "github.com/mainflux/mainflux/bashflux"
+	bf "github.com/mainflux/mainflux/cli"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +19,7 @@ func main() {
 
 	// Root
 	var rootCmd = &cobra.Command{
-		Use: "bashflux",
+		Use: "mainflux-cli",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			// Set HTTP server address
 			bf.SetServerAddr(conf.Host, conf.Port)
