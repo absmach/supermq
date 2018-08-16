@@ -12,12 +12,13 @@ define make_docker
 	docker build --build-arg SVC_NAME=$(subst docker_,,$(1)) --tag=mainflux/$(subst docker_,,$(1)) -f docker/Dockerfile .
 endef
 
-all: $(SERVICES)
+all: $(SERVICES) mqtt
 
-.PHONY: all $(SERVICES) dockers latest release
+.PHONY: all $(SERVICES) dockers latest release mqtt
 
 clean:
 	rm -rf ${BUILD_DIR}
+	rm -rf mqtt/node_modules
 
 install:
 	cp ${BUILD_DIR}/* $(GOBIN)
@@ -34,6 +35,9 @@ $(DOCKERS):
 dockers: $(DOCKERS)
 	docker build --tag=mainflux/dashflux -f dashflux/docker/Dockerfile dashflux
 	docker build --tag=mainflux/mqtt -f mqtt/Dockerfile .
+
+mqtt:
+	cd mqtt && npm install
 
 latest: dockers
 	for svc in $(SERVICES); do \
@@ -57,4 +61,3 @@ release:
 
 run:
 	cd scripts && ./run.sh
-

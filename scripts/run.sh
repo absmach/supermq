@@ -10,7 +10,7 @@
 # Runs all Mainflux microservices (must be previously built and installed).
 #
 # Expects that PostgreSQL and needed messaging DB are alredy running.
-# Also, do not forget to run `cd mqtt && npm install` previously.
+# Additionally, MQTT microservice demands that Redis is up and running.
 #
 ###
 
@@ -18,7 +18,7 @@ BUILD_DIR=../build
 
 # Kill all mainflux-* stuff
 function cleanup {
-	pkill mainflux
+    pkill mainflux
     pkill nats
 }
 
@@ -36,7 +36,6 @@ $BUILD_DIR/mainflux-users &
 # Things
 ###
 MF_THINGS_HTTP_PORT=8182 MF_THINGS_GRPC_PORT=8183 $BUILD_DIR/mainflux-things &
-
 
 ###
 # HTTP
@@ -59,7 +58,7 @@ cd -
 ###
 # CoAP
 ###
-
+# TODO: add coap
 
 trap cleanup EXIT
 
