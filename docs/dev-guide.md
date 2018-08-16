@@ -68,7 +68,7 @@ make docker_http
 
 ### MQTT Microservice
 MQTT Microservice in Mainflux is special, as it is currently the only microservice written in NodeJS. It is not compiled,
-but node modules need to be download in order to start the service:
+but node modules need to be downloaded in order to start the service:
 
 ```
 cd mqtt
@@ -81,12 +81,18 @@ node mqtt/mqtt.js
 ```
 
 ### Protobuf
-Aforemntioned  `make` (which is an alias for `make all` target) is calling `protoc` command prior to compiling individual microservices.
+Aforementioned  `make` (which is an alias for `make all` target) is calling `protoc` command prior to compiling individual microservices.
 
 To do this by hand, execute:
 
 ```
 protoc --go_out=plugins=grpc:. *.proto
+```
+
+A shorthand to do this via `make` tool is:
+
+```
+make proto
 ```
 
 > N.B. This must be done one time in the beginning in order to generate protobuf Go structures needed for the build.
