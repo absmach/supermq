@@ -47,9 +47,9 @@ spec:
         - mountPath: /etc/ssl/private/mainflux-server.key
           name: secret-volume
           subPath: mainflux-server.key
-        - mountPath: /etc/ssl/certs/dhparam.pem
+        - mountPath: /etc/ssl/certs/mainflux-dhparam.pem
           name: secret-volume
-          subPath: dhparam.pem
+          subPath: mainflux-dhparam.pem
         - mountPath: /etc/nginx/nginx.conf
           name: configmap-volume
           subPath: nginx.conf

@@ -76,7 +76,7 @@ kubectl create -f k8s/mainflux/dashflux.yml
 - Create TLS server side certificate and keys:
 
 ```
-kubectl create secret generic mainflux-secret --from-file=k8s/nginx/ssl/certs/mainflux-server.crt --from-file=k8s/nginx/ssl/certs/mainflux-server.key --from-file=k8s/nginx/ssl/dhparam.pem
+kubectl create secret generic mainflux-secret --from-file=k8s/nginx/ssl/certs/mainflux-server.crt --from-file=k8s/nginx/ssl/certs/mainflux-server.key --from-file=k8s/nginx/ssl/mainflux-dhparam.pem
 ```
 
 - Create Kubernetes configmap to store NginX configuration:
