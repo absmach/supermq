@@ -66,6 +66,20 @@ make docker_http
 
 > N.B. Mainflux creates `FROM scratch` docker containers which as compact and small in size.
 
+### MQTT Microservice
+MQTT Microservice in Mainflux is special, as it is currently the only microservice written in NodeJS. It is not compiled,
+but node modules need to be download in order to start the service:
+
+```
+cd mqtt
+npm install
+```
+
+After that MQTT Adapter can be started from top directory (as it needs to find `*.proto` files) with:
+```
+node mqtt/mqtt.js
+```
+
 ### Protobuf
 Aforemntioned  `make` (which is an alias for `make all` target) is calling `protoc` command prior to compiling individual microservices.
 
@@ -141,5 +155,7 @@ make run
 ```
 
 which will properly configure and run all microservices.
+
+Please assure that MQTT microservice has `node_modules` installed, as explained in _MQTT Microservice_ chapter.
 
 > N.B. `make run` actually calls helper script `scripts/run.sh`, so you can inspect this script for the details.
