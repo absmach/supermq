@@ -49,7 +49,7 @@ an authorization key.
 ### Provisioning devices
 
 Devices are provisioned by executing request `POST /things`, with a
-`"type":"device"` specified in JSON metadata. Note that you will also need
+`"type":"device"` specified in JSON payload. Note that you will also need
 `user_auth_token` in order to provision things (both devices and application)
 that belong to this particular user.
 
@@ -71,7 +71,7 @@ Content-Length: 0
 ### Provisioning applications
 
 Applications are provisioned by executing HTTP request `POST /things`, with
-`"type":"app"` specified in JSON metadata.
+`"type":"app"` specified in JSON payload.
 
 ```
 curl -s -S -i --cacert docker/ssl/certs/mainflux-server.crt --insecure -X POST -H "Content-Type: application/json" -H "Authorization: <user_auth_token>" https://localhost/things -d '{"type":"app", "name":"myapp"}'
