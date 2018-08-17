@@ -10,6 +10,7 @@ package main
 import (
 	"log"
 
+	"github.com/mainflux/mainflux/sdk/go"
 	"github.com/mainflux/mainflux/cli"
 	"github.com/spf13/cobra"
 )
@@ -36,10 +37,10 @@ func main() {
 				proto = "http"
 			} else {
 				proto = "https"
-				cli.SetCerts()
+				sdk.SetCerts()
 			}
 
-			cli.SetServerAddr(proto, conf.host, conf.port)
+			sdk.SetServerAddr(proto, conf.host, conf.port)
 		},
 	}
 

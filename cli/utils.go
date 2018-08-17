@@ -16,22 +16,8 @@ import (
 	"github.com/hokaccha/go-prettyjson"
 )
 
-const contentType = "application/json"
-
 var Limit = 10
 var Offset = 0
-
-func SendRequest(req *http.Request, token string, e error) {
-	req.Header.Set("Authorization", token)
-	req.Header.Add("Content-Type", contentType)
-	if e != nil {
-		LogError(e)
-		return
-	}
-
-	resp, err := httpClient.Do(req)
-	FormatResLog(resp, err)
-}
 
 // FormatResLog - format http response
 func FormatResLog(resp *http.Response, err error) {

@@ -8,9 +8,7 @@
 package cli
 
 import (
-	"net/http"
-	"strings"
-
+	"github.com/mainflux/mainflux/sdk/go"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +24,7 @@ var cmdMessages = []cobra.Command{
 				LogUsage(cmd.Short)
 				return
 			}
-			SendMsg(args[0], args[1], args[2])
+			FormatResLog(sdk.SendMessage(args[0], args[1], args[2]))
 		},
 	},
 }
@@ -43,17 +41,4 @@ func NewMessagesCmd() *cobra.Command {
 	}
 
 	return &cmd
-}
-
-// SendMsg - publishes SenML message on the channel
-func SendMsg(id, msg, token string) {
-	url := serverAddr + "/http/channels/" + id + "/messages"
-	req, err := http.NewRequest("POST", url, strings.NewReader(msg))
-	LogError(err)
-
-	req.Header.Set("Authorization", token)
-	req.Header.Add("Content-Type", contentTypeSenml)
-
-	resp, err := httpClient.Do(req)
-	FormatResLog(resp, err)
 }

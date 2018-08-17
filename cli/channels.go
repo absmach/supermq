@@ -8,15 +8,9 @@
 package cli
 
 import (
-	"fmt"
-	"net/http"
-	"strconv"
-	"strings"
-
+	"github.com/mainflux/mainflux/sdk/go"
 	"github.com/spf13/cobra"
 )
-
-const channelsEP = "channels"
 
 var cmdChannels = []cobra.Command{
 	cobra.Command{
@@ -28,7 +22,7 @@ var cmdChannels = []cobra.Command{
 				LogUsage(cmd.Short)
 				return
 			}
-			CreateChannel(args[0], args[1])
+			FormatResLog(sdk.CreateChannel(args[0], args[1]))
 		},
 	},
 	cobra.Command{
@@ -41,10 +35,10 @@ var cmdChannels = []cobra.Command{
 				return
 			}
 			if args[0] == "all" {
-				GetChannels(args[1])
+				FormatResLog(sdk.GetChannels(args[1]))
 				return
 			}
-			GetChannel(args[0], args[1])
+			FormatResLog(sdk.GetChannel(args[0], args[1]))
 		},
 	},
 	cobra.Command{
@@ -56,7 +50,7 @@ var cmdChannels = []cobra.Command{
 				LogUsage(cmd.Short)
 				return
 			}
-			UpdateChannel(args[0], args[1], args[2])
+			FormatResLog(sdk.UpdateChannel(args[0], args[1], args[2]))
 		},
 	},
 	cobra.Command{
@@ -68,7 +62,7 @@ var cmdChannels = []cobra.Command{
 				LogUsage(cmd.Short)
 				return
 			}
-			DeleteChannel(args[0], args[1])
+			FormatResLog(sdk.DeleteChannel(args[0], args[1]))
 		},
 	},
 }
@@ -88,40 +82,4 @@ func NewChannelsCmd() *cobra.Command {
 	}
 
 	return &cmd
-}
-
-// CreateChannel - creates new channel and generates UUID
-func CreateChannel(data, token string) {
-	url := fmt.Sprintf("%s/%s", serverAddr, channelsEP)
-	req, err := http.NewRequest("POST", url, strings.NewReader(data))
-	SendRequest(req, token, err)
-}
-
-// GetChannels - gets all channels
-func GetChannels(token string) {
-	url := fmt.Sprintf("%s/%s?offset=%s&limit=%s",
-		serverAddr, channelsEP, strconv.Itoa(Offset), strconv.Itoa(Limit))
-	req, err := http.NewRequest("GET", url, nil)
-	SendRequest(req, token, err)
-}
-
-// GetChannel - gets channel by ID
-func GetChannel(id, token string) {
-	url := fmt.Sprintf("%s/%s/%s", serverAddr, channelsEP, id)
-	req, err := http.NewRequest("GET", url, nil)
-	SendRequest(req, token, err)
-}
-
-// UpdateChannel - update a channel
-func UpdateChannel(id, data, token string) {
-	url := fmt.Sprintf("%s/%s/%s", serverAddr, channelsEP, id)
-	req, err := http.NewRequest("PUT", url, strings.NewReader(data))
-	SendRequest(req, token, err)
-}
-
-// DeleteChannel - removes channel
-func DeleteChannel(id, token string) {
-	url := fmt.Sprintf("%s/%s/%s", serverAddr, channelsEP, id)
-	req, err := http.NewRequest("DELETE", url, nil)
-	SendRequest(req, token, err)
 }

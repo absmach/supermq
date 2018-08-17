@@ -8,9 +8,7 @@
 package cli
 
 import (
-	"fmt"
-	"strings"
-
+	"github.com/mainflux/mainflux/sdk/go"
 	"github.com/spf13/cobra"
 )
 
@@ -24,7 +22,7 @@ var cmdUsers = []cobra.Command{
 				LogUsage(cmd.Short)
 				return
 			}
-			CreateUser(args[0], args[1])
+			FormatResLog(sdk.CreateUser(args[0], args[1]))
 		},
 	},
 	cobra.Command{
@@ -36,7 +34,7 @@ var cmdUsers = []cobra.Command{
 				LogUsage(cmd.Short)
 				return
 			}
-			CreateToken(args[0], args[1])
+			FormatResLog(sdk.CreateToken(args[0], args[1]))
 		},
 	},
 }
@@ -56,20 +54,4 @@ func NewUsersCmd() *cobra.Command {
 	}
 
 	return &cmd
-}
-
-// CreateUser - create user
-func CreateUser(user, pwd string) {
-	msg := fmt.Sprintf(`{"email": "%s", "password": "%s"}`, user, pwd)
-	url := fmt.Sprintf("%s/users", serverAddr)
-	resp, err := httpClient.Post(url, contentType, strings.NewReader(msg))
-	FormatResLog(resp, err)
-}
-
-// CreateToken - create user token
-func CreateToken(user, pwd string) {
-	msg := fmt.Sprintf(`{"email": "%s", "password": "%s"}`, user, pwd)
-	url := fmt.Sprintf("%s/tokens", serverAddr)
-	resp, err := httpClient.Post(url, contentType, strings.NewReader(msg))
-	FormatResLog(resp, err)
 }
