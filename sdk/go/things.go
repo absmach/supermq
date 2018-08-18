@@ -14,7 +14,7 @@ const (
 // CreateThing - creates new thing and generates thing UUID
 func CreateThing(data, token string) (*http.Response, error) {
 	url := fmt.Sprintf("%s/%s", serverAddr, thingsEndpoint)
-	req, err := http.NewRequest("POST", url, strings.NewReader(data))
+	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(data))
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +26,7 @@ func CreateThing(data, token string) (*http.Response, error) {
 func GetThings(token string) (*http.Response, error) {
 	url := fmt.Sprintf("%s/%s?offset=%s&limit=%s",
 		serverAddr, thingsEndpoint, strconv.Itoa(offset), strconv.Itoa(limit))
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func GetThings(token string) (*http.Response, error) {
 // GetThing - gets thing by ID
 func GetThing(id, token string) (*http.Response, error) {
 	url := fmt.Sprintf("%s/%s/%s", serverAddr, thingsEndpoint, id)
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func GetThing(id, token string) (*http.Response, error) {
 // UpdateThing - updates thing by ID
 func UpdateThing(id, data, token string) (*http.Response, error) {
 	url := fmt.Sprintf("%s/%s/%s", serverAddr, thingsEndpoint, id)
-	req, err := http.NewRequest("PUT", url, strings.NewReader(data))
+	req, err := http.NewRequest(http.MethodPut, url, strings.NewReader(data))
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func UpdateThing(id, data, token string) (*http.Response, error) {
 // DeleteThing - removes thing
 func DeleteThing(id, token string) (*http.Response, error) {
 	url := fmt.Sprintf("%s/%s/%s", serverAddr, thingsEndpoint, id)
-	req, err := http.NewRequest("DELETE", url, nil)
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func DeleteThing(id, token string) (*http.Response, error) {
 // ConnectThing - connect thing to a channel
 func ConnectThing(cliId, chanId, token string) (*http.Response, error) {
 	url := fmt.Sprintf("%s/%s/%s/%s/%s", serverAddr, channelsEndpoint, chanId, thingsEndpoint, cliId)
-	req, err := http.NewRequest("PUT", url, nil)
+	req, err := http.NewRequest(http.MethodPut, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func ConnectThing(cliId, chanId, token string) (*http.Response, error) {
 // DisconnectThing - connect thing to a channel
 func DisconnectThing(cliId, chanId, token string) (*http.Response, error) {
 	url := fmt.Sprintf("%s/%s/%s/%s/%s", serverAddr, channelsEndpoint, chanId, thingsEndpoint, cliId)
-	req, err := http.NewRequest("DELETE", url, nil)
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return nil, err
 	}
