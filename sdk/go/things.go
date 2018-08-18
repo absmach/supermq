@@ -7,9 +7,7 @@ import (
 	"strings"
 )
 
-const (
-	thingsEndpoint = "things"
-)
+const thingsEndpoint = "things"
 
 // CreateThing - creates new thing and generates thing UUID
 func CreateThing(data, token string) (*http.Response, error) {
