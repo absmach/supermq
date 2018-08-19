@@ -10,8 +10,8 @@ package main
 import (
 	"log"
 
-	"github.com/mainflux/mainflux/sdk/go"
 	"github.com/mainflux/mainflux/cli"
+	"github.com/mainflux/mainflux/sdk/go"
 	"github.com/spf13/cobra"
 )
 
@@ -19,11 +19,11 @@ func main() {
 
 	conf := struct {
 		host     string
-		port     int
+		port     string
 		insecure bool
 	}{
 		"localhost",
-		0,
+		"",
 		false,
 	}
 
@@ -61,7 +61,7 @@ func main() {
 	// Root Flags
 	rootCmd.PersistentFlags().StringVarP(
 		&conf.host, "host", "m", conf.host, "HTTP Host address")
-	rootCmd.PersistentFlags().IntVarP(
+	rootCmd.PersistentFlags().StringVarP(
 		&conf.port, "port", "p", conf.port, "HTTP Host Port")
 	rootCmd.PersistentFlags().BoolVarP(
 		&conf.insecure, "insecure", "i", false, "do not use TLS")
