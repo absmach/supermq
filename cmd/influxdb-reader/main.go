@@ -20,8 +20,8 @@ import (
 )
 
 const (
-	defPort      = "8180"
 	defThingsURL = "localhost:8181"
+	defPort      = "8180"
 	defPointName = "messages"
 	defDBName    = "mainflux"
 	defDBHost    = "localhost"
@@ -29,8 +29,8 @@ const (
 	defDBUser    = "mainflux"
 	defDBPass    = "mainflux"
 
-	envPort      = "MF_INFLUX_WRITER_PORT"
 	envThingsURL = "MF_THINGS_URL"
+	envPort      = "MF_INFLUX_READER_PORT"
 	envDBName    = "MF_INFLUX_READER_DB_NAME"
 	envDBHost    = "MF_INFLUX_READER_DB_HOST"
 	envDBPort    = "MF_INFLUX_READER_DB_PORT"
