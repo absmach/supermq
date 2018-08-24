@@ -24,8 +24,6 @@ default values.
   influxdb-reader:
     image: mainflux/influxdb-reader:[version]
     container_name: [instance name]
-    expose:
-      - [Service HTTP port]
     restart: on-failure
     environment:
       MF_THINGS_URL: [Things service URL]

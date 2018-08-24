@@ -15,8 +15,6 @@ services:
   influxdb-reader:
     image: mainflux/influxdb-reader:latest
     container_name: mainflux-influxdb-reader
-    expose:
-      - 8905
     restart: on-failure
     environment:
       MF_THINGS_URL: things:8183
