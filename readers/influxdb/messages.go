@@ -12,7 +12,7 @@ import (
 	"github.com/mainflux/mainflux"
 )
 
-const pointName = "messages"
+const maxLimit = 100
 
 var _ readers.MessageRepository = (*influxRepository)(nil)
 
@@ -30,6 +30,9 @@ func New(client influxdata.Client, database string) (readers.MessageRepository, 
 }
 
 func (repo *influxRepository) ReadAll(chanID, offset, limit uint64) []mainflux.Message {
+	if limit > maxLimit {
+		limit = maxLimit
+	}
 	cmd := fmt.Sprintf(`SELECT * from messages WHERE Channel='%d' LIMIT %d OFFSET %d`, chanID, limit, offset)
 	q := influxdata.Query{
 		Command:  cmd,
