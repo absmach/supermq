@@ -24,7 +24,7 @@ type influxRepository struct {
 type fields map[string]interface{}
 type tags map[string]string
 
-// New returns new InfluxDB writer.
+// New returns new InfluxDB reader.
 func New(client influxdata.Client, database string) (readers.MessageRepository, error) {
 	return &influxRepository{database, client}, nil
 }

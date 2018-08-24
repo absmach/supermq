@@ -1,9 +1,8 @@
 ###
-# This docker-compose file contains optional InfluxDB, InfluxDB-writer and Grafana services
-# for Mainflux platform. Since these are optional, this file is dependent of docker-compose file
-# from <project_root>/docker. In order to run these optional service, execute command:
-# docker-compose -f docker/docker-compose.yml -f docker/addons/influxdb/docker-compose.yml up
-# from project root.
+# This docker-compose file contains optional InfluxDB-reader service for the Mainflux
+# platform. Since this service is optional, this file is dependent on the docker-compose.yml
+# file from <project_root>/docker/. In order to run InfluxDB-reader service, core services,
+# as well as the network from the core composition, should be already running.
 ###
 
 version: "3"
@@ -23,7 +22,7 @@ services:
       MF_THINGS_URL: things:8183
       MF_INFLUX_READER_PORT: 8905
       MF_INFLUX_READER_DB_NAME: mainflux
-      MF_INFLUX_READER_DB_HOST: mainflux-influxdb-reader
+      MF_INFLUX_READER_DB_HOST: mainflux-influxdb
       MF_INFLUX_READER_DB_PORT: 8086
       MF_INFLUX_READER_DB_USER: mainflux
       MF_INFLUX_READER_DB_PASS: mainflux

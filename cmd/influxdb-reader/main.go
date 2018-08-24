@@ -22,7 +22,6 @@ import (
 const (
 	defThingsURL = "localhost:8181"
 	defPort      = "8180"
-	defPointName = "messages"
 	defDBName    = "mainflux"
 	defDBHost    = "localhost"
 	defDBPort    = "8086"
