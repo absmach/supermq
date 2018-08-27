@@ -113,6 +113,13 @@ Cross-compilation for ARM with Mainflux make:
 GOOS=linux GOARCH=arm GOARM=7 make
 ```
 
+## Running tests
+To run all of the test you  can execute:
+```
+make test
+```
+Dockertest is used for the test, so to run the tests you will need the Docker deamon/service running.
+
 ## Installing
 Installing Go binaries is simple: just move them from `build` to `$GOBIN` (do not fortget to add `$GOBIN` to your `$PATH`).
 
