@@ -373,7 +373,7 @@ Message readers are services that consume normalized (in `SenML` format) Mainflu
 ```bash
 docker-compose -f docker/addons/influxdb-reader/docker-compose.yml up -d
 ``` 
-Service exposes [HTTP API][https://github.com/mainflux/mainflux/blob/master/readers/swagger.yml] for fetching messages on port 8905
+Service exposes [HTTP API](https://github.com/mainflux/mainflux/blob/master/readers/swagger.yml) for fetching messages on port 8905
 
 
 To read sent messages on channel with id `channel_id` you should send `GET` request to `/channels/<channel_id>/messages` with thing access token in `Authorization` header. That thing must be connected to  channel with `channel_id`
@@ -426,7 +426,7 @@ If you don't provide them, default values will be used instead: 0 for `offset`, 
 ```bash
 docker-compose -f docker/addons/cassandra-reader/docker-compose.yml up -d
 ``` 
-Service exposes [HTTP API][https://github.com/mainflux/mainflux/blob/master/readers/swagger.yml] for fetching messages on port 8903
+Service exposes [HTTP API](https://github.com/mainflux/mainflux/blob/master/readers/swagger.yml) for fetching messages on port 8903
 
 Aside from port, reading request is same as for other readers:
 
@@ -439,7 +439,7 @@ curl -s -S -i  -H "Authorization: <thing_token>" http://localhost:8903/channels/
 ```bash
 docker-compose -f docker/addons/mongodb-reader/docker-compose.yml up -d
 ``` 
-Service exposes [HTTP API][https://github.com/mainflux/mainflux/blob/master/readers/swagger.yml] for fetching messages on port 8904
+Service exposes [HTTP API](https://github.com/mainflux/mainflux/blob/master/readers/swagger.yml) for fetching messages on port 8904
 
 Aside from port, reading request is same as for other readers:
 
