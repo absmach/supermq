@@ -355,6 +355,7 @@ This will install and start:
 ```bash
 ./docker/addons/cassandra-writer/init.sh
 ``` 
+Please note that Cassandra may not be suitable for your testing enviroment because it has high system requirements.
 
 #### MongoDB and MongoDB-writer
 
@@ -367,6 +368,8 @@ MongoDB default port (27017) is exposed, so you can use various tools for databa
 
 Readers provide an implementation of various `message readers`.
 Message readers are services that consume normalized (in `SenML` format) Mainflux messages from data storage and opens HTTP API for message consumption.
+Installing corresponding writer before reader is implied. 
+
 
 #### InfluxDB-reader 
 
@@ -446,15 +449,3 @@ Aside from port, reading request is same as for other readers:
 ```
 curl -s -S -i  -H "Authorization: <thing_token>" http://localhost:8904/channels/<channel_id>/messages
 ```
-
-
-
-
-
-
-
-
-
-
-
-
