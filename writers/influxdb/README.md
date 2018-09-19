@@ -63,7 +63,7 @@ MF_NATS_URL=[NATS instance URL] MF_INFLUX_WRITER_PORT=[Service HTTP port] MF_INF
 ### Using docker-compose
 
 This service can be deployed using docker containers.
-Docker compose file is available in <project_root>/docker/addons/influxdb-writer/docker-compose.yml. Besides database
+Docker compose file is available in `<project_root>/docker/addons/influxdb-writer/docker-compose.yml`. Besides database
 and writer service, it contains [Grafana platform](https://grafana.com/) which can be used for database
 exploration and data visualization and analytics. In order to run all Mainflux core services, as well as mentioned optional ones, execute following command:
 

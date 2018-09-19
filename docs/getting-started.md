@@ -328,7 +328,7 @@ mosquitto_sub -u <thing_id> -P <thing_key> -t channels/<channel_id>/messages -h 
 If you are using TLS to secure MQTT connection, add `--cafile docker/ssl/certs/ca.crt`
 to every command.
 
-## ADDONS
+## Add-ons
 
 The `<project_root>/docker` folder contains an `addons` directory. This directory is used for various services that are not core to the Mainflux platform but could be used for providing additional features.
 
@@ -355,7 +355,7 @@ This will install and start:
 ```bash
 ./docker/addons/cassandra-writer/init.sh
 ``` 
-Please note that Cassandra may not be suitable for your testing enviroment because it has high system requirements.
+_Please note that Cassandra may not be suitable for your testing enviroment because it has high system requirements._
 
 #### MongoDB and MongoDB-writer
 
