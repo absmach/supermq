@@ -350,6 +350,13 @@ This will install and start:
 - InfluxDB writer - message repository implementation for InfluxDB
 - [Grafana](https://grafana.com) - tool for database exploration and data visualization and analytics
 
+Those new services will take some additional ports:
+- 8086 by InfluxDB
+- 8900 by InfluxDB writer service
+- 3001 by Grafana
+
+To access Grafana, navigate to `http://localhost:3001` and login with: `admin`, password: `admin`
+
 #### Cassandra and Cassandra-writer
 
 ```bash
