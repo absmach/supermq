@@ -125,21 +125,20 @@ func TestLevelSelection(t *testing.T) {
 		input  string
 		output logMsg
 	}{
-		"debug log ordinary string": {"input_string", logMsg{level.InfoValue().String(), "input_string"}},
-		"debug log empty string":    {"", logMsg{level.InfoValue().String(), ""}},
+		"debug log ordinary string": {"input_string", logMsg{level.ErrorValue().String(), "input_string"}},
+		"debug log empty string":    {"", logMsg{level.ErrorValue().String(), ""}},
 	}
 
 	writer := mockWriter{}
-	logger := log.New(&writer, "Not_A_Level") //Set the log level to a non-level expect info
+	logger := log.New(&writer, "Not_A_Level") //Set the log level to a non-level expect error level
 
 	for desc, tc := range cases {
-		logger.Info(tc.input)
+		logger.Error(tc.input)
 		output, err := writer.Read()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", desc, err))
 		assert.Equal(t, tc.output, output, fmt.Sprintf("%s: expected %s got %s", desc, tc.output, output))
 	}
 }
-
 
 func TestLogLevel(t *testing.T) {
 	debugCases := map[string]struct {

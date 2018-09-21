@@ -27,7 +27,7 @@ import (
 
 const (
 	defNatsURL  string = broker.DefaultURL
-	defLogLevel string = "info"
+	defLogLevel string = "error"
 	defPort     string = "8180"
 	envNatsURL  string = "MF_NATS_URL"
 	envLogLevel string = "MF_NORMALIZER_LOG_LEVEL"

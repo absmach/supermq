@@ -21,7 +21,7 @@ import (
 
 const (
 	defThingsURL = "localhost:8181"
-	defLogLevel  = "info"
+	defLogLevel  = "error"
 	defPort      = "8180"
 	defDBName    = "mainflux"
 	defDBHost    = "localhost"

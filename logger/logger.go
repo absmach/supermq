@@ -46,7 +46,7 @@ func New(out io.Writer, logLevel string) Logger {
 	if allowedLevel, ok := logLevels[strings.ToLower(logLevel)]; ok {
 		l = level.NewFilter(l, allowedLevel)
 	} else {
-		l = level.NewFilter(l, level.AllowInfo())
+		l = level.NewFilter(l, level.AllowError())
 	}
 	l = log.With(l, "ts", log.DefaultTimestampUTC)
 	return &logger{l}

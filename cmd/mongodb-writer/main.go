@@ -29,7 +29,7 @@ const (
 	queue = "mongodb-writer"
 
 	defNatsURL  = nats.DefaultURL
-	defLogLevel = "info"
+	defLogLevel = "error"
 	defPort     = "8180"
 	defDBName   = "mainflux"
 	defDBHost   = "localhost"

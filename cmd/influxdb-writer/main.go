@@ -31,7 +31,7 @@ const (
 	queue = "influxdb-writer"
 
 	defNatsURL      = nats.DefaultURL
-	defLogLevel     = "info"
+	defLogLevel     = "error"
 	defPort         = "8180"
 	defBatchSize    = "5000"
 	defBatchTimeout = "5"

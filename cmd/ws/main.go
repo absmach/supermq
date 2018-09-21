@@ -28,7 +28,7 @@ import (
 
 const (
 	defPort      = "8180"
-	defLogLevel  = "info"
+	defLogLevel  = "error"
 	defNatsURL   = broker.DefaultURL
 	defThingsURL = "localhost:8181"
 	envPort      = "MF_WS_ADAPTER_PORT"

@@ -22,9 +22,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const logLevel = "info"
+
 var (
 	port          string
-	testLog       = log.New(os.Stdout, "info")
+	testLog       = log.New(os.Stdout, logLevel)
 	testDB        = "test"
 	saveTimeout   = 2 * time.Second
 	saveBatchSize = 20

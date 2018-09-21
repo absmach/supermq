@@ -30,6 +30,7 @@ const (
 	invalidEmail = "userexample.com"
 	wrongID      = "123e4567-e89b-12d3-a456-000000000042"
 	id           = "123e4567-e89b-12d3-a456-000000000001"
+	logLevel     = "info"
 )
 
 var user = users.User{"user@example.com", "password"}
@@ -66,7 +67,7 @@ func newService() users.Service {
 }
 
 func newServer(svc users.Service) *httptest.Server {
-	logger := log.New(os.Stdout, "info")
+	logger := log.New(os.Stdout, logLevel)
 	mux := httpapi.MakeHandler(svc, logger)
 	return httptest.NewServer(mux)
 }

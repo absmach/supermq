@@ -11,7 +11,7 @@ default values.
 
 | Variable                    | Description         | Default               |
 |-----------------------------|---------------------|-----------------------|
-| MF_MQTT_ADAPTER_LOG_LEVEL   | Log level for MQTT  | info                  |
+| MF_MQTT_ADAPTER_LOG_LEVEL   | Log level for MQTT  | error                 |
 | MF_MQTT_ADAPTER_PORT        | Service MQTT port   | 1883                  |
 | MF_MQTT_WS_PORT             | WebSocket port      | 8880                  |
 | MF_NATS_URL                 | NATS instance URL   | nats://localhost:4222 |
