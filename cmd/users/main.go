@@ -31,6 +31,7 @@ import (
 )
 
 const (
+	defLogLevel = "info"
 	defDBHost   = "localhost"
 	defDBPort   = "5432"
 	defDBUser   = "mainflux"
@@ -39,6 +40,7 @@ const (
 	defHTTPPort = "8180"
 	defGRPCPort = "8181"
 	defSecret   = "users"
+	envLogLevel = "MF_USERS_LOG_LEVEL"
 	envDBHost   = "MF_USERS_DB_HOST"
 	envDBPort   = "MF_USERS_DB_PORT"
 	envDBUser   = "MF_USERS_DB_USER"
@@ -50,6 +52,7 @@ const (
 )
 
 type config struct {
+	LogLevel string
 	DBHost   string
 	DBPort   string
 	DBUser   string
@@ -63,7 +66,7 @@ type config struct {
 func main() {
 	cfg := loadConfig()
 
-	logger := log.New(os.Stdout)
+	logger := log.New(os.Stdout, cfg.LogLevel)
 
 	db := connectToDB(cfg, logger)
 	defer db.Close()
@@ -86,6 +89,7 @@ func main() {
 
 func loadConfig() config {
 	return config{
+		LogLevel: mainflux.Env(envLogLevel, defLogLevel),
 		DBHost:   mainflux.Env(envDBHost, defDBHost),
 		DBPort:   mainflux.Env(envDBPort, defDBPort),
 		DBUser:   mainflux.Env(envDBUser, defDBUser),

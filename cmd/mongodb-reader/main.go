@@ -29,12 +29,14 @@ import (
 
 const (
 	defThingsURL = "localhost:8181"
+	defLogLevel  = "info"
 	defPort      = "8180"
 	defDBName    = "mainflux"
 	defDBHost    = "localhost"
 	defDBPort    = "27017"
 
 	envThingsURL = "MF_THINGS_URL"
+	envLogLevel  = "MF_MONGO_READER_LOG_LEVEL"
 	envPort      = "MF_MONGO_READER_PORT"
 	envDBName    = "MF_MONGO_READER_DB_NAME"
 	envDBHost    = "MF_MONGO_READER_DB_HOST"
@@ -43,6 +45,7 @@ const (
 
 type config struct {
 	thingsURL string
+	logLevel  string
 	port      string
 	dbName    string
 	dbHost    string
@@ -51,7 +54,7 @@ type config struct {
 
 func main() {
 	cfg := loadConfigs()
-	logger := log.New(os.Stdout)
+	logger := log.New(os.Stdout, cfg.logLevel)
 
 	conn := connectToThings(cfg.thingsURL, logger)
 	defer conn.Close()
@@ -78,6 +81,7 @@ func main() {
 func loadConfigs() config {
 	return config{
 		thingsURL: mainflux.Env(envThingsURL, defThingsURL),
+		logLevel:  mainflux.Env(envLogLevel, defLogLevel),
 		port:      mainflux.Env(envPort, defPort),
 		dbName:    mainflux.Env(envDBName, defDBName),
 		dbHost:    mainflux.Env(envDBHost, defDBHost),

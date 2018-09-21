@@ -28,30 +28,33 @@ import (
 const (
 	queue = "mongodb-writer"
 
-	defNatsURL = nats.DefaultURL
-	defPort    = "8180"
-	defDBName  = "mainflux"
-	defDBHost  = "localhost"
-	defDBPort  = "27017"
+	defNatsURL  = nats.DefaultURL
+	defLogLevel = "info"
+	defPort     = "8180"
+	defDBName   = "mainflux"
+	defDBHost   = "localhost"
+	defDBPort   = "27017"
 
-	envNatsURL = "MF_NATS_URL"
-	envPort    = "MF_MONGO_WRITER_PORT"
-	envDBName  = "MF_MONGO_WRITER_DB_NAME"
-	envDBHost  = "MF_MONGO_WRITER_DB_HOST"
-	envDBPort  = "MF_MONGO_WRITER_DB_PORT"
+	envNatsURL  = "MF_NATS_URL"
+	envLogLevel = "MF_MONGO_WRITER_LOG_LEVEL"
+	envPort     = "MF_MONGO_WRITER_PORT"
+	envDBName   = "MF_MONGO_WRITER_DB_NAME"
+	envDBHost   = "MF_MONGO_WRITER_DB_HOST"
+	envDBPort   = "MF_MONGO_WRITER_DB_PORT"
 )
 
 type config struct {
-	NatsURL string
-	Port    string
-	DBName  string
-	DBHost  string
-	DBPort  string
+	NatsURL  string
+	LogLevel string
+	Port     string
+	DBName   string
+	DBHost   string
+	DBPort   string
 }
 
 func main() {
 	cfg := loadConfigs()
-	logger := log.New(os.Stdout)
+	logger := log.New(os.Stdout, cfg.LogLevel)
 
 	nc, err := nats.Connect(cfg.NatsURL)
 	if err != nil {
@@ -92,11 +95,12 @@ func main() {
 
 func loadConfigs() config {
 	return config{
-		NatsURL: mainflux.Env(envNatsURL, defNatsURL),
-		Port:    mainflux.Env(envPort, defPort),
-		DBName:  mainflux.Env(envDBName, defDBName),
-		DBHost:  mainflux.Env(envDBHost, defDBHost),
-		DBPort:  mainflux.Env(envDBPort, defDBPort),
+		NatsURL:  mainflux.Env(envNatsURL, defNatsURL),
+		LogLevel: mainflux.Env(envLogLevel, defLogLevel),
+		Port:     mainflux.Env(envPort, defPort),
+		DBName:   mainflux.Env(envDBName, defDBName),
+		DBHost:   mainflux.Env(envDBHost, defDBHost),
+		DBPort:   mainflux.Env(envDBPort, defDBPort),
 	}
 }
 

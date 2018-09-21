@@ -8,11 +8,12 @@ The service is configured using the environment variables presented in the
 following table. Note that any unset variables will be replaced with their
 default values.
 
-| Variable             | Description         | Default               |
-|----------------------|---------------------|-----------------------|
-| MF_WS_ADAPTER_PORT   | Service WS port     | 8180                  |
-| MF_NATS_URL          | NATS instance URL   | nats://localhost:4222 |
-| MF_THINGS_URL        | Things service URL  | localhost:8181        |
+| Variable                  | Description                   | Default               |
+|---------------------------|-------------------------------|-----------------------|
+| MF_WS_ADAPTER_LOG_LEVEL   | Log level for the WS Adapter  | info                  |
+| MF_WS_ADAPTER_PORT        | Service WS port               | 8180                  |
+| MF_NATS_URL               | NATS instance URL             | nats://localhost:4222 |
+| MF_THINGS_URL             | Things service URL            | localhost:8181        |
 
 ## Deployment
 

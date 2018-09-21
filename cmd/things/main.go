@@ -34,6 +34,7 @@ import (
 )
 
 const (
+	defLogLevel  = "info"
 	defDBHost    = "localhost"
 	defDBPort    = "5432"
 	defDBUser    = "mainflux"
@@ -45,6 +46,7 @@ const (
 	defHTTPPort  = "8180"
 	defGRPCPort  = "8181"
 	defUsersURL  = "localhost:8181"
+	envLogLevel  = "MF_THINGS_LOG_LEVEL"
 	envDBHost    = "MF_THINGS_DB_HOST"
 	envDBPort    = "MF_THINGS_DB_PORT"
 	envDBUser    = "MF_THINGS_DB_USER"
@@ -59,6 +61,7 @@ const (
 )
 
 type config struct {
+	LogLevel  string
 	DBHost    string
 	DBPort    string
 	DBUser    string
@@ -66,18 +69,18 @@ type config struct {
 	DBName    string
 	CacheURL  string
 	CachePass string
-	CacheDB   int
+	CacheDB   string
 	HTTPPort  string
 	GRPCPort  string
 	UsersURL  string
 }
 
 func main() {
-	logger := log.New(os.Stdout)
+	cfg := loadConfig()
 
-	cfg := loadConfig(logger)
+	logger := log.New(os.Stdout, cfg.LogLevel)
 
-	cache := connectToCache(cfg.CacheURL, cfg.CachePass, cfg.CacheDB)
+	cache := connectToCache(cfg.CacheURL, cfg.CachePass, cfg.CacheDB, logger)
 
 	db := connectToDB(cfg, logger)
 	defer db.Close()
@@ -101,14 +104,9 @@ func main() {
 	logger.Error(fmt.Sprintf("Things service terminated: %s", err))
 }
 
-func loadConfig(logger log.Logger) config {
-	db, err := strconv.Atoi(mainflux.Env(envCacheDB, defCacheDB))
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to cache: %s", err))
-		os.Exit(1)
-	}
-
+func loadConfig() config {
 	return config{
+		LogLevel:  mainflux.Env(envLogLevel, defLogLevel),
 		DBHost:    mainflux.Env(envDBHost, defDBHost),
 		DBPort:    mainflux.Env(envDBPort, defDBPort),
 		DBUser:    mainflux.Env(envDBUser, defDBUser),
@@ -116,18 +114,25 @@ func loadConfig(logger log.Logger) config {
 		DBName:    mainflux.Env(envDBName, defDBName),
 		CacheURL:  mainflux.Env(envCacheURL, defCacheURL),
 		CachePass: mainflux.Env(envCachePass, defCachePass),
-		CacheDB:   db,
+		CacheDB:   mainflux.Env(envCacheDB, defCacheDB),
 		HTTPPort:  mainflux.Env(envHTTPPort, defHTTPPort),
 		GRPCPort:  mainflux.Env(envGRPCPort, defGRPCPort),
 		UsersURL:  mainflux.Env(envUsersURL, defUsersURL),
 	}
 }
 
-func connectToCache(cacheURL, cachePass string, cacheDB int) *redis.Client {
+func connectToCache(cacheURL, cachePass string, cacheDB string, logger log.Logger) *redis.Client {
+
+	db, err := strconv.Atoi(mainflux.Env(envCacheDB, defCacheDB))
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to cache: %s", err))
+		os.Exit(1)
+	}
+
 	return redis.NewClient(&redis.Options{
 		Addr:     cacheURL,
 		Password: cachePass,
-		DB:       cacheDB,
+		DB:       db,
 	})
 }
 

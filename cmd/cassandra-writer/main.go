@@ -30,11 +30,13 @@ const (
 	sep   = ","
 
 	defNatsURL  = nats.DefaultURL
+	defLogLevel = "info"
 	defPort     = "8180"
 	defCluster  = "127.0.0.1"
 	defKeyspace = "mainflux"
 
 	envNatsURL  = "MF_NATS_URL"
+	envLogLevel = "MF_CASSANDRA_WRITER_LOG_LEVEL"
 	envPort     = "MF_CASSANDRA_WRITER_PORT"
 	envCluster  = "MF_CASSANDRA_WRITER_DB_CLUSTER"
 	envKeyspace = "MF_CASSANDRA_WRITER_DB_KEYSPACE"
@@ -42,6 +44,7 @@ const (
 
 type config struct {
 	natsURL  string
+	logLevel string
 	port     string
 	cluster  string
 	keyspace string
@@ -50,7 +53,7 @@ type config struct {
 func main() {
 	cfg := loadConfig()
 
-	logger := log.New(os.Stdout)
+	logger := log.New(os.Stdout, cfg.logLevel)
 
 	nc := connectToNATS(cfg.natsURL, logger)
 	defer nc.Close()
@@ -80,6 +83,7 @@ func main() {
 func loadConfig() config {
 	return config{
 		natsURL:  mainflux.Env(envNatsURL, defNatsURL),
+		logLevel: mainflux.Env(envLogLevel, defLogLevel),
 		port:     mainflux.Env(envPort, defPort),
 		cluster:  mainflux.Env(envCluster, defCluster),
 		keyspace: mainflux.Env(envKeyspace, defKeyspace),

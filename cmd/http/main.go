@@ -28,9 +28,11 @@ import (
 
 const (
 	defPort      string = "8180"
+	defLogLevel  string = "info"
 	defNatsURL   string = broker.DefaultURL
 	defThingsURL string = "localhost:8181"
 	envPort      string = "MF_HTTP_ADAPTER_PORT"
+	envLogLevel  string = "MF_HTTP_ADAPTER_LOG_LEVEL"
 	envNatsURL   string = "MF_NATS_URL"
 	envThingsURL string = "MF_THINGS_URL"
 )
@@ -38,6 +40,7 @@ const (
 type config struct {
 	ThingsURL string
 	NatsURL   string
+	LogLevel  string
 	Port      string
 }
 
@@ -45,10 +48,11 @@ func main() {
 	cfg := config{
 		ThingsURL: mainflux.Env(envThingsURL, defThingsURL),
 		NatsURL:   mainflux.Env(envNatsURL, defNatsURL),
+		LogLevel:  mainflux.Env(envLogLevel, defLogLevel),
 		Port:      mainflux.Env(envPort, defPort),
 	}
 
-	logger := log.New(os.Stdout)
+	logger := log.New(os.Stdout, cfg.LogLevel)
 
 	nc, err := broker.Connect(cfg.NatsURL)
 	if err != nil {

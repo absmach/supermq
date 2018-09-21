@@ -21,6 +21,7 @@ import (
 
 const (
 	defThingsURL = "localhost:8181"
+	defLogLevel  = "info"
 	defPort      = "8180"
 	defDBName    = "mainflux"
 	defDBHost    = "localhost"
@@ -29,6 +30,7 @@ const (
 	defDBPass    = "mainflux"
 
 	envThingsURL = "MF_THINGS_URL"
+	envLogLevel  = "MF_INFLUX_READER_LOG_LEVEL"
 	envPort      = "MF_INFLUX_READER_PORT"
 	envDBName    = "MF_INFLUX_READER_DB_NAME"
 	envDBHost    = "MF_INFLUX_READER_DB_HOST"
@@ -39,6 +41,7 @@ const (
 
 type config struct {
 	ThingsURL string
+	LogLevel  string
 	Port      string
 	DBName    string
 	DBHost    string
@@ -49,7 +52,7 @@ type config struct {
 
 func main() {
 	cfg, clientCfg := loadConfigs()
-	logger := log.New(os.Stdout)
+	logger := log.New(os.Stdout, cfg.LogLevel)
 
 	conn := connectToThings(cfg.ThingsURL, logger)
 	defer conn.Close()
@@ -85,6 +88,7 @@ func main() {
 func loadConfigs() (config, influxdata.HTTPConfig) {
 	cfg := config{
 		ThingsURL: mainflux.Env(envThingsURL, defThingsURL),
+		LogLevel:  mainflux.Env(envLogLevel, defLogLevel),
 		Port:      mainflux.Env(envPort, defPort),
 		DBName:    mainflux.Env(envDBName, defDBName),
 		DBHost:    mainflux.Env(envDBHost, defDBHost),

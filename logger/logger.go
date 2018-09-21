@@ -9,18 +9,29 @@ package logger
 
 import (
 	"io"
+	"strings"
 
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 )
 
 // Logger specifies logging API.
 type Logger interface {
+	// Debug logs any object in JSON format on debug level.
+	Debug(string)
 	// Info logs any object in JSON format on info level.
 	Info(string)
 	// Warn logs any object in JSON format on warning level.
 	Warn(string)
 	// Error logs any object in JSON format on error level.
 	Error(string)
+}
+
+var logLevels = map[string]level.Option{
+	"debug": level.AllowDebug(),
+	"info":  level.AllowInfo(),
+	"warn":  level.AllowWarn(),
+	"error": level.AllowError(),
 }
 
 var _ Logger = (*logger)(nil)
@@ -30,20 +41,30 @@ type logger struct {
 }
 
 // New returns wrapped go kit logger.
-func New(out io.Writer) Logger {
+func New(out io.Writer, logLevel string) Logger {
 	l := log.NewJSONLogger(log.NewSyncWriter(out))
+	if allowedLevel, ok := logLevels[strings.ToLower(logLevel)]; ok {
+		l = level.NewFilter(l, allowedLevel)
+	} else {
+		l = level.NewFilter(l, level.AllowInfo())
+	}
 	l = log.With(l, "ts", log.DefaultTimestampUTC)
 	return &logger{l}
 }
 
+func (l logger) Debug(msg string) {
+	level.Debug(l.kitLogger).Log("level", level.DebugValue().String(), "message", msg)
+}
+
 func (l logger) Info(msg string) {
-	l.kitLogger.Log("level", Info.String(), "message", msg)
+	level.Info(l.kitLogger).Log("level", level.InfoValue().String(), "message", msg)
 }
 
 func (l logger) Warn(msg string) {
-	l.kitLogger.Log("level", Warn.String(), "message", msg)
+	level.Warn(l.kitLogger).Log("level", level.WarnValue().String(), "message", msg)
 }
 
 func (l logger) Error(msg string) {
-	l.kitLogger.Log("level", Error.String(), "message", msg)
+	level.Error(l.kitLogger).Log("level", level.ErrorValue().String(), "message", msg)
+
 }

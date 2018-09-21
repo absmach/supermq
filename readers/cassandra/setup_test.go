@@ -18,7 +18,7 @@ import (
 	dockertest "gopkg.in/ory-am/dockertest.v3"
 )
 
-var logger = log.New(os.Stdout)
+var logger = log.New(os.Stdout, "info")
 
 func TestMain(m *testing.M) {
 	pool, err := dockertest.NewPool("")

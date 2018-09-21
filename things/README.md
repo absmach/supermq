@@ -19,6 +19,7 @@ default values.
 
 | Variable              | Description                              | Default        |
 |-----------------------|------------------------------------------|----------------|
+| MF_THINGS_LOG_LEVEL   | Log level for Things (info, warn, error) | info           |
 | MF_THINGS_DB_HOST     | Database host address                    | localhost      |
 | MF_THINGS_DB_PORT     | Database host port                       | 5432           |
 | MF_THINGS_DB_USER     | Database user                            | mainflux       |

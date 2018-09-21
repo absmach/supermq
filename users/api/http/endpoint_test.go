@@ -66,7 +66,7 @@ func newService() users.Service {
 }
 
 func newServer(svc users.Service) *httptest.Server {
-	logger := log.New(os.Stdout)
+	logger := log.New(os.Stdout, "info")
 	mux := httpapi.MakeHandler(svc, logger)
 	return httptest.NewServer(mux)
 }
