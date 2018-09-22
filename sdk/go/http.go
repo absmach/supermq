@@ -41,10 +41,15 @@ var (
 
 	limit  = 10
 	offset = 0
+
+	isHTTPS = false
 )
 
 // SetServerAddr - set addr using host and port
 func SetServerAddr(proto, host, port string) {
+	if proto == "https" {
+		isHTTPS = true
+	}
 	serverAddr = fmt.Sprintf("%s://%s:%s", proto, host, port)
 }
 

@@ -21,35 +21,25 @@ import (
 const thingsEndpoint = "things"
 
 // CreateThing - creates new thing and generates thing UUID
-func CreateThing(data, token string) (uint64, error) {
+func CreateThing(data, token string) (string, error) {
 	url := fmt.Sprintf("%s/%s", serverAddr, thingsEndpoint)
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(data))
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
 	resp, err := sendRequest(req, token, contentTypeJSON)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return 0, err
-	}
-
 	if resp.StatusCode != http.StatusCreated {
-		return 0, fmt.Errorf("%d", resp.StatusCode)
+		return "", fmt.Errorf("%d", resp.StatusCode)
 	}
 
-	var t thingRes
-	err = json.Unmarshal(body, &t)
-	if err != nil {
-		return 0, err
-	}
-	return t.id, nil
+	return resp.Header.Get("Location"), nil
 }
 
 // GetThings - gets all things
@@ -77,17 +67,19 @@ func GetThings(token string) ([]things.Thing, error) {
 		return nil, fmt.Errorf("%d", resp.StatusCode)
 	}
 
-	var l listThingsRes
+	l := listThingsRes{}
 	err = json.Unmarshal(body, &l)
 	if err != nil {
 		return nil, err
 	}
-	return l.things, nil
+
+	return l.Things, nil
 }
 
 // GetThing - gets thing by ID
 func GetThing(id, token string) (things.Thing, error) {
 	url := fmt.Sprintf("%s/%s/%s", serverAddr, thingsEndpoint, id)
+	println(url)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return things.Thing{}, err
@@ -109,12 +101,13 @@ func GetThing(id, token string) (things.Thing, error) {
 		return things.Thing{}, fmt.Errorf("%d", resp.StatusCode)
 	}
 
-	var v viewThingRes
-	err = json.Unmarshal(body, &v)
+	t := things.Thing{}
+	err = json.Unmarshal(body, &t)
 	if err != nil {
 		return things.Thing{}, err
 	}
-	return v.thing, nil
+
+	return t, nil
 }
 
 // UpdateThing - updates thing by ID
@@ -131,7 +124,7 @@ func UpdateThing(id, data, token string) error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("%s", resp.StatusCode)
+		return fmt.Errorf("%d", resp.StatusCode)
 	}
 
 	return nil
@@ -150,7 +143,7 @@ func DeleteThing(id, token string) error {
 		return err
 	}
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("%d", resp.StatusCode)
 	}
 
@@ -190,7 +183,7 @@ func DisconnectThing(cliID, chanID, token string) error {
 		return err
 	}
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("%d", resp.StatusCode)
 	}
 

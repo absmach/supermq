@@ -19,7 +19,13 @@ var msgContentType = contentTypeSenMLJSON
 
 // SendMessage - send message on Mainflux channel
 func SendMessage(id, msg, token string) error {
-	url := serverAddr + "/http/channels/" + id + "/messages"
+	var url string
+	switch isHTTPS {
+	case true:
+		url = fmt.Sprintf("%s/%s/%s/%s", serverAddr, "http/channels", id, "messages")
+	case false:
+		url = fmt.Sprintf("%s/%s/%s/%s", serverAddr, "channels", id, "messages")
+	}
 
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(msg))
 	if err != nil {
@@ -31,8 +37,8 @@ func SendMessage(id, msg, token string) error {
 		return err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("%s", resp.StatusCode)
+	if resp.StatusCode != http.StatusAccepted {
+		return fmt.Errorf("%d", resp.StatusCode)
 	}
 
 	return nil

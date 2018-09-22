@@ -20,8 +20,16 @@ func CreateUser(user, pwd string) error {
 	msg := fmt.Sprintf(`{"email": "%s", "password": "%s"}`, user, pwd)
 	url := fmt.Sprintf("%s/users", serverAddr)
 
-	_, err := httpClient.Post(url, contentTypeJSON, strings.NewReader(msg))
-	return err
+	resp, err := httpClient.Post(url, contentTypeJSON, strings.NewReader(msg))
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("%d", resp.StatusCode)
+	}
+
+	return nil
 }
 
 // CreateToken - create user token
@@ -50,5 +58,5 @@ func CreateToken(user, pwd string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return t.token, nil
+	return t.Token, nil
 }

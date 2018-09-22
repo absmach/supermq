@@ -22,17 +22,17 @@ var (
 )
 
 func dump(i interface{}) {
-	fmt.Printf("%s\n\n", color.BlueString(spew.Sdump(i)))
+	fmt.Printf("%s", color.BlueString(spew.Sdump(i)))
 }
 
 func logUsage(u string) {
-	fmt.Printf(color.YellowString("Usage:  %s\n\n"), u)
+	fmt.Printf(color.YellowString("Usage:  %s\n"), u)
 }
 
 func logError(err error) {
-	fmt.Printf("%s\n\n", color.RedString(err.Error()))
+	fmt.Printf("%s\n", color.RedString(err.Error()))
 }
 
 func logOK() {
-	fmt.Printf("%s\n\n", color.GreenString("OK"))
+	fmt.Printf("%s\n", color.GreenString("OK"))
 }

@@ -27,6 +27,7 @@ var cmdMessages = []cobra.Command{
 			err := sdk.SendMessage(args[0], args[1], args[2])
 			if err != nil {
 				logError(err)
+				return
 			}
 			logOK()
 		},

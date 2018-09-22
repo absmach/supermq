@@ -12,31 +12,13 @@ import (
 )
 
 type tokenRes struct {
-	token string `json:"token,omitempty"`
-}
-
-type thingRes struct {
-	id      uint64 `json:"id,omitempty"`
-	created bool   `json:"created,omitempty"`
-}
-
-type viewThingRes struct {
-	thing things.Thing `json:"thing,omitempty"`
+	Token string `json:"token,omitempty"`
 }
 
 type listThingsRes struct {
-	things []things.Thing `json:"things,omitempty"`
-}
-
-type channelRes struct {
-	id      uint64 `json:"id,omitempty"`
-	created bool   `json:"created,omitempty"`
-}
-
-type viewChannelRes struct {
-	channel things.Channel `json:"things,omitempty"`
+	Things []things.Thing `json:"things,omitempty"`
 }
 
 type listChannelsRes struct {
-	channels []things.Channel `json:"channels,omitempty"`
+	Channels []things.Channel `json:"channels,omitempty"`
 }

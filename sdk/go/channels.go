@@ -14,35 +14,23 @@ import (
 const channelsEndpoint = "channels"
 
 // CreateChannel - creates new channel and generates UUID
-func CreateChannel(data, token string) (uint64, error) {
+func CreateChannel(data, token string) (string, error) {
 	url := fmt.Sprintf("%s/%s", serverAddr, channelsEndpoint)
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(data))
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
 	resp, err := sendRequest(req, token, contentTypeJSON)
 	if err != nil {
-		return 0, err
-	}
-
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return 0, err
+		return "", err
 	}
 
 	if resp.StatusCode != http.StatusCreated {
-		return 0, fmt.Errorf("%d", resp.StatusCode)
+		return "", fmt.Errorf("%d", resp.StatusCode)
 	}
 
-	var c channelRes
-	err = json.Unmarshal(body, &c)
-	if err != nil {
-		return 0, err
-	}
-	return c.id, nil
+	return resp.Header.Get("Location"), nil
 }
 
 // GetChannels - gets all channels
@@ -70,12 +58,12 @@ func GetChannels(token string) ([]things.Channel, error) {
 		return nil, fmt.Errorf("%d", resp.StatusCode)
 	}
 
-	var l listChannelsRes
+	l := listChannelsRes{}
 	err = json.Unmarshal(body, &l)
 	if err != nil {
 		return nil, err
 	}
-	return l.channels, nil
+	return l.Channels, nil
 }
 
 // GetChannel - gets channel by ID
@@ -102,12 +90,12 @@ func GetChannel(id, token string) (things.Channel, error) {
 		return things.Channel{}, fmt.Errorf("%d", resp.StatusCode)
 	}
 
-	var v viewChannelRes
-	err = json.Unmarshal(body, &v)
+	c := things.Channel{}
+	err = json.Unmarshal(body, &c)
 	if err != nil {
 		return things.Channel{}, err
 	}
-	return v.channel, nil
+	return c, nil
 }
 
 // UpdateChannel - update a channel
@@ -143,7 +131,7 @@ func DeleteChannel(id, token string) error {
 		return err
 	}
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("%d", resp.StatusCode)
 	}
 
