@@ -54,6 +54,7 @@ func SetServerAddr(proto, host, port string) {
 }
 
 // SetCerts - set TLS certs
+// Certs are provided via MF_CERT_FILE, MF_KEY_FILE and MF_CA_FILE env vars
 func SetCerts() {
 	// Set certificates paths
 	certFile := mainflux.Env(envCertFile, defCertFile)

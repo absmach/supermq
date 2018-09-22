@@ -58,7 +58,8 @@ func SendMessage(id, msg, token string) error
     SendMessage - send message on Mainflux channel
 
 func SetCerts()
-    SetCerts - set TLS certs
+    SetCerts - set TLS certs Certs are provided via MF_CERT_FILE,
+    MF_KEY_FILE and MF_CA_FILE env vars
 
 func SetContentType(ct string) error
     SetContentType - set message content type. Available options are SenML
@@ -75,5 +76,4 @@ func UpdateThing(id, data, token string) error
 
 func Version() (mainflux.VersionInfo, error)
     Version - server health check
-
 ```
