@@ -21,10 +21,15 @@ var cmdThings = []cobra.Command{
 		Long:  `Create new thing, generate his UUID and store it`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
-				LogUsage(cmd.Short)
+				logUsage(cmd.Short)
 				return
 			}
-			FormatResLog(sdk.CreateThing(args[0], args[1]))
+			id, err := sdk.CreateThing(args[0], args[1])
+			if err != nil {
+				logError(err)
+				return
+			}
+			dump(id)
 		},
 	},
 	cobra.Command{
@@ -33,14 +38,24 @@ var cmdThings = []cobra.Command{
 		Long:  `Get all thingss or thing by id`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
-				LogUsage(cmd.Short)
+				logUsage(cmd.Short)
 				return
 			}
 			if args[0] == "all" {
-				FormatResLog(sdk.GetThings(args[1]))
+				l, err := sdk.GetThings(args[1])
+				if err != nil {
+					logError(err)
+					return
+				}
+				dump(l)
 				return
 			}
-			FormatResLog(sdk.GetThing(args[0], args[1]))
+			t, err := sdk.GetThing(args[0], args[1])
+			if err != nil {
+				logError(err)
+				return
+			}
+			dump(t)
 		},
 	},
 	cobra.Command{
@@ -49,10 +64,15 @@ var cmdThings = []cobra.Command{
 		Long:  `Removes thing from database`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
-				LogUsage(cmd.Short)
+				logUsage(cmd.Short)
 				return
 			}
-			FormatResLog(sdk.DeleteThing(args[0], args[1]))
+			err := sdk.DeleteThing(args[0], args[1])
+			if err != nil {
+				logError(err)
+				return
+			}
+			logOK()
 		},
 	},
 	cobra.Command{
@@ -61,10 +81,15 @@ var cmdThings = []cobra.Command{
 		Long:  `Update thing record`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
-				LogUsage(cmd.Short)
+				logUsage(cmd.Short)
 				return
 			}
-			FormatResLog(sdk.UpdateThing(args[0], args[1], args[2]))
+			err := sdk.UpdateThing(args[0], args[1], args[2])
+			if err != nil {
+				logError(err)
+				return
+			}
+			logOK()
 		},
 	},
 	cobra.Command{
@@ -73,10 +98,15 @@ var cmdThings = []cobra.Command{
 		Long:  `Connect thing to the channel`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
-				LogUsage(cmd.Short)
+				logUsage(cmd.Short)
 				return
 			}
-			FormatResLog(sdk.ConnectThing(args[0], args[1], args[2]))
+			err := sdk.ConnectThing(args[0], args[1], args[2])
+			if err != nil {
+				logError(err)
+				return
+			}
+			logOK()
 		},
 	},
 	cobra.Command{
@@ -85,10 +115,15 @@ var cmdThings = []cobra.Command{
 		Long:  `Disconnect thing to the channel`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
-				LogUsage(cmd.Short)
+				logUsage(cmd.Short)
 				return
 			}
-			FormatResLog(sdk.DisconnectThing(args[0], args[1], args[2]))
+			err := sdk.DisconnectThing(args[0], args[1], args[2])
+			if err != nil {
+				logError(err)
+				return
+			}
+			logOK()
 		},
 	},
 }
@@ -99,11 +134,11 @@ func NewThingsCmd() *cobra.Command {
 		Short: "things <options>",
 		Long:  `Things handling: create, delete or update things.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			LogUsage(cmd.Short)
+			logUsage(cmd.Short)
 		},
 	}
 
-	for i, _ := range cmdThings {
+	for i := range cmdThings {
 		cmd.AddCommand(&cmdThings[i])
 	}
 

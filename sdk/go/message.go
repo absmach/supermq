@@ -1,7 +1,15 @@
+//
+// Copyright (c) 2018
+// Mainflux
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
 package sdk
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 )
@@ -10,15 +18,24 @@ import (
 var msgContentType = contentTypeSenMLJSON
 
 // SendMessage - send message on Mainflux channel
-func SendMessage(id, msg, token string) (*http.Response, error) {
+func SendMessage(id, msg, token string) error {
 	url := serverAddr + "/http/channels/" + id + "/messages"
 
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(msg))
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return sendRequest(req, token, msgContentType)
+	resp, err := sendRequest(req, token, msgContentType)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("%s", resp.StatusCode)
+	}
+
+	return nil
 }
 
 // SetContentType - set message content type.

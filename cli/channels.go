@@ -19,10 +19,15 @@ var cmdChannels = []cobra.Command{
 		Long:  `Creates new channel and generates it's UUID`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
-				LogUsage(cmd.Short)
+				logUsage(cmd.Short)
 				return
 			}
-			FormatResLog(sdk.CreateChannel(args[0], args[1]))
+			id, err := sdk.CreateChannel(args[0], args[1])
+			if err != nil {
+				logError(err)
+				return
+			}
+			dump(id)
 		},
 	},
 	cobra.Command{
@@ -31,14 +36,24 @@ var cmdChannels = []cobra.Command{
 		Long:  `Gets list of all channels or gets channel by id`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
-				LogUsage(cmd.Short)
+				logUsage(cmd.Short)
 				return
 			}
 			if args[0] == "all" {
-				FormatResLog(sdk.GetChannels(args[1]))
+				l, err := sdk.GetChannels(args[1])
+				if err != nil {
+					logError(err)
+					return
+				}
+				dump(l)
 				return
 			}
-			FormatResLog(sdk.GetChannel(args[0], args[1]))
+			c, err := sdk.GetChannel(args[0], args[1])
+			if err != nil {
+				logError(err)
+				return
+			}
+			dump(c)
 		},
 	},
 	cobra.Command{
@@ -47,10 +62,15 @@ var cmdChannels = []cobra.Command{
 		Long:  `Updates channel record`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
-				LogUsage(cmd.Short)
+				logUsage(cmd.Short)
 				return
 			}
-			FormatResLog(sdk.UpdateChannel(args[0], args[1], args[2]))
+			err := sdk.UpdateChannel(args[0], args[1], args[2])
+			if err != nil {
+				logError(err)
+				return
+			}
+			logOK()
 		},
 	},
 	cobra.Command{
@@ -59,10 +79,15 @@ var cmdChannels = []cobra.Command{
 		Long:  `Delete channel by ID`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
-				LogUsage(cmd.Short)
+				logUsage(cmd.Short)
 				return
 			}
-			FormatResLog(sdk.DeleteChannel(args[0], args[1]))
+			err := sdk.DeleteChannel(args[0], args[1])
+			if err != nil {
+				logError(err)
+				return
+			}
+			logOK()
 		},
 	},
 }
@@ -73,11 +98,11 @@ func NewChannelsCmd() *cobra.Command {
 		Short: "Manipulation with channels",
 		Long:  `Manipulation with channels: create, delete or update channels`,
 		Run: func(cmd *cobra.Command, args []string) {
-			LogUsage(cmd.Short)
+			logUsage(cmd.Short)
 		},
 	}
 
-	for i, _ := range cmdChannels {
+	for i := range cmdChannels {
 		cmd.AddCommand(&cmdChannels[i])
 	}
 

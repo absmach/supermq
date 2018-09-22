@@ -18,7 +18,12 @@ func NewVersionCmd() *cobra.Command {
 		Short: "Get version of Mainflux Things Service",
 		Long:  `Mainflux server health checkt.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			FormatResLog(sdk.Version())
+			v, err := sdk.Version()
+			if err != nil {
+				logError(err)
+				return
+			}
+			dump(v)
 		},
 	}
 }

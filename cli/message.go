@@ -21,10 +21,14 @@ var cmdMessages = []cobra.Command{
 		Long:  `Sends message on the channel`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 3 {
-				LogUsage(cmd.Short)
+				logUsage(cmd.Short)
 				return
 			}
-			FormatResLog(sdk.SendMessage(args[0], args[1], args[2]))
+			err := sdk.SendMessage(args[0], args[1], args[2])
+			if err != nil {
+				logError(err)
+			}
+			logOK()
 		},
 	},
 }
@@ -36,7 +40,7 @@ func NewMessagesCmd() *cobra.Command {
 		Long:  `Send or retrieve messages: control message flow on the channel`,
 	}
 
-	for i, _ := range cmdMessages {
+	for i := range cmdMessages {
 		cmd.AddCommand(&cmdMessages[i])
 	}
 

@@ -67,9 +67,9 @@ func main() {
 		&conf.insecure, "insecure", "i", false, "do not use TLS")
 
 	// Client and Channels Flags
-	rootCmd.PersistentFlags().IntVarP(
+	rootCmd.PersistentFlags().UintVarP(
 		&cli.Limit, "limit", "l", 100, "limit query parameter")
-	rootCmd.PersistentFlags().IntVarP(
+	rootCmd.PersistentFlags().UintVarP(
 		&cli.Offset, "offset", "o", 0, "offset query parameter")
 
 	if err := rootCmd.Execute(); err != nil {
