@@ -9,8 +9,13 @@ import (
 	dockertest "gopkg.in/ory-am/dockertest.v3"
 )
 
+const (
+	wrongID    = 0
+	wrongValue = "wrong-value"
+)
+
 var (
-	cache *redis.Client
+	cacheClient *redis.Client
 )
 
 func TestMain(m *testing.M) {
@@ -25,11 +30,13 @@ func TestMain(m *testing.M) {
 	}
 
 	if err = pool.Retry(func() error {
-		cache = redis.NewClient(&redis.Options{
-			Addr: fmt.Sprintf("localhost:%s", resource.GetPort("6379/tcp")),
+		cacheClient = redis.NewClient(&redis.Options{
+			Addr:     fmt.Sprintf("localhost:%s", resource.GetPort("6379/tcp")),
+			Password: "",
+			DB:       0,
 		})
 
-		return cache.Ping().Err()
+		return cacheClient.Ping().Err()
 	}); err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
