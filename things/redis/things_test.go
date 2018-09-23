@@ -10,9 +10,10 @@ import (
 )
 
 func TestThingSave(t *testing.T) {
-	thingCache := redis.NewThingCache(client)
+
+	thingCache := redis.NewThingCache(cache)
 	key := uuid.New().ID()
-	id := u
+	id := uint64(17)
 
 	err := thingCache.Save(key, id)
 	assert.Nil(t, err, fmt.Sprintf("save new thing to cache: expected no error got %s\n", err))
