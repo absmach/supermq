@@ -10,6 +10,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -18,7 +19,7 @@ import (
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
-	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/readers"
 	"github.com/mainflux/mainflux/readers/api"
 	"github.com/mainflux/mainflux/readers/mongodb"
@@ -46,7 +47,7 @@ const (
 
 type config struct {
 	thingsURL string
-	logLevel  log.Level
+	logLevel  logger.Level
 	port      string
 	dbName    string
 	dbHost    string
@@ -55,7 +56,7 @@ type config struct {
 
 func main() {
 	cfg := loadConfigs()
-	logger := log.New(os.Stdout, cfg.logLevel)
+	logger := logger.New(os.Stdout, cfg.logLevel)
 
 	conn := connectToThings(cfg.thingsURL, logger)
 	defer conn.Close()
@@ -80,11 +81,10 @@ func main() {
 }
 
 func loadConfigs() config {
-	var logLevel log.Level
+	var logLevel logger.Level
 	err := logLevel.UnmarshalText(mainflux.Env(envLogLevel, defLogLevel))
 	if err != nil {
-		fmt.Printf(`{"level":"error","message":"%s","ts":"%s"}`, err, time.RFC3339Nano)
-		os.Exit(1)
+		log.Fatalf(`{"level":"error","message":"%s: %s","ts":"%s"}`, err, logLevel.String(), time.RFC3339Nano)
 	}
 
 	return config{
@@ -97,7 +97,7 @@ func loadConfigs() config {
 	}
 }
 
-func connectToMongoDB(host, port, name string, logger log.Logger) *mongo.Database {
+func connectToMongoDB(host, port, name string, logger logger.Logger) *mongo.Database {
 	client, err := mongo.Connect(context.Background(), fmt.Sprintf("mongodb://%s:%s", host, port), nil)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to database: %s", err))
@@ -107,7 +107,7 @@ func connectToMongoDB(host, port, name string, logger log.Logger) *mongo.Databas
 	return client.Database(name)
 }
 
-func connectToThings(url string, logger log.Logger) *grpc.ClientConn {
+func connectToThings(url string, logger logger.Logger) *grpc.ClientConn {
 	conn, err := grpc.Dial(url, grpc.WithInsecure())
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to things service: %s", err))
@@ -117,7 +117,7 @@ func connectToThings(url string, logger log.Logger) *grpc.ClientConn {
 	return conn
 }
 
-func newService(db *mongo.Database, logger log.Logger) readers.MessageRepository {
+func newService(db *mongo.Database, logger logger.Logger) readers.MessageRepository {
 	repo := mongodb.New(db)
 	repo = api.LoggingMiddleware(repo, logger)
 	repo = api.MetricsMiddleware(
@@ -139,7 +139,7 @@ func newService(db *mongo.Database, logger log.Logger) readers.MessageRepository
 	return repo
 }
 
-func startHTTPServer(repo readers.MessageRepository, tc mainflux.ThingsServiceClient, port string, logger log.Logger, errs chan error) {
+func startHTTPServer(repo readers.MessageRepository, tc mainflux.ThingsServiceClient, port string, logger logger.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", port)
 	logger.Info(fmt.Sprintf("Mongo reader service started, exposed port %s", port))
 	errs <- http.ListenAndServe(p, api.MakeHandler(repo, tc, "cassandra-reader"))

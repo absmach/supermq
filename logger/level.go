@@ -8,7 +8,7 @@
 package logger
 
 import (
-	"fmt"
+	"errors"
 	"strings"
 )
 
@@ -22,6 +22,8 @@ const (
 	// Debug level is used when logging debugging info.
 	Debug
 )
+
+var ErrInvalidLogLevel = errors.New("unrecognized log level")
 
 // Level represents severity level while logging.
 type Level int
@@ -52,7 +54,7 @@ func (lvl *Level) UnmarshalText(text string) error {
 	case "error":
 		*lvl = Error
 	default:
-		return fmt.Errorf("unrecognized log level: %q", text)
+		return ErrInvalidLogLevel
 	}
 	return nil
 }

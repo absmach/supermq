@@ -9,6 +9,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,10 +20,10 @@ import (
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/gocql/gocql"
 	"github.com/mainflux/mainflux"
-	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/writers"
 	"github.com/mainflux/mainflux/writers/cassandra"
-	nats "github.com/nats-io/go-nats"
+	"github.com/nats-io/go-nats"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
@@ -45,7 +46,7 @@ const (
 
 type config struct {
 	natsURL  string
-	logLevel log.Level
+	logLevel logger.Level
 	port     string
 	cluster  string
 	keyspace string
@@ -54,7 +55,7 @@ type config struct {
 func main() {
 	cfg := loadConfig()
 
-	logger := log.New(os.Stdout, cfg.logLevel)
+	logger := logger.New(os.Stdout, cfg.logLevel)
 
 	nc := connectToNATS(cfg.natsURL, logger)
 	defer nc.Close()
@@ -82,11 +83,10 @@ func main() {
 }
 
 func loadConfig() config {
-	var logLevel log.Level
+	var logLevel logger.Level
 	err := logLevel.UnmarshalText(mainflux.Env(envLogLevel, defLogLevel))
 	if err != nil {
-		fmt.Printf(`{"level":"error","message":"%s","ts":"%s"}`, err, time.RFC3339Nano)
-		os.Exit(1)
+		log.Fatalf(`{"level":"error","message":"%s: %s","ts":"%s"}`, err, logLevel.String(), time.RFC3339Nano)
 	}
 
 	return config{
@@ -98,7 +98,7 @@ func loadConfig() config {
 	}
 }
 
-func connectToNATS(url string, logger log.Logger) *nats.Conn {
+func connectToNATS(url string, logger logger.Logger) *nats.Conn {
 	nc, err := nats.Connect(url)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
@@ -108,7 +108,7 @@ func connectToNATS(url string, logger log.Logger) *nats.Conn {
 	return nc
 }
 
-func connectToCassandra(cluster, keyspace string, logger log.Logger) *gocql.Session {
+func connectToCassandra(cluster, keyspace string, logger logger.Logger) *gocql.Session {
 	session, err := cassandra.Connect(strings.Split(cluster, sep), keyspace)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to Cassandra cluster: %s", err))
@@ -118,7 +118,7 @@ func connectToCassandra(cluster, keyspace string, logger log.Logger) *gocql.Sess
 	return session
 }
 
-func newService(session *gocql.Session, logger log.Logger) writers.MessageRepository {
+func newService(session *gocql.Session, logger logger.Logger) writers.MessageRepository {
 	repo := cassandra.New(session)
 	repo = writers.LoggingMiddleware(repo, logger)
 	repo = writers.MetricsMiddleware(
@@ -140,7 +140,7 @@ func newService(session *gocql.Session, logger log.Logger) writers.MessageReposi
 	return repo
 }
 
-func startHTTPServer(port string, errs chan error, logger log.Logger) {
+func startHTTPServer(port string, errs chan error, logger logger.Logger) {
 	p := fmt.Sprintf(":%s", port)
 	logger.Info(fmt.Sprintf("Cassandra writer service started, exposed port %s", port))
 	errs <- http.ListenAndServe(p, cassandra.MakeHandler())

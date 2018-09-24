@@ -10,6 +10,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -21,7 +22,7 @@ import (
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/go-redis/redis"
 	"github.com/mainflux/mainflux"
-	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/things/api"
 	grpcapi "github.com/mainflux/mainflux/things/api/grpc"
@@ -62,7 +63,7 @@ const (
 )
 
 type config struct {
-	LogLevel  log.Level
+	LogLevel  logger.Level
 	DBHost    string
 	DBPort    string
 	DBUser    string
@@ -79,7 +80,7 @@ type config struct {
 func main() {
 	cfg := loadConfig()
 
-	logger := log.New(os.Stdout, cfg.LogLevel)
+	logger := logger.New(os.Stdout, cfg.LogLevel)
 
 	cache := connectToCache(cfg.CacheURL, cfg.CachePass, cfg.CacheDB, logger)
 
@@ -106,11 +107,10 @@ func main() {
 }
 
 func loadConfig() config {
-	var logLevel log.Level
+	var logLevel logger.Level
 	err := logLevel.UnmarshalText(mainflux.Env(envLogLevel, defLogLevel))
 	if err != nil {
-		fmt.Printf(`{"level":"error","message":"%s","ts":"%s"}`, err, time.RFC3339Nano)
-		os.Exit(1)
+		log.Fatalf(`{"level":"error","message":"%s: %s","ts":"%s"}`, err, logLevel.String(), time.RFC3339Nano)
 	}
 
 	return config{
@@ -129,7 +129,7 @@ func loadConfig() config {
 	}
 }
 
-func connectToCache(cacheURL, cachePass string, cacheDB string, logger log.Logger) *redis.Client {
+func connectToCache(cacheURL, cachePass string, cacheDB string, logger logger.Logger) *redis.Client {
 
 	db, err := strconv.Atoi(cacheDB)
 	if err != nil {
@@ -144,7 +144,7 @@ func connectToCache(cacheURL, cachePass string, cacheDB string, logger log.Logge
 	})
 }
 
-func connectToDB(cfg config, logger log.Logger) *sql.DB {
+func connectToDB(cfg config, logger logger.Logger) *sql.DB {
 	db, err := postgres.Connect(cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBUser, cfg.DBPass)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to postgres: %s", err))
@@ -153,7 +153,7 @@ func connectToDB(cfg config, logger log.Logger) *sql.DB {
 	return db
 }
 
-func connectToUsersService(usersAddr string, logger log.Logger) *grpc.ClientConn {
+func connectToUsersService(usersAddr string, logger logger.Logger) *grpc.ClientConn {
 	conn, err := grpc.Dial(usersAddr, grpc.WithInsecure())
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to users service: %s", err))
@@ -162,7 +162,7 @@ func connectToUsersService(usersAddr string, logger log.Logger) *grpc.ClientConn
 	return conn
 }
 
-func newService(conn *grpc.ClientConn, db *sql.DB, client *redis.Client, logger log.Logger) things.Service {
+func newService(conn *grpc.ClientConn, db *sql.DB, client *redis.Client, logger logger.Logger) things.Service {
 	users := usersapi.NewClient(conn)
 	thingsRepo := postgres.NewThingRepository(db, logger)
 	channelsRepo := postgres.NewChannelRepository(db, logger)
@@ -190,13 +190,13 @@ func newService(conn *grpc.ClientConn, db *sql.DB, client *redis.Client, logger 
 	return svc
 }
 
-func startHTTPServer(svc things.Service, port string, logger log.Logger, errs chan error) {
+func startHTTPServer(svc things.Service, port string, logger logger.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", port)
 	logger.Info(fmt.Sprintf("Things service started, exposed port %s", port))
 	errs <- http.ListenAndServe(p, httpapi.MakeHandler(svc))
 }
 
-func startGRPCServer(svc things.Service, port string, logger log.Logger, errs chan error) {
+func startGRPCServer(svc things.Service, port string, logger logger.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", port)
 	listener, err := net.Listen("tcp", p)
 	if err != nil {

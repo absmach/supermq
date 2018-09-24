@@ -9,6 +9,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,7 +17,7 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux"
-	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/normalizer"
 	"github.com/mainflux/mainflux/normalizer/api"
 	"github.com/mainflux/mainflux/normalizer/nats"
@@ -37,14 +38,14 @@ const (
 
 type config struct {
 	NatsURL  string
-	LogLevel log.Level
+	LogLevel logger.Level
 	Port     string
 }
 
 func main() {
 	cfg := loadConfig()
 
-	logger := log.New(os.Stdout, cfg.LogLevel)
+	logger := logger.New(os.Stdout, cfg.LogLevel)
 
 	nc, err := broker.Connect(cfg.NatsURL)
 	if err != nil {
@@ -92,11 +93,10 @@ func main() {
 }
 
 func loadConfig() config {
-	var logLevel log.Level
+	var logLevel logger.Level
 	err := logLevel.UnmarshalText(mainflux.Env(envLogLevel, defLogLevel))
 	if err != nil {
-		fmt.Printf(`{"level":"error","message":"%s","ts":"%s"}`, err, time.RFC3339Nano)
-		os.Exit(1)
+		log.Fatalf(`{"level":"error","message":"%s: %s","ts":"%s"}`, err, logLevel.String(), time.RFC3339Nano)
 	}
 
 	return config{

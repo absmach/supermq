@@ -10,6 +10,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -18,11 +19,11 @@ import (
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
-	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/writers"
-	mongodb "github.com/mainflux/mainflux/writers/mongodb"
+	"github.com/mainflux/mainflux/writers/mongodb"
 	"github.com/mongodb/mongo-go-driver/mongo"
-	nats "github.com/nats-io/go-nats"
+	"github.com/nats-io/go-nats"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
@@ -46,7 +47,7 @@ const (
 
 type config struct {
 	NatsURL  string
-	LogLevel log.Level
+	LogLevel logger.Level
 	Port     string
 	DBName   string
 	DBHost   string
@@ -55,7 +56,7 @@ type config struct {
 
 func main() {
 	cfg := loadConfigs()
-	logger := log.New(os.Stdout, cfg.LogLevel)
+	logger := logger.New(os.Stdout, cfg.LogLevel)
 
 	nc, err := nats.Connect(cfg.NatsURL)
 	if err != nil {
@@ -95,11 +96,10 @@ func main() {
 }
 
 func loadConfigs() config {
-	var logLevel log.Level
+	var logLevel logger.Level
 	err := logLevel.UnmarshalText(mainflux.Env(envLogLevel, defLogLevel))
 	if err != nil {
-		fmt.Printf(`{"level":"error","message":"%s","ts":"%s"}`, err, time.RFC3339Nano)
-		os.Exit(1)
+		log.Fatalf(`{"level":"error","message":"%s: %s","ts":"%s"}`, err, logLevel.String(), time.RFC3339Nano)
 	}
 
 	return config{
@@ -130,7 +130,7 @@ func makeMetrics() (*kitprometheus.Counter, *kitprometheus.Summary) {
 	return counter, latency
 }
 
-func startHTTPService(port string, logger log.Logger, errs chan error) {
+func startHTTPService(port string, logger logger.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", port)
 	logger.Info(fmt.Sprintf("Mongodb writer service started, exposed port %s", p))
 	errs <- http.ListenAndServe(p, mongodb.MakeHandler())
