@@ -14,6 +14,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
@@ -45,7 +46,7 @@ const (
 
 type config struct {
 	thingsURL string
-	logLevel  string
+	logLevel  log.Level
 	port      string
 	dbName    string
 	dbHost    string
@@ -79,9 +80,16 @@ func main() {
 }
 
 func loadConfigs() config {
+	var logLevel log.Level
+	err := logLevel.UnmarshalText(mainflux.Env(envLogLevel, defLogLevel))
+	if err != nil {
+		fmt.Printf(`{"level":"error","message":"%s","ts":"%s"}`, err, time.RFC3339Nano)
+		os.Exit(1)
+	}
+
 	return config{
 		thingsURL: mainflux.Env(envThingsURL, defThingsURL),
-		logLevel:  mainflux.Env(envLogLevel, defLogLevel),
+		logLevel:  logLevel,
 		port:      mainflux.Env(envPort, defPort),
 		dbName:    mainflux.Env(envDBName, defDBName),
 		dbHost:    mainflux.Env(envDBHost, defDBHost),

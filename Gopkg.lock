@@ -93,14 +93,13 @@
   packages = [
     "endpoint",
     "log",
-    "log/level",
     "metrics",
     "metrics/internal/lv",
     "metrics/prometheus",
     "transport/grpc",
     "transport/http"
   ]
-  revision = "ca4112baa34cb55091301bdc13b1420a122b1b9e"
+  revision = "4dc7be5d2d12881735283bcab7352178e190fc71"
   version = "v0.6.0"
 
 [[projects]]

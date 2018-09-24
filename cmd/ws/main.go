@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
@@ -40,17 +41,12 @@ const (
 type config struct {
 	ThingsURL string
 	NatsURL   string
-	LogLevel  string
+	LogLevel  log.Level
 	Port      string
 }
 
 func main() {
-	cfg := config{
-		ThingsURL: mainflux.Env(envThingsURL, defThingsURL),
-		NatsURL:   mainflux.Env(envNatsURL, defNatsURL),
-		LogLevel:  mainflux.Env(envLogLevel, defLogLevel),
-		Port:      mainflux.Env(envPort, defPort),
-	}
+	cfg := loadConfig()
 
 	logger := log.New(os.Stdout, cfg.LogLevel)
 
@@ -104,4 +100,19 @@ func main() {
 
 	err = <-errs
 	logger.Error(fmt.Sprintf("WebSocket adapter terminated: %s", err))
+}
+
+func loadConfig() config {
+	var logLevel log.Level
+	err := logLevel.UnmarshalText(mainflux.Env(envLogLevel, defLogLevel))
+	if err != nil {
+		fmt.Printf(`{"level":"error","message":"%s","ts":"%s"}`, err, time.RFC3339Nano)
+		os.Exit(1)
+	}
+
+	return config{
+		NatsURL:  mainflux.Env(envNatsURL, defNatsURL),
+		LogLevel: logLevel,
+		Port:     mainflux.Env(envPort, defPort),
+	}
 }

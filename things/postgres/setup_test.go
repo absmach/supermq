@@ -24,11 +24,10 @@ import (
 const (
 	wrongID    = 0
 	wrongValue = "wrong-value"
-	logLevel   = "info"
 )
 
 var (
-	testLog = logger.New(os.Stdout, logLevel)
+	testLog = logger.New(os.Stdout, logger.Info)
 	db      *sql.DB
 )
 

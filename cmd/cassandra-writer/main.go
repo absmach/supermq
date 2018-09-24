@@ -14,6 +14,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/gocql/gocql"
@@ -44,7 +45,7 @@ const (
 
 type config struct {
 	natsURL  string
-	logLevel string
+	logLevel log.Level
 	port     string
 	cluster  string
 	keyspace string
@@ -81,9 +82,16 @@ func main() {
 }
 
 func loadConfig() config {
+	var logLevel log.Level
+	err := logLevel.UnmarshalText(mainflux.Env(envLogLevel, defLogLevel))
+	if err != nil {
+		fmt.Printf(`{"level":"error","message":"%s","ts":"%s"}`, err, time.RFC3339Nano)
+		os.Exit(1)
+	}
+
 	return config{
 		natsURL:  mainflux.Env(envNatsURL, defNatsURL),
-		logLevel: mainflux.Env(envLogLevel, defLogLevel),
+		logLevel: logLevel,
 		port:     mainflux.Env(envPort, defPort),
 		cluster:  mainflux.Env(envCluster, defCluster),
 		keyspace: mainflux.Env(envKeyspace, defKeyspace),

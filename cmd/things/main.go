@@ -16,6 +16,7 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/go-redis/redis"
@@ -61,7 +62,7 @@ const (
 )
 
 type config struct {
-	LogLevel  string
+	LogLevel  log.Level
 	DBHost    string
 	DBPort    string
 	DBUser    string
@@ -105,8 +106,15 @@ func main() {
 }
 
 func loadConfig() config {
+	var logLevel log.Level
+	err := logLevel.UnmarshalText(mainflux.Env(envLogLevel, defLogLevel))
+	if err != nil {
+		fmt.Printf(`{"level":"error","message":"%s","ts":"%s"}`, err, time.RFC3339Nano)
+		os.Exit(1)
+	}
+
 	return config{
-		LogLevel:  mainflux.Env(envLogLevel, defLogLevel),
+		LogLevel:  logLevel,
 		DBHost:    mainflux.Env(envDBHost, defDBHost),
 		DBPort:    mainflux.Env(envDBPort, defDBPort),
 		DBUser:    mainflux.Env(envDBUser, defDBUser),
@@ -123,7 +131,7 @@ func loadConfig() config {
 
 func connectToCache(cacheURL, cachePass string, cacheDB string, logger log.Logger) *redis.Client {
 
-	db, err := strconv.Atoi(mainflux.Env(envCacheDB, defCacheDB))
+	db, err := strconv.Atoi(cacheDB)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to cache: %s", err))
 		os.Exit(1)

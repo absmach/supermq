@@ -23,12 +23,10 @@ import (
 	"github.com/mongodb/mongo-go-driver/mongo"
 )
 
-const logLevel = "info"
-
 var (
 	port       string
 	addr       string
-	testLog    = log.New(os.Stdout, logLevel)
+	testLog    = log.New(os.Stdout, log.Info)
 	testDB     = "test"
 	collection = "mainflux"
 	db         mongo.Database

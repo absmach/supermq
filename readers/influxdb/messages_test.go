@@ -18,7 +18,6 @@ import (
 
 const (
 	testDB        = "test"
-	logLevel      = "info"
 	chanID        = 1
 	numOfMessages = 101
 )
@@ -35,7 +34,7 @@ var (
 		Publisher: 1,
 		Protocol:  "mqtt",
 	}
-	testLog = log.New(os.Stdout, logLevel)
+	testLog = log.New(os.Stdout, log.Info)
 )
 
 func TestReadAll(t *testing.T) {

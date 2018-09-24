@@ -10,7 +10,6 @@ package logger_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-kit/kit/log/level"
 	"io"
 	"testing"
 
@@ -45,12 +44,12 @@ func TestDebug(t *testing.T) {
 		input  string
 		output logMsg
 	}{
-		"info log ordinary string": {"input_string", logMsg{level.DebugValue().String(), "input_string"}},
-		"info log empty string":    {"", logMsg{level.DebugValue().String(), ""}},
+		"info log ordinary string": {"input_string", logMsg{log.Debug.String(), "input_string"}},
+		"info log empty string":    {"", logMsg{log.Debug.String(), ""}},
 	}
 
 	writer := mockWriter{}
-	logger := log.New(&writer, level.DebugValue().String())
+	logger := log.New(&writer, log.Debug)
 
 	for desc, tc := range cases {
 		logger.Debug(tc.input)
@@ -65,12 +64,12 @@ func TestInfo(t *testing.T) {
 		input  string
 		output logMsg
 	}{
-		"info log ordinary string": {"input_string", logMsg{level.InfoValue().String(), "input_string"}},
-		"info log empty string":    {"", logMsg{level.InfoValue().String(), ""}},
+		"info log ordinary string": {"input_string", logMsg{log.Info.String(), "input_string"}},
+		"info log empty string":    {"", logMsg{log.Info.String(), ""}},
 	}
 
 	writer := mockWriter{}
-	logger := log.New(&writer, level.InfoValue().String())
+	logger := log.New(&writer, log.Info)
 
 	for desc, tc := range cases {
 		logger.Info(tc.input)
@@ -85,12 +84,12 @@ func TestWarn(t *testing.T) {
 		input  string
 		output logMsg
 	}{
-		"warn log ordinary string": {"input_string", logMsg{level.WarnValue().String(), "input_string"}},
-		"warn log empty string":    {"", logMsg{level.WarnValue().String(), ""}},
+		"warn log ordinary string": {"input_string", logMsg{log.Warn.String(), "input_string"}},
+		"warn log empty string":    {"", logMsg{log.Warn.String(), ""}},
 	}
 
 	writer := mockWriter{}
-	logger := log.New(&writer, level.WarnValue().String())
+	logger := log.New(&writer, log.Warn)
 
 	for desc, tc := range cases {
 		logger.Warn(tc.input)
@@ -105,32 +104,12 @@ func TestError(t *testing.T) {
 		input  string
 		output logMsg
 	}{
-		"error log ordinary string": {"input_string", logMsg{level.ErrorValue().String(), "input_string"}},
-		"error log empty string":    {"", logMsg{level.ErrorValue().String(), ""}},
+		"error log ordinary string": {"input_string", logMsg{log.Error.String(), "input_string"}},
+		"error log empty string":    {"", logMsg{log.Error.String(), ""}},
 	}
 
 	writer := mockWriter{}
-	logger := log.New(&writer, level.ErrorValue().String())
-
-	for desc, tc := range cases {
-		logger.Error(tc.input)
-		output, err := writer.Read()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", desc, err))
-		assert.Equal(t, tc.output, output, fmt.Sprintf("%s: expected %s got %s", desc, tc.output, output))
-	}
-}
-
-func TestLevelSelection(t *testing.T) {
-	cases := map[string]struct {
-		input  string
-		output logMsg
-	}{
-		"debug log ordinary string": {"input_string", logMsg{level.ErrorValue().String(), "input_string"}},
-		"debug log empty string":    {"", logMsg{level.ErrorValue().String(), ""}},
-	}
-
-	writer := mockWriter{}
-	logger := log.New(&writer, "Not_A_Level") //Set the log level to a non-level expect error level
+	logger := log.New(&writer, log.Error)
 
 	for desc, tc := range cases {
 		logger.Error(tc.input)
@@ -161,20 +140,20 @@ func TestLogLevel(t *testing.T) {
 		input  string
 		output logMsg
 	}{
-		"warn log ordinary string": {"input_string", logMsg{level.WarnValue().String(), "input_string"}},
-		"warn log empty string":    {"", logMsg{level.WarnValue().String(), ""}},
+		"warn log ordinary string": {"input_string", logMsg{log.Warn.String(), "input_string"}},
+		"warn log empty string":    {"", logMsg{log.Warn.String(), ""}},
 	}
 
 	errorCases := map[string]struct {
 		input  string
 		output logMsg
 	}{
-		"error log ordinary string": {"input_string", logMsg{level.ErrorValue().String(), "input_string"}},
-		"error log empty string":    {"", logMsg{level.ErrorValue().String(), ""}},
+		"error log ordinary string": {"input_string", logMsg{log.Error.String(), "input_string"}},
+		"error log empty string":    {"", logMsg{log.Error.String(), ""}},
 	}
 
 	writer := mockWriter{}
-	logger := log.New(&writer, level.WarnValue().String()) //Set the log level to warn
+	logger := log.New(&writer, log.Warn) //Set the log level to warn
 
 	for desc, tc := range debugCases {
 		logger.Debug(tc.input) //Try to log with Debug when warn is the level

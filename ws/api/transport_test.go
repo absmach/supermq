@@ -29,7 +29,6 @@ const (
 	chanID   = 1
 	token    = "token"
 	protocol = "ws"
-	logLevel = "info"
 )
 
 var (
@@ -44,7 +43,7 @@ func newService() ws.Service {
 }
 
 func newHTTPServer(svc ws.Service, tc mainflux.ThingsServiceClient) *httptest.Server {
-	mux := api.MakeHandler(svc, tc, log.New(os.Stdout, logLevel))
+	mux := api.MakeHandler(svc, tc, log.New(os.Stdout, log.Info))
 	return httptest.NewServer(mux)
 }
 

@@ -55,7 +55,7 @@ const (
 
 type config struct {
 	NatsURL      string
-	LogLevel     string
+	LogLevel     log.Level
 	Port         string
 	BatchSize    string
 	BatchTimeout string
@@ -118,9 +118,16 @@ func main() {
 }
 
 func loadConfigs() (config, influxdata.HTTPConfig) {
+	var logLevel log.Level
+	err := logLevel.UnmarshalText(mainflux.Env(envLogLevel, defLogLevel))
+	if err != nil {
+		fmt.Printf(`{"level":"error","message":"%s","ts":"%s"}`, err, time.RFC3339Nano)
+		os.Exit(1)
+	}
+
 	cfg := config{
 		NatsURL:  mainflux.Env(envNatsURL, defNatsURL),
-		LogLevel: mainflux.Env(envLogLevel, defLogLevel),
+		LogLevel: logLevel,
 		Port:     mainflux.Env(envPort, defPort),
 		DBName:   mainflux.Env(envDBName, defDBName),
 		DBHost:   mainflux.Env(envDBHost, defDBHost),
@@ -138,7 +145,7 @@ func loadConfigs() (config, influxdata.HTTPConfig) {
 	return cfg, clientCfg
 }
 
-func unmarshalInfluxDBSettings(cfgBatchTimeout string, cfgBatchSize string) (batchTimeout int, batchSize int, err error){
+func unmarshalInfluxDBSettings(cfgBatchTimeout string, cfgBatchSize string) (batchTimeout int, batchSize int, err error) {
 	batchTimeout, err = strconv.Atoi(cfgBatchTimeout)
 	if err != nil {
 		return batchTimeout, batchSize, errors.New(fmt.Sprintf("Invalid value for batch timeout: %s", err))

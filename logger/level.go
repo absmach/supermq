@@ -1,0 +1,58 @@
+//
+// Copyright (c) 2018
+// Mainflux
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
+package logger
+
+import (
+	"fmt"
+	"strings"
+)
+
+const (
+	// Error level is used when logging errors.
+	Error Level = iota + 1
+	// Warn level is used when logging warnings.
+	Warn
+	// Info level is used when logging info data.
+	Info
+	// Debug level is used when logging debugging info.
+	Debug
+)
+
+// Level represents severity level while logging.
+type Level int
+
+var levels = map[Level]string{
+	Error: "error",
+	Warn:  "warn",
+	Info:  "info",
+	Debug: "debug",
+}
+
+func (lvl Level) String() string {
+	return levels[lvl]
+}
+
+func (lvl Level) isAllowed(logLevel Level) bool {
+	return lvl <= logLevel
+}
+
+func (lvl *Level) UnmarshalText(text string) error {
+	switch string(strings.ToLower(text)) {
+	case "debug":
+		*lvl = Debug
+	case "info":
+		*lvl = Info
+	case "warn":
+		*lvl = Warn
+	case "error":
+		*lvl = Error
+	default:
+		return fmt.Errorf("unrecognized log level: %q", text)
+	}
+	return nil
+}
