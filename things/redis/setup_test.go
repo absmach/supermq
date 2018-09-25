@@ -3,6 +3,7 @@ package redis_test
 import (
 	"fmt"
 	"log"
+	"os"
 	"testing"
 
 	"github.com/go-redis/redis"
@@ -41,6 +42,10 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
+	code := m.Run()
 	// When you're done, kill and remove the container
-	err = pool.Purge(resource)
+	// err = pool.Purge(resource)
+	defer pool.Purge(resource)
+
+	os.Exit(code)
 }
