@@ -7,40 +7,32 @@ import (
 )
 
 func TestUnmarshalText(t *testing.T) {
-	invalidCases := map[string]struct {
+	cases := map[string]struct {
 		input  string
 		output Level
+		err    error
 	}{
-		"select log level Not_A_Level": {"Not_A_Level", 0},
-		"select log level Bad_Input":   {"Bad_Input", 0},
-	}
+		"select log level Not_A_Level": {"Not_A_Level", 1, ErrInvalidLogLevel},
+		"select log level Bad_Input":   {"Bad_Input", 1, ErrInvalidLogLevel},
 
-	validCases := map[string]struct {
-		input  string
-		output Level
-	}{
-		"select log level debug": {"debug", Debug},
-		"select log level DEBUG": {"DEBUG", Debug},
-		"select log level info":  {"info", Info},
-		"select log level INFO":  {"INFO", Info},
-		"select log level warn":  {"warn", Warn},
-		"select log level WARN":  {"WARN", Warn},
-		"select log level Error": {"Error", Error},
-		"select log level ERROR": {"ERROR", Error},
+		"select log level debug": {"debug", Debug, nil},
+		"select log level DEBUG": {"DEBUG", Debug, nil},
+		"select log level info":  {"info", Info, nil},
+		"select log level INFO":  {"INFO", Info, nil},
+		"select log level warn":  {"warn", Warn, nil},
+		"select log level WARN":  {"WARN", Warn, nil},
+		"select log level Error": {"Error", Error, nil},
+		"select log level ERROR": {"ERROR", Error, nil},
 	}
 
 	var logLevel Level
-	for desc, tc := range invalidCases {
+	for desc, tc := range cases {
 		err := logLevel.UnmarshalText(tc.input)
-		assert.Error(t, err, ErrInvalidLogLevel.Error(), desc, err)
 		assert.Equal(t, tc.output, logLevel, fmt.Sprintf("%s: expected %s got %d", desc, tc.output, logLevel))
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %d", desc, tc.err, err))
+
 	}
 
-	for desc, tc := range validCases {
-		err := logLevel.UnmarshalText(tc.input)
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", desc, err))
-		assert.Equal(t, tc.output, logLevel, fmt.Sprintf("%s: expected %s got %d", desc, tc.output, logLevel))
-	}
 }
 
 func TestLevelIsAllowed(t *testing.T) {
