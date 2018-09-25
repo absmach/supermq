@@ -26,7 +26,7 @@ func TestThingID(t *testing.T) {
 
 	key := uuid.New().ID()
 	id := uint64(123)
-	_ = thingCache.Save(key, id)
+	thingCache.Save(key, id)
 
 	cases := []struct {
 		desc string
@@ -50,7 +50,7 @@ func TestThingRemove(t *testing.T) {
 
 	key := uuid.New().ID()
 	id := uint64(123)
-	_ = thingCache.Save(key, id)
+	thingCache.Save(key, id)
 
 	cases := []struct {
 		desc string

@@ -25,14 +25,14 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
-	resource, err := pool.Run("redis", "4.0.9-alpine", nil)
+	container, err := pool.Run("redis", "4.0.9-alpine", nil)
 	if err != nil {
-		log.Fatalf("Could not start resource: %s", err)
+		log.Fatalf("Could not start container: %s", err)
 	}
 
 	if err = pool.Retry(func() error {
 		cacheClient = redis.NewClient(&redis.Options{
-			Addr:     fmt.Sprintf("localhost:%s", resource.GetPort("6379/tcp")),
+			Addr:     fmt.Sprintf("localhost:%s", container.GetPort("6379/tcp")),
 			Password: "",
 			DB:       0,
 		})
@@ -44,8 +44,7 @@ func TestMain(m *testing.M) {
 
 	code := m.Run()
 	// When you're done, kill and remove the container
-	// err = pool.Purge(resource)
-	defer pool.Purge(resource)
+	defer pool.Purge(container)
 
 	os.Exit(code)
 }
