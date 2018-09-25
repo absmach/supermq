@@ -15,7 +15,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
@@ -47,7 +46,7 @@ const (
 
 type config struct {
 	thingsURL string
-	logLevel  logger.Level
+	logLevel  string
 	port      string
 	dbName    string
 	dbHost    string
@@ -56,8 +55,10 @@ type config struct {
 
 func main() {
 	cfg := loadConfigs()
-	logger := logger.New(os.Stdout, cfg.logLevel)
-
+	logger, err := logger.New(os.Stdout, cfg.logLevel)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
 	conn := connectToThings(cfg.thingsURL, logger)
 	defer conn.Close()
 
@@ -76,20 +77,14 @@ func main() {
 
 	go startHTTPServer(repo, tc, cfg.port, logger, errs)
 
-	err := <-errs
+	err = <-errs
 	logger.Error(fmt.Sprintf("MongoDB reader service terminated: %s", err))
 }
 
 func loadConfigs() config {
-	var logLevel logger.Level
-	err := logLevel.UnmarshalText(mainflux.Env(envLogLevel, defLogLevel))
-	if err != nil {
-		log.Fatalf(`{"level":"error","message":"%s: %s","ts":"%s"}`, err, logLevel.String(), time.RFC3339Nano)
-	}
-
 	return config{
 		thingsURL: mainflux.Env(envThingsURL, defThingsURL),
-		logLevel:  logLevel,
+		logLevel:  mainflux.Env(envLogLevel, defLogLevel),
 		port:      mainflux.Env(envPort, defPort),
 		dbName:    mainflux.Env(envDBName, defDBName),
 		dbHost:    mainflux.Env(envDBHost, defDBHost),

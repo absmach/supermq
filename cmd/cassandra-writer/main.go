@@ -15,7 +15,6 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-	"time"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/gocql/gocql"
@@ -46,7 +45,7 @@ const (
 
 type config struct {
 	natsURL  string
-	logLevel logger.Level
+	logLevel string
 	port     string
 	cluster  string
 	keyspace string
@@ -55,7 +54,10 @@ type config struct {
 func main() {
 	cfg := loadConfig()
 
-	logger := logger.New(os.Stdout, cfg.logLevel)
+	logger, err := logger.New(os.Stdout, cfg.logLevel)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
 
 	nc := connectToNATS(cfg.natsURL, logger)
 	defer nc.Close()
@@ -78,20 +80,14 @@ func main() {
 		errs <- fmt.Errorf("%s", <-c)
 	}()
 
-	err := <-errs
+	err = <-errs
 	logger.Error(fmt.Sprintf("Cassandra writer service terminated: %s", err))
 }
 
 func loadConfig() config {
-	var logLevel logger.Level
-	err := logLevel.UnmarshalText(mainflux.Env(envLogLevel, defLogLevel))
-	if err != nil {
-		log.Fatalf(`{"level":"error","message":"%s: %s","ts":"%s"}`, err, logLevel.String(), time.RFC3339Nano)
-	}
-
 	return config{
 		natsURL:  mainflux.Env(envNatsURL, defNatsURL),
-		logLevel: logLevel,
+		logLevel: mainflux.Env(envLogLevel, defLogLevel),
 		port:     mainflux.Env(envPort, defPort),
 		cluster:  mainflux.Env(envCluster, defCluster),
 		keyspace: mainflux.Env(envKeyspace, defKeyspace),

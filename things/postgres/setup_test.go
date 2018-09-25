@@ -27,7 +27,7 @@ const (
 )
 
 var (
-	testLog = logger.New(os.Stdout, logger.Info)
+	testLog, _ = logger.New(os.Stdout, logger.Info.String())
 	db      *sql.DB
 )
 

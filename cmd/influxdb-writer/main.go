@@ -8,7 +8,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -56,7 +55,7 @@ const (
 
 type config struct {
 	NatsURL      string
-	LogLevel     logger.Level
+	LogLevel     string
 	Port         string
 	BatchSize    string
 	BatchTimeout string
@@ -69,8 +68,10 @@ type config struct {
 
 func main() {
 	cfg, clientCfg := loadConfigs()
-	logger := logger.New(os.Stdout, cfg.LogLevel)
-
+	logger, err := logger.New(os.Stdout, cfg.LogLevel)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
 	nc, err := nats.Connect(cfg.NatsURL)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
@@ -85,9 +86,16 @@ func main() {
 	}
 	defer client.Close()
 
-	batchTimeout, batchSize, err := unmarshalInfluxDBSettings(cfg.BatchTimeout, cfg.BatchSize)
+	batchTimeout, err := strconv.Atoi(cfg.BatchTimeout)
 	if err != nil {
-		logger.Error(err.Error())
+		logger.Error(fmt.Sprintf("Invalid value for batch timeout: %s", err))
+		os.Exit(1)
+	}
+
+	batchSize, err := strconv.Atoi(cfg.BatchSize)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Invalid value of batch size: %s", err))
+		os.Exit(1)
 	}
 
 	timeout := time.Duration(batchTimeout) * time.Second
@@ -119,15 +127,9 @@ func main() {
 }
 
 func loadConfigs() (config, influxdata.HTTPConfig) {
-	var logLevel logger.Level
-	err := logLevel.UnmarshalText(mainflux.Env(envLogLevel, defLogLevel))
-	if err != nil {
-		log.Fatalf(`{"level":"error","message":"%s: %s","ts":"%s"}`, err, logLevel.String(), time.RFC3339Nano)
-	}
-
 	cfg := config{
 		NatsURL:  mainflux.Env(envNatsURL, defNatsURL),
-		LogLevel: logLevel,
+		LogLevel: mainflux.Env(envLogLevel, defLogLevel),
 		Port:     mainflux.Env(envPort, defPort),
 		DBName:   mainflux.Env(envDBName, defDBName),
 		DBHost:   mainflux.Env(envDBHost, defDBHost),
@@ -143,19 +145,6 @@ func loadConfigs() (config, influxdata.HTTPConfig) {
 	}
 
 	return cfg, clientCfg
-}
-
-func unmarshalInfluxDBSettings(cfgBatchTimeout string, cfgBatchSize string) (batchTimeout int, batchSize int, err error) {
-	batchTimeout, err = strconv.Atoi(cfgBatchTimeout)
-	if err != nil {
-		return batchTimeout, batchSize, errors.New(fmt.Sprintf("Invalid value for batch timeout: %s", err))
-	}
-
-	batchSize, err = strconv.Atoi(cfgBatchSize)
-	if err != nil {
-		return batchTimeout, batchSize, errors.New(fmt.Sprintf("Invalid value of batch size: %s", err))
-	}
-	return batchTimeout, batchSize, err
 }
 
 func makeMetrics() (*kitprometheus.Counter, *kitprometheus.Summary) {

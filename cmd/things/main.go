@@ -17,7 +17,6 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
-	"time"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/go-redis/redis"
@@ -63,7 +62,7 @@ const (
 )
 
 type config struct {
-	LogLevel  logger.Level
+	LogLevel  string
 	DBHost    string
 	DBPort    string
 	DBUser    string
@@ -80,8 +79,10 @@ type config struct {
 func main() {
 	cfg := loadConfig()
 
-	logger := logger.New(os.Stdout, cfg.LogLevel)
-
+	logger, err := logger.New(os.Stdout, cfg.LogLevel)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
 	cache := connectToCache(cfg.CacheURL, cfg.CachePass, cfg.CacheDB, logger)
 
 	db := connectToDB(cfg, logger)
@@ -102,19 +103,13 @@ func main() {
 		errs <- fmt.Errorf("%s", <-c)
 	}()
 
-	err := <-errs
+	err = <-errs
 	logger.Error(fmt.Sprintf("Things service terminated: %s", err))
 }
 
 func loadConfig() config {
-	var logLevel logger.Level
-	err := logLevel.UnmarshalText(mainflux.Env(envLogLevel, defLogLevel))
-	if err != nil {
-		log.Fatalf(`{"level":"error","message":"%s: %s","ts":"%s"}`, err, logLevel.String(), time.RFC3339Nano)
-	}
-
 	return config{
-		LogLevel:  logLevel,
+		LogLevel:  mainflux.Env(envLogLevel, defLogLevel),
 		DBHost:    mainflux.Env(envDBHost, defDBHost),
 		DBPort:    mainflux.Env(envDBPort, defDBPort),
 		DBUser:    mainflux.Env(envDBUser, defDBUser),

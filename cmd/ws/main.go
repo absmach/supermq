@@ -14,7 +14,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
@@ -42,15 +41,17 @@ const (
 type config struct {
 	ThingsURL string
 	NatsURL   string
-	LogLevel  logger.Level
+	LogLevel  string
 	Port      string
 }
 
 func main() {
 	cfg := loadConfig()
 
-	logger := logger.New(os.Stdout, cfg.LogLevel)
-
+	logger, err := logger.New(os.Stdout, cfg.LogLevel)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
 	nc, err := broker.Connect(cfg.NatsURL)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
@@ -104,15 +105,9 @@ func main() {
 }
 
 func loadConfig() config {
-	var logLevel logger.Level
-	err := logLevel.UnmarshalText(mainflux.Env(envLogLevel, defLogLevel))
-	if err != nil {
-		log.Fatalf(`{"level":"error","message":"%s: %s","ts":"%s"}`, err, logLevel.String(), time.RFC3339Nano)
-	}
-
 	return config{
 		NatsURL:  mainflux.Env(envNatsURL, defNatsURL),
-		LogLevel: logLevel,
+		LogLevel: mainflux.Env(envLogLevel, defLogLevel),
 		Port:     mainflux.Env(envPort, defPort),
 	}
 }

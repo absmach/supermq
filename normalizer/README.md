@@ -29,6 +29,7 @@ services:
     container_name: [instance name]
     environment:
       MF_NATS_URL: [NATS instance URL]
+      MF_NORMALIZER_LOG_LEVEL: [Normalizer log level]
       MF_NORMALIZER_PORT: [Service HTTP port]
 ```
 
@@ -47,5 +48,5 @@ make normalizer
 make install
 
 # set the environment variables and run the service
-MF_NATS_URL=[NATS instance URL] MF_NORMALIZER_PORT=[Service HTTP port] $GOBIN/mainflux-normalizer
+MF_NATS_URL=[NATS instance URL] MF_NORMALIZER_LOG_LEVEL=[Normalizer log level] MF_NORMALIZER_PORT=[Service HTTP port] $GOBIN/mainflux-normalizer
 ```

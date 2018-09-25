@@ -8,8 +8,10 @@
 package logger
 
 import (
+	"fmt"
 	"github.com/go-kit/kit/log"
 	"io"
+	"time"
 )
 
 // Logger specifies logging API.
@@ -32,10 +34,15 @@ type logger struct {
 }
 
 // New returns wrapped go kit logger.
-func New(out io.Writer, level Level) Logger {
+func New(out io.Writer, levelText string) (Logger, error) {
+	var level Level
+	err := level.UnmarshalText(levelText)
+	if err != nil {
+		return nil, fmt.Errorf(`{"level":"error","message":"%s: %s","ts":"%s"}`, err, levelText, time.RFC3339Nano)
+	}
 	l := log.NewJSONLogger(log.NewSyncWriter(out))
 	l = log.With(l, "ts", log.DefaultTimestampUTC)
-	return &logger{l, level}
+	return &logger{l, level}, err
 }
 
 func (l logger) Debug(msg string) {

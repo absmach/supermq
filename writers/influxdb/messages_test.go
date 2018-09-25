@@ -24,7 +24,7 @@ import (
 
 var (
 	port          string
-	testLog       = log.New(os.Stdout, log.Info)
+	testLog, _    = log.New(os.Stdout, log.Info.String())
 	testDB        = "test"
 	saveTimeout   = 2 * time.Second
 	saveBatchSize = 20

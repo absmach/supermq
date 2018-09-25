@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	influxdata "github.com/influxdata/influxdb/client/v2"
@@ -43,7 +42,7 @@ const (
 
 type config struct {
 	ThingsURL string
-	LogLevel  logger.Level
+	LogLevel  string
 	Port      string
 	DBName    string
 	DBHost    string
@@ -54,8 +53,10 @@ type config struct {
 
 func main() {
 	cfg, clientCfg := loadConfigs()
-	logger := logger.New(os.Stdout, cfg.LogLevel)
-
+	logger, err := logger.New(os.Stdout, cfg.LogLevel)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
 	conn := connectToThings(cfg.ThingsURL, logger)
 	defer conn.Close()
 
@@ -88,15 +89,9 @@ func main() {
 }
 
 func loadConfigs() (config, influxdata.HTTPConfig) {
-	var logLevel logger.Level
-	err := logLevel.UnmarshalText(mainflux.Env(envLogLevel, defLogLevel))
-	if err != nil {
-		log.Fatalf(`{"level":"error","message":"%s: %s","ts":"%s"}`, err, logLevel.String(), time.RFC3339Nano)
-	}
-
 	cfg := config{
 		ThingsURL: mainflux.Env(envThingsURL, defThingsURL),
-		LogLevel:  logLevel,
+		LogLevel:  mainflux.Env(envLogLevel, defLogLevel),
 		Port:      mainflux.Env(envPort, defPort),
 		DBName:    mainflux.Env(envDBName, defDBName),
 		DBHost:    mainflux.Env(envDBHost, defDBHost),

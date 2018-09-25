@@ -31,6 +31,7 @@ services:
     environment:
       MF_THINGS_URL: [Things service URL]
       MF_NATS_URL: [NATS instance URL]
+      MF_HTTP_ADAPTER_LOG_LEVEL: [HTTP Adapter Log Level]
       MF_HTTP_ADAPTER_PORT: [Service HTTP port]
 ```
 
@@ -49,7 +50,7 @@ make http
 make install
 
 # set the environment variables and run the service
-MF_THINGS_URL=[Things service URL] MF_NATS_URL=[NATS instance URL] MF_HTTP_ADAPTER_PORT=[Service HTTP port] $GOBIN/mainflux-http
+MF_THINGS_URL=[Things service URL] MF_NATS_URL=[NATS instance URL] MF_HTTP_ADAPTER_LOG_LEVEL=[HTTP Adapter Log Level] MF_HTTP_ADAPTER_PORT=[Service HTTP port] $GOBIN/mainflux-http
 ```
 
 ## Usage
