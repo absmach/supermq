@@ -60,20 +60,20 @@ func TestThingRemove(t *testing.T) {
 
 	key := uuid.New().ID()
 	id := uint64(123)
+	id2 := uint64(321)
 	thingCache.Save(key, id)
 
-	cases := []struct {
-		desc string
-		ID   uint64
-		err  error
+	cases := map[string]struct {
+		ID  uint64
+		err error
 	}{
-		{desc: "Remove existing thing from cache", ID: id, err: nil},
-		{desc: "Remove removed thing from cache", ID: id, err: r.Nil},
+		"Remove existing thing from cache":     {ID: id, err: nil},
+		"Remove non-existing thing from cache": {ID: id2, err: r.Nil},
 	}
 
-	for _, tc := range cases {
+	for desc, tc := range cases {
 		err := thingCache.Remove(tc.ID)
-		require.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 
 }
