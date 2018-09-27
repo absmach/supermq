@@ -37,7 +37,10 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not start container: %s", err)
 	}
 
-	if err = pool.Retry(func() error {
+	// When you're done, kill and remove the container
+	defer pool.Purge(container)
+
+	if err := pool.Retry(func() error {
 		cacheClient = redis.NewClient(&redis.Options{
 			Addr:     fmt.Sprintf("localhost:%s", container.GetPort("6379/tcp")),
 			Password: "",
@@ -50,8 +53,6 @@ func TestMain(m *testing.M) {
 	}
 
 	code := m.Run()
-	// When you're done, kill and remove the container
-	defer pool.Purge(container)
 
 	os.Exit(code)
 }
