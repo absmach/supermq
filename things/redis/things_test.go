@@ -24,8 +24,11 @@ func TestThingSave(t *testing.T) {
 	key := uuid.New().ID()
 	id := uint64(123)
 
-	err := thingCache.Save(key, id)
-	assert.Nil(t, err, fmt.Sprintf("save new thing to cache: expected no error got %s\n", err))
+	// show that the save works the same for both non-cached and cached thing
+	for i := 0; i < 2; i++ {
+		err := thingCache.Save(key, id)
+		assert.Nil(t, err, fmt.Sprintf("#%d: save thing to cache: expected no error got %s\n", i, err))
+	}
 }
 
 func TestThingID(t *testing.T) {
