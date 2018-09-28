@@ -24,10 +24,20 @@ func TestThingSave(t *testing.T) {
 	key := uuid.New().ID()
 	id := uint64(123)
 
-	// show that the save works the same for both non-cached and cached thing
-	for i := 0; i < 2; i++ {
-		err := thingCache.Save(key, id)
-		require.Nil(t, err, fmt.Sprintf("#%d: save thing to cache: expected no error got %s\n", i, err))
+	cases := []struct {
+		desc string
+		ID   uint64
+		key  string
+		err  error
+	}{
+		{desc: "Save thing to cache", ID: id, key: key, err: nil},
+		{desc: "Save already cached thing to cache", ID: id, key: key, err: nil},
+	}
+
+	for _, tc := range cases {
+		err := thingCache.Save(tc.key, tc.ID)
+		require.Nil(t, err, fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.err, err))
+
 	}
 }
 
