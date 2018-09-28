@@ -73,17 +73,18 @@ func TestThingRemove(t *testing.T) {
 	id2 := uint64(321)
 	thingCache.Save(key, id)
 
-	cases := map[string]struct {
-		ID  uint64
-		err error
+	cases := []struct {
+		desc string
+		ID   uint64
+		err  error
 	}{
-		"Remove existing thing from cache":     {ID: id, err: nil},
-		"Remove non-existing thing from cache": {ID: id2, err: r.Nil},
+		{desc: "Remove existing thing from cache", ID: id, err: nil},
+		{desc: "Remove non-existing thing from cache", ID: id2, err: r.Nil},
 	}
 
-	for desc, tc := range cases {
+	for _, tc := range cases {
 		err := thingCache.Remove(tc.ID)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 
 }
