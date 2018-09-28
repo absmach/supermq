@@ -30,8 +30,8 @@ func TestConnect(t *testing.T) {
 		{desc: "connect thing to channel", cid: cid, tid: tid},
 		{desc: "connect already connected thing to channel", cid: cid, tid: tid},
 	}
-	err := channelCache.Connect(cid, tid)
 	for _, tc := range cases {
+		err := channelCache.Connect(cid, tid)
 		assert.Nil(t, err, fmt.Sprintf("%s: fail to connect due to: %s\n", tc.desc, err))
 	}
 }
@@ -91,16 +91,27 @@ func TestRemove(t *testing.T) {
 	channelCache := redis.NewChannelCache(cacheClient)
 
 	cid := uint64(123)
+	cid2 := uint64(124)
 	tid := uint64(321)
 
 	err := channelCache.Connect(cid, tid)
 	require.Nil(t, err, fmt.Sprintf("connect thing to channel: fail to connect due to: %s\n", err))
 
-	// show that the removal works the same for both existing and non-existing (removed) channel
-	for i := 0; i < 2; i++ {
-		err := channelCache.Remove(cid)
-		require.Nil(t, err, fmt.Sprintf("#%d: connect thing to channel: fail to connect due to: %s\n", i, err))
-		hasAccess := channelCache.HasThing(cid, tid)
-		require.Equal(t, false, hasAccess, fmt.Sprintf("#%d: Check access after removing channel: expected false got %t\n", i, hasAccess))
+	cases := []struct {
+		desc      string
+		cid       uint64
+		tid       uint64
+		err       error
+		hasAccess bool
+	}{
+		{desc: "Remove channel from cache", cid: cid, tid: tid, err: nil, hasAccess: false},
+		{desc: "Remove non-cached channel from cache", cid: cid2, tid: tid, err: nil, hasAccess: false},
+	}
+
+	for _, tc := range cases {
+		err := channelCache.Remove(tc.cid)
+		require.Nil(t, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		hasAcces := channelCache.HasThing(tc.cid, tc.tid)
+		assert.Equal(t, tc.hasAccess, hasAcces, "%s - check access after removing channel: expected %t got %t\n", tc.desc, tc.hasAccess, hasAcces)
 	}
 }
