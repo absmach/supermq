@@ -53,20 +53,19 @@ func TestThingID(t *testing.T) {
 	err := thingCache.Save(key, id)
 	require.Nil(t, err, fmt.Sprintf("Save thing to cache: expected nil got %s", err))
 
-	cases := []struct {
-		desc string
-		ID   uint64
-		key  string
-		err  error
+	cases := map[string]struct {
+		ID  uint64
+		key string
+		err error
 	}{
-		{desc: "Get ID by existing thing-key", ID: id, key: key, err: nil},
-		{desc: "Get ID by non-existing thing-key", ID: 0, key: wrongValue, err: r.Nil},
+		"Get ID by existing thing-key":     {ID: id, key: key, err: nil},
+		"Get ID by non-existing thing-key": {ID: 0, key: wrongValue, err: r.Nil},
 	}
 
-	for _, tc := range cases {
+	for desc, tc := range cases {
 		cacheID, err := thingCache.ID(tc.key)
-		assert.Equal(t, tc.ID, cacheID, fmt.Sprintf("%s: expected %d got %d\n", tc.desc, tc.ID, cacheID))
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.Equal(t, tc.ID, cacheID, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.ID, cacheID))
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
 

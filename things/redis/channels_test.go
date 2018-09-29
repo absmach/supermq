@@ -70,20 +70,21 @@ func TestDisconnect(t *testing.T) {
 	err := channelCache.Connect(cid, tid)
 	require.Nil(t, err, fmt.Sprintf("connect thing to channel: fail to connect due to: %s\n", err))
 
-	cases := map[string]struct {
+	cases := []struct {
+		desc      string
 		cid       uint64
 		tid       uint64
 		hasAccess bool
 	}{
-		"disconnecting connected thing":     {cid: cid, tid: tid, hasAccess: false},
-		"disconnecting non-connected thing": {cid: cid, tid: tid2, hasAccess: false},
+		{desc: "disconnecting connected thing", cid: cid, tid: tid, hasAccess: false},
+		{desc: "disconnecting non-connected thing", cid: cid, tid: tid2, hasAccess: false},
 	}
-	for desc, tc := range cases {
+	for _, tc := range cases {
 		err := channelCache.Disconnect(tc.cid, tc.tid)
-		assert.Nil(t, err, fmt.Sprintf("%s: fail due to: %s\n", desc, err))
+		assert.Nil(t, err, fmt.Sprintf("%s: fail due to: %s\n", tc.desc, err))
 
 		hasAccess := channelCache.HasThing(tc.cid, tc.tid)
-		assert.Equal(t, tc.hasAccess, hasAccess, fmt.Sprintf("access check after %s: expected %t got %t\n", desc, tc.hasAccess, hasAccess))
+		assert.Equal(t, tc.hasAccess, hasAccess, fmt.Sprintf("access check after %s: expected %t got %t\n", tc.desc, tc.hasAccess, hasAccess))
 	}
 }
 
