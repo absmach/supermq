@@ -80,7 +80,7 @@ func TestDisconnect(t *testing.T) {
 	}
 	for desc, tc := range cases {
 		err := channelCache.Disconnect(tc.cid, tc.tid)
-		require.Nil(t, err, fmt.Sprintf("%s: fail due to: %s\n", desc, err))
+		assert.Nil(t, err, fmt.Sprintf("%s: fail due to: %s\n", desc, err))
 
 		hasAccess := channelCache.HasThing(tc.cid, tc.tid)
 		assert.Equal(t, tc.hasAccess, hasAccess, fmt.Sprintf("access check after %s: expected %t got %t\n", desc, tc.hasAccess, hasAccess))
@@ -110,7 +110,7 @@ func TestRemove(t *testing.T) {
 
 	for _, tc := range cases {
 		err := channelCache.Remove(tc.cid)
-		require.Nil(t, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.Nil(t, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		hasAcces := channelCache.HasThing(tc.cid, tc.tid)
 		assert.Equal(t, tc.hasAccess, hasAcces, "%s - check access after removing channel: expected %t got %t\n", tc.desc, tc.hasAccess, hasAcces)
 	}

@@ -23,6 +23,10 @@ func TestThingSave(t *testing.T) {
 	thingCache := redis.NewThingCache(cacheClient)
 	key := uuid.New().ID()
 	id := uint64(123)
+	id2 := uint64(124)
+
+	err := thingCache.Save(key, id2)
+	require.Nil(t, err, fmt.Sprintf("Save thing to cache: expected nil got %s", err))
 
 	cases := []struct {
 		desc string
@@ -31,12 +35,12 @@ func TestThingSave(t *testing.T) {
 		err  error
 	}{
 		{desc: "Save thing to cache", ID: id, key: key, err: nil},
-		{desc: "Save already cached thing to cache", ID: id, key: key, err: nil},
+		{desc: "Save already cached thing to cache", ID: id2, key: key, err: nil},
 	}
 
 	for _, tc := range cases {
 		err := thingCache.Save(tc.key, tc.ID)
-		require.Nil(t, err, fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.err, err))
+		assert.Nil(t, err, fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.err, err))
 
 	}
 }
@@ -46,7 +50,8 @@ func TestThingID(t *testing.T) {
 
 	key := uuid.New().ID()
 	id := uint64(123)
-	thingCache.Save(key, id)
+	err := thingCache.Save(key, id)
+	require.Nil(t, err, fmt.Sprintf("Save thing to cache: expected nil got %s", err))
 
 	cases := []struct {
 		desc string
