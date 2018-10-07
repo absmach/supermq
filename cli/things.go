@@ -35,7 +35,7 @@ var cmdThings = []cobra.Command{
 	cobra.Command{
 		Use:   "get",
 		Short: "get all/<thing_id> <user_auth_token>",
-		Long:  `Get all thingss or thing by id`,
+		Long:  `Get all things or thing by id`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
 				logUsage(cmd.Short)
@@ -132,7 +132,7 @@ func NewThingsCmd() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "things",
 		Short: "things <options>",
-		Long:  `Things handling: create, delete or update things.`,
+		Long:  `Things handling: create, delete or update things`,
 		Run: func(cmd *cobra.Command, args []string) {
 			logUsage(cmd.Short)
 		},
