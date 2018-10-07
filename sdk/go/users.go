@@ -54,8 +54,7 @@ func CreateToken(user, pwd string) (string, error) {
 	}
 
 	var t tokenRes
-	err = json.Unmarshal(body, &t)
-	if err != nil {
+	if err := json.Unmarshal(body, &t); err != nil {
 		return "", err
 	}
 	return t.Token, nil

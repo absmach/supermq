@@ -66,8 +66,7 @@ func GetChannels(token string) ([]things.Channel, error) {
 	}
 
 	l := listChannelsRes{}
-	err = json.Unmarshal(body, &l)
-	if err != nil {
+	if err := json.Unmarshal(body, &l); err != nil {
 		return nil, err
 	}
 	return l.Channels, nil
@@ -98,8 +97,7 @@ func GetChannel(id, token string) (things.Channel, error) {
 	}
 
 	c := things.Channel{}
-	err = json.Unmarshal(body, &c)
-	if err != nil {
+	if err := json.Unmarshal(body, &c); err != nil {
 		return things.Channel{}, err
 	}
 	return c, nil

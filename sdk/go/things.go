@@ -68,8 +68,7 @@ func GetThings(token string) ([]things.Thing, error) {
 	}
 
 	l := listThingsRes{}
-	err = json.Unmarshal(body, &l)
-	if err != nil {
+	if err := json.Unmarshal(body, &l); err != nil {
 		return nil, err
 	}
 
@@ -102,8 +101,7 @@ func GetThing(id, token string) (things.Thing, error) {
 	}
 
 	t := things.Thing{}
-	err = json.Unmarshal(body, &t)
-	if err != nil {
+	if err := json.Unmarshal(body, &t); err != nil {
 		return things.Thing{}, err
 	}
 

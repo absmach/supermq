@@ -37,8 +37,7 @@ func Version() (mainflux.VersionInfo, error) {
 	}
 
 	var ver mainflux.VersionInfo
-	err = json.Unmarshal(body, &ver)
-	if err != nil {
+	if err := json.Unmarshal(body, &ver); err != nil {
 		return mainflux.VersionInfo{}, err
 	}
 	return ver, nil
