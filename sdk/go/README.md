@@ -18,6 +18,12 @@ Then call SDK Go functions to interact with the system.
 ```go
 FUNCTIONS
 
+func Channel(id, token string) (things.Channel, error)
+    Channel - gets channel by ID
+
+func Channels(token string) ([]things.Channel, error)
+    Channels - gets all channels
+
 func ConnectThing(thingID, chanID, token string) error
     ConnectThing - connect thing to a channel
 
@@ -42,18 +48,6 @@ func DeleteThing(id, token string) error
 func DisconnectThing(thingID, chanID, token string) error
     DisconnectThing - connect thing to a channel
 
-func GetChannel(id, token string) (things.Channel, error)
-    GetChannel - gets channel by ID
-
-func GetChannels(token string) ([]things.Channel, error)
-    GetChannels - gets all channels
-
-func GetThing(id, token string) (things.Thing, error)
-    GetThing - gets thing by ID
-
-func GetThings(token string) ([]things.Thing, error)
-    GetThings - gets all things
-
 func SendMessage(id, msg, token string) error
     SendMessage - send message on Mainflux channel
 
@@ -67,6 +61,12 @@ func SetContentType(ct string) error
 
 func SetServerAddr(proto, host, port string)
     SetServerAddr - set addr using host and port
+
+func Thing(id, token string) (things.Thing, error)
+    Thing - gets thing by ID
+
+func Things(token string) ([]things.Thing, error)
+    Things - gets all things
 
 func UpdateChannel(id, data, token string) error
     UpdateChannel - update a channel

@@ -42,7 +42,7 @@ var cmdThings = []cobra.Command{
 				return
 			}
 			if args[0] == "all" {
-				l, err := sdk.GetThings(args[1])
+				l, err := sdk.Things(args[1])
 				if err != nil {
 					logError(err)
 					return
@@ -50,7 +50,7 @@ var cmdThings = []cobra.Command{
 				dump(l)
 				return
 			}
-			t, err := sdk.GetThing(args[0], args[1])
+			t, err := sdk.Thing(args[0], args[1])
 			if err != nil {
 				logError(err)
 				return

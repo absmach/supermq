@@ -40,7 +40,7 @@ var cmdChannels = []cobra.Command{
 				return
 			}
 			if args[0] == "all" {
-				l, err := sdk.GetChannels(args[1])
+				l, err := sdk.Channels(args[1])
 				if err != nil {
 					logError(err)
 					return
@@ -48,7 +48,7 @@ var cmdChannels = []cobra.Command{
 				dump(l)
 				return
 			}
-			c, err := sdk.GetChannel(args[0], args[1])
+			c, err := sdk.Channel(args[0], args[1])
 			if err != nil {
 				logError(err)
 				return

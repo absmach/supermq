@@ -42,8 +42,8 @@ func CreateThing(data, token string) (string, error) {
 	return resp.Header.Get("Location"), nil
 }
 
-// GetThings - gets all things
-func GetThings(token string) ([]things.Thing, error) {
+// Things - gets all things
+func Things(token string) ([]things.Thing, error) {
 	url := fmt.Sprintf("%s/%s?offset=%s&limit=%s",
 		serverAddr, thingsEndpoint, strconv.Itoa(offset), strconv.Itoa(limit))
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -75,8 +75,8 @@ func GetThings(token string) ([]things.Thing, error) {
 	return l.Things, nil
 }
 
-// GetThing - gets thing by ID
-func GetThing(id, token string) (things.Thing, error) {
+// Thing - gets thing by ID
+func Thing(id, token string) (things.Thing, error) {
 	url := fmt.Sprintf("%s/%s/%s", serverAddr, thingsEndpoint, id)
 	println(url)
 	req, err := http.NewRequest(http.MethodGet, url, nil)

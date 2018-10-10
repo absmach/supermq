@@ -40,8 +40,8 @@ func CreateChannel(data, token string) (string, error) {
 	return resp.Header.Get("Location"), nil
 }
 
-// GetChannels - gets all channels
-func GetChannels(token string) ([]things.Channel, error) {
+// Channels - gets all channels
+func Channels(token string) ([]things.Channel, error) {
 	url := fmt.Sprintf("%s/%s?offset=%s&limit=%s",
 		serverAddr, channelsEndpoint, strconv.Itoa(offset), strconv.Itoa(limit))
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -72,8 +72,8 @@ func GetChannels(token string) ([]things.Channel, error) {
 	return l.Channels, nil
 }
 
-// GetChannel - gets channel by ID
-func GetChannel(id, token string) (things.Channel, error) {
+// Channel - gets channel by ID
+func Channel(id, token string) (things.Channel, error) {
 	url := fmt.Sprintf("%s/%s/%s", serverAddr, channelsEndpoint, id)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
