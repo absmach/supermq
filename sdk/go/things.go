@@ -149,8 +149,8 @@ func DeleteThing(id, token string) error {
 }
 
 // ConnectThing - connect thing to a channel
-func ConnectThing(cliID, chanID, token string) error {
-	url := fmt.Sprintf("%s/%s/%s/%s/%s", serverAddr, channelsEndpoint, chanID, thingsEndpoint, cliID)
+func ConnectThing(thingID, chanID, token string) error {
+	url := fmt.Sprintf("%s/%s/%s/%s/%s", serverAddr, channelsEndpoint, chanID, thingsEndpoint, thingID)
 	req, err := http.NewRequest(http.MethodPut, url, nil)
 	if err != nil {
 		return err
@@ -169,8 +169,8 @@ func ConnectThing(cliID, chanID, token string) error {
 }
 
 // DisconnectThing - connect thing to a channel
-func DisconnectThing(cliID, chanID, token string) error {
-	url := fmt.Sprintf("%s/%s/%s/%s/%s", serverAddr, channelsEndpoint, chanID, thingsEndpoint, cliID)
+func DisconnectThing(thingID, chanID, token string) error {
+	url := fmt.Sprintf("%s/%s/%s/%s/%s", serverAddr, channelsEndpoint, chanID, thingsEndpoint, thingID)
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return err

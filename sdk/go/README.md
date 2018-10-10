@@ -18,7 +18,7 @@ Then call SDK Go functions to interact with the system.
 ```go
 FUNCTIONS
 
-func ConnectThing(cliID, chanID, token string) error
+func ConnectThing(thingID, chanID, token string) error
     ConnectThing - connect thing to a channel
 
 func CreateChannel(data, token string) (string, error)
@@ -39,7 +39,7 @@ func DeleteChannel(id, token string) error
 func DeleteThing(id, token string) error
     DeleteThing - removes thing
 
-func DisconnectThing(cliID, chanID, token string) error
+func DisconnectThing(thingID, chanID, token string) error
     DisconnectThing - connect thing to a channel
 
 func GetChannel(id, token string) (things.Channel, error)
