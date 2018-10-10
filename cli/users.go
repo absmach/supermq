@@ -22,8 +22,7 @@ var cmdUsers = []cobra.Command{
 				logUsage(cmd.Short)
 				return
 			}
-			err := sdk.CreateUser(args[0], args[1])
-			if err != nil {
+			if err := sdk.CreateUser(args[0], args[1]); err != nil {
 				logError(err)
 				return
 			}

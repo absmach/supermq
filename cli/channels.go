@@ -65,8 +65,7 @@ var cmdChannels = []cobra.Command{
 				logUsage(cmd.Short)
 				return
 			}
-			err := sdk.UpdateChannel(args[0], args[1], args[2])
-			if err != nil {
+			if err := sdk.UpdateChannel(args[0], args[1], args[2]); err != nil {
 				logError(err)
 				return
 			}
@@ -82,8 +81,7 @@ var cmdChannels = []cobra.Command{
 				logUsage(cmd.Short)
 				return
 			}
-			err := sdk.DeleteChannel(args[0], args[1])
-			if err != nil {
+			if err := sdk.DeleteChannel(args[0], args[1]); err != nil {
 				logError(err)
 				return
 			}

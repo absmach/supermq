@@ -24,8 +24,7 @@ var cmdMessages = []cobra.Command{
 				logUsage(cmd.Short)
 				return
 			}
-			err := sdk.SendMessage(args[0], args[1], args[2])
-			if err != nil {
+			if err := sdk.SendMessage(args[0], args[1], args[2]); err != nil {
 				logError(err)
 				return
 			}

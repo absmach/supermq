@@ -67,8 +67,7 @@ var cmdThings = []cobra.Command{
 				logUsage(cmd.Short)
 				return
 			}
-			err := sdk.DeleteThing(args[0], args[1])
-			if err != nil {
+			if err := sdk.DeleteThing(args[0], args[1]); err != nil {
 				logError(err)
 				return
 			}
@@ -84,8 +83,7 @@ var cmdThings = []cobra.Command{
 				logUsage(cmd.Short)
 				return
 			}
-			err := sdk.UpdateThing(args[0], args[1], args[2])
-			if err != nil {
+			if err := sdk.UpdateThing(args[0], args[1], args[2]); err != nil {
 				logError(err)
 				return
 			}
@@ -101,8 +99,7 @@ var cmdThings = []cobra.Command{
 				logUsage(cmd.Short)
 				return
 			}
-			err := sdk.ConnectThing(args[0], args[1], args[2])
-			if err != nil {
+			if err := sdk.ConnectThing(args[0], args[1], args[2]); err != nil {
 				logError(err)
 				return
 			}
@@ -118,8 +115,7 @@ var cmdThings = []cobra.Command{
 				logUsage(cmd.Short)
 				return
 			}
-			err := sdk.DisconnectThing(args[0], args[1], args[2])
-			if err != nil {
+			if err := sdk.DisconnectThing(args[0], args[1], args[2]); err != nil {
 				logError(err)
 				return
 			}
