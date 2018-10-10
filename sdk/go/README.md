@@ -1,6 +1,6 @@
 # Mainflux Go SDK
 
-Go SDK, a Go driver for Mainflux HTP API.
+Go SDK, a Go driver for Mainflux HTTP API.
 
 Does both system administration (provisioning) and messaging.
 
