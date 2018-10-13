@@ -18,9 +18,9 @@ import (
 
 // Version - server health check
 func (sdk *MfxSDK) Version() (mainflux.VersionInfo, error) {
-	url := fmt.Sprintf("%s/version", sdk.config.url)
+	url := fmt.Sprintf("%s/version", sdk.url)
 
-	resp, err := sdk.config.httpClient.Get(url)
+	resp, err := sdk.httpClient.Get(url)
 	if err != nil {
 		return mainflux.VersionInfo{}, err
 	}

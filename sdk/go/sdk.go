@@ -42,7 +42,7 @@ type SDK interface {
 	SetContentType(ct string) error
 }
 
-type sdkConfig struct {
+type MfxSDK struct {
 	host       string
 	port       string
 	url        string
@@ -50,31 +50,27 @@ type sdkConfig struct {
 	tls        bool
 }
 
-type MfxSDK struct {
-	config sdkConfig
-}
-
 func NewMfxSDK(host, port string, tls bool) *MfxSDK {
-	cfg := sdkConfig{
+	sdk := MfxSDK{
 		host: host,
 		port: port,
 		tls:  tls,
 	}
 
 	if tls == true {
-		cfg.url = fmt.Sprintf("https://%s:%s", host, port)
-		cfg.httpClient = setCerts()
+		sdk.url = fmt.Sprintf("https://%s:%s", host, port)
+		sdk.httpClient = setCerts()
 	} else {
-		cfg.url = fmt.Sprintf("http://%s:%s", host, port)
-		cfg.httpClient = &http.Client{}
+		sdk.url = fmt.Sprintf("http://%s:%s", host, port)
+		sdk.httpClient = &http.Client{}
 	}
 
-	return &MfxSDK{config: cfg}
+	return &sdk
 }
 
 func (sdk *MfxSDK) sendRequest(req *http.Request, token, contentType string) (*http.Response, error) {
 	req.Header.Set("Authorization", token)
 	req.Header.Add("Content-Type", contentType)
 
-	return sdk.config.httpClient.Do(req)
+	return sdk.httpClient.Do(req)
 }

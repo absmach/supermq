@@ -22,7 +22,7 @@ const thingsEndpoint = "things"
 
 // CreateThing - creates new thing and generates thing UUID
 func (sdk *MfxSDK) CreateThing(data, token string) (string, error) {
-	url := fmt.Sprintf("%s/%s", sdk.config.url, thingsEndpoint)
+	url := fmt.Sprintf("%s/%s", sdk.url, thingsEndpoint)
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(data))
 	if err != nil {
 		return "", err
@@ -45,7 +45,7 @@ func (sdk *MfxSDK) CreateThing(data, token string) (string, error) {
 // Things - gets all things
 func (sdk *MfxSDK) Things(token string) ([]things.Thing, error) {
 	url := fmt.Sprintf("%s/%s?offset=%s&limit=%s",
-		sdk.config.url, thingsEndpoint, strconv.Itoa(offset), strconv.Itoa(limit))
+		sdk.url, thingsEndpoint, strconv.Itoa(offset), strconv.Itoa(limit))
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -77,7 +77,7 @@ func (sdk *MfxSDK) Things(token string) ([]things.Thing, error) {
 
 // Thing - gets thing by ID
 func (sdk *MfxSDK) Thing(id, token string) (things.Thing, error) {
-	url := fmt.Sprintf("%s/%s/%s", sdk.config.url, thingsEndpoint, id)
+	url := fmt.Sprintf("%s/%s/%s", sdk.url, thingsEndpoint, id)
 	println(url)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -110,7 +110,7 @@ func (sdk *MfxSDK) Thing(id, token string) (things.Thing, error) {
 
 // UpdateThing - updates thing by ID
 func (sdk *MfxSDK) UpdateThing(id, data, token string) error {
-	url := fmt.Sprintf("%s/%s/%s", sdk.config.url, thingsEndpoint, id)
+	url := fmt.Sprintf("%s/%s/%s", sdk.url, thingsEndpoint, id)
 	req, err := http.NewRequest(http.MethodPut, url, strings.NewReader(data))
 	if err != nil {
 		return err
@@ -130,7 +130,7 @@ func (sdk *MfxSDK) UpdateThing(id, data, token string) error {
 
 // DeleteThing - removes thing
 func (sdk *MfxSDK) DeleteThing(id, token string) error {
-	url := fmt.Sprintf("%s/%s/%s", sdk.config.url, thingsEndpoint, id)
+	url := fmt.Sprintf("%s/%s/%s", sdk.url, thingsEndpoint, id)
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return err
@@ -150,7 +150,7 @@ func (sdk *MfxSDK) DeleteThing(id, token string) error {
 
 // ConnectThing - connect thing to a channel
 func (sdk *MfxSDK) ConnectThing(thingID, chanID, token string) error {
-	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.config.url, channelsEndpoint, chanID, thingsEndpoint, thingID)
+	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.url, channelsEndpoint, chanID, thingsEndpoint, thingID)
 	req, err := http.NewRequest(http.MethodPut, url, nil)
 	if err != nil {
 		return err
@@ -170,7 +170,7 @@ func (sdk *MfxSDK) ConnectThing(thingID, chanID, token string) error {
 
 // DisconnectThing - connect thing to a channel
 func (sdk *MfxSDK) DisconnectThing(thingID, chanID, token string) error {
-	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.config.url, channelsEndpoint, chanID, thingsEndpoint, thingID)
+	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.url, channelsEndpoint, chanID, thingsEndpoint, thingID)
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return err

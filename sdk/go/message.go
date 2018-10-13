@@ -20,11 +20,11 @@ var msgContentType = contentTypeSenMLJSON
 // SendMessage - send message on Mainflux channel
 func (sdk *MfxSDK) SendMessage(id, msg, token string) error {
 	var url string
-	switch sdk.config.tls {
+	switch sdk.tls {
 	case true:
-		url = fmt.Sprintf("%s/%s/%s/%s", sdk.config.url, "http/channels", id, "messages")
+		url = fmt.Sprintf("%s/%s/%s/%s", sdk.url, "http/channels", id, "messages")
 	case false:
-		url = fmt.Sprintf("%s/%s/%s/%s", sdk.config.url, "channels", id, "messages")
+		url = fmt.Sprintf("%s/%s/%s/%s", sdk.url, "channels", id, "messages")
 	}
 
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(msg))

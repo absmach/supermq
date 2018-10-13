@@ -22,7 +22,7 @@ const channelsEndpoint = "channels"
 
 // CreateChannel - creates new channel and generates UUID
 func (sdk *MfxSDK) CreateChannel(data, token string) (string, error) {
-	url := fmt.Sprintf("%s/%s", sdk.config.url, channelsEndpoint)
+	url := fmt.Sprintf("%s/%s", sdk.url, channelsEndpoint)
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(data))
 	if err != nil {
 		return "", err
@@ -43,7 +43,7 @@ func (sdk *MfxSDK) CreateChannel(data, token string) (string, error) {
 // Channels - gets all channels
 func (sdk *MfxSDK) Channels(token string) ([]things.Channel, error) {
 	url := fmt.Sprintf("%s/%s?offset=%s&limit=%s",
-		sdk.config.url, channelsEndpoint, strconv.Itoa(offset), strconv.Itoa(limit))
+		sdk.url, channelsEndpoint, strconv.Itoa(offset), strconv.Itoa(limit))
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func (sdk *MfxSDK) Channels(token string) ([]things.Channel, error) {
 
 // Channel - gets channel by ID
 func (sdk *MfxSDK) Channel(id, token string) (things.Channel, error) {
-	url := fmt.Sprintf("%s/%s/%s", sdk.config.url, channelsEndpoint, id)
+	url := fmt.Sprintf("%s/%s/%s", sdk.url, channelsEndpoint, id)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return things.Channel{}, err
@@ -105,7 +105,7 @@ func (sdk *MfxSDK) Channel(id, token string) (things.Channel, error) {
 
 // UpdateChannel - update a channel
 func (sdk *MfxSDK) UpdateChannel(id, data, token string) error {
-	url := fmt.Sprintf("%s/%s/%s", sdk.config.url, channelsEndpoint, id)
+	url := fmt.Sprintf("%s/%s/%s", sdk.url, channelsEndpoint, id)
 	req, err := http.NewRequest(http.MethodPut, url, strings.NewReader(data))
 	if err != nil {
 		return err
@@ -125,7 +125,7 @@ func (sdk *MfxSDK) UpdateChannel(id, data, token string) error {
 
 // DeleteChannel - removes channel
 func (sdk *MfxSDK) DeleteChannel(id, token string) error {
-	url := fmt.Sprintf("%s/%s/%s", sdk.config.url, channelsEndpoint, id)
+	url := fmt.Sprintf("%s/%s/%s", sdk.url, channelsEndpoint, id)
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return err
