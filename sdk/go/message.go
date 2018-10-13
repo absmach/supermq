@@ -18,13 +18,13 @@ import (
 var msgContentType = contentTypeSenMLJSON
 
 // SendMessage - send message on Mainflux channel
-func SendMessage(id, msg, token string) error {
+func (sdk *MfxSDK) SendMessage(id, msg, token string) error {
 	var url string
-	switch isHTTPS {
+	switch sdk.config.tls {
 	case true:
-		url = fmt.Sprintf("%s/%s/%s/%s", serverAddr, "http/channels", id, "messages")
+		url = fmt.Sprintf("%s/%s/%s/%s", sdk.config.url, "http/channels", id, "messages")
 	case false:
-		url = fmt.Sprintf("%s/%s/%s/%s", serverAddr, "channels", id, "messages")
+		url = fmt.Sprintf("%s/%s/%s/%s", sdk.config.url, "channels", id, "messages")
 	}
 
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(msg))
@@ -32,7 +32,7 @@ func SendMessage(id, msg, token string) error {
 		return err
 	}
 
-	resp, err := sendRequest(req, token, msgContentType)
+	resp, err := sdk.sendRequest(req, token, msgContentType)
 	if err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func SendMessage(id, msg, token string) error {
 
 // SetContentType - set message content type.
 // Available options are SenML JSON, custom JSON and custom binary (octet-stream).
-func SetContentType(ct string) error {
+func (sdk *MfxSDK) SetContentType(ct string) error {
 	if ct != contentTypeJSON && ct != contentTypeSenMLJSON && ct != contentTypeBinary {
 		return errors.New("Unknown Content Type")
 	}

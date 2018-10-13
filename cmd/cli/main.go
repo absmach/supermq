@@ -16,7 +16,6 @@ import (
 )
 
 func main() {
-
 	conf := struct {
 		host     string
 		port     string
@@ -31,16 +30,8 @@ func main() {
 	var rootCmd = &cobra.Command{
 		Use: "mainflux-cli",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			var proto string
-
-			if conf.insecure {
-				proto = "http"
-			} else {
-				proto = "https"
-				sdk.SetCerts()
-			}
-
-			sdk.SetServerAddr(proto, conf.host, conf.port)
+			s := sdk.NewMfxSDK(conf.host, conf.port, !conf.insecure)
+			cli.SetSDK(s)
 		},
 	}
 

@@ -16,11 +16,11 @@ import (
 )
 
 // CreateUser - create user
-func CreateUser(user, pwd string) error {
+func (sdk *MfxSDK) CreateUser(user, pwd string) error {
 	msg := fmt.Sprintf(`{"email": "%s", "password": "%s"}`, user, pwd)
-	url := fmt.Sprintf("%s/users", serverAddr)
+	url := fmt.Sprintf("%s/users", sdk.config.url)
 
-	resp, err := httpClient.Post(url, contentTypeJSON, strings.NewReader(msg))
+	resp, err := sdk.config.httpClient.Post(url, contentTypeJSON, strings.NewReader(msg))
 	if err != nil {
 		return err
 	}
@@ -33,11 +33,11 @@ func CreateUser(user, pwd string) error {
 }
 
 // CreateToken - create user token
-func CreateToken(user, pwd string) (string, error) {
+func (sdk *MfxSDK) CreateToken(user, pwd string) (string, error) {
 	msg := fmt.Sprintf(`{"email": "%s", "password": "%s"}`, user, pwd)
-	url := fmt.Sprintf("%s/tokens", serverAddr)
+	url := fmt.Sprintf("%s/tokens", sdk.config.url)
 
-	resp, err := httpClient.Post(url, contentTypeJSON, strings.NewReader(msg))
+	resp, err := sdk.config.httpClient.Post(url, contentTypeJSON, strings.NewReader(msg))
 	if err != nil {
 		return "", err
 	}

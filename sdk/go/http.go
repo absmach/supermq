@@ -32,30 +32,17 @@ const (
 )
 
 var (
-	httpClient = &http.Client{}
-	serverAddr = fmt.Sprintf("https://%s", "localhost")
-
 	defCertFile = fmt.Sprintf("%s%s%s", os.Getenv("GOPATH"), defCertsPath, "mainflux-server.crt")
 	defKeyFile  = fmt.Sprintf("%s%s%s", os.Getenv("GOPATH"), defCertsPath, "mainflux-server.key")
 	defCaFile   = fmt.Sprintf("%s%s%s", os.Getenv("GOPATH"), defCertsPath, "ca.crt")
 
 	limit  = 10
 	offset = 0
-
-	isHTTPS = false
 )
 
-// SetServerAddr - set addr using host and port
-func SetServerAddr(proto, host, port string) {
-	if proto == "https" {
-		isHTTPS = true
-	}
-	serverAddr = fmt.Sprintf("%s://%s:%s", proto, host, port)
-}
-
-// SetCerts - set TLS certs
+// setCerts - set TLS certs
 // Certs are provided via MF_CERT_FILE, MF_KEY_FILE and MF_CA_FILE env vars
-func SetCerts() {
+func setCerts() *http.Client {
 	// Set certificates paths
 	certFile := mainflux.Env(envCertFile, defCertFile)
 	keyFile := mainflux.Env(envKeyFile, defKeyFile)
@@ -82,12 +69,5 @@ func SetCerts() {
 	}
 	tlsConfig.BuildNameToCertificate()
 	transport := &http.Transport{TLSClientConfig: tlsConfig}
-	httpClient = &http.Client{Transport: transport}
-}
-
-func sendRequest(req *http.Request, token, contentType string) (*http.Response, error) {
-	req.Header.Set("Authorization", token)
-	req.Header.Add("Content-Type", contentType)
-
-	return httpClient.Do(req)
+	return &http.Client{Transport: transport}
 }

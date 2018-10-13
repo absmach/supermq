@@ -21,14 +21,14 @@ import (
 const thingsEndpoint = "things"
 
 // CreateThing - creates new thing and generates thing UUID
-func CreateThing(data, token string) (string, error) {
-	url := fmt.Sprintf("%s/%s", serverAddr, thingsEndpoint)
+func (sdk *MfxSDK) CreateThing(data, token string) (string, error) {
+	url := fmt.Sprintf("%s/%s", sdk.config.url, thingsEndpoint)
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(data))
 	if err != nil {
 		return "", err
 	}
 
-	resp, err := sendRequest(req, token, contentTypeJSON)
+	resp, err := sdk.sendRequest(req, token, contentTypeJSON)
 	if err != nil {
 		return "", err
 	}
@@ -43,15 +43,15 @@ func CreateThing(data, token string) (string, error) {
 }
 
 // Things - gets all things
-func Things(token string) ([]things.Thing, error) {
+func (sdk *MfxSDK) Things(token string) ([]things.Thing, error) {
 	url := fmt.Sprintf("%s/%s?offset=%s&limit=%s",
-		serverAddr, thingsEndpoint, strconv.Itoa(offset), strconv.Itoa(limit))
+		sdk.config.url, thingsEndpoint, strconv.Itoa(offset), strconv.Itoa(limit))
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := sendRequest(req, token, contentTypeJSON)
+	resp, err := sdk.sendRequest(req, token, contentTypeJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -76,15 +76,15 @@ func Things(token string) ([]things.Thing, error) {
 }
 
 // Thing - gets thing by ID
-func Thing(id, token string) (things.Thing, error) {
-	url := fmt.Sprintf("%s/%s/%s", serverAddr, thingsEndpoint, id)
+func (sdk *MfxSDK) Thing(id, token string) (things.Thing, error) {
+	url := fmt.Sprintf("%s/%s/%s", sdk.config.url, thingsEndpoint, id)
 	println(url)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return things.Thing{}, err
 	}
 
-	resp, err := sendRequest(req, token, contentTypeJSON)
+	resp, err := sdk.sendRequest(req, token, contentTypeJSON)
 	if err != nil {
 		return things.Thing{}, err
 	}
@@ -109,14 +109,14 @@ func Thing(id, token string) (things.Thing, error) {
 }
 
 // UpdateThing - updates thing by ID
-func UpdateThing(id, data, token string) error {
-	url := fmt.Sprintf("%s/%s/%s", serverAddr, thingsEndpoint, id)
+func (sdk *MfxSDK) UpdateThing(id, data, token string) error {
+	url := fmt.Sprintf("%s/%s/%s", sdk.config.url, thingsEndpoint, id)
 	req, err := http.NewRequest(http.MethodPut, url, strings.NewReader(data))
 	if err != nil {
 		return err
 	}
 
-	resp, err := sendRequest(req, token, contentTypeJSON)
+	resp, err := sdk.sendRequest(req, token, contentTypeJSON)
 	if err != nil {
 		return err
 	}
@@ -129,14 +129,14 @@ func UpdateThing(id, data, token string) error {
 }
 
 // DeleteThing - removes thing
-func DeleteThing(id, token string) error {
-	url := fmt.Sprintf("%s/%s/%s", serverAddr, thingsEndpoint, id)
+func (sdk *MfxSDK) DeleteThing(id, token string) error {
+	url := fmt.Sprintf("%s/%s/%s", sdk.config.url, thingsEndpoint, id)
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return err
 	}
 
-	resp, err := sendRequest(req, token, contentTypeJSON)
+	resp, err := sdk.sendRequest(req, token, contentTypeJSON)
 	if err != nil {
 		return err
 	}
@@ -149,14 +149,14 @@ func DeleteThing(id, token string) error {
 }
 
 // ConnectThing - connect thing to a channel
-func ConnectThing(thingID, chanID, token string) error {
-	url := fmt.Sprintf("%s/%s/%s/%s/%s", serverAddr, channelsEndpoint, chanID, thingsEndpoint, thingID)
+func (sdk *MfxSDK) ConnectThing(thingID, chanID, token string) error {
+	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.config.url, channelsEndpoint, chanID, thingsEndpoint, thingID)
 	req, err := http.NewRequest(http.MethodPut, url, nil)
 	if err != nil {
 		return err
 	}
 
-	resp, err := sendRequest(req, token, contentTypeJSON)
+	resp, err := sdk.sendRequest(req, token, contentTypeJSON)
 	if err != nil {
 		return err
 	}
@@ -169,14 +169,14 @@ func ConnectThing(thingID, chanID, token string) error {
 }
 
 // DisconnectThing - connect thing to a channel
-func DisconnectThing(thingID, chanID, token string) error {
-	url := fmt.Sprintf("%s/%s/%s/%s/%s", serverAddr, channelsEndpoint, chanID, thingsEndpoint, thingID)
+func (sdk *MfxSDK) DisconnectThing(thingID, chanID, token string) error {
+	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.config.url, channelsEndpoint, chanID, thingsEndpoint, thingID)
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return err
 	}
 
-	resp, err := sendRequest(req, token, contentTypeJSON)
+	resp, err := sdk.sendRequest(req, token, contentTypeJSON)
 	if err != nil {
 		return err
 	}

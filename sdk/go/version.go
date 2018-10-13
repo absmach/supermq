@@ -17,10 +17,10 @@ import (
 )
 
 // Version - server health check
-func Version() (mainflux.VersionInfo, error) {
-	url := fmt.Sprintf("%s/version", serverAddr)
+func (sdk *MfxSDK) Version() (mainflux.VersionInfo, error) {
+	url := fmt.Sprintf("%s/version", sdk.config.url)
 
-	resp, err := httpClient.Get(url)
+	resp, err := sdk.config.httpClient.Get(url)
 	if err != nil {
 		return mainflux.VersionInfo{}, err
 	}

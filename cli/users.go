@@ -8,7 +8,6 @@
 package cli
 
 import (
-	"github.com/mainflux/mainflux/sdk/go"
 	"github.com/spf13/cobra"
 )
 
