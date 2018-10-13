@@ -35,6 +35,30 @@
   revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
 
 [[projects]]
+  name = "github.com/brocaar/lora-app-server"
+  packages = ["api"]
+  revision = "e7ab0486e04985a74be7d6f0325b5091a7ef864a"
+  version = "v2.2.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/brocaar/loraserver"
+  packages = [
+    "api/common",
+    "api/gw"
+  ]
+  revision = "b04449130f4bcef71c5123ce53d2500f0ce2b7e1"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/brocaar/lorawan"
+  packages = [
+    ".",
+    "band"
+  ]
+  revision = "f8d816eb916de4ef3253cc6f1f1036d25a1e324b"
+
+[[projects]]
   branch = "master"
   name = "github.com/buger/jsonparser"
   packages = ["."]
@@ -81,6 +105,15 @@
   packages = ["."]
   revision = "47565b4f722fb6ceae66b95f853feed578a4a51c"
   version = "v0.3.3"
+
+[[projects]]
+  name = "github.com/eclipse/paho.mqtt.golang"
+  packages = [
+    ".",
+    "packets"
+  ]
+  revision = "36d01c2b4cbeb3d2a12063e4880ce30800af9560"
+  version = "v1.1.1"
 
 [[projects]]
   name = "github.com/fatih/color"
@@ -155,10 +188,14 @@
 [[projects]]
   name = "github.com/golang/protobuf"
   packages = [
+    "jsonpb",
     "proto",
+    "protoc-gen-go/descriptor",
     "ptypes",
     "ptypes/any",
     "ptypes/duration",
+    "ptypes/empty",
+    "ptypes/struct",
     "ptypes/timestamp"
   ]
   revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
@@ -175,6 +212,16 @@
   packages = ["."]
   revision = "ea4d1f681babbce9545c9c5f3d5194a789c89f5b"
   version = "v1.2.0"
+
+[[projects]]
+  name = "github.com/grpc-ecosystem/grpc-gateway"
+  packages = [
+    "runtime",
+    "runtime/internal",
+    "utilities"
+  ]
+  revision = "aeab1d96e0f1368d243e2e5f526aa29d495517bb"
+  version = "v1.5.1"
 
 [[projects]]
   name = "github.com/hailocab/go-hostpool"
@@ -202,6 +249,15 @@
   ]
   revision = "02d7d4f043b34ecb4e9b2dbec298c6f9450c2a32"
   version = "v1.5.2"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/jacobsa/crypto"
+  packages = [
+    "cmac",
+    "common"
+  ]
+  revision = "d95898ceee0769dac9bf74c46f8f68d3d3d79100"
 
 [[projects]]
   branch = "master"
@@ -484,8 +540,11 @@
     "http2",
     "http2/hpack",
     "idna",
+    "internal/socks",
     "internal/timeseries",
-    "trace"
+    "proxy",
+    "trace",
+    "websocket"
   ]
   revision = "f73e4c9ed3b7ebdd5f699a16a880c2b1994e50dd"
 
@@ -528,7 +587,10 @@
 [[projects]]
   branch = "master"
   name = "google.golang.org/genproto"
-  packages = ["googleapis/rpc/status"]
+  packages = [
+    "googleapis/api/annotations",
+    "googleapis/rpc/status"
+  ]
   revision = "86e600f69ee4704c6efbf6a2a40a5c10700e76c2"
 
 [[projects]]
@@ -583,6 +645,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1f18adf44738d8f5c48b2f0576ab90c2f2c549f13a846b8f3c95aabaebe8efb4"
+  inputs-digest = "b4b7c594d989c3f3e30b9e500023b0f811be03456232d274c0bb4517e3f823ee"
   solver-name = "gps-cdcl"
   solver-version = 1
