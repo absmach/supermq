@@ -9,8 +9,10 @@ package main
 
 import (
 	"fmt"
+	"google.golang.org/grpc/credentials"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -36,6 +38,7 @@ const (
 	envLogLevel  string = "MF_HTTP_ADAPTER_LOG_LEVEL"
 	envNatsURL   string = "MF_NATS_URL"
 	envThingsURL string = "MF_THINGS_URL"
+	envCACerts   string = "MF_CA_CERTS"
 )
 
 type config struct {
@@ -43,6 +46,7 @@ type config struct {
 	NatsURL   string
 	LogLevel  string
 	Port      string
+	CACerts   string
 }
 
 func main() {
@@ -60,8 +64,22 @@ func main() {
 		os.Exit(1)
 	}
 	defer nc.Close()
+	
+	grpcCreds := grpc.WithInsecure()
+	if cfg.CACerts != "" {
+		thingsURL, err  := url.Parse(cfg.ThingsURL)
+		if err != nil {
+			logger.Error(fmt.Sprintf("Failed to parse ThingsURL: %s", err))
+		}
+		tpc, err := credentials.NewClientTLSFromFile(cfg.CACerts, thingsURL.Host)
+		if err != nil {
+			logger.Error(fmt.Sprintf("Failed to load certs: %s", err))
+			os.Exit(1)
+		}
+		grpcCreds = grpc.WithTransportCredentials(tpc)
+	}
 
-	conn, err := grpc.Dial(cfg.ThingsURL, grpc.WithInsecure())
+	conn, err := grpc.Dial(cfg.ThingsURL, grpcCreds)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to things service: %s", err))
 		os.Exit(1)
@@ -113,6 +131,7 @@ func loadConfig() config {
 		NatsURL:   mainflux.Env(envNatsURL, defNatsURL),
 		LogLevel:  mainflux.Env(envLogLevel, defLogLevel),
 		Port:      mainflux.Env(envPort, defPort),
+		CACerts:   mainflux.Env(envCACerts, ""),
 	}
 
 }
