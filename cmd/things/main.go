@@ -14,7 +14,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
@@ -157,15 +156,14 @@ func connectToDB(cfg config, logger logger.Logger) *sql.DB {
 func connectToUsersService(cfg config, logger logger.Logger) *grpc.ClientConn {
 	secureOption := grpc.WithInsecure()
 	if cfg.CACerts != "" {
-		usersURL, err := url.Parse(cfg.UsersURL)
-		if err != nil {
-			logger.Error(fmt.Sprintf("Failed to parse users url: %s", err))
-		}
-		tpc, err := credentials.NewClientTLSFromFile(cfg.CACerts, usersURL.Host)
+		tpc, err := credentials.NewClientTLSFromFile(cfg.CACerts, "")
 		if err != nil {
 			logger.Error(fmt.Sprintf("Failed to create tls credentials: %s", err))
+			os.Exit(1)
 		}
 		secureOption = grpc.WithTransportCredentials(tpc)
+	} else {
+		logger.Info("gRPC communication is not encrypted")
 	}
 
 	conn, err := grpc.Dial(cfg.UsersURL, secureOption)

@@ -12,7 +12,6 @@ import (
 	"google.golang.org/grpc/credentials"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -68,16 +67,14 @@ func main() {
 
 	secureOption := grpc.WithInsecure()
 	if cfg.CACerts != "" {
-		thingsURL, err  := url.Parse(cfg.ThingsURL)
-		if err != nil {
-			logger.Error(fmt.Sprintf("Failed to parse ThingsURL: %s", err))
-		}
-		tpc, err := credentials.NewClientTLSFromFile(cfg.CACerts, thingsURL.Host)
+		tpc, err := credentials.NewClientTLSFromFile(cfg.CACerts, "")
 		if err != nil {
 			logger.Error(fmt.Sprintf("Failed to load certs: %s", err))
 			os.Exit(1)
 		}
 		secureOption = grpc.WithTransportCredentials(tpc)
+	} else {
+		logger.Info("gRPC communication is not encrypted")
 	}
 
 	conn, err := grpc.Dial(cfg.ThingsURL, secureOption)
