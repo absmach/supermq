@@ -65,23 +65,7 @@ func main() {
 	}
 	defer nc.Close()
 
-	secureOption := grpc.WithInsecure()
-	if cfg.CACerts != "" {
-		tpc, err := credentials.NewClientTLSFromFile(cfg.CACerts, "")
-		if err != nil {
-			logger.Error(fmt.Sprintf("Failed to load certs: %s", err))
-			os.Exit(1)
-		}
-		secureOption = grpc.WithTransportCredentials(tpc)
-	} else {
-		logger.Info("gRPC communication is not encrypted")
-	}
-
-	conn, err := grpc.Dial(cfg.ThingsURL, secureOption)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to things service: %s", err))
-		os.Exit(1)
-	}
+	conn := connectToThingsService(cfg, logger)
 	defer conn.Close()
 
 	cc := thingsapi.NewClient(conn)
@@ -131,5 +115,25 @@ func loadConfig() config {
 		Port:      mainflux.Env(envPort, defPort),
 		CACerts:   mainflux.Env(envCACerts, defCACerts),
 	}
+}
 
+func connectToThingsService(cfg config, logger logger.Logger) *grpc.ClientConn {
+	secureOption := grpc.WithInsecure()
+	if cfg.CACerts != "" {
+		tpc, err := credentials.NewClientTLSFromFile(cfg.CACerts, "")
+		if err != nil {
+			logger.Error(fmt.Sprintf("Failed to load certs: %s", err))
+			os.Exit(1)
+		}
+		secureOption = grpc.WithTransportCredentials(tpc)
+	} else {
+		logger.Info("gRPC communication is not encrypted")
+	}
+
+	conn, err := grpc.Dial(cfg.ThingsURL, secureOption)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to things service: %s", err))
+		os.Exit(1)
+	}
+	return conn
 }
