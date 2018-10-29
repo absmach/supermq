@@ -34,6 +34,7 @@ const (
 	defLogLevel  string = "error"
 	defNatsURL   string = broker.DefaultURL
 	defThingsURL string = "localhost:8181"
+	defCACerts   string = ""
 	envPort      string = "MF_HTTP_ADAPTER_PORT"
 	envLogLevel  string = "MF_HTTP_ADAPTER_LOG_LEVEL"
 	envNatsURL   string = "MF_NATS_URL"
@@ -64,8 +65,8 @@ func main() {
 		os.Exit(1)
 	}
 	defer nc.Close()
-	
-	grpcCreds := grpc.WithInsecure()
+
+	secureOption := grpc.WithInsecure()
 	if cfg.CACerts != "" {
 		thingsURL, err  := url.Parse(cfg.ThingsURL)
 		if err != nil {
@@ -76,10 +77,10 @@ func main() {
 			logger.Error(fmt.Sprintf("Failed to load certs: %s", err))
 			os.Exit(1)
 		}
-		grpcCreds = grpc.WithTransportCredentials(tpc)
+		secureOption = grpc.WithTransportCredentials(tpc)
 	}
 
-	conn, err := grpc.Dial(cfg.ThingsURL, grpcCreds)
+	conn, err := grpc.Dial(cfg.ThingsURL, secureOption)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to things service: %s", err))
 		os.Exit(1)
@@ -131,7 +132,7 @@ func loadConfig() config {
 		NatsURL:   mainflux.Env(envNatsURL, defNatsURL),
 		LogLevel:  mainflux.Env(envLogLevel, defLogLevel),
 		Port:      mainflux.Env(envPort, defPort),
-		CACerts:   mainflux.Env(envCACerts, ""),
+		CACerts:   mainflux.Env(envCACerts, defCACerts),
 	}
 
 }

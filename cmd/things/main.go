@@ -10,9 +10,11 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"google.golang.org/grpc/credentials"
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
@@ -41,6 +43,7 @@ const (
 	defDBUser    = "mainflux"
 	defDBPass    = "mainflux"
 	defDBName    = "things"
+	defCACerts   = ""
 	defCacheURL  = "localhost:6379"
 	defCachePass = ""
 	defCacheDB   = "0"
@@ -53,6 +56,7 @@ const (
 	envDBUser    = "MF_THINGS_DB_USER"
 	envDBPass    = "MF_THINGS_DB_PASS"
 	envDBName    = "MF_THINGS_DB"
+	envCACerts   = "MF_THINGS_CA_CERTS"
 	envCacheURL  = "MF_THINGS_CACHE_URL"
 	envCachePass = "MF_THINGS_CACHE_PASS"
 	envCacheDB   = "MF_THINGS_CACHE_DB"
@@ -68,6 +72,7 @@ type config struct {
 	DBUser    string
 	DBPass    string
 	DBName    string
+	CACerts   string
 	CacheURL  string
 	CachePass string
 	CacheDB   string
@@ -88,7 +93,7 @@ func main() {
 	db := connectToDB(cfg, logger)
 	defer db.Close()
 
-	conn := connectToUsersService(cfg.UsersURL, logger)
+	conn := connectToUsersService(cfg, logger)
 	defer conn.Close()
 
 	svc := newService(conn, db, cache, logger)
@@ -115,6 +120,7 @@ func loadConfig() config {
 		DBUser:    mainflux.Env(envDBUser, defDBUser),
 		DBPass:    mainflux.Env(envDBPass, defDBPass),
 		DBName:    mainflux.Env(envDBName, defDBName),
+		CACerts:   mainflux.Env(envCACerts, defCACerts),
 		CacheURL:  mainflux.Env(envCacheURL, defCacheURL),
 		CachePass: mainflux.Env(envCachePass, defCachePass),
 		CacheDB:   mainflux.Env(envCacheDB, defCacheDB),
@@ -148,8 +154,21 @@ func connectToDB(cfg config, logger logger.Logger) *sql.DB {
 	return db
 }
 
-func connectToUsersService(usersAddr string, logger logger.Logger) *grpc.ClientConn {
-	conn, err := grpc.Dial(usersAddr, grpc.WithInsecure())
+func connectToUsersService(cfg config, logger logger.Logger) *grpc.ClientConn {
+	secureOption := grpc.WithInsecure()
+	if cfg.CACerts != "" {
+		usersURL, err := url.Parse(cfg.UsersURL)
+		if err != nil {
+			logger.Error(fmt.Sprintf("Failed to parse users url: %s", err))
+		}
+		tpc, err := credentials.NewClientTLSFromFile(cfg.CACerts, usersURL.Host)
+		if err != nil {
+			logger.Error(fmt.Sprintf("Failed to create tls credentials: %s", err))
+		}
+		secureOption = grpc.WithTransportCredentials(tpc)
+	}
+
+	conn, err := grpc.Dial(cfg.UsersURL, secureOption)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to users service: %s", err))
 		os.Exit(1)
