@@ -458,3 +458,17 @@ Aside from port, reading request is same as for other readers:
 ```
 curl -s -S -i  -H "Authorization: <thing_token>" http://localhost:8904/channels/<channel_id>/messages
 ```
+
+## TLS Configuration
+
+If you wish to secure the gRPC connection to `things` and `users` services you must define the CAs that you trust. 
+
+Currently, you'll need to configure your own ssl termination on the service endpoints.
+
+### HTTP Adapter
+
+`MF_CA_CERTS` - the path to a file that contains the CAs in PEM format. If not set, the default connection will be insecure.
+
+### Things 
+
+`MF_THINGS_CA_CERTS` - the path to a file that contains the CAs in PEM format. If not set, the default connection will be insecure.
