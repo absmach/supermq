@@ -461,14 +461,16 @@ curl -s -S -i  -H "Authorization: <thing_token>" http://localhost:8904/channels/
 
 ## TLS Configuration
 
+By default gRPC communication is not secure. 
+
 If you wish to secure the gRPC connection to `things` and `users` services you must define the CAs that you trust. 
 
 Currently, you'll need to configure your own ssl termination on the service endpoints.
 
 ### HTTP Adapter
 
-`MF_CA_CERTS` - the path to a file that contains the CAs in PEM format. If not set, the default connection will be insecure.
+`MF_CA_CERTS` - the path to a file that contains the CAs in PEM format. If not set, the default connection will be insecure. If it fails to read the file, the adapter will fail to start up.
 
 ### Things 
 
-`MF_THINGS_CA_CERTS` - the path to a file that contains the CAs in PEM format. If not set, the default connection will be insecure.
+`MF_THINGS_CA_CERTS` - the path to a file that contains the CAs in PEM format. If not set, the default connection will be insecure. If it fails to read the file, the service will fail to start up.
