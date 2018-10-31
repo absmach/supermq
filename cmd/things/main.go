@@ -132,6 +132,8 @@ func loadConfig() config {
 		HTTPPort:  mainflux.Env(envHTTPPort, defHTTPPort),
 		GRPCPort:  mainflux.Env(envGRPCPort, defGRPCPort),
 		UsersURL:  mainflux.Env(envUsersURL, defUsersURL),
+		ServerCert:  mainflux.Env(envServerCert, defServerCert),
+		ServerKey:  mainflux.Env(envServerKey, defServerKey),
 	}
 }
 
@@ -211,7 +213,7 @@ func newService(conn *grpc.ClientConn, db *sql.DB, client *redis.Client, logger 
 func startHTTPServer(svc things.Service, port string, certFile string, keyFile string, logger logger.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", port)
 	if certFile != "" || keyFile != "" {
-		logger.Info(fmt.Sprintf("Things service started using https, cert %s and key %s, exposed port %s", certFile, keyFile, port))
+		logger.Info(fmt.Sprintf("Things service started using https, cert %s key %s, exposed port %s", certFile, keyFile, port))
 		errs <- http.ListenAndServeTLS(p, certFile, keyFile, httpapi.MakeHandler(svc))
 	} else {
 		logger.Info(fmt.Sprintf("Things service started using http, exposed port %s", port))
@@ -233,12 +235,13 @@ func startGRPCServer(svc things.Service, port string, certFile string, keyFile s
 			logger.Error(fmt.Sprintf("Failed to load things certificates: %s", err))
 			os.Exit(1)
 		}
+		logger.Info(fmt.Sprintf("Things gRPC service started using https, cert %s key %s exposed port %s", port, certFile, keyFile))
 		server = grpc.NewServer(grpc.Creds(creds))
 	} else {
+		logger.Info(fmt.Sprintf("Things gRPC service started using http, exposed port %s", port))
 		server = grpc.NewServer()
 	}
 
 	mainflux.RegisterThingsServiceServer(server, grpcapi.NewServer(svc))
-	logger.Info(fmt.Sprintf("Things gRPC service started, exposed port %s", port))
 	errs <- server.Serve(listener)
 }
