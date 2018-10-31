@@ -48,6 +48,8 @@ const (
 	defCacheDB   = "0"
 	defHTTPPort  = "8180"
 	defGRPCPort  = "8181"
+	defServerCert = ""
+	defServerKey  = ""
 	defUsersURL  = "localhost:8181"
 	envLogLevel  = "MF_THINGS_LOG_LEVEL"
 	envDBHost    = "MF_THINGS_DB_HOST"
@@ -62,6 +64,8 @@ const (
 	envHTTPPort  = "MF_THINGS_HTTP_PORT"
 	envGRPCPort  = "MF_THINGS_GRPC_PORT"
 	envUsersURL  = "MF_USERS_URL"
+	envServerCert = "MF_THINGS_SERVER_CERT"
+	envServerKey  = "MF_THINGS_SERVER_KEY"
 )
 
 type config struct {
@@ -78,6 +82,8 @@ type config struct {
 	HTTPPort  string
 	GRPCPort  string
 	UsersURL  string
+	ServerCert string
+	ServerKey  string
 }
 
 func main() {
@@ -98,8 +104,8 @@ func main() {
 	svc := newService(conn, db, cache, logger)
 	errs := make(chan error, 2)
 
-	go startHTTPServer(svc, cfg.HTTPPort, logger, errs)
-	go startGRPCServer(svc, cfg.GRPCPort, logger, errs)
+	go startHTTPServer(svc, cfg.HTTPPort, cfg.ServerCert, cfg.ServerKey, logger, errs)
+	go startGRPCServer(svc, cfg.GRPCPort, cfg.ServerCert, cfg.ServerKey, logger, errs)
 
 	go func() {
 		c := make(chan os.Signal)
@@ -202,19 +208,36 @@ func newService(conn *grpc.ClientConn, db *sql.DB, client *redis.Client, logger 
 	return svc
 }
 
-func startHTTPServer(svc things.Service, port string, logger logger.Logger, errs chan error) {
+func startHTTPServer(svc things.Service, port string, certFile string, keyFile string, logger logger.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", port)
-	logger.Info(fmt.Sprintf("Things service started, exposed port %s", port))
-	errs <- http.ListenAndServe(p, httpapi.MakeHandler(svc))
+	if certFile != "" || keyFile != "" {
+		logger.Info(fmt.Sprintf("Things service started using https, cert %s and key %s, exposed port %s", certFile, keyFile, port))
+		errs <- http.ListenAndServeTLS(p, certFile, keyFile, httpapi.MakeHandler(svc))
+	} else {
+		logger.Info(fmt.Sprintf("Things service started using http, exposed port %s", port))
+		errs <- http.ListenAndServe(p, httpapi.MakeHandler(svc))
+	}
 }
 
-func startGRPCServer(svc things.Service, port string, logger logger.Logger, errs chan error) {
+func startGRPCServer(svc things.Service, port string, certFile string, keyFile string, logger logger.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", port)
 	listener, err := net.Listen("tcp", p)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to listen on port %s: %s", port, err))
 	}
-	server := grpc.NewServer()
+
+	var server *grpc.Server
+	if certFile != "" || keyFile != "" {
+		creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
+		if err !=nil {
+			logger.Error(fmt.Sprintf("Failed to load things certificates: %s", err))
+			os.Exit(1)
+		}
+		server = grpc.NewServer(grpc.Creds(creds))
+	} else {
+		server = grpc.NewServer()
+	}
+
 	mainflux.RegisterThingsServiceServer(server, grpcapi.NewServer(svc))
 	logger.Info(fmt.Sprintf("Things gRPC service started, exposed port %s", port))
 	errs <- server.Serve(listener)
