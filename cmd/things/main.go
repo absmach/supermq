@@ -10,7 +10,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"google.golang.org/grpc/credentials"
 	"log"
 	"net"
 	"net/http"
@@ -18,6 +17,8 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
+
+	"google.golang.org/grpc/credentials"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/go-redis/redis"
@@ -36,52 +37,52 @@ import (
 )
 
 const (
-	defLogLevel  = "error"
-	defDBHost    = "localhost"
-	defDBPort    = "5432"
-	defDBUser    = "mainflux"
-	defDBPass    = "mainflux"
-	defDBName    = "things"
-	defCACerts   = ""
-	defCacheURL  = "localhost:6379"
-	defCachePass = ""
-	defCacheDB   = "0"
-	defHTTPPort  = "8180"
-	defGRPCPort  = "8181"
+	defLogLevel   = "error"
+	defDBHost     = "localhost"
+	defDBPort     = "5432"
+	defDBUser     = "mainflux"
+	defDBPass     = "mainflux"
+	defDBName     = "things"
+	defCACerts    = ""
+	defCacheURL   = "localhost:6379"
+	defCachePass  = ""
+	defCacheDB    = "0"
+	defHTTPPort   = "8180"
+	defGRPCPort   = "8181"
 	defServerCert = ""
 	defServerKey  = ""
-	defUsersURL  = "localhost:8181"
-	envLogLevel  = "MF_THINGS_LOG_LEVEL"
-	envDBHost    = "MF_THINGS_DB_HOST"
-	envDBPort    = "MF_THINGS_DB_PORT"
-	envDBUser    = "MF_THINGS_DB_USER"
-	envDBPass    = "MF_THINGS_DB_PASS"
-	envDBName    = "MF_THINGS_DB"
-	envCACerts   = "MF_THINGS_CA_CERTS"
-	envCacheURL  = "MF_THINGS_CACHE_URL"
-	envCachePass = "MF_THINGS_CACHE_PASS"
-	envCacheDB   = "MF_THINGS_CACHE_DB"
-	envHTTPPort  = "MF_THINGS_HTTP_PORT"
-	envGRPCPort  = "MF_THINGS_GRPC_PORT"
-	envUsersURL  = "MF_USERS_URL"
+	defUsersURL   = "localhost:8181"
+	envLogLevel   = "MF_THINGS_LOG_LEVEL"
+	envDBHost     = "MF_THINGS_DB_HOST"
+	envDBPort     = "MF_THINGS_DB_PORT"
+	envDBUser     = "MF_THINGS_DB_USER"
+	envDBPass     = "MF_THINGS_DB_PASS"
+	envDBName     = "MF_THINGS_DB"
+	envCACerts    = "MF_THINGS_CA_CERTS"
+	envCacheURL   = "MF_THINGS_CACHE_URL"
+	envCachePass  = "MF_THINGS_CACHE_PASS"
+	envCacheDB    = "MF_THINGS_CACHE_DB"
+	envHTTPPort   = "MF_THINGS_HTTP_PORT"
+	envGRPCPort   = "MF_THINGS_GRPC_PORT"
+	envUsersURL   = "MF_USERS_URL"
 	envServerCert = "MF_THINGS_SERVER_CERT"
 	envServerKey  = "MF_THINGS_SERVER_KEY"
 )
 
 type config struct {
-	LogLevel  string
-	DBHost    string
-	DBPort    string
-	DBUser    string
-	DBPass    string
-	DBName    string
-	CACerts   string
-	CacheURL  string
-	CachePass string
-	CacheDB   string
-	HTTPPort  string
-	GRPCPort  string
-	UsersURL  string
+	LogLevel   string
+	DBHost     string
+	DBPort     string
+	DBUser     string
+	DBPass     string
+	DBName     string
+	CACerts    string
+	CacheURL   string
+	CachePass  string
+	CacheDB    string
+	HTTPPort   string
+	GRPCPort   string
+	UsersURL   string
 	ServerCert string
 	ServerKey  string
 }
@@ -119,20 +120,20 @@ func main() {
 
 func loadConfig() config {
 	return config{
-		LogLevel:  mainflux.Env(envLogLevel, defLogLevel),
-		DBHost:    mainflux.Env(envDBHost, defDBHost),
-		DBPort:    mainflux.Env(envDBPort, defDBPort),
-		DBUser:    mainflux.Env(envDBUser, defDBUser),
-		DBPass:    mainflux.Env(envDBPass, defDBPass),
-		DBName:    mainflux.Env(envDBName, defDBName),
-		CACerts:   mainflux.Env(envCACerts, defCACerts),
-		CacheURL:  mainflux.Env(envCacheURL, defCacheURL),
-		CachePass: mainflux.Env(envCachePass, defCachePass),
-		CacheDB:   mainflux.Env(envCacheDB, defCacheDB),
-		HTTPPort:  mainflux.Env(envHTTPPort, defHTTPPort),
-		GRPCPort:  mainflux.Env(envGRPCPort, defGRPCPort),
-		UsersURL:  mainflux.Env(envUsersURL, defUsersURL),
-		ServerCert:  mainflux.Env(envServerCert, defServerCert),
+		LogLevel:   mainflux.Env(envLogLevel, defLogLevel),
+		DBHost:     mainflux.Env(envDBHost, defDBHost),
+		DBPort:     mainflux.Env(envDBPort, defDBPort),
+		DBUser:     mainflux.Env(envDBUser, defDBUser),
+		DBPass:     mainflux.Env(envDBPass, defDBPass),
+		DBName:     mainflux.Env(envDBName, defDBName),
+		CACerts:    mainflux.Env(envCACerts, defCACerts),
+		CacheURL:   mainflux.Env(envCacheURL, defCacheURL),
+		CachePass:  mainflux.Env(envCachePass, defCachePass),
+		CacheDB:    mainflux.Env(envCacheDB, defCacheDB),
+		HTTPPort:   mainflux.Env(envHTTPPort, defHTTPPort),
+		GRPCPort:   mainflux.Env(envGRPCPort, defGRPCPort),
+		UsersURL:   mainflux.Env(envUsersURL, defUsersURL),
+		ServerCert: mainflux.Env(envServerCert, defServerCert),
 		ServerKey:  mainflux.Env(envServerKey, defServerKey),
 	}
 }
@@ -231,7 +232,7 @@ func startGRPCServer(svc things.Service, port string, certFile string, keyFile s
 	var server *grpc.Server
 	if certFile != "" || keyFile != "" {
 		creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
-		if err !=nil {
+		if err != nil {
 			logger.Error(fmt.Sprintf("Failed to load things certificates: %s", err))
 			os.Exit(1)
 		}

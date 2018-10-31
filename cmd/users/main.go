@@ -10,13 +10,14 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"google.golang.org/grpc/credentials"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"google.golang.org/grpc/credentials"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
@@ -33,40 +34,40 @@ import (
 )
 
 const (
-	defLogLevel = "error"
-	defDBHost   = "localhost"
-	defDBPort   = "5432"
-	defDBUser   = "mainflux"
-	defDBPass   = "mainflux"
-	defDBName   = "users"
-	defHTTPPort = "8180"
-	defGRPCPort = "8181"
-	defSecret   = "users"
+	defLogLevel   = "error"
+	defDBHost     = "localhost"
+	defDBPort     = "5432"
+	defDBUser     = "mainflux"
+	defDBPass     = "mainflux"
+	defDBName     = "users"
+	defHTTPPort   = "8180"
+	defGRPCPort   = "8181"
+	defSecret     = "users"
 	defServerCert = ""
-	defServerKey = ""
-	envLogLevel = "MF_USERS_LOG_LEVEL"
-	envDBHost   = "MF_USERS_DB_HOST"
-	envDBPort   = "MF_USERS_DB_PORT"
-	envDBUser   = "MF_USERS_DB_USER"
-	envDBPass   = "MF_USERS_DB_PASS"
-	envDBName   = "MF_USERS_DB"
-	envHTTPPort = "MF_USERS_HTTP_PORT"
-	envGRPCPort = "MF_USERS_GRPC_PORT"
-	envSecret   = "MF_USERS_SECRET"
+	defServerKey  = ""
+	envLogLevel   = "MF_USERS_LOG_LEVEL"
+	envDBHost     = "MF_USERS_DB_HOST"
+	envDBPort     = "MF_USERS_DB_PORT"
+	envDBUser     = "MF_USERS_DB_USER"
+	envDBPass     = "MF_USERS_DB_PASS"
+	envDBName     = "MF_USERS_DB"
+	envHTTPPort   = "MF_USERS_HTTP_PORT"
+	envGRPCPort   = "MF_USERS_GRPC_PORT"
+	envSecret     = "MF_USERS_SECRET"
 	envServerCert = "MF_USERS_SERVER_CERT"
 	envServerKey  = "MF_USERS_SERVER_KEY"
 )
 
 type config struct {
-	LogLevel string
-	DBHost   string
-	DBPort   string
-	DBUser   string
-	DBPass   string
-	DBName   string
-	HTTPPort string
-	GRPCPort string
-	Secret   string
+	LogLevel   string
+	DBHost     string
+	DBPort     string
+	DBUser     string
+	DBPass     string
+	DBName     string
+	HTTPPort   string
+	GRPCPort   string
+	Secret     string
 	ServerCert string
 	ServerKey  string
 }
@@ -99,16 +100,16 @@ func main() {
 
 func loadConfig() config {
 	return config{
-		LogLevel: mainflux.Env(envLogLevel, defLogLevel),
-		DBHost:   mainflux.Env(envDBHost, defDBHost),
-		DBPort:   mainflux.Env(envDBPort, defDBPort),
-		DBUser:   mainflux.Env(envDBUser, defDBUser),
-		DBPass:   mainflux.Env(envDBPass, defDBPass),
-		DBName:   mainflux.Env(envDBName, defDBName),
-		HTTPPort: mainflux.Env(envHTTPPort, defHTTPPort),
-		GRPCPort: mainflux.Env(envGRPCPort, defGRPCPort),
-		Secret:   mainflux.Env(envSecret, defSecret),
-		ServerCert:  mainflux.Env(envServerCert, defServerCert),
+		LogLevel:   mainflux.Env(envLogLevel, defLogLevel),
+		DBHost:     mainflux.Env(envDBHost, defDBHost),
+		DBPort:     mainflux.Env(envDBPort, defDBPort),
+		DBUser:     mainflux.Env(envDBUser, defDBUser),
+		DBPass:     mainflux.Env(envDBPass, defDBPass),
+		DBName:     mainflux.Env(envDBName, defDBName),
+		HTTPPort:   mainflux.Env(envHTTPPort, defHTTPPort),
+		GRPCPort:   mainflux.Env(envGRPCPort, defGRPCPort),
+		Secret:     mainflux.Env(envSecret, defSecret),
+		ServerCert: mainflux.Env(envServerCert, defServerCert),
 		ServerKey:  mainflux.Env(envServerKey, defServerKey),
 	}
 }
@@ -168,7 +169,7 @@ func startGRPCServer(svc users.Service, port string, certFile string, keyFile st
 	var server *grpc.Server
 	if certFile != "" || keyFile != "" {
 		creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
-		if err !=nil {
+		if err != nil {
 			logger.Error(fmt.Sprintf("Failed to load things certificates: %s", err))
 			os.Exit(1)
 		}

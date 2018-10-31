@@ -9,12 +9,13 @@ package main
 
 import (
 	"fmt"
-	"google.golang.org/grpc/credentials"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"google.golang.org/grpc/credentials"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
