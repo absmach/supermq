@@ -186,7 +186,7 @@ services:
       MF_HTTP_ADAPTER_PORT: 8185
       MF_NATS_URL: nats://nats:4222
       MF_THINGS_URL: things:8183
-      MF_CA_CERTS: /etc/ssl/certs/ca.crt
+      MF_HTTP_ADAPTER_CA_CERTS: /etc/ssl/certs/ca.crt
     ports:
       - 8185:8185
     networks:

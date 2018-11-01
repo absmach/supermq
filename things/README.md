@@ -79,7 +79,7 @@ make things
 make install
 
 # set the environment variables and run the service
-MF_THINGS_LOG_LEVEL=[Things log level] MF_THINGS_DB_HOST=[Database host address] MF_THINGS_DB_PORT=[Database host port] MF_THINGS_DB_USER=[Database user] MF_THINGS_DB_PASS=[Database password] MF_THINGS_DB=[Name of the database used by the service] MF_CA_CERTS=[Path to trusted CAs in PEM format] MF_THINGS_CACHE_URL=[Cache database URL] MF_THINGS_CACHE_PASS=[Cache database password] MF_THINGS_CACHE_DB=[Cache instance that should be used] MF_THINGS_HTTP_PORT=[Service HTTP port] MF_THINGS_GRPC_PORT=[Service gRPC port] MF_USERS_URL=[Users service URL] $GOBIN/mainflux-things
+MF_THINGS_LOG_LEVEL=[Things log level] MF_THINGS_DB_HOST=[Database host address] MF_THINGS_DB_PORT=[Database host port] MF_THINGS_DB_USER=[Database user] MF_THINGS_DB_PASS=[Database password] MF_THINGS_DB=[Name of the database used by the service] MF_HTTP_ADAPTER_CA_CERTS=[Path to trusted CAs in PEM format] MF_THINGS_CACHE_URL=[Cache database URL] MF_THINGS_CACHE_PASS=[Cache database password] MF_THINGS_CACHE_DB=[Cache instance that should be used] MF_THINGS_HTTP_PORT=[Service HTTP port] MF_THINGS_GRPC_PORT=[Service gRPC port] MF_USERS_URL=[Users service URL] $GOBIN/mainflux-things
 ```
 
 Setting `MF_THINGS_CA_CERTS` expects a file in PEM format of trusted CAs. This will enable TLS against the Users gRPC endpoint trusting only those CAs that are provided.

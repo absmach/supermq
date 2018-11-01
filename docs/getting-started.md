@@ -469,7 +469,7 @@ Currently, you'll need to configure your own ssl termination on the service endp
 
 ### HTTP Adapter
 
-`MF_CA_CERTS` - the path to a file that contains the CAs in PEM format. If not set, the default connection will be insecure. If it fails to read the file, the adapter will fail to start up.
+`MF_HTTP_ADAPTER_CA_CERTS` - the path to a file that contains the CAs in PEM format. If not set, the default connection will be insecure. If it fails to read the file, the adapter will fail to start up.
 
 ### Things 
 

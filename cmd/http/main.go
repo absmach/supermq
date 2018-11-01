@@ -30,16 +30,16 @@ import (
 )
 
 const (
+	defCACerts   string = ""
 	defPort      string = "8180"
 	defLogLevel  string = "error"
 	defNatsURL   string = broker.DefaultURL
 	defThingsURL string = "localhost:8181"
-	defCACerts   string = ""
+	envCACerts   string = "MF_HTTP_ADAPTER_CA_CERTS"
 	envPort      string = "MF_HTTP_ADAPTER_PORT"
 	envLogLevel  string = "MF_HTTP_ADAPTER_LOG_LEVEL"
 	envNatsURL   string = "MF_NATS_URL"
 	envThingsURL string = "MF_THINGS_URL"
-	envCACerts   string = "MF_CA_CERTS"
 )
 
 type config struct {
