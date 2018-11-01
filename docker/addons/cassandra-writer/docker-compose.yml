@@ -19,6 +19,8 @@ services:
     restart: on-failure
     networks:
       - docker_mainflux-base-net
+    ports:
+      - 9042:9042
 
   cassandra-writer:
     image: mainflux/cassandra-writer:latest
