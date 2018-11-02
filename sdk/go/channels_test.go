@@ -188,23 +188,114 @@ func TestCahnnels(t *testing.T) {
 
 	cases := []struct {
 		desc     string
-		chId     string
 		token    string
+		offset   uint64
+		limit    uint64
 		err      error
 		response []sdk.Channel
 	}{
 		{
 			desc:     "get a list of channels",
-			chId:     "1",
 			token:    token,
+			offset:   0,
+			limit:    5,
 			err:      nil,
 			response: channels[0:5],
 		},
+		{
+			desc:     "get a list of channels with invalid token",
+			token:    wrongValue,
+			offset:   0,
+			limit:    5,
+			err:      sdk.ErrUnauthorized,
+			response: nil,
+		},
+		{
+			desc:     "get a list of channels with empty token",
+			token:    "",
+			offset:   0,
+			limit:    5,
+			err:      sdk.ErrUnauthorized,
+			response: nil,
+		},
+		{
+			desc:     "get a list of channels with zero limit",
+			token:    token,
+			offset:   0,
+			limit:    0,
+			err:      sdk.ErrInvalidArgs,
+			response: nil,
+		},
+		{
+			desc:     "get a list of channels with limit greater than max",
+			token:    token,
+			offset:   0,
+			limit:    110,
+			err:      sdk.ErrInvalidArgs,
+			response: nil,
+		},
+		{
+			desc:     "get a list of channels with offset greater than max",
+			token:    token,
+			offset:   110,
+			limit:    5,
+			err:      nil,
+			response: nil,
+		},
+		{
+			desc:     "get a list of channels with invalid args (zero limit) and invalid token",
+			token:    wrongValue,
+			offset:   0,
+			limit:    0,
+			err:      sdk.ErrInvalidArgs,
+			response: nil,
+		},
 	}
 	for _, tc := range cases {
-		respChs, err := mainfluxSDK.Channels(tc.token, 0, 5)
+		respChs, err := mainfluxSDK.Channels(tc.token, tc.offset, tc.limit)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.response, respChs, fmt.Sprintf("%s: expected response channel %s, got %s", tc.desc, tc.response, respChs))
 
 	}
+}
+
+func TestUpdateChannel(t *testing.T) {
+	svc := newService(map[string]string{token: email})
+	ts := newServer(svc)
+	defer ts.Close()
+	sdkConf := sdk.Config{
+		BaseURL:           ts.URL,
+		UsersPrefix:       "",
+		ThingsPrefix:      "",
+		HTTPAdapterPrefix: "http",
+		MsgContentType:    contentType,
+		TLSVerification:   false,
+	}
+
+	mainfluxSDK := sdk.NewSDK(sdkConf)
+	channel := sdk.Channel{ID: "1", Name: "test"}
+	mainfluxSDK.CreateChannel(channel, token)
+	cases := []struct {
+		desc     string
+		chId     string
+		token    string
+		err      error
+		response sdk.Channel
+	}{
+		{
+			desc:     "update existing thing",
+			chId:     "1",
+			token:    token,
+			err:      nil,
+			response: channel,
+		},
+	}
+
+	for _, tc := range cases {
+		respCh, err := mainfluxSDK.UpdateChannel(tc.chId, tc.token)
+
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+		assert.Equal(t, tc.response, respCh, fmt.Sprintf("%s: expected response channel %s, got %s", tc.desc, tc.response, respCh))
+	}
+
 }
