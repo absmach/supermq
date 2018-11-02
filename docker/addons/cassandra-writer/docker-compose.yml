@@ -27,8 +27,6 @@ services:
     container_name: mainflux-cassandra-writer
     depends_on:
       - cassandra
-    expose:
-      - 8902
     restart: on-failure
     environment:
       MF_NATS_URL: nats://nats:4222
