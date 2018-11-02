@@ -215,10 +215,10 @@ func newService(conn *grpc.ClientConn, db *sql.DB, client *redis.Client, logger 
 func startHTTPServer(svc things.Service, port string, certFile string, keyFile string, logger logger.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", port)
 	if certFile != "" || keyFile != "" {
-		logger.Info(fmt.Sprintf("Things service started using https, cert %s key %s, exposed port %s", certFile, keyFile, port))
+		logger.Info(fmt.Sprintf("Things service started using https on port %s with cert %s key %s", port, certFile, keyFile))
 		errs <- http.ListenAndServeTLS(p, certFile, keyFile, httpapi.MakeHandler(svc))
 	} else {
-		logger.Info(fmt.Sprintf("Things service started using http, exposed port %s", port))
+		logger.Info(fmt.Sprintf("Things service started using http on port %s", port))
 		errs <- http.ListenAndServe(p, httpapi.MakeHandler(svc))
 	}
 }

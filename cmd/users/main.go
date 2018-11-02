@@ -176,7 +176,7 @@ func startGRPCServer(svc users.Service, port string, certFile string, keyFile st
 		logger.Info(fmt.Sprintf("Users gRPC service started using https on port %s with cert %s key %s", port, certFile, keyFile))
 		server = grpc.NewServer(grpc.Creds(creds))
 	} else {
-		logger.Info(fmt.Sprintf("Users gRPC service started using http, exposed port %s", port))
+		logger.Info(fmt.Sprintf("Users gRPC service started using http on port %s", port))
 		server = grpc.NewServer()
 	}
 
