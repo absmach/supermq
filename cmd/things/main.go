@@ -163,19 +163,20 @@ func connectToDB(cfg config, logger logger.Logger) *sql.DB {
 }
 
 func connectToUsersService(cfg config, logger logger.Logger) *grpc.ClientConn {
-	secureOption := grpc.WithInsecure()
+	var opts []grpc.DialOption
 	if cfg.CACerts != "" {
 		tpc, err := credentials.NewClientTLSFromFile(cfg.CACerts, "")
 		if err != nil {
 			logger.Error(fmt.Sprintf("Failed to create tls credentials: %s", err))
 			os.Exit(1)
 		}
-		secureOption = grpc.WithTransportCredentials(tpc)
+		opts = append(opts, grpc.WithTransportCredentials(tpc))
 	} else {
+		opts = append(opts, grpc.WithInsecure())
 		logger.Info("gRPC communication is not encrypted")
 	}
 
-	conn, err := grpc.Dial(cfg.UsersURL, secureOption)
+	conn, err := grpc.Dial(cfg.UsersURL, opts...)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to users service: %s", err))
 		os.Exit(1)
@@ -236,10 +237,10 @@ func startGRPCServer(svc things.Service, port string, certFile string, keyFile s
 			logger.Error(fmt.Sprintf("Failed to load things certificates: %s", err))
 			os.Exit(1)
 		}
-		logger.Info(fmt.Sprintf("Things gRPC service started using https, cert %s key %s exposed port %s", port, certFile, keyFile))
+		logger.Info(fmt.Sprintf("Things gRPC service started using https on port %s with cert %s key %s", port, certFile, keyFile))
 		server = grpc.NewServer(grpc.Creds(creds))
 	} else {
-		logger.Info(fmt.Sprintf("Things gRPC service started using http, exposed port %s", port))
+		logger.Info(fmt.Sprintf("Things gRPC service started using http on port %s", port))
 		server = grpc.NewServer()
 	}
 

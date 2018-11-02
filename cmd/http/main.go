@@ -119,19 +119,20 @@ func loadConfig() config {
 }
 
 func connectToThingsService(cfg config, logger logger.Logger) *grpc.ClientConn {
-	secureOption := grpc.WithInsecure()
+	var opts []grpc.DialOption
 	if cfg.CACerts != "" {
 		tpc, err := credentials.NewClientTLSFromFile(cfg.CACerts, "")
 		if err != nil {
 			logger.Error(fmt.Sprintf("Failed to load certs: %s", err))
 			os.Exit(1)
 		}
-		secureOption = grpc.WithTransportCredentials(tpc)
+		opts = append(opts, grpc.WithTransportCredentials(tpc))
 	} else {
 		logger.Info("gRPC communication is not encrypted")
+		opts = append(opts, grpc.WithInsecure())
 	}
 
-	conn, err := grpc.Dial(cfg.ThingsURL, secureOption)
+	conn, err := grpc.Dial(cfg.ThingsURL, opts...)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to things service: %s", err))
 		os.Exit(1)

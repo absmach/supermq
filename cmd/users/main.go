@@ -173,7 +173,7 @@ func startGRPCServer(svc users.Service, port string, certFile string, keyFile st
 			logger.Error(fmt.Sprintf("Failed to load things certificates: %s", err))
 			os.Exit(1)
 		}
-		logger.Info(fmt.Sprintf("Users gRPC service started using https, cert %s key %s exposed port %s", port, certFile, keyFile))
+		logger.Info(fmt.Sprintf("Users gRPC service started using https on port %s with cert %s key %s", port, certFile, keyFile))
 		server = grpc.NewServer(grpc.Creds(creds))
 	} else {
 		logger.Info(fmt.Sprintf("Users gRPC service started using http, exposed port %s", port))
