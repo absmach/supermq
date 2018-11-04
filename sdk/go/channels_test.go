@@ -321,3 +321,72 @@ func TestUpdateChannel(t *testing.T) {
 	}
 
 }
+
+func TestDeleteChannel(t *testing.T) {
+	svc := newService(map[string]string{token: email})
+	ts := newServer(svc)
+	defer ts.Close()
+	sdkConf := sdk.Config{
+		BaseURL:           ts.URL,
+		UsersPrefix:       "",
+		ThingsPrefix:      "",
+		HTTPAdapterPrefix: "http",
+		MsgContentType:    contentType,
+		TLSVerification:   false,
+	}
+
+	mainfluxSDK := sdk.NewSDK(sdkConf)
+	channel := sdk.Channel{ID: "1", Name: "test"}
+	mainfluxSDK.CreateChannel(channel, token)
+
+	cases := []struct {
+		desc  string
+		chId  string
+		token string
+		err   error
+	}{
+
+		{
+			desc:  "delete channel with invalid token",
+			chId:  "1",
+			token: wrongValue,
+			err:   sdk.ErrUnauthorized,
+		},
+		{
+			desc:  "delete non-existing channel",
+			chId:  "2",
+			token: token,
+			err:   nil,
+		},
+		{
+			desc:  "delete channel with invalid id",
+			chId:  "invalid",
+			token: token,
+			err:   sdk.ErrInvalidArgs,
+		},
+		{
+			desc:  "delete channel with empty token",
+			chId:  "1",
+			token: "",
+			err:   sdk.ErrUnauthorized,
+		},
+		{
+			desc:  "delete existing channel",
+			chId:  "1",
+			token: token,
+			err:   nil,
+		},
+		{
+			desc:  "delete deleted channel",
+			chId:  "1",
+			token: token,
+			err:   nil,
+		},
+	}
+
+	for _, tc := range cases {
+		err := mainfluxSDK.DeleteChannel(tc.chId, tc.token)
+
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+	}
+}
