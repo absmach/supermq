@@ -275,27 +275,49 @@ func TestUpdateChannel(t *testing.T) {
 	mainfluxSDK := sdk.NewSDK(sdkConf)
 	channel := sdk.Channel{ID: "1", Name: "test"}
 	mainfluxSDK.CreateChannel(channel, token)
+
 	cases := []struct {
-		desc     string
-		chId     string
-		token    string
-		err      error
-		response sdk.Channel
+		desc    string
+		channel sdk.Channel
+		token   string
+		err     error
 	}{
 		{
-			desc:     "update existing thing",
-			chId:     "1",
-			token:    token,
-			err:      nil,
-			response: channel,
+			desc:    "update existing thing",
+			channel: sdk.Channel{ID: "1", Name: "test2"},
+			token:   token,
+			err:     nil,
+		},
+		{
+			desc:    "update non-existing thing",
+			channel: sdk.Channel{ID: "0", Name: "test2"},
+			token:   token,
+			err:     sdk.ErrNotFound,
+		},
+		{
+			desc:    "update channel with invalid id",
+			channel: sdk.Channel{ID: "invalid", Name: "test2"},
+			token:   token,
+			err:     sdk.ErrInvalidArgs,
+		},
+		{
+			desc:    "update channel with invalid token",
+			channel: sdk.Channel{ID: "1", Name: "test2"},
+			token:   wrongValue,
+			err:     sdk.ErrUnauthorized,
+		},
+		{
+			desc:    "update channel with empty token",
+			channel: sdk.Channel{ID: "1", Name: "test2"},
+			token:   "",
+			err:     sdk.ErrUnauthorized,
 		},
 	}
 
 	for _, tc := range cases {
-		respCh, err := mainfluxSDK.UpdateChannel(tc.chId, tc.token)
+		err := mainfluxSDK.UpdateChannel(tc.channel, tc.token)
 
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		assert.Equal(t, tc.response, respCh, fmt.Sprintf("%s: expected response channel %s, got %s", tc.desc, tc.response, respCh))
 	}
 
 }
