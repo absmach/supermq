@@ -171,6 +171,10 @@ services:
       - things
       - nats
     restart: on-failure
+    expose:
+      - 8185
+    volumes:
+      - ./ssl/certs/ca.crt:/etc/ssl/certs/ca.crt
     environment:
       MF_HTTP_ADAPTER_PORT: 8185
       MF_NATS_URL: nats://nats:4222
