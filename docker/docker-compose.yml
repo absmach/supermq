@@ -174,10 +174,6 @@ services:
     depends_on:
       - things
       - nats
-    expose:
-      - 8185
-    volumes:
-      - ./ssl/certs/ca.crt:/etc/ssl/certs/ca.crt
     restart: on-failure
     environment:
       MF_HTTP_ADAPTER_PORT: 8185
