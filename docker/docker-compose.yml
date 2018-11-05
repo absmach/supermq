@@ -16,9 +16,6 @@ services:
   nginx:
     image: nginx:1.13-alpine
     container_name: mainflux-nginx
-    depends_on:
-      - users
-      - things
     restart: on-failure
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
@@ -177,11 +174,11 @@ services:
     depends_on:
       - things
       - nats
-    restart: on-failure
     expose:
       - 8185
     volumes:
-    - ./ssl/certs/ca.crt:/etc/ssl/certs/ca.crt
+      - ./ssl/certs/ca.crt:/etc/ssl/certs/ca.crt
+    restart: on-failure
     environment:
       MF_HTTP_ADAPTER_PORT: 8185
       MF_NATS_URL: nats://nats:4222
