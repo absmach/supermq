@@ -29,7 +29,7 @@ const (
 	wrongID     = 0
 )
 
-func newService(tokens map[string]string) things.Service {
+func newThingsService(tokens map[string]string) things.Service {
 	users := mocks.NewUsersService(tokens)
 	thingsRepo := mocks.NewThingRepository()
 	channelsRepo := mocks.NewChannelRepository(thingsRepo)
@@ -46,7 +46,7 @@ func newServer(svc things.Service) *httptest.Server {
 }
 
 func TestCreateChannel(t *testing.T) {
-	svc := newService(map[string]string{token: email})
+	svc := newThingsService(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 
@@ -108,7 +108,7 @@ func TestCreateChannel(t *testing.T) {
 	}
 }
 func TestChannel(t *testing.T) {
-	svc := newService(map[string]string{token: email})
+	svc := newThingsService(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 	sdkConf := sdk.Config{
@@ -165,7 +165,7 @@ func TestChannel(t *testing.T) {
 
 func TestCahnnels(t *testing.T) {
 
-	svc := newService(map[string]string{token: email})
+	svc := newThingsService(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 	sdkConf := sdk.Config{
@@ -260,7 +260,7 @@ func TestCahnnels(t *testing.T) {
 }
 
 func TestUpdateChannel(t *testing.T) {
-	svc := newService(map[string]string{token: email})
+	svc := newThingsService(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 	sdkConf := sdk.Config{
@@ -323,7 +323,7 @@ func TestUpdateChannel(t *testing.T) {
 }
 
 func TestDeleteChannel(t *testing.T) {
-	svc := newService(map[string]string{token: email})
+	svc := newThingsService(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 	sdkConf := sdk.Config{
