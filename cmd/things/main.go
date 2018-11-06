@@ -5,7 +5,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package things
+package main
 
 import (
 	"database/sql"
