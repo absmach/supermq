@@ -185,8 +185,8 @@ services:
     restart: on-failure
     environment:
       MF_MQTT_ADAPTER_PORT: 1883
-      MF_MQTT_WS_PORT: 8880
-      MF_MQTT_REDIS_HOST: redis
+      MF_MQTT_ADAPTER_WS_PORT: 8880
+      MF_MQTT_ADAPTER_REDIS_HOST: redis
       MF_NATS_URL: nats://nats:4222
       MF_THINGS_URL: things:8183
     ports:

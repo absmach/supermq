@@ -36,8 +36,8 @@ const (
 	defLogLevel  = "error"
 	defNatsURL   = broker.DefaultURL
 	defThingsURL = "localhost:8181"
-	envClientTLS = "MF_WS_CLIENT_TLS"
-	envCACerts   = "MF_WS_CA_CERTS"
+	envClientTLS = "MF_WS_ADAPTER_CLIENT_TLS"
+	envCACerts   = "MF_WS_ADAPTER_CA_CERTS"
 	envPort      = "MF_WS_ADAPTER_PORT"
 	envLogLevel  = "MF_WS_ADAPTER_LOG_LEVEL"
 	envNatsURL   = "MF_NATS_URL"
