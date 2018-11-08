@@ -33,7 +33,9 @@ func newMessageServer(pub mainflux.MessagePublisher, cc mainflux.ThingsServiceCl
 
 func TestSendMessage(t *testing.T) {
 	chanID := "1"
+	invalidID := "wrong"
 	atoken := "auth_token"
+	invalidToken := "invalid_token"
 	msg := `[{"n":"current","t":-1,"v":1.6}]`
 	id, _ := strconv.ParseUint(chanID, 10, 64)
 
@@ -46,7 +48,7 @@ func TestSendMessage(t *testing.T) {
 		BaseURL:           ts.URL,
 		UsersPrefix:       "",
 		ThingsPrefix:      "",
-		HTTPAdapterPrefix: "http",
+		HTTPAdapterPrefix: "",
 		MsgContentType:    contentType,
 		TLSVerification:   false,
 	}
@@ -62,8 +64,38 @@ func TestSendMessage(t *testing.T) {
 		"publish message": {
 			chanID: chanID,
 			msg:    msg,
-			auth:   "",
+			auth:   atoken,
 			err:    nil,
+		},
+		"publish message without authorization token": {
+			chanID: chanID,
+			msg:    msg,
+			auth:   "",
+			err:    sdk.ErrUnauthorized,
+		},
+		"publish message with invalid authorization token": {
+			chanID: chanID,
+			msg:    msg,
+			auth:   invalidToken,
+			err:    sdk.ErrUnauthorized,
+		},
+		"publish message with wrong content type": {
+			chanID: chanID,
+			msg:    "text",
+			auth:   atoken,
+			err:    nil,
+		},
+		"publish message to wrong channel": {
+			chanID: invalidID,
+			msg:    msg,
+			auth:   atoken,
+			err:    sdk.ErrNotFound,
+		},
+		"publish message unable to authorize": {
+			chanID: chanID,
+			msg:    msg,
+			auth:   mocks.ServiceErrToken,
+			err:    sdk.ErrFailedUpdate,
 		},
 	}
 	for desc, tc := range cases {
@@ -89,7 +121,7 @@ func TestSetContentType(t *testing.T) {
 		BaseURL:           ts.URL,
 		UsersPrefix:       "",
 		ThingsPrefix:      "",
-		HTTPAdapterPrefix: "http",
+		HTTPAdapterPrefix: "",
 		MsgContentType:    contentType,
 		TLSVerification:   false,
 	}

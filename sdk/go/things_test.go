@@ -62,7 +62,7 @@ func TestCreateThing(t *testing.T) {
 		BaseURL:           ts.URL,
 		UsersPrefix:       "",
 		ThingsPrefix:      "",
-		HTTPAdapterPrefix: "http",
+		HTTPAdapterPrefix: "",
 		MsgContentType:    contentType,
 		TLSVerification:   false,
 	}
@@ -122,7 +122,7 @@ func TestThing(t *testing.T) {
 		BaseURL:           ts.URL,
 		UsersPrefix:       "",
 		ThingsPrefix:      "",
-		HTTPAdapterPrefix: "http",
+		HTTPAdapterPrefix: "",
 		MsgContentType:    contentType,
 		TLSVerification:   false,
 	}
@@ -179,7 +179,7 @@ func TestThings(t *testing.T) {
 		BaseURL:           ts.URL,
 		UsersPrefix:       "",
 		ThingsPrefix:      "",
-		HTTPAdapterPrefix: "http",
+		HTTPAdapterPrefix: "",
 		MsgContentType:    contentType,
 		TLSVerification:   false,
 	}
@@ -274,7 +274,7 @@ func TestUpdateThing(t *testing.T) {
 		BaseURL:           ts.URL,
 		UsersPrefix:       "",
 		ThingsPrefix:      "",
-		HTTPAdapterPrefix: "http",
+		HTTPAdapterPrefix: "",
 		MsgContentType:    contentType,
 		TLSVerification:   false,
 	}
@@ -337,7 +337,7 @@ func TestDeleteThing(t *testing.T) {
 		BaseURL:           ts.URL,
 		UsersPrefix:       "",
 		ThingsPrefix:      "",
-		HTTPAdapterPrefix: "http",
+		HTTPAdapterPrefix: "",
 		MsgContentType:    contentType,
 		TLSVerification:   false,
 	}
@@ -409,7 +409,7 @@ func TestConnectThing(t *testing.T) {
 		BaseURL:           ts.URL,
 		UsersPrefix:       "",
 		ThingsPrefix:      "",
-		HTTPAdapterPrefix: "http",
+		HTTPAdapterPrefix: "",
 		MsgContentType:    contentType,
 		TLSVerification:   false,
 	}
@@ -505,7 +505,7 @@ func TestDisconnectThing(t *testing.T) {
 		BaseURL:           ts.URL,
 		UsersPrefix:       "",
 		ThingsPrefix:      "",
-		HTTPAdapterPrefix: "http",
+		HTTPAdapterPrefix: "",
 		MsgContentType:    contentType,
 		TLSVerification:   false,
 	}

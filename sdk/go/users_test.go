@@ -49,7 +49,7 @@ func TestCreateUser(t *testing.T) {
 		BaseURL:           ts.URL,
 		UsersPrefix:       "",
 		ThingsPrefix:      "",
-		HTTPAdapterPrefix: "http",
+		HTTPAdapterPrefix: "",
 		MsgContentType:    contentType,
 		TLSVerification:   false,
 	}
@@ -112,7 +112,7 @@ func TestCreateToken(t *testing.T) {
 		BaseURL:           ts.URL,
 		UsersPrefix:       "",
 		ThingsPrefix:      "",
-		HTTPAdapterPrefix: "http",
+		HTTPAdapterPrefix: "",
 		MsgContentType:    contentType,
 		TLSVerification:   false,
 	}

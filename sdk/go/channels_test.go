@@ -30,7 +30,7 @@ func TestCreateChannel(t *testing.T) {
 		BaseURL:           ts.URL,
 		UsersPrefix:       "",
 		ThingsPrefix:      "",
-		HTTPAdapterPrefix: "http",
+		HTTPAdapterPrefix: "",
 		MsgContentType:    contentType,
 		TLSVerification:   false,
 	}
@@ -89,7 +89,7 @@ func TestChannel(t *testing.T) {
 		BaseURL:           ts.URL,
 		UsersPrefix:       "",
 		ThingsPrefix:      "",
-		HTTPAdapterPrefix: "http",
+		HTTPAdapterPrefix: "",
 		MsgContentType:    contentType,
 		TLSVerification:   false,
 	}
@@ -145,7 +145,7 @@ func TestCahnnels(t *testing.T) {
 		BaseURL:           ts.URL,
 		UsersPrefix:       "",
 		ThingsPrefix:      "",
-		HTTPAdapterPrefix: "http",
+		HTTPAdapterPrefix: "",
 		MsgContentType:    contentType,
 		TLSVerification:   false,
 	}
@@ -240,7 +240,7 @@ func TestUpdateChannel(t *testing.T) {
 		BaseURL:           ts.URL,
 		UsersPrefix:       "",
 		ThingsPrefix:      "",
-		HTTPAdapterPrefix: "http",
+		HTTPAdapterPrefix: "",
 		MsgContentType:    contentType,
 		TLSVerification:   false,
 	}
@@ -302,7 +302,7 @@ func TestDeleteChannel(t *testing.T) {
 		BaseURL:           ts.URL,
 		UsersPrefix:       "",
 		ThingsPrefix:      "",
-		HTTPAdapterPrefix: "http",
+		HTTPAdapterPrefix: "",
 		MsgContentType:    contentType,
 		TLSVerification:   false,
 	}
