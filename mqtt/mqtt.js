@@ -20,6 +20,8 @@ var logger = bunyan.createLogger({name: "mqtt"}),
         redis_host: process.env.MF_MQTT_REDIS_HOST || 'localhost',
         redis_pass: process.env.MF_MQTT_REDIS_PASS || 'mqtt',
         redis_db: Number(process.env.MF_MQTT_REDIS_DB) || 0,
+        client_tls: (process.env.MF_MQTT_CLIENT_TLS == "true") || false,
+    	ca_certs: process.env.MF_MQTT_CA_CERTS || "",
         auth_url: process.env.MF_THINGS_URL || 'localhost:8181',
         schema_dir: process.argv[2] || '.',
     },
@@ -35,7 +37,15 @@ var logger = bunyan.createLogger({name: "mqtt"}),
     aedes = require('aedes')({
         persistence: aedesRedis
     }),
-    things = new thingsSchema.ThingsService(config.auth_url, grpc.credentials.createInsecure()),
+    things = (function() {
+        var certs;
+        if (config.client_tls) {
+            certs = grpc.credentials.createSsl(config.ca_certs);
+        } else {
+            certs = grpc.credentials.createInsecure();
+        }
+        return new thingsSchema.ThingsService(config.auth_url, certs);
+    })(),
     servers = [
         startMqtt(),
         startWs()
