@@ -16,6 +16,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	channel      = sdk.Channel{ID: "1", Name: "test"}
+	emptyChannel = sdk.Channel{}
+)
+
 func TestCreateChannel(t *testing.T) {
 	svc := newThingsService(map[string]string{token: email})
 	ts := newThingsServer(svc)
@@ -31,8 +36,6 @@ func TestCreateChannel(t *testing.T) {
 	}
 
 	mainfluxSDK := sdk.NewSDK(sdkConf)
-	channel := sdk.Channel{ID: "1", Name: "test"}
-	emptyChannel := sdk.Channel{}
 
 	cases := []struct {
 		desc     string
@@ -92,7 +95,6 @@ func TestChannel(t *testing.T) {
 	}
 
 	mainfluxSDK := sdk.NewSDK(sdkConf)
-	channel := sdk.Channel{ID: "1", Name: "test"}
 	mainfluxSDK.CreateChannel(channel, token)
 
 	cases := []struct {
@@ -244,7 +246,6 @@ func TestUpdateChannel(t *testing.T) {
 	}
 
 	mainfluxSDK := sdk.NewSDK(sdkConf)
-	channel := sdk.Channel{ID: "1", Name: "test"}
 	mainfluxSDK.CreateChannel(channel, token)
 
 	cases := []struct {
@@ -307,7 +308,6 @@ func TestDeleteChannel(t *testing.T) {
 	}
 
 	mainfluxSDK := sdk.NewSDK(sdkConf)
-	channel := sdk.Channel{ID: "1", Name: "test"}
 	mainfluxSDK.CreateChannel(channel, token)
 
 	cases := []struct {

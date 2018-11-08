@@ -24,7 +24,9 @@ import (
 const (
 	contentType = "application/json"
 	email       = "user@example.com"
+	otherEmail  = "other_user@example.com"
 	token       = "token"
+	otherToken  = "other_token"
 	wrongValue  = "wrong_value"
 
 	keyPrefix = "123e4567-e89b-12d3-a456-"
@@ -391,6 +393,199 @@ func TestDeleteThing(t *testing.T) {
 	for _, tc := range cases {
 		err := mainfluxSDK.DeleteThing(tc.thId, tc.token)
 
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
+	}
+}
+
+func TestConnectThing(t *testing.T) {
+	svc := newThingsService(map[string]string{
+		token:      email,
+		otherToken: otherEmail,
+	})
+
+	ts := newThingsServer(svc)
+	defer ts.Close()
+	sdkConf := sdk.Config{
+		BaseURL:           ts.URL,
+		UsersPrefix:       "",
+		ThingsPrefix:      "",
+		HTTPAdapterPrefix: "http",
+		MsgContentType:    contentType,
+		TLSVerification:   false,
+	}
+
+	mainfluxSDK := sdk.NewSDK(sdkConf)
+	mainfluxSDK.CreateThing(thing, token)
+	mainfluxSDK.CreateChannel(channel, token)
+	mainfluxSDK.CreateChannel(channel, otherToken)
+
+	cases := []struct {
+		desc  string
+		thId  string
+		chId  string
+		token string
+		err   error
+	}{
+
+		{
+			desc:  "connect existing thing to existing channel",
+			thId:  "1",
+			chId:  "1",
+			token: token,
+			err:   nil,
+		},
+
+		{
+			desc:  "connect existing thing to non-existing channel",
+			thId:  "1",
+			chId:  "9",
+			token: token,
+			err:   sdk.ErrNotFound,
+		},
+		{
+			desc:  "connect non-existing thing to existing channel",
+			thId:  "9",
+			chId:  "1",
+			token: token,
+			err:   sdk.ErrNotFound,
+		},
+		{
+			desc:  "connect existing thing to channel with invalid ID",
+			thId:  "1",
+			chId:  "invalid",
+			token: token,
+			err:   sdk.ErrFailedConnection,
+		},
+		{
+			desc:  "connect thing with invalid ID to existing channel",
+			thId:  "invalid",
+			chId:  "1",
+			token: token,
+			err:   sdk.ErrFailedConnection,
+		},
+
+		{
+			desc:  "connect existing thing to existing channel with invalid token",
+			thId:  "1",
+			chId:  "1",
+			token: wrongValue,
+			err:   sdk.ErrUnauthorized,
+		},
+		{
+			desc:  "connect existing thing to existing channel with empty token",
+			thId:  "1",
+			chId:  "1",
+			token: "",
+			err:   sdk.ErrUnauthorized,
+		},
+		{
+			desc:  "connect thing from owner to channel of other user",
+			thId:  "1",
+			chId:  "2",
+			token: token,
+			err:   sdk.ErrNotFound,
+		},
+	}
+
+	for _, tc := range cases {
+		err := mainfluxSDK.ConnectThing(tc.thId, tc.chId, tc.token)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
+	}
+}
+
+func TestDisconnectThing(t *testing.T) {
+	svc := newThingsService(map[string]string{
+		token:      email,
+		otherToken: otherEmail,
+	})
+
+	ts := newThingsServer(svc)
+	defer ts.Close()
+	sdkConf := sdk.Config{
+		BaseURL:           ts.URL,
+		UsersPrefix:       "",
+		ThingsPrefix:      "",
+		HTTPAdapterPrefix: "http",
+		MsgContentType:    contentType,
+		TLSVerification:   false,
+	}
+
+	mainfluxSDK := sdk.NewSDK(sdkConf)
+	mainfluxSDK.CreateThing(thing, token)
+	mainfluxSDK.CreateChannel(channel, token)
+	mainfluxSDK.ConnectThing("1", "1", token)
+	mainfluxSDK.CreateChannel(channel, otherToken)
+
+	cases := []struct {
+		desc  string
+		thId  string
+		chId  string
+		token string
+		err   error
+	}{
+
+		{
+			desc:  "disconnect connected thing from channel",
+			thId:  "1",
+			chId:  "1",
+			token: token,
+			err:   nil,
+		},
+
+		{
+			desc:  "disconnect existing thing from non-existing channel",
+			thId:  "1",
+			chId:  "9",
+			token: token,
+			err:   sdk.ErrNotFound,
+		},
+		{
+			desc:  "disconnect non-existing thing from existing channel",
+			thId:  "9",
+			chId:  "1",
+			token: token,
+			err:   sdk.ErrNotFound,
+		},
+		{
+			desc:  "disconnect existing thing from channel with invalid ID",
+			thId:  "1",
+			chId:  "invalid",
+			token: token,
+			err:   sdk.ErrFailedConnection,
+		},
+		{
+			desc:  "disconnect thing with invalid ID from existing channel",
+			thId:  "invalid",
+			chId:  "1",
+			token: token,
+			err:   sdk.ErrFailedConnection,
+		},
+
+		{
+			desc:  "disconnect existing thing from existing channel with invalid token",
+			thId:  "1",
+			chId:  "1",
+			token: wrongValue,
+			err:   sdk.ErrUnauthorized,
+		},
+		{
+			desc:  "disconnect existing thing from existing channel with empty token",
+			thId:  "1",
+			chId:  "1",
+			token: "",
+			err:   sdk.ErrUnauthorized,
+		},
+		{
+			desc:  "disconnect owner's thing from someone elses channel",
+			thId:  "1",
+			chId:  "2",
+			token: token,
+			err:   sdk.ErrNotFound,
+		},
+	}
+
+	for _, tc := range cases {
+		err := mainfluxSDK.DisconnectThing(tc.thId, tc.chId, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 	}
 }
