@@ -183,6 +183,8 @@ func (sdk mfSDK) DeleteThing(id, token string) error {
 		switch resp.StatusCode {
 		case http.StatusForbidden:
 			return ErrUnauthorized
+		case http.StatusBadRequest:
+			return ErrInvalidArgs
 		default:
 			return ErrFailedRemoval
 		}
