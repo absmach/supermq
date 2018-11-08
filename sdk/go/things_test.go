@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	contentType = "application/json"
+	contentType = "application/senml+json"
 	email       = "user@example.com"
 	otherEmail  = "other_user@example.com"
 	token       = "token"
