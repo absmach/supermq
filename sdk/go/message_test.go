@@ -33,12 +33,12 @@ func newMessageServer(pub mainflux.MessagePublisher, cc mainflux.ThingsServiceCl
 
 func TestSendMessage(t *testing.T) {
 	chanID := "1"
-	//	invalidID := "wrong"
-	token := "auth_token"
-	//	invalidToken := "invalid_token"
+	atoken := "auth_token"
 	msg := `[{"n":"current","t":-1,"v":1.6}]`
 	id, _ := strconv.ParseUint(chanID, 10, 64)
-	thingsClient := mocks.NewThingsClient(map[string]uint64{token: id})
+
+	thingsClient := mocks.NewThingsClient(map[string]uint64{atoken: id})
+	fmt.Println(thingsClient)
 	pub := newMessageService()
 	ts := newMessageServer(pub, thingsClient)
 	defer ts.Close()
@@ -62,7 +62,7 @@ func TestSendMessage(t *testing.T) {
 		"publish message": {
 			chanID: chanID,
 			msg:    msg,
-			auth:   token,
+			auth:   "",
 			err:    nil,
 		},
 	}
@@ -71,4 +71,49 @@ func TestSendMessage(t *testing.T) {
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", desc, tc.err, err))
 
 	}
+}
+
+func TestSetContentType(t *testing.T) {
+
+	chanID := "1"
+	atoken := "auth_token"
+	id, _ := strconv.ParseUint(chanID, 10, 64)
+
+	thingsClient := mocks.NewThingsClient(map[string]uint64{atoken: id})
+
+	pub := newMessageService()
+	ts := newMessageServer(pub, thingsClient)
+	defer ts.Close()
+
+	sdkConf := sdk.Config{
+		BaseURL:           ts.URL,
+		UsersPrefix:       "",
+		ThingsPrefix:      "",
+		HTTPAdapterPrefix: "http",
+		MsgContentType:    contentType,
+		TLSVerification:   false,
+	}
+	mainfluxSDK := sdk.NewSDK(sdkConf)
+
+	cases := []struct {
+		desc  string
+		cType sdk.ContentType
+		err   error
+	}{
+		{
+			desc:  "set senml+json content type",
+			cType: "application/senml+json",
+			err:   nil,
+		},
+		{
+			desc:  "set invalid content type",
+			cType: "invalid",
+			err:   sdk.ErrInvalidContentType,
+		},
+	}
+	for _, tc := range cases {
+		err := mainfluxSDK.SetContentType(tc.cType)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
+	}
+
 }
