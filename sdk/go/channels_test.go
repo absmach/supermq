@@ -9,45 +9,16 @@ package sdk_test
 
 import (
 	"fmt"
-	"net/http/httptest"
 	"strconv"
 	"testing"
 
 	"github.com/mainflux/mainflux/sdk/go"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/mainflux/mainflux/things"
-	httpapi "github.com/mainflux/mainflux/things/api/http"
-	"github.com/mainflux/mainflux/things/mocks"
 )
-
-const (
-	contentType = "application/json"
-	email       = "user@example.com"
-	token       = "token"
-	wrongValue  = "wrong_value"
-	wrongID     = 0
-)
-
-func newThingsService(tokens map[string]string) things.Service {
-	users := mocks.NewUsersService(tokens)
-	thingsRepo := mocks.NewThingRepository()
-	channelsRepo := mocks.NewChannelRepository(thingsRepo)
-	chanCache := mocks.NewChannelCache()
-	thingCache := mocks.NewThingCache()
-	idp := mocks.NewIdentityProvider()
-
-	return things.New(users, thingsRepo, channelsRepo, chanCache, thingCache, idp)
-}
-
-func newServer(svc things.Service) *httptest.Server {
-	mux := httpapi.MakeHandler(svc)
-	return httptest.NewServer(mux)
-}
 
 func TestCreateChannel(t *testing.T) {
 	svc := newThingsService(map[string]string{token: email})
-	ts := newServer(svc)
+	ts := newThingsServer(svc)
 	defer ts.Close()
 
 	sdkConf := sdk.Config{
@@ -102,14 +73,14 @@ func TestCreateChannel(t *testing.T) {
 
 	for _, tc := range cases {
 		loc, err := mainfluxSDK.CreateChannel(tc.channel, tc.token)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.location, loc, fmt.Sprintf("%s: expected location %s got %s", tc.desc, tc.location, loc))
 
 	}
 }
 func TestChannel(t *testing.T) {
 	svc := newThingsService(map[string]string{token: email})
-	ts := newServer(svc)
+	ts := newThingsServer(svc)
 	defer ts.Close()
 	sdkConf := sdk.Config{
 		BaseURL:           ts.URL,
@@ -157,7 +128,7 @@ func TestChannel(t *testing.T) {
 	for _, tc := range cases {
 		respCh, err := mainfluxSDK.Channel(tc.chId, tc.token)
 
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, respCh, fmt.Sprintf("%s: expected response channel %s, got %s", tc.desc, tc.response, respCh))
 	}
 
@@ -166,7 +137,7 @@ func TestChannel(t *testing.T) {
 func TestCahnnels(t *testing.T) {
 
 	svc := newThingsService(map[string]string{token: email})
-	ts := newServer(svc)
+	ts := newThingsServer(svc)
 	defer ts.Close()
 	sdkConf := sdk.Config{
 		BaseURL:           ts.URL,
@@ -253,7 +224,7 @@ func TestCahnnels(t *testing.T) {
 	}
 	for _, tc := range cases {
 		respChs, err := mainfluxSDK.Channels(tc.token, tc.offset, tc.limit)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, respChs, fmt.Sprintf("%s: expected response channel %s, got %s", tc.desc, tc.response, respChs))
 
 	}
@@ -261,7 +232,7 @@ func TestCahnnels(t *testing.T) {
 
 func TestUpdateChannel(t *testing.T) {
 	svc := newThingsService(map[string]string{token: email})
-	ts := newServer(svc)
+	ts := newThingsServer(svc)
 	defer ts.Close()
 	sdkConf := sdk.Config{
 		BaseURL:           ts.URL,
@@ -283,13 +254,13 @@ func TestUpdateChannel(t *testing.T) {
 		err     error
 	}{
 		{
-			desc:    "update existing thing",
+			desc:    "update existing channel",
 			channel: sdk.Channel{ID: "1", Name: "test2"},
 			token:   token,
 			err:     nil,
 		},
 		{
-			desc:    "update non-existing thing",
+			desc:    "update non-existing channel",
 			channel: sdk.Channel{ID: "0", Name: "test2"},
 			token:   token,
 			err:     sdk.ErrNotFound,
@@ -317,14 +288,14 @@ func TestUpdateChannel(t *testing.T) {
 	for _, tc := range cases {
 		err := mainfluxSDK.UpdateChannel(tc.channel, tc.token)
 
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 	}
 
 }
 
 func TestDeleteChannel(t *testing.T) {
 	svc := newThingsService(map[string]string{token: email})
-	ts := newServer(svc)
+	ts := newThingsServer(svc)
 	defer ts.Close()
 	sdkConf := sdk.Config{
 		BaseURL:           ts.URL,
@@ -387,6 +358,6 @@ func TestDeleteChannel(t *testing.T) {
 	for _, tc := range cases {
 		err := mainfluxSDK.DeleteChannel(tc.chId, tc.token)
 
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 	}
 }
