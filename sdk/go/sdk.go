@@ -36,6 +36,9 @@ var (
 	// ErrFailedUpdate indicates that entity update failed.
 	ErrFailedUpdate = errors.New("failed to update entity")
 
+	// ErrFailedPublish indicates that publishing message failed.
+	ErrFailedPublish = errors.New("failed to publish message")
+
 	// ErrFailedRemoval indicates that entity removal failed.
 	ErrFailedRemoval = errors.New("failed to remove entity")
 

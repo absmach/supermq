@@ -41,7 +41,6 @@ func TestSendMessage(t *testing.T) {
 	id, err := strconv.ParseUint(chanID, 10, 64)
 	require.Nil(t, err, "publish message: unexpected error when converting channel id to string: %s", err)
 	thingsClient := mocks.NewThingsClient(map[string]uint64{atoken: id})
-	fmt.Println(thingsClient)
 	pub := newMessageService()
 	ts := newMessageServer(pub, thingsClient)
 	defer ts.Close()
@@ -96,7 +95,7 @@ func TestSendMessage(t *testing.T) {
 			chanID: chanID,
 			msg:    msg,
 			auth:   mocks.ServiceErrToken,
-			err:    sdk.ErrFailedUpdate,
+			err:    sdk.ErrFailedPublish,
 		},
 	}
 	for desc, tc := range cases {
