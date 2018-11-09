@@ -19,6 +19,7 @@ import (
 	"github.com/mainflux/mainflux/http/mocks"
 	sdk "github.com/mainflux/mainflux/sdk/go"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func newMessageService() mainflux.MessagePublisher {
@@ -37,8 +38,8 @@ func TestSendMessage(t *testing.T) {
 	atoken := "auth_token"
 	invalidToken := "invalid_token"
 	msg := `[{"n":"current","t":-1,"v":1.6}]`
-	id, _ := strconv.ParseUint(chanID, 10, 64)
-
+	id, err := strconv.ParseUint(chanID, 10, 64)
+	require.Nil(t, err, "publish message: unexpected error when converting channel id to string: %s", err)
 	thingsClient := mocks.NewThingsClient(map[string]uint64{atoken: id})
 	fmt.Println(thingsClient)
 	pub := newMessageService()
@@ -101,16 +102,14 @@ func TestSendMessage(t *testing.T) {
 	for desc, tc := range cases {
 		err := mainfluxSDK.SendMessage(tc.chanID, tc.msg, tc.auth)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", desc, tc.err, err))
-
 	}
 }
 
 func TestSetContentType(t *testing.T) {
-
 	chanID := "1"
 	atoken := "auth_token"
-	id, _ := strconv.ParseUint(chanID, 10, 64)
-
+	id, err := strconv.ParseUint(chanID, 10, 64)
+	require.Nil(t, err, "publish message: unexpected error when converting channel id to string: %s", err)
 	thingsClient := mocks.NewThingsClient(map[string]uint64{atoken: id})
 
 	pub := newMessageService()
@@ -147,5 +146,4 @@ func TestSetContentType(t *testing.T) {
 		err := mainfluxSDK.SetContentType(tc.cType)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 	}
-
 }

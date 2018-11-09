@@ -78,7 +78,6 @@ func TestCreateChannel(t *testing.T) {
 		loc, err := mainfluxSDK.CreateChannel(tc.channel, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.empty, loc == "", fmt.Sprintf("%s: expected empty result location, got: %s", tc.desc, loc))
-
 	}
 }
 func TestChannel(t *testing.T) {
@@ -133,11 +132,9 @@ func TestChannel(t *testing.T) {
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, respCh, fmt.Sprintf("%s: expected response channel %s, got %s", tc.desc, tc.response, respCh))
 	}
-
 }
 
 func TestCahnnels(t *testing.T) {
-
 	svc := newThingsService(map[string]string{token: email})
 	ts := newThingsServer(svc)
 	defer ts.Close()
@@ -150,10 +147,8 @@ func TestCahnnels(t *testing.T) {
 		TLSVerification:   false,
 	}
 	var channels []sdk.Channel
-
 	mainfluxSDK := sdk.NewSDK(sdkConf)
 	for i := 1; i < 101; i++ {
-
 		channel := sdk.Channel{ID: strconv.Itoa(i), Name: "test"}
 		mainfluxSDK.CreateChannel(channel, token)
 		channels = append(channels, channel)
@@ -228,7 +223,6 @@ func TestCahnnels(t *testing.T) {
 		respChs, err := mainfluxSDK.Channels(tc.token, tc.offset, tc.limit)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, respChs, fmt.Sprintf("%s: expected response channel %s, got %s", tc.desc, tc.response, respChs))
-
 	}
 }
 
@@ -288,10 +282,8 @@ func TestUpdateChannel(t *testing.T) {
 
 	for _, tc := range cases {
 		err := mainfluxSDK.UpdateChannel(tc.channel, tc.token)
-
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 	}
-
 }
 
 func TestDeleteChannel(t *testing.T) {
@@ -316,7 +308,6 @@ func TestDeleteChannel(t *testing.T) {
 		token string
 		err   error
 	}{
-
 		{
 			desc:  "delete channel with invalid token",
 			chId:  "1",
@@ -357,7 +348,6 @@ func TestDeleteChannel(t *testing.T) {
 
 	for _, tc := range cases {
 		err := mainfluxSDK.DeleteChannel(tc.chId, tc.token)
-
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 	}
 }

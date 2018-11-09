@@ -323,7 +323,6 @@ func TestUpdateThing(t *testing.T) {
 
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 	}
-
 }
 
 func TestDeleteThing(t *testing.T) {
@@ -348,7 +347,6 @@ func TestDeleteThing(t *testing.T) {
 		token string
 		err   error
 	}{
-
 		{
 			desc:  "delete thing with invalid token",
 			thId:  "1",
@@ -423,7 +421,6 @@ func TestConnectThing(t *testing.T) {
 		token string
 		err   error
 	}{
-
 		{
 			desc:  "connect existing thing to existing channel",
 			thId:  "1",
@@ -520,7 +517,6 @@ func TestDisconnectThing(t *testing.T) {
 		token string
 		err   error
 	}{
-
 		{
 			desc:  "disconnect connected thing from channel",
 			thId:  "1",
@@ -528,7 +524,6 @@ func TestDisconnectThing(t *testing.T) {
 			token: token,
 			err:   nil,
 		},
-
 		{
 			desc:  "disconnect existing thing from non-existing channel",
 			thId:  "1",
@@ -557,7 +552,6 @@ func TestDisconnectThing(t *testing.T) {
 			token: token,
 			err:   sdk.ErrFailedDisconnect,
 		},
-
 		{
 			desc:  "disconnect existing thing from existing channel with invalid token",
 			thId:  "1",

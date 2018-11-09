@@ -149,7 +149,5 @@ func TestCreateToken(t *testing.T) {
 		token, err := mainfluxSDK.CreateToken(tc.user)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.token, token, fmt.Sprintf("%s: expected response: %s, got:  %s", tc.desc, token, tc.token))
-
 	}
-
 }
