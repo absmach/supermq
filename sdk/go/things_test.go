@@ -548,14 +548,14 @@ func TestDisconnectThing(t *testing.T) {
 			thId:  "1",
 			chId:  "invalid",
 			token: token,
-			err:   sdk.ErrFailedConnection,
+			err:   sdk.ErrFailedDisconnect,
 		},
 		{
 			desc:  "disconnect thing with invalid ID from existing channel",
 			thId:  "invalid",
 			chId:  "1",
 			token: token,
-			err:   sdk.ErrFailedConnection,
+			err:   sdk.ErrFailedDisconnect,
 		},
 
 		{

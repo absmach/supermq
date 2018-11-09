@@ -43,7 +43,7 @@ var (
 	ErrFailedConnection = errors.New("failed to connect thing to channel")
 
 	// ErrFailedDisconnect indicates that disconnecting thing from a channel failed.
-	ErrFailedDisconnect = errors.New("failed to connect thing to channel")
+	ErrFailedDisconnect = errors.New("failed to disconnect thing from channel")
 
 	// ErrInvalidArgs indicates that invalid argument was passed.
 	ErrInvalidArgs = errors.New("invalid argument passed")
