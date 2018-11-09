@@ -167,11 +167,9 @@ func TestThing(t *testing.T) {
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, respTh, fmt.Sprintf("%s: expected response thing %s, got %s", tc.desc, tc.response, respTh))
 	}
-
 }
 
 func TestThings(t *testing.T) {
-
 	svc := newThingsService(map[string]string{token: email})
 	ts := newThingsServer(svc)
 	defer ts.Close()
@@ -263,7 +261,6 @@ func TestThings(t *testing.T) {
 		respThs, err := mainfluxSDK.Things(tc.token, tc.offset, tc.limit)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, respThs, fmt.Sprintf("%s: expected response channel %s, got %s", tc.desc, tc.response, respThs))
-
 	}
 }
 func TestUpdateThing(t *testing.T) {
@@ -368,7 +365,7 @@ func TestDeleteThing(t *testing.T) {
 			desc:  "delete thing with invalid id",
 			thId:  "invalid",
 			token: token,
-			err:   sdk.ErrFailedRemoval,
+			err:   sdk.ErrInvalidArgs,
 		},
 		{
 			desc:  "delete thing with empty token",
