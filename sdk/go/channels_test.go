@@ -38,46 +38,46 @@ func TestCreateChannel(t *testing.T) {
 	mainfluxSDK := sdk.NewSDK(sdkConf)
 
 	cases := []struct {
-		desc     string
-		channel  sdk.Channel
-		token    string
-		err      error
-		location string
+		desc    string
+		channel sdk.Channel
+		token   string
+		err     error
+		empty   bool
 	}{
 		{
-			desc:     "create new channel",
-			channel:  channel,
-			token:    token,
-			err:      nil,
-			location: "/channels/1",
+			desc:    "create new channel",
+			channel: channel,
+			token:   token,
+			err:     nil,
+			empty:   false,
 		},
 		{
-			desc:     "create new channel with empty token",
-			channel:  channel,
-			token:    "",
-			err:      sdk.ErrUnauthorized,
-			location: "",
+			desc:    "create new channel with empty token",
+			channel: channel,
+			token:   "",
+			err:     sdk.ErrUnauthorized,
+			empty:   true,
 		},
 		{
-			desc:     "create new channel with invalid token",
-			channel:  channel,
-			token:    wrongValue,
-			err:      sdk.ErrUnauthorized,
-			location: "",
+			desc:    "create new channel with invalid token",
+			channel: channel,
+			token:   wrongValue,
+			err:     sdk.ErrUnauthorized,
+			empty:   true,
 		},
 		{
-			desc:     "create new empty channel",
-			channel:  emptyChannel,
-			token:    token,
-			err:      nil,
-			location: "/channels/2",
+			desc:    "create new empty channel",
+			channel: emptyChannel,
+			token:   token,
+			err:     nil,
+			empty:   false,
 		},
 	}
 
 	for _, tc := range cases {
 		loc, err := mainfluxSDK.CreateChannel(tc.channel, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
-		assert.Equal(t, tc.location, loc, fmt.Sprintf("%s: expected location %s got %s", tc.desc, tc.location, loc))
+		assert.Equal(t, tc.empty, loc == "", fmt.Sprintf("%s: expected empty result location, got: %s", tc.desc, loc))
 
 	}
 }
