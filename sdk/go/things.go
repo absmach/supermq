@@ -42,8 +42,6 @@ func (sdk mfSDK) CreateThing(thing Thing, token string) (string, error) {
 			return "", ErrInvalidArgs
 		case http.StatusForbidden:
 			return "", ErrUnauthorized
-		case http.StatusConflict:
-			return "", ErrConflict
 		default:
 			return "", ErrFailedCreation
 		}
