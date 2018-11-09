@@ -138,10 +138,16 @@ func TestCreateToken(t *testing.T) {
 			token: "",
 			err:   sdk.ErrUnauthorized,
 		},
+		{
+			desc:  "create user with empty email",
+			user:  sdk.User{Email: "", Password: "password"},
+			token: "",
+			err:   sdk.ErrInvalidArgs,
+		},
 	}
 	for _, tc := range cases {
 		token, err := mainfluxSDK.CreateToken(tc.user)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.token, token, fmt.Sprintf("%s: expected response: %s, got:  %s", tc.desc, token, tc.token))
 
 	}
