@@ -100,7 +100,7 @@ func TestCreateThing(t *testing.T) {
 		{
 			desc:     "create new epmty thing",
 			thing:    emptyThing,
-			token:    wrongValue,
+			token:    token,
 			err:      sdk.ErrInvalidArgs,
 			location: "",
 		},
