@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -17,6 +18,7 @@ import (
 	natsBroker "github.com/mainflux/mainflux/lora/nats"
 	pahoBroker "github.com/mainflux/mainflux/lora/paho"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	apilora "github.com/brocaar/lora-app-server/api"
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
@@ -26,15 +28,13 @@ import (
 )
 
 const (
-	defPort         = "6070"
 	defLoraMsgURL   = "tcp://localhost:1883"
-	defLoraServURL  = "tcp://localhost:1884"
+	defLoraServURL  = "localhost:8080"
 	defNatsURL      = nats.DefaultURL
 	defLogLevel     = "error"
 	defRouteMapURL  = "localhost:6379"
 	defRouteMapPass = ""
 	defRouteMapDB   = "0"
-	envPort         = "MF_LORA_ADAPTER_PORT"
 	envLoraMsgURL   = "MF_LORA_ADAPTER_LORA_MESSAGE_URL"
 	envLoraServURL  = "MF_LORA_ADAPTER_LORA_SERVER_URL"
 	envNatsURL      = "MF_NATS_URL"
@@ -45,7 +45,6 @@ const (
 )
 
 type config struct {
-	Port         string
 	LoraMsgURL   string
 	LoraServURL  string
 	NatsURL      string
@@ -53,6 +52,20 @@ type config struct {
 	RouteMapURL  string
 	RouteMapPass string
 	RouteMapDB   string
+}
+
+type jwt struct {
+	token string
+}
+
+func (t jwt) GetRequestMetadata(ctx context.Context, in ...string) (map[string]string, error) {
+	return map[string]string{
+		"authorization": "Bearer " + t.token,
+	}, nil
+}
+
+func (jwt) RequireTransportSecurity() bool {
+	return true
 }
 
 func main() {
@@ -66,12 +79,14 @@ func main() {
 	natsConn := connectToNATS(cfg.NatsURL, logger)
 	mqttConn := connectToMQTTBroker(cfg.LoraMsgURL, logger)
 	grpcConn := connectToGRPC(cfg.LoraServURL, logger)
+	defer grpcConn.Close()
+
 	redisConn := connectToRouteMap(cfg.RouteMapURL, cfg.RouteMapPass, cfg.RouteMapDB, logger)
 
-	asc := apilora.NewApplicationServiceClient(grpcConn)
+	asConn := apilora.NewApplicationServiceClient(grpcConn)
 	routeMap := router.NewRouteMapRepository(redisConn)
 
-	svc := lora.New(natsConn, asc, routeMap, logger)
+	svc := lora.New(natsConn, asConn, routeMap, logger)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
@@ -106,7 +121,6 @@ func main() {
 
 func loadConfig() config {
 	return config{
-		Port:         mainflux.Env(envPort, defPort),
 		LoraMsgURL:   mainflux.Env(envLoraMsgURL, defLoraMsgURL),
 		LoraServURL:  mainflux.Env(envLoraServURL, defLoraServURL),
 		NatsURL:      mainflux.Env(envNatsURL, defNatsURL),
@@ -164,7 +178,13 @@ func connectToRouteMap(mappingURL, mappingPass string, mappingDB string, logger 
 }
 
 func connectToGRPC(url string, logger logger.Logger) *grpc.ClientConn {
-	conn, err := grpc.Dial(url, grpc.WithInsecure())
+	conn, err := grpc.Dial(url,
+		grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(nil, "")),
+		grpc.WithPerRPCCredentials(jwt{
+			token: "verysecret",
+		}),
+	)
+
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to GRPC: %s", err))
 		os.Exit(1)
