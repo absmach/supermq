@@ -15,7 +15,6 @@ import (
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/lora"
 	"github.com/mainflux/mainflux/lora/api"
-	natsBroker "github.com/mainflux/mainflux/lora/nats"
 	pahoBroker "github.com/mainflux/mainflux/lora/paho"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -105,7 +104,6 @@ func main() {
 		}, []string{"method"}),
 	)
 
-	go subscribeToMfxBroker(svc, natsConn, logger)
 	go subscribeToLoRaBroker(svc, mqttConn, natsConn, logger)
 
 	errs := make(chan error, 1)
@@ -148,10 +146,11 @@ func connectToMQTTBroker(loraURL string, logger logger.Logger) mqtt.Client {
 	opts.SetUsername("")
 	opts.SetPassword("")
 	opts.SetOnConnectHandler(func(c mqtt.Client) {
-		logger.Info("Connected to MQTT broker")
+		logger.Info("Connected to MsQTT broker")
 	})
 	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {
 		logger.Error(fmt.Sprintf("MQTT connection lost: %s", err.Error()))
+		os.Exit(1)
 	})
 
 	client := mqtt.NewClient(opts)
@@ -191,14 +190,6 @@ func connectToGRPC(url string, logger logger.Logger) *grpc.ClientConn {
 	}
 
 	return conn
-}
-
-func subscribeToMfxBroker(svc lora.Service, nc *nats.Conn, logger logger.Logger) {
-	logger.Info(fmt.Sprintf("Lora-adapter service subscribed to MFX NATS broker."))
-	if err := natsBroker.Subscribe(svc, nc, logger); err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to MFX NATS broker: %s", err))
-		os.Exit(1)
-	}
 }
 
 func subscribeToLoRaBroker(svc lora.Service, mc mqtt.Client, nc *nats.Conn, logger logger.Logger) {
