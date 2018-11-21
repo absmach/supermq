@@ -217,3 +217,20 @@ services:
       - 5683:5683
     networks:
       - mainflux-base-net
+
+  lora-adapter:
+    image: mainflux/lora:latest
+    container_name: mainflux-lora
+    depends_on:
+      - things
+      - nats
+      - redis
+    restart: on-failure
+    environment:
+      MF_LORA_ADAPTER_LOG_LEVEL: debug
+      MF_LORA_ADAPTER_PORT: 8187
+      MF_NATS_URL: nats://nats:4222
+    ports:
+      - 8187:8187
+    networks:
+      - mainflux-base-net
