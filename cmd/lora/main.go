@@ -77,6 +77,7 @@ func main() {
 	}
 
 	natsConn := connectToNATS(cfg.natsURL, logger)
+	defer natsConn.Close()
 	mqttConn := connectToMQTTBroker(cfg.loraMsgURL, logger)
 	grpcConn := connectToGRPC(cfg.loraServURL, logger)
 	defer grpcConn.Close()
@@ -104,8 +105,8 @@ func main() {
 		}, []string{"method"}),
 	)
 
-	go connectToMfxBroker(svc, natsConn, logger)
-	go connectToLoraBroker(svc, mqttConn, natsConn, logger)
+	go subscribeToMfxBroker(svc, natsConn, logger)
+	go subscribeToLoRaBroker(svc, mqttConn, natsConn, logger)
 
 	errs := make(chan error, 1)
 
@@ -137,7 +138,6 @@ func connectToNATS(url string, logger logger.Logger) *nats.Conn {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
 		os.Exit(1)
 	}
-	defer conn.Close()
 
 	return conn
 }
@@ -193,7 +193,7 @@ func connectToGRPC(url string, logger logger.Logger) *grpc.ClientConn {
 	return conn
 }
 
-func connectToMfxBroker(svc lora.Service, nc *nats.Conn, logger logger.Logger) {
+func subscribeToMfxBroker(svc lora.Service, nc *nats.Conn, logger logger.Logger) {
 	logger.Info(fmt.Sprintf("Lora-adapter service subscribed to MFX NATS broker."))
 	if err := natsBroker.Subscribe(svc, nc, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to MFX NATS broker: %s", err))
@@ -201,7 +201,7 @@ func connectToMfxBroker(svc lora.Service, nc *nats.Conn, logger logger.Logger) {
 	}
 }
 
-func connectToLoraBroker(svc lora.Service, mc mqtt.Client, nc *nats.Conn, logger logger.Logger) {
+func subscribeToLoRaBroker(svc lora.Service, mc mqtt.Client, nc *nats.Conn, logger logger.Logger) {
 	logger.Info(fmt.Sprintf("Lora-adapter service subscribed to Lora MQTT broker."))
 	if err := pahoBroker.Subscribe(svc, mc, nc, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to Lora MQTT broker: %s", err))
