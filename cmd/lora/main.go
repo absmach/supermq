@@ -45,13 +45,13 @@ const (
 )
 
 type config struct {
-	LoraMsgURL   string
-	LoraServURL  string
-	NatsURL      string
-	LogLevel     string
-	RouteMapURL  string
-	RouteMapPass string
-	RouteMapDB   string
+	loraMsgURL   string
+	loraServURL  string
+	natsURL      string
+	logLevel     string
+	routeMapURL  string
+	routeMapPass string
+	routeMapDB   string
 }
 
 type jwt struct {
@@ -71,17 +71,17 @@ func (jwt) RequireTransportSecurity() bool {
 func main() {
 	cfg := loadConfig()
 
-	logger, err := logger.New(os.Stdout, cfg.LogLevel)
+	logger, err := logger.New(os.Stdout, cfg.logLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 
-	natsConn := connectToNATS(cfg.NatsURL, logger)
-	mqttConn := connectToMQTTBroker(cfg.LoraMsgURL, logger)
-	grpcConn := connectToGRPC(cfg.LoraServURL, logger)
+	natsConn := connectToNATS(cfg.natsURL, logger)
+	mqttConn := connectToMQTTBroker(cfg.loraMsgURL, logger)
+	grpcConn := connectToGRPC(cfg.loraServURL, logger)
 	defer grpcConn.Close()
 
-	redisConn := connectToRouteMap(cfg.RouteMapURL, cfg.RouteMapPass, cfg.RouteMapDB, logger)
+	redisConn := connectToRouteMap(cfg.routeMapURL, cfg.routeMapPass, cfg.routeMapDB, logger)
 
 	asConn := apilora.NewApplicationServiceClient(grpcConn)
 	routeMap := router.NewRouteMapRepository(redisConn)
@@ -121,13 +121,13 @@ func main() {
 
 func loadConfig() config {
 	return config{
-		LoraMsgURL:   mainflux.Env(envLoraMsgURL, defLoraMsgURL),
-		LoraServURL:  mainflux.Env(envLoraServURL, defLoraServURL),
-		NatsURL:      mainflux.Env(envNatsURL, defNatsURL),
-		LogLevel:     mainflux.Env(envLogLevel, defLogLevel),
-		RouteMapURL:  mainflux.Env(envRouteMapURL, defRouteMapURL),
-		RouteMapPass: mainflux.Env(envRouteMapPass, defRouteMapPass),
-		RouteMapDB:   mainflux.Env(envRouteMapDB, defRouteMapDB),
+		loraMsgURL:   mainflux.Env(envLoraMsgURL, defLoraMsgURL),
+		loraServURL:  mainflux.Env(envLoraServURL, defLoraServURL),
+		natsURL:      mainflux.Env(envNatsURL, defNatsURL),
+		logLevel:     mainflux.Env(envLogLevel, defLogLevel),
+		routeMapURL:  mainflux.Env(envRouteMapURL, defRouteMapURL),
+		routeMapPass: mainflux.Env(envRouteMapPass, defRouteMapPass),
+		routeMapDB:   mainflux.Env(envRouteMapDB, defRouteMapDB),
 	}
 }
 
