@@ -1,32 +1,66 @@
-# Mainflux LoRa Adapter
-
-[![License](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
-[![Go Report Card](https://goreportcard.com/badge/github.com/Mainflux/mainflux-cli)](https://goreportcard.com/report/github.com/Mainflux/mainflux-cli)
-[![Join the chat at https://gitter.im/Mainflux/mainflux](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Mainflux/mainflux?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
+# LoRa Adapter
 Adapter between Mainflux IoT system and [LoRa Server](https://github.com/brocaar/loraserver).
 
 This adapter sits between Mainflux and LoRa server and just forwards the messages form one system to another via MQTT protocol, using the adequate MQTT topics and in the good message format (JSON and SenML), i.e. respecting the APIs of both systems.
 
 LoRa Server is used for connectivity layer and data is pushed via this adapter service to Mainflux, where it is persisted and routed to other protocols via Mainflux multi-protocol message broker. Mainflux adds user accounts, application management and security in order to obtain the overall end-to-end LoRa solution.
 
-### Installation
-```bash
-go get github.com/mainflux/lora-adapter
+## Configuration
+
+The service is configured using the environment variables presented in the
+following table. Note that any unset variables will be replaced with their
+default values.
+
+| Variable                         | Description                           | Default               |
+|----------------------------------|---------------------------------------|-----------------------|
+| MF_LORA_ADAPTER_LOG_LEVEL        | Log level for the Lora Adapter        | error                 |
+| MF_NATS_URL                      | NATS instance URL                     | nats://localhost:4222 |
+| MF_LORA_ADAPTER_LORA_MESSAGE_URL | Loraserver mqtt broker URL            | tcp://localhost:1883  |
+| MF_LORA_ADAPTER_LORA_SERVER_URL  | Loraserver gRPC API URL               | localhost:8080        |
+| MF_LORA_ADAPTER_ROUTEMAP_URL     | Routemap database URL                 | localhost:6379        |
+| MF_LORA_ADAPTER_ROUTEMAP_PASS    | Routemap database password            |                       |
+| MF_LORA_ADAPTER_ROUTEMAP_DB      | Routemap instance that should be used | 0                     |
+
+## Deployment
+
+The service is distributed as Docker container. The following snippet provides
+a compose file template that can be used to deploy the service container locally:
+
+```yaml
+version: "2"
+services:
+  adapter:
+    image: mainflux/lora:[version]
+    container_name: [instance name]
+    environment:
+      MF_LORA_ADAPTER_LOG_LEVEL: [Lora Adapter Log Level]
+      MF_NATS_URL: [NATS instance URL]
+      MF_LORA_ADAPTER_LORA_MESSAGE_URL: [Loraserver mqtt broker URL]
+      MF_LORA_ADAPTER_LORA_SERVER_URL: [Loraserver gRPC API URL]
+      MF_LORA_ADAPTER_ROUTEMAP_URL: [Lora adapter routemap URL]
+      MF_LORA_ADAPTER_ROUTEMAP_PASS: [Lora adapter routemap password]
+      MF_LORA_ADAPTER_ROUTEMAP_DB: [Lora adapter routemap instance]
 ```
 
-### Documentation
-Development documentation can be found [here](http://mainflux.readthedocs.io).
+To start the service outside of the container, execute the following shell script:
 
-### Community
-#### Mailing lists
-[mainflux](https://groups.google.com/forum/#!forum/mainflux) Google group.
+```bash
+# download the latest version of the service
+go get github.com/mainflux/mainflux
 
-#### IRC
-[Mainflux Gitter](https://gitter.im/Mainflux/mainflux?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+cd $GOPATH/src/github.com/mainflux/mainflux
 
-#### Twitter
-[@mainflux](https://twitter.com/mainflux)
+# compile the lora adapter
+make lora
 
-### License
-[Apache License, version 2.0](LICENSE)
+# copy binary to bin
+make install
+
+# set the environment variables and run the service
+MF_LORA_ADAPTER_LOG_LEVEL=[Lora Adapter Log Level] MF_NATS_URL=[NATS instance URL] MF_LORA_ADAPTER_LORA_MESSAGE_URL=[Loraserver mqtt broker URL] MF_LORA_ADAPTER_LORA_SERVER_URL=[Loraserver gRPC API URL] MF_LORA_ADAPTER_ROUTEMAP_URL=[Lora adapter routemap URL] MF_LORA_ADAPTER_ROUTEMAP_PASS=[Lora adapter routemap password] MF_LORA_ADAPTER_ROUTEMAP_DB=[Lora adapter routemap instance] $GOBIN/mainflux-lora
+```
+
+## Usage
+
+For more information about service capabilities and its usage, please check out
+the [API documentation](swagger.yaml).

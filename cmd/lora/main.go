@@ -39,9 +39,9 @@ const (
 	envLoraServURL  = "MF_LORA_ADAPTER_LORA_SERVER_URL"
 	envNatsURL      = "MF_NATS_URL"
 	envLogLevel     = "MF_LORA_ADAPTER_LOG_LEVEL"
-	envRouteMapURL  = "MF_LORA_ADAPTER_CACHE_URL"
-	envRouteMapPass = "MF_LORA_ADAPTER_CACHE_PASS"
-	envRouteMapDB   = "MF_LORA_ADAPTER_CACHE_DB"
+	envRouteMapURL  = "MF_LORA_ADAPTER_REDIS_URL"
+	envRouteMapPass = "MF_LORA_ADAPTER_REDIS_PASS"
+	envRouteMapDB   = "MF_LORA_ADAPTER_REDIS_DB"
 )
 
 type config struct {
