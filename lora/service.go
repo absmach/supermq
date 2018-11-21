@@ -1,11 +1,8 @@
 package lora
 
 import (
-	"context"
 	"encoding/base64"
 	"fmt"
-	"strconv"
-	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/nats-io/go-nats"
@@ -57,12 +54,28 @@ func New(mc *nats.Conn, asc apilora.ApplicationServiceClient, m RouteMapReposito
 func (as *adapterService) ProvisionRouter(provision EventSourcing) error {
 	// TODO: do gRPC provisioning here if thing created
 	switch provision.Type {
-	case "app":
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-		defer cancel()
+	case "thing":
+	// TODO: Lora provisioning
+	/*ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
 
-		req := &apilora.CreateApplicationRequest{}
-		as.loraAppClient.Create(ctx, req)
+	createResp, err := as.loraAppClient.List(ctx, &apilora.ListApplicationRequest{
+		Limit:  10,
+		Offset: 0,
+	})
+
+	createResp, err := as.loraAppClient.Create(ctx, &apilora.CreateApplicationRequest{
+		Application: &apilora.Application{
+			OrganizationId:       123456,
+			Name:                 "test-app",
+			Description:          "A test application",
+			ServiceProfileId:     "serviceProfileId",
+			PayloadCodec:         "CUSTOM_JS",
+			PayloadEncoderScript: "Encode() {}",
+			PayloadDecoderScript: "Decode() {}",
+		},
+	})*/
+	case "channel":
 
 	default:
 		as.logger.Error(fmt.Sprintf("Unknown provision type"))
@@ -70,33 +83,37 @@ func (as *adapterService) ProvisionRouter(provision EventSourcing) error {
 	}
 
 	// TODO: save routeMap
-	var channel uint64 = 1
-	loraAppTopic := "application/123"
-	if err := as.routeMap.Save(loraAppTopic, channel); err != nil {
+	//var channel uint64 = 1
+	//loraAppTopic := "application/123"
+	/*if err := as.routeMap.Save(loraAppTopic, channel); err != nil {
 		as.logger.Error(fmt.Sprintf("Failed to save route map: %s", err))
-	}
+	}*/
 
 	return nil
 }
 
 // MessageRouter routes messages from Lora MQTT broker to Mainflux NATS broker
 func (as *adapterService) MessageRouter(m Message, nc *nats.Conn) error {
-	eui, err := strconv.ParseUint(m.DevEUI, 10, 64)
+	// TODO: Use routemap
+	/*eui, err := strconv.ParseUint(m.DevEUI, 16, 64)
 	if err != nil {
 		as.logger.Error(fmt.Sprintf("Failed to decode deviceEUI: %s", err.Error()))
 		return nil
-	}
+	}*/
+	var eui uint64 = 1
+
+	// TODO: Use routemap
+	// Get route map of lora application
+	/*channel, err := as.routeMap.Channel(m.ApplicationID)
+	if err != nil {
+		as.logger.Error(fmt.Sprintf("Routing doesn't exist for this LoRa application: %s", err.Error()))
+		return nil
+	}*/
+	var channel uint64 = 1
 
 	payload, err := base64.StdEncoding.DecodeString(m.Data)
 	if err != nil {
 		as.logger.Error(fmt.Sprintf("Failed to decode string message: %s", err.Error()))
-		return nil
-	}
-
-	// Get route map of lora application
-	channel, err := as.routeMap.Channel(m.ApplicationID)
-	if err != nil {
-		as.logger.Error(fmt.Sprintf("Routing doesn't exist for this LoRa application: %s", err.Error()))
 		return nil
 	}
 
