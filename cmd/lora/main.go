@@ -27,6 +27,7 @@ import (
 )
 
 const (
+	defHTTPPort     = "8180"
 	defLoraMsgURL   = "tcp://localhost:1883"
 	defLoraServURL  = "localhost:8080"
 	defNatsURL      = nats.DefaultURL
@@ -34,6 +35,7 @@ const (
 	defRouteMapURL  = "localhost:6379"
 	defRouteMapPass = ""
 	defRouteMapDB   = "0"
+	envHTTPPort     = "MF_LORA_ADAPTER_HTTP_PORT"
 	envLoraMsgURL   = "MF_LORA_ADAPTER_LORA_MESSAGE_URL"
 	envLoraServURL  = "MF_LORA_ADAPTER_LORA_SERVER_URL"
 	envNatsURL      = "MF_NATS_URL"
@@ -44,6 +46,7 @@ const (
 )
 
 type config struct {
+	httpPort     string
 	loraMsgURL   string
 	loraServURL  string
 	natsURL      string
@@ -120,6 +123,7 @@ func main() {
 
 func loadConfig() config {
 	return config{
+		httpPort:     mainflux.Env(envHTTPPort, defHTTPPort),
 		loraMsgURL:   mainflux.Env(envLoraMsgURL, defLoraMsgURL),
 		loraServURL:  mainflux.Env(envLoraServURL, defLoraServURL),
 		natsURL:      mainflux.Env(envNatsURL, defNatsURL),
