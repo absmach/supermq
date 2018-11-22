@@ -127,7 +127,7 @@ func main() {
 func loadConfig() config {
 	tls, err := strconv.ParseBool(mainflux.Env(envClientTLS, defClientTLS))
 	if err != nil {
-		tls = false
+		log.Fatalf("Invalid value passed for %s\n", envClientTLS)
 	}
 
 	return config{
@@ -209,6 +209,7 @@ func newService(conn *grpc.ClientConn, db *sql.DB, client *redis.Client, logger 
 	idp := uuid.New()
 
 	svc := things.New(users, thingsRepo, channelsRepo, chanCache, thingCache, idp)
+	svc = rediscache.NewEventStoreMiddleware(svc, client)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
