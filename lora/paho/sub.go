@@ -12,7 +12,7 @@ import (
 	nats "github.com/nats-io/go-nats"
 )
 
-const loraServerTopic = "application/+/node/+/rx"
+const loraServerTopic = "application/+/device/+/rx"
 
 type pubsub struct {
 	nc     *nats.Conn

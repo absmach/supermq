@@ -46,7 +46,7 @@ func (lm loggingMiddleware) ProvisionRouter(es lora.EventSourcing) (err error) {
 
 func (lm loggingMiddleware) MessageRouter(m lora.Message, nc *nats.Conn) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("message_router took %s to complete", time.Since(begin))
+		message := fmt.Sprintf("message_router - application/%s/device/%s/rx took %s to complete", m.ApplicationID, m.DevEUI, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return

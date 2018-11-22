@@ -38,9 +38,9 @@ const (
 	envLoraServURL  = "MF_LORA_ADAPTER_LORA_SERVER_URL"
 	envNatsURL      = "MF_NATS_URL"
 	envLogLevel     = "MF_LORA_ADAPTER_LOG_LEVEL"
-	envRouteMapURL  = "MF_LORA_ADAPTER_REDIS_URL"
-	envRouteMapPass = "MF_LORA_ADAPTER_REDIS_PASS"
-	envRouteMapDB   = "MF_LORA_ADAPTER_REDIS_DB"
+	envRouteMapURL  = "MF_LORA_ADAPTER_ROUTEMAP_URL"
+	envRouteMapPass = "MF_LORA_ADAPTER_ROUTEMAP_PASS"
+	envRouteMapDB   = "MF_LORA_ADAPTER_ROUTEMAP_DB"
 )
 
 type config struct {
@@ -146,7 +146,7 @@ func connectToMQTTBroker(loraURL string, logger logger.Logger) mqtt.Client {
 	opts.SetUsername("")
 	opts.SetPassword("")
 	opts.SetOnConnectHandler(func(c mqtt.Client) {
-		logger.Info("Connected to MsQTT broker")
+		logger.Info("Connected to MQTT broker")
 	})
 	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {
 		logger.Error(fmt.Sprintf("MQTT connection lost: %s", err.Error()))
