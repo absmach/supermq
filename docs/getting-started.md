@@ -368,6 +368,29 @@ Flags:
 Use "mainflux-cli [command] --help" for more information about a command.
 ```
 
+You can execute each command with `-h` flag for more information about that command, e.g.
+
+```
+./mainflux-cli channels -h
+```
+
+will get you usage info:
+
+```
+Manipulation with channels: create, delete or update channels
+
+Usage:
+  mainflux-cli channels [flags]
+  mainflux-cli channels [command]
+
+Available Commands:
+  create      create <JSON_channel> <user_auth_token>
+  delete      delete <channel_id> <user_auth_token>
+  get         get all/<channel_id> <user_auth_token>
+  update      update <JSON_string> <user_auth_token>
+
+```
+
 ### Service
 #### Get the service verison
 
