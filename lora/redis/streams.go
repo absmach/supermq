@@ -57,32 +57,39 @@ func (es eventStore) Subscribe(subject string) {
 
 		for _, msg := range streams[0].Messages {
 			event := msg.Values
+
+			var err error
 			switch event["operation"] {
 			case thingCreate:
 				cte := decodeCreateThing(event)
-				es.handleCreateThing(cte)
+				err = es.handleCreateThing(cte)
 			case thingUpdate:
 				ute := decodeUpdateThing(event)
-				es.handleUpdateThing(ute)
+				err = es.handleUpdateThing(ute)
 			case thingRemove:
 				rte := decodeRemoveThing(event)
-				es.handleRemoveThing(rte)
+				err = es.handleRemoveThing(rte)
 			case channelCreate:
 				cce := decodeCreateChannel(event)
-				es.handleCreateChannel(cce)
+				err = es.handleCreateChannel(cce)
 			case channelUpdate:
 				uce := decodeUpdateChannel(event)
-				es.handleUpdateChannel(uce)
+				err = es.handleUpdateChannel(uce)
 			case channelRemove:
 				rce := decodeRemoveChannel(event)
-				es.handleRemoveChannel(rce)
+				err = es.handleRemoveChannel(rce)
 			case thingConnect:
 				cte := decodeConnectThing(event)
-				es.handleConnect(cte)
+				err = es.handleConnect(cte)
 			case thingDisconnect:
 				dte := decodeDisconnectThing(event)
-				es.handleDisconnect(dte)
+				err = es.handleDisconnect(dte)
 			}
+			if err != nil {
+				// TODO: add error logging
+				break
+			}
+			es.client.XAck(stream, group, msg.ID)
 		}
 	}
 }
@@ -147,34 +154,42 @@ func decodeDisconnectThing(event map[string]interface{}) disconnectThingEvent {
 	}
 }
 
-func (es eventStore) handleCreateThing(cte createThingEvent) {
+func (es eventStore) handleCreateThing(cte createThingEvent) error {
 	// TODO: es.svc.CreateThing()
+	return nil
 }
 
-func (es eventStore) handleUpdateThing(ute updateThingEvent) {
+func (es eventStore) handleUpdateThing(ute updateThingEvent) error {
 	// TODO: es.svc.UpdateThing()
+	return nil
 }
 
-func (es eventStore) handleRemoveThing(rte removeThingEvent) {
+func (es eventStore) handleRemoveThing(rte removeThingEvent) error {
 	// TODO: es.svc.RemoveThing()
+	return nil
 }
 
-func (es eventStore) handleCreateChannel(cce createChannelEvent) {
+func (es eventStore) handleCreateChannel(cce createChannelEvent) error {
 	// TODO: es.svc.CreateChannel()
+	return nil
 }
 
-func (es eventStore) handleUpdateChannel(uce updateChannelEvent) {
+func (es eventStore) handleUpdateChannel(uce updateChannelEvent) error {
 	// TODO: es.svc.UpdateChannel()
+	return nil
 }
 
-func (es eventStore) handleRemoveChannel(rce removeChannelEvent) {
+func (es eventStore) handleRemoveChannel(rce removeChannelEvent) error {
 	// TODO: es.svc.RemoveChannel()
+	return nil
 }
 
-func (es eventStore) handleConnect(cte connectThingEvent) {
+func (es eventStore) handleConnect(cte connectThingEvent) error {
 	// TODO: es.svc.Connect()
+	return nil
 }
 
-func (es eventStore) handleDisconnect(dte disconnectThingEvent) {
+func (es eventStore) handleDisconnect(dte disconnectThingEvent) error {
 	// TODO: es.svc.Disconnect()
+	return nil
 }
