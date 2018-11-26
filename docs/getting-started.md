@@ -330,7 +330,7 @@ to every command.
 
 ## CLI
 
-Mainflux CLI is another way to manipulate with users, things and channels and send messages.
+Mainflux CLI is another way to manage users, things, channels and messages.
 
 CLI can be downloaded as separate asset from [project realeses](https://github.com/mainflux/mainflux/releases) or it can be built with:
 
