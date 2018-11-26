@@ -48,7 +48,7 @@ const (
 	envESURL        = "MF_THINGS_ES_URL"
 	envESPass       = "MF_THINGS_ES_PASS"
 	envESDB         = "MF_THINGS_ES_DB"
-	envInstanceName = "MF_LORA_INSTANCE_NAME"
+	envInstanceName = "MF_LORA_ADAPTER_INSTANCE_NAME"
 	envRouteMapURL  = "MF_LORA_ADAPTER_ROUTEMAP_URL"
 	envRouteMapPass = "MF_LORA_ADAPTER_ROUTEMAP_PASS"
 	envRouteMapDB   = "MF_LORA_ADAPTER_ROUTEMAP_DB"

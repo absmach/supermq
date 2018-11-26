@@ -13,6 +13,7 @@ default values.
 
 | Variable                         | Description                           | Default               |
 |----------------------------------|---------------------------------------|-----------------------|
+| MF_LORA_ADAPTER_HTTP_PORT        | Service HTTP port                     | 8180                  |
 | MF_LORA_ADAPTER_LOG_LEVEL        | Log level for the Lora Adapter        | error                 |
 | MF_NATS_URL                      | NATS instance URL                     | nats://localhost:4222 |
 | MF_LORA_ADAPTER_LORA_MESSAGE_URL | Loraserver mqtt broker URL            | tcp://localhost:1883  |
@@ -20,6 +21,10 @@ default values.
 | MF_LORA_ADAPTER_ROUTEMAP_URL     | Routemap database URL                 | localhost:6379        |
 | MF_LORA_ADAPTER_ROUTEMAP_PASS    | Routemap database password            |                       |
 | MF_LORA_ADAPTER_ROUTEMAP_DB      | Routemap instance that should be used | 0                     |
+| MF_THINGS_ES_URL                 | Things service event store URL        | localhost:6379        |
+| MF_THINGS_ES_PASS                | Things service event store password   |                       |
+| MF_THINGS_ES_DB                  | Things service event store db         | 0                     |
+| MF_LORA_ADAPTER_INSTANCE_NAME    | LoRa adapter instance name            | lora                  |
 
 ## Deployment
 
