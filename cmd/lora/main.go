@@ -10,7 +10,7 @@ import (
 	"syscall"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/go-redis/redis"
+	r "github.com/go-redis/redis"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/lora"
@@ -21,7 +21,7 @@ import (
 
 	apilora "github.com/brocaar/lora-app-server/api"
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
-	router "github.com/mainflux/mainflux/lora/redis"
+	"github.com/mainflux/mainflux/lora/redis"
 	"github.com/nats-io/go-nats"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
@@ -32,14 +32,23 @@ const (
 	defLoraServURL  = "localhost:8080"
 	defNatsURL      = nats.DefaultURL
 	defLogLevel     = "error"
+	defESURL        = "localhost:6379"
+	defESPass       = ""
+	defESDB         = "0"
+	defInstanceName = "lora"
 	defRouteMapURL  = "localhost:6379"
 	defRouteMapPass = ""
 	defRouteMapDB   = "0"
+
 	envHTTPPort     = "MF_LORA_ADAPTER_HTTP_PORT"
 	envLoraMsgURL   = "MF_LORA_ADAPTER_LORA_MESSAGE_URL"
 	envLoraServURL  = "MF_LORA_ADAPTER_LORA_SERVER_URL"
 	envNatsURL      = "MF_NATS_URL"
 	envLogLevel     = "MF_LORA_ADAPTER_LOG_LEVEL"
+	envESURL        = "MF_THINGS_ES_URL"
+	envESPass       = "MF_THINGS_ES_PASS"
+	envESDB         = "MF_THINGS_ES_DB"
+	envInstanceName = "MF_LORA_INSTANCE_NAME"
 	envRouteMapURL  = "MF_LORA_ADAPTER_ROUTEMAP_URL"
 	envRouteMapPass = "MF_LORA_ADAPTER_ROUTEMAP_PASS"
 	envRouteMapDB   = "MF_LORA_ADAPTER_ROUTEMAP_DB"
@@ -51,6 +60,10 @@ type config struct {
 	loraServURL  string
 	natsURL      string
 	logLevel     string
+	esURL        string
+	esPass       string
+	esDB         string
+	instanceName string
 	routeMapURL  string
 	routeMapPass string
 	routeMapDB   string
@@ -84,10 +97,14 @@ func main() {
 	grpcConn := connectToGRPC(cfg.loraServURL, logger)
 	defer grpcConn.Close()
 
-	redisConn := connectToRouteMap(cfg.routeMapURL, cfg.routeMapPass, cfg.routeMapDB, logger)
+	redisConn := connectToRedis(cfg.routeMapURL, cfg.routeMapPass, cfg.routeMapDB, logger)
+	defer redisConn.Close()
+
+	esConn := connectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
+	defer esConn.Close()
 
 	asConn := apilora.NewApplicationServiceClient(grpcConn)
-	routeMap := router.NewRouteMapRepository(redisConn)
+	routeMap := redis.NewRouteMapRepository(redisConn)
 
 	svc := lora.New(natsConn, asConn, routeMap, logger)
 	svc = api.LoggingMiddleware(svc, logger)
@@ -108,6 +125,7 @@ func main() {
 	)
 
 	go subscribeToLoRaBroker(svc, mqttConn, natsConn, logger)
+	go subscribeToThingsES(esConn, cfg.instanceName)
 
 	errs := make(chan error, 1)
 
@@ -128,6 +146,10 @@ func loadConfig() config {
 		loraServURL:  mainflux.Env(envLoraServURL, defLoraServURL),
 		natsURL:      mainflux.Env(envNatsURL, defNatsURL),
 		logLevel:     mainflux.Env(envLogLevel, defLogLevel),
+		esURL:        mainflux.Env(envESURL, defESURL),
+		esPass:       mainflux.Env(envESPass, defESPass),
+		esDB:         mainflux.Env(envESDB, defESDB),
+		instanceName: mainflux.Env(envInstanceName, defInstanceName),
 		routeMapURL:  mainflux.Env(envRouteMapURL, defRouteMapURL),
 		routeMapPass: mainflux.Env(envRouteMapPass, defRouteMapPass),
 		routeMapDB:   mainflux.Env(envRouteMapDB, defRouteMapDB),
@@ -166,16 +188,16 @@ func connectToMQTTBroker(loraURL string, logger logger.Logger) mqtt.Client {
 	return client
 }
 
-func connectToRouteMap(mappingURL, mappingPass string, mappingDB string, logger logger.Logger) *redis.Client {
-	db, err := strconv.Atoi(mappingDB)
+func connectToRedis(redisURL, redisPass, redisDB string, logger logger.Logger) *r.Client {
+	db, err := strconv.Atoi(redisDB)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to cache: %s", err))
+		logger.Error(fmt.Sprintf("Failed to connect to redis: %s", err))
 		os.Exit(1)
 	}
 
-	return redis.NewClient(&redis.Options{
-		Addr:     mappingURL,
-		Password: mappingPass,
+	return r.NewClient(&r.Options{
+		Addr:     redisURL,
+		Password: redisPass,
 		DB:       db,
 	})
 }
@@ -202,4 +224,9 @@ func subscribeToLoRaBroker(svc lora.Service, mc mqtt.Client, nc *nats.Conn, logg
 		logger.Error(fmt.Sprintf("Failed to connect to Lora MQTT broker: %s", err))
 		os.Exit(1)
 	}
+}
+
+func subscribeToThingsES(client *r.Client, consumer string) {
+	es := redis.NewEventStore(client, consumer)
+	es.Subscribe("mainflux.things")
 }
