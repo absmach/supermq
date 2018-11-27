@@ -3,7 +3,8 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
-	"monetasa/logger"
+
+	"github.com/mainflux/mainflux/logger"
 
 	"nov/bootstrap"
 
