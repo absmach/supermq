@@ -48,12 +48,12 @@ func (req boostrapReq) validate() error {
 
 type changeStatusReq struct {
 	key    string
-	Key    string           `json:"key"`
+	ID     string           `json:"id"`
 	Status bootstrap.Status `json:"status"`
 }
 
 func (req changeStatusReq) validate() error {
-	if req.Key == "" || req.key == "" {
+	if req.ID == "" || req.key == "" {
 		return bootstrap.ErrUnauthorizedAccess
 	}
 

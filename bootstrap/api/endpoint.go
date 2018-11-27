@@ -113,7 +113,7 @@ func statusEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		if err := svc.ChangeStatus(req.Key, req.key, req.Status); err != nil {
+		if err := svc.ChangeStatus(req.ID, req.key, req.Status); err != nil {
 			return nil, err
 		}
 
