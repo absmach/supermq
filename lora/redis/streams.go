@@ -96,47 +96,47 @@ func (es eventStore) Subscribe(subject string) {
 
 func decodeCreateThing(event map[string]interface{}) createThingEvent {
 	return createThingEvent{
-		id:       event["id"].(string),
-		kind:     event["type"].(string),
-		name:     event["name"].(string),
-		owner:    event["owner"].(string),
-		metadata: event["metadata"].(string),
+		id:       read(event, "id", ""),
+		kind:     read(event, "type", ""),
+		name:     read(event, "name", ""),
+		owner:    read(event, "owner", ""),
+		metadata: read(event, "metadata", ""),
 	}
 }
 
 func decodeUpdateThing(event map[string]interface{}) updateThingEvent {
 	return updateThingEvent{
-		id:       event["id"].(string),
-		kind:     event["type"].(string),
-		name:     event["name"].(string),
-		metadata: event["metadata"].(string),
+		id:       read(event, "id", ""),
+		kind:     read(event, "type", ""),
+		name:     read(event, "name", ""),
+		metadata: read(event, "metadata", ""),
 	}
 }
 
 func decodeRemoveThing(event map[string]interface{}) removeThingEvent {
 	return removeThingEvent{
-		id: event["id"].(string),
+		id: read(event, "id", ""),
 	}
 }
 
 func decodeCreateChannel(event map[string]interface{}) createChannelEvent {
 	return createChannelEvent{
-		id:    event["id"].(string),
-		owner: event["owner"].(string),
-		name:  event["name"].(string),
+		id:    read(event, "id", ""),
+		owner: read(event, "owner", ""),
+		name:  read(event, "name", ""),
 	}
 }
 
 func decodeUpdateChannel(event map[string]interface{}) updateChannelEvent {
 	return updateChannelEvent{
-		id:   event["id"].(string),
-		name: event["name"].(string),
+		id:   read(event, "id", ""),
+		name: read(event, "name", ""),
 	}
 }
 
 func decodeRemoveChannel(event map[string]interface{}) removeChannelEvent {
 	return removeChannelEvent{
-		id: event["id"].(string),
+		id: read(event, "id", ""),
 	}
 }
 
@@ -149,8 +149,8 @@ func decodeConnectThing(event map[string]interface{}) connectThingEvent {
 
 func decodeDisconnectThing(event map[string]interface{}) disconnectThingEvent {
 	return disconnectThingEvent{
-		thingID: event["thing_id"].(string),
-		chanID:  event["chan_id"].(string),
+		thingID: read(event, "thing_id", ""),
+		chanID:  read(event, "chan_id", ""),
 	}
 }
 
@@ -192,4 +192,13 @@ func (es eventStore) handleConnect(cte connectThingEvent) error {
 func (es eventStore) handleDisconnect(dte disconnectThingEvent) error {
 	// TODO: es.svc.Disconnect()
 	return nil
+}
+
+func read(event map[string]interface{}, key, def string) string {
+	val, ok := event[key].(string)
+	if !ok {
+		return def
+	}
+
+	return val
 }
