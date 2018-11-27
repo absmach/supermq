@@ -39,11 +39,18 @@ func bootstrapEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		if err := svc.Bootstrap(req.externalID); err != nil {
+		cfg, err := svc.Bootstrap(req.externalID)
+		if err != nil {
 			return nil, err
 		}
 
-		return nil, nil
+		res := bootstrapRes{
+			MFID:     cfg.MFID,
+			MFKey:    cfg.MFKey,
+			MFChan:   cfg.MFChan,
+			Metadata: cfg.Metadata,
+		}
+		return res, nil
 	}
 }
 
@@ -62,9 +69,9 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 
 		res := viewRes{
 			ID:         thing.ID,
-			Key:        thing.Key,
+			Key:        thing.MFKey,
 			Owner:      thing.Owner,
-			MainfluxID: thing.MainfluxID,
+			MainfluxID: thing.MFID,
 			ExternalID: thing.ExternalID,
 			Status:     thing.Status,
 		}

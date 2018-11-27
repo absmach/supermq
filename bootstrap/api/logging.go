@@ -59,7 +59,7 @@ func (lm *loggingMiddleware) Remove(id, key string) (err error) {
 	return lm.svc.Remove(id, key)
 }
 
-func (lm *loggingMiddleware) Bootstrap(externalID string) (err error) {
+func (lm *loggingMiddleware) Bootstrap(externalID string) (cfg bootstrap.Config, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method bootstrap for thing with external id %s took %s to complete", externalID, time.Since(begin))
 		if err != nil {

@@ -35,7 +35,7 @@ type Service interface {
 	Remove(string, string) error
 
 	// Bootstrap returns initial configuration to the Thing with provided external ID.
-	Bootstrap(string) error
+	Bootstrap(string) (Config, error)
 
 	// ChangeStatus changes status of the Thing with given ID and owner.
 	ChangeStatus(string, string, Status) error
@@ -47,14 +47,16 @@ type bootstrapService struct {
 	things ThingRepository
 	sdk    mfsdk.SDK
 	apiKey string
+	config string
 }
 
 // New returns new Bootstrap service.
-func New(things ThingRepository, apiKey string, sdk mfsdk.SDK) Service {
+func New(things ThingRepository, apiKey string, sdk mfsdk.SDK, config string) Service {
 	return &bootstrapService{
 		things: things,
 		apiKey: apiKey,
 		sdk:    sdk,
+		config: config,
 	}
 }
 
@@ -77,51 +79,64 @@ func (bs bootstrapService) Remove(id, key string) error {
 	return bs.Remove(id, key)
 }
 
-func (bs bootstrapService) Bootstrap(externID string) error {
+func (bs bootstrapService) Bootstrap(externID string) (Config, error) {
 	thing, err := bs.things.RetrieveByExternalID(externID)
 	if err != nil {
-		return ErrUnauthorizedAccess
+		return Config{}, ErrUnauthorizedAccess
 	}
 
 	if thing.Status != Created {
-		return ErrMalformedEntity
+		return Config{}, ErrMalformedEntity
 	}
 
 	resp, err := bs.sdk.CreateThing(mfsdk.Thing{Type: "device"}, bs.apiKey)
 	if err != nil {
-		return err
+		return Config{}, err
 	}
 
-	mfID, err := parseLocation(resp)
+	thingID, err := parseLocation(resp)
 	if err != nil {
-		return err
+		return Config{}, err
 	}
 
-	mfThing, err := bs.sdk.Thing(mfID, bs.apiKey)
+	mfThing, err := bs.sdk.Thing(thingID, bs.apiKey)
 	if err != nil {
-		return err
+		bs.sdk.DeleteThing(thingID, bs.apiKey)
+		// TODO: Handle and log possible deletion errors.
+		return Config{}, err
 	}
 
-	thing.MainfluxID = mfID
-	thing.Key = mfThing.Key
+	thing.MFID = thingID
+	thing.MFKey = mfThing.Key
 
 	mfChan, err := bs.sdk.CreateChannel(mfsdk.Channel{Name: "NOV"}, bs.apiKey)
 	if err != nil {
-		return err
+		bs.sdk.DeleteThing(thingID, bs.apiKey)
+		// TODO: Handle and log possible deletion errors.
+		return Config{}, err
 	}
 
 	chanID, err := parseLocation(mfChan)
 	if err != nil {
-		return err
+		return Config{}, err
 	}
 
-	thing.ChannelID = chanID
+	thing.MFChan = chanID
 	thing.Status = Inactive
 	if err := bs.things.Update(thing); err != nil {
-		return err
+		bs.sdk.DeleteThing(thingID, bs.apiKey)
+		bs.sdk.DeleteChannel(chanID, bs.apiKey)
+		// TODO: Handle and log possible deletion errors.
+		return Config{}, err
 	}
 
-	return nil
+	config := Config{
+		MFID:     thing.MFID,
+		MFChan:   thing.MFChan,
+		MFKey:    thing.MFKey,
+		Metadata: bs.config,
+	}
+	return config, nil
 }
 
 func (bs bootstrapService) ChangeStatus(id, owner string, status Status) error {

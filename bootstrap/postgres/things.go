@@ -25,7 +25,7 @@ func NewThingRepository(db *sql.DB, log logger.Logger) bootstrap.ThingRepository
 
 func (tr thingRepository) Save(thing bootstrap.Thing) (string, error) {
 	const q = `INSERT INTO things (key, owner, mainflux_id, external_id, channel_id, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
-	if err := tr.db.QueryRow(q, thing.Key, thing.Owner, thing.MainfluxID, thing.ExternalID, thing.ChannelID, thing.Status).Scan(&thing.ID); err != nil {
+	if err := tr.db.QueryRow(q, thing.MFKey, thing.Owner, thing.MFID, thing.ExternalID, thing.MFChan, thing.Status).Scan(&thing.ID); err != nil {
 		return "", err
 	}
 
@@ -37,7 +37,7 @@ func (tr thingRepository) RetrieveByID(id, owner string) (bootstrap.Thing, error
 	thing := bootstrap.Thing{ID: id, Owner: owner}
 	err := tr.db.
 		QueryRow(q, id, owner).
-		Scan(&thing.Key, &thing.MainfluxID, &thing.ExternalID, &thing.ChannelID, &thing.Status)
+		Scan(&thing.MFKey, &thing.MFID, &thing.ExternalID, &thing.MFChan, &thing.Status)
 
 	if err != nil {
 		empty := bootstrap.Thing{}
@@ -53,7 +53,7 @@ func (tr thingRepository) RetrieveByID(id, owner string) (bootstrap.Thing, error
 func (tr thingRepository) RetrieveByExternalID(externalID string) (bootstrap.Thing, error) {
 	const q = `SELECT id, owner, key, mainflux_id, channel_id, status FROM things WHERE external_id = $1`
 	thing := bootstrap.Thing{ExternalID: externalID}
-	if err := tr.db.QueryRow(q, externalID).Scan(&thing.ID, &thing.Owner, &thing.Key, &thing.MainfluxID, &thing.ChannelID, &thing.Status); err != nil {
+	if err := tr.db.QueryRow(q, externalID).Scan(&thing.ID, &thing.Owner, &thing.MFKey, &thing.MFID, &thing.MFChan, &thing.Status); err != nil {
 		empty := bootstrap.Thing{}
 		if err == sql.ErrNoRows {
 			return empty, bootstrap.ErrNotFound
@@ -67,7 +67,7 @@ func (tr thingRepository) RetrieveByExternalID(externalID string) (bootstrap.Thi
 func (tr thingRepository) Update(thing bootstrap.Thing) error {
 	const q = `UPDATE things SET key = $1, mainflux_id = $2, external_id = $3, channel_id = $4, status = $5 WHERE id = $6 AND owner = $7`
 	fmt.Printf("%v\n", thing)
-	res, err := tr.db.Exec(q, thing.Key, thing.MainfluxID, thing.ExternalID, thing.ChannelID, thing.Status, thing.ID, thing.Owner)
+	res, err := tr.db.Exec(q, thing.MFKey, thing.MFID, thing.ExternalID, thing.MFChan, thing.Status, thing.ID, thing.Owner)
 	if err != nil {
 		return err
 	}

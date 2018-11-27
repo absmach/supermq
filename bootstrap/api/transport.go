@@ -85,7 +85,6 @@ func decodeStatusRequest(_ context.Context, r *http.Request) (interface{}, error
 
 func encodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
 	w.Header().Set("Content-Type", contentType)
-
 	if ar, ok := response.(mainflux.Response); ok {
 		for k, v := range ar.Headers() {
 			w.Header().Set(k, v)

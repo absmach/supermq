@@ -101,3 +101,22 @@ func (res viewRes) Headers() map[string]string {
 func (res viewRes) Empty() bool {
 	return false
 }
+
+type bootstrapRes struct {
+	MFID     string `json:"mainflux_id"`
+	MFKey    string `json:"mainflux_key"`
+	MFChan   string `json:"mainflux_channel"`
+	Metadata string `json:"metadata"`
+}
+
+func (res boostrapReq) Code() int {
+	return http.StatusOK
+}
+
+func (res boostrapReq) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res bootstrapRes) Empty() bool {
+	return false
+}

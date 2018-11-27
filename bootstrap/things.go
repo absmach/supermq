@@ -20,12 +20,20 @@ const (
 // Thing represents Mainflux thing.
 type Thing struct {
 	ID         string
-	Key        string
 	Owner      string
-	MainfluxID string
+	MFID       string
+	MFKey      string
+	MFChan     string
 	ExternalID string
-	ChannelID  string
 	Status     Status
+}
+
+// Config represents Thing configuration generated in bootstrapping process.
+type Config struct {
+	MFID     string
+	MFKey    string
+	MFChan   string
+	Metadata string
 }
 
 // ThingRepository specifies a Thing persistence API.

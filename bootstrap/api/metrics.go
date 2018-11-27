@@ -52,7 +52,7 @@ func (mm *metricsMiddleware) Remove(id, key string) (err error) {
 	return mm.svc.Remove(id, key)
 }
 
-func (mm *metricsMiddleware) Bootstrap(externalID string) (err error) {
+func (mm *metricsMiddleware) Bootstrap(externalID string) (cfg bootstrap.Config, err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "bootstrap").Add(1)
 		mm.latency.With("method", "bootstrap").Observe(time.Since(begin).Seconds())
