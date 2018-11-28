@@ -1,0 +1,10 @@
+MF_MQTT_HOST:                   tcp://127.0.0.1:1883
+MF_MQTT_PASSWORD:               pwd
+MF_MQTT_USERNAME:               1
+MF_MQTT_RCV_TOPIC:              channels/1/messages
+MF_MQTT_SND_TOPIC:              channels/1/messages
+NOV_MGT_HOST:                   http://localhost:7000
+DOCKER_MGT_HOST:                http://127.0.0.1:2375
+AGENT_MGT_HOST:                 https://127.0.0.1:7003
+NOV_GW_ID:                      1
+MF_HTTP_CLIENT_TIMEOUT_SECONDS: 150

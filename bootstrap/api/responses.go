@@ -103,10 +103,11 @@ func (res viewRes) Empty() bool {
 }
 
 type bootstrapRes struct {
-	MFID     string `json:"mainflux_id"`
-	MFKey    string `json:"mainflux_key"`
-	MFChan   string `json:"mainflux_channel"`
-	Metadata string `json:"metadata"`
+	MQTTUsername string `json:"mf_mqtt_username"`
+	MQTTRcvTopic string `json:"mf_mqtt_rcv_topic"`
+	MQTTSndTopic string `json:"mf_mqtt_snd_topic"`
+	GWID         string `json:"nov_gw_id"`
+	Metadata     string `json:"metadata"`
 }
 
 func (res boostrapReq) Code() int {

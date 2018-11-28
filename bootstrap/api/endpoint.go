@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"nov/bootstrap"
 
 	"github.com/go-kit/kit/endpoint"
@@ -45,10 +46,11 @@ func bootstrapEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		res := bootstrapRes{
-			MFID:     cfg.MFID,
-			MFKey:    cfg.MFKey,
-			MFChan:   cfg.MFChan,
-			Metadata: cfg.Metadata,
+			GWID:         cfg.MFID,
+			MQTTUsername: cfg.MFID,
+			MQTTRcvTopic: fmt.Sprintf("channels/%s/messages", cfg.MFID),
+			MQTTSndTopic: fmt.Sprintf("channels/%s/messages", cfg.MFID),
+			Metadata:     cfg.Metadata,
 		}
 		return res, nil
 	}

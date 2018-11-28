@@ -1,0 +1,6 @@
+mf_mqtt_host:                   tcp://127.0.0.1:1883
+mf_mqtt_password:               pwd
+nov_mgt_host:                   http://localhost:7000
+docker_mgt_host:                http://127.0.0.1:2375
+agent_mgt_host:                 https://127.0.0.1:7003
+mf_http_client_timeout_seconds: 150
