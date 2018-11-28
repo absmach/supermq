@@ -110,11 +110,11 @@ type bootstrapRes struct {
 	Metadata     string `json:"metadata"`
 }
 
-func (res boostrapReq) Code() int {
+func (res bootstrapRes) Code() int {
 	return http.StatusOK
 }
 
-func (res boostrapReq) Headers() map[string]string {
+func (res bootstrapRes) Headers() map[string]string {
 	return map[string]string{}
 }
 

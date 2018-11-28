@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/mainflux/mainflux"
 	mfsdk "github.com/mainflux/mainflux/sdk/go"
 )
 
@@ -42,6 +43,20 @@ type Service interface {
 }
 
 var _ Service = (*bootstrapService)(nil)
+
+// Config represents Thing configuration generated in bootstrapping process.
+type Config struct {
+	MFID     string
+	MFKey    string
+	MFChan   string
+	Metadata string
+}
+
+// ConfigReader is used to parse Config into format which will be encoded
+// as a JSON and consumed from the client side.
+type ConfigReader interface {
+	ReadConfig(Config) (mainflux.Response, error)
+}
 
 type bootstrapService struct {
 	things ThingRepository

@@ -28,14 +28,6 @@ type Thing struct {
 	Status     Status
 }
 
-// Config represents Thing configuration generated in bootstrapping process.
-type Config struct {
-	MFID     string
-	MFKey    string
-	MFChan   string
-	Metadata string
-}
-
 // ThingRepository specifies a Thing persistence API.
 type ThingRepository interface {
 	// Save persists the Thing. Successful operation is indicated by non-nil

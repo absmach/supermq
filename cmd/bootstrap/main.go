@@ -176,9 +176,9 @@ func startHTTPServer(svc bootstrap.Service, cfg config, logger logger.Logger, er
 	if cfg.serverCert != "" || cfg.serverKey != "" {
 		logger.Info(fmt.Sprintf("Bootstrap service started using https on port %s with cert %s key %s",
 			cfg.httpPort, cfg.serverCert, cfg.serverKey))
-		errs <- http.ListenAndServeTLS(p, cfg.serverCert, cfg.serverKey, api.MakeHandler(svc))
+		errs <- http.ListenAndServeTLS(p, cfg.serverCert, cfg.serverKey, api.MakeHandler(svc, bootstrap.NewConfigReader()))
 	} else {
 		logger.Info(fmt.Sprintf("Bootstrap service started using http on port %s", cfg.httpPort))
-		errs <- http.ListenAndServe(p, api.MakeHandler(svc))
+		errs <- http.ListenAndServe(p, api.MakeHandler(svc, bootstrap.NewConfigReader()))
 	}
 }

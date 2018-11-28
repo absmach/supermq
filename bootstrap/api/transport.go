@@ -22,7 +22,7 @@ var (
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc bootstrap.Service) http.Handler {
+func MakeHandler(svc bootstrap.Service, reader bootstrap.ConfigReader) http.Handler {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),
 	}
@@ -35,7 +35,7 @@ func MakeHandler(svc bootstrap.Service) http.Handler {
 		opts...))
 
 	r.Get("/bootstrap", kithttp.NewServer(
-		bootstrapEndpoint(svc),
+		bootstrapEndpoint(svc, reader),
 		decodeBootstrapRequest,
 		encodeResponse,
 		opts...))

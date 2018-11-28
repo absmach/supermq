@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"fmt"
 	"nov/bootstrap"
 
 	"github.com/go-kit/kit/endpoint"
@@ -33,7 +32,7 @@ func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 	}
 }
 
-func bootstrapEndpoint(svc bootstrap.Service) endpoint.Endpoint {
+func bootstrapEndpoint(svc bootstrap.Service, reader bootstrap.ConfigReader) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(boostrapReq)
 		if err := req.validate(); err != nil {
@@ -45,14 +44,7 @@ func bootstrapEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		res := bootstrapRes{
-			GWID:         cfg.MFID,
-			MQTTUsername: cfg.MFID,
-			MQTTRcvTopic: fmt.Sprintf("channels/%s/messages", cfg.MFID),
-			MQTTSndTopic: fmt.Sprintf("channels/%s/messages", cfg.MFID),
-			Metadata:     cfg.Metadata,
-		}
-		return res, nil
+		return reader.ReadConfig(cfg)
 	}
 }
 
