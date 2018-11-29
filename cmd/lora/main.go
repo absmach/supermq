@@ -28,7 +28,6 @@ import (
 const (
 	defHTTPPort     = "8180"
 	defLoraMsgURL   = "tcp://localhost:1883"
-	defLoraServURL  = "localhost:8080"
 	defNatsURL      = nats.DefaultURL
 	defLogLevel     = "error"
 	defESURL        = "localhost:6379"
@@ -56,7 +55,6 @@ const (
 type config struct {
 	httpPort     string
 	loraMsgURL   string
-	loraServURL  string
 	natsURL      string
 	logLevel     string
 	esURL        string
@@ -93,8 +91,6 @@ func main() {
 	natsConn := connectToNATS(cfg.natsURL, logger)
 	defer natsConn.Close()
 	mqttConn := connectToMQTTBroker(cfg.loraMsgURL, logger)
-	grpcConn := connectToGRPC(cfg.loraServURL, logger)
-	defer grpcConn.Close()
 
 	redisConn := connectToRedis(cfg.routeMapURL, cfg.routeMapPass, cfg.routeMapDB, logger)
 	defer redisConn.Close()
@@ -141,7 +137,6 @@ func loadConfig() config {
 	return config{
 		httpPort:     mainflux.Env(envHTTPPort, defHTTPPort),
 		loraMsgURL:   mainflux.Env(envLoraMsgURL, defLoraMsgURL),
-		loraServURL:  mainflux.Env(envLoraServURL, defLoraServURL),
 		natsURL:      mainflux.Env(envNatsURL, defNatsURL),
 		logLevel:     mainflux.Env(envLogLevel, defLogLevel),
 		esURL:        mainflux.Env(envESURL, defESURL),

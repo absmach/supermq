@@ -32,43 +32,36 @@ func NewRouteMapRepository(client *redis.Client) lora.RouteMapRepository {
 	}
 }
 
-func (mr *routerMap) Save(key string, val string) error {
-	println("ROUTEMAP SAVE")
-	tkey := fmt.Sprintf("%s:%s", loraMapPrefix, key)
-	if err := mr.client.Set(tkey, val, 0).Err(); err != nil {
+func (mr *routerMap) Save(mfxID string, loraID string) error {
+	tkey := fmt.Sprintf("%s:%s", mfxMapPrefix, mfxID)
+	if err := mr.client.Set(tkey, loraID, 0).Err(); err != nil {
 		return err
 	}
-	tkey = fmt.Sprintf("%s:%s", mfxMapPrefix, val)
-	if err := mr.client.Set(tkey, key, 0).Err(); err != nil {
+	lkey := fmt.Sprintf("%s:%s", loraMapPrefix, loraID)
+	if err := mr.client.Set(lkey, mfxID, 0).Err(); err != nil {
 		return err
 	}
-
-	val, err := mr.client.Get(tkey).Result()
-	if err != nil {
-		return err
-	}
-	println("ROUTEMAP SAVED: ", tkey, val)
 
 	return nil
 }
 
-func (mr *routerMap) Get(key string) (string, error) {
-	laKey := fmt.Sprintf("%s:%s", loraMapPrefix, key)
-	val, err := mr.client.Get(laKey).Result()
+func (mr *routerMap) Get(mfxID string) (string, error) {
+	lKey := fmt.Sprintf("%s:%s", loraMapPrefix, mfxID)
+	mval, err := mr.client.Get(lKey).Result()
 	if err != nil {
 		return "", err
 	}
 
-	return val, nil
+	return mval, nil
 }
 
-func (mr *routerMap) Remove(key string) error {
-	tid := fmt.Sprintf("%s:%s", loraMapPrefix, key)
-	key, err := mr.client.Get(tid).Result()
+func (mr *routerMap) Remove(mfxID string) error {
+	mkey := fmt.Sprintf("%s:%s", mfxMapPrefix, mfxID)
+	lval, err := mr.client.Get(mkey).Result()
 	if err != nil {
 		return err
 	}
 
-	tkey := fmt.Sprintf("%s:%s", loraMapPrefix, key)
-	return mr.client.Del(tkey, tid).Err()
+	lkey := fmt.Sprintf("%s:%s", loraMapPrefix, lval)
+	return mr.client.Del(mkey, lkey).Err()
 }
