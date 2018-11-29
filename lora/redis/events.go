@@ -20,26 +20,18 @@ type removeThingEvent struct {
 }
 
 type createChannelEvent struct {
-	id    string
-	owner string
-	name  string
+	id       string
+	owner    string
+	name     string
+	metadata string
 }
 
 type updateChannelEvent struct {
-	id   string
-	name string
+	id       string
+	name     string
+	metadata string
 }
 
 type removeChannelEvent struct {
 	id string
-}
-
-type connectThingEvent struct {
-	thingID string
-	chanID  string
-}
-
-type disconnectThingEvent struct {
-	thingID string
-	chanID  string
 }

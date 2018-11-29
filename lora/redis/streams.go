@@ -1,6 +1,11 @@
 package redis
 
 import (
+	"datapace/logger"
+	"encoding/json"
+	"errors"
+	"fmt"
+
 	"github.com/go-redis/redis"
 	"github.com/mainflux/mainflux/lora"
 )
@@ -9,12 +14,10 @@ const (
 	group  = "mainflux.lora"
 	stream = "mainflux.things"
 
-	thingPrefix     = "thing."
-	thingCreate     = thingPrefix + "create"
-	thingUpdate     = thingPrefix + "update"
-	thingRemove     = thingPrefix + "remove"
-	thingConnect    = thingPrefix + "connect"
-	thingDisconnect = thingPrefix + "disconnect"
+	thingPrefix = "thing."
+	thingCreate = thingPrefix + "create"
+	thingUpdate = thingPrefix + "update"
+	thingRemove = thingPrefix + "remove"
 
 	channelPrefix = "channel."
 	channelCreate = channelPrefix + "create"
@@ -28,17 +31,30 @@ type EventStore interface {
 	Subscribe(string)
 }
 
+type thingMetadata struct {
+	Protocol   string `json:"protocol"`
+	LoraDevEUI string `json:"loraDevEUI"`
+}
+
+type channelMetadata struct {
+	Protocol string `json:"protocol"`
+	LoraApp  string `json:"loraApp"`
+}
+
 type eventStore struct {
+	svc      lora.Service
 	client   *redis.Client
 	consumer string
-	svc      lora.Service
+	logger   logger.Logger
 }
 
 // NewEventStore returns new event store instance.
-func NewEventStore(client *redis.Client, consumer string) EventStore {
+func NewEventStore(svc lora.Service, client *redis.Client, consumer string, log logger.Logger) EventStore {
 	return eventStore{
+		svc:      svc,
 		client:   client,
 		consumer: consumer,
+		logger:   log,
 	}
 }
 
@@ -78,15 +94,9 @@ func (es eventStore) Subscribe(subject string) {
 			case channelRemove:
 				rce := decodeRemoveChannel(event)
 				err = es.handleRemoveChannel(rce)
-			case thingConnect:
-				cte := decodeConnectThing(event)
-				err = es.handleConnect(cte)
-			case thingDisconnect:
-				dte := decodeDisconnectThing(event)
-				err = es.handleDisconnect(dte)
 			}
 			if err != nil {
-				// TODO: add error logging
+				es.logger.Error(fmt.Sprintf("Failed to handle event sourcing: %s", err.Error()))
 				break
 			}
 			es.client.XAck(stream, group, msg.ID)
@@ -140,58 +150,70 @@ func decodeRemoveChannel(event map[string]interface{}) removeChannelEvent {
 	}
 }
 
-func decodeConnectThing(event map[string]interface{}) connectThingEvent {
-	return connectThingEvent{
-		thingID: event["thing_id"].(string),
-		chanID:  event["chan_id"].(string),
-	}
-}
-
-func decodeDisconnectThing(event map[string]interface{}) disconnectThingEvent {
-	return disconnectThingEvent{
-		thingID: read(event, "thing_id", ""),
-		chanID:  read(event, "chan_id", ""),
-	}
-}
-
 func (es eventStore) handleCreateThing(cte createThingEvent) error {
-	// TODO: es.svc.CreateThing()
-	return nil
+	println("LORA handleCreateThing")
+	em := thingMetadata{}
+	if err := json.Unmarshal([]byte(cte.metadata), &em); err != nil {
+		return err
+	}
+
+	if em.Protocol != protocol {
+		return errors.New("Lora protocol not found in thing metadatada")
+	}
+
+	return es.svc.CreateThing(cte.id, em.LoraDevEUI)
 }
 
 func (es eventStore) handleUpdateThing(ute updateThingEvent) error {
-	// TODO: es.svc.UpdateThing()
-	return nil
+	println("LORA handleUpdateThing")
+	em := thingMetadata{}
+	if err := json.Unmarshal([]byte(ute.metadata), &em); err != nil {
+		return err
+	}
+
+	if em.Protocol != protocol {
+		return errors.New("Lora protocol not found in thing metadatada")
+	}
+
+	return es.svc.CreateThing(ute.id, em.LoraDevEUI)
 }
 
 func (es eventStore) handleRemoveThing(rte removeThingEvent) error {
-	// TODO: es.svc.RemoveThing()
-	return nil
+	println("LORA handleRemoveThing")
+	return es.svc.RemoveThing(rte.id)
 }
 
 func (es eventStore) handleCreateChannel(cce createChannelEvent) error {
-	// TODO: es.svc.CreateChannel()
-	return nil
+	println("LORA handleCreateChannel, metadata: ", cce.metadata)
+	cm := channelMetadata{}
+	if err := json.Unmarshal([]byte(cce.metadata), &cm); err != nil {
+		return err
+	}
+
+	if cm.Protocol != protocol {
+		return errors.New("Lora protocol not found in channel metadatada")
+	}
+
+	return es.svc.CreateChannel(cce.id, cm.LoraApp)
 }
 
 func (es eventStore) handleUpdateChannel(uce updateChannelEvent) error {
-	// TODO: es.svc.UpdateChannel()
-	return nil
+	println("LORA handleUpdateChannel")
+	cm := channelMetadata{}
+	if err := json.Unmarshal([]byte(uce.metadata), &cm); err != nil {
+		return err
+	}
+
+	if cm.Protocol != protocol {
+		return errors.New("Lora protocol not found in channel metadatada")
+	}
+
+	return es.svc.UpdateChannel(uce.id, cm.LoraApp)
 }
 
 func (es eventStore) handleRemoveChannel(rce removeChannelEvent) error {
-	// TODO: es.svc.RemoveChannel()
-	return nil
-}
-
-func (es eventStore) handleConnect(cte connectThingEvent) error {
-	// TODO: es.svc.Connect()
-	return nil
-}
-
-func (es eventStore) handleDisconnect(dte disconnectThingEvent) error {
-	// TODO: es.svc.Disconnect()
-	return nil
+	println("LORA handleRemoveChannel")
+	return es.svc.RemoveChannel(rce.id)
 }
 
 func read(event map[string]interface{}, key, def string) string {
