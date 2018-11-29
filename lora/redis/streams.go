@@ -1,16 +1,18 @@
 package redis
 
 import (
-	"datapace/logger"
 	"encoding/json"
 	"errors"
 	"fmt"
 
 	"github.com/go-redis/redis"
+	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/lora"
 )
 
 const (
+	protocol = "lora"
+
 	group  = "mainflux.lora"
 	stream = "mainflux.things"
 
@@ -108,8 +110,6 @@ func decodeCreateThing(event map[string]interface{}) createThingEvent {
 	return createThingEvent{
 		id:       read(event, "id", ""),
 		kind:     read(event, "type", ""),
-		name:     read(event, "name", ""),
-		owner:    read(event, "owner", ""),
 		metadata: read(event, "metadata", ""),
 	}
 }
@@ -118,7 +118,6 @@ func decodeUpdateThing(event map[string]interface{}) updateThingEvent {
 	return updateThingEvent{
 		id:       read(event, "id", ""),
 		kind:     read(event, "type", ""),
-		name:     read(event, "name", ""),
 		metadata: read(event, "metadata", ""),
 	}
 }
@@ -131,16 +130,15 @@ func decodeRemoveThing(event map[string]interface{}) removeThingEvent {
 
 func decodeCreateChannel(event map[string]interface{}) createChannelEvent {
 	return createChannelEvent{
-		id:    read(event, "id", ""),
-		owner: read(event, "owner", ""),
-		name:  read(event, "name", ""),
+		id:       read(event, "id", ""),
+		metadata: read(event, "metadata", ""),
 	}
 }
 
 func decodeUpdateChannel(event map[string]interface{}) updateChannelEvent {
 	return updateChannelEvent{
-		id:   read(event, "id", ""),
-		name: read(event, "name", ""),
+		id:       read(event, "id", ""),
+		metadata: read(event, "metadata", ""),
 	}
 }
 
