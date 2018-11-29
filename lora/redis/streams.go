@@ -177,12 +177,10 @@ func (es eventStore) handleUpdateThing(ute updateThingEvent) error {
 }
 
 func (es eventStore) handleRemoveThing(rte removeThingEvent) error {
-	println("LORA handleRemoveThing")
 	return es.svc.RemoveThing(rte.id)
 }
 
 func (es eventStore) handleCreateChannel(cce createChannelEvent) error {
-	println("LORA handleCreateChannel, metadata: ", cce.metadata)
 	cm := channelMetadata{}
 	if err := json.Unmarshal([]byte(cce.metadata), &cm); err != nil {
 		return err
@@ -196,7 +194,6 @@ func (es eventStore) handleCreateChannel(cce createChannelEvent) error {
 }
 
 func (es eventStore) handleUpdateChannel(uce updateChannelEvent) error {
-	println("LORA handleUpdateChannel")
 	cm := channelMetadata{}
 	if err := json.Unmarshal([]byte(uce.metadata), &cm); err != nil {
 		return err
@@ -210,7 +207,6 @@ func (es eventStore) handleUpdateChannel(uce updateChannelEvent) error {
 }
 
 func (es eventStore) handleRemoveChannel(rce removeChannelEvent) error {
-	println("LORA handleRemoveChannel")
 	return es.svc.RemoveChannel(rce.id)
 }
 
