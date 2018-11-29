@@ -46,6 +46,19 @@ func (lm *loggingMiddleware) View(id, key string) (saved bootstrap.Thing, err er
 	return lm.svc.View(id, key)
 }
 
+func (lm *loggingMiddleware) List(key string, offset, limit uint64) (res []bootstrap.Thing, err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method list for key %s and offset %d and limit %d took %s to complete", key, offset, limit, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+
+	return lm.svc.List(key, offset, limit)
+}
+
 func (lm *loggingMiddleware) Remove(id, key string) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method remove for key %s and thing %s took %s to complete", key, id, time.Since(begin))

@@ -102,6 +102,22 @@ func (res viewRes) Empty() bool {
 	return false
 }
 
+type listRes struct {
+	Things []viewRes `json:"things"`
+}
+
+func (res listRes) Code() int {
+	return http.StatusOK
+}
+
+func (res listRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res listRes) Empty() bool {
+	return false
+}
+
 type bootstrapRes struct {
 	MQTTUsername string `json:"mf_mqtt_username"`
 	MQTTRcvTopic string `json:"mf_mqtt_rcv_topic"`

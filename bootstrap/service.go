@@ -37,6 +37,9 @@ type Service interface {
 	// View returns Thing with given ID belonging to the user identified by the given key.
 	View(string, string) (Thing, error)
 
+	// List returns subset of Things that belong to the user identified by the given key.
+	List(string, uint64, uint64) ([]Thing, error)
+
 	// Remove removes Thing with specified key that belongs to the user identified by the given key.
 	Remove(string, string) error
 
@@ -93,6 +96,10 @@ func (bs bootstrapService) Add(key string, thing Thing) (Thing, error) {
 
 func (bs bootstrapService) View(id, key string) (Thing, error) {
 	return bs.things.RetrieveByID(id, key)
+}
+
+func (bs bootstrapService) List(key string, offset, limit uint64) ([]Thing, error) {
+	return bs.things.RetrieveAll(key, offset, limit), nil
 }
 
 func (bs bootstrapService) Remove(id, key string) error {

@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 	"nov/bootstrap"
+	"strconv"
 
 	kithttp "github.com/go-kit/kit/transport/http"
 
@@ -14,7 +16,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-const contentType = "application/json"
+const (
+	contentType = "application/json"
+	maxLimit    = 100
+)
 
 var (
 	errUnsupportedContentType = errors.New("unsupported content type")
@@ -37,6 +42,12 @@ func MakeHandler(svc bootstrap.Service, reader bootstrap.ConfigReader) http.Hand
 	r.Get("/things/:id", kithttp.NewServer(
 		viewEndpoint(svc),
 		decodeEntityRequest,
+		encodeResponse,
+		opts...))
+
+	r.Get("/things", kithttp.NewServer(
+		listEndpoint(svc),
+		decodeListRequest,
 		encodeResponse,
 		opts...))
 
@@ -72,6 +83,47 @@ func decodeAddRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	req := addReq{key: r.Header.Get("Authorization")}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
+	}
+
+	return req, nil
+}
+
+func parseUint(s []string) (uint64, error) {
+	if len(s) != 1 {
+		return 0, errInvalidQueryParams
+	}
+
+	ret, err := strconv.ParseUint(s[0], 10, 64)
+	if err != nil {
+		return 0, errInvalidQueryParams
+	}
+	return ret, nil
+}
+
+func decodeListRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	q, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		return nil, errInvalidQueryParams
+	}
+
+	offset, err := parseUint(q["offset"])
+	if err != nil {
+		return nil, err
+	}
+
+	limit, err := parseUint(q["limit"])
+	if err != nil {
+		return nil, err
+	}
+
+	if limit > maxLimit {
+		limit = maxLimit
+	}
+
+	req := listReq{
+		key:    r.Header.Get("Authorization"),
+		offset: offset,
+		limit:  limit,
 	}
 
 	return req, nil
@@ -126,7 +178,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", contentType)
 
 	switch err {
-	case bootstrap.ErrMalformedEntity:
+	case errInvalidQueryParams, bootstrap.ErrMalformedEntity:
 		w.WriteHeader(http.StatusBadRequest)
 	case bootstrap.ErrNotFound:
 		w.WriteHeader(http.StatusNotFound)

@@ -2,8 +2,6 @@ package http
 
 import "nov/bootstrap"
 
-const maxLimitSize = 100
-
 type apiReq interface {
 	validate() error
 }
@@ -31,6 +29,19 @@ func (req entityReq) validate() error {
 		return bootstrap.ErrUnauthorizedAccess
 	}
 
+	return nil
+}
+
+type listReq struct {
+	key    string
+	offset uint64
+	limit  uint64
+}
+
+func (req listReq) validate() error {
+	if req.key == "" {
+		return bootstrap.ErrUnauthorizedAccess
+	}
 	return nil
 }
 

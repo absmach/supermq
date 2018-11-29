@@ -38,6 +38,9 @@ type ThingRepository interface {
 	// by the specified user.
 	RetrieveByID(string, string) (Thing, error)
 
+	// RetrieveAll retrieves the subset of things owned by the specified user.
+	RetrieveAll(string, uint64, uint64) []Thing
+
 	// RetrieveByExternalID returns Thing for given external ID.
 	RetrieveByExternalID(string) (Thing, error)
 

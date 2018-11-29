@@ -43,6 +43,15 @@ func (mm *metricsMiddleware) View(id, key string) (saved bootstrap.Thing, err er
 	return mm.svc.View(id, key)
 }
 
+func (mm *metricsMiddleware) List(key string, offset, limit uint64) (saved []bootstrap.Thing, err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "list").Add(1)
+		mm.latency.With("method", "list").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.List(key, offset, limit)
+}
+
 func (mm *metricsMiddleware) Remove(id, key string) (err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "remove").Add(1)

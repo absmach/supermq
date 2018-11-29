@@ -73,6 +73,35 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 	}
 }
 
+func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
+	return func(_ context.Context, request interface{}) (interface{}, error) {
+		req := request.(listReq)
+
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+
+		things, err := svc.List(req.key, req.offset, req.limit)
+		if err != nil {
+			return nil, err
+		}
+
+		res := listRes{}
+		for _, thing := range things {
+			view := viewRes{
+				ID:         thing.ID,
+				MFThing:    thing.MFThing,
+				MFChan:     thing.MFChan,
+				ExternalID: thing.ExternalID,
+				Status:     thing.Status,
+			}
+			res.Things = append(res.Things, view)
+		}
+
+		return res, nil
+	}
+}
+
 func removeEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(entityReq)
