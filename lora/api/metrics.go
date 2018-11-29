@@ -33,13 +33,58 @@ func MetricsMiddleware(svc lora.Service, counter metrics.Counter, latency metric
 	}
 }
 
-func (mm *metricsMiddleware) ProvisionRouter(es lora.EventSourcing) error {
+func (mm *metricsMiddleware) CreateThing(mfxDevID string, loraDevEUI string) error {
 	defer func(begin time.Time) {
-		mm.counter.With("method", "mfx_subscribe").Add(1)
-		mm.latency.With("method", "mfx_subscribe").Observe(time.Since(begin).Seconds())
+		mm.counter.With("method", "create_thing").Add(1)
+		mm.latency.With("method", "create_thing").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.ProvisionRouter(es)
+	return mm.svc.CreateThing(mfxDevID, loraDevEUI)
+}
+
+func (mm *metricsMiddleware) UpdateThing(mfxDevID string, loraDevEUI string) error {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "update_thing").Add(1)
+		mm.latency.With("method", "update_thing").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.UpdateThing(mfxDevID, loraDevEUI)
+}
+
+func (mm *metricsMiddleware) RemoveThing(mfxDevID string) error {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "remove_thing").Add(1)
+		mm.latency.With("method", "remove_thing").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.RemoveThing(mfxDevID)
+}
+
+func (mm *metricsMiddleware) CreateChannel(mfxChanID string, loraApp string) error {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "create_channel").Add(1)
+		mm.latency.With("method", "create_channel").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.CreateChannel(mfxChanID, loraApp)
+}
+
+func (mm *metricsMiddleware) UpdateChannel(mfxChanID string, loraApp string) error {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "update_channel").Add(1)
+		mm.latency.With("method", "update_channel").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.UpdateChannel(mfxChanID, loraApp)
+}
+
+func (mm *metricsMiddleware) RemoveChannel(mfxChanID string) error {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "remove_channel").Add(1)
+		mm.latency.With("method", "remove_channel").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.RemoveChannel(mfxChanID)
 }
 
 func (mm *metricsMiddleware) MessageRouter(m lora.Message, nc *nats.Conn) error {

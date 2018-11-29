@@ -19,7 +19,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	apilora "github.com/brocaar/lora-app-server/api"
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux/lora/redis"
 	"github.com/nats-io/go-nats"
@@ -103,10 +102,9 @@ func main() {
 	esConn := connectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
 	defer esConn.Close()
 
-	asConn := apilora.NewApplicationServiceClient(grpcConn)
 	routeMap := redis.NewRouteMapRepository(redisConn)
 
-	svc := lora.New(natsConn, asConn, routeMap, logger)
+	svc := lora.New(natsConn, routeMap, logger)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
@@ -125,7 +123,7 @@ func main() {
 	)
 
 	go subscribeToLoRaBroker(svc, mqttConn, natsConn, logger)
-	go subscribeToThingsES(esConn, cfg.instanceName)
+	go subscribeToThingsES(svc, esConn, cfg.instanceName, logger)
 
 	errs := make(chan error, 1)
 
@@ -226,7 +224,7 @@ func subscribeToLoRaBroker(svc lora.Service, mc mqtt.Client, nc *nats.Conn, logg
 	}
 }
 
-func subscribeToThingsES(client *r.Client, consumer string) {
-	es := redis.NewEventStore(client, consumer)
-	es.Subscribe("mainflux.things")
+func subscribeToThingsES(svc lora.Service, client *r.Client, consumer string, logger logger.Logger) {
+	eventStore := redis.NewEventStore(svc, client, consumer, logger)
+	eventStore.Subscribe("mainflux.things")
 }
