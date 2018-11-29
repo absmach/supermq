@@ -68,31 +68,26 @@ func (as *adapterService) MessageRouter(m Message, nc *nats.Conn) error {
 	// Get route map of lora application
 	d, err := as.routeMap.Get(m.DevEUI)
 	if err != nil {
-		as.logger.Error(fmt.Sprintf("Routing doesn't exist for this LoRa application: %s", err.Error()))
-		return nil
+		return fmt.Errorf(fmt.Sprintf("Routing doesn't exist for this LoRa DeviceEUI: %s", m.DevEUI))
 	}
 	mfxDev, err := strconv.ParseUint(d, 10, 64)
 	if err != nil {
-		as.logger.Error(fmt.Sprintf("Failed to decode deviceEUI: %s", m.DevEUI))
-		return nil
+		return fmt.Errorf(fmt.Sprintf("Failed to decode deviceEUI: %s", m.DevEUI))
 	}
 
 	// Get route map of lora application
 	c, err := as.routeMap.Get(m.ApplicationID)
 	if err != nil {
-		as.logger.Error(fmt.Sprintf("Routing doesn't exist for this LoRa application: %s", err.Error()))
-		return nil
+		return fmt.Errorf(fmt.Sprintf("Routing doesn't exist for this LoRa applicationID: %s", m.ApplicationID))
 	}
 	mfxChan, err := strconv.ParseUint(c, 10, 64)
 	if err != nil {
-		as.logger.Error(fmt.Sprintf("Failed to decode mainflux channel: %s", err.Error()))
-		return nil
+		return fmt.Errorf(fmt.Sprintf("Failed to decode LoRa applicationID: %s", err.Error()))
 	}
 
 	payload, err := base64.StdEncoding.DecodeString(m.Data)
 	if err != nil {
-		as.logger.Error(fmt.Sprintf("Failed to decode string message: %s", err.Error()))
-		return nil
+		return fmt.Errorf(fmt.Sprintf("Failed to decode Lora message: %s", err.Error()))
 	}
 
 	// Publish on Mainflux NATS broker
