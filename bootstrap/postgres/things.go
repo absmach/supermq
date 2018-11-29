@@ -85,7 +85,7 @@ func (tr thingRepository) Update(thing bootstrap.Thing) error {
 	return nil
 }
 
-func (tr thingRepository) Remove(owner string, id string) error {
+func (tr thingRepository) Remove(id, owner string) error {
 	q := `DELETE FROM things WHERE id = $1 AND owner = $2`
 	tr.db.Exec(q, id, owner)
 	return nil

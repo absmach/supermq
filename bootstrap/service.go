@@ -8,6 +8,11 @@ import (
 	mfsdk "github.com/mainflux/mainflux/sdk/go"
 )
 
+const (
+	thingType = "device"
+	chanName  = "NOV"
+)
+
 var (
 	// ErrNotFound indicates a non-existent entity request.
 	ErrNotFound = errors.New("non-existent entity")
@@ -91,7 +96,19 @@ func (bs bootstrapService) View(id, key string) (Thing, error) {
 }
 
 func (bs bootstrapService) Remove(id, key string) error {
-	return bs.Remove(id, key)
+	thing, err := bs.things.RetrieveByID(id, key)
+	if err != nil {
+		return err
+	}
+
+	if err := bs.sdk.DeleteThing(thing.MFID, bs.apiKey); err != nil {
+		return err
+	}
+
+	if err := bs.sdk.DeleteChannel(thing.MFChan, bs.apiKey); err != nil {
+		return err
+	}
+	return bs.things.Remove(id, key)
 }
 
 func (bs bootstrapService) Bootstrap(externID string) (Config, error) {
@@ -104,7 +121,7 @@ func (bs bootstrapService) Bootstrap(externID string) (Config, error) {
 		return Config{}, ErrMalformedEntity
 	}
 
-	resp, err := bs.sdk.CreateThing(mfsdk.Thing{Type: "device"}, bs.apiKey)
+	resp, err := bs.sdk.CreateThing(mfsdk.Thing{Type: thingType}, bs.apiKey)
 	if err != nil {
 		return Config{}, err
 	}
@@ -124,7 +141,7 @@ func (bs bootstrapService) Bootstrap(externID string) (Config, error) {
 	thing.MFID = thingID
 	thing.MFKey = mfThing.Key
 
-	mfChan, err := bs.sdk.CreateChannel(mfsdk.Channel{Name: "NOV"}, bs.apiKey)
+	mfChan, err := bs.sdk.CreateChannel(mfsdk.Channel{Name: chanName}, bs.apiKey)
 	if err != nil {
 		bs.sdk.DeleteThing(thingID, bs.apiKey)
 		// TODO: Handle and log possible deletion errors.

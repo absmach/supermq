@@ -46,6 +46,12 @@ func MakeHandler(svc bootstrap.Service, reader bootstrap.ConfigReader) http.Hand
 		encodeResponse,
 		opts...))
 
+	r.Delete("/things/:id", kithttp.NewServer(
+		removeEndpoint(svc),
+		decodeEntityRequest,
+		encodeResponse,
+		opts...))
+
 	r.GetFunc("/version", mainflux.Version("bootstrap"))
 	r.Handle("/metrics", promhttp.Handler())
 
@@ -79,6 +85,15 @@ func decodeStatusRequest(_ context.Context, r *http.Request) (interface{}, error
 	req.ID = bone.GetValue(r, "id")
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
+	}
+
+	return req, nil
+}
+
+func decodeEntityRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	req := entityReq{
+		key: r.Header.Get("Authorization"),
+		id:  bone.GetValue(r, "id"),
 	}
 
 	return req, nil

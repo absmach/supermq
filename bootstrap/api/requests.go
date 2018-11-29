@@ -21,12 +21,12 @@ func (req addReq) validate() error {
 	return nil
 }
 
-type viewReq struct {
+type entityReq struct {
 	key string
 	id  string
 }
 
-func (req viewReq) validate() error {
+func (req entityReq) validate() error {
 	if req.key == "" {
 		return bootstrap.ErrUnauthorizedAccess
 	}

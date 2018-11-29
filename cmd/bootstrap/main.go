@@ -36,7 +36,7 @@ const (
 	defThingsURL  = "localhost:8181"
 	defServerCert = ""
 	defServerKey  = ""
-	defAPIKey     = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NDM0MzUzNDMsImlhdCI6MTU0MzM5OTM0MywiaXNzIjoibWFpbmZsdXgiLCJzdWIiOiJqb2huLmRvZUBlbWFpbC5jb20ifQ._aSxYX3-DGQkXwaBs2ifO0Imu25l9X7Lq6RlMepqC9E"
+	defAPIKey     = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NDM1MzE5MTEsImlhdCI6MTU0MzQ5NTkxMSwiaXNzIjoibWFpbmZsdXgiLCJzdWIiOiJqb2huLmRvZUBlbWFpbC5jb20ifQ.NDZFFvQPwqGxtTBt6Kyz6w3X1bs0bkrbuE5Rd1P3DKs"
 	defBaseURL    = "http://localhost:8182"
 	defConfigFile = "examples/edged/config.yml"
 

@@ -50,7 +50,7 @@ func bootstrapEndpoint(svc bootstrap.Service, reader bootstrap.ConfigReader) end
 
 func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
-		req := request.(viewReq)
+		req := request.(entityReq)
 
 		if err := req.validate(); err != nil {
 			return nil, err
@@ -75,18 +75,13 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 
 func removeEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
-		req := request.(viewReq)
+		req := request.(entityReq)
 
-		err := req.validate()
-		if err == things.ErrNotFound {
+		if err := req.validate(); err == things.ErrNotFound {
 			return removeRes{}, nil
 		}
 
-		if err != nil {
-			return nil, err
-		}
-
-		if err := svc.Remove(req.key, req.id); err != nil {
+		if err := svc.Remove(req.id, req.key); err != nil {
 			return nil, err
 		}
 
