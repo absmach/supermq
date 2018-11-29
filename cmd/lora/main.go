@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -16,8 +15,6 @@ import (
 	"github.com/mainflux/mainflux/lora"
 	"github.com/mainflux/mainflux/lora/api"
 	pahoBroker "github.com/mainflux/mainflux/lora/paho"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux/lora/redis"
@@ -64,20 +61,6 @@ type config struct {
 	routeMapURL  string
 	routeMapPass string
 	routeMapDB   string
-}
-
-type jwt struct {
-	token string
-}
-
-func (t jwt) GetRequestMetadata(ctx context.Context, in ...string) (map[string]string, error) {
-	return map[string]string{
-		"authorization": "Bearer " + t.token,
-	}, nil
-}
-
-func (jwt) RequireTransportSecurity() bool {
-	return true
 }
 
 func main() {
@@ -193,22 +176,6 @@ func connectToRedis(redisURL, redisPass, redisDB string, logger logger.Logger) *
 		Password: redisPass,
 		DB:       db,
 	})
-}
-
-func connectToGRPC(url string, logger logger.Logger) *grpc.ClientConn {
-	conn, err := grpc.Dial(url,
-		grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(nil, "")),
-		grpc.WithPerRPCCredentials(jwt{
-			token: "verysecret",
-		}),
-	)
-
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to GRPC: %s", err))
-		os.Exit(1)
-	}
-
-	return conn
 }
 
 func subscribeToLoRaBroker(svc lora.Service, mc mqtt.Client, nc *nats.Conn, logger logger.Logger) {

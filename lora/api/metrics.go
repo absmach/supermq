@@ -23,8 +23,7 @@ type metricsMiddleware struct {
 	svc     lora.Service
 }
 
-// MetricsMiddleware instruments core service by tracking request count and
-// latency.
+// MetricsMiddleware instruments core service by tracking request count and latency.
 func MetricsMiddleware(svc lora.Service, counter metrics.Counter, latency metrics.Histogram) lora.Service {
 	return &metricsMiddleware{
 		counter: counter,
