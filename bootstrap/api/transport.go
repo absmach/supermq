@@ -34,6 +34,12 @@ func MakeHandler(svc bootstrap.Service, reader bootstrap.ConfigReader) http.Hand
 		encodeResponse,
 		opts...))
 
+	r.Get("/things/:id", kithttp.NewServer(
+		viewEndpoint(svc),
+		decodeEntityRequest,
+		encodeResponse,
+		opts...))
+
 	r.Get("/bootstrap", kithttp.NewServer(
 		bootstrapEndpoint(svc, reader),
 		decodeBootstrapRequest,

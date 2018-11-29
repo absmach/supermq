@@ -56,7 +56,7 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		thing, err := svc.View(req.key, req.id)
+		thing, err := svc.View(req.id, req.key)
 		if err != nil {
 			return nil, err
 		}
@@ -64,8 +64,8 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		res := viewRes{
 			ID:         thing.ID,
 			Key:        thing.MFKey,
-			Owner:      thing.Owner,
-			MainfluxID: thing.MFID,
+			MFThing:    thing.MFThing,
+			MFChan:     thing.MFChan,
 			ExternalID: thing.ExternalID,
 			Status:     thing.Status,
 		}

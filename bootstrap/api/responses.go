@@ -84,8 +84,8 @@ func (res thingRes) Empty() bool {
 type viewRes struct {
 	ID         string           `json:"id"`
 	Key        string           `json:"key"`
-	Owner      string           `json:"-"`
-	MainfluxID string           `json:"mainflux_id"`
+	MFThing    string           `json:"mainflux_id"`
+	MFChan     string           `json:"mainflux_channel"`
 	ExternalID string           `json:"external_id,omitempty"`
 	Status     bootstrap.Status `json:"status"`
 }

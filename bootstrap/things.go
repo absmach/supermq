@@ -21,7 +21,7 @@ const (
 type Thing struct {
 	ID         string
 	Owner      string
-	MFID       string
+	MFThing    string
 	MFKey      string
 	MFChan     string
 	ExternalID string

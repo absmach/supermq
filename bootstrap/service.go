@@ -101,7 +101,7 @@ func (bs bootstrapService) Remove(id, key string) error {
 		return err
 	}
 
-	if err := bs.sdk.DeleteThing(thing.MFID, bs.apiKey); err != nil {
+	if err := bs.sdk.DeleteThing(thing.MFThing, bs.apiKey); err != nil {
 		return err
 	}
 
@@ -138,7 +138,7 @@ func (bs bootstrapService) Bootstrap(externID string) (Config, error) {
 		return Config{}, err
 	}
 
-	thing.MFID = thingID
+	thing.MFThing = thingID
 	thing.MFKey = mfThing.Key
 
 	mfChan, err := bs.sdk.CreateChannel(mfsdk.Channel{Name: chanName}, bs.apiKey)
@@ -163,7 +163,7 @@ func (bs bootstrapService) Bootstrap(externID string) (Config, error) {
 	}
 
 	config := Config{
-		MFID:     thing.MFID,
+		MFID:     thing.MFThing,
 		MFChan:   thing.MFChan,
 		MFKey:    thing.MFKey,
 		Metadata: bs.config,
