@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	protocol = "lora"
+	loraMapPrefix = "lora:mfx"
+	mfxMapPrefix  = "mfx:lora"
 )
 
 var _ lora.RouteMapRepository = (*routerMap)(nil)
@@ -32,16 +33,27 @@ func NewRouteMapRepository(client *redis.Client) lora.RouteMapRepository {
 }
 
 func (mr *routerMap) Save(key string, val string) error {
-	tkey := fmt.Sprintf("%s:%s", protocol, key)
+	println("ROUTEMAP SAVE")
+	tkey := fmt.Sprintf("%s:%s", loraMapPrefix, key)
 	if err := mr.client.Set(tkey, val, 0).Err(); err != nil {
 		return err
 	}
+	tkey = fmt.Sprintf("%s:%s", mfxMapPrefix, val)
+	if err := mr.client.Set(tkey, key, 0).Err(); err != nil {
+		return err
+	}
+
+	val, err := mr.client.Get(tkey).Result()
+	if err != nil {
+		return err
+	}
+	println("ROUTEMAP SAVED: ", tkey, val)
 
 	return nil
 }
 
 func (mr *routerMap) Get(key string) (string, error) {
-	laKey := fmt.Sprintf("%s:%s", protocol, key)
+	laKey := fmt.Sprintf("%s:%s", loraMapPrefix, key)
 	val, err := mr.client.Get(laKey).Result()
 	if err != nil {
 		return "", err
@@ -51,12 +63,12 @@ func (mr *routerMap) Get(key string) (string, error) {
 }
 
 func (mr *routerMap) Remove(key string) error {
-	tid := fmt.Sprintf("%s:%s", protocol, key)
+	tid := fmt.Sprintf("%s:%s", loraMapPrefix, key)
 	key, err := mr.client.Get(tid).Result()
 	if err != nil {
 		return err
 	}
 
-	tkey := fmt.Sprintf("%s:%s", protocol, key)
+	tkey := fmt.Sprintf("%s:%s", loraMapPrefix, key)
 	return mr.client.Del(tkey, tid).Err()
 }
