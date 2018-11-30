@@ -11,6 +11,7 @@ import (
 // This is used as a response from ConfigReader and can easily be
 // replace with any other response format.
 type bootstrapRes struct {
+	MFKey        string `json:"key"`
 	MQTTUsername string `json:"mf_mqtt_username"`
 	MQTTRcvTopic string `json:"mf_mqtt_rcv_topic"`
 	MQTTSndTopic string `json:"mf_mqtt_snd_topic"`
@@ -40,6 +41,7 @@ func NewConfigReader() ConfigReader {
 
 func (r reader) ReadConfig(cfg Config) (mainflux.Response, error) {
 	res := bootstrapRes{
+		MFKey:        cfg.MFKey,
 		GWID:         cfg.MFID,
 		MQTTUsername: cfg.MFID,
 		MQTTRcvTopic: fmt.Sprintf("channels/%s/messages", cfg.MFID),

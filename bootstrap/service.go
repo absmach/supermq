@@ -179,6 +179,15 @@ func (bs bootstrapService) Bootstrap(externID string) (Config, error) {
 }
 
 func (bs bootstrapService) ChangeStatus(id, owner string, status Status) error {
+	thing, err := bs.things.RetrieveByID(id, owner)
+	if err != nil {
+		return err
+	}
+
+	if err := bs.sdk.ConnectThing(thing.MFThing, thing.MFChan, bs.apiKey); err != nil {
+		return err
+	}
+
 	return bs.things.ChangeStatus(id, owner, status)
 }
 
