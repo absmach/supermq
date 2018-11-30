@@ -12,25 +12,34 @@ import (
 	nats "github.com/nats-io/go-nats"
 )
 
-const loraServerTopic = "application/+/device/+/rx"
+// MqttBroker represents the MQTT broker.
+type MqttBroker interface {
+	// Subscribes to geven subject and receives events.
+	Subscribe(string) error
+}
 
-type pubsub struct {
-	nc     *nats.Conn
+type broker struct {
 	svc    lora.Service
+	client mqtt.Client
+	nc     *nats.Conn
 	logger logger.Logger
 }
 
-// Subscribe subscribes to the Lora MQTT message broker
-func Subscribe(svc lora.Service, mc mqtt.Client, nc *nats.Conn, log logger.Logger) error {
-	ps := pubsub{
+// NewBroker returns new MQTT broker instance.
+func NewBroker(svc lora.Service, client mqtt.Client, nc *nats.Conn, log logger.Logger) MqttBroker {
+	return broker{
 		svc:    svc,
+		client: client,
 		nc:     nc,
 		logger: log,
 	}
+}
 
-	s := mc.Subscribe(loraServerTopic, 0, ps.handleMsg)
+// Subscribe subscribes to the Lora MQTT message broker
+func (b broker) Subscribe(subject string) error {
+	s := b.client.Subscribe(subject, 0, b.handleMsg)
 	if err := s.Error(); s.Wait() && err != nil {
-		ps.logger.Error(fmt.Sprintf("Failed to subscribe to lora message broker: %s", err.Error()))
+		b.logger.Error(fmt.Sprintf("Failed to subscribe to lora message broker: %s", err.Error()))
 		return err
 	}
 
@@ -38,15 +47,14 @@ func Subscribe(svc lora.Service, mc mqtt.Client, nc *nats.Conn, log logger.Logge
 }
 
 // handleMsg triggered when new message is received on Lora MQTT broker
-func (ps *pubsub) handleMsg(c mqtt.Client, msg mqtt.Message) {
+func (b broker) handleMsg(c mqtt.Client, msg mqtt.Message) {
 	m := lora.Message{}
-	err := json.Unmarshal(msg.Payload(), &m)
-	if err != nil {
-		ps.logger.Error(fmt.Sprintf("Failed to Unmarshal message: %s", err.Error()))
+	if err := json.Unmarshal(msg.Payload(), &m); err != nil {
+		b.logger.Error(fmt.Sprintf("Failed to Unmarshal message: %s", err.Error()))
 		return
 	}
 
 	// TODO: Decode data to publish on proper channel
-	ps.svc.MessageRouter(m, ps.nc)
+	b.svc.MessageRouter(m)
 	return
 }

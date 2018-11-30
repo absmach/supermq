@@ -36,7 +36,7 @@ type Service interface {
 	UpdateChannel(string, string) error
 
 	// Publish messages on Mainflux NATS broker
-	MessageRouter(Message, *nats.Conn) error
+	MessageRouter(Message) error
 }
 
 var _ Service = (*adapterService)(nil)
@@ -55,16 +55,16 @@ type EventStore interface {
 }
 
 // New instantiates the HTTP adapter implementation.
-func New(mc *nats.Conn, m RouteMapRepository, logger logger.Logger) Service {
+func New(nc *nats.Conn, m RouteMapRepository, logger logger.Logger) Service {
 	return &adapterService{
-		natsConn: mc,
+		natsConn: nc,
 		routeMap: m,
 		logger:   logger,
 	}
 }
 
 // MessageRouter routes messages from Lora MQTT broker to Mainflux NATS broker
-func (as *adapterService) MessageRouter(m Message, nc *nats.Conn) error {
+func (as *adapterService) MessageRouter(m Message) error {
 	// Get route map of lora application
 	d, err := as.routeMap.Get(m.DevEUI)
 	if err != nil {
@@ -105,7 +105,7 @@ func (as *adapterService) MessageRouter(m Message, nc *nats.Conn) error {
 	}
 
 	subject := fmt.Sprintf("channel.%d", msg.Channel)
-	return nc.Publish(subject, data)
+	return as.natsConn.Publish(subject, data)
 }
 
 func (as *adapterService) CreateThing(mfxDevID string, loraDevEUI string) error {

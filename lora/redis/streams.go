@@ -149,7 +149,6 @@ func decodeRemoveChannel(event map[string]interface{}) removeChannelEvent {
 }
 
 func (es eventStore) handleCreateThing(cte createThingEvent) error {
-	println("LORA handleCreateThing")
 	em := thingMetadata{}
 	if err := json.Unmarshal([]byte(cte.metadata), &em); err != nil {
 		return err
@@ -163,7 +162,6 @@ func (es eventStore) handleCreateThing(cte createThingEvent) error {
 }
 
 func (es eventStore) handleUpdateThing(ute updateThingEvent) error {
-	println("LORA handleUpdateThing")
 	em := thingMetadata{}
 	if err := json.Unmarshal([]byte(ute.metadata), &em); err != nil {
 		return err

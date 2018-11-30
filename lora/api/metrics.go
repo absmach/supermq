@@ -12,7 +12,6 @@ import (
 
 	"github.com/go-kit/kit/metrics"
 	"github.com/mainflux/mainflux/lora"
-	nats "github.com/nats-io/go-nats"
 )
 
 var _ lora.Service = (*metricsMiddleware)(nil)
@@ -86,11 +85,11 @@ func (mm *metricsMiddleware) RemoveChannel(mfxChanID string) error {
 	return mm.svc.RemoveChannel(mfxChanID)
 }
 
-func (mm *metricsMiddleware) MessageRouter(m lora.Message, nc *nats.Conn) error {
+func (mm *metricsMiddleware) MessageRouter(m lora.Message) error {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "message_router").Add(1)
 		mm.latency.With("method", "message_router").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.MessageRouter(m, nc)
+	return mm.svc.MessageRouter(m)
 }

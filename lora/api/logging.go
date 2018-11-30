@@ -13,7 +13,6 @@ import (
 
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/lora"
-	nats "github.com/nats-io/go-nats"
 )
 
 var _ lora.Service = (*loggingMiddleware)(nil)
@@ -109,7 +108,7 @@ func (lm loggingMiddleware) RemoveChannel(mfxChanID string) (err error) {
 	return lm.svc.RemoveChannel(mfxChanID)
 }
 
-func (lm loggingMiddleware) MessageRouter(m lora.Message, nc *nats.Conn) (err error) {
+func (lm loggingMiddleware) MessageRouter(m lora.Message) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("message_router - application/%s/device/%s/rx took %s to complete", m.ApplicationID, m.DevEUI, time.Since(begin))
 		if err != nil {
@@ -119,5 +118,5 @@ func (lm loggingMiddleware) MessageRouter(m lora.Message, nc *nats.Conn) (err er
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.MessageRouter(m, nc)
+	return lm.svc.MessageRouter(m)
 }
