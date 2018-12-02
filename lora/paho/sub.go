@@ -9,7 +9,6 @@ import (
 	"github.com/mainflux/mainflux/lora"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	nats "github.com/nats-io/go-nats"
 )
 
 // MqttBroker represents the MQTT broker.
@@ -21,16 +20,14 @@ type MqttBroker interface {
 type broker struct {
 	svc    lora.Service
 	client mqtt.Client
-	nc     *nats.Conn
 	logger logger.Logger
 }
 
 // NewBroker returns new MQTT broker instance.
-func NewBroker(svc lora.Service, client mqtt.Client, nc *nats.Conn, log logger.Logger) MqttBroker {
+func NewBroker(svc lora.Service, client mqtt.Client, log logger.Logger) MqttBroker {
 	return broker{
 		svc:    svc,
 		client: client,
-		nc:     nc,
 		logger: log,
 	}
 }

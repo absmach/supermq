@@ -14,6 +14,7 @@ import (
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/lora"
 	"github.com/mainflux/mainflux/lora/api"
+	pub "github.com/mainflux/mainflux/lora/nats"
 	mqttBroker "github.com/mainflux/mainflux/lora/paho"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
@@ -81,11 +82,13 @@ func main() {
 	esConn := connectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
 	defer esConn.Close()
 
-	mqttConn := connectToMQTTBroker(cfg.loraMsgURL, logger)
+	publisher := pub.NewMessagePublisher(natsConn)
 
 	routeMap := connectToRedisRouteMap(rmConn, logger)
 
-	svc := lora.New(natsConn, routeMap, logger)
+	mqttConn := connectToMQTTBroker(cfg.loraMsgURL, logger)
+
+	svc := lora.New(publisher, routeMap, logger)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
@@ -103,7 +106,7 @@ func main() {
 		}, []string{"method"}),
 	)
 
-	go subscribeToLoRaBroker(svc, mqttConn, natsConn, logger)
+	go subscribeToLoRaBroker(svc, mqttConn, logger)
 	go subscribeToThingsES(svc, esConn, cfg.instanceName, logger)
 
 	errs := make(chan error, 1)
@@ -181,8 +184,8 @@ func connectToRedis(redisURL, redisPass, redisDB string, logger logger.Logger) *
 	})
 }
 
-func subscribeToLoRaBroker(svc lora.Service, mc mqtt.Client, nc *nats.Conn, logger logger.Logger) {
-	mqttBroker := mqttBroker.NewBroker(svc, mc, nc, logger)
+func subscribeToLoRaBroker(svc lora.Service, mc mqtt.Client, logger logger.Logger) {
+	mqttBroker := mqttBroker.NewBroker(svc, mc, logger)
 	logger.Info("Subscribed to Lora MQTT broker")
 	if err := mqttBroker.Subscribe(loraServerTopic); err != nil {
 		logger.Error(fmt.Sprintf("Failed to subscribe to Lora MQTT broker: %s", err))
@@ -192,7 +195,7 @@ func subscribeToLoRaBroker(svc lora.Service, mc mqtt.Client, nc *nats.Conn, logg
 
 func subscribeToThingsES(svc lora.Service, client *r.Client, consumer string, logger logger.Logger) {
 	eventStore := redis.NewEventStore(svc, client, consumer, logger)
-	logger.Info("Subscribed to Redis Event Sourcing")
+	logger.Info("Subscribed to Redis Event Store")
 	eventStore.Subscribe("mainflux.things")
 }
 

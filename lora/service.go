@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/gogo/protobuf/proto"
-	"github.com/nats-io/go-nats"
-
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
 )
@@ -17,49 +14,42 @@ const protocol = "lora"
 // Service specifies an API that must be fullfiled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
-	// Create Thing route-map
+	// CreateThing creates thing  mfx:lora & lora:mfx route-map
 	CreateThing(string, string) error
 
-	// Create Thing route-map
+	// UpdateThing updates thing mfx:lora & lora:mfx route-map
 	UpdateThing(string, string) error
 
-	// Remove Thing route-map
+	// RemoveThing removes thing mfx:lora & lora:mfx route-map
 	RemoveThing(string) error
 
-	// Create Channel route-map
+	// CreateChannel creates channel mfx:lora & lora:mfx route-map
 	CreateChannel(string, string) error
 
-	// Remove Channel route-map
-	RemoveChannel(string) error
-
-	// Update Channel route-map
+	// UpdateChannel updates mfx:lora & lora:mfx route-map
 	UpdateChannel(string, string) error
 
-	// Publish messages on Mainflux NATS broker
+	// RemoveChannel removes channel mfx:lora & lora:mfx route-map
+	RemoveChannel(string) error
+
+	// MessageRouter forward Lora messages to Mainflux NATS broker
 	MessageRouter(Message) error
 }
 
 var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
-	natsConn   *nats.Conn
-	eventStore EventStore
-	logger     logger.Logger
-	routeMap   RouteMapRepository
-}
-
-// EventStore represents event source for things and channels provisioning.
-type EventStore interface {
-	// Subscribes to geven subject and receives events.
-	Subscribe(string)
+	publisher mainflux.MessagePublisher
+	routeMap  RouteMapRepository
+	logger    logger.Logger
 }
 
 // New instantiates the HTTP adapter implementation.
-func New(nc *nats.Conn, m RouteMapRepository, logger logger.Logger) Service {
+func New(pub mainflux.MessagePublisher, m RouteMapRepository, logger logger.Logger) Service {
 	return &adapterService{
-		natsConn: nc,
-		routeMap: m,
-		logger:   logger,
+		publisher: pub,
+		routeMap:  m,
+		logger:    logger,
 	}
 }
 
@@ -99,13 +89,7 @@ func (as *adapterService) MessageRouter(m Message) error {
 		Payload:     payload,
 	}
 
-	data, err := proto.Marshal(&msg)
-	if err != nil {
-		return err
-	}
-
-	subject := fmt.Sprintf("channel.%d", msg.Channel)
-	return as.natsConn.Publish(subject, data)
+	return as.publisher.Publish(msg)
 }
 
 func (as *adapterService) CreateThing(mfxDevID string, loraDevEUI string) error {
