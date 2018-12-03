@@ -84,7 +84,7 @@ func main() {
 
 	publisher := pub.NewMessagePublisher(natsConn)
 
-	routeMap := connectToRedisRouteMap(rmConn, logger)
+	routeMap := newRouteMapRepositoy(rmConn, logger)
 
 	mqttConn := connectToMQTTBroker(cfg.loraMsgURL, logger)
 
@@ -199,7 +199,7 @@ func subscribeToThingsES(svc lora.Service, client *r.Client, consumer string, lo
 	eventStore.Subscribe("mainflux.things")
 }
 
-func connectToRedisRouteMap(client *r.Client, logger logger.Logger) lora.RouteMapRepository {
+func newRouteMapRepositoy(client *r.Client, logger logger.Logger) lora.RouteMapRepository {
 	logger.Info("Connected to Redis Route map")
 	return redis.NewRouteMapRepository(client)
 }

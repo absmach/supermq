@@ -33,14 +33,14 @@ type EventStore interface {
 	Subscribe(string)
 }
 
-type thingMetadata struct {
-	Protocol   string `json:"protocol"`
-	LoraDevEUI string `json:"loraDevEUI"`
+type thingLoraMetadata struct {
+	Type   string `json:"type"`
+	DevEUI string `json:"devEUI"`
 }
 
-type channelMetadata struct {
-	Protocol string `json:"protocol"`
-	LoraApp  string `json:"loraApp"`
+type channelLoraMetadata struct {
+	Type  string `json:"type"`
+	AppID string `json:"appID"`
 }
 
 type eventStore struct {
@@ -149,29 +149,29 @@ func decodeRemoveChannel(event map[string]interface{}) removeChannelEvent {
 }
 
 func (es eventStore) handleCreateThing(cte createThingEvent) error {
-	em := thingMetadata{}
+	em := thingLoraMetadata{}
 	if err := json.Unmarshal([]byte(cte.metadata), &em); err != nil {
 		return err
 	}
 
-	if em.Protocol != protocol {
+	if em.Type != protocol {
 		return errors.New("Lora protocol not found in thing metadatada")
 	}
 
-	return es.svc.CreateThing(cte.id, em.LoraDevEUI)
+	return es.svc.CreateThing(cte.id, em.DevEUI)
 }
 
 func (es eventStore) handleUpdateThing(ute updateThingEvent) error {
-	em := thingMetadata{}
+	em := thingLoraMetadata{}
 	if err := json.Unmarshal([]byte(ute.metadata), &em); err != nil {
 		return err
 	}
 
-	if em.Protocol != protocol {
+	if em.Type != protocol {
 		return errors.New("Lora protocol not found in thing metadatada")
 	}
 
-	return es.svc.CreateThing(ute.id, em.LoraDevEUI)
+	return es.svc.CreateThing(ute.id, em.DevEUI)
 }
 
 func (es eventStore) handleRemoveThing(rte removeThingEvent) error {
@@ -179,29 +179,29 @@ func (es eventStore) handleRemoveThing(rte removeThingEvent) error {
 }
 
 func (es eventStore) handleCreateChannel(cce createChannelEvent) error {
-	cm := channelMetadata{}
+	cm := channelLoraMetadata{}
 	if err := json.Unmarshal([]byte(cce.metadata), &cm); err != nil {
 		return err
 	}
 
-	if cm.Protocol != protocol {
+	if cm.Type != protocol {
 		return errors.New("Lora protocol not found in channel metadatada")
 	}
 
-	return es.svc.CreateChannel(cce.id, cm.LoraApp)
+	return es.svc.CreateChannel(cce.id, cm.AppID)
 }
 
 func (es eventStore) handleUpdateChannel(uce updateChannelEvent) error {
-	cm := channelMetadata{}
+	cm := channelLoraMetadata{}
 	if err := json.Unmarshal([]byte(uce.metadata), &cm); err != nil {
 		return err
 	}
 
-	if cm.Protocol != protocol {
+	if cm.Type != protocol {
 		return errors.New("Lora protocol not found in channel metadatada")
 	}
 
-	return es.svc.UpdateChannel(uce.id, cm.LoraApp)
+	return es.svc.UpdateChannel(uce.id, cm.AppID)
 }
 
 func (es eventStore) handleRemoveChannel(rce removeChannelEvent) error {
