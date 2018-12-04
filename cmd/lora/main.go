@@ -50,6 +50,9 @@ const (
 	envRouteMapDB   = "MF_LORA_ADAPTER_ROUTEMAP_DB"
 
 	loraServerTopic = "application/+/device/+/rx"
+
+	thingsRMPrefix   = "thing"
+	channelsRMPrefix = "channel"
 )
 
 type config struct {
@@ -85,11 +88,12 @@ func main() {
 
 	publisher := pub.NewMessagePublisher(natsConn)
 
-	routeMap := newRouteMapRepositoy(rmConn, logger)
+	thingRM := newRouteMapRepositoy(rmConn, thingsRMPrefix, logger)
+	chanRM := newRouteMapRepositoy(rmConn, channelsRMPrefix, logger)
 
 	mqttConn := connectToMQTTBroker(cfg.loraMsgURL, logger)
 
-	svc := lora.New(publisher, routeMap, logger)
+	svc := lora.New(publisher, thingRM, chanRM, logger)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
@@ -202,9 +206,9 @@ func subscribeToThingsES(svc lora.Service, client *r.Client, consumer string, lo
 	eventStore.Subscribe("mainflux.things")
 }
 
-func newRouteMapRepositoy(client *r.Client, logger logger.Logger) lora.RouteMapRepository {
+func newRouteMapRepositoy(client *r.Client, prefix string, logger logger.Logger) lora.RouteMapRepository {
 	logger.Info("Connected to Redis Route map")
-	return redis.NewRouteMapRepository(client)
+	return redis.NewRouteMapRepository(client, prefix)
 }
 
 func startHTTPServer(cfg config, logger logger.Logger, errs chan error) {

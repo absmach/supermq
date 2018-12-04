@@ -43,24 +43,26 @@ type Service interface {
 var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
-	publisher mainflux.MessagePublisher
-	routeMap  RouteMapRepository
-	logger    logger.Logger
+	publisher  mainflux.MessagePublisher
+	thingsRM   RouteMapRepository
+	channelsRM RouteMapRepository
+	logger     logger.Logger
 }
 
 // New instantiates the LoRa adapter implementation.
-func New(pub mainflux.MessagePublisher, m RouteMapRepository, logger logger.Logger) Service {
+func New(pub mainflux.MessagePublisher, thingsRM, channelsRM RouteMapRepository, logger logger.Logger) Service {
 	return &adapterService{
-		publisher: pub,
-		routeMap:  m,
-		logger:    logger,
+		publisher:  pub,
+		thingsRM:   thingsRM,
+		channelsRM: channelsRM,
+		logger:     logger,
 	}
 }
 
 // MessageRouter routes messages from Lora MQTT broker to Mainflux NATS broker
 func (as *adapterService) MessageRouter(m Message) error {
 	// Get route map of lora application
-	d, err := as.routeMap.Get(m.DevEUI, thingSuffix)
+	d, err := as.thingsRM.Get(m.DevEUI)
 	if err != nil {
 		return fmt.Errorf(fmt.Sprintf("Route map not foud for device EUI %s", m.DevEUI))
 	}
@@ -70,7 +72,7 @@ func (as *adapterService) MessageRouter(m Message) error {
 	}
 
 	// Get route map of lora application
-	c, err := as.routeMap.Get(m.ApplicationID, channelSuffix)
+	c, err := as.channelsRM.Get(m.ApplicationID)
 	if err != nil {
 		return fmt.Errorf(fmt.Sprintf("Route map not found for application ID %s", m.ApplicationID))
 	}
@@ -97,25 +99,25 @@ func (as *adapterService) MessageRouter(m Message) error {
 }
 
 func (as *adapterService) CreateThing(mfxDevID string, loraDevEUI string) error {
-	return as.routeMap.Save(mfxDevID, loraDevEUI, thingSuffix)
+	return as.thingsRM.Save(mfxDevID, loraDevEUI)
 }
 
 func (as *adapterService) UpdateThing(mfxDevID string, loraDevEUI string) error {
-	return as.routeMap.Save(mfxDevID, loraDevEUI, thingSuffix)
+	return as.thingsRM.Save(mfxDevID, loraDevEUI)
 }
 
 func (as *adapterService) RemoveThing(mfxDevID string) error {
-	return as.routeMap.Remove(mfxDevID, thingSuffix)
+	return as.thingsRM.Remove(mfxDevID)
 }
 
 func (as *adapterService) CreateChannel(mfxChanID string, loraAppID string) error {
-	return as.routeMap.Save(mfxChanID, loraAppID, channelSuffix)
+	return as.channelsRM.Save(mfxChanID, loraAppID)
 }
 
 func (as *adapterService) UpdateChannel(mfxChanID string, loraAppID string) error {
-	return as.routeMap.Save(mfxChanID, loraAppID, channelSuffix)
+	return as.channelsRM.Save(mfxChanID, loraAppID)
 }
 
 func (as *adapterService) RemoveChannel(mfxChanID string) error {
-	return as.routeMap.Remove(mfxChanID, channelSuffix)
+	return as.channelsRM.Remove(mfxChanID)
 }
