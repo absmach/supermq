@@ -50,6 +50,6 @@ func (b broker) handleMsg(c mqtt.Client, msg mqtt.Message) {
 		return
 	}
 
-	b.svc.MessageRouter(m)
+	b.svc.Publish(m)
 	return
 }

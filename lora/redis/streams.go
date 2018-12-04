@@ -98,7 +98,7 @@ func (es eventStore) Subscribe(subject string) {
 				err = es.handleRemoveChannel(rce)
 			}
 			if err != nil {
-				es.logger.Error(fmt.Sprintf("Failed to handle event sourcing: %s", err.Error()))
+				es.logger.Warn(fmt.Sprintf("Failed to handle event sourcing: %s", err.Error()))
 				break
 			}
 			es.client.XAck(stream, group, msg.ID)

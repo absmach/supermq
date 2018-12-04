@@ -93,7 +93,7 @@ func main() {
 
 	mqttConn := connectToMQTTBroker(cfg.loraMsgURL, logger)
 
-	svc := lora.New(publisher, thingRM, chanRM, logger)
+	svc := lora.New(publisher, thingRM, chanRM)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,

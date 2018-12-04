@@ -2,17 +2,31 @@ package lora
 
 import (
 	"encoding/base64"
-	"fmt"
+	"errors"
 	"strconv"
 
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/logger"
 )
 
 const (
 	protocol      = "lora"
 	thingSuffix   = "thing"
 	channelSuffix = "channel"
+)
+
+var (
+	// ErrMalformedIdentity indicates malformed identity received (e.g.
+	// invalid appID or deviceEUI).
+	ErrMalformedIdentity = errors.New("malformed identity received")
+
+	// ErrMalformedMessage indicates malformed LoRa message.
+	ErrMalformedMessage = errors.New("malformed message received")
+
+	// ErrNotFoundDev indicates a non-existent route map for a device EUI.
+	ErrNotFoundDev = errors.New("route map not found for device EUI")
+
+	// ErrNotFoundApp indicates a non-existent route map for an application ID.
+	ErrNotFoundApp = errors.New("route map not found for application ID")
 )
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -36,8 +50,8 @@ type Service interface {
 	// RemoveChannel removes channel mfx:lora & lora:mfx route-map
 	RemoveChannel(string) error
 
-	// MessageRouter forward Lora messages to Mainflux NATS broker
-	MessageRouter(Message) error
+	// Publish forwards messages from the LoRa MQTT broker to Mainflux NATS broker
+	Publish(Message) error
 }
 
 var _ Service = (*adapterService)(nil)
@@ -46,44 +60,42 @@ type adapterService struct {
 	publisher  mainflux.MessagePublisher
 	thingsRM   RouteMapRepository
 	channelsRM RouteMapRepository
-	logger     logger.Logger
 }
 
 // New instantiates the LoRa adapter implementation.
-func New(pub mainflux.MessagePublisher, thingsRM, channelsRM RouteMapRepository, logger logger.Logger) Service {
+func New(pub mainflux.MessagePublisher, thingsRM, channelsRM RouteMapRepository) Service {
 	return &adapterService{
 		publisher:  pub,
 		thingsRM:   thingsRM,
 		channelsRM: channelsRM,
-		logger:     logger,
 	}
 }
 
-// MessageRouter routes messages from Lora MQTT broker to Mainflux NATS broker
-func (as *adapterService) MessageRouter(m Message) error {
+// Publish forwards messages from Lora MQTT broker to Mainflux NATS broker
+func (as *adapterService) Publish(m Message) error {
 	// Get route map of lora application
 	d, err := as.thingsRM.Get(m.DevEUI)
 	if err != nil {
-		return fmt.Errorf(fmt.Sprintf("Route map not foud for device EUI %s", m.DevEUI))
+		return ErrNotFoundDev
 	}
 	mfxDev, err := strconv.ParseUint(d, 10, 64)
 	if err != nil {
-		return fmt.Errorf(fmt.Sprintf("Failed to decode %s as device EUI", m.DevEUI))
+		return ErrMalformedIdentity
 	}
 
 	// Get route map of lora application
 	c, err := as.channelsRM.Get(m.ApplicationID)
 	if err != nil {
-		return fmt.Errorf(fmt.Sprintf("Route map not found for application ID %s", m.ApplicationID))
+		return ErrNotFoundApp
 	}
 	mfxChan, err := strconv.ParseUint(c, 10, 64)
 	if err != nil {
-		return fmt.Errorf(fmt.Sprintf("Failed to decode %s as application ID", m.ApplicationID))
+		return ErrMalformedIdentity
 	}
 
 	payload, err := base64.StdEncoding.DecodeString(m.Data)
 	if err != nil {
-		return fmt.Errorf(fmt.Sprintf("Failed to decode message %s", err.Error()))
+		return ErrMalformedMessage
 	}
 
 	// Publish on Mainflux NATS broker
