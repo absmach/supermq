@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -109,7 +110,9 @@ func main() {
 	go subscribeToLoRaBroker(svc, mqttConn, logger)
 	go subscribeToThingsES(svc, esConn, cfg.instanceName, logger)
 
-	errs := make(chan error, 1)
+	errs := make(chan error, 2)
+
+	go startHTTPServer(cfg, logger, errs)
 
 	go func() {
 		c := make(chan os.Signal)
@@ -202,4 +205,10 @@ func subscribeToThingsES(svc lora.Service, client *r.Client, consumer string, lo
 func newRouteMapRepositoy(client *r.Client, logger logger.Logger) lora.RouteMapRepository {
 	logger.Info("Connected to Redis Route map")
 	return redis.NewRouteMapRepository(client)
+}
+
+func startHTTPServer(cfg config, logger logger.Logger, errs chan error) {
+	p := fmt.Sprintf(":%s", cfg.httpPort)
+	logger.Info(fmt.Sprintf("Lora-adapter service started, exposed port %s", cfg.httpPort))
+	errs <- http.ListenAndServe(p, api.MakeHandler())
 }

@@ -36,7 +36,6 @@ func NewBroker(svc lora.Service, client mqtt.Client, log logger.Logger) MqttBrok
 func (b broker) Subscribe(subject string) error {
 	s := b.client.Subscribe(subject, 0, b.handleMsg)
 	if err := s.Error(); s.Wait() && err != nil {
-		b.logger.Error(fmt.Sprintf("Failed to subscribe to lora message broker: %s", err.Error()))
 		return err
 	}
 
@@ -47,11 +46,10 @@ func (b broker) Subscribe(subject string) error {
 func (b broker) handleMsg(c mqtt.Client, msg mqtt.Message) {
 	m := lora.Message{}
 	if err := json.Unmarshal(msg.Payload(), &m); err != nil {
-		b.logger.Error(fmt.Sprintf("Failed to Unmarshal message: %s", err.Error()))
+		b.logger.Warn(fmt.Sprintf("Failed to Unmarshal message: %s", err.Error()))
 		return
 	}
 
-	// TODO: Decode data to publish on proper channel
 	b.svc.MessageRouter(m)
 	return
 }

@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	protocol     = "lora"
-	thingSufix   = "thing"
-	channelSufix = "channel"
+	protocol      = "lora"
+	thingSuffix   = "thing"
+	channelSuffix = "channel"
 )
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -60,7 +60,7 @@ func New(pub mainflux.MessagePublisher, m RouteMapRepository, logger logger.Logg
 // MessageRouter routes messages from Lora MQTT broker to Mainflux NATS broker
 func (as *adapterService) MessageRouter(m Message) error {
 	// Get route map of lora application
-	d, err := as.routeMap.Get(m.DevEUI, thingSufix)
+	d, err := as.routeMap.Get(m.DevEUI, thingSuffix)
 	if err != nil {
 		return fmt.Errorf(fmt.Sprintf("Route map not foud for device EUI %s", m.DevEUI))
 	}
@@ -70,7 +70,7 @@ func (as *adapterService) MessageRouter(m Message) error {
 	}
 
 	// Get route map of lora application
-	c, err := as.routeMap.Get(m.ApplicationID, channelSufix)
+	c, err := as.routeMap.Get(m.ApplicationID, channelSuffix)
 	if err != nil {
 		return fmt.Errorf(fmt.Sprintf("Route map not found for application ID %s", m.ApplicationID))
 	}
@@ -97,25 +97,25 @@ func (as *adapterService) MessageRouter(m Message) error {
 }
 
 func (as *adapterService) CreateThing(mfxDevID string, loraDevEUI string) error {
-	return as.routeMap.Save(mfxDevID, loraDevEUI, thingSufix)
+	return as.routeMap.Save(mfxDevID, loraDevEUI, thingSuffix)
 }
 
 func (as *adapterService) UpdateThing(mfxDevID string, loraDevEUI string) error {
-	return as.routeMap.Save(mfxDevID, loraDevEUI, thingSufix)
+	return as.routeMap.Save(mfxDevID, loraDevEUI, thingSuffix)
 }
 
 func (as *adapterService) RemoveThing(mfxDevID string) error {
-	return as.routeMap.Remove(mfxDevID, thingSufix)
+	return as.routeMap.Remove(mfxDevID, thingSuffix)
 }
 
 func (as *adapterService) CreateChannel(mfxChanID string, loraAppID string) error {
-	return as.routeMap.Save(mfxChanID, loraAppID, channelSufix)
+	return as.routeMap.Save(mfxChanID, loraAppID, channelSuffix)
 }
 
 func (as *adapterService) UpdateChannel(mfxChanID string, loraAppID string) error {
-	return as.routeMap.Save(mfxChanID, loraAppID, channelSufix)
+	return as.routeMap.Save(mfxChanID, loraAppID, channelSuffix)
 }
 
 func (as *adapterService) RemoveChannel(mfxChanID string) error {
-	return as.routeMap.Remove(mfxChanID, channelSufix)
+	return as.routeMap.Remove(mfxChanID, channelSuffix)
 }
