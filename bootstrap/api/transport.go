@@ -140,7 +140,7 @@ func decodeStatusRequest(_ context.Context, r *http.Request) (interface{}, error
 	}
 
 	req := changeStatusReq{key: r.Header.Get("Authorization")}
-	req.ID = bone.GetValue(r, "id")
+	req.id = bone.GetValue(r, "id")
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}

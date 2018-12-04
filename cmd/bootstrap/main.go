@@ -13,6 +13,7 @@ import (
 	"syscall"
 
 	api "nov/bootstrap/api"
+	"nov/bootstrap/jwt"
 	"nov/bootstrap/postgres"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
@@ -151,7 +152,7 @@ func newService(db *sql.DB, logger logger.Logger, cfg config) bootstrap.Service 
 		BaseURL: cfg.baseURL,
 	}
 	sdk := mfsdk.NewSDK(config)
-	svc := bootstrap.New(thingsRepo, cfg.apiKey, sdk, cfg.configFile)
+	svc := bootstrap.New(thingsRepo, cfg.apiKey, jwt.New(), sdk, cfg.configFile)
 	svc = api.NewLoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,

@@ -8,11 +8,12 @@ type apiReq interface {
 
 type addReq struct {
 	key        string
-	ExternalID string `json:"external_id"`
+	ExternalID string   `json:"external_id"`
+	Channels   []string `json:"channels"`
 }
 
 func (req addReq) validate() error {
-	if req.ExternalID == "" {
+	if req.ExternalID == "" || len(req.Channels) == 0 {
 		return bootstrap.ErrMalformedEntity
 	}
 
@@ -59,12 +60,12 @@ func (req boostrapReq) validate() error {
 
 type changeStatusReq struct {
 	key    string
-	ID     string           `json:"id"`
+	id     string
 	Status bootstrap.Status `json:"status"`
 }
 
 func (req changeStatusReq) validate() error {
-	if req.ID == "" || req.key == "" {
+	if req.id == "" || req.key == "" {
 		return bootstrap.ErrUnauthorizedAccess
 	}
 

@@ -28,6 +28,8 @@ var (
 	ErrInvalidID = errors.New("invalid Mainflux ID response")
 )
 
+var _ Service = (*bootstrapService)(nil)
+
 // Service specifies an API that must be fulfilled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
@@ -50,14 +52,12 @@ type Service interface {
 	ChangeStatus(string, string, Status) error
 }
 
-var _ Service = (*bootstrapService)(nil)
-
 // Config represents Thing configuration generated in bootstrapping process.
 type Config struct {
-	MFID     string
-	MFKey    string
-	MFChan   string
-	Metadata string
+	MFID       string
+	MFKey      string
+	MFChannels []string
+	Metadata   string
 }
 
 // ConfigReader is used to parse Config into format which will be encoded
@@ -69,22 +69,29 @@ type ConfigReader interface {
 type bootstrapService struct {
 	things ThingRepository
 	sdk    mfsdk.SDK
+	idp    IdentityProvider
 	apiKey string
 	config string
 }
 
 // New returns new Bootstrap service.
-func New(things ThingRepository, apiKey string, sdk mfsdk.SDK, cfgPath string) Service {
+func New(things ThingRepository, apiKey string, idp IdentityProvider, sdk mfsdk.SDK, cfgPath string) Service {
 	return &bootstrapService{
 		things: things,
 		apiKey: apiKey,
 		sdk:    sdk,
+		idp:    idp,
 		config: cfgPath,
 	}
 }
 
 func (bs bootstrapService) Add(key string, thing Thing) (Thing, error) {
-	thing.Owner = key
+	owner, err := bs.idp.ExtractKey(key)
+	if err != nil {
+		return Thing{}, err
+	}
+
+	thing.Owner = owner
 	thing.Status = Created
 	id, err := bs.things.Save(thing)
 	if err != nil {
@@ -94,15 +101,15 @@ func (bs bootstrapService) Add(key string, thing Thing) (Thing, error) {
 	return thing, nil
 }
 
-func (bs bootstrapService) View(id, key string) (Thing, error) {
-	return bs.things.RetrieveByID(id, key)
+func (bs bootstrapService) View(key, id string) (Thing, error) {
+	return bs.things.RetrieveByID(key, id)
 }
 
 func (bs bootstrapService) List(key string, offset, limit uint64) ([]Thing, error) {
 	return bs.things.RetrieveAll(key, offset, limit), nil
 }
 
-func (bs bootstrapService) Remove(id, key string) error {
+func (bs bootstrapService) Remove(key, id string) error {
 	thing, err := bs.things.RetrieveByID(id, key)
 	if err != nil {
 		return err
@@ -112,7 +119,7 @@ func (bs bootstrapService) Remove(id, key string) error {
 		return err
 	}
 
-	if err := bs.sdk.DeleteChannel(thing.MFChan, bs.apiKey); err != nil {
+	if err := bs.sdk.DeleteChannel(thing.MFChannels[0], bs.apiKey); err != nil {
 		return err
 	}
 	return bs.things.Remove(id, key)
@@ -160,7 +167,7 @@ func (bs bootstrapService) Bootstrap(externID string) (Config, error) {
 		return Config{}, err
 	}
 
-	thing.MFChan = chanID
+	thing.MFChannels = append(thing.MFChannels, chanID)
 	thing.Status = Inactive
 	if err := bs.things.Update(thing); err != nil {
 		bs.sdk.DeleteThing(thingID, bs.apiKey)
@@ -170,25 +177,32 @@ func (bs bootstrapService) Bootstrap(externID string) (Config, error) {
 	}
 
 	config := Config{
-		MFID:     thing.MFThing,
-		MFChan:   thing.MFChan,
-		MFKey:    thing.MFKey,
-		Metadata: bs.config,
+		MFID:       thing.MFThing,
+		MFChannels: thing.MFChannels,
+		MFKey:      thing.MFKey,
+		Metadata:   bs.config,
 	}
 	return config, nil
 }
 
-func (bs bootstrapService) ChangeStatus(id, owner string, status Status) error {
-	thing, err := bs.things.RetrieveByID(id, owner)
+func (bs bootstrapService) ChangeStatus(key, id string, status Status) error {
+	thing, err := bs.things.RetrieveByID(key, id)
 	if err != nil {
 		return err
 	}
 
-	if err := bs.sdk.ConnectThing(thing.MFThing, thing.MFChan, bs.apiKey); err != nil {
-		return err
+	switch status {
+	case Active:
+		if err := bs.sdk.ConnectThing(thing.MFThing, thing.MFChannels[0], bs.apiKey); err != nil {
+			return err
+		}
+	case Inactive:
+		if err := bs.sdk.DisconnectThing(thing.MFThing, thing.MFChannels[0], bs.apiKey); err != nil {
+			return err
+		}
 	}
 
-	return bs.things.ChangeStatus(id, owner, status)
+	return bs.things.ChangeStatus(key, id, status)
 }
 
 func parseLocation(location string) (string, error) {

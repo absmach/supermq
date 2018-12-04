@@ -19,13 +19,14 @@ const (
 
 // Thing represents Mainflux thing.
 type Thing struct {
-	ID         string
-	Owner      string
-	MFThing    string
-	MFKey      string
-	MFChan     string
-	ExternalID string
-	Status     Status
+	ID             string
+	Owner          string
+	MFThing        string
+	MFKey          string
+	MFChannels     []string
+	ExternalID     string
+	ExternalConfig string
+	Status         Status
 }
 
 // ThingRepository specifies a Thing persistence API.

@@ -18,6 +18,7 @@ func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 
 		thing := bootstrap.Thing{
 			ExternalID: req.ExternalID,
+			MFChannels: req.Channels,
 		}
 		saved, err := svc.Add(req.key, thing)
 		if err != nil {
@@ -65,7 +66,7 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			ID:         thing.ID,
 			Key:        thing.MFKey,
 			MFThing:    thing.MFThing,
-			MFChan:     thing.MFChan,
+			MFChannels: thing.MFChannels,
 			ExternalID: thing.ExternalID,
 			Status:     thing.Status,
 		}
@@ -91,7 +92,7 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			view := viewRes{
 				ID:         thing.ID,
 				MFThing:    thing.MFThing,
-				MFChan:     thing.MFChan,
+				MFChannels: thing.MFChannels,
 				ExternalID: thing.ExternalID,
 				Status:     thing.Status,
 			}
@@ -110,7 +111,7 @@ func removeEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return removeRes{}, nil
 		}
 
-		if err := svc.Remove(req.id, req.key); err != nil {
+		if err := svc.Remove(req.key, req.id); err != nil {
 			return nil, err
 		}
 
@@ -131,7 +132,7 @@ func statusEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		if err := svc.ChangeStatus(req.ID, req.key, req.Status); err != nil {
+		if err := svc.ChangeStatus(req.key, req.id, req.Status); err != nil {
 			return nil, err
 		}
 
