@@ -153,26 +153,25 @@ func (bs bootstrapService) Update(key string, thing Thing) error {
 	}
 
 	if t.Status == Active {
-		intersect := []string{}
+		tmp := make(map[string]bool)
 		for _, c := range t.MFChannels {
-			if contains(thing.MFChannels, c) {
-				intersect = append(intersect, c)
-			}
-		}
-
-		for _, c := range t.MFChannels {
-			if !contains(intersect, c) {
-				if err := bs.sdk.DisconnectThing(id, c, key); err != nil {
-					return err
-				}
-			}
+			tmp[c] = true
 		}
 
 		for _, c := range thing.MFChannels {
-			if !contains(intersect, c) {
+			if !tmp[c] {
 				if err := bs.sdk.ConnectThing(id, c, key); err != nil {
 					return err
 				}
+				continue
+			}
+
+			delete(tmp, c)
+		}
+
+		for c := range tmp {
+			if err := bs.sdk.DisconnectThing(id, c, key); err != nil {
+				return err
 			}
 		}
 	}
@@ -273,14 +272,4 @@ func parseLocation(location string) (string, error) {
 	}
 
 	return mfPath[n-1], nil
-}
-
-func contains(l []string, e string) bool {
-	for _, v := range l {
-		if v == e {
-			return true
-		}
-	}
-
-	return false
 }
