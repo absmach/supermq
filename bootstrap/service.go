@@ -26,6 +26,13 @@ var (
 
 	// ErrInvalidID indicates that wrong ID is returned from the Mainflux.
 	ErrInvalidID = errors.New("invalid Mainflux ID response")
+
+	// ErrConflict indicates that entity with the same ID or external ID alredy exists.
+	ErrConflict = errors.New("entity already exists")
+
+	// ErrInvalidStatus indicates attempt to change status of the unconfigured entity.
+	// Entity needs to be bootstrapped in order to be able to change status.
+	ErrInvalidStatus = errors.New("can change status of unconfigured entity")
 )
 
 var _ Service = (*bootstrapService)(nil)
@@ -38,6 +45,9 @@ type Service interface {
 
 	// View returns Thing with given ID belonging to the user identified by the given key.
 	View(string, string) (Thing, error)
+
+	// Update updates editable fields of the provided Thing.
+	Update(string, Thing) error
 
 	// List returns subset of Things that belong to the user identified by the given key.
 	List(string, uint64, uint64) ([]Thing, error)
@@ -107,7 +117,7 @@ func (bs bootstrapService) Add(key string, thing Thing) (Thing, error) {
 	}
 
 	thing.Owner = owner
-	thing.Status = Inactive
+	thing.Status = Created
 	thing.MFThing = thingID
 	thing.MFKey = mfThing.Key
 
@@ -127,6 +137,49 @@ func (bs bootstrapService) View(key, id string) (Thing, error) {
 	}
 
 	return bs.things.RetrieveByID(owner, id)
+}
+
+func (bs bootstrapService) Update(key string, thing Thing) error {
+	owner, err := bs.idp.Identify(key)
+	if err != nil {
+		return err
+	}
+
+	thing.Owner = owner
+
+	t, err := bs.things.RetrieveByID(owner, thing.ID)
+	id := t.MFThing
+
+	if err != nil {
+		return err
+	}
+
+	if t.Status == Active {
+		intersect := []string{}
+		for _, c := range t.MFChannels {
+			if contains(thing.MFChannels, c) {
+				intersect = append(intersect, c)
+			}
+		}
+
+		for _, c := range t.MFChannels {
+			if !contains(intersect, c) {
+				if err := bs.sdk.DisconnectThing(id, c, key); err != nil {
+					return err
+				}
+			}
+		}
+
+		for _, c := range thing.MFChannels {
+			if !contains(intersect, c) {
+				if err := bs.sdk.ConnectThing(id, c, key); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return bs.things.Update(thing)
 }
 
 func (bs bootstrapService) List(key string, offset, limit uint64) ([]Thing, error) {
@@ -156,14 +209,19 @@ func (bs bootstrapService) Remove(key, id string) error {
 	return bs.things.Remove(owner, id)
 }
 
-func (bs bootstrapService) Bootstrap(externID string) (Config, error) {
-	thing, err := bs.things.RetrieveByExternalID(externID)
+func (bs bootstrapService) Bootstrap(id string) (Config, error) {
+	thing, err := bs.things.RetrieveByExternalID(id)
 	if err != nil {
 		return Config{}, ErrUnauthorizedAccess
 	}
 
-	if thing.Status != Inactive {
+	if thing.Status == Active {
 		return Config{}, ErrMalformedEntity
+	}
+
+	thing.Status = Inactive
+	if err := bs.things.ChangeStatus(thing.Owner, thing.ID, thing.Status); err != nil {
+		return Config{}, err
 	}
 
 	config := Config{
@@ -185,6 +243,10 @@ func (bs bootstrapService) ChangeStatus(key, id string, status Status) error {
 	thing, err := bs.things.RetrieveByID(owner, id)
 	if err != nil {
 		return err
+	}
+
+	if thing.Status == Created {
+		return ErrInvalidStatus
 	}
 
 	switch status {
@@ -213,4 +275,14 @@ func parseLocation(location string) (string, error) {
 	}
 
 	return mfPath[n-1], nil
+}
+
+func contains(l []string, e string) bool {
+	for _, v := range l {
+		if v == e {
+			return true
+		}
+	}
+
+	return false
 }

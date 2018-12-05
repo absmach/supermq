@@ -34,6 +34,27 @@ func (req entityReq) validate() error {
 	return nil
 }
 
+type updateReq struct {
+	key        string
+	id         string
+	MFChannels []string         `json:"channels"`
+	Config     string           `json:"config"`
+	Status     bootstrap.Status `json:"status"`
+}
+
+func (req updateReq) validate() error {
+	if req.key == "" {
+		return bootstrap.ErrUnauthorizedAccess
+	}
+
+	if req.Status != bootstrap.Inactive &&
+		req.Status != bootstrap.Active {
+		return bootstrap.ErrMalformedEntity
+	}
+
+	return nil
+}
+
 type listReq struct {
 	key    string
 	offset uint64
@@ -44,6 +65,7 @@ func (req listReq) validate() error {
 	if req.key == "" {
 		return bootstrap.ErrUnauthorizedAccess
 	}
+
 	return nil
 }
 

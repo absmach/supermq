@@ -32,6 +32,7 @@ func (idp *jwtIDP) ExtractKey(token string) (string, error) {
 	return "", errInvalidJWTClaims
 }
 
-func (idp *jwtIDP) Identify(string) (string, error) {
-	return "", nil
+func (idp *jwtIDP) Identify(token string) (string, error) {
+	// TODO Implement actual Mainflux Users service API call.
+	return idp.ExtractKey(token)
 }

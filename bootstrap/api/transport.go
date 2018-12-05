@@ -45,6 +45,12 @@ func MakeHandler(svc bootstrap.Service, reader bootstrap.ConfigReader) http.Hand
 		encodeResponse,
 		opts...))
 
+	r.Put("/things/:id", kithttp.NewServer(
+		updateEndpoint(svc),
+		decodeUpdateRequest,
+		encodeResponse,
+		opts...))
+
 	r.Get("/things", kithttp.NewServer(
 		listEndpoint(svc),
 		decodeListRequest,
@@ -75,6 +81,18 @@ func MakeHandler(svc bootstrap.Service, reader bootstrap.ConfigReader) http.Hand
 	return r
 }
 
+func parseUint(s []string) (uint64, error) {
+	if len(s) != 1 {
+		return 0, errInvalidQueryParams
+	}
+
+	ret, err := strconv.ParseUint(s[0], 10, 64)
+	if err != nil {
+		return 0, errInvalidQueryParams
+	}
+	return ret, nil
+}
+
 func decodeAddRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
 		return nil, errUnsupportedContentType
@@ -86,16 +104,16 @@ func decodeAddRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	return req, nil
 }
 
-func parseUint(s []string) (uint64, error) {
-	if len(s) != 1 {
-		return 0, errInvalidQueryParams
+func decodeUpdateRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	if r.Header.Get("Content-Type") != contentType {
+		return nil, errUnsupportedContentType
 	}
-
-	ret, err := strconv.ParseUint(s[0], 10, 64)
-	if err != nil {
-		return 0, errInvalidQueryParams
+	req := updateReq{key: r.Header.Get("Authorization")}
+	req.id = bone.GetValue(r, "id")
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, err
 	}
-	return ret, nil
+	return req, nil
 }
 
 func decodeListRequest(_ context.Context, r *http.Request) (interface{}, error) {
@@ -184,6 +202,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusForbidden)
 	case bootstrap.ErrInvalidID:
 		w.WriteHeader(http.StatusServiceUnavailable)
+	case bootstrap.ErrConflict:
+		w.WriteHeader(http.StatusConflict)
 	default:
 		switch err.(type) {
 		case *json.SyntaxError:

@@ -33,11 +33,14 @@ func nullString(s string) sql.NullString {
 }
 
 func (tr thingRepository) Save(thing bootstrap.Thing) (string, error) {
-	q := `INSERT INTO things (mainflux_key, owner, mainflux_thing, external_id, mainflux_channels, external_config, status)
+	q := `INSERT INTO things (mainflux_key, owner, mainflux_thing, external_id, mainflux_channels, config, status)
 	VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
 
 	if err := tr.db.QueryRow(q, nullString(thing.MFKey), thing.Owner, nullString(thing.MFThing),
 		thing.ExternalID, pq.Array(thing.MFChannels), nullString(thing.Config), thing.Status).Scan(&thing.ID); err != nil {
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Name() == "unique_violation" {
+			return "", bootstrap.ErrConflict
+		}
 		return "", err
 	}
 
@@ -45,7 +48,7 @@ func (tr thingRepository) Save(thing bootstrap.Thing) (string, error) {
 }
 
 func (tr thingRepository) RetrieveByID(key, id string) (bootstrap.Thing, error) {
-	q := `SELECT mainflux_key, mainflux_thing, external_id, mainflux_channels, external_config, status FROM things WHERE id = $1 AND owner = $2`
+	q := `SELECT mainflux_key, mainflux_thing, external_id, mainflux_channels, config, status FROM things WHERE id = $1 AND owner = $2`
 	thing := bootstrap.Thing{ID: id, Owner: key}
 	var mfKey, mfThing, config sql.NullString
 
@@ -69,7 +72,7 @@ func (tr thingRepository) RetrieveByID(key, id string) (bootstrap.Thing, error) 
 }
 
 func (tr thingRepository) RetrieveAll(key string, offset, limit uint64) []bootstrap.Thing {
-	q := `SELECT mainflux_key, mainflux_thing, external_id, mainflux_channels, external_config, status FROM things WHERE owner = $1 ORDER BY id LIMIT $2 OFFSET $3`
+	q := `SELECT mainflux_key, mainflux_thing, external_id, mainflux_channels, config, status FROM things WHERE owner = $1 ORDER BY id LIMIT $2 OFFSET $3`
 	items := []bootstrap.Thing{}
 
 	rows, err := tr.db.Query(q, key, limit, offset)
@@ -99,7 +102,7 @@ func (tr thingRepository) RetrieveAll(key string, offset, limit uint64) []bootst
 }
 
 func (tr thingRepository) RetrieveByExternalID(externalID string) (bootstrap.Thing, error) {
-	q := `SELECT id, owner, mainflux_key, mainflux_thing, mainflux_channels, external_config, status FROM things WHERE external_id = $1`
+	q := `SELECT id, owner, mainflux_key, mainflux_thing, mainflux_channels, config, status FROM things WHERE external_id = $1`
 
 	var mfKey, mfThing, config sql.NullString
 	thing := bootstrap.Thing{ExternalID: externalID}
@@ -119,8 +122,8 @@ func (tr thingRepository) RetrieveByExternalID(externalID string) (bootstrap.Thi
 }
 
 func (tr thingRepository) Update(thing bootstrap.Thing) error {
-	q := `UPDATE things SET mainflux_key = $1, mainflux_thing = $2, external_id = $3, mainflux_channels = $4, external_config = $5, status = $6 WHERE id = $7 AND owner = $8`
-	res, err := tr.db.Exec(q, nullString(thing.MFKey), nullString(thing.MFThing), thing.ExternalID, pq.Array(thing.MFChannels), thing.Config, thing.Status, thing.ID, thing.Owner)
+	q := `UPDATE things SET mainflux_channels = $1, config = $2, status = $3 WHERE id = $4 AND owner = $5`
+	res, err := tr.db.Exec(q, pq.Array(thing.MFChannels), thing.Config, thing.Status, thing.ID, thing.Owner)
 	if err != nil {
 		return err
 	}
