@@ -170,6 +170,9 @@ func (es eventStore) handleUpdateThing(ute updateThingEvent) error {
 	if em.Type != protocol {
 		return errors.New("Lora protocol not found in thing metadatada")
 	}
+	if em.DevEUI != "" {
+		return errors.New("Lora device EUI not found in thing metadatada")
+	}
 
 	return es.svc.CreateThing(ute.id, em.DevEUI)
 }
@@ -186,6 +189,9 @@ func (es eventStore) handleCreateChannel(cce createChannelEvent) error {
 
 	if cm.Type != protocol {
 		return errors.New("Lora protocol not found in channel metadatada")
+	}
+	if cm.AppID != "" {
+		return errors.New("Lora application ID not found in channel metadatada")
 	}
 
 	return es.svc.CreateChannel(cce.id, cm.AppID)
