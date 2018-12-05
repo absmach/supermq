@@ -32,7 +32,7 @@ var (
 
 	errMetadataAppID = errors.New("application ID not found in channel metadatada")
 
-	errMetadataDevEUI = errors.New("device EUI not found in channel metadatada")
+	errMetadataDevEUI = errors.New("device EUI not found in thing metadatada")
 )
 
 // EventStore represents event source for things and channels provisioning.
