@@ -27,6 +27,17 @@ const (
 	channelRemove = channelPrefix + "remove"
 )
 
+var (
+	// ErrMetadataType indicates an ivalid metadata type.
+	ErrMetadataType = errors.New("metadatada is not of type lora")
+
+	// ErrMetadataAppID indicates a missing application ID in channel metadata.
+	ErrMetadataAppID = errors.New("application ID not found in channel metadatada")
+
+	// ErrMetadataDevEUI indicates a missing device EUI in thing metadata.
+	ErrMetadataDevEUI = errors.New("device EUI not found in channel metadatada")
+)
+
 // EventStore represents event source for things and channels provisioning.
 type EventStore interface {
 	// Subscribes to geven subject and receives events.
@@ -155,7 +166,10 @@ func (es eventStore) handleCreateThing(cte createThingEvent) error {
 	}
 
 	if em.Type != protocol {
-		return errors.New("Lora protocol not found in thing metadatada")
+		return ErrMetadataType
+	}
+	if em.DevEUI != "" {
+		return ErrMetadataDevEUI
 	}
 
 	return es.svc.CreateThing(cte.id, em.DevEUI)
@@ -168,10 +182,10 @@ func (es eventStore) handleUpdateThing(ute updateThingEvent) error {
 	}
 
 	if em.Type != protocol {
-		return errors.New("Lora protocol not found in thing metadatada")
+		return ErrMetadataType
 	}
 	if em.DevEUI != "" {
-		return errors.New("Lora device EUI not found in thing metadatada")
+		return ErrMetadataDevEUI
 	}
 
 	return es.svc.CreateThing(ute.id, em.DevEUI)
@@ -188,10 +202,10 @@ func (es eventStore) handleCreateChannel(cce createChannelEvent) error {
 	}
 
 	if cm.Type != protocol {
-		return errors.New("Lora protocol not found in channel metadatada")
+		return ErrMetadataType
 	}
 	if cm.AppID != "" {
-		return errors.New("Lora application ID not found in channel metadatada")
+		return ErrMetadataAppID
 	}
 
 	return es.svc.CreateChannel(cce.id, cm.AppID)
@@ -204,7 +218,10 @@ func (es eventStore) handleUpdateChannel(uce updateChannelEvent) error {
 	}
 
 	if cm.Type != protocol {
-		return errors.New("Lora protocol not found in channel metadatada")
+		return ErrMetadataType
+	}
+	if cm.AppID != "" {
+		return ErrMetadataAppID
 	}
 
 	return es.svc.UpdateChannel(uce.id, cm.AppID)
