@@ -42,10 +42,10 @@ func NewConfigReader() ConfigReader {
 func (r reader) ReadConfig(cfg Config) (mainflux.Response, error) {
 	res := bootstrapRes{
 		MFKey:        cfg.MFKey,
-		GWID:         cfg.MFID,
-		MQTTUsername: cfg.MFID,
-		MQTTRcvTopic: fmt.Sprintf("channels/%s/messages", cfg.MFID),
-		MQTTSndTopic: fmt.Sprintf("channels/%s/messages", cfg.MFID),
+		GWID:         cfg.MFThing,
+		MQTTUsername: cfg.MFThing,
+		MQTTRcvTopic: fmt.Sprintf("channels/%s/messages", cfg.MFThing),
+		MQTTSndTopic: fmt.Sprintf("channels/%s/messages", cfg.MFThing),
 		Metadata:     cfg.Metadata,
 	}
 	return res, nil

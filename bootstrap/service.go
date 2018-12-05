@@ -54,7 +54,7 @@ type Service interface {
 
 // Config represents Thing configuration generated in bootstrapping process.
 type Config struct {
-	MFID       string
+	MFThing    string
 	MFKey      string
 	MFChannels []string
 	Metadata   string
@@ -91,12 +91,31 @@ func (bs bootstrapService) Add(key string, thing Thing) (Thing, error) {
 		return Thing{}, err
 	}
 
+	resp, err := bs.sdk.CreateThing(mfsdk.Thing{Type: thingType}, key)
+	if err != nil {
+		return Thing{}, err
+	}
+
+	thingID, err := parseLocation(resp)
+	if err != nil {
+		return Thing{}, err
+	}
+
+	mfThing, err := bs.sdk.Thing(thingID, key)
+	if err != nil {
+		return Thing{}, bs.sdk.DeleteThing(thingID, key)
+	}
+
 	thing.Owner = owner
-	thing.Status = Created
+	thing.Status = Inactive
+	thing.MFThing = thingID
+	thing.MFKey = mfThing.Key
+
 	id, err := bs.things.Save(thing)
 	if err != nil {
 		return Thing{}, err
 	}
+
 	thing.ID = id
 	return thing, nil
 }
@@ -120,19 +139,21 @@ func (bs bootstrapService) List(key string, offset, limit uint64) ([]Thing, erro
 }
 
 func (bs bootstrapService) Remove(key, id string) error {
-	thing, err := bs.things.RetrieveByID(id, key)
+	owner, err := bs.idp.ExtractKey(key)
 	if err != nil {
 		return err
 	}
 
-	if err := bs.sdk.DeleteThing(thing.MFThing, bs.apiKey); err != nil {
+	thing, err := bs.things.RetrieveByID(owner, id)
+	if err != nil {
 		return err
 	}
 
-	if err := bs.sdk.DeleteChannel(thing.MFChannels[0], bs.apiKey); err != nil {
+	if err := bs.sdk.DeleteThing(thing.MFThing, key); err != nil {
 		return err
 	}
-	return bs.things.Remove(id, key)
+
+	return bs.things.Remove(owner, id)
 }
 
 func (bs bootstrapService) Bootstrap(externID string) (Config, error) {
@@ -141,78 +162,47 @@ func (bs bootstrapService) Bootstrap(externID string) (Config, error) {
 		return Config{}, ErrUnauthorizedAccess
 	}
 
-	if thing.Status != Created {
+	if thing.Status != Inactive {
 		return Config{}, ErrMalformedEntity
 	}
 
-	resp, err := bs.sdk.CreateThing(mfsdk.Thing{Type: thingType}, bs.apiKey)
-	if err != nil {
-		return Config{}, err
-	}
-
-	thingID, err := parseLocation(resp)
-	if err != nil {
-		return Config{}, err
-	}
-
-	mfThing, err := bs.sdk.Thing(thingID, bs.apiKey)
-	if err != nil {
-		bs.sdk.DeleteThing(thingID, bs.apiKey)
-		// TODO: Handle and log possible deletion errors.
-		return Config{}, err
-	}
-
-	thing.MFThing = thingID
-	thing.MFKey = mfThing.Key
-
-	mfChan, err := bs.sdk.CreateChannel(mfsdk.Channel{Name: chanName}, bs.apiKey)
-	if err != nil {
-		bs.sdk.DeleteThing(thingID, bs.apiKey)
-		// TODO: Handle and log possible deletion errors.
-		return Config{}, err
-	}
-
-	chanID, err := parseLocation(mfChan)
-	if err != nil {
-		return Config{}, err
-	}
-
-	thing.MFChannels = append(thing.MFChannels, chanID)
-	thing.Status = Inactive
-	if err := bs.things.Update(thing); err != nil {
-		bs.sdk.DeleteThing(thingID, bs.apiKey)
-		bs.sdk.DeleteChannel(chanID, bs.apiKey)
-		// TODO: Handle and log possible deletion errors.
-		return Config{}, err
-	}
-
 	config := Config{
-		MFID:       thing.MFThing,
-		MFChannels: thing.MFChannels,
+		MFThing:    thing.MFThing,
 		MFKey:      thing.MFKey,
-		Metadata:   bs.config,
+		MFChannels: thing.MFChannels,
+		Metadata:   thing.Config,
 	}
+
 	return config, nil
 }
 
 func (bs bootstrapService) ChangeStatus(key, id string, status Status) error {
-	thing, err := bs.things.RetrieveByID(key, id)
+	owner, err := bs.idp.ExtractKey(key)
+	if err != nil {
+		return err
+	}
+
+	thing, err := bs.things.RetrieveByID(owner, id)
 	if err != nil {
 		return err
 	}
 
 	switch status {
 	case Active:
-		if err := bs.sdk.ConnectThing(thing.MFThing, thing.MFChannels[0], bs.apiKey); err != nil {
-			return err
+		for _, c := range thing.MFChannels {
+			if err := bs.sdk.ConnectThing(thing.MFThing, c, key); err != nil {
+				return err
+			}
 		}
 	case Inactive:
-		if err := bs.sdk.DisconnectThing(thing.MFThing, thing.MFChannels[0], bs.apiKey); err != nil {
-			return err
+		for _, c := range thing.MFChannels {
+			if err := bs.sdk.DisconnectThing(thing.MFThing, c, key); err != nil {
+				return err
+			}
 		}
 	}
 
-	return bs.things.ChangeStatus(key, id, status)
+	return bs.things.ChangeStatus(owner, id, status)
 }
 
 func parseLocation(location string) (string, error) {
@@ -221,5 +211,6 @@ func parseLocation(location string) (string, error) {
 	if n != 3 {
 		return "", ErrInvalidID
 	}
+
 	return mfPath[n-1], nil
 }

@@ -19,6 +19,7 @@ func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		thing := bootstrap.Thing{
 			ExternalID: req.ExternalID,
 			MFChannels: req.Channels,
+			Config:     req.Config,
 		}
 		saved, err := svc.Add(req.key, thing)
 		if err != nil {
@@ -124,10 +125,6 @@ func statusEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		req := request.(changeStatusReq)
 
 		err := req.validate()
-		if err == things.ErrNotFound {
-			return removeRes{}, nil
-		}
-
 		if err != nil {
 			return nil, err
 		}
@@ -136,6 +133,10 @@ func statusEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		return removeRes{}, nil
+		r := statusRes{
+			Status: req.Status,
+		}
+
+		return r, nil
 	}
 }

@@ -10,6 +10,7 @@ type addReq struct {
 	key        string
 	ExternalID string   `json:"external_id"`
 	Channels   []string `json:"channels"`
+	Config     string   `json:"config"`
 }
 
 func (req addReq) validate() error {

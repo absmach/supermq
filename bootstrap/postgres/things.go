@@ -37,7 +37,7 @@ func (tr thingRepository) Save(thing bootstrap.Thing) (string, error) {
 	VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
 
 	if err := tr.db.QueryRow(q, nullString(thing.MFKey), thing.Owner, nullString(thing.MFThing),
-		thing.ExternalID, pq.Array(thing.MFChannels), nullString(thing.ExternalConfig), thing.Status).Scan(&thing.ID); err != nil {
+		thing.ExternalID, pq.Array(thing.MFChannels), nullString(thing.Config), thing.Status).Scan(&thing.ID); err != nil {
 		return "", err
 	}
 
@@ -47,14 +47,15 @@ func (tr thingRepository) Save(thing bootstrap.Thing) (string, error) {
 func (tr thingRepository) RetrieveByID(key, id string) (bootstrap.Thing, error) {
 	q := `SELECT mainflux_key, mainflux_thing, external_id, mainflux_channels, external_config, status FROM things WHERE id = $1 AND owner = $2`
 	thing := bootstrap.Thing{ID: id, Owner: key}
-	var mfKey, mfThing sql.NullString
+	var mfKey, mfThing, config sql.NullString
 
 	err := tr.db.
 		QueryRow(q, id, key).
-		Scan(&mfKey, &mfThing, &thing.ExternalID, pq.Array(&thing.MFChannels), &thing.ExternalConfig, &thing.Status)
+		Scan(&mfKey, &mfThing, &thing.ExternalID, pq.Array(&thing.MFChannels), &config, &thing.Status)
 
 	thing.MFKey = mfKey.String
 	thing.MFThing = mfThing.String
+	thing.Config = config.String
 
 	if err != nil {
 		empty := bootstrap.Thing{}
@@ -89,7 +90,7 @@ func (tr thingRepository) RetrieveAll(key string, offset, limit uint64) []bootst
 
 		t.MFKey = mfKey.String
 		t.MFThing = mfThing.String
-		t.ExternalConfig = config.String
+		t.Config = config.String
 
 		items = append(items, t)
 	}
@@ -112,13 +113,14 @@ func (tr thingRepository) RetrieveByExternalID(externalID string) (bootstrap.Thi
 
 	thing.MFKey = mfKey.String
 	thing.MFThing = mfThing.String
-	thing.ExternalConfig = config.String
+	thing.Config = config.String
+
 	return thing, nil
 }
 
 func (tr thingRepository) Update(thing bootstrap.Thing) error {
 	q := `UPDATE things SET mainflux_key = $1, mainflux_thing = $2, external_id = $3, mainflux_channels = $4, external_config = $5, status = $6 WHERE id = $7 AND owner = $8`
-	res, err := tr.db.Exec(q, nullString(thing.MFKey), nullString(thing.MFThing), thing.ExternalID, pq.Array(thing.MFChannels), thing.ExternalConfig, thing.Status, thing.ID, thing.Owner)
+	res, err := tr.db.Exec(q, nullString(thing.MFKey), nullString(thing.MFThing), thing.ExternalID, pq.Array(thing.MFChannels), thing.Config, thing.Status, thing.ID, thing.Owner)
 	if err != nil {
 		return err
 	}
@@ -144,6 +146,7 @@ func (tr thingRepository) Remove(key, id string) error {
 func (tr thingRepository) ChangeStatus(key, id string, status bootstrap.Status) error {
 	q := `UPDATE things SET status = $1 WHERE id = $2 AND owner = $3;`
 
+	println("calling")
 	res, err := tr.db.Exec(q, status, id, key)
 	if err != nil {
 		return err

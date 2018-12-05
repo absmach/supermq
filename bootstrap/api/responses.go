@@ -137,3 +137,19 @@ func (res bootstrapRes) Headers() map[string]string {
 func (res bootstrapRes) Empty() bool {
 	return false
 }
+
+type statusRes struct {
+	Status bootstrap.Status `json:"status"`
+}
+
+func (res statusRes) Code() int {
+	return http.StatusOK
+}
+
+func (res statusRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res statusRes) Empty() bool {
+	return false
+}
