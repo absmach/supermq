@@ -80,15 +80,13 @@ type bootstrapService struct {
 	things ThingRepository
 	sdk    mfsdk.SDK
 	idp    IdentityProvider
-	apiKey string
 	config string
 }
 
 // New returns new Bootstrap service.
-func New(things ThingRepository, apiKey string, idp IdentityProvider, sdk mfsdk.SDK, cfgPath string) Service {
+func New(things ThingRepository, idp IdentityProvider, sdk mfsdk.SDK, cfgPath string) Service {
 	return &bootstrapService{
 		things: things,
-		apiKey: apiKey,
 		sdk:    sdk,
 		idp:    idp,
 		config: cfgPath,

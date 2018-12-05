@@ -37,7 +37,6 @@ const (
 	defThingsURL  = "localhost:8181"
 	defServerCert = ""
 	defServerKey  = ""
-	defAPIKey     = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NDQwMzU1ODUsImlhdCI6MTU0Mzk5OTU4NSwiaXNzIjoibWFpbmZsdXgiLCJzdWIiOiJqb2huLmRvZUBlbWFpbC5jb20ifQ.ERo2p9CBeXgU-lFY8EK5sN10xV2ulVVUJ3On1S19QlY"
 	defBaseURL    = "http://localhost:8182"
 	defConfigFile = "examples/edged/config.yml"
 
@@ -54,7 +53,6 @@ const (
 	envThingsURL  = "MF_THINGS_URL"
 	envServerCert = "MF_BOOTSTRAP_SERVER_CERT"
 	envServerKey  = "MF_BOOTSTRAP_SERVER_KEY"
-	envAPIKey     = "MF_BOOTSTRAP_API_KEY"
 	envBaseURL    = "MF_SDK_BASE_URL"
 	envConfigFile = "MF_BOOTSTRAP_CONFIG_FILE"
 )
@@ -73,7 +71,6 @@ type config struct {
 	thingsURL  string
 	serverCert string
 	serverKey  string
-	apiKey     string
 	baseURL    string
 	configFile string
 }
@@ -130,7 +127,6 @@ func loadConfig() config {
 		thingsURL:  mainflux.Env(envThingsURL, defThingsURL),
 		serverCert: mainflux.Env(envServerCert, defServerCert),
 		serverKey:  mainflux.Env(envServerKey, defServerKey),
-		apiKey:     mainflux.Env(envAPIKey, defAPIKey),
 		baseURL:    mainflux.Env(envBaseURL, defBaseURL),
 		configFile: string(f),
 	}
@@ -152,7 +148,7 @@ func newService(db *sql.DB, logger logger.Logger, cfg config) bootstrap.Service 
 		BaseURL: cfg.baseURL,
 	}
 	sdk := mfsdk.NewSDK(config)
-	svc := bootstrap.New(thingsRepo, cfg.apiKey, jwt.New(), sdk, cfg.configFile)
+	svc := bootstrap.New(thingsRepo, jwt.New(), sdk, cfg.configFile)
 	svc = api.NewLoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
