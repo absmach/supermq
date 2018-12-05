@@ -28,13 +28,10 @@ const (
 )
 
 var (
-	// errMetadataType indicates an ivalid metadata type.
 	errMetadataType = errors.New("metadatada is not of type lora")
 
-	// errMetadataAppID indicates a missing application ID in channel metadata.
 	errMetadataAppID = errors.New("application ID not found in channel metadatada")
 
-	// errMetadataDevEUI indicates a missing device EUI in thing metadata.
 	errMetadataDevEUI = errors.New("device EUI not found in channel metadatada")
 )
 
