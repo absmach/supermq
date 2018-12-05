@@ -57,7 +57,7 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		thing, err := svc.View(req.id, req.key)
+		thing, err := svc.View(req.key, req.id)
 		if err != nil {
 			return nil, err
 		}

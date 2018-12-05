@@ -102,11 +102,21 @@ func (bs bootstrapService) Add(key string, thing Thing) (Thing, error) {
 }
 
 func (bs bootstrapService) View(key, id string) (Thing, error) {
-	return bs.things.RetrieveByID(key, id)
+	owner, err := bs.idp.ExtractKey(key)
+	if err != nil {
+		return Thing{}, err
+	}
+
+	return bs.things.RetrieveByID(owner, id)
 }
 
 func (bs bootstrapService) List(key string, offset, limit uint64) ([]Thing, error) {
-	return bs.things.RetrieveAll(key, offset, limit), nil
+	owner, err := bs.idp.ExtractKey(key)
+	if err != nil {
+		return []Thing{}, err
+	}
+
+	return bs.things.RetrieveAll(owner, offset, limit), nil
 }
 
 func (bs bootstrapService) Remove(key, id string) error {

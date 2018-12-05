@@ -2,7 +2,6 @@ package jwt
 
 import (
 	"errors"
-	"fmt"
 	"nov/bootstrap"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -24,7 +23,6 @@ func (idp *jwtIDP) ExtractKey(token string) (string, error) {
 		return "", err
 	}
 
-	fmt.Printf("\n\nVALUE:%v\n", jwtToken.Claims)
 	if claims, ok := jwtToken.Claims.(jwt.MapClaims); ok {
 		if id, ok := claims["sub"]; ok {
 			return id.(string), nil

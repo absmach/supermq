@@ -85,7 +85,7 @@ type viewRes struct {
 	ID         string           `json:"id"`
 	Key        string           `json:"key"`
 	MFThing    string           `json:"mainflux_id"`
-	MFChannels []string         `json:"mainflux_channel"`
+	MFChannels []string         `json:"mainflux_channels"`
 	ExternalID string           `json:"external_id,omitempty"`
 	Status     bootstrap.Status `json:"status"`
 }
