@@ -14,19 +14,11 @@ import (
 	"io"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/docker/docker/pkg/namesgenerator"
 	mfxsdk "github.com/mainflux/mainflux/sdk/go"
 	"github.com/spf13/cobra"
 )
-
-func printMap(title string, m map[string]string) {
-	fmt.Printf("\n%s\n", title)
-	for k, v := range m {
-		fmt.Printf("name: %s, id: %s\n", k, v)
-	}
-}
 
 type thing struct {
 	name  string
@@ -41,13 +33,11 @@ type channel struct {
 }
 
 func createThing(name, kind, token string) (thing, error) {
-	loc, err := sdk.CreateThing(mfxsdk.Thing{Name: name, Type: kind}, token)
+	id, err := sdk.CreateThing(mfxsdk.Thing{Name: name, Type: kind}, token)
 	if err != nil {
 		return thing{}, err
 	}
 
-	// Received location header is in the format: /things/<thing_id>
-	id := strings.Split(loc, "/")[2]
 	t, err := sdk.Thing(id, token)
 	if err != nil {
 		return thing{}, err
@@ -64,13 +54,11 @@ func createThing(name, kind, token string) (thing, error) {
 }
 
 func createChannel(name, token string) (channel, error) {
-	loc, err := sdk.CreateChannel(mfxsdk.Channel{Name: name}, token)
+	id, err := sdk.CreateChannel(mfxsdk.Channel{Name: name}, token)
 	if err != nil {
 		return channel{}, nil
 	}
 
-	// Received location header is in the format: /channels/<channel_id>
-	id := strings.Split(loc, "/")[2]
 	c := channel{
 		name: name,
 		id:   id,
@@ -203,6 +191,7 @@ var cmdProvision = []cobra.Command{
 				if i%2 != 0 {
 					k = "app"
 				}
+
 				m, err := createThing(n, k, ut)
 				if err != nil {
 					logError(err)
