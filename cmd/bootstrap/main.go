@@ -12,14 +12,16 @@ import (
 	"syscall"
 
 	api "nov/bootstrap/api"
-	"nov/bootstrap/jwt"
 	"nov/bootstrap/postgres"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
 	mfsdk "github.com/mainflux/mainflux/sdk/go"
+	usersapi "github.com/mainflux/mainflux/users/api/grpc"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 const (
@@ -37,6 +39,7 @@ const (
 	defServerCert = ""
 	defServerKey  = ""
 	defBaseURL    = "http://localhost:8182"
+	defUsersURL   = "localhost:8181"
 
 	envLogLevel   = "MF_BOOTSTRAP_LOG_LEVEL"
 	envDBHost     = "MF_BOOTSTRAP_DB_HOST"
@@ -52,6 +55,7 @@ const (
 	envServerCert = "MF_BOOTSTRAP_SERVER_CERT"
 	envServerKey  = "MF_BOOTSTRAP_SERVER_KEY"
 	envBaseURL    = "MF_SDK_BASE_URL"
+	envUsersURL   = "MF_USERS_URL"
 )
 
 type config struct {
@@ -69,6 +73,7 @@ type config struct {
 	serverCert string
 	serverKey  string
 	baseURL    string
+	usersURL   string
 }
 
 func main() {
@@ -82,7 +87,10 @@ func main() {
 	db := connectToDB(cfg, logger)
 	defer db.Close()
 
-	svc := newService(db, logger, cfg)
+	conn := connectToUsers(cfg, logger)
+	defer conn.Close()
+
+	svc := newService(conn, db, logger, cfg)
 	errs := make(chan error, 2)
 
 	go startHTTPServer(svc, cfg, logger, errs)
@@ -118,6 +126,7 @@ func loadConfig() config {
 		serverCert: mainflux.Env(envServerCert, defServerCert),
 		serverKey:  mainflux.Env(envServerKey, defServerKey),
 		baseURL:    mainflux.Env(envBaseURL, defBaseURL),
+		usersURL:   mainflux.Env(envUsersURL, defUsersURL),
 	}
 }
 
@@ -130,14 +139,17 @@ func connectToDB(cfg config, logger logger.Logger) *sql.DB {
 	return db
 }
 
-func newService(db *sql.DB, logger logger.Logger, cfg config) bootstrap.Service {
+func newService(conn *grpc.ClientConn, db *sql.DB, logger logger.Logger, cfg config) bootstrap.Service {
 	thingsRepo := postgres.NewThingRepository(db, logger)
 
 	config := mfsdk.Config{
 		BaseURL: cfg.baseURL,
 	}
+
 	sdk := mfsdk.NewSDK(config)
-	svc := bootstrap.New(thingsRepo, jwt.New(), sdk)
+	users := usersapi.NewClient(conn)
+
+	svc := bootstrap.New(users, thingsRepo, sdk)
 	svc = api.NewLoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
@@ -155,6 +167,31 @@ func newService(db *sql.DB, logger logger.Logger, cfg config) bootstrap.Service 
 		}, []string{"method"}),
 	)
 	return svc
+}
+
+func connectToUsers(cfg config, logger logger.Logger) *grpc.ClientConn {
+	var opts []grpc.DialOption
+	if cfg.clientTLS {
+		if cfg.caCerts != "" {
+			tpc, err := credentials.NewClientTLSFromFile(cfg.caCerts, "")
+			if err != nil {
+				logger.Error(fmt.Sprintf("Failed to create tls credentials: %s", err))
+				os.Exit(1)
+			}
+			opts = append(opts, grpc.WithTransportCredentials(tpc))
+		}
+	} else {
+		opts = append(opts, grpc.WithInsecure())
+		logger.Info("gRPC communication is not encrypted")
+	}
+
+	conn, err := grpc.Dial(cfg.usersURL, opts...)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to users service: %s", err))
+		os.Exit(1)
+	}
+
+	return conn
 }
 
 func startHTTPServer(svc bootstrap.Service, cfg config, logger logger.Logger, errs chan error) {

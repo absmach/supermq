@@ -1,8 +1,10 @@
 package bootstrap
 
 import (
+	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/mainflux/mainflux"
 	mfsdk "github.com/mainflux/mainflux/sdk/go"
@@ -10,7 +12,7 @@ import (
 
 const (
 	thingType = "device"
-	chanName  = "NOV"
+	chanName  = "channel"
 )
 
 var (
@@ -79,21 +81,20 @@ type ConfigReader interface {
 type bootstrapService struct {
 	things ThingRepository
 	sdk    mfsdk.SDK
-	idp    IdentityProvider
-	config string
+	users  mainflux.UsersServiceClient
 }
 
 // New returns new Bootstrap service.
-func New(things ThingRepository, idp IdentityProvider, sdk mfsdk.SDK) Service {
+func New(users mainflux.UsersServiceClient, things ThingRepository, sdk mfsdk.SDK) Service {
 	return &bootstrapService{
 		things: things,
 		sdk:    sdk,
-		idp:    idp,
+		users:  users,
 	}
 }
 
 func (bs bootstrapService) Add(key string, thing Thing) (Thing, error) {
-	owner, err := bs.idp.ExtractKey(key)
+	owner, err := bs.identify(key)
 	if err != nil {
 		return Thing{}, err
 	}
@@ -128,7 +129,7 @@ func (bs bootstrapService) Add(key string, thing Thing) (Thing, error) {
 }
 
 func (bs bootstrapService) View(key, id string) (Thing, error) {
-	owner, err := bs.idp.ExtractKey(key)
+	owner, err := bs.identify(key)
 	if err != nil {
 		return Thing{}, err
 	}
@@ -137,7 +138,7 @@ func (bs bootstrapService) View(key, id string) (Thing, error) {
 }
 
 func (bs bootstrapService) Update(key string, thing Thing) error {
-	owner, err := bs.idp.Identify(key)
+	owner, err := bs.identify(key)
 	if err != nil {
 		return err
 	}
@@ -179,7 +180,7 @@ func (bs bootstrapService) Update(key string, thing Thing) error {
 }
 
 func (bs bootstrapService) List(key string, offset, limit uint64) ([]Thing, error) {
-	owner, err := bs.idp.ExtractKey(key)
+	owner, err := bs.identify(key)
 	if err != nil {
 		return []Thing{}, err
 	}
@@ -188,7 +189,7 @@ func (bs bootstrapService) List(key string, offset, limit uint64) ([]Thing, erro
 }
 
 func (bs bootstrapService) Remove(key, id string) error {
-	owner, err := bs.idp.ExtractKey(key)
+	owner, err := bs.identify(key)
 	if err != nil {
 		return err
 	}
@@ -231,7 +232,7 @@ func (bs bootstrapService) Bootstrap(id string) (Config, error) {
 }
 
 func (bs bootstrapService) ChangeStatus(key, id string, status Status) error {
-	owner, err := bs.idp.ExtractKey(key)
+	owner, err := bs.identify(key)
 	if err != nil {
 		return err
 	}
@@ -271,4 +272,16 @@ func parseLocation(location string) (string, error) {
 	}
 
 	return mfPath[n-1], nil
+}
+
+func (bs bootstrapService) identify(token string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	res, err := bs.users.Identify(ctx, &mainflux.Token{Value: token})
+	if err != nil {
+		return "", ErrUnauthorizedAccess
+	}
+
+	return res.GetValue(), nil
 }
