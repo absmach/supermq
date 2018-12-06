@@ -84,12 +84,11 @@ type bootstrapService struct {
 }
 
 // New returns new Bootstrap service.
-func New(things ThingRepository, idp IdentityProvider, sdk mfsdk.SDK, cfgPath string) Service {
+func New(things ThingRepository, idp IdentityProvider, sdk mfsdk.SDK) Service {
 	return &bootstrapService{
 		things: things,
 		sdk:    sdk,
 		idp:    idp,
-		config: cfgPath,
 	}
 }
 
@@ -116,7 +115,7 @@ func (bs bootstrapService) Add(key string, thing Thing) (Thing, error) {
 
 	thing.Owner = owner
 	thing.Status = Created
-	thing.MFThing = thingID
+	thing.MFThing = mfThing.ID
 	thing.MFKey = mfThing.Key
 
 	id, err := bs.things.Save(thing)

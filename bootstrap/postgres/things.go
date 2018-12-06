@@ -9,6 +9,8 @@ import (
 	"github.com/mainflux/mainflux/logger"
 )
 
+const duplicateErr = "unique_violation"
+
 var _ bootstrap.ThingRepository = (*thingRepository)(nil)
 
 type thingRepository struct {
@@ -26,6 +28,7 @@ func nullString(s string) sql.NullString {
 	if s == "" {
 		return sql.NullString{}
 	}
+
 	return sql.NullString{
 		String: s,
 		Valid:  true,
@@ -38,7 +41,7 @@ func (tr thingRepository) Save(thing bootstrap.Thing) (string, error) {
 
 	if err := tr.db.QueryRow(q, nullString(thing.MFKey), thing.Owner, nullString(thing.MFThing),
 		thing.ExternalID, pq.Array(thing.MFChannels), nullString(thing.Config), thing.Status).Scan(&thing.ID); err != nil {
-		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Name() == "unique_violation" {
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Name() == duplicateErr {
 			return "", bootstrap.ErrConflict
 		}
 		return "", err

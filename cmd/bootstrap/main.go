@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"nov/bootstrap"
@@ -38,7 +37,6 @@ const (
 	defServerCert = ""
 	defServerKey  = ""
 	defBaseURL    = "http://localhost:8182"
-	defConfigFile = "examples/edged/config.yml"
 
 	envLogLevel   = "MF_BOOTSTRAP_LOG_LEVEL"
 	envDBHost     = "MF_BOOTSTRAP_DB_HOST"
@@ -54,7 +52,6 @@ const (
 	envServerCert = "MF_BOOTSTRAP_SERVER_CERT"
 	envServerKey  = "MF_BOOTSTRAP_SERVER_KEY"
 	envBaseURL    = "MF_SDK_BASE_URL"
-	envConfigFile = "MF_BOOTSTRAP_CONFIG_FILE"
 )
 
 type config struct {
@@ -72,7 +69,6 @@ type config struct {
 	serverCert string
 	serverKey  string
 	baseURL    string
-	configFile string
 }
 
 func main() {
@@ -106,12 +102,6 @@ func loadConfig() config {
 	if err != nil {
 		tls = false
 	}
-	cfgFile := mainflux.Env(envConfigFile, defConfigFile)
-
-	f, err := ioutil.ReadFile(cfgFile)
-	if err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to load configuration file: %s", err.Error()))
-	}
 
 	return config{
 		logLevel:   mainflux.Env(envLogLevel, defLogLevel),
@@ -128,7 +118,6 @@ func loadConfig() config {
 		serverCert: mainflux.Env(envServerCert, defServerCert),
 		serverKey:  mainflux.Env(envServerKey, defServerKey),
 		baseURL:    mainflux.Env(envBaseURL, defBaseURL),
-		configFile: string(f),
 	}
 }
 
@@ -148,7 +137,7 @@ func newService(db *sql.DB, logger logger.Logger, cfg config) bootstrap.Service 
 		BaseURL: cfg.baseURL,
 	}
 	sdk := mfsdk.NewSDK(config)
-	svc := bootstrap.New(thingsRepo, jwt.New(), sdk, cfg.configFile)
+	svc := bootstrap.New(thingsRepo, jwt.New(), sdk)
 	svc = api.NewLoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
