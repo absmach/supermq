@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -40,12 +41,15 @@ func NewConfigReader() ConfigReader {
 }
 
 func (r reader) ReadConfig(cfg Config) (mainflux.Response, error) {
+	if len(cfg.MFChannels) < 1 {
+		return bootstrapRes{}, errors.New("Invalid configuration")
+	}
 	res := bootstrapRes{
 		MFKey:        cfg.MFKey,
 		GWID:         cfg.MFThing,
 		MQTTUsername: cfg.MFThing,
-		MQTTRcvTopic: fmt.Sprintf("channels/%s/messages", cfg.MFThing),
-		MQTTSndTopic: fmt.Sprintf("channels/%s/messages", cfg.MFThing),
+		MQTTRcvTopic: fmt.Sprintf("channels/%s/messages", cfg.MFChannels[0]),
+		MQTTSndTopic: fmt.Sprintf("channels/%s/messages", cfg.MFChannels[0]),
 		Metadata:     cfg.Metadata,
 	}
 	return res, nil

@@ -99,6 +99,13 @@ func (bs bootstrapService) Add(key string, thing Thing) (Thing, error) {
 		return Thing{}, err
 	}
 
+	// Check if channels exist.
+	for _, c := range thing.MFChannels {
+		if _, err := bs.sdk.Channel(c, key); err != nil {
+			return Thing{}, ErrMalformedEntity
+		}
+	}
+
 	resp, err := bs.sdk.CreateThing(mfsdk.Thing{Type: thingType}, key)
 	if err != nil {
 		return Thing{}, err
@@ -248,14 +255,16 @@ func (bs bootstrapService) ChangeStatus(key, id string, status Status) error {
 
 	switch status {
 	case Active:
-		for _, c := range thing.MFChannels {
+		for i, c := range thing.MFChannels {
 			if err := bs.sdk.ConnectThing(thing.MFThing, c, key); err != nil {
+				bs.connectionFallback(thing.MFThing, key, thing.MFChannels[:i], false)
 				return err
 			}
 		}
 	case Inactive:
-		for _, c := range thing.MFChannels {
+		for i, c := range thing.MFChannels {
 			if err := bs.sdk.DisconnectThing(thing.MFThing, c, key); err != nil {
+				bs.connectionFallback(thing.MFThing, key, thing.MFChannels[:i], true)
 				return err
 			}
 		}
@@ -284,4 +293,14 @@ func (bs bootstrapService) identify(token string) (string, error) {
 	}
 
 	return res.GetValue(), nil
+}
+
+func (bs bootstrapService) connectionFallback(id string, key string, channels []string, connect bool) {
+	for _, c := range channels {
+		if connect {
+			bs.sdk.ConnectThing(id, c, key)
+			continue
+		}
+		bs.sdk.DisconnectThing(id, c, key)
+	}
 }

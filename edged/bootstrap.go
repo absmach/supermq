@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func Bootstrap(configFilePath, bootstrapServerURL string, logger *log.Logger) error {
+func Bootstrap(configFilePath, bootstrapServerURL string, bootstrapKey string, logger *log.Logger) error {
 	macAddresses, err := macAddresses()
 	if err != nil {
 		logger.Error(fmt.Sprintf("Error reading MAC addresses on the device %s", err))
@@ -23,7 +23,7 @@ func Bootstrap(configFilePath, bootstrapServerURL string, logger *log.Logger) er
 	var cfg []byte = nil
 	for _, address := range macAddresses {
 		logger.Debug(fmt.Sprintf("Requesting config for %s from %s", address, bootstrapServerURL))
-		cfg, err = config(address, bootstrapServerURL)
+		cfg, err = config(address, bootstrapKey, bootstrapServerURL)
 		if err != nil {
 			logger.Debug(fmt.Sprintf("Getting config for %s from %s failed: %s", address, bootstrapServerURL, err))
 			continue
@@ -71,13 +71,13 @@ func macAddresses() ([]string, error) {
 	return addresses, nil
 }
 
-func config(address, bootstrapServerURL string) ([]byte, error) {
+func config(address, key, bootstrapServerURL string) ([]byte, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", bootstrapServerURL, nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", bootstrapServerURL, address), nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Authorization", address)
+	req.Header.Add("Authorization", key)
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
