@@ -20,48 +20,36 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type thing struct {
-	name  string
-	kind  string
-	id    string
-	token string
-}
-
-type channel struct {
-	name string
-	id   string
-}
-
-func createThing(name, kind, token string) (thing, error) {
+func createThing(name, kind, token string) (mfxsdk.Thing, error) {
 	id, err := sdk.CreateThing(mfxsdk.Thing{Name: name, Type: kind}, token)
 	if err != nil {
-		return thing{}, err
+		return mfxsdk.Thing{}, err
 	}
 
 	t, err := sdk.Thing(id, token)
 	if err != nil {
-		return thing{}, err
+		return mfxsdk.Thing{}, err
 	}
 
-	m := thing{
-		name:  name,
-		kind:  kind,
-		id:    id,
-		token: t.Key,
+	m := mfxsdk.Thing{
+		ID:   id,
+		Name: name,
+		Type: kind,
+		Key:  t.Key,
 	}
 
 	return m, nil
 }
 
-func createChannel(name, token string) (channel, error) {
+func createChannel(name, token string) (mfxsdk.Channel, error) {
 	id, err := sdk.CreateChannel(mfxsdk.Channel{Name: name}, token)
 	if err != nil {
-		return channel{}, nil
+		return mfxsdk.Channel{}, nil
 	}
 
-	c := channel{
-		name: name,
-		id:   id,
+	c := mfxsdk.Channel{
+		ID:   id,
+		Name: name,
 	}
 
 	return c, nil
@@ -73,7 +61,7 @@ var cmdProvision = []cobra.Command{
 		Short: "things <things_csv> <user_token>",
 		Long:  `Provisions things`,
 		Run: func(cmd *cobra.Command, args []string) {
-			things := []thing{}
+			things := []mfxsdk.Thing{}
 
 			if len(args) != 2 {
 				logUsage(cmd.Short)
@@ -114,7 +102,7 @@ var cmdProvision = []cobra.Command{
 		Short: "channels <channels_csv> <user_token>",
 		Long:  `Provisions channels`,
 		Run: func(cmd *cobra.Command, args []string) {
-			channels := []channel{}
+			channels := []mfxsdk.Channel{}
 
 			if len(args) != 2 {
 				logUsage(cmd.Short)
@@ -157,10 +145,10 @@ var cmdProvision = []cobra.Command{
 						Connect both things to one of the channels, \
 						and only on thing to other channel.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			nbThings := 2
-			nbChan := 2
-			things := []thing{}
-			channels := []channel{}
+			numThings := 2
+			numChan := 2
+			things := []mfxsdk.Thing{}
+			channels := []mfxsdk.Channel{}
 
 			if len(args) != 0 {
 				logUsage(cmd.Short)
@@ -185,8 +173,8 @@ var cmdProvision = []cobra.Command{
 			}
 
 			// Create things
-			for i := 0; i < nbThings; i++ {
-				n := "d" + strconv.Itoa(i)
+			for i := 0; i < numThings; i++ {
+				n := fmt.Sprintf("d%s", strconv.Itoa(i))
 				k := "device"
 				if i%2 != 0 {
 					k = "app"
@@ -201,8 +189,8 @@ var cmdProvision = []cobra.Command{
 				things = append(things, m)
 			}
 			// Create channels
-			for i := 0; i < nbChan; i++ {
-				n := "c" + strconv.Itoa(i)
+			for i := 0; i < numChan; i++ {
+				n := fmt.Sprintf("c%s", strconv.Itoa(i))
 				c, err := createChannel(n, ut)
 				if err != nil {
 					logError(err)
@@ -213,8 +201,8 @@ var cmdProvision = []cobra.Command{
 			}
 
 			// Connect things to channels - first thing to both channels, second only to first
-			for i := 0; i < nbThings; i++ {
-				if err := sdk.ConnectThing(things[i].id, channels[i].id, ut); err != nil {
+			for i := 0; i < numThings; i++ {
+				if err := sdk.ConnectThing(things[i].ID, channels[i].ID, ut); err != nil {
 					logError(err)
 					return
 				}
@@ -223,7 +211,7 @@ var cmdProvision = []cobra.Command{
 					if i+1 >= len(channels) {
 						break
 					}
-					if err := sdk.ConnectThing(things[i].id, channels[i+1].id, ut); err != nil {
+					if err := sdk.ConnectThing(things[i].ID, channels[i+1].ID, ut); err != nil {
 						logError(err)
 						return
 					}
