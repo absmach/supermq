@@ -57,8 +57,8 @@ type Service interface {
 	// Remove removes Thing with specified key that belongs to the user identified by the given key.
 	Remove(string, string) error
 
-	// Bootstrap returns initial configuration to the Thing with provided external ID.
-	Bootstrap(string) (Config, error)
+	// Bootstrap returns configuration to the Thing with provided external ID using external key.
+	Bootstrap(string, string) (Config, error)
 
 	// ChangeStatus changes status of the Thing with given ID and owner.
 	ChangeStatus(string, string, Status) error
@@ -206,8 +206,8 @@ func (bs bootstrapService) Remove(key, id string) error {
 	return bs.things.Remove(owner, id)
 }
 
-func (bs bootstrapService) Bootstrap(id string) (Config, error) {
-	thing, err := bs.things.RetrieveByExternalID(id)
+func (bs bootstrapService) Bootstrap(externalKey, externalID string) (Config, error) {
+	thing, err := bs.things.RetrieveByExternalID(externalKey, externalID)
 	if err != nil {
 		return Config{}, ErrUnauthorizedAccess
 	}

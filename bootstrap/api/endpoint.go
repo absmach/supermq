@@ -17,9 +17,10 @@ func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		thing := bootstrap.Thing{
-			ExternalID: req.ExternalID,
-			MFChannels: req.Channels,
-			Config:     req.Config,
+			ExternalID:  req.ExternalID,
+			ExternalKey: req.ExternalKey,
+			MFChannels:  req.Channels,
+			Config:      req.Config,
 		}
 		saved, err := svc.Add(req.key, thing)
 		if err != nil {
@@ -139,7 +140,7 @@ func bootstrapEndpoint(svc bootstrap.Service, reader bootstrap.ConfigReader) end
 			return nil, err
 		}
 
-		cfg, err := svc.Bootstrap(req.externalID)
+		cfg, err := svc.Bootstrap(req.key, req.id)
 		if err != nil {
 			return nil, err
 		}

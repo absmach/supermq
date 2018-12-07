@@ -70,13 +70,13 @@ func (mm *metricsMiddleware) Remove(id, key string) (err error) {
 	return mm.svc.Remove(id, key)
 }
 
-func (mm *metricsMiddleware) Bootstrap(externalID string) (cfg bootstrap.Config, err error) {
+func (mm *metricsMiddleware) Bootstrap(externalKey, externalID string) (cfg bootstrap.Config, err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "bootstrap").Add(1)
 		mm.latency.With("method", "bootstrap").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.Bootstrap(externalID)
+	return mm.svc.Bootstrap(externalKey, externalID)
 }
 
 func (mm *metricsMiddleware) ChangeStatus(id, key string, status bootstrap.Status) (err error) {

@@ -7,14 +7,15 @@ type apiReq interface {
 }
 
 type addReq struct {
-	key        string
-	ExternalID string   `json:"external_id"`
-	Channels   []string `json:"channels"`
-	Config     string   `json:"config"`
+	key         string
+	ExternalID  string   `json:"external_id"`
+	ExternalKey string   `json:"external_key"`
+	Channels    []string `json:"channels"`
+	Config      string   `json:"config"`
 }
 
 func (req addReq) validate() error {
-	if req.ExternalID == "" || len(req.Channels) == 0 {
+	if req.ExternalID == "" || req.ExternalKey == "" {
 		return bootstrap.ErrMalformedEntity
 	}
 
@@ -70,12 +71,17 @@ func (req listReq) validate() error {
 }
 
 type boostrapReq struct {
-	externalID string
+	key string
+	id  string
 }
 
 func (req boostrapReq) validate() error {
-	if req.externalID == "" {
+	if req.key == "" {
 		return bootstrap.ErrUnauthorizedAccess
+	}
+
+	if req.id == "" {
+		return bootstrap.ErrMalformedEntity
 	}
 
 	return nil

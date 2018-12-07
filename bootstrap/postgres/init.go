@@ -41,11 +41,12 @@ func migrateDB(db *sql.DB) error {
 				Up: []string{
 					`CREATE TABLE IF NOT  EXISTS things (
 						id          	  BIGSERIAL,
-						mainflux_key      CHAR(36) UNIQUE NOT NULL,
 						owner             VARCHAR(254) NOT NULL,
 						mainflux_thing    TEXT UNIQUE NOT NULL,
-                        external_id       TEXT UNIQUE NOT NULL,
+						mainflux_key      CHAR(36) UNIQUE NOT NULL,
 						mainflux_channels TEXT [],
+						external_id       TEXT UNIQUE NOT NULL,
+						external_key 	  TEXT NOT NULL,
                         config  		  TEXT,
 						status            BIGINT NOT NULL,
 						PRIMARY KEY (id, owner)

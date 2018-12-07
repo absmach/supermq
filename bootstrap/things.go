@@ -19,14 +19,15 @@ const (
 
 // Thing represents Mainflux thing.
 type Thing struct {
-	ID         string
-	Owner      string
-	MFThing    string
-	MFKey      string
-	MFChannels []string
-	ExternalID string
-	Config     string
-	Status     Status
+	ID          string
+	Owner       string
+	MFThing     string
+	MFKey       string
+	MFChannels  []string
+	ExternalID  string
+	ExternalKey string
+	Config      string
+	Status      Status
 }
 
 // ThingRepository specifies a Thing persistence API.
@@ -43,7 +44,7 @@ type ThingRepository interface {
 	RetrieveAll(string, uint64, uint64) []Thing
 
 	// RetrieveByExternalID returns Thing for given external ID.
-	RetrieveByExternalID(string) (Thing, error)
+	RetrieveByExternalID(string, string) (Thing, error)
 
 	// Update performs and update to an existing Thing. A non-nil error is returned
 	// to indicate operation failure.

@@ -57,7 +57,7 @@ func MakeHandler(svc bootstrap.Service, reader bootstrap.ConfigReader) http.Hand
 		encodeResponse,
 		opts...))
 
-	r.Get("/bootstrap", kithttp.NewServer(
+	r.Get("/bootstrap/:external_id", kithttp.NewServer(
 		bootstrapEndpoint(svc, reader),
 		decodeBootstrapRequest,
 		encodeResponse,
@@ -146,7 +146,11 @@ func decodeListRequest(_ context.Context, r *http.Request) (interface{}, error) 
 }
 
 func decodeBootstrapRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	req := boostrapReq{r.Header.Get("Authorization")}
+	req := boostrapReq{
+		id:  bone.GetValue(r, "external_id"),
+		key: r.Header.Get("Authorization"),
+	}
+
 	return req, nil
 }
 
