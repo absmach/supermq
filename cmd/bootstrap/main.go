@@ -35,7 +35,6 @@ const (
 	defClientTLS  = "false"
 	defCACerts    = ""
 	defPort       = "8180"
-	defThingsURL  = "localhost:8181"
 	defServerCert = ""
 	defServerKey  = ""
 	defBaseURL    = "http://localhost:8182"
@@ -51,7 +50,6 @@ const (
 	envClientTLS  = "MF_BOOTSTRAP_CLIENT_TLS"
 	envCACerts    = "MF_BOOTSTRAP_CA_CERTS"
 	envPort       = "MF_BOOTSTRAP_PORT"
-	envThingsURL  = "MF_THINGS_URL"
 	envServerCert = "MF_BOOTSTRAP_SERVER_CERT"
 	envServerKey  = "MF_BOOTSTRAP_SERVER_KEY"
 	envBaseURL    = "MF_SDK_BASE_URL"
@@ -69,7 +67,6 @@ type config struct {
 	clientTLS  bool
 	caCerts    string
 	httpPort   string
-	thingsURL  string
 	serverCert string
 	serverKey  string
 	baseURL    string
@@ -122,7 +119,6 @@ func loadConfig() config {
 		clientTLS:  tls,
 		caCerts:    mainflux.Env(envCACerts, defCACerts),
 		httpPort:   mainflux.Env(envPort, defPort),
-		thingsURL:  mainflux.Env(envThingsURL, defThingsURL),
 		serverCert: mainflux.Env(envServerCert, defServerCert),
 		serverKey:  mainflux.Env(envServerKey, defServerKey),
 		baseURL:    mainflux.Env(envBaseURL, defBaseURL),
