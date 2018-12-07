@@ -10,6 +10,7 @@ package cli
 import (
 	"bufio"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -19,6 +20,8 @@ import (
 	mfxsdk "github.com/mainflux/mainflux/sdk/go"
 	"github.com/spf13/cobra"
 )
+
+var errMalformedCSV = errors.New("malformed CSV")
 
 func createThing(name, kind, token string) (mfxsdk.Thing, error) {
 	id, err := sdk.CreateThing(mfxsdk.Thing{Name: name, Type: kind}, token)
@@ -85,6 +88,11 @@ var cmdProvision = []cobra.Command{
 					return
 				}
 
+				if len(l) < 2 {
+					logError(errMalformedCSV)
+					return
+				}
+
 				m, err := createThing(l[0], l[1], args[1])
 				if err != nil {
 					logError(err)
@@ -123,6 +131,11 @@ var cmdProvision = []cobra.Command{
 				}
 				if err != nil {
 					logError(err)
+					return
+				}
+
+				if len(l) < 1 {
+					logError(errMalformedCSV)
 					return
 				}
 
