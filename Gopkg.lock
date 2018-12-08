@@ -104,18 +104,15 @@
   revision = "ddcc80675fa42611359d91a6dfa5aa57fb90e72b"
 
 [[projects]]
-  digest = "1:184008c955d6a3226b700c13ed0e875a7a051a759618f9bccba9b5c99f17faa5"
   name = "github.com/eclipse/paho.mqtt.golang"
   packages = [
     ".",
-    "packets",
+    "packets"
   ]
-  pruneopts = "UT"
   revision = "36d01c2b4cbeb3d2a12063e4880ce30800af9560"
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:865079840386857c809b72ce300be7580cb50d3d3129ce11bf9aa6ca2bc1934a"
   name = "github.com/fatih/color"
   packages = ["."]
   revision = "5b77d2a35fb0ede96d138fc9a99f5c9b6aef11b4"
@@ -505,7 +502,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:70e155783b8dfd4f7697243384e2f361930ff0751459580769ce44d511f38b05"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -517,8 +513,7 @@
     "internal/timeseries",
     "proxy",
     "trace",
-    "websocket",
-    "trace"
+    "websocket"
   ]
   revision = "f73e4c9ed3b7ebdd5f699a16a880c2b1994e50dd"
 
@@ -618,49 +613,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  input-imports = [
-    "github.com/asaskevich/govalidator",
-    "github.com/cisco/senml",
-    "github.com/davecgh/go-spew/spew",
-    "github.com/dereulenspiegel/coap-mux",
-    "github.com/dgrijalva/jwt-go",
-    "github.com/dustin/go-coap",
-    "github.com/eclipse/paho.mqtt.golang",
-    "github.com/fatih/color",
-    "github.com/go-kit/kit/endpoint",
-    "github.com/go-kit/kit/log",
-    "github.com/go-kit/kit/metrics",
-    "github.com/go-kit/kit/metrics/prometheus",
-    "github.com/go-kit/kit/transport/grpc",
-    "github.com/go-kit/kit/transport/http",
-    "github.com/go-redis/redis",
-    "github.com/go-zoo/bone",
-    "github.com/gocql/gocql",
-    "github.com/gogo/protobuf/proto",
-    "github.com/golang/protobuf/proto",
-    "github.com/gorilla/websocket",
-    "github.com/influxdata/influxdb/client/v2",
-    "github.com/lib/pq",
-    "github.com/mongodb/mongo-go-driver/bson",
-    "github.com/mongodb/mongo-go-driver/mongo",
-    "github.com/mongodb/mongo-go-driver/mongo/findopt",
-    "github.com/nats-io/go-nats",
-    "github.com/prometheus/client_golang/prometheus",
-    "github.com/prometheus/client_golang/prometheus/promhttp",
-    "github.com/rubenv/sql-migrate",
-    "github.com/satori/go.uuid",
-    "github.com/sony/gobreaker",
-    "github.com/spf13/cobra",
-    "github.com/stretchr/testify/assert",
-    "github.com/stretchr/testify/require",
-    "golang.org/x/crypto/bcrypt",
-    "golang.org/x/net/context",
-    "google.golang.org/grpc",
-    "google.golang.org/grpc/codes",
-    "google.golang.org/grpc/credentials",
-    "google.golang.org/grpc/status",
-    "gopkg.in/ory-am/dockertest.v3",
-  ]
-  inputs-digest = "e268215396c5c84a81b8f55b0d0c3ad346e6ba1a223490ad97b5718d3fe475ff"
+  inputs-digest = "96f3fcd7c3539e021230f0a500f0c3281f6ad6b06e455a9e9585b89f932f184e"
   solver-name = "gps-cdcl"
   solver-version = 1

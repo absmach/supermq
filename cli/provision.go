@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strconv"
 
 	"github.com/docker/docker/pkg/namesgenerator"
 	mfxsdk "github.com/mainflux/mainflux/sdk/go"
@@ -187,7 +186,7 @@ var cmdProvision = []cobra.Command{
 
 			// Create things
 			for i := 0; i < numThings; i++ {
-				n := fmt.Sprintf("d%s", strconv.Itoa(i))
+				n := fmt.Sprintf("d%d", i)
 				k := "device"
 				if i%2 != 0 {
 					k = "app"
@@ -203,7 +202,7 @@ var cmdProvision = []cobra.Command{
 			}
 			// Create channels
 			for i := 0; i < numChan; i++ {
-				n := fmt.Sprintf("c%s", strconv.Itoa(i))
+				n := fmt.Sprintf("c%d", i)
 				c, err := createChannel(n, ut)
 				if err != nil {
 					logError(err)
