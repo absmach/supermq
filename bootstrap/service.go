@@ -31,10 +31,6 @@ var (
 
 	// ErrConflict indicates that entity with the same ID or external ID alredy exists.
 	ErrConflict = errors.New("entity already exists")
-
-	// ErrInvalidStatus indicates attempt to change status of the unconfigured entity.
-	// Entity needs to be bootstrapped in order to be able to change status.
-	ErrInvalidStatus = errors.New("can change status of unconfigured entity")
 )
 
 var _ Service = (*bootstrapService)(nil)
@@ -247,10 +243,6 @@ func (bs bootstrapService) ChangeStatus(key, id string, status Status) error {
 	thing, err := bs.things.RetrieveByID(owner, id)
 	if err != nil {
 		return err
-	}
-
-	if thing.Status == Created {
-		return ErrInvalidStatus
 	}
 
 	switch status {
