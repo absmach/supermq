@@ -215,10 +215,6 @@ func (bs bootstrapService) Bootstrap(externalKey, externalID string) (Config, er
 		return Config{}, ErrUnauthorizedAccess
 	}
 
-	if thing.Status == Active {
-		return Config{}, ErrMalformedEntity
-	}
-
 	thing.Status = Inactive
 	if err := bs.things.ChangeStatus(thing.Owner, thing.ID, thing.Status); err != nil {
 		return Config{}, err
