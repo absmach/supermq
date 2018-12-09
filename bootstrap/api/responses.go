@@ -83,7 +83,7 @@ func (res thingRes) Empty() bool {
 
 type viewRes struct {
 	ID         string           `json:"id"`
-	Key        string           `json:"key"`
+	MFKey      string           `json:"mainflux_key"`
 	MFThing    string           `json:"mainflux_id"`
 	MFChannels []string         `json:"mainflux_channels"`
 	ExternalID string           `json:"external_id,omitempty"`

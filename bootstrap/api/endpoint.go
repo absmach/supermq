@@ -50,7 +50,7 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 
 		res := viewRes{
 			ID:         thing.ID,
-			Key:        thing.MFKey,
+			MFKey:      thing.MFKey,
 			MFThing:    thing.MFThing,
 			MFChannels: thing.MFChannels,
 			ExternalID: thing.ExternalID,
@@ -106,6 +106,7 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			view := viewRes{
 				ID:         thing.ID,
 				MFThing:    thing.MFThing,
+				MFKey:      thing.MFKey,
 				MFChannels: thing.MFChannels,
 				ExternalID: thing.ExternalID,
 				Status:     thing.Status,
