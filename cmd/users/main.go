@@ -34,45 +34,54 @@ import (
 )
 
 const (
-	defLogLevel   = "error"
-	defDBHost     = "localhost"
-	defDBPort     = "5432"
-	defDBUser     = "mainflux"
-	defDBPass     = "mainflux"
-	defDBName     = "users"
-	defDBSSLMode  = "disable"
-	defHTTPPort   = "8180"
-	defGRPCPort   = "8181"
-	defSecret     = "users"
-	defServerCert = ""
-	defServerKey  = ""
-	envLogLevel   = "MF_USERS_LOG_LEVEL"
-	envDBHost     = "MF_USERS_DB_HOST"
-	envDBPort     = "MF_USERS_DB_PORT"
-	envDBUser     = "MF_USERS_DB_USER"
-	envDBPass     = "MF_USERS_DB_PASS"
-	envDBName     = "MF_USERS_DB"
-	envDBSSLMode  = "MF_USERS_DB_SSL_MODE"
-	envHTTPPort   = "MF_USERS_HTTP_PORT"
-	envGRPCPort   = "MF_USERS_GRPC_PORT"
-	envSecret     = "MF_USERS_SECRET"
-	envServerCert = "MF_USERS_SERVER_CERT"
-	envServerKey  = "MF_USERS_SERVER_KEY"
+	defLogLevel      = "error"
+	defDBHost        = "localhost"
+	defDBPort        = "5432"
+	defDBUser        = "mainflux"
+	defDBPass        = "mainflux"
+	defDBName        = "users"
+	defDBSSLMode     = "disable"
+	defDBSSLCert     = ""
+	defDBSSLKey      = ""
+	defDBSSLRootCert = ""
+	defHTTPPort      = "8180"
+	defGRPCPort      = "8181"
+	defSecret        = "users"
+	defServerCert    = ""
+	defServerKey     = ""
+	envLogLevel      = "MF_USERS_LOG_LEVEL"
+	envDBHost        = "MF_USERS_DB_HOST"
+	envDBPort        = "MF_USERS_DB_PORT"
+	envDBUser        = "MF_USERS_DB_USER"
+	envDBPass        = "MF_USERS_DB_PASS"
+	envDBName        = "MF_USERS_DB"
+	envDBSSLMode     = "MF_USERS_DB_SSL_MODE"
+	envDBSSLCert     = "MF_USERS_DB_SSL_CERT"
+	envDBSSLKey      = "MF_USERS_DB_SSL_KEY"
+	envDBSSLRootCert = "MF_USERS_DB_SSL_ROOT_CERT"
+	envHTTPPort      = "MF_USERS_HTTP_PORT"
+	envGRPCPort      = "MF_USERS_GRPC_PORT"
+	envSecret        = "MF_USERS_SECRET"
+	envServerCert    = "MF_USERS_SERVER_CERT"
+	envServerKey     = "MF_USERS_SERVER_KEY"
 )
 
 type config struct {
-	LogLevel   string
-	DBHost     string
-	DBPort     string
-	DBUser     string
-	DBPass     string
-	DBName     string
-	DBSSLMode  string
-	HTTPPort   string
-	GRPCPort   string
-	Secret     string
-	ServerCert string
-	ServerKey  string
+	LogLevel      string
+	DBHost        string
+	DBPort        string
+	DBUser        string
+	DBPass        string
+	DBName        string
+	DBSSLMode     string
+	DBSSLCert     string
+	DBSSLKey      string
+	DBSSLRootCert string
+	HTTPPort      string
+	GRPCPort      string
+	Secret        string
+	ServerCert    string
+	ServerKey     string
 }
 
 func main() {
@@ -103,23 +112,26 @@ func main() {
 
 func loadConfig() config {
 	return config{
-		LogLevel:   mainflux.Env(envLogLevel, defLogLevel),
-		DBHost:     mainflux.Env(envDBHost, defDBHost),
-		DBPort:     mainflux.Env(envDBPort, defDBPort),
-		DBUser:     mainflux.Env(envDBUser, defDBUser),
-		DBPass:     mainflux.Env(envDBPass, defDBPass),
-		DBName:     mainflux.Env(envDBName, defDBName),
-		DBSSLMode:  mainflux.Env(envDBSSLMode, defDBSSLMode),
-		HTTPPort:   mainflux.Env(envHTTPPort, defHTTPPort),
-		GRPCPort:   mainflux.Env(envGRPCPort, defGRPCPort),
-		Secret:     mainflux.Env(envSecret, defSecret),
-		ServerCert: mainflux.Env(envServerCert, defServerCert),
-		ServerKey:  mainflux.Env(envServerKey, defServerKey),
+		LogLevel:      mainflux.Env(envLogLevel, defLogLevel),
+		DBHost:        mainflux.Env(envDBHost, defDBHost),
+		DBPort:        mainflux.Env(envDBPort, defDBPort),
+		DBUser:        mainflux.Env(envDBUser, defDBUser),
+		DBPass:        mainflux.Env(envDBPass, defDBPass),
+		DBName:        mainflux.Env(envDBName, defDBName),
+		DBSSLMode:     mainflux.Env(envDBSSLMode, defDBSSLMode),
+		DBSSLCert:     mainflux.Env(envDBSSLCert, defDBSSLCert),
+		DBSSLKey:      mainflux.Env(envDBSSLKey, defDBSSLKey),
+		DBSSLRootCert: mainflux.Env(envDBSSLRootCert, defDBSSLRootCert),
+		HTTPPort:      mainflux.Env(envHTTPPort, defHTTPPort),
+		GRPCPort:      mainflux.Env(envGRPCPort, defGRPCPort),
+		Secret:        mainflux.Env(envSecret, defSecret),
+		ServerCert:    mainflux.Env(envServerCert, defServerCert),
+		ServerKey:     mainflux.Env(envServerKey, defServerKey),
 	}
 }
 
 func connectToDB(cfg config, logger logger.Logger) *sql.DB {
-	db, err := postgres.Connect(cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBUser, cfg.DBPass, cfg.DBSSLMode)
+	db, err := postgres.Connect(cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBUser, cfg.DBPass, cfg.DBSSLMode, cfg.DBSSLCert, cfg.DBSSLKey, cfg.DBSSLRootCert)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to postgres: %s", err))
 		os.Exit(1)
