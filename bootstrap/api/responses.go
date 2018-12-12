@@ -82,12 +82,12 @@ func (res thingRes) Empty() bool {
 }
 
 type viewRes struct {
-	ID         string           `json:"id"`
-	MFKey      string           `json:"mainflux_key"`
-	MFThing    string           `json:"mainflux_id"`
-	MFChannels []string         `json:"mainflux_channels"`
-	ExternalID string           `json:"external_id,omitempty"`
-	Status     bootstrap.Status `json:"status"`
+	ID         string          `json:"id"`
+	MFKey      string          `json:"mainflux_key"`
+	MFThing    string          `json:"mainflux_id"`
+	MFChannels []string        `json:"mainflux_channels"`
+	ExternalID string          `json:"external_id,omitempty"`
+	State      bootstrap.State `json:"state"`
 }
 
 func (res viewRes) Code() int {
@@ -138,18 +138,18 @@ func (res bootstrapRes) Empty() bool {
 	return false
 }
 
-type statusRes struct {
-	Status bootstrap.Status `json:"status"`
+type stateRes struct {
+	State bootstrap.State `json:"state"`
 }
 
-func (res statusRes) Code() int {
+func (res stateRes) Code() int {
 	return http.StatusOK
 }
 
-func (res statusRes) Headers() map[string]string {
+func (res stateRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res statusRes) Empty() bool {
+func (res stateRes) Empty() bool {
 	return false
 }

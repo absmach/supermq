@@ -54,7 +54,7 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			MFThing:    thing.MFThing,
 			MFChannels: thing.MFChannels,
 			ExternalID: thing.ExternalID,
-			Status:     thing.Status,
+			State:      thing.State,
 		}
 		return res, nil
 	}
@@ -72,7 +72,7 @@ func updateEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			ID:         req.id,
 			MFChannels: req.MFChannels,
 			Config:     req.Config,
-			Status:     req.Status,
+			State:      req.State,
 		}
 
 		err := svc.Update(req.key, thing)
@@ -109,7 +109,7 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 				MFKey:      thing.MFKey,
 				MFChannels: thing.MFChannels,
 				ExternalID: thing.ExternalID,
-				Status:     thing.Status,
+				State:      thing.State,
 			}
 			res.Things = append(res.Things, view)
 		}
@@ -150,21 +150,21 @@ func bootstrapEndpoint(svc bootstrap.Service, reader bootstrap.ConfigReader) end
 	}
 }
 
-func statusEndpoint(svc bootstrap.Service) endpoint.Endpoint {
+func stateEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
-		req := request.(changeStatusReq)
+		req := request.(changeStateReq)
 
 		err := req.validate()
 		if err != nil {
 			return nil, err
 		}
 
-		if err := svc.ChangeStatus(req.key, req.id, req.Status); err != nil {
+		if err := svc.ChangeState(req.key, req.id, req.State); err != nil {
 			return nil, err
 		}
 
-		r := statusRes{
-			Status: req.Status,
+		r := stateRes{
+			State: req.State,
 		}
 
 		return r, nil

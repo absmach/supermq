@@ -56,8 +56,8 @@ type Service interface {
 	// Bootstrap returns configuration to the Thing with provided external ID using external key.
 	Bootstrap(string, string) (Config, error)
 
-	// ChangeStatus changes status of the Thing with given ID and owner.
-	ChangeStatus(string, string, Status) error
+	// ChangeState changes state of the Thing with given ID and owner.
+	ChangeState(string, string, State) error
 }
 
 // Config represents Thing configuration generated in bootstrapping process.
@@ -118,7 +118,7 @@ func (bs bootstrapService) Add(key string, thing Thing) (Thing, error) {
 	}
 
 	thing.Owner = owner
-	thing.Status = Created
+	thing.State = Created
 	thing.MFThing = mfThing.ID
 	thing.MFKey = mfThing.Key
 
@@ -155,7 +155,7 @@ func (bs bootstrapService) Update(key string, thing Thing) error {
 		return err
 	}
 
-	if t.Status == Active {
+	if t.State == Active {
 		tmp := make(map[string]bool)
 		for _, c := range t.MFChannels {
 			tmp[c] = true
@@ -215,7 +215,7 @@ func (bs bootstrapService) Bootstrap(externalKey, externalID string) (Config, er
 		t := Thing{
 			ExternalID:  externalID,
 			ExternalKey: externalKey,
-			Status:      NewThing,
+			State:       NewThing,
 		}
 		_, err := bs.things.Save(t)
 		return Config{}, err
@@ -225,8 +225,8 @@ func (bs bootstrapService) Bootstrap(externalKey, externalID string) (Config, er
 		return Config{}, ErrUnauthorizedAccess
 	}
 
-	thing.Status = Inactive
-	if err := bs.things.ChangeStatus(thing.Owner, thing.ID, thing.Status); err != nil {
+	thing.State = Inactive
+	if err := bs.things.ChangeState(thing.Owner, thing.ID, thing.State); err != nil {
 		return Config{}, err
 	}
 
@@ -240,8 +240,8 @@ func (bs bootstrapService) Bootstrap(externalKey, externalID string) (Config, er
 	return config, nil
 }
 
-func (bs bootstrapService) ChangeStatus(key, id string, status Status) error {
-	if status == NewThing || status == Created {
+func (bs bootstrapService) ChangeState(key, id string, state State) error {
+	if state == NewThing || state == Created {
 		return ErrMalformedEntity
 	}
 
@@ -255,7 +255,7 @@ func (bs bootstrapService) ChangeStatus(key, id string, status Status) error {
 		return err
 	}
 
-	switch status {
+	switch state {
 	case Active:
 		for i, c := range thing.MFChannels {
 			if err := bs.sdk.ConnectThing(thing.MFThing, c, key); err != nil {
@@ -272,7 +272,7 @@ func (bs bootstrapService) ChangeStatus(key, id string, status Status) error {
 		}
 	}
 
-	return bs.things.ChangeStatus(owner, id, status)
+	return bs.things.ChangeState(owner, id, state)
 }
 
 func parseLocation(location string) (string, error) {

@@ -79,11 +79,11 @@ func (mm *metricsMiddleware) Bootstrap(externalKey, externalID string) (cfg boot
 	return mm.svc.Bootstrap(externalKey, externalID)
 }
 
-func (mm *metricsMiddleware) ChangeStatus(id, key string, status bootstrap.Status) (err error) {
+func (mm *metricsMiddleware) ChangeState(id, key string, state bootstrap.State) (err error) {
 	defer func(begin time.Time) {
-		mm.counter.With("method", "change_status").Add(1)
-		mm.latency.With("method", "change_status").Observe(time.Since(begin).Seconds())
+		mm.counter.With("method", "change_state").Add(1)
+		mm.latency.With("method", "change_state").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.ChangeStatus(id, key, status)
+	return mm.svc.ChangeState(id, key, state)
 }

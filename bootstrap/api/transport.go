@@ -63,9 +63,9 @@ func MakeHandler(svc bootstrap.Service, reader bootstrap.ConfigReader) http.Hand
 		encodeResponse,
 		opts...))
 
-	r.Put("/status/:id", kithttp.NewServer(
-		statusEndpoint(svc),
-		decodeStatusRequest,
+	r.Put("/state/:id", kithttp.NewServer(
+		stateEndpoint(svc),
+		decodeStateRequest,
 		encodeResponse,
 		opts...))
 
@@ -154,12 +154,12 @@ func decodeBootstrapRequest(_ context.Context, r *http.Request) (interface{}, er
 	return req, nil
 }
 
-func decodeStatusRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeStateRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
 		return nil, errUnsupportedContentType
 	}
 
-	req := changeStatusReq{key: r.Header.Get("Authorization")}
+	req := changeStateReq{key: r.Header.Get("Authorization")}
 	req.id = bone.GetValue(r, "id")
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err

@@ -38,9 +38,9 @@ func (req entityReq) validate() error {
 type updateReq struct {
 	key        string
 	id         string
-	MFChannels []string         `json:"channels"`
-	Config     string           `json:"config"`
-	Status     bootstrap.Status `json:"status"`
+	MFChannels []string        `json:"channels"`
+	Config     string          `json:"config"`
+	State      bootstrap.State `json:"state"`
 }
 
 func (req updateReq) validate() error {
@@ -48,8 +48,8 @@ func (req updateReq) validate() error {
 		return bootstrap.ErrUnauthorizedAccess
 	}
 
-	if req.Status != bootstrap.Inactive &&
-		req.Status != bootstrap.Active {
+	if req.State != bootstrap.Inactive &&
+		req.State != bootstrap.Active {
 		return bootstrap.ErrMalformedEntity
 	}
 
@@ -87,20 +87,20 @@ func (req boostrapReq) validate() error {
 	return nil
 }
 
-type changeStatusReq struct {
-	key    string
-	id     string
-	Status bootstrap.Status `json:"status"`
+type changeStateReq struct {
+	key   string
+	id    string
+	State bootstrap.State `json:"state"`
 }
 
-func (req changeStatusReq) validate() error {
+func (req changeStateReq) validate() error {
 	if req.id == "" || req.key == "" {
 		return bootstrap.ErrUnauthorizedAccess
 	}
 
-	if req.Status != bootstrap.Created &&
-		req.Status != bootstrap.Inactive &&
-		req.Status != bootstrap.Active {
+	if req.State != bootstrap.Created &&
+		req.State != bootstrap.Inactive &&
+		req.State != bootstrap.Active {
 		return bootstrap.ErrMalformedEntity
 	}
 

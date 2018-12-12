@@ -48,7 +48,7 @@ func migrateDB(db *sql.DB) error {
 						external_id       TEXT UNIQUE NOT NULL,
 						external_key 	  TEXT NOT NULL,
                         config  		  TEXT,
-						status            BIGINT NOT NULL,
+						state            BIGINT NOT NULL,
 						PRIMARY KEY (id, owner)
 					)`,
 				},

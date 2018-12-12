@@ -98,9 +98,9 @@ func (lm *loggingMiddleware) Bootstrap(externalKey, externalID string) (cfg boot
 	return lm.svc.Bootstrap(externalKey, externalID)
 }
 
-func (lm *loggingMiddleware) ChangeStatus(key, id string, status bootstrap.Status) (err error) {
+func (lm *loggingMiddleware) ChangeState(key, id string, state bootstrap.State) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method changeStatus for key %s and thing %s took %s to complete", key, id, time.Since(begin))
+		message := fmt.Sprintf("Method changeState for key %s and thing %s took %s to complete", key, id, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -108,5 +108,5 @@ func (lm *loggingMiddleware) ChangeStatus(key, id string, status bootstrap.Statu
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.ChangeStatus(key, id, status)
+	return lm.svc.ChangeState(key, id, state)
 }
