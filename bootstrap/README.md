@@ -5,9 +5,19 @@ New devices need to be configured properly and connected to the Mainflux. Bootst
 * Providing basic configuration for the newly created GWs
 * Handle whitelisting and blacklisting of the GWs
 
-## TODO
-* Setup project
-* Setup data models and database
-* Add single GW create endpoint
-* Add bulk creation support
-* Add blacklisting/whitelisting
+## TODO:
+* ~~Setup project~~
+
+* ~~Setup data models and database~~
+
+* ~~Add single GW create endpoint~~
+
+* ~~Add blacklisting/whitelisting~~
+
+* Add support for bootstrapping Things that are not preprovisioned
+
+* Add docs
+
+* Add API docs
+
+* Add tests
