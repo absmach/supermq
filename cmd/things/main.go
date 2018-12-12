@@ -80,26 +80,18 @@ const (
 )
 
 type config struct {
-	logLevel      string
-	dbHost        string
-	dbPort        string
-	dbUser        string
-	dbPass        string
-	dbName        string
-	dbSSLMode     string
-	dbSSLCert     string
-	dbSSLKey      string
-	dbSSLRootCert string
-	clientTLS     bool
-	caCerts       string
-	cacheURL      string
-	cachePass     string
-	cacheDB       string
-	httpPort      string
-	grpcPort      string
-	usersURL      string
-	serverCert    string
-	serverKey     string
+	logLevel   string
+	dbConfig   postgres.Config
+	clientTLS  bool
+	caCerts    string
+	cacheURL   string
+	cachePass  string
+	cacheDB    string
+	httpPort   string
+	grpcPort   string
+	usersURL   string
+	serverCert string
+	serverKey  string
 }
 
 func main() {
@@ -111,7 +103,7 @@ func main() {
 	}
 	cache := connectToCache(cfg.cacheURL, cfg.cachePass, cfg.cacheDB, logger)
 
-	db := connectToDB(cfg, logger)
+	db := connectToDB(cfg.dbConfig, logger)
 	defer db.Close()
 
 	conn := connectToUsers(cfg, logger)
@@ -139,27 +131,31 @@ func loadConfig() config {
 		log.Fatalf("Invalid value passed for %s\n", envClientTLS)
 	}
 
+	dbConfig := postgres.Config{
+		Host:        mainflux.Env(envDBHost, defDBHost),
+		Port:        mainflux.Env(envDBPort, defDBPort),
+		User:        mainflux.Env(envDBUser, defDBUser),
+		Pass:        mainflux.Env(envDBPass, defDBPass),
+		Name:        mainflux.Env(envDBName, defDBName),
+		SSLMode:     mainflux.Env(envDBSSLMode, defDBSSLMode),
+		SSLCert:     mainflux.Env(envDBSSLCert, defDBSSLCert),
+		SSLKey:      mainflux.Env(envDBSSLKey, defDBSSLKey),
+		SSLRootCert: mainflux.Env(envDBSSLRootCert, defDBSSLRootCert),
+	}
+
 	return config{
-		logLevel:      mainflux.Env(envLogLevel, defLogLevel),
-		dbHost:        mainflux.Env(envDBHost, defDBHost),
-		dbPort:        mainflux.Env(envDBPort, defDBPort),
-		dbUser:        mainflux.Env(envDBUser, defDBUser),
-		dbPass:        mainflux.Env(envDBPass, defDBPass),
-		dbName:        mainflux.Env(envDBName, defDBName),
-		dbSSLMode:     mainflux.Env(envDBSSLMode, defDBSSLMode),
-		dbSSLCert:     mainflux.Env(envDBSSLCert, defDBSSLCert),
-		dbSSLKey:      mainflux.Env(envDBSSLKey, defDBSSLKey),
-		dbSSLRootCert: mainflux.Env(envDBSSLRootCert, defDBSSLRootCert),
-		clientTLS:     tls,
-		caCerts:       mainflux.Env(envCACerts, defCACerts),
-		cacheURL:      mainflux.Env(envCacheURL, defCacheURL),
-		cachePass:     mainflux.Env(envCachePass, defCachePass),
-		cacheDB:       mainflux.Env(envCacheDB, defCacheDB),
-		httpPort:      mainflux.Env(envHTTPPort, defHTTPPort),
-		grpcPort:      mainflux.Env(envGRPCPort, defGRPCPort),
-		usersURL:      mainflux.Env(envUsersURL, defUsersURL),
-		serverCert:    mainflux.Env(envServerCert, defServerCert),
-		serverKey:     mainflux.Env(envServerKey, defServerKey),
+		logLevel:   mainflux.Env(envLogLevel, defLogLevel),
+		dbConfig:   dbConfig,
+		clientTLS:  tls,
+		caCerts:    mainflux.Env(envCACerts, defCACerts),
+		cacheURL:   mainflux.Env(envCacheURL, defCacheURL),
+		cachePass:  mainflux.Env(envCachePass, defCachePass),
+		cacheDB:    mainflux.Env(envCacheDB, defCacheDB),
+		httpPort:   mainflux.Env(envHTTPPort, defHTTPPort),
+		grpcPort:   mainflux.Env(envGRPCPort, defGRPCPort),
+		usersURL:   mainflux.Env(envUsersURL, defUsersURL),
+		serverCert: mainflux.Env(envServerCert, defServerCert),
+		serverKey:  mainflux.Env(envServerKey, defServerKey),
 	}
 }
 
@@ -178,8 +174,8 @@ func connectToCache(cacheURL, cachePass string, cacheDB string, logger logger.Lo
 	})
 }
 
-func connectToDB(cfg config, logger logger.Logger) *sql.DB {
-	db, err := postgres.Connect(cfg.dbHost, cfg.dbPort, cfg.dbName, cfg.dbUser, cfg.dbPass, cfg.dbSSLMode, cfg.dbSSLCert, cfg.dbSSLKey, cfg.dbSSLRootCert)
+func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sql.DB {
+	db, err := postgres.Connect(dbConfig)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to postgres: %s", err))
 		os.Exit(1)

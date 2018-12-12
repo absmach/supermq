@@ -67,21 +67,13 @@ const (
 )
 
 type config struct {
-	LogLevel      string
-	DBHost        string
-	DBPort        string
-	DBUser        string
-	DBPass        string
-	DBName        string
-	DBSSLMode     string
-	DBSSLCert     string
-	DBSSLKey      string
-	DBSSLRootCert string
-	HTTPPort      string
-	GRPCPort      string
-	Secret        string
-	ServerCert    string
-	ServerKey     string
+	LogLevel   string
+	dbConfig   postgres.Config
+	HTTPPort   string
+	GRPCPort   string
+	Secret     string
+	ServerCert string
+	ServerKey  string
 }
 
 func main() {
@@ -91,7 +83,7 @@ func main() {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	db := connectToDB(cfg, logger)
+	db := connectToDB(cfg.dbConfig, logger)
 	defer db.Close()
 
 	svc := newService(db, cfg.Secret, logger)
@@ -111,27 +103,32 @@ func main() {
 }
 
 func loadConfig() config {
+
+	dbConfig := postgres.Config{
+		Host:        mainflux.Env(envDBHost, defDBHost),
+		Port:        mainflux.Env(envDBPort, defDBPort),
+		User:        mainflux.Env(envDBUser, defDBUser),
+		Pass:        mainflux.Env(envDBPass, defDBPass),
+		Name:        mainflux.Env(envDBName, defDBName),
+		SSLMode:     mainflux.Env(envDBSSLMode, defDBSSLMode),
+		SSLCert:     mainflux.Env(envDBSSLCert, defDBSSLCert),
+		SSLKey:      mainflux.Env(envDBSSLKey, defDBSSLKey),
+		SSLRootCert: mainflux.Env(envDBSSLRootCert, defDBSSLRootCert),
+	}
+
 	return config{
-		LogLevel:      mainflux.Env(envLogLevel, defLogLevel),
-		DBHost:        mainflux.Env(envDBHost, defDBHost),
-		DBPort:        mainflux.Env(envDBPort, defDBPort),
-		DBUser:        mainflux.Env(envDBUser, defDBUser),
-		DBPass:        mainflux.Env(envDBPass, defDBPass),
-		DBName:        mainflux.Env(envDBName, defDBName),
-		DBSSLMode:     mainflux.Env(envDBSSLMode, defDBSSLMode),
-		DBSSLCert:     mainflux.Env(envDBSSLCert, defDBSSLCert),
-		DBSSLKey:      mainflux.Env(envDBSSLKey, defDBSSLKey),
-		DBSSLRootCert: mainflux.Env(envDBSSLRootCert, defDBSSLRootCert),
-		HTTPPort:      mainflux.Env(envHTTPPort, defHTTPPort),
-		GRPCPort:      mainflux.Env(envGRPCPort, defGRPCPort),
-		Secret:        mainflux.Env(envSecret, defSecret),
-		ServerCert:    mainflux.Env(envServerCert, defServerCert),
-		ServerKey:     mainflux.Env(envServerKey, defServerKey),
+		LogLevel:   mainflux.Env(envLogLevel, defLogLevel),
+		dbConfig:   dbConfig,
+		HTTPPort:   mainflux.Env(envHTTPPort, defHTTPPort),
+		GRPCPort:   mainflux.Env(envGRPCPort, defGRPCPort),
+		Secret:     mainflux.Env(envSecret, defSecret),
+		ServerCert: mainflux.Env(envServerCert, defServerCert),
+		ServerKey:  mainflux.Env(envServerKey, defServerKey),
 	}
 }
 
-func connectToDB(cfg config, logger logger.Logger) *sql.DB {
-	db, err := postgres.Connect(cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBUser, cfg.DBPass, cfg.DBSSLMode, cfg.DBSSLCert, cfg.DBSSLKey, cfg.DBSSLRootCert)
+func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sql.DB {
+	db, err := postgres.Connect(dbConfig)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to postgres: %s", err))
 		os.Exit(1)
