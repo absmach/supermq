@@ -14,7 +14,9 @@ New devices need to be configured properly and connected to the Mainflux. Bootst
 
 * ~~Add blacklisting/whitelisting~~
 
-* Add support for bootstrapping Things that are not preprovisioned
+* ~~Add support for bootstrapping Things that are not preprovisioned~~
+
+* ~~Add list things by state~~
 
 * Add docs
 

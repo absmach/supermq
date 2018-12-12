@@ -81,18 +81,6 @@ func MakeHandler(svc bootstrap.Service, reader bootstrap.ConfigReader) http.Hand
 	return r
 }
 
-func parseUint(s []string) (uint64, error) {
-	if len(s) != 1 {
-		return 0, errInvalidQueryParams
-	}
-
-	ret, err := strconv.ParseUint(s[0], 10, 64)
-	if err != nil {
-		return 0, errInvalidQueryParams
-	}
-	return ret, nil
-}
-
 func decodeAddRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
 		return nil, errUnsupportedContentType
@@ -136,8 +124,14 @@ func decodeListRequest(_ context.Context, r *http.Request) (interface{}, error) 
 		limit = maxLimit
 	}
 
+	state, err := parseState(q["state"])
+	if err != nil {
+		return nil, err
+	}
+
 	req := listReq{
 		key:    r.Header.Get("Authorization"),
+		state:  state,
 		offset: offset,
 		limit:  limit,
 	}
@@ -218,4 +212,25 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
+}
+
+func parseUint(s []string) (uint64, error) {
+	if len(s) != 1 {
+		return 0, errInvalidQueryParams
+	}
+
+	ret, err := strconv.ParseUint(s[0], 10, 64)
+	if err != nil {
+		return 0, errInvalidQueryParams
+	}
+	return ret, nil
+}
+
+func parseState(s []string) (bootstrap.State, error) {
+	if len(s) == 0 {
+		return -1, nil
+	}
+
+	state, err := strconv.Atoi(s[0])
+	return bootstrap.State(state), err
 }

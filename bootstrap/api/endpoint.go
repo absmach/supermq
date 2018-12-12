@@ -96,7 +96,7 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		things, err := svc.List(req.key, req.offset, req.limit)
+		things, err := svc.List(req.key, req.state, req.offset, req.limit)
 		if err != nil {
 			return nil, err
 		}

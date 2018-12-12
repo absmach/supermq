@@ -74,17 +74,15 @@ func (tr thingRepository) RetrieveByID(key, id string) (bootstrap.Thing, error) 
 	return thing, nil
 }
 
-func (tr thingRepository) RetrieveAll(key string, offset, limit uint64) []bootstrap.Thing {
-	q := `SELECT mainflux_key, mainflux_thing, external_id, external_key, mainflux_channels, config, state FROM things WHERE owner = $1 ORDER BY id LIMIT $2 OFFSET $3`
-	items := []bootstrap.Thing{}
-
-	rows, err := tr.db.Query(q, key, limit, offset)
+func (tr thingRepository) RetrieveAll(key string, state bootstrap.State, offset, limit uint64) []bootstrap.Thing {
+	rows, err := tr.retrieveAll(key, state, offset, limit)
 	if err != nil {
 		tr.log.Error(fmt.Sprintf("Failed to retrieve things due to %s", err))
 		return []bootstrap.Thing{}
 	}
 	defer rows.Close()
 
+	items := []bootstrap.Thing{}
 	var mfKey, mfThing, config sql.NullString
 	for rows.Next() {
 		t := bootstrap.Thing{Owner: key}
@@ -170,4 +168,18 @@ func (tr thingRepository) ChangeState(key, id string, state bootstrap.State) err
 	}
 
 	return nil
+}
+
+func (tr thingRepository) retrieveAll(key string, state bootstrap.State, offset, limit uint64) (*sql.Rows, error) {
+	template := `SELECT mainflux_key, mainflux_thing, external_id, external_key, mainflux_channels, config, state FROM things WHERE %s %s ORDER BY id LIMIT %s OFFSET %s`
+	if key == "" {
+		template = fmt.Sprintf(template, "owner = $1")
+	}
+	if state != -1 {
+		q := fmt.Sprintf(template, "", "$2", "$3")
+		return tr.db.Query(q, key, limit, offset)
+	}
+
+	q := fmt.Sprintf(template, "AND state = $2", "$3", "$4")
+	return tr.db.Query(q, key, state, limit, offset)
 }

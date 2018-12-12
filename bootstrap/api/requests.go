@@ -58,6 +58,7 @@ func (req updateReq) validate() error {
 
 type listReq struct {
 	key    string
+	state  bootstrap.State
 	offset uint64
 	limit  uint64
 }
