@@ -3,14 +3,19 @@ package bootstrap
 // Status represents status of the Thing:
 // | Status   | What does it mean                                                             |
 // |----------+-------------------------------------------------------------------------------|
+// | NewThing | Thing sent a bootstrap request without being being preprovisioned             |
 // | Created  | Thing has been created and saved, but not bootstrapped                        |
 // | Inactive | Thing is create and bootstrapped, but isn't able to communicate over Mainflux |
 // | Active   | Thing is able to communicate using Mainflux                                   |
 type Status int
 
 const (
+	// NewThing is the Thing that sent bootstrap request before corresponding thing has been
+	// created on the Bootstrap service side. This means that the Thing is created during
+	// bootstrapping process and needs to be approved by the operator to switch to Created state.
+	NewThing Status = iota
 	// Created Thing is created, but not configured.
-	Created Status = iota
+	Created
 	// Inactive Thing is created and configured, but not able to exchange messages using Mainflux.
 	Inactive
 	// Active Thing is created, configured, and whitelisted.

@@ -211,6 +211,16 @@ func (bs bootstrapService) Remove(key, id string) error {
 
 func (bs bootstrapService) Bootstrap(externalKey, externalID string) (Config, error) {
 	thing, err := bs.things.RetrieveByExternalID(externalKey, externalID)
+	if err == ErrNotFound {
+		t := Thing{
+			ExternalID:  externalID,
+			ExternalKey: externalKey,
+			Status:      NewThing,
+		}
+		_, err := bs.things.Save(t)
+		return Config{}, err
+	}
+
 	if err != nil {
 		return Config{}, ErrUnauthorizedAccess
 	}
@@ -231,6 +241,10 @@ func (bs bootstrapService) Bootstrap(externalKey, externalID string) (Config, er
 }
 
 func (bs bootstrapService) ChangeStatus(key, id string, status Status) error {
+	if status == NewThing || status == Created {
+		return ErrMalformedEntity
+	}
+
 	owner, err := bs.identify(key)
 	if err != nil {
 		return err
@@ -289,6 +303,7 @@ func (bs bootstrapService) connectionFallback(id string, key string, channels []
 			bs.sdk.ConnectThing(id, c, key)
 			continue
 		}
+
 		bs.sdk.DisconnectThing(id, c, key)
 	}
 }
