@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"nov/bootstrap"
+	"strings"
 
 	"github.com/lib/pq" // required for DB access
 	"github.com/mainflux/mainflux/logger"
@@ -39,7 +40,7 @@ func (tr thingRepository) Save(thing bootstrap.Thing) (string, error) {
 	q := `INSERT INTO things (mainflux_key, owner, mainflux_thing, external_id, external_key, mainflux_channels, config, state)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
 
-	if err := tr.db.QueryRow(q, thing.MFKey, thing.Owner, thing.MFThing, thing.ExternalID, thing.ExternalKey, pq.Array(thing.MFChannels),
+	if err := tr.db.QueryRow(q, nullString(thing.MFKey), nullString(thing.Owner), nullString(thing.MFThing), thing.ExternalID, thing.ExternalKey, pq.Array(thing.MFChannels),
 		nullString(thing.Config), thing.State).Scan(&thing.ID); err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Name() == duplicateErr {
 			return "", bootstrap.ErrConflict
@@ -74,8 +75,8 @@ func (tr thingRepository) RetrieveByID(key, id string) (bootstrap.Thing, error) 
 	return thing, nil
 }
 
-func (tr thingRepository) RetrieveAll(key string, state bootstrap.State, offset, limit uint64) []bootstrap.Thing {
-	rows, err := tr.retrieveAll(key, state, offset, limit)
+func (tr thingRepository) RetrieveAll(filter map[string]string, offset, limit uint64) []bootstrap.Thing {
+	rows, err := tr.retrieveAll(filter, offset, limit)
 	if err != nil {
 		tr.log.Error(fmt.Sprintf("Failed to retrieve things due to %s", err))
 		return []bootstrap.Thing{}
@@ -85,7 +86,7 @@ func (tr thingRepository) RetrieveAll(key string, state bootstrap.State, offset,
 	items := []bootstrap.Thing{}
 	var mfKey, mfThing, config sql.NullString
 	for rows.Next() {
-		t := bootstrap.Thing{Owner: key}
+		t := bootstrap.Thing{}
 		if err = rows.Scan(&mfKey, &mfThing, &t.ExternalID, &t.ExternalKey, pq.Array(&t.MFChannels), &config, &t.State); err != nil {
 			tr.log.Error(fmt.Sprintf("Failed to read retrieved thing due to %s", err))
 
@@ -170,16 +171,16 @@ func (tr thingRepository) ChangeState(key, id string, state bootstrap.State) err
 	return nil
 }
 
-func (tr thingRepository) retrieveAll(key string, state bootstrap.State, offset, limit uint64) (*sql.Rows, error) {
-	template := `SELECT mainflux_key, mainflux_thing, external_id, external_key, mainflux_channels, config, state FROM things WHERE %s %s ORDER BY id LIMIT %s OFFSET %s`
-	if key == "" {
-		template = fmt.Sprintf(template, "owner = $1")
+func (tr thingRepository) retrieveAll(filter map[string]string, offset, limit uint64) (*sql.Rows, error) {
+	template := `SELECT id, owner, mainflux_key, mainflux_thing, external_id, external_key, mainflux_channels, config, state FROM things WHERE %s ORDER BY id LIMIT $1 OFFSET $2`
+	params := []interface{}{limit, offset}
+	var queries []string
+	counter := 0
+	for k, v := range filter {
+		queries = append(queries, fmt.Sprintf("%s = $%d", k, counter))
+		params = append(params, v)
+		counter++
 	}
-	if state != -1 {
-		q := fmt.Sprintf(template, "", "$2", "$3")
-		return tr.db.Query(q, key, limit, offset)
-	}
-
-	q := fmt.Sprintf(template, "AND state = $2", "$3", "$4")
-	return tr.db.Query(q, key, state, limit, offset)
+	f := strings.Join(queries, " AND ")
+	return tr.db.Query(fmt.Sprintf(template, f), params...)
 }

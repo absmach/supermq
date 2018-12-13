@@ -1,13 +1,22 @@
 package bootstrap
 
+import (
+	"strconv"
+)
+
 // State represents state of the Thing:
-// | State   | What does it mean                                                             |
+// | State    | What it means 		                                                          |
 // |----------+-------------------------------------------------------------------------------|
 // | NewThing | Thing sent a bootstrap request without being being preprovisioned             |
 // | Created  | Thing has been created and saved, but not bootstrapped                        |
 // | Inactive | Thing is create and bootstrapped, but isn't able to communicate over Mainflux |
 // | Active   | Thing is able to communicate using Mainflux                                   |
 type State int
+
+// String returns string representation of State.
+func (s State) String() string {
+	return strconv.Itoa(int(s))
+}
 
 const (
 	// NewThing is the Thing that sent bootstrap request before corresponding thing has been
@@ -45,8 +54,8 @@ type ThingRepository interface {
 	// by the specified user.
 	RetrieveByID(string, string) (Thing, error)
 
-	// RetrieveAll retrieves the subset of things with given state owned by the specified user.
-	RetrieveAll(string, State, uint64, uint64) []Thing
+	// RetrieveAll retrieves the subset of things with given parameters.
+	RetrieveAll(map[string]string, uint64, uint64) []Thing
 
 	// RetrieveByExternalID returns Thing for given external ID.
 	RetrieveByExternalID(string, string) (Thing, error)

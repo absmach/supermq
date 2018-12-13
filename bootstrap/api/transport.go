@@ -24,6 +24,7 @@ const (
 var (
 	errUnsupportedContentType = errors.New("unsupported content type")
 	errInvalidQueryParams     = errors.New("invalid query params")
+	validParams               = []string{"state"}
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -110,12 +111,14 @@ func decodeListRequest(_ context.Context, r *http.Request) (interface{}, error) 
 		return nil, errInvalidQueryParams
 	}
 
-	offset, err := parseUint(q["offset"])
+	offset, err := parseUint(q.Get("offset"))
+	q.Del("offset")
 	if err != nil {
 		return nil, err
 	}
 
-	limit, err := parseUint(q["limit"])
+	limit, err := parseUint(q.Get("limit"))
+	q.Del("limit")
 	if err != nil {
 		return nil, err
 	}
@@ -124,14 +127,15 @@ func decodeListRequest(_ context.Context, r *http.Request) (interface{}, error) 
 		limit = maxLimit
 	}
 
-	state, err := parseState(q["state"])
-	if err != nil {
-		return nil, err
+	if limit == 0 {
+		limit = 1
 	}
+
+	filter := parseFilter(q)
 
 	req := listReq{
 		key:    r.Header.Get("Authorization"),
-		state:  state,
+		filter: filter,
 		offset: offset,
 		limit:  limit,
 	}
@@ -140,7 +144,7 @@ func decodeListRequest(_ context.Context, r *http.Request) (interface{}, error) 
 }
 
 func decodeBootstrapRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	req := boostrapReq{
+	req := bootstrapReq{
 		id:  bone.GetValue(r, "external_id"),
 		key: r.Header.Get("Authorization"),
 	}
@@ -214,23 +218,42 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	}
 }
 
-func parseUint(s []string) (uint64, error) {
-	if len(s) != 1 {
-		return 0, errInvalidQueryParams
+func parseUint(s string) (uint64, error) {
+	if s == "" {
+		return 0, nil
 	}
 
-	ret, err := strconv.ParseUint(s[0], 10, 64)
+	ret, err := strconv.ParseUint(s, 10, 64)
 	if err != nil {
 		return 0, errInvalidQueryParams
 	}
 	return ret, nil
 }
 
-func parseState(s []string) (bootstrap.State, error) {
-	if len(s) == 0 {
-		return -1, nil
+func parseFilter(values url.Values) map[string]string {
+	ret := make(map[string]string)
+	for k, _ := range values {
+		if contains(validParams, k) {
+			ret[k] = values.Get(k)
+		}
 	}
-
-	state, err := strconv.Atoi(s[0])
-	return bootstrap.State(state), err
+	return ret
 }
+
+func contains(l []string, s string) bool {
+	for _, v := range l {
+		if v == s {
+			return true
+		}
+	}
+	return false
+}
+
+// func parseState(s []string) (bootstrap.State, error) {
+// 	if len(s) == 0 {
+// 		return -1, nil
+// 	}
+
+// 	state, err := strconv.Atoi(s[0])
+// 	return bootstrap.State(state), err
+// }

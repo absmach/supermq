@@ -59,7 +59,7 @@ func (lm *loggingMiddleware) Update(key string, thing bootstrap.Thing) (err erro
 	return lm.svc.Update(key, thing)
 }
 
-func (lm *loggingMiddleware) List(key string, state bootstrap.State, offset, limit uint64) (res []bootstrap.Thing, err error) {
+func (lm *loggingMiddleware) List(key string, filter map[string]string, offset, limit uint64) (res []bootstrap.Thing, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method list for key %s and offset %d and limit %d took %s to complete", key, offset, limit, time.Since(begin))
 		if err != nil {
@@ -69,7 +69,7 @@ func (lm *loggingMiddleware) List(key string, state bootstrap.State, offset, lim
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.List(key, state, offset, limit)
+	return lm.svc.List(key, filter, offset, limit)
 }
 
 func (lm *loggingMiddleware) Remove(key, id string) (err error) {

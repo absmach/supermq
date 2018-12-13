@@ -96,7 +96,7 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		things, err := svc.List(req.key, req.state, req.offset, req.limit)
+		things, err := svc.List(req.key, req.filter, req.offset, req.limit)
 		if err != nil {
 			return nil, err
 		}
@@ -136,7 +136,7 @@ func removeEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 
 func bootstrapEndpoint(svc bootstrap.Service, reader bootstrap.ConfigReader) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
-		req := request.(boostrapReq)
+		req := request.(bootstrapReq)
 		if err := req.validate(); err != nil {
 			return nil, err
 		}

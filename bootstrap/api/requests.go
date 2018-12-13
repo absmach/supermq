@@ -58,7 +58,7 @@ func (req updateReq) validate() error {
 
 type listReq struct {
 	key    string
-	state  bootstrap.State
+	filter map[string]string
 	offset uint64
 	limit  uint64
 }
@@ -71,12 +71,12 @@ func (req listReq) validate() error {
 	return nil
 }
 
-type boostrapReq struct {
+type bootstrapReq struct {
 	key string
 	id  string
 }
 
-func (req boostrapReq) validate() error {
+func (req bootstrapReq) validate() error {
 	if req.key == "" {
 		return bootstrap.ErrUnauthorizedAccess
 	}
