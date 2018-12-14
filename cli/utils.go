@@ -29,7 +29,7 @@ func logJSON(i interface{}) {
 		return
 	}
 
-	pj, err := prettyjson.Format([]byte(m))
+	pj, err := prettyjson.Format(m)
 	if err != nil {
 		logError(err)
 		return
