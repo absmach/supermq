@@ -15,6 +15,7 @@ import (
 	migrate "github.com/rubenv/sql-migrate"
 )
 
+// Config defines the options that are used when connecting to a PostgreSQL instance
 type Config struct {
 	Host        string
 	Port        string

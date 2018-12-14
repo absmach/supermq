@@ -67,30 +67,30 @@ const (
 )
 
 type config struct {
-	LogLevel   string
+	logLevel   string
 	dbConfig   postgres.Config
-	HTTPPort   string
-	GRPCPort   string
-	Secret     string
-	ServerCert string
-	ServerKey  string
+	httpPort   string
+	grpcPort   string
+	secret     string
+	serverCert string
+	serverKey  string
 }
 
 func main() {
 	cfg := loadConfig()
 
-	logger, err := logger.New(os.Stdout, cfg.LogLevel)
+	logger, err := logger.New(os.Stdout, cfg.logLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 	db := connectToDB(cfg.dbConfig, logger)
 	defer db.Close()
 
-	svc := newService(db, cfg.Secret, logger)
+	svc := newService(db, cfg.secret, logger)
 	errs := make(chan error, 2)
 
-	go startHTTPServer(svc, cfg.HTTPPort, cfg.ServerCert, cfg.ServerKey, logger, errs)
-	go startGRPCServer(svc, cfg.GRPCPort, cfg.ServerCert, cfg.ServerKey, logger, errs)
+	go startHTTPServer(svc, cfg.httpPort, cfg.serverCert, cfg.serverKey, logger, errs)
+	go startGRPCServer(svc, cfg.grpcPort, cfg.serverCert, cfg.serverKey, logger, errs)
 
 	go func() {
 		c := make(chan os.Signal)
@@ -117,13 +117,13 @@ func loadConfig() config {
 	}
 
 	return config{
-		LogLevel:   mainflux.Env(envLogLevel, defLogLevel),
+		logLevel:   mainflux.Env(envLogLevel, defLogLevel),
 		dbConfig:   dbConfig,
-		HTTPPort:   mainflux.Env(envHTTPPort, defHTTPPort),
-		GRPCPort:   mainflux.Env(envGRPCPort, defGRPCPort),
-		Secret:     mainflux.Env(envSecret, defSecret),
-		ServerCert: mainflux.Env(envServerCert, defServerCert),
-		ServerKey:  mainflux.Env(envServerKey, defServerKey),
+		httpPort:   mainflux.Env(envHTTPPort, defHTTPPort),
+		grpcPort:   mainflux.Env(envGRPCPort, defGRPCPort),
+		secret:     mainflux.Env(envSecret, defSecret),
+		serverCert: mainflux.Env(envServerCert, defServerCert),
+		serverKey:  mainflux.Env(envServerKey, defServerKey),
 	}
 }
 
