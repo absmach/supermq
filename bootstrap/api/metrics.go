@@ -52,7 +52,7 @@ func (mm *metricsMiddleware) Update(key string, thing bootstrap.Thing) (err erro
 	return mm.svc.Update(key, thing)
 }
 
-func (mm *metricsMiddleware) List(key string, filter map[string]string, offset, limit uint64) (saved []bootstrap.Thing, err error) {
+func (mm *metricsMiddleware) List(key string, filter bootstrap.Filter, offset, limit uint64) (saved []bootstrap.Thing, err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "list").Add(1)
 		mm.latency.With("method", "list").Observe(time.Since(begin).Seconds())

@@ -24,7 +24,7 @@ const (
 var (
 	errUnsupportedContentType = errors.New("unsupported content type")
 	errInvalidQueryParams     = errors.New("invalid query params")
-	validParams               = []string{"state"}
+	validParams               = []string{"state", "external_id", "mainflux_id", "mainflux_key"}
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -230,9 +230,9 @@ func parseUint(s string) (uint64, error) {
 	return ret, nil
 }
 
-func parseFilter(values url.Values) map[string]string {
-	ret := make(map[string]string)
-	for k, _ := range values {
+func parseFilter(values url.Values) bootstrap.Filter {
+	ret := bootstrap.Filter{}
+	for k := range values {
 		if contains(validParams, k) {
 			ret[k] = values.Get(k)
 		}

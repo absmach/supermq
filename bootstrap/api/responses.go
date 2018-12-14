@@ -12,7 +12,9 @@ var (
 	_ mainflux.Response = (*identityRes)(nil)
 	_ mainflux.Response = (*removeRes)(nil)
 	_ mainflux.Response = (*thingRes)(nil)
+	_ mainflux.Response = (*stateRes)(nil)
 	_ mainflux.Response = (*viewRes)(nil)
+	_ mainflux.Response = (*listRes)(nil)
 )
 
 type identityRes struct {

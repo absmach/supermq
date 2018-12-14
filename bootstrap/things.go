@@ -44,6 +44,9 @@ type Thing struct {
 	State       State
 }
 
+// Filter is used for the search filters.
+type Filter map[string]string
+
 // ThingRepository specifies a Thing persistence API.
 type ThingRepository interface {
 	// Save persists the Thing. Successful operation is indicated by non-nil
@@ -55,7 +58,7 @@ type ThingRepository interface {
 	RetrieveByID(string, string) (Thing, error)
 
 	// RetrieveAll retrieves the subset of things with given parameters.
-	RetrieveAll(map[string]string, uint64, uint64) []Thing
+	RetrieveAll(Filter, uint64, uint64) []Thing
 
 	// RetrieveByExternalID returns Thing for given external ID.
 	RetrieveByExternalID(string, string) (Thing, error)

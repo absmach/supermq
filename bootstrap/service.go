@@ -48,7 +48,7 @@ type Service interface {
 	Update(string, Thing) error
 
 	// List returns subset of Things with given state that belong to the user identified by the given key.
-	List(string, map[string]string, uint64, uint64) ([]Thing, error)
+	List(string, Filter, uint64, uint64) ([]Thing, error)
 
 	// Remove removes Thing with specified key that belongs to the user identified by the given key.
 	Remove(string, string) error
@@ -182,13 +182,14 @@ func (bs bootstrapService) Update(key string, thing Thing) error {
 	return bs.things.Update(thing)
 }
 
-func (bs bootstrapService) List(key string, filter map[string]string, offset, limit uint64) ([]Thing, error) {
+func (bs bootstrapService) List(key string, filter Filter, offset, limit uint64) ([]Thing, error) {
 	owner, err := bs.identify(key)
 	if err != nil {
 		return []Thing{}, err
 	}
 
-	if state, ok := filter["state"]; !ok || state != NewThing.String() {
+	// All the Things with state other than NewThing have an owner.
+	if state := filter["state"]; state != NewThing.String() {
 		filter["owner"] = owner
 	}
 

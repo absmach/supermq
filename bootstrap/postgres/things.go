@@ -75,7 +75,7 @@ func (tr thingRepository) RetrieveByID(key, id string) (bootstrap.Thing, error) 
 	return thing, nil
 }
 
-func (tr thingRepository) RetrieveAll(filter map[string]string, offset, limit uint64) []bootstrap.Thing {
+func (tr thingRepository) RetrieveAll(filter bootstrap.Filter, offset, limit uint64) []bootstrap.Thing {
 	rows, err := tr.retrieveAll(filter, offset, limit)
 	if err != nil {
 		tr.log.Error(fmt.Sprintf("Failed to retrieve things due to %s", err))
@@ -172,7 +172,7 @@ func (tr thingRepository) ChangeState(key, id string, state bootstrap.State) err
 	return nil
 }
 
-func (tr thingRepository) retrieveAll(filter map[string]string, offset, limit uint64) (*sql.Rows, error) {
+func (tr thingRepository) retrieveAll(filter bootstrap.Filter, offset, limit uint64) (*sql.Rows, error) {
 	template := `SELECT id, owner, mainflux_key, mainflux_thing, external_id, external_key, mainflux_channels, config, state FROM things WHERE %s ORDER BY id LIMIT $1 OFFSET $2`
 	params := []interface{}{limit, offset}
 	var queries []string

@@ -58,7 +58,7 @@ func (req updateReq) validate() error {
 
 type listReq struct {
 	key    string
-	filter map[string]string
+	filter bootstrap.Filter
 	offset uint64
 	limit  uint64
 }
