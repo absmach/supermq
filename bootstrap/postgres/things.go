@@ -84,15 +84,16 @@ func (tr thingRepository) RetrieveAll(filter map[string]string, offset, limit ui
 	defer rows.Close()
 
 	items := []bootstrap.Thing{}
-	var mfKey, mfThing, config sql.NullString
+	var owner, mfKey, mfThing, config sql.NullString
 	for rows.Next() {
 		t := bootstrap.Thing{}
-		if err = rows.Scan(&mfKey, &mfThing, &t.ExternalID, &t.ExternalKey, pq.Array(&t.MFChannels), &config, &t.State); err != nil {
+		if err = rows.Scan(&t.ID, &owner, &mfKey, &mfThing, &t.ExternalID, &t.ExternalKey, pq.Array(&t.MFChannels), &config, &t.State); err != nil {
 			tr.log.Error(fmt.Sprintf("Failed to read retrieved thing due to %s", err))
 
 			return []bootstrap.Thing{}
 		}
 
+		t.Owner = owner.String
 		t.MFKey = mfKey.String
 		t.MFThing = mfThing.String
 		t.Config = config.String
@@ -175,7 +176,8 @@ func (tr thingRepository) retrieveAll(filter map[string]string, offset, limit ui
 	template := `SELECT id, owner, mainflux_key, mainflux_thing, external_id, external_key, mainflux_channels, config, state FROM things WHERE %s ORDER BY id LIMIT $1 OFFSET $2`
 	params := []interface{}{limit, offset}
 	var queries []string
-	counter := 0
+	// Since limit = 1, offset = 2, the next one is 3...
+	counter := 3
 	for k, v := range filter {
 		queries = append(queries, fmt.Sprintf("%s = $%d", k, counter))
 		params = append(params, v)
