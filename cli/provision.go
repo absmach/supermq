@@ -230,15 +230,12 @@ var cmdProvision = []cobra.Command{
 				}
 			}
 
-			logJSON(user)
-			logJSON(ut)
-			logJSON(things)
-			logJSON(channels)
+			logJSON(user, ut, things, channels)
 		},
 	},
 }
 
-// NewProvisionCmd returns provision command.
+// NewProvisionCmd sreturns provision command.
 func NewProvisionCmd() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "provision",

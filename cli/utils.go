@@ -22,7 +22,7 @@ var (
 	Offset uint
 )
 
-func logJSON(i interface{}) {
+func logJSON(i ...interface{}) {
 	m, err := json.Marshal(i)
 	if err != nil {
 		logError(err)
