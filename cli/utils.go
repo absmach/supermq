@@ -22,20 +22,22 @@ var (
 	Offset uint
 )
 
-func logJSON(i ...interface{}) {
-	m, err := json.Marshal(i)
-	if err != nil {
-		logError(err)
-		return
-	}
+func logJSON(iList ...interface{}) {
+	for _, i := range iList {
+		m, err := json.Marshal(i)
+		if err != nil {
+			logError(err)
+			return
+		}
 
-	pj, err := prettyjson.Format(m)
-	if err != nil {
-		logError(err)
-		return
-	}
+		pj, err := prettyjson.Format(m)
+		if err != nil {
+			logError(err)
+			return
+		}
 
-	fmt.Printf("\n%s\n\n", string(pj))
+		fmt.Printf("\n%s\n\n", string(pj))
+	}
 }
 
 func logUsage(u string) {
