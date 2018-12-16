@@ -235,7 +235,7 @@ var cmdProvision = []cobra.Command{
 	},
 }
 
-// NewProvisionCmd sreturns provision command.
+// NewProvisionCmd returns provision command.
 func NewProvisionCmd() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "provision",
