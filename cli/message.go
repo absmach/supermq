@@ -7,9 +7,7 @@
 
 package cli
 
-import (
-	"github.com/spf13/cobra"
-)
+import "github.com/spf13/cobra"
 
 const contentTypeSenml = "application/senml+json"
 
