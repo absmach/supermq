@@ -146,6 +146,25 @@ func (tr thingRepository) Update(thing bootstrap.Thing) error {
 	return nil
 }
 
+func (tr thingRepository) Assign(thing bootstrap.Thing) error {
+	q := `UPDATE things SET owner = $1, mainflux_channels = $2, config = $3, state = $4 WHERE external_id = $5`
+	res, err := tr.db.Exec(q, thing.Owner, pq.Array(thing.MFChannels), thing.Config, thing.State, thing.ExternalID)
+	if err != nil {
+		return err
+	}
+
+	cnt, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if cnt == 0 {
+		return bootstrap.ErrNotFound
+	}
+
+	return nil
+}
+
 func (tr thingRepository) Remove(key, id string) error {
 	q := `DELETE FROM things WHERE id = $1 AND owner = $2`
 	tr.db.Exec(q, id, key)

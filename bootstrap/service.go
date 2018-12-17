@@ -102,19 +102,9 @@ func (bs bootstrapService) Add(key string, thing Thing) (Thing, error) {
 		}
 	}
 
-	resp, err := bs.sdk.CreateThing(mfsdk.Thing{Type: thingType}, key)
+	mfThing, err := bs.add(key)
 	if err != nil {
 		return Thing{}, err
-	}
-
-	thingID, err := parseLocation(resp)
-	if err != nil {
-		return Thing{}, err
-	}
-
-	mfThing, err := bs.sdk.Thing(thingID, key)
-	if err != nil {
-		return Thing{}, bs.sdk.DeleteThing(thingID, key)
 	}
 
 	thing.Owner = owner
@@ -149,12 +139,24 @@ func (bs bootstrapService) Update(key string, thing Thing) error {
 	thing.Owner = owner
 
 	t, err := bs.things.RetrieveByID(owner, thing.ID)
-	id := t.MFThing
-
 	if err != nil {
 		return err
 	}
 
+	// If the state is NewThing, corresponding Mainflux Thing should be created.
+	if t.State == NewThing {
+		mfThing, err := bs.add(key)
+		if err != nil {
+			return err
+		}
+
+		thing.MFThing = mfThing.ID
+		thing.MFKey = mfThing.Key
+		thing.State = Created
+		return bs.things.Assign(thing)
+	}
+
+	id := t.MFThing
 	if t.State == Active {
 		tmp := make(map[string]bool)
 		for _, c := range t.MFChannels {
@@ -278,6 +280,24 @@ func (bs bootstrapService) ChangeState(key, id string, state State) error {
 	}
 
 	return bs.things.ChangeState(owner, id, state)
+}
+
+func (bs bootstrapService) add(key string) (mfsdk.Thing, error) {
+	resp, err := bs.sdk.CreateThing(mfsdk.Thing{Type: thingType}, key)
+	if err != nil {
+		return mfsdk.Thing{}, err
+	}
+
+	thingID, err := parseLocation(resp)
+	if err != nil {
+		return mfsdk.Thing{}, err
+	}
+
+	thing, err := bs.sdk.Thing(thingID, key)
+	if err != nil {
+		return mfsdk.Thing{}, bs.sdk.DeleteThing(thingID, key)
+	}
+	return thing, nil
 }
 
 func parseLocation(location string) (string, error) {

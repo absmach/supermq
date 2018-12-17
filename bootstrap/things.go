@@ -67,6 +67,10 @@ type ThingRepository interface {
 	// to indicate operation failure.
 	Update(Thing) error
 
+	// Assign updates thing with state NewThing, changing state to Created and chaning
+	// Thing ownership to the corresponding owner.
+	Assign(Thing) error
+
 	// Remove removes the Thing having the provided identifier, that is owned
 	// by the specified user.
 	Remove(string, string) error

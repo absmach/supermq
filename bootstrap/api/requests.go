@@ -48,6 +48,7 @@ func (req updateReq) validate() error {
 		return bootstrap.ErrUnauthorizedAccess
 	}
 
+	// Can't explicitly update state to NewThing or Created.
 	if req.State != bootstrap.Inactive &&
 		req.State != bootstrap.Active {
 		return bootstrap.ErrMalformedEntity
