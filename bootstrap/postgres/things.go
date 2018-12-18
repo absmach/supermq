@@ -112,6 +112,7 @@ func (tr thingRepository) RetrieveByExternalID(externalKey, externalID string) (
 		ExternalID:  externalID,
 		ExternalKey: externalKey,
 	}
+
 	if err := tr.db.QueryRow(q, externalKey, externalID).Scan(&thing.ID, &thing.Owner, &mfKey, &mfThing, pq.Array(&thing.MFChannels), &config, &thing.State); err != nil {
 		empty := bootstrap.Thing{}
 		if err == sql.ErrNoRows {
