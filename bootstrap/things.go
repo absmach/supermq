@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"fmt"
 	"strconv"
 )
 
@@ -16,6 +17,22 @@ type State int
 // String returns string representation of State.
 func (s State) String() string {
 	return strconv.Itoa(int(s))
+}
+
+// Value represents human-readable value of the State.
+func (s State) Value() string {
+	switch s {
+	case 0:
+		return "New"
+	case 1:
+		return "Created"
+	case 2:
+		return "Inactive"
+	case 3:
+		return "Active"
+	default:
+		return fmt.Sprintf("Unknown: %d", s)
+	}
 }
 
 const (

@@ -1,10 +1,3 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
-// SPDX-License-Identifier: Apache-2.0
-//
-
 package mocks
 
 import (
@@ -22,8 +15,8 @@ type thingRepositoryMock struct {
 	things  map[string]bootstrap.Thing
 }
 
-// NewThingRepository creates in-memory thing repository.
-func NewThingRepository() bootstrap.ThingRepository {
+// NewThingsRepository creates in-memory thing repository.
+func NewThingsRepository() bootstrap.ThingRepository {
 	return &thingRepositoryMock{
 		things: make(map[string]bootstrap.Thing),
 	}
@@ -35,17 +28,22 @@ func (trm *thingRepositoryMock) Save(thing bootstrap.Thing) (string, error) {
 
 	trm.counter++
 	thing.ID = strconv.FormatUint(trm.counter, 10)
-	trm.things[key(thing.Owner, thing.ID)] = thing
+	trm.things[thing.ID] = thing
 
 	return thing.ID, nil
 }
 
 func (trm *thingRepositoryMock) RetrieveByID(owner, id string) (bootstrap.Thing, error) {
-	if c, ok := trm.things[key(owner, id)]; ok {
-		return c, nil
+	c, ok := trm.things[id]
+	if !ok {
+		return bootstrap.Thing{}, bootstrap.ErrNotFound
+	}
+	if c.Owner != owner {
+		return bootstrap.Thing{}, bootstrap.ErrUnauthorizedAccess
 	}
 
-	return bootstrap.Thing{}, bootstrap.ErrNotFound
+	return c, nil
+
 }
 
 func (trm *thingRepositoryMock) RetrieveAll(filter bootstrap.Filter, offset, limit uint64) []bootstrap.Thing {
@@ -94,35 +92,43 @@ func (trm *thingRepositoryMock) Update(thing bootstrap.Thing) error {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
-	dbKey := key(thing.Owner, thing.ID)
-
-	if _, ok := trm.things[dbKey]; !ok {
+	if _, ok := trm.things[thing.ID]; !ok {
 		return bootstrap.ErrNotFound
 	}
 
-	trm.things[dbKey] = thing
+	trm.things[thing.ID] = thing
 
-	return nil
-}
-
-func (trm *thingRepositoryMock) Assign(thing bootstrap.Thing) error {
 	return nil
 }
 
 func (trm *thingRepositoryMock) Remove(owner, id string) error {
-	delete(trm.things, key(owner, id))
+	for k, v := range trm.things {
+		if v.Owner == owner && k == id {
+			delete(trm.things, k)
+			break
+		}
+	}
+
 	return nil
 }
 
 func (trm *thingRepositoryMock) ChangeState(owner, id string, state bootstrap.State) error {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
-	dbKey := key(owner, id)
-	if thing, ok := trm.things[dbKey]; ok {
-		thing.State = state
-		trm.things[dbKey] = thing
-		return nil
+
+	thing, ok := trm.things[id]
+	if !ok {
+		return bootstrap.ErrNotFound
+	}
+	if thing.Owner != owner {
+		return bootstrap.ErrUnauthorizedAccess
 	}
 
-	return bootstrap.ErrNotFound
+	thing.State = state
+	trm.things[id] = thing
+	return nil
+}
+
+func (trm *thingRepositoryMock) Assign(bootstrap.Thing) error {
+	return nil
 }

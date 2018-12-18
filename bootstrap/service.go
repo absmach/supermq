@@ -3,7 +3,6 @@ package bootstrap
 import (
 	"context"
 	"errors"
-	"strings"
 	"time"
 
 	"github.com/mainflux/mainflux"
@@ -126,7 +125,6 @@ func (bs bootstrapService) View(key, id string) (Thing, error) {
 	if err != nil {
 		return Thing{}, err
 	}
-
 	return bs.things.RetrieveByID(owner, id)
 }
 
@@ -165,7 +163,11 @@ func (bs bootstrapService) Update(key string, thing Thing) error {
 
 		for _, c := range thing.MFChannels {
 			if !tmp[c] {
-				if err := bs.sdk.ConnectThing(id, c, key); err != nil {
+				err := bs.sdk.ConnectThing(id, c, key)
+				if err == mfsdk.ErrNotFound {
+					return ErrNotFound
+				}
+				if err != nil {
 					return err
 				}
 				continue
@@ -175,7 +177,11 @@ func (bs bootstrapService) Update(key string, thing Thing) error {
 		}
 
 		for c := range tmp {
-			if err := bs.sdk.DisconnectThing(id, c, key); err != nil {
+			err := bs.sdk.DisconnectThing(id, c, key)
+			if err == mfsdk.ErrNotFound {
+				return ErrNotFound
+			}
+			if err != nil {
 				return err
 			}
 		}
@@ -188,6 +194,9 @@ func (bs bootstrapService) List(key string, filter Filter, offset, limit uint64)
 	owner, err := bs.identify(key)
 	if err != nil {
 		return []Thing{}, err
+	}
+	if filter == nil {
+		return []Thing{}, ErrMalformedEntity
 	}
 
 	// All the Things with state other than NewThing have an owner.
@@ -205,6 +214,9 @@ func (bs bootstrapService) Remove(key, id string) error {
 	}
 
 	thing, err := bs.things.RetrieveByID(owner, id)
+	if err == ErrNotFound {
+		return bs.things.Remove(owner, id)
+	}
 	if err != nil {
 		return err
 	}
@@ -232,11 +244,6 @@ func (bs bootstrapService) Bootstrap(externalKey, externalID string) (Config, er
 		return Config{}, ErrUnauthorizedAccess
 	}
 
-	thing.State = Inactive
-	if err := bs.things.ChangeState(thing.Owner, thing.ID, thing.State); err != nil {
-		return Config{}, err
-	}
-
 	config := Config{
 		MFThing:    thing.MFThing,
 		MFKey:      thing.MFKey,
@@ -248,7 +255,7 @@ func (bs bootstrapService) Bootstrap(externalKey, externalID string) (Config, er
 }
 
 func (bs bootstrapService) ChangeState(key, id string, state State) error {
-	if state == NewThing || state == Created {
+	if state == NewThing {
 		return ErrMalformedEntity
 	}
 
@@ -283,12 +290,7 @@ func (bs bootstrapService) ChangeState(key, id string, state State) error {
 }
 
 func (bs bootstrapService) add(key string) (mfsdk.Thing, error) {
-	resp, err := bs.sdk.CreateThing(mfsdk.Thing{Type: thingType}, key)
-	if err != nil {
-		return mfsdk.Thing{}, err
-	}
-
-	thingID, err := parseLocation(resp)
+	thingID, err := bs.sdk.CreateThing(mfsdk.Thing{Type: thingType}, key)
 	if err != nil {
 		return mfsdk.Thing{}, err
 	}
@@ -298,16 +300,6 @@ func (bs bootstrapService) add(key string) (mfsdk.Thing, error) {
 		return mfsdk.Thing{}, bs.sdk.DeleteThing(thingID, key)
 	}
 	return thing, nil
-}
-
-func parseLocation(location string) (string, error) {
-	mfPath := strings.Split(location, "/")
-	n := len(mfPath)
-	if n != 3 {
-		return "", ErrInvalidID
-	}
-
-	return mfPath[n-1], nil
 }
 
 func (bs bootstrapService) identify(token string) (string, error) {
