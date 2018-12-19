@@ -1,134 +1,193 @@
 package mocks
 
 import (
-	"nov/bootstrap"
-	"sort"
+	"context"
 	"strconv"
 	"sync"
+
+	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/things"
 )
 
-var _ bootstrap.ThingRepository = (*thingRepositoryMock)(nil)
+var _ things.Service = (*mainfluxThings)(nil)
 
-type thingRepositoryMock struct {
-	mu      sync.Mutex
-	counter uint64
-	things  map[string]bootstrap.Thing
+type mainfluxThings struct {
+	mu          sync.Mutex
+	counter     uint64
+	things      map[string]things.Thing
+	channels    map[string]things.Channel
+	users       mainflux.UsersServiceClient
+	connections map[string][]string
 }
 
-// NewThingsRepository creates in-memory thing repository.
-func NewThingsRepository() bootstrap.ThingRepository {
-	return &thingRepositoryMock{
-		things: make(map[string]bootstrap.Thing),
+// NewThingsService returns Mainflux Things service mock.
+// Only methods used by SDK are mocked.
+func NewThingsService(things map[string]things.Thing, channels map[string]things.Channel, users mainflux.UsersServiceClient) things.Service {
+	return &mainfluxThings{
+		things:      things,
+		channels:    channels,
+		users:       users,
+		connections: make(map[string][]string),
 	}
 }
 
-func (trm *thingRepositoryMock) Save(thing bootstrap.Thing) (string, error) {
-	trm.mu.Lock()
-	defer trm.mu.Unlock()
+func (svc *mainfluxThings) AddThing(owner string, thing things.Thing) (things.Thing, error) {
+	svc.mu.Lock()
+	defer svc.mu.Unlock()
 
-	trm.counter++
-	thing.ID = strconv.FormatUint(trm.counter, 10)
-	trm.things[thing.ID] = thing
+	userID, err := svc.users.Identify(context.Background(), &mainflux.Token{Value: owner})
+	if err != nil {
+		return things.Thing{}, things.ErrUnauthorizedAccess
+	}
 
-	return thing.ID, nil
+	svc.counter++
+	thing.Owner = userID.Value
+	thing.ID = strconv.FormatUint(svc.counter, 10)
+	thing.Key = thing.ID
+	svc.things[thing.ID] = thing
+	return thing, nil
 }
 
-func (trm *thingRepositoryMock) RetrieveByID(owner, id string) (bootstrap.Thing, error) {
-	c, ok := trm.things[id]
-	if !ok {
-		return bootstrap.Thing{}, bootstrap.ErrNotFound
-	}
-	if c.Owner != owner {
-		return bootstrap.Thing{}, bootstrap.ErrUnauthorizedAccess
+func (svc *mainfluxThings) ViewThing(owner, id string) (things.Thing, error) {
+	svc.mu.Lock()
+	defer svc.mu.Unlock()
+
+	userID, err := svc.users.Identify(context.Background(), &mainflux.Token{Value: owner})
+	if err != nil {
+		return things.Thing{}, things.ErrUnauthorizedAccess
 	}
 
-	return c, nil
+	if t, ok := svc.things[id]; ok && t.Owner == userID.Value {
+		return t, nil
 
+	}
+
+	return things.Thing{}, things.ErrNotFound
 }
 
-func (trm *thingRepositoryMock) RetrieveAll(filter bootstrap.Filter, offset, limit uint64) []bootstrap.Thing {
-	things := make([]bootstrap.Thing, 0)
+func (svc *mainfluxThings) Connect(owner, chanID, thingID string) error {
+	svc.mu.Lock()
+	defer svc.mu.Unlock()
 
-	if offset < 0 || limit <= 0 {
-		return things
+	userID, err := svc.users.Identify(context.Background(), &mainflux.Token{Value: owner})
+	if err != nil {
+		return things.ErrUnauthorizedAccess
 	}
 
-	owner := filter["owner"]
-	first := uint64(offset) + 1
-	last := first + uint64(limit)
-	var state bootstrap.State = -1
-	if s, ok := filter["state"]; ok {
-		val, _ := strconv.Atoi(s)
-		state = bootstrap.State(val)
+	if svc.channels[chanID].Owner != userID.Value {
+		return things.ErrNotFound
 	}
 
-	for _, v := range trm.things {
-		id, _ := strconv.ParseUint(v.ID, 10, 64)
-		if id >= first && id < last {
-			if (state == -1 || v.State == state) && (owner == "" || v.Owner == owner) {
-				things = append(things, v)
-			}
-		}
-	}
-
-	sort.SliceStable(things, func(i, j int) bool {
-		return things[i].ID < things[j].ID
-	})
-
-	return things
-}
-
-func (trm *thingRepositoryMock) RetrieveByExternalID(externalKey, externalID string) (bootstrap.Thing, error) {
-	for _, thing := range trm.things {
-		if thing.ExternalID == externalID && thing.ExternalKey == externalKey {
-			return thing, nil
-		}
-	}
-
-	return bootstrap.Thing{}, bootstrap.ErrNotFound
-}
-
-func (trm *thingRepositoryMock) Update(thing bootstrap.Thing) error {
-	trm.mu.Lock()
-	defer trm.mu.Unlock()
-
-	if _, ok := trm.things[thing.ID]; !ok {
-		return bootstrap.ErrNotFound
-	}
-
-	trm.things[thing.ID] = thing
-
+	svc.connections[chanID] = append(svc.connections[chanID], thingID)
 	return nil
 }
 
-func (trm *thingRepositoryMock) Remove(owner, id string) error {
-	for k, v := range trm.things {
-		if v.Owner == owner && k == id {
-			delete(trm.things, k)
+func (svc *mainfluxThings) Disconnect(owner, thingID, chanID string) error {
+	svc.mu.Lock()
+	defer svc.mu.Unlock()
+
+	userID, err := svc.users.Identify(context.Background(), &mainflux.Token{Value: owner})
+	if err != nil || svc.channels[chanID].Owner != userID.Value {
+		return things.ErrUnauthorizedAccess
+	}
+
+	ids := svc.connections[chanID]
+	i := 0
+	for _, t := range ids {
+		if t == thingID {
 			break
 		}
+		i++
 	}
+	if i == len(ids) {
+		return things.ErrNotFound
+	}
+
+	var tmp []string
+	if i != len(ids)-2 {
+		tmp = ids[i+1:]
+	}
+	ids = append(ids[:i], tmp...)
+	svc.connections[chanID] = ids
 
 	return nil
 }
 
-func (trm *thingRepositoryMock) ChangeState(owner, id string, state bootstrap.State) error {
-	trm.mu.Lock()
-	defer trm.mu.Unlock()
+func (svc *mainfluxThings) RemoveThing(owner, id string) error {
+	svc.mu.Lock()
+	defer svc.mu.Unlock()
 
-	thing, ok := trm.things[id]
-	if !ok {
-		return bootstrap.ErrNotFound
-	}
-	if thing.Owner != owner {
-		return bootstrap.ErrUnauthorizedAccess
+	userID, err := svc.users.Identify(context.Background(), &mainflux.Token{Value: owner})
+	if err != nil {
+		return things.ErrUnauthorizedAccess
 	}
 
-	thing.State = state
-	trm.things[id] = thing
+	if t, ok := svc.things[id]; !ok || t.Owner != userID.Value {
+		return things.ErrNotFound
+	}
+
+	delete(svc.things, id)
+	conns := make(map[string][]string)
+	for k, v := range svc.connections {
+		idx := findIndex(v, id)
+		if idx != -1 {
+			var tmp []string
+			if idx != len(v)-2 {
+				tmp = v[idx+1:]
+			}
+			conns[k] = append(v[:idx], tmp...)
+		}
+	}
+
+	svc.connections = conns
 	return nil
 }
 
-func (trm *thingRepositoryMock) Assign(bootstrap.Thing) error {
-	return nil
+func (svc *mainfluxThings) ViewChannel(owner, id string) (things.Channel, error) {
+	if c, ok := svc.channels[id]; ok {
+		return c, nil
+	}
+	return things.Channel{}, things.ErrNotFound
+}
+
+func (svc *mainfluxThings) UpdateThing(string, things.Thing) error {
+	panic("not implemented")
+}
+
+func (svc *mainfluxThings) ListThings(string, uint64, uint64) ([]things.Thing, error) {
+	panic("not implemented")
+}
+
+func (svc *mainfluxThings) CreateChannel(string, things.Channel) (things.Channel, error) {
+	panic("not implemented")
+}
+
+func (svc *mainfluxThings) UpdateChannel(string, things.Channel) error {
+	panic("not implemented")
+}
+
+func (svc *mainfluxThings) ListChannels(string, uint64, uint64) ([]things.Channel, error) {
+	panic("not implemented")
+}
+
+func (svc *mainfluxThings) RemoveChannel(string, string) error {
+	panic("not implemented")
+}
+
+func (svc *mainfluxThings) CanAccess(string, string) (string, error) {
+	panic("not implemented")
+}
+
+func (svc *mainfluxThings) Identify(string) (string, error) {
+	panic("not implemented")
+}
+
+func findIndex(list []string, val string) int {
+	for i, v := range list {
+		if v == val {
+			return i
+		}
+	}
+
+	return -1
 }

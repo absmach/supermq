@@ -16,11 +16,11 @@ func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		thing := bootstrap.Thing{
+		thing := bootstrap.Config{
 			ExternalID:  req.ExternalID,
 			ExternalKey: req.ExternalKey,
 			MFChannels:  req.Channels,
-			Config:      req.Config,
+			Content:     req.Config,
 		}
 		saved, err := svc.Add(req.key, thing)
 		if err != nil {
@@ -68,10 +68,10 @@ func updateEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		thing := bootstrap.Thing{
+		thing := bootstrap.Config{
 			ID:         req.id,
 			MFChannels: req.MFChannels,
-			Config:     req.Config,
+			Content:    req.Config,
 			State:      req.State,
 		}
 

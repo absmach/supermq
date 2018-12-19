@@ -24,11 +24,11 @@ const (
 	email        = "test@example.com"
 )
 
-var thing = bootstrap.Thing{
+var thing = bootstrap.Config{
 	ExternalID:  "external-id",
 	ExternalKey: "external-key",
 	MFChannels:  []string{"1"},
-	Config:      "config",
+	Content:     "config",
 }
 
 func newService(users mainflux.UsersServiceClient, url string) bootstrap.Service {
@@ -50,7 +50,7 @@ func newThingsService(t map[string]things.Thing, users mainflux.UsersServiceClie
 		},
 	}
 
-	return mocks.NewMainfluxThingsService(t, c, users)
+	return mocks.NewThingsService(t, c, users)
 }
 
 func newServer(svc things.Service) *httptest.Server {
@@ -68,7 +68,7 @@ func TestAdd(t *testing.T) {
 			Things: []things.Thing{},
 		},
 	}
-	server := newServer(mocks.NewMainfluxThingsService(map[string]things.Thing{}, c, users))
+	server := newServer(mocks.NewThingsService(map[string]things.Thing{}, c, users))
 	svc := newService(users, server.URL)
 
 	wrongChannels := thing
@@ -76,7 +76,7 @@ func TestAdd(t *testing.T) {
 
 	cases := []struct {
 		desc  string
-		thing bootstrap.Thing
+		thing bootstrap.Config
 		key   string
 		err   error
 	}{
@@ -116,7 +116,7 @@ func TestView(t *testing.T) {
 			Things: []things.Thing{},
 		},
 	}
-	server := newServer(mocks.NewMainfluxThingsService(map[string]things.Thing{}, c, users))
+	server := newServer(mocks.NewThingsService(map[string]things.Thing{}, c, users))
 	svc := newService(users, server.URL)
 
 	saved, err := svc.Add(validToken, thing)
@@ -170,13 +170,13 @@ func TestUpdate(t *testing.T) {
 		},
 	}
 
-	server := newServer(mocks.NewMainfluxThingsService(map[string]things.Thing{}, c, users))
+	server := newServer(mocks.NewThingsService(map[string]things.Thing{}, c, users))
 	svc := newService(users, server.URL)
 
 	saved, err := svc.Add(validToken, thing)
 	require.Nil(t, err, fmt.Sprintf("Saving thing expected to succeed: %s.\n", err))
 
-	saved.Config = "new-config"
+	saved.Content = "new-config"
 	saved.MFChannels = []string{"2"}
 	saved.State = bootstrap.Active
 
@@ -188,7 +188,7 @@ func TestUpdate(t *testing.T) {
 
 	cases := []struct {
 		desc  string
-		thing bootstrap.Thing
+		thing bootstrap.Config
 		key   string
 		err   error
 	}{
@@ -234,11 +234,11 @@ func TestList(t *testing.T) {
 			Things: []things.Thing{},
 		},
 	}
-	server := newServer(mocks.NewMainfluxThingsService(map[string]things.Thing{}, c, users))
+	server := newServer(mocks.NewThingsService(map[string]things.Thing{}, c, users))
 	svc := newService(users, server.URL)
 
 	numThings := 101
-	var saved []bootstrap.Thing
+	var saved []bootstrap.Config
 	for i := 0; i < numThings; i++ {
 		s, err := svc.Add(validToken, thing)
 		saved = append(saved, s)
@@ -251,7 +251,7 @@ func TestList(t *testing.T) {
 
 	cases := []struct {
 		desc   string
-		things []bootstrap.Thing
+		things []bootstrap.Config
 		filter bootstrap.Filter
 		offset uint64
 		limit  uint64
@@ -269,7 +269,7 @@ func TestList(t *testing.T) {
 		},
 		{
 			desc:   "list things with wrong credentials",
-			things: []bootstrap.Thing{},
+			things: []bootstrap.Config{},
 			filter: bootstrap.Filter{},
 			key:    invalidToken,
 			offset: 0,
@@ -287,7 +287,7 @@ func TestList(t *testing.T) {
 		},
 		{
 			desc:   "list Active things",
-			things: []bootstrap.Thing{saved[41]},
+			things: []bootstrap.Config{saved[41]},
 			filter: bootstrap.Filter{"state": bootstrap.Active.String()},
 			key:    validToken,
 			offset: 35,
@@ -314,7 +314,7 @@ func TestRemove(t *testing.T) {
 		},
 	}
 
-	server := newServer(mocks.NewMainfluxThingsService(map[string]things.Thing{}, c, users))
+	server := newServer(mocks.NewThingsService(map[string]things.Thing{}, c, users))
 	svc := newService(users, server.URL)
 
 	saved, err := svc.Add(validToken, thing)
@@ -369,7 +369,7 @@ func TestBootstrap(t *testing.T) {
 		},
 	}
 
-	server := newServer(mocks.NewMainfluxThingsService(map[string]things.Thing{}, c, users))
+	server := newServer(mocks.NewThingsService(map[string]things.Thing{}, c, users))
 	svc := newService(users, server.URL)
 
 	saved, err := svc.Add(validToken, thing)
@@ -397,13 +397,8 @@ func TestBootstrap(t *testing.T) {
 			err:         nil,
 		},
 		{
-			desc: "bootstrap an existing thing",
-			config: bootstrap.Config{
-				MFThing:    saved.MFThing,
-				MFKey:      saved.MFKey,
-				MFChannels: thing.MFChannels,
-				Metadata:   thing.Config,
-			},
+			desc:        "bootstrap an existing thing",
+			config:      saved,
 			externalID:  thing.ExternalID,
 			externalKey: thing.ExternalKey,
 			err:         nil,
@@ -432,7 +427,7 @@ func TestChangeState(t *testing.T) {
 		},
 	}
 
-	server := newServer(mocks.NewMainfluxThingsService(map[string]things.Thing{}, c, users))
+	server := newServer(mocks.NewThingsService(map[string]things.Thing{}, c, users))
 	svc := newService(users, server.URL)
 
 	saved, err := svc.Add(validToken, thing)

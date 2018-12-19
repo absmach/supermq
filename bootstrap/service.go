@@ -38,16 +38,16 @@ var _ Service = (*bootstrapService)(nil)
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
 	// Add adds new Thing to the user identified by the provided key.
-	Add(string, Thing) (Thing, error)
+	Add(string, Config) (Config, error)
 
 	// View returns Thing with given ID belonging to the user identified by the given key.
-	View(string, string) (Thing, error)
+	View(string, string) (Config, error)
 
 	// Update updates editable fields of the provided Thing.
-	Update(string, Thing) error
+	Update(string, Config) error
 
 	// List returns subset of Things with given state that belong to the user identified by the given key.
-	List(string, Filter, uint64, uint64) ([]Thing, error)
+	List(string, Filter, uint64, uint64) ([]Config, error)
 
 	// Remove removes Thing with specified key that belongs to the user identified by the given key.
 	Remove(string, string) error
@@ -59,28 +59,22 @@ type Service interface {
 	ChangeState(string, string, State) error
 }
 
-// Config represents Thing configuration generated in bootstrapping process.
-type Config struct {
-	MFThing    string
-	MFKey      string
-	MFChannels []string
-	Metadata   string
-}
-
 // ConfigReader is used to parse Config into format which will be encoded
-// as a JSON and consumed from the client side.
+// as a JSON and consumed from the client side. The purpose of this interface
+// is to provide convenient way to generate custom configuration response
+// based on the specific Config which will be consumed form the client side.
 type ConfigReader interface {
 	ReadConfig(Config) (mainflux.Response, error)
 }
 
 type bootstrapService struct {
-	things ThingRepository
+	things ConfigRepository
 	sdk    mfsdk.SDK
 	users  mainflux.UsersServiceClient
 }
 
 // New returns new Bootstrap service.
-func New(users mainflux.UsersServiceClient, things ThingRepository, sdk mfsdk.SDK) Service {
+func New(users mainflux.UsersServiceClient, things ConfigRepository, sdk mfsdk.SDK) Service {
 	return &bootstrapService{
 		things: things,
 		sdk:    sdk,
@@ -88,22 +82,22 @@ func New(users mainflux.UsersServiceClient, things ThingRepository, sdk mfsdk.SD
 	}
 }
 
-func (bs bootstrapService) Add(key string, thing Thing) (Thing, error) {
+func (bs bootstrapService) Add(key string, thing Config) (Config, error) {
 	owner, err := bs.identify(key)
 	if err != nil {
-		return Thing{}, err
+		return Config{}, err
 	}
 
 	// Check if channels exist.
 	for _, c := range thing.MFChannels {
 		if _, err := bs.sdk.Channel(c, key); err != nil {
-			return Thing{}, ErrMalformedEntity
+			return Config{}, ErrMalformedEntity
 		}
 	}
 
 	mfThing, err := bs.add(key)
 	if err != nil {
-		return Thing{}, err
+		return Config{}, err
 	}
 
 	thing.Owner = owner
@@ -113,22 +107,22 @@ func (bs bootstrapService) Add(key string, thing Thing) (Thing, error) {
 
 	id, err := bs.things.Save(thing)
 	if err != nil {
-		return Thing{}, err
+		return Config{}, err
 	}
 
 	thing.ID = id
 	return thing, nil
 }
 
-func (bs bootstrapService) View(key, id string) (Thing, error) {
+func (bs bootstrapService) View(key, id string) (Config, error) {
 	owner, err := bs.identify(key)
 	if err != nil {
-		return Thing{}, err
+		return Config{}, err
 	}
 	return bs.things.RetrieveByID(owner, id)
 }
 
-func (bs bootstrapService) Update(key string, thing Thing) error {
+func (bs bootstrapService) Update(key string, thing Config) error {
 	owner, err := bs.identify(key)
 	if err != nil {
 		return err
@@ -190,13 +184,13 @@ func (bs bootstrapService) Update(key string, thing Thing) error {
 	return bs.things.Update(thing)
 }
 
-func (bs bootstrapService) List(key string, filter Filter, offset, limit uint64) ([]Thing, error) {
+func (bs bootstrapService) List(key string, filter Filter, offset, limit uint64) ([]Config, error) {
 	owner, err := bs.identify(key)
 	if err != nil {
-		return []Thing{}, err
+		return []Config{}, err
 	}
 	if filter == nil {
-		return []Thing{}, ErrMalformedEntity
+		return []Config{}, ErrMalformedEntity
 	}
 
 	// All the Things with state other than NewThing have an owner.
@@ -231,12 +225,12 @@ func (bs bootstrapService) Remove(key, id string) error {
 func (bs bootstrapService) Bootstrap(externalKey, externalID string) (Config, error) {
 	thing, err := bs.things.RetrieveByExternalID(externalKey, externalID)
 	if err == ErrNotFound {
-		t := Thing{
+		c := Config{
 			ExternalID:  externalID,
 			ExternalKey: externalKey,
 			State:       NewThing,
 		}
-		_, err := bs.things.Save(t)
+		_, err := bs.things.Save(c)
 		return Config{}, err
 	}
 
@@ -244,14 +238,7 @@ func (bs bootstrapService) Bootstrap(externalKey, externalID string) (Config, er
 		return Config{}, ErrUnauthorizedAccess
 	}
 
-	config := Config{
-		MFThing:    thing.MFThing,
-		MFKey:      thing.MFKey,
-		MFChannels: thing.MFChannels,
-		Metadata:   thing.Config,
-	}
-
-	return config, nil
+	return thing, nil
 }
 
 func (bs bootstrapService) ChangeState(key, id string, state State) error {

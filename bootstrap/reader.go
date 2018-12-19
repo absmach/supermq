@@ -17,8 +17,8 @@ type bootstrapRes struct {
 	MQTTPassword string `json:"mf_mqtt_password"`
 	MQTTRcvTopic string `json:"mf_mqtt_rcv_topic"`
 	MQTTSndTopic string `json:"mf_mqtt_snd_topic"`
-	GWID         string `json:"nov_gw_id"`
-	Metadata     string `json:"metadata"`
+	GWID         string `json:"gw_id"`
+	Content      string `json:"metadata"`
 }
 
 func (res bootstrapRes) Code() int {
@@ -52,7 +52,7 @@ func (r reader) ReadConfig(cfg Config) (mainflux.Response, error) {
 		MQTTPassword: cfg.MFKey,
 		MQTTRcvTopic: fmt.Sprintf("channels/%s/messages", cfg.MFChannels[0]),
 		MQTTSndTopic: fmt.Sprintf("channels/%s/messages", cfg.MFChannels[0]),
-		Metadata:     cfg.Metadata,
+		Content:      cfg.Content,
 	}
 	return res, nil
 }

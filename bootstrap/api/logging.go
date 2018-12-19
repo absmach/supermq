@@ -20,7 +20,7 @@ func NewLoggingMiddleware(svc bootstrap.Service, logger log.Logger) bootstrap.Se
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) Add(key string, thing bootstrap.Thing) (saved bootstrap.Thing, err error) {
+func (lm *loggingMiddleware) Add(key string, thing bootstrap.Config) (saved bootstrap.Config, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method add for key %s and thing %s took %s to complete", key, saved.ID, time.Since(begin))
 		if err != nil {
@@ -33,7 +33,7 @@ func (lm *loggingMiddleware) Add(key string, thing bootstrap.Thing) (saved boots
 	return lm.svc.Add(key, thing)
 }
 
-func (lm *loggingMiddleware) View(key, id string) (saved bootstrap.Thing, err error) {
+func (lm *loggingMiddleware) View(key, id string) (saved bootstrap.Config, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method view for key %s and thing %s took %s to complete", key, saved.ID, time.Since(begin))
 		if err != nil {
@@ -46,7 +46,7 @@ func (lm *loggingMiddleware) View(key, id string) (saved bootstrap.Thing, err er
 	return lm.svc.View(key, id)
 }
 
-func (lm *loggingMiddleware) Update(key string, thing bootstrap.Thing) (err error) {
+func (lm *loggingMiddleware) Update(key string, thing bootstrap.Config) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method update for key %s and thing %s took %s to complete", key, thing.ID, time.Since(begin))
 		if err != nil {
@@ -59,7 +59,7 @@ func (lm *loggingMiddleware) Update(key string, thing bootstrap.Thing) (err erro
 	return lm.svc.Update(key, thing)
 }
 
-func (lm *loggingMiddleware) List(key string, filter bootstrap.Filter, offset, limit uint64) (res []bootstrap.Thing, err error) {
+func (lm *loggingMiddleware) List(key string, filter bootstrap.Filter, offset, limit uint64) (res []bootstrap.Config, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method list for key %s and offset %d and limit %d took %s to complete", key, offset, limit, time.Since(begin))
 		if err != nil {
