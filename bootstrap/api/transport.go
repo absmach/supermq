@@ -202,8 +202,6 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusNotFound)
 	case bootstrap.ErrUnauthorizedAccess:
 		w.WriteHeader(http.StatusForbidden)
-	case bootstrap.ErrInvalidID:
-		w.WriteHeader(http.StatusServiceUnavailable)
 	case bootstrap.ErrConflict:
 		w.WriteHeader(http.StatusConflict)
 	default:
@@ -248,12 +246,3 @@ func contains(l []string, s string) bool {
 	}
 	return false
 }
-
-// func parseState(s []string) (bootstrap.State, error) {
-// 	if len(s) == 0 {
-// 		return -1, nil
-// 	}
-
-// 	state, err := strconv.Atoi(s[0])
-// 	return bootstrap.State(state), err
-// }

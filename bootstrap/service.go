@@ -25,10 +25,7 @@ var (
 	// when accessing a protected resource.
 	ErrUnauthorizedAccess = errors.New("missing or invalid credentials provided")
 
-	// ErrInvalidID indicates that wrong ID is returned from the Mainflux.
-	ErrInvalidID = errors.New("invalid Mainflux ID response")
-
-	// ErrConflict indicates that entity with the same ID or external ID alredy exists.
+	// ErrConflict indicates that entity with the same ID or external ID already exists.
 	ErrConflict = errors.New("entity already exists")
 )
 
