@@ -3,7 +3,6 @@ package bootstrap
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/mainflux/mainflux"
@@ -90,7 +89,9 @@ func (bs bootstrapService) Add(key string, thing Config) (Config, error) {
 		return Config{}, err
 	}
 
-	// Check if channels exist.
+	// Check if channels exist. This is the way to prevent invalid configuration to be saved.
+	// However, channels deletion wil eventually cause this; since Bootstrap service is not
+	// using events from the Things service at the moment.
 	for _, c := range thing.MFChannels {
 		if _, err := bs.sdk.Channel(c, key); err != nil {
 			return Config{}, ErrMalformedEntity
@@ -167,7 +168,6 @@ func (bs bootstrapService) Update(key string, thing Config) error {
 		}
 	}
 
-	fmt.Println("Connect: ", connect)
 	for c := range disconnect {
 		err := bs.sdk.DisconnectThing(id, c, key)
 		if err == mfsdk.ErrNotFound {
