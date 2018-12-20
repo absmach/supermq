@@ -41,16 +41,21 @@ func newService(users mainflux.UsersServiceClient, url string) bootstrap.Service
 	return bootstrap.New(users, things, sdk)
 }
 
-func newThingsService(t map[string]things.Thing, users mainflux.UsersServiceClient) things.Service {
-	c := map[string]things.Channel{
+func newThingsService(users mainflux.UsersServiceClient) things.Service {
+	channels := map[string]things.Channel{
 		"1": things.Channel{
 			ID:     "1",
-			Owner:  validToken,
-			Things: []things.Thing{t["1"]},
+			Owner:  email,
+			Things: []things.Thing{},
+		},
+		"2": things.Channel{
+			ID:     "2",
+			Owner:  email,
+			Things: []things.Thing{},
 		},
 	}
 
-	return mocks.NewThingsService(t, c, users)
+	return mocks.NewThingsService(map[string]things.Thing{}, channels, users)
 }
 
 func newServer(svc things.Service) *httptest.Server {
@@ -61,18 +66,11 @@ func newServer(svc things.Service) *httptest.Server {
 func TestAdd(t *testing.T) {
 	users := mocks.NewUsersService(map[string]string{validToken: email})
 
-	c := map[string]things.Channel{
-		"1": things.Channel{
-			ID:     "1",
-			Owner:  validToken,
-			Things: []things.Thing{},
-		},
-	}
-	server := newServer(mocks.NewThingsService(map[string]things.Thing{}, c, users))
+	server := newServer(newThingsService(users))
 	svc := newService(users, server.URL)
 
 	wrongChannels := thing
-	wrongChannels.MFChannels = append(wrongChannels.MFChannels, "2")
+	wrongChannels.MFChannels = append(wrongChannels.MFChannels, "invalid")
 
 	cases := []struct {
 		desc  string
@@ -109,14 +107,7 @@ func TestAdd(t *testing.T) {
 func TestView(t *testing.T) {
 	users := mocks.NewUsersService(map[string]string{validToken: email})
 
-	c := map[string]things.Channel{
-		"1": things.Channel{
-			ID:     "1",
-			Owner:  validToken,
-			Things: []things.Thing{},
-		},
-	}
-	server := newServer(mocks.NewThingsService(map[string]things.Thing{}, c, users))
+	server := newServer(newThingsService(users))
 	svc := newService(users, server.URL)
 
 	saved, err := svc.Add(validToken, thing)
@@ -157,34 +148,21 @@ func TestView(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	users := mocks.NewUsersService(map[string]string{validToken: email})
 
-	c := map[string]things.Channel{
-		"1": things.Channel{
-			ID:     "1",
-			Owner:  validToken,
-			Things: []things.Thing{},
-		},
-		"2": things.Channel{
-			ID:     "2",
-			Owner:  validToken,
-			Things: []things.Thing{},
-		},
-	}
-
-	server := newServer(mocks.NewThingsService(map[string]things.Thing{}, c, users))
+	server := newServer(newThingsService(users))
 	svc := newService(users, server.URL)
 
 	saved, err := svc.Add(validToken, thing)
 	require.Nil(t, err, fmt.Sprintf("Saving thing expected to succeed: %s.\n", err))
-
-	saved.Content = "new-config"
-	saved.MFChannels = []string{"2"}
-	saved.State = bootstrap.Active
+	modified := saved
+	modified.Content = "new-config"
+	modified.MFChannels = []string{"2"}
+	modified.State = bootstrap.Active
 
 	nonExisting := thing
 	nonExisting.ID = "non-existing"
 
 	wrongChannels := saved
-	wrongChannels.MFChannels = append(wrongChannels.MFChannels, "2")
+	wrongChannels.MFChannels = append(wrongChannels.MFChannels, "wrong")
 
 	cases := []struct {
 		desc  string
@@ -194,7 +172,7 @@ func TestUpdate(t *testing.T) {
 	}{
 		{
 			desc:  "update a thing",
-			thing: saved,
+			thing: modified,
 			key:   validToken,
 			err:   nil,
 		},
@@ -227,14 +205,7 @@ func TestUpdate(t *testing.T) {
 func TestList(t *testing.T) {
 	users := mocks.NewUsersService(map[string]string{validToken: email})
 
-	c := map[string]things.Channel{
-		"1": things.Channel{
-			ID:     "1",
-			Owner:  email,
-			Things: []things.Thing{},
-		},
-	}
-	server := newServer(mocks.NewThingsService(map[string]things.Thing{}, c, users))
+	server := newServer(newThingsService(users))
 	svc := newService(users, server.URL)
 
 	numThings := 101
@@ -306,15 +277,7 @@ func TestList(t *testing.T) {
 func TestRemove(t *testing.T) {
 	users := mocks.NewUsersService(map[string]string{validToken: email})
 
-	c := map[string]things.Channel{
-		"1": things.Channel{
-			ID:     "1",
-			Owner:  validToken,
-			Things: []things.Thing{},
-		},
-	}
-
-	server := newServer(mocks.NewThingsService(map[string]things.Thing{}, c, users))
+	server := newServer(newThingsService(users))
 	svc := newService(users, server.URL)
 
 	saved, err := svc.Add(validToken, thing)
@@ -361,15 +324,7 @@ func TestRemove(t *testing.T) {
 func TestBootstrap(t *testing.T) {
 	users := mocks.NewUsersService(map[string]string{validToken: email})
 
-	c := map[string]things.Channel{
-		"1": things.Channel{
-			ID:     "1",
-			Owner:  validToken,
-			Things: []things.Thing{},
-		},
-	}
-
-	server := newServer(mocks.NewThingsService(map[string]things.Thing{}, c, users))
+	server := newServer(newThingsService(users))
 	svc := newService(users, server.URL)
 
 	saved, err := svc.Add(validToken, thing)
@@ -414,20 +369,7 @@ func TestBootstrap(t *testing.T) {
 func TestChangeState(t *testing.T) {
 	users := mocks.NewUsersService(map[string]string{validToken: email})
 
-	c := map[string]things.Channel{
-		"1": things.Channel{
-			ID:     "1",
-			Owner:  email,
-			Things: []things.Thing{},
-		},
-		"2": things.Channel{
-			ID:     "2",
-			Owner:  email,
-			Things: []things.Thing{},
-		},
-	}
-
-	server := newServer(mocks.NewThingsService(map[string]things.Thing{}, c, users))
+	server := newServer(newThingsService(users))
 	svc := newService(users, server.URL)
 
 	saved, err := svc.Add(validToken, thing)

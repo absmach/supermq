@@ -142,6 +142,7 @@ func (bs bootstrapService) Update(key string, thing Config) error {
 		thing.MFThing = mfThing.ID
 		thing.MFKey = mfThing.Key
 		thing.State = Created
+
 		return bs.things.Assign(thing)
 	}
 
@@ -161,6 +162,7 @@ func (bs bootstrapService) Update(key string, thing Config) error {
 				if err != nil {
 					return err
 				}
+
 				continue
 			}
 
