@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"nov/bootstrap"
 	"nov/bootstrap/mocks"
+	"strconv"
 	"testing"
 
 	"github.com/mainflux/mainflux"
@@ -22,9 +23,11 @@ const (
 	validToken   = "validToken"
 	invalidToken = "invalidToken"
 	email        = "test@example.com"
+	unknown      = "unknown"
+	channelsNum  = 3
 )
 
-var thing = bootstrap.Config{
+var config = bootstrap.Config{
 	ExternalID:  "external-id",
 	ExternalKey: "external-key",
 	MFChannels:  []string{"1"},
@@ -42,17 +45,14 @@ func newService(users mainflux.UsersServiceClient, url string) bootstrap.Service
 }
 
 func newThingsService(users mainflux.UsersServiceClient) things.Service {
-	channels := map[string]things.Channel{
-		"1": things.Channel{
-			ID:     "1",
+	channels := make(map[string]things.Channel, channelsNum)
+	for i := 0; i < channelsNum; i++ {
+		id := strconv.Itoa(i + 1)
+		channels[id] = things.Channel{
+			ID:     id,
 			Owner:  email,
 			Things: []things.Thing{},
-		},
-		"2": things.Channel{
-			ID:     "2",
-			Owner:  email,
-			Things: []things.Thing{},
-		},
+		}
 	}
 
 	return mocks.NewThingsService(map[string]things.Thing{}, channels, users)
@@ -69,37 +69,37 @@ func TestAdd(t *testing.T) {
 	server := newServer(newThingsService(users))
 	svc := newService(users, server.URL)
 
-	wrongChannels := thing
+	wrongChannels := config
 	wrongChannels.MFChannels = append(wrongChannels.MFChannels, "invalid")
 
 	cases := []struct {
-		desc  string
-		thing bootstrap.Config
-		key   string
-		err   error
+		desc   string
+		config bootstrap.Config
+		key    string
+		err    error
 	}{
 		{
-			desc:  "add a new thing",
-			thing: thing,
-			key:   validToken,
-			err:   nil,
+			desc:   "add a config thing",
+			config: config,
+			key:    validToken,
+			err:    nil,
 		},
 		{
-			desc:  "add a thing with wrong credentials",
-			thing: thing,
-			key:   invalidToken,
-			err:   bootstrap.ErrUnauthorizedAccess,
+			desc:   "add a config with wrong credentials",
+			config: config,
+			key:    invalidToken,
+			err:    bootstrap.ErrUnauthorizedAccess,
 		},
 		{
-			desc:  "add a thing with invalid list of channels",
-			thing: wrongChannels,
-			key:   validToken,
-			err:   bootstrap.ErrMalformedEntity,
+			desc:   "add a config with invalid list of channels",
+			config: wrongChannels,
+			key:    validToken,
+			err:    bootstrap.ErrMalformedEntity,
 		},
 	}
 
 	for _, tc := range cases {
-		_, err := svc.Add(tc.key, tc.thing)
+		_, err := svc.Add(tc.key, tc.config)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
@@ -110,8 +110,8 @@ func TestView(t *testing.T) {
 	server := newServer(newThingsService(users))
 	svc := newService(users, server.URL)
 
-	saved, err := svc.Add(validToken, thing)
-	require.Nil(t, err, fmt.Sprintf("Saving thing expected to succeed: %s.\n", err))
+	saved, err := svc.Add(validToken, config)
+	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	cases := []struct {
 		desc string
@@ -120,20 +120,20 @@ func TestView(t *testing.T) {
 		err  error
 	}{
 		{
-			desc: "view an existing thing",
+			desc: "view an existing config",
 			id:   saved.ID,
 			key:  validToken,
 			err:  nil,
 		},
 		{
-			desc: "view a non-existing thing",
-			id:   "non-existing",
+			desc: "view a non-existing config",
+			id:   unknown,
 			key:  validToken,
 			err:  bootstrap.ErrNotFound,
 		},
 		{
-			desc: "view a thing with wrong credentials",
-			id:   thing.ID,
+			desc: "view a config with wrong credentials",
+			id:   config.ID,
 			key:  invalidToken,
 			err:  bootstrap.ErrUnauthorizedAccess,
 		},
@@ -150,54 +150,66 @@ func TestUpdate(t *testing.T) {
 
 	server := newServer(newThingsService(users))
 	svc := newService(users, server.URL)
+	c := config
 
-	saved, err := svc.Add(validToken, thing)
-	require.Nil(t, err, fmt.Sprintf("Saving thing expected to succeed: %s.\n", err))
-	modified := saved
-	modified.Content = "new-config"
-	modified.MFChannels = []string{"2"}
-	modified.State = bootstrap.Active
+	c.MFChannels = []string{"1", "2"}
+	saved, err := svc.Add(validToken, c)
+	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
-	nonExisting := thing
-	nonExisting.ID = "non-existing"
+	modifiedCreated := saved
+	modifiedCreated.Content = "new-config"
+	modifiedCreated.MFChannels = []string{"1", "3"}
+	modifiedCreated.State = bootstrap.Active
 
-	wrongChannels := saved
+	modifiedActive := modifiedCreated
+	modifiedActive.MFChannels = []string{"1", "2"}
+
+	nonExisting := config
+	nonExisting.ID = unknown
+
+	wrongChannels := modifiedCreated
 	wrongChannels.MFChannels = append(wrongChannels.MFChannels, "wrong")
 
 	cases := []struct {
-		desc  string
-		thing bootstrap.Config
-		key   string
-		err   error
+		desc   string
+		config bootstrap.Config
+		key    string
+		err    error
 	}{
 		{
-			desc:  "update a thing",
-			thing: modified,
-			key:   validToken,
-			err:   nil,
+			desc:   "update a config with state Created",
+			config: modifiedCreated,
+			key:    validToken,
+			err:    nil,
 		},
 		{
-			desc:  "update a non-existing thing",
-			thing: nonExisting,
-			key:   validToken,
-			err:   bootstrap.ErrNotFound,
+			desc:   "update a config with state Active",
+			config: modifiedActive,
+			key:    validToken,
+			err:    nil,
 		},
 		{
-			desc:  "update a thing with wrong credentials",
-			thing: saved,
-			key:   invalidToken,
-			err:   bootstrap.ErrUnauthorizedAccess,
+			desc:   "update a non-existing config",
+			config: nonExisting,
+			key:    validToken,
+			err:    bootstrap.ErrNotFound,
 		},
 		{
-			desc:  "update a thing with invalid list of channels",
-			thing: wrongChannels,
-			key:   validToken,
-			err:   bootstrap.ErrNotFound,
+			desc:   "update a config with wrong credentials",
+			config: saved,
+			key:    invalidToken,
+			err:    bootstrap.ErrUnauthorizedAccess,
+		},
+		{
+			desc:   "update a config with invalid list of channels",
+			config: wrongChannels,
+			key:    validToken,
+			err:    bootstrap.ErrNotFound,
 		},
 	}
 
 	for _, tc := range cases {
-		err := svc.Update(tc.key, tc.thing)
+		err := svc.Update(tc.key, tc.config)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
@@ -211,18 +223,18 @@ func TestList(t *testing.T) {
 	numThings := 101
 	var saved []bootstrap.Config
 	for i := 0; i < numThings; i++ {
-		s, err := svc.Add(validToken, thing)
+		s, err := svc.Add(validToken, config)
 		saved = append(saved, s)
-		require.Nil(t, err, fmt.Sprintf("Saving thing expected to succeed: %s.\n", err))
+		require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 	}
 	// Set one Thing to the different state
 	err := svc.ChangeState(validToken, "42", bootstrap.Active)
-	require.Nil(t, err, fmt.Sprintf("Changing thing state expected to succeed: %s.\n", err))
+	require.Nil(t, err, fmt.Sprintf("Changing config state expected to succeed: %s.\n", err))
 	saved[41].State = bootstrap.Active
 
 	cases := []struct {
 		desc   string
-		things []bootstrap.Config
+		config []bootstrap.Config
 		filter bootstrap.Filter
 		offset uint64
 		limit  uint64
@@ -230,8 +242,8 @@ func TestList(t *testing.T) {
 		err    error
 	}{
 		{
-			desc:   "list things",
-			things: saved[0:10],
+			desc:   "list config",
+			config: saved[0:10],
 			filter: bootstrap.Filter{},
 			key:    validToken,
 			offset: 0,
@@ -239,8 +251,8 @@ func TestList(t *testing.T) {
 			err:    nil,
 		},
 		{
-			desc:   "list things with wrong credentials",
-			things: []bootstrap.Config{},
+			desc:   "list config with wrong credentials",
+			config: []bootstrap.Config{},
 			filter: bootstrap.Filter{},
 			key:    invalidToken,
 			offset: 0,
@@ -249,7 +261,7 @@ func TestList(t *testing.T) {
 		},
 		{
 			desc:   "list last page",
-			things: saved[95:],
+			config: saved[95:],
 			filter: bootstrap.Filter{},
 			key:    validToken,
 			offset: 95,
@@ -257,8 +269,8 @@ func TestList(t *testing.T) {
 			err:    nil,
 		},
 		{
-			desc:   "list Active things",
-			things: []bootstrap.Config{saved[41]},
+			desc:   "list config with Active staate",
+			config: []bootstrap.Config{saved[41]},
 			filter: bootstrap.Filter{"state": bootstrap.Active.String()},
 			key:    validToken,
 			offset: 35,
@@ -269,7 +281,7 @@ func TestList(t *testing.T) {
 
 	for _, tc := range cases {
 		result, err := svc.List(tc.key, tc.filter, tc.offset, tc.limit)
-		assert.ElementsMatch(t, tc.things, result, fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.things, result))
+		assert.ElementsMatch(t, tc.config, result, fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.config, result))
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
@@ -280,8 +292,8 @@ func TestRemove(t *testing.T) {
 	server := newServer(newThingsService(users))
 	svc := newService(users, server.URL)
 
-	saved, err := svc.Add(validToken, thing)
-	require.Nil(t, err, fmt.Sprintf("Saving thing expected to succeed: %s.\n", err))
+	saved, err := svc.Add(validToken, config)
+	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	cases := []struct {
 		desc string
@@ -290,26 +302,26 @@ func TestRemove(t *testing.T) {
 		err  error
 	}{
 		{
-			desc: "view a thing with wrong credentials",
-			id:   thing.ID,
+			desc: "view a config with wrong credentials",
+			id:   saved.ID,
 			key:  invalidToken,
 			err:  bootstrap.ErrUnauthorizedAccess,
 		},
 		{
-			desc: "remove an existing thing",
+			desc: "remove an existing config",
 			id:   saved.ID,
 			key:  validToken,
 			err:  nil,
 		},
 		{
-			desc: "remove removed thing",
+			desc: "remove removed config",
 			id:   saved.ID,
 			key:  validToken,
 			err:  nil,
 		},
 		{
-			desc: "remove non-existing thing",
-			id:   "non-existing",
+			desc: "remove non-existing config",
+			id:   unknown,
 			key:  validToken,
 			err:  nil,
 		},
@@ -327,8 +339,8 @@ func TestBootstrap(t *testing.T) {
 	server := newServer(newThingsService(users))
 	svc := newService(users, server.URL)
 
-	saved, err := svc.Add(validToken, thing)
-	require.Nil(t, err, fmt.Sprintf("Saving thing expected to succeed: %s.\n", err))
+	saved, err := svc.Add(validToken, config)
+	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	cases := []struct {
 		desc        string
@@ -341,21 +353,21 @@ func TestBootstrap(t *testing.T) {
 			desc:        "bootstrap using invalid external id",
 			config:      bootstrap.Config{},
 			externalID:  "invalid",
-			externalKey: thing.ExternalKey,
-			err:         nil,
+			externalKey: saved.ExternalKey,
+			err:         bootstrap.ErrNotFound,
 		},
 		{
 			desc:        "bootstrap using invalid external key",
 			config:      bootstrap.Config{},
-			externalID:  thing.ExternalID,
+			externalID:  saved.ExternalID,
 			externalKey: "invalid",
-			err:         nil,
+			err:         bootstrap.ErrNotFound,
 		},
 		{
-			desc:        "bootstrap an existing thing",
+			desc:        "bootstrap an existing config",
 			config:      saved,
-			externalID:  thing.ExternalID,
-			externalKey: thing.ExternalKey,
+			externalID:  saved.ExternalID,
+			externalKey: saved.ExternalKey,
 			err:         nil,
 		},
 	}
@@ -366,14 +378,15 @@ func TestBootstrap(t *testing.T) {
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
+
 func TestChangeState(t *testing.T) {
 	users := mocks.NewUsersService(map[string]string{validToken: email})
 
 	server := newServer(newThingsService(users))
 	svc := newService(users, server.URL)
 
-	saved, err := svc.Add(validToken, thing)
-	require.Nil(t, err, fmt.Sprintf("Saving thing expected to succeed: %s.\n", err))
+	saved, err := svc.Add(validToken, config)
+	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	cases := []struct {
 		desc  string

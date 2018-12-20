@@ -82,7 +82,7 @@ func (svc *mainfluxThings) Connect(owner, chanID, thingID string) error {
 	return nil
 }
 
-func (svc *mainfluxThings) Disconnect(owner, thingID, chanID string) error {
+func (svc *mainfluxThings) Disconnect(owner, chanID, thingID string) error {
 	svc.mu.Lock()
 	defer svc.mu.Unlock()
 
@@ -99,6 +99,7 @@ func (svc *mainfluxThings) Disconnect(owner, thingID, chanID string) error {
 		}
 		i++
 	}
+
 	if i == len(ids) {
 		return things.ErrNotFound
 	}

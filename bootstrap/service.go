@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/mainflux/mainflux"
@@ -27,6 +28,10 @@ var (
 
 	// ErrConflict indicates that entity with the same ID or external ID already exists.
 	ErrConflict = errors.New("entity already exists")
+
+	// ErrThings indicates failure to communicate with Mainflux Things service.
+	// It can be due to networking error or invalid/unauthorized request.
+	ErrThings = errors.New("error receiving response from Things service")
 )
 
 var _ Service = (*bootstrapService)(nil)
@@ -132,51 +137,54 @@ func (bs bootstrapService) Update(key string, thing Config) error {
 		return err
 	}
 
-	// If the state is NewThing, corresponding Mainflux Thing should be created.
-	if t.State == NewThing {
-		mfThing, err := bs.add(key)
-		if err != nil {
-			return err
-		}
-
-		thing.MFThing = mfThing.ID
-		thing.MFKey = mfThing.Key
-		thing.State = Created
-
-		return bs.things.Assign(thing)
-	}
-
 	id := t.MFThing
-	if t.State == Active {
-		tmp := make(map[string]bool)
+	var connect []string
+	var disconnect map[string]bool
+
+	switch t.State {
+	case Active:
+		disconnect = make(map[string]bool, len(t.MFChannels))
 		for _, c := range t.MFChannels {
-			tmp[c] = true
+			disconnect[c] = true
 		}
 
 		for _, c := range thing.MFChannels {
-			if !tmp[c] {
-				err := bs.sdk.ConnectThing(id, c, key)
-				if err == mfsdk.ErrNotFound {
-					return ErrNotFound
+			if thing.State == Active {
+				if disconnect[c] {
+					// Don't disconnect common elements.
+					delete(disconnect, c)
+					continue
 				}
-				if err != nil {
-					return err
-				}
-
-				continue
+				// Connect new elements.
+				connect = append(connect, c)
 			}
-
-			delete(tmp, c)
 		}
 
-		for c := range tmp {
-			err := bs.sdk.DisconnectThing(id, c, key)
-			if err == mfsdk.ErrNotFound {
-				return ErrNotFound
-			}
-			if err != nil {
-				return err
-			}
+	default:
+		if thing.State == Active {
+			// Connect all new elements.
+			connect = thing.MFChannels
+		}
+	}
+
+	fmt.Println("Connect: ", connect)
+	for c := range disconnect {
+		err := bs.sdk.DisconnectThing(id, c, key)
+		if err == mfsdk.ErrNotFound {
+			return ErrNotFound
+		}
+		if err != nil {
+			return ErrThings
+		}
+	}
+
+	for _, c := range connect {
+		err := bs.sdk.ConnectThing(id, c, key)
+		if err == mfsdk.ErrNotFound {
+			return ErrNotFound
+		}
+		if err != nil {
+			return ErrThings
 		}
 	}
 
@@ -192,12 +200,7 @@ func (bs bootstrapService) List(key string, filter Filter, offset, limit uint64)
 		return []Config{}, ErrMalformedEntity
 	}
 
-	// All the Things with state other than NewThing have an owner.
-	if state := filter["state"]; state != NewThing.String() {
-		filter["owner"] = owner
-	}
-
-	return bs.things.RetrieveAll(filter, offset, limit), nil
+	return bs.things.RetrieveAll(owner, filter, offset, limit), nil
 }
 
 func (bs bootstrapService) Remove(key, id string) error {
@@ -215,7 +218,7 @@ func (bs bootstrapService) Remove(key, id string) error {
 	}
 
 	if err := bs.sdk.DeleteThing(thing.MFThing, key); err != nil {
-		return err
+		return ErrThings
 	}
 
 	return bs.things.Remove(owner, id)
@@ -223,28 +226,17 @@ func (bs bootstrapService) Remove(key, id string) error {
 
 func (bs bootstrapService) Bootstrap(externalKey, externalID string) (Config, error) {
 	thing, err := bs.things.RetrieveByExternalID(externalKey, externalID)
-	if err == ErrNotFound {
-		c := Config{
-			ExternalID:  externalID,
-			ExternalKey: externalKey,
-			State:       NewThing,
-		}
-		_, err := bs.things.Save(c)
-		return Config{}, err
-	}
-
 	if err != nil {
-		return Config{}, ErrUnauthorizedAccess
+		if err == ErrNotFound {
+			return Config{}, err
+		}
+		return Config{}, ErrNotFound
 	}
 
 	return thing, nil
 }
 
 func (bs bootstrapService) ChangeState(key, id string, state State) error {
-	if state == NewThing {
-		return ErrMalformedEntity
-	}
-
 	owner, err := bs.identify(key)
 	if err != nil {
 		return err
@@ -260,14 +252,14 @@ func (bs bootstrapService) ChangeState(key, id string, state State) error {
 		for i, c := range thing.MFChannels {
 			if err := bs.sdk.ConnectThing(thing.MFThing, c, key); err != nil {
 				bs.connectionFallback(thing.MFThing, key, thing.MFChannels[:i], false)
-				return err
+				return ErrThings
 			}
 		}
 	case Inactive:
 		for i, c := range thing.MFChannels {
 			if err := bs.sdk.DisconnectThing(thing.MFThing, c, key); err != nil {
 				bs.connectionFallback(thing.MFThing, key, thing.MFChannels[:i], true)
-				return err
+				return ErrThings
 			}
 		}
 	}

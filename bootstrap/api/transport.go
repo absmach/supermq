@@ -204,6 +204,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusForbidden)
 	case bootstrap.ErrConflict:
 		w.WriteHeader(http.StatusConflict)
+	case bootstrap.ErrThings:
+		w.WriteHeader(http.StatusServiceUnavailable)
 	default:
 		switch err.(type) {
 		case *json.SyntaxError:

@@ -33,12 +33,12 @@ func (trm *configRepositoryMock) Save(config bootstrap.Config) (string, error) {
 	return config.ID, nil
 }
 
-func (trm *configRepositoryMock) RetrieveByID(owner, id string) (bootstrap.Config, error) {
+func (trm *configRepositoryMock) RetrieveByID(key, id string) (bootstrap.Config, error) {
 	c, ok := trm.configs[id]
 	if !ok {
 		return bootstrap.Config{}, bootstrap.ErrNotFound
 	}
-	if c.Owner != owner {
+	if c.Owner != key {
 		return bootstrap.Config{}, bootstrap.ErrUnauthorizedAccess
 	}
 
@@ -46,14 +46,13 @@ func (trm *configRepositoryMock) RetrieveByID(owner, id string) (bootstrap.Confi
 
 }
 
-func (trm *configRepositoryMock) RetrieveAll(filter bootstrap.Filter, offset, limit uint64) []bootstrap.Config {
+func (trm *configRepositoryMock) RetrieveAll(key string, filter bootstrap.Filter, offset, limit uint64) []bootstrap.Config {
 	configs := make([]bootstrap.Config, 0)
 
 	if offset < 0 || limit <= 0 {
 		return configs
 	}
 
-	owner := filter["owner"]
 	first := uint64(offset) + 1
 	last := first + uint64(limit)
 	var state bootstrap.State = -1
@@ -65,7 +64,7 @@ func (trm *configRepositoryMock) RetrieveAll(filter bootstrap.Filter, offset, li
 	for _, v := range trm.configs {
 		id, _ := strconv.ParseUint(v.ID, 10, 64)
 		if id >= first && id < last {
-			if (state == -1 || v.State == state) && (owner == "" || v.Owner == owner) {
+			if (state == -1 || v.State == state) && v.Owner == key {
 				configs = append(configs, v)
 			}
 		}
@@ -101,9 +100,9 @@ func (trm *configRepositoryMock) Update(config bootstrap.Config) error {
 	return nil
 }
 
-func (trm *configRepositoryMock) Remove(owner, id string) error {
+func (trm *configRepositoryMock) Remove(key, id string) error {
 	for k, v := range trm.configs {
-		if v.Owner == owner && k == id {
+		if v.Owner == key && k == id {
 			delete(trm.configs, k)
 			break
 		}
@@ -112,7 +111,7 @@ func (trm *configRepositoryMock) Remove(owner, id string) error {
 	return nil
 }
 
-func (trm *configRepositoryMock) ChangeState(owner, id string, state bootstrap.State) error {
+func (trm *configRepositoryMock) ChangeState(key, id string, state bootstrap.State) error {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -120,15 +119,11 @@ func (trm *configRepositoryMock) ChangeState(owner, id string, state bootstrap.S
 	if !ok {
 		return bootstrap.ErrNotFound
 	}
-	if config.Owner != owner {
+	if config.Owner != key {
 		return bootstrap.ErrUnauthorizedAccess
 	}
 
 	config.State = state
 	trm.configs[id] = config
-	return nil
-}
-
-func (trm *configRepositoryMock) Assign(bootstrap.Config) error {
 	return nil
 }

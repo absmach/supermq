@@ -75,8 +75,8 @@ func (tr thingRepository) RetrieveByID(key, id string) (bootstrap.Config, error)
 	return thing, nil
 }
 
-func (tr thingRepository) RetrieveAll(filter bootstrap.Filter, offset, limit uint64) []bootstrap.Config {
-	rows, err := tr.retrieveAll(filter, offset, limit)
+func (tr thingRepository) RetrieveAll(key string, filter bootstrap.Filter, offset, limit uint64) []bootstrap.Config {
+	rows, err := tr.retrieveAll(key, filter, offset, limit)
 	if err != nil {
 		tr.log.Error(fmt.Sprintf("Failed to retrieve things due to %s", err))
 		return []bootstrap.Config{}
@@ -147,25 +147,6 @@ func (tr thingRepository) Update(thing bootstrap.Config) error {
 	return nil
 }
 
-func (tr thingRepository) Assign(thing bootstrap.Config) error {
-	q := `UPDATE things SET owner = $1, mainflux_channels = $2, content = $3, state = $4 WHERE external_id = $5`
-	res, err := tr.db.Exec(q, thing.Owner, pq.Array(thing.MFChannels), thing.Content, thing.State, thing.ExternalID)
-	if err != nil {
-		return err
-	}
-
-	cnt, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if cnt == 0 {
-		return bootstrap.ErrNotFound
-	}
-
-	return nil
-}
-
 func (tr thingRepository) Remove(key, id string) error {
 	q := `DELETE FROM things WHERE id = $1 AND owner = $2`
 	tr.db.Exec(q, id, key)
@@ -192,17 +173,18 @@ func (tr thingRepository) ChangeState(key, id string, state bootstrap.State) err
 	return nil
 }
 
-func (tr thingRepository) retrieveAll(filter bootstrap.Filter, offset, limit uint64) (*sql.Rows, error) {
-	template := `SELECT id, owner, mainflux_key, mainflux_thing, external_id, external_key, mainflux_channels, content, state FROM things WHERE %s ORDER BY id LIMIT $1 OFFSET $2`
-	params := []interface{}{limit, offset}
+func (tr thingRepository) retrieveAll(key string, filter bootstrap.Filter, offset, limit uint64) (*sql.Rows, error) {
+	template := `SELECT id, mainflux_key, mainflux_thing, external_id, external_key, mainflux_channels, content, state FROM things WHERE owner = $1 %s ORDER BY id LIMIT $2 OFFSET $3`
+	params := []interface{}{key, limit, offset}
 	var queries []string
-	// Since limit = 1, offset = 2, the next one is 3...
-	counter := 3
+	// Since key = 1, limit = 2, offset = 3, the next one is 4.
+	counter := 4
 	for k, v := range filter {
 		queries = append(queries, fmt.Sprintf("%s = $%d", k, counter))
 		params = append(params, v)
 		counter++
 	}
+
 	f := strings.Join(queries, " AND ")
 	return tr.db.Query(fmt.Sprintf(template, f), params...)
 }
