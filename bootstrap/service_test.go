@@ -354,14 +354,14 @@ func TestBootstrap(t *testing.T) {
 			config:      bootstrap.Config{},
 			externalID:  "invalid",
 			externalKey: saved.ExternalKey,
-			err:         bootstrap.ErrNotFound,
+			err:         nil,
 		},
 		{
 			desc:        "bootstrap using invalid external key",
 			config:      bootstrap.Config{},
 			externalID:  saved.ExternalID,
 			externalKey: "invalid",
-			err:         bootstrap.ErrNotFound,
+			err:         nil,
 		},
 		{
 			desc:        "bootstrap an existing config",

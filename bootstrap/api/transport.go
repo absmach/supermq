@@ -24,7 +24,7 @@ const (
 var (
 	errUnsupportedContentType = errors.New("unsupported content type")
 	errInvalidQueryParams     = errors.New("invalid query params")
-	validParams               = []string{"state", "external_id", "mainflux_id", "mainflux_key"}
+	validParams               = []string{"state", "external_id", "mainflux_id", "mainflux_key", "unknown"}
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.

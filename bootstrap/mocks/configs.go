@@ -10,15 +10,17 @@ import (
 var _ bootstrap.ConfigRepository = (*configRepositoryMock)(nil)
 
 type configRepositoryMock struct {
-	mu      sync.Mutex
-	counter uint64
-	configs map[string]bootstrap.Config
+	mu       sync.Mutex
+	counter  uint64
+	configs  map[string]bootstrap.Config
+	unknowns map[string]string
 }
 
 // NewThingsRepository creates in-memory thing repository.
 func NewThingsRepository() bootstrap.ConfigRepository {
 	return &configRepositoryMock{
-		configs: make(map[string]bootstrap.Config),
+		configs:  make(map[string]bootstrap.Config),
+		unknowns: make(map[string]string),
 	}
 }
 
@@ -125,5 +127,13 @@ func (trm *configRepositoryMock) ChangeState(key, id string, state bootstrap.Sta
 
 	config.State = state
 	trm.configs[id] = config
+	return nil
+}
+
+func (trm *configRepositoryMock) RetrieveUnknown(offset, limit uint64) []bootstrap.Config {
+	return []bootstrap.Config{}
+}
+
+func (trm *configRepositoryMock) SaveUnknown(key, id string) error {
 	return nil
 }

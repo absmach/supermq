@@ -12,9 +12,9 @@ import (
 
 const duplicateErr = "unique_violation"
 
-var _ bootstrap.ConfigRepository = (*thingRepository)(nil)
+var _ bootstrap.ConfigRepository = (*configRepository)(nil)
 
-type thingRepository struct {
+type configRepository struct {
 	db  *sql.DB
 	log logger.Logger
 }
@@ -22,7 +22,7 @@ type thingRepository struct {
 // NewThingRepository instantiates a PostgreSQL implementation of thing
 // repository.
 func NewThingRepository(db *sql.DB, log logger.Logger) bootstrap.ConfigRepository {
-	return &thingRepository{db: db, log: log}
+	return &configRepository{db: db, log: log}
 }
 
 func nullString(s string) sql.NullString {
@@ -36,11 +36,11 @@ func nullString(s string) sql.NullString {
 	}
 }
 
-func (tr thingRepository) Save(thing bootstrap.Config) (string, error) {
+func (cr configRepository) Save(thing bootstrap.Config) (string, error) {
 	q := `INSERT INTO things (mainflux_key, owner, mainflux_thing, external_id, external_key, mainflux_channels, content, state)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
 
-	if err := tr.db.QueryRow(q, thing.MFKey, thing.Owner, thing.MFThing, thing.ExternalID, thing.ExternalKey,
+	if err := cr.db.QueryRow(q, thing.MFKey, thing.Owner, thing.MFThing, thing.ExternalID, thing.ExternalKey,
 		pq.Array(thing.MFChannels), nullString(thing.Content), thing.State).Scan(&thing.ID); err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Name() == duplicateErr {
 			return "", bootstrap.ErrConflict
@@ -51,12 +51,12 @@ func (tr thingRepository) Save(thing bootstrap.Config) (string, error) {
 	return thing.ID, nil
 }
 
-func (tr thingRepository) RetrieveByID(key, id string) (bootstrap.Config, error) {
+func (cr configRepository) RetrieveByID(key, id string) (bootstrap.Config, error) {
 	q := `SELECT mainflux_key, mainflux_thing, external_id, external_key, mainflux_channels, content, state FROM things WHERE id = $1 AND owner = $2`
 	config := bootstrap.Config{ID: id, Owner: key}
 	var content sql.NullString
 
-	err := tr.db.
+	err := cr.db.
 		QueryRow(q, id, key).
 		Scan(&config.MFKey, &config.MFThing, &config.ExternalID, &config.ExternalKey, pq.Array(&config.MFChannels), &content, &config.State)
 
@@ -73,10 +73,10 @@ func (tr thingRepository) RetrieveByID(key, id string) (bootstrap.Config, error)
 	return config, nil
 }
 
-func (tr thingRepository) RetrieveAll(key string, filter bootstrap.Filter, offset, limit uint64) []bootstrap.Config {
-	rows, err := tr.retrieveAll(key, filter, offset, limit)
+func (cr configRepository) RetrieveAll(key string, filter bootstrap.Filter, offset, limit uint64) []bootstrap.Config {
+	rows, err := cr.retrieveAll(key, filter, offset, limit)
 	if err != nil {
-		tr.log.Error(fmt.Sprintf("Failed to retrieve things due to %s", err))
+		cr.log.Error(fmt.Sprintf("Failed to retrieve configs due to %s", err))
 		return []bootstrap.Config{}
 	}
 	defer rows.Close()
@@ -86,7 +86,7 @@ func (tr thingRepository) RetrieveAll(key string, filter bootstrap.Filter, offse
 	for rows.Next() {
 		c := bootstrap.Config{Owner: key}
 		if err = rows.Scan(&c.ID, &c.MFKey, &c.MFThing, &c.ExternalID, &c.ExternalKey, pq.Array(&c.MFChannels), &content, &c.State); err != nil {
-			tr.log.Error(fmt.Sprintf("Failed to read retrieved thing due to %s", err))
+			cr.log.Error(fmt.Sprintf("Failed to read retrieved config due to %s", err))
 			return []bootstrap.Config{}
 		}
 
@@ -97,16 +97,15 @@ func (tr thingRepository) RetrieveAll(key string, filter bootstrap.Filter, offse
 	return items
 }
 
-func (tr thingRepository) RetrieveByExternalID(externalKey, externalID string) (bootstrap.Config, error) {
+func (cr configRepository) RetrieveByExternalID(externalKey, externalID string) (bootstrap.Config, error) {
 	q := `SELECT id, owner, mainflux_key, mainflux_thing, mainflux_channels, content, state FROM things WHERE external_key = $1 AND external_id = $2`
-
 	var content sql.NullString
 	config := bootstrap.Config{
 		ExternalID:  externalID,
 		ExternalKey: externalKey,
 	}
 
-	if err := tr.db.QueryRow(q, externalKey, externalID).Scan(&config.ID, &config.Owner, &config.MFKey, &config.MFThing, pq.Array(&config.MFChannels), &content, &config.State); err != nil {
+	if err := cr.db.QueryRow(q, externalKey, externalID).Scan(&config.ID, &config.Owner, &config.MFKey, &config.MFThing, pq.Array(&config.MFChannels), &content, &config.State); err != nil {
 		empty := bootstrap.Config{}
 		if err == sql.ErrNoRows {
 			return empty, bootstrap.ErrNotFound
@@ -119,9 +118,9 @@ func (tr thingRepository) RetrieveByExternalID(externalKey, externalID string) (
 	return config, nil
 }
 
-func (tr thingRepository) Update(config bootstrap.Config) error {
+func (cr configRepository) Update(config bootstrap.Config) error {
 	q := `UPDATE things SET mainflux_channels = $1, content = $2, state = $3 WHERE id = $4 AND owner = $5`
-	res, err := tr.db.Exec(q, pq.Array(config.MFChannels), config.Content, config.State, config.ID, config.Owner)
+	res, err := cr.db.Exec(q, pq.Array(config.MFChannels), config.Content, config.State, config.ID, config.Owner)
 	if err != nil {
 		return err
 	}
@@ -138,16 +137,16 @@ func (tr thingRepository) Update(config bootstrap.Config) error {
 	return nil
 }
 
-func (tr thingRepository) Remove(key, id string) error {
+func (cr configRepository) Remove(key, id string) error {
 	q := `DELETE FROM things WHERE id = $1 AND owner = $2`
-	tr.db.Exec(q, id, key)
+	cr.db.Exec(q, id, key)
 	return nil
 }
 
-func (tr thingRepository) ChangeState(key, id string, state bootstrap.State) error {
+func (cr configRepository) ChangeState(key, id string, state bootstrap.State) error {
 	q := `UPDATE things SET state = $1 WHERE id = $2 AND owner = $3;`
 
-	res, err := tr.db.Exec(q, state, id, key)
+	res, err := cr.db.Exec(q, state, id, key)
 	if err != nil {
 		return err
 	}
@@ -164,7 +163,43 @@ func (tr thingRepository) ChangeState(key, id string, state bootstrap.State) err
 	return nil
 }
 
-func (tr thingRepository) retrieveAll(key string, filter bootstrap.Filter, offset, limit uint64) (*sql.Rows, error) {
+func (cr configRepository) SaveUnknown(key, id string) error {
+	q := `INSERT INTO unknown (external_id, external_key) VALUES ($1, $2)`
+
+	if _, err := cr.db.Exec(q, id, key); err != nil {
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Name() == duplicateErr {
+			return nil
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (cr configRepository) RetrieveUnknown(offset, limit uint64) []bootstrap.Config {
+	q := `SELECT external_id, external_key FROM unknown OFFSET $1 LIMIT $2`
+	rows, err := cr.db.Query(q, offset, limit)
+	if err != nil {
+		cr.log.Error(fmt.Sprintf("Failed to retrieve config due to %s", err))
+		return []bootstrap.Config{}
+	}
+	defer rows.Close()
+
+	items := []bootstrap.Config{}
+	for rows.Next() {
+		c := bootstrap.Config{}
+		if err = rows.Scan(&c.ExternalID, &c.ExternalKey); err != nil {
+			cr.log.Error(fmt.Sprintf("Failed to read retrieved config due to %s", err))
+			return []bootstrap.Config{}
+		}
+
+		items = append(items, c)
+	}
+
+	return items
+}
+
+func (cr configRepository) retrieveAll(key string, filter bootstrap.Filter, offset, limit uint64) (*sql.Rows, error) {
 	template := `SELECT id, mainflux_key, mainflux_thing, external_id, external_key, mainflux_channels, content, state FROM things WHERE owner = $1 %s ORDER BY id LIMIT $2 OFFSET $3`
 	params := []interface{}{key, limit, offset}
 	// One empty string so that strings Join works if only one filter is applied.
@@ -178,5 +213,6 @@ func (tr thingRepository) retrieveAll(key string, filter bootstrap.Filter, offse
 	}
 
 	f := strings.Join(queries, " AND ")
-	return tr.db.Query(fmt.Sprintf(template, f), params...)
+
+	return cr.db.Query(fmt.Sprintf(template, f), params...)
 }

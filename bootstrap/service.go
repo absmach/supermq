@@ -199,6 +199,9 @@ func (bs bootstrapService) List(key string, filter Filter, offset, limit uint64)
 	if filter == nil {
 		return []Config{}, ErrMalformedEntity
 	}
+	if _, ok := filter["unknown"]; ok {
+		return bs.things.RetrieveUnknown(offset, limit), nil
+	}
 
 	return bs.things.RetrieveAll(owner, filter, offset, limit), nil
 }
@@ -228,7 +231,7 @@ func (bs bootstrapService) Bootstrap(externalKey, externalID string) (Config, er
 	thing, err := bs.things.RetrieveByExternalID(externalKey, externalID)
 	if err != nil {
 		if err == ErrNotFound {
-			return Config{}, err
+			return Config{}, bs.things.SaveUnknown(externalKey, externalID)
 		}
 		return Config{}, ErrNotFound
 	}

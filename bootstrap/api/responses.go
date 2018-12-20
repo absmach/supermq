@@ -77,12 +77,13 @@ func (res thingRes) Empty() bool {
 }
 
 type viewRes struct {
-	ID         string          `json:"id"`
-	MFKey      string          `json:"mainflux_key"`
-	MFThing    string          `json:"mainflux_id"`
-	MFChannels []string        `json:"mainflux_channels"`
-	ExternalID string          `json:"external_id,omitempty"`
-	State      bootstrap.State `json:"state"`
+	ID          string          `json:"id,omitempty"`
+	MFKey       string          `json:"mainflux_key,omitempty"`
+	MFThing     string          `json:"mainflux_id,omitempty"`
+	MFChannels  []string        `json:"mainflux_channels,omitempty"`
+	ExternalID  string          `json:"external_id"`
+	ExternalKey string          `json:"external_key,omitempty"`
+	State       bootstrap.State `json:"state,omitempty"`
 }
 
 func (res viewRes) Code() int {

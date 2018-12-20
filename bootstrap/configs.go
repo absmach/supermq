@@ -71,4 +71,10 @@ type ConfigRepository interface {
 
 	// ChangeState changes of the Config, that is owned by the specific user.
 	ChangeState(string, string, State) error
+
+	// SaveUnknown saves Thing which unsuccessfully bootstrapped.
+	SaveUnknown(string, string) error
+
+	// RetrieveUnknown returns list of unsuccessfully bootstrapped Things.
+	RetrieveUnknown(uint64, uint64) []Config
 }

@@ -104,12 +104,13 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		res := listRes{}
 		for _, thing := range things {
 			view := viewRes{
-				ID:         thing.ID,
-				MFThing:    thing.MFThing,
-				MFKey:      thing.MFKey,
-				MFChannels: thing.MFChannels,
-				ExternalID: thing.ExternalID,
-				State:      thing.State,
+				ID:          thing.ID,
+				MFThing:     thing.MFThing,
+				MFKey:       thing.MFKey,
+				MFChannels:  thing.MFChannels,
+				ExternalID:  thing.ExternalID,
+				ExternalKey: thing.ExternalKey,
+				State:       thing.State,
 			}
 			res.Things = append(res.Things, view)
 		}
