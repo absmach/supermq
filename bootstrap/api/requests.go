@@ -1,4 +1,4 @@
-package http
+package api
 
 import "nov/bootstrap"
 
@@ -10,8 +10,8 @@ type addReq struct {
 	key         string
 	ExternalID  string   `json:"external_id"`
 	ExternalKey string   `json:"external_key"`
-	Channels    []string `json:"channels"`
-	Config      string   `json:"config"`
+	Channels    []string `json:"mainflux_channels"`
+	Content     string   `json:"content"`
 }
 
 func (req addReq) validate() error {

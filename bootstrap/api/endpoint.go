@@ -1,4 +1,4 @@
-package http
+package api
 
 import (
 	"context"
@@ -11,23 +11,23 @@ import (
 func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(addReq)
-
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
 
-		thing := bootstrap.Config{
+		config := bootstrap.Config{
 			ExternalID:  req.ExternalID,
 			ExternalKey: req.ExternalKey,
 			MFChannels:  req.Channels,
-			Content:     req.Config,
+			Content:     req.Content,
 		}
-		saved, err := svc.Add(req.key, thing)
+
+		saved, err := svc.Add(req.key, config)
 		if err != nil {
 			return nil, err
 		}
 
-		res := thingRes{
+		res := configRes{
 			id:      saved.ID,
 			created: true,
 		}
@@ -43,18 +43,18 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		thing, err := svc.View(req.key, req.id)
+		config, err := svc.View(req.key, req.id)
 		if err != nil {
 			return nil, err
 		}
 
 		res := viewRes{
-			ID:         thing.ID,
-			MFKey:      thing.MFKey,
-			MFThing:    thing.MFThing,
-			MFChannels: thing.MFChannels,
-			ExternalID: thing.ExternalID,
-			State:      thing.State,
+			ID:         config.ID,
+			MFKey:      config.MFKey,
+			MFThing:    config.MFThing,
+			MFChannels: config.MFChannels,
+			ExternalID: config.ExternalID,
+			State:      config.State,
 		}
 		return res, nil
 	}
@@ -68,20 +68,20 @@ func updateEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		thing := bootstrap.Config{
+		config := bootstrap.Config{
 			ID:         req.id,
 			MFChannels: req.MFChannels,
 			Content:    req.Config,
 			State:      req.State,
 		}
 
-		err := svc.Update(req.key, thing)
+		err := svc.Update(req.key, config)
 		if err != nil {
 			return nil, err
 		}
 
-		res := thingRes{
-			id:      thing.ID,
+		res := configRes{
+			id:      config.ID,
 			created: false,
 		}
 		return res, nil
@@ -96,23 +96,23 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		things, err := svc.List(req.key, req.filter, req.offset, req.limit)
+		configs, err := svc.List(req.key, req.filter, req.offset, req.limit)
 		if err != nil {
 			return nil, err
 		}
 
 		res := listRes{}
-		for _, thing := range things {
+		for _, cfg := range configs {
 			view := viewRes{
-				ID:          thing.ID,
-				MFThing:     thing.MFThing,
-				MFKey:       thing.MFKey,
-				MFChannels:  thing.MFChannels,
-				ExternalID:  thing.ExternalID,
-				ExternalKey: thing.ExternalKey,
-				State:       thing.State,
+				ID:          cfg.ID,
+				MFThing:     cfg.MFThing,
+				MFKey:       cfg.MFKey,
+				MFChannels:  cfg.MFChannels,
+				ExternalID:  cfg.ExternalID,
+				ExternalKey: cfg.ExternalKey,
+				State:       cfg.State,
 			}
-			res.Things = append(res.Things, view)
+			res.Configs = append(res.Configs, view)
 		}
 
 		return res, nil

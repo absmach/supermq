@@ -1,4 +1,4 @@
-package http
+package api
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 var (
 	_ mainflux.Response = (*identityRes)(nil)
 	_ mainflux.Response = (*removeRes)(nil)
-	_ mainflux.Response = (*thingRes)(nil)
+	_ mainflux.Response = (*configRes)(nil)
 	_ mainflux.Response = (*stateRes)(nil)
 	_ mainflux.Response = (*viewRes)(nil)
 	_ mainflux.Response = (*listRes)(nil)
@@ -49,12 +49,12 @@ func (res removeRes) Empty() bool {
 	return true
 }
 
-type thingRes struct {
+type configRes struct {
 	id      string
 	created bool
 }
 
-func (res thingRes) Code() int {
+func (res configRes) Code() int {
 	if res.created {
 		return http.StatusCreated
 	}
@@ -62,17 +62,17 @@ func (res thingRes) Code() int {
 	return http.StatusOK
 }
 
-func (res thingRes) Headers() map[string]string {
+func (res configRes) Headers() map[string]string {
 	if res.created {
 		return map[string]string{
-			"Location": fmt.Sprintf("/things/%s", res.id),
+			"Location": fmt.Sprintf("/configs/%s", res.id),
 		}
 	}
 
 	return map[string]string{}
 }
 
-func (res thingRes) Empty() bool {
+func (res configRes) Empty() bool {
 	return true
 }
 
@@ -99,7 +99,7 @@ func (res viewRes) Empty() bool {
 }
 
 type listRes struct {
-	Things []viewRes `json:"things"`
+	Configs []viewRes `json:"configs"`
 }
 
 func (res listRes) Code() int {

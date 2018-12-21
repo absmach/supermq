@@ -1,4 +1,4 @@
-package http
+package api
 
 import (
 	"context"
@@ -92,10 +92,12 @@ func decodeAddRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
 		return nil, errUnsupportedContentType
 	}
+
 	req := addReq{key: r.Header.Get("Authorization")}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}
+
 	return req, nil
 }
 
@@ -103,11 +105,13 @@ func decodeUpdateRequest(_ context.Context, r *http.Request) (interface{}, error
 	if r.Header.Get("Content-Type") != contentType {
 		return nil, errUnsupportedContentType
 	}
+
 	req := updateReq{key: r.Header.Get("Authorization")}
 	req.id = bone.GetValue(r, "id")
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}
+
 	return req, nil
 }
 

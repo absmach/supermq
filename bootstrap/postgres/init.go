@@ -30,9 +30,9 @@ func migrateDB(db *sql.DB) error {
 	migrations := &migrate.MemoryMigrationSource{
 		Migrations: []*migrate.Migration{
 			{
-				Id: "things_1",
+				Id: "configs_1",
 				Up: []string{
-					`CREATE TABLE IF NOT EXISTS things (
+					`CREATE TABLE IF NOT EXISTS configs (
 						id          	  BIGSERIAL,
 						owner             VARCHAR(254),
 						mainflux_thing    TEXT UNIQUE NOT NULL,

@@ -88,7 +88,6 @@ func (bs bootstrapService) Add(key string, thing Config) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
-
 	// Check if channels exist. This is the way to prevent invalid configuration to be saved.
 	// However, channels deletion wil eventually cause this; since Bootstrap service is not
 	// using events from the Things service at the moment.

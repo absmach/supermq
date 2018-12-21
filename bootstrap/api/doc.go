@@ -1,2 +1,2 @@
-// Package http contains implementation of things service HTTP API.
-package http
+// Package api contains implementation of things service HTTP API.
+package api

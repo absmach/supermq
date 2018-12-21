@@ -37,7 +37,7 @@ func nullString(s string) sql.NullString {
 }
 
 func (cr configRepository) Save(thing bootstrap.Config) (string, error) {
-	q := `INSERT INTO things (mainflux_key, owner, mainflux_thing, external_id, external_key, mainflux_channels, content, state)
+	q := `INSERT INTO configs (mainflux_key, owner, mainflux_thing, external_id, external_key, mainflux_channels, content, state)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
 
 	if err := cr.db.QueryRow(q, thing.MFKey, thing.Owner, thing.MFThing, thing.ExternalID, thing.ExternalKey,
@@ -52,7 +52,7 @@ func (cr configRepository) Save(thing bootstrap.Config) (string, error) {
 }
 
 func (cr configRepository) RetrieveByID(key, id string) (bootstrap.Config, error) {
-	q := `SELECT mainflux_key, mainflux_thing, external_id, external_key, mainflux_channels, content, state FROM things WHERE id = $1 AND owner = $2`
+	q := `SELECT mainflux_key, mainflux_thing, external_id, external_key, mainflux_channels, content, state FROM configs WHERE id = $1 AND owner = $2`
 	config := bootstrap.Config{ID: id, Owner: key}
 	var content sql.NullString
 
@@ -98,7 +98,7 @@ func (cr configRepository) RetrieveAll(key string, filter bootstrap.Filter, offs
 }
 
 func (cr configRepository) RetrieveByExternalID(externalKey, externalID string) (bootstrap.Config, error) {
-	q := `SELECT id, owner, mainflux_key, mainflux_thing, mainflux_channels, content, state FROM things WHERE external_key = $1 AND external_id = $2`
+	q := `SELECT id, owner, mainflux_key, mainflux_thing, mainflux_channels, content, state FROM configs WHERE external_key = $1 AND external_id = $2`
 	var content sql.NullString
 	config := bootstrap.Config{
 		ExternalID:  externalID,
@@ -119,7 +119,7 @@ func (cr configRepository) RetrieveByExternalID(externalKey, externalID string) 
 }
 
 func (cr configRepository) Update(config bootstrap.Config) error {
-	q := `UPDATE things SET mainflux_channels = $1, content = $2, state = $3 WHERE id = $4 AND owner = $5`
+	q := `UPDATE configs SET mainflux_channels = $1, content = $2, state = $3 WHERE id = $4 AND owner = $5`
 	res, err := cr.db.Exec(q, pq.Array(config.MFChannels), config.Content, config.State, config.ID, config.Owner)
 	if err != nil {
 		return err
@@ -138,13 +138,13 @@ func (cr configRepository) Update(config bootstrap.Config) error {
 }
 
 func (cr configRepository) Remove(key, id string) error {
-	q := `DELETE FROM things WHERE id = $1 AND owner = $2`
+	q := `DELETE FROM configs WHERE id = $1 AND owner = $2`
 	cr.db.Exec(q, id, key)
 	return nil
 }
 
 func (cr configRepository) ChangeState(key, id string, state bootstrap.State) error {
-	q := `UPDATE things SET state = $1 WHERE id = $2 AND owner = $3;`
+	q := `UPDATE configs SET state = $1 WHERE id = $2 AND owner = $3;`
 
 	res, err := cr.db.Exec(q, state, id, key)
 	if err != nil {
@@ -206,7 +206,7 @@ func (cr configRepository) RemoveUnknown(key, id string) error {
 }
 
 func (cr configRepository) retrieveAll(key string, filter bootstrap.Filter, offset, limit uint64) (*sql.Rows, error) {
-	template := `SELECT id, mainflux_key, mainflux_thing, external_id, external_key, mainflux_channels, content, state FROM things WHERE owner = $1 %s ORDER BY id LIMIT $2 OFFSET $3`
+	template := `SELECT id, mainflux_key, mainflux_thing, external_id, external_key, mainflux_channels, content, state FROM configs WHERE owner = $1 %s ORDER BY id LIMIT $2 OFFSET $3`
 	params := []interface{}{key, limit, offset}
 	// One empty string so that strings Join works if only one filter is applied.
 	queries := []string{""}

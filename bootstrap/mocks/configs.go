@@ -16,27 +16,27 @@ type configRepositoryMock struct {
 	unknowns map[string]string
 }
 
-// NewThingsRepository creates in-memory thing repository.
-func NewThingsRepository() bootstrap.ConfigRepository {
+// NewConfigsRepository creates in-memory thing repository.
+func NewConfigsRepository() bootstrap.ConfigRepository {
 	return &configRepositoryMock{
 		configs:  make(map[string]bootstrap.Config),
 		unknowns: make(map[string]string),
 	}
 }
 
-func (trm *configRepositoryMock) Save(config bootstrap.Config) (string, error) {
-	trm.mu.Lock()
-	defer trm.mu.Unlock()
+func (crm *configRepositoryMock) Save(config bootstrap.Config) (string, error) {
+	crm.mu.Lock()
+	defer crm.mu.Unlock()
 
-	trm.counter++
-	config.ID = strconv.FormatUint(trm.counter, 10)
-	trm.configs[config.ID] = config
+	crm.counter++
+	config.ID = strconv.FormatUint(crm.counter, 10)
+	crm.configs[config.ID] = config
 
 	return config.ID, nil
 }
 
-func (trm *configRepositoryMock) RetrieveByID(key, id string) (bootstrap.Config, error) {
-	c, ok := trm.configs[id]
+func (crm *configRepositoryMock) RetrieveByID(key, id string) (bootstrap.Config, error) {
+	c, ok := crm.configs[id]
 	if !ok {
 		return bootstrap.Config{}, bootstrap.ErrNotFound
 	}
@@ -48,7 +48,7 @@ func (trm *configRepositoryMock) RetrieveByID(key, id string) (bootstrap.Config,
 
 }
 
-func (trm *configRepositoryMock) RetrieveAll(key string, filter bootstrap.Filter, offset, limit uint64) []bootstrap.Config {
+func (crm *configRepositoryMock) RetrieveAll(key string, filter bootstrap.Filter, offset, limit uint64) []bootstrap.Config {
 	configs := make([]bootstrap.Config, 0)
 
 	if offset < 0 || limit <= 0 {
@@ -63,7 +63,7 @@ func (trm *configRepositoryMock) RetrieveAll(key string, filter bootstrap.Filter
 		state = bootstrap.State(val)
 	}
 
-	for _, v := range trm.configs {
+	for _, v := range crm.configs {
 		id, _ := strconv.ParseUint(v.ID, 10, 64)
 		if id >= first && id < last {
 			if (state == -1 || v.State == state) && v.Owner == key {
@@ -79,8 +79,8 @@ func (trm *configRepositoryMock) RetrieveAll(key string, filter bootstrap.Filter
 	return configs
 }
 
-func (trm *configRepositoryMock) RetrieveByExternalID(externalKey, externalID string) (bootstrap.Config, error) {
-	for _, thing := range trm.configs {
+func (crm *configRepositoryMock) RetrieveByExternalID(externalKey, externalID string) (bootstrap.Config, error) {
+	for _, thing := range crm.configs {
 		if thing.ExternalID == externalID && thing.ExternalKey == externalKey {
 			return thing, nil
 		}
@@ -89,23 +89,23 @@ func (trm *configRepositoryMock) RetrieveByExternalID(externalKey, externalID st
 	return bootstrap.Config{}, bootstrap.ErrNotFound
 }
 
-func (trm *configRepositoryMock) Update(config bootstrap.Config) error {
-	trm.mu.Lock()
-	defer trm.mu.Unlock()
+func (crm *configRepositoryMock) Update(config bootstrap.Config) error {
+	crm.mu.Lock()
+	defer crm.mu.Unlock()
 
-	if _, ok := trm.configs[config.ID]; !ok {
+	if _, ok := crm.configs[config.ID]; !ok {
 		return bootstrap.ErrNotFound
 	}
 
-	trm.configs[config.ID] = config
+	crm.configs[config.ID] = config
 
 	return nil
 }
 
-func (trm *configRepositoryMock) Remove(key, id string) error {
-	for k, v := range trm.configs {
+func (crm *configRepositoryMock) Remove(key, id string) error {
+	for k, v := range crm.configs {
 		if v.Owner == key && k == id {
-			delete(trm.configs, k)
+			delete(crm.configs, k)
 			break
 		}
 	}
@@ -113,11 +113,11 @@ func (trm *configRepositoryMock) Remove(key, id string) error {
 	return nil
 }
 
-func (trm *configRepositoryMock) ChangeState(key, id string, state bootstrap.State) error {
-	trm.mu.Lock()
-	defer trm.mu.Unlock()
+func (crm *configRepositoryMock) ChangeState(key, id string, state bootstrap.State) error {
+	crm.mu.Lock()
+	defer crm.mu.Unlock()
 
-	config, ok := trm.configs[id]
+	config, ok := crm.configs[id]
 	if !ok {
 		return bootstrap.ErrNotFound
 	}
@@ -126,18 +126,18 @@ func (trm *configRepositoryMock) ChangeState(key, id string, state bootstrap.Sta
 	}
 
 	config.State = state
-	trm.configs[id] = config
+	crm.configs[id] = config
 	return nil
 }
 
-func (trm *configRepositoryMock) RetrieveUnknown(offset, limit uint64) []bootstrap.Config {
+func (crm *configRepositoryMock) RetrieveUnknown(offset, limit uint64) []bootstrap.Config {
 	return []bootstrap.Config{}
 }
 
-func (trm *configRepositoryMock) RemoveUnknown(string, string) error {
+func (crm *configRepositoryMock) RemoveUnknown(string, string) error {
 	return nil
 }
 
-func (trm *configRepositoryMock) SaveUnknown(key, id string) error {
+func (crm *configRepositoryMock) SaveUnknown(key, id string) error {
 	return nil
 }
