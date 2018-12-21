@@ -28,8 +28,8 @@ const (
 )
 
 var config = bootstrap.Config{
-	ExternalID:  "external-id",
-	ExternalKey: "external-key",
+	ExternalID:  "external_id",
+	ExternalKey: "external_key",
 	MFChannels:  []string{"1"},
 	Content:     "config",
 }

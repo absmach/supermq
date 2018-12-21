@@ -49,12 +49,14 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		res := viewRes{
-			ID:         config.ID,
-			MFKey:      config.MFKey,
-			MFThing:    config.MFThing,
-			MFChannels: config.MFChannels,
-			ExternalID: config.ExternalID,
-			State:      config.State,
+			ID:          config.ID,
+			MFKey:       config.MFKey,
+			MFThing:     config.MFThing,
+			MFChannels:  config.MFChannels,
+			ExternalID:  config.ExternalID,
+			ExternalKey: config.ExternalKey,
+			Content:     config.Content,
+			State:       config.State,
 		}
 		return res, nil
 	}
@@ -101,7 +103,10 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		res := listRes{}
+		res := listRes{
+			Configs: []viewRes{},
+		}
+
 		for _, cfg := range configs {
 			view := viewRes{
 				ID:          cfg.ID,
@@ -110,6 +115,7 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 				MFChannels:  cfg.MFChannels,
 				ExternalID:  cfg.ExternalID,
 				ExternalKey: cfg.ExternalKey,
+				Content:     cfg.Content,
 				State:       cfg.State,
 			}
 			res.Configs = append(res.Configs, view)

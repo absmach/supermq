@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/url"
 	"nov/bootstrap"
@@ -17,8 +18,9 @@ import (
 )
 
 const (
-	contentType = "application/json"
-	maxLimit    = 100
+	contentType  = "application/json"
+	maxLimit     = 100
+	defaultLimit = 10
 )
 
 var (
@@ -76,7 +78,7 @@ func MakeHandler(svc bootstrap.Service, reader bootstrap.ConfigReader) http.Hand
 		encodeResponse,
 		opts...))
 
-	r.Delete("/things/:id", kithttp.NewServer(
+	r.Delete("/configs/:id", kithttp.NewServer(
 		removeEndpoint(svc),
 		decodeEntityRequest,
 		encodeResponse,
@@ -212,6 +214,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", contentType)
 
 	switch err {
+	case errUnsupportedContentType:
+		w.WriteHeader(http.StatusUnsupportedMediaType)
 	case errInvalidQueryParams, bootstrap.ErrMalformedEntity:
 		w.WriteHeader(http.StatusBadRequest)
 	case bootstrap.ErrNotFound:
@@ -222,6 +226,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusConflict)
 	case bootstrap.ErrThings:
 		w.WriteHeader(http.StatusServiceUnavailable)
+	case io.EOF:
+		w.WriteHeader(http.StatusBadRequest)
 	default:
 		switch err.(type) {
 		case *json.SyntaxError:
@@ -259,12 +265,16 @@ func parsePagePrams(q url.Values) (uint64, uint64, error) {
 		return 0, 0, err
 	}
 
+	if limit < 0 || offset < 0 {
+		return 0, 0, bootstrap.ErrMalformedEntity
+	}
+
 	if limit > maxLimit {
 		limit = maxLimit
 	}
 
 	if limit == 0 {
-		limit = 1
+		limit = defaultLimit
 	}
 
 	return offset, limit, nil

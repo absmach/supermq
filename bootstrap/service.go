@@ -213,9 +213,6 @@ func (bs bootstrapService) Remove(key, id string) error {
 	}
 
 	thing, err := bs.things.RetrieveByID(owner, id)
-	if err == ErrNotFound {
-		return bs.things.Remove(owner, id)
-	}
 	if err != nil {
 		return err
 	}
@@ -250,6 +247,10 @@ func (bs bootstrapService) ChangeState(key, id string, state State) error {
 		return err
 	}
 
+	if thing.State == state {
+		return nil
+	}
+
 	switch state {
 	case Active:
 		for i, c := range thing.MFChannels {
@@ -261,6 +262,9 @@ func (bs bootstrapService) ChangeState(key, id string, state State) error {
 	case Inactive:
 		for i, c := range thing.MFChannels {
 			if err := bs.sdk.DisconnectThing(thing.MFThing, c, key); err != nil {
+				if err == mfsdk.ErrNotFound {
+					continue
+				}
 				bs.connectionFallback(thing.MFThing, key, thing.MFChannels[:i], true)
 				return ErrThings
 			}

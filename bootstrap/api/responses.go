@@ -83,6 +83,7 @@ type viewRes struct {
 	MFChannels  []string        `json:"mainflux_channels,omitempty"`
 	ExternalID  string          `json:"external_id"`
 	ExternalKey string          `json:"external_key,omitempty"`
+	Content     string          `json:"content,omitempty"`
 	State       bootstrap.State `json:"state,omitempty"`
 }
 
