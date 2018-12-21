@@ -1,0 +1,67 @@
+package http
+
+import "nov/bootstrap"
+
+const maxLimitSize = 100
+
+type apiReq interface {
+	validate() error
+}
+
+type addReq struct {
+	key        string
+	ExternalID string `json:"external_id"`
+}
+
+func (req addReq) validate() error {
+	if req.ExternalID == "" {
+		return bootstrap.ErrMalformedEntity
+	}
+
+	return nil
+}
+
+type viewReq struct {
+	key string
+	id  string
+}
+
+func (req viewReq) validate() error {
+	if req.key == "" {
+		return bootstrap.ErrUnauthorizedAccess
+	}
+
+	return nil
+}
+
+type boostrapReq struct {
+	externalID string
+}
+
+func (req boostrapReq) validate() error {
+	if req.externalID == "" {
+		return bootstrap.ErrUnauthorizedAccess
+	}
+
+	return nil
+}
+
+type changeStatusReq struct {
+	key    string
+	Key    string           `json:"key"`
+	Status bootstrap.Status `json:"status"`
+}
+
+func (req changeStatusReq) validate() error {
+	if req.Key == "" || req.key == "" {
+		return bootstrap.ErrUnauthorizedAccess
+	}
+
+	if req.Status != bootstrap.Created &&
+		req.Status != bootstrap.Inactive &&
+		req.Status != bootstrap.Active {
+		return bootstrap.ErrMalformedEntity
+	}
+
+	return nil
+}
