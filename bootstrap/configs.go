@@ -77,4 +77,8 @@ type ConfigRepository interface {
 
 	// RetrieveUnknown returns list of unsuccessfully bootstrapped Things.
 	RetrieveUnknown(uint64, uint64) []Config
+
+	// RemoveUnknown removes unsuccessfully bootstrapped Thing. This is done once the
+	// corresponding Config is added to the list of existing configs (Save method).
+	RemoveUnknown(string, string) error
 }

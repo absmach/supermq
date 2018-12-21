@@ -134,6 +134,10 @@ func (trm *configRepositoryMock) RetrieveUnknown(offset, limit uint64) []bootstr
 	return []bootstrap.Config{}
 }
 
+func (trm *configRepositoryMock) RemoveUnknown(string, string) error {
+	return nil
+}
+
 func (trm *configRepositoryMock) SaveUnknown(key, id string) error {
 	return nil
 }

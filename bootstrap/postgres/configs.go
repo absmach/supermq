@@ -199,6 +199,12 @@ func (cr configRepository) RetrieveUnknown(offset, limit uint64) []bootstrap.Con
 	return items
 }
 
+func (cr configRepository) RemoveUnknown(key, id string) error {
+	q := `DELETE FROM unknown WHERE external_id = $1 AND external_key = $2`
+	cr.db.Exec(q, id, key)
+	return nil
+}
+
 func (cr configRepository) retrieveAll(key string, filter bootstrap.Filter, offset, limit uint64) (*sql.Rows, error) {
 	template := `SELECT id, mainflux_key, mainflux_thing, external_id, external_key, mainflux_channels, content, state FROM things WHERE owner = $1 %s ORDER BY id LIMIT $2 OFFSET $3`
 	params := []interface{}{key, limit, offset}

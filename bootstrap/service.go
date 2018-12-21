@@ -112,6 +112,7 @@ func (bs bootstrapService) Add(key string, thing Config) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+	bs.things.RemoveUnknown(thing.ExternalKey, thing.ExternalID)
 
 	thing.ID = id
 	return thing, nil
@@ -231,7 +232,7 @@ func (bs bootstrapService) Bootstrap(externalKey, externalID string) (Config, er
 	thing, err := bs.things.RetrieveByExternalID(externalKey, externalID)
 	if err != nil {
 		if err == ErrNotFound {
-			return Config{}, bs.things.SaveUnknown(externalKey, externalID)
+			bs.things.SaveUnknown(externalKey, externalID)
 		}
 		return Config{}, ErrNotFound
 	}

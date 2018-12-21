@@ -24,7 +24,7 @@ const (
 var (
 	errUnsupportedContentType = errors.New("unsupported content type")
 	errInvalidQueryParams     = errors.New("invalid query params")
-	validParams               = []string{"state", "external_id", "mainflux_id", "mainflux_key", "unknown"}
+	validParams               = []string{"state", "external_id", "mainflux_id", "mainflux_key"}
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -34,27 +34,33 @@ func MakeHandler(svc bootstrap.Service, reader bootstrap.ConfigReader) http.Hand
 	}
 	r := bone.New()
 
-	r.Post("/things", kithttp.NewServer(
+	r.Post("/configs", kithttp.NewServer(
 		addEndpoint(svc),
 		decodeAddRequest,
 		encodeResponse,
 		opts...))
 
-	r.Get("/things/:id", kithttp.NewServer(
+	r.Get("/configs/:id", kithttp.NewServer(
 		viewEndpoint(svc),
 		decodeEntityRequest,
 		encodeResponse,
 		opts...))
 
-	r.Put("/things/:id", kithttp.NewServer(
+	r.Put("/configs/:id", kithttp.NewServer(
 		updateEndpoint(svc),
 		decodeUpdateRequest,
 		encodeResponse,
 		opts...))
 
-	r.Get("/things", kithttp.NewServer(
+	r.Get("/configs", kithttp.NewServer(
 		listEndpoint(svc),
 		decodeListRequest,
+		encodeResponse,
+		opts...))
+
+	r.Get("/unknown", kithttp.NewServer(
+		listEndpoint(svc),
+		decodeUnknownRequest,
 		encodeResponse,
 		opts...))
 
@@ -105,30 +111,36 @@ func decodeUpdateRequest(_ context.Context, r *http.Request) (interface{}, error
 	return req, nil
 }
 
+func decodeUnknownRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	q, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		return nil, errInvalidQueryParams
+	}
+
+	offset, limit, err := parsePagePrams(q)
+	if err != nil {
+		return nil, err
+	}
+
+	req := listReq{
+		key:    r.Header.Get("Authorization"),
+		filter: bootstrap.Filter{"unknown": "true"},
+		offset: offset,
+		limit:  limit,
+	}
+
+	return req, nil
+}
+
 func decodeListRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	q, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
 		return nil, errInvalidQueryParams
 	}
 
-	offset, err := parseUint(q.Get("offset"))
-	q.Del("offset")
+	offset, limit, err := parsePagePrams(q)
 	if err != nil {
 		return nil, err
-	}
-
-	limit, err := parseUint(q.Get("limit"))
-	q.Del("limit")
-	if err != nil {
-		return nil, err
-	}
-
-	if limit > maxLimit {
-		limit = maxLimit
-	}
-
-	if limit == 0 {
-		limit = 1
 	}
 
 	filter := parseFilter(q)
@@ -228,6 +240,30 @@ func parseUint(s string) (uint64, error) {
 		return 0, errInvalidQueryParams
 	}
 	return ret, nil
+}
+
+func parsePagePrams(q url.Values) (uint64, uint64, error) {
+	offset, err := parseUint(q.Get("offset"))
+	q.Del("offset")
+	if err != nil {
+		return 0, 0, err
+	}
+
+	limit, err := parseUint(q.Get("limit"))
+	q.Del("limit")
+	if err != nil {
+		return 0, 0, err
+	}
+
+	if limit > maxLimit {
+		limit = maxLimit
+	}
+
+	if limit == 0 {
+		limit = 1
+	}
+
+	return offset, limit, nil
 }
 
 func parseFilter(values url.Values) bootstrap.Filter {
