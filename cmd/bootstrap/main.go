@@ -143,7 +143,7 @@ func connectToDB(cfg postgres.Config, logger logger.Logger) *sql.DB {
 }
 
 func newService(conn *grpc.ClientConn, db *sql.DB, logger logger.Logger, cfg config) bootstrap.Service {
-	thingsRepo := postgres.NewThingRepository(db, logger)
+	thingsRepo := postgres.NewConfigRepository(db, logger)
 
 	config := mfsdk.Config{
 		BaseURL: cfg.baseURL,

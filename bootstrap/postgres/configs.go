@@ -19,9 +19,9 @@ type configRepository struct {
 	log logger.Logger
 }
 
-// NewThingRepository instantiates a PostgreSQL implementation of thing
+// NewConfigRepository instantiates a PostgreSQL implementation of thing
 // repository.
-func NewThingRepository(db *sql.DB, log logger.Logger) bootstrap.ConfigRepository {
+func NewConfigRepository(db *sql.DB, log logger.Logger) bootstrap.ConfigRepository {
 	return &configRepository{db: db, log: log}
 }
 
@@ -177,8 +177,8 @@ func (cr configRepository) SaveUnknown(key, id string) error {
 }
 
 func (cr configRepository) RetrieveUnknown(offset, limit uint64) []bootstrap.Config {
-	q := `SELECT external_id, external_key FROM unknown OFFSET $1 LIMIT $2`
-	rows, err := cr.db.Query(q, offset, limit)
+	q := `SELECT external_id, external_key FROM unknown LIMIT $1 OFFSET $2`
+	rows, err := cr.db.Query(q, limit, offset)
 	if err != nil {
 		cr.log.Error(fmt.Sprintf("Failed to retrieve config due to %s", err))
 		return []bootstrap.Config{}
@@ -201,8 +201,8 @@ func (cr configRepository) RetrieveUnknown(offset, limit uint64) []bootstrap.Con
 
 func (cr configRepository) RemoveUnknown(key, id string) error {
 	q := `DELETE FROM unknown WHERE external_id = $1 AND external_key = $2`
-	cr.db.Exec(q, id, key)
-	return nil
+	_, err := cr.db.Exec(q, id, key)
+	return err
 }
 
 func (cr configRepository) retrieveAll(key string, filter bootstrap.Filter, offset, limit uint64) (*sql.Rows, error) {
