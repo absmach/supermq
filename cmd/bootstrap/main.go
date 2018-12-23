@@ -25,45 +25,46 @@ import (
 )
 
 const (
-	defLogLevel   = "error"
-	defDBHost     = "localhost"
-	defDBPort     = "5432"
-	defDBUser     = "mainflux"
-	defDBPass     = "mainflux"
-	defDBName     = "bootstrap"
-	defDBSSLMode  = "disable"
-	defClientTLS  = "false"
-	defCACerts    = ""
-	defPort       = "8180"
-	defServerCert = ""
-	defServerKey  = ""
-	defBaseURL    = "http://localhost:8182"
-	defUsersURL   = "localhost:8181"
+	defLogLevel      = "error"
+	defDBHost        = "localhost"
+	defDBPort        = "5432"
+	defDBUser        = "mainflux"
+	defDBPass        = "mainflux"
+	defDBName        = "bootstrap"
+	defDBSSLMode     = "disable"
+	defDBSSLCert     = ""
+	defDBSSLKey      = ""
+	defDBSSLRootCert = ""
+	defClientTLS     = "false"
+	defCACerts       = ""
+	defPort          = "8180"
+	defServerCert    = ""
+	defServerKey     = ""
+	defBaseURL       = "http://localhost:8182"
+	defUsersURL      = "localhost:8181"
 
-	envLogLevel   = "MF_BOOTSTRAP_LOG_LEVEL"
-	envDBHost     = "MF_BOOTSTRAP_DB_HOST"
-	envDBPort     = "MF_BOOTSTRAP_DB_PORT"
-	envDBUser     = "MF_BOOTSTRAP_DB_USER"
-	envDBPass     = "MF_BOOTSTRAP_DB_PASS"
-	envDBName     = "MF_BOOTSTRAP_DB"
-	envDBSSLMode  = "MF_BOOTSTRAP_DB_SSL_MODE"
-	envClientTLS  = "MF_BOOTSTRAP_CLIENT_TLS"
-	envCACerts    = "MF_BOOTSTRAP_CA_CERTS"
-	envPort       = "MF_BOOTSTRAP_PORT"
-	envServerCert = "MF_BOOTSTRAP_SERVER_CERT"
-	envServerKey  = "MF_BOOTSTRAP_SERVER_KEY"
-	envBaseURL    = "MF_SDK_BASE_URL"
-	envUsersURL   = "MF_USERS_URL"
+	envLogLevel      = "MF_BOOTSTRAP_LOG_LEVEL"
+	envDBHost        = "MF_BOOTSTRAP_DB_HOST"
+	envDBPort        = "MF_BOOTSTRAP_DB_PORT"
+	envDBUser        = "MF_BOOTSTRAP_DB_USER"
+	envDBPass        = "MF_BOOTSTRAP_DB_PASS"
+	envDBName        = "MF_BOOTSTRAP_DB"
+	envDBSSLMode     = "MF_BOOTSTRAP_DB_SSL_MODE"
+	envDBSSLCert     = "MF_THINGS_DB_SSL_CERT"
+	envDBSSLKey      = "MF_THINGS_DB_SSL_KEY"
+	envDBSSLRootCert = "MF_THINGS_DB_SSL_ROOT_CERT"
+	envClientTLS     = "MF_BOOTSTRAP_CLIENT_TLS"
+	envCACerts       = "MF_BOOTSTRAP_CA_CERTS"
+	envPort          = "MF_BOOTSTRAP_PORT"
+	envServerCert    = "MF_BOOTSTRAP_SERVER_CERT"
+	envServerKey     = "MF_BOOTSTRAP_SERVER_KEY"
+	envBaseURL       = "MF_SDK_BASE_URL"
+	envUsersURL      = "MF_USERS_URL"
 )
 
 type config struct {
 	logLevel   string
-	dbHost     string
-	dbPort     string
-	dbUser     string
-	dbPass     string
-	dbName     string
-	dbSSLMode  string
+	dbConfig   postgres.Config
 	clientTLS  bool
 	caCerts    string
 	httpPort   string
@@ -81,7 +82,7 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	db := connectToDB(cfg, logger)
+	db := connectToDB(cfg.dbConfig, logger)
 	defer db.Close()
 
 	conn := connectToUsers(cfg, logger)
@@ -107,15 +108,21 @@ func loadConfig() config {
 	if err != nil {
 		tls = false
 	}
+	dbConfig := postgres.Config{
+		Host:        mainflux.Env(envDBHost, defDBHost),
+		Port:        mainflux.Env(envDBPort, defDBPort),
+		User:        mainflux.Env(envDBUser, defDBUser),
+		Pass:        mainflux.Env(envDBPass, defDBPass),
+		Name:        mainflux.Env(envDBName, defDBName),
+		SSLMode:     mainflux.Env(envDBSSLMode, defDBSSLMode),
+		SSLCert:     mainflux.Env(envDBSSLCert, defDBSSLCert),
+		SSLKey:      mainflux.Env(envDBSSLKey, defDBSSLKey),
+		SSLRootCert: mainflux.Env(envDBSSLRootCert, defDBSSLRootCert),
+	}
 
 	return config{
 		logLevel:   mainflux.Env(envLogLevel, defLogLevel),
-		dbHost:     mainflux.Env(envDBHost, defDBHost),
-		dbPort:     mainflux.Env(envDBPort, defDBPort),
-		dbUser:     mainflux.Env(envDBUser, defDBUser),
-		dbPass:     mainflux.Env(envDBPass, defDBPass),
-		dbName:     mainflux.Env(envDBName, defDBName),
-		dbSSLMode:  mainflux.Env(envDBSSLMode, defDBSSLMode),
+		dbConfig:   dbConfig,
 		clientTLS:  tls,
 		caCerts:    mainflux.Env(envCACerts, defCACerts),
 		httpPort:   mainflux.Env(envPort, defPort),
@@ -126,8 +133,8 @@ func loadConfig() config {
 	}
 }
 
-func connectToDB(cfg config, logger logger.Logger) *sql.DB {
-	db, err := postgres.Connect(cfg.dbHost, cfg.dbPort, cfg.dbName, cfg.dbUser, cfg.dbPass, cfg.dbSSLMode)
+func connectToDB(cfg postgres.Config, logger logger.Logger) *sql.DB {
+	db, err := postgres.Connect(cfg)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to postgres: %s", err))
 		os.Exit(1)
