@@ -39,7 +39,7 @@ type updateReq struct {
 	key        string
 	id         string
 	MFChannels []string        `json:"channels"`
-	Config     string          `json:"config"`
+	Content    string          `json:"content"`
 	State      bootstrap.State `json:"state"`
 }
 

@@ -73,7 +73,7 @@ func updateEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		config := bootstrap.Config{
 			ID:         req.id,
 			MFChannels: req.MFChannels,
-			Content:    req.Config,
+			Content:    req.Content,
 			State:      req.State,
 		}
 
