@@ -15,6 +15,7 @@ import (
 
 	"github.com/mainflux/mainflux/bootstrap"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/mainflux/mainflux"
 
@@ -43,7 +44,7 @@ var config = bootstrap.Config{
 }
 
 func newService(users mainflux.UsersServiceClient, url string) bootstrap.Service {
-	things := mocks.NewConfigsRepository()
+	things := mocks.NewConfigsRepository(map[string]string{})
 	config := mfsdk.Config{
 		BaseURL: url,
 	}
@@ -231,7 +232,11 @@ func TestList(t *testing.T) {
 	numThings := 101
 	var saved []bootstrap.Config
 	for i := 0; i < numThings; i++ {
-		s, err := svc.Add(validToken, config)
+		c := config
+		id := uuid.NewV4().String()
+		c.ExternalID = id
+		c.ExternalKey = id
+		s, err := svc.Add(validToken, c)
 		saved = append(saved, s)
 		require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 	}

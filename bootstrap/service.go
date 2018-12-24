@@ -221,6 +221,9 @@ func (bs bootstrapService) Remove(key, id string) error {
 
 	thing, err := bs.things.RetrieveByID(owner, id)
 	if err != nil {
+		if err == ErrNotFound {
+			return nil
+		}
 		return err
 	}
 

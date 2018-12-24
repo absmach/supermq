@@ -773,7 +773,7 @@ func TestRemove(t *testing.T) {
 			desc:   "remove non-existing config",
 			id:     "non-existing",
 			auth:   validToken,
-			status: http.StatusNotFound,
+			status: http.StatusNoContent,
 		},
 		{
 			desc:   "remove config",
@@ -785,7 +785,7 @@ func TestRemove(t *testing.T) {
 			desc:   "remove removed config",
 			id:     wrongID,
 			auth:   validToken,
-			status: http.StatusNotFound,
+			status: http.StatusNoContent,
 		},
 	}
 
