@@ -52,6 +52,7 @@ paths:
         - $ref: "#/parameters/Authorization"
         - $ref: "#/parameters/Limit"
         - $ref: "#/parameters/Offset"
+        - $ref: "#/parameters/State"
       responses:
         200:
           description: Data retrieved.
@@ -219,6 +220,16 @@ parameters:
     type: integer
     default: 0
     minimum: 0
+    required: false
+  State:
+    name: state
+    description: A state of items to list
+    in: query
+    type: integer
+    enum:
+      - created
+      - inactive
+      - active
     required: false
 
 responses:
