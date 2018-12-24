@@ -9,7 +9,6 @@ package bootstrap
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/mainflux/mainflux"
@@ -19,13 +18,10 @@ import (
 // This is used as a response from ConfigReader and can easily be
 // replace with any other response format.
 type bootstrapRes struct {
-	MFKey        string `json:"key"`
-	MQTTUsername string `json:"mf_mqtt_username"`
-	MQTTPassword string `json:"mf_mqtt_password"`
-	MQTTRcvTopic string `json:"mf_mqtt_rcv_topic"`
-	MQTTSndTopic string `json:"mf_mqtt_snd_topic"`
-	GWID         string `json:"gw_id"`
-	Content      string `json:"metadata"`
+	MFKey      string   `json:"mainflux_key"`
+	MFThing    string   `json:"mainflux_id"`
+	MFChannels []string `json:"mainflux_channels"`
+	Content    string   `json:"content"`
 }
 
 func (res bootstrapRes) Code() int {
@@ -53,13 +49,10 @@ func (r reader) ReadConfig(cfg Config) (mainflux.Response, error) {
 		return bootstrapRes{}, errors.New("Invalid configuration")
 	}
 	res := bootstrapRes{
-		MFKey:        cfg.MFKey,
-		GWID:         cfg.MFThing,
-		MQTTUsername: cfg.MFThing,
-		MQTTPassword: cfg.MFKey,
-		MQTTRcvTopic: fmt.Sprintf("channels/%s/messages", cfg.MFChannels[0]),
-		MQTTSndTopic: fmt.Sprintf("channels/%s/messages", cfg.MFChannels[0]),
-		Content:      cfg.Content,
+		MFKey:      cfg.MFKey,
+		MFThing:    cfg.MFThing,
+		MFChannels: cfg.MFChannels,
+		Content:    cfg.Content,
 	}
 	return res, nil
 }

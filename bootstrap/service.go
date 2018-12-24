@@ -263,19 +263,17 @@ func (bs bootstrapService) ChangeState(key, id string, state State) error {
 
 	switch state {
 	case Active:
-		for i, c := range thing.MFChannels {
+		for _, c := range thing.MFChannels {
 			if err := bs.sdk.ConnectThing(thing.MFThing, c, key); err != nil {
-				bs.connectionFallback(thing.MFThing, key, thing.MFChannels[:i], false)
 				return ErrThings
 			}
 		}
 	case Inactive:
-		for i, c := range thing.MFChannels {
+		for _, c := range thing.MFChannels {
 			if err := bs.sdk.DisconnectThing(thing.MFThing, c, key); err != nil {
 				if err == mfsdk.ErrNotFound {
 					continue
 				}
-				bs.connectionFallback(thing.MFThing, key, thing.MFChannels[:i], true)
 				return ErrThings
 			}
 		}
@@ -307,15 +305,4 @@ func (bs bootstrapService) identify(token string) (string, error) {
 	}
 
 	return res.GetValue(), nil
-}
-
-func (bs bootstrapService) connectionFallback(id string, key string, channels []string, connect bool) {
-	for _, c := range channels {
-		if connect {
-			bs.sdk.ConnectThing(id, c, key)
-			continue
-		}
-
-		bs.sdk.DisconnectThing(id, c, key)
-	}
 }

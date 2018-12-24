@@ -17,31 +17,12 @@ import (
 )
 
 var (
-	_ mainflux.Response = (*identityRes)(nil)
 	_ mainflux.Response = (*removeRes)(nil)
 	_ mainflux.Response = (*configRes)(nil)
 	_ mainflux.Response = (*stateRes)(nil)
 	_ mainflux.Response = (*viewRes)(nil)
 	_ mainflux.Response = (*listRes)(nil)
 )
-
-type identityRes struct {
-	id uint64
-}
-
-func (res identityRes) Headers() map[string]string {
-	return map[string]string{
-		"X-thing-id": fmt.Sprint(res.id),
-	}
-}
-
-func (res identityRes) Code() int {
-	return http.StatusOK
-}
-
-func (res identityRes) Empty() bool {
-	return true
-}
 
 type removeRes struct{}
 

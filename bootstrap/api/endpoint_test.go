@@ -49,7 +49,7 @@ type config struct {
 	MFKey       string          `json:"mainflux_key,omitempty"`
 	MFThing     string          `json:"mainflux_id,omitempty"`
 	MFChannels  []string        `json:"mainflux_channels,omitempty"`
-	ExternalID  string          `json:"external_id"`
+	ExternalID  string          `json:"external_id,omitempty"`
 	ExternalKey string          `json:"external_key,omitempty"`
 	Content     string          `json:"content,omitempty"`
 	State       bootstrap.State `json:"state,omitempty"`
@@ -346,10 +346,18 @@ func TestUpdate(t *testing.T) {
 		status      int
 	}{
 		{
-			desc:        "update a config unauthorized",
+			desc:        "update unauthorized",
 			req:         data,
 			id:          saved.ID,
 			auth:        invalidToken,
+			contentType: contentType,
+			status:      http.StatusForbidden,
+		},
+		{
+			desc:        "update with an empty token",
+			req:         data,
+			id:          saved.ID,
+			auth:        "",
 			contentType: contentType,
 			status:      http.StatusForbidden,
 		},
@@ -362,7 +370,7 @@ func TestUpdate(t *testing.T) {
 			status:      http.StatusOK,
 		},
 		{
-			desc:        "add a config with wring content type",
+			desc:        "add a config with wrong content type",
 			req:         data,
 			id:          saved.ID,
 			auth:        validToken,
@@ -427,7 +435,7 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	configNum := 100
+	configNum := 101
 	changedStateNum := 20
 	var active, inactive []config
 	list := make([]config, configNum)
@@ -486,58 +494,79 @@ func TestList(t *testing.T) {
 		res    []config
 	}{
 		{
-			desc:   "view a list unauthorized",
+			desc:   "view list unauthorized",
 			auth:   invalidToken,
 			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d", bs.URL, 0, 10),
 			status: http.StatusForbidden,
 			res:    nil,
 		},
 		{
-			desc:   "view a list",
+			desc:   "view list with an empty token",
+			auth:   "",
+			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d", bs.URL, 0, 10),
+			status: http.StatusForbidden,
+			res:    nil,
+		},
+		{
+			desc:   "view list",
 			auth:   validToken,
 			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d", bs.URL, 0, 10),
 			status: http.StatusOK,
 			res:    list[0:10],
 		},
 		{
-			desc:   "view a last page",
+			desc:   "view last page",
 			auth:   validToken,
 			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d", bs.URL, 100, 10),
 			status: http.StatusOK,
 			res:    list[100:],
 		},
 		{
-			desc:   "view a list with no specified limit and offset",
+			desc:   "view with limit greater than allowed",
+			auth:   validToken,
+			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d", bs.URL, 0, 1000),
+			status: http.StatusOK,
+			res:    list[:100],
+		},
+		{
+			desc:   "view list with no specified limit and offset",
 			auth:   validToken,
 			url:    fmt.Sprintf("%s/configs", bs.URL),
 			status: http.StatusOK,
 			res:    list[0:10],
 		},
 		{
-			desc:   "view a list with no specified limit",
+			desc:   "view list with no specified limit",
 			auth:   validToken,
 			url:    fmt.Sprintf("%s/configs?offset=%d", bs.URL, 10),
 			status: http.StatusOK,
 			res:    list[10:20],
 		},
 		{
-			desc:   "view a list with no specified offset",
+			desc:   "view list with no specified offset",
 			auth:   validToken,
 			url:    fmt.Sprintf("%s/configs?limit=%d", bs.URL, 10),
 			status: http.StatusOK,
 			res:    list[0:10],
 		},
 		{
-			desc:   "view a list with limit < 0",
+			desc:   "view list with limit < 0",
 			auth:   validToken,
 			url:    fmt.Sprintf("%s/configs?limit=%d", bs.URL, -10),
 			status: http.StatusBadRequest,
 			res:    nil,
 		},
 		{
-			desc:   "view a list with offset < 0",
+			desc:   "view list with offset < 0",
 			auth:   validToken,
 			url:    fmt.Sprintf("%s/configs?offset=%d", bs.URL, -10),
+			status: http.StatusBadRequest,
+			res:    nil,
+		},
+		{
+			desc:   "view list with invalid query params",
+			auth:   validToken,
+			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d&state=%d&some param=some value", bs.URL, 10, 10, bootstrap.Inactive),
 			status: http.StatusBadRequest,
 			res:    nil,
 		},
@@ -587,6 +616,73 @@ func TestList(t *testing.T) {
 		json.NewDecoder(res.Body).Decode(&body)
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.ElementsMatch(t, tc.res, body["configs"], fmt.Sprintf("%s: expected response '%s' got '%s'", tc.desc, tc.res, body["configs"]))
+	}
+}
+
+func TestRemove(t *testing.T) {
+	users := mocks.NewUsersService(map[string]string{validToken: email})
+
+	ts := newThingsServer(newThingsService(users))
+	svc := newService(users, nil, ts.URL)
+	bs := newBootstrapServer(svc)
+
+	c := bootstrap.Config{
+		ExternalID:  cfg.ExternalID,
+		ExternalKey: cfg.ExternalKey,
+		MFChannels:  cfg.MFChannels,
+		Content:     cfg.Content,
+	}
+
+	saved, err := svc.Add(validToken, c)
+	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+
+	cases := []struct {
+		desc   string
+		id     string
+		auth   string
+		status int
+	}{
+		{
+			desc:   "remove unauthorized",
+			id:     saved.ID,
+			auth:   invalidToken,
+			status: http.StatusForbidden,
+		}, {
+			desc:   "remove with an empty token",
+			id:     saved.ID,
+			auth:   "",
+			status: http.StatusForbidden,
+		},
+		{
+			desc:   "remove non-existing config",
+			id:     "non-existing",
+			auth:   validToken,
+			status: http.StatusNoContent,
+		},
+		{
+			desc:   "remove config",
+			id:     saved.ID,
+			auth:   validToken,
+			status: http.StatusNoContent,
+		},
+		{
+			desc:   "remove removed config",
+			id:     wrongID,
+			auth:   validToken,
+			status: http.StatusNoContent,
+		},
+	}
+
+	for _, tc := range cases {
+		req := testRequest{
+			client: bs.Client(),
+			method: http.MethodDelete,
+			url:    fmt.Sprintf("%s/configs/%s", bs.URL, tc.id),
+			token:  tc.auth,
+		}
+		res, err := req.make()
+		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 	}
 }
 
@@ -658,6 +754,81 @@ func TestUnknown(t *testing.T) {
 	}
 }
 
+func TestBootstrap(t *testing.T) {
+	users := mocks.NewUsersService(map[string]string{validToken: email})
+
+	ts := newThingsServer(newThingsService(users))
+	svc := newService(users, map[string]string{}, ts.URL)
+	bs := newBootstrapServer(svc)
+
+	c := bootstrap.Config{
+		ExternalID:  cfg.ExternalID,
+		ExternalKey: cfg.ExternalKey,
+		MFChannels:  cfg.MFChannels,
+		Content:     cfg.Content,
+	}
+
+	saved, err := svc.Add(validToken, c)
+	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+
+	s := config{
+		MFThing:    saved.MFThing,
+		MFKey:      saved.MFKey,
+		MFChannels: saved.MFChannels,
+		Content:    saved.Content,
+	}
+	data, _ := json.Marshal(s)
+	res := string(data)
+
+	cases := []struct {
+		desc         string
+		external_id  string
+		external_key string
+		status       int
+		res          string
+	}{
+		{
+			desc:         "bootstrap a Thing with unknown ID",
+			external_id:  unknown,
+			external_key: c.ExternalKey,
+			status:       http.StatusNotFound,
+			res:          "",
+		},
+		{
+			desc:         "bootstrap a Thing with unknown key",
+			external_id:  c.ExternalID,
+			external_key: unknown,
+			status:       http.StatusNotFound,
+			res:          "",
+		},
+		{
+			desc:         "bootstrap known Thing",
+			external_id:  c.ExternalID,
+			external_key: c.ExternalKey,
+			status:       http.StatusOK,
+			res:          res,
+		},
+	}
+
+	for _, tc := range cases {
+		req := testRequest{
+			client: bs.Client(),
+			method: http.MethodGet,
+			url:    fmt.Sprintf("%s/bootstrap/%s", bs.URL, tc.external_id),
+			token:  tc.external_key,
+		}
+		res, err := req.make()
+		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+
+		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
+		body, err := ioutil.ReadAll(res.Body)
+		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+
+		data := strings.Trim(string(body), "\n")
+		assert.Equal(t, tc.res, data, fmt.Sprintf("%s: expected response '%s' got '%s'", tc.desc, tc.res, data))
+	}
+}
+
 func TestChangeState(t *testing.T) {
 	users := mocks.NewUsersService(map[string]string{validToken: email})
 
@@ -684,7 +855,7 @@ func TestChangeState(t *testing.T) {
 		status      int
 	}{
 		{
-			desc:        "change a state unauthorized",
+			desc:        "change state unauthorized",
 			id:          saved.ID,
 			auth:        invalidToken,
 			state:       bootstrap.Active,
@@ -692,7 +863,15 @@ func TestChangeState(t *testing.T) {
 			status:      http.StatusForbidden,
 		},
 		{
-			desc:        "change a state invalid content type",
+			desc:        "change state with an empty token",
+			id:          saved.ID,
+			auth:        "",
+			state:       bootstrap.Active,
+			contentType: contentType,
+			status:      http.StatusForbidden,
+		},
+		{
+			desc:        "change state with invalid content type",
 			id:          saved.ID,
 			auth:        validToken,
 			state:       bootstrap.Active,
@@ -700,7 +879,7 @@ func TestChangeState(t *testing.T) {
 			status:      http.StatusUnsupportedMediaType,
 		},
 		{
-			desc:        "change a state",
+			desc:        "change state",
 			id:          saved.ID,
 			auth:        validToken,
 			state:       bootstrap.Active,
@@ -708,7 +887,7 @@ func TestChangeState(t *testing.T) {
 			status:      http.StatusOK,
 		},
 		{
-			desc:        "change a state of non-existing config",
+			desc:        "change state of non-existing config",
 			id:          wrongID,
 			auth:        validToken,
 			state:       bootstrap.Active,
@@ -716,7 +895,7 @@ func TestChangeState(t *testing.T) {
 			status:      http.StatusNotFound,
 		},
 		{
-			desc:        "change a state to invalid value",
+			desc:        "change state to invalid value",
 			id:          saved.ID,
 			auth:        validToken,
 			state:       bootstrap.State(45),
@@ -733,68 +912,6 @@ func TestChangeState(t *testing.T) {
 			token:       tc.auth,
 			contentType: tc.contentType,
 			body:        strings.NewReader(fmt.Sprintf("{\"state\": %d}", tc.state)),
-		}
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-	}
-}
-
-func TestRemove(t *testing.T) {
-	users := mocks.NewUsersService(map[string]string{validToken: email})
-
-	ts := newThingsServer(newThingsService(users))
-	svc := newService(users, nil, ts.URL)
-	bs := newBootstrapServer(svc)
-
-	c := bootstrap.Config{
-		ExternalID:  cfg.ExternalID,
-		ExternalKey: cfg.ExternalKey,
-		MFChannels:  cfg.MFChannels,
-		Content:     cfg.Content,
-	}
-
-	saved, err := svc.Add(validToken, c)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
-
-	cases := []struct {
-		desc   string
-		id     string
-		auth   string
-		status int
-	}{
-		{
-			desc:   "remove unauthorized",
-			id:     saved.ID,
-			auth:   invalidToken,
-			status: http.StatusForbidden,
-		},
-		{
-			desc:   "remove non-existing config",
-			id:     "non-existing",
-			auth:   validToken,
-			status: http.StatusNoContent,
-		},
-		{
-			desc:   "remove config",
-			id:     saved.ID,
-			auth:   validToken,
-			status: http.StatusNoContent,
-		},
-		{
-			desc:   "remove removed config",
-			id:     wrongID,
-			auth:   validToken,
-			status: http.StatusNoContent,
-		},
-	}
-
-	for _, tc := range cases {
-		req := testRequest{
-			client: bs.Client(),
-			method: http.MethodDelete,
-			url:    fmt.Sprintf("%s/configs/%s", bs.URL, tc.id),
-			token:  tc.auth,
 		}
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))

@@ -416,6 +416,13 @@ func TestChangeState(t *testing.T) {
 			err:   bootstrap.ErrUnauthorizedAccess,
 		},
 		{
+			desc:  "change state of non-existing config",
+			state: bootstrap.Active,
+			id:    unknown,
+			key:   validToken,
+			err:   bootstrap.ErrNotFound,
+		},
+		{
 			desc:  "change state to Active",
 			state: bootstrap.Active,
 			id:    saved.ID,

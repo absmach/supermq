@@ -13,7 +13,6 @@ import (
 	"github.com/mainflux/mainflux/bootstrap"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/mainflux/mainflux/things"
 )
 
 func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
@@ -137,8 +136,8 @@ func removeEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(entityReq)
 
-		if err := req.validate(); err == things.ErrNotFound {
-			return removeRes{}, nil
+		if err := req.validate(); err != nil {
+			return removeRes{}, err
 		}
 
 		if err := svc.Remove(req.key, req.id); err != nil {
