@@ -1,8 +1,9 @@
 package api
 
 import (
-	"nov/bootstrap"
 	"time"
+
+	"github.com/mainflux/mainflux/bootstrap"
 
 	"github.com/go-kit/kit/metrics"
 )

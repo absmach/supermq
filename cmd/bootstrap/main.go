@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"nov/bootstrap"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
 
-	api "nov/bootstrap/api"
-	"nov/bootstrap/postgres"
+	"github.com/mainflux/mainflux/bootstrap"
+
+	api "github.com/mainflux/mainflux/bootstrap/api"
+	"github.com/mainflux/mainflux/bootstrap/postgres"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"

@@ -2,8 +2,9 @@ package api
 
 import (
 	"fmt"
-	"nov/bootstrap"
 	"time"
+
+	"github.com/mainflux/mainflux/bootstrap"
 
 	log "github.com/mainflux/mainflux/logger"
 )

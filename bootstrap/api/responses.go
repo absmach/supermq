@@ -3,7 +3,8 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"nov/bootstrap"
+
+	"github.com/mainflux/mainflux/bootstrap"
 
 	"github.com/mainflux/mainflux"
 )

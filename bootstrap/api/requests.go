@@ -1,6 +1,6 @@
 package api
 
-import "nov/bootstrap"
+import "github.com/mainflux/mainflux/bootstrap"
 
 type apiReq interface {
 	validate() error

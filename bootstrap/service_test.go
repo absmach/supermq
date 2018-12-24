@@ -3,10 +3,11 @@ package bootstrap_test
 import (
 	"fmt"
 	"net/http/httptest"
-	"nov/bootstrap"
-	"nov/bootstrap/mocks"
 	"strconv"
 	"testing"
+
+	"github.com/mainflux/mainflux/bootstrap"
+	"github.com/mainflux/mainflux/bootstrap/mocks"
 
 	"github.com/mainflux/mainflux"
 

@@ -1,10 +1,11 @@
 package mocks
 
 import (
-	"nov/bootstrap"
 	"sort"
 	"strconv"
 	"sync"
+
+	"github.com/mainflux/mainflux/bootstrap"
 )
 
 var _ bootstrap.ConfigRepository = (*configRepositoryMock)(nil)

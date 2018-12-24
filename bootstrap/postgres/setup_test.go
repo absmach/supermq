@@ -4,11 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"nov/bootstrap/postgres"
 	"os"
 	"testing"
-	"gopkg.in/ory-am/dockertest.v3"
+
+	"github.com/mainflux/mainflux/bootstrap/postgres"
 	"github.com/mainflux/mainflux/logger"
+	"gopkg.in/ory-am/dockertest.v3"
 )
 
 const (

@@ -2,10 +2,11 @@ package postgres_test
 
 import (
 	"fmt"
-	"nov/bootstrap"
-	"nov/bootstrap/postgres"
 	"strconv"
 	"testing"
+
+	"github.com/mainflux/mainflux/bootstrap"
+	"github.com/mainflux/mainflux/bootstrap/postgres"
 
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"

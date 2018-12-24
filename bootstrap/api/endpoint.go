@@ -2,7 +2,8 @@ package api
 
 import (
 	"context"
-	"nov/bootstrap"
+
+	"github.com/mainflux/mainflux/bootstrap"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/mainflux/mainflux/things"

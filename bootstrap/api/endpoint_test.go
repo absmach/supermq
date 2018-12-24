@@ -14,14 +14,14 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"nov/bootstrap"
 	"strconv"
 	"strings"
 	"testing"
 
-	bsapi "nov/bootstrap/api"
+	"github.com/mainflux/mainflux/bootstrap"
+	bsapi "github.com/mainflux/mainflux/bootstrap/api"
 
-	"nov/bootstrap/mocks"
+	"github.com/mainflux/mainflux/bootstrap/mocks"
 
 	mfsdk "github.com/mainflux/mainflux/sdk/go"
 	"github.com/stretchr/testify/assert"

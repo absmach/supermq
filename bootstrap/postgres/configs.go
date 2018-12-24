@@ -3,8 +3,9 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
-	"nov/bootstrap"
 	"strings"
+
+	"github.com/mainflux/mainflux/bootstrap"
 
 	"github.com/lib/pq" // required for DB access
 	"github.com/mainflux/mainflux/logger"

@@ -7,8 +7,9 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"nov/bootstrap"
 	"strconv"
+
+	"github.com/mainflux/mainflux/bootstrap"
 
 	kithttp "github.com/go-kit/kit/transport/http"
 
