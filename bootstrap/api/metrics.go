@@ -12,9 +12,8 @@ package api
 import (
 	"time"
 
-	"github.com/mainflux/mainflux/bootstrap"
-
 	"github.com/go-kit/kit/metrics"
+	"github.com/mainflux/mainflux/bootstrap"
 )
 
 var _ bootstrap.Service = (*metricsMiddleware)(nil)
