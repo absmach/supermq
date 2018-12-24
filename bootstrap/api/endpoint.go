@@ -10,9 +10,8 @@ package api
 import (
 	"context"
 
-	"github.com/mainflux/mainflux/bootstrap"
-
 	"github.com/go-kit/kit/endpoint"
+	"github.com/mainflux/mainflux/bootstrap"
 )
 
 func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
@@ -38,6 +37,7 @@ func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			id:      saved.ID,
 			created: true,
 		}
+
 		return res, nil
 	}
 }
@@ -65,6 +65,7 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			Content:     config.Content,
 			State:       config.State,
 		}
+
 		return res, nil
 	}
 }
@@ -93,6 +94,7 @@ func updateEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			id:      config.ID,
 			created: false,
 		}
+
 		return res, nil
 	}
 }
@@ -177,10 +179,6 @@ func stateEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		r := stateRes{
-			State: req.State,
-		}
-
-		return r, nil
+		return stateRes{}, nil
 	}
 }

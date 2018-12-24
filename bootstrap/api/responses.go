@@ -124,9 +124,7 @@ func (res bootstrapRes) Empty() bool {
 	return false
 }
 
-type stateRes struct {
-	State bootstrap.State `json:"state"`
-}
+type stateRes struct{}
 
 func (res stateRes) Code() int {
 	return http.StatusOK
@@ -137,5 +135,5 @@ func (res stateRes) Headers() map[string]string {
 }
 
 func (res stateRes) Empty() bool {
-	return false
+	return true
 }
