@@ -163,6 +163,31 @@ paths:
           description: Missing or invalid access token provided.
         500:
           $ref: "#/responses/ServiceError"
+  /unknown:
+    get:
+      summary: Get a list of unsucessfully bootstrapped Things
+      description: |
+        Retrieves a list of unknown configs. Due to performance concerns, data
+        is retrieved in subsets. The API configs must ensure that the entire
+        dataset is consumed either by making subsequent requests, or by
+        increasing the subset size of the initial request.
+      tags:
+        - configs
+      parameters:
+        - $ref: "#/parameters/Authorization"
+        - $ref: "#/parameters/Limit"
+        - $ref: "#/parameters/Offset"
+      responses:
+        200:
+          description: Data retrieved.
+          schema:
+            $ref: "#/definitions/ConfigList"
+        400:
+          description: Failed due to malformed query parameters.
+        403:
+          description: Missing or invalid access token provided.
+        500:
+          $ref: "#/responses/ServiceError"
 
 parameters:
   Authorization:
@@ -244,6 +269,9 @@ definitions:
           - created
           - active
           - inactive
+    required:
+      - external_id
+      - external_key
   ConfigReq:
     type: object
     properties:

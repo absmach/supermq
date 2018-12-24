@@ -3,7 +3,7 @@
 New devices need to be configured properly and connected to the Mainflux. Bootstrap service is used in order to accomplish that. This service provides the following features:
     1) Creating new Mainflux Thing
     2) Providing basic configuration for the newly created Thing
-    3) Handle blacklisting of the thing
+    3) Handle blacklisting of the Thing
 
 Initial BS endpoint will be provided in the Thing during the manufacturing process. Pre-provisioning a new GW is as simple as sending GW data to the
 Bootstrap service. Once the Thing is active it sends a request for initial config to BS service. Once GW is bootstrapped, it’s possible to add it to the whitelist, so that it can exchange messages using Mainflux. Bootstrapping does not implicitly add GW to whitelist, it has to be done manually.
