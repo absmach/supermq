@@ -5,19 +5,18 @@ New devices need to be configured properly and connected to the Mainflux. Bootst
     2) Providing basic configuration for the newly created Thing
     3) Handle blacklisting of the Thing
 
-Initial BS endpoint will be provided in the Thing during the manufacturing process. Pre-provisioning a new GW is as simple as sending GW data to the
-Bootstrap service. Once the Thing is active it sends a request for initial config to BS service. Once GW is bootstrapped, it’s possible to add it to the whitelist, so that it can exchange messages using Mainflux. Bootstrapping does not implicitly add GW to whitelist, it has to be done manually.
+Pre-provisioning a new GW is as simple as sending GW data to the Bootstrap service. Once the Thing is active it sends a request for initial config to BS service. Once the Thing is bootstrapped, it’s possible to add it to the whitelist, so that it can exchange messages using Mainflux. Bootstrapping does not implicitly add Things to whitelist, it has to be done manually.
 
-In order to bootstrap successfully, the Thing needs to send bootstrapping request to the specific URL, as well as secret key that are pre-provisioned during manufacturing process. If the Thing is pre-provisioned on the Bootstrap service side, corresponding configuration will be sent as a response. Otherwise, the Thing will be saved so that these Things can be provisioned later.
+In order to bootstrap successfully, the Thing needs to send bootstrapping request to the specific URL, as well as secret key. This key and URL are pre-provisioned during manufacturing process. If the Thing is pre-provisioned on the Bootstrap service side, corresponding configuration will be sent as a response. Otherwise, the Thing will be saved so that it can be provisioned later.
 
 ***Thing Configuration***
 
-Thing Configuration contains two parts: custom configuration (that can be interpreted by the Thing itself) and Mainflux-related configuration. Mainflux config contains:
+Thing Configuration consists of two logical parts: custom configuration (that can be interpreted by the Thing itself) and Mainflux-related configuration. Mainflux config contains:
     1) corresponding Mainflux Thing ID
     2) corresponding Mainflux Thing key
     3) list of the Mainflux channels the Thing is connected to
 
->Note: list of channels contains IDs of the Mainflux channels. These channels are _pre-provisioned_ on the Mainflux side and Bootstrapping service does not create Mainflux Channels.
+>Note: list of channels contains IDs of the Mainflux channels. These channels are _pre-provisioned_ on the Mainflux side and, unlike corresponding Mainflux Thing, Bootstrapping service does not create Mainflux Channels.
 
 ## Configuration
 
@@ -96,7 +95,7 @@ make things
 make install
 
 # set the environment variables and run the service
-MF_BOOTSTRAP_LOG_LEVEL=[Bootstrap log level] MF_BOOTSTRAP_DB_HOST=[Database host address] MF_BOOTSTRAP_DB_PORT=[Database host port] MF_BOOTSTRAP_DB_USER=[Database user] MF_BOOTSTRAP_DB_PASS=[Database password] MF_BOOTSTRAP_DB=[Name of the database used by the service] MF_BOOTSTRAP_DB_SSL_MODE=[SSL mode to connect to the database with] MF_BOOTSTRAP_DB_SSL_CERT=[Path to the PEM encoded certificate file] MF_BOOTSTRAP_DB_SSL_KEY=[Path to the PEM encoded key file] MF_BOOTSTRAP_DB_SSL_ROOT_CERT=[Path to the PEM encoded root certificate file] MF_BOOTSTRAP_CLIENT_TLS=[Boolean value to enable/disable client TLS]  MF_BOOTSTRAP_PORT=[Service HTTP port] MF_BOOTSTRAP_SERVER_CERT=[Path to server certificate] MF_BOOTSTRAP_SERVER_KEY=[Path to server key] MF_USERS_URL=[Users service URL]  $GOBIN/mainflux-things
+MF_BOOTSTRAP_LOG_LEVEL=[Bootstrap log level] MF_BOOTSTRAP_DB_HOST=[Database host address] MF_BOOTSTRAP_DB_PORT=[Database host port] MF_BOOTSTRAP_DB_USER=[Database user] MF_BOOTSTRAP_DB_PASS=[Database password] MF_BOOTSTRAP_DB=[Name of the database used by the service] MF_BOOTSTRAP_DB_SSL_MODE=[SSL mode to connect to the database with] MF_BOOTSTRAP_DB_SSL_CERT=[Path to the PEM encoded certificate file] MF_BOOTSTRAP_DB_SSL_KEY=[Path to the PEM encoded key file] MF_BOOTSTRAP_DB_SSL_ROOT_CERT=[Path to the PEM encoded root certificate file] MF_BOOTSTRAP_CLIENT_TLS=[Boolean value to enable/disable client TLS] MF_BOOTSTRAP_CA_CERTS=[Path to trusted CAs in PEM format] MF_BOOTSTRAP_PORT=[Service HTTP port] MF_BOOTSTRAP_SERVER_CERT=[Path to server certificate] MF_BOOTSTRAP_SERVER_KEY=[Path to server key] MF_SDK_BASE_URL=[Base SDK URL for the Mainflux services] MF_USERS_URL=[Users service URL] $GOBIN/mainflux-things
 ```
 
 Setting `MF_BOOTSTRAP_CA_CERTS` expects a file in PEM format of trusted CAs. This will enable TLS against the Users gRPC endpoint trusting only those CAs that are provided.
