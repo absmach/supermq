@@ -18,7 +18,10 @@ import (
 	"github.com/mainflux/mainflux/logger"
 )
 
-const duplicateErr = "unique_violation"
+const (
+	duplicateErr = "unique_violation"
+	uuidErr      = "invalid input syntax for type uuid"
+)
 
 var _ bootstrap.ConfigRepository = (*configRepository)(nil)
 
@@ -45,10 +48,10 @@ func nullString(s string) sql.NullString {
 }
 
 func (cr configRepository) Save(thing bootstrap.Config) (string, error) {
-	q := `INSERT INTO configs (mainflux_key, owner, mainflux_thing, external_id, external_key, mainflux_channels, content, state)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
+	q := `INSERT INTO configs (id, mainflux_key, owner, mainflux_thing, external_id, external_key, mainflux_channels, content, state)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`
 
-	if err := cr.db.QueryRow(q, thing.MFKey, thing.Owner, thing.MFThing, thing.ExternalID, thing.ExternalKey,
+	if err := cr.db.QueryRow(q, thing.ID, thing.MFKey, thing.Owner, thing.MFThing, thing.ExternalID, thing.ExternalKey,
 		pq.Array(thing.MFChannels), nullString(thing.Content), thing.State).Scan(&thing.ID); err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Name() == duplicateErr {
 			return "", bootstrap.ErrConflict
@@ -75,6 +78,10 @@ func (cr configRepository) RetrieveByID(key, id string) (bootstrap.Config, error
 		if err == sql.ErrNoRows {
 			return empty, bootstrap.ErrNotFound
 		}
+		if pqErr, ok := err.(*pq.Error); ok && strings.HasPrefix(pqErr.Message, uuidErr) {
+			return empty, bootstrap.ErrNotFound
+		}
+
 		return empty, err
 	}
 

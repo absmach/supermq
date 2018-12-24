@@ -53,7 +53,7 @@ func migrateDB(db *sql.DB) error {
 				Id: "configs_1",
 				Up: []string{
 					`CREATE TABLE IF NOT EXISTS configs (
-						id          	  BIGSERIAL,
+						id          	  UUID,
 						owner             VARCHAR(254),
 						mainflux_thing    TEXT UNIQUE NOT NULL,
 						mainflux_key      CHAR(36) UNIQUE NOT NULL,

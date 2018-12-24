@@ -16,10 +16,10 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/bootstrap"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
+	uuid "github.com/mainflux/mainflux/bootstrap/uuid"
 	mfsdk "github.com/mainflux/mainflux/sdk/go"
 	"github.com/mainflux/mainflux/things"
 	httpapi "github.com/mainflux/mainflux/things/api/http"
-	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -34,12 +34,15 @@ const (
 	channelsNum  = 3
 )
 
-var config = bootstrap.Config{
-	ExternalID:  "external_id",
-	ExternalKey: "external_key",
-	MFChannels:  []string{"1"},
-	Content:     "config",
-}
+var (
+	idp    = uuid.New()
+	config = bootstrap.Config{
+		ExternalID:  "external_id",
+		ExternalKey: "external_key",
+		MFChannels:  []string{"1"},
+		Content:     "config",
+	}
+)
 
 func newService(users mainflux.UsersServiceClient, url string) bootstrap.Service {
 	things := mocks.NewConfigsRepository(map[string]string{unknownID: unknownKey})
@@ -48,7 +51,7 @@ func newService(users mainflux.UsersServiceClient, url string) bootstrap.Service
 	}
 
 	sdk := mfsdk.NewSDK(config)
-	return bootstrap.New(users, things, sdk)
+	return bootstrap.New(users, things, sdk, idp)
 }
 
 func newThingsService(users mainflux.UsersServiceClient) things.Service {
@@ -231,7 +234,7 @@ func TestList(t *testing.T) {
 	var saved []bootstrap.Config
 	for i := 0; i < numThings; i++ {
 		c := config
-		id := uuid.NewV4().String()
+		id := idp.ID()
 		c.ExternalID = id
 		c.ExternalKey = id
 		s, err := svc.Add(validToken, c)

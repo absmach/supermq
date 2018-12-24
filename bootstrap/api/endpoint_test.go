@@ -22,6 +22,7 @@ import (
 	"github.com/mainflux/mainflux/bootstrap"
 	bsapi "github.com/mainflux/mainflux/bootstrap/api"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
+	"github.com/mainflux/mainflux/bootstrap/uuid"
 	mfsdk "github.com/mainflux/mainflux/sdk/go"
 	"github.com/mainflux/mainflux/things"
 	thingsapi "github.com/mainflux/mainflux/things/api/http"
@@ -51,12 +52,15 @@ type config struct {
 	State       bootstrap.State `json:"state,omitempty"`
 }
 
-var cfg = config{
-	ExternalID:  "external-id",
-	ExternalKey: "external-key",
-	MFChannels:  []string{"1"},
-	Content:     "config",
-}
+var (
+	idp = uuid.New()
+	cfg = config{
+		ExternalID:  "external-id",
+		ExternalKey: "external-key",
+		MFChannels:  []string{"1"},
+		Content:     "config",
+	}
+)
 
 type testRequest struct {
 	client      *http.Client
@@ -88,7 +92,7 @@ func newService(users mainflux.UsersServiceClient, unknown map[string]string, ur
 	}
 
 	sdk := mfsdk.NewSDK(config)
-	return bootstrap.New(users, things, sdk)
+	return bootstrap.New(users, things, sdk, idp)
 }
 
 func newThingsService(users mainflux.UsersServiceClient) things.Service {

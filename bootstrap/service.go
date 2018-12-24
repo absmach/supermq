@@ -76,17 +76,19 @@ type ConfigReader interface {
 }
 
 type bootstrapService struct {
+	users  mainflux.UsersServiceClient
 	things ConfigRepository
 	sdk    mfsdk.SDK
-	users  mainflux.UsersServiceClient
+	idp    IdentityProvider
 }
 
 // New returns new Bootstrap service.
-func New(users mainflux.UsersServiceClient, things ConfigRepository, sdk mfsdk.SDK) Service {
+func New(users mainflux.UsersServiceClient, things ConfigRepository, sdk mfsdk.SDK, idp IdentityProvider) Service {
 	return &bootstrapService{
 		things: things,
 		sdk:    sdk,
 		users:  users,
+		idp:    idp,
 	}
 }
 
@@ -103,7 +105,6 @@ func (bs bootstrapService) Add(key string, thing Config) (Config, error) {
 			return Config{}, ErrMalformedEntity
 		}
 	}
-
 	mfThing, err := bs.add(key)
 	if err != nil {
 		return Config{}, err
@@ -113,6 +114,7 @@ func (bs bootstrapService) Add(key string, thing Config) (Config, error) {
 	thing.State = Created
 	thing.MFThing = mfThing.ID
 	thing.MFKey = mfThing.Key
+	thing.ID = bs.idp.ID()
 
 	id, err := bs.things.Save(thing)
 	if err != nil {
@@ -292,6 +294,7 @@ func (bs bootstrapService) add(key string) (mfsdk.Thing, error) {
 	if err != nil {
 		return mfsdk.Thing{}, bs.sdk.DeleteThing(thingID, key)
 	}
+
 	return thing, nil
 }
 
