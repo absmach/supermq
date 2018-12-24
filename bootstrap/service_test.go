@@ -13,19 +13,15 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/bootstrap"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
-	uuid "github.com/satori/go.uuid"
-
-	"github.com/mainflux/mainflux"
-
+	mfsdk "github.com/mainflux/mainflux/sdk/go"
 	"github.com/mainflux/mainflux/things"
-
 	httpapi "github.com/mainflux/mainflux/things/api/http"
+	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	mfsdk "github.com/mainflux/mainflux/sdk/go"
 )
 
 const (
@@ -33,6 +29,8 @@ const (
 	invalidToken = "invalidToken"
 	email        = "test@example.com"
 	unknown      = "unknown"
+	unknownID    = "1"
+	unknownKey   = "2"
 	channelsNum  = 3
 )
 
@@ -44,7 +42,7 @@ var config = bootstrap.Config{
 }
 
 func newService(users mainflux.UsersServiceClient, url string) bootstrap.Service {
-	things := mocks.NewConfigsRepository(map[string]string{})
+	things := mocks.NewConfigsRepository(map[string]string{unknownID: unknownKey})
 	config := mfsdk.Config{
 		BaseURL: url,
 	}
@@ -176,8 +174,8 @@ func TestUpdate(t *testing.T) {
 	nonExisting := config
 	nonExisting.ID = unknown
 
-	wrongChannels := modifiedCreated
-	wrongChannels.MFChannels = append(wrongChannels.MFChannels, "wrong")
+	wrongChannels := modifiedActive
+	wrongChannels.MFChannels = append(wrongChannels.MFChannels, unknown)
 
 	cases := []struct {
 		desc   string
@@ -245,6 +243,11 @@ func TestList(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("Changing config state expected to succeed: %s.\n", err))
 	saved[41].State = bootstrap.Active
 
+	unknownConfig := bootstrap.Config{
+		ExternalID:  unknownID,
+		ExternalKey: unknownKey,
+	}
+
 	cases := []struct {
 		desc   string
 		config []bootstrap.Config
@@ -287,6 +290,15 @@ func TestList(t *testing.T) {
 			filter: bootstrap.Filter{"state": bootstrap.Active.String()},
 			key:    validToken,
 			offset: 35,
+			limit:  20,
+			err:    nil,
+		},
+		{
+			desc:   "list unknown config",
+			config: []bootstrap.Config{unknownConfig},
+			filter: bootstrap.Filter{"unknown": "true"},
+			key:    validToken,
+			offset: 0,
 			limit:  20,
 			err:    nil,
 		},
@@ -424,6 +436,13 @@ func TestChangeState(t *testing.T) {
 		},
 		{
 			desc:  "change state to Active",
+			state: bootstrap.Active,
+			id:    saved.ID,
+			key:   validToken,
+			err:   nil,
+		},
+		{
+			desc:  "change state to current state",
 			state: bootstrap.Active,
 			id:    saved.ID,
 			key:   validToken,

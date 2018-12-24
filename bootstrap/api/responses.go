@@ -104,26 +104,6 @@ func (res listRes) Empty() bool {
 	return false
 }
 
-type bootstrapRes struct {
-	MQTTUsername string `json:"mf_mqtt_username"`
-	MQTTRcvTopic string `json:"mf_mqtt_rcv_topic"`
-	MQTTSndTopic string `json:"mf_mqtt_snd_topic"`
-	GWID         string `json:"nov_gw_id"`
-	Metadata     string `json:"metadata"`
-}
-
-func (res bootstrapRes) Code() int {
-	return http.StatusOK
-}
-
-func (res bootstrapRes) Headers() map[string]string {
-	return map[string]string{}
-}
-
-func (res bootstrapRes) Empty() bool {
-	return false
-}
-
 type stateRes struct{}
 
 func (res stateRes) Code() int {

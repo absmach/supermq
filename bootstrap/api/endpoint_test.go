@@ -18,18 +18,15 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/bootstrap"
 	bsapi "github.com/mainflux/mainflux/bootstrap/api"
-
 	"github.com/mainflux/mainflux/bootstrap/mocks"
-
 	mfsdk "github.com/mainflux/mainflux/sdk/go"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/things"
 	thingsapi "github.com/mainflux/mainflux/things/api/http"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -39,7 +36,6 @@ const (
 	unknown      = "unknown"
 	channelsNum  = 3
 	contentType  = "application/json"
-	token        = "token"
 	wrongID      = "wrong_id"
 )
 
@@ -566,7 +562,7 @@ func TestList(t *testing.T) {
 		{
 			desc:   "view list with invalid query params",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d&state=%d&some param=some value", bs.URL, 10, 10, bootstrap.Inactive),
+			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d&state=%d&key=%%", bs.URL, 10, 10, bootstrap.Inactive),
 			status: http.StatusBadRequest,
 			res:    nil,
 		},
@@ -686,7 +682,7 @@ func TestRemove(t *testing.T) {
 	}
 }
 
-func TestUnknown(t *testing.T) {
+func TestListUnknown(t *testing.T) {
 	unknownNum := 10
 	unknown := make([]config, unknownNum)
 	unknownConfigs := make(map[string]string, unknownNum)
@@ -717,6 +713,34 @@ func TestUnknown(t *testing.T) {
 			auth:   invalidToken,
 			url:    fmt.Sprintf("%s/unknown?offset=%d&limit=%d", bs.URL, 0, 5),
 			status: http.StatusForbidden,
+			res:    nil,
+		},
+		{
+			desc:   "view unknown with an empty token",
+			auth:   "",
+			url:    fmt.Sprintf("%s/unknown?offset=%d&limit=%d", bs.URL, 0, 5),
+			status: http.StatusForbidden,
+			res:    nil,
+		},
+		{
+			desc:   "view unknown with limit < 0",
+			auth:   validToken,
+			url:    fmt.Sprintf("%s/unknown?offset=%d&limit=%d", bs.URL, 0, -5),
+			status: http.StatusBadRequest,
+			res:    nil,
+		},
+		{
+			desc:   "view unknown with offset < 0",
+			auth:   validToken,
+			url:    fmt.Sprintf("%s/unknown?offset=%d&limit=%d", bs.URL, -3, 5),
+			status: http.StatusBadRequest,
+			res:    nil,
+		},
+		{
+			desc:   "view unknown with invalid query params",
+			auth:   validToken,
+			url:    fmt.Sprintf("%s/unknown?offset=%d&limit=%d&key=%%", bs.URL, 0, -5),
+			status: http.StatusBadRequest,
 			res:    nil,
 		},
 		{
@@ -795,10 +819,24 @@ func TestBootstrap(t *testing.T) {
 			res:          "",
 		},
 		{
+			desc:         "bootstrap a Thing with an empty ID",
+			external_id:  "",
+			external_key: c.ExternalKey,
+			status:       http.StatusBadRequest,
+			res:          "",
+		},
+		{
 			desc:         "bootstrap a Thing with unknown key",
 			external_id:  c.ExternalID,
 			external_key: unknown,
 			status:       http.StatusNotFound,
+			res:          "",
+		},
+		{
+			desc:         "bootstrap a Thing with an empty key",
+			external_id:  c.ExternalID,
+			external_key: "",
+			status:       http.StatusForbidden,
 			res:          "",
 		},
 		{
@@ -846,11 +884,15 @@ func TestChangeState(t *testing.T) {
 	saved, err := svc.Add(validToken, c)
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
+	created := fmt.Sprintf("{\"state\": %d}", bootstrap.Created)
+	inactive := fmt.Sprintf("{\"state\": %d}", bootstrap.Inactive)
+	active := fmt.Sprintf("{\"state\": %d}", bootstrap.Active)
+
 	cases := []struct {
 		desc        string
 		id          string
 		auth        string
-		state       bootstrap.State
+		state       string
 		contentType string
 		status      int
 	}{
@@ -858,7 +900,7 @@ func TestChangeState(t *testing.T) {
 			desc:        "change state unauthorized",
 			id:          saved.ID,
 			auth:        invalidToken,
-			state:       bootstrap.Active,
+			state:       active,
 			contentType: contentType,
 			status:      http.StatusForbidden,
 		},
@@ -866,7 +908,7 @@ func TestChangeState(t *testing.T) {
 			desc:        "change state with an empty token",
 			id:          saved.ID,
 			auth:        "",
-			state:       bootstrap.Active,
+			state:       active,
 			contentType: contentType,
 			status:      http.StatusForbidden,
 		},
@@ -874,15 +916,31 @@ func TestChangeState(t *testing.T) {
 			desc:        "change state with invalid content type",
 			id:          saved.ID,
 			auth:        validToken,
-			state:       bootstrap.Active,
+			state:       active,
 			contentType: "",
 			status:      http.StatusUnsupportedMediaType,
 		},
 		{
-			desc:        "change state",
+			desc:        "change state to active",
 			id:          saved.ID,
 			auth:        validToken,
-			state:       bootstrap.Active,
+			state:       active,
+			contentType: contentType,
+			status:      http.StatusOK,
+		},
+		{
+			desc:        "change state to inactive",
+			id:          saved.ID,
+			auth:        validToken,
+			state:       inactive,
+			contentType: contentType,
+			status:      http.StatusOK,
+		},
+		{
+			desc:        "change state to created",
+			id:          saved.ID,
+			auth:        validToken,
+			state:       created,
 			contentType: contentType,
 			status:      http.StatusOK,
 		},
@@ -890,7 +948,7 @@ func TestChangeState(t *testing.T) {
 			desc:        "change state of non-existing config",
 			id:          wrongID,
 			auth:        validToken,
-			state:       bootstrap.Active,
+			state:       active,
 			contentType: contentType,
 			status:      http.StatusNotFound,
 		},
@@ -898,7 +956,15 @@ func TestChangeState(t *testing.T) {
 			desc:        "change state to invalid value",
 			id:          saved.ID,
 			auth:        validToken,
-			state:       bootstrap.State(45),
+			state:       fmt.Sprintf("{\"state\": %d}", -3),
+			contentType: contentType,
+			status:      http.StatusBadRequest,
+		},
+		{
+			desc:        "change state with invalid data",
+			id:          saved.ID,
+			auth:        validToken,
+			state:       "",
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 		},
@@ -911,7 +977,7 @@ func TestChangeState(t *testing.T) {
 			url:         fmt.Sprintf("%s/state/%s", bs.URL, tc.id),
 			token:       tc.auth,
 			contentType: tc.contentType,
-			body:        strings.NewReader(fmt.Sprintf("{\"state\": %d}", tc.state)),
+			body:        strings.NewReader(tc.state),
 		}
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
