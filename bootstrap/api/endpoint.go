@@ -34,7 +34,7 @@ func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		res := configRes{
-			id:      saved.ID,
+			id:      saved.MFThing,
 			created: true,
 		}
 
@@ -56,9 +56,8 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		res := viewRes{
-			ID:          config.ID,
-			MFKey:       config.MFKey,
 			MFThing:     config.MFThing,
+			MFKey:       config.MFKey,
 			MFChannels:  config.MFChannels,
 			ExternalID:  config.ExternalID,
 			ExternalKey: config.ExternalKey,
@@ -79,7 +78,7 @@ func updateEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		config := bootstrap.Config{
-			ID:         req.id,
+			MFThing:    req.id,
 			MFChannels: req.MFChannels,
 			Content:    req.Content,
 			State:      req.State,
@@ -91,7 +90,7 @@ func updateEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		res := configRes{
-			id:      config.ID,
+			id:      config.MFThing,
 			created: false,
 		}
 
@@ -118,7 +117,6 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 
 		for _, cfg := range configs {
 			view := viewRes{
-				ID:          cfg.ID,
 				MFThing:     cfg.MFThing,
 				MFKey:       cfg.MFKey,
 				MFChannels:  cfg.MFChannels,

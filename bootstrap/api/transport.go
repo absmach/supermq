@@ -273,10 +273,6 @@ func parsePagePrams(q url.Values) (uint64, uint64, error) {
 		return 0, 0, err
 	}
 
-	if limit < 0 || offset < 0 {
-		return 0, 0, bootstrap.ErrMalformedEntity
-	}
-
 	if limit > maxLimit {
 		limit = maxLimit
 	}

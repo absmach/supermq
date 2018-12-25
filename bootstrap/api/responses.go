@@ -66,9 +66,8 @@ func (res configRes) Empty() bool {
 }
 
 type viewRes struct {
-	ID          string          `json:"id,omitempty"`
-	MFKey       string          `json:"mainflux_key,omitempty"`
 	MFThing     string          `json:"mainflux_id,omitempty"`
+	MFKey       string          `json:"mainflux_key,omitempty"`
 	MFChannels  []string        `json:"mainflux_channels,omitempty"`
 	ExternalID  string          `json:"external_id"`
 	ExternalKey string          `json:"external_key,omitempty"`

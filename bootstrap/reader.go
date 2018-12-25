@@ -18,8 +18,8 @@ import (
 // This is used as a response from ConfigReader and can easily be
 // replace with any other response format.
 type bootstrapRes struct {
-	MFKey      string   `json:"mainflux_key"`
 	MFThing    string   `json:"mainflux_id"`
+	MFKey      string   `json:"mainflux_key"`
 	MFChannels []string `json:"mainflux_channels"`
 	Content    string   `json:"content"`
 }

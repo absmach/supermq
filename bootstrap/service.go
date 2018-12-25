@@ -79,16 +79,14 @@ type bootstrapService struct {
 	users  mainflux.UsersServiceClient
 	things ConfigRepository
 	sdk    mfsdk.SDK
-	idp    IdentityProvider
 }
 
 // New returns new Bootstrap service.
-func New(users mainflux.UsersServiceClient, things ConfigRepository, sdk mfsdk.SDK, idp IdentityProvider) Service {
+func New(users mainflux.UsersServiceClient, things ConfigRepository, sdk mfsdk.SDK) Service {
 	return &bootstrapService{
 		things: things,
 		sdk:    sdk,
 		users:  users,
-		idp:    idp,
 	}
 }
 
@@ -110,11 +108,10 @@ func (bs bootstrapService) Add(key string, thing Config) (Config, error) {
 		return Config{}, err
 	}
 
+	thing.MFThing = mfThing.ID
 	thing.Owner = owner
 	thing.State = Created
-	thing.MFThing = mfThing.ID
 	thing.MFKey = mfThing.Key
-	thing.ID = bs.idp.ID()
 
 	id, err := bs.things.Save(thing)
 	if err != nil {
@@ -122,7 +119,7 @@ func (bs bootstrapService) Add(key string, thing Config) (Config, error) {
 	}
 	bs.things.RemoveUnknown(thing.ExternalKey, thing.ExternalID)
 
-	thing.ID = id
+	thing.MFThing = id
 	return thing, nil
 }
 
@@ -142,7 +139,7 @@ func (bs bootstrapService) Update(key string, thing Config) error {
 
 	thing.Owner = owner
 
-	t, err := bs.things.RetrieveByID(owner, thing.ID)
+	t, err := bs.things.RetrieveByID(owner, thing.MFThing)
 	if err != nil {
 		return err
 	}

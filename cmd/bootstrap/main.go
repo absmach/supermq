@@ -21,7 +21,6 @@ import (
 	"github.com/mainflux/mainflux/bootstrap"
 	api "github.com/mainflux/mainflux/bootstrap/api"
 	"github.com/mainflux/mainflux/bootstrap/postgres"
-	"github.com/mainflux/mainflux/bootstrap/uuid"
 	"github.com/mainflux/mainflux/logger"
 	mfsdk "github.com/mainflux/mainflux/sdk/go"
 	usersapi "github.com/mainflux/mainflux/users/api/grpc"
@@ -158,7 +157,7 @@ func newService(conn *grpc.ClientConn, db *sql.DB, logger logger.Logger, cfg con
 	sdk := mfsdk.NewSDK(config)
 	users := usersapi.NewClient(conn)
 
-	svc := bootstrap.New(users, thingsRepo, sdk, uuid.New())
+	svc := bootstrap.New(users, thingsRepo, sdk)
 	svc = api.NewLoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,

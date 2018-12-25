@@ -22,7 +22,6 @@ import (
 	"github.com/mainflux/mainflux/bootstrap"
 	bsapi "github.com/mainflux/mainflux/bootstrap/api"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
-	"github.com/mainflux/mainflux/bootstrap/uuid"
 	mfsdk "github.com/mainflux/mainflux/sdk/go"
 	"github.com/mainflux/mainflux/things"
 	thingsapi "github.com/mainflux/mainflux/things/api/http"
@@ -41,10 +40,9 @@ const (
 )
 
 type config struct {
-	ID          string          `json:"id,omitempty"`
+	MFThing     string          `json:"mainflux_id,omitempty"`
 	Owner       string          `json:"owner,omitempty"`
 	MFKey       string          `json:"mainflux_key,omitempty"`
-	MFThing     string          `json:"mainflux_id,omitempty"`
 	MFChannels  []string        `json:"mainflux_channels,omitempty"`
 	ExternalID  string          `json:"external_id,omitempty"`
 	ExternalKey string          `json:"external_key,omitempty"`
@@ -52,15 +50,12 @@ type config struct {
 	State       bootstrap.State `json:"state,omitempty"`
 }
 
-var (
-	idp = uuid.New()
-	cfg = config{
-		ExternalID:  "external-id",
-		ExternalKey: "external-key",
-		MFChannels:  []string{"1"},
-		Content:     "config",
-	}
-)
+var cfg = config{
+	ExternalID:  "external-id",
+	ExternalKey: "external-key",
+	MFChannels:  []string{"1"},
+	Content:     "config",
+}
 
 type testRequest struct {
 	client      *http.Client
@@ -92,7 +87,7 @@ func newService(users mainflux.UsersServiceClient, unknown map[string]string, ur
 	}
 
 	sdk := mfsdk.NewSDK(config)
-	return bootstrap.New(users, things, sdk, idp)
+	return bootstrap.New(users, things, sdk)
 }
 
 func newThingsService(users mainflux.UsersServiceClient) things.Service {
@@ -186,6 +181,13 @@ func TestAdd(t *testing.T) {
 			location:    "",
 		},
 		{
+			desc:        "add a config with wrong JSON",
+			req:         "{\"external_id\": 5}",
+			auth:        validToken,
+			contentType: contentType,
+			status:      http.StatusBadRequest,
+		},
+		{
 			desc:        "add a config with invalid request format",
 			req:         "}",
 			auth:        validToken,
@@ -247,7 +249,7 @@ func TestView(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	s := cfg
-	s.ID = saved.ID
+	s.MFThing = saved.MFThing
 	s.MFThing = saved.MFThing
 	s.MFKey = saved.MFKey
 	s.State = saved.State
@@ -263,14 +265,14 @@ func TestView(t *testing.T) {
 		{
 			desc:   "view a config unauthorized",
 			auth:   invalidToken,
-			id:     saved.ID,
+			id:     saved.MFThing,
 			status: http.StatusForbidden,
 			res:    "",
 		},
 		{
 			desc:   "view a config",
 			auth:   validToken,
-			id:     saved.ID,
+			id:     saved.MFThing,
 			status: http.StatusOK,
 			res:    data,
 		},
@@ -284,7 +286,7 @@ func TestView(t *testing.T) {
 		{
 			desc:   "view a config with an empty token",
 			auth:   "",
-			id:     saved.ID,
+			id:     saved.MFThing,
 			status: http.StatusForbidden,
 			res:    "",
 		},
@@ -348,7 +350,7 @@ func TestUpdate(t *testing.T) {
 		{
 			desc:        "update unauthorized",
 			req:         data,
-			id:          saved.ID,
+			id:          saved.MFThing,
 			auth:        invalidToken,
 			contentType: contentType,
 			status:      http.StatusForbidden,
@@ -356,7 +358,7 @@ func TestUpdate(t *testing.T) {
 		{
 			desc:        "update with an empty token",
 			req:         data,
-			id:          saved.ID,
+			id:          saved.MFThing,
 			auth:        "",
 			contentType: contentType,
 			status:      http.StatusForbidden,
@@ -364,15 +366,15 @@ func TestUpdate(t *testing.T) {
 		{
 			desc:        "update a valid config",
 			req:         data,
-			id:          saved.ID,
+			id:          saved.MFThing,
 			auth:        validToken,
 			contentType: contentType,
 			status:      http.StatusOK,
 		},
 		{
-			desc:        "add a config with wrong content type",
+			desc:        "update a config with wrong content type",
 			req:         data,
-			id:          saved.ID,
+			id:          saved.MFThing,
 			auth:        validToken,
 			contentType: "",
 			status:      http.StatusUnsupportedMediaType,
@@ -386,32 +388,32 @@ func TestUpdate(t *testing.T) {
 			status:      http.StatusNotFound,
 		},
 		{
-			desc:        "add a config with invalid channels",
+			desc:        "update a config with invalid channels",
 			req:         wrongData,
-			id:          saved.ID,
+			id:          saved.MFThing,
 			auth:        validToken,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 		},
 		{
-			desc:        "add a config with invalid request format",
+			desc:        "update a config with invalid request format",
 			req:         "}",
-			id:          saved.ID,
+			id:          saved.MFThing,
 			auth:        validToken,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 		},
 		{
-			desc:        "add a config with empty JSON",
+			desc:        "update a config with empty JSON",
 			req:         "{}",
-			id:          saved.ID,
+			id:          saved.MFThing,
 			auth:        validToken,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 		},
 		{
-			desc:        "add a config with an empty request",
-			id:          saved.ID,
+			desc:        "update a config with an empty request",
+			id:          saved.MFThing,
 			req:         "",
 			auth:        validToken,
 			contentType: contentType,
@@ -454,16 +456,16 @@ func TestList(t *testing.T) {
 
 	for i := 0; i < configNum; i++ {
 		c.ExternalID = strconv.Itoa(i)
+		c.MFKey = c.ExternalID
 		c.ExternalKey = fmt.Sprintf("%s%s", c.ExternalKey, strconv.Itoa(i))
 		saved, err := svc.Add(validToken, c)
 		require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 		s := config{
-			ID:          saved.ID,
-			ExternalID:  saved.ExternalID,
-			ExternalKey: saved.ExternalKey,
 			MFThing:     saved.MFThing,
 			MFKey:       saved.MFKey,
 			MFChannels:  saved.MFChannels,
+			ExternalID:  saved.ExternalID,
+			ExternalKey: saved.ExternalKey,
 			Content:     saved.Content,
 			State:       saved.State,
 		}
@@ -476,7 +478,7 @@ func TestList(t *testing.T) {
 		if i%2 == 0 {
 			state = bootstrap.Inactive
 		}
-		err := svc.ChangeState(validToken, list[i].ID, state)
+		err := svc.ChangeState(validToken, list[i].MFThing, state)
 		require.Nil(t, err, fmt.Sprintf("Changing state expected to succeed: %s.\n", err))
 		list[i].State = state
 		if state == bootstrap.Inactive {
@@ -510,9 +512,9 @@ func TestList(t *testing.T) {
 		{
 			desc:   "view list",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d", bs.URL, 0, 10),
+			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d", bs.URL, 0, 1),
 			status: http.StatusOK,
-			res:    list[0:10],
+			res:    list[0:1],
 		},
 		{
 			desc:   "view last page",
@@ -644,12 +646,12 @@ func TestRemove(t *testing.T) {
 	}{
 		{
 			desc:   "remove unauthorized",
-			id:     saved.ID,
+			id:     saved.MFThing,
 			auth:   invalidToken,
 			status: http.StatusForbidden,
 		}, {
 			desc:   "remove with an empty token",
-			id:     saved.ID,
+			id:     saved.MFThing,
 			auth:   "",
 			status: http.StatusForbidden,
 		},
@@ -661,7 +663,7 @@ func TestRemove(t *testing.T) {
 		},
 		{
 			desc:   "remove config",
-			id:     saved.ID,
+			id:     saved.MFThing,
 			auth:   validToken,
 			status: http.StatusNoContent,
 		},
@@ -902,7 +904,7 @@ func TestChangeState(t *testing.T) {
 	}{
 		{
 			desc:        "change state unauthorized",
-			id:          saved.ID,
+			id:          saved.MFThing,
 			auth:        invalidToken,
 			state:       active,
 			contentType: contentType,
@@ -910,7 +912,7 @@ func TestChangeState(t *testing.T) {
 		},
 		{
 			desc:        "change state with an empty token",
-			id:          saved.ID,
+			id:          saved.MFThing,
 			auth:        "",
 			state:       active,
 			contentType: contentType,
@@ -918,7 +920,7 @@ func TestChangeState(t *testing.T) {
 		},
 		{
 			desc:        "change state with invalid content type",
-			id:          saved.ID,
+			id:          saved.MFThing,
 			auth:        validToken,
 			state:       active,
 			contentType: "",
@@ -926,7 +928,7 @@ func TestChangeState(t *testing.T) {
 		},
 		{
 			desc:        "change state to active",
-			id:          saved.ID,
+			id:          saved.MFThing,
 			auth:        validToken,
 			state:       active,
 			contentType: contentType,
@@ -934,7 +936,7 @@ func TestChangeState(t *testing.T) {
 		},
 		{
 			desc:        "change state to inactive",
-			id:          saved.ID,
+			id:          saved.MFThing,
 			auth:        validToken,
 			state:       inactive,
 			contentType: contentType,
@@ -942,7 +944,7 @@ func TestChangeState(t *testing.T) {
 		},
 		{
 			desc:        "change state to created",
-			id:          saved.ID,
+			id:          saved.MFThing,
 			auth:        validToken,
 			state:       created,
 			contentType: contentType,
@@ -958,7 +960,7 @@ func TestChangeState(t *testing.T) {
 		},
 		{
 			desc:        "change state to invalid value",
-			id:          saved.ID,
+			id:          saved.MFThing,
 			auth:        validToken,
 			state:       fmt.Sprintf("{\"state\": %d}", -3),
 			contentType: contentType,
@@ -966,7 +968,7 @@ func TestChangeState(t *testing.T) {
 		},
 		{
 			desc:        "change state with invalid data",
-			id:          saved.ID,
+			id:          saved.MFThing,
 			auth:        validToken,
 			state:       "",
 			contentType: contentType,

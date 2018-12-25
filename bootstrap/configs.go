@@ -37,9 +37,8 @@ const (
 // Config represents Configuration entity. It wraps information about external entity
 // as well as info about corresponding Mainflux entities.
 type Config struct {
-	ID          string
-	Owner       string
 	MFThing     string
+	Owner       string
 	MFKey       string
 	MFChannels  []string
 	ExternalID  string

@@ -16,10 +16,10 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/bootstrap"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
-	uuid "github.com/mainflux/mainflux/bootstrap/uuid"
 	mfsdk "github.com/mainflux/mainflux/sdk/go"
 	"github.com/mainflux/mainflux/things"
 	httpapi "github.com/mainflux/mainflux/things/api/http"
+	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -34,15 +34,12 @@ const (
 	channelsNum  = 3
 )
 
-var (
-	idp    = uuid.New()
-	config = bootstrap.Config{
-		ExternalID:  "external_id",
-		ExternalKey: "external_key",
-		MFChannels:  []string{"1"},
-		Content:     "config",
-	}
-)
+var config = bootstrap.Config{
+	ExternalID:  "external_id",
+	ExternalKey: "external_key",
+	MFChannels:  []string{"1"},
+	Content:     "config",
+}
 
 func newService(users mainflux.UsersServiceClient, url string) bootstrap.Service {
 	things := mocks.NewConfigsRepository(map[string]string{unknownID: unknownKey})
@@ -51,7 +48,7 @@ func newService(users mainflux.UsersServiceClient, url string) bootstrap.Service
 	}
 
 	sdk := mfsdk.NewSDK(config)
-	return bootstrap.New(users, things, sdk, idp)
+	return bootstrap.New(users, things, sdk)
 }
 
 func newThingsService(users mainflux.UsersServiceClient) things.Service {
@@ -131,7 +128,7 @@ func TestView(t *testing.T) {
 	}{
 		{
 			desc: "view an existing config",
-			id:   saved.ID,
+			id:   saved.MFThing,
 			key:  validToken,
 			err:  nil,
 		},
@@ -143,7 +140,7 @@ func TestView(t *testing.T) {
 		},
 		{
 			desc: "view a config with wrong credentials",
-			id:   config.ID,
+			id:   config.MFThing,
 			key:  invalidToken,
 			err:  bootstrap.ErrUnauthorizedAccess,
 		},
@@ -175,7 +172,7 @@ func TestUpdate(t *testing.T) {
 	modifiedActive.MFChannels = []string{"1", "2"}
 
 	nonExisting := config
-	nonExisting.ID = unknown
+	nonExisting.MFThing = unknown
 
 	wrongChannels := modifiedActive
 	wrongChannels.MFChannels = append(wrongChannels.MFChannels, unknown)
@@ -234,7 +231,7 @@ func TestList(t *testing.T) {
 	var saved []bootstrap.Config
 	for i := 0; i < numThings; i++ {
 		c := config
-		id := idp.ID()
+		id := uuid.NewV4().String()
 		c.ExternalID = id
 		c.ExternalKey = id
 		s, err := svc.Add(validToken, c)
@@ -331,19 +328,19 @@ func TestRemove(t *testing.T) {
 	}{
 		{
 			desc: "view a config with wrong credentials",
-			id:   saved.ID,
+			id:   saved.MFThing,
 			key:  invalidToken,
 			err:  bootstrap.ErrUnauthorizedAccess,
 		},
 		{
 			desc: "remove an existing config",
-			id:   saved.ID,
+			id:   saved.MFThing,
 			key:  validToken,
 			err:  nil,
 		},
 		{
 			desc: "remove removed config",
-			id:   saved.ID,
+			id:   saved.MFThing,
 			key:  validToken,
 			err:  nil,
 		},
@@ -426,7 +423,7 @@ func TestChangeState(t *testing.T) {
 		{
 			desc:  "change state with wrong credentials",
 			state: bootstrap.Active,
-			id:    saved.ID,
+			id:    saved.MFThing,
 			key:   invalidToken,
 			err:   bootstrap.ErrUnauthorizedAccess,
 		},
@@ -440,21 +437,21 @@ func TestChangeState(t *testing.T) {
 		{
 			desc:  "change state to Active",
 			state: bootstrap.Active,
-			id:    saved.ID,
+			id:    saved.MFThing,
 			key:   validToken,
 			err:   nil,
 		},
 		{
 			desc:  "change state to current state",
 			state: bootstrap.Active,
-			id:    saved.ID,
+			id:    saved.MFThing,
 			key:   validToken,
 			err:   nil,
 		},
 		{
 			desc:  "change state to Inactive",
 			state: bootstrap.Inactive,
-			id:    saved.ID,
+			id:    saved.MFThing,
 			key:   validToken,
 			err:   nil,
 		},

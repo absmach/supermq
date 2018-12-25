@@ -37,17 +37,17 @@ func (crm *configRepositoryMock) Save(config bootstrap.Config) (string, error) {
 	defer crm.mu.Unlock()
 
 	for _, v := range crm.configs {
-		if v.ID == config.ID || v.ExternalID == config.ExternalID {
+		if v.MFThing == config.MFThing || v.ExternalID == config.ExternalID {
 			return "", bootstrap.ErrConflict
 		}
 	}
 
 	crm.counter++
-	config.ID = strconv.FormatUint(crm.counter, 10)
-	crm.configs[config.ID] = config
+	config.MFThing = strconv.FormatUint(crm.counter, 10)
+	crm.configs[config.MFThing] = config
 	delete(crm.unknown, config.ExternalID)
 
-	return config.ID, nil
+	return config.MFThing, nil
 }
 
 func (crm *configRepositoryMock) RetrieveByID(key, id string) (bootstrap.Config, error) {
@@ -79,7 +79,7 @@ func (crm *configRepositoryMock) RetrieveAll(key string, filter bootstrap.Filter
 	}
 
 	for _, v := range crm.configs {
-		id, _ := strconv.ParseUint(v.ID, 10, 64)
+		id, _ := strconv.ParseUint(v.MFThing, 10, 64)
 		if id >= first && id < last {
 			if (state == -1 || v.State == state) && v.Owner == key {
 				configs = append(configs, v)
@@ -88,7 +88,7 @@ func (crm *configRepositoryMock) RetrieveAll(key string, filter bootstrap.Filter
 	}
 
 	sort.SliceStable(configs, func(i, j int) bool {
-		return configs[i].ID < configs[j].ID
+		return configs[i].MFThing < configs[j].MFThing
 	})
 
 	return configs
@@ -108,11 +108,11 @@ func (crm *configRepositoryMock) Update(config bootstrap.Config) error {
 	crm.mu.Lock()
 	defer crm.mu.Unlock()
 
-	if _, ok := crm.configs[config.ID]; !ok {
+	if _, ok := crm.configs[config.MFThing]; !ok {
 		return bootstrap.ErrNotFound
 	}
 
-	crm.configs[config.ID] = config
+	crm.configs[config.MFThing] = config
 
 	return nil
 }

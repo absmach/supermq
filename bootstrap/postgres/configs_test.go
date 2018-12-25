@@ -14,17 +14,14 @@ import (
 
 	"github.com/mainflux/mainflux/bootstrap"
 	"github.com/mainflux/mainflux/bootstrap/postgres"
-	"github.com/mainflux/mainflux/bootstrap/uuid"
+	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 const numConfigs = 10
 
-var idp = uuid.New()
-
 var config = bootstrap.Config{
-	ID:          idp.ID(),
 	MFThing:     "mf-thing",
 	MFKey:       "mf-key",
 	ExternalID:  "external-id",
@@ -63,8 +60,7 @@ func TestRetrieveByID(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	c := config
 	// Use UUID to prevent conflicts.
-	id := idp.ID()
-	c.ID = id
+	id := uuid.NewV4().String()
 	c.MFKey = id
 	c.MFThing = id
 	c.ExternalID = id
@@ -92,7 +88,7 @@ func TestRetrieveByID(t *testing.T) {
 		{
 			desc:  "retrieve a non-existing config",
 			owner: c.Owner,
-			id:    idp.ID(),
+			id:    uuid.NewV4().String(),
 			err:   bootstrap.ErrNotFound,
 		},
 		{
@@ -113,8 +109,7 @@ func TestRetrieveAll(t *testing.T) {
 	for i := 0; i < numConfigs; i++ {
 		c := config
 		// Use UUID to prevent conflict errors.
-		id := idp.ID()
-		c.ID = id
+		id := uuid.NewV4().String()
 		c.ExternalID = id
 		c.MFThing = id
 		c.MFKey = id
@@ -173,8 +168,7 @@ func TestRetrieveByExternalID(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	c := config
 	// Use UUID to prevent conflicts.
-	id := idp.ID()
-	c.ID = id
+	id := uuid.NewV4().String()
 	c.MFKey = id
 	c.MFThing = id
 	c.ExternalID = id
@@ -217,8 +211,7 @@ func TestUpdate(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	c := config
 	// Use UUID to prevent conflicts.
-	id := idp.ID()
-	c.ID = id
+	id := uuid.NewV4().String()
 	c.MFKey = id
 	c.MFThing = id
 	c.ExternalID = id
@@ -226,10 +219,8 @@ func TestUpdate(t *testing.T) {
 	saved, err := repo.Save(c)
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
-	id = idp.ID()
-	c.ID = saved
-	c.MFKey = id
-	c.MFThing = id
+	id = uuid.NewV4().String()
+	c.MFThing = saved
 	c.ExternalID = id
 	c.ExternalKey = id
 	c.MFChannels = []string{"1", "2", "3", "4"}
@@ -238,9 +229,6 @@ func TestUpdate(t *testing.T) {
 
 	wrongOwner := c
 	wrongOwner.Owner = "3"
-
-	wrongID := c
-	wrongID.ID = idp.ID()
 
 	cases := []struct {
 		desc   string
@@ -251,11 +239,6 @@ func TestUpdate(t *testing.T) {
 		{
 			desc:   "update with wrong owner",
 			config: wrongOwner,
-			err:    bootstrap.ErrNotFound,
-		},
-		{
-			desc:   "update with wrong id",
-			config: wrongID,
 			err:    bootstrap.ErrNotFound,
 		},
 		{
@@ -274,8 +257,7 @@ func TestRemove(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	c := config
 	// Use UUID to prevent conflicts.
-	id := idp.ID()
-	c.ID = id
+	id := uuid.NewV4().String()
 	c.MFKey = id
 	c.MFThing = id
 	c.ExternalID = id
@@ -298,8 +280,7 @@ func TestChangeState(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	c := config
 	// Use UUID to prevent conflicts.
-	id := idp.ID()
-	c.ID = id
+	id := uuid.NewV4().String()
 	c.MFKey = id
 	c.MFThing = id
 	c.ExternalID = id
@@ -322,7 +303,7 @@ func TestChangeState(t *testing.T) {
 		},
 		{
 			desc:  "change state with wrong id",
-			id:    idp.ID(),
+			id:    uuid.NewV4().String(),
 			owner: c.Owner,
 			err:   bootstrap.ErrNotFound,
 		},
@@ -365,13 +346,13 @@ func TestSaveUnknown(t *testing.T) {
 	}{
 		{
 			desc:        "save unknown",
-			externalID:  idp.ID(),
-			externalKey: idp.ID(),
+			externalID:  uuid.NewV4().String(),
+			externalKey: uuid.NewV4().String(),
 			err:         nil,
 		},
 		{
 			desc:        "save invalid unknown",
-			externalID:  idp.ID(),
+			externalID:  uuid.NewV4().String(),
 			externalKey: "",
 			err:         nil,
 		},
@@ -386,7 +367,7 @@ func TestRetrieveUnknown(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 
 	for i := 0; i < numConfigs; i++ {
-		id := idp.ID()
+		id := uuid.NewV4().String()
 		repo.SaveUnknown(id, id)
 	}
 
@@ -419,7 +400,7 @@ func TestRetrieveUnknown(t *testing.T) {
 func TestRemoveUnknown(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 
-	id := idp.ID()
+	id := uuid.NewV4().String()
 	repo.SaveUnknown(id, id)
 
 	// Removal works the same for both existing and non-existing
