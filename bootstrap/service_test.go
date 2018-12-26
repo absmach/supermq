@@ -211,7 +211,7 @@ func TestUpdate(t *testing.T) {
 			desc:   "update a config with invalid list of channels",
 			config: wrongChannels,
 			key:    validToken,
-			err:    bootstrap.ErrNotFound,
+			err:    bootstrap.ErrMalformedEntity,
 		},
 	}
 
@@ -267,13 +267,22 @@ func TestList(t *testing.T) {
 			err:    nil,
 		},
 		{
-			desc:   "list config with wrong credentials",
+			desc:   "list config unauthorized",
 			config: []bootstrap.Config{},
 			filter: bootstrap.Filter{},
 			key:    invalidToken,
 			offset: 0,
 			limit:  10,
 			err:    bootstrap.ErrUnauthorizedAccess,
+		},
+		{
+			desc:   "list config with invalid filter",
+			config: []bootstrap.Config{},
+			filter: nil,
+			key:    validToken,
+			offset: 0,
+			limit:  10,
+			err:    bootstrap.ErrMalformedEntity,
 		},
 		{
 			desc:   "list last page",

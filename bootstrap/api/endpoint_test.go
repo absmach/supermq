@@ -327,14 +327,14 @@ func TestUpdate(t *testing.T) {
 	saved, err := svc.Add(validToken, c)
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
-	update := cfg
-	update.MFChannels = []string{"2", "3"}
-	update.Content = "new config"
-	update.State = bootstrap.Active
-
+	update := config{
+		MFChannels: []string{"2", "3"},
+		Content:    "new config",
+		State:      bootstrap.Active,
+	}
 	data := toJSON(update)
 
-	invalidChannels := cfg
+	invalidChannels := update
 	invalidChannels.MFChannels = []string{wrongID}
 
 	wrongData := toJSON(invalidChannels)
@@ -890,7 +890,6 @@ func TestChangeState(t *testing.T) {
 	saved, err := svc.Add(validToken, c)
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
-	created := fmt.Sprintf("{\"state\": %d}", bootstrap.Created)
 	inactive := fmt.Sprintf("{\"state\": %d}", bootstrap.Inactive)
 	active := fmt.Sprintf("{\"state\": %d}", bootstrap.Active)
 
@@ -939,14 +938,6 @@ func TestChangeState(t *testing.T) {
 			id:          saved.MFThing,
 			auth:        validToken,
 			state:       inactive,
-			contentType: contentType,
-			status:      http.StatusOK,
-		},
-		{
-			desc:        "change state to created",
-			id:          saved.MFThing,
-			auth:        validToken,
-			state:       created,
 			contentType: contentType,
 			status:      http.StatusOK,
 		},

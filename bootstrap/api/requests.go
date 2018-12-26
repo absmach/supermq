@@ -45,7 +45,7 @@ func (req entityReq) validate() error {
 type updateReq struct {
 	key        string
 	id         string
-	MFChannels []string        `json:"channels"`
+	MFChannels []string        `json:"mainflux_channels"`
 	Content    string          `json:"content"`
 	State      bootstrap.State `json:"state"`
 }
@@ -107,8 +107,7 @@ func (req changeStateReq) validate() error {
 		return bootstrap.ErrUnauthorizedAccess
 	}
 
-	if req.State != bootstrap.Created &&
-		req.State != bootstrap.Inactive &&
+	if req.State != bootstrap.Inactive &&
 		req.State != bootstrap.Active {
 		return bootstrap.ErrMalformedEntity
 	}

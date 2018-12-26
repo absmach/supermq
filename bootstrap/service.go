@@ -70,7 +70,7 @@ type Service interface {
 // ConfigReader is used to parse Config into format which will be encoded
 // as a JSON and consumed from the client side. The purpose of this interface
 // is to provide convenient way to generate custom configuration response
-// based on the specific Config which will be consumed form the client side.
+// based on the specific Config which will be consumed by the client.
 type ConfigReader interface {
 	ReadConfig(Config) (mainflux.Response, error)
 }
@@ -110,7 +110,7 @@ func (bs bootstrapService) Add(key string, thing Config) (Config, error) {
 
 	thing.MFThing = mfThing.ID
 	thing.Owner = owner
-	thing.State = Created
+	thing.State = Inactive
 	thing.MFKey = mfThing.Key
 
 	id, err := bs.things.Save(thing)
@@ -177,7 +177,7 @@ func (bs bootstrapService) Update(key string, thing Config) error {
 	for c := range disconnect {
 		err := bs.sdk.DisconnectThing(id, c, key)
 		if err == mfsdk.ErrNotFound {
-			return ErrNotFound
+			return ErrMalformedEntity
 		}
 		if err != nil {
 			return ErrThings
@@ -187,7 +187,7 @@ func (bs bootstrapService) Update(key string, thing Config) error {
 	for _, c := range connect {
 		err := bs.sdk.ConnectThing(id, c, key)
 		if err == mfsdk.ErrNotFound {
-			return ErrNotFound
+			return ErrMalformedEntity
 		}
 		if err != nil {
 			return ErrThings

@@ -15,8 +15,7 @@ import (
 // as well as description of what that State represents are given in the table:
 // | State    | What it means 		                                                           |
 // |----------+--------------------------------------------------------------------------------|
-// | Created  | Thing has been created and saved, but not bootstrapped                         |
-// | Inactive | Thing is created and bootstrapped, but isn't able to communicate over Mainflux |
+// | Inactive | Thing is created, but isn't able to communicate over Mainflux 				   |
 // | Active   | Thing is able to communicate using Mainflux                                    |
 type State int
 
@@ -26,10 +25,8 @@ func (s State) String() string {
 }
 
 const (
-	// Created Thing is created, but not configured.
-	Created State = iota
 	// Inactive Thing is created and configured, but not able to exchange messages using Mainflux.
-	Inactive
+	Inactive State = iota
 	// Active Thing is created, configured, and whitelisted.
 	Active
 )

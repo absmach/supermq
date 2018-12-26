@@ -29,7 +29,7 @@ var config = bootstrap.Config{
 	Owner:       "user@email.com",
 	MFChannels:  []string{"1", "2"},
 	Content:     "content",
-	State:       bootstrap.Created,
+	State:       bootstrap.Inactive,
 }
 
 func TestSave(t *testing.T) {
@@ -306,13 +306,6 @@ func TestChangeState(t *testing.T) {
 			id:    uuid.NewV4().String(),
 			owner: c.Owner,
 			err:   bootstrap.ErrNotFound,
-		},
-		{
-			desc:  "change state to Created",
-			id:    saved,
-			owner: c.Owner,
-			state: bootstrap.Created,
-			err:   nil,
 		},
 		{
 			desc:  "change state to Active",
