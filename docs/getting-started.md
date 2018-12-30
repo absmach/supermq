@@ -375,7 +375,7 @@ CoAP Adapter sends these notifications every 12 hours. To configure this period,
  
  #### LoRa Server setup
  - **Create Organization:** To add your own Gateways to the network you must have an Organization.
- - **Add Network LoRa Server:** Set the address of your LoRa Server where the [LoRa Gateways Bridge](https://www.loraserver.io/lora-gateway-bridge/overview) will forward messages over MQTT.
+ - **Add Network LoRa Server:** Set the address of your Network-Server API that is used by LoRa App Server or other custom components interacting with LoRa Server (by default loraserver:8000).
  - **Create a Gateways-Profile:** In this profile you can select the radio LoRa channels and the LoRa Network Server to use.
  - **Create a Service-profile:** A service-profile connects an organization to a network-server and defines the features that an organization can use on this Network-Server.
  - **Create a Gateway:** You must set proper ID in order to be discovered by LoRa Server.
