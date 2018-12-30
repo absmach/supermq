@@ -361,7 +361,9 @@ CoAP Adapter sends these notifications every 12 hours. To configure this period,
  
  ```
  
- The Mainflux lora-adapter can do bridging between both systems. Basically, the service subscribe to the [LoRa Gateway Bridge](https://www.loraserver.io/lora-gateway-bridge/overview/), an mqtt broker that receive UDP messages from the SemTech packet-forwarder. You must configure the docker-compose.yml with the address of your LoRa Server Network, otherwise the composition will fail:
+ The Mainflux lora-adapter can do bridging between both systems. Basically, the service subscribe to the [LoRa Gateway Bridge](https://www.loraserver.io/lora-gateway-bridge/overview/), a service which abstracts the [SemTech packet-forwarder UDP protocol](https://github.com/Lora-net/packet_forwarder/blob/master/PROTOCOL.TXT) into JSON over MQTT.
+ 
+ You must configure the `MF_LORA_ADAPTER_LORA_MESSAGE_URL` variable in the lora-adapter docker-compose.yml with the address of your LoRa Gateway Bridge, otherwise the composition will fail:
  
  ```bash
  docker-compose -f docker/addons/lora-adapter/docker-compose up
@@ -421,7 +423,7 @@ CoAP Adapter sends these notifications every 12 hours. To configure this period,
  }
  ```
  
- To receive Lora messages the lora-adapter subscribes to the topic `applications/+/devices/+` of the [LoRa Server](https://www.loraserver.io/loraserver/overview). The [LoRa Gateway Bridge](https://www.loraserver.io/lora-gateway-bridge/overview) uses the same topic to publish decoded messages received from gateways as UDP packets. The lora-adapter verifies the applicationID and the deviceEUI of published message and if they are known it forwards the message on the Mainflux NATS broker as corresponding Channel and Thing.
+ To forward LoRa messages the lora-adapter subscribes to topics `applications/+/devices/+` of the [LoRa Gateway Bridge](https://www.loraserver.io/lora-gateway-bridge/overview). It verifies `appID` and `devEUI` of published messages. If the mapping exists it uses corresponding `channelID` and `thingID` to sign and forwards the content of the LoRa message to the Mainflux message broker.
  For more information about service capabilities and its usage, please check out the API documentation.
  
 ## Add-ons
