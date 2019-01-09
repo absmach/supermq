@@ -62,7 +62,7 @@ locally:
 version: "2"
   bootstrap:
     image: mainflux/bootstrap:latest
-    container_name: nov-bootstrap
+    container_name: mainflux-bootstrap
     depends_on:
       - bootstrap-db
     restart: on-failure

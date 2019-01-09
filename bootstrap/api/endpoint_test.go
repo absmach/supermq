@@ -43,7 +43,7 @@ type config struct {
 	MFThing     string          `json:"mainflux_id,omitempty"`
 	Owner       string          `json:"owner,omitempty"`
 	MFKey       string          `json:"mainflux_key,omitempty"`
-	MFChannels  []string        `json:"mainflux_channels,omitempty"`
+	MFChannels  []string        `json:"channels,omitempty"`
 	ExternalID  string          `json:"external_id,omitempty"`
 	ExternalKey string          `json:"external_key,omitempty"`
 	Content     string          `json:"content,omitempty"`
@@ -808,7 +808,8 @@ func TestBootstrap(t *testing.T) {
 		Content:    saved.Content,
 	}
 	data, _ := json.Marshal(s)
-	res := string(data)
+	// Bootstrapping response includes mainflux_channels instead of channels.
+	res := strings.Replace(string(data), "channels", "mainflux_channels", 1)
 
 	cases := []struct {
 		desc         string

@@ -58,7 +58,7 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		res := viewRes{
 			MFThing:     config.MFThing,
 			MFKey:       config.MFKey,
-			MFChannels:  config.MFChannels,
+			Channels:    config.MFChannels,
 			ExternalID:  config.ExternalID,
 			ExternalKey: config.ExternalKey,
 			Content:     config.Content,
@@ -79,13 +79,12 @@ func updateEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 
 		config := bootstrap.Config{
 			MFThing:    req.id,
-			MFChannels: req.MFChannels,
+			MFChannels: req.Channels,
 			Content:    req.Content,
 			State:      req.State,
 		}
 
-		err := svc.Update(req.key, config)
-		if err != nil {
+		if err := svc.Update(req.key, config); err != nil {
 			return nil, err
 		}
 
@@ -119,7 +118,7 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			view := viewRes{
 				MFThing:     cfg.MFThing,
 				MFKey:       cfg.MFKey,
-				MFChannels:  cfg.MFChannels,
+				Channels:    cfg.MFChannels,
 				ExternalID:  cfg.ExternalID,
 				ExternalKey: cfg.ExternalKey,
 				Content:     cfg.Content,
@@ -168,8 +167,7 @@ func stateEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(changeStateReq)
 
-		err := req.validate()
-		if err != nil {
+		if err := req.validate(); err != nil {
 			return nil, err
 		}
 

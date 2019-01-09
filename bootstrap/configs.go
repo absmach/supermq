@@ -16,6 +16,9 @@ const (
 
 // Config represents Configuration entity. It wraps information about external entity
 // as well as info about corresponding Mainflux entities.
+// MFThing represents corresponding Mainflux Thing ID.
+// MFKey is key of corresponding Mainflux Thing.
+// MFChannels is a list of Mainflux Channels corresponding Mainflux Thing connects to.
 type Config struct {
 	MFThing     string
 	Owner       string
