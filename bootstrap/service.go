@@ -76,21 +76,21 @@ type ConfigReader interface {
 }
 
 type bootstrapService struct {
-	users  mainflux.UsersServiceClient
-	things ConfigRepository
-	sdk    mfsdk.SDK
+	users   mainflux.UsersServiceClient
+	configs ConfigRepository
+	sdk     mfsdk.SDK
 }
 
 // New returns new Bootstrap service.
-func New(users mainflux.UsersServiceClient, things ConfigRepository, sdk mfsdk.SDK) Service {
+func New(users mainflux.UsersServiceClient, configs ConfigRepository, sdk mfsdk.SDK) Service {
 	return &bootstrapService{
-		things: things,
-		sdk:    sdk,
-		users:  users,
+		configs: configs,
+		sdk:     sdk,
+		users:   users,
 	}
 }
 
-func (bs bootstrapService) Add(key string, thing Config) (Config, error) {
+func (bs bootstrapService) Add(key string, cfg Config) (Config, error) {
 	owner, err := bs.identify(key)
 	if err != nil {
 		return Config{}, err
@@ -98,7 +98,7 @@ func (bs bootstrapService) Add(key string, thing Config) (Config, error) {
 	// Check if channels exist. This is the way to prevent invalid configuration to be saved.
 	// However, channels deletion wil eventually cause this; since Bootstrap service is not
 	// using events from the Things service at the moment.
-	for _, c := range thing.MFChannels {
+	for _, c := range cfg.MFChannels {
 		if _, err := bs.sdk.Channel(c, key); err != nil {
 			return Config{}, ErrMalformedEntity
 		}
@@ -108,19 +108,19 @@ func (bs bootstrapService) Add(key string, thing Config) (Config, error) {
 		return Config{}, err
 	}
 
-	thing.MFThing = mfThing.ID
-	thing.Owner = owner
-	thing.State = Inactive
-	thing.MFKey = mfThing.Key
+	cfg.MFThing = mfThing.ID
+	cfg.Owner = owner
+	cfg.State = Inactive
+	cfg.MFKey = mfThing.Key
 
-	id, err := bs.things.Save(thing)
+	id, err := bs.configs.Save(cfg)
 	if err != nil {
 		return Config{}, err
 	}
-	bs.things.RemoveUnknown(thing.ExternalKey, thing.ExternalID)
+	bs.configs.RemoveUnknown(cfg.ExternalKey, cfg.ExternalID)
 
-	thing.MFThing = id
-	return thing, nil
+	cfg.MFThing = id
+	return cfg, nil
 }
 
 func (bs bootstrapService) View(key, id string) (Config, error) {
@@ -128,18 +128,18 @@ func (bs bootstrapService) View(key, id string) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
-	return bs.things.RetrieveByID(owner, id)
+	return bs.configs.RetrieveByID(owner, id)
 }
 
-func (bs bootstrapService) Update(key string, thing Config) error {
+func (bs bootstrapService) Update(key string, cfg Config) error {
 	owner, err := bs.identify(key)
 	if err != nil {
 		return err
 	}
 
-	thing.Owner = owner
+	cfg.Owner = owner
 
-	t, err := bs.things.RetrieveByID(owner, thing.MFThing)
+	t, err := bs.configs.RetrieveByID(owner, cfg.MFThing)
 	if err != nil {
 		return err
 	}
@@ -155,8 +155,8 @@ func (bs bootstrapService) Update(key string, thing Config) error {
 			disconnect[c] = true
 		}
 
-		for _, c := range thing.MFChannels {
-			if thing.State == Active {
+		for _, c := range cfg.MFChannels {
+			if cfg.State == Active {
 				if disconnect[c] {
 					// Don't disconnect common elements.
 					delete(disconnect, c)
@@ -168,33 +168,31 @@ func (bs bootstrapService) Update(key string, thing Config) error {
 		}
 
 	default:
-		if thing.State == Active {
+		if cfg.State == Active {
 			// Connect all new elements.
-			connect = thing.MFChannels
+			connect = cfg.MFChannels
 		}
 	}
 
 	for c := range disconnect {
-		err := bs.sdk.DisconnectThing(id, c, key)
-		if err == mfsdk.ErrNotFound {
-			return ErrMalformedEntity
-		}
-		if err != nil {
+		if err := bs.sdk.DisconnectThing(id, c, key); err != nil {
+			if err == mfsdk.ErrNotFound {
+				return ErrMalformedEntity
+			}
 			return ErrThings
 		}
 	}
 
 	for _, c := range connect {
-		err := bs.sdk.ConnectThing(id, c, key)
-		if err == mfsdk.ErrNotFound {
-			return ErrMalformedEntity
-		}
-		if err != nil {
+		if err := bs.sdk.ConnectThing(id, c, key); err != nil {
+			if err == mfsdk.ErrNotFound {
+				return ErrMalformedEntity
+			}
 			return ErrThings
 		}
 	}
 
-	return bs.things.Update(thing)
+	return bs.configs.Update(cfg)
 }
 
 func (bs bootstrapService) List(key string, filter Filter, offset, limit uint64) ([]Config, error) {
@@ -206,10 +204,10 @@ func (bs bootstrapService) List(key string, filter Filter, offset, limit uint64)
 		return []Config{}, ErrMalformedEntity
 	}
 	if _, ok := filter["unknown"]; ok {
-		return bs.things.RetrieveUnknown(offset, limit), nil
+		return bs.configs.RetrieveUnknown(offset, limit), nil
 	}
 
-	return bs.things.RetrieveAll(owner, filter, offset, limit), nil
+	return bs.configs.RetrieveAll(owner, filter, offset, limit), nil
 }
 
 func (bs bootstrapService) Remove(key, id string) error {
@@ -218,7 +216,7 @@ func (bs bootstrapService) Remove(key, id string) error {
 		return err
 	}
 
-	thing, err := bs.things.RetrieveByID(owner, id)
+	thing, err := bs.configs.RetrieveByID(owner, id)
 	if err != nil {
 		if err == ErrNotFound {
 			return nil
@@ -230,14 +228,14 @@ func (bs bootstrapService) Remove(key, id string) error {
 		return ErrThings
 	}
 
-	return bs.things.Remove(owner, id)
+	return bs.configs.Remove(owner, id)
 }
 
 func (bs bootstrapService) Bootstrap(externalKey, externalID string) (Config, error) {
-	thing, err := bs.things.RetrieveByExternalID(externalKey, externalID)
+	thing, err := bs.configs.RetrieveByExternalID(externalKey, externalID)
 	if err != nil {
 		if err == ErrNotFound {
-			bs.things.SaveUnknown(externalKey, externalID)
+			bs.configs.SaveUnknown(externalKey, externalID)
 		}
 		return Config{}, ErrNotFound
 	}
@@ -251,7 +249,7 @@ func (bs bootstrapService) ChangeState(key, id string, state State) error {
 		return err
 	}
 
-	thing, err := bs.things.RetrieveByID(owner, id)
+	thing, err := bs.configs.RetrieveByID(owner, id)
 	if err != nil {
 		return err
 	}
@@ -278,7 +276,7 @@ func (bs bootstrapService) ChangeState(key, id string, state State) error {
 		}
 	}
 
-	return bs.things.ChangeState(owner, id, state)
+	return bs.configs.ChangeState(owner, id, state)
 }
 
 func (bs bootstrapService) add(key string) (mfsdk.Thing, error) {
