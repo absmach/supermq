@@ -45,7 +45,8 @@ const (
 	defPort          = "8180"
 	defServerCert    = ""
 	defServerKey     = ""
-	defBaseURL       = "http://localhost:8182"
+	defBaseURL       = "http://localhost"
+	defThingsPrefix  = ""
 	defUsersURL      = "localhost:8181"
 
 	envLogLevel      = "MF_BOOTSTRAP_LOG_LEVEL"
@@ -64,19 +65,21 @@ const (
 	envServerCert    = "MF_BOOTSTRAP_SERVER_CERT"
 	envServerKey     = "MF_BOOTSTRAP_SERVER_KEY"
 	envBaseURL       = "MF_SDK_BASE_URL"
+	envThingsPrefix  = "MF_SDK_THINGS_PREFIX"
 	envUsersURL      = "MF_USERS_URL"
 )
 
 type config struct {
-	logLevel   string
-	dbConfig   postgres.Config
-	clientTLS  bool
-	caCerts    string
-	httpPort   string
-	serverCert string
-	serverKey  string
-	baseURL    string
-	usersURL   string
+	logLevel     string
+	dbConfig     postgres.Config
+	clientTLS    bool
+	caCerts      string
+	httpPort     string
+	serverCert   string
+	serverKey    string
+	baseURL      string
+	thingsPrefix string
+	usersURL     string
 }
 
 func main() {
@@ -126,15 +129,16 @@ func loadConfig() config {
 	}
 
 	return config{
-		logLevel:   mainflux.Env(envLogLevel, defLogLevel),
-		dbConfig:   dbConfig,
-		clientTLS:  tls,
-		caCerts:    mainflux.Env(envCACerts, defCACerts),
-		httpPort:   mainflux.Env(envPort, defPort),
-		serverCert: mainflux.Env(envServerCert, defServerCert),
-		serverKey:  mainflux.Env(envServerKey, defServerKey),
-		baseURL:    mainflux.Env(envBaseURL, defBaseURL),
-		usersURL:   mainflux.Env(envUsersURL, defUsersURL),
+		logLevel:     mainflux.Env(envLogLevel, defLogLevel),
+		dbConfig:     dbConfig,
+		clientTLS:    tls,
+		caCerts:      mainflux.Env(envCACerts, defCACerts),
+		httpPort:     mainflux.Env(envPort, defPort),
+		serverCert:   mainflux.Env(envServerCert, defServerCert),
+		serverKey:    mainflux.Env(envServerKey, defServerKey),
+		baseURL:      mainflux.Env(envBaseURL, defBaseURL),
+		thingsPrefix: mainflux.Env(envThingsPrefix, defThingsPrefix),
+		usersURL:     mainflux.Env(envUsersURL, defUsersURL),
 	}
 }
 
@@ -151,7 +155,8 @@ func newService(conn *grpc.ClientConn, db *sql.DB, logger logger.Logger, cfg con
 	thingsRepo := postgres.NewConfigRepository(db, logger)
 
 	config := mfsdk.Config{
-		BaseURL: cfg.baseURL,
+		BaseURL:      cfg.baseURL,
+		ThingsPrefix: cfg.thingsPrefix,
 	}
 
 	sdk := mfsdk.NewSDK(config)
