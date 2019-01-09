@@ -186,7 +186,7 @@ func (cr configRepository) ChangeState(key, id string, state bootstrap.State) er
 }
 
 func (cr configRepository) SaveUnknown(key, id string) error {
-	q := `INSERT INTO unknown (external_id, external_key) VALUES ($1, $2)`
+	q := `INSERT INTO unknown_configs (external_id, external_key) VALUES ($1, $2)`
 
 	if _, err := cr.db.Exec(q, id, key); err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Name() == duplicateErr {
@@ -199,7 +199,7 @@ func (cr configRepository) SaveUnknown(key, id string) error {
 }
 
 func (cr configRepository) RetrieveUnknown(offset, limit uint64) []bootstrap.Config {
-	q := `SELECT external_id, external_key FROM unknown LIMIT $1 OFFSET $2`
+	q := `SELECT external_id, external_key FROM unknown_configs LIMIT $1 OFFSET $2`
 	rows, err := cr.db.Query(q, limit, offset)
 	if err != nil {
 		cr.log.Error(fmt.Sprintf("Failed to retrieve config due to %s", err))
@@ -222,7 +222,7 @@ func (cr configRepository) RetrieveUnknown(offset, limit uint64) []bootstrap.Con
 }
 
 func (cr configRepository) RemoveUnknown(key, id string) error {
-	q := `DELETE FROM unknown WHERE external_id = $1 AND external_key = $2`
+	q := `DELETE FROM unknown_configs WHERE external_id = $1 AND external_key = $2`
 	_, err := cr.db.Exec(q, id, key)
 	return err
 }

@@ -63,15 +63,15 @@ func migrateDB(db *sql.DB) error {
 						state             BIGINT NOT NULL,
 						PRIMARY KEY (mainflux_thing, external_id)
 					)`,
-					`CREATE TABLE IF NOT EXISTS unknown (
+					`CREATE TABLE IF NOT EXISTS unknown_configs (
 						external_id       TEXT UNIQUE NOT NULL,
 						external_key 	  TEXT NOT NULL,
 						PRIMARY KEY (external_id, external_key)
 					)`,
 				},
 				Down: []string{
-					"DROP TABLE things",
-					"DROP TABLE unknown",
+					"DROP TABLE configs",
+					"DROP TABLE unknown_configs",
 				},
 			},
 		},
