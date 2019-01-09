@@ -95,9 +95,8 @@ func newThingsService(users mainflux.UsersServiceClient) things.Service {
 	for i := 0; i < channelsNum; i++ {
 		id := strconv.Itoa(i + 1)
 		channels[id] = things.Channel{
-			ID:     id,
-			Owner:  email,
-			Things: []things.Thing{},
+			ID:    id,
+			Owner: email,
 		}
 	}
 

@@ -162,7 +162,15 @@ func (svc *mainfluxThings) UpdateThing(string, things.Thing) error {
 	panic("not implemented")
 }
 
-func (svc *mainfluxThings) ListThings(string, uint64, uint64) ([]things.Thing, error) {
+func (svc *mainfluxThings) ListThings(string, uint64, uint64) (things.ThingsPage, error) {
+	panic("not implemented")
+}
+
+func (svc *mainfluxThings) ListChannelsByThing(string, string, uint64, uint64) (things.ChannelsPage, error) {
+	panic("not implemented")
+}
+
+func (svc *mainfluxThings) ListThingsByChannel(string, string, uint64, uint64) (things.ThingsPage, error) {
 	panic("not implemented")
 }
 
@@ -174,7 +182,7 @@ func (svc *mainfluxThings) UpdateChannel(string, things.Channel) error {
 	panic("not implemented")
 }
 
-func (svc *mainfluxThings) ListChannels(string, uint64, uint64) ([]things.Channel, error) {
+func (svc *mainfluxThings) ListChannels(string, uint64, uint64) (things.ChannelsPage, error) {
 	panic("not implemented")
 }
 
