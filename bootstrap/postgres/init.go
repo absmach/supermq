@@ -59,7 +59,7 @@ func migrateDB(db *sql.DB) error {
 						mainflux_channels TEXT [],
 						external_id       TEXT UNIQUE NOT NULL,
 						external_key 	  TEXT NOT NULL,
-                        content  		  TEXT,
+						content  		  TEXT,
 						state             BIGINT NOT NULL,
 						PRIMARY KEY (mainflux_thing, external_id)
 					)`,
@@ -71,6 +71,7 @@ func migrateDB(db *sql.DB) error {
 				},
 				Down: []string{
 					"DROP TABLE things",
+					"DROP TABLE unknown",
 				},
 			},
 		},

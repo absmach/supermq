@@ -47,31 +47,35 @@ func nullString(s string) sql.NullString {
 	}
 }
 
-func (cr configRepository) Save(thing bootstrap.Config) (string, error) {
+func (cr configRepository) Save(cfg bootstrap.Config) (string, error) {
 	q := `INSERT INTO configs (mainflux_thing, owner, mainflux_key, mainflux_channels, external_id, external_key, content, state)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING mainflux_thing`
 
-	if err := cr.db.QueryRow(q, thing.MFThing, thing.Owner, thing.MFKey, pq.Array(thing.MFChannels), thing.ExternalID, thing.ExternalKey,
-		nullString(thing.Content), thing.State).Scan(&thing.MFThing); err != nil {
+	arr := pq.Array(cfg.MFChannels)
+	content := nullString(cfg.Content)
+
+	if err := cr.db.
+		QueryRow(q, cfg.MFThing, cfg.Owner, cfg.MFKey, arr, cfg.ExternalID, cfg.ExternalKey, content, cfg.State).
+		Scan(&cfg.MFThing); err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Name() == duplicateErr {
 			return "", bootstrap.ErrConflict
 		}
 		return "", err
 	}
 
-	return thing.MFThing, nil
+	return cfg.MFThing, nil
 }
 
 func (cr configRepository) RetrieveByID(key, id string) (bootstrap.Config, error) {
 	q := `SELECT mainflux_thing, mainflux_key, mainflux_channels, external_id, external_key, content, state FROM configs WHERE mainflux_thing = $1 AND owner = $2`
-	config := bootstrap.Config{MFThing: id, Owner: key}
+	cfg := bootstrap.Config{MFThing: id, Owner: key}
 	var content sql.NullString
 
-	err := cr.db.
-		QueryRow(q, id, key).
-		Scan(&config.MFThing, &config.MFKey, pq.Array(&config.MFChannels), &config.ExternalID, &config.ExternalKey, &content, &config.State)
+	arr := pq.Array(&cfg.MFChannels)
+	err := cr.db.QueryRow(q, id, key).
+		Scan(&cfg.MFThing, &cfg.MFKey, arr, &cfg.ExternalID, &cfg.ExternalKey, &content, &cfg.State)
 
-	config.Content = content.String
+	cfg.Content = content.String
 
 	if err != nil {
 		empty := bootstrap.Config{}
@@ -85,7 +89,7 @@ func (cr configRepository) RetrieveByID(key, id string) (bootstrap.Config, error
 		return empty, err
 	}
 
-	return config, nil
+	return cfg, nil
 }
 
 func (cr configRepository) RetrieveAll(key string, filter bootstrap.Filter, offset, limit uint64) []bootstrap.Config {
@@ -100,7 +104,8 @@ func (cr configRepository) RetrieveAll(key string, filter bootstrap.Filter, offs
 	var content sql.NullString
 	for rows.Next() {
 		c := bootstrap.Config{Owner: key}
-		if err = rows.Scan(&c.MFThing, &c.MFKey, pq.Array(&c.MFChannels), &c.ExternalID, &c.ExternalKey, &content, &c.State); err != nil {
+		arr := pq.Array(&c.MFChannels)
+		if err = rows.Scan(&c.MFThing, &c.MFKey, arr, &c.ExternalID, &c.ExternalKey, &content, &c.State); err != nil {
 			cr.log.Error(fmt.Sprintf("Failed to read retrieved config due to %s", err))
 			return []bootstrap.Config{}
 		}
@@ -115,12 +120,13 @@ func (cr configRepository) RetrieveAll(key string, filter bootstrap.Filter, offs
 func (cr configRepository) RetrieveByExternalID(externalKey, externalID string) (bootstrap.Config, error) {
 	q := `SELECT mainflux_thing, owner, mainflux_key, mainflux_channels, content, state FROM configs WHERE external_key = $1 AND external_id = $2`
 	var content sql.NullString
-	config := bootstrap.Config{
+	cfg := bootstrap.Config{
 		ExternalID:  externalID,
 		ExternalKey: externalKey,
 	}
-
-	if err := cr.db.QueryRow(q, externalKey, externalID).Scan(&config.MFThing, &config.Owner, &config.MFKey, pq.Array(&config.MFChannels), &content, &config.State); err != nil {
+	arr := pq.Array(&cfg.MFChannels)
+	if err := cr.db.QueryRow(q, externalKey, externalID).
+		Scan(&cfg.MFThing, &cfg.Owner, &cfg.MFKey, arr, &content, &cfg.State); err != nil {
 		empty := bootstrap.Config{}
 		if err == sql.ErrNoRows {
 			return empty, bootstrap.ErrNotFound
@@ -128,14 +134,15 @@ func (cr configRepository) RetrieveByExternalID(externalKey, externalID string) 
 		return empty, err
 	}
 
-	config.Content = content.String
+	cfg.Content = content.String
 
-	return config, nil
+	return cfg, nil
 }
 
-func (cr configRepository) Update(config bootstrap.Config) error {
+func (cr configRepository) Update(cfg bootstrap.Config) error {
 	q := `UPDATE configs SET mainflux_channels = $1, content = $2, state = $3 WHERE mainflux_thing = $4 AND owner = $5`
-	res, err := cr.db.Exec(q, pq.Array(config.MFChannels), config.Content, config.State, config.MFThing, config.Owner)
+	arr := pq.Array(cfg.MFChannels)
+	res, err := cr.db.Exec(q, arr, cfg.Content, cfg.State, cfg.MFThing, cfg.Owner)
 	if err != nil {
 		return err
 	}
