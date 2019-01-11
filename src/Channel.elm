@@ -21,17 +21,19 @@ channelListDecoder =
     (D.field "channels" (D.list channelDecoder))
 
 
+requestProvision : String -> String -> String -> Http.Expect msg -> Cmd msg
 requestProvision url token name msg =
-    { method = "POST"
-    , headers = [ Http.header "Authorization" token ]
-    , url = url
-    , body =
-        E.object [ ( "name", E.string name ) ]
-            |> Http.jsonBody
-    , expect = msg
-    , timeout = Nothing
-    , tracker = Nothing
-    }
+    Http.request
+        { method = "POST"
+        , headers = [ Http.header "Authorization" token ]
+        , url = url
+        , body =
+            E.object [ ( "name", E.string name ) ]
+        |> Http.jsonBody
+        , expect = msg
+        , timeout = Nothing
+        , tracker = Nothing
+        }
 
 
 expectProvision : (Result Http.Error Int -> msg) -> Http.Expect msg
@@ -55,7 +57,9 @@ expectProvision toMsg =
                     Ok metadata.statusCode
 
 
+requestRetrieve : String -> String -> Http.Expect msg -> Cmd msg
 requestRetrieve url token msg =
+    Http.request
         { method = "GET"
         , headers = [ Http.header "Authorization" token ]
         , url = url
@@ -93,7 +97,9 @@ expectRetrieve toMsg =
               Err (Http.BadBody "Account has no channels")
 
 
+requestRemove : String -> String -> String -> Http.Expect msg -> Cmd msg
 requestRemove url id token msg =
+    Http.request
         { method = "DELETE"
         , headers = [ Http.header "Authorization" token ]
         , url = url ++ "/" ++ id

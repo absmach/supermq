@@ -136,13 +136,11 @@ update msg model =
 
         GetUser ->
             ( model
-            , Http.request
-                (User.request
-                    model.email
-                    model.password
-                    "http://localhost/users"
-                    (User.expectUser GotUser)
-                )
+            , User.request
+                model.email
+                model.password
+                "http://localhost/users"
+                (User.expectUser GotUser)
             )
 
         GotUser result ->
@@ -155,13 +153,11 @@ update msg model =
 
         GetToken ->
             ( model
-            , Http.request
-                (User.request
-                    model.email
-                    model.password
-                    "http://localhost/tokens"
-                    (User.expectToken GotToken)
-                )
+            , User.request
+                model.email
+                model.password
+                "http://localhost/tokens"
+                (User.expectToken GotToken)
             )
 
         GotToken result ->
@@ -180,13 +176,11 @@ update msg model =
 
         ProvisionChannel ->
             ( model
-            , Http.request
-                (Channel.requestProvision
-                    "http://localhost/channels"
-                    model.token
-                    model.channel
-                    (Channel.expectProvision ProvisionedChannel)
-                )
+            , Channel.requestProvision
+                "http://localhost/channels"
+                model.token
+                model.channel
+                (Channel.expectProvision ProvisionedChannel)
             )
 
         ProvisionedChannel result ->
@@ -199,12 +193,10 @@ update msg model =
 
         RetrieveChannel ->
             ( model
-            , Http.request
-                (Channel.requestRetrieve
-                    "http://localhost/channels"
-                    model.token
-                    (Channel.expectRetrieve RetrievedChannel)
-                )
+            , Channel.requestRetrieve
+                "http://localhost/channels"
+                model.token
+                (Channel.expectRetrieve RetrievedChannel)
             )
 
         RetrievedChannel result ->
@@ -217,13 +209,11 @@ update msg model =
             
         RemoveChannel ->
             ( model
-            , Http.request
-                (Channel.requestRemove
-                    "http://localhost/channels"
-                    model.channel                     
-                    model.token
-                    (Channel.expectProvision ProvisionedChannel)                     
-                )
+            , Channel.requestRemove
+                "http://localhost/channels"
+                model.channel                     
+                model.token
+                (Channel.expectProvision ProvisionedChannel)                     
             )            
 
 

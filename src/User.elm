@@ -26,16 +26,18 @@ decoder =
         (D.field "password" D.string)
 
 
+request : String -> String -> String -> Http.Expect msg -> Cmd msg            
 request email password url msg =
-    { method = "POST"
-    , headers = []
-    , url = url
-    , body =
-        encode (User email password)
-            |> Http.jsonBody
-    , expect = msg
-    , timeout = Nothing
-    , tracker = Nothing
+    Http.request
+        { method = "POST"
+        , headers = []
+        , url = url
+        , body =
+            encode (User email password)
+        |> Http.jsonBody
+        , expect = msg
+        , timeout = Nothing
+        , tracker = Nothing
     }
 
 
