@@ -25,7 +25,7 @@ import Json.Encode as Encode
 import Url
 import Url.Parser as UrlParser exposing ((</>))
 import User
-
+import Thing
 
 
 -- MAIN
@@ -55,12 +55,14 @@ type alias Model =
     , password : String
     , channel : String
     , token : String
+    , thingType : String
+    , thingName : String
     }
 
 
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
-    ( Model key (UrlParser.parse docsParser url) "" "" "" "" "", Cmd.none )
+    ( Model key (UrlParser.parse docsParser url) "" "" "" "" "" "" "", Cmd.none )
 
 
 
@@ -94,7 +96,12 @@ type Msg
     | RetrieveChannel
     | RetrievedChannel (Result Http.Error (List Channel.Channel))
     | RemoveChannel
-
+    | SubmitThingType String
+    | SubmitThingName String
+    | ProvisionThing
+    | ProvisionedThing (Result Http.Error Int)      
+    | RetrieveThing
+    | RemoveThing
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -216,6 +223,35 @@ update msg model =
                 (Channel.expectProvision ProvisionedChannel)                     
             )            
 
+        SubmitThingType type_ ->
+            ( { model | thingType = type_ }, Cmd.none )
+
+        SubmitThingName name ->
+            ( { model | thingName = name }, Cmd.none )
+
+        ProvisionThing ->
+            ( model
+            , Thing.provision
+                "http://localhost/things"
+                model.token
+                model.thingType
+                model.thingName
+                (Thing.expectProvision ProvisionedThing)
+            )
+
+        ProvisionedThing result ->
+            case result of
+                Ok statusCode ->
+                    ( { model | response = "Ok " ++ String.fromInt statusCode }, Cmd.none )
+
+                Err error ->
+                    handleError error model
+            
+        RetrieveThing ->
+            ( model, Cmd.none )
+
+        RemoveThing ->
+            ( model, Cmd.none )
 
 -- SUBSCRIPTIONS
 
@@ -257,14 +293,10 @@ view model =
                                     [ Form.group []
                                         [ Form.label [ for "myemail" ] [ text "Email address" ]
                                         , Input.email [ Input.id "myemail", Input.onInput SubmitEmail ]
-
-                                        -- , Form.help [] [ text "Register user" ]
                                         ]
                                     , Form.group []
                                         [ Form.label [ for "mypwd" ] [ text "Password" ]
                                         , Input.password [ Input.id "mypwd", Input.onInput SubmitPassword ]
-
-                                        -- , Form.help [] [ text model.password ]
                                         ]
                                     , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick GetUser ] [ text "Register" ]
                                     , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick GetToken ] [ text "Token" ]
@@ -278,18 +310,36 @@ view model =
                                     [ Form.group []
                                         [ Form.label [ for "mychan" ] [ text "Channel" ]
                                         , Input.email [ Input.id "mychan", Input.onInput SubmitChannel ]
-
-                                        -- , Form.help [] [ text model.channel ]
                                         ]
                                     , Form.group []
                                         [ Form.label [ for "mytoken" ] [ text "Token" ]
                                         , Input.text [ Input.id "mytoken", Input.onInput SubmitToken ]
-
-                                        -- , Form.help [] [ text model.token ]
                                         ]
                                     , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionChannel ] [ text "Provision" ]
                                     , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RetrieveChannel ] [ text "Retrieve" ]
                                     , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RemoveChannel ] [ text "Remove" ]
+                                    ]
+                                , hr [] []
+                                , response
+                                ]
+
+                            "things" ->
+                                [ Form.form []
+                                    [ Form.group []
+                                        [ Form.label [ for "mytype" ] [ text "Type" ]
+                                        , Input.text [ Input.id "mytype", Input.onInput SubmitThingType ]
+                                        ]
+                                    , Form.group []
+                                        [ Form.label [ for "myname" ] [ text "Name" ]
+                                        , Input.text [ Input.id "myname", Input.onInput SubmitThingName ]
+                                        ]
+                                    , Form.group []
+                                        [ Form.label [ for "mytoken" ] [ text "Token" ]
+                                        , Input.text [ Input.id "mytoken", Input.onInput SubmitToken ]
+                                        ]                                        
+                                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionThing ] [ text "Provision" ]
+                                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RetrieveThing ] [ text "Retrieve" ]
+                                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RemoveThing ] [ text "Remove" ]
                                     ]
                                 , hr [] []
                                 , response
