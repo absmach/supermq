@@ -16,7 +16,6 @@ import Bootstrap.Grid.Row as Row
 import Bootstrap.Utilities.Spacing as Spacing
 import Browser
 import Browser.Navigation as Nav
-import Channel
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
@@ -26,7 +25,7 @@ import Url
 import Url.Parser as UrlParser exposing ((</>))
 import User
 import Thing
-
+import Channel
 
 -- MAIN
 
@@ -185,7 +184,7 @@ update msg model =
 
         ProvisionChannel ->
             ( model
-            , Channel.requestProvision
+            , Channel.provision
                 "http://localhost/channels"
                 model.token
                 model.channel
@@ -202,7 +201,7 @@ update msg model =
 
         RetrieveChannel ->
             ( model
-            , Channel.requestRetrieve
+            , Channel.retrieve
                 "http://localhost/channels"
                 model.token
                 (Channel.expectRetrieve RetrievedChannel)
@@ -218,7 +217,7 @@ update msg model =
             
         RemoveChannel ->
             ( model
-            , Channel.requestRemove
+            , Channel.remove
                 "http://localhost/channels/"
                 model.channel                     
                 model.token
