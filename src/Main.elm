@@ -101,7 +101,9 @@ type Msg
     | ProvisionThing
     | ProvisionedThing (Result Http.Error Int)      
     | RetrieveThing
+    | RetrievedThing (Result Http.Error (List Thing.Thing))
     | RemoveThing
+
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -217,7 +219,7 @@ update msg model =
         RemoveChannel ->
             ( model
             , Channel.requestRemove
-                "http://localhost/channels"
+                "http://localhost/channels/"
                 model.channel                     
                 model.token
                 (Channel.expectProvision ProvisionedChannel)                     
@@ -248,11 +250,32 @@ update msg model =
                     handleError error model
             
         RetrieveThing ->
-            ( model, Cmd.none )
+            ( model
+            , Thing.retrieve
+                "http://localhost/things"
+                model.token
+                (Thing.expectRetrieve RetrievedThing)
+            )
+            
 
+        RetrievedThing result ->
+            case result of
+                Ok things ->
+                    ( { model | response = thingsToString things }, Cmd.none )
+                    
+                Err error ->
+                    handleError error model
+            
         RemoveThing ->
-            ( model, Cmd.none )
+            ( model
+            , Thing.remove
+                "http://localhost/things/"
+                model.thingName                     
+                model.token
+                (Thing.expectProvision ProvisionedThing)                     
+            )            
 
+                
 -- SUBSCRIPTIONS
 
 
@@ -411,6 +434,14 @@ handleError error model =
 channelsToString : List Channel.Channel -> String
 channelsToString channels =
     List.map
-        (\channel -> channel.name ++ " " ++ channel.id ++ " || ")
+        (\channel -> channel.name ++ " " ++ channel.id ++ "; ")
         channels
+        |> String.concat
+
+
+thingsToString : List Thing.Thing -> String
+thingsToString things =
+    List.map
+        (\thing -> thing.id ++ " " ++ thing.type_ ++ " " ++ thing.name ++ " " ++ thing.key ++ "; ")
+        things
         |> String.concat

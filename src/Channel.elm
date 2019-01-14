@@ -6,7 +6,8 @@ import Json.Decode as D
 
 type alias Channel =
     { name : String
-    , id : String }
+    , id : String
+    }
 
 
 channelDecoder : D.Decoder Channel
@@ -102,7 +103,7 @@ requestRemove url id token msg =
     Http.request
         { method = "DELETE"
         , headers = [ Http.header "Authorization" token ]
-        , url = url ++ "/" ++ id
+        , url = url ++ id
         , body = Http.emptyBody
         , expect = msg
         , timeout = Nothing
