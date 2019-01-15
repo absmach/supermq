@@ -27,6 +27,16 @@ import User
 import Thing
 import Channel
 
+
+urls =
+    { version = "http://localhost/version"
+    , users = "http://localhost/users"
+    , tokens = "http://localhost/tokens"
+    , channels = "http://localhost/channels"
+    , things = "http://localhost/things"
+    }
+
+
 -- MAIN
 
 
@@ -57,7 +67,7 @@ type alias Model =
     , thingType : String
     , thingName : String
     }
-
+    
 
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
@@ -123,7 +133,7 @@ update msg model =
         GetVersion ->
             ( model
             , Http.get
-                { url = "http://localhost/version"
+                { url = urls.version
                 , expect = Http.expectJson GotVersion (field "version" string)
                 }
             )
@@ -147,7 +157,7 @@ update msg model =
             , User.request
                 model.email
                 model.password
-                "http://localhost/users"
+                urls.users
                 (User.expectUser GotUser)
             )
 
@@ -164,7 +174,7 @@ update msg model =
             , User.request
                 model.email
                 model.password
-                "http://localhost/tokens"
+                urls.tokens
                 (User.expectToken GotToken)
             )
 
@@ -185,7 +195,7 @@ update msg model =
         ProvisionChannel ->
             ( model
             , Channel.provision
-                "http://localhost/channels"
+                urls.channels
                 model.token
                 model.channel
                 (Channel.expectProvision ProvisionedChannel)
@@ -202,7 +212,7 @@ update msg model =
         RetrieveChannel ->
             ( model
             , Channel.retrieve
-                "http://localhost/channels"
+                urls.channels
                 model.token
                 (Channel.expectRetrieve RetrievedChannel)
             )
@@ -218,7 +228,7 @@ update msg model =
         RemoveChannel ->
             ( model
             , Channel.remove
-                "http://localhost/channels/"
+                urls.channels
                 model.channel                     
                 model.token
                 (Channel.expectProvision ProvisionedChannel)                     
@@ -233,7 +243,7 @@ update msg model =
         ProvisionThing ->
             ( model
             , Thing.provision
-                "http://localhost/things"
+                urls.things
                 model.token
                 model.thingType
                 model.thingName
@@ -251,7 +261,7 @@ update msg model =
         RetrieveThing ->
             ( model
             , Thing.retrieve
-                "http://localhost/things"
+                urls.things
                 model.token
                 (Thing.expectRetrieve RetrievedThing)
             )
@@ -268,7 +278,7 @@ update msg model =
         RemoveThing ->
             ( model
             , Thing.remove
-                "http://localhost/things/"
+                urls.things
                 model.thingName                     
                 model.token
                 (Thing.expectProvision ProvisionedThing)                     
@@ -289,7 +299,7 @@ subscriptions _ =
 
 view : Model -> Browser.Document Msg
 view model =
-    { title = "URL Interceptor"
+    { title = "Gateflux"
     , body =
         let
             response =
@@ -352,7 +362,7 @@ view model =
                                         , Input.text [ Input.id "mytype", Input.onInput SubmitThingType ]
                                         ]
                                     , Form.group []
-                                        [ Form.label [ for "myname" ] [ text "Name" ]
+                                        [ Form.label [ for "myname" ] [ text "Name (Provision) | Id (Retrieve)" ]
                                         , Input.text [ Input.id "myname", Input.onInput SubmitThingName ]
                                         ]
                                     , Form.group []

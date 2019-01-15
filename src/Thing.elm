@@ -111,7 +111,7 @@ remove url id token msg =
     Http.request
         { method = "DELETE"
         , headers = [ Http.header "Authorization" token ]
-        , url = url ++ id
+        , url = url ++ "/" ++ id
         , body = Http.emptyBody
         , expect = msg
         , timeout = Nothing
