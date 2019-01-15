@@ -1,8 +1,125 @@
 module Channel exposing (..)
 
 import Http
+import Html exposing  (..)
+import Html.Attributes exposing (..)
 import Json.Encode as E
 import Json.Decode as D
+
+import Bootstrap.Grid as Grid
+import Bootstrap.Button as Button
+import Bootstrap.Form as Form
+import Bootstrap.Form.Input as Input
+import Bootstrap.Utilities.Spacing as Spacing
+
+import Error
+
+
+urls =
+    {
+        channels = "http://localhost/channels"
+    }
+   
+
+type alias Model =
+    { channel : String
+    , token : String
+    , response : String
+    }
+
+
+initial : Model
+initial =
+    { channel = ""
+    , token = ""
+    , response = ""
+    }
+
+
+type Msg
+    = SubmitChannel String
+    | SubmitToken String
+    | ProvisionChannel
+    | ProvisionedChannel (Result Http.Error Int)
+    | RetrieveChannel
+    | RetrievedChannel (Result Http.Error (List Channel))
+    | RemoveChannel
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        SubmitChannel channel ->
+            ( { model | channel = channel }, Cmd.none )
+
+        SubmitToken token ->
+            ( { model | token = token }, Cmd.none )
+
+        ProvisionChannel ->
+            ( model
+            , provision
+                urls.channels
+                model.token
+                model.channel
+                (expectProvision ProvisionedChannel)
+            )
+
+        ProvisionedChannel result ->
+            case result of
+                Ok statusCode ->
+                    ( { model | response = "Ok " ++ String.fromInt statusCode }, Cmd.none )
+
+                Err error ->
+                    ( { model | response = (Error.handle error) }, Cmd.none )
+
+        RetrieveChannel ->
+            ( model
+            , retrieve
+                urls.channels
+                model.token
+                (expectRetrieve RetrievedChannel)
+            )
+
+        RetrievedChannel result ->
+            case result of
+                Ok channels ->
+                    ( { model | response = channelsToString channels }, Cmd.none )
+
+                Err error ->
+                    ( { model | response = (Error.handle error) }, Cmd.none )
+            
+        RemoveChannel ->
+            ( model
+            , remove
+                urls.channels
+                model.channel                     
+                model.token
+                (expectProvision ProvisionedChannel)                     
+            )            
+
+
+view : Model -> Html Msg
+view model =
+    Grid.row []
+        [ Grid.col []
+          [ Form.form []
+            [ Form.group []
+              [ Form.label [ for "mychan" ] [ text "Channel" ]
+              , Input.email [ Input.id "mychan", Input.onInput SubmitChannel ]
+              ]
+            , Form.group []
+                [ Form.label [ for "mytoken" ] [ text "Token" ]
+                , Input.text [ Input.id "mytoken", Input.onInput SubmitToken ]
+                ]
+            , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionChannel ] [ text "Provision" ]
+            , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RetrieveChannel ] [ text "Retrieve" ]
+            , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RemoveChannel ] [ text "Remove" ]
+            ]
+          , Html.hr [] []
+          , text ("response: " ++ model.response)
+          ]
+        ]
+
 
 type alias Channel =
     { name : String
@@ -109,3 +226,14 @@ remove url id token msg =
         , timeout = Nothing
         , tracker = Nothing
         }
+
+-- HELPERS
+
+                
+channelsToString : List Channel -> String
+channelsToString channels =
+    List.map
+        (\channel -> channel.name ++ " " ++ channel.id ++ "; ")
+        channels
+        |> String.concat
+        

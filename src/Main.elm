@@ -33,9 +33,6 @@ import Channel
 
 urls =
     { version = "http://localhost/version"
-    , users = "http://localhost/users"
-    , tokens = "http://localhost/tokens"
-    , channels = "http://localhost/channels"
     , things = "http://localhost/things"
     }
 
@@ -55,7 +52,6 @@ main =
         }
 
 
-
 -- MODEL
 
 
@@ -65,18 +61,20 @@ type alias Model =
     , response : String
     , email : String
     , password : String
-    , channel : String
     , token : String
     , thingType : String
     , thingName : String
     , user : User.Model
+    , channel : Channel.Model
     }
     
 
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
     ( Model key (UrlParser.parse docsParser url)
-          "" "" "" "" "" "" "" User.initial
+          "" "" "" "" "" ""
+          User.initial
+          Channel.initial
     , Cmd.none )
 
 
@@ -98,13 +96,8 @@ type Msg
     | GetVersion
     | GotVersion (Result Http.Error String)
     | UserMsg User.Msg
-    | SubmitChannel String
-    | SubmitToken String
-    | ProvisionChannel
-    | ProvisionedChannel (Result Http.Error Int)
-    | RetrieveChannel
-    | RetrievedChannel (Result Http.Error (List Channel.Channel))
-    | RemoveChannel
+    | ChannelMsg Channel.Msg
+    | SubmitToken String      
     | SubmitThingType String
     | SubmitThingName String
     | ProvisionThing
@@ -152,55 +145,17 @@ update msg model =
                     User.update subMsg model.user
             in
                 ( { model | user = updatedUser }, Cmd.map UserMsg userCmd )
-                
-        SubmitChannel channel ->
-            ( { model | channel = channel }, Cmd.none )
+
+        ChannelMsg subMsg ->
+           let
+                ( updatedChannel, channelCmd ) =
+                    Channel.update subMsg model.channel
+            in
+                ( { model | channel = updatedChannel }, Cmd.map ChannelMsg channelCmd )
 
         SubmitToken token ->
             ( { model | token = token }, Cmd.none )
-
-        ProvisionChannel ->
-            ( model
-            , Channel.provision
-                urls.channels
-                model.token
-                model.channel
-                (Channel.expectProvision ProvisionedChannel)
-            )
-
-        ProvisionedChannel result ->
-            case result of
-                Ok statusCode ->
-                    ( { model | response = "Ok " ++ String.fromInt statusCode }, Cmd.none )
-
-                Err error ->
-                    ( { model | response = (Error.handle error) }, Cmd.none )
-
-        RetrieveChannel ->
-            ( model
-            , Channel.retrieve
-                urls.channels
-                model.token
-                (Channel.expectRetrieve RetrievedChannel)
-            )
-
-        RetrievedChannel result ->
-            case result of
-                Ok channels ->
-                    ( { model | response = channelsToString channels }, Cmd.none )
-
-                Err error ->
-                    ( { model | response = (Error.handle error) }, Cmd.none )
-            
-        RemoveChannel ->
-            ( model
-            , Channel.remove
-                urls.channels
-                model.channel                     
-                model.token
-                (Channel.expectProvision ProvisionedChannel)                     
-            )            
-
+                    
         SubmitThingType type_ ->
             ( { model | thingType = type_ }, Cmd.none )
 
@@ -291,22 +246,7 @@ view model =
                                 [ Html.map UserMsg (User.view model.user) ]
                                     
                             "channel" ->
-                                [ Form.form []
-                                    [ Form.group []
-                                        [ Form.label [ for "mychan" ] [ text "Channel" ]
-                                        , Input.email [ Input.id "mychan", Input.onInput SubmitChannel ]
-                                        ]
-                                    , Form.group []
-                                        [ Form.label [ for "mytoken" ] [ text "Token" ]
-                                        , Input.text [ Input.id "mytoken", Input.onInput SubmitToken ]
-                                        ]
-                                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionChannel ] [ text "Provision" ]
-                                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RetrieveChannel ] [ text "Retrieve" ]
-                                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RemoveChannel ] [ text "Remove" ]
-                                    ]
-                                , hr [] []
-                                , response
-                                ]
+                                [ Html.map ChannelMsg (Channel.view model.channel) ]                                
 
                             "things" ->
                                 [ Form.form []
@@ -370,16 +310,7 @@ menuButtons =
     ]
 
 
-
 -- HELPERS
-
-                
-channelsToString : List Channel.Channel -> String
-channelsToString channels =
-    List.map
-        (\channel -> channel.name ++ " " ++ channel.id ++ "; ")
-        channels
-        |> String.concat
 
 
 thingsToString : List Thing.Thing -> String
