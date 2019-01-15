@@ -23,6 +23,9 @@ import Json.Decode exposing (Decoder, field, string)
 import Json.Encode as Encode
 import Url
 import Url.Parser as UrlParser exposing ((</>))
+
+
+import Error
 import User
 import Thing
 import Channel
@@ -66,13 +69,15 @@ type alias Model =
     , token : String
     , thingType : String
     , thingName : String
+    , user : User.Model
     }
     
 
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
-    ( Model key (UrlParser.parse docsParser url) "" "" "" "" "" "" "", Cmd.none )
-
+    ( Model key (UrlParser.parse docsParser url)
+          "" "" "" "" "" "" "" User.initial
+    , Cmd.none )
 
 
 -- UPDATE
@@ -92,12 +97,7 @@ type Msg
     | UrlChanged Url.Url
     | GetVersion
     | GotVersion (Result Http.Error String)
-    | SubmitEmail String
-    | SubmitPassword String
-    | GetUser
-    | GotUser (Result Http.Error Int)
-    | GetToken
-    | GotToken (Result Http.Error String)
+    | UserMsg User.Msg
     | SubmitChannel String
     | SubmitToken String
     | ProvisionChannel
@@ -146,46 +146,13 @@ update msg model =
                 Err _ ->
                     ( Debug.log "model GOT version ERR: " model, Cmd.none )
 
-        SubmitEmail email ->
-            ( { model | email = email }, Cmd.none )
-
-        SubmitPassword password ->
-            ( { model | password = password }, Cmd.none )
-
-        GetUser ->
-            ( model
-            , User.request
-                model.email
-                model.password
-                urls.users
-                (User.expectUser GotUser)
-            )
-
-        GotUser result ->
-            case result of
-                Ok statusCode ->
-                    ( { model | response = "Ok " ++ String.fromInt statusCode }, Cmd.none )
-
-                Err error ->
-                    handleError error model
-
-        GetToken ->
-            ( model
-            , User.request
-                model.email
-                model.password
-                urls.tokens
-                (User.expectToken GotToken)
-            )
-
-        GotToken result ->
-            case result of
-                Ok token ->
-                    ( { model | response = "Ok " ++ token }, Cmd.none )
-
-                Err error ->
-                    handleError error model
-
+        UserMsg subMsg ->
+           let
+                ( updatedUser, userCmd ) =
+                    User.update subMsg model.user
+            in
+                ( { model | user = updatedUser }, Cmd.map UserMsg userCmd )
+                
         SubmitChannel channel ->
             ( { model | channel = channel }, Cmd.none )
 
@@ -207,7 +174,7 @@ update msg model =
                     ( { model | response = "Ok " ++ String.fromInt statusCode }, Cmd.none )
 
                 Err error ->
-                    handleError error model
+                    ( { model | response = (Error.handle error) }, Cmd.none )
 
         RetrieveChannel ->
             ( model
@@ -223,7 +190,7 @@ update msg model =
                     ( { model | response = channelsToString channels }, Cmd.none )
 
                 Err error ->
-                    handleError error model
+                    ( { model | response = (Error.handle error) }, Cmd.none )
             
         RemoveChannel ->
             ( model
@@ -256,7 +223,7 @@ update msg model =
                     ( { model | response = "Ok " ++ String.fromInt statusCode }, Cmd.none )
 
                 Err error ->
-                    handleError error model
+                    ( { model | response = (Error.handle error) }, Cmd.none )
             
         RetrieveThing ->
             ( model
@@ -273,7 +240,7 @@ update msg model =
                     ( { model | response = thingsToString things }, Cmd.none )
                     
                 Err error ->
-                    handleError error model
+                    ( { model | response = (Error.handle error) }, Cmd.none )
             
         RemoveThing ->
             ( model
@@ -321,22 +288,8 @@ view model =
                                 ]
 
                             "account" ->
-                                [ Form.form []
-                                    [ Form.group []
-                                        [ Form.label [ for "myemail" ] [ text "Email address" ]
-                                        , Input.email [ Input.id "myemail", Input.onInput SubmitEmail ]
-                                        ]
-                                    , Form.group []
-                                        [ Form.label [ for "mypwd" ] [ text "Password" ]
-                                        , Input.password [ Input.id "mypwd", Input.onInput SubmitPassword ]
-                                        ]
-                                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick GetUser ] [ text "Register" ]
-                                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick GetToken ] [ text "Token" ]
-                                    ]
-                                , hr [] []
-                                , response
-                                ]
-
+                                [ Html.map UserMsg (User.view model.user) ]
+                                    
                             "channel" ->
                                 [ Form.form []
                                     [ Form.group []
@@ -419,25 +372,6 @@ menuButtons =
 
 
 -- HELPERS
-
-
-handleError : Http.Error -> Model -> ( Model, Cmd Msg )
-handleError error model =
-    case error of
-        Http.BadUrl txt ->
-            ( { model | response = "Bad url " ++ txt }, Cmd.none )
-
-        Http.Timeout ->
-            ( { model | response = "Timeout" }, Cmd.none )
-
-        Http.NetworkError ->
-            ( { model | response = "Network error" }, Cmd.none )
-
-        Http.BadStatus num ->
-            ( { model | response = "Bad status " ++ String.fromInt num }, Cmd.none )
-
-        Http.BadBody err ->
-            ( { model | response = err }, Cmd.none )
 
                 
 channelsToString : List Channel.Channel -> String
