@@ -104,7 +104,7 @@ view model =
         [ Grid.col []
           [ Form.form []
             [ Form.group []
-              [ Form.label [ for "mychan" ] [ text "Channel" ]
+              [ Form.label [ for "mychan" ] [ text "Name (Provision) or id (Remove)" ]
               , Input.email [ Input.id "mychan", Input.onInput SubmitChannel ]
               ]
             , Form.group []

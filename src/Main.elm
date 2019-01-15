@@ -26,6 +26,7 @@ import Url.Parser as UrlParser exposing ((</>))
 
 
 import Error
+import Version
 import User
 import Thing
 import Channel
@@ -57,54 +58,46 @@ main =
 
 type alias Model =
     { key : Nav.Key
-    , route : Maybe DocsRoute
-    , response : String
-    , email : String
-    , password : String
-    , token : String
-    , thingType : String
-    , thingName : String
+    , route : Maybe Route
+    , version : Version.Model
     , user : User.Model
     , channel : Channel.Model
+    , thing : Thing.Model
     }
-    
+
 
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
-    ( Model key (UrlParser.parse docsParser url)
-          "" "" "" "" "" ""
+    ( Model key (UrlParser.parse parser url)
+          Version.initial
           User.initial
           Channel.initial
+          Thing.initial
     , Cmd.none )
+
+
+-- URL PARSER
+
+
+type alias Route =
+    ( String, Maybe String )
+
+
+parser : UrlParser.Parser (Route -> a) a
+parser =
+    UrlParser.map Tuple.pair (UrlParser.string </> UrlParser.fragment identity)
 
 
 -- UPDATE
 
 
-type alias DocsRoute =
-    ( String, Maybe String )
-
-
-docsParser : UrlParser.Parser (DocsRoute -> a) a
-docsParser =
-    UrlParser.map Tuple.pair (UrlParser.string </> UrlParser.fragment identity)
-
-
 type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
-    | GetVersion
-    | GotVersion (Result Http.Error String)
+    | VersionMsg Version.Msg
     | UserMsg User.Msg
     | ChannelMsg Channel.Msg
-    | SubmitToken String      
-    | SubmitThingType String
-    | SubmitThingName String
-    | ProvisionThing
-    | ProvisionedThing (Result Http.Error Int)      
-    | RetrieveThing
-    | RetrievedThing (Result Http.Error (List Thing.Thing))
-    | RemoveThing
+    | ThingMsg Thing.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -119,25 +112,16 @@ update msg model =
                     ( Debug.log "model EXTERNAL click:" model, Cmd.none )
 
         UrlChanged url ->
-            ( { model | route = UrlParser.parse docsParser url }
+            ( { model | route = UrlParser.parse parser url }
             , Cmd.none
             )
 
-        GetVersion ->
-            ( model
-            , Http.get
-                { url = urls.version
-                , expect = Http.expectJson GotVersion (field "version" string)
-                }
-            )
-
-        GotVersion result ->
-            case result of
-                Ok text ->
-                    ( Debug.log "model GOT version OK: " { model | response = "Version " ++ text }, Cmd.none )
-
-                Err _ ->
-                    ( Debug.log "model GOT version ERR: " model, Cmd.none )
+        VersionMsg subMsg ->
+           let
+                ( updatedVersion, versionCmd ) =
+                    Version.update subMsg model.version
+            in
+                ( { model | version = updatedVersion }, Cmd.map VersionMsg versionCmd )
 
         UserMsg subMsg ->
            let
@@ -153,58 +137,12 @@ update msg model =
             in
                 ( { model | channel = updatedChannel }, Cmd.map ChannelMsg channelCmd )
 
-        SubmitToken token ->
-            ( { model | token = token }, Cmd.none )
-                    
-        SubmitThingType type_ ->
-            ( { model | thingType = type_ }, Cmd.none )
-
-        SubmitThingName name ->
-            ( { model | thingName = name }, Cmd.none )
-
-        ProvisionThing ->
-            ( model
-            , Thing.provision
-                urls.things
-                model.token
-                model.thingType
-                model.thingName
-                (Thing.expectProvision ProvisionedThing)
-            )
-
-        ProvisionedThing result ->
-            case result of
-                Ok statusCode ->
-                    ( { model | response = "Ok " ++ String.fromInt statusCode }, Cmd.none )
-
-                Err error ->
-                    ( { model | response = (Error.handle error) }, Cmd.none )
-            
-        RetrieveThing ->
-            ( model
-            , Thing.retrieve
-                urls.things
-                model.token
-                (Thing.expectRetrieve RetrievedThing)
-            )
-            
-
-        RetrievedThing result ->
-            case result of
-                Ok things ->
-                    ( { model | response = thingsToString things }, Cmd.none )
-                    
-                Err error ->
-                    ( { model | response = (Error.handle error) }, Cmd.none )
-            
-        RemoveThing ->
-            ( model
-            , Thing.remove
-                urls.things
-                model.thingName                     
-                model.token
-                (Thing.expectProvision ProvisionedThing)                     
-            )            
+        ThingMsg subMsg ->
+           let
+                ( updatedThing, thingCmd ) =
+                    Thing.update subMsg model.thing
+            in
+                ( { model | thing = updatedThing }, Cmd.map ThingMsg thingCmd )
 
                 
 -- SUBSCRIPTIONS
@@ -215,7 +153,6 @@ subscriptions _ =
     Sub.none
 
 
-
 -- VIEW
 
 
@@ -224,57 +161,27 @@ view model =
     { title = "Gateflux"
     , body =
         let
-            response =
-                Grid.row []
-                    [ Grid.col []
-                        [ text ("response: " ++ model.response) ]
-                    ]
-
             content =
                 case model.route of
                     Just route ->
                         case Tuple.first route of
                             "version" ->
-                                [ Button.linkButton
-                                    [ Button.primary, Button.onClick GetVersion ]
-                                    [ text "Version" ]
-                                , hr [] []
-                                , response
-                                ]
+                                Html.map VersionMsg (Version.view model.version)
 
                             "account" ->
-                                [ Html.map UserMsg (User.view model.user) ]
+                                Html.map UserMsg (User.view model.user)
                                     
                             "channel" ->
-                                [ Html.map ChannelMsg (Channel.view model.channel) ]                                
+                                Html.map ChannelMsg (Channel.view model.channel)
 
                             "things" ->
-                                [ Form.form []
-                                    [ Form.group []
-                                        [ Form.label [ for "mytype" ] [ text "Type" ]
-                                        , Input.text [ Input.id "mytype", Input.onInput SubmitThingType ]
-                                        ]
-                                    , Form.group []
-                                        [ Form.label [ for "myname" ] [ text "Name (Provision) | Id (Retrieve)" ]
-                                        , Input.text [ Input.id "myname", Input.onInput SubmitThingName ]
-                                        ]
-                                    , Form.group []
-                                        [ Form.label [ for "mytoken" ] [ text "Token" ]
-                                        , Input.text [ Input.id "mytoken", Input.onInput SubmitToken ]
-                                        ]                                        
-                                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionThing ] [ text "Provision" ]
-                                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RetrieveThing ] [ text "Retrieve" ]
-                                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RemoveThing ] [ text "Remove" ]
-                                    ]
-                                , hr [] []
-                                , response
-                                ]
+                                Html.map ThingMsg (Thing.view model.thing)
 
                             _ ->
-                                [ h3 [] [ text "Welcome to Gateflux" ] ]
+                                h3 [] [ text "Welcome to Gateflux" ]
 
                     Nothing ->
-                        [ h3 [] [ text "Welcome" ] ]
+                        h3 [] [ text "Welcome" ]
         in
         [ -- we use Bootstrap container defined at http://elm-bootstrap.info/grid
           Grid.container []
@@ -287,18 +194,12 @@ view model =
                       ButtonGroup.linkButtonGroup [ ButtonGroup.vertical ] menuButtons
                     ]
                 , Grid.col [ Col.xs10 ]
-                    [ div
-                        []
-                        content
+                    [ content
                     ]
                 ]
             ]
         ]
     }
-
-
-
--- Vertical button group defined at http://elm-bootstrap.info/buttongroup
 
 
 menuButtons : List (ButtonGroup.LinkButtonItem msg)
@@ -308,14 +209,3 @@ menuButtons =
     , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/channel" ] ] [ text "Channel" ]
     , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/things" ] ] [ text "Things" ]
     ]
-
-
--- HELPERS
-
-
-thingsToString : List Thing.Thing -> String
-thingsToString things =
-    List.map
-        (\thing -> thing.id ++ " " ++ thing.type_ ++ " " ++ thing.name ++ " " ++ thing.key ++ "; ")
-        things
-        |> String.concat

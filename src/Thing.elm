@@ -1,18 +1,147 @@
 module Thing exposing (..)
 
 import Http
-import Json.Decode as D
+import Html exposing  (..)
+import Html.Attributes exposing (..)
 import Json.Encode as E
+import Json.Decode as D
+
+import Bootstrap.Grid as Grid
+import Bootstrap.Button as Button
+import Bootstrap.Form as Form
+import Bootstrap.Form.Input as Input
+import Bootstrap.Utilities.Spacing as Spacing
+
+import Error
 
 
+urls =
+    {
+        things = "http://localhost/things"
+    }
+   
+
+type alias Model =
+    { name : String
+    , type_ : String
+    , token : String
+    , response : String
+    }
+
+
+initial : Model
+initial =
+    { name = ""
+    , type_ = ""
+    , token = ""
+    , response = ""
+    }
+
+
+type Msg
+    = SubmitToken String
+    | SubmitType String
+    | SubmitName String
+    | ProvisionThing
+    | ProvisionedThing (Result Http.Error Int)      
+    | RetrieveThing
+    | RetrievedThing (Result Http.Error (List Thing))
+    | RemoveThing
+
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        SubmitToken token ->
+            ( { model | token = token }, Cmd.none )
+                    
+        SubmitType type_ ->
+            ( { model | type_ = type_ }, Cmd.none )
+
+        SubmitName name ->
+            ( { model | name = name }, Cmd.none )
+
+        ProvisionThing ->
+            ( model
+            , provision
+                urls.things
+                model.token
+                model.type_
+                model.name
+                (expectProvision ProvisionedThing)
+            )
+
+        ProvisionedThing result ->
+            case result of
+                Ok statusCode ->
+                    ( { model | response = "Ok " ++ String.fromInt statusCode }, Cmd.none )
+
+                Err error ->
+                    ( { model | response = (Error.handle error) }, Cmd.none )
+            
+        RetrieveThing ->
+            ( model
+            , retrieve
+                urls.things
+                model.token
+                (expectRetrieve RetrievedThing)
+            )
+            
+
+        RetrievedThing result ->
+            case result of
+                Ok things ->
+                    ( { model | response = thingsToString things }, Cmd.none )
+                    
+                Err error ->
+                    ( { model | response = (Error.handle error) }, Cmd.none )
+            
+        RemoveThing ->
+            ( model
+            , remove
+                urls.things
+                model.name                     
+                model.token
+                (expectProvision ProvisionedThing)                     
+            )            
+
+
+
+view : Model -> Html Msg
+view model =
+    Grid.row []
+        [ Grid.col []
+          [ Form.form []
+            [ Form.group []
+              [ Form.label [ for "mytype" ] [ text "Type" ]
+              , Input.text [ Input.id "mytype", Input.onInput SubmitType ]
+              ]
+            , Form.group []
+                [ Form.label [ for "myname" ] [ text "Name (Provision) or id (Remove)" ]
+                , Input.text [ Input.id "myname", Input.onInput SubmitName ]
+                ]
+            , Form.group []
+                [ Form.label [ for "mytoken" ] [ text "Token" ]
+                , Input.text [ Input.id "mytoken", Input.onInput SubmitToken ]
+                ]                                        
+            , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionThing ] [ text "Provision" ]
+            , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RetrieveThing ] [ text "Retrieve" ]
+            , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RemoveThing ] [ text "Remove" ]
+            ]
+          , Html.hr [] []
+          , text ("response: " ++ model.response) ]
+        ]
+
+        
 type alias Thing =
     { type_ : String
     , name : String
     , id : String
     , key : String
     }
-
-
+            
+            
 thingDecoder : D.Decoder Thing
 thingDecoder =
     D.map4 Thing
@@ -117,3 +246,15 @@ remove url id token msg =
         , timeout = Nothing
         , tracker = Nothing
         }
+
+
+
+-- HELPERS
+
+
+thingsToString : List Thing -> String
+thingsToString things =
+    List.map
+        (\thing -> thing.id ++ " " ++ thing.type_ ++ " " ++ thing.name ++ " " ++ thing.key ++ "; ")
+        things
+        |> String.concat
