@@ -32,12 +32,6 @@ import Thing
 import Channel
 
 
-urls =
-    { version = "http://localhost/version"
-    , things = "http://localhost/things"
-    }
-
-
 -- MAIN
 
 
@@ -181,7 +175,7 @@ view model =
                                 h3 [] [ text "Welcome to Gateflux" ]
 
                     Nothing ->
-                        h3 [] [ text "Welcome" ]
+                        h3 [] [ text "" ]
         in
         [ -- we use Bootstrap container defined at http://elm-bootstrap.info/grid
           Grid.container []
@@ -206,6 +200,6 @@ menuButtons : List (ButtonGroup.LinkButtonItem msg)
 menuButtons =
     [ ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/version" ] ] [ text "Version" ]
     , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/account" ] ] [ text "Account" ]
-    , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/channel" ] ] [ text "Channel" ]
+    , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/channel" ] ] [ text "Channels" ]
     , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/things" ] ] [ text "Things" ]
     ]

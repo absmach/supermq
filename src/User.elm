@@ -53,13 +53,13 @@ update msg model =
 
         SubmitPassword password ->
             ( { model | password = password }, Cmd.none )
+
         Create ->
             ( model
-            , request
+            , create
                 model.email
                 model.password
                 urls.users
-                (expectUser Created)
             )
 
         Created result ->
@@ -72,11 +72,10 @@ update msg model =
 
         GetToken ->
             ( model
-            , request
+            , getToken
                 model.email
                 model.password
                 urls.tokens
-                (expectToken GotToken)
             )
 
         GotToken result ->
@@ -131,8 +130,8 @@ decoder =
         (D.field "password" D.string)
 
 
-request : String -> String -> String -> Http.Expect msg -> Cmd msg            
-request email password url msg =
+create : String -> String -> String -> Cmd Msg            
+create email password url  =
     Http.request
         { method = "POST"
         , headers = []
@@ -140,13 +139,13 @@ request email password url msg =
         , body =
             encode (User email password)
         |> Http.jsonBody
-        , expect = msg
+        , expect = expectUser Created
         , timeout = Nothing
         , tracker = Nothing
     }
 
 
-expectUser : (Result Http.Error Int -> msg) -> Http.Expect msg
+expectUser : (Result Http.Error Int -> Msg) -> Http.Expect Msg
 expectUser toMsg =
     Http.expectStringResponse toMsg <|
         \response ->
@@ -167,7 +166,22 @@ expectUser toMsg =
                     Ok metadata.statusCode
 
 
-expectToken : (Result Http.Error String -> msg) -> Http.Expect msg
+getToken : String -> String -> String -> Cmd Msg            
+getToken email password url =
+    Http.request
+        { method = "POST"
+        , headers = []
+        , url = url
+        , body =
+            encode (User email password)
+        |> Http.jsonBody
+        , expect = expectToken GotToken
+        , timeout = Nothing
+        , tracker = Nothing
+    }
+
+
+expectToken : (Result Http.Error String -> Msg) -> Http.Expect Msg
 expectToken toMsg =
     Http.expectStringResponse toMsg <|
         \response ->

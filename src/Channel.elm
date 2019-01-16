@@ -61,7 +61,6 @@ update msg model =
                 urls.channels
                 model.token
                 model.channel
-                (expectProvision ProvisionedChannel)
             )
 
         ProvisionedChannel result ->
@@ -77,7 +76,6 @@ update msg model =
             , retrieve
                 urls.channels
                 model.token
-                (expectRetrieve RetrievedChannel)
             )
 
         RetrievedChannel result ->
@@ -94,7 +92,6 @@ update msg model =
                 urls.channels
                 model.channel                     
                 model.token
-                (expectProvision ProvisionedChannel)                     
             )            
 
 
@@ -139,8 +136,8 @@ channelListDecoder =
     (D.field "channels" (D.list channelDecoder))
 
 
-provision : String -> String -> String -> Http.Expect msg -> Cmd msg
-provision url token name msg =
+provision : String -> String -> String -> Cmd Msg
+provision url token name =
     Http.request
         { method = "POST"
         , headers = [ Http.header "Authorization" token ]
@@ -148,13 +145,13 @@ provision url token name msg =
         , body =
             E.object [ ( "name", E.string name ) ]
         |> Http.jsonBody
-        , expect = msg
+        , expect = expectProvision ProvisionedChannel
         , timeout = Nothing
         , tracker = Nothing
         }
 
 
-expectProvision : (Result Http.Error Int -> msg) -> Http.Expect msg
+expectProvision : (Result Http.Error Int -> Msg) -> Http.Expect Msg
 expectProvision toMsg =
     Http.expectStringResponse toMsg <|
         \response ->
@@ -175,20 +172,20 @@ expectProvision toMsg =
                     Ok metadata.statusCode
 
 
-retrieve : String -> String -> Http.Expect msg -> Cmd msg
-retrieve url token msg =
+retrieve : String -> String -> Cmd Msg
+retrieve url token =
     Http.request
         { method = "GET"
         , headers = [ Http.header "Authorization" token ]
         , url = url
         , body = Http.emptyBody
-        , expect = msg
+        , expect = expectRetrieve RetrievedChannel
         , timeout = Nothing
         , tracker = Nothing
         }                    
 
 
-expectRetrieve : (Result Http.Error (List Channel) -> msg) -> Http.Expect msg
+expectRetrieve : (Result Http.Error (List Channel) -> Msg) -> Http.Expect Msg
 expectRetrieve toMsg =
   Http.expectStringResponse toMsg <|
     \response ->
@@ -211,21 +208,21 @@ expectRetrieve toMsg =
               Ok value
 
             Err err ->
-              -- Err (Http.BadBody (D.errorToString err))
               Err (Http.BadBody "Account has no channels")
 
 
-remove : String -> String -> String -> Http.Expect msg -> Cmd msg
-remove url id token msg =
+remove : String -> String -> String -> Cmd Msg
+remove url id token =
     Http.request
         { method = "DELETE"
         , headers = [ Http.header "Authorization" token ]
         , url = url ++ "/" ++ id
         , body = Http.emptyBody
-        , expect = msg
+        , expect = expectProvision ProvisionedChannel
         , timeout = Nothing
         , tracker = Nothing
         }
+
 
 -- HELPERS
 

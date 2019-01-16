@@ -69,7 +69,6 @@ update msg model =
                 model.token
                 model.type_
                 model.name
-                (expectProvision ProvisionedThing)
             )
 
         ProvisionedThing result ->
@@ -85,7 +84,6 @@ update msg model =
             , retrieve
                 urls.things
                 model.token
-                (expectRetrieve RetrievedThing)
             )
             
 
@@ -103,7 +101,6 @@ update msg model =
                 urls.things
                 model.name                     
                 model.token
-                (expectProvision ProvisionedThing)                     
             )            
 
 
@@ -156,8 +153,8 @@ thingListDecoder =
     (D.field "things" (D.list thingDecoder))
         
 
-provision : String -> String -> String -> String -> Http.Expect msg -> Cmd msg            
-provision url token type_ name msg =
+provision : String -> String -> String -> String -> Cmd Msg            
+provision url token type_ name =
     Http.request
         { method = "POST"
         , headers = [ Http.header "Authorization" token ]
@@ -169,13 +166,13 @@ provision url token type_ name msg =
                 ]
 
         |> Http.jsonBody
-        , expect = msg
+        , expect = expectProvision ProvisionedThing
         , timeout = Nothing
         , tracker = Nothing
     }
 
 
-expectProvision : (Result Http.Error Int -> msg) -> Http.Expect msg
+expectProvision : (Result Http.Error Int -> Msg) -> Http.Expect Msg
 expectProvision toMsg =
     Http.expectStringResponse toMsg <|
         \response ->
@@ -196,20 +193,20 @@ expectProvision toMsg =
                     Ok metadata.statusCode    
 
 
-retrieve : String -> String -> Http.Expect msg -> Cmd msg
-retrieve url token msg =
+retrieve : String -> String -> Cmd Msg
+retrieve url token =
     Http.request
         { method = "GET"
         , headers = [ Http.header "Authorization" token ]
         , url = url
         , body = Http.emptyBody
-        , expect = msg
+        , expect = expectRetrieve RetrievedThing
         , timeout = Nothing
         , tracker = Nothing
         }                    
 
 
-expectRetrieve : (Result Http.Error (List Thing) -> msg) -> Http.Expect msg
+expectRetrieve : (Result Http.Error (List Thing) -> Msg) -> Http.Expect Msg
 expectRetrieve toMsg =
   Http.expectStringResponse toMsg <|
     \response ->
@@ -235,14 +232,14 @@ expectRetrieve toMsg =
               Err (Http.BadBody "Account has no things")
 
 
-remove : String -> String -> String -> Http.Expect msg -> Cmd msg
-remove url id token msg =
+remove : String -> String -> String -> Cmd Msg
+remove url id token =
     Http.request
         { method = "DELETE"
         , headers = [ Http.header "Authorization" token ]
         , url = url ++ "/" ++ id
         , body = Http.emptyBody
-        , expect = msg
+        , expect = expectProvision ProvisionedThing
         , timeout = Nothing
         , tracker = Nothing
         }
