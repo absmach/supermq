@@ -5,6 +5,7 @@ import Html exposing  (..)
 import Html.Attributes exposing (..)
 import Json.Encode as E
 import Json.Decode as D
+import Url.Builder as B
 
 import Bootstrap.Grid as Grid
 import Bootstrap.Button as Button
@@ -19,11 +20,19 @@ urls =
     {
         channels = "http://localhost/channels"
     }
-   
+
+
+path =
+    { offset = "0"
+    , limit = "10"
+    }
+
 
 type alias Model =
     { channel : String
     , token : String
+    , offset : String
+    , limit : String
     , response : String
     }
 
@@ -32,13 +41,17 @@ initial : Model
 initial =
     { channel = ""
     , token = ""
-    , response = ""
+    , offset = "0"
+    , limit = path.offset
+    , response = path.limit
     }
 
 
 type Msg
     = SubmitChannel String
     | SubmitToken String
+    | SubmitOffset String
+    | SubmitLimit String
     | ProvisionChannel
     | ProvisionedChannel (Result Http.Error Int)
     | RetrieveChannel
@@ -54,6 +67,12 @@ update msg model =
 
         SubmitToken token ->
             ( { model | token = token }, Cmd.none )
+
+        SubmitOffset offset ->
+            ( { model | offset = offset }, Cmd.none )
+
+        SubmitLimit limit ->
+            ( { model | limit = limit }, Cmd.none )
 
         ProvisionChannel ->
             ( model
@@ -74,7 +93,7 @@ update msg model =
         RetrieveChannel ->
             ( model
             , retrieve
-                urls.channels
+                (urls.channels ++ (B.relative [ "" ] (buildQueryParamList model)))
                 model.token
             )
 
@@ -108,6 +127,14 @@ view model =
                 [ Form.label [ for "mytoken" ] [ text "Token" ]
                 , Input.text [ Input.id "mytoken", Input.onInput SubmitToken ]
                 ]
+            , Form.group []
+                [ Form.label [ for "myoffset" ] [ text "Offset" ]
+                , Input.text [ Input.id "myoffset", Input.onInput SubmitOffset ]
+                ]
+            , Form.group []
+                [ Form.label [ for "mylimit" ] [ text "Limit" ]
+                , Input.text [ Input.id "mylimit", Input.onInput SubmitLimit ]
+                ]                
             , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionChannel ] [ text "Provision" ]
             , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RetrieveChannel ] [ text "Retrieve" ]
             , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RemoveChannel ] [ text "Remove" ]
@@ -233,4 +260,19 @@ channelsToString channels =
         (\channel -> channel.name ++ " " ++ channel.id ++ "; ")
         channels
         |> String.concat
-        
+
+
+buildQueryParamList : Model -> List B.QueryParameter
+buildQueryParamList model =
+    List.map 
+        (\tpl ->
+             case (String.toInt (Tuple.second tpl)) of
+                 Just n ->
+                     B.int (Tuple.first tpl) n
+                            
+                 Nothing ->
+                     if (Tuple.first tpl) == "offset" then
+                         B.string (Tuple.first tpl) path.offset
+                     else
+                         B.string (Tuple.first tpl) path.limit)
+        [("offset", model.offset), ("limit", model.limit)]
