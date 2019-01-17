@@ -16,20 +16,20 @@ import Bootstrap.Grid.Row as Row
 import Bootstrap.Utilities.Spacing as Spacing
 import Browser
 import Browser.Navigation as Nav
+import Channel
+import Error
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
 import Json.Decode exposing (Decoder, field, string)
 import Json.Encode as Encode
+import Message
+import Thing
 import Url
 import Url.Parser as UrlParser exposing ((</>))
-
-
-import Error
-import Version
 import User
-import Thing
-import Channel
+import Version
+
 
 
 -- MAIN
@@ -47,6 +47,7 @@ main =
         }
 
 
+
 -- MODEL
 
 
@@ -57,17 +58,22 @@ type alias Model =
     , user : User.Model
     , channel : Channel.Model
     , thing : Thing.Model
+    , message : Message.Model
     }
 
 
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
-    ( Model key (UrlParser.parse parser url)
-          Version.initial
-          User.initial
-          Channel.initial
-          Thing.initial
-    , Cmd.none )
+    ( Model key
+        (UrlParser.parse parser url)
+        Version.initial
+        User.initial
+        Channel.initial
+        Thing.initial
+        Message.initial
+    , Cmd.none
+    )
+
 
 
 -- URL PARSER
@@ -82,6 +88,7 @@ parser =
     UrlParser.map Tuple.pair (UrlParser.string </> UrlParser.fragment identity)
 
 
+
 -- UPDATE
 
 
@@ -92,6 +99,7 @@ type Msg
     | UserMsg User.Msg
     | ChannelMsg Channel.Msg
     | ThingMsg Thing.Msg
+    | MessageMsg Message.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -111,40 +119,49 @@ update msg model =
             )
 
         VersionMsg subMsg ->
-           let
+            let
                 ( updatedVersion, versionCmd ) =
                     Version.update subMsg model.version
             in
-                ( { model | version = updatedVersion }, Cmd.map VersionMsg versionCmd )
+            ( { model | version = updatedVersion }, Cmd.map VersionMsg versionCmd )
 
         UserMsg subMsg ->
-           let
+            let
                 ( updatedUser, userCmd ) =
                     User.update subMsg model.user
             in
-                ( { model | user = updatedUser }, Cmd.map UserMsg userCmd )
+            ( { model | user = updatedUser }, Cmd.map UserMsg userCmd )
 
         ChannelMsg subMsg ->
-           let
+            let
                 ( updatedChannel, channelCmd ) =
                     Channel.update subMsg model.channel
             in
-                ( { model | channel = updatedChannel }, Cmd.map ChannelMsg channelCmd )
+            ( { model | channel = updatedChannel }, Cmd.map ChannelMsg channelCmd )
 
         ThingMsg subMsg ->
-           let
+            let
                 ( updatedThing, thingCmd ) =
                     Thing.update subMsg model.thing
             in
-                ( { model | thing = updatedThing }, Cmd.map ThingMsg thingCmd )
+            ( { model | thing = updatedThing }, Cmd.map ThingMsg thingCmd )
 
-                
+        MessageMsg subMsg ->
+            let
+                ( updatedMessage, messageCmd ) =
+                    Message.update subMsg model.message
+            in
+            ( { model | message = updatedMessage }, Cmd.map MessageMsg messageCmd )
+
+
+
 -- SUBSCRIPTIONS
 
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.none
+
 
 
 -- VIEW
@@ -164,12 +181,15 @@ view model =
 
                             "account" ->
                                 Html.map UserMsg (User.view model.user)
-                                    
+
                             "channel" ->
                                 Html.map ChannelMsg (Channel.view model.channel)
 
                             "things" ->
                                 Html.map ThingMsg (Thing.view model.thing)
+
+                            "messages" ->
+                                Html.map MessageMsg (Message.view model.message)
 
                             _ ->
                                 h3 [] [ text "Welcome to Gateflux" ]
@@ -202,4 +222,5 @@ menuButtons =
     , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/account" ] ] [ text "Account" ]
     , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/channel" ] ] [ text "Channels" ]
     , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/things" ] ] [ text "Things" ]
+    , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/messages" ] ] [ text "Messages" ]
     ]
