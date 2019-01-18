@@ -41,9 +41,9 @@ initial : Model
 initial =
     { channel = ""
     , token = ""
-    , offset = "0"
-    , limit = path.offset
-    , response = path.limit
+    , offset = path.offset
+    , limit = path.limit
+    , response = ""
     }
 
 
