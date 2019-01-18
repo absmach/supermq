@@ -1,5 +1,6 @@
 module Main exposing (Model, Msg(..), init, main, menuButtons, subscriptions, update, view)
 
+import Access
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
 import Bootstrap.CDN as CDN
@@ -58,6 +59,7 @@ type alias Model =
     , user : User.Model
     , channel : Channel.Model
     , thing : Thing.Model
+    , access : Access.Model
     , message : Message.Model
     }
 
@@ -70,6 +72,7 @@ init _ url key =
         User.initial
         Channel.initial
         Thing.initial
+        Access.initial
         Message.initial
     , Cmd.none
     )
@@ -99,6 +102,7 @@ type Msg
     | UserMsg User.Msg
     | ChannelMsg Channel.Msg
     | ThingMsg Thing.Msg
+    | AccessMsg Access.Msg
     | MessageMsg Message.Msg
 
 
@@ -146,6 +150,13 @@ update msg model =
             in
             ( { model | thing = updatedThing }, Cmd.map ThingMsg thingCmd )
 
+        AccessMsg subMsg ->
+            let
+                ( updatedAccess, accessCmd ) =
+                    Access.update subMsg model.access
+            in
+            ( { model | access = updatedAccess }, Cmd.map AccessMsg accessCmd )
+
         MessageMsg subMsg ->
             let
                 ( updatedMessage, messageCmd ) =
@@ -188,6 +199,9 @@ view model =
                             "things" ->
                                 Html.map ThingMsg (Thing.view model.thing)
 
+                            "access" ->
+                                Html.map AccessMsg (Access.view model.access)
+
                             "messages" ->
                                 Html.map MessageMsg (Message.view model.message)
 
@@ -222,5 +236,6 @@ menuButtons =
     , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/account" ] ] [ text "Account" ]
     , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/channel" ] ] [ text "Channels" ]
     , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/things" ] ] [ text "Things" ]
+    , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/access" ] ] [ text "Access" ]
     , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/messages" ] ] [ text "Messages" ]
     ]

@@ -1,4 +1,4 @@
-module Message exposing (Model, Msg(..), expectMessage, initial, update, view)
+module Access exposing (Model, Msg(..), expectResponse, initial, update, view)
 
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
@@ -12,12 +12,12 @@ import Http
 
 
 urls =
-    { channels = "http://localhost/http/channels/"
+    { channels = "http://localhost/channels/"
     }
 
 
 type alias Model =
-    { message : String
+    { thing : String
     , token : String
     , channel : String
     , response : String
@@ -26,7 +26,7 @@ type alias Model =
 
 initial : Model
 initial =
-    { message = ""
+    { thing = ""
     , token = ""
     , channel = ""
     , response = ""
@@ -34,39 +34,53 @@ initial =
 
 
 type Msg
-    = SubmitMessage String
+    = SubmitThing String
     | SubmitToken String
     | SubmitChannel String
-    | SendMessage
-    | SentMessage (Result Http.Error Int)
+    | Connect
+    | Disconnect
+    | GotResponse (Result Http.Error Int)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        SubmitMessage message ->
-            ( { model | message = message }, Cmd.none )
-
         SubmitChannel channel ->
             ( { model | channel = channel }, Cmd.none )
+
+        SubmitThing thing ->
+            ( { model | thing = thing }, Cmd.none )
 
         SubmitToken token ->
             ( { model | token = token }, Cmd.none )
 
-        SendMessage ->
+        Connect ->
             ( model
             , Http.request
-                { method = "POST"
+                { method = "PUT"
                 , headers = [ Http.header "Authorization" model.token ]
-                , url = urls.channels ++ model.channel ++ "/messages"
-                , body = Http.stringBody "application/json" model.message
-                , expect = expectMessage SentMessage
+                , url = urls.channels ++ model.channel ++ "/things/" ++ model.thing
+                , body = Http.emptyBody
+                , expect = expectResponse GotResponse
                 , timeout = Nothing
                 , tracker = Nothing
                 }
             )
 
-        SentMessage result ->
+        Disconnect ->
+            ( model
+            , Http.request
+                { method = "DELETE"
+                , headers = [ Http.header "Authorization" model.token ]
+                , url = urls.channels ++ model.channel ++ "/things/" ++ model.thing
+                , body = Http.emptyBody
+                , expect = expectResponse GotResponse
+                , timeout = Nothing
+                , tracker = Nothing
+                }
+            )
+
+        GotResponse result ->
             case result of
                 Ok statusCode ->
                     ( { model | response = "Ok " ++ String.fromInt statusCode }, Cmd.none )
@@ -89,10 +103,11 @@ view model =
                     , Input.text [ Input.id "mytoken", Input.onInput SubmitToken ]
                     ]
                 , Form.group []
-                    [ Form.label [ for "mymessage" ] [ text "Message" ]
-                    , Input.text [ Input.id "mymessage", Input.onInput SubmitMessage ]
+                    [ Form.label [ for "mything" ] [ text "Thing" ]
+                    , Input.text [ Input.id "mything", Input.onInput SubmitThing ]
                     ]
-                , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick SendMessage ] [ text "Send" ]
+                , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick Connect ] [ text "Connect" ]
+                , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick Disconnect ] [ text "Disonnect" ]
                 ]
             , Html.hr [] []
             , text ("response: " ++ model.response)
@@ -100,8 +115,8 @@ view model =
         ]
 
 
-expectMessage : (Result Http.Error Int -> msg) -> Http.Expect msg
-expectMessage toMsg =
+expectResponse : (Result Http.Error Int -> Msg) -> Http.Expect Msg
+expectResponse toMsg =
     Http.expectStringResponse toMsg <|
         \response ->
             case response of
