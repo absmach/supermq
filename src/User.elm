@@ -5,6 +5,7 @@ import Html.Attributes exposing (..)
 import Http
 import Json.Decode as D
 import Json.Encode as E
+import Url.Builder as B
 
 import Bootstrap.Grid as Grid
 import Bootstrap.Button as Button
@@ -15,10 +16,11 @@ import Bootstrap.Utilities.Spacing as Spacing
 import Error
 
 
-urls =
-    { users = "http://localhost/users"
-    , tokens = "http://localhost/tokens"
-    }
+url =
+    { base = "http://localhost"        
+    , usersPath = [ "users" ]
+    , tokensPath = [ "tokens" ]
+    }    
 
 
 type alias Model =
@@ -59,7 +61,7 @@ update msg model =
             , create
                 model.email
                 model.password
-                urls.users
+                (B.crossOrigin url.base url.usersPath [])
             )
 
         Created result ->
@@ -75,7 +77,7 @@ update msg model =
             , getToken
                 model.email
                 model.password
-                urls.tokens
+                (B.crossOrigin url.base url.tokensPath [])
             )
 
         GotToken result ->
@@ -93,12 +95,12 @@ view model =
         [ Grid.col []
           [ Form.form []
             [ Form.group []
-              [ Form.label [ for "myemail" ] [ text "Email address" ]
-              , Input.email [ Input.id "myemail", Input.onInput SubmitEmail ]
+              [ Form.label [ for "email" ] [ text "Email address" ]
+              , Input.email [ Input.id "email", Input.onInput SubmitEmail ]
               ]
             , Form.group []
-                [ Form.label [ for "mypwd" ] [ text "Password" ]
-                , Input.password [ Input.id "mypwd", Input.onInput SubmitPassword ]
+                [ Form.label [ for "pwd" ] [ text "Password" ]
+                , Input.password [ Input.id "pwd", Input.onInput SubmitPassword ]
                 ]
             , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick Create ] [ text "Register" ]
             , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick GetToken ] [ text "Token" ]
@@ -131,11 +133,11 @@ decoder =
 
 
 create : String -> String -> String -> Cmd Msg            
-create email password url  =
+create email password u  =
     Http.request
         { method = "POST"
         , headers = []
-        , url = url
+        , url = u
         , body =
             encode (User email password)
         |> Http.jsonBody
@@ -150,8 +152,8 @@ expectUser toMsg =
     Http.expectStringResponse toMsg <|
         \response ->
             case response of
-                Http.BadUrl_ url ->
-                    Err (Http.BadUrl url)
+                Http.BadUrl_ u ->
+                    Err (Http.BadUrl u)
 
                 Http.Timeout_ ->
                     Err Http.Timeout
@@ -167,11 +169,11 @@ expectUser toMsg =
 
 
 getToken : String -> String -> String -> Cmd Msg            
-getToken email password url =
+getToken email password u =
     Http.request
         { method = "POST"
         , headers = []
-        , url = url
+        , url = u
         , body =
             encode (User email password)
         |> Http.jsonBody
@@ -186,8 +188,8 @@ expectToken toMsg =
     Http.expectStringResponse toMsg <|
         \response ->
             case response of
-                Http.BadUrl_ url ->
-                    Err (Http.BadUrl url)
+                Http.BadUrl_ u ->
+                    Err (Http.BadUrl u)
 
                 Http.Timeout_ ->
                     Err Http.Timeout

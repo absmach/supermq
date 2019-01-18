@@ -5,17 +5,17 @@ import Html exposing  (..)
 import Html.Attributes exposing (..)
 import Json.Encode as E
 import Json.Decode as D
+import Url.Builder as B
 
 import Bootstrap.Grid as Grid
 import Bootstrap.Button as Button
 
 import Error
 
-urls =
-    {
-        version = "http://localhost/version"
-    }
-
+url =
+    { base = "http://localhost"        
+    ,path = [ "version" ]
+    }    
 
 type alias Model =
     { response : String }
@@ -37,7 +37,7 @@ update msg model =
         GetVersion ->
             ( model
             , Http.get
-                { url = urls.version
+                { url = B.crossOrigin url.base url.path []
                 , expect = Http.expectJson GotVersion (D.field "version" D.string)
                 }
             )

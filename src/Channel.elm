@@ -16,9 +16,9 @@ import Bootstrap.Utilities.Spacing as Spacing
 import Error
 
 
-urls =
-    {
-        channels = "http://localhost/channels"
+url =
+    { base = "http://localhost"        
+    ,path = [ "channels" ]
     }
 
 
@@ -77,7 +77,7 @@ update msg model =
         ProvisionChannel ->
             ( model
             , provision
-                urls.channels
+                (B.crossOrigin url.base url.path [])
                 model.token
                 model.channel
             )
@@ -93,7 +93,7 @@ update msg model =
         RetrieveChannel ->
             ( model
             , retrieve
-                (urls.channels ++ (B.relative [ "" ] (buildQueryParamList model)))
+                (B.crossOrigin url.base url.path (buildQueryParamList model))
                 model.token
             )
 
@@ -108,8 +108,7 @@ update msg model =
         RemoveChannel ->
             ( model
             , remove
-                urls.channels
-                model.channel                     
+                (B.crossOrigin url.base (List.append url.path [ model.channel ]) [])
                 model.token
             )            
 
@@ -120,20 +119,20 @@ view model =
         [ Grid.col []
           [ Form.form []
             [ Form.group []
-              [ Form.label [ for "mychan" ] [ text "Name (Provision) or id (Remove)" ]
-              , Input.email [ Input.id "mychan", Input.onInput SubmitChannel ]
+              [ Form.label [ for "chan" ] [ text "Name (Provision) or id (Remove)" ]
+              , Input.email [ Input.id "chan", Input.onInput SubmitChannel ]
               ]
             , Form.group []
-                [ Form.label [ for "mytoken" ] [ text "Token" ]
-                , Input.text [ Input.id "mytoken", Input.onInput SubmitToken ]
+                [ Form.label [ for "token" ] [ text "Token" ]
+                , Input.text [ Input.id "token", Input.onInput SubmitToken ]
                 ]
             , Form.group []
-                [ Form.label [ for "myoffset" ] [ text "Offset" ]
-                , Input.text [ Input.id "myoffset", Input.onInput SubmitOffset ]
+                [ Form.label [ for "offset" ] [ text "Offset" ]
+                , Input.text [ Input.id "offset", Input.onInput SubmitOffset ]
                 ]
             , Form.group []
-                [ Form.label [ for "mylimit" ] [ text "Limit" ]
-                , Input.text [ Input.id "mylimit", Input.onInput SubmitLimit ]
+                [ Form.label [ for "limit" ] [ text "Limit" ]
+                , Input.text [ Input.id "limit", Input.onInput SubmitLimit ]
                 ]                
             , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionChannel ] [ text "Provision" ]
             , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RetrieveChannel ] [ text "Retrieve" ]
@@ -164,11 +163,11 @@ channelListDecoder =
 
 
 provision : String -> String -> String -> Cmd Msg
-provision url token name =
+provision u token name =
     Http.request
         { method = "POST"
         , headers = [ Http.header "Authorization" token ]
-        , url = url
+        , url = u
         , body =
             E.object [ ( "name", E.string name ) ]
         |> Http.jsonBody
@@ -183,8 +182,8 @@ expectProvision toMsg =
     Http.expectStringResponse toMsg <|
         \response ->
             case response of
-                Http.BadUrl_ url ->
-                    Err (Http.BadUrl url)
+                Http.BadUrl_ u ->
+                    Err (Http.BadUrl u)
 
                 Http.Timeout_ ->
                     Err Http.Timeout
@@ -200,11 +199,11 @@ expectProvision toMsg =
 
 
 retrieve : String -> String -> Cmd Msg
-retrieve url token =
+retrieve u token =
     Http.request
         { method = "GET"
         , headers = [ Http.header "Authorization" token ]
-        , url = url
+        , url = u
         , body = Http.emptyBody
         , expect = expectRetrieve RetrievedChannel
         , timeout = Nothing
@@ -217,8 +216,8 @@ expectRetrieve toMsg =
   Http.expectStringResponse toMsg <|
     \response ->
       case response of
-        Http.BadUrl_ url ->
-          Err (Http.BadUrl url)
+        Http.BadUrl_ u ->
+          Err (Http.BadUrl u)
 
         Http.Timeout_ ->
           Err Http.Timeout
@@ -238,12 +237,12 @@ expectRetrieve toMsg =
               Err (Http.BadBody "Account has no channels")
 
 
-remove : String -> String -> String -> Cmd Msg
-remove url id token =
+remove : String -> String -> Cmd Msg
+remove u token =
     Http.request
         { method = "DELETE"
         , headers = [ Http.header "Authorization" token ]
-        , url = url ++ "/" ++ id
+        , url = u
         , body = Http.emptyBody
         , expect = expectProvision ProvisionedChannel
         , timeout = Nothing

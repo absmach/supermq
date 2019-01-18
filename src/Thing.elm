@@ -5,6 +5,7 @@ import Html exposing  (..)
 import Html.Attributes exposing (..)
 import Json.Encode as E
 import Json.Decode as D
+import Url.Builder as B
 
 import Bootstrap.Grid as Grid
 import Bootstrap.Button as Button
@@ -15,9 +16,15 @@ import Bootstrap.Utilities.Spacing as Spacing
 import Error
 
 
-urls =
-    {
-        things = "http://localhost/things"
+path =
+    { offset = "0"
+    , limit = "10"
+    }
+
+
+url =
+    { base = "http://localhost"        
+    , path = [ "things" ]
     }
    
 
@@ -25,6 +32,8 @@ type alias Model =
     { name : String
     , type_ : String
     , token : String
+    , offset : String
+    , limit : String              
     , response : String
     }
 
@@ -34,6 +43,8 @@ initial =
     { name = ""
     , type_ = ""
     , token = ""
+    , offset = path.offset
+    , limit = path.limit              
     , response = ""
     }
 
@@ -42,6 +53,8 @@ type Msg
     = SubmitToken String
     | SubmitType String
     | SubmitName String
+    | SubmitOffset String
+    | SubmitLimit String      
     | ProvisionThing
     | ProvisionedThing (Result Http.Error Int)      
     | RetrieveThing
@@ -62,10 +75,16 @@ update msg model =
         SubmitName name ->
             ( { model | name = name }, Cmd.none )
 
+        SubmitOffset offset ->
+            ( { model | offset = offset }, Cmd.none )
+
+        SubmitLimit limit ->
+            ( { model | limit = limit }, Cmd.none )
+
         ProvisionThing ->
             ( model
             , provision
-                urls.things
+                (B.crossOrigin url.base url.path [])
                 model.token
                 model.type_
                 model.name
@@ -82,7 +101,7 @@ update msg model =
         RetrieveThing ->
             ( model
             , retrieve
-                urls.things
+                (B.crossOrigin url.base url.path (buildQueryParamList model))
                 model.token
             )
             
@@ -98,8 +117,7 @@ update msg model =
         RemoveThing ->
             ( model
             , remove
-                urls.things
-                model.name                     
+                (B.crossOrigin url.base (List.append url.path [ model.name ]) [])
                 model.token
             )            
 
@@ -111,17 +129,25 @@ view model =
         [ Grid.col []
           [ Form.form []
             [ Form.group []
-              [ Form.label [ for "mytype" ] [ text "Type" ]
-              , Input.text [ Input.id "mytype", Input.onInput SubmitType ]
+              [ Form.label [ for "type" ] [ text "Type" ]
+              , Input.text [ Input.id "type", Input.onInput SubmitType ]
               ]
             , Form.group []
-                [ Form.label [ for "myname" ] [ text "Name (Provision) or id (Remove)" ]
-                , Input.text [ Input.id "myname", Input.onInput SubmitName ]
+                [ Form.label [ for "name" ] [ text "Name (Provision) or id (Remove)" ]
+                , Input.text [ Input.id "name", Input.onInput SubmitName ]
                 ]
             , Form.group []
-                [ Form.label [ for "mytoken" ] [ text "Token" ]
-                , Input.text [ Input.id "mytoken", Input.onInput SubmitToken ]
-                ]                                        
+                [ Form.label [ for "token" ] [ text "Token" ]
+                , Input.text [ Input.id "token", Input.onInput SubmitToken ]
+                ]
+            , Form.group []
+                [ Form.label [ for "offset" ] [ text "Offset" ]
+                , Input.text [ Input.id "offset", Input.onInput SubmitOffset ]
+                ]
+            , Form.group []
+                [ Form.label [ for "limit" ] [ text "Limit" ]
+                , Input.text [ Input.id "limit", Input.onInput SubmitLimit ]
+                ]                                
             , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionThing ] [ text "Provision" ]
             , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RetrieveThing ] [ text "Retrieve" ]
             , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RemoveThing ] [ text "Remove" ]
@@ -154,11 +180,11 @@ thingListDecoder =
         
 
 provision : String -> String -> String -> String -> Cmd Msg            
-provision url token type_ name =
+provision u token type_ name =
     Http.request
         { method = "POST"
         , headers = [ Http.header "Authorization" token ]
-        , url = url
+        , url = u
         , body =
             E.object
                 [ ("type", E.string type_)
@@ -177,8 +203,8 @@ expectProvision toMsg =
     Http.expectStringResponse toMsg <|
         \response ->
             case response of
-                Http.BadUrl_ url ->
-                    Err (Http.BadUrl url)
+                Http.BadUrl_ u ->
+                    Err (Http.BadUrl u)
 
                 Http.Timeout_ ->
                     Err Http.Timeout
@@ -194,11 +220,11 @@ expectProvision toMsg =
 
 
 retrieve : String -> String -> Cmd Msg
-retrieve url token =
+retrieve u token =
     Http.request
         { method = "GET"
         , headers = [ Http.header "Authorization" token ]
-        , url = url
+        , url = u
         , body = Http.emptyBody
         , expect = expectRetrieve RetrievedThing
         , timeout = Nothing
@@ -211,8 +237,8 @@ expectRetrieve toMsg =
   Http.expectStringResponse toMsg <|
     \response ->
       case response of
-        Http.BadUrl_ url ->
-          Err (Http.BadUrl url)
+        Http.BadUrl_ u ->
+          Err (Http.BadUrl u)
 
         Http.Timeout_ ->
           Err Http.Timeout
@@ -232,12 +258,12 @@ expectRetrieve toMsg =
               Err (Http.BadBody "Account has no things")
 
 
-remove : String -> String -> String -> Cmd Msg
-remove url id token =
+remove : String -> String -> Cmd Msg
+remove u token =
     Http.request
         { method = "DELETE"
         , headers = [ Http.header "Authorization" token ]
-        , url = url ++ "/" ++ id
+        , url = u
         , body = Http.emptyBody
         , expect = expectProvision ProvisionedThing
         , timeout = Nothing
@@ -255,3 +281,19 @@ thingsToString things =
         (\thing -> thing.id ++ " " ++ thing.type_ ++ " " ++ thing.name ++ " " ++ thing.key ++ "; ")
         things
         |> String.concat
+
+
+buildQueryParamList : Model -> List B.QueryParameter
+buildQueryParamList model =
+    List.map 
+        (\tpl ->
+             case (String.toInt (Tuple.second tpl)) of
+                 Just n ->
+                     B.int (Tuple.first tpl) n
+                            
+                 Nothing ->
+                     if (Tuple.first tpl) == "offset" then
+                         B.string (Tuple.first tpl) path.offset
+                     else
+                         B.string (Tuple.first tpl) path.limit)
+        [("offset", model.offset), ("limit", model.limit)]           
