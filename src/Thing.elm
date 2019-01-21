@@ -31,7 +31,6 @@ url =
 type alias Model =
     { name : String
     , type_ : String
-    , token : String
     , offset : String
     , limit : String              
     , response : String
@@ -42,7 +41,6 @@ initial : Model
 initial =
     { name = ""
     , type_ = ""
-    , token = ""
     , offset = path.offset
     , limit = path.limit              
     , response = ""
@@ -50,8 +48,7 @@ initial =
 
 
 type Msg
-    = SubmitToken String
-    | SubmitType String
+    = SubmitType String
     | SubmitName String
     | SubmitOffset String
     | SubmitLimit String      
@@ -63,12 +60,9 @@ type Msg
 
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Msg -> Model -> String -> ( Model, Cmd Msg )
+update msg model token =
     case msg of
-        SubmitToken token ->
-            ( { model | token = token }, Cmd.none )
-                    
         SubmitType type_ ->
             ( { model | type_ = type_ }, Cmd.none )
 
@@ -85,7 +79,7 @@ update msg model =
             ( model
             , provision
                 (B.crossOrigin url.base url.path [])
-                model.token
+                token
                 model.type_
                 model.name
             )
@@ -102,7 +96,7 @@ update msg model =
             ( model
             , retrieve
                 (B.crossOrigin url.base url.path (buildQueryParamList model))
-                model.token
+                token
             )
             
 
@@ -118,7 +112,7 @@ update msg model =
             ( model
             , remove
                 (B.crossOrigin url.base (List.append url.path [ model.name ]) [])
-                model.token
+                token
             )            
 
 
@@ -135,10 +129,6 @@ view model =
             , Form.group []
                 [ Form.label [ for "name" ] [ text "Name (Provision) or id (Remove)" ]
                 , Input.text [ Input.id "name", Input.onInput SubmitName ]
-                ]
-            , Form.group []
-                [ Form.label [ for "token" ] [ text "Token" ]
-                , Input.text [ Input.id "token", Input.onInput SubmitToken ]
                 ]
             , Form.group []
                 [ Form.label [ for "offset" ] [ text "Offset" ]

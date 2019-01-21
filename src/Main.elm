@@ -139,21 +139,21 @@ update msg model =
         ChannelMsg subMsg ->
             let
                 ( updatedChannel, channelCmd ) =
-                    Channel.update subMsg model.channel
+                    Channel.update subMsg model.channel model.user.token
             in
             ( { model | channel = updatedChannel }, Cmd.map ChannelMsg channelCmd )
 
         ThingMsg subMsg ->
             let
                 ( updatedThing, thingCmd ) =
-                    Thing.update subMsg model.thing
+                    Thing.update subMsg model.thing model.user.token
             in
             ( { model | thing = updatedThing }, Cmd.map ThingMsg thingCmd )
 
         ConnectionMsg subMsg ->
             let
                 ( updatedConnection, connectionCmd ) =
-                    Connection.update subMsg model.connection
+                    Connection.update subMsg model.connection model.user.token
             in
             ( { model | connection = updatedConnection }, Cmd.map ConnectionMsg connectionCmd )
 
@@ -174,7 +174,6 @@ subscriptions _ =
     Sub.none
 
 
-
 -- VIEW
 
 
@@ -183,33 +182,42 @@ view model =
     { title = "Gateflux"
     , body =
         let
+            loggedIn : Bool
+            loggedIn =
+                if String.length model.user.token > 0 then
+                    True
+                else
+                    False
             content =
                 case model.route of
                     Just route ->
-                        case Tuple.first route of
-                            "version" ->
-                                Html.map VersionMsg (Version.view model.version)
+                        if loggedIn then
+                            case Tuple.first route of
+                                "version" ->
+                                    Html.map VersionMsg (Version.view model.version)
 
-                            "account" ->
-                                Html.map UserMsg (User.view model.user)
+                                "account" ->
+                                    Html.map UserMsg (User.view model.user)
 
-                            "channel" ->
-                                Html.map ChannelMsg (Channel.view model.channel)
+                                "channel" ->
+                                    Html.map ChannelMsg (Channel.view model.channel)
 
-                            "things" ->
-                                Html.map ThingMsg (Thing.view model.thing)
+                                "things" ->
+                                    Html.map ThingMsg (Thing.view model.thing)
 
-                            "connection" ->
-                                Html.map ConnectionMsg (Connection.view model.connection)
+                                "connection" ->
+                                    Html.map ConnectionMsg (Connection.view model.connection)
 
-                            "messages" ->
-                                Html.map MessageMsg (Message.view model.message)
+                                "messages" ->
+                                    Html.map MessageMsg (Message.view model.message)
 
-                            _ ->
-                                h3 [] [ text "Welcome to Gateflux" ]
-
+                                _ ->
+                                    h3 [] [ text "Welcome to Gateflux" ]
+                        else
+                            Html.map UserMsg (User.view model.user)
+                                
                     Nothing ->
-                        h3 [] [ text "" ]
+                        Html.map UserMsg (User.view model.user)
         in
         [ -- we use Bootstrap container defined at http://elm-bootstrap.info/grid
           Grid.container []

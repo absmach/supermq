@@ -19,7 +19,6 @@ url =
 
 type alias Model =
     { thing : String
-    , token : String
     , channel : String
     , response : String
     }
@@ -28,7 +27,6 @@ type alias Model =
 initial : Model
 initial =
     { thing = ""
-    , token = ""
     , channel = ""
     , response = ""
     }
@@ -36,15 +34,14 @@ initial =
 
 type Msg
     = SubmitThing String
-    | SubmitToken String
     | SubmitChannel String
     | Connect
     | Disconnect
     | GotResponse (Result Http.Error Int)
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Msg -> Model -> String -> ( Model, Cmd Msg )
+update msg model token =
     case msg of
         SubmitChannel channel ->
             ( { model | channel = channel }, Cmd.none )
@@ -52,14 +49,11 @@ update msg model =
         SubmitThing thing ->
             ( { model | thing = thing }, Cmd.none )
 
-        SubmitToken token ->
-            ( { model | token = token }, Cmd.none )
-
         Connect ->
             ( model
             , Http.request
                 { method = "PUT"
-                , headers = [ Http.header "Authorization" model.token ]
+                , headers = [ Http.header "Authorization" token ]
                 , url = B.crossOrigin url.base [ "channels", model.channel, "things", model.thing ] []
                 , body = Http.emptyBody
                 , expect = expectResponse GotResponse
@@ -72,7 +66,7 @@ update msg model =
             ( model
             , Http.request
                 { method = "DELETE"
-                , headers = [ Http.header "Authorization" model.token ]
+                , headers = [ Http.header "Authorization" token ]
                 , url = B.crossOrigin url.base [ "channels", model.channel, "things", model.thing ] []
                 , body = Http.emptyBody
                 , expect = expectResponse GotResponse
@@ -98,10 +92,6 @@ view model =
                 [ Form.group []
                     [ Form.label [ for "chan" ] [ text "Channel" ]
                     , Input.email [ Input.id "chan", Input.onInput SubmitChannel ]
-                    ]
-                , Form.group []
-                    [ Form.label [ for "token" ] [ text "Token" ]
-                    , Input.text [ Input.id "token", Input.onInput SubmitToken ]
                     ]
                 , Form.group []
                     [ Form.label [ for "thing" ] [ text "Thing" ]

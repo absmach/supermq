@@ -26,6 +26,7 @@ url =
 type alias Model =
     { email : String
     , password : String
+    , token : String
     , response : String
     }
 
@@ -34,6 +35,7 @@ initial : Model
 initial =
     { email = ""
     , password = ""
+    , token = ""
     , response = ""
     }
 
@@ -45,6 +47,7 @@ type Msg
     | Created (Result Http.Error Int)
     | GetToken
     | GotToken (Result Http.Error String)
+    | LogOut
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -83,31 +86,48 @@ update msg model =
         GotToken result ->
             case result of
                 Ok token ->
-                    ( { model | response = "Ok " ++ token }, Cmd.none )
+                    -- ( { model | token = token, response = "Ok " ++ token }, Cmd.none )
+                    ( { model | token = token, response = "" }, Cmd.none )
 
                 Err error ->
                     ( { model | response = (Error.handle error) }, Cmd.none )                    
-        
+
+        LogOut ->
+            ( { model | email = "", password = "", token = "" }, Cmd.none )
+                        
 
 view : Model -> Html Msg
 view model =
-    Grid.row []
-        [ Grid.col []
-          [ Form.form []
-            [ Form.group []
-              [ Form.label [ for "email" ] [ text "Email address" ]
-              , Input.email [ Input.id "email", Input.onInput SubmitEmail ]
-              ]
-            , Form.group []
-                [ Form.label [ for "pwd" ] [ text "Password" ]
-                , Input.password [ Input.id "pwd", Input.onInput SubmitPassword ]
+    let
+        loggedIn : Bool
+        loggedIn =
+            if String.length model.token > 0 then
+                True
+            else
+                False
+    in
+        if loggedIn then
+            div [ id "loggedIn" ]
+                [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick LogOut ] [ text "Log out" ]
                 ]
-            , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick Create ] [ text "Register" ]
-            , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick GetToken ] [ text "Token" ]
-            ]
-          , Html.hr [] []
-          , text ("response: " ++ model.response) ]
-        ]
+        else
+            Grid.row []
+                [ Grid.col []
+                      [ Form.form []
+                            [ Form.group []
+                                  [ Form.label [ for "email" ] [ text "Email address" ]
+                                  , Input.email [ Input.id "email", Input.onInput SubmitEmail ]
+                                  ]
+                            , Form.group []
+                                [ Form.label [ for "pwd" ] [ text "Password" ]
+                                , Input.password [ Input.id "pwd", Input.onInput SubmitPassword ]
+                                ]
+                            , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick Create ] [ text "Register" ]
+                            , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick GetToken ] [ text "Log in" ]
+                            ]
+                      , Html.hr [] []
+                      , text ("response: " ++ model.response) ]
+                ]
 
 
         

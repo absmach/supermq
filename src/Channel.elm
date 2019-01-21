@@ -49,7 +49,6 @@ initial =
 
 type Msg
     = SubmitChannel String
-    | SubmitToken String
     | SubmitOffset String
     | SubmitLimit String
     | ProvisionChannel
@@ -59,14 +58,11 @@ type Msg
     | RemoveChannel
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Msg -> Model -> String -> ( Model, Cmd Msg )
+update msg model token =
     case msg of
         SubmitChannel channel ->
             ( { model | channel = channel }, Cmd.none )
-
-        SubmitToken token ->
-            ( { model | token = token }, Cmd.none )
 
         SubmitOffset offset ->
             ( { model | offset = offset }, Cmd.none )
@@ -78,7 +74,7 @@ update msg model =
             ( model
             , provision
                 (B.crossOrigin url.base url.path [])
-                model.token
+                token
                 model.channel
             )
 
@@ -94,7 +90,7 @@ update msg model =
             ( model
             , retrieve
                 (B.crossOrigin url.base url.path (buildQueryParamList model))
-                model.token
+                token
             )
 
         RetrievedChannel result ->
@@ -109,7 +105,7 @@ update msg model =
             ( model
             , remove
                 (B.crossOrigin url.base (List.append url.path [ model.channel ]) [])
-                model.token
+                token
             )            
 
 
@@ -122,10 +118,6 @@ view model =
               [ Form.label [ for "chan" ] [ text "Name (Provision) or id (Remove)" ]
               , Input.email [ Input.id "chan", Input.onInput SubmitChannel ]
               ]
-            , Form.group []
-                [ Form.label [ for "token" ] [ text "Token" ]
-                , Input.text [ Input.id "token", Input.onInput SubmitToken ]
-                ]
             , Form.group []
                 [ Form.label [ for "offset" ] [ text "Offset" ]
                 , Input.text [ Input.id "offset", Input.onInput SubmitOffset ]
