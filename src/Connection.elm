@@ -1,4 +1,4 @@
-module Access exposing (Model, Msg(..), expectResponse, initial, update, view)
+module Connection exposing (Model, Msg(..), expectResponse, initial, update, view)
 
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
@@ -9,10 +9,11 @@ import Error
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
+import Url.Builder as B
 
 
-urls =
-    { channels = "http://localhost/channels/"
+url =
+    { base = "http://localhost"
     }
 
 
@@ -59,7 +60,7 @@ update msg model =
             , Http.request
                 { method = "PUT"
                 , headers = [ Http.header "Authorization" model.token ]
-                , url = urls.channels ++ model.channel ++ "/things/" ++ model.thing
+                , url = B.crossOrigin url.base [ "channels", model.channel, "things", model.thing ] []
                 , body = Http.emptyBody
                 , expect = expectResponse GotResponse
                 , timeout = Nothing
@@ -72,7 +73,7 @@ update msg model =
             , Http.request
                 { method = "DELETE"
                 , headers = [ Http.header "Authorization" model.token ]
-                , url = urls.channels ++ model.channel ++ "/things/" ++ model.thing
+                , url = B.crossOrigin url.base [ "channels", model.channel, "things", model.thing ] []
                 , body = Http.emptyBody
                 , expect = expectResponse GotResponse
                 , timeout = Nothing
@@ -95,16 +96,16 @@ view model =
         [ Grid.col []
             [ Form.form []
                 [ Form.group []
-                    [ Form.label [ for "mychan" ] [ text "Channel" ]
-                    , Input.email [ Input.id "mychan", Input.onInput SubmitChannel ]
+                    [ Form.label [ for "chan" ] [ text "Channel" ]
+                    , Input.email [ Input.id "chan", Input.onInput SubmitChannel ]
                     ]
                 , Form.group []
-                    [ Form.label [ for "mytoken" ] [ text "Token" ]
-                    , Input.text [ Input.id "mytoken", Input.onInput SubmitToken ]
+                    [ Form.label [ for "token" ] [ text "Token" ]
+                    , Input.text [ Input.id "token", Input.onInput SubmitToken ]
                     ]
                 , Form.group []
-                    [ Form.label [ for "mything" ] [ text "Thing" ]
-                    , Input.text [ Input.id "mything", Input.onInput SubmitThing ]
+                    [ Form.label [ for "thing" ] [ text "Thing" ]
+                    , Input.text [ Input.id "thing", Input.onInput SubmitThing ]
                     ]
                 , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick Connect ] [ text "Connect" ]
                 , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick Disconnect ] [ text "Disonnect" ]
@@ -120,8 +121,8 @@ expectResponse toMsg =
     Http.expectStringResponse toMsg <|
         \response ->
             case response of
-                Http.BadUrl_ url ->
-                    Err (Http.BadUrl url)
+                Http.BadUrl_ u ->
+                    Err (Http.BadUrl u)
 
                 Http.Timeout_ ->
                     Err Http.Timeout

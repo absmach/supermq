@@ -9,10 +9,11 @@ import Error
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
+import Url.Builder as B
 
 
-urls =
-    { channels = "http://localhost/http/channels/"
+url =
+    { base = "http://localhost"
     }
 
 
@@ -58,7 +59,7 @@ update msg model =
             , Http.request
                 { method = "POST"
                 , headers = [ Http.header "Authorization" model.token ]
-                , url = urls.channels ++ model.channel ++ "/messages"
+                , url = B.crossOrigin url.base [ "http", "channels", model.channel, "messages" ] []
                 , body = Http.stringBody "application/json" model.message
                 , expect = expectMessage SentMessage
                 , timeout = Nothing
@@ -105,8 +106,8 @@ expectMessage toMsg =
     Http.expectStringResponse toMsg <|
         \response ->
             case response of
-                Http.BadUrl_ url ->
-                    Err (Http.BadUrl url)
+                Http.BadUrl_ u ->
+                    Err (Http.BadUrl u)
 
                 Http.Timeout_ ->
                     Err Http.Timeout
