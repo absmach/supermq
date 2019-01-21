@@ -126,9 +126,9 @@ view model =
                             , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick GetToken ] [ text "Log in" ]
                             ]
                       , Html.hr [] []
-                      , text ("response: " ++ model.response) ]
+                      , text ("response: " ++ model.response)
+                      ]
                 ]
-
 
         
 type alias User =

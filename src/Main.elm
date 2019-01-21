@@ -182,16 +182,10 @@ view model =
     { title = "Gateflux"
     , body =
         let
-            loggedIn : Bool
-            loggedIn =
-                if String.length model.user.token > 0 then
-                    True
-                else
-                    False
             content =
                 case model.route of
                     Just route ->
-                        if loggedIn then
+                        if (loggedIn model) then
                             case Tuple.first route of
                                 "version" ->
                                     Html.map VersionMsg (Version.view model.version)
@@ -223,11 +217,11 @@ view model =
           Grid.container []
             [ CDN.stylesheet -- creates an inline style node with the Bootstrap CSS
             , Grid.row []
-                [ Grid.col [] [ h1 [] [ text "Gateflux" ] ] ]
+                [ Grid.col [] [ h1 [] [ a [href "/account"] [text "Gateflux"] ] ] ]
             , Grid.row []
                 [ Grid.col []
                     [ -- In this column we put the button group defined below
-                      ButtonGroup.linkButtonGroup [ ButtonGroup.vertical ] menuButtons
+                      ButtonGroup.linkButtonGroup [ ButtonGroup.vertical ] (menuButtons model)
                     ]
                 , Grid.col [ Col.xs10 ]
                     [ content
@@ -238,12 +232,24 @@ view model =
     }
 
 
-menuButtons : List (ButtonGroup.LinkButtonItem msg)
-menuButtons =
-    [ ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/version" ] ] [ text "Version" ]
-    , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/account" ] ] [ text "Account" ]
-    , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/channel" ] ] [ text "Channels" ]
-    , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/things" ] ] [ text "Things" ]
-    , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/connection" ] ] [ text "Connection" ]
-    , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/messages" ] ] [ text "Messages" ]
-    ]
+menuButtons : Model -> List (ButtonGroup.LinkButtonItem msg)
+menuButtons model =
+    if (loggedIn model) then
+        [ ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/account" ] ] [ text "Account" ]
+        , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/channel" ] ] [ text "Channels" ]
+        , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/things" ] ] [ text "Things" ]
+        , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/connection" ] ] [ text "Connection" ]
+        , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/messages" ] ] [ text "Messages" ]
+        , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/version" ] ] [ text "Version" ]        
+        ]
+    else
+        [ ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/account" ] ] [ text "Account" ]
+        ]        
+
+
+loggedIn : Model -> Bool
+loggedIn model =
+    if String.length model.user.token > 0 then
+        True
+    else
+        False
