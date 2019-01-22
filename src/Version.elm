@@ -1,21 +1,22 @@
-module Version exposing (..)
+module Version exposing (Model, Msg(..), initial, update, view)
 
-import Http
-import Html exposing  (..)
+import Bootstrap.Button as Button
+import Bootstrap.Grid as Grid
+import Error
+import Helpers
+import Html exposing (..)
 import Html.Attributes exposing (..)
-import Json.Encode as E
+import Http
 import Json.Decode as D
+import Json.Encode as E
 import Url.Builder as B
 
-import Bootstrap.Grid as Grid
-import Bootstrap.Button as Button
-
-import Error
 
 url =
-    { base = "http://localhost"        
-    ,path = [ "version" ]
-    }    
+    { base = "http://localhost"
+    , path = [ "version" ]
+    }
+
 
 type alias Model =
     { response : String }
@@ -24,7 +25,7 @@ type alias Model =
 initial : Model
 initial =
     { response = "" }
-    
+
 
 type Msg
     = GetVersion
@@ -48,17 +49,18 @@ update msg model =
                     ( { model | response = "Version " ++ text }, Cmd.none )
 
                 Err error ->
-                    ( { model | response = (Error.handle error) }, Cmd.none )
+                    ( { model | response = Error.handle error }, Cmd.none )
+
 
 view : Model -> Html Msg
 view model =
-    Grid.row []
-        [ Grid.col []
-          [ Button.linkButton
-                [ Button.primary, Button.onClick GetVersion ]
-                [ text "Version" ]
-          , Html.hr [] []
-          , text ("response: " ++ model.response)
-          ]
+    Grid.container []
+        [ Grid.row []
+            [ Grid.col []
+                [ Button.linkButton
+                    [ Button.primary, Button.onClick GetVersion ]
+                    [ text "Version" ]
+                ]
+            ]
+        , Helpers.response model.response
         ]
-                        

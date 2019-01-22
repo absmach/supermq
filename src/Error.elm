@@ -1,5 +1,4 @@
-module Error exposing (..)
-
+module Error exposing (handle)
 
 import Http
 
@@ -21,4 +20,3 @@ handle error =
 
         Http.BadBody err ->
             err
-

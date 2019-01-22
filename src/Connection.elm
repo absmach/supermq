@@ -1,4 +1,4 @@
-module Connection exposing (Model, Msg(..), expectResponse, initial, update, view)
+module Connection exposing (Model, Msg(..), initial, update, view)
 
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
@@ -6,6 +6,7 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid
 import Bootstrap.Utilities.Spacing as Spacing
 import Error
+import Helpers
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
@@ -86,23 +87,24 @@ update msg model token =
 
 view : Model -> Html Msg
 view model =
-    Grid.row []
-        [ Grid.col []
-            [ Form.form []
-                [ Form.group []
-                    [ Form.label [ for "chan" ] [ text "Channel" ]
-                    , Input.email [ Input.id "chan", Input.onInput SubmitChannel ]
+    Grid.container []
+        [ Grid.row []
+            [ Grid.col []
+                [ Form.form []
+                    [ Form.group []
+                        [ Form.label [ for "chan" ] [ text "Channel" ]
+                        , Input.email [ Input.id "chan", Input.onInput SubmitChannel ]
+                        ]
+                    , Form.group []
+                        [ Form.label [ for "thing" ] [ text "Thing" ]
+                        , Input.text [ Input.id "thing", Input.onInput SubmitThing ]
+                        ]
+                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick Connect ] [ text "Connect" ]
+                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick Disconnect ] [ text "Disonnect" ]
                     ]
-                , Form.group []
-                    [ Form.label [ for "thing" ] [ text "Thing" ]
-                    , Input.text [ Input.id "thing", Input.onInput SubmitThing ]
-                    ]
-                , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick Connect ] [ text "Connect" ]
-                , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick Disconnect ] [ text "Disonnect" ]
                 ]
-            , Html.hr [] []
-            , text ("response: " ++ model.response)
             ]
+        , Helpers.response model.response
         ]
 
 

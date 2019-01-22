@@ -1,19 +1,18 @@
-module Thing exposing (..)
+module Thing exposing (Model, Msg(..), initial, update, view)
 
-import Http
-import Html exposing  (..)
-import Html.Attributes exposing (..)
-import Json.Encode as E
-import Json.Decode as D
-import Url.Builder as B
-
-import Bootstrap.Grid as Grid
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
+import Bootstrap.Grid as Grid
 import Bootstrap.Utilities.Spacing as Spacing
-
 import Error
+import Helpers
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Http
+import Json.Decode as D
+import Json.Encode as E
+import Url.Builder as B
 
 
 path =
@@ -23,16 +22,16 @@ path =
 
 
 url =
-    { base = "http://localhost"        
+    { base = "http://localhost"
     , path = [ "things" ]
     }
-   
+
 
 type alias Model =
     { name : String
     , type_ : String
     , offset : String
-    , limit : String              
+    , limit : String
     , response : String
     }
 
@@ -42,7 +41,7 @@ initial =
     { name = ""
     , type_ = ""
     , offset = path.offset
-    , limit = path.limit              
+    , limit = path.limit
     , response = ""
     }
 
@@ -51,13 +50,12 @@ type Msg
     = SubmitType String
     | SubmitName String
     | SubmitOffset String
-    | SubmitLimit String      
+    | SubmitLimit String
     | ProvisionThing
-    | ProvisionedThing (Result Http.Error Int)      
+    | ProvisionedThing (Result Http.Error Int)
     | RetrieveThing
     | RetrievedThing (Result Http.Error (List Thing))
     | RemoveThing
-
 
 
 update : Msg -> Model -> String -> ( Model, Cmd Msg )
@@ -90,75 +88,75 @@ update msg model token =
                     ( { model | response = "Ok " ++ String.fromInt statusCode }, Cmd.none )
 
                 Err error ->
-                    ( { model | response = (Error.handle error) }, Cmd.none )
-            
+                    ( { model | response = Error.handle error }, Cmd.none )
+
         RetrieveThing ->
             ( model
             , retrieve
                 (B.crossOrigin url.base url.path (buildQueryParamList model))
                 token
             )
-            
 
         RetrievedThing result ->
             case result of
                 Ok things ->
                     ( { model | response = thingsToString things }, Cmd.none )
-                    
+
                 Err error ->
-                    ( { model | response = (Error.handle error) }, Cmd.none )
-            
+                    ( { model | response = Error.handle error }, Cmd.none )
+
         RemoveThing ->
             ( model
             , remove
                 (B.crossOrigin url.base (List.append url.path [ model.name ]) [])
                 token
-            )            
-
+            )
 
 
 view : Model -> Html Msg
 view model =
-    Grid.row []
-        [ Grid.col []
-          [ Form.form []
-            [ Form.group []
-              [ Form.label [ for "type" ] [ text "Type" ]
-              , Input.text [ Input.id "type", Input.onInput SubmitType ]
-              ]
-            , Form.group []
-                [ Form.label [ for "name" ] [ text "Name (Provision) or id (Remove)" ]
-                , Input.text [ Input.id "name", Input.onInput SubmitName ]
+    Grid.container []
+        [ Grid.row []
+            [ Grid.col []
+                [ Form.form []
+                    [ Form.group []
+                        [ Form.label [ for "type" ] [ text "Type" ]
+                        , Input.text [ Input.id "type", Input.onInput SubmitType ]
+                        ]
+                    , Form.group []
+                        [ Form.label [ for "name" ] [ text "Name (Provision) or id (Remove)" ]
+                        , Input.text [ Input.id "name", Input.onInput SubmitName ]
+                        ]
+                    , Form.group []
+                        [ Form.label [ for "offset" ] [ text "Offset" ]
+                        , Input.text [ Input.id "offset", Input.onInput SubmitOffset ]
+                        ]
+                    , Form.group []
+                        [ Form.label [ for "limit" ] [ text "Limit" ]
+                        , Input.text [ Input.id "limit", Input.onInput SubmitLimit ]
+                        ]
+                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionThing ] [ text "Provision" ]
+                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RetrieveThing ] [ text "Retrieve" ]
+                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RemoveThing ] [ text "Remove" ]
+                    ]
                 ]
-            , Form.group []
-                [ Form.label [ for "offset" ] [ text "Offset" ]
-                , Input.text [ Input.id "offset", Input.onInput SubmitOffset ]
-                ]
-            , Form.group []
-                [ Form.label [ for "limit" ] [ text "Limit" ]
-                , Input.text [ Input.id "limit", Input.onInput SubmitLimit ]
-                ]                                
-            , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionThing ] [ text "Provision" ]
-            , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RetrieveThing ] [ text "Retrieve" ]
-            , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RemoveThing ] [ text "Remove" ]
             ]
-          , Html.hr [] []
-          , text ("response: " ++ model.response) ]
+        , Helpers.response model.response
         ]
 
-        
+
 type alias Thing =
     { type_ : String
     , name : Maybe String
     , id : String
     , key : String
     }
-            
-            
+
+
 thingDecoder : D.Decoder Thing
 thingDecoder =
     D.map4 Thing
-        (D.field "type" D.string)        
+        (D.field "type" D.string)
         (D.maybe (D.field "name" D.string))
         (D.field "id" D.string)
         (D.field "key" D.string)
@@ -166,10 +164,10 @@ thingDecoder =
 
 thingListDecoder : D.Decoder (List Thing)
 thingListDecoder =
-    (D.field "things" (D.list thingDecoder))
-        
+    D.field "things" (D.list thingDecoder)
 
-provision : String -> String -> String -> String -> Cmd Msg            
+
+provision : String -> String -> String -> String -> Cmd Msg
 provision u token type_ name =
     Http.request
         { method = "POST"
@@ -177,15 +175,14 @@ provision u token type_ name =
         , url = u
         , body =
             E.object
-                [ ("type", E.string type_)
-                , ("name", E.string name)
+                [ ( "type", E.string type_ )
+                , ( "name", E.string name )
                 ]
-
-        |> Http.jsonBody
+                |> Http.jsonBody
         , expect = expectProvision ProvisionedThing
         , timeout = Nothing
         , tracker = Nothing
-    }
+        }
 
 
 expectProvision : (Result Http.Error Int -> Msg) -> Http.Expect Msg
@@ -206,7 +203,7 @@ expectProvision toMsg =
                     Err (Http.BadStatus metadata.statusCode)
 
                 Http.GoodStatus_ metadata _ ->
-                    Ok metadata.statusCode    
+                    Ok metadata.statusCode
 
 
 retrieve : String -> String -> Cmd Msg
@@ -219,33 +216,33 @@ retrieve u token =
         , expect = expectRetrieve RetrievedThing
         , timeout = Nothing
         , tracker = Nothing
-        }                    
+        }
 
 
 expectRetrieve : (Result Http.Error (List Thing) -> Msg) -> Http.Expect Msg
 expectRetrieve toMsg =
-  Http.expectStringResponse toMsg <|
-    \response ->
-      case response of
-        Http.BadUrl_ u ->
-          Err (Http.BadUrl u)
+    Http.expectStringResponse toMsg <|
+        \response ->
+            case response of
+                Http.BadUrl_ u ->
+                    Err (Http.BadUrl u)
 
-        Http.Timeout_ ->
-          Err Http.Timeout
+                Http.Timeout_ ->
+                    Err Http.Timeout
 
-        Http.NetworkError_ ->
-          Err Http.NetworkError
+                Http.NetworkError_ ->
+                    Err Http.NetworkError
 
-        Http.BadStatus_ metadata body ->
-          Err (Http.BadStatus metadata.statusCode)
+                Http.BadStatus_ metadata body ->
+                    Err (Http.BadStatus metadata.statusCode)
 
-        Http.GoodStatus_ metadata body ->
-          case D.decodeString thingListDecoder body of
-            Ok value ->
-              Ok value
+                Http.GoodStatus_ metadata body ->
+                    case D.decodeString thingListDecoder body of
+                        Ok value ->
+                            Ok value
 
-            Err err ->
-              Err (Http.BadBody (D.errorToString err))
+                        Err err ->
+                            Err (Http.BadBody (D.errorToString err))
 
 
 remove : String -> String -> Cmd Msg
@@ -269,11 +266,12 @@ thingsToString : List Thing -> String
 thingsToString things =
     List.map
         (\thing ->
-             case thing.name of
-                 Just name ->
-                     thing.id ++ " " ++ thing.type_ ++ " " ++ name ++ " " ++ thing.key ++ "; "
-                 Nothing ->
-                     thing.id ++ " " ++ thing.type_ ++ " " ++ thing.key ++ "; "
+            case thing.name of
+                Just name ->
+                    thing.id ++ " " ++ thing.type_ ++ " " ++ name ++ " " ++ thing.key ++ "; "
+
+                Nothing ->
+                    thing.id ++ " " ++ thing.type_ ++ " " ++ thing.key ++ "; "
         )
         things
         |> String.concat
@@ -281,15 +279,17 @@ thingsToString things =
 
 buildQueryParamList : Model -> List B.QueryParameter
 buildQueryParamList model =
-    List.map 
+    List.map
         (\tpl ->
-             case (String.toInt (Tuple.second tpl)) of
-                 Just n ->
-                     B.int (Tuple.first tpl) n
-                            
-                 Nothing ->
-                     if (Tuple.first tpl) == "offset" then
-                         B.string (Tuple.first tpl) path.offset
-                     else
-                         B.string (Tuple.first tpl) path.limit)
-        [("offset", model.offset), ("limit", model.limit)]           
+            case String.toInt (Tuple.second tpl) of
+                Just n ->
+                    B.int (Tuple.first tpl) n
+
+                Nothing ->
+                    if Tuple.first tpl == "offset" then
+                        B.string (Tuple.first tpl) path.offset
+
+                    else
+                        B.string (Tuple.first tpl) path.limit
+        )
+        [ ( "offset", model.offset ), ( "limit", model.limit ) ]

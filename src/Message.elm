@@ -1,4 +1,4 @@
-module Message exposing (Model, Msg(..), expectMessage, initial, update, view)
+module Message exposing (Model, Msg(..), initial, update, view)
 
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
@@ -6,6 +6,7 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid
 import Bootstrap.Utilities.Spacing as Spacing
 import Error
+import Helpers
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
@@ -78,26 +79,27 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    Grid.row []
-        [ Grid.col []
-            [ Form.form []
-                [ Form.group []
-                    [ Form.label [ for "chan" ] [ text "Channel id" ]
-                    , Input.email [ Input.id "chan", Input.onInput SubmitChannel ]
+    Grid.container []
+        [ Grid.row []
+            [ Grid.col []
+                [ Form.form []
+                    [ Form.group []
+                        [ Form.label [ for "chan" ] [ text "Channel id" ]
+                        , Input.email [ Input.id "chan", Input.onInput SubmitChannel ]
+                        ]
+                    , Form.group []
+                        [ Form.label [ for "token" ] [ text "Thing token" ]
+                        , Input.text [ Input.id "token", Input.onInput SubmitToken ]
+                        ]
+                    , Form.group []
+                        [ Form.label [ for "message" ] [ text "Message" ]
+                        , Input.text [ Input.id "message", Input.onInput SubmitMessage ]
+                        ]
+                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick SendMessage ] [ text "Send" ]
                     ]
-                , Form.group []
-                    [ Form.label [ for "token" ] [ text "Thing token" ]
-                    , Input.text [ Input.id "token", Input.onInput SubmitToken ]
-                    ]
-                , Form.group []
-                    [ Form.label [ for "message" ] [ text "Message" ]
-                    , Input.text [ Input.id "message", Input.onInput SubmitMessage ]
-                    ]
-                , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick SendMessage ] [ text "Send" ]
                 ]
-            , Html.hr [] []
-            , text ("response: " ++ model.response)
             ]
+        , Helpers.response model.response
         ]
 
 

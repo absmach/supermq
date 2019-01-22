@@ -1,25 +1,24 @@
-module Channel exposing (..)
+module Channel exposing (Model, Msg(..), initial, update, view)
 
-import Http
-import Debug exposing (log)
-import Html exposing  (..)
-import Html.Attributes exposing (..)
-import Json.Encode as E
-import Json.Decode as D
-import Url.Builder as B
-
-import Bootstrap.Grid as Grid
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
+import Bootstrap.Grid as Grid
 import Bootstrap.Utilities.Spacing as Spacing
-
+import Debug exposing (log)
 import Error
+import Helpers
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Http
+import Json.Decode as D
+import Json.Encode as E
+import Url.Builder as B
 
 
 url =
-    { base = "http://localhost"        
-    ,path = [ "channels" ]
+    { base = "http://localhost"
+    , path = [ "channels" ]
     }
 
 
@@ -85,7 +84,7 @@ update msg model token =
                     ( { model | response = "Ok " ++ String.fromInt statusCode }, Cmd.none )
 
                 Err error ->
-                    ( { model | response = (Error.handle error) }, Cmd.none )
+                    ( { model | response = Error.handle error }, Cmd.none )
 
         RetrieveChannel ->
             ( model
@@ -100,40 +99,41 @@ update msg model token =
                     ( { model | response = channelsToString channels }, Cmd.none )
 
                 Err error ->
-                    ( { model | response = (Error.handle error) }, Cmd.none )
-            
+                    ( { model | response = Error.handle error }, Cmd.none )
+
         RemoveChannel ->
             ( model
             , remove
                 (B.crossOrigin url.base (List.append url.path [ model.channel ]) [])
                 token
-            )            
+            )
 
 
 view : Model -> Html Msg
 view model =
-    Grid.row []
-        [ Grid.col []
-          [ Form.form []
-            [ Form.group []
-              [ Form.label [ for "chan" ] [ text "Name (Provision) or id (Remove)" ]
-              , Input.email [ Input.id "chan", Input.onInput SubmitChannel ]
-              ]
-            , Form.group []
-                [ Form.label [ for "offset" ] [ text "Offset" ]
-                , Input.text [ Input.id "offset", Input.onInput SubmitOffset ]
+    Grid.container []
+        [ Grid.row []
+            [ Grid.col []
+                [ Form.form []
+                    [ Form.group []
+                        [ Form.label [ for "chan" ] [ text "Name (Provision) or id (Remove)" ]
+                        , Input.email [ Input.id "chan", Input.onInput SubmitChannel ]
+                        ]
+                    , Form.group []
+                        [ Form.label [ for "offset" ] [ text "Offset" ]
+                        , Input.text [ Input.id "offset", Input.onInput SubmitOffset ]
+                        ]
+                    , Form.group []
+                        [ Form.label [ for "limit" ] [ text "Limit" ]
+                        , Input.text [ Input.id "limit", Input.onInput SubmitLimit ]
+                        ]
+                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionChannel ] [ text "Provision" ]
+                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RetrieveChannel ] [ text "Retrieve" ]
+                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RemoveChannel ] [ text "Remove" ]
+                    ]
                 ]
-            , Form.group []
-                [ Form.label [ for "limit" ] [ text "Limit" ]
-                , Input.text [ Input.id "limit", Input.onInput SubmitLimit ]
-                ]                
-            , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionChannel ] [ text "Provision" ]
-            , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RetrieveChannel ] [ text "Retrieve" ]
-            , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RemoveChannel ] [ text "Remove" ]
             ]
-          , Html.hr [] []
-          , text ("response: " ++ model.response)
-          ]
+        , Helpers.response model.response
         ]
 
 
@@ -148,11 +148,11 @@ channelDecoder =
     D.map2 Channel
         (D.maybe (D.field "name" D.string))
         (D.field "id" D.string)
-    
+
 
 channelListDecoder : D.Decoder (List Channel)
 channelListDecoder =
-    (D.field "channels" (D.list channelDecoder))
+    D.field "channels" (D.list channelDecoder)
 
 
 provision : String -> String -> String -> Cmd Msg
@@ -163,7 +163,7 @@ provision u token name =
         , url = u
         , body =
             E.object [ ( "name", E.string name ) ]
-        |> Http.jsonBody
+                |> Http.jsonBody
         , expect = expectProvision ProvisionedChannel
         , timeout = Nothing
         , tracker = Nothing
@@ -201,33 +201,33 @@ retrieve u token =
         , expect = expectRetrieve RetrievedChannel
         , timeout = Nothing
         , tracker = Nothing
-        }                    
+        }
 
 
 expectRetrieve : (Result Http.Error (List Channel) -> Msg) -> Http.Expect Msg
 expectRetrieve toMsg =
-  Http.expectStringResponse toMsg <|
-    \response ->
-      case response of
-        Http.BadUrl_ u ->
-          Err (Http.BadUrl u)
+    Http.expectStringResponse toMsg <|
+        \response ->
+            case response of
+                Http.BadUrl_ u ->
+                    Err (Http.BadUrl u)
 
-        Http.Timeout_ ->
-          Err Http.Timeout
+                Http.Timeout_ ->
+                    Err Http.Timeout
 
-        Http.NetworkError_ ->
-          Err Http.NetworkError
+                Http.NetworkError_ ->
+                    Err Http.NetworkError
 
-        Http.BadStatus_ metadata body ->
-          Err (Http.BadStatus metadata.statusCode)
+                Http.BadStatus_ metadata body ->
+                    Err (Http.BadStatus metadata.statusCode)
 
-        Http.GoodStatus_ metadata body ->
-          case D.decodeString channelListDecoder body of
-            Ok value ->
-              Ok value
+                Http.GoodStatus_ metadata body ->
+                    case D.decodeString channelListDecoder body of
+                        Ok value ->
+                            Ok value
 
-            Err err ->
-              Err (Http.BadBody (D.errorToString err))
+                        Err err ->
+                            Err (Http.BadBody (D.errorToString err))
 
 
 remove : String -> String -> Cmd Msg
@@ -243,18 +243,20 @@ remove u token =
         }
 
 
+
 -- HELPERS
 
-                
+
 channelsToString : List Channel -> String
 channelsToString channels =
     List.map
         (\channel ->
-             case channel.name of
-                 Just name ->
-                     name ++ " " ++ channel.id ++ "; "
-                 Nothing ->
-                     channel.id ++ "; "
+            case channel.name of
+                Just name ->
+                    name ++ " " ++ channel.id ++ "; "
+
+                Nothing ->
+                    channel.id ++ "; "
         )
         channels
         |> String.concat
@@ -262,15 +264,17 @@ channelsToString channels =
 
 buildQueryParamList : Model -> List B.QueryParameter
 buildQueryParamList model =
-    List.map 
+    List.map
         (\tpl ->
-             case (String.toInt (Tuple.second tpl)) of
-                 Just n ->
-                     B.int (Tuple.first tpl) n
-                            
-                 Nothing ->
-                     if (Tuple.first tpl) == "offset" then
-                         B.string (Tuple.first tpl) path.offset
-                     else
-                         B.string (Tuple.first tpl) path.limit)
-        [("offset", model.offset), ("limit", model.limit)]
+            case String.toInt (Tuple.second tpl) of
+                Just n ->
+                    B.int (Tuple.first tpl) n
+
+                Nothing ->
+                    if Tuple.first tpl == "offset" then
+                        B.string (Tuple.first tpl) path.offset
+
+                    else
+                        B.string (Tuple.first tpl) path.limit
+        )
+        [ ( "offset", model.offset ), ( "limit", model.limit ) ]
