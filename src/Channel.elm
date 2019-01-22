@@ -1,6 +1,7 @@
 module Channel exposing (..)
 
 import Http
+import Debug exposing (log)
 import Html exposing  (..)
 import Html.Attributes exposing (..)
 import Json.Encode as E
@@ -137,7 +138,7 @@ view model =
 
 
 type alias Channel =
-    { name : String
+    { name : Maybe String
     , id : String
     }
 
@@ -145,7 +146,7 @@ type alias Channel =
 channelDecoder : D.Decoder Channel
 channelDecoder =
     D.map2 Channel
-        (D.field "name" D.string)
+        (D.maybe (D.field "name" D.string))
         (D.field "id" D.string)
     
 
@@ -226,7 +227,7 @@ expectRetrieve toMsg =
               Ok value
 
             Err err ->
-              Err (Http.BadBody "Account has no channels")
+              Err (Http.BadBody (D.errorToString err))
 
 
 remove : String -> String -> Cmd Msg
@@ -248,7 +249,13 @@ remove u token =
 channelsToString : List Channel -> String
 channelsToString channels =
     List.map
-        (\channel -> channel.name ++ " " ++ channel.id ++ "; ")
+        (\channel ->
+             case channel.name of
+                 Just name ->
+                     name ++ " " ++ channel.id ++ "; "
+                 Nothing ->
+                     channel.id ++ "; "
+        )
         channels
         |> String.concat
 

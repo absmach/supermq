@@ -149,7 +149,7 @@ view model =
         
 type alias Thing =
     { type_ : String
-    , name : String
+    , name : Maybe String
     , id : String
     , key : String
     }
@@ -159,7 +159,7 @@ thingDecoder : D.Decoder Thing
 thingDecoder =
     D.map4 Thing
         (D.field "type" D.string)        
-        (D.field "name" D.string)
+        (D.maybe (D.field "name" D.string))
         (D.field "id" D.string)
         (D.field "key" D.string)
 
@@ -245,7 +245,7 @@ expectRetrieve toMsg =
               Ok value
 
             Err err ->
-              Err (Http.BadBody "Account has no things")
+              Err (Http.BadBody (D.errorToString err))
 
 
 remove : String -> String -> Cmd Msg
@@ -268,7 +268,13 @@ remove u token =
 thingsToString : List Thing -> String
 thingsToString things =
     List.map
-        (\thing -> thing.id ++ " " ++ thing.type_ ++ " " ++ thing.name ++ " " ++ thing.key ++ "; ")
+        (\thing ->
+             case thing.name of
+                 Just name ->
+                     thing.id ++ " " ++ thing.type_ ++ " " ++ name ++ " " ++ thing.key ++ "; "
+                 Nothing ->
+                     thing.id ++ " " ++ thing.type_ ++ " " ++ thing.key ++ "; "
+        )
         things
         |> String.concat
 
