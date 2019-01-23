@@ -98,10 +98,17 @@ func (bs bootstrapService) Add(key string, cfg Config) (Config, error) {
 	// Check if channels exist. This is the way to prevent invalid configuration to be saved.
 	// However, channels deletion wil eventually cause this; since Bootstrap service is not
 	// using events from the Things service at the moment.
+	channels := []Channel{}
 	for _, c := range cfg.MFChannels {
-		if _, err := bs.sdk.Channel(c, key); err != nil {
+		ch, err := bs.sdk.Channel(c.ID, key)
+		if err != nil {
 			return Config{}, ErrMalformedEntity
 		}
+		channels = append(channels, Channel{
+			ID:       ch.ID,
+			Name:     ch.Name,
+			Metadata: ch.Metadata,
+		})
 	}
 	mfThing, err := bs.add(key)
 	if err != nil {
@@ -112,7 +119,7 @@ func (bs bootstrapService) Add(key string, cfg Config) (Config, error) {
 	cfg.Owner = owner
 	cfg.State = Inactive
 	cfg.MFKey = mfThing.Key
-
+	cfg.MFChannels = channels
 	id, err := bs.configs.Save(cfg)
 	if err != nil {
 		return Config{}, err
@@ -152,25 +159,27 @@ func (bs bootstrapService) Update(key string, cfg Config) error {
 	case Active:
 		disconnect = make(map[string]bool, len(t.MFChannels))
 		for _, c := range t.MFChannels {
-			disconnect[c] = true
+			disconnect[c.ID] = true
 		}
 
 		for _, c := range cfg.MFChannels {
 			if cfg.State == Active {
-				if disconnect[c] {
+				if disconnect[c.ID] {
 					// Don't disconnect common elements.
-					delete(disconnect, c)
+					delete(disconnect, c.ID)
 					continue
 				}
 				// Connect new elements.
-				connect = append(connect, c)
+				connect = append(connect, c.ID)
 			}
 		}
 
 	default:
 		if cfg.State == Active {
 			// Connect all new elements.
-			connect = cfg.MFChannels
+			for _, ch := range cfg.MFChannels {
+				connect = append(connect, ch.ID)
+			}
 		}
 	}
 
@@ -261,13 +270,13 @@ func (bs bootstrapService) ChangeState(key, id string, state State) error {
 	switch state {
 	case Active:
 		for _, c := range thing.MFChannels {
-			if err := bs.sdk.ConnectThing(thing.MFThing, c, key); err != nil {
+			if err := bs.sdk.ConnectThing(thing.MFThing, c.ID, key); err != nil {
 				return ErrThings
 			}
 		}
 	case Inactive:
 		for _, c := range thing.MFChannels {
-			if err := bs.sdk.DisconnectThing(thing.MFThing, c, key); err != nil {
+			if err := bs.sdk.DisconnectThing(thing.MFThing, c.ID, key); err != nil {
 				if err == mfsdk.ErrNotFound {
 					continue
 				}

@@ -63,6 +63,15 @@ func migrateDB(db *sql.DB) error {
 						state             BIGINT NOT NULL,
 						PRIMARY KEY (mainflux_thing, external_id)
 					)`,
+					`CREATE TABLE IF NOT EXISTS channels (
+						channel_id TEXT,
+						config_id TEXT,
+						owner VARCHAR(256),
+						name TEXT,
+						metadata JSON,
+						FOREIGN KEY (config_id) REFERENCES configs (mainflux_thing) ON DELETE CASCADE ON UPDATE CASCADE,
+						PRIMARY KEY (channel_id, config_id, owner)
+					)`,
 					`CREATE TABLE IF NOT EXISTS unknown_configs (
 						external_id       TEXT UNIQUE NOT NULL,
 						external_key 	  TEXT NOT NULL,

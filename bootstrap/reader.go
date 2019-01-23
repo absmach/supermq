@@ -18,10 +18,10 @@ import (
 // This is used as a response from ConfigReader and can easily be
 // replace with any other response format.
 type bootstrapRes struct {
-	MFThing    string   `json:"mainflux_id"`
-	MFKey      string   `json:"mainflux_key"`
-	MFChannels []string `json:"mainflux_channels"`
-	Content    string   `json:"content"`
+	MFThing    string    `json:"mainflux_id"`
+	MFKey      string    `json:"mainflux_key"`
+	MFChannels []Channel `json:"mainflux_channels"`
+	Content    string    `json:"content"`
 }
 
 func (res bootstrapRes) Code() int {

@@ -21,10 +21,15 @@ func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
+		channels := []bootstrap.Channel{}
+		for _, c := range req.Channels {
+			channels = append(channels, bootstrap.Channel{ID: c})
+		}
+
 		config := bootstrap.Config{
 			ExternalID:  req.ExternalID,
 			ExternalKey: req.ExternalKey,
-			MFChannels:  req.Channels,
+			MFChannels:  channels,
 			Content:     req.Content,
 		}
 
@@ -77,9 +82,14 @@ func updateEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
+		channels := []bootstrap.Channel{}
+		for _, c := range req.Channels {
+			channels = append(channels, bootstrap.Channel{ID: c})
+		}
+
 		config := bootstrap.Config{
 			MFThing:    req.id,
-			MFChannels: req.Channels,
+			MFChannels: channels,
 			Content:    req.Content,
 			State:      req.State,
 		}
