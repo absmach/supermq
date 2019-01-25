@@ -114,7 +114,7 @@ aedes.authorizePublish = function (client, packet, publish) {
         baseLength = 3, // First 3 elements which represents the base part of topic.
         elements = packet.topic.split('/').slice(baseLength),
         baseTopic = 'channel.' + channelId;
-     // Remove empty elements
+    // Remove empty elements
     for (var i = 0; i < elements.length; i++) {
       if (elements[i] === '') {
         elements.pop(i)
