@@ -142,7 +142,6 @@ aedes.authorizePublish = function (client, packet, publish) {
             }
         };
 
-    console.log("Here it is the filan NATS topic:", channelTopic)
     things.CanAccess(accessReq, onAuthorize);
 };
 
