@@ -135,8 +135,13 @@ aedes.authorizePublish = function (client, packet, publish) {
 
 aedes.authorizeSubscribe = function (client, packet, subscribe) {
     // Topics are in the form `channels/<channel_id>/messages`
-    var channel = /^channels\/(.+?)\/messages$/.exec(packet.topic),
-        channelId = channel[1],
+    var channel = /^channels\/(.+?)\/messages$/.exec(packet.topic);
+    if (!channel) {
+        logger.warn('unknown topic');
+        subscribe(4, packet); // Bad username or password
+        return;
+    }
+    var channelId = channel[1],
         accessReq = {
             token: client.password,
             chanID: channelId
