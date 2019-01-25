@@ -111,7 +111,7 @@ aedes.authorizePublish = function (client, packet, publish) {
             chanID: channelId
         },
         // Parse unlimited subtopics
-        baseLength = 3, // First few elements which represents the base part of topic.
+        baseLength = 3, // First 3 elements which represents the base part of topic.
         elements = packet.topic.split('/').slice(baseLength),
         baseTopic = 'channel.' + channelId;
      // Remove empty elements
