@@ -69,24 +69,24 @@ If you are using TLS to secure MQTT connection, add `--cafile docker/ssl/certs/c
 to every command.
 
 ###### Subtopics
-In order to use MQTT subtopics and extend the channel with subtopic or name the channel using your own naming convention, You can simply add any prefix on base `/messages` topic.
+In order to use MQTT subtopics and extend the channel with subtopic or name the channel using your own naming convention, You can simply add any suffix on base ` /channels/<channel_id>/messages` topic.
 
 Example subtopic publish/subscribe for bedroom temperature would be
 
- `channels/<channel_id>/messages/bedroom/temperature`
+`channels/<channel_id>/messages/bedroom/temperature`
 
- Subtopics are generic and multilevel, You can use any prefix with any level depth. However for the sake of simplicity we recommend to keep it simple and design your topics at max 2 or 3 level depth.
+Subtopics are generic and multilevel, You can use any prefix with any level depth.
 
- Topic with subtopics are propagated to NATS broker in the following format
+Topic with subtopics are propagated to NATS broker in the following format
 
- `channel.<channel_id>.<optional_subtopic>`
+`channel.<channel_id>.<optional_subtopic>`
 
- Subscription directly to NATS on our example channel with subtopic
+Subscription directly to NATS on our example channel with subtopic
 
- `channels/<channel_id>/messages/bedroom/temperature` would be in format `channel.<channel_id>.bedroom.temperature`
+`channels/<channel_id>/messages/bedroom/temperature` would be in format `channel.<channel_id>.bedroom.temperature`
 
 
- For more information and examples checkout [official nats.io documentation](https://nats.io/documentation/writing_applications/subscribing/)
+For more information and examples checkout [official nats.io documentation](https://nats.io/documentation/writing_applications/subscribing/)
 
 
 ## CoAP
