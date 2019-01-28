@@ -68,6 +68,15 @@ mosquitto_sub -u <thing_id> -P <thing_key> -t channels/<channel_id>/messages -h 
 If you are using TLS to secure MQTT connection, add `--cafile docker/ssl/certs/ca.crt`
 to every command.
 
+###### Subtopic's
+In order to use MQTT subtopic's and extend the channel with subtopic or name the channel using your own naming convention, You can simply add any prefix on base `/messages` topic.
+
+Example subtopic publish/subscribe for bedroom temperature would be
+
+ `channels/<channel_id>/messages/bedroom/temperature`
+
+ Subtopic's are generic and multilevel, You can use any prefix with any level depth. However for the sake of simplicity we recommend to keep it simple and design your topic's at max 2 or 3 level depth.
+
 ## CoAP
 
 CoAP adapter implements CoAP protocol using underlying UDP and according to [RFC 7252](https://tools.ietf.org/html/rfc7252). To send and receive messages over CoAP, you can use [Copper](https://github.com/mkovatsc/Copper) CoAP user-agent. To set the add-on, please follow the installation instructions provided [here](https://github.com/mkovatsc/Copper#how-to-integrate-the-copper-sources-into-firefox). Once the Mozilla Firefox and Copper are ready and CoAP adapter is running locally on the default port (5683), you can navigate to the appropriate URL and start using CoAP. The URL should look like this:
