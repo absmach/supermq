@@ -68,14 +68,14 @@ mosquitto_sub -u <thing_id> -P <thing_key> -t channels/<channel_id>/messages -h 
 If you are using TLS to secure MQTT connection, add `--cafile docker/ssl/certs/ca.crt`
 to every command.
 
-###### Subtopic's
-In order to use MQTT subtopic's and extend the channel with subtopic or name the channel using your own naming convention, You can simply add any prefix on base `/messages` topic.
+###### Subtopics
+In order to use MQTT subtopics and extend the channel with subtopic or name the channel using your own naming convention, You can simply add any prefix on base `/messages` topic.
 
 Example subtopic publish/subscribe for bedroom temperature would be
 
  `channels/<channel_id>/messages/bedroom/temperature`
 
- Subtopic's are generic and multilevel, You can use any prefix with any level depth. However for the sake of simplicity we recommend to keep it simple and design your topic's at max 2 or 3 level depth.
+ Subtopics are generic and multilevel, You can use any prefix with any level depth. However for the sake of simplicity we recommend to keep it simple and design your topics at max 2 or 3 level depth.
 
 ## CoAP
 
