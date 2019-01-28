@@ -96,8 +96,8 @@ func (bs bootstrapService) Add(key string, cfg Config) (Config, error) {
 		return Config{}, err
 	}
 	// Check if channels exist. This is the way to prevent invalid configuration to be saved.
-	// However, channels deletion wil eventually cause this; since Bootstrap service is not
-	// using events from the Things service at the moment.
+	// However, channels deletion will eventually cause this; since Bootstrap service is not
+	// using events from the Things service at the moment. See #552.
 	channels := []Channel{}
 	for _, c := range cfg.MFChannels {
 		ch, err := bs.sdk.Channel(c.ID, key)
@@ -152,38 +152,29 @@ func (bs bootstrapService) Update(key string, cfg Config) error {
 	}
 
 	id := t.MFThing
-	var connect []string
-	var disconnect map[string]bool
+	add, remove, common := bs.updateList(t, cfg)
+	channels, err := bs.updateChannels(t.MFChannels, add, remove, key)
+	if err != nil {
+		return err
+	}
+	cfg.MFChannels = channels
+	var connect, disconnect []string
 
 	switch t.State {
 	case Active:
-		disconnect = make(map[string]bool, len(t.MFChannels))
-		for _, c := range t.MFChannels {
-			disconnect[c.ID] = true
+		if cfg.State == Inactive {
+			disconnect = append(remove, common...)
+			break
 		}
-
-		for _, c := range cfg.MFChannels {
-			if cfg.State == Active {
-				if disconnect[c.ID] {
-					// Don't disconnect common elements.
-					delete(disconnect, c.ID)
-					continue
-				}
-				// Connect new elements.
-				connect = append(connect, c.ID)
-			}
-		}
-
+		connect = add
+		disconnect = remove
 	default:
 		if cfg.State == Active {
-			// Connect all new elements.
-			for _, ch := range cfg.MFChannels {
-				connect = append(connect, ch.ID)
-			}
+			connect = append(add, common...)
 		}
 	}
 
-	for c := range disconnect {
+	for _, c := range disconnect {
 		if err := bs.sdk.DisconnectThing(id, c, key); err != nil {
 			if err == mfsdk.ErrNotFound {
 				return ErrMalformedEntity
@@ -312,4 +303,63 @@ func (bs bootstrapService) identify(token string) (string, error) {
 	}
 
 	return res.GetValue(), nil
+}
+
+// Method updateList accepts two configs and returns three lists:
+// 1) IDs of Channels to be added
+// 2) IDs of Channels to be removed
+// 3) IDs of common Channels for these two configs
+func (bs bootstrapService) updateList(cfg1 Config, cfg2 Config) (add, remove, common []string) {
+	var disconnect map[string]bool
+	disconnect = make(map[string]bool, len(cfg1.MFChannels))
+	for _, c := range cfg1.MFChannels {
+		disconnect[c.ID] = true
+	}
+
+	for _, c := range cfg2.MFChannels {
+		if disconnect[c.ID] {
+			// Don't disconnect common elements.
+			delete(disconnect, c.ID)
+			common = append(common, c.ID)
+			continue
+		}
+		// Connect new elements.
+		add = append(add, c.ID)
+	}
+
+	for v := range disconnect {
+		remove = append(remove, v)
+	}
+
+	return
+}
+
+func (bs bootstrapService) updateChannels(chs []Channel, add, remove []string, key string) ([]Channel, error) {
+	channels := make(map[string]Channel, len(chs))
+	for _, ch := range chs {
+		channels[ch.ID] = ch
+	}
+
+	for _, ch := range remove {
+		delete(channels, ch)
+	}
+
+	for _, id := range add {
+		ch, err := bs.sdk.Channel(id, key)
+		if err != nil {
+			return []Channel{}, ErrMalformedEntity
+		}
+		channels[id] = Channel{
+			ID:       ch.ID,
+			Name:     ch.Name,
+			Metadata: ch.Metadata,
+		}
+	}
+
+	var ret []Channel
+	for _, v := range channels {
+		ret = append(ret, v)
+	}
+
+	return ret, nil
 }

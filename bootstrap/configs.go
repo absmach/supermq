@@ -34,7 +34,7 @@ type Config struct {
 type Channel struct {
 	ID       string
 	Name     string
-	Metadata string
+	Metadata interface{}
 }
 
 // Filter is used for the search filters.

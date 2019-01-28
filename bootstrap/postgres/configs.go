@@ -9,6 +9,7 @@ package postgres
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -32,6 +33,12 @@ type configRepository struct {
 	log logger.Logger
 }
 
+type writeCh struct {
+	ID       string      `json:"id"`
+	Name     string      `json:"name"`
+	Metadata interface{} `json:"metadata"`
+}
+
 // NewConfigRepository instantiates a PostgreSQL implementation of thing
 // repository.
 func NewConfigRepository(db *sql.DB, log logger.Logger) bootstrap.ConfigRepository {
@@ -50,12 +57,17 @@ func nullString(s string) sql.NullString {
 }
 
 func (cr configRepository) Save(cfg bootstrap.Config) (string, error) {
-	q := `INSERT INTO configs (mainflux_thing, owner, mainflux_key, external_id, external_key, content, state)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	q := `INSERT INTO configs (mainflux_thing, owner, mainflux_key, external_id, external_key, content, state, mainflux_channels)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
 
-	query, v := generateValues(q, cfg)
+	channels := toDBChannels(cfg.MFChannels)
 
-	if _, err := cr.db.Exec(query, v...); err != nil {
+	jsn, err := json.Marshal(channels)
+	if err != nil {
+		return "", bootstrap.ErrMalformedEntity
+	}
+
+	if _, err := cr.db.Exec(q, cfg.MFThing, cfg.Owner, cfg.MFKey, cfg.ExternalID, cfg.ExternalKey, cfg.Content, cfg.State, jsn); err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Name() == duplicateErr {
 			return "", bootstrap.ErrConflict
 		}
@@ -66,12 +78,12 @@ func (cr configRepository) Save(cfg bootstrap.Config) (string, error) {
 }
 
 func (cr configRepository) RetrieveByID(key, id string) (bootstrap.Config, error) {
-	q := `SELECT mainflux_thing, mainflux_key, external_id, external_key, content, state FROM configs WHERE mainflux_thing = $1 AND owner = $2`
+	q := `SELECT mainflux_thing, mainflux_key, external_id, external_key, content, state, mainflux_channels FROM configs WHERE mainflux_thing = $1 AND owner = $2`
 	cfg := bootstrap.Config{MFThing: id, Owner: key, MFChannels: []bootstrap.Channel{}}
 	var content sql.NullString
-
+	var chs []byte
 	err := cr.db.QueryRow(q, id, key).
-		Scan(&cfg.MFThing, &cfg.MFKey, &cfg.ExternalID, &cfg.ExternalKey, &content, &cfg.State)
+		Scan(&cfg.MFThing, &cfg.MFKey, &cfg.ExternalID, &cfg.ExternalKey, &content, &cfg.State, &chs)
 	if err != nil {
 		empty := bootstrap.Config{}
 		if err == sql.ErrNoRows {
@@ -80,24 +92,13 @@ func (cr configRepository) RetrieveByID(key, id string) (bootstrap.Config, error
 		return empty, err
 	}
 
-	q = `SELECT channel_id, name, metadata FROM channels WHERE config_id = $1 AND owner = $2`
-	rows, err := cr.db.Query(q, id, key)
+	err = json.Unmarshal(chs, &cfg.MFChannels)
 	if err != nil {
-		cr.log.Error(fmt.Sprintf("Failed to retrieve connected due to %s", err))
 		return bootstrap.Config{}, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		c := bootstrap.Channel{}
-		if err = rows.Scan(&c.ID, &c.Name, &c.Metadata); err != nil {
-			cr.log.Error(fmt.Sprintf("Failed to read connected channels due to %s", err))
-			return bootstrap.Config{}, err
-		}
-		cfg.MFChannels = append(cfg.MFChannels, c)
 	}
 
 	cfg.Content = content.String
+
 	return cfg, nil
 }
 
@@ -109,61 +110,41 @@ func (cr configRepository) RetrieveAll(key string, filter bootstrap.Filter, offs
 	}
 	defer rows.Close()
 
-	configs := map[string]bootstrap.Config{}
 	var content sql.NullString
-	ids := []string{}
+	configs := []bootstrap.Config{}
+
 	for rows.Next() {
+		var chs []byte
 		c := bootstrap.Config{Owner: key}
-		if err = rows.Scan(&c.MFThing, &c.MFKey, &c.ExternalID, &c.ExternalKey, &content, &c.State); err != nil {
+		if err = rows.Scan(&c.MFThing, &c.MFKey, &c.ExternalID, &c.ExternalKey, &content, &c.State, &chs); err != nil {
+			cr.log.Error(fmt.Sprintf("Failed to read retrieved config due to %s", err))
+			return []bootstrap.Config{}
+		}
+
+		err = json.Unmarshal(chs, &c.MFChannels)
+		if err != nil {
 			cr.log.Error(fmt.Sprintf("Failed to read retrieved config due to %s", err))
 			return []bootstrap.Config{}
 		}
 
 		c.Content = content.String
-		configs[c.MFThing] = c
-		ids = append(ids, c.MFThing)
-	}
-	fmt.Println("IDS: ", ids)
-	q := `SELECT channel_id, name, metadata, config_id FROM channels WHERE config_id = ANY($1);`
-	fmt.Println("ARR: ", pq.Array(&ids))
-	rows, err = cr.db.Query(q, pq.Array(ids))
-	if err != nil {
-		cr.log.Error(fmt.Sprintf("Failed to retrieve connected due to %s", err))
-		return []bootstrap.Config{}
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var configID string
-		c := bootstrap.Channel{}
-		if err = rows.Scan(&c.ID, &c.Name, &c.Metadata, &configID); err != nil {
-			cr.log.Error(fmt.Sprintf("Failed to read connected channels due to %s", err))
-			return []bootstrap.Config{}
-		}
-		if cfg, ok := configs[configID]; ok {
-			cfg.MFChannels = append(cfg.MFChannels, c)
-			configs[configID] = cfg
-		}
+		configs = append(configs, c)
 	}
 
-	items := []bootstrap.Config{}
-	for _, v := range configs {
-		items = append(items, v)
-	}
-
-	return items
+	return configs
 }
 
 func (cr configRepository) RetrieveByExternalID(externalKey, externalID string) (bootstrap.Config, error) {
-	q := `SELECT mainflux_thing, owner, mainflux_key, content, state FROM configs WHERE external_key = $1 AND external_id = $2`
+	q := `SELECT mainflux_thing, owner, mainflux_key, content, state, mainflux_channels FROM configs WHERE external_key = $1 AND external_id = $2`
 	var content sql.NullString
 	cfg := bootstrap.Config{
 		ExternalID:  externalID,
 		ExternalKey: externalKey,
 	}
 
+	var chs []byte
 	if err := cr.db.QueryRow(q, externalKey, externalID).
-		Scan(&cfg.MFThing, &cfg.Owner, &cfg.MFKey, &content, &cfg.State); err != nil {
+		Scan(&cfg.MFThing, &cfg.Owner, &cfg.MFKey, &content, &cfg.State, &chs); err != nil {
 		empty := bootstrap.Config{}
 		if err == sql.ErrNoRows {
 			return empty, bootstrap.ErrNotFound
@@ -171,21 +152,9 @@ func (cr configRepository) RetrieveByExternalID(externalKey, externalID string) 
 		return empty, err
 	}
 
-	q = `SELECT channel_id, name, metadata FROM channels WHERE config_id = $1`
-	rows, err := cr.db.Query(q, cfg.MFThing)
+	err := json.Unmarshal(chs, &cfg.MFChannels)
 	if err != nil {
-		cr.log.Error(fmt.Sprintf("Failed to retrieve connected due to %s", err))
 		return bootstrap.Config{}, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		c := bootstrap.Channel{}
-		if err = rows.Scan(&c.ID, &c.Name, &c.Metadata); err != nil {
-			cr.log.Error(fmt.Sprintf("Failed to read connected channels due to %s", err))
-			return bootstrap.Config{}, err
-		}
-		cfg.MFChannels = append(cfg.MFChannels, c)
 	}
 
 	cfg.Content = content.String
@@ -194,9 +163,16 @@ func (cr configRepository) RetrieveByExternalID(externalKey, externalID string) 
 }
 
 func (cr configRepository) Update(cfg bootstrap.Config) error {
-	q := `UPDATE configs SET mainflux_channels = $1, content = $2, state = $3 WHERE mainflux_thing = $4 AND owner = $5`
-	arr := pq.Array(cfg.MFChannels)
-	res, err := cr.db.Exec(q, arr, cfg.Content, cfg.State, cfg.MFThing, cfg.Owner)
+	q := `UPDATE configs SET content = $1, state = $2, mainflux_channels = $3 WHERE mainflux_thing = $4 AND owner = $5`
+
+	channels := toDBChannels(cfg.MFChannels)
+
+	jsn, err := json.Marshal(channels)
+	if err != nil {
+		return bootstrap.ErrMalformedEntity
+	}
+
+	res, err := cr.db.Exec(q, cfg.Content, cfg.State, jsn, cfg.MFThing, cfg.Owner)
 	if err != nil {
 		return err
 	}
@@ -282,7 +258,7 @@ func (cr configRepository) RemoveUnknown(key, id string) error {
 }
 
 func (cr configRepository) retrieveAll(key string, filter bootstrap.Filter, offset, limit uint64) (*sql.Rows, error) {
-	template := `SELECT mainflux_thing, mainflux_key, external_id, external_key, content, state FROM configs WHERE owner = $1 %s ORDER BY mainflux_thing LIMIT $2 OFFSET $3`
+	template := `SELECT mainflux_thing, mainflux_key, external_id, external_key, content, state, mainflux_channels FROM configs WHERE owner = $1 %s ORDER BY mainflux_thing LIMIT $2 OFFSET $3`
 	params := []interface{}{key, limit, offset}
 	// One empty string so that strings Join works if only one filter is applied.
 	queries := []string{""}
@@ -298,22 +274,26 @@ func (cr configRepository) retrieveAll(key string, filter bootstrap.Filter, offs
 	return cr.db.Query(fmt.Sprintf(template, f), params...)
 }
 
-func generateValues(query string, cfg bootstrap.Config) (string, []interface{}) {
-	template := `($1, $2, $%d, $%d, $%d)`
-	content := nullString(cfg.Content)
-	q := []string{}
-	v := []interface{}{cfg.MFThing, cfg.Owner, cfg.MFKey, cfg.ExternalID, cfg.ExternalKey, content, cfg.State}
-
-	counter := configFieldsNum
-	for _, c := range cfg.MFChannels {
-		q = append(q, fmt.Sprintf(template, counter, counter+1, counter+2))
-		v = append(v, c.ID, c.Name, c.Metadata)
-		counter += channelFieldsNum
+// Since Channel metadata field can contain nested objects, in order to save it as a
+// proper JSON rather than a string, it needs to be serialized before serializing
+// the entire Channels list.
+func toDBChannels(channels []bootstrap.Channel) []writeCh {
+	ret := []writeCh{}
+	for _, ch := range channels {
+		c := writeCh{ID: ch.ID, Name: ch.Name}
+		var err error
+		switch ch.Metadata.(type) {
+		case string:
+			err = json.Unmarshal([]byte(ch.Metadata.(string)), &c.Metadata)
+		case []byte:
+			break
+		default:
+			c.Metadata = ch.Metadata
+		}
+		if err != nil {
+			return []writeCh{}
+		}
+		ret = append(ret, c)
 	}
-	if len(v) > configFieldsNum {
-		chInsert := fmt.Sprintf(`) INSERT INTO channels (config_id, owner, channel_id, name, metadata) VALUES %s;`, strings.Join(q, ", "))
-		query = fmt.Sprintf("%s%s%s", "WITH save_thing AS (", query, chInsert)
-	}
-
-	return query, v
+	return ret
 }
