@@ -60,10 +60,19 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
+		var channels []channelRes
+		for _, ch := range config.MFChannels {
+			channels = append(channels, channelRes{
+				ID:       ch.ID,
+				Name:     ch.Name,
+				Metadata: ch.Metadata,
+			})
+		}
+
 		res := viewRes{
 			MFThing:     config.MFThing,
 			MFKey:       config.MFKey,
-			Channels:    config.MFChannels,
+			Channels:    channels,
 			ExternalID:  config.ExternalID,
 			ExternalKey: config.ExternalKey,
 			Content:     config.Content,
@@ -125,10 +134,19 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		for _, cfg := range configs {
+			var channels []channelRes
+			for _, ch := range cfg.MFChannels {
+				channels = append(channels, channelRes{
+					ID:       ch.ID,
+					Name:     ch.Name,
+					Metadata: ch.Metadata,
+				})
+			}
+
 			view := viewRes{
 				MFThing:     cfg.MFThing,
 				MFKey:       cfg.MFKey,
-				Channels:    cfg.MFChannels,
+				Channels:    channels,
 				ExternalID:  cfg.ExternalID,
 				ExternalKey: cfg.ExternalKey,
 				Content:     cfg.Content,

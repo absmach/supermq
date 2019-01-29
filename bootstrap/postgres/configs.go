@@ -169,6 +169,7 @@ func (cr configRepository) Update(cfg bootstrap.Config) error {
 
 	jsn, err := json.Marshal(channels)
 	if err != nil {
+		cr.log.Error(fmt.Sprintf("Failed to serialize channels list due to %s", err))
 		return bootstrap.ErrMalformedEntity
 	}
 
@@ -263,7 +264,7 @@ func (cr configRepository) retrieveAll(key string, filter bootstrap.Filter, offs
 	// One empty string so that strings Join works if only one filter is applied.
 	queries := []string{""}
 	// Since key = 1, limit = 2, offset = 3, the next one is 4.
-	counter := 4
+	counter := len(params) + 1
 	for k, v := range filter {
 		queries = append(queries, fmt.Sprintf("%s = $%d", k, counter))
 		params = append(params, v)
@@ -280,19 +281,7 @@ func (cr configRepository) retrieveAll(key string, filter bootstrap.Filter, offs
 func toDBChannels(channels []bootstrap.Channel) []writeCh {
 	ret := []writeCh{}
 	for _, ch := range channels {
-		c := writeCh{ID: ch.ID, Name: ch.Name}
-		var err error
-		switch ch.Metadata.(type) {
-		case string:
-			err = json.Unmarshal([]byte(ch.Metadata.(string)), &c.Metadata)
-		case []byte:
-			break
-		default:
-			c.Metadata = ch.Metadata
-		}
-		if err != nil {
-			return []writeCh{}
-		}
+		c := writeCh{ID: ch.ID, Name: ch.Name, Metadata: ch.Metadata}
 		ret = append(ret, c)
 	}
 	return ret

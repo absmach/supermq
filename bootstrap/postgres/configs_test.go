@@ -226,7 +226,7 @@ func TestUpdate(t *testing.T) {
 	c.MFThing = saved
 	c.ExternalID = id
 	c.ExternalKey = id
-	c.MFChannels = append(config.MFChannels, bootstrap.Channel{ID: "3", Name: "name 3", Metadata: "{\"meta\": 3"}, bootstrap.Channel{ID: "4", Name: "name 4", Metadata: "{\"meta\": 4"})
+	c.MFChannels = append(config.MFChannels, bootstrap.Channel{ID: "3", Name: "name 3", Metadata: `{"meta": 3}`})
 	c.State = bootstrap.Active
 	c.Content = "new content"
 

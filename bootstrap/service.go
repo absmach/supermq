@@ -9,6 +9,7 @@ package bootstrap
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -104,12 +105,19 @@ func (bs bootstrapService) Add(key string, cfg Config) (Config, error) {
 		if err != nil {
 			return Config{}, ErrMalformedEntity
 		}
-		channels = append(channels, Channel{
-			ID:       ch.ID,
-			Name:     ch.Name,
-			Metadata: ch.Metadata,
-		})
+
+		newCh := Channel{
+			ID:   ch.ID,
+			Name: ch.Name,
+		}
+
+		if err := json.Unmarshal([]byte(ch.Metadata), &newCh.Metadata); err != nil {
+			return Config{}, ErrMalformedEntity
+		}
+
+		channels = append(channels, newCh)
 	}
+
 	mfThing, err := bs.add(key)
 	if err != nil {
 		return Config{}, err
@@ -177,7 +185,7 @@ func (bs bootstrapService) Update(key string, cfg Config) error {
 	for _, c := range disconnect {
 		if err := bs.sdk.DisconnectThing(id, c, key); err != nil {
 			if err == mfsdk.ErrNotFound {
-				return ErrMalformedEntity
+				continue
 			}
 			return ErrThings
 		}
@@ -349,11 +357,17 @@ func (bs bootstrapService) updateChannels(chs []Channel, add, remove []string, k
 		if err != nil {
 			return []Channel{}, ErrMalformedEntity
 		}
-		channels[id] = Channel{
-			ID:       ch.ID,
-			Name:     ch.Name,
-			Metadata: ch.Metadata,
+
+		newCh := Channel{
+			ID:   ch.ID,
+			Name: ch.Name,
 		}
+
+		if err := json.Unmarshal([]byte(ch.Metadata), &newCh.Metadata); err != nil {
+			return []Channel{}, ErrMalformedEntity
+		}
+
+		channels[id] = newCh
 	}
 
 	var ret []Channel
