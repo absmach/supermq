@@ -270,12 +270,12 @@ func (cr configRepository) retrieveAll(key string, filter bootstrap.Filter, offs
 	queries := []string{""}
 	// Since key = 1, limit = 2, offset = 3, the next one is 4.
 	counter := len(params) + 1
-	for k, v := range filter.Equals {
+	for k, v := range filter.FullMatch {
 		queries = append(queries, fmt.Sprintf("%s = $%d", k, counter))
 		params = append(params, v)
 		counter++
 	}
-	for k, v := range filter.Like {
+	for k, v := range filter.PartialMatch {
 		queries = append(queries, fmt.Sprintf("LOWER(%s) LIKE '%%' || $%d || '%%'", k, counter))
 		params = append(params, v)
 		counter++

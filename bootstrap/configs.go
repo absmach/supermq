@@ -40,9 +40,9 @@ type Channel struct {
 
 // Filter is used for the search filters.
 type Filter struct {
-	Unknown bool
-	Equals  map[string]string
-	Like    map[string]string
+	Unknown      bool
+	FullMatch    map[string]string
+	PartialMatch map[string]string
 }
 
 // ConfigRepository specifies a Config persistence API.

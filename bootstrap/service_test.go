@@ -303,7 +303,7 @@ func TestList(t *testing.T) {
 		{
 			desc:   "list config with Active staate",
 			config: []bootstrap.Config{saved[41]},
-			filter: bootstrap.Filter{Equals: map[string]string{"state": bootstrap.Active.String()}},
+			filter: bootstrap.Filter{FullMatch: map[string]string{"state": bootstrap.Active.String()}},
 			key:    validToken,
 			offset: 35,
 			limit:  20,

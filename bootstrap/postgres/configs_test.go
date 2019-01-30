@@ -157,7 +157,7 @@ func TestRetrieveAll(t *testing.T) {
 			owner:  config.Owner,
 			offset: 0,
 			limit:  uint64(numConfigs),
-			filter: bootstrap.Filter{Equals: map[string]string{"state": bootstrap.Active.String()}},
+			filter: bootstrap.Filter{FullMatch: map[string]string{"state": bootstrap.Active.String()}},
 			size:   numConfigs / 2,
 		},
 		{
@@ -165,7 +165,7 @@ func TestRetrieveAll(t *testing.T) {
 			owner:  config.Owner,
 			offset: 0,
 			limit:  uint64(numConfigs),
-			filter: bootstrap.Filter{Like: map[string]string{"name": "1"}},
+			filter: bootstrap.Filter{PartialMatch: map[string]string{"name": "1"}},
 			size:   1,
 		},
 	}
