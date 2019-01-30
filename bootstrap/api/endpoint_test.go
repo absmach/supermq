@@ -52,6 +52,7 @@ var (
 		Channels:    []string{"1"},
 		Content:     "config",
 	}
+
 	updateReq = struct {
 		Channels []string        `json:"channels"`
 		Content  string          `json:"content"`
