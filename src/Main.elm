@@ -54,26 +54,26 @@ main =
 
 type alias Model =
     { key : Nav.Key
-    , route : Maybe Route
     , version : Version.Model
     , user : User.Model
     , channel : Channel.Model
     , thing : Thing.Model
     , connection : Connection.Model
     , message : Message.Model
+    , view : String
     }
 
 
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
     ( Model key
-        (UrlParser.parse parser url)
         Version.initial
         User.initial
         Channel.initial
         Thing.initial
         Connection.initial
         Message.initial
+        (parse url)
     , Cmd.none
     )
 
@@ -86,13 +86,19 @@ type alias Route =
     ( String, Maybe String )
 
 
-parser : UrlParser.Parser (Route -> a) a
-parser =
-    UrlParser.map Tuple.pair (UrlParser.string </> UrlParser.fragment identity)
+parse : Url.Url -> String
+parse url =
+    UrlParser.parse
+        (UrlParser.map Tuple.pair (UrlParser.string </> UrlParser.fragment identity))
+        url
+        |> (\route ->
+                case route of
+                    Just r ->
+                        Tuple.first r
 
-
-
--- UPDATE
+                    Nothing ->
+                        "account"
+           )
 
 
 type Msg
@@ -104,6 +110,12 @@ type Msg
     | ThingMsg Thing.Msg
     | ConnectionMsg Connection.Msg
     | MessageMsg Message.Msg
+    | Account
+    | Channels
+    | Things
+    | Connection
+    | Messages
+    | Version
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -118,7 +130,7 @@ update msg model =
                     ( model, Cmd.none )
 
         UrlChanged url ->
-            ( { model | route = UrlParser.parse parser url }
+            ( { model | view = parse url }
             , Cmd.none
             )
 
@@ -164,8 +176,40 @@ update msg model =
             in
             ( { model | message = updatedMessage }, Cmd.map MessageMsg messageCmd )
 
+        Account ->
+            ( { model | view = "account" }, Cmd.none )
+
+        Channels ->
+            let
+                ( updatedChannel, channelCmd ) =
+                    Channel.update Channel.RetrieveChannel model.channel model.user.token
+            in
+            ( { model | view = "channels" }, Cmd.map ChannelMsg channelCmd )
+
+        Things ->
+            let
+                ( updatedThing, thingCmd ) =
+                    Thing.update Thing.RetrieveThing model.thing model.user.token
+            in
+            ( { model | view = "things" }, Cmd.map ThingMsg thingCmd )
+
+        Connection ->
+            ( { model | view = "connection" }, Cmd.none )
+
+        Messages ->
+            ( { model | view = "messages" }, Cmd.none )
+
+        Version ->
+            let
+                ( updatedVersion, versionCmd ) =
+                    Version.update Version.GetVersion model.version
+            in
+            ( { model | view = "version", version = updatedVersion }, Cmd.map VersionMsg versionCmd )
 
 
+
+-- Menu subMsg ->
+--     ( model, Cmd.none )
 -- SUBSCRIPTIONS
 
 
@@ -191,14 +235,17 @@ view model =
                 else
                     False
 
+            buttonAttrs =
+                Button.attrs [ style "color" "white" ]
+
             menu =
                 if loggedIn then
-                    [ ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/account" ] ] [ text "Account" ]
-                    , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/channel" ] ] [ text "Channels" ]
-                    , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/things" ] ] [ text "Things" ]
-                    , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/connection" ] ] [ text "Connection" ]
-                    , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/messages" ] ] [ text "Messages" ]
-                    , ButtonGroup.linkButton [ Button.secondary, Button.attrs [ href "/version" ] ] [ text "Version" ]
+                    [ ButtonGroup.linkButton [ Button.primary, Button.onClick Account, buttonAttrs ] [ text "Account" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Channels, buttonAttrs ] [ text "Channels" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Things, buttonAttrs ] [ text "Things" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Connection, buttonAttrs ] [ text "Connection" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Messages, buttonAttrs ] [ text "Messages" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Version, buttonAttrs ] [ text "Version" ]
                     ]
 
                 else
@@ -206,31 +253,26 @@ view model =
 
             content =
                 if loggedIn then
-                    case model.route of
-                        Just route ->
-                            case Tuple.first route of
-                                "version" ->
-                                    Html.map VersionMsg (Version.view model.version)
+                    case model.view of
+                        "version" ->
+                            Html.map VersionMsg (Version.view model.version)
 
-                                "account" ->
-                                    Html.map UserMsg (User.view model.user)
+                        "account" ->
+                            Html.map UserMsg (User.view model.user)
 
-                                "channel" ->
-                                    Html.map ChannelMsg (Channel.view model.channel)
+                        "channels" ->
+                            Html.map ChannelMsg (Channel.view model.channel)
 
-                                "things" ->
-                                    Html.map ThingMsg (Thing.view model.thing)
+                        "things" ->
+                            Html.map ThingMsg (Thing.view model.thing)
 
-                                "connection" ->
-                                    Html.map ConnectionMsg (Connection.view model.connection)
+                        "connection" ->
+                            Html.map ConnectionMsg (Connection.view model.connection)
 
-                                "messages" ->
-                                    Html.map MessageMsg (Message.view model.message)
+                        "messages" ->
+                            Html.map MessageMsg (Message.view model.message)
 
-                                _ ->
-                                    h3 [] [ text "Welcome to Gateflux" ]
-
-                        Nothing ->
+                        _ ->
                             Html.map UserMsg (User.view model.user)
 
                 else
