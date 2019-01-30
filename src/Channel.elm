@@ -7,9 +7,7 @@ import Bootstrap.Form.InputGroup as InputGroup
 import Bootstrap.Grid as Grid
 import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
-import Debug exposing (log)
 import Error
-import Helpers
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
@@ -31,8 +29,7 @@ path =
 
 
 type alias Model =
-    { channelName : String
-    , token : String
+    { name : String
     , offset : String
     , limit : String
     , response : String
@@ -42,8 +39,7 @@ type alias Model =
 
 initial : Model
 initial =
-    { channelName = ""
-    , token = ""
+    { name = ""
     , offset = path.offset
     , limit = path.limit
     , response = ""
@@ -52,7 +48,7 @@ initial =
 
 
 type Msg
-    = SubmitChannelName String
+    = SubmitName String
     | SubmitOffset String
     | SubmitLimit String
     | ProvisionChannel
@@ -60,44 +56,33 @@ type Msg
     | RetrieveChannel
     | RetrievedChannel (Result Http.Error (List Channel))
     | RemoveChannel String
+    | RemovedChannel (Result Http.Error Int)
 
 
 update : Msg -> Model -> String -> ( Model, Cmd Msg )
 update msg model token =
     case msg of
-        SubmitChannelName name ->
-            ( { model | channelName = name }, Cmd.none )
+        SubmitName name ->
+            ( { model | name = name }, Cmd.none )
 
         SubmitOffset offset ->
-            ( { model | offset = offset }
-            , retrieve
-                (B.crossOrigin url.base url.path (buildQueryParamList { model | offset = offset }))
-                token
-            )
+            refreshChannelList { model | offset = offset } token
 
         SubmitLimit limit ->
-            ( { model | limit = limit }
-            , retrieve
-                (B.crossOrigin url.base url.path (buildQueryParamList { model | limit = limit }))
-                token
-            )
+            refreshChannelList { model | limit = limit } token
 
         ProvisionChannel ->
             ( model
             , provision
                 (B.crossOrigin url.base url.path [])
                 token
-                model.channelName
+                model.name
             )
 
         ProvisionedChannel result ->
             case result of
                 Ok statusCode ->
-                    ( { model | response = "Ok " ++ String.fromInt statusCode }
-                    , retrieve
-                        (B.crossOrigin url.base url.path (buildQueryParamList model))
-                        token
-                    )
+                    refreshChannelList { model | response = String.fromInt statusCode } token
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
@@ -112,7 +97,7 @@ update msg model token =
         RetrievedChannel result ->
             case result of
                 Ok channels ->
-                    ( { model | channels = channels, response = channelsToString channels }, Cmd.none )
+                    ( { model | channels = channels }, Cmd.none )
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
@@ -123,6 +108,14 @@ update msg model token =
                 (B.crossOrigin url.base (List.append url.path [ id ]) [])
                 token
             )
+
+        RemovedChannel result ->
+            case result of
+                Ok statusCode ->
+                    refreshChannelList { model | response = String.fromInt statusCode } token
+
+                Err error ->
+                    ( { model | response = Error.handle error }, Cmd.none )
 
 
 view : Model -> Html Msg
@@ -140,8 +133,6 @@ view model =
                     ]
                 ]
             ]
-
-        -- , Helpers.response model.response
         , Grid.row []
             [ Grid.col []
                 [ Table.simpleTable
@@ -152,7 +143,7 @@ view model =
                     , Table.tbody []
                         (List.append
                             [ Table.tr []
-                                [ Table.td [] [ Input.text [ Input.id "chan", Input.onInput SubmitChannelName ] ]
+                                [ Table.td [] [ Input.text [ Input.id "name", Input.onInput SubmitName ] ]
                                 , Table.td [] []
                                 , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionChannel ] [ text "Provision" ] ]
                                 ]
@@ -215,14 +206,14 @@ provision u token name =
         , body =
             E.object [ ( "name", E.string name ) ]
                 |> Http.jsonBody
-        , expect = expectProvision ProvisionedChannel
+        , expect = expectStatus ProvisionedChannel
         , timeout = Nothing
         , tracker = Nothing
         }
 
 
-expectProvision : (Result Http.Error Int -> Msg) -> Http.Expect Msg
-expectProvision toMsg =
+expectStatus : (Result Http.Error Int -> Msg) -> Http.Expect Msg
+expectStatus toMsg =
     Http.expectStringResponse toMsg <|
         \response ->
             case response of
@@ -288,7 +279,7 @@ remove u token =
         , headers = [ Http.header "Authorization" token ]
         , url = u
         , body = Http.emptyBody
-        , expect = expectProvision ProvisionedChannel
+        , expect = expectStatus RemovedChannel
         , timeout = Nothing
         , tracker = Nothing
         }
@@ -296,21 +287,6 @@ remove u token =
 
 
 -- HELPERS
-
-
-channelsToString : List Channel -> String
-channelsToString channels =
-    List.map
-        (\channel ->
-            case channel.name of
-                Just name ->
-                    name ++ " " ++ channel.id ++ "; "
-
-                Nothing ->
-                    channel.id ++ "; "
-        )
-        channels
-        |> String.concat
 
 
 buildQueryParamList : Model -> List B.QueryParameter
@@ -329,3 +305,8 @@ buildQueryParamList model =
                         B.string (Tuple.first tpl) path.limit
         )
         [ ( "offset", model.offset ), ( "limit", model.limit ) ]
+
+
+refreshChannelList : Model -> String -> ( Model, Cmd Msg )
+refreshChannelList model token =
+    ( model, retrieve (B.crossOrigin url.base url.path (buildQueryParamList model)) token )
