@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/mainflux/mainflux/bootstrap"
 
@@ -34,7 +35,8 @@ const (
 var (
 	errUnsupportedContentType = errors.New("unsupported content type")
 	errInvalidQueryParams     = errors.New("invalid query params")
-	validParams               = []string{"state", "external_id", "mainflux_id", "mainflux_key"}
+	equalsParams              = []string{"state", "external_id", "mainflux_id", "mainflux_key"}
+	likeParams                = []string{"name"}
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -138,7 +140,7 @@ func decodeUnknownRequest(_ context.Context, r *http.Request) (interface{}, erro
 
 	req := listReq{
 		key:    r.Header.Get("Authorization"),
-		filter: bootstrap.Filter{"unknown": "true"},
+		filter: bootstrap.Filter{Unknown: true},
 		offset: offset,
 		limit:  limit,
 	}
@@ -285,10 +287,13 @@ func parsePagePrams(q url.Values) (uint64, uint64, error) {
 }
 
 func parseFilter(values url.Values) bootstrap.Filter {
-	ret := bootstrap.Filter{}
+	ret := bootstrap.Filter{Equals: make(map[string]string), Like: make(map[string]string)}
 	for k := range values {
-		if contains(validParams, k) {
-			ret[k] = values.Get(k)
+		if contains(equalsParams, k) {
+			ret.Equals[k] = values.Get(k)
+		}
+		if contains(likeParams, k) {
+			ret.Like[k] = strings.ToLower(values.Get(k))
 		}
 	}
 	return ret

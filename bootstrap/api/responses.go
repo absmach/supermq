@@ -78,6 +78,7 @@ type viewRes struct {
 	ExternalID  string          `json:"external_id"`
 	ExternalKey string          `json:"external_key,omitempty"`
 	Content     string          `json:"content,omitempty"`
+	Name        string          `json:"name,omitempty"`
 	State       bootstrap.State `json:"state"`
 }
 

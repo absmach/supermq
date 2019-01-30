@@ -73,7 +73,7 @@ func (crm *configRepositoryMock) RetrieveAll(key string, filter bootstrap.Filter
 	first := uint64(offset) + 1
 	last := first + uint64(limit)
 	var state bootstrap.State = -1
-	if s, ok := filter["state"]; ok {
+	if s, ok := filter.Equals["state"]; ok {
 		val, _ := strconv.Atoi(s)
 		state = bootstrap.State(val)
 	}

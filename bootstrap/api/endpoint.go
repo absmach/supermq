@@ -30,6 +30,7 @@ func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			ExternalID:  req.ExternalID,
 			ExternalKey: req.ExternalKey,
 			MFChannels:  channels,
+			Name:        req.Name,
 			Content:     req.Content,
 		}
 
@@ -75,6 +76,7 @@ func viewEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			Channels:    channels,
 			ExternalID:  config.ExternalID,
 			ExternalKey: config.ExternalKey,
+			Name:        config.Name,
 			Content:     config.Content,
 			State:       config.State,
 		}
@@ -99,6 +101,7 @@ func updateEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		config := bootstrap.Config{
 			MFThing:    req.id,
 			MFChannels: channels,
+			Name:       req.Name,
 			Content:    req.Content,
 			State:      req.State,
 		}
@@ -149,6 +152,7 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 				Channels:    channels,
 				ExternalID:  cfg.ExternalID,
 				ExternalKey: cfg.ExternalKey,
+				Name:        cfg.Name,
 				Content:     cfg.Content,
 				State:       cfg.State,
 			}

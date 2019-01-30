@@ -40,6 +40,7 @@ const (
 	metadata       = `{"meta": "data"}`
 	addExternalID  = "external-id"
 	addExternalKey = "external-key"
+	addName        = "name"
 	addContent     = "config"
 )
 
@@ -49,12 +50,14 @@ var (
 		ExternalID  string   `json:"external_id"`
 		ExternalKey string   `json:"external_key"`
 		Channels    []string `json:"channels"`
+		Name        string   `json:"name"`
 		Content     string   `json:"content"`
 	}{
-		ExternalID:  addExternalID,
-		ExternalKey: addExternalKey,
-		Channels:    addChannels,
-		Content:     addContent,
+		ExternalID:  "external-id",
+		ExternalKey: "external-key",
+		Channels:    []string{"1"},
+		Name:        "name",
+		Content:     "config",
 	}
 
 	updateReq = struct {
@@ -82,6 +85,7 @@ func newConfig(channels []bootstrap.Channel) bootstrap.Config {
 		ExternalID:  addExternalID,
 		ExternalKey: addExternalKey,
 		MFChannels:  channels,
+		Name:        addName,
 		Content:     addContent,
 	}
 }

@@ -292,15 +292,6 @@ func TestList(t *testing.T) {
 			err:    bootstrap.ErrUnauthorizedAccess,
 		},
 		{
-			desc:   "list config with invalid filter",
-			config: []bootstrap.Config{},
-			filter: nil,
-			key:    validToken,
-			offset: 0,
-			limit:  10,
-			err:    bootstrap.ErrMalformedEntity,
-		},
-		{
 			desc:   "list last page",
 			config: saved[95:],
 			filter: bootstrap.Filter{},
@@ -312,7 +303,7 @@ func TestList(t *testing.T) {
 		{
 			desc:   "list config with Active staate",
 			config: []bootstrap.Config{saved[41]},
-			filter: bootstrap.Filter{"state": bootstrap.Active.String()},
+			filter: bootstrap.Filter{Equals: map[string]string{"state": bootstrap.Active.String()}},
 			key:    validToken,
 			offset: 35,
 			limit:  20,
@@ -321,7 +312,7 @@ func TestList(t *testing.T) {
 		{
 			desc:   "list unknown config",
 			config: []bootstrap.Config{unknownConfig},
-			filter: bootstrap.Filter{"unknown": "true"},
+			filter: bootstrap.Filter{Unknown: true},
 			key:    validToken,
 			offset: 0,
 			limit:  20,
