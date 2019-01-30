@@ -830,10 +830,8 @@ func TestBootstrap(t *testing.T) {
 		MFChannels: channels,
 		Content:    saved.Content,
 	}
+
 	data := toJSON(s)
-	// Bootstrapping response includes mainflux_channels instead of channels.
-	// res := strings.Replace(string(data), `,"state":0`, "", 1)
-	// res = strings.Replace(string(data), `,"external_id":""`, "", 1)
 
 	cases := []struct {
 		desc         string

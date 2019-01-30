@@ -275,9 +275,6 @@ func (cr configRepository) retrieveAll(key string, filter bootstrap.Filter, offs
 	return cr.db.Query(fmt.Sprintf(template, f), params...)
 }
 
-// Since Channel metadata field can contain nested objects, in order to save it as a
-// proper JSON rather than a string, it needs to be serialized before serializing
-// the entire Channels list.
 func toDBChannels(channels []bootstrap.Channel) []writeCh {
 	ret := []writeCh{}
 	for _, ch := range channels {
