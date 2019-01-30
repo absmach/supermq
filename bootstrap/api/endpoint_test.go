@@ -469,7 +469,8 @@ func TestList(t *testing.T) {
 	for i := 0; i < configNum; i++ {
 		c.ExternalID = strconv.Itoa(i)
 		c.MFKey = c.ExternalID
-		c.ExternalKey = fmt.Sprintf("%s%s", c.ExternalKey, strconv.Itoa(i))
+		c.Name = fmt.Sprintf("%s-%d", addName, i)
+		c.ExternalKey = fmt.Sprintf("%s%s", addExternalKey, strconv.Itoa(i))
 		saved, err := svc.Add(validToken, c)
 		require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 		var channels []channel
@@ -532,6 +533,13 @@ func TestList(t *testing.T) {
 			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d", bs.URL, 0, 1),
 			status: http.StatusOK,
 			res:    list[0:1],
+		},
+		{
+			desc:   "view list searching by name",
+			auth:   validToken,
+			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d&name=%s", bs.URL, 0, 100, "95"),
+			status: http.StatusOK,
+			res:    list[95:96],
 		},
 		{
 			desc:   "view last page",
