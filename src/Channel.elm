@@ -3,7 +3,9 @@ module Channel exposing (Model, Msg(..), initial, update, view)
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
+import Bootstrap.Form.InputGroup as InputGroup
 import Bootstrap.Grid as Grid
+import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
 import Debug exposing (log)
 import Error
@@ -29,59 +31,73 @@ path =
 
 
 type alias Model =
-    { channel : String
+    { channelName : String
     , token : String
     , offset : String
     , limit : String
     , response : String
+    , channels : List Channel
     }
 
 
 initial : Model
 initial =
-    { channel = ""
+    { channelName = ""
     , token = ""
     , offset = path.offset
     , limit = path.limit
     , response = ""
+    , channels = []
     }
 
 
 type Msg
-    = SubmitChannel String
+    = SubmitChannelName String
     | SubmitOffset String
     | SubmitLimit String
     | ProvisionChannel
     | ProvisionedChannel (Result Http.Error Int)
     | RetrieveChannel
     | RetrievedChannel (Result Http.Error (List Channel))
-    | RemoveChannel
+    | RemoveChannel String
 
 
 update : Msg -> Model -> String -> ( Model, Cmd Msg )
 update msg model token =
     case msg of
-        SubmitChannel channel ->
-            ( { model | channel = channel }, Cmd.none )
+        SubmitChannelName name ->
+            ( { model | channelName = name }, Cmd.none )
 
         SubmitOffset offset ->
-            ( { model | offset = offset }, Cmd.none )
+            ( { model | offset = offset }
+            , retrieve
+                (B.crossOrigin url.base url.path (buildQueryParamList { model | offset = offset }))
+                token
+            )
 
         SubmitLimit limit ->
-            ( { model | limit = limit }, Cmd.none )
+            ( { model | limit = limit }
+            , retrieve
+                (B.crossOrigin url.base url.path (buildQueryParamList { model | limit = limit }))
+                token
+            )
 
         ProvisionChannel ->
             ( model
             , provision
                 (B.crossOrigin url.base url.path [])
                 token
-                model.channel
+                model.channelName
             )
 
         ProvisionedChannel result ->
             case result of
                 Ok statusCode ->
-                    ( { model | response = "Ok " ++ String.fromInt statusCode }, Cmd.none )
+                    ( { model | response = "Ok " ++ String.fromInt statusCode }
+                    , retrieve
+                        (B.crossOrigin url.base url.path (buildQueryParamList model))
+                        token
+                    )
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
@@ -96,15 +112,15 @@ update msg model token =
         RetrievedChannel result ->
             case result of
                 Ok channels ->
-                    ( { model | response = channelsToString channels }, Cmd.none )
+                    ( { model | channels = channels, response = channelsToString channels }, Cmd.none )
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
 
-        RemoveChannel ->
+        RemoveChannel id ->
             ( model
             , remove
-                (B.crossOrigin url.base (List.append url.path [ model.channel ]) [])
+                (B.crossOrigin url.base (List.append url.path [ id ]) [])
                 token
             )
 
@@ -116,25 +132,60 @@ view model =
             [ Grid.col []
                 [ Form.form []
                     [ Form.group []
-                        [ Form.label [ for "chan" ] [ text "Name (Provision) or id (Remove)" ]
-                        , Input.email [ Input.id "chan", Input.onInput SubmitChannel ]
+                        [ Input.text [ Input.placeholder "offset", Input.id "offset", Input.onInput SubmitOffset ]
                         ]
                     , Form.group []
-                        [ Form.label [ for "offset" ] [ text "Offset" ]
-                        , Input.text [ Input.id "offset", Input.onInput SubmitOffset ]
+                        [ Input.text [ Input.placeholder "limit", Input.id "limit", Input.onInput SubmitLimit ]
                         ]
-                    , Form.group []
-                        [ Form.label [ for "limit" ] [ text "Limit" ]
-                        , Input.text [ Input.id "limit", Input.onInput SubmitLimit ]
-                        ]
-                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionChannel ] [ text "Provision" ]
-                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RetrieveChannel ] [ text "Retrieve" ]
-                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RemoveChannel ] [ text "Remove" ]
                     ]
                 ]
             ]
-        , Helpers.response model.response
+
+        -- , Helpers.response model.response
+        , Grid.row []
+            [ Grid.col []
+                [ Table.simpleTable
+                    ( Table.simpleThead
+                        [ Table.th [] [ text "Name" ]
+                        , Table.th [] [ text "Id" ]
+                        ]
+                    , Table.tbody []
+                        (List.append
+                            [ Table.tr []
+                                [ Table.td [] [ Input.text [ Input.id "chan", Input.onInput SubmitChannelName ] ]
+                                , Table.td [] []
+                                , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionChannel ] [ text "Provision" ] ]
+                                ]
+                            ]
+                            (genTableRows model.channels)
+                        )
+                    )
+                ]
+            ]
         ]
+
+
+genTableRows : List Channel -> List (Table.Row Msg)
+genTableRows channels =
+    let
+        parseName : Maybe String -> String
+        parseName channelName =
+            case channelName of
+                Just name ->
+                    name
+
+                Nothing ->
+                    ""
+    in
+    List.map
+        (\channel ->
+            Table.tr []
+                [ Table.td [] [ text (parseName channel.name) ]
+                , Table.td [] [ text channel.id ]
+                , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick (RemoveChannel channel.id) ] [ text "Remove" ] ]
+                ]
+        )
+        channels
 
 
 type alias Channel =
