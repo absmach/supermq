@@ -30,27 +30,31 @@ import (
 )
 
 const (
-	validToken   = "validToken"
-	invalidToken = "invalidToken"
-	email        = "test@example.com"
-	unknown      = "unknown"
-	channelsNum  = 3
-	contentType  = "application/json"
-	wrongID      = "wrong_id"
-	metadata     = `{"meta": "data"}`
+	validToken     = "validToken"
+	invalidToken   = "invalidToken"
+	email          = "test@example.com"
+	unknown        = "unknown"
+	channelsNum    = 3
+	contentType    = "application/json"
+	wrongID        = "wrong_id"
+	metadata       = `{"meta": "data"}`
+	addExternalID  = "external-id"
+	addExternalKey = "external-key"
+	addContent     = "config"
 )
 
 var (
-	addReq = struct {
+	addChannels = []string{"1"}
+	addReq      = struct {
 		ExternalID  string   `json:"external_id"`
 		ExternalKey string   `json:"external_key"`
 		Channels    []string `json:"channels"`
 		Content     string   `json:"content"`
 	}{
-		ExternalID:  "external-id",
-		ExternalKey: "external-key",
-		Channels:    []string{"1"},
-		Content:     "config",
+		ExternalID:  addExternalID,
+		ExternalKey: addExternalKey,
+		Channels:    addChannels,
+		Content:     addContent,
 	}
 
 	updateReq = struct {
@@ -71,6 +75,15 @@ type testRequest struct {
 	contentType string
 	token       string
 	body        io.Reader
+}
+
+func newConfig(channels []bootstrap.Channel) bootstrap.Config {
+	return bootstrap.Config{
+		ExternalID:  addExternalID,
+		ExternalKey: addExternalKey,
+		MFChannels:  channels,
+		Content:     addContent,
+	}
 }
 
 func (tr testRequest) make() (*http.Response, error) {
@@ -247,12 +260,7 @@ func TestView(t *testing.T) {
 	ts := newThingsServer(newThingsService(users))
 	svc := newService(users, nil, ts.URL)
 	bs := newBootstrapServer(svc)
-	c := bootstrap.Config{
-		ExternalID:  addReq.ExternalID,
-		ExternalKey: addReq.ExternalKey,
-		MFChannels:  []bootstrap.Channel{},
-		Content:     addReq.Content,
-	}
+	c := newConfig([]bootstrap.Channel{})
 
 	mfChs := generateChannels()
 	for _, ch := range mfChs {
@@ -339,12 +347,7 @@ func TestUpdate(t *testing.T) {
 	svc := newService(users, nil, ts.URL)
 	bs := newBootstrapServer(svc)
 
-	c := bootstrap.Config{
-		ExternalID:  addReq.ExternalID,
-		ExternalKey: addReq.ExternalKey,
-		MFChannels:  []bootstrap.Channel{bootstrap.Channel{ID: "1"}},
-		Content:     addReq.Content,
-	}
+	c := newConfig([]bootstrap.Channel{bootstrap.Channel{ID: "1"}})
 
 	saved, err := svc.Add(validToken, c)
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
@@ -456,12 +459,7 @@ func TestList(t *testing.T) {
 	svc := newService(users, nil, ts.URL)
 	bs := newBootstrapServer(svc)
 
-	c := bootstrap.Config{
-		ExternalID:  addReq.ExternalID,
-		ExternalKey: addReq.ExternalKey,
-		MFChannels:  []bootstrap.Channel{bootstrap.Channel{ID: "1"}},
-		Content:     addReq.Content,
-	}
+	c := newConfig([]bootstrap.Channel{bootstrap.Channel{ID: "1"}})
 
 	for i := 0; i < configNum; i++ {
 		c.ExternalID = strconv.Itoa(i)
@@ -641,12 +639,7 @@ func TestRemove(t *testing.T) {
 	svc := newService(users, nil, ts.URL)
 	bs := newBootstrapServer(svc)
 
-	c := bootstrap.Config{
-		ExternalID:  addReq.ExternalID,
-		ExternalKey: addReq.ExternalKey,
-		MFChannels:  []bootstrap.Channel{bootstrap.Channel{ID: "1"}},
-		Content:     addReq.Content,
-	}
+	c := newConfig([]bootstrap.Channel{bootstrap.Channel{ID: "1"}})
 
 	saved, err := svc.Add(validToken, c)
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
@@ -709,7 +702,7 @@ func TestListUnknown(t *testing.T) {
 	for i := 0; i < unknownNum; i++ {
 		u := config{
 			ExternalID:  fmt.Sprintf("key-%s", strconv.Itoa(i)),
-			ExternalKey: fmt.Sprintf("%s%s", addReq.ExternalKey, strconv.Itoa(i)),
+			ExternalKey: fmt.Sprintf("%s%s", addExternalKey, strconv.Itoa(i)),
 		}
 		unknownConfigs[u.ExternalID] = u.ExternalKey
 		unknown[i] = u
@@ -804,12 +797,7 @@ func TestBootstrap(t *testing.T) {
 	svc := newService(users, map[string]string{}, ts.URL)
 	bs := newBootstrapServer(svc)
 
-	c := bootstrap.Config{
-		ExternalID:  addReq.ExternalID,
-		ExternalKey: addReq.ExternalKey,
-		MFChannels:  []bootstrap.Channel{bootstrap.Channel{ID: "1"}},
-		Content:     addReq.Content,
-	}
+	c := newConfig([]bootstrap.Channel{bootstrap.Channel{ID: "1"}})
 
 	saved, err := svc.Add(validToken, c)
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
@@ -903,12 +891,7 @@ func TestChangeState(t *testing.T) {
 	svc := newService(users, nil, ts.URL)
 	bs := newBootstrapServer(svc)
 
-	c := bootstrap.Config{
-		ExternalID:  addReq.ExternalID,
-		ExternalKey: addReq.ExternalKey,
-		MFChannels:  []bootstrap.Channel{bootstrap.Channel{ID: "1"}},
-		Content:     addReq.Content,
-	}
+	c := newConfig([]bootstrap.Channel{bootstrap.Channel{ID: "1"}})
 
 	saved, err := svc.Add(validToken, c)
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
