@@ -131,35 +131,43 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		if err != nil {
 			return nil, err
 		}
-
-		res := listRes{
-			Configs: []viewRes{},
-		}
-
-		for _, cfg := range configs {
-			var channels []channelRes
-			for _, ch := range cfg.MFChannels {
-				channels = append(channels, channelRes{
-					ID:       ch.ID,
-					Name:     ch.Name,
-					Metadata: ch.Metadata,
-				})
+		switch {
+		case req.filter.Unknown:
+			res := listUnknownRes{}
+			for _, cfg := range configs {
+				res.Configs = append(res.Configs, unknownRes{ExternalID: cfg.ExternalID, ExternalKey: cfg.ExternalKey})
+			}
+			return res, nil
+		default:
+			res := listRes{
+				Configs: []viewRes{},
 			}
 
-			view := viewRes{
-				MFThing:     cfg.MFThing,
-				MFKey:       cfg.MFKey,
-				Channels:    channels,
-				ExternalID:  cfg.ExternalID,
-				ExternalKey: cfg.ExternalKey,
-				Name:        cfg.Name,
-				Content:     cfg.Content,
-				State:       cfg.State,
-			}
-			res.Configs = append(res.Configs, view)
-		}
+			for _, cfg := range configs {
+				var channels []channelRes
+				for _, ch := range cfg.MFChannels {
+					channels = append(channels, channelRes{
+						ID:       ch.ID,
+						Name:     ch.Name,
+						Metadata: ch.Metadata,
+					})
+				}
 
-		return res, nil
+				view := viewRes{
+					MFThing:     cfg.MFThing,
+					MFKey:       cfg.MFKey,
+					Channels:    channels,
+					ExternalID:  cfg.ExternalID,
+					ExternalKey: cfg.ExternalKey,
+					Name:        cfg.Name,
+					Content:     cfg.Content,
+					State:       cfg.State,
+				}
+				res.Configs = append(res.Configs, view)
+			}
+
+			return res, nil
+		}
 	}
 }
 

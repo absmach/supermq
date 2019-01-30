@@ -286,6 +286,7 @@ func TestView(t *testing.T) {
 		Channels:    channels,
 		ExternalID:  saved.ExternalID,
 		ExternalKey: saved.ExternalKey,
+		Name:        saved.Name,
 		Content:     saved.Content,
 	})
 
@@ -481,6 +482,7 @@ func TestList(t *testing.T) {
 			Channels:    channels,
 			ExternalID:  saved.ExternalID,
 			ExternalKey: saved.ExternalKey,
+			Name:        saved.Name,
 			Content:     saved.Content,
 			State:       saved.State,
 		}
@@ -1005,5 +1007,6 @@ type config struct {
 	ExternalID  string          `json:"external_id"`
 	ExternalKey string          `json:"external_key,omitempty"`
 	Content     string          `json:"content,omitempty"`
+	Name        string          `json:"name"`
 	State       bootstrap.State `json:"state"`
 }
