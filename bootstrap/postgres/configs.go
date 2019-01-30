@@ -82,9 +82,8 @@ func (cr configRepository) RetrieveByID(key, id string) (bootstrap.Config, error
 	cfg := bootstrap.Config{MFThing: id, Owner: key, MFChannels: []bootstrap.Channel{}}
 	var content sql.NullString
 	var chs []byte
-	err := cr.db.QueryRow(q, id, key).
-		Scan(&cfg.MFThing, &cfg.MFKey, &cfg.ExternalID, &cfg.ExternalKey, &content, &cfg.State, &chs)
-	if err != nil {
+	if err := cr.db.QueryRow(q, id, key).
+		Scan(&cfg.MFThing, &cfg.MFKey, &cfg.ExternalID, &cfg.ExternalKey, &content, &cfg.State, &chs); err != nil {
 		empty := bootstrap.Config{}
 		if err == sql.ErrNoRows {
 			return empty, bootstrap.ErrNotFound
@@ -92,8 +91,7 @@ func (cr configRepository) RetrieveByID(key, id string) (bootstrap.Config, error
 		return empty, err
 	}
 
-	err = json.Unmarshal(chs, &cfg.MFChannels)
-	if err != nil {
+	if err := json.Unmarshal(chs, &cfg.MFChannels); err != nil {
 		return bootstrap.Config{}, err
 	}
 
@@ -116,13 +114,12 @@ func (cr configRepository) RetrieveAll(key string, filter bootstrap.Filter, offs
 	for rows.Next() {
 		var chs []byte
 		c := bootstrap.Config{Owner: key}
-		if err = rows.Scan(&c.MFThing, &c.MFKey, &c.ExternalID, &c.ExternalKey, &content, &c.State, &chs); err != nil {
+		if err := rows.Scan(&c.MFThing, &c.MFKey, &c.ExternalID, &c.ExternalKey, &content, &c.State, &chs); err != nil {
 			cr.log.Error(fmt.Sprintf("Failed to read retrieved config due to %s", err))
 			return []bootstrap.Config{}
 		}
 
-		err = json.Unmarshal(chs, &c.MFChannels)
-		if err != nil {
+		if err := json.Unmarshal(chs, &c.MFChannels); err != nil {
 			cr.log.Error(fmt.Sprintf("Failed to read retrieved config due to %s", err))
 			return []bootstrap.Config{}
 		}
@@ -152,8 +149,7 @@ func (cr configRepository) RetrieveByExternalID(externalKey, externalID string) 
 		return empty, err
 	}
 
-	err := json.Unmarshal(chs, &cfg.MFChannels)
-	if err != nil {
+	if err := json.Unmarshal(chs, &cfg.MFChannels); err != nil {
 		return bootstrap.Config{}, err
 	}
 
