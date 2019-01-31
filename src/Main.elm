@@ -182,14 +182,14 @@ update msg model =
         Channels ->
             let
                 ( updatedChannel, channelCmd ) =
-                    Channel.update Channel.RetrieveChannel model.channel model.user.token
+                    Channel.update Channel.RetrieveChannels model.channel model.user.token
             in
             ( { model | view = "channels" }, Cmd.map ChannelMsg channelCmd )
 
         Things ->
             let
                 ( updatedThing, thingCmd ) =
-                    Thing.update Thing.RetrieveThing model.thing model.user.token
+                    Thing.update Thing.RetrieveThings model.thing model.user.token
             in
             ( { model | view = "things" }, Cmd.map ThingMsg thingCmd )
 

@@ -8,6 +8,7 @@ import Bootstrap.Grid as Grid
 import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
 import Error
+import Helpers
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
@@ -22,7 +23,7 @@ url =
     }
 
 
-path =
+query =
     { offset = "0"
     , limit = "10"
     }
@@ -40,8 +41,8 @@ type alias Model =
 initial : Model
 initial =
     { name = ""
-    , offset = path.offset
-    , limit = path.limit
+    , offset = query.offset
+    , limit = query.limit
     , response = ""
     , channels = []
     }
@@ -53,7 +54,7 @@ type Msg
     | SubmitLimit String
     | ProvisionChannel
     | ProvisionedChannel (Result Http.Error Int)
-    | RetrieveChannel
+    | RetrieveChannels
     | RetrievedChannel (Result Http.Error (List Channel))
     | RemoveChannel String
     | RemovedChannel (Result Http.Error Int)
@@ -66,10 +67,10 @@ update msg model token =
             ( { model | name = name }, Cmd.none )
 
         SubmitOffset offset ->
-            refreshChannelList { model | offset = offset } token
+            updateChannelList { model | offset = offset } token
 
         SubmitLimit limit ->
-            refreshChannelList { model | limit = limit } token
+            updateChannelList { model | limit = limit } token
 
         ProvisionChannel ->
             ( model
@@ -82,15 +83,18 @@ update msg model token =
         ProvisionedChannel result ->
             case result of
                 Ok statusCode ->
-                    refreshChannelList { model | response = String.fromInt statusCode } token
+                    updateChannelList { model | response = String.fromInt statusCode } token
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
 
-        RetrieveChannel ->
+        RetrieveChannels ->
             ( model
             , retrieve
-                (B.crossOrigin url.base url.path (buildQueryParamList model))
+                (B.crossOrigin url.base
+                    url.path
+                    (Helpers.buildQueryParamList model.offset model.limit query)
+                )
                 token
             )
 
@@ -112,7 +116,7 @@ update msg model token =
         RemovedChannel result ->
             case result of
                 Ok statusCode ->
-                    refreshChannelList { model | response = String.fromInt statusCode } token
+                    updateChannelList { model | response = String.fromInt statusCode } token
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
@@ -122,16 +126,8 @@ view : Model -> Html Msg
 view model =
     Grid.container []
         [ Grid.row []
-            [ Grid.col []
-                [ Form.form []
-                    [ Form.group []
-                        [ Input.text [ Input.placeholder "offset", Input.id "offset", Input.onInput SubmitOffset ]
-                        ]
-                    , Form.group []
-                        [ Input.text [ Input.placeholder "limit", Input.id "limit", Input.onInput SubmitLimit ]
-                        ]
-                    ]
-                ]
+            [ Grid.col [] [ Input.text [ Input.placeholder "offset", Input.id "offset", Input.onInput SubmitOffset ] ]
+            , Grid.col [] [ Input.text [ Input.placeholder "limit", Input.id "limit", Input.onInput SubmitLimit ] ]
             ]
         , Grid.row []
             [ Grid.col []
@@ -289,24 +285,13 @@ remove u token =
 -- HELPERS
 
 
-buildQueryParamList : Model -> List B.QueryParameter
-buildQueryParamList model =
-    List.map
-        (\tpl ->
-            case String.toInt (Tuple.second tpl) of
-                Just n ->
-                    B.int (Tuple.first tpl) n
-
-                Nothing ->
-                    if Tuple.first tpl == "offset" then
-                        B.string (Tuple.first tpl) path.offset
-
-                    else
-                        B.string (Tuple.first tpl) path.limit
+updateChannelList : Model -> String -> ( Model, Cmd Msg )
+updateChannelList model token =
+    ( model
+    , retrieve
+        (B.crossOrigin url.base
+            url.path
+            (Helpers.buildQueryParamList model.offset model.limit query)
         )
-        [ ( "offset", model.offset ), ( "limit", model.limit ) ]
-
-
-refreshChannelList : Model -> String -> ( Model, Cmd Msg )
-refreshChannelList model token =
-    ( model, retrieve (B.crossOrigin url.base url.path (buildQueryParamList model)) token )
+        token
+    )

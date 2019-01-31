@@ -4,6 +4,7 @@ import Bootstrap.Button as Button
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid
+import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
 import Error
 import Helpers
@@ -15,7 +16,7 @@ import Json.Encode as E
 import Url.Builder as B
 
 
-path =
+query =
     { offset = "0"
     , limit = "10"
     }
@@ -33,6 +34,7 @@ type alias Model =
     , offset : String
     , limit : String
     , response : String
+    , things : List Thing
     }
 
 
@@ -40,9 +42,10 @@ initial : Model
 initial =
     { name = ""
     , type_ = ""
-    , offset = path.offset
-    , limit = path.limit
+    , offset = query.offset
+    , limit = query.limit
     , response = ""
+    , things = []
     }
 
 
@@ -53,9 +56,10 @@ type Msg
     | SubmitLimit String
     | ProvisionThing
     | ProvisionedThing (Result Http.Error Int)
-    | RetrieveThing
+    | RetrieveThings
     | RetrievedThing (Result Http.Error (List Thing))
-    | RemoveThing
+    | RemoveThing String
+    | RemovedThing (Result Http.Error Int)
 
 
 update : Msg -> Model -> String -> ( Model, Cmd Msg )
@@ -68,10 +72,10 @@ update msg model token =
             ( { model | name = name }, Cmd.none )
 
         SubmitOffset offset ->
-            ( { model | offset = offset }, Cmd.none )
+            updateThingList { model | offset = offset } token
 
         SubmitLimit limit ->
-            ( { model | limit = limit }, Cmd.none )
+            updateThingList { model | limit = limit } token
 
         ProvisionThing ->
             ( model
@@ -85,64 +89,101 @@ update msg model token =
         ProvisionedThing result ->
             case result of
                 Ok statusCode ->
-                    ( { model | response = "Ok " ++ String.fromInt statusCode }, Cmd.none )
+                    updateThingList { model | response = String.fromInt statusCode } token
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
 
-        RetrieveThing ->
+        RetrieveThings ->
             ( model
             , retrieve
-                (B.crossOrigin url.base url.path (buildQueryParamList model))
+                (B.crossOrigin url.base url.path (Helpers.buildQueryParamList model.offset model.limit query))
                 token
             )
 
         RetrievedThing result ->
             case result of
                 Ok things ->
-                    ( { model | response = thingsToString things }, Cmd.none )
+                    ( { model | things = things }, Cmd.none )
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
 
-        RemoveThing ->
+        RemoveThing id ->
             ( model
             , remove
-                (B.crossOrigin url.base (List.append url.path [ model.name ]) [])
+                (B.crossOrigin url.base (List.append url.path [ id ]) [])
                 token
             )
+
+        RemovedThing result ->
+            case result of
+                Ok statusCode ->
+                    updateThingList { model | response = String.fromInt statusCode } token
+
+                Err error ->
+                    ( { model | response = Error.handle error }, Cmd.none )
 
 
 view : Model -> Html Msg
 view model =
     Grid.container []
         [ Grid.row []
+            [ Grid.col [] [ Input.text [ Input.placeholder "offset", Input.id "offset", Input.onInput SubmitOffset ] ]
+            , Grid.col [] [ Input.text [ Input.placeholder "limit", Input.id "limit", Input.onInput SubmitLimit ] ]
+            ]
+
+        -- , Helpers.response model.response
+        , Grid.row []
             [ Grid.col []
-                [ Form.form []
-                    [ Form.group []
-                        [ Form.label [ for "type" ] [ text "Type" ]
-                        , Input.text [ Input.id "type", Input.onInput SubmitType ]
+                [ Table.simpleTable
+                    ( Table.simpleThead
+                        [ Table.th [] [ text "Name" ]
+                        , Table.th [] [ text "Id" ]
+                        , Table.th [] [ text "Type" ]
+                        , Table.th [] [ text "key" ]
                         ]
-                    , Form.group []
-                        [ Form.label [ for "name" ] [ text "Name (Provision) or id (Remove)" ]
-                        , Input.text [ Input.id "name", Input.onInput SubmitName ]
-                        ]
-                    , Form.group []
-                        [ Form.label [ for "offset" ] [ text "Offset" ]
-                        , Input.text [ Input.id "offset", Input.onInput SubmitOffset ]
-                        ]
-                    , Form.group []
-                        [ Form.label [ for "limit" ] [ text "Limit" ]
-                        , Input.text [ Input.id "limit", Input.onInput SubmitLimit ]
-                        ]
-                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionThing ] [ text "Provision" ]
-                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RetrieveThing ] [ text "Retrieve" ]
-                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick RemoveThing ] [ text "Remove" ]
-                    ]
+                    , Table.tbody []
+                        (List.append
+                            [ Table.tr []
+                                [ Table.td [] [ Input.text [ Input.id "name", Input.onInput SubmitName ] ]
+                                , Table.td [] []
+                                , Table.td [] [ Input.text [ Input.id "type", Input.onInput SubmitType ] ]
+                                , Table.td [] []
+                                , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionThing ] [ text "Provision" ] ]
+                                ]
+                            ]
+                            (genTableRows model.things)
+                        )
+                    )
                 ]
             ]
-        , Helpers.response model.response
         ]
+
+
+genTableRows : List Thing -> List (Table.Row Msg)
+genTableRows things =
+    let
+        parseName : Maybe String -> String
+        parseName thingName =
+            case thingName of
+                Just name ->
+                    name
+
+                Nothing ->
+                    ""
+    in
+    List.map
+        (\thing ->
+            Table.tr []
+                [ Table.td [] [ text (parseName thing.name) ]
+                , Table.td [] [ text thing.id ]
+                , Table.td [] [ text thing.type_ ]
+                , Table.td [] [ text thing.key ]
+                , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick (RemoveThing thing.id) ] [ text "Remove" ] ]
+                ]
+        )
+        things
 
 
 type alias Thing =
@@ -179,14 +220,14 @@ provision u token type_ name =
                 , ( "name", E.string name )
                 ]
                 |> Http.jsonBody
-        , expect = expectProvision ProvisionedThing
+        , expect = expectStatus ProvisionedThing
         , timeout = Nothing
         , tracker = Nothing
         }
 
 
-expectProvision : (Result Http.Error Int -> Msg) -> Http.Expect Msg
-expectProvision toMsg =
+expectStatus : (Result Http.Error Int -> Msg) -> Http.Expect Msg
+expectStatus toMsg =
     Http.expectStringResponse toMsg <|
         \response ->
             case response of
@@ -252,44 +293,19 @@ remove u token =
         , headers = [ Http.header "Authorization" token ]
         , url = u
         , body = Http.emptyBody
-        , expect = expectProvision ProvisionedThing
+        , expect = expectStatus RemovedThing
         , timeout = Nothing
         , tracker = Nothing
         }
 
 
-
--- HELPERS
-
-
-thingsToString : List Thing -> String
-thingsToString things =
-    List.map
-        (\thing ->
-            case thing.name of
-                Just name ->
-                    thing.id ++ " " ++ thing.type_ ++ " " ++ name ++ " " ++ thing.key ++ "; "
-
-                Nothing ->
-                    thing.id ++ " " ++ thing.type_ ++ " " ++ thing.key ++ "; "
+updateThingList : Model -> String -> ( Model, Cmd Msg )
+updateThingList model token =
+    ( model
+    , retrieve
+        (B.crossOrigin url.base
+            url.path
+            (Helpers.buildQueryParamList model.offset model.limit query)
         )
-        things
-        |> String.concat
-
-
-buildQueryParamList : Model -> List B.QueryParameter
-buildQueryParamList model =
-    List.map
-        (\tpl ->
-            case String.toInt (Tuple.second tpl) of
-                Just n ->
-                    B.int (Tuple.first tpl) n
-
-                Nothing ->
-                    if Tuple.first tpl == "offset" then
-                        B.string (Tuple.first tpl) path.offset
-
-                    else
-                        B.string (Tuple.first tpl) path.limit
-        )
-        [ ( "offset", model.offset ), ( "limit", model.limit ) ]
+        token
+    )
