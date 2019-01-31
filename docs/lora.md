@@ -62,7 +62,7 @@ The lora-adapter uses the matadata of provision events emitted by Mainflux syste
     "type": "lora",
     "appID": "<application ID>"
   }
-}a
+}
 ```
 
 **Thing structure:**
