@@ -16,7 +16,7 @@ Once everything is installed, execute the following command from the LoRa Server
 docker-compose up
 ```
 
-**Troubleshouting:**  Mainflux and LoRa Server use their own MQTT brokers. By default, those use the standard MQTT port `1883`. If you are running both systems in the same machine you must use different ports. You can fix this on Mainflux side configuring the environment variable `MF_MQTT_ADAPTER_PORT`.
+**Troubleshouting:**  Mainflux and LoRa Server use their own MQTT brokers. By default, those use the standard MQTT port `1883`. If you are running both systems on the same machine you must use different ports. You can fix this on Mainflux side configuring the environment variable `MF_MQTT_ADAPTER_PORT`.
 
 
 ## Setup LoRa Server
