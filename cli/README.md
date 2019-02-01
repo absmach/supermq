@@ -12,7 +12,7 @@ make cli
 mainflux-cli version
 ```
 
-### User management
+### Users management
 #### Create Users
 ```
 mainflux-cli users create john.doe@email.com password

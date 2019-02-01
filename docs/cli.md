@@ -22,7 +22,7 @@ Available Commands:
   messages    Send or read messages
   provision   Provision things and channels from config file
   things      Things management
-  users       User management
+  users       Users management
   version     Mainflux system version
 
 Flags:
@@ -68,7 +68,7 @@ Available Commands:
 mainflux-cli version
 ```
 
-### User management
+### Users management
 #### Create Users
 ```
 mainflux-cli users create john.doe@email.com password
