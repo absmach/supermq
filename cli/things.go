@@ -152,7 +152,7 @@ var cmdThings = []cobra.Command{
 	cobra.Command{
 		Use:   "connections",
 		Short: "connections <thing_id> <user_auth_token>",
-		Long:  `List of Channels connected to Things`,
+		Long:  `List of Channels connected to Thing`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
 				logUsage(cmd.Short)
@@ -175,7 +175,7 @@ func NewThingsCmd() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "things",
 		Short: "Things management",
-		Long:  `Things management: create, get, update or delete Things, connect or disconnect Things from Channels and get the list of Channels connected to Things`,
+		Long:  `Things management: create, get, update or delete Thing, connect or disconnect Thing from Channel and get the list of Channels connected to Thing`,
 		Run: func(cmd *cobra.Command, args []string) {
 			logUsage("channels [create | get | update | delete | connect | disconnect | connections]")
 		},
