@@ -69,7 +69,7 @@ update msg model =
         Created result ->
             case result of
                 Ok statusCode ->
-                    ( { model | response = "Ok " ++ String.fromInt statusCode }, Cmd.none )
+                    ( { model | response = String.fromInt statusCode }, Cmd.none )
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
@@ -85,14 +85,13 @@ update msg model =
         GotToken result ->
             case result of
                 Ok token ->
-                    -- ( { model | token = token, response = "Ok " ++ token }, Cmd.none )
                     ( { model | token = token, response = "" }, Cmd.none )
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
 
         LogOut ->
-            ( { model | email = "", password = "", token = "" }, Cmd.none )
+            ( { model | email = "", password = "", token = "", response = "" }, Cmd.none )
 
 
 view : Model -> Html Msg

@@ -150,7 +150,7 @@ view model =
                                 , Table.td [] []
                                 , Table.td [] [ Input.text [ Input.id "type", Input.onInput SubmitType ] ]
                                 , Table.td [] []
-                                , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionThing ] [ text "Provision" ] ]
+                                , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionThing ] [ text "+" ] ]
                                 ]
                             ]
                             (genTableRows model.things)
@@ -180,7 +180,7 @@ genTableRows things =
                 , Table.td [] [ text thing.id ]
                 , Table.td [] [ text thing.type_ ]
                 , Table.td [] [ text thing.key ]
-                , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick (RemoveThing thing.id) ] [ text "Remove" ] ]
+                , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick (RemoveThing thing.id) ] [ text "-" ] ]
                 ]
         )
         things

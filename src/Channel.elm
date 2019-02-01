@@ -55,7 +55,7 @@ type Msg
     | ProvisionChannel
     | ProvisionedChannel (Result Http.Error Int)
     | RetrieveChannels
-    | RetrievedChannel (Result Http.Error (List Channel))
+    | RetrievedChannels (Result Http.Error (List Channel))
     | RemoveChannel String
     | RemovedChannel (Result Http.Error Int)
 
@@ -98,7 +98,7 @@ update msg model token =
                 token
             )
 
-        RetrievedChannel result ->
+        RetrievedChannels result ->
             case result of
                 Ok channels ->
                     ( { model | channels = channels }, Cmd.none )
@@ -141,7 +141,7 @@ view model =
                             [ Table.tr []
                                 [ Table.td [] [ Input.text [ Input.id "name", Input.onInput SubmitName ] ]
                                 , Table.td [] []
-                                , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionChannel ] [ text "Provision" ] ]
+                                , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionChannel ] [ text "+" ] ]
                                 ]
                             ]
                             (genTableRows model.channels)
@@ -169,7 +169,7 @@ genTableRows channels =
             Table.tr []
                 [ Table.td [] [ text (parseName channel.name) ]
                 , Table.td [] [ text channel.id ]
-                , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick (RemoveChannel channel.id) ] [ text "Remove" ] ]
+                , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick (RemoveChannel channel.id) ] [ text "-" ] ]
                 ]
         )
         channels
@@ -236,7 +236,7 @@ retrieve u token =
         , headers = [ Http.header "Authorization" token ]
         , url = u
         , body = Http.emptyBody
-        , expect = expectRetrieve RetrievedChannel
+        , expect = expectRetrieve RetrievedChannels
         , timeout = Nothing
         , tracker = Nothing
         }

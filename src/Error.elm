@@ -6,8 +6,8 @@ import Http
 handle : Http.Error -> String
 handle error =
     case error of
-        Http.BadUrl txt ->
-            "Bad url " ++ txt
+        Http.BadUrl url ->
+            "Bad url: " ++ url
 
         Http.Timeout ->
             "Timeout"
@@ -15,8 +15,8 @@ handle error =
         Http.NetworkError ->
             "Network error"
 
-        Http.BadStatus num ->
-            "Bad status " ++ String.fromInt num
+        Http.BadStatus code ->
+            "Bad status: " ++ String.fromInt code
 
         Http.BadBody err ->
             err
