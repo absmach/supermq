@@ -7,7 +7,7 @@ make cli
 
 ## Usage
 ### Service
-#### Get the service verison
+#### Get the version of Mainflux services
 ```
 mainflux-cli version
 ```
@@ -44,7 +44,7 @@ mainflux-cli things update '{"id":"<thing_id>", "name":"myNewName"}' <user_auth_
 mainflux-cli things delete <thing_id> <user_auth_token>
 ```
 
-#### Retrieve a list of provisioned Things
+#### Retrieve a subset list of provisioned Things
 ```
 mainflux-cli things get all --offset=1 --limit=5 <user_auth_token>
 ```
@@ -69,7 +69,7 @@ mainflux-cli channels update '{"id":"<channel_id>","name":"myNewName"}' <user_au
 mainflux-cli channels delete <channel_id> <user_auth_token>
 ```
 
-#### Retrieve a list of provisioned Channels
+#### Retrieve a subset list of provisioned Channels
 ```
 mainflux-cli channels get all --offset=1 --limit=5 <user_auth_token>
 ```
@@ -91,12 +91,12 @@ mainflux-cli things disconnect <thing_id> <channel_id> <user_auth_token>
 
 ```
 
-#### Retrieve a List of Channels connected to Thing
+#### Retrieve a subset list of Channels connected to Thing
 ```
 mainflux-cli things connections <thing_id> <user_auth_token>
 ```
 
-#### Retrieve list of Things connected to Channel
+#### Retrieve a subset list of Things connected to Channel
 ```
 mainflux-cli channels connections <channel_id> <user_auth_token>
 ```
