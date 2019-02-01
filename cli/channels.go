@@ -42,7 +42,7 @@ var cmdChannels = []cobra.Command{
 	},
 	cobra.Command{
 		Use:   "get",
-		Short: "get <channel_id | all> <user_auth_token>",
+		Short: "get [all | <channel_id>] <user_auth_token>",
 		Long:  `Gets list of all channels or gets channel by id`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {

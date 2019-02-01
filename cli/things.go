@@ -44,7 +44,7 @@ var cmdThings = []cobra.Command{
 	},
 	cobra.Command{
 		Use:   "get",
-		Short: "get <thing_id | all> <user_auth_token>",
+		Short: "get [all | <thing_id>] <user_auth_token>",
 		Long:  `Get all things or thing by id`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
