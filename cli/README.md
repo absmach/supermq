@@ -13,90 +13,90 @@ mainflux-cli version
 ```
 
 ### Users management
-#### Create Users
+#### Create User
 ```
 mainflux-cli users create john.doe@email.com password
 ```
 
-#### Login Users
+#### Login User
 ```
 mainflux-cli users token john.doe@email.com password
 ```
 
 ### System Provisioning
-#### Create Devices
+#### Create Thing (type Device)
 ```
 mainflux-cli things create '{"type":"device", "name":"myDevice"}' <user_auth_token>
 ```
 
-#### Create Applications
+#### Create Thing (type Application)
 ```
 mainflux-cli things create '{"type":"app", "name":"myDevice"}' <user_auth_token>
 ```
 
-#### Update Devices and Applications
+#### Update Thing
 ```
 mainflux-cli things update '{"id":"<thing_id>", "name":"myNewName"}' <user_auth_token>
 ```
 
-#### Remove Things
+#### Remove Thing
 ```
 mainflux-cli things delete <thing_id> <user_auth_token>
 ```
 
-#### Retrieve all provisioned Things
+#### Retrieve a list of provisioned Things
 ```
 mainflux-cli things get all --offset=1 --limit=5 <user_auth_token>
 ```
 
-#### Retrieve Things By ID
+#### Retrieve Thing By ID
 ```
 mainflux-cli things get <thing_id> <user_auth_token>
 ```
 
-#### Create Channels
+#### Create Channel
 ```
 mainflux-cli channels create '{"name":"myChannel"}' <user_auth_token>
 ```
 
-#### Update Channels
+#### Update Channel
 ```
 mainflux-cli channels update '{"id":"<channel_id>","name":"myNewName"}' <user_auth_token>
 
 ```
-#### Remove Channels
+#### Remove Channel
 ```
 mainflux-cli channels delete <channel_id> <user_auth_token>
 ```
 
-#### Retrieve all provisioned Channels
+#### Retrieve a list of provisioned Channels
 ```
 mainflux-cli channels get all --offset=1 --limit=5 <user_auth_token>
 ```
 
-#### Retrieve Channels By ID
+#### Retrieve Channel By ID
 ```
 mainflux-cli channels get <channel_id> <user_auth_token>
 ```
 
 ### Access control
-#### Connect Things to Channels
+#### Connect Thing to Channel
 ```
 mainflux-cli things connect <thing_id> <channel_id> <user_auth_token>
 ```
 
-#### Disconnect Things from Channels
+#### Disconnect Thing from Channel
 ```
 mainflux-cli things disconnect <thing_id> <channel_id> <user_auth_token>
 
 ```
 
-#### Retrieve List of Channels connected to Things
+#### Retrieve a List of Channels connected to Thing
 ```
 mainflux-cli things connections <thing_id> <user_auth_token>
 ```
 
-#### Retrieve List of Things connected to Channels
+#### Retrieve list of Things connected to Channel
 ```
 mainflux-cli channels connections <channel_id> <user_auth_token>
 ```
