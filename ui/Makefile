@@ -58,7 +58,7 @@ $(DOCKERS):
 	$(call make_docker,$(@))
 
 dockers: $(DOCKERS)
-	docker build --tag=mainflux/dashflux -f dashflux/docker/Dockerfile dashflux
+	docker build --tag=mainflux/ui -f ui/docker/Dockerfile ui
 	docker build --tag=mainflux/mqtt -f mqtt/Dockerfile .
 
 $(DOCKERS_DEV):
@@ -73,7 +73,7 @@ define docker_push
 	for svc in $(SERVICES); do \
 		docker push mainflux/$$svc:$(1); \
 	done
-	docker push mainflux/dashflux:$(1)
+	docker push mainflux/ui:$(1)
 	docker push mainflux/mqtt:$(1)
 endef
 
@@ -90,7 +90,7 @@ release:
 	for svc in $(SERVICES); do \
 		docker tag mainflux/$$svc mainflux/$$svc:$(version); \
 	done
-	docker tag mainflux/dashflux mainflux/dashflux:$(version)
+	docker tag mainflux/ui mainflux/ui:$(version)
 	docker tag mainflux/mqtt mainflux/mqtt:$(version)
 	$(call docker_push,$(version))
 
