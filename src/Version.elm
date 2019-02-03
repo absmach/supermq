@@ -56,11 +56,6 @@ view : Model -> Html Msg
 view model =
     Grid.container []
         [ Grid.row []
-            [ Grid.col []
-                [ Button.linkButton
-                    [ Button.primary, Button.onClick GetVersion ]
-                    [ text "Version" ]
-                ]
+            [ Grid.col [] [ text model.response ] 
             ]
-        , Helpers.response model.response
         ]
