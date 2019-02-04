@@ -87,7 +87,9 @@ func (crm *configRepositoryMock) RetrieveAll(key string, filter bootstrap.Filter
 	for _, v := range crm.configs {
 		id, _ := strconv.ParseUint(v.MFThing, 10, 64)
 		if id >= first && id < last {
-			if (state == -1 || v.State == state) && (name == "" || strings.Index(strings.ToLower(v.Name), name) != -1) && v.Owner == key {
+			if (state == -1 || v.State == state) &&
+				(name == "" || strings.Index(strings.ToLower(v.Name), name) != -1) &&
+				v.Owner == key {
 				configs = append(configs, v)
 			}
 		}
