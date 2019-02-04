@@ -197,6 +197,7 @@ func (cr configRepository) Update(cfg bootstrap.Config) error {
 func (cr configRepository) Remove(key, id string) error {
 	q := `DELETE FROM configs WHERE mainflux_thing = $1 AND owner = $2`
 	cr.db.Exec(q, id, key)
+
 	return nil
 }
 
@@ -259,6 +260,7 @@ func (cr configRepository) RetrieveUnknown(offset, limit uint64) []bootstrap.Con
 func (cr configRepository) RemoveUnknown(key, id string) error {
 	q := `DELETE FROM unknown_configs WHERE external_id = $1 AND external_key = $2`
 	_, err := cr.db.Exec(q, id, key)
+
 	return err
 }
 
@@ -282,14 +284,21 @@ func (cr configRepository) retrieveAll(key string, filter bootstrap.Filter, offs
 	}
 
 	f := strings.Join(queries, " AND ")
+
 	return cr.db.Query(fmt.Sprintf(template, f), params...)
 }
 
 func toDBChannels(channels []bootstrap.Channel) []dbChannel {
 	ret := []dbChannel{}
 	for _, ch := range channels {
-		c := dbChannel{ID: ch.ID, Name: ch.Name, Metadata: ch.Metadata}
+		c := dbChannel{
+			ID:       ch.ID,
+			Name:     ch.Name,
+			Metadata: ch.Metadata,
+		}
+
 		ret = append(ret, c)
 	}
+
 	return ret
 }

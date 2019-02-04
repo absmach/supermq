@@ -135,7 +135,10 @@ func listEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		case req.filter.Unknown:
 			res := listUnknownRes{}
 			for _, cfg := range configs {
-				res.Configs = append(res.Configs, unknownRes{ExternalID: cfg.ExternalID, ExternalKey: cfg.ExternalKey})
+				res.Configs = append(res.Configs, unknownRes{
+					ExternalID:  cfg.ExternalID,
+					ExternalKey: cfg.ExternalKey,
+				})
 			}
 			return res, nil
 		default:

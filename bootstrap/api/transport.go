@@ -259,6 +259,7 @@ func parseUint(s string) (uint64, error) {
 	if err != nil {
 		return 0, errInvalidQueryParams
 	}
+
 	return ret, nil
 }
 
@@ -287,7 +288,10 @@ func parsePagePrams(q url.Values) (uint64, uint64, error) {
 }
 
 func parseFilter(values url.Values) bootstrap.Filter {
-	ret := bootstrap.Filter{FullMatch: make(map[string]string), PartialMatch: make(map[string]string)}
+	ret := bootstrap.Filter{
+		FullMatch:    make(map[string]string),
+		PartialMatch: make(map[string]string),
+	}
 	for k := range values {
 		if contains(fullMatch, k) {
 			ret.FullMatch[k] = values.Get(k)
@@ -296,6 +300,7 @@ func parseFilter(values url.Values) bootstrap.Filter {
 			ret.PartialMatch[k] = strings.ToLower(values.Get(k))
 		}
 	}
+
 	return ret
 }
 
