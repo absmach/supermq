@@ -30,7 +30,7 @@ message Message {
 		bool   boolValue   = 8;
 		string dataValue   = 9;
 	}
-	SumValue valueSum    = 10;
+	SumValue valueSum  = 10;
 	double time        = 11;
 	double updateTime  = 12;
 	string link        = 13;
