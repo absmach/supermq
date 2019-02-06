@@ -46,6 +46,7 @@ func TestAddReqValidation(t *testing.T) {
 			ExternalID:  tc.externalID,
 			ExternalKey: tc.externalKey,
 		}
+
 		err := req.validate()
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
@@ -76,6 +77,7 @@ func TestEntityReqValidation(t *testing.T) {
 		req := entityReq{
 			key: tc.key,
 		}
+
 		err := req.validate()
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
@@ -118,6 +120,7 @@ func TestUpdateReqValidation(t *testing.T) {
 			id:    tc.id,
 			State: tc.state,
 		}
+
 		err := req.validate()
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
@@ -160,6 +163,7 @@ func TestListReqValidation(t *testing.T) {
 			offset: tc.offset,
 			limit:  tc.limit,
 		}
+
 		err := req.validate()
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
@@ -191,6 +195,7 @@ func TestBootstrapReqValidation(t *testing.T) {
 			id:  tc.externID,
 			key: tc.externKey,
 		}
+
 		err := req.validate()
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
@@ -233,6 +238,7 @@ func TestChangeStateReqValidation(t *testing.T) {
 			id:    tc.id,
 			State: tc.state,
 		}
+
 		err := req.validate()
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}

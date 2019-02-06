@@ -121,7 +121,6 @@ type changeStateReq struct {
 }
 
 func (req changeStateReq) validate() error {
-
 	if req.key == "" {
 		return bootstrap.ErrUnauthorizedAccess
 	}

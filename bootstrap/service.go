@@ -55,7 +55,7 @@ type Service interface {
 	// Update updates editable fields of the provided Thing.
 	Update(string, Config) error
 
-	// List returns subset of Things with given search params that belong to the
+	// List returns subset of Configs with given search params that belong to the
 	// user identified by the given key.
 	List(string, Filter, uint64, uint64) (ConfigsPage, error)
 

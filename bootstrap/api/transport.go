@@ -46,49 +46,49 @@ func MakeHandler(svc bootstrap.Service, reader bootstrap.ConfigReader) http.Hand
 	}
 	r := bone.New()
 
-	r.Post("/configs", kithttp.NewServer(
+	r.Post("/things/configs", kithttp.NewServer(
 		addEndpoint(svc),
 		decodeAddRequest,
 		encodeResponse,
 		opts...))
 
-	r.Get("/configs/:id", kithttp.NewServer(
+	r.Get("/things/configs/:id", kithttp.NewServer(
 		viewEndpoint(svc),
 		decodeEntityRequest,
 		encodeResponse,
 		opts...))
 
-	r.Put("/configs/:id", kithttp.NewServer(
+	r.Put("/things/configs/:id", kithttp.NewServer(
 		updateEndpoint(svc),
 		decodeUpdateRequest,
 		encodeResponse,
 		opts...))
 
-	r.Get("/configs", kithttp.NewServer(
+	r.Get("/things/configs", kithttp.NewServer(
 		listEndpoint(svc),
 		decodeListRequest,
 		encodeResponse,
 		opts...))
 
-	r.Get("/unknown", kithttp.NewServer(
+	r.Get("/things/unknown/configs", kithttp.NewServer(
 		listEndpoint(svc),
 		decodeUnknownRequest,
 		encodeResponse,
 		opts...))
 
-	r.Get("/bootstrap/:external_id", kithttp.NewServer(
+	r.Get("/things/bootstrap/:external_id", kithttp.NewServer(
 		bootstrapEndpoint(svc, reader),
 		decodeBootstrapRequest,
 		encodeResponse,
 		opts...))
 
-	r.Put("/state/:id", kithttp.NewServer(
+	r.Put("/things/state/:id", kithttp.NewServer(
 		stateEndpoint(svc),
 		decodeStateRequest,
 		encodeResponse,
 		opts...))
 
-	r.Delete("/configs/:id", kithttp.NewServer(
+	r.Delete("/things/configs/:id", kithttp.NewServer(
 		removeEndpoint(svc),
 		decodeEntityRequest,
 		encodeResponse,

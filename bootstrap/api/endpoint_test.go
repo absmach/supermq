@@ -244,7 +244,7 @@ func TestAdd(t *testing.T) {
 		req := testRequest{
 			client:      bs.Client(),
 			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/configs", bs.URL),
+			url:         fmt.Sprintf("%s/things/configs", bs.URL),
 			contentType: tc.contentType,
 			token:       tc.auth,
 			body:        strings.NewReader(tc.req),
@@ -331,7 +331,7 @@ func TestView(t *testing.T) {
 		req := testRequest{
 			client: bs.Client(),
 			method: http.MethodGet,
-			url:    fmt.Sprintf("%s/configs/%s", bs.URL, tc.id),
+			url:    fmt.Sprintf("%s/things/configs/%s", bs.URL, tc.id),
 			token:  tc.auth,
 		}
 		res, err := req.make()
@@ -454,7 +454,7 @@ func TestUpdate(t *testing.T) {
 		req := testRequest{
 			client:      bs.Client(),
 			method:      http.MethodPut,
-			url:         fmt.Sprintf("%s/configs/%s", bs.URL, tc.id),
+			url:         fmt.Sprintf("%s/things/configs/%s", bs.URL, tc.id),
 			contentType: tc.contentType,
 			token:       tc.auth,
 			body:        strings.NewReader(tc.req),
@@ -475,6 +475,7 @@ func TestList(t *testing.T) {
 	ts := newThingsServer(newThingsService(users))
 	svc := newService(users, nil, ts.URL)
 	bs := newBootstrapServer(svc)
+	path := fmt.Sprintf("%s/%s", bs.URL, "things/configs")
 
 	c := newConfig([]bootstrap.Channel{bootstrap.Channel{ID: "1"}})
 
@@ -530,21 +531,21 @@ func TestList(t *testing.T) {
 		{
 			desc:   "view list unauthorized",
 			auth:   invalidToken,
-			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d", bs.URL, 0, 10),
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d", path, 0, 10),
 			status: http.StatusForbidden,
 			res:    configPage{},
 		},
 		{
 			desc:   "view list with an empty token",
 			auth:   "",
-			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d", bs.URL, 0, 10),
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d", path, 0, 10),
 			status: http.StatusForbidden,
 			res:    configPage{},
 		},
 		{
 			desc:   "view list",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d", bs.URL, 0, 1),
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d", path, 0, 1),
 			status: http.StatusOK,
 			res: configPage{
 				Total:   uint64(len(list)),
@@ -556,7 +557,7 @@ func TestList(t *testing.T) {
 		{
 			desc:   "view list searching by name",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d&name=%s", bs.URL, 0, 100, "95"),
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d&name=%s", path, 0, 100, "95"),
 			status: http.StatusOK,
 			res: configPage{
 				Total:   1,
@@ -568,7 +569,7 @@ func TestList(t *testing.T) {
 		{
 			desc:   "view last page",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d", bs.URL, 100, 10),
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d", path, 100, 10),
 			status: http.StatusOK,
 			res: configPage{
 				Total:   uint64(len(list)),
@@ -580,7 +581,7 @@ func TestList(t *testing.T) {
 		{
 			desc:   "view with limit greater than allowed",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d", bs.URL, 0, 1000),
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d", path, 0, 1000),
 			status: http.StatusOK,
 			res: configPage{
 				Total:   uint64(len(list)),
@@ -592,7 +593,7 @@ func TestList(t *testing.T) {
 		{
 			desc:   "view list with no specified limit and offset",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/configs", bs.URL),
+			url:    path,
 			status: http.StatusOK,
 			res: configPage{
 				Total:   uint64(len(list)),
@@ -604,7 +605,7 @@ func TestList(t *testing.T) {
 		{
 			desc:   "view list with no specified limit",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/configs?offset=%d", bs.URL, 10),
+			url:    fmt.Sprintf("%s?offset=%d", path, 10),
 			status: http.StatusOK,
 			res: configPage{
 				Total:   uint64(len(list)),
@@ -616,7 +617,7 @@ func TestList(t *testing.T) {
 		{
 			desc:   "view list with no specified offset",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/configs?limit=%d", bs.URL, 10),
+			url:    fmt.Sprintf("%s?limit=%d", path, 10),
 			status: http.StatusOK,
 			res: configPage{
 				Total:   uint64(len(list)),
@@ -628,28 +629,28 @@ func TestList(t *testing.T) {
 		{
 			desc:   "view list with limit < 0",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/configs?limit=%d", bs.URL, -10),
+			url:    fmt.Sprintf("%s?limit=%d", path, -10),
 			status: http.StatusBadRequest,
 			res:    configPage{},
 		},
 		{
 			desc:   "view list with offset < 0",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/configs?offset=%d", bs.URL, -10),
+			url:    fmt.Sprintf("%s?offset=%d", path, -10),
 			status: http.StatusBadRequest,
 			res:    configPage{},
 		},
 		{
 			desc:   "view list with invalid query params",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d&state=%d&key=%%", bs.URL, 10, 10, bootstrap.Inactive),
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d&state=%d&key=%%", path, 10, 10, bootstrap.Inactive),
 			status: http.StatusBadRequest,
 			res:    configPage{},
 		},
 		{
 			desc:   "view first 10 active",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d&state=%d", bs.URL, 0, 20, bootstrap.Active),
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d&state=%d", path, 0, 20, bootstrap.Active),
 			status: http.StatusOK,
 			res: configPage{
 				Total:   uint64(len(active)),
@@ -661,7 +662,7 @@ func TestList(t *testing.T) {
 		{
 			desc:   "view first 10 inactive",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d&state=%d", bs.URL, 0, 20, bootstrap.Inactive),
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d&state=%d", path, 0, 20, bootstrap.Inactive),
 			status: http.StatusOK,
 			res: configPage{
 				Total:   uint64(len(list) - len(inactive)),
@@ -673,7 +674,7 @@ func TestList(t *testing.T) {
 		{
 			desc:   "view first 5 active",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d&state=%d", bs.URL, 0, 10, bootstrap.Active),
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d&state=%d", path, 0, 10, bootstrap.Active),
 			status: http.StatusOK,
 			res: configPage{
 				Total:   uint64(len(active)),
@@ -685,7 +686,7 @@ func TestList(t *testing.T) {
 		{
 			desc:   "view last 5 inactive",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/configs?offset=%d&limit=%d&state=%d", bs.URL, 10, 10, bootstrap.Inactive),
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d&state=%d", path, 10, 10, bootstrap.Inactive),
 			status: http.StatusOK,
 			res: configPage{
 				Total:   uint64(len(list) - len(active)),
@@ -770,7 +771,7 @@ func TestRemove(t *testing.T) {
 		req := testRequest{
 			client: bs.Client(),
 			method: http.MethodDelete,
-			url:    fmt.Sprintf("%s/configs/%s", bs.URL, tc.id),
+			url:    fmt.Sprintf("%s/things/configs/%s", bs.URL, tc.id),
 			token:  tc.auth,
 		}
 		res, err := req.make()
@@ -797,6 +798,7 @@ func TestListUnknown(t *testing.T) {
 	ts := newThingsServer(newThingsService(users))
 	svc := newService(users, unknownConfigs, ts.URL)
 	bs := newBootstrapServer(svc)
+	path := fmt.Sprintf("%s/%s", bs.URL, "things/unknown/configs")
 
 	cases := []struct {
 		desc   string
@@ -808,49 +810,49 @@ func TestListUnknown(t *testing.T) {
 		{
 			desc:   "view unknown unauthorized",
 			auth:   invalidToken,
-			url:    fmt.Sprintf("%s/unknown?offset=%d&limit=%d", bs.URL, 0, 5),
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d", path, 0, 5),
 			status: http.StatusForbidden,
 			res:    nil,
 		},
 		{
 			desc:   "view unknown with an empty token",
 			auth:   "",
-			url:    fmt.Sprintf("%s/unknown?offset=%d&limit=%d", bs.URL, 0, 5),
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d", path, 0, 5),
 			status: http.StatusForbidden,
 			res:    nil,
 		},
 		{
 			desc:   "view unknown with limit < 0",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/unknown?offset=%d&limit=%d", bs.URL, 0, -5),
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d", path, 0, -5),
 			status: http.StatusBadRequest,
 			res:    nil,
 		},
 		{
 			desc:   "view unknown with offset < 0",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/unknown?offset=%d&limit=%d", bs.URL, -3, 5),
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d", path, -3, 5),
 			status: http.StatusBadRequest,
 			res:    nil,
 		},
 		{
 			desc:   "view unknown with invalid query params",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/unknown?offset=%d&limit=%d&key=%%", bs.URL, 0, -5),
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d&key=%%", path, 0, -5),
 			status: http.StatusBadRequest,
 			res:    nil,
 		},
 		{
 			desc:   "view a list of unknown",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/unknown?offset=%d&limit=%d", bs.URL, 0, 5),
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d", path, 0, 5),
 			status: http.StatusOK,
 			res:    unknown[:5],
 		},
 		{
 			desc:   "view unknown with no page paremeters",
 			auth:   validToken,
-			url:    fmt.Sprintf("%s/unknown", bs.URL),
+			url:    fmt.Sprintf("%s", path),
 			status: http.StatusOK,
 			res:    unknown[:10],
 		},
@@ -954,7 +956,7 @@ func TestBootstrap(t *testing.T) {
 		req := testRequest{
 			client: bs.Client(),
 			method: http.MethodGet,
-			url:    fmt.Sprintf("%s/bootstrap/%s", bs.URL, tc.external_id),
+			url:    fmt.Sprintf("%s/things/bootstrap/%s", bs.URL, tc.external_id),
 			token:  tc.external_key,
 		}
 		res, err := req.make()
@@ -1062,7 +1064,7 @@ func TestChangeState(t *testing.T) {
 		req := testRequest{
 			client:      bs.Client(),
 			method:      http.MethodPut,
-			url:         fmt.Sprintf("%s/state/%s", bs.URL, tc.id),
+			url:         fmt.Sprintf("%s/things/state/%s", bs.URL, tc.id),
 			token:       tc.auth,
 			contentType: tc.contentType,
 			body:        strings.NewReader(tc.state),
