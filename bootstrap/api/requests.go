@@ -23,6 +23,10 @@ type addReq struct {
 }
 
 func (req addReq) validate() error {
+	if req.key == "" {
+		return bootstrap.ErrUnauthorizedAccess
+	}
+
 	if req.ExternalID == "" || req.ExternalKey == "" {
 		return bootstrap.ErrMalformedEntity
 	}
@@ -40,6 +44,10 @@ func (req entityReq) validate() error {
 		return bootstrap.ErrUnauthorizedAccess
 	}
 
+	if req.id == "" {
+		return bootstrap.ErrMalformedEntity
+	}
+
 	return nil
 }
 
@@ -55,6 +63,10 @@ type updateReq struct {
 func (req updateReq) validate() error {
 	if req.key == "" {
 		return bootstrap.ErrUnauthorizedAccess
+	}
+
+	if req.id == "" {
+		return bootstrap.ErrMalformedEntity
 	}
 
 	// Can't explicitly update state to NewThing or Created.
@@ -76,6 +88,10 @@ type listReq struct {
 func (req listReq) validate() error {
 	if req.key == "" {
 		return bootstrap.ErrUnauthorizedAccess
+	}
+
+	if req.limit == 0 || req.limit > maxLimit {
+		return bootstrap.ErrMalformedEntity
 	}
 
 	return nil
@@ -105,8 +121,13 @@ type changeStateReq struct {
 }
 
 func (req changeStateReq) validate() error {
-	if req.id == "" || req.key == "" {
+
+	if req.key == "" {
 		return bootstrap.ErrUnauthorizedAccess
+	}
+
+	if req.id == "" {
+		return bootstrap.ErrMalformedEntity
 	}
 
 	if req.State != bootstrap.Inactive &&
