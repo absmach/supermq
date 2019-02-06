@@ -1,4 +1,4 @@
-module Channel exposing (Model, Msg(..), initial, update, view)
+module Channel exposing (Channel, Model, Msg(..), initial, update, view)
 
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
@@ -154,20 +154,10 @@ view model =
 
 genTableRows : List Channel -> List (Table.Row Msg)
 genTableRows channels =
-    let
-        parseName : Maybe String -> String
-        parseName channelName =
-            case channelName of
-                Just name ->
-                    name
-
-                Nothing ->
-                    ""
-    in
     List.map
         (\channel ->
             Table.tr []
-                [ Table.td [] [ text (parseName channel.name) ]
+                [ Table.td [] [ text (Helpers.parseName channel.name) ]
                 , Table.td [] [ text channel.id ]
                 , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick (RemoveChannel channel.id) ] [ text "-" ] ]
                 ]

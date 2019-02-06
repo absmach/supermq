@@ -1,4 +1,4 @@
-module Helpers exposing (buildQueryParamList, response)
+module Helpers exposing (buildQueryParamList, parseName, response)
 
 import Bootstrap.Grid as Grid
 import Html exposing (hr, p, text)
@@ -37,3 +37,13 @@ buildQueryParamList offset limit query =
                         B.string (Tuple.first tpl) query.limit
         )
         [ ( "offset", offset ), ( "limit", limit ) ]
+
+
+parseName : Maybe String -> String
+parseName thingName =
+    case thingName of
+        Just name ->
+            name
+
+        Nothing ->
+            ""

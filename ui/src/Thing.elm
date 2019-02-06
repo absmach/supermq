@@ -1,4 +1,4 @@
-module Thing exposing (Model, Msg(..), initial, update, view)
+module Thing exposing (Model, Msg(..), Thing, initial, update, view)
 
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
@@ -163,20 +163,10 @@ view model =
 
 genTableRows : List Thing -> List (Table.Row Msg)
 genTableRows things =
-    let
-        parseName : Maybe String -> String
-        parseName thingName =
-            case thingName of
-                Just name ->
-                    name
-
-                Nothing ->
-                    ""
-    in
     List.map
         (\thing ->
             Table.tr []
-                [ Table.td [] [ text (parseName thing.name) ]
+                [ Table.td [] [ text (Helpers.parseName thing.name) ]
                 , Table.td [] [ text thing.id ]
                 , Table.td [] [ text thing.type_ ]
                 , Table.td [] [ text thing.key ]
