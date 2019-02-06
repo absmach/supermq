@@ -55,13 +55,14 @@ type Service interface {
 	// Update updates editable fields of the provided Thing.
 	Update(string, Config) error
 
-	// List returns subset of Things with given state that belong to the user identified by the given key.
-	List(string, Filter, uint64, uint64) ([]Config, error)
+	// List returns subset of Things with given search params that belong to the
+	// user identified by the given key.
+	List(string, Filter, uint64, uint64) (ConfigsPage, error)
 
-	// Remove removes Thing with specified key that belongs to the user identified by the given key.
+	// Remove removes Config with specified key that belongs to the user identified by the given key.
 	Remove(string, string) error
 
-	// Bootstrap returns configuration to the Thing with provided external ID using external key.
+	// Bootstrap returns Config to the Thing with provided external ID using external key.
 	Bootstrap(string, string) (Config, error)
 
 	// ChangeState changes state of the Thing with given ID and owner.
@@ -205,10 +206,10 @@ func (bs bootstrapService) Update(key string, cfg Config) error {
 	return bs.configs.Update(cfg)
 }
 
-func (bs bootstrapService) List(key string, filter Filter, offset, limit uint64) ([]Config, error) {
+func (bs bootstrapService) List(key string, filter Filter, offset, limit uint64) (ConfigsPage, error) {
 	owner, err := bs.identify(key)
 	if err != nil {
-		return []Config{}, err
+		return ConfigsPage{}, err
 	}
 
 	if filter.Unknown {
