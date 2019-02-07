@@ -5,11 +5,13 @@ import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid
 import Bootstrap.Utilities.Spacing as Spacing
+import Channel
 import Error
 import Helpers
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
+import Thing
 import Url.Builder as B
 
 
@@ -23,6 +25,8 @@ type alias Model =
     , token : String
     , channel : String
     , response : String
+    , things : Thing.Model
+    , channels : Channel.Model
     }
 
 
@@ -32,6 +36,8 @@ initial =
     , token = ""
     , channel = ""
     , response = ""
+    , things = Thing.initial
+    , channels = Channel.initial
     }
 
 
