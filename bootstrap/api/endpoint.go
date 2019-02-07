@@ -27,6 +27,7 @@ func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 		}
 
 		config := bootstrap.Config{
+			MFThing:     req.ThingID,
 			ExternalID:  req.ExternalID,
 			ExternalKey: req.ExternalKey,
 			MFChannels:  channels,

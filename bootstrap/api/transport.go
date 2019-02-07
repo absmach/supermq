@@ -17,12 +17,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mainflux/mainflux/bootstrap"
-
 	kithttp "github.com/go-kit/kit/transport/http"
-
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/bootstrap"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 

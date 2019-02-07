@@ -11,9 +11,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/mainflux/mainflux/bootstrap"
-
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/bootstrap"
 )
 
 var (

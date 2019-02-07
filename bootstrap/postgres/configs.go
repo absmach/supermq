@@ -13,9 +13,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/lib/pq"
 	"github.com/mainflux/mainflux/bootstrap"
-
-	"github.com/lib/pq" // required for DB access
 	"github.com/mainflux/mainflux/logger"
 )
 

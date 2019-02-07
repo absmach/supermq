@@ -15,6 +15,7 @@ type apiReq interface {
 
 type addReq struct {
 	key         string
+	ThingID     string   `json:"thing_id"`
 	ExternalID  string   `json:"external_id"`
 	ExternalKey string   `json:"external_key"`
 	Channels    []string `json:"channels"`

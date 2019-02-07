@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/mainflux/mainflux/bootstrap"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAddReqValidation(t *testing.T) {

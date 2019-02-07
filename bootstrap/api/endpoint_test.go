@@ -47,6 +47,7 @@ const (
 var (
 	addChannels = []string{"1"}
 	addReq      = struct {
+		ThingID     string   `json:"thing_id"`
 		ExternalID  string   `json:"external_id"`
 		ExternalKey string   `json:"external_key"`
 		Channels    []string `json:"channels"`
@@ -155,6 +156,10 @@ func TestAdd(t *testing.T) {
 
 	data := toJSON(addReq)
 
+	neID := addReq
+	neID.ThingID = "non-existent"
+	neData := toJSON(neID)
+
 	invalidChannels := addReq
 	invalidChannels.Channels = []string{wrongID}
 	wrongData := toJSON(invalidChannels)
@@ -197,6 +202,14 @@ func TestAdd(t *testing.T) {
 			auth:        validToken,
 			contentType: contentType,
 			status:      http.StatusConflict,
+			location:    "",
+		},
+		{
+			desc:        "add a config with non-existent ID",
+			req:         neData,
+			auth:        validToken,
+			contentType: contentType,
+			status:      http.StatusNotFound,
 			location:    "",
 		},
 		{

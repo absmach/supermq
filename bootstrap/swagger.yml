@@ -287,9 +287,12 @@ definitions:
         type: integer
         description: Number of items to skip during retrieval.
         minimum: 0
+        default: 0
       limit:
         type: integer
         description: Size of the subset to retrieve.
+        maximum: 100
+        default: 10
       configs:
         type: array
         minItems: 0

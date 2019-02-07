@@ -84,6 +84,9 @@ func TestAdd(t *testing.T) {
 	server := newThingsServer(newThingsService(users))
 	svc := newService(users, server.URL)
 
+	neID := config
+	neID.MFThing = "non-existent"
+
 	wrongChannels := config
 	ch := channel
 	ch.ID = "invalid"
@@ -100,6 +103,12 @@ func TestAdd(t *testing.T) {
 			config: config,
 			key:    validToken,
 			err:    nil,
+		},
+		{
+			desc:   "add a config with an invalid ID",
+			config: neID,
+			key:    validToken,
+			err:    bootstrap.ErrNotFound,
 		},
 		{
 			desc:   "add a config with wrong credentials",
