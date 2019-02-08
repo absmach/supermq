@@ -1,7 +1,12 @@
-module Helpers exposing (buildQueryParamList, parseName, response)
+module Helpers exposing (buildQueryParamList, genFormField, parseName, response)
 
+import Bootstrap.Form as Form
+import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
+import Bootstrap.Grid.Row as Row
 import Html exposing (hr, p, text)
+import Html.Attributes exposing (..)
 import Url.Builder as B
 
 
@@ -47,3 +52,13 @@ parseName thingName =
 
         Nothing ->
             ""
+
+
+genFormField : String -> String -> (String -> msg) -> Grid.Column msg
+genFormField txt val msg =
+    Grid.col []
+        [ Form.formInline []
+            [ Form.label [] [ text (txt ++ ": ") ]
+            , Input.text [ Input.attrs [ placeholder txt, id txt, value val ], Input.onInput msg ]
+            ]
+        ]

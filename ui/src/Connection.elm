@@ -13,7 +13,9 @@ import Error
 import Helpers
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onClick)
 import Http
+import List.Extra
 import Thing
 import Url.Builder as B
 
@@ -29,6 +31,7 @@ type alias Model =
     , response : String
     , things : Thing.Model
     , channels : Channel.Model
+    , checkedThingsIds : List String
     }
 
 
@@ -39,6 +42,7 @@ initial =
     , response = ""
     , things = Thing.initial
     , channels = Channel.initial
+    , checkedThingsIds = []
     }
 
 
@@ -63,7 +67,7 @@ update msg model token =
             ( { model | thing = thing }, Cmd.none )
 
         Connect ->
-            ( model
+            ( { model | checkedThingsIds = [] }
             , Http.request
                 { method = "PUT"
                 , headers = [ Http.header "Authorization" token ]
@@ -76,7 +80,7 @@ update msg model token =
             )
 
         Disconnect ->
-            ( model
+            ( { model | checkedThingsIds = [] }
             , Http.request
                 { method = "DELETE"
                 , headers = [ Http.header "Authorization" token ]
@@ -110,8 +114,12 @@ update msg model token =
             in
             ( { model | channels = updatedChannel }, Cmd.map ChannelMsg channelCmd )
 
-        CheckThing bool ->
-            ( model, Cmd.none )
+        CheckThing id ->
+            if List.member id model.checkedThingsIds then
+                ( { model | checkedThingsIds = List.Extra.remove id model.checkedThingsIds }, Cmd.none )
+
+            else
+                ( { model | checkedThingsIds = id :: model.checkedThingsIds }, Cmd.none )
 
 
 view : Model -> String -> Html Msg
@@ -137,8 +145,8 @@ view model token =
             [ Grid.col []
                 [ Html.map ThingMsg
                     (Grid.row []
-                        [ Grid.col [] [ Input.text [ Input.placeholder "offset", Input.id "offset", Input.onInput Thing.SubmitOffset ] ]
-                        , Grid.col [] [ Input.text [ Input.placeholder "limit", Input.id "limit", Input.onInput Thing.SubmitLimit ] ]
+                        [ Helpers.genFormField "offset" model.things.offset Thing.SubmitOffset
+                        , Helpers.genFormField "limit" model.things.limit Thing.SubmitLimit
                         ]
                     )
                 , Grid.row []
@@ -148,7 +156,7 @@ view model token =
                                 [ Table.th [] [ text "Name" ]
                                 , Table.th [] [ text "Id" ]
                                 ]
-                            , Table.tbody [] (genThingRows model.things.things)
+                            , Table.tbody [] (genThingRows model.checkedThingsIds model.things.things)
                             )
                         ]
                     ]
@@ -156,8 +164,8 @@ view model token =
             , Grid.col []
                 [ Html.map ChannelMsg
                     (Grid.row []
-                        [ Grid.col [] [ Input.text [ Input.placeholder "offset", Input.id "offset", Input.onInput Channel.SubmitOffset ] ]
-                        , Grid.col [] [ Input.text [ Input.placeholder "limit", Input.id "limit", Input.onInput Channel.SubmitLimit ] ]
+                        [ Helpers.genFormField "offset" model.channels.offset Channel.SubmitOffset
+                        , Helpers.genFormField "limit" model.channels.limit Channel.SubmitLimit
                         ]
                     )
                 , Grid.row []
@@ -177,16 +185,26 @@ view model token =
         ]
 
 
-genThingRows : List Thing.Thing -> List (Table.Row Msg)
-genThingRows things =
+genThingRows : List String -> List Thing.Thing -> List (Table.Row Msg)
+genThingRows checkedThingsIds things =
     List.map
         (\thing ->
             Table.tr []
-                [ Table.td [] [ Checkbox.checkbox [ Checkbox.id thing.id ] (Helpers.parseName thing.name) ]
+                -- [ Table.td [] [ Checkbox.checkbox [ Checkbox.id thing.id ] (Helpers.parseName thing.name) ]
+                [ Table.td [] [ input [ type_ "checkbox", onClick (CheckThing thing.id), checked (isChecked thing.id checkedThingsIds) ] [], text (" " ++ Helpers.parseName thing.name) ]
                 , Table.td [] [ text thing.id ]
                 ]
         )
         things
+
+
+isChecked : String -> List String -> Bool
+isChecked id checkedThingsIds =
+    if List.member id checkedThingsIds then
+        True
+
+    else
+        False
 
 
 genChannelRows : List Channel.Channel -> List (Table.Row Msg)

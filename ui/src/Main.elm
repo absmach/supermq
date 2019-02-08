@@ -247,12 +247,12 @@ view model =
 
             menu =
                 if loggedIn then
-                    [ ButtonGroup.linkButton [ Button.primary, Button.onClick Account, buttonAttrs ] [ text "Account" ]
-                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Things, buttonAttrs ] [ text "Things" ]
-                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Channels, buttonAttrs ] [ text "Channels" ]
-                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Connection, buttonAttrs ] [ text "Connection" ]
-                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Messages, buttonAttrs ] [ text "Messages" ]
-                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Version, buttonAttrs ] [ text "Version" ]
+                    [ ButtonGroup.linkButton [ Button.primary, Button.onClick Account, buttonAttrs ] [ text "account" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Things, buttonAttrs ] [ text "things" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Channels, buttonAttrs ] [ text "channels" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Connection, buttonAttrs ] [ text "connection" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Messages, buttonAttrs ] [ text "messages" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Version, buttonAttrs ] [ text "version" ]
                     ]
 
                 else
@@ -289,7 +289,7 @@ view model =
           Grid.container []
             [ CDN.stylesheet -- creates an inline style node with the Bootstrap CSS
             , Grid.row []
-                [ Grid.col [] [ h1 [] [ text "Gateflux" ] ] ]
+                [ Grid.col [] [ h1 [] [ text model.view ] ] ]
             , Grid.row []
                 [ Grid.col []
                     [ -- In this column we put the button group defined below
