@@ -2,8 +2,10 @@ module Message exposing (Model, Msg(..), initial, update, view)
 
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
+import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid
+import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
 import Channel
 import Error
@@ -47,6 +49,8 @@ type Msg
     | SubmitChannel String
     | SendMessage
     | SentMessage (Result Http.Error Int)
+    | ThingMsg Thing.Msg
+    | ChannelMsg Channel.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -82,6 +86,20 @@ update msg model =
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
 
+        ThingMsg subMsg ->
+            let
+                ( updatedThing, thingCmd ) =
+                    Thing.update subMsg model.things token
+            in
+            ( { model | things = updatedThing }, Cmd.map ThingMsg thingCmd )
+
+        ChannelMsg subMsg ->
+            let
+                ( updatedChannel, channelCmd ) =
+                    Channel.update subMsg model.channels token
+            in
+            ( { model | channels = updatedChannel }, Cmd.map ChannelMsg channelCmd )
+
 
 view : Model -> Html Msg
 view model =
@@ -105,8 +123,72 @@ view model =
                     ]
                 ]
             ]
+        , Grid.row []
+            [ Grid.col []
+                [ Html.map ThingMsg
+                    (Grid.row []
+                        [ Grid.col [] [ Input.text [ Input.placeholder "offset", Input.id "offset", Input.onInput Thing.SubmitOffset ] ]
+                        , Grid.col [] [ Input.text [ Input.placeholder "limit", Input.id "limit", Input.onInput Thing.SubmitLimit ] ]
+                        ]
+                    )
+                , Grid.row []
+                    [ Grid.col []
+                        [ Table.simpleTable
+                            ( Table.simpleThead
+                                [ Table.th [] [ text "Name" ]
+                                , Table.th [] [ text "Id" ]
+                                ]
+                            , Table.tbody [] (genThingRows model.things.things)
+                            )
+                        ]
+                    ]
+                ]
+            , Grid.col []
+                [ Html.map ChannelMsg
+                    (Grid.row []
+                        [ Grid.col [] [ Input.text [ Input.placeholder "offset", Input.id "offset", Input.onInput Channel.SubmitOffset ] ]
+                        , Grid.col [] [ Input.text [ Input.placeholder "limit", Input.id "limit", Input.onInput Channel.SubmitLimit ] ]
+                        ]
+                    )
+                , Grid.row []
+                    [ Grid.col []
+                        [ Table.simpleTable
+                            ( Table.simpleThead
+                                [ Table.th [] [ text "Name" ]
+                                , Table.th [] [ text "Id" ]
+                                ]
+                            , Table.tbody [] (genChannelRows model.channels.channels)
+                            )
+                        ]
+                    ]
+                ]
+            ]
         , Helpers.response model.response
         ]
+
+
+genThingRows : List Thing.Thing -> List (Table.Row Msg)
+genThingRows things =
+    List.map
+        (\thing ->
+            Table.tr []
+                [ Table.td [] [ Checkbox.checkbox [ Checkbox.id thing.id ] (Helpers.parseName thing.name) ]
+                , Table.td [] [ text thing.id ]
+                ]
+        )
+        things
+
+
+genChannelRows : List Channel.Channel -> List (Table.Row Msg)
+genChannelRows channels =
+    List.map
+        (\channel ->
+            Table.tr []
+                [ Table.td [] [ Checkbox.checkbox [ Checkbox.id channel.id ] (Helpers.parseName channel.name) ]
+                , Table.td [] [ text channel.id ]
+                ]
+        )
+        channels
 
 
 expectMessage : (Result Http.Error Int -> msg) -> Http.Expect msg
