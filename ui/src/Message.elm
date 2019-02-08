@@ -4,6 +4,7 @@ import Bootstrap.Button as Button
 import Bootstrap.Form as Form
 import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Form.Input as Input
+import Bootstrap.Form.Radio as Radio
 import Bootstrap.Grid as Grid
 import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
@@ -45,16 +46,21 @@ initial =
 
 type Msg
     = SubmitMessage String
-    | SubmitToken String
+      -- | SubmitToken String
     | SubmitChannel String
     | SendMessage
     | SentMessage (Result Http.Error Int)
     | ThingMsg Thing.Msg
     | ChannelMsg Channel.Msg
+    | SelectedThing ThingId --Bool
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+type ThingId
+    = String Bool
+
+
+update : Msg -> Model -> String -> ( Model, Cmd Msg )
+update msg model token =
     case msg of
         SubmitMessage message ->
             ( { model | message = message }, Cmd.none )
@@ -62,9 +68,8 @@ update msg model =
         SubmitChannel channel ->
             ( { model | channel = channel }, Cmd.none )
 
-        SubmitToken token ->
-            ( { model | token = token }, Cmd.none )
-
+        -- SubmitToken token ->
+        --     ( { model | token = token }, Cmd.none )
         SendMessage ->
             ( model
             , Http.request
@@ -111,10 +116,11 @@ view model =
                         [ Form.label [ for "chan" ] [ text "Channel id" ]
                         , Input.email [ Input.id "chan", Input.onInput SubmitChannel ]
                         ]
-                    , Form.group []
-                        [ Form.label [ for "token" ] [ text "Thing token" ]
-                        , Input.text [ Input.id "token", Input.onInput SubmitToken ]
-                        ]
+
+                    -- , Form.group []
+                    --     [ Form.label [ for "token" ] [ text "Thing token" ]
+                    --     , Input.text [ Input.id "token", Input.onInput SubmitToken ]
+                    --     ]
                     , Form.group []
                         [ Form.label [ for "message" ] [ text "Message" ]
                         , Input.text [ Input.id "message", Input.onInput SubmitMessage ]
@@ -172,7 +178,8 @@ genThingRows things =
     List.map
         (\thing ->
             Table.tr []
-                [ Table.td [] [ Checkbox.checkbox [ Checkbox.id thing.id ] (Helpers.parseName thing.name) ]
+                -- [ Table.td [] [ Checkbox.checkbox [ Checkbox.id thing.id ] (Helpers.parseName thing.name) ]
+                [ Table.td [] [ Radio.radio [ Radio.id thing.id, Radio.name "things", Radio.onClick (SelectedThing thing.id) ] (Helpers.parseName thing.name) ]
                 , Table.td [] [ text thing.id ]
                 ]
         )
