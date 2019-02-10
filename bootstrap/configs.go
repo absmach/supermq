@@ -58,7 +58,7 @@ type ConfigsPage struct {
 type ConfigRepository interface {
 	// Save persists the Config. Successful operation is indicated by non-nil
 	// error response.
-	Save(Config) (string, error)
+	Save(Config, []string) (string, error)
 
 	// RetrieveByID retrieves the Config having the provided identifier, that is owned
 	// by the specified user.
@@ -73,7 +73,7 @@ type ConfigRepository interface {
 
 	// Update performs and update to an existing Config. A non-nil error is returned
 	// to indicate operation failure.
-	Update(Config) error
+	Update(Config, []string) error
 
 	// Remove removes the Config having the provided identifier, that is owned
 	// by the specified user.
@@ -88,7 +88,6 @@ type ConfigRepository interface {
 	// RetrieveUnknown returns a subset of unsuccessfully bootstrapped Things.
 	RetrieveUnknown(uint64, uint64) ConfigsPage
 
-	// RemoveUnknown removes unsuccessfully bootstrapped Thing. This is done once the
-	// corresponding Config is added to the list of existing configs (Save method).
-	RemoveUnknown(string, string) error
+	//Exist retrieves IDs of those channels from the given list that exist in DB.
+	Exist(string, []string) ([]string, error)
 }
