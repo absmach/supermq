@@ -110,7 +110,12 @@ update msg model token =
             ( { model | channels = updatedChannel }, Cmd.map ChannelMsg channelCmd )
 
         SelectedThing thingid ->
-            ( Debug.log "model: " { model | thingid = thingid }, Cmd.none )
+            -- ( Debug.log "model: " { model | thingid = thingid }, Cmd.none )
+            let
+                ( updatedChannel, channelCmd ) =
+                    Channel.update (Channel.RetrieveChannelsForThing thingid) model.channels token
+            in
+            ( { model | thingid = thingid, channels = updatedChannel }, Cmd.map ChannelMsg channelCmd )
 
 
 view : Model -> Html Msg
