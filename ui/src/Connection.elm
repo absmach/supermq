@@ -32,6 +32,7 @@ type alias Model =
     , things : Thing.Model
     , channels : Channel.Model
     , checkedThingsIds : List String
+    , checkedChannelsIds : List String
     }
 
 
@@ -43,6 +44,7 @@ initial =
     , things = Thing.initial
     , channels = Channel.initial
     , checkedThingsIds = []
+    , checkedChannelsIds = []
     }
 
 
@@ -55,6 +57,7 @@ type Msg
     | ChannelMsg Channel.Msg
     | GotResponse (Result Http.Error Int)
     | CheckThing String
+    | CheckChannel String
 
 
 update : Msg -> Model -> String -> ( Model, Cmd Msg )
@@ -67,35 +70,27 @@ update msg model token =
             ( { model | thing = thing }, Cmd.none )
 
         Connect ->
-            ( { model | checkedThingsIds = [] }
-            , Http.request
-                { method = "PUT"
-                , headers = [ Http.header "Authorization" token ]
-                , url = B.crossOrigin url.base [ "channels", model.channel, "things", model.thing ] []
-                , body = Http.emptyBody
-                , expect = expectResponse GotResponse
-                , timeout = Nothing
-                , tracker = Nothing
-                }
-            )
+            if List.isEmpty model.checkedThingsIds || List.isEmpty model.checkedChannelsIds then
+                ( model, Cmd.none )
+
+            else
+                ( { model | checkedThingsIds = [], checkedChannelsIds = [] }
+                , Cmd.batch (modifyConnections model.checkedThingsIds model.checkedChannelsIds "PUT" token)
+                )
 
         Disconnect ->
-            ( { model | checkedThingsIds = [] }
-            , Http.request
-                { method = "DELETE"
-                , headers = [ Http.header "Authorization" token ]
-                , url = B.crossOrigin url.base [ "channels", model.channel, "things", model.thing ] []
-                , body = Http.emptyBody
-                , expect = expectResponse GotResponse
-                , timeout = Nothing
-                , tracker = Nothing
-                }
-            )
+            if List.isEmpty model.checkedThingsIds || List.isEmpty model.checkedChannelsIds then
+                ( model, Cmd.none )
+
+            else
+                ( { model | checkedThingsIds = [], checkedChannelsIds = [] }
+                , Cmd.batch (modifyConnections model.checkedThingsIds model.checkedChannelsIds "DELETE" token)
+                )
 
         GotResponse result ->
             case result of
                 Ok statusCode ->
-                    ( { model | response = "Ok " ++ String.fromInt statusCode }, Cmd.none )
+                    ( { model | response = String.fromInt statusCode }, Cmd.none )
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
@@ -115,33 +110,25 @@ update msg model token =
             ( { model | channels = updatedChannel }, Cmd.map ChannelMsg channelCmd )
 
         CheckThing id ->
-            if List.member id model.checkedThingsIds then
-                ( { model | checkedThingsIds = List.Extra.remove id model.checkedThingsIds }, Cmd.none )
+            ( { model | checkedThingsIds = checkEntity id model.checkedThingsIds }, Cmd.none )
 
-            else
-                ( { model | checkedThingsIds = id :: model.checkedThingsIds }, Cmd.none )
+        CheckChannel id ->
+            ( { model | checkedChannelsIds = checkEntity id model.checkedChannelsIds }, Cmd.none )
 
 
-view : Model -> String -> Html Msg
-view model token =
+checkEntity : String -> List String -> List String
+checkEntity id checkedEntitiesIds =
+    if List.member id checkedEntitiesIds then
+        List.Extra.remove id checkedEntitiesIds
+
+    else
+        id :: checkedEntitiesIds
+
+
+view : Model -> Html Msg
+view model =
     Grid.container []
         [ Grid.row []
-            [ Grid.col []
-                [ Form.form []
-                    [ Form.group []
-                        [ Form.label [ for "thing" ] [ text "Thing" ]
-                        , Input.text [ Input.id "thing", Input.onInput SubmitThing ]
-                        ]
-                    , Form.group []
-                        [ Form.label [ for "chan" ] [ text "Channel" ]
-                        , Input.email [ Input.id "chan", Input.onInput SubmitChannel ]
-                        ]
-                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick Connect ] [ text "Connect" ]
-                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick Disconnect ] [ text "Disonnect" ]
-                    ]
-                ]
-            ]
-        , Grid.row []
             [ Grid.col []
                 [ Html.map ThingMsg
                     (Grid.row []
@@ -175,9 +162,17 @@ view model token =
                                 [ Table.th [] [ text "Name" ]
                                 , Table.th [] [ text "Id" ]
                                 ]
-                            , Table.tbody [] (genChannelRows model.channels.channels)
+                            , Table.tbody [] (genChannelRows model.checkedChannelsIds model.channels.channels)
                             )
                         ]
+                    ]
+                ]
+            ]
+        , Grid.row []
+            [ Grid.col []
+                [ Form.form []
+                    [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick Connect ] [ text "Connect" ]
+                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick Disconnect ] [ text "Disonnect" ]
                     ]
                 ]
             ]
@@ -190,7 +185,6 @@ genThingRows checkedThingsIds things =
     List.map
         (\thing ->
             Table.tr []
-                -- [ Table.td [] [ Checkbox.checkbox [ Checkbox.id thing.id ] (Helpers.parseName thing.name) ]
                 [ Table.td [] [ input [ type_ "checkbox", onClick (CheckThing thing.id), checked (isChecked thing.id checkedThingsIds) ] [], text (" " ++ Helpers.parseName thing.name) ]
                 , Table.td [] [ text thing.id ]
                 ]
@@ -198,25 +192,49 @@ genThingRows checkedThingsIds things =
         things
 
 
+genChannelRows : List String -> List Channel.Channel -> List (Table.Row Msg)
+genChannelRows checkedChannelsIds channels =
+    List.map
+        (\channel ->
+            Table.tr []
+                [ Table.td [] [ input [ type_ "checkbox", onClick (CheckChannel channel.id), checked (isChecked channel.id checkedChannelsIds) ] [], text (" " ++ Helpers.parseName channel.name) ]
+                , Table.td [] [ text channel.id ]
+                ]
+        )
+        channels
+
+
 isChecked : String -> List String -> Bool
-isChecked id checkedThingsIds =
-    if List.member id checkedThingsIds then
+isChecked id checkedEntitiesIds =
+    if List.member id checkedEntitiesIds then
         True
 
     else
         False
 
 
-genChannelRows : List Channel.Channel -> List (Table.Row Msg)
-genChannelRows channels =
-    List.map
-        (\channel ->
-            Table.tr []
-                [ Table.td [] [ Checkbox.checkbox [ Checkbox.id channel.id ] (Helpers.parseName channel.name) ]
-                , Table.td [] [ text channel.id ]
-                ]
+modifyConnections : List String -> List String -> String -> String -> List (Cmd Msg)
+modifyConnections checkedThingsIds checkedChannelsIds method token =
+    List.foldr (++)
+        []
+        (List.map
+            (\thingId ->
+                List.map
+                    (\channelId ->
+                        Http.request
+                            { method = method
+                            , headers = [ Http.header "Authorization" token ]
+                            , url = B.crossOrigin url.base [ "channels", channelId, "things", thingId ] []
+                            , body = Http.emptyBody
+                            , expect = expectResponse GotResponse
+                            , timeout = Nothing
+                            , tracker = Nothing
+                            }
+                    )
+                    checkedChannelsIds
+            )
+            checkedThingsIds
         )
-        channels
 
 
 expectResponse : (Result Http.Error Int -> Msg) -> Http.Expect Msg

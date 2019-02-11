@@ -274,7 +274,7 @@ view model =
                             Html.map ThingMsg (Thing.view model.thing)
 
                         "connection" ->
-                            Html.map ConnectionMsg (Connection.view model.connection model.user.token)
+                            Html.map ConnectionMsg (Connection.view model.connection)
 
                         "messages" ->
                             Html.map MessageMsg (Message.view model.message)
