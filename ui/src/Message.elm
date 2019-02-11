@@ -13,6 +13,7 @@ import Error
 import Helpers
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onClick)
 import Http
 import Thing
 import Url.Builder as B
@@ -30,6 +31,7 @@ type alias Model =
     , response : String
     , things : Thing.Model
     , channels : Channel.Model
+    , thingid : String
     }
 
 
@@ -41,6 +43,7 @@ initial =
     , response = ""
     , things = Thing.initial
     , channels = Channel.initial
+    , thingid = ""
     }
 
 
@@ -52,11 +55,12 @@ type Msg
     | SentMessage (Result Http.Error Int)
     | ThingMsg Thing.Msg
     | ChannelMsg Channel.Msg
-    | SelectedThing ThingId --Bool
+    | SelectedThing String
 
 
-type ThingId
-    = String Bool
+
+-- type ThingId
+--     = String Bool
 
 
 update : Msg -> Model -> String -> ( Model, Cmd Msg )
@@ -104,6 +108,9 @@ update msg model token =
                     Channel.update subMsg model.channels token
             in
             ( { model | channels = updatedChannel }, Cmd.map ChannelMsg channelCmd )
+
+        SelectedThing thingid ->
+            ( Debug.log "model: " { model | thingid = thingid }, Cmd.none )
 
 
 view : Model -> Html Msg
@@ -179,7 +186,8 @@ genThingRows things =
         (\thing ->
             Table.tr []
                 -- [ Table.td [] [ Checkbox.checkbox [ Checkbox.id thing.id ] (Helpers.parseName thing.name) ]
-                [ Table.td [] [ Radio.radio [ Radio.id thing.id, Radio.name "things", Radio.onClick (SelectedThing thing.id) ] (Helpers.parseName thing.name) ]
+                -- [ Table.td [] [ Radio.radio [ Radio.id thing.id, Radio.name "things", Radio.onClick (SelectedThing thing.id) ] (Helpers.parseName thing.name) ]
+                [ Table.td [] [ label [] [ input [ type_ "radio", onClick (SelectedThing thing.id), name "things" ] [], text (Helpers.parseName thing.name) ] ]
                 , Table.td [] [ text thing.id ]
                 ]
         )

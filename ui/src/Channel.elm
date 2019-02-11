@@ -55,6 +55,7 @@ type Msg
     | ProvisionChannel
     | ProvisionedChannel (Result Http.Error Int)
     | RetrieveChannels
+    | RetrieveChannelsForThing String
     | RetrievedChannels (Result Http.Error (List Channel))
     | RemoveChannel String
     | RemovedChannel (Result Http.Error Int)
@@ -93,6 +94,16 @@ update msg model token =
             , retrieve
                 (B.crossOrigin url.base
                     url.path
+                    (Helpers.buildQueryParamList model.offset model.limit query)
+                )
+                token
+            )
+
+        RetrieveChannelsForThing thingid ->
+            ( model
+            , retrieve
+                (B.crossOrigin url.base
+                    ([ "things" ] ++ [ thingid ] ++ url.path)
                     (Helpers.buildQueryParamList model.offset model.limit query)
                 )
                 token
@@ -221,6 +232,19 @@ expectStatus toMsg =
 
 retrieve : String -> String -> Cmd Msg
 retrieve u token =
+    Http.request
+        { method = "GET"
+        , headers = [ Http.header "Authorization" token ]
+        , url = u
+        , body = Http.emptyBody
+        , expect = expectRetrieve RetrievedChannels
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
+retrieveChannelsForThing : String -> String -> String -> Cmd Msg
+retrieveChannelsForThing u thingid token =
     Http.request
         { method = "GET"
         , headers = [ Http.header "Authorization" token ]
