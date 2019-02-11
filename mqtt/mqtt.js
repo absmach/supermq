@@ -105,18 +105,18 @@ nats.subscribe('channel.>', {'queue':'mqtts'}, function (msg) {
 aedes.authorizePublish = function (client, packet, publish) {
     // Topics are in the form `channels/<channel_id>/messages`
     // Subtopic's are in the form `channels/<channel_id>/messages/<subtopic>`
-    var channel = parseMqttTopic(packet.topic)
-    if (!channel) {
+    var channelParts = parseMqttTopic(packet.topic)
+    if (!channelParts) {
         logger.warn('unknown or malformed topic');
         publish(4); // Bad username or password
         return;
     }
 
-    var channelId = channel[1],
+    var channelId = channelParts[1],
         // channelTopic contains channelId prefixed by 'channel.' and suffiex
         // by every topic part in the forms .topic
         channelTopic = 'channel.' + channelId + (
-            channel[2] !== undefined ? channel[2].replace(/\//g, '.') : ''
+            channelParts[2] !== undefined ? channelParts[2].replace(/\//g, '.') : ''
         ),
         accessReq = {
             token: client.password,
@@ -149,13 +149,13 @@ aedes.authorizePublish = function (client, packet, publish) {
 aedes.authorizeSubscribe = function (client, packet, subscribe) {
     // Topics are in the form `channels/<channel_id>/messages`
     // Subtopic's are in the form `channels/<channel_id>/messages/<subtopic>`
-    var channel = parseMqttTopic(packet.topic)
-    if (!channel) {
+    var channelParts = parseMqttTopic(packet.topic)
+    if (!channelParts) {
       logger.warn('unknown topic');
       subscribe(4, packet); // Bad username or password
       return;
     }
-    var channelId = channel[1],
+    var channelId = channelParts[1],
         accessReq = {
             token: client.password,
             chanID: channelId
