@@ -113,6 +113,8 @@ aedes.authorizePublish = function (client, packet, publish) {
     }
 
     var channelId = channel[1],
+        // channelTopic contains channelId prefixed by 'channel.' and suffiex
+        // by every topic part in the forms .topic
         channelTopic = 'channel.' + channelId + (
             channel[2] !== undefined ? channel[2].replace(/\//g, '.') : ''
         ),
