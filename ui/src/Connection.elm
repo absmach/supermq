@@ -125,26 +125,10 @@ checkEntity id checkedEntitiesIds =
         id :: checkedEntitiesIds
 
 
-view : Model -> String -> Html Msg
-view model token =
+view : Model -> Html Msg
+view model =
     Grid.container []
         [ Grid.row []
-            [ Grid.col []
-                [ Form.form []
-                    [ Form.group []
-                        [ Form.label [ for "thing" ] [ text "Thing" ]
-                        , Input.text [ Input.id "thing", Input.onInput SubmitThing ]
-                        ]
-                    , Form.group []
-                        [ Form.label [ for "chan" ] [ text "Channel" ]
-                        , Input.email [ Input.id "chan", Input.onInput SubmitChannel ]
-                        ]
-                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick Connect ] [ text "Connect" ]
-                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick Disconnect ] [ text "Disonnect" ]
-                    ]
-                ]
-            ]
-        , Grid.row []
             [ Grid.col []
                 [ Html.map ThingMsg
                     (Grid.row []
@@ -181,6 +165,14 @@ view model token =
                             , Table.tbody [] (genChannelRows model.checkedChannelsIds model.channels.channels)
                             )
                         ]
+                    ]
+                ]
+            ]
+        , Grid.row []
+            [ Grid.col []
+                [ Form.form []
+                    [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick Connect ] [ text "Connect" ]
+                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick Disconnect ] [ text "Disonnect" ]
                     ]
                 ]
             ]
