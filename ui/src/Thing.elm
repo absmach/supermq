@@ -1,4 +1,4 @@
-module Thing exposing (Model, Msg(..), initial, update, view)
+module Thing exposing (Model, Msg(..), Thing, initial, update, view)
 
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
@@ -78,7 +78,7 @@ update msg model token =
             updateThingList { model | limit = limit } token
 
         ProvisionThing ->
-            ( model
+            ( { model | name = "", type_ = "" }
             , provision
                 (B.crossOrigin url.base url.path [])
                 token
@@ -129,11 +129,9 @@ view : Model -> Html Msg
 view model =
     Grid.container []
         [ Grid.row []
-            [ Grid.col [] [ Input.text [ Input.placeholder "offset", Input.id "offset", Input.onInput SubmitOffset ] ]
-            , Grid.col [] [ Input.text [ Input.placeholder "limit", Input.id "limit", Input.onInput SubmitLimit ] ]
+            [ Helpers.genFormField "offset" model.offset SubmitOffset
+            , Helpers.genFormField "limit" model.limit SubmitLimit
             ]
-
-        -- , Helpers.response model.response
         , Grid.row []
             [ Grid.col []
                 [ Table.simpleTable
@@ -146,9 +144,9 @@ view model =
                     , Table.tbody []
                         (List.append
                             [ Table.tr []
-                                [ Table.td [] [ Input.text [ Input.id "name", Input.onInput SubmitName ] ]
+                                [ Table.td [] [ Input.text [ Input.attrs [ id "name", value model.name ], Input.onInput SubmitName ] ]
                                 , Table.td [] []
-                                , Table.td [] [ Input.text [ Input.id "type", Input.onInput SubmitType ] ]
+                                , Table.td [] [ Input.text [ Input.attrs [ id "type", value model.type_ ], Input.onInput SubmitType ] ]
                                 , Table.td [] []
                                 , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionThing ] [ text "+" ] ]
                                 ]
@@ -163,20 +161,10 @@ view model =
 
 genTableRows : List Thing -> List (Table.Row Msg)
 genTableRows things =
-    let
-        parseName : Maybe String -> String
-        parseName thingName =
-            case thingName of
-                Just name ->
-                    name
-
-                Nothing ->
-                    ""
-    in
     List.map
         (\thing ->
             Table.tr []
-                [ Table.td [] [ text (parseName thing.name) ]
+                [ Table.td [] [ text (Helpers.parseName thing.name) ]
                 , Table.td [] [ text thing.id ]
                 , Table.td [] [ text thing.type_ ]
                 , Table.td [] [ text thing.key ]

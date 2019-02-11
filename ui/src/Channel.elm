@@ -1,4 +1,4 @@
-module Channel exposing (Model, Msg(..), initial, update, view)
+module Channel exposing (Channel, Model, Msg(..), initial, update, view)
 
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
@@ -73,7 +73,7 @@ update msg model token =
             updateChannelList { model | limit = limit } token
 
         ProvisionChannel ->
-            ( model
+            ( { model | name = "" }
             , provision
                 (B.crossOrigin url.base url.path [])
                 token
@@ -126,8 +126,8 @@ view : Model -> Html Msg
 view model =
     Grid.container []
         [ Grid.row []
-            [ Grid.col [] [ Input.text [ Input.placeholder "offset", Input.id "offset", Input.onInput SubmitOffset ] ]
-            , Grid.col [] [ Input.text [ Input.placeholder "limit", Input.id "limit", Input.onInput SubmitLimit ] ]
+            [ Helpers.genFormField "offset" model.offset SubmitOffset
+            , Helpers.genFormField "limit" model.limit SubmitLimit
             ]
         , Grid.row []
             [ Grid.col []
@@ -139,7 +139,7 @@ view model =
                     , Table.tbody []
                         (List.append
                             [ Table.tr []
-                                [ Table.td [] [ Input.text [ Input.id "name", Input.onInput SubmitName ] ]
+                                [ Table.td [] [ Input.text [ Input.attrs [ id "name", value model.name ], Input.onInput SubmitName ] ]
                                 , Table.td [] []
                                 , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionChannel ] [ text "+" ] ]
                                 ]
@@ -154,20 +154,10 @@ view model =
 
 genTableRows : List Channel -> List (Table.Row Msg)
 genTableRows channels =
-    let
-        parseName : Maybe String -> String
-        parseName channelName =
-            case channelName of
-                Just name ->
-                    name
-
-                Nothing ->
-                    ""
-    in
     List.map
         (\channel ->
             Table.tr []
-                [ Table.td [] [ text (parseName channel.name) ]
+                [ Table.td [] [ text (Helpers.parseName channel.name) ]
                 , Table.td [] [ text channel.id ]
                 , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick (RemoveChannel channel.id) ] [ text "-" ] ]
                 ]

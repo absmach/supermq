@@ -179,13 +179,6 @@ update msg model =
         Account ->
             ( { model | view = "account" }, Cmd.none )
 
-        Channels ->
-            let
-                ( updatedChannel, channelCmd ) =
-                    Channel.update Channel.RetrieveChannels model.channel model.user.token
-            in
-            ( { model | view = "channels" }, Cmd.map ChannelMsg channelCmd )
-
         Things ->
             let
                 ( updatedThing, thingCmd ) =
@@ -193,8 +186,22 @@ update msg model =
             in
             ( { model | view = "things" }, Cmd.map ThingMsg thingCmd )
 
+        Channels ->
+            let
+                ( updatedChannel, channelCmd ) =
+                    Channel.update Channel.RetrieveChannels model.channel model.user.token
+            in
+            ( { model | view = "channels" }, Cmd.map ChannelMsg channelCmd )
+
         Connection ->
-            ( { model | view = "connection" }, Cmd.none )
+            let
+                ( _, thingsCmd ) =
+                    Connection.update (Connection.ThingMsg Thing.RetrieveThings) Connection.initial model.user.token
+
+                ( _, channelsCmd ) =
+                    Connection.update (Connection.ChannelMsg Channel.RetrieveChannels) Connection.initial model.user.token
+            in
+            ( { model | view = "connection" }, Cmd.map ConnectionMsg (Cmd.batch [ thingsCmd, channelsCmd ]) )
 
         Messages ->
             ( { model | view = "messages" }, Cmd.none )
@@ -240,12 +247,12 @@ view model =
 
             menu =
                 if loggedIn then
-                    [ ButtonGroup.linkButton [ Button.primary, Button.onClick Account, buttonAttrs ] [ text "Account" ]
-                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Channels, buttonAttrs ] [ text "Channels" ]
-                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Things, buttonAttrs ] [ text "Things" ]
-                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Connection, buttonAttrs ] [ text "Connection" ]
-                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Messages, buttonAttrs ] [ text "Messages" ]
-                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Version, buttonAttrs ] [ text "Version" ]
+                    [ ButtonGroup.linkButton [ Button.primary, Button.onClick Account, buttonAttrs ] [ text "account" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Things, buttonAttrs ] [ text "things" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Channels, buttonAttrs ] [ text "channels" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Connection, buttonAttrs ] [ text "connection" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Messages, buttonAttrs ] [ text "messages" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Version, buttonAttrs ] [ text "version" ]
                     ]
 
                 else
@@ -267,7 +274,7 @@ view model =
                             Html.map ThingMsg (Thing.view model.thing)
 
                         "connection" ->
-                            Html.map ConnectionMsg (Connection.view model.connection)
+                            Html.map ConnectionMsg (Connection.view model.connection model.user.token)
 
                         "messages" ->
                             Html.map MessageMsg (Message.view model.message)
@@ -282,7 +289,7 @@ view model =
           Grid.container []
             [ CDN.stylesheet -- creates an inline style node with the Bootstrap CSS
             , Grid.row []
-                [ Grid.col [] [ h1 [] [ text "Gateflux" ] ] ]
+                [ Grid.col [] [ h1 [] [ text model.view ] ] ]
             , Grid.row []
                 [ Grid.col []
                     [ -- In this column we put the button group defined below
