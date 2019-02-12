@@ -172,7 +172,7 @@ update msg model =
         MessageMsg subMsg ->
             let
                 ( updatedMessage, messageCmd ) =
-                    Message.update subMsg model.message
+                    Message.update subMsg model.message model.user.token
             in
             ( { model | message = updatedMessage }, Cmd.map MessageMsg messageCmd )
 
@@ -204,7 +204,11 @@ update msg model =
             ( { model | view = "connection" }, Cmd.map ConnectionMsg (Cmd.batch [ thingsCmd, channelsCmd ]) )
 
         Messages ->
-            ( { model | view = "messages" }, Cmd.none )
+            let
+                ( _, thingsCmd ) =
+                    Message.update (Message.ThingMsg Thing.RetrieveThings) Message.initial model.user.token
+            in
+            ( { model | view = "messages" }, Cmd.map MessageMsg thingsCmd )
 
         Version ->
             let

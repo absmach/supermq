@@ -19,7 +19,8 @@ import Url.Builder as B
 
 url =
     { base = "http://localhost"
-    , path = [ "channels" ]
+    , thingsPath = [ "things" ]
+    , channelsPath = [ "channels" ]
     }
 
 
@@ -55,6 +56,7 @@ type Msg
     | ProvisionChannel
     | ProvisionedChannel (Result Http.Error Int)
     | RetrieveChannels
+    | RetrieveChannelsForThing String
     | RetrievedChannels (Result Http.Error (List Channel))
     | RemoveChannel String
     | RemovedChannel (Result Http.Error Int)
@@ -75,7 +77,7 @@ update msg model token =
         ProvisionChannel ->
             ( { model | name = "" }
             , provision
-                (B.crossOrigin url.base url.path [])
+                (B.crossOrigin url.base url.channelsPath [])
                 token
                 model.name
             )
@@ -92,7 +94,17 @@ update msg model token =
             ( model
             , retrieve
                 (B.crossOrigin url.base
-                    url.path
+                    url.channelsPath
+                    (Helpers.buildQueryParamList model.offset model.limit query)
+                )
+                token
+            )
+
+        RetrieveChannelsForThing thingid ->
+            ( model
+            , retrieve
+                (B.crossOrigin url.base
+                    (url.thingsPath ++ [ thingid ] ++ url.channelsPath)
                     (Helpers.buildQueryParamList model.offset model.limit query)
                 )
                 token
@@ -109,7 +121,7 @@ update msg model token =
         RemoveChannel id ->
             ( model
             , remove
-                (B.crossOrigin url.base (List.append url.path [ id ]) [])
+                (B.crossOrigin url.base (List.append url.channelsPath [ id ]) [])
                 token
             )
 
@@ -232,6 +244,7 @@ retrieve u token =
         }
 
 
+
 expectRetrieve : (Result Http.Error (List Channel) -> Msg) -> Http.Expect Msg
 expectRetrieve toMsg =
     Http.expectStringResponse toMsg <|
@@ -280,7 +293,7 @@ updateChannelList model token =
     ( model
     , retrieve
         (B.crossOrigin url.base
-            url.path
+            url.channelsPath
             (Helpers.buildQueryParamList model.offset model.limit query)
         )
         token

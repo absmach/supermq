@@ -2,14 +2,20 @@ module Message exposing (Model, Msg(..), initial, update, view)
 
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
+import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Form.Input as Input
+import Bootstrap.Form.Radio as Radio
 import Bootstrap.Grid as Grid
+import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
+import Channel
 import Error
 import Helpers
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onClick)
 import Http
+import Thing
 import Url.Builder as B
 
 
@@ -23,6 +29,9 @@ type alias Model =
     , token : String
     , channel : String
     , response : String
+    , things : Thing.Model
+    , channels : Channel.Model
+    , thingid : String
     }
 
 
@@ -32,28 +41,30 @@ initial =
     , token = ""
     , channel = ""
     , response = ""
+    , things = Thing.initial
+    , channels = Channel.initial
+    , thingid = ""
     }
 
 
 type Msg
     = SubmitMessage String
-    | SubmitToken String
     | SubmitChannel String
     | SendMessage
     | SentMessage (Result Http.Error Int)
+    | ThingMsg Thing.Msg
+    | ChannelMsg Channel.Msg
+    | SelectedThing String
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Msg -> Model -> String -> ( Model, Cmd Msg )
+update msg model token =
     case msg of
         SubmitMessage message ->
             ( { model | message = message }, Cmd.none )
 
         SubmitChannel channel ->
             ( { model | channel = channel }, Cmd.none )
-
-        SubmitToken token ->
-            ( { model | token = token }, Cmd.none )
 
         SendMessage ->
             ( model
@@ -76,6 +87,27 @@ update msg model =
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
 
+        ThingMsg subMsg ->
+            let
+                ( updatedThing, thingCmd ) =
+                    Thing.update subMsg model.things token
+            in
+            ( { model | things = updatedThing }, Cmd.map ThingMsg thingCmd )
+
+        ChannelMsg subMsg ->
+            let
+                ( updatedChannel, channelCmd ) =
+                    Channel.update subMsg model.channels token
+            in
+            ( { model | channels = updatedChannel }, Cmd.map ChannelMsg channelCmd )
+
+        SelectedThing thingid ->
+            let
+                ( updatedChannel, channelCmd ) =
+                    Channel.update (Channel.RetrieveChannelsForThing thingid) model.channels token
+            in
+            ( { model | thingid = thingid, channels = updatedChannel }, Cmd.map ChannelMsg channelCmd )
+
 
 view : Model -> Html Msg
 view model =
@@ -88,10 +120,6 @@ view model =
                         , Input.email [ Input.id "chan", Input.onInput SubmitChannel ]
                         ]
                     , Form.group []
-                        [ Form.label [ for "token" ] [ text "Thing token" ]
-                        , Input.text [ Input.id "token", Input.onInput SubmitToken ]
-                        ]
-                    , Form.group []
                         [ Form.label [ for "message" ] [ text "Message" ]
                         , Input.text [ Input.id "message", Input.onInput SubmitMessage ]
                         ]
@@ -99,8 +127,72 @@ view model =
                     ]
                 ]
             ]
+        , Grid.row []
+            [ Grid.col []
+                [ Html.map ThingMsg
+                    (Grid.row []
+                        [ Helpers.genFormField "offset" model.things.offset Thing.SubmitOffset
+                        , Helpers.genFormField "limit" model.things.limit Thing.SubmitLimit
+                        ]
+                    )
+                , Grid.row []
+                    [ Grid.col []
+                        [ Table.simpleTable
+                            ( Table.simpleThead
+                                [ Table.th [] [ text "Name" ]
+                                , Table.th [] [ text "Id" ]
+                                ]
+                            , Table.tbody [] (genThingRows model.things.things)
+                            )
+                        ]
+                    ]
+                ]
+            , Grid.col []
+                [ Html.map ChannelMsg
+                    (Grid.row []
+                        [ Helpers.genFormField "offset" model.channels.offset Channel.SubmitOffset
+                        , Helpers.genFormField "limit" model.channels.limit Channel.SubmitLimit
+                        ]
+                    )
+                , Grid.row []
+                    [ Grid.col []
+                        [ Table.simpleTable
+                            ( Table.simpleThead
+                                [ Table.th [] [ text "Name" ]
+                                , Table.th [] [ text "Id" ]
+                                ]
+                            , Table.tbody [] (genChannelRows model.channels.channels)
+                            )
+                        ]
+                    ]
+                ]
+            ]
         , Helpers.response model.response
         ]
+
+
+genThingRows : List Thing.Thing -> List (Table.Row Msg)
+genThingRows things =
+    List.map
+        (\thing ->
+            Table.tr []
+                [ Table.td [] [ label [] [ input [ type_ "radio", onClick (SelectedThing thing.id), name "things" ] [], text (Helpers.parseName thing.name) ] ]
+                , Table.td [] [ text thing.id ]
+                ]
+        )
+        things
+
+
+genChannelRows : List Channel.Channel -> List (Table.Row Msg)
+genChannelRows channels =
+    List.map
+        (\channel ->
+            Table.tr []
+                [ Table.td [] [ Checkbox.checkbox [ Checkbox.id channel.id ] (Helpers.parseName channel.name) ]
+                , Table.td [] [ text channel.id ]
+                ]
+        )
+        channels
 
 
 expectMessage : (Result Http.Error Int -> msg) -> Http.Expect msg
