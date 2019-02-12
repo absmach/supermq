@@ -88,12 +88,19 @@ function parseMqttTopic(topic) {
 
 nats.subscribe('channel.>', {'queue':'mqtts'}, function (msg) {
     var m = message.RawMessage.decode(Buffer.from(msg)),
-        packet;
+        packet, channelParts;
     if (m && m.protocol !== 'mqtt') {
+        // rexexp has two element, the first one is the channelId, wile
+        // the second is undefined or the subtopic parts starting from the dot
+        channelParts = /^([\w\-]+)(\..+[^\.]$)*$/.exec(m.channel)
         packet = {
             cmd: 'publish',
             qos: 2,
-            topic: 'channels/' + m.channel + '/messages',
+            // compose the topic with channelId followed by /messages and
+            // all the subtopics in the form /subtopic/subN/
+            topic: 'channels/' + channelParts[1] + '/messages' + (
+                channelParts[2] !== undefined ? channelParts[2].replace(/\./g, '\/') : ''
+            ),
             payload: m.payload,
             retain: false
         };
