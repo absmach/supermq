@@ -49,18 +49,12 @@ initial =
 
 type Msg
     = SubmitMessage String
-      -- | SubmitToken String
     | SubmitChannel String
     | SendMessage
     | SentMessage (Result Http.Error Int)
     | ThingMsg Thing.Msg
     | ChannelMsg Channel.Msg
     | SelectedThing String
-
-
-
--- type ThingId
---     = String Bool
 
 
 update : Msg -> Model -> String -> ( Model, Cmd Msg )
@@ -72,8 +66,6 @@ update msg model token =
         SubmitChannel channel ->
             ( { model | channel = channel }, Cmd.none )
 
-        -- SubmitToken token ->
-        --     ( { model | token = token }, Cmd.none )
         SendMessage ->
             ( model
             , Http.request
@@ -110,7 +102,6 @@ update msg model token =
             ( { model | channels = updatedChannel }, Cmd.map ChannelMsg channelCmd )
 
         SelectedThing thingid ->
-            -- ( Debug.log "model: " { model | thingid = thingid }, Cmd.none )
             let
                 ( updatedChannel, channelCmd ) =
                     Channel.update (Channel.RetrieveChannelsForThing thingid) model.channels token
@@ -128,11 +119,6 @@ view model =
                         [ Form.label [ for "chan" ] [ text "Channel id" ]
                         , Input.email [ Input.id "chan", Input.onInput SubmitChannel ]
                         ]
-
-                    -- , Form.group []
-                    --     [ Form.label [ for "token" ] [ text "Thing token" ]
-                    --     , Input.text [ Input.id "token", Input.onInput SubmitToken ]
-                    --     ]
                     , Form.group []
                         [ Form.label [ for "message" ] [ text "Message" ]
                         , Input.text [ Input.id "message", Input.onInput SubmitMessage ]
@@ -145,8 +131,8 @@ view model =
             [ Grid.col []
                 [ Html.map ThingMsg
                     (Grid.row []
-                        [ Grid.col [] [ Input.text [ Input.placeholder "offset", Input.id "offset", Input.onInput Thing.SubmitOffset ] ]
-                        , Grid.col [] [ Input.text [ Input.placeholder "limit", Input.id "limit", Input.onInput Thing.SubmitLimit ] ]
+                        [ Helpers.genFormField "offset" model.things.offset Thing.SubmitOffset
+                        , Helpers.genFormField "limit" model.things.limit Thing.SubmitLimit
                         ]
                     )
                 , Grid.row []
@@ -164,8 +150,8 @@ view model =
             , Grid.col []
                 [ Html.map ChannelMsg
                     (Grid.row []
-                        [ Grid.col [] [ Input.text [ Input.placeholder "offset", Input.id "offset", Input.onInput Channel.SubmitOffset ] ]
-                        , Grid.col [] [ Input.text [ Input.placeholder "limit", Input.id "limit", Input.onInput Channel.SubmitLimit ] ]
+                        [ Helpers.genFormField "offset" model.channels.offset Channel.SubmitOffset
+                        , Helpers.genFormField "limit" model.channels.limit Channel.SubmitLimit
                         ]
                     )
                 , Grid.row []
@@ -190,8 +176,6 @@ genThingRows things =
     List.map
         (\thing ->
             Table.tr []
-                -- [ Table.td [] [ Checkbox.checkbox [ Checkbox.id thing.id ] (Helpers.parseName thing.name) ]
-                -- [ Table.td [] [ Radio.radio [ Radio.id thing.id, Radio.name "things", Radio.onClick (SelectedThing thing.id) ] (Helpers.parseName thing.name) ]
                 [ Table.td [] [ label [] [ input [ type_ "radio", onClick (SelectedThing thing.id), name "things" ] [], text (Helpers.parseName thing.name) ] ]
                 , Table.td [] [ text thing.id ]
                 ]

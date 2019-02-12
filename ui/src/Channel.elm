@@ -19,7 +19,8 @@ import Url.Builder as B
 
 url =
     { base = "http://localhost"
-    , path = [ "channels" ]
+    , thingsPath = [ "things" ]
+    , channelsPath = [ "channels" ]
     }
 
 
@@ -76,7 +77,7 @@ update msg model token =
         ProvisionChannel ->
             ( { model | name = "" }
             , provision
-                (B.crossOrigin url.base url.path [])
+                (B.crossOrigin url.base url.channelsPath [])
                 token
                 model.name
             )
@@ -93,7 +94,7 @@ update msg model token =
             ( model
             , retrieve
                 (B.crossOrigin url.base
-                    url.path
+                    url.channelsPath
                     (Helpers.buildQueryParamList model.offset model.limit query)
                 )
                 token
@@ -103,7 +104,7 @@ update msg model token =
             ( model
             , retrieve
                 (B.crossOrigin url.base
-                    ([ "things" ] ++ [ thingid ] ++ url.path)
+                    (url.thingsPath ++ [ thingid ] ++ url.channelsPath)
                     (Helpers.buildQueryParamList model.offset model.limit query)
                 )
                 token
@@ -120,7 +121,7 @@ update msg model token =
         RemoveChannel id ->
             ( model
             , remove
-                (B.crossOrigin url.base (List.append url.path [ id ]) [])
+                (B.crossOrigin url.base (List.append url.channelsPath [ id ]) [])
                 token
             )
 
@@ -243,18 +244,6 @@ retrieve u token =
         }
 
 
-retrieveChannelsForThing : String -> String -> String -> Cmd Msg
-retrieveChannelsForThing u thingid token =
-    Http.request
-        { method = "GET"
-        , headers = [ Http.header "Authorization" token ]
-        , url = u
-        , body = Http.emptyBody
-        , expect = expectRetrieve RetrievedChannels
-        , timeout = Nothing
-        , tracker = Nothing
-        }
-
 
 expectRetrieve : (Result Http.Error (List Channel) -> Msg) -> Http.Expect Msg
 expectRetrieve toMsg =
@@ -304,7 +293,7 @@ updateChannelList model token =
     ( model
     , retrieve
         (B.crossOrigin url.base
-            url.path
+            url.channelsPath
             (Helpers.buildQueryParamList model.offset model.limit query)
         )
         token
