@@ -13,6 +13,8 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"regexp"
+	"strings"
 	"time"
 
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -27,8 +29,9 @@ import (
 const protocol = "http"
 
 var (
-	errMalformedData = errors.New("malformed request data")
-	auth             mainflux.ThingsServiceClient
+	errMalformedData  = errors.New("malformed request data")
+	auth              mainflux.ThingsServiceClient
+	channelPartRegExp = regexp.MustCompile(`^/channels/(?P<channelId>[\w\-]+)/messages(?P<subTopics>/.+[^/])*$`)
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -41,7 +44,7 @@ func MakeHandler(svc mainflux.MessagePublisher, tc mainflux.ThingsServiceClient)
 
 	r := bone.New()
 
-	r.Post("/channels/:id/messages", kithttp.NewServer(
+	r.Post("/channels/*", kithttp.NewServer(
 		sendMessageEndpoint(svc),
 		decodeRequest,
 		encodeResponse,
@@ -55,7 +58,17 @@ func MakeHandler(svc mainflux.MessagePublisher, tc mainflux.ThingsServiceClient)
 }
 
 func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	publisher, err := authorize(r)
+	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
+	if len(channelParts) < 2 {
+		return nil, errMalformedData
+	}
+	channel := channelParts[1]
+
+	if len(channelParts) == 3 {
+		channel = channel + strings.Replace(channelParts[2], "/", ".", -1)
+	}
+
+	publisher, err := authorize(r, channelParts[1])
 	if err != nil {
 		return nil, err
 	}
@@ -63,11 +76,6 @@ func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	payload, err := decodePayload(r.Body)
 	if err != nil {
 		return nil, err
-	}
-
-	channel := bone.GetValue(r, "id")
-	if channel == "" {
-		return nil, errMalformedData
 	}
 
 	msg := mainflux.RawMessage{
@@ -81,23 +89,17 @@ func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	return msg, nil
 }
 
-func authorize(r *http.Request) (string, error) {
+func authorize(r *http.Request, channelId string) (string, error) {
 	apiKey := r.Header.Get("Authorization")
 
 	if apiKey == "" {
 		return "", things.ErrUnauthorizedAccess
 	}
 
-	// extract ID from /channels/:id/messages
-	chanID := bone.GetValue(r, "id")
-	if chanID == "" {
-		return "", errMalformedData
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	id, err := auth.CanAccess(ctx, &mainflux.AccessReq{Token: apiKey, ChanID: chanID})
+	id, err := auth.CanAccess(ctx, &mainflux.AccessReq{Token: apiKey, ChanID: channelId})
 	if err != nil {
 		return "", err
 	}
