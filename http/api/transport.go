@@ -31,7 +31,7 @@ const protocol = "http"
 var (
 	errMalformedData  = errors.New("malformed request data")
 	auth              mainflux.ThingsServiceClient
-	channelPartRegExp = regexp.MustCompile(`^/channels/(?P<channelId>[\w\-]+)/messages(?P<subTopics>/.+[^/])*$`)
+	channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/.+[^/])*$`)
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -89,7 +89,7 @@ func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	return msg, nil
 }
 
-func authorize(r *http.Request, channelId string) (string, error) {
+func authorize(r *http.Request, chanID string) (string, error) {
 	apiKey := r.Header.Get("Authorization")
 
 	if apiKey == "" {
@@ -99,7 +99,7 @@ func authorize(r *http.Request, channelId string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	id, err := auth.CanAccess(ctx, &mainflux.AccessReq{Token: apiKey, ChanID: channelId})
+	id, err := auth.CanAccess(ctx, &mainflux.AccessReq{Token: apiKey, ChanID: chanID})
 	if err != nil {
 		return "", err
 	}
