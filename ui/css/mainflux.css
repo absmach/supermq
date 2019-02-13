@@ -1,0 +1,15 @@
+/* Copyright (c) 2019
+   Mainflux
+
+   SPDX-License-Identifier: Apache-2.0 */
+
+.btn-primary {
+  color: #fff;
+  background-color: #113f67;
+  border-color: #113f67;
+}
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open>.dropdown-toggle.btn-primary {
+  color: #fff;
+  background-color: #408ab4;
+  border-color: #408ab4;
+}

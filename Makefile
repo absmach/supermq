@@ -1,3 +1,8 @@
+## Copyright (c) 2015-2019
+## Mainflux
+##
+## SPDX-License-Identifier: Apache-2.0
+
 BUILD_DIR = build
 SERVICES = users things http normalizer ws coap lora influxdb-writer influxdb-reader mongodb-writer mongodb-reader cassandra-writer cassandra-reader cli bootstrap
 DOCKERS = $(addprefix docker_,$(SERVICES))
@@ -19,7 +24,7 @@ endef
 
 all: $(SERVICES) mqtt
 
-.PHONY: all $(SERVICES) dockers dockers_dev latest release mqtt
+.PHONY: all $(SERVICES) dockers dockers_dev latest release mqtt ui
 
 clean:
 	rm -rf ${BUILD_DIR}
@@ -71,6 +76,9 @@ $(DOCKERS_DEV):
 
 dockers_dev: $(DOCKERS_DEV)
 
+ui:
+	$(MAKE) -C ui
+
 mqtt:
 	cd mqtt && npm install
 
@@ -104,6 +112,9 @@ rundev:
 
 run:
 	docker-compose -f docker/docker-compose.yml up
+
+runui:
+	$(MAKE) -C ui run
 
 runlora:
 	docker-compose -f docker/docker-compose.yml up -d
