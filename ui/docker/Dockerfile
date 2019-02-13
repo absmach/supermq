@@ -1,13 +1,21 @@
-# Stage 0, based on Node.js, to build and compile Angular
-FROM node:9.5 as node
+###
+# Copyright (c) 2015-2019 Mainflux
+#
+# Mainflux is licensed under an Apache license, version 2.0 license.
+# All rights not explicitly granted in the Apache license, version 2.0 are reserved.
+# See the included LICENSE file for more details.
+###
+
+# Stage 0, based on Node.js, to build and compile Elm app
+FROM node:10.15.1-alpine as builder
+
 WORKDIR /app
-COPY package.json /app/
-RUN npm install
-COPY ./ /app/
-ARG env=prod
-RUN npm run build -- --prod --environment $env
+RUN npm install --unsafe-perm=true --allow-root -g elm
+
+COPY . /app
+RUN elm make --optimize src/Main.elm
 
 # Stage 1, based on Nginx, to have only the compiled app, ready for production with Nginx
-FROM nginx:1.13-alpine
-COPY --from=node /app/dist/ /usr/share/nginx/html
+FROM nginx:1.14.2-alpine
+COPY --from=builder /app/index.html /usr/share/nginx/html
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf

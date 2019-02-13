@@ -2,6 +2,7 @@ build
 site/
 
 ui/elm-stuff
+ui/index.html
 ui/src/.dir-locals.el
 
 .vscode
