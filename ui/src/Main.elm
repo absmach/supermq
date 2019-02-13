@@ -1,3 +1,8 @@
+-- Copyright (c) 2019
+-- Mainflux
+--
+-- SPDX-License-Identifier: Apache-2.0
+
 module Main exposing (Model, Msg(..), init, main, subscriptions, update, view)
 
 import Bootstrap.Button as Button
@@ -233,6 +238,14 @@ subscriptions _ =
 -- VIEW
 
 
+mfStylesheet : Html msg
+mfStylesheet =
+    node "link"
+        [ rel "stylesheet"
+        , href "./css/mainflux.css"
+        ]
+        []
+
 view : Model -> Browser.Document Msg
 view model =
     { title = "Gateflux"
@@ -247,7 +260,7 @@ view model =
                     False
 
             buttonAttrs =
-                Button.attrs [ style "color" "white" ]
+                Button.attrs [ style "text-align" "left" ]
 
             menu =
                 if loggedIn then
@@ -289,18 +302,47 @@ view model =
                 else
                     Html.map UserMsg (User.view model.user)
         in
-        [ -- we use Bootstrap container defined at http://elm-bootstrap.info/grid
-          Grid.container []
+        -- we use Bootstrap container defined at http://elm-bootstrap.info/grid
+        [ Grid.containerFluid []
             [ CDN.stylesheet -- creates an inline style node with the Bootstrap CSS
-            , Grid.row []
-                [ Grid.col [] [ h1 [] [ text model.view ] ] ]
-            , Grid.row []
-                [ Grid.col []
-                    [ -- In this column we put the button group defined below
-                      ButtonGroup.linkButtonGroup [ ButtonGroup.vertical ] menu
+            , mfStylesheet
+            , Grid.row [ Row.attrs [ style "height" "100vh" ] ]
+                [ Grid.col
+                    [ Col.attrs
+                        [ style "background-color" "#113f67"
+                        , style "padding" "0"
+                        , style "color" "white"
+                        ]
                     ]
-                , Grid.col [ Col.xs10 ]
-                    [ content
+                    [ Grid.row []
+                        [ Grid.col
+                            [ Col.attrs [] ] [ h3 [] [ text "Mainflux" ] ]
+                        ]
+                    , Grid.row []
+                        [ Grid.col
+                            [ Col.attrs [] ]
+                            [ ButtonGroup.linkButtonGroup 
+                                [ ButtonGroup.vertical
+                                , ButtonGroup.attrs [ style "width" "100%" ]
+                                ] menu
+                            ]
+                        ]
+                    ]
+                , Grid.col
+                    [ Col.xs10
+                    , Col.attrs [] 
+                    ]
+                    [ Grid.row
+                        [ Row.attrs [] ]
+                        [ Grid.col
+                            [ Col.attrs [] ]
+                            [ text "drasko@mainflux.com" ]
+                        ]
+                    , Grid.row []
+                        [ Grid.col
+                            [ Col.attrs [] ]
+                            [ content ]
+                        ]
                     ]
                 ]
             ]
