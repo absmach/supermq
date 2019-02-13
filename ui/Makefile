@@ -1,5 +1,7 @@
 all: dev
 
+.PHONY: all docker
+
 dev:
 	elm make src/Main.elm
 
@@ -8,6 +10,9 @@ prod:
 
 run:
 	elm reactor
+
+docker:
+	docker build --tag=mainflux/ui -f docker/Dockerfile .
 
 clean:
 	rm -f index.html

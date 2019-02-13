@@ -57,9 +57,14 @@ $(SERVICES):
 $(DOCKERS):
 	$(call make_docker,$(@))
 
-dockers: $(DOCKERS)
-	docker build --tag=mainflux/ui -f ui/docker/Dockerfile ui
+docker_ui:
+	$(MAKE) -C ui docker
+
+docker_mqtt:
+	# MQTT Docker build must be done from root dir because it copies .proto files
 	docker build --tag=mainflux/mqtt -f mqtt/Dockerfile .
+
+dockers: $(DOCKERS) docker_ui docker_mqtt
 
 $(DOCKERS_DEV):
 	$(call make_docker_dev,$(@))
