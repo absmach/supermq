@@ -141,7 +141,7 @@ func (cr configRepository) RetrieveAll(key string, filter bootstrap.Filter, offs
 
 	var total uint64
 	if err := cr.db.QueryRow(q, params...).Scan(&total); err != nil {
-		cr.log.Error(fmt.Sprintf("Failed to count config due to %s", err))
+		cr.log.Error(fmt.Sprintf("Failed to count configs due to %s", err))
 		return bootstrap.ConfigsPage{}
 	}
 
@@ -277,7 +277,7 @@ func (cr configRepository) RetrieveUnknown(offset, limit uint64) bootstrap.Confi
 
 	var total uint64
 	if err := cr.db.QueryRow(q).Scan(&total); err != nil {
-		cr.log.Error(fmt.Sprintf("Failed to count config due to %s", err))
+		cr.log.Error(fmt.Sprintf("Failed to count unknown configs due to %s", err))
 		return bootstrap.ConfigsPage{}
 	}
 
