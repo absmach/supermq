@@ -16,6 +16,11 @@ import (
 	"github.com/mainflux/mainflux/bootstrap"
 )
 
+const (
+	emptyState  = -1
+	notFoundIdx = -1
+)
+
 var _ bootstrap.ConfigRepository = (*configRepositoryMock)(nil)
 
 type configRepositoryMock struct {
@@ -73,7 +78,7 @@ func (crm *configRepositoryMock) RetrieveAll(key string, filter bootstrap.Filter
 
 	first := uint64(offset) + 1
 	last := first + uint64(limit)
-	var state bootstrap.State = -1
+	var state bootstrap.State = emptyState
 	var name string
 	if s, ok := filter.FullMatch["state"]; ok {
 		val, _ := strconv.Atoi(s)
@@ -87,8 +92,8 @@ func (crm *configRepositoryMock) RetrieveAll(key string, filter bootstrap.Filter
 	var total uint64
 	for _, v := range crm.configs {
 		id, _ := strconv.ParseUint(v.MFThing, 10, 64)
-		if (state == -1 || v.State == state) &&
-			(name == "" || strings.Index(strings.ToLower(v.Name), name) != -1) &&
+		if (state == emptyState || v.State == state) &&
+			(name == "" || strings.Index(strings.ToLower(v.Name), name) != notFoundIdx) &&
 			v.Owner == key {
 			if id >= first && id < last {
 				configs = append(configs, v)
