@@ -64,7 +64,7 @@ type ConfigRepository interface {
 	// by the specified user.
 	RetrieveByID(string, string) (Config, error)
 
-	// RetrieveAll retrieves data about subset of Configs that are owned
+	// RetrieveAll retrieves a subset of Configs that are owned
 	// by the specific user, with given filter parameters.
 	RetrieveAll(string, Filter, uint64, uint64) ConfigsPage
 
@@ -85,7 +85,7 @@ type ConfigRepository interface {
 	// SaveUnknown saves Thing which unsuccessfully bootstrapped.
 	SaveUnknown(string, string) error
 
-	// RetrieveUnknown returns data about subset of unsuccessfully bootstrapped Things.
+	// RetrieveUnknown returns a subset of unsuccessfully bootstrapped Things.
 	RetrieveUnknown(uint64, uint64) ConfigsPage
 
 	// RemoveUnknown removes unsuccessfully bootstrapped Thing. This is done once the
