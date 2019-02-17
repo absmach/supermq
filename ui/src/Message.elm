@@ -31,7 +31,7 @@ url =
 
 type alias Model =
     { message : String
-    , token : String
+    , thingkey : String
     , response : String
     , things : Thing.Model
     , channels : Channel.Model
@@ -43,7 +43,7 @@ type alias Model =
 initial : Model
 initial =
     { message = ""
-    , token = ""
+    , thingkey = ""
     , response = ""
     , things = Thing.initial
     , channels = Channel.initial
@@ -75,7 +75,7 @@ update msg model token =
                     (\channelId ->
                         Http.request
                             { method = "POST"
-                            , headers = [ Http.header "Authorization" model.token ]
+                            , headers = [ Http.header "Authorization" model.thingkey ]
                             , url = B.crossOrigin url.base (url.httpPath ++ url.channelsPath ++ [ channelId ] ++ url.messagesPath) []
                             , body = Http.stringBody "application/json" model.message
                             , expect = expectMessage SentMessage
@@ -114,7 +114,7 @@ update msg model token =
                 ( updatedChannel, channelCmd ) =
                     Channel.update (Channel.RetrieveChannelsForThing thingid) model.channels token
             in
-            ( { model | thingid = thingid, channels = updatedChannel, token = thingkey }, Cmd.map ChannelMsg channelCmd )
+            ( { model | thingid = thingid, channels = updatedChannel, thingkey = thingkey }, Cmd.map ChannelMsg channelCmd )
 
         CheckChannel id ->
             ( { model | checkedChannelsIds = checkEntity id model.checkedChannelsIds }, Cmd.none )
