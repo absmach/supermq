@@ -70,6 +70,9 @@ type Service interface {
 
 	// UpdateChannel updates Channel with data received from an event.
 	UpdateChannel(Channel) error
+
+	// RemoveConfig removes Configuration with id received from an event.
+	RemoveConfig(string) error
 }
 
 // ConfigReader is used to parse Config into format which will be encoded
@@ -233,18 +236,6 @@ func (bs bootstrapService) Remove(key, id string) error {
 		return err
 	}
 
-	thing, err := bs.configs.RetrieveByID(owner, id)
-	if err != nil {
-		if err == ErrNotFound {
-			return nil
-		}
-		return err
-	}
-
-	if err := bs.sdk.DeleteThing(thing.MFThing, key); err != nil {
-		return ErrThings
-	}
-
 	return bs.configs.Remove(owner, id)
 }
 
@@ -304,6 +295,10 @@ func (bs bootstrapService) ChangeState(key, id string, state State) error {
 
 func (bs bootstrapService) UpdateChannel(channel Channel) error {
 	return bs.configs.UpdateChannel(channel)
+}
+
+func (bs bootstrapService) RemoveConfig(id string) error {
+	return bs.configs.Remove("", id)
 }
 
 // Method thing retrieves Mainflux Thing creating one if an empty ID is passed.

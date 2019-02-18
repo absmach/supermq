@@ -101,9 +101,7 @@ func decodeRemoveChannel(event map[string]interface{}) removeEvent {
 }
 
 func (es eventStore) handleRemoveThing(rte removeEvent) error {
-	println("remove thing")
-	return nil
-	// return es.svc.RemoveThing(rte.id)
+	return es.svc.RemoveConfig(rte.id)
 }
 
 func (es eventStore) handleUpdateChannel(uce updateChannelEvent) error {

@@ -264,8 +264,14 @@ func (cr configRepository) Update(cfg bootstrap.Config, connections []string) er
 }
 
 func (cr configRepository) Remove(key, id string) error {
-	q := `DELETE FROM configs WHERE mainflux_thing = $1 AND owner = $2`
-	cr.db.Exec(q, id, key)
+	params := []interface{}{id}
+	q := `DELETE FROM configs WHERE mainflux_thing = $1`
+	if key != "" {
+		q = fmt.Sprintf("%s%s", q, " AND owner = $2")
+		params = append(params, key)
+	}
+
+	cr.db.Exec(q, params...)
 
 	return nil
 }

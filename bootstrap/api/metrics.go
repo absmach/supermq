@@ -105,3 +105,12 @@ func (mm *metricsMiddleware) UpdateChannel(channel bootstrap.Channel) (err error
 
 	return mm.svc.UpdateChannel(channel)
 }
+
+func (mm *metricsMiddleware) RemoveConfig(id string) (err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "change_state").Add(1)
+		mm.latency.With("method", "change_state").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.RemoveConfig(id)
+}
