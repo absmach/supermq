@@ -69,7 +69,7 @@ update msg model token =
             ( { model | message = message }, Cmd.none )
 
         SendMessage ->
-            ( model
+            ( { model | message = "", thingkey = "", response = "", thingid = "" }
             , Cmd.batch
                 (List.map
                     (\channelId ->
@@ -114,7 +114,7 @@ update msg model token =
                 ( updatedChannel, channelCmd ) =
                     Channel.update (Channel.RetrieveChannelsForThing thingid) model.channels token
             in
-            ( { model | thingid = thingid, channels = updatedChannel, thingkey = thingkey }, Cmd.map ChannelMsg channelCmd )
+            ( { model | thingid = thingid, channels = updatedChannel, thingkey = thingkey, checkedChannelsIds = [] }, Cmd.map ChannelMsg channelCmd )
 
         CheckChannel id ->
             ( { model | checkedChannelsIds = checkEntity id model.checkedChannelsIds }, Cmd.none )
