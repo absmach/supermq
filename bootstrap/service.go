@@ -73,6 +73,9 @@ type Service interface {
 
 	// RemoveConfig removes Configuration with id received from an event.
 	RemoveConfig(string) error
+
+	// RemoveChannel removes Channel with id received from an event.
+	RemoveChannel(string) error
 }
 
 // ConfigReader is used to parse Config into format which will be encoded
@@ -299,6 +302,10 @@ func (bs bootstrapService) UpdateChannel(channel Channel) error {
 
 func (bs bootstrapService) RemoveConfig(id string) error {
 	return bs.configs.Remove("", id)
+}
+
+func (bs bootstrapService) RemoveChannel(id string) error {
+	return bs.configs.RemoveChannel(id)
 }
 
 // Method thing retrieves Mainflux Thing creating one if an empty ID is passed.

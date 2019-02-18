@@ -500,6 +500,15 @@ func (cr configRepository) UpdateChannel(channel bootstrap.Channel) error {
 	return nil
 }
 
+func (cr configRepository) RemoveChannel(id string) error {
+	q := `DELETE FROM channels WHERE mainflux_channel = $1`
+	if _, err := cr.db.Exec(q, id); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (cr configRepository) rollback(content string, tx *sql.Tx, err error) {
 	cr.log.Error(fmt.Sprintf("%s %s", content, err))
 	if err := tx.Rollback(); err != nil {

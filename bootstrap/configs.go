@@ -93,4 +93,7 @@ type ConfigRepository interface {
 
 	// UpdateChannel updates channel extracting data from received event.
 	UpdateChannel(Channel) error
+
+	// RemoveChannel removes channel extracting id from received event.
+	RemoveChannel(id string) error
 }

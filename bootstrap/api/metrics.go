@@ -99,8 +99,8 @@ func (mm *metricsMiddleware) ChangeState(id, key string, state bootstrap.State) 
 
 func (mm *metricsMiddleware) UpdateChannel(channel bootstrap.Channel) (err error) {
 	defer func(begin time.Time) {
-		mm.counter.With("method", "change_state").Add(1)
-		mm.latency.With("method", "change_state").Observe(time.Since(begin).Seconds())
+		mm.counter.With("method", "update_channel").Add(1)
+		mm.latency.With("method", "update_channel").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
 	return mm.svc.UpdateChannel(channel)
@@ -108,9 +108,18 @@ func (mm *metricsMiddleware) UpdateChannel(channel bootstrap.Channel) (err error
 
 func (mm *metricsMiddleware) RemoveConfig(id string) (err error) {
 	defer func(begin time.Time) {
-		mm.counter.With("method", "change_state").Add(1)
-		mm.latency.With("method", "change_state").Observe(time.Since(begin).Seconds())
+		mm.counter.With("method", "remove_config").Add(1)
+		mm.latency.With("method", "remove_config").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
 	return mm.svc.RemoveConfig(id)
+}
+
+func (mm *metricsMiddleware) RemoveChannel(id string) (err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "remove_channel").Add(1)
+		mm.latency.With("method", "remove_channel").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.RemoveChannel(id)
 }

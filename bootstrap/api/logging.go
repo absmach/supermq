@@ -145,3 +145,16 @@ func (lm *loggingMiddleware) RemoveConfig(id string) (err error) {
 
 	return lm.svc.RemoveConfig(id)
 }
+
+func (lm *loggingMiddleware) RemoveChannel(id string) (err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method removeChannel for channel %s took %s to complete", id, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+
+	return lm.svc.RemoveChannel(id)
+}

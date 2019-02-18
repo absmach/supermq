@@ -114,9 +114,7 @@ func (es eventStore) handleUpdateChannel(uce updateChannelEvent) error {
 }
 
 func (es eventStore) handleRemoveChannel(rce removeEvent) error {
-	println("remove chann")
-	return nil
-	// return es.svc.RemoveChannel(rce.id)
+	return es.svc.RemoveChannel(rce.id)
 }
 
 func read(event map[string]interface{}, key, def string) string {
