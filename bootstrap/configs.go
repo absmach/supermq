@@ -90,4 +90,7 @@ type ConfigRepository interface {
 
 	//Exist retrieves IDs of those channels from the given list that exist in DB.
 	Exist(string, []string) ([]string, error)
+
+	// UpdateChannel updates channel extracting data from received event.
+	UpdateChannel(Channel) error
 }

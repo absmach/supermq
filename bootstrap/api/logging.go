@@ -119,3 +119,16 @@ func (lm *loggingMiddleware) ChangeState(key, id string, state bootstrap.State) 
 
 	return lm.svc.ChangeState(key, id, state)
 }
+
+func (lm *loggingMiddleware) UpdateChannel(channel bootstrap.Channel) (err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method updateChannel for channel %s took %s to complete", channel.ID, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+
+	return lm.svc.UpdateChannel(channel)
+}

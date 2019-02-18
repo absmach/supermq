@@ -96,3 +96,12 @@ func (mm *metricsMiddleware) ChangeState(id, key string, state bootstrap.State) 
 
 	return mm.svc.ChangeState(id, key, state)
 }
+
+func (mm *metricsMiddleware) UpdateChannel(channel bootstrap.Channel) (err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "change_state").Add(1)
+		mm.latency.With("method", "change_state").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.UpdateChannel(channel)
+}

@@ -67,6 +67,9 @@ type Service interface {
 
 	// ChangeState changes state of the Thing with given ID and owner.
 	ChangeState(string, string, State) error
+
+	// UpdateChannel updates Channel with data received from an event.
+	UpdateChannel(Channel) error
 }
 
 // ConfigReader is used to parse Config into format which will be encoded
@@ -103,8 +106,6 @@ func (bs bootstrapService) Add(key string, cfg Config) (Config, error) {
 		toConnect = append(toConnect, ch.ID)
 	}
 	// Check if channels exist. This is the way to prevent invalid configuration to be saved.
-	// However, channels deletion will eventually cause this; since Bootstrap service is not
-	// using events from the Things service at the moment. See #552.
 	connected, err := bs.configs.Exist(key, toConnect)
 	if err != nil {
 		return Config{}, err
@@ -299,6 +300,10 @@ func (bs bootstrapService) ChangeState(key, id string, state State) error {
 	}
 
 	return bs.configs.ChangeState(owner, id, state)
+}
+
+func (bs bootstrapService) UpdateChannel(channel Channel) error {
+	return bs.configs.UpdateChannel(channel)
 }
 
 // Method thing retrieves Mainflux Thing creating one if an empty ID is passed.

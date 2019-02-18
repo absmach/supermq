@@ -485,6 +485,15 @@ func updateConnections(cfg bootstrap.Config, connections []string, tx *sql.Tx) e
 	return err
 }
 
+func (cr configRepository) UpdateChannel(channel bootstrap.Channel) error {
+	q := `UPDATE channels SET name = $1, metadata = $2 WHERE mainflux_channel = $3`
+	if _, err := cr.db.Exec(q, channel.Name, channel.Metadata, channel.ID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (cr configRepository) rollback(content string, tx *sql.Tx, err error) {
 	cr.log.Error(fmt.Sprintf("%s %s", content, err))
 	if err := tx.Rollback(); err != nil {

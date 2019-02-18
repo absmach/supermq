@@ -107,9 +107,12 @@ func (es eventStore) handleRemoveThing(rte removeEvent) error {
 }
 
 func (es eventStore) handleUpdateChannel(uce updateChannelEvent) error {
-	println("update chann")
-	return nil
-	// return es.svc.UpdateChannel(uce.id, cm.AppID)
+	channel := bootstrap.Channel{
+		ID:       uce.id,
+		Name:     uce.name,
+		Metadata: uce.metadata,
+	}
+	return es.svc.UpdateChannel(channel)
 }
 
 func (es eventStore) handleRemoveChannel(rce removeEvent) error {
