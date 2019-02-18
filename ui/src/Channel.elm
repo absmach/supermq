@@ -53,6 +53,8 @@ type Msg
     = SubmitName String
     | SubmitOffset String
     | SubmitLimit String
+    | SubmitOffsetForThing String String
+    | SubmitLimitForThing String String
     | ProvisionChannel
     | ProvisionedChannel (Result Http.Error Int)
     | RetrieveChannels
@@ -73,6 +75,12 @@ update msg model token =
 
         SubmitLimit limit ->
             updateChannelList { model | limit = limit } token
+
+        SubmitOffsetForThing thingid offset ->
+            updateChannelListForThing { model | offset = offset } token thingid
+
+        SubmitLimitForThing thingid limit ->
+            updateChannelListForThing { model | limit = limit } token thingid
 
         ProvisionChannel ->
             ( { model | name = "" }
@@ -244,7 +252,6 @@ retrieve u token =
         }
 
 
-
 expectRetrieve : (Result Http.Error (List Channel) -> Msg) -> Http.Expect Msg
 expectRetrieve toMsg =
     Http.expectStringResponse toMsg <|
@@ -294,6 +301,18 @@ updateChannelList model token =
     , retrieve
         (B.crossOrigin url.base
             url.channelsPath
+            (Helpers.buildQueryParamList model.offset model.limit query)
+        )
+        token
+    )
+
+
+updateChannelListForThing : Model -> String -> String -> ( Model, Cmd Msg )
+updateChannelListForThing model token thingid =
+    ( model
+    , retrieve
+        (B.crossOrigin url.base
+            (url.thingsPath ++ [ thingid ] ++ url.channelsPath)
             (Helpers.buildQueryParamList model.offset model.limit query)
         )
         token
