@@ -299,10 +299,7 @@ updateChannelList : Model -> String -> ( Model, Cmd Msg )
 updateChannelList model token =
     ( model
     , retrieve
-        (B.crossOrigin url.base
-            url.channelsPath
-            (Helpers.buildQueryParamList model.offset model.limit query)
-        )
+        (buildUrl url.channelsPath model.offset model.limit)
         token
     )
 
@@ -311,9 +308,13 @@ updateChannelListForThing : Model -> String -> String -> ( Model, Cmd Msg )
 updateChannelListForThing model token thingid =
     ( model
     , retrieve
-        (B.crossOrigin url.base
-            (url.thingsPath ++ [ thingid ] ++ url.channelsPath)
-            (Helpers.buildQueryParamList model.offset model.limit query)
-        )
+        (buildUrl (url.thingsPath ++ [ thingid ] ++ url.channelsPath) model.offset model.limit)
         token
     )
+
+
+buildUrl : List String -> String -> String -> String
+buildUrl path offset limit =
+    B.crossOrigin url.base
+        path
+        (Helpers.buildQueryParamList offset limit query)

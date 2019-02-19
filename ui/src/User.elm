@@ -106,9 +106,7 @@ view model =
                 False
     in
     if loggedIn then
-        div [ id "loggedIn" ]
-            [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick LogOut ] [ text "Log out" ]
-            ]
+        Grid.container [] []
 
     else
         Grid.container []
