@@ -3,6 +3,7 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
+
 module Main exposing (Model, Msg(..), init, main, subscriptions, update, view)
 
 import Bootstrap.Button as Button
@@ -102,7 +103,7 @@ parse url =
                         Tuple.first r
 
                     Nothing ->
-                        "account"
+                        ""
            )
 
 
@@ -150,8 +151,16 @@ update msg model =
             let
                 ( updatedUser, userCmd ) =
                     User.update subMsg model.user
+
+                v =
+                    case subMsg of
+                        User.GotToken _ ->
+                            "account"
+
+                        _ ->
+                            model.view
             in
-            ( { model | user = updatedUser }, Cmd.map UserMsg userCmd )
+            ( { model | user = updatedUser, view = v }, Cmd.map UserMsg userCmd )
 
         ChannelMsg subMsg ->
             let
@@ -246,6 +255,7 @@ mfStylesheet =
         ]
         []
 
+
 view : Model -> Browser.Document Msg
 view model =
     { title = "Gateflux"
@@ -274,6 +284,17 @@ view model =
 
                 else
                     []
+
+            header =
+                if loggedIn then
+                    Grid.row []
+                        [ Grid.col [ Col.attrs [] ] [ text model.user.email ]
+                        , Grid.col [ Col.attrs [ align "right" ] ] [ Button.button [ Button.roleLink, Button.attrs [ Spacing.ml1 ], Button.onClick User.LogOut ] [ text "logout" ] ]
+                        ]
+
+                else
+                    Grid.row []
+                        [ Grid.col [ Col.attrs [] ] [] ]
 
             content =
                 if loggedIn then
@@ -316,28 +337,25 @@ view model =
                     ]
                     [ Grid.row []
                         [ Grid.col
-                            [ Col.attrs [] ] [ h3 [] [ text "Mainflux" ] ]
+                            [ Col.attrs [] ]
+                            [ h3 [] [ text "Mainflux" ] ]
                         ]
                     , Grid.row []
                         [ Grid.col
                             [ Col.attrs [] ]
-                            [ ButtonGroup.linkButtonGroup 
+                            [ ButtonGroup.linkButtonGroup
                                 [ ButtonGroup.vertical
                                 , ButtonGroup.attrs [ style "width" "100%" ]
-                                ] menu
+                                ]
+                                menu
                             ]
                         ]
                     ]
                 , Grid.col
                     [ Col.xs10
-                    , Col.attrs [] 
+                    , Col.attrs []
                     ]
-                    [ Grid.row
-                        [ Row.attrs [] ]
-                        [ Grid.col
-                            [ Col.attrs [] ]
-                            [ text "drasko@mainflux.com" ]
-                        ]
+                    [ Html.map UserMsg header
                     , Grid.row []
                         [ Grid.col
                             [ Col.attrs [] ]
