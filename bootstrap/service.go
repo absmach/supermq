@@ -46,13 +46,13 @@ var _ Service = (*bootstrapService)(nil)
 // Service specifies an API that must be fulfilled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
-	// Add adds new Thing to the user identified by the provided key.
+	// Add adds new Thing Config to the user identified by the provided key.
 	Add(string, Config) (Config, error)
 
-	// View returns Thing with given ID belonging to the user identified by the given key.
+	// View returns Thing Config with given ID belonging to the user identified by the given key.
 	View(string, string) (Config, error)
 
-	// Update updates editable fields of the provided Thing.
+	// Update updates editable fields of the provided Config.
 	Update(string, Config) error
 
 	// List returns subset of Configs with given search params that belong to the
@@ -132,6 +132,7 @@ func (bs bootstrapService) Add(key string, cfg Config) (Config, error) {
 
 	if err != nil {
 		if id == "" {
+			// Fail silently.
 			bs.sdk.DeleteThing(cfg.MFThing, key)
 		}
 		return Config{}, err
@@ -154,8 +155,10 @@ func (bs bootstrapService) View(key, id string) (Config, error) {
 	}
 
 	for i, ch := range cfg.MFChannels {
-		if err := json.Unmarshal(ch.Metadata.([]byte), &cfg.MFChannels[i].Metadata); err != nil {
-			return Config{}, err
+		if meta, ok := ch.Metadata.([]byte); ok {
+			if err := json.Unmarshal(meta, &cfg.MFChannels[i].Metadata); err != nil {
+				return Config{}, err
+			}
 		}
 	}
 
