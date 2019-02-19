@@ -73,7 +73,11 @@ type ConfigRepository interface {
 
 	// Update performs and update to an existing Config. A non-nil error is returned
 	// to indicate operation failure.
-	Update(Config, []string) error
+	Update(Config) error
+
+	// UpdateConnections updates a list of Channels the Config is connected to
+	// adding new Channels if needed.
+	UpdateConnections(string, string, []Channel, []string) error
 
 	// Remove removes the Config having the provided identifier, that is owned
 	// by the specified user.
@@ -88,8 +92,14 @@ type ConfigRepository interface {
 	// RetrieveUnknown returns a subset of unsuccessfully bootstrapped Things.
 	RetrieveUnknown(uint64, uint64) ConfigsPage
 
-	//Exist retrieves IDs of those channels from the given list that exist in DB.
-	Exist(string, []string) ([]string, error)
+	//ListExisting retrieves IDs of those channels from the given list that exist in DB.
+	ListExisting(string, []string) ([]string, error)
+
+	// Methods RemoveThing, UpdateChannel, and RemoveChannel are related to
+	// event sourcing. That's why these methods surpass ownership check.
+
+	// RemoveThing removes Config for Thing with an ID extracted from an event.
+	RemoveThing(string) error
 
 	// UpdateChannel updates channel extracting data from received event.
 	UpdateChannel(Channel) error

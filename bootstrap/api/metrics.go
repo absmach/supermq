@@ -54,11 +54,20 @@ func (mm *metricsMiddleware) View(id, key string) (saved bootstrap.Config, err e
 
 func (mm *metricsMiddleware) Update(key string, thing bootstrap.Config) (err error) {
 	defer func(begin time.Time) {
-		mm.counter.With("method", "view").Add(1)
-		mm.latency.With("method", "view").Observe(time.Since(begin).Seconds())
+		mm.counter.With("method", "update").Add(1)
+		mm.latency.With("method", "update").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
 	return mm.svc.Update(key, thing)
+}
+
+func (mm *metricsMiddleware) UpdateConnections(key, id string, connections []string) (err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "update_connections").Add(1)
+		mm.latency.With("method", "update_connections").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.UpdateConnections(key, id, connections)
 }
 
 func (mm *metricsMiddleware) List(key string, filter bootstrap.Filter, offset, limit uint64) (saved bootstrap.ConfigsPage, err error) {

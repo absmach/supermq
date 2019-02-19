@@ -96,5 +96,6 @@ func migrateDB(db *sql.DB) error {
 	}
 
 	_, err := migrate.Exec(db, "postgres", migrations, migrate.Up)
+
 	return err
 }

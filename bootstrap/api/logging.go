@@ -68,6 +68,19 @@ func (lm *loggingMiddleware) Update(key string, thing bootstrap.Config) (err err
 	return lm.svc.Update(key, thing)
 }
 
+func (lm *loggingMiddleware) UpdateConnections(key, id string, connections []string) (err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method update_connections for key %s and thing %s took %s to complete", key, id, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+
+	return lm.svc.UpdateConnections(key, id, connections)
+}
+
 func (lm *loggingMiddleware) List(key string, filter bootstrap.Filter, offset, limit uint64) (res bootstrap.ConfigsPage, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method list for key %s and offset %d and limit %d took %s to complete", key, offset, limit, time.Since(begin))

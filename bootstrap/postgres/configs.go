@@ -32,12 +32,6 @@ type configRepository struct {
 	log logger.Logger
 }
 
-type dbChannel struct {
-	ID       string      `json:"id"`
-	Name     string      `json:"name"`
-	Metadata interface{} `json:"metadata"`
-}
-
 // NewConfigRepository instantiates a PostgreSQL implementation of thing
 // repository.
 func NewConfigRepository(db *sql.DB, log logger.Logger) bootstrap.ConfigRepository {
@@ -67,7 +61,7 @@ func (cr configRepository) Save(cfg bootstrap.Config, connections []string) (str
 		return "", e
 	}
 
-	if err := insertChannels(cfg, tx); err != nil {
+	if err := insertChannels(cfg.Owner, cfg.MFChannels, tx); err != nil {
 		cr.rollback("Failed to insert Channels", tx, err)
 
 		return "", err
@@ -222,35 +216,32 @@ func (cr configRepository) RetrieveByExternalID(externalKey, externalID string) 
 	return cfg, nil
 }
 
-func (cr configRepository) Update(cfg bootstrap.Config, connections []string) error {
-	q := `UPDATE configs SET name = $1, content = $2, state = $3 WHERE mainflux_thing = $4 AND owner = $5`
+func (cr configRepository) Update(cfg bootstrap.Config) error {
+	q := `UPDATE configs SET name = $1, content = $2 WHERE mainflux_thing = $3 AND owner = $4`
 
 	content := nullString(cfg.Content)
 	name := nullString(cfg.Name)
-	tx, err := cr.db.Begin()
 
+	if _, err := cr.db.Exec(q, name, content, cfg.MFThing, cfg.Owner); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (cr configRepository) UpdateConnections(key, id string, channels []bootstrap.Channel, connections []string) error {
+	tx, err := cr.db.Begin()
 	if err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec(q, name, content, cfg.State, cfg.MFThing, cfg.Owner); err != nil {
-		e := err
-		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Name() == duplicateErr {
-			e = bootstrap.ErrConflict
-		}
-
-		cr.rollback("Failed to update a Config", tx, err)
-
-		return e
-	}
-
-	if err = insertChannels(cfg, tx); err != nil {
+	if err = insertChannels(key, channels, tx); err != nil {
 		cr.rollback("Failed to insert Channels during the update", tx, err)
 
 		return err
 	}
 
-	if err = updateConnections(cfg, connections, tx); err != nil {
+	if err = updateConnections(key, id, connections, tx); err != nil {
 		cr.rollback("Failed to update connections during the update", tx, err)
 
 		return err
@@ -264,14 +255,10 @@ func (cr configRepository) Update(cfg bootstrap.Config, connections []string) er
 }
 
 func (cr configRepository) Remove(key, id string) error {
-	params := []interface{}{id}
-	q := `DELETE FROM configs WHERE mainflux_thing = $1`
-	if key != "" {
-		q = fmt.Sprintf("%s%s", q, " AND owner = $2")
-		params = append(params, key)
+	q := `DELETE FROM configs WHERE mainflux_thing = $1 AND owner = $2`
+	if _, err := cr.db.Exec(q, id, key); err != nil {
+		return err
 	}
-
-	cr.db.Exec(q, params...)
 
 	return nil
 }
@@ -296,7 +283,7 @@ func (cr configRepository) ChangeState(key, id string, state bootstrap.State) er
 	return nil
 }
 
-func (cr configRepository) Exist(key string, ids []string) ([]string, error) {
+func (cr configRepository) ListExisting(key string, ids []string) ([]string, error) {
 	q := "SELECT mainflux_channel FROM channels WHERE owner = $1 AND mainflux_channel IN ($2)"
 
 	rows, err := cr.db.Query(q, key, pq.Array(ids))
@@ -304,7 +291,7 @@ func (cr configRepository) Exist(key string, ids []string) ([]string, error) {
 		return []string{}, err
 	}
 
-	var connections []string
+	var channels []string
 	for rows.Next() {
 		var ch string
 		if err = rows.Scan(&ch); err != nil {
@@ -312,10 +299,10 @@ func (cr configRepository) Exist(key string, ids []string) ([]string, error) {
 			return []string{}, nil
 		}
 
-		connections = append(connections, ch)
+		channels = append(channels, ch)
 	}
 
-	return connections, nil
+	return channels, nil
 }
 
 func (cr configRepository) SaveUnknown(key, id string) error {
@@ -390,26 +377,32 @@ func (cr configRepository) retrieveAll(key string, filter bootstrap.Filter) (str
 	return fmt.Sprintf(template, f), params
 }
 
-func insertChannels(cfg bootstrap.Config, tx *sql.Tx) error {
-	if len(cfg.MFChannels) == 0 {
+func insertChannels(key string, channels []bootstrap.Channel, tx *sql.Tx) error {
+	if len(channels) == 0 {
 		return nil
 	}
 
 	q := `INSERT INTO channels (mainflux_channel, owner, name, metadata) VALUES `
-	v := []interface{}{cfg.Owner}
+	v := []interface{}{key}
 	var vals []string
 	// Since the first value is owner, start with the second one.
 	count := 2
-	for _, ch := range cfg.MFChannels {
+	for _, ch := range channels {
 		vals = append(vals, fmt.Sprintf("($%d, $1, $%d, $%d)", count, count+1, count+2))
 		v = append(v, ch.ID, ch.Name, ch.Metadata)
 		count += chanFieldsNum
 	}
 
-	q = fmt.Sprintf("%s%s%s", q, strings.Join(vals, ","), "ON CONFLICT (mainflux_channel) DO NOTHING")
-	_, err := tx.Exec(q, v...)
+	q = fmt.Sprintf("%s%s", q, strings.Join(vals, ","))
+	if _, err := tx.Exec(q, v...); err != nil {
+		e := err
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Name() == duplicateErr {
+			e = bootstrap.ErrConflict
+		}
+		return e
+	}
 
-	return err
+	return nil
 }
 
 func insertConnections(cfg bootstrap.Config, connections []string, tx *sql.Tx) error {
@@ -437,7 +430,7 @@ func insertConnections(cfg bootstrap.Config, connections []string, tx *sql.Tx) e
 }
 
 // Updating connections is removing old and adding new ones.
-func updateConnections(cfg bootstrap.Config, connections []string, tx *sql.Tx) error {
+func updateConnections(key, id string, connections []string, tx *sql.Tx) error {
 	if len(connections) == 0 {
 		return nil
 	}
@@ -446,7 +439,7 @@ func updateConnections(cfg bootstrap.Config, connections []string, tx *sql.Tx) e
 	WHERE config_id = $1 AND config_owner = $2 AND channel_owner = $2
 	AND channel_id NOT IN ($3)`
 
-	v := []interface{}{cfg.MFThing, cfg.Owner}
+	v := []interface{}{id, key}
 	v = append(v, pq.Array(connections))
 
 	res, err := tx.Exec(q, v...)
@@ -460,16 +453,16 @@ func updateConnections(cfg bootstrap.Config, connections []string, tx *sql.Tx) e
 		return err
 	}
 
-	q = `INSERT INTO connections (config_id, external_id, channel_id, config_owner, channel_owner) VALUES`
-	v = []interface{}{cfg.MFThing, cfg.ExternalID, cfg.Owner}
+	q = `INSERT INTO connections (config_id, channel_id, config_owner, channel_owner) VALUES`
+	v = []interface{}{id, key}
 	var vals []string
 
 	// Since the first value is Config ID and the second is Config
-	// owner, start with  the second one.
-	count := 4
-	for _, id := range connections {
-		vals = append(vals, fmt.Sprintf("($1, $2, $%d, $3, $3)", count))
-		v = append(v, id)
+	// owner, start with the third one.
+	count := 3
+	for _, chID := range connections {
+		vals = append(vals, fmt.Sprintf("($1, $%d, $2, $2)", count))
+		v = append(v, chID)
 		count++
 	}
 
@@ -483,12 +476,21 @@ func updateConnections(cfg bootstrap.Config, connections []string, tx *sql.Tx) e
 		return nil
 	}
 
-	q = `DELETE FROM channels ch WHERE ch.mainflux_channel NOT IN (
-    SELECT channel_id FROM connections)`
+	q = `DELETE FROM channels ch WHERE NOT EXISTS (
+		 SELECT channel_id FROM connections c WHERE ch.mainflux_channel = c.channel_id);`
 
 	_, err = tx.Exec(q)
 
 	return err
+}
+
+func (cr configRepository) RemoveThing(id string) error {
+	q := `DELETE FROM configs WHERE mainflux_thing = $1`
+	if _, err := cr.db.Exec(q, id); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (cr configRepository) UpdateChannel(channel bootstrap.Channel) error {

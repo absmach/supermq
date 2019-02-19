@@ -55,6 +55,9 @@ type Service interface {
 	// Update updates editable fields of the provided Config.
 	Update(string, Config) error
 
+	// UpdateConnections updates list of Channels related to given Config.
+	UpdateConnections(string, string, []string) error
+
 	// List returns subset of Configs with given search params that belong to the
 	// user identified by the given key.
 	List(string, Filter, uint64, uint64) (ConfigsPage, error)
@@ -68,11 +71,14 @@ type Service interface {
 	// ChangeState changes state of the Thing with given ID and owner.
 	ChangeState(string, string, State) error
 
-	// UpdateChannel updates Channel with data received from an event.
-	UpdateChannel(Channel) error
+	// Methods RemoveConfig, UpdateChannel, and RemoveChannel are used as
+	// handlers for events. That's why these methods surpass ownership check.
 
 	// RemoveConfig removes Configuration with id received from an event.
 	RemoveConfig(string) error
+
+	// UpdateChannel updates Channel with data received from an event.
+	UpdateChannel(Channel) error
 
 	// RemoveChannel removes Channel with id received from an event.
 	RemoveChannel(string) error
@@ -111,19 +117,21 @@ func (bs bootstrapService) Add(key string, cfg Config) (Config, error) {
 	for _, ch := range cfg.MFChannels {
 		toConnect = append(toConnect, ch.ID)
 	}
+
 	// Check if channels exist. This is the way to prevent invalid configuration to be saved.
-	connected, err := bs.configs.Exist(key, toConnect)
+	existing, err := bs.configs.ListExisting(key, toConnect)
 	if err != nil {
 		return Config{}, err
 	}
 
-	cfg.MFChannels, err = bs.connectionChannels(toConnect, connected, key)
+	cfg.MFChannels, err = bs.connectionChannels(toConnect, existing, key)
+
+	if err != nil {
+		return Config{}, err
+	}
+
 	id := cfg.MFThing
 	mfThing, err := bs.thing(key, id)
-	if err != nil {
-		return Config{}, err
-	}
-
 	cfg.MFThing = mfThing.ID
 	cfg.Owner = owner
 	cfg.State = Inactive
@@ -173,14 +181,22 @@ func (bs bootstrapService) Update(key string, cfg Config) error {
 
 	cfg.Owner = owner
 
-	t, err := bs.configs.RetrieveByID(owner, cfg.MFThing)
+	return bs.configs.Update(cfg)
+}
+
+func (bs bootstrapService) UpdateConnections(key, id string, connections []string) error {
+	owner, err := bs.identify(key)
 	if err != nil {
 		return err
 	}
 
-	id := t.MFThing
-	add, remove, common := bs.updateList(t, cfg)
-	channels, err := bs.updateChannels(t.MFChannels, add, remove, key)
+	cfg, err := bs.configs.RetrieveByID(owner, id)
+	if err != nil {
+		return err
+	}
+
+	add, remove := bs.updateList(cfg, connections)
+	channels, err := bs.updateChannels(add, key)
 	if err != nil {
 		return err
 	}
@@ -188,18 +204,9 @@ func (bs bootstrapService) Update(key string, cfg Config) error {
 	cfg.MFChannels = channels
 	var connect, disconnect []string
 
-	switch t.State {
-	case Active:
-		if cfg.State == Inactive {
-			disconnect = append(remove, common...)
-			break
-		}
+	if cfg.State == Active {
 		connect = add
 		disconnect = remove
-	default:
-		if cfg.State == Active {
-			connect = append(add, common...)
-		}
 	}
 
 	for _, c := range disconnect {
@@ -220,7 +227,7 @@ func (bs bootstrapService) Update(key string, cfg Config) error {
 		}
 	}
 
-	return bs.configs.Update(cfg, append(connect, common...))
+	return bs.configs.UpdateConnections(owner, id, channels, connections)
 }
 
 func (bs bootstrapService) List(key string, filter Filter, offset, limit uint64) (ConfigsPage, error) {
@@ -255,8 +262,10 @@ func (bs bootstrapService) Bootstrap(externalKey, externalID string) (Config, er
 	}
 
 	for i, ch := range cfg.MFChannels {
-		if err := json.Unmarshal(ch.Metadata.([]byte), &cfg.MFChannels[i].Metadata); err != nil {
-			return Config{}, err
+		if meta, ok := ch.Metadata.([]byte); ok {
+			if err := json.Unmarshal(meta, &cfg.MFChannels[i].Metadata); err != nil {
+				return Config{}, err
+			}
 		}
 	}
 
@@ -311,6 +320,18 @@ func (bs bootstrapService) RemoveChannel(id string) error {
 	return bs.configs.RemoveChannel(id)
 }
 
+func (bs bootstrapService) identify(token string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	res, err := bs.users.Identify(ctx, &mainflux.Token{Value: token})
+	if err != nil {
+		return "", ErrUnauthorizedAccess
+	}
+
+	return res.GetValue(), nil
+}
+
 // Method thing retrieves Mainflux Thing creating one if an empty ID is passed.
 func (bs bootstrapService) thing(key, id string) (mfsdk.Thing, error) {
 	thingID := id
@@ -339,38 +360,25 @@ func (bs bootstrapService) thing(key, id string) (mfsdk.Thing, error) {
 	return thing, nil
 }
 
-func (bs bootstrapService) identify(token string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	res, err := bs.users.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return "", ErrUnauthorizedAccess
-	}
-
-	return res.GetValue(), nil
-}
-
-// Method updateList accepts two configs and returns three lists:
+// Method updateList accepts config and channel IDs and returns three lists:
 // 1) IDs of Channels to be added
 // 2) IDs of Channels to be removed
 // 3) IDs of common Channels for these two configs
-func (bs bootstrapService) updateList(cfg1 Config, cfg2 Config) (add, remove, common []string) {
+func (bs bootstrapService) updateList(cfg Config, connections []string) (add, remove []string) {
 	var disconnect map[string]bool
-	disconnect = make(map[string]bool, len(cfg1.MFChannels))
-	for _, c := range cfg1.MFChannels {
+	disconnect = make(map[string]bool, len(cfg.MFChannels))
+	for _, c := range cfg.MFChannels {
 		disconnect[c.ID] = true
 	}
 
-	for _, c := range cfg2.MFChannels {
-		if disconnect[c.ID] {
+	for _, c := range connections {
+		if disconnect[c] {
 			// Don't disconnect common elements.
-			delete(disconnect, c.ID)
-			common = append(common, c.ID)
+			delete(disconnect, c)
 			continue
 		}
 		// Connect new elements.
-		add = append(add, c.ID)
+		add = append(add, c)
 	}
 
 	for v := range disconnect {
@@ -380,46 +388,31 @@ func (bs bootstrapService) updateList(cfg1 Config, cfg2 Config) (add, remove, co
 	return
 }
 
-func (bs bootstrapService) updateChannels(chs []Channel, add, remove []string, key string) ([]Channel, error) {
-	channels := make(map[string]Channel, len(chs))
-	for _, ch := range chs {
-		channels[ch.ID] = ch
-	}
-
-	for _, ch := range remove {
-		delete(channels, ch)
-	}
-
+func (bs bootstrapService) updateChannels(add []string, key string) ([]Channel, error) {
+	var ret []Channel
 	for _, id := range add {
 		ch, err := bs.sdk.Channel(id, key)
 		if err != nil {
 			return []Channel{}, ErrMalformedEntity
 		}
 
-		newCh := Channel{
+		ret = append(ret, Channel{
 			ID:       ch.ID,
 			Name:     ch.Name,
 			Metadata: ch.Metadata,
-		}
-
-		channels[id] = newCh
-	}
-
-	var ret []Channel
-	for _, v := range channels {
-		ret = append(ret, v)
+		})
 	}
 
 	return ret, nil
 }
 
-func (bs bootstrapService) connectionChannels(channels, connections []string, key string) ([]Channel, error) {
+func (bs bootstrapService) connectionChannels(channels, existing []string, key string) ([]Channel, error) {
 	add := make(map[string]bool, len(channels))
 	for _, ch := range channels {
 		add[ch] = true
 	}
 
-	for _, ch := range connections {
+	for _, ch := range existing {
 		if add[ch] == true {
 			delete(add, ch)
 		}
