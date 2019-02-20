@@ -169,6 +169,7 @@ view model =
                         (List.concat
                             [ genTableHeader model.name model.type_
                             , genTableRows model.things.list
+                            , genTableFooter model.things.total
                             ]
                         )
                     )
@@ -203,6 +204,17 @@ genTableRows list =
                 ]
         )
         list
+
+
+genTableFooter : Int -> List (Table.Row Msg)
+genTableFooter total =
+    [ Table.tr []
+        []
+    ]
+
+
+
+-- HTTP
 
 
 type alias Thing =
