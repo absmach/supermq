@@ -76,10 +76,10 @@ func migrateDB(db *sql.DB) error {
 						PRIMARY KEY (mainflux_channel, owner)
 					)`,
 					`CREATE TABLE IF NOT EXISTS connections (
-						config_id     TEXT,
-						config_owner  VARCHAR(256),
 						channel_id    TEXT,
 						channel_owner VARCHAR(256),
+						config_id     TEXT,
+						config_owner  VARCHAR(256),
 						FOREIGN KEY (channel_id, channel_owner) REFERENCES channels (mainflux_channel, owner) ON DELETE CASCADE ON UPDATE CASCADE,
 						FOREIGN KEY (config_id, config_owner) REFERENCES configs (mainflux_thing, owner) ON DELETE CASCADE ON UPDATE CASCADE,
 						PRIMARY KEY (channel_id, channel_owner, config_id, config_owner)

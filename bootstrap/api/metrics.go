@@ -106,29 +106,38 @@ func (mm *metricsMiddleware) ChangeState(id, key string, state bootstrap.State) 
 	return mm.svc.ChangeState(id, key, state)
 }
 
-func (mm *metricsMiddleware) UpdateChannel(channel bootstrap.Channel) (err error) {
+func (mm *metricsMiddleware) UpdateChannelHandler(channel bootstrap.Channel) (err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "update_channel").Add(1)
 		mm.latency.With("method", "update_channel").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.UpdateChannel(channel)
+	return mm.svc.UpdateChannelHandler(channel)
 }
 
-func (mm *metricsMiddleware) RemoveConfig(id string) (err error) {
+func (mm *metricsMiddleware) RemoveConfigHandler(id string) (err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "remove_config").Add(1)
 		mm.latency.With("method", "remove_config").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.RemoveConfig(id)
+	return mm.svc.RemoveConfigHandler(id)
 }
 
-func (mm *metricsMiddleware) RemoveChannel(id string) (err error) {
+func (mm *metricsMiddleware) RemoveChannelHandler(id string) (err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "remove_channel").Add(1)
 		mm.latency.With("method", "remove_channel").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.RemoveChannel(id)
+	return mm.svc.RemoveChannelHandler(id)
+}
+
+func (mm *metricsMiddleware) DisconnectThingHandler(channelID, thingID string) (err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "disconnect_thing_handler").Add(1)
+		mm.latency.With("method", "disconnect_thing_handler").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.DisconnectThingHandler(channelID, thingID)
 }

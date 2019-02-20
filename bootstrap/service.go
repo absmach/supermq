@@ -74,14 +74,17 @@ type Service interface {
 	// Methods RemoveConfig, UpdateChannel, and RemoveChannel are used as
 	// handlers for events. That's why these methods surpass ownership check.
 
-	// RemoveConfig removes Configuration with id received from an event.
-	RemoveConfig(string) error
+	// RemoveConfigHandler removes Configuration with id received from an event.
+	RemoveConfigHandler(string) error
 
-	// UpdateChannel updates Channel with data received from an event.
-	UpdateChannel(Channel) error
+	// UpdateChannelHandler updates Channel with data received from an event.
+	UpdateChannelHandler(Channel) error
 
-	// RemoveChannel removes Channel with id received from an event.
-	RemoveChannel(string) error
+	// RemoveChannelHandler removes Channel with id received from an event.
+	RemoveChannelHandler(string) error
+
+	// DisconnectHandler changes state of the Config when connect/disconnect event occurs.
+	DisconnectThingHandler(string, string) error
 }
 
 // ConfigReader is used to parse Config into format which will be encoded
@@ -308,16 +311,20 @@ func (bs bootstrapService) ChangeState(key, id string, state State) error {
 	return bs.configs.ChangeState(owner, id, state)
 }
 
-func (bs bootstrapService) UpdateChannel(channel Channel) error {
+func (bs bootstrapService) UpdateChannelHandler(channel Channel) error {
 	return bs.configs.UpdateChannel(channel)
 }
 
-func (bs bootstrapService) RemoveConfig(id string) error {
-	return bs.configs.Remove("", id)
+func (bs bootstrapService) RemoveConfigHandler(id string) error {
+	return bs.configs.RemoveThing(id)
 }
 
-func (bs bootstrapService) RemoveChannel(id string) error {
+func (bs bootstrapService) RemoveChannelHandler(id string) error {
 	return bs.configs.RemoveChannel(id)
+}
+
+func (bs bootstrapService) DisconnectThingHandler(channelID, thingID string) error {
+	return bs.configs.DisconnectThing(channelID, thingID)
 }
 
 func (bs bootstrapService) identify(token string) (string, error) {

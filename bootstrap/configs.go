@@ -7,13 +7,6 @@
 
 package bootstrap
 
-const (
-	// Inactive Thing is created, but not able to exchange messages using Mainflux.
-	Inactive State = iota
-	// Active Thing is created, configured, and whitelisted.
-	Active
-)
-
 // Config represents Configuration entity. It wraps information about external entity
 // as well as info about corresponding Mainflux entities.
 // MFThing represents corresponding Mainflux Thing ID.
@@ -92,18 +85,22 @@ type ConfigRepository interface {
 	// RetrieveUnknown returns a subset of unsuccessfully bootstrapped Things.
 	RetrieveUnknown(uint64, uint64) ConfigsPage
 
-	//ListExisting retrieves IDs of those channels from the given list that exist in DB.
+	// ListExisting retrieves IDs of those channels from the given list that exist in DB.
 	ListExisting(string, []string) ([]string, error)
 
 	// Methods RemoveThing, UpdateChannel, and RemoveChannel are related to
 	// event sourcing. That's why these methods surpass ownership check.
 
-	// RemoveThing removes Config for Thing with an ID extracted from an event.
+	// RemoveThing removes Config of the Thing with the given ID.
 	RemoveThing(string) error
 
-	// UpdateChannel updates channel extracting data from received event.
+	// UpdateChannel updates channel with the given ID.
 	UpdateChannel(Channel) error
 
-	// RemoveChannel removes channel extracting id from received event.
-	RemoveChannel(id string) error
+	// RemoveChannel removes channel with the given ID.
+	RemoveChannel(string) error
+
+	// DisconnectHandler changes state of the Config when the corresponding Thing is
+	// disconnected from the Channel.
+	DisconnectThing(string, string) error
 }

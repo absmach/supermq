@@ -133,7 +133,7 @@ func (lm *loggingMiddleware) ChangeState(key, id string, state bootstrap.State) 
 	return lm.svc.ChangeState(key, id, state)
 }
 
-func (lm *loggingMiddleware) UpdateChannel(channel bootstrap.Channel) (err error) {
+func (lm *loggingMiddleware) UpdateChannelHandler(channel bootstrap.Channel) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method updateChannel for channel %s took %s to complete", channel.ID, time.Since(begin))
 		if err != nil {
@@ -143,10 +143,10 @@ func (lm *loggingMiddleware) UpdateChannel(channel bootstrap.Channel) (err error
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.UpdateChannel(channel)
+	return lm.svc.UpdateChannelHandler(channel)
 }
 
-func (lm *loggingMiddleware) RemoveConfig(id string) (err error) {
+func (lm *loggingMiddleware) RemoveConfigHandler(id string) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method removeConfig for config %s took %s to complete", id, time.Since(begin))
 		if err != nil {
@@ -156,10 +156,10 @@ func (lm *loggingMiddleware) RemoveConfig(id string) (err error) {
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.RemoveConfig(id)
+	return lm.svc.RemoveConfigHandler(id)
 }
 
-func (lm *loggingMiddleware) RemoveChannel(id string) (err error) {
+func (lm *loggingMiddleware) RemoveChannelHandler(id string) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method removeChannel for channel %s took %s to complete", id, time.Since(begin))
 		if err != nil {
@@ -169,5 +169,18 @@ func (lm *loggingMiddleware) RemoveChannel(id string) (err error) {
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.RemoveChannel(id)
+	return lm.svc.RemoveChannelHandler(id)
+}
+
+func (lm *loggingMiddleware) DisconnectThingHandler(channelID, thingID string) (err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method disconnectThingHandler for channel %s and thing %s took %s to complete", channelID, thingID, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+
+	return lm.svc.DisconnectThingHandler(channelID, thingID)
 }

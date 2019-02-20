@@ -179,6 +179,7 @@ func (cr configRepository) RetrieveByExternalID(externalKey, externalID string) 
 	q := `SELECT mainflux_thing, mainflux_key, owner, name, content, state FROM configs WHERE external_key = $1 AND external_id = $2`
 	cfg := bootstrap.Config{ExternalID: externalID, ExternalKey: externalKey, MFChannels: []bootstrap.Channel{}}
 	var name, content sql.NullString
+
 	if err := cr.db.QueryRow(q, externalKey, externalID).
 		Scan(&cfg.MFThing, &cfg.MFKey, &cfg.Owner, &name, &content, &cfg.State); err != nil {
 		empty := bootstrap.Config{}
@@ -354,6 +355,35 @@ func (cr configRepository) RetrieveUnknown(offset, limit uint64) bootstrap.Confi
 	}
 }
 
+func (cr configRepository) RemoveThing(id string) error {
+	q := `DELETE FROM configs WHERE mainflux_thing = $1`
+	_, err := cr.db.Exec(q, id)
+
+	return err
+}
+
+func (cr configRepository) UpdateChannel(channel bootstrap.Channel) error {
+	q := `UPDATE channels SET name = $1, metadata = $2 WHERE mainflux_channel = $3`
+	_, err := cr.db.Exec(q, channel.Name, channel.Metadata, channel.ID)
+
+	return err
+}
+
+func (cr configRepository) RemoveChannel(id string) error {
+	q := `DELETE FROM channels WHERE mainflux_channel = $1`
+	_, err := cr.db.Exec(q, id)
+
+	return err
+}
+
+func (cr configRepository) DisconnectThing(channelID, thingID string) error {
+	q := `UPDATE configs SET state = $1 WHERE EXISTS (
+		SELECT 1 FROM connections WHERE config_id = $2 AND channel_id = $3)`
+	_, err := cr.db.Exec(q, bootstrap.Inactive, thingID, channelID)
+
+	return err
+}
+
 func (cr configRepository) retrieveAll(key string, filter bootstrap.Filter) (string, []interface{}) {
 	template := `WHERE owner = $1 %s`
 	params := []interface{}{key}
@@ -375,6 +405,13 @@ func (cr configRepository) retrieveAll(key string, filter bootstrap.Filter) (str
 	f := strings.Join(queries, " AND ")
 
 	return fmt.Sprintf(template, f), params
+}
+
+func (cr configRepository) rollback(content string, tx *sql.Tx, err error) {
+	cr.log.Error(fmt.Sprintf("%s %s", content, err))
+	if err := tx.Rollback(); err != nil {
+		cr.log.Error(fmt.Sprintf("Failed to rollback due to %s", err))
+	}
 }
 
 func insertChannels(key string, channels []bootstrap.Channel, tx *sql.Tx) error {
@@ -429,7 +466,6 @@ func insertConnections(cfg bootstrap.Config, connections []string, tx *sql.Tx) e
 	return err
 }
 
-// Updating connections is removing old and adding new ones.
 func updateConnections(key, id string, connections []string, tx *sql.Tx) error {
 	if len(connections) == 0 {
 		return nil
@@ -482,40 +518,6 @@ func updateConnections(key, id string, connections []string, tx *sql.Tx) error {
 	_, err = tx.Exec(q)
 
 	return err
-}
-
-func (cr configRepository) RemoveThing(id string) error {
-	q := `DELETE FROM configs WHERE mainflux_thing = $1`
-	if _, err := cr.db.Exec(q, id); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (cr configRepository) UpdateChannel(channel bootstrap.Channel) error {
-	q := `UPDATE channels SET name = $1, metadata = $2 WHERE mainflux_channel = $3`
-	if _, err := cr.db.Exec(q, channel.Name, channel.Metadata, channel.ID); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (cr configRepository) RemoveChannel(id string) error {
-	q := `DELETE FROM channels WHERE mainflux_channel = $1`
-	if _, err := cr.db.Exec(q, id); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (cr configRepository) rollback(content string, tx *sql.Tx, err error) {
-	cr.log.Error(fmt.Sprintf("%s %s", content, err))
-	if err := tx.Rollback(); err != nil {
-		cr.log.Error(fmt.Sprintf("Failed to rollback due to %s", err))
-	}
 }
 
 func nullString(s string) sql.NullString {

@@ -12,8 +12,9 @@ const (
 	stream = "mainflux.things"
 	group  = "mainflux.bootstrap"
 
-	thingPrefix = "thing."
-	thingRemove = thingPrefix + "remove"
+	thingPrefix     = "thing."
+	thingRemove     = thingPrefix + "remove"
+	thingDisconnect = thingPrefix + "disconnect"
 
 	channelPrefix = "channel."
 	channelUpdate = channelPrefix + "update"
@@ -64,6 +65,9 @@ func (es eventStore) Subscribe(subject string) {
 			case thingRemove:
 				rte := decodeRemoveThing(event)
 				err = es.handleRemoveThing(rte)
+			case thingDisconnect:
+				dte := decodeDisconnectThing(event)
+				err = es.handleDisconnectThing(dte)
 			case channelUpdate:
 				uce := decodeUpdateChannel(event)
 				err = es.handleUpdateChannel(uce)
@@ -100,8 +104,15 @@ func decodeRemoveChannel(event map[string]interface{}) removeEvent {
 	}
 }
 
+func decodeDisconnectThing(event map[string]interface{}) disconnectEvent {
+	return disconnectEvent{
+		channelID: read(event, "chan_id", ""),
+		thingID:   read(event, "thing_id", ""),
+	}
+}
+
 func (es eventStore) handleRemoveThing(rte removeEvent) error {
-	return es.svc.RemoveConfig(rte.id)
+	return es.svc.RemoveConfigHandler(rte.id)
 }
 
 func (es eventStore) handleUpdateChannel(uce updateChannelEvent) error {
@@ -110,11 +121,15 @@ func (es eventStore) handleUpdateChannel(uce updateChannelEvent) error {
 		Name:     uce.name,
 		Metadata: uce.metadata,
 	}
-	return es.svc.UpdateChannel(channel)
+	return es.svc.UpdateChannelHandler(channel)
 }
 
 func (es eventStore) handleRemoveChannel(rce removeEvent) error {
-	return es.svc.RemoveChannel(rce.id)
+	return es.svc.RemoveChannelHandler(rce.id)
+}
+
+func (es eventStore) handleDisconnectThing(dte disconnectEvent) error {
+	return es.svc.DisconnectThingHandler(dte.channelID, dte.thingID)
 }
 
 func read(event map[string]interface{}, key, def string) string {
