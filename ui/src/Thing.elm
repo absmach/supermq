@@ -69,6 +69,7 @@ type Msg
     | RetrievedThings (Result Http.Error Things)
     | RemoveThing String
     | RemovedThing (Result Http.Error Int)
+    | SubmitPage Int
 
 
 update : Msg -> Model -> String -> ( Model, Cmd Msg )
@@ -85,6 +86,16 @@ update msg model token =
 
         SubmitLimit limit ->
             updateThingList { model | limit = limit } token
+
+        SubmitPage page ->
+            let
+                offset =
+                    (page - 1) * 10
+
+                limit =
+                    10
+            in
+            updateThingList { model | offset = String.fromInt offset, limit = String.fromInt limit } token
 
         ProvisionThing ->
             ( { model | name = "", type_ = "" }
@@ -158,12 +169,12 @@ view model =
                         (List.concat
                             [ genTableHeader model.name model.type_
                             , genTableRows model.things.list
-                            , genTableFooter model.things.total
                             ]
                         )
                     )
                 ]
             ]
+        , genPagination model.things.total
         ]
 
 
@@ -194,11 +205,20 @@ genTableRows list =
         list
 
 
-genTableFooter : Int -> List (Table.Row Msg)
-genTableFooter total =
-    [ Table.tr []
-        []
-    ]
+genPagination : Int -> Html Msg
+genPagination total =
+    let
+        pages =
+            List.range 1 (Basics.floor (Basics.toFloat total / 10))
+
+        cols =
+            List.map
+                (\page ->
+                    Grid.col [] [ Button.button [ Button.roleLink, Button.attrs [ Spacing.ml1 ], Button.onClick (SubmitPage page) ] [ text (String.fromInt page) ] ]
+                )
+                pages
+    in
+    Grid.row [] cols
 
 
 
