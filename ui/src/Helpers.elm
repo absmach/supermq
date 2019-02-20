@@ -1,11 +1,13 @@
-module Helpers exposing (buildQueryParamList, genFormField, parseName, response)
+module Helpers exposing (buildQueryParamList, genFormField, genPagination, parseName, response)
 
+import Bootstrap.Button as Button
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
-import Html exposing (hr, p, text)
+import Bootstrap.Utilities.Spacing as Spacing
+import Html exposing (Html, hr, p, text)
 import Html.Attributes exposing (..)
 import Url.Builder as B
 
@@ -62,3 +64,19 @@ genFormField txt val msg =
             , Input.text [ Input.attrs [ placeholder txt, id txt, value val ], Input.onInput msg ]
             ]
         ]
+
+
+genPagination : Int -> (Int -> msg) -> Html msg
+genPagination total msg =
+    let
+        pages =
+            List.range 1 (Basics.ceiling (Basics.toFloat total / 10))
+
+        cols =
+            List.map
+                (\page ->
+                    Grid.col [] [ Button.button [ Button.roleLink, Button.attrs [ Spacing.ml1 ], Button.onClick (msg page) ] [ text (String.fromInt page) ] ]
+                )
+                pages
+    in
+    Grid.row [] cols

@@ -30,12 +30,18 @@ query =
     }
 
 
+type alias Channels =
+    { list : List Channel
+    , total : Int
+    }
+
+
 type alias Model =
     { name : String
     , offset : String
     , limit : String
     , response : String
-    , channels : List Channel
+    , channels : Channels
     }
 
 
@@ -45,7 +51,10 @@ initial =
     , offset = query.offset
     , limit = query.limit
     , response = ""
-    , channels = []
+    , channels =
+        { list = []
+        , total = 0
+        }
     }
 
 
@@ -59,9 +68,10 @@ type Msg
     | ProvisionedChannel (Result Http.Error Int)
     | RetrieveChannels
     | RetrieveChannelsForThing String
-    | RetrievedChannels (Result Http.Error (List Channel))
+    | RetrievedChannels (Result Http.Error Channels)
     | RemoveChannel String
     | RemovedChannel (Result Http.Error Int)
+    | SubmitPage Int
 
 
 update : Msg -> Model -> String -> ( Model, Cmd Msg )
@@ -81,6 +91,16 @@ update msg model token =
 
         SubmitLimitForThing thingid limit ->
             updateChannelListForThing { model | limit = limit } token thingid
+
+        SubmitPage page ->
+            let
+                offset =
+                    (page - 1) * 10
+
+                limit =
+                    10
+            in
+            updateChannelList { model | offset = String.fromInt offset, limit = String.fromInt limit } token
 
         ProvisionChannel ->
             ( { model | name = "" }
@@ -164,11 +184,12 @@ view model =
                                 , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionChannel ] [ text "+" ] ]
                                 ]
                             ]
-                            (genTableRows model.channels)
+                            (genTableRows model.channels.list)
                         )
                     )
                 ]
             ]
+        , Helpers.genPagination model.channels.total SubmitPage
         ]
 
 
@@ -198,9 +219,11 @@ channelDecoder =
         (D.field "id" D.string)
 
 
-channelListDecoder : D.Decoder (List Channel)
-channelListDecoder =
-    D.field "channels" (D.list channelDecoder)
+channelsDecoder : D.Decoder Channels
+channelsDecoder =
+    D.map2 Channels
+        (D.field "channels" (D.list channelDecoder))
+        (D.field "total" D.int)
 
 
 provision : String -> String -> String -> Cmd Msg
@@ -252,7 +275,7 @@ retrieve u token =
         }
 
 
-expectRetrieve : (Result Http.Error (List Channel) -> Msg) -> Http.Expect Msg
+expectRetrieve : (Result Http.Error Channels -> Msg) -> Http.Expect Msg
 expectRetrieve toMsg =
     Http.expectStringResponse toMsg <|
         \response ->
@@ -270,7 +293,7 @@ expectRetrieve toMsg =
                     Err (Http.BadStatus metadata.statusCode)
 
                 Http.GoodStatus_ metadata body ->
-                    case D.decodeString channelListDecoder body of
+                    case D.decodeString channelsDecoder body of
                         Ok value ->
                             Ok value
 

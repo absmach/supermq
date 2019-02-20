@@ -162,7 +162,7 @@ view model =
                                 [ Table.th [] [ text "Name" ]
                                 , Table.th [] [ text "Id" ]
                                 ]
-                            , Table.tbody [] (genChannelRows model.checkedChannelsIds model.channels.channels)
+                            , Table.tbody [] (genChannelRows model.checkedChannelsIds model.channels.channels.list)
                             )
                         ]
                     ]
