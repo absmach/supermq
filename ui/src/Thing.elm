@@ -28,13 +28,19 @@ url =
     }
 
 
+type alias Things =
+    { list : List Thing
+    , total : Int
+    }
+
+
 type alias Model =
     { name : String
     , type_ : String
     , offset : String
     , limit : String
     , response : String
-    , things : List Thing
+    , things : Things
     }
 
 
@@ -45,7 +51,10 @@ initial =
     , offset = query.offset
     , limit = query.limit
     , response = ""
-    , things = []
+    , things =
+        { list = []
+        , total = 0
+        }
     }
 
 
@@ -57,7 +66,7 @@ type Msg
     | ProvisionThing
     | ProvisionedThing (Result Http.Error Int)
     | RetrieveThings
-    | RetrievedThing (Result Http.Error (List Thing))
+    | RetrievedThings (Result Http.Error Things)
     | RemoveThing String
     | RemovedThing (Result Http.Error Int)
 
@@ -101,7 +110,7 @@ update msg model token =
                 token
             )
 
-        RetrievedThing result ->
+        RetrievedThings result ->
             case result of
                 Ok things ->
                     ( { model | things = things }, Cmd.none )
@@ -125,6 +134,10 @@ update msg model token =
                     ( { model | response = Error.handle error }, Cmd.none )
 
 
+
+-- VIEW
+
+
 view : Model -> Html Msg
 view model =
     Grid.container []
@@ -142,16 +155,11 @@ view model =
                         , Table.th [] [ text "key" ]
                         ]
                     , Table.tbody []
-                        (List.append
-                            [ Table.tr []
-                                [ Table.td [] [ Input.text [ Input.attrs [ id "name", value model.name ], Input.onInput SubmitName ] ]
-                                , Table.td [] []
-                                , Table.td [] [ Input.text [ Input.attrs [ id "type", value model.type_ ], Input.onInput SubmitType ] ]
-                                , Table.td [] []
-                                , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionThing ] [ text "+" ] ]
-                                ]
+                        (List.concat
+                            [ genTableHeader model.name model.type_
+                            , genTableRows model.things.list
+                            , genTableFooter model.things.total
                             ]
-                            (genTableRows model.things)
                         )
                     )
                 ]
@@ -159,8 +167,20 @@ view model =
         ]
 
 
+genTableHeader : String -> String -> List (Table.Row Msg)
+genTableHeader name type_ =
+    [ Table.tr []
+        [ Table.td [] [ Input.text [ Input.attrs [ id "name", value name ], Input.onInput SubmitName ] ]
+        , Table.td [] []
+        , Table.td [] [ Input.text [ Input.attrs [ id "type", value type_ ], Input.onInput SubmitType ] ]
+        , Table.td [] []
+        , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionThing ] [ text "+" ] ]
+        ]
+    ]
+
+
 genTableRows : List Thing -> List (Table.Row Msg)
-genTableRows things =
+genTableRows list =
     List.map
         (\thing ->
             Table.tr []
@@ -171,7 +191,18 @@ genTableRows things =
                 , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick (RemoveThing thing.id) ] [ text "-" ] ]
                 ]
         )
-        things
+        list
+
+
+genTableFooter : Int -> List (Table.Row Msg)
+genTableFooter total =
+    [ Table.tr []
+        []
+    ]
+
+
+
+-- HTTP
 
 
 type alias Thing =
@@ -191,9 +222,11 @@ thingDecoder =
         (D.field "key" D.string)
 
 
-thingListDecoder : D.Decoder (List Thing)
-thingListDecoder =
-    D.field "things" (D.list thingDecoder)
+thingsDecoder : D.Decoder Things
+thingsDecoder =
+    D.map2 Things
+        (D.field "things" (D.list thingDecoder))
+        (D.field "total" D.int)
 
 
 provision : String -> String -> String -> String -> Cmd Msg
@@ -242,13 +275,13 @@ retrieve u token =
         , headers = [ Http.header "Authorization" token ]
         , url = u
         , body = Http.emptyBody
-        , expect = expectRetrieve RetrievedThing
+        , expect = expectRetrieve RetrievedThings
         , timeout = Nothing
         , tracker = Nothing
         }
 
 
-expectRetrieve : (Result Http.Error (List Thing) -> Msg) -> Http.Expect Msg
+expectRetrieve : (Result Http.Error Things -> Msg) -> Http.Expect Msg
 expectRetrieve toMsg =
     Http.expectStringResponse toMsg <|
         \response ->
@@ -266,7 +299,7 @@ expectRetrieve toMsg =
                     Err (Http.BadStatus metadata.statusCode)
 
                 Http.GoodStatus_ metadata body ->
-                    case D.decodeString thingListDecoder body of
+                    case D.decodeString thingsDecoder body of
                         Ok value ->
                             Ok value
 

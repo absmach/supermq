@@ -138,7 +138,7 @@ view model =
                                 [ Table.th [] [ text "Name" ]
                                 , Table.th [] [ text "Id" ]
                                 ]
-                            , Table.tbody [] (genThingRows model.things.things)
+                            , Table.tbody [] (genThingRows model.things.things.list)
                             )
                         ]
                     ]
