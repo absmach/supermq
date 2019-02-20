@@ -205,26 +205,6 @@ genTableRows list =
         list
 
 
-genPagination : Int -> Html Msg
-genPagination total =
-    let
-        pages =
-            List.range 1 (Basics.floor (Basics.toFloat total / 10))
-
-        cols =
-            List.map
-                (\page ->
-                    Grid.col [] [ Button.button [ Button.roleLink, Button.attrs [ Spacing.ml1 ], Button.onClick (SubmitPage page) ] [ text (String.fromInt page) ] ]
-                )
-                pages
-    in
-    Grid.row [] cols
-
-
-
--- HTTP
-
-
 type alias Thing =
     { type_ : String
     , name : Maybe String
