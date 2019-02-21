@@ -143,7 +143,7 @@ view model =
                                 [ Table.th [] [ text "Name" ]
                                 , Table.th [] [ text "Id" ]
                                 ]
-                            , Table.tbody [] (genThingRows model.checkedThingsIds model.things.things)
+                            , Table.tbody [] (genThingRows model.checkedThingsIds model.things.things.list)
                             )
                         ]
                     ]
@@ -162,7 +162,7 @@ view model =
                                 [ Table.th [] [ text "Name" ]
                                 , Table.th [] [ text "Id" ]
                                 ]
-                            , Table.tbody [] (genChannelRows model.checkedChannelsIds model.channels.channels)
+                            , Table.tbody [] (genChannelRows model.checkedChannelsIds model.channels.channels.list)
                             )
                         ]
                     ]
@@ -256,4 +256,3 @@ expectResponse toMsg =
 
                 Http.GoodStatus_ metadata _ ->
                     Ok metadata.statusCode
-                    
