@@ -25,8 +25,8 @@ url =
 
 
 query =
-    { offset = "0"
-    , limit = "10"
+    { offset = 0
+    , limit = 10
     }
 
 
@@ -38,8 +38,8 @@ type alias Channels =
 
 type alias Model =
     { name : String
-    , offset : String
-    , limit : String
+    , offset : Int
+    , limit : Int
     , response : String
     , channels : Channels
     }
@@ -60,8 +60,6 @@ initial =
 
 type Msg
     = SubmitName String
-    | SubmitOffset String
-    | SubmitLimit String
     | SubmitOffsetForThing String String
     | SubmitLimitForThing String String
     | ProvisionChannel
@@ -80,17 +78,11 @@ update msg model token =
         SubmitName name ->
             ( { model | name = name }, Cmd.none )
 
-        SubmitOffset offset ->
-            updateChannelList { model | offset = offset } token
-
-        SubmitLimit limit ->
-            updateChannelList { model | limit = limit } token
-
         SubmitOffsetForThing thingid offset ->
-            updateChannelListForThing { model | offset = offset } token thingid
+            updateChannelListForThing { model | offset = Helpers.validateInt offset query.offset } token thingid
 
         SubmitLimitForThing thingid limit ->
-            updateChannelListForThing { model | limit = limit } token thingid
+            updateChannelListForThing { model | limit = Helpers.validateInt limit query.limit } token thingid
 
         SubmitPage page ->
             let
@@ -100,7 +92,7 @@ update msg model token =
                 limit =
                     10
             in
-            updateChannelList { model | offset = String.fromInt offset, limit = String.fromInt limit } token
+            updateChannelList { model | offset = Helpers.pageToOffset page query.limit } token
 
         ProvisionChannel ->
             ( { model | name = "" }
@@ -123,7 +115,7 @@ update msg model token =
             , retrieve
                 (B.crossOrigin url.base
                     url.channelsPath
-                    (Helpers.buildQueryParamList model.offset model.limit query)
+                    (Helpers.buildQueryParamList model.offset model.limit)
                 )
                 token
             )
@@ -133,7 +125,7 @@ update msg model token =
             , retrieve
                 (B.crossOrigin url.base
                     (url.thingsPath ++ [ thingid ] ++ url.channelsPath)
-                    (Helpers.buildQueryParamList model.offset model.limit query)
+                    (Helpers.buildQueryParamList model.offset model.limit)
                 )
                 token
             )
@@ -156,7 +148,12 @@ update msg model token =
         RemovedChannel result ->
             case result of
                 Ok statusCode ->
-                    updateChannelList { model | response = String.fromInt statusCode } token
+                    updateChannelList
+                        { model
+                            | response = String.fromInt statusCode
+                            , offset = Helpers.validateOffset model.offset model.channels.total query.limit
+                        }
+                        token
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
@@ -166,10 +163,6 @@ view : Model -> Html Msg
 view model =
     Grid.container []
         [ Grid.row []
-            [ Helpers.genFormField "offset" model.offset SubmitOffset
-            , Helpers.genFormField "limit" model.limit SubmitLimit
-            ]
-        , Grid.row []
             [ Grid.col []
                 [ Table.simpleTable
                     ( Table.simpleThead
@@ -336,8 +329,8 @@ updateChannelListForThing model token thingid =
     )
 
 
-buildUrl : List String -> String -> String -> String
+buildUrl : List String -> Int -> Int -> String
 buildUrl path offset limit =
     B.crossOrigin url.base
         path
-        (Helpers.buildQueryParamList offset limit query)
+        (Helpers.buildQueryParamList offset limit)
