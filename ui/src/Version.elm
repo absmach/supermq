@@ -4,6 +4,7 @@ import Bootstrap.Button as Button
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
 import Bootstrap.Grid as Grid
+import Bootstrap.Text as Text
 import Bootstrap.Utilities.Spacing as Spacing
 import Error
 import Helpers
@@ -110,19 +111,28 @@ view model =
 
 cardList : Model -> List (Card.Config msg)
 cardList model =
-    [ Card.config []
+    [ Card.config
+        [ Card.secondary
+        , Card.textColor Text.white
+        ]
         |> Card.headerH3 [] [ text "Version" ]
         |> Card.block []
             [ Block.titleH4 [] [ text model.response ] ]
-    , Card.config []
+    , Card.config
+        [ Card.info
+        , Card.textColor Text.white
+        ]
         |> Card.headerH3 [] [ text "Things" ]
         |> Card.block []
-            [ Block.titleH4 [] [ text "69" ] ]
+            [ Block.titleH4 [] [ text "69" ]
+            , Block.custom <|
+                Button.button [ Button.light ] [ text "Manage things" ]
+            ]
     , Card.config []
         |> Card.headerH3 [] [ text "Channels" ]
         |> Card.block []
             [ Block.titleH4 [] [ text "69" ]
             , Block.custom <|
-                Button.button [ Button.primary ] [ text "Go somewhere" ]
+                Button.button [ Button.dark ] [ text "Manage channels" ]
             ]
     ]

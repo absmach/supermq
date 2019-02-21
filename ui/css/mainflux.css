@@ -3,6 +3,8 @@
 
    SPDX-License-Identifier: Apache-2.0 */
 
+@import url('https://fonts.googleapis.com/css?family=Roboto');
+
 .btn-primary {
   color: #fff;
   background-color: #113f67;
@@ -12,4 +14,9 @@
   color: #fff;
   background-color: #408ab4;
   border-color: #408ab4;
+}
+
+body {
+background-color: #f3f3f4 !important;
+font-family: 'Roboto', sans-serif !important;
 }
