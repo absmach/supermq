@@ -1,4 +1,4 @@
-module Helpers exposing (buildQueryParamList, genFormField, genPagination, pageToOffset, parseName, response, validateInt, validateOffset)
+module Helpers exposing (buildQueryParamList, genPagination, pageToOffset, parseName, response, validateInt, validateOffset)
 
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
@@ -45,16 +45,6 @@ parseName thingName =
 buildQueryParamList : Int -> Int -> List B.QueryParameter
 buildQueryParamList offset limit =
     [ B.int "offset" offset, B.int "limit" limit ]
-
-
-genFormField : String -> Int -> (String -> msg) -> Grid.Column msg
-genFormField txt val msg =
-    Grid.col []
-        [ Form.formInline []
-            [ Form.label [] [ text (txt ++ ": ") ]
-            , Input.text [ Input.attrs [ placeholder txt, id txt, value (String.fromInt val) ], Input.onInput msg ]
-            ]
-        ]
 
 
 validateInt : String -> Int -> Int

@@ -60,8 +60,6 @@ initial =
 
 type Msg
     = SubmitName String
-    | SubmitOffsetForThing String String
-    | SubmitLimitForThing String String
     | ProvisionChannel
     | ProvisionedChannel (Result Http.Error Int)
     | RetrieveChannels
@@ -77,12 +75,6 @@ update msg model token =
     case msg of
         SubmitName name ->
             ( { model | name = name }, Cmd.none )
-
-        SubmitOffsetForThing thingid offset ->
-            updateChannelListForThing { model | offset = Helpers.validateInt offset query.offset } token thingid
-
-        SubmitLimitForThing thingid limit ->
-            updateChannelListForThing { model | limit = Helpers.validateInt limit query.limit } token thingid
 
         SubmitPage page ->
             let

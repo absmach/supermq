@@ -124,7 +124,12 @@ update msg model token =
         RemovedThing result ->
             case result of
                 Ok statusCode ->
-                    updateThingList { model | response = String.fromInt statusCode } token
+                    updateThingList
+                        { model
+                            | response = String.fromInt statusCode
+                            , offset = Helpers.validateOffset model.offset model.things.total query.limit
+                        }
+                        token
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )

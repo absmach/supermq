@@ -125,13 +125,7 @@ view model =
     Grid.container []
         [ Grid.row []
             [ Grid.col []
-                [ Html.map ThingMsg
-                    (Grid.row []
-                        [ Helpers.genFormField "offset" model.things.offset Thing.SubmitOffset
-                        , Helpers.genFormField "limit" model.things.limit Thing.SubmitLimit
-                        ]
-                    )
-                , Grid.row []
+                [ Grid.row []
                     [ Grid.col []
                         [ Table.simpleTable
                             ( Table.simpleThead
@@ -142,15 +136,10 @@ view model =
                             )
                         ]
                     ]
+                , Html.map ThingMsg (Helpers.genPagination model.things.things.total Thing.SubmitPage)
                 ]
             , Grid.col []
-                [ Html.map ChannelMsg
-                    (Grid.row []
-                        [ Helpers.genFormField "offset" model.channels.offset (Channel.SubmitOffsetForThing model.thingid)
-                        , Helpers.genFormField "limit" model.channels.limit (Channel.SubmitLimitForThing model.thingid)
-                        ]
-                    )
-                , Grid.row []
+                [ Grid.row []
                     [ Grid.col []
                         [ Table.simpleTable
                             ( Table.simpleThead
@@ -161,6 +150,7 @@ view model =
                             )
                         ]
                     ]
+                , Html.map ChannelMsg (Helpers.genPagination model.channels.channels.total Channel.SubmitPage)
                 ]
             ]
         , Grid.row []
