@@ -285,7 +285,7 @@ func (cr configRepository) ChangeState(key, id string, state bootstrap.State) er
 }
 
 func (cr configRepository) ListExisting(key string, ids []string) ([]string, error) {
-	q := "SELECT mainflux_channel FROM channels WHERE owner = $1 AND mainflux_channel IN ($2)"
+	q := "SELECT mainflux_channel FROM channels WHERE owner = $1 AND mainflux_channel = ANY ($2)"
 
 	rows, err := cr.db.Query(q, key, pq.Array(ids))
 	if err != nil {

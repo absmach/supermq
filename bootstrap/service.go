@@ -122,7 +122,7 @@ func (bs bootstrapService) Add(key string, cfg Config) (Config, error) {
 	}
 
 	// Check if channels exist. This is the way to prevent invalid configuration to be saved.
-	existing, err := bs.configs.ListExisting(key, toConnect)
+	existing, err := bs.configs.ListExisting(owner, toConnect)
 	if err != nil {
 		return Config{}, err
 	}
