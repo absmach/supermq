@@ -1,4 +1,4 @@
-module Helpers exposing (buildQueryParamList, genFormField, genPagination, parseName, response)
+module Helpers exposing (buildQueryParamList, genPagination, pageToOffset, parseName, response, validateInt, validateOffset)
 
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
@@ -28,24 +28,6 @@ response resp =
             ]
 
 
-buildQueryParamList : String -> String -> { offset : String, limit : String } -> List B.QueryParameter
-buildQueryParamList offset limit query =
-    List.map
-        (\tpl ->
-            case String.toInt (Tuple.second tpl) of
-                Just n ->
-                    B.int (Tuple.first tpl) n
-
-                Nothing ->
-                    if Tuple.first tpl == "offset" then
-                        B.string (Tuple.first tpl) query.offset
-
-                    else
-                        B.string (Tuple.first tpl) query.limit
-        )
-        [ ( "offset", offset ), ( "limit", limit ) ]
-
-
 parseName : Maybe String -> String
 parseName thingName =
     case thingName of
@@ -56,14 +38,37 @@ parseName thingName =
             ""
 
 
-genFormField : String -> String -> (String -> msg) -> Grid.Column msg
-genFormField txt val msg =
-    Grid.col []
-        [ Form.formInline []
-            [ Form.label [] [ text (txt ++ ": ") ]
-            , Input.text [ Input.attrs [ placeholder txt, id txt, value val ], Input.onInput msg ]
-            ]
-        ]
+
+-- PAGINATION
+
+
+buildQueryParamList : Int -> Int -> List B.QueryParameter
+buildQueryParamList offset limit =
+    [ B.int "offset" offset, B.int "limit" limit ]
+
+
+validateInt : String -> Int -> Int
+validateInt string default =
+    case String.toInt string of
+        Just num ->
+            num
+
+        Nothing ->
+            default
+
+
+pageToOffset : Int -> Int -> Int
+pageToOffset page limit =
+    (page - 1) * limit
+
+
+validateOffset : Int -> Int -> Int -> Int
+validateOffset offset total limit =
+    if offset >= (total - 1) then
+        (total - 1) - limit
+
+    else
+        offset
 
 
 genPagination : Int -> (Int -> msg) -> Html msg

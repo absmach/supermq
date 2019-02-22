@@ -17,8 +17,8 @@ import Url.Builder as B
 
 
 query =
-    { offset = "0"
-    , limit = "10"
+    { offset = 0
+    , limit = 10
     }
 
 
@@ -37,8 +37,8 @@ type alias Things =
 type alias Model =
     { name : String
     , type_ : String
-    , offset : String
-    , limit : String
+    , offset : Int
+    , limit : Int
     , response : String
     , things : Things
     }
@@ -61,8 +61,6 @@ initial =
 type Msg
     = SubmitType String
     | SubmitName String
-    | SubmitOffset String
-    | SubmitLimit String
     | ProvisionThing
     | ProvisionedThing (Result Http.Error Int)
     | RetrieveThings
@@ -81,21 +79,8 @@ update msg model token =
         SubmitName name ->
             ( { model | name = name }, Cmd.none )
 
-        SubmitOffset offset ->
-            updateThingList { model | offset = offset } token
-
-        SubmitLimit limit ->
-            updateThingList { model | limit = limit } token
-
         SubmitPage page ->
-            let
-                offset =
-                    (page - 1) * 10
-
-                limit =
-                    10
-            in
-            updateThingList { model | offset = String.fromInt offset, limit = String.fromInt limit } token
+            updateThingList { model | offset = Helpers.pageToOffset page query.limit } token
 
         ProvisionThing ->
             ( { model | name = "", type_ = "" }
@@ -117,7 +102,7 @@ update msg model token =
         RetrieveThings ->
             ( model
             , retrieve
-                (B.crossOrigin url.base url.path (Helpers.buildQueryParamList model.offset model.limit query))
+                (B.crossOrigin url.base url.path (Helpers.buildQueryParamList model.offset model.limit))
                 token
             )
 
@@ -139,7 +124,12 @@ update msg model token =
         RemovedThing result ->
             case result of
                 Ok statusCode ->
-                    updateThingList { model | response = String.fromInt statusCode } token
+                    updateThingList
+                        { model
+                            | response = String.fromInt statusCode
+                            , offset = Helpers.validateOffset model.offset model.things.total query.limit
+                        }
+                        token
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
@@ -153,10 +143,6 @@ view : Model -> Html Msg
 view model =
     Grid.container []
         [ Grid.row []
-            [ Helpers.genFormField "offset" model.offset SubmitOffset
-            , Helpers.genFormField "limit" model.limit SubmitLimit
-            ]
-        , Grid.row []
             [ Grid.col []
                 [ Table.simpleTable
                     ( Table.simpleThead
@@ -326,7 +312,7 @@ updateThingList model token =
     , retrieve
         (B.crossOrigin url.base
             url.path
-            (Helpers.buildQueryParamList model.offset model.limit query)
+            (Helpers.buildQueryParamList model.offset model.limit)
         )
         token
     )
