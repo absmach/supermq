@@ -1,6 +1,9 @@
 module Channel exposing (Channel, Model, Msg(..), initial, update, view)
 
+import Bootstrap.Accordion as Accordion
 import Bootstrap.Button as Button
+import Bootstrap.Card as Card
+import Bootstrap.Card.Block as Block
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.InputGroup as InputGroup
@@ -42,6 +45,7 @@ type alias Model =
     , limit : String
     , response : String
     , channels : Channels
+    , accordionState : Accordion.State
     }
 
 
@@ -55,6 +59,7 @@ initial =
         { list = []
         , total = 0
         }
+    , accordionState = Accordion.initialState
     }
 
 
@@ -74,9 +79,15 @@ type Msg
     | SubmitPage Int
 
 
+
+-- | AccordionMsg Accordion.State
+
+
 update : Msg -> Model -> String -> ( Model, Cmd Msg )
 update msg model token =
     case msg of
+        -- AccordionMsg state ->
+        --     ( Debug.log "debug: " { model | accordionState = state }, Cmd.none )
         SubmitName name ->
             ( { model | name = name }, Cmd.none )
 
@@ -171,23 +182,59 @@ view model =
             ]
         , Grid.row []
             [ Grid.col []
-                [ Table.simpleTable
-                    ( Table.simpleThead
-                        [ Table.th [] [ text "Name" ]
-                        , Table.th [] [ text "Id" ]
+                [ Card.config []
+                    |> Card.block []
+                        [ Block.custom
+                            (Table.table
+                                { options = [ Table.striped, Table.hover, Table.small ]
+                                , thead =
+                                    Table.simpleThead
+                                        [ Table.th [] [ text "Name" ]
+                                        , Table.th [] [ text "Id" ]
+                                        ]
+                                , tbody =
+                                    Table.tbody []
+                                        (List.append
+                                            [ Table.tr []
+                                                [ Table.td [] [ Input.text [ Input.attrs [ id "name", value model.name ], Input.onInput SubmitName ] ]
+                                                , Table.td [] []
+                                                , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionChannel ] [ text "+" ] ]
+                                                ]
+                                            ]
+                                            (genTableRows model.channels.list)
+                                        )
+                                }
+                            )
                         ]
-                    , Table.tbody []
-                        (List.append
-                            [ Table.tr []
-                                [ Table.td [] [ Input.text [ Input.attrs [ id "name", value model.name ], Input.onInput SubmitName ] ]
-                                , Table.td [] []
-                                , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionChannel ] [ text "+" ] ]
-                                ]
-                            ]
-                            (genTableRows model.channels.list)
-                        )
-                    )
+                    |> Card.view
                 ]
+
+            -- [ Accordion.config AccordionMsg
+            --     |> Accordion.withAnimation
+            --     |> Accordion.cards
+            --         [ Accordion.card
+            --             { id = "card1"
+            --             , options = []
+            --             , header =
+            --                 Accordion.header [] <| Accordion.toggle [] [ text "Card 1" ]
+            --             , blocks =
+            --                 [ Accordion.block []
+            --                     [ Block.text [] [ text "Lorem ipsum etc" ] ]
+            --                 ]
+            --             }
+            --         , Accordion.card
+            --             { id = "card2"
+            --             , options = []
+            --             , header =
+            --                 Accordion.header [] <| Accordion.toggle [] [ text "Card 2" ]
+            --             , blocks =
+            --                 [ Accordion.block []
+            --                     [ Block.text [] [ text "Lorem ipsum etc" ] ]
+            --                 ]
+            --             }
+            --         ]
+            --     |> Accordion.view model.accordionState
+            -- ]
             ]
         , Helpers.genPagination model.channels.total SubmitPage
         ]
@@ -341,3 +388,9 @@ buildUrl path offset limit =
     B.crossOrigin url.base
         path
         (Helpers.buildQueryParamList offset limit query)
+
+
+
+-- subscriptions : Model -> Sub Msg
+-- subscriptions model =
+--     Accordion.subscriptions model.accordionState AccordionMsg
