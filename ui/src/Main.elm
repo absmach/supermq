@@ -155,7 +155,7 @@ update msg model =
                 v =
                     case subMsg of
                         User.GotToken _ ->
-                            "version"
+                            "account"
 
                         _ ->
                             model.view
@@ -274,12 +274,12 @@ view model =
 
             menu =
                 if loggedIn then
-                    -- [ ButtonGroup.linkButton [ Button.primary, Button.onClick Account, buttonAttrs ] [ text "account" ]
-                    [ ButtonGroup.linkButton [ Button.primary, Button.onClick Things, buttonAttrs ] [ text "things" ]
+                    [ ButtonGroup.linkButton [ Button.primary, Button.onClick Account, buttonAttrs ] [ text "account" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Things, buttonAttrs ] [ text "things" ]
                     , ButtonGroup.linkButton [ Button.primary, Button.onClick Channels, buttonAttrs ] [ text "channels" ]
                     , ButtonGroup.linkButton [ Button.primary, Button.onClick Connection, buttonAttrs ] [ text "connection" ]
                     , ButtonGroup.linkButton [ Button.primary, Button.onClick Messages, buttonAttrs ] [ text "messages" ]
-                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Version, buttonAttrs ] [ text "dashboard" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Version, buttonAttrs ] [ text "version" ]
                     ]
 
                 else
@@ -338,7 +338,7 @@ view model =
                     [ Grid.row []
                         [ Grid.col
                             [ Col.attrs [] ]
-                            [ h3 [ class "title" ] [ text "MAINFLUX" ] ]
+                            [ h3 [] [ text "Mainflux" ] ]
                         ]
                     , Grid.row []
                         [ Grid.col
