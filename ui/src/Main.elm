@@ -338,7 +338,7 @@ view model =
                     [ Grid.row []
                         [ Grid.col
                             [ Col.attrs [] ]
-                            [ h3 [] [ text "Mainflux" ] ]
+                            [ h3 [ class "title" ] [ text "MAINFLUX" ] ]
                         ]
                     , Grid.row []
                         [ Grid.col
