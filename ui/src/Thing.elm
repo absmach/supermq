@@ -82,6 +82,16 @@ update msg model token =
         SubmitPage page ->
             updateThingList { model | offset = Helpers.pageToOffset page query.limit } token
 
+        SubmitPage page ->
+            let
+                offset =
+                    (page - 1) * 10
+
+                limit =
+                    10
+            in
+            updateThingList { model | offset = String.fromInt offset, limit = String.fromInt limit } token
+
         ProvisionThing ->
             ( { model | name = "", type_ = "" }
             , provision

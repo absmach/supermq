@@ -36,6 +36,12 @@ type alias Channels =
     }
 
 
+type alias Channels =
+    { list : List Channel
+    , total : Int
+    }
+
+
 type alias Model =
     { name : String
     , offset : Int
@@ -85,6 +91,16 @@ update msg model token =
                     10
             in
             updateChannelList { model | offset = Helpers.pageToOffset page query.limit } token
+
+        SubmitPage page ->
+            let
+                offset =
+                    (page - 1) * 10
+
+                limit =
+                    10
+            in
+            updateChannelList { model | offset = String.fromInt offset, limit = String.fromInt limit } token
 
         ProvisionChannel ->
             ( { model | name = "" }
