@@ -77,13 +77,6 @@ update msg model token =
             ( { model | name = name }, Cmd.none )
 
         SubmitPage page ->
-            let
-                offset =
-                    (page - 1) * 10
-
-                limit =
-                    10
-            in
             updateChannelList { model | offset = Helpers.pageToOffset page query.limit } token
 
         ProvisionChannel ->
