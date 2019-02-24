@@ -116,10 +116,7 @@ func (bs bootstrapService) Add(key string, cfg Config) (Config, error) {
 		return Config{}, err
 	}
 
-	var toConnect []string
-	for _, ch := range cfg.MFChannels {
-		toConnect = append(toConnect, ch.ID)
-	}
+	toConnect := bs.toIDList(cfg.MFChannels)
 
 	// Check if channels exist. This is the way to prevent invalid configuration to be saved.
 	existing, err := bs.configs.ListExisting(owner, toConnect)
@@ -127,7 +124,7 @@ func (bs bootstrapService) Add(key string, cfg Config) (Config, error) {
 		return Config{}, err
 	}
 
-	cfg.MFChannels, err = bs.connectionChannels(toConnect, existing, key)
+	cfg.MFChannels, err = bs.connectionChannels(toConnect, bs.toIDList(existing), key)
 
 	if err != nil {
 		return Config{}, err
@@ -135,6 +132,10 @@ func (bs bootstrapService) Add(key string, cfg Config) (Config, error) {
 
 	id := cfg.MFThing
 	mfThing, err := bs.thing(key, id)
+	if err != nil {
+		return Config{}, err
+	}
+
 	cfg.MFThing = mfThing.ID
 	cfg.Owner = owner
 	cfg.State = Inactive
@@ -150,6 +151,7 @@ func (bs bootstrapService) Add(key string, cfg Config) (Config, error) {
 	}
 
 	cfg.MFThing = saved
+	cfg.MFChannels = append(cfg.MFChannels, existing...)
 
 	return cfg, nil
 }
@@ -393,6 +395,15 @@ func (bs bootstrapService) updateList(cfg Config, connections []string) (add, re
 	}
 
 	return
+}
+
+func (bs bootstrapService) toIDList(channels []Channel) []string {
+	var ret []string
+	for _, ch := range channels {
+		ret = append(ret, ch.ID)
+	}
+
+	return ret
 }
 
 func (bs bootstrapService) updateChannels(add []string, key string) ([]Channel, error) {

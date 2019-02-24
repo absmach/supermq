@@ -15,6 +15,7 @@ import (
 	"github.com/lib/pq"
 	"github.com/mainflux/mainflux/bootstrap"
 	"github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/things"
 )
 
 const (
@@ -223,8 +224,18 @@ func (cr configRepository) Update(cfg bootstrap.Config) error {
 	content := nullString(cfg.Content)
 	name := nullString(cfg.Name)
 
-	if _, err := cr.db.Exec(q, name, content, cfg.MFThing, cfg.Owner); err != nil {
+	res, err := cr.db.Exec(q, name, content, cfg.MFThing, cfg.Owner)
+	if err != nil {
 		return err
+	}
+
+	cnt, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if cnt == 0 {
+		return things.ErrNotFound
 	}
 
 	return nil
@@ -284,20 +295,20 @@ func (cr configRepository) ChangeState(key, id string, state bootstrap.State) er
 	return nil
 }
 
-func (cr configRepository) ListExisting(key string, ids []string) ([]string, error) {
-	q := "SELECT mainflux_channel FROM channels WHERE owner = $1 AND mainflux_channel = ANY ($2)"
+func (cr configRepository) ListExisting(key string, ids []string) ([]bootstrap.Channel, error) {
+	q := "SELECT mainflux_channel, name, metadata FROM channels WHERE owner = $1 AND mainflux_channel = ANY ($2)"
 
 	rows, err := cr.db.Query(q, key, pq.Array(ids))
 	if err != nil {
-		return []string{}, err
+		return []bootstrap.Channel{}, err
 	}
 
-	var channels []string
+	var channels []bootstrap.Channel
 	for rows.Next() {
-		var ch string
-		if err = rows.Scan(&ch); err != nil {
+		var ch bootstrap.Channel
+		if err = rows.Scan(&ch.ID, &ch.Name, &ch.Metadata); err != nil {
 			cr.log.Error(fmt.Sprintf("Failed to read retrieved channels due to %s", err))
-			return []string{}, nil
+			return []bootstrap.Channel{}, nil
 		}
 
 		channels = append(channels, ch)

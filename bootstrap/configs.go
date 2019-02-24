@@ -85,8 +85,8 @@ type ConfigRepository interface {
 	// RetrieveUnknown returns a subset of unsuccessfully bootstrapped Things.
 	RetrieveUnknown(uint64, uint64) ConfigsPage
 
-	// ListExisting retrieves IDs of those channels from the given list that exist in DB.
-	ListExisting(string, []string) ([]string, error)
+	// ListExisting retrieves those channels from the given list that exist in DB.
+	ListExisting(string, []string) ([]Channel, error)
 
 	// Methods RemoveThing, UpdateChannel, and RemoveChannel are related to
 	// event sourcing. That's why these methods surpass ownership check.
