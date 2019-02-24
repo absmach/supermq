@@ -280,8 +280,12 @@ func TestView(t *testing.T) {
 	c := newConfig([]bootstrap.Channel{})
 
 	mfChs := generateChannels()
-	for _, ch := range mfChs {
-		c.MFChannels = append(c.MFChannels, bootstrap.Channel{ID: ch.ID})
+	for id, ch := range mfChs {
+		c.MFChannels = append(c.MFChannels, bootstrap.Channel{
+			ID:       ch.ID,
+			Name:     fmt.Sprintf("%s%s", "name ", id),
+			Metadata: fmt.Sprintf("{\"type\":\"some type %s\"}", id),
+		})
 	}
 
 	saved, err := svc.Add(validToken, c)
@@ -292,7 +296,7 @@ func TestView(t *testing.T) {
 		channels = append(channels, channel{ID: ch.ID, Name: ch.Name, Metadata: ch.Metadata})
 	}
 
-	data := toJSON(config{
+	data := config{
 		MFThing:     saved.MFThing,
 		MFKey:       saved.MFKey,
 		State:       saved.State,
@@ -301,21 +305,21 @@ func TestView(t *testing.T) {
 		ExternalKey: saved.ExternalKey,
 		Name:        saved.Name,
 		Content:     saved.Content,
-	})
+	}
 
 	cases := []struct {
 		desc   string
 		auth   string
 		id     string
 		status int
-		res    string
+		res    config
 	}{
 		{
 			desc:   "view a config unauthorized",
 			auth:   invalidToken,
 			id:     saved.MFThing,
 			status: http.StatusForbidden,
-			res:    "",
+			res:    config{},
 		},
 		{
 			desc:   "view a config",
@@ -329,14 +333,14 @@ func TestView(t *testing.T) {
 			auth:   validToken,
 			id:     wrongID,
 			status: http.StatusNotFound,
-			res:    "",
+			res:    config{},
 		},
 		{
 			desc:   "view a config with an empty token",
 			auth:   "",
 			id:     saved.MFThing,
 			status: http.StatusForbidden,
-			res:    "",
+			res:    config{},
 		},
 	}
 
@@ -351,10 +355,17 @@ func TestView(t *testing.T) {
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		body, err := ioutil.ReadAll(res.Body)
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		data := strings.Trim(string(body), "\n")
-		assert.Equal(t, tc.res, data, fmt.Sprintf("%s: expected response '%s' got '%s'", tc.desc, tc.res, data))
+		var view config
+		err = json.NewDecoder(res.Body).Decode(&view)
+		if err != io.EOF {
+			assert.Nil(t, err, fmt.Sprintf("Decoding expeceted to succeed %s: %s", tc.desc, err))
+		}
+
+		assert.ElementsMatch(t, tc.res.Channels, view.Channels, fmt.Sprintf("%s: expected response '%s' got '%s'", tc.desc, tc.res.Channels, view.Channels))
+		// Empty channels to prevent order mismatch.
+		tc.res.Channels = []channel{}
+		view.Channels = []channel{}
+		assert.Equal(t, tc.res, view, fmt.Sprintf("%s: expected response '%s' got '%s'", tc.desc, tc.res, view))
 	}
 }
 
@@ -371,15 +382,6 @@ func TestUpdate(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	data := toJSON(updateReq)
-
-	invalidChannels := updateReq
-	invalidChannels.Channels = []string{wrongID}
-
-	invalidState := updateReq
-	invalidState.State = bootstrap.State(5)
-
-	wrongData := toJSON(invalidChannels)
-	wrongState := toJSON(invalidState)
 
 	cases := []struct {
 		desc        string
@@ -430,16 +432,108 @@ func TestUpdate(t *testing.T) {
 			status:      http.StatusNotFound,
 		},
 		{
-			desc:        "update a config with invalid channels",
-			req:         wrongData,
+			desc:        "update a config with invalid request format",
+			req:         "}",
 			id:          saved.MFThing,
 			auth:        validToken,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 		},
 		{
-			desc:        "update a config with invalid state",
-			req:         wrongState,
+			desc:        "update a config with an empty request",
+			id:          saved.MFThing,
+			req:         "",
+			auth:        validToken,
+			contentType: contentType,
+			status:      http.StatusBadRequest,
+		},
+	}
+
+	for _, tc := range cases {
+		req := testRequest{
+			client:      bs.Client(),
+			method:      http.MethodPut,
+			url:         fmt.Sprintf("%s/things/configs/%s", bs.URL, tc.id),
+			contentType: tc.contentType,
+			token:       tc.auth,
+			body:        strings.NewReader(tc.req),
+		}
+		res, err := req.make()
+		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
+	}
+}
+
+func TestUpdateConnections(t *testing.T) {
+	users := mocks.NewUsersService(map[string]string{validToken: email})
+
+	ts := newThingsServer(newThingsService(users))
+	svc := newService(users, nil, ts.URL)
+	bs := newBootstrapServer(svc)
+
+	c := newConfig([]bootstrap.Channel{bootstrap.Channel{ID: "1"}})
+
+	saved, err := svc.Add(validToken, c)
+	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+
+	data := toJSON(updateReq)
+
+	invalidChannels := updateReq
+	invalidChannels.Channels = []string{wrongID}
+
+	wrongData := toJSON(invalidChannels)
+
+	cases := []struct {
+		desc        string
+		req         string
+		id          string
+		auth        string
+		contentType string
+		status      int
+	}{
+		{
+			desc:        "update connections unauthorized",
+			req:         data,
+			id:          saved.MFThing,
+			auth:        invalidToken,
+			contentType: contentType,
+			status:      http.StatusForbidden,
+		},
+		{
+			desc:        "update connections with an empty token",
+			req:         data,
+			id:          saved.MFThing,
+			auth:        "",
+			contentType: contentType,
+			status:      http.StatusForbidden,
+		},
+		{
+			desc:        "update connections valid config",
+			req:         data,
+			id:          saved.MFThing,
+			auth:        validToken,
+			contentType: contentType,
+			status:      http.StatusOK,
+		},
+		{
+			desc:        "update connections with wrong content type",
+			req:         data,
+			id:          saved.MFThing,
+			auth:        validToken,
+			contentType: "",
+			status:      http.StatusUnsupportedMediaType,
+		},
+		{
+			desc:        "update connections for a non-existing config",
+			req:         data,
+			id:          wrongID,
+			auth:        validToken,
+			contentType: contentType,
+			status:      http.StatusNotFound,
+		},
+		{
+			desc:        "update connections with invalid channels",
+			req:         wrongData,
 			id:          saved.MFThing,
 			auth:        validToken,
 			contentType: contentType,
@@ -467,7 +561,7 @@ func TestUpdate(t *testing.T) {
 		req := testRequest{
 			client:      bs.Client(),
 			method:      http.MethodPut,
-			url:         fmt.Sprintf("%s/things/configs/%s", bs.URL, tc.id),
+			url:         fmt.Sprintf("%s/things/configs/connections/%s", bs.URL, tc.id),
 			contentType: tc.contentType,
 			token:       tc.auth,
 			body:        strings.NewReader(tc.req),

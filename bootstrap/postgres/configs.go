@@ -19,11 +19,13 @@ import (
 )
 
 const (
-	duplicateErr    = "unique_violation"
-	uuidErr         = "invalid input syntax for type uuid"
-	configFieldsNum = 8
-	chanFieldsNum   = 3
-	connFieldsNum   = 2
+	duplicateErr      = "unique_violation"
+	uuidErr           = "invalid input syntax for type uuid"
+	connConstraintErr = "connections_config_id_fkey"
+	fkViolation       = "foreign_key_violation"
+	configFieldsNum   = 8
+	chanFieldsNum     = 3
+	connFieldsNum     = 2
 )
 
 var _ bootstrap.ConfigRepository = (*configRepository)(nil)
@@ -254,6 +256,11 @@ func (cr configRepository) UpdateConnections(key, id string, channels []bootstra
 	}
 
 	if err = updateConnections(key, id, connections, tx); err != nil {
+		if e, ok := err.(*pq.Error); ok {
+			if e.Code.Name() == fkViolation && e.Constraint == connConstraintErr {
+				return bootstrap.ErrNotFound
+			}
+		}
 		cr.rollback("Failed to update connections during the update", tx, err)
 
 		return err
