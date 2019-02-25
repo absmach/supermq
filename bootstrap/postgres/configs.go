@@ -15,7 +15,6 @@ import (
 	"github.com/lib/pq"
 	"github.com/mainflux/mainflux/bootstrap"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/things"
 )
 
 const (
@@ -26,6 +25,8 @@ const (
 	configFieldsNum   = 8
 	chanFieldsNum     = 3
 	connFieldsNum     = 2
+	cleanupQuery      = `DELETE FROM channels ch WHERE NOT EXISTS (
+						 SELECT channel_id FROM connections c WHERE ch.mainflux_channel = c.channel_id);`
 )
 
 var _ bootstrap.ConfigRepository = (*configRepository)(nil)
@@ -101,6 +102,7 @@ func (cr configRepository) RetrieveByID(key, id string) (bootstrap.Config, error
 		if err == sql.ErrNoRows {
 			return empty, bootstrap.ErrNotFound
 		}
+
 		return empty, err
 	}
 
@@ -237,7 +239,7 @@ func (cr configRepository) Update(cfg bootstrap.Config) error {
 	}
 
 	if cnt == 0 {
-		return things.ErrNotFound
+		return bootstrap.ErrNotFound
 	}
 
 	return nil
@@ -277,6 +279,10 @@ func (cr configRepository) Remove(key, id string) error {
 	q := `DELETE FROM configs WHERE mainflux_thing = $1 AND owner = $2`
 	if _, err := cr.db.Exec(q, id, key); err != nil {
 		return err
+	}
+
+	if _, err := cr.db.Exec(cleanupQuery); err != nil {
+		cr.log.Warn("Failed to clean dangling channels after removal")
 	}
 
 	return nil
@@ -376,6 +382,10 @@ func (cr configRepository) RetrieveUnknown(offset, limit uint64) bootstrap.Confi
 func (cr configRepository) RemoveThing(id string) error {
 	q := `DELETE FROM configs WHERE mainflux_thing = $1`
 	_, err := cr.db.Exec(q, id)
+
+	if _, err := cr.db.Exec(cleanupQuery); err != nil {
+		cr.log.Warn("Failed to clean dangling channels after removal")
+	}
 
 	return err
 }
@@ -530,10 +540,7 @@ func updateConnections(key, id string, connections []string, tx *sql.Tx) error {
 		return nil
 	}
 
-	q = `DELETE FROM channels ch WHERE NOT EXISTS (
-		 SELECT channel_id FROM connections c WHERE ch.mainflux_channel = c.channel_id);`
-
-	_, err = tx.Exec(q)
+	_, err = tx.Exec(cleanupQuery)
 
 	return err
 }

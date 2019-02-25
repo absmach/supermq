@@ -30,7 +30,7 @@ paths:
           headers:
             Location:
               type: string
-              description: Created config's relative URL (i.e. /configs/{configId}).
+              description: Created config's relative URL (i.e. /things/configs/{configId}).
         400:
           description: Failed due to malformed JSON.
         403:

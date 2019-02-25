@@ -93,15 +93,19 @@ func newConfig(channels []bootstrap.Channel) bootstrap.Config {
 
 func (tr testRequest) make() (*http.Response, error) {
 	req, err := http.NewRequest(tr.method, tr.url, tr.body)
+
 	if err != nil {
 		return nil, err
 	}
+
 	if tr.token != "" {
 		req.Header.Set("Authorization", tr.token)
 	}
+
 	if tr.contentType != "" {
 		req.Header.Set("Content-Type", tr.contentType)
 	}
+
 	return tr.client.Do(req)
 }
 
@@ -186,7 +190,7 @@ func TestAdd(t *testing.T) {
 			auth:        validToken,
 			contentType: contentType,
 			status:      http.StatusCreated,
-			location:    "/configs/1",
+			location:    "/things/configs/1",
 		},
 		{
 			desc:        "add a config with wring content type",
