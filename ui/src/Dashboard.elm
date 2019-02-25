@@ -17,32 +17,46 @@ import Url.Builder as B
 
 url =
     { base = "http://localhost"
-    , versionPath = [ "version" ]
+    , path = [ "version" ]
     }
 
 
 type alias Model =
-    {}
+    { version : String }
 
 
 initial : Model
 initial =
-    {}
+    { version = "" }
 
 
 type Msg
-    = NoOp
+    = GetVersion
+    | GotVersion (Result Http.Error String)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
+        GetVersion ->
+            ( model
+            , Http.get
+                { url = B.crossOrigin url.base url.path []
+                , expect = Http.expectJson GotVersion (D.field "version" D.string)
+                }
+            )
+
+        GotVersion result ->
+            case result of
+                Ok version ->
+                    ( { model | version = version }, Cmd.none )
+
+                Err error ->
+                    ( { model | version = Error.handle error }, Cmd.none )
 
 
-view : Model -> String -> Int -> Int -> Html Msg
-view model version numThings numChannels =
+view : Model -> Int -> Int -> Html Msg
+view model numThings numChannels =
     Grid.container []
         -- [ Card.config [ Card.attrs [ style [ ( "width", "20rem" ) ] ] ]
         [ Card.config []
@@ -50,7 +64,7 @@ view model version numThings numChannels =
                 [ h3 [ Spacing.mt2 ] [ text "Version" ]
                 ]
             |> Card.block []
-                [ Block.titleH4 [] [ text version ]
+                [ Block.titleH4 [] [ text model.version ]
                 ]
             |> Card.view
         , Card.config []

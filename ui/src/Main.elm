@@ -37,7 +37,6 @@ import Thing
 import Url
 import Url.Parser as UrlParser exposing ((</>))
 import User
-import Version
 
 
 
@@ -63,7 +62,6 @@ main =
 type alias Model =
     { key : Nav.Key
     , user : User.Model
-    , version : Version.Model
     , dashboard : Dashboard.Model
     , channel : Channel.Model
     , thing : Thing.Model
@@ -77,7 +75,6 @@ init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
     ( Model key
         User.initial
-        Version.initial
         Dashboard.initial
         Channel.initial
         Thing.initial
@@ -115,7 +112,6 @@ type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
     | UserMsg User.Msg
-    | VersionMsg Version.Msg
     | DashboardMsg Dashboard.Msg
     | ChannelMsg Channel.Msg
     | ThingMsg Thing.Msg
@@ -153,7 +149,7 @@ update msg model =
             case subMsg of
                 User.GotToken _ ->
                     if String.length updatedUser.token > 0 then
-                        logIn model updatedUser Version.GetVersion Thing.RetrieveThings Channel.RetrieveChannels
+                        logIn model updatedUser Dashboard.GetVersion Thing.RetrieveThings Channel.RetrieveChannels
 
                     else
                         ( model, Cmd.none )
@@ -196,24 +192,17 @@ update msg model =
             in
             ( { model | message = updatedMessage }, Cmd.map MessageMsg messageCmd )
 
-        VersionMsg subMsg ->
-            let
-                ( updatedVersion, versionCmd ) =
-                    Version.update subMsg model.version
-            in
-            ( { model | version = updatedVersion }, Cmd.map VersionMsg versionCmd )
-
         Dashboard ->
             ( { model | view = "dashboard" }, Cmd.none )
 
         Login subMsg ->
             case subMsg of
-                VersionMsg vMsg ->
+                DashboardMsg dMsg ->
                     let
-                        ( updatedVersion, versionCmd ) =
-                            Version.update vMsg model.version
+                        ( updatedDashboard, dashboardCmd ) =
+                            Dashboard.update dMsg model.dashboard
                     in
-                    ( { model | version = updatedVersion }, Cmd.map VersionMsg versionCmd )
+                    ( { model | dashboard = updatedDashboard }, Cmd.map DashboardMsg dashboardCmd )
 
                 ThingMsg tMsg ->
                     let
@@ -256,11 +245,11 @@ update msg model =
             ( { model | view = "messages" }, Cmd.map MessageMsg thingsCmd )
 
 
-logIn : Model -> User.Model -> Version.Msg -> Thing.Msg -> Channel.Msg -> ( Model, Cmd Msg )
-logIn model user versionMsg thingMsg channelMsg =
+logIn : Model -> User.Model -> Dashboard.Msg -> Thing.Msg -> Channel.Msg -> ( Model, Cmd Msg )
+logIn model user dashboardMsg thingMsg channelMsg =
     let
-        ( updatedVersion, versionCmd ) =
-            Version.update versionMsg model.version
+        ( updatedDashboard, dashboardCmd ) =
+            Dashboard.update dashboardMsg model.dashboard
 
         ( updatedThing, thingCmd ) =
             Thing.update thingMsg model.thing user.token
@@ -271,18 +260,12 @@ logIn model user versionMsg thingMsg channelMsg =
     ( { model | user = user }
     , Cmd.map Login
         (Cmd.batch
-            [ Cmd.map VersionMsg versionCmd
+            [ Cmd.map DashboardMsg dashboardCmd
             , Cmd.map ThingMsg thingCmd
             , Cmd.map ChannelMsg channelCmd
             ]
         )
     )
-
-
-
--- Menu subMsg ->
---     ( model, Cmd.none )
--- SUBSCRIPTIONS
 
 
 subscriptions : Model -> Sub Msg
@@ -346,7 +329,7 @@ view model =
                 if loggedIn then
                     case model.view of
                         "dashboard" ->
-                            Html.map DashboardMsg (Dashboard.view model.dashboard model.version.response model.thing.things.total model.channel.channels.total)
+                            Html.map DashboardMsg (Dashboard.view model.dashboard model.thing.things.total model.channel.channels.total)
 
                         "channels" ->
                             Html.map ChannelMsg (Channel.view model.channel)
@@ -361,7 +344,7 @@ view model =
                             Html.map MessageMsg (Message.view model.message)
 
                         _ ->
-                            Html.map DashboardMsg (Dashboard.view model.dashboard model.version.response model.thing.things.total model.channel.channels.total)
+                            Html.map DashboardMsg (Dashboard.view model.dashboard model.thing.things.total model.channel.channels.total)
 
                 else
                     Html.map UserMsg (User.view model.user)
