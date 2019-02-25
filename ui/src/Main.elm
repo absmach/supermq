@@ -125,6 +125,10 @@ type Msg
     | Messages
 
 
+
+-- UPDATE
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -158,39 +162,19 @@ update msg model =
                     ( { model | user = updatedUser }, Cmd.map UserMsg userCmd )
 
         DashboardMsg subMsg ->
-            let
-                ( updatedDashboard, dashboardCmd ) =
-                    Dashboard.update subMsg model.dashboard
-            in
-            ( { model | dashboard = updatedDashboard }, Cmd.map DashboardMsg dashboardCmd )
+            updateDashboard model subMsg
 
         ChannelMsg subMsg ->
-            let
-                ( updatedChannel, channelCmd ) =
-                    Channel.update subMsg model.channel model.user.token
-            in
-            ( { model | channel = updatedChannel }, Cmd.map ChannelMsg channelCmd )
+            updateChannel model subMsg
 
         ThingMsg subMsg ->
-            let
-                ( updatedThing, thingCmd ) =
-                    Thing.update subMsg model.thing model.user.token
-            in
-            ( { model | thing = updatedThing }, Cmd.map ThingMsg thingCmd )
+            updateThing model subMsg
 
         ConnectionMsg subMsg ->
-            let
-                ( updatedConnection, connectionCmd ) =
-                    Connection.update subMsg model.connection model.user.token
-            in
-            ( { model | connection = updatedConnection }, Cmd.map ConnectionMsg connectionCmd )
+            updateConnection model subMsg
 
         MessageMsg subMsg ->
-            let
-                ( updatedMessage, messageCmd ) =
-                    Message.update subMsg model.message model.user.token
-            in
-            ( { model | message = updatedMessage }, Cmd.map MessageMsg messageCmd )
+            updateMessage model subMsg
 
         Dashboard ->
             ( { model | view = "dashboard" }, Cmd.none )
@@ -198,25 +182,13 @@ update msg model =
         Login subMsg ->
             case subMsg of
                 DashboardMsg dMsg ->
-                    let
-                        ( updatedDashboard, dashboardCmd ) =
-                            Dashboard.update dMsg model.dashboard
-                    in
-                    ( { model | dashboard = updatedDashboard }, Cmd.map DashboardMsg dashboardCmd )
+                    updateDashboard model dMsg
 
                 ThingMsg tMsg ->
-                    let
-                        ( updatedThing, thingCmd ) =
-                            Thing.update tMsg model.thing model.user.token
-                    in
-                    ( { model | thing = updatedThing }, Cmd.map ThingMsg thingCmd )
+                    updateThing model tMsg
 
                 ChannelMsg cMsg ->
-                    let
-                        ( updatedChannel, channelCmd ) =
-                            Channel.update cMsg model.channel model.user.token
-                    in
-                    ( { model | channel = updatedChannel }, Cmd.map ChannelMsg channelCmd )
+                    updateChannel model cMsg
 
                 _ ->
                     ( { model | view = "dashboard" }, Cmd.none )
@@ -245,6 +217,51 @@ update msg model =
             ( { model | view = "messages" }, Cmd.map MessageMsg thingsCmd )
 
 
+updateDashboard : Model -> Dashboard.Msg -> ( Model, Cmd Msg )
+updateDashboard model msg =
+    let
+        ( updatedDashboard, dashboardCmd ) =
+            Dashboard.update msg model.dashboard
+    in
+    ( { model | dashboard = updatedDashboard }, Cmd.map DashboardMsg dashboardCmd )
+
+
+updateThing : Model -> Thing.Msg -> ( Model, Cmd Msg )
+updateThing model msg =
+    let
+        ( updatedThing, thingCmd ) =
+            Thing.update msg model.thing model.user.token
+    in
+    ( { model | thing = updatedThing }, Cmd.map ThingMsg thingCmd )
+
+
+updateChannel : Model -> Channel.Msg -> ( Model, Cmd Msg )
+updateChannel model msg =
+    let
+        ( updatedChannel, channelCmd ) =
+            Channel.update msg model.channel model.user.token
+    in
+    ( { model | channel = updatedChannel }, Cmd.map ChannelMsg channelCmd )
+
+
+updateConnection : Model -> Connection.Msg -> ( Model, Cmd Msg )
+updateConnection model msg =
+    let
+        ( updatedConnection, connectionCmd ) =
+            Connection.update msg model.connection model.user.token
+    in
+    ( { model | connection = updatedConnection }, Cmd.map ConnectionMsg connectionCmd )
+
+
+updateMessage : Model -> Message.Msg -> ( Model, Cmd Msg )
+updateMessage model msg =
+    let
+        ( updatedMessage, messageCmd ) =
+            Message.update msg model.message model.user.token
+    in
+    ( { model | message = updatedMessage }, Cmd.map MessageMsg messageCmd )
+
+
 logIn : Model -> User.Model -> Dashboard.Msg -> Thing.Msg -> Channel.Msg -> ( Model, Cmd Msg )
 logIn model user dashboardMsg thingMsg channelMsg =
     let
@@ -266,6 +283,10 @@ logIn model user dashboardMsg thingMsg channelMsg =
             ]
         )
     )
+
+
+
+-- SUBSCRIPTIONS
 
 
 subscriptions : Model -> Sub Msg
