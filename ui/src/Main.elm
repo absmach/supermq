@@ -9,6 +9,8 @@ module Main exposing (Model, Msg(..), init, main, subscriptions, update, view)
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
 import Bootstrap.CDN as CDN
+import Bootstrap.Card as Card
+import Bootstrap.Card.Block as Block
 import Bootstrap.Form as Form
 import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Form.Fieldset as Fieldset
@@ -24,7 +26,6 @@ import Browser
 import Browser.Navigation as Nav
 import Channel
 import Connection
-import Dashboard
 import Debug exposing (log)
 import Error
 import Html exposing (..)
@@ -37,6 +38,7 @@ import Thing
 import Url
 import Url.Parser as UrlParser exposing ((</>))
 import User
+import Version
 
 
 
@@ -62,7 +64,7 @@ main =
 type alias Model =
     { key : Nav.Key
     , user : User.Model
-    , dashboard : Dashboard.Model
+    , dashboard : Version.Model
     , channel : Channel.Model
     , thing : Thing.Model
     , connection : Connection.Model
@@ -75,7 +77,7 @@ init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
     ( Model key
         User.initial
-        Dashboard.initial
+        Version.initial
         Channel.initial
         Thing.initial
         Connection.initial
@@ -112,12 +114,12 @@ type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
     | UserMsg User.Msg
-    | DashboardMsg Dashboard.Msg
+    | VersionMsg Version.Msg
     | ChannelMsg Channel.Msg
     | ThingMsg Thing.Msg
     | ConnectionMsg Connection.Msg
     | MessageMsg Message.Msg
-    | Dashboard
+    | Version
     | Channels
     | Things
     | Connection
@@ -147,8 +149,8 @@ update msg model =
         UserMsg subMsg ->
             updateUser model subMsg
 
-        DashboardMsg subMsg ->
-            updateDashboard model subMsg
+        VersionMsg subMsg ->
+            updateVersion model subMsg
 
         ChannelMsg subMsg ->
             updateChannel model subMsg
@@ -162,7 +164,7 @@ update msg model =
         MessageMsg subMsg ->
             updateMessage model subMsg
 
-        Dashboard ->
+        Version ->
             ( { model | view = "dashboard" }, Cmd.none )
 
         Things ->
@@ -192,7 +194,7 @@ updateUser model msg =
     case msg of
         User.GotToken _ ->
             if String.length updatedUser.token > 0 then
-                logIn model updatedUser Dashboard.GetVersion Thing.RetrieveThings Channel.RetrieveChannels
+                logIn { model | view = "dashboard" } updatedUser Version.GetVersion Thing.RetrieveThings Channel.RetrieveChannels
 
             else
                 ( { model | user = updatedUser }, Cmd.map UserMsg userCmd )
@@ -201,11 +203,11 @@ updateUser model msg =
             ( { model | user = updatedUser }, Cmd.map UserMsg userCmd )
 
 
-logIn : Model -> User.Model -> Dashboard.Msg -> Thing.Msg -> Channel.Msg -> ( Model, Cmd Msg )
+logIn : Model -> User.Model -> Version.Msg -> Thing.Msg -> Channel.Msg -> ( Model, Cmd Msg )
 logIn model user dashboardMsg thingMsg channelMsg =
     let
-        ( updatedDashboard, dashboardCmd ) =
-            Dashboard.update dashboardMsg model.dashboard
+        ( updatedVersion, dashboardCmd ) =
+            Version.update dashboardMsg model.dashboard
 
         ( updatedThing, thingCmd ) =
             Thing.update thingMsg model.thing user.token
@@ -215,20 +217,20 @@ logIn model user dashboardMsg thingMsg channelMsg =
     in
     ( { model | user = user }
     , Cmd.batch
-        [ Cmd.map DashboardMsg dashboardCmd
+        [ Cmd.map VersionMsg dashboardCmd
         , Cmd.map ThingMsg thingCmd
         , Cmd.map ChannelMsg channelCmd
         ]
     )
 
 
-updateDashboard : Model -> Dashboard.Msg -> ( Model, Cmd Msg )
-updateDashboard model msg =
+updateVersion : Model -> Version.Msg -> ( Model, Cmd Msg )
+updateVersion model msg =
     let
-        ( updatedDashboard, dashboardCmd ) =
-            Dashboard.update msg model.dashboard
+        ( updatedVersion, dashboardCmd ) =
+            Version.update msg model.dashboard
     in
-    ( { model | dashboard = updatedDashboard }, Cmd.map DashboardMsg dashboardCmd )
+    ( { model | dashboard = updatedVersion }, Cmd.map VersionMsg dashboardCmd )
 
 
 updateThing : Model -> Thing.Msg -> ( Model, Cmd Msg )
@@ -307,7 +309,7 @@ view model =
 
             menu =
                 if loggedIn then
-                    [ ButtonGroup.linkButton [ Button.primary, Button.onClick Dashboard, buttonAttrs ] [ text "dashboard" ]
+                    [ ButtonGroup.linkButton [ Button.primary, Button.onClick Version, buttonAttrs ] [ text "dashboard" ]
                     , ButtonGroup.linkButton [ Button.primary, Button.onClick Things, buttonAttrs ] [ text "things" ]
                     , ButtonGroup.linkButton [ Button.primary, Button.onClick Channels, buttonAttrs ] [ text "channels" ]
                     , ButtonGroup.linkButton [ Button.primary, Button.onClick Connection, buttonAttrs ] [ text "connection" ]
@@ -332,7 +334,7 @@ view model =
                 if loggedIn then
                     case model.view of
                         "dashboard" ->
-                            Html.map DashboardMsg (Dashboard.view model.dashboard model.thing.things.total model.channel.channels.total)
+                            dashboard model
 
                         "channels" ->
                             Html.map ChannelMsg (Channel.view model.channel)
@@ -347,7 +349,7 @@ view model =
                             Html.map MessageMsg (Message.view model.message)
 
                         _ ->
-                            Html.map DashboardMsg (Dashboard.view model.dashboard model.thing.things.total model.channel.channels.total)
+                            dashboard model
 
                 else
                     Html.map UserMsg (User.view model.user)
@@ -395,3 +397,47 @@ view model =
             ]
         ]
     }
+
+
+dashboard : Model -> Html Msg
+dashboard model =
+    Grid.container []
+        [ Grid.row
+            []
+            [ Grid.col []
+                [ Card.config []
+                    |> Card.header []
+                        [ h3 [ Spacing.mt2 ] [ text "Version" ]
+                        ]
+                    |> Card.block []
+                        [ Block.titleH4 [] [ text model.dashboard.version ]
+                        ]
+                    |> Card.view
+                ]
+            , Grid.col
+                []
+                [ Card.config []
+                    |> Card.header []
+                        [ h3 [ Spacing.mt2 ] [ text "Things" ]
+                        ]
+                    |> Card.block []
+                        [ Block.titleH4 [] [ text (String.fromInt model.thing.things.total) ]
+                        , Block.custom <|
+                            Button.button [ Button.primary, Button.onClick Things ] [ text "Things" ]
+                        ]
+                    |> Card.view
+                ]
+            , Grid.col []
+                [ Card.config []
+                    |> Card.header []
+                        [ h3 [ Spacing.mt2 ] [ text "Channels" ]
+                        ]
+                    |> Card.block []
+                        [ Block.titleH4 [] [ text (String.fromInt model.channel.channels.total) ]
+                        , Block.custom <|
+                            Button.button [ Button.primary, Button.onClick Channels ] [ text "Channels" ]
+                        ]
+                    |> Card.view
+                ]
+            ]
+        ]
