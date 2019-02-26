@@ -118,7 +118,6 @@ type Msg
     | ConnectionMsg Connection.Msg
     | MessageMsg Message.Msg
     | Dashboard
-    | Login Msg
     | Channels
     | Things
     | Connection
@@ -146,20 +145,7 @@ update msg model =
             )
 
         UserMsg subMsg ->
-            let
-                ( updatedUser, userCmd ) =
-                    User.update subMsg model.user
-            in
-            case subMsg of
-                User.GotToken _ ->
-                    if String.length updatedUser.token > 0 then
-                        logIn model updatedUser Dashboard.GetVersion Thing.RetrieveThings Channel.RetrieveChannels
-
-                    else
-                        ( model, Cmd.none )
-
-                _ ->
-                    ( { model | user = updatedUser }, Cmd.map UserMsg userCmd )
+            updateUser model subMsg
 
         DashboardMsg subMsg ->
             updateDashboard model subMsg
@@ -179,20 +165,6 @@ update msg model =
         Dashboard ->
             ( { model | view = "dashboard" }, Cmd.none )
 
-        Login subMsg ->
-            case subMsg of
-                DashboardMsg dMsg ->
-                    updateDashboard model dMsg
-
-                ThingMsg tMsg ->
-                    updateThing model tMsg
-
-                ChannelMsg cMsg ->
-                    updateChannel model cMsg
-
-                _ ->
-                    ( { model | view = "dashboard" }, Cmd.none )
-
         Things ->
             ( { model | view = "things" }, Cmd.none )
 
@@ -200,21 +172,54 @@ update msg model =
             ( { model | view = "channels" }, Cmd.none )
 
         Connection ->
-            let
-                ( _, thingsCmd ) =
-                    Connection.update (Connection.ThingMsg Thing.RetrieveThings) Connection.initial model.user.token
-
-                ( _, channelsCmd ) =
-                    Connection.update (Connection.ChannelMsg Channel.RetrieveChannels) Connection.initial model.user.token
-            in
-            ( { model | view = "connection" }, Cmd.map ConnectionMsg (Cmd.batch [ thingsCmd, channelsCmd ]) )
+            ( { model | view = "connection" }
+            , Cmd.batch
+                [ Tuple.second (updateConnection model (Connection.ThingMsg Thing.RetrieveThings))
+                , Tuple.second (updateConnection model (Connection.ChannelMsg Channel.RetrieveChannels))
+                ]
+            )
 
         Messages ->
-            let
-                ( _, thingsCmd ) =
-                    Message.update (Message.ThingMsg Thing.RetrieveThings) Message.initial model.user.token
-            in
-            ( { model | view = "messages" }, Cmd.map MessageMsg thingsCmd )
+            updateMessage { model | view = "messages" } (Message.ThingMsg Thing.RetrieveThings)
+
+
+updateUser : Model -> User.Msg -> ( Model, Cmd Msg )
+updateUser model msg =
+    let
+        ( updatedUser, userCmd ) =
+            User.update msg model.user
+    in
+    case msg of
+        User.GotToken _ ->
+            if String.length updatedUser.token > 0 then
+                logIn model updatedUser Dashboard.GetVersion Thing.RetrieveThings Channel.RetrieveChannels
+
+            else
+                ( { model | user = updatedUser }, Cmd.map UserMsg userCmd )
+
+        _ ->
+            ( { model | user = updatedUser }, Cmd.map UserMsg userCmd )
+
+
+logIn : Model -> User.Model -> Dashboard.Msg -> Thing.Msg -> Channel.Msg -> ( Model, Cmd Msg )
+logIn model user dashboardMsg thingMsg channelMsg =
+    let
+        ( updatedDashboard, dashboardCmd ) =
+            Dashboard.update dashboardMsg model.dashboard
+
+        ( updatedThing, thingCmd ) =
+            Thing.update thingMsg model.thing user.token
+
+        ( updatedChannel, channelCmd ) =
+            Channel.update channelMsg model.channel user.token
+    in
+    ( { model | user = user }
+    , Cmd.batch
+        [ Cmd.map DashboardMsg dashboardCmd
+        , Cmd.map ThingMsg thingCmd
+        , Cmd.map ChannelMsg channelCmd
+        ]
+    )
 
 
 updateDashboard : Model -> Dashboard.Msg -> ( Model, Cmd Msg )
@@ -260,29 +265,6 @@ updateMessage model msg =
             Message.update msg model.message model.user.token
     in
     ( { model | message = updatedMessage }, Cmd.map MessageMsg messageCmd )
-
-
-logIn : Model -> User.Model -> Dashboard.Msg -> Thing.Msg -> Channel.Msg -> ( Model, Cmd Msg )
-logIn model user dashboardMsg thingMsg channelMsg =
-    let
-        ( updatedDashboard, dashboardCmd ) =
-            Dashboard.update dashboardMsg model.dashboard
-
-        ( updatedThing, thingCmd ) =
-            Thing.update thingMsg model.thing user.token
-
-        ( updatedChannel, channelCmd ) =
-            Channel.update channelMsg model.channel user.token
-    in
-    ( { model | user = user }
-    , Cmd.map Login
-        (Cmd.batch
-            [ Cmd.map DashboardMsg dashboardCmd
-            , Cmd.map ThingMsg thingCmd
-            , Cmd.map ChannelMsg channelCmd
-            ]
-        )
-    )
 
 
 
