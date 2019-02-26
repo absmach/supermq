@@ -1,15 +1,22 @@
 module Thing exposing (Model, Msg(..), Thing, initial, update, view)
 
 import Bootstrap.Button as Button
+import Bootstrap.ButtonGroup as ButtonGroup
+import Bootstrap.CDN exposing (fontAwesome)
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
+import Bootstrap.Grid.Row as Row
+import Bootstrap.Modal as Modal
 import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
+import Debug exposing (log)
 import Error
 import Helpers
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onClick)
 import Http
 import Json.Decode as D
 import Json.Encode as E
@@ -41,7 +48,14 @@ type alias Model =
     , limit : Int
     , response : String
     , things : Things
+    , edited : Thing
+    , editMode : Bool
+    , modalVisibility : Modal.Visibility
     }
+
+
+emptyThing =
+    Thing "" (Just "") "" ""
 
 
 initial : Model
@@ -55,6 +69,9 @@ initial =
         { list = []
         , total = 0
         }
+    , edited = emptyThing
+    , editMode = False
+    , modalVisibility = Modal.hidden
     }
 
 
@@ -68,6 +85,10 @@ type Msg
     | RemoveThing String
     | RemovedThing (Result Http.Error Int)
     | SubmitPage Int
+    | CloseModal
+    | ShowModal Thing
+    | EditThing
+    | SubmitThing
 
 
 update : Msg -> Model -> String -> ( Model, Cmd Msg )
@@ -128,11 +149,26 @@ update msg model token =
                         { model
                             | response = String.fromInt statusCode
                             , offset = Helpers.validateOffset model.offset model.things.total query.limit
+                            , edited = emptyThing
+                            , editMode = False
+                            , modalVisibility = Modal.hidden
                         }
                         token
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
+
+        CloseModal ->
+            ( { model | modalVisibility = Modal.hidden, edited = emptyThing, editMode = False }, Cmd.none )
+
+        ShowModal thing ->
+            ( { model | modalVisibility = Modal.shown, edited = thing, editMode = False }, Cmd.none )
+
+        EditThing ->
+            ( { model | editMode = True }, Cmd.none )
+
+        SubmitThing ->
+            ( { model | editMode = False }, Cmd.none )
 
 
 
@@ -142,25 +178,39 @@ update msg model token =
 view : Model -> Html Msg
 view model =
     Grid.container []
-        [ Grid.row []
-            [ Grid.col []
-                [ Table.simpleTable
-                    ( Table.simpleThead
+        [ fontAwesome
+        , genTable model
+        , Helpers.genPagination model.things.total SubmitPage
+        , genModal model
+        ]
+
+
+
+-- Table
+
+
+genTable : Model -> Html Msg
+genTable model =
+    Grid.row []
+        [ Grid.col []
+            [ Table.table
+                { options = [ Table.striped, Table.hover ]
+                , thead =
+                    Table.simpleThead
                         [ Table.th [] [ text "Name" ]
                         , Table.th [] [ text "Id" ]
                         , Table.th [] [ text "Type" ]
-                        , Table.th [] [ text "key" ]
+                        , Table.th [] [ text "Key" ]
                         ]
-                    , Table.tbody []
+                , tbody =
+                    Table.tbody []
                         (List.concat
                             [ genTableHeader model.name model.type_
-                            , genTableRows model.things.list
+                            , genTableRows model
                             ]
                         )
-                    )
-                ]
+                }
             ]
-        , Helpers.genPagination model.things.total SubmitPage
         ]
 
 
@@ -171,13 +221,13 @@ genTableHeader name type_ =
         , Table.td [] []
         , Table.td [] [ Input.text [ Input.attrs [ id "type", value type_ ], Input.onInput SubmitType ] ]
         , Table.td [] []
-        , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionThing ] [ text "+" ] ]
+        , Table.td [] [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1, class "fa fa-plus" ], Button.onClick ProvisionThing ] [] ]
         ]
     ]
 
 
-genTableRows : List Thing -> List (Table.Row Msg)
-genTableRows list =
+genTableRows : Model -> List (Table.Row Msg)
+genTableRows model =
     List.map
         (\thing ->
             Table.tr []
@@ -185,10 +235,103 @@ genTableRows list =
                 , Table.td [] [ text thing.id ]
                 , Table.td [] [ text thing.type_ ]
                 , Table.td [] [ text thing.key ]
-                , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick (RemoveThing thing.id) ] [ text "-" ] ]
+                , Table.td [] [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1, class "fa fa-pencil" ], Button.onClick (ShowModal thing) ] [] ]
+                , Table.td [] [ Button.button [ Button.outlineDanger, Button.attrs [ Spacing.ml1, class "fa fa-remove" ], Button.onClick (RemoveThing thing.id) ] [] ]
                 ]
         )
-        list
+        model.things.list
+
+
+
+-- Modal
+
+
+genModal : Model -> Html Msg
+genModal model =
+    Modal.config CloseModal
+        |> Modal.large
+        |> Modal.hideOnBackdropClick True
+        |> Modal.h4 [] [ text (Helpers.parseName model.edited.name) ]
+        |> Modal.body []
+            [ Grid.container []
+                [ genModalInfo model
+                , genModalButtons model
+                ]
+            ]
+        |> Modal.view model.modalVisibility
+
+
+genModalInfo : Model -> Html Msg
+genModalInfo model =
+    Grid.row []
+        [ Grid.col []
+            [ genModalEdit model
+            , genModalImmutable model
+            ]
+        ]
+
+
+genModalButtons : Model -> Html Msg
+genModalButtons model =
+    let
+        ( msg, buttonText ) =
+            if model.editMode then
+                ( SubmitThing, "SUBMIT" )
+
+            else
+                ( EditThing, "EDIT" )
+    in
+    Grid.row []
+        [ Grid.col [ Col.xs8 ]
+            [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1 ], Button.onClick msg ] [ text buttonText ]
+            ]
+
+        -- , Grid.col []
+        --     [ Button.button [ Button.outlineDanger, Button.attrs [ Spacing.ml1, class "fa fa-remove" ], Button.onClick (RemoveThing model.edited.id) ] []
+        --     ]
+        ]
+
+
+genModalImmutable : Model -> Html Msg
+genModalImmutable model =
+    div []
+        [ p []
+            [ strong [] [ text "id: " ]
+            , text model.edited.id
+            ]
+        , p []
+            [ strong [] [ text "key: " ]
+            , text model.edited.key
+            ]
+        ]
+
+
+genModalEdit : Model -> Html Msg
+genModalEdit model =
+    if model.editMode then
+        Form.form []
+            [ h4 [] [ text "" ]
+            , Form.group []
+                [ Form.label [] [ strong [] [ text "name" ] ]
+                , Input.text [ Input.attrs [ placeholder (Helpers.parseName model.edited.name) ] ]
+                ]
+            , Form.group []
+                [ Form.label [] [ strong [] [ text "type" ] ]
+                , Input.text [ Input.attrs [ placeholder model.edited.type_ ] ]
+                ]
+            ]
+
+    else
+        div []
+            [ p []
+                [ strong [] [ text "name: " ]
+                , text (Helpers.parseName model.edited.name)
+                ]
+            , p []
+                [ strong [] [ text "type: " ]
+                , text model.edited.type_
+                ]
+            ]
 
 
 type alias Thing =
