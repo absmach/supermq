@@ -48,8 +48,9 @@ type alias Model =
     , limit : Int
     , response : String
     , things : Things
-    , edited : Thing
+    , thing : Thing
     , editMode : Bool
+    , editName : String
     , modalVisibility : Modal.Visibility
     }
 
@@ -69,8 +70,9 @@ initial =
         { list = []
         , total = 0
         }
-    , edited = emptyThing
+    , thing = emptyThing
     , editMode = False
+    , editName = ""
     , modalVisibility = Modal.hidden
     }
 
@@ -80,6 +82,8 @@ type Msg
     | SubmitName String
     | ProvisionThing
     | ProvisionedThing (Result Http.Error Int)
+    | RetrieveThing String
+    | RetrievedThing (Result Http.Error Thing)
     | RetrieveThings
     | RetrievedThings (Result Http.Error Things)
     | RemoveThing String
@@ -88,7 +92,8 @@ type Msg
     | CloseModal
     | ShowModal Thing
     | EditThing
-    | SubmitThing
+    | EditName String
+    | UpdateThing
 
 
 update : Msg -> Model -> String -> ( Model, Cmd Msg )
@@ -120,11 +125,30 @@ update msg model token =
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
 
+        RetrieveThing thingid ->
+            ( model
+            , retrieve
+                (B.crossOrigin url.base (List.append url.path [ thingid ]) [])
+                token
+                RetrievedThing
+                thingDecoder
+            )
+
+        RetrievedThing result ->
+            case result of
+                Ok thing ->
+                    ( { model | thing = thing }, Cmd.none )
+
+                Err error ->
+                    ( { model | response = Error.handle error }, Cmd.none )
+
         RetrieveThings ->
             ( model
             , retrieve
                 (B.crossOrigin url.base url.path (Helpers.buildQueryParamList model.offset model.limit))
                 token
+                RetrievedThings
+                thingsDecoder
             )
 
         RetrievedThings result ->
@@ -149,7 +173,7 @@ update msg model token =
                         { model
                             | response = String.fromInt statusCode
                             , offset = Helpers.validateOffset model.offset model.things.total query.limit
-                            , edited = emptyThing
+                            , thing = emptyThing
                             , editMode = False
                             , modalVisibility = Modal.hidden
                         }
@@ -159,16 +183,25 @@ update msg model token =
                     ( { model | response = Error.handle error }, Cmd.none )
 
         CloseModal ->
-            ( { model | modalVisibility = Modal.hidden, edited = emptyThing, editMode = False }, Cmd.none )
+            ( { model | modalVisibility = Modal.hidden, thing = emptyThing, editMode = False }, Cmd.none )
 
         ShowModal thing ->
-            ( { model | modalVisibility = Modal.shown, edited = thing, editMode = False }, Cmd.none )
+            ( { model | modalVisibility = Modal.shown, thing = thing, editMode = False }, Cmd.none )
 
         EditThing ->
             ( { model | editMode = True }, Cmd.none )
 
-        SubmitThing ->
-            ( { model | editMode = False }, Cmd.none )
+        EditName name ->
+            ( { model | editName = name }, Cmd.none )
+
+        UpdateThing ->
+            ( { model | editMode = False, editName = "" }
+            , edit
+                (B.crossOrigin url.base (List.append url.path [ model.thing.id ]) [])
+                token
+                model.thing.type_
+                model.editName
+            )
 
 
 
@@ -251,7 +284,7 @@ genModal model =
     Modal.config CloseModal
         |> Modal.large
         |> Modal.hideOnBackdropClick True
-        |> Modal.h4 [] [ text (Helpers.parseName model.edited.name) ]
+        |> Modal.h4 [] [ text (Helpers.parseName model.thing.name) ]
         |> Modal.body []
             [ Grid.container []
                 [ genModalInfo model
@@ -276,7 +309,7 @@ genModalButtons model =
     let
         ( msg, buttonText ) =
             if model.editMode then
-                ( SubmitThing, "SUBMIT" )
+                ( UpdateThing, "UPDATE" )
 
             else
                 ( EditThing, "EDIT" )
@@ -285,10 +318,9 @@ genModalButtons model =
         [ Grid.col [ Col.xs8 ]
             [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1 ], Button.onClick msg ] [ text buttonText ]
             ]
-
-        -- , Grid.col []
-        --     [ Button.button [ Button.outlineDanger, Button.attrs [ Spacing.ml1, class "fa fa-remove" ], Button.onClick (RemoveThing model.edited.id) ] []
-        --     ]
+        , Grid.col []
+            [ Button.button [ Button.outlineDanger, Button.attrs [ Spacing.ml1 ], Button.onClick (RemoveThing model.thing.id) ] [ text "REMOVE" ]
+            ]
         ]
 
 
@@ -296,12 +328,16 @@ genModalImmutable : Model -> Html Msg
 genModalImmutable model =
     div []
         [ p []
+            [ strong [] [ text "type: " ]
+            , text model.thing.type_
+            ]
+        , p []
             [ strong [] [ text "id: " ]
-            , text model.edited.id
+            , text model.thing.id
             ]
         , p []
             [ strong [] [ text "key: " ]
-            , text model.edited.key
+            , text model.thing.key
             ]
         ]
 
@@ -310,14 +346,9 @@ genModalEdit : Model -> Html Msg
 genModalEdit model =
     if model.editMode then
         Form.form []
-            [ h4 [] [ text "" ]
-            , Form.group []
+            [ Form.group []
                 [ Form.label [] [ strong [] [ text "name" ] ]
-                , Input.text [ Input.attrs [ placeholder (Helpers.parseName model.edited.name) ] ]
-                ]
-            , Form.group []
-                [ Form.label [] [ strong [] [ text "type" ] ]
-                , Input.text [ Input.attrs [ placeholder model.edited.type_ ] ]
+                , Input.text [ Input.onInput EditName, Input.attrs [ placeholder (Helpers.parseName model.thing.name) ] ]
                 ]
             ]
 
@@ -325,11 +356,7 @@ genModalEdit model =
         div []
             [ p []
                 [ strong [] [ text "name: " ]
-                , text (Helpers.parseName model.edited.name)
-                ]
-            , p []
-                [ strong [] [ text "type: " ]
-                , text model.edited.type_
+                , text (Helpers.parseName model.thing.name)
                 ]
             ]
 
@@ -376,6 +403,24 @@ provision u token type_ name =
         }
 
 
+edit : String -> String -> String -> String -> Cmd Msg
+edit u token type_ name =
+    Http.request
+        { method = "PUT"
+        , headers = [ Http.header "Authorization" token ]
+        , url = u
+        , body =
+            E.object
+                [ ( "type", E.string type_ )
+                , ( "name", E.string name )
+                ]
+                |> Http.jsonBody
+        , expect = expectStatus ProvisionedThing
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
 expectStatus : (Result Http.Error Int -> Msg) -> Http.Expect Msg
 expectStatus toMsg =
     Http.expectStringResponse toMsg <|
@@ -397,21 +442,21 @@ expectStatus toMsg =
                     Ok metadata.statusCode
 
 
-retrieve : String -> String -> Cmd Msg
-retrieve u token =
+retrieve : String -> String -> (Result Http.Error a -> Msg) -> D.Decoder a -> Cmd Msg
+retrieve u token msg decoder =
     Http.request
         { method = "GET"
         , headers = [ Http.header "Authorization" token ]
         , url = u
         , body = Http.emptyBody
-        , expect = expectRetrieve RetrievedThings
+        , expect = expectRetrieve msg decoder
         , timeout = Nothing
         , tracker = Nothing
         }
 
 
-expectRetrieve : (Result Http.Error Things -> Msg) -> Http.Expect Msg
-expectRetrieve toMsg =
+expectRetrieve : (Result Http.Error a -> Msg) -> D.Decoder a -> Http.Expect Msg
+expectRetrieve toMsg decoder =
     Http.expectStringResponse toMsg <|
         \response ->
             case response of
@@ -428,7 +473,7 @@ expectRetrieve toMsg =
                     Err (Http.BadStatus metadata.statusCode)
 
                 Http.GoodStatus_ metadata body ->
-                    case D.decodeString thingsDecoder body of
+                    case D.decodeString decoder body of
                         Ok value ->
                             Ok value
 
@@ -452,10 +497,19 @@ remove u token =
 updateThingList : Model -> String -> ( Model, Cmd Msg )
 updateThingList model token =
     ( model
-    , retrieve
-        (B.crossOrigin url.base
-            url.path
-            (Helpers.buildQueryParamList model.offset model.limit)
-        )
-        token
+    , Cmd.batch
+        [ retrieve
+            (B.crossOrigin url.base
+                url.path
+                (Helpers.buildQueryParamList model.offset model.limit)
+            )
+            token
+            RetrievedThings
+            thingsDecoder
+        , retrieve
+            (B.crossOrigin url.base (List.append url.path [ model.thing.id ]) [])
+            token
+            RetrievedThing
+            thingDecoder
+        ]
     )
