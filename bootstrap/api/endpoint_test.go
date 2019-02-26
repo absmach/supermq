@@ -360,8 +360,7 @@ func TestView(t *testing.T) {
 
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 		var view config
-		err = json.NewDecoder(res.Body).Decode(&view)
-		if err != io.EOF {
+		if err := json.NewDecoder(res.Body).Decode(&view); err != io.EOF {
 			assert.Nil(t, err, fmt.Sprintf("Decoding expeceted to succeed %s: %s", tc.desc, err))
 		}
 

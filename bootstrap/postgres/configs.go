@@ -120,7 +120,7 @@ func (cr configRepository) RetrieveByID(key, id string) (bootstrap.Config, error
 
 	for rows.Next() {
 		c := bootstrap.Channel{}
-		if err = rows.Scan(&c.ID, &c.Name, &c.Metadata); err != nil {
+		if err := rows.Scan(&c.ID, &c.Name, &c.Metadata); err != nil {
 			cr.log.Error(fmt.Sprintf("Failed to read connected thing due to %s", err))
 			return bootstrap.Config{}, err
 		}
@@ -208,7 +208,7 @@ func (cr configRepository) RetrieveByExternalID(externalKey, externalID string) 
 
 	for rows.Next() {
 		c := bootstrap.Channel{}
-		if err = rows.Scan(&c.ID, &c.Name, &c.Metadata); err != nil {
+		if err := rows.Scan(&c.ID, &c.Name, &c.Metadata); err != nil {
 			cr.log.Error(fmt.Sprintf("Failed to read connected thing due to %s", err))
 			return bootstrap.Config{}, err
 		}
@@ -251,13 +251,13 @@ func (cr configRepository) UpdateConnections(key, id string, channels []bootstra
 		return err
 	}
 
-	if err = insertChannels(key, channels, tx); err != nil {
+	if err := insertChannels(key, channels, tx); err != nil {
 		cr.rollback("Failed to insert Channels during the update", tx, err)
 
 		return err
 	}
 
-	if err = updateConnections(key, id, connections, tx); err != nil {
+	if err := updateConnections(key, id, connections, tx); err != nil {
 		if e, ok := err.(*pq.Error); ok {
 			if e.Code.Name() == fkViolation && e.Constraint == connConstraintErr {
 				return bootstrap.ErrNotFound
@@ -319,7 +319,7 @@ func (cr configRepository) ListExisting(key string, ids []string) ([]bootstrap.C
 	var channels []bootstrap.Channel
 	for rows.Next() {
 		var ch bootstrap.Channel
-		if err = rows.Scan(&ch.ID, &ch.Name, &ch.Metadata); err != nil {
+		if err := rows.Scan(&ch.ID, &ch.Name, &ch.Metadata); err != nil {
 			cr.log.Error(fmt.Sprintf("Failed to read retrieved channels due to %s", err))
 			return []bootstrap.Channel{}, nil
 		}
@@ -355,7 +355,7 @@ func (cr configRepository) RetrieveUnknown(offset, limit uint64) bootstrap.Confi
 	items := []bootstrap.Config{}
 	for rows.Next() {
 		c := bootstrap.Config{}
-		if err = rows.Scan(&c.ExternalID, &c.ExternalKey); err != nil {
+		if err := rows.Scan(&c.ExternalID, &c.ExternalKey); err != nil {
 			cr.log.Error(fmt.Sprintf("Failed to read retrieved config due to %s", err))
 			return bootstrap.ConfigsPage{}
 		}
@@ -437,6 +437,7 @@ func (cr configRepository) retrieveAll(key string, filter bootstrap.Filter) (str
 
 func (cr configRepository) rollback(content string, tx *sql.Tx, err error) {
 	cr.log.Error(fmt.Sprintf("%s %s", content, err))
+
 	if err := tx.Rollback(); err != nil {
 		cr.log.Error(fmt.Sprintf("Failed to rollback due to %s", err))
 	}
