@@ -111,10 +111,27 @@ update msg model token =
         ProvisionThing ->
             ( { model | name = "", type_ = "" }
             , provision
+                "POST"
                 (B.crossOrigin url.base url.path [])
                 token
                 model.type_
                 model.name
+            )
+
+        EditThing ->
+            ( { model | editMode = True }, Cmd.none )
+
+        EditName name ->
+            ( { model | editName = name }, Cmd.none )
+
+        UpdateThing ->
+            ( { model | editMode = False, editName = "" }
+            , provision
+                "PUT"
+                (B.crossOrigin url.base (List.append url.path [ model.thing.id ]) [])
+                token
+                model.thing.type_
+                model.editName
             )
 
         ProvisionedThing result ->
@@ -187,21 +204,6 @@ update msg model token =
 
         ShowModal thing ->
             ( { model | modalVisibility = Modal.shown, thing = thing, editMode = False }, Cmd.none )
-
-        EditThing ->
-            ( { model | editMode = True }, Cmd.none )
-
-        EditName name ->
-            ( { model | editName = name }, Cmd.none )
-
-        UpdateThing ->
-            ( { model | editMode = False, editName = "" }
-            , edit
-                (B.crossOrigin url.base (List.append url.path [ model.thing.id ]) [])
-                token
-                model.thing.type_
-                model.editName
-            )
 
 
 
@@ -385,28 +387,10 @@ thingsDecoder =
         (D.field "total" D.int)
 
 
-provision : String -> String -> String -> String -> Cmd Msg
-provision u token type_ name =
+provision : String -> String -> String -> String -> String -> Cmd Msg
+provision method u token type_ name =
     Http.request
-        { method = "POST"
-        , headers = [ Http.header "Authorization" token ]
-        , url = u
-        , body =
-            E.object
-                [ ( "type", E.string type_ )
-                , ( "name", E.string name )
-                ]
-                |> Http.jsonBody
-        , expect = expectStatus ProvisionedThing
-        , timeout = Nothing
-        , tracker = Nothing
-        }
-
-
-edit : String -> String -> String -> String -> Cmd Msg
-edit u token type_ name =
-    Http.request
-        { method = "PUT"
+        { method = method
         , headers = [ Http.header "Authorization" token ]
         , url = u
         , body =
