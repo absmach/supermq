@@ -88,7 +88,7 @@ update msg model =
                     ( { model | token = token, response = "" }, Cmd.none )
 
                 Err error ->
-                    ( { model | response = Error.handle error }, Cmd.none )
+                    ( { model | token = "", response = Error.handle error }, Cmd.none )
 
         LogOut ->
             ( { model | email = "", password = "", token = "", response = "" }, Cmd.none )
