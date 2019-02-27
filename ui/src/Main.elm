@@ -9,6 +9,7 @@ module Main exposing (Model, Msg(..), init, main, subscriptions, update, view)
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
 import Bootstrap.CDN as CDN
+import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Form as Form
 import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Form.Fieldset as Fieldset
@@ -67,6 +68,7 @@ type alias Model =
     , connection : Connection.Model
     , message : Message.Model
     , view : String
+    , myDrop1State : Dropdown.State
     }
 
 
@@ -80,6 +82,7 @@ init _ url key =
         Connection.initial
         Message.initial
         (parse url)
+        Dropdown.initialState
     , Cmd.none
     )
 
@@ -122,6 +125,7 @@ type Msg
     | Connection
     | Messages
     | Version
+    | MyDrop1Msg Dropdown.State
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -231,6 +235,11 @@ update msg model =
             in
             ( { model | view = "version", version = updatedVersion }, Cmd.map VersionMsg versionCmd )
 
+        MyDrop1Msg state ->
+            ( { model | myDrop1State = state }
+            , Cmd.none
+            )
+
 
 
 -- Menu subMsg ->
@@ -239,8 +248,10 @@ update msg model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
+subscriptions model =
+    -- Sub.none
+    Sub.batch
+        [ Dropdown.subscriptions model.myDrop1State MyDrop1Msg ]
 
 
 
@@ -252,6 +263,17 @@ mfStylesheet =
     node "link"
         [ rel "stylesheet"
         , href "./css/mainflux.css"
+        ]
+        []
+
+
+fontAwesome : Html msg
+fontAwesome =
+    node "link"
+        [ rel "stylesheet"
+        , href "https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+        , attribute "integrity" "sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr"
+        , attribute "crossorigin" "anonymous"
         ]
         []
 
@@ -275,11 +297,11 @@ view model =
             menu =
                 if loggedIn then
                     -- [ ButtonGroup.linkButton [ Button.primary, Button.onClick Account, buttonAttrs ] [ text "account" ]
-                    [ ButtonGroup.linkButton [ Button.primary, Button.onClick Things, buttonAttrs ] [ text "things" ]
-                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Channels, buttonAttrs ] [ text "channels" ]
-                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Connection, buttonAttrs ] [ text "connection" ]
-                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Messages, buttonAttrs ] [ text "messages" ]
-                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Version, buttonAttrs ] [ text "dashboard" ]
+                    [ ButtonGroup.linkButton [ Button.primary, Button.onClick Version, buttonAttrs ] [ i [ class "fas fa-chart-bar" ] [], text " Dashboard" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Things, buttonAttrs ] [ i [ class "fas fa-sitemap" ] [], text " Things" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Channels, buttonAttrs ] [ i [ class "fas fa-broadcast-tower" ] [], text " Channels" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Connection, buttonAttrs ] [ i [ class "fas fa-plug" ] [], text " Connection" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Messages, buttonAttrs ] [ i [ class "far fa-paper-plane" ] [], text " Messages" ]
                     ]
 
                 else
@@ -288,8 +310,22 @@ view model =
             header =
                 if loggedIn then
                     Grid.row []
-                        [ Grid.col [ Col.attrs [] ] [ text model.user.email ]
-                        , Grid.col [ Col.attrs [ align "right" ] ] [ Button.button [ Button.roleLink, Button.attrs [ Spacing.ml1 ], Button.onClick User.LogOut ] [ text "logout" ] ]
+                        [ -- Grid.col [ Col.attrs [] ] [ text model.user.email ]
+                          -- , Grid.col [ Col.attrs [ align "right" ] ] [ Button.button [ Button.roleLink, Button.attrs [ Spacing.ml1 ], Button.onClick User.LogOut ] [ text "logout" ] ]
+                          -- ,
+                          Grid.col [ Col.attrs [ align "right" ] ]
+                            [ Dropdown.dropdown
+                                model.myDrop1State
+                                { options = []
+                                , toggleMsg = MyDrop1Msg
+                                , toggleButton =
+                                    Dropdown.toggle [ Button.warning ] [ text model.user.email ]
+                                , items =
+                                    [ --Dropdown.customItem (Button.button [ Button.roleLink, Button.attrs [ Spacing.ml1 ], Button.onClick User.LogOut ] [ text "logout" ])
+                                      Dropdown.buttonItem [] [ text "logout" ]
+                                    ]
+                                }
+                            ]
                         ]
 
                 else
@@ -326,6 +362,7 @@ view model =
         -- we use Bootstrap container defined at http://elm-bootstrap.info/grid
         [ Grid.containerFluid []
             [ CDN.stylesheet -- creates an inline style node with the Bootstrap CSS
+            , fontAwesome
             , mfStylesheet
             , Grid.row [ Row.attrs [ style "height" "100vh" ] ]
                 [ Grid.col
@@ -355,7 +392,9 @@ view model =
                     [ Col.xs10
                     , Col.attrs []
                     ]
-                    [ Html.map UserMsg header
+                    [ header
+
+                    --Html.map UserMsg header
                     , Grid.row []
                         [ Grid.col
                             [ Col.attrs [] ]
