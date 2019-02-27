@@ -231,16 +231,11 @@ genTable model =
             [ Table.table
                 { options = [ Table.striped, Table.hover ]
                 , thead =
-                    Table.simpleThead
-                        [ Table.th [] [ text "Name" ]
-                        , Table.th [] [ text "Id" ]
-                        , Table.th [] [ text "Type" ]
-                        , Table.th [] [ text "Key" ]
-                        ]
+                    Table.simpleThead genTableHeader
                 , tbody =
                     Table.tbody []
                         (List.concat
-                            [ genTableHeader model.name model.type_
+                            [ genTableProvision model.name model.type_
                             , genTableRows model
                             ]
                         )
@@ -249,8 +244,16 @@ genTable model =
         ]
 
 
-genTableHeader : String -> String -> List (Table.Row Msg)
-genTableHeader name type_ =
+genTableHeader =
+    [ Table.th [] [ text "Name" ]
+    , Table.th [] [ text "Id" ]
+    , Table.th [] [ text "Type" ]
+    , Table.th [] [ text "Key" ]
+    ]
+
+
+genTableProvision : String -> String -> List (Table.Row Msg)
+genTableProvision name type_ =
     [ Table.tr []
         [ Table.td [] [ Input.text [ Input.attrs [ id "name", value name ], Input.onInput SubmitName ] ]
         , Table.td [] []
@@ -300,28 +303,8 @@ genModalInfo : Model -> Html Msg
 genModalInfo model =
     Grid.row []
         [ Grid.col []
-            [ genModalEdit model
+            [ genModalEditable model
             , genModalImmutable model
-            ]
-        ]
-
-
-genModalButtons : Model -> Html Msg
-genModalButtons model =
-    let
-        ( msg, buttonText ) =
-            if model.editMode then
-                ( UpdateThing, "UPDATE" )
-
-            else
-                ( EditThing, "EDIT" )
-    in
-    Grid.row []
-        [ Grid.col [ Col.xs8 ]
-            [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1 ], Button.onClick msg ] [ text buttonText ]
-            ]
-        , Grid.col []
-            [ Button.button [ Button.outlineDanger, Button.attrs [ Spacing.ml1 ], Button.onClick (RemoveThing model.thing.id) ] [ text "REMOVE" ]
             ]
         ]
 
@@ -344,8 +327,8 @@ genModalImmutable model =
         ]
 
 
-genModalEdit : Model -> Html Msg
-genModalEdit model =
+genModalEditable : Model -> Html Msg
+genModalEditable model =
     if model.editMode then
         Form.form []
             [ Form.group []
@@ -361,6 +344,30 @@ genModalEdit model =
                 , text (Helpers.parseName model.thing.name)
                 ]
             ]
+
+
+genModalButtons : Model -> Html Msg
+genModalButtons model =
+    let
+        ( msg, buttonText ) =
+            if model.editMode then
+                ( UpdateThing, "UPDATE" )
+
+            else
+                ( EditThing, "EDIT" )
+    in
+    Grid.row []
+        [ Grid.col [ Col.xs8 ]
+            [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1 ], Button.onClick msg ] [ text buttonText ]
+            ]
+        , Grid.col []
+            [ Button.button [ Button.outlineDanger, Button.attrs [ Spacing.ml1 ], Button.onClick (RemoveThing model.thing.id) ] [ text "REMOVE" ]
+            ]
+        ]
+
+
+
+-- JSON
 
 
 type alias Thing =
@@ -387,22 +394,8 @@ thingsDecoder =
         (D.field "total" D.int)
 
 
-provision : String -> String -> String -> String -> String -> Cmd Msg
-provision method u token type_ name =
-    Http.request
-        { method = method
-        , headers = [ Http.header "Authorization" token ]
-        , url = u
-        , body =
-            E.object
-                [ ( "type", E.string type_ )
-                , ( "name", E.string name )
-                ]
-                |> Http.jsonBody
-        , expect = expectStatus ProvisionedThing
-        , timeout = Nothing
-        , tracker = Nothing
-        }
+
+-- HTTP
 
 
 expectStatus : (Result Http.Error Int -> Msg) -> Http.Expect Msg
@@ -424,6 +417,24 @@ expectStatus toMsg =
 
                 Http.GoodStatus_ metadata _ ->
                     Ok metadata.statusCode
+
+
+provision : String -> String -> String -> String -> String -> Cmd Msg
+provision method u token type_ name =
+    Http.request
+        { method = method
+        , headers = [ Http.header "Authorization" token ]
+        , url = u
+        , body =
+            E.object
+                [ ( "type", E.string type_ )
+                , ( "name", E.string name )
+                ]
+                |> Http.jsonBody
+        , expect = expectStatus ProvisionedThing
+        , timeout = Nothing
+        , tracker = Nothing
+        }
 
 
 retrieve : String -> String -> (Result Http.Error a -> Msg) -> D.Decoder a -> Cmd Msg
