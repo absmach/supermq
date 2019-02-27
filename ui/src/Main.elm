@@ -9,6 +9,8 @@ module Main exposing (Model, Msg(..), init, main, subscriptions, update, view)
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
 import Bootstrap.CDN as CDN
+import Bootstrap.Card as Card
+import Bootstrap.Card.Block as Block
 import Bootstrap.Form as Form
 import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Form.Fieldset as Fieldset
@@ -24,6 +26,7 @@ import Browser
 import Browser.Navigation as Nav
 import Channel
 import Connection
+import Debug exposing (log)
 import Error
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -60,8 +63,8 @@ main =
 
 type alias Model =
     { key : Nav.Key
-    , version : Version.Model
     , user : User.Model
+    , dashboard : Version.Model
     , channel : Channel.Model
     , thing : Thing.Model
     , connection : Connection.Model
@@ -73,8 +76,8 @@ type alias Model =
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
     ( Model key
-        Version.initial
         User.initial
+        Version.initial
         Channel.initial
         Thing.initial
         Connection.initial
@@ -110,18 +113,21 @@ parse url =
 type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
-    | VersionMsg Version.Msg
     | UserMsg User.Msg
+    | VersionMsg Version.Msg
     | ChannelMsg Channel.Msg
     | ThingMsg Thing.Msg
     | ConnectionMsg Connection.Msg
     | MessageMsg Message.Msg
-    | Account
+    | Version
     | Channels
     | Things
     | Connection
     | Messages
-    | Version
+
+
+
+-- UPDATE
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -140,101 +146,130 @@ update msg model =
             , Cmd.none
             )
 
-        VersionMsg subMsg ->
-            let
-                ( updatedVersion, versionCmd ) =
-                    Version.update subMsg model.version
-            in
-            ( { model | version = updatedVersion }, Cmd.map VersionMsg versionCmd )
-
         UserMsg subMsg ->
-            let
-                ( updatedUser, userCmd ) =
-                    User.update subMsg model.user
+            updateUser model subMsg
 
-                v =
-                    case subMsg of
-                        User.GotToken _ ->
-                            "account"
-
-                        _ ->
-                            model.view
-            in
-            ( { model | user = updatedUser, view = v }, Cmd.map UserMsg userCmd )
+        VersionMsg subMsg ->
+            updateVersion model subMsg
 
         ChannelMsg subMsg ->
-            let
-                ( updatedChannel, channelCmd ) =
-                    Channel.update subMsg model.channel model.user.token
-            in
-            ( { model | channel = updatedChannel }, Cmd.map ChannelMsg channelCmd )
+            updateChannel model subMsg
 
         ThingMsg subMsg ->
-            let
-                ( updatedThing, thingCmd ) =
-                    Thing.update subMsg model.thing model.user.token
-            in
-            ( { model | thing = updatedThing }, Cmd.map ThingMsg thingCmd )
+            updateThing model subMsg
 
         ConnectionMsg subMsg ->
-            let
-                ( updatedConnection, connectionCmd ) =
-                    Connection.update subMsg model.connection model.user.token
-            in
-            ( { model | connection = updatedConnection }, Cmd.map ConnectionMsg connectionCmd )
+            updateConnection model subMsg
 
         MessageMsg subMsg ->
-            let
-                ( updatedMessage, messageCmd ) =
-                    Message.update subMsg model.message model.user.token
-            in
-            ( { model | message = updatedMessage }, Cmd.map MessageMsg messageCmd )
-
-        Account ->
-            ( { model | view = "account" }, Cmd.none )
-
-        Things ->
-            let
-                ( updatedThing, thingCmd ) =
-                    Thing.update Thing.RetrieveThings model.thing model.user.token
-            in
-            ( { model | view = "things" }, Cmd.map ThingMsg thingCmd )
-
-        Channels ->
-            let
-                ( updatedChannel, channelCmd ) =
-                    Channel.update Channel.RetrieveChannels model.channel model.user.token
-            in
-            ( { model | view = "channels" }, Cmd.map ChannelMsg channelCmd )
-
-        Connection ->
-            let
-                ( _, thingsCmd ) =
-                    Connection.update (Connection.ThingMsg Thing.RetrieveThings) Connection.initial model.user.token
-
-                ( _, channelsCmd ) =
-                    Connection.update (Connection.ChannelMsg Channel.RetrieveChannels) Connection.initial model.user.token
-            in
-            ( { model | view = "connection" }, Cmd.map ConnectionMsg (Cmd.batch [ thingsCmd, channelsCmd ]) )
-
-        Messages ->
-            let
-                ( _, thingsCmd ) =
-                    Message.update (Message.ThingMsg Thing.RetrieveThings) Message.initial model.user.token
-            in
-            ( { model | view = "messages" }, Cmd.map MessageMsg thingsCmd )
+            updateMessage model subMsg
 
         Version ->
-            let
-                ( updatedVersion, versionCmd ) =
-                    Version.update Version.GetVersion model.version
-            in
-            ( { model | view = "version", version = updatedVersion }, Cmd.map VersionMsg versionCmd )
+            ( { model | view = "dashboard" }, Cmd.none )
+
+        Things ->
+            ( { model | view = "things" }, Cmd.none )
+
+        Channels ->
+            ( { model | view = "channels" }, Cmd.none )
+
+        Connection ->
+            ( { model | view = "connection" }
+            , Cmd.batch
+                [ Tuple.second (updateConnection model (Connection.ThingMsg Thing.RetrieveThings))
+                , Tuple.second (updateConnection model (Connection.ChannelMsg Channel.RetrieveChannels))
+                ]
+            )
+
+        Messages ->
+            updateMessage { model | view = "messages" } (Message.ThingMsg Thing.RetrieveThings)
+
+
+updateUser : Model -> User.Msg -> ( Model, Cmd Msg )
+updateUser model msg =
+    let
+        ( updatedUser, userCmd ) =
+            User.update msg model.user
+    in
+    case msg of
+        User.GotToken _ ->
+            if String.length updatedUser.token > 0 then
+                logIn { model | view = "dashboard" } updatedUser Version.GetVersion Thing.RetrieveThings Channel.RetrieveChannels
+
+            else
+                ( { model | user = updatedUser }, Cmd.map UserMsg userCmd )
+
+        _ ->
+            ( { model | user = updatedUser }, Cmd.map UserMsg userCmd )
+
+
+logIn : Model -> User.Model -> Version.Msg -> Thing.Msg -> Channel.Msg -> ( Model, Cmd Msg )
+logIn model user dashboardMsg thingMsg channelMsg =
+    let
+        ( updatedVersion, dashboardCmd ) =
+            Version.update dashboardMsg model.dashboard
+
+        ( updatedThing, thingCmd ) =
+            Thing.update thingMsg model.thing user.token
+
+        ( updatedChannel, channelCmd ) =
+            Channel.update channelMsg model.channel user.token
+    in
+    ( { model | user = user }
+    , Cmd.batch
+        [ Cmd.map VersionMsg dashboardCmd
+        , Cmd.map ThingMsg thingCmd
+        , Cmd.map ChannelMsg channelCmd
+        ]
+    )
+
+
+updateVersion : Model -> Version.Msg -> ( Model, Cmd Msg )
+updateVersion model msg =
+    let
+        ( updatedVersion, dashboardCmd ) =
+            Version.update msg model.dashboard
+    in
+    ( { model | dashboard = updatedVersion }, Cmd.map VersionMsg dashboardCmd )
+
+
+updateThing : Model -> Thing.Msg -> ( Model, Cmd Msg )
+updateThing model msg =
+    let
+        ( updatedThing, thingCmd ) =
+            Thing.update msg model.thing model.user.token
+    in
+    ( { model | thing = updatedThing }, Cmd.map ThingMsg thingCmd )
+
+
+updateChannel : Model -> Channel.Msg -> ( Model, Cmd Msg )
+updateChannel model msg =
+    let
+        ( updatedChannel, channelCmd ) =
+            Channel.update msg model.channel model.user.token
+    in
+    ( { model | channel = updatedChannel }, Cmd.map ChannelMsg channelCmd )
+
+
+updateConnection : Model -> Connection.Msg -> ( Model, Cmd Msg )
+updateConnection model msg =
+    let
+        ( updatedConnection, connectionCmd ) =
+            Connection.update msg model.connection model.user.token
+    in
+    ( { model | connection = updatedConnection }, Cmd.map ConnectionMsg connectionCmd )
+
+
+updateMessage : Model -> Message.Msg -> ( Model, Cmd Msg )
+updateMessage model msg =
+    let
+        ( updatedMessage, messageCmd ) =
+            Message.update msg model.message model.user.token
+    in
+    ( { model | message = updatedMessage }, Cmd.map MessageMsg messageCmd )
 
 
 
--- Menu subMsg ->
---     ( model, Cmd.none )
 -- SUBSCRIPTIONS
 
 
@@ -274,12 +309,11 @@ view model =
 
             menu =
                 if loggedIn then
-                    [ ButtonGroup.linkButton [ Button.primary, Button.onClick Account, buttonAttrs ] [ text "account" ]
+                    [ ButtonGroup.linkButton [ Button.primary, Button.onClick Version, buttonAttrs ] [ text "dashboard" ]
                     , ButtonGroup.linkButton [ Button.primary, Button.onClick Things, buttonAttrs ] [ text "things" ]
                     , ButtonGroup.linkButton [ Button.primary, Button.onClick Channels, buttonAttrs ] [ text "channels" ]
                     , ButtonGroup.linkButton [ Button.primary, Button.onClick Connection, buttonAttrs ] [ text "connection" ]
                     , ButtonGroup.linkButton [ Button.primary, Button.onClick Messages, buttonAttrs ] [ text "messages" ]
-                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Version, buttonAttrs ] [ text "version" ]
                     ]
 
                 else
@@ -299,11 +333,8 @@ view model =
             content =
                 if loggedIn then
                     case model.view of
-                        "version" ->
-                            Html.map VersionMsg (Version.view model.version)
-
-                        "account" ->
-                            Html.map UserMsg (User.view model.user)
+                        "dashboard" ->
+                            dashboard model
 
                         "channels" ->
                             Html.map ChannelMsg (Channel.view model.channel)
@@ -318,7 +349,7 @@ view model =
                             Html.map MessageMsg (Message.view model.message)
 
                         _ ->
-                            Html.map UserMsg (User.view model.user)
+                            dashboard model
 
                 else
                     Html.map UserMsg (User.view model.user)
@@ -366,3 +397,47 @@ view model =
             ]
         ]
     }
+
+
+dashboard : Model -> Html Msg
+dashboard model =
+    Grid.container []
+        [ Grid.row
+            []
+            [ Grid.col []
+                [ Card.config []
+                    |> Card.header []
+                        [ h3 [ Spacing.mt2 ] [ text "Version" ]
+                        ]
+                    |> Card.block []
+                        [ Block.titleH4 [] [ text model.dashboard.version ]
+                        ]
+                    |> Card.view
+                ]
+            , Grid.col
+                []
+                [ Card.config []
+                    |> Card.header []
+                        [ h3 [ Spacing.mt2 ] [ text "Things" ]
+                        ]
+                    |> Card.block []
+                        [ Block.titleH4 [] [ text (String.fromInt model.thing.things.total) ]
+                        , Block.custom <|
+                            Button.button [ Button.primary, Button.onClick Things ] [ text "Things" ]
+                        ]
+                    |> Card.view
+                ]
+            , Grid.col []
+                [ Card.config []
+                    |> Card.header []
+                        [ h3 [ Spacing.mt2 ] [ text "Channels" ]
+                        ]
+                    |> Card.block []
+                        [ Block.titleH4 [] [ text (String.fromInt model.channel.channels.total) ]
+                        , Block.custom <|
+                            Button.button [ Button.primary, Button.onClick Channels ] [ text "Channels" ]
+                        ]
+                    |> Card.view
+                ]
+            ]
+        ]

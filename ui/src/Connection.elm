@@ -26,9 +26,7 @@ url =
 
 
 type alias Model =
-    { thing : String
-    , channel : String
-    , response : String
+    { response : String
     , things : Thing.Model
     , channels : Channel.Model
     , checkedThingsIds : List String
@@ -38,9 +36,7 @@ type alias Model =
 
 initial : Model
 initial =
-    { thing = ""
-    , channel = ""
-    , response = ""
+    { response = ""
     , things = Thing.initial
     , channels = Channel.initial
     , checkedThingsIds = []
@@ -49,9 +45,7 @@ initial =
 
 
 type Msg
-    = SubmitThing String
-    | SubmitChannel String
-    | Connect
+    = Connect
     | Disconnect
     | ThingMsg Thing.Msg
     | ChannelMsg Channel.Msg
@@ -63,12 +57,6 @@ type Msg
 update : Msg -> Model -> String -> ( Model, Cmd Msg )
 update msg model token =
     case msg of
-        SubmitChannel channel ->
-            ( { model | channel = channel }, Cmd.none )
-
-        SubmitThing thing ->
-            ( { model | thing = thing }, Cmd.none )
-
         Connect ->
             if List.isEmpty model.checkedThingsIds || List.isEmpty model.checkedChannelsIds then
                 ( model, Cmd.none )
