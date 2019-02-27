@@ -1,4 +1,4 @@
-module Helpers exposing (buildQueryParamList, genPagination, pageToOffset, parseName, response, validateInt, validateOffset)
+module Helpers exposing (buildQueryParamList, faIcons, fontAwesome, genPagination, pageToOffset, parseName, response, validateInt, validateOffset)
 
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
@@ -7,7 +7,7 @@ import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
 import Bootstrap.Utilities.Spacing as Spacing
-import Html exposing (Html, hr, p, text)
+import Html exposing (Html, hr, node, p, text)
 import Html.Attributes exposing (..)
 import Url.Builder as B
 
@@ -85,3 +85,25 @@ genPagination total msg =
                 pages
     in
     Grid.row [] cols
+
+
+
+-- FONT-AWESOME
+
+
+fontAwesome : Html msg
+fontAwesome =
+    node "link"
+        [ rel "stylesheet"
+        , href "https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+        , attribute "integrity" "sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr"
+        , attribute "crossorigin" "anonymous"
+        ]
+        []
+
+
+faIcons =
+    { provision = class "fa fa-plus"
+    , edit = class "fa fa-pen"
+    , remove = class "fa fa-trash-alt"
+    }

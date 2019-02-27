@@ -1,9 +1,6 @@
-module Version exposing (Model, Msg(..), initial, update, view)
+module Version exposing (Model, Msg(..), initial, update)
 
-import Bootstrap.Button as Button
-import Bootstrap.Grid as Grid
 import Error
-import Helpers
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
@@ -19,12 +16,12 @@ url =
 
 
 type alias Model =
-    { response : String }
+    { version : String }
 
 
 initial : Model
 initial =
-    { response = "" }
+    { version = "" }
 
 
 type Msg
@@ -45,17 +42,8 @@ update msg model =
 
         GotVersion result ->
             case result of
-                Ok text ->
-                    ( { model | response = "Version " ++ text }, Cmd.none )
+                Ok version ->
+                    ( { model | version = version }, Cmd.none )
 
                 Err error ->
-                    ( { model | response = Error.handle error }, Cmd.none )
-
-
-view : Model -> Html Msg
-view model =
-    Grid.container []
-        [ Grid.row []
-            [ Grid.col [] [ text model.response ] 
-            ]
-        ]
+                    ( { model | version = Error.handle error }, Cmd.none )

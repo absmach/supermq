@@ -58,7 +58,7 @@ type Msg
     | SentMessage (Result Http.Error Int)
     | ThingMsg Thing.Msg
     | ChannelMsg Channel.Msg
-    | SelectedThing String String
+    | SelectedThing String String Channel.Msg
     | CheckChannel String
 
 
@@ -96,28 +96,38 @@ update msg model token =
                     ( { model | response = Error.handle error }, Cmd.none )
 
         ThingMsg subMsg ->
-            let
-                ( updatedThing, thingCmd ) =
-                    Thing.update subMsg model.things token
-            in
-            ( { model | things = updatedThing }, Cmd.map ThingMsg thingCmd )
+            updateThing model subMsg token
 
         ChannelMsg subMsg ->
-            let
-                ( updatedChannel, channelCmd ) =
-                    Channel.update subMsg model.channels token
-            in
-            ( { model | channels = updatedChannel }, Cmd.map ChannelMsg channelCmd )
+            updateChannel model subMsg token
 
-        SelectedThing thingid thingkey ->
-            let
-                ( updatedChannel, channelCmd ) =
-                    Channel.update (Channel.RetrieveChannelsForThing thingid) model.channels token
-            in
-            ( { model | thingid = thingid, channels = updatedChannel, thingkey = thingkey, checkedChannelsIds = [] }, Cmd.map ChannelMsg channelCmd )
+        SelectedThing thingid thingkey channelMsg ->
+            updateChannel { model | thingid = thingid, thingkey = thingkey, checkedChannelsIds = [] } (Channel.RetrieveChannelsForThing thingid) token
 
         CheckChannel id ->
             ( { model | checkedChannelsIds = checkEntity id model.checkedChannelsIds }, Cmd.none )
+
+
+updateThing : Model -> Thing.Msg -> String -> ( Model, Cmd Msg )
+updateThing model msg token =
+    let
+        ( updatedThing, thingCmd ) =
+            Thing.update msg model.things token
+    in
+    ( { model | things = updatedThing }, Cmd.map ThingMsg thingCmd )
+
+
+updateChannel : Model -> Channel.Msg -> String -> ( Model, Cmd Msg )
+updateChannel model msg token =
+    let
+        ( updatedChannel, channelCmd ) =
+            Channel.update msg model.channels token
+    in
+    ( { model | channels = updatedChannel }, Cmd.map ChannelMsg channelCmd )
+
+
+
+-- VIEW
 
 
 view : Model -> Html Msg
@@ -173,7 +183,7 @@ genThingRows things =
     List.map
         (\thing ->
             Table.tr []
-                [ Table.td [] [ label [] [ input [ type_ "radio", onClick (SelectedThing thing.id thing.key), name "things" ] [], text (Helpers.parseName thing.name) ] ]
+                [ Table.td [] [ label [] [ input [ type_ "radio", onClick (SelectedThing thing.id thing.key (Channel.RetrieveChannelsForThing thing.id)), name "things" ] [], text (Helpers.parseName thing.name) ] ]
                 , Table.td [] [ text thing.id ]
                 ]
         )
