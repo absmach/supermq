@@ -13,7 +13,7 @@ import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
 import Debug exposing (log)
 import Error
-import Helpers
+import Helpers exposing (faIcons)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -213,7 +213,7 @@ update msg model token =
 view : Model -> Html Msg
 view model =
     Grid.container []
-        [ fontAwesome
+        [ Helpers.fontAwesome
         , genTable model
         , Helpers.genPagination model.things.total SubmitPage
         , genModal model
@@ -259,7 +259,7 @@ genTableProvision name type_ =
         , Table.td [] []
         , Table.td [] [ Input.text [ Input.attrs [ id "type", value type_ ], Input.onInput SubmitType ] ]
         , Table.td [] []
-        , Table.td [] [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1, class "fa fa-plus" ], Button.onClick ProvisionThing ] [] ]
+        , Table.td [] [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1, faIcons.plus ], Button.onClick ProvisionThing ] [] ]
         ]
     ]
 
@@ -273,8 +273,8 @@ genTableRows model =
                 , Table.td [] [ text thing.id ]
                 , Table.td [] [ text thing.type_ ]
                 , Table.td [] [ text thing.key ]
-                , Table.td [] [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1, class "fa fa-pencil" ], Button.onClick (ShowModal thing) ] [] ]
-                , Table.td [] [ Button.button [ Button.outlineDanger, Button.attrs [ Spacing.ml1, class "fa fa-remove" ], Button.onClick (RemoveThing thing.id) ] [] ]
+                , Table.td [] [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1, faIcons.pen ], Button.onClick (ShowModal thing) ] [] ]
+                , Table.td [] [ Button.button [ Button.outlineDanger, Button.attrs [ Spacing.ml1, faIcons.minus ], Button.onClick (RemoveThing thing.id) ] [] ]
                 ]
         )
         model.things.list
