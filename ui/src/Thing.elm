@@ -12,6 +12,7 @@ import Bootstrap.Modal as Modal
 import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
 import Debug exposing (log)
+import Dict exposing (Dict)
 import Error
 import Helpers exposing (faIcons)
 import Html exposing (..)
@@ -35,6 +36,15 @@ url =
     }
 
 
+type alias Thing =
+    { type_ : String
+    , name : Maybe String
+    , id : String
+    , key : String
+    , metadata : Maybe String
+    }
+
+
 type alias Things =
     { list : List Thing
     , total : Int
@@ -51,12 +61,13 @@ type alias Model =
     , thing : Thing
     , editMode : Bool
     , editName : String
+    , editMetadata : String
     , modalVisibility : Modal.Visibility
     }
 
 
 emptyThing =
-    Thing "" (Just "") "" ""
+    Thing "" (Just "") "" "" (Just "")
 
 
 initial : Model
@@ -73,6 +84,7 @@ initial =
     , thing = emptyThing
     , editMode = False
     , editName = ""
+    , editMetadata = ""
     , modalVisibility = Modal.hidden
     }
 
@@ -93,6 +105,7 @@ type Msg
     | ShowModal Thing
     | EditThing
     | EditName String
+    | EditMetadata String
     | UpdateThing
 
 
@@ -116,22 +129,33 @@ update msg model token =
                 token
                 model.type_
                 model.name
+                ""
             )
 
         EditThing ->
-            ( { model | editMode = True }, Cmd.none )
+            ( { model
+                | editMode = True
+                , editName = Helpers.parseName model.thing.name
+                , editMetadata = Helpers.parseName model.thing.metadata
+              }
+            , Cmd.none
+            )
 
         EditName name ->
             ( { model | editName = name }, Cmd.none )
 
+        EditMetadata metadata ->
+            ( { model | editMetadata = metadata }, Cmd.none )
+
         UpdateThing ->
-            ( { model | editMode = False, editName = "" }
+            ( { model | editMode = False, editName = "", editMetadata = "" }
             , provision
                 "PUT"
                 (B.crossOrigin url.base (List.append url.path [ model.thing.id ]) [])
                 token
                 model.thing.type_
                 model.editName
+                model.editMetadata
             )
 
         ProvisionedThing result ->
@@ -191,7 +215,6 @@ update msg model token =
                             | response = String.fromInt statusCode
                             , offset = Helpers.validateOffset model.offset model.things.total query.limit
                             , thing = emptyThing
-                            , editMode = False
                             , modalVisibility = Modal.hidden
                         }
                         token
@@ -200,10 +223,16 @@ update msg model token =
                     ( { model | response = Error.handle error }, Cmd.none )
 
         CloseModal ->
-            ( { model | modalVisibility = Modal.hidden, thing = emptyThing, editMode = False }, Cmd.none )
+            ( { model | modalVisibility = Modal.hidden, thing = emptyThing }, Cmd.none )
 
         ShowModal thing ->
-            ( { model | modalVisibility = Modal.shown, thing = thing, editMode = False }, Cmd.none )
+            ( { model
+                | modalVisibility = Modal.shown
+                , thing = thing
+                , editMode = False
+              }
+            , Cmd.none
+            )
 
 
 
@@ -248,7 +277,6 @@ genTableHeader =
     [ Table.th [] [ text "Name" ]
     , Table.th [] [ text "Id" ]
     , Table.th [] [ text "Type" ]
-    , Table.th [] [ text "Key" ]
     ]
 
 
@@ -259,7 +287,7 @@ genTableProvision name type_ =
         , Table.td [] []
         , Table.td [] [ Input.text [ Input.attrs [ id "type", value type_ ], Input.onInput SubmitType ] ]
         , Table.td [] []
-        , Table.td [] [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1, faIcons.plus ], Button.onClick ProvisionThing ] [] ]
+        , Table.td [] [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1, faIcons.provision ], Button.onClick ProvisionThing ] [] ]
         ]
     ]
 
@@ -268,13 +296,10 @@ genTableRows : Model -> List (Table.Row Msg)
 genTableRows model =
     List.map
         (\thing ->
-            Table.tr []
+            Table.tr [ Table.rowAttr (onClick (ShowModal thing)) ]
                 [ Table.td [] [ text (Helpers.parseName thing.name) ]
                 , Table.td [] [ text thing.id ]
                 , Table.td [] [ text thing.type_ ]
-                , Table.td [] [ text thing.key ]
-                , Table.td [] [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1, faIcons.pen ], Button.onClick (ShowModal thing) ] [] ]
-                , Table.td [] [ Button.button [ Button.outlineDanger, Button.attrs [ Spacing.ml1, faIcons.minus ], Button.onClick (RemoveThing thing.id) ] [] ]
                 ]
         )
         model.things.list
@@ -333,7 +358,11 @@ genModalEditable model =
         Form.form []
             [ Form.group []
                 [ Form.label [] [ strong [] [ text "name" ] ]
-                , Input.text [ Input.onInput EditName, Input.attrs [ placeholder (Helpers.parseName model.thing.name) ] ]
+                , Input.text [ Input.onInput EditName, Input.attrs [ placeholder (Helpers.parseName model.thing.name), value model.editName ] ]
+                ]
+            , Form.group []
+                [ Form.label [] [ strong [] [ text "metadata" ] ]
+                , Input.text [ Input.onInput EditMetadata, Input.attrs [ placeholder (Helpers.parseName model.thing.metadata), value model.editMetadata ] ]
                 ]
             ]
 
@@ -342,6 +371,10 @@ genModalEditable model =
             [ p []
                 [ strong [] [ text "name: " ]
                 , text (Helpers.parseName model.thing.name)
+                ]
+            , p []
+                [ strong [] [ text "metadata: " ]
+                , text (Helpers.parseName model.thing.metadata)
                 ]
             ]
 
@@ -370,21 +403,14 @@ genModalButtons model =
 -- JSON
 
 
-type alias Thing =
-    { type_ : String
-    , name : Maybe String
-    , id : String
-    , key : String
-    }
-
-
 thingDecoder : D.Decoder Thing
 thingDecoder =
-    D.map4 Thing
+    D.map5 Thing
         (D.field "type" D.string)
         (D.maybe (D.field "name" D.string))
         (D.field "id" D.string)
         (D.field "key" D.string)
+        (D.maybe (D.field "metadata" D.string))
 
 
 thingsDecoder : D.Decoder Things
@@ -419,8 +445,8 @@ expectStatus toMsg =
                     Ok metadata.statusCode
 
 
-provision : String -> String -> String -> String -> String -> Cmd Msg
-provision method u token type_ name =
+provision : String -> String -> String -> String -> String -> String -> Cmd Msg
+provision method u token type_ name metadata =
     Http.request
         { method = method
         , headers = [ Http.header "Authorization" token ]
@@ -429,6 +455,7 @@ provision method u token type_ name =
             E.object
                 [ ( "type", E.string type_ )
                 , ( "name", E.string name )
+                , ( "metadata", E.string metadata )
                 ]
                 |> Http.jsonBody
         , expect = expectStatus ProvisionedThing

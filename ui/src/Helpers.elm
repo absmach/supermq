@@ -103,7 +103,7 @@ fontAwesome =
 
 
 faIcons =
-    { plus = class "fa fa-plus"
-    , pen = class "fa fa-pen"
-    , minus = class "fa fa-minus"
+    { provision = class "fa fa-plus"
+    , edit = class "fa fa-pen"
+    , remove = class "fa fa-trash-alt"
     }
