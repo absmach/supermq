@@ -243,6 +243,11 @@ view : Model -> Html Msg
 view model =
     Grid.container []
         [ Helpers.fontAwesome
+        , Grid.row []
+            [ Grid.col [ Col.attrs [ align "right" ] ]
+                [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1, align "right" ], Button.onClick ProvisionThing ] [ text "ADD" ]
+                ]
+            ]
         , genTable model
         , Helpers.genPagination model.things.total SubmitPage
         , genModal model
@@ -264,8 +269,7 @@ genTable model =
                 , tbody =
                     Table.tbody []
                         (List.concat
-                            [ genTableProvision model.name model.type_
-                            , genTableRows model
+                            [ genTableRows model
                             ]
                         )
                 }
@@ -390,10 +394,10 @@ genModalButtons model =
                 ( EditThing, "EDIT" )
     in
     Grid.row []
-        [ Grid.col [ Col.xs8 ]
+        [ Grid.col []
             [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1 ], Button.onClick msg ] [ text buttonText ]
             ]
-        , Grid.col []
+        , Grid.col [ Col.attrs [ align "right" ] ]
             [ Button.button [ Button.outlineDanger, Button.attrs [ Spacing.ml1 ], Button.onClick (RemoveThing model.thing.id) ] [ text "REMOVE" ]
             ]
         ]

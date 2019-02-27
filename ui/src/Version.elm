@@ -47,37 +47,3 @@ update msg model =
 
                 Err error ->
                     ( { model | version = Error.handle error }, Cmd.none )
-
-
-
--- view : Model -> Int -> Int -> Html msg
--- view model numThings numChannels =
---     Grid.container []
---         -- [ Card.config [ Card.attrs [ style [ ( "width", "20rem" ) ] ] ]
---         [ Card.config []
---             |> Card.header [ class "text-center" ]
---                 [ h3 [ Spacing.mt2 ] [ text "Version" ]
---                 ]
---             |> Card.block []
---                 [ Block.titleH4 [] [ text model.version ]
---                 ]
---             |> Card.view
---         , Card.config []
---             |> Card.header [ class "text-center" ]
---                 [ h3 [ Spacing.mt2 ] [ text "Things" ]
---                 ]
---             |> Card.block []
---                 [ Block.titleH4 [] [ text (String.fromInt numThings) ]
---                 , Block.custom <|
---                     Button.button [ Button.primary ] [ text "Things" ]
---                 ]
---             |> Card.view
---         , Card.config []
---             |> Card.header [ class "text-center" ]
---                 [ h3 [ Spacing.mt2 ] [ text "Channels" ]
---                 ]
---             |> Card.block []
---                 [ Block.titleH4 [] [ text (String.fromInt numChannels) ]
---                 ]
---             |> Card.view
---         ]
