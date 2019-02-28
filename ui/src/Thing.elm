@@ -135,8 +135,8 @@ update msg model token =
         EditThing ->
             ( { model
                 | editMode = True
-                , editName = Helpers.parseName model.thing.name
-                , editMetadata = Helpers.parseName model.thing.metadata
+                , editName = Helpers.parseString model.thing.name
+                , editMetadata = Helpers.parseString model.thing.metadata
               }
             , Cmd.none
             )
@@ -250,7 +250,7 @@ view model =
             ]
         , genTable model
         , Helpers.genPagination model.things.total SubmitPage
-        , genModal model
+        , editModal model
         ]
 
 
@@ -264,143 +264,76 @@ genTable model =
         [ Grid.col []
             [ Table.table
                 { options = [ Table.striped, Table.hover ]
-                , thead =
-                    Table.simpleThead genTableHeader
-                , tbody =
-                    Table.tbody []
-                        (List.concat
-                            [ genTableRows model
-                            ]
-                        )
+                , thead = genTableHeader
+                , tbody = genTableBody model
                 }
             ]
         ]
 
 
+genTableHeader : Table.THead Msg
 genTableHeader =
-    [ Table.th [] [ text "Name" ]
-    , Table.th [] [ text "Id" ]
-    , Table.th [] [ text "Type" ]
-    ]
-
-
-genTableProvision : String -> String -> List (Table.Row Msg)
-genTableProvision name type_ =
-    [ Table.tr []
-        [ Table.td [] [ Input.text [ Input.attrs [ id "name", value name ], Input.onInput SubmitName ] ]
-        , Table.td [] []
-        , Table.td [] [ Input.text [ Input.attrs [ id "type", value type_ ], Input.onInput SubmitType ] ]
-        , Table.td [] []
-        , Table.td [] [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1, faIcons.provision ], Button.onClick ProvisionThing ] [] ]
+    Table.simpleThead
+        [ Table.th [] [ text "Name" ]
+        , Table.th [] [ text "Id" ]
+        , Table.th [] [ text "Type" ]
         ]
-    ]
 
 
-genTableRows : Model -> List (Table.Row Msg)
-genTableRows model =
-    List.map
-        (\thing ->
-            Table.tr [ Table.rowAttr (onClick (ShowModal thing)) ]
-                [ Table.td [] [ text (Helpers.parseName thing.name) ]
-                , Table.td [] [ text thing.id ]
-                , Table.td [] [ text thing.type_ ]
-                ]
+genTableBody : Model -> Table.TBody Msg
+genTableBody model =
+    Table.tbody []
+        (List.map
+            (\thing ->
+                Table.tr [ Table.rowAttr (onClick (ShowModal thing)) ]
+                    [ Table.td [] [ text (Helpers.parseString thing.name) ]
+                    , Table.td [] [ text thing.id ]
+                    , Table.td [] [ text thing.type_ ]
+                    ]
+            )
+            model.things.list
         )
-        model.things.list
 
 
 
--- Modal
+-- EDIT MODAL
 
 
-genModal : Model -> Html Msg
-genModal model =
+editModal : Model -> Html Msg
+editModal model =
     Modal.config CloseModal
         |> Modal.large
         |> Modal.hideOnBackdropClick True
-        |> Modal.h4 [] [ text (Helpers.parseName model.thing.name) ]
-        |> Modal.body []
-            [ Grid.container []
-                [ genModalInfo model
-                , genModalButtons model
-                ]
-            ]
+        |> Modal.h4 [] [ text (Helpers.parseString model.thing.name) ]
+        |> editModalBody model
         |> Modal.view model.modalVisibility
 
 
-genModalInfo : Model -> Html Msg
-genModalInfo model =
-    Grid.row []
-        [ Grid.col []
-            [ genModalEditable model
-            , genModalImmutable model
+editModalBody : Model -> (Modal.Config Msg -> Modal.Config Msg)
+editModalBody model =
+    Modal.body []
+        [ Grid.container []
+            [ Grid.row []
+                [ Grid.col []
+                    [ editModalForm model
+                    , Helpers.modalDiv [ ( "type", model.thing.type_ ), ( "id", model.thing.id ), ( "key", model.thing.key ) ]
+                    ]
+                ]
+            , Helpers.editModalButtons model.editMode UpdateThing EditThing (ShowModal model.thing) (RemoveThing model.thing.id) CloseModal
             ]
         ]
 
 
-genModalImmutable : Model -> Html Msg
-genModalImmutable model =
-    div []
-        [ p []
-            [ strong [] [ text "type: " ]
-            , text model.thing.type_
-            ]
-        , p []
-            [ strong [] [ text "id: " ]
-            , text model.thing.id
-            ]
-        , p []
-            [ strong [] [ text "key: " ]
-            , text model.thing.key
-            ]
-        ]
-
-
-genModalEditable : Model -> Html Msg
-genModalEditable model =
+editModalForm : Model -> Html Msg
+editModalForm model =
     if model.editMode then
-        Form.form []
-            [ Form.group []
-                [ Form.label [] [ strong [] [ text "name" ] ]
-                , Input.text [ Input.onInput EditName, Input.attrs [ placeholder (Helpers.parseName model.thing.name), value model.editName ] ]
-                ]
-            , Form.group []
-                [ Form.label [] [ strong [] [ text "metadata" ] ]
-                , Input.text [ Input.onInput EditMetadata, Input.attrs [ placeholder (Helpers.parseName model.thing.metadata), value model.editMetadata ] ]
-                ]
+        Helpers.modalForm
+            [ Helpers.FormRecord "name" EditName (Helpers.parseString model.thing.name) model.editName
+            , Helpers.FormRecord "metadata" EditMetadata (Helpers.parseString model.thing.metadata) model.editMetadata
             ]
 
     else
-        div []
-            [ p []
-                [ strong [] [ text "name: " ]
-                , text (Helpers.parseName model.thing.name)
-                ]
-            , p []
-                [ strong [] [ text "metadata: " ]
-                , text (Helpers.parseName model.thing.metadata)
-                ]
-            ]
-
-
-genModalButtons : Model -> Html Msg
-genModalButtons model =
-    let
-        ( msg, buttonText ) =
-            if model.editMode then
-                ( UpdateThing, "UPDATE" )
-
-            else
-                ( EditThing, "EDIT" )
-    in
-    Grid.row []
-        [ Grid.col []
-            [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1 ], Button.onClick msg ] [ text buttonText ]
-            ]
-        , Grid.col [ Col.attrs [ align "right" ] ]
-            [ Button.button [ Button.outlineDanger, Button.attrs [ Spacing.ml1 ], Button.onClick (RemoveThing model.thing.id) ] [ text "REMOVE" ]
-            ]
-        ]
+        Helpers.modalDiv [ ( "name", Helpers.parseString model.thing.name ), ( "metadata", Helpers.parseString model.thing.metadata ) ]
 
 
 
