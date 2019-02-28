@@ -1,4 +1,4 @@
-module Helpers exposing (FormRecord, buildQueryParamList, button, editModalButtons, faIcons, fontAwesome, genPagination, modalDiv, modalForm, pageToOffset, parseString, response, validateInt, validateOffset)
+module Helpers exposing (FormRecord, buildQueryParamList, button, editModalButtons, faIcons, fontAwesome, genPagination, modalDiv, modalForm, pageToOffset, parseString, provisionModalButtons, response, validateInt, validateOffset)
 
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
@@ -88,7 +88,6 @@ genPagination total msg =
 
 
 
-
 -- FONT-AWESOME
 
 
@@ -108,6 +107,7 @@ faIcons =
     , edit = class "fa fa-pen"
     , remove = class "fa fa-trash-alt"
     }
+
 
 
 -- BOOTSTRAP
@@ -176,6 +176,23 @@ editModalButtons mode updateMsg editMsg cancelMsg deleteMsg closeMsg =
         [ Grid.col [ Col.attrs [ align "left" ] ]
             [ lButton1
             , lButton2
+            ]
+        , Grid.col [ Col.attrs [ align "right" ] ]
+            [ button Button.outlineSecondary closeMsg "CLOSE"
+            ]
+        ]
+
+
+
+-- provisionModalButtons provisionMsg cancelMsg closeMsg =
+
+
+provisionModalButtons provisionMsg closeMsg =
+    Grid.row []
+        [ Grid.col [ Col.attrs [ align "left" ] ]
+            [ button Button.outlinePrimary provisionMsg "ADD"
+
+            -- , button Button.outlineDanger cancelMsg "CANCEL"
             ]
         , Grid.col [ Col.attrs [ align "right" ] ]
             [ button Button.outlineSecondary closeMsg "CLOSE"

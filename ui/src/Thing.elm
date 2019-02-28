@@ -53,6 +53,7 @@ type alias Things =
 
 type alias Model =
     { name : String
+    , metadata : String
     , type_ : String
     , offset : Int
     , limit : Int
@@ -60,9 +61,8 @@ type alias Model =
     , things : Things
     , thing : Thing
     , editMode : Bool
-    , editName : String
-    , editMetadata : String
-    , modalVisibility : Modal.Visibility
+    , provisionModalVisibility : Modal.Visibility
+    , editModalVisibility : Modal.Visibility
     }
 
 
@@ -73,6 +73,7 @@ emptyThing =
 initial : Model
 initial =
     { name = ""
+    , metadata = ""
     , type_ = ""
     , offset = query.offset
     , limit = query.limit
@@ -83,15 +84,15 @@ initial =
         }
     , thing = emptyThing
     , editMode = False
-    , editName = ""
-    , editMetadata = ""
-    , modalVisibility = Modal.hidden
+    , provisionModalVisibility = Modal.hidden
+    , editModalVisibility = Modal.hidden
     }
 
 
 type Msg
     = SubmitType String
     | SubmitName String
+    | SubmitMetadata String
     | ProvisionThing
     | ProvisionedThing (Result Http.Error Int)
     | RetrieveThing String
@@ -101,11 +102,11 @@ type Msg
     | RemoveThing String
     | RemovedThing (Result Http.Error Int)
     | SubmitPage Int
-    | CloseModal
-    | ShowModal Thing
+    | ClosePorvisionModal
+    | CloseEditModal
+    | ShowProvisionModal
+    | ShowEditModal Thing
     | EditThing
-    | EditName String
-    | EditMetadata String
     | UpdateThing
 
 
@@ -118,44 +119,41 @@ update msg model token =
         SubmitName name ->
             ( { model | name = name }, Cmd.none )
 
+        SubmitMetadata metadata ->
+            ( { model | metadata = metadata }, Cmd.none )
+
         SubmitPage page ->
             updateThingList { model | offset = Helpers.pageToOffset page query.limit } token
 
         ProvisionThing ->
-            ( { model | name = "", type_ = "" }
+            ( resetEdit model
             , provision
                 "POST"
                 (B.crossOrigin url.base url.path [])
                 token
                 model.type_
                 model.name
-                ""
+                model.metadata
             )
 
         EditThing ->
             ( { model
                 | editMode = True
-                , editName = Helpers.parseString model.thing.name
-                , editMetadata = Helpers.parseString model.thing.metadata
+                , name = Helpers.parseString model.thing.name
+                , metadata = Helpers.parseString model.thing.metadata
               }
             , Cmd.none
             )
 
-        EditName name ->
-            ( { model | editName = name }, Cmd.none )
-
-        EditMetadata metadata ->
-            ( { model | editMetadata = metadata }, Cmd.none )
-
         UpdateThing ->
-            ( { model | editMode = False, editName = "", editMetadata = "" }
+            ( resetEdit { model | editMode = False }
             , provision
                 "PUT"
                 (B.crossOrigin url.base (List.append url.path [ model.thing.id ]) [])
                 token
                 model.thing.type_
-                model.editName
-                model.editMetadata
+                model.name
+                model.metadata
             )
 
         ProvisionedThing result ->
@@ -214,25 +212,37 @@ update msg model token =
                         { model
                             | response = String.fromInt statusCode
                             , offset = Helpers.validateOffset model.offset model.things.total query.limit
-                            , thing = emptyThing
-                            , modalVisibility = Modal.hidden
+                            , editModalVisibility = Modal.hidden
                         }
                         token
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
 
-        CloseModal ->
-            ( { model | modalVisibility = Modal.hidden, thing = emptyThing }, Cmd.none )
+        ClosePorvisionModal ->
+            ( resetEdit { model | provisionModalVisibility = Modal.hidden }, Cmd.none )
 
-        ShowModal thing ->
+        CloseEditModal ->
+            ( resetEdit { model | editModalVisibility = Modal.hidden }, Cmd.none )
+
+        ShowProvisionModal ->
+            ( { model | provisionModalVisibility = Modal.shown }
+            , Cmd.none
+            )
+
+        ShowEditModal thing ->
             ( { model
-                | modalVisibility = Modal.shown
+                | editModalVisibility = Modal.shown
                 , thing = thing
                 , editMode = False
               }
             , Cmd.none
             )
+
+
+resetEdit : Model -> Model
+resetEdit model =
+    { model | name = "", type_ = "", metadata = "" }
 
 
 
@@ -245,11 +255,12 @@ view model =
         [ Helpers.fontAwesome
         , Grid.row []
             [ Grid.col [ Col.attrs [ align "right" ] ]
-                [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1, align "right" ], Button.onClick ProvisionThing ] [ text "ADD" ]
+                [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1, align "right" ], Button.onClick ShowProvisionModal ] [ text "ADD" ]
                 ]
             ]
         , genTable model
         , Helpers.genPagination model.things.total SubmitPage
+        , provisionModal model
         , editModal model
         ]
 
@@ -285,7 +296,7 @@ genTableBody model =
     Table.tbody []
         (List.map
             (\thing ->
-                Table.tr [ Table.rowAttr (onClick (ShowModal thing)) ]
+                Table.tr [ Table.rowAttr (onClick (ShowEditModal thing)) ]
                     [ Table.td [] [ text (Helpers.parseString thing.name) ]
                     , Table.td [] [ text thing.id ]
                     , Table.td [] [ text thing.type_ ]
@@ -296,17 +307,54 @@ genTableBody model =
 
 
 
+-- PROVISION MODAL
+
+
+provisionModal : Model -> Html Msg
+provisionModal model =
+    Modal.config ClosePorvisionModal
+        |> Modal.large
+        |> Modal.hideOnBackdropClick True
+        |> Modal.h4 [] [ text "Add thing" ]
+        |> provisionModalBody model
+        |> Modal.view model.provisionModalVisibility
+
+
+provisionModalBody : Model -> (Modal.Config Msg -> Modal.Config Msg)
+provisionModalBody model =
+    Modal.body []
+        [ Grid.container []
+            [ Grid.row []
+                [ Grid.col []
+                    [ provisionModalForm model
+                    ]
+                ]
+            , Helpers.provisionModalButtons ProvisionThing ClosePorvisionModal
+            ]
+        ]
+
+
+provisionModalForm : Model -> Html Msg
+provisionModalForm model =
+    Helpers.modalForm
+        [ Helpers.FormRecord "name" SubmitName model.name model.name
+        , Helpers.FormRecord "metadata" SubmitMetadata model.metadata model.metadata
+        , Helpers.FormRecord "type" SubmitType model.type_ model.type_
+        ]
+
+
+
 -- EDIT MODAL
 
 
 editModal : Model -> Html Msg
 editModal model =
-    Modal.config CloseModal
+    Modal.config CloseEditModal
         |> Modal.large
         |> Modal.hideOnBackdropClick True
         |> Modal.h4 [] [ text (Helpers.parseString model.thing.name) ]
         |> editModalBody model
-        |> Modal.view model.modalVisibility
+        |> Modal.view model.editModalVisibility
 
 
 editModalBody : Model -> (Modal.Config Msg -> Modal.Config Msg)
@@ -319,7 +367,7 @@ editModalBody model =
                     , Helpers.modalDiv [ ( "type", model.thing.type_ ), ( "id", model.thing.id ), ( "key", model.thing.key ) ]
                     ]
                 ]
-            , Helpers.editModalButtons model.editMode UpdateThing EditThing (ShowModal model.thing) (RemoveThing model.thing.id) CloseModal
+            , Helpers.editModalButtons model.editMode UpdateThing EditThing (ShowEditModal model.thing) (RemoveThing model.thing.id) CloseEditModal
             ]
         ]
 
@@ -328,8 +376,8 @@ editModalForm : Model -> Html Msg
 editModalForm model =
     if model.editMode then
         Helpers.modalForm
-            [ Helpers.FormRecord "name" EditName (Helpers.parseString model.thing.name) model.editName
-            , Helpers.FormRecord "metadata" EditMetadata (Helpers.parseString model.thing.metadata) model.editMetadata
+            [ Helpers.FormRecord "name" SubmitName (Helpers.parseString model.thing.name) model.name
+            , Helpers.FormRecord "metadata" SubmitMetadata (Helpers.parseString model.thing.metadata) model.metadata
             ]
 
     else
