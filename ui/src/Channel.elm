@@ -176,7 +176,7 @@ genTableRows channels =
     List.map
         (\channel ->
             Table.tr []
-                [ Table.td [] [ text (Helpers.parseName channel.name) ]
+                [ Table.td [] [ text (Helpers.parseString channel.name) ]
                 , Table.td [] [ text channel.id ]
                 , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick (RemoveChannel channel.id) ] [ text "-" ] ]
                 ]

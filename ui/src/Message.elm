@@ -183,7 +183,7 @@ genThingRows things =
     List.map
         (\thing ->
             Table.tr []
-                [ Table.td [] [ label [] [ input [ type_ "radio", onClick (SelectedThing thing.id thing.key (Channel.RetrieveChannelsForThing thing.id)), name "things" ] [], text (Helpers.parseName thing.name) ] ]
+                [ Table.td [] [ label [] [ input [ type_ "radio", onClick (SelectedThing thing.id thing.key (Channel.RetrieveChannelsForThing thing.id)), name "things" ] [], text (Helpers.parseString thing.name) ] ]
                 , Table.td [] [ text thing.id ]
                 ]
         )
@@ -195,7 +195,7 @@ genChannelRows checkedChannelsIds channels =
     List.map
         (\channel ->
             Table.tr []
-                [ Table.td [] [ input [ type_ "checkbox", onClick (CheckChannel channel.id), checked (isChecked channel.id checkedChannelsIds) ] [], text (" " ++ Helpers.parseName channel.name) ]
+                [ Table.td [] [ input [ type_ "checkbox", onClick (CheckChannel channel.id), checked (isChecked channel.id checkedChannelsIds) ] [], text (" " ++ Helpers.parseString channel.name) ]
                 , Table.td [] [ text channel.id ]
                 ]
         )
