@@ -1,4 +1,4 @@
-module Helpers exposing (buildQueryParamList, faIcons, fontAwesome, genPagination, pageToOffset, parseName, response, validateInt, validateOffset)
+module Helpers exposing (FormRecord, buildQueryParamList, button, editModalButtons, faIcons, fontAwesome, genPagination, modalDiv, modalForm, pageToOffset, parseString, response, validateInt, validateOffset)
 
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
@@ -7,7 +7,7 @@ import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
 import Bootstrap.Utilities.Spacing as Spacing
-import Html exposing (Html, hr, node, p, text)
+import Html exposing (Html, div, hr, node, p, strong, text)
 import Html.Attributes exposing (..)
 import Url.Builder as B
 
@@ -28,11 +28,11 @@ response resp =
             ]
 
 
-parseName : Maybe String -> String
-parseName thingName =
-    case thingName of
-        Just name ->
-            name
+parseString : Maybe String -> String
+parseString str =
+    case str of
+        Just s ->
+            s
 
         Nothing ->
             ""
@@ -88,6 +88,7 @@ genPagination total msg =
 
 
 
+
 -- FONT-AWESOME
 
 
@@ -107,3 +108,76 @@ faIcons =
     , edit = class "fa fa-pen"
     , remove = class "fa fa-trash-alt"
     }
+
+
+-- BOOTSTRAP
+
+
+button type_ msg txt =
+    Button.button [ type_, Button.attrs [ Spacing.ml1 ], Button.onClick msg ] [ text txt ]
+
+
+
+-- MODAL
+
+
+modalDiv paragraphList =
+    div []
+        (List.map
+            (\paragraph ->
+                p []
+                    [ strong [] [ text (Tuple.first paragraph ++ ": ") ]
+                    , text (Tuple.second paragraph)
+                    ]
+            )
+            paragraphList
+        )
+
+
+type alias FormRecord msg =
+    { text : String
+    , msg : String -> msg
+    , placeholder : String
+    , value : String
+    }
+
+
+modalForm : List (FormRecord msg) -> Html msg
+modalForm formList =
+    Form.form []
+        (List.map
+            (\form ->
+                Form.group []
+                    [ Form.label [] [ strong [] [ text form.text ] ]
+                    , Input.text [ Input.onInput form.msg, Input.attrs [ placeholder form.placeholder, value form.value ] ]
+                    ]
+            )
+            formList
+        )
+
+
+editModalButtons mode updateMsg editMsg cancelMsg deleteMsg closeMsg =
+    let
+        lButton1 =
+            if mode then
+                button Button.outlinePrimary updateMsg "UPDATE"
+
+            else
+                button Button.outlinePrimary editMsg "EDIT"
+
+        lButton2 =
+            if mode then
+                button Button.outlineDanger cancelMsg "CANCEL"
+
+            else
+                button Button.outlineDanger deleteMsg "DELETE"
+    in
+    Grid.row []
+        [ Grid.col [ Col.attrs [ align "left" ] ]
+            [ lButton1
+            , lButton2
+            ]
+        , Grid.col [ Col.attrs [ align "right" ] ]
+            [ button Button.outlineSecondary closeMsg "CLOSE"
+            ]
+        ]
