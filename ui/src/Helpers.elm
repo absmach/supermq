@@ -88,6 +88,7 @@ genPagination total msg =
 
 
 
+
 -- FONT-AWESOME
 
 
@@ -107,7 +108,6 @@ faIcons =
     , edit = class "fa fa-pen"
     , remove = class "fa fa-trash-alt"
     }
-
 
 
 -- BOOTSTRAP
