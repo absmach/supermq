@@ -1,8 +1,6 @@
-module Helpers exposing (FormRecord, buildQueryParamList, button, editModalButtons, expectStatus, faIcons, fontAwesome, genPagination, modalDiv, modalForm, pageToOffset, parseString, provisionModalButtons, response, validateInt, validateOffset)
+module Helpers exposing (buildQueryParamList, faIcons, fontAwesome, genPagination, pageToOffset, parseString, response, validateInt, validateOffset)
 
 import Bootstrap.Button as Button
-import Bootstrap.Form as Form
-import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
@@ -31,27 +29,6 @@ response resp =
         Grid.row []
             [ Grid.col [] []
             ]
-
-
-expectStatus : (Result Http.Error String -> msg) -> Http.Expect msg
-expectStatus toMsg =
-    Http.expectStringResponse toMsg <|
-        \resp ->
-            case resp of
-                Http.BadUrl_ u ->
-                    Err (Http.BadUrl u)
-
-                Http.Timeout_ ->
-                    Err Http.Timeout
-
-                Http.NetworkError_ ->
-                    Err Http.NetworkError
-
-                Http.BadStatus_ metadata body ->
-                    Err (Http.BadStatus metadata.statusCode)
-
-                Http.GoodStatus_ metadata _ ->
-                    Ok (String.fromInt metadata.statusCode)
 
 
 
@@ -137,88 +114,3 @@ faIcons =
     , edit = class "fa fa-pen"
     , remove = class "fa fa-trash-alt"
     }
-
-
-
--- BOOTSTRAP
-
-
-button type_ msg txt =
-    Button.button [ type_, Button.attrs [ Spacing.ml1 ], Button.onClick msg ] [ text txt ]
-
-
-
--- MODAL
-
-
-modalDiv paragraphList =
-    div []
-        (List.map
-            (\paragraph ->
-                p []
-                    [ strong [] [ text (Tuple.first paragraph ++ ": ") ]
-                    , text (Tuple.second paragraph)
-                    ]
-            )
-            paragraphList
-        )
-
-
-type alias FormRecord msg =
-    { text : String
-    , msg : String -> msg
-    , placeholder : String
-    , value : String
-    }
-
-
-modalForm : List (FormRecord msg) -> Html msg
-modalForm formList =
-    Form.form []
-        (List.map
-            (\form ->
-                Form.group []
-                    [ Form.label [] [ strong [] [ text form.text ] ]
-                    , Input.text [ Input.onInput form.msg, Input.attrs [ placeholder form.placeholder, value form.value ] ]
-                    ]
-            )
-            formList
-        )
-
-
-editModalButtons mode updateMsg editMsg cancelMsg deleteMsg closeMsg =
-    let
-        lButton1 =
-            if mode then
-                button Button.outlinePrimary updateMsg "UPDATE"
-
-            else
-                button Button.outlinePrimary editMsg "EDIT"
-
-        lButton2 =
-            if mode then
-                button Button.outlineDanger cancelMsg "CANCEL"
-
-            else
-                button Button.outlineDanger deleteMsg "DELETE"
-    in
-    Grid.row []
-        [ Grid.col [ Col.attrs [ align "left" ] ]
-            [ lButton1
-            , lButton2
-            ]
-        , Grid.col [ Col.attrs [ align "right" ] ]
-            [ button Button.outlineSecondary closeMsg "CLOSE"
-            ]
-        ]
-
-
-provisionModalButtons provisionMsg closeMsg =
-    Grid.row []
-        [ Grid.col [ Col.attrs [ align "left" ] ]
-            [ button Button.outlinePrimary provisionMsg "ADD"
-            ]
-        , Grid.col [ Col.attrs [ align "right" ] ]
-            [ button Button.outlineSecondary closeMsg "CLOSE"
-            ]
-        ]
