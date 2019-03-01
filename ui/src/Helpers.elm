@@ -1,4 +1,4 @@
-module Helpers exposing (FormRecord, buildQueryParamList, button, editModalButtons, expectStatus, faIcons, fontAwesome, genPagination, modalDiv, modalForm, pageToOffset, parseString, provisionModalButtons, response, validateInt, validateOffset)
+module Helpers exposing (FormRecord, buildQueryParamList, button, editModalButtons, faIcons, fontAwesome, genPagination, modalDiv, modalForm, pageToOffset, parseString, provisionModalButtons, response, validateInt, validateOffset)
 
 import Bootstrap.Button as Button
 import Bootstrap.Form as Form
@@ -7,9 +7,12 @@ import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
 import Bootstrap.Utilities.Spacing as Spacing
+import Dict
 import Html exposing (Html, div, hr, node, p, strong, text)
 import Html.Attributes exposing (..)
 import Http
+import Json.Decode as D
+import Json.Encode as E
 import Url.Builder as B
 
 
@@ -31,27 +34,6 @@ response resp =
         Grid.row []
             [ Grid.col [] []
             ]
-
-
-expectStatus : (Result Http.Error String -> msg) -> Http.Expect msg
-expectStatus toMsg =
-    Http.expectStringResponse toMsg <|
-        \resp ->
-            case resp of
-                Http.BadUrl_ u ->
-                    Err (Http.BadUrl u)
-
-                Http.Timeout_ ->
-                    Err Http.Timeout
-
-                Http.NetworkError_ ->
-                    Err Http.NetworkError
-
-                Http.BadStatus_ metadata body ->
-                    Err (Http.BadStatus metadata.statusCode)
-
-                Http.GoodStatus_ metadata _ ->
-                    Ok (String.fromInt metadata.statusCode)
 
 
 

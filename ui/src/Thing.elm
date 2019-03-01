@@ -19,6 +19,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Http
+import HttpMF
 import Json.Decode as D
 import Json.Encode as E
 import Url.Builder as B
@@ -187,7 +188,7 @@ update msg model token =
 
         RetrieveThing thingid ->
             ( model
-            , retrieve
+            , HttpMF.retrieve
                 (B.crossOrigin url.base (List.append url.path [ thingid ]) [])
                 token
                 RetrievedThing
@@ -204,7 +205,7 @@ update msg model token =
 
         RetrieveThings ->
             ( model
-            , retrieve
+            , HttpMF.retrieve
                 (B.crossOrigin url.base url.path (Helpers.buildQueryParamList model.offset model.limit))
                 token
                 RetrievedThings
@@ -449,29 +450,6 @@ thingsDecoder =
 -- HTTP
 
 
-expectID : (Result Http.Error String -> Msg) -> Http.Expect Msg
-expectID toMsg =
-    Http.expectStringResponse toMsg <|
-        \response ->
-            case response of
-                Http.BadUrl_ u ->
-                    Err (Http.BadUrl u)
-
-                Http.Timeout_ ->
-                    Err Http.Timeout
-
-                Http.NetworkError_ ->
-                    Err Http.NetworkError
-
-                Http.BadStatus_ metadata body ->
-                    Err (Http.BadStatus metadata.statusCode)
-
-                Http.GoodStatus_ metadata body ->
-                    Ok <|
-                        String.dropLeft (String.length "/things/") <|
-                            Helpers.parseString (Dict.get "location" metadata.headers)
-
-
 provision : String -> String -> String -> String -> String -> Cmd Msg
 provision u token type_ name metadata =
     Http.request
@@ -485,7 +463,7 @@ provision u token type_ name metadata =
                 , ( "metadata", E.string metadata )
                 ]
                 |> Http.jsonBody
-        , expect = expectID ProvisionedThing
+        , expect = HttpMF.expectID ProvisionedThing "/things/"
         , timeout = Nothing
         , tracker = Nothing
         }
@@ -504,46 +482,7 @@ updateThing u token type_ name metadata =
                 , ( "metadata", E.string metadata )
                 ]
                 |> Http.jsonBody
-        , expect = Helpers.expectStatus UpdatedThing
-        , timeout = Nothing
-        , tracker = Nothing
-        }
-
-
-expectRetrieve : (Result Http.Error a -> Msg) -> D.Decoder a -> Http.Expect Msg
-expectRetrieve toMsg decoder =
-    Http.expectStringResponse toMsg <|
-        \response ->
-            case response of
-                Http.BadUrl_ u ->
-                    Err (Http.BadUrl u)
-
-                Http.Timeout_ ->
-                    Err Http.Timeout
-
-                Http.NetworkError_ ->
-                    Err Http.NetworkError
-
-                Http.BadStatus_ metadata body ->
-                    Err (Http.BadStatus metadata.statusCode)
-
-                Http.GoodStatus_ metadata body ->
-                    case D.decodeString decoder body of
-                        Ok value ->
-                            Ok value
-
-                        Err err ->
-                            Err (Http.BadBody (D.errorToString err))
-
-
-retrieve : String -> String -> (Result Http.Error a -> Msg) -> D.Decoder a -> Cmd Msg
-retrieve u token msg decoder =
-    Http.request
-        { method = "GET"
-        , headers = [ Http.header "Authorization" token ]
-        , url = u
-        , body = Http.emptyBody
-        , expect = expectRetrieve msg decoder
+        , expect = HttpMF.expectStatus UpdatedThing
         , timeout = Nothing
         , tracker = Nothing
         }
@@ -556,7 +495,7 @@ remove u token =
         , headers = [ Http.header "Authorization" token ]
         , url = u
         , body = Http.emptyBody
-        , expect = Helpers.expectStatus RemovedThing
+        , expect = HttpMF.expectStatus RemovedThing
         , timeout = Nothing
         , tracker = Nothing
         }
@@ -575,7 +514,7 @@ updateThingList : Model -> String -> ( Model, Cmd Msg )
 updateThingList model token =
     ( model
     , Cmd.batch
-        [ retrieve
+        [ HttpMF.retrieve
             (B.crossOrigin url.base
                 url.path
                 (Helpers.buildQueryParamList model.offset model.limit)
@@ -583,7 +522,7 @@ updateThingList model token =
             token
             RetrievedThings
             thingsDecoder
-        , retrieve
+        , HttpMF.retrieve
             (B.crossOrigin url.base (List.append url.path [ model.thing.id ]) [])
             token
             RetrievedThing

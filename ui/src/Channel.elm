@@ -18,6 +18,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Http
+import HttpMF
 import Json.Decode as D
 import Json.Encode as E
 import Url.Builder as B
@@ -170,7 +171,7 @@ update msg model token =
 
         RetrieveChannel channelid ->
             ( model
-            , retrieve
+            , HttpMF.retrieve
                 (B.crossOrigin url.base (List.append url.channelsPath [ channelid ]) [])
                 token
                 RetrievedChannel
@@ -187,7 +188,7 @@ update msg model token =
 
         RetrieveChannels ->
             ( model
-            , retrieve
+            , HttpMF.retrieve
                 (B.crossOrigin url.base
                     url.channelsPath
                     (Helpers.buildQueryParamList model.offset model.limit)
@@ -199,7 +200,7 @@ update msg model token =
 
         RetrieveChannelsForThing thingid ->
             ( model
-            , retrieve
+            , HttpMF.retrieve
                 (B.crossOrigin url.base
                     (url.thingsPath ++ [ thingid ] ++ url.channelsPath)
                     (Helpers.buildQueryParamList model.offset model.limit)
@@ -312,8 +313,6 @@ genTableBody model =
                 Table.tr [ Table.rowAttr (onClick (ShowEditModal channel)) ]
                     [ Table.td [] [ text (Helpers.parseString channel.name) ]
                     , Table.td [] [ text channel.id ]
-
-                    -- , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick (RemoveChannel channel.id) ] [ text "-" ] ]
                     ]
             )
             model.channels.list
@@ -411,29 +410,6 @@ channelsDecoder =
 -- HTTP
 
 
-expectID : (Result Http.Error String -> Msg) -> Http.Expect Msg
-expectID toMsg =
-    Http.expectStringResponse toMsg <|
-        \response ->
-            case response of
-                Http.BadUrl_ u ->
-                    Err (Http.BadUrl u)
-
-                Http.Timeout_ ->
-                    Err Http.Timeout
-
-                Http.NetworkError_ ->
-                    Err Http.NetworkError
-
-                Http.BadStatus_ metadata body ->
-                    Err (Http.BadStatus metadata.statusCode)
-
-                Http.GoodStatus_ metadata body ->
-                    Ok <|
-                        String.dropLeft (String.length "/channels/") <|
-                            Helpers.parseString (Dict.get "location" metadata.headers)
-
-
 provision : String -> String -> String -> String -> Cmd Msg
 provision u token name metadata =
     Http.request
@@ -446,7 +422,7 @@ provision u token name metadata =
                 , ( "metadata", E.string metadata )
                 ]
                 |> Http.jsonBody
-        , expect = expectID ProvisionedChannel
+        , expect = HttpMF.expectID ProvisionedChannel "/channels/"
         , timeout = Nothing
         , tracker = Nothing
         }
@@ -464,49 +440,10 @@ updateChannel u token name metadata =
                 , ( "metadata", E.string metadata )
                 ]
                 |> Http.jsonBody
-        , expect = Helpers.expectStatus UpdatedChannel
+        , expect = HttpMF.expectStatus UpdatedChannel
         , timeout = Nothing
         , tracker = Nothing
         }
-
-
-retrieve : String -> String -> (Result Http.Error a -> Msg) -> D.Decoder a -> Cmd Msg
-retrieve u token msg decoder =
-    Http.request
-        { method = "GET"
-        , headers = [ Http.header "Authorization" token ]
-        , url = u
-        , body = Http.emptyBody
-        , expect = expectRetrieve msg decoder
-        , timeout = Nothing
-        , tracker = Nothing
-        }
-
-
-expectRetrieve : (Result Http.Error a -> Msg) -> D.Decoder a -> Http.Expect Msg
-expectRetrieve toMsg decoder =
-    Http.expectStringResponse toMsg <|
-        \response ->
-            case response of
-                Http.BadUrl_ u ->
-                    Err (Http.BadUrl u)
-
-                Http.Timeout_ ->
-                    Err Http.Timeout
-
-                Http.NetworkError_ ->
-                    Err Http.NetworkError
-
-                Http.BadStatus_ metadata body ->
-                    Err (Http.BadStatus metadata.statusCode)
-
-                Http.GoodStatus_ metadata body ->
-                    case D.decodeString decoder body of
-                        Ok value ->
-                            Ok value
-
-                        Err err ->
-                            Err (Http.BadBody (D.errorToString err))
 
 
 remove : String -> String -> Cmd Msg
@@ -516,7 +453,7 @@ remove u token =
         , headers = [ Http.header "Authorization" token ]
         , url = u
         , body = Http.emptyBody
-        , expect = Helpers.expectStatus RemovedChannel
+        , expect = HttpMF.expectStatus RemovedChannel
         , timeout = Nothing
         , tracker = Nothing
         }
@@ -535,7 +472,7 @@ updateChannelList : Model -> String -> ( Model, Cmd Msg )
 updateChannelList model token =
     ( model
     , Cmd.batch
-        [ retrieve
+        [ HttpMF.retrieve
             (B.crossOrigin url.base
                 url.channelsPath
                 (Helpers.buildQueryParamList model.offset model.limit)
@@ -543,7 +480,7 @@ updateChannelList model token =
             token
             RetrievedChannels
             channelsDecoder
-        , retrieve
+        , HttpMF.retrieve
             (B.crossOrigin url.base (List.append url.channelsPath [ model.channel.id ]) [])
             token
             RetrievedChannel
@@ -555,7 +492,7 @@ updateChannelList model token =
 updateChannelListForThing : Model -> String -> String -> ( Model, Cmd Msg )
 updateChannelListForThing model token thingid =
     ( model
-    , retrieve
+    , HttpMF.retrieve
         (buildUrl (url.thingsPath ++ [ thingid ] ++ url.channelsPath) model.offset model.limit)
         token
         RetrievedChannels
