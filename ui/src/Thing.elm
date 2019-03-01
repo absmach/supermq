@@ -22,6 +22,7 @@ import Http
 import HttpMF
 import Json.Decode as D
 import Json.Encode as E
+import ModalMF
 import Url.Builder as B
 
 
@@ -371,16 +372,16 @@ provisionModalBody model =
         [ Grid.container []
             [ Grid.row [] [ Grid.col [] [ provisionDropDiv model ] ]
             , Grid.row [] [ Grid.col [] [ provisionModalForm model ] ]
-            , Helpers.provisionModalButtons ProvisionThing ClosePorvisionModal
+            , ModalMF.provisionModalButtons ProvisionThing ClosePorvisionModal
             ]
         ]
 
 
 provisionModalForm : Model -> Html Msg
 provisionModalForm model =
-    Helpers.modalForm
-        [ Helpers.FormRecord "name" SubmitName model.name model.name
-        , Helpers.FormRecord "metadata" SubmitMetadata model.metadata model.metadata
+    ModalMF.modalForm
+        [ ModalMF.FormRecord "name" SubmitName model.name model.name
+        , ModalMF.FormRecord "metadata" SubmitMetadata model.metadata model.metadata
         ]
 
 
@@ -405,10 +406,10 @@ editModalBody model =
             [ Grid.row []
                 [ Grid.col []
                     [ editModalForm model
-                    , Helpers.modalDiv [ ( "type", model.thing.type_ ), ( "id", model.thing.id ), ( "key", model.thing.key ) ]
+                    , ModalMF.modalDiv [ ( "type", model.thing.type_ ), ( "id", model.thing.id ), ( "key", model.thing.key ) ]
                     ]
                 ]
-            , Helpers.editModalButtons model.editMode UpdateThing EditThing (ShowEditModal model.thing) (RemoveThing model.thing.id) CloseEditModal
+            , ModalMF.editModalButtons model.editMode UpdateThing EditThing (ShowEditModal model.thing) (RemoveThing model.thing.id) CloseEditModal
             ]
         ]
 
@@ -416,13 +417,13 @@ editModalBody model =
 editModalForm : Model -> Html Msg
 editModalForm model =
     if model.editMode then
-        Helpers.modalForm
-            [ Helpers.FormRecord "name" SubmitName (Helpers.parseString model.thing.name) model.name
-            , Helpers.FormRecord "metadata" SubmitMetadata (Helpers.parseString model.thing.metadata) model.metadata
+        ModalMF.modalForm
+            [ ModalMF.FormRecord "name" SubmitName (Helpers.parseString model.thing.name) model.name
+            , ModalMF.FormRecord "metadata" SubmitMetadata (Helpers.parseString model.thing.metadata) model.metadata
             ]
 
     else
-        Helpers.modalDiv [ ( "name", Helpers.parseString model.thing.name ), ( "metadata", Helpers.parseString model.thing.metadata ) ]
+        ModalMF.modalDiv [ ( "name", Helpers.parseString model.thing.name ), ( "metadata", Helpers.parseString model.thing.metadata ) ]
 
 
 
