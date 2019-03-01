@@ -286,8 +286,7 @@ updateMessage model msg =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Dropdown.subscriptions model.dropState MyDrop1Msg ]
-
+        [ Sub.map ThingMsg (Thing.subscriptions model.thing) ]
 
 
 -- VIEW
