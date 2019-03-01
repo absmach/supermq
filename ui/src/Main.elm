@@ -11,6 +11,7 @@ import Bootstrap.ButtonGroup as ButtonGroup
 import Bootstrap.CDN as CDN
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
+import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Form as Form
 import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Form.Fieldset as Fieldset
@@ -274,8 +275,16 @@ updateMessage model msg =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
+
+
+
+-- subscriptions _ =
+--     Sub.none
+
+
+subscriptions model =
+    Sub.batch
+        [ Sub.map ThingMsg (Thing.subscriptions model.thing) ]
 
 
 

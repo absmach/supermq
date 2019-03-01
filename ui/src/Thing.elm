@@ -1,8 +1,9 @@
-module Thing exposing (Model, Msg(..), Thing, initial, update, view)
+module Thing exposing (Model, Msg(..), Thing, initial, subscriptions, update, view)
 
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
 import Bootstrap.CDN exposing (fontAwesome)
+import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid
@@ -36,6 +37,10 @@ url =
     }
 
 
+defaultType =
+    "app"
+
+
 type alias Thing =
     { type_ : String
     , name : Maybe String
@@ -63,6 +68,7 @@ type alias Model =
     , editMode : Bool
     , provisionModalVisibility : Modal.Visibility
     , editModalVisibility : Modal.Visibility
+    , provisionDropState : Dropdown.State
     }
 
 
@@ -74,7 +80,7 @@ initial : Model
 initial =
     { name = ""
     , metadata = ""
-    , type_ = ""
+    , type_ = defaultType
     , offset = query.offset
     , limit = query.limit
     , response = ""
@@ -86,6 +92,7 @@ initial =
     , editMode = False
     , provisionModalVisibility = Modal.hidden
     , editModalVisibility = Modal.hidden
+    , provisionDropState = Dropdown.initialState
     }
 
 
@@ -108,6 +115,8 @@ type Msg
     | ShowEditModal Thing
     | EditThing
     | UpdateThing
+    | ProvisionDropState Dropdown.State
+    | Type String
 
 
 update : Msg -> Model -> String -> ( Model, Cmd Msg )
@@ -239,10 +248,16 @@ update msg model token =
             , Cmd.none
             )
 
+        ProvisionDropState state ->
+            ( { model | provisionDropState = state }, Cmd.none )
+
+        Type type_ ->
+            ( { model | type_ = type_ }, Cmd.none )
+
 
 resetEdit : Model -> Model
 resetEdit model =
-    { model | name = "", type_ = "", metadata = "" }
+    { model | name = "", type_ = defaultType, metadata = "" }
 
 
 
@@ -310,6 +325,29 @@ genTableBody model =
 -- PROVISION MODAL
 
 
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ Dropdown.subscriptions model.provisionDropState ProvisionDropState ]
+
+
+provisionDropDiv : Model -> Html Msg
+provisionDropDiv model =
+    div []
+        [ Dropdown.dropdown
+            model.provisionDropState
+            { options = []
+            , toggleMsg = ProvisionDropState
+            , toggleButton =
+                Dropdown.toggle [ Button.outlinePrimary ] [ text model.type_ ]
+            , items =
+                [ Dropdown.buttonItem [ onClick (Type "app") ] [ text "app" ]
+                , Dropdown.buttonItem [ onClick (Type "device") ] [ text "device" ]
+                ]
+            }
+        ]
+
+
 provisionModal : Model -> Html Msg
 provisionModal model =
     Modal.config ClosePorvisionModal
@@ -324,11 +362,8 @@ provisionModalBody : Model -> (Modal.Config Msg -> Modal.Config Msg)
 provisionModalBody model =
     Modal.body []
         [ Grid.container []
-            [ Grid.row []
-                [ Grid.col []
-                    [ provisionModalForm model
-                    ]
-                ]
+            [ Grid.row [] [ Grid.col [] [ provisionDropDiv model ] ]
+            , Grid.row [] [ Grid.col [] [ provisionModalForm model ] ]
             , Helpers.provisionModalButtons ProvisionThing ClosePorvisionModal
             ]
         ]
@@ -339,7 +374,6 @@ provisionModalForm model =
     Helpers.modalForm
         [ Helpers.FormRecord "name" SubmitName model.name model.name
         , Helpers.FormRecord "metadata" SubmitMetadata model.metadata model.metadata
-        , Helpers.FormRecord "type" SubmitType model.type_ model.type_
         ]
 
 
