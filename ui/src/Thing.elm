@@ -2,7 +2,6 @@ module Thing exposing (Model, Msg(..), Thing, initial, subscriptions, update, vi
 
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
-import Bootstrap.CDN exposing (fontAwesome)
 import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
@@ -13,7 +12,7 @@ import Bootstrap.Modal as Modal
 import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
 import Debug exposing (log)
-import Dict as Dict
+import Dict
 import Error
 import Helpers
 import Html exposing (..)
@@ -277,8 +276,7 @@ update msg model token =
 view : Model -> Html Msg
 view model =
     Grid.container []
-        [ Helpers.fontAwesome
-        , Grid.row []
+        [ Grid.row []
             [ Grid.col [ Col.attrs [ align "right" ] ]
                 [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1, align "right" ], Button.onClick ShowProvisionModal ] [ text "ADD" ]
                 ]
