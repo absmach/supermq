@@ -1,6 +1,8 @@
 module Channel exposing (Channel, Model, Msg(..), initial, update, view)
 
 import Bootstrap.Button as Button
+import Bootstrap.Card as Card
+import Bootstrap.Card.Block as Block
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.InputGroup as InputGroup
@@ -8,7 +10,7 @@ import Bootstrap.Grid as Grid
 import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
 import Error
-import Helpers
+import Helpers exposing (faIcons)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
@@ -149,22 +151,31 @@ view model =
     Grid.container []
         [ Grid.row []
             [ Grid.col []
-                [ Table.simpleTable
-                    ( Table.simpleThead
-                        [ Table.th [] [ text "Name" ]
-                        , Table.th [] [ text "Id" ]
+                [ Card.config []
+                    |> Card.block []
+                        [ Block.custom
+                            (Table.table
+                                { options = [ Table.striped, Table.hover, Table.small ]
+                                , thead =
+                                    Table.simpleThead
+                                        [ Table.th [] [ text "Name" ]
+                                        , Table.th [] [ text "Id" ]
+                                        ]
+                                , tbody =
+                                    Table.tbody []
+                                        (List.append
+                                            [ Table.tr []
+                                                [ Table.td [] [ Input.text [ Input.attrs [ id "name", value model.name ], Input.onInput SubmitName ] ]
+                                                , Table.td [] []
+                                                , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionChannel ] [ text "+" ] ]
+                                                ]
+                                            ]
+                                            (genTableRows model.channels.list)
+                                        )
+                                }
+                            )
                         ]
-                    , Table.tbody []
-                        (List.append
-                            [ Table.tr []
-                                [ Table.td [] [ Input.text [ Input.attrs [ id "name", value model.name ], Input.onInput SubmitName ] ]
-                                , Table.td [] []
-                                , Table.td [] [ Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick ProvisionChannel ] [ text "+" ] ]
-                                ]
-                            ]
-                            (genTableRows model.channels.list)
-                        )
-                    )
+                    |> Card.view
                 ]
             ]
         , Helpers.genPagination model.channels.total SubmitPage
