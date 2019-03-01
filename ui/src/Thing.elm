@@ -64,7 +64,6 @@ type alias Model =
     , response : String
     , things : Things
     , thing : Thing
-    , location : String
     , editMode : Bool
     , provisionModalVisibility : Modal.Visibility
     , editModalVisibility : Modal.Visibility
@@ -89,7 +88,6 @@ initial =
         , total = 0
         }
     , thing = emptyThing
-    , location = ""
     , editMode = False
     , provisionModalVisibility = Modal.hidden
     , editModalVisibility = Modal.hidden
