@@ -138,12 +138,17 @@ update msg model token =
 
         ProvisionThing ->
             ( resetEdit model
-            , provision
+            , HttpMF.provision
                 (B.crossOrigin url.base url.path [])
                 token
-                model.type_
-                model.name
-                model.metadata
+                { emptyThing
+                    | name = Just model.name
+                    , type_ = model.type_
+                    , metadata = Just model.metadata
+                }
+                thingEncoder
+                ProvisionedThing
+                "/things/"
             )
 
         ProvisionedThing result ->
@@ -171,12 +176,16 @@ update msg model token =
 
         UpdateThing ->
             ( resetEdit { model | editMode = False }
-            , updateThing
+            , HttpMF.update
                 (B.crossOrigin url.base (List.append url.path [ model.thing.id ]) [])
                 token
-                model.thing.type_
-                model.name
-                model.metadata
+                { emptyThing
+                    | name = Just model.name
+                    , type_ = model.thing.type_
+                    , metadata = Just model.metadata
+                }
+                thingEncoder
+                UpdatedThing
             )
 
         UpdatedThing result ->
@@ -223,9 +232,10 @@ update msg model token =
 
         RemoveThing id ->
             ( model
-            , remove
+            , HttpMF.remove
                 (B.crossOrigin url.base (List.append url.path [ id ]) [])
                 token
+                RemovedThing
             )
 
         RemovedThing result ->
@@ -447,59 +457,13 @@ thingsDecoder =
         (D.field "total" D.int)
 
 
-
--- HTTP
-
-
-provision : String -> String -> String -> String -> String -> Cmd Msg
-provision u token type_ name metadata =
-    Http.request
-        { method = "POST"
-        , headers = [ Http.header "Authorization" token ]
-        , url = u
-        , body =
-            E.object
-                [ ( "type", E.string type_ )
-                , ( "name", E.string name )
-                , ( "metadata", E.string metadata )
-                ]
-                |> Http.jsonBody
-        , expect = HttpMF.expectID ProvisionedThing "/things/"
-        , timeout = Nothing
-        , tracker = Nothing
-        }
-
-
-updateThing : String -> String -> String -> String -> String -> Cmd Msg
-updateThing u token type_ name metadata =
-    Http.request
-        { method = "PUT"
-        , headers = [ Http.header "Authorization" token ]
-        , url = u
-        , body =
-            E.object
-                [ ( "type", E.string type_ )
-                , ( "name", E.string name )
-                , ( "metadata", E.string metadata )
-                ]
-                |> Http.jsonBody
-        , expect = HttpMF.expectStatus UpdatedThing
-        , timeout = Nothing
-        , tracker = Nothing
-        }
-
-
-remove : String -> String -> Cmd Msg
-remove u token =
-    Http.request
-        { method = "DELETE"
-        , headers = [ Http.header "Authorization" token ]
-        , url = u
-        , body = Http.emptyBody
-        , expect = HttpMF.expectStatus RemovedThing
-        , timeout = Nothing
-        , tracker = Nothing
-        }
+thingEncoder : Thing -> E.Value
+thingEncoder thing =
+    E.object
+        [ ( "type", E.string thing.type_ )
+        , ( "name", E.string (Helpers.parseString thing.name) )
+        , ( "metadata", E.string (Helpers.parseString thing.metadata) )
+        ]
 
 
 

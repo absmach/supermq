@@ -1,4 +1,4 @@
-module HttpMF exposing (expectID, expectRetrieve, expectStatus, retrieve)
+module HttpMF exposing (expectID, expectRetrieve, expectStatus, provision, remove, retrieve, update)
 
 import Dict
 import Helpers
@@ -89,3 +89,46 @@ expectRetrieve toMsg decoder =
 
                         Err err ->
                             Err (Http.BadBody (D.errorToString err))
+
+
+provision : String -> String -> entity -> (entity -> E.Value) -> (Result Http.Error String -> msg) -> String -> Cmd msg
+provision u token e encoder msg prefix =
+    Http.request
+        { method = "POST"
+        , headers = [ Http.header "Authorization" token ]
+        , url = u
+        , body =
+            encoder e
+                |> Http.jsonBody
+        , expect = expectID msg prefix
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
+update : String -> String -> entity -> (entity -> E.Value) -> (Result Http.Error String -> msg) -> Cmd msg
+update u token e encoder msg =
+    Http.request
+        { method = "PUT"
+        , headers = [ Http.header "Authorization" token ]
+        , url = u
+        , body =
+            encoder e
+                |> Http.jsonBody
+        , expect = expectStatus msg
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
+remove : String -> String -> (Result Http.Error String -> msg) -> Cmd msg
+remove u token msg =
+    Http.request
+        { method = "DELETE"
+        , headers = [ Http.header "Authorization" token ]
+        , url = u
+        , body = Http.emptyBody
+        , expect = expectStatus msg
+        , timeout = Nothing
+        , tracker = Nothing
+        }

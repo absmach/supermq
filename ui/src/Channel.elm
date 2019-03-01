@@ -123,11 +123,16 @@ update msg model token =
 
         ProvisionChannel ->
             ( resetEdit model
-            , provision
+            , HttpMF.provision
                 (B.crossOrigin url.base url.channelsPath [])
                 token
-                model.name
-                model.metadata
+                { emptyChannel
+                    | name = Just model.name
+                    , metadata = Just model.metadata
+                }
+                channelEncoder
+                ProvisionedChannel
+                "/channels/"
             )
 
         ProvisionedChannel result ->
@@ -155,11 +160,15 @@ update msg model token =
 
         UpdateChannel ->
             ( resetEdit { model | editMode = False }
-            , updateChannel
+            , HttpMF.update
                 (B.crossOrigin url.base (List.append url.channelsPath [ model.channel.id ]) [])
                 token
-                model.name
-                model.metadata
+                { emptyChannel
+                    | name = Just model.name
+                    , metadata = Just model.metadata
+                }
+                channelEncoder
+                UpdatedChannel
             )
 
         UpdatedChannel result ->
@@ -220,10 +229,11 @@ update msg model token =
                     ( { model | response = Error.handle error }, Cmd.none )
 
         RemoveChannel id ->
-            ( model
-            , remove
+            ( resetEdit model
+            , HttpMF.remove
                 (B.crossOrigin url.base (List.append url.channelsPath [ id ]) [])
                 token
+                RemovedChannel
             )
 
         RemovedChannel result ->
@@ -407,57 +417,12 @@ channelsDecoder =
         (D.field "total" D.int)
 
 
-
--- HTTP
-
-
-provision : String -> String -> String -> String -> Cmd Msg
-provision u token name metadata =
-    Http.request
-        { method = "POST"
-        , headers = [ Http.header "Authorization" token ]
-        , url = u
-        , body =
-            E.object
-                [ ( "name", E.string name )
-                , ( "metadata", E.string metadata )
-                ]
-                |> Http.jsonBody
-        , expect = HttpMF.expectID ProvisionedChannel "/channels/"
-        , timeout = Nothing
-        , tracker = Nothing
-        }
-
-
-updateChannel : String -> String -> String -> String -> Cmd Msg
-updateChannel u token name metadata =
-    Http.request
-        { method = "PUT"
-        , headers = [ Http.header "Authorization" token ]
-        , url = u
-        , body =
-            E.object
-                [ ( "name", E.string name )
-                , ( "metadata", E.string metadata )
-                ]
-                |> Http.jsonBody
-        , expect = HttpMF.expectStatus UpdatedChannel
-        , timeout = Nothing
-        , tracker = Nothing
-        }
-
-
-remove : String -> String -> Cmd Msg
-remove u token =
-    Http.request
-        { method = "DELETE"
-        , headers = [ Http.header "Authorization" token ]
-        , url = u
-        , body = Http.emptyBody
-        , expect = HttpMF.expectStatus RemovedChannel
-        , timeout = Nothing
-        , tracker = Nothing
-        }
+channelEncoder : Channel -> E.Value
+channelEncoder channel =
+    E.object
+        [ ( "name", E.string (Helpers.parseString channel.name) )
+        , ( "metadata", E.string (Helpers.parseString channel.metadata) )
+        ]
 
 
 
