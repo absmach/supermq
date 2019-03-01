@@ -19,8 +19,10 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Http
+import HttpMF
 import Json.Decode as D
 import Json.Encode as E
+import ModalMF
 import Url.Builder as B
 
 
@@ -138,12 +140,17 @@ update msg model token =
 
         ProvisionThing ->
             ( resetEdit model
-            , provision
+            , HttpMF.provision
                 (B.crossOrigin url.base url.path [])
                 token
-                model.type_
-                model.name
-                model.metadata
+                { emptyThing
+                    | name = Just model.name
+                    , type_ = model.type_
+                    , metadata = Just model.metadata
+                }
+                thingEncoder
+                ProvisionedThing
+                "/things/"
             )
 
         ProvisionedThing result ->
@@ -171,12 +178,16 @@ update msg model token =
 
         UpdateThing ->
             ( resetEdit { model | editMode = False }
-            , updateThing
+            , HttpMF.update
                 (B.crossOrigin url.base (List.append url.path [ model.thing.id ]) [])
                 token
-                model.thing.type_
-                model.name
-                model.metadata
+                { emptyThing
+                    | name = Just model.name
+                    , type_ = model.thing.type_
+                    , metadata = Just model.metadata
+                }
+                thingEncoder
+                UpdatedThing
             )
 
         UpdatedThing result ->
@@ -189,7 +200,7 @@ update msg model token =
 
         RetrieveThing thingid ->
             ( model
-            , retrieve
+            , HttpMF.retrieve
                 (B.crossOrigin url.base (List.append url.path [ thingid ]) [])
                 token
                 RetrievedThing
@@ -206,7 +217,7 @@ update msg model token =
 
         RetrieveThings ->
             ( model
-            , retrieve
+            , HttpMF.retrieve
                 (B.crossOrigin url.base url.path (Helpers.buildQueryParamList model.offset model.limit))
                 token
                 RetrievedThings
@@ -223,9 +234,10 @@ update msg model token =
 
         RemoveThing id ->
             ( model
-            , remove
+            , HttpMF.remove
                 (B.crossOrigin url.base (List.append url.path [ id ]) [])
                 token
+                RemovedThing
             )
 
         RemovedThing result ->
@@ -372,16 +384,16 @@ provisionModalBody model =
         [ Grid.container []
             [ Grid.row [] [ Grid.col [] [ provisionDropDiv model ] ]
             , Grid.row [] [ Grid.col [] [ provisionModalForm model ] ]
-            , Helpers.provisionModalButtons ProvisionThing ClosePorvisionModal
+            , ModalMF.provisionModalButtons ProvisionThing ClosePorvisionModal
             ]
         ]
 
 
 provisionModalForm : Model -> Html Msg
 provisionModalForm model =
-    Helpers.modalForm
-        [ Helpers.FormRecord "name" SubmitName model.name model.name
-        , Helpers.FormRecord "metadata" SubmitMetadata model.metadata model.metadata
+    ModalMF.modalForm
+        [ ModalMF.FormRecord "name" SubmitName model.name model.name
+        , ModalMF.FormRecord "metadata" SubmitMetadata model.metadata model.metadata
         ]
 
 
@@ -406,10 +418,10 @@ editModalBody model =
             [ Grid.row []
                 [ Grid.col []
                     [ editModalForm model
-                    , Helpers.modalDiv [ ( "type", model.thing.type_ ), ( "id", model.thing.id ), ( "key", model.thing.key ) ]
+                    , ModalMF.modalDiv [ ( "type", model.thing.type_ ), ( "id", model.thing.id ), ( "key", model.thing.key ) ]
                     ]
                 ]
-            , Helpers.editModalButtons model.editMode UpdateThing EditThing (ShowEditModal model.thing) (RemoveThing model.thing.id) CloseEditModal
+            , ModalMF.editModalButtons model.editMode UpdateThing EditThing (ShowEditModal model.thing) (RemoveThing model.thing.id) CloseEditModal
             ]
         ]
 
@@ -417,13 +429,13 @@ editModalBody model =
 editModalForm : Model -> Html Msg
 editModalForm model =
     if model.editMode then
-        Helpers.modalForm
-            [ Helpers.FormRecord "name" SubmitName (Helpers.parseString model.thing.name) model.name
-            , Helpers.FormRecord "metadata" SubmitMetadata (Helpers.parseString model.thing.metadata) model.metadata
+        ModalMF.modalForm
+            [ ModalMF.FormRecord "name" SubmitName (Helpers.parseString model.thing.name) model.name
+            , ModalMF.FormRecord "metadata" SubmitMetadata (Helpers.parseString model.thing.metadata) model.metadata
             ]
 
     else
-        Helpers.modalDiv [ ( "name", Helpers.parseString model.thing.name ), ( "metadata", Helpers.parseString model.thing.metadata ) ]
+        ModalMF.modalDiv [ ( "name", Helpers.parseString model.thing.name ), ( "metadata", Helpers.parseString model.thing.metadata ) ]
 
 
 
@@ -447,121 +459,13 @@ thingsDecoder =
         (D.field "total" D.int)
 
 
-
--- HTTP
-
-
-expectID : (Result Http.Error String -> Msg) -> Http.Expect Msg
-expectID toMsg =
-    Http.expectStringResponse toMsg <|
-        \response ->
-            case response of
-                Http.BadUrl_ u ->
-                    Err (Http.BadUrl u)
-
-                Http.Timeout_ ->
-                    Err Http.Timeout
-
-                Http.NetworkError_ ->
-                    Err Http.NetworkError
-
-                Http.BadStatus_ metadata body ->
-                    Err (Http.BadStatus metadata.statusCode)
-
-                Http.GoodStatus_ metadata body ->
-                    Ok <|
-                        String.dropLeft (String.length "/things/") <|
-                            Helpers.parseString (Dict.get "location" metadata.headers)
-
-
-provision : String -> String -> String -> String -> String -> Cmd Msg
-provision u token type_ name metadata =
-    Http.request
-        { method = "POST"
-        , headers = [ Http.header "Authorization" token ]
-        , url = u
-        , body =
-            E.object
-                [ ( "type", E.string type_ )
-                , ( "name", E.string name )
-                , ( "metadata", E.string metadata )
-                ]
-                |> Http.jsonBody
-        , expect = expectID ProvisionedThing
-        , timeout = Nothing
-        , tracker = Nothing
-        }
-
-
-updateThing : String -> String -> String -> String -> String -> Cmd Msg
-updateThing u token type_ name metadata =
-    Http.request
-        { method = "PUT"
-        , headers = [ Http.header "Authorization" token ]
-        , url = u
-        , body =
-            E.object
-                [ ( "type", E.string type_ )
-                , ( "name", E.string name )
-                , ( "metadata", E.string metadata )
-                ]
-                |> Http.jsonBody
-        , expect = Helpers.expectStatus UpdatedThing
-        , timeout = Nothing
-        , tracker = Nothing
-        }
-
-
-expectRetrieve : (Result Http.Error a -> Msg) -> D.Decoder a -> Http.Expect Msg
-expectRetrieve toMsg decoder =
-    Http.expectStringResponse toMsg <|
-        \response ->
-            case response of
-                Http.BadUrl_ u ->
-                    Err (Http.BadUrl u)
-
-                Http.Timeout_ ->
-                    Err Http.Timeout
-
-                Http.NetworkError_ ->
-                    Err Http.NetworkError
-
-                Http.BadStatus_ metadata body ->
-                    Err (Http.BadStatus metadata.statusCode)
-
-                Http.GoodStatus_ metadata body ->
-                    case D.decodeString decoder body of
-                        Ok value ->
-                            Ok value
-
-                        Err err ->
-                            Err (Http.BadBody (D.errorToString err))
-
-
-retrieve : String -> String -> (Result Http.Error a -> Msg) -> D.Decoder a -> Cmd Msg
-retrieve u token msg decoder =
-    Http.request
-        { method = "GET"
-        , headers = [ Http.header "Authorization" token ]
-        , url = u
-        , body = Http.emptyBody
-        , expect = expectRetrieve msg decoder
-        , timeout = Nothing
-        , tracker = Nothing
-        }
-
-
-remove : String -> String -> Cmd Msg
-remove u token =
-    Http.request
-        { method = "DELETE"
-        , headers = [ Http.header "Authorization" token ]
-        , url = u
-        , body = Http.emptyBody
-        , expect = Helpers.expectStatus RemovedThing
-        , timeout = Nothing
-        , tracker = Nothing
-        }
+thingEncoder : Thing -> E.Value
+thingEncoder thing =
+    E.object
+        [ ( "type", E.string thing.type_ )
+        , ( "name", E.string (Helpers.parseString thing.name) )
+        , ( "metadata", E.string (Helpers.parseString thing.metadata) )
+        ]
 
 
 
@@ -577,7 +481,7 @@ updateThingList : Model -> String -> ( Model, Cmd Msg )
 updateThingList model token =
     ( model
     , Cmd.batch
-        [ retrieve
+        [ HttpMF.retrieve
             (B.crossOrigin url.base
                 url.path
                 (Helpers.buildQueryParamList model.offset model.limit)
@@ -585,7 +489,7 @@ updateThingList model token =
             token
             RetrievedThings
             thingsDecoder
-        , retrieve
+        , HttpMF.retrieve
             (B.crossOrigin url.base (List.append url.path [ model.thing.id ]) [])
             token
             RetrievedThing

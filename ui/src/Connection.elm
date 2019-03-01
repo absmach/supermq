@@ -15,6 +15,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Http
+import HttpMF
 import List.Extra
 import Thing
 import Url.Builder as B
@@ -49,7 +50,7 @@ type Msg
     | Disconnect
     | ThingMsg Thing.Msg
     | ChannelMsg Channel.Msg
-    | GotResponse (Result Http.Error Int)
+    | GotResponse (Result Http.Error String)
     | CheckThing String
     | CheckChannel String
 
@@ -78,7 +79,7 @@ update msg model token =
         GotResponse result ->
             case result of
                 Ok statusCode ->
-                    ( { model | response = String.fromInt statusCode }, Cmd.none )
+                    ( { model | response = statusCode }, Cmd.none )
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
@@ -204,7 +205,7 @@ modifyConnections checkedThingsIds checkedChannelsIds method token =
                             , headers = [ Http.header "Authorization" token ]
                             , url = B.crossOrigin url.base [ "channels", channelId, "things", thingId ] []
                             , body = Http.emptyBody
-                            , expect = expectResponse GotResponse
+                            , expect = HttpMF.expectStatus GotResponse
                             , timeout = Nothing
                             , tracker = Nothing
                             }
@@ -213,24 +214,3 @@ modifyConnections checkedThingsIds checkedChannelsIds method token =
             )
             checkedThingsIds
         )
-
-
-expectResponse : (Result Http.Error Int -> Msg) -> Http.Expect Msg
-expectResponse toMsg =
-    Http.expectStringResponse toMsg <|
-        \response ->
-            case response of
-                Http.BadUrl_ u ->
-                    Err (Http.BadUrl u)
-
-                Http.Timeout_ ->
-                    Err Http.Timeout
-
-                Http.NetworkError_ ->
-                    Err Http.NetworkError
-
-                Http.BadStatus_ metadata body ->
-                    Err (Http.BadStatus metadata.statusCode)
-
-                Http.GoodStatus_ metadata _ ->
-                    Ok metadata.statusCode
