@@ -1,7 +1,8 @@
-module Thing exposing (Model, Msg(..), Thing, initial, update, view)
+module Thing exposing (Model, Msg(..), Thing, initial, subscriptions, update, view)
 
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
+import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid
@@ -11,9 +12,9 @@ import Bootstrap.Modal as Modal
 import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
 import Debug exposing (log)
-import Dict exposing (Dict)
+import Dict
 import Error
-import Helpers exposing (faIcons)
+import Helpers
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -35,6 +36,10 @@ url =
     }
 
 
+defaultType =
+    "app"
+
+
 type alias Thing =
     { type_ : String
     , name : Maybe String
@@ -52,16 +57,18 @@ type alias Things =
 
 type alias Model =
     { name : String
+    , metadata : String
     , type_ : String
     , offset : Int
     , limit : Int
     , response : String
     , things : Things
     , thing : Thing
+    , location : String
     , editMode : Bool
-    , editName : String
-    , editMetadata : String
-    , modalVisibility : Modal.Visibility
+    , provisionModalVisibility : Modal.Visibility
+    , editModalVisibility : Modal.Visibility
+    , provisionDropState : Dropdown.State
     }
 
 
@@ -72,7 +79,8 @@ emptyThing =
 initial : Model
 initial =
     { name = ""
-    , type_ = ""
+    , metadata = ""
+    , type_ = defaultType
     , offset = query.offset
     , limit = query.limit
     , response = ""
@@ -81,31 +89,36 @@ initial =
         , total = 0
         }
     , thing = emptyThing
+    , location = ""
     , editMode = False
-    , editName = ""
-    , editMetadata = ""
-    , modalVisibility = Modal.hidden
+    , provisionModalVisibility = Modal.hidden
+    , editModalVisibility = Modal.hidden
+    , provisionDropState = Dropdown.initialState
     }
 
 
 type Msg
     = SubmitType String
     | SubmitName String
+    | SubmitMetadata String
     | ProvisionThing
-    | ProvisionedThing (Result Http.Error Int)
+    | ProvisionedThing (Result Http.Error String)
+    | EditThing
+    | UpdateThing
+    | UpdatedThing (Result Http.Error String)
     | RetrieveThing String
     | RetrievedThing (Result Http.Error Thing)
     | RetrieveThings
     | RetrievedThings (Result Http.Error Things)
     | RemoveThing String
-    | RemovedThing (Result Http.Error Int)
+    | RemovedThing (Result Http.Error String)
     | SubmitPage Int
-    | CloseModal
-    | ShowModal Thing
-    | EditThing
-    | EditName String
-    | EditMetadata String
-    | UpdateThing
+    | ClosePorvisionModal
+    | CloseEditModal
+    | ShowProvisionModal
+    | ShowEditModal Thing
+    | ProvisionDropState Dropdown.State
+    | Type String
 
 
 update : Msg -> Model -> String -> ( Model, Cmd Msg )
@@ -117,50 +130,59 @@ update msg model token =
         SubmitName name ->
             ( { model | name = name }, Cmd.none )
 
+        SubmitMetadata metadata ->
+            ( { model | metadata = metadata }, Cmd.none )
+
         SubmitPage page ->
             updateThingList { model | offset = Helpers.pageToOffset page query.limit } token
 
         ProvisionThing ->
-            ( { model | name = "", type_ = "" }
+            ( resetEdit model
             , provision
-                "POST"
                 (B.crossOrigin url.base url.path [])
                 token
                 model.type_
                 model.name
-                ""
-            )
-
-        EditThing ->
-            ( { model
-                | editMode = True
-                , editName = Helpers.parseString model.thing.name
-                , editMetadata = Helpers.parseString model.thing.metadata
-              }
-            , Cmd.none
-            )
-
-        EditName name ->
-            ( { model | editName = name }, Cmd.none )
-
-        EditMetadata metadata ->
-            ( { model | editMetadata = metadata }, Cmd.none )
-
-        UpdateThing ->
-            ( { model | editMode = False, editName = "", editMetadata = "" }
-            , provision
-                "PUT"
-                (B.crossOrigin url.base (List.append url.path [ model.thing.id ]) [])
-                token
-                model.thing.type_
-                model.editName
-                model.editMetadata
+                model.metadata
             )
 
         ProvisionedThing result ->
             case result of
+                Ok thingid ->
+                    updateThingList
+                        { model
+                            | thing = { emptyThing | id = thingid }
+                            , provisionModalVisibility = Modal.hidden
+                            , editModalVisibility = Modal.shown
+                        }
+                        token
+
+                Err error ->
+                    ( { model | response = Error.handle error }, Cmd.none )
+
+        EditThing ->
+            ( { model
+                | editMode = True
+                , name = Helpers.parseString model.thing.name
+                , metadata = Helpers.parseString model.thing.metadata
+              }
+            , Cmd.none
+            )
+
+        UpdateThing ->
+            ( resetEdit { model | editMode = False }
+            , updateThing
+                (B.crossOrigin url.base (List.append url.path [ model.thing.id ]) [])
+                token
+                model.thing.type_
+                model.name
+                model.metadata
+            )
+
+        UpdatedThing result ->
+            case result of
                 Ok statusCode ->
-                    updateThingList { model | response = String.fromInt statusCode } token
+                    updateThingList (resetEdit { model | response = statusCode }) token
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
@@ -211,27 +233,40 @@ update msg model token =
                 Ok statusCode ->
                     updateThingList
                         { model
-                            | response = String.fromInt statusCode
+                            | response = statusCode
                             , offset = Helpers.validateOffset model.offset model.things.total query.limit
-                            , thing = emptyThing
-                            , modalVisibility = Modal.hidden
+                            , editModalVisibility = Modal.hidden
                         }
                         token
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
 
-        CloseModal ->
-            ( { model | modalVisibility = Modal.hidden, thing = emptyThing }, Cmd.none )
+        ClosePorvisionModal ->
+            ( resetEdit { model | provisionModalVisibility = Modal.hidden }, Cmd.none )
 
-        ShowModal thing ->
+        CloseEditModal ->
+            ( resetEdit { model | editModalVisibility = Modal.hidden }, Cmd.none )
+
+        ShowProvisionModal ->
+            ( { model | provisionModalVisibility = Modal.shown }
+            , Cmd.none
+            )
+
+        ShowEditModal thing ->
             ( { model
-                | modalVisibility = Modal.shown
+                | editModalVisibility = Modal.shown
                 , thing = thing
                 , editMode = False
               }
             , Cmd.none
             )
+
+        ProvisionDropState state ->
+            ( { model | provisionDropState = state }, Cmd.none )
+
+        Type type_ ->
+            ( { model | type_ = type_ }, Cmd.none )
 
 
 
@@ -241,20 +276,20 @@ update msg model token =
 view : Model -> Html Msg
 view model =
     Grid.container []
-        [ Helpers.fontAwesome
-        , Grid.row []
+        [ Grid.row []
             [ Grid.col [ Col.attrs [ align "right" ] ]
-                [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1, align "right" ], Button.onClick ProvisionThing ] [ text "ADD" ]
+                [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1, align "right" ], Button.onClick ShowProvisionModal ] [ text "ADD" ]
                 ]
             ]
         , genTable model
         , Helpers.genPagination model.things.total SubmitPage
+        , provisionModal model
         , editModal model
         ]
 
 
 
--- Table
+-- Things table
 
 
 genTable : Model -> Html Msg
@@ -284,7 +319,7 @@ genTableBody model =
     Table.tbody []
         (List.map
             (\thing ->
-                Table.tr [ Table.rowAttr (onClick (ShowModal thing)) ]
+                Table.tr [ Table.rowAttr (onClick (ShowEditModal thing)) ]
                     [ Table.td [] [ text (Helpers.parseString thing.name) ]
                     , Table.td [] [ text thing.id ]
                     , Table.td [] [ text thing.type_ ]
@@ -295,17 +330,73 @@ genTableBody model =
 
 
 
--- EDIT MODAL
+-- Provision modal
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ Dropdown.subscriptions model.provisionDropState ProvisionDropState ]
+
+
+provisionDropDiv : Model -> Html Msg
+provisionDropDiv model =
+    div []
+        [ Dropdown.dropdown
+            model.provisionDropState
+            { options = []
+            , toggleMsg = ProvisionDropState
+            , toggleButton =
+                Dropdown.toggle [ Button.outlinePrimary ] [ text model.type_ ]
+            , items =
+                [ Dropdown.buttonItem [ onClick (Type "app") ] [ text "app" ]
+                , Dropdown.buttonItem [ onClick (Type "device") ] [ text "device" ]
+                ]
+            }
+        ]
+
+
+provisionModal : Model -> Html Msg
+provisionModal model =
+    Modal.config ClosePorvisionModal
+        |> Modal.large
+        |> Modal.hideOnBackdropClick True
+        |> Modal.h4 [] [ text "Add thing" ]
+        |> provisionModalBody model
+        |> Modal.view model.provisionModalVisibility
+
+
+provisionModalBody : Model -> (Modal.Config Msg -> Modal.Config Msg)
+provisionModalBody model =
+    Modal.body []
+        [ Grid.container []
+            [ Grid.row [] [ Grid.col [] [ provisionDropDiv model ] ]
+            , Grid.row [] [ Grid.col [] [ provisionModalForm model ] ]
+            , Helpers.provisionModalButtons ProvisionThing ClosePorvisionModal
+            ]
+        ]
+
+
+provisionModalForm : Model -> Html Msg
+provisionModalForm model =
+    Helpers.modalForm
+        [ Helpers.FormRecord "name" SubmitName model.name model.name
+        , Helpers.FormRecord "metadata" SubmitMetadata model.metadata model.metadata
+        ]
+
+
+
+-- Edit modal
 
 
 editModal : Model -> Html Msg
 editModal model =
-    Modal.config CloseModal
+    Modal.config CloseEditModal
         |> Modal.large
         |> Modal.hideOnBackdropClick True
         |> Modal.h4 [] [ text (Helpers.parseString model.thing.name) ]
         |> editModalBody model
-        |> Modal.view model.modalVisibility
+        |> Modal.view model.editModalVisibility
 
 
 editModalBody : Model -> (Modal.Config Msg -> Modal.Config Msg)
@@ -318,7 +409,7 @@ editModalBody model =
                     , Helpers.modalDiv [ ( "type", model.thing.type_ ), ( "id", model.thing.id ), ( "key", model.thing.key ) ]
                     ]
                 ]
-            , Helpers.editModalButtons model.editMode UpdateThing EditThing (ShowModal model.thing) (RemoveThing model.thing.id) CloseModal
+            , Helpers.editModalButtons model.editMode UpdateThing EditThing (ShowEditModal model.thing) (RemoveThing model.thing.id) CloseEditModal
             ]
         ]
 
@@ -327,8 +418,8 @@ editModalForm : Model -> Html Msg
 editModalForm model =
     if model.editMode then
         Helpers.modalForm
-            [ Helpers.FormRecord "name" EditName (Helpers.parseString model.thing.name) model.editName
-            , Helpers.FormRecord "metadata" EditMetadata (Helpers.parseString model.thing.metadata) model.editMetadata
+            [ Helpers.FormRecord "name" SubmitName (Helpers.parseString model.thing.name) model.name
+            , Helpers.FormRecord "metadata" SubmitMetadata (Helpers.parseString model.thing.metadata) model.metadata
             ]
 
     else
@@ -360,8 +451,8 @@ thingsDecoder =
 -- HTTP
 
 
-expectStatus : (Result Http.Error Int -> Msg) -> Http.Expect Msg
-expectStatus toMsg =
+expectID : (Result Http.Error String -> Msg) -> Http.Expect Msg
+expectID toMsg =
     Http.expectStringResponse toMsg <|
         \response ->
             case response of
@@ -377,14 +468,16 @@ expectStatus toMsg =
                 Http.BadStatus_ metadata body ->
                     Err (Http.BadStatus metadata.statusCode)
 
-                Http.GoodStatus_ metadata _ ->
-                    Ok metadata.statusCode
+                Http.GoodStatus_ metadata body ->
+                    Ok <|
+                        String.dropLeft (String.length "/things/") <|
+                            Helpers.parseString (Dict.get "location" metadata.headers)
 
 
-provision : String -> String -> String -> String -> String -> String -> Cmd Msg
-provision method u token type_ name metadata =
+provision : String -> String -> String -> String -> String -> Cmd Msg
+provision u token type_ name metadata =
     Http.request
-        { method = method
+        { method = "POST"
         , headers = [ Http.header "Authorization" token ]
         , url = u
         , body =
@@ -394,20 +487,26 @@ provision method u token type_ name metadata =
                 , ( "metadata", E.string metadata )
                 ]
                 |> Http.jsonBody
-        , expect = expectStatus ProvisionedThing
+        , expect = expectID ProvisionedThing
         , timeout = Nothing
         , tracker = Nothing
         }
 
 
-retrieve : String -> String -> (Result Http.Error a -> Msg) -> D.Decoder a -> Cmd Msg
-retrieve u token msg decoder =
+updateThing : String -> String -> String -> String -> String -> Cmd Msg
+updateThing u token type_ name metadata =
     Http.request
-        { method = "GET"
+        { method = "PUT"
         , headers = [ Http.header "Authorization" token ]
         , url = u
-        , body = Http.emptyBody
-        , expect = expectRetrieve msg decoder
+        , body =
+            E.object
+                [ ( "type", E.string type_ )
+                , ( "name", E.string name )
+                , ( "metadata", E.string metadata )
+                ]
+                |> Http.jsonBody
+        , expect = Helpers.expectStatus UpdatedThing
         , timeout = Nothing
         , tracker = Nothing
         }
@@ -439,6 +538,19 @@ expectRetrieve toMsg decoder =
                             Err (Http.BadBody (D.errorToString err))
 
 
+retrieve : String -> String -> (Result Http.Error a -> Msg) -> D.Decoder a -> Cmd Msg
+retrieve u token msg decoder =
+    Http.request
+        { method = "GET"
+        , headers = [ Http.header "Authorization" token ]
+        , url = u
+        , body = Http.emptyBody
+        , expect = expectRetrieve msg decoder
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
 remove : String -> String -> Cmd Msg
 remove u token =
     Http.request
@@ -446,10 +558,19 @@ remove u token =
         , headers = [ Http.header "Authorization" token ]
         , url = u
         , body = Http.emptyBody
-        , expect = expectStatus RemovedThing
+        , expect = Helpers.expectStatus RemovedThing
         , timeout = Nothing
         , tracker = Nothing
         }
+
+
+
+-- HELPERS
+
+
+resetEdit : Model -> Model
+resetEdit model =
+    { model | name = "", type_ = defaultType, metadata = "" }
 
 
 updateThingList : Model -> String -> ( Model, Cmd Msg )
