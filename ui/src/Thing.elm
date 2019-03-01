@@ -2,7 +2,6 @@ module Thing exposing (Model, Msg(..), Thing, initial, update, view)
 
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
-import Bootstrap.CDN exposing (fontAwesome)
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid
