@@ -29,6 +29,7 @@ import Channel
 import Connection
 import Debug exposing (log)
 import Error
+import Helpers exposing (fontAwesome)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
@@ -71,6 +72,7 @@ type alias Model =
     , connection : Connection.Model
     , message : Message.Model
     , view : String
+    , dropState : Dropdown.State
     }
 
 
@@ -84,6 +86,7 @@ init _ url key =
         Connection.initial
         Message.initial
         (parse url)
+        Dropdown.initialState
     , Cmd.none
     )
 
@@ -125,6 +128,7 @@ type Msg
     | Things
     | Connection
     | Messages
+    | MyDrop1Msg Dropdown.State
 
 
 
@@ -184,6 +188,11 @@ update msg model =
 
         Messages ->
             updateMessage { model | view = "messages" } (Message.ThingMsg Thing.RetrieveThings)
+
+        MyDrop1Msg state ->
+            ( { model | dropState = state }
+            , Cmd.none
+            )
 
 
 updateUser : Model -> User.Msg -> ( Model, Cmd Msg )
@@ -275,17 +284,9 @@ updateMessage model msg =
 
 
 subscriptions : Model -> Sub Msg
-
-
-
--- subscriptions _ =
---     Sub.none
-
-
 subscriptions model =
     Sub.batch
         [ Sub.map ThingMsg (Thing.subscriptions model.thing) ]
-
 
 
 -- VIEW
@@ -318,11 +319,11 @@ view model =
 
             menu =
                 if loggedIn then
-                    [ ButtonGroup.linkButton [ Button.primary, Button.onClick Version, buttonAttrs ] [ text "dashboard" ]
-                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Things, buttonAttrs ] [ text "things" ]
-                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Channels, buttonAttrs ] [ text "channels" ]
-                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Connection, buttonAttrs ] [ text "connection" ]
-                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Messages, buttonAttrs ] [ text "messages" ]
+                    [ ButtonGroup.linkButton [ Button.primary, Button.onClick Version, buttonAttrs ] [ i [ class "fas fa-chart-bar" ] [], text " Dashboard" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Things, buttonAttrs ] [ i [ class "fas fa-sitemap" ] [], text " Things" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Channels, buttonAttrs ] [ i [ class "fas fa-broadcast-tower" ] [], text " Channels" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Connection, buttonAttrs ] [ i [ class "fas fa-plug" ] [], text " Connection" ]
+                    , ButtonGroup.linkButton [ Button.primary, Button.onClick Messages, buttonAttrs ] [ i [ class "far fa-paper-plane" ] [], text " Messages" ]
                     ]
 
                 else
@@ -331,8 +332,19 @@ view model =
             header =
                 if loggedIn then
                     Grid.row []
-                        [ Grid.col [ Col.attrs [] ] [ text model.user.email ]
-                        , Grid.col [ Col.attrs [ align "right" ] ] [ Button.button [ Button.roleLink, Button.attrs [ Spacing.ml1 ], Button.onClick User.LogOut ] [ text "logout" ] ]
+                        [ Grid.col [ Col.attrs [ align "right" ] ]
+                            [ Dropdown.dropdown
+                                model.dropState
+                                { options = []
+                                , toggleMsg = MyDrop1Msg
+                                , toggleButton =
+                                    Dropdown.toggle [ Button.warning ] [ text model.user.email ]
+                                , items =
+                                    [ --Dropdown.customItem (Button.button [ Button.roleLink, Button.attrs [ Spacing.ml1 ], Button.onClick User.LogOut ] [ text "logout" ])
+                                      Dropdown.buttonItem [] [ text "logout" ]
+                                    ]
+                                }
+                            ]
                         ]
 
                 else
@@ -367,6 +379,7 @@ view model =
         [ Grid.containerFluid []
             [ CDN.stylesheet -- creates an inline style node with the Bootstrap CSS
             , mfStylesheet
+            , fontAwesome
             , Grid.row [ Row.attrs [ style "height" "100vh" ] ]
                 [ Grid.col
                     [ Col.attrs
@@ -378,7 +391,7 @@ view model =
                     [ Grid.row []
                         [ Grid.col
                             [ Col.attrs [] ]
-                            [ h3 [] [ text "Mainflux" ] ]
+                            [ h3 [ class "title" ] [ text "MAINFLUX" ] ]
                         ]
                     , Grid.row []
                         [ Grid.col
@@ -395,7 +408,7 @@ view model =
                     [ Col.xs10
                     , Col.attrs []
                     ]
-                    [ Html.map UserMsg header
+                    [ header
                     , Grid.row []
                         [ Grid.col
                             [ Col.attrs [] ]
