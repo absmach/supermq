@@ -1,6 +1,8 @@
 module Message exposing (Model, Msg(..), initial, update, view)
 
 import Bootstrap.Button as Button
+import Bootstrap.Card as Card
+import Bootstrap.Card.Block as Block
 import Bootstrap.Form as Form
 import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Form.Input as Input
@@ -138,13 +140,23 @@ view model =
             [ Grid.col []
                 [ Grid.row []
                     [ Grid.col []
-                        [ Table.simpleTable
-                            ( Table.simpleThead
-                                [ Table.th [] [ text "Name" ]
-                                , Table.th [] [ text "Id" ]
+                        [ Card.config
+                            []
+                            |> Card.headerH3 [] [ text "Things" ]
+                            |> Card.block []
+                                [ Block.custom
+                                    (Table.table
+                                        { options = [ Table.striped, Table.hover, Table.small ]
+                                        , thead =
+                                            Table.simpleThead
+                                                [ Table.th [] [ text "Name" ]
+                                                , Table.th [] [ text "Id" ]
+                                                ]
+                                        , tbody = Table.tbody [] (genThingRows model.things.things.list)
+                                        }
+                                    )
                                 ]
-                            , Table.tbody [] (genThingRows model.things.things.list)
-                            )
+                            |> Card.view
                         ]
                     ]
                 , Html.map ThingMsg (Helpers.genPagination model.things.things.total Thing.SubmitPage)
@@ -152,13 +164,23 @@ view model =
             , Grid.col []
                 [ Grid.row []
                     [ Grid.col []
-                        [ Table.simpleTable
-                            ( Table.simpleThead
-                                [ Table.th [] [ text "Name" ]
-                                , Table.th [] [ text "Id" ]
+                        [ Card.config
+                            []
+                            |> Card.headerH3 [] [ text "Channels" ]
+                            |> Card.block []
+                                [ Block.custom
+                                    (Table.table
+                                        { options = [ Table.striped, Table.hover, Table.small ]
+                                        , thead =
+                                            Table.simpleThead
+                                                [ Table.th [] [ text "Name" ]
+                                                , Table.th [] [ text "Id" ]
+                                                ]
+                                        , tbody = Table.tbody [] (genChannelRows model.checkedChannelsIds model.channels.channels.list)
+                                        }
+                                    )
                                 ]
-                            , Table.tbody [] (genChannelRows model.checkedChannelsIds model.channels.channels.list)
-                            )
+                            |> Card.view
                         ]
                     ]
                 , Html.map ChannelMsg (Helpers.genPagination model.channels.channels.total Channel.SubmitPage)
@@ -166,13 +188,19 @@ view model =
             ]
         , Grid.row []
             [ Grid.col []
-                [ Form.form []
-                    [ Form.group []
-                        [ Form.label [ for "message" ] [ text "Message" ]
-                        , Input.text [ Input.id "message", Input.onInput SubmitMessage ]
+                [ Card.config []
+                    |> Card.headerH3 [] [ text "Message" ]
+                    |> Card.block []
+                        [ Block.custom
+                            (Form.form []
+                                [ Form.group []
+                                    [ Input.text [ Input.id "message", Input.onInput SubmitMessage ]
+                                    ]
+                                , Button.button [ Button.success, Button.attrs [ Spacing.ml1 ], Button.onClick SendMessage ] [ text "Send" ]
+                                ]
+                            )
                         ]
-                    , Button.button [ Button.primary, Button.attrs [ Spacing.ml1 ], Button.onClick SendMessage ] [ text "Send" ]
-                    ]
+                    |> Card.view
                 ]
             ]
         , Helpers.response model.response
