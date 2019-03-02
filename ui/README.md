@@ -3,12 +3,12 @@ Dashboard made with [elm-bootstrap](http://elm-bootstrap.info/).
 
 ### Install
 ```
-git clone https://gitlab.com/mainflux/gateflux-in-elm
-cd gateflux-in-elm
+git clone https://github.com/mainflux/mainflux
+cd mainflux/ui
 make
 ```
 
-This will produce `index.html` in the root directory.
+This will produce `index.html` in the ui directory.
 
 > N.B. `make` does `elm make src/Main.elm`
 
