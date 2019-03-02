@@ -2,6 +2,8 @@ module Thing exposing (Model, Msg(..), Thing, initial, subscriptions, update, vi
 
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
+import Bootstrap.Card as Card
+import Bootstrap.Card.Block as Block
 import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
@@ -308,11 +310,18 @@ genTable : Model -> Html Msg
 genTable model =
     Grid.row []
         [ Grid.col []
-            [ Table.table
-                { options = [ Table.striped, Table.hover ]
-                , thead = genTableHeader
-                , tbody = genTableBody model
-                }
+            [ Card.config []
+                |> Card.headerH3 [] [ text "Things" ]
+                |> Card.block []
+                    [ Block.custom
+                        (Table.table
+                            { options = [ Table.striped, Table.hover, Table.small ]
+                            , thead = genTableHeader
+                            , tbody = genTableBody model
+                            }
+                        )
+                    ]
+                |> Card.view
             ]
         ]
 
