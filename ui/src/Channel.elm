@@ -286,6 +286,7 @@ view model =
         , Grid.row []
             [ Grid.col []
                 [ Card.config []
+                    |> Card.headerH3 [] [ text "Channels" ]
                     |> Card.block []
                         [ Block.custom
                             (Table.table
