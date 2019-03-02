@@ -75,17 +75,7 @@ update msg model token =
             ( { model | message = "", thingkey = "", response = "", thingid = "" }
             , Cmd.batch
                 (List.map
-                    (\channelId ->
-                        Http.request
-                            { method = "POST"
-                            , headers = [ Http.header "Authorization" model.thingkey ]
-                            , url = B.crossOrigin url.base (url.httpPath ++ url.channelsPath ++ [ channelId ] ++ url.messagesPath) []
-                            , body = Http.stringBody "application/json" model.message
-                            , expect = HttpMF.expectStatus SentMessage
-                            , timeout = Nothing
-                            , tracker = Nothing
-                            }
-                    )
+                    (\channelId -> send channelId token model.message)
                     model.checkedChannelsIds
                 )
             )
@@ -108,7 +98,7 @@ update msg model token =
             updateChannel { model | thingid = thingid, thingkey = thingkey, checkedChannelsIds = [] } (Channel.RetrieveChannelsForThing thingid) token
 
         CheckChannel id ->
-            ( { model | checkedChannelsIds = checkEntity id model.checkedChannelsIds }, Cmd.none )
+            ( { model | checkedChannelsIds = Helpers.checkEntity id model.checkedChannelsIds }, Cmd.none )
 
 
 updateThing : Model -> Thing.Msg -> String -> ( Model, Cmd Msg )
@@ -138,51 +128,43 @@ view model =
     Grid.container []
         [ Grid.row []
             [ Grid.col []
-                [ Grid.row []
-                    [ Grid.col []
-                        [ Card.config
-                            []
-                            |> Card.headerH3 [] [ text "Things" ]
-                            |> Card.block []
-                                [ Block.custom
-                                    (Table.table
-                                        { options = [ Table.striped, Table.hover, Table.small ]
-                                        , thead =
-                                            Table.simpleThead
-                                                [ Table.th [] [ text "Name" ]
-                                                , Table.th [] [ text "Id" ]
-                                                ]
-                                        , tbody = Table.tbody [] (genThingRows model.things.things.list)
-                                        }
-                                    )
-                                ]
-                            |> Card.view
+                [ Card.config
+                    []
+                    |> Card.headerH3 [] [ text "Things" ]
+                    |> Card.block []
+                        [ Block.custom
+                            (Table.table
+                                { options = [ Table.striped, Table.hover, Table.small ]
+                                , thead =
+                                    Table.simpleThead
+                                        [ Table.th [] [ text "Name" ]
+                                        , Table.th [] [ text "Id" ]
+                                        ]
+                                , tbody = Table.tbody [] <| genThingRows model.things.things.list
+                                }
+                            )
                         ]
-                    ]
+                    |> Card.view
                 , Html.map ThingMsg (Helpers.genPagination model.things.things.total Thing.SubmitPage)
                 ]
             , Grid.col []
-                [ Grid.row []
-                    [ Grid.col []
-                        [ Card.config
-                            []
-                            |> Card.headerH3 [] [ text "Channels" ]
-                            |> Card.block []
-                                [ Block.custom
-                                    (Table.table
-                                        { options = [ Table.striped, Table.hover, Table.small ]
-                                        , thead =
-                                            Table.simpleThead
-                                                [ Table.th [] [ text "Name" ]
-                                                , Table.th [] [ text "Id" ]
-                                                ]
-                                        , tbody = Table.tbody [] (genChannelRows model.checkedChannelsIds model.channels.channels.list)
-                                        }
-                                    )
-                                ]
-                            |> Card.view
+                [ Card.config
+                    []
+                    |> Card.headerH3 [] [ text "Channels" ]
+                    |> Card.block []
+                        [ Block.custom
+                            (Table.table
+                                { options = [ Table.striped, Table.hover, Table.small ]
+                                , thead =
+                                    Table.simpleThead
+                                        [ Table.th [] [ text "Name" ]
+                                        , Table.th [] [ text "Id" ]
+                                        ]
+                                , tbody = Table.tbody [] <| genChannelRows model.checkedChannelsIds model.channels.channels.list
+                                }
+                            )
                         ]
-                    ]
+                    |> Card.view
                 , Html.map ChannelMsg (Helpers.genPagination model.channels.channels.total Channel.SubmitPage)
                 ]
             ]
@@ -224,26 +206,22 @@ genChannelRows checkedChannelsIds channels =
     List.map
         (\channel ->
             Table.tr []
-                [ Table.td [] [ input [ type_ "checkbox", onClick (CheckChannel channel.id), checked (isChecked channel.id checkedChannelsIds) ] [], text (" " ++ Helpers.parseString channel.name) ]
+                [ Table.td [] [ input [ type_ "checkbox", onClick (CheckChannel channel.id), checked (Helpers.isChecked channel.id checkedChannelsIds) ] [], text (" " ++ Helpers.parseString channel.name) ]
                 , Table.td [] [ text channel.id ]
                 ]
         )
         channels
 
 
-isChecked : String -> List String -> Bool
-isChecked id checkedEntitiesIds =
-    if List.member id checkedEntitiesIds then
-        True
 
-    else
-        False
+-- HTTP
 
 
-checkEntity : String -> List String -> List String
-checkEntity id checkedEntitiesIds =
-    if List.member id checkedEntitiesIds then
-        List.Extra.remove id checkedEntitiesIds
-
-    else
-        id :: checkedEntitiesIds
+send : String -> String -> String -> Cmd Msg
+send channelId token message =
+    HttpMF.request
+        (B.crossOrigin url.base (url.httpPath ++ url.channelsPath ++ [ channelId ] ++ url.messagesPath) [])
+        "POST"
+        token
+        (Http.stringBody "application/json" message)
+        SentMessage
