@@ -67,7 +67,7 @@ update msg model token =
 
             else
                 ( { model | checkedThingsIds = [], checkedChannelsIds = [] }
-                , Cmd.batch (modifyConnections model.checkedThingsIds model.checkedChannelsIds "PUT" token)
+                , Cmd.batch (connect model.checkedThingsIds model.checkedChannelsIds "PUT" token)
                 )
 
         Disconnect ->
@@ -76,7 +76,7 @@ update msg model token =
 
             else
                 ( { model | checkedThingsIds = [], checkedChannelsIds = [] }
-                , Cmd.batch (modifyConnections model.checkedThingsIds model.checkedChannelsIds "DELETE" token)
+                , Cmd.batch (connect model.checkedThingsIds model.checkedChannelsIds "DELETE" token)
                 )
 
         GotResponse result ->
@@ -102,19 +102,14 @@ update msg model token =
             ( { model | channels = updatedChannel }, Cmd.map ChannelMsg channelCmd )
 
         CheckThing id ->
-            ( { model | checkedThingsIds = checkEntity id model.checkedThingsIds }, Cmd.none )
+            ( { model | checkedThingsIds = Helpers.checkEntity id model.checkedThingsIds }, Cmd.none )
 
         CheckChannel id ->
-            ( { model | checkedChannelsIds = checkEntity id model.checkedChannelsIds }, Cmd.none )
+            ( { model | checkedChannelsIds = Helpers.checkEntity id model.checkedChannelsIds }, Cmd.none )
 
 
-checkEntity : String -> List String -> List String
-checkEntity id checkedEntitiesIds =
-    if List.member id checkedEntitiesIds then
-        List.Extra.remove id checkedEntitiesIds
 
-    else
-        id :: checkedEntitiesIds
+-- VIEW
 
 
 view : Model -> Html Msg
@@ -122,51 +117,43 @@ view model =
     Grid.container []
         [ Grid.row []
             [ Grid.col []
-                [ Grid.row []
-                    [ Grid.col []
-                        [ Card.config
-                            []
-                            |> Card.headerH3 [] [ text "Things" ]
-                            |> Card.block []
-                                [ Block.custom
-                                    (Table.table
-                                        { options = [ Table.striped, Table.hover, Table.small ]
-                                        , thead =
-                                            Table.simpleThead
-                                                [ Table.th [] [ text "Name" ]
-                                                , Table.th [] [ text "Id" ]
-                                                ]
-                                        , tbody = Table.tbody [] (genThingRows model.checkedThingsIds model.things.things.list)
-                                        }
-                                    )
-                                ]
-                            |> Card.view
+                [ Card.config
+                    []
+                    |> Card.headerH3 [] [ text "Things" ]
+                    |> Card.block []
+                        [ Block.custom
+                            (Table.table
+                                { options = [ Table.striped, Table.hover, Table.small ]
+                                , thead =
+                                    Table.simpleThead
+                                        [ Table.th [] [ text "Name" ]
+                                        , Table.th [] [ text "Id" ]
+                                        ]
+                                , tbody = Table.tbody [] <| genThingRows model.checkedThingsIds model.things.things.list
+                                }
+                            )
                         ]
-                    ]
+                    |> Card.view
                 , Html.map ThingMsg (Helpers.genPagination model.things.things.total Thing.SubmitPage)
                 ]
             , Grid.col []
-                [ Grid.row []
-                    [ Grid.col []
-                        [ Card.config
-                            []
-                            |> Card.headerH3 [] [ text "Channels" ]
-                            |> Card.block []
-                                [ Block.custom
-                                    (Table.table
-                                        { options = [ Table.striped, Table.hover, Table.small ]
-                                        , thead =
-                                            Table.simpleThead
-                                                [ Table.th [] [ text "Name" ]
-                                                , Table.th [] [ text "Id" ]
-                                                ]
-                                        , tbody = Table.tbody [] (genChannelRows model.checkedChannelsIds model.channels.channels.list)
-                                        }
-                                    )
-                                ]
-                            |> Card.view
+                [ Card.config
+                    []
+                    |> Card.headerH3 [] [ text "Channels" ]
+                    |> Card.block []
+                        [ Block.custom
+                            (Table.table
+                                { options = [ Table.striped, Table.hover, Table.small ]
+                                , thead =
+                                    Table.simpleThead
+                                        [ Table.th [] [ text "Name" ]
+                                        , Table.th [] [ text "Id" ]
+                                        ]
+                                , tbody = Table.tbody [] <| genChannelRows model.checkedChannelsIds model.channels.channels.list
+                                }
+                            )
                         ]
-                    ]
+                    |> Card.view
                 , Html.map ChannelMsg (Helpers.genPagination model.channels.channels.total Channel.SubmitPage)
                 ]
             ]
@@ -187,7 +174,7 @@ genThingRows checkedThingsIds things =
     List.map
         (\thing ->
             Table.tr []
-                [ Table.td [] [ input [ type_ "checkbox", onClick (CheckThing thing.id), checked (isChecked thing.id checkedThingsIds) ] [], text (" " ++ Helpers.parseString thing.name) ]
+                [ Table.td [] [ input [ type_ "checkbox", onClick (CheckThing thing.id), checked (Helpers.isChecked thing.id checkedThingsIds) ] [], text (" " ++ Helpers.parseString thing.name) ]
                 , Table.td [] [ text thing.id ]
                 ]
         )
@@ -199,39 +186,31 @@ genChannelRows checkedChannelsIds channels =
     List.map
         (\channel ->
             Table.tr []
-                [ Table.td [] [ input [ type_ "checkbox", onClick (CheckChannel channel.id), checked (isChecked channel.id checkedChannelsIds) ] [], text (" " ++ Helpers.parseString channel.name) ]
+                [ Table.td [] [ input [ type_ "checkbox", onClick (CheckChannel channel.id), checked (Helpers.isChecked channel.id checkedChannelsIds) ] [], text (" " ++ Helpers.parseString channel.name) ]
                 , Table.td [] [ text channel.id ]
                 ]
         )
         channels
 
 
-isChecked : String -> List String -> Bool
-isChecked id checkedEntitiesIds =
-    if List.member id checkedEntitiesIds then
-        True
 
-    else
-        False
+-- HTTP
 
 
-modifyConnections : List String -> List String -> String -> String -> List (Cmd Msg)
-modifyConnections checkedThingsIds checkedChannelsIds method token =
+connect : List String -> List String -> String -> String -> List (Cmd Msg)
+connect checkedThingsIds checkedChannelsIds method token =
     List.foldr (++)
         []
         (List.map
             (\thingId ->
                 List.map
                     (\channelId ->
-                        Http.request
-                            { method = method
-                            , headers = [ Http.header "Authorization" token ]
-                            , url = B.crossOrigin url.base [ "channels", channelId, "things", thingId ] []
-                            , body = Http.emptyBody
-                            , expect = HttpMF.expectStatus GotResponse
-                            , timeout = Nothing
-                            , tracker = Nothing
-                            }
+                        HttpMF.request
+                            (B.crossOrigin url.base [ "channels", channelId, "things", thingId ] [])
+                            method
+                            token
+                            Http.emptyBody
+                            GotResponse
                     )
                     checkedChannelsIds
             )

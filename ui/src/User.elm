@@ -1,15 +1,19 @@
-module User exposing (Model, Msg(..), initial, update, view)
+module User exposing (Model, Msg(..), initial, loggedIn, subscriptions, update, view)
 
 import Bootstrap.Button as Button
+import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
 import Bootstrap.Utilities.Spacing as Spacing
 import Error
 import Helpers
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onClick)
 import Http
+import HttpMF
 import Json.Decode as D
 import Json.Encode as E
 import Url.Builder as B
@@ -27,6 +31,7 @@ type alias Model =
     , password : String
     , token : String
     , response : String
+    , dropState : Dropdown.State
     }
 
 
@@ -36,6 +41,7 @@ initial =
     , password = ""
     , token = ""
     , response = ""
+    , dropState = Dropdown.initialState
     }
 
 
@@ -43,9 +49,10 @@ type Msg
     = SubmitEmail String
     | SubmitPassword String
     | Create
-    | Created (Result Http.Error Int)
+    | Created (Result Http.Error String)
     | GetToken
     | GotToken (Result Http.Error String)
+    | DropState Dropdown.State
     | LogOut
 
 
@@ -69,7 +76,7 @@ update msg model =
         Created result ->
             case result of
                 Ok statusCode ->
-                    ( { model | response = String.fromInt statusCode }, Cmd.none )
+                    ( { model | response = statusCode }, Cmd.none )
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
@@ -90,23 +97,34 @@ update msg model =
                 Err error ->
                     ( { model | token = "", response = Error.handle error }, Cmd.none )
 
+        DropState state ->
+            ( { model | dropState = state }, Cmd.none )
+
         LogOut ->
             ( { model | email = "", password = "", token = "", response = "" }, Cmd.none )
 
 
+
+-- VIEW
+
+
 view : Model -> Html Msg
 view model =
-    let
-        loggedIn : Bool
-        loggedIn =
-            if String.length model.token > 0 then
-                True
-
-            else
-                False
-    in
-    if loggedIn then
-        Grid.container [] []
+    if loggedIn model then
+        Grid.row []
+            [ Grid.col [ Col.attrs [ align "right" ] ]
+                [ Dropdown.dropdown
+                    model.dropState
+                    { options = []
+                    , toggleMsg = DropState
+                    , toggleButton =
+                        Dropdown.toggle [ Button.warning ] [ text model.email ]
+                    , items =
+                        [ Dropdown.buttonItem [ onClick LogOut ] [ text "logout" ]
+                        ]
+                    }
+                ]
+            ]
 
     else
         Grid.container []
@@ -130,6 +148,16 @@ view model =
             ]
 
 
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ Dropdown.subscriptions model.dropState DropState ]
+
+
+
+-- JSON
+
+
 type alias User =
     { email : String
     , password : String
@@ -151,6 +179,10 @@ decoder =
         (D.field "password" D.string)
 
 
+
+-- HTTP
+
+
 create : String -> String -> String -> Cmd Msg
 create email password u =
     Http.request
@@ -160,31 +192,10 @@ create email password u =
         , body =
             encode (User email password)
                 |> Http.jsonBody
-        , expect = expectUser Created
+        , expect = HttpMF.expectStatus Created
         , timeout = Nothing
         , tracker = Nothing
         }
-
-
-expectUser : (Result Http.Error Int -> Msg) -> Http.Expect Msg
-expectUser toMsg =
-    Http.expectStringResponse toMsg <|
-        \response ->
-            case response of
-                Http.BadUrl_ u ->
-                    Err (Http.BadUrl u)
-
-                Http.Timeout_ ->
-                    Err Http.Timeout
-
-                Http.NetworkError_ ->
-                    Err Http.NetworkError
-
-                Http.BadStatus_ metadata body ->
-                    Err (Http.BadStatus metadata.statusCode)
-
-                Http.GoodStatus_ metadata _ ->
-                    Ok metadata.statusCode
 
 
 getToken : String -> String -> String -> Cmd Msg
@@ -196,33 +207,23 @@ getToken email password u =
         , body =
             encode (User email password)
                 |> Http.jsonBody
-        , expect = expectToken GotToken
+        , expect =
+            HttpMF.expectRetrieve
+                GotToken
+                (D.field "token" D.string)
         , timeout = Nothing
         , tracker = Nothing
         }
 
 
-expectToken : (Result Http.Error String -> Msg) -> Http.Expect Msg
-expectToken toMsg =
-    Http.expectStringResponse toMsg <|
-        \response ->
-            case response of
-                Http.BadUrl_ u ->
-                    Err (Http.BadUrl u)
 
-                Http.Timeout_ ->
-                    Err Http.Timeout
+-- Helpers
 
-                Http.NetworkError_ ->
-                    Err Http.NetworkError
 
-                Http.BadStatus_ metadata body ->
-                    Err (Http.BadStatus metadata.statusCode)
+loggedIn : Model -> Bool
+loggedIn model =
+    if String.length model.token > 0 then
+        True
 
-                Http.GoodStatus_ metadata body ->
-                    case D.decodeString (D.field "token" D.string) body of
-                        Ok value ->
-                            Ok value
-
-                        Err err ->
-                            Err (Http.BadBody (D.errorToString err))
+    else
+        False
