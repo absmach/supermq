@@ -11,7 +11,6 @@ import Bootstrap.ButtonGroup as ButtonGroup
 import Bootstrap.CDN as CDN
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
-import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Form as Form
 import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Form.Fieldset as Fieldset
@@ -33,6 +32,7 @@ import Error
 import Helpers exposing (fontAwesome)
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onClick)
 import Http
 import Json.Decode exposing (Decoder, field, string)
 import Json.Encode as Encode
@@ -73,7 +73,6 @@ type alias Model =
     , connection : Connection.Model
     , message : Message.Model
     , view : String
-    , dropState : Dropdown.State
     }
 
 
@@ -87,7 +86,6 @@ init _ url key =
         Connection.initial
         Message.initial
         (parse url)
-        Dropdown.initialState
     , Cmd.none
     )
 
@@ -129,7 +127,6 @@ type Msg
     | Things
     | Connection
     | Messages
-    | MyDrop1Msg Dropdown.State
 
 
 
@@ -189,11 +186,6 @@ update msg model =
 
         Messages ->
             updateMessage { model | view = "messages" } (Message.ThingMsg Thing.RetrieveThings)
-
-        MyDrop1Msg state ->
-            ( { model | dropState = state }
-            , Cmd.none
-            )
 
 
 updateUser : Model -> User.Msg -> ( Model, Cmd Msg )
@@ -287,7 +279,9 @@ updateMessage model msg =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Sub.map ThingMsg (Thing.subscriptions model.thing) ]
+        [ Sub.map ThingMsg (Thing.subscriptions model.thing)
+        , Sub.map UserMsg (User.subscriptions model.user)
+        ]
 
 
 
@@ -308,16 +302,11 @@ view model =
     { title = "Gateflux"
     , body =
         let
-            loggedIn : Bool
-            loggedIn =
-                if String.length model.user.token > 0 then
-                    True
-
-                else
-                    False
-
             buttonAttrs =
                 Button.attrs [ style "text-align" "left" ]
+
+            loggedIn =
+                User.loggedIn model.user
 
             menu =
                 if loggedIn then
@@ -333,25 +322,10 @@ view model =
 
             header =
                 if loggedIn then
-                    Grid.row []
-                        [ Grid.col [ Col.attrs [ align "right" ] ]
-                            [ Dropdown.dropdown
-                                model.dropState
-                                { options = []
-                                , toggleMsg = MyDrop1Msg
-                                , toggleButton =
-                                    Dropdown.toggle [ Button.warning ] [ text model.user.email ]
-                                , items =
-                                    [ --Dropdown.customItem (Button.button [ Button.roleLink, Button.attrs [ Spacing.ml1 ], Button.onClick User.LogOut ] [ text "logout" ])
-                                      Dropdown.buttonItem [] [ text "logout" ]
-                                    ]
-                                }
-                            ]
-                        ]
+                    Html.map UserMsg (User.view model.user)
 
                 else
-                    Grid.row []
-                        [ Grid.col [ Col.attrs [] ] [] ]
+                    Grid.container [] []
 
             content =
                 if loggedIn then
@@ -377,7 +351,6 @@ view model =
                 else
                     Html.map UserMsg (User.view model.user)
         in
-        -- we use Bootstrap container defined at http://elm-bootstrap.info/grid
         [ Grid.containerFluid []
             [ CDN.stylesheet -- creates an inline style node with the Bootstrap CSS
             , mfStylesheet
