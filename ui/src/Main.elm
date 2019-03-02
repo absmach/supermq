@@ -22,6 +22,7 @@ import Bootstrap.Form.Textarea as Textarea
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
+import Bootstrap.Text as Text
 import Bootstrap.Utilities.Spacing as Spacing
 import Browser
 import Browser.Navigation as Nav
@@ -289,6 +290,7 @@ subscriptions model =
         [ Sub.map ThingMsg (Thing.subscriptions model.thing) ]
 
 
+
 -- VIEW
 
 
@@ -423,43 +425,40 @@ view model =
 
 dashboard : Model -> Html Msg
 dashboard model =
-    Grid.container []
-        [ Grid.row
-            []
+    Grid.container
+        []
+        [ Grid.row []
             [ Grid.col []
-                [ Card.config []
-                    |> Card.header []
-                        [ h3 [ Spacing.mt2 ] [ text "Version" ]
-                        ]
-                    |> Card.block []
-                        [ Block.titleH4 [] [ text model.dashboard.version ]
-                        ]
-                    |> Card.view
-                ]
-            , Grid.col
-                []
-                [ Card.config []
-                    |> Card.header []
-                        [ h3 [ Spacing.mt2 ] [ text "Things" ]
-                        ]
-                    |> Card.block []
-                        [ Block.titleH4 [] [ text (String.fromInt model.thing.things.total) ]
-                        , Block.custom <|
-                            Button.button [ Button.primary, Button.onClick Things ] [ text "Things" ]
-                        ]
-                    |> Card.view
-                ]
-            , Grid.col []
-                [ Card.config []
-                    |> Card.header []
-                        [ h3 [ Spacing.mt2 ] [ text "Channels" ]
-                        ]
-                    |> Card.block []
-                        [ Block.titleH4 [] [ text (String.fromInt model.channel.channels.total) ]
-                        , Block.custom <|
-                            Button.button [ Button.primary, Button.onClick Channels ] [ text "Channels" ]
-                        ]
-                    |> Card.view
+                [ Card.deck (cardList model)
                 ]
             ]
         ]
+
+
+cardList : Model -> List (Card.Config Msg)
+cardList model =
+    [ Card.config
+        [ Card.secondary
+        , Card.textColor Text.white
+        ]
+        |> Card.headerH3 [] [ text "Version" ]
+        |> Card.block []
+            [ Block.titleH4 [] [ text model.dashboard.version ] ]
+    , Card.config
+        [ Card.info
+        , Card.textColor Text.white
+        ]
+        |> Card.headerH3 [] [ text "Things" ]
+        |> Card.block []
+            [ Block.titleH4 [] [ text (String.fromInt model.thing.things.total) ]
+            , Block.custom <|
+                Button.button [ Button.light, Button.onClick Things ] [ text "Manage things" ]
+            ]
+    , Card.config []
+        |> Card.headerH3 [] [ text "Channels" ]
+        |> Card.block []
+            [ Block.titleH4 [] [ text (String.fromInt model.channel.channels.total) ]
+            , Block.custom <|
+                Button.button [ Button.dark, Button.onClick Channels ] [ text "Manage channels" ]
+            ]
+    ]
