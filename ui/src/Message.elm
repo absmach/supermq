@@ -75,17 +75,7 @@ update msg model token =
             ( { model | message = "", thingkey = "", response = "", thingid = "" }
             , Cmd.batch
                 (List.map
-                    (\channelId ->
-                        Http.request
-                            { method = "POST"
-                            , headers = [ Http.header "Authorization" model.thingkey ]
-                            , url = B.crossOrigin url.base (url.httpPath ++ url.channelsPath ++ [ channelId ] ++ url.messagesPath) []
-                            , body = Http.stringBody "application/json" model.message
-                            , expect = HttpMF.expectStatus SentMessage
-                            , timeout = Nothing
-                            , tracker = Nothing
-                            }
-                    )
+                    (\channelId -> send channelId token model.message)
                     model.checkedChannelsIds
                 )
             )
@@ -247,3 +237,17 @@ checkEntity id checkedEntitiesIds =
 
     else
         id :: checkedEntitiesIds
+
+
+
+-- HTTP
+
+
+send : String -> String -> String -> Cmd Msg
+send channelId token message =
+    HttpMF.request
+        (B.crossOrigin url.base (url.httpPath ++ url.channelsPath ++ [ channelId ] ++ url.messagesPath) [])
+        "POST"
+        token
+        (Http.stringBody "application/json" message)
+        SentMessage

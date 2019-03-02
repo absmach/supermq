@@ -67,7 +67,7 @@ update msg model token =
 
             else
                 ( { model | checkedThingsIds = [], checkedChannelsIds = [] }
-                , Cmd.batch (modifyConnections model.checkedThingsIds model.checkedChannelsIds "PUT" token)
+                , Cmd.batch (connect model.checkedThingsIds model.checkedChannelsIds "PUT" token)
                 )
 
         Disconnect ->
@@ -76,7 +76,7 @@ update msg model token =
 
             else
                 ( { model | checkedThingsIds = [], checkedChannelsIds = [] }
-                , Cmd.batch (modifyConnections model.checkedThingsIds model.checkedChannelsIds "DELETE" token)
+                , Cmd.batch (connect model.checkedThingsIds model.checkedChannelsIds "DELETE" token)
                 )
 
         GotResponse result ->
@@ -108,13 +108,8 @@ update msg model token =
             ( { model | checkedChannelsIds = checkEntity id model.checkedChannelsIds }, Cmd.none )
 
 
-checkEntity : String -> List String -> List String
-checkEntity id checkedEntitiesIds =
-    if List.member id checkedEntitiesIds then
-        List.Extra.remove id checkedEntitiesIds
 
-    else
-        id :: checkedEntitiesIds
+-- VIEW
 
 
 view : Model -> Html Msg
@@ -182,6 +177,28 @@ view model =
         ]
 
 
+
+-- Table
+
+
+checkEntity : String -> List String -> List String
+checkEntity id checkedEntitiesIds =
+    if List.member id checkedEntitiesIds then
+        List.Extra.remove id checkedEntitiesIds
+
+    else
+        id :: checkedEntitiesIds
+
+
+isChecked : String -> List String -> Bool
+isChecked id checkedEntitiesIds =
+    if List.member id checkedEntitiesIds then
+        True
+
+    else
+        False
+
+
 genThingRows : List String -> List Thing.Thing -> List (Table.Row Msg)
 genThingRows checkedThingsIds things =
     List.map
@@ -206,32 +223,24 @@ genChannelRows checkedChannelsIds channels =
         channels
 
 
-isChecked : String -> List String -> Bool
-isChecked id checkedEntitiesIds =
-    if List.member id checkedEntitiesIds then
-        True
 
-    else
-        False
+-- HTTP
 
 
-modifyConnections : List String -> List String -> String -> String -> List (Cmd Msg)
-modifyConnections checkedThingsIds checkedChannelsIds method token =
+connect : List String -> List String -> String -> String -> List (Cmd Msg)
+connect checkedThingsIds checkedChannelsIds method token =
     List.foldr (++)
         []
         (List.map
             (\thingId ->
                 List.map
                     (\channelId ->
-                        Http.request
-                            { method = method
-                            , headers = [ Http.header "Authorization" token ]
-                            , url = B.crossOrigin url.base [ "channels", channelId, "things", thingId ] []
-                            , body = Http.emptyBody
-                            , expect = HttpMF.expectStatus GotResponse
-                            , timeout = Nothing
-                            , tracker = Nothing
-                            }
+                        HttpMF.request
+                            (B.crossOrigin url.base [ "channels", channelId, "things", thingId ] [])
+                            method
+                            token
+                            Http.emptyBody
+                            GotResponse
                     )
                     checkedChannelsIds
             )
