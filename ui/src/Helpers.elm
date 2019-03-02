@@ -1,4 +1,4 @@
-module Helpers exposing (buildQueryParamList, faIcons, fontAwesome, genPagination, pageToOffset, parseString, response, validateInt, validateOffset)
+module Helpers exposing (buildQueryParamList, checkEntity, faIcons, fontAwesome, genPagination, isChecked, pageToOffset, parseString, response, validateInt, validateOffset)
 
 import Bootstrap.Button as Button
 import Bootstrap.Grid as Grid
@@ -8,6 +8,7 @@ import Bootstrap.Utilities.Spacing as Spacing
 import Html exposing (Html, div, hr, node, p, strong, text)
 import Html.Attributes exposing (..)
 import Http
+import List.Extra
 import Url.Builder as B
 
 
@@ -114,3 +115,25 @@ faIcons =
     , edit = class "fa fa-pen"
     , remove = class "fa fa-trash-alt"
     }
+
+
+
+-- TABLE
+
+
+checkEntity : String -> List String -> List String
+checkEntity id checkedEntitiesIds =
+    if List.member id checkedEntitiesIds then
+        List.Extra.remove id checkedEntitiesIds
+
+    else
+        id :: checkedEntitiesIds
+
+
+isChecked : String -> List String -> Bool
+isChecked id checkedEntitiesIds =
+    if List.member id checkedEntitiesIds then
+        True
+
+    else
+        False

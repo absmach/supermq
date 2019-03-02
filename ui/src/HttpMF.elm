@@ -1,4 +1,4 @@
-module HttpMF exposing (expectID, expectRetrieve, expectStatus, provision, remove, retrieve, update)
+module HttpMF exposing (expectID, expectRetrieve, expectStatus, provision, remove, request, retrieve, update, url)
 
 import Dict
 import Helpers
@@ -6,6 +6,15 @@ import Http
 import Json.Decode as D
 import Json.Encode as E
 import Url.Builder as B
+
+
+url =
+    { base = "http://localhost"
+    }
+
+
+
+-- EXPECT
 
 
 expectStatus : (Result Http.Error String -> msg) -> Http.Expect msg
@@ -52,19 +61,6 @@ expectID toMsg prefix =
                             Helpers.parseString (Dict.get "location" metadata.headers)
 
 
-retrieve : String -> String -> (Result Http.Error a -> msg) -> D.Decoder a -> Cmd msg
-retrieve u token msg decoder =
-    Http.request
-        { method = "GET"
-        , headers = [ Http.header "Authorization" token ]
-        , url = u
-        , body = Http.emptyBody
-        , expect = expectRetrieve msg decoder
-        , timeout = Nothing
-        , tracker = Nothing
-        }
-
-
 expectRetrieve : (Result Http.Error a -> msg) -> D.Decoder a -> Http.Expect msg
 expectRetrieve toMsg decoder =
     Http.expectStringResponse toMsg <|
@@ -89,6 +85,36 @@ expectRetrieve toMsg decoder =
 
                         Err err ->
                             Err (Http.BadBody (D.errorToString err))
+
+
+
+-- REQUEST
+
+
+request : String -> String -> String -> Http.Body -> (Result Http.Error String -> msg) -> Cmd msg
+request u method token b msg =
+    Http.request
+        { method = method
+        , headers = [ Http.header "Authorization" token ]
+        , url = u
+        , body = b
+        , expect = expectStatus msg
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
+retrieve : String -> String -> (Result Http.Error a -> msg) -> D.Decoder a -> Cmd msg
+retrieve u token msg decoder =
+    Http.request
+        { method = "GET"
+        , headers = [ Http.header "Authorization" token ]
+        , url = u
+        , body = Http.emptyBody
+        , expect = expectRetrieve msg decoder
+        , timeout = Nothing
+        , tracker = Nothing
+        }
 
 
 provision : String -> String -> entity -> (entity -> E.Value) -> (Result Http.Error String -> msg) -> String -> Cmd msg
