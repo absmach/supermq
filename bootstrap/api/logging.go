@@ -122,7 +122,7 @@ func (lm *loggingMiddleware) Bootstrap(externalKey, externalID string) (cfg boot
 
 func (lm *loggingMiddleware) ChangeState(key, id string, state bootstrap.State) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method changeState for key %s and thing %s took %s to complete", key, id, time.Since(begin))
+		message := fmt.Sprintf("Method change_state for key %s and thing %s took %s to complete", key, id, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -135,7 +135,7 @@ func (lm *loggingMiddleware) ChangeState(key, id string, state bootstrap.State) 
 
 func (lm *loggingMiddleware) UpdateChannelHandler(channel bootstrap.Channel) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method updateChannel for channel %s took %s to complete", channel.ID, time.Since(begin))
+		message := fmt.Sprintf("Method update_channel_handler for channel %s took %s to complete", channel.ID, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -148,7 +148,7 @@ func (lm *loggingMiddleware) UpdateChannelHandler(channel bootstrap.Channel) (er
 
 func (lm *loggingMiddleware) RemoveConfigHandler(id string) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method removeConfig for config %s took %s to complete", id, time.Since(begin))
+		message := fmt.Sprintf("Method remove_config_handler for config %s took %s to complete", id, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -161,7 +161,7 @@ func (lm *loggingMiddleware) RemoveConfigHandler(id string) (err error) {
 
 func (lm *loggingMiddleware) RemoveChannelHandler(id string) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method removeChannel for channel %s took %s to complete", id, time.Since(begin))
+		message := fmt.Sprintf("Method remove_channel_handler for channel %s took %s to complete", id, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -174,7 +174,7 @@ func (lm *loggingMiddleware) RemoveChannelHandler(id string) (err error) {
 
 func (lm *loggingMiddleware) DisconnectThingHandler(channelID, thingID string) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method disconnectThingHandler for channel %s and thing %s took %s to complete", channelID, thingID, time.Since(begin))
+		message := fmt.Sprintf("Method disconnect_thing_handler for channel %s and thing %s took %s to complete", channelID, thingID, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
