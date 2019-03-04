@@ -163,7 +163,28 @@ func (crm *configRepositoryMock) Update(config bootstrap.Config) error {
 	return nil
 }
 
-func (crm *configRepositoryMock) UpdateConnections(string, string, []bootstrap.Channel, []string) error {
+func (crm *configRepositoryMock) UpdateConnections(key, id string, channels []bootstrap.Channel, connections []string) error {
+	crm.mu.Lock()
+	defer crm.mu.Unlock()
+
+	config, ok := crm.configs[id]
+	if !ok {
+		return bootstrap.ErrNotFound
+	}
+	for _, ch := range channels {
+		crm.channels[ch.ID] = ch
+	}
+
+	config.MFChannels = []bootstrap.Channel{}
+	for _, conn := range connections {
+		ch, ok := crm.channels[conn]
+		if !ok {
+			return bootstrap.ErrNotFound
+		}
+		config.MFChannels = append(config.MFChannels, ch)
+	}
+	crm.configs[id] = config
+
 	return nil
 }
 
@@ -201,6 +222,7 @@ func (crm *configRepositoryMock) ChangeState(key, id string, state bootstrap.Sta
 func (crm *configRepositoryMock) RetrieveUnknown(offset, limit uint64) bootstrap.ConfigsPage {
 	crm.mu.Lock()
 	defer crm.mu.Unlock()
+
 	configs := []bootstrap.Config{}
 	i := uint64(0)
 	l := int(limit)
@@ -231,6 +253,7 @@ func (crm *configRepositoryMock) RetrieveUnknown(offset, limit uint64) bootstrap
 func (crm *configRepositoryMock) RemoveUnknown(key, id string) error {
 	crm.mu.Lock()
 	defer crm.mu.Unlock()
+
 	for k, v := range crm.unknown {
 		if k == id && v == key {
 			delete(crm.unknown, k)
@@ -243,7 +266,8 @@ func (crm *configRepositoryMock) RemoveUnknown(key, id string) error {
 
 func (crm *configRepositoryMock) SaveUnknown(key, id string) error {
 	crm.mu.Lock()
-	crm.mu.Unlock()
+	defer crm.mu.Unlock()
+
 	crm.unknown[id] = key
 	return nil
 }
@@ -251,7 +275,9 @@ func (crm *configRepositoryMock) SaveUnknown(key, id string) error {
 func (crm *configRepositoryMock) ListExisting(key string, connections []string) ([]bootstrap.Channel, error) {
 	crm.mu.Lock()
 	defer crm.mu.Unlock()
+
 	var ret []bootstrap.Channel
+
 	for k, v := range crm.channels {
 		for _, conn := range connections {
 			if conn == k {
@@ -267,6 +293,7 @@ func (crm *configRepositoryMock) ListExisting(key string, connections []string) 
 func (crm *configRepositoryMock) RemoveThing(id string) error {
 	crm.mu.Lock()
 	defer crm.mu.Unlock()
+
 	delete(crm.configs, id)
 	return nil
 }
@@ -274,6 +301,7 @@ func (crm *configRepositoryMock) RemoveThing(id string) error {
 func (crm *configRepositoryMock) UpdateChannel(ch bootstrap.Channel) error {
 	crm.mu.Lock()
 	defer crm.mu.Unlock()
+
 	channel, ok := crm.channels[ch.ID]
 	if !ok {
 		return nil
@@ -288,13 +316,15 @@ func (crm *configRepositoryMock) UpdateChannel(ch bootstrap.Channel) error {
 func (crm *configRepositoryMock) RemoveChannel(id string) error {
 	crm.mu.Lock()
 	defer crm.mu.Unlock()
+
 	delete(crm.channels, id)
 	return nil
 }
 
 func (crm *configRepositoryMock) DisconnectThing(channelID, thingID string) error {
 	crm.mu.Lock()
-	crm.mu.Unlock()
+	defer crm.mu.Unlock()
+
 	idx := -1
 	if config, ok := crm.configs[thingID]; ok {
 		for i, ch := range config.MFChannels {
