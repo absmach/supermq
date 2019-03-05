@@ -89,10 +89,7 @@ func (tr thingRepository) RetrieveByID(owner, id string) (things.Thing, error) {
 
 	if err != nil {
 		empty := things.Thing{}
-		if err == sql.ErrNoRows {
-			return empty, things.ErrNotFound
-		}
-		return empty, err
+		return empty, things.ErrNotFound
 	}
 
 	return thing, nil
