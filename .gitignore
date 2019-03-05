@@ -2,5 +2,3 @@ build
 
 site/
 
-# editor specific
-.vscode
