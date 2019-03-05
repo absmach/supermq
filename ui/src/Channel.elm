@@ -1,3 +1,9 @@
+-- Copyright (c) 2019
+-- Mainflux
+--
+-- SPDX-License-Identifier: Apache-2.0
+
+
 module Channel exposing (Channel, Model, Msg(..), initial, update, view)
 
 import Bootstrap.Button as Button

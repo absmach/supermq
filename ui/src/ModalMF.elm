@@ -1,3 +1,9 @@
+-- Copyright (c) 2019
+-- Mainflux
+--
+-- SPDX-License-Identifier: Apache-2.0
+
+
 module ModalMF exposing (FormRecord, editModalButtons, modalDiv, modalForm, provisionModalButtons)
 
 import Bootstrap.Button as Button

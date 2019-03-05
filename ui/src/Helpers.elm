@@ -1,3 +1,9 @@
+-- Copyright (c) 2019
+-- Mainflux
+--
+-- SPDX-License-Identifier: Apache-2.0
+
+
 module Helpers exposing (buildQueryParamList, checkEntity, faIcons, fontAwesome, genPagination, isChecked, pageToOffset, parseString, response, validateInt, validateOffset)
 
 import Bootstrap.Button as Button

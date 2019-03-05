@@ -1,3 +1,9 @@
+-- Copyright (c) 2019
+-- Mainflux
+--
+-- SPDX-License-Identifier: Apache-2.0
+
+
 module HttpMF exposing (expectID, expectRetrieve, expectStatus, provision, remove, request, retrieve, update, url)
 
 import Dict
