@@ -13,7 +13,7 @@ handle : Http.Error -> String
 handle error =
     case error of
         Http.BadUrl url ->
-            "Bad url: " ++ url
+            "Bad URL: " ++ url
 
         Http.Timeout ->
             "Timeout"

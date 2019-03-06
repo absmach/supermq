@@ -144,7 +144,7 @@ view model =
                                 , thead =
                                     Table.simpleThead
                                         [ Table.th [] [ text "Name" ]
-                                        , Table.th [] [ text "Id" ]
+                                        , Table.th [] [ text "ID" ]
                                         ]
                                 , tbody = Table.tbody [] <| genThingRows model.things.things.list
                                 }
@@ -164,7 +164,7 @@ view model =
                                 , thead =
                                     Table.simpleThead
                                         [ Table.th [] [ text "Name" ]
-                                        , Table.th [] [ text "Id" ]
+                                        , Table.th [] [ text "ID" ]
                                         ]
                                 , tbody = Table.tbody [] <| genChannelRows model.checkedChannelsIds model.channels.channels.list
                                 }

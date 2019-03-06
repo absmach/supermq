@@ -319,7 +319,7 @@ genTableHeader : Table.THead Msg
 genTableHeader =
     Table.simpleThead
         [ Table.th [] [ text "Name" ]
-        , Table.th [] [ text "Id" ]
+        , Table.th [] [ text "ID" ]
         ]
 
 
