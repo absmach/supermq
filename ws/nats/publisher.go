@@ -45,18 +45,25 @@ func New(nc *broker.Conn) ws.Service {
 	return &natsPubSub{nc, cb}
 }
 
+func (pubsub *natsPubSub) getFullChannelName(chanID, subtopic string) string {
+	return fmt.Sprintf("%s.%s%s", prefix, chanID, subtopic)
+}
+
 func (pubsub *natsPubSub) Publish(msg mainflux.RawMessage) error {
 	data, err := proto.Marshal(&msg)
 	if err != nil {
 		return err
 	}
 
-	return pubsub.nc.Publish(fmt.Sprintf("%s.%s", prefix, msg.Channel), data)
+	// TODO actually if someone subscribe to some channel with jolly chars, publish
+	//	does not work, return an error message or silently fail?
+	return pubsub.nc.Publish(pubsub.getFullChannelName(msg.Channel, msg.Subtopic), data)
 }
 
-func (pubsub *natsPubSub) Subscribe(chanID string, channel *ws.Channel) error {
+func (pubsub *natsPubSub) Subscribe(chanID, subtopic string, channel *ws.Channel) error {
 	var sub *broker.Subscription
-	sub, err := pubsub.nc.Subscribe(fmt.Sprintf("%s.%s", prefix, chanID), func(msg *broker.Msg) {
+
+	sub, err := pubsub.nc.Subscribe(pubsub.getFullChannelName(chanID, subtopic), func(msg *broker.Msg) {
 		if msg == nil {
 			return
 		}

@@ -85,14 +85,15 @@ function startMqtt() {
     return net.createServer(aedes.handle).listen(config.mqtt_port);
 }
 
-nats.subscribe('channel.*', {'queue':'mqtts'}, function (msg) {
+nats.subscribe('channel.>', {'queue':'mqtts'}, function (msg) {
     var m = message.RawMessage.decode(Buffer.from(msg)),
-        packet;
+        packet, subtopic;
     if (m && m.protocol !== 'mqtt') {
+        subtopic = m.subtopic !== '' ? m.subtopic.replace('.', '/') : ''
         packet = {
             cmd: 'publish',
             qos: 2,
-            topic: 'channels/' + m.channel + '/messages',
+            topic: 'channels/' + m.channel + '/messages' + subtopic,
             payload: m.payload,
             retain: false
         };
@@ -135,6 +136,7 @@ aedes.authorizePublish = function (client, packet, publish) {
                 rawMsg = message.RawMessage.encode({
                     publisher: client.thingId,
                     channel: channelId,
+                    subtopic: elements.join('.'),
                     protocol: 'mqtt',
                     payload: packet.payload
                 });

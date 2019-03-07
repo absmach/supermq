@@ -13,6 +13,8 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"regexp"
+	"strings"
 	"time"
 
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -29,6 +31,9 @@ const protocol = "http"
 var (
 	errMalformedData = errors.New("malformed request data")
 	auth             mainflux.ThingsServiceClient
+	// regexp accept subtopic with name without '.' to avoid problems
+	//	with nats, / par of subtopic will be replaced with '.'
+	channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?\.]+)*$`)
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -41,7 +46,7 @@ func MakeHandler(svc mainflux.MessagePublisher, tc mainflux.ThingsServiceClient)
 
 	r := bone.New()
 
-	r.Post("/channels/:id/messages", kithttp.NewServer(
+	r.Post("/channels/*", kithttp.NewServer(
 		sendMessageEndpoint(svc),
 		decodeRequest,
 		encodeResponse,
@@ -55,7 +60,15 @@ func MakeHandler(svc mainflux.MessagePublisher, tc mainflux.ThingsServiceClient)
 }
 
 func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	publisher, err := authorize(r)
+	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
+	if len(channelParts) < 2 {
+		return nil, errMalformedData
+	}
+
+	chanID := channelParts[1]
+	subtopic := strings.Replace(channelParts[2], "/", ".", -1)
+
+	publisher, err := authorize(r, chanID)
 	if err != nil {
 		return nil, err
 	}
@@ -65,33 +78,23 @@ func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	channel := bone.GetValue(r, "id")
-	if channel == "" {
-		return nil, errMalformedData
-	}
-
 	msg := mainflux.RawMessage{
 		Publisher:   publisher,
 		Protocol:    protocol,
 		ContentType: r.Header.Get("Content-Type"),
-		Channel:     channel,
+		Channel:     chanID,
+		Subtopic:    subtopic,
 		Payload:     payload,
 	}
 
 	return msg, nil
 }
 
-func authorize(r *http.Request) (string, error) {
+func authorize(r *http.Request, chanID string) (string, error) {
 	apiKey := r.Header.Get("Authorization")
 
 	if apiKey == "" {
 		return "", things.ErrUnauthorizedAccess
-	}
-
-	// extract ID from /channels/:id/messages
-	chanID := bone.GetValue(r, "id")
-	if chanID == "" {
-		return "", errMalformedData
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)

@@ -12,6 +12,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/go-zoo/bone"
@@ -39,6 +42,11 @@ var (
 	}
 	auth   mainflux.ThingsServiceClient
 	logger log.Logger
+
+	// TODO how to allow catch all for channel.u-u-i-d> ?
+	// channelPartRegExp = regexp.MustCompile(`^/channels/(?P<cid>[\w\-]+)/messages(?P<st>[\*>]|(/[^?\.]+)*)\??.*$`)
+	// TODO limit or convert mqtt jolly chars? use it instead nats one?
+	channelPartRegExp = regexp.MustCompile(`^/channels/(?P<cid>[\w\-]+)/messages(?P<st>/[^?\.]+)*\??.*$`)
 )
 
 // MakeHandler returns http handler with handshake endpoint.
@@ -47,7 +55,7 @@ func MakeHandler(svc ws.Service, tc mainflux.ThingsServiceClient, l log.Logger) 
 	logger = l
 
 	mux := bone.New()
-	mux.GetFunc("/channels/:id/messages", handshake(svc))
+	mux.GetFunc("/channels/*", handshake(svc))
 	mux.GetFunc("/version", mainflux.Version("websocket"))
 	mux.Handle("/metrics", promhttp.Handler())
 
@@ -60,7 +68,7 @@ func handshake(svc ws.Service) http.HandlerFunc {
 		if err != nil {
 			switch err {
 			case errMalformedData:
-				logger.Warn(fmt.Sprintf("Empty channel id"))
+				logger.Warn(fmt.Sprintf("Empty channel id or malformed url"))
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			case things.ErrUnauthorizedAccess:
@@ -82,7 +90,7 @@ func handshake(svc ws.Service) http.HandlerFunc {
 		sub.conn = conn
 
 		sub.channel = ws.NewChannel()
-		if err := svc.Subscribe(sub.chanID, sub.channel); err != nil {
+		if err := svc.Subscribe(sub.chanID, sub.subtopic, sub.channel); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to subscribe to NATS subject: %s", err))
 			conn.Close()
 			return
@@ -104,11 +112,18 @@ func authorize(r *http.Request) (subscription, error) {
 		authKey = authKeys[0]
 	}
 
-	// Extract ID from /channels/:id/messages.
-	chanID := bone.GetValue(r, "id")
-	if chanID == "" {
+	unescapedRequestURI, err := url.PathUnescape(r.RequestURI)
+	if err != nil {
 		return subscription{}, errMalformedData
 	}
+
+	channelParts := channelPartRegExp.FindStringSubmatch(unescapedRequestURI)
+	if len(channelParts) < 2 {
+		return subscription{}, errMalformedData
+	}
+
+	chanID := channelParts[1]
+	subtopic := strings.Replace(channelParts[2], "/", ".", -1)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -123,18 +138,20 @@ func authorize(r *http.Request) (subscription, error) {
 	}
 
 	sub := subscription{
-		pubID:  id.GetValue(),
-		chanID: chanID,
+		pubID:    id.GetValue(),
+		chanID:   chanID,
+		subtopic: subtopic,
 	}
 
 	return sub, nil
 }
 
 type subscription struct {
-	pubID   string
-	chanID  string
-	conn    *websocket.Conn
-	channel *ws.Channel
+	pubID    string
+	chanID   string
+	subtopic string
+	conn     *websocket.Conn
+	channel  *ws.Channel
 }
 
 func (sub subscription) broadcast(svc ws.Service) {
@@ -150,6 +167,7 @@ func (sub subscription) broadcast(svc ws.Service) {
 		}
 		msg := mainflux.RawMessage{
 			Channel:   sub.chanID,
+			Subtopic:  sub.subtopic,
 			Publisher: sub.pubID,
 			Protocol:  protocol,
 			Payload:   payload,
