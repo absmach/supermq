@@ -93,7 +93,7 @@ func buildQuery(chanID string, offset, limit uint64, andQuery map[string]string)
 			"publisher",
 			"name",
 			"protocol":
-			condSql += fmt.Sprintf(` AND %s = ?`, name)
+			condSql = fmt.Sprintf(`%s AND %s = ?`, condSql, name)
 			values = append(values, value)
 		}
 	}

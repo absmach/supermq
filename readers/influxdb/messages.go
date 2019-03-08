@@ -67,12 +67,12 @@ func fmtCondition(chanID string, andQuery map[string]string) string {
 			"channel",
 			"subtopic",
 			"publisher":
-			condition += fmt.Sprintf(` AND %s='%s'`, name,
+			condition = fmt.Sprintf(`%s AND %s='%s'`, condition, name,
 				strings.Replace(value, "'", "\\'", -1))
 		case
 			"name",
 			"protocol":
-			condition += fmt.Sprintf(` AND "%s"='%s'`, name,
+			condition = fmt.Sprintf(`%s AND "%s"='%s'`, condition, name,
 				strings.Replace(value, "\"", "\\\"", -1))
 		}
 	}

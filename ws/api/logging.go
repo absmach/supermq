@@ -34,7 +34,7 @@ func (lm *loggingMiddleware) Publish(msg mainflux.RawMessage) (err error) {
 	defer func(begin time.Time) {
 		destChannel := msg.Channel
 		if msg.Subtopic != "" {
-			destChannel += "." + msg.Subtopic
+			destChannel = fmt.Sprintf("%s.%s", destChannel, msg.Subtopic)
 		}
 		message := fmt.Sprintf("Method publish to channel %s took %s to complete", destChannel, time.Since(begin))
 		if err != nil {
@@ -51,7 +51,7 @@ func (lm *loggingMiddleware) Subscribe(chanID, subtopic string, channel *ws.Chan
 	defer func(begin time.Time) {
 		destChannel := chanID
 		if subtopic != "" {
-			destChannel += "." + subtopic
+			destChannel = fmt.Sprintf("%s.%s", destChannel, subtopic)
 		}
 		message := fmt.Sprintf("Method subscribe to channel %s took %s to complete", destChannel, time.Since(begin))
 		if err != nil {

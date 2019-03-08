@@ -42,11 +42,8 @@ var (
 	}
 	auth   mainflux.ThingsServiceClient
 	logger log.Logger
-
-	// TODO how to allow catch all for channel.u-u-i-d> ?
-	// channelPartRegExp = regexp.MustCompile(`^/channels/(?P<cid>[\w\-]+)/messages(?P<st>[\*>]|(/[^?\.]+)*)\??.*$`)
-	// TODO limit or convert mqtt jolly chars? use it instead nats one?
-	channelPartRegExp = regexp.MustCompile(`^/channels/(?P<cid>[\w\-]+)/messages(?P<st>/[^?\.]+)*\??.*$`)
+	// subtopic accept also nats wildcard chars * and >
+	channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages((/[\w\-*>]+)*)*\??.*$`)
 )
 
 // MakeHandler returns http handler with handshake endpoint.

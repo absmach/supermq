@@ -29,11 +29,9 @@ import (
 const protocol = "http"
 
 var (
-	errMalformedData = errors.New("malformed request data")
-	auth             mainflux.ThingsServiceClient
-	// regexp accept subtopic with name without '.' to avoid problems
-	//	with nats, / par of subtopic will be replaced with '.'
-	channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?\.]+)*$`)
+	errMalformedData  = errors.New("malformed request data")
+	auth              mainflux.ThingsServiceClient
+	channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages((/[\w\-]+)*)*\??.*$`)
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.

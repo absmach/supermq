@@ -23,7 +23,7 @@ func (sdk mfSDK) SendMessage(chanName, msg, token string) error {
 	chanID := chanNameParts[0]
 	subtopicPart := ""
 	if len(chanNameParts) == 2 {
-		subtopicPart = "/" + strings.Replace(chanNameParts[1], ".", "/", -1)
+		subtopicPart = fmt.Sprintf("/%s", strings.Replace(chanNameParts[1], ".", "/", -1))
 	}
 
 	endpoint := fmt.Sprintf("channels/%s/messages%s", chanID, subtopicPart)
@@ -58,7 +58,7 @@ func (sdk mfSDK) ReadMessages(chanName, token string) ([]mainflux.Message, error
 	chanID := chanNameParts[0]
 	subtopicPart := ""
 	if len(chanNameParts) == 2 {
-		subtopicPart = "?subtopic=" + strings.Replace(chanNameParts[1], ".", "/", -1)
+		subtopicPart = fmt.Sprintf("?subtopic=%s", strings.Replace(chanNameParts[1], ".", "/", -1))
 	}
 
 	endpoint := fmt.Sprintf("channels/%s/messages%s", chanID, subtopicPart)

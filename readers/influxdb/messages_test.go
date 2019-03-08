@@ -113,6 +113,13 @@ func TestReadAll(t *testing.T) {
 			limit:    10,
 			messages: messages[95:101],
 		},
+		"read message with non-existent subtopic": {
+			chanID:   chanID,
+			offset:   0,
+			limit:    msgsNum,
+			andQuery: map[string]string{"subtopic": "not-present"},
+			messages: []mainflux.Message{},
+		},
 		fmt.Sprintf("read message with subtopic: %s", subtopic): {
 			chanID:   chanID,
 			offset:   0,

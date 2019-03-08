@@ -9,7 +9,9 @@
 package nats
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/sony/gobreaker"
 
@@ -25,7 +27,10 @@ const (
 	maxFailureRatio = 0.6
 )
 
-var _ ws.Service = (*natsPubSub)(nil)
+var (
+	_               ws.Service = (*natsPubSub)(nil)
+	errInvalidTopic            = errors.New("invalid topic")
+)
 
 type natsPubSub struct {
 	nc *broker.Conn
@@ -48,7 +53,7 @@ func New(nc *broker.Conn) ws.Service {
 func (pubsub *natsPubSub) getDestChannel(chanID, subtopic string) string {
 	destChannel := fmt.Sprintf("%s.%s", prefix, chanID)
 	if subtopic != "" {
-		destChannel += "." + subtopic
+		destChannel = fmt.Sprintf("%s.%s", destChannel, subtopic)
 	}
 	return destChannel
 }
@@ -59,9 +64,14 @@ func (pubsub *natsPubSub) Publish(msg mainflux.RawMessage) error {
 		return err
 	}
 
-	// TODO actually if someone subscribe to some channel with jolly chars, publish
-	//	does not work, return an error message or silently fail?
-	return pubsub.nc.Publish(pubsub.getDestChannel(msg.Channel, msg.Subtopic), data)
+	subject := pubsub.getDestChannel(msg.Channel, msg.Subtopic)
+	// if someone subscribe to a channel with a whildcard char, publish
+	// does not work
+	if strings.ContainsAny(subject, "*>") {
+		return errInvalidTopic
+	}
+
+	return pubsub.nc.Publish(subject, data)
 }
 
 func (pubsub *natsPubSub) Subscribe(chanID, subtopic string, channel *ws.Channel) error {
