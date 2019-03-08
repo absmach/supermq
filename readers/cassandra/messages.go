@@ -25,8 +25,8 @@ func New(session *gocql.Session) readers.MessageRepository {
 	return cassandraRepository{session: session}
 }
 
-func (cr cassandraRepository) ReadAll(chanID string, offset, limit uint64, andQuery map[string]string) []mainflux.Message {
-	cql, values := buildQuery(chanID, offset, limit, andQuery)
+func (cr cassandraRepository) ReadAll(chanID string, offset, limit uint64, query map[string]string) []mainflux.Message {
+	cql, values := buildQuery(chanID, offset, limit, query)
 
 	iter := cr.session.Query(cql, values...).Iter()
 	scanner := iter.Scanner()
@@ -74,7 +74,7 @@ func (cr cassandraRepository) ReadAll(chanID string, offset, limit uint64, andQu
 	return page
 }
 
-func buildQuery(chanID string, offset, limit uint64, andQuery map[string]string) (string, []interface{}) {
+func buildQuery(chanID string, offset, limit uint64, query map[string]string) (string, []interface{}) {
 	var condSql string
 	var values []interface{}
 
@@ -85,7 +85,7 @@ func buildQuery(chanID string, offset, limit uint64, andQuery map[string]string)
 
 	values = append(values, chanID)
 
-	for name, value := range andQuery {
+	for name, value := range query {
 		switch name {
 		case
 			"channel",

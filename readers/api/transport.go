@@ -79,18 +79,18 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	andQuery := map[string]string{}
+	query := map[string]string{}
 	for _, name := range queryFields {
 		if value := bone.GetQuery(r, name); len(value) == 1 {
-			andQuery[name] = value[0]
+			query[name] = value[0]
 		}
 	}
 
 	req := listMessagesReq{
-		chanID:   chanID,
-		offset:   offset,
-		limit:    limit,
-		andQuery: andQuery,
+		chanID: chanID,
+		offset: offset,
+		limit:  limit,
+		query:  query,
 	}
 
 	return req, nil

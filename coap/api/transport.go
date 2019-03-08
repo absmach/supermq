@@ -142,7 +142,7 @@ func receive(svc coap.Service) handler {
 			return res
 		}
 
-		subtopic := strings.Replace(mux.Var(msg, "subtopic"), "/", ".", -1)
+		subtopic := strings.ReplaceAll(mux.Var(msg, "subtopic"), "/", ".")
 		if strings.HasSuffix(subtopic, "/") {
 			subtopic = subtopic[:len(subtopic)-1]
 		}
@@ -191,7 +191,7 @@ func observe(svc coap.Service, responses chan<- string) handler {
 			if strings.HasSuffix(subtopic, "/") {
 				subtopic = subtopic[:len(subtopic)-1]
 			}
-			subtopic = strings.Replace(subtopic, "/", ".", -1)
+			subtopic = strings.ReplaceAll(subtopic, "/", ".")
 		}
 
 		publisher, err := authorize(msg, res, chanID)

@@ -50,12 +50,12 @@ func New(nc *broker.Conn) ws.Service {
 	return &natsPubSub{nc, cb}
 }
 
-func (pubsub *natsPubSub) getDestChannel(chanID, subtopic string) string {
-	destChannel := fmt.Sprintf("%s.%s", prefix, chanID)
+func (pubsub *natsPubSub) fmtSubject(chanID, subtopic string) string {
+	subject := fmt.Sprintf("%s.%s", prefix, chanID)
 	if subtopic != "" {
-		destChannel = fmt.Sprintf("%s.%s", destChannel, subtopic)
+		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
-	return destChannel
+	return subject
 }
 
 func (pubsub *natsPubSub) Publish(msg mainflux.RawMessage) error {
@@ -64,7 +64,7 @@ func (pubsub *natsPubSub) Publish(msg mainflux.RawMessage) error {
 		return err
 	}
 
-	subject := pubsub.getDestChannel(msg.Channel, msg.Subtopic)
+	subject := pubsub.fmtSubject(msg.Channel, msg.Subtopic)
 	// if someone subscribe to a channel with a whildcard char, publish
 	// does not work
 	if strings.ContainsAny(subject, "*>") {
@@ -77,7 +77,7 @@ func (pubsub *natsPubSub) Publish(msg mainflux.RawMessage) error {
 func (pubsub *natsPubSub) Subscribe(chanID, subtopic string, channel *ws.Channel) error {
 	var sub *broker.Subscription
 
-	sub, err := pubsub.nc.Subscribe(pubsub.getDestChannel(chanID, subtopic), func(msg *broker.Msg) {
+	sub, err := pubsub.nc.Subscribe(pubsub.fmtSubject(chanID, subtopic), func(msg *broker.Msg) {
 		if msg == nil {
 			return
 		}

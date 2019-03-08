@@ -48,13 +48,13 @@ func New(db *mongo.Database) readers.MessageRepository {
 	return mongoRepository{db: db}
 }
 
-func (repo mongoRepository) ReadAll(chanID string, offset, limit uint64, andQuery map[string]string) []mainflux.Message {
+func (repo mongoRepository) ReadAll(chanID string, offset, limit uint64, query map[string]string) []mainflux.Message {
 	col := repo.db.Collection(collection)
 	sortMap := map[string]interface{}{
 		"time": -1,
 	}
 
-	filter := fmtCondition(chanID, andQuery)
+	filter := fmtCondition(chanID, query)
 	cursor, err := col.Find(context.Background(), filter, findopt.Sort(sortMap), findopt.Limit(int64(limit)), findopt.Skip(int64(offset)))
 	if err != nil {
 		return []mainflux.Message{}
@@ -101,9 +101,9 @@ func (repo mongoRepository) ReadAll(chanID string, offset, limit uint64, andQuer
 	return messages
 }
 
-func fmtCondition(chanID string, andQuery map[string]string) *bson.Document {
+func fmtCondition(chanID string, query map[string]string) *bson.Document {
 	filter := bson.NewDocument(bson.EC.String("channel", chanID))
-	for name, value := range andQuery {
+	for name, value := range query {
 		switch name {
 		case
 			"channel",

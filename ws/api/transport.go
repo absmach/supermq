@@ -52,7 +52,8 @@ func MakeHandler(svc ws.Service, tc mainflux.ThingsServiceClient, l log.Logger) 
 	logger = l
 
 	mux := bone.New()
-	mux.GetFunc("/channels/*", handshake(svc))
+	mux.GetFunc("/channels/:id/messages", handshake(svc))
+	mux.GetFunc("/channels/:id/messages/*", handshake(svc))
 	mux.GetFunc("/version", mainflux.Version("websocket"))
 	mux.Handle("/metrics", promhttp.Handler())
 
@@ -119,8 +120,8 @@ func authorize(r *http.Request) (subscription, error) {
 		return subscription{}, errMalformedData
 	}
 
-	chanID := channelParts[1]
-	subtopic := strings.Replace(channelParts[2], "/", ".", -1)
+	chanID := bone.GetValue(r, "id")
+	subtopic := strings.ReplaceAll(channelParts[2], "/", ".")
 	if subtopic != "" {
 		// channelParts[2] contains the subtopic parts starting with char /
 		subtopic = subtopic[1:]

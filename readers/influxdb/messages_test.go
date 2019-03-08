@@ -86,7 +86,7 @@ func TestReadAll(t *testing.T) {
 		chanID   string
 		offset   uint64
 		limit    uint64
-		andQuery map[string]string
+		query    map[string]string
 		messages []mainflux.Message
 	}{
 		"read message page for existing channel": {
@@ -117,20 +117,20 @@ func TestReadAll(t *testing.T) {
 			chanID:   chanID,
 			offset:   0,
 			limit:    msgsNum,
-			andQuery: map[string]string{"subtopic": "not-present"},
+			query:    map[string]string{"subtopic": "not-present"},
 			messages: []mainflux.Message{},
 		},
-		fmt.Sprintf("read message with subtopic: %s", subtopic): {
+		"read message with subtopic": {
 			chanID:   chanID,
 			offset:   0,
 			limit:    10,
-			andQuery: map[string]string{"subtopic": subtopic},
+			query:    map[string]string{"subtopic": subtopic},
 			messages: messages[0:10],
 		},
 	}
 
 	for desc, tc := range cases {
-		result := reader.ReadAll(tc.chanID, tc.offset, tc.limit, tc.andQuery)
+		result := reader.ReadAll(tc.chanID, tc.offset, tc.limit, tc.query)
 		assert.ElementsMatch(t, tc.messages, result, fmt.Sprintf("%s: expected: %v \n-------------\n got: %v", desc, tc.messages, result))
 	}
 }

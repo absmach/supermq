@@ -12,10 +12,10 @@ type apiReq interface {
 }
 
 type listMessagesReq struct {
-	chanID   string
-	offset   uint64
-	limit    uint64
-	andQuery map[string]string
+	chanID string
+	offset uint64
+	limit  uint64
+	query  map[string]string
 }
 
 func (req listMessagesReq) validate() error {

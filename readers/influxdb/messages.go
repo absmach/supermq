@@ -28,12 +28,12 @@ func New(client influxdata.Client, database string) (readers.MessageRepository, 
 	return &influxRepository{database, client}, nil
 }
 
-func (repo *influxRepository) ReadAll(chanID string, offset, limit uint64, andQuery map[string]string) []mainflux.Message {
+func (repo *influxRepository) ReadAll(chanID string, offset, limit uint64, query map[string]string) []mainflux.Message {
 	if limit > maxLimit {
 		limit = maxLimit
 	}
 
-	condition := fmtCondition(chanID, andQuery)
+	condition := fmtCondition(chanID, query)
 	cmd := fmt.Sprintf(`SELECT * from messages WHERE %s ORDER BY time DESC LIMIT %d OFFSET %d`, condition, limit, offset)
 	q := influxdata.Query{
 		Command:  cmd,
@@ -59,21 +59,21 @@ func (repo *influxRepository) ReadAll(chanID string, offset, limit uint64, andQu
 	return ret
 }
 
-func fmtCondition(chanID string, andQuery map[string]string) string {
+func fmtCondition(chanID string, query map[string]string) string {
 	condition := fmt.Sprintf(`channel='%s'`, chanID)
-	for name, value := range andQuery {
+	for name, value := range query {
 		switch name {
 		case
 			"channel",
 			"subtopic",
 			"publisher":
 			condition = fmt.Sprintf(`%s AND %s='%s'`, condition, name,
-				strings.Replace(value, "'", "\\'", -1))
+				strings.ReplaceAll(value, "'", "\\'"))
 		case
 			"name",
 			"protocol":
 			condition = fmt.Sprintf(`%s AND "%s"='%s'`, condition, name,
-				strings.Replace(value, "\"", "\\\"", -1))
+				strings.ReplaceAll(value, "\"", "\\\""))
 		}
 	}
 	return condition

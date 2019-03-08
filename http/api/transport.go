@@ -38,23 +38,27 @@ var (
 func MakeHandler(svc mainflux.MessagePublisher, tc mainflux.ThingsServiceClient) http.Handler {
 	auth = tc
 
-	opts := []kithttp.ServerOption{
-		kithttp.ServerErrorEncoder(encodeError),
-	}
-
 	r := bone.New()
-
-	r.Post("/channels/*", kithttp.NewServer(
-		sendMessageEndpoint(svc),
-		decodeRequest,
-		encodeResponse,
-		opts...,
-	))
+	r.Post("/channels/:id/messages", handshake(svc))
+	r.Post("/channels/:id/messages/*", handshake(svc))
 
 	r.GetFunc("/version", mainflux.Version("http"))
 	r.Handle("/metrics", promhttp.Handler())
 
 	return r
+}
+
+func handshake(svc mainflux.MessagePublisher) *kithttp.Server {
+	opts := []kithttp.ServerOption{
+		kithttp.ServerErrorEncoder(encodeError),
+	}
+
+	return kithttp.NewServer(
+		sendMessageEndpoint(svc),
+		decodeRequest,
+		encodeResponse,
+		opts...,
+	)
 }
 
 func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
@@ -64,7 +68,7 @@ func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	}
 
 	chanID := channelParts[1]
-	subtopic := strings.Replace(channelParts[2], "/", ".", -1)
+	subtopic := strings.ReplaceAll(channelParts[2], "/", ".")
 	if subtopic != "" {
 		// channelParts[2] contains the subtopic parts starting with char /
 		subtopic = subtopic[1:]
