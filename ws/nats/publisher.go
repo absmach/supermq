@@ -45,8 +45,12 @@ func New(nc *broker.Conn) ws.Service {
 	return &natsPubSub{nc, cb}
 }
 
-func (pubsub *natsPubSub) getFullChannelName(chanID, subtopic string) string {
-	return fmt.Sprintf("%s.%s%s", prefix, chanID, subtopic)
+func (pubsub *natsPubSub) getDestChannel(chanID, subtopic string) string {
+	destChannel := fmt.Sprintf("%s.%s", prefix, chanID)
+	if subtopic != "" {
+		destChannel += "." + subtopic
+	}
+	return destChannel
 }
 
 func (pubsub *natsPubSub) Publish(msg mainflux.RawMessage) error {
@@ -57,13 +61,13 @@ func (pubsub *natsPubSub) Publish(msg mainflux.RawMessage) error {
 
 	// TODO actually if someone subscribe to some channel with jolly chars, publish
 	//	does not work, return an error message or silently fail?
-	return pubsub.nc.Publish(pubsub.getFullChannelName(msg.Channel, msg.Subtopic), data)
+	return pubsub.nc.Publish(pubsub.getDestChannel(msg.Channel, msg.Subtopic), data)
 }
 
 func (pubsub *natsPubSub) Subscribe(chanID, subtopic string, channel *ws.Channel) error {
 	var sub *broker.Subscription
 
-	sub, err := pubsub.nc.Subscribe(pubsub.getFullChannelName(chanID, subtopic), func(msg *broker.Msg) {
+	sub, err := pubsub.nc.Subscribe(pubsub.getDestChannel(chanID, subtopic), func(msg *broker.Msg) {
 		if msg == nil {
 			return
 		}

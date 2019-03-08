@@ -22,6 +22,7 @@ import (
 const (
 	keyspace    = "mainflux"
 	chanID      = "1"
+	subtopic    = "subtopic"
 	msgsNum     = 42
 	valueFields = 6
 )
@@ -48,6 +49,7 @@ func TestReadAll(t *testing.T) {
 		count := i % valueFields
 		switch count {
 		case 0:
+			msg.Subtopic = subtopic
 			msg.Value = &mainflux.Message_FloatValue{FloatValue: 5}
 		case 1:
 			msg.Value = &mainflux.Message_BoolValue{BoolValue: false}
@@ -76,6 +78,7 @@ func TestReadAll(t *testing.T) {
 		chanID   string
 		offset   uint64
 		limit    uint64
+		andQuery map[string]string
 		messages []mainflux.Message
 	}{
 		"read message page for existing channel": {
@@ -96,10 +99,24 @@ func TestReadAll(t *testing.T) {
 			limit:    5,
 			messages: messages[40:42],
 		},
+		"read message with non-existent subtopic": {
+			chanID:   chanID,
+			offset:   0,
+			limit:    msgsNum,
+			andQuery: map[string]string{"subtopic": "not-present"},
+			messages: []mainflux.Message{},
+		},
+		fmt.Sprintf("read message with subtopic: %s", subtopic): {
+			chanID:   chanID,
+			offset:   10,
+			limit:    msgsNum,
+			andQuery: map[string]string{"subtopic": subtopic},
+			messages: messages[0:10],
+		},
 	}
 
 	for desc, tc := range cases {
-		result := reader.ReadAll(tc.chanID, tc.offset, tc.limit)
+		result := reader.ReadAll(tc.chanID, tc.offset, tc.limit, tc.andQuery)
 		if tc.offset > 0 {
 			assert.Equal(t, len(tc.messages), len(result), fmt.Sprintf("%s: expected %d messages, got %d", desc, len(tc.messages), len(result)))
 			continue

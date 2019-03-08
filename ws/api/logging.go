@@ -32,7 +32,11 @@ func LoggingMiddleware(svc ws.Service, logger log.Logger) ws.Service {
 
 func (lm *loggingMiddleware) Publish(msg mainflux.RawMessage) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method publish to channel %s took %s to complete", msg.Channel, time.Since(begin))
+		destChannel := msg.Channel
+		if msg.Subtopic != "" {
+			destChannel += "." + msg.Subtopic
+		}
+		message := fmt.Sprintf("Method publish to channel %s took %s to complete", destChannel, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -45,8 +49,11 @@ func (lm *loggingMiddleware) Publish(msg mainflux.RawMessage) (err error) {
 
 func (lm *loggingMiddleware) Subscribe(chanID, subtopic string, channel *ws.Channel) (err error) {
 	defer func(begin time.Time) {
-
-		message := fmt.Sprintf("Method subscribe to channel %s%s took %s to complete", chanID, subtopic, time.Since(begin))
+		destChannel := chanID
+		if subtopic != "" {
+			destChannel += "." + subtopic
+		}
+		message := fmt.Sprintf("Method subscribe to channel %s took %s to complete", destChannel, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return

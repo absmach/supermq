@@ -124,6 +124,10 @@ func authorize(r *http.Request) (subscription, error) {
 
 	chanID := channelParts[1]
 	subtopic := strings.Replace(channelParts[2], "/", ".", -1)
+	if subtopic != "" {
+		// channelParts[2] contains the subtopic parts starting with char /
+		subtopic = subtopic[1:]
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()

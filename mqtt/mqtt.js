@@ -89,7 +89,8 @@ nats.subscribe('channel.>', {'queue':'mqtts'}, function (msg) {
     var m = message.RawMessage.decode(Buffer.from(msg)),
         packet, subtopic;
     if (m && m.protocol !== 'mqtt') {
-        subtopic = m.subtopic !== '' ? m.subtopic.replace('.', '/') : ''
+        subtopic = m.subtopic !== '' ? '/' + m.subtopic.replace('.', '/') : ''
+
         packet = {
             cmd: 'publish',
             qos: 2,
