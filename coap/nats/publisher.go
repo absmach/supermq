@@ -9,7 +9,9 @@
 package nats
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
@@ -19,7 +21,10 @@ import (
 
 const prefix = "channel"
 
-var _ mainflux.MessagePublisher = (*natsPublisher)(nil)
+var (
+	_               mainflux.MessagePublisher = (*natsPublisher)(nil)
+	errInvalidTopic                           = errors.New("invalid topic")
+)
 
 type natsPublisher struct {
 	nc *broker.Conn
@@ -30,18 +35,32 @@ func New(nc *broker.Conn) coap.Broker {
 	return &natsPublisher{nc}
 }
 
+func (pubsub *natsPublisher) getDestChannel(chanID, subtopic string) string {
+	destChannel := fmt.Sprintf("%s.%s", prefix, chanID)
+	if subtopic != "" {
+		destChannel = fmt.Sprintf("%s.%s", destChannel, subtopic)
+	}
+	return destChannel
+}
+
 func (pubsub *natsPublisher) Publish(msg mainflux.RawMessage) error {
 	data, err := proto.Marshal(&msg)
 	if err != nil {
 		return err
 	}
 
-	subject := fmt.Sprintf("%s.%s", prefix, msg.Channel)
+	subject := pubsub.getDestChannel(msg.Channel, msg.Subtopic)
+	// if someone subscribe to a channel with a whildcard char, publish
+	// does not work
+	if strings.ContainsAny(subject, "*>") {
+		return errInvalidTopic
+	}
 	return pubsub.nc.Publish(subject, data)
 }
 
-func (pubsub *natsPublisher) Subscribe(chanID, obsID string, observer *coap.Observer) error {
-	sub, err := pubsub.nc.Subscribe(fmt.Sprintf("%s.%s", prefix, chanID), func(msg *broker.Msg) {
+func (pubsub *natsPublisher) Subscribe(chanID, subtopic, obsID string, observer *coap.Observer) error {
+	subject := pubsub.getDestChannel(chanID, subtopic)
+	sub, err := pubsub.nc.Subscribe(subject, func(msg *broker.Msg) {
 		if msg == nil {
 			return
 		}
