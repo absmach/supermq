@@ -27,10 +27,9 @@ const (
 	maxFailureRatio = 0.6
 )
 
-var (
-	_               ws.Service = (*natsPubSub)(nil)
-	errInvalidTopic            = errors.New("invalid topic")
-)
+var errInvalidTopic = errors.New("invalid topic")
+
+var _ ws.Service = (*natsPubSub)(nil)
 
 type natsPubSub struct {
 	nc *broker.Conn

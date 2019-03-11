@@ -31,7 +31,7 @@ const protocol = "http"
 var (
 	errMalformedData  = errors.New("malformed request data")
 	auth              mainflux.ThingsServiceClient
-	channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages((/[\w\-]+)*)*\??.*$`)
+	channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages((/[\w\-]+)*)*(\?.*)?$`)
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.

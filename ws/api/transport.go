@@ -43,7 +43,7 @@ var (
 	auth   mainflux.ThingsServiceClient
 	logger log.Logger
 	// subtopic accept also nats wildcard chars * and >
-	channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages((/[\w\-*>]+)*)*\??.*$`)
+	channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages((/[\w\-*>]+)*)*(\?.*)?$`)
 )
 
 // MakeHandler returns http handler with handshake endpoint.
