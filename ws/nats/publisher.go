@@ -11,7 +11,6 @@ package nats
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/sony/gobreaker"
 
@@ -26,8 +25,6 @@ const (
 	maxFailedReqs   = 3
 	maxFailureRatio = 0.6
 )
-
-var errInvalidTopic = errors.New("invalid topic")
 
 var _ ws.Service = (*natsPubSub)(nil)
 
@@ -64,12 +61,6 @@ func (pubsub *natsPubSub) Publish(msg mainflux.RawMessage) error {
 	}
 
 	subject := pubsub.fmtSubject(msg.Channel, msg.Subtopic)
-	// if someone subscribe to a channel with a whildcard char, publish
-	// does not work
-	if strings.ContainsAny(subject, "*>") {
-		return errInvalidTopic
-	}
-
 	return pubsub.nc.Publish(subject, data)
 }
 

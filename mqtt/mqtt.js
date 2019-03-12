@@ -90,6 +90,8 @@ nats.subscribe('channel.>', {'queue':'mqtts'}, function (msg) {
         packet, subtopic;
     if (m && m.protocol !== 'mqtt') {
         subtopic = m.subtopic !== '' ? '/' + m.subtopic.replace('.', '/') : '';
+        // convert nats wildcard chars in mqtt formats
+        subtopic = subtopic.replace('*', '+').replace('>', '#');
 
         packet = {
             cmd: 'publish',
@@ -103,10 +105,14 @@ nats.subscribe('channel.>', {'queue':'mqtts'}, function (msg) {
     }
 });
 
-aedes.authorizePublish = function (client, packet, publish) {
+function parseTopic(topic) {
     // Topics are in the form `channels/<channel_id>/messages`
     // Subtopic's are in the form `channels/<channel_id>/messages/<subtopic>`
-    var channel = /^channels\/(.+?)\/messages\/?.*$/.exec(packet.topic);
+    return /^channels\/(.+?)\/messages\/?.*$/.exec(topic);
+}
+
+aedes.authorizePublish = function (client, packet, publish) {
+    var channel = parseTopic(packet.topic);
     if (!channel) {
         logger.warn('unknown topic');
         publish(4); // Bad username or password

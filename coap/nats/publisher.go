@@ -11,7 +11,6 @@ package nats
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
@@ -50,11 +49,6 @@ func (pubsub *natsPublisher) Publish(msg mainflux.RawMessage) error {
 	}
 
 	subject := pubsub.fmtSubject(msg.Channel, msg.Subtopic)
-	// if someone subscribe to a channel with a whildcard char, publish
-	// does not work
-	if strings.ContainsAny(subject, "*>") {
-		return errInvalidTopic
-	}
 	return pubsub.nc.Publish(subject, data)
 }
 
