@@ -68,7 +68,7 @@ func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	}
 
 	chanID := channelParts[1]
-	subtopic := strings.ReplaceAll(channelParts[2], "/", ".")
+	subtopic := strings.Replace(channelParts[2], "/", ".", -1)
 	if subtopic != "" {
 		// channelParts[2] contains the subtopic parts starting with char /
 		subtopic = subtopic[1:]

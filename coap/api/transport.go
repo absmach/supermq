@@ -147,7 +147,7 @@ func receive(svc coap.Service) handler {
 			if strings.HasSuffix(subtopic, "/") {
 				subtopic = subtopic[:len(subtopic)-1]
 			}
-			subtopic = strings.ReplaceAll(subtopic, "/", ".")
+			subtopic = strings.Replace(subtopic, "/", ".", -1)
 		}
 
 		publisher, err := authorize(msg, res, chanID)
@@ -194,9 +194,10 @@ func observe(svc coap.Service, responses chan<- string) handler {
 			if strings.HasSuffix(subtopic, "/") {
 				subtopic = subtopic[:len(subtopic)-1]
 			}
-			subtopic = strings.ReplaceAll(subtopic, "/", ".")
+			subtopic = strings.Replace(subtopic, "/", ".", -1)
 			// convert wildcard enabled  mqtt chars to those of nats
-			subtopic = strings.ReplaceAll(subtopic, "+", "*").ReplaceAll("#", ">")
+			subtopic = strings.Replace(subtopic, "+", "*", -1)
+			subtopic = strings.Replace(subtopic, "#", ">", -1)
 		}
 
 		publisher, err := authorize(msg, res, chanID)

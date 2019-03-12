@@ -9,7 +9,6 @@
 package nats
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/sony/gobreaker"

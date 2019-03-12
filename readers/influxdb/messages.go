@@ -68,12 +68,12 @@ func fmtCondition(chanID string, query map[string]string) string {
 			"subtopic",
 			"publisher":
 			condition = fmt.Sprintf(`%s AND %s='%s'`, condition, name,
-				strings.ReplaceAll(value, "'", "\\'"))
+				strings.Replace(value, "'", "\\'", -1))
 		case
 			"name",
 			"protocol":
 			condition = fmt.Sprintf(`%s AND "%s"='%s'`, condition, name,
-				strings.ReplaceAll(value, "\"", "\\\""))
+				strings.Replace(value, "\"", "\\\"", -1))
 		}
 	}
 	return condition
