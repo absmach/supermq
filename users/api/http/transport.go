@@ -61,10 +61,18 @@ func MakeHandler(svc users.Service, l log.Logger) http.Handler {
 }
 
 func decodeCredentials(_ context.Context, r *http.Request) (interface{}, error) {
-	if r.Header.Get("Content-Type") != contentType {
-		logger.Warn("Invalid or missing content type.")
-		return nil, errUnsupportedContentType
+	s := r.Header.Get("Content-Type")
+	ss := strings.Split(s, ";")
+	for i := 0 ; i <= len(ss) ; i++ {
+		if i == len(ss) {
+			logger.Warn("Invalid or missing content type.")
+			return nil, errUnsupportedContentType
+		}
+		if ss[i] == contentType {
+			break;
+		}
 	}
+
 
 	var user users.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
