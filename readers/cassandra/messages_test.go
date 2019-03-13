@@ -47,6 +47,7 @@ func TestReadAll(t *testing.T) {
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.
 		count := i % valueFields
+		msg.Subtopic = ""
 		switch count {
 		case 0:
 			msg.Subtopic = subtopic
@@ -108,10 +109,10 @@ func TestReadAll(t *testing.T) {
 		},
 		"read message with subtopic": {
 			chanID:   chanID,
-			offset:   10,
+			offset:   5,
 			limit:    msgsNum,
 			query:    map[string]string{"subtopic": subtopic},
-			messages: messages[0:10],
+			messages: messages[0:2],
 		},
 	}
 
