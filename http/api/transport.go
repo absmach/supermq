@@ -31,7 +31,7 @@ const protocol = "http"
 var (
 	errMalformedData  = errors.New("malformed request data")
 	auth              mainflux.ThingsServiceClient
-	channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages((/[\w\-*>]+)*)*(\?.*)?$`)
+	channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages((/[^/]+)*)*(\?.*)?$`)
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -68,8 +68,9 @@ func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	}
 
 	chanID := channelParts[1]
-	subtopic := strings.Replace(channelParts[2], "/", ".", -1)
+	subtopic := channelParts[2]
 	if subtopic != "" {
+		subtopic = strings.Replace(subtopic, "/", ".", -1)
 		// channelParts[2] contains the subtopic parts starting with char /
 		subtopic = subtopic[1:]
 	}

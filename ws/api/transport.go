@@ -43,7 +43,7 @@ var (
 	auth   mainflux.ThingsServiceClient
 	logger log.Logger
 	// subtopic accept also nats wildcard chars * and >
-	channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages((/[\w\-*>]+)*)*(\?.*)?$`)
+	channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages((/[^/]+)*)*(\?.*)?$`)
 )
 
 // MakeHandler returns http handler with handshake endpoint.
@@ -121,8 +121,9 @@ func authorize(r *http.Request) (subscription, error) {
 	}
 
 	chanID := bone.GetValue(r, "id")
-	subtopic := strings.ReplaceAll(channelParts[2], "/", ".")
+	subtopic := channelParts[2]
 	if subtopic != "" {
+		subtopic = strings.Replace(subtopic, "/", ".", -1)
 		// channelParts[2] contains the subtopic parts starting with char /
 		subtopic = subtopic[1:]
 	}

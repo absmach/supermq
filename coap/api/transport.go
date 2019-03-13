@@ -69,9 +69,9 @@ func MakeCOAPHandler(svc coap.Service, tc mainflux.ThingsServiceClient, l log.Lo
 	pingPeriod = pp
 	r := mux.NewRouter()
 	r.Handle("/channels/{id}/messages", gocoap.FuncHandler(receive(svc))).Methods(gocoap.POST)
-	r.Handle("/channels/{id}/messages/{subtopic:[/a-zA-Z0-9-_*>+#]+}", gocoap.FuncHandler(receive(svc))).Methods(gocoap.POST)
+	r.Handle("/channels/{id}/messages/{subtopic:.+}", gocoap.FuncHandler(receive(svc))).Methods(gocoap.POST)
 	r.Handle("/channels/{id}/messages", gocoap.FuncHandler(observe(svc, responses)))
-	r.Handle("/channels/{id}/messages/{subtopic:[/a-zA-Z0-9-_*>+#]+}", gocoap.FuncHandler(observe(svc, responses)))
+	r.Handle("/channels/{id}/messages/{subtopic:.+}", gocoap.FuncHandler(observe(svc, responses)))
 	r.NotFoundHandler = gocoap.FuncHandler(notFoundHandler)
 
 	return r
@@ -195,9 +195,6 @@ func observe(svc coap.Service, responses chan<- string) handler {
 				subtopic = subtopic[:len(subtopic)-1]
 			}
 			subtopic = strings.Replace(subtopic, "/", ".", -1)
-			// convert wildcard enabled  mqtt chars to those of nats
-			subtopic = strings.Replace(subtopic, "+", "*", -1)
-			subtopic = strings.Replace(subtopic, "#", ">", -1)
 		}
 
 		publisher, err := authorize(msg, res, chanID)

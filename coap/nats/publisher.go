@@ -9,7 +9,6 @@
 package nats
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
@@ -20,10 +19,7 @@ import (
 
 const prefix = "channel"
 
-var (
-	_               mainflux.MessagePublisher = (*natsPublisher)(nil)
-	errInvalidTopic                           = errors.New("invalid topic")
-)
+var _ mainflux.MessagePublisher = (*natsPublisher)(nil)
 
 type natsPublisher struct {
 	nc *broker.Conn
