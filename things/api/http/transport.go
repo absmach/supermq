@@ -150,15 +150,8 @@ func MakeHandler(svc things.Service) http.Handler {
 }
 
 func decodeThingCreation(_ context.Context, r *http.Request) (interface{}, error) {
-	s := r.Header.Get("Content-Type")
-	ss := strings.Split(s, ";")
-	for i := 0 ; i <= len(ss) ; i++ {
-		if i == len(ss) {
-			return nil, errUnsupportedContentType
-		}
-		if ss[i] == contentType {
-			break;
-		}
+	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
+		return nil, errUnsupportedContentType
 	}
 
 	req := addThingReq{key: r.Header.Get("Authorization")}
@@ -170,15 +163,8 @@ func decodeThingCreation(_ context.Context, r *http.Request) (interface{}, error
 }
 
 func decodeThingUpdate(_ context.Context, r *http.Request) (interface{}, error) {
-	s := r.Header.Get("Content-Type")
-	ss := strings.Split(s, ";")
-	for i := 0 ; i <= len(ss) ; i++ {
-		if i == len(ss) {
-			return nil, errUnsupportedContentType
-		}
-		if ss[i] == contentType {
-			break;
-		}
+	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
+		return nil, errUnsupportedContentType
 	}
 
 	req := updateThingReq{
