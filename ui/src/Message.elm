@@ -37,6 +37,7 @@ type alias Model =
     , channels : Channel.Model
     , thingid : String
     , checkedChannelsIds : List String
+    , baseURL : String
     }
 
 
@@ -49,6 +50,7 @@ initial =
     , channels = Channel.initial
     , thingid = ""
     , checkedChannelsIds = []
+    , baseURL = ""
     }
 
 
@@ -72,7 +74,7 @@ update msg model token =
             ( { model | message = "", thingkey = "", response = "", thingid = "" }
             , Cmd.batch
                 (List.map
-                    (\channelid -> send channelid model.thingkey model.message)
+                    (\channelid -> send model.baseURL channelid model.thingkey model.message)
                     model.checkedChannelsIds
                 )
             )
@@ -214,10 +216,10 @@ genChannelRows checkedChannelsIds channels =
 -- HTTP
 
 
-send : String -> String -> String -> Cmd Msg
-send channelid thingkey message =
+send : String -> String -> String -> String -> Cmd Msg
+send baseURL channelid thingkey message =
     HttpMF.request
-        (B.relative [ "http", path.channels, channelid, path.messages ] [])
+        (B.crossOrigin baseURL [ "http", path.channels, channelid, path.messages ] [])
         "POST"
         thingkey
         (Http.stringBody "application/json" message)

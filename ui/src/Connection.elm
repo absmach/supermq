@@ -36,6 +36,7 @@ type alias Model =
     , channels : Channel.Model
     , checkedThingsIds : List String
     , checkedChannelsIds : List String
+    , baseURL : String
     }
 
 
@@ -46,6 +47,7 @@ initial =
     , channels = Channel.initial
     , checkedThingsIds = []
     , checkedChannelsIds = []
+    , baseURL = ""
     }
 
 
@@ -68,7 +70,7 @@ update msg model token =
 
             else
                 ( { model | checkedThingsIds = [], checkedChannelsIds = [] }
-                , Cmd.batch (connect model.checkedThingsIds model.checkedChannelsIds "PUT" token)
+                , Cmd.batch (connect model.baseURL model.checkedThingsIds model.checkedChannelsIds "PUT" token)
                 )
 
         Disconnect ->
@@ -77,7 +79,7 @@ update msg model token =
 
             else
                 ( { model | checkedThingsIds = [], checkedChannelsIds = [] }
-                , Cmd.batch (connect model.checkedThingsIds model.checkedChannelsIds "DELETE" token)
+                , Cmd.batch (connect model.baseURL model.checkedThingsIds model.checkedChannelsIds "DELETE" token)
                 )
 
         GotResponse result ->
@@ -198,8 +200,8 @@ genChannelRows checkedChannelsIds channels =
 -- HTTP
 
 
-connect : List String -> List String -> String -> String -> List (Cmd Msg)
-connect checkedThingsIds checkedChannelsIds method token =
+connect : String -> List String -> List String -> String -> String -> List (Cmd Msg)
+connect baseURL checkedThingsIds checkedChannelsIds method token =
     List.foldr (++)
         []
         (List.map
@@ -207,7 +209,7 @@ connect checkedThingsIds checkedChannelsIds method token =
                 List.map
                     (\channelid ->
                         HttpMF.request
-                            (B.relative [ path.channels, channelid, path.things, thingid ] [])
+                            (B.crossOrigin baseURL [ path.channels, channelid, path.things, thingid ] [])
                             method
                             token
                             Http.emptyBody

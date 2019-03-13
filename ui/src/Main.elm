@@ -48,7 +48,11 @@ import Version
 -- MAIN
 
 
-main : Program () Model Msg
+type alias Flags =
+    { protocol : String, host : String, port_ : String }
+
+
+main : Program Flags Model Msg
 main =
     Browser.application
         { init = init
@@ -66,25 +70,57 @@ main =
 
 type alias Model =
     { key : Nav.Key
+    , baseURL : String
     , user : User.Model
-    , dashboard : Version.Model
-    , channel : Channel.Model
+    , version : Version.Model
     , thing : Thing.Model
+    , channel : Channel.Model
     , connection : Connection.Model
     , message : Message.Model
     , view : String
     }
 
 
-init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init _ url key =
+init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init flags url key =
+    let
+        baseURL =
+            flags.protocol ++ "://" ++ flags.host ++ ":" ++ flags.port_
+
+        user =
+            User.initial
+
+        version =
+            Version.initial
+
+        thing =
+            Thing.initial
+
+        channel =
+            Channel.initial
+
+        connection =
+            Connection.initial
+
+        message =
+            Message.initial
+    in
     ( Model key
-        User.initial
-        Version.initial
-        Channel.initial
-        Thing.initial
-        Connection.initial
-        Message.initial
+        baseURL
+        { user | baseURL = baseURL }
+        { version | baseURL = baseURL }
+        { thing | baseURL = baseURL }
+        { channel | baseURL = baseURL }
+        { connection
+            | baseURL = baseURL
+            , things = { thing | baseURL = baseURL }
+            , channels = { channel | baseURL = baseURL }
+        }
+        { message
+            | baseURL = baseURL
+            , things = { thing | baseURL = baseURL }
+            , channels = { channel | baseURL = baseURL }
+        }
         (parse url)
     , Cmd.none
     )
@@ -207,10 +243,10 @@ updateUser model msg =
 
 
 logIn : Model -> User.Model -> Version.Msg -> Thing.Msg -> Channel.Msg -> ( Model, Cmd Msg )
-logIn model user dashboardMsg thingMsg channelMsg =
+logIn model user versionMsg thingMsg channelMsg =
     let
         ( updatedVersion, dashboardCmd ) =
-            Version.update dashboardMsg model.dashboard
+            Version.update versionMsg model.version
 
         ( updatedThing, thingCmd ) =
             Thing.update thingMsg model.thing user.token
@@ -231,9 +267,9 @@ updateVersion : Model -> Version.Msg -> ( Model, Cmd Msg )
 updateVersion model msg =
     let
         ( updatedVersion, dashboardCmd ) =
-            Version.update msg model.dashboard
+            Version.update msg model.version
     in
-    ( { model | dashboard = updatedVersion }, Cmd.map VersionMsg dashboardCmd )
+    ( { model | version = updatedVersion }, Cmd.map VersionMsg dashboardCmd )
 
 
 updateThing : Model -> Thing.Msg -> ( Model, Cmd Msg )
@@ -352,9 +388,9 @@ view model =
                     Html.map UserMsg (User.view model.user)
         in
         [ Grid.containerFluid []
-            [ CDN.stylesheet -- creates an inline style node with the Bootstrap CSS
-            , mfStylesheet
-            , fontAwesome
+            [ -- CDN.stylesheet -- creates an inline style node with the Bootstrap CSS
+              -- , mfStylesheet
+              fontAwesome
             , Grid.row [ Row.attrs [ style "height" "100vh" ] ]
                 [ Grid.col
                     [ Col.attrs
@@ -416,7 +452,7 @@ cardList model =
         ]
         |> Card.headerH3 [] [ text "Version" ]
         |> Card.block []
-            [ Block.titleH4 [] [ text model.dashboard.version ] ]
+            [ Block.titleH4 [] [ text model.version.version ] ]
     , Card.config
         [ Card.info
         , Card.textColor Text.white

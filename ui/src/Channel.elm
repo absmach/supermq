@@ -65,6 +65,7 @@ type alias Model =
     , editMode : Bool
     , provisionModalVisibility : Modal.Visibility
     , editModalVisibility : Modal.Visibility
+    , baseURL : String
     }
 
 
@@ -83,6 +84,7 @@ initial =
     , editMode = False
     , provisionModalVisibility = Modal.hidden
     , editModalVisibility = Modal.hidden
+    , baseURL = ""
     }
 
 
@@ -123,7 +125,7 @@ update msg model token =
         ProvisionChannel ->
             ( resetEdit model
             , HttpMF.provision
-                (B.relative [ path.channels ] [])
+                (B.crossOrigin model.baseURL [ path.channels ] [])
                 token
                 { emptyChannel
                     | name = Just model.name
@@ -160,7 +162,7 @@ update msg model token =
         UpdateChannel ->
             ( resetEdit { model | editMode = False }
             , HttpMF.update
-                (B.relative [ path.channels, model.channel.id ] [])
+                (B.crossOrigin model.baseURL [ path.channels, model.channel.id ] [])
                 token
                 { emptyChannel
                     | name = Just model.name
@@ -181,7 +183,7 @@ update msg model token =
         RetrieveChannel channelid ->
             ( model
             , HttpMF.retrieve
-                (B.relative [ path.channels, channelid ] [])
+                (B.crossOrigin model.baseURL [ path.channels, channelid ] [])
                 token
                 RetrievedChannel
                 channelDecoder
@@ -198,7 +200,7 @@ update msg model token =
         RetrieveChannels ->
             ( model
             , HttpMF.retrieve
-                (B.relative [ path.channels ] (Helpers.buildQueryParamList model.offset model.limit))
+                (B.crossOrigin model.baseURL [ path.channels ] (Helpers.buildQueryParamList model.offset model.limit))
                 token
                 RetrievedChannels
                 channelsDecoder
@@ -207,7 +209,7 @@ update msg model token =
         RetrieveChannelsForThing thingid ->
             ( model
             , HttpMF.retrieve
-                (B.relative [ path.things, thingid, path.channels ] (Helpers.buildQueryParamList model.offset model.limit))
+                (B.crossOrigin model.baseURL [ path.things, thingid, path.channels ] (Helpers.buildQueryParamList model.offset model.limit))
                 token
                 RetrievedChannels
                 channelsDecoder
@@ -224,7 +226,7 @@ update msg model token =
         RemoveChannel id ->
             ( resetEdit model
             , HttpMF.remove
-                (B.relative [ path.channels, id ] [])
+                (B.crossOrigin model.baseURL [ path.channels, id ] [])
                 token
                 RemovedChannel
             )
@@ -433,12 +435,12 @@ updateChannelList model token =
     ( model
     , Cmd.batch
         [ HttpMF.retrieve
-            (B.relative [ path.channels ] (Helpers.buildQueryParamList model.offset model.limit))
+            (B.crossOrigin model.baseURL [ path.channels ] (Helpers.buildQueryParamList model.offset model.limit))
             token
             RetrievedChannels
             channelsDecoder
         , HttpMF.retrieve
-            (B.relative [ path.channels, model.channel.id ] [])
+            (B.crossOrigin model.baseURL [ path.channels, model.channel.id ] [])
             token
             RetrievedChannel
             channelDecoder
@@ -450,7 +452,7 @@ updateChannelListForThing : Model -> String -> String -> ( Model, Cmd Msg )
 updateChannelListForThing model token thingid =
     ( model
     , HttpMF.retrieve
-        (B.relative [ path.things, thingid, path.channels ] (Helpers.buildQueryParamList model.offset model.limit))
+        (B.crossOrigin model.baseURL [ path.things, thingid, path.channels ] (Helpers.buildQueryParamList model.offset model.limit))
         token
         RetrievedChannels
         channelsDecoder

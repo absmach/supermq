@@ -17,12 +17,16 @@ import Url.Builder as B
 
 
 type alias Model =
-    { version : String }
+    { version : String
+    , baseURL : String
+    }
 
 
 initial : Model
 initial =
-    { version = "" }
+    { version = ""
+    , baseURL = ""
+    }
 
 
 type Msg
@@ -36,7 +40,7 @@ update msg model =
         GetVersion ->
             ( model
             , Http.get
-                { url = B.relative [ path.version ] []
+                { url = B.crossOrigin model.baseURL [ path.version ] []
                 , expect = Http.expectJson GotVersion (D.field "version" D.string)
                 }
             )

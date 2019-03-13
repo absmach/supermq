@@ -31,6 +31,7 @@ type alias Model =
     , token : String
     , response : String
     , dropState : Dropdown.State
+    , baseURL : String
     }
 
 
@@ -41,6 +42,7 @@ initial =
     , token = ""
     , response = ""
     , dropState = Dropdown.initialState
+    , baseURL = ""
     }
 
 
@@ -69,7 +71,7 @@ update msg model =
             , create
                 model.email
                 model.password
-                (B.relative [ path.users ] [])
+                (B.crossOrigin model.baseURL [ path.users ] [])
             )
 
         Created result ->
@@ -85,7 +87,7 @@ update msg model =
             , getToken
                 model.email
                 model.password
-                (B.relative [ path.tokens ] [])
+                (B.crossOrigin model.baseURL [ path.tokens ] [])
             )
 
         GotToken result ->
