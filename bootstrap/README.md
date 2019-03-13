@@ -53,7 +53,7 @@ The service is configured using the environment variables presented in the follo
 | MF_USERS_URL                  | Users service URL                                                       | localhost:8181        |
 | MF_THINGS_ES_URL              | Things service event source URL                                         | localhost:6379        |
 | MF_THINGS_ES_PASS             | Things service event source password                                    |                       |
-| MF_THINGS_ES_DB               | Things service event source db                                          | 0                     |
+| MF_THINGS_ES_DB               | Things service event source database                                    | 0                     |
 | MF_BOOTSTRAP_INSTANCE_NAME    | Bootstrap service instance name                                         | bootstrap             |
 
 ## Deployment

@@ -47,7 +47,8 @@ func NewEventStore(svc bootstrap.Service, client *redis.Client, consumer string,
 }
 
 func (es eventStore) Subscribe(subject string) error {
-	if err := es.client.XGroupCreateMkStream(stream, group, "$").Err(); err != nil && err.Error() != exists {
+	err := es.client.XGroupCreateMkStream(stream, group, "$").Err()
+	if err != nil && err.Error() != exists {
 		return err
 	}
 
