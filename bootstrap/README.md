@@ -51,6 +51,10 @@ The service is configured using the environment variables presented in the follo
 | MF_SDK_BASE_URL               | Base url for Mainflux SDK                                               | http://localhost      |
 | MF_SDK_THINGS_PREFIX          | SDK prefix for Things service                                           |                       |
 | MF_USERS_URL                  | Users service URL                                                       | localhost:8181        |
+| MF_THINGS_ES_URL              | Things service event source URL                                         | localhost:6379        |
+| MF_THINGS_ES_PASS             | Things service event source password                                    |                       |
+| MF_THINGS_ES_DB               | Things service event source db                                          | 0                     |
+| MF_BOOTSTRAP_INSTANCE_NAME    | Bootstrap service instance name                                         | bootstrap             |
 
 ## Deployment
 
@@ -87,7 +91,12 @@ version: "2"
       MF_SDK_BASE_URL: [Base SDK URL for the Mainflux services]
       MF_SDK_THINGS_PREFIX: [SDK prefix for Things service]
       MF_USERS_URL: [Users service URL]
-```
+      MF_THINGS_ES_URL: [Things service event source URL] 
+      MF_THINGS_ES_PASS: [Things service event source password]
+      MF_THINGS_ES_DB: [Things service event source database]
+      MF_BOOTSTRAP_INSTANCE_NAME: [Bootstrap service instance name]
+
+```      
 
 To start the service outside of the container, execute the following shell script:
 
