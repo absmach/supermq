@@ -262,5 +262,7 @@ func startHTTPServer(svc bootstrap.Service, cfg config, logger logger.Logger, er
 func subscribeToThingsES(svc bootstrap.Service, client *r.Client, consumer string, logger logger.Logger) {
 	eventStore := redis.NewEventStore(svc, client, consumer, logger)
 	logger.Info("Subscribed to Redis Event Store")
-	eventStore.Subscribe("mainflux.things")
+	if err := eventStore.Subscribe("mainflux.things"); err != nil {
+		logger.Warn(fmt.Sprintf("Botstrap service failed to subscribe to event sourcing: %s", err))
+	}
 }
