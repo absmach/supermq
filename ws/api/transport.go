@@ -33,17 +33,20 @@ const protocol = "ws"
 var (
 	errUnauthorizedAccess = errors.New("missing or invalid credentials provided")
 	errMalformedData      = errors.New("malformed request data")
-	upgrader              = websocket.Upgrader{
+	errMalformedSubtopic  = errors.New("malformed subtopic")
+)
+
+var (
+	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 		CheckOrigin: func(r *http.Request) bool {
 			return true
 		},
 	}
-	auth   mainflux.ThingsServiceClient
-	logger log.Logger
-	// subtopic accept also nats wildcard chars * and >
-	channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages((/[^/]+)*)*(\?.*)?$`)
+	auth              mainflux.ThingsServiceClient
+	logger            log.Logger
+	channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages((/[^/?]+)*)?(\?.*)?$`)
 )
 
 // MakeHandler returns http handler with handshake endpoint.
@@ -110,12 +113,7 @@ func authorize(r *http.Request) (subscription, error) {
 		authKey = authKeys[0]
 	}
 
-	unescapedRequestURI, err := url.PathUnescape(r.RequestURI)
-	if err != nil {
-		return subscription{}, errMalformedData
-	}
-
-	channelParts := channelPartRegExp.FindStringSubmatch(unescapedRequestURI)
+	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
 	if len(channelParts) < 2 {
 		return subscription{}, errMalformedData
 	}
@@ -123,6 +121,11 @@ func authorize(r *http.Request) (subscription, error) {
 	chanID := bone.GetValue(r, "id")
 	subtopic := channelParts[2]
 	if subtopic != "" {
+		var err error
+		subtopic, err = url.QueryUnescape(channelParts[2])
+		if err != nil {
+			return subscription{}, errMalformedSubtopic
+		}
 		subtopic = strings.Replace(subtopic, "/", ".", -1)
 		// channelParts[2] contains the subtopic parts starting with char /
 		subtopic = subtopic[1:]
