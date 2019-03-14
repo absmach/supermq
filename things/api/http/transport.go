@@ -179,7 +179,7 @@ func decodeThingUpdate(_ context.Context, r *http.Request) (interface{}, error) 
 }
 
 func decodeChannelCreation(_ context.Context, r *http.Request) (interface{}, error) {
-	if r.Header.Get("Content-Type") != contentType {
+	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, errUnsupportedContentType
 	}
 
@@ -192,7 +192,7 @@ func decodeChannelCreation(_ context.Context, r *http.Request) (interface{}, err
 }
 
 func decodeChannelUpdate(_ context.Context, r *http.Request) (interface{}, error) {
-	if r.Header.Get("Content-Type") != contentType {
+	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, errUnsupportedContentType
 	}
 
