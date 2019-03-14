@@ -7,6 +7,7 @@
 module Version exposing (Model, Msg(..), initial, update)
 
 import Error
+import Helpers exposing (Globals)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
@@ -30,13 +31,13 @@ type Msg
     | GotVersion (Result Http.Error String)
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Globals -> Msg -> Model -> ( Model, Cmd Msg )
+update globals msg model =
     case msg of
         GetVersion ->
             ( model
             , Http.get
-                { url = B.relative [ path.version ] []
+                { url = B.crossOrigin globals.baseURL [ path.version ] []
                 , expect = Http.expectJson GotVersion (D.field "version" D.string)
                 }
             )

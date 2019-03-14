@@ -4,7 +4,7 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 
-module Helpers exposing (buildQueryParamList, checkEntity, faIcons, fontAwesome, genPagination, isChecked, pageToOffset, parseString, response, validateInt, validateOffset)
+module Helpers exposing (Globals, buildQueryParamList, checkEntity, faIcons, fontAwesome, genPagination, isChecked, pageToOffset, parseString, response, validateInt, validateOffset)
 
 import Bootstrap.Button as Button
 import Bootstrap.Grid as Grid
@@ -16,6 +16,16 @@ import Html.Attributes exposing (..)
 import Http
 import List.Extra
 import Url.Builder as B
+
+
+
+-- GLOBALS
+
+
+type alias Globals =
+    { baseURL : String
+    , token : String
+    }
 
 
 

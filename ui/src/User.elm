@@ -14,7 +14,7 @@ import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Utilities.Spacing as Spacing
 import Error
-import Helpers
+import Helpers exposing (Globals)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -55,8 +55,8 @@ type Msg
     | LogOut
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Globals -> Msg -> Model -> ( Model, Cmd Msg )
+update globals msg model =
     case msg of
         SubmitEmail email ->
             ( { model | email = email }, Cmd.none )
@@ -69,7 +69,7 @@ update msg model =
             , create
                 model.email
                 model.password
-                (B.relative [ path.users ] [])
+                (B.crossOrigin globals.baseURL [ path.users ] [])
             )
 
         Created result ->
@@ -85,7 +85,7 @@ update msg model =
             , getToken
                 model.email
                 model.password
-                (B.relative [ path.tokens ] [])
+                (B.crossOrigin globals.baseURL [ path.tokens ] [])
             )
 
         GotToken result ->

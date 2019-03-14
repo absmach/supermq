@@ -18,7 +18,7 @@ import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
 import Channel
 import Error
-import Helpers
+import Helpers exposing (Globals)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -62,8 +62,8 @@ type Msg
     | CheckChannel String
 
 
-update : Msg -> Model -> String -> ( Model, Cmd Msg )
-update msg model token =
+update : Globals -> Msg -> Model -> ( Model, Cmd Msg )
+update globals msg model =
     case msg of
         SubmitMessage message ->
             ( { model | message = message }, Cmd.none )
@@ -72,7 +72,7 @@ update msg model token =
             ( { model | message = "", thingkey = "", response = "", thingid = "" }
             , Cmd.batch
                 (List.map
-                    (\channelid -> send channelid model.thingkey model.message)
+                    (\channelid -> send globals channelid model.thingkey model.message)
                     model.checkedChannelsIds
                 )
             )
@@ -86,32 +86,32 @@ update msg model token =
                     ( { model | response = Error.handle error }, Cmd.none )
 
         ThingMsg subMsg ->
-            updateThing model subMsg token
+            updateThing globals model subMsg
 
         ChannelMsg subMsg ->
-            updateChannel model subMsg token
+            updateChannel globals model subMsg
 
         SelectedThing thingid thingkey channelMsg ->
-            updateChannel { model | thingid = thingid, thingkey = thingkey, checkedChannelsIds = [] } (Channel.RetrieveChannelsForThing thingid) token
+            updateChannel globals { model | thingid = thingid, thingkey = thingkey, checkedChannelsIds = [] } (Channel.RetrieveChannelsForThing thingid)
 
         CheckChannel id ->
             ( { model | checkedChannelsIds = Helpers.checkEntity id model.checkedChannelsIds }, Cmd.none )
 
 
-updateThing : Model -> Thing.Msg -> String -> ( Model, Cmd Msg )
-updateThing model msg token =
+updateThing : Globals -> Model -> Thing.Msg -> ( Model, Cmd Msg )
+updateThing globals model msg =
     let
         ( updatedThing, thingCmd ) =
-            Thing.update msg model.things token
+            Thing.update globals msg model.things
     in
     ( { model | things = updatedThing }, Cmd.map ThingMsg thingCmd )
 
 
-updateChannel : Model -> Channel.Msg -> String -> ( Model, Cmd Msg )
-updateChannel model msg token =
+updateChannel : Globals -> Model -> Channel.Msg -> ( Model, Cmd Msg )
+updateChannel globals model msg =
     let
         ( updatedChannel, channelCmd ) =
-            Channel.update msg model.channels token
+            Channel.update globals msg model.channels
     in
     ( { model | channels = updatedChannel }, Cmd.map ChannelMsg channelCmd )
 
@@ -214,10 +214,10 @@ genChannelRows checkedChannelsIds channels =
 -- HTTP
 
 
-send : String -> String -> String -> Cmd Msg
-send channelid thingkey message =
+send : Globals -> String -> String -> String -> Cmd Msg
+send globals channelid thingkey message =
     HttpMF.request
-        (B.relative [ "http", path.channels, channelid, path.messages ] [])
+        (B.crossOrigin globals.baseURL [ "http", path.channels, channelid, path.messages ] [])
         "POST"
         thingkey
         (Http.stringBody "application/json" message)

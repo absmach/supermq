@@ -22,7 +22,7 @@ import Bootstrap.Utilities.Spacing as Spacing
 import Debug exposing (log)
 import Dict
 import Error
-import Helpers
+import Helpers exposing (Globals)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -125,8 +125,8 @@ type Msg
     | Type String
 
 
-update : Msg -> Model -> String -> ( Model, Cmd Msg )
-update msg model token =
+update : Globals -> Msg -> Model -> ( Model, Cmd Msg )
+update globals msg model =
     case msg of
         SubmitType type_ ->
             ( { model | type_ = type_ }, Cmd.none )
@@ -138,13 +138,13 @@ update msg model token =
             ( { model | metadata = metadata }, Cmd.none )
 
         SubmitPage page ->
-            updateThingList { model | offset = Helpers.pageToOffset page query.limit } token
+            updateThingList globals { model | offset = Helpers.pageToOffset page query.limit }
 
         ProvisionThing ->
             ( resetEdit model
             , HttpMF.provision
-                (B.relative [ path.things ] [])
-                token
+                (B.crossOrigin globals.baseURL [ path.things ] [])
+                globals.token
                 { emptyThing
                     | name = Just model.name
                     , type_ = model.type_
@@ -159,12 +159,12 @@ update msg model token =
             case result of
                 Ok thingid ->
                     updateThingList
+                        globals
                         { model
                             | thing = { emptyThing | id = thingid }
                             , provisionModalVisibility = Modal.hidden
                             , editModalVisibility = Modal.shown
                         }
-                        token
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
@@ -181,8 +181,8 @@ update msg model token =
         UpdateThing ->
             ( resetEdit { model | editMode = False }
             , HttpMF.update
-                (B.relative [ path.things, model.thing.id ] [])
-                token
+                (B.crossOrigin globals.baseURL [ path.things, model.thing.id ] [])
+                globals.token
                 { emptyThing
                     | name = Just model.name
                     , type_ = model.thing.type_
@@ -195,7 +195,7 @@ update msg model token =
         UpdatedThing result ->
             case result of
                 Ok statusCode ->
-                    updateThingList (resetEdit { model | response = statusCode }) token
+                    updateThingList globals (resetEdit { model | response = statusCode })
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
@@ -203,8 +203,8 @@ update msg model token =
         RetrieveThing thingid ->
             ( model
             , HttpMF.retrieve
-                (B.relative [ path.things, thingid ] [])
-                token
+                (B.crossOrigin globals.baseURL [ path.things, thingid ] [])
+                globals.token
                 RetrievedThing
                 thingDecoder
             )
@@ -220,8 +220,8 @@ update msg model token =
         RetrieveThings ->
             ( model
             , HttpMF.retrieve
-                (B.relative [ path.things ] (Helpers.buildQueryParamList model.offset model.limit))
-                token
+                (B.crossOrigin globals.baseURL [ path.things ] (Helpers.buildQueryParamList model.offset model.limit))
+                globals.token
                 RetrievedThings
                 thingsDecoder
             )
@@ -237,8 +237,8 @@ update msg model token =
         RemoveThing id ->
             ( model
             , HttpMF.remove
-                (B.relative [ path.things, id ] [])
-                token
+                (B.crossOrigin globals.baseURL [ path.things, id ] [])
+                globals.token
                 RemovedThing
             )
 
@@ -246,12 +246,12 @@ update msg model token =
             case result of
                 Ok statusCode ->
                     updateThingList
+                        globals
                         { model
                             | response = statusCode
                             , offset = Helpers.validateOffset model.offset model.things.total query.limit
                             , editModalVisibility = Modal.hidden
                         }
-                        token
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
@@ -486,18 +486,18 @@ resetEdit model =
     { model | name = "", type_ = defaultType, metadata = "" }
 
 
-updateThingList : Model -> String -> ( Model, Cmd Msg )
-updateThingList model token =
+updateThingList : Globals -> Model -> ( Model, Cmd Msg )
+updateThingList globals model =
     ( model
     , Cmd.batch
         [ HttpMF.retrieve
-            (B.relative [ path.things ] (Helpers.buildQueryParamList model.offset model.limit))
-            token
+            (B.crossOrigin globals.baseURL [ path.things ] (Helpers.buildQueryParamList model.offset model.limit))
+            globals.token
             RetrievedThings
             thingsDecoder
         , HttpMF.retrieve
-            (B.relative [ path.things, model.thing.id ] [])
-            token
+            (B.crossOrigin globals.baseURL [ path.things, model.thing.id ] [])
+            globals.token
             RetrievedThing
             thingDecoder
         ]

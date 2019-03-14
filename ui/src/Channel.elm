@@ -19,7 +19,7 @@ import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
 import Dict
 import Error
-import Helpers exposing (faIcons)
+import Helpers exposing (Globals, faIcons)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -108,14 +108,14 @@ type Msg
     | ClosePorvisionModal
 
 
-update : Msg -> Model -> String -> ( Model, Cmd Msg )
-update msg model token =
+update : Globals -> Msg -> Model -> ( Model, Cmd Msg )
+update globals msg model =
     case msg of
         SubmitName name ->
             ( { model | name = name }, Cmd.none )
 
         SubmitPage page ->
-            updateChannelList { model | offset = Helpers.pageToOffset page query.limit } token
+            updateChannelList globals { model | offset = Helpers.pageToOffset page query.limit }
 
         SubmitMetadata metadata ->
             ( { model | metadata = metadata }, Cmd.none )
@@ -123,8 +123,8 @@ update msg model token =
         ProvisionChannel ->
             ( resetEdit model
             , HttpMF.provision
-                (B.relative [ path.channels ] [])
-                token
+                (B.crossOrigin globals.baseURL [ path.channels ] [])
+                globals.token
                 { emptyChannel
                     | name = Just model.name
                     , metadata = Just model.metadata
@@ -138,12 +138,12 @@ update msg model token =
             case result of
                 Ok channelid ->
                     updateChannelList
+                        globals
                         { model
                             | channel = { emptyChannel | id = channelid }
                             , provisionModalVisibility = Modal.hidden
                             , editModalVisibility = Modal.shown
                         }
-                        token
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
@@ -160,8 +160,8 @@ update msg model token =
         UpdateChannel ->
             ( resetEdit { model | editMode = False }
             , HttpMF.update
-                (B.relative [ path.channels, model.channel.id ] [])
-                token
+                (B.crossOrigin globals.baseURL [ path.channels, model.channel.id ] [])
+                globals.token
                 { emptyChannel
                     | name = Just model.name
                     , metadata = Just model.metadata
@@ -173,7 +173,7 @@ update msg model token =
         UpdatedChannel result ->
             case result of
                 Ok statusCode ->
-                    updateChannelList (resetEdit { model | response = statusCode }) token
+                    updateChannelList globals (resetEdit { model | response = statusCode })
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
@@ -181,8 +181,8 @@ update msg model token =
         RetrieveChannel channelid ->
             ( model
             , HttpMF.retrieve
-                (B.relative [ path.channels, channelid ] [])
-                token
+                (B.crossOrigin globals.baseURL [ path.channels, channelid ] [])
+                globals.token
                 RetrievedChannel
                 channelDecoder
             )
@@ -198,8 +198,8 @@ update msg model token =
         RetrieveChannels ->
             ( model
             , HttpMF.retrieve
-                (B.relative [ path.channels ] (Helpers.buildQueryParamList model.offset model.limit))
-                token
+                (B.crossOrigin globals.baseURL [ path.channels ] (Helpers.buildQueryParamList model.offset model.limit))
+                globals.token
                 RetrievedChannels
                 channelsDecoder
             )
@@ -207,8 +207,8 @@ update msg model token =
         RetrieveChannelsForThing thingid ->
             ( model
             , HttpMF.retrieve
-                (B.relative [ path.things, thingid, path.channels ] (Helpers.buildQueryParamList model.offset model.limit))
-                token
+                (B.crossOrigin globals.baseURL [ path.things, thingid, path.channels ] (Helpers.buildQueryParamList model.offset model.limit))
+                globals.token
                 RetrievedChannels
                 channelsDecoder
             )
@@ -224,8 +224,8 @@ update msg model token =
         RemoveChannel id ->
             ( resetEdit model
             , HttpMF.remove
-                (B.relative [ path.channels, id ] [])
-                token
+                (B.crossOrigin globals.baseURL [ path.channels, id ] [])
+                globals.token
                 RemovedChannel
             )
 
@@ -233,12 +233,12 @@ update msg model token =
             case result of
                 Ok statusCode ->
                     updateChannelList
+                        globals
                         { model
                             | response = statusCode
                             , offset = Helpers.validateOffset model.offset model.channels.total query.limit
                             , editModalVisibility = Modal.hidden
                         }
-                        token
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
@@ -428,30 +428,30 @@ resetEdit model =
     { model | name = "", metadata = "" }
 
 
-updateChannelList : Model -> String -> ( Model, Cmd Msg )
-updateChannelList model token =
+updateChannelList : Globals -> Model -> ( Model, Cmd Msg )
+updateChannelList globals model =
     ( model
     , Cmd.batch
         [ HttpMF.retrieve
-            (B.relative [ path.channels ] (Helpers.buildQueryParamList model.offset model.limit))
-            token
+            (B.crossOrigin globals.baseURL [ path.channels ] (Helpers.buildQueryParamList model.offset model.limit))
+            globals.token
             RetrievedChannels
             channelsDecoder
         , HttpMF.retrieve
-            (B.relative [ path.channels, model.channel.id ] [])
-            token
+            (B.crossOrigin globals.baseURL [ path.channels, model.channel.id ] [])
+            globals.token
             RetrievedChannel
             channelDecoder
         ]
     )
 
 
-updateChannelListForThing : Model -> String -> String -> ( Model, Cmd Msg )
-updateChannelListForThing model token thingid =
+updateChannelListForThing : Globals -> Model -> String -> ( Model, Cmd Msg )
+updateChannelListForThing globals model thingid =
     ( model
     , HttpMF.retrieve
-        (B.relative [ path.things, thingid, path.channels ] (Helpers.buildQueryParamList model.offset model.limit))
-        token
+        (B.crossOrigin globals.baseURL [ path.things, thingid, path.channels ] (Helpers.buildQueryParamList model.offset model.limit))
+        globals.token
         RetrievedChannels
         channelsDecoder
     )

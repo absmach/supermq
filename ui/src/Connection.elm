@@ -19,7 +19,7 @@ import Bootstrap.Utilities.Spacing as Spacing
 import Channel
 import Debug exposing (log)
 import Error
-import Helpers
+import Helpers exposing (Globals)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -59,8 +59,8 @@ type Msg
     | CheckChannel String
 
 
-update : Msg -> Model -> String -> ( Model, Cmd Msg )
-update msg model token =
+update : Globals -> Msg -> Model -> ( Model, Cmd Msg )
+update globals msg model =
     case msg of
         Connect ->
             if List.isEmpty model.checkedThingsIds || List.isEmpty model.checkedChannelsIds then
@@ -68,7 +68,7 @@ update msg model token =
 
             else
                 ( { model | checkedThingsIds = [], checkedChannelsIds = [] }
-                , Cmd.batch (connect model.checkedThingsIds model.checkedChannelsIds "PUT" token)
+                , Cmd.batch (connect globals model.checkedThingsIds model.checkedChannelsIds "PUT")
                 )
 
         Disconnect ->
@@ -77,7 +77,7 @@ update msg model token =
 
             else
                 ( { model | checkedThingsIds = [], checkedChannelsIds = [] }
-                , Cmd.batch (connect model.checkedThingsIds model.checkedChannelsIds "DELETE" token)
+                , Cmd.batch (connect globals model.checkedThingsIds model.checkedChannelsIds "DELETE")
                 )
 
         GotResponse result ->
@@ -91,14 +91,14 @@ update msg model token =
         ThingMsg subMsg ->
             let
                 ( updatedThing, thingCmd ) =
-                    Thing.update subMsg model.things token
+                    Thing.update globals subMsg model.things
             in
             ( { model | things = updatedThing }, Cmd.map ThingMsg thingCmd )
 
         ChannelMsg subMsg ->
             let
                 ( updatedChannel, channelCmd ) =
-                    Channel.update subMsg model.channels token
+                    Channel.update globals subMsg model.channels
             in
             ( { model | channels = updatedChannel }, Cmd.map ChannelMsg channelCmd )
 
@@ -198,8 +198,8 @@ genChannelRows checkedChannelsIds channels =
 -- HTTP
 
 
-connect : List String -> List String -> String -> String -> List (Cmd Msg)
-connect checkedThingsIds checkedChannelsIds method token =
+connect : Globals -> List String -> List String -> String -> List (Cmd Msg)
+connect globals checkedThingsIds checkedChannelsIds method =
     List.foldr (++)
         []
         (List.map
@@ -207,9 +207,9 @@ connect checkedThingsIds checkedChannelsIds method token =
                 List.map
                     (\channelid ->
                         HttpMF.request
-                            (B.relative [ path.channels, channelid, path.things, thingid ] [])
+                            (B.crossOrigin globals.baseURL [ path.channels, channelid, path.things, thingid ] [])
                             method
-                            token
+                            globals.token
                             Http.emptyBody
                             GotResponse
                     )

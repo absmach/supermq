@@ -29,7 +29,7 @@ import Channel
 import Connection
 import Debug exposing (log)
 import Error
-import Helpers exposing (fontAwesome)
+import Helpers exposing (Globals, fontAwesome)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -48,7 +48,11 @@ import Version
 -- MAIN
 
 
-main : Program () Model Msg
+type alias Flags =
+    { protocol : String, host : String, port_ : String }
+
+
+main : Program Flags Model Msg
 main =
     Browser.application
         { init = init
@@ -67,17 +71,22 @@ main =
 type alias Model =
     { key : Nav.Key
     , user : User.Model
-    , dashboard : Version.Model
+    , version : Version.Model
     , channel : Channel.Model
     , thing : Thing.Model
     , connection : Connection.Model
     , message : Message.Model
     , view : String
+    , globals : Globals
     }
 
 
-init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init _ url key =
+init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init flags url key =
+    let
+        baseURL =
+            flags.protocol ++ "://" ++ flags.host ++ ":" ++ flags.port_
+    in
     ( Model key
         User.initial
         Version.initial
@@ -86,6 +95,7 @@ init _ url key =
         Connection.initial
         Message.initial
         (parse url)
+        (Globals baseURL "")
     , Cmd.none
     )
 
@@ -168,7 +178,7 @@ update msg model =
             updateMessage model subMsg
 
         Version ->
-            ( { model | view = "dashboard" }, Cmd.none )
+            ( { model | view = "version" }, Cmd.none )
 
         Things ->
             ( { model | view = "things" }, Cmd.none )
@@ -192,12 +202,16 @@ updateUser : Model -> User.Msg -> ( Model, Cmd Msg )
 updateUser model msg =
     let
         ( updatedUser, userCmd ) =
-            User.update msg model.user
+            User.update model.globals msg model.user
     in
     case msg of
         User.GotToken _ ->
             if String.length updatedUser.token > 0 then
-                logIn { model | view = "dashboard" } updatedUser Version.GetVersion Thing.RetrieveThings Channel.RetrieveChannels
+                let
+                    globs =
+                        model.globals
+                in
+                logIn { model | view = "version", globals = { globs | token = updatedUser.token } } updatedUser Version.GetVersion Thing.RetrieveThings Channel.RetrieveChannels
 
             else
                 ( { model | user = updatedUser }, Cmd.map UserMsg userCmd )
@@ -207,22 +221,12 @@ updateUser model msg =
 
 
 logIn : Model -> User.Model -> Version.Msg -> Thing.Msg -> Channel.Msg -> ( Model, Cmd Msg )
-logIn model user dashboardMsg thingMsg channelMsg =
-    let
-        ( updatedVersion, dashboardCmd ) =
-            Version.update dashboardMsg model.dashboard
-
-        ( updatedThing, thingCmd ) =
-            Thing.update thingMsg model.thing user.token
-
-        ( updatedChannel, channelCmd ) =
-            Channel.update channelMsg model.channel user.token
-    in
+logIn model user versionMsg thingMsg channelMsg =
     ( { model | user = user }
     , Cmd.batch
-        [ Cmd.map VersionMsg dashboardCmd
-        , Cmd.map ThingMsg thingCmd
-        , Cmd.map ChannelMsg channelCmd
+        [ Tuple.second (updateVersion model versionMsg)
+        , Tuple.second (updateThing model thingMsg)
+        , Tuple.second (updateChannel model channelMsg)
         ]
     )
 
@@ -230,17 +234,17 @@ logIn model user dashboardMsg thingMsg channelMsg =
 updateVersion : Model -> Version.Msg -> ( Model, Cmd Msg )
 updateVersion model msg =
     let
-        ( updatedVersion, dashboardCmd ) =
-            Version.update msg model.dashboard
+        ( updatedVersion, versionCmd ) =
+            Version.update model.globals msg model.version
     in
-    ( { model | dashboard = updatedVersion }, Cmd.map VersionMsg dashboardCmd )
+    ( { model | version = updatedVersion }, Cmd.map VersionMsg versionCmd )
 
 
 updateThing : Model -> Thing.Msg -> ( Model, Cmd Msg )
 updateThing model msg =
     let
         ( updatedThing, thingCmd ) =
-            Thing.update msg model.thing model.user.token
+            Thing.update model.globals msg model.thing
     in
     ( { model | thing = updatedThing }, Cmd.map ThingMsg thingCmd )
 
@@ -249,7 +253,7 @@ updateChannel : Model -> Channel.Msg -> ( Model, Cmd Msg )
 updateChannel model msg =
     let
         ( updatedChannel, channelCmd ) =
-            Channel.update msg model.channel model.user.token
+            Channel.update model.globals msg model.channel
     in
     ( { model | channel = updatedChannel }, Cmd.map ChannelMsg channelCmd )
 
@@ -258,7 +262,7 @@ updateConnection : Model -> Connection.Msg -> ( Model, Cmd Msg )
 updateConnection model msg =
     let
         ( updatedConnection, connectionCmd ) =
-            Connection.update msg model.connection model.user.token
+            Connection.update model.globals msg model.connection
     in
     ( { model | connection = updatedConnection }, Cmd.map ConnectionMsg connectionCmd )
 
@@ -267,7 +271,7 @@ updateMessage : Model -> Message.Msg -> ( Model, Cmd Msg )
 updateMessage model msg =
     let
         ( updatedMessage, messageCmd ) =
-            Message.update msg model.message model.user.token
+            Message.update model.globals msg model.message
     in
     ( { model | message = updatedMessage }, Cmd.map MessageMsg messageCmd )
 
@@ -352,9 +356,9 @@ view model =
                     Html.map UserMsg (User.view model.user)
         in
         [ Grid.containerFluid []
-            [ CDN.stylesheet -- creates an inline style node with the Bootstrap CSS
-            , mfStylesheet
-            , fontAwesome
+            [ -- CDN.stylesheet -- creates an inline style node with the Bootstrap CSS
+              -- , mfStylesheet
+              fontAwesome
             , Grid.row [ Row.attrs [ style "height" "100vh" ] ]
                 [ Grid.col
                     [ Col.attrs
@@ -416,7 +420,7 @@ cardList model =
         ]
         |> Card.headerH3 [] [ text "Version" ]
         |> Card.block []
-            [ Block.titleH4 [] [ text model.dashboard.version ] ]
+            [ Block.titleH4 [] [ text model.version.version ] ]
     , Card.config
         [ Card.info
         , Card.textColor Text.white
