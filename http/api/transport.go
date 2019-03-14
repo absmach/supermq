@@ -66,6 +66,22 @@ func handshake(svc mainflux.MessagePublisher) *kithttp.Server {
 	)
 }
 
+func parseSubtopic(subtopic string) (string, error) {
+	if subtopic == "" {
+		return subtopic, nil
+	}
+
+	var err error
+	subtopic, err = url.QueryUnescape(subtopic)
+	if err != nil {
+		return "", errMalformedSubtopic
+	}
+	subtopic = strings.Replace(subtopic, "/", ".", -1)
+	// channelParts[2] contains the subtopic parts starting with char /
+	subtopic = subtopic[1:]
+	return subtopic, nil
+}
+
 func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
 	if len(channelParts) < 2 {
@@ -73,16 +89,9 @@ func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	}
 
 	chanID := bone.GetValue(r, "id")
-	subtopic := channelParts[2]
-	if subtopic != "" {
-		var err error
-		subtopic, err = url.QueryUnescape(channelParts[2])
-		if err != nil {
-			return nil, errMalformedSubtopic
-		}
-		subtopic = strings.Replace(subtopic, "/", ".", -1)
-		// channelParts[2] contains the subtopic parts starting with char /
-		subtopic = subtopic[1:]
+	subtopic, err := parseSubtopic(channelParts[2])
+	if err != nil {
+		return nil, err
 	}
 
 	publisher, err := authorize(r, chanID)

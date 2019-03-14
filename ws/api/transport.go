@@ -103,6 +103,22 @@ func handshake(svc ws.Service) http.HandlerFunc {
 	}
 }
 
+func parseSubtopic(subtopic string) (string, error) {
+	if subtopic == "" {
+		return subtopic, nil
+	}
+
+	var err error
+	subtopic, err = url.QueryUnescape(subtopic)
+	if err != nil {
+		return "", errMalformedSubtopic
+	}
+	subtopic = strings.Replace(subtopic, "/", ".", -1)
+	// channelParts[2] contains the subtopic parts starting with char /
+	subtopic = subtopic[1:]
+	return subtopic, nil
+}
+
 func authorize(r *http.Request) (subscription, error) {
 	authKey := r.Header.Get("Authorization")
 	if authKey == "" {
@@ -119,16 +135,9 @@ func authorize(r *http.Request) (subscription, error) {
 	}
 
 	chanID := bone.GetValue(r, "id")
-	subtopic := channelParts[2]
-	if subtopic != "" {
-		var err error
-		subtopic, err = url.QueryUnescape(channelParts[2])
-		if err != nil {
-			return subscription{}, errMalformedSubtopic
-		}
-		subtopic = strings.Replace(subtopic, "/", ".", -1)
-		// channelParts[2] contains the subtopic parts starting with char /
-		subtopic = subtopic[1:]
+	subtopic, err := parseSubtopic(channelParts[2])
+	if err != nil {
+		return subscription{}, err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
