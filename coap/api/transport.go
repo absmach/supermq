@@ -112,6 +112,16 @@ func authorize(msg *gocoap.Message, res *gocoap.Message, cid string) (string, er
 	return id.GetValue(), nil
 }
 
+func fmtSubtopic(subtopic string) string {
+	if subtopic != "" {
+		if strings.HasSuffix(subtopic, "/") {
+			subtopic = subtopic[:len(subtopic)-1]
+		}
+		subtopic = strings.Replace(subtopic, "/", ".", -1)
+	}
+	return subtopic
+}
+
 func receive(svc coap.Service) handler {
 	return func(conn *net.UDPConn, addr *net.UDPAddr, msg *gocoap.Message) *gocoap.Message {
 		// By default message is NonConfirmable, so
@@ -141,14 +151,7 @@ func receive(svc coap.Service) handler {
 			res.Code = gocoap.NotFound
 			return res
 		}
-
-		subtopic := mux.Var(msg, "subtopic")
-		if subtopic != "" {
-			if strings.HasSuffix(subtopic, "/") {
-				subtopic = subtopic[:len(subtopic)-1]
-			}
-			subtopic = strings.Replace(subtopic, "/", ".", -1)
-		}
+		subtopic := fmtSubtopic(mux.Var(msg, "subtopic"))
 
 		publisher, err := authorize(msg, res, chanID)
 		if err != nil {
@@ -188,14 +191,7 @@ func observe(svc coap.Service, responses chan<- string) handler {
 			res.Code = gocoap.NotFound
 			return res
 		}
-
-		subtopic := mux.Var(msg, "subtopic")
-		if subtopic != "" {
-			if strings.HasSuffix(subtopic, "/") {
-				subtopic = subtopic[:len(subtopic)-1]
-			}
-			subtopic = strings.Replace(subtopic, "/", ".", -1)
-		}
+		subtopic := fmtSubtopic(mux.Var(msg, "subtopic"))
 
 		publisher, err := authorize(msg, res, chanID)
 		if err != nil {
