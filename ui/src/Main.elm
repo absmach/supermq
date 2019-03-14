@@ -132,7 +132,7 @@ type Msg
     | ThingMsg Thing.Msg
     | ConnectionMsg Connection.Msg
     | MessageMsg Message.Msg
-    | Version
+    | Dashboard
     | Channels
     | Things
     | Connection
@@ -177,8 +177,8 @@ update msg model =
         MessageMsg subMsg ->
             updateMessage model subMsg
 
-        Version ->
-            ( { model | view = "version" }, Cmd.none )
+        Dashboard ->
+            ( { model | view = "dashboard" }, Cmd.none )
 
         Things ->
             ( { model | view = "things" }, Cmd.none )
@@ -198,37 +198,43 @@ update msg model =
             updateMessage { model | view = "messages" } (Message.ThingMsg Thing.RetrieveThings)
 
 
-updateUser : Model -> User.Msg -> ( Model, Cmd Msg )
-updateUser model msg =
-    let
-        ( updatedUser, userCmd ) =
-            User.update model.globals msg model.user
-    in
-    case msg of
-        User.GotToken _ ->
-            if String.length updatedUser.token > 0 then
-                let
-                    globs =
-                        model.globals
-                in
-                logIn { model | view = "version", globals = { globs | token = updatedUser.token } } updatedUser Version.GetVersion Thing.RetrieveThings Channel.RetrieveChannels
-
-            else
-                ( { model | user = updatedUser }, Cmd.map UserMsg userCmd )
-
-        _ ->
-            ( { model | user = updatedUser }, Cmd.map UserMsg userCmd )
-
-
-logIn : Model -> User.Model -> Version.Msg -> Thing.Msg -> Channel.Msg -> ( Model, Cmd Msg )
-logIn model user versionMsg thingMsg channelMsg =
-    ( { model | user = user }
+logIn : Model -> Version.Msg -> Thing.Msg -> Channel.Msg -> ( Model, Cmd Msg )
+logIn model versionMsg thingMsg channelMsg =
+    ( model
     , Cmd.batch
         [ Tuple.second (updateVersion model versionMsg)
         , Tuple.second (updateThing model thingMsg)
         , Tuple.second (updateChannel model channelMsg)
         ]
     )
+
+
+loggedIn : Model -> Bool
+loggedIn model =
+    String.length model.globals.token > 0
+
+
+updateUser : Model -> User.Msg -> ( Model, Cmd Msg )
+updateUser model msg =
+    let
+        ( updatedUser, userCmd ) =
+            User.update model.globals msg model.user
+
+        globs =
+            model.globals
+    in
+    if String.length updatedUser.token > 0 then
+        if not (loggedIn model) then
+            logIn { model | user = updatedUser, view = "dashboard", globals = { globs | token = updatedUser.token } } Version.GetVersion Thing.RetrieveThings Channel.RetrieveChannels
+
+        else
+            ( { model | user = updatedUser, globals = { globs | token = updatedUser.token } }, Cmd.none )
+
+    else if loggedIn model then
+        ( { model | user = User.initial, globals = { globs | token = "" } }, Cmd.map UserMsg userCmd )
+
+    else
+        ( { model | user = updatedUser }, Cmd.map UserMsg userCmd )
 
 
 updateVersion : Model -> Version.Msg -> ( Model, Cmd Msg )
@@ -292,15 +298,6 @@ subscriptions model =
 -- VIEW
 
 
-mfStylesheet : Html msg
-mfStylesheet =
-    node "link"
-        [ rel "stylesheet"
-        , href "./css/mainflux.css"
-        ]
-        []
-
-
 view : Model -> Browser.Document Msg
 view model =
     { title = "Gateflux"
@@ -309,12 +306,9 @@ view model =
             buttonAttrs =
                 Button.attrs [ style "text-align" "left" ]
 
-            loggedIn =
-                User.loggedIn model.user
-
             menu =
-                if loggedIn then
-                    [ ButtonGroup.linkButton [ Button.primary, Button.onClick Version, buttonAttrs ] [ i [ class "fas fa-chart-bar" ] [], text " Dashboard" ]
+                if loggedIn model then
+                    [ ButtonGroup.linkButton [ Button.primary, Button.onClick Dashboard, buttonAttrs ] [ i [ class "fas fa-chart-bar" ] [], text " Dashboard" ]
                     , ButtonGroup.linkButton [ Button.primary, Button.onClick Things, buttonAttrs ] [ i [ class "fas fa-sitemap" ] [], text " Things" ]
                     , ButtonGroup.linkButton [ Button.primary, Button.onClick Channels, buttonAttrs ] [ i [ class "fas fa-broadcast-tower" ] [], text " Channels" ]
                     , ButtonGroup.linkButton [ Button.primary, Button.onClick Connection, buttonAttrs ] [ i [ class "fas fa-plug" ] [], text " Connection" ]
@@ -325,14 +319,10 @@ view model =
                     []
 
             header =
-                if loggedIn then
-                    Html.map UserMsg (User.view model.user)
-
-                else
-                    Grid.container [] []
+                Html.map UserMsg (User.view (loggedIn model) model.user)
 
             content =
-                if loggedIn then
+                if loggedIn model then
                     case model.view of
                         "dashboard" ->
                             dashboard model
@@ -353,12 +343,10 @@ view model =
                             dashboard model
 
                 else
-                    Html.map UserMsg (User.view model.user)
+                    Grid.container [] []
         in
         [ Grid.containerFluid []
-            [ -- CDN.stylesheet -- creates an inline style node with the Bootstrap CSS
-              -- , mfStylesheet
-              fontAwesome
+            [ fontAwesome
             , Grid.row [ Row.attrs [ style "height" "100vh" ] ]
                 [ Grid.col
                     [ Col.attrs
