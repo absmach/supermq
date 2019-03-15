@@ -19,7 +19,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Http
-import HttpMF exposing (path)
+import HttpMF exposing (baseURL, paths)
 import Json.Decode as D
 import Json.Encode as E
 import Url.Builder as B
@@ -69,7 +69,7 @@ update msg model =
             , create
                 model.email
                 model.password
-                (B.relative [ path.users ] [])
+                (B.relative [ paths.users ] [])
             )
 
         Created result ->
@@ -85,7 +85,7 @@ update msg model =
             , getToken
                 model.email
                 model.password
-                (B.relative [ path.tokens ] [])
+                (B.relative [ paths.tokens ] [])
             )
 
         GotToken result ->
@@ -184,25 +184,19 @@ decoder =
 
 create : String -> String -> String -> Cmd Msg
 create email password u =
-    Http.request
-        { method = "POST"
-        , headers = []
-        , url = u
+    Http.post
+        { url = baseURL ++ u
         , body =
             encode (User email password)
                 |> Http.jsonBody
         , expect = HttpMF.expectStatus Created
-        , timeout = Nothing
-        , tracker = Nothing
         }
 
 
 getToken : String -> String -> String -> Cmd Msg
 getToken email password u =
-    Http.request
-        { method = "POST"
-        , headers = []
-        , url = u
+    Http.post
+        { url = baseURL ++ u
         , body =
             encode (User email password)
                 |> Http.jsonBody
@@ -210,13 +204,7 @@ getToken email password u =
             HttpMF.expectRetrieve
                 GotToken
                 (D.field "token" D.string)
-        , timeout = Nothing
-        , tracker = Nothing
         }
-
-
-
--- Helpers
 
 
 loggedIn : Model -> Bool
