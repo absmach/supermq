@@ -6,6 +6,8 @@ Mainflux platform supports bootstrapping process, but some of the preconditions 
 - device, for any reason, fails to start a communication with the configured Mainflux services (server not responding, authentication failure, etc..).
 - device, for any reason, wants to update its configuration
 
+> Bootstrapping and provisioning are two different procedures. Provisioning refers to entities management while bootstrapping is related to entity configuration.
+
 ![bootstrapping flow](img/bs_flow.gif)
 
 ### Configuration
