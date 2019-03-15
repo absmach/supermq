@@ -36,7 +36,7 @@ baseURL =
                 "/"
 
             else
-                ""
+                env.host
     in
     protocol ++ env.host ++ port_ ++ trailing
 
