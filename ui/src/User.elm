@@ -4,7 +4,7 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 
-module User exposing (Model, Msg(..), initial, loggedIn, subscriptions, update, view)
+module User exposing (Model, Msg(..), initial, subscriptions, update, view)
 
 import Bootstrap.Button as Button
 import Bootstrap.Dropdown as Dropdown
@@ -109,7 +109,7 @@ update globals msg model =
 
 view : Model -> Html Msg
 view model =
-    if loggedIn model then
+    if String.length model.token > 0 then
         Grid.row []
             [ Grid.col [ Col.attrs [ align "right" ] ]
                 [ Dropdown.dropdown
@@ -213,16 +213,3 @@ getToken email password u =
         , timeout = Nothing
         , tracker = Nothing
         }
-
-
-
--- Helpers
-
-
-loggedIn : Model -> Bool
-loggedIn model =
-    if String.length model.token > 0 then
-        True
-
-    else
-        False

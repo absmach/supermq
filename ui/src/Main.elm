@@ -319,7 +319,7 @@ view model =
                     []
 
             header =
-                Html.map UserMsg (User.view (loggedIn model) model.user)
+                Html.map UserMsg (User.view model.user)
 
             content =
                 if loggedIn model then
