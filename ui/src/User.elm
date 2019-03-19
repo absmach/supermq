@@ -66,10 +66,12 @@ update msg model =
 
         Create ->
             ( model
-            , create
+            , HttpMF.user
                 model.email
                 model.password
                 (B.relative [ paths.users ] [])
+                (encode (User model.email model.password))
+                (HttpMF.expectStatus Created)
             )
 
         Created result ->
@@ -82,10 +84,15 @@ update msg model =
 
         GetToken ->
             ( model
-            , getToken
+            , HttpMF.user
                 model.email
                 model.password
                 (B.relative [ paths.tokens ] [])
+                (encode (User model.email model.password))
+                (HttpMF.expectRetrieve
+                    GotToken
+                    (D.field "token" D.string)
+                )
             )
 
         GotToken result ->
@@ -180,31 +187,6 @@ decoder =
 
 
 -- HTTP
-
-
-create : String -> String -> String -> Cmd Msg
-create email password u =
-    Http.post
-        { url = baseURL ++ u
-        , body =
-            encode (User email password)
-                |> Http.jsonBody
-        , expect = HttpMF.expectStatus Created
-        }
-
-
-getToken : String -> String -> String -> Cmd Msg
-getToken email password u =
-    Http.post
-        { url = baseURL ++ u
-        , body =
-            encode (User email password)
-                |> Http.jsonBody
-        , expect =
-            HttpMF.expectRetrieve
-                GotToken
-                (D.field "token" D.string)
-        }
 
 
 loggedIn : Model -> Bool

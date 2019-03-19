@@ -8,7 +8,5 @@ module Env exposing (env)
 
 
 env =
-    { protocol = ""
-    , host = ""
-    , port_ = ""
+    { url = "http://localhost:80/"
     }

@@ -4,7 +4,7 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 
-module HttpMF exposing (baseURL, expectID, expectRetrieve, expectStatus, paths, provision, remove, request, retrieve, update, version)
+module HttpMF exposing (baseURL, expectID, expectRetrieve, expectStatus, paths, provision, remove, request, retrieve, update, user, version)
 
 import Dict
 import Env exposing (env)
@@ -16,29 +16,7 @@ import Url.Builder as B
 
 
 baseURL =
-    let
-        protocol =
-            if String.length env.protocol > 0 then
-                env.protocol ++ "://"
-
-            else
-                env.protocol
-
-        port_ =
-            if String.length env.port_ > 0 then
-                ":" ++ env.port_
-
-            else
-                env.port_
-
-        trailing =
-            if String.length env.host > 0 then
-                "/"
-
-            else
-                env.host
-    in
-    protocol ++ env.host ++ port_ ++ trailing
+    env.url
 
 
 paths =
@@ -134,6 +112,16 @@ version path msg decoder =
     Http.get
         { url = baseURL ++ path
         , expect = Http.expectJson msg decoder
+        }
+
+
+user : String -> String -> String -> E.Value -> Http.Expect msg -> Cmd msg
+user email password u value expect =
+    Http.post
+        { url = baseURL ++ u
+        , body =
+            value |> Http.jsonBody
+        , expect = expect
         }
 
 
