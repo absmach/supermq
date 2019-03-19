@@ -25,9 +25,7 @@ Install Elm (https://guide.elm-lang.org/install.html) and then edit
 
 ```
 env =
-    { protocol = ""
-    , host = ""
-    , port_ = ""
+    { url = ""
     }
 ```
 
@@ -35,13 +33,12 @@ with
 
 ```
 env =
-    { protocol = "http"
-    , host = "localhost"
-    , port_ = "80"
+    { url = "http://localhost:80/"
     }
 ```
-So you can send requests with absolute URLs. Put the desired values in the
-record fields for the protocol, host and port. Then run the following commands,
+
+So you can send requests with absolute URLs. Dont forget the trailing slash.
+Then run the following commands,
 
 ```
 git clone https://github.com/mainflux/mainflux
@@ -49,8 +46,8 @@ cd mainflux/ui
 make
 ```
 
-This will produce `index.html` in the _ui_ directory. In order to use it, `cd`
-to _ui_ and do
+This will produce `index.html` in the _ui_ directory. While still being In the
+_mainflux/ui_ folder, enter
 
 `make run`
 
@@ -67,5 +64,5 @@ and execute `elm-live src/Main.elm` to get a live reload when your `.Elm` pages
 change.
 
 Launch Mainflux without ui service, either natively or as a Docker composition.
-Follow the guidelines for Mainflux contributors found here
+Please follow the guidelines for Mainflux contributors found here
 https://mainflux.readthedocs.io/en/latest/CONTRIBUTING/.

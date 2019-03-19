@@ -8,5 +8,5 @@ module Env exposing (env)
 
 
 env =
-    { url = "http://localhost:80/"
+    { url = ""
     }
