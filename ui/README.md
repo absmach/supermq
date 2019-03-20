@@ -11,34 +11,16 @@ then
 
 `docker-compose -f docker/docker-compose.yml up`
 
-if you want to launch a whole Mainflux docker composition or just
+if you want to launch a whole Mainflux docker composition, or just
 
 `docker-compose -f docker/docker-compose.yml up ui`
 
 if you want to launch just GUI.
 
-
 ### Native GUI build
 
-Install Elm (https://guide.elm-lang.org/install.html) and then edit
-*src/Env.elm* by replacing
-
-```
-env =
-    { url = ""
-    }
-```
-
-with
-
-```
-env =
-    { url = "http://localhost:80/"
-    }
-```
-
-So you can send requests with absolute URLs. Dont forget the trailing slash.
-Then run the following commands,
+Install Elm (https://guide.elm-lang.org/install.html) and then run the following
+commands:
 
 ```
 git clone https://github.com/mainflux/mainflux
@@ -46,17 +28,21 @@ cd mainflux/ui
 make
 ```
 
-This will produce `index.html` in the _ui_ directory. While still being In the
-_mainflux/ui_ folder, enter
+This will produce `index.html` in the _ui_ directory. Still in the _mainflux/ui_
+folder, enter
 
 `make run`
 
 and follow the instructions on screen.
 
-**NB:** `make` does `elm make src/Main.elm` and `make run` just executes `elm
+**NB:** `make` does `elm make src/Main.elm` and `make run` executes `elm
 reactor`. Cf. _Makefile_ for more options.
 
-### Contribute to the GUI development
+## Configuration
+
+Open the _src/Env.elm_ file and edit the values of the `env` record.
+
+## Contribute to the GUI development
 
 Follow the instructions above to install and run GUI as a native build. Instead
 of `make run` you can install `elm-live` (https://github.com/wking-io/elm-live)
