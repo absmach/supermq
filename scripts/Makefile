@@ -1,4 +1,4 @@
-CRT_LOCATION = docker/ssl/certs
+CRT_LOCATION = ../docker/ssl/certs
 KEY = default
 O = Mainflux
 OU = mainflux
