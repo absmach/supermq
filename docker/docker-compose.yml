@@ -18,7 +18,7 @@ services:
     container_name: mainflux-nginx
     restart: on-failure
     volumes:
-      - ./nginx/${NGINX_CONF}:/etc/nginx/nginx.conf
+      - ./nginx/nginx-${AUTH_CONF-key}.conf:/etc/nginx/nginx.conf
       - ./ssl/access.js:/etc/nginx/access.js
       - ./ssl/certs/mainflux-server.crt:/etc/ssl/certs/mainflux-server.crt
       - ./ssl/certs/ca.crt:/etc/ssl/certs/ca.crt
