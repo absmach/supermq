@@ -4,13 +4,14 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 
-module Helpers exposing (buildQueryParamList, checkEntity, faIcons, fontAwesome, genPagination, isChecked, offsetToPage, pageToOffset, parseString, response, validateInt, validateOffset)
+module Helpers exposing (appendIf, buildQueryParamList, checkEntity, faIcons, fontAwesome, genPagination, isChecked, offsetToPage, pageToOffset, parseString, response, validateInt, validateOffset)
 
 import Bootstrap.Button as Button
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
 import Bootstrap.Utilities.Spacing as Spacing
+import Debug exposing (log)
 import Html exposing (Html, a, div, hr, li, nav, node, p, strong, text, ul)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -100,7 +101,7 @@ genPagination total currPage msg =
         cols =
             nav []
                 [ ul [ class "pagination" ]
-                    ([ li [ classList [ ( "page-items", True ), ( "disabled", currPage == 1 ) ] ]
+                    ([ li [ classList [ ( "page-item", True ), ( "disabled", currPage == 1 ) ] ]
                         [ a
                             ([ class "page-link" ]
                                 |> appendIf (currPage > 1)
@@ -111,10 +112,10 @@ genPagination total currPage msg =
                      ]
                         ++ List.map
                             (\page ->
-                                li [ classList [ ( "page-items", True ), ( "active", currPage == page ) ] ] [ a [ class "page-link", onClick (msg page) ] [ text (String.fromInt page) ] ]
+                                li [ classList [ ( "page-item", True ), ( "active", currPage == page ) ] ] [ a [ class "page-link", onClick (msg (log "pagehelper: " page)) ] [ text (String.fromInt page) ] ]
                             )
                             pages
-                        ++ [ li [ classList [ ( "page-items", True ), ( "disabled", disableNext currPage total ) ] ]
+                        ++ [ li [ classList [ ( "page-item", True ), ( "disabled", disableNext currPage total ) ] ]
                                 [ a
                                     ([ class "page-link" ]
                                         |> appendIf

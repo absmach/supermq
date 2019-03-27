@@ -17,6 +17,7 @@ import Bootstrap.Grid.Col as Col
 import Bootstrap.Modal as Modal
 import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
+import Debug exposing (log)
 import Dict
 import Error
 import Helpers exposing (faIcons)
@@ -271,12 +272,12 @@ update msg model token =
 view : Model -> Html Msg
 view model =
     Grid.container []
-        [ Grid.row []
+        ([ Grid.row []
             [ Grid.col [ Col.attrs [ align "right" ] ]
                 [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1, align "right" ], Button.onClick ShowProvisionModal ] [ text "ADD" ]
                 ]
             ]
-        , Grid.row []
+         , Grid.row []
             [ Grid.col []
                 [ Card.config []
                     |> Card.headerH3 [] [ text "Channels" ]
@@ -292,10 +293,16 @@ view model =
                     |> Card.view
                 ]
             ]
-        , Helpers.genPagination model.channels.total (Helpers.offsetToPage model.offset model.limit) SubmitPage
-        , provisionModal model
-        , editModal model
-        ]
+         , provisionModal model
+         , editModal model
+         ]
+            ++ (if model.channels.total > model.limit then
+                    [ Helpers.genPagination (log "total: " model.channels.total) (log " page: " (Helpers.offsetToPage model.offset (log "limit: " model.limit))) SubmitPage ]
+
+                else
+                    []
+               )
+        )
 
 
 
