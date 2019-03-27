@@ -135,7 +135,7 @@ view model =
                             )
                         ]
                     |> Card.view
-                , Html.map ThingMsg (Helpers.genPagination model.things.things.total Thing.SubmitPage)
+                , Html.map ThingMsg (Helpers.genPagination model.things.things.total (Helpers.offsetToPage model.things.offset model.things.limit) Thing.SubmitPage)
                 ]
             , Grid.col []
                 [ Card.config
@@ -155,7 +155,7 @@ view model =
                             )
                         ]
                     |> Card.view
-                , Html.map ChannelMsg (Helpers.genPagination model.channels.channels.total Channel.SubmitPage)
+                , Html.map ChannelMsg (Helpers.genPagination model.channels.channels.total (Helpers.offsetToPage model.channels.offset model.channels.limit) Channel.SubmitPage)
                 ]
             ]
         , Grid.row []

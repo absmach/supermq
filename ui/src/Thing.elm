@@ -19,7 +19,6 @@ import Bootstrap.Grid.Row as Row
 import Bootstrap.Modal as Modal
 import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
-import Debug exposing (log)
 import Dict
 import Error
 import Helpers
@@ -296,7 +295,7 @@ view model =
                 ]
             ]
         , genTable model
-        , Helpers.genPagination model.things.total SubmitPage
+        , Helpers.genPagination model.things.total (Helpers.offsetToPage model.offset model.limit) SubmitPage
         , provisionModal model
         , editModal model
         ]

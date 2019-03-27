@@ -292,7 +292,7 @@ view model =
                     |> Card.view
                 ]
             ]
-        , Helpers.genPagination model.channels.total SubmitPage
+        , Helpers.genPagination model.channels.total (Helpers.offsetToPage model.offset model.limit) SubmitPage
         , provisionModal model
         , editModal model
         ]
