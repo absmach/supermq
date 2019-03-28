@@ -1,19 +1,19 @@
-var clientKey = "";
+var clientKey = '';
 
 function access(s) {
     s.on('upload', function (data) {
-        while (data == "") {
+        while (data == '') {
             return s.AGAIN
         }
 
-        if (clientKey === "") {
-            clientKey = parseCert(s.variables.ssl_client_s_dn, "CN");
+        if (clientKey === '') {
+            clientKey = parseCert(s.variables.ssl_client_s_dn, 'CN');
         }
 
         var pass = parsePackage(s, data);
 
         if (!clientKey.length || pass !== clientKey) {
-            s.log("Cert CN (" + clientKey + ") does not match ID");
+            s.error('Cert CN (' + clientKey + ') does not match client ID');
             s.off('upload')
             s.deny();
         }
@@ -46,7 +46,8 @@ function parsePackage(s, data) {
         var flags = data.codePointAt(flags_pos);
         // If there are no username and password flags (11xxxxxx), return.
         if (flags < 192) {
-            return "";
+            s.error('MQTT username or password not provided');
+            return '';
         }
         // FLAGS(1) + KEEP_ALIVE(2)
         var shift = flags_pos + 1 + 2;
@@ -73,12 +74,29 @@ function parsePackage(s, data) {
         return password;
     }
 
-    return "";    
+    return '';
 }
 
 function setKey(r) {
-    if (clientKey === "") {
-        clientKey = parseCert(r.variables.ssl_client_s_dn, "CN");
+    if (clientKey === '') {
+        clientKey = parseCert(r.variables.ssl_client_s_dn, 'CN');
+    }
+
+    var auth = r.headersIn['Authorization'];
+    if (auth.length && auth != clientKey) {
+        r.error('Authorization header does not match certificate');
+        return '';
+    }
+
+    if (r.uri.startsWith('/ws') && !auth.length) {
+        var a;
+        for (a in r.args) {
+            if (a == 'authorization' && r.args[a] === clientKey) {
+                return clientKey;
+            }
+        }
+        r.error('Authorization param does not match certificate');
+        return '';
     }
 
     return clientKey;
@@ -86,7 +104,7 @@ function setKey(r) {
 
 function calcLen(msb, lsb) {
     if (lsb < 2) {
-        lsb = "0" + lsb;
+        lsb = '0' + lsb;
     }
 
     return parseInt(msb + lsb, 16);
@@ -103,5 +121,5 @@ function parseCert(cert, key) {
         }
     }
 
-    return "";
+    return '';
 }

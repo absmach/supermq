@@ -74,7 +74,7 @@ These commands use (OpenSSL)[https://www.openssl.org/] tool, so please make sure
     - Command `make server_cert` will generated and sign (with previously created CA) server cert, which will expire after 1000 days. This cert is used as a Mainflux server-side certificate in usual TLS flow to establish HTTPS, WSS, or MQTTS connection.
     - Command `make thing_cert` wil finally generate and sign client-side certificate and private key for the thing.
 
-In this example `<thing_key>` represents key of the thing, and `<cert_name>` represents name of the certificate and key file which will be saved in `docker/ssl/certs` directory. Generated Certificate will expire after 2 years. This script is created for the testing purposes and is not meant to be used in production. We strongly recommend avoiding self-signed certificates and using certificate management tool such as (Vault)[https://www.vaultproject.io/] for the production.
+In this example `<thing_key>` represents key of the thing, and `<cert_name>` represents name of the certificate and key file which will be saved in `docker/ssl/certs` directory. Generated Certificate will expire after 2 years. The key must be stored in the x.509 certificate "CN" field.  This script is created for the testing purposes and is not meant to be used in production. We strongly recommend avoiding self-signed certificates and using certificate management tool such as (Vault)[https://www.vaultproject.io/] for the production.
 
 Once you have created CA and server-side cert, you can spin the composition using:
 
@@ -104,12 +104,11 @@ _WSS:_
 ```javascript
 const WebSocket = require('ws');
 
-// do not verify self-signed certificates if you are using one
+// Do not verify self-signed certificates if you are using one.
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
-// cbf02d60-72f2-4180-9f82-2c957db929d1 is an example of a thing_auth_key
-// d7a0257c-7462-4e3c-8c76-62c45229a1f9 is an example of channel_id
-const ws = new WebSocket('wss://localhost/ws/channels/d7a0257c-7462-4e3c-8c76-62c45229a1f9/messages?authorization=cbf02d60-72f2-4180-9f82-2c957db929d1',
+// Replace <channel_id> and <thing_key> with real values.
+const ws = new WebSocket('wss://localhost/ws/channels/<channel_id>/messages?authorization=<thing_key>',
 // This is ClientOptions object that contains client cert and client key in the form of string. You can easily load these strings from cert and key files.
 {
     cert: `-----BEGIN CERTIFICATE-----....`,
@@ -127,3 +126,5 @@ ws.on('error', (e) => {
     console.log(e)
 })
 ```
+
+As you can see, `Authorization` header does not have to be present in the the HTTP request, since the key is present in the certificate. However, if yoy pass `Authorization` header, it _must be the same as the key in the cert_. In the case of MQTTS, `password` filed in CONNECT message _must match the key from the certificate_. In the case of WSS, `Authorization` header or `authorization` query parameter _must match cert key_.
