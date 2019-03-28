@@ -298,12 +298,8 @@ view model =
          , provisionModal model
          , editModal model
          ]
-            ++ (if model.things.total > model.limit then
-                    [ Helpers.genPagination model.things.total (Helpers.offsetToPage model.offset model.limit) SubmitPage ]
-
-                else
-                    []
-               )
+            |> Helpers.appendIf (model.things.total > model.limit)
+                (Helpers.genPagination model.things.total (Helpers.offsetToPage model.offset model.limit) SubmitPage)
         )
 
 
