@@ -111,7 +111,7 @@ genPagination total currPage msg =
                      ]
                         ++ List.map
                             (\page ->
-                                li [ classList [ ( "page-item", True ), ( "active", currPage == page ) ] ] [ a [ class "page-link", onClick (msg (log "pagehelper: " page)) ] [ text (String.fromInt page) ] ]
+                                li [ classList [ ( "page-item", True ), ( "active", currPage == page ) ] ] [ a [ class "page-link", onClick (msg page) ] [ text (String.fromInt page) ] ]
                             )
                             pages
                         ++ [ li [ classList [ ( "page-item", True ), ( "disabled", disableNext currPage total ) ] ]
