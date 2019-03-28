@@ -11,7 +11,6 @@ import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
 import Bootstrap.Utilities.Spacing as Spacing
-import Debug exposing (log)
 import Html exposing (Html, a, div, hr, li, nav, node, p, strong, text, ul)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
