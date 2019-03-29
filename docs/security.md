@@ -1,3 +1,4 @@
+# **SECURING COMMUNICATION**
 
 By default gRPC communication is not secure as Mainflux system is most often run in a private network behind the reverse proxy.
 
