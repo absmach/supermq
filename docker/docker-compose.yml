@@ -19,7 +19,7 @@ services:
     restart: on-failure
     volumes:
       - ./nginx/nginx-${AUTH-key}.conf:/etc/nginx/nginx.conf
-      - ./ssl/access.js:/etc/nginx/access.js
+      - ./ssl/authorization.js:/etc/nginx/authorization.js
       - ./ssl/certs/mainflux-server.crt:/etc/ssl/certs/mainflux-server.crt
       - ./ssl/certs/ca.crt:/etc/ssl/certs/ca.crt
       - ./ssl/certs/mainflux-server.key:/etc/ssl/private/mainflux-server.key
