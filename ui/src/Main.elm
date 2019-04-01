@@ -29,7 +29,7 @@ import Channel
 import Connection
 import Debug exposing (log)
 import Error
-import Helpers exposing (fontAwesome)
+import Helpers exposing (faIcons, fontAwesome)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -311,11 +311,11 @@ view model =
             menu =
                 if loggedIn then
                     [ ul [ class "nav-pills flex-column nav" ]
-                        [ menuItem "Dashboard" Version "fas fa-chart-bar" (model.view == "dashboard")
-                        , menuItem "Things" Things "fas fa-sitemap" (model.view == "things")
-                        , menuItem "Channels" Channels "fas fa-broadcast-tower" (model.view == "channels")
-                        , menuItem "Connection" Connection "fas fa-plug" (model.view == "connection")
-                        , menuItem "Messages" Messages "far fa-paper-plane" (model.view == "messages")
+                        [ menuItem "Dashboard" Version faIcons.dashboard (model.view == "dashboard")
+                        , menuItem "Things" Things faIcons.things (model.view == "things")
+                        , menuItem "Channels" Channels faIcons.channels (model.view == "channels")
+                        , menuItem "Connection" Connection faIcons.connection (model.view == "connection")
+                        , menuItem "Messages" Messages faIcons.messages (model.view == "messages")
                         ]
                     ]
 
