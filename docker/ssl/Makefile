@@ -8,10 +8,12 @@ CRT_FILE_NAME = thing
 
 all: clean_certs ca server_crt
 
+# CA name and key is "ca".
 ca:
 	openssl req -newkey rsa:2048 -x509 -nodes -sha512 -days 1095 \
 				-keyout $(CRT_LOCATION)/ca.key -out $(CRT_LOCATION)/ca.crt -subj "/CN=localhost/O=Mainflux/OU=IoT/emailAddress=info@mainflux.com"
 
+# Server cert and key name is "mainflux-server".
 server_cert:
 	# Create mainflux server key and CSR.
 	openssl req -new -sha256 -newkey rsa:4096 -nodes -keyout $(CRT_LOCATION)/mainflux-server.key \
