@@ -4,6 +4,7 @@
 
    @import url('https://fonts.googleapis.com/css?family=Roboto');
    @import url('https://fonts.googleapis.com/css?family=Montserrat:400,600,800');
+   @import url('https://fonts.googleapis.com/css?family=Space+Mono');
    
    .btn-primary {
      color: #fff;
@@ -18,7 +19,7 @@
    
    body {
      background-color: #f3f3f4 !important;
-     font-family: 'Roboto', sans-serif !important;
+     font-family: 'Montserrat', sans-serif !important;
    }
    .title{
      font-family: 'Montserrat', sans-serif;
@@ -58,4 +59,13 @@ ul.nav a:hover {
   border-radius: 4px;
   background:#154f82;
  
+}
+
+.card {
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+.table thead th {
+  border-top: none;
 }
