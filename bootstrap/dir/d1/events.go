@@ -1,4 +1,4 @@
-package redis
+package consumer
 
 type removeEvent struct {
 	id string

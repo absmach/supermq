@@ -16,13 +16,14 @@ import (
 	"strconv"
 	"syscall"
 
+	rediscons "github.com/mainflux/mainflux/bootstrap/redis/consumer"
+
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	r "github.com/go-redis/redis"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/bootstrap"
 	api "github.com/mainflux/mainflux/bootstrap/api"
 	"github.com/mainflux/mainflux/bootstrap/postgres"
-	"github.com/mainflux/mainflux/bootstrap/redis"
 	"github.com/mainflux/mainflux/logger"
 	mfsdk "github.com/mainflux/mainflux/sdk/go"
 	usersapi "github.com/mainflux/mainflux/users/api/grpc"
@@ -258,7 +259,7 @@ func startHTTPServer(svc bootstrap.Service, cfg config, logger logger.Logger, er
 }
 
 func subscribeToThingsES(svc bootstrap.Service, client *r.Client, consumer string, logger logger.Logger) {
-	eventStore := redis.NewEventStore(svc, client, consumer, logger)
+	eventStore := rediscons.NewEventStore(svc, client, consumer, logger)
 	logger.Info("Subscribed to Redis Event Store")
 	if err := eventStore.Subscribe("mainflux.things"); err != nil {
 		logger.Warn(fmt.Sprintf("Botstrap service failed to subscribe to event sourcing: %s", err))
