@@ -87,7 +87,25 @@ func (es eventStore) Update(key string, cfg bootstrap.Config) error {
 }
 
 func (es eventStore) UpdateConnections(key, id string, connections []string) error {
-	return es.svc.UpdateConnections(key, id, connections)
+	if err := es.svc.UpdateConnections(key, id, connections); err != nil {
+		return err
+	}
+
+	event := updateConnectionsEvent{
+		mfThing:    id,
+		mfChannels: connections,
+		timestamp:  time.Now(),
+	}
+
+	record := &redis.XAddArgs{
+		Stream:       streamID,
+		MaxLenApprox: streamLen,
+		Values:       event.encode(),
+	}
+
+	es.client.XAdd(record).Err()
+
+	return nil
 }
 
 func (es eventStore) List(key string, filter bootstrap.Filter, offset, limit uint64) (bootstrap.ConfigsPage, error) {

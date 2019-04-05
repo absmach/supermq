@@ -13,9 +13,10 @@ const (
 	configUpdate = configPrefix + "update"
 	configRemove = configPrefix + "remove"
 
-	thingPrefix      = "thing."
-	thingStateChange = thingPrefix + "state_change"
-	thingBootstrap   = thingPrefix + "bootstrap"
+	thingPrefix            = "thing."
+	thingBootstrap         = thingPrefix + "bootstrap"
+	thingStateChange       = thingPrefix + "state_change"
+	thingUpdateConnections = thingPrefix + "update_connections"
 )
 
 type event interface {
@@ -28,6 +29,7 @@ var (
 	_ event = (*removeConfigEvent)(nil)
 	_ event = (*bootstrapEvent)(nil)
 	_ event = (*changeStateEvent)(nil)
+	_ event = (*updateConnectionsEvent)(nil)
 )
 
 type createConfigEvent struct {
@@ -110,5 +112,20 @@ func (cse changeStateEvent) encode() map[string]interface{} {
 		"state":     cse.state.String(),
 		"timestamp": cse.timestamp.Unix(),
 		"operation": thingStateChange,
+	}
+}
+
+type updateConnectionsEvent struct {
+	mfThing    string
+	mfChannels []string
+	timestamp  time.Time
+}
+
+func (uce updateConnectionsEvent) encode() map[string]interface{} {
+	return map[string]interface{}{
+		"id":        uce.mfThing,
+		"channels":  strings.Join(uce.mfChannels, ", "),
+		"timestamp": uce.timestamp.Unix(),
+		"operation": thingUpdateConnections,
 	}
 }

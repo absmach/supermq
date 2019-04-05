@@ -41,9 +41,10 @@ const (
 	configUpdate = configPrefix + "update"
 	configRemove = configPrefix + "remove"
 
-	thingPrefix      = "thing."
-	thingStateChange = thingPrefix + "state_change"
-	thingBootstrap   = thingPrefix + "bootstrap"
+	thingPrefix            = "thing."
+	thingStateChange       = thingPrefix + "state_change"
+	thingBootstrap         = thingPrefix + "bootstrap"
+	thingUpdateConnections = thingPrefix + "update_connections"
 )
 
 var (
@@ -174,9 +175,8 @@ func TestUpdate(t *testing.T) {
 	ch.ID = "2"
 	c.MFChannels = append(c.MFChannels, ch)
 	saved, err := svc.Add(validToken, c)
-	redisClient.FlushAll().Err()
-
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	redisClient.FlushAll().Err()
 
 	modified := saved
 	modified.Content = "new-config"
@@ -248,9 +248,8 @@ func TestRemove(t *testing.T) {
 	c := config
 
 	saved, err := svc.Add(validToken, c)
-	redisClient.FlushAll().Err()
-
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	redisClient.FlushAll().Err()
 
 	cases := []struct {
 		desc  string
@@ -383,9 +382,8 @@ func TestChangeState(t *testing.T) {
 	c := config
 
 	saved, err := svc.Add(validToken, c)
-	redisClient.FlushAll().Err()
-
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	redisClient.FlushAll().Err()
 
 	cases := []struct {
 		desc  string
@@ -421,6 +419,72 @@ func TestChangeState(t *testing.T) {
 	lastID := "0"
 	for _, tc := range cases {
 		err := svc.ChangeState(tc.key, tc.id, tc.state)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+
+		streams := redisClient.XRead(&redis.XReadArgs{
+			Streams: []string{streamID, lastID},
+			Count:   1,
+			Block:   time.Second,
+		}).Val()
+
+		var event map[string]interface{}
+		if len(streams) > 0 && len(streams[0].Messages) > 0 {
+			msg := streams[0].Messages[0]
+			event = msg.Values
+			lastID = msg.ID
+		}
+
+		assert.Equal(t, tc.event, event, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.event, event))
+	}
+}
+
+func TestUpdateConnections(t *testing.T) {
+	redisClient.FlushAll().Err()
+
+	users := mocks.NewUsersService(map[string]string{validToken: email})
+
+	server := newThingsServer(newThingsService(users))
+	svc := newService(users, server.URL)
+	svc = producer.NewEventStoreMiddleware(svc, redisClient)
+
+	saved, err := svc.Add(validToken, config)
+	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	redisClient.FlushAll().Err()
+
+	cases := []struct {
+		desc        string
+		id          string
+		key         string
+		connections []string
+		err         error
+		event       map[string]interface{}
+	}{
+		{
+			desc:        "update connections successfully",
+			id:          saved.MFThing,
+			key:         validToken,
+			connections: []string{"2"},
+			err:         nil,
+			event: map[string]interface{}{
+				"id":        saved.MFThing,
+				"channels":  "2",
+				"timestamp": strconv.FormatInt(time.Now().Unix(), 10),
+				"operation": thingUpdateConnections,
+			},
+		},
+		{
+			desc:        "update connections unsuccessfully",
+			id:          saved.MFThing,
+			key:         validToken,
+			connections: []string{"256"},
+			err:         bootstrap.ErrMalformedEntity,
+			event:       nil,
+		},
+	}
+
+	lastID := "0"
+	for _, tc := range cases {
+		err := svc.UpdateConnections(tc.key, tc.id, tc.connections)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 
 		streams := redisClient.XRead(&redis.XReadArgs{
