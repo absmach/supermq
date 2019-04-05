@@ -10,6 +10,8 @@ DOCKERS_DEV = $(addprefix docker_dev_,$(SERVICES))
 CGO_ENABLED ?= 0
 GOOS ?= linux
 
+DOCKER_IMG_NAME ?= mainflux
+
 define compile_service
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) go build -ldflags "-s -w" -o ${BUILD_DIR}/mainflux-$(1) cmd/$(1)/main.go
 endef
@@ -34,9 +36,9 @@ cleandocker: cleanghost
 	# Stop all containers (if running)
 	docker-compose -f docker/docker-compose.yml stop
 	# Remove mainflux containers
-	docker ps -f name=mainflux -aq | xargs -r docker rm
+	docker ps -f name=$(DOCKER_IMG_NAME) -aq | xargs -r docker rm
 	# Remove old mainflux images
-	docker images -q mainflux\/* | xargs -r docker rmi
+	docker images -q $(DOCKER_IMG_NAME)\/* | xargs -r docker rmi
 
 # Clean ghost docker images
 cleanghost:
@@ -67,7 +69,7 @@ docker_ui:
 
 docker_mqtt:
 	# MQTT Docker build must be done from root dir because it copies .proto files
-	docker build --tag=mainflux/mqtt -f mqtt/Dockerfile .
+	docker build --tag=$(DOCKER_IMG_NAME)/mqtt -f mqtt/Dockerfile .
 
 dockers: $(DOCKERS) docker_ui docker_mqtt
 
@@ -84,10 +86,10 @@ mqtt:
 
 define docker_push
 	for svc in $(SERVICES); do \
-		docker push mainflux/$$svc:$(1); \
+		docker push $(DOCKER_IMG_NAME)/$$svc:$(1); \
 	done
-	docker push mainflux/ui:$(1)
-	docker push mainflux/mqtt:$(1)
+	docker push $(DOCKER_IMG_NAME)/ui:$(1)
+	docker push $(DOCKER_IMG_NAME)/mqtt:$(1)
 endef
 
 changelog:
@@ -101,10 +103,10 @@ release:
 	git checkout $(version)
 	$(MAKE) dockers
 	for svc in $(SERVICES); do \
-		docker tag mainflux/$$svc mainflux/$$svc:$(version); \
+		docker tag $(DOCKER_IMG_NAME)/$$svc $(DOCKER_IMG_NAME)/$$svc:$(version); \
 	done
-	docker tag mainflux/ui mainflux/ui:$(version)
-	docker tag mainflux/mqtt mainflux/mqtt:$(version)
+	docker tag $(DOCKER_IMG_NAME)/ui $(DOCKER_IMG_NAME)/ui:$(version)
+	docker tag $(DOCKER_IMG_NAME)/mqtt $(DOCKER_IMG_NAME)/mqtt:$(version)
 	$(call docker_push,$(version))
 
 rundev:
