@@ -99,16 +99,16 @@ func (be bootstrapEvent) encode() map[string]interface{} {
 }
 
 type changeStateEvent struct {
-	externalID string
-	state      bootstrap.State
-	timestamp  time.Time
+	mfThing   string
+	state     bootstrap.State
+	timestamp time.Time
 }
 
 func (cse changeStateEvent) encode() map[string]interface{} {
 	return map[string]interface{}{
-		"externalID": cse.externalID,
-		"state":      cse.state.String(),
-		"timestamp":  cse.timestamp.Unix(),
-		"operation":  thingStateChange,
+		"id":        cse.mfThing,
+		"state":     cse.state.String(),
+		"timestamp": cse.timestamp.Unix(),
+		"operation": thingStateChange,
 	}
 }

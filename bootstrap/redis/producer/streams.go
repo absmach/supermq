@@ -69,9 +69,10 @@ func (es eventStore) Update(key string, cfg bootstrap.Config) error {
 	}
 
 	event := updateConfigEvent{
-		mfThing: cfg.MFThing,
-		name:    cfg.Name,
-		content: cfg.Content,
+		mfThing:   cfg.MFThing,
+		name:      cfg.Name,
+		content:   cfg.Content,
+		timestamp: time.Now(),
 	}
 
 	record := &redis.XAddArgs{
@@ -118,7 +119,7 @@ func (es eventStore) Bootstrap(externalKey, externalID string) (bootstrap.Config
 	cfg, err := es.svc.Bootstrap(externalKey, externalID)
 
 	event := bootstrapEvent{
-		externalID:  cfg.ExternalID,
+		externalID:  externalID,
 		timestamp:   time.Now(),
 		successfull: true,
 	}
@@ -144,9 +145,9 @@ func (es eventStore) ChangeState(key, id string, state bootstrap.State) error {
 	}
 
 	event := changeStateEvent{
-		externalID: id,
-		state:      state,
-		timestamp:  time.Now(),
+		mfThing:   id,
+		state:     state,
+		timestamp: time.Now(),
 	}
 
 	record := &redis.XAddArgs{
