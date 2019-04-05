@@ -17,6 +17,7 @@ import (
 	"syscall"
 
 	rediscons "github.com/mainflux/mainflux/bootstrap/redis/consumer"
+	redisprod "github.com/mainflux/mainflux/bootstrap/redis/producer"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	r "github.com/go-redis/redis"
@@ -112,14 +113,17 @@ func main() {
 	conn := connectToUsers(cfg, logger)
 	defer conn.Close()
 
-	esConn := connectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
-	defer esConn.Close()
+	thingsESConn := connectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
+	defer thingsESConn.Close()
 
-	svc := newService(conn, db, logger, cfg)
+	esClient := connectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
+	defer esClient.Close()
+
+	svc := newService(conn, db, logger, esClient, cfg)
 	errs := make(chan error, 2)
 
 	go startHTTPServer(svc, cfg, logger, errs)
-	go subscribeToThingsES(svc, esConn, cfg.instanceName, logger)
+	go subscribeToThingsES(svc, thingsESConn, cfg.instanceName, logger)
 
 	go func() {
 		c := make(chan os.Signal)
@@ -190,7 +194,21 @@ func connectToRedis(redisURL, redisPass, redisDB string, logger logger.Logger) *
 	})
 }
 
-func newService(conn *grpc.ClientConn, db *sql.DB, logger logger.Logger, cfg config) bootstrap.Service {
+func connectToRedis1(redisURL, redisPass, redisDB string, logger logger.Logger) *r.Client {
+	db, err := strconv.Atoi(redisDB)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to redis: %s", err))
+		os.Exit(1)
+	}
+
+	return r.NewClient(&r.Options{
+		Addr:     redisURL,
+		Password: redisPass,
+		DB:       db,
+	})
+}
+
+func newService(conn *grpc.ClientConn, db *sql.DB, logger logger.Logger, esClient *r.Client, cfg config) bootstrap.Service {
 	thingsRepo := postgres.NewConfigRepository(db, logger)
 
 	config := mfsdk.Config{
@@ -202,6 +220,7 @@ func newService(conn *grpc.ClientConn, db *sql.DB, logger logger.Logger, cfg con
 	users := usersapi.NewClient(conn)
 
 	svc := bootstrap.New(users, thingsRepo, sdk)
+	svc = redisprod.NewEventStoreMiddleware(svc, esClient)
 	svc = api.NewLoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,

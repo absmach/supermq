@@ -1,23 +1,10 @@
 package producer
 
 import (
+	"time"
+
 	"github.com/go-redis/redis"
 	"github.com/mainflux/mainflux/bootstrap"
-)
-
-const (
-	stream = "mainflux.things"
-	group  = "mainflux.bootstrap"
-
-	thingPrefix     = "thing."
-	thingRemove     = thingPrefix + "remove"
-	thingDisconnect = thingPrefix + "disconnect"
-
-	channelPrefix = "channel."
-	channelUpdate = channelPrefix + "update"
-	channelRemove = channelPrefix + "remove"
-
-	exists = "BUSYGROUP Consumer Group name already exists"
 )
 
 const (
@@ -59,12 +46,14 @@ func (es eventStore) Add(key string, cfg bootstrap.Config) (bootstrap.Config, er
 		mfChannels: channels,
 		externalID: saved.ExternalID,
 		content:    saved.Content,
+		timestamp:  time.Now(),
 	}
 	record := &redis.XAddArgs{
 		Stream:       streamID,
 		MaxLenApprox: streamLen,
-		Values:       event.Encode(),
+		Values:       event.encode(),
 	}
+
 	es.client.XAdd(record).Err()
 
 	return saved, err
@@ -88,7 +77,7 @@ func (es eventStore) Update(key string, cfg bootstrap.Config) error {
 	record := &redis.XAddArgs{
 		Stream:       streamID,
 		MaxLenApprox: streamLen,
-		Values:       event.Encode(),
+		Values:       event.encode(),
 	}
 
 	es.client.XAdd(record).Err()
@@ -110,13 +99,14 @@ func (es eventStore) Remove(key, id string) error {
 	}
 
 	event := removeConfigEvent{
-		mfThing: id,
+		mfThing:   id,
+		timestamp: time.Now(),
 	}
 
 	record := &redis.XAddArgs{
 		Stream:       streamID,
 		MaxLenApprox: streamLen,
-		Values:       event.Encode(),
+		Values:       event.encode(),
 	}
 
 	es.client.XAdd(record).Err()
@@ -132,12 +122,13 @@ func (es eventStore) Bootstrap(externalKey, externalID string) (bootstrap.Config
 
 	event := bootstrapEvent{
 		externalID: cfg.ExternalID,
+		timestamp:  time.Now(),
 	}
 
 	record := &redis.XAddArgs{
 		Stream:       streamID,
 		MaxLenApprox: streamLen,
-		Values:       event.Encode(),
+		Values:       event.encode(),
 	}
 
 	es.client.XAdd(record).Err()
@@ -153,21 +144,18 @@ func (es eventStore) ChangeState(key, id string, state bootstrap.State) error {
 	event := changeStateEvent{
 		externalID: id,
 		state:      state,
+		timestamp:  time.Now(),
 	}
 
 	record := &redis.XAddArgs{
 		Stream:       streamID,
 		MaxLenApprox: streamLen,
-		Values:       event.Encode(),
+		Values:       event.encode(),
 	}
 
 	es.client.XAdd(record).Err()
 
 	return nil
-}
-
-func (es eventStore) UpdateChannelHandler(channel bootstrap.Channel) error {
-	return es.UpdateChannelHandler(channel)
 }
 
 func (es eventStore) RemoveConfigHandler(id string) error {
@@ -176,6 +164,10 @@ func (es eventStore) RemoveConfigHandler(id string) error {
 
 func (es eventStore) RemoveChannelHandler(id string) error {
 	return es.svc.RemoveChannelHandler(id)
+}
+
+func (es eventStore) UpdateChannelHandler(channel bootstrap.Channel) error {
+	return es.UpdateChannelHandler(channel)
 }
 
 func (es eventStore) DisconnectThingHandler(channelID, thingID string) error {
