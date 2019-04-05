@@ -19,7 +19,7 @@ type eventStore struct {
 	client *redis.Client
 }
 
-// NewEventStoreMiddleware returns wrapper around things service that sends
+// NewEventStoreMiddleware returns wrapper around bootstrap service that sends
 // events to event store.
 func NewEventStoreMiddleware(svc bootstrap.Service, client *redis.Client) bootstrap.Service {
 	return eventStore{
@@ -116,13 +116,15 @@ func (es eventStore) Remove(key, id string) error {
 
 func (es eventStore) Bootstrap(externalKey, externalID string) (bootstrap.Config, error) {
 	cfg, err := es.svc.Bootstrap(externalKey, externalID)
-	if err != nil {
-		return bootstrap.Config{}, err
-	}
 
 	event := bootstrapEvent{
-		externalID: cfg.ExternalID,
-		timestamp:  time.Now(),
+		externalID:  cfg.ExternalID,
+		timestamp:   time.Now(),
+		successfull: true,
+	}
+
+	if err != nil {
+		event.successfull = false
 	}
 
 	record := &redis.XAddArgs{
@@ -133,7 +135,7 @@ func (es eventStore) Bootstrap(externalKey, externalID string) (bootstrap.Config
 
 	es.client.XAdd(record).Err()
 
-	return cfg, nil
+	return cfg, err
 }
 
 func (es eventStore) ChangeState(key, id string, state bootstrap.State) error {

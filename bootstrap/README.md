@@ -1,6 +1,7 @@
 # BOOTSTRAP SERVICE
 
 New devices need to be configured properly and connected to the Mainflux. Bootstrap service is used in order to accomplish that. This service provides the following features:
+
   1) Creating new Mainflux Things
   2) Providing basic configuration for the newly created Things
   3) Enabling/disabling Things
@@ -12,6 +13,7 @@ In order to bootstrap successfully, the Thing needs to send bootstrapping reques
 ***Thing Configuration***
 
 Thing Configuration consists of two logical parts: the custom configuration that can be interpreted by the Thing itself and Mainflux-related configuration. Mainflux config contains:
+
   1) corresponding Mainflux Thing ID
   2) corresponding Mainflux Thing key
   3) list of the Mainflux channels the Thing is connected to
@@ -54,6 +56,9 @@ The service is configured using the environment variables presented in the follo
 | MF_THINGS_ES_URL              | Things service event source URL                                         | localhost:6379        |
 | MF_THINGS_ES_PASS             | Things service event source password                                    |                       |
 | MF_THINGS_ES_DB               | Things service event source database                                    | 0                     |
+| MF_BOOTSTRAP_ES_URL           | Botstrap service event source URL                                       | localhost:6379        |
+| MF_BOOTSTRAP_ES_PASS          | Botstrap service event source password                                  |                       |
+| MF_BOOTSTRAP_ES_DB            | Botstrap service event source database                                  | 0                     |
 | MF_BOOTSTRAP_INSTANCE_NAME    | Bootstrap service instance name                                         | bootstrap             |
 
 ## Deployment
@@ -91,11 +96,14 @@ version: "2"
       MF_SDK_BASE_URL: [Base SDK URL for the Mainflux services]
       MF_SDK_THINGS_PREFIX: [SDK prefix for Things service]
       MF_USERS_URL: [Users service URL]
-      MF_THINGS_ES_URL: [Things service event source URL] 
+      MF_THINGS_ES_URL: [Things service event source URL]
       MF_THINGS_ES_PASS: [Things service event source password]
       MF_THINGS_ES_DB: [Things service event source database]
+      MF_BOOTSTRAP_ES_URL: [Bootstrap service event source URL]
+      MF_BOOTSTRAP_ES_PASS: [Bootstrap service event source password]
+      MF_BOOTSTRAP_ES_DB: [Bootstrap service event source database]
       MF_BOOTSTRAP_INSTANCE_NAME: [Bootstrap service instance name]
-```      
+```
 
 To start the service outside of the container, execute the following shell script:
 

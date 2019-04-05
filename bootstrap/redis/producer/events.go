@@ -84,15 +84,17 @@ func (rce removeConfigEvent) encode() map[string]interface{} {
 }
 
 type bootstrapEvent struct {
-	externalID string
-	timestamp  time.Time
+	externalID  string
+	successfull bool
+	timestamp   time.Time
 }
 
 func (be bootstrapEvent) encode() map[string]interface{} {
 	return map[string]interface{}{
-		"externalID": be.externalID,
-		"timestamp":  be.timestamp.Unix(),
-		"operation":  thingBootstrap,
+		"externalID":  be.externalID,
+		"successfull": be.successfull,
+		"timestamp":   be.timestamp.Unix(),
+		"operation":   thingBootstrap,
 	}
 }
 
