@@ -25,4 +25,4 @@ handle error =
             "Bad status: " ++ String.fromInt code
 
         Http.BadBody err ->
-            err
+            "Invalid response body"
