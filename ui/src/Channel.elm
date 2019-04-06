@@ -19,7 +19,7 @@ import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
 import Dict
 import Error
-import Helpers exposing (faIcons)
+import Helpers
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -272,14 +272,18 @@ view : Model -> Html Msg
 view model =
     Grid.container []
         ([ Grid.row []
-            [ Grid.col [ Col.attrs [ align "right" ] ]
-                [ Button.button [ Button.outlinePrimary, Button.attrs [ Spacing.ml1, align "right" ], Button.onClick ShowProvisionModal ] [ text "ADD" ]
-                ]
-            ]
-         , Grid.row []
             [ Grid.col []
                 [ Card.config []
-                    |> Card.headerH3 [] [ text "Channels" ]
+                    |> Card.header []
+                        [ Grid.row []
+                            [ Grid.col [ Col.attrs [ align "left" ] ]
+                                [ h3 [ Spacing.mt2 ] [ text "Channels"]
+                                ]
+                            , Grid.col [ Col.attrs [ align "right" ] ]
+                                [ Button.button [ Button.success, Button.attrs [ align "right" ], Button.onClick ShowProvisionModal ] [ text "ADD" ]
+                                ]
+                            ]
+                        ]
                     |> Card.block []
                         [ Block.custom
                             (Table.table
