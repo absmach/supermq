@@ -8,7 +8,25 @@ Mainflux platform supports bootstrapping process, but some of the preconditions 
 
 > Bootstrapping and provisioning are two different procedures. Provisioning refers to entities management while bootstrapping is related to entity configuration.
 
-![bootstrapping flow](img/bs_flow.gif)
+Bootstrapping procedure is the following:
+
+![Configure device](img/bootstrap/1.png)
+*1) Configure device with Bootstrap service URL, an external key and external ID*
+   
+> ![Provision Mainflux channels](img/bootstrap/2.png)
+*Optionally create Mainflux channels if they don't exist*
+
+> ![Provision Mainflux things](img/bootstrap/3.png)
+*Optionally create Mainflux thing if it doesn't exist*
+
+![Upload configuration](img/bootstrap/4.png)
+*2) Upload configuration for the Mainflux thing*
+
+![Bootstrap](img/bootstrap/5.png)
+*3) Bootstrap - send a request for the configuration*
+
+![Update, enable/disable, remove](img/bootstrap/6.png)
+*4) Connect/disconnect thing from channels, update or remove configuration*
 
 ### Configuration
 
