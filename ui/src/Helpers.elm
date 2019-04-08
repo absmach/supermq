@@ -4,12 +4,15 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 
-module Helpers exposing (appendIf, buildQueryParamList, checkEntity, faIcons, fontAwesome, genPagination, isChecked, offsetToPage, pageToOffset, parseString, response, validateInt, validateOffset)
+module Helpers exposing (appendIf, buildQueryParamList, checkEntity, disableNext, faIcons, fontAwesome, genCardConfig, genPagination, isChecked, offsetToPage, pageToOffset, parseString, response, validateInt, validateOffset)
 
 import Bootstrap.Button as Button
+import Bootstrap.Card as Card
+import Bootstrap.Card.Block as Block
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
+import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
 import Html exposing (Html, a, div, hr, li, nav, node, p, strong, text, ul)
 import Html.Attributes exposing (..)
@@ -181,7 +184,7 @@ isChecked id checkedEntitiesIds =
 
 appendIf : Bool -> a -> List a -> List a
 appendIf flag value list =
-    if flag == True then
+    if flag then
         list ++ [ value ]
 
     else
@@ -191,3 +194,24 @@ appendIf flag value list =
 disableNext : Int -> Int -> Bool
 disableNext currPage total =
     currPage == Basics.ceiling (Basics.toFloat total / 10)
+
+
+genCardConfig : String -> List (Table.Row msg) -> Html msg
+genCardConfig title rows =
+    Card.config
+        []
+        |> Card.headerH3 [] [ text title ]
+        |> Card.block []
+            [ Block.custom
+                (Table.table
+                    { options = [ Table.striped, Table.hover, Table.small ]
+                    , thead =
+                        Table.simpleThead
+                            [ Table.th [] [ text "Name" ]
+                            , Table.th [] [ text "ID" ]
+                            ]
+                    , tbody = Table.tbody [] <| rows
+                    }
+                )
+            ]
+        |> Card.view
