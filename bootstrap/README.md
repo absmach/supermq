@@ -10,7 +10,7 @@ Pre-provisioning a new Thing is as simple as sending Configuration data to the B
 
 In order to bootstrap successfully, the Thing needs to send bootstrapping request to the specific URL, as well as a secret key. This key and URL are pre-provisioned during the manufacturing process. If the Thing is provisioned on the Bootstrap service side, the corresponding configuration will be sent as a response. Otherwise, the Thing will be saved so that it can be provisioned later.
 
-***Thing Configuration***
+## Thing Configuration Entity
 
 Thing Configuration consists of two logical parts: the custom configuration that can be interpreted by the Thing itself and Mainflux-related configuration. Mainflux config contains:
 
@@ -28,6 +28,8 @@ Enabling and disabling Thing (adding Thing to/from whitelist) is as simple as co
 | Active   | Thing is able to communicate using Mainflux            |
 
 Switching between states `Active` and `Inactive` enables and disables Thing, respectively.
+
+Thing configuration also contains the so-called `external ID` and `external key`. An external ID is a unique identifier of the device/app for the corresponding Thing. For example, the device MAC address is a good choice for external ID. External key is a secret key that is used for authentication during the bootstrapping procedure.
 
 ## Configuration
 
