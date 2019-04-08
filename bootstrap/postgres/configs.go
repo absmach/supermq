@@ -331,14 +331,17 @@ func (cr configRepository) ChangeState(key, id string, state bootstrap.State) er
 }
 
 func (cr configRepository) ListExisting(key string, ids []string) ([]bootstrap.Channel, error) {
-	q := "SELECT mainflux_channel, name, metadata FROM channels WHERE owner = $1 AND mainflux_channel = ANY ($2)"
+	var channels []bootstrap.Channel
+	if len(ids) == 0 {
+		return channels, nil
+	}
 
+	q := "SELECT mainflux_channel, name, metadata FROM channels WHERE owner = $1 AND mainflux_channel = ANY ($2)"
 	rows, err := cr.db.Queryx(q, key, pq.Array(ids))
 	if err != nil {
 		return []bootstrap.Channel{}, err
 	}
 
-	var channels []bootstrap.Channel
 	for rows.Next() {
 		var dbch dbChannel
 		if err := rows.StructScan(&dbch); err != nil {

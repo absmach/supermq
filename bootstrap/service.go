@@ -187,7 +187,7 @@ func (bs bootstrapService) UpdateConnections(key, id string, connections []strin
 	}
 
 	add, remove := bs.updateList(cfg, connections)
-	channels, err := bs.updateChannels(add, key)
+	channels, err := bs.updateChannels(add, owner, key)
 	if err != nil {
 		return err
 	}
@@ -384,7 +384,27 @@ func (bs bootstrapService) toIDList(channels []Channel) []string {
 	return ret
 }
 
-func (bs bootstrapService) updateChannels(add []string, key string) ([]Channel, error) {
+func (bs bootstrapService) updateChannels(add []string, owner, key string) ([]Channel, error) {
+	existing, err := bs.configs.ListExisting(owner, add)
+	if err != nil {
+		return []Channel{}, err
+	}
+
+	if len(existing) > 0 {
+		m := make(map[string]bool, len(existing))
+		for _, ch := range existing {
+			m[ch.ID] = true
+		}
+
+		all := add
+		add = []string{}
+		for _, v := range all {
+			if !m[v] {
+				add = append(add, v)
+			}
+		}
+	}
+
 	var ret []Channel
 	for _, id := range add {
 		ch, err := bs.sdk.Channel(id, key)
