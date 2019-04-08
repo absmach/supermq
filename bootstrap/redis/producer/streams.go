@@ -39,7 +39,7 @@ func (es eventStore) Add(key string, cfg bootstrap.Config) (bootstrap.Config, er
 		channels = append(channels, ch.ID)
 	}
 
-	event := createConfigEvent{
+	ev := createConfigEvent{
 		mfThing:    saved.MFThing,
 		owner:      saved.Owner,
 		name:       saved.Name,
@@ -48,13 +48,8 @@ func (es eventStore) Add(key string, cfg bootstrap.Config) (bootstrap.Config, er
 		content:    saved.Content,
 		timestamp:  time.Now(),
 	}
-	record := &redis.XAddArgs{
-		Stream:       streamID,
-		MaxLenApprox: streamLen,
-		Values:       event.encode(),
-	}
 
-	es.client.XAdd(record).Err()
+	es.add(ev)
 
 	return saved, err
 }
@@ -68,20 +63,14 @@ func (es eventStore) Update(key string, cfg bootstrap.Config) error {
 		return err
 	}
 
-	event := updateConfigEvent{
+	ev := updateConfigEvent{
 		mfThing:   cfg.MFThing,
 		name:      cfg.Name,
 		content:   cfg.Content,
 		timestamp: time.Now(),
 	}
 
-	record := &redis.XAddArgs{
-		Stream:       streamID,
-		MaxLenApprox: streamLen,
-		Values:       event.encode(),
-	}
-
-	es.client.XAdd(record).Err()
+	es.add(ev)
 
 	return nil
 }
@@ -91,19 +80,13 @@ func (es eventStore) UpdateConnections(key, id string, connections []string) err
 		return err
 	}
 
-	event := updateConnectionsEvent{
+	ev := updateConnectionsEvent{
 		mfThing:    id,
 		mfChannels: connections,
 		timestamp:  time.Now(),
 	}
 
-	record := &redis.XAddArgs{
-		Stream:       streamID,
-		MaxLenApprox: streamLen,
-		Values:       event.encode(),
-	}
-
-	es.client.XAdd(record).Err()
+	es.add(ev)
 
 	return nil
 }
@@ -117,18 +100,12 @@ func (es eventStore) Remove(key, id string) error {
 		return err
 	}
 
-	event := removeConfigEvent{
+	ev := removeConfigEvent{
 		mfThing:   id,
 		timestamp: time.Now(),
 	}
 
-	record := &redis.XAddArgs{
-		Stream:       streamID,
-		MaxLenApprox: streamLen,
-		Values:       event.encode(),
-	}
-
-	es.client.XAdd(record).Err()
+	es.add(ev)
 
 	return nil
 }
@@ -136,23 +113,17 @@ func (es eventStore) Remove(key, id string) error {
 func (es eventStore) Bootstrap(externalKey, externalID string) (bootstrap.Config, error) {
 	cfg, err := es.svc.Bootstrap(externalKey, externalID)
 
-	event := bootstrapEvent{
+	ev := bootstrapEvent{
 		externalID:  externalID,
 		timestamp:   time.Now(),
 		successfull: true,
 	}
 
 	if err != nil {
-		event.successfull = false
+		ev.successfull = false
 	}
 
-	record := &redis.XAddArgs{
-		Stream:       streamID,
-		MaxLenApprox: streamLen,
-		Values:       event.encode(),
-	}
-
-	es.client.XAdd(record).Err()
+	es.add(ev)
 
 	return cfg, err
 }
@@ -162,19 +133,13 @@ func (es eventStore) ChangeState(key, id string, state bootstrap.State) error {
 		return err
 	}
 
-	event := changeStateEvent{
+	ev := changeStateEvent{
 		mfThing:   id,
 		state:     state,
 		timestamp: time.Now(),
 	}
 
-	record := &redis.XAddArgs{
-		Stream:       streamID,
-		MaxLenApprox: streamLen,
-		Values:       event.encode(),
-	}
-
-	es.client.XAdd(record).Err()
+	es.add(ev)
 
 	return nil
 }
@@ -193,4 +158,14 @@ func (es eventStore) UpdateChannelHandler(channel bootstrap.Channel) error {
 
 func (es eventStore) DisconnectThingHandler(channelID, thingID string) error {
 	return es.svc.DisconnectThingHandler(channelID, thingID)
+}
+
+func (es eventStore) add(ev event) error {
+	record := &redis.XAddArgs{
+		Stream:       streamID,
+		MaxLenApprox: streamLen,
+		Values:       ev.encode(),
+	}
+
+	return es.client.XAdd(record).Err()
 }
