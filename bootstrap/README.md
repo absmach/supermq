@@ -56,9 +56,9 @@ The service is configured using the environment variables presented in the follo
 | MF_THINGS_ES_URL              | Things service event source URL                                         | localhost:6379        |
 | MF_THINGS_ES_PASS             | Things service event source password                                    |                       |
 | MF_THINGS_ES_DB               | Things service event source database                                    | 0                     |
-| MF_BOOTSTRAP_ES_URL           | Botstrap service event source URL                                       | localhost:6379        |
-| MF_BOOTSTRAP_ES_PASS          | Botstrap service event source password                                  |                       |
-| MF_BOOTSTRAP_ES_DB            | Botstrap service event source database                                  | 0                     |
+| MF_BOOTSTRAP_ES_URL           | Bootstrap service event source URL                                      | localhost:6379        |
+| MF_BOOTSTRAP_ES_PASS          | Bootstrap service event source password                                 |                       |
+| MF_BOOTSTRAP_ES_DB            | Bootstrap service event source database                                 | 0                     |
 | MF_BOOTSTRAP_INSTANCE_NAME    | Bootstrap service instance name                                         | bootstrap             |
 
 ## Deployment
