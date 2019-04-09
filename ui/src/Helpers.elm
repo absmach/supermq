@@ -105,9 +105,9 @@ genPagination total currPage msg =
                 [ ul [ class "pagination" ]
                     ([ li [ classList [ ( "page-item", True ), ( "disabled", currPage == 1 ) ] ]
                         [ a
-                            ([ class "page-link" ]
-                                |> appendIf (currPage > 1)
-                                    (onClick (msg (currPage - 1)))
+                            (appendIf (currPage > 1)
+                                [ class "page-link" ]
+                                (onClick (msg (currPage - 1)))
                             )
                             [ text "Previous" ]
                         ]
@@ -119,10 +119,10 @@ genPagination total currPage msg =
                             pages
                         ++ [ li [ classList [ ( "page-item", True ), ( "disabled", disableNext currPage total ) ] ]
                                 [ a
-                                    ([ class "page-link" ]
-                                        |> appendIf
-                                            (not (disableNext currPage total))
-                                            (onClick (msg (currPage + 1)))
+                                    (appendIf
+                                        (not (disableNext currPage total))
+                                        [ class "page-link" ]
+                                        (onClick (msg (currPage + 1)))
                                     )
                                     [ text "Next" ]
                                 ]
@@ -182,8 +182,8 @@ isChecked id checkedEntitiesIds =
         False
 
 
-appendIf : Bool -> a -> List a -> List a
-appendIf flag value list =
+appendIf : Bool -> List a -> a -> List a
+appendIf flag list value =
     if flag then
         list ++ [ value ]
 
