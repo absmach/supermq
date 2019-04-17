@@ -548,8 +548,7 @@ func updateConnections(key, id string, connections []string, tx *sqlx.Tx) error 
 	}
 
 	q = `INSERT INTO connections (config_id, channel_id, config_owner, channel_owner) 
-		 VALUES (:config_id, :channel_id, :config_owner, :channel_owner)
-		 ON CONFLICT (config_id, config_owner, channel_id, channel_owner) DO NOTHING`
+		 VALUES (:config_id, :channel_id, :config_owner, :channel_owner)`
 
 	conns := []dbConnection{}
 	for _, conn := range connections {
