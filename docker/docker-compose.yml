@@ -12,6 +12,13 @@ networks:
   mainflux-base-net:
     driver: bridge
 
+volumes:
+  mainflux-users-db-volume:
+  mainflux-things-db-volume:
+  mainflux-mqtt-redis-volume:
+  mainflux-things-redis-volume:
+  mainflux-es-redis-volume:
+
 services:
   nginx:
     image: nginx:1.14.2
@@ -48,6 +55,8 @@ services:
       POSTGRES_DB: users
     networks:
       - mainflux-base-net
+    volumes:
+      - mainflux-users-db-volume:/var/lib/postgresql/data
 
   users:
     image: mainflux/users:latest
@@ -82,6 +91,8 @@ services:
       POSTGRES_DB: things
     networks:
       - mainflux-base-net
+    volumes:
+      - mainflux-things-db-volume:/var/lib/postgresql/data
 
   things-redis:
     image: redis:5.0-alpine
@@ -89,6 +100,8 @@ services:
     restart: on-failure
     networks:
       - mainflux-base-net
+    volumes:
+      - mainflux-things-redis-volume:/data
 
   things:
     image: mainflux/things:latest
@@ -105,7 +118,7 @@ services:
       MF_THINGS_DB_PASS: mainflux
       MF_THINGS_DB: things
       MF_THINGS_CACHE_URL: things-redis:6379
-      MF_THINGS_ES_URL: things-redis:6379
+      MF_THINGS_ES_URL: es-redis:6379
       MF_THINGS_HTTP_PORT: 8182
       MF_THINGS_GRPC_PORT: 8183
       MF_USERS_URL: users:8181
@@ -178,12 +191,23 @@ services:
     networks:
       - mainflux-base-net
 
+  es-redis:
+    image: redis:5.0-alpine
+    container_name: mainflux-es-redis
+    restart: on-failure
+    networks:
+      - mainflux-base-net
+    volumes:
+      - mainflux-es-redis-volume:/data
+
   mqtt-redis:
     image: redis:5.0-alpine
     container_name: mainflux-mqtt-redis
     restart: on-failure
     networks:
       - mainflux-base-net
+    volumes:
+      - mainflux-mqtt-redis-volume:/data
 
   mqtt-adapter:
     image: mainflux/mqtt:latest
@@ -199,6 +223,7 @@ services:
       MF_MQTT_ADAPTER_PORT: 1883
       MF_MQTT_ADAPTER_WS_PORT: 8880
       MF_MQTT_ADAPTER_REDIS_HOST: mqtt-redis
+      MF_MQTT_ADAPTER_ES_HOST: es-redis
       MF_NATS_URL: nats://nats:4222
       MF_THINGS_URL: things:8183
     ports:
