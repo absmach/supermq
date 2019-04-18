@@ -35,7 +35,7 @@ const (
 )
 
 var (
-	thing   = things.Thing{ Name: "test_app", Metadata: map[string]interface{}{"test": "data"}}
+	thing   = things.Thing{Name: "test_app", Metadata: map[string]interface{}{"test": "data"}}
 	channel = things.Channel{Name: "test", Metadata: map[string]interface{}{"test": "data"}}
 )
 
@@ -107,7 +107,7 @@ func TestAddThing(t *testing.T) {
 			status:      http.StatusCreated,
 			location:    "/things/1",
 		},
-    {
+		{
 			desc:        "add thing with empty JSON request",
 			req:         "{}",
 			contentType: contentType,
@@ -199,7 +199,7 @@ func TestUpdateThing(t *testing.T) {
 			auth:        token,
 			status:      http.StatusOK,
 		},
-    {
+		{
 			desc:        "update thing with empty JSON request",
 			req:         "{}",
 			id:          sth.ID,

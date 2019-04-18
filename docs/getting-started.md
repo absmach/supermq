@@ -104,4 +104,4 @@ mainflux-http   | {"level":"info","message":"Method publish took 336.685µs to c
 mainflux-normalizer | {"level":"info","message":"Method normalize took 108.126µs to complete without errors.","ts":"2019-01-08T22:19:30.149500543Z"}
 ```
 
-This proves that messages have been well send through the system, via protocol adapter (`mainflux-http`) and `normalizer` service which corectly parsed messages.
+This proves that messages have been well send through the system, via protocol adapter (`mainflux-http`) and `normalizer` service which correctly parsed messages.
