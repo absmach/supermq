@@ -12,12 +12,15 @@ import Bootstrap.Card.Block as Block
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
+import Bootstrap.Grid.Row as Row
 import Bootstrap.Utilities.Spacing as Spacing
 import Debug exposing (log)
 import Env exposing (env)
 import Error
-import Helpers
+import Helpers exposing (faIcons, fontAwesome)
 import Html exposing (..)
+import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Http exposing (header)
 import HttpMF exposing (paths)
@@ -89,6 +92,7 @@ type Msg
     | SubmitValue String
     | SendWebsocketMsg
     | ReceiveWebsocketMsg String
+    | SubmitReset
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -172,6 +176,9 @@ update msg model =
             , Cmd.none
             )
 
+        SubmitReset ->
+            ( { model | websocketInMsgs = [] }, Cmd.none )
+
 
 createSenML : Model -> String
 createSenML model =
@@ -199,7 +206,7 @@ view model =
         [ Grid.row []
             [ Grid.col []
                 [ Card.config []
-                    |> Card.headerH3 [] [ text "Websocket" ]
+                    |> Card.headerH3 [] [ div [ class "table_header" ] [ i [ style "margin-right" "15px", class faIcons.websocket ] [], text "Base attributes" ] ]
                     |> Card.block []
                         [ Block.custom
                             (Form.form []
@@ -208,7 +215,18 @@ view model =
                                 , createFormGroup "Base version" SubmitBaseVersion "version number of the media type format"
                                 , createFormGroup "Base time" SubmitBaseTime "added to the time"
                                 , createFormGroup "Base value" SubmitBaseValue "added to the value found in an entry"
-                                , createFormGroup "Name" SubmitName "Name of the sensor or parameter"
+                                ]
+                            )
+                        ]
+                    |> Card.view
+                ]
+            , Grid.col []
+                [ Card.config []
+                    |> Card.headerH3 [] [ div [ class "table_header" ] [ i [ style "margin-right" "15px", class faIcons.websocket ] [], text "Regular attributes" ] ]
+                    |> Card.block []
+                        [ Block.custom
+                            (Form.form []
+                                [ createFormGroup "Name" SubmitName "Name of the sensor or parameter"
                                 , createFormGroup "Unit" SubmitUnit "Unit for a measurement value"
                                 , createFormGroup "Time" SubmitTime "Time when the value was recorded"
                                 , createFormGroup "Value" SubmitValue "Value of the entry"
@@ -221,8 +239,29 @@ view model =
                     |> Card.view
                 ]
             ]
-
-        -- , model.websocketInMsgs |> List.map li |> Html.ol []
+        , Grid.row []
+            [ Grid.col []
+                [ Card.config []
+                    |> Card.headerH3 []
+                        [ Grid.row []
+                            [ Grid.col [ Col.attrs [ align "left" ] ]
+                                [ h3 [] [ div [ class "table_header" ] [ i [ style "margin-right" "15px", class faIcons.websocket ] [], text "Received messages" ] ]
+                                ]
+                            , Grid.col [ Col.attrs [ align "right" ] ]
+                                [ Button.button [ Button.secondary, Button.attrs [ align "right" ], Button.onClick SubmitReset ] [ text "Reset" ]
+                                ]
+                            ]
+                        ]
+                    |> Card.block []
+                        [ Block.custom
+                            (model.websocketInMsgs
+                                |> List.map li
+                                |> Html.ol []
+                            )
+                        ]
+                    |> Card.view
+                ]
+            ]
         ]
 
 
