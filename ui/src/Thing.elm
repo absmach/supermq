@@ -19,6 +19,7 @@ import Bootstrap.Grid.Row as Row
 import Bootstrap.Modal as Modal
 import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
+import Debug exposing (log)
 import Dict
 import Error
 import Helpers exposing (faIcons, fontAwesome)
@@ -48,7 +49,7 @@ type alias Thing =
     , name : Maybe String
     , id : String
     , key : String
-    , metadata : Maybe String
+    , metadata : Maybe JsonValue
     }
 
 
@@ -76,7 +77,7 @@ type alias Model =
 
 
 emptyThing =
-    Thing "" (Just "") "" "" (Just "")
+    Thing "" (Just "") "" "" (Just ValueNull)
 
 
 initial : Model
@@ -147,7 +148,7 @@ update msg model token =
                 { emptyThing
                     | name = Just model.name
                     , type_ = model.type_
-                    , metadata = Just model.metadata
+                    , metadata = stringToMaybeJsonValue model.metadata
                 }
                 thingEncoder
                 ProvisionedThing
@@ -172,7 +173,7 @@ update msg model token =
             ( { model
                 | editMode = True
                 , name = Helpers.parseString model.thing.name
-                , metadata = Helpers.parseString model.thing.metadata
+                , metadata = jsonValueToString (maybeJsonValueToJsonValue model.thing.metadata)
               }
             , Cmd.none
             )
@@ -185,7 +186,13 @@ update msg model token =
                 { emptyThing
                     | name = Just model.name
                     , type_ = model.thing.type_
-                    , metadata = Just model.metadata
+                    , metadata =
+                        case stringToMaybeJsonValue model.metadata of
+                            Just ValueNull ->
+                                model.thing.metadata
+
+                            _ ->
+                                stringToMaybeJsonValue model.metadata
                 }
                 thingEncoder
                 UpdatedThing
@@ -442,11 +449,11 @@ editModalForm model =
     if model.editMode then
         ModalMF.modalForm
             [ ModalMF.FormRecord "name" SubmitName (Helpers.parseString model.thing.name) model.name
-            , ModalMF.FormRecord "metadata" SubmitMetadata (Helpers.parseString model.thing.metadata) model.metadata
+            , ModalMF.FormRecord "metadata" SubmitMetadata (jsonValueToString (maybeJsonValueToJsonValue model.thing.metadata)) model.metadata
             ]
 
     else
-        ModalMF.modalDiv [ ( "name", Helpers.parseString model.thing.name ), ( "metadata", Helpers.parseString model.thing.metadata ) ]
+        ModalMF.modalDiv [ ( "name", Helpers.parseString model.thing.name ), ( "metadata", jsonValueToString (maybeJsonValueToJsonValue model.thing.metadata) ) ]
 
 
 
@@ -460,7 +467,7 @@ thingDecoder =
         (D.maybe (D.field "name" D.string))
         (D.field "id" D.string)
         (D.field "key" D.string)
-        (D.maybe (D.field "metadata" D.string))
+        (D.maybe (D.field "metadata" jsonValueDecoder))
 
 
 thingsDecoder : D.Decoder Things
@@ -475,8 +482,105 @@ thingEncoder thing =
     E.object
         [ ( "type", E.string thing.type_ )
         , ( "name", E.string (Helpers.parseString thing.name) )
-        , ( "metadata", E.string (Helpers.parseString thing.metadata) )
+        , ( "metadata", jsonValueToValue (maybeJsonValueToJsonValue thing.metadata) )
         ]
+
+
+
+-- JSONVALUE
+
+
+type JsonValue
+    = ValueObject (List ( String, JsonValue ))
+    | ValueArray (List JsonValue)
+    | ValueString String
+    | ValueFloat Float
+    | ValueInt Int
+    | ValueBool Bool
+    | ValueNull
+
+
+emptyString : String
+emptyString =
+    ""
+
+
+jsonValueDecoder : D.Decoder JsonValue
+jsonValueDecoder =
+    D.oneOf
+        [ D.keyValuePairs (D.lazy (\_ -> jsonValueDecoder)) |> D.map ValueObject
+        , D.list (D.lazy (\_ -> jsonValueDecoder)) |> D.map ValueArray
+        , D.int |> D.map ValueInt
+        , D.float |> D.map ValueFloat
+        , D.bool |> D.map ValueBool
+        , D.string |> D.map ValueString
+        , D.null emptyString |> D.map (\_ -> ValueNull)
+        ]
+
+
+stringToJsonValue : String -> Result D.Error JsonValue
+stringToJsonValue jsonString =
+    D.decodeString jsonValueDecoder jsonString
+
+
+jsonValueToValue : JsonValue -> E.Value
+jsonValueToValue json =
+    case json of
+        ValueObject dict ->
+            dict
+                |> List.map
+                    (\( k, v ) ->
+                        ( k, jsonValueToValue v )
+                    )
+                |> E.object
+
+        ValueArray array ->
+            array
+                |> E.list jsonValueToValue
+
+        ValueString str ->
+            E.string str
+
+        ValueFloat number ->
+            E.float number
+
+        ValueInt number ->
+            E.int number
+
+        ValueBool bool ->
+            E.bool bool
+
+        ValueNull ->
+            E.null
+
+
+jsonValueToString : JsonValue -> String
+jsonValueToString json =
+    json |> jsonValueToValue |> E.encode 0
+
+
+
+-- String -> Maybe JsonValue -> JsonValue
+
+
+stringToMaybeJsonValue : String -> Maybe JsonValue
+stringToMaybeJsonValue string =
+    case stringToJsonValue string of
+        Ok jsonValue ->
+            Just jsonValue
+
+        Err err ->
+            Just ValueNull
+
+
+maybeJsonValueToJsonValue : Maybe JsonValue -> JsonValue
+maybeJsonValueToJsonValue maybeJsonValue =
+    case maybeJsonValue of
+        Just jsonValue ->
+            jsonValue
+
+        Nothing ->
+            ValueNull
 
 
 
