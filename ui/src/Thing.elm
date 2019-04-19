@@ -30,6 +30,7 @@ import Http
 import HttpMF exposing (paths)
 import Json.Decode as D
 import Json.Encode as E
+import JsonMF exposing (..)
 import ModalMF
 import Url.Builder as B
 
@@ -173,7 +174,7 @@ update msg model token =
             ( { model
                 | editMode = True
                 , name = Helpers.parseString model.thing.name
-                , metadata = jsonValueToString (maybeJsonValueToJsonValue model.thing.metadata)
+                , metadata = maybeJsonValueToString model.thing.metadata
               }
             , Cmd.none
             )
@@ -187,12 +188,12 @@ update msg model token =
                     | name = Just model.name
                     , type_ = model.thing.type_
                     , metadata =
-                        case stringToMaybeJsonValue model.metadata of
-                            Just ValueNull ->
-                                model.thing.metadata
+                        case stringToJsonValue model.metadata of
+                            Ok jsonValue ->
+                                Just jsonValue
 
-                            _ ->
-                                stringToMaybeJsonValue model.metadata
+                            Err err ->
+                                model.thing.metadata
                 }
                 thingEncoder
                 UpdatedThing
@@ -449,11 +450,11 @@ editModalForm model =
     if model.editMode then
         ModalMF.modalForm
             [ ModalMF.FormRecord "name" SubmitName (Helpers.parseString model.thing.name) model.name
-            , ModalMF.FormRecord "metadata" SubmitMetadata (jsonValueToString (maybeJsonValueToJsonValue model.thing.metadata)) model.metadata
+            , ModalMF.FormRecord "metadata" SubmitMetadata (maybeJsonValueToString model.thing.metadata) model.metadata
             ]
 
     else
-        ModalMF.modalDiv [ ( "name", Helpers.parseString model.thing.name ), ( "metadata", jsonValueToString (maybeJsonValueToJsonValue model.thing.metadata) ) ]
+        ModalMF.modalDiv [ ( "name", Helpers.parseString model.thing.name ), ( "metadata", maybeJsonValueToString model.thing.metadata ) ]
 
 
 
@@ -484,103 +485,6 @@ thingEncoder thing =
         , ( "name", E.string (Helpers.parseString thing.name) )
         , ( "metadata", jsonValueToValue (maybeJsonValueToJsonValue thing.metadata) )
         ]
-
-
-
--- JSONVALUE
-
-
-type JsonValue
-    = ValueObject (List ( String, JsonValue ))
-    | ValueArray (List JsonValue)
-    | ValueString String
-    | ValueFloat Float
-    | ValueInt Int
-    | ValueBool Bool
-    | ValueNull
-
-
-emptyString : String
-emptyString =
-    ""
-
-
-jsonValueDecoder : D.Decoder JsonValue
-jsonValueDecoder =
-    D.oneOf
-        [ D.keyValuePairs (D.lazy (\_ -> jsonValueDecoder)) |> D.map ValueObject
-        , D.list (D.lazy (\_ -> jsonValueDecoder)) |> D.map ValueArray
-        , D.int |> D.map ValueInt
-        , D.float |> D.map ValueFloat
-        , D.bool |> D.map ValueBool
-        , D.string |> D.map ValueString
-        , D.null emptyString |> D.map (\_ -> ValueNull)
-        ]
-
-
-stringToJsonValue : String -> Result D.Error JsonValue
-stringToJsonValue jsonString =
-    D.decodeString jsonValueDecoder jsonString
-
-
-jsonValueToValue : JsonValue -> E.Value
-jsonValueToValue json =
-    case json of
-        ValueObject dict ->
-            dict
-                |> List.map
-                    (\( k, v ) ->
-                        ( k, jsonValueToValue v )
-                    )
-                |> E.object
-
-        ValueArray array ->
-            array
-                |> E.list jsonValueToValue
-
-        ValueString str ->
-            E.string str
-
-        ValueFloat number ->
-            E.float number
-
-        ValueInt number ->
-            E.int number
-
-        ValueBool bool ->
-            E.bool bool
-
-        ValueNull ->
-            E.null
-
-
-jsonValueToString : JsonValue -> String
-jsonValueToString json =
-    json |> jsonValueToValue |> E.encode 0
-
-
-
--- String -> Maybe JsonValue -> JsonValue
-
-
-stringToMaybeJsonValue : String -> Maybe JsonValue
-stringToMaybeJsonValue string =
-    case stringToJsonValue string of
-        Ok jsonValue ->
-            Just jsonValue
-
-        Err err ->
-            Just ValueNull
-
-
-maybeJsonValueToJsonValue : Maybe JsonValue -> JsonValue
-maybeJsonValueToJsonValue maybeJsonValue =
-    case maybeJsonValue of
-        Just jsonValue ->
-            jsonValue
-
-        Nothing ->
-            ValueNull
 
 
 
