@@ -88,7 +88,7 @@ func TestCreateThing(t *testing.T) {
 			location: "1",
 		},
 		{
-			desc:     "create new epmty thing",
+			desc:     "create new empty thing",
 			thing:    emptyThing,
 			token:    token,
 			err:      nil,

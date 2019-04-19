@@ -1,7 +1,7 @@
 swagger: "2.0"
 info:
   title: Mainflux things service
-  description: HTTP API for managing platform devices, applications and channels.
+  description: HTTP API for managing platform things and channels.
   version: "1.0.0"
 consumes:
   - "application/json"
@@ -262,7 +262,7 @@ paths:
       summary: Removes a channel
       description: |
         Removes a channel. The service will ensure that the subscribed apps and
-        devices are unsubscribed from the removed channel.
+        things are unsubscribed from the removed channel.
       tags:
         - channels
       parameters:
