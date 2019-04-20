@@ -299,8 +299,7 @@ updateWebsocket model msg =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Sub.map ThingMsg (Thing.subscriptions model.thing)
-        , Sub.map UserMsg (User.subscriptions model.user)
+        [ Sub.map UserMsg (User.subscriptions model.user)
         , Sub.map WebsocketMsg (Websocket.subscriptions model.websocket)
         ]
 
