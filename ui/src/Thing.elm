@@ -483,7 +483,7 @@ thingEncoder thing =
     E.object
         [ ( "type", E.string thing.type_ )
         , ( "name", E.string (Helpers.parseString thing.name) )
-        , ( "metadata", jsonValueToValue (maybeJsonValueToJsonValue thing.metadata) )
+        , ( "metadata", jsonValueEncoder (maybeJsonValueToJsonValue thing.metadata) )
         ]
 
 

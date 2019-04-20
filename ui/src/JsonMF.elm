@@ -4,7 +4,7 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 
-module JsonMF exposing (JsonValue(..), emptyString, jsonValueDecoder, jsonValueToString, jsonValueToValue, maybeJsonValueToJsonValue, maybeJsonValueToString, stringToJsonValue, stringToMaybeJsonValue)
+module JsonMF exposing (JsonValue(..), jsonValueDecoder, jsonValueEncoder, jsonValueToString, maybeJsonValueToJsonValue, maybeJsonValueToString, stringToJsonValue, stringToMaybeJsonValue)
 
 import Json.Decode as D
 import Json.Encode as E
@@ -24,11 +24,6 @@ type JsonValue
     | ValueNull
 
 
-emptyString : String
-emptyString =
-    ""
-
-
 jsonValueDecoder : D.Decoder JsonValue
 jsonValueDecoder =
     D.oneOf
@@ -38,7 +33,7 @@ jsonValueDecoder =
         , D.float |> D.map ValueFloat
         , D.bool |> D.map ValueBool
         , D.string |> D.map ValueString
-        , D.null emptyString |> D.map (\_ -> ValueNull)
+        , D.null "" |> D.map (\_ -> ValueNull)
         ]
 
 
@@ -47,20 +42,20 @@ stringToJsonValue jsonString =
     D.decodeString jsonValueDecoder jsonString
 
 
-jsonValueToValue : JsonValue -> E.Value
-jsonValueToValue json =
+jsonValueEncoder : JsonValue -> E.Value
+jsonValueEncoder json =
     case json of
         ValueObject dict ->
             dict
                 |> List.map
                     (\( k, v ) ->
-                        ( k, jsonValueToValue v )
+                        ( k, jsonValueEncoder v )
                     )
                 |> E.object
 
         ValueArray array ->
             array
-                |> E.list jsonValueToValue
+                |> E.list jsonValueEncoder
 
         ValueString str ->
             E.string str
@@ -79,8 +74,8 @@ jsonValueToValue json =
 
 
 jsonValueToString : JsonValue -> String
-jsonValueToString json =
-    json |> jsonValueToValue |> E.encode 0
+jsonValueToString jsonValue =
+    jsonValue |> jsonValueEncoder |> E.encode 0
 
 
 
