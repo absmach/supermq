@@ -427,8 +427,7 @@ thingsDecoder =
 thingEncoder : Thing -> E.Value
 thingEncoder thing =
     E.object
-        [ -- ( "type", E.string thing.type_ )
-          ( "name", E.string (Helpers.parseString thing.name) )
+        [ ( "name", E.string (Helpers.parseString thing.name) )
         , ( "metadata", jsonValueEncoder (maybeJsonValueToJsonValue thing.metadata) )
         ]
 

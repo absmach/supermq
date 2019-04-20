@@ -42,7 +42,6 @@ import Url
 import Url.Parser as UrlParser exposing ((</>))
 import User
 import Version
-import Websocket
 
 
 
@@ -73,7 +72,6 @@ type alias Model =
     , thing : Thing.Model
     , connection : Connection.Model
     , message : Message.Model
-    , websocket : Websocket.Model
     , view : String
     }
 
@@ -87,7 +85,6 @@ init _ url key =
         Thing.initial
         Connection.initial
         Message.initial
-        Websocket.initial
         (parse url)
     , Cmd.none
     )
@@ -125,13 +122,11 @@ type Msg
     | ThingMsg Thing.Msg
     | ConnectionMsg Connection.Msg
     | MessageMsg Message.Msg
-    | WebsocketMsg Websocket.Msg
     | Version
     | Channels
     | Things
     | Connection
     | Messages
-    | Websocket
 
 
 
@@ -172,9 +167,6 @@ update msg model =
         MessageMsg subMsg ->
             updateMessage model subMsg
 
-        WebsocketMsg subMsg ->
-            updateWebsocket model subMsg
-
         Version ->
             ( { model | view = "dashboard" }, Cmd.none )
 
@@ -194,9 +186,6 @@ update msg model =
 
         Messages ->
             updateMessage { model | view = "messages" } (Message.ThingMsg Thing.RetrieveThings)
-
-        Websocket ->
-            ( { model | view = "websocket" }, Cmd.none )
 
 
 updateUser : Model -> User.Msg -> ( Model, Cmd Msg )
@@ -283,15 +272,6 @@ updateMessage model msg =
     ( { model | message = updatedMessage }, Cmd.map MessageMsg messageCmd )
 
 
-updateWebsocket : Model -> Websocket.Msg -> ( Model, Cmd Msg )
-updateWebsocket model msg =
-    let
-        ( updatedWebsocket, websocketCmd ) =
-            Websocket.update msg model.websocket
-    in
-    ( { model | websocket = updatedWebsocket }, Cmd.map WebsocketMsg websocketCmd )
-
-
 
 -- SUBSCRIPTIONS
 
@@ -300,7 +280,6 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Sub.map UserMsg (User.subscriptions model.user)
-        , Sub.map WebsocketMsg (Websocket.subscriptions model.websocket)
         ]
 
 
@@ -336,7 +315,6 @@ view model =
                         , menuItem "Channels" Channels faIcons.channels (model.view == "channels")
                         , menuItem "Connection" Connection faIcons.connection (model.view == "connection")
                         , menuItem "Messages" Messages faIcons.messages (model.view == "messages")
-                        , menuItem "Websocket" Websocket faIcons.websocket (model.view == "websocket")
                         ]
                     ]
 
@@ -367,9 +345,6 @@ view model =
 
                         "messages" ->
                             Html.map MessageMsg (Message.view model.message)
-
-                        "websocket" ->
-                            Html.map WebsocketMsg (Websocket.view model.websocket)
 
                         _ ->
                             dashboard model
