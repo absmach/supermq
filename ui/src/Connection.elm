@@ -13,6 +13,7 @@ import Bootstrap.Form as Form
 import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Form.Input as Input
 import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
 import Bootstrap.Table as Table
 import Bootstrap.Text as Text
 import Bootstrap.Utilities.Spacing as Spacing
@@ -186,16 +187,16 @@ view model =
                 )
             ]
         , Grid.row []
-            [ Grid.col []
+            [ Grid.col [ Col.attrs [ align "left" ] ]
                 [ Form.form []
                     [ Button.button [ Button.success, Button.attrs [ Spacing.ml1 ], Button.onClick Connect ] [ text "Connect" ]
                     , Button.button [ Button.danger, Button.attrs [ Spacing.ml1 ], Button.onClick Disconnect ] [ text "Disconnect" ]
                     ]
                 ]
-            , Grid.col []
+            , Grid.col [ Col.attrs [ align "right" ] ]
                 [ Form.form []
-                    [ Button.button [ Button.success, Button.attrs [ Spacing.ml1 ], Button.onClick Listen ] [ text "Listen" ]
-                    , Button.button [ Button.danger, Button.attrs [ Spacing.ml1 ], Button.onClick Stop ] [ text "Stop" ]
+                    [ Button.button [ Button.success, Button.attrs [ Spacing.ml1 ], Button.onClick Listen ] [ text "WS Listen" ]
+                    , Button.button [ Button.danger, Button.attrs [ Spacing.ml1 ], Button.onClick Stop ] [ text "WS Stop" ]
                     ]
                 ]
             ]

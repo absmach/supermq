@@ -27,7 +27,7 @@ app.ports.connectWebsocket.subscribe(function(data) {
     app.ports.websocketIn.send(JSON.stringify({data: message.data, timestamp: message.timeStamp}));
   };
   
-  ws.onclose = function () {
+  ws.onclose = function (event) {
     MF.log("Websocket closed. URL: " + url);
     delete wss[ws.url];
   };
