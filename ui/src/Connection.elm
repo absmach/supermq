@@ -4,7 +4,7 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 
-module Connection exposing (Model, Msg(..), initial, update, view)
+port module Connection exposing (Model, Msg(..), initial, subscriptions, update, view)
 
 import Bootstrap.Button as Button
 import Bootstrap.Card as Card
@@ -25,7 +25,9 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Http
 import HttpMF exposing (paths)
+import Json.Encode as E
 import List.Extra
+import Ports exposing (..)
 import Thing
 import Url.Builder as B
 
@@ -35,7 +37,9 @@ type alias Model =
     , things : Thing.Model
     , channels : Channel.Model
     , checkedThingsIds : List String
+    , checkedThingsKeys : List String
     , checkedChannelsIds : List String
+    , websocketData : String
     }
 
 
@@ -45,40 +49,77 @@ initial =
     , things = Thing.initial
     , channels = Channel.initial
     , checkedThingsIds = []
+    , checkedThingsKeys = []
     , checkedChannelsIds = []
+    , websocketData = ""
     }
 
 
 type Msg
     = Connect
     | Disconnect
+    | Listen
+    | WebsocketData String
+    | Stop
     | ThingMsg Thing.Msg
     | ChannelMsg Channel.Msg
     | GotResponse (Result Http.Error String)
-    | CheckThing String
+    | CheckThing ( String, String )
     | CheckChannel String
+
+
+resetChecked : Model -> Model
+resetChecked model =
+    { model | checkedThingsIds = [], checkedThingsKeys = [], checkedChannelsIds = [] }
+
+
+isEmptyChecked : Model -> Bool
+isEmptyChecked model =
+    List.isEmpty model.checkedThingsIds || List.isEmpty model.checkedChannelsIds
 
 
 update : Msg -> Model -> String -> ( Model, Cmd Msg )
 update msg model token =
     case msg of
         Connect ->
-            if List.isEmpty model.checkedThingsIds || List.isEmpty model.checkedChannelsIds then
+            if isEmptyChecked model then
                 ( model, Cmd.none )
 
             else
-                ( { model | checkedThingsIds = [], checkedChannelsIds = [] }
+                ( resetChecked model
                 , Cmd.batch (connect model.checkedThingsIds model.checkedChannelsIds "PUT" token)
                 )
 
         Disconnect ->
-            if List.isEmpty model.checkedThingsIds || List.isEmpty model.checkedChannelsIds then
+            if isEmptyChecked model then
                 ( model, Cmd.none )
 
             else
-                ( { model | checkedThingsIds = [], checkedChannelsIds = [] }
+                ( resetChecked model
                 , Cmd.batch (connect model.checkedThingsIds model.checkedChannelsIds "DELETE" token)
                 )
+
+        Listen ->
+            if isEmptyChecked model then
+                ( model, Cmd.none )
+
+            else
+                ( resetChecked model
+                , Cmd.batch
+                    (connect model.checkedThingsIds model.checkedChannelsIds "PUT" token
+                        ++ listen model.checkedThingsKeys model.checkedChannelsIds
+                    )
+                )
+
+        Stop ->
+            if isEmptyChecked model then
+                ( resetChecked model, Cmd.none )
+
+            else
+                ( resetChecked model, Cmd.batch (stop model.checkedThingsKeys model.checkedChannelsIds) )
+
+        WebsocketData data ->
+            ( { model | websocketData = data }, Cmd.none )
 
         GotResponse result ->
             case result of
@@ -102,11 +143,27 @@ update msg model token =
             in
             ( { model | channels = updatedChannel }, Cmd.map ChannelMsg channelCmd )
 
-        CheckThing id ->
-            ( { model | checkedThingsIds = Helpers.checkEntity id model.checkedThingsIds }, Cmd.none )
+        CheckThing thing ->
+            ( { model
+                | checkedThingsIds = Helpers.checkEntity (Tuple.first thing) model.checkedThingsIds
+                , checkedThingsKeys = Helpers.checkEntity (Tuple.second thing) model.checkedThingsIds
+              }
+            , Cmd.none
+            )
 
         CheckChannel id ->
             ( { model | checkedChannelsIds = Helpers.checkEntity id model.checkedChannelsIds }, Cmd.none )
+
+
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ websocketState WebsocketData
+        ]
 
 
 
@@ -135,8 +192,15 @@ view model =
                     , Button.button [ Button.danger, Button.attrs [ Spacing.ml1 ], Button.onClick Disconnect ] [ text "Disconnect" ]
                     ]
                 ]
+            , Grid.col []
+                [ Form.form []
+                    [ Button.button [ Button.success, Button.attrs [ Spacing.ml1 ], Button.onClick Listen ] [ text "Listen" ]
+                    , Button.button [ Button.danger, Button.attrs [ Spacing.ml1 ], Button.onClick Stop ] [ text "Stop" ]
+                    ]
+                ]
             ]
         , Helpers.response model.response
+        , Helpers.response model.websocketData
         ]
 
 
@@ -147,7 +211,7 @@ genThingRows checkedThingsIds things =
             Table.tr []
                 [ Table.td [] [ text (" " ++ Helpers.parseString thing.name) ]
                 , Table.td [] [ text thing.id ]
-                , Table.td [] [ input [ type_ "checkbox", onClick (CheckThing thing.id), checked (Helpers.isChecked thing.id checkedThingsIds) ] [] ]
+                , Table.td [] [ input [ type_ "checkbox", onClick (CheckThing ( thing.id, thing.key )), checked (Helpers.isChecked thing.id checkedThingsIds) ] [] ]
                 ]
         )
         things
@@ -188,4 +252,44 @@ connect checkedThingsIds checkedChannelsIds method token =
                     checkedChannelsIds
             )
             checkedThingsIds
+        )
+
+
+listen : List String -> List String -> List (Cmd Msg)
+listen checkedThingsKeys checkedChannelsIds =
+    List.foldr (++)
+        []
+        (List.map
+            (\thingkey ->
+                List.map
+                    (\channelid ->
+                        connectWebsocket <|
+                            E.object
+                                [ ( "channelid", E.string channelid )
+                                , ( "thingkey", E.string thingkey )
+                                ]
+                    )
+                    checkedChannelsIds
+            )
+            checkedThingsKeys
+        )
+
+
+stop : List String -> List String -> List (Cmd Msg)
+stop checkedThingsKeys checkedChannelsIds =
+    List.foldr (++)
+        []
+        (List.map
+            (\thingkey ->
+                List.map
+                    (\channelid ->
+                        disconnectWebsocket <|
+                            E.object
+                                [ ( "channelid", E.string channelid )
+                                , ( "thingkey", E.string thingkey )
+                                ]
+                    )
+                    checkedChannelsIds
+            )
+            checkedThingsKeys
         )

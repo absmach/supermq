@@ -4,17 +4,21 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 
-port module Ports exposing (websocketIn, websocketOut)
+port module Ports exposing (connectWebsocket, disconnectWebsocket, websocketIn, websocketOut, websocketState)
 
--- PORTS
--- JavaScript usage: app.ports.websocketIn.send(response);
+import Json.Encode as E
 
 
 port websocketIn : (String -> msg) -> Sub msg
 
 
+port websocketState : (String -> msg) -> Sub msg
 
--- JavaScript usage: app.ports.websocketOut.subscribe(handler);
+
+port websocketOut : E.Value -> Cmd msg
 
 
-port websocketOut : String -> Cmd msg
+port connectWebsocket : E.Value -> Cmd msg
+
+
+port disconnectWebsocket : E.Value -> Cmd msg

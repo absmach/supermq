@@ -280,6 +280,8 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Sub.map UserMsg (User.subscriptions model.user)
+        , Sub.map ConnectionMsg (Connection.subscriptions model.connection)
+        , Sub.map MessageMsg (Message.subscriptions model.message)
         ]
 
 

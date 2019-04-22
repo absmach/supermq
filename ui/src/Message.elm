@@ -4,7 +4,7 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 
-module Message exposing (Model, Msg(..), initial, update, view)
+port module Message exposing (Model, Msg(..), initial, subscriptions, update, view)
 
 import Bootstrap.Button as Button
 import Bootstrap.Card as Card
@@ -24,7 +24,9 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Http
 import HttpMF exposing (paths)
+import Json.Encode as E
 import List.Extra
+import Ports exposing (..)
 import Thing
 import Url.Builder as B
 
@@ -37,6 +39,7 @@ type alias Model =
     , channels : Channel.Model
     , thingid : String
     , checkedChannelsIds : List String
+    , websocketData : String
     }
 
 
@@ -49,17 +52,25 @@ initial =
     , channels = Channel.initial
     , thingid = ""
     , checkedChannelsIds = []
+    , websocketData = ""
     }
 
 
 type Msg
     = SubmitMessage String
     | SendMessage
+    | WebsocketSend
+    | WebsocketMsg String
     | SentMessage (Result Http.Error String)
     | ThingMsg Thing.Msg
     | ChannelMsg Channel.Msg
     | SelectedThing String String Channel.Msg
     | CheckChannel String
+
+
+resetSent : Model -> Model
+resetSent model =
+    { model | message = "", thingkey = "", response = "", thingid = "" }
 
 
 update : Msg -> Model -> String -> ( Model, Cmd Msg )
@@ -69,10 +80,26 @@ update msg model token =
             ( { model | message = message }, Cmd.none )
 
         SendMessage ->
-            ( { model | message = "", thingkey = "", response = "", thingid = "" }
+            ( model
             , Cmd.batch
                 (List.map
                     (\channelid -> send channelid model.thingkey model.message)
+                    model.checkedChannelsIds
+                )
+            )
+
+        WebsocketSend ->
+            ( model
+            , Cmd.batch
+                (List.map
+                    (\channelid ->
+                        websocketOut <|
+                            E.object
+                                [ ( "channelid", E.string channelid )
+                                , ( "thingkey", E.string model.thingkey )
+                                , ( "message", E.string model.message )
+                                ]
+                    )
                     model.checkedChannelsIds
                 )
             )
@@ -84,6 +111,9 @@ update msg model token =
 
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
+
+        WebsocketMsg data ->
+            ( { model | websocketData = data }, Cmd.none )
 
         ThingMsg subMsg ->
             updateThing model subMsg token
@@ -117,6 +147,18 @@ updateChannel model msg token =
 
 
 
+-- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ websocketIn WebsocketMsg
+        , websocketState WebsocketMsg
+        ]
+
+
+
 -- VIEW
 
 
@@ -146,6 +188,7 @@ view model =
                                     [ Input.text [ Input.id "message", Input.onInput SubmitMessage ]
                                     ]
                                 , Button.button [ Button.secondary, Button.attrs [ Spacing.ml1 ], Button.onClick SendMessage ] [ text "Send" ]
+                                , Button.button [ Button.secondary, Button.attrs [ Spacing.ml1 ], Button.onClick WebsocketSend ] [ text "Websocket" ]
                                 ]
                             )
                         ]
@@ -153,6 +196,7 @@ view model =
                 ]
             ]
         , Helpers.response model.response
+        , Helpers.response model.websocketData
         ]
 
 
