@@ -39,7 +39,7 @@ type alias Model =
     , checkedThingsIds : List String
     , checkedThingsKeys : List String
     , checkedChannelsIds : List String
-    , websocketData : String
+    , websocketData : List String
     }
 
 
@@ -51,7 +51,7 @@ initial =
     , checkedThingsIds = []
     , checkedThingsKeys = []
     , checkedChannelsIds = []
-    , websocketData = ""
+    , websocketData = []
     }
 
 
@@ -119,7 +119,7 @@ update msg model token =
                 ( resetChecked model, Cmd.batch (stop model.checkedThingsKeys model.checkedChannelsIds) )
 
         WebsocketData data ->
-            ( { model | websocketData = data }, Cmd.none )
+            ( { model | websocketData = data :: Helpers.resetList model.websocketData 5 }, Cmd.none )
 
         GotResponse result ->
             case result of
@@ -200,7 +200,7 @@ view model =
                 ]
             ]
         , Helpers.response model.response
-        , Helpers.response model.websocketData
+        , Helpers.genOrderedList model.websocketData
         ]
 
 

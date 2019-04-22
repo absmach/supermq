@@ -39,7 +39,7 @@ type alias Model =
     , channels : Channel.Model
     , thingid : String
     , checkedChannelsIds : List String
-    , websocketData : String
+    , websocketData : List String
     }
 
 
@@ -52,7 +52,7 @@ initial =
     , channels = Channel.initial
     , thingid = ""
     , checkedChannelsIds = []
-    , websocketData = ""
+    , websocketData = []
     }
 
 
@@ -113,7 +113,7 @@ update msg model token =
                     ( { model | response = Error.handle error }, Cmd.none )
 
         WebsocketMsg data ->
-            ( { model | websocketData = data }, Cmd.none )
+            ( { model | websocketData = data :: Helpers.resetList model.websocketData 5 }, Cmd.none )
 
         ThingMsg subMsg ->
             updateThing model subMsg token
@@ -196,7 +196,7 @@ view model =
                 ]
             ]
         , Helpers.response model.response
-        , Helpers.response model.websocketData
+        , Helpers.genOrderedList model.websocketData
         ]
 
 
