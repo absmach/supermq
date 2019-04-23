@@ -1,12 +1,15 @@
 var wss = new Object();
 
 MF.log = function(msg) {
-    console.log(msg);
-    app.ports.websocketState.send(msg);
+  console.log(msg);
+  app.ports.websocketState.send(msg);
 }
 
+MF.url = function(data) {
+  return 'wss://localhost/ws/channels/' + data.channelid + '/messages?authorization=' + data.thingkey
+}
 app.ports.connectWebsocket.subscribe(function(data) {
-  var url = 'wss://localhost/ws/channels/' + data.channelid + '/messages?authorization=' + data.thingkey
+  var url = MF.url(data);
   if (wss[url]) {
     MF.log("Websocket already open. URL: " + url );
     return;
@@ -35,20 +38,28 @@ app.ports.connectWebsocket.subscribe(function(data) {
 });
 
 app.ports.websocketOut.subscribe(function(data) {
-  var url = 'wss://localhost/ws/channels/' + data.channelid + '/messages?authorization=' + data.thingkey
+  var url = MF.url(data);
   if (wss[url]) {
     wss[url].send(data.message);
   } else {
-    MF.log("Websocket is not open. URL: " + url);
+    MF.log("Message not sent. Websocket is not open. URL: " + url);
   }
 });
 
 app.ports.disconnectWebsocket.subscribe(function(data) {
-  var url = 'wss://localhost/ws/channels/' + data.channelid + '/messages?authorization=' + data.thingkey
+  var url = MF.url(data);
   if (wss[url]) {
     wss[url].close();
   } else {
-    MF.log("Websocket is not open. URL: " + url);
+    MF.log("Websocket not disconnected. Websocket is not open. URL: " + url);
   }
 })
 
+app.ports.queryWebsocket.subscribe(function(data) {
+  var url = MF.url(data);
+  if (wss[url]) {
+    app.ports.retrieveWebsocket.send({url: url, readyState : wss[url].readyState});
+  } else {
+    app.ports.retrieveWebsocket.send({url: "", readyState : -1})
+  }
+})

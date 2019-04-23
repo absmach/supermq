@@ -17,6 +17,7 @@ import Bootstrap.Grid as Grid
 import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
 import Channel
+import Debug exposing (log)
 import Error
 import Helpers exposing (faIcons, fontAwesome)
 import Html exposing (..)
@@ -24,11 +25,18 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Http
 import HttpMF exposing (paths)
+import Json.Decode as D
 import Json.Encode as E
 import List.Extra
 import Ports exposing (..)
 import Thing
 import Url.Builder as B
+
+
+type alias CheckedChannel =
+    { id : String
+    , ws : Int
+    }
 
 
 type alias Model =
@@ -39,6 +47,7 @@ type alias Model =
     , channels : Channel.Model
     , thingid : String
     , checkedChannelsIds : List String
+    , checkedChannelsIdsWs : List String
     , websocketData : List String
     }
 
@@ -52,6 +61,7 @@ initial =
     , channels = Channel.initial
     , thingid = ""
     , checkedChannelsIds = []
+    , checkedChannelsIdsWs = []
     , websocketData = []
     }
 
@@ -61,10 +71,11 @@ type Msg
     | SendMessage
     | WebsocketSend
     | WebsocketMsg String
+    | RetrievedWebsocket E.Value
     | SentMessage (Result Http.Error String)
     | ThingMsg Thing.Msg
     | ChannelMsg Channel.Msg
-    | SelectedThing String String Channel.Msg
+    | SelectThing String String Channel.Msg
     | CheckChannel String
 
 
@@ -115,14 +126,30 @@ update msg model token =
         WebsocketMsg data ->
             ( { model | websocketData = data :: Helpers.resetList model.websocketData 5 }, Cmd.none )
 
+        RetrievedWebsocket value ->
+            case D.decodeValue websocketDecoder value of
+                Ok ws ->
+                    let
+                        channelid =
+                            channelIdFromUrl ws.url
+                    in
+                    if String.length channelid > 0 then
+                        ( { model | checkedChannelsIdsWs = log "wss" (Helpers.checkEntity channelid model.checkedChannelsIdsWs) }, Cmd.none )
+
+                    else
+                        ( model, Cmd.none )
+
+                Err err ->
+                    ( model, Cmd.none )
+
         ThingMsg subMsg ->
             updateThing model subMsg token
 
         ChannelMsg subMsg ->
             updateChannel model subMsg token
 
-        SelectedThing thingid thingkey channelMsg ->
-            updateChannel { model | thingid = thingid, thingkey = thingkey, checkedChannelsIds = [] } (Channel.RetrieveChannelsForThing thingid) token
+        SelectThing thingid thingkey channelMsg ->
+            updateChannel { model | thingid = thingid, thingkey = thingkey, checkedChannelsIds = [], checkedChannelsIdsWs = [] } (Channel.RetrieveChannelsForThing thingid) token
 
         CheckChannel id ->
             ( { model | checkedChannelsIds = Helpers.checkEntity id model.checkedChannelsIds }, Cmd.none )
@@ -142,8 +169,29 @@ updateChannel model msg token =
     let
         ( updatedChannel, channelCmd ) =
             Channel.update msg model.channels token
+
+        checkedChannels =
+            updatedChannel.channels.list
     in
-    ( { model | channels = updatedChannel }, Cmd.map ChannelMsg channelCmd )
+    case msg of
+        Channel.RetrievedChannels _ ->
+            ( { model | channels = updatedChannel }
+            , Cmd.batch
+                (Cmd.map ChannelMsg channelCmd
+                    :: List.map
+                        (\channel ->
+                            queryWebsocket <|
+                                E.object
+                                    [ ( "channelid", E.string channel.id )
+                                    , ( "thingkey", E.string model.thingkey )
+                                    ]
+                        )
+                        checkedChannels
+                )
+            )
+
+        _ ->
+            ( { model | channels = updatedChannel }, Cmd.map ChannelMsg channelCmd )
 
 
 
@@ -154,7 +202,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ websocketIn WebsocketMsg
-        , websocketState WebsocketMsg
+        , retrieveWebsocket RetrievedWebsocket
         ]
 
 
@@ -168,12 +216,12 @@ view model =
         [ Grid.row []
             [ Grid.col []
                 (Helpers.appendIf (model.things.things.total > model.things.limit)
-                    [ Helpers.genCardConfig faIcons.things "Things" (genThingRows model.things.things.list) ]
+                    [ Helpers.genCardConfig faIcons.things "Things" (genThingRows model) ]
                     (Html.map ThingMsg (Helpers.genPagination model.things.things.total (Helpers.offsetToPage model.things.offset model.things.limit) Thing.SubmitPage))
                 )
             , Grid.col []
                 (Helpers.appendIf (model.channels.channels.total > model.channels.limit)
-                    [ Helpers.genCardConfig faIcons.channels "Channels" (genChannelRows model.checkedChannelsIds model.channels.channels.list) ]
+                    [ Helpers.genCardConfig faIcons.channels "Channels" (genChannelRows model) ]
                     (Html.map ChannelMsg (Helpers.genPagination model.channels.channels.total (Helpers.offsetToPage model.channels.offset model.channels.limit) Channel.SubmitPage))
                 )
             ]
@@ -200,30 +248,39 @@ view model =
         ]
 
 
-genThingRows : List Thing.Thing -> List (Table.Row Msg)
-genThingRows things =
+genThingRows : Model -> List (Table.Row Msg)
+genThingRows model =
     List.map
         (\thing ->
             Table.tr []
                 [ Table.td [] [ label [] [ text (Helpers.parseString thing.name) ] ]
                 , Table.td [] [ text thing.id ]
-                , Table.td [] [ input [ type_ "radio", onClick (SelectedThing thing.id thing.key (Channel.RetrieveChannelsForThing thing.id)), name "things" ] [] ]
+                , Table.td [] [ input [ type_ "radio", onClick (SelectThing thing.id thing.key (Channel.RetrieveChannelsForThing thing.id)), name "things" ] [] ]
                 ]
         )
-        things
+        model.things.things.list
 
 
-genChannelRows : List String -> List Channel.Channel -> List (Table.Row Msg)
-genChannelRows checkedChannelsIds channels =
+genChannelRows : Model -> List (Table.Row Msg)
+genChannelRows model =
     List.map
         (\channel ->
             Table.tr []
                 [ Table.td [] [ text (" " ++ Helpers.parseString channel.name) ]
-                , Table.td [] [ text channel.id ]
-                , Table.td [] [ input [ type_ "checkbox", onClick (CheckChannel channel.id), checked (Helpers.isChecked channel.id checkedChannelsIds) ] [] ]
+                , Table.td [] [ text (channel.id ++ isInList channel.id model.checkedChannelsIdsWs) ]
+                , Table.td [] [ input [ type_ "checkbox", onClick (CheckChannel channel.id), checked (Helpers.isChecked channel.id model.checkedChannelsIds) ] [] ]
                 ]
         )
-        channels
+        model.channels.channels.list
+
+
+isInList : String -> List String -> String
+isInList id idList =
+    if List.member id idList then
+        "*WS"
+
+    else
+        ""
 
 
 

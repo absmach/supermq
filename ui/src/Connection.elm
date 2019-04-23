@@ -26,6 +26,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Http
 import HttpMF exposing (paths)
+import Json.Decode as D
 import Json.Encode as E
 import List.Extra
 import Ports exposing (..)
