@@ -41,7 +41,7 @@ type alias Model =
     , checkedThingsIds : List String
     , checkedThingsKeys : List String
     , checkedChannelsIds : List String
-    , websocketData : List String
+    , websocketIn : List String
     }
 
 
@@ -53,7 +53,7 @@ initial =
     , checkedThingsIds = []
     , checkedThingsKeys = []
     , checkedChannelsIds = []
-    , websocketData = []
+    , websocketIn = []
     }
 
 
@@ -61,7 +61,7 @@ type Msg
     = Connect
     | Disconnect
     | Listen
-    | WebsocketData String
+    | WebsocketIn String
     | Stop
     | ThingMsg Thing.Msg
     | ChannelMsg Channel.Msg
@@ -120,8 +120,8 @@ update msg model token =
             else
                 ( resetChecked model, Cmd.batch (stop model.checkedThingsKeys model.checkedChannelsIds) )
 
-        WebsocketData data ->
-            ( { model | websocketData = data :: Helpers.resetList model.websocketData 5 }, Cmd.none )
+        WebsocketIn data ->
+            ( { model | websocketIn = data :: model.websocketIn }, Cmd.none )
 
         GotResponse result ->
             case result of
@@ -164,7 +164,7 @@ update msg model token =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ websocketState WebsocketData
+        [ websocketIn WebsocketIn
         ]
 
 
@@ -202,7 +202,7 @@ view model =
                 ]
             ]
         , Helpers.response model.response
-        , Helpers.genOrderedList model.websocketData
+        , Helpers.genOrderedList model.websocketIn
         ]
 
 
@@ -266,10 +266,7 @@ listen checkedThingsKeys checkedChannelsIds =
                 List.map
                     (\channelid ->
                         connectWebsocket <|
-                            E.object
-                                [ ( "channelid", E.string channelid )
-                                , ( "thingkey", E.string thingkey )
-                                ]
+                            websocketEncoder (Websocket channelid thingkey "")
                     )
                     checkedChannelsIds
             )
@@ -286,10 +283,7 @@ stop checkedThingsKeys checkedChannelsIds =
                 List.map
                     (\channelid ->
                         disconnectWebsocket <|
-                            E.object
-                                [ ( "channelid", E.string channelid )
-                                , ( "thingkey", E.string thingkey )
-                                ]
+                            websocketEncoder (Websocket channelid thingkey "")
                     )
                     checkedChannelsIds
             )

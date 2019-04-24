@@ -2,7 +2,7 @@ var wss = new Object();
 
 MF.log = function(msg) {
   console.log(msg);
-  app.ports.websocketState.send(msg);
+  app.ports.websocketIn.send(msg);
 }
 
 MF.url = function(data) {
@@ -55,11 +55,25 @@ app.ports.disconnectWebsocket.subscribe(function(data) {
   }
 })
 
-app.ports.queryWebsocket.subscribe(function(data) {
-  var url = MF.url(data);
-  if (wss[url]) {
-    app.ports.retrieveWebsocket.send({url: url, readyState : wss[url].readyState});
-  } else {
-    app.ports.retrieveWebsocket.send({url: "", readyState : -1})
-  }
+if (typeof app.ports.queryWebsocket !== 'undefined') {
+  app.ports.queryWebsocket.subscribe(function(data) {
+    var url = MF.url(data);
+    if (wss[url]) {
+      app.ports.retrieveWebsocket.send({url: url, readyState : wss[url].readyState});
+    } else {
+      app.ports.retrieveWebsocket.send({url: "", readyState : -1})
+    }
+  })
+}
+
+app.ports.queryWebsockets.subscribe(function(data) {
+  console.log(data);
+  var wssList = []
+  data.forEach(function(item, index){
+    var url = MF.url(item);
+    if (wss[url]) {
+      wssList.push({url: url, readyState : wss[url].readyState})
+    }
+  })
+  app.ports.retrieveWebsockets.send(wssList);
 })

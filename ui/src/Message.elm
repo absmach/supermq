@@ -48,7 +48,7 @@ type alias Model =
     , thingid : String
     , checkedChannelsIds : List String
     , checkedChannelsIdsWs : List String
-    , websocketData : List String
+    , websocketIn : List String
     }
 
 
@@ -62,7 +62,7 @@ initial =
     , thingid = ""
     , checkedChannelsIds = []
     , checkedChannelsIdsWs = []
-    , websocketData = []
+    , websocketIn = []
     }
 
 
@@ -70,8 +70,8 @@ type Msg
     = SubmitMessage String
     | SendMessage
     | WebsocketSend
-    | WebsocketMsg String
-    | RetrievedWebsocket E.Value
+    | WebsocketIn String
+    | RetrievedWebsockets E.Value
     | SentMessage (Result Http.Error String)
     | ThingMsg Thing.Msg
     | ChannelMsg Channel.Msg
@@ -105,11 +105,7 @@ update msg model token =
                 (List.map
                     (\channelid ->
                         websocketOut <|
-                            E.object
-                                [ ( "channelid", E.string channelid )
-                                , ( "thingkey", E.string model.thingkey )
-                                , ( "message", E.string model.message )
-                                ]
+                            websocketEncoder (Websocket channelid model.thingkey model.message)
                     )
                     model.checkedChannelsIds
                 )
@@ -123,23 +119,23 @@ update msg model token =
                 Err error ->
                     ( { model | response = Error.handle error }, Cmd.none )
 
-        WebsocketMsg data ->
-            ( { model | websocketData = data :: Helpers.resetList model.websocketData 5 }, Cmd.none )
+        WebsocketIn data ->
+            ( { model | websocketIn = data :: model.websocketIn }, Cmd.none )
 
-        RetrievedWebsocket value ->
-            case D.decodeValue websocketDecoder value of
-                Ok ws ->
+        RetrievedWebsockets wssList ->
+            case D.decodeValue websocketsQueryDecoder wssList of
+                Ok wssL ->
                     let
-                        channelid =
-                            channelIdFromUrl ws.url
+                        l =
+                            List.map
+                                (\wss ->
+                                    channelIdFromUrl wss.url
+                                )
+                                wssL
                     in
-                    if String.length channelid > 0 then
-                        ( { model | checkedChannelsIdsWs = log "wss" (Helpers.checkEntity channelid model.checkedChannelsIdsWs) }, Cmd.none )
+                    ( { model | checkedChannelsIdsWs = log "wssList" l }, Cmd.none )
 
-                    else
-                        ( model, Cmd.none )
-
-                Err err ->
+                Err _ ->
                     ( model, Cmd.none )
 
         ThingMsg subMsg ->
@@ -175,19 +171,16 @@ updateChannel model msg token =
     in
     case msg of
         Channel.RetrievedChannels _ ->
-            ( { model | channels = updatedChannel }
-            , Cmd.batch
-                (Cmd.map ChannelMsg channelCmd
-                    :: List.map
+            let
+                wssList =
+                    List.map
                         (\channel ->
-                            queryWebsocket <|
-                                E.object
-                                    [ ( "channelid", E.string channel.id )
-                                    , ( "thingkey", E.string model.thingkey )
-                                    ]
+                            Websocket channel.id model.thingkey ""
                         )
                         checkedChannels
-                )
+            in
+            ( { model | channels = updatedChannel }
+            , queryWebsockets (websocketsEncoder wssList)
             )
 
         _ ->
@@ -201,8 +194,8 @@ updateChannel model msg token =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ websocketIn WebsocketMsg
-        , retrieveWebsocket RetrievedWebsocket
+        [ websocketIn WebsocketIn
+        , retrieveWebsockets RetrievedWebsockets
         ]
 
 
@@ -244,7 +237,7 @@ view model =
                 ]
             ]
         , Helpers.response model.response
-        , Helpers.genOrderedList model.websocketData
+        , Helpers.genOrderedList model.websocketIn
         ]
 
 
@@ -277,7 +270,7 @@ genChannelRows model =
 isInList : String -> List String -> String
 isInList id idList =
     if List.member id idList then
-        "*WS"
+        " +WS"
 
     else
         ""
