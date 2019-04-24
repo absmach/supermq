@@ -109,7 +109,7 @@ update msg model token =
                 ( resetChecked model
                 , Cmd.batch
                     (connect model.checkedThingsIds model.checkedChannelsIds "PUT" token
-                        ++ listen model.checkedThingsKeys model.checkedChannelsIds
+                        ++ ws connectWebsocket model.checkedThingsKeys model.checkedChannelsIds
                     )
                 )
 
@@ -118,7 +118,7 @@ update msg model token =
                 ( resetChecked model, Cmd.none )
 
             else
-                ( resetChecked model, Cmd.batch (stop model.checkedThingsKeys model.checkedChannelsIds) )
+                ( resetChecked model, Cmd.batch (ws disconnectWebsocket model.checkedThingsKeys model.checkedChannelsIds) )
 
         WebsocketIn data ->
             ( { model | websocketIn = data :: model.websocketIn }, Cmd.none )
@@ -148,7 +148,7 @@ update msg model token =
         CheckThing thing ->
             ( { model
                 | checkedThingsIds = Helpers.checkEntity (Tuple.first thing) model.checkedThingsIds
-                , checkedThingsKeys = Helpers.checkEntity (Tuple.second thing) model.checkedThingsIds
+                , checkedThingsKeys = Helpers.checkEntity (Tuple.second thing) model.checkedThingsKeys
               }
             , Cmd.none
             )
@@ -257,32 +257,15 @@ connect checkedThingsIds checkedChannelsIds method token =
         )
 
 
-listen : List String -> List String -> List (Cmd Msg)
-listen checkedThingsKeys checkedChannelsIds =
+ws : (E.Value -> Cmd Msg) -> List String -> List String -> List (Cmd Msg)
+ws command checkedThingsKeys checkedChannelsIds =
     List.foldr (++)
         []
         (List.map
             (\thingkey ->
                 List.map
                     (\channelid ->
-                        connectWebsocket <|
-                            websocketEncoder (Websocket channelid thingkey "")
-                    )
-                    checkedChannelsIds
-            )
-            checkedThingsKeys
-        )
-
-
-stop : List String -> List String -> List (Cmd Msg)
-stop checkedThingsKeys checkedChannelsIds =
-    List.foldr (++)
-        []
-        (List.map
-            (\thingkey ->
-                List.map
-                    (\channelid ->
-                        disconnectWebsocket <|
+                        command <|
                             websocketEncoder (Websocket channelid thingkey "")
                     )
                     checkedChannelsIds

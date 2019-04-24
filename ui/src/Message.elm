@@ -270,7 +270,7 @@ genChannelRows model =
 isInList : String -> List String -> String
 isInList id idList =
     if List.member id idList then
-        " +WS"
+        " *WS*"
 
     else
         ""
