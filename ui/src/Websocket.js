@@ -12,14 +12,14 @@ MF.url = function(data) {
 app.ports.connectWebsocket.subscribe(function(data) {
     var url = MF.url(data);
     if (wss[url]) {
-        MF.log("Websocket already open. URL: " + url );
+        MF.log('Websocket already open. URL: ' + url );
         return;
     }
 
     var ws = new WebSocket(url);
     
     ws.onopen = function (event) {
-        MF.log("Websocket opened. URL: " + url);
+        MF.log('Websocket opened. URL: ' + url);
         wss[url] = ws;          
     }
 
@@ -32,7 +32,7 @@ app.ports.connectWebsocket.subscribe(function(data) {
     };
     
     ws.onclose = function (event) {
-        MF.log("Websocket closed. URL: " + url);
+        MF.log('Websocket closed. URL: ' + url);
         delete wss[ws.url];
     };
 });
@@ -42,7 +42,7 @@ app.ports.websocketOut.subscribe(function(data) {
     if (wss[url]) {
         wss[url].send(data.message);
     } else {
-        MF.log("Message not sent. Websocket is not open. URL: " + url);
+        MF.log('Message not sent. Websocket is not open. URL: ' + url);
     }
 });
 
@@ -51,7 +51,7 @@ app.ports.disconnectWebsocket.subscribe(function(data) {
     if (wss[url]) {
         wss[url].close();
     } else {
-        MF.log("Websocket not disconnected. Websocket is not open. URL: " + url);
+        MF.log('Websocket not disconnected. Websocket is not open. URL: ' + url);
     }
 })
 
@@ -61,7 +61,7 @@ if (typeof app.ports.queryWebsocket !== 'undefined') {
         if (wss[url]) {
             app.ports.retrieveWebsocket.send({url: url, readyState : wss[url].readyState});
         } else {
-            app.ports.retrieveWebsocket.send({url: "", readyState : -1})
+            app.ports.retrieveWebsocket.send({url: '', readyState : -1})
         }
     })
 }
