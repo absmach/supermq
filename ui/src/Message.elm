@@ -14,6 +14,7 @@ import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Radio as Radio
 import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
 import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing as Spacing
 import Channel
@@ -69,7 +70,8 @@ initial =
 type Msg
     = SubmitMessage String
     | SendMessage
-    | WebsocketSend
+    | Listen
+    | Stop
     | WebsocketIn String
     | RetrievedWebsockets E.Value
     | SentMessage (Result Http.Error String)
@@ -99,17 +101,19 @@ update msg model token =
                 )
             )
 
-        WebsocketSend ->
-            ( model
-            , Cmd.batch
-                (List.map
-                    (\channelid ->
-                        websocketOut <|
-                            websocketEncoder (Websocket channelid model.thingkey model.message)
-                    )
-                    model.checkedChannelsIds
-                )
-            )
+        Listen ->
+            if List.isEmpty model.checkedChannelsIds then
+                ( model, Cmd.none )
+
+            else
+                ( model, Cmd.batch <| ws connectWebsocket model )
+
+        Stop ->
+            if List.isEmpty model.checkedChannelsIds then
+                ( model, Cmd.none )
+
+            else
+                ( model, Cmd.batch <| ws disconnectWebsocket model )
 
         SentMessage result ->
             case result of
@@ -125,15 +129,19 @@ update msg model token =
         RetrievedWebsockets wssList ->
             case D.decodeValue websocketsQueryDecoder wssList of
                 Ok wssL ->
-                    let
-                        l =
-                            List.map
-                                (\wss ->
-                                    channelIdFromUrl wss.url
-                                )
-                                wssL
-                    in
-                    ( { model | checkedChannelsIdsWs = log "wssList" l }, Cmd.none )
+                    if List.isEmpty wssL then
+                        ( model, Cmd.none )
+
+                    else
+                        let
+                            l =
+                                List.map
+                                    (\wss ->
+                                        channelIdFromUrl wss.url
+                                    )
+                                    wssL
+                        in
+                        ( { model | checkedChannelsIdsWs = l }, Cmd.none )
 
                 Err _ ->
                     ( model, Cmd.none )
@@ -151,13 +159,28 @@ update msg model token =
             ( { model | checkedChannelsIds = Helpers.checkEntity id model.checkedChannelsIds }, Cmd.none )
 
 
+retrieveWebsocketsForThing : List Channel.Channel -> String -> Cmd Msg
+retrieveWebsocketsForThing channels thingkey =
+    let
+        wssList =
+            List.map
+                (\channel ->
+                    Websocket channel.id thingkey ""
+                )
+                channels
+    in
+    queryWebsockets (websocketsEncoder wssList)
+
+
 updateThing : Model -> Thing.Msg -> String -> ( Model, Cmd Msg )
 updateThing model msg token =
     let
         ( updatedThing, thingCmd ) =
             Thing.update msg model.things token
     in
-    ( { model | things = updatedThing }, Cmd.map ThingMsg thingCmd )
+    ( { model | things = updatedThing }
+    , Cmd.map ThingMsg thingCmd
+    )
 
 
 updateChannel : Model -> Channel.Msg -> String -> ( Model, Cmd Msg )
@@ -169,22 +192,9 @@ updateChannel model msg token =
         checkedChannels =
             updatedChannel.channels.list
     in
-    case msg of
-        Channel.RetrievedChannels _ ->
-            let
-                wssList =
-                    List.map
-                        (\channel ->
-                            Websocket channel.id model.thingkey ""
-                        )
-                        checkedChannels
-            in
-            ( { model | channels = updatedChannel }
-            , queryWebsockets (websocketsEncoder wssList)
-            )
-
-        _ ->
-            ( { model | channels = updatedChannel }, Cmd.map ChannelMsg channelCmd )
+    ( { model | channels = updatedChannel }
+    , Cmd.map ChannelMsg channelCmd
+    )
 
 
 
@@ -221,23 +231,58 @@ view model =
         , Grid.row []
             [ Grid.col []
                 [ Card.config []
-                    |> Card.headerH3 [] [ div [ class "table_header" ] [ i [ style "margin-right" "15px", class faIcons.messages ] [], text "Message" ] ]
+                    |> Card.headerH3 []
+                        [ Grid.row []
+                            [ Grid.col []
+                                [ div [ class "table_header" ]
+                                    [ i [ style "margin-right" "15px", class faIcons.send ] []
+                                    , text "HTTP"
+                                    ]
+                                ]
+                            , Grid.col [ Col.attrs [ align "right" ] ]
+                                [ Form.group []
+                                    [ Button.button [ Button.secondary, Button.attrs [ Spacing.ml1 ], Button.onClick SendMessage ] [ text "Send" ]
+                                    ]
+                                ]
+                            ]
+                        ]
                     |> Card.block []
                         [ Block.custom
-                            (Form.form []
-                                [ Form.group []
-                                    [ Input.text [ Input.id "message", Input.onInput SubmitMessage ]
-                                    ]
-                                , Button.button [ Button.secondary, Button.attrs [ Spacing.ml1 ], Button.onClick SendMessage ] [ text "Send" ]
-                                , Button.button [ Button.secondary, Button.attrs [ Spacing.ml1 ], Button.onClick WebsocketSend ] [ text "Websocket" ]
+                            (Grid.row []
+                                [ Grid.col [] [ Input.text [ Input.id "message", Input.onInput SubmitMessage ] ]
                                 ]
                             )
                         ]
                     |> Card.view
                 ]
+            , Grid.col []
+                [ Card.config []
+                    |> Card.headerH3 []
+                        [ Grid.row []
+                            [ Grid.col []
+                                [ div [ class "table_header" ]
+                                    [ i [ style "margin-right" "15px", class faIcons.receive ] []
+                                    , text "WS"
+                                    ]
+                                ]
+                            , Grid.col [ Col.attrs [ align "right" ] ]
+                                [ Form.form []
+                                    [ Form.group []
+                                        [ Button.button [ Button.secondary, Button.attrs [ Spacing.ml1 ], Button.onClick Listen ] [ text "Listen" ]
+                                        , Button.button [ Button.secondary, Button.attrs [ Spacing.ml1 ], Button.onClick Stop ] [ text "Stop" ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    |> Card.block []
+                        [ Block.custom
+                            (Helpers.genOrderedList model.websocketIn)
+                        ]
+                    |> Card.view
+                ]
             ]
         , Helpers.response model.response
-        , Helpers.genOrderedList model.websocketIn
         ]
 
 
@@ -288,3 +333,12 @@ send channelid thingkey message =
         thingkey
         (Http.stringBody "application/json" message)
         SentMessage
+
+
+ws : (E.Value -> Cmd Msg) -> Model -> List (Cmd Msg)
+ws command model =
+    List.map
+        (\channelid ->
+            command <| websocketEncoder (Websocket channelid model.thingkey "")
+        )
+        model.checkedChannelsIds

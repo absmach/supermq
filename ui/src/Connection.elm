@@ -4,7 +4,7 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 
-port module Connection exposing (Model, Msg(..), initial, subscriptions, update, view)
+port module Connection exposing (Model, Msg(..), initial, update, view)
 
 import Bootstrap.Button as Button
 import Bootstrap.Card as Card
@@ -39,7 +39,6 @@ type alias Model =
     , things : Thing.Model
     , channels : Channel.Model
     , checkedThingsIds : List String
-    , checkedThingsKeys : List String
     , checkedChannelsIds : List String
     , websocketIn : List String
     }
@@ -51,7 +50,6 @@ initial =
     , things = Thing.initial
     , channels = Channel.initial
     , checkedThingsIds = []
-    , checkedThingsKeys = []
     , checkedChannelsIds = []
     , websocketIn = []
     }
@@ -60,9 +58,6 @@ initial =
 type Msg
     = Connect
     | Disconnect
-    | Listen
-    | WebsocketIn String
-    | Stop
     | ThingMsg Thing.Msg
     | ChannelMsg Channel.Msg
     | GotResponse (Result Http.Error String)
@@ -72,7 +67,7 @@ type Msg
 
 resetChecked : Model -> Model
 resetChecked model =
-    { model | checkedThingsIds = [], checkedThingsKeys = [], checkedChannelsIds = [] }
+    { model | checkedThingsIds = [], checkedChannelsIds = [] }
 
 
 isEmptyChecked : Model -> Bool
@@ -101,28 +96,6 @@ update msg model token =
                 , Cmd.batch (connect model.checkedThingsIds model.checkedChannelsIds "DELETE" token)
                 )
 
-        Listen ->
-            if isEmptyChecked model then
-                ( model, Cmd.none )
-
-            else
-                ( resetChecked model
-                , Cmd.batch
-                    (connect model.checkedThingsIds model.checkedChannelsIds "PUT" token
-                        ++ ws connectWebsocket model.checkedThingsKeys model.checkedChannelsIds
-                    )
-                )
-
-        Stop ->
-            if isEmptyChecked model then
-                ( resetChecked model, Cmd.none )
-
-            else
-                ( resetChecked model, Cmd.batch (ws disconnectWebsocket model.checkedThingsKeys model.checkedChannelsIds) )
-
-        WebsocketIn data ->
-            ( { model | websocketIn = data :: model.websocketIn }, Cmd.none )
-
         GotResponse result ->
             case result of
                 Ok statusCode ->
@@ -148,24 +121,12 @@ update msg model token =
         CheckThing thing ->
             ( { model
                 | checkedThingsIds = Helpers.checkEntity (Tuple.first thing) model.checkedThingsIds
-                , checkedThingsKeys = Helpers.checkEntity (Tuple.second thing) model.checkedThingsKeys
               }
             , Cmd.none
             )
 
         CheckChannel id ->
             ( { model | checkedChannelsIds = Helpers.checkEntity id model.checkedChannelsIds }, Cmd.none )
-
-
-
--- SUBSCRIPTIONS
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.batch
-        [ websocketIn WebsocketIn
-        ]
 
 
 
@@ -194,15 +155,8 @@ view model =
                     , Button.button [ Button.danger, Button.attrs [ Spacing.ml1 ], Button.onClick Disconnect ] [ text "Disconnect" ]
                     ]
                 ]
-            , Grid.col [ Col.attrs [ align "right" ] ]
-                [ Form.form []
-                    [ Button.button [ Button.success, Button.attrs [ Spacing.ml1 ], Button.onClick Listen ] [ text "WS Listen" ]
-                    , Button.button [ Button.danger, Button.attrs [ Spacing.ml1 ], Button.onClick Stop ] [ text "WS Stop" ]
-                    ]
-                ]
             ]
         , Helpers.response model.response
-        , Helpers.genOrderedList model.websocketIn
         ]
 
 
@@ -254,21 +208,4 @@ connect checkedThingsIds checkedChannelsIds method token =
                     checkedChannelsIds
             )
             checkedThingsIds
-        )
-
-
-ws : (E.Value -> Cmd Msg) -> List String -> List String -> List (Cmd Msg)
-ws command checkedThingsKeys checkedChannelsIds =
-    List.foldr (++)
-        []
-        (List.map
-            (\thingkey ->
-                List.map
-                    (\channelid ->
-                        command <|
-                            websocketEncoder (Websocket channelid thingkey "")
-                    )
-                    checkedChannelsIds
-            )
-            checkedThingsKeys
         )

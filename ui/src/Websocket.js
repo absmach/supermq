@@ -37,14 +37,16 @@ app.ports.connectWebsocket.subscribe(function(data) {
     };
 });
 
-app.ports.websocketOut.subscribe(function(data) {
-    var url = MF.url(data);
-    if (wss[url]) {
-        wss[url].send(data.message);
-    } else {
-        MF.log('Message not sent. Websocket is not open. URL: ' + url);
-    }
-});
+if (typeof app.ports.websocketOut !== 'undefined') {
+    app.ports.websocketOut.subscribe(function(data) {
+        var url = MF.url(data);
+        if (wss[url]) {
+            wss[url].send(data.message);
+        } else {
+            MF.log('Message not sent. Websocket is not open. URL: ' + url);
+        }
+    })
+}
 
 app.ports.disconnectWebsocket.subscribe(function(data) {
     var url = MF.url(data);
@@ -66,14 +68,15 @@ if (typeof app.ports.queryWebsocket !== 'undefined') {
     })
 }
 
-app.ports.queryWebsockets.subscribe(function(data) {
-    console.log(data);
-    var wssList = []
-    data.forEach(function(item, index){
-        var url = MF.url(item);
-        if (wss[url]) {
-            wssList.push({url: url, readyState : wss[url].readyState})
-        }
+if (typeof app.ports.queryWebsockets !== 'undefined') {
+    app.ports.queryWebsockets.subscribe(function(data) {
+        var wssList = []
+        data.forEach(function(item, index){
+            var url = MF.url(item);
+            if (wss[url]) {
+                wssList.push({url: url, readyState : wss[url].readyState})
+            }
+        })
+        app.ports.retrieveWebsockets.send(wssList);
     })
-    app.ports.retrieveWebsockets.send(wssList);
-})
+}

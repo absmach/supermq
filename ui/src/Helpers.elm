@@ -164,6 +164,8 @@ faIcons =
     , messages = "far fa-paper-plane"
     , version = "fa fa-code-branch"
     , websocket = "fas fa-arrows-alt-v"
+    , send = "fas fa-arrow-up"
+    , receive = "fas fa-arrow-down"
     }
 
 
