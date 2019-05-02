@@ -20,14 +20,15 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/writers"
+	"github.com/mainflux/mainflux/writers/api"
 	"github.com/mainflux/mainflux/writers/postgres"
 	"github.com/nats-io/go-nats"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
 const (
-	queue = "postgres-writer"
-	sep   = ","
+	svcName = "postgres-writer"
+	sep     = ","
 
 	defNatsURL       = nats.DefaultURL
 	defLogLevel      = "error"
@@ -78,7 +79,7 @@ func main() {
 	defer db.Close()
 
 	repo := newService(db, logger)
-	if err = writers.Start(nc, repo, queue, logger); err != nil {
+	if err = writers.Start(nc, repo, svcName, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to create Postgres writer: %s", err))
 	}
 
@@ -138,8 +139,8 @@ func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sqlx.DB {
 
 func newService(db *sqlx.DB, logger logger.Logger) writers.MessageRepository {
 	svc := postgres.New(db)
-	svc = writers.LoggingMiddleware(svc, logger)
-	svc = writers.MetricsMiddleware(
+	svc = api.LoggingMiddleware(svc, logger)
+	svc = api.MetricsMiddleware(
 		svc,
 		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 			Namespace: "postgres",
@@ -161,5 +162,5 @@ func newService(db *sqlx.DB, logger logger.Logger) writers.MessageRepository {
 func startHTTPServer(port string, errs chan error, logger logger.Logger) {
 	p := fmt.Sprintf(":%s", port)
 	logger.Info(fmt.Sprintf("Postgres writer service started, exposed port %s", port))
-	errs <- http.ListenAndServe(p, postgres.MakeHandler())
+	errs <- http.ListenAndServe(p, api.MakeHandler(svcName))
 }
