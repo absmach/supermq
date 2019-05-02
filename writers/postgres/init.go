@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2018
+// Copyright (c) 2019
 // Mainflux
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -53,11 +53,12 @@ func migrateDB(db *sqlx.DB) error {
 				Id: "messages_1",
 				Up: []string{
 					`CREATE TABLE IF NOT EXISTS messages (
-						channel       UUID,
-						subtopic      VARCHAR(254),
-						publisher     UUID,
+            id            UUID,
+            channel       UUID,
+            subtopic      VARCHAR(254),
+            publisher     UUID,
             protocol      TEXT,
-						name          TEXT,
+            name          TEXT,
             unit          TEXT,
             value         FLOAT,
             string_value  TEXT,
@@ -67,7 +68,7 @@ func migrateDB(db *sqlx.DB) error {
             time          FlOAT,
             update_time   FLOAT,
             link          TEXT,
-						PRIMARY KEY (channel)
+            PRIMARY KEY (id)
 					)`,
 				},
 				Down: []string{

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2018
+// Copyright (c) 2019
 // Mainflux
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -15,6 +15,8 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/writers/postgres"
 	"github.com/stretchr/testify/assert"
+
+	uuid "github.com/satori/go.uuid"
 )
 
 var (
@@ -25,6 +27,9 @@ var (
 
 func TestMessageSave(t *testing.T) {
 	messageRepo := postgres.New(db)
+
+	msg.Channel = uuid.NewV4().String()
+	msg.Publisher = uuid.NewV4().String()
 
 	now := time.Now().Unix()
 	for i := 0; i < msgsNum; i++ {

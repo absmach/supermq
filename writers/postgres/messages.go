@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2018
+// Copyright (c) 2019
 // Mainflux
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -8,17 +8,19 @@
 package postgres
 
 import (
+	"errors"
+
+	uuid "github.com/satori/go.uuid"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq" // required for DB access
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/writers"
 )
 
-const (
-	errDuplicate = "unique_violation"
-	errFK        = "foreign_key_violation"
-	errInvalid   = "invalid_text_representation"
-)
+const errInvalid = "invalid_text_representation"
+
+var errInvalidMessage = errors.New("invalid message representation")
 
 var _ writers.MessageRepository = (*postgresRepo)(nil)
 
@@ -32,10 +34,10 @@ func New(db *sqlx.DB) writers.MessageRepository {
 }
 
 func (pr postgresRepo) Save(msg mainflux.Message) error {
-	q := `INSERT INTO messages (channel, subtopic, publisher, protocol,
+	q := `INSERT INTO messages (id, channel, subtopic, publisher, protocol,
     name, unit, value, string_value, bool_value, data_value, value_sum,
     time, update_time, link)
-    VALUES (:channel, :subtopic, :publisher, :protocol, :name, :unit,
+    VALUES (:id, :channel, :subtopic, :publisher, :protocol, :name, :unit,
     :value, :string_value, :bool_value, :data_value, :value_sum,
     :time, :update_time, :link);`
 
@@ -43,11 +45,12 @@ func (pr postgresRepo) Save(msg mainflux.Message) error {
 
 	_, err := pr.db.NamedExec(q, dbth)
 	if err != nil {
+		println(err.Error())
 		pqErr, ok := err.(*pq.Error)
 		if ok {
 			switch pqErr.Code.Name() {
 			case errInvalid:
-				return nil
+				return errInvalidMessage
 			}
 		}
 
@@ -58,6 +61,7 @@ func (pr postgresRepo) Save(msg mainflux.Message) error {
 }
 
 type dbMessage struct {
+	ID          string   `db:"id"`
 	Channel     string   `db:"channel"`
 	Subtopic    string   `db:"subtopic"`
 	Publisher   string   `db:"publisher"`
@@ -78,6 +82,7 @@ func toDBMessage(msg mainflux.Message) dbMessage {
 	var floatVal, valSum *float64
 	var strVal, dataVal *string
 	var boolVal *bool
+
 	switch msg.Value.(type) {
 	case *mainflux.Message_FloatValue:
 		v := msg.GetFloatValue()
@@ -98,7 +103,9 @@ func toDBMessage(msg mainflux.Message) dbMessage {
 		valSum = &v
 	}
 
+	id := uuid.NewV4().String()
 	return dbMessage{
+		ID:          id,
 		Channel:     msg.Channel,
 		Subtopic:    msg.Subtopic,
 		Publisher:   msg.Publisher,

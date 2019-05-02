@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2018
+// Copyright (c) 2019
 // Mainflux
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -45,21 +45,21 @@ const (
 	envNatsURL       = "MF_NATS_URL"
 	envLogLevel      = "MF_POSTGRES_WRITER_LOG_LEVEL"
 	envPort          = "MF_POSTGRES_WRITER_PORT"
-	envDBHost        = "MF_POSTGRES_DB_HOST"
-	envDBPort        = "MF_POSTGRES_DB_PORT"
-	envDBUser        = "MF_POSTGRES_DB_USER"
-	envDBPass        = "MF_POSTGRES_DB_PASS"
-	envDBName        = "MF_POSTGRES_DB_NAME"
-	envDBSSLMode     = "MF_POSTGRES_DB_SSL_MODE"
-	envDBSSLCert     = "MF_POSTGRES_DB_SSL_CERT"
-	envDBSSLKey      = "MF_POSTGRES_DB_SSL_KEY"
-	envDBSSLRootCert = "MF_POSTGRES_DB_SSL_ROOT_CERT"
+	envDBHost        = "MF_POSTGRES_WRITER_DB_HOST"
+	envDBPort        = "MF_POSTGRES_WRITER_DB_PORT"
+	envDBUser        = "MF_POSTGRES_WRITER_DB_USER"
+	envDBPass        = "MF_POSTGRES_WRITER_DB_PASS"
+	envDBName        = "MF_POSTGRES_WRITER_DB_NAME"
+	envDBSSLMode     = "MF_POSTGRES_WRITER_DB_SSL_MODE"
+	envDBSSLCert     = "MF_POSTGRES_WRITER_DB_SSL_CERT"
+	envDBSSLKey      = "MF_POSTGRES_WRITER_DB_SSL_KEY"
+	envDBSSLRootCert = "MF_POSTGRES_WRITER_DB_SSL_ROOT_CERT"
 )
 
 type config struct {
 	natsURL  string
 	logLevel string
-	Port     string
+	port     string
 	dbConfig postgres.Config
 }
 
@@ -79,12 +79,12 @@ func main() {
 
 	repo := newService(db, logger)
 	if err = writers.Start(nc, repo, queue, logger); err != nil {
-		logger.Error(fmt.Sprintf("Failed to create Cassandra writer: %s", err))
+		logger.Error(fmt.Sprintf("Failed to create Postgres writer: %s", err))
 	}
 
 	errs := make(chan error, 2)
 
-	go startHTTPServer(cfg.Port, errs, logger)
+	go startHTTPServer(cfg.port, errs, logger)
 
 	go func() {
 		c := make(chan os.Signal)
@@ -93,7 +93,7 @@ func main() {
 	}()
 
 	err = <-errs
-	logger.Error(fmt.Sprintf("Cassandra writer service terminated: %s", err))
+	logger.Error(fmt.Sprintf("Postgres writer service terminated: %s", err))
 }
 
 func loadConfig() config {
@@ -112,7 +112,7 @@ func loadConfig() config {
 	return config{
 		natsURL:  mainflux.Env(envNatsURL, defNatsURL),
 		logLevel: mainflux.Env(envLogLevel, defLogLevel),
-		Port:     mainflux.Env(envPort, defPort),
+		port:     mainflux.Env(envPort, defPort),
 		dbConfig: dbConfig,
 	}
 }
@@ -130,7 +130,7 @@ func connectToNATS(url string, logger logger.Logger) *nats.Conn {
 func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sqlx.DB {
 	db, err := postgres.Connect(dbConfig)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to postgres: %s", err))
+		logger.Error(fmt.Sprintf("Failed to connect to Postgres: %s", err))
 		os.Exit(1)
 	}
 	return db
@@ -160,6 +160,6 @@ func newService(db *sqlx.DB, logger logger.Logger) writers.MessageRepository {
 
 func startHTTPServer(port string, errs chan error, logger logger.Logger) {
 	p := fmt.Sprintf(":%s", port)
-	logger.Info(fmt.Sprintf("Postgre writer service started, exposed port %s", port))
+	logger.Info(fmt.Sprintf("Postgres writer service started, exposed port %s", port))
 	errs <- http.ListenAndServe(p, postgres.MakeHandler())
 }
