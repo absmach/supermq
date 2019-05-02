@@ -35,6 +35,7 @@ services:
     container_name: mainflux-postgres-writer
     depends_on:
       - postgres
+      - nats
     restart: on-failure
     environment:
       MF_NATS_URL: nats://nats:4222
