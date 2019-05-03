@@ -14,7 +14,6 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
-	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/things"
 )
 
@@ -27,16 +26,14 @@ const (
 )
 
 type channelRepository struct {
-	db  *sqlx.DB
-	log logger.Logger
+	db *sqlx.DB
 }
 
 // NewChannelRepository instantiates a PostgreSQL implementation of channel
 // repository.
-func NewChannelRepository(db *sqlx.DB, log logger.Logger) things.ChannelRepository {
+func NewChannelRepository(db *sqlx.DB) things.ChannelRepository {
 	return &channelRepository{
-		db:  db,
-		log: log,
+		db: db,
 	}
 }
 
@@ -108,7 +105,7 @@ func (cr channelRepository) RetrieveByID(owner, id string) (things.Channel, erro
 	return toChannel(dbch)
 }
 
-func (cr channelRepository) RetrieveAll(owner string, offset, limit uint64) things.ChannelsPage {
+func (cr channelRepository) RetrieveAll(owner string, offset, limit uint64) (things.ChannelsPage, error) {
 	q := `SELECT id, name, metadata FROM channels WHERE owner = :owner ORDER BY id LIMIT :limit OFFSET :offset;`
 
 	params := map[string]interface{}{
@@ -118,8 +115,7 @@ func (cr channelRepository) RetrieveAll(owner string, offset, limit uint64) thin
 	}
 	rows, err := cr.db.NamedQuery(q, params)
 	if err != nil {
-		cr.log.Error(fmt.Sprintf("Failed to retrieve channels due to %s", err))
-		return things.ChannelsPage{}
+		return things.ChannelsPage{}, fmt.Errorf("Failed to retrieve channels due to %s", err)
 	}
 	defer rows.Close()
 
@@ -127,13 +123,11 @@ func (cr channelRepository) RetrieveAll(owner string, offset, limit uint64) thin
 	for rows.Next() {
 		dbch := dbChannel{Owner: owner}
 		if err := rows.StructScan(&dbch); err != nil {
-			cr.log.Error(fmt.Sprintf("Failed to read retrieved channel due to %s", err))
-			return things.ChannelsPage{}
+			return things.ChannelsPage{}, fmt.Errorf("Failed to read retrieved channel due to %s", err)
 		}
 		ch, err := toChannel(dbch)
 		if err != nil {
-			cr.log.Error(fmt.Sprintf("Failed to read retrieved channel due to %s", err))
-			return things.ChannelsPage{}
+			return things.ChannelsPage{}, fmt.Errorf("Failed to read retrieved channel due to %s", err)
 		}
 
 		items = append(items, ch)
@@ -143,8 +137,7 @@ func (cr channelRepository) RetrieveAll(owner string, offset, limit uint64) thin
 
 	var total uint64
 	if err := cr.db.Get(&total, q, owner); err != nil {
-		cr.log.Error(fmt.Sprintf("Failed to count channels due to %s", err))
-		return things.ChannelsPage{}
+		return things.ChannelsPage{}, fmt.Errorf("Failed to count channels due to %s", err)
 	}
 
 	page := things.ChannelsPage{
@@ -156,10 +149,10 @@ func (cr channelRepository) RetrieveAll(owner string, offset, limit uint64) thin
 		},
 	}
 
-	return page
+	return page, nil
 }
 
-func (cr channelRepository) RetrieveByThing(owner, thing string, offset, limit uint64) things.ChannelsPage {
+func (cr channelRepository) RetrieveByThing(owner, thing string, offset, limit uint64) (things.ChannelsPage, error) {
 	q := `SELECT id, name, metadata
 	      FROM channels ch
 	      INNER JOIN connections co
@@ -178,8 +171,7 @@ func (cr channelRepository) RetrieveByThing(owner, thing string, offset, limit u
 
 	rows, err := cr.db.NamedQuery(q, params)
 	if err != nil {
-		cr.log.Error(fmt.Sprintf("Failed to retrieve channels due to %s", err))
-		return things.ChannelsPage{}
+		return things.ChannelsPage{}, fmt.Errorf("Failed to retrieve channels due to %s", err)
 	}
 	defer rows.Close()
 
@@ -187,14 +179,12 @@ func (cr channelRepository) RetrieveByThing(owner, thing string, offset, limit u
 	for rows.Next() {
 		dbch := dbChannel{Owner: owner}
 		if err := rows.StructScan(&dbch); err != nil {
-			cr.log.Error(fmt.Sprintf("Failed to read retrieved channel due to %s", err))
-			return things.ChannelsPage{}
+			return things.ChannelsPage{}, fmt.Errorf("Failed to read retrieved channel due to %s", err)
 		}
 
 		ch, err := toChannel(dbch)
 		if err != nil {
-			cr.log.Error(fmt.Sprintf("Failed to read retrieved channel due to %s", err))
-			return things.ChannelsPage{}
+			return things.ChannelsPage{}, fmt.Errorf("Failed to read retrieved channel due to %s", err)
 		}
 
 		items = append(items, ch)
@@ -208,8 +198,7 @@ func (cr channelRepository) RetrieveByThing(owner, thing string, offset, limit u
 
 	var total uint64
 	if err := cr.db.Get(&total, q, owner, thing); err != nil {
-		cr.log.Error(fmt.Sprintf("Failed to count channels due to %s", err))
-		return things.ChannelsPage{}
+		return things.ChannelsPage{}, fmt.Errorf("Failed to count channels due to %s", err)
 	}
 
 	return things.ChannelsPage{
@@ -219,7 +208,7 @@ func (cr channelRepository) RetrieveByThing(owner, thing string, offset, limit u
 			Offset: offset,
 			Limit:  limit,
 		},
-	}
+	}, nil
 }
 
 func (cr channelRepository) Remove(owner, id string) error {
@@ -233,7 +222,7 @@ func (cr channelRepository) Remove(owner, id string) error {
 }
 
 func (cr channelRepository) Connect(owner, chanID, thingID string) error {
-	q := `INSERT INTO connections (channel_id, channel_owner, thing_id, thing_owner) 
+	q := `INSERT INTO connections (channel_id, channel_owner, thing_id, thing_owner)
 	      VALUES (:channel, :owner, :thing, :owner);`
 
 	conn := dbConnection{
@@ -293,15 +282,14 @@ func (cr channelRepository) HasThing(chanID, key string) (string, error) {
 
 	q := `SELECT id FROM things WHERE key = $1`
 	if err := cr.db.QueryRow(q, key).Scan(&thingID); err != nil {
-		cr.log.Error(fmt.Sprintf("Failed to obtain thing's ID due to %s", err))
-		return "", err
+		return "", fmt.Errorf("Failed to obtain thing ID due to %s", err)
+
 	}
 
 	q = `SELECT EXISTS (SELECT 1 FROM connections WHERE channel_id = $1 AND thing_id = $2);`
 	exists := false
 	if err := cr.db.QueryRow(q, chanID, thingID).Scan(&exists); err != nil {
-		cr.log.Error(fmt.Sprintf("Failed to check thing existence due to %s", err))
-		return "", err
+		return "", fmt.Errorf("Failed to check thing existence due to %s", err)
 	}
 
 	if !exists {
