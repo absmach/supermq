@@ -10,7 +10,6 @@ package postgres
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -115,7 +114,7 @@ func (cr channelRepository) RetrieveAll(owner string, offset, limit uint64) (thi
 	}
 	rows, err := cr.db.NamedQuery(q, params)
 	if err != nil {
-		return things.ChannelsPage{}, fmt.Errorf("Failed to retrieve channels due to %s", err)
+		return things.ChannelsPage{}, err
 	}
 	defer rows.Close()
 
@@ -123,11 +122,11 @@ func (cr channelRepository) RetrieveAll(owner string, offset, limit uint64) (thi
 	for rows.Next() {
 		dbch := dbChannel{Owner: owner}
 		if err := rows.StructScan(&dbch); err != nil {
-			return things.ChannelsPage{}, fmt.Errorf("Failed to read retrieved channel due to %s", err)
+			return things.ChannelsPage{}, err
 		}
 		ch, err := toChannel(dbch)
 		if err != nil {
-			return things.ChannelsPage{}, fmt.Errorf("Failed to read retrieved channel due to %s", err)
+			return things.ChannelsPage{}, err
 		}
 
 		items = append(items, ch)
@@ -137,7 +136,7 @@ func (cr channelRepository) RetrieveAll(owner string, offset, limit uint64) (thi
 
 	var total uint64
 	if err := cr.db.Get(&total, q, owner); err != nil {
-		return things.ChannelsPage{}, fmt.Errorf("Failed to count channels due to %s", err)
+		return things.ChannelsPage{}, err
 	}
 
 	page := things.ChannelsPage{
@@ -171,7 +170,7 @@ func (cr channelRepository) RetrieveByThing(owner, thing string, offset, limit u
 
 	rows, err := cr.db.NamedQuery(q, params)
 	if err != nil {
-		return things.ChannelsPage{}, fmt.Errorf("Failed to retrieve channels due to %s", err)
+		return things.ChannelsPage{}, err
 	}
 	defer rows.Close()
 
@@ -179,12 +178,12 @@ func (cr channelRepository) RetrieveByThing(owner, thing string, offset, limit u
 	for rows.Next() {
 		dbch := dbChannel{Owner: owner}
 		if err := rows.StructScan(&dbch); err != nil {
-			return things.ChannelsPage{}, fmt.Errorf("Failed to read retrieved channel due to %s", err)
+			return things.ChannelsPage{}, err
 		}
 
 		ch, err := toChannel(dbch)
 		if err != nil {
-			return things.ChannelsPage{}, fmt.Errorf("Failed to read retrieved channel due to %s", err)
+			return things.ChannelsPage{}, err
 		}
 
 		items = append(items, ch)
@@ -198,7 +197,7 @@ func (cr channelRepository) RetrieveByThing(owner, thing string, offset, limit u
 
 	var total uint64
 	if err := cr.db.Get(&total, q, owner, thing); err != nil {
-		return things.ChannelsPage{}, fmt.Errorf("Failed to count channels due to %s", err)
+		return things.ChannelsPage{}, err
 	}
 
 	return things.ChannelsPage{
@@ -282,14 +281,14 @@ func (cr channelRepository) HasThing(chanID, key string) (string, error) {
 
 	q := `SELECT id FROM things WHERE key = $1`
 	if err := cr.db.QueryRow(q, key).Scan(&thingID); err != nil {
-		return "", fmt.Errorf("Failed to obtain thing ID due to %s", err)
+		return "", err
 
 	}
 
 	q = `SELECT EXISTS (SELECT 1 FROM connections WHERE channel_id = $1 AND thing_id = $2);`
 	exists := false
 	if err := cr.db.QueryRow(q, chanID, thingID).Scan(&exists); err != nil {
-		return "", fmt.Errorf("Failed to check thing existence due to %s", err)
+		return "", err
 	}
 
 	if !exists {

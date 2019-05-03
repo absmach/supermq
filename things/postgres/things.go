@@ -10,7 +10,6 @@ package postgres
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq" // required for DB access
@@ -170,7 +169,7 @@ func (tr thingRepository) RetrieveAll(owner string, offset, limit uint64) (thing
 
 	rows, err := tr.db.NamedQuery(q, params)
 	if err != nil {
-		return things.ThingsPage{}, fmt.Errorf("Failed to retrieve things due to %s", err)
+		return things.ThingsPage{}, err
 	}
 	defer rows.Close()
 
@@ -178,12 +177,12 @@ func (tr thingRepository) RetrieveAll(owner string, offset, limit uint64) (thing
 	for rows.Next() {
 		dbth := dbThing{Owner: owner}
 		if err := rows.StructScan(&dbth); err != nil {
-			return things.ThingsPage{}, fmt.Errorf("Failed to read retrieved thing due to %s", err)
+			return things.ThingsPage{}, err
 		}
 
 		th, err := toThing(dbth)
 		if err != nil {
-			return things.ThingsPage{}, fmt.Errorf("Failed to read retrieved thing due to %s", err)
+			return things.ThingsPage{}, err
 		}
 
 		items = append(items, th)
@@ -193,7 +192,7 @@ func (tr thingRepository) RetrieveAll(owner string, offset, limit uint64) (thing
 
 	var total uint64
 	if err := tr.db.Get(&total, q, owner); err != nil {
-		return things.ThingsPage{}, fmt.Errorf("Failed to count things due to %s", err)
+		return things.ThingsPage{}, err
 	}
 
 	page := things.ThingsPage{
@@ -227,7 +226,7 @@ func (tr thingRepository) RetrieveByChannel(owner, channel string, offset, limit
 
 	rows, err := tr.db.NamedQuery(q, params)
 	if err != nil {
-		return things.ThingsPage{}, fmt.Errorf("Failed to retrieve things due to %s", err)
+		return things.ThingsPage{}, err
 	}
 	defer rows.Close()
 
@@ -235,12 +234,12 @@ func (tr thingRepository) RetrieveByChannel(owner, channel string, offset, limit
 	for rows.Next() {
 		dbth := dbThing{Owner: owner}
 		if err := rows.StructScan(&dbth); err != nil {
-			return things.ThingsPage{}, fmt.Errorf("Failed to read retrieved thing due to %s", err)
+			return things.ThingsPage{}, err
 		}
 
 		th, err := toThing(dbth)
 		if err != nil {
-			return things.ThingsPage{}, fmt.Errorf("Failed to read retrieved thing due to %s", err)
+			return things.ThingsPage{}, err
 		}
 
 		items = append(items, th)
@@ -254,7 +253,7 @@ func (tr thingRepository) RetrieveByChannel(owner, channel string, offset, limit
 
 	var total uint64
 	if err := tr.db.Get(&total, q, owner, channel); err != nil {
-		return things.ThingsPage{}, fmt.Errorf("Failed to count things due to %s", err)
+		return things.ThingsPage{}, err
 	}
 
 	return things.ThingsPage{
