@@ -226,7 +226,7 @@ func (tr thingRepository) RetrieveByChannel(owner, channel string, offset, limit
 
 	rows, err := tr.db.NamedQuery(q, params)
 	if err != nil {
-		return things.ThingsPage{}, err
+		return things.ThingsPage{}, things.ErrNotFound
 	}
 	defer rows.Close()
 

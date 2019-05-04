@@ -315,9 +315,10 @@ func TestMultiThingRetrieval(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		page, _ := thingRepo.RetrieveAll(tc.owner, tc.offset, tc.limit)
+		page, err := thingRepo.RetrieveAll(tc.owner, tc.offset, tc.limit)
 		size := uint64(len(page.Things))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
+		assert.Equal(t, nil, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
 	}
 }
 
@@ -353,6 +354,7 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 		offset  uint64
 		limit   uint64
 		size    uint64
+		error   error
 	}{
 		"retrieve all things by channel with existing owner": {
 			owner:   email,
@@ -360,6 +362,7 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 			offset:  0,
 			limit:   n,
 			size:    n,
+			error:   nil,
 		},
 		"retrieve subset of things by channel with existing owner": {
 			owner:   email,
@@ -367,6 +370,7 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 			offset:  n / 2,
 			limit:   n,
 			size:    n / 2,
+			error:   nil,
 		},
 		"retrieve things by channel with non-existing owner": {
 			owner:   wrongValue,
@@ -374,6 +378,7 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 			offset:  0,
 			limit:   n,
 			size:    0,
+			error:   nil,
 		},
 		"retrieve things by non-existent channel": {
 			owner:   email,
@@ -381,13 +386,15 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 			offset:  0,
 			limit:   n,
 			size:    0,
+			error:   things.ErrNotFound,
 		},
 	}
 
 	for desc, tc := range cases {
-		page, _ := thingRepo.RetrieveByChannel(tc.owner, tc.channel, tc.offset, tc.limit)
+		page, err := thingRepo.RetrieveByChannel(tc.owner, tc.channel, tc.offset, tc.limit)
 		size := uint64(len(page.Things))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
+		assert.Equal(t, tc.error, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
 	}
 }
 
