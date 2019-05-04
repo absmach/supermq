@@ -23,10 +23,12 @@ type cassandraRepository struct {
 
 // New instantiates Cassandra message repository.
 func New(session *gocql.Session) readers.MessageRepository {
-	return cassandraRepository{session: session}
+	return cassandraRepository{
+		session: session,
+	}
 }
 
-func (cr cassandraRepository) ReadAll(chanID string, offset, limit uint64, query map[string]string) readers.MessagesPage {
+func (cr cassandraRepository) ReadAll(chanID string, offset, limit uint64, query map[string]string) (readers.MessagesPage, error) {
 	names := []string{}
 	vals := []interface{}{chanID}
 	for name, val := range query {
@@ -63,7 +65,7 @@ func (cr cassandraRepository) ReadAll(chanID string, offset, limit uint64, query
 			&msg.Name, &msg.Unit, &floatVal, &strVal, &boolVal,
 			&dataVal, &valueSum, &msg.Time, &msg.UpdateTime, &msg.Link)
 		if err != nil {
-			return readers.MessagesPage{}
+			return readers.MessagesPage{}, err
 		}
 
 		switch {
@@ -85,21 +87,21 @@ func (cr cassandraRepository) ReadAll(chanID string, offset, limit uint64, query
 	}
 
 	if err := iter.Close(); err != nil {
-		return readers.MessagesPage{}
+		return readers.MessagesPage{}, err
 	}
 
 	if err := cr.session.Query(countCQL, vals[:len(vals)-1]...).Scan(&page.Total); err != nil {
-		return readers.MessagesPage{}
+		return readers.MessagesPage{}, err
 	}
 
-	return page
+	return page, nil
 }
 
 func buildSelectQuery(chanID string, offset, limit uint64, names []string) string {
 	var condCQL string
 	cql := `SELECT channel, subtopic, publisher, protocol, name, unit,
 	        value, string_value, bool_value, data_value, value_sum, time,
-			update_time, link FROM messages WHERE channel = ? %s LIMIT ? 
+			update_time, link FROM messages WHERE channel = ? %s LIMIT ?
 			ALLOW FILTERING`
 
 	for _, name := range names {
