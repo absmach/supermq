@@ -170,7 +170,7 @@ func (cr channelRepository) RetrieveByThing(owner, thing string, offset, limit u
 
 	rows, err := cr.db.NamedQuery(q, params)
 	if err != nil {
-		return things.ChannelsPage{}, things.ErrNotFound
+		return things.ChannelsPage{}, err
 	}
 	defer rows.Close()
 

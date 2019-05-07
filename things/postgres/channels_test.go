@@ -204,7 +204,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 		page, err := chanRepo.RetrieveAll(tc.owner, tc.offset, tc.limit)
 		size := uint64(len(page.Channels))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
-		assert.Equal(t, nil, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
+		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
 	}
 }
 
@@ -213,6 +213,7 @@ func TestMultiChannelRetrievalByThing(t *testing.T) {
 	idp := uuid.New()
 	chanRepo := postgres.NewChannelRepository(db)
 	thingRepo := postgres.NewThingRepository(db)
+	wrongID := idp.ID()
 
 	tid, err := thingRepo.Save(things.Thing{
 		ID:    idp.ID(),
@@ -237,7 +238,6 @@ func TestMultiChannelRetrievalByThing(t *testing.T) {
 		offset uint64
 		limit  uint64
 		size   uint64
-		error  error
 	}{
 		"retrieve all channels by thing with existing owner": {
 			owner:  email,
@@ -245,7 +245,6 @@ func TestMultiChannelRetrievalByThing(t *testing.T) {
 			offset: 0,
 			limit:  n,
 			size:   n,
-			error:  nil,
 		},
 		"retrieve subset of channels by thing with existing owner": {
 			owner:  email,
@@ -253,7 +252,6 @@ func TestMultiChannelRetrievalByThing(t *testing.T) {
 			offset: n / 2,
 			limit:  n,
 			size:   n / 2,
-			error:  nil,
 		},
 		"retrieve channels by thing with non-existing owner": {
 			owner:  wrongValue,
@@ -261,15 +259,13 @@ func TestMultiChannelRetrievalByThing(t *testing.T) {
 			offset: n / 2,
 			limit:  n,
 			size:   0,
-			error:  nil,
 		},
 		"retrieve channels by non-existent thing": {
 			owner:  email,
-			thing:  "non-existent",
+			thing:  wrongID,
 			offset: 0,
 			limit:  n,
 			size:   0,
-			error:  things.ErrNotFound,
 		},
 	}
 
@@ -277,7 +273,7 @@ func TestMultiChannelRetrievalByThing(t *testing.T) {
 		page, err := chanRepo.RetrieveByThing(tc.owner, tc.thing, tc.offset, tc.limit)
 		size := uint64(len(page.Channels))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
-		assert.Equal(t, tc.error, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
+		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
 	}
 }
 

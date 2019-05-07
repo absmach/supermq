@@ -327,6 +327,7 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 	idp := uuid.New()
 	thingRepo := postgres.NewThingRepository(db)
 	channelRepo := postgres.NewChannelRepository(db)
+	wrongID := idp.ID()
 
 	n := uint64(10)
 
@@ -378,15 +379,13 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 			offset:  0,
 			limit:   n,
 			size:    0,
-			error:   nil,
 		},
 		"retrieve things by non-existent channel": {
 			owner:   email,
-			channel: "non-existent",
+			channel: wrongID,
 			offset:  0,
 			limit:   n,
 			size:    0,
-			error:   things.ErrNotFound,
 		},
 	}
 
@@ -394,7 +393,7 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 		page, err := thingRepo.RetrieveByChannel(tc.owner, tc.channel, tc.offset, tc.limit)
 		size := uint64(len(page.Things))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
-		assert.Equal(t, tc.error, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
+		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
 	}
 }
 
