@@ -13,8 +13,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-
-	"github.com/mainflux/mainflux"
 )
 
 func (sdk mfSDK) SendMessage(chanName, msg, token string) error {
@@ -53,7 +51,7 @@ func (sdk mfSDK) SendMessage(chanName, msg, token string) error {
 	return nil
 }
 
-func (sdk mfSDK) ReadMessages(chanName, token string) ([]mainflux.Message, error) {
+func (sdk mfSDK) ReadMessages(chanName, token string) (messagesPageRes, error) {
 	chanNameParts := strings.SplitN(chanName, ".", 2)
 	chanID := chanNameParts[0]
 	subtopicPart := ""
@@ -66,36 +64,36 @@ func (sdk mfSDK) ReadMessages(chanName, token string) ([]mainflux.Message, error
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return nil, err
+		return messagesPageRes{}, err
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(sdk.msgContentType))
 	if err != nil {
-		return nil, err
+		return messagesPageRes{}, err
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return messagesPageRes{}, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		switch resp.StatusCode {
 		case http.StatusBadRequest:
-			return nil, ErrInvalidArgs
+			return messagesPageRes{}, ErrInvalidArgs
 		case http.StatusForbidden:
-			return nil, ErrUnauthorized
+			return messagesPageRes{}, ErrUnauthorized
 		default:
-			return nil, ErrFailedRead
+			return messagesPageRes{}, ErrFailedRead
 		}
 	}
 
-	var l listMessagesRes
-	if err := json.Unmarshal(body, &l); err != nil {
-		return nil, err
+	mp := messagesPageRes{}
+	if err := json.Unmarshal(body, &mp); err != nil {
+		return messagesPageRes{}, err
 	}
 
-	return l.Messages, nil
+	return mp, nil
 }
 
 func (sdk *mfSDK) SetContentType(ct ContentType) error {

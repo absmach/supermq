@@ -12,8 +12,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-
-	"github.com/mainflux/mainflux"
 )
 
 const (
@@ -168,7 +166,7 @@ type SDK interface {
 	SendMessage(chanID, msg, token string) error
 
 	// ReadMessages read messages of specified channel.
-	ReadMessages(chanID, token string) ([]mainflux.Message, error)
+	ReadMessages(chanID, token string) (messagesPageRes, error)
 
 	// SetContentType sets message content type.
 	SetContentType(ct ContentType) error
