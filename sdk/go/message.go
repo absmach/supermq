@@ -51,7 +51,7 @@ func (sdk mfSDK) SendMessage(chanName, msg, token string) error {
 	return nil
 }
 
-func (sdk mfSDK) ReadMessages(chanName, token string) (messagesPageRes, error) {
+func (sdk mfSDK) ReadMessages(chanName, token string) (MessagesPage, error) {
 	chanNameParts := strings.SplitN(chanName, ".", 2)
 	chanID := chanNameParts[0]
 	subtopicPart := ""
@@ -64,36 +64,41 @@ func (sdk mfSDK) ReadMessages(chanName, token string) (messagesPageRes, error) {
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return messagesPageRes{}, err
+		return MessagesPage{}, err
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(sdk.msgContentType))
 	if err != nil {
-		return messagesPageRes{}, err
+		return MessagesPage{}, err
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return messagesPageRes{}, err
+		return MessagesPage{}, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		switch resp.StatusCode {
 		case http.StatusBadRequest:
-			return messagesPageRes{}, ErrInvalidArgs
+			return MessagesPage{}, ErrInvalidArgs
 		case http.StatusForbidden:
-			return messagesPageRes{}, ErrUnauthorized
+			return MessagesPage{}, ErrUnauthorized
 		default:
-			return messagesPageRes{}, ErrFailedRead
+			return MessagesPage{}, ErrFailedRead
 		}
 	}
 
 	mp := messagesPageRes{}
 	if err := json.Unmarshal(body, &mp); err != nil {
-		return messagesPageRes{}, err
+		return MessagesPage{}, err
 	}
 
-	return mp, nil
+	return MessagesPage{
+		Total:    mp.Total,
+		Offset:   mp.Offset,
+		Limit:    mp.Limit,
+		Messages: mp.Messages,
+	}, nil
 }
 
 func (sdk *mfSDK) SetContentType(ct ContentType) error {
