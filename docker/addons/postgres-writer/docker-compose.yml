@@ -35,12 +35,11 @@ services:
     container_name: mainflux-postgres-writer
     depends_on:
       - postgres
-      - nats
     restart: on-failure
     environment:
       MF_NATS_URL: nats://nats:4222
       MF_POSTGRES_WRITER_LOG_LEVEL: debug
-      MF_POSTGRES_WRITER_PORT: 8903
+      MF_POSTGRES_WRITER_PORT: 9104
       MF_POSTGRES_WRITER_DB_HOST: postgres
       MF_POSTGRES_WRITER_DB_PORT: 5432
       MF_POSTGRES_WRITER_DB_USER: mainflux
@@ -51,6 +50,6 @@ services:
       MF_POSTGRES_WRITER_DB_SSL_KEY: ""
       MF_POSTGRES_WRITER_DB_SSL_ROOT_CERT: ""
     ports:
-      - 8903:8903
+      - 9104:9104
     networks:
       - docker_mainflux-base-net

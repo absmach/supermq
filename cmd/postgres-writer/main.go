@@ -32,8 +32,8 @@ const (
 
 	defNatsURL       = nats.DefaultURL
 	defLogLevel      = "error"
-	defPort          = "8180"
-	defDBHost        = "localhost"
+	defPort          = "9104"
+	defDBHost        = "postgres"
 	defDBPort        = "5432"
 	defDBUser        = "mainflux"
 	defDBPass        = "mainflux"

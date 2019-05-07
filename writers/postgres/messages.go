@@ -45,7 +45,6 @@ func (pr postgresRepo) Save(msg mainflux.Message) error {
 
 	_, err := pr.db.NamedExec(q, dbth)
 	if err != nil {
-		println(err.Error())
 		pqErr, ok := err.(*pq.Error)
 		if ok {
 			switch pqErr.Code.Name() {
@@ -119,5 +118,6 @@ func toDBMessage(msg mainflux.Message) dbMessage {
 		ValueSum:    valSum,
 		Time:        msg.Time,
 		UpdateTime:  msg.UpdateTime,
+		Link:        msg.Link,
 	}
 }
