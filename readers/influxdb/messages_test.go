@@ -167,9 +167,7 @@ func TestReadAll(t *testing.T) {
 
 	for desc, tc := range cases {
 		result, err := reader.ReadAll(tc.chanID, tc.offset, tc.limit, tc.query)
-		if err != nil {
-			assert.Equal(t, nil, err, fmt.Sprintf("%s: expected no error got %s", desc, err.Error()))
-		}
+		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %s", desc, err))
 		assert.ElementsMatch(t, tc.page.Messages, result.Messages, fmt.Sprintf("%s: expected: %v \n-------------\n got: %v", desc, tc.page.Messages, result.Messages))
 		assert.Equal(t, tc.page.Total, result.Total, fmt.Sprintf("%s: expected %d got %d", desc, tc.page.Total, result.Total))
 	}
