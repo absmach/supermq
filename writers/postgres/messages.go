@@ -20,7 +20,7 @@ import (
 
 const errInvalid = "invalid_text_representation"
 
-var errInvalidMessage = errors.New("invalid message representation")
+var ErrInvalidMessage = errors.New("invalid message representation")
 
 var _ writers.MessageRepository = (*postgresRepo)(nil)
 
@@ -43,13 +43,12 @@ func (pr postgresRepo) Save(msg mainflux.Message) error {
 
 	dbth := toDBMessage(msg)
 
-	_, err := pr.db.NamedExec(q, dbth)
-	if err != nil {
+	if _, err := pr.db.NamedExec(q, dbth); err != nil {
 		pqErr, ok := err.(*pq.Error)
 		if ok {
 			switch pqErr.Code.Name() {
 			case errInvalid:
-				return errInvalidMessage
+				return ErrInvalidMessage
 			}
 		}
 

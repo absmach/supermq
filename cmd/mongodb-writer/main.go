@@ -81,8 +81,8 @@ func main() {
 	counter, latency := makeMetrics()
 	repo = api.LoggingMiddleware(repo, logger)
 	repo = api.MetricsMiddleware(repo, counter, latency)
-	if err = writers.Start(nc, repo, svcName, logger); err != nil {
-		logger.Error(fmt.Sprintf("Failed to start message writer: %s", err))
+	if err := writers.Start(nc, repo, svcName, logger); err != nil {
+		logger.Error(fmt.Sprintf("Failed to start MongoDB writer: %s", err))
 		os.Exit(1)
 	}
 

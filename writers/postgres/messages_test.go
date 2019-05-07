@@ -51,8 +51,8 @@ func TestMessageSave(t *testing.T) {
 		}
 		msg.Time = float64(now + int64(i))
 
-		if err := messageRepo.Save(msg); err != nil {
-			assert.Equal(t, err, fmt.Sprintf("expected no error got %s\n", err))
-		}
+		err := messageRepo.Save(msg)
+		assert.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
+
 	}
 }

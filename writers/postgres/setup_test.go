@@ -49,7 +49,7 @@ func TestMain(m *testing.M) {
 
 	port := container.GetPort("5432/tcp")
 
-	if err = pool.Retry(func() error {
+	if err := pool.Retry(func() error {
 		url := fmt.Sprintf("host=localhost port=%s user=test dbname=test password=test sslmode=disable", port)
 		db, err = sqlx.Open("postgres", url)
 		if err != nil {
@@ -72,14 +72,15 @@ func TestMain(m *testing.M) {
 		SSLRootCert: "",
 	}
 
-	if db, err = postgres.Connect(dbConfig); err != nil {
+	db, err = postgres.Connect(dbConfig)
+	if err != nil {
 		log.Fatalf("Could not setup test DB connection: %s", err)
 	}
 	defer db.Close()
 
 	code := m.Run()
 
-	if err = pool.Purge(container); err != nil {
+	if err := pool.Purge(container); err != nil {
 		log.Fatalf("Could not purge container: %s", err)
 	}
 
