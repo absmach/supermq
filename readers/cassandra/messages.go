@@ -41,6 +41,7 @@ func (cr cassandraRepository) ReadAll(chanID string, offset, limit uint64, query
 	countCQL := buildCountQuery(chanID, names)
 
 	iter := cr.session.Query(selectCQL, vals...).Iter()
+	defer iter.Close()
 	scanner := iter.Scanner()
 
 	// skip first OFFSET rows
@@ -84,10 +85,6 @@ func (cr cassandraRepository) ReadAll(chanID string, offset, limit uint64, query
 		}
 
 		page.Messages = append(page.Messages, msg)
-	}
-
-	if err := iter.Close(); err != nil {
-		return readers.MessagesPage{}, err
 	}
 
 	if err := cr.session.Query(countCQL, vals[:len(vals)-1]...).Scan(&page.Total); err != nil {
