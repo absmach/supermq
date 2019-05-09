@@ -213,7 +213,6 @@ func TestMultiChannelRetrievalByThing(t *testing.T) {
 	idp := uuid.New()
 	chanRepo := postgres.NewChannelRepository(db)
 	thingRepo := postgres.NewThingRepository(db)
-	wrongID := idp.ID()
 
 	tid, err := thingRepo.Save(things.Thing{
 		ID:    idp.ID(),
@@ -238,6 +237,7 @@ func TestMultiChannelRetrievalByThing(t *testing.T) {
 		offset uint64
 		limit  uint64
 		size   uint64
+		err    error
 	}{
 		"retrieve all channels by thing with existing owner": {
 			owner:  email,
@@ -262,10 +262,18 @@ func TestMultiChannelRetrievalByThing(t *testing.T) {
 		},
 		"retrieve channels by non-existent thing": {
 			owner:  email,
-			thing:  wrongID,
+			thing:  uuid.New().ID(),
 			offset: 0,
 			limit:  n,
 			size:   0,
+		},
+		"retrieve channels with malformed UUID": {
+			owner:  email,
+			thing:  wrongValue,
+			offset: 0,
+			limit:  n,
+			size:   0,
+			err:    things.ErrNotFound,
 		},
 	}
 
@@ -273,7 +281,7 @@ func TestMultiChannelRetrievalByThing(t *testing.T) {
 		page, err := chanRepo.RetrieveByThing(tc.owner, tc.thing, tc.offset, tc.limit)
 		size := uint64(len(page.Channels))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
-		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
 	}
 }
 

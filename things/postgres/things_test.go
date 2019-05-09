@@ -327,7 +327,6 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 	idp := uuid.New()
 	thingRepo := postgres.NewThingRepository(db)
 	channelRepo := postgres.NewChannelRepository(db)
-	wrongID := idp.ID()
 
 	n := uint64(10)
 
@@ -355,7 +354,7 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 		offset  uint64
 		limit   uint64
 		size    uint64
-		error   error
+		err     error
 	}{
 		"retrieve all things by channel with existing owner": {
 			owner:   email,
@@ -363,7 +362,6 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 			offset:  0,
 			limit:   n,
 			size:    n,
-			error:   nil,
 		},
 		"retrieve subset of things by channel with existing owner": {
 			owner:   email,
@@ -371,7 +369,6 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 			offset:  n / 2,
 			limit:   n,
 			size:    n / 2,
-			error:   nil,
 		},
 		"retrieve things by channel with non-existing owner": {
 			owner:   wrongValue,
@@ -382,10 +379,18 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 		},
 		"retrieve things by non-existent channel": {
 			owner:   email,
-			channel: wrongID,
+			channel: uuid.New().ID(),
 			offset:  0,
 			limit:   n,
 			size:    0,
+		},
+		"retrieve things with malformed UUID": {
+			owner:   email,
+			channel: wrongValue,
+			offset:  0,
+			limit:   n,
+			size:    0,
+			err:     things.ErrNotFound,
 		},
 	}
 
@@ -393,7 +398,7 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 		page, err := thingRepo.RetrieveByChannel(tc.owner, tc.channel, tc.offset, tc.limit)
 		size := uint64(len(page.Things))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
-		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
 	}
 }
 

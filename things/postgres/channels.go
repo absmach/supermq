@@ -11,6 +11,7 @@ import (
 	"database/sql"
 	"encoding/json"
 
+	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/mainflux/mainflux/things"
@@ -152,6 +153,11 @@ func (cr channelRepository) RetrieveAll(owner string, offset, limit uint64) (thi
 }
 
 func (cr channelRepository) RetrieveByThing(owner, thing string, offset, limit uint64) (things.ChannelsPage, error) {
+	// Verify if UUID format is valid to avoid internal Postgres error
+	if _, err := uuid.FromString(thing); err != nil {
+		return things.ChannelsPage{}, things.ErrNotFound
+	}
+
 	q := `SELECT id, name, metadata
 	      FROM channels ch
 	      INNER JOIN connections co
