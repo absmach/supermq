@@ -1,0 +1,14 @@
+version: "3"
+
+volumes:
+  mainflux-users-db-volume:
+  mainflux-things-db-volume:
+
+services:
+  users-db:
+    volumes:
+      - mainflux-users-db-volume:/var/lib/postgresql/data
+
+  things-db:
+    volumes:
+      - mainflux-things-db-volume:/var/lib/postgresql/data
