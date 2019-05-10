@@ -73,9 +73,7 @@ func (tr postgresRepository) ReadAll(chanID string, offset, limit uint64, query 
 	}
 
 	q = `SELECT COUNT(*) FROM messages WHERE channel = $1;`
-
-	var total uint64
-	if err := tr.db.Get(&total, q, chanID); err != nil {
+	if err := tr.db.Get(&page.Total, q, chanID); err != nil {
 		//tr.log.Error(fmt.Sprintf("Failed to count things due to %s", err))
 		return readers.MessagesPage{}, err
 	}
