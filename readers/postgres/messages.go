@@ -45,7 +45,6 @@ func (tr postgresRepository) ReadAll(chanID string, offset, limit uint64, query 
 
 	rows, err := tr.db.NamedQuery(q, params)
 	if err != nil {
-		//tr.log.Error(fmt.Sprintf("Failed to retrieve things due to %s", err))
 		return readers.MessagesPage{}, err
 	}
 	defer rows.Close()
@@ -58,13 +57,11 @@ func (tr postgresRepository) ReadAll(chanID string, offset, limit uint64, query 
 	for rows.Next() {
 		dbm := dbMessage{Channel: chanID}
 		if err := rows.StructScan(&dbm); err != nil {
-			//tr.log.Error(fmt.Sprintf("Failed to read retrieved thing due to %s", err))
 			return readers.MessagesPage{}, err
 		}
 
 		msg, err := toMessage(dbm)
 		if err != nil {
-			//tr.log.Error(fmt.Sprintf("Failed to read retrieved thing due to %s", err))
 			return readers.MessagesPage{}, err
 		}
 
@@ -74,7 +71,6 @@ func (tr postgresRepository) ReadAll(chanID string, offset, limit uint64, query 
 
 	q = `SELECT COUNT(*) FROM messages WHERE channel = $1;`
 	if err := tr.db.Get(&page.Total, q, chanID); err != nil {
-		//tr.log.Error(fmt.Sprintf("Failed to count things due to %s", err))
 		return readers.MessagesPage{}, err
 	}
 
