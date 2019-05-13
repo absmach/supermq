@@ -1,4 +1,5 @@
 # This script contains commands to be executed by the CI tool.
+NPROC=$(nproc)
 
 setup_protoc() {
 	echo "Setting up protoc..."
@@ -32,6 +33,7 @@ setup_mf() {
 			exit 1
 		fi
 	done
+	make -j$(NPROC)
 }
 
 setup() {
