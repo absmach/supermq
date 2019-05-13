@@ -33,7 +33,7 @@ setup_mf() {
 			exit 1
 		fi
 	done
-	make -j$(NPROC)
+	make -j$NPROC
 }
 
 setup() {
@@ -58,7 +58,7 @@ run_test() {
 push() {
 	if test -n "$BRANCH_NAME" && test "$BRANCH_NAME" = "master"; then
 		echo "Pushing Docker images..."
-		make latest
+		make -j$NPROC latest
 	fi
 }
 
