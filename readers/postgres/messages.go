@@ -9,6 +9,7 @@ package postgres
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/jmoiron/sqlx" // required for DB access
 	"github.com/mainflux/mainflux"
@@ -33,14 +34,19 @@ func New(db *sqlx.DB) readers.MessageRepository {
 }
 
 func (tr postgresRepository) ReadAll(chanID string, offset, limit uint64, query map[string]string) (readers.MessagesPage, error) {
-	q := `SELECT * FROM messages
-    WHERE channel = :channel ORDER BY time DESC
-    LIMIT :limit OFFSET :offset;`
+	subtopicQuery := ""
+	if query["subtopic"] != "" {
+		subtopicQuery = `AND subtopic = :subtopic`
+	}
+	q := fmt.Sprintf(`SELECT * FROM messages
+    WHERE channel = :channel %s ORDER BY time DESC
+    LIMIT :limit OFFSET :offset;`, subtopicQuery)
 
 	params := map[string]interface{}{
-		"channel": chanID,
-		"limit":   limit,
-		"offset":  offset,
+		"channel":  chanID,
+		"limit":    limit,
+		"offset":   offset,
+		"subtopic": query["subtopic"],
 	}
 
 	rows, err := tr.db.NamedQuery(q, params)
@@ -66,11 +72,17 @@ func (tr postgresRepository) ReadAll(chanID string, offset, limit uint64, query 
 		}
 
 		page.Messages = append(page.Messages, msg)
-
 	}
 
 	q = `SELECT COUNT(*) FROM messages WHERE channel = $1;`
-	if err := tr.db.Get(&page.Total, q, chanID); err != nil {
+	qParams := []interface{}{chanID}
+
+	if query["subtopic"] != "" {
+		q = `SELECT COUNT(*) FROM messages WHERE channel = $1 AND subtopic = $2;`
+		qParams = append(qParams, query["subtopic"])
+	}
+
+	if err := tr.db.QueryRow(q, qParams...).Scan(&page.Total); err != nil {
 		return readers.MessagesPage{}, err
 	}
 
