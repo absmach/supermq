@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 
@@ -38,6 +39,9 @@ const (
 	defPort        = "8180"
 	defCluster     = "127.0.0.1"
 	defKeyspace    = "mainflux"
+	defDBUsername  = ""
+	defDBPassword  = ""
+	defDBPort      = "9042"
 	defChanCfgPath = "/config/channels.toml"
 
 	envNatsURL     = "MF_NATS_URL"
@@ -45,6 +49,9 @@ const (
 	envPort        = "MF_CASSANDRA_WRITER_PORT"
 	envCluster     = "MF_CASSANDRA_WRITER_DB_CLUSTER"
 	envKeyspace    = "MF_CASSANDRA_WRITER_DB_KEYSPACE"
+	envDBUsername  = "MF_CASSANDRA_WRITER_DB_USERNAME"
+	envDBPassword  = "MF_CASSANDRA_WRITER_DB_PASSWORD"
+	envDBPort      = "MF_CASSANDRA_WRITER_DB_PORT"
 	envChanCfgPath = "MF_CASSANDRA_WRITER_CHANNELS_CONFIG"
 )
 
@@ -52,9 +59,8 @@ type config struct {
 	natsURL  string
 	logLevel string
 	port     string
-	cluster  string
-	keyspace string
-	channels []string
+	dbCfg    cassandra.DBConfig
+	channels map[string]bool
 }
 
 func main() {
@@ -68,7 +74,7 @@ func main() {
 	nc := connectToNATS(cfg.natsURL, logger)
 	defer nc.Close()
 
-	session := connectToCassandra(cfg.cluster, cfg.keyspace, logger)
+	session := connectToCassandra(cfg.dbCfg, logger)
 	defer session.Close()
 
 	repo := newService(session, logger)
@@ -91,13 +97,25 @@ func main() {
 }
 
 func loadConfig() config {
+	dbPort, err := strconv.Atoi(mainflux.Env(envDBPort, defDBPort))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dbCfg := cassandra.DBConfig{
+		Hosts:    strings.Split(mainflux.Env(envCluster, defCluster), sep),
+		Keyspace: mainflux.Env(envKeyspace, defKeyspace),
+		Username: mainflux.Env(envDBUsername, defDBUsername),
+		Password: mainflux.Env(envDBPassword, defDBPassword),
+		Port:     dbPort,
+	}
+
 	chanCfgPath := mainflux.Env(envChanCfgPath, defChanCfgPath)
 	return config{
 		natsURL:  mainflux.Env(envNatsURL, defNatsURL),
 		logLevel: mainflux.Env(envLogLevel, defLogLevel),
 		port:     mainflux.Env(envPort, defPort),
-		cluster:  mainflux.Env(envCluster, defCluster),
-		keyspace: mainflux.Env(envKeyspace, defKeyspace),
+		dbCfg:    dbCfg,
 		channels: loadChansConfig(chanCfgPath),
 	}
 }
@@ -110,20 +128,23 @@ type chanConfig struct {
 	Channels channels `toml:"channels"`
 }
 
-func loadChansConfig(chanConfigPath string) []string {
+func loadChansConfig(chanConfigPath string) map[string]bool {
 	data, err := ioutil.ReadFile(chanConfigPath)
 	if err != nil {
-		log.Fatal(err.Error())
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
 	var chanCfg chanConfig
 	if err := toml.Unmarshal(data, &chanCfg); err != nil {
-		log.Fatal(err.Error())
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
-	return chanCfg.Channels.List
+	chans := map[string]bool{}
+	for _, ch := range chanCfg.Channels.List {
+		chans[ch] = true
+	}
+
+	return chans
 }
 
 func connectToNATS(url string, logger logger.Logger) *nats.Conn {
@@ -136,8 +157,8 @@ func connectToNATS(url string, logger logger.Logger) *nats.Conn {
 	return nc
 }
 
-func connectToCassandra(cluster, keyspace string, logger logger.Logger) *gocql.Session {
-	session, err := cassandra.Connect(strings.Split(cluster, sep), keyspace)
+func connectToCassandra(dbCfg cassandra.DBConfig, logger logger.Logger) *gocql.Session {
+	session, err := cassandra.Connect(dbCfg)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to Cassandra cluster: %s", err))
 		os.Exit(1)
