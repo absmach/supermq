@@ -267,6 +267,26 @@ func (cr configRepository) Update(cfg bootstrap.Config) error {
 	return nil
 }
 
+func (cr configRepository) UpdateCert(id string, cert, key []byte) error {
+	q := `UPDATE configs SET cert = $1, cert_key = $2 WHERE mainflux_thing = $3`
+
+	res, err := cr.db.Exec(q, cert, key, id)
+	if err != nil {
+		return err
+	}
+
+	cnt, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if cnt == 0 {
+		return bootstrap.ErrNotFound
+	}
+
+	return nil
+}
+
 func (cr configRepository) UpdateConnections(key, id string, channels []bootstrap.Channel, connections []string) error {
 	tx, err := cr.db.Beginx()
 	if err != nil {

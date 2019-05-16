@@ -82,6 +82,10 @@ func (es eventStore) Update(key string, cfg bootstrap.Config) error {
 	return nil
 }
 
+func (es eventStore) UpdateCert(id string, cert, key []byte) error {
+	return es.svc.UpdateCert(id, cert, key)
+}
+
 func (es eventStore) UpdateConnections(key, id string, connections []string) error {
 	if err := es.svc.UpdateConnections(key, id, connections); err != nil {
 		return err
