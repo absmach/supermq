@@ -12,13 +12,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/readers"
 	preader "github.com/mainflux/mainflux/readers/postgres"
 	pwriter "github.com/mainflux/mainflux/writers/postgres"
 	"github.com/stretchr/testify/assert"
-
-	uuid "github.com/satori/go.uuid"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -27,17 +27,21 @@ const (
 	valueFields = 5
 )
 
-var (
-	chanID = uuid.NewV4().String()
-	msg    = mainflux.Message{
-		Channel:   chanID,
-		Publisher: uuid.NewV4().String(),
-		Protocol:  "mqtt",
-	}
-)
-
 func TestMessageReadAll(t *testing.T) {
 	messageRepo := pwriter.New(db)
+
+	chanID, err := uuid.NewV4()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	pubID, err := uuid.NewV4()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	wrongID, err := uuid.NewV4()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	msg := mainflux.Message{
+		Channel:   chanID.String(),
+		Publisher: pubID.String(),
+		Protocol:  "mqtt",
+	}
 
 	messages := []mainflux.Message{}
 	subtopicMsgs := []mainflux.Message{}
@@ -82,7 +86,7 @@ func TestMessageReadAll(t *testing.T) {
 		page   readers.MessagesPage
 	}{
 		"read message page for existing channel": {
-			chanID: chanID,
+			chanID: chanID.String(),
 			offset: 0,
 			limit:  msgsNum,
 			page: readers.MessagesPage{
@@ -93,7 +97,7 @@ func TestMessageReadAll(t *testing.T) {
 			},
 		},
 		"read message page for non-existent channel": {
-			chanID: uuid.NewV4().String(),
+			chanID: wrongID.String(),
 			offset: 0,
 			limit:  msgsNum,
 			page: readers.MessagesPage{
@@ -104,7 +108,7 @@ func TestMessageReadAll(t *testing.T) {
 			},
 		},
 		"read message last page": {
-			chanID: chanID,
+			chanID: chanID.String(),
 			offset: 40,
 			limit:  5,
 			page: readers.MessagesPage{
@@ -115,7 +119,7 @@ func TestMessageReadAll(t *testing.T) {
 			},
 		},
 		"read message with non-existent subtopic": {
-			chanID: chanID,
+			chanID: chanID.String(),
 			offset: 0,
 			limit:  msgsNum,
 			query:  map[string]string{"subtopic": "not-present"},
@@ -127,7 +131,7 @@ func TestMessageReadAll(t *testing.T) {
 			},
 		},
 		"read message with subtopic": {
-			chanID: chanID,
+			chanID: chanID.String(),
 			offset: 0,
 			limit:  uint64(len(subtopicMsgs)),
 			query:  map[string]string{"subtopic": subtopic},
