@@ -16,13 +16,14 @@ type Config struct {
 	MFThing     string
 	Owner       string
 	Name        string
+	ClientCert  string
+	ClientKey   string
+	CACert      string
 	MFKey       string
 	MFChannels  []Channel
 	ExternalID  string
 	ExternalKey string
 	Content     string
-	Cert        []byte
-	Key         []byte
 	State       State
 }
 

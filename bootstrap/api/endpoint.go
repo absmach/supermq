@@ -32,6 +32,9 @@ func addEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			ExternalKey: req.ExternalKey,
 			MFChannels:  channels,
 			Name:        req.Name,
+			ClientCert:  req.ClientCert,
+			ClientKey:   req.ClientKey,
+			CACert:      req.CACert,
 			Content:     req.Content,
 		}
 

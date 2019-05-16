@@ -45,8 +45,8 @@ func NewConfigRepository(db *sqlx.DB, log logger.Logger) bootstrap.ConfigReposit
 }
 
 func (cr configRepository) Save(cfg bootstrap.Config, connections []string) (string, error) {
-	q := `INSERT INTO configs (mainflux_thing, owner, name, mainflux_key, external_id, external_key, content, state)
-		  VALUES (:mainflux_thing, :owner, :name, :mainflux_key, :external_id, :external_key, :content, :state)`
+	q := `INSERT INTO configs (mainflux_thing, owner, name, client_cert, client_key, ca_cert, mainflux_key, external_id, external_key, content, state)
+		  VALUES (:mainflux_thing, :owner, :name, :client_cert, :client_key, :ca_cert, :mainflux_key, :external_id, :external_key, :content, :state)`
 
 	tx, err := cr.db.Beginx()
 	if err != nil {
@@ -609,6 +609,9 @@ type dbConfig struct {
 	MFThing     string          `db:"mainflux_thing"`
 	Owner       string          `db:"owner"`
 	Name        sql.NullString  `db:"name"`
+	ClientCert  sql.NullString  `db:"client_cert"`
+	ClientKey   sql.NullString  `db:"client_key"`
+	CaCert      sql.NullString  `db:"ca_cert"`
 	MFKey       string          `db:"mainflux_key"`
 	ExternalID  string          `db:"external_id"`
 	ExternalKey string          `db:"external_key"`
@@ -621,6 +624,9 @@ func toDBConfig(cfg bootstrap.Config) dbConfig {
 		MFThing:     cfg.MFThing,
 		Owner:       cfg.Owner,
 		Name:        nullString(cfg.Name),
+		ClientCert:  nullString(cfg.ClientCert),
+		ClientKey:   nullString(cfg.ClientKey),
+		CaCert:      nullString(cfg.CACert),
 		MFKey:       cfg.MFKey,
 		ExternalID:  cfg.ExternalID,
 		ExternalKey: cfg.ExternalKey,
