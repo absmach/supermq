@@ -268,7 +268,7 @@ func (cr configRepository) Update(cfg bootstrap.Config) error {
 }
 
 func (cr configRepository) UpdateCert(thingKey, clientCert, clientKey, caCert string) error {
-	q := `UPDATE configs SET client_cert = $1, cert_key = $2, ca_cert = $3 WHERE mainflux_key = $4`
+	q := `UPDATE configs SET client_cert = $1, client_key = $2, ca_cert = $3 WHERE mainflux_key = $4`
 
 	res, err := cr.db.Exec(q, clientCert, clientKey, caCert, thingKey)
 	if err != nil {

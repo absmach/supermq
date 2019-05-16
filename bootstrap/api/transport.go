@@ -62,7 +62,7 @@ func MakeHandler(svc bootstrap.Service, reader bootstrap.ConfigReader) http.Hand
 		encodeResponse,
 		opts...))
 
-	r.Put("/things/configs/certs/:id", kithttp.NewServer(
+	r.Post("/things/configs/certs/:id", kithttp.NewServer(
 		updateCertEndpoint(svc),
 		decodeUpdateCertRequest,
 		encodeResponse,

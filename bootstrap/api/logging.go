@@ -70,7 +70,7 @@ func (lm *loggingMiddleware) Update(key string, cfg bootstrap.Config) (err error
 
 func (lm *loggingMiddleware) UpdateCert(thingKey, clientCert, clientKey, caCert string) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method update_cert for thing with key %s took %s to complete", clientKey, time.Since(begin))
+		message := fmt.Sprintf("Method update_cert for thing with key %s took %s to complete", thingKey, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
