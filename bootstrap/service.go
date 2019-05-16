@@ -51,7 +51,7 @@ type Service interface {
 
 	// UpdateCerts updates an existing Config certificate and key.
 	// A non-nil error is returned to indicate operation failure.
-	UpdateCert(string, []byte, []byte) error
+	UpdateCert(string, string, string, string) error
 
 	// UpdateConnections updates list of Channels related to given Config.
 	UpdateConnections(string, string, []string) error
@@ -174,8 +174,8 @@ func (bs bootstrapService) Update(key string, cfg Config) error {
 	return bs.configs.Update(cfg)
 }
 
-func (bs bootstrapService) UpdateCert(id string, cert, key []byte) error {
-	return bs.configs.UpdateCert(id, cert, key)
+func (bs bootstrapService) UpdateCert(thingKey, clientCert, clientKey, caCert string) error {
+	return bs.configs.UpdateCert(thingKey, clientCert, clientKey, caCert)
 }
 
 func (bs bootstrapService) UpdateConnections(key, id string, connections []string) error {

@@ -74,6 +74,21 @@ func (req updateReq) validate() error {
 	return nil
 }
 
+type updateCertReq struct {
+	key        string
+	ClientCert string `json:"client_cert"`
+	ClientKey  string `json:"client_key"`
+	CACert     string `json:"ca_cert"`
+}
+
+func (req updateCertReq) validate() error {
+	if req.key == "" {
+		return bootstrap.ErrUnauthorizedAccess
+	}
+
+	return nil
+}
+
 type updateConnReq struct {
 	key      string
 	id       string
