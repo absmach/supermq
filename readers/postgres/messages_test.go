@@ -28,8 +28,8 @@ const (
 )
 
 var (
-  chanID = uuid.NewV4().String()
-  msg    = mainflux.Message{
+	chanID = uuid.NewV4().String()
+	msg    = mainflux.Message{
 		Channel:   chanID,
 		Publisher: uuid.NewV4().String(),
 		Protocol:  "mqtt",
@@ -39,16 +39,16 @@ var (
 func TestMessageReadAll(t *testing.T) {
 	messageRepo := pwriter.New(db)
 
-  messages := []mainflux.Message{}
+	messages := []mainflux.Message{}
 	subtopicMsgs := []mainflux.Message{}
 	now := time.Now().Unix()
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.
-    count := i % valueFields
-    msg.Subtopic = ""
+		count := i % valueFields
+		msg.Subtopic = ""
 		switch count {
 		case 0:
-      msg.Subtopic = subtopic
+			msg.Subtopic = subtopic
 			msg.Value = &mainflux.Message_FloatValue{FloatValue: 5}
 		case 1:
 			msg.Value = &mainflux.Message_BoolValue{BoolValue: false}
@@ -63,8 +63,8 @@ func TestMessageReadAll(t *testing.T) {
 
 		err := messageRepo.Save(msg)
 		assert.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
-    messages = append(messages, msg)
-    if count == 0 {
+		messages = append(messages, msg)
+		if count == 0 {
 			subtopicMsgs = append(subtopicMsgs, msg)
 		}
 	}
