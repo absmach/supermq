@@ -20,6 +20,9 @@ type bootstrapRes struct {
 	MFThing    string       `json:"mainflux_id"`
 	MFKey      string       `json:"mainflux_key"`
 	MFChannels []channelRes `json:"mainflux_channels"`
+	ClientCert string       `json:"client_cert"`
+	ClientKey  string       `json:"client_key"`
+	CaCert     string       `json:"ca_cert"`
 	Content    string       `json:"content"`
 }
 
@@ -59,6 +62,9 @@ func (r reader) ReadConfig(cfg Config) (mainflux.Response, error) {
 		MFKey:      cfg.MFKey,
 		MFThing:    cfg.MFThing,
 		MFChannels: channels,
+		ClientCert: cfg.ClientCert,
+		ClientKey:  cfg.ClientKey,
+		CaCert:     cfg.CACert,
 		Content:    cfg.Content,
 	}
 

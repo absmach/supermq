@@ -193,7 +193,7 @@ func (cr configRepository) RetrieveAll(key string, filter bootstrap.Filter, offs
 }
 
 func (cr configRepository) RetrieveByExternalID(externalKey, externalID string) (bootstrap.Config, error) {
-	q := `SELECT mainflux_thing, mainflux_key, owner, name, content, state 
+	q := `SELECT mainflux_thing, mainflux_key, owner, name, client_cert, client_key, ca_cert, content, state 
 		  FROM configs 
 		  WHERE external_key = $1 AND external_id = $2`
 	dbcfg := dbConfig{
@@ -653,6 +653,17 @@ func toConfig(dbcfg dbConfig) bootstrap.Config {
 		cfg.Content = dbcfg.Content.String
 	}
 
+	if dbcfg.ClientCert.Valid {
+		cfg.ClientCert = dbcfg.ClientCert.String
+	}
+
+	if dbcfg.ClientKey.Valid {
+		cfg.ClientKey = dbcfg.ClientKey.String
+	}
+
+	if dbcfg.CaCert.Valid {
+		cfg.CACert = dbcfg.CaCert.String
+	}
 	return cfg
 }
 
