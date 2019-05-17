@@ -10,6 +10,7 @@ package http
 import "github.com/mainflux/mainflux/things"
 
 const maxLimitSize = 100
+const maxNameSize = 64
 
 type apiReq interface {
 	validate() error
@@ -25,6 +26,10 @@ type addThingReq struct {
 func (req addThingReq) validate() error {
 	if req.token == "" {
 		return things.ErrUnauthorizedAccess
+	}
+
+	if len(req.Name) > maxNameSize {
+		return things.ErrMalformedEntity
 	}
 
 	return nil
@@ -43,6 +48,10 @@ func (req updateThingReq) validate() error {
 	}
 
 	if req.id == "" {
+		return things.ErrMalformedEntity
+	}
+
+	if len(req.Name) > maxNameSize {
 		return things.ErrMalformedEntity
 	}
 
@@ -78,6 +87,10 @@ func (req createChannelReq) validate() error {
 		return things.ErrUnauthorizedAccess
 	}
 
+	if len(req.Name) > maxNameSize {
+		return things.ErrMalformedEntity
+	}
+
 	return nil
 }
 
@@ -94,6 +107,10 @@ func (req updateChannelReq) validate() error {
 	}
 
 	if req.id == "" {
+		return things.ErrMalformedEntity
+	}
+
+	if len(req.Name) > maxNameSize {
 		return things.ErrMalformedEntity
 	}
 
@@ -121,6 +138,7 @@ type listResourcesReq struct {
 	token  string
 	offset uint64
 	limit  uint64
+	name   string
 }
 
 func (req *listResourcesReq) validate() error {
@@ -128,7 +146,8 @@ func (req *listResourcesReq) validate() error {
 		return things.ErrUnauthorizedAccess
 	}
 
-	if req.limit == 0 || req.limit > maxLimitSize {
+	if req.limit == 0 || req.limit > maxLimitSize ||
+		len(req.name) > maxNameSize {
 		return things.ErrMalformedEntity
 	}
 

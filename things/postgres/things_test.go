@@ -315,29 +315,36 @@ func TestThingRetrieveByKey(t *testing.T) {
 
 func TestMultiThingRetrieval(t *testing.T) {
 	email := "thing-multi-retrieval@example.com"
+	name := "mainflux"
 	idp := uuid.New()
 	thingRepo := postgres.NewThingRepository(db)
 
 	n := uint64(10)
-
 	for i := uint64(0); i < n; i++ {
 		thid, err := idp.ID()
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 		thkey, err := idp.ID()
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-		t := things.Thing{
-			ID:    thid,
+
+		th := things.Thing{
 			Owner: email,
+			ID:    thid,
 			Key:   thkey,
 		}
 
-		thingRepo.Save(t)
+		// Create one thing with name
+		if i == 1 {
+			th.Name = name
+		}
+
+		thingRepo.Save(th)
 	}
 
 	cases := map[string]struct {
 		owner  string
 		offset uint64
 		limit  uint64
+		name   string
 		size   uint64
 	}{
 		"retrieve all things with existing owner": {
@@ -358,10 +365,24 @@ func TestMultiThingRetrieval(t *testing.T) {
 			limit:  n,
 			size:   0,
 		},
+		"retrieve things with valid name": {
+			owner:  email,
+			offset: 0,
+			limit:  n,
+			name:   name,
+			size:   1,
+		},
+		"retrieve things with invalid name": {
+			owner:  email,
+			offset: 0,
+			limit:  n,
+			name:   "wrong",
+			size:   0,
+		},
 	}
 
 	for desc, tc := range cases {
-		page, err := thingRepo.RetrieveAll(tc.owner, tc.offset, tc.limit)
+		page, err := thingRepo.RetrieveAll(tc.owner, tc.offset, tc.limit, tc.name)
 		size := uint64(len(page.Things))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))

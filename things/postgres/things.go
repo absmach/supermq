@@ -10,6 +10,7 @@ package postgres
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
@@ -158,14 +159,21 @@ func (tr thingRepository) RetrieveByKey(key string) (string, error) {
 	return id, nil
 }
 
-func (tr thingRepository) RetrieveAll(owner string, offset, limit uint64) (things.ThingsPage, error) {
-	q := `SELECT id, name, key, metadata FROM things
-	      WHERE owner = :owner ORDER BY id LIMIT :limit OFFSET :offset;`
+func (tr thingRepository) RetrieveAll(owner string, offset, limit uint64, name string) (things.ThingsPage, error) {
+	nq := ""
+	if name != "" {
+		name = fmt.Sprintf(`%%%s%%`, name)
+		nq = fmt.Sprintf(`AND name LIKE :name`)
+	}
+
+	q := fmt.Sprintf(`SELECT id, name, key, metadata FROM things
+	      WHERE owner = :owner %s ORDER BY id LIMIT :limit OFFSET :offset;`, nq)
 
 	params := map[string]interface{}{
 		"owner":  owner,
 		"limit":  limit,
 		"offset": offset,
+		"name":   name,
 	}
 
 	rows, err := tr.db.NamedQuery(q, params)
