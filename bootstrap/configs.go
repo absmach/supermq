@@ -73,7 +73,7 @@ type ConfigRepository interface {
 
 	// UpdateCerts updates an existing Config certificate and key.
 	// A non-nil error is returned to indicate operation failure.
-	UpdateCert(string, string, string, string) error
+	UpdateCert(string, string, string, string, string) error
 
 	// UpdateConnections updates a list of Channels the Config is connected to
 	// adding new Channels if needed.

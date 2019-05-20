@@ -62,7 +62,7 @@ func MakeHandler(svc bootstrap.Service, reader bootstrap.ConfigReader) http.Hand
 		encodeResponse,
 		opts...))
 
-	r.Post("/things/configs/certs/:id", kithttp.NewServer(
+	r.Post("/things/configs/certs/:key", kithttp.NewServer(
 		updateCertEndpoint(svc),
 		decodeUpdateCertRequest,
 		encodeResponse,
@@ -143,7 +143,7 @@ func decodeUpdateCertRequest(_ context.Context, r *http.Request) (interface{}, e
 	}
 
 	req := updateCertReq{key: r.Header.Get("Authorization")}
-	req.thingKey = bone.GetValue(r, "id")
+	req.thingKey = bone.GetValue(r, "key")
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}
