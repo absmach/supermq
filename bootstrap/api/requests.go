@@ -76,13 +76,14 @@ func (req updateReq) validate() error {
 
 type updateCertReq struct {
 	key        string
+	thingKey   string
 	ClientCert string `json:"client_cert"`
 	ClientKey  string `json:"client_key"`
 	CACert     string `json:"ca_cert"`
 }
 
 func (req updateCertReq) validate() error {
-	if req.key == "" {
+	if req.key == "" || req.thingKey == "" {
 		return bootstrap.ErrUnauthorizedAccess
 	}
 

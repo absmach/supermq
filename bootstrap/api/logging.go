@@ -68,7 +68,7 @@ func (lm *loggingMiddleware) Update(key string, cfg bootstrap.Config) (err error
 	return lm.svc.Update(key, cfg)
 }
 
-func (lm *loggingMiddleware) UpdateCert(thingKey, clientCert, clientKey, caCert string) (err error) {
+func (lm *loggingMiddleware) UpdateCert(key, thingKey, clientCert, clientKey, caCert string) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method update_cert for thing with key %s took %s to complete", thingKey, time.Since(begin))
 		if err != nil {
@@ -78,7 +78,7 @@ func (lm *loggingMiddleware) UpdateCert(thingKey, clientCert, clientKey, caCert 
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.UpdateCert(thingKey, clientCert, clientKey, caCert)
+	return lm.svc.UpdateCert(key, thingKey, clientCert, clientKey, caCert)
 }
 
 func (lm *loggingMiddleware) UpdateConnections(key, id string, connections []string) (err error) {

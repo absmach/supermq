@@ -142,8 +142,8 @@ func decodeUpdateCertRequest(_ context.Context, r *http.Request) (interface{}, e
 		return nil, errUnsupportedContentType
 	}
 
-	var req updateCertReq
-	req.key = bone.GetValue(r, "id")
+	req := updateCertReq{key: r.Header.Get("Authorization")}
+	req.thingKey = bone.GetValue(r, "id")
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}
