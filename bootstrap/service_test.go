@@ -223,7 +223,7 @@ func TestUpdate(t *testing.T) {
 	}
 }
 
-func TestUpdateCerts(t *testing.T) {
+func TestUpdateCert(t *testing.T) {
 	users := mocks.NewUsersService(map[string]string{validToken: email})
 
 	server := newThingsServer(newThingsService(users))
