@@ -83,8 +83,12 @@ type updateCertReq struct {
 }
 
 func (req updateCertReq) validate() error {
-	if req.key == "" || req.thingKey == "" {
+	if req.key == "" {
 		return bootstrap.ErrUnauthorizedAccess
+	}
+
+	if req.thingKey == "" {
+		return bootstrap.ErrNotFound
 	}
 
 	return nil

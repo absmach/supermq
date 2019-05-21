@@ -131,7 +131,7 @@ func TestUpdateCertReqValidation(t *testing.T) {
 			desc:     "empty thing key",
 			key:      "key",
 			thingKey: "",
-			err:      bootstrap.ErrMalformedEntity,
+			err:      bootstrap.ErrNotFound,
 		},
 	}
 
