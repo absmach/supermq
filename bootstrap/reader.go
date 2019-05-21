@@ -20,10 +20,10 @@ type bootstrapRes struct {
 	MFThing    string       `json:"mainflux_id"`
 	MFKey      string       `json:"mainflux_key"`
 	MFChannels []channelRes `json:"mainflux_channels"`
-	ClientCert string       `json:"client_cert"`
-	ClientKey  string       `json:"client_key"`
-	CaCert     string       `json:"ca_cert"`
-	Content    string       `json:"content"`
+	ClientCert string       `json:"client_cert,omitempty"`
+	ClientKey  string       `json:"client_key,omitempty"`
+	CaCert     string       `json:"ca_cert,omitempty"`
+	Content    string       `json:"content,omitempty"`
 }
 
 type channelRes struct {
