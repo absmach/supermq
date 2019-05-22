@@ -187,7 +187,7 @@ func TestListThings(t *testing.T) {
 
 	essvc := redis.NewEventStoreMiddleware(svc, redisClient)
 	esths, eserr := essvc.ListThings(token, 0, 10, "")
-	ths, err := svc.ListThings(token, 0, 10, "lora")
+	ths, err := svc.ListThings(token, 0, 10, "")
 	assert.Equal(t, ths, esths, fmt.Sprintf("event sourcing changed service behaviour: expected %v got %v", ths, esths))
 	assert.Equal(t, err, eserr, fmt.Sprintf("event sourcing changed service behaviour: expected %v got %v", err, eserr))
 }

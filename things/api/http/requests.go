@@ -146,8 +146,11 @@ func (req *listResourcesReq) validate() error {
 		return things.ErrUnauthorizedAccess
 	}
 
-	if req.limit == 0 || req.limit > maxLimitSize ||
-		len(req.name) > maxNameSize {
+	if req.limit == 0 || req.limit > maxLimitSize {
+		return things.ErrMalformedEntity
+	}
+
+	if len(req.name) > maxNameSize {
 		return things.ErrMalformedEntity
 	}
 

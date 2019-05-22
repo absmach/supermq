@@ -163,7 +163,7 @@ func (tr thingRepository) RetrieveAll(owner string, offset, limit uint64, name s
 	nq := ""
 	if name != "" {
 		name = fmt.Sprintf(`%%%s%%`, name)
-		nq = fmt.Sprintf(`AND name LIKE :name`)
+		nq = `AND name LIKE :name`
 	}
 
 	q := fmt.Sprintf(`SELECT id, name, key, metadata FROM things

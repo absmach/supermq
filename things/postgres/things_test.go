@@ -332,8 +332,8 @@ func TestMultiThingRetrieval(t *testing.T) {
 			Key:   thkey,
 		}
 
-		// Create one thing with name
-		if i == 1 {
+		// Create first Thing with name
+		if i == 0 {
 			th.Name = name
 		}
 
@@ -365,14 +365,14 @@ func TestMultiThingRetrieval(t *testing.T) {
 			limit:  n,
 			size:   0,
 		},
-		"retrieve things with valid name": {
+		"retrieve things with existent name": {
 			owner:  email,
 			offset: 0,
 			limit:  n,
 			name:   name,
 			size:   1,
 		},
-		"retrieve things with invalid name": {
+		"retrieve things with inexistent name": {
 			owner:  email,
 			offset: 0,
 			limit:  n,
