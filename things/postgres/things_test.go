@@ -372,7 +372,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 			name:   name,
 			size:   1,
 		},
-		"retrieve things with inexistent name": {
+		"retrieve things with unexistent name": {
 			owner:  email,
 			offset: 0,
 			limit:  n,
