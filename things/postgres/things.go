@@ -20,6 +20,13 @@ import (
 
 var _ things.ThingRepository = (*thingRepository)(nil)
 
+const (
+	errDuplicate  = "unique_violation"
+	errFK         = "foreign_key_violation"
+	errInvalid    = "invalid_text_representation"
+	errTruncation = "string_data_right_truncation"
+)
+
 type thingRepository struct {
 	db *sqlx.DB
 }
@@ -46,7 +53,7 @@ func (tr thingRepository) Save(thing things.Thing) (string, error) {
 		pqErr, ok := err.(*pq.Error)
 		if ok {
 			switch pqErr.Code.Name() {
-			case errInvalid:
+			case errInvalid, errTruncation:
 				return "", things.ErrMalformedEntity
 			case errDuplicate:
 				return "", things.ErrConflict
@@ -70,8 +77,11 @@ func (tr thingRepository) Update(thing things.Thing) error {
 	res, err := tr.db.NamedExec(q, dbth)
 	if err != nil {
 		pqErr, ok := err.(*pq.Error)
-		if ok && errInvalid == pqErr.Code.Name() {
-			return things.ErrMalformedEntity
+		if ok {
+			switch pqErr.Code.Name() {
+			case errInvalid, errTruncation:
+				return things.ErrMalformedEntity
+			}
 		}
 
 		return err

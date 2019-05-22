@@ -9,6 +9,7 @@ package postgres_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -20,12 +21,17 @@ import (
 )
 
 func TestThingSave(t *testing.T) {
-	email := "thing-save@example.com"
 	thingRepo := postgres.NewThingRepository(db)
+
+	email := "thing-save@example.com"
+	invalidName := strings.Repeat("0123456789", 50)
 
 	thid, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	thkey, err := uuid.New().ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	nonexistentThingKey, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	thing := things.Thing{
@@ -33,9 +39,6 @@ func TestThingSave(t *testing.T) {
 		Owner: email,
 		Key:   thkey,
 	}
-
-	nonexistentThingKey, err := uuid.New().ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := []struct {
 		desc  string
@@ -48,18 +51,37 @@ func TestThingSave(t *testing.T) {
 			err:   nil,
 		},
 		{
-			desc: "create invalid thing",
+			desc:  "create thing with conflicting key",
+			thing: thing,
+			err:   things.ErrConflict,
+		},
+		{
+			desc: "create thing with invalid ID",
 			thing: things.Thing{
 				ID:    "invalid",
 				Owner: email,
-				Key:   nonexistentThingKey,
+				Key:   thkey,
 			},
 			err: things.ErrMalformedEntity,
 		},
 		{
-			desc:  "create thing with conflicting key",
-			thing: thing,
-			err:   things.ErrConflict,
+			desc: "create thing with invalid Key",
+			thing: things.Thing{
+				ID:    thid,
+				Owner: email,
+				Key:   nonexistentThingKey,
+			},
+			err: things.ErrConflict,
+		},
+		{
+			desc: "create thing with invalid name",
+			thing: things.Thing{
+				ID:    thid,
+				Owner: email,
+				Key:   thkey,
+				Name:  invalidName,
+			},
+			err: things.ErrMalformedEntity,
 		},
 	}
 
@@ -70,8 +92,11 @@ func TestThingSave(t *testing.T) {
 }
 
 func TestThingUpdate(t *testing.T) {
-	email := "thing-update@example.com"
 	thingRepo := postgres.NewThingRepository(db)
+
+	email := "thing-update@example.com"
+	validName := "mfx_device"
+	invalidName := strings.Repeat("0123456789", 50)
 
 	thid, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -123,6 +148,26 @@ func TestThingUpdate(t *testing.T) {
 				Owner: wrongValue,
 			},
 			err: things.ErrNotFound,
+		},
+		{
+			desc: "update thing with valid name",
+			thing: things.Thing{
+				ID:    thid,
+				Owner: email,
+				Key:   thkey,
+				Name:  validName,
+			},
+			err: nil,
+		},
+		{
+			desc: "update thing with invalid name",
+			thing: things.Thing{
+				ID:    thid,
+				Owner: email,
+				Key:   thkey,
+				Name:  invalidName,
+			},
+			err: things.ErrMalformedEntity,
 		},
 	}
 

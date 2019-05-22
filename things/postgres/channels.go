@@ -19,12 +19,6 @@ import (
 
 var _ things.ChannelRepository = (*channelRepository)(nil)
 
-const (
-	errDuplicate = "unique_violation"
-	errFK        = "foreign_key_violation"
-	errInvalid   = "invalid_text_representation"
-)
-
 type channelRepository struct {
 	db *sqlx.DB
 }
