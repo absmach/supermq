@@ -10,100 +10,106 @@ package http
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 
-	"github.com/gofrs/uuid"
 	"github.com/mainflux/mainflux/things"
+	"github.com/mainflux/mainflux/things/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAddThingReqValidation(t *testing.T) {
-	uuidToken, err := uuid.NewV4()
+	token, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	token := uuidToken.String()
 
-	valid := things.Thing{}
+	invalidName := strings.Repeat("0123456789", 50)
+
+	validReq := addThingReq{
+		token: token,
+	}
 
 	cases := map[string]struct {
-		thing things.Thing
-		token string
-		err   error
+		req addThingReq
+		err error
 	}{
 		"valid thing addition request": {
-			thing: valid,
-			token: token,
-			err:   nil,
+			req: validReq,
+			err: nil,
 		},
 		"missing token": {
-			thing: valid,
-			token: "",
-			err:   things.ErrUnauthorizedAccess,
+			req: addThingReq{
+				token: "",
+			},
+			err: things.ErrUnauthorizedAccess,
+		},
+		"valid name": {
+			req: addThingReq{
+				token: token,
+				Name:  "thing_name",
+			},
+			err: nil,
+		},
+		"invalid name": {
+			req: addThingReq{
+				token: token,
+				Name:  invalidName,
+			},
+			err: things.ErrMalformedEntity,
 		},
 	}
 
 	for desc, tc := range cases {
-		req := addThingReq{
-			token:    tc.token,
-			Name:     tc.thing.Name,
-			Metadata: tc.thing.Metadata,
-		}
-
-		err := req.validate()
+		err := tc.req.validate()
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
 
 func TestUpdateThingReqValidation(t *testing.T) {
-	uuidToken, err := uuid.NewV4()
+	token, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	token := uuidToken.String()
 
-	valid := things.Thing{ID: "1"}
+	thid, err := uuid.New().ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	validReq := updateThingReq{
+		token: token,
+		id:    thid,
+	}
 
 	cases := map[string]struct {
-		thing things.Thing
-		id    string
-		token string
-		err   error
+		req updateThingReq
+		err error
 	}{
 		"valid thing update request": {
-			thing: valid,
-			id:    valid.ID,
-			token: token,
-			err:   nil,
+			req: validReq,
+			err: nil,
 		},
 		"missing token": {
-			thing: valid,
-			id:    valid.ID,
-			token: "",
-			err:   things.ErrUnauthorizedAccess,
+			req: updateThingReq{
+				token: "",
+				id:    thid,
+			},
+			err: things.ErrUnauthorizedAccess,
 		},
 		"empty thing id": {
-			thing: valid,
-			id:    "",
-			token: token,
-			err:   things.ErrMalformedEntity,
+			req: updateThingReq{
+				token: token,
+				id:    "",
+			},
+			err: things.ErrMalformedEntity,
 		},
 	}
 
 	for desc, tc := range cases {
-		req := updateThingReq{
-			token:    tc.token,
-			id:       tc.id,
-			Name:     tc.thing.Name,
-			Metadata: tc.thing.Metadata,
-		}
-
-		err := req.validate()
+		err := tc.req.validate()
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
 
 func TestUpdateKeyReqValidation(t *testing.T) {
-	uuidToken, err := uuid.NewV4()
+	token, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	token := uuidToken.String()
 
 	thing := things.Thing{ID: "1", Key: "key"}
 
@@ -153,9 +159,8 @@ func TestUpdateKeyReqValidation(t *testing.T) {
 
 func TestCreateChannelReqValidation(t *testing.T) {
 	channel := things.Channel{}
-	uuidToken, err := uuid.NewV4()
+	token, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	token := uuidToken.String()
 
 	cases := map[string]struct {
 		channel things.Channel
@@ -186,9 +191,8 @@ func TestCreateChannelReqValidation(t *testing.T) {
 }
 
 func TestUpdateChannelReqValidation(t *testing.T) {
-	uuidToken, err := uuid.NewV4()
+	token, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	token := uuidToken.String()
 
 	channel := things.Channel{ID: "1"}
 
@@ -231,9 +235,8 @@ func TestUpdateChannelReqValidation(t *testing.T) {
 }
 
 func TestViewResourceReqValidation(t *testing.T) {
-	uuidToken, err := uuid.NewV4()
+	token, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	token := uuidToken.String()
 
 	id := uint64(1)
 
@@ -267,16 +270,17 @@ func TestViewResourceReqValidation(t *testing.T) {
 }
 
 func TestListResourcesReqValidation(t *testing.T) {
-	uuidToken, err := uuid.NewV4()
+	token, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	token := uuidToken.String()
 
+	invalidName := strings.Repeat("0123456789", 50)
 	value := uint64(10)
 
 	cases := map[string]struct {
 		token  string
 		offset uint64
 		limit  uint64
+		name   string
 		err    error
 	}{
 		"valid listing request": {
@@ -302,6 +306,13 @@ func TestListResourcesReqValidation(t *testing.T) {
 			offset: value,
 			limit:  20 * value,
 			err:    things.ErrMalformedEntity,
+		},
+		"too long name": {
+			token:  token,
+			offset: value,
+			limit:  value,
+			name:   invalidName,
+			err:    nil,
 		},
 	}
 

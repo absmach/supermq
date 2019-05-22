@@ -32,7 +32,8 @@ func NewChannelRepository(db *sqlx.DB) things.ChannelRepository {
 }
 
 func (cr channelRepository) Save(channel things.Channel) (string, error) {
-	q := `INSERT INTO channels (id, owner, name, metadata) VALUES (:id, :owner, :name, :metadata);`
+	q := `INSERT INTO channels (id, owner, name, metadata)
+        VALUES (:id, :owner, :name, :metadata);`
 
 	dbch, err := toDBChannel(channel)
 	if err != nil {
