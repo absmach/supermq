@@ -20,11 +20,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const maxNameSize = 1024
+
+var invalidName = strings.Repeat("m", maxNameSize+1)
+
 func TestThingSave(t *testing.T) {
 	thingRepo := postgres.NewThingRepository(db)
 
 	email := "thing-save@example.com"
-	invalidName := strings.Repeat("0123456789", 50)
 
 	thid, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -96,7 +99,6 @@ func TestThingUpdate(t *testing.T) {
 
 	email := "thing-update@example.com"
 	validName := "mfx_device"
-	invalidName := strings.Repeat("0123456789", 50)
 
 	thid, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
