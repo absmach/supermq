@@ -32,6 +32,7 @@ const (
 	token       = "token"
 	wrongValue  = "wrong_value"
 	wrongID     = 0
+	maxNameSize = 256
 )
 
 var (
@@ -43,6 +44,7 @@ var (
 		Name:     "test",
 		Metadata: map[string]interface{}{"test": "data"},
 	}
+	invalidName = strings.Repeat("m", maxNameSize+1)
 )
 
 type testRequest struct {
@@ -99,7 +101,7 @@ func TestAddThing(t *testing.T) {
 	th.Key = "key"
 	data := toJSON(th)
 
-	th.Name = strings.Repeat("0123456789", 50)
+	th.Name = invalidName
 	invalidData := toJSON(th)
 
 	cases := []struct {
@@ -211,7 +213,7 @@ func TestUpdateThing(t *testing.T) {
 	sth, _ := svc.AddThing(token, thing)
 
 	th := thing
-	th.Name = strings.Repeat("0123456789", 50)
+	th.Name = invalidName
 	invalidData := toJSON(th)
 
 	cases := []struct {
@@ -643,7 +645,7 @@ func TestListThings(t *testing.T) {
 			desc:   "get a list of things filtering with invalid name",
 			auth:   token,
 			status: http.StatusBadRequest,
-			url:    fmt.Sprintf("%s?offset=%d&limit=%d&name=%s", thingURL, 0, 5, strings.Repeat("0123456789", 50)),
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d&name=%s", thingURL, 0, 5, invalidName),
 			res:    nil,
 		},
 	}
