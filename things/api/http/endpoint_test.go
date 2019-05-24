@@ -32,7 +32,7 @@ const (
 	token       = "token"
 	wrongValue  = "wrong_value"
 	wrongID     = 0
-	maxNameSize = 256
+	maxNameSize = 1024
 )
 
 var (
