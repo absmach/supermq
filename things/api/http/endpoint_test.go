@@ -35,8 +35,14 @@ const (
 )
 
 var (
-	thing   = things.Thing{Name: "test_app", Metadata: map[string]interface{}{"test": "data"}}
-	channel = things.Channel{Name: "test", Metadata: map[string]interface{}{"test": "data"}}
+	thing = things.Thing{
+		Name:     "test_app",
+		Metadata: map[string]interface{}{"test": "data"},
+	}
+	channel = things.Channel{
+		Name:     "test",
+		Metadata: map[string]interface{}{"test": "data"},
+	}
 )
 
 type testRequest struct {
@@ -92,6 +98,9 @@ func TestAddThing(t *testing.T) {
 	th := thing
 	th.Key = "key"
 	data := toJSON(th)
+
+	th.Name = strings.Repeat("0123456789", 50)
+	invalidData := toJSON(th)
 
 	cases := []struct {
 		desc        string
@@ -165,6 +174,14 @@ func TestAddThing(t *testing.T) {
 			status:      http.StatusUnsupportedMediaType,
 			location:    "",
 		},
+		{
+			desc:        "add thing with invalid name",
+			req:         invalidData,
+			contentType: contentType,
+			auth:        token,
+			status:      http.StatusBadRequest,
+			location:    "",
+		},
 	}
 
 	for _, tc := range cases {
@@ -192,6 +209,10 @@ func TestUpdateThing(t *testing.T) {
 
 	data := toJSON(thing)
 	sth, _ := svc.AddThing(token, thing)
+
+	th := thing
+	th.Name = strings.Repeat("0123456789", 50)
+	invalidData := toJSON(th)
 
 	cases := []struct {
 		desc        string
@@ -272,6 +293,13 @@ func TestUpdateThing(t *testing.T) {
 			contentType: "",
 			auth:        token,
 			status:      http.StatusUnsupportedMediaType,
+		},
+		{
+			desc:        "update thing with invalid name",
+			req:         invalidData,
+			contentType: contentType,
+			auth:        token,
+			status:      http.StatusBadRequest,
 		},
 	}
 
@@ -493,7 +521,7 @@ func TestListThings(t *testing.T) {
 	defer ts.Close()
 
 	data := []thingRes{}
-	for i := 0; i < 101; i++ {
+	for i := 0; i < 100; i++ {
 		sth, err := svc.AddThing(token, thing)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		thres := thingRes{
@@ -504,6 +532,7 @@ func TestListThings(t *testing.T) {
 		}
 		data = append(data, thres)
 	}
+
 	thingURL := fmt.Sprintf("%s/things", ts.URL)
 	cases := []struct {
 		desc   string
@@ -608,6 +637,13 @@ func TestListThings(t *testing.T) {
 			auth:   token,
 			status: http.StatusBadRequest,
 			url:    fmt.Sprintf("%s%s", thingURL, "?offset=5&limit=e"),
+			res:    nil,
+		},
+		{
+			desc:   "get a list of things filtering with invalid name",
+			auth:   token,
+			status: http.StatusBadRequest,
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d&name=%s", thingURL, 0, 5, strings.Repeat("0123456789", 50)),
 			res:    nil,
 		},
 	}
