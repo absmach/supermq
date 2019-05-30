@@ -43,8 +43,11 @@ func (cr channelRepository) Save(channel things.Channel) (string, error) {
 
 	if _, err := cr.db.NamedExec(q, dbch); err != nil {
 		pqErr, ok := err.(*pq.Error)
-		if ok && errInvalid == pqErr.Code.Name() {
-			return "", things.ErrMalformedEntity
+		if ok {
+			switch pqErr.Code.Name() {
+			case errInvalid, errTruncation:
+				return "", things.ErrMalformedEntity
+			}
 		}
 
 		return "", err
@@ -64,8 +67,11 @@ func (cr channelRepository) Update(channel things.Channel) error {
 	res, err := cr.db.NamedExec(q, dbch)
 	if err != nil {
 		pqErr, ok := err.(*pq.Error)
-		if ok && errInvalid == pqErr.Code.Name() {
-			return things.ErrMalformedEntity
+		if ok {
+			switch pqErr.Code.Name() {
+			case errInvalid, errTruncation:
+				return things.ErrMalformedEntity
+			}
 		}
 
 		return err
@@ -145,12 +151,13 @@ func (cr channelRepository) RetrieveAll(owner string, offset, limit uint64, name
 	q = fmt.Sprintf(`SELECT COUNT(*) FROM channels WHERE owner = $1 %s;`, cq)
 
 	total := uint64(0)
-	if name != "" {
-		if err := cr.db.Get(&total, q, owner, name); err != nil {
+	switch name {
+	case "":
+		if err := cr.db.Get(&total, q, owner); err != nil {
 			return things.ChannelsPage{}, err
 		}
-	} else {
-		if err := cr.db.Get(&total, q, owner); err != nil {
+	default:
+		if err := cr.db.Get(&total, q, owner, name); err != nil {
 			return things.ChannelsPage{}, err
 		}
 	}

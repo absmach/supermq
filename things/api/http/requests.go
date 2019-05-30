@@ -10,7 +10,7 @@ package http
 import "github.com/mainflux/mainflux/things"
 
 const maxLimitSize = 100
-const maxNameSize = 256
+const maxNameSize = 1024
 
 type apiReq interface {
 	validate() error

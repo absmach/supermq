@@ -25,6 +25,7 @@ func TestChannelSave(t *testing.T) {
 
 	id, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
 	channel := things.Channel{
 		ID:    id,
 		Owner: email,
@@ -41,10 +42,19 @@ func TestChannelSave(t *testing.T) {
 			err:     nil,
 		},
 		{
-			desc: "create invalid channel",
+			desc: "create channel with invalid ID",
 			channel: things.Channel{
 				ID:    "invalid",
 				Owner: email,
+			},
+			err: things.ErrMalformedEntity,
+		},
+		{
+			desc: "create thing with invalid name",
+			channel: things.Channel{
+				ID:    id,
+				Owner: email,
+				Name:  invalidName,
 			},
 			err: things.ErrMalformedEntity,
 		},
@@ -233,7 +243,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 			name:   channelName,
 			size:   1,
 		},
-		"retrieve all channels with unexisting name": {
+		"retrieve all channels with non-existing name": {
 			owner:  email,
 			offset: 0,
 			limit:  n,

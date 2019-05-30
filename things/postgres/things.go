@@ -18,14 +18,14 @@ import (
 	"github.com/mainflux/mainflux/things"
 )
 
-var _ things.ThingRepository = (*thingRepository)(nil)
-
 const (
 	errDuplicate  = "unique_violation"
 	errFK         = "foreign_key_violation"
 	errInvalid    = "invalid_text_representation"
 	errTruncation = "string_data_right_truncation"
 )
+
+var _ things.ThingRepository = (*thingRepository)(nil)
 
 type thingRepository struct {
 	db *sqlx.DB
@@ -207,11 +207,23 @@ func (tr thingRepository) RetrieveAll(owner string, offset, limit uint64, name s
 		items = append(items, th)
 	}
 
-	q = `SELECT COUNT(*) FROM things WHERE owner = $1;`
+	cq := ""
+	if name != "" {
+		cq = `AND name = $2`
+	}
 
-	var total uint64
-	if err := tr.db.Get(&total, q, owner); err != nil {
-		return things.ThingsPage{}, err
+	q = fmt.Sprintf(`SELECT COUNT(*) FROM things WHERE owner = $1 %s;`, cq)
+
+	total := uint64(0)
+	switch name {
+	case "":
+		if err := tr.db.Get(&total, q, owner); err != nil {
+			return things.ThingsPage{}, err
+		}
+	default:
+		if err := tr.db.Get(&total, q, owner, name); err != nil {
+			return things.ThingsPage{}, err
+		}
 	}
 
 	page := things.ThingsPage{
