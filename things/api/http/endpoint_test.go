@@ -945,7 +945,7 @@ func TestCreateChannel(t *testing.T) {
 			location:    "",
 		},
 		{
-			desc:        "create new channel",
+			desc:        "create new channel with invalid name",
 			req:         invalidData,
 			contentType: contentType,
 			auth:        token,
