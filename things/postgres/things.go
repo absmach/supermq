@@ -18,14 +18,14 @@ import (
 	"github.com/mainflux/mainflux/things"
 )
 
-var _ things.ThingRepository = (*thingRepository)(nil)
-
 const (
 	errDuplicate  = "unique_violation"
 	errFK         = "foreign_key_violation"
 	errInvalid    = "invalid_text_representation"
 	errTruncation = "string_data_right_truncation"
 )
+
+var _ things.ThingRepository = (*thingRepository)(nil)
 
 type thingRepository struct {
 	db *sqlx.DB
