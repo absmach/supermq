@@ -10,6 +10,7 @@ package postgres
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
@@ -100,13 +101,21 @@ func (cr channelRepository) RetrieveByID(owner, id string) (things.Channel, erro
 	return toChannel(dbch)
 }
 
-func (cr channelRepository) RetrieveAll(owner string, offset, limit uint64) (things.ChannelsPage, error) {
-	q := `SELECT id, name, metadata FROM channels WHERE owner = :owner ORDER BY id LIMIT :limit OFFSET :offset;`
+func (cr channelRepository) RetrieveAll(owner string, offset, limit uint64, name string) (things.ChannelsPage, error) {
+	nq := ""
+	if name != "" {
+		name = fmt.Sprintf(`%%%s%%`, name)
+		nq = `AND name LIKE :name`
+	}
+
+	q := fmt.Sprintf(`SELECT id, name, metadata FROM channels
+	      WHERE owner = :owner %s ORDER BY id LIMIT :limit OFFSET :offset;`, nq)
 
 	params := map[string]interface{}{
 		"owner":  owner,
 		"limit":  limit,
 		"offset": offset,
+		"name":   name,
 	}
 	rows, err := cr.db.NamedQuery(q, params)
 	if err != nil {
@@ -128,11 +137,22 @@ func (cr channelRepository) RetrieveAll(owner string, offset, limit uint64) (thi
 		items = append(items, ch)
 	}
 
-	q = `SELECT COUNT(*) FROM channels WHERE owner = $1;`
+	cq := ""
+	if name != "" {
+		cq = `AND name = $2`
+	}
 
-	var total uint64
-	if err := cr.db.Get(&total, q, owner); err != nil {
-		return things.ChannelsPage{}, err
+	q = fmt.Sprintf(`SELECT COUNT(*) FROM channels WHERE owner = $1 %s;`, cq)
+
+	total := uint64(0)
+	if name != "" {
+		if err := cr.db.Get(&total, q, owner, name); err != nil {
+			return things.ChannelsPage{}, err
+		}
+	} else {
+		if err := cr.db.Get(&total, q, owner); err != nil {
+			return things.ChannelsPage{}, err
+		}
 	}
 
 	page := things.ChannelsPage{

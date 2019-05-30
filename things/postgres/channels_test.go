@@ -182,9 +182,9 @@ func TestSingleChannelRetrieval(t *testing.T) {
 func TestMultiChannelRetrieval(t *testing.T) {
 	email := "channel-multi-retrieval@example.com"
 	chanRepo := postgres.NewChannelRepository(db)
+	channelName := "channel_name"
 
 	n := uint64(10)
-
 	for i := uint64(0); i < n; i++ {
 		chid, err := uuid.New().ID()
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -193,6 +193,11 @@ func TestMultiChannelRetrieval(t *testing.T) {
 			ID:    chid,
 			Owner: email,
 		}
+
+		if i == 0 {
+			c.Name = channelName
+		}
+
 		chanRepo.Save(c)
 	}
 
@@ -200,6 +205,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 		owner  string
 		offset uint64
 		limit  uint64
+		name   string
 		size   uint64
 	}{
 		"retrieve all channels with existing owner": {
@@ -220,10 +226,24 @@ func TestMultiChannelRetrieval(t *testing.T) {
 			limit:  n,
 			size:   0,
 		},
+		"retrieve all channels with existing name": {
+			owner:  email,
+			offset: 0,
+			limit:  n,
+			name:   channelName,
+			size:   1,
+		},
+		"retrieve all channels with unexisting name": {
+			owner:  email,
+			offset: 0,
+			limit:  n,
+			name:   "wrong",
+			size:   0,
+		},
 	}
 
 	for desc, tc := range cases {
-		page, err := chanRepo.RetrieveAll(tc.owner, tc.offset, tc.limit)
+		page, err := chanRepo.RetrieveAll(tc.owner, tc.offset, tc.limit, tc.name)
 		size := uint64(len(page.Channels))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
