@@ -46,7 +46,7 @@ services:
       - mainflux-base-net
 
   users-db:
-    image: postgres:10.2-alpine
+    image: postgres:10.8-alpine
     container_name: mainflux-users-db
     restart: on-failure
     environment:
@@ -82,7 +82,7 @@ services:
       - mainflux-base-net
 
   things-db:
-    image: postgres:10.2-alpine
+    image: postgres:10.8-alpine
     container_name: mainflux-things-db
     restart: on-failure
     environment:
