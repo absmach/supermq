@@ -147,8 +147,8 @@ services:
       - mainflux-base-net
 
   ui:
-    image: mainflux/ui:latest  #image kako se zove na docker hubu, povuci taj image 
-    container_name: mainflux-ui # tako nazovi kontejner
+    image: mainflux/ui:latest
+    container_name: mainflux-ui
     restart: on-failure
     ports:
       - 3000:3000
