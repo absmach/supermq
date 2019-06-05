@@ -7,6 +7,7 @@ BUILD_DIR = build
 SERVICES = users things http normalizer ws coap lora influxdb-writer influxdb-reader mongodb-writer mongodb-reader cassandra-writer cassandra-reader postgres-writer postgres-reader cli bootstrap
 DOCKERS = $(addprefix docker_,$(SERVICES))
 DOCKERS_DEV = $(addprefix docker_dev_,$(SERVICES))
+DOCKERS_ARM32V7 = $(addprefix docker_arm32v7_,$(SERVICES))
 CGO_ENABLED ?= 0
 
 define compile_service
@@ -18,7 +19,7 @@ define make_docker
 endef
 
 define make_docker_arm32v7
-	GOARCH=arm GOARM=7 docker build --no-cache --build-arg SVC_NAME=$(subst docker_,,$(1)) --tag=mainflux/$(subst docker_,,$(1)) -f docker/Dockerfile .
+	GOARCH=arm GOARM=7 docker build --no-cache --build-arg SVC_NAME=$(subst docker_arm32v7_,,$(1)) --tag=mainflux/$(subst docker_arm32v7_,,$(1)):arm32v7 -f docker/Dockerfile .
 endef
 
 define make_docker_dev
@@ -85,7 +86,7 @@ docker_mqtt:
 
 docker_mqtt_arm32v7:
 	# MQTT Docker build must be done from root dir because it copies .proto files and qemu-arm-static
-	docker build --tag=mainflux/mqtt -f mqtt/Dockerfile.arm .
+	docker build --tag=mainflux/mqtt:arm32v7 -f mqtt/Dockerfile.arm .
 
 dockers: $(DOCKERS) docker_ui docker_mqtt
 

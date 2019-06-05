@@ -15,7 +15,7 @@ docker:
 	docker build --tag=mainflux/ui -f docker/Dockerfile .
 
 docker_arm32v7:
-	docker build --tag=mainflux/ui -f docker/Dockerfile.arm .
+	docker build --tag=mainflux/ui:arm32v7 -f docker/Dockerfile.arm .
 
 clean:
 	rm -f main.js
