@@ -10,3 +10,4 @@ EXPOSE 1883 8880
 
 CMD ["node", "mqtt.js"]
 
+RUN rm /usr/bin/qemu-arm-static

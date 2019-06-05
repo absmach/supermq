@@ -17,6 +17,10 @@ define make_docker
 	docker build --no-cache --build-arg SVC_NAME=$(subst docker_,,$(1)) --tag=mainflux/$(subst docker_,,$(1)) -f docker/Dockerfile .
 endef
 
+define make_docker_arm32v7
+	GOARCH=arm GOARM=7 docker build --no-cache --build-arg SVC_NAME=$(subst docker_,,$(1)) --tag=mainflux/$(subst docker_,,$(1)) -f docker/Dockerfile .
+endef
+
 define make_docker_dev
 	docker build --build-arg SVC_NAME=$(subst docker_dev_,,$(1)) --tag=mainflux/$(subst docker_dev_,,$(1)) -f docker/Dockerfile.dev ./build
 endef
@@ -63,19 +67,31 @@ $(SERVICES):
 $(DOCKERS):
 	$(call make_docker,$(@))
 
+$(DOCKERS_DEV):
+	$(call make_docker_dev,$(@))
+
+$(DOCKERS_ARM32V7):
+	$(call make_docker_arm32v7,$(@))
+
 docker_ui:
 	$(MAKE) -C ui docker
+
+docker_ui_arm32v7:
+	$(MAKE) -C ui docker_arm32v7
 
 docker_mqtt:
 	# MQTT Docker build must be done from root dir because it copies .proto files
 	docker build --tag=mainflux/mqtt -f mqtt/Dockerfile .
 
+docker_mqtt_arm32v7:
+	# MQTT Docker build must be done from root dir because it copies .proto files and qemu-arm-static
+	docker build --tag=mainflux/mqtt -f mqtt/Dockerfile.arm .
+
 dockers: $(DOCKERS) docker_ui docker_mqtt
 
-$(DOCKERS_DEV):
-	$(call make_docker_dev,$(@))
-
 dockers_dev: $(DOCKERS_DEV)
+
+dockers_arm32v7: $(DOCKERS_ARM32V7) docker_ui_arm32v7 docker_mqtt_arm32v7
 
 ui:
 	$(MAKE) -C ui
