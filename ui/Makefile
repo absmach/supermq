@@ -14,7 +14,7 @@ run:
 docker:
 	docker build --tag=mainflux/ui -f docker/Dockerfile .
 
-docker_arm32v7:
+docker_arm:
 	docker build --tag=mainflux/ui:arm32v7 -f docker/Dockerfile.arm .
 
 clean:

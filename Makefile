@@ -7,7 +7,7 @@ BUILD_DIR = build
 SERVICES = users things http normalizer ws coap lora influxdb-writer influxdb-reader mongodb-writer mongodb-reader cassandra-writer cassandra-reader postgres-writer postgres-reader cli bootstrap
 DOCKERS = $(addprefix docker_,$(SERVICES))
 DOCKERS_DEV = $(addprefix docker_dev_,$(SERVICES))
-DOCKERS_ARM32V7 = $(addprefix docker_arm32v7_,$(SERVICES))
+DOCKERS_ARM = $(addprefix docker_arm_,$(SERVICES))
 CGO_ENABLED ?= 0
 
 define compile_service
@@ -18,8 +18,8 @@ define make_docker
 	docker build --no-cache --build-arg SVC_NAME=$(subst docker_,,$(1)) --tag=mainflux/$(subst docker_,,$(1)) -f docker/Dockerfile .
 endef
 
-define make_docker_arm32v7
-	docker build --no-cache --build-arg GOARCH=arm --build-arg GOARM=7 --build-arg SVC_NAME=$(subst docker_arm32v7_,,$(1)) --tag=mainflux/$(subst docker_arm32v7_,,$(1)):arm32v7 -f docker/Dockerfile .
+define make_docker_arm
+	docker build --no-cache --build-arg GOARCH=arm --build-arg GOARM=7 --build-arg SVC_NAME=$(subst docker_arm_,,$(1)) --tag=mainflux/$(subst docker_arm_,,$(1)):arm32v7 -f docker/Dockerfile .
 endef
 
 define make_docker_dev
@@ -71,28 +71,28 @@ $(DOCKERS):
 $(DOCKERS_DEV):
 	$(call make_docker_dev,$(@))
 
-$(DOCKERS_ARM32V7):
-	$(call make_docker_arm32v7,$(@))
+$(DOCKERS_ARM):
+	$(call make_docker_arm,$(@))
 
 docker_ui:
 	$(MAKE) -C ui docker
 
-docker_ui_arm32v7:
-	$(MAKE) -C ui docker_arm32v7
+docker_ui_arm:
+	$(MAKE) -C ui docker_arm
 
 docker_mqtt:
 	# MQTT Docker build must be done from root dir because it copies .proto files
 	docker build --tag=mainflux/mqtt -f mqtt/Dockerfile .
 
-docker_mqtt_arm32v7:
-	# MQTT Docker build must be done from root dir because it copies .proto files and qemu-arm-static
+docker_mqtt_arm:
+	# MQTT Docker build must be done from root dir because it copies .proto files
 	docker build --tag=mainflux/mqtt:arm32v7 -f mqtt/Dockerfile.arm .
 
 dockers: $(DOCKERS) docker_ui docker_mqtt
 
 dockers_dev: $(DOCKERS_DEV)
 
-dockers_arm32v7: $(DOCKERS_ARM32V7) docker_ui_arm32v7 docker_mqtt_arm32v7
+dockers_arm: $(DOCKERS_ARM) docker_ui_arm docker_mqtt_arm
 
 ui:
 	$(MAKE) -C ui
