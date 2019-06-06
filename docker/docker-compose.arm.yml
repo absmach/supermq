@@ -14,6 +14,7 @@ networks:
 
 volumes:
   mainflux-users-db-volume:
+  mainflux-things-db-volume:
   mainflux-mqtt-redis-volume:
   mainflux-things-redis-volume:
   mainflux-es-redis-volume:
@@ -80,6 +81,18 @@ services:
     networks:
       - mainflux-base-net
 
+  things-db:
+    image: postgres:10.8-alpine
+    container_name: mainflux-things-db
+    restart: on-failure
+    environment:
+      POSTGRES_USER: mainflux
+      POSTGRES_PASSWORD: mainflux
+      POSTGRES_DB: things
+    networks:
+      - mainflux-base-net
+    volumes:
+      - mainflux-things-db-volume:/var/lib/postgresql/data
 
   things-redis:
     image: redis:5.0-alpine
@@ -94,16 +107,16 @@ services:
     image: mainflux/things:arm32v7
     container_name: mainflux-things
     depends_on:
-      - users-db
+      - things-db
       - users
     restart: on-failure
     environment:
       MF_THINGS_LOG_LEVEL: debug
-      MF_THINGS_DB_HOST: users-db
+      MF_THINGS_DB_HOST: things-db
       MF_THINGS_DB_PORT: 5432
       MF_THINGS_DB_USER: mainflux
       MF_THINGS_DB_PASS: mainflux
-      MF_THINGS_DB: users
+      MF_THINGS_DB: things
       MF_THINGS_CACHE_URL: things-redis:6379
       MF_THINGS_ES_URL: es-redis:6379
       MF_THINGS_HTTP_PORT: 8182
