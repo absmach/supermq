@@ -19,7 +19,7 @@ define make_docker
 endef
 
 define make_docker_arm
-	docker build --no-cache --build-arg GOARCH=arm --build-arg GOARM=7 --build-arg SVC_NAME=$(subst docker_arm_,,$(1)) --tag=mainflux/$(subst docker_arm_,,$(1)):arm32v7 -f docker/Dockerfile .
+	docker build --no-cache --build-arg GOARCH=arm --build-arg GOARM=7 --build-arg SVC_NAME=$(subst docker_arm_,,$(1)) --tag=mainflux/$(subst docker_arm_,,$(1))-arm32v7 -f docker/Dockerfile .
 endef
 
 define make_docker_dev
@@ -86,7 +86,7 @@ docker_mqtt:
 
 docker_mqtt_arm:
 	# MQTT Docker build must be done from root dir because it copies .proto files
-	docker build --tag=mainflux/mqtt:arm32v7 -f mqtt/Dockerfile.arm .
+	docker build --tag=mainflux/mqtt-arm32v7 -f mqtt/Dockerfile.arm .
 
 dockers: $(DOCKERS) docker_ui docker_mqtt
 
