@@ -19,7 +19,7 @@ define make_docker
 endef
 
 define make_docker_arm32v7
-	GOARCH=arm GOARM=7 docker build --no-cache --build-arg SVC_NAME=$(subst docker_arm32v7_,,$(1)) --tag=mainflux/$(subst docker_arm32v7_,,$(1)):arm32v7 -f docker/Dockerfile .
+	docker build --no-cache --build-arg GOARCH=arm --build-arg GOARM=7 --build-arg SVC_NAME=$(subst docker_arm32v7_,,$(1)) --tag=mainflux/$(subst docker_arm32v7_,,$(1)):arm32v7 -f docker/Dockerfile .
 endef
 
 define make_docker_dev
