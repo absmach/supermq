@@ -77,14 +77,14 @@ $(DOCKERS_ARM):
 docker_ui:
 	$(MAKE) -C ui docker
 
-docker_ui_arm:
+docker_arm_ui:
 	$(MAKE) -C ui docker_arm
 
 docker_mqtt:
 	# MQTT Docker build must be done from root dir because it copies .proto files
 	docker build --tag=mainflux/mqtt -f mqtt/Dockerfile .
 
-docker_mqtt_arm:
+docker_arm_mqtt:
 	# MQTT Docker build must be done from root dir because it copies .proto files
 	docker build --tag=mainflux/mqtt-arm32v7 -f mqtt/Dockerfile.arm .
 
