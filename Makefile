@@ -103,6 +103,7 @@ mqtt:
 define docker_push
 	for svc in $(SERVICES); do \
 		docker push mainflux/$$svc:$(1); \
+		docker push mainflux/$$svc-arm32v7:$(1); \
 	done
 	docker push mainflux/ui:$(1)
 	docker push mainflux/mqtt:$(1)
@@ -118,11 +119,15 @@ release:
 	$(eval version = $(shell git describe --abbrev=0 --tags))
 	git checkout $(version)
 	$(MAKE) dockers
+	$(MAKE) dockers_arm
 	for svc in $(SERVICES); do \
 		docker tag mainflux/$$svc mainflux/$$svc:$(version); \
+		docker tag mainflux/$$svc-arm32v7 mainflux/$$svc-arm32v7:$(version); \
 	done
 	docker tag mainflux/ui mainflux/ui:$(version)
 	docker tag mainflux/mqtt mainflux/mqtt:$(version)
+	docker tag mainflux/ui-arm32v7 mainflux/ui-arm32v7:$(version)
+	docker tag mainflux/mqtt-arm32v7 mainflux/mqtt-arm32v7:$(version)
 	$(call docker_push,$(version))
 
 rundev:
