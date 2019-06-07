@@ -74,7 +74,7 @@ install_qemu() {
 push() {
 	if test -n "$BRANCH_NAME" && test "$BRANCH_NAME" = "master"; then
 		echo "Pushing Docker images..."
-		install_qemu()
+		install_qemu
 		make -j$NPROC latest
 	fi
 }
