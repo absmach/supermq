@@ -50,7 +50,7 @@ func TestChannelSave(t *testing.T) {
 			err: things.ErrMalformedEntity,
 		},
 		{
-			desc: "create thing with invalid name",
+			desc: "create channel with invalid name",
 			channel: things.Channel{
 				ID:    id,
 				Owner: email,

@@ -536,7 +536,7 @@ func TestListChannels(t *testing.T) {
 			size:   0,
 			err:    things.ErrUnauthorizedAccess,
 		},
-		"list with existent name": {
+		"list with existing name": {
 			token:  token,
 			offset: 0,
 			limit:  n,
@@ -544,7 +544,7 @@ func TestListChannels(t *testing.T) {
 			name:   "chanel_name",
 			err:    nil,
 		},
-		"list with unexistent name": {
+		"list with non-existent name": {
 			token:  token,
 			offset: 0,
 			limit:  n,
