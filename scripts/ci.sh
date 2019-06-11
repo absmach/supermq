@@ -67,16 +67,17 @@ run_test() {
 
 install_qemu() {
 	echo "Installing qemu..."
+	MF_PATH=$GOPATH/src/github.com/mainflux/mainflux
 	sudo apt update
-	sudo apt -y install qemu qemu-user-static qemu-user binfmt-support
+	sudo apt -y install qemu-user-static
 	sudo mv /usr/bin/qemu-arm-static $MF_PATH
 }
 
 push() {
 	if test -n "$BRANCH_NAME"; then
 		echo "Pushing Docker images..."
-	#	make -j$NPROC latest
-		make cleandocker
+		make -j$NPROC latest
+		docker system prune -a -f
 		install_qemu
 		make latest_arm
 	fi
