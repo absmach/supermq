@@ -68,7 +68,7 @@ run_test() {
 install_qemu() {
 	echo "Installing qemu..."
 	sudo apt update
-	sudo apt -y install qemu qemu-user-static qemu-user binfmt-support
+	sudo apt -y install qemu-user-static
 	sudo mv /usr/bin/qemu-arm-static $MF_PATH
 }
 

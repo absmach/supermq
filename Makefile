@@ -106,13 +106,15 @@ define docker_push
 		docker push mainflux/$$svc-arm32v7:$(1); \
 	done
 	docker push mainflux/ui:$(1)
+	docker push mainflux/ui-arm32v7:$(1)
 	docker push mainflux/mqtt:$(1)
+	docker push mainflux/mqtt-arm32v7:$(1)
 endef
 
 changelog:
 	git log $(shell git describe --tags --abbrev=0)..HEAD --pretty=format:"- %s"
 
-latest: dockers
+latest: dockers dockers_arm
 	$(call docker_push,latest)
 
 release:
