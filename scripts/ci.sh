@@ -67,9 +67,10 @@ run_test() {
 
 install_qemu() {
 	echo "Installing qemu..."
+	sudo apt-get clean
+	sudo apt-get update
+	sudo apt-get -y install binfmt-support qemu-user-static
 	MF_PATH=$GOPATH/src/github.com/mainflux/mainflux
-	sudo apt update
-	sudo apt -y install qemu-user-static
 	sudo mv /usr/bin/qemu-arm-static $MF_PATH
 }
 
@@ -79,7 +80,7 @@ push() {
 		make -j$NPROC latest
 		docker system prune -a -f
 		install_qemu
-		make latest_arm
+		make -j$NPROC latest_arm
 	fi
 }
 
