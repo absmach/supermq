@@ -78,6 +78,7 @@ docker_ui:
 	$(MAKE) -C ui docker
 
 docker_arm_ui:
+	$(MAKE) cleandocker
 	$(MAKE) -C ui docker_arm
 
 docker_mqtt:
@@ -85,6 +86,7 @@ docker_mqtt:
 	docker build --tag=mainflux/mqtt -f mqtt/Dockerfile .
 
 docker_arm_mqtt:
+	$(MAKE) cleandocker
 	# MQTT Docker build must be done from root dir because it copies .proto files
 	docker build --tag=mainflux/mqtt-arm32v7 -f mqtt/Dockerfile.arm .
 
