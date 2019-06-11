@@ -118,10 +118,10 @@ define docker_push_arm
 	done
 	docker push mainflux/ui-arm32v7:$(1)
 	docker rmi mainflux/ui-arm32v7:$(1)
-	docker system prune -a -f; \
+	docker system prune -a -f
 	docker push mainflux/mqtt-arm32v7:$(1)
 	docker rmi mainflux/mqtt-arm32v7:$(1)
-	docker system prune -a -f; \
+	docker system prune -a -f
 endef
 
 changelog:
