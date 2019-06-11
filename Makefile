@@ -49,6 +49,8 @@ cleandocker:
 	# Remove old mainflux images
 	docker images -q mainflux\/* | xargs -r docker rmi
 
+	docker system prune -a -f
+
 ifdef pv
 	# Remove unused volumes
 	docker volume ls -f name=mainflux -f dangling=true -q | xargs -r docker volume rm
@@ -78,7 +80,6 @@ docker_ui:
 	$(MAKE) -C ui docker
 
 docker_arm_ui:
-	$(MAKE) cleandocker
 	$(MAKE) -C ui docker_arm
 
 docker_mqtt:
@@ -86,7 +87,6 @@ docker_mqtt:
 	docker build --tag=mainflux/mqtt -f mqtt/Dockerfile .
 
 docker_arm_mqtt:
-	$(MAKE) cleandocker
 	# MQTT Docker build must be done from root dir because it copies .proto files
 	docker build --tag=mainflux/mqtt-arm32v7 -f mqtt/Dockerfile.arm .
 
@@ -113,9 +113,15 @@ endef
 define docker_push_arm
 	for svc in $(SERVICES); do \
 		docker push mainflux/$$svc-arm32v7:$(1); \
+		docker rmi mainflux/$$svc-arm32v7:$(1); \
+		docker system prune -a -f; \
 	done
 	docker push mainflux/ui-arm32v7:$(1)
+	docker rmi mainflux/ui-arm32v7:$(1)
+	docker system prune -a -f; \
 	docker push mainflux/mqtt-arm32v7:$(1)
+	docker rmi mainflux/mqtt-arm32v7:$(1)
+	docker system prune -a -f; \
 endef
 
 changelog:

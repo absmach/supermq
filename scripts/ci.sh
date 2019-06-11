@@ -75,10 +75,10 @@ install_qemu() {
 push() {
 	if test -n "$BRANCH_NAME"; then
 		echo "Pushing Docker images..."
-		make -j$NPROC latest
+	#	make -j$NPROC latest
 		make cleandocker
 		install_qemu
-		make -j$NPROC latest_arm
+		make latest_arm
 	fi
 }
 
