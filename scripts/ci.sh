@@ -75,9 +75,9 @@ install_qemu() {
 }
 
 push() {
-	if test -n "$BRANCH_NAME"; then
+	if test -n "$BRANCH_NAME" && test "$BRANCH_NAME" = "master"; then
 		echo "Pushing Docker images..."
-#		make -j$NPROC latest
+		make -j$NPROC latest
 		docker system prune -a -f
 		install_qemu
 		make latest_arm
@@ -86,5 +86,5 @@ push() {
 
 set -e
 setup
-#run_test
+run_test
 push
