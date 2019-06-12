@@ -71,15 +71,16 @@ install_qemu() {
 	cd $MF_PATH
 	sudo apt-get update && sudo apt-get -y install qemu-user-static
 	wget https://github.com/multiarch/qemu-user-static/releases/download/v2.11.1/qemu-arm-static.tar.gz  && tar -xzf qemu-arm-static.tar.gz && rm qemu-arm-static.tar.gz
+	sudo cp qemu-arm-static /usr/bin/
 }
 
 push() {
 	if test -n "$BRANCH_NAME"; then
 		echo "Pushing Docker images..."
-		make -j$NPROC latest
+#		make -j$NPROC latest
 		docker system prune -a -f
 		install_qemu
-		make -j$NPROC latest_arm
+		make latest_arm
 	fi
 }
 

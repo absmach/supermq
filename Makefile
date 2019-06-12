@@ -92,7 +92,7 @@ dockers: $(DOCKERS) docker_ui docker_mqtt
 
 dockers_dev: $(DOCKERS_DEV)
 
-dockers_arm: $(DOCKERS_ARM) docker_arm_mqtt docker_arm_ui
+dockers_arm: docker_arm_mqtt docker_arm_ui $(DOCKERS_ARM) 
 
 ui:
 	$(MAKE) -C ui
