@@ -79,11 +79,11 @@ push() {
 	#	make -j$NPROC latest
 		docker system prune -a -f
 		install_qemu
-		make -j$NPROC latest_arm
+		make latest_arm
 	fi
 }
 
 set -e
 setup
-run_test
+#run_test
 push
