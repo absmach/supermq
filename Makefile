@@ -92,7 +92,7 @@ dockers: $(DOCKERS) docker_ui docker_mqtt
 
 dockers_dev: $(DOCKERS_DEV)
 
-dockers_arm: docker_arm_mqtt docker_arm_ui $(DOCKERS_ARM) 
+dockers_arm: $(DOCKERS_ARM) docker_arm_ui docker_arm_mqtt
 
 ui:
 	$(MAKE) -C ui
@@ -119,7 +119,7 @@ endef
 changelog:
 	git log $(shell git describe --tags --abbrev=0)..HEAD --pretty=format:"- %s"
 
-latest: dockers 
+latest: dockers
 	$(call docker_push,latest)
 
 latest_arm: dockers_arm
