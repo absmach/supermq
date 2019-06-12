@@ -92,7 +92,7 @@ dockers: $(DOCKERS) docker_ui docker_mqtt
 
 dockers_dev: $(DOCKERS_DEV)
 
-dockers_arm: $(DOCKERS_ARM) docker_arm_ui docker_arm_mqtt
+dockers_arm: $(DOCKERS_ARM) docker_arm_mqtt docker_arm_ui
 
 ui:
 	$(MAKE) -C ui
@@ -111,15 +111,9 @@ endef
 define docker_push_arm
 	for svc in $(SERVICES); do \
 		docker push mainflux/$$svc-arm32v7:$(1); \
-		docker rmi mainflux/$$svc-arm32v7:$(1); \
-	#	docker system prune -a -f; \
 	done
 	docker push mainflux/ui-arm32v7:$(1)
-	docker rmi mainflux/ui-arm32v7:$(1)
-	#docker system prune -a -f
 	docker push mainflux/mqtt-arm32v7:$(1)
-	docker rmi mainflux/mqtt-arm32v7:$(1)
-	#docker system prune -a -f
 endef
 
 changelog:
