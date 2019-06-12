@@ -86,5 +86,5 @@ push() {
 
 set -e
 setup
-run_test
+#run_test
 push
