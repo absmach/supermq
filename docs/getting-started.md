@@ -13,7 +13,7 @@ make run
 This will start Mainflux docker composition, which will output the logs from the containers.
 
 ## Step 2 - Install the CLI
-Open a new terminal from which you can interact with the running Mainflux system. The easiest way to do this is by usin Mainflux CLI,
+Open a new terminal from which you can interact with the running Mainflux system. The easiest way to do this is by using the Mainflux CLI,
 which can be downloaded as a tarball from GitHub (here we use release `0.7.0` but be sure to use the latest release):
 
 ```bash
@@ -28,12 +28,12 @@ Once installed, you can use the CLI to quick-provision the system for testing:
 mainflux-cli provision test
 ```
 
-This command actually creates a temporary testing user, logs it in, then creates two things and two channles on behalf of this user.
-This way we have Mainflux system that have been quickly provisioned with one simple testing scenario.
+This command actually creates a temporary testing user, logs it in, then creates two things and two channels on behalf of this user.
+This quickly provisions a Mainflux system with one simple testing scenario.
 
 You can read more about system provisioning in a dedicated [Provisioning](./provisioning.md) chapter
 
-Output of the command is something like this:
+Output of the command follows this pattern:
 
 ```json
 {
@@ -71,7 +71,7 @@ Output of the command is something like this:
 ]
 ```
 
-In the Mainflux system terminal (where docker composition is running) you should see following logs:
+In the Mainflux system terminal (where docker compose is running) you should see following logs:
 ```bash
 mainflux-users  | {"level":"info","message":"Method register for user friendly_beaver@email.com took 97.573974ms to complete without errors.","ts":"2019-01-08T22:16:20.745989495Z"}
 mainflux-users  | {"level":"info","message":"Method login for user friendly_beaver@email.com took 69.308406ms to complete without errors.","ts":"2019-01-08T22:16:20.820610461Z"}
@@ -85,7 +85,7 @@ mainflux-things | {"level":"info","message":"Method add_thing for key eyJhbGciOi
 This proves that these provisioning commands were sent from the CLI to the Mainflux system.
 
 ## Step 4 - Send Messages
-Once system is provisioned, `thing` can start sending messages on a `channel`:
+Once system is provisioned, a `thing` can start sending messages on a `channel`:
 
 ```bash
 mainflux-cli messages send <channel_id> '[{"bn":"some-base-name:","bt":1.276020076001e+09, "bu":"A","bver":5, "n":"voltage","u":"V","v":120.1}, {"n":"current","t":-5,"v":1.2}, {"n":"current","t":-4,"v":1.3}]' <thing_key>
@@ -104,4 +104,4 @@ mainflux-http   | {"level":"info","message":"Method publish took 336.685µs to c
 mainflux-normalizer | {"level":"info","message":"Method normalize took 108.126µs to complete without errors.","ts":"2019-01-08T22:19:30.149500543Z"}
 ```
 
-This proves that messages have been well send through the system, via protocol adapter (`mainflux-http`) and `normalizer` service which correctly parsed messages.
+This proves that messages have been correctly sent through the system, via the protocol adapter (`mainflux-http`) and the `normalizer` service has correctly parsed the messages.
