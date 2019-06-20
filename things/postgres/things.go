@@ -11,6 +11,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
@@ -170,14 +171,15 @@ func (tr thingRepository) RetrieveByKey(key string) (string, error) {
 }
 
 func (tr thingRepository) RetrieveAll(owner string, offset, limit uint64, name string) (things.ThingsPage, error) {
+	name = strings.ToLower(name)
 	nq := ""
 	if name != "" {
 		name = fmt.Sprintf(`%%%s%%`, name)
-		nq = `AND name LIKE :name`
+		nq = `AND LOWER(name) LIKE :name`
 	}
 
 	q := fmt.Sprintf(`SELECT id, name, key, metadata FROM things
-	      WHERE owner = :owner %s ORDER BY id LIMIT :limit OFFSET :offset;`, nq)
+		  WHERE owner = :owner %s ORDER BY id LIMIT :limit OFFSET :offset;`, nq)
 
 	params := map[string]interface{}{
 		"owner":  owner,
@@ -209,7 +211,7 @@ func (tr thingRepository) RetrieveAll(owner string, offset, limit uint64, name s
 
 	cq := ""
 	if name != "" {
-		cq = `AND name = $2`
+		cq = `AND LOWER(name) LIKE $2`
 	}
 
 	q = fmt.Sprintf(`SELECT COUNT(*) FROM things WHERE owner = $1 %s;`, cq)
