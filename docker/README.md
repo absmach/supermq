@@ -8,15 +8,16 @@ Configure environment variables and run Mainflux Docker Composition.
 
 Follow the [official documentation](https://docs.docker.com/compose/install/).
 
+
 ## Usage
 
-Run following commands from `docker` directory.
-
-
-```
-docker-compose up
-```
+Run following commands from project root directory.
 
 ```
-docker-compose -f addons/<path>/docker-compose.yml  up
+docker-compose -f docker/docker-compose.yml up
 ```
+
+```
+docker-compose -f docker/addons/<path>/docker-compose.yml  up
+```
+
