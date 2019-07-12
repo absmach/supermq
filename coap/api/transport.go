@@ -66,9 +66,7 @@ func MakeCOAPHandler(svc coap.Service, tc mainflux.ThingsServiceClient, l log.Lo
 func mux(svc coap.Service, responses chan<- string) gocoap.Handler {
 	return gocoap.FuncHandler(func(conn *net.UDPConn, addr *net.UDPAddr, msg *gocoap.Message) *gocoap.Message {
 		path := msg.PathString()
-		fmt.Println("Path is: ", path)
 		if !channelRegExp.Match([]byte(path)) {
-			fmt.Println("path does not match:", path)
 			logger.Info(fmt.Sprintf("path %s not found", path))
 			return &gocoap.Message{
 				Type:      gocoap.NonConfirmable,
@@ -77,10 +75,10 @@ func mux(svc coap.Service, responses chan<- string) gocoap.Handler {
 				Token:     msg.Token,
 			}
 		}
+		// Allow "/" to be a part of the path.
 		if strings.HasPrefix(path, "/") {
 			msg.SetPathString(path[1:])
 		}
-
 		switch msg.Code {
 		case gocoap.GET:
 			return observe(svc, responses)(conn, addr, msg)
@@ -175,7 +173,6 @@ func fmtSubtopic(msg *gocoap.Message) (string, error) {
 }
 
 func receive(svc coap.Service, msg *gocoap.Message) *gocoap.Message {
-	// return func(conn *net.UDPConn, addr *net.UDPAddr, msg *gocoap.Message) *gocoap.Message {
 	// By default message is NonConfirmable, so
 	// NonConfirmable response is sent back.
 	res := &gocoap.Message{
@@ -197,14 +194,14 @@ func receive(svc coap.Service, msg *gocoap.Message) *gocoap.Message {
 			return res
 		}
 	}
-	// // println(mux.Var(msg, "id"))
-	chanID := id(msg) //mux.Var(msg, "id")
+
+	chanID := id(msg)
 	if chanID == "" {
 		res.Code = gocoap.NotFound
 		return res
 	}
 
-	subtopic, err := fmtSubtopic(msg) //muxVar(msg, "subtopic"))
+	subtopic, err := fmtSubtopic(msg)
 	if err != nil {
 		res.Code = gocoap.BadRequest
 		return res
