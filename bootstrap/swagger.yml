@@ -30,7 +30,7 @@ paths:
           headers:
             Location:
               type: string
-              description: Created config's relative URL (i.e. /things/configs/{configId}).
+              description: Created configuration's relative URL (i.e. /things/configs/{configId}).
         400:
           description: Failed due to malformed JSON.
         403:
@@ -140,10 +140,10 @@ paths:
     delete:
       summary: Removes a Config
       description: |
-        Removes a Config. In case of successfull removal the service will ensure
-        that the removed config is disconnected from all of the Maifnlux channels.
+        Removes a Config. In case of successful removal the service will ensure
+        that the removed config is disconnected from all of the Mainflux channels.
       tags:
-        - confgis
+        - configs
       parameters:
         - $ref: "#/parameters/Authorization"
         - $ref: "#/parameters/ConfigId"
@@ -151,7 +151,7 @@ paths:
         204:
           description: Config removed.
         400:
-          description: Failed due to malformed config's ID.
+          description: Failed due to malformed config ID.
         403:
           description: Missing or invalid access token provided.
         500:
@@ -249,7 +249,7 @@ paths:
           $ref: "#/responses/ServiceError"
   /things/unknown/configs:
     get:
-      summary: Get a list of unsucessfully bootstrapped Things
+      summary: Get a list of unsuccessfully bootstrapped Things
       description: |
         Retrieves a list of unknown configs. Due to performance concerns, data
         is retrieved in subsets. The API configs must ensure that the entire
@@ -339,7 +339,7 @@ parameters:
 
 responses:
   ServiceError:
-    description: Unexpected server-side error occured.
+    description: Unexpected server-side error occurred.
 
 definitions:
   ConfigList:
@@ -366,7 +366,7 @@ definitions:
         items:
           $ref: "#/definitions/ConfigRes"
     required:
-      - confgis
+      - configs
   State:
     type: integer
     enum:
@@ -398,7 +398,7 @@ definitions:
               description: Custom metadata related to the Channel.
       external_id:
         type: string
-        description: External ID (MAC address or some uinque identifier).
+        description: External ID (MAC address or some unique identifier).
       external_key:
         type: string
         description: External key.
@@ -437,7 +437,7 @@ definitions:
     properties:
       external_id:
         type: string
-        description: External ID (MAC address or some uinque identifier).
+        description: External ID (MAC address or some unique identifier).
       external_key:
         type: string
         description: External key.
