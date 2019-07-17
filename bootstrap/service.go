@@ -270,15 +270,18 @@ func (bs bootstrapService) Bootstrap(externalKey, externalID string, encrypted b
 		}
 		return cfg, err
 	}
+
 	if encrypted {
 		k := sha256.Sum256([]byte(cfg.ExternalKey))
 		dec, err := decWithKey(externalKey, k[:])
 		if err != nil {
 			return Config{}, err
 		}
-		if dec != cfg.ExternalKey {
-			return Config{}, ErrNotFound
-		}
+		externalKey = dec
+	}
+
+	if cfg.ExternalKey != externalKey {
+		return Config{}, ErrNotFound
 	}
 
 	return cfg, nil

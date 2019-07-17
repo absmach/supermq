@@ -67,9 +67,6 @@ type ConfigRepository interface {
 	// RetrieveByExternalID returns Config for given external ID.
 	RetrieveByExternalID(string) (Config, error)
 
-	// RetrieveExternal returns Config for given external ID and key.
-	RetrieveExternal(string, string) (Config, error)
-
 	// Update updates an existing Config. A non-nil error is returned
 	// to indicate operation failure.
 	Update(Config) error

@@ -571,7 +571,7 @@ func TestBootstrap(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		config, err := svc.Bootstrap(tc.externalKey, tc.externalID)
+		config, err := svc.Bootstrap(tc.externalKey, tc.externalID, false)
 		assert.Equal(t, tc.config, config, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.config, config))
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
