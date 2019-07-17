@@ -9,6 +9,12 @@ package api
 
 import (
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/json"
+	"io"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/mainflux/mainflux/bootstrap"
@@ -228,19 +234,34 @@ func removeEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 	}
 }
 
-func bootstrapEndpoint(svc bootstrap.Service, reader bootstrap.ConfigReader) endpoint.Endpoint {
+func bootstrapEndpoint(svc bootstrap.Service, reader bootstrap.ConfigReader, secure bool) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(bootstrapReq)
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
 
-		cfg, err := svc.Bootstrap(req.key, req.id)
+		cfg, err := svc.Bootstrap(req.key, req.id, secure)
 		if err != nil {
 			return nil, err
 		}
 
-		return reader.ReadConfig(cfg)
+		res, err := reader.ReadConfig(cfg)
+		if err != nil {
+			return nil, err
+		}
+
+		if secure {
+			b, err := json.Marshal(res)
+			if err != nil {
+				return nil, err
+			}
+
+			k := sha256.Sum256([]byte(cfg.ExternalKey))
+			return enc(b, k[:])
+		}
+
+		return res, nil
 	}
 }
 
@@ -258,4 +279,19 @@ func stateEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 
 		return stateRes{}, nil
 	}
+}
+
+func enc(in []byte, key []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	ciphertext := make([]byte, aes.BlockSize+len(in))
+	iv := ciphertext[:aes.BlockSize]
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return nil, err
+	}
+	stream := cipher.NewCFBEncrypter(block, iv)
+	stream.XORKeyStream(ciphertext[aes.BlockSize:], in)
+	return ciphertext, nil
 }

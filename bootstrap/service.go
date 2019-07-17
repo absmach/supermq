@@ -9,6 +9,10 @@ package bootstrap
 
 import (
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"time"
 
@@ -64,7 +68,7 @@ type Service interface {
 	Remove(string, string) error
 
 	// Bootstrap returns Config to the Thing with provided external ID using external key.
-	Bootstrap(string, string) (Config, error)
+	Bootstrap(string, string, bool) (Config, error)
 
 	// ChangeState changes state of the Thing with given ID and owner.
 	ChangeState(string, string, State) error
@@ -257,13 +261,24 @@ func (bs bootstrapService) Remove(key, id string) error {
 	return bs.configs.Remove(owner, id)
 }
 
-func (bs bootstrapService) Bootstrap(externalKey, externalID string) (Config, error) {
-	cfg, err := bs.configs.RetrieveByExternalID(externalKey, externalID)
+func (bs bootstrapService) Bootstrap(externalKey, externalID string, encrypted bool) (Config, error) {
+	cfg, err := bs.configs.RetrieveByExternalID(externalID)
 	if err != nil {
 		if err == ErrNotFound {
 			bs.configs.SaveUnknown(externalKey, externalID)
+			return Config{}, ErrNotFound
 		}
-		return Config{}, ErrNotFound
+		return cfg, err
+	}
+	if encrypted {
+		k := sha256.Sum256([]byte(cfg.ExternalKey))
+		dec, err := decWithKey(externalKey, k[:])
+		if err != nil {
+			return Config{}, err
+		}
+		if dec != cfg.ExternalKey {
+			return Config{}, ErrNotFound
+		}
 	}
 
 	return cfg, nil
@@ -425,4 +440,23 @@ func (bs bootstrapService) toIDList(channels []Channel) []string {
 	}
 
 	return ret
+}
+
+func decWithKey(in string, key []byte) (string, error) {
+	ciphertext, err := hex.DecodeString(in)
+	if err != nil {
+		return "", err
+	}
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return "", err
+	}
+	if len(ciphertext) < aes.BlockSize {
+		return "", errors.New("ciphertext too short")
+	}
+	iv := ciphertext[:aes.BlockSize]
+	ciphertext = ciphertext[aes.BlockSize:]
+	stream := cipher.NewCFBDecrypter(block, iv)
+	stream.XORKeyStream(ciphertext, ciphertext)
+	return string(ciphertext), nil
 }

@@ -65,7 +65,10 @@ type ConfigRepository interface {
 	RetrieveAll(string, Filter, uint64, uint64) ConfigsPage
 
 	// RetrieveByExternalID returns Config for given external ID.
-	RetrieveByExternalID(string, string) (Config, error)
+	RetrieveByExternalID(string) (Config, error)
+
+	// RetrieveExternal returns Config for given external ID and key.
+	RetrieveExternal(string, string) (Config, error)
 
 	// Update updates an existing Config. A non-nil error is returned
 	// to indicate operation failure.

@@ -192,7 +192,58 @@ func (cr configRepository) RetrieveAll(key string, filter bootstrap.Filter, offs
 	}
 }
 
-func (cr configRepository) RetrieveByExternalID(externalKey, externalID string) (bootstrap.Config, error) {
+func (cr configRepository) RetrieveByExternalID(externalID string) (bootstrap.Config, error) {
+	q := `SELECT mainflux_thing, mainflux_key, external_key, owner, name, client_cert, client_key, ca_cert, content, state 
+		  FROM configs 
+		  WHERE external_id = $1`
+	dbcfg := dbConfig{
+		ExternalID: externalID,
+	}
+
+	if err := cr.db.QueryRowx(q, externalID).StructScan(&dbcfg); err != nil {
+		empty := bootstrap.Config{}
+		if err == sql.ErrNoRows {
+			return empty, bootstrap.ErrNotFound
+		}
+		return empty, err
+	}
+
+	q = `SELECT mainflux_channel, name, metadata FROM channels ch
+		 INNER JOIN connections conn
+		 ON ch.mainflux_channel = conn.channel_id AND ch.owner = conn.config_owner
+		 WHERE conn.config_id = :mainflux_thing AND conn.config_owner = :owner`
+
+	rows, err := cr.db.NamedQuery(q, dbcfg)
+	if err != nil {
+		cr.log.Error(fmt.Sprintf("Failed to retrieve connected due to %s", err))
+		return bootstrap.Config{}, err
+	}
+	defer rows.Close()
+
+	channels := []bootstrap.Channel{}
+	for rows.Next() {
+		dbch := dbChannel{}
+		if err := rows.StructScan(&dbch); err != nil {
+			cr.log.Error(fmt.Sprintf("Failed to read connected thing due to %s", err))
+			return bootstrap.Config{}, err
+		}
+
+		ch, err := toChannel(dbch)
+		if err != nil {
+			cr.log.Error(fmt.Sprintf("Failed to deserialize channel due to %s", err))
+			return bootstrap.Config{}, err
+		}
+
+		channels = append(channels, ch)
+	}
+
+	cfg := toConfig(dbcfg)
+	cfg.MFChannels = channels
+
+	return cfg, nil
+}
+
+func (cr configRepository) RetrieveExternal(externalKey, externalID string) (bootstrap.Config, error) {
 	q := `SELECT mainflux_thing, mainflux_key, owner, name, client_cert, client_key, ca_cert, content, state 
 		  FROM configs 
 		  WHERE external_key = $1 AND external_id = $2`

@@ -121,8 +121,8 @@ func (es eventStore) Remove(key, id string) error {
 	return nil
 }
 
-func (es eventStore) Bootstrap(externalKey, externalID string) (bootstrap.Config, error) {
-	cfg, err := es.svc.Bootstrap(externalKey, externalID)
+func (es eventStore) Bootstrap(externalKey, externalID string, encrypted bool) (bootstrap.Config, error) {
+	cfg, err := es.svc.Bootstrap(externalKey, externalID, encrypted)
 
 	ev := bootstrapEvent{
 		externalID: externalID,
