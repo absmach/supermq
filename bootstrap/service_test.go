@@ -8,7 +8,12 @@
 package bootstrap_test
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"crypto/sha256"
 	"fmt"
+	"io"
 	"net/http/httptest"
 	"strconv"
 	"testing"
@@ -78,6 +83,21 @@ func newThingsService(users mainflux.UsersServiceClient) things.Service {
 func newThingsServer(svc things.Service) *httptest.Server {
 	mux := httpapi.MakeHandler(mocktracer.New(), svc)
 	return httptest.NewServer(mux)
+}
+
+func enc(in []byte, key []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	ciphertext := make([]byte, aes.BlockSize+len(in))
+	iv := ciphertext[:aes.BlockSize]
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return nil, err
+	}
+	stream := cipher.NewCFBEncrypter(block, iv)
+	stream.XORKeyStream(ciphertext[aes.BlockSize:], in)
+	return ciphertext, nil
 }
 
 func TestAdd(t *testing.T) {
@@ -540,6 +560,10 @@ func TestBootstrap(t *testing.T) {
 	saved, err := svc.Add(validToken, config)
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
+	k := sha256.Sum256([]byte(saved.ExternalKey))
+	e, err := enc([]byte(saved.ExternalKey), k[:])
+	require.Nil(t, err, fmt.Sprintf("Encrypting external key expected to succeed: %s.\n", err))
+
 	cases := []struct {
 		desc        string
 		config      bootstrap.Config
@@ -571,6 +595,14 @@ func TestBootstrap(t *testing.T) {
 			externalKey: saved.ExternalKey,
 			err:         nil,
 			encrypted:   false,
+		},
+		{
+			desc:        "bootstrap encrypted",
+			config:      saved,
+			externalID:  saved.ExternalID,
+			externalKey: fmt.Sprintf("%x", e),
+			err:         nil,
+			encrypted:   true,
 		},
 	}
 
