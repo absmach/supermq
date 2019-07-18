@@ -724,7 +724,7 @@ func TestRemoveCoinfigHandler(t *testing.T) {
 		err  error
 	}{
 		{
-			desc: "remove an existing conifg",
+			desc: "remove an existing config",
 			id:   saved.MFThing,
 			err:  nil,
 		},
@@ -763,7 +763,7 @@ func TestDisconnectThingsHandler(t *testing.T) {
 			err:       nil,
 		},
 		{
-			desc:      "disconnect dicsonnected",
+			desc:      "disconnect disconnected",
 			channelID: channel.ID,
 			thingID:   saved.MFThing,
 			err:       nil,
