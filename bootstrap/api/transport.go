@@ -266,12 +266,12 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 
 func encodeSecureRes(_ context.Context, w http.ResponseWriter, response interface{}) error {
 	w.Header().Set("Content-Type", contentType)
+	w.WriteHeader(http.StatusOK)
 	if b, ok := response.([]byte); ok {
 		if _, err := w.Write(b); err != nil {
 			return err
 		}
 	}
-	w.WriteHeader(http.StatusOK)
 	return nil
 }
 

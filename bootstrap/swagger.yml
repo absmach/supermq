@@ -74,7 +74,29 @@ paths:
       tags:
         - configs
       parameters:
-        - $ref: "#/parameters/ConfigAuthorization"
+        - $ref: "#/parameters/EncConfigAuth"
+        - $ref: "#/parameters/ExternalId"
+      responses:
+        200:
+          description: Data retrieved.
+          schema:
+            $ref: "#/definitions/BootstrapRes"
+        404:
+          description: |
+            Failed to retrieve corresponding config. Thing which attempted
+            to bootstrap is saved as an unknown Thing and can be listed and
+            added to the service later.
+        500:
+          $ref: "#/responses/ServiceError"
+  /things/bootstrap/{externalId}:
+    get:
+      summary: Retrieves configuration
+      description: |
+        Retrieves a configuration with given external ID and external key.
+      tags:
+        - configs
+      parameters:
+        - $ref: "#/parameters/ConfigAuth"
         - $ref: "#/parameters/ExternalId"
       responses:
         200:
@@ -280,9 +302,18 @@ parameters:
     in: header
     type: string
     required: true
-  ConfigAuthorization:
+  ConfigAuth:
     name: configAuthorization
     description: Configuration external key.
+    in: header
+    type: string
+    required: true
+  EncConfigAuth:
+    name: configAuthorization
+    description: |
+      Hex-encoded configuration external key encrypted using 
+      the AES algorithm and SHA256 sum of the external key 
+      itself as an encryption key.
     in: header
     type: string
     required: true
