@@ -273,7 +273,7 @@ func (bs bootstrapService) Bootstrap(externalKey, externalID string, encrypted b
 
 	if encrypted {
 		k := sha256.Sum256([]byte(cfg.ExternalKey))
-		dec, err := decWithKey(externalKey, k[:])
+		dec, err := dec(externalKey, k[:])
 		if err != nil {
 			return Config{}, err
 		}
@@ -445,7 +445,7 @@ func (bs bootstrapService) toIDList(channels []Channel) []string {
 	return ret
 }
 
-func decWithKey(in string, key []byte) (string, error) {
+func dec(in string, key []byte) (string, error) {
 	ciphertext, err := hex.DecodeString(in)
 	if err != nil {
 		return "", err
@@ -455,7 +455,7 @@ func decWithKey(in string, key []byte) (string, error) {
 		return "", err
 	}
 	if len(ciphertext) < aes.BlockSize {
-		return "", errors.New("ciphertext too short")
+		return "", ErrMalformedEntity
 	}
 	iv := ciphertext[:aes.BlockSize]
 	ciphertext = ciphertext[aes.BlockSize:]

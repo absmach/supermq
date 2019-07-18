@@ -262,11 +262,6 @@ func TestRetrieveByExternalID(t *testing.T) {
 			err:        bootstrap.ErrNotFound,
 		},
 		{
-			desc:       "retrieve with invalid external key",
-			externalID: c.ExternalID,
-			err:        bootstrap.ErrNotFound,
-		},
-		{
 			desc:       "retrieve with external key",
 			externalID: c.ExternalID,
 			err:        nil,
