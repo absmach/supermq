@@ -7,6 +7,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -46,6 +47,7 @@ const (
 	defDBUser        = "mainflux"
 	defDBPass        = "mainflux"
 	defDBName        = "bootstrap"
+	defEncryptKey    = "12345678"
 	defDBSSLMode     = "disable"
 	defDBSSLCert     = ""
 	defDBSSLKey      = ""
@@ -74,6 +76,7 @@ const (
 	envDBUser        = "MF_BOOTSTRAP_DB_USER"
 	envDBPass        = "MF_BOOTSTRAP_DB_PASS"
 	envDBName        = "MF_BOOTSTRAP_DB"
+	envEncryptKey    = "MF_BOOTSTRAP_ENCRYPT_KEY"
 	envDBSSLMode     = "MF_BOOTSTRAP_DB_SSL_MODE"
 	envDBSSLCert     = "MF_BOOTSTRAP_DB_SSL_CERT"
 	envDBSSLKey      = "MF_BOOTSTRAP_DB_SSL_KEY"
@@ -101,6 +104,7 @@ type config struct {
 	logLevel     string
 	dbConfig     postgres.Config
 	clientTLS    bool
+	encKey       []byte
 	caCerts      string
 	httpPort     string
 	serverCert   string
@@ -179,11 +183,16 @@ func loadConfig() config {
 	if err != nil {
 		log.Fatalf("Invalid %s value: %s", envUsersTimeout, err.Error())
 	}
+	encKey, err := hex.DecodeString(mainflux.Env(envEncryptKey, defEncryptKey))
+	if err != nil {
+		log.Fatalf("Invalid %s value: %s", envEncryptKey, err.Error())
+	}
 
 	return config{
 		logLevel:     mainflux.Env(envLogLevel, defLogLevel),
 		dbConfig:     dbConfig,
 		clientTLS:    tls,
+		encKey:       encKey,
 		caCerts:      mainflux.Env(envCACerts, defCACerts),
 		httpPort:     mainflux.Env(envPort, defPort),
 		serverCert:   mainflux.Env(envServerCert, defServerCert),
@@ -260,8 +269,9 @@ func newService(conn *grpc.ClientConn, usersTracer opentracing.Tracer, db *sqlx.
 
 	sdk := mfsdk.NewSDK(config)
 	users := usersapi.NewClient(usersTracer, conn, cfg.usersTimeout)
+	reader := bootstrap.NewConfigReader()
 
-	svc := bootstrap.New(users, thingsRepo, sdk)
+	svc := bootstrap.New(users, thingsRepo, sdk, cfg.encKey, reader)
 	svc = redisprod.NewEventStoreMiddleware(svc, esClient)
 	svc = api.NewLoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
@@ -312,11 +322,11 @@ func startHTTPServer(svc bootstrap.Service, cfg config, logger mflog.Logger, err
 	if cfg.serverCert != "" || cfg.serverKey != "" {
 		logger.Info(fmt.Sprintf("Bootstrap service started using https on port %s with cert %s key %s",
 			cfg.httpPort, cfg.serverCert, cfg.serverKey))
-		errs <- http.ListenAndServeTLS(p, cfg.serverCert, cfg.serverKey, api.MakeHandler(svc, bootstrap.NewConfigReader()))
+		errs <- http.ListenAndServeTLS(p, cfg.serverCert, cfg.serverKey, api.MakeHandler(svc))
 		return
 	}
 	logger.Info(fmt.Sprintf("Bootstrap service started using http on port %s", cfg.httpPort))
-	errs <- http.ListenAndServe(p, api.MakeHandler(svc, bootstrap.NewConfigReader()))
+	errs <- http.ListenAndServe(p, api.MakeHandler(svc))
 }
 
 func subscribeToThingsES(svc bootstrap.Service, client *r.Client, consumer string, logger mflog.Logger) {

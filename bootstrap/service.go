@@ -11,9 +11,9 @@ import (
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/mainflux/mainflux"
@@ -101,14 +101,18 @@ type bootstrapService struct {
 	users   mainflux.UsersServiceClient
 	configs ConfigRepository
 	sdk     mfsdk.SDK
+	encKey  []byte
+	reader  ConfigReader
 }
 
 // New returns new Bootstrap service.
-func New(users mainflux.UsersServiceClient, configs ConfigRepository, sdk mfsdk.SDK) Service {
+func New(users mainflux.UsersServiceClient, configs ConfigRepository, sdk mfsdk.SDK, encKey []byte, reader ConfigReader) Service {
 	return &bootstrapService{
 		configs: configs,
 		sdk:     sdk,
 		users:   users,
+		encKey:  encKey,
+		reader:  reader,
 	}
 }
 
@@ -270,10 +274,9 @@ func (bs bootstrapService) Bootstrap(externalKey, externalID string, encrypted b
 		}
 		return cfg, err
 	}
-
+	fmt.Println("EXTERNAL KEY:", externalKey)
 	if encrypted {
-		k := sha256.Sum256([]byte(cfg.ExternalKey))
-		dec, err := dec(externalKey, k[:])
+		dec, err := bs.dec(externalKey)
 		if err != nil {
 			return Config{}, err
 		}
@@ -451,6 +454,25 @@ func dec(in string, key []byte) (string, error) {
 		return "", err
 	}
 	block, err := aes.NewCipher(key)
+	if err != nil {
+		return "", err
+	}
+	if len(ciphertext) < aes.BlockSize {
+		return "", ErrMalformedEntity
+	}
+	iv := ciphertext[:aes.BlockSize]
+	ciphertext = ciphertext[aes.BlockSize:]
+	stream := cipher.NewCFBDecrypter(block, iv)
+	stream.XORKeyStream(ciphertext, ciphertext)
+	return string(ciphertext), nil
+}
+
+func (bs bootstrapService) dec(in string) (string, error) {
+	ciphertext, err := hex.DecodeString(in)
+	if err != nil {
+		return "", err
+	}
+	block, err := aes.NewCipher(bs.encKey)
 	if err != nil {
 		return "", err
 	}

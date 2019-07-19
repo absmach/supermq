@@ -234,7 +234,7 @@ func removeEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 	}
 }
 
-func bootstrapEndpoint(svc bootstrap.Service, reader bootstrap.ConfigReader, secure bool) endpoint.Endpoint {
+func bootstrapEndpoint(svc bootstrap.Service, secure bool) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(bootstrapReq)
 		if err := req.validate(); err != nil {
@@ -246,13 +246,13 @@ func bootstrapEndpoint(svc bootstrap.Service, reader bootstrap.ConfigReader, sec
 			return nil, err
 		}
 
-		res, err := reader.ReadConfig(cfg)
-		if err != nil {
-			return nil, err
-		}
+		// res, err := reader.ReadConfig(cfg)
+		// if err != nil {
+		// 	return nil, err
+		// }
 
 		if secure {
-			b, err := json.Marshal(res)
+			b, err := json.Marshal(cfg)
 			if err != nil {
 				return nil, err
 			}
@@ -261,7 +261,7 @@ func bootstrapEndpoint(svc bootstrap.Service, reader bootstrap.ConfigReader, sec
 			return enc(b, k[:])
 		}
 
-		return res, nil
+		return cfg, nil
 	}
 }
 
