@@ -1,6 +1,5 @@
 #!/bin/ash
 
-echo $MF_UI_PORT
 if [ -n "$MF_UI_PORT" ]; then
     sed  -e "s/MF_UI_PORT/$MF_UI_PORT/" /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 else
