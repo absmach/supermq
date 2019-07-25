@@ -25,8 +25,8 @@ which maintains the project and offers professional services around it.
 - Device management and provisioning (Zero Touch provisioning)
 - Mutual TLS Authentication (mTLS) using X.509 Certificates
 - Fine-grained access control
-- Message persistence (Cassandra, InfluxDB MongoDB and PostgresSQL)
-- Platform logging and instrumentation support (Grafana, Prometheus, OpenTracing)
+- Message persistence (Cassandra, InfluxDB, MongoDB and PostgresSQL)
+- Platform logging and instrumentation support (Grafana, Prometheus and OpenTracing)
 - Event sourcing
 - Container-based deployment using [Docker][docker] and [Kubernetes][kubernetes]
 - [LoRaWAN][lora] network integration
