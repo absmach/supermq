@@ -273,9 +273,8 @@ func newService(conn *grpc.ClientConn, usersTracer opentracing.Tracer, db *sqlx.
 
 	sdk := mfsdk.NewSDK(config)
 	users := usersapi.NewClient(usersTracer, conn, cfg.usersTimeout)
-	reader := bootstrap.NewConfigReader(cfg.encKey)
 
-	svc := bootstrap.New(users, thingsRepo, sdk, cfg.encKey, reader)
+	svc := bootstrap.New(users, thingsRepo, sdk, cfg.encKey)
 	svc = redisprod.NewEventStoreMiddleware(svc, esClient)
 	svc = api.NewLoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(

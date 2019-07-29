@@ -105,13 +105,12 @@ type bootstrapService struct {
 }
 
 // New returns new Bootstrap service.
-func New(users mainflux.UsersServiceClient, configs ConfigRepository, sdk mfsdk.SDK, encKey []byte, reader ConfigReader) Service {
+func New(users mainflux.UsersServiceClient, configs ConfigRepository, sdk mfsdk.SDK, encKey []byte) Service {
 	return &bootstrapService{
 		configs: configs,
 		sdk:     sdk,
 		users:   users,
 		encKey:  encKey,
-		reader:  reader,
 	}
 }
 
