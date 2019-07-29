@@ -45,6 +45,7 @@ const (
 )
 
 var (
+	encKey      = []byte("1234567891011121")
 	addChannels = []string{"1"}
 	metadata    = map[string]interface{}{"meta": "data"}
 	addReq      = struct {
@@ -123,7 +124,7 @@ func newService(users mainflux.UsersServiceClient, unknown map[string]string, ur
 	}
 
 	sdk := mfsdk.NewSDK(config)
-	return bootstrap.New(users, things, sdk)
+	return bootstrap.New(users, things, sdk, encKey)
 }
 
 func generateChannels() map[string]things.Channel {
@@ -149,7 +150,7 @@ func newThingsServer(svc things.Service) *httptest.Server {
 }
 
 func newBootstrapServer(svc bootstrap.Service) *httptest.Server {
-	mux := bsapi.MakeHandler(svc, bootstrap.NewConfigReader())
+	mux := bsapi.MakeHandler(svc, bootstrap.NewConfigReader(encKey))
 	return httptest.NewServer(mux)
 }
 
@@ -368,7 +369,7 @@ func TestView(t *testing.T) {
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 		var view config
 		if err := json.NewDecoder(res.Body).Decode(&view); err != io.EOF {
-			assert.Nil(t, err, fmt.Sprintf("Decoding expeceted to succeed %s: %s", tc.desc, err))
+			assert.Nil(t, err, fmt.Sprintf("Decoding expected to succeed %s: %s", tc.desc, err))
 		}
 
 		assert.ElementsMatch(t, tc.res.Channels, view.Channels, fmt.Sprintf("%s: expected response '%s' got '%s'", tc.desc, tc.res.Channels, view.Channels))

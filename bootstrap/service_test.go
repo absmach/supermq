@@ -11,7 +11,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"crypto/sha256"
 	"fmt"
 	"io"
 	"net/http/httptest"
@@ -42,6 +41,8 @@ const (
 )
 
 var (
+	encKey = []byte("1234567891011121")
+
 	channel = bootstrap.Channel{
 		ID:       "1",
 		Name:     "name",
@@ -63,7 +64,7 @@ func newService(users mainflux.UsersServiceClient, url string) bootstrap.Service
 	}
 
 	sdk := mfsdk.NewSDK(config)
-	return bootstrap.New(users, things, sdk)
+	return bootstrap.New(users, things, sdk, encKey)
 }
 
 func newThingsService(users mainflux.UsersServiceClient) things.Service {
@@ -560,8 +561,7 @@ func TestBootstrap(t *testing.T) {
 	saved, err := svc.Add(validToken, config)
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
-	k := sha256.Sum256([]byte(saved.ExternalKey))
-	e, err := enc([]byte(saved.ExternalKey), k[:])
+	e, err := enc([]byte(saved.ExternalKey), encKey)
 	require.Nil(t, err, fmt.Sprintf("Encrypting external key expected to succeed: %s.\n", err))
 
 	cases := []struct {

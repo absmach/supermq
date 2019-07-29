@@ -50,6 +50,8 @@ const (
 )
 
 var (
+	encKey = []byte("1234567891011121")
+
 	channel = bootstrap.Channel{
 		ID:       "1",
 		Name:     "name",
@@ -71,7 +73,7 @@ func newService(users mainflux.UsersServiceClient, url string) bootstrap.Service
 	}
 
 	sdk := mfsdk.NewSDK(config)
-	return bootstrap.New(users, configs, sdk)
+	return bootstrap.New(users, configs, sdk, encKey)
 }
 
 func newThingsService(users mainflux.UsersServiceClient) things.Service {
