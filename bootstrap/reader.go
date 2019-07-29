@@ -11,10 +11,9 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"encoding/json"
 	"io"
 	"net/http"
-
-	"github.com/mainflux/mainflux"
 )
 
 // bootstrapRes represent Mainflux Response to the Bootatrap request.
@@ -58,7 +57,7 @@ func NewConfigReader(encKey []byte) ConfigReader {
 	return reader{encKey: encKey}
 }
 
-func (r reader) ReadConfig(cfg Config) (mainflux.Response, error) {
+func (r reader) ReadConfig(cfg Config, secure bool) (interface{}, error) {
 	var channels []channelRes
 	for _, ch := range cfg.MFChannels {
 		channels = append(channels, channelRes{ID: ch.ID, Name: ch.Name, Metadata: ch.Metadata})
@@ -73,11 +72,18 @@ func (r reader) ReadConfig(cfg Config) (mainflux.Response, error) {
 		CaCert:     cfg.CACert,
 		Content:    cfg.Content,
 	}
+	if secure {
+		b, err := json.Marshal(res)
+		if err != nil {
+			return nil, err
+		}
+		return r.encrypt(b)
+	}
 
 	return res, nil
 }
 
-func (r reader) Encrypt(in []byte) ([]byte, error) {
+func (r reader) encrypt(in []byte) ([]byte, error) {
 	block, err := aes.NewCipher(r.encKey)
 	if err != nil {
 		return nil, err

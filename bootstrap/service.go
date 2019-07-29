@@ -13,7 +13,6 @@ import (
 	"crypto/cipher"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/mainflux/mainflux"
@@ -94,8 +93,7 @@ type Service interface {
 // is to provide convenient way to generate custom configuration response
 // based on the specific Config which will be consumed by the client.
 type ConfigReader interface {
-	ReadConfig(Config) (mainflux.Response, error)
-	Encrypt([]byte) ([]byte, error)
+	ReadConfig(Config, bool) (interface{}, error)
 }
 
 type bootstrapService struct {
@@ -275,7 +273,7 @@ func (bs bootstrapService) Bootstrap(externalKey, externalID string, encrypted b
 		}
 		return cfg, err
 	}
-	fmt.Println("EXTERNAL KEY:", externalKey)
+
 	if encrypted {
 		dec, err := bs.dec(externalKey)
 		if err != nil {

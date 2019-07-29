@@ -12,7 +12,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"encoding/json"
 	"io"
 
 	"github.com/go-kit/kit/endpoint"
@@ -245,20 +244,7 @@ func bootstrapEndpoint(svc bootstrap.Service, reader bootstrap.ConfigReader, sec
 			return nil, err
 		}
 
-		res, err := reader.ReadConfig(cfg)
-		if err != nil {
-			return res, err
-		}
-
-		if secure {
-			b, err := json.Marshal(res)
-			if err != nil {
-				return nil, err
-			}
-			return reader.Encrypt(b)
-		}
-
-		return res, nil
+		return reader.ReadConfig(cfg, secure)
 	}
 }
 
