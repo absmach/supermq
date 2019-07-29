@@ -95,6 +95,7 @@ type Service interface {
 // based on the specific Config which will be consumed by the client.
 type ConfigReader interface {
 	ReadConfig(Config) (mainflux.Response, error)
+	Encrypt([]byte) ([]byte, error)
 }
 
 type bootstrapService struct {
@@ -446,25 +447,6 @@ func (bs bootstrapService) toIDList(channels []Channel) []string {
 	}
 
 	return ret
-}
-
-func dec(in string, key []byte) (string, error) {
-	ciphertext, err := hex.DecodeString(in)
-	if err != nil {
-		return "", err
-	}
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", err
-	}
-	if len(ciphertext) < aes.BlockSize {
-		return "", ErrMalformedEntity
-	}
-	iv := ciphertext[:aes.BlockSize]
-	ciphertext = ciphertext[aes.BlockSize:]
-	stream := cipher.NewCFBDecrypter(block, iv)
-	stream.XORKeyStream(ciphertext, ciphertext)
-	return string(ciphertext), nil
 }
 
 func (bs bootstrapService) dec(in string) (string, error) {

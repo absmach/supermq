@@ -12,7 +12,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/json"
 	"io"
 
@@ -234,7 +233,7 @@ func removeEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 	}
 }
 
-func bootstrapEndpoint(svc bootstrap.Service, secure bool) endpoint.Endpoint {
+func bootstrapEndpoint(svc bootstrap.Service, reader bootstrap.ConfigReader, secure bool) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(bootstrapReq)
 		if err := req.validate(); err != nil {
@@ -246,22 +245,20 @@ func bootstrapEndpoint(svc bootstrap.Service, secure bool) endpoint.Endpoint {
 			return nil, err
 		}
 
-		// res, err := reader.ReadConfig(cfg)
-		// if err != nil {
-		// 	return nil, err
-		// }
+		res, err := reader.ReadConfig(cfg)
+		if err != nil {
+			return res, err
+		}
 
 		if secure {
-			b, err := json.Marshal(cfg)
+			b, err := json.Marshal(res)
 			if err != nil {
 				return nil, err
 			}
-
-			k := sha256.Sum256([]byte(cfg.ExternalKey))
-			return enc(b, k[:])
+			return reader.Encrypt(b)
 		}
 
-		return cfg, nil
+		return res, nil
 	}
 }
 

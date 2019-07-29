@@ -8,6 +8,10 @@
 package bootstrap
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"io"
 	"net/http"
 
 	"github.com/mainflux/mainflux"
@@ -44,12 +48,14 @@ func (res bootstrapRes) Empty() bool {
 	return false
 }
 
-type reader struct{}
+type reader struct {
+	encKey []byte
+}
 
 // NewConfigReader return new reader which is used to generate response
 // from the config.
-func NewConfigReader() ConfigReader {
-	return reader{}
+func NewConfigReader(encKey []byte) ConfigReader {
+	return reader{encKey: encKey}
 }
 
 func (r reader) ReadConfig(cfg Config) (mainflux.Response, error) {
@@ -69,4 +75,19 @@ func (r reader) ReadConfig(cfg Config) (mainflux.Response, error) {
 	}
 
 	return res, nil
+}
+
+func (r reader) Encrypt(in []byte) ([]byte, error) {
+	block, err := aes.NewCipher(r.encKey)
+	if err != nil {
+		return nil, err
+	}
+	ciphertext := make([]byte, aes.BlockSize+len(in))
+	iv := ciphertext[:aes.BlockSize]
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return nil, err
+	}
+	stream := cipher.NewCFBEncrypter(block, iv)
+	stream.XORKeyStream(ciphertext[aes.BlockSize:], in)
+	return ciphertext, nil
 }

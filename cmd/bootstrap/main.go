@@ -7,6 +7,7 @@
 package main
 
 import (
+	"crypto/aes"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -187,6 +188,9 @@ func loadConfig() config {
 	if err != nil {
 		log.Fatalf("Invalid %s value: %s", envEncryptKey, err.Error())
 	}
+	if _, err := aes.NewCipher(encKey); err != nil {
+		log.Fatalf("Invalid %s value: %s", envEncryptKey, err.Error())
+	}
 
 	return config{
 		logLevel:     mainflux.Env(envLogLevel, defLogLevel),
@@ -269,7 +273,7 @@ func newService(conn *grpc.ClientConn, usersTracer opentracing.Tracer, db *sqlx.
 
 	sdk := mfsdk.NewSDK(config)
 	users := usersapi.NewClient(usersTracer, conn, cfg.usersTimeout)
-	reader := bootstrap.NewConfigReader()
+	reader := bootstrap.NewConfigReader(cfg.encKey)
 
 	svc := bootstrap.New(users, thingsRepo, sdk, cfg.encKey, reader)
 	svc = redisprod.NewEventStoreMiddleware(svc, esClient)
@@ -322,11 +326,11 @@ func startHTTPServer(svc bootstrap.Service, cfg config, logger mflog.Logger, err
 	if cfg.serverCert != "" || cfg.serverKey != "" {
 		logger.Info(fmt.Sprintf("Bootstrap service started using https on port %s with cert %s key %s",
 			cfg.httpPort, cfg.serverCert, cfg.serverKey))
-		errs <- http.ListenAndServeTLS(p, cfg.serverCert, cfg.serverKey, api.MakeHandler(svc))
+		errs <- http.ListenAndServeTLS(p, cfg.serverCert, cfg.serverKey, api.MakeHandler(svc, bootstrap.NewConfigReader(cfg.encKey)))
 		return
 	}
 	logger.Info(fmt.Sprintf("Bootstrap service started using http on port %s", cfg.httpPort))
-	errs <- http.ListenAndServe(p, api.MakeHandler(svc))
+	errs <- http.ListenAndServe(p, api.MakeHandler(svc, bootstrap.NewConfigReader(cfg.encKey)))
 }
 
 func subscribeToThingsES(svc bootstrap.Service, client *r.Client, consumer string, logger mflog.Logger) {
