@@ -48,11 +48,11 @@ const (
 	defDBUser        = "mainflux"
 	defDBPass        = "mainflux"
 	defDBName        = "bootstrap"
-	defEncryptKey    = "12345678"
 	defDBSSLMode     = "disable"
 	defDBSSLCert     = ""
 	defDBSSLKey      = ""
 	defDBSSLRootCert = ""
+	defEncryptKey    = "1234567891011121"
 	defClientTLS     = "false"
 	defCACerts       = ""
 	defPort          = "8180"
@@ -77,11 +77,11 @@ const (
 	envDBUser        = "MF_BOOTSTRAP_DB_USER"
 	envDBPass        = "MF_BOOTSTRAP_DB_PASS"
 	envDBName        = "MF_BOOTSTRAP_DB"
-	envEncryptKey    = "MF_BOOTSTRAP_ENCRYPT_KEY"
 	envDBSSLMode     = "MF_BOOTSTRAP_DB_SSL_MODE"
 	envDBSSLCert     = "MF_BOOTSTRAP_DB_SSL_CERT"
 	envDBSSLKey      = "MF_BOOTSTRAP_DB_SSL_KEY"
 	envDBSSLRootCert = "MF_BOOTSTRAP_DB_SSL_ROOT_CERT"
+	envEncryptKey    = "MF_BOOTSTRAP_ENCRYPT_KEY"
 	envClientTLS     = "MF_BOOTSTRAP_CLIENT_TLS"
 	envCACerts       = "MF_BOOTSTRAP_CA_CERTS"
 	envPort          = "MF_BOOTSTRAP_PORT"
@@ -187,6 +187,9 @@ func loadConfig() config {
 	encKey, err := hex.DecodeString(mainflux.Env(envEncryptKey, defEncryptKey))
 	if err != nil {
 		log.Fatalf("Invalid %s value: %s", envEncryptKey, err.Error())
+	}
+	if err := os.Unsetenv(envEncryptKey); err != nil {
+		log.Fatalf("Unable to unset %s value: %s", envEncryptKey, err.Error())
 	}
 	if _, err := aes.NewCipher(encKey); err != nil {
 		log.Fatalf("Invalid %s value: %s", envEncryptKey, err.Error())
