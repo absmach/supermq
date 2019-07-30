@@ -74,7 +74,7 @@ paths:
       tags:
         - configs
       parameters:
-        - $ref: "#/parameters/EncConfigAuth"
+        - $ref: "#/parameters/ConfigAuth"
         - $ref: "#/parameters/ExternalId"
       responses:
         200:
@@ -88,19 +88,21 @@ paths:
             added to the service later.
         500:
           $ref: "#/responses/ServiceError"
-  /things/bootstrap/{externalId}:
+  /things/bootstrap/secure/{externalId}:
     get:
       summary: Retrieves configuration
       description: |
-        Retrieves a configuration with given external ID and external key.
+        Retrieves a configuration with given external ID and encrypted external key.
       tags:
         - configs
       parameters:
-        - $ref: "#/parameters/ConfigAuth"
+        - $ref: "#/parameters/EncConfigAuth"
         - $ref: "#/parameters/ExternalId"
       responses:
         200:
-          description: Data retrieved.
+          description: |
+            Data retrieved. In this case, Bootstrap response is encrypted using
+            the secret key, so an actual response is in the binary format.
           schema:
             $ref: "#/definitions/BootstrapRes"
         404:
@@ -442,27 +444,37 @@ definitions:
       - external_id
       - external_key
   BootstrapRes:
-      type: object
-      properties:
-        mainflux_id:
+    type: object
+    properties:
+      mainflux_id:
+        type: string
+        description: Corresponding Mainflux Thing ID.
+      mainflux_key:
+        type: string
+        description: Corresponding Mainflux Thing key.
+      mainflux_channels:
+        type: array
+        minItems: 0
+        items:
           type: string
-          description: Corresponding Mainflux Thing ID.
-        mainflux_key:
-          type: string
-          description: Corresponding Mainflux Thing key.
-        mainflux_channels:
-          type: array
-          minItems: 0
-          items:
-            type: string
-        content:
-          type: string
-          description: Free-form custom configuration.
-      required:
-        - mainflux_id
-        - mainflux_key
-        - mainflux_channels
-        - content
+      content:
+        type: string
+        description: Free-form custom configuration.
+      client_cert:
+        type: string
+        description: Client certrificate.
+      client_key:
+        type: string
+        description: Key for the client_cert.
+      ca_cert:
+        type: string
+        description: Issuing CA certificate.
+    required:
+      - mainflux_id
+      - mainflux_key
+      - mainflux_channels
+      - content
+
   ConfigReq:
     type: object
     properties:
