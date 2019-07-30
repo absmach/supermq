@@ -86,8 +86,8 @@ func newThingsServer(svc things.Service) *httptest.Server {
 	return httptest.NewServer(mux)
 }
 
-func enc(in []byte, key []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
+func enc(in []byte) ([]byte, error) {
+	block, err := aes.NewCipher(encKey)
 	if err != nil {
 		return nil, err
 	}
@@ -561,7 +561,7 @@ func TestBootstrap(t *testing.T) {
 	saved, err := svc.Add(validToken, config)
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
-	e, err := enc([]byte(saved.ExternalKey), encKey)
+	e, err := enc([]byte(saved.ExternalKey))
 	require.Nil(t, err, fmt.Sprintf("Encrypting external key expected to succeed: %s.\n", err))
 
 	cases := []struct {

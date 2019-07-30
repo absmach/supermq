@@ -25,7 +25,7 @@ type bootstrapRes struct {
 	MFChannels []channelRes `json:"mainflux_channels"`
 	ClientCert string       `json:"client_cert,omitempty"`
 	ClientKey  string       `json:"client_key,omitempty"`
-	CaCert     string       `json:"ca_cert,omitempty"`
+	CACert     string       `json:"ca_cert,omitempty"`
 	Content    string       `json:"content,omitempty"`
 }
 
@@ -69,7 +69,7 @@ func (r reader) ReadConfig(cfg Config, secure bool) (interface{}, error) {
 		MFChannels: channels,
 		ClientCert: cfg.ClientCert,
 		ClientKey:  cfg.ClientKey,
-		CaCert:     cfg.CACert,
+		CACert:     cfg.CACert,
 		Content:    cfg.Content,
 	}
 	if secure {

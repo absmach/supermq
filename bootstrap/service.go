@@ -263,7 +263,7 @@ func (bs bootstrapService) Remove(key, id string) error {
 	return bs.configs.Remove(owner, id)
 }
 
-func (bs bootstrapService) Bootstrap(externalKey, externalID string, encrypted bool) (Config, error) {
+func (bs bootstrapService) Bootstrap(externalKey, externalID string, secure bool) (Config, error) {
 	cfg, err := bs.configs.RetrieveByExternalID(externalID)
 	if err != nil {
 		if err == ErrNotFound {
@@ -273,7 +273,7 @@ func (bs bootstrapService) Bootstrap(externalKey, externalID string, encrypted b
 		return cfg, err
 	}
 
-	if encrypted {
+	if secure {
 		dec, err := bs.dec(externalKey)
 		if err != nil {
 			return Config{}, err
