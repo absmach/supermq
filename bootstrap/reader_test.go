@@ -11,7 +11,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"testing"
@@ -32,10 +31,10 @@ type readResp struct {
 	MFThing    string     `json:"mainflux_id"`
 	MFKey      string     `json:"mainflux_key"`
 	MFChannels []readChan `json:"mainflux_channels"`
+	Content    string     `json:"content,omitempty"`
 	ClientCert string     `json:"client_cert,omitempty"`
 	ClientKey  string     `json:"client_key,omitempty"`
 	CACert     string     `json:"ca_cert,omitempty"`
-	Content    string     `json:"content,omitempty"`
 }
 
 func dec(in []byte) ([]byte, error) {
@@ -44,7 +43,7 @@ func dec(in []byte) ([]byte, error) {
 		return nil, err
 	}
 	if len(in) < aes.BlockSize {
-		return nil, errors.New("ciphertext too short")
+		return nil, bootstrap.ErrMalformedEntity
 	}
 	iv := in[:aes.BlockSize]
 	in = in[aes.BlockSize:]
@@ -70,11 +69,8 @@ func TestReadConfig(t *testing.T) {
 		Content: "content",
 	}
 	ret := readResp{
-		MFThing:    "mf_id",
-		ClientCert: "client_cert",
-		ClientKey:  "client_key",
-		CACert:     "ca_cert",
-		MFKey:      "mf_key",
+		MFThing: "mf_id",
+		MFKey:   "mf_key",
 		MFChannels: []readChan{
 			{
 				ID:       "mf_id",
@@ -82,7 +78,10 @@ func TestReadConfig(t *testing.T) {
 				Metadata: map[string]interface{}{"key": "value}"},
 			},
 		},
-		Content: "content",
+		Content:    "content",
+		ClientCert: "client_cert",
+		ClientKey:  "client_key",
+		CACert:     "ca_cert",
 	}
 
 	bin, err := json.Marshal(ret)

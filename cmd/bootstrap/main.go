@@ -52,7 +52,7 @@ const (
 	defDBSSLCert     = ""
 	defDBSSLKey      = ""
 	defDBSSLRootCert = ""
-	defEncryptKey    = "1234567891011121"
+	defEncryptKey    = "12345678910111213141516171819202"
 	defClientTLS     = "false"
 	defCACerts       = ""
 	defPort          = "8180"

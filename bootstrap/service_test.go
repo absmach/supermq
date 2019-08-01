@@ -11,6 +11,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http/httptest"
@@ -600,7 +601,7 @@ func TestBootstrap(t *testing.T) {
 			desc:        "bootstrap encrypted",
 			config:      saved,
 			externalID:  saved.ExternalID,
-			externalKey: fmt.Sprintf("%x", e),
+			externalKey: hex.EncodeToString(e),
 			err:         nil,
 			encrypted:   true,
 		},

@@ -449,7 +449,7 @@ func (bs bootstrapService) toIDList(channels []Channel) []string {
 func (bs bootstrapService) dec(in string) (string, error) {
 	ciphertext, err := hex.DecodeString(in)
 	if err != nil {
-		return "", err
+		return "", ErrNotFound
 	}
 	block, err := aes.NewCipher(bs.encKey)
 	if err != nil {
