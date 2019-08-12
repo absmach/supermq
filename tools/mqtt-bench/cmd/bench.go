@@ -56,7 +56,7 @@ type connection struct {
 	ThingID   string `json:"ThingID"`
 	ThingKey  string `json:"ThingKey"`
 	MTLSCert  string `json:"MTLSCert"`
-	MtlsKey   string `json:"MtlsKey"`
+	MTLSKey   string `json:"MTLSKey"`
 }
 type Connections struct {
 	Connection []connection
@@ -163,7 +163,7 @@ func runBench() {
 		con := connections[i%n]
 
 		if mtls {
-			cert, err = tls.X509KeyPair([]byte(con.MTLSCert), []byte(con.MtlsKey))
+			cert, err = tls.X509KeyPair([]byte(con.MTLSCert), []byte(con.MTLSKey))
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -195,7 +195,7 @@ func runBench() {
 		con := connections[i%n]
 
 		if mtls {
-			cert, err = tls.X509KeyPair([]byte(con.MTLSCert), []byte(con.MtlsKey))
+			cert, err = tls.X509KeyPair([]byte(con.MTLSCert), []byte(con.MTLSKey))
 			if err != nil {
 				log.Fatal(err)
 			}
