@@ -6,6 +6,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
@@ -47,11 +48,12 @@ const (
 func main() {
 	var (
 		host     = flag.String("host", "http://localhost", "Mainflux host address")
-		username = flag.String("username", "", "mainflux user")
-		password = flag.String("password", "", "mainflux user password")
-		num      = flag.Int("num", 10, "number of created channels")
+		username = flag.String("username", "mirkot@mainflux.com", "mainflux user")
+		password = flag.String("password", "test1234", "mainflux user password")
+		num      = flag.Int("num", 1, "number of created channels")
 		ssl      = flag.Bool("ssl", true, "create thing certs")
 		ca       = flag.String("ca", "ca.crt", "CA file for creating things certs")
+		cakey    = flag.String("cakey", "ca.key", "CA private key file")
 		prefix   = flag.String("prefix", "test", "name prefix for created channels and things")
 	)
 
@@ -85,8 +87,14 @@ func main() {
 	things := []sdk.Thing{}
 	channels := []sdk.Channel{}
 	connections := connections{Connection: []connection{}}
+	var tlsCert tls.Certificate
 	var caCert *x509.Certificate
+
 	if *ssl {
+		tlsCert, err = tls.LoadX509KeyPair(*ca, *cakey)
+		if err != nil {
+			log.Fatalf("Failed to load CA cert")
+		}
 
 		b, err := ioutil.ReadFile(*ca)
 		if err != nil {
@@ -95,20 +103,20 @@ func main() {
 		block, _ := pem.Decode(b)
 		caCert, err = x509.ParseCertificate(block.Bytes)
 		if err != nil {
-			log.Fatalf("Failed to load CA cert")
+			log.Fatalf("Failed to decode certificate")
 		}
-		log.Printf("Loaded CA cert %s", caCert.Subject.CommonName)
+
 	}
 
 	for i := 0; i < *num; i++ {
 
-		m, err := createThing(s, fmt.Sprintf("%s-thing-%d", prefix, i), token)
+		m, err := createThing(s, fmt.Sprintf("%s-thing-%d", *prefix, i), token)
 		if err != nil {
 			log.Println("Failed to create thing")
 			return
 		}
 
-		ch, err := createChannel(s, fmt.Sprintf("%s-channel-%d", prefix, i), token)
+		ch, err := createChannel(s, fmt.Sprintf("%s-channel-%d", *prefix, i), token)
 
 		if err := s.ConnectThing(m.ID, ch.ID, token); err != nil {
 			log.Println("Failed to create thing")
@@ -148,7 +156,7 @@ func main() {
 				SubjectKeyId: []byte{1, 2, 3, 4, 6},
 			}
 
-			derBytes, err := x509.CreateCertificate(rand.Reader, &tmpl, caCert, publicKey(priv), priv)
+			derBytes, err := x509.CreateCertificate(rand.Reader, &tmpl, caCert, publicKey(priv), tlsCert.PrivateKey)
 			if err != nil {
 				log.Fatalf("Failed to create certificate: %s", err)
 			}
