@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"bytes"
@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -20,13 +22,6 @@ import (
 	"gonum.org/v1/gonum/mat"
 	"gonum.org/v1/gonum/stat"
 )
-
-// Execute - main command
-func Execute() {
-	if err := benchCmd.Execute(); err != nil {
-		log.Fatalf(err.Error())
-	}
-}
 
 // Config - command optiopns from file configuration
 type Config struct {
@@ -75,6 +70,7 @@ var (
 	format     string
 	conf       string
 	channels   string
+	msg        string
 	quiet      bool
 	retain     bool
 	mtls       bool
@@ -85,12 +81,23 @@ var (
 var benchCmd = &cobra.Command{
 	Use: "mqtt-bench",
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) < 1 {
-			cmd.Help()
+		fmt.Printf("broker - 	%s\n", broker)
+		fmt.Printf("mtls - 		%v\n", mtls)
+		fmt.Printf("retain - 	%v\n", retain)
+		fmt.Printf("qos - 		%d", qos)
+		fmt.Printf("pubs - 		%d\n", pubs)
+		fmt.Printf("subs - 		%d\n", subs)
+		if pubs < 1 && subs < 1 {
+			log.Fatal("Invalid arguments")
 		}
-
 		runBench()
 	},
+}
+
+func main() {
+	if err := benchCmd.Execute(); err != nil {
+		log.Fatalf(err.Error())
+	}
 }
 
 func init() {
@@ -105,12 +112,12 @@ func init() {
 	benchCmd.PersistentFlags().StringVarP(&format, "format", "f", "text", "Output format: text|json")
 	benchCmd.PersistentFlags().StringVarP(&conf, "config", "g", "config.toml", "config file default is config.toml")
 	benchCmd.PersistentFlags().StringVarP(&channels, "channels", "", "channels.toml", "config file for channels")
+	benchCmd.PersistentFlags().StringVarP(&msg, "msg", "", "{\"n\":\"current\",\"t\":-4,\"v\":1.3}", "messg to be sent, SENML")
 	benchCmd.PersistentFlags().StringVarP(&ca, "ca", "", "ca.crt", "CA file")
 	benchCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "", false, "Supress messages")
 	benchCmd.PersistentFlags().BoolVarP(&retain, "retain", "r", false, "Retain mqtt messages")
 	benchCmd.PersistentFlags().BoolVarP(&mtls, "mtls", "m", false, "Use mtls for connection")
 	benchCmd.PersistentFlags().BoolVarP(&skipTLSVer, "skipTLSVer", "t", false, "Skip tls verification")
-
 }
 
 func initConfig() {
@@ -126,9 +133,9 @@ func initConfig() {
 
 		err = viper.Unmarshal(&c)
 		if err != nil {
-			log.Printf("failed to load config - %s", err.Error())
+			log.Printf("failed to load config - %s\n", err.Error())
 		}
-		log.Printf("config file: %s", viper.ConfigFileUsed())
+		log.Printf("config file: %s\n", viper.ConfigFileUsed())
 	}
 }
 
@@ -136,12 +143,8 @@ func runBench() {
 	var wg sync.WaitGroup
 	var err error
 
+	checkConnection(broker, 1)
 	subTimes := make(res.SubTimes)
-
-	if pubs < 1 && subs < 1 {
-		log.Fatal("Invalid arguments")
-	}
-
 	var caByte []byte
 	if mtls {
 		caFile, err := os.Open(ca)
@@ -153,8 +156,20 @@ func runBench() {
 		caByte, _ = ioutil.ReadAll(caFile)
 	}
 
-	c := Connections{}
+	payload := string(make([]byte, size))
+	if len(msg) > 0 {
+		m := []byte(msg)
+		r := size / len(m)
 
+		payload := fmt.Sprintf("%s", msg)
+		for k := 0; k < r-1; k++ {
+			payload = fmt.Sprintf("%s,%s", payload, msg)
+		}
+		payload = strings.TrimRight(payload, ",")
+		payload = fmt.Sprintf("[%s]", payload)
+	}
+
+	c := Connections{}
 	loadChansConfig(&channels, &c)
 	connections := c.Connection
 
@@ -190,9 +205,10 @@ func runBench() {
 			CA:         caByte,
 			ClientCert: cert,
 			Retain:     retain,
+			Message:    payload,
 		}
 		wg.Add(1)
-		go c.RunSubscriber(&wg, &subTimes, &done, mtls)
+		go c.RunSubscriber(&wg, &subTimes, &done)
 	}
 	wg.Wait()
 
@@ -222,8 +238,9 @@ func runBench() {
 			CA:         caByte,
 			ClientCert: cert,
 			Retain:     retain,
+			Message:    payload,
 		}
-		go c.RunPublisher(resCh, mtls)
+		go c.RunPublisher(resCh)
 	}
 
 	// collect the results
@@ -320,7 +337,7 @@ func printResults(results []*res.RunResults, totals *res.TotalResults, format st
 		}
 		data, err := json.Marshal(jr)
 		if err != nil {
-			log.Printf("Failed to prepare results for printing - %s", err.Error())
+			log.Printf("Failed to prepare results for printing - %s\n", err.Error())
 		}
 		var out bytes.Buffer
 		json.Indent(&out, data, "", "\t")
@@ -364,4 +381,35 @@ func loadChansConfig(path *string, conns *Connections) {
 	if _, err := toml.DecodeFile(*path, conns); err != nil {
 		log.Fatalf("cannot load channels config %s \nuse tools/provision to create file", *path)
 	}
+}
+
+func checkConnection(broker string, timeoutSecs int) {
+	s := strings.Split(broker, ":")
+	if len(s) != 3 {
+		log.Fatalf("wrong host address format")
+	}
+
+	network := s[0]
+	host := strings.Trim(s[1], "/")
+	port := s[2]
+
+	conn, err := net.DialTimeout(network, fmt.Sprintf("%s:%s", host, port), time.Duration(timeoutSecs)*time.Second)
+	conClose := func() {
+		if conn != nil {
+			log.Println("closing connection")
+			conn.Close()
+		}
+	}
+
+	defer conClose()
+	if err, ok := err.(*net.OpError); ok && err.Timeout() {
+		log.Fatalf("Timeout error: %s\n", err)
+		return
+	}
+
+	if err != nil {
+		log.Fatalf("Error: %s\n", err)
+		return
+	}
+	log.Printf("Connection to %s://%s:%s looks ok\n", network, host, port)
 }
