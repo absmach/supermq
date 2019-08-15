@@ -201,7 +201,7 @@ func (c *Client) connect(onConnected func(client mqtt.Client)) error {
 		AddBroker(c.BrokerURL).
 		SetClientID(c.ID).
 		SetCleanSession(true).
-		SetAutoReconnect(true).
+		SetAutoReconnect(false).
 		SetOnConnectHandler(onConnected).
 		SetConnectionLostHandler(func(client mqtt.Client, reason error) {
 			log.Printf("CLIENT %s lost connection to the broker: %v. Will reconnect...\n", c.ID, reason.Error())

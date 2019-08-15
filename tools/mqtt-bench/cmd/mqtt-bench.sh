@@ -22,22 +22,21 @@ do
 					for size in 100 500
 					do
 						let "i += 1"
-						
 						echo "=================================TEST $i=========================================" >> $1-$i.out
 						echo "MTLS: $mtls RETAIN: $ret, QOS $qos" >> $1-$i.out
 						echo "Pub:" $pub ", Sub:" $sub ", MsgSize:" $size ", MsgPerPub:" $message    >> $1-$i.out
 						echo "=================================================================================" >> $1-$i.out
 						if [ "$mtls" = true ];
 						then
-							echo "| " >> $1.out
-							echo "| ./mqtt-bench --channels $3 -s $size -n $message  --subs $sub --pubs $pub  -q $qos --retain=$ret -m=true -b tcps://$2:8883 --quiet=true" >> $1.out
-							echo "| " >> $1.out
-							./mqtt-bench --channels $3 -s $size -n $message  --subs $sub --pubs $pub  -q $qos --retain=$ret -m=true -b tcps://$2:8883 --quiet=true >> $1.out
+							echo "| " >> $1-$i.out
+							echo "| ./mqtt-bench --channels $3 -s $size -n $message  --subs $sub --pubs $pub  -q $qos --retain=$ret -m=true -b tcps://$2:8883 --quiet=true" >> $1-$i.out
+							echo "| " >> $1-$i.out
+							./mqtt-bench --channels $3 -s $size -n $message  --subs $sub --pubs $pub  -q $qos --retain=$ret -m=true -b tcps://$2:8883 --quiet=true >> $1-$i.out
 						else
-							echo "| " >> $1.out
-							echo "| ./mqtt-bench --channels $3 -s $size -n $message  --subs $sub --pubs $pub  -q $qos  --retain=$ret -b tcp://$2:1883 --quiet=true" >> $1.out	
-							echo "| " >> $1.out
-							./mqtt-bench --channels $3 -s $size -n $message  --subs $sub --pubs $pub  -q $qos  --retain=$ret -b tcp://$2:1883 --quiet=true >> $1.out
+							echo "| " >> $1-$i.out
+							echo "| ./mqtt-bench --channels $3 -s $size -n $message  --subs $sub --pubs $pub  -q $qos  --retain=$ret -b tcp://$2:1883 --quiet=true" >> $1-$i.out	
+							echo "| " >> $1-$i.out
+							./mqtt-bench --channels $3 -s $size -n $message  --subs $sub --pubs $pub  -q $qos  --retain=$ret -b tcp://$2:1883 --quiet=true >> $1-$i.out
 						fi
 						sleep 2
 					done
