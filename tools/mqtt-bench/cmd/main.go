@@ -84,7 +84,7 @@ var benchCmd = &cobra.Command{
 		fmt.Printf("broker - 	%s\n", broker)
 		fmt.Printf("mtls - 		%v\n", mtls)
 		fmt.Printf("retain - 	%v\n", retain)
-		fmt.Printf("qos - 		%d", qos)
+		fmt.Printf("qos - 		%d\n", qos)
 		fmt.Printf("pubs - 		%d\n", pubs)
 		fmt.Printf("subs - 		%d\n", subs)
 		if pubs < 1 && subs < 1 {
@@ -157,18 +157,6 @@ func runBench() {
 	}
 
 	payload := string(make([]byte, size))
-	if len(msg) > 0 {
-		m := []byte(msg)
-		r := size / len(m)
-
-		payload := fmt.Sprintf("%s", msg)
-		for k := 0; k < r-1; k++ {
-			payload = fmt.Sprintf("%s,%s", payload, msg)
-		}
-		payload = strings.TrimRight(payload, ",")
-		payload = fmt.Sprintf("[%s]", payload)
-	}
-
 	c := Connections{}
 	loadChansConfig(&channels, &c)
 	connections := c.Connection
@@ -346,7 +334,7 @@ func printResults(results []*res.RunResults, totals *res.TotalResults, format st
 	default:
 		if !quiet {
 			for _, res := range results {
-				fmt.Printf("======= CLIENT %s =======\n", res.ID)
+				fmt.Printf("======= CLIENT %d =======\n", res.ID)
 				fmt.Printf("Ratio:               %.3f (%d/%d)\n", float64(res.Successes)/float64(res.Successes+res.Failures), res.Successes, res.Successes+res.Failures)
 				fmt.Printf("Runtime (s):         %.3f\n", res.RunTime)
 				fmt.Printf("Msg time min (us):   %.3f\n", res.MsgTimeMin)
@@ -393,7 +381,7 @@ func checkConnection(broker string, timeoutSecs int) {
 	host := strings.Trim(s[1], "/")
 	port := s[2]
 
-	conn, err := net.DialTimeout(network, fmt.Sprintf("%s:%s", host, port), time.Duration(timeoutSecs)*time.Second)
+	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", host, port), time.Duration(timeoutSecs)*time.Second)
 	conClose := func() {
 		if conn != nil {
 			log.Println("closing connection")
@@ -403,11 +391,13 @@ func checkConnection(broker string, timeoutSecs int) {
 
 	defer conClose()
 	if err, ok := err.(*net.OpError); ok && err.Timeout() {
-		log.Fatalf("Timeout error: %s\n", err)
+		fmt.Printf("Timeout error: %s\n", err.Error())
+		log.Fatalf("Timeout error: %s\n", err.Error())
 		return
 	}
 
 	if err != nil {
+		fmt.Printf("Error: %s\n", err.Error())
 		log.Fatalf("Error: %s\n", err)
 		return
 	}
