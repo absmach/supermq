@@ -11,7 +11,7 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/mainflux/mainflux/tools/mqtt-bench/res"
+	res "github.com/mainflux/mainflux/tools/mqtt-bench/results"
 	mat "gonum.org/v1/gonum/mat"
 	stat "gonum.org/v1/gonum/stat"
 )
@@ -132,7 +132,10 @@ func (c *Client) subscribe(wg *sync.WaitGroup, subTimes *res.SubTimes, done *cha
 		}
 	}
 
-	c.connect(onConnected)
+	connLost := func(client mqtt.Client, reason error) {
+		log.Printf("CLIENT %v had lost connection to the broker: %s\n", c.ID, reason.Error())
+	}
+	c.connect(onConnected, connLost)
 
 	token := (*c.mqttClient).Subscribe(c.MsgTopic, c.MsgQoS, func(cl mqtt.Client, msg mqtt.Message) {
 
@@ -150,11 +153,11 @@ func (c *Client) subscribe(wg *sync.WaitGroup, subTimes *res.SubTimes, done *cha
 func (c *Client) pubMessages(in, out chan *message, doneGen chan bool, donePub chan bool) {
 	clientID := fmt.Sprintf("pub-%v-%v", time.Now().Format(time.RFC3339Nano), c.ID)
 	c.ID = clientID
+	ctr := 0
 	onConnected := func(client mqtt.Client) {
 		if !c.Quiet {
 			log.Printf("CLIENT %v is connected to the broker %v\n", clientID, c.BrokerURL)
 		}
-		ctr := 0
 		for {
 			select {
 			case m := <-in:
@@ -191,21 +194,32 @@ func (c *Client) pubMessages(in, out chan *message, doneGen chan bool, donePub c
 			}
 		}
 	}
+	connLost := func(client mqtt.Client, reason error) {
+		log.Printf("CLIENT %v had lost connection to the broker: %s\n", c.ID, reason.Error())
+		if ctr < c.MsgCount {
+			flushMessages := make([]message, c.MsgCount-ctr)
+			for _, m := range flushMessages {
+				out <- &m
+			}
+		}
+		donePub <- true
+	}
 
-	c.connect(onConnected)
+	if c.connect(onConnected, connLost) != nil {
+		out <- &message{}
+		donePub <- true
+	}
 
 }
 
-func (c *Client) connect(onConnected func(client mqtt.Client)) error {
+func (c *Client) connect(onConnected func(client mqtt.Client), connLost func(client mqtt.Client, reason error)) error {
 	opts := mqtt.NewClientOptions().
 		AddBroker(c.BrokerURL).
 		SetClientID(c.ID).
 		SetCleanSession(true).
 		SetAutoReconnect(false).
 		SetOnConnectHandler(onConnected).
-		SetConnectionLostHandler(func(client mqtt.Client, reason error) {
-			log.Printf("CLIENT %s lost connection to the broker: %v. Will reconnect...\n", c.ID, reason.Error())
-		})
+		SetConnectionLostHandler(connLost)
 	if c.BrokerUser != "" && c.BrokerPass != "" {
 		opts.SetUsername(c.BrokerUser)
 		opts.SetPassword(c.BrokerPass)
@@ -219,9 +233,7 @@ func (c *Client) connect(onConnected func(client mqtt.Client)) error {
 
 		if c.CA != nil {
 			cfg.RootCAs = x509.NewCertPool()
-			if cfg.RootCAs.AppendCertsFromPEM(c.CA) {
-				log.Printf("Successfully added certificate\n")
-			}
+			cfg.RootCAs.AppendCertsFromPEM(c.CA)
 		}
 		if c.ClientCert.Certificate != nil {
 			cfg.Certificates = []tls.Certificate{c.ClientCert}
@@ -238,7 +250,7 @@ func (c *Client) connect(onConnected func(client mqtt.Client)) error {
 	c.mqttClient = &client
 
 	if token.Error() != nil {
-		log.Printf("CLIENT %v had error connecting to the broker: %s\n", c.ID, token.Error())
+		log.Printf("CLIENT %v had error connecting to the broker: %s\n", c.ID, token.Error().Error())
 		return token.Error()
 	}
 	return nil

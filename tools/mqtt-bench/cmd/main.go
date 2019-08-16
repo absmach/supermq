@@ -16,7 +16,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/mainflux/mainflux/tools/mqtt-bench/mqtt"
-	"github.com/mainflux/mainflux/tools/mqtt-bench/res"
+	res "github.com/mainflux/mainflux/tools/mqtt-bench/results"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gonum.org/v1/gonum/mat"

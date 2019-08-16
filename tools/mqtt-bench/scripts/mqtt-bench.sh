@@ -31,12 +31,12 @@ do
 							echo "| " >> $1-$i.out
 							echo "| ./mqtt-bench --channels $3 -s $size -n $message  --subs $sub --pubs $pub  -q $qos --retain=$ret -m=true -b tcps://$2:8883 --quiet=true --ca ../../../docker/ssl/certs/ca.crt -t=true" >> $1-$i.out
 							echo "| " >> $1-$i.out
-							./mqtt-bench --channels $3 -s $size -n $message  --subs $sub --pubs $pub  -q $qos --retain=$ret -m=true -b tcps://$2:8883 --quiet=true --ca ../../../docker/ssl/certs/ca.crt -t=true >> $1-$i.out
+							../cmd/mqtt-bench --channels $3 -s $size -n $message  --subs $sub --pubs $pub  -q $qos --retain=$ret -m=true -b tcps://$2:8883 --quiet=true --ca ../../../docker/ssl/certs/ca.crt -t=true >> $1-$i.out
 						else
 							echo "| " >> $1-$i.out
 							echo "| ./mqtt-bench --channels $3 -s $size -n $message  --subs $sub --pubs $pub  -q $qos  --retain=$ret -b tcp://$2:1883 --quiet=true" >> $1-$i.out	
 							echo "| " >> $1-$i.out
-							./mqtt-bench --channels $3 -s $size -n $message  --subs $sub --pubs $pub  -q $qos  --retain=$ret -b tcp://$2:1883 --quiet=true >> $1-$i.out
+							../cmd/mqtt-bench --channels $3 -s $size -n $message  --subs $sub --pubs $pub  -q $qos  --retain=$ret -b tcp://$2:1883 --quiet=true >> $1-$i.out
 						fi
 						sleep 2
 					done
