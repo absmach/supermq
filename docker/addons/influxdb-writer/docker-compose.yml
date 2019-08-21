@@ -68,3 +68,4 @@ services:
       - docker_mainflux-base-net
     volumes:
       - mainflux-grafana-volume:/var/lib/grafana
+      - ./grafana.ini:/etc/grafana/grafana.ini
