@@ -594,7 +594,7 @@ func TestUpdateCert(t *testing.T) {
 	for _, tc := range cases {
 		req := testRequest{
 			client:      bs.Client(),
-			method:      http.MethodPut,
+			method:      http.MethodPatch,
 			url:         fmt.Sprintf("%s/things/configs/certs/%s", bs.URL, tc.key),
 			contentType: tc.contentType,
 			token:       tc.auth,
