@@ -36,12 +36,19 @@ identify(undefined) ->
 identify(Password) ->
     error_logger:info_msg("identify: ~p", [Password]),
     Token = #{value => binary_to_list(Password)},
-    mfx_grpc:send(identify, Token).
+    Worker = poolboy:checkout(grpc_pool),
+    Result = gen_server:call(Worker, {identify, Token}),
+    poolboy:checkin(grpc_pool, Worker),
+    Result.
+
 
 access(UserName, ChannelId) ->
     error_logger:info_msg("access: ~p ~p", [UserName, ChannelId]),
     AccessByIdReq = #{thingID => binary_to_list(UserName), chanID => binary_to_list(ChannelId)},
-    mfx_grpc:send(can_access_by_id, AccessByIdReq).
+    Worker = poolboy:checkout(grpc_pool),
+    Result = gen_server:call(Worker, {can_access_by_id, AccessByIdReq}),
+    poolboy:checkin(grpc_pool, Worker),
+    Result.
 
 auth_on_register({_IpAddr, _Port} = Peer, {_MountPoint, _ClientId} = SubscriberId, UserName, Password, CleanSession) ->
     error_logger:info_msg("auth_on_register: ~p ~p ~p ~p ~p", [Peer, SubscriberId, UserName, Password, CleanSession]),

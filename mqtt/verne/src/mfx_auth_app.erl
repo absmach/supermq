@@ -15,7 +15,7 @@ start(_StartType, _StartArgs) ->
     ets:new(mfx_cfg, [set, named_table, public]),
 
     GrpcUrl = case os:getenv("MF_THINGS_AUTH_GRPC_URL") of
-        false -> "tcp://localhost:8181";
+        false -> "tcp://localhost:8183";
         GrpcEnv -> GrpcEnv
     end,
     NatsUrl = case os:getenv("MF_NATS_URL") of
@@ -41,3 +41,5 @@ start(_StartType, _StartArgs) ->
 
 stop(_State) ->
     ok.
+
+

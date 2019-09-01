@@ -1,7 +1,10 @@
 -module(mfx_grpc).
 -behaviour(gen_server).
+-behaviour(poolboy_worker).
+
 -export([
     start_link/0,
+    start_link/1,
     init/1,
     send/2,
     handle_call/3,
@@ -10,28 +13,30 @@
     terminate/2
 ]).
 
+-record(state, {conn}).
+
 init(_Args) ->
     error_logger:info_msg("mfx_grpc genserver has started (~w)~n", [self()]),
 
     [{_, GrpcUrl}] = ets:lookup(mfx_cfg, grpc_url),
     {ok, {_, _, GrpcHost, GrpcPort, _, _}} = http_uri:parse(GrpcUrl),
-    error_logger:info_msg("mfx_redis host: ~p,  port: ~p", [GrpcHost, GrpcPort]),
+    error_logger:info_msg("grpc host: ~p,  port: ~p", [GrpcHost, GrpcPort]),
     {ok, GrpcConn} = grpc_client:connect(tcp, GrpcHost, GrpcPort),
-
-    ets:insert(mfx_cfg, {grpc_conn, GrpcConn}),
-    {ok, []}.
+    {ok, #state{conn = GrpcConn}}.
 
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+
+start_link(Args) ->
+    gen_server:start_link(?MODULE, Args, []).
 
 send(Method, Message) ->
     gen_server:call(?MODULE, {send, Method, Message}).
 
 
-handle_call({send, identify, Message}, _From, _State) ->
-    [{grpc_conn, Conn}] = ets:lookup(mfx_cfg, grpc_conn),
+handle_call({identify, Message}, _From, #state{conn = GrpcConn} = State) ->
     error_logger:info_msg("mfx_grpc message: ~p", [Message]),
-    {Status, Result} = internal_client:'IdentifyThing'(Conn, Message, []),
+    {Status, Result} = internal_client:'IdentifyThing'(GrpcConn, Message, []),
     case Status of
       ok ->
           #{
@@ -46,17 +51,16 @@ handle_call({send, identify, Message}, _From, _State) ->
 
           case HttpStatus of
               200 ->
-                  {reply, {ok, ThingId}, ok};
+                  {reply, {ok, ThingId}, State};
               _ ->
                   {reply, {error, HttpStatus}, error}
           end;
       _ ->
-          {reply, {error, Status}, error}
+          {reply, {error, Status}, State}
   end;
-handle_call({send, can_access_by_id, Message}, _From, _State) ->
-  [{grpc_conn, Conn}] = ets:lookup(mfx_cfg, grpc_conn),
+handle_call({can_access_by_id, Message}, _From, #state{conn = GrpcConn} = State) ->
   error_logger:info_msg("mfx_grpc message: ~p", [Message]),
-  {Status, Result} = internal_client:'CanAccessByID'(Conn, Message, []),
+  {Status, Result} = internal_client:'CanAccessByID'(GrpcConn, Message, []),
   case Status of
     ok ->
       #{
@@ -75,13 +79,13 @@ handle_call({send, can_access_by_id, Message}, _From, _State) ->
 
       case HttpStatus of
           200 ->
-              {reply, ok, ok};
+              {reply, ok, State};
           _ ->
-              {reply, {error, HttpStatus}, error}
+              {reply, {error, HttpStatus}, State}
       end;
       
     _ ->
-        {reply, {error, Status}, error}
+        {reply, {error, Status}, State}
   end.
 
 handle_cast(_Request, State) ->
