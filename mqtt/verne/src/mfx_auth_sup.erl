@@ -24,6 +24,7 @@ start_link() ->
 
 init([]) ->
     {ok, { {one_for_one, 5, 10}, [
+        {mfx_grpc, {mfx_grpc, start_link, []}, permanent, 2000, worker, [mfx_grpc]},
         {mfx_nats, {mfx_nats, start_link, []}, permanent, 2000, worker, [mfx_nats]},
         {mfx_redis, {mfx_redis, start_link, []}, permanent, 2000, worker, [mfx_redis]}
     ]} }.

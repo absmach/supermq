@@ -11,7 +11,6 @@
 ]).
 
 start_link() ->
-    % Start genserver for PUB
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init(_Args) ->

@@ -8,8 +8,7 @@
                   stdlib,
                   teacup,
                   gpb,
-                  jsone,
-                  hackney,
+                  grpc_client,
                   eredis
                  ]},
   {mod, { mfx_auth_app, []}},

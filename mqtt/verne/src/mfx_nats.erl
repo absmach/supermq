@@ -64,7 +64,7 @@ loop(Conn) ->
         {Conn, {msg, <<"teacup.control">>, _, <<"exit">>}} ->
             error_logger:info_msg("NATS received exit msg", []);
         {Conn, {msg, Subject, _ReplyTo, NatsMsg}} ->
-            #'mainflux.RawMessage'{'protocol' = Protocol, 'contentType' = ContentType, 'payload' = Payload} = message:decode_msg(NatsMsg, 'mainflux.RawMessage'),
+            #{protocol := Protocol, contentType := ContentType, payload := Payload} = message:decode_msg(NatsMsg, 'mainflux.RawMessage'),
             error_logger:info_msg("Received NATS protobuf msg with payload: ~p and ContentType: ~p~n", [Payload, ContentType]),
             case Protocol of
                 "mqtt" ->
