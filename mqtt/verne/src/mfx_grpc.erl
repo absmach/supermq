@@ -6,7 +6,6 @@
     start_link/0,
     start_link/1,
     init/1,
-    send/2,
     handle_call/3,
     handle_cast/2,
     handle_info/2,
@@ -29,10 +28,6 @@ start_link() ->
 
 start_link(Args) ->
     gen_server:start_link(?MODULE, Args, []).
-
-send(Method, Message) ->
-    gen_server:call(?MODULE, {send, Method, Message}).
-
 
 handle_call({identify, Message}, _From, #state{conn = GrpcConn} = State) ->
     error_logger:info_msg("mfx_grpc message: ~p", [Message]),
