@@ -1,5 +1,6 @@
 -module(mfx_redis).
 -behaviour(gen_server).
+
 -export([
     start_link/0,
     init/1,
@@ -10,8 +11,9 @@
     terminate/2
 ]).
 
+-record(state, {conn}).
+
 start_link() ->
-    % Start genserver for PUB
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init(_Args) ->
@@ -22,21 +24,20 @@ init(_Args) ->
     error_logger:info_msg("mfx_redis host: ~p,  port: ~p", [RedisHost, RedisPort]),
     {ok, RedisConn} = eredis:start_link(RedisHost, RedisPort),
 
-    ets:insert(mfx_cfg, {redis_conn, RedisConn}),
-    {ok, []}.
+    {ok, #state{conn = RedisConn}}.
 
 publish(Message) ->
     gen_server:cast(?MODULE, {publish, Message}).
 
+% Currently unused, but kept to avoid compiler warnings (it expects handle_call/3 in the gen_server)
 handle_call(Name, _From, _State) ->
-    Reply = lists:flatten(io_lib:format("hello ~s from mfx_redis genserver", [Name])),
+    Reply = lists:flatten(io_lib:format("Hello ~s from mfx_redis genserver", [Name])),
     {reply, Reply, _State}.
 
-handle_cast({publish, Message}, _State) ->
-    [{redis_conn, Conn}] = ets:lookup(mfx_cfg, redis_conn),
-    error_logger:info_msg("mfx_redis genserver cast ~p ~p", [Conn, Message]),
-    NewState = eredis:q(Conn, ["XADD" | Message]),
-    {noreply, NewState}.
+handle_cast({publish, Message}, #state{conn = RedisConn} = State) ->
+    error_logger:info_msg("mfx_redis genserver cast ~p ~p", [RedisConn, Message]),
+    eredis:q(RedisConn, ["XADD" | Message]),
+    {noreply, State}.
 
 handle_info(_Info, State) ->
     {noreply, State}.

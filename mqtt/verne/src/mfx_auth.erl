@@ -35,44 +35,20 @@ identify(undefined) ->
     {error, undefined};
 identify(Password) ->
     error_logger:info_msg("identify: ~p", [Password]),
-    [{_, AuthUrl}] = ets:lookup(mfx_cfg, auth_url),
-    URL = [list_to_binary(AuthUrl), <<"/identify">>],
-    ReqBody = jsone:encode(#{<<"token">> => Password}),
-    ReqHeaders = [{<<"Content-Type">>, <<"application/json">>}],
-    error_logger:info_msg("identify: ~p", [URL]),
-    {ok, Status, _, Ref} = hackney:request(post, URL, ReqHeaders, ReqBody),
-    case Status of
-        200 ->
-            case hackney:body(Ref) of
-                {ok, RespBody} ->
-                    {[{<<"id">>, Id}]} = jsone:decode(RespBody, [{object_format, tuple}]),
-                    error_logger:info_msg("identify: ~p", [URL]),
-                    {ok, Id};
-                _ ->
-                    error
-            end;
-        403 ->
-            {error, invalid_credentials};
-        _ ->
-            {error, auth_error}
-    end.
+    Token = #{value => binary_to_list(Password)},
+    Worker = poolboy:checkout(grpc_pool),
+    Result = gen_server:call(Worker, {identify, Token}),
+    poolboy:checkin(grpc_pool, Worker),
+    Result.
+
 
 access(UserName, ChannelId) ->
     error_logger:info_msg("access: ~p ~p", [UserName, ChannelId]),
-    [{_, AuthUrl}] = ets:lookup(mfx_cfg, auth_url),
-    URL = [list_to_binary(AuthUrl), <<"/channels/">>, ChannelId, <<"/access-by-id">>],
-    error_logger:info_msg("URL: ~p", [URL]),
-    ReqBody = jsone:encode(#{<<"thing_id">> => UserName}),
-    ReqHeaders = [{<<"Content-Type">>, <<"application/json">>}],
-    {ok, Status, _RespHeaders, _ClientRef} = hackney:request(post, URL, ReqHeaders, ReqBody),
-    case Status of
-        200 ->
-            ok;
-        403 ->
-            {error, forbidden};
-        _ ->
-            {error, authz_error}
-    end.
+    AccessByIdReq = #{thingID => binary_to_list(UserName), chanID => binary_to_list(ChannelId)},
+    Worker = poolboy:checkout(grpc_pool),
+    Result = gen_server:call(Worker, {can_access_by_id, AccessByIdReq}),
+    poolboy:checkin(grpc_pool, Worker),
+    Result.
 
 auth_on_register({_IpAddr, _Port} = Peer, {_MountPoint, _ClientId} = SubscriberId, UserName, Password, CleanSession) ->
     error_logger:info_msg("auth_on_register: ~p ~p ~p ~p ~p", [Peer, SubscriberId, UserName, Password, CleanSession]),
@@ -98,7 +74,7 @@ auth_on_register({_IpAddr, _Port} = Peer, {_MountPoint, _ClientId} = SubscriberI
 parseTopic(Topic) when length(Topic) == 3 ->
     ChannelId = lists:nth(2, Topic),
     NatsSubject = [<<"channel.">>, ChannelId],
-    [{chanel_id, ChannelId}, {content_type, ""}, {nats_subject, NatsSubject}];
+    [{chanel_id, ChannelId}, {content_type, ""}, {subtopic, <<>>}, {nats_subject, NatsSubject}];
 parseTopic(Topic) when length(Topic) > 3 ->
     ChannelId = lists:nth(2, Topic),
     case lists:nth(length(Topic) - 1, Topic) of
@@ -112,7 +88,8 @@ parseTopic(Topic) when length(Topic) > 3 ->
         _ ->
             Subtopic = lists:sublist(Topic, 4, length(Topic) - 3),
             NatsSubject = [<<"channel.">>, ChannelId, <<".">>, string:join([[X] || X <- Subtopic], ".")],
-            [{chanel_id, ChannelId}, {content_type, ""}, {nats_subject, NatsSubject}]
+            Subtopic2 = string:join([[X] || X <- Subtopic], "/"),
+            [{chanel_id, ChannelId}, {content_type, ""}, {subtopic, Subtopic2}, {nats_subject, NatsSubject}]
     end.
 
 auth_on_publish(UserName, {_MountPoint, _ClientId} = SubscriberId, QoS, Topic, Payload, IsRetain) ->
@@ -132,17 +109,18 @@ auth_on_publish(UserName, {_MountPoint, _ClientId} = SubscriberId, QoS, Topic, P
     %%
 
     % Topic is list of binaries, ex: [<<"channels">>, <<"1">>, <<"messages">>, <<"subtopic_1">>, ...]
-    [{chanel_id, ChannelId}, {content_type, ContentType}, {nats_subject, NatsSubject}] = parseTopic(Topic),
+    [{chanel_id, ChannelId}, {content_type, ContentType}, {subtopic, Subtopic}, {nats_subject, NatsSubject}] = parseTopic(Topic),
     case access(UserName, ChannelId) of
         ok ->
-            RawMessage = #'RawMessage'{
-                'channel' = ChannelId,
-                'publisher' = UserName,
-                'protocol' = "mqtt",
-                'contentType' = ContentType,
-                'payload' = Payload
+            RawMessage = #{
+                channel => ChannelId,
+                subtopic => Subtopic,
+                publisher => UserName,
+                protocol => "mqtt",
+                contentType => ContentType,
+                payload => Payload
             },
-            mfx_nats:publish(NatsSubject, message:encode_msg(RawMessage)),
+            mfx_nats:publish(NatsSubject, message:encode_msg(RawMessage, 'mainflux.RawMessage')),
             ok;
         Other ->
             error_logger:info_msg("Error auth: ~p", [Other]),
@@ -158,7 +136,7 @@ auth_on_subscribe(UserName, ClientId, [{Topic, _QoS}|_] = Topics) ->
     %% 2. return 'next' -> leave it to other plugins to decide
     %% 3. return {error, whatever} -> auth chain is stopped, and no SUBACK is sent
 
-    [{chanel_id, ChannelId}, _, _] = parseTopic(Topic),
+    [{chanel_id, ChannelId}, _, _, _] = parseTopic(Topic),
     access(UserName, ChannelId).
 
 %%% Redis ES

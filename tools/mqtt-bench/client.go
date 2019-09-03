@@ -1,4 +1,7 @@
-package mqtt
+// Copyright (c) Mainflux
+// SPDX-License-Identifier: Apache-2.0
+
+package bench
 
 import (
 	"crypto/rsa"
@@ -7,11 +10,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
+	"strings"
 	"sync"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/mainflux/mainflux/tools/mqtt-bench/res"
 	mat "gonum.org/v1/gonum/mat"
 	stat "gonum.org/v1/gonum/stat"
 )
@@ -23,12 +27,13 @@ type Client struct {
 	BrokerUser string
 	BrokerPass string
 	MsgTopic   string
+	Message    string
 	MsgSize    int
 	MsgCount   int
 	MsgQoS     byte
 	Quiet      bool
 	mqttClient *mqtt.Client
-	Mtls       bool
+	MTLS       bool
 	SkipTLSVer bool
 	Retain     bool
 	CA         []byte
@@ -53,19 +58,21 @@ type message struct {
 	Error          bool
 }
 
-// RunPublisher - runs publisher
-func (c *Client) RunPublisher(r chan *res.RunResults, mtls bool) {
+// Publisher
+func (c *Client) runPublisher(r chan *RunResults) {
 	newMsgs := make(chan *message)
 	pubMsgs := make(chan *message)
 	doneGen := make(chan bool)
 	donePub := make(chan bool)
-	runResults := new(res.RunResults)
+	runResults := new(RunResults)
 
 	started := time.Now()
+
 	// Start generator
-	go c.genMessages(newMsgs, doneGen)
+	go c.generate(newMsgs, doneGen)
+
 	// Start publisher
-	go c.pubMessages(newMsgs, pubMsgs, doneGen, donePub, mtls)
+	go c.publish(newMsgs, pubMsgs, doneGen, donePub)
 
 	times := []float64{}
 
@@ -98,66 +105,67 @@ func (c *Client) RunPublisher(r chan *res.RunResults, mtls bool) {
 	}
 }
 
-// RunSubscriber - runs a subscriber
-func (c *Client) RunSubscriber(wg *sync.WaitGroup, subTimes *res.SubTimes, done *chan bool, mtls bool) {
+// Subscriber
+func (c *Client) runSubscriber(wg *sync.WaitGroup, subTimes *SubTimes, done *chan bool) {
 	defer wg.Done()
-	// Start subscriber
-	c.subscribe(wg, subTimes, done, mtls)
 
+	// Start subscriber
+	c.subscribe(wg, subTimes, done)
 }
 
-func (c *Client) genMessages(ch chan *message, done chan bool) {
+func (c *Client) generate(ch chan *message, done chan bool) {
 	for i := 0; i < c.MsgCount; i++ {
-		msgPayload := messagePayload{Payload: make([]byte, c.MsgSize)}
+		msgPayload := messagePayload{Payload: c.Message}
 		ch <- &message{
 			Topic:   c.MsgTopic,
 			QoS:     c.MsgQoS,
 			Payload: msgPayload,
 		}
 	}
+
 	done <- true
 	return
 }
 
-func (c *Client) subscribe(wg *sync.WaitGroup, subTimes *res.SubTimes, done *chan bool, mtls bool) {
+func (c *Client) subscribe(wg *sync.WaitGroup, subTimes *SubTimes, done *chan bool) {
 	clientID := fmt.Sprintf("sub-%v-%v", time.Now().Format(time.RFC3339Nano), c.ID)
 	c.ID = clientID
 
 	onConnected := func(client mqtt.Client) {
 		if !c.Quiet {
-			log.Printf("CLIENT %v is connected to the broker %v\n", clientID, c.BrokerURL)
+			log.Printf("Client %v is connected to the broker %v\n", clientID, c.BrokerURL)
 		}
 	}
 
-	c.connect(onConnected, mtls)
+	connLost := func(client mqtt.Client, reason error) {
+		log.Printf("Client %v had lost connection to the broker: %s\n", c.ID, reason.Error())
+	}
+	c.connect(onConnected, connLost)
 
-	token := (*c.mqttClient).Subscribe(c.MsgTopic, 0, func(cl mqtt.Client, msg mqtt.Message) {
-
+	token := (*c.mqttClient).Subscribe(c.MsgTopic, c.MsgQoS, func(cl mqtt.Client, msg mqtt.Message) {
 		mp := messagePayload{}
 		err := json.Unmarshal(msg.Payload(), &mp)
 		if err != nil {
-			log.Printf("CLIENT %s failed to decode message", clientID)
+			log.Printf("Client %s failed to decode message\n", clientID)
 		}
 	})
 
 	token.Wait()
-
 }
 
-func (c *Client) pubMessages(in, out chan *message, doneGen chan bool, donePub chan bool, mtls bool) {
+func (c *Client) publish(in, out chan *message, doneGen chan bool, donePub chan bool) {
 	clientID := fmt.Sprintf("pub-%v-%v", time.Now().Format(time.RFC3339Nano), c.ID)
 	c.ID = clientID
+	ctr := 0
 	onConnected := func(client mqtt.Client) {
 		if !c.Quiet {
-			log.Printf("CLIENT %v is connected to the broker %v\n", clientID, c.BrokerURL)
+			log.Printf("Client %v is connected to the broker %v\n", clientID, c.BrokerURL)
 		}
-		ctr := 0
 		for {
 			select {
 			case m := <-in:
 				m.Sent = time.Now()
 				m.ID = clientID
-				m.Payload.ID = clientID
 				m.Payload.Sent = m.Sent
 
 				pload, err := json.Marshal(m.Payload)
@@ -176,49 +184,59 @@ func (c *Client) pubMessages(in, out chan *message, doneGen chan bool, donePub c
 
 				if ctr > 0 && ctr%100 == 0 {
 					if !c.Quiet {
-						log.Printf("CLIENT %v published %v messages and keeps publishing...\n", clientID, ctr)
+						log.Printf("Client %v published %v messages and keeps publishing...\n", clientID, ctr)
 					}
 				}
 				ctr++
 			case <-doneGen:
 				donePub <- true
 				if !c.Quiet {
-					log.Printf("CLIENT %v is done publishing\n", clientID)
+					log.Printf("Client %v is done publishing\n", clientID)
 				}
 				return
 			}
 		}
 	}
+	connLost := func(client mqtt.Client, reason error) {
+		log.Printf("Client %v had lost connection to the broker: %s\n", c.ID, reason.Error())
+		if ctr < c.MsgCount {
+			flushMessages := make([]message, c.MsgCount-ctr)
+			for _, m := range flushMessages {
+				out <- &m
+			}
+		}
+		donePub <- true
+	}
 
-	c.connect(onConnected, mtls)
+	if c.connect(onConnected, connLost) != nil {
+		out <- &message{}
+		donePub <- true
+	}
 
 }
 
-func (c *Client) connect(onConnected func(client mqtt.Client), mtls bool) error {
+func (c *Client) connect(onConnected func(client mqtt.Client), connLost func(client mqtt.Client, reason error)) error {
 	opts := mqtt.NewClientOptions().
 		AddBroker(c.BrokerURL).
 		SetClientID(c.ID).
 		SetCleanSession(true).
-		SetAutoReconnect(true).
+		SetAutoReconnect(false).
 		SetOnConnectHandler(onConnected).
-		SetConnectionLostHandler(func(client mqtt.Client, reason error) {
-			log.Printf("CLIENT %s lost connection to the broker: %v. Will reconnect...\n", c.ID, reason.Error())
-		})
+		SetConnectionLostHandler(connLost)
+
 	if c.BrokerUser != "" && c.BrokerPass != "" {
 		opts.SetUsername(c.BrokerUser)
 		opts.SetPassword(c.BrokerPass)
 	}
-	if mtls {
 
+	if c.MTLS {
 		cfg := &tls.Config{
 			InsecureSkipVerify: c.SkipTLSVer,
 		}
 
 		if c.CA != nil {
 			cfg.RootCAs = x509.NewCertPool()
-			if cfg.RootCAs.AppendCertsFromPEM(c.CA) {
-				log.Printf("Successfully added certificate\n")
-			}
+			cfg.RootCAs.AppendCertsFromPEM(c.CA)
 		}
 		if c.ClientCert.Certificate != nil {
 			cfg.Certificates = []tls.Certificate{c.ClientCert}
@@ -235,8 +253,40 @@ func (c *Client) connect(onConnected func(client mqtt.Client), mtls bool) error 
 	c.mqttClient = &client
 
 	if token.Error() != nil {
-		log.Printf("CLIENT %v had error connecting to the broker: %s\n", c.ID, token.Error())
+		log.Printf("Client %v had error connecting to the broker: %s\n", c.ID, token.Error().Error())
 		return token.Error()
 	}
 	return nil
+}
+
+func checkConnection(broker string, timeoutSecs int) {
+	s := strings.Split(broker, ":")
+	if len(s) != 3 {
+		log.Fatalf("Wrong host address format")
+	}
+
+	network := s[0]
+	host := strings.Trim(s[1], "/")
+	port := s[2]
+
+	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", host, port), time.Duration(timeoutSecs)*time.Second)
+	conClose := func() {
+		if conn != nil {
+			log.Println("Closing connection...")
+			conn.Close()
+		}
+	}
+
+	defer conClose()
+	if err, ok := err.(*net.OpError); ok && err.Timeout() {
+		log.Fatalf("Timeout error: %s\n", err.Error())
+		return
+	}
+
+	if err != nil {
+		log.Fatalf("Error: %s\n", err.Error())
+		return
+	}
+
+	log.Printf("Connection to %s://%s:%s looks OK\n", network, host, port)
 }
