@@ -137,13 +137,10 @@ func (c *Client) subscribe(wg *sync.WaitGroup, tot int, donePub *chan bool, res 
 
 	go func() {
 		for {
-			select {
-			case <-*donePub:
-				time.Sleep(2 * time.Second)
-				subsResults[c.MsgTopic] = &a
-				*res <- &subsResults
-				return
-			}
+			<-*donePub
+			time.Sleep(2 * time.Second)
+			subsResults[c.MsgTopic] = &a
+			*res <- &subsResults
 		}
 	}()
 
@@ -153,16 +150,17 @@ func (c *Client) subscribe(wg *sync.WaitGroup, tot int, donePub *chan bool, res 
 			log.Printf("Client %v is connected to the broker %v\n", clientID, c.BrokerURL)
 		}
 	}
+
 	connLost := func(client mqtt.Client, reason error) {
 		log.Printf("Client %v had lost connection to the broker: %s\n", c.ID, reason.Error())
 	}
+
 	if c.connect(onConnected, connLost) != nil {
 		wg.Done()
 		log.Printf("Client %v failed connecting to the broker\n", c.ID)
 	}
 
 	token := (*c.mqttClient).Subscribe(c.MsgTopic, c.MsgQoS, func(cl mqtt.Client, msg mqtt.Message) {
-
 		arrival := float64(time.Now().UnixNano())
 		var timeSent float64
 
@@ -216,10 +214,8 @@ func (c *Client) publish(in, out chan *message, doneGen chan bool, donePub chan 
 				}
 				out <- m
 
-				if ctr > 0 && ctr%100 == 0 {
-					if !c.Quiet {
-						log.Printf("Client %v published %v messages and keeps publishing...\n", clientID, ctr)
-					}
+				if !c.Quiet && ctr > 0 && ctr%100 == 0 {
+					log.Printf("Client %v published %v messages and keeps publishing...\n", clientID, ctr)
 				}
 				ctr++
 			case <-doneGen:
@@ -259,7 +255,7 @@ func (c *Client) connect(onConnected func(client mqtt.Client), connLost func(cli
 	opts := mqtt.NewClientOptions().
 		AddBroker(c.BrokerURL).
 		SetClientID(c.ID).
-		SetCleanSession(true).
+		SetCleanSession(false).
 		SetAutoReconnect(false).
 		SetOnConnectHandler(onConnected).
 		SetConnectionLostHandler(connLost)

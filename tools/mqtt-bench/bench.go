@@ -99,7 +99,7 @@ func Benchmark(cfg Config) {
 	var err error
 
 	checkConnection(cfg.MQTT.Broker.URL, 1)
-	var subsResults map[string](*[]float64)
+	subsResults := map[string](*[]float64){}
 	var caByte []byte
 	if cfg.MQTT.TLS.MTLS {
 		caFile, err := os.Open(cfg.MQTT.TLS.CA)
@@ -149,24 +149,7 @@ func Benchmark(cfg Config) {
 				log.Fatal(err)
 			}
 		}
-
-		c := &Client{
-			ID:         strconv.Itoa(i),
-			BrokerURL:  cfg.MQTT.Broker.URL,
-			BrokerUser: mfThing.ThingID,
-			BrokerPass: mfThing.ThingKey,
-			MsgTopic:   getTopic(mfChan.ChannelID, startStamp),
-			MsgSize:    cfg.MQTT.Message.Size,
-			MsgCount:   cfg.Test.Count,
-			MsgQoS:     byte(cfg.MQTT.Message.QoS),
-			Quiet:      cfg.Log.Quiet,
-			MTLS:       cfg.MQTT.TLS.MTLS,
-			SkipTLSVer: cfg.MQTT.TLS.SkipTLSVer,
-			CA:         caByte,
-			ClientCert: cert,
-			Retain:     cfg.MQTT.Message.Retain,
-			GetSenML:   getSenML,
-		}
+		c := makeClient(i, cfg, mfChan, mfThing, startStamp, caByte, cert, getSenML, nil)
 
 		wg.Add(1)
 
@@ -188,25 +171,7 @@ func Benchmark(cfg Config) {
 				log.Fatal(err)
 			}
 		}
-
-		c := &Client{
-			ID:         strconv.Itoa(i),
-			BrokerURL:  cfg.MQTT.Broker.URL,
-			BrokerUser: mfThing.ThingID,
-			BrokerPass: mfThing.ThingKey,
-			MsgTopic:   getTopic(mfChan.ChannelID, startStamp),
-			MsgSize:    cfg.MQTT.Message.Size,
-			MsgCount:   cfg.Test.Count,
-			MsgQoS:     byte(cfg.MQTT.Message.QoS),
-			Quiet:      cfg.Log.Quiet,
-			MTLS:       cfg.MQTT.TLS.MTLS,
-			SkipTLSVer: cfg.MQTT.TLS.SkipTLSVer,
-			CA:         caByte,
-			ClientCert: cert,
-			Retain:     cfg.MQTT.Message.Retain,
-			Message:    getPload,
-			GetSenML:   getSenML,
-		}
+		c := makeClient(i, cfg, mfChan, mfThing, startStamp, caByte, cert, getSenML, getPload)
 
 		go c.runPublisher(resCh)
 	}
@@ -216,15 +181,10 @@ func Benchmark(cfg Config) {
 	if cfg.Test.Pubs > 0 {
 		results = make([]*runResults, cfg.Test.Pubs)
 	}
-	// Wait for publishers to be don
+	// Wait for publishers to finish
 	go func() {
 		for i := 0; i < cfg.Test.Pubs; i++ {
-			select {
-			case result := <-resCh:
-				{
-					results[i] = result
-				}
-			}
+			results[i] = <-resCh
 		}
 		finishedPub <- true
 	}()
@@ -349,4 +309,25 @@ func getSenMLPayload(cid string, time float64, getSenML func() *senml.SenML) ([]
 
 func getTopic(ch string, start time.Time) string {
 	return fmt.Sprintf("channels/%s/messages/%d/test", ch, start.UnixNano())
+}
+
+func makeClient(i int, cfg Config, mfChan mfChannel, mfThing mfThing, start time.Time, caCert []byte, clientCert tls.Certificate, getMsg func() *senml.SenML, msg func(cid string, time float64, f func() *senml.SenML) ([]byte, error)) *Client {
+	return &Client{
+		ID:         strconv.Itoa(i),
+		BrokerURL:  cfg.MQTT.Broker.URL,
+		BrokerUser: mfThing.ThingID,
+		BrokerPass: mfThing.ThingKey,
+		MsgTopic:   getTopic(mfChan.ChannelID, start),
+		MsgSize:    cfg.MQTT.Message.Size,
+		MsgCount:   cfg.Test.Count,
+		MsgQoS:     byte(cfg.MQTT.Message.QoS),
+		Quiet:      cfg.Log.Quiet,
+		MTLS:       cfg.MQTT.TLS.MTLS,
+		SkipTLSVer: cfg.MQTT.TLS.SkipTLSVer,
+		CA:         caCert,
+		ClientCert: clientCert,
+		Retain:     cfg.MQTT.Message.Retain,
+		GetSenML:   getMsg,
+		Message:    msg,
+	}
 }
