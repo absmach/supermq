@@ -63,7 +63,6 @@ type message struct {
 
 // Publisher
 func (c *Client) runPublisher(r chan *runResults) {
-	newMsgs := make(chan *message)
 	pubMsgs := make(chan *message)
 	doneGen := make(chan bool)
 	donePub := make(chan bool)
@@ -71,12 +70,9 @@ func (c *Client) runPublisher(r chan *runResults) {
 	Inf := float64(math.Inf(+1))
 	var diff float64
 
-	// Start generator
-	go c.generate(newMsgs, doneGen)
-
 	started := time.Now()
 	// Start publisher
-	go c.publish(newMsgs, pubMsgs, doneGen, donePub)
+	go c.publish(pubMsgs, doneGen, donePub)
 	times := []float64{}
 	for {
 		select {
@@ -112,20 +108,6 @@ func (c *Client) runPublisher(r chan *runResults) {
 // Subscriber
 func (c *Client) runSubscriber(wg *sync.WaitGroup, tot int, donePub *chan bool, res *chan *map[string](*[]float64)) {
 	c.subscribe(wg, tot, donePub, res)
-}
-
-func (c *Client) generate(ch chan *message, done chan bool) {
-	for i := 0; i < c.MsgCount; i++ {
-		msgPayload := messagePayload{Payload: c.Message}
-		ch <- &message{
-			Topic:   c.MsgTopic,
-			QoS:     c.MsgQoS,
-			Payload: msgPayload,
-		}
-	}
-
-	done <- true
-	return
 }
 
 func (c *Client) subscribe(wg *sync.WaitGroup, tot int, donePub *chan bool, res *chan *map[string](*[]float64)) {
@@ -187,7 +169,7 @@ func (c *Client) subscribe(wg *sync.WaitGroup, tot int, donePub *chan bool, res 
 	token.Wait()
 }
 
-func (c *Client) publish(in, out chan *message, doneGen chan bool, donePub chan bool) {
+func (c *Client) publish(out chan *message, doneGen chan bool, donePub chan bool) {
 	clientID := fmt.Sprintf("pub-%v-%v", time.Now().Format(time.RFC3339Nano), c.ID)
 	c.ID = clientID
 	ctr := 1
@@ -195,38 +177,41 @@ func (c *Client) publish(in, out chan *message, doneGen chan bool, donePub chan 
 		if !c.Quiet {
 			log.Printf("Client %v is connected to the broker %v\n", clientID, c.BrokerURL)
 		}
-		for {
-			select {
-			case m := <-in:
-				m.Sent = time.Now()
-				m.ID = clientID
-				pload, err := c.Message(m.ID, float64(m.Sent.UnixNano()), c.GetSenML)
-				if err != nil {
-					log.Printf("Failed to marshal payload - %s", err.Error())
-				}
-				token := client.Publish(m.Topic, m.QoS, c.Retain, pload)
-				token.Wait()
-				if token.Error() != nil {
-					m.Error = true
-				} else {
-					m.Delivered = time.Now()
-					m.Error = false
-				}
-				out <- m
 
-				if !c.Quiet && ctr > 0 && ctr%100 == 0 {
-					log.Printf("Client %v published %v messages and keeps publishing...\n", clientID, ctr)
-				}
-				ctr++
-			case <-doneGen:
-				donePub <- true
-				if !c.Quiet {
-					log.Printf("Client %v is done publishing\n", clientID)
-				}
-				return
+		for i := 0; i < c.MsgCount; i++ {
+			m := &message{
+				Topic:   c.MsgTopic,
+				QoS:     c.MsgQoS,
+				Payload: messagePayload{Payload: c.Message},
 			}
+			m.Sent = time.Now()
+			m.ID = clientID
+			pload, err := c.Message(m.ID, float64(m.Sent.UnixNano()), c.GetSenML)
+			if err != nil {
+				log.Printf("Failed to marshal payload - %s", err.Error())
+			}
+			token := client.Publish(m.Topic, m.QoS, c.Retain, pload)
+			token.Wait()
+			if token.Error() != nil {
+				m.Error = true
+			} else {
+				m.Delivered = time.Now()
+				m.Error = false
+			}
+			out <- m
+
+			if !c.Quiet && ctr > 0 && ctr%100 == 0 {
+				log.Printf("Client %v published %v messages and keeps publishing...\n", clientID, ctr)
+			}
+			ctr++
 		}
+		donePub <- true
+		if !c.Quiet {
+			log.Printf("Client %v is done publishing\n", clientID)
+		}
+		return
 	}
+
 	connLost := func(client mqtt.Client, reason error) {
 		log.Printf("Client %v had lost connection to the broker: %s\n", c.ID, reason.Error())
 		if ctr < c.MsgCount {
@@ -248,7 +233,6 @@ func (c *Client) publish(in, out chan *message, doneGen chan bool, donePub chan 
 		}
 		donePub <- true
 	}
-
 }
 
 func (c *Client) connect(onConnected func(client mqtt.Client), connLost func(client mqtt.Client, reason error)) error {
