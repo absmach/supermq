@@ -153,7 +153,7 @@ func Benchmark(cfg Config) {
 
 		wg.Add(1)
 
-		go c.runSubscriber(&wg, cfg.Test.Count*cfg.Test.Pubs, &donePub, &resR)
+		go c.subscribe(&wg, cfg.Test.Count*cfg.Test.Pubs, &donePub, &resR)
 	}
 
 	wg.Wait()
@@ -173,7 +173,7 @@ func Benchmark(cfg Config) {
 		}
 		c := makeClient(i, cfg, mfChan, mfThing, startStamp, caByte, cert, getSenML, getPload)
 
-		go c.runPublisher(resCh)
+		go c.publish(resCh)
 	}
 
 	// Collect the results

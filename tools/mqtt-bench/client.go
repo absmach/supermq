@@ -61,54 +61,7 @@ type message struct {
 	Error          bool
 }
 
-// Publisher
-func (c *Client) runPublisher(r chan *runResults) {
-	pubMsgs := make(chan *message)
-	doneGen := make(chan bool)
-	donePub := make(chan bool)
-	runResults := new(runResults)
-	Inf := float64(math.Inf(+1))
-	var diff float64
-
-	started := time.Now()
-	// Start publisher
-	go c.publish(pubMsgs, doneGen, donePub)
-	times := []float64{}
-	for {
-		select {
-		case m := <-pubMsgs:
-			cid := m.ID
-			if m.Error {
-				runResults.Failures++
-				diff = Inf
-			} else {
-				runResults.Successes++
-				diff = float64(m.Delivered.Sub(m.Sent).Nanoseconds() / 1000) // in microseconds
-			}
-			runResults.ID = cid
-			times = append(times, diff)
-		case <-donePub:
-			// Calculate results
-			duration := time.Now().Sub(started)
-			timeMatrix := mat.NewDense(1, len(times), times)
-			runResults.MsgTimeMin = mat.Min(timeMatrix)
-			runResults.MsgTimeMax = mat.Max(timeMatrix)
-			runResults.MsgTimeMean = stat.Mean(times, nil)
-			runResults.MsgTimeStd = stat.StdDev(times, nil)
-			runResults.RunTime = duration.Seconds()
-			runResults.MsgsPerSec = float64(runResults.Successes) / duration.Seconds()
-
-			// Report results and exit
-			r <- runResults
-			return
-		}
-	}
-}
-
-// Subscriber
-func (c *Client) runSubscriber(wg *sync.WaitGroup, tot int, donePub *chan bool, res *chan *map[string](*[]float64)) {
-	c.subscribe(wg, tot, donePub, res)
-}
+var inf = float64(math.Inf(+1))
 
 func (c *Client) subscribe(wg *sync.WaitGroup, tot int, donePub *chan bool, res *chan *map[string](*[]float64)) {
 	clientID := fmt.Sprintf("sub-%v-%v", time.Now().Format(time.RFC3339Nano), c.ID)
@@ -169,10 +122,14 @@ func (c *Client) subscribe(wg *sync.WaitGroup, tot int, donePub *chan bool, res 
 	token.Wait()
 }
 
-func (c *Client) publish(out chan *message, doneGen chan bool, donePub chan bool) {
+func (c *Client) publish(r chan *runResults) {
 	clientID := fmt.Sprintf("pub-%v-%v", time.Now().Format(time.RFC3339Nano), c.ID)
 	c.ID = clientID
 	ctr := 1
+	res := &runResults{}
+	times := make([]float64, c.MsgCount)
+
+	start := time.Now()
 	onConnected := func(client mqtt.Client) {
 		if !c.Quiet {
 			log.Printf("Client %v is connected to the broker %v\n", clientID, c.BrokerURL)
@@ -198,18 +155,14 @@ func (c *Client) publish(out chan *message, doneGen chan bool, donePub chan bool
 				m.Delivered = time.Now()
 				m.Error = false
 			}
-			out <- m
+			calcMsgRes(m, res, times)
 
 			if !c.Quiet && ctr > 0 && ctr%100 == 0 {
 				log.Printf("Client %v published %v messages and keeps publishing...\n", clientID, ctr)
 			}
 			ctr++
 		}
-		donePub <- true
-		if !c.Quiet {
-			log.Printf("Client %v is done publishing\n", clientID)
-		}
-		return
+		r <- calcRes(res, start, times)
 	}
 
 	connLost := func(client mqtt.Client, reason error) {
@@ -218,10 +171,10 @@ func (c *Client) publish(out chan *message, doneGen chan bool, donePub chan bool
 			flushMessages := make([]message, c.MsgCount-ctr)
 			for _, m := range flushMessages {
 				m.Error = true
-				out <- &m
+				calcMsgRes(&m, res, times)
 			}
 		}
-		donePub <- true
+		calcRes(res, start, times)
 	}
 
 	if c.connect(onConnected, connLost) != nil {
@@ -229,9 +182,9 @@ func (c *Client) publish(out chan *message, doneGen chan bool, donePub chan bool
 		flushMessages := make([]message, c.MsgCount-ctr)
 		for _, m := range flushMessages {
 			m.Error = true
-			out <- &m
+			calcMsgRes(&m, res, times)
 		}
-		donePub <- true
+		calcRes(res, start, times)
 	}
 }
 
@@ -266,6 +219,7 @@ func (c *Client) connect(onConnected func(client mqtt.Client), connLost func(cli
 		opts.SetTLSConfig(cfg)
 		opts.SetProtocolVersion(4)
 	}
+
 	client := mqtt.NewClient(opts)
 	token := client.Connect()
 	token.Wait()
@@ -276,6 +230,7 @@ func (c *Client) connect(onConnected func(client mqtt.Client), connLost func(cli
 		log.Printf("Client %v had error connecting to the broker: %s\n", c.ID, token.Error().Error())
 		return token.Error()
 	}
+
 	return nil
 }
 
@@ -310,4 +265,29 @@ func checkConnection(broker string, timeoutSecs int) {
 	}
 
 	log.Printf("Connection to %s://%s:%s looks OK\n", network, host, port)
+}
+
+func calcMsgRes(m *message, res *runResults, times []float64) {
+	var diff float64
+	if m.Error {
+		res.Failures++
+		diff = inf
+	} else {
+		res.Successes++
+		diff = float64(m.Delivered.Sub(m.Sent).Nanoseconds() / 1000) // in microseconds
+	}
+	res.ID = m.ID
+	times = append(times, diff)
+}
+
+func calcRes(r *runResults, start time.Time, times []float64) *runResults {
+	duration := time.Now().Sub(start)
+	timeMatrix := mat.NewDense(1, len(times), times)
+	r.MsgTimeMin = mat.Min(timeMatrix)
+	r.MsgTimeMax = mat.Max(timeMatrix)
+	r.MsgTimeMean = stat.Mean(times, nil)
+	r.MsgTimeStd = stat.StdDev(times, nil)
+	r.RunTime = duration.Seconds()
+	r.MsgsPerSec = float64(r.Successes) / duration.Seconds()
+	return r
 }
