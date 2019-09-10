@@ -138,6 +138,7 @@ func Benchmark(cfg Config) {
 	getSenML := func() *senml.SenML {
 		return msg
 	}
+
 	// Subscribers
 	for i := 0; i < cfg.Test.Subs; i++ {
 		mfChan := mf.Channels[i%n]
@@ -151,16 +152,14 @@ func Benchmark(cfg Config) {
 		}
 		c := makeClient(i, cfg, mfChan, mfThing, startStamp, caByte, cert, getSenML, nil)
 
-		wg.Add(1)
-
 		go c.subscribe(&wg, cfg.Test.Count*cfg.Test.Pubs, &donePub, &resR)
 	}
 
 	wg.Wait()
 
-	// Publishers
 	start := time.Now()
 
+	// Publishers
 	for i := 0; i < cfg.Test.Pubs; i++ {
 		mfChan := mf.Channels[i%n]
 		mfThing := mf.Things[i%n]
@@ -181,6 +180,7 @@ func Benchmark(cfg Config) {
 	if cfg.Test.Pubs > 0 {
 		results = make([]*runResults, cfg.Test.Pubs)
 	}
+
 	// Wait for publishers to finish
 	go func() {
 		for i := 0; i < cfg.Test.Pubs; i++ {
@@ -191,13 +191,9 @@ func Benchmark(cfg Config) {
 
 	go func() {
 		for i := 0; i < cfg.Test.Subs; i++ {
-			select {
-			case r := <-resR:
-				{
-					for k, v := range *r {
-						subsResults[k] = v
-					}
-				}
+			r := <-resR
+			for k, v := range *r {
+				subsResults[k] = v
 			}
 		}
 		finishedSub <- true
@@ -307,17 +303,13 @@ func getSenMLPayload(cid string, time float64, getSenML func() *senml.SenML) ([]
 	return payload, nil
 }
 
-func getTopic(ch string, start time.Time) string {
-	return fmt.Sprintf("channels/%s/messages/%d/test", ch, start.UnixNano())
-}
-
 func makeClient(i int, cfg Config, mfChan mfChannel, mfThing mfThing, start time.Time, caCert []byte, clientCert tls.Certificate, getMsg func() *senml.SenML, msg func(cid string, time float64, f func() *senml.SenML) ([]byte, error)) *Client {
 	return &Client{
 		ID:         strconv.Itoa(i),
 		BrokerURL:  cfg.MQTT.Broker.URL,
 		BrokerUser: mfThing.ThingID,
 		BrokerPass: mfThing.ThingKey,
-		MsgTopic:   getTopic(mfChan.ChannelID, start),
+		MsgTopic:   fmt.Sprintf("channels/%s/messages/%d/test", mfChan.ChannelID, start.UnixNano()),
 		MsgSize:    cfg.MQTT.Message.Size,
 		MsgCount:   cfg.Test.Count,
 		MsgQoS:     byte(cfg.MQTT.Message.QoS),

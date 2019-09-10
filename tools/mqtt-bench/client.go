@@ -80,7 +80,6 @@ func (c *Client) subscribe(wg *sync.WaitGroup, tot int, donePub *chan bool, res 
 	}()
 
 	onConnected := func(client mqtt.Client) {
-		wg.Done()
 		if !c.Quiet {
 			log.Printf("Client %v is connected to the broker %v\n", clientID, c.BrokerURL)
 		}
@@ -117,8 +116,8 @@ func (c *Client) subscribe(wg *sync.WaitGroup, tot int, donePub *chan bool, res 
 			subsResults[c.MsgTopic] = &a
 			*res <- &subsResults
 		}
-
 	})
+
 	token.Wait()
 }
 
@@ -130,6 +129,7 @@ func (c *Client) publish(r chan *runResults) {
 	times := make([]float64, c.MsgCount)
 
 	start := time.Now()
+
 	onConnected := func(client mqtt.Client) {
 		if !c.Quiet {
 			log.Printf("Client %v is connected to the broker %v\n", clientID, c.BrokerURL)
