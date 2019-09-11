@@ -151,10 +151,11 @@ func (c *Client) publish(r chan *runResults) {
 			token.Wait()
 			if token.Error() != nil {
 				m.Error = true
-			} else {
-				m.Delivered = time.Now()
-				m.Error = false
+				continue
 			}
+
+			m.Delivered = time.Now()
+			m.Error = false
 			calcMsgRes(m, res, times)
 
 			if !c.Quiet && ctr > 0 && ctr%100 == 0 {

@@ -93,7 +93,7 @@ type JSONResults struct {
 	Totals *totalResults `json:"totals"`
 }
 
-// Benchmark - main benckhmarking function
+// Benchmark - main benchmarking function
 func Benchmark(cfg Config) {
 	var wg sync.WaitGroup
 	var err error
