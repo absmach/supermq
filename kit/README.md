@@ -31,7 +31,7 @@ services:
     ports:
       - [host machine port]:[configured HTTP port]
     environment:
-      MF_KIT_LOG_LEVEL: [Things log level]
+      MF_KIT_LOG_LEVEL: [Kit log level]
       MF_KIT_HTTP_PORT: [Service HTTP port]
       MF_KIT_AUTH_HTTP_PORT: [Service auth HTTP port]
       MF_KIT_AUTH_GRPC_PORT: [Service auth gRPC port]
@@ -45,14 +45,14 @@ go get github.com/mainflux/mainflux
 
 cd $GOPATH/src/github.com/mainflux/mainflux
 
-# compile the things
+# compile the kit
 make starter-kit
 
 # copy binary to bin
 make install
 
 # set the environment variables and run the service
-MF_KIT_LOG_LEVEL=[Things log level] MF_KIT_HTTP_PORT=[Service HTTP port] MF_KIT_AUTH_HTTP_PORT=[Service auth HTTP port] MF_KIT_AUTH_GRPC_PORT=[Service auth gRPC port] $GOBIN/mainflux-things
+MF_KIT_LOG_LEVEL=[Kit log level] MF_KIT_HTTP_PORT=[Service HTTP port] MF_KIT_AUTH_HTTP_PORT=[Service auth HTTP port] MF_KIT_AUTH_GRPC_PORT=[Service auth gRPC port] $GOBIN/mainflux-kit
 ```
 
 ## Usage
