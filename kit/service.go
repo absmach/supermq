@@ -12,6 +12,10 @@ import (
 )
 
 var (
+	// ErrMalformedEntity indicates malformed entity specification (e.g.
+	// invalid username or password).
+	ErrMalformedEntity = errors.New("malformed entity specification")
+
 	// ErrUnauthorizedAccess indicates missing or invalid credentials provided
 	// when accessing a protected resource.
 	ErrUnauthorizedAccess = errors.New("missing or invalid credentials provided")
