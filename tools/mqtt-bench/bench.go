@@ -4,6 +4,7 @@
 package bench
 
 import (
+	"crypto/rand"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -18,6 +19,8 @@ import (
 	"github.com/cisco/senml"
 )
 
+const fixedSize = 491
+
 // Keep struct names exported, otherwise Viper unmarshalling won't work
 type mqttBrokerConfig struct {
 	URL string `toml:"url" mapstructure:"url"`
@@ -29,7 +32,6 @@ type mqttMessageConfig struct {
 	Format  string `toml:"format" mapstructure:"format"`
 	QoS     int    `toml:"qos" mapstructure:"qos"`
 	Retain  bool   `toml:"retain" mapstructure:"retain"`
-	Type    string `toml:"type" mapstructure:"type"`
 }
 
 type mqttTLSConfig struct {
@@ -127,18 +129,7 @@ func Benchmark(cfg Config) {
 	n := len(mf.Channels)
 	var cert tls.Certificate
 
-	var msg *senml.SenML
-	getPload := getBytePayload
-
-	if len(cfg.MQTT.Message.Payload) > 0 {
-		m := buildSenML(cfg.MQTT.Message.Size, cfg.MQTT.Message.Payload)
-		msg = &m
-		getPload = getSenMLPayload
-	}
-
-	getSenML := func() *senml.SenML {
-		return msg
-	}
+	handler := getBytePayload(cfg.MQTT.Message.Size)
 
 	// Subscribers
 	for i := 0; i < cfg.Test.Subs; i++ {
@@ -151,7 +142,7 @@ func Benchmark(cfg Config) {
 				log.Fatal(err)
 			}
 		}
-		c := makeClient(i, cfg, mfChan, mfThing, startStamp, caByte, cert, getSenML, nil)
+		c := makeClient(i, cfg, mfChan, mfThing, startStamp, caByte, cert, handler)
 
 		go c.subscribe(&wg, cfg.Test.Count*cfg.Test.Pubs, &donePub, resR)
 	}
@@ -171,7 +162,7 @@ func Benchmark(cfg Config) {
 				log.Fatal(err)
 			}
 		}
-		c := makeClient(i, cfg, mfChan, mfThing, startStamp, caByte, cert, getSenML, getPload)
+		c := makeClient(i, cfg, mfChan, mfThing, startStamp, caByte, cert, handler)
 
 		go c.publish(resCh)
 	}
@@ -227,8 +218,7 @@ func getSenMLTimeStamp() senml.SenMLRecord {
 	return timeStamp
 }
 
-func buildSenML(sz int, payload string) senml.SenML {
-	println("building msf")
+func buildSenML(size int, payload string) senml.SenML {
 	timeStamp := getSenMLTimeStamp()
 
 	tsByte, err := json.Marshal(timeStamp)
@@ -248,16 +238,17 @@ func buildSenML(sz int, payload string) senml.SenML {
 	}
 
 	// How many records to make message long sz bytes
-	n := (sz-len(tsByte))/len(msgByte) + 1
-	if sz < len(tsByte) {
+	n := (size-len(tsByte))/len(msgByte) + 1
+	if size < len(tsByte) {
 		n = 1
 	}
 
 	records := make([]senml.SenMLRecord, n)
 	records[0] = timeStamp
+	t := time.Now().UnixNano()
 	for i := 1; i < n; i++ {
 		// Timestamp for each record when saving to db
-		sml.Time = float64(time.Now().UnixNano())
+		sml.Time = float64(t + int64(i))
 		records[i] = sml
 	}
 
@@ -268,29 +259,18 @@ func buildSenML(sz int, payload string) senml.SenML {
 	return s
 }
 
-func getBytePayload(cid string, time float64, getSenML func() *senml.SenML) ([]byte, error) {
-	msg := testMsg{}
-	msg.ClientID = cid
-	msg.Sent = time
-
-	tsByte, err := json.Marshal(msg)
-	if err != nil {
-		log.Fatalf("Failed to create test message")
+func getBytePayload(size int) handler {
+	s := size - fixedSize
+	if s <= 0 {
+		s = 0
 	}
-
-	// TODO - Need to sort this out
-	m := 500 - len(tsByte)
-	if m < 0 {
-		return tsByte, nil
+	var b = make([]byte, s)
+	rand.Read(b)
+	return func(m *message) ([]byte, error) {
+		m.Payloads = b
+		m.Sent = time.Now()
+		return json.Marshal(m)
 	}
-	add := make([]byte, m)
-	msg.Payload = add
-
-	b, err := json.Marshal(msg)
-	if err != nil {
-		return nil, err
-	}
-	return b, nil
 }
 
 func getSenMLPayload(cid string, time float64, getSenML func() *senml.SenML) ([]byte, error) {
@@ -304,7 +284,7 @@ func getSenMLPayload(cid string, time float64, getSenML func() *senml.SenML) ([]
 	return payload, nil
 }
 
-func makeClient(i int, cfg Config, mfChan mfChannel, mfThing mfThing, start time.Time, caCert []byte, clientCert tls.Certificate, getMsg func() *senml.SenML, msg func(cid string, time float64, f func() *senml.SenML) ([]byte, error)) *Client {
+func makeClient(i int, cfg Config, mfChan mfChannel, mfThing mfThing, start time.Time, caCert []byte, clientCert tls.Certificate, h handler) *Client {
 	return &Client{
 		ID:         strconv.Itoa(i),
 		BrokerURL:  cfg.MQTT.Broker.URL,
@@ -320,7 +300,6 @@ func makeClient(i int, cfg Config, mfChan mfChannel, mfThing mfThing, start time
 		CA:         caCert,
 		ClientCert: clientCert,
 		Retain:     cfg.MQTT.Message.Retain,
-		GetSenML:   getMsg,
-		Message:    msg,
+		SendMsg:    h,
 	}
 }
