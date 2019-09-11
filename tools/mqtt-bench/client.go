@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"math"
 	"net"
 	"strings"
 	"sync"
@@ -42,59 +41,20 @@ type Client struct {
 	CA         []byte
 	ClientCert tls.Certificate
 	ClientKey  *rsa.PrivateKey
+	// SendMsg    func(message) []byte
+	// RecMsg     mqtt.MessageHandler
 }
 
-type messagePayload struct {
-	ID      string
-	Sent    time.Time
-	Payload interface{}
+func (c *Client) SendMsg(m message) []byte {
+	return nil
 }
 
-type message struct {
-	ID             string
-	Topic          string
-	QoS            byte
-	Payload        messagePayload
-	Sent           time.Time
-	Delivered      time.Time
-	DeliveredToSub time.Time
-	Error          bool
-}
-
-var inf = float64(math.Inf(+1))
-
-func (c *Client) subscribe(wg *sync.WaitGroup, tot int, donePub *chan bool, res *chan *map[string](*[]float64)) {
-	clientID := fmt.Sprintf("sub-%v-%v", time.Now().Format(time.RFC3339Nano), c.ID)
-	c.ID = clientID
+func (c *Client) RcvMsg(res chan *map[string](*[]float64), total int) mqtt.MessageHandler {
 	subsResults := make(map[string](*[]float64), 1)
 	i := 1
 	a := []float64{}
 
-	go func() {
-		for {
-			<-*donePub
-			time.Sleep(2 * time.Second)
-			subsResults[c.MsgTopic] = &a
-			*res <- &subsResults
-		}
-	}()
-
-	onConnected := func(client mqtt.Client) {
-		if !c.Quiet {
-			log.Printf("Client %v is connected to the broker %v\n", clientID, c.BrokerURL)
-		}
-	}
-
-	connLost := func(client mqtt.Client, reason error) {
-		log.Printf("Client %v had lost connection to the broker: %s\n", c.ID, reason.Error())
-	}
-
-	if c.connect(onConnected, connLost) != nil {
-		wg.Done()
-		log.Printf("Client %v failed connecting to the broker\n", c.ID)
-	}
-
-	token := (*c.mqttClient).Subscribe(c.MsgTopic, c.MsgQoS, func(cl mqtt.Client, msg mqtt.Message) {
+	return func(cl mqtt.Client, msg mqtt.Message) {
 		arrival := float64(time.Now().UnixNano())
 		var timeSent float64
 
@@ -112,42 +72,115 @@ func (c *Client) subscribe(wg *sync.WaitGroup, tot int, donePub *chan bool, res 
 
 		a = append(a, (arrival - timeSent))
 		i++
-		if i == tot {
+		if i == total {
 			subsResults[c.MsgTopic] = &a
-			*res <- &subsResults
+			res <- &subsResults
 		}
-	})
+	}
+}
+
+type messagePayload struct {
+	ID      string
+	Sent    time.Time
+	Payload interface{}
+}
+
+type message struct {
+	ID             string
+	Topic          string
+	QoS            byte
+	Payload        messagePayload
+	Payloads       []byte
+	Sent           time.Time
+	Delivered      time.Time
+	DeliveredToSub time.Time
+	Error          bool
+}
+
+func (c *Client) subscribe(wg *sync.WaitGroup, tot int, donePub *chan bool, res chan *map[string](*[]float64)) {
+	c.ID = fmt.Sprintf("sub-%v-%v", time.Now().Format(time.RFC3339Nano), c.ID)
+	subsResults := make(map[string](*[]float64), 1)
+	i := 1
+	a := []float64{}
+
+	go func() {
+		for {
+			<-*donePub
+			time.Sleep(2 * time.Second)
+			subsResults[c.MsgTopic] = &a
+			res <- &subsResults
+		}
+	}()
+
+	if c.connect(c.subConnected, c.subLost) != nil {
+		wg.Done()
+		log.Printf("Client %v failed connecting to the broker\n", c.ID)
+	}
+
+	token := (*c.mqttClient).Subscribe(c.MsgTopic, c.MsgQoS,
+		func(cl mqtt.Client, msg mqtt.Message) {
+			arrival := float64(time.Now().UnixNano())
+			var timeSent float64
+
+			if c.GetSenML() != nil {
+				mp, err := senml.Decode(msg.Payload(), senml.JSON)
+				if err != nil && !c.Quiet {
+					log.Printf("Failed to decode message %s\n", err.Error())
+				}
+				timeSent = *mp.Records[0].Value
+			} else {
+				tst := testMsg{}
+				json.Unmarshal(msg.Payload(), &tst)
+				timeSent = tst.Sent
+			}
+
+			a = append(a, (arrival - timeSent))
+			i++
+			if i == tot {
+				subsResults[c.MsgTopic] = &a
+				res <- &subsResults
+			}
+		})
+
+	// token := (*c.mqttClient).Subscribe(c.MsgTopic, c.MsgQoS, c.RcvMsg(res, tot))
 
 	token.Wait()
 }
+
+// var AAA = 0
 
 func (c *Client) publish(r chan *runResults) {
 	clientID := fmt.Sprintf("pub-%v-%v", time.Now().Format(time.RFC3339Nano), c.ID)
 	c.ID = clientID
 	ctr := 1
 	res := &runResults{}
-	times := make([]float64, c.MsgCount)
+	// Allocate an array, but keep
+	times := make([]*float64, c.MsgCount)
 
 	start := time.Now()
 
 	onConnected := func(client mqtt.Client) {
+		// AAA++
+		// println(AAA)
 		if !c.Quiet {
 			log.Printf("Client %v is connected to the broker %v\n", clientID, c.BrokerURL)
 		}
 
 		for i := 0; i < c.MsgCount; i++ {
-			m := &message{
+			m := message{
 				Topic:   c.MsgTopic,
 				QoS:     c.MsgQoS,
 				Payload: messagePayload{Payload: c.Message},
 			}
 			m.Sent = time.Now()
 			m.ID = clientID
-			pload, err := c.Message(m.ID, float64(m.Sent.UnixNano()), c.GetSenML)
+			payload, err := c.Message(m.ID, float64(m.Sent.UnixNano()), c.GetSenML)
 			if err != nil {
 				log.Printf("Failed to marshal payload - %s", err.Error())
 			}
-			token := client.Publish(m.Topic, m.QoS, c.Retain, pload)
+			// payload := []byte("dsds")
+			payload = c.SendMsg(m)
+			token := client.Publish(m.Topic, m.QoS, c.Retain, payload)
 			token.Wait()
 			if token.Error() != nil {
 				m.Error = true
@@ -156,26 +189,26 @@ func (c *Client) publish(r chan *runResults) {
 
 			m.Delivered = time.Now()
 			m.Error = false
-			calcMsgRes(m, res, times)
+			times[i] = calcMsgRes(&m, res)
 
 			if !c.Quiet && ctr > 0 && ctr%100 == 0 {
 				log.Printf("Client %v published %v messages and keeps publishing...\n", clientID, ctr)
 			}
 			ctr++
 		}
-		r <- calcRes(res, start, times)
+		r <- calcRes(res, start, arr(times))
 	}
 
 	connLost := func(client mqtt.Client, reason error) {
 		log.Printf("Client %v had lost connection to the broker: %s\n", c.ID, reason.Error())
 		if ctr < c.MsgCount {
 			flushMessages := make([]message, c.MsgCount-ctr)
-			for _, m := range flushMessages {
+			for i, m := range flushMessages {
 				m.Error = true
-				calcMsgRes(&m, res, times)
+				times[i] = calcMsgRes(&m, res)
 			}
 		}
-		calcRes(res, start, times)
+		calcRes(res, start, arr(times))
 	}
 
 	if c.connect(onConnected, connLost) != nil {
@@ -183,9 +216,9 @@ func (c *Client) publish(r chan *runResults) {
 		flushMessages := make([]message, c.MsgCount-ctr)
 		for _, m := range flushMessages {
 			m.Error = true
-			calcMsgRes(&m, res, times)
+			calcMsgRes(&m, res)
 		}
-		calcRes(res, start, times)
+		calcRes(res, start, arr(times))
 	}
 }
 
@@ -257,28 +290,23 @@ func checkConnection(broker string, timeoutSecs int) {
 	defer conClose()
 	if err, ok := err.(*net.OpError); ok && err.Timeout() {
 		log.Fatalf("Timeout error: %s\n", err.Error())
-		return
 	}
 
 	if err != nil {
 		log.Fatalf("Error: %s\n", err.Error())
-		return
 	}
 
 	log.Printf("Connection to %s://%s:%s looks OK\n", network, host, port)
 }
 
-func calcMsgRes(m *message, res *runResults, times []float64) {
-	var diff float64
+func calcMsgRes(m *message, res *runResults) *float64 {
 	if m.Error {
 		res.Failures++
-		diff = inf
-	} else {
-		res.Successes++
-		diff = float64(m.Delivered.Sub(m.Sent).Nanoseconds() / 1000) // in microseconds
+		return nil
 	}
-	res.ID = m.ID
-	times = append(times, diff)
+	res.Successes++
+	diff := float64(m.Delivered.Sub(m.Sent).Nanoseconds() / 1000) // in microseconds
+	return &diff
 }
 
 func calcRes(r *runResults, start time.Time, times []float64) *runResults {
@@ -291,4 +319,24 @@ func calcRes(r *runResults, start time.Time, times []float64) *runResults {
 	r.RunTime = duration.Seconds()
 	r.MsgsPerSec = float64(r.Successes) / duration.Seconds()
 	return r
+}
+
+func arr(a []*float64) []float64 {
+	ret := []float64{}
+	for _, v := range a {
+		if v != nil {
+			ret = append(ret, *v)
+		}
+	}
+	return ret
+}
+
+func (c *Client) subConnected(client mqtt.Client) {
+	if !c.Quiet {
+		log.Printf("Client %v is connected to the broker %v\n", c.ID, c.BrokerURL)
+	}
+}
+
+func (c *Client) subLost(client mqtt.Client, reason error) {
+	log.Printf("Client %v had lost connection to the broker: %s\n", c.ID, reason.Error())
 }

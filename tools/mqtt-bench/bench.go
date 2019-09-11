@@ -18,7 +18,7 @@ import (
 	"github.com/cisco/senml"
 )
 
-// Keep struct names exported, otherwise Viper unmarshaling won't work
+// Keep struct names exported, otherwise Viper unmarshalling won't work
 type mqttBrokerConfig struct {
 	URL string `toml:"url" mapstructure:"url"`
 }
@@ -29,6 +29,7 @@ type mqttMessageConfig struct {
 	Format  string `toml:"format" mapstructure:"format"`
 	QoS     int    `toml:"qos" mapstructure:"qos"`
 	Retain  bool   `toml:"retain" mapstructure:"retain"`
+	Type    string `toml:"type" mapstructure:"type"`
 }
 
 type mqttTLSConfig struct {
@@ -95,10 +96,10 @@ type JSONResults struct {
 
 // Benchmark - main benchmarking function
 func Benchmark(cfg Config) {
+	checkConnection(cfg.MQTT.Broker.URL, 1)
+
 	var wg sync.WaitGroup
 	var err error
-
-	checkConnection(cfg.MQTT.Broker.URL, 1)
 	subsResults := map[string](*[]float64){}
 	var caByte []byte
 	if cfg.MQTT.TLS.MTLS {
@@ -152,7 +153,7 @@ func Benchmark(cfg Config) {
 		}
 		c := makeClient(i, cfg, mfChan, mfThing, startStamp, caByte, cert, getSenML, nil)
 
-		go c.subscribe(&wg, cfg.Test.Count*cfg.Test.Pubs, &donePub, &resR)
+		go c.subscribe(&wg, cfg.Test.Count*cfg.Test.Pubs, &donePub, resR)
 	}
 
 	wg.Wait()
@@ -227,6 +228,7 @@ func getSenMLTimeStamp() senml.SenMLRecord {
 }
 
 func buildSenML(sz int, payload string) senml.SenML {
+	println("building msf")
 	timeStamp := getSenMLTimeStamp()
 
 	tsByte, err := json.Marshal(timeStamp)
@@ -267,7 +269,6 @@ func buildSenML(sz int, payload string) senml.SenML {
 }
 
 func getBytePayload(cid string, time float64, getSenML func() *senml.SenML) ([]byte, error) {
-
 	msg := testMsg{}
 	msg.ClientID = cid
 	msg.Sent = time
