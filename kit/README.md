@@ -9,12 +9,14 @@ The service is configured using the environment variables presented in the
 following table. Note that any unset variables will be replaced with their
 default values.
 
-| Variable                      | Description                                                  | Default |
-|-------------------------------|--------------------------------------------------------------|---------|
-| MF_KIT_LOG_LEVEL      | Log level for starter-kit service (debug, info, warn, error) | error   |
-| MF_KIT_HTTP_PORT      | Starter-kit service HTTP port                                | 8180    |
-| MF_KIT_AUTH_HTTP_PORT | Starter-kit service auth HTTP port                           | 8989    |
-| MF_KIT_AUTH_GRPC_PORT | Starter-kit service auth gRPC port                           | 8181    |
+| Variable           | Description                                                  | Default |
+|--------------------|--------------------------------------------------------------|---------|
+| MF_KIT_LOG_LEVEL   | Log level for starter-kit service (debug, info, warn, error) | error   |
+| MF_KIT_HTTP_PORT   | Starter-kit service HTTP port                                | 9021    |
+| MF_KIT_SERVER_CERT | Path to server certificate in pem format                     |         |
+| MF_KIT_SERVER_KEY  | Path to server key in pem format                             |         |
+| MF_JAEGER_URL      | Jaeger server URL                                            |         |
+| MF_KIT_SECRET      | Starter-kit service secret                                   | secret  |
 
 ## Deployment
 
@@ -33,8 +35,9 @@ services:
     environment:
       MF_KIT_LOG_LEVEL: [Kit log level]
       MF_KIT_HTTP_PORT: [Service HTTP port]
-      MF_KIT_AUTH_HTTP_PORT: [Service auth HTTP port]
-      MF_KIT_AUTH_GRPC_PORT: [Service auth gRPC port]
+      MF_KIT_SERVER_CERT: [String path to server cert in pem format]
+      MF_KIT_SERVER_KEY: [String path to server key in pem format]
+      MF_KIT_SECRET: [Starter-kit service secret]
 ```
 
 To start the service outside of the container, execute the following shell script:
@@ -52,7 +55,7 @@ make starter-kit
 make install
 
 # set the environment variables and run the service
-MF_KIT_LOG_LEVEL=[Kit log level] MF_KIT_HTTP_PORT=[Service HTTP port] MF_KIT_AUTH_HTTP_PORT=[Service auth HTTP port] MF_KIT_AUTH_GRPC_PORT=[Service auth gRPC port] $GOBIN/mainflux-kit
+MF_KIT_LOG_LEVEL=[Kit log level] MF_KIT_HTTP_PORT=[Service HTTP port] MF_KIT_SERVER_CERT: [String path to server cert in pem format] MF_KIT_SERVER_KEY: [String path to server key in pem format] MF_KIT_SECRET: [Starter-kit service secret] $GOBIN/mainflux-kit
 ```
 
 ## Usage
