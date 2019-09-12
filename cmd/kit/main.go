@@ -30,23 +30,19 @@ import (
 )
 
 const (
-	defLogLevel     = "error"
-	defHTTPPort     = "8180"
-	defAuthHTTPPort = "8989"
-	defAuthGRPCPort = "8181"
-	defJaegerURL    = ""
-	defServerCert   = ""
-	defServerKey    = ""
-	defSecret       = "secret"
+	defLogLevel   = "error"
+	defHTTPPort   = "9021"
+	defJaegerURL  = ""
+	defServerCert = ""
+	defServerKey  = ""
+	defSecret     = "secret"
 
-	envLogLevel     = "MF_KIT_LOG_LEVEL"
-	envHTTPPort     = "MF_KIT_HTTP_PORT"
-	envAuthHTTPPort = "MF_KIT_AUTH_HTTP_PORT"
-	envAuthGRPCPort = "MF_KIT_AUTH_GRPC_PORT"
-	envJaegerURL    = "MF_JAEGER_URL"
-	envSecret       = "MF_KIT_SECRET"
-	envServerCert   = "MF_THINGS_SERVER_CERT"
-	envServerKey    = "MF_THINGS_SERVER_KEY"
+	envLogLevel   = "MF_KIT_LOG_LEVEL"
+	envHTTPPort   = "MF_KIT_HTTP_PORT"
+	envJaegerURL  = "MF_JAEGER_URL"
+	envServerCert = "MF_KIT_SERVER_CERT"
+	envServerKey  = "MF_KIT_SERVER_KEY"
+	envSecret     = "MF_KIT_SECRET"
 )
 
 type config struct {
@@ -83,7 +79,7 @@ func main() {
 	}()
 
 	err = <-errs
-	logger.Error(fmt.Sprintf("Things service terminated: %s", err))
+	logger.Error(fmt.Sprintf("Kit service terminated: %s", err))
 }
 
 func loadConfig() config {
