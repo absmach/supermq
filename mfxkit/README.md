@@ -9,13 +9,13 @@ The service is configured using the environment variables presented in the
 following table. Note that any unset variables will be replaced with their
 default values.
 
-| Variable              | Description                                                  | Default |
-|-----------------------|--------------------------------------------------------------|---------|
+| Variable              | Description                                             | Default |
+|-----------------------|---------------------------------------------------------|---------|
 | MF_MFXKIT_LOG_LEVEL   | Log level for mfxkit service (debug, info, warn, error) | error   |
 | MF_MFXKIT_HTTP_PORT   | Mfxkit service HTTP port                                | 9021    |
-| MF_MFXKIT_SERVER_CERT | Path to server certificate in pem format                     |         |
-| MF_MFXKIT_SERVER_KEY  | Path to server key in pem format                             |         |
-| MF_JAEGER_URL         | Jaeger server URL                                            |         |
+| MF_MFXKIT_SERVER_CERT | Path to server certificate in pem format                |         |
+| MF_MFXKIT_SERVER_KEY  | Path to server key in pem format                        |         |
+| MF_JAEGER_URL         | Jaeger server URL                                       |         |
 | MF_MFXKIT_SECRET      | Mfxkit service secret                                   | secret  |
 
 ## Deployment
