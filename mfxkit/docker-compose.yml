@@ -8,13 +8,12 @@
 
 version: "3.7"
 
-  
 services:
   mfxkit:
     container_name: mainflux-mfxkit
     build:
       context: ../
-      dockerfile: docker/Dockerfile
+      dockerfile: mfxkit/Dockerfile
     ports:
       - 9021:9021
     environment:
