@@ -11,10 +11,10 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/mainflux/mainflux/kit"
+	"github.com/mainflux/mainflux/mfxkit"
 )
 
-func pingEndpoint(svc kit.Service) endpoint.Endpoint {
+func pingEndpoint(svc mfxkit.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(pingReq)
 

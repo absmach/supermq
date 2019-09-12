@@ -13,19 +13,19 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mainflux/mainflux/kit"
 	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/mfxkit"
 )
 
-var _ kit.Service = (*loggingMiddleware)(nil)
+var _ mfxkit.Service = (*loggingMiddleware)(nil)
 
 type loggingMiddleware struct {
 	logger log.Logger
-	svc    kit.Service
+	svc    mfxkit.Service
 }
 
 // LoggingMiddleware adds logging facilities to the core service.
-func LoggingMiddleware(svc kit.Service, logger log.Logger) kit.Service {
+func LoggingMiddleware(svc mfxkit.Service, logger log.Logger) mfxkit.Service {
 	return &loggingMiddleware{logger, svc}
 }
 

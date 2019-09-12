@@ -13,20 +13,20 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/metrics"
-	"github.com/mainflux/mainflux/kit"
+	"github.com/mainflux/mainflux/mfxkit"
 )
 
-var _ kit.Service = (*metricsMiddleware)(nil)
+var _ mfxkit.Service = (*metricsMiddleware)(nil)
 
 type metricsMiddleware struct {
 	counter metrics.Counter
 	latency metrics.Histogram
-	svc     kit.Service
+	svc     mfxkit.Service
 }
 
 // MetricsMiddleware instruments core service by tracking request count and
 // latency.
-func MetricsMiddleware(svc kit.Service, counter metrics.Counter, latency metrics.Histogram) kit.Service {
+func MetricsMiddleware(svc mfxkit.Service, counter metrics.Counter, latency metrics.Histogram) mfxkit.Service {
 	return &metricsMiddleware{
 		counter: counter,
 		latency: latency,
