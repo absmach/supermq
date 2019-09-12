@@ -1,0 +1,23 @@
+###
+# Copyright (c) 2015-2017 Mainflux
+#
+# Mainflux is licensed under an Apache license, version 2.0 license.
+# All rights not explicitly granted in the Apache license, version 2.0 are reserved.
+# See the included LICENSE file for more details.
+###
+
+version: "3"
+
+services:
+  mfxkit:
+    image: mainflux/http:latest
+    container_name: mainflux-mfxkit
+    ports:
+      - ${MF_MFXKIT_HTTP_PORT}:${MF_MFXKIT_HTTP_PORT}
+      environment:
+        MF_MFXKIT_LOG_LEVEL: ${MF_MFXKIT_LOG_LEVEL}
+        MF_MFXKIT_HTTP_PORT: ${MF_MFXKIT_HTTP_PORT}
+        MF_MFXKIT_SERVER_CERT: ${MF_MFXKIT_SERVER_CERT}
+        MF_MFXKIT_SERVER_KEY: ${MF_MFXKIT_SERVER_KEY}
+        MF_JAEGER_URL: ${MF_JAEGER_URL}        
+        MF_MFXKIT_SECRET: ${MF_MFXKIT_SECRET}
