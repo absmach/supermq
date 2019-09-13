@@ -76,12 +76,6 @@ type mainflux struct {
 	Channels []mfChannel `toml:"channels" mapstructure:"channels"`
 }
 
-type testMsg struct {
-	ClientID string
-	Sent     float64
-	Payload  []byte
-}
-
 // Config struct holds benchmark configuration
 type Config struct {
 	MQTT mqttConfig   `toml:"mqtt" mapstructure:"mqtt"`
@@ -267,7 +261,7 @@ func getBytePayload(size int) handler {
 	var b = make([]byte, s)
 	rand.Read(b)
 	return func(m *message) ([]byte, error) {
-		m.Payloads = b
+		m.Payload = b
 		m.Sent = time.Now()
 		return json.Marshal(m)
 	}
