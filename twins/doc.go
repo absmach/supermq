@@ -6,6 +6,6 @@
 //
 
 // Package things contains the domain concept definitions needed to support
-// Mainflux twin service functionality.
+// Mainflux twins service functionality.
 
-package twin
+package twins

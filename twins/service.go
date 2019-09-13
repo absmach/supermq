@@ -5,7 +5,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package twin
+package twins
 
 import (
 	"errors"
@@ -30,22 +30,24 @@ type Service interface {
 	Ping(string) (string, error)
 }
 
-type twinService struct {
+type twinsService struct {
 	secret string
+	twins  TwinRepository
 	db     *mongo.Database
 }
 
-var _ Service = (*twinService)(nil)
+var _ Service = (*twinsService)(nil)
 
-// New instantiates the twin service implementation.
-func New(secret string, db *mongo.Database) Service {
-	return &twinService{
+// New instantiates the twins service implementation.
+func New(secret string, db *mongo.Database, twins TwinRepository) Service {
+	return &twinsService{
 		secret: secret,
+		twins:  twins,
 		db:     db,
 	}
 }
 
-func (ks *twinService) Ping(secret string) (string, error) {
+func (ks *twinsService) Ping(secret string) (string, error) {
 	if ks.secret != secret {
 		return "", ErrUnauthorizedAccess
 	}

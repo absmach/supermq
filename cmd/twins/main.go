@@ -19,10 +19,10 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/twin"
-	"github.com/mainflux/mainflux/twin/api"
-	twinhttpapi "github.com/mainflux/mainflux/twin/api/twin/http"
-	twinmongodb "github.com/mainflux/mainflux/twin/mongodb"
+	"github.com/mainflux/mainflux/twins"
+	"github.com/mainflux/mainflux/twins/api"
+	twinshttpapi "github.com/mainflux/mainflux/twins/api/twins/http"
+	twinsmongodb "github.com/mainflux/mainflux/twins/mongodb"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
@@ -42,12 +42,12 @@ const (
 	defDBHost     = "localhost"
 	defDBPort     = "29021"
 
-	envLogLevel   = "MF_TWIN_LOG_LEVEL"
-	envHTTPPort   = "MF_TWIN_HTTP_PORT"
+	envLogLevel   = "MF_TWINS_LOG_LEVEL"
+	envHTTPPort   = "MF_TWINS_HTTP_PORT"
 	envJaegerURL  = "MF_JAEGER_URL"
-	envServerCert = "MF_TWIN_SERVER_CERT"
-	envServerKey  = "MF_TWIN_SERVER_KEY"
-	envSecret     = "MF_TWIN_SECRET"
+	envServerCert = "MF_TWINS_SERVER_CERT"
+	envServerKey  = "MF_TWINS_SERVER_KEY"
+	envSecret     = "MF_TWINS_SECRET"
 	envDBName     = "MF_MONGODB_NAME"
 	envDBHost     = "MF_MONGODB_HOST"
 	envDBPort     = "MF_MONGODB_PORT"
@@ -62,7 +62,7 @@ type config struct {
 	serverCert   string
 	serverKey    string
 	secret       string
-	dbCfg        twinmongodb.Config
+	dbCfg        twinsmongodb.Config
 }
 
 func main() {
@@ -73,21 +73,21 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	db, err := twinmongodb.Connect(cfg.dbCfg, logger)
+	db, err := twinsmongodb.Connect(cfg.dbCfg, logger)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 
-	// dbTracer, dbCloser := initJaeger("twin_db", cfg.jaegerURL, logger)
+	// dbTracer, dbCloser := initJaeger("twins_db", cfg.jaegerURL, logger)
 	// defer dbCloser.Close()
 
-	tracer, closer := initJaeger("twin", cfg.jaegerURL, logger)
+	tracer, closer := initJaeger("twins", cfg.jaegerURL, logger)
 	defer closer.Close()
 
 	svc := newService(cfg.secret, db, logger)
 	errs := make(chan error, 2)
 
-	go startHTTPServer(twinhttpapi.MakeHandler(tracer, svc), cfg.httpPort, cfg, logger, errs)
+	go startHTTPServer(twinshttpapi.MakeHandler(tracer, svc), cfg.httpPort, cfg, logger, errs)
 
 	go func() {
 		c := make(chan os.Signal)
@@ -96,12 +96,12 @@ func main() {
 	}()
 
 	err = <-errs
-	logger.Error(fmt.Sprintf("Twin service terminated: %s", err))
+	logger.Error(fmt.Sprintf("Twins service terminated: %s", err))
 }
 
 func loadConfig() config {
 
-	dbCfg := twinmongodb.Config{
+	dbCfg := twinsmongodb.Config{
 		Name: mainflux.Env(envDBName, defDBName),
 		Host: mainflux.Env(envDBHost, defDBHost),
 		Port: mainflux.Env(envDBPort, defDBPort),
@@ -142,20 +142,20 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 	return tracer, closer
 }
 
-func newService(secret string, db *mongo.Database, logger logger.Logger) twin.Service {
-	svc := twin.New(secret, db)
+func newService(secret string, db *mongo.Database, logger logger.Logger) twins.Service {
+	svc := twins.New(secret, db)
 
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
 		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
-			Namespace: "twin",
+			Namespace: "twins",
 			Subsystem: "api",
 			Name:      "request_count",
 			Help:      "Number of requests received.",
 		}, []string{"method"}),
 		kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
-			Namespace: "twin",
+			Namespace: "twins",
 			Subsystem: "api",
 			Name:      "request_latency_microseconds",
 			Help:      "Total duration of requests in microseconds.",
@@ -168,11 +168,11 @@ func newService(secret string, db *mongo.Database, logger logger.Logger) twin.Se
 func startHTTPServer(handler http.Handler, port string, cfg config, logger logger.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", port)
 	if cfg.serverCert != "" || cfg.serverKey != "" {
-		logger.Info(fmt.Sprintf("Twin service started using https on port %s with cert %s key %s",
+		logger.Info(fmt.Sprintf("Twins service started using https on port %s with cert %s key %s",
 			port, cfg.serverCert, cfg.serverKey))
 		errs <- http.ListenAndServeTLS(p, cfg.serverCert, cfg.serverKey, handler)
 		return
 	}
-	logger.Info(fmt.Sprintf("Twin service started using http on port %s", cfg.httpPort))
+	logger.Info(fmt.Sprintf("Twins service started using http on port %s", cfg.httpPort))
 	errs <- http.ListenAndServe(p, handler)
 }

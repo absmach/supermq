@@ -7,7 +7,7 @@
 
 package http
 
-import "github.com/mainflux/mainflux/twin"
+import "github.com/mainflux/mainflux/twins"
 
 type apiReq interface {
 	validate() error
@@ -19,7 +19,7 @@ type pingReq struct {
 
 func (req pingReq) validate() error {
 	if req.Secret == "" {
-		return twin.ErrUnauthorizedAccess
+		return twins.ErrUnauthorizedAccess
 	}
 
 	return nil
