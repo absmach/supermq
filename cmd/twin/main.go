@@ -19,9 +19,9 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/mfxkit"
-	"github.com/mainflux/mainflux/mfxkit/api"
-	mfxkithttpapi "github.com/mainflux/mainflux/mfxkit/api/mfxkit/http"
+	"github.com/mainflux/mainflux/twin"
+	"github.com/mainflux/mainflux/twin/api"
+	twinhttpapi "github.com/mainflux/mainflux/twin/api/twin/http"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -30,19 +30,19 @@ import (
 )
 
 const (
-	defLogLevel   = "error"
+	defLogLevel   = "info"
 	defHTTPPort   = "9021"
 	defJaegerURL  = ""
 	defServerCert = ""
 	defServerKey  = ""
 	defSecret     = "secret"
 
-	envLogLevel   = "MF_MFXKIT_LOG_LEVEL"
-	envHTTPPort   = "MF_MFXKIT_HTTP_PORT"
+	envLogLevel   = "MF_TWIN_LOG_LEVEL"
+	envHTTPPort   = "MF_TWIN_HTTP_PORT"
 	envJaegerURL  = "MF_JAEGER_URL"
-	envServerCert = "MF_MFXKIT_SERVER_CERT"
-	envServerKey  = "MF_MFXKIT_SERVER_KEY"
-	envSecret     = "MF_MFXKIT_SECRET"
+	envServerCert = "MF_TWIN_SERVER_CERT"
+	envServerKey  = "MF_TWIN_SERVER_KEY"
+	envSecret     = "MF_TWIN_SECRET"
 )
 
 type config struct {
@@ -64,13 +64,13 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	mfxkitTracer, mfxkitCloser := initJaeger("mfxkit", cfg.jaegerURL, logger)
-	defer mfxkitCloser.Close()
+	twinTracer, twinCloser := initJaeger("twin", cfg.jaegerURL, logger)
+	defer twinCloser.Close()
 
 	svc := newService(cfg.secret, logger)
 	errs := make(chan error, 2)
 
-	go startHTTPServer(mfxkithttpapi.MakeHandler(mfxkitTracer, svc), cfg.httpPort, cfg, logger, errs)
+	go startHTTPServer(twinhttpapi.MakeHandler(twinTracer, svc), cfg.httpPort, cfg, logger, errs)
 
 	go func() {
 		c := make(chan os.Signal)
@@ -79,7 +79,7 @@ func main() {
 	}()
 
 	err = <-errs
-	logger.Error(fmt.Sprintf("Mfxkit service terminated: %s", err))
+	logger.Error(fmt.Sprintf("Twin service terminated: %s", err))
 }
 
 func loadConfig() config {
@@ -117,20 +117,20 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 	return tracer, closer
 }
 
-func newService(secret string, logger logger.Logger) mfxkit.Service {
-	svc := mfxkit.New(secret)
+func newService(secret string, logger logger.Logger) twin.Service {
+	svc := twin.New(secret)
 
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
 		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
-			Namespace: "mfxkit",
+			Namespace: "twin",
 			Subsystem: "api",
 			Name:      "request_count",
 			Help:      "Number of requests received.",
 		}, []string{"method"}),
 		kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
-			Namespace: "mfxkit",
+			Namespace: "twin",
 			Subsystem: "api",
 			Name:      "request_latency_microseconds",
 			Help:      "Total duration of requests in microseconds.",
@@ -143,11 +143,11 @@ func newService(secret string, logger logger.Logger) mfxkit.Service {
 func startHTTPServer(handler http.Handler, port string, cfg config, logger logger.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", port)
 	if cfg.serverCert != "" || cfg.serverKey != "" {
-		logger.Info(fmt.Sprintf("Mfxkit service started using https on port %s with cert %s key %s",
+		logger.Info(fmt.Sprintf("Twin service started using https on port %s with cert %s key %s",
 			port, cfg.serverCert, cfg.serverKey))
 		errs <- http.ListenAndServeTLS(p, cfg.serverCert, cfg.serverKey, handler)
 		return
 	}
-	logger.Info(fmt.Sprintf("Mfxkit service started using http on port %s", cfg.httpPort))
+	logger.Info(fmt.Sprintf("Twin service started using http on port %s", cfg.httpPort))
 	errs <- http.ListenAndServe(p, handler)
 }

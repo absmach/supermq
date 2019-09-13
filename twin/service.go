@@ -5,7 +5,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package mfxkit
+package twin
 
 import (
 	"errors"
@@ -28,20 +28,20 @@ type Service interface {
 	Ping(string) (string, error)
 }
 
-type mfxkitService struct {
+type twinService struct {
 	secret string
 }
 
-var _ Service = (*mfxkitService)(nil)
+var _ Service = (*twinService)(nil)
 
-// New instantiates the mfxkit service implementation.
+// New instantiates the twin service implementation.
 func New(secret string) Service {
-	return &mfxkitService{
+	return &twinService{
 		secret: secret,
 	}
 }
 
-func (ks *mfxkitService) Ping(secret string) (string, error) {
+func (ks *twinService) Ping(secret string) (string, error) {
 	if ks.secret != secret {
 		return "", ErrUnauthorizedAccess
 	}
