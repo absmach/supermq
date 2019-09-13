@@ -6,6 +6,6 @@
 //
 
 // Package things contains the domain concept definitions needed to support
-// Mainflux mfxkit service functionality.
+// Mainflux twin service functionality.
 
-package mfxkit
+package twin

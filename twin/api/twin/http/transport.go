@@ -20,7 +20,7 @@ import (
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/mfxkit"
+	"github.com/mainflux/mainflux/twin"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -35,14 +35,14 @@ var (
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(tracer opentracing.Tracer, svc mfxkit.Service) http.Handler {
+func MakeHandler(tracer opentracing.Tracer, svc twin.Service) http.Handler {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),
 	}
 
 	r := bone.New()
 
-	r.Post("/mfxkit", kithttp.NewServer(
+	r.Post("/twin", kithttp.NewServer(
 		kitot.TraceServer(tracer, "ping")(pingEndpoint(svc)),
 		decodePing,
 		encodeResponse,
@@ -90,9 +90,9 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", contentType)
 
 	switch err {
-	case mfxkit.ErrMalformedEntity:
+	case twin.ErrMalformedEntity:
 		w.WriteHeader(http.StatusBadRequest)
-	case mfxkit.ErrUnauthorizedAccess:
+	case twin.ErrUnauthorizedAccess:
 		w.WriteHeader(http.StatusForbidden)
 	case errUnsupportedContentType:
 		w.WriteHeader(http.StatusUnsupportedMediaType)
