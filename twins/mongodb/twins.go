@@ -36,7 +36,7 @@ func NewTwinRepository(db *mongo.Database) twins.TwinRepository {
 	}
 }
 
-// Save persists the twin. Successful operation is indicated by a nil
+// Save persists the twin. Successful operation is indicated by non-nil
 // error response.
 func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) (string, error) {
 	coll := tr.db.Collection(collectionName)

@@ -120,38 +120,13 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	usersTracer, usersCloser := initJaeger("users", cfg.jaegerURL, logger)
-	defer usersCloser.Close()
-
-	users, close := createUsersClient(cfg, usersTracer, logger)
-	if close != nil {
-		defer close()
-	}
-
 	dbTracer, dbCloser := initJaeger("twins_db", cfg.jaegerURL, logger)
 	defer dbCloser.Close()
-
-	mc := connectToMQTTBroker(cfg.mqttURL, cfg.thingID, cfg.thingKey, logger)
-
-	mcTracer, mcCloser := initJaeger("twins_mqtt", cfg.jaegerURL, logger)
-	defer mcCloser.Close()
-
-	nc, err := broker.Connect(cfg.NatsURL)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
-		os.Exit(1)
-	}
-	defer nc.Close()
-
-	ncTracer, ncCloser := initJaeger("twins_nats", cfg.jaegerURL, logger)
-	defer ncCloser.Close()
 
 	tracer, closer := initJaeger("twins", cfg.jaegerURL, logger)
 	defer closer.Close()
 
-	svc := newService(cfg.secret,
-		nc, ncTracer, mc, mcTracer,
-		users, dbTracer, db, logger)
+	svc := newService(cfg.secret, dbTracer, db, logger)
 	errs := make(chan error, 2)
 
 	go startHTTPServer(twinshttpapi.MakeHandler(tracer, svc), cfg.httpPort, cfg, logger, errs)
@@ -228,48 +203,11 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 	return tracer, closer
 }
 
-func createUsersClient(cfg config, tracer opentracing.Tracer, logger logger.Logger) (mainflux.UsersServiceClient, func() error) {
-	if cfg.singleUserEmail != "" && cfg.singleUserToken != "" {
-		return localusers.NewSingleUserService(cfg.singleUserEmail, cfg.singleUserToken), nil
-	}
-
-	conn := connectToUsers(cfg, logger)
-	return usersapi.NewClient(tracer, conn, cfg.usersTimeout), conn.Close
-}
-
-func connectToUsers(cfg config, logger logger.Logger) *grpc.ClientConn {
-	var opts []grpc.DialOption
-	if cfg.clientTLS {
-		if cfg.caCerts != "" {
-			tpc, err := credentials.NewClientTLSFromFile(cfg.caCerts, "")
-			if err != nil {
-				logger.Error(fmt.Sprintf("Failed to create tls credentials: %s", err))
-				os.Exit(1)
-			}
-			opts = append(opts, grpc.WithTransportCredentials(tpc))
-		}
-	} else {
-		opts = append(opts, grpc.WithInsecure())
-		logger.Info("gRPC communication is not encrypted")
-	}
-
-	conn, err := grpc.Dial(cfg.usersURL, opts...)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to users service: %s", err))
-		os.Exit(1)
-	}
-
-	return conn
-}
-
-func newService(secret string, nc *broker.Conn, ncTracer opentracing.Tracer, mc mqtt.Client, mcTracer opentracing.Tracer, users mainflux.UsersServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
+func newService(secret string, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
 	twinRepo := twinsmongodb.NewTwinRepository(db)
-	idp := uuid.New()
-
 	// TODO twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, thingsRepo)
-	nats.Subscribe(nc, twinRepo, logger)
 
-	svc := twins.New(secret, nc, mc, users, twinRepo, idp)
+	svc := twins.New(secret, twinRepo)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
