@@ -20,6 +20,14 @@ type twinRepository struct {
 
 var _ twins.TwinRepository = (*twinRepository)(nil)
 
+// NewTwinRepository instantiates a MongoDB implementation of twin
+// repository.
+func NewTwinRepository(db *mongo.Database) twins.TwinRepository {
+	return &twinRepository{
+		db: db,
+	}
+}
+
 // Save persists the twin. Successful operation is indicated by non-nil
 // error response.
 func (tr *twinRepository) Save(context.Context, twins.Twin) (string, error) {

@@ -9,8 +9,6 @@ package twins
 
 import (
 	"errors"
-
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var (
@@ -33,17 +31,15 @@ type Service interface {
 type twinsService struct {
 	secret string
 	twins  TwinRepository
-	db     *mongo.Database
 }
 
 var _ Service = (*twinsService)(nil)
 
 // New instantiates the twins service implementation.
-func New(secret string, db *mongo.Database, twins TwinRepository) Service {
+func New(secret string, twins TwinRepository) Service {
 	return &twinsService{
 		secret: secret,
 		twins:  twins,
-		db:     db,
 	}
 }
 

@@ -78,13 +78,13 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	// dbTracer, dbCloser := initJaeger("twins_db", cfg.jaegerURL, logger)
-	// defer dbCloser.Close()
+	dbTracer, dbCloser := initJaeger("twins_db", cfg.jaegerURL, logger)
+	defer dbCloser.Close()
 
 	tracer, closer := initJaeger("twins", cfg.jaegerURL, logger)
 	defer closer.Close()
 
-	svc := newService(cfg.secret, db, logger)
+	svc := newService(cfg.secret, dbTracer, db, logger)
 	errs := make(chan error, 2)
 
 	go startHTTPServer(twinshttpapi.MakeHandler(tracer, svc), cfg.httpPort, cfg, logger, errs)
@@ -142,9 +142,11 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 	return tracer, closer
 }
 
-func newService(secret string, db *mongo.Database, logger logger.Logger) twins.Service {
-	svc := twins.New(secret, db)
+func newService(secret string, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
+	twinRepo := twinsmongodb.NewTwinRepository(db)
+	// TODO twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, thingsRepo)
 
+	svc := twins.New(secret, twinRepo)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
