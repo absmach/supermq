@@ -22,6 +22,8 @@ import (
 	"github.com/mainflux/mainflux/twin"
 	"github.com/mainflux/mainflux/twin/api"
 	twinhttpapi "github.com/mainflux/mainflux/twin/api/twin/http"
+	twinmongodb "github.com/mainflux/mainflux/twin/mongodb"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -36,6 +38,9 @@ const (
 	defServerCert = ""
 	defServerKey  = ""
 	defSecret     = "secret"
+	defDBName     = "mainflux"
+	defDBHost     = "localhost"
+	defDBPort     = "29021"
 
 	envLogLevel   = "MF_TWIN_LOG_LEVEL"
 	envHTTPPort   = "MF_TWIN_HTTP_PORT"
@@ -43,6 +48,9 @@ const (
 	envServerCert = "MF_TWIN_SERVER_CERT"
 	envServerKey  = "MF_TWIN_SERVER_KEY"
 	envSecret     = "MF_TWIN_SECRET"
+	envDBName     = "MF_MONGODB_NAME"
+	envDBHost     = "MF_MONGODB_HOST"
+	envDBPort     = "MF_MONGODB_PORT"
 )
 
 type config struct {
@@ -54,6 +62,7 @@ type config struct {
 	serverCert   string
 	serverKey    string
 	secret       string
+	dbCfg        twinmongodb.Config
 }
 
 func main() {
@@ -64,13 +73,21 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	twinTracer, twinCloser := initJaeger("twin", cfg.jaegerURL, logger)
-	defer twinCloser.Close()
+	db, err := twinmongodb.Connect(cfg.dbCfg, logger)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
 
-	svc := newService(cfg.secret, logger)
+	// dbTracer, dbCloser := initJaeger("twin_db", cfg.jaegerURL, logger)
+	// defer dbCloser.Close()
+
+	tracer, closer := initJaeger("twin", cfg.jaegerURL, logger)
+	defer closer.Close()
+
+	svc := newService(cfg.secret, db, logger)
 	errs := make(chan error, 2)
 
-	go startHTTPServer(twinhttpapi.MakeHandler(twinTracer, svc), cfg.httpPort, cfg, logger, errs)
+	go startHTTPServer(twinhttpapi.MakeHandler(tracer, svc), cfg.httpPort, cfg, logger, errs)
 
 	go func() {
 		c := make(chan os.Signal)
@@ -83,6 +100,13 @@ func main() {
 }
 
 func loadConfig() config {
+
+	dbCfg := twinmongodb.Config{
+		Name: mainflux.Env(envDBName, defDBName),
+		Host: mainflux.Env(envDBHost, defDBHost),
+		Port: mainflux.Env(envDBPort, defDBPort),
+	}
+
 	return config{
 		logLevel:   mainflux.Env(envLogLevel, defLogLevel),
 		httpPort:   mainflux.Env(envHTTPPort, defHTTPPort),
@@ -90,6 +114,7 @@ func loadConfig() config {
 		serverKey:  mainflux.Env(envServerKey, defServerKey),
 		jaegerURL:  mainflux.Env(envJaegerURL, defJaegerURL),
 		secret:     mainflux.Env(envSecret, defSecret),
+		dbCfg:      dbCfg,
 	}
 }
 
@@ -117,8 +142,8 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 	return tracer, closer
 }
 
-func newService(secret string, logger logger.Logger) twin.Service {
-	svc := twin.New(secret)
+func newService(secret string, db *mongo.Database, logger logger.Logger) twin.Service {
+	svc := twin.New(secret, db)
 
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
