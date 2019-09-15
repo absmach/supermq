@@ -54,7 +54,8 @@ func migrateDB(db *sqlx.DB) error {
 				Up: []string{
 					`CREATE TABLE IF NOT EXISTS users (
 						email	 VARCHAR(254) PRIMARY KEY,
-						password CHAR(60)	  NOT NULL
+						password CHAR(60)	  NOT NULL,
+						metadata JSONB,
 					)`,
 				},
 				Down: []string{"DROP TABLE users"},
