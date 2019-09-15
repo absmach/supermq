@@ -5,6 +5,7 @@
 [![coverage][cov-badge]][cov-url]
 [![license][license]](LICENSE)
 [![chat][gitter-badge]][gitter]
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fmainflux%2Fmainflux.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmainflux%2Fmainflux?ref=badge_shield)
 
 ![banner][banner]
 
@@ -142,3 +143,6 @@ Note that the best way to grab our attention is by sending PRs :sunglasses:.
 [kole]: https://github.com/chombium
 [dusanm]: https://github.com/malidukica
 [mirko]: https://github.com/mteodor
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fmainflux%2Fmainflux.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmainflux%2Fmainflux?ref=badge_large)
