@@ -71,7 +71,11 @@ func MakeHandler(svc users.Service, tracer opentracing.Tracer, l log.Logger) htt
 }
 
 func decodeViewInfo(_ context.Context, r *http.Request) (interface{}, error) {
+<<<<<<< HEAD
 	req := viewUserInfoReq{
+=======
+	req := viewUserInfo{
+>>>>>>> add users metadata
 		token: r.Header.Get("Authorization"),
 	}
 	return req, nil

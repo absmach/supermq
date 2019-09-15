@@ -112,7 +112,7 @@ type dbUser struct {
 func toDBUser(u users.User) dbUser {
 	return dbUser{
 		Email:    u.Email,
-		Password: u.Password,
+		Password: u.Password,b
 		Metadata: u.Metadata,
 	}
 }

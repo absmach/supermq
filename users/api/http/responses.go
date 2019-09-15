@@ -22,6 +22,11 @@ type tokenRes struct {
 	Token string `json:"token,omitempty"`
 }
 
+type userInfo struct {
+	Email    string                 `json:"email"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
+}
+
 func (res tokenRes) Code() int {
 	return http.StatusCreated
 }
