@@ -131,7 +131,7 @@ func (c *Client) publish(r chan *runResults) {
 			log.Fatalf("Failed to marshal payload - %s", err.Error())
 		}
 		token := (*c.mqttClient).Publish(m.Topic, m.QoS, c.Retain, payload)
-		if !token.WaitTimeout(time.Second*time.Duration(c.timeout)) && token.Error() != nil {
+		if !token.WaitTimeout(time.Second*time.Duration(c.timeout)) || token.Error() != nil {
 			m.Error = true
 			times[i] = calcMsgRes(&m, res)
 			continue
