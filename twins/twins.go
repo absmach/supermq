@@ -50,29 +50,21 @@ type TwinsSet struct {
 type TwinRepository interface {
 	// Save persists the twin. Successful operation is indicated by non-nil
 	// error response.
-	Save(context.Context, Twin) (string, error)
+	Save(context.Context, Twin) error
 
 	// Update performs an update to the existing twin. A non-nil error is
 	// returned to indicate operation failure.
 	Update(context.Context, Twin) error
 
-	// UpdateKey performs an update key to the existing twin. A non-nil error is
-	// returned to indicate operation failure.
-	UpdateKey(ctx context.Context, owner, id, key string) error
-
 	// RetrieveByID retrieves the twin having the provided identifier.
-	RetrieveByID(ctx context.Context, owner, id string) (Twin, error)
+	RetrieveByID(context.Context, string) (Twin, error)
 
 	// RetrieveByKey retrieves the twin having the provided key.
-	RetrieveByKey(context.Context, string) (string, error)
-
-	// RetrieveAll retrieves the subset of things owned by the specified user.
-	RetrieveAll(context.Context, string, uint64, string, Metadata) (TwinsSet, error)
-
-	// RetrieveByChannel retrieves the subset of twins
-	// connected to specified channel.
-	RetrieveByChannel(context.Context, string, uint64) (TwinsSet, error)
+	RetrieveByKey(context.Context, string) (Twin, error)
 
 	// Remove removes the twin having the provided identifier.
-	Remove(ctx context.Context, owner, id string) error
+	RemoveByID(context.Context, string) error
+
+	// Remove removes the twin having the provided key.
+	RemoveByKey(context.Context, string) error
 }
