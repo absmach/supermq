@@ -70,6 +70,11 @@ func calculateTotalResults(results []*runResults, totalTime time.Duration, sr su
 		totals.Failures += res.Failures
 		totals.TotalMsgsPerSec += res.MsgsPerSec
 
+		// Don't count those client that sent no messages.
+		if res.MsgsPerSec == 0 {
+			continue
+		}
+
 		if res.MsgTimeMin < totals.MsgTimeMin {
 			totals.MsgTimeMin = res.MsgTimeMin
 		}
@@ -131,7 +136,7 @@ func printResults(results []*runResults, totals *totalResults, format string, qu
 		if !quiet {
 			for _, res := range results {
 				fmt.Printf("======= CLIENT %s =======\n", res.ID)
-				fmt.Printf("Ratio:               %.3f (%d/%d)\n", float64(res.Successes)/float64(res.Successes+res.Failures), res.Successes, res.Successes+res.Failures)
+				fmt.Printf("Ratio:               %.6f (%d/%d)\n", float64(res.Successes)/float64(res.Successes+res.Failures), res.Successes, res.Successes+res.Failures)
 				fmt.Printf("Runtime (s):         %.3f\n", res.RunTime)
 				fmt.Printf("Msg time min (µs):   %.3f\n", res.MsgTimeMin)
 				fmt.Printf("Msg time max (µs):   %.3f\n", res.MsgTimeMax)

@@ -31,6 +31,7 @@ type Client struct {
 	MsgCount   int
 	MsgQoS     byte
 	Quiet      bool
+	timeout    int
 	mqttClient *mqtt.Client
 	MTLS       bool
 	SkipTLSVer bool
@@ -106,13 +107,12 @@ func (c *Client) publish(r chan *runResults) {
 
 	start := time.Now()
 	if c.connect() != nil {
-		log.Printf("Failed to connect %s\n", c.ID)
 		flushMessages := make([]message, c.MsgCount)
-		for _, m := range flushMessages {
+		for i, m := range flushMessages {
 			m.Error = true
-			calcMsgRes(&m, res)
+			times[i] = calcMsgRes(&m, res)
 		}
-		calcRes(res, start, arr(times))
+		r <- calcRes(res, start, arr(times))
 		return
 	}
 	if !c.Quiet {
@@ -131,8 +131,7 @@ func (c *Client) publish(r chan *runResults) {
 			log.Fatalf("Failed to marshal payload - %s", err.Error())
 		}
 		token := (*c.mqttClient).Publish(m.Topic, m.QoS, c.Retain, payload)
-		token.Wait()
-		if token.Error() != nil {
+		if !token.WaitTimeout(time.Second*time.Duration(c.timeout)) && token.Error() != nil {
 			m.Error = true
 			times[i] = calcMsgRes(&m, res)
 			continue
@@ -255,6 +254,9 @@ func arr(a []*float64) []float64 {
 		if v != nil {
 			ret = append(ret, *v)
 		}
+	}
+	if len(ret) == 0 {
+		ret = append(ret, 0)
 	}
 	return ret
 }

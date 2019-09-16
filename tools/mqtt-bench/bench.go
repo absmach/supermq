@@ -43,6 +43,7 @@ type mqttTLSConfig struct {
 type mqttConfig struct {
 	Broker  mqttBrokerConfig  `toml:"broker" mapstructure:"broker"`
 	Message mqttMessageConfig `toml:"message" mapstructure:"message"`
+	Timeout int               `toml:"timeout" mapstructure:"timeout"`
 	TLS     mqttTLSConfig     `toml:"tls" mapstructure:"tls"`
 }
 
@@ -292,6 +293,7 @@ func makeClient(i int, cfg Config, mfChan mfChannel, mfThing mfThing, start time
 		MTLS:       cfg.MQTT.TLS.MTLS,
 		SkipTLSVer: cfg.MQTT.TLS.SkipTLSVer,
 		CA:         caCert,
+		timeout:    cfg.MQTT.Timeout,
 		ClientCert: clientCert,
 		Retain:     cfg.MQTT.Message.Retain,
 		SendMsg:    h,
