@@ -23,21 +23,21 @@ type Twin struct {
 type TwinRepository interface {
 	// Save persists the twin. Successful operation is indicated by non-nil
 	// error response.
-	Save(context.Context, Twin) (string, error)
+	Save(context.Context, Twin) error
 
 	// Update performs an update to the existing twin. A non-nil error is
 	// returned to indicate operation failure.
 	Update(context.Context, Twin) error
 
-	// RetrieveByID retrieves the twin having the provided identifier, that is owned
-	// by the specified thing.
-	RetrieveByID(context.Context, string, string) (Twin, error)
+	// RetrieveByID retrieves the twin having the provided identifier.
+	RetrieveByID(context.Context, string) (Twin, error)
 
-	// RetrieveByKey retrieves the twin having the provided key, that is owned
-	// by the specified thing.
-	RetrieveByKey(context.Context, string) (string, error)
+	// RetrieveByKey retrieves the twin having the provided key.
+	RetrieveByKey(context.Context, string) (Twin, error)
 
-	// Remove removes the twin having the provided identifier, that is owned
-	// by the specified thing.
-	Remove(context.Context, string, string) error
+	// Remove removes the twin having the provided identifier.
+	RemoveByID(context.Context, string) error
+
+	// Remove removes the twin having the provided key.
+	RemoveByKey(context.Context, string) error
 }

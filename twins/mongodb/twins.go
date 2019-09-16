@@ -11,8 +11,11 @@ import (
 	"context"
 
 	"github.com/mainflux/mainflux/twins"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
+
+const collectionName string = "mainflux"
 
 type twinRepository struct {
 	db *mongo.Database
@@ -30,30 +33,80 @@ func NewTwinRepository(db *mongo.Database) twins.TwinRepository {
 
 // Save persists the twin. Successful operation is indicated by non-nil
 // error response.
-func (tr *twinRepository) Save(context.Context, twins.Twin) (string, error) {
-	return "", nil
+func (tr *twinRepository) Save(_ context.Context, tw twins.Twin) error {
+	coll := tr.db.Collection(collectionName)
+
+	if _, err := coll.InsertOne(context.Background(), tw); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Update performs an update to the existing twins. A non-nil error is
 // returned to indicate operation failure.
-func (tr *twinRepository) Update(context.Context, twins.Twin) error {
+func (tr *twinRepository) Update(_ context.Context, tw twins.Twin) error {
+	coll := tr.db.Collection(collectionName)
+
+	filter := bson.D{{"ID", tw.ID}}
+
+	if _, err := coll.UpdateOne(context.Background(), filter, tw); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-// RetrieveByID retrieves the twin having the provided identifier, that is owned
-// by the specified thing.
-func (tr *twinRepository) RetrieveByID(context.Context, string, string) (twins.Twin, error) {
-	return twins.Twin{}, nil
+// RetrieveByID retrieves the twin having the provided identifier
+func (tr *twinRepository) RetrieveByID(_ context.Context, id string) (twins.Twin, error) {
+	coll := tr.db.Collection(collectionName)
+	var tw twins.Twin
+
+	filter := bson.D{{"ID", id}}
+
+	if err := coll.FindOne(context.Background(), filter).Decode(&tw); err != nil {
+		return tw, err
+	}
+
+	return tw, nil
 }
 
-// RetrieveByKey retrieves the twin having the provided key, that is owned
-// by the specified thing.
-func (tr *twinRepository) RetrieveByKey(context.Context, string) (string, error) {
-	return "", nil
+// RetrieveByKey retrieves the twin having the provided key
+func (tr *twinRepository) RetrieveByKey(_ context.Context, key string) (twins.Twin, error) {
+	coll := tr.db.Collection(collectionName)
+	var tw twins.Twin
+
+	filter := bson.D{{"Key", key}}
+
+	if err := coll.FindOne(context.Background(), filter).Decode(&tw); err != nil {
+		return tw, err
+	}
+
+	return tw, nil
 }
 
-// Remove removes the twin having the provided identifier, that is owned
-// by the specified thing.
-func (tr *twinRepository) Remove(context.Context, string, string) error {
+// Remove removes the twin having the provided id
+func (tr *twinRepository) RemoveByID(_ context.Context, id string) error {
+	coll := tr.db.Collection(collectionName)
+
+	filter := bson.D{{"ID", id}}
+
+	if _, err := coll.DeleteOne(context.Background(), filter); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Remove removes the twin having the provided key
+func (tr *twinRepository) RemoveByKey(_ context.Context, key string) error {
+	coll := tr.db.Collection(collectionName)
+
+	filter := bson.D{{"ID", key}}
+
+	if _, err := coll.DeleteOne(context.Background(), filter); err != nil {
+		return err
+	}
+
 	return nil
 }
