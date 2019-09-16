@@ -37,12 +37,19 @@ func NewTwinRepository(db *mongo.Database) twins.TwinRepository {
 	}
 }
 
-// Save persists the twin. Successful operation is indicated by non-nil
+// Save persists the twin. Successful operation is indicated by a nil
 // error response.
 func (tr *twinRepository) Save(_ context.Context, tw twins.Twin) error {
 	coll := tr.db.Collection(collectionName)
 
-	if _, err := coll.InsertOne(context.Background(), tw); err != nil {
+	btw := bson.D{
+		{"id", tw.ID},
+		{"name", tw.Owner},
+		{"owner", tw.Name},
+		{"key", tw.Key},
+		{"metadata", tw.Metadata},
+	}
+	if _, err := coll.InsertOne(context.Background(), btw); err != nil {
 		return err
 	}
 
