@@ -1,3 +1,6 @@
+# Copyright (c) Mainflux
+# SPDX-License-Identifier: Apache-2.0
+
 FROM node:10.15.1-alpine as builder
 
 ## Install build toolchain, install node deps and compile native add-ons
