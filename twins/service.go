@@ -9,8 +9,9 @@ package twins
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
+
+	"github.com/mainflux/mainflux"
 )
 
 var (
@@ -64,17 +65,21 @@ type Service interface {
 }
 
 type twinsService struct {
+	users  mainflux.UsersServiceClient
 	secret string
 	twins  TwinRepository
+	idp    IdentityProvider
 }
 
 var _ Service = (*twinsService)(nil)
 
 // New instantiates the twins service implementation.
-func New(secret string, twins TwinRepository) Service {
+func New(secret string, users mainflux.UsersServiceClient, twins TwinRepository, idp IdentityProvider) Service {
 	return &twinsService{
+		users:  users,
 		secret: secret,
 		twins:  twins,
+		idp:    idp,
 	}
 }
 
@@ -85,7 +90,7 @@ func (ts *twinsService) Ping(secret string) (string, error) {
 	return "Hello World :)", nil
 }
 
-func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin) (Twin, error) {
+func (ts *twinsService) AddThing(ctx context.Context, token string, twin Twin) (Twin, error) {
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return Twin{}, ErrUnauthorizedAccess
@@ -105,122 +110,9 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin) (T
 		}
 	}
 
-	twin.created = time.Now()
-	twin.updated = time.Now()
-
-	id, err := ts.twins.Save(ctx, twin)
-	if err != nil {
-		return Twin{}, err
-	}
-
-	twin.ID = id
-
-	b, err := json.Marshal(twin)
-	if ts.publish(twin.thingID, "create/success", b); err != nil {
+	if err := ts.twins.Save(ctx, twin); err != nil {
 		return Twin{}, err
 	}
 
 	return twin, nil
-}
-
-func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin) error {
-	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return ErrUnauthorizedAccess
-	}
-
-	twin.Owner = res.GetValue()
-
-	twin.updated = time.Now()
-	if err := ts.twins.Update(ctx, twin); err != nil {
-		return err
-	}
-
-	b, err := json.Marshal(twin)
-	if ts.publish(twin.thingID, "update/success", b); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (ts *twinsService) UpdateKey(ctx context.Context, token, id, key string) error {
-	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return ErrUnauthorizedAccess
-	}
-
-	if err := ts.twins.UpdateKey(ctx, res.GetValue(), id, key); err != nil {
-		return err
-	}
-
-	twin, err := ts.twins.RetrieveByID(ctx, res.GetValue(), id)
-	if err != nil {
-		return err
-	}
-
-	b, err := json.Marshal(twin)
-	if ts.publish(twin.thingID, "update/success", b); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (Twin, error) {
-	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return Twin{}, ErrUnauthorizedAccess
-	}
-
-	twin, err := ts.twins.RetrieveByID(ctx, res.GetValue(), id)
-	if err != nil {
-		return Twin{}, err
-	}
-
-	b, err := json.Marshal(twin)
-	if ts.publish(twin.thingID, "get/success", b); err != nil {
-		return Twin{}, err
-	}
-
-	return twin, nil
-}
-
-func (ts *twinsService) ListTwins(ctx context.Context, token string, limit uint64, name string, metadata Metadata) (TwinsSet, error) {
-	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return TwinsSet{}, ErrUnauthorizedAccess
-	}
-
-	return ts.twins.RetrieveAll(ctx, res.GetValue(), limit, name, metadata)
-}
-
-func (ts *twinsService) ListTwinsByChannel(ctx context.Context, token, channel string, limit uint64) (TwinsSet, error) {
-	_, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return TwinsSet{}, ErrUnauthorizedAccess
-	}
-
-	return ts.twins.RetrieveByChannel(ctx, channel, limit)
-}
-
-func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) error {
-	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return ErrUnauthorizedAccess
-	}
-
-	if err := ts.twins.Remove(ctx, res.GetValue(), id); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (ts *twinsService) publish(thingID, op string, payload []byte) error {
-	topic := fmt.Sprintf("$mfx/things/%s/%s", thingID, op)
-	token := ts.mqttClient.Publish(topic, 0, false, payload)
-	token.Wait()
-
-	return token.Error()
 }

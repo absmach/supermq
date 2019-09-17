@@ -24,7 +24,6 @@ import (
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/api"
-	"github.com/mainflux/mainflux/twins/nats"
 	localusers "github.com/mainflux/mainflux/twins/users"
 	"github.com/mainflux/mainflux/twins/uuid"
 
@@ -59,10 +58,6 @@ const (
 	defCACerts         = ""
 	defUsersURL        = "localhost:8181"
 	defUsersTimeout    = "1" // in seconds
-	defMqttURL         = "tcp://localhost:1883"
-	defThingID         = "2dce1d65-73b4-4020-bfe3-403d851386e7"
-	defThingKey        = "1ff0d0f0-ea04-4fbb-83c4-c10b110bf566"
-	defNatsURL         = broker.DefaultURL
 
 	envLogLevel        = "MF_TWINS_LOG_LEVEL"
 	envHTTPPort        = "MF_TWINS_HTTP_PORT"
@@ -79,10 +74,6 @@ const (
 	envCACerts         = "MF_TWINS_CA_CERTS"
 	envUsersURL        = "MF_USERS_URL"
 	envUsersTimeout    = "MF_TWINS_USERS_TIMEOUT"
-	envMqttURL         = "MF_TWINS_MQTT_URL"
-	envThingID         = "MF_TWINS_THING_ID"
-	envThingKey        = "MF_TWINS_THING_KEY"
-	envNatsURL         = "MF_NATS_URL"
 )
 
 type config struct {
@@ -101,10 +92,6 @@ type config struct {
 	caCerts         string
 	usersURL        string
 	usersTimeout    time.Duration
-	mqttURL         string
-	thingID         string
-	thingKey        string
-	NatsURL         string
 }
 
 func main() {
@@ -120,13 +107,21 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
+	usersTracer, usersCloser := initJaeger("users", cfg.jaegerURL, logger)
+	defer usersCloser.Close()
+
+	users, close := createUsersClient(cfg, usersTracer, logger)
+	if close != nil {
+		defer close()
+	}
+
 	dbTracer, dbCloser := initJaeger("twins_db", cfg.jaegerURL, logger)
 	defer dbCloser.Close()
 
 	tracer, closer := initJaeger("twins", cfg.jaegerURL, logger)
 	defer closer.Close()
 
-	svc := newService(cfg.secret, dbTracer, db, logger)
+	svc := newService(cfg.secret, users, dbTracer, db, logger)
 	errs := make(chan error, 2)
 
 	go startHTTPServer(twinshttpapi.MakeHandler(tracer, svc), cfg.httpPort, cfg, logger, errs)
@@ -172,10 +167,6 @@ func loadConfig() config {
 		caCerts:         mainflux.Env(envCACerts, defCACerts),
 		usersURL:        mainflux.Env(envUsersURL, defUsersURL),
 		usersTimeout:    time.Duration(timeout) * time.Second,
-		mqttURL:         mainflux.Env(envMqttURL, defMqttURL),
-		thingID:         mainflux.Env(envThingID, defThingID),
-		thingKey:        mainflux.Env(envThingKey, defThingKey),
-		NatsURL:         mainflux.Env(envNatsURL, defNatsURL),
 	}
 }
 
@@ -203,11 +194,47 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 	return tracer, closer
 }
 
-func newService(secret string, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
+func createUsersClient(cfg config, tracer opentracing.Tracer, logger logger.Logger) (mainflux.UsersServiceClient, func() error) {
+	if cfg.singleUserEmail != "" && cfg.singleUserToken != "" {
+		return localusers.NewSingleUserService(cfg.singleUserEmail, cfg.singleUserToken), nil
+	}
+
+	conn := connectToUsers(cfg, logger)
+	return usersapi.NewClient(tracer, conn, cfg.usersTimeout), conn.Close
+}
+
+func connectToUsers(cfg config, logger logger.Logger) *grpc.ClientConn {
+	var opts []grpc.DialOption
+	if cfg.clientTLS {
+		if cfg.caCerts != "" {
+			tpc, err := credentials.NewClientTLSFromFile(cfg.caCerts, "")
+			if err != nil {
+				logger.Error(fmt.Sprintf("Failed to create tls credentials: %s", err))
+				os.Exit(1)
+			}
+			opts = append(opts, grpc.WithTransportCredentials(tpc))
+		}
+	} else {
+		opts = append(opts, grpc.WithInsecure())
+		logger.Info("gRPC communication is not encrypted")
+	}
+
+	conn, err := grpc.Dial(cfg.usersURL, opts...)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to users service: %s", err))
+		os.Exit(1)
+	}
+
+	return conn
+}
+
+func newService(secret string, users mainflux.UsersServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
 	twinRepo := twinsmongodb.NewTwinRepository(db)
+	idp := uuid.New()
+
 	// TODO twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, thingsRepo)
 
-	svc := twins.New(secret, twinRepo)
+	svc := twins.New(secret, users, twinRepo, idp)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
