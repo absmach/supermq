@@ -36,6 +36,9 @@ func NewTwinRepository(db *mongo.Database) twins.TwinRepository {
 func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) error {
 	coll := tr.db.Collection(collectionName)
 
+	if _, err := tr.RetrieveByID(ctx, tw.ID); err != nil {
+		return twins.ErrConflict
+	}
 	if _, err := tr.RetrieveByKey(ctx, tw.Key); err != nil {
 		return twins.ErrConflict
 	}

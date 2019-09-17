@@ -15,54 +15,81 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/api"
+	localusers "github.com/mainflux/mainflux/twins/users"
+	"github.com/mainflux/mainflux/twins/uuid"
+
 	twinshttpapi "github.com/mainflux/mainflux/twins/api/twins/http"
 	twinsmongodb "github.com/mainflux/mainflux/twins/mongodb"
+	usersapi "github.com/mainflux/mainflux/users/api/grpc"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 const (
-	defLogLevel   = "info"
-	defHTTPPort   = "9021"
-	defJaegerURL  = ""
-	defServerCert = ""
-	defServerKey  = ""
-	defSecret     = "secret"
-	defDBName     = "mainflux"
-	defDBHost     = "localhost"
-	defDBPort     = "29021"
+	defLogLevel        = "info"
+	defHTTPPort        = "9021"
+	defJaegerURL       = ""
+	defServerCert      = ""
+	defServerKey       = ""
+	defSecret          = "secret"
+	defDBName          = "mainflux"
+	defDBHost          = "localhost"
+	defDBPort          = "29021"
+	defSingleUserEmail = ""
+	defSingleUserToken = ""
+	defClientTLS       = "false"
+	defCACerts         = ""
+	defUsersURL        = "localhost:8181"
+	defUsersTimeout    = "1" // in seconds
 
-	envLogLevel   = "MF_TWINS_LOG_LEVEL"
-	envHTTPPort   = "MF_TWINS_HTTP_PORT"
-	envJaegerURL  = "MF_JAEGER_URL"
-	envServerCert = "MF_TWINS_SERVER_CERT"
-	envServerKey  = "MF_TWINS_SERVER_KEY"
-	envSecret     = "MF_TWINS_SECRET"
-	envDBName     = "MF_MONGODB_NAME"
-	envDBHost     = "MF_MONGODB_HOST"
-	envDBPort     = "MF_MONGODB_PORT"
+	envLogLevel        = "MF_TWINS_LOG_LEVEL"
+	envHTTPPort        = "MF_TWINS_HTTP_PORT"
+	envJaegerURL       = "MF_JAEGER_URL"
+	envServerCert      = "MF_TWINS_SERVER_CERT"
+	envServerKey       = "MF_TWINS_SERVER_KEY"
+	envSecret          = "MF_TWINS_SECRET"
+	envDBName          = "MF_MONGODB_NAME"
+	envDBHost          = "MF_MONGODB_HOST"
+	envDBPort          = "MF_MONGODB_PORT"
+	envSingleUserEmail = "MF_TWINS_SINGLE_USER_EMAIL"
+	envSingleUserToken = "MF_TWINS_SINGLE_USER_TOKEN"
+	envClientTLS       = "MF_TWINS_CLIENT_TLS"
+	envCACerts         = "MF_TWINS_CA_CERTS"
+	envUsersURL        = "MF_USERS_URL"
+	envUsersTimeout    = "MF_TWINS_USERS_TIMEOUT"
 )
 
 type config struct {
-	logLevel     string
-	httpPort     string
-	authHTTPPort string
-	authGRPCPort string
-	jaegerURL    string
-	serverCert   string
-	serverKey    string
-	secret       string
-	dbCfg        twinsmongodb.Config
+	logLevel        string
+	httpPort        string
+	authHTTPPort    string
+	authGRPCPort    string
+	jaegerURL       string
+	serverCert      string
+	serverKey       string
+	secret          string
+	dbCfg           twinsmongodb.Config
+	singleUserEmail string
+	singleUserToken string
+	clientTLS       bool
+	caCerts         string
+	usersURL        string
+	usersTimeout    time.Duration
 }
 
 func main() {
@@ -78,13 +105,21 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
+	usersTracer, usersCloser := initJaeger("users", cfg.jaegerURL, logger)
+	defer usersCloser.Close()
+
+	users, close := createUsersClient(cfg, usersTracer, logger)
+	if close != nil {
+		defer close()
+	}
+
 	dbTracer, dbCloser := initJaeger("twins_db", cfg.jaegerURL, logger)
 	defer dbCloser.Close()
 
 	tracer, closer := initJaeger("twins", cfg.jaegerURL, logger)
 	defer closer.Close()
 
-	svc := newService(cfg.secret, dbTracer, db, logger)
+	svc := newService(cfg.secret, users, dbTracer, db, logger)
 	errs := make(chan error, 2)
 
 	go startHTTPServer(twinshttpapi.MakeHandler(tracer, svc), cfg.httpPort, cfg, logger, errs)
@@ -100,6 +135,15 @@ func main() {
 }
 
 func loadConfig() config {
+	tls, err := strconv.ParseBool(mainflux.Env(envClientTLS, defClientTLS))
+	if err != nil {
+		log.Fatalf("Invalid value passed for %s\n", envClientTLS)
+	}
+
+	timeout, err := strconv.ParseInt(mainflux.Env(envUsersTimeout, defUsersTimeout), 10, 64)
+	if err != nil {
+		log.Fatalf("Invalid %s value: %s", envUsersTimeout, err.Error())
+	}
 
 	dbCfg := twinsmongodb.Config{
 		Name: mainflux.Env(envDBName, defDBName),
@@ -108,13 +152,19 @@ func loadConfig() config {
 	}
 
 	return config{
-		logLevel:   mainflux.Env(envLogLevel, defLogLevel),
-		httpPort:   mainflux.Env(envHTTPPort, defHTTPPort),
-		serverCert: mainflux.Env(envServerCert, defServerCert),
-		serverKey:  mainflux.Env(envServerKey, defServerKey),
-		jaegerURL:  mainflux.Env(envJaegerURL, defJaegerURL),
-		secret:     mainflux.Env(envSecret, defSecret),
-		dbCfg:      dbCfg,
+		logLevel:        mainflux.Env(envLogLevel, defLogLevel),
+		httpPort:        mainflux.Env(envHTTPPort, defHTTPPort),
+		serverCert:      mainflux.Env(envServerCert, defServerCert),
+		serverKey:       mainflux.Env(envServerKey, defServerKey),
+		jaegerURL:       mainflux.Env(envJaegerURL, defJaegerURL),
+		secret:          mainflux.Env(envSecret, defSecret),
+		dbCfg:           dbCfg,
+		singleUserEmail: mainflux.Env(envSingleUserEmail, defSingleUserEmail),
+		singleUserToken: mainflux.Env(envSingleUserToken, defSingleUserToken),
+		clientTLS:       tls,
+		caCerts:         mainflux.Env(envCACerts, defCACerts),
+		usersURL:        mainflux.Env(envUsersURL, defUsersURL),
+		usersTimeout:    time.Duration(timeout) * time.Second,
 	}
 }
 
@@ -142,11 +192,47 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 	return tracer, closer
 }
 
-func newService(secret string, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
+func createUsersClient(cfg config, tracer opentracing.Tracer, logger logger.Logger) (mainflux.UsersServiceClient, func() error) {
+	if cfg.singleUserEmail != "" && cfg.singleUserToken != "" {
+		return localusers.NewSingleUserService(cfg.singleUserEmail, cfg.singleUserToken), nil
+	}
+
+	conn := connectToUsers(cfg, logger)
+	return usersapi.NewClient(tracer, conn, cfg.usersTimeout), conn.Close
+}
+
+func connectToUsers(cfg config, logger logger.Logger) *grpc.ClientConn {
+	var opts []grpc.DialOption
+	if cfg.clientTLS {
+		if cfg.caCerts != "" {
+			tpc, err := credentials.NewClientTLSFromFile(cfg.caCerts, "")
+			if err != nil {
+				logger.Error(fmt.Sprintf("Failed to create tls credentials: %s", err))
+				os.Exit(1)
+			}
+			opts = append(opts, grpc.WithTransportCredentials(tpc))
+		}
+	} else {
+		opts = append(opts, grpc.WithInsecure())
+		logger.Info("gRPC communication is not encrypted")
+	}
+
+	conn, err := grpc.Dial(cfg.usersURL, opts...)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to users service: %s", err))
+		os.Exit(1)
+	}
+
+	return conn
+}
+
+func newService(secret string, users mainflux.UsersServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
 	twinRepo := twinsmongodb.NewTwinRepository(db)
+	idp := uuid.New()
+
 	// TODO twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, thingsRepo)
 
-	svc := twins.New(secret, twinRepo)
+	svc := twins.New(secret, users, twinRepo, idp)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,

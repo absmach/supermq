@@ -8,7 +8,10 @@
 package twins
 
 import (
+	"context"
 	"errors"
+
+	"github.com/mainflux/mainflux"
 )
 
 var (
@@ -35,23 +38,54 @@ type Service interface {
 }
 
 type twinsService struct {
+	users  mainflux.UsersServiceClient
 	secret string
 	twins  TwinRepository
+	idp    IdentityProvider
 }
 
 var _ Service = (*twinsService)(nil)
 
 // New instantiates the twins service implementation.
-func New(secret string, twins TwinRepository) Service {
+func New(secret string, users mainflux.UsersServiceClient, twins TwinRepository, idp IdentityProvider) Service {
 	return &twinsService{
+		users:  users,
 		secret: secret,
 		twins:  twins,
+		idp:    idp,
 	}
 }
 
-func (ks *twinsService) Ping(secret string) (string, error) {
-	if ks.secret != secret {
+func (ts *twinsService) Ping(secret string) (string, error) {
+	if ts.secret != secret {
 		return "", ErrUnauthorizedAccess
 	}
 	return "Hello World :)", nil
+}
+
+func (ts *twinsService) AddThing(ctx context.Context, token string, twin Twin) (Twin, error) {
+	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	if err != nil {
+		return Twin{}, ErrUnauthorizedAccess
+	}
+
+	twin.ID, err = ts.idp.ID()
+	if err != nil {
+		return Twin{}, err
+	}
+
+	twin.Owner = res.GetValue()
+
+	if twin.Key == "" {
+		twin.Key, err = ts.idp.ID()
+		if err != nil {
+			return Twin{}, err
+		}
+	}
+
+	if err := ts.twins.Save(ctx, twin); err != nil {
+		return Twin{}, err
+	}
+
+	return twin, nil
 }
