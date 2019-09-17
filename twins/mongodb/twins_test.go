@@ -11,6 +11,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	log "github.com/mainflux/mainflux/logger"
@@ -19,21 +20,21 @@ import (
 	"github.com/mainflux/mainflux/twins/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+const maxNameSize = 1024
+
 var (
-	port       string
-	addr       string
-	testLog, _ = log.New(os.Stdout, log.Info.String())
-	testDB     = "test"
-	collection = "mainflux"
-	db         mongo.Database
-	msgsNum    = 10
-	owner      = "mainflux@mainflux.com"
-	name       = "twin"
+	port        string
+	addr        string
+	testLog, _  = log.New(os.Stdout, log.Info.String())
+	testDB      = "test"
+	collection  = "mainflux"
+	db          mongo.Database
+	msgsNum     = 10
+	invalidName = strings.Repeat("m", maxNameSize+1)
 )
 
 func TestTwinSave(t *testing.T) {
@@ -43,27 +44,71 @@ func TestTwinSave(t *testing.T) {
 	db := client.Database(testDB)
 	repo := mongodb.NewTwinRepository(db)
 
-	for i := 0; i < msgsNum; i++ {
-		twid, err := uuid.New().ID()
-		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-		twkey, err := uuid.New().ID()
-		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	email := "thing-save@example.com"
 
-		tw := twins.Twin{
-			ID:    twid,
-			Owner: string(i) + owner,
-			Name:  name + string(i),
-			Key:   twkey,
-		}
+	twid, err := uuid.New().ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	twkey, err := uuid.New().ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-		err = repo.Save(context.TODO(), tw)
+	nonexistentTwinKey, err := uuid.New().ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	twin := twins.Twin{
+		ID:    twid,
+		Owner: email,
+		Key:   twkey,
 	}
 
-	count, err := db.Collection(collection).CountDocuments(context.Background(), bson.D{})
+	cases := []struct {
+		desc string
+		twin twins.Twin
+		err  error
+	}{
+		{
+			desc: "create new twin",
+			twin: twin,
+			err:  nil,
+		},
+		{
+			desc: "create twin with conflicting key",
+			twin: twin,
+			err:  twins.ErrConflict,
+		},
+		{
+			desc: "create twin with invalid ID",
+			twin: twins.Twin{
+				ID:    "invalid",
+				Owner: email,
+				Key:   twkey,
+			},
+			err: twins.ErrMalformedEntity,
+		},
+		{
+			desc: "create twin with invalid Key",
+			twin: twins.Twin{
+				ID:    twid,
+				Owner: email,
+				Key:   nonexistentTwinKey,
+			},
+			err: twins.ErrConflict,
+		},
+		{
+			desc: "create twin with invalid name",
+			twin: twins.Twin{
+				ID:    twid,
+				Owner: email,
+				Key:   twkey,
+				Name:  invalidName,
+			},
+			err: twins.ErrMalformedEntity,
+		},
+	}
 
-	assert.Nil(t, err, fmt.Sprintf("Querying database expected to succeed: %s.\n", err))
-	assert.Nil(t, err, fmt.Sprintf("Save operation expected to succeed: %s.\n", err))
-	assert.Equal(t, int64(msgsNum), count, fmt.Sprintf("Expected to have %d value, found %d instead.\n", msgsNum, count))
+	for _, tc := range cases {
+		err := repo.Save(context.Background(), tc.twin)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+	}
 }
 
 // func TestThingUpdate(t *testing.T) {
