@@ -11,7 +11,4 @@ package twins
 type IdentityProvider interface {
 	// ID generates the unique identifier.
 	ID() (string, error)
-
-	// IsValid checks whether string is a valid uuid4.
-	IsValid(u4 string) error
 }

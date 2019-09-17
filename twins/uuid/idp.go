@@ -10,6 +10,7 @@ package uuid
 
 import (
 	"github.com/gofrs/uuid"
+	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/twins"
 )
 
@@ -18,7 +19,7 @@ var _ twins.IdentityProvider = (*uuidIdentityProvider)(nil)
 type uuidIdentityProvider struct{}
 
 // New instantiates a UUID identity provider.
-func New() twins.IdentityProvider {
+func New() things.IdentityProvider {
 	return &uuidIdentityProvider{}
 }
 
@@ -29,12 +30,4 @@ func (idp *uuidIdentityProvider) ID() (string, error) {
 	}
 
 	return id.String(), nil
-}
-
-func (idp *uuidIdentityProvider) IsValid(u4 string) error {
-	if _, err := uuid.FromString(u4); err != nil {
-		return twins.ErrMalformedEntity
-	}
-
-	return nil
 }
