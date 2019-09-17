@@ -33,8 +33,12 @@ func NewTwinRepository(db *mongo.Database) twins.TwinRepository {
 
 // Save persists the twin. Successful operation is indicated by a nil
 // error response.
-func (tr *twinRepository) Save(_ context.Context, tw twins.Twin) error {
+func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) error {
 	coll := tr.db.Collection(collectionName)
+
+	if _, err := tr.RetrieveByKey(ctx, tw.Key); err != nil {
+		return twins.ErrConflict
+	}
 
 	dbtw := toDBTwin(tw)
 	if _, err := coll.InsertOne(context.Background(), dbtw); err != nil {

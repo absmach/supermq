@@ -19,6 +19,12 @@ var (
 	// ErrUnauthorizedAccess indicates missing or invalid credentials provided
 	// when accessing a protected resource.
 	ErrUnauthorizedAccess = errors.New("missing or invalid credentials provided")
+
+	// ErrNotFound indicates a non-existent entity request.
+	ErrNotFound = errors.New("non-existent entity")
+
+	// ErrConflict indicates that entity already exists.
+	ErrConflict = errors.New("entity already exists")
 )
 
 // Service specifies an API that must be fullfiled by the domain service
