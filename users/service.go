@@ -50,7 +50,11 @@ type Service interface {
 	Identify(string) (string, error)
 
 	// Get authenticated user info for the given token.
+<<<<<<< HEAD
 	UserInfo(ctx context.Context, token string) (User, error)
+=======
+	UserInfo(ctx context.Context, token string) (UserInfo, error)
+>>>>>>> add metadata to users
 }
 
 var _ Service = (*usersService)(nil)
@@ -97,14 +101,23 @@ func (svc usersService) Identify(token string) (string, error) {
 	return id, nil
 }
 
+<<<<<<< HEAD
 func (svc usersService) UserInfo(ctx context.Context, token string) (User, error) {
 	id, err := svc.idp.Identity(token)
 	if err != nil {
 		return User{}, ErrUnauthorizedAccess
+=======
+func (svc usersService) UserInfo(ctx context.Context, token string) (UserInfo, error) {
+
+	id, err := svc.idp.Identity(token)
+	if err != nil {
+		return UserInfo{}, ErrUnauthorizedAccess
+>>>>>>> add metadata to users
 	}
 
 	dbUser, err := svc.users.RetrieveByID(ctx, id)
 	if err != nil {
+<<<<<<< HEAD
 		return User{}, ErrUnauthorizedAccess
 	}
 
@@ -113,4 +126,10 @@ func (svc usersService) UserInfo(ctx context.Context, token string) (User, error
 		Password: "",
 		Metadata: dbUser.Metadata,
 	}, nil
+=======
+		return UserInfo{}, ErrUnauthorizedAccess
+	}
+
+	return UserInfo{id, dbUser.Metadata}, nil
+>>>>>>> add metadata to users
 }
