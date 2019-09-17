@@ -16,13 +16,12 @@ import (
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/mongodb"
+	"github.com/mainflux/mainflux/twins/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-
-	uuid "github.com/satori/go.uuid"
 )
 
 var (
@@ -37,7 +36,7 @@ var (
 	name       = "twin"
 )
 
-func TestSave(t *testing.T) {
+func TestTwinSave(t *testing.T) {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
 	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
 
@@ -45,11 +44,16 @@ func TestSave(t *testing.T) {
 	repo := mongodb.NewTwinRepository(db)
 
 	for i := 0; i < msgsNum; i++ {
+		twid, err := uuid.New().ID()
+		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+		twkey, err := uuid.New().ID()
+		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
 		tw := twins.Twin{
-			ID:    uuid.Must(uuid.NewV4()).String(),
+			ID:    twid,
 			Owner: string(i) + owner,
 			Name:  name + string(i),
-			Key:   uuid.Must(uuid.NewV4()).String(),
+			Key:   twkey,
 		}
 
 		err = repo.Save(context.TODO(), tw)
@@ -61,3 +65,27 @@ func TestSave(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("Save operation expected to succeed: %s.\n", err))
 	assert.Equal(t, int64(msgsNum), count, fmt.Sprintf("Expected to have %d value, found %d instead.\n", msgsNum, count))
 }
+
+// func TestThingUpdate(t *testing.T) {
+// 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
+// 	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
+
+// 	db := client.Database(testDB)
+// 	repo := mongodb.NewTwinRepository(db)
+
+// 	email := "twin-update@example.com"
+// 	validName := "mfx_shadow"
+
+// 	twid, err := uuid.New().ID()
+// 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+// 	twkey, err := uuid.New().ID()
+// 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+// 	twin := twins.Twin{
+// 		ID:    twid,
+// 		Owner: email,
+// 		Name:  validName,
+// 		Key:   twkey,
+// 	}
+
+// }

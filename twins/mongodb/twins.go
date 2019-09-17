@@ -36,14 +36,8 @@ func NewTwinRepository(db *mongo.Database) twins.TwinRepository {
 func (tr *twinRepository) Save(_ context.Context, tw twins.Twin) error {
 	coll := tr.db.Collection(collectionName)
 
-	btw := bson.D{
-		{"id", tw.ID},
-		{"name", tw.Owner},
-		{"owner", tw.Name},
-		{"key", tw.Key},
-		{"metadata", tw.Metadata},
-	}
-	if _, err := coll.InsertOne(context.Background(), btw); err != nil {
+	dbtw := toDBTwin(tw)
+	if _, err := coll.InsertOne(context.Background(), dbtw); err != nil {
 		return err
 	}
 
@@ -55,9 +49,9 @@ func (tr *twinRepository) Save(_ context.Context, tw twins.Twin) error {
 func (tr *twinRepository) Update(_ context.Context, tw twins.Twin) error {
 	coll := tr.db.Collection(collectionName)
 
-	filter := bson.D{{"ID", tw.ID}}
-
-	if _, err := coll.UpdateOne(context.Background(), filter, tw); err != nil {
+	filter := bson.D{{"id", tw.ID}}
+	dbtw := toDBTwin(tw)
+	if _, err := coll.UpdateOne(context.Background(), filter, dbtw); err != nil {
 		return err
 	}
 
@@ -69,7 +63,7 @@ func (tr *twinRepository) RetrieveByID(_ context.Context, id string) (twins.Twin
 	coll := tr.db.Collection(collectionName)
 	var tw twins.Twin
 
-	filter := bson.D{{"ID", id}}
+	filter := bson.D{{"id", id}}
 
 	if err := coll.FindOne(context.Background(), filter).Decode(&tw); err != nil {
 		return tw, err
@@ -83,7 +77,7 @@ func (tr *twinRepository) RetrieveByKey(_ context.Context, key string) (twins.Tw
 	coll := tr.db.Collection(collectionName)
 	var tw twins.Twin
 
-	filter := bson.D{{"Key", key}}
+	filter := bson.D{{"key", key}}
 
 	if err := coll.FindOne(context.Background(), filter).Decode(&tw); err != nil {
 		return tw, err
@@ -96,7 +90,7 @@ func (tr *twinRepository) RetrieveByKey(_ context.Context, key string) (twins.Tw
 func (tr *twinRepository) RemoveByID(_ context.Context, id string) error {
 	coll := tr.db.Collection(collectionName)
 
-	filter := bson.D{{"ID", id}}
+	filter := bson.D{{"id", id}}
 
 	if _, err := coll.DeleteOne(context.Background(), filter); err != nil {
 		return err
@@ -109,11 +103,21 @@ func (tr *twinRepository) RemoveByID(_ context.Context, id string) error {
 func (tr *twinRepository) RemoveByKey(_ context.Context, key string) error {
 	coll := tr.db.Collection(collectionName)
 
-	filter := bson.D{{"ID", key}}
+	filter := bson.D{{"id", key}}
 
 	if _, err := coll.DeleteOne(context.Background(), filter); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func toDBTwin(tw twins.Twin) bson.D {
+	return bson.D{
+		{"id", tw.ID},
+		{"owner", tw.Owner},
+		{"name", tw.Name},
+		{"key", tw.Key},
+		{"metadata", tw.Metadata},
+	}
 }
