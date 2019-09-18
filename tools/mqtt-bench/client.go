@@ -125,26 +125,42 @@ func (c *Client) publish(r chan *runResults) {
 		ID:    c.ID,
 	}
 
-	for i := 0; i < c.MsgCount; i++ {
-		payload, err := c.SendMsg(&m)
-		if err != nil {
-			log.Fatalf("Failed to marshal payload - %s", err.Error())
-		}
-		token := (*c.mqttClient).Publish(m.Topic, m.QoS, c.Retain, payload)
-		if !token.WaitTimeout(time.Second*time.Duration(c.timeout)) || token.Error() != nil {
-			m.Error = true
-			times[i] = calcMsgRes(&m, res)
-			continue
-		}
-
-		m.Delivered = time.Now()
-		m.Error = false
-		times[i] = calcMsgRes(&m, res)
-
-		if !c.Quiet && i > 0 && i%100 == 0 {
-			log.Printf("Client %v published %v messages and keeps publishing...\n", c.ID, i)
-		}
+	wg := sync.WaitGroup{}
+	mu := sync.Mutex{}
+	payload, err := c.SendMsg(&m)
+	if err != nil {
+		log.Fatalf("Failed to marshal payload - %s", err.Error())
 	}
+	for i := 0; i < c.MsgCount; i++ {
+		wg.Add(1)
+		go func(mut *sync.Mutex, wg *sync.WaitGroup, t *[]*float64, i int) {
+			defer wg.Done()
+			m := message{
+				Topic:   c.MsgTopic,
+				QoS:     c.MsgQoS,
+				ID:      c.ID,
+				Payload: payload,
+			}
+
+			token := (*c.mqttClient).Publish(m.Topic, m.QoS, c.Retain, payload)
+			if !token.WaitTimeout(time.Second*time.Duration(c.timeout)) || token.Error() != nil {
+				m.Error = true
+				mu.Lock()
+				times[i] = calcMsgRes(&m, res)
+				mu.Unlock()
+			}
+
+			m.Delivered = time.Now()
+			m.Error = false
+			mu.Lock()
+			times[i] = calcMsgRes(&m, res)
+			mu.Unlock()
+			if !c.Quiet && i > 0 && i%100 == 0 {
+				log.Printf("Client %v published %v messages and keeps publishing...\n", c.ID, i)
+			}
+		}(&mu, &wg, &times, i)
+	}
+	wg.Wait()
 
 	r <- calcRes(res, start, arr(times))
 }
@@ -156,7 +172,10 @@ func (c *Client) connect() error {
 		SetCleanSession(false).
 		SetAutoReconnect(false).
 		SetOnConnectHandler(c.subConnected).
-		SetConnectionLostHandler(c.subLost)
+		SetConnectionLostHandler(c.subLost).
+		SetKeepAlive(time.Second * 30).
+		SetAutoReconnect(false).
+		SetCleanSession(false)
 
 	if c.BrokerUser != "" && c.BrokerPass != "" {
 		opts.SetUsername(c.BrokerUser)
