@@ -10,10 +10,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
-<<<<<<< HEAD
 	"database/sql/driver"
-=======
->>>>>>> add metadata to users
 	"encoding/json"
 
 	"github.com/jmoiron/sqlx"
@@ -107,26 +104,30 @@ func (m dbMetadata) Value() (driver.Value, error) {
 }
 
 type dbUser struct {
-<<<<<<< HEAD
 	Email    string     `db:"email"`
 	Password string     `db:"password"`
 	Metadata dbMetadata `db:"metadata"`
-=======
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Metadata string `db:"metadata"`
->>>>>>> add metadata to users
 }
 
 func toDBUser(u users.User) dbUser {
-	data, err := json.Marshal(u.Metadata)
-	if err != nil {
-		return dbUser{}
+	var m string
+	if len(u.Metadata) > 0 {
+		data, err := json.Marshal(u.Metadata)
+		if err != nil {
+			return dbUser{}
+		}
+		m = string(data)
+
+		return dbUser{
+			Email:    u.Email,
+			Password: u.Password,
+			Metadata: m,
+		}
 	}
+
 	return dbUser{
 		Email:    u.Email,
 		Password: u.Password,
-		Metadata: string(data),
 	}
 }
 
