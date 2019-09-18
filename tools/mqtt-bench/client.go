@@ -7,7 +7,6 @@ import (
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -45,63 +44,16 @@ type Client struct {
 }
 
 type message struct {
-	ID        string
-	Topic     string
-	QoS       byte
-	Payload   []byte
-	Sent      time.Time
-	Delivered time.Time
-	Error     bool
+	ID        string    `json:"id"`
+	Topic     string    `json:"topic"`
+	QoS       byte      `json:"qos"`
+	Payload   []byte    `json:"payload"`
+	Sent      time.Time `json:"sent"`
+	Delivered time.Time `json:"delivered"`
+	Error     bool      `json:"error"`
 }
 
 type handler func(*message) ([]byte, error)
-
-func (c *Client) RcvMsg(res *chan *map[string](*[]float64), total int, donePub *chan bool) mqtt.MessageHandler {
-	subsResults := make(map[string](*[]float64), 1)
-	i := 1
-	a := []float64{}
-
-	return func(cl mqtt.Client, msg mqtt.Message) {
-		go func() {
-			for {
-				<-*donePub
-				if cl.IsConnected() {
-					cl.Disconnect(100)
-				}
-				time.Sleep(2 * time.Second)
-				subsResults[c.MsgTopic] = &a
-				*res <- &subsResults
-			}
-		}()
-
-		var m message
-		if err := json.Unmarshal(msg.Payload(), &m); err != nil {
-			return
-		}
-		arrival := float64(time.Now().UnixNano())
-		timeSent := float64(m.Sent.UnixNano())
-
-		a = append(a, (arrival - timeSent))
-		i++
-		if i == total {
-			cl.Disconnect(0)
-			subsResults[c.MsgTopic] = &a
-			*res <- &subsResults
-		}
-	}
-}
-
-func (c *Client) subscribe(wg *sync.WaitGroup, tot int, donePub *chan bool, res chan *map[string](*[]float64)) {
-	c.ID = fmt.Sprintf("sub-%v-%v", time.Now().Format(time.RFC3339Nano), c.ID)
-	if c.connect() != nil {
-		wg.Done()
-		log.Printf("Client %v failed connecting to the broker\n", c.ID)
-	}
-
-	token := (*c.mqttClient).Subscribe(c.MsgTopic, c.MsgQoS, c.RcvMsg(&res, tot, donePub))
-
-	token.Wait()
-}
 
 func (c *Client) publish(r chan *runResults) {
 	res := &runResults{}
@@ -120,29 +72,24 @@ func (c *Client) publish(r chan *runResults) {
 	if !c.Quiet {
 		log.Printf("Client %v is connected to the broker %v\n", c.ID, c.BrokerURL)
 	}
-	// Use a single message, since it's going to be sent sequentially.
+	wg := sync.WaitGroup{}
+	mu := sync.Mutex{}
+	// Use a single message.
 	m := message{
 		Topic: c.MsgTopic,
 		QoS:   c.MsgQoS,
 		ID:    c.ID,
+		Sent:  time.Now(),
 	}
-
-	wg := sync.WaitGroup{}
-	mu := sync.Mutex{}
 	payload, err := c.SendMsg(&m)
 	if err != nil {
 		log.Fatalf("Failed to marshal payload - %s", err.Error())
 	}
+
 	for i := 0; i < c.MsgCount; i++ {
 		wg.Add(1)
 		go func(mut *sync.Mutex, wg *sync.WaitGroup, t *[]*float64, i int) {
 			defer wg.Done()
-			m := message{
-				Topic:   c.MsgTopic,
-				QoS:     c.MsgQoS,
-				ID:      c.ID,
-				Payload: payload,
-			}
 
 			token := (*c.mqttClient).Publish(m.Topic, m.QoS, c.Retain, payload)
 			if !token.WaitTimeout(time.Second*time.Duration(c.timeout)) || token.Error() != nil {
@@ -174,8 +121,8 @@ func (c *Client) connect() error {
 		SetClientID(c.ID).
 		SetCleanSession(false).
 		SetAutoReconnect(false).
-		SetOnConnectHandler(c.subConnected).
-		SetConnectionLostHandler(c.subLost).
+		SetOnConnectHandler(c.connected).
+		SetConnectionLostHandler(c.connLost).
 		SetPingTimeout(time.Second * pingTimeout).
 		SetAutoReconnect(true).
 		SetCleanSession(false)
@@ -261,16 +208,12 @@ func arr(a []*float64) []float64 {
 	return ret
 }
 
-func (c *Client) subConnected(client mqtt.Client) {
+func (c *Client) connected(client mqtt.Client) {
 	if !c.Quiet {
 		log.Printf("Client %v is connected to the broker %v\n", c.ID, c.BrokerURL)
 	}
 }
 
-func (c *Client) subLost(client mqtt.Client, reason error) {
+func (c *Client) connLost(client mqtt.Client, reason error) {
 	log.Printf("Client %v had lost connection to the broker: %s\n", c.ID, reason.Error())
 }
-
-// func (c *Client) pubConnected(client mqtt.Client) {
-
-// }

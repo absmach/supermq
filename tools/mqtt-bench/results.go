@@ -173,11 +173,6 @@ func printResults(results []*runResults, totals *totalResults, format string, qu
 				fmt.Printf("Msg time mean (µs):      %.3f\n", res.MsgTimeMean)
 				fmt.Printf("Msg time std (µs):       %.3f\n\n", res.MsgTimeStd)
 
-				fmt.Printf("Msg del time min (µs):   %.3f\n", res.MsgDelTimeMin)
-				fmt.Printf("Msg del time max (µs):   %.3f\n", res.MsgDelTimeMax)
-				fmt.Printf("Msg del time mean (µs):  %.3f\n", res.MsgDelTimeMean)
-				fmt.Printf("Msg del time std (µs):   %.3f\n", res.MsgDelTimeStd)
-
 				fmt.Printf("Bandwidth (msg/sec):     %.3f\n\n", res.MsgsPerSec)
 			}
 		}
@@ -189,13 +184,8 @@ func printResults(results []*runResults, totals *totalResults, format string, qu
 		fmt.Printf("Average Runtime (sec):       %.3f\n", totals.AvgRunTime)
 		fmt.Printf("Msg time min (µs):           %.3f\n", totals.MsgTimeMin)
 		fmt.Printf("Msg time max (µs):           %.3f\n", totals.MsgTimeMax)
-		fmt.Printf("Msg time mean mean (µs):     %.3f\n", totals.MsgTimeMeanAvg)
+		fmt.Printf("Msg time mean (µs):     %.3f\n", totals.MsgTimeMeanAvg)
 		fmt.Printf("Msg time mean std (µs):      %.3f\n", totals.MsgTimeMeanStd)
-
-		fmt.Printf("Msg del time min (µs):       %.3f\n", totals.MsgDelTimeMin)
-		fmt.Printf("Msg del time max (µs):       %.3f\n", totals.MsgDelTimeMax)
-		fmt.Printf("Msg del time mean (µs):      %.3f\n", totals.MsgDelTimeMeanAvg)
-		fmt.Printf("Msg del time std (µs):	     %.3f\n", totals.MsgDelTimeMeanStd)
 
 		fmt.Printf("Average Bandwidth (msg/sec): %.3f\n", totals.AvgMsgsPerSec)
 		fmt.Printf("Total Bandwidth (msg/sec):   %.3f\n", totals.TotalMsgsPerSec)

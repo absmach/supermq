@@ -4,10 +4,7 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"runtime"
-	"time"
 
 	bench "github.com/mainflux/mainflux/tools/mqtt-bench"
 	"github.com/spf13/cobra"
@@ -69,12 +66,6 @@ Complete documentation is available at https://mainflux.readthedocs.io`,
 	// Config file
 	rootCmd.PersistentFlags().StringVarP(&confFile, "config", "c", "config.toml", "config file for mqtt-bench")
 	rootCmd.PersistentFlags().StringVarP(&bconf.Mf.ConnFile, "mainflux", "m", "connections.toml", "config file for Mainflux connections")
-	go func() {
-		for {
-			fmt.Println(runtime.NumGoroutine())
-			time.Sleep(time.Second * 5)
-		}
-	}()
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
