@@ -35,6 +35,25 @@ var (
 type Service interface {
 	// Ping compares a given string with secret
 	Ping(string) (string, error)
+
+	// AddTwin adds new twin to the user identified by the provided key.
+	AddTwin(context.Context, string, Twin) (Twin, error)
+
+	// UpdateTwin updates the twin identified by the provided ID, that
+	// belongs to the user identified by the provided key.
+	UpdateTwin(context.Context, string, Twin) error
+
+	// UpdateKey updates key value of the existing twin. A non-nil error is
+	// returned to indicate operation failure.
+	UpdateKey(context.Context, string, string, string) error
+
+	// ViewTwin retrieves data about the twin identified with the provided
+	// ID, that belongs to the user identified by the provided key.
+	ViewTwin(context.Context, string, string) (Twin, error)
+
+	// RemoveTwin removes the twin identified with the provided ID, that
+	// belongs to the user identified by the provided key.
+	RemoveTwin(context.Context, string, string) error
 }
 
 type twinsService struct {
@@ -63,7 +82,7 @@ func (ts *twinsService) Ping(secret string) (string, error) {
 	return "Hello World :)", nil
 }
 
-func (ts *twinsService) AddThing(ctx context.Context, token string, twin Twin) (Twin, error) {
+func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin) (Twin, error) {
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return Twin{}, ErrUnauthorizedAccess
@@ -99,4 +118,31 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin)
 	twin.Owner = res.GetValue()
 
 	return ts.twins.Update(ctx, twin)
+}
+
+func (ts *twinsService) UpdateKey(ctx context.Context, token, id, key string) error {
+	_, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	if err != nil {
+		return ErrUnauthorizedAccess
+	}
+
+	return ts.twins.UpdateKey(ctx, id, key)
+}
+
+func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (Twin, error) {
+	_, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	if err != nil {
+		return Twin{}, ErrUnauthorizedAccess
+	}
+
+	return ts.twins.RetrieveByID(ctx, id)
+}
+
+func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) error {
+	_, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	if err != nil {
+		return ErrUnauthorizedAccess
+	}
+
+	return ts.twins.Remove(ctx, id)
 }

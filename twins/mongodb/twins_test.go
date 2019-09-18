@@ -35,6 +35,7 @@ var (
 	port        string
 	addr        string
 	testLog, _  = log.New(os.Stdout, log.Info.String())
+	idp         = uuid.New()
 	db          mongo.Database
 	invalidName = strings.Repeat("m", maxNameSize+1)
 )
@@ -48,15 +49,15 @@ func TestTwinSave(t *testing.T) {
 
 	email := "twin-save@example.com"
 
-	twid, err := uuid.New().ID()
+	twid, err := idp.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	twkey, err := uuid.New().ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-
-	nonexistentTwinID, err := uuid.New().ID()
+	twkey, err := idp.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	nonexistentTwinKey, err := uuid.New().ID()
+	nonexistentTwinID, err := idp.ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	nonexistentTwinKey, err := idp.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	twin := twins.Twin{
@@ -139,12 +140,12 @@ func TestThingUpdate(t *testing.T) {
 	email := "twin-update@example.com"
 	validName := "mfx_shadow"
 
-	twid, err := uuid.New().ID()
+	twid, err := idp.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	twkey, err := uuid.New().ID()
+	twkey, err := idp.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	nonexistentTwinID, err := uuid.New().ID()
+	nonexistentTwinID, err := idp.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	twin := twins.Twin{
@@ -216,14 +217,14 @@ func TestTwinUpdateKey(t *testing.T) {
 	email := "twin-update@example.com"
 	validName := "mfx_shadow"
 
-	twid, err := uuid.New().ID()
+	twid, err := idp.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	twkey, err := uuid.New().ID()
+	twkey, err := idp.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	nonexistentTwinID, err := uuid.New().ID()
+	nonexistentTwinID, err := idp.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	nonexistentTwinKey, err := uuid.New().ID()
+	nonexistentTwinKey, err := idp.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	twin := twins.Twin{
@@ -265,6 +266,120 @@ func TestTwinUpdateKey(t *testing.T) {
 
 	for _, tc := range cases {
 		err := repo.UpdateKey(context.Background(), tc.id, tc.key)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+	}
+}
+
+func TestTwinRetrieveByID(t *testing.T) {
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
+	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
+
+	db := client.Database(testDB)
+	repo := mongodb.NewTwinRepository(db)
+
+	email := "twin-retrievebyid@example.com"
+	validName := "mfx_shadow"
+
+	twid, err := idp.ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	twkey, err := idp.ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	nonexistentTwinID, err := idp.ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	twin := twins.Twin{
+		ID:    twid,
+		Owner: email,
+		Name:  validName,
+		Key:   twkey,
+	}
+
+	if err := repo.Save(context.Background(), twin); err != nil {
+		testLog.Error(err.Error())
+	}
+
+	cases := []struct {
+		desc string
+		id   string
+		err  error
+	}{
+		{
+			desc: "retreive an existing twin",
+			id:   twin.ID,
+			err:  nil,
+		},
+		{
+			desc: "retrieve a non-existing twin",
+			id:   nonexistentTwinID,
+			err:  twins.ErrNotFound,
+		},
+		{
+			desc: "retrieve with an invalid id",
+			id:   "invalid",
+			err:  twins.ErrMalformedEntity,
+		},
+	}
+
+	for _, tc := range cases {
+		_, err := repo.RetrieveByID(context.Background(), tc.id)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+	}
+}
+
+func TestTwinRemove(t *testing.T) {
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
+	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
+
+	db := client.Database(testDB)
+	repo := mongodb.NewTwinRepository(db)
+
+	email := "twin-remove@example.com"
+	validName := "mfx_shadow"
+
+	twid, err := idp.ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	twkey, err := idp.ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	nonexistentTwinID, err := idp.ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	twin := twins.Twin{
+		ID:    twid,
+		Owner: email,
+		Name:  validName,
+		Key:   twkey,
+	}
+
+	if err := repo.Save(context.Background(), twin); err != nil {
+		testLog.Error(err.Error())
+	}
+
+	cases := []struct {
+		desc string
+		id   string
+		err  error
+	}{
+		{
+			desc: "remove an existing twin",
+			id:   twin.ID,
+			err:  nil,
+		},
+		{
+			desc: "remove a non-existing twin",
+			id:   nonexistentTwinID,
+			err:  twins.ErrNotFound,
+		},
+		{
+			desc: "retrieve with an invalid id",
+			id:   "invalid",
+			err:  twins.ErrMalformedEntity,
+		},
+	}
+
+	for _, tc := range cases {
+		err := repo.Remove(context.Background(), tc.id)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }

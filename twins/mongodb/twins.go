@@ -110,10 +110,13 @@ func (tr *twinRepository) RetrieveByID(_ context.Context, id string) (twins.Twin
 	coll := tr.db.Collection(collectionName)
 	var tw twins.Twin
 
-	filter := bson.D{{"id", id}}
-
-	if err := coll.FindOne(context.Background(), filter).Decode(&tw); err != nil {
+	if err := uuid.New().IsValid(id); err != nil {
 		return tw, err
+	}
+
+	filter := bson.D{{"id", id}}
+	if err := coll.FindOne(context.Background(), filter).Decode(&tw); err != nil {
+		return tw, twins.ErrNotFound
 	}
 
 	return tw, nil
@@ -134,24 +137,18 @@ func (tr *twinRepository) RetrieveByKey(_ context.Context, key string) (twins.Tw
 }
 
 // Remove removes the twin having the provided id
-func (tr *twinRepository) RemoveByID(_ context.Context, id string) error {
+func (tr *twinRepository) Remove(ctx context.Context, id string) error {
 	coll := tr.db.Collection(collectionName)
 
-	filter := bson.D{{"id", id}}
-
-	if _, err := coll.DeleteOne(context.Background(), filter); err != nil {
+	if err := uuid.New().IsValid(id); err != nil {
 		return err
 	}
 
-	return nil
-}
+	if _, err := tr.RetrieveByID(ctx, id); err != nil {
+		return twins.ErrNotFound
+	}
 
-// Remove removes the twin having the provided key
-func (tr *twinRepository) RemoveByKey(_ context.Context, key string) error {
-	coll := tr.db.Collection(collectionName)
-
-	filter := bson.D{{"id", key}}
-
+	filter := bson.D{{"id", id}}
 	if _, err := coll.DeleteOne(context.Background(), filter); err != nil {
 		return err
 	}
