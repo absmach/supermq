@@ -52,7 +52,7 @@ require (
 	github.com/pelletier/go-toml v1.4.0 // indirect
 	github.com/prometheus/client_golang v0.9.3
 	github.com/rubenv/sql-migrate v0.0.0-20181106121204-ba2c6a7295c5
-	github.com/sony/gobreaker v0.0.0-20180905101324-b2a34562d02c
+	github.com/sony/gobreaker v0.4.1
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
