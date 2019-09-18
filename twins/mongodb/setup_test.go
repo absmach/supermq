@@ -19,6 +19,11 @@ import (
 	dockertest "gopkg.in/ory-am/dockertest.v3"
 )
 
+const (
+	wrongID    = "0"
+	wrongValue = "wrong-value"
+)
+
 func TestMain(m *testing.M) {
 	pool, err := dockertest.NewPool("")
 	if err != nil {

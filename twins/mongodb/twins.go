@@ -11,11 +11,15 @@ import (
 	"context"
 
 	"github.com/mainflux/mainflux/twins"
+	"github.com/mainflux/mainflux/twins/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-const collectionName string = "mainflux"
+const (
+	maxNameSize           = 1024
+	collectionName string = "mainflux"
+)
 
 type twinRepository struct {
 	db *mongo.Database
@@ -36,14 +40,18 @@ func NewTwinRepository(db *mongo.Database) twins.TwinRepository {
 func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) error {
 	coll := tr.db.Collection(collectionName)
 
-	if _, err := tr.RetrieveByID(ctx, tw.ID); err != nil {
+	if _, err := tr.RetrieveByID(ctx, tw.ID); err == nil {
 		return twins.ErrConflict
 	}
-	if _, err := tr.RetrieveByKey(ctx, tw.Key); err != nil {
+	if _, err := tr.RetrieveByKey(ctx, tw.Key); err == nil {
 		return twins.ErrConflict
 	}
 
-	dbtw := toDBTwin(tw)
+	dbtw, err := toDBTwin(tw)
+	if err != nil {
+		return err
+	}
+
 	if _, err := coll.InsertOne(context.Background(), dbtw); err != nil {
 		return err
 	}
@@ -53,12 +61,44 @@ func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) error {
 
 // Update performs an update to the existing twins. A non-nil error is
 // returned to indicate operation failure.
-func (tr *twinRepository) Update(_ context.Context, tw twins.Twin) error {
+func (tr *twinRepository) Update(ctx context.Context, tw twins.Twin) error {
 	coll := tr.db.Collection(collectionName)
 
+	if _, err := tr.RetrieveByID(ctx, tw.ID); err != nil {
+		return twins.ErrNotFound
+	}
+
+	dbtw, err := toDBTwin(tw)
+	if err != nil {
+		return err
+	}
+
 	filter := bson.D{{"id", tw.ID}}
-	dbtw := toDBTwin(tw)
-	if _, err := coll.UpdateOne(context.Background(), filter, dbtw); err != nil {
+	update := bson.D{{"$set", dbtw}}
+	if _, err := coll.UpdateOne(context.Background(), filter, update); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UpdateKey performs an update key of the existing twin. A non-nil error is
+// returned to indicate operation failure.
+func (tr *twinRepository) UpdateKey(ctx context.Context, id, key string) error {
+	coll := tr.db.Collection(collectionName)
+
+	if _, err := tr.RetrieveByID(ctx, id); err != nil {
+		return twins.ErrNotFound
+	}
+
+	if err := uuid.New().IsValid(key); err != nil {
+		return err
+	}
+
+	filter := bson.D{{"id", id}}
+	update := bson.D{{"$set", bson.D{{"key", key}}}}
+
+	if _, err := coll.UpdateOne(context.Background(), filter, update); err != nil {
 		return err
 	}
 
@@ -119,12 +159,27 @@ func (tr *twinRepository) RemoveByKey(_ context.Context, key string) error {
 	return nil
 }
 
-func toDBTwin(tw twins.Twin) bson.D {
+func toDBTwin(tw twins.Twin) (bson.D, error) {
+	// invalid name
+	if len(tw.Name) > maxNameSize {
+		return bson.D{}, twins.ErrMalformedEntity
+	}
+
+	// invalid id
+	if err := uuid.New().IsValid(tw.ID); err != nil {
+		return bson.D{}, err
+	}
+
+	// invalid key
+	if err := uuid.New().IsValid(tw.Key); err != nil {
+		return bson.D{}, err
+	}
+
 	return bson.D{
 		{"id", tw.ID},
 		{"owner", tw.Owner},
 		{"name", tw.Name},
 		{"key", tw.Key},
 		{"metadata", tw.Metadata},
-	}
+	}, nil
 }

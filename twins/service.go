@@ -89,3 +89,14 @@ func (ts *twinsService) AddThing(ctx context.Context, token string, twin Twin) (
 
 	return twin, nil
 }
+
+func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin) error {
+	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	if err != nil {
+		return ErrUnauthorizedAccess
+	}
+
+	twin.Owner = res.GetValue()
+
+	return ts.twins.Update(ctx, twin)
+}
