@@ -67,8 +67,5 @@ type TwinRepository interface {
 	RetrieveByKey(context.Context, string) (Twin, error)
 
 	// Remove removes the twin having the provided identifier.
-	RemoveByID(context.Context, string) error
-
-	// Remove removes the twin having the provided key.
-	RemoveByKey(context.Context, string) error
+	Remove(context.Context, string) error
 }
