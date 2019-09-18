@@ -16,9 +16,11 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	mat "gonum.org/v1/gonum/mat"
-	stat "gonum.org/v1/gonum/stat"
 )
+
+// Set default ping timeout to large value, so that ping
+// won't fail in the case of broker pingresp delay.
+const pingTimeout = 10000
 
 // Client - represents mqtt client
 type Client struct {
@@ -148,6 +150,7 @@ func (c *Client) publish(r chan *runResults) {
 				mu.Lock()
 				times[i] = calcMsgRes(&m, res)
 				mu.Unlock()
+				return
 			}
 
 			m.Delivered = time.Now()
@@ -173,8 +176,8 @@ func (c *Client) connect() error {
 		SetAutoReconnect(false).
 		SetOnConnectHandler(c.subConnected).
 		SetConnectionLostHandler(c.subLost).
-		SetKeepAlive(time.Second * 30).
-		SetAutoReconnect(false).
+		SetPingTimeout(time.Second * pingTimeout).
+		SetAutoReconnect(true).
 		SetCleanSession(false)
 
 	if c.BrokerUser != "" && c.BrokerPass != "" {
@@ -245,28 +248,6 @@ func checkConnection(broker string, timeoutSecs int) {
 	log.Printf("Connection to %s://%s:%s looks OK\n", network, host, port)
 }
 
-func calcMsgRes(m *message, res *runResults) *float64 {
-	if m.Error {
-		res.Failures++
-		return nil
-	}
-	res.Successes++
-	diff := float64(m.Delivered.Sub(m.Sent).Nanoseconds() / 1000) // in microseconds
-	return &diff
-}
-
-func calcRes(r *runResults, start time.Time, times []float64) *runResults {
-	duration := time.Now().Sub(start)
-	timeMatrix := mat.NewDense(1, len(times), times)
-	r.MsgTimeMin = mat.Min(timeMatrix)
-	r.MsgTimeMax = mat.Max(timeMatrix)
-	r.MsgTimeMean = stat.Mean(times, nil)
-	r.MsgTimeStd = stat.StdDev(times, nil)
-	r.RunTime = duration.Seconds()
-	r.MsgsPerSec = float64(r.Successes) / duration.Seconds()
-	return r
-}
-
 func arr(a []*float64) []float64 {
 	ret := []float64{}
 	for _, v := range a {
@@ -290,6 +271,6 @@ func (c *Client) subLost(client mqtt.Client, reason error) {
 	log.Printf("Client %v had lost connection to the broker: %s\n", c.ID, reason.Error())
 }
 
-func (c *Client) pubConnected(client mqtt.Client) {
+// func (c *Client) pubConnected(client mqtt.Client) {
 
-}
+// }
