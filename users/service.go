@@ -6,6 +6,7 @@ package users
 import (
 	"context"
 	"errors"
+	"fmt"
 )
 
 var (
@@ -98,7 +99,8 @@ func New(users UserRepository, hasher Hasher, idp IdentityProvider, m Emailer, t
 func (svc usersService) Register(ctx context.Context, user User) error {
 	hash, err := svc.hasher.Hash(user.Password)
 	if err != nil {
-		return ErrMalformedEntity
+		return fmt.Errorf("%w: %s", ErrMalformedEntity, err)
+		// return ErrMalformedEntity
 	}
 
 	user.Password = hash
@@ -108,11 +110,13 @@ func (svc usersService) Register(ctx context.Context, user User) error {
 func (svc usersService) Login(ctx context.Context, user User) (string, error) {
 	dbUser, err := svc.users.RetrieveByID(ctx, user.Email)
 	if err != nil {
-		return "", ErrUnauthorizedAccess
+		// return "", ErrUnauthorizedAccess
+		return "", fmt.Errorf("%w: %s", ErrUnauthorizedAccess, err)
 	}
 
 	if err := svc.hasher.Compare(user.Password, dbUser.Password); err != nil {
-		return "", ErrUnauthorizedAccess
+		// return "", ErrUnauthorizedAccess
+		return "", fmt.Errorf("%w: %s", ErrUnauthorizedAccess, err)
 	}
 
 	return svc.idp.TemporaryKey(user.Email)
@@ -121,7 +125,8 @@ func (svc usersService) Login(ctx context.Context, user User) (string, error) {
 func (svc usersService) Identify(token string) (string, error) {
 	id, err := svc.idp.Identity(token)
 	if err != nil {
-		return "", ErrUnauthorizedAccess
+		// return "", ErrUnauthorizedAccess
+		return "", fmt.Errorf("%w: %s", ErrUnauthorizedAccess, err)
 	}
 	return id, nil
 }

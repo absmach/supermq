@@ -63,6 +63,8 @@ func (res identityRes) Headers() map[string]string {
 
 func (res identityRes) Empty() bool {
 	return false
+type errorRes struct {
+	Err string `json:"error"`
 }
 
 type passwChangeRes struct {

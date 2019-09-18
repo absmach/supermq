@@ -192,8 +192,6 @@ func decodeToken(_ context.Context, r *http.Request) (interface{}, error) {
 
 }
 func encodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
-	w.Header().Set("Content-Type", contentType)
-
 	if ar, ok := response.(mainflux.Response); ok {
 		for k, v := range ar.Headers() {
 			w.Header().Set(k, v)
@@ -204,28 +202,31 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 		if ar.Empty() {
 			return nil
 		}
+
+		w.Header().Set("Content-Type", contentType)
 	}
 
 	return json.NewEncoder(w).Encode(response)
 }
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
-	w.Header().Set("Content-Type", contentType)
-
-	switch err {
-	case users.ErrMalformedEntity:
+	// if errors.Is(err, users.ErrUnauthorizedAccess) {
+	// 	w.WriteHeader(http.StatusForbidden)
+	// }
+	switch {
+	case errors.Is(err, users.ErrMalformedEntity):
 		w.WriteHeader(http.StatusBadRequest)
-	case users.ErrUnauthorizedAccess:
+	case errors.Is(err, users.ErrUnauthorizedAccess):
 		w.WriteHeader(http.StatusForbidden)
 	case users.ErrUserNotFound:
 		w.WriteHeader(http.StatusNotFound)
 	case users.ErrConflict:
 		w.WriteHeader(http.StatusConflict)
-	case errUnsupportedContentType:
+	case errors.Is(err, errUnsupportedContentType):
 		w.WriteHeader(http.StatusUnsupportedMediaType)
-	case io.ErrUnexpectedEOF:
+	case errors.Is(err, io.ErrUnexpectedEOF):
 		w.WriteHeader(http.StatusBadRequest)
-	case io.EOF:
+	case errors.Is(err, io.EOF):
 		w.WriteHeader(http.StatusBadRequest)
 	default:
 		switch err.(type) {
@@ -236,5 +237,10 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}
+	}
+
+	if err != nil {
+		w.Header().Set("Content-Type", contentType)
+		json.NewEncoder(w).Encode(errorRes{Err: err.Error()})
 	}
 }
