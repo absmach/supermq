@@ -22,6 +22,7 @@ function cleanup {
 # NATS
 ###
 gnatsd &
+sleep 3
 
 ###
 # Users
