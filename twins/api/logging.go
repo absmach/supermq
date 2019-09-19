@@ -95,32 +95,6 @@ func (lm *loggingMiddleware) ViewTwin(ctx context.Context, token, id string) (vi
 	return lm.svc.ViewTwin(ctx, token, id)
 }
 
-func (lm *loggingMiddleware) ListTwins(ctx context.Context, token string, limit uint64, name string, metadata twins.SetMetadata) (tw twins.TwinsSet, err error) {
-	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method list_twins for for token %s took %s to complete", token, time.Since(begin))
-		if err != nil {
-			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
-			return
-		}
-		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
-	}(time.Now())
-
-	return lm.svc.ListTwins(ctx, token, limit, name, metadata)
-}
-
-func (lm *loggingMiddleware) ListTwinsByChannel(ctx context.Context, token, channel string, limit uint64) (tw twins.TwinsSet, err error) {
-	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method list_twins_by_channel for for token %s and channel %s took %s to complete", token, channel, time.Since(begin))
-		if err != nil {
-			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
-			return
-		}
-		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
-	}(time.Now())
-
-	return lm.svc.ListTwinsByChannel(ctx, token, channel, limit)
-}
-
 func (lm *loggingMiddleware) RemoveTwin(ctx context.Context, token, id string) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method remove_twin for for token %s and twin %s took %s to complete", token, id, time.Since(begin))

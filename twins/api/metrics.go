@@ -80,24 +80,6 @@ func (ms *metricsMiddleware) ViewTwin(ctx context.Context, token, id string) (vi
 	return ms.svc.ViewTwin(ctx, token, id)
 }
 
-func (ms *metricsMiddleware) ListTwins(ctx context.Context, token string, limit uint64, name string, metadata twins.SetMetadata) (tw twins.TwinsSet, err error) {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "list_twins").Add(1)
-		ms.latency.With("method", "list_twins").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-
-	return ms.svc.ListTwins(ctx, token, limit, name, metadata)
-}
-
-func (ms *metricsMiddleware) ListTwinsByChannel(ctx context.Context, token, channel string, limit uint64) (tw twins.TwinsSet, err error) {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "list_twins_by_channel").Add(1)
-		ms.latency.With("method", "list_twins_by_channel").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-
-	return ms.svc.ListTwinsByChannel(ctx, token, channel, limit)
-}
-
 func (ms *metricsMiddleware) RemoveTwin(ctx context.Context, token, id string) (err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "remove_twin").Add(1)
