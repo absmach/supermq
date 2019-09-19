@@ -171,7 +171,7 @@ func (tr thingRepository) RetrieveByKey(_ context.Context, key string) (string, 
 	return id, nil
 }
 
-func (tr thingRepository) RetrieveAll(_ context.Context, owner string, offset, limit uint64, name string, metadata things.ThingMetadata) (things.ThingsPage, error) {
+func (tr thingRepository) RetrieveAll(_ context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ThingsPage, error) {
 	name = strings.ToLower(name)
 	nq := ""
 	if name != "" {

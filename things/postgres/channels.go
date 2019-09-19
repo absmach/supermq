@@ -109,7 +109,7 @@ func (cr channelRepository) RetrieveByID(_ context.Context, owner, id string) (t
 	return toChannel(dbch)
 }
 
-func (cr channelRepository) RetrieveAll(_ context.Context, owner string, offset, limit uint64, name string) (things.ChannelsPage, error) {
+func (cr channelRepository) RetrieveAll(_ context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ChannelsPage, error) {
 	name = strings.ToLower(name)
 	nq := ""
 	if name != "" {
