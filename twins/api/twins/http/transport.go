@@ -42,9 +42,16 @@ func MakeHandler(tracer opentracing.Tracer, svc twins.Service) http.Handler {
 
 	r := bone.New()
 
-	r.Post("/twins", kithttp.NewServer(
+	r.Post("/twins/ping", kithttp.NewServer(
 		kitot.TraceServer(tracer, "ping")(pingEndpoint(svc)),
 		decodePing,
+		encodeResponse,
+		opts...,
+	))
+
+	r.Post("/twins", kithttp.NewServer(
+		kitot.TraceServer(tracer, "add_twin")(addTwinEndpoint(svc)),
+		decodeTwinCreation,
 		encodeResponse,
 		opts...,
 	))
@@ -61,6 +68,19 @@ func decodePing(_ context.Context, r *http.Request) (interface{}, error) {
 	}
 
 	req := pingReq{}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+func decodeTwinCreation(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
+		return nil, errUnsupportedContentType
+	}
+
+	req := addTwinReq{token: r.Header.Get("Authorization")}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}
