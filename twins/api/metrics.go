@@ -10,6 +10,7 @@
 package api
 
 import (
+	"context"
 	"time"
 
 	"github.com/go-kit/kit/metrics"
@@ -41,4 +42,49 @@ func (ms *metricsMiddleware) Ping(secret string) (response string, err error) {
 	}(time.Now())
 
 	return ms.svc.Ping(secret)
+}
+
+func (ms *metricsMiddleware) AddTwin(ctx context.Context, token string, twin twins.Twin) (saved twins.Twin, err error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "add_twin").Add(1)
+		ms.latency.With("method", "add_twin").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.AddTwin(ctx, token, twin)
+}
+
+func (ms *metricsMiddleware) UpdateTwin(ctx context.Context, token string, twin twins.Twin) (err error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "update_twin").Add(1)
+		ms.latency.With("method", "update_twin").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.UpdateTwin(ctx, token, twin)
+}
+
+func (ms *metricsMiddleware) UpdateKey(ctx context.Context, token, id, key string) (err error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "update_key").Add(1)
+		ms.latency.With("method", "update_key").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.UpdateKey(ctx, token, id, key)
+}
+
+func (ms *metricsMiddleware) ViewTwin(ctx context.Context, token, id string) (viewed twins.Twin, err error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "view_twin").Add(1)
+		ms.latency.With("method", "view_twin").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.ViewTwin(ctx, token, id)
+}
+
+func (ms *metricsMiddleware) RemoveTwin(ctx context.Context, token, id string) (err error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "remove_twin").Add(1)
+		ms.latency.With("method", "remove_twin").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.RemoveTwin(ctx, token, id)
 }
