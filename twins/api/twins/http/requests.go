@@ -45,3 +45,44 @@ func (req addTwinReq) validate() error {
 
 	return nil
 }
+
+type updateTwinReq struct {
+	token    string
+	id       string
+	Name     string                 `json:"name,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
+}
+
+func (req updateTwinReq) validate() error {
+	if req.token == "" {
+		return twins.ErrUnauthorizedAccess
+	}
+
+	if req.id == "" {
+		return twins.ErrMalformedEntity
+	}
+
+	if len(req.Name) > maxNameSize {
+		return twins.ErrMalformedEntity
+	}
+
+	return nil
+}
+
+type updateKeyReq struct {
+	token string
+	id    string
+	Key   string `json:"key"`
+}
+
+func (req updateKeyReq) validate() error {
+	if req.token == "" {
+		return twins.ErrUnauthorizedAccess
+	}
+
+	if req.id == "" || req.Key == "" {
+		return twins.ErrMalformedEntity
+	}
+
+	return nil
+}
