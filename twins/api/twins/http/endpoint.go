@@ -99,3 +99,48 @@ func updateKeyEndpoint(svc twins.Service) endpoint.Endpoint {
 		return res, nil
 	}
 }
+
+func viewTwinEndpoint(svc twins.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(viewTwinReq)
+
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+
+		twin, err := svc.ViewTwin(ctx, req.token, req.id)
+		if err != nil {
+			return nil, err
+		}
+
+		res := viewTwinRes{
+			ID:       twin.ID,
+			Owner:    twin.Owner,
+			Name:     twin.Name,
+			Key:      twin.Key,
+			Metadata: twin.Metadata,
+		}
+		return res, nil
+	}
+}
+
+func removeTwinEndpoint(svc twins.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(viewTwinReq)
+
+		err := req.validate()
+		if err == twins.ErrNotFound {
+			return removeRes{}, nil
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		if err := svc.RemoveTwin(ctx, req.token, req.id); err != nil {
+			return nil, err
+		}
+
+		return removeRes{}, nil
+	}
+}
