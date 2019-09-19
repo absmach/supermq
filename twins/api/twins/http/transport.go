@@ -56,35 +56,7 @@ func MakeHandler(tracer opentracing.Tracer, svc twins.Service) http.Handler {
 		opts...,
 	))
 
-	r.Patch("/twins/:id/key", kithttp.NewServer(
-		kitot.TraceServer(tracer, "update_key")(updateKeyEndpoint(svc)),
-		decodeKeyUpdate,
-		encodeResponse,
-		opts...,
-	))
-
-	r.Put("/twins/:id", kithttp.NewServer(
-		kitot.TraceServer(tracer, "update_twin")(updateTwinEndpoint(svc)),
-		decodeTwinUpdate,
-		encodeResponse,
-		opts...,
-	))
-
-	r.Get("/twins/:id", kithttp.NewServer(
-		kitot.TraceServer(tracer, "view_twin")(viewTwinEndpoint(svc)),
-		decodeView,
-		encodeResponse,
-		opts...,
-	))
-
-	r.Delete("/twins/:id", kithttp.NewServer(
-		kitot.TraceServer(tracer, "remove_twin")(removeTwinEndpoint(svc)),
-		decodeView,
-		encodeResponse,
-		opts...,
-	))
-
-	r.GetFunc("/version", mainflux.Version("twins"))
+	r.GetFunc("/version", mainflux.Version("things"))
 	r.Handle("/metrics", promhttp.Handler())
 
 	return r
@@ -111,47 +83,6 @@ func decodeTwinCreation(_ context.Context, r *http.Request) (interface{}, error)
 	req := addTwinReq{token: r.Header.Get("Authorization")}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
-	}
-
-	return req, nil
-}
-
-func decodeTwinUpdate(_ context.Context, r *http.Request) (interface{}, error) {
-	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errUnsupportedContentType
-	}
-
-	req := updateTwinReq{
-		token: r.Header.Get("Authorization"),
-		id:    bone.GetValue(r, "id"),
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-func decodeKeyUpdate(_ context.Context, r *http.Request) (interface{}, error) {
-	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errUnsupportedContentType
-	}
-
-	req := updateKeyReq{
-		token: r.Header.Get("Authorization"),
-		id:    bone.GetValue(r, "id"),
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-func decodeView(_ context.Context, r *http.Request) (interface{}, error) {
-	req := viewTwinReq{
-		token: r.Header.Get("Authorization"),
-		id:    bone.GetValue(r, "id"),
 	}
 
 	return req, nil
