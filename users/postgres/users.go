@@ -104,32 +104,26 @@ func (m dbMetadata) Value() (driver.Value, error) {
 }
 
 type dbUser struct {
-<<<<<<< HEAD
 	Email    string     `db:"email"`
 	Password string     `db:"password"`
 	Metadata dbMetadata `db:"metadata"`
-=======
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Metadata string `json:"metadata",omitempty`
->>>>>>> when metadata is not set dont save 'null' string
 }
 
-func toDBUser(u users.User) dbUser {
-	m := "{}"
+func toDBUser(u users.User) (dbUser, error) {
+	m := []byte("{}")
 	if len(u.Metadata) > 0 {
 		data, err := json.Marshal(u.Metadata)
 		if err != nil {
-			return dbUser{}
+			return dbUser{}, err
 		}
-		m = string(data)
+		m = data
 	}
 
 	return dbUser{
 		Email:    u.Email,
 		Password: u.Password,
 		Metadata: m,
-	}
+	}, nil
 }
 
 func toUser(dbu dbUser) users.User {
