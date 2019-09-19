@@ -94,12 +94,10 @@ func fmtCondition(chanID string, query map[string]string) string {
 		switch name {
 		case
 			"subtopic",
-			"publisher":
-			condition = fmt.Sprintf(`%s AND %s = :%s`, condition, name, name)
-		case
+			"publisher",
 			"name",
 			"protocol":
-			condition = fmt.Sprintf(`%s AND "%s" = :%s`, condition, name, name)
+			condition = fmt.Sprintf(`%s AND %s = :%s`, condition, name, name)
 		}
 	}
 	return condition
