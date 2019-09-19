@@ -70,6 +70,20 @@ func MakeHandler(tracer opentracing.Tracer, svc twins.Service) http.Handler {
 		opts...,
 	))
 
+	r.Get("/twins/:id", kithttp.NewServer(
+		kitot.TraceServer(tracer, "view_twin")(viewTwinEndpoint(svc)),
+		decodeView,
+		encodeResponse,
+		opts...,
+	))
+
+	r.Delete("/twins/:id", kithttp.NewServer(
+		kitot.TraceServer(tracer, "remove_twin")(removeTwinEndpoint(svc)),
+		decodeView,
+		encodeResponse,
+		opts...,
+	))
+
 	r.GetFunc("/version", mainflux.Version("twins"))
 	r.Handle("/metrics", promhttp.Handler())
 
@@ -129,6 +143,15 @@ func decodeKeyUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
+	}
+
+	return req, nil
+}
+
+func decodeView(_ context.Context, r *http.Request) (interface{}, error) {
+	req := viewTwinReq{
+		token: r.Header.Get("Authorization"),
+		id:    bone.GetValue(r, "id"),
 	}
 
 	return req, nil

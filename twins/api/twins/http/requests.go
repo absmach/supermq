@@ -7,7 +7,10 @@
 
 package http
 
-import "github.com/mainflux/mainflux/twins"
+import (
+	"github.com/mainflux/mainflux/things"
+	"github.com/mainflux/mainflux/twins"
+)
 
 const maxNameSize = 1024
 
@@ -82,6 +85,23 @@ func (req updateKeyReq) validate() error {
 
 	if req.id == "" || req.Key == "" {
 		return twins.ErrMalformedEntity
+	}
+
+	return nil
+}
+
+type viewTwinReq struct {
+	token string
+	id    string
+}
+
+func (req viewTwinReq) validate() error {
+	if req.token == "" {
+		return things.ErrUnauthorizedAccess
+	}
+
+	if req.id == "" {
+		return things.ErrMalformedEntity
 	}
 
 	return nil
