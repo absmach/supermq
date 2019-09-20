@@ -19,6 +19,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/mainflux/mainflux/things"
+	"github.com/opentracing/opentracing-go"
 )
 
 var _ things.ChannelRepository = (*channelRepository)(nil)
@@ -35,9 +36,13 @@ func NewChannelRepository(db *sqlx.DB) things.ChannelRepository {
 	}
 }
 
-func (cr channelRepository) Save(_ context.Context, channel things.Channel) (string, error) {
+func (cr channelRepository) Save(ctx context.Context, channel things.Channel) (string, error) {
+	span := opentracing.SpanFromContext(ctx)
+	defer span.Finish()
+
 	q := `INSERT INTO channels (id, owner, name, metadata)
-        VALUES (:id, :owner, :name, :metadata);`
+		VALUES (:id, :owner, :name, :metadata);`
+	span.SetTag("sql.statement", q)
 
 	dbch := toDBChannel(channel)
 
@@ -56,8 +61,12 @@ func (cr channelRepository) Save(_ context.Context, channel things.Channel) (str
 	return channel.ID, nil
 }
 
-func (cr channelRepository) Update(_ context.Context, channel things.Channel) error {
+func (cr channelRepository) Update(ctx context.Context, channel things.Channel) error {
+	span := opentracing.SpanFromContext(ctx)
+	defer span.Finish()
+
 	q := `UPDATE channels SET name = :name, metadata = :metadata WHERE owner = :owner AND id = :id;`
+	span.SetTag("sql.statement", q)
 
 	dbch := toDBChannel(channel)
 
@@ -86,8 +95,13 @@ func (cr channelRepository) Update(_ context.Context, channel things.Channel) er
 	return nil
 }
 
-func (cr channelRepository) RetrieveByID(_ context.Context, owner, id string) (things.Channel, error) {
+func (cr channelRepository) RetrieveByID(ctx context.Context, owner, id string) (things.Channel, error) {
+	span := opentracing.SpanFromContext(ctx)
+	defer span.Finish()
+
 	q := `SELECT name, metadata FROM channels WHERE id = $1 AND owner = $2;`
+	span.SetTag("sql.statement", q)
+
 	dbch := dbChannel{
 		ID:    id,
 		Owner: owner,
@@ -169,7 +183,10 @@ func (cr channelRepository) RetrieveAll(_ context.Context, owner string, offset,
 	return page, nil
 }
 
-func (cr channelRepository) RetrieveByThing(_ context.Context, owner, thing string, offset, limit uint64) (things.ChannelsPage, error) {
+func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing string, offset, limit uint64) (things.ChannelsPage, error) {
+	span := opentracing.SpanFromContext(ctx)
+	defer span.Finish()
+
 	// Verify if UUID format is valid to avoid internal Postgres error
 	if _, err := uuid.FromString(thing); err != nil {
 		return things.ChannelsPage{}, things.ErrNotFound
@@ -183,6 +200,7 @@ func (cr channelRepository) RetrieveByThing(_ context.Context, owner, thing stri
 		  ORDER BY ch.id
 		  LIMIT :limit
 		  OFFSET :offset`
+	span.SetTag("sql.statement", q)
 
 	params := map[string]interface{}{
 		"owner":  owner,
@@ -229,19 +247,27 @@ func (cr channelRepository) RetrieveByThing(_ context.Context, owner, thing stri
 	}, nil
 }
 
-func (cr channelRepository) Remove(_ context.Context, owner, id string) error {
+func (cr channelRepository) Remove(ctx context.Context, owner, id string) error {
+	span := opentracing.SpanFromContext(ctx)
+	defer span.Finish()
+
 	dbch := dbChannel{
 		ID:    id,
 		Owner: owner,
 	}
 	q := `DELETE FROM channels WHERE id = :id AND owner = :owner`
+	span.SetTag("sql.statement", q)
 	cr.db.NamedExec(q, dbch)
 	return nil
 }
 
-func (cr channelRepository) Connect(_ context.Context, owner, chanID, thingID string) error {
+func (cr channelRepository) Connect(ctx context.Context, owner, chanID, thingID string) error {
+	span := opentracing.SpanFromContext(ctx)
+	defer span.Finish()
+
 	q := `INSERT INTO connections (channel_id, channel_owner, thing_id, thing_owner)
 	      VALUES (:channel, :owner, :thing, :owner);`
+	span.SetTag("sql.statement", q)
 
 	conn := dbConnection{
 		Channel: chanID,
@@ -267,10 +293,14 @@ func (cr channelRepository) Connect(_ context.Context, owner, chanID, thingID st
 	return nil
 }
 
-func (cr channelRepository) Disconnect(_ context.Context, owner, chanID, thingID string) error {
+func (cr channelRepository) Disconnect(ctx context.Context, owner, chanID, thingID string) error {
+	span := opentracing.SpanFromContext(ctx)
+	defer span.Finish()
+
 	q := `DELETE FROM connections
 	      WHERE channel_id = :channel AND channel_owner = :owner
 	      AND thing_id = :thing AND thing_owner = :owner`
+	span.SetTag("sql.statement", q)
 
 	conn := dbConnection{
 		Channel: chanID,
@@ -295,10 +325,14 @@ func (cr channelRepository) Disconnect(_ context.Context, owner, chanID, thingID
 	return nil
 }
 
-func (cr channelRepository) HasThing(_ context.Context, chanID, key string) (string, error) {
+func (cr channelRepository) HasThing(ctx context.Context, chanID, key string) (string, error) {
+	span := opentracing.SpanFromContext(ctx)
+	defer span.Finish()
+
 	var thingID string
 
 	q := `SELECT id FROM things WHERE key = $1`
+	span.SetTag("sql.statement", q)
 	if err := cr.db.QueryRow(q, key).Scan(&thingID); err != nil {
 		return "", err
 

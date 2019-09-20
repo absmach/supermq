@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/lib/pq"
 	"github.com/mainflux/mainflux/users"
@@ -33,8 +34,12 @@ func New(db *sqlx.DB) users.UserRepository {
 	return &userRepository{db}
 }
 
-func (ur userRepository) Save(_ context.Context, user users.User) error {
+func (ur userRepository) Save(ctx context.Context, user users.User) error {
+	span := opentracing.SpanFromContext(ctx)
+	defer span.Finish()
+
 	q := `INSERT INTO users (email, password, metadata) VALUES (:email, :password, :metadata)`
+	span.SetTag("sql.statement", q)
 
 	dbu := toDBUser(user)
 
@@ -48,8 +53,12 @@ func (ur userRepository) Save(_ context.Context, user users.User) error {
 	return nil
 }
 
-func (ur userRepository) RetrieveByID(_ context.Context, email string) (users.User, error) {
+func (ur userRepository) RetrieveByID(ctx context.Context, email string) (users.User, error) {
+	span := opentracing.SpanFromContext(ctx)
+	defer span.Finish()
+
 	q := `SELECT password, metadata FROM users WHERE email = $1`
+	span.SetTag("sql.statement", q)
 
 	dbu := dbUser{
 		Email: email,

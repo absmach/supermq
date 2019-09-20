@@ -17,6 +17,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq" // required for DB access
 	"github.com/mainflux/mainflux/things"
+	"github.com/opentracing/opentracing-go"
 )
 
 const (
@@ -41,8 +42,12 @@ func NewThingRepository(db *sqlx.DB) things.ThingRepository {
 }
 
 func (tr thingRepository) Save(ctx context.Context, thing things.Thing) (string, error) {
+	span := opentracing.SpanFromContext(ctx)
+	defer span.Finish()
+
 	q := `INSERT INTO things (id, owner, name, key, metadata)
 		  VALUES (:id, :owner, :name, :key, :metadata);`
+	span.SetTag("sql.statement", q)
 
 	dbth, err := toDBThing(thing)
 	if err != nil {
@@ -67,8 +72,12 @@ func (tr thingRepository) Save(ctx context.Context, thing things.Thing) (string,
 	return dbth.ID, nil
 }
 
-func (tr thingRepository) Update(_ context.Context, thing things.Thing) error {
+func (tr thingRepository) Update(ctx context.Context, thing things.Thing) error {
+	span := opentracing.SpanFromContext(ctx)
+	defer span.Finish()
+
 	q := `UPDATE things SET name = :name, metadata = :metadata WHERE owner = :owner AND id = :id;`
+	span.SetTag("sql.statement", q)
 
 	dbth, err := toDBThing(thing)
 	if err != nil {
@@ -100,8 +109,13 @@ func (tr thingRepository) Update(_ context.Context, thing things.Thing) error {
 	return nil
 }
 
-func (tr thingRepository) UpdateKey(_ context.Context, owner, id, key string) error {
+func (tr thingRepository) UpdateKey(ctx context.Context, owner, id, key string) error {
+	span := opentracing.SpanFromContext(ctx)
+	defer span.Finish()
+
 	q := `UPDATE things SET key = :key WHERE owner = :owner AND id = :id;`
+	span.SetTag("sql.statement", q)
+
 	dbth := dbThing{
 		ID:    id,
 		Owner: owner,
@@ -135,8 +149,12 @@ func (tr thingRepository) UpdateKey(_ context.Context, owner, id, key string) er
 	return nil
 }
 
-func (tr thingRepository) RetrieveByID(_ context.Context, owner, id string) (things.Thing, error) {
+func (tr thingRepository) RetrieveByID(ctx context.Context, owner, id string) (things.Thing, error) {
+	span := opentracing.SpanFromContext(ctx)
+	defer span.Finish()
+
 	q := `SELECT name, key, metadata FROM things WHERE id = $1 AND owner = $2;`
+	span.SetTag("sql.statement", q)
 
 	dbth := dbThing{
 		ID:    id,
@@ -157,8 +175,13 @@ func (tr thingRepository) RetrieveByID(_ context.Context, owner, id string) (thi
 	return toThing(dbth)
 }
 
-func (tr thingRepository) RetrieveByKey(_ context.Context, key string) (string, error) {
+func (tr thingRepository) RetrieveByKey(ctx context.Context, key string) (string, error) {
+	span := opentracing.SpanFromContext(ctx)
+	defer span.Finish()
+
 	q := `SELECT id FROM things WHERE key = $1;`
+	span.SetTag("sql.statement", q)
+
 	var id string
 	if err := tr.db.QueryRowx(q, key).Scan(&id); err != nil {
 		if err == sql.ErrNoRows {
@@ -240,7 +263,10 @@ func (tr thingRepository) RetrieveAll(_ context.Context, owner string, offset, l
 	return page, nil
 }
 
-func (tr thingRepository) RetrieveByChannel(_ context.Context, owner, channel string, offset, limit uint64) (things.ThingsPage, error) {
+func (tr thingRepository) RetrieveByChannel(ctx context.Context, owner, channel string, offset, limit uint64) (things.ThingsPage, error) {
+	span := opentracing.SpanFromContext(ctx)
+	defer span.Finish()
+
 	// Verify if UUID format is valid to avoid internal Postgres error
 	if _, err := uuid.FromString(channel); err != nil {
 		return things.ThingsPage{}, things.ErrNotFound
@@ -254,6 +280,7 @@ func (tr thingRepository) RetrieveByChannel(_ context.Context, owner, channel st
 		  ORDER BY th.id
 		  LIMIT :limit
 		  OFFSET :offset;`
+	span.SetTag("sql.statement", q)
 
 	params := map[string]interface{}{
 		"owner":   owner,
