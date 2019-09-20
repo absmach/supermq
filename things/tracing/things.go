@@ -148,12 +148,19 @@ func (tcm thingCacheMiddleware) Remove(ctx context.Context, thingID string) erro
 }
 
 func createSpan(ctx context.Context, tracer opentracing.Tracer, opName string) opentracing.Span {
+	var span opentracing.Span
 	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
-		return tracer.StartSpan(
+		span = tracer.StartSpan(
 			opName,
 			opentracing.ChildOf(parentSpan.Context()),
 		)
+	} else {
+		span = tracer.StartSpan(opName)
 	}
 
-	return tracer.StartSpan(opName)
+	span.SetTag("span.kind", "client")
+	span.SetTag("peer.service", "postgres")
+	span.SetTag("db.type", "sql")
+
+	return span
 }
