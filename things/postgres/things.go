@@ -178,12 +178,8 @@ func (tr thingRepository) RetrieveAll(_ context.Context, owner string, offset, l
 		name = fmt.Sprintf(`%%%s%%`, name)
 		nq = `AND LOWER(name) LIKE :name`
 	}
-	mq := ""
-	if len(metadata) > 0 {
-		mq = `metadata @> :metadata AND`
-	}
 
-	m, err := json.Marshal(metadata)
+	m, mq, err := getMetadataQuery(metadata)
 	if err != nil {
 		return things.ThingsPage{}, err
 	}

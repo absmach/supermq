@@ -116,15 +116,20 @@ func (cr channelRepository) RetrieveAll(_ context.Context, owner string, offset,
 		name = fmt.Sprintf(`%%%s%%`, name)
 		nq = `AND LOWER(name) LIKE :name`
 	}
+	m, mq, err := getMetadataQuery(metadata)
+	if err != nil {
+		return things.ChannelsPage{}, err
+	}
 
 	q := fmt.Sprintf(`SELECT id, name, metadata FROM channels
-	      WHERE owner = :owner %s ORDER BY id LIMIT :limit OFFSET :offset;`, nq)
+	      WHERE %s owner = :owner %s ORDER BY id LIMIT :limit OFFSET :offset;`, mq, nq)
 
 	params := map[string]interface{}{
-		"owner":  owner,
-		"limit":  limit,
-		"offset": offset,
-		"name":   name,
+		"owner":    owner,
+		"limit":    limit,
+		"offset":   offset,
+		"name":     name,
+		"metadata": m,
 	}
 	rows, err := cr.db.NamedQuery(q, params)
 	if err != nil {
@@ -345,20 +350,24 @@ type dbChannel struct {
 	ID       string `db:"id"`
 	Owner    string `db:"owner"`
 	Name     string `db:"name"`
-	Metadata string `db:"metadata"`
+	Metadata []byte `db:"metadata"`
 }
 
 func toDBChannel(ch things.Channel) (dbChannel, error) {
-	data, err := json.Marshal(ch.Metadata)
-	if err != nil {
-		return dbChannel{}, err
+	data := []byte("{}")
+	if len(ch.Metadata) > 0 {
+		b, err := json.Marshal(ch.Metadata)
+		if err != nil {
+			return dbChannel{}, err
+		}
+		data = b
 	}
 
 	return dbChannel{
 		ID:       ch.ID,
 		Owner:    ch.Owner,
 		Name:     ch.Name,
-		Metadata: string(data),
+		Metadata: data,
 	}, nil
 }
 
@@ -374,6 +383,21 @@ func toChannel(ch dbChannel) (things.Channel, error) {
 		Name:     ch.Name,
 		Metadata: metadata,
 	}, nil
+}
+
+func getMetadataQuery(m things.Metadata) ([]byte, string, error) {
+	mq := ""
+	mb := []byte("{}")
+	if len(m) > 0 {
+		mq = `metadata @> :metadata AND`
+
+		b, err := json.Marshal(m)
+		if err != nil {
+			return nil, "", err
+		}
+		mb = b
+	}
+	return mb, mq, nil
 }
 
 type dbConnection struct {
