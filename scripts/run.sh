@@ -22,7 +22,18 @@ function cleanup {
 # NATS
 ###
 gnatsd &
-sleep 1
+lsof_check=`command -v lsof`
+if [ -z "$lsof_check" ]
+then
+    echo "Waiting for gnatsd"
+    sleep 2
+else
+    until lsof -i :4222 | grep -q "gnatsd";
+    do
+        echo "Waiting for gnatsd"       
+        sleep 0.2
+    done
+fi
 
 ###
 # Users
