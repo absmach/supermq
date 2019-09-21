@@ -22,11 +22,6 @@ type tokenRes struct {
 	Token string `json:"token,omitempty"`
 }
 
-type identityRes struct {
-	Email    string                 `json:"email"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
-
 func (res tokenRes) Code() int {
 	return http.StatusCreated
 }
@@ -37,6 +32,23 @@ func (res tokenRes) Headers() map[string]string {
 
 func (res tokenRes) Empty() bool {
 	return res.Token == ""
+}
+
+type identityRes struct {
+	Email    string                 `json:"email"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
+}
+
+func (res identityRes) Code() int {
+	return http.StatusCreated
+}
+
+func (res identityRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res identityRes) Empty() bool {
+	return res.Email == "" && len(res.Metadata) == 0
 }
 
 type identityRes struct {
