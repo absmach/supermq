@@ -60,17 +60,10 @@ func (ms *metricsMiddleware) Identify(key string) (string, error) {
 	return ms.svc.Identify(key)
 }
 
-<<<<<<< HEAD
 func (ms *metricsMiddleware) UserInfo(ctx context.Context, key string) (users.User, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "user_info").Add(1)
 		ms.latency.With("method", "user_info").Observe(time.Since(begin).Seconds())
-=======
-func (ms *metricsMiddleware) UserInfo(ctx context.Context, key string) (users.UserInfo, error) {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "identity").Add(1)
-		ms.latency.With("method", "identity").Observe(time.Since(begin).Seconds())
->>>>>>> add metadata to users
 	}(time.Now())
 
 	return ms.svc.UserInfo(ctx, key)

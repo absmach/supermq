@@ -19,10 +19,6 @@ type userReq struct {
 	user users.User
 }
 
-type viewUserInfo struct {
-	token string
-}
-
 func (req userReq) validate() error {
 	return req.user.Validate()
 }
