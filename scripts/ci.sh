@@ -6,7 +6,7 @@ update_go() {
 	go version
 	sudo rm -rf /usr/local/go
 	wget https://dl.google.com/go/go1.13.linux-amd64.tar.gz
-	sudo tar -C /usr/local/golang/1.13 -xzf go1.13.linux-amd64.tar.gz
+	sudo mkdir /usr/local/golang/1.13 && sudo tar -C /usr/local/golang/1.13 -xzf go1.13.linux-amd64.tar.gz
 	rm go1.13.linux-amd64.tar.gz
 
 	# remove other Go version from path
