@@ -3,10 +3,12 @@ NPROC=$(nproc)
 
 update_go() {
 	echo "Update go version..."
+	go version
 	sudo rm -rf /usr/local/go
 	wget https://dl.google.com/go/go1.13.linux-amd64.tar.gz
-	sudo tar -C /usr/local -xzf go1.13.linux-amd64.tar.gz \
+	sudo tar -C /usr/local -xzf go1.13.linux-amd64.tar.gz
 	rm go1.13.linux-amd64.tar.gz
+	go version
 }
 
 setup_protoc() {
