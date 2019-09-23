@@ -1,6 +1,14 @@
 # This script contains commands to be executed by the CI tool.
 NPROC=$(nproc)
 
+update_go() {
+	echo "Update go version..."
+	sudo rm -rf /usr/local/go
+	wget https://dl.google.com/go/go1.13.linux-amd64.tar.gz
+	sudo tar -C /usr/local -xzf go1.13.linux-amd64.tar.gz \
+	rm go1.13.linux-amd64.tar.gz
+}
+
 setup_protoc() {
 	echo "Setting up protoc..."
 	PROTOC_ZIP=protoc-3.6.1-linux-x86_64.zip
@@ -48,6 +56,7 @@ setup_mf() {
 
 setup() {
 	echo "Setting up..."
+	update_go
 	setup_protoc
 	setup_mf
 }
