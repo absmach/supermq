@@ -186,7 +186,7 @@ func (svc *mainfluxThings) UpdateChannel(context.Context, string, things.Channel
 	panic("not implemented")
 }
 
-func (svc *mainfluxThings) ListChannels(context.Context, string, uint64, uint64, string, metadata things.Metadata) (things.ChannelsPage, error) {
+func (svc *mainfluxThings) ListChannels(context.Context, string, uint64, uint64, string, things.Metadata) (things.ChannelsPage, error) {
 	panic("not implemented")
 }
 
