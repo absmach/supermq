@@ -6,8 +6,20 @@ update_go() {
 	go version
 	sudo rm -rf /usr/local/go
 	wget https://dl.google.com/go/go1.13.linux-amd64.tar.gz
-	sudo tar -C /usr/local -xzf go1.13.linux-amd64.tar.gz
+	sudo tar -C /usr/local/golang/1.13 -xzf go1.13.linux-amd64.tar.gz
 	rm go1.13.linux-amd64.tar.gz
+
+	# remove other Go version from path
+	export PATH=`echo $PATH | sed -e 's|:/usr/local/golang/[1-9.]*/go/bin||'`
+
+	sudo ln -fs /usr/local/golang/1.13/go/bin/go /usr/local/bin/go
+
+	# setup GOROOT
+	export GOROOT="/usr/local/golang/1.13/go"
+
+	# add new go installation to PATH
+	export PATH="$PATH:/usr/local/golang/1.13/go/bin"
+
 	go version
 }
 
