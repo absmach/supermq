@@ -265,7 +265,7 @@ func TestTwinUpdateKey(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := repo.UpdateKey(context.Background(), tc.id, tc.key)
+		err := repo.UpdateKey(context.Background(), email, tc.id, tc.key)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
@@ -305,7 +305,7 @@ func TestTwinRetrieveByID(t *testing.T) {
 		err  error
 	}{
 		{
-			desc: "retreive an existing twin",
+			desc: "retrieve an existing twin",
 			id:   twin.ID,
 			err:  nil,
 		},
@@ -322,7 +322,7 @@ func TestTwinRetrieveByID(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, err := repo.RetrieveByID(context.Background(), tc.id)
+		_, err := repo.RetrieveByID(context.Background(), email, tc.id)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
@@ -379,7 +379,7 @@ func TestTwinRemove(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := repo.Remove(context.Background(), tc.id)
+		err := repo.Remove(context.Background(), email, tc.id)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }

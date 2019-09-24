@@ -31,14 +31,14 @@ type TwinRepository interface {
 
 	// UpdateKey performs an update key to the existing twin. A non-nil error is
 	// returned to indicate operation failure.
-	UpdateKey(ctx context.Context, id, key string) error
+	UpdateKey(ctx context.Context, owner, id, key string) error
 
 	// RetrieveByID retrieves the twin having the provided identifier.
-	RetrieveByID(context.Context, string) (Twin, error)
+	RetrieveByID(ctx context.Context, owner, id string) (Twin, error)
 
 	// RetrieveByKey retrieves the twin having the provided key.
-	RetrieveByKey(context.Context, string) (Twin, error)
+	RetrieveByKey(context.Context, string) (string, error)
 
 	// Remove removes the twin having the provided identifier.
-	Remove(context.Context, string) error
+	Remove(ctx context.Context, owner, id string) error
 }

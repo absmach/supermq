@@ -121,28 +121,28 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin)
 }
 
 func (ts *twinsService) UpdateKey(ctx context.Context, token, id, key string) error {
-	_, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return ErrUnauthorizedAccess
 	}
 
-	return ts.twins.UpdateKey(ctx, id, key)
+	return ts.twins.UpdateKey(ctx, res.GetValue(), id, key)
 }
 
 func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (Twin, error) {
-	_, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return Twin{}, ErrUnauthorizedAccess
 	}
 
-	return ts.twins.RetrieveByID(ctx, id)
+	return ts.twins.RetrieveByID(ctx, res.GetValue(), id)
 }
 
 func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) error {
-	_, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return ErrUnauthorizedAccess
 	}
 
-	return ts.twins.Remove(ctx, id)
+	return ts.twins.Remove(ctx, res.GetValue(), id)
 }
