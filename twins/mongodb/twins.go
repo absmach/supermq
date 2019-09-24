@@ -46,7 +46,7 @@ func NewTwinRepository(db *mongo.Database) twins.TwinRepository {
 func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) error {
 	coll := tr.db.Collection(collectionName)
 
-	if _, err := tr.RetrieveByID(ctx, tw.ID); err == nil {
+	if _, err := tr.RetrieveByID(ctx, tw.Owner, tw.ID); err == nil {
 		return twins.ErrConflict
 	}
 	if _, err := tr.RetrieveByKey(ctx, tw.Key); err == nil {
@@ -70,7 +70,7 @@ func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) error {
 func (tr *twinRepository) Update(ctx context.Context, tw twins.Twin) error {
 	coll := tr.db.Collection(collectionName)
 
-	if _, err := tr.RetrieveByID(ctx, tw.ID); err != nil {
+	if _, err := tr.RetrieveByID(ctx, tw.Owner, tw.ID); err != nil {
 		return twins.ErrNotFound
 	}
 
@@ -90,10 +90,10 @@ func (tr *twinRepository) Update(ctx context.Context, tw twins.Twin) error {
 
 // UpdateKey performs an update key of the existing twin. A non-nil error is
 // returned to indicate operation failure.
-func (tr *twinRepository) UpdateKey(ctx context.Context, id, key string) error {
+func (tr *twinRepository) UpdateKey(ctx context.Context, owner, id, key string) error {
 	coll := tr.db.Collection(collectionName)
 
-	if _, err := tr.RetrieveByID(ctx, id); err != nil {
+	if _, err := tr.RetrieveByID(ctx, owner, id); err != nil {
 		return twins.ErrNotFound
 	}
 
@@ -112,7 +112,7 @@ func (tr *twinRepository) UpdateKey(ctx context.Context, id, key string) error {
 }
 
 // RetrieveByID retrieves the twin having the provided identifier
-func (tr *twinRepository) RetrieveByID(_ context.Context, id string) (twins.Twin, error) {
+func (tr *twinRepository) RetrieveByID(_ context.Context, owner, id string) (twins.Twin, error) {
 	coll := tr.db.Collection(collectionName)
 	var tw twins.Twin
 
@@ -129,28 +129,28 @@ func (tr *twinRepository) RetrieveByID(_ context.Context, id string) (twins.Twin
 }
 
 // RetrieveByKey retrieves the twin having the provided key
-func (tr *twinRepository) RetrieveByKey(_ context.Context, key string) (twins.Twin, error) {
+func (tr *twinRepository) RetrieveByKey(_ context.Context, key string) (string, error) {
 	coll := tr.db.Collection(collectionName)
 	var tw twins.Twin
 
 	filter := bson.D{{"key", key}}
 
 	if err := coll.FindOne(context.Background(), filter).Decode(&tw); err != nil {
-		return tw, err
+		return "", err
 	}
 
-	return tw, nil
+	return tw.ID, nil
 }
 
 // Remove removes the twin having the provided id
-func (tr *twinRepository) Remove(ctx context.Context, id string) error {
+func (tr *twinRepository) Remove(ctx context.Context, owner, id string) error {
 	coll := tr.db.Collection(collectionName)
 
 	if err := uuid.New().IsValid(id); err != nil {
 		return err
 	}
 
-	if _, err := tr.RetrieveByID(ctx, id); err != nil {
+	if _, err := tr.RetrieveByID(ctx, "owner", id); err != nil {
 		return twins.ErrNotFound
 	}
 

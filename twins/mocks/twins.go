@@ -68,38 +68,58 @@ func (trm *twinRepositoryMock) Update(ctx context.Context, twin twins.Twin) erro
 	return nil
 }
 
-func (trm *twinRepositoryMock) UpdateKey(ctx context.Context, id, key string) error {
+func (trm *twinRepositoryMock) UpdateKey(ctx context.Context, owner, id, val string) error {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
 	for _, tw := range trm.twins {
-		if tw.Key == key {
+		if tw.Key == val {
 			return twins.ErrConflict
 		}
 	}
 
-	// dbKey := key()
+	dbKey := key(owner, id)
+
+	tw, ok := trm.twins[dbKey]
+	if !ok {
+		return twins.ErrNotFound
+	}
+
+	tw.Key = val
+	trm.twins[dbKey] = tw
 
 	return nil
 }
 
-func (trm *twinRepositoryMock) RetrieveByID(_ context.Context, id string) (twins.Twin, error) {
+func (trm *twinRepositoryMock) RetrieveByID(_ context.Context, owner, id string) (twins.Twin, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
-	return twins.Twin{}, nil
+	if tw, ok := trm.twins[key(owner, id)]; ok {
+		return tw, nil
+	}
+
+	return twins.Twin{}, twins.ErrNotFound
 }
 
-func (trm *twinRepositoryMock) RetrieveByKey(_ context.Context, key string) (twins.Twin, error) {
+func (trm *twinRepositoryMock) RetrieveByKey(_ context.Context, key string) (string, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
-	return twins.Twin{}, nil
+	for _, twin := range trm.twins {
+		if twin.Key == key {
+			return twin.ID, nil
+		}
+	}
+
+	return "", twins.ErrNotFound
 }
 
-func (trm *twinRepositoryMock) Remove(ctx context.Context, id string) error {
+func (trm *twinRepositoryMock) Remove(ctx context.Context, owner, id string) error {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
-	return nil
+	delete(trm.twins, key(owner, id))
+
+	return twins.ErrNotFound
 }
