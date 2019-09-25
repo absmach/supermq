@@ -22,6 +22,7 @@ function cleanup {
 # NATS
 ###
 gnatsd &
+counter=1
 until nc -zv localhost 4222 1>/dev/null 2>&1; 
 do
     sleep 0.5
