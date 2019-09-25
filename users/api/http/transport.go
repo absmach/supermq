@@ -213,6 +213,10 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	// if errors.Is(err, users.ErrUnauthorizedAccess) {
 	// 	w.WriteHeader(http.StatusForbidden)
 	// }
+
+	// For debug only:
+	fmt.Printf("debug... (%v, %T)\n", err, err)
+
 	switch {
 	case errors.Is(err, users.ErrMalformedEntity):
 		w.WriteHeader(http.StatusBadRequest)
@@ -241,6 +245,10 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 
 	if err != nil {
 		w.Header().Set("Content-Type", contentType)
-		json.NewEncoder(w).Encode(errorRes{Err: err.Error()})
+		if unw := errors.Unwrap(err); unw != nil {
+			json.NewEncoder(w).Encode(errorRes{Err: unw.Error()})
+		} else {
+			json.NewEncoder(w).Encode(errorRes{Err: err.Error()})
+		}
 	}
 }

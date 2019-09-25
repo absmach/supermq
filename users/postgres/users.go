@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
+	"fmt"
 
 	"github.com/lib/pq"
 	"github.com/mainflux/mainflux/users"
@@ -35,7 +36,8 @@ func (ur userRepository) Save(ctx context.Context, user users.User) error {
 	dbu := toDBUser(user)
 	if _, err := ur.db.NamedExecContext(ctx, q, dbu); err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && errDuplicate == pqErr.Code.Name() {
-			return users.ErrConflict
+			// return users.ErrConflict
+			return fmt.Errorf("%w: %s", users.ErrConflict, err)
 		}
 		return err
 	}
