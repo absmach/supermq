@@ -35,7 +35,7 @@ setup_protoc() {
 	sudo mv protoc3/bin/* /usr/local/bin/
 	sudo mv protoc3/include/* /usr/local/include/
 	rm -f PROTOC_ZIP
-	go get -u github.com/golang/protobuf/protoc-gen-go \
+	GO111MODULE=off go get -u github.com/golang/protobuf/protoc-gen-go \
 		github.com/gogo/protobuf/protoc-gen-gofast \
 		google.golang.org/grpc
 	
