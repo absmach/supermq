@@ -5,6 +5,7 @@
 package jwt
 
 import (
+	"fmt"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -51,7 +52,7 @@ func (idp *jwtIdentityProvider) Identity(key string) (string, error) {
 	})
 
 	if err != nil {
-		return "", users.ErrUnauthorizedAccess
+		return "", fmt.Errorf("%w: %s", users.ErrUnauthorizedAccess, err)
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {

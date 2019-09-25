@@ -5,6 +5,8 @@
 package bcrypt
 
 import (
+	"fmt"
+
 	"github.com/mainflux/mainflux/users"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -23,7 +25,7 @@ func New() users.Hasher {
 func (bh *bcryptHasher) Hash(pwd string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(pwd), cost)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("Generate hash failed: %w", err)
 	}
 
 	return string(hash), nil
