@@ -91,7 +91,7 @@ func (ur userRepository) RetrieveByID(ctx context.Context, email string) (users.
 	}
 	if err := ur.db.QueryRowxContext(ctx, q, email).StructScan(&dbu); err != nil {
 		if err == sql.ErrNoRows {
-			return users.User{}, users.ErrNotFound
+			return users.User{}, fmt.Errorf("User not found: %w", users.ErrNotFound)
 		}
 		return users.User{}, err
 	}
