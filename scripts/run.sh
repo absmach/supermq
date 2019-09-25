@@ -22,35 +22,17 @@ function cleanup {
 # NATS
 ###
 gnatsd &
-lsof_check=`command -v lsof`
-counter=1
-if [ -z "$lsof_check" ]
-then
 until nc -zv localhost 4222 1>/dev/null 2>&1; 
 do
-        sleep 0.5
-        ((counter++))
-        if [ ${counter} -gt 10 ]
-        then
-            echo "gnatsd failed, exiting"
-            exit 1
-        fi
-        echo "Waiting for gnatsd"       
+    sleep 0.5
+    ((counter++))
+    if [ ${counter} -gt 20 ]
+    then
+        echo "gnatsd failed, exiting"
+        exit 1
+    fi
+    echo "Waiting for gnatsd"       
 done
-else
-    until lsof -i :4222 | grep -q "gnatsd";
-    do
-        sleep 0.5
-        ((counter++))
-        if [ ${counter} -gt 10 ]
-        then
-            echo "gnatsd failed, exiting"
-            exit 1
-        fi
-        echo "Waiting for gnatsd"       
-    done
-
-fi
 
 ###
 # Users
