@@ -45,11 +45,9 @@ func (ur userRepository) Save(ctx context.Context, user users.User) error {
 	dbu := toDBUser(user)
 	if _, err := ur.db.NamedExecContext(ctx, q, dbu); err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && errDuplicate == pqErr.Code.Name() {
-			// return users.ErrConflict
-			return fmt.Errorf("%w: %s", users.ErrConflict, err)
+			return fmt.Errorf("%s: %w", users.ErrConflict, err)
 		}
-		// return err
-		return fmt.Errorf("%w: %s", ErrDatabase, err)
+		return fmt.Errorf("%s: %w", ErrDatabase, err)
 	}
 
 	return nil
@@ -93,7 +91,7 @@ func (ur userRepository) RetrieveByID(ctx context.Context, email string) (users.
 		if err == sql.ErrNoRows {
 			return users.User{}, fmt.Errorf("User not found: %w", users.ErrNotFound)
 		}
-		return users.User{}, err
+		return users.User{}, fmt.Errorf("%s: %w", ErrDatabase, err)
 	}
 
 	user := toUser(dbu)

@@ -27,12 +27,10 @@ type User struct {
 // Validate returns an error if user representation is invalid.
 func (u User) Validate() error {
 	if u.Email == "" || u.Password == "" {
-		// return ErrMalformedEntity
 		return fmt.Errorf("Email or Password is empty: %w", ErrMalformedEntity)
 	}
 
 	if !isEmail(u.Email) {
-		// return ErrMalformedEntity
 		return fmt.Errorf("Email is not valid email: %w", ErrMalformedEntity)
 	}
 
