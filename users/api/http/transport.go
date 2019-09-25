@@ -215,7 +215,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	// }
 
 	// For debug only:
-	fmt.Printf("debug... (%v, %T)\n", err, err)
+	// fmt.Printf("debug... (%v, %T)\n", err, err)
 
 	switch {
 	case errors.Is(err, users.ErrMalformedEntity):

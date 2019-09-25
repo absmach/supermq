@@ -5,6 +5,7 @@ package users_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -114,7 +115,10 @@ func TestIdentify(t *testing.T) {
 
 	for desc, tc := range cases {
 		_, err := svc.Identify(tc.key)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		// assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		if !errors.Is(err, tc.err) {
+			t.Errorf("%s: expected %s got %s\n", desc, tc.err, err)
+		}
 	}
 }
 
