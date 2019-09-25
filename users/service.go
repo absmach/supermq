@@ -99,7 +99,7 @@ func New(users UserRepository, hasher Hasher, idp IdentityProvider, m Emailer, t
 func (svc usersService) Register(ctx context.Context, user User) error {
 	hash, err := svc.hasher.Hash(user.Password)
 	if err != nil {
-		return fmt.Errorf("%w: %s", ErrMalformedEntity, err)
+		return fmt.Errorf("%s: %w", ErrMalformedEntity, err)
 		// return ErrMalformedEntity
 	}
 

@@ -246,9 +246,16 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	if err != nil {
 		w.Header().Set("Content-Type", contentType)
 		if unw := errors.Unwrap(err); unw != nil {
-			json.NewEncoder(w).Encode(errorRes{Err: unw.Error()})
+			// wrapper := strings.TrimSuffix(strings.TrimSuffix(err.Error(), unw.Error()), ": ")
+			json.NewEncoder(w).Encode(errorRes{Err: Wrapper(err)})
 		} else {
 			json.NewEncoder(w).Encode(errorRes{Err: err.Error()})
 		}
 	}
+}
+
+// Wrapper returns a wrapper around wrapped error
+func Wrapper(err error) string {
+	wrapper := strings.SplitN(err.Error(), ":", 2)
+	return wrapper[0]
 }
