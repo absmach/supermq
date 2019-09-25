@@ -88,11 +88,12 @@ func (c *Client) publish(r chan *runResults) {
 
 	for i := 0; i < c.MsgCount; i++ {
 		wg.Add(1)
-		go func(mut *sync.Mutex, wg *sync.WaitGroup, t *[]*float64, i int) {
+		go func(mut *sync.Mutex, wg *sync.WaitGroup, t *[]*float64, i int, m message) {
 			defer wg.Done()
+			m.Sent = time.Now()
 
 			token := (*c.mqttClient).Publish(m.Topic, m.QoS, c.Retain, payload)
-			if !token.WaitTimeout(time.Second*time.Duration(c.timeout)) || token.Error() != nil {
+			if !token.WaitTimeout(time.Second*time.Duration(c.timeout)) || token.Error() != nil || !(*c.mqttClient).IsConnectionOpen() {
 				m.Error = true
 				mu.Lock()
 				times[i] = calcMsgRes(&m, res)
@@ -105,10 +106,11 @@ func (c *Client) publish(r chan *runResults) {
 			mu.Lock()
 			times[i] = calcMsgRes(&m, res)
 			mu.Unlock()
+
 			if !c.Quiet && i > 0 && i%100 == 0 {
 				log.Printf("Client %v published %v messages and keeps publishing...\n", c.ID, i)
 			}
-		}(&mu, &wg, &times, i)
+		}(&mu, &wg, &times, i, m)
 	}
 	wg.Wait()
 

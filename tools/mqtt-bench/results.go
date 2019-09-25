@@ -184,7 +184,7 @@ func printResults(results []*runResults, totals *totalResults, format string, qu
 		fmt.Printf("Average Runtime (sec):       %.3f\n", totals.AvgRunTime)
 		fmt.Printf("Msg time min (µs):           %.3f\n", totals.MsgTimeMin)
 		fmt.Printf("Msg time max (µs):           %.3f\n", totals.MsgTimeMax)
-		fmt.Printf("Msg time mean (µs):     %.3f\n", totals.MsgTimeMeanAvg)
+		fmt.Printf("Msg time mean (µs):          %.3f\n", totals.MsgTimeMeanAvg)
 		fmt.Printf("Msg time mean std (µs):      %.3f\n", totals.MsgTimeMeanStd)
 
 		fmt.Printf("Average Bandwidth (msg/sec): %.3f\n", totals.AvgMsgsPerSec)

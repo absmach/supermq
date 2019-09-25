@@ -70,5 +70,4 @@ Complete documentation is available at https://mainflux.readthedocs.io`,
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
-
 }
