@@ -6,12 +6,21 @@ package postgres
 import (
 	"context"
 	"database/sql"
+<<<<<<< HEAD
 	"database/sql/driver"
 	"encoding/json"
+=======
+	"errors"
+>>>>>>> Add internal database error
 	"fmt"
 
 	"github.com/lib/pq"
 	"github.com/mainflux/mainflux/users"
+)
+
+var (
+	// ErrDatabase indicates internal database error
+	ErrDatabase = errors.New("Database error")
 )
 
 var _ users.UserRepository = (*userRepository)(nil)
@@ -39,7 +48,8 @@ func (ur userRepository) Save(ctx context.Context, user users.User) error {
 			// return users.ErrConflict
 			return fmt.Errorf("%w: %s", users.ErrConflict, err)
 		}
-		return err
+		// return err
+		return fmt.Errorf("%w: %s", ErrDatabase, err)
 	}
 
 	return nil
