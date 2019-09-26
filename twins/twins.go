@@ -23,7 +23,7 @@ type Twin struct {
 type TwinRepository interface {
 	// Save persists the twin. Successful operation is indicated by non-nil
 	// error response.
-	Save(context.Context, Twin) error
+	Save(context.Context, Twin) (string, error)
 
 	// Update performs an update to the existing twin. A non-nil error is
 	// returned to indicate operation failure.

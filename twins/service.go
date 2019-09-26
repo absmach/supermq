@@ -102,9 +102,12 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin) (T
 		}
 	}
 
-	if err := ts.twins.Save(ctx, twin); err != nil {
+	id, err := ts.twins.Save(ctx, twin)
+	if err != nil {
 		return Twin{}, err
 	}
+
+	twin.ID = id
 
 	return twin, nil
 }

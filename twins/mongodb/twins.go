@@ -37,26 +37,26 @@ func NewTwinRepository(db *mongo.Database) twins.TwinRepository {
 
 // Save persists the twin. Successful operation is indicated by a nil
 // error response.
-func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) error {
+func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) (string, error) {
 	coll := tr.db.Collection(collectionName)
 
 	if _, err := tr.RetrieveByID(ctx, tw.Owner, tw.ID); err == nil {
-		return twins.ErrConflict
+		return "", twins.ErrConflict
 	}
 	if _, err := tr.RetrieveByKey(ctx, tw.Key); err == nil {
-		return twins.ErrConflict
+		return "", twins.ErrConflict
 	}
 
 	dbtw, err := toDBTwin(tw)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if _, err := coll.InsertOne(context.Background(), dbtw); err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return tw.ID, nil
 }
 
 // Update performs an update to the existing twins. A non-nil error is

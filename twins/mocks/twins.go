@@ -30,19 +30,19 @@ func NewTwinRepository() twins.TwinRepository {
 	}
 }
 
-func (trm *twinRepositoryMock) Save(ctx context.Context, twin twins.Twin) error {
+func (trm *twinRepositoryMock) Save(ctx context.Context, twin twins.Twin) (string, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
 	for _, tw := range trm.twins {
 		if tw.ID == twin.ID {
-			return twins.ErrConflict
+			return "", twins.ErrConflict
 		}
 	}
 
 	for _, tw := range trm.twins {
 		if tw.Key == twin.Key {
-			return twins.ErrConflict
+			return "", twins.ErrConflict
 		}
 	}
 
@@ -50,7 +50,7 @@ func (trm *twinRepositoryMock) Save(ctx context.Context, twin twins.Twin) error 
 	twin.ID = strconv.FormatUint(trm.counter, 10)
 	trm.twins[key(twin.Owner, twin.ID)] = twin
 
-	return nil
+	return twin.ID, nil
 }
 
 func (trm *twinRepositoryMock) Update(ctx context.Context, twin twins.Twin) error {
@@ -121,5 +121,5 @@ func (trm *twinRepositoryMock) Remove(ctx context.Context, owner, id string) err
 
 	delete(trm.twins, key(owner, id))
 
-	return twins.ErrNotFound
+	return nil
 }
