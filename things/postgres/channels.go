@@ -16,37 +16,31 @@ import (
 	"strings"
 
 	"github.com/gofrs/uuid"
-	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/mainflux/mainflux/things"
-	"github.com/opentracing/opentracing-go"
 )
 
 var _ things.ChannelRepository = (*channelRepository)(nil)
 
 type channelRepository struct {
-	db *sqlx.DB
+	dm DatabaseMiddleware
 }
 
 // NewChannelRepository instantiates a PostgreSQL implementation of channel
 // repository.
-func NewChannelRepository(db *sqlx.DB) things.ChannelRepository {
+func NewChannelRepository(dm DatabaseMiddleware) things.ChannelRepository {
 	return &channelRepository{
-		db: db,
+		dm: dm,
 	}
 }
 
 func (cr channelRepository) Save(ctx context.Context, channel things.Channel) (string, error) {
-	span := opentracing.SpanFromContext(ctx)
-	defer span.Finish()
-
 	q := `INSERT INTO channels (id, owner, name, metadata)
 		VALUES (:id, :owner, :name, :metadata);`
-	span.SetTag("sql.statement", q)
 
 	dbch := toDBChannel(channel)
 
-	if _, err := cr.db.NamedExec(q, dbch); err != nil {
+	if _, err := cr.dm.NamedExec(ctx, q, dbch); err != nil {
 		pqErr, ok := err.(*pq.Error)
 		if ok {
 			switch pqErr.Code.Name() {
@@ -62,15 +56,11 @@ func (cr channelRepository) Save(ctx context.Context, channel things.Channel) (s
 }
 
 func (cr channelRepository) Update(ctx context.Context, channel things.Channel) error {
-	span := opentracing.SpanFromContext(ctx)
-	defer span.Finish()
-
 	q := `UPDATE channels SET name = :name, metadata = :metadata WHERE owner = :owner AND id = :id;`
-	span.SetTag("sql.statement", q)
 
 	dbch := toDBChannel(channel)
 
-	res, err := cr.db.NamedExec(q, dbch)
+	res, err := cr.dm.NamedExec(ctx, q, dbch)
 	if err != nil {
 		pqErr, ok := err.(*pq.Error)
 		if ok {
@@ -96,17 +86,13 @@ func (cr channelRepository) Update(ctx context.Context, channel things.Channel) 
 }
 
 func (cr channelRepository) RetrieveByID(ctx context.Context, owner, id string) (things.Channel, error) {
-	span := opentracing.SpanFromContext(ctx)
-	defer span.Finish()
-
 	q := `SELECT name, metadata FROM channels WHERE id = $1 AND owner = $2;`
-	span.SetTag("sql.statement", q)
 
 	dbch := dbChannel{
 		ID:    id,
 		Owner: owner,
 	}
-	if err := cr.db.QueryRowx(q, id, owner).StructScan(&dbch); err != nil {
+	if err := cr.dm.QueryRowx(ctx, q, id, owner).StructScan(&dbch); err != nil {
 		empty := things.Channel{}
 		pqErr, ok := err.(*pq.Error)
 		if err == sql.ErrNoRows || ok && errInvalid == pqErr.Code.Name() {
@@ -135,7 +121,7 @@ func (cr channelRepository) RetrieveAll(_ context.Context, owner string, offset,
 		"name":     name,
 		"metadata": m,
 	}
-	rows, err := cr.db.NamedQuery(q, params)
+	rows, err := cr.dm.NamedQuery(ctx, q, params)
 	if err != nil {
 		return things.ChannelsPage{}, err
 	}
@@ -162,11 +148,11 @@ func (cr channelRepository) RetrieveAll(_ context.Context, owner string, offset,
 	total := uint64(0)
 	switch name {
 	case "":
-		if err := cr.db.Get(&total, q, owner); err != nil {
+		if err := cr.dm.Get(ctx, &total, q, owner); err != nil {
 			return things.ChannelsPage{}, err
 		}
 	default:
-		if err := cr.db.Get(&total, q, owner, name); err != nil {
+		if err := cr.dm.Get(ctx, &total, q, owner, name); err != nil {
 			return things.ChannelsPage{}, err
 		}
 	}
@@ -184,9 +170,6 @@ func (cr channelRepository) RetrieveAll(_ context.Context, owner string, offset,
 }
 
 func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing string, offset, limit uint64) (things.ChannelsPage, error) {
-	span := opentracing.SpanFromContext(ctx)
-	defer span.Finish()
-
 	// Verify if UUID format is valid to avoid internal Postgres error
 	if _, err := uuid.FromString(thing); err != nil {
 		return things.ChannelsPage{}, things.ErrNotFound
@@ -200,7 +183,6 @@ func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing st
 		  ORDER BY ch.id
 		  LIMIT :limit
 		  OFFSET :offset`
-	span.SetTag("sql.statement", q)
 
 	params := map[string]interface{}{
 		"owner":  owner,
@@ -209,7 +191,7 @@ func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing st
 		"offset": offset,
 	}
 
-	rows, err := cr.db.NamedQuery(q, params)
+	rows, err := cr.dm.NamedQuery(ctx, q, params)
 	if err != nil {
 		return things.ChannelsPage{}, err
 	}
@@ -233,7 +215,7 @@ func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing st
 	     WHERE ch.owner = $1 AND co.thing_id = $2`
 
 	var total uint64
-	if err := cr.db.Get(&total, q, owner, thing); err != nil {
+	if err := cr.dm.Get(ctx, &total, q, owner, thing); err != nil {
 		return things.ChannelsPage{}, err
 	}
 
@@ -248,26 +230,18 @@ func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing st
 }
 
 func (cr channelRepository) Remove(ctx context.Context, owner, id string) error {
-	span := opentracing.SpanFromContext(ctx)
-	defer span.Finish()
-
 	dbch := dbChannel{
 		ID:    id,
 		Owner: owner,
 	}
 	q := `DELETE FROM channels WHERE id = :id AND owner = :owner`
-	span.SetTag("sql.statement", q)
-	cr.db.NamedExec(q, dbch)
+	cr.dm.NamedExec(ctx, q, dbch)
 	return nil
 }
 
 func (cr channelRepository) Connect(ctx context.Context, owner, chanID, thingID string) error {
-	span := opentracing.SpanFromContext(ctx)
-	defer span.Finish()
-
 	q := `INSERT INTO connections (channel_id, channel_owner, thing_id, thing_owner)
 	      VALUES (:channel, :owner, :thing, :owner);`
-	span.SetTag("sql.statement", q)
 
 	conn := dbConnection{
 		Channel: chanID,
@@ -275,7 +249,7 @@ func (cr channelRepository) Connect(ctx context.Context, owner, chanID, thingID 
 		Owner:   owner,
 	}
 
-	if _, err := cr.db.NamedExec(q, conn); err != nil {
+	if _, err := cr.dm.NamedExec(ctx, q, conn); err != nil {
 		pqErr, ok := err.(*pq.Error)
 
 		if ok && errFK == pqErr.Code.Name() {
@@ -294,13 +268,9 @@ func (cr channelRepository) Connect(ctx context.Context, owner, chanID, thingID 
 }
 
 func (cr channelRepository) Disconnect(ctx context.Context, owner, chanID, thingID string) error {
-	span := opentracing.SpanFromContext(ctx)
-	defer span.Finish()
-
 	q := `DELETE FROM connections
 	      WHERE channel_id = :channel AND channel_owner = :owner
 	      AND thing_id = :thing AND thing_owner = :owner`
-	span.SetTag("sql.statement", q)
 
 	conn := dbConnection{
 		Channel: chanID,
@@ -308,7 +278,7 @@ func (cr channelRepository) Disconnect(ctx context.Context, owner, chanID, thing
 		Owner:   owner,
 	}
 
-	res, err := cr.db.NamedExec(q, conn)
+	res, err := cr.dm.NamedExec(ctx, q, conn)
 	if err != nil {
 		return err
 	}
@@ -326,33 +296,28 @@ func (cr channelRepository) Disconnect(ctx context.Context, owner, chanID, thing
 }
 
 func (cr channelRepository) HasThing(ctx context.Context, chanID, key string) (string, error) {
-	span := opentracing.SpanFromContext(ctx)
-	defer span.Finish()
-
 	var thingID string
-
 	q := `SELECT id FROM things WHERE key = $1`
-	span.SetTag("sql.statement", q)
-	if err := cr.db.QueryRow(q, key).Scan(&thingID); err != nil {
+	if err := cr.dm.QueryRowx(ctx, q, key).Scan(&thingID); err != nil {
 		return "", err
 
 	}
 
-	if err := cr.hasThing(chanID, thingID); err != nil {
+	if err := cr.hasThing(ctx, chanID, thingID); err != nil {
 		return "", err
 	}
 
 	return thingID, nil
 }
 
-func (cr channelRepository) HasThingByID(_ context.Context, chanID, thingID string) error {
-	return cr.hasThing(chanID, thingID)
+func (cr channelRepository) HasThingByID(ctx context.Context, chanID, thingID string) error {
+	return cr.hasThing(ctx, chanID, thingID)
 }
 
-func (cr channelRepository) hasThing(chanID, thingID string) error {
+func (cr channelRepository) hasThing(ctx context.Context, chanID, thingID string) error {
 	q := `SELECT EXISTS (SELECT 1 FROM connections WHERE channel_id = $1 AND thing_id = $2);`
 	exists := false
-	if err := cr.db.QueryRow(q, chanID, thingID).Scan(&exists); err != nil {
+	if err := cr.dm.QueryRowx(ctx, q, chanID, thingID).Scan(&exists); err != nil {
 		return err
 	}
 
@@ -451,7 +416,7 @@ func getMetadataQuery(m things.Metadata) ([]byte, string, error) {
 }
 
 type dbConnection struct {
-	Channel string `db:"channel"`
-	Thing   string `db:"thing"`
-	Owner   string `db:"owner"`
+	Channel string `dm:"channel"`
+	Thing   string `dm:"thing"`
+	Owner   string `dm:"owner"`
 }
