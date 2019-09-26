@@ -178,7 +178,8 @@ func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sqlx.DB {
 }
 
 func newService(db *sqlx.DB, tracer opentracing.Tracer, secret string, logger logger.Logger) users.Service {
-	repo := tracing.UserRepositoryMiddleware(postgres.New(db), tracer)
+	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	repo := tracing.UserRepositoryMiddleware(postgres.New(dbMiddleware), tracer)
 	hasher := bcrypt.New()
 	idp := jwt.New(secret)
 

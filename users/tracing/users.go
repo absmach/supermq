@@ -54,19 +54,11 @@ func (urm userRepositoryMiddleware) RetrieveByID(ctx context.Context, id string)
 }
 
 func createSpan(ctx context.Context, tracer opentracing.Tracer, opName string) opentracing.Span {
-	var span opentracing.Span
 	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
-		span = tracer.StartSpan(
+		return tracer.StartSpan(
 			opName,
 			opentracing.ChildOf(parentSpan.Context()),
 		)
-	} else {
-		span = tracer.StartSpan(opName)
 	}
-
-	span.SetTag("span.kind", "client")
-	span.SetTag("peer.service", "postgres")
-	span.SetTag("db.type", "sql")
-
-	return span
+	return tracer.StartSpan(opName)
 }

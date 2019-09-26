@@ -13,9 +13,6 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 
-	"github.com/jmoiron/sqlx"
-	"github.com/opentracing/opentracing-go"
-
 	"github.com/lib/pq"
 	"github.com/mainflux/mainflux/users"
 )
@@ -25,25 +22,22 @@ var _ users.UserRepository = (*userRepository)(nil)
 const errDuplicate = "unique_violation"
 
 type userRepository struct {
-	db *sqlx.DB
+	dm DatabaseMiddleware
 }
 
 // New instantiates a PostgreSQL implementation of user
 // repository.
-func New(db *sqlx.DB) users.UserRepository {
-	return &userRepository{db}
+func New(dm DatabaseMiddleware) users.UserRepository {
+	return &userRepository{
+		dm: dm,
+	}
 }
 
 func (ur userRepository) Save(ctx context.Context, user users.User) error {
-	span := opentracing.SpanFromContext(ctx)
-	defer span.Finish()
-
 	q := `INSERT INTO users (email, password, metadata) VALUES (:email, :password, :metadata)`
-	span.SetTag("sql.statement", q)
 
 	dbu := toDBUser(user)
-
-	if _, err := ur.db.NamedExec(q, dbu); err != nil {
+	if _, err := ur.dm.NamedExec(ctx, q, dbu); err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && errDuplicate == pqErr.Code.Name() {
 			return users.ErrConflict
 		}
@@ -54,16 +48,12 @@ func (ur userRepository) Save(ctx context.Context, user users.User) error {
 }
 
 func (ur userRepository) RetrieveByID(ctx context.Context, email string) (users.User, error) {
-	span := opentracing.SpanFromContext(ctx)
-	defer span.Finish()
-
 	q := `SELECT password, metadata FROM users WHERE email = $1`
-	span.SetTag("sql.statement", q)
 
 	dbu := dbUser{
 		Email: email,
 	}
-	if err := ur.db.QueryRowx(q, email).StructScan(&dbu); err != nil {
+	if err := ur.dm.QueryRowx(ctx, q, email).StructScan(&dbu); err != nil {
 		if err == sql.ErrNoRows {
 			return users.User{}, users.ErrNotFound
 		}
