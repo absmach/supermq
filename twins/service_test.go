@@ -12,10 +12,8 @@ import (
 	"fmt"
 	"testing"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/mocks"
-	broker "github.com/nats-io/go-nats"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -25,7 +23,6 @@ const (
 	wrongValue = "wrong-value"
 	email      = "user@example.com"
 	token      = "token"
-	natsURL    = "nats://localhost:4222"
 )
 
 var (
@@ -37,12 +34,7 @@ func newService(tokens map[string]string) twins.Service {
 	twinsRepo := mocks.NewTwinRepository()
 	idp := mocks.NewIdentityProvider()
 
-	nc, _ := broker.Connect(natsURL)
-
-	opts := mqtt.NewClientOptions()
-	mc := mqtt.NewClient(opts)
-
-	return twins.New("secret", nc, mc, users, twinsRepo, idp)
+	return twins.New("secret", users, twinsRepo, idp)
 }
 
 func TestAddTwin(t *testing.T) {
@@ -184,62 +176,6 @@ func TestViewTwin(t *testing.T) {
 
 	for desc, tc := range cases {
 		_, err := svc.ViewTwin(context.Background(), tc.token, tc.id)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
-	}
-}
-
-func TestListTwins(t *testing.T) {
-	svc := newService(map[string]string{token: email})
-
-	m := make(map[string]interface{})
-	m["serial"] = "123456"
-	twin.Metadata = m
-
-	n := uint64(10)
-	for i := uint64(0); i < n; i++ {
-		svc.AddTwin(context.Background(), token, twin)
-	}
-
-	cases := map[string]struct {
-		token    string
-		offset   uint64
-		limit    uint64
-		name     string
-		size     uint64
-		metadata map[string]interface{}
-		err      error
-	}{
-		"list all twins": {
-			token: token,
-			limit: n + 1,
-			size:  n,
-			err:   nil,
-		},
-		"list with zero limit": {
-			token: token,
-			limit: 0,
-			size:  0,
-			err:   nil,
-		},
-		"list with wrong credentials": {
-			token: wrongValue,
-			limit: 0,
-			size:  0,
-			err:   twins.ErrUnauthorizedAccess,
-		},
-		"list with metadata": {
-			token:    token,
-			limit:    n + 1,
-			size:     n,
-			err:      nil,
-			metadata: m,
-		},
-	}
-
-	for desc, tc := range cases {
-		page, err := svc.ListTwins(context.Background(), tc.token, tc.limit, tc.name, tc.metadata)
-		size := uint64(len(page.Twins))
-		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }

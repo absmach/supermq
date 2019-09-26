@@ -125,7 +125,7 @@ func TestTwinSave(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := repo.Save(context.Background(), tc.twin)
+		_, err := repo.Save(context.Background(), tc.twin)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
@@ -155,7 +155,7 @@ func TestThingUpdate(t *testing.T) {
 		Key:   twkey,
 	}
 
-	if err := repo.Save(context.Background(), twin); err != nil {
+	if _, err := repo.Save(context.Background(), twin); err != nil {
 		testLog.Error(err.Error())
 	}
 
@@ -234,7 +234,7 @@ func TestTwinUpdateKey(t *testing.T) {
 		Key:   twkey,
 	}
 
-	if err := repo.Save(context.Background(), twin); err != nil {
+	if _, err := repo.Save(context.Background(), twin); err != nil {
 		testLog.Error(err.Error())
 	}
 
@@ -295,7 +295,7 @@ func TestTwinRetrieveByID(t *testing.T) {
 		Key:   twkey,
 	}
 
-	if err := repo.Save(context.Background(), twin); err != nil {
+	if _, err := repo.Save(context.Background(), twin); err != nil {
 		testLog.Error(err.Error())
 	}
 
@@ -352,7 +352,7 @@ func TestTwinRemove(t *testing.T) {
 		Key:   twkey,
 	}
 
-	if err := repo.Save(context.Background(), twin); err != nil {
+	if _, err := repo.Save(context.Background(), twin); err != nil {
 		testLog.Error(err.Error())
 	}
 
