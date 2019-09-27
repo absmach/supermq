@@ -4,6 +4,7 @@
 package users_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -54,6 +55,6 @@ func TestValidate(t *testing.T) {
 
 	for desc, tc := range cases {
 		err := tc.user.Validate()
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s", desc, tc.err, err))
+		assert.True(t, errors.Is(err, tc.err), fmt.Sprintf("%s: expected %s got %s", desc, tc.err, err))
 	}
 }

@@ -62,7 +62,7 @@ func TestRegister(t *testing.T) {
 
 	for _, tc := range cases {
 		err := svc.Register(context.Background(), tc.user)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.True(t, errors.Is(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
@@ -96,7 +96,7 @@ func TestLogin(t *testing.T) {
 
 	for desc, tc := range cases {
 		_, err := svc.Login(context.Background(), tc.user)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		assert.True(t, errors.Is(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
 
