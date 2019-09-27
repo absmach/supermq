@@ -27,12 +27,12 @@ until nc -zv localhost 4222 1>/dev/null 2>&1;
 do
     sleep 0.5
     ((counter++))
-    if [ ${counter} -gt 20 ]
+    if [ ${counter} -gt 10 ]
     then
-        echo "gnatsd failed, exiting"
+        echo -ne "gnatsd failed to start in 5 sec, exiting"
         exit 1
     fi
-    echo "Waiting for gnatsd"       
+    echo -ne "Waiting for gnatsd"
 done
 
 ###
