@@ -110,19 +110,14 @@ func (cr channelRepository) RetrieveByID(_ context.Context, owner, id string) (t
 }
 
 func (cr channelRepository) RetrieveAll(_ context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ChannelsPage, error) {
-	name = strings.ToLower(name)
-	nq := ""
-	if name != "" {
-		name = fmt.Sprintf(`%%%s%%`, name)
-		nq = `AND LOWER(name) LIKE :name`
-	}
+	nq := getNameQuery(name)
 	m, mq, err := getMetadataQuery(metadata)
 	if err != nil {
 		return things.ChannelsPage{}, err
 	}
 
 	q := fmt.Sprintf(`SELECT id, name, metadata FROM channels
-	      WHERE %s owner = :owner %s ORDER BY id LIMIT :limit OFFSET :offset;`, mq, nq)
+	      WHERE owner = :owner %s %s ORDER BY id LIMIT :limit OFFSET :offset;`, mq, nq)
 
 	params := map[string]interface{}{
 		"owner":    owner,
@@ -385,11 +380,21 @@ func toChannel(ch dbChannel) (things.Channel, error) {
 	}, nil
 }
 
+func getNameQuery(name string) string {
+	name = strings.ToLower(name)
+	nq := ""
+	if name != "" {
+		name = fmt.Sprintf(`%%%s%%`, name)
+		nq = `AND LOWER(name) LIKE :name`
+	}
+	return nq
+}
+
 func getMetadataQuery(m things.Metadata) ([]byte, string, error) {
 	mq := ""
 	mb := []byte("{}")
 	if len(m) > 0 {
-		mq = `metadata @> :metadata AND`
+		mq = `AND metadata @> :metadata`
 
 		b, err := json.Marshal(m)
 		if err != nil {
