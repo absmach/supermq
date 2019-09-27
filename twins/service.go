@@ -11,6 +11,7 @@ import (
 	"context"
 	"errors"
 
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/mainflux/mainflux"
 )
 
@@ -57,21 +58,23 @@ type Service interface {
 }
 
 type twinsService struct {
-	users  mainflux.UsersServiceClient
-	secret string
-	twins  TwinRepository
-	idp    IdentityProvider
+	secret     string
+	mqttClient mqtt.Client
+	users      mainflux.UsersServiceClient
+	twins      TwinRepository
+	idp        IdentityProvider
 }
 
 var _ Service = (*twinsService)(nil)
 
 // New instantiates the twins service implementation.
-func New(secret string, users mainflux.UsersServiceClient, twins TwinRepository, idp IdentityProvider) Service {
+func New(secret string, mc mqtt.Client, users mainflux.UsersServiceClient, twins TwinRepository, idp IdentityProvider) Service {
 	return &twinsService{
-		users:  users,
-		secret: secret,
-		twins:  twins,
-		idp:    idp,
+		secret:     secret,
+		mqttClient: mc,
+		users:      users,
+		twins:      twins,
+		idp:        idp,
 	}
 }
 
