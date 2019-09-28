@@ -30,45 +30,31 @@ func NewDatabaseMiddleware(db *sqlx.DB) DatabaseMiddleware {
 }
 
 func (dm databaseMiddleware) NamedExec(ctx context.Context, query string, args interface{}) (sql.Result, error) {
-	span := opentracing.SpanFromContext(ctx)
-
-	span.SetTag("sql.statement", query)
-	span.SetTag("span.kind", "client")
-	span.SetTag("peer.service", "postgres")
-	span.SetTag("db.type", "sql")
-
+	addSpanTags(ctx, query)
 	return dm.db.NamedExec(query, args)
 }
 
 func (dm databaseMiddleware) QueryRowx(ctx context.Context, query string, args ...interface{}) *sqlx.Row {
-	span := opentracing.SpanFromContext(ctx)
-
-	span.SetTag("sql.statement", query)
-	span.SetTag("span.kind", "client")
-	span.SetTag("peer.service", "postgres")
-	span.SetTag("db.type", "sql")
-
+	addSpanTags(ctx, query)
 	return dm.db.QueryRowx(query, args...)
 }
 
 func (dm databaseMiddleware) NamedQuery(ctx context.Context, query string, args interface{}) (*sqlx.Rows, error) {
-	span := opentracing.SpanFromContext(ctx)
-
-	span.SetTag("sql.statement", query)
-	span.SetTag("span.kind", "client")
-	span.SetTag("peer.service", "postgres")
-	span.SetTag("db.type", "sql")
-
+	addSpanTags(ctx, query)
 	return dm.db.NamedQuery(query, args)
 }
 
 func (dm databaseMiddleware) Get(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
-	span := opentracing.SpanFromContext(ctx)
-
-	span.SetTag("sql.statement", query)
-	span.SetTag("span.kind", "client")
-	span.SetTag("peer.service", "postgres")
-	span.SetTag("db.type", "sql")
-
+	addSpanTags(ctx, query)
 	return dm.db.Get(dest, query, args...)
+}
+
+func addSpanTags(ctx context.Context, query string) {
+	span := opentracing.SpanFromContext(ctx)
+	if span != nil {
+		span.SetTag("sql.statement", query)
+		span.SetTag("span.kind", "client")
+		span.SetTag("peer.service", "postgres")
+		span.SetTag("db.type", "sql")
+	}
 }

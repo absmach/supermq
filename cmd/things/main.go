@@ -306,7 +306,6 @@ func connectToUsers(cfg config, logger logger.Logger) *grpc.ClientConn {
 }
 
 func newService(users mainflux.UsersServiceClient, dbTracer opentracing.Tracer, cacheTracer opentracing.Tracer, db *sqlx.DB, cacheClient *redis.Client, esClient *redis.Client, logger logger.Logger) things.Service {
-
 	dbMiddleware := postgres.NewDatabaseMiddleware(db)
 
 	thingsRepo := postgres.NewThingRepository(dbMiddleware)
