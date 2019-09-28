@@ -109,33 +109,18 @@ type dbUser struct {
 	Metadata dbMetadata `db:"metadata"`
 }
 
-func toDBUser(u users.User) (dbUser, error) {
-	m := []byte("{}")
-	if len(u.Metadata) > 0 {
-		data, err := json.Marshal(u.Metadata)
-		if err != nil {
-			return dbUser{}, err
-		}
-		m = data
-	}
-
+func toDBUser(u users.User) dbUser {
 	return dbUser{
 		Email:    u.Email,
 		Password: u.Password,
-		Metadata: m,
-	}, nil
+		Metadata: u.Metadata,
+	}
 }
 
 func toUser(dbu dbUser) users.User {
-
-	var metadata map[string]interface{}
-	if err := json.Unmarshal([]byte(dbu.Metadata), &metadata); err != nil {
-		return users.User{}
-	}
-
 	return users.User{
 		Email:    dbu.Email,
 		Password: dbu.Password,
-		Metadata: metadata,
+		Metadata: dbu.Metadata,
 	}
 }
