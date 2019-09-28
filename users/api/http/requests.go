@@ -7,9 +7,7 @@
 
 package http
 
-import (
-	"github.com/mainflux/mainflux/users"
-)
+import 	"github.com/mainflux/mainflux/users"
 
 type apiReq interface {
 	validate() error
