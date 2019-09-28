@@ -110,7 +110,8 @@ func (cr channelRepository) RetrieveByID(_ context.Context, owner, id string) (t
 }
 
 func (cr channelRepository) RetrieveAll(_ context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ChannelsPage, error) {
-	nq := getNameQuery(name)
+
+	nq, name := getNameQuery(name)
 	m, mq, err := getMetadataQuery(metadata)
 	if err != nil {
 		return things.ChannelsPage{}, err
@@ -380,14 +381,14 @@ func toChannel(ch dbChannel) (things.Channel, error) {
 	}, nil
 }
 
-func getNameQuery(name string) string {
+func getNameQuery(name string) (string, string) {
 	name = strings.ToLower(name)
 	nq := ""
 	if name != "" {
 		name = fmt.Sprintf(`%%%s%%`, name)
 		nq = ` AND LOWER(name) LIKE :name`
 	}
-	return nq
+	return nq, name
 }
 
 func getMetadataQuery(m things.Metadata) ([]byte, string, error) {

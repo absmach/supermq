@@ -12,7 +12,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
@@ -170,20 +169,10 @@ func (tr thingRepository) RetrieveByKey(_ context.Context, key string) (string, 
 
 	return id, nil
 }
-func d(name string) string {
-	nq := ""
-	if name != "" {
-		name = fmt.Sprintf(`%%%s%%`, name)
-		nq = ` AND LOWER(name) LIKE :name`
-	}
-
-	return nq
-}
 
 func (tr thingRepository) RetrieveAll(_ context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ThingsPage, error) {
-	name = strings.ToLower(name)
-	nq := d(name)
 
+	nq, name := getNameQuery(name)
 	m, mq, err := getMetadataQuery(metadata)
 	if err != nil {
 		return things.ThingsPage{}, err
