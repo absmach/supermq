@@ -117,7 +117,7 @@ func (cr channelRepository) RetrieveAll(_ context.Context, owner string, offset,
 	}
 
 	q := fmt.Sprintf(`SELECT id, name, metadata FROM channels
-	      WHERE owner = :owner %s %s ORDER BY id LIMIT :limit OFFSET :offset;`, mq, nq)
+	      WHERE owner = :owner %s%s ORDER BY id LIMIT :limit OFFSET :offset;`, mq, nq)
 
 	params := map[string]interface{}{
 		"owner":    owner,
@@ -385,7 +385,7 @@ func getNameQuery(name string) string {
 	nq := ""
 	if name != "" {
 		name = fmt.Sprintf(`%%%s%%`, name)
-		nq = `AND LOWER(name) LIKE :name`
+		nq = ` AND LOWER(name) LIKE :name`
 	}
 	return nq
 }
@@ -394,7 +394,7 @@ func getMetadataQuery(m things.Metadata) ([]byte, string, error) {
 	mq := ""
 	mb := []byte("{}")
 	if len(m) > 0 {
-		mq = `AND metadata @> :metadata`
+		mq = ` AND metadata @> :metadata`
 
 		b, err := json.Marshal(m)
 		if err != nil {

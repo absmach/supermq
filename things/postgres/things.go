@@ -170,14 +170,19 @@ func (tr thingRepository) RetrieveByKey(_ context.Context, key string) (string, 
 
 	return id, nil
 }
-
-func (tr thingRepository) RetrieveAll(_ context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ThingsPage, error) {
-	name = strings.ToLower(name)
+func d(name string) string {
 	nq := ""
 	if name != "" {
 		name = fmt.Sprintf(`%%%s%%`, name)
-		nq = `AND LOWER(name) LIKE :name`
+		nq = ` AND LOWER(name) LIKE :name`
 	}
+
+	return nq
+}
+
+func (tr thingRepository) RetrieveAll(_ context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ThingsPage, error) {
+	name = strings.ToLower(name)
+	nq := d(name)
 
 	m, mq, err := getMetadataQuery(metadata)
 	if err != nil {
@@ -185,7 +190,8 @@ func (tr thingRepository) RetrieveAll(_ context.Context, owner string, offset, l
 	}
 
 	q := fmt.Sprintf(`SELECT id, name, key, metadata FROM things
-		  WHERE %s owner = :owner %s ORDER BY id LIMIT :limit OFFSET :offset;`, mq, nq)
+		  WHERE owner = :owner %s%s ORDER BY id LIMIT :limit OFFSET :offset;`, mq, nq)
+	fmt.Printf("q:%s %s %s\n", q, owner, name)
 
 	params := map[string]interface{}{
 		"owner":    owner,
