@@ -180,7 +180,6 @@ func (tr thingRepository) RetrieveAll(_ context.Context, owner string, offset, l
 
 	q := fmt.Sprintf(`SELECT id, name, key, metadata FROM things
 		  WHERE owner = :owner %s%s ORDER BY id LIMIT :limit OFFSET :offset;`, mq, nq)
-	fmt.Printf("q:%s %s %s\n", q, owner, name)
 
 	params := map[string]interface{}{
 		"owner":    owner,
