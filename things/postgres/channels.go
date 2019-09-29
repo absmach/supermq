@@ -10,6 +10,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -18,6 +19,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/mainflux/mainflux/things"
+	"github.com/mainflux/mainflux/users"
 )
 
 var _ things.ChannelRepository = (*channelRepository)(nil)
@@ -38,10 +40,7 @@ func (cr channelRepository) Save(_ context.Context, channel things.Channel) (str
 	q := `INSERT INTO channels (id, owner, name, metadata)
         VALUES (:id, :owner, :name, :metadata);`
 
-	dbch, err := toDBChannel(channel)
-	if err != nil {
-		return "", err
-	}
+	dbch := toDBChannel(channel)
 
 	if _, err := cr.db.NamedExec(q, dbch); err != nil {
 		pqErr, ok := err.(*pq.Error)
@@ -61,10 +60,7 @@ func (cr channelRepository) Save(_ context.Context, channel things.Channel) (str
 func (cr channelRepository) Update(_ context.Context, channel things.Channel) error {
 	q := `UPDATE channels SET name = :name, metadata = :metadata WHERE owner = :owner AND id = :id;`
 
-	dbch, err := toDBChannel(channel)
-	if err != nil {
-		return err
-	}
+	dbch := toDBChannel(channel)
 
 	res, err := cr.db.NamedExec(q, dbch)
 	if err != nil {
@@ -106,7 +102,7 @@ func (cr channelRepository) RetrieveByID(_ context.Context, owner, id string) (t
 		return empty, err
 	}
 
-	return toChannel(dbch)
+	return toChannel(dbch), nil
 }
 
 func (cr channelRepository) RetrieveAll(_ context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ChannelsPage, error) {
@@ -138,10 +134,7 @@ func (cr channelRepository) RetrieveAll(_ context.Context, owner string, offset,
 		if err := rows.StructScan(&dbch); err != nil {
 			return things.ChannelsPage{}, err
 		}
-		ch, err := toChannel(dbch)
-		if err != nil {
-			return things.ChannelsPage{}, err
-		}
+		ch := toChannel(dbch)
 
 		items = append(items, ch)
 	}
@@ -212,11 +205,7 @@ func (cr channelRepository) RetrieveByThing(_ context.Context, owner, thing stri
 			return things.ChannelsPage{}, err
 		}
 
-		ch, err := toChannel(dbch)
-		if err != nil {
-			return things.ChannelsPage{}, err
-		}
-
+		ch := toChannel(dbch)
 		items = append(items, ch)
 	}
 
@@ -341,43 +330,66 @@ func (cr channelRepository) hasThing(chanID, thingID string) error {
 	return nil
 }
 
-type dbChannel struct {
-	ID       string `db:"id"`
-	Owner    string `db:"owner"`
-	Name     string `db:"name"`
-	Metadata []byte `db:"metadata"`
-}
+// dbMetadata type for handling metadata properly in database/sql
+type dbMetadata map[string]interface{}
 
-func toDBChannel(ch things.Channel) (dbChannel, error) {
-	data := []byte("{}")
-	if len(ch.Metadata) > 0 {
-		b, err := json.Marshal(ch.Metadata)
-		if err != nil {
-			return dbChannel{}, err
-		}
-		data = b
+// Scan - Implement the database/sql scanner interface
+func (m *dbMetadata) Scan(value interface{}) error {
+	if value == nil {
+		m = nil
+		return nil
 	}
 
+	b, ok := value.([]byte)
+	if !ok {
+		m = &dbMetadata{}
+		return users.ErrScanMetadata
+	}
+
+	if err := json.Unmarshal(b, m); err != nil {
+		m = &dbMetadata{}
+		return err
+	}
+
+	return nil
+}
+
+// Value Implements valuer
+func (m dbMetadata) Value() (driver.Value, error) {
+	if len(m) == 0 {
+		return nil, nil
+	}
+
+	b, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	return b, err
+}
+
+type dbChannel struct {
+	ID       string     `db:"id"`
+	Owner    string     `db:"owner"`
+	Name     string     `db:"name"`
+	Metadata dbMetadata `db:"metadata"`
+}
+
+func toDBChannel(ch things.Channel) dbChannel {
 	return dbChannel{
 		ID:       ch.ID,
 		Owner:    ch.Owner,
 		Name:     ch.Name,
-		Metadata: data,
-	}, nil
+		Metadata: ch.Metadata,
+	}
 }
 
-func toChannel(ch dbChannel) (things.Channel, error) {
-	var metadata map[string]interface{}
-	if err := json.Unmarshal([]byte(ch.Metadata), &metadata); err != nil {
-		return things.Channel{}, err
-	}
-
+func toChannel(ch dbChannel) things.Channel {
 	return things.Channel{
 		ID:       ch.ID,
 		Owner:    ch.Owner,
 		Name:     ch.Name,
-		Metadata: metadata,
-	}, nil
+		Metadata: ch.Metadata,
+	}
 }
 
 func getNameQuery(name string) (string, string) {
