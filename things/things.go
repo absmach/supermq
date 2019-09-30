@@ -10,7 +10,7 @@ package things
 import "context"
 
 // Metadata to be used for mainflux thing or channel for customized
-// describing of particular thing or channel
+// describing of particular thing or channel.
 type Metadata map[string]interface{}
 
 // Thing represents a Mainflux thing. Each thing is owned by one user, and

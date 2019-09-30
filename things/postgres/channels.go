@@ -19,7 +19,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/mainflux/mainflux/things"
-	"github.com/mainflux/mainflux/users"
 )
 
 var _ things.ChannelRepository = (*channelRepository)(nil)
@@ -333,7 +332,7 @@ func (cr channelRepository) hasThing(chanID, thingID string) error {
 // dbMetadata type for handling metadata properly in database/sql
 type dbMetadata map[string]interface{}
 
-// Scan - Implement the database/sql scanner interface
+// Scan - Implement the database/sql scanner interface.
 func (m *dbMetadata) Scan(value interface{}) error {
 	if value == nil {
 		m = nil
@@ -343,7 +342,7 @@ func (m *dbMetadata) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
 		m = &dbMetadata{}
-		return users.ErrScanMetadata
+		return things.ErrScanMetadata
 	}
 
 	if err := json.Unmarshal(b, m); err != nil {
@@ -354,7 +353,7 @@ func (m *dbMetadata) Scan(value interface{}) error {
 	return nil
 }
 
-// Value Implements valuer
+// Value Implements valuer.
 func (m dbMetadata) Value() (driver.Value, error) {
 	if len(m) == 0 {
 		return nil, nil

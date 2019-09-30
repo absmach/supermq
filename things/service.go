@@ -28,6 +28,9 @@ var (
 
 	// ErrConflict indicates that entity already exists.
 	ErrConflict = errors.New("entity already exists")
+
+	// ErrScanMetadata indicates problem with metadata in db
+	ErrScanMetadata = errors.New("Failed to scan metadata")
 )
 
 // Service specifies an API that must be fullfiled by the domain service
