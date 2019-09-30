@@ -23,12 +23,12 @@ import (
 var _ things.ChannelRepository = (*channelRepository)(nil)
 
 type channelRepository struct {
-	dm DatabaseMiddleware
+	dm Database
 }
 
 // NewChannelRepository instantiates a PostgreSQL implementation of channel
 // repository.
-func NewChannelRepository(dm DatabaseMiddleware) things.ChannelRepository {
+func NewChannelRepository(dm Database) things.ChannelRepository {
 	return &channelRepository{
 		dm: dm,
 	}
@@ -40,7 +40,7 @@ func (cr channelRepository) Save(ctx context.Context, channel things.Channel) (s
 
 	dbch := toDBChannel(channel)
 
-	if _, err := cr.dm.NamedExec(ctx, q, dbch); err != nil {
+	if _, err := cr.dm.NamedExecContext(ctx, q, dbch); err != nil {
 		pqErr, ok := err.(*pq.Error)
 		if ok {
 			switch pqErr.Code.Name() {
@@ -60,7 +60,7 @@ func (cr channelRepository) Update(ctx context.Context, channel things.Channel) 
 
 	dbch := toDBChannel(channel)
 
-	res, err := cr.dm.NamedExec(ctx, q, dbch)
+	res, err := cr.dm.NamedExecContext(ctx, q, dbch)
 	if err != nil {
 		pqErr, ok := err.(*pq.Error)
 		if ok {
@@ -92,7 +92,7 @@ func (cr channelRepository) RetrieveByID(ctx context.Context, owner, id string) 
 		ID:    id,
 		Owner: owner,
 	}
-	if err := cr.dm.QueryRowx(ctx, q, id, owner).StructScan(&dbch); err != nil {
+	if err := cr.dm.QueryRowxContext(ctx, q, id, owner).StructScan(&dbch); err != nil {
 		empty := things.Channel{}
 		pqErr, ok := err.(*pq.Error)
 		if err == sql.ErrNoRows || ok && errInvalid == pqErr.Code.Name() {
@@ -121,7 +121,7 @@ func (cr channelRepository) RetrieveAll(_ context.Context, owner string, offset,
 		"name":     name,
 		"metadata": m,
 	}
-	rows, err := cr.dm.NamedQuery(ctx, q, params)
+	rows, err := cr.dm.NamedQueryContext(ctx, q, params)
 	if err != nil {
 		return things.ChannelsPage{}, err
 	}
@@ -148,11 +148,11 @@ func (cr channelRepository) RetrieveAll(_ context.Context, owner string, offset,
 	total := uint64(0)
 	switch name {
 	case "":
-		if err := cr.dm.Get(ctx, &total, q, owner); err != nil {
+		if err := cr.dm.GetContext(ctx, &total, q, owner); err != nil {
 			return things.ChannelsPage{}, err
 		}
 	default:
-		if err := cr.dm.Get(ctx, &total, q, owner, name); err != nil {
+		if err := cr.dm.GetContext(ctx, &total, q, owner, name); err != nil {
 			return things.ChannelsPage{}, err
 		}
 	}
@@ -191,7 +191,7 @@ func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing st
 		"offset": offset,
 	}
 
-	rows, err := cr.dm.NamedQuery(ctx, q, params)
+	rows, err := cr.dm.NamedQueryContext(ctx, q, params)
 	if err != nil {
 		return things.ChannelsPage{}, err
 	}
@@ -215,7 +215,7 @@ func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing st
 	     WHERE ch.owner = $1 AND co.thing_id = $2`
 
 	var total uint64
-	if err := cr.dm.Get(ctx, &total, q, owner, thing); err != nil {
+	if err := cr.dm.GetContext(ctx, &total, q, owner, thing); err != nil {
 		return things.ChannelsPage{}, err
 	}
 
@@ -235,7 +235,7 @@ func (cr channelRepository) Remove(ctx context.Context, owner, id string) error 
 		Owner: owner,
 	}
 	q := `DELETE FROM channels WHERE id = :id AND owner = :owner`
-	cr.dm.NamedExec(ctx, q, dbch)
+	cr.dm.NamedExecContext(ctx, q, dbch)
 	return nil
 }
 
@@ -249,7 +249,7 @@ func (cr channelRepository) Connect(ctx context.Context, owner, chanID, thingID 
 		Owner:   owner,
 	}
 
-	if _, err := cr.dm.NamedExec(ctx, q, conn); err != nil {
+	if _, err := cr.dm.NamedExecContext(ctx, q, conn); err != nil {
 		pqErr, ok := err.(*pq.Error)
 
 		if ok && errFK == pqErr.Code.Name() {
@@ -278,7 +278,7 @@ func (cr channelRepository) Disconnect(ctx context.Context, owner, chanID, thing
 		Owner:   owner,
 	}
 
-	res, err := cr.dm.NamedExec(ctx, q, conn)
+	res, err := cr.dm.NamedExecContext(ctx, q, conn)
 	if err != nil {
 		return err
 	}
@@ -298,7 +298,7 @@ func (cr channelRepository) Disconnect(ctx context.Context, owner, chanID, thing
 func (cr channelRepository) HasThing(ctx context.Context, chanID, key string) (string, error) {
 	var thingID string
 	q := `SELECT id FROM things WHERE key = $1`
-	if err := cr.dm.QueryRowx(ctx, q, key).Scan(&thingID); err != nil {
+	if err := cr.dm.QueryRowxContext(ctx, q, key).Scan(&thingID); err != nil {
 		return "", err
 
 	}
@@ -317,7 +317,7 @@ func (cr channelRepository) HasThingByID(ctx context.Context, chanID, thingID st
 func (cr channelRepository) hasThing(ctx context.Context, chanID, thingID string) error {
 	q := `SELECT EXISTS (SELECT 1 FROM connections WHERE channel_id = $1 AND thing_id = $2);`
 	exists := false
-	if err := cr.dm.QueryRowx(ctx, q, chanID, thingID).Scan(&exists); err != nil {
+	if err := cr.dm.QueryRowxContext(ctx, q, chanID, thingID).Scan(&exists); err != nil {
 		return err
 	}
 

@@ -8,45 +8,45 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-var _ DatabaseMiddleware = (*databaseMiddleware)(nil)
+var _ Database = (*database)(nil)
 
-type databaseMiddleware struct {
+type database struct {
 	db *sqlx.DB
 }
 
-// DatabaseMiddleware provides a database interface
-type DatabaseMiddleware interface {
-	NamedExec(context.Context, string, interface{}) (sql.Result, error)
-	QueryRowx(context.Context, string, ...interface{}) *sqlx.Row
-	NamedQuery(context.Context, string, interface{}) (*sqlx.Rows, error)
-	Get(context.Context, interface{}, string, ...interface{}) error
+// Database provides a database interface
+type Database interface {
+	NamedExecContext(context.Context, string, interface{}) (sql.Result, error)
+	QueryRowxContext(context.Context, string, ...interface{}) *sqlx.Row
+	NamedQueryContext(context.Context, string, interface{}) (*sqlx.Rows, error)
+	GetContext(context.Context, interface{}, string, ...interface{}) error
 }
 
-// NewDatabaseMiddleware creates a ThingDatabase instance
-func NewDatabaseMiddleware(db *sqlx.DB) DatabaseMiddleware {
-	return &databaseMiddleware{
+// NewDatabase creates a ThingDatabase instance
+func NewDatabase(db *sqlx.DB) Database {
+	return &database{
 		db: db,
 	}
 }
 
-func (dm databaseMiddleware) NamedExec(ctx context.Context, query string, args interface{}) (sql.Result, error) {
+func (dm database) NamedExecContext(ctx context.Context, query string, args interface{}) (sql.Result, error) {
 	addSpanTags(ctx, query)
-	return dm.db.NamedExec(query, args)
+	return dm.db.NamedExecContext(ctx, query, args)
 }
 
-func (dm databaseMiddleware) QueryRowx(ctx context.Context, query string, args ...interface{}) *sqlx.Row {
+func (dm database) QueryRowxContext(ctx context.Context, query string, args ...interface{}) *sqlx.Row {
 	addSpanTags(ctx, query)
-	return dm.db.QueryRowx(query, args...)
+	return dm.db.QueryRowxContext(ctx, query, args...)
 }
 
-func (dm databaseMiddleware) NamedQuery(ctx context.Context, query string, args interface{}) (*sqlx.Rows, error) {
+func (dm database) NamedQueryContext(ctx context.Context, query string, args interface{}) (*sqlx.Rows, error) {
 	addSpanTags(ctx, query)
-	return dm.db.NamedQuery(query, args)
+	return dm.db.NamedQueryContext(ctx, query, args)
 }
 
-func (dm databaseMiddleware) Get(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
+func (dm database) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
 	addSpanTags(ctx, query)
-	return dm.db.Get(dest, query, args...)
+	return dm.db.GetContext(ctx, dest, query, args...)
 }
 
 func addSpanTags(ctx context.Context, query string) {
