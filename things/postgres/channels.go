@@ -329,10 +329,10 @@ func (cr channelRepository) hasThing(chanID, thingID string) error {
 	return nil
 }
 
-// dbMetadata type for handling metadata properly in database/sql
+// dbMetadata type for handling metadata properly in database/sql.
 type dbMetadata map[string]interface{}
 
-// Scan - Implement the database/sql scanner interface.
+// Scan implements the database/sql scanner interface.
 func (m *dbMetadata) Scan(value interface{}) error {
 	if value == nil {
 		m = nil
@@ -353,7 +353,7 @@ func (m *dbMetadata) Scan(value interface{}) error {
 	return nil
 }
 
-// Value Implements valuer.
+// Value implements database/sql valuer interface.
 func (m dbMetadata) Value() (driver.Value, error) {
 	if len(m) == 0 {
 		return nil, nil
