@@ -22,7 +22,7 @@ import (
 
 func TestChannelSave(t *testing.T) {
 	email := "channel-save@example.com"
-	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	dbMiddleware := postgres.NewDatabase(db)
 	channelRepo := postgres.NewChannelRepository(dbMiddleware)
 
 	id, err := uuid.New().ID()
@@ -70,7 +70,7 @@ func TestChannelSave(t *testing.T) {
 
 func TestChannelUpdate(t *testing.T) {
 	email := "channel-update@example.com"
-	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	dbMiddleware := postgres.NewDatabase(db)
 	chanRepo := postgres.NewChannelRepository(dbMiddleware)
 
 	cid, err := uuid.New().ID()
@@ -130,7 +130,7 @@ func TestChannelUpdate(t *testing.T) {
 
 func TestSingleChannelRetrieval(t *testing.T) {
 	email := "channel-single-retrieval@example.com"
-	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	dbMiddleware := postgres.NewDatabase(db)
 	chanRepo := postgres.NewChannelRepository(dbMiddleware)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
@@ -195,7 +195,7 @@ func TestSingleChannelRetrieval(t *testing.T) {
 
 func TestMultiChannelRetrieval(t *testing.T) {
 	email := "channel-multi-retrieval@example.com"
-	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	dbMiddleware := postgres.NewDatabase(db)
 	chanRepo := postgres.NewChannelRepository(dbMiddleware)
 	channelName := "channel_name"
 	meta := things.Metadata{}
@@ -302,7 +302,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 func TestMultiChannelRetrievalByThing(t *testing.T) {
 	email := "channel-multi-retrieval-by-thing@example.com"
 	idp := uuid.New()
-	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	dbMiddleware := postgres.NewDatabase(db)
 	chanRepo := postgres.NewChannelRepository(dbMiddleware)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
@@ -387,7 +387,7 @@ func TestMultiChannelRetrievalByThing(t *testing.T) {
 
 func TestChannelRemoval(t *testing.T) {
 	email := "channel-removal@example.com"
-	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	dbMiddleware := postgres.NewDatabase(db)
 	chanRepo := postgres.NewChannelRepository(dbMiddleware)
 
 	chid, err := uuid.New().ID()
@@ -410,7 +410,7 @@ func TestChannelRemoval(t *testing.T) {
 
 func TestConnect(t *testing.T) {
 	email := "channel-connect@example.com"
-	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	dbMiddleware := postgres.NewDatabase(db)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	thid, err := uuid.New().ID()
@@ -493,7 +493,7 @@ func TestConnect(t *testing.T) {
 
 func TestDisconnect(t *testing.T) {
 	email := "channel-disconnect@example.com"
-	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	dbMiddleware := postgres.NewDatabase(db)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	thid, err := uuid.New().ID()
@@ -576,7 +576,7 @@ func TestDisconnect(t *testing.T) {
 
 func TestHasThing(t *testing.T) {
 	email := "channel-access-check@example.com"
-	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	dbMiddleware := postgres.NewDatabase(db)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	thid, err := uuid.New().ID()
@@ -634,7 +634,7 @@ func TestHasThing(t *testing.T) {
 
 func TestHasThingByID(t *testing.T) {
 	email := "channel-access-check@example.com"
-	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	dbMiddleware := postgres.NewDatabase(db)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	thid, err := uuid.New().ID()

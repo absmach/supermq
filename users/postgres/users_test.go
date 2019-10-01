@@ -44,7 +44,7 @@ func TestUserSave(t *testing.T) {
 		},
 	}
 
-	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	dbMiddleware := postgres.NewDatabase(db)
 	repo := postgres.New(dbMiddleware)
 
 	for _, tc := range cases {
@@ -56,7 +56,7 @@ func TestUserSave(t *testing.T) {
 func TestSingleUserRetrieval(t *testing.T) {
 	email := "user-retrieval@example.com"
 
-	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	dbMiddleware := postgres.NewDatabase(db)
 	repo := postgres.New(dbMiddleware)
 	err := repo.Save(context.Background(), users.User{
 		Email:    email,

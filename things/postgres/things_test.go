@@ -26,7 +26,7 @@ const maxNameSize = 1024
 var invalidName = strings.Repeat("m", maxNameSize+1)
 
 func TestThingSave(t *testing.T) {
-	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	dbMiddleware := postgres.NewDatabase(db)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	email := "thing-save@example.com"
@@ -97,7 +97,7 @@ func TestThingSave(t *testing.T) {
 }
 
 func TestThingUpdate(t *testing.T) {
-	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	dbMiddleware := postgres.NewDatabase(db)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	email := "thing-update@example.com"
@@ -185,7 +185,7 @@ func TestThingUpdate(t *testing.T) {
 func TestUpdateKey(t *testing.T) {
 	email := "thing-update=key@example.com"
 	newKey := "new-key"
-	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	dbMiddleware := postgres.NewDatabase(db)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	ethid, err := uuid.New().ID()
@@ -270,7 +270,7 @@ func TestUpdateKey(t *testing.T) {
 
 func TestSingleThingRetrieval(t *testing.T) {
 	email := "thing-single-retrieval@example.com"
-	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	dbMiddleware := postgres.NewDatabase(db)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	thid, err := uuid.New().ID()
@@ -325,7 +325,7 @@ func TestSingleThingRetrieval(t *testing.T) {
 
 func TestThingRetrieveByKey(t *testing.T) {
 	email := "thing-retrieved-by-key@example.com"
-	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	dbMiddleware := postgres.NewDatabase(db)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	thid, err := uuid.New().ID()
@@ -373,7 +373,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 	metadata["serial"] = "123456"
 	metadata["type"] = "test"
 	idp := uuid.New()
-	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	dbMiddleware := postgres.NewDatabase(db)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	n := uint64(10)
@@ -466,7 +466,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 func TestMultiThingRetrievalByChannel(t *testing.T) {
 	email := "thing-multi-retrieval-by-channel@example.com"
 	idp := uuid.New()
-	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	dbMiddleware := postgres.NewDatabase(db)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 	channelRepo := postgres.NewChannelRepository(dbMiddleware)
 
@@ -556,7 +556,7 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 
 func TestThingRemoval(t *testing.T) {
 	email := "thing-removal@example.com"
-	dbMiddleware := postgres.NewDatabaseMiddleware(db)
+	dbMiddleware := postgres.NewDatabase(db)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	thid, err := uuid.New().ID()
