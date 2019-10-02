@@ -57,7 +57,7 @@ const (
 	defCACerts         = ""
 	defUsersURL        = "localhost:8181"
 	defUsersTimeout    = "1" // in seconds
-	defMqttURL         = "localhost:1883"
+	defMqttURL         = "tcp://localhost:1883"
 	defThingID         = "2dce1d65-73b4-4020-bfe3-403d851386e7"
 	defThingKey        = "1ff0d0f0-ea04-4fbb-83c4-c10b110bf566"
 
