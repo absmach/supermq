@@ -22,14 +22,14 @@ var _ users.UserRepository = (*userRepository)(nil)
 const errDuplicate = "unique_violation"
 
 type userRepository struct {
-	dm Database
+	db Database
 }
 
 // New instantiates a PostgreSQL implementation of user
 // repository.
-func New(dm Database) users.UserRepository {
+func New(db Database) users.UserRepository {
 	return &userRepository{
-		dm: dm,
+		db: db,
 	}
 }
 
@@ -37,7 +37,7 @@ func (ur userRepository) Save(ctx context.Context, user users.User) error {
 	q := `INSERT INTO users (email, password, metadata) VALUES (:email, :password, :metadata)`
 
 	dbu := toDBUser(user)
-	if _, err := ur.dm.NamedExecContext(ctx, q, dbu); err != nil {
+	if _, err := ur.db.NamedExecContext(ctx, q, dbu); err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && errDuplicate == pqErr.Code.Name() {
 			return users.ErrConflict
 		}
@@ -53,7 +53,7 @@ func (ur userRepository) RetrieveByID(ctx context.Context, email string) (users.
 	dbu := dbUser{
 		Email: email,
 	}
-	if err := ur.dm.QueryRowxContext(ctx, q, email).StructScan(&dbu); err != nil {
+	if err := ur.db.QueryRowxContext(ctx, q, email).StructScan(&dbu); err != nil {
 		if err == sql.ErrNoRows {
 			return users.User{}, users.ErrNotFound
 		}
