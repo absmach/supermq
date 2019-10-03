@@ -12,38 +12,21 @@ import (
 	"time"
 )
 
-type Metadata map[string]interface{}
-
 // Twin represents a Mainflux thing digital twin. Each twin is owned by one thing, and
 // is assigned with the unique identifier and (temporary) access key.
 type Twin struct {
 	ID         string
-	Key        string
 	Owner      string
 	Name       string
+	Key        string
 	thingID    string
-	channelID  string
 	created    time.Time
 	updated    time.Time
 	attributes map[string]interface{}
 	state      map[string]interface{}
 	topic      string
 	revision   int
-	Metadata   Metadata
-}
-
-// SetMetadata contains page metadata that helps navigation.
-type SetMetadata struct {
-	Total uint64
-	Limit uint64
-	Name  string
-}
-
-// TwinsSet contains page related metadata as well as a list of twins that
-// belong to this page.
-type TwinsSet struct {
-	SetMetadata
-	Twins []Twin
+	Metadata   map[string]interface{}
 }
 
 // TwinRepository specifies a twin persistence API.

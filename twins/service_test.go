@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"testing"
 
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/mocks"
 	"github.com/stretchr/testify/assert"
@@ -34,7 +35,10 @@ func newService(tokens map[string]string) twins.Service {
 	twinsRepo := mocks.NewTwinRepository()
 	idp := mocks.NewIdentityProvider()
 
-	return twins.New("secret", users, twinsRepo, idp)
+	opts := mqtt.NewClientOptions()
+	mc := mqtt.NewClient(opts)
+
+	return twins.New("secret", mc, users, twinsRepo, idp)
 }
 
 func TestAddTwin(t *testing.T) {
