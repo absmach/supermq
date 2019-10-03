@@ -6,11 +6,11 @@ package http
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
+
+	errors "github.com/mainflux/mainflux/errors"
 
 	kitot "github.com/go-kit/kit/tracing/opentracing"
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -213,20 +213,18 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	// For debug only:
 	fmt.Printf("debug... (%v, %T)\n", err, err)
 	switch {
-	case errors.Is(err, users.ErrMalformedEntity):
+	case users.ErrMalformedEntity.Is(err):
 		w.WriteHeader(http.StatusBadRequest)
-	case errors.Is(err, users.ErrUnauthorizedAccess):
+	case users.ErrUnauthorizedAccess.Is(err):
 		w.WriteHeader(http.StatusForbidden)
-	case users.ErrUserNotFound:
-		w.WriteHeader(http.StatusNotFound)
-	case users.ErrConflict:
+	case users.ErrConflict.Is(err):
 		w.WriteHeader(http.StatusConflict)
-	case errors.Is(err, errUnsupportedContentType):
+	case errUnsupportedContentType.Is(err):
 		w.WriteHeader(http.StatusUnsupportedMediaType)
-	case errors.Is(err, io.ErrUnexpectedEOF):
-		w.WriteHeader(http.StatusBadRequest)
-	case errors.Is(err, io.EOF):
-		w.WriteHeader(http.StatusBadRequest)
+	// case errors.Is(err, io.ErrUnexpectedEOF):
+	// 	w.WriteHeader(http.StatusBadRequest)
+	// case errors.Is(err, io.EOF):
+	// 	w.WriteHeader(http.StatusBadRequest)
 	default:
 		switch err.(type) {
 		case *json.SyntaxError:
@@ -240,11 +238,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 
 	if err != nil {
 		w.Header().Set("Content-Type", contentType)
-		if unw := errors.Unwrap(err); unw != nil {
-			json.NewEncoder(w).Encode(errorRes{Err: Wrapper(err)})
-		} else {
-			json.NewEncoder(w).Encode(errorRes{Err: err.Error()})
-		}
+		json.NewEncoder(w).Encode(errorRes{Err: err.Error()})
 	}
 }
 

@@ -5,8 +5,9 @@ package users
 
 import (
 	"context"
-	"errors"
 	"fmt"
+
+	errors "github.com/mainflux/mainflux/errors"
 )
 
 var (
@@ -109,11 +110,12 @@ func (svc usersService) Register(ctx context.Context, user User) error {
 func (svc usersService) Login(ctx context.Context, user User) (string, error) {
 	dbUser, err := svc.users.RetrieveByID(ctx, user.Email)
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", ErrUnauthorizedAccess, err)
+		// return "", fmt.Errorf("%s: %w", ErrUnauthorizedAccess, err)
+		return "", errors.Wrap(ErrUnauthorizedAccess, errors.Cast(err))
 	}
 
 	if err := svc.hasher.Compare(user.Password, dbUser.Password); err != nil {
-		return "", fmt.Errorf("%s: %w", ErrUnauthorizedAccess, err)
+		return "", errors.Wrap(ErrUnauthorizedAccess, errors.Cast(err))
 	}
 
 	return svc.idp.TemporaryKey(user.Email)
@@ -122,7 +124,7 @@ func (svc usersService) Login(ctx context.Context, user User) (string, error) {
 func (svc usersService) Identify(token string) (string, error) {
 	id, err := svc.idp.Identity(token)
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", ErrUnauthorizedAccess, err)
+		return "", errors.Wrap(ErrUnauthorizedAccess, errors.Cast(err))
 	}
 	return id, nil
 }
@@ -130,12 +132,12 @@ func (svc usersService) Identify(token string) (string, error) {
 func (svc usersService) UserInfo(ctx context.Context, token string) (User, error) {
 	id, err := svc.idp.Identity(token)
 	if err != nil {
-		return User{}, ErrUnauthorizedAccess
+		return User{}, errors.Wrap(ErrUnauthorizedAccess, errors.Cast(err))
 	}
 
 	dbUser, err := svc.users.RetrieveByID(ctx, id)
 	if err != nil {
-		return User{}, ErrUnauthorizedAccess
+		return User{}, errors.Wrap(ErrUnauthorizedAccess, errors.Cast(err))
 	}
 
 	return User{
