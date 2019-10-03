@@ -6,12 +6,9 @@ package postgres
 import (
 	"context"
 	"database/sql"
-<<<<<<< HEAD
 	"database/sql/driver"
 	"encoding/json"
-=======
 	"errors"
->>>>>>> Add internal database error
 	"fmt"
 
 	"github.com/lib/pq"
