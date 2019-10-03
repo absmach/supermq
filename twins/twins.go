@@ -7,16 +7,26 @@
 
 package twins
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 // Twin represents a Mainflux thing digital twin. Each twin is owned by one thing, and
 // it is assigned with the unique identifier and (temporary) access key.
 type Twin struct {
-	ID       string
-	Owner    string
-	Name     string
-	Key      string
-	Metadata map[string]interface{}
+	ID         string
+	Owner      string
+	Name       string
+	Key        string
+	thingID    string
+	created    time.Time
+	updated    time.Time
+	attributes map[string]interface{}
+	state      map[string]interface{}
+	topic      string
+	revision   int
+	Metadata   map[string]interface{}
 }
 
 // TwinRepository specifies a twin persistence API.

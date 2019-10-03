@@ -10,6 +10,7 @@ package twins
 import (
 	"context"
 	"errors"
+	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/mainflux/mainflux"
@@ -105,6 +106,9 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin) (T
 		}
 	}
 
+	twin.created = time.Now()
+	twin.updated = time.Now()
+
 	id, err := ts.twins.Save(ctx, twin)
 	if err != nil {
 		return Twin{}, err
@@ -123,7 +127,12 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin)
 
 	twin.Owner = res.GetValue()
 
-	return ts.twins.Update(ctx, twin)
+	twin.updated = time.Now()
+	if err := ts.twins.Update(ctx, twin); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (ts *twinsService) UpdateKey(ctx context.Context, token, id, key string) error {
@@ -132,7 +141,11 @@ func (ts *twinsService) UpdateKey(ctx context.Context, token, id, key string) er
 		return ErrUnauthorizedAccess
 	}
 
-	return ts.twins.UpdateKey(ctx, res.GetValue(), id, key)
+	if err := ts.twins.UpdateKey(ctx, res.GetValue(), id, key); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (Twin, error) {
