@@ -9,7 +9,9 @@ package twins
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -132,6 +134,11 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin)
 		return err
 	}
 
+	b, err := json.Marshal(twin)
+	if ts.publish(twin.thingID, "update/success", b); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -154,7 +161,17 @@ func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (Twin, e
 		return Twin{}, ErrUnauthorizedAccess
 	}
 
-	return ts.twins.RetrieveByID(ctx, res.GetValue(), id)
+	twin, err := ts.twins.RetrieveByID(ctx, res.GetValue(), id)
+	if err != nil {
+		return Twin{}, err
+	}
+
+	b, err := json.Marshal(twin)
+	if ts.publish(twin.thingID, "get/success", b); err != nil {
+		return Twin{}, err
+	}
+
+	return twin, nil
 }
 
 func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) error {
@@ -163,5 +180,22 @@ func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) error 
 		return ErrUnauthorizedAccess
 	}
 
-	return ts.twins.Remove(ctx, res.GetValue(), id)
+	if err := ts.twins.Remove(ctx, res.GetValue(), id); err != nil {
+		return err
+	}
+
+	// b, err := json.Marshal(Twin{})
+	// if ts.publish(twin.thingID, "delete/success", b); err != nil {
+	// 	return err
+	// }
+
+	return nil
+}
+
+func (ts *twinsService) publish(thingID, op string, payload []byte) error {
+	topic := fmt.Sprintf("$mfx/things/%s/%s", thingID, op)
+	token := ts.mqttClient.Publish(topic, 0, false, payload)
+	token.Wait()
+
+	return token.Error()
 }
