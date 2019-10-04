@@ -5,7 +5,6 @@ package users
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 	"strings"
 )
@@ -27,11 +26,12 @@ type User struct {
 // Validate returns an error if user representation is invalid.
 func (u User) Validate() error {
 	if u.Email == "" || u.Password == "" {
-		return fmt.Errorf("Email or Password is empty: %w", ErrMalformedEntity)
+		return ErrMalformedEntity
+
 	}
 
 	if !isEmail(u.Email) {
-		return fmt.Errorf("Email is not valid email: %w", ErrMalformedEntity)
+		return ErrMalformedEntity
 	}
 
 	return nil

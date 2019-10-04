@@ -5,11 +5,12 @@ package users_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/users"
+
 	"github.com/mainflux/mainflux/users/mocks"
 	"github.com/stretchr/testify/assert"
 )
@@ -62,7 +63,8 @@ func TestRegister(t *testing.T) {
 
 	for _, tc := range cases {
 		err := svc.Register(context.Background(), tc.user)
-		assert.True(t, errors.Is(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		mfErr := err.(errors.Error)
+		assert.True(t, mfErr.Contains(tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
@@ -96,7 +98,8 @@ func TestLogin(t *testing.T) {
 
 	for desc, tc := range cases {
 		_, err := svc.Login(context.Background(), tc.user)
-		assert.True(t, errors.Is(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		mfErr := err.(errors.Error)
+		assert.True(t, mfErr.Contains(tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
 
@@ -115,11 +118,8 @@ func TestIdentify(t *testing.T) {
 
 	for desc, tc := range cases {
 		_, err := svc.Identify(tc.key)
-		assert.True(t, errors.Is(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
-
-		// if !errors.Is(err, tc.err) {
-		// 	t.Errorf("%s: expected %s got %s\n", desc, tc.err, err)
-		// }
+		mfErr := err.(errors.Error)
+		assert.True(t, mfErr.Contains(tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
 

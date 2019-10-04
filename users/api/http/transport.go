@@ -7,10 +7,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
-	errors "github.com/mainflux/mainflux/errors"
+	"github.com/mainflux/mainflux/errors"
 
 	kitot "github.com/go-kit/kit/tracing/opentracing"
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -211,21 +212,28 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	// For debug only:
-	fmt.Printf("debug... (%v, %T)\n", err, err)
-	switch {
-	case users.ErrMalformedEntity.Is(err):
-		w.WriteHeader(http.StatusBadRequest)
-	case users.ErrUnauthorizedAccess.Is(err):
-		w.WriteHeader(http.StatusForbidden)
-	case users.ErrConflict.Is(err):
-		w.WriteHeader(http.StatusConflict)
-	case errUnsupportedContentType.Is(err):
-		w.WriteHeader(http.StatusUnsupportedMediaType)
-	// case errors.Is(err, io.ErrUnexpectedEOF):
-	// 	w.WriteHeader(http.StatusBadRequest)
-	// case errors.Is(err, io.EOF):
-	// 	w.WriteHeader(http.StatusBadRequest)
-	default:
+	fmt.Printf("debug, err... (%v, %T)\n", err, err)
+
+	mfErr, ok := err.(errors.Error)
+	if ok {
+
+		fmt.Printf("debug, mfErr... (%v, %T)\n", mfErr, mfErr)
+
+		switch {
+		case mfErr.Contains(users.ErrMalformedEntity):
+			w.WriteHeader(http.StatusBadRequest)
+		case mfErr.Contains(users.ErrUnauthorizedAccess):
+			w.WriteHeader(http.StatusForbidden)
+		case mfErr.Contains(users.ErrConflict):
+			w.WriteHeader(http.StatusConflict)
+		case mfErr.Contains(errUnsupportedContentType):
+			w.WriteHeader(http.StatusUnsupportedMediaType)
+		case mfErr.Contains(io.ErrUnexpectedEOF):
+			w.WriteHeader(http.StatusBadRequest)
+		case mfErr.Contains(io.EOF):
+			w.WriteHeader(http.StatusBadRequest)
+		}
+	} else {
 		switch err.(type) {
 		case *json.SyntaxError:
 			w.WriteHeader(http.StatusBadRequest)
@@ -235,15 +243,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
-
-	if err != nil {
+	if mfErr.Msg() != "" {
 		w.Header().Set("Content-Type", contentType)
-		json.NewEncoder(w).Encode(errorRes{Err: err.Error()})
+		json.NewEncoder(w).Encode(errorRes{Err: mfErr.Msg()})
 	}
-}
-
-// Wrapper returns a wrapper around wrapped error
-func Wrapper(err error) string {
-	wrapper := strings.SplitN(err.Error(), ":", 2)
-	return wrapper[0]
 }

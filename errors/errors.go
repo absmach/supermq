@@ -1,6 +1,8 @@
 package errors
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Error struct {
 	msg string
@@ -19,7 +21,7 @@ func (err Error) Msg() string {
 	return err.msg
 }
 
-func (err Error) Is(e error) bool {
+func (err Error) Contains(e error) bool {
 	if e == nil {
 		return false
 	}
@@ -27,8 +29,10 @@ func (err Error) Is(e error) bool {
 	if err.msg == e.Error() {
 		return true
 	}
-
-	return err.err.Is(e)
+	if err.err == nil {
+		return false
+	}
+	return err.err.Contains(e)
 }
 
 func Wrap(wrapper Error, err *Error) Error {

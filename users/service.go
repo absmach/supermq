@@ -5,9 +5,8 @@ package users
 
 import (
 	"context"
-	"fmt"
 
-	errors "github.com/mainflux/mainflux/errors"
+	"github.com/mainflux/mainflux/errors"
 )
 
 var (
@@ -100,7 +99,7 @@ func New(users UserRepository, hasher Hasher, idp IdentityProvider, m Emailer, t
 func (svc usersService) Register(ctx context.Context, user User) error {
 	hash, err := svc.hasher.Hash(user.Password)
 	if err != nil {
-		return fmt.Errorf("%s: %w", ErrMalformedEntity, err)
+		return errors.Wrap(ErrMalformedEntity, errors.Cast(err))
 	}
 
 	user.Password = hash

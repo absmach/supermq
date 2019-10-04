@@ -9,9 +9,8 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 
-	errors "github.com/mainflux/mainflux/errors"
-
 	"github.com/lib/pq"
+	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/users"
 )
 

@@ -5,10 +5,10 @@
 package jwt
 
 import (
-	"fmt"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/users"
 )
 
@@ -52,7 +52,8 @@ func (idp *jwtIdentityProvider) Identity(key string) (string, error) {
 	})
 
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", users.ErrUnauthorizedAccess, err)
+		return "", errors.Wrap(users.ErrUnauthorizedAccess, errors.Cast(err))
+
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
