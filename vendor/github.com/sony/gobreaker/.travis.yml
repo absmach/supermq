@@ -1,13 +1,11 @@
 language: go
 go:
-  - 1.7.x
-  - 1.8.x
-  - 1.9.x
   - 1.10.x
   - 1.11.x
+  - 1.12.x
 sudo: false
 before_install:
-  - go get -u github.com/golang/lint/golint
+  - go get -u golang.org/x/lint/golint
   - go get github.com/axw/gocov/gocov
   - go get github.com/mattn/goveralls
 script:
