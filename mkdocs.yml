@@ -20,23 +20,24 @@ extra:
 markdown_extensions:
   - admonition
   - toc:
-      permalink: '#'
+      permalink: "#"
 
 pages:
-- Overview:
-    - About: index.md
-    - Contributing: CONTRIBUTING.md
-    - License: LICENSE.txt
-- Architecture: architecture.md
-- Getting Started: getting-started.md
-- Provisioning: provisioning.md
-- Messaging: messaging.md
-- Storage: storage.md
-- LoRa: lora.md
-- Security: 
-    - Secure communication: security.md
-    - Authentication: authentication.md
-- CLI: cli.md
-- Bootstrap: bootstrap.md
-- Developer's Guide: dev-guide.md
-- Load Test: load-test.md
+  - Overview:
+      - About: index.md
+      - Contributing: CONTRIBUTING.md
+      - License: LICENSE.txt
+  - Architecture: architecture.md
+  - Getting Started: getting-started.md
+  - Provisioning: provisioning.md
+  - Messaging: messaging.md
+  - Storage: storage.md
+  - LoRa: lora.md
+  - Security:
+      - Secure communication: security.md
+      - Authentication: authentication.md
+  - CLI: cli.md
+  - Bootstrap: bootstrap.md
+  - Tracing: tracing.md
+  - Developer's Guide: dev-guide.md
+  - Load Test: load-test.md
