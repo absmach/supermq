@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2019
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package main
 
@@ -178,7 +174,8 @@ func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sqlx.DB {
 }
 
 func newService(db *sqlx.DB, tracer opentracing.Tracer, secret string, logger logger.Logger) users.Service {
-	repo := tracing.UserRepositoryMiddleware(postgres.New(db), tracer)
+	database := postgres.NewDatabase(db)
+	repo := tracing.UserRepositoryMiddleware(postgres.New(database), tracer)
 	hasher := bcrypt.New()
 	idp := jwt.New(secret)
 

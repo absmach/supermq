@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2019
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package main
 
@@ -306,10 +302,12 @@ func connectToUsers(cfg config, logger logger.Logger) *grpc.ClientConn {
 }
 
 func newService(users mainflux.UsersServiceClient, dbTracer opentracing.Tracer, cacheTracer opentracing.Tracer, db *sqlx.DB, cacheClient *redis.Client, esClient *redis.Client, logger logger.Logger) things.Service {
-	thingsRepo := postgres.NewThingRepository(db)
+	database := postgres.NewDatabase(db)
+
+	thingsRepo := postgres.NewThingRepository(database)
 	thingsRepo = tracing.ThingRepositoryMiddleware(dbTracer, thingsRepo)
 
-	channelsRepo := postgres.NewChannelRepository(db)
+	channelsRepo := postgres.NewChannelRepository(database)
 	channelsRepo = tracing.ChannelRepositoryMiddleware(dbTracer, channelsRepo)
 
 	chanCache := rediscache.NewChannelCache(cacheClient)

@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package postgres
 
@@ -12,8 +8,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
-
-	"github.com/jmoiron/sqlx"
 
 	"github.com/lib/pq"
 	"github.com/mainflux/mainflux/users"
@@ -24,21 +18,22 @@ var _ users.UserRepository = (*userRepository)(nil)
 const errDuplicate = "unique_violation"
 
 type userRepository struct {
-	db *sqlx.DB
+	db Database
 }
 
 // New instantiates a PostgreSQL implementation of user
 // repository.
-func New(db *sqlx.DB) users.UserRepository {
-	return &userRepository{db}
+func New(db Database) users.UserRepository {
+	return &userRepository{
+		db: db,
+	}
 }
 
-func (ur userRepository) Save(_ context.Context, user users.User) error {
+func (ur userRepository) Save(ctx context.Context, user users.User) error {
 	q := `INSERT INTO users (email, password, metadata) VALUES (:email, :password, :metadata)`
 
 	dbu := toDBUser(user)
-
-	if _, err := ur.db.NamedExec(q, dbu); err != nil {
+	if _, err := ur.db.NamedExecContext(ctx, q, dbu); err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && errDuplicate == pqErr.Code.Name() {
 			return users.ErrConflict
 		}
@@ -48,13 +43,13 @@ func (ur userRepository) Save(_ context.Context, user users.User) error {
 	return nil
 }
 
-func (ur userRepository) RetrieveByID(_ context.Context, email string) (users.User, error) {
+func (ur userRepository) RetrieveByID(ctx context.Context, email string) (users.User, error) {
 	q := `SELECT password, metadata FROM users WHERE email = $1`
 
 	dbu := dbUser{
 		Email: email,
 	}
-	if err := ur.db.QueryRowx(q, email).StructScan(&dbu); err != nil {
+	if err := ur.db.QueryRowxContext(ctx, q, email).StructScan(&dbu); err != nil {
 		if err == sql.ErrNoRows {
 			return users.User{}, users.ErrNotFound
 		}

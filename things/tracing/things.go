@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2019
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package tracing
 
@@ -154,6 +150,5 @@ func createSpan(ctx context.Context, tracer opentracing.Tracer, opName string) o
 			opentracing.ChildOf(parentSpan.Context()),
 		)
 	}
-
 	return tracer.StartSpan(opName)
 }
