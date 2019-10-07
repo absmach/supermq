@@ -364,6 +364,8 @@ func decodeCreateConnections(_ context.Context, r *http.Request) (interface{}, e
 }
 
 func encodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
+	w.Header().Set("Content-Type", contentType)
+
 	if ar, ok := response.(mainflux.Response); ok {
 		for k, v := range ar.Headers() {
 			w.Header().Set(k, v)
@@ -374,18 +376,13 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 		if ar.Empty() {
 			return nil
 		}
-
-		w.Header().Set("Content-Type", contentType)
 	}
 
 	return json.NewEncoder(w).Encode(response)
 }
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
-	if err != nil {
-		w.Header().Set("Content-Type", contentType)
-		json.NewEncoder(w).Encode(errorRes{Err: err.Error()})
-	}
+	w.Header().Set("Content-Type", contentType)
 
 	switch err {
 	case things.ErrMalformedEntity:

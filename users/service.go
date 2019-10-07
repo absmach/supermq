@@ -109,7 +109,6 @@ func (svc usersService) Register(ctx context.Context, user User) error {
 func (svc usersService) Login(ctx context.Context, user User) (string, error) {
 	dbUser, err := svc.users.RetrieveByID(ctx, user.Email)
 	if err != nil {
-		// return "", fmt.Errorf("%s: %w", ErrUnauthorizedAccess, err)
 		return "", errors.Wrap(ErrUnauthorizedAccess, errors.Cast(err))
 	}
 

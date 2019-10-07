@@ -151,13 +151,13 @@ func TestLogin(t *testing.T) {
 		res         string
 	}{
 		{"login with valid credentials", data, contentType, http.StatusCreated, tokenData},
-		{"login with invalid credentials", invalidData, contentType, http.StatusForbidden, ""},
-		{"login with invalid email address", invalidEmailData, contentType, http.StatusBadRequest, ""},
-		{"login non-existent user", nonexistentData, contentType, http.StatusForbidden, ""},
-		{"login with invalid request format", "{", contentType, http.StatusBadRequest, ""},
-		{"login with empty JSON request", "{}", contentType, http.StatusBadRequest, ""},
-		{"login with empty request", "", contentType, http.StatusBadRequest, ""},
-		{"login with missing content type", data, "", http.StatusUnsupportedMediaType, ""},
+		{"login with invalid credentials", invalidData, contentType, http.StatusForbidden, toJSON(errorRes{users.ErrUnauthorizedAccess.Error()})},
+		{"login with invalid email address", invalidEmailData, contentType, http.StatusBadRequest, toJSON(errorRes{users.ErrMalformedEntity.Error()})},
+		{"login non-existent user", nonexistentData, contentType, http.StatusForbidden, toJSON(errorRes{users.ErrUnauthorizedAccess.Error()})},
+		{"login with invalid request format", "{", contentType, http.StatusBadRequest, toJSON(errorRes{users.ErrMalformedEntity.Error()})},
+		{"login with empty JSON request", "{}", contentType, http.StatusBadRequest, toJSON(errorRes{users.ErrMalformedEntity.Error()})},
+		{"login with empty request", "", contentType, http.StatusBadRequest, toJSON(errorRes{users.ErrMalformedEntity.Error()})},
+		{"login with missing content type", data, "", http.StatusUnsupportedMediaType, toJSON(errorRes{httpapi.ErrUnsupportedContentType.Error()})},
 	}
 
 	for _, tc := range cases {
@@ -428,4 +428,6 @@ func TestPasswordChange(t *testing.T) {
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 		assert.Equal(t, tc.res, token, fmt.Sprintf("%s: expected body %s got %s", tc.desc, tc.res, token))
 	}
+type errorRes struct {
+	Err string `json:"error"`
 }
