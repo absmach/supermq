@@ -10,7 +10,7 @@ The Jaeger service will launch with the rest of the Mainflux services.  All serv
 make run
 ```
 
-The Jaeger UI can then be accessed at ```http://http://localhost:16686``` from a browser.  Details about the UI can be found in [Jaeger's official documentation](https://www.jaegertracing.io/docs/1.14/frontend-ui/).
+The Jaeger UI can then be accessed at ```http://localhost:16686``` from a browser.  Details about the UI can be found in [Jaeger's official documentation](https://www.jaegertracing.io/docs/1.14/frontend-ui/).
 
 ## Configure
 
