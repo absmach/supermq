@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -25,7 +24,6 @@ import (
 	"github.com/mainflux/mainflux/twins/mocks"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -435,140 +433,4 @@ func TestUpdateKey(t *testing.T) {
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 	}
-}
-
-func TestViewTwin(t *testing.T) {
-	svc := newService(map[string]string{token: email})
-	ts := newServer(svc)
-	defer ts.Close()
-
-	stw, err := svc.AddTwin(context.Background(), token, twin)
-	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-
-	twres := twinRes{
-		ID:       stw.ID,
-		Name:     stw.Name,
-		Key:      stw.Key,
-		Metadata: stw.Metadata,
-	}
-	data := toJSON(twres)
-
-	cases := []struct {
-		desc   string
-		id     string
-		auth   string
-		status int
-		res    string
-	}{
-		{
-			desc:   "view existing twin",
-			id:     stw.ID,
-			auth:   token,
-			status: http.StatusOK,
-			res:    data,
-		},
-		{
-			desc:   "view non-existent twin",
-			id:     strconv.FormatUint(wrongID, 10),
-			auth:   token,
-			status: http.StatusNotFound,
-			res:    "",
-		},
-		{
-			desc:   "view twin by passing invalid token",
-			id:     stw.ID,
-			auth:   wrongValue,
-			status: http.StatusForbidden,
-			res:    "",
-		},
-		{
-			desc:   "view twin by passing empty token",
-			id:     stw.ID,
-			auth:   "",
-			status: http.StatusForbidden,
-			res:    "",
-		},
-		{
-			desc:   "view twin by passing invalid id",
-			id:     "invalid",
-			auth:   token,
-			status: http.StatusNotFound,
-			res:    "",
-		},
-	}
-
-	for _, tc := range cases {
-		req := testRequest{
-			client: ts.Client(),
-			method: http.MethodGet,
-			url:    fmt.Sprintf("%s/twins/%s", ts.URL, tc.id),
-			token:  tc.auth,
-		}
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		body, err := ioutil.ReadAll(res.Body)
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		data := strings.Trim(string(body), "\n")
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		assert.Equal(t, tc.res, data, fmt.Sprintf("%s: expected body %s got %s", tc.desc, tc.res, data))
-	}
-}
-
-func TestRemoveTwin(t *testing.T) {
-	svc := newService(map[string]string{token: email})
-	ts := newServer(svc)
-	defer ts.Close()
-
-	stw, _ := svc.AddTwin(context.Background(), token, twin)
-
-	cases := []struct {
-		desc   string
-		id     string
-		auth   string
-		status int
-	}{
-		{
-			desc:   "delete existing twin",
-			id:     stw.ID,
-			auth:   token,
-			status: http.StatusNoContent,
-		},
-		{
-			desc:   "delete non-existent twin",
-			id:     strconv.FormatUint(wrongID, 10),
-			auth:   token,
-			status: http.StatusNoContent,
-		},
-		{
-			desc:   "delete twin with invalid token",
-			id:     stw.ID,
-			auth:   wrongValue,
-			status: http.StatusForbidden,
-		},
-		{
-			desc:   "delete twin with empty token",
-			id:     stw.ID,
-			auth:   "",
-			status: http.StatusForbidden,
-		},
-	}
-
-	for _, tc := range cases {
-		req := testRequest{
-			client: ts.Client(),
-			method: http.MethodDelete,
-			url:    fmt.Sprintf("%s/twins/%s", ts.URL, tc.id),
-			token:  tc.auth,
-		}
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-	}
-}
-
-type twinRes struct {
-	ID       string                 `json:"id"`
-	Name     string                 `json:"name,omitempty"`
-	Key      string                 `json:"key"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
