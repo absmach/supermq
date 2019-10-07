@@ -6,11 +6,9 @@
 
 package errors
 
-import (
-	"fmt"
-)
+import "fmt"
 
-// Error represents a Mainflux error.
+// Error struct represents a Mainflux error
 type Error struct {
 	msg string
 	err *Error
@@ -30,6 +28,9 @@ func (err Error) Msg() string {
 	return err.msg
 }
 
+// Contains inspects if Error's message is same as error
+// in argument. If not it continues to examin in next
+// layers of Error until it founds it or unwrap every layers
 func (err Error) Contains(e error) bool {
 	if e == nil {
 		return false
@@ -44,6 +45,7 @@ func (err Error) Contains(e error) bool {
 	return err.err.Contains(e)
 }
 
+// Wrap returns an Error that wrap err with wrapper
 func Wrap(wrapper Error, err *Error) Error {
 	return Error{
 		msg: wrapper.msg,

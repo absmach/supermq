@@ -14,10 +14,8 @@ import (
 	"github.com/mainflux/mainflux/users"
 )
 
-var (
-	// ErrDatabase indicates internal database error
-	ErrDatabase = errors.New("Database error")
-)
+// ErrDatabase indicates internal database error
+var ErrDatabase = errors.New("Database error")
 
 var _ users.UserRepository = (*userRepository)(nil)
 

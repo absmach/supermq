@@ -30,6 +30,7 @@ var (
 	errMissingRefererHeader   = errors.New("missing referer header")
 	errInvalidToken           = errors.New("invalid token")
 	errNoTokenSupplied        = errors.New("no token supplied")
+	// ErrUnsupportedContentType indicates unacceptable or lack of Content-Type
 	ErrUnsupportedContentType = errors.New("unsupported content type")
 	logger                    log.Logger
 )
@@ -119,13 +120,11 @@ func decodeUpdateUser(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeCredentials(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		logger.Warn("Invalid or missing content type.")
 		return nil, ErrUnsupportedContentType
 	}
 
 	var user users.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		logger.Warn(fmt.Sprintf("Failed to decode user credentials: %s", err))
 		return nil, errors.Wrap(users.ErrMalformedEntity, errors.Cast(err))
 	}
 
@@ -217,12 +216,14 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		switch {
 		case mfErr.Contains(users.ErrMalformedEntity):
 			w.WriteHeader(http.StatusBadRequest)
+			logger.Warn(fmt.Sprintf("Failed to decode user credentials: %s", err))
 		case mfErr.Contains(users.ErrUnauthorizedAccess):
 			w.WriteHeader(http.StatusForbidden)
 		case mfErr.Contains(users.ErrConflict):
 			w.WriteHeader(http.StatusConflict)
 		case mfErr.Contains(ErrUnsupportedContentType):
 			w.WriteHeader(http.StatusUnsupportedMediaType)
+			logger.Warn("Invalid or missing content type.")
 		case mfErr.Contains(io.ErrUnexpectedEOF):
 			w.WriteHeader(http.StatusBadRequest)
 		case mfErr.Contains(io.EOF):
