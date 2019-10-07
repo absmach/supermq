@@ -1,6 +1,6 @@
 # Tracing
 
-Distributed tracing is a method of profiling and monitoring applications.  It can provide valuable insight when optimizing and debugging an application.  Mainflux includes the Jaeger open tracing framework as a service with its stack by default.
+Distributed tracing is a method of profiling and monitoring applications.  It can provide valuable insight when optimizing and debugging an application.  Mainflux includes the [Jaeger](https://www.jaegertracing.io) open tracing framework as a service with its stack by default. 
 
 ## Launch
 
