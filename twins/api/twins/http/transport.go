@@ -183,6 +183,10 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusBadRequest)
 	case twins.ErrUnauthorizedAccess:
 		w.WriteHeader(http.StatusForbidden)
+	case twins.ErrNotFound:
+		w.WriteHeader(http.StatusNotFound)
+	case twins.ErrConflict:
+		w.WriteHeader(http.StatusUnprocessableEntity)
 	case errUnsupportedContentType:
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	case errInvalidQueryParams:
