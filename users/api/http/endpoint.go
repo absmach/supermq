@@ -136,7 +136,7 @@ func loginEndpoint(svc users.Service) endpoint.Endpoint {
 		}
 
 		token, err := svc.Login(ctx, req.user)
-		if err != nil {
+		if err.Msg() != "" {
 			return nil, err
 		}
 

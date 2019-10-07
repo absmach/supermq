@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mainflux/mainflux/errors"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/users"
 )
@@ -38,10 +39,10 @@ func (lm *loggingMiddleware) Register(ctx context.Context, user users.User) (err
 	return lm.svc.Register(ctx, user)
 }
 
-func (lm *loggingMiddleware) Login(ctx context.Context, user users.User) (token string, err error) {
+func (lm *loggingMiddleware) Login(ctx context.Context, user users.User) (token string, err errors.Error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method login for user %s took %s to complete", user.Email, time.Since(begin))
-		if err != nil {
+		if err.Msg() != "" {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
 		}

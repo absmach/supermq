@@ -28,7 +28,7 @@ func New(secret string) users.IdentityProvider {
 	return &jwtIdentityProvider{secret}
 }
 
-func (idp *jwtIdentityProvider) TemporaryKey(id string) (string, error) {
+func (idp *jwtIdentityProvider) TemporaryKey(id string) (string, errors.Error) {
 	now := time.Now().UTC()
 	exp := now.Add(duration)
 
@@ -65,7 +65,11 @@ func (idp *jwtIdentityProvider) Identity(key string) (string, error) {
 	return "", users.ErrUnauthorizedAccess
 }
 
-func (idp *jwtIdentityProvider) jwt(claims jwt.StandardClaims) (string, error) {
+func (idp *jwtIdentityProvider) jwt(claims jwt.StandardClaims) (string, errors.Error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(idp.secret))
+	tok, err := token.SignedString([]byte(idp.secret))
+	if err != nil {
+		return tok, *errors.Cast(err)
+	}
+	return tok, errors.New("")
 }

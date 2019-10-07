@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/metrics"
+	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/users"
 )
 
@@ -38,7 +39,7 @@ func (ms *metricsMiddleware) Register(ctx context.Context, user users.User) erro
 	return ms.svc.Register(ctx, user)
 }
 
-func (ms *metricsMiddleware) Login(ctx context.Context, user users.User) (string, error) {
+func (ms *metricsMiddleware) Login(ctx context.Context, user users.User) (string, errors.Error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "login").Add(1)
 		ms.latency.With("method", "login").Observe(time.Since(begin).Seconds())

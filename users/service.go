@@ -53,7 +53,7 @@ type Service interface {
 	// Login authenticates the user given its credentials. Successful
 	// authentication generates new access token. Failed invocations are
 	// identified by the non-nil error values in the response.
-	Login(context.Context, User) (string, error)
+	Login(context.Context, User) (string, errors.Error)
 
 	// Identify validates user's token. If token is valid, user's id
 	// is returned. If token is invalid, or invocation failed for some
@@ -106,7 +106,7 @@ func (svc usersService) Register(ctx context.Context, user User) error {
 	return svc.users.Save(ctx, user)
 }
 
-func (svc usersService) Login(ctx context.Context, user User) (string, error) {
+func (svc usersService) Login(ctx context.Context, user User) (string, errors.Error) {
 	dbUser, err := svc.users.RetrieveByID(ctx, user.Email)
 	if err != nil {
 		return "", errors.Wrap(ErrUnauthorizedAccess, errors.Cast(err))
