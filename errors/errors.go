@@ -8,14 +8,22 @@ package errors
 
 import "fmt"
 
-// Error struct represents a Mainflux error
-type Error struct {
+type Error interface {
+	Error() string
+	Msg() string
+	Contains(error) bool
+}
+
+var _ Error = (*customError)(nil)
+
+// customError struct represents a Mainflux error
+type customError struct {
 	msg string
-	err *Error
+	err Error
 }
 
 // Error implements the error interface.
-func (err Error) Error() string {
+func (err customError) Error() string {
 	if err.err != nil {
 		return fmt.Sprintf("%s: %s", err.msg, err.err.Error())
 	}
@@ -24,14 +32,14 @@ func (err Error) Error() string {
 }
 
 // Msg returns error message
-func (err Error) Msg() string {
+func (err customError) Msg() string {
 	return err.msg
 }
 
 // Contains inspects if Error's message is same as error
 // in argument. If not it continues to examin in next
 // layers of Error until it founds it or unwrap every layers
-func (err Error) Contains(e error) bool {
+func (err customError) Contains(e error) bool {
 	if e == nil {
 		return false
 	}
@@ -46,27 +54,27 @@ func (err Error) Contains(e error) bool {
 }
 
 // Wrap returns an Error that wrap err with wrapper
-func Wrap(wrapper Error, err *Error) Error {
-	return Error{
+func Wrap(wrapper customError, err Error) Error {
+	return customError{
 		msg: wrapper.msg,
 		err: err,
 	}
 }
 
 // Cast returns pointer to Error type with message of given error
-func Cast(err error) *Error {
+func Cast(err error) Error {
 	if err == nil {
 		return nil
 	}
 
-	return &Error{
+	return customError{
 		msg: err.Error(),
 	}
 }
 
 // New returns an Error that formats as the given text.
 func New(text string) Error {
-	return Error{
+	return customError{
 		msg: text,
 		err: nil,
 	}
