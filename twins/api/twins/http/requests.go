@@ -8,7 +8,6 @@
 package http
 
 import (
-	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/twins"
 )
 
@@ -97,11 +96,11 @@ type viewTwinReq struct {
 
 func (req viewTwinReq) validate() error {
 	if req.token == "" {
-		return things.ErrUnauthorizedAccess
+		return twins.ErrUnauthorizedAccess
 	}
 
 	if req.id == "" {
-		return things.ErrMalformedEntity
+		return twins.ErrMalformedEntity
 	}
 
 	return nil
