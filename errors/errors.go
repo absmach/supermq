@@ -54,9 +54,9 @@ func (err customError) Contains(e error) bool {
 }
 
 // Wrap returns an Error that wrap err with wrapper
-func Wrap(wrapper customError, err Error) Error {
+func Wrap(wrapper Error, err Error) Error {
 	return customError{
-		msg: wrapper.msg,
+		msg: wrapper.Msg(),
 		err: err,
 	}
 }
