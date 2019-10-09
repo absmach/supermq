@@ -14,7 +14,7 @@ func registrationEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(userReq)
 
-		if err := req.validate(); err != nil {
+		if err := req.validate(); !err.IsEmpty() {
 			return nil, err
 		}
 
