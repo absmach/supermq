@@ -50,6 +50,8 @@ services:
     restart: on-failure
     networks:
       - mainflux-base-net
+    ports:
+      - 4222:4222      
 
   authn-db:
     image: postgres:10.8-alpine

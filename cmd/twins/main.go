@@ -33,6 +33,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
+	"github.com/nats-io/go-nats"
 	broker "github.com/nats-io/go-nats"
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
@@ -61,6 +62,7 @@ const (
 	defMqttURL         = "tcp://localhost:1883"
 	defThingID         = "2dce1d65-73b4-4020-bfe3-403d851386e7"
 	defThingKey        = "1ff0d0f0-ea04-4fbb-83c4-c10b110bf566"
+	defNatsURL         = broker.DefaultURL
 
 	envLogLevel        = "MF_TWINS_LOG_LEVEL"
 	envHTTPPort        = "MF_TWINS_HTTP_PORT"
@@ -80,6 +82,7 @@ const (
 	envMqttURL         = "MF_TWINS_MQTT_URL"
 	envThingID         = "MF_TWINS_THING_ID"
 	envThingKey        = "MF_TWINS_THING_KEY"
+	envNatsURL         = "MF_NATS_URL"
 )
 
 type config struct {
@@ -101,6 +104,7 @@ type config struct {
 	mqttURL         string
 	thingID         string
 	thingKey        string
+	NatsURL         string
 }
 
 func main() {
@@ -132,10 +136,20 @@ func main() {
 	mcTracer, mcCloser := initJaeger("twins_mqtt", cfg.jaegerURL, logger)
 	defer mcCloser.Close()
 
+	nc, err := broker.Connect(cfg.NatsURL)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
+		os.Exit(1)
+	}
+	defer nc.Close()
+
+	ncTracer, ncCloser := initJaeger("twins_nats", cfg.jaegerURL, logger)
+	defer ncCloser.Close()
+
 	tracer, closer := initJaeger("twins", cfg.jaegerURL, logger)
 	defer closer.Close()
 
-	svc := newService(cfg.secret, mc, mcTracer, users, dbTracer, db, logger)
+	svc := newService(cfg.secret, nc, ncTracer, mc, mcTracer, users, dbTracer, db, logger)
 	errs := make(chan error, 2)
 
 	go startHTTPServer(twinshttpapi.MakeHandler(tracer, svc), cfg.httpPort, cfg, logger, errs)
@@ -184,6 +198,7 @@ func loadConfig() config {
 		mqttURL:         mainflux.Env(envMqttURL, defMqttURL),
 		thingID:         mainflux.Env(envThingID, defThingID),
 		thingKey:        mainflux.Env(envThingKey, defThingKey),
+		NatsURL:         mainflux.Env(envNatsURL, defNatsURL),
 	}
 }
 
@@ -245,13 +260,13 @@ func connectToUsers(cfg config, logger logger.Logger) *grpc.ClientConn {
 	return conn
 }
 
-func newService(secret string, mc mqtt.Client, mcTracer opentracing.Tracer, users mainflux.UsersServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
+func newService(secret string, nc *nats.Conn, ncTracer opentracing.Tracer, mc mqtt.Client, mcTracer opentracing.Tracer, users mainflux.UsersServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
 	twinRepo := twinsmongodb.NewTwinRepository(db)
 	idp := uuid.New()
 
 	// TODO twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, thingsRepo)
 
-	svc := twins.New(secret, mc, users, twinRepo, idp)
+	svc := twins.New(secret, nc, mc, users, twinRepo, idp)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
