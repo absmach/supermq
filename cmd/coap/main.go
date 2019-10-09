@@ -21,6 +21,7 @@ import (
 	"github.com/mainflux/mainflux/coap"
 	"github.com/mainflux/mainflux/coap/api"
 	"github.com/mainflux/mainflux/coap/nats"
+	"github.com/mainflux/mainflux/coap/tracing"
 	logger "github.com/mainflux/mainflux/logger"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -89,7 +90,12 @@ func main() {
 
 	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
 	respChan := make(chan string, 10000)
+
+	natsTracer, natsCloser := initJaeger("nats", cfg.jaegerURL, logger)
+	defer natsCloser.Close()
 	pubsub := nats.New(nc)
+	pubsub = tracing.NatsPublisherMiddleware(pubsub, natsTracer)
+
 	svc := coap.New(pubsub, cc, respChan)
 	svc = api.LoggingMiddleware(svc, logger)
 
