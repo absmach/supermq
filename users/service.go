@@ -5,7 +5,6 @@ package users
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/mainflux/mainflux/errors"
 )
@@ -100,7 +99,6 @@ func New(users UserRepository, hasher Hasher, idp IdentityProvider, m Emailer, t
 func (svc usersService) Register(ctx context.Context, user User) errors.Error {
 	hash, err := svc.hasher.Hash(user.Password)
 	if !err.IsEmpty() {
-		fmt.Printf("debug, err4... (%v, %T)\n", err, err)
 
 		return errors.Wrap(ErrMalformedEntity, err)
 	}

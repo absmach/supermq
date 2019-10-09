@@ -5,7 +5,6 @@ package http
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/mainflux/mainflux/users"
@@ -20,8 +19,9 @@ func registrationEndpoint(svc users.Service) endpoint.Endpoint {
 		}
 
 		err := svc.Register(ctx, req.user)
-		fmt.Printf("debug, err3... (%v, %T)\n", err, err)
-
+		if err.IsEmpty() {
+			return tokenRes{}, nil
+		}
 		return tokenRes{}, err
 	}
 }
