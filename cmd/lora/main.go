@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -17,11 +19,14 @@ import (
 	"github.com/mainflux/mainflux/lora/api"
 	pub "github.com/mainflux/mainflux/lora/nats"
 	mqttBroker "github.com/mainflux/mainflux/lora/paho"
+	"github.com/mainflux/mainflux/lora/tracing"
+	"github.com/opentracing/opentracing-go"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux/lora/redis"
 	nats "github.com/nats-io/go-nats"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
+	jconfig "github.com/uber/jaeger-client-go/config"
 )
 
 const (
@@ -36,6 +41,7 @@ const (
 	defRouteMapURL  = "localhost:6379"
 	defRouteMapPass = ""
 	defRouteMapDB   = "0"
+	defJaegerURL    = ""
 
 	envHTTPPort     = "MF_LORA_ADAPTER_HTTP_PORT"
 	envLoraMsgURL   = "MF_LORA_ADAPTER_MESSAGES_URL"
@@ -48,6 +54,7 @@ const (
 	envRouteMapURL  = "MF_LORA_ADAPTER_ROUTEMAP_URL"
 	envRouteMapPass = "MF_LORA_ADAPTER_ROUTEMAP_PASS"
 	envRouteMapDB   = "MF_LORA_ADAPTER_ROUTEMAP_DB"
+	envJaegerURL    = "MF_JAEGER_URL"
 
 	loraServerTopic = "application/+/device/+/rx"
 
@@ -67,6 +74,7 @@ type config struct {
 	routeMapURL  string
 	routeMapPass string
 	routeMapDB   string
+	jaegerURL    string
 }
 
 func main() {
@@ -86,7 +94,10 @@ func main() {
 	esConn := connectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
 	defer esConn.Close()
 
+	natsTracer, natsCloser := initJaeger("nats", cfg.jaegerURL, logger)
+	defer natsCloser.Close()
 	publisher := pub.NewMessagePublisher(natsConn)
+	publisher = tracing.NatsPublisherMiddleware(publisher, natsTracer)
 
 	thingRM := newRouteMapRepositoy(rmConn, thingsRMPrefix, logger)
 	chanRM := newRouteMapRepositoy(rmConn, channelsRMPrefix, logger)
@@ -141,7 +152,32 @@ func loadConfig() config {
 		routeMapURL:  mainflux.Env(envRouteMapURL, defRouteMapURL),
 		routeMapPass: mainflux.Env(envRouteMapPass, defRouteMapPass),
 		routeMapDB:   mainflux.Env(envRouteMapDB, defRouteMapDB),
+		jaegerURL:    mainflux.Env(envJaegerURL, defJaegerURL),
 	}
+}
+
+func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, io.Closer) {
+	if url == "" {
+		return opentracing.NoopTracer{}, ioutil.NopCloser(nil)
+	}
+
+	tracer, closer, err := jconfig.Configuration{
+		ServiceName: svcName,
+		Sampler: &jconfig.SamplerConfig{
+			Type:  "const",
+			Param: 1,
+		},
+		Reporter: &jconfig.ReporterConfig{
+			LocalAgentHostPort: url,
+			LogSpans:           true,
+		},
+	}.NewTracer()
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to init Jaeger: %s", err))
+		os.Exit(1)
+	}
+
+	return tracer, closer
 }
 
 func connectToNATS(url string, logger logger.Logger) *nats.Conn {
