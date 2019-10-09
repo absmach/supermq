@@ -109,7 +109,7 @@ func (svc usersService) Register(ctx context.Context, user User) errors.Error {
 func (svc usersService) Login(ctx context.Context, user User) (string, errors.Error) {
 	dbUser, err := svc.users.RetrieveByID(ctx, user.Email)
 	if !err.IsEmpty() {
-		return "", errors.Wrap(ErrUnauthorizedAccess, errors.Cast(err))
+		return "", errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
 	if err := svc.hasher.Compare(user.Password, dbUser.Password); !err.IsEmpty() {
