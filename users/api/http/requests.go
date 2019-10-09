@@ -3,7 +3,10 @@
 
 package http
 
-import "github.com/mainflux/mainflux/users"
+import (
+	"github.com/mainflux/mainflux/errors"
+	"github.com/mainflux/mainflux/users"
+)
 
 type apiReq interface {
 	validate() error
@@ -13,7 +16,7 @@ type userReq struct {
 	user users.User
 }
 
-func (req userReq) validate() error {
+func (req userReq) validate() errors.Error {
 	return req.user.Validate()
 }
 
@@ -21,7 +24,7 @@ type viewUserInfoReq struct {
 	token string
 }
 
-func (req viewUserInfoReq) validate() error {
+func (req viewUserInfoReq) validate() errors.Error {
 	if req.token == "" {
 		return users.ErrUnauthorizedAccess
 	}

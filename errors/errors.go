@@ -12,6 +12,7 @@ type Error interface {
 	Error() string
 	Msg() string
 	Contains(error) bool
+	IsEmpty() bool
 }
 
 var _ Error = (*customError)(nil)
@@ -36,6 +37,13 @@ func (err customError) Msg() string {
 	return err.msg
 }
 
+func (err customError) IsEmpty() bool {
+	if err.Msg() == "" {
+		return true
+	}
+	return false
+}
+
 // Contains inspects if Error's message is same as error
 // in argument. If not it continues to examin in next
 // layers of Error until it founds it or unwrap every layers
@@ -43,13 +51,13 @@ func (err customError) Contains(e error) bool {
 	if e == nil {
 		return false
 	}
-
 	if err.msg == e.Error() {
 		return true
 	}
 	if err.err == nil {
 		return false
 	}
+
 	return err.err.Contains(e)
 }
 
@@ -61,15 +69,12 @@ func Wrap(wrapper Error, err Error) Error {
 	}
 }
 
-// Cast returns pointer to Error type with message of given error
+// Cast returns Error type with message of given error
 func Cast(err error) Error {
 	if err == nil {
-		return nil
+		return New("")
 	}
-
-	return customError{
-		msg: err.Error(),
-	}
+	return New(err.Error())
 }
 
 // New returns an Error that formats as the given text.

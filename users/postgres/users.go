@@ -33,7 +33,7 @@ func New(db Database) users.UserRepository {
 	}
 }
 
-func (ur userRepository) Save(ctx context.Context, user users.User) error {
+func (ur userRepository) Save(_ context.Context, user users.User) errors.Error {
 	q := `INSERT INTO users (email, password, metadata) VALUES (:email, :password, :metadata)`
 
 	dbu := toDBUser(user)
@@ -44,7 +44,7 @@ func (ur userRepository) Save(ctx context.Context, user users.User) error {
 		return errors.Wrap(ErrDatabase, errors.Cast(err))
 	}
 
-	return nil
+	return errors.New("")
 }
 
 func (ur userRepository) Update(ctx context.Context, user users.User) error {
@@ -75,7 +75,7 @@ func (ur userRepository) UpdateUser(ctx context.Context, user users.User) error 
 	return nil
 }
 
-func (ur userRepository) RetrieveByID(ctx context.Context, email string) (users.User, error) {
+func (ur userRepository) RetrieveByID(_ context.Context, email string) (users.User, errors.Error) {
 	q := `SELECT password, metadata FROM users WHERE email = $1`
 
 	dbu := dbUser{
@@ -91,7 +91,7 @@ func (ur userRepository) RetrieveByID(ctx context.Context, email string) (users.
 
 	user := toUser(dbu)
 
-	return user, nil
+	return user, errors.New("")
 }
 
 func (ur userRepository) UpdatePassword(ctx context.Context, email, password string) error {

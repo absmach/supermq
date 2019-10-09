@@ -12,5 +12,5 @@ type IdentityProvider interface {
 	TemporaryKey(string) (string, errors.Error)
 
 	// Identity extracts the entity identifier given its secret key.
-	Identity(string) (string, error)
+	Identity(string) (string, errors.Error)
 }

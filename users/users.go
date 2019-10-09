@@ -7,6 +7,8 @@ import (
 	"context"
 	"regexp"
 	"strings"
+
+	"github.com/mainflux/mainflux/errors"
 )
 
 var (
@@ -24,7 +26,7 @@ type User struct {
 }
 
 // Validate returns an error if user representation is invalid.
-func (u User) Validate() error {
+func (u User) Validate() errors.Error {
 	if u.Email == "" || u.Password == "" {
 		return ErrMalformedEntity
 
@@ -34,14 +36,14 @@ func (u User) Validate() error {
 		return ErrMalformedEntity
 	}
 
-	return nil
+	return errors.New("")
 }
 
 // UserRepository specifies an account persistence API.
 type UserRepository interface {
 	// Save persists the user account. A non-nil error is returned to indicate
 	// operation failure.
-	Save(context.Context, User) error
+	Save(context.Context, User) errors.Error
 
 	// Update updates the user metadata.
 	UpdateUser(context.Context, User) error

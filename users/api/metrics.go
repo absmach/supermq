@@ -30,7 +30,7 @@ func MetricsMiddleware(svc users.Service, counter metrics.Counter, latency metri
 	}
 }
 
-func (ms *metricsMiddleware) Register(ctx context.Context, user users.User) error {
+func (ms *metricsMiddleware) Register(ctx context.Context, user users.User) errors.Error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "register").Add(1)
 		ms.latency.With("method", "register").Observe(time.Since(begin).Seconds())
@@ -48,7 +48,7 @@ func (ms *metricsMiddleware) Login(ctx context.Context, user users.User) (string
 	return ms.svc.Login(ctx, user)
 }
 
-func (ms *metricsMiddleware) Identify(key string) (string, error) {
+func (ms *metricsMiddleware) Identify(key string) (string, errors.Error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "identity").Add(1)
 		ms.latency.With("method", "identity").Observe(time.Since(begin).Seconds())

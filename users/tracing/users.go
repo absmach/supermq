@@ -8,6 +8,7 @@ package tracing
 import (
 	"context"
 
+	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/users"
 	opentracing "github.com/opentracing/opentracing-go"
 )
@@ -36,7 +37,7 @@ func UserRepositoryMiddleware(repo users.UserRepository, tracer opentracing.Trac
 	}
 }
 
-func (urm userRepositoryMiddleware) Save(ctx context.Context, user users.User) error {
+func (urm userRepositoryMiddleware) Save(ctx context.Context, user users.User) errors.Error {
 	span := createSpan(ctx, urm.tracer, saveOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -57,7 +58,8 @@ func (urm userRepositoryMiddleware) RetrieveByID(ctx context.Context, id string)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 
-	return urm.repo.RetrieveByID(ctx, id)
+	user, err := urm.repo.RetrieveByID(ctx, id)
+	return user, errors.Cast(err)
 }
 
 func (urm userRepositoryMiddleware) UpdatePassword(ctx context.Context, email, password string) error {

@@ -7,6 +7,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/users"
 )
 
@@ -24,7 +25,7 @@ func NewUserRepository() users.UserRepository {
 	}
 }
 
-func (urm *userRepositoryMock) Save(ctx context.Context, user users.User) error {
+func (urm *userRepositoryMock) Save(ctx context.Context, user users.User) errors.Error {
 	urm.mu.Lock()
 	defer urm.mu.Unlock()
 
@@ -33,7 +34,7 @@ func (urm *userRepositoryMock) Save(ctx context.Context, user users.User) error 
 	}
 
 	urm.users[user.Email] = user
-	return nil
+	return errors.New("")
 }
 
 func (urm *userRepositoryMock) Update(ctx context.Context, user users.User) error {
@@ -69,7 +70,7 @@ func (urm *userRepositoryMock) RetrieveByID(ctx context.Context, email string) (
 		return users.User{}, users.ErrNotFound
 	}
 
-	return val, nil
+	return val, errors.New("")
 }
 
 func (urm *userRepositoryMock) UpdatePassword(_ context.Context, token, password string) error {

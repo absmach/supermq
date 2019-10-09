@@ -48,7 +48,7 @@ var (
 type Service interface {
 	// Register creates new user account. In case of the failed registration, a
 	// non-nil error value is returned.
-	Register(context.Context, User) error
+	Register(context.Context, User) errors.Error
 
 	// Login authenticates the user given its credentials. Successful
 	// authentication generates new access token. Failed invocations are
@@ -58,7 +58,7 @@ type Service interface {
 	// Identify validates user's token. If token is valid, user's id
 	// is returned. If token is invalid, or invocation failed for some
 	// other reason, non-nil error values are returned in response.
-	Identify(string) (string, error)
+	Identify(string) (string, errors.Error)
 
 	// Get authenticated user info for the given token
 	UserInfo(ctx context.Context, token string) (User, error)
@@ -96,10 +96,10 @@ func New(users UserRepository, hasher Hasher, idp IdentityProvider, m Emailer, t
 	return &usersService{users: users, hasher: hasher, idp: idp, email: m, token: t}
 }
 
-func (svc usersService) Register(ctx context.Context, user User) error {
+func (svc usersService) Register(ctx context.Context, user User) errors.Error {
 	hash, err := svc.hasher.Hash(user.Password)
-	if err != nil {
-		return errors.Wrap(ErrMalformedEntity, errors.Cast(err))
+	if !err.IsEmpty() {
+		return errors.Wrap(ErrMalformedEntity, err)
 	}
 
 	user.Password = hash
@@ -108,34 +108,35 @@ func (svc usersService) Register(ctx context.Context, user User) error {
 
 func (svc usersService) Login(ctx context.Context, user User) (string, errors.Error) {
 	dbUser, err := svc.users.RetrieveByID(ctx, user.Email)
-	if err != nil {
+	if !err.IsEmpty() {
 		return "", errors.Wrap(ErrUnauthorizedAccess, errors.Cast(err))
 	}
 
-	if err := svc.hasher.Compare(user.Password, dbUser.Password); err != nil {
-		return "", errors.Wrap(ErrUnauthorizedAccess, errors.Cast(err))
+	if err := svc.hasher.Compare(user.Password, dbUser.Password); !err.IsEmpty() {
+		return "", errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
 	return svc.idp.TemporaryKey(user.Email)
 }
 
-func (svc usersService) Identify(token string) (string, error) {
+func (svc usersService) Identify(token string) (string, errors.Error) {
+
 	id, err := svc.idp.Identity(token)
-	if err != nil {
-		return "", errors.Wrap(ErrUnauthorizedAccess, errors.Cast(err))
+	if !err.IsEmpty() {
+		return "", errors.Wrap(ErrUnauthorizedAccess, err)
 	}
-	return id, nil
+	return id, errors.New("")
 }
 
-func (svc usersService) UserInfo(ctx context.Context, token string) (User, error) {
+func (svc usersService) UserInfo(ctx context.Context, token string) (User, errors.Error) {
 	id, err := svc.idp.Identity(token)
-	if err != nil {
-		return User{}, errors.Wrap(ErrUnauthorizedAccess, errors.Cast(err))
+	if !err.IsEmpty() {
+		return User{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
 	dbUser, err := svc.users.RetrieveByID(ctx, id)
-	if err != nil {
-		return User{}, errors.Wrap(ErrUnauthorizedAccess, errors.Cast(err))
+	if !err.IsEmpty() {
+		return User{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
 	return User{

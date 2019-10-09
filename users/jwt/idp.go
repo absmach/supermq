@@ -42,13 +42,13 @@ func (idp *jwtIdentityProvider) TemporaryKey(id string) (string, errors.Error) {
 	return idp.jwt(claims)
 }
 
-func (idp *jwtIdentityProvider) Identity(key string) (string, error) {
+func (idp *jwtIdentityProvider) Identity(key string) (string, errors.Error) {
 	token, err := jwt.Parse(key, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, users.ErrUnauthorizedAccess
 		}
 
-		return []byte(idp.secret), nil
+		return []byte(idp.secret), errors.New("")
 	})
 
 	if err != nil {
@@ -68,8 +68,5 @@ func (idp *jwtIdentityProvider) Identity(key string) (string, error) {
 func (idp *jwtIdentityProvider) jwt(claims jwt.StandardClaims) (string, errors.Error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tok, err := token.SignedString([]byte(idp.secret))
-	if err != nil {
-		return tok, *errors.Cast(err)
-	}
-	return tok, errors.New("")
+	return tok, errors.Cast(err)
 }
