@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
+	"fmt"
 
 	"github.com/lib/pq"
 	"github.com/mainflux/mainflux/errors"
@@ -43,6 +44,7 @@ func (ur userRepository) Save(_ context.Context, user users.User) errors.Error {
 		}
 		return errors.Wrap(ErrDatabase, errors.Cast(err))
 	}
+	fmt.Printf("debug, dal udje ovde")
 
 	return errors.New("")
 }
