@@ -20,6 +20,7 @@ type Twin struct {
 	Name       string
 	Key        string
 	thingID    string
+	channelID  string
 	created    time.Time
 	updated    time.Time
 	attributes map[string]interface{}

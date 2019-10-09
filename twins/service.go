@@ -16,6 +16,7 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/mainflux/mainflux"
+	"github.com/nats-io/go-nats"
 )
 
 var (
@@ -62,6 +63,7 @@ type Service interface {
 
 type twinsService struct {
 	secret     string
+	natsClient *nats.Conn
 	mqttClient mqtt.Client
 	users      mainflux.UsersServiceClient
 	twins      TwinRepository
@@ -71,10 +73,11 @@ type twinsService struct {
 var _ Service = (*twinsService)(nil)
 
 // New instantiates the twins service implementation.
-func New(secret string, mc mqtt.Client, users mainflux.UsersServiceClient, twins TwinRepository, idp IdentityProvider) Service {
+func New(secret string, nc *nats.Conn, mc mqtt.Client, users mainflux.UsersServiceClient, twins TwinRepository, idp IdentityProvider) Service {
 	return &twinsService{
 		secret:     secret,
 		mqttClient: mc,
+		natsClient: nc,
 		users:      users,
 		twins:      twins,
 		idp:        idp,
