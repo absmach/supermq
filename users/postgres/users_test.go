@@ -29,7 +29,7 @@ func TestUserSave(t *testing.T) {
 				Email:    email,
 				Password: "pass",
 			},
-			err: nil,
+			err: errors.New(""),
 		},
 		{
 			desc: "duplicate user",
@@ -64,13 +64,13 @@ func TestSingleUserRetrieval(t *testing.T) {
 		Email:    email,
 		Password: "pass",
 	})
-	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.True(t, err.IsEmpty(), fmt.Sprintf("unexpected error: %s", err))
 
 	cases := map[string]struct {
 		email string
 		err   error
 	}{
-		"existing user":     {email, nil},
+		"existing user":     {email, errors.New("")},
 		"non-existing user": {"unknown@example.com", users.ErrNotFound},
 	}
 

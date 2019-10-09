@@ -82,7 +82,7 @@ func userInfoEndpoint(svc users.Service) endpoint.Endpoint {
 		}
 
 		u, err := svc.UserInfo(ctx, req.token)
-		if err != nil {
+		if !err.IsEmpty() {
 			return nil, err
 		}
 

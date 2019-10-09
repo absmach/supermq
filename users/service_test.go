@@ -44,7 +44,7 @@ func TestRegister(t *testing.T) {
 		{
 			desc: "register new user",
 			user: user,
-			err:  nil,
+			err:  errors.New(""),
 		},
 		{
 			desc: "register existing user",
@@ -115,7 +115,7 @@ func TestIdentify(t *testing.T) {
 		key string
 		err error
 	}{
-		"valid token's identity":   {key, nil},
+		"valid token's identity":   {key, errors.New("")},
 		"invalid token's identity": {"", users.ErrUnauthorizedAccess},
 	}
 
