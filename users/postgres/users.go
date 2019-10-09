@@ -44,7 +44,7 @@ func (ur userRepository) Save(_ context.Context, user users.User) errors.Error {
 		return errors.Wrap(ErrDatabase, errors.Cast(err))
 	}
 
-	return errors.New("")
+	return errors.Empty()
 }
 
 func (ur userRepository) Update(ctx context.Context, user users.User) error {
@@ -91,7 +91,7 @@ func (ur userRepository) RetrieveByID(_ context.Context, email string) (users.Us
 
 	user := toUser(dbu)
 
-	return user, errors.New("")
+	return user, errors.Empty()
 }
 
 func (ur userRepository) UpdatePassword(ctx context.Context, email, password string) error {

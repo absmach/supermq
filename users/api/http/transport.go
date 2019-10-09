@@ -239,7 +239,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
-	if mfErr.Msg() != "" {
+	if !mfErr.IsEmpty() {
 		w.Header().Set("Content-Type", contentType)
 		json.NewEncoder(w).Encode(errorRes{Err: mfErr.Msg()})
 	}

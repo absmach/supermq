@@ -30,7 +30,7 @@ func (bh *bcryptHasher) Hash(pwd string) (string, errors.Error) {
 		return "", errors.Cast(err)
 	}
 
-	return string(hash), errors.New("")
+	return string(hash), errors.Empty()
 }
 
 func (bh *bcryptHasher) Compare(plain, hashed string) errors.Error {

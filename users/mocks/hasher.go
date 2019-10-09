@@ -22,7 +22,7 @@ func (hm *hasherMock) Hash(pwd string) (string, errors.Error) {
 	if pwd == "" {
 		return "", users.ErrMalformedEntity
 	}
-	return pwd, errors.New("")
+	return pwd, errors.Empty()
 }
 
 func (hm *hasherMock) Compare(plain, hashed string) errors.Error {
@@ -30,5 +30,5 @@ func (hm *hasherMock) Compare(plain, hashed string) errors.Error {
 		return users.ErrUnauthorizedAccess
 	}
 
-	return errors.New("")
+	return errors.Empty()
 }

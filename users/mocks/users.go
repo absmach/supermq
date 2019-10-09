@@ -34,7 +34,7 @@ func (urm *userRepositoryMock) Save(ctx context.Context, user users.User) errors
 	}
 
 	urm.users[user.Email] = user
-	return errors.New("")
+	return errors.Empty()
 }
 
 func (urm *userRepositoryMock) Update(ctx context.Context, user users.User) error {
@@ -70,7 +70,7 @@ func (urm *userRepositoryMock) RetrieveByID(ctx context.Context, email string) (
 		return users.User{}, users.ErrNotFound
 	}
 
-	return val, errors.New("")
+	return val, errors.Empty()
 }
 
 func (urm *userRepositoryMock) UpdatePassword(_ context.Context, token, password string) error {

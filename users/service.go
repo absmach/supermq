@@ -126,7 +126,7 @@ func (svc usersService) Identify(token string) (string, errors.Error) {
 	if !err.IsEmpty() {
 		return "", errors.Wrap(ErrUnauthorizedAccess, err)
 	}
-	return id, errors.New("")
+	return id, errors.Empty()
 }
 
 func (svc usersService) UserInfo(ctx context.Context, token string) (User, errors.Error) {

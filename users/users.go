@@ -36,7 +36,7 @@ func (u User) Validate() errors.Error {
 		return ErrMalformedEntity
 	}
 
-	return errors.New("")
+	return errors.Empty()
 }
 
 // UserRepository specifies an account persistence API.

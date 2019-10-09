@@ -8,10 +8,21 @@ package errors
 
 import "fmt"
 
+// Error specifies an API that must be fullfiled by error type
 type Error interface {
+
+	// Error implements the error interface.
 	Error() string
+
+	// Msg returns error message
 	Msg() string
+
+	// Contains inspects if Error's message is same as error
+	// in argument. If not it continues to examin in next
+	// layers of Error until it founds it or unwrap every layers
 	Contains(error) bool
+
+	//IsEmpty check if Error is empty
 	IsEmpty() bool
 }
 
@@ -23,7 +34,6 @@ type customError struct {
 	err Error
 }
 
-// Error implements the error interface.
 func (err customError) Error() string {
 	if err.err != nil {
 		return fmt.Sprintf("%s: %s", err.msg, err.err.Error())
@@ -32,7 +42,6 @@ func (err customError) Error() string {
 	return err.msg
 }
 
-// Msg returns error message
 func (err customError) Msg() string {
 	return err.msg
 }
@@ -44,9 +53,6 @@ func (err customError) IsEmpty() bool {
 	return false
 }
 
-// Contains inspects if Error's message is same as error
-// in argument. If not it continues to examin in next
-// layers of Error until it founds it or unwrap every layers
 func (err customError) Contains(e error) bool {
 	if e == nil {
 		return false
@@ -83,4 +89,9 @@ func New(text string) Error {
 		msg: text,
 		err: nil,
 	}
+}
+
+// Empty returns a new empty Error
+func Empty() Error {
+	return New("")
 }

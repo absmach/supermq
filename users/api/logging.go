@@ -28,7 +28,7 @@ func LoggingMiddleware(svc users.Service, logger log.Logger) users.Service {
 func (lm *loggingMiddleware) Register(ctx context.Context, user users.User) (err errors.Error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method register for user %s took %s to complete", user.Email, time.Since(begin))
-		if err.Msg() != "" {
+		if !err.IsEmpty() {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
 		}
@@ -42,7 +42,7 @@ func (lm *loggingMiddleware) Register(ctx context.Context, user users.User) (err
 func (lm *loggingMiddleware) Login(ctx context.Context, user users.User) (token string, err errors.Error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method login for user %s took %s to complete", user.Email, time.Since(begin))
-		if err.Msg() != "" {
+		if !err.IsEmpty() {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
 		}
@@ -55,7 +55,7 @@ func (lm *loggingMiddleware) Login(ctx context.Context, user users.User) (token 
 func (lm *loggingMiddleware) Identify(key string) (id string, err errors.Error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method identity for user %s took %s to complete", id, time.Since(begin))
-		if err.Msg() != "" {
+		if !err.IsEmpty() {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
 		}
@@ -68,7 +68,7 @@ func (lm *loggingMiddleware) Identify(key string) (id string, err errors.Error) 
 func (lm *loggingMiddleware) UserInfo(ctx context.Context, token string) (u users.User, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method user_info for user %s took %s to complete", u.Email, time.Since(begin))
-		if err.Msg() != "" {
+		if !err.IsEmpty() {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
 		}

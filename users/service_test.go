@@ -44,7 +44,7 @@ func TestRegister(t *testing.T) {
 		{
 			desc: "register new user",
 			user: user,
-			err:  errors.New(""),
+			err:  errors.Empty(),
 		},
 		{
 			desc: "register existing user",
@@ -82,7 +82,7 @@ func TestLogin(t *testing.T) {
 	}{
 		"login with good credentials": {
 			user: user,
-			err:  errors.New(""),
+			err:  errors.Empty(),
 		},
 		"login with wrong e-mail": {
 			user: users.User{
@@ -115,7 +115,7 @@ func TestIdentify(t *testing.T) {
 		key string
 		err error
 	}{
-		"valid token's identity":   {key, errors.New("")},
+		"valid token's identity":   {key, errors.Empty()},
 		"invalid token's identity": {"", users.ErrUnauthorizedAccess},
 	}
 

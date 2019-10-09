@@ -29,7 +29,7 @@ func TestUserSave(t *testing.T) {
 				Email:    email,
 				Password: "pass",
 			},
-			err: errors.New(""),
+			err: errors.Empty(),
 		},
 		{
 			desc: "duplicate user",
@@ -70,7 +70,7 @@ func TestSingleUserRetrieval(t *testing.T) {
 		email string
 		err   error
 	}{
-		"existing user":     {email, errors.New("")},
+		"existing user":     {email, errors.Empty()},
 		"non-existing user": {"unknown@example.com", users.ErrNotFound},
 	}
 
