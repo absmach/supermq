@@ -22,8 +22,10 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/normalizer"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/api"
+	"github.com/mainflux/mainflux/twins/nats"
 	localusers "github.com/mainflux/mainflux/twins/users"
 	"github.com/mainflux/mainflux/twins/uuid"
 
@@ -33,7 +35,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
-	"github.com/nats-io/go-nats"
 	broker "github.com/nats-io/go-nats"
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
@@ -149,7 +150,13 @@ func main() {
 	tracer, closer := initJaeger("twins", cfg.jaegerURL, logger)
 	defer closer.Close()
 
-	svc := newService(cfg.secret, nc, ncTracer, mc, mcTracer, users, dbTracer, db, logger)
+	nrm := normalizer.New()
+
+	nats.Subscribe(nrm, nc, logger)
+
+	svc := newService(cfg.secret,
+		nc, ncTracer, nrm, mc, mcTracer,
+		users, dbTracer, db, logger)
 	errs := make(chan error, 2)
 
 	go startHTTPServer(twinshttpapi.MakeHandler(tracer, svc), cfg.httpPort, cfg, logger, errs)
@@ -260,13 +267,13 @@ func connectToUsers(cfg config, logger logger.Logger) *grpc.ClientConn {
 	return conn
 }
 
-func newService(secret string, nc *nats.Conn, ncTracer opentracing.Tracer, mc mqtt.Client, mcTracer opentracing.Tracer, users mainflux.UsersServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
+func newService(secret string, nc *broker.Conn, ncTracer opentracing.Tracer, nrm normalizer.Service, mc mqtt.Client, mcTracer opentracing.Tracer, users mainflux.UsersServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
 	twinRepo := twinsmongodb.NewTwinRepository(db)
 	idp := uuid.New()
 
 	// TODO twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, thingsRepo)
 
-	svc := twins.New(secret, nc, mc, users, twinRepo, idp)
+	svc := twins.New(secret, nc, nrm, mc, users, twinRepo, idp)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
