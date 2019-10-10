@@ -234,10 +234,6 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			w.Header().Set("Content-Type", contentType)
 			json.NewEncoder(w).Encode(errorRes{Err: errorVal.Msg()})
 		}
-	case *json.SyntaxError:
-		w.WriteHeader(http.StatusBadRequest)
-	case *json.UnmarshalTypeError:
-		w.WriteHeader(http.StatusBadRequest)
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
 	}
