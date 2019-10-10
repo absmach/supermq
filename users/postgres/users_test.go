@@ -46,12 +46,7 @@ func TestUserSave(t *testing.T) {
 
 	for _, tc := range cases {
 		err := repo.Save(context.Background(), tc.user)
-		switch v := err.(type) {
-		case errors.Error:
-			assert.True(t, v.Contains(tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		default:
-			assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		}
+		assert.True(t, err.Contains(tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
@@ -76,11 +71,6 @@ func TestSingleUserRetrieval(t *testing.T) {
 
 	for desc, tc := range cases {
 		_, err := repo.RetrieveByID(context.Background(), tc.email)
-		switch v := err.(type) {
-		case errors.Error:
-			assert.True(t, v.Contains(tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
-		default:
-			assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
-		}
+		assert.True(t, err.Contains(tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }

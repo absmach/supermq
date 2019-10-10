@@ -63,12 +63,7 @@ func TestRegister(t *testing.T) {
 
 	for _, tc := range cases {
 		err := svc.Register(context.Background(), tc.user)
-		switch v := err.(type) {
-		case errors.Error:
-			assert.True(t, v.Contains(tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		default:
-			assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		}
+		assert.True(t, err.Contains(tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
@@ -121,13 +116,7 @@ func TestIdentify(t *testing.T) {
 
 	for desc, tc := range cases {
 		_, err := svc.Identify(tc.key)
-		switch v := err.(type) {
-		case errors.Error:
-			assert.True(t, v.Contains(tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
-		default:
-			assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
-		}
-
+		assert.True(t, err.Contains(tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
 
