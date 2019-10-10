@@ -149,8 +149,6 @@ func main() {
 	tracer, closer := initJaeger("twins", cfg.jaegerURL, logger)
 	defer closer.Close()
 
-	nats.Subscribe(nc, logger)
-
 	svc := newService(cfg.secret,
 		nc, ncTracer, mc, mcTracer,
 		users, dbTracer, db, logger)
@@ -269,6 +267,7 @@ func newService(secret string, nc *broker.Conn, ncTracer opentracing.Tracer, mc 
 	idp := uuid.New()
 
 	// TODO twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, thingsRepo)
+	nats.Subscribe(nc, twinRepo, logger)
 
 	svc := twins.New(secret, nc, mc, users, twinRepo, idp)
 	svc = api.LoggingMiddleware(svc, logger)

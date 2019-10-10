@@ -56,6 +56,11 @@ type Service interface {
 	// ID, that belongs to the user identified by the provided key.
 	ViewTwin(context.Context, string, string) (Twin, error)
 
+	// ListTwinsByChannel retrieves data about subset of twins that are
+	// connected to specified channel and belong to the user identified by
+	// the provided key.
+	ListTwinsByChannel(context.Context, string, string, int64) (TwinsSet, error)
+
 	// RemoveTwin removes the twin identified with the provided ID, that
 	// belongs to the user identified by the provided key.
 	RemoveTwin(context.Context, string, string) error
@@ -177,6 +182,15 @@ func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (Twin, e
 	return twin, nil
 }
 
+func (ts *twinsService) ListTwinsByChannel(ctx context.Context, token, channel string, limit int64) (TwinsSet, error) {
+	_, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	if err != nil {
+		return TwinsSet{}, ErrUnauthorizedAccess
+	}
+
+	return ts.twins.RetrieveByChannel(ctx, channel, limit)
+}
+
 func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) error {
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -186,11 +200,6 @@ func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) error 
 	if err := ts.twins.Remove(ctx, res.GetValue(), id); err != nil {
 		return err
 	}
-
-	// b, err := json.Marshal(Twin{})
-	// if ts.publish(twin.thingID, "delete/success", b); err != nil {
-	// 	return err
-	// }
 
 	return nil
 }
