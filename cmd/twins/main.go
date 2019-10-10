@@ -22,7 +22,6 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/normalizer"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/api"
 	"github.com/mainflux/mainflux/twins/nats"
@@ -150,12 +149,10 @@ func main() {
 	tracer, closer := initJaeger("twins", cfg.jaegerURL, logger)
 	defer closer.Close()
 
-	nrm := normalizer.New()
-
-	nats.Subscribe(nrm, nc, logger)
+	nats.Subscribe(nc, logger)
 
 	svc := newService(cfg.secret,
-		nc, ncTracer, nrm, mc, mcTracer,
+		nc, ncTracer, mc, mcTracer,
 		users, dbTracer, db, logger)
 	errs := make(chan error, 2)
 
@@ -267,13 +264,13 @@ func connectToUsers(cfg config, logger logger.Logger) *grpc.ClientConn {
 	return conn
 }
 
-func newService(secret string, nc *broker.Conn, ncTracer opentracing.Tracer, nrm normalizer.Service, mc mqtt.Client, mcTracer opentracing.Tracer, users mainflux.UsersServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
+func newService(secret string, nc *broker.Conn, ncTracer opentracing.Tracer, mc mqtt.Client, mcTracer opentracing.Tracer, users mainflux.UsersServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
 	twinRepo := twinsmongodb.NewTwinRepository(db)
 	idp := uuid.New()
 
 	// TODO twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, thingsRepo)
 
-	svc := twins.New(secret, nc, nrm, mc, users, twinRepo, idp)
+	svc := twins.New(secret, nc, mc, users, twinRepo, idp)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
