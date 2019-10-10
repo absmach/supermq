@@ -30,6 +30,20 @@ type Twin struct {
 	Metadata   map[string]interface{}
 }
 
+// SetMetadata contains page metadata that helps navigation.
+type SetMetadata struct {
+	Total int64
+	Limit int64
+	Name  string
+}
+
+// TwinsSet contains page related metadata as well as list of twins that
+// belong to this page.
+type TwinsSet struct {
+	SetMetadata
+	Twins []*Twin
+}
+
 // TwinRepository specifies a twin persistence API.
 type TwinRepository interface {
 	// Save persists the twin. Successful operation is indicated by non-nil
@@ -46,6 +60,10 @@ type TwinRepository interface {
 
 	// RetrieveByID retrieves the twin having the provided identifier.
 	RetrieveByID(ctx context.Context, owner, id string) (Twin, error)
+
+	// RetrieveByChannel retrieves the subset of twins
+	// connected to specified channel.
+	RetrieveByChannel(context.Context, string, int64) (TwinsSet, error)
 
 	// RetrieveByKey retrieves the twin having the provided key.
 	RetrieveByKey(context.Context, string) (string, error)

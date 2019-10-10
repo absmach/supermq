@@ -8,11 +8,14 @@
 package nats
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/twins"
 	"github.com/nats-io/go-nats"
 )
 
@@ -26,13 +29,15 @@ const (
 type pubsub struct {
 	nc     *nats.Conn
 	logger log.Logger
+	tr     twins.TwinRepository
 }
 
-// Subscribe to appropriate NATS topic and normalizes received messages.
-func Subscribe(nc *nats.Conn, logger log.Logger) {
+// Subscribe to appropriate NATS topic
+func Subscribe(nc *nats.Conn, tr twins.TwinRepository, logger log.Logger) {
 	ps := pubsub{
 		nc:     nc,
 		logger: logger,
+		tr:     tr,
 	}
 	ps.nc.QueueSubscribe(input, queue, ps.handleMsg)
 }
@@ -44,16 +49,23 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 		return
 	}
 
-	if err := ps.publish(msg); err != nil {
-		ps.logger.Warn(fmt.Sprintf("Publishing failed: %s", err))
+	twinsSet, err := ps.tr.RetrieveByChannel(context.TODO(), msg.Channel, 10)
+	if err != nil {
+		ps.logger.Warn(fmt.Sprintf("Retrieving twins failed: %s", err))
 		return
+	}
+
+	for _, v := range twinsSet.Twins {
+		if err := ps.publish(msg, v); err != nil {
+			ps.logger.Warn(fmt.Sprintf("Publishing failed: %s", err))
+		}
 	}
 }
 
-func (ps pubsub) publish(msg mainflux.RawMessage) error {
+func (ps pubsub) publish(msg mainflux.RawMessage, twin *twins.Twin) error {
 	output := mainflux.OutputSenML
 
-	data, err := proto.Marshal(&msg)
+	data, err := json.Marshal(msg)
 	if err != nil {
 		ps.logger.Warn(fmt.Sprintf("Marshalling failed: %s", err))
 		return err

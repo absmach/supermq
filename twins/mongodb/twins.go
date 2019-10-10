@@ -10,16 +10,12 @@ package mongodb
 import (
 	"context"
 
+	gofrsuuid "github.com/gofrs/uuid"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-)
-
-const (
-	maxNameSize           = 1024
-	collectionName string = "mainflux"
 )
 
 const (
@@ -140,6 +136,50 @@ func (tr *twinRepository) RetrieveByKey(_ context.Context, key string) (string, 
 	}
 
 	return tw.ID, nil
+}
+
+func (tr *twinRepository) RetrieveByChannel(ctx context.Context, channel string, limit int64) (twins.TwinsSet, error) {
+	if _, err := gofrsuuid.FromString(channel); err != nil {
+		return twins.TwinsSet{}, twins.ErrNotFound
+	}
+
+	coll := tr.db.Collection(collectionName)
+
+	findOptions := options.Find()
+	findOptions.SetLimit(limit)
+
+	filter := bson.D{{"channel", channel}}
+	cur, err := coll.Find(ctx, filter, findOptions)
+	if err != nil {
+		return twins.TwinsSet{}, err
+	}
+
+	var results []*twins.Twin
+	for cur.Next(ctx) {
+		var elem twins.Twin
+		err := cur.Decode(&elem)
+		if err != nil {
+			return twins.TwinsSet{}, err
+		}
+		results = append(results, &elem)
+	}
+	if err := cur.Err(); err != nil {
+		return twins.TwinsSet{}, err
+	}
+	cur.Close(ctx)
+
+	total, err := coll.CountDocuments(ctx, filter)
+	if err != nil {
+		return twins.TwinsSet{}, err
+	}
+
+	return twins.TwinsSet{
+		Twins: results,
+		SetMetadata: twins.SetMetadata{
+			Total: total,
+			Limit: limit,
+		},
+	}, nil
 }
 
 // Remove removes the twin having the provided id
