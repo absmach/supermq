@@ -1,8 +1,5 @@
-//
 // Copyright (c) Mainflux
-//
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package errors
 
@@ -78,7 +75,7 @@ func Wrap(wrapper Error, err Error) Error {
 // Cast returns Error type with message of given error
 func Cast(err error) Error {
 	if err == nil {
-		return New("")
+		return Empty()
 	}
 	return New(err.Error())
 }

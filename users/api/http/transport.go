@@ -211,36 +211,34 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 }
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
-	mfErr, ok := err.(errors.Error)
-	if ok {
+
+	switch errorVal := err.(type) {
+	case errors.Error:
 		switch {
-		case mfErr.Contains(users.ErrMalformedEntity):
+		case errorVal.Contains(users.ErrMalformedEntity):
 			w.WriteHeader(http.StatusBadRequest)
-			logger.Warn(fmt.Sprintf("Failed to decode user credentials: %s", err))
-		case mfErr.Contains(users.ErrUnauthorizedAccess):
+			logger.Warn(fmt.Sprintf("Failed to decode user credentials: %s", errorVal))
+		case errorVal.Contains(users.ErrUnauthorizedAccess):
 			w.WriteHeader(http.StatusForbidden)
-		case mfErr.Contains(users.ErrConflict):
+		case errorVal.Contains(users.ErrConflict):
 			w.WriteHeader(http.StatusConflict)
-		case mfErr.Contains(ErrUnsupportedContentType):
+		case errorVal.Contains(ErrUnsupportedContentType):
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 			logger.Warn("Invalid or missing content type.")
-		case mfErr.Contains(io.ErrUnexpectedEOF):
+		case errorVal.Contains(io.ErrUnexpectedEOF):
 			w.WriteHeader(http.StatusBadRequest)
-		case mfErr.Contains(io.EOF):
+		case errorVal.Contains(io.EOF):
 			w.WriteHeader(http.StatusBadRequest)
 		}
-	} else {
-		switch err.(type) {
-		case *json.SyntaxError:
-			w.WriteHeader(http.StatusBadRequest)
-		case *json.UnmarshalTypeError:
-			w.WriteHeader(http.StatusBadRequest)
-		default:
-			w.WriteHeader(http.StatusInternalServerError)
+		if !errorVal.IsEmpty() {
+			w.Header().Set("Content-Type", contentType)
+			json.NewEncoder(w).Encode(errorRes{Err: errorVal.Msg()})
 		}
-	}
-	if !mfErr.IsEmpty() {
-		w.Header().Set("Content-Type", contentType)
-		json.NewEncoder(w).Encode(errorRes{Err: mfErr.Msg()})
+	case *json.SyntaxError:
+		w.WriteHeader(http.StatusBadRequest)
+	case *json.UnmarshalTypeError:
+		w.WriteHeader(http.StatusBadRequest)
+	default:
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
