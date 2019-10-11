@@ -32,8 +32,8 @@ type Twin struct {
 
 // SetMetadata contains page metadata that helps navigation.
 type SetMetadata struct {
-	Total int64
-	Limit int64
+	Total uint64
+	Limit uint64
 	Name  string
 }
 
@@ -63,7 +63,7 @@ type TwinRepository interface {
 
 	// RetrieveByChannel retrieves the subset of twins
 	// connected to specified channel.
-	RetrieveByChannel(context.Context, string, int64) (TwinsSet, error)
+	RetrieveByChannel(context.Context, string, uint64) (TwinsSet, error)
 
 	// RetrieveByKey retrieves the twin having the provided key.
 	RetrieveByKey(context.Context, string) (string, error)

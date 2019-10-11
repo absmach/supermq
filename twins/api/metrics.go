@@ -79,7 +79,7 @@ func (ms *metricsMiddleware) ViewTwin(ctx context.Context, token, id string) (vi
 
 	return ms.svc.ViewTwin(ctx, token, id)
 }
-func (ms *metricsMiddleware) ListTwinsByChannel(ctx context.Context, token, channel string, limit int64) (tw twins.TwinsSet, err error) {
+func (ms *metricsMiddleware) ListTwinsByChannel(ctx context.Context, token, channel string, limit uint64) (tw twins.TwinsSet, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "list_twins_by_channel").Add(1)
 		ms.latency.With("method", "list_twins_by_channel").Observe(time.Since(begin).Seconds())
