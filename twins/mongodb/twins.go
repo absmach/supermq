@@ -10,7 +10,6 @@ package mongodb
 import (
 	"context"
 
-	gofrsuuid "github.com/gofrs/uuid"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/uuid"
 	"go.mongodb.org/mongo-driver/bson"
@@ -49,12 +48,7 @@ func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) (string, erro
 		return "", twins.ErrConflict
 	}
 
-	dbtw, err := toDBTwin(tw)
-	if err != nil {
-		return "", err
-	}
-
-	if _, err := coll.InsertOne(context.Background(), dbtw); err != nil {
+	if _, err := coll.InsertOne(context.Background(), tw); err != nil {
 		return "", err
 	}
 
@@ -70,13 +64,8 @@ func (tr *twinRepository) Update(ctx context.Context, tw twins.Twin) error {
 		return twins.ErrNotFound
 	}
 
-	dbtw, err := toDBTwin(tw)
-	if err != nil {
-		return err
-	}
-
 	filter := bson.D{{"id", tw.ID}}
-	update := bson.D{{"$set", dbtw}}
+	update := bson.D{{"$set", tw}}
 	if _, err := coll.UpdateOne(context.Background(), filter, update); err != nil {
 		return err
 	}
@@ -139,7 +128,7 @@ func (tr *twinRepository) RetrieveByKey(_ context.Context, key string) (string, 
 }
 
 func (tr *twinRepository) RetrieveByChannel(ctx context.Context, channel string, limit int64) (twins.TwinsSet, error) {
-	if _, err := gofrsuuid.FromString(channel); err != nil {
+	if err := uuid.New().IsValid(channel); err != nil {
 		return twins.TwinsSet{}, twins.ErrNotFound
 	}
 
@@ -148,7 +137,7 @@ func (tr *twinRepository) RetrieveByChannel(ctx context.Context, channel string,
 	findOptions := options.Find()
 	findOptions.SetLimit(limit)
 
-	filter := bson.D{{"channel", channel}}
+	filter := bson.D{{"channelID", channel}}
 	cur, err := coll.Find(ctx, filter, findOptions)
 	if err != nil {
 		return twins.TwinsSet{}, err
@@ -200,29 +189,4 @@ func (tr *twinRepository) Remove(ctx context.Context, owner, id string) error {
 	}
 
 	return nil
-}
-
-func toDBTwin(tw twins.Twin) (bson.D, error) {
-	// invalid name
-	if len(tw.Name) > maxNameSize {
-		return bson.D{}, twins.ErrMalformedEntity
-	}
-
-	// invalid id
-	if err := uuid.New().IsValid(tw.ID); err != nil {
-		return bson.D{}, err
-	}
-
-	// invalid key
-	if err := uuid.New().IsValid(tw.Key); err != nil {
-		return bson.D{}, err
-	}
-
-	return bson.D{
-		{"id", tw.ID},
-		{"owner", tw.Owner},
-		{"name", tw.Name},
-		{"key", tw.Key},
-		{"metadata", tw.Metadata},
-	}, nil
 }
