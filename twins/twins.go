@@ -16,9 +16,9 @@ import (
 // it is assigned with the unique identifier and (temporary) access key.
 type Twin struct {
 	ID         string
+	Key        string
 	Owner      string
 	Name       string
-	Key        string
 	thingID    string
 	channelID  string
 	created    time.Time
