@@ -59,7 +59,7 @@ type Service interface {
 	// ListTwinsByChannel retrieves data about subset of twins that are
 	// connected to specified channel and belong to the user identified by
 	// the provided key.
-	ListTwinsByChannel(context.Context, string, string, int64) (TwinsSet, error)
+	ListTwinsByChannel(context.Context, string, string, uint64) (TwinsSet, error)
 
 	// RemoveTwin removes the twin identified with the provided ID, that
 	// belongs to the user identified by the provided key.
@@ -182,7 +182,7 @@ func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (Twin, e
 	return twin, nil
 }
 
-func (ts *twinsService) ListTwinsByChannel(ctx context.Context, token, channel string, limit int64) (TwinsSet, error) {
+func (ts *twinsService) ListTwinsByChannel(ctx context.Context, token, channel string, limit uint64) (TwinsSet, error) {
 	_, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return TwinsSet{}, ErrUnauthorizedAccess

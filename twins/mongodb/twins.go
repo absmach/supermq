@@ -127,7 +127,7 @@ func (tr *twinRepository) RetrieveByKey(_ context.Context, key string) (string, 
 	return tw.ID, nil
 }
 
-func (tr *twinRepository) RetrieveByChannel(ctx context.Context, channel string, limit int64) (twins.TwinsSet, error) {
+func (tr *twinRepository) RetrieveByChannel(ctx context.Context, channel string, limit uint64) (twins.TwinsSet, error) {
 	if err := uuid.New().IsValid(channel); err != nil {
 		return twins.TwinsSet{}, twins.ErrNotFound
 	}
@@ -135,7 +135,7 @@ func (tr *twinRepository) RetrieveByChannel(ctx context.Context, channel string,
 	coll := tr.db.Collection(collectionName)
 
 	findOptions := options.Find()
-	findOptions.SetLimit(limit)
+	findOptions.SetLimit((int64)(limit))
 
 	filter := bson.D{{"channelID", channel}}
 	cur, err := coll.Find(ctx, filter, findOptions)
@@ -165,7 +165,7 @@ func (tr *twinRepository) RetrieveByChannel(ctx context.Context, channel string,
 	return twins.TwinsSet{
 		Twins: results,
 		SetMetadata: twins.SetMetadata{
-			Total: total,
+			Total: (uint64)(total),
 			Limit: limit,
 		},
 	}, nil
