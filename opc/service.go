@@ -3,6 +3,7 @@ package opc
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/mainflux/mainflux"
 )
@@ -85,12 +86,14 @@ func (as *adapterService) Publish(ctx context.Context, token string, m Message) 
 	// }
 
 	// Publish on Mainflux NATS broker
+	SenML := fmt.Sprintf(`[{"n":"opc","v":%f}]`, m.Data)
+	payload := []byte(SenML)
 	msg := mainflux.RawMessage{
 		Publisher:   m.ID,
 		Protocol:    protocol,
 		ContentType: "Content-Type",
 		Channel:     m.Namespace,
-		Payload:     m.Data,
+		Payload:     payload,
 	}
 
 	return as.publisher.Publish(ctx, token, msg)

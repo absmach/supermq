@@ -28,18 +28,20 @@ import (
 )
 
 const (
-	defHTTPPort     = "8180"
-	defOPCServerURI = "opc.tcp://opcua.rocks:4840"
-	defOPCNodeID    = "ns=0;i=2256"
-	defNatsURL      = nats.DefaultURL
-	defLogLevel     = "debug"
-	defESURL        = "localhost:6379"
-	defESPass       = ""
-	defESDB         = "0"
-	defInstanceName = "opc"
-	defRouteMapURL  = "localhost:6379"
-	defRouteMapPass = ""
-	defRouteMapDB   = "0"
+	defHTTPPort      = "8180"
+	defOPCServerURI  = "opc.tcp://opcua.rocks:4840"
+	defOPCNamespace  = "0"
+	defOPCIdentifier = "2256"
+	defOPCNodeID     = "ns=0;i=2256"
+	defNatsURL       = nats.DefaultURL
+	defLogLevel      = "debug"
+	defESURL         = "localhost:6379"
+	defESPass        = ""
+	defESDB          = "0"
+	defInstanceName  = "opc"
+	defRouteMapURL   = "localhost:6379"
+	defRouteMapPass  = ""
+	defRouteMapDB    = "0"
 
 	envHTTPPort     = "MF_OPC_ADAPTER_HTTP_PORT"
 	envOPCServerURI = "MF_OPC_ADAPTER_SERVER_URI"
@@ -212,7 +214,7 @@ func subscribeToOpcServer(svc opc.Service, uri, nid string, logger logger.Logger
 	defer c.Close()
 
 	sub, err := c.Subscribe(&opcua.SubscriptionParameters{
-		Interval: 2000 * time.Millisecond,
+		Interval: 5000 * time.Millisecond,
 	})
 	if err != nil {
 		logger.Error(err.Error())
@@ -261,9 +263,9 @@ func subscribeToOpcServer(svc opc.Service, uri, nid string, logger logger.Logger
 
 					// Publish on Mainflux NATS broker
 					msg := opc.Message{
-						Namespace: "0",
-						ID:        "2256",
-						Data:      mData,
+						Namespace: defOPCNamespace,
+						ID:        defOPCIdentifier,
+						Data:      item.Value.Value.Float(),
 					}
 					svc.Publish(ctx, "", msg)
 				}
