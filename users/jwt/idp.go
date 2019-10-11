@@ -48,7 +48,7 @@ func (idp *jwtIdentityProvider) Identity(key string) (string, errors.Error) {
 			return nil, users.ErrUnauthorizedAccess
 		}
 
-		return []byte(idp.secret), errors.Empty()
+		return []byte(idp.secret), nil
 	})
 
 	if err != nil {
