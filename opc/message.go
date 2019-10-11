@@ -4,5 +4,5 @@ package opc
 type Message struct {
 	Namespace string `json:"namespace"`
 	ID        string `json:"id"`
-	Data      string `json:"data"`
+	Data      []byte `json:"data"`
 }

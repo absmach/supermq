@@ -2,7 +2,6 @@ package opc
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 
 	"github.com/mainflux/mainflux"
@@ -74,29 +73,24 @@ func New(pub mainflux.MessagePublisher, thingsRM, channelsRM RouteMapRepository)
 // Publish forwards messages from OPC-UA MQTT broker to Mainflux NATS broker
 func (as *adapterService) Publish(ctx context.Context, token string, m Message) error {
 	// Get route map of opc application
-	thing, err := as.thingsRM.Get(m.ID)
-	if err != nil {
-		return ErrNotFoundDev
-	}
+	// thing, err := as.thingsRM.Get(m.ID)
+	// if err != nil {
+	//	return ErrNotFoundDev
+	// }
 
 	// Get route map of opc application
-	channel, err := as.channelsRM.Get(m.Namespace)
-	if err != nil {
-		return ErrNotFoundApp
-	}
-
-	payload, err := base64.StdEncoding.DecodeString(m.Data)
-	if err != nil {
-		return ErrMalformedMessage
-	}
+	// channel, err := as.channelsRM.Get(string(m.Namespace))
+	// if err != nil {
+	//	return ErrNotFoundApp
+	// }
 
 	// Publish on Mainflux NATS broker
 	msg := mainflux.RawMessage{
-		Publisher:   thing,
+		Publisher:   m.ID,
 		Protocol:    protocol,
 		ContentType: "Content-Type",
-		Channel:     channel,
-		Payload:     payload,
+		Channel:     m.Namespace,
+		Payload:     m.Data,
 	}
 
 	return as.publisher.Publish(ctx, token, msg)

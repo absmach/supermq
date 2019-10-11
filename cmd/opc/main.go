@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,15 +10,16 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	r "github.com/go-redis/redis"
+	"github.com/gopcua/opcua"
+	"github.com/gopcua/opcua/ua"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/opc"
 	"github.com/mainflux/mainflux/opc/api"
 	pub "github.com/mainflux/mainflux/opc/nats"
-	mqttBroker "github.com/mainflux/mainflux/opc/paho"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux/opc/redis"
@@ -26,9 +29,10 @@ import (
 
 const (
 	defHTTPPort     = "8180"
-	defLoraMsgURL   = "tcp://localhost:1883"
+	defOPCServerURI = "opc.tcp://opcua.rocks:4840"
+	defOPCNodeID    = "ns=0;i=2256"
 	defNatsURL      = nats.DefaultURL
-	defLogLevel     = "error"
+	defLogLevel     = "debug"
 	defESURL        = "localhost:6379"
 	defESPass       = ""
 	defESDB         = "0"
@@ -37,17 +41,18 @@ const (
 	defRouteMapPass = ""
 	defRouteMapDB   = "0"
 
-	envHTTPPort     = "MF_LORA_ADAPTER_HTTP_PORT"
-	envLoraMsgURL   = "MF_LORA_ADAPTER_MESSAGES_URL"
+	envHTTPPort     = "MF_OPC_ADAPTER_HTTP_PORT"
+	envOPCServerURI = "MF_OPC_ADAPTER_SERVER_URI"
+	envOPCNodeID    = "MF_OPC_ADAPTER_NODE_ID"
 	envNatsURL      = "MF_NATS_URL"
 	envLogLevel     = "MF_LORA_ADAPTER_LOG_LEVEL"
 	envESURL        = "MF_THINGS_ES_URL"
 	envESPass       = "MF_THINGS_ES_PASS"
 	envESDB         = "MF_THINGS_ES_DB"
-	envInstanceName = "MF_LORA_ADAPTER_INSTANCE_NAME"
-	envRouteMapURL  = "MF_LORA_ADAPTER_ROUTEMAP_URL"
-	envRouteMapPass = "MF_LORA_ADAPTER_ROUTEMAP_PASS"
-	envRouteMapDB   = "MF_LORA_ADAPTER_ROUTEMAP_DB"
+	envInstanceName = "MF_OPC_ADAPTER_INSTANCE_NAME"
+	envRouteMapURL  = "MF_OPC_ADAPTER_ROUTEMAP_URL"
+	envRouteMapPass = "MF_OPC_ADAPTER_ROUTEMAP_PASS"
+	envRouteMapDB   = "MF_OPC_ADAPTER_ROUTEMAP_DB"
 
 	loraServerTopic = "application/+/device/+/rx"
 
@@ -57,7 +62,8 @@ const (
 
 type config struct {
 	httpPort     string
-	loraMsgURL   string
+	OPCServerURI string
+	OPCNodeID    string
 	natsURL      string
 	logLevel     string
 	esURL        string
@@ -91,8 +97,6 @@ func main() {
 	thingRM := newRouteMapRepositoy(rmConn, thingsRMPrefix, logger)
 	chanRM := newRouteMapRepositoy(rmConn, channelsRMPrefix, logger)
 
-	mqttConn := connectToMQTTBroker(cfg.loraMsgURL, logger)
-
 	svc := opc.New(publisher, thingRM, chanRM)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
@@ -111,7 +115,7 @@ func main() {
 		}, []string{"method"}),
 	)
 
-	go subscribeToLoRaBroker(svc, mqttConn, logger)
+	go subscribeToOpcServer(svc, cfg.OPCServerURI, cfg.OPCNodeID, logger)
 	go subscribeToThingsES(svc, esConn, cfg.instanceName, logger)
 
 	errs := make(chan error, 2)
@@ -131,7 +135,8 @@ func main() {
 func loadConfig() config {
 	return config{
 		httpPort:     mainflux.Env(envHTTPPort, defHTTPPort),
-		loraMsgURL:   mainflux.Env(envLoraMsgURL, defLoraMsgURL),
+		OPCServerURI: mainflux.Env(envOPCServerURI, defOPCServerURI),
+		OPCNodeID:    mainflux.Env(envOPCNodeID, defOPCNodeID),
 		natsURL:      mainflux.Env(envNatsURL, defNatsURL),
 		logLevel:     mainflux.Env(envLogLevel, defLogLevel),
 		esURL:        mainflux.Env(envESURL, defESURL),
@@ -155,28 +160,6 @@ func connectToNATS(url string, logger logger.Logger) *nats.Conn {
 	return conn
 }
 
-func connectToMQTTBroker(loraURL string, logger logger.Logger) mqtt.Client {
-	opts := mqtt.NewClientOptions()
-	opts.AddBroker(loraURL)
-	opts.SetUsername("")
-	opts.SetPassword("")
-	opts.SetOnConnectHandler(func(c mqtt.Client) {
-		logger.Info("Connected to Lora MQTT broker")
-	})
-	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {
-		logger.Error(fmt.Sprintf("MQTT connection lost: %s", err.Error()))
-		os.Exit(1)
-	})
-
-	client := mqtt.NewClient(opts)
-	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to Lora MQTT broker: %s", token.Error()))
-		os.Exit(1)
-	}
-
-	return client
-}
-
 func connectToRedis(redisURL, redisPass, redisDB string, logger logger.Logger) *r.Client {
 	db, err := strconv.Atoi(redisDB)
 	if err != nil {
@@ -191,20 +174,111 @@ func connectToRedis(redisURL, redisPass, redisDB string, logger logger.Logger) *
 	})
 }
 
-func subscribeToLoRaBroker(svc opc.Service, mc mqtt.Client, logger logger.Logger) {
-	mqttBroker := mqttBroker.NewBroker(svc, mc, logger)
-	logger.Info("Subscribed to Lora MQTT broker")
-	if err := mqttBroker.Subscribe(loraServerTopic); err != nil {
-		logger.Error(fmt.Sprintf("Failed to subscribe to Lora MQTT broker: %s", err))
-		os.Exit(1)
+func subscribeToOpcServer(svc opc.Service, uri, nid string, logger logger.Logger) {
+	var (
+		policy   = "" // Security policy: None, Basic128Rsa15, Basic256, Basic256Sha256. Default: auto
+		mode     = "" // Modes: None, Sign, SignAndEncrypt. Default: auto
+		certFile = ""
+		keyFile  = ""
+	)
+
+	ctx := context.Background()
+
+	endpoints, err := opcua.GetEndpoints(uri)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to fetch OPC server endpoints: %s", err.Error()))
+	}
+
+	ep := opcua.SelectEndpoint(endpoints, policy, ua.MessageSecurityModeFromString(mode))
+	if ep == nil {
+		logger.Error("Failed to find suitable endpoint")
+	}
+
+	logger.Info(fmt.Sprintf("OPC-UA server URI: %s", ep.SecurityPolicyURI))
+
+	opts := []opcua.Option{
+		opcua.SecurityPolicy(policy),
+		opcua.SecurityModeString(mode),
+		opcua.CertificateFile(certFile),
+		opcua.PrivateKeyFile(keyFile),
+		opcua.AuthAnonymous(),
+		opcua.SecurityFromEndpoint(ep, ua.UserTokenTypeAnonymous),
+	}
+
+	c := opcua.NewClient(ep.EndpointURL, opts...)
+	if errC := c.Connect(ctx); err != nil {
+		logger.Error(errC.Error())
+	}
+	defer c.Close()
+
+	sub, err := c.Subscribe(&opcua.SubscriptionParameters{
+		Interval: 2000 * time.Millisecond,
+	})
+	if err != nil {
+		logger.Error(err.Error())
+	}
+	defer sub.Cancel()
+	logger.Info(fmt.Sprintf("Created subscription with id %v", sub.SubscriptionID))
+
+	nodeID, err := ua.ParseNodeID(nid)
+	if err != nil {
+		logger.Error(err.Error())
+	}
+
+	// arbitrary client handle for the monitoring item
+	handle := uint32(42)
+	miCreateRequest := opcua.NewMonitoredItemCreateRequestWithDefaults(nodeID, ua.AttributeIDValue, handle)
+	res, err := sub.Monitor(ua.TimestampsToReturnBoth, miCreateRequest)
+	if err != nil || res.Results[0].StatusCode != ua.StatusOK {
+		logger.Error(err.Error())
+	}
+
+	go sub.Run(ctx)
+
+	// read from subscription's notification channel until ctx is cancelled
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case res := <-sub.Notifs:
+			if res.Error != nil {
+				logger.Error(res.Error.Error())
+				continue
+			}
+
+			switch x := res.Value.(type) {
+			case *ua.DataChangeNotification:
+				for _, item := range x.MonitoredItems {
+					data := item.Value.Value.Value()
+
+					mData, err := json.Marshal(data)
+					if err != nil {
+						logger.Error("Failed to Marshal JSON data")
+						continue
+					}
+
+					log.Printf("MonitoredItem with client handle %v = %s", item.ClientHandle, string(mData))
+
+					// Publish on Mainflux NATS broker
+					msg := opc.Message{
+						Namespace: "0",
+						ID:        "2256",
+						Data:      mData,
+					}
+					svc.Publish(ctx, "", msg)
+				}
+
+			default:
+				logger.Info(fmt.Sprintf("what's this publish result? %T", res.Value))
+			}
+		}
 	}
 }
 
 func subscribeToThingsES(svc opc.Service, client *r.Client, consumer string, logger logger.Logger) {
 	eventStore := redis.NewEventStore(svc, client, consumer, logger)
-	logger.Info("Subscribed to Redis Event Store")
 	if err := eventStore.Subscribe("mainflux.things"); err != nil {
-		logger.Warn(fmt.Sprintf("Lora-adapter service failed to subscribe to event sourcing: %s", err))
+		logger.Warn(fmt.Sprintf("Failed to subscribe to Redis event sourcing: %s", err))
 	}
 }
 
