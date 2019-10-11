@@ -130,7 +130,7 @@ func TestTwinSave(t *testing.T) {
 	}
 }
 
-func TestThingUpdate(t *testing.T) {
+func TestTwinUpdate(t *testing.T) {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
 	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
 

@@ -9,6 +9,7 @@ package mocks
 
 import (
 	"context"
+	"sort"
 	"strconv"
 	"sync"
 
@@ -21,12 +22,14 @@ type twinRepositoryMock struct {
 	mu      sync.Mutex
 	counter uint64
 	twins   map[string]twins.Twin
+	tconns  map[string]map[string]twins.Twin
 }
 
 // NewTwinRepository creates in-memory twin repository.
 func NewTwinRepository() twins.TwinRepository {
 	return &twinRepositoryMock{
-		twins: make(map[string]twins.Twin),
+		twins:  make(map[string]twins.Twin),
+		tconns: make(map[string]map[string]twins.Twin),
 	}
 }
 
@@ -113,6 +116,43 @@ func (trm *twinRepositoryMock) RetrieveByKey(_ context.Context, key string) (str
 	}
 
 	return "", twins.ErrNotFound
+}
+
+func (trm *twinRepositoryMock) RetrieveByChannel(_ context.Context, chanID string, limit uint64) (twins.TwinsSet, error) {
+	trm.mu.Lock()
+	defer trm.mu.Unlock()
+
+	items := make([]twins.Twin, 0)
+
+	if limit <= 0 {
+		return twins.TwinsSet{}, nil
+	}
+
+	tws, ok := trm.tconns[chanID]
+	if !ok {
+		return twins.TwinsSet{}, nil
+	}
+
+	for _, v := range tws {
+		id, _ := strconv.ParseUint(v.ID, 10, 64)
+		if id < limit {
+			items = append(items, v)
+		}
+	}
+
+	sort.SliceStable(items, func(i, j int) bool {
+		return items[i].ID < items[j].ID
+	})
+
+	page := twins.TwinsSet{
+		Twins: items,
+		SetMetadata: twins.SetMetadata{
+			Total: trm.counter,
+			Limit: limit,
+		},
+	}
+
+	return page, nil
 }
 
 func (trm *twinRepositoryMock) Remove(ctx context.Context, owner, id string) error {

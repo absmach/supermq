@@ -15,6 +15,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/mocks"
+	broker "github.com/nats-io/go-nats"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,6 +25,7 @@ const (
 	wrongValue = "wrong-value"
 	email      = "user@example.com"
 	token      = "token"
+	natsURL    = "nats://localhost:4222"
 )
 
 var (
@@ -36,9 +38,11 @@ func newService(tokens map[string]string) twins.Service {
 	idp := mocks.NewIdentityProvider()
 
 	opts := mqtt.NewClientOptions()
+
+	nc, _ := broker.Connect(natsURL)
 	mc := mqtt.NewClient(opts)
 
-	return twins.New("secret", mc, users, twinsRepo, idp)
+	return twins.New("secret", nc, mc, users, twinsRepo, idp)
 }
 
 func TestAddTwin(t *testing.T) {
