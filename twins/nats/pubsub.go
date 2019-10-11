@@ -20,10 +20,8 @@ import (
 )
 
 const (
-	queue         = "twins"
-	input         = "channel.>"
-	outputUnknown = "out.unknown"
-	senML         = "application/senml+json"
+	queue = "twins"
+	input = "channel.>"
 )
 
 type pubsub struct {
@@ -56,22 +54,21 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 	}
 
 	for _, v := range twinsSet.Twins {
-		if err := ps.publish(msg, v); err != nil {
+		if err := ps.publish(msg, &v); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Publishing failed: %s", err))
 		}
 	}
 }
 
 func (ps pubsub) publish(msg mainflux.RawMessage, twin *twins.Twin) error {
-	output := mainflux.OutputSenML
-
 	data, err := json.Marshal(msg)
 	if err != nil {
 		ps.logger.Warn(fmt.Sprintf("Marshalling failed: %s", err))
 		return err
 	}
 
-	if err := ps.nc.Publish(output, data); err != nil {
+	subject := fmt.Sprintf("%s.%s", msg.Channel, msg.Subtopic)
+	if err := ps.nc.Publish(subject, data); err != nil {
 		ps.logger.Warn(fmt.Sprintf("Publishing failed: %s", err))
 		return err
 	}

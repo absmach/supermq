@@ -41,7 +41,7 @@ type SetMetadata struct {
 // belong to this page.
 type TwinsSet struct {
 	SetMetadata
-	Twins []*Twin
+	Twins []Twin
 }
 
 // TwinRepository specifies a twin persistence API.

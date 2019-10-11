@@ -48,6 +48,10 @@ func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) (string, erro
 		return "", twins.ErrConflict
 	}
 
+	if err := validate(tw); err != nil {
+		return "", err
+	}
+
 	if _, err := coll.InsertOne(context.Background(), tw); err != nil {
 		return "", err
 	}
@@ -62,6 +66,10 @@ func (tr *twinRepository) Update(ctx context.Context, tw twins.Twin) error {
 
 	if _, err := tr.RetrieveByID(ctx, tw.Owner, tw.ID); err != nil {
 		return twins.ErrNotFound
+	}
+
+	if err := validate(tw); err != nil {
+		return err
 	}
 
 	filter := bson.D{{"id", tw.ID}}
@@ -143,14 +151,14 @@ func (tr *twinRepository) RetrieveByChannel(ctx context.Context, channel string,
 		return twins.TwinsSet{}, err
 	}
 
-	var results []*twins.Twin
+	var results []twins.Twin
 	for cur.Next(ctx) {
 		var elem twins.Twin
 		err := cur.Decode(&elem)
 		if err != nil {
 			return twins.TwinsSet{}, err
 		}
-		results = append(results, &elem)
+		results = append(results, elem)
 	}
 	if err := cur.Err(); err != nil {
 		return twins.TwinsSet{}, err
@@ -188,5 +196,18 @@ func (tr *twinRepository) Remove(ctx context.Context, owner, id string) error {
 		return err
 	}
 
+	return nil
+}
+
+func validate(tw twins.Twin) error {
+	if len(tw.Name) > maxNameSize {
+		return twins.ErrMalformedEntity
+	}
+	if err := uuid.New().IsValid(tw.ID); err != nil {
+		return twins.ErrMalformedEntity
+	}
+	if err := uuid.New().IsValid(tw.Key); err != nil {
+		return twins.ErrMalformedEntity
+	}
 	return nil
 }
