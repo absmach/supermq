@@ -4,10 +4,14 @@
 package grpc
 
 import (
+	"fmt"
+
 	kitot "github.com/go-kit/kit/tracing/opentracing"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	mainflux "github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/users"
+
 	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -33,7 +37,7 @@ func NewServer(tracer opentracing.Tracer, svc users.Service) mainflux.UsersServi
 func (s *grpcServer) Identify(ctx context.Context, token *mainflux.Token) (*mainflux.UserID, error) {
 	_, res, err := s.handler.ServeGRPC(ctx, token)
 	if err != nil {
-		return nil, encodeError(err)
+		return nil, encodeError(errors.Cast(err))
 	}
 	return res.(*mainflux.UserID), nil
 }
@@ -45,18 +49,20 @@ func decodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{},
 
 func encodeIdentifyResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(identityRes)
-	return &mainflux.UserID{Value: res.id}, encodeError(res.err)
+	return &mainflux.UserID{Value: res.id}, encodeError(errors.Cast(res.err))
 }
 
-func encodeError(err error) error {
-	if err == nil {
+func encodeError(err errors.Error) error {
+	//debug
+	fmt.Printf("endodeError grpc, err... (%v, %T)\n", err, err)
+	if err.IsEmpty() {
 		return nil
 	}
 
-	switch err {
-	case users.ErrMalformedEntity:
+	switch {
+	case err.Contains(users.ErrMalformedEntity):
 		return status.Error(codes.InvalidArgument, "received invalid token request")
-	case users.ErrUnauthorizedAccess:
+	case err.Contains(users.ErrUnauthorizedAccess):
 		return status.Error(codes.Unauthenticated, "failed to identify user from token")
 	default:
 		return status.Error(codes.Internal, "internal server error")
