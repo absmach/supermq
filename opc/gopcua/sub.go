@@ -17,29 +17,29 @@ const (
 	defOPCIdentifier = "2256"
 )
 
-// Client represents the OPC client.
-type Client interface {
-	// Subscribes to geven subject and receives events.
+// OPCClient represents the OPC-UA Server client.
+type OPCClient interface {
+	// Subscribes to given NodeID and receives events.
 	Subscribe(string, string) error
 }
 
-type broker struct {
-	svc    opc.Service
+type client struct {
 	ctx    context.Context
+	svc    opc.Service
 	logger logger.Logger
 }
 
 // NewClient returns new OPC client instance.
-func NewClient(ctx context.Context, svc opc.Service, log logger.Logger) Client {
-	return broker{
-		svc:    svc,
+func NewClient(ctx context.Context, svc opc.Service, log logger.Logger) OPCClient {
+	return client{
 		ctx:    ctx,
+		svc:    svc,
 		logger: log,
 	}
 }
 
 // Subscribe subscribes to the OPC-UA Server.
-func (b broker) Subscribe(uri, nid string) error {
+func (b client) Subscribe(uri, nid string) error {
 	var (
 		policy   = "" // Security policy: None, Basic128Rsa15, Basic256, Basic256Sha256. Default: auto
 		mode     = "" // Modes: None, Sign, SignAndEncrypt. Default: auto
@@ -56,8 +56,6 @@ func (b broker) Subscribe(uri, nid string) error {
 	if ep == nil {
 		b.logger.Error("Failed to find suitable endpoint")
 	}
-
-	b.logger.Info(fmt.Sprintf("OPC-UA server URI: %s", ep.SecurityPolicyURI))
 
 	opts := []opcua.Option{
 		opcua.SecurityPolicy(policy),
@@ -81,6 +79,7 @@ func (b broker) Subscribe(uri, nid string) error {
 		b.logger.Error(err.Error())
 	}
 	defer sub.Cancel()
+	b.logger.Info(fmt.Sprintf("OPC-UA server URI: %s", ep.SecurityPolicyURI))
 	b.logger.Info(fmt.Sprintf("Created subscription with id %v", sub.SubscriptionID))
 
 	nodeID, err := ua.ParseNodeID(nid)

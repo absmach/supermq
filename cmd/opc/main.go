@@ -173,9 +173,14 @@ func connectToRedis(redisURL, redisPass, redisDB string, logger logger.Logger) *
 
 func subscribeToOpcServer(svc opc.Service, uri, nid string, logger logger.Logger) {
 	ctx := context.Background()
+	gr := gopcua.NewReader(ctx, svc, logger)
+	if err := gr.Read(uri, nid); err != nil {
+		logger.Warn(fmt.Sprintf("OPC-UA Read failed: %s", err))
+	}
+
 	gc := gopcua.NewClient(ctx, svc, logger)
 	if err := gc.Subscribe(uri, nid); err != nil {
-		logger.Warn(fmt.Sprintf("OPC subscription failed: %s", err))
+		logger.Warn(fmt.Sprintf("OPC-UA Subscription failed: %s", err))
 	}
 }
 
@@ -187,12 +192,12 @@ func subscribeToThingsES(svc opc.Service, client *r.Client, consumer string, log
 }
 
 func newRouteMapRepositoy(client *r.Client, prefix string, logger logger.Logger) opc.RouteMapRepository {
-	logger.Info("Connected to Redis Route map")
+	logger.Info(fmt.Sprintf("Connected to %s Redis Route map", prefix))
 	return redis.NewRouteMapRepository(client, prefix)
 }
 
 func startHTTPServer(cfg config, logger logger.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", cfg.httpPort)
-	logger.Info(fmt.Sprintf("Lora-adapter service started, exposed port %s", cfg.httpPort))
+	logger.Info(fmt.Sprintf("opc-adapter service started, exposed port %s", cfg.httpPort))
 	errs <- http.ListenAndServe(p, api.MakeHandler())
 }
