@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,15 +9,13 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
-	"time"
 
 	r "github.com/go-redis/redis"
-	"github.com/gopcua/opcua"
-	"github.com/gopcua/opcua/ua"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/opc"
 	"github.com/mainflux/mainflux/opc/api"
+	"github.com/mainflux/mainflux/opc/gopcua"
 	pub "github.com/mainflux/mainflux/opc/nats"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
@@ -28,20 +25,18 @@ import (
 )
 
 const (
-	defHTTPPort      = "8180"
-	defOPCServerURI  = "opc.tcp://opcua.rocks:4840"
-	defOPCNamespace  = "0"
-	defOPCIdentifier = "2256"
-	defOPCNodeID     = "ns=0;i=2256"
-	defNatsURL       = nats.DefaultURL
-	defLogLevel      = "debug"
-	defESURL         = "localhost:6379"
-	defESPass        = ""
-	defESDB          = "0"
-	defInstanceName  = "opc"
-	defRouteMapURL   = "localhost:6379"
-	defRouteMapPass  = ""
-	defRouteMapDB    = "0"
+	defHTTPPort     = "8180"
+	defOPCServerURI = "opc.tcp://opcua.rocks:4840"
+	defOPCNodeID    = "ns=0;i=2256"
+	defNatsURL      = nats.DefaultURL
+	defLogLevel     = "debug"
+	defESURL        = "localhost:6379"
+	defESPass       = ""
+	defESDB         = "0"
+	defInstanceName = "opc"
+	defRouteMapURL  = "localhost:6379"
+	defRouteMapPass = ""
+	defRouteMapDB   = "0"
 
 	envHTTPPort     = "MF_OPC_ADAPTER_HTTP_PORT"
 	envOPCServerURI = "MF_OPC_ADAPTER_SERVER_URI"
@@ -177,103 +172,10 @@ func connectToRedis(redisURL, redisPass, redisDB string, logger logger.Logger) *
 }
 
 func subscribeToOpcServer(svc opc.Service, uri, nid string, logger logger.Logger) {
-	var (
-		policy   = "" // Security policy: None, Basic128Rsa15, Basic256, Basic256Sha256. Default: auto
-		mode     = "" // Modes: None, Sign, SignAndEncrypt. Default: auto
-		certFile = ""
-		keyFile  = ""
-	)
-
 	ctx := context.Background()
-
-	endpoints, err := opcua.GetEndpoints(uri)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to fetch OPC server endpoints: %s", err.Error()))
-	}
-
-	ep := opcua.SelectEndpoint(endpoints, policy, ua.MessageSecurityModeFromString(mode))
-	if ep == nil {
-		logger.Error("Failed to find suitable endpoint")
-	}
-
-	logger.Info(fmt.Sprintf("OPC-UA server URI: %s", ep.SecurityPolicyURI))
-
-	opts := []opcua.Option{
-		opcua.SecurityPolicy(policy),
-		opcua.SecurityModeString(mode),
-		opcua.CertificateFile(certFile),
-		opcua.PrivateKeyFile(keyFile),
-		opcua.AuthAnonymous(),
-		opcua.SecurityFromEndpoint(ep, ua.UserTokenTypeAnonymous),
-	}
-
-	c := opcua.NewClient(ep.EndpointURL, opts...)
-	if errC := c.Connect(ctx); err != nil {
-		logger.Error(errC.Error())
-	}
-	defer c.Close()
-
-	sub, err := c.Subscribe(&opcua.SubscriptionParameters{
-		Interval: 5000 * time.Millisecond,
-	})
-	if err != nil {
-		logger.Error(err.Error())
-	}
-	defer sub.Cancel()
-	logger.Info(fmt.Sprintf("Created subscription with id %v", sub.SubscriptionID))
-
-	nodeID, err := ua.ParseNodeID(nid)
-	if err != nil {
-		logger.Error(err.Error())
-	}
-
-	// arbitrary client handle for the monitoring item
-	handle := uint32(42)
-	miCreateRequest := opcua.NewMonitoredItemCreateRequestWithDefaults(nodeID, ua.AttributeIDValue, handle)
-	res, err := sub.Monitor(ua.TimestampsToReturnBoth, miCreateRequest)
-	if err != nil || res.Results[0].StatusCode != ua.StatusOK {
-		logger.Error(err.Error())
-	}
-
-	go sub.Run(ctx)
-
-	// read from subscription's notification channel until ctx is cancelled
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case res := <-sub.Notifs:
-			if res.Error != nil {
-				logger.Error(res.Error.Error())
-				continue
-			}
-
-			switch x := res.Value.(type) {
-			case *ua.DataChangeNotification:
-				for _, item := range x.MonitoredItems {
-					data := item.Value.Value.Value()
-
-					mData, err := json.Marshal(data)
-					if err != nil {
-						logger.Error("Failed to Marshal JSON data")
-						continue
-					}
-
-					log.Printf("MonitoredItem with client handle %v = %s", item.ClientHandle, string(mData))
-
-					// Publish on Mainflux NATS broker
-					msg := opc.Message{
-						Namespace: defOPCNamespace,
-						ID:        defOPCIdentifier,
-						Data:      item.Value.Value.Float(),
-					}
-					svc.Publish(ctx, "", msg)
-				}
-
-			default:
-				logger.Info(fmt.Sprintf("what's this publish result? %T", res.Value))
-			}
-		}
+	gc := gopcua.NewClient(ctx, svc, logger)
+	if err := gc.Subscribe(uri, nid); err != nil {
+		logger.Warn(fmt.Sprintf("OPC subscription failed: %s", err))
 	}
 }
 
