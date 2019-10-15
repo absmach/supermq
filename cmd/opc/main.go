@@ -57,8 +57,8 @@ const (
 
 type config struct {
 	httpPort     string
-	OPCServerURI string
-	OPCNodeID    string
+	opcServerURI string
+	opcNodeID    string
 	natsURL      string
 	logLevel     string
 	esURL        string
@@ -110,7 +110,7 @@ func main() {
 		}, []string{"method"}),
 	)
 
-	go subscribeToOpcServer(svc, cfg.OPCServerURI, cfg.OPCNodeID, logger)
+	go subscribeToOpcServer(svc, cfg.opcServerURI, cfg.opcNodeID, logger)
 	go subscribeToThingsES(svc, esConn, cfg.instanceName, logger)
 
 	errs := make(chan error, 2)
@@ -130,8 +130,8 @@ func main() {
 func loadConfig() config {
 	return config{
 		httpPort:     mainflux.Env(envHTTPPort, defHTTPPort),
-		OPCServerURI: mainflux.Env(envOPCServerURI, defOPCServerURI),
-		OPCNodeID:    mainflux.Env(envOPCNodeID, defOPCNodeID),
+		opcServerURI: mainflux.Env(envOPCServerURI, defOPCServerURI),
+		opcNodeID:    mainflux.Env(envOPCNodeID, defOPCNodeID),
 		natsURL:      mainflux.Env(envNatsURL, defNatsURL),
 		logLevel:     mainflux.Env(envLogLevel, defLogLevel),
 		esURL:        mainflux.Env(envESURL, defESURL),
