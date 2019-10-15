@@ -51,8 +51,6 @@ const (
 	envRouteMapPass = "MF_OPC_ADAPTER_ROUTEMAP_PASS"
 	envRouteMapDB   = "MF_OPC_ADAPTER_ROUTEMAP_DB"
 
-	loraServerTopic = "application/+/device/+/rx"
-
 	thingsRMPrefix   = "thing"
 	channelsRMPrefix = "channel"
 )
@@ -99,13 +97,13 @@ func main() {
 	svc = api.MetricsMiddleware(
 		svc,
 		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
-			Namespace: "lora_adapter",
+			Namespace: "opc_adapter",
 			Subsystem: "api",
 			Name:      "request_count",
 			Help:      "Number of requests received.",
 		}, []string{"method"}),
 		kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
-			Namespace: "lora_adapter",
+			Namespace: "opc_adapter",
 			Subsystem: "api",
 			Name:      "request_latency_microseconds",
 			Help:      "Total duration of requests in microseconds.",
