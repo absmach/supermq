@@ -14,7 +14,7 @@ import (
 
 // MqttBroker represents the MQTT broker.
 type MqttBroker interface {
-	// Subscribes to geven subject and receives events.
+	// Subscribes to given subject and receives events.
 	Subscribe(string) error
 }
 

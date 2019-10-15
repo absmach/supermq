@@ -209,12 +209,12 @@ func subscribeToThingsES(svc lora.Service, client *r.Client, consumer string, lo
 }
 
 func newRouteMapRepositoy(client *r.Client, prefix string, logger logger.Logger) lora.RouteMapRepository {
-	logger.Info("Connected to Redis Route map")
+	logger.Info(fmt.Sprintf("Connected to %s Redis Route map", prefix))
 	return redis.NewRouteMapRepository(client, prefix)
 }
 
 func startHTTPServer(cfg config, logger logger.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", cfg.httpPort)
-	logger.Info(fmt.Sprintf("Lora-adapter service started, exposed port %s", cfg.httpPort))
+	logger.Info(fmt.Sprintf("lora-adapter service started, exposed port %s", cfg.httpPort))
 	errs <- http.ListenAndServe(p, api.MakeHandler())
 }
