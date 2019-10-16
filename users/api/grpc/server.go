@@ -4,8 +4,6 @@
 package grpc
 
 import (
-	"fmt"
-
 	kitot "github.com/go-kit/kit/tracing/opentracing"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	mainflux "github.com/mainflux/mainflux"
@@ -53,8 +51,6 @@ func encodeIdentifyResponse(_ context.Context, grpcRes interface{}) (interface{}
 }
 
 func encodeError(err errors.Error) error {
-	//debug
-	fmt.Printf("endodeError grpc, err... (%v, %T)\n", err, err)
 	if err.IsEmpty() {
 		return errors.Empty()
 	}
