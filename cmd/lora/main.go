@@ -12,14 +12,14 @@ import (
 	"strconv"
 	"syscall"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
+	mqttPaho "github.com/eclipse/paho.mqtt.golang"
 	r "github.com/go-redis/redis"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/lora"
 	"github.com/mainflux/mainflux/lora/api"
+	"github.com/mainflux/mainflux/lora/mqtt"
 	pub "github.com/mainflux/mainflux/lora/nats"
-	mqttBroker "github.com/mainflux/mainflux/lora/paho"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux/lora/redis"
@@ -158,20 +158,20 @@ func connectToNATS(url string, logger logger.Logger) *nats.Conn {
 	return conn
 }
 
-func connectToMQTTBroker(loraURL string, logger logger.Logger) mqtt.Client {
-	opts := mqtt.NewClientOptions()
+func connectToMQTTBroker(loraURL string, logger logger.Logger) mqttPaho.Client {
+	opts := mqttPaho.NewClientOptions()
 	opts.AddBroker(loraURL)
 	opts.SetUsername("")
 	opts.SetPassword("")
-	opts.SetOnConnectHandler(func(c mqtt.Client) {
+	opts.SetOnConnectHandler(func(c mqttPaho.Client) {
 		logger.Info("Connected to Lora MQTT broker")
 	})
-	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {
+	opts.SetConnectionLostHandler(func(c mqttPaho.Client, err error) {
 		logger.Error(fmt.Sprintf("MQTT connection lost: %s", err.Error()))
 		os.Exit(1)
 	})
 
-	client := mqtt.NewClient(opts)
+	client := mqttPaho.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to Lora MQTT broker: %s", token.Error()))
 		os.Exit(1)
@@ -194,10 +194,10 @@ func connectToRedis(redisURL, redisPass, redisDB string, logger logger.Logger) *
 	})
 }
 
-func subscribeToLoRaBroker(svc lora.Service, mc mqtt.Client, logger logger.Logger) {
-	mqttBroker := mqttBroker.NewBroker(svc, mc, logger)
+func subscribeToLoRaBroker(svc lora.Service, mc mqttPaho.Client, logger logger.Logger) {
+	mqtt := mqtt.NewBroker(svc, mc, logger)
 	logger.Info("Subscribed to Lora MQTT broker")
-	if err := mqttBroker.Subscribe(loraServerTopic); err != nil {
+	if err := mqtt.Subscribe(loraServerTopic); err != nil {
 		logger.Error(fmt.Sprintf("Failed to subscribe to Lora MQTT broker: %s", err))
 		os.Exit(1)
 	}

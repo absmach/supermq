@@ -1,4 +1,4 @@
-package paho
+package mqtt
 
 // LoraSubscribe subscribe to lora server messages
 import (

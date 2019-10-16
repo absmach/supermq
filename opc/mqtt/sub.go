@@ -1,7 +1,7 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-package paho
+package mqtt
 
 // LoraSubscribe subscribe to opc server messages
 import (
