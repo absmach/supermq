@@ -33,7 +33,7 @@ func New(db Database) users.UserRepository {
 	}
 }
 
-func (ur userRepository) Save(_ context.Context, user users.User) errors.Error {
+func (ur userRepository) Save(ctx context.Context, user users.User) errors.Error {
 	q := `INSERT INTO users (email, password, metadata) VALUES (:email, :password, :metadata)`
 
 	dbu := toDBUser(user)
