@@ -37,22 +37,22 @@ func NewClient(ctx context.Context, svc opc.Service, log logger.Logger) Subscrib
 }
 
 // Subscribe subscribes to the OPC-UA Server.
-func (b client) Subscribe(oc opc.Config) error {
-	endpoints, err := opcua.GetEndpoints(oc.ServerURI)
+func (b client) Subscribe(cfg opc.Config) error {
+	endpoints, err := opcua.GetEndpoints(cfg.ServerURI)
 	if err != nil {
 		b.logger.Error(fmt.Sprintf("Failed to fetch OPC server endpoints: %s", err.Error()))
 	}
 
-	ep := opcua.SelectEndpoint(endpoints, oc.Policy, ua.MessageSecurityModeFromString(oc.Mode))
+	ep := opcua.SelectEndpoint(endpoints, cfg.Policy, ua.MessageSecurityModeFromString(cfg.Mode))
 	if ep == nil {
 		b.logger.Error("Failed to find suitable endpoint")
 	}
 
 	opts := []opcua.Option{
-		opcua.SecurityPolicy(oc.Policy),
-		opcua.SecurityModeString(oc.Mode),
-		opcua.CertificateFile(oc.CertFile),
-		opcua.PrivateKeyFile(oc.KeyFile),
+		opcua.SecurityPolicy(cfg.Policy),
+		opcua.SecurityModeString(cfg.Mode),
+		opcua.CertificateFile(cfg.CertFile),
+		opcua.PrivateKeyFile(cfg.KeyFile),
 		opcua.AuthAnonymous(),
 		opcua.SecurityFromEndpoint(ep, ua.UserTokenTypeAnonymous),
 	}
@@ -73,7 +73,7 @@ func (b client) Subscribe(oc opc.Config) error {
 	b.logger.Info(fmt.Sprintf("OPC-UA server URI: %s", ep.SecurityPolicyURI))
 	b.logger.Info(fmt.Sprintf("Created subscription with id %v", sub.SubscriptionID))
 
-	if err := b.runHandler(sub, oc); err != nil {
+	if err := b.runHandler(sub, cfg); err != nil {
 		return err
 	}
 

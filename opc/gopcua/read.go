@@ -37,14 +37,14 @@ func NewReader(ctx context.Context, svc opc.Service, log logger.Logger) Reader {
 }
 
 // Read reads a given OPC-UA Server endpoint.
-func (r reader) Read(oc opc.Config) error {
-	c := opcua.NewClient(oc.ServerURI, opcua.SecurityMode(ua.MessageSecurityModeNone))
+func (r reader) Read(cfg opc.Config) error {
+	c := opcua.NewClient(cfg.ServerURI, opcua.SecurityMode(ua.MessageSecurityModeNone))
 	if err := c.Connect(r.ctx); err != nil {
 		log.Fatal(err)
 	}
 	defer c.Close()
 
-	nid := fmt.Sprintf("ns=%s;i=%s", oc.NodeNamespace, oc.NodeIdintifier)
+	nid := fmt.Sprintf("ns=%s;i=%s", cfg.NodeNamespace, cfg.NodeIdintifier)
 	id, err := ua.ParseNodeID(nid)
 	if err != nil {
 		r.logger.Error(fmt.Sprintf("invalid node id: %v", err))
@@ -68,8 +68,8 @@ func (r reader) Read(oc opc.Config) error {
 
 	// Publish on Mainflux NATS broker
 	msg := opc.Message{
-		Namespace: oc.NodeNamespace,
-		ID:        oc.NodeIdintifier,
+		Namespace: cfg.NodeNamespace,
+		ID:        cfg.NodeIdintifier,
 		Data:      resp.Results[0].Value.Float(),
 	}
 	r.svc.Publish(r.ctx, "", msg)
