@@ -1,3 +1,6 @@
+// Copyright (c) Mainflux
+// SPDX-License-Identifier: Apache-2.0
+
 package gopcua
 
 // LoraSubscribe subscribe to opc server messages

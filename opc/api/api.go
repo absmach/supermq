@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
-// SPDX-License-Identifier: Apache-2.0
-//
+// Copyright (c) Mainflux
+// SPDX-License-Identifier: Apache-2.0s
 
 package api
 

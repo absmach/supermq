@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package redis
 
@@ -15,7 +11,7 @@ import (
 )
 
 const (
-	mfxMapPrefix  = "mfx:opc"
+	mfxMapPrefix = "mfx:opc"
 	opcMapPrefix = "opc:mfx"
 )
 
