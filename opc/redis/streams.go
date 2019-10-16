@@ -35,9 +35,9 @@ const (
 var (
 	errMetadataType = errors.New("metadatada is not of type opc")
 
-	errMetadataAppID = errors.New("application ID not found in channel metadatada")
+	errMetadataAppID = errors.New("Node Namespace not found in channel metadatada")
 
-	errMetadataDevEUI = errors.New("device EUI not found in thing metadatada")
+	errMetadataDevEUI = errors.New("Node Identifier not found in thing metadatada")
 )
 
 // Subscriber represents event source for things and channels provisioning.

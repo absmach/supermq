@@ -25,11 +25,11 @@ var (
 	// ErrMalformedMessage indicates malformed OPC-UA message.
 	ErrMalformedMessage = errors.New("malformed message received")
 
-	// ErrNotFoundDev indicates a non-existent route map for a device EUI.
-	ErrNotFoundDev = errors.New("route map not found for this device EUI")
+	// ErrNotFoundIdentifier indicates a non-existent route map for a Node Identifier.
+	ErrNotFoundIdentifier = errors.New("route map not found for this node identifier")
 
-	// ErrNotFoundApp indicates a non-existent route map for an application ID.
-	ErrNotFoundApp = errors.New("route map not found for this application ID")
+	// ErrNotFoundNamespace indicates a non-existent route map for an Node Namespace.
+	ErrNotFoundNamespace = errors.New("route map not found for this node namespace")
 )
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -87,26 +87,27 @@ func New(pub mainflux.MessagePublisher, thingsRM, channelsRM RouteMapRepository)
 
 // Publish forwards messages from OPC-UA MQTT broker to Mainflux NATS broker
 func (as *adapterService) Publish(ctx context.Context, token string, m Message) error {
-	// Get route map of opc application
-	// thing, err := as.thingsRM.Get(m.ID)
-	// if err != nil {
-	//	return ErrNotFoundDev
-	// }
+	// Get route map of OPC Node Identifier
+	thingID, err := as.thingsRM.Get(m.ID)
+	if err != nil {
+		return ErrNotFoundIdentifier
+	}
 
-	// Get route map of opc application
-	// channel, err := as.channelsRM.Get(string(m.Namespace))
-	// if err != nil {
-	//	return ErrNotFoundApp
-	// }
+	// Get route map of OPC Node Namespace
+	channelID, err := as.channelsRM.Get(m.Namespace)
+	if err != nil {
+		println(err)
+		return ErrNotFoundNamespace
+	}
 
 	// Publish on Mainflux NATS broker
 	SenML := fmt.Sprintf(`[{"n":"opc","v":%f}]`, m.Data)
 	payload := []byte(SenML)
 	msg := mainflux.RawMessage{
-		Publisher:   m.ID,
+		Publisher:   thingID,
 		Protocol:    protocol,
 		ContentType: "Content-Type",
-		Channel:     m.Namespace,
+		Channel:     channelID,
 		Payload:     payload,
 	}
 
