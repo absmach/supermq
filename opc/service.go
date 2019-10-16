@@ -57,6 +57,16 @@ type Service interface {
 	Publish(context.Context, string, Message) error
 }
 
+// Config OPC-UA Server
+type Config struct {
+	ServerURI string
+	NodeID    string
+	Policy    string
+	Mode      string
+	CertFile  string
+	KeyFile   string
+}
+
 var _ Service = (*adapterService)(nil)
 
 type adapterService struct {

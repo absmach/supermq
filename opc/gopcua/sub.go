@@ -23,7 +23,7 @@ const (
 // Subscriber represents the OPC-UA Server client.
 type Subscriber interface {
 	// Subscribes to given NodeID and receives events.
-	Subscribe(string, string) error
+	Subscribe(opc.Config) error
 }
 
 type client struct {
@@ -42,29 +42,22 @@ func NewClient(ctx context.Context, svc opc.Service, log logger.Logger) Subscrib
 }
 
 // Subscribe subscribes to the OPC-UA Server.
-func (b client) Subscribe(uri, nid string) error {
-	var (
-		policy   = "" // Security policy: None, Basic128Rsa15, Basic256, Basic256Sha256. Default: auto
-		mode     = "" // Modes: None, Sign, SignAndEncrypt. Default: auto
-		certFile = ""
-		keyFile  = ""
-	)
-
-	endpoints, err := opcua.GetEndpoints(uri)
+func (b client) Subscribe(oc opc.Config) error {
+	endpoints, err := opcua.GetEndpoints(oc.ServerURI)
 	if err != nil {
 		b.logger.Error(fmt.Sprintf("Failed to fetch OPC server endpoints: %s", err.Error()))
 	}
 
-	ep := opcua.SelectEndpoint(endpoints, policy, ua.MessageSecurityModeFromString(mode))
+	ep := opcua.SelectEndpoint(endpoints, oc.Policy, ua.MessageSecurityModeFromString(oc.Mode))
 	if ep == nil {
 		b.logger.Error("Failed to find suitable endpoint")
 	}
 
 	opts := []opcua.Option{
-		opcua.SecurityPolicy(policy),
-		opcua.SecurityModeString(mode),
-		opcua.CertificateFile(certFile),
-		opcua.PrivateKeyFile(keyFile),
+		opcua.SecurityPolicy(oc.Policy),
+		opcua.SecurityModeString(oc.Mode),
+		opcua.CertificateFile(oc.CertFile),
+		opcua.PrivateKeyFile(oc.KeyFile),
 		opcua.AuthAnonymous(),
 		opcua.SecurityFromEndpoint(ep, ua.UserTokenTypeAnonymous),
 	}
@@ -85,7 +78,7 @@ func (b client) Subscribe(uri, nid string) error {
 	b.logger.Info(fmt.Sprintf("OPC-UA server URI: %s", ep.SecurityPolicyURI))
 	b.logger.Info(fmt.Sprintf("Created subscription with id %v", sub.SubscriptionID))
 
-	nodeID, err := ua.ParseNodeID(nid)
+	nodeID, err := ua.ParseNodeID(oc.NodeID)
 	if err != nil {
 		b.logger.Error(err.Error())
 	}

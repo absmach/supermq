@@ -31,6 +31,10 @@ const (
 	defHTTPPort     = "8180"
 	defOPCServerURI = "opc.tcp://opcua.rocks:4840"
 	defOPCNodeID    = "ns=0;i=2256"
+	defOPCPolicy    = ""
+	defOPCMode      = ""
+	defOPCCertFile  = ""
+	defOPCKeyFile   = ""
 	defNatsURL      = nats.DefaultURL
 	defLogLevel     = "debug"
 	defESURL        = "localhost:6379"
@@ -44,6 +48,10 @@ const (
 	envHTTPPort     = "MF_OPC_ADAPTER_HTTP_PORT"
 	envOPCServerURI = "MF_OPC_ADAPTER_SERVER_URI"
 	envOPCNodeID    = "MF_OPC_ADAPTER_NODE_ID"
+	envOPCPolicy    = "MF_OPC_ADAPTER_POLICY"
+	envOPCMode      = "MF_OPC_ADAPTER_MODE"
+	envOPCCertFile  = "MF_OPC_ADAPTER_CERT_FILE"
+	envOPCKeyFile   = "MF_OPC_ADAPTER_KEY_FILE"
 	envNatsURL      = "MF_NATS_URL"
 	envLogLevel     = "MF_LORA_ADAPTER_LOG_LEVEL"
 	envESURL        = "MF_THINGS_ES_URL"
@@ -60,8 +68,7 @@ const (
 
 type config struct {
 	httpPort     string
-	opcServerURI string
-	opcNodeID    string
+	opcConfig    opc.Config
 	natsURL      string
 	logLevel     string
 	esURL        string
@@ -113,7 +120,7 @@ func main() {
 		}, []string{"method"}),
 	)
 
-	go subscribeToOpcServer(svc, cfg.opcServerURI, cfg.opcNodeID, logger)
+	go subscribeToOpcServer(svc, cfg.opcConfig, logger)
 	go subscribeToThingsES(svc, esConn, cfg.instanceName, logger)
 
 	errs := make(chan error, 2)
@@ -131,10 +138,13 @@ func main() {
 }
 
 func loadConfig() config {
+	oc := opc.Config{
+		ServerURI: mainflux.Env(envOPCServerURI, defOPCServerURI),
+		NodeID:    mainflux.Env(envOPCNodeID, defOPCNodeID),
+	}
 	return config{
 		httpPort:     mainflux.Env(envHTTPPort, defHTTPPort),
-		opcServerURI: mainflux.Env(envOPCServerURI, defOPCServerURI),
-		opcNodeID:    mainflux.Env(envOPCNodeID, defOPCNodeID),
+		opcConfig:    oc,
 		natsURL:      mainflux.Env(envNatsURL, defNatsURL),
 		logLevel:     mainflux.Env(envLogLevel, defLogLevel),
 		esURL:        mainflux.Env(envESURL, defESURL),
@@ -172,15 +182,15 @@ func connectToRedis(redisURL, redisPass, redisDB string, logger logger.Logger) *
 	})
 }
 
-func subscribeToOpcServer(svc opc.Service, uri, nid string, logger logger.Logger) {
+func subscribeToOpcServer(svc opc.Service, cfg opc.Config, logger logger.Logger) {
 	ctx := context.Background()
 	gr := gopcua.NewReader(ctx, svc, logger)
-	if err := gr.Read(uri, nid); err != nil {
+	if err := gr.Read(cfg.ServerURI, cfg.NodeID); err != nil {
 		logger.Warn(fmt.Sprintf("OPC-UA Read failed: %s", err))
 	}
 
 	gc := gopcua.NewClient(ctx, svc, logger)
-	if err := gc.Subscribe(uri, nid); err != nil {
+	if err := gc.Subscribe(cfg); err != nil {
 		logger.Warn(fmt.Sprintf("OPC-UA Subscription failed: %s", err))
 	}
 }
