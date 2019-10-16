@@ -51,7 +51,6 @@ func startGRPCServer(svc users.Service, port int) {
 }
 
 func TestIdentify(t *testing.T) {
-	// svc.Register(context.Background(), user)
 	err := svc.Register(context.Background(), user)
 	require.True(t, err.IsEmpty(), fmt.Sprintf("Error creating User: %s", err))
 
