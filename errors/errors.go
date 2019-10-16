@@ -31,37 +31,37 @@ type customError struct {
 	err Error
 }
 
-func (err customError) Error() string {
-	if err.err != nil {
-		return fmt.Sprintf("%s: %s", err.msg, err.err.Error())
+func (ce customError) Error() string {
+	if ce.err != nil {
+		return fmt.Sprintf("%s: %s", ce.msg, ce.err.Error())
 	}
 
-	return err.msg
+	return ce.msg
 }
 
-func (err customError) Msg() string {
-	return err.msg
+func (ce customError) Msg() string {
+	return ce.msg
 }
 
-func (err customError) IsEmpty() bool {
-	if err.Msg() == "" {
+func (ce customError) IsEmpty() bool {
+	if ce.Msg() == "" {
 		return true
 	}
 	return false
 }
 
-func (err customError) Contains(e error) bool {
+func (ce customError) Contains(e error) bool {
 	if e == nil {
 		return false
 	}
-	if err.msg == e.Error() {
+	if ce.msg == e.Error() {
 		return true
 	}
-	if err.err == nil {
+	if ce.err == nil {
 		return false
 	}
 
-	return err.err.Contains(e)
+	return ce.err.Contains(e)
 }
 
 // Wrap returns an Error that wrap err with wrapper

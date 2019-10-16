@@ -18,11 +18,10 @@ func registrationEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		err := svc.Register(ctx, req.user)
-		if err.IsEmpty() {
-			return tokenRes{}, nil
+		if err := svc.Register(ctx, req.user); !err.IsEmpty() {
+			return tokenRes{}, err
 		}
-		return tokenRes{}, err
+		return tokenRes{}, nil
 	}
 }
 
