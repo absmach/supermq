@@ -15,11 +15,6 @@ import (
 	"github.com/mainflux/mainflux/opc"
 )
 
-const (
-	defOPCNamespace  = "0"
-	defOPCIdentifier = "2256"
-)
-
 // Subscriber represents the OPC-UA Server client.
 type Subscriber interface {
 	// Subscribes to given NodeID and receives events.
@@ -78,7 +73,16 @@ func (b client) Subscribe(oc opc.Config) error {
 	b.logger.Info(fmt.Sprintf("OPC-UA server URI: %s", ep.SecurityPolicyURI))
 	b.logger.Info(fmt.Sprintf("Created subscription with id %v", sub.SubscriptionID))
 
-	nodeID, err := ua.ParseNodeID(oc.NodeID)
+	if err := b.runHandler(sub, oc); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (b client) runHandler(sub *opcua.Subscription, cfg opc.Config) error {
+	nid := fmt.Sprintf("ns=%s;i=%s", cfg.NodeNamespace, cfg.NodeIdintifier)
+	nodeID, err := ua.ParseNodeID(nid)
 	if err != nil {
 		b.logger.Error(err.Error())
 	}
@@ -108,8 +112,8 @@ func (b client) Subscribe(oc opc.Config) error {
 				for _, item := range x.MonitoredItems {
 					// Publish on Mainflux NATS broker
 					msg := opc.Message{
-						Namespace: defOPCNamespace,
-						ID:        defOPCIdentifier,
+						Namespace: cfg.NodeNamespace,
+						ID:        cfg.NodeIdintifier,
 						Data:      item.Value.Value.Float(),
 					}
 					b.svc.Publish(b.ctx, "", msg)
@@ -120,4 +124,6 @@ func (b client) Subscribe(oc opc.Config) error {
 			}
 		}
 	}
+
+	return nil
 }

@@ -28,39 +28,41 @@ import (
 )
 
 const (
-	defHTTPPort     = "8180"
-	defOPCServerURI = "opc.tcp://opcua.rocks:4840"
-	defOPCNodeID    = "ns=0;i=2256"
-	defOPCPolicy    = ""
-	defOPCMode      = ""
-	defOPCCertFile  = ""
-	defOPCKeyFile   = ""
-	defNatsURL      = nats.DefaultURL
-	defLogLevel     = "debug"
-	defESURL        = "localhost:6379"
-	defESPass       = ""
-	defESDB         = "0"
-	defInstanceName = "opc"
-	defRouteMapURL  = "localhost:6379"
-	defRouteMapPass = ""
-	defRouteMapDB   = "0"
+	defHTTPPort          = "8180"
+	defOPCServerURI      = "opc.tcp://opcua.rocks:4840"
+	defOPCNodeNamespace  = "0"
+	defOPCNodeIdentifier = "2256"
+	defOPCPolicy         = ""
+	defOPCMode           = ""
+	defOPCCertFile       = ""
+	defOPCKeyFile        = ""
+	defNatsURL           = nats.DefaultURL
+	defLogLevel          = "debug"
+	defESURL             = "localhost:6379"
+	defESPass            = ""
+	defESDB              = "0"
+	defInstanceName      = "opc"
+	defRouteMapURL       = "localhost:6379"
+	defRouteMapPass      = ""
+	defRouteMapDB        = "0"
 
-	envHTTPPort     = "MF_OPC_ADAPTER_HTTP_PORT"
-	envOPCServerURI = "MF_OPC_ADAPTER_SERVER_URI"
-	envOPCNodeID    = "MF_OPC_ADAPTER_NODE_ID"
-	envOPCPolicy    = "MF_OPC_ADAPTER_POLICY"
-	envOPCMode      = "MF_OPC_ADAPTER_MODE"
-	envOPCCertFile  = "MF_OPC_ADAPTER_CERT_FILE"
-	envOPCKeyFile   = "MF_OPC_ADAPTER_KEY_FILE"
-	envNatsURL      = "MF_NATS_URL"
-	envLogLevel     = "MF_LORA_ADAPTER_LOG_LEVEL"
-	envESURL        = "MF_THINGS_ES_URL"
-	envESPass       = "MF_THINGS_ES_PASS"
-	envESDB         = "MF_THINGS_ES_DB"
-	envInstanceName = "MF_OPC_ADAPTER_INSTANCE_NAME"
-	envRouteMapURL  = "MF_OPC_ADAPTER_ROUTEMAP_URL"
-	envRouteMapPass = "MF_OPC_ADAPTER_ROUTEMAP_PASS"
-	envRouteMapDB   = "MF_OPC_ADAPTER_ROUTEMAP_DB"
+	envHTTPPort          = "MF_OPC_ADAPTER_HTTP_PORT"
+	envOPCServerURI      = "MF_OPC_ADAPTER_SERVER_URI"
+	envOPCNodeNamespace  = "MF_OPC_ADAPTER_NODE_NAMESPACE"
+	envOPCNodeIdentifier = "MF_OPC_ADAPTER_NODE_IDENTIFIER"
+	envOPCPolicy         = "MF_OPC_ADAPTER_POLICY"
+	envOPCMode           = "MF_OPC_ADAPTER_MODE"
+	envOPCCertFile       = "MF_OPC_ADAPTER_CERT_FILE"
+	envOPCKeyFile        = "MF_OPC_ADAPTER_KEY_FILE"
+	envNatsURL           = "MF_NATS_URL"
+	envLogLevel          = "MF_LORA_ADAPTER_LOG_LEVEL"
+	envESURL             = "MF_THINGS_ES_URL"
+	envESPass            = "MF_THINGS_ES_PASS"
+	envESDB              = "MF_THINGS_ES_DB"
+	envInstanceName      = "MF_OPC_ADAPTER_INSTANCE_NAME"
+	envRouteMapURL       = "MF_OPC_ADAPTER_ROUTEMAP_URL"
+	envRouteMapPass      = "MF_OPC_ADAPTER_ROUTEMAP_PASS"
+	envRouteMapDB        = "MF_OPC_ADAPTER_ROUTEMAP_DB"
 
 	thingsRMPrefix   = "thing"
 	channelsRMPrefix = "channel"
@@ -139,8 +141,13 @@ func main() {
 
 func loadConfig() config {
 	oc := opc.Config{
-		ServerURI: mainflux.Env(envOPCServerURI, defOPCServerURI),
-		NodeID:    mainflux.Env(envOPCNodeID, defOPCNodeID),
+		ServerURI:      mainflux.Env(envOPCServerURI, defOPCServerURI),
+		NodeNamespace:  mainflux.Env(envOPCNodeNamespace, defOPCNodeNamespace),
+		NodeIdintifier: mainflux.Env(envOPCNodeIdentifier, defOPCNodeIdentifier),
+		Policy:         mainflux.Env(envOPCPolicy, defOPCPolicy),
+		Mode:           mainflux.Env(envOPCMode, defOPCMode),
+		CertFile:       mainflux.Env(envOPCCertFile, defOPCCertFile),
+		KeyFile:        mainflux.Env(envOPCKeyFile, defOPCKeyFile),
 	}
 	return config{
 		httpPort:     mainflux.Env(envHTTPPort, defHTTPPort),
@@ -185,7 +192,7 @@ func connectToRedis(redisURL, redisPass, redisDB string, logger logger.Logger) *
 func subscribeToOpcServer(svc opc.Service, cfg opc.Config, logger logger.Logger) {
 	ctx := context.Background()
 	gr := gopcua.NewReader(ctx, svc, logger)
-	if err := gr.Read(cfg.ServerURI, cfg.NodeID); err != nil {
+	if err := gr.Read(cfg); err != nil {
 		logger.Warn(fmt.Sprintf("OPC-UA Read failed: %s", err))
 	}
 

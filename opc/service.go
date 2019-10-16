@@ -59,12 +59,13 @@ type Service interface {
 
 // Config OPC-UA Server
 type Config struct {
-	ServerURI string
-	NodeID    string
-	Policy    string
-	Mode      string
-	CertFile  string
-	KeyFile   string
+	ServerURI      string
+	NodeNamespace  string
+	NodeIdintifier string
+	Policy         string
+	Mode           string
+	CertFile       string
+	KeyFile        string
 }
 
 var _ Service = (*adapterService)(nil)
