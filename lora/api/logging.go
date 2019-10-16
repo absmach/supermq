@@ -107,7 +107,7 @@ func (lm loggingMiddleware) RemoveChannel(mfxChanID string) (err error) {
 
 func (lm loggingMiddleware) Publish(ctx context.Context, token string, m lora.Message) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("message_router application/%s/device/%s/rx took %s to complete", m.ApplicationID, m.DevEUI, time.Since(begin))
+		message := fmt.Sprintf("publish application/%s/device/%s/rx took %s to complete", m.ApplicationID, m.DevEUI, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return

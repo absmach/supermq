@@ -20,8 +20,8 @@ const (
 	defOPCIdentifier = "2256"
 )
 
-// OPCClient represents the OPC-UA Server client.
-type OPCClient interface {
+// Subscriber represents the OPC-UA Server client.
+type Subscriber interface {
 	// Subscribes to given NodeID and receives events.
 	Subscribe(string, string) error
 }
@@ -33,7 +33,7 @@ type client struct {
 }
 
 // NewClient returns new OPC client instance.
-func NewClient(ctx context.Context, svc opc.Service, log logger.Logger) OPCClient {
+func NewClient(ctx context.Context, svc opc.Service, log logger.Logger) Subscriber {
 	return client{
 		ctx:    ctx,
 		svc:    svc,
