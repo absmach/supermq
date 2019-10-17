@@ -1,15 +1,12 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package mocks
 
 import (
 	"context"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/things"
 	"google.golang.org/grpc"
@@ -53,6 +50,10 @@ func (tc thingsClient) CanAccess(ctx context.Context, req *mainflux.AccessReq, o
 	return &mainflux.ThingID{Value: id}, nil
 }
 
+func (tc thingsClient) CanAccessByID(context.Context, *mainflux.AccessByIDReq, ...grpc.CallOption) (*empty.Empty, error) {
+	panic("not implemented")
+}
+
 func (tc thingsClient) Identify(ctx context.Context, req *mainflux.Token, opts ...grpc.CallOption) (*mainflux.ThingID, error) {
-	return nil, nil
+	panic("not implemented")
 }

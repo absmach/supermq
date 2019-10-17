@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2019
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package postgres
 
@@ -65,7 +61,7 @@ func migrateDB(db *sqlx.DB) error {
             bool_value    BOOL,
             data_value    TEXT,
             value_sum     FLOAT,
-            time          FlOAT,
+            time          FLOAT,
             update_time   FLOAT,
             link          TEXT,
             PRIMARY KEY (id)

@@ -1,8 +1,4 @@
 [[constraint]]
-  name = "github.com/asaskevich/govalidator"
-  version = "9.0.0"
-
-[[constraint]]
   name = "github.com/cisco/senml"
   branch = "master"
 
@@ -12,7 +8,7 @@
 
 [[constraint]]
   name = "github.com/eclipse/paho.mqtt.golang"
-  version = "1.1.1"
+  version = "1.2"
 
 [[constraint]]
   name = "github.com/fatih/color"
@@ -68,7 +64,7 @@
 
 [[constraint]]
   name = "github.com/gorilla/websocket"
-  version = "1.4.0"
+  version = "1.4.1"
 
 [[constraint]]
   name = "github.com/rubenv/sql-migrate"
@@ -85,10 +81,6 @@
 
 [[constraint]]
   name = "github.com/gocql/gocql"
-  branch = "master"
-
-[[constraint]]
-  name = "github.com/dereulenspiegel/coap-mux"
   branch = "master"
 
 [[constraint]]
@@ -119,6 +111,14 @@
   name = "github.com/gofrs/uuid"
   version = "~v3.2.0"
 
+[[constraint]]
+  name = "github.com/opentracing/opentracing-go"
+  version = "~v1.1.0"
+
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  revision = "ced62fe5104b907b6c16cb7e575c17b2e62ceddd"
+  name = "gonum.org/v1/gonum"

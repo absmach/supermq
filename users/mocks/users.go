@@ -1,13 +1,10 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package mocks
 
 import (
+	"context"
 	"sync"
 
 	"github.com/mainflux/mainflux/users"
@@ -27,7 +24,7 @@ func NewUserRepository() users.UserRepository {
 	}
 }
 
-func (urm *userRepositoryMock) Save(user users.User) error {
+func (urm *userRepositoryMock) Save(ctx context.Context, user users.User) error {
 	urm.mu.Lock()
 	defer urm.mu.Unlock()
 
@@ -39,7 +36,7 @@ func (urm *userRepositoryMock) Save(user users.User) error {
 	return nil
 }
 
-func (urm *userRepositoryMock) RetrieveByID(email string) (users.User, error) {
+func (urm *userRepositoryMock) RetrieveByID(ctx context.Context, email string) (users.User, error) {
 	urm.mu.Lock()
 	defer urm.mu.Unlock()
 

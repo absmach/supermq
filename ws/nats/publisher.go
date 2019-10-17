@@ -1,20 +1,18 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 // Package nats contains NATS message publisher implementation.
 package nats
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/sony/gobreaker"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
+	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/ws"
 	broker "github.com/nats-io/go-nats"
 )
@@ -28,12 +26,13 @@ const (
 var _ ws.Service = (*natsPubSub)(nil)
 
 type natsPubSub struct {
-	nc *broker.Conn
-	cb *gobreaker.CircuitBreaker
+	nc     *broker.Conn
+	cb     *gobreaker.CircuitBreaker
+	logger log.Logger
 }
 
 // New instantiates NATS message publisher.
-func New(nc *broker.Conn) ws.Service {
+func New(nc *broker.Conn, logger log.Logger) ws.Service {
 	st := gobreaker.Settings{
 		Name: "NATS",
 		ReadyToTrip: func(counts gobreaker.Counts) bool {
@@ -42,7 +41,11 @@ func New(nc *broker.Conn) ws.Service {
 		},
 	}
 	cb := gobreaker.NewCircuitBreaker(st)
-	return &natsPubSub{nc, cb}
+	return &natsPubSub{
+		nc:     nc,
+		cb:     cb,
+		logger: logger,
+	}
 }
 
 func (pubsub *natsPubSub) fmtSubject(chanID, subtopic string) string {
@@ -53,7 +56,7 @@ func (pubsub *natsPubSub) fmtSubject(chanID, subtopic string) string {
 	return subject
 }
 
-func (pubsub *natsPubSub) Publish(msg mainflux.RawMessage) error {
+func (pubsub *natsPubSub) Publish(_ context.Context, _ string, msg mainflux.RawMessage) error {
 	data, err := proto.Marshal(&msg)
 	if err != nil {
 		return err
@@ -68,13 +71,17 @@ func (pubsub *natsPubSub) Subscribe(chanID, subtopic string, channel *ws.Channel
 
 	sub, err := pubsub.nc.Subscribe(pubsub.fmtSubject(chanID, subtopic), func(msg *broker.Msg) {
 		if msg == nil {
+			pubsub.logger.Warn("Received nil message")
 			return
 		}
 
 		var rawMsg mainflux.RawMessage
 		if err := proto.Unmarshal(msg.Data, &rawMsg); err != nil {
+			pubsub.logger.Warn(fmt.Sprintf("Failed to deserialize received message: %s", err.Error()))
 			return
 		}
+
+		pubsub.logger.Debug(fmt.Sprintf("Successfully received message from NATS from channel %s", rawMsg.GetChannel()))
 
 		// Sends message to messages channel
 		channel.Send(rawMsg)

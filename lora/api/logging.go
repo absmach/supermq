@@ -1,13 +1,10 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package api
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -108,7 +105,7 @@ func (lm loggingMiddleware) RemoveChannel(mfxChanID string) (err error) {
 	return lm.svc.RemoveChannel(mfxChanID)
 }
 
-func (lm loggingMiddleware) Publish(m lora.Message) (err error) {
+func (lm loggingMiddleware) Publish(ctx context.Context, token string, m lora.Message) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("message_router application/%s/device/%s/rx took %s to complete", m.ApplicationID, m.DevEUI, time.Since(begin))
 		if err != nil {
@@ -118,5 +115,5 @@ func (lm loggingMiddleware) Publish(m lora.Message) (err error) {
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.Publish(m)
+	return lm.svc.Publish(ctx, token, m)
 }

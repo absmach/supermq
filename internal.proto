@@ -1,16 +1,15 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 syntax = "proto3";
 
 package mainflux;
 
+import "google/protobuf/empty.proto";
+
 service ThingsService {
     rpc CanAccess(AccessReq) returns (ThingID) {}
+    rpc CanAccessByID(AccessByIDReq) returns (google.protobuf.Empty) {}
     rpc Identify(Token) returns (ThingID) {}
 }
 
@@ -25,6 +24,11 @@ message AccessReq {
 
 message ThingID {
     string value = 1;
+}
+
+message AccessByIDReq {
+    string thingID = 1;
+    string chanID = 2;
 }
 
 message Token {

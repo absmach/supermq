@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package http
 
@@ -16,11 +12,13 @@ import (
 	"net/http"
 	"strings"
 
+	kitot "github.com/go-kit/kit/tracing/opentracing"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/users"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -32,7 +30,7 @@ var (
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc users.Service, l log.Logger) http.Handler {
+func MakeHandler(svc users.Service, tracer opentracing.Tracer, l log.Logger) http.Handler {
 	logger = l
 
 	opts := []kithttp.ServerOption{
@@ -42,14 +40,21 @@ func MakeHandler(svc users.Service, l log.Logger) http.Handler {
 	mux := bone.New()
 
 	mux.Post("/users", kithttp.NewServer(
-		registrationEndpoint(svc),
+		kitot.TraceServer(tracer, "register")(registrationEndpoint(svc)),
 		decodeCredentials,
 		encodeResponse,
 		opts...,
 	))
 
+	mux.Get("/users", kithttp.NewServer(
+		kitot.TraceServer(tracer, "register")(userInfoEndpoint(svc)),
+		decodeViewInfo,
+		encodeResponse,
+		opts...,
+	))
+
 	mux.Post("/tokens", kithttp.NewServer(
-		loginEndpoint(svc),
+		kitot.TraceServer(tracer, "login")(loginEndpoint(svc)),
 		decodeCredentials,
 		encodeResponse,
 		opts...,
@@ -59,6 +64,13 @@ func MakeHandler(svc users.Service, l log.Logger) http.Handler {
 	mux.Handle("/metrics", promhttp.Handler())
 
 	return mux
+}
+
+func decodeViewInfo(_ context.Context, r *http.Request) (interface{}, error) {
+	req := viewUserInfoReq{
+		token: r.Header.Get("Authorization"),
+	}
+	return req, nil
 }
 
 func decodeCredentials(_ context.Context, r *http.Request) (interface{}, error) {

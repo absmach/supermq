@@ -1,10 +1,6 @@
 #!/bin/bash
-#
-# Copyright (c) 2018
-# Mainflux
-#
+# Copyright (c) Mainflux
 # SPDX-License-Identifier: Apache-2.0
-#
 
 ###
 # Runs all Mainflux microservices (must be previously built and installed).
@@ -26,6 +22,18 @@ function cleanup {
 # NATS
 ###
 gnatsd &
+counter=1
+until nc -zv localhost 4222 1>/dev/null 2>&1; 
+do
+    sleep 0.5
+    ((counter++))
+    if [ ${counter} -gt 10 ]
+    then
+        echo -ne "gnatsd failed to start in 5 sec, exiting"
+        exit 1
+    fi
+    echo -ne "Waiting for gnatsd"
+done
 
 ###
 # Users
@@ -35,7 +43,7 @@ MF_USERS_LOG_LEVEL=info $BUILD_DIR/mainflux-users &
 ###
 # Things
 ###
-MF_THINGS_LOG_LEVEL=info MF_THINGS_HTTP_PORT=8182 MF_THINGS_GRPC_PORT=8183 $BUILD_DIR/mainflux-things &
+MF_THINGS_LOG_LEVEL=info MF_THINGS_HTTP_PORT=8182 MF_THINGS_AUTH_GRPC_PORT=8183 MF_THINGS_AUTH_HTTP_PORT=8989 $BUILD_DIR/mainflux-things &
 
 ###
 # HTTP
@@ -58,7 +66,7 @@ MF_NORMALIZER_LOG_LEVEL=INFO MF_NORMALIZER_PORT=8184 MF_NATS_URL=localhost:4222 
 # Switch to top dir to find *.proto stuff when running MQTT broker
 
 cd ..
-MF_MQTT_ADAPTER_LOG_LEVEL=info MF_THINGS_URL=localhost:8183 node mqtt/mqtt.js &
+MF_MQTT_ADAPTER_LOG_LEVEL=info MF_THINGS_URL=localhost:8183 node mqtt/aedes/mqtt.js &
 cd -
 
 ###

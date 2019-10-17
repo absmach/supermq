@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package api
 
@@ -59,7 +55,7 @@ func updateCertEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		if err := svc.UpdateCert(req.key, req.thingKey, req.ClientCert, req.ClientKey, req.CACert); err != nil {
+		if err := svc.UpdateCert(req.key, req.thingID, req.ClientCert, req.ClientKey, req.CACert); err != nil {
 			return nil, err
 		}
 
@@ -228,19 +224,19 @@ func removeEndpoint(svc bootstrap.Service) endpoint.Endpoint {
 	}
 }
 
-func bootstrapEndpoint(svc bootstrap.Service, reader bootstrap.ConfigReader) endpoint.Endpoint {
+func bootstrapEndpoint(svc bootstrap.Service, reader bootstrap.ConfigReader, secure bool) endpoint.Endpoint {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
 		req := request.(bootstrapReq)
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
 
-		cfg, err := svc.Bootstrap(req.key, req.id)
+		cfg, err := svc.Bootstrap(req.key, req.id, secure)
 		if err != nil {
 			return nil, err
 		}
 
-		return reader.ReadConfig(cfg)
+		return reader.ReadConfig(cfg, secure)
 	}
 }
 

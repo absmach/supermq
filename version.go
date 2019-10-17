@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package mainflux
 
@@ -12,10 +8,14 @@ import (
 	"net/http"
 )
 
-const version string = "0.8.0"
+const version string = "0.9.0"
 
+// VersionInfo contains version endpoint response.
 type VersionInfo struct {
+	// Service contains service name.
 	Service string `json:"service"`
+
+	// Version contains service current version value.
 	Version string `json:"version"`
 }
 

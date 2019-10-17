@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package mocks
 
@@ -134,12 +130,12 @@ func (crm *configRepositoryMock) RetrieveAll(key string, filter bootstrap.Filter
 	}
 }
 
-func (crm *configRepositoryMock) RetrieveByExternalID(externalKey, externalID string) (bootstrap.Config, error) {
+func (crm *configRepositoryMock) RetrieveByExternalID(externalID string) (bootstrap.Config, error) {
 	crm.mu.Lock()
 	defer crm.mu.Unlock()
 
 	for _, cfg := range crm.configs {
-		if cfg.ExternalID == externalID && cfg.ExternalKey == externalKey {
+		if cfg.ExternalID == externalID {
 			return cfg, nil
 		}
 	}
@@ -163,12 +159,12 @@ func (crm *configRepositoryMock) Update(config bootstrap.Config) error {
 	return nil
 }
 
-func (crm *configRepositoryMock) UpdateCert(owner, thingKey, clientCert, clientKey, caCert string) error {
+func (crm *configRepositoryMock) UpdateCert(owner, thingID, clientCert, clientKey, caCert string) error {
 	crm.mu.Lock()
 	defer crm.mu.Unlock()
 	var forUpdate bootstrap.Config
 	for _, v := range crm.configs {
-		if v.MFKey == thingKey && v.Owner == owner {
+		if v.MFThing == thingID && v.Owner == owner {
 			forUpdate = v
 			break
 		}

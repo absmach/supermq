@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package api_test
 
@@ -15,6 +11,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/opentracing/opentracing-go/mocktracer"
+
 	"github.com/mainflux/mainflux"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
@@ -22,13 +20,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func newService() mainflux.MessagePublisher {
+func newService(cc mainflux.ThingsServiceClient) mainflux.MessagePublisher {
 	pub := mocks.NewPublisher()
-	return adapter.New(pub)
+	return adapter.New(pub, cc)
 }
 
-func newHTTPServer(pub mainflux.MessagePublisher, cc mainflux.ThingsServiceClient) *httptest.Server {
-	mux := api.MakeHandler(pub, cc)
+func newHTTPServer(pub mainflux.MessagePublisher) *httptest.Server {
+	mux := api.MakeHandler(pub, mocktracer.New())
 	return httptest.NewServer(mux)
 }
 
@@ -62,8 +60,8 @@ func TestPublish(t *testing.T) {
 	invalidToken := "invalid_token"
 	msg := `[{"n":"current","t":-1,"v":1.6}]`
 	thingsClient := mocks.NewThingsClient(map[string]string{token: chanID})
-	pub := newService()
-	ts := newHTTPServer(pub, thingsClient)
+	pub := newService(thingsClient)
+	ts := newHTTPServer(pub)
 	defer ts.Close()
 
 	cases := map[string]struct {

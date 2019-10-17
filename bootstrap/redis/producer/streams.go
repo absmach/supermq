@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2019
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package producer
 
@@ -121,8 +117,8 @@ func (es eventStore) Remove(key, id string) error {
 	return nil
 }
 
-func (es eventStore) Bootstrap(externalKey, externalID string) (bootstrap.Config, error) {
-	cfg, err := es.svc.Bootstrap(externalKey, externalID)
+func (es eventStore) Bootstrap(externalKey, externalID string, secure bool) (bootstrap.Config, error) {
+	cfg, err := es.svc.Bootstrap(externalKey, externalID, secure)
 
 	ev := bootstrapEvent{
 		externalID: externalID,

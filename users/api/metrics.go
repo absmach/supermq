@@ -1,13 +1,10 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package api
 
 import (
+	"context"
 	"time"
 
 	"github.com/go-kit/kit/metrics"
@@ -32,22 +29,22 @@ func MetricsMiddleware(svc users.Service, counter metrics.Counter, latency metri
 	}
 }
 
-func (ms *metricsMiddleware) Register(user users.User) error {
+func (ms *metricsMiddleware) Register(ctx context.Context, user users.User) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "register").Add(1)
 		ms.latency.With("method", "register").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.Register(user)
+	return ms.svc.Register(ctx, user)
 }
 
-func (ms *metricsMiddleware) Login(user users.User) (string, error) {
+func (ms *metricsMiddleware) Login(ctx context.Context, user users.User) (string, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "login").Add(1)
 		ms.latency.With("method", "login").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.Login(user)
+	return ms.svc.Login(ctx, user)
 }
 
 func (ms *metricsMiddleware) Identify(key string) (string, error) {
@@ -57,4 +54,13 @@ func (ms *metricsMiddleware) Identify(key string) (string, error) {
 	}(time.Now())
 
 	return ms.svc.Identify(key)
+}
+
+func (ms *metricsMiddleware) UserInfo(ctx context.Context, key string) (users.User, error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "user_info").Add(1)
+		ms.latency.With("method", "user_info").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.UserInfo(ctx, key)
 }

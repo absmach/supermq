@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package users_test
 
@@ -18,6 +14,7 @@ import (
 const (
 	email    = "user@example.com"
 	password = "password"
+	metadata = `{"role":"manager"}`
 )
 
 func TestValidate(t *testing.T) {
@@ -25,10 +22,34 @@ func TestValidate(t *testing.T) {
 		user users.User
 		err  error
 	}{
-		"validate user with valid data":     {users.User{email, password}, nil},
-		"validate user with empty email":    {users.User{"", password}, users.ErrMalformedEntity},
-		"validate user with empty password": {users.User{email, ""}, users.ErrMalformedEntity},
-		"validate user with invalid email":  {users.User{"userexample.com", password}, users.ErrMalformedEntity},
+		"validate user with valid data": {
+			user: users.User{
+				Email:    email,
+				Password: password,
+			},
+			err: nil,
+		},
+		"validate user with empty email": {
+			user: users.User{
+				Email:    "",
+				Password: password,
+			},
+			err: users.ErrMalformedEntity,
+		},
+		"validate user with empty password": {
+			user: users.User{
+				Email:    email,
+				Password: "",
+			},
+			err: users.ErrMalformedEntity,
+		},
+		"validate user with invalid email": {
+			user: users.User{
+				Email:    "userexample.com",
+				Password: password,
+			},
+			err: users.ErrMalformedEntity,
+		},
 	}
 
 	for desc, tc := range cases {

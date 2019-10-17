@@ -1,15 +1,12 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 // +build !test
 
 package api
 
 import (
+	"context"
 	"time"
 
 	"github.com/go-kit/kit/metrics"
@@ -33,11 +30,11 @@ func MetricsMiddleware(svc mainflux.MessagePublisher, counter metrics.Counter, l
 	}
 }
 
-func (mm *metricsMiddleware) Publish(msg mainflux.RawMessage) error {
+func (mm *metricsMiddleware) Publish(ctx context.Context, token string, msg mainflux.RawMessage) error {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "publish").Add(1)
 		mm.latency.With("method", "publish").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.Publish(msg)
+	return mm.svc.Publish(ctx, token, msg)
 }

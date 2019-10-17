@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package postgres
 
@@ -81,6 +77,22 @@ func migrateDB(db *sqlx.DB) error {
 					"DROP TABLE connections",
 					"DROP TABLE things",
 					"DROP TABLE channels",
+				},
+			},
+			{
+				Id: "things_2",
+				Up: []string{
+					`ALTER TABLE IF EXISTS things ALTER COLUMN
+					 metadata TYPE JSONB using metadata::text::jsonb
+					`,
+				},
+			},
+			{
+				Id: "things_3",
+				Up: []string{
+					`ALTER TABLE IF EXISTS channels ALTER COLUMN
+					 metadata TYPE JSONB using metadata::text::jsonb
+					`,
 				},
 			},
 		},

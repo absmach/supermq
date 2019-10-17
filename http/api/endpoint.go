@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package api
 
@@ -15,9 +11,9 @@ import (
 )
 
 func sendMessageEndpoint(svc mainflux.MessagePublisher) endpoint.Endpoint {
-	return func(_ context.Context, request interface{}) (interface{}, error) {
-		msg := request.(mainflux.RawMessage)
-		err := svc.Publish(msg)
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(publishReq)
+		err := svc.Publish(ctx, req.token, req.msg)
 		return nil, err
 	}
 }

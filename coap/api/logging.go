@@ -1,15 +1,12 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 // +build !test
 
 package api
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -30,7 +27,7 @@ func LoggingMiddleware(svc coap.Service, logger log.Logger) coap.Service {
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) Publish(msg mainflux.RawMessage) (err error) {
+func (lm *loggingMiddleware) Publish(ctx context.Context, token string, msg mainflux.RawMessage) (err error) {
 	defer func(begin time.Time) {
 		destChannel := msg.Channel
 		if msg.Subtopic != "" {
@@ -44,7 +41,7 @@ func (lm *loggingMiddleware) Publish(msg mainflux.RawMessage) (err error) {
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.Publish(msg)
+	return lm.svc.Publish(ctx, token, msg)
 }
 
 func (lm *loggingMiddleware) Subscribe(chanID, subtopic, obsID string, o *coap.Observer) (err error) {

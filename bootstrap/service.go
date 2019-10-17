@@ -1,14 +1,13 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package bootstrap
 
 import (
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
+	"encoding/hex"
 	"errors"
 	"time"
 
@@ -64,7 +63,7 @@ type Service interface {
 	Remove(string, string) error
 
 	// Bootstrap returns Config to the Thing with provided external ID using external key.
-	Bootstrap(string, string) (Config, error)
+	Bootstrap(string, string, bool) (Config, error)
 
 	// ChangeState changes state of the Thing with given ID and owner.
 	ChangeState(string, string, State) error
@@ -90,21 +89,24 @@ type Service interface {
 // is to provide convenient way to generate custom configuration response
 // based on the specific Config which will be consumed by the client.
 type ConfigReader interface {
-	ReadConfig(Config) (mainflux.Response, error)
+	ReadConfig(Config, bool) (interface{}, error)
 }
 
 type bootstrapService struct {
 	users   mainflux.UsersServiceClient
 	configs ConfigRepository
 	sdk     mfsdk.SDK
+	encKey  []byte
+	reader  ConfigReader
 }
 
 // New returns new Bootstrap service.
-func New(users mainflux.UsersServiceClient, configs ConfigRepository, sdk mfsdk.SDK) Service {
+func New(users mainflux.UsersServiceClient, configs ConfigRepository, sdk mfsdk.SDK, encKey []byte) Service {
 	return &bootstrapService{
 		configs: configs,
 		sdk:     sdk,
 		users:   users,
+		encKey:  encKey,
 	}
 }
 
@@ -174,12 +176,12 @@ func (bs bootstrapService) Update(key string, cfg Config) error {
 	return bs.configs.Update(cfg)
 }
 
-func (bs bootstrapService) UpdateCert(key, thingKey, clientCert, clientKey, caCert string) error {
+func (bs bootstrapService) UpdateCert(key, thingID, clientCert, clientKey, caCert string) error {
 	owner, err := bs.identify(key)
 	if err != nil {
 		return err
 	}
-	return bs.configs.UpdateCert(owner, thingKey, clientCert, clientKey, caCert)
+	return bs.configs.UpdateCert(owner, thingID, clientCert, clientKey, caCert)
 }
 
 func (bs bootstrapService) UpdateConnections(key, id string, connections []string) error {
@@ -257,12 +259,25 @@ func (bs bootstrapService) Remove(key, id string) error {
 	return bs.configs.Remove(owner, id)
 }
 
-func (bs bootstrapService) Bootstrap(externalKey, externalID string) (Config, error) {
-	cfg, err := bs.configs.RetrieveByExternalID(externalKey, externalID)
+func (bs bootstrapService) Bootstrap(externalKey, externalID string, secure bool) (Config, error) {
+	cfg, err := bs.configs.RetrieveByExternalID(externalID)
 	if err != nil {
 		if err == ErrNotFound {
 			bs.configs.SaveUnknown(externalKey, externalID)
+			return Config{}, ErrNotFound
 		}
+		return cfg, err
+	}
+
+	if secure {
+		dec, err := bs.dec(externalKey)
+		if err != nil {
+			return Config{}, err
+		}
+		externalKey = dec
+	}
+
+	if cfg.ExternalKey != externalKey {
 		return Config{}, ErrNotFound
 	}
 
@@ -425,4 +440,23 @@ func (bs bootstrapService) toIDList(channels []Channel) []string {
 	}
 
 	return ret
+}
+
+func (bs bootstrapService) dec(in string) (string, error) {
+	ciphertext, err := hex.DecodeString(in)
+	if err != nil {
+		return "", ErrNotFound
+	}
+	block, err := aes.NewCipher(bs.encKey)
+	if err != nil {
+		return "", err
+	}
+	if len(ciphertext) < aes.BlockSize {
+		return "", ErrMalformedEntity
+	}
+	iv := ciphertext[:aes.BlockSize]
+	ciphertext = ciphertext[aes.BlockSize:]
+	stream := cipher.NewCFBDecrypter(block, iv)
+	stream.XORKeyStream(ciphertext, ciphertext)
+	return string(ciphertext), nil
 }

@@ -1,12 +1,7 @@
-###
-# Copyright (c) 2015-2017 Mainflux
-#
-# Mainflux is licensed under an Apache license, version 2.0 license.
-# All rights not explicitly granted in the Apache license, version 2.0 are reserved.
-# See the included LICENSE file for more details.
-###
+# Copyright (c) Mainflux
+# SPDX-License-Identifier: Apache-2.0
 
-version: "3"
+version: "3.7"
 
 networks:
   mainflux-base-net:
@@ -15,7 +10,6 @@ networks:
 volumes:
   mainflux-users-db-volume:
   mainflux-things-db-volume:
-  mainflux-mqtt-redis-volume:
   mainflux-things-redis-volume:
   mainflux-es-redis-volume:
 
@@ -27,20 +21,27 @@ services:
     volumes:
       - ./nginx/nginx-${AUTH-key}.conf:/etc/nginx/nginx.conf.template
       - ./nginx/entrypoint.sh:/entrypoint.sh
+      - ./nginx/snippets:/etc/nginx/snippets
       - ./ssl/authorization.js:/etc/nginx/authorization.js
       - ./ssl/certs/mainflux-server.crt:/etc/ssl/certs/mainflux-server.crt
       - ./ssl/certs/ca.crt:/etc/ssl/certs/ca.crt
       - ./ssl/certs/mainflux-server.key:/etc/ssl/private/mainflux-server.key
       - ./ssl/dhparam.pem:/etc/ssl/certs/dhparam.pem
     ports:
-      - 80:80
-      - 443:443
-      - 8883:8883
+      - ${MF_NGINX_HTTP_PORT}:${MF_NGINX_HTTP_PORT}
+      - ${MF_NGINX_SSL_PORT}:${MF_NGINX_SSL_PORT}
+      - ${MF_NGINX_MQTT_PORT}:${MF_NGINX_MQTT_PORT}
+      - ${MF_NGINX_MQTTS_PORT}:${MF_NGINX_MQTTS_PORT}
     networks:
       - mainflux-base-net
-    environment:
-      - UI_PORT
+    env_file:
+      - ../.env
     command: /entrypoint.sh
+    depends_on:
+      - things
+      - users
+      - http-adapter
+      - ws-adapter
 
   nats:
     image: nats:1.3.0
@@ -54,9 +55,9 @@ services:
     container_name: mainflux-users-db
     restart: on-failure
     environment:
-      POSTGRES_USER: mainflux
-      POSTGRES_PASSWORD: mainflux
-      POSTGRES_DB: users
+      POSTGRES_USER: ${MF_USERS_DB_USER}
+      POSTGRES_PASSWORD: ${MF_USERS_DB_PASS}
+      POSTGRES_DB: ${MF_USERS_DB}
     networks:
       - mainflux-base-net
     volumes:
@@ -68,20 +69,21 @@ services:
     depends_on:
       - users-db
     expose:
-      - 8181
+      - ${MF_USERS_GRPC_PORT}
     restart: on-failure
     environment:
-      MF_USERS_LOG_LEVEL: debug
+      MF_USERS_LOG_LEVEL: ${MF_USERS_LOG_LEVEL}
       MF_USERS_DB_HOST: users-db
-      MF_USERS_DB_PORT: 5432
-      MF_USERS_DB_USER: mainflux
-      MF_USERS_DB_PASS: mainflux
-      MF_USERS_DB: users
-      MF_USERS_HTTP_PORT: 8180
-      MF_USERS_GRPC_PORT: 8181
-      MF_USERS_SECRET: secret
+      MF_USERS_DB_PORT: ${MF_USERS_DB_PORT}
+      MF_USERS_DB_USER: ${MF_USERS_DB_USER}
+      MF_USERS_DB_PASS: ${MF_USERS_DB_PASS}
+      MF_USERS_DB: ${MF_USERS_DB}
+      MF_USERS_HTTP_PORT: ${MF_USERS_HTTP_PORT}
+      MF_USERS_GRPC_PORT: ${MF_USERS_GRPC_PORT}
+      MF_USERS_SECRET: ${MF_USERS_SECRET}
+      MF_JAEGER_URL: ${MF_JAEGER_URL}
     ports:
-      - 8180:8180
+      - ${MF_USERS_HTTP_PORT}:${MF_USERS_HTTP_PORT}
     networks:
       - mainflux-base-net
 
@@ -90,9 +92,9 @@ services:
     container_name: mainflux-things-db
     restart: on-failure
     environment:
-      POSTGRES_USER: mainflux
-      POSTGRES_PASSWORD: mainflux
-      POSTGRES_DB: things
+      POSTGRES_USER: ${MF_THINGS_DB_USER}
+      POSTGRES_PASSWORD: ${MF_THINGS_DB_PASS}
+      POSTGRES_DB: ${MF_THINGS_DB}
     networks:
       - mainflux-base-net
     volumes:
@@ -115,21 +117,35 @@ services:
       - users
     restart: on-failure
     environment:
-      MF_THINGS_LOG_LEVEL: debug
+      MF_THINGS_LOG_LEVEL: ${MF_THINGS_LOG_LEVEL}
       MF_THINGS_DB_HOST: things-db
-      MF_THINGS_DB_PORT: 5432
-      MF_THINGS_DB_USER: mainflux
-      MF_THINGS_DB_PASS: mainflux
-      MF_THINGS_DB: things
-      MF_THINGS_CACHE_URL: things-redis:6379
-      MF_THINGS_ES_URL: es-redis:6379
-      MF_THINGS_HTTP_PORT: 8182
-      MF_THINGS_GRPC_PORT: 8183
-      MF_USERS_URL: users:8181
-      MF_THINGS_SECRET: secret
+      MF_THINGS_DB_PORT: ${MF_THINGS_DB_PORT}
+      MF_THINGS_DB_USER: ${MF_THINGS_DB_USER}
+      MF_THINGS_DB_PASS: ${MF_THINGS_DB_PASS}
+      MF_THINGS_DB: ${MF_THINGS_DB}
+      MF_THINGS_CACHE_URL: things-redis:${MF_REDIS_TCP_PORT}
+      MF_THINGS_ES_URL: es-redis:${MF_REDIS_TCP_PORT}
+      MF_THINGS_HTTP_PORT: ${MF_THINGS_HTTP_PORT}
+      MF_THINGS_AUTH_HTTP_PORT: ${MF_THINGS_AUTH_HTTP_PORT}
+      MF_THINGS_AUTH_GRPC_PORT: ${MF_THINGS_AUTH_GRPC_PORT}
+      MF_USERS_URL: users:${MF_USERS_GRPC_PORT}
+      MF_THINGS_SECRET: ${MF_THINGS_SECRET}
+      MF_JAEGER_URL: ${MF_JAEGER_URL}
     ports:
-      - 8182:8182
-      - 8183:8183
+      - ${MF_THINGS_HTTP_PORT}:${MF_THINGS_HTTP_PORT}
+      - ${MF_THINGS_AUTH_HTTP_PORT}:${MF_THINGS_AUTH_HTTP_PORT}
+      - ${MF_THINGS_AUTH_GRPC_PORT}:${MF_THINGS_AUTH_GRPC_PORT}
+    networks:
+      - mainflux-base-net
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.13
+    container_name: mainflux-jaeger
+    ports:
+      - ${MF_JAEGER_PORT}:${MF_JAEGER_PORT}/udp
+      - ${MF_JAEGER_FRONTEND}:${MF_JAEGER_FRONTEND}
+      - ${MF_JAEGER_COLLECTOR}:${MF_JAEGER_COLLECTOR}
+      - ${MF_JAEGER_CONFIGS}:${MF_JAEGER_CONFIGS}
     networks:
       - mainflux-base-net
 
@@ -139,27 +155,14 @@ services:
     restart: on-failure
     depends_on:
       - nats
-    expose:
-      - 8184
     environment:
-      MF_NORMALIZER_LOG_LEVEL: debug
-      MF_NATS_URL: nats://nats:4222
-      MF_NORMALIZER_PORT: 8184
+      MF_NORMALIZER_LOG_LEVEL: ${MF_NORMALIZER_LOG_LEVEL}
+      MF_NATS_URL: ${MF_NATS_URL}
+      MF_NORMALIZER_PORT: ${MF_NORMALIZER_PORT}
     ports:
-      - 8184:8184
+      - ${MF_NORMALIZER_PORT}:${MF_NORMALIZER_PORT}
     networks:
       - mainflux-base-net
-
-  ui:
-    image: mainflux/ui:latest
-    container_name: mainflux-ui
-    restart: on-failure
-    ports:
-      - ${UI_PORT}:${UI_PORT}
-    networks:
-      - mainflux-base-net
-    environment:
-      - UI_PORT
 
   ws-adapter:
     image: mainflux/ws:latest
@@ -169,12 +172,13 @@ services:
       - nats
     restart: on-failure
     environment:
-      MF_WS_ADAPTER_LOG_LEVEL: debug
-      MF_WS_ADAPTER_PORT: 8186
-      MF_NATS_URL: nats://nats:4222
-      MF_THINGS_URL: things:8183
+      MF_WS_ADAPTER_LOG_LEVEL: ${MF_WS_ADAPTER_LOG_LEVEL}
+      MF_WS_ADAPTER_PORT: ${MF_WS_ADAPTER_PORT}
+      MF_NATS_URL: ${MF_NATS_URL}
+      MF_THINGS_URL: things:${MF_THINGS_AUTH_GRPC_PORT}
+      MF_JAEGER_URL: ${MF_JAEGER_URL}
     ports:
-      - 8186:8186
+      - ${MF_WS_ADAPTER_PORT}:${MF_WS_ADAPTER_PORT}
     networks:
       - mainflux-base-net
 
@@ -185,15 +189,14 @@ services:
       - things
       - nats
     restart: on-failure
-    expose:
-      - 8185
     environment:
       MF_HTTP_ADAPTER_LOG_LEVEL: debug
-      MF_HTTP_ADAPTER_PORT: 8185
-      MF_NATS_URL: nats://nats:4222
-      MF_THINGS_URL: things:8183
+      MF_HTTP_ADAPTER_PORT: ${MF_HTTP_ADAPTER_PORT}
+      MF_NATS_URL: ${MF_NATS_URL}
+      MF_THINGS_URL: things:${MF_THINGS_AUTH_GRPC_PORT}
+      MF_JAEGER_URL: ${MF_JAEGER_URL}
     ports:
-      - 8185:8185
+      - ${MF_HTTP_ADAPTER_PORT}:${MF_HTTP_ADAPTER_PORT}
     networks:
       - mainflux-base-net
 
@@ -206,38 +209,6 @@ services:
     volumes:
       - mainflux-es-redis-volume:/data
 
-  mqtt-redis:
-    image: redis:5.0-alpine
-    container_name: mainflux-mqtt-redis
-    restart: on-failure
-    networks:
-      - mainflux-base-net
-    volumes:
-      - mainflux-mqtt-redis-volume:/data
-
-  mqtt-adapter:
-    image: mainflux/mqtt:latest
-    container_name: mainflux-mqtt
-    depends_on:
-      - things
-      - nats
-      - mqtt-redis
-    restart: on-failure
-    environment:
-      MF_MQTT_ADAPTER_LOG_LEVEL: debug
-      MF_MQTT_INSTANCE_ID: mqtt-adapter-1
-      MF_MQTT_ADAPTER_PORT: 1883
-      MF_MQTT_ADAPTER_WS_PORT: 8880
-      MF_MQTT_ADAPTER_REDIS_HOST: mqtt-redis
-      MF_MQTT_ADAPTER_ES_HOST: es-redis
-      MF_NATS_URL: nats://nats:4222
-      MF_THINGS_URL: things:8183
-    ports:
-      - 1883:1883
-      - 8880:8880
-    networks:
-      - mainflux-base-net
-
   coap-adapter:
     image: mainflux/coap:latest
     container_name: mainflux-coap
@@ -246,11 +217,24 @@ services:
       - nats
     restart: on-failure
     environment:
-      MF_COAP_ADAPTER_LOG_LEVEL: debug
-      MF_COAP_ADAPTER_PORT: 5683
-      MF_NATS_URL: nats://nats:4222
-      MF_THINGS_URL: things:8183
+      MF_COAP_ADAPTER_LOG_LEVEL: ${MF_COAP_ADAPTER_LOG_LEVEL}
+      MF_COAP_ADAPTER_PORT: ${MF_COAP_ADAPTER_PORT}
+      MF_NATS_URL: ${MF_NATS_URL}
+      MF_THINGS_URL: things:${MF_THINGS_AUTH_GRPC_PORT}
+      MF_JAEGER_URL: ${MF_JAEGER_URL}
     ports:
-      - 5683:5683/udp
+      - ${MF_COAP_ADAPTER_PORT}:${MF_COAP_ADAPTER_PORT}/udp
+      - ${MF_COAP_ADAPTER_PORT}:${MF_COAP_ADAPTER_PORT}/tcp
     networks:
       - mainflux-base-net
+
+  ui:
+    image: mainflux/ui:latest
+    container_name: mainflux-ui
+    restart: on-failure
+    ports:
+      - ${MF_UI_PORT}:${MF_UI_PORT}
+    networks:
+      - mainflux-base-net
+    environment:
+      MF_UI_PORT: ${MF_UI_PORT}

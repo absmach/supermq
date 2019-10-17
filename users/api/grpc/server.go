@@ -1,16 +1,14 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package grpc
 
 import (
+	kitot "github.com/go-kit/kit/tracing/opentracing"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	mainflux "github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/users"
+	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -23,9 +21,9 @@ type grpcServer struct {
 }
 
 // NewServer returns new UsersServiceServer instance.
-func NewServer(svc users.Service) mainflux.UsersServiceServer {
+func NewServer(tracer opentracing.Tracer, svc users.Service) mainflux.UsersServiceServer {
 	handler := kitgrpc.NewServer(
-		identifyEndpoint(svc),
+		kitot.TraceServer(tracer, "identify")(identifyEndpoint(svc)),
 		decodeIdentifyRequest,
 		encodeIdentifyResponse,
 	)

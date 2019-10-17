@@ -1,7 +1,5 @@
-## Copyright (c) 2015-2019
-## Mainflux
-##
-## SPDX-License-Identifier: Apache-2.0
+# Copyright (c) Mainflux
+# SPDX-License-Identifier: Apache-2.0
 
 BUILD_DIR = build
 SERVICES = users things http normalizer ws coap lora influxdb-writer influxdb-reader mongodb-writer mongodb-reader cassandra-writer cassandra-reader postgres-writer postgres-reader cli bootstrap
@@ -38,7 +36,7 @@ all: $(SERVICES) mqtt
 
 clean:
 	rm -rf ${BUILD_DIR}
-	rm -rf mqtt/node_modules
+	rm -rf mqtt/aedes/node_modules
 
 cleandocker:
 	# Stop all containers (if running)
@@ -83,10 +81,13 @@ docker_ui:
 docker_mqtt:
 	# MQTT Docker build must be done from root dir because it copies .proto files
 ifeq ($(GOARCH), arm)
-	docker build --tag=mainflux/mqtt-arm -f mqtt/Dockerfile.arm .
+	docker build --tag=mainflux/mqtt-arm -f mqtt/aedes/Dockerfile.arm .
 else
-	docker build --tag=mainflux/mqtt-amd64 -f mqtt/Dockerfile .
+	docker build --tag=mainflux/mqtt-amd64 -f mqtt/aedes/Dockerfile .
 endif
+
+docker_mqtt_verne:
+	docker build --tag=mainflux/mqtt-verne -f mqtt/verne/Dockerfile .
 
 dockers: $(DOCKERS) docker_ui docker_mqtt
 
@@ -96,7 +97,7 @@ ui:
 	$(MAKE) -C ui
 
 mqtt:
-	cd mqtt && npm install
+	cd mqtt/aedes && npm install
 
 define docker_push
 	for svc in $(SERVICES); do \
@@ -139,17 +140,24 @@ release:
 	docker tag mainflux/ui mainflux/ui-$(GOARCH):$(version)
 	docker tag mainflux/mqtt mainflux/mqtt-$(GOARCH):$(version)
 	$(call docker_push,$(GOARCH),$(version))
+	$(call docker_manifest,$(version))
 
 rundev:
 	cd scripts && ./run.sh
 
 run:
-	docker-compose -f docker/docker-compose.yml up
+	docker-compose -f docker/docker-compose.yml -f docker/aedes.yml up
 
 runui:
 	$(MAKE) -C ui run
 
 runlora:
-	docker-compose -f docker/docker-compose.yml up -d
-	docker-compose -f docker/addons/influxdb-writer/docker-compose.yml up -d
-	docker-compose -f docker/addons/lora-adapter/docker-compose.yml up
+	docker-compose \
+		-f docker/docker-compose.yml \
+		-f docker/aedes.yml up \
+		-f docker/addons/influxdb-writer/docker-compose.yml \
+		-f docker/addons/lora-adapter/docker-compose.yml up \
+
+# Run all Mainflux core services except distributed tracing system - Jaeger. Recommended on gateways:
+rungw:
+	MF_JAEGER_URL= docker-compose -f docker/docker-compose.yml -f docker/aedes.yml up --scale jaeger=0

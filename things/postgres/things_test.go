@@ -1,13 +1,10 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package postgres_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -25,7 +22,8 @@ const maxNameSize = 1024
 var invalidName = strings.Repeat("m", maxNameSize+1)
 
 func TestThingSave(t *testing.T) {
-	thingRepo := postgres.NewThingRepository(db)
+	dbMiddleware := postgres.NewDatabase(db)
+	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	email := "thing-save@example.com"
 
@@ -89,13 +87,14 @@ func TestThingSave(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, err := thingRepo.Save(tc.thing)
+		_, err := thingRepo.Save(context.Background(), tc.thing)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
 func TestThingUpdate(t *testing.T) {
-	thingRepo := postgres.NewThingRepository(db)
+	dbMiddleware := postgres.NewDatabase(db)
+	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	email := "thing-update@example.com"
 	validName := "mfx_device"
@@ -111,7 +110,7 @@ func TestThingUpdate(t *testing.T) {
 		Key:   thkey,
 	}
 
-	id, _ := thingRepo.Save(thing)
+	id, _ := thingRepo.Save(context.Background(), thing)
 	thing.ID = id
 
 	nonexistentThingID, err := uuid.New().ID()
@@ -174,7 +173,7 @@ func TestThingUpdate(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := thingRepo.Update(tc.thing)
+		err := thingRepo.Update(context.Background(), tc.thing)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
@@ -182,7 +181,8 @@ func TestThingUpdate(t *testing.T) {
 func TestUpdateKey(t *testing.T) {
 	email := "thing-update=key@example.com"
 	newKey := "new-key"
-	thingRepo := postgres.NewThingRepository(db)
+	dbMiddleware := postgres.NewDatabase(db)
+	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	ethid, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -194,7 +194,7 @@ func TestUpdateKey(t *testing.T) {
 		Owner: email,
 		Key:   ethkey,
 	}
-	existingID, _ := thingRepo.Save(existingThing)
+	existingID, _ := thingRepo.Save(context.Background(), existingThing)
 	existingThing.ID = existingID
 
 	thid, err := uuid.New().ID()
@@ -208,7 +208,7 @@ func TestUpdateKey(t *testing.T) {
 		Key:   thkey,
 	}
 
-	id, _ := thingRepo.Save(thing)
+	id, _ := thingRepo.Save(context.Background(), thing)
 	thing.ID = id
 
 	nonexistentThingID, err := uuid.New().ID()
@@ -259,14 +259,15 @@ func TestUpdateKey(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := thingRepo.UpdateKey(tc.owner, tc.id, tc.key)
+		err := thingRepo.UpdateKey(context.Background(), tc.owner, tc.id, tc.key)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
 func TestSingleThingRetrieval(t *testing.T) {
 	email := "thing-single-retrieval@example.com"
-	thingRepo := postgres.NewThingRepository(db)
+	dbMiddleware := postgres.NewDatabase(db)
+	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	thid, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -279,7 +280,7 @@ func TestSingleThingRetrieval(t *testing.T) {
 		Key:   thkey,
 	}
 
-	id, _ := thingRepo.Save(thing)
+	id, _ := thingRepo.Save(context.Background(), thing)
 	thing.ID = id
 
 	nonexistentThingID, err := uuid.New().ID()
@@ -313,14 +314,15 @@ func TestSingleThingRetrieval(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		_, err := thingRepo.RetrieveByID(tc.owner, tc.ID)
+		_, err := thingRepo.RetrieveByID(context.Background(), tc.owner, tc.ID)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
 
 func TestThingRetrieveByKey(t *testing.T) {
 	email := "thing-retrieved-by-key@example.com"
-	thingRepo := postgres.NewThingRepository(db)
+	dbMiddleware := postgres.NewDatabase(db)
+	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	thid, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -333,7 +335,7 @@ func TestThingRetrieveByKey(t *testing.T) {
 		Key:   thkey,
 	}
 
-	id, _ := thingRepo.Save(thing)
+	id, _ := thingRepo.Save(context.Background(), thing)
 	thing.ID = id
 
 	cases := map[string]struct {
@@ -354,7 +356,7 @@ func TestThingRetrieveByKey(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		id, err := thingRepo.RetrieveByKey(tc.key)
+		id, err := thingRepo.RetrieveByKey(context.Background(), tc.key)
 		assert.Equal(t, tc.ID, id, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.ID, id))
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
@@ -363,8 +365,12 @@ func TestThingRetrieveByKey(t *testing.T) {
 func TestMultiThingRetrieval(t *testing.T) {
 	email := "thing-multi-retrieval@example.com"
 	name := "mainflux"
+	metadata := make(map[string]interface{})
+	metadata["serial"] = "123456"
+	metadata["type"] = "test"
 	idp := uuid.New()
-	thingRepo := postgres.NewThingRepository(db)
+	dbMiddleware := postgres.NewDatabase(db)
+	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	n := uint64(10)
 	for i := uint64(0); i < n; i++ {
@@ -374,9 +380,10 @@ func TestMultiThingRetrieval(t *testing.T) {
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 		th := things.Thing{
-			Owner: email,
-			ID:    thid,
-			Key:   thkey,
+			Owner:    email,
+			ID:       thid,
+			Key:      thkey,
+			Metadata: metadata,
 		}
 
 		// Create first two Things with name.
@@ -384,16 +391,17 @@ func TestMultiThingRetrieval(t *testing.T) {
 			th.Name = name
 		}
 
-		thingRepo.Save(th)
+		thingRepo.Save(context.Background(), th)
 	}
 
 	cases := map[string]struct {
-		owner  string
-		offset uint64
-		limit  uint64
-		name   string
-		size   uint64
-		total  uint64
+		owner    string
+		offset   uint64
+		limit    uint64
+		name     string
+		size     uint64
+		total    uint64
+		metadata map[string]interface{}
 	}{
 		"retrieve all things with existing owner": {
 			owner:  email,
@@ -432,10 +440,18 @@ func TestMultiThingRetrieval(t *testing.T) {
 			size:   0,
 			total:  0,
 		},
+		"retrieve things with metadata": {
+			owner:    email,
+			offset:   0,
+			limit:    n,
+			size:     n,
+			total:    n,
+			metadata: metadata,
+		},
 	}
 
 	for desc, tc := range cases {
-		page, err := thingRepo.RetrieveAll(tc.owner, tc.offset, tc.limit, tc.name)
+		page, err := thingRepo.RetrieveAll(context.Background(), tc.owner, tc.offset, tc.limit, tc.name, tc.metadata)
 		size := uint64(len(page.Things))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
 		assert.Equal(t, tc.total, page.Total, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.total, page.Total))
@@ -446,15 +462,16 @@ func TestMultiThingRetrieval(t *testing.T) {
 func TestMultiThingRetrievalByChannel(t *testing.T) {
 	email := "thing-multi-retrieval-by-channel@example.com"
 	idp := uuid.New()
-	thingRepo := postgres.NewThingRepository(db)
-	channelRepo := postgres.NewChannelRepository(db)
+	dbMiddleware := postgres.NewDatabase(db)
+	thingRepo := postgres.NewThingRepository(dbMiddleware)
+	channelRepo := postgres.NewChannelRepository(dbMiddleware)
 
 	n := uint64(10)
 
 	chid, err := idp.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	cid, err := channelRepo.Save(things.Channel{
+	cid, err := channelRepo.Save(context.Background(), things.Channel{
 		ID:    chid,
 		Owner: email,
 	})
@@ -470,9 +487,9 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 			Key:   thkey,
 		}
 
-		tid, err := thingRepo.Save(th)
+		tid, err := thingRepo.Save(context.Background(), th)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-		err = channelRepo.Connect(email, cid, tid)
+		err = channelRepo.Connect(context.Background(), email, cid, tid)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	}
 
@@ -526,7 +543,7 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		page, err := thingRepo.RetrieveByChannel(tc.owner, tc.channel, tc.offset, tc.limit)
+		page, err := thingRepo.RetrieveByChannel(context.Background(), tc.owner, tc.channel, tc.offset, tc.limit)
 		size := uint64(len(page.Things))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
@@ -535,7 +552,8 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 
 func TestThingRemoval(t *testing.T) {
 	email := "thing-removal@example.com"
-	thingRepo := postgres.NewThingRepository(db)
+	dbMiddleware := postgres.NewDatabase(db)
+	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	thid, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -548,16 +566,16 @@ func TestThingRemoval(t *testing.T) {
 		Key:   thkey,
 	}
 
-	id, _ := thingRepo.Save(thing)
+	id, _ := thingRepo.Save(context.Background(), thing)
 	thing.ID = id
 
 	// show that the removal works the same for both existing and non-existing
 	// (removed) thing
 	for i := 0; i < 2; i++ {
-		err := thingRepo.Remove(email, thing.ID)
+		err := thingRepo.Remove(context.Background(), email, thing.ID)
 		require.Nil(t, err, fmt.Sprintf("#%d: failed to remove thing due to: %s", i, err))
 
-		_, err = thingRepo.RetrieveByID(email, thing.ID)
+		_, err = thingRepo.RetrieveByID(context.Background(), email, thing.ID)
 		require.Equal(t, things.ErrNotFound, err, fmt.Sprintf("#%d: expected %s got %s", i, things.ErrNotFound, err))
 	}
 }

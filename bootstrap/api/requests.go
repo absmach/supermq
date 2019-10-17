@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package api
 
@@ -76,7 +72,7 @@ func (req updateReq) validate() error {
 
 type updateCertReq struct {
 	key        string
-	thingKey   string
+	thingID    string
 	ClientCert string `json:"client_cert"`
 	ClientKey  string `json:"client_key"`
 	CACert     string `json:"ca_cert"`
@@ -87,7 +83,7 @@ func (req updateCertReq) validate() error {
 		return bootstrap.ErrUnauthorizedAccess
 	}
 
-	if req.thingKey == "" {
+	if req.thingID == "" {
 		return bootstrap.ErrNotFound
 	}
 

@@ -1,19 +1,19 @@
-//
-// Copyright (c) 2019
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package main
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
+	"time"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/jmoiron/sqlx"
@@ -22,8 +22,10 @@ import (
 	"github.com/mainflux/mainflux/readers"
 	"github.com/mainflux/mainflux/readers/api"
 	"github.com/mainflux/mainflux/readers/postgres"
-	thingsapi "github.com/mainflux/mainflux/things/api/grpc"
+	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
+	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
+	jconfig "github.com/uber/jaeger-client-go/config"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -46,6 +48,8 @@ const (
 	defDBSSLCert     = ""
 	defDBSSLKey      = ""
 	defDBSSLRootCert = ""
+	defJaegerURL     = ""
+	defThingsTimeout = "1" // in seconds
 
 	envThingsURL     = "MF_THINGS_URL"
 	envLogLevel      = "MF_POSTGRES_READER_LOG_LEVEL"
@@ -61,15 +65,19 @@ const (
 	envDBSSLCert     = "MF_POSTGRES_READER_DB_SSL_CERT"
 	envDBSSLKey      = "MF_POSTGRES_READER_DB_SSL_KEY"
 	envDBSSLRootCert = "MF_POSTGRES_READER_DB_SSL_ROOT_CERT"
+	envJaegerURL     = "MF_JAEGER_URL"
+	envThingsTimeout = "MF_POSTGRES_READER_THINGS_TIMEOUT"
 )
 
 type config struct {
-	thingsURL string
-	logLevel  string
-	port      string
-	clientTLS bool
-	caCerts   string
-	dbConfig  postgres.Config
+	thingsURL     string
+	logLevel      string
+	port          string
+	clientTLS     bool
+	caCerts       string
+	dbConfig      postgres.Config
+	jaegerURL     string
+	thingsTimeout time.Duration
 }
 
 func main() {
@@ -83,7 +91,10 @@ func main() {
 	conn := connectToThings(cfg, logger)
 	defer conn.Close()
 
-	tc := thingsapi.NewClient(conn)
+	thingsTracer, thingsCloser := initJaeger("things", cfg.jaegerURL, logger)
+	defer thingsCloser.Close()
+
+	tc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
 
 	db := connectToDB(cfg.dbConfig, logger)
 	defer db.Close()
@@ -117,11 +128,18 @@ func loadConfig() config {
 		SSLRootCert: mainflux.Env(envDBSSLRootCert, defDBSSLRootCert),
 	}
 
+	timeout, err := strconv.ParseInt(mainflux.Env(envThingsTimeout, defThingsTimeout), 10, 64)
+	if err != nil {
+		log.Fatalf("Invalid %s value: %s", envThingsTimeout, err.Error())
+	}
+
 	return config{
-		thingsURL: mainflux.Env(envThingsURL, defThingsURL),
-		logLevel:  mainflux.Env(envLogLevel, defLogLevel),
-		port:      mainflux.Env(envPort, defPort),
-		dbConfig:  dbConfig,
+		thingsURL:     mainflux.Env(envThingsURL, defThingsURL),
+		logLevel:      mainflux.Env(envLogLevel, defLogLevel),
+		port:          mainflux.Env(envPort, defPort),
+		dbConfig:      dbConfig,
+		jaegerURL:     mainflux.Env(envJaegerURL, defJaegerURL),
+		thingsTimeout: time.Duration(timeout) * time.Second,
 	}
 }
 
@@ -132,6 +150,30 @@ func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sqlx.DB {
 		os.Exit(1)
 	}
 	return db
+}
+
+func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, io.Closer) {
+	if url == "" {
+		return opentracing.NoopTracer{}, ioutil.NopCloser(nil)
+	}
+
+	tracer, closer, err := jconfig.Configuration{
+		ServiceName: svcName,
+		Sampler: &jconfig.SamplerConfig{
+			Type:  "const",
+			Param: 1,
+		},
+		Reporter: &jconfig.ReporterConfig{
+			LocalAgentHostPort: url,
+			LogSpans:           true,
+		},
+	}.NewTracer()
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to init Jaeger client: %s", err))
+		os.Exit(1)
+	}
+
+	return tracer, closer
 }
 
 func connectToThings(cfg config, logger logger.Logger) *grpc.ClientConn {

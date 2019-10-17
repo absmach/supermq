@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package postgres
 
@@ -58,6 +54,12 @@ func migrateDB(db *sqlx.DB) error {
 					)`,
 				},
 				Down: []string{"DROP TABLE users"},
+			},
+			{
+				Id: "users_2",
+				Up: []string{
+					`ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS metadata JSONB`,
+				},
 			},
 		},
 	}

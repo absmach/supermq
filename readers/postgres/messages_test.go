@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2019
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package postgres_test
 
@@ -140,6 +136,18 @@ func TestMessageReadAll(t *testing.T) {
 				Offset:   0,
 				Limit:    uint64(len(subtopicMsgs)),
 				Messages: subtopicMsgs,
+			},
+		},
+		"read message with publisher/protocols": {
+			chanID: chanID.String(),
+			offset: 0,
+			limit:  msgsNum,
+			query:  map[string]string{"publisher": pubID.String(), "protocol": "mqtt"},
+			page: readers.MessagesPage{
+				Total:    msgsNum,
+				Offset:   0,
+				Limit:    msgsNum,
+				Messages: messages,
 			},
 		},
 	}

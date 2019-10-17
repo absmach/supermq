@@ -17,15 +17,16 @@ for building complex IoT solutions.
 For more details, check out the [official documentation][docs].
 
 Mainflux is member of the [Linux Foundation][lf] and an active contributor
-to the [EdgeX Foundry][edgex] project. It has been made with :heart: by [Mainflux company][company],
+to the [EdgeX Foundry][edgex] project. It has been made with :heart: by [Mainflux Labs company][company],
 which maintains the project and offers professional services around it.
 
 ## Features
-- Multi-protocol connectivity and protocol bridging (HTTP, MQTT, WebSocket and CoAP)
-- Device management and provisioning
+- Multi-protocol connectivity and bridging (HTTP, MQTT, WebSocket and CoAP)
+- Device management and provisioning (Zero Touch provisioning)
+- Mutual TLS Authentication (mTLS) using X.509 Certificates
 - Fine-grained access control
-- Storage support (Cassandra, InfluxDB and MongoDB)
-- Platform logging and instrumentation support
+- Message persistence (Cassandra, InfluxDB, MongoDB and PostgresSQL)
+- Platform logging and instrumentation support (Grafana, Prometheus and OpenTracing)
 - Event sourcing
 - Container-based deployment using [Docker][docker] and [Kubernetes][kubernetes]
 - [LoRaWAN][lora] network integration
@@ -76,7 +77,7 @@ helped with crafting initial implementation and continuously worked on the proje
 
 Besides them, Mainflux is constantly improved and actively
 developed by [@anovakovic01][alex], [@dusanb94][dusan], [@srados][sava],
-[@gsaleh][george], [@blokovi][iva], [@chombium][kole] and a large set of contributors.
+[@gsaleh][george], [@blokovi][iva], [@chombium][kole], [@mteodor][mirko] and a large set of contributors.
 
 Maintainers are listed in [MAINTAINERS](MAINTAINERS) file.
 
@@ -140,3 +141,4 @@ Note that the best way to grab our attention is by sending PRs :sunglasses:.
 [iva]: https://github.com/blokovi
 [kole]: https://github.com/chombium
 [dusanm]: https://github.com/malidukica
+[mirko]: https://github.com/mteodor

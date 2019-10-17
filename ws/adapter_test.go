@@ -1,13 +1,10 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package ws_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -67,7 +64,7 @@ func TestPublish(t *testing.T) {
 		}(tc.desc, tc.msg)
 
 		// Check if publish succeeded.
-		err := svc.Publish(tc.msg)
+		err := svc.Publish(context.Background(), "", tc.msg)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }

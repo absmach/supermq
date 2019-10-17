@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package sdk_test
 
@@ -15,6 +11,7 @@ import (
 
 	log "github.com/mainflux/mainflux/logger"
 	sdk "github.com/mainflux/mainflux/sdk/go"
+	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 
 	httpapi "github.com/mainflux/mainflux/users/api/http"
@@ -37,7 +34,7 @@ func newUserService() users.Service {
 
 func newUserServer(svc users.Service) *httptest.Server {
 	logger, _ := log.New(os.Stdout, log.Info.String())
-	mux := httpapi.MakeHandler(svc, logger)
+	mux := httpapi.MakeHandler(svc, mocktracer.New(), logger)
 	return httptest.NewServer(mux)
 }
 

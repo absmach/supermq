@@ -1,15 +1,9 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package grpc
 
-import (
-	"github.com/mainflux/mainflux/users"
-)
+import "github.com/mainflux/mainflux/users"
 
 type identityReq struct {
 	token string

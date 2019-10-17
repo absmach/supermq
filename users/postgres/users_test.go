@@ -1,13 +1,10 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package postgres_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -43,10 +40,11 @@ func TestUserSave(t *testing.T) {
 		},
 	}
 
-	repo := postgres.New(db)
+	dbMiddleware := postgres.NewDatabase(db)
+	repo := postgres.New(dbMiddleware)
 
 	for _, tc := range cases {
-		err := repo.Save(tc.user)
+		err := repo.Save(context.Background(), tc.user)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
@@ -54,8 +52,9 @@ func TestUserSave(t *testing.T) {
 func TestSingleUserRetrieval(t *testing.T) {
 	email := "user-retrieval@example.com"
 
-	repo := postgres.New(db)
-	err := repo.Save(users.User{
+	dbMiddleware := postgres.NewDatabase(db)
+	repo := postgres.New(dbMiddleware)
+	err := repo.Save(context.Background(), users.User{
 		Email:    email,
 		Password: "pass",
 	})
@@ -70,7 +69,7 @@ func TestSingleUserRetrieval(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		_, err := repo.RetrieveByID(tc.email)
+		_, err := repo.RetrieveByID(context.Background(), tc.email)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }

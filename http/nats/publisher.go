@@ -1,14 +1,11 @@
-//
-// Copyright (c) 2018
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 // Package nats contains NATS message publisher implementation.
 package nats
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
@@ -26,10 +23,10 @@ type natsPublisher struct {
 
 // NewMessagePublisher instantiates NATS message publisher.
 func NewMessagePublisher(nc *broker.Conn) mainflux.MessagePublisher {
-	return &natsPublisher{nc}
+	return &natsPublisher{nc: nc}
 }
 
-func (pub *natsPublisher) Publish(msg mainflux.RawMessage) error {
+func (pub *natsPublisher) Publish(_ context.Context, _ string, msg mainflux.RawMessage) error {
 	data, err := proto.Marshal(&msg)
 	if err != nil {
 		return err
