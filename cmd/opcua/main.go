@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	defHTTPPort          = "8180"
+	defHTTPPort          = "8188"
 	defOPCServerURI      = "opc.tcp://opcua.rocks:4840"
 	defOPCNodeNamespace  = "0"
 	defOPCNodeIdentifier = "2256"
@@ -46,23 +46,23 @@ const (
 	defRouteMapPass      = ""
 	defRouteMapDB        = "0"
 
-	envHTTPPort          = "MF_OPC_ADAPTER_HTTP_PORT"
-	envOPCServerURI      = "MF_OPC_ADAPTER_SERVER_URI"
-	envOPCNodeNamespace  = "MF_OPC_ADAPTER_NODE_NAMESPACE"
-	envOPCNodeIdentifier = "MF_OPC_ADAPTER_NODE_IDENTIFIER"
-	envOPCPolicy         = "MF_OPC_ADAPTER_POLICY"
-	envOPCMode           = "MF_OPC_ADAPTER_MODE"
-	envOPCCertFile       = "MF_OPC_ADAPTER_CERT_FILE"
-	envOPCKeyFile        = "MF_OPC_ADAPTER_KEY_FILE"
+	envHTTPPort          = "MF_OPCUA_ADAPTER_HTTP_PORT"
+	envOPCServerURI      = "MF_OPCUA_ADAPTER_SERVER_URI"
+	envOPCNodeNamespace  = "MF_OPCUA_ADAPTER_NODE_NAMESPACE"
+	envOPCNodeIdentifier = "MF_OPCUA_ADAPTER_NODE_IDENTIFIER"
+	envOPCPolicy         = "MF_OPCUA_ADAPTER_POLICY"
+	envOPCMode           = "MF_OPCUA_ADAPTER_MODE"
+	envOPCCertFile       = "MF_OPCUA_ADAPTER_CERT_FILE"
+	envOPCKeyFile        = "MF_OPCUA_ADAPTER_KEY_FILE"
 	envNatsURL           = "MF_NATS_URL"
 	envLogLevel          = "MF_LORA_ADAPTER_LOG_LEVEL"
 	envESURL             = "MF_THINGS_ES_URL"
 	envESPass            = "MF_THINGS_ES_PASS"
 	envESDB              = "MF_THINGS_ES_DB"
-	envInstanceName      = "MF_OPC_ADAPTER_INSTANCE_NAME"
-	envRouteMapURL       = "MF_OPC_ADAPTER_ROUTEMAP_URL"
-	envRouteMapPass      = "MF_OPC_ADAPTER_ROUTEMAP_PASS"
-	envRouteMapDB        = "MF_OPC_ADAPTER_ROUTEMAP_DB"
+	envInstanceName      = "MF_OPCUA_ADAPTER_INSTANCE_NAME"
+	envRouteMapURL       = "MF_OPCUA_ADAPTER_ROUTEMAP_URL"
+	envRouteMapPass      = "MF_OPCUA_ADAPTER_ROUTEMAP_PASS"
+	envRouteMapDB        = "MF_OPCUA_ADAPTER_ROUTEMAP_DB"
 
 	thingsRMPrefix   = "thing"
 	channelsRMPrefix = "channel"
@@ -202,8 +202,8 @@ func subscribeToOpcServer(svc opcua.Service, cfg opcua.Config, logger logger.Log
 	}
 }
 
-func subscribeToThingsES(svc opcua.Service, client *r.Client, consumer string, logger logger.Logger) {
-	eventStore := redis.NewEventStore(svc, client, consumer, logger)
+func subscribeToThingsES(svc opcua.Service, client *r.Client, prefix string, logger logger.Logger) {
+	eventStore := redis.NewEventStore(svc, client, prefix, logger)
 	if err := eventStore.Subscribe("mainflux.things"); err != nil {
 		logger.Warn(fmt.Sprintf("Failed to subscribe to Redis event sourcing: %s", err))
 	}
