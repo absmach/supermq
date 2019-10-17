@@ -58,7 +58,7 @@ go get github.com/mainflux/mainflux
 cd $GOPATH/src/github.com/mainflux/mainflux
 
 # compile the opc adapter
-make opc
+make opcua
 
 # copy binary to bin
 make install
@@ -70,10 +70,10 @@ MF_OPC_ADAPTER_LOG_LEVEL=[OPC-UA Adapter Log Level] MF_NATS_URL=[NATS instance U
 ### Using docker-compose
 
 This service can be deployed using docker containers.
-Docker compose file is available in `<project_root>/docker/addons/opc-adapter/docker-compose.yml`. In order to run Mainflux opc-adapter, execute the following command:
+Docker compose file is available in `<project_root>/docker/addons/opcua-adapter/docker-compose.yml`. In order to run Mainflux opcua-adapter, execute the following command:
 
 ```bash
-docker-compose -f docker/addons/opc-adapter/docker-compose.yml up -d
+docker-compose -f docker/addons/opcua-adapter/docker-compose.yml up -d
 ```
 
 ## Usage

@@ -10,7 +10,7 @@ import (
 	"fmt"
 
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/opc"
+	opcua "github.com/mainflux/mainflux/opcua"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -22,13 +22,13 @@ type Subscriber interface {
 }
 
 type broker struct {
-	svc    opc.Service
+	svc    opcua.Service
 	client mqtt.Client
 	logger logger.Logger
 }
 
 // NewBroker returns new MQTT broker instance.
-func NewBroker(svc opc.Service, client mqtt.Client, log logger.Logger) Subscriber {
+func NewBroker(svc opcua.Service, client mqtt.Client, log logger.Logger) Subscriber {
 	return broker{
 		svc:    svc,
 		client: client,
@@ -48,7 +48,7 @@ func (b broker) Subscribe(subject string) error {
 
 // handleMsg triggered when new message is received on OPC-UA MQTT broker
 func (b broker) handleMsg(c mqtt.Client, msg mqtt.Message) {
-	m := opc.Message{}
+	m := opcua.Message{}
 	if err := json.Unmarshal(msg.Payload(), &m); err != nil {
 		b.logger.Warn(fmt.Sprintf("Failed to Unmarshal message: %s", err.Error()))
 		return

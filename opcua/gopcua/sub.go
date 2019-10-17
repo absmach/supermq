@@ -9,26 +9,26 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gopcua/opcua"
-	"github.com/gopcua/opcua/ua"
+	opcuaGopcua "github.com/gopcua/opcua"
+	uaGopcua "github.com/gopcua/opcua/ua"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/opc"
+	"github.com/mainflux/mainflux/opcua"
 )
 
 // Subscriber represents the OPC-UA Server client.
 type Subscriber interface {
 	// Subscribes to given NodeID and receives events.
-	Subscribe(opc.Config) error
+	Subscribe(opcua.Config) error
 }
 
 type client struct {
 	ctx    context.Context
-	svc    opc.Service
+	svc    opcua.Service
 	logger logger.Logger
 }
 
-// NewClient returns new OPC client instance.
-func NewClient(ctx context.Context, svc opc.Service, log logger.Logger) Subscriber {
+// NewClient returns new OPC-UA client instance.
+func NewClient(ctx context.Context, svc opcua.Service, log logger.Logger) Subscriber {
 	return client{
 		ctx:    ctx,
 		svc:    svc,
@@ -37,33 +37,33 @@ func NewClient(ctx context.Context, svc opc.Service, log logger.Logger) Subscrib
 }
 
 // Subscribe subscribes to the OPC-UA Server.
-func (b client) Subscribe(cfg opc.Config) error {
-	endpoints, err := opcua.GetEndpoints(cfg.ServerURI)
+func (b client) Subscribe(cfg opcua.Config) error {
+	endpoints, err := opcuaGopcua.GetEndpoints(cfg.ServerURI)
 	if err != nil {
-		b.logger.Error(fmt.Sprintf("Failed to fetch OPC server endpoints: %s", err.Error()))
+		b.logger.Error(fmt.Sprintf("Failed to fetch OPC-UA server endpoints: %s", err.Error()))
 	}
 
-	ep := opcua.SelectEndpoint(endpoints, cfg.Policy, ua.MessageSecurityModeFromString(cfg.Mode))
+	ep := opcuaGopcua.SelectEndpoint(endpoints, cfg.Policy, uaGopcua.MessageSecurityModeFromString(cfg.Mode))
 	if ep == nil {
 		b.logger.Error("Failed to find suitable endpoint")
 	}
 
-	opts := []opcua.Option{
-		opcua.SecurityPolicy(cfg.Policy),
-		opcua.SecurityModeString(cfg.Mode),
-		opcua.CertificateFile(cfg.CertFile),
-		opcua.PrivateKeyFile(cfg.KeyFile),
-		opcua.AuthAnonymous(),
-		opcua.SecurityFromEndpoint(ep, ua.UserTokenTypeAnonymous),
+	opts := []opcuaGopcua.Option{
+		opcuaGopcua.SecurityPolicy(cfg.Policy),
+		opcuaGopcua.SecurityModeString(cfg.Mode),
+		opcuaGopcua.CertificateFile(cfg.CertFile),
+		opcuaGopcua.PrivateKeyFile(cfg.KeyFile),
+		opcuaGopcua.AuthAnonymous(),
+		opcuaGopcua.SecurityFromEndpoint(ep, uaGopcua.UserTokenTypeAnonymous),
 	}
 
-	c := opcua.NewClient(ep.EndpointURL, opts...)
+	c := opcuaGopcua.NewClient(ep.EndpointURL, opts...)
 	if errC := c.Connect(b.ctx); err != nil {
 		b.logger.Error(errC.Error())
 	}
 	defer c.Close()
 
-	sub, err := c.Subscribe(&opcua.SubscriptionParameters{
+	sub, err := c.Subscribe(&opcuaGopcua.SubscriptionParameters{
 		Interval: 2000 * time.Millisecond,
 	})
 	if err != nil {
@@ -80,18 +80,18 @@ func (b client) Subscribe(cfg opc.Config) error {
 	return nil
 }
 
-func (b client) runHandler(sub *opcua.Subscription, cfg opc.Config) error {
+func (b client) runHandler(sub *opcuaGopcua.Subscription, cfg opcua.Config) error {
 	nid := fmt.Sprintf("ns=%s;i=%s", cfg.NodeNamespace, cfg.NodeIdintifier)
-	nodeID, err := ua.ParseNodeID(nid)
+	nodeID, err := uaGopcua.ParseNodeID(nid)
 	if err != nil {
 		b.logger.Error(err.Error())
 	}
 
 	// arbitrary client handle for the monitoring item
 	handle := uint32(42)
-	miCreateRequest := opcua.NewMonitoredItemCreateRequestWithDefaults(nodeID, ua.AttributeIDValue, handle)
-	res, err := sub.Monitor(ua.TimestampsToReturnBoth, miCreateRequest)
-	if err != nil || res.Results[0].StatusCode != ua.StatusOK {
+	miCreateRequest := opcuaGopcua.NewMonitoredItemCreateRequestWithDefaults(nodeID, uaGopcua.AttributeIDValue, handle)
+	res, err := sub.Monitor(uaGopcua.TimestampsToReturnBoth, miCreateRequest)
+	if err != nil || res.Results[0].StatusCode != uaGopcua.StatusOK {
 		b.logger.Error(err.Error())
 	}
 
@@ -108,10 +108,10 @@ func (b client) runHandler(sub *opcua.Subscription, cfg opc.Config) error {
 			}
 
 			switch x := res.Value.(type) {
-			case *ua.DataChangeNotification:
+			case *uaGopcua.DataChangeNotification:
 				for _, item := range x.MonitoredItems {
 					// Publish on Mainflux NATS broker
-					msg := opc.Message{
+					msg := opcua.Message{
 						Namespace: cfg.NodeNamespace,
 						ID:        cfg.NodeIdintifier,
 						Data:      item.Value.Value.Float(),

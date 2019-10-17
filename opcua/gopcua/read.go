@@ -9,26 +9,26 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/gopcua/opcua"
-	"github.com/gopcua/opcua/ua"
+	opcuaGopcua "github.com/gopcua/opcua"
+	uaGopcua "github.com/gopcua/opcua/ua"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/opc"
+	"github.com/mainflux/mainflux/opcua"
 )
 
-// Reader represents the OPC client.
+// Reader represents the OPC-UA client.
 type Reader interface {
 	// Read given OPC-UA Server NodeID (Namespace + ID).
-	Read(opc.Config) error
+	Read(opcua.Config) error
 }
 
 type reader struct {
 	ctx    context.Context
-	svc    opc.Service
+	svc    opcua.Service
 	logger logger.Logger
 }
 
-// NewReader returns new OPC reader instance.
-func NewReader(ctx context.Context, svc opc.Service, log logger.Logger) Reader {
+// NewReader returns new OPC-UA reader instance.
+func NewReader(ctx context.Context, svc opcua.Service, log logger.Logger) Reader {
 	return reader{
 		ctx:    ctx,
 		svc:    svc,
@@ -37,37 +37,37 @@ func NewReader(ctx context.Context, svc opc.Service, log logger.Logger) Reader {
 }
 
 // Read reads a given OPC-UA Server endpoint.
-func (r reader) Read(cfg opc.Config) error {
-	c := opcua.NewClient(cfg.ServerURI, opcua.SecurityMode(ua.MessageSecurityModeNone))
+func (r reader) Read(cfg opcua.Config) error {
+	c := opcuaGopcua.NewClient(cfg.ServerURI, opcuaGopcua.SecurityMode(uaGopcua.MessageSecurityModeNone))
 	if err := c.Connect(r.ctx); err != nil {
 		log.Fatal(err)
 	}
 	defer c.Close()
 
 	nid := fmt.Sprintf("ns=%s;i=%s", cfg.NodeNamespace, cfg.NodeIdintifier)
-	id, err := ua.ParseNodeID(nid)
+	id, err := uaGopcua.ParseNodeID(nid)
 	if err != nil {
 		r.logger.Error(fmt.Sprintf("invalid node id: %v", err))
 	}
 
-	req := &ua.ReadRequest{
+	req := &uaGopcua.ReadRequest{
 		MaxAge: 2000,
-		NodesToRead: []*ua.ReadValueID{
-			&ua.ReadValueID{NodeID: id},
+		NodesToRead: []*uaGopcua.ReadValueID{
+			&uaGopcua.ReadValueID{NodeID: id},
 		},
-		TimestampsToReturn: ua.TimestampsToReturnBoth,
+		TimestampsToReturn: uaGopcua.TimestampsToReturnBoth,
 	}
 
 	resp, err := c.Read(req)
 	if err != nil {
 		r.logger.Error(fmt.Sprintf("Read failed: %s", err))
 	}
-	if resp.Results[0].Status != ua.StatusOK {
+	if resp.Results[0].Status != uaGopcua.StatusOK {
 		r.logger.Error(fmt.Sprintf("Status not OK: %v", resp.Results[0].Status))
 	}
 
 	// Publish on Mainflux NATS broker
-	msg := opc.Message{
+	msg := opcua.Message{
 		Namespace: cfg.NodeNamespace,
 		ID:        cfg.NodeIdintifier,
 		Data:      resp.Results[0].Value.Float(),

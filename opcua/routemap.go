@@ -1,7 +1,7 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-package opc
+package opcua
 
 // RouteMapRepository store route map between OPC-UA App Server and Mainflux
 type RouteMapRepository interface {

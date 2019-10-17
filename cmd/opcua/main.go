@@ -16,13 +16,13 @@ import (
 	r "github.com/go-redis/redis"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/opc"
-	"github.com/mainflux/mainflux/opc/api"
-	"github.com/mainflux/mainflux/opc/gopcua"
-	pub "github.com/mainflux/mainflux/opc/nats"
+	"github.com/mainflux/mainflux/opcua"
+	"github.com/mainflux/mainflux/opcua/api"
+	"github.com/mainflux/mainflux/opcua/gopcua"
+	pub "github.com/mainflux/mainflux/opcua/nats"
+	"github.com/mainflux/mainflux/opcua/redis"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
-	"github.com/mainflux/mainflux/opc/redis"
 	nats "github.com/nats-io/go-nats"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
@@ -41,7 +41,7 @@ const (
 	defESURL             = "localhost:6379"
 	defESPass            = ""
 	defESDB              = "0"
-	defInstanceName      = "opc"
+	defInstanceName      = "opcua"
 	defRouteMapURL       = "localhost:6379"
 	defRouteMapPass      = ""
 	defRouteMapDB        = "0"
@@ -70,7 +70,7 @@ const (
 
 type config struct {
 	httpPort     string
-	opcConfig    opc.Config
+	opcConfig    opcua.Config
 	natsURL      string
 	logLevel     string
 	esURL        string
@@ -104,7 +104,7 @@ func main() {
 	thingRM := newRouteMapRepositoy(rmConn, thingsRMPrefix, logger)
 	chanRM := newRouteMapRepositoy(rmConn, channelsRMPrefix, logger)
 
-	svc := opc.New(publisher, thingRM, chanRM)
+	svc := opcua.New(publisher, thingRM, chanRM)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
@@ -136,11 +136,11 @@ func main() {
 	}()
 
 	err = <-errs
-	logger.Error(fmt.Sprintf("LoRa adapter terminated: %s", err))
+	logger.Error(fmt.Sprintf("OPC-UA adapter terminated: %s", err))
 }
 
 func loadConfig() config {
-	oc := opc.Config{
+	oc := opcua.Config{
 		ServerURI:      mainflux.Env(envOPCServerURI, defOPCServerURI),
 		NodeNamespace:  mainflux.Env(envOPCNodeNamespace, defOPCNodeNamespace),
 		NodeIdintifier: mainflux.Env(envOPCNodeIdentifier, defOPCNodeIdentifier),
@@ -189,7 +189,7 @@ func connectToRedis(redisURL, redisPass, redisDB string, logger logger.Logger) *
 	})
 }
 
-func subscribeToOpcServer(svc opc.Service, cfg opc.Config, logger logger.Logger) {
+func subscribeToOpcServer(svc opcua.Service, cfg opcua.Config, logger logger.Logger) {
 	ctx := context.Background()
 	gr := gopcua.NewReader(ctx, svc, logger)
 	if err := gr.Read(cfg); err != nil {
@@ -202,20 +202,20 @@ func subscribeToOpcServer(svc opc.Service, cfg opc.Config, logger logger.Logger)
 	}
 }
 
-func subscribeToThingsES(svc opc.Service, client *r.Client, consumer string, logger logger.Logger) {
+func subscribeToThingsES(svc opcua.Service, client *r.Client, consumer string, logger logger.Logger) {
 	eventStore := redis.NewEventStore(svc, client, consumer, logger)
 	if err := eventStore.Subscribe("mainflux.things"); err != nil {
 		logger.Warn(fmt.Sprintf("Failed to subscribe to Redis event sourcing: %s", err))
 	}
 }
 
-func newRouteMapRepositoy(client *r.Client, prefix string, logger logger.Logger) opc.RouteMapRepository {
+func newRouteMapRepositoy(client *r.Client, prefix string, logger logger.Logger) opcua.RouteMapRepository {
 	logger.Info(fmt.Sprintf("Connected to %s Redis Route map", prefix))
 	return redis.NewRouteMapRepository(client, prefix)
 }
 
 func startHTTPServer(cfg config, logger logger.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", cfg.httpPort)
-	logger.Info(fmt.Sprintf("opc-adapter service started, exposed port %s", cfg.httpPort))
+	logger.Info(fmt.Sprintf("opcua-adapter service started, exposed port %s", cfg.httpPort))
 	errs <- http.ListenAndServe(p, api.MakeHandler())
 }

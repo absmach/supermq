@@ -7,15 +7,15 @@ import (
 	"fmt"
 
 	"github.com/go-redis/redis"
-	"github.com/mainflux/mainflux/opc"
+	"github.com/mainflux/mainflux/opcua"
 )
 
 const (
-	mfxMapPrefix = "mfx:opc"
-	opcMapPrefix = "opc:mfx"
+	mfxMapPrefix = "mfx:opcua"
+	opcMapPrefix = "opcua:mfx"
 )
 
-var _ opc.RouteMapRepository = (*routerMap)(nil)
+var _ opcua.RouteMapRepository = (*routerMap)(nil)
 
 type routerMap struct {
 	client *redis.Client
@@ -23,7 +23,7 @@ type routerMap struct {
 }
 
 // NewRouteMapRepository returns redis thing cache implementation.
-func NewRouteMapRepository(client *redis.Client, prefix string) opc.RouteMapRepository {
+func NewRouteMapRepository(client *redis.Client, prefix string) opcua.RouteMapRepository {
 	return &routerMap{
 		client: client,
 		prefix: prefix,

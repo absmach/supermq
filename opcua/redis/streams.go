@@ -10,13 +10,13 @@ import (
 
 	"github.com/go-redis/redis"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/opc"
+	"github.com/mainflux/mainflux/opcua"
 )
 
 const (
-	protocol = "opc"
+	protocol = "opcua"
 
-	group  = "mainflux.opc"
+	group  = "mainflux.opcua"
 	stream = "mainflux.things"
 
 	thingPrefix = "thing."
@@ -33,7 +33,7 @@ const (
 )
 
 var (
-	errMetadataType = errors.New("metadatada is not of type opc")
+	errMetadataType = errors.New("metadatada is not of type opcua")
 
 	errMetadataAppID = errors.New("Node Namespace not found in channel metadatada")
 
@@ -47,14 +47,14 @@ type Subscriber interface {
 }
 
 type eventStore struct {
-	svc      opc.Service
+	svc      opcua.Service
 	client   *redis.Client
 	consumer string
 	logger   logger.Logger
 }
 
 // NewEventStore returns new event store instance.
-func NewEventStore(svc opc.Service, client *redis.Client, consumer string, log logger.Logger) Subscriber {
+func NewEventStore(svc opcua.Service, client *redis.Client, consumer string, log logger.Logger) Subscriber {
 	return eventStore{
 		svc:      svc,
 		client:   client,
@@ -140,7 +140,7 @@ func decodeCreateThing(event map[string]interface{}) (createThingEvent, error) {
 		id: read(event, "id", ""),
 	}
 
-	val, ok := metadata["opc"]
+	val, ok := metadata[protocol]
 	if !ok {
 		return createThingEvent{}, errMetadataType
 	}
@@ -163,7 +163,7 @@ func decodeUpdateThing(event map[string]interface{}) (updateThingEvent, error) {
 		id: read(event, "id", ""),
 	}
 
-	val, ok := metadata["opc"]
+	val, ok := metadata[protocol]
 	if !ok {
 		return updateThingEvent{}, errMetadataType
 	}
@@ -193,7 +193,7 @@ func decodeCreateChannel(event map[string]interface{}) (createChannelEvent, erro
 		id: read(event, "id", ""),
 	}
 
-	val, ok := metadata["opc"]
+	val, ok := metadata[protocol]
 	if !ok {
 		return createChannelEvent{}, errMetadataType
 	}
@@ -216,7 +216,7 @@ func decodeUpdateChannel(event map[string]interface{}) (updateChannelEvent, erro
 		id: read(event, "id", ""),
 	}
 
-	val, ok := metadata["opc"]
+	val, ok := metadata[protocol]
 	if !ok {
 		return updateChannelEvent{}, errMetadataType
 	}

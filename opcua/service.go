@@ -1,7 +1,7 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-package opc
+package opcua
 
 import (
 	"context"
@@ -87,21 +87,20 @@ func New(pub mainflux.MessagePublisher, thingsRM, channelsRM RouteMapRepository)
 
 // Publish forwards messages from OPC-UA MQTT broker to Mainflux NATS broker
 func (as *adapterService) Publish(ctx context.Context, token string, m Message) error {
-	// Get route map of OPC Node Identifier
+	// Get route map of OPC-UA Node Namespace
+	channelID, err := as.channelsRM.Get(m.Namespace)
+	if err != nil {
+		return ErrNotFoundNamespace
+	}
+
+	// Get route map of OPC-UA Node Identifier
 	thingID, err := as.thingsRM.Get(m.ID)
 	if err != nil {
 		return ErrNotFoundIdentifier
 	}
 
-	// Get route map of OPC Node Namespace
-	channelID, err := as.channelsRM.Get(m.Namespace)
-	if err != nil {
-		println(err)
-		return ErrNotFoundNamespace
-	}
-
 	// Publish on Mainflux NATS broker
-	SenML := fmt.Sprintf(`[{"n":"opc","v":%f}]`, m.Data)
+	SenML := fmt.Sprintf(`[{"n":"opcua","v":%f}]`, m.Data)
 	payload := []byte(SenML)
 	msg := mainflux.RawMessage{
 		Publisher:   thingID,

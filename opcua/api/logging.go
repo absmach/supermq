@@ -9,18 +9,18 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/opc"
+	"github.com/mainflux/mainflux/opcua"
 )
 
-var _ opc.Service = (*loggingMiddleware)(nil)
+var _ opcua.Service = (*loggingMiddleware)(nil)
 
 type loggingMiddleware struct {
 	logger logger.Logger
-	svc    opc.Service
+	svc    opcua.Service
 }
 
 // LoggingMiddleware adds logging facilities to the core service.
-func LoggingMiddleware(svc opc.Service, logger logger.Logger) opc.Service {
+func LoggingMiddleware(svc opcua.Service, logger logger.Logger) opcua.Service {
 	return &loggingMiddleware{
 		logger: logger,
 		svc:    svc,
@@ -29,7 +29,7 @@ func LoggingMiddleware(svc opc.Service, logger logger.Logger) opc.Service {
 
 func (lm loggingMiddleware) CreateThing(mfxThing string, opcID string) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("create_thing mfx:opc:%s:%s took %s to complete", mfxThing, opcID, time.Since(begin))
+		message := fmt.Sprintf("create_thing mfx:opcua:%s:%s took %s to complete", mfxThing, opcID, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -42,7 +42,7 @@ func (lm loggingMiddleware) CreateThing(mfxThing string, opcID string) (err erro
 
 func (lm loggingMiddleware) UpdateThing(mfxThing string, opcID string) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("update_thing mfx:opc:%s:%s took %s to complete", mfxThing, opcID, time.Since(begin))
+		message := fmt.Sprintf("update_thing mfx:opcua:%s:%s took %s to complete", mfxThing, opcID, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -55,7 +55,7 @@ func (lm loggingMiddleware) UpdateThing(mfxThing string, opcID string) (err erro
 
 func (lm loggingMiddleware) RemoveThing(mfxThing string) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("remove_thing mfx:opc:%s took %s to complete", mfxThing, time.Since(begin))
+		message := fmt.Sprintf("remove_thing mfx:opcua:%s took %s to complete", mfxThing, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -68,7 +68,7 @@ func (lm loggingMiddleware) RemoveThing(mfxThing string) (err error) {
 
 func (lm loggingMiddleware) CreateChannel(mfxChan string, opcNamespace string) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("create_channel mfx:opc:%s:%s took %s to complete", mfxChan, opcNamespace, time.Since(begin))
+		message := fmt.Sprintf("create_channel mfx:opcua:%s:%s took %s to complete", mfxChan, opcNamespace, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -81,7 +81,7 @@ func (lm loggingMiddleware) CreateChannel(mfxChan string, opcNamespace string) (
 
 func (lm loggingMiddleware) UpdateChannel(mfxChanID string, opcNamespace string) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("update_channel mfx:opc:%s:%s took %s to complete", mfxChanID, opcNamespace, time.Since(begin))
+		message := fmt.Sprintf("update_channel mfx:opcua:%s:%s took %s to complete", mfxChanID, opcNamespace, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -105,7 +105,7 @@ func (lm loggingMiddleware) RemoveChannel(mfxChanID string) (err error) {
 	return lm.svc.RemoveChannel(mfxChanID)
 }
 
-func (lm loggingMiddleware) Publish(ctx context.Context, token string, m opc.Message) (err error) {
+func (lm loggingMiddleware) Publish(ctx context.Context, token string, m opcua.Message) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("publish namespace/%s/id/%s/rx took %s to complete", m.Namespace, m.ID, time.Since(begin))
 		if err != nil {

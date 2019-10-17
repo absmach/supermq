@@ -8,19 +8,19 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/metrics"
-	"github.com/mainflux/mainflux/opc"
+	"github.com/mainflux/mainflux/opcua"
 )
 
-var _ opc.Service = (*metricsMiddleware)(nil)
+var _ opcua.Service = (*metricsMiddleware)(nil)
 
 type metricsMiddleware struct {
 	counter metrics.Counter
 	latency metrics.Histogram
-	svc     opc.Service
+	svc     opcua.Service
 }
 
 // MetricsMiddleware instruments core service by tracking request count and latency.
-func MetricsMiddleware(svc opc.Service, counter metrics.Counter, latency metrics.Histogram) opc.Service {
+func MetricsMiddleware(svc opcua.Service, counter metrics.Counter, latency metrics.Histogram) opcua.Service {
 	return &metricsMiddleware{
 		counter: counter,
 		latency: latency,
@@ -82,7 +82,7 @@ func (mm *metricsMiddleware) RemoveChannel(mfxChanID string) error {
 	return mm.svc.RemoveChannel(mfxChanID)
 }
 
-func (mm *metricsMiddleware) Publish(ctx context.Context, token string, m opc.Message) error {
+func (mm *metricsMiddleware) Publish(ctx context.Context, token string, m opcua.Message) error {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "publish").Add(1)
 		mm.latency.With("method", "publish").Observe(time.Since(begin).Seconds())
