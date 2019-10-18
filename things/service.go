@@ -35,6 +35,9 @@ type Service interface {
 	// AddThing adds new thing to the user identified by the provided key.
 	AddThing(context.Context, string, Thing) (Thing, error)
 
+	// ProvisionThings adds a list of things to the user identified by the provided key.
+	ProvisionThings(context.Context, string, []Thing) ([]Thing, error)
+
 	// UpdateThing updates the thing identified by the provided ID, that
 	// belongs to the user identified by the provided key.
 	UpdateThing(context.Context, string, Thing) error
@@ -62,6 +65,9 @@ type Service interface {
 
 	// CreateChannel adds new channel to the user identified by the provided key.
 	CreateChannel(context.Context, string, Channel) (Channel, error)
+
+	// ProvisionChannels adds a list of channels to the user identified by the provided key.
+	ProvisionChannels(context.Context, string, []Channel) ([]Channel, error)
 
 	// UpdateChannel updates the channel identified by the provided ID, that
 	// belongs to the user identified by the provided key.
@@ -163,6 +169,31 @@ func (ts *thingsService) AddThing(ctx context.Context, token string, thing Thing
 	return thing, nil
 }
 
+func (ts *thingsService) ProvisionThings(ctx context.Context, token string, things []Thing) ([]Thing, error) {
+	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	if err != nil {
+		return []Thing{}, ErrUnauthorizedAccess
+	}
+
+	for idx := range things {
+		things[idx].ID, err = ts.idp.ID()
+		if err != nil {
+			return []Thing{}, err
+		}
+
+		things[idx].Owner = res.GetValue()
+
+		if things[idx].Key == "" {
+			things[idx].Key, err = ts.idp.ID()
+			if err != nil {
+				return []Thing{}, err
+			}
+		}
+	}
+
+	return ts.things.Provision(ctx, things)
+}
+
 func (ts *thingsService) UpdateThing(ctx context.Context, token string, thing Thing) error {
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -243,6 +274,24 @@ func (ts *thingsService) CreateChannel(ctx context.Context, token string, channe
 
 	channel.ID = id
 	return channel, nil
+}
+
+func (ts *thingsService) ProvisionChannels(ctx context.Context, token string, channels []Channel) ([]Channel, error) {
+	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	if err != nil {
+		return []Channel{}, ErrUnauthorizedAccess
+	}
+
+	for idx := range channels {
+		channels[idx].ID, err = ts.idp.ID()
+		if err != nil {
+			return []Channel{}, err
+		}
+
+		channels[idx].Owner = res.GetValue()
+	}
+
+	return ts.channels.Provision(ctx, channels)
 }
 
 func (ts *thingsService) UpdateChannel(ctx context.Context, token string, channel Channel) error {

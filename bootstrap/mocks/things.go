@@ -51,6 +51,26 @@ func (svc *mainfluxThings) AddThing(_ context.Context, owner string, thing thing
 	return thing, nil
 }
 
+func (svc *mainfluxThings) ProvisionThings(_ context.Context, owner string, ths []things.Thing) ([]things.Thing, error) {
+	svc.mu.Lock()
+	defer svc.mu.Unlock()
+
+	for idx := range ths {
+		userID, err := svc.users.Identify(context.Background(), &mainflux.Token{Value: owner})
+		if err != nil {
+			return []things.Thing{}, things.ErrUnauthorizedAccess
+		}
+
+		svc.counter++
+		ths[idx].Owner = userID.Value
+		ths[idx].ID = strconv.FormatUint(svc.counter, 10)
+		ths[idx].Key = ths[idx].ID
+		svc.things[ths[idx].ID] = ths[idx]
+	}
+
+	return ths, nil
+}
+
 func (svc *mainfluxThings) ViewThing(_ context.Context, owner, id string) (things.Thing, error) {
 	svc.mu.Lock()
 	defer svc.mu.Unlock()
@@ -176,6 +196,25 @@ func (svc *mainfluxThings) ListThingsByChannel(context.Context, string, string, 
 
 func (svc *mainfluxThings) CreateChannel(context.Context, string, things.Channel) (things.Channel, error) {
 	panic("not implemented")
+}
+
+func (svc *mainfluxThings) ProvisionChannels(_ context.Context, owner string, channels []things.Channel) ([]things.Channel, error) {
+	svc.mu.Lock()
+	defer svc.mu.Unlock()
+
+	for idx := range channels {
+		userID, err := svc.users.Identify(context.Background(), &mainflux.Token{Value: owner})
+		if err != nil {
+			return []things.Channel{}, things.ErrUnauthorizedAccess
+		}
+
+		svc.counter++
+		channels[idx].Owner = userID.Value
+		channels[idx].ID = strconv.FormatUint(svc.counter, 10)
+		svc.channels[channels[idx].ID] = channels[idx]
+	}
+
+	return channels, nil
 }
 
 func (svc *mainfluxThings) UpdateChannel(context.Context, string, things.Channel) error {
