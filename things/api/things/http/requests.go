@@ -3,7 +3,9 @@
 
 package http
 
-import "github.com/mainflux/mainflux/things"
+import (
+	"github.com/mainflux/mainflux/things"
+)
 
 const maxLimitSize = 100
 const maxNameSize = 1024
@@ -26,6 +28,29 @@ func (req addThingReq) validate() error {
 
 	if len(req.Name) > maxNameSize {
 		return things.ErrMalformedEntity
+	}
+
+	return nil
+}
+
+type provisionThingsReq struct {
+	token  string
+	Things []addThingReq
+}
+
+func (req provisionThingsReq) validate() error {
+	if req.token == "" {
+		return things.ErrUnauthorizedAccess
+	}
+
+	if len(req.Things) <= 0 {
+		return things.ErrMalformedEntity
+	}
+
+	for _, thing := range req.Things {
+		if len(thing.Name) > maxNameSize {
+			return things.ErrMalformedEntity
+		}
 	}
 
 	return nil
@@ -85,6 +110,29 @@ func (req createChannelReq) validate() error {
 
 	if len(req.Name) > maxNameSize {
 		return things.ErrMalformedEntity
+	}
+
+	return nil
+}
+
+type provisionChannelsReq struct {
+	token    string
+	Channels []createChannelReq
+}
+
+func (req provisionChannelsReq) validate() error {
+	if req.token == "" {
+		return things.ErrUnauthorizedAccess
+	}
+
+	if len(req.Channels) <= 0 {
+		return things.ErrMalformedEntity
+	}
+
+	for _, channel := range req.Channels {
+		if len(channel.Name) > maxNameSize {
+			return things.ErrMalformedEntity
+		}
 	}
 
 	return nil

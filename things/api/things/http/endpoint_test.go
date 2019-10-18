@@ -202,6 +202,107 @@ func TestAddThing(t *testing.T) {
 	}
 }
 
+func TestProvisionThings(t *testing.T) {
+	svc := newService(map[string]string{token: email})
+	ts := newServer(svc)
+	defer ts.Close()
+
+	data := `[{"name": "1", "key": "1"},
+			  {"name": "2", "key": "2"}]`
+
+	invalidData := fmt.Sprintf(`[{"name": "%s", "key": "1"}`, invalidName)
+
+	cases := []struct {
+		desc        string
+		data        string
+		contentType string
+		auth        string
+		status      int
+		response    string
+	}{
+		{
+			desc:        "add valid things",
+			data:        data,
+			contentType: contentType,
+			auth:        token,
+			status:      http.StatusCreated,
+			response:    "/things/provision",
+		},
+		{
+			desc:        "add thing with existing key",
+			data:        data,
+			contentType: contentType,
+			auth:        token,
+			status:      http.StatusUnprocessableEntity,
+			response:    "",
+		},
+		{
+			desc:        "add thing with empty request",
+			data:        "",
+			contentType: contentType,
+			auth:        token,
+			status:      http.StatusBadRequest,
+			response:    "",
+		},
+		{
+			desc:        "add thing with invalid auth token",
+			data:        data,
+			contentType: contentType,
+			auth:        wrongValue,
+			status:      http.StatusForbidden,
+			response:    "",
+		},
+		{
+			desc:        "add thing with empty auth token",
+			data:        data,
+			contentType: contentType,
+			auth:        "",
+			status:      http.StatusForbidden,
+			response:    "",
+		},
+		{
+			desc:     "add thing with invalid request format",
+			data:     "}",
+			auth:     token,
+			status:   http.StatusUnsupportedMediaType,
+			response: "",
+		},
+		{
+			desc:        "add thing without content type",
+			data:        data,
+			contentType: contentType,
+			auth:        token,
+			status:      http.StatusUnprocessableEntity,
+			response:    "",
+		},
+		{
+			desc:        "add thing with invalid name",
+			data:        invalidData,
+			contentType: contentType,
+			auth:        token,
+			status:      http.StatusBadRequest,
+			response:    "",
+		},
+	}
+
+	for _, tc := range cases {
+		req := testRequest{
+			client:      ts.Client(),
+			method:      http.MethodPost,
+			url:         fmt.Sprintf("%s/things/provision", ts.URL),
+			contentType: tc.contentType,
+			token:       tc.auth,
+			body:        strings.NewReader(tc.data),
+		}
+		res, err := req.make()
+		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+
+		location := res.Header.Get("Location")
+		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
+		assert.Equal(t, tc.response, location, fmt.Sprintf("%s: expected response %s got %s", tc.desc, tc.response, location))
+	}
+}
+
 func TestUpdateThing(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 	ts := newServer(svc)
@@ -970,6 +1071,99 @@ func TestCreateChannel(t *testing.T) {
 	}
 }
 
+func TestProvisionChannels(t *testing.T) {
+	svc := newService(map[string]string{token: email})
+	ts := newServer(svc)
+	defer ts.Close()
+
+	data := `[{"name": "1"},
+			  {"name": "2"}]`
+
+	invalidData := fmt.Sprintf(`[{"name": "%s"}`, invalidName)
+
+	cases := []struct {
+		desc        string
+		data        string
+		contentType string
+		auth        string
+		status      int
+		response    string
+	}{
+		{
+			desc:        "add valid channels",
+			data:        data,
+			contentType: contentType,
+			auth:        token,
+			status:      http.StatusCreated,
+			response:    "/channels/provision",
+		},
+		{
+			desc:        "add channel with empty request",
+			data:        "",
+			contentType: contentType,
+			auth:        token,
+			status:      http.StatusBadRequest,
+			response:    "",
+		},
+		{
+			desc:        "add channel with invalid auth token",
+			data:        data,
+			contentType: contentType,
+			auth:        wrongValue,
+			status:      http.StatusForbidden,
+			response:    "",
+		},
+		{
+			desc:        "add channel with empty auth token",
+			data:        data,
+			contentType: contentType,
+			auth:        "",
+			status:      http.StatusForbidden,
+			response:    "",
+		},
+		{
+			desc:     "add channel with invalid request format",
+			data:     "}",
+			auth:     token,
+			status:   http.StatusUnsupportedMediaType,
+			response: "",
+		},
+		{
+			desc:        "add channel without content type",
+			data:        data,
+			contentType: "",
+			auth:        token,
+			status:      http.StatusUnsupportedMediaType,
+			response:    "",
+		},
+		{
+			desc:        "add channel with invalid name",
+			data:        invalidData,
+			contentType: contentType,
+			auth:        token,
+			status:      http.StatusBadRequest,
+			response:    "",
+		},
+	}
+
+	for _, tc := range cases {
+		req := testRequest{
+			client:      ts.Client(),
+			method:      http.MethodPost,
+			url:         fmt.Sprintf("%s/channels/provision", ts.URL),
+			contentType: tc.contentType,
+			token:       tc.auth,
+			body:        strings.NewReader(tc.data),
+		}
+		res, err := req.make()
+		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+
+		location := res.Header.Get("Location")
+		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
+		assert.Equal(t, tc.response, location, fmt.Sprintf("%s: expected response %s got %s", tc.desc, tc.response, location))
+	}
+}
+
 func TestUpdateChannel(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 	ts := newServer(svc)
@@ -1720,6 +1914,11 @@ type thingRes struct {
 	Name     string                 `json:"name,omitempty"`
 	Key      string                 `json:"key"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
+}
+
+type thingsRes struct {
+	Things  []things.Thing
+	created bool
 }
 
 type channelRes struct {

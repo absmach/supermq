@@ -52,6 +52,13 @@ func MakeHandler(tracer opentracing.Tracer, svc things.Service) http.Handler {
 		opts...,
 	))
 
+	r.Post("/things/provision", kithttp.NewServer(
+		kitot.TraceServer(tracer, "provision_things")(provisionThingsEndpoint(svc)),
+		decodeThingsProvision,
+		encodeResponse,
+		opts...,
+	))
+
 	r.Patch("/things/:id/key", kithttp.NewServer(
 		kitot.TraceServer(tracer, "update_key")(updateKeyEndpoint(svc)),
 		decodeKeyUpdate,
@@ -97,6 +104,13 @@ func MakeHandler(tracer opentracing.Tracer, svc things.Service) http.Handler {
 	r.Post("/channels", kithttp.NewServer(
 		kitot.TraceServer(tracer, "create_channel")(createChannelEndpoint(svc)),
 		decodeChannelCreation,
+		encodeResponse,
+		opts...,
+	))
+
+	r.Post("/channels/provision", kithttp.NewServer(
+		kitot.TraceServer(tracer, "provision_channels")(provisionChannelsEndpoint(svc)),
+		decodeChannelsProvision,
 		encodeResponse,
 		opts...,
 	))
@@ -169,6 +183,19 @@ func decodeThingCreation(_ context.Context, r *http.Request) (interface{}, error
 	return req, nil
 }
 
+func decodeThingsProvision(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
+		return nil, errUnsupportedContentType
+	}
+
+	req := provisionThingsReq{token: r.Header.Get("Authorization")}
+	if err := json.NewDecoder(r.Body).Decode(&req.Things); err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 func decodeThingUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, errUnsupportedContentType
@@ -208,6 +235,20 @@ func decodeChannelCreation(_ context.Context, r *http.Request) (interface{}, err
 
 	req := createChannelReq{token: r.Header.Get("Authorization")}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+func decodeChannelsProvision(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
+		return nil, errUnsupportedContentType
+	}
+
+	req := provisionChannelsReq{token: r.Header.Get("Authorization")}
+
+	if err := json.NewDecoder(r.Body).Decode(&req.Channels); err != nil {
 		return nil, err
 	}
 
