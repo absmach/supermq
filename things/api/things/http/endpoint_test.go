@@ -226,7 +226,7 @@ func TestProvisionThings(t *testing.T) {
 			contentType: contentType,
 			auth:        token,
 			status:      http.StatusCreated,
-			response:    "/things/provision",
+			response:    "",
 		},
 		{
 			desc:        "add thing with existing key",
@@ -1095,7 +1095,7 @@ func TestProvisionChannels(t *testing.T) {
 			contentType: contentType,
 			auth:        token,
 			status:      http.StatusCreated,
-			response:    "/channels/provision",
+			response:    "",
 		},
 		{
 			desc:        "add channel with empty request",

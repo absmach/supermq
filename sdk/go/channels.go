@@ -51,8 +51,7 @@ func (sdk mfSDK) CreateChannel(channel Channel, token string) (string, error) {
 }
 
 func (sdk mfSDK) ProvisionChannels(path string, token string) ([]Channel, error) {
-	channels := []Channel{}
-	err := channelsFromFile(path, channels)
+	channels, err := channelsFromFile(path)
 	if err != nil {
 		return []Channel{}, err
 	}
@@ -290,10 +289,11 @@ func (sdk mfSDK) DeleteChannel(id, token string) error {
 	return nil
 }
 
-func channelsFromFile(path string, channels []Channel) error {
+func channelsFromFile(path string) ([]Channel, error) {
+	channels := []Channel{}
 	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
 	if err != nil {
-		return err
+		return []Channel{}, err
 	}
 	defer file.Close()
 
@@ -301,17 +301,17 @@ func channelsFromFile(path string, channels []Channel) error {
 	case ".csv":
 		err := gocsv.UnmarshalFile(file, &channels)
 		if err != nil {
-			return err
+			return []Channel{}, err
 
 		}
 	case ".json":
 		err := json.NewDecoder(file).Decode(&channels)
 		if err != nil {
-			return err
+			return []Channel{}, err
 		}
 	default:
-		return ErrInvalidArgs
+		return []Channel{}, ErrInvalidArgs
 	}
 
-	return nil
+	return channels, nil
 }

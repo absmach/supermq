@@ -77,12 +77,6 @@ func (res thingsRes) Code() int {
 }
 
 func (res thingsRes) Headers() map[string]string {
-	if res.created {
-		return map[string]string{
-			"Location": "/things/provision",
-		}
-	}
-
 	return map[string]string{}
 }
 
@@ -168,12 +162,6 @@ func (res channelsRes) Code() int {
 }
 
 func (res channelsRes) Headers() map[string]string {
-	if res.created {
-		return map[string]string{
-			"Location": "/channels/provision",
-		}
-	}
-
 	return map[string]string{}
 }
 
