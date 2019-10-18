@@ -86,6 +86,15 @@ mainflux-cli users token john.doe@email.com password
 mainflux-cli things create '{"name":"myThing"}' <user_auth_token>
 ```
 
+#### Bulk Provision Things
+
+```bash
+mainflux-cli provision things <file> <user_auth_token>
+```
+
+* `file` - A CSV or JSON file containing things
+* `user_auth_token` - A valid user auth token for the current system
+
 #### Update Thing
 ```
 mainflux-cli things update '{"id":"<thing_id>", "name":"myNewName"}' <user_auth_token>
@@ -110,6 +119,15 @@ mainflux-cli things get <thing_id> <user_auth_token>
 ```
 mainflux-cli channels create '{"name":"myChannel"}' <user_auth_token>
 ```
+
+#### Bulk Provision Channels
+
+```bash
+mainflux-cli provision channels <file> <user_auth_token>
+```
+
+* `file` - A CSV or JSON file containing channels
+* `user_auth_token` - A valid user auth token for the current system
 
 #### Update Channel
 ```

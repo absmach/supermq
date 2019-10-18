@@ -35,10 +35,10 @@ Response should look like this:
 Before proceeding, make sure that you have created a new account, and obtained
 an authorization key.
 
-### Provisioning things
+### Creating things
 
-Things are provisioned by executing request `POST /things` with a JSON payload.
-Note that you will also need `user_auth_token` in order to provision things
+Things are created by executing request `POST /things` with a JSON payload.
+Note that you will also need `user_auth_token` in order to create things
 that belong to this particular user.
 
 ```
@@ -54,6 +54,28 @@ Content-Type: application/json
 Location: /things/81380742-7116-4f6f-9800-14fe464f6773
 Date: Tue, 10 Apr 2018 10:02:59 GMT
 Content-Length: 0
+```
+
+### Bulk Provisioning things
+
+Multiple things can be created by executing a `POST /things/provision` request with a JSON payload.  The payload should contain a JSON array of the things to be created.  If there is an error any of the things, none of the things will be created.
+
+```bash
+curl -s -S -i --cacert docker/ssl/certs/mainflux-server.crt --insecure -X POST -H "Content-Type: application/json" -H "Authorization: <user_auth_token>" https://localhost/things -d '[{"name":"weio"},{"name":"bob"},]'
+```
+
+The response's body will contain a list of the created things and their IDs.
+
+```
+HTTP/2 201 
+server: nginx/1.16.0
+date: Fri, 18 Oct 2019 03:32:32 GMT
+content-type: application/json
+content-length: 105
+location: /things/provision
+access-control-expose-headers: Location
+
+{"things":[{"id":"2c4d76eb-7ebd-4e25-8ad7-92640250c4f9"},{"id":"16281f2b-974e-4e60-87e5-a6979b72b283"}]}
 ```
 
 ### Retrieving provisioned things
@@ -119,9 +141,9 @@ In order to remove you own thing you can send following request:
 curl -s -S -i --cacert docker/ssl/certs/mainflux-server.crt --insecure -X DELETE -H "Authorization: <user_auth_token>" https://localhost/things/<thing_id>
 ```
 
-### Provisioning channels
+### Creating channels
 
-Channels are provisioned by executing request `POST /channels`:
+Channels are created by executing request `POST /channels`:
 
 ```
 curl -s -S -i --cacert docker/ssl/certs/mainflux-server.crt --insecure -X POST -H "Content-Type: application/json" -H "Authorization: <user_auth_token>" https://localhost/channels -d '{"name":"mychan"}'
@@ -136,6 +158,28 @@ Content-Type: application/json
 Location: /channels/19daa7a8-a489-4571-8714-ef1a214ed914
 Date: Tue, 10 Apr 2018 11:30:07 GMT
 Content-Length: 0
+```
+
+### Bulk Provisioning channels
+
+Multiple channels can be created by executing a `POST /things/provision` request with a JSON payload.  The payload should contain a JSON array of the channels to be created.  If there is an error any of the channels, none of the channels will be created.
+
+```bash
+curl -s -S -i --cacert docker/ssl/certs/mainflux-server.crt --insecure -X POST -H "Content-Type: application/json" -H "Authorization: <user_auth_token>" https://localhost/channels/provision -d '[{"name":"joe"},{"name":"betty"}]'
+```
+
+The response's body will contain a list of the created channels and their IDs.
+
+```
+HTTP/2 201 
+server: nginx/1.16.0
+date: Fri, 18 Oct 2019 03:45:00 GMT
+content-type: application/json
+content-length: 107
+location: /channels/provision
+access-control-expose-headers: Location
+
+{"channels":[{"ID":"abcd038e-28ab-492e-b46e-b23d53804f0c"},{"ID":"341cde5e-52b9-49ee-89e1-00b58733afc2"}]}
 ```
 
 ### Retrieving provisioned channels
