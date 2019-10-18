@@ -9,7 +9,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
+
+	"github.com/gocarina/gocsv"
 )
 
 const channelsEndpoint = "channels"
@@ -44,6 +48,56 @@ func (sdk mfSDK) CreateChannel(channel Channel, token string) (string, error) {
 
 	id := strings.TrimPrefix(resp.Header.Get("Location"), fmt.Sprintf("/%s/", channelsEndpoint))
 	return id, nil
+}
+
+func (sdk mfSDK) ProvisionChannels(path string, token string) ([]Channel, error) {
+	channels := []Channel{}
+	err := channelsFromFile(path, channels)
+	if err != nil {
+		return []Channel{}, err
+	}
+
+	data, err := json.Marshal(channels)
+	if err != nil {
+		return []Channel{}, ErrInvalidArgs
+	}
+
+	endpoint := fmt.Sprintf("%s/%s", channelsEndpoint, "provision")
+	url := createURL(sdk.baseURL, sdk.channelsPrefix, endpoint)
+
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+	if err != nil {
+		return []Channel{}, err
+	}
+
+	resp, err := sdk.sendRequest(req, token, string(CTJSON))
+	if err != nil {
+		return []Channel{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		switch resp.StatusCode {
+		case http.StatusBadRequest:
+			return []Channel{}, ErrInvalidArgs
+		case http.StatusForbidden:
+			return []Channel{}, ErrUnauthorized
+		default:
+			return []Channel{}, ErrFailedCreation
+		}
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return []Channel{}, err
+	}
+
+	var p provisionChannelsRes
+	if err := json.Unmarshal(body, &p); err != nil {
+		return []Channel{}, err
+	}
+
+	return p.Channels, nil
 }
 
 func (sdk mfSDK) Channels(token string, offset, limit uint64, name string) (ChannelsPage, error) {
@@ -231,6 +285,32 @@ func (sdk mfSDK) DeleteChannel(id, token string) error {
 		default:
 			return ErrFailedUpdate
 		}
+	}
+
+	return nil
+}
+
+func channelsFromFile(path string, channels []Channel) error {
+	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	switch filepath.Ext(path) {
+	case ".csv":
+		err := gocsv.UnmarshalFile(file, &channels)
+		if err != nil {
+			return err
+
+		}
+	case ".json":
+		err := json.NewDecoder(file).Decode(&channels)
+		if err != nil {
+			return err
+		}
+	default:
+		return ErrInvalidArgs
 	}
 
 	return nil

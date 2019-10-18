@@ -4,12 +4,8 @@
 package cli
 
 import (
-	"bufio"
-	"encoding/csv"
 	"errors"
 	"fmt"
-	"io"
-	"os"
 
 	"github.com/docker/docker/pkg/namesgenerator"
 	mfxsdk "github.com/mainflux/mainflux/sdk/go"
@@ -58,42 +54,15 @@ var cmdProvision = []cobra.Command{
 		Short: "things <things_csv> <user_token>",
 		Long:  `Provisions things`,
 		Run: func(cmd *cobra.Command, args []string) {
-			things := []mfxsdk.Thing{}
-
 			if len(args) != 2 {
 				logUsage(cmd.Short)
 				return
 			}
 
-			c, err := os.Open(args[0])
+			things, err := sdk.ProvisionThings(args[0], args[1])
 			if err != nil {
 				logError(err)
 				return
-			}
-			reader := csv.NewReader(bufio.NewReader(c))
-
-			for {
-				l, err := reader.Read()
-				if err == io.EOF {
-					break
-				}
-				if err != nil {
-					logError(err)
-					return
-				}
-
-				if len(l) < 1 {
-					logError(errMalformedCSV)
-					return
-				}
-
-				m, err := createThing(l[0], args[1])
-				if err != nil {
-					logError(err)
-					return
-				}
-
-				things = append(things, m)
 			}
 
 			logJSON(things)
@@ -104,42 +73,15 @@ var cmdProvision = []cobra.Command{
 		Short: "channels <channels_csv> <user_token>",
 		Long:  `Provisions channels`,
 		Run: func(cmd *cobra.Command, args []string) {
-			channels := []mfxsdk.Channel{}
-
 			if len(args) != 2 {
 				logUsage(cmd.Short)
 				return
 			}
 
-			c, err := os.Open(args[0])
+			channels, err := sdk.ProvisionChannels(args[0], args[1])
 			if err != nil {
 				logError(err)
 				return
-			}
-			reader := csv.NewReader(bufio.NewReader(c))
-
-			for {
-				l, err := reader.Read()
-				if err == io.EOF {
-					break
-				}
-				if err != nil {
-					logError(err)
-					return
-				}
-
-				if len(l) < 1 {
-					logError(errMalformedCSV)
-					return
-				}
-
-				c, err := createChannel(l[0], args[1])
-				if err != nil {
-					logError(err)
-					return
-				}
-
-				channels = append(channels, c)
 			}
 
 			logJSON(channels)
@@ -230,8 +172,8 @@ var cmdProvision = []cobra.Command{
 func NewProvisionCmd() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "provision",
-		Short: "Provision things and channels from config file",
-		Long:  `Provision things and channels: use csv config file to provision things and channels`,
+		Short: "Provision things and channels from a config file",
+		Long:  `Provision things and channels: use json or csv file to provision things and channels`,
 	}
 
 	for i := range cmdProvision {

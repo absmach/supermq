@@ -79,10 +79,10 @@ type User struct {
 
 // Thing represents mainflux thing.
 type Thing struct {
-	ID       string                 `json:"id,omitempty"`
-	Name     string                 `json:"name,omitempty"`
-	Key      string                 `json:"key,omitempty"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	ID       string                 `json:"id,omitempty" csv:"id,omitempty"`
+	Name     string                 `json:"name,omitempty" csv:"name,omitempty"`
+	Key      string                 `json:"key,omitempty" csv:"key,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty" csv:"-"`
 }
 
 // ThingsPage contains list of things in a page with proper metadata.
@@ -127,6 +127,9 @@ type SDK interface {
 	// CreateThing registers new thing and returns its id.
 	CreateThing(thing Thing, token string) (string, error)
 
+	// ProvisionThings registers new things and returns their ids.
+	ProvisionThings(path string, token string) ([]Thing, error)
+
 	// Things returns page of things.
 	Things(token string, offset, limit uint64, name string) (ThingsPage, error)
 
@@ -151,6 +154,9 @@ type SDK interface {
 
 	// CreateChannel creates new channel and returns its id.
 	CreateChannel(channel Channel, token string) (string, error)
+
+	// ProvisionChannels registers new channels and returns their ids.
+	ProvisionChannels(path string, token string) ([]Channel, error)
 
 	// Channels returns page of channels.
 	Channels(token string, offset, limit uint64, name string) (ChannelsPage, error)
@@ -187,6 +193,7 @@ type mfSDK struct {
 	readerPrefix      string
 	usersPrefix       string
 	thingsPrefix      string
+	channelsPrefix    string
 	httpAdapterPrefix string
 	msgContentType    ContentType
 	client            *http.Client

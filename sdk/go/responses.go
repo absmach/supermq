@@ -9,6 +9,14 @@ type tokenRes struct {
 	Token string `json:"token,omitempty"`
 }
 
+type provisionThingsRes struct {
+	Things []Thing `json:"things"`
+}
+
+type provisionChannelsRes struct {
+	Channels []Channel `json:"channels"`
+}
+
 type thingsPageRes struct {
 	Things []Thing `json:"things,omitempty"`
 	Total  uint64  `json:"total"`

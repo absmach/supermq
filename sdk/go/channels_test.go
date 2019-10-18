@@ -4,10 +4,15 @@
 package sdk_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+	"os"
 	"strconv"
+	"strings"
 	"testing"
 
+	"github.com/gocarina/gocsv"
 	sdk "github.com/mainflux/mainflux/sdk/go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -75,6 +80,102 @@ func TestCreateChannel(t *testing.T) {
 		loc, err := mainfluxSDK.CreateChannel(tc.channel, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.empty, loc == "", fmt.Sprintf("%s: expected empty result location, got: %s", tc.desc, loc))
+	}
+}
+
+func TestProvisionChannel(t *testing.T) {
+	svc := newThingsService(map[string]string{token: email})
+	ts := newThingsServer(svc)
+	defer ts.Close()
+
+	sdkConf := sdk.Config{
+		BaseURL:           ts.URL,
+		UsersPrefix:       "",
+		ThingsPrefix:      "",
+		HTTPAdapterPrefix: "",
+		MsgContentType:    contentType,
+		TLSVerification:   false,
+	}
+
+	mainfluxSDK := sdk.NewSDK(sdkConf)
+
+	jsonChannels := []sdk.Channel{
+		sdk.Channel{ID: "1", Name: "1"},
+		sdk.Channel{ID: "2", Name: "2"},
+	}
+	jsonData, err := json.Marshal(jsonChannels)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+
+	csvChannels := []sdk.Channel{
+		sdk.Channel{ID: "3", Name: "3"},
+		sdk.Channel{ID: "4", Name: "4"},
+	}
+	csvData, err := gocsv.MarshalString(csvChannels)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+
+	cases := []struct {
+		desc  string
+		path  string
+		data  string
+		token string
+		err   error
+		res   []sdk.Channel
+	}{
+		{
+			desc:  "create new channels from json file",
+			path:  "channels.json",
+			data:  string(jsonData),
+			token: token,
+			err:   nil,
+			res:   jsonChannels,
+		},
+		{
+			desc:  "create new channels from csv file",
+			path:  "channels.csv",
+			data:  csvData,
+			token: token,
+			err:   nil,
+			res:   csvChannels,
+		},
+		{
+			desc:  "create new channels with empty filepath",
+			path:  "",
+			token: token,
+			err:   sdk.ErrInvalidArgs,
+			res:   []sdk.Channel{},
+		},
+		{
+			desc:  "create new channels with empty token",
+			path:  "channels.json",
+			token: "",
+			err:   sdk.ErrUnauthorized,
+			res:   []sdk.Channel{},
+		},
+		{
+			desc:  "create new channels with invalid token",
+			path:  "channels.json",
+			token: wrongValue,
+			err:   sdk.ErrUnauthorized,
+			res:   []sdk.Channel{},
+		},
+	}
+	for _, tc := range cases {
+		if tc.data != "" {
+			file, err := os.Create(tc.path)
+			require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+
+			_, err = io.Copy(file, strings.NewReader(tc.data))
+			require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+			file.Close()
+			defer os.Remove(tc.path)
+		}
+
+		res, err := mainfluxSDK.ProvisionThings(tc.path, tc.token)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
+
+		for idx, _ := range tc.res {
+			assert.Equal(t, tc.res[idx].ID, res[idx].ID, fmt.Sprintf("%s: expected response ID %s got %s", tc.desc, tc.res[idx].ID, res[idx].ID))
+		}
 	}
 }
 

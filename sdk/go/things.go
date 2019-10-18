@@ -9,7 +9,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
+
+	"github.com/gocarina/gocsv"
 )
 
 const thingsEndpoint = "things"
@@ -46,6 +50,60 @@ func (sdk mfSDK) CreateThing(thing Thing, token string) (string, error) {
 
 	id := strings.TrimPrefix(resp.Header.Get("Location"), fmt.Sprintf("/%s/", thingsEndpoint))
 	return id, nil
+}
+
+func (sdk mfSDK) ProvisionThings(path string, token string) ([]Thing, error) {
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return []Thing{}, ErrInvalidArgs
+	}
+
+	things, err := thingsFromFile(path)
+	if err != nil {
+		return []Thing{}, err
+	}
+
+	data, err := json.Marshal(things)
+	if err != nil {
+		return []Thing{}, ErrInvalidArgs
+	}
+
+	endpoint := fmt.Sprintf("%s/%s", thingsEndpoint, "provision")
+	url := createURL(sdk.baseURL, sdk.thingsPrefix, endpoint)
+
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+	if err != nil {
+		return []Thing{}, err
+	}
+
+	resp, err := sdk.sendRequest(req, token, string(CTJSON))
+	if err != nil {
+		return []Thing{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		switch resp.StatusCode {
+		case http.StatusBadRequest:
+			return []Thing{}, ErrInvalidArgs
+		case http.StatusForbidden:
+			return []Thing{}, ErrUnauthorized
+		default:
+			return []Thing{}, ErrFailedCreation
+		}
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return []Thing{}, err
+	}
+
+	var p provisionThingsRes
+	if err := json.Unmarshal(body, &p); err != nil {
+		return []Thing{}, err
+	}
+
+	return p.Things, nil
 }
 
 func (sdk mfSDK) Things(token string, offset, limit uint64, name string) (ThingsPage, error) {
@@ -292,4 +350,31 @@ func (sdk mfSDK) DisconnectThing(thingID, chanID, token string) error {
 	}
 
 	return nil
+}
+
+func thingsFromFile(path string) ([]Thing, error) {
+	things := []Thing{}
+	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
+	if err != nil {
+		return []Thing{}, err
+	}
+	defer file.Close()
+
+	switch filepath.Ext(path) {
+	case ".csv":
+		err := gocsv.Unmarshal(file, &things)
+		if err != nil {
+			return []Thing{}, err
+
+		}
+	case ".json":
+		err := json.NewDecoder(file).Decode(&things)
+		if err != nil {
+			return []Thing{}, err
+		}
+	default:
+		return []Thing{}, ErrInvalidArgs
+	}
+
+	return things, nil
 }
