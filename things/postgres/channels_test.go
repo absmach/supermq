@@ -64,6 +64,64 @@ func TestChannelSave(t *testing.T) {
 	}
 }
 
+func TestChannelsProvision(t *testing.T) {
+	dbMiddleware := postgres.NewDatabase(db)
+	channelRepo := postgres.NewChannelRepository(dbMiddleware)
+
+	email := "channel-save@example.com"
+
+	var chid string
+	channels := []things.Channel{}
+	for i := 1; i <= 5; i++ {
+		chid, err := uuid.New().ID()
+		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+		channel := things.Channel{
+			ID:    chid,
+			Owner: email,
+		}
+		channels = append(channels, channel)
+	}
+
+	cases := []struct {
+		desc     string
+		channels []things.Channel
+		err      error
+	}{
+		{
+			desc:     "create new channels",
+			channels: channels,
+			err:      nil,
+		},
+		{
+			desc: "create channel with invalid ID",
+			channels: []things.Channel{
+				things.Channel{
+					ID:    "invalid",
+					Owner: email,
+				},
+			},
+			err: things.ErrMalformedEntity,
+		},
+		{
+			desc: "create channel with invalid name",
+			channels: []things.Channel{
+				things.Channel{
+					ID:    chid,
+					Owner: email,
+					Name:  invalidName,
+				},
+			},
+			err: things.ErrMalformedEntity,
+		},
+	}
+
+	for _, cc := range cases {
+		_, err := channelRepo.Provision(context.Background(), cc.channels)
+		assert.Equal(t, cc.err, err, fmt.Sprintf("%s: expected %s got %s\n", cc.desc, cc.err, err))
+	}
+}
+
 func TestChannelUpdate(t *testing.T) {
 	email := "channel-update@example.com"
 	dbMiddleware := postgres.NewDatabase(db)

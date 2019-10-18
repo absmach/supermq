@@ -12,6 +12,7 @@ import (
 
 const (
 	saveChannelOp             = "save_channel"
+	provisionChannelsOp       = "provision_channels"
 	updateChannelOp           = "update_channel"
 	retrieveChannelByIDOp     = "retrieve_channel_by_id"
 	retrieveAllChannelsOp     = "retrieve_all_channels"
@@ -48,6 +49,14 @@ func (crm channelRepositoryMiddleware) Save(ctx context.Context, ch things.Chann
 	ctx = opentracing.ContextWithSpan(ctx, span)
 
 	return crm.repo.Save(ctx, ch)
+}
+
+func (crm channelRepositoryMiddleware) Provision(ctx context.Context, channels []things.Channel) ([]things.Channel, error) {
+	span := createSpan(ctx, crm.tracer, provisionChannelsOp)
+	defer span.Finish()
+	ctx = opentracing.ContextWithSpan(ctx, span)
+
+	return crm.repo.Provision(ctx, channels)
 }
 
 func (crm channelRepositoryMiddleware) Update(ctx context.Context, ch things.Channel) error {
