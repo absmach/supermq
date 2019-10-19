@@ -52,14 +52,14 @@ var cmdProvision = []cobra.Command{
 	cobra.Command{
 		Use:   "things",
 		Short: "things <things_csv> <user_token>",
-		Long:  `Provisions things`,
+		Long:  `Bulk create things`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
 				logUsage(cmd.Short)
 				return
 			}
 
-			things, err := sdk.ProvisionThings(args[0], args[1])
+			things, err := sdk.BulkCreateThings(args[0], args[1])
 			if err != nil {
 				logError(err)
 				return
@@ -71,14 +71,14 @@ var cmdProvision = []cobra.Command{
 	cobra.Command{
 		Use:   "channels",
 		Short: "channels <channels_csv> <user_token>",
-		Long:  `Provisions channels`,
+		Long:  `Bulk create channels`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
 				logUsage(cmd.Short)
 				return
 			}
 
-			channels, err := sdk.ProvisionChannels(args[0], args[1])
+			channels, err := sdk.BulkCreateChannels(args[0], args[1])
 			if err != nil {
 				logError(err)
 				return
@@ -173,7 +173,7 @@ func NewProvisionCmd() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "provision",
 		Short: "Provision things and channels from a config file",
-		Long:  `Provision things and channels: use json or csv file to provision things and channels`,
+		Long:  `Provision things and channels: use json or csv file to bulk provision things and channels`,
 	}
 
 	for i := range cmdProvision {

@@ -62,7 +62,7 @@ func (tr thingRepository) Save(ctx context.Context, thing things.Thing) (string,
 	return dbth.ID, nil
 }
 
-func (tr thingRepository) Provision(ctx context.Context, ths []things.Thing) ([]things.Thing, error) {
+func (tr thingRepository) BulkCreate(ctx context.Context, ths []things.Thing) ([]things.Thing, error) {
 
 	tx, err := tr.db.BeginTxx(ctx, nil)
 	if err != nil {

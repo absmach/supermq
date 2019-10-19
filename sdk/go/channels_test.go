@@ -83,7 +83,7 @@ func TestCreateChannel(t *testing.T) {
 	}
 }
 
-func TestProvisionChannel(t *testing.T) {
+func TestBulkCreateChannels(t *testing.T) {
 	svc := newThingsService(map[string]string{token: email})
 	ts := newThingsServer(svc)
 	defer ts.Close()
@@ -170,7 +170,7 @@ func TestProvisionChannel(t *testing.T) {
 			defer os.Remove(tc.path)
 		}
 
-		res, err := mainfluxSDK.ProvisionThings(tc.path, tc.token)
+		res, err := mainfluxSDK.BulkCreateChannels(tc.path, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 
 		for idx, _ := range tc.res {

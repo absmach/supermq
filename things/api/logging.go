@@ -39,9 +39,9 @@ func (lm *loggingMiddleware) AddThing(ctx context.Context, token string, thing t
 	return lm.svc.AddThing(ctx, token, thing)
 }
 
-func (lm *loggingMiddleware) ProvisionThings(ctx context.Context, token string, ths []things.Thing) (saved []things.Thing, err error) {
+func (lm *loggingMiddleware) BulkCreateThings(ctx context.Context, token string, ths []things.Thing) (saved []things.Thing, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method provision_things for token %s and things %s took %s to complete", token, saved, time.Since(begin))
+		message := fmt.Sprintf("Method bulk_create_things for token %s and things %s took %s to complete", token, saved, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -49,7 +49,7 @@ func (lm *loggingMiddleware) ProvisionThings(ctx context.Context, token string, 
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.ProvisionThings(ctx, token, ths)
+	return lm.svc.BulkCreateThings(ctx, token, ths)
 }
 
 func (lm *loggingMiddleware) UpdateThing(ctx context.Context, token string, thing things.Thing) (err error) {
@@ -146,9 +146,9 @@ func (lm *loggingMiddleware) CreateChannel(ctx context.Context, token string, ch
 	return lm.svc.CreateChannel(ctx, token, channel)
 }
 
-func (lm *loggingMiddleware) ProvisionChannels(ctx context.Context, token string, channels []things.Channel) (saved []things.Channel, err error) {
+func (lm *loggingMiddleware) BulkCreateChannels(ctx context.Context, token string, channels []things.Channel) (saved []things.Channel, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method provision_channels for token %s and channels %s took %s to complete", token, saved, time.Since(begin))
+		message := fmt.Sprintf("Method bulk_create_channels for token %s and channels %s took %s to complete", token, saved, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -156,7 +156,7 @@ func (lm *loggingMiddleware) ProvisionChannels(ctx context.Context, token string
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.ProvisionChannels(ctx, token, channels)
+	return lm.svc.BulkCreateChannels(ctx, token, channels)
 }
 
 func (lm *loggingMiddleware) UpdateChannel(ctx context.Context, token string, channel things.Channel) (err error) {

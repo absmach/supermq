@@ -202,7 +202,7 @@ func TestAddThing(t *testing.T) {
 	}
 }
 
-func TestProvisionThings(t *testing.T) {
+func TestBulkCreateThings(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
@@ -289,7 +289,7 @@ func TestProvisionThings(t *testing.T) {
 		req := testRequest{
 			client:      ts.Client(),
 			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/things/provision", ts.URL),
+			url:         fmt.Sprintf("%s/things/bulkCreate", ts.URL),
 			contentType: tc.contentType,
 			token:       tc.auth,
 			body:        strings.NewReader(tc.data),
@@ -1071,7 +1071,7 @@ func TestCreateChannel(t *testing.T) {
 	}
 }
 
-func TestProvisionChannels(t *testing.T) {
+func TestBulkChannels(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
@@ -1150,7 +1150,7 @@ func TestProvisionChannels(t *testing.T) {
 		req := testRequest{
 			client:      ts.Client(),
 			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/channels/provision", ts.URL),
+			url:         fmt.Sprintf("%s/channels/bulkCreate", ts.URL),
 			contentType: tc.contentType,
 			token:       tc.auth,
 			body:        strings.NewReader(tc.data),

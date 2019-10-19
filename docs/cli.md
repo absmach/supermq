@@ -20,7 +20,7 @@ Available Commands:
   channels    Channels management
   help        Help about any command
   messages    Send or read messages
-  provision   Provision things and channels from config file
+  provision   Bulk create things and channels from a config file
   things      Things management
   users       Users management
   version     Mainflux system version

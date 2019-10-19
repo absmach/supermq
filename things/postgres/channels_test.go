@@ -64,7 +64,7 @@ func TestChannelSave(t *testing.T) {
 	}
 }
 
-func TestChannelsProvision(t *testing.T) {
+func TestChannelsBulkCreate(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
 	channelRepo := postgres.NewChannelRepository(dbMiddleware)
 
@@ -117,7 +117,7 @@ func TestChannelsProvision(t *testing.T) {
 	}
 
 	for _, cc := range cases {
-		_, err := channelRepo.Provision(context.Background(), cc.channels)
+		_, err := channelRepo.BulkCreate(context.Background(), cc.channels)
 		assert.Equal(t, cc.err, err, fmt.Sprintf("%s: expected %s got %s\n", cc.desc, cc.err, err))
 	}
 }

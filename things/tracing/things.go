@@ -12,7 +12,7 @@ import (
 
 const (
 	saveThingOp               = "save_thing"
-	provisionThingsOp         = "provision_things"
+	bulkCreateThingsOp        = "bulk_create_things"
 	updateThingOp             = "update_thing"
 	updateThingKeyOp          = "update_thing_by_key"
 	retrieveThingByIDOp       = "retrieve_thing_by_id"
@@ -50,12 +50,12 @@ func (trm thingRepositoryMiddleware) Save(ctx context.Context, th things.Thing) 
 	return trm.repo.Save(ctx, th)
 }
 
-func (trm thingRepositoryMiddleware) Provision(ctx context.Context, ths []things.Thing) ([]things.Thing, error) {
-	span := createSpan(ctx, trm.tracer, provisionThingsOp)
+func (trm thingRepositoryMiddleware) BulkCreate(ctx context.Context, ths []things.Thing) ([]things.Thing, error) {
+	span := createSpan(ctx, trm.tracer, bulkCreateThingsOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 
-	return trm.repo.Provision(ctx, ths)
+	return trm.repo.BulkCreate(ctx, ths)
 }
 
 func (trm thingRepositoryMiddleware) Update(ctx context.Context, th things.Thing) error {

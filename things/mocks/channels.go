@@ -54,7 +54,7 @@ func (crm *channelRepositoryMock) Save(_ context.Context, channel things.Channel
 	return channel.ID, nil
 }
 
-func (crm *channelRepositoryMock) Provision(_ context.Context, channels []things.Channel) ([]things.Channel, error) {
+func (crm *channelRepositoryMock) BulkCreate(_ context.Context, channels []things.Channel) ([]things.Channel, error) {
 	crm.mu.Lock()
 	defer crm.mu.Unlock()
 

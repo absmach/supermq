@@ -65,7 +65,7 @@ paths:
           description: Missing or invalid access token provided.
         500:
           $ref: "#/responses/ServiceError"          
-  /things/provision:
+  /things/bulkCreate:
     post:
       summary: Bulk provisions new things
       description: |
@@ -84,10 +84,6 @@ paths:
       responses:
         201:
           description: Things registered.
-          headers:
-            Location:
-              type: string
-              description: Originally requested URL (i.e. /things/provision).
         400:
           description: Failed due to malformed JSON.
         403:
@@ -274,7 +270,7 @@ paths:
           description: Missing or invalid access token provided.
         500:
           $ref: "#/responses/ServiceError"                 
-  /channels/provision:
+  /channels/bulkCreate:
     post:
       summary: Bulk provisions new channels
       description: |
@@ -293,10 +289,6 @@ paths:
       responses:
         201:
           description: Channels registered.
-          headers:
-            Location:
-              type: string
-              description: Originally requested URL (i.e. /channels/provision).
         400:
           description: Failed due to malformed JSON.
         403:
