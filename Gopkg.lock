@@ -206,6 +206,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:77e13fb4b86c85c80be600735851c209420438ed8d463f1d0d366d9a096ced83"
+  name = "github.com/gocarina/gocsv"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "3ecffd272576e35d1fa005b601b0bc0a24a4d58d"
+
+[[projects]]
+  branch = "master"
   digest = "1:348bbd07b4a983b2f811f81948c78142de09bb9fcf25284bee5e2ab3bdd0f6f9"
   name = "github.com/gocql/gocql"
   packages = [
@@ -956,6 +964,7 @@
     "github.com/go-kit/kit/transport/http",
     "github.com/go-redis/redis",
     "github.com/go-zoo/bone",
+    "github.com/gocarina/gocsv",
     "github.com/gocql/gocql",
     "github.com/gofrs/uuid",
     "github.com/gogo/protobuf/proto",
