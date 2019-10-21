@@ -52,9 +52,9 @@ func MakeHandler(tracer opentracing.Tracer, svc things.Service) http.Handler {
 		opts...,
 	))
 
-	r.Post("/things/bulkCreate", kithttp.NewServer(
-		kitot.TraceServer(tracer, "bulk_create_things")(bulkCreateThingsEndpoint(svc)),
-		decodeThingsBulkCreate,
+	r.Post("/things/bulk", kithttp.NewServer(
+		kitot.TraceServer(tracer, "bulk_add_things")(addThingsEndpoint(svc)),
+		decodeThingsCreation,
 		encodeResponse,
 		opts...,
 	))
@@ -108,9 +108,9 @@ func MakeHandler(tracer opentracing.Tracer, svc things.Service) http.Handler {
 		opts...,
 	))
 
-	r.Post("/channels/bulkCreate", kithttp.NewServer(
-		kitot.TraceServer(tracer, "bulk_create_channels")(bulkCreateChannelsEndpoint(svc)),
-		decodeChannelsBulkCreate,
+	r.Post("/channels/bulk", kithttp.NewServer(
+		kitot.TraceServer(tracer, "bulk_create_channels")(createChannelsEndpoint(svc)),
+		decodeChannelsCreation,
 		encodeResponse,
 		opts...,
 	))
@@ -183,12 +183,12 @@ func decodeThingCreation(_ context.Context, r *http.Request) (interface{}, error
 	return req, nil
 }
 
-func decodeThingsBulkCreate(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeThingsCreation(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, errUnsupportedContentType
 	}
 
-	req := bulkCreateThingsReq{token: r.Header.Get("Authorization")}
+	req := addThingsReq{token: r.Header.Get("Authorization")}
 	if err := json.NewDecoder(r.Body).Decode(&req.Things); err != nil {
 		return nil, err
 	}
@@ -241,12 +241,12 @@ func decodeChannelCreation(_ context.Context, r *http.Request) (interface{}, err
 	return req, nil
 }
 
-func decodeChannelsBulkCreate(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeChannelsCreation(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, errUnsupportedContentType
 	}
 
-	req := bulkCreateChannelsReq{token: r.Header.Get("Authorization")}
+	req := createChannelsReq{token: r.Header.Get("Authorization")}
 
 	if err := json.NewDecoder(r.Body).Decode(&req.Channels); err != nil {
 		return nil, err

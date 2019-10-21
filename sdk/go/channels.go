@@ -50,7 +50,7 @@ func (sdk mfSDK) CreateChannel(channel Channel, token string) (string, error) {
 	return id, nil
 }
 
-func (sdk mfSDK) BulkCreateChannels(path string, token string) ([]Channel, error) {
+func (sdk mfSDK) CreateChannels(path string, token string) ([]Channel, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return []Channel{}, ErrInvalidArgs
 	}
@@ -65,7 +65,7 @@ func (sdk mfSDK) BulkCreateChannels(path string, token string) ([]Channel, error
 		return []Channel{}, ErrInvalidArgs
 	}
 
-	endpoint := fmt.Sprintf("%s/%s", channelsEndpoint, "bulkCreate")
+	endpoint := fmt.Sprintf("%s/%s", channelsEndpoint, "bulk")
 	url := createURL(sdk.baseURL, sdk.channelsPrefix, endpoint)
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))

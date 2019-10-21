@@ -53,8 +53,8 @@ func (es eventStore) AddThing(ctx context.Context, token string, thing things.Th
 	return sth, err
 }
 
-func (es eventStore) BulkCreateThings(ctx context.Context, token string, ths []things.Thing) ([]things.Thing, error) {
-	sths, err := es.svc.BulkCreateThings(ctx, token, ths)
+func (es eventStore) AddThings(ctx context.Context, token string, ths []things.Thing) ([]things.Thing, error) {
+	sths, err := es.svc.AddThings(ctx, token, ths)
 	if err != nil {
 		return sths, err
 	}
@@ -156,8 +156,8 @@ func (es eventStore) CreateChannel(ctx context.Context, token string, channel th
 	return sch, err
 }
 
-func (es eventStore) BulkCreateChannels(ctx context.Context, token string, channels []things.Channel) ([]things.Channel, error) {
-	schs, err := es.svc.BulkCreateChannels(ctx, token, channels)
+func (es eventStore) CreateChannels(ctx context.Context, token string, channels []things.Channel) ([]things.Channel, error) {
+	schs, err := es.svc.CreateChannels(ctx, token, channels)
 	if err != nil {
 		return schs, err
 	}

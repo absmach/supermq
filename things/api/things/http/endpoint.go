@@ -37,9 +37,9 @@ func addThingEndpoint(svc things.Service) endpoint.Endpoint {
 	}
 }
 
-func bulkCreateThingsEndpoint(svc things.Service) endpoint.Endpoint {
+func addThingsEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(bulkCreateThingsReq)
+		req := request.(addThingsReq)
 
 		if err := req.validate(); err != nil {
 			return nil, err
@@ -54,7 +54,7 @@ func bulkCreateThingsEndpoint(svc things.Service) endpoint.Endpoint {
 			ths = append(ths, thing)
 		}
 
-		saved, err := svc.BulkCreateThings(ctx, req.token, ths)
+		saved, err := svc.AddThings(ctx, req.token, ths)
 		if err != nil {
 			return nil, err
 		}
@@ -254,9 +254,9 @@ func createChannelEndpoint(svc things.Service) endpoint.Endpoint {
 	}
 }
 
-func bulkCreateChannelsEndpoint(svc things.Service) endpoint.Endpoint {
+func createChannelsEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(bulkCreateChannelsReq)
+		req := request.(createChannelsReq)
 
 		if err := req.validate(); err != nil {
 			return nil, err
@@ -270,7 +270,7 @@ func bulkCreateChannelsEndpoint(svc things.Service) endpoint.Endpoint {
 			channels = append(channels, channel)
 		}
 
-		saved, err := svc.BulkCreateChannels(ctx, req.token, channels)
+		saved, err := svc.CreateChannels(ctx, req.token, channels)
 		if err != nil {
 			return nil, err
 		}

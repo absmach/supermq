@@ -120,7 +120,7 @@ func TestCreateThing(t *testing.T) {
 	}
 }
 
-func TestBulkCreateThings(t *testing.T) {
+func TestCreateThings(t *testing.T) {
 	svc := newThingsService(map[string]string{token: email})
 	ts := newThingsServer(svc)
 	defer ts.Close()
@@ -207,7 +207,7 @@ func TestBulkCreateThings(t *testing.T) {
 			defer os.Remove(tc.path)
 		}
 
-		res, err := mainfluxSDK.BulkCreateThings(tc.path, tc.token)
+		res, err := mainfluxSDK.CreateThings(tc.path, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 
 		for idx, _ := range tc.res {

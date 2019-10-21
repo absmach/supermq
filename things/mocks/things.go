@@ -61,7 +61,7 @@ func (trm *thingRepositoryMock) Save(_ context.Context, thing things.Thing) (str
 	return thing.ID, nil
 }
 
-func (trm *thingRepositoryMock) BulkCreate(_ context.Context, ths []things.Thing) ([]things.Thing, error) {
+func (trm *thingRepositoryMock) BulkSave(_ context.Context, ths []things.Thing) ([]things.Thing, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 

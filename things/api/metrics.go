@@ -40,13 +40,13 @@ func (ms *metricsMiddleware) AddThing(ctx context.Context, token string, thing t
 	return ms.svc.AddThing(ctx, token, thing)
 }
 
-func (ms *metricsMiddleware) BulkCreateThings(ctx context.Context, token string, ths []things.Thing) (saved []things.Thing, err error) {
+func (ms *metricsMiddleware) AddThings(ctx context.Context, token string, ths []things.Thing) (saved []things.Thing, err error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "bulk_create_things").Add(1)
-		ms.latency.With("method", "bulk_create_things").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "add_things").Add(1)
+		ms.latency.With("method", "add_things").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.BulkCreateThings(ctx, token, ths)
+	return ms.svc.AddThings(ctx, token, ths)
 }
 
 func (ms *metricsMiddleware) UpdateThing(ctx context.Context, token string, thing things.Thing) error {
@@ -112,13 +112,13 @@ func (ms *metricsMiddleware) CreateChannel(ctx context.Context, token string, ch
 	return ms.svc.CreateChannel(ctx, token, channel)
 }
 
-func (ms *metricsMiddleware) BulkCreateChannels(ctx context.Context, token string, channels []things.Channel) (saved []things.Channel, err error) {
+func (ms *metricsMiddleware) CreateChannels(ctx context.Context, token string, channels []things.Channel) (saved []things.Channel, err error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "bulk_create_channels").Add(1)
-		ms.latency.With("method", "bulk_create_channels").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "create_channels").Add(1)
+		ms.latency.With("method", "create_channels").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.BulkCreateChannels(ctx, token, channels)
+	return ms.svc.CreateChannels(ctx, token, channels)
 }
 
 func (ms *metricsMiddleware) UpdateChannel(ctx context.Context, token string, channel things.Channel) error {

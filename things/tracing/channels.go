@@ -51,12 +51,12 @@ func (crm channelRepositoryMiddleware) Save(ctx context.Context, ch things.Chann
 	return crm.repo.Save(ctx, ch)
 }
 
-func (crm channelRepositoryMiddleware) BulkCreate(ctx context.Context, channels []things.Channel) ([]things.Channel, error) {
+func (crm channelRepositoryMiddleware) BulkSave(ctx context.Context, channels []things.Channel) ([]things.Channel, error) {
 	span := createSpan(ctx, crm.tracer, bulkCreateChannelsOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 
-	return crm.repo.BulkCreate(ctx, channels)
+	return crm.repo.BulkSave(ctx, channels)
 }
 
 func (crm channelRepositoryMiddleware) Update(ctx context.Context, ch things.Channel) error {

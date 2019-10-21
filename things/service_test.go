@@ -68,7 +68,7 @@ func TestAddThing(t *testing.T) {
 	}
 }
 
-func TestBulkCreateThings(t *testing.T) {
+func TestAddThings(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 
 	cases := []struct {
@@ -99,7 +99,7 @@ func TestBulkCreateThings(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, err := svc.BulkCreateThings(context.Background(), tc.token, tc.things)
+		_, err := svc.AddThings(context.Background(), tc.token, tc.things)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
@@ -456,7 +456,7 @@ func TestCreateChannel(t *testing.T) {
 	}
 }
 
-func TestBulkCreateChannels(t *testing.T) {
+func TestCreateChannels(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 
 	cases := []struct {
@@ -487,7 +487,7 @@ func TestBulkCreateChannels(t *testing.T) {
 	}
 
 	for _, cc := range cases {
-		_, err := svc.BulkCreateChannels(context.Background(), cc.token, cc.channels)
+		_, err := svc.CreateChannels(context.Background(), cc.token, cc.channels)
 		assert.Equal(t, cc.err, err, fmt.Sprintf("%s: expected %s got %s\n", cc.desc, cc.err, err))
 	}
 }

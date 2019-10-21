@@ -59,7 +59,7 @@ var cmdProvision = []cobra.Command{
 				return
 			}
 
-			things, err := sdk.BulkCreateThings(args[0], args[1])
+			things, err := sdk.CreateThings(args[0], args[1])
 			if err != nil {
 				logError(err)
 				return
@@ -78,7 +78,7 @@ var cmdProvision = []cobra.Command{
 				return
 			}
 
-			channels, err := sdk.BulkCreateChannels(args[0], args[1])
+			channels, err := sdk.CreateChannels(args[0], args[1])
 			if err != nil {
 				logError(err)
 				return

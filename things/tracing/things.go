@@ -50,12 +50,12 @@ func (trm thingRepositoryMiddleware) Save(ctx context.Context, th things.Thing) 
 	return trm.repo.Save(ctx, th)
 }
 
-func (trm thingRepositoryMiddleware) BulkCreate(ctx context.Context, ths []things.Thing) ([]things.Thing, error) {
+func (trm thingRepositoryMiddleware) BulkSave(ctx context.Context, ths []things.Thing) ([]things.Thing, error) {
 	span := createSpan(ctx, trm.tracer, bulkCreateThingsOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 
-	return trm.repo.BulkCreate(ctx, ths)
+	return trm.repo.BulkSave(ctx, ths)
 }
 
 func (trm thingRepositoryMiddleware) Update(ctx context.Context, th things.Thing) error {

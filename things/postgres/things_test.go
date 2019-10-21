@@ -91,7 +91,7 @@ func TestThingSave(t *testing.T) {
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
-func TestThingsBulkCreate(t *testing.T) {
+func TestThingsBulkSave(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
@@ -169,7 +169,7 @@ func TestThingsBulkCreate(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, err := thingRepo.BulkCreate(context.Background(), tc.things)
+		_, err := thingRepo.BulkSave(context.Background(), tc.things)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }

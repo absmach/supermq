@@ -202,14 +202,12 @@ func TestAddThing(t *testing.T) {
 	}
 }
 
-func TestBulkCreateThings(t *testing.T) {
+func TestAddThings(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 
-	data := `[{"name": "1", "key": "1"},
-			  {"name": "2", "key": "2"}]`
-
+	data := `[{"name": "1", "key": "1"}, {"name": "2", "key": "2"}]`
 	invalidData := fmt.Sprintf(`[{"name": "%s", "key": "1"}`, invalidName)
 
 	cases := []struct {
@@ -289,7 +287,7 @@ func TestBulkCreateThings(t *testing.T) {
 		req := testRequest{
 			client:      ts.Client(),
 			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/things/bulkCreate", ts.URL),
+			url:         fmt.Sprintf("%s/things/bulk", ts.URL),
 			contentType: tc.contentType,
 			token:       tc.auth,
 			body:        strings.NewReader(tc.data),
@@ -1071,14 +1069,12 @@ func TestCreateChannel(t *testing.T) {
 	}
 }
 
-func TestBulkChannels(t *testing.T) {
+func TestCreateChannels(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 
-	data := `[{"name": "1"},
-			  {"name": "2"}]`
-
+	data := `[{"name": "1"}, {"name": "2"}]`
 	invalidData := fmt.Sprintf(`[{"name": "%s"}`, invalidName)
 
 	cases := []struct {
@@ -1150,7 +1146,7 @@ func TestBulkChannels(t *testing.T) {
 		req := testRequest{
 			client:      ts.Client(),
 			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/channels/bulkCreate", ts.URL),
+			url:         fmt.Sprintf("%s/channels/bulk", ts.URL),
 			contentType: tc.contentType,
 			token:       tc.auth,
 			body:        strings.NewReader(tc.data),

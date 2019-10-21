@@ -51,7 +51,7 @@ func (svc *mainfluxThings) AddThing(_ context.Context, owner string, thing thing
 	return thing, nil
 }
 
-func (svc *mainfluxThings) BulkCreateThings(_ context.Context, owner string, ths []things.Thing) ([]things.Thing, error) {
+func (svc *mainfluxThings) AddThings(_ context.Context, owner string, ths []things.Thing) ([]things.Thing, error) {
 	svc.mu.Lock()
 	defer svc.mu.Unlock()
 
@@ -198,7 +198,7 @@ func (svc *mainfluxThings) CreateChannel(context.Context, string, things.Channel
 	panic("not implemented")
 }
 
-func (svc *mainfluxThings) BulkCreateChannels(_ context.Context, owner string, channels []things.Channel) ([]things.Channel, error) {
+func (svc *mainfluxThings) CreateChannels(_ context.Context, owner string, channels []things.Channel) ([]things.Channel, error) {
 	svc.mu.Lock()
 	defer svc.mu.Unlock()
 

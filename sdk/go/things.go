@@ -52,8 +52,7 @@ func (sdk mfSDK) CreateThing(thing Thing, token string) (string, error) {
 	return id, nil
 }
 
-func (sdk mfSDK) BulkCreateThings(path string, token string) ([]Thing, error) {
-
+func (sdk mfSDK) CreateThings(path string, token string) ([]Thing, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return []Thing{}, ErrInvalidArgs
 	}
@@ -68,7 +67,7 @@ func (sdk mfSDK) BulkCreateThings(path string, token string) ([]Thing, error) {
 		return []Thing{}, ErrInvalidArgs
 	}
 
-	endpoint := fmt.Sprintf("%s/%s", thingsEndpoint, "bulkCreate")
+	endpoint := fmt.Sprintf("%s/%s", thingsEndpoint, "bulk")
 	url := createURL(sdk.baseURL, sdk.thingsPrefix, endpoint)
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))

@@ -33,12 +33,12 @@ func (req addThingReq) validate() error {
 	return nil
 }
 
-type bulkCreateThingsReq struct {
+type addThingsReq struct {
 	token  string
 	Things []addThingReq
 }
 
-func (req bulkCreateThingsReq) validate() error {
+func (req addThingsReq) validate() error {
 	if req.token == "" {
 		return things.ErrUnauthorizedAccess
 	}
@@ -115,12 +115,12 @@ func (req createChannelReq) validate() error {
 	return nil
 }
 
-type bulkCreateChannelsReq struct {
+type createChannelsReq struct {
 	token    string
 	Channels []createChannelReq
 }
 
-func (req bulkCreateChannelsReq) validate() error {
+func (req createChannelsReq) validate() error {
 	if req.token == "" {
 		return things.ErrUnauthorizedAccess
 	}

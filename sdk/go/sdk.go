@@ -127,8 +127,8 @@ type SDK interface {
 	// CreateThing registers new thing and returns its id.
 	CreateThing(thing Thing, token string) (string, error)
 
-	// BulkCreateThings registers new things and returns their ids.
-	BulkCreateThings(path string, token string) ([]Thing, error)
+	// CreateThings registers new things and returns their ids.
+	CreateThings(path string, token string) ([]Thing, error)
 
 	// Things returns page of things.
 	Things(token string, offset, limit uint64, name string) (ThingsPage, error)
@@ -155,8 +155,8 @@ type SDK interface {
 	// CreateChannel creates new channel and returns its id.
 	CreateChannel(channel Channel, token string) (string, error)
 
-	// BulkCreateChannels registers new channels and returns their ids.
-	BulkCreateChannels(path string, token string) ([]Channel, error)
+	// CreateChannels registers new channels and returns their ids.
+	CreateChannels(path string, token string) ([]Channel, error)
 
 	// Channels returns page of channels.
 	Channels(token string, offset, limit uint64, name string) (ChannelsPage, error)
