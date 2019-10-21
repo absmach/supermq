@@ -1,4 +1,4 @@
-## Server configuration
+## Security
 
 ### Securing PostgreSQL connections
 
@@ -17,7 +17,7 @@ If a secured connection is required, you can select the SSL mode and set paths t
 
 Supported database connection modes are: `disabled` (default), `required`, `verify-ca` and `verify-full`.
 
-## Securing gRPC
+### Securing gRPC
 By default gRPC communication is not secure as Mainflux system is most often run in a private network behind the reverse proxy.
 
 However, TLS can be activated and configured.
