@@ -15,11 +15,7 @@ import (
 	"github.com/mainflux/mainflux/opcua"
 )
 
-// Subscriber represents the OPC-UA Server client.
-type Subscriber interface {
-	// Subscribes to given NodeID and receives events.
-	Subscribe(opcua.Config) error
-}
+var _ opcua.Subscriber = (*client)(nil)
 
 type client struct {
 	ctx    context.Context
@@ -28,7 +24,7 @@ type client struct {
 }
 
 // NewClient returns new OPC-UA client instance.
-func NewClient(ctx context.Context, svc opcua.Service, log logger.Logger) Subscriber {
+func NewClient(ctx context.Context, svc opcua.Service, log logger.Logger) opcua.Subscriber {
 	return client{
 		ctx:    ctx,
 		svc:    svc,

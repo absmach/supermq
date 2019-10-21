@@ -15,11 +15,7 @@ import (
 	"github.com/mainflux/mainflux/opcua"
 )
 
-// Reader represents the OPC-UA client.
-type Reader interface {
-	// Read given OPC-UA Server NodeID (Namespace + ID).
-	Read(opcua.Config) error
-}
+var _ opcua.Reader = (*reader)(nil)
 
 type reader struct {
 	ctx    context.Context
@@ -28,7 +24,7 @@ type reader struct {
 }
 
 // NewReader returns new OPC-UA reader instance.
-func NewReader(ctx context.Context, svc opcua.Service, log logger.Logger) Reader {
+func NewReader(ctx context.Context, svc opcua.Service, log logger.Logger) opcua.Reader {
 	return reader{
 		ctx:    ctx,
 		svc:    svc,

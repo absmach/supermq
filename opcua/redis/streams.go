@@ -40,11 +40,7 @@ var (
 	errMetadataDevEUI = errors.New("Node Identifier not found in thing metadatada")
 )
 
-// Subscriber represents event source for things and channels provisioning.
-type Subscriber interface {
-	// Subscribes to geven subject and receives events.
-	Subscribe(string) error
-}
+var _ opcua.EventStore = (*eventStore)(nil)
 
 type eventStore struct {
 	svc      opcua.Service
@@ -54,7 +50,7 @@ type eventStore struct {
 }
 
 // NewEventStore returns new event store instance.
-func NewEventStore(svc opcua.Service, client *redis.Client, consumer string, log logger.Logger) Subscriber {
+func NewEventStore(svc opcua.Service, client *redis.Client, consumer string, log logger.Logger) opcua.EventStore {
 	return eventStore{
 		svc:      svc,
 		client:   client,
