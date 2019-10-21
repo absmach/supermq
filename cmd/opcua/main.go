@@ -60,9 +60,9 @@ const (
 	envESPass            = "MF_THINGS_ES_PASS"
 	envESDB              = "MF_THINGS_ES_DB"
 	envInstanceName      = "MF_OPCUA_ADAPTER_INSTANCE_NAME"
-	envRouteMapURL       = "MF_OPCUA_ADAPTER_ROUTEMAP_URL"
-	envRouteMapPass      = "MF_OPCUA_ADAPTER_ROUTEMAP_PASS"
-	envRouteMapDB        = "MF_OPCUA_ADAPTER_ROUTEMAP_DB"
+	envRouteMapURL       = "MF_OPCUA_ADAPTER_ROUTE_MAP_URL"
+	envRouteMapPass      = "MF_OPCUA_ADAPTER_ROUTE_MAP_PASS"
+	envRouteMapDB        = "MF_OPCUA_ADAPTER_ROUTE_MAP_DB"
 
 	thingsRMPrefix   = "thing"
 	channelsRMPrefix = "channel"
@@ -210,7 +210,7 @@ func subscribeToThingsES(svc opcua.Service, client *r.Client, prefix string, log
 }
 
 func newRouteMapRepositoy(client *r.Client, prefix string, logger logger.Logger) opcua.RouteMapRepository {
-	logger.Info(fmt.Sprintf("Connected to %s Redis Route map", prefix))
+	logger.Info(fmt.Sprintf("Connected to %s Redis Route-map", prefix))
 	return redis.NewRouteMapRepository(client, prefix)
 }
 

@@ -3,7 +3,7 @@
 
 package opcua
 
-// Message represent an opc message
+// Message represent an OPC-UA message
 type Message struct {
 	Namespace string  `json:"namespace"`
 	ID        string  `json:"id"`

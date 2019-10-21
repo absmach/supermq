@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	protocol      = "opc"
+	protocol      = "opcua"
 	thingSuffix   = "thing"
 	channelSuffix = "channel"
 )

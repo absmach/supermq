@@ -3,14 +3,14 @@
 
 package opcua
 
-// RouteMapRepository store route map between OPC-UA App Server and Mainflux
+// RouteMapRepository store route-map between the OPC-UA Server and Mainflux
 type RouteMapRepository interface {
-	// Save stores/routes pair opc application topic & mainflux channel.
+	// Save stores/routes pair OPC-UA Server & Mainflux.
 	Save(string, string) error
 
-	// Channel returns mainflux channel for given opc application.
+	// Get returns the stored Mainflux route-map for a given OPC-UA pair.
 	Get(string) (string, error)
 
-	// Removes mapping from cache.
+	// Remove Remove route-map from cache.
 	Remove(string) error
 }

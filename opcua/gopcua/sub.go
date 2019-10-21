@@ -3,7 +3,6 @@
 
 package gopcua
 
-// LoraSubscribe subscribe to opc server messages
 import (
 	"context"
 	"fmt"
@@ -120,6 +119,4 @@ func (b client) runHandler(sub *opcuaGopcua.Subscription, cfg opcua.Config) erro
 			}
 		}
 	}
-
-	return nil
 }

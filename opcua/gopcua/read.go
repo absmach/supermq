@@ -3,7 +3,6 @@
 
 package gopcua
 
-// LoraSubscribe subscribe to opc server messages
 import (
 	"context"
 	"fmt"

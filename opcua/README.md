@@ -11,26 +11,25 @@ The service is configured using the environment variables presented in the
 following table. Note that any unset variables will be replaced with their
 default values.
 
-| Variable                         | Description                           | Default                    |
-|----------------------------------|---------------------------------------|----------------------------|
-| MF_OPCUA_ADAPTER_HTTP_PORT       | Service HTTP port                     | 8188                       |
-| MF_OPCUA_ADAPTER_LOG_LEVEL       | Log level for the OPC-UA Adapter      | error                      |
-| MF_NATS_URL                      | NATS instance URL                     | nats://localhost:4222      |
-| MF_OPCUA_ADAPTER_SERVER_URI      | OPC-UA Server subscription URI        | opc.tcp://opcua.rocks:4840 |
-| MF_OPCUA_ADAPTER_NODE_NAMESPACE  | OPC-UA Server Node Namespace          | 0                          |
-| MF_OPCUA_ADAPTER_NODE_IDENTIFIER | OPC-UA Server Node Identifier         | 2256                       |
-| MF_OPCUA_ADAPTER_POLICY          | OPC-UA Server Policy                  |                            |
-| MF_OPCUA_ADAPTER_MODE            | OPC-UA Server Mode                    |                            |
-| MF_OPCUA_ADAPTER_CERT_FILE       | OPC-UA Server Certificate file        |                            |
-| MF_OPCUA_ADAPTER_KEY_FILE        | OPC-UA Server Key file                |                            |
-| MF_OPCUA_ADAPTER_MQTT_URL        | MQTT Subscription URL                 | tcp://localhost:1883       |
-| MF_OPCUA_ADAPTER_ROUTEMAP_URL    | Routemap database URL                 | localhost:6379             |
-| MF_OPCUA_ADAPTER_ROUTEMAP_PASS   | Routemap database password            |                            |
-| MF_OPCUA_ADAPTER_ROUTEMAP_DB     | Routemap instance that should be used | 0                          |
-| MF_THINGS_ES_URL                 | Things service event store URL        | localhost:6379             |
-| MF_THINGS_ES_PASS                | Things service event store password   |                            |
-| MF_THINGS_ES_DB                  | Things service event store db         | 0                          |
-| MF_OPCUA_ADAPTER_INSTANCE_NAME   | OPC-UA adapter instance name          | opcua                      |
+| Variable                         | Description                            | Default                    |
+|----------------------------------|----------------------------------------|----------------------------|
+| MF_OPCUA_ADAPTER_HTTP_PORT       | Service HTTP port                      | 8188                       |
+| MF_OPCUA_ADAPTER_LOG_LEVEL       | Log level for the OPC-UA Adapter       | error                      |
+| MF_NATS_URL                      | NATS instance URL                      | nats://localhost:4222      |
+| MF_OPCUA_ADAPTER_SERVER_URI      | OPC-UA Server subscription URI         | opc.tcp://opcua.rocks:4840 |
+| MF_OPCUA_ADAPTER_NODE_NAMESPACE  | OPC-UA Server Node Namespace           | 0                          |
+| MF_OPCUA_ADAPTER_NODE_IDENTIFIER | OPC-UA Server Node Identifier          | 2256                       |
+| MF_OPCUA_ADAPTER_POLICY          | OPC-UA Server Policy                   |                            |
+| MF_OPCUA_ADAPTER_MODE            | OPC-UA Server Mode                     |                            |
+| MF_OPCUA_ADAPTER_CERT_FILE       | OPC-UA Server Certificate file         |                            |
+| MF_OPCUA_ADAPTER_KEY_FILE        | OPC-UA Server Key file                 |                            |
+| MF_OPCUA_ADAPTER_ROUTE_MAP_URL   | Route-map database URL                 | localhost:6379             |
+| MF_OPCUA_ADAPTER_ROUTE_MAP_PASS  | Route-map database password            |                            |
+| MF_OPCUA_ADAPTER_ROUTE_MAP_DB    | Route-map instance that should be used | 0                          |
+| MF_THINGS_ES_URL                 | Things service event store URL         | localhost:6379             |
+| MF_THINGS_ES_PASS                | Things service event store password    |                            |
+| MF_THINGS_ES_DB                  | Things service event store db          | 0                          |
+| MF_OPCUA_ADAPTER_INSTANCE_NAME   | OPC-UA adapter instance name           | opcua                      |
 
 ## Deployment
 
@@ -41,15 +40,22 @@ a compose file template that can be used to deploy the service container locally
 version: "2"
 services:
   adapter:
-    image: mainflux/opc:[version]
+    image: mainflux/opcua:[version]
     container_name: [instance name]
     environment:
+      MF_OPCUA_ADAPTER_HTTP_PORT: [Service HTTP port]
       MF_OPCUA_ADAPTER_LOG_LEVEL: [OPC-UA Adapter Log Level]
       MF_NATS_URL: [NATS instance URL]
-      MF_OPCUA_ADAPTER_MQTT_URL: [OPC-UA Server mqtt broker URL]
-      MF_OPCUA_ADAPTER_ROUTEMAP_URL: [OPC-UA adapter routemap URL]
-      MF_OPCUA_ADAPTER_ROUTEMAP_PASS: [OPC-UA adapter routemap password]
-      MF_OPCUA_ADAPTER_ROUTEMAP_DB: [OPC-UA adapter routemap instance]
+      MF_OPCUA_ADAPTER_SERVER_URI: [OPC-UA Server subscription URI]
+      MF_OPCUA_ADAPTER_NODE_NAMESPACE: [OPC-UA Server Node Namespace]
+      MF_OPCUA_ADAPTER_NODE_IDENTIFIER: [OPC-UA Server Node Identifier]
+      MF_OPCUA_ADAPTER_POLICY: [OPC-UA Server Policy]
+      MF_OPCUA_ADAPTER_MODE: [OPC-UA Server Mode]
+      MF_OPCUA_ADAPTER_CERT_FILE: [OPC-UA Server Certificate file]
+      MF_OPCUA_ADAPTER_KEY_FILE: [OPC-UA Server Key file]
+      MF_OPCUA_ADAPTER_ROUTE_MAP_URL: [Route-map database URL]
+      MF_OPCUA_ADAPTER_ROUTE_MAP_PASS: [Route-map database password]
+      MF_OPCUA_ADAPTER_ROUTE_MAP_DB: [Route-map instance that should be used]
       MF_THINGS_ES_URL: [Things service event store URL]
       MF_THINGS_ES_PASS: [Things service event store password]
       MF_THINGS_ES_DB: [Things service event store db]
@@ -64,14 +70,14 @@ go get github.com/mainflux/mainflux
 
 cd $GOPATH/src/github.com/mainflux/mainflux
 
-# compile the opc adapter
+# compile the opcua-adapter
 make opcua
 
 # copy binary to bin
 make install
 
 # set the environment variables and run the service
-MF_OPCUA_ADAPTER_LOG_LEVEL=[OPC-UA Adapter Log Level] MF_NATS_URL=[NATS instance URL] MF_OPCUA_ADAPTER_MQTT_URL=[OPC-UA Server mqtt broker URL] MF_OPCUA_ADAPTER_ROUTEMAP_URL=[OPC-UA adapter routemap URL] MF_OPCUA_ADAPTER_ROUTEMAP_PASS=[OPC-UA adapter routemap password] MF_OPCUA_ADAPTER_ROUTEMAP_DB=[OPC-UA adapter routemap instance] MF_THINGS_ES_URL=[Things service event store URL] MF_THINGS_ES_PASS=[Things service event store password] MF_THINGS_ES_DB=[Things service event store db] MF_OPCUA_ADAPTER_INSTANCE_NAME=[OPC-UA adapter instance name] $GOBIN/mainflux-opc
+MF_OPCUA_ADAPTER_HTTP_PORT=[Service HTTP port] MF_OPCUA_ADAPTER_LOG_LEVEL=[OPC-UA Adapter Log Level] MF_NATS_URL=[NATS instance URL] MF_OPCUA_ADAPTER_SERVER_URI=[OPC-UA Server subscription URI] MF_OPCUA_ADAPTER_NODE_NAMESPACE=[OPC-UA Server Node Namespace] MF_OPCUA_ADAPTER_NODE_IDENTIFIER=[OPC-UA Server Node Identifier] MF_OPCUA_ADAPTER_POLICY=[OPC-UA Server Policy] MF_OPCUA_ADAPTER_MODE=[OPC-UA Server Mode] MF_OPCUA_ADAPTER_CERT_FILE=[OPC-UA Server Certificate file] MF_OPCUA_ADAPTER_KEY_FILE=[OPC-UA Server Key file] MF_OPCUA_ADAPTER_ROUTE_MAP_URL=[Route-map database URL] MF_OPCUA_ADAPTER_ROUTE_MAP_PASS=[Route-map database password] MF_OPCUA_ADAPTER_ROUTE_MAP_DB=[Route-map instance that should be used] MF_THINGS_ES_URL=[Things service event store URL] MF_THINGS_ES_PASS=[Things service event store password] MF_THINGS_ES_DB=[Things service event store db] MF_OPCUA_ADAPTER_INSTANCE_NAME=[OPC-UA adapter instance name] $GOBIN/mainflux-opcua
 ```
 
 ### Using docker-compose
@@ -86,4 +92,4 @@ docker-compose -f docker/addons/opcua-adapter/docker-compose.yml up -d
 ## Usage
 
 For more information about service capabilities and its usage, please check out
-the [Mainflux documentation](https://mainflux.readthedocs.io/en/latest/opc/).
+the [Mainflux documentation](https://mainflux.readthedocs.io/en/latest/opcua/).
