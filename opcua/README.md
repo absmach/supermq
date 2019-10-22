@@ -29,7 +29,7 @@ default values.
 | MF_THINGS_ES_URL                 | Things service event store URL         | localhost:6379             |
 | MF_THINGS_ES_PASS                | Things service event store password    |                            |
 | MF_THINGS_ES_DB                  | Things service event store db          | 0                          |
-| MF_OPCUA_ADAPTER_INSTANCE_NAME   | OPC-UA adapter instance name           | opcua                      |
+| MF_OPCUA_ADAPTER_ROUTE_MAP_NAME  | OPC-UA adapter instance name           | opcua                      |
 
 ## Deployment
 
@@ -59,7 +59,7 @@ services:
       MF_THINGS_ES_URL: [Things service event store URL]
       MF_THINGS_ES_PASS: [Things service event store password]
       MF_THINGS_ES_DB: [Things service event store db]
-      MF_OPCUA_ADAPTER_INSTANCE_NAME: [OPC-UA adapter instance name]
+      MF_OPCUA_ADAPTER_ROUTE_MAP_NAME: [OPC-UA adapter instance name]
 ```
 
 To start the service outside of the container, execute the following shell script:
@@ -77,7 +77,7 @@ make opcua
 make install
 
 # set the environment variables and run the service
-MF_OPCUA_ADAPTER_HTTP_PORT=[Service HTTP port] MF_OPCUA_ADAPTER_LOG_LEVEL=[OPC-UA Adapter Log Level] MF_NATS_URL=[NATS instance URL] MF_OPCUA_ADAPTER_SERVER_URI=[OPC-UA Server subscription URI] MF_OPCUA_ADAPTER_NODE_NAMESPACE=[OPC-UA Server Node Namespace] MF_OPCUA_ADAPTER_NODE_IDENTIFIER=[OPC-UA Server Node Identifier] MF_OPCUA_ADAPTER_POLICY=[OPC-UA Server Policy] MF_OPCUA_ADAPTER_MODE=[OPC-UA Server Mode] MF_OPCUA_ADAPTER_CERT_FILE=[OPC-UA Server Certificate file] MF_OPCUA_ADAPTER_KEY_FILE=[OPC-UA Server Key file] MF_OPCUA_ADAPTER_ROUTE_MAP_URL=[Route-map database URL] MF_OPCUA_ADAPTER_ROUTE_MAP_PASS=[Route-map database password] MF_OPCUA_ADAPTER_ROUTE_MAP_DB=[Route-map instance that should be used] MF_THINGS_ES_URL=[Things service event store URL] MF_THINGS_ES_PASS=[Things service event store password] MF_THINGS_ES_DB=[Things service event store db] MF_OPCUA_ADAPTER_INSTANCE_NAME=[OPC-UA adapter instance name] $GOBIN/mainflux-opcua
+MF_OPCUA_ADAPTER_HTTP_PORT=[Service HTTP port] MF_OPCUA_ADAPTER_LOG_LEVEL=[OPC-UA Adapter Log Level] MF_NATS_URL=[NATS instance URL] MF_OPCUA_ADAPTER_SERVER_URI=[OPC-UA Server subscription URI] MF_OPCUA_ADAPTER_NODE_NAMESPACE=[OPC-UA Server Node Namespace] MF_OPCUA_ADAPTER_NODE_IDENTIFIER=[OPC-UA Server Node Identifier] MF_OPCUA_ADAPTER_POLICY=[OPC-UA Server Policy] MF_OPCUA_ADAPTER_MODE=[OPC-UA Server Mode] MF_OPCUA_ADAPTER_CERT_FILE=[OPC-UA Server Certificate file] MF_OPCUA_ADAPTER_KEY_FILE=[OPC-UA Server Key file] MF_OPCUA_ADAPTER_ROUTE_MAP_URL=[Route-map database URL] MF_OPCUA_ADAPTER_ROUTE_MAP_PASS=[Route-map database password] MF_OPCUA_ADAPTER_ROUTE_MAP_DB=[Route-map instance that should be used] MF_THINGS_ES_URL=[Things service event store URL] MF_THINGS_ES_PASS=[Things service event store password] MF_THINGS_ES_DB=[Things service event store db] MF_OPCUA_ADAPTER_ROUTE_MAP_NAME=[OPC-UA adapter instance name] $GOBIN/mainflux-opcua
 ```
 
 ### Using docker-compose

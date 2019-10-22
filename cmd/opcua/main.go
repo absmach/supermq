@@ -59,7 +59,7 @@ const (
 	envESURL             = "MF_THINGS_ES_URL"
 	envESPass            = "MF_THINGS_ES_PASS"
 	envESDB              = "MF_THINGS_ES_DB"
-	envInstanceName      = "MF_OPCUA_ADAPTER_INSTANCE_NAME"
+	envInstanceName      = "MF_OPCUA_ADAPTER_ROUTE_MAP_NAME"
 	envRouteMapURL       = "MF_OPCUA_ADAPTER_ROUTE_MAP_URL"
 	envRouteMapPass      = "MF_OPCUA_ADAPTER_ROUTE_MAP_PASS"
 	envRouteMapDB        = "MF_OPCUA_ADAPTER_ROUTE_MAP_DB"
