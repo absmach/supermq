@@ -58,24 +58,23 @@ Content-Length: 0
 
 ### Bulk provisioning things
 
-Multiple things can be created by executing a `POST /things/bulkCreate` request with a JSON payload.  The payload should contain a JSON array of the things to be created.  If there is an error any of the things, none of the things will be created.
+Multiple things can be created by executing a `POST /things/bulk` request with a JSON payload.  The payload should contain a JSON array of the things to be created.  If there is an error any of the things, none of the things will be created.
 
 ```bash
-curl -s -S -i --cacert docker/ssl/certs/mainflux-server.crt --insecure -X POST -H "Content-Type: application/json" -H "Authorization: <user_auth_token>" https://localhost/things/bulkCreate -d '[{"name":"weio"},{"name":"bob"},]'
+curl -s -S -i --cacert docker/ssl/certs/mainflux-server.crt --insecure -X POST -H "Content-Type: application/json" -H "Authorization: <user_auth_token>" https://localhost/things/bulk -d '[{"name":"weio"},{"name":"bob"}]'
 ```
 
-The response's body will contain a list of the created things and their IDs.
+The response's body will contain a list of the created things.
 
 ```
-HTTP/2 201 
+HTTP/2 201
 server: nginx/1.16.0
-date: Fri, 18 Oct 2019 03:32:32 GMT
+date: Tue, 22 Oct 2019 02:19:15 GMT
 content-type: application/json
-content-length: 105
-location: ""
+content-length: 222
 access-control-expose-headers: Location
 
-{"things":[{"id":"2c4d76eb-7ebd-4e25-8ad7-92640250c4f9"},{"id":"16281f2b-974e-4e60-87e5-a6979b72b283"}]}
+{"things":[{"id":"8909adbf-312f-41eb-8cfc-ccc8c4e3655e","name":"weio","key":"4ef103cc-964a-41b5-b75b-b7415c3a3619"},{"id":"2fcd2349-38f7-4b5c-8a29-9607b2ca8ff5","name":"bob","key":"ff0d1490-355c-4dcf-b322-a4c536c8c3bf"}]}
 ```
 
 ### Retrieving provisioned things
@@ -162,24 +161,23 @@ Content-Length: 0
 
 ### Bulk provisioning channels
 
-Multiple channels can be created by executing a `POST /things/bulkCreate` request with a JSON payload.  The payload should contain a JSON array of the channels to be created.  If there is an error any of the channels, none of the channels will be created.
+Multiple channels can be created by executing a `POST /things/bulk` request with a JSON payload.  The payload should contain a JSON array of the channels to be created.  If there is an error any of the channels, none of the channels will be created.
 
 ```bash
-curl -s -S -i --cacert docker/ssl/certs/mainflux-server.crt --insecure -X POST -H "Content-Type: application/json" -H "Authorization: <user_auth_token>" https://localhost/channels/bulkCreate -d '[{"name":"joe"},{"name":"betty"}]'
+curl -s -S -i --cacert docker/ssl/certs/mainflux-server.crt --insecure -X POST -H "Content-Type: application/json" -H "Authorization: <user_auth_token>" https://localhost/channels/bulk -d '[{"name":"joe"},{"name":"betty"}]'
 ```
 
-The response's body will contain a list of the created channels and their IDs.
+The response's body will contain a list of the created channels.
 
 ```
-HTTP/2 201 
+HTTP/2 201
 server: nginx/1.16.0
-date: Fri, 18 Oct 2019 03:45:00 GMT
+date: Tue, 22 Oct 2019 02:14:41 GMT
 content-type: application/json
-content-length: 107
-location: ""
+content-length: 135
 access-control-expose-headers: Location
 
-{"channels":[{"ID":"abcd038e-28ab-492e-b46e-b23d53804f0c"},{"ID":"341cde5e-52b9-49ee-89e1-00b58733afc2"}]}
+{"channels":[{"id":"5a21bbcb-4c9a-4bb4-af31-9982d00f7a6e","name":"joe"},{"id":"d74b119b-2eea-4285-a999-9f747869bb45","name":"betty"}]}
 ```
 
 ### Retrieving provisioned channels

@@ -81,8 +81,7 @@ func (cr channelRepository) BulkSave(ctx context.Context, channels []things.Chan
 		}
 	}
 
-	err = tx.Commit()
-	if err != nil {
+	if err = tx.Commit(); err != nil {
 		return []things.Channel{}, err
 	}
 

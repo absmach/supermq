@@ -95,8 +95,7 @@ func (tr thingRepository) BulkSave(ctx context.Context, ths []things.Thing) ([]t
 		}
 	}
 
-	err = tx.Commit()
-	if err != nil {
+	if err = tx.Commit(); err != nil {
 		return []things.Thing{}, err
 	}
 

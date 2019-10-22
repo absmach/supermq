@@ -37,8 +37,11 @@ func (res removeRes) Empty() bool {
 }
 
 type thingRes struct {
-	ID      string `json:"id"`
-	created bool
+	ID       string                 `json:"id"`
+	Name     string                 `json:"name,omitempty"`
+	Key      string                 `json:"key"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	created  bool
 }
 
 func (res thingRes) Code() int {
@@ -122,8 +125,10 @@ func (res thingsPageRes) Empty() bool {
 }
 
 type channelRes struct {
-	ID      string
-	created bool
+	ID       string                 `json:"id"`
+	Name     string                 `json:"name,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	created  bool
 }
 
 func (res channelRes) Code() int {

@@ -9,11 +9,11 @@ type tokenRes struct {
 	Token string `json:"token,omitempty"`
 }
 
-type bulkCreateThingsRes struct {
+type createThingsRes struct {
 	Things []Thing `json:"things"`
 }
 
-type bulkCreateChannelsRes struct {
+type createChannelsRes struct {
 	Channels []Channel `json:"channels"`
 }
 
