@@ -9,11 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
-
-	"github.com/gocarina/gocsv"
 )
 
 const thingsEndpoint = "things"
@@ -52,16 +48,7 @@ func (sdk mfSDK) CreateThing(thing Thing, token string) (string, error) {
 	return id, nil
 }
 
-func (sdk mfSDK) CreateThings(path string, token string) ([]Thing, error) {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return []Thing{}, ErrInvalidArgs
-	}
-
-	things, err := thingsFromFile(path)
-	if err != nil {
-		return []Thing{}, err
-	}
-
+func (sdk mfSDK) CreateThings(things []Thing, token string) ([]Thing, error) {
 	data, err := json.Marshal(things)
 	if err != nil {
 		return []Thing{}, ErrInvalidArgs
@@ -97,7 +84,7 @@ func (sdk mfSDK) CreateThings(path string, token string) ([]Thing, error) {
 		return []Thing{}, err
 	}
 
-	var p bulkCreateThingsRes
+	var p createThingsRes
 	if err := json.Unmarshal(body, &p); err != nil {
 		return []Thing{}, err
 	}
@@ -349,31 +336,4 @@ func (sdk mfSDK) DisconnectThing(thingID, chanID, token string) error {
 	}
 
 	return nil
-}
-
-func thingsFromFile(path string) ([]Thing, error) {
-	things := []Thing{}
-	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
-	if err != nil {
-		return []Thing{}, err
-	}
-	defer file.Close()
-
-	switch filepath.Ext(path) {
-	case ".csv":
-		err := gocsv.Unmarshal(file, &things)
-		if err != nil {
-			return []Thing{}, err
-
-		}
-	case ".json":
-		err := json.NewDecoder(file).Decode(&things)
-		if err != nil {
-			return []Thing{}, err
-		}
-	default:
-		return []Thing{}, ErrInvalidArgs
-	}
-
-	return things, nil
 }

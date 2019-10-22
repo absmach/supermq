@@ -126,7 +126,3 @@
 [[constraint]]
   revision = "ced62fe5104b907b6c16cb7e575c17b2e62ceddd"
   name = "gonum.org/v1/gonum"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/gocarina/gocsv"

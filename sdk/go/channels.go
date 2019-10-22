@@ -9,11 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
-
-	"github.com/gocarina/gocsv"
 )
 
 const channelsEndpoint = "channels"
@@ -50,16 +46,7 @@ func (sdk mfSDK) CreateChannel(channel Channel, token string) (string, error) {
 	return id, nil
 }
 
-func (sdk mfSDK) CreateChannels(path string, token string) ([]Channel, error) {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return []Channel{}, ErrInvalidArgs
-	}
-
-	channels, err := channelsFromFile(path)
-	if err != nil {
-		return []Channel{}, err
-	}
-
+func (sdk mfSDK) CreateChannels(channels []Channel, token string) ([]Channel, error) {
 	data, err := json.Marshal(channels)
 	if err != nil {
 		return []Channel{}, ErrInvalidArgs
@@ -95,7 +82,7 @@ func (sdk mfSDK) CreateChannels(path string, token string) ([]Channel, error) {
 		return []Channel{}, err
 	}
 
-	var p bulkCreateChannelsRes
+	var p createChannelsRes
 	if err := json.Unmarshal(body, &p); err != nil {
 		return []Channel{}, err
 	}
@@ -291,31 +278,4 @@ func (sdk mfSDK) DeleteChannel(id, token string) error {
 	}
 
 	return nil
-}
-
-func channelsFromFile(path string) ([]Channel, error) {
-	channels := []Channel{}
-	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
-	if err != nil {
-		return []Channel{}, err
-	}
-	defer file.Close()
-
-	switch filepath.Ext(path) {
-	case ".csv":
-		err := gocsv.UnmarshalFile(file, &channels)
-		if err != nil {
-			return []Channel{}, err
-
-		}
-	case ".json":
-		err := json.NewDecoder(file).Decode(&channels)
-		if err != nil {
-			return []Channel{}, err
-		}
-	default:
-		return []Channel{}, ErrInvalidArgs
-	}
-
-	return channels, nil
 }

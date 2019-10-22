@@ -79,10 +79,10 @@ type User struct {
 
 // Thing represents mainflux thing.
 type Thing struct {
-	ID       string                 `json:"id,omitempty" csv:"id,omitempty"`
-	Name     string                 `json:"name,omitempty" csv:"name,omitempty"`
-	Key      string                 `json:"key,omitempty" csv:"key,omitempty"`
-	Metadata map[string]interface{} `json:"metadata,omitempty" csv:"-"`
+	ID       string                 `json:"id,omitempty"`
+	Name     string                 `json:"name,omitempty"`
+	Key      string                 `json:"key,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // ThingsPage contains list of things in a page with proper metadata.
@@ -95,9 +95,9 @@ type ThingsPage struct {
 
 // Channel represents mainflux channel.
 type Channel struct {
-	ID       string                 `json:"id,omitempty" csv:"id,omitempty"`
-	Name     string                 `json:"name" csv:"name,omitempty"`
-	Metadata map[string]interface{} `json:"metadata,omitempty" csv:"-"`
+	ID       string                 `json:"id,omitempty"`
+	Name     string                 `json:"name"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // ChannelsPage contains list of channels in a page with proper metadata.
@@ -128,7 +128,7 @@ type SDK interface {
 	CreateThing(thing Thing, token string) (string, error)
 
 	// CreateThings registers new things and returns their ids.
-	CreateThings(path string, token string) ([]Thing, error)
+	CreateThings(things []Thing, token string) ([]Thing, error)
 
 	// Things returns page of things.
 	Things(token string, offset, limit uint64, name string) (ThingsPage, error)
@@ -156,7 +156,7 @@ type SDK interface {
 	CreateChannel(channel Channel, token string) (string, error)
 
 	// CreateChannels registers new channels and returns their ids.
-	CreateChannels(path string, token string) ([]Channel, error)
+	CreateChannels(channels []Channel, token string) ([]Channel, error)
 
 	// Channels returns page of channels.
 	Channels(token string, offset, limit uint64, name string) (ChannelsPage, error)

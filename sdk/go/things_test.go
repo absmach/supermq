@@ -4,16 +4,11 @@
 package sdk_test
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http/httptest"
-	"os"
 	"strconv"
-	"strings"
 	"testing"
 
-	"github.com/gocarina/gocsv"
 	sdk "github.com/mainflux/mainflux/sdk/go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
@@ -136,78 +131,49 @@ func TestCreateThings(t *testing.T) {
 
 	mainfluxSDK := sdk.NewSDK(sdkConf)
 
-	jsonThings := []sdk.Thing{
+	things := []sdk.Thing{
 		sdk.Thing{ID: "1", Name: "1", Key: "1"},
 		sdk.Thing{ID: "2", Name: "2", Key: "2"},
 	}
-	jsonData, err := json.Marshal(jsonThings)
-	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-
-	csvThings := []sdk.Thing{
-		sdk.Thing{ID: "3", Name: "3", Key: "3"},
-		sdk.Thing{ID: "4", Name: "4", Key: "4"},
-	}
-	csvData, err := gocsv.MarshalString(csvThings)
-	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	cases := []struct {
-		desc  string
-		path  string
-		data  string
-		token string
-		err   error
-		res   []sdk.Thing
+		desc   string
+		things []sdk.Thing
+		token  string
+		err    error
+		res    []sdk.Thing
 	}{
 		{
-			desc:  "create new things from json file",
-			path:  "things.json",
-			data:  string(jsonData),
-			token: token,
-			err:   nil,
-			res:   jsonThings,
+			desc:   "create new things",
+			things: things,
+			token:  token,
+			err:    nil,
+			res:    things,
 		},
 		{
-			desc:  "create new things from csv file",
-			path:  "things.csv",
-			data:  csvData,
-			token: token,
-			err:   nil,
-			res:   csvThings,
+			desc:   "create new things with empty things",
+			things: []sdk.Thing{},
+			token:  token,
+			err:    sdk.ErrInvalidArgs,
+			res:    []sdk.Thing{},
 		},
 		{
-			desc:  "create new things with empty filepath",
-			path:  "",
-			token: token,
-			err:   sdk.ErrInvalidArgs,
-			res:   []sdk.Thing{},
+			desc:   "create new thing with empty token",
+			things: things,
+			token:  "",
+			err:    sdk.ErrUnauthorized,
+			res:    []sdk.Thing{},
 		},
 		{
-			desc:  "create new thing with empty token",
-			path:  "things.json",
-			token: "",
-			err:   sdk.ErrUnauthorized,
-			res:   []sdk.Thing{},
-		},
-		{
-			desc:  "create new thing with invalid token",
-			path:  "things.json",
-			token: wrongValue,
-			err:   sdk.ErrUnauthorized,
-			res:   []sdk.Thing{},
+			desc:   "create new thing with invalid token",
+			things: things,
+			token:  wrongValue,
+			err:    sdk.ErrUnauthorized,
+			res:    []sdk.Thing{},
 		},
 	}
 	for _, tc := range cases {
-		if tc.data != "" {
-			file, err := os.Create(tc.path)
-			require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-
-			_, err = io.Copy(file, strings.NewReader(tc.data))
-			require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-			file.Close()
-			defer os.Remove(tc.path)
-		}
-
-		res, err := mainfluxSDK.CreateThings(tc.path, tc.token)
+		res, err := mainfluxSDK.CreateThings(tc.things, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 
 		for idx, _ := range tc.res {

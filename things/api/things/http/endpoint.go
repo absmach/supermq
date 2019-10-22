@@ -66,7 +66,10 @@ func addThingsEndpoint(svc things.Service) endpoint.Endpoint {
 
 		for _, thing := range saved {
 			t := thingRes{
-				ID: thing.ID,
+				ID:       thing.ID,
+				Name:     thing.Name,
+				Key:      thing.Key,
+				Metadata: thing.Metadata,
 			}
 			res.Things = append(res.Things, t)
 		}
@@ -265,7 +268,8 @@ func createChannelsEndpoint(svc things.Service) endpoint.Endpoint {
 		channels := []things.Channel{}
 		for _, c := range req.Channels {
 			channel := things.Channel{
-				Name: c.Name,
+				Metadata: c.Metadata,
+				Name:     c.Name,
 			}
 			channels = append(channels, channel)
 		}
@@ -282,7 +286,9 @@ func createChannelsEndpoint(svc things.Service) endpoint.Endpoint {
 
 		for _, channel := range saved {
 			c := channelRes{
-				ID: channel.ID,
+				ID:       channel.ID,
+				Name:     channel.Name,
+				Metadata: channel.Metadata,
 			}
 			res.Channels = append(res.Channels, c)
 		}

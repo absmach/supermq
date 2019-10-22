@@ -4,8 +4,13 @@
 package cli
 
 import (
+	"encoding/csv"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 
 	"github.com/docker/docker/pkg/namesgenerator"
 	mfxsdk "github.com/mainflux/mainflux/sdk/go"
@@ -14,44 +19,10 @@ import (
 
 var errMalformedCSV = errors.New("malformed CSV")
 
-func createThing(name, token string) (mfxsdk.Thing, error) {
-	id, err := sdk.CreateThing(mfxsdk.Thing{Name: name}, token)
-	if err != nil {
-		return mfxsdk.Thing{}, err
-	}
-
-	t, err := sdk.Thing(id, token)
-	if err != nil {
-		return mfxsdk.Thing{}, err
-	}
-
-	m := mfxsdk.Thing{
-		ID:   id,
-		Name: name,
-		Key:  t.Key,
-	}
-
-	return m, nil
-}
-
-func createChannel(name, token string) (mfxsdk.Channel, error) {
-	id, err := sdk.CreateChannel(mfxsdk.Channel{Name: name}, token)
-	if err != nil {
-		return mfxsdk.Channel{}, nil
-	}
-
-	c := mfxsdk.Channel{
-		ID:   id,
-		Name: name,
-	}
-
-	return c, nil
-}
-
 var cmdProvision = []cobra.Command{
 	cobra.Command{
 		Use:   "things",
-		Short: "things <things_csv> <user_token>",
+		Short: "things <things_file> <user_token>",
 		Long:  `Bulk create things`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
@@ -59,7 +30,18 @@ var cmdProvision = []cobra.Command{
 				return
 			}
 
-			things, err := sdk.CreateThings(args[0], args[1])
+			if _, err := os.Stat(args[0]); os.IsNotExist(err) {
+				logError(err)
+				return
+			}
+
+			things, err := thingsFromFile(args[0])
+			if err != nil {
+				logError(err)
+				return
+			}
+
+			things, err = sdk.CreateThings(things, args[1])
 			if err != nil {
 				logError(err)
 				return
@@ -70,7 +52,7 @@ var cmdProvision = []cobra.Command{
 	},
 	cobra.Command{
 		Use:   "channels",
-		Short: "channels <channels_csv> <user_token>",
+		Short: "channels <channels_file> <user_token>",
 		Long:  `Bulk create channels`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
@@ -78,7 +60,13 @@ var cmdProvision = []cobra.Command{
 				return
 			}
 
-			channels, err := sdk.CreateChannels(args[0], args[1])
+			channels, err := channelsFromFile(args[0])
+			if err != nil {
+				logError(err)
+				return
+			}
+
+			channels, err = sdk.CreateChannels(channels, args[1])
 			if err != nil {
 				logError(err)
 				return
@@ -125,24 +113,32 @@ var cmdProvision = []cobra.Command{
 			for i := 0; i < numThings; i++ {
 				n := fmt.Sprintf("d%d", i)
 
-				m, err := createThing(n, ut)
-				if err != nil {
-					logError(err)
-					return
+				t := mfxsdk.Thing{
+					Name: n,
 				}
 
-				things = append(things, m)
+				things = append(things, t)
 			}
+			things, err = sdk.CreateThings(things, ut)
+			if err != nil {
+				logError(err)
+				return
+			}
+
 			// Create channels
 			for i := 0; i < numChan; i++ {
 				n := fmt.Sprintf("c%d", i)
-				c, err := createChannel(n, ut)
-				if err != nil {
-					logError(err)
-					return
+
+				c := mfxsdk.Channel{
+					Name: n,
 				}
 
 				channels = append(channels, c)
+			}
+			channels, err = sdk.CreateChannels(channels, ut)
+			if err != nil {
+				logError(err)
+				return
 			}
 
 			// Connect things to channels - first thing to both channels, second only to first
@@ -181,4 +177,98 @@ func NewProvisionCmd() *cobra.Command {
 	}
 
 	return &cmd
+}
+
+func thingsFromFile(path string) ([]mfxsdk.Thing, error) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return []mfxsdk.Thing{}, err
+	}
+
+	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
+	if err != nil {
+		return []mfxsdk.Thing{}, err
+	}
+	defer file.Close()
+
+	things := []mfxsdk.Thing{}
+	switch filepath.Ext(path) {
+	case ".csv":
+		reader := csv.NewReader(file)
+
+		for {
+			l, err := reader.Read()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return []mfxsdk.Thing{}, err
+			}
+
+			if len(l) < 1 {
+				return []mfxsdk.Thing{}, err
+			}
+
+			thing := mfxsdk.Thing{
+				Name: l[0],
+			}
+
+			things = append(things, thing)
+		}
+	case ".json":
+		err := json.NewDecoder(file).Decode(&things)
+		if err != nil {
+			return []mfxsdk.Thing{}, err
+		}
+	default:
+		return []mfxsdk.Thing{}, err
+	}
+
+	return things, nil
+}
+
+func channelsFromFile(path string) ([]mfxsdk.Channel, error) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return []mfxsdk.Channel{}, err
+	}
+
+	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
+	if err != nil {
+		return []mfxsdk.Channel{}, err
+	}
+	defer file.Close()
+
+	channels := []mfxsdk.Channel{}
+	switch filepath.Ext(path) {
+	case ".csv":
+		reader := csv.NewReader(file)
+
+		for {
+			l, err := reader.Read()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return []mfxsdk.Channel{}, err
+			}
+
+			if len(l) < 1 {
+				return []mfxsdk.Channel{}, err
+			}
+
+			channel := mfxsdk.Channel{
+				Name: l[0],
+			}
+
+			channels = append(channels, channel)
+		}
+	case ".json":
+		err := json.NewDecoder(file).Decode(&channels)
+		if err != nil {
+			return []mfxsdk.Channel{}, err
+		}
+	default:
+		return []mfxsdk.Channel{}, err
+	}
+
+	return channels, nil
 }
