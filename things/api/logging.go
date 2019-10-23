@@ -39,9 +39,9 @@ func (lm *loggingMiddleware) AddThing(ctx context.Context, token string, thing t
 	return lm.svc.AddThing(ctx, token, thing)
 }
 
-func (lm *loggingMiddleware) AddThings(ctx context.Context, token string, ths []things.Thing) (saved []things.Thing, err error) {
+func (lm *loggingMiddleware) CreateThings(ctx context.Context, token string, ths []things.Thing) (saved []things.Thing, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method add_things for token %s and things %s took %s to complete", token, saved, time.Since(begin))
+		message := fmt.Sprintf("Method create_things for token %s and things %s took %s to complete", token, saved, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -49,7 +49,7 @@ func (lm *loggingMiddleware) AddThings(ctx context.Context, token string, ths []
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.AddThings(ctx, token, ths)
+	return lm.svc.CreateThings(ctx, token, ths)
 }
 
 func (lm *loggingMiddleware) UpdateThing(ctx context.Context, token string, thing things.Thing) (err error) {

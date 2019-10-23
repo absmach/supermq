@@ -40,13 +40,13 @@ func (ms *metricsMiddleware) AddThing(ctx context.Context, token string, thing t
 	return ms.svc.AddThing(ctx, token, thing)
 }
 
-func (ms *metricsMiddleware) AddThings(ctx context.Context, token string, ths []things.Thing) (saved []things.Thing, err error) {
+func (ms *metricsMiddleware) CreateThings(ctx context.Context, token string, ths []things.Thing) (saved []things.Thing, err error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "add_things").Add(1)
-		ms.latency.With("method", "add_things").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "create_things").Add(1)
+		ms.latency.With("method", "create_things").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.AddThings(ctx, token, ths)
+	return ms.svc.CreateThings(ctx, token, ths)
 }
 
 func (ms *metricsMiddleware) UpdateThing(ctx context.Context, token string, thing things.Thing) error {

@@ -68,7 +68,7 @@ func TestAddThing(t *testing.T) {
 	}
 }
 
-func TestAddThings(t *testing.T) {
+func TestCreateThings(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 
 	cases := []struct {
@@ -78,7 +78,7 @@ func TestAddThings(t *testing.T) {
 		err    error
 	}{
 		{
-			desc: "add new things",
+			desc: "create new things",
 			things: []things.Thing{
 				things.Thing{Name: "a"},
 				things.Thing{Name: "b"},
@@ -89,7 +89,7 @@ func TestAddThings(t *testing.T) {
 			err:   nil,
 		},
 		{
-			desc: "add thing with wrong credentials",
+			desc: "create thing with wrong credentials",
 			things: []things.Thing{
 				things.Thing{Name: "e"},
 			},
@@ -99,7 +99,7 @@ func TestAddThings(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, err := svc.AddThings(context.Background(), tc.token, tc.things)
+		_, err := svc.CreateThings(context.Background(), tc.token, tc.things)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
@@ -466,7 +466,7 @@ func TestCreateChannels(t *testing.T) {
 		err      error
 	}{
 		{
-			desc: "add new channels",
+			desc: "create new channels",
 			channels: []things.Channel{
 				things.Channel{Name: "a"},
 				things.Channel{Name: "b"},
@@ -477,7 +477,7 @@ func TestCreateChannels(t *testing.T) {
 			err:   nil,
 		},
 		{
-			desc: "add channel with wrong credentials",
+			desc: "create channel with wrong credentials",
 			channels: []things.Channel{
 				things.Channel{Name: "e"},
 			},

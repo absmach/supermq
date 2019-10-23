@@ -35,8 +35,8 @@ type Service interface {
 	// AddThing adds new thing to the user identified by the provided key.
 	AddThing(context.Context, string, Thing) (Thing, error)
 
-	// AddThings adds a list of things to the user identified by the provided key.
-	AddThings(context.Context, string, []Thing) ([]Thing, error)
+	// CreateThings adds a list of things to the user identified by the provided key.
+	CreateThings(context.Context, string, []Thing) ([]Thing, error)
 
 	// UpdateThing updates the thing identified by the provided ID, that
 	// belongs to the user identified by the provided key.
@@ -169,7 +169,7 @@ func (ts *thingsService) AddThing(ctx context.Context, token string, thing Thing
 	return thing, nil
 }
 
-func (ts *thingsService) AddThings(ctx context.Context, token string, things []Thing) ([]Thing, error) {
+func (ts *thingsService) CreateThings(ctx context.Context, token string, things []Thing) ([]Thing, error) {
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return []Thing{}, ErrUnauthorizedAccess

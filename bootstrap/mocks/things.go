@@ -51,7 +51,7 @@ func (svc *mainfluxThings) AddThing(_ context.Context, owner string, thing thing
 	return thing, nil
 }
 
-func (svc *mainfluxThings) AddThings(_ context.Context, owner string, ths []things.Thing) ([]things.Thing, error) {
+func (svc *mainfluxThings) CreateThings(_ context.Context, owner string, ths []things.Thing) ([]things.Thing, error) {
 	svc.mu.Lock()
 	defer svc.mu.Unlock()
 

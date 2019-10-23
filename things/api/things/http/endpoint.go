@@ -37,9 +37,9 @@ func addThingEndpoint(svc things.Service) endpoint.Endpoint {
 	}
 }
 
-func addThingsEndpoint(svc things.Service) endpoint.Endpoint {
+func createThingsEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(addThingsReq)
+		req := request.(createThingsReq)
 
 		if err := req.validate(); err != nil {
 			return nil, err
@@ -54,7 +54,7 @@ func addThingsEndpoint(svc things.Service) endpoint.Endpoint {
 			ths = append(ths, thing)
 		}
 
-		saved, err := svc.AddThings(ctx, req.token, ths)
+		saved, err := svc.CreateThings(ctx, req.token, ths)
 		if err != nil {
 			return nil, err
 		}

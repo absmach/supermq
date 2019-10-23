@@ -3,9 +3,7 @@
 
 package http
 
-import (
-	"github.com/mainflux/mainflux/things"
-)
+import "github.com/mainflux/mainflux/things"
 
 const maxLimitSize = 100
 const maxNameSize = 1024
@@ -33,12 +31,12 @@ func (req addThingReq) validate() error {
 	return nil
 }
 
-type addThingsReq struct {
+type createThingsReq struct {
 	token  string
 	Things []addThingReq
 }
 
-func (req addThingsReq) validate() error {
+func (req createThingsReq) validate() error {
 	if req.token == "" {
 		return things.ErrUnauthorizedAccess
 	}

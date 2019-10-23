@@ -53,8 +53,8 @@ func (es eventStore) AddThing(ctx context.Context, token string, thing things.Th
 	return sth, err
 }
 
-func (es eventStore) AddThings(ctx context.Context, token string, ths []things.Thing) ([]things.Thing, error) {
-	sths, err := es.svc.AddThings(ctx, token, ths)
+func (es eventStore) CreateThings(ctx context.Context, token string, ths []things.Thing) ([]things.Thing, error) {
+	sths, err := es.svc.CreateThings(ctx, token, ths)
 	if err != nil {
 		return sths, err
 	}
