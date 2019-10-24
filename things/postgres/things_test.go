@@ -128,7 +128,7 @@ func TestThingsBulkSave(t *testing.T) {
 			err:    nil,
 		},
 		{
-			desc:   "create things with conflicting keys",
+			desc:   "create things that already exist",
 			things: ths,
 			err:    things.ErrConflict,
 		},
@@ -139,6 +139,18 @@ func TestThingsBulkSave(t *testing.T) {
 					ID:    "invalid",
 					Owner: email,
 					Key:   thkey,
+				},
+			},
+			err: things.ErrMalformedEntity,
+		},
+		{
+			desc: "create thing with invalid name",
+			things: []things.Thing{
+				things.Thing{
+					ID:    thid,
+					Owner: email,
+					Key:   thkey,
+					Name:  invalidName,
 				},
 			},
 			err: things.ErrMalformedEntity,
@@ -155,16 +167,9 @@ func TestThingsBulkSave(t *testing.T) {
 			err: things.ErrConflict,
 		},
 		{
-			desc: "create thing with invalid name",
-			things: []things.Thing{
-				things.Thing{
-					ID:    thid,
-					Owner: email,
-					Key:   thkey,
-					Name:  invalidName,
-				},
-			},
-			err: things.ErrMalformedEntity,
+			desc:   "create things with conflicting keys",
+			things: ths,
+			err:    things.ErrConflict,
 		},
 	}
 

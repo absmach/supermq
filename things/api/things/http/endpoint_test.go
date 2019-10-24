@@ -202,13 +202,13 @@ func TestAddThing(t *testing.T) {
 	}
 }
 
-func TestAddThings(t *testing.T) {
+func TestCreateThings(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 
 	data := `[{"name": "1", "key": "1"}, {"name": "2", "key": "2"}]`
-	invalidData := fmt.Sprintf(`[{"name": "%s", "key": "1"}`, invalidName)
+	invalidData := fmt.Sprintf(`[{"name": "%s", "key": "10"}]`, invalidName)
 
 	cases := []struct {
 		desc        string
@@ -219,7 +219,7 @@ func TestAddThings(t *testing.T) {
 		response    string
 	}{
 		{
-			desc:        "add valid things",
+			desc:        "create valid things",
 			data:        data,
 			contentType: contentType,
 			auth:        token,
@@ -227,15 +227,7 @@ func TestAddThings(t *testing.T) {
 			response:    "",
 		},
 		{
-			desc:        "add thing with existing key",
-			data:        data,
-			contentType: contentType,
-			auth:        token,
-			status:      http.StatusUnprocessableEntity,
-			response:    "",
-		},
-		{
-			desc:        "add thing with empty request",
+			desc:        "create things with empty request",
 			data:        "",
 			contentType: contentType,
 			auth:        token,
@@ -243,30 +235,31 @@ func TestAddThings(t *testing.T) {
 			response:    "",
 		},
 		{
-			desc:        "add thing with invalid auth token",
-			data:        data,
+			desc:        "create thing with invalid request format",
+			data:        "}",
 			contentType: contentType,
-			auth:        wrongValue,
-			status:      http.StatusForbidden,
+			auth:        token,
+			status:      http.StatusBadRequest,
 			response:    "",
 		},
 		{
-			desc:        "add thing with empty auth token",
-			data:        data,
+			desc:        "create thing with invalid name",
+			data:        invalidData,
 			contentType: contentType,
-			auth:        "",
-			status:      http.StatusForbidden,
+			auth:        token,
+			status:      http.StatusBadRequest,
 			response:    "",
 		},
 		{
-			desc:     "add thing with invalid request format",
-			data:     "}",
-			auth:     token,
-			status:   http.StatusUnsupportedMediaType,
-			response: "",
+			desc:        "create things with empty JSON array",
+			data:        "[]",
+			contentType: contentType,
+			auth:        token,
+			status:      http.StatusBadRequest,
+			response:    "",
 		},
 		{
-			desc:        "add thing without content type",
+			desc:        "create thing with existing key",
 			data:        data,
 			contentType: contentType,
 			auth:        token,
@@ -274,11 +267,27 @@ func TestAddThings(t *testing.T) {
 			response:    "",
 		},
 		{
-			desc:        "add thing with invalid name",
-			data:        invalidData,
+			desc:        "create thing with invalid auth token",
+			data:        data,
 			contentType: contentType,
+			auth:        wrongValue,
+			status:      http.StatusForbidden,
+			response:    "",
+		},
+		{
+			desc:        "create thing with empty auth token",
+			data:        data,
+			contentType: contentType,
+			auth:        "",
+			status:      http.StatusForbidden,
+			response:    "",
+		},
+		{
+			desc:        "create thing without content type",
+			data:        data,
+			contentType: "",
 			auth:        token,
-			status:      http.StatusBadRequest,
+			status:      http.StatusUnsupportedMediaType,
 			response:    "",
 		},
 	}
@@ -1075,7 +1084,7 @@ func TestCreateChannels(t *testing.T) {
 	defer ts.Close()
 
 	data := `[{"name": "1"}, {"name": "2"}]`
-	invalidData := fmt.Sprintf(`[{"name": "%s"}`, invalidName)
+	invalidData := fmt.Sprintf(`[{"name": "%s"}]`, invalidName)
 
 	cases := []struct {
 		desc        string
@@ -1096,6 +1105,14 @@ func TestCreateChannels(t *testing.T) {
 		{
 			desc:        "add channel with empty request",
 			data:        "",
+			contentType: contentType,
+			auth:        token,
+			status:      http.StatusBadRequest,
+			response:    "",
+		},
+		{
+			desc:        "add channels with empty JSON",
+			data:        "[]",
 			contentType: contentType,
 			auth:        token,
 			status:      http.StatusBadRequest,

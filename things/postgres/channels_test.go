@@ -71,16 +71,16 @@ func TestChannelsBulkSave(t *testing.T) {
 	email := "channel-save@example.com"
 
 	var chid string
-	channels := []things.Channel{}
+	chs := []things.Channel{}
 	for i := 1; i <= 5; i++ {
 		chid, err := uuid.New().ID()
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-		channel := things.Channel{
+		ch := things.Channel{
 			ID:    chid,
 			Owner: email,
 		}
-		channels = append(channels, channel)
+		chs = append(chs, ch)
 	}
 
 	cases := []struct {
@@ -90,8 +90,13 @@ func TestChannelsBulkSave(t *testing.T) {
 	}{
 		{
 			desc:     "create new channels",
-			channels: channels,
+			channels: chs,
 			err:      nil,
+		},
+		{
+			desc:     "create channels that already exist",
+			channels: chs,
+			err:      things.ErrConflict,
 		},
 		{
 			desc: "create channel with invalid ID",
@@ -99,6 +104,17 @@ func TestChannelsBulkSave(t *testing.T) {
 				things.Channel{
 					ID:    "invalid",
 					Owner: email,
+				},
+			},
+			err: things.ErrMalformedEntity,
+		},
+		{
+			desc: "create channel with invalid name",
+			channels: []things.Channel{
+				things.Channel{
+					ID:    chid,
+					Owner: email,
+					Name:  invalidName,
 				},
 			},
 			err: things.ErrMalformedEntity,
