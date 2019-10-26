@@ -40,8 +40,8 @@ which maintains the project and offers professional services around it.
 
 The following are needed to run Mainflux:
 
-- [Docker](https://docs.docker.com/install/) **(template version 3.7)**
-- [Docker compose](https://docs.docker.com/compose/install/) **(version 1.24.1)**
+- [Docker](https://docs.docker.com/install/) **(version 18.09)**
+- [Docker compose](https://docs.docker.com/compose/install/) **(version 1.24.1)****(template version 3.7)**
 
 Developing Mainflux will also require:
 
