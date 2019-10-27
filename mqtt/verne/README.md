@@ -70,7 +70,7 @@ services:
 ```
 
 ### Native
-#### Generapte protobuf files
+#### Generate protobuf files
 ```
 mkdir -p src/protos
 rebar3 grpc gen
