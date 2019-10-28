@@ -1,6 +1,6 @@
 ## Getting Mainflux
 
-Mainflux source can be found in the official [Mainflux GitHub repository](https://github.com/Mainflux/mainflux).  You should fork this repo in order to make changes to the project.  The forked version of the repo should be cloned using the following:
+Mainflux source can be found in the official [Mainflux GitHub repository](https://github.com/Mainflux/mainflux). You should fork this repo in order to make changes to the project. The forked version of the repo should be cloned using the following:
 
 ```bash
 git clone <forked repo> $GOPATH/src/github.com/mainflux/mainflux
@@ -98,7 +98,7 @@ make
 make dockers_dev
 ```
 
-As you develop and test changes, only the services related to your changes will need to be rebuilt.  This will reduce compile time and create a much more enjoyable development experience.
+As you develop and test changes, only the services related to your changes will need to be rebuilt. This will reduce compile time and create a much more enjoyable development experience.
 
 ```bash
 make <microservice_name>

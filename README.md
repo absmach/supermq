@@ -56,7 +56,7 @@ Once the prerequisites are installed, execute the following commands from the pr
 docker-compose -f docker/docker-compose.yml -f docker/aedes.yml up
 ```
 
-This will bring up the Mainflux docker services and interconnect them.  This command can also be executed using the project's included Makefile:
+This will bring up the Mainflux docker services and interconnect them. This command can also be executed using the project's included Makefile:
 
 ```bash
 make run
@@ -64,7 +64,7 @@ make run
 
 ## Usage
 
-The quickest way to start using Mainflux is via the CLI.  The latest version can be downloaded from the [official releases page][rel].  
+The quickest way to start using Mainflux is via the CLI. The latest version can be downloaded from the [official releases page][rel]. 
 
 It can also be built and used from the project's root directory:
 
@@ -77,7 +77,7 @@ Additional details on using the CLI can be found in the [CLI documentation](http
 
 ## Documentation
 
-Official documentation is hosted at [Mainflux Read The Docs page][docs].  Documentation is auto-generated from Markdown files in `./docs` directory.  These can be viewed locally by [installing mkdocs](https://www.mkdocs.org/#installation) and running the command:
+Official documentation is hosted at [Mainflux Read The Docs page][docs]. Documentation is auto-generated from Markdown files in `./docs` directory. These can be viewed locally by [installing mkdocs](https://www.mkdocs.org/#installation) and running the command:
 
 ```bash
 mkdocs serve
@@ -109,7 +109,7 @@ and [@malidukica][dusanm] for his effort on implementing the initial user interf
 
 Thank you for your interest in Mainflux and the desire to contribute!
 
-1. Take a look at our [open issues](https://github.com/mainflux/mainflux/issues).  The [good-first-issue](https://github.com/mainflux/mainflux/labels/good-first-issue) label is specifically for issues that are great for getting started.
+1. Take a look at our [open issues](https://github.com/mainflux/mainflux/issues). The [good-first-issue](https://github.com/mainflux/mainflux/labels/good-first-issue) label is specifically for issues that are great for getting started.
 2. Checkout the [contribution guide](CONTRIBUTING.md) to learn more about our style and conventions.
 3. Make your changes compatible to our workflow.
 
