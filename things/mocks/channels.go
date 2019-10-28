@@ -58,10 +58,10 @@ func (crm *channelRepositoryMock) BulkSave(_ context.Context, channels []things.
 	crm.mu.Lock()
 	defer crm.mu.Unlock()
 
-	for idx := range channels {
+	for i := range channels {
 		crm.counter++
-		channels[idx].ID = strconv.FormatUint(crm.counter, 10)
-		crm.channels[key(channels[idx].Owner, channels[idx].ID)] = channels[idx]
+		channels[i].ID = strconv.FormatUint(crm.counter, 10)
+		crm.channels[key(channels[i].Owner, channels[i].ID)] = channels[i]
 	}
 
 	return channels, nil

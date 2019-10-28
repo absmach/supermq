@@ -52,7 +52,6 @@ func (cr channelRepository) Save(ctx context.Context, channel things.Channel) (s
 }
 
 func (cr channelRepository) BulkSave(ctx context.Context, channels []things.Channel) ([]things.Channel, error) {
-
 	tx, err := cr.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return nil, err

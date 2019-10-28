@@ -19,6 +19,9 @@ import (
 
 var errMalformedCSV = errors.New("malformed CSV")
 
+const jsonExt = ".json"
+const csvExt = ".csv"
+
 var cmdProvision = []cobra.Command{
 	cobra.Command{
 		Use:   "things",
@@ -192,7 +195,7 @@ func thingsFromFile(path string) ([]mfxsdk.Thing, error) {
 
 	things := []mfxsdk.Thing{}
 	switch filepath.Ext(path) {
-	case ".csv":
+	case csvExt:
 		reader := csv.NewReader(file)
 
 		for {
@@ -205,7 +208,7 @@ func thingsFromFile(path string) ([]mfxsdk.Thing, error) {
 			}
 
 			if len(l) < 1 {
-				return []mfxsdk.Thing{}, err
+				return []mfxsdk.Thing{}, errors.New("empty line found in file")
 			}
 
 			thing := mfxsdk.Thing{
@@ -214,7 +217,7 @@ func thingsFromFile(path string) ([]mfxsdk.Thing, error) {
 
 			things = append(things, thing)
 		}
-	case ".json":
+	case jsonExt:
 		err := json.NewDecoder(file).Decode(&things)
 		if err != nil {
 			return []mfxsdk.Thing{}, err
@@ -252,7 +255,7 @@ func channelsFromFile(path string) ([]mfxsdk.Channel, error) {
 			}
 
 			if len(l) < 1 {
-				return []mfxsdk.Channel{}, err
+				return []mfxsdk.Channel{}, errors.New("empty line found in file")
 			}
 
 			channel := mfxsdk.Channel{

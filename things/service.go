@@ -175,16 +175,16 @@ func (ts *thingsService) CreateThings(ctx context.Context, token string, things 
 		return []Thing{}, ErrUnauthorizedAccess
 	}
 
-	for idx := range things {
-		things[idx].ID, err = ts.idp.ID()
+	for i := range things {
+		things[i].ID, err = ts.idp.ID()
 		if err != nil {
 			return []Thing{}, err
 		}
 
-		things[idx].Owner = res.GetValue()
+		things[i].Owner = res.GetValue()
 
-		if things[idx].Key == "" {
-			things[idx].Key, err = ts.idp.ID()
+		if things[i].Key == "" {
+			things[i].Key, err = ts.idp.ID()
 			if err != nil {
 				return []Thing{}, err
 			}
@@ -282,13 +282,13 @@ func (ts *thingsService) CreateChannels(ctx context.Context, token string, chann
 		return []Channel{}, ErrUnauthorizedAccess
 	}
 
-	for idx := range channels {
-		channels[idx].ID, err = ts.idp.ID()
+	for i := range channels {
+		channels[i].ID, err = ts.idp.ID()
 		if err != nil {
 			return []Channel{}, err
 		}
 
-		channels[idx].Owner = res.GetValue()
+		channels[i].Owner = res.GetValue()
 	}
 
 	return ts.channels.BulkSave(ctx, channels)

@@ -65,16 +65,16 @@ func (trm *thingRepositoryMock) BulkSave(_ context.Context, ths []things.Thing) 
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
-	for idx := range ths {
+	for i := range ths {
 		for _, th := range trm.things {
-			if th.Key == ths[idx].Key {
+			if th.Key == ths[i].Key {
 				return []things.Thing{}, things.ErrConflict
 			}
 		}
 
 		trm.counter++
-		ths[idx].ID = strconv.FormatUint(trm.counter, 10)
-		trm.things[key(ths[idx].Owner, ths[idx].ID)] = ths[idx]
+		ths[i].ID = strconv.FormatUint(trm.counter, 10)
+		trm.things[key(ths[i].Owner, ths[i].ID)] = ths[i]
 	}
 
 	return ths, nil

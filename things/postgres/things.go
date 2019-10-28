@@ -63,7 +63,6 @@ func (tr thingRepository) Save(ctx context.Context, thing things.Thing) (string,
 }
 
 func (tr thingRepository) BulkSave(ctx context.Context, ths []things.Thing) ([]things.Thing, error) {
-
 	tx, err := tr.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return nil, err
