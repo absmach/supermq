@@ -1,9 +1,9 @@
 ## Getting Mainflux
 
-Mainflux source can be found in the official [Mainflux GitHub repository](https://github.com/Mainflux/mainflux). You should fork this repo in order to make changes to the project. The forked version of the repo should be cloned using the following:
+Mainflux source can be found in the official [Mainflux GitHub repository](https://github.com/Mainflux/mainflux). You should fork this repository in order to make changes to the project. The forked version of the repository should be cloned using the following:
 
 ```bash
-git clone <forked repo> $GOPATH/src/github.com/mainflux/mainflux
+git clone <forked repository> $GOPATH/src/github.com/mainflux/mainflux
 cd $GOPATH/src/github.com/mainflux/mainflux
 ```
 
@@ -15,7 +15,7 @@ Make sure that you have [Protocol Buffers](https://developers.google.com/protoco
 
 [Go Protobuf](https://github.com/golang/protobuf) installation instructions are [here](https://github.com/golang/protobuf#installation).
 Go Protobuf uses C bindings, so you will need to install [C++ protobuf](https://github.com/google/protobuf) as a prerequisite.
-Mainflux uses `Protocol Buffers for Go with Gadgets` to generate faster marshaling and unmarshaling Go code. Protocol Buffers for Go with Gadgets installation instructions can be found (here)(https://github.com/gogo/protobuf).
+Mainflux uses `Protocol Buffers for Go with Gadgets` to generate faster marshaling and unmarshaling Go code. Protocol Buffers for Go with Gadgets installation instructions can be found [here](https://github.com/gogo/protobuf).
 
 A copy of [Go](https://golang.org/doc/install) (version 1.13.3) and docker template (version 3.7) will also need to be installed on your system.
 
@@ -183,7 +183,7 @@ A shorthand to do this via `make` tool is:
 make proto
 ```
 
-> N.B. This must be done once at the beginning in order to generate protobuf Go structures needed for the build. However, if you don't change any of `.proto` files, this step is not mandatory, since all generated files are included in the repo (those are files with `.pb.go` extension).
+> N.B. This must be done once at the beginning in order to generate protobuf Go structures needed for the build. However, if you don't change any of `.proto` files, this step is not mandatory, since all generated files are included in the repository (those are files with `.pb.go` extension).
 
 ### Cross-compiling for ARM
 Mainflux can be compiled for ARM platform and run on Raspberry Pi or other similar IoT gateways, by following the instructions [here](https://dave.cheney.net/2015/08/22/cross-compilation-with-go-1-5) or [here](https://www.alexruf.net/golang/arm/raspberrypi/2016/01/16/cross-compile-with-go-1-5-for-raspberry-pi.html) as well as information
