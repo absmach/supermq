@@ -8,6 +8,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/internal/normalizer"
 	log "github.com/mainflux/mainflux/logger"
 	nats "github.com/nats-io/go-nats"
 )
@@ -28,22 +29,32 @@ func Start(nc *nats.Conn, repo MessageRepository, queue string, channels map[str
 		logger:   logger,
 	}
 
-	_, err := nc.QueueSubscribe(mainflux.OutputSenML, queue, c.consume)
+	_, err := nc.QueueSubscribe(mainflux.OutputChannels, queue, c.consume)
 	return err
 }
 
 func (c *consumer) consume(m *nats.Msg) {
-	msg := &mainflux.Message{}
-	if err := proto.Unmarshal(m.Data, msg); err != nil {
+	// msg := &mainflux.Message{}
+
+	var msg mainflux.RawMessage
+	if err := proto.Unmarshal(m.Data, &msg); err != nil {
 		c.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
 		return
 	}
 
-	if !c.channelExists(msg.GetChannel()) {
+	norm, err := normalizer.Normalize(msg)
+	if err != nil {
+		c.logger.Warn(fmt.Sprintf("Failed to normalize received message: %s", err))
 		return
 	}
+	var msgs []mainflux.Message
+	for _, v := range norm {
+		if c.channelExists(v.GetChannel()) {
+			msgs = append(msgs, v)
+		}
+	}
 
-	if err := c.repo.Save(*msg); err != nil {
+	if err := c.repo.Save(msgs); err != nil {
 		c.logger.Warn(fmt.Sprintf("Failed to save message: %s", err))
 		return
 	}

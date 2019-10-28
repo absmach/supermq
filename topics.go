@@ -7,3 +7,4 @@ package mainflux
 
 // OutputSenML represents subject SenML messages will be published to.
 const OutputSenML = "out.senml"
+const OutputChannels = "channel.>"
