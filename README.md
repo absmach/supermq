@@ -40,13 +40,13 @@ which maintains the project and offers professional services around it.
 
 The following are needed to run Mainflux:
 
-- [Docker](https://docs.docker.com/install/) **(version 18.09)**
-- [Docker compose](https://docs.docker.com/compose/install/) **(version 1.24.1)****(template version 3.7)**
+- [Docker](https://docs.docker.com/install/) (version 18.09)
+- [Docker compose](https://docs.docker.com/compose/install/) (version 1.24.1)
 
 Developing Mainflux will also require:
 
-- [Go](https://golang.org/doc/install) **(version 1.13.3)**
-- [Protobuf](https://github.com/protocolbuffers/protobuf#protocol-compiler-installation) **(version 3.6.1)**
+- [Go](https://golang.org/doc/install) (version 1.13.3)
+- [Protobuf](https://github.com/protocolbuffers/protobuf#protocol-compiler-installation) (version 3.6.1)
 
 ## Install
 

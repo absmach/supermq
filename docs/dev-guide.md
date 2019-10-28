@@ -11,15 +11,15 @@ cd $GOPATH/src/github.com/mainflux/mainflux
 
 ### Prerequisites
 
-Make sure that you have [Protocol Buffers](https://developers.google.com/protocol-buffers/) **(version 3.6.1)** compiler (`protoc`) installed.
+Make sure that you have [Protocol Buffers](https://developers.google.com/protocol-buffers/) (version 3.6.1) compiler (`protoc`) installed.
 
 [Go Protobuf](https://github.com/golang/protobuf) installation instructions are [here](https://github.com/golang/protobuf#installation).
 Go Protobuf uses C bindings, so you will need to install [C++ protobuf](https://github.com/google/protobuf) as a prerequisite.
 Mainflux uses `Protocol Buffers for Go with Gadgets` to generate faster marshaling and unmarshaling Go code. Protocol Buffers for Go with Gadgets installation instructions can be found (here)(https://github.com/gogo/protobuf).
 
-A copy of [Go](https://golang.org/doc/install) **(version 1.13.3)** will also need to be installed on your system.
+A copy of [Go](https://golang.org/doc/install) (version 1.13.3) and docker template (version 3.7) will also need to be installed on your system.
 
-If either of these versions seem outdated, the latest can always be found in our [CI script](https://github.com/mainflux/mainflux/blob/master/scripts/ci.sh).
+If any of these versions seem outdated, the latest can always be found in our [CI script](https://github.com/mainflux/mainflux/blob/master/scripts/ci.sh).
 
 ### Build All Services
 
