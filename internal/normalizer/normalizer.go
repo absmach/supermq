@@ -8,12 +8,6 @@ import (
 	"github.com/mainflux/mainflux"
 )
 
-// Normalizer specifies API for normalizing messages.
-type Normalizer interface {
-	// Normalizes raw message to array of Mainflux messages.
-	Normalize(mainflux.RawMessage) ([]mainflux.Message, error)
-}
-
 // Normalize takes a RawMessage and converts
 // it to an array of the Mainflux message.
 func Normalize(msg mainflux.RawMessage) ([]mainflux.Message, error) {
