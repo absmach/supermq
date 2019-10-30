@@ -8,25 +8,27 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/internal/normalizer"
 	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/normalizer"
 	nats "github.com/nats-io/go-nats"
 )
 
 type consumer struct {
-	nc       *nats.Conn
-	channels map[string]bool
-	repo     MessageRepository
-	logger   log.Logger
+	nc         *nats.Conn
+	channels   map[string]bool
+	repo       MessageRepository
+	normalizer normalizer.Service
+	logger     log.Logger
 }
 
 // Start method starts to consume normalized messages received from NATS.
-func Start(nc *nats.Conn, repo MessageRepository, queue string, channels map[string]bool, logger log.Logger) error {
+func Start(nc *nats.Conn, repo MessageRepository, norm normalizer.Service, queue string, channels map[string]bool, logger log.Logger) error {
 	c := consumer{
-		nc:       nc,
-		channels: channels,
-		repo:     repo,
-		logger:   logger,
+		nc:         nc,
+		channels:   channels,
+		repo:       repo,
+		normalizer: norm,
+		logger:     logger,
 	}
 
 	_, err := nc.QueueSubscribe(mainflux.OutputChannels, queue, c.consume)
@@ -42,7 +44,7 @@ func (c *consumer) consume(m *nats.Msg) {
 		return
 	}
 
-	norm, err := normalizer.Normalize(msg)
+	norm, err := c.normalizer.Normalize(msg)
 	if err != nil {
 		c.logger.Warn(fmt.Sprintf("Failed to normalize received message: %s", err))
 		return
@@ -54,7 +56,7 @@ func (c *consumer) consume(m *nats.Msg) {
 		}
 	}
 
-	if err := c.repo.Save(msgs); err != nil {
+	if err := c.repo.Save(msgs...); err != nil {
 		c.logger.Warn(fmt.Sprintf("Failed to save message: %s", err))
 		return
 	}

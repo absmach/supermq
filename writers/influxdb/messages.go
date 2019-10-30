@@ -40,7 +40,7 @@ func New(client influxdata.Client, database string) writers.MessageRepository {
 	}
 }
 
-func (repo *influxRepo) Save(messages []mainflux.Message) error {
+func (repo *influxRepo) Save(messages ...mainflux.Message) error {
 	pts, err := influxdata.NewBatchPoints(repo.cfg)
 	if err != nil {
 		return err

@@ -43,7 +43,7 @@ func New(db *mongo.Database) writers.MessageRepository {
 	return &mongoRepo{db}
 }
 
-func (repo *mongoRepo) Save(messages []mainflux.Message) error {
+func (repo *mongoRepo) Save(messages ...mainflux.Message) error {
 	coll := repo.db.Collection(collectionName)
 	var msgs []interface{}
 	for _, msg := range messages {

@@ -20,7 +20,7 @@ func New(session *gocql.Session) writers.MessageRepository {
 	return &cassandraRepository{session}
 }
 
-func (cr *cassandraRepository) Save(messages []mainflux.Message) error {
+func (cr *cassandraRepository) Save(messages ...mainflux.Message) error {
 	cql := `INSERT INTO messages (id, channel, subtopic, publisher, protocol,
 			name, unit, value, string_value, bool_value, data_value, value_sum,
 			time, update_time, link)

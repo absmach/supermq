@@ -32,7 +32,7 @@ func New(db *sqlx.DB) writers.MessageRepository {
 	return &postgresRepo{db: db}
 }
 
-func (pr postgresRepo) Save(messages []mainflux.Message) error {
+func (pr postgresRepo) Save(messages ...mainflux.Message) error {
 	q := `INSERT INTO messages (id, channel, subtopic, publisher, protocol,
     name, unit, value, string_value, bool_value, data_value, value_sum,
     time, update_time, link)
