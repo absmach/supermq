@@ -22,7 +22,7 @@ provides a compose file template that can be used to deploy the service containe
 locally:
 
 ```yaml
-version: "2"
+version: "3.7"
 services:
   normalizer:
     image: mainflux/normalizer:[version]

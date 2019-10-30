@@ -23,7 +23,7 @@ default values.
 ## Deployment
 
 ```yaml
-  version: "2"
+  version: "3.7"
   influxdb-writer:
     image: mainflux/influxdb:[version]
     container_name: [instance name]
