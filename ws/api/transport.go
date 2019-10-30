@@ -220,7 +220,7 @@ func (sub subscription) broadcast(svc ws.Service, contentType string) {
 			logger.Warn(fmt.Sprintf("Failed to read message: %s", err))
 			return
 		}
-		msg := mainflux.RawMessage{
+		msg := mainflux.Message{
 			Channel:     sub.chanID,
 			Subtopic:    sub.subtopic,
 			ContentType: contentType,

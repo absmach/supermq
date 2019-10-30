@@ -55,7 +55,7 @@ var config = {
     protoDescriptor = grpc.loadPackageDefinition(packageDefinition),
     thingsSchema = protoDescriptor.mainflux,
     messagesSchema = new protobuf.Root().loadSync(config.schema_dir + '/message.proto'),
-    RawMessage = messagesSchema.lookupType('mainflux.RawMessage'),
+    Message = messagesSchema.lookupType('mainflux.Message'),
     nats = require('nats').connect({
         servers: [config.nats_url],
         preserveBuffers: true,
@@ -141,7 +141,7 @@ function startMqtt() {
 nats.subscribe('channel.>', {
     'queue': 'mqtts'
 }, function (msg) {
-    var m = RawMessage.decode(msg),
+    var m = Message.decode(msg),
         packet, subtopic, ct;
     if (m && m.protocol !== 'mqtt') {
         subtopic = m.subtopic !== '' ? '/' + m.subtopic.replace(/\./g, '/') : '';
@@ -208,7 +208,7 @@ aedes.authorizePublish = function (client, packet, publish) {
         onAuthorize = function (err, res) {
             var rawMsg;
             if (!err) {
-                rawMsg = RawMessage.encode({
+                rawMsg = Message.encode({
                     publisher: client.thingId,
                     channel: channelId,
                     subtopic: st.join('.'),

@@ -17,7 +17,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/normalizer"
+	"github.com/mainflux/mainflux/transformer/senml"
 	"github.com/mainflux/mainflux/writers"
 	"github.com/mainflux/mainflux/writers/api"
 	"github.com/mainflux/mainflux/writers/postgres"
@@ -81,7 +81,7 @@ func main() {
 	defer db.Close()
 
 	repo := newService(db, logger)
-	norm := normalizer.New()
+	norm := senml.New()
 	if err = writers.Start(nc, repo, norm, svcName, cfg.channels, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to create Postgres writer: %s", err))
 	}

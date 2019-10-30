@@ -35,7 +35,7 @@ func (pubsub *natsPublisher) fmtSubject(chanID, subtopic string) string {
 	return subject
 }
 
-func (pubsub *natsPublisher) Publish(_ context.Context, _ string, msg mainflux.RawMessage) error {
+func (pubsub *natsPublisher) Publish(_ context.Context, _ string, msg mainflux.Message) error {
 	data, err := proto.Marshal(&msg)
 	if err != nil {
 		return err
@@ -51,7 +51,7 @@ func (pubsub *natsPublisher) Subscribe(chanID, subtopic, obsID string, observer 
 		if msg == nil {
 			return
 		}
-		var rawMsg mainflux.RawMessage
+		var rawMsg mainflux.Message
 		if err := proto.Unmarshal(msg.Data, &rawMsg); err != nil {
 			return
 		}

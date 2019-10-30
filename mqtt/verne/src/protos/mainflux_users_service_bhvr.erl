@@ -3,7 +3,7 @@
 %% @end
 %%%-------------------------------------------------------------------
 
-%% this module was generated on 2019-10-27T15:11:30+00:00 and should not be modified manually
+%% this module was generated on 2019-10-30T17:04:40+00:00 and should not be modified manually
 
 -module(mainflux_users_service_bhvr).
 

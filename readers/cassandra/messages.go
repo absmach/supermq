@@ -7,8 +7,8 @@ import (
 	"fmt"
 
 	"github.com/gocql/gocql"
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/readers"
+	"github.com/mainflux/mainflux/transformer/senml"
 )
 
 var _ readers.MessageRepository = (*cassandraRepository)(nil)
@@ -54,10 +54,10 @@ func (cr cassandraRepository) ReadAll(chanID string, offset, limit uint64, query
 	page := readers.MessagesPage{
 		Offset:   offset,
 		Limit:    limit,
-		Messages: []mainflux.Message{},
+		Messages: []senml.Message{},
 	}
 	for scanner.Next() {
-		var msg mainflux.Message
+		var msg senml.Message
 		err := scanner.Scan(&msg.Channel, &msg.Subtopic, &msg.Publisher, &msg.Protocol,
 			&msg.Name, &msg.Unit, &floatVal, &strVal, &boolVal,
 			&dataVal, &valueSum, &msg.Time, &msg.UpdateTime, &msg.Link)
@@ -67,17 +67,17 @@ func (cr cassandraRepository) ReadAll(chanID string, offset, limit uint64, query
 
 		switch {
 		case floatVal != nil:
-			msg.Value = &mainflux.Message_FloatValue{FloatValue: *floatVal}
+			msg.Value = &senml.Message_FloatValue{FloatValue: *floatVal}
 		case strVal != nil:
-			msg.Value = &mainflux.Message_StringValue{StringValue: *strVal}
+			msg.Value = &senml.Message_StringValue{StringValue: *strVal}
 		case boolVal != nil:
-			msg.Value = &mainflux.Message_BoolValue{BoolValue: *boolVal}
+			msg.Value = &senml.Message_BoolValue{BoolValue: *boolVal}
 		case dataVal != nil:
-			msg.Value = &mainflux.Message_DataValue{DataValue: *dataVal}
+			msg.Value = &senml.Message_DataValue{DataValue: *dataVal}
 		}
 
 		if valueSum != nil {
-			msg.ValueSum = &mainflux.SumValue{Value: *valueSum}
+			msg.ValueSum = &senml.SumValue{Value: *valueSum}
 		}
 
 		page.Messages = append(page.Messages, msg)

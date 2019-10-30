@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/mainflux/mainflux/transformer/senml"
 	"github.com/mainflux/mainflux/writers"
 
 	influxdata "github.com/influxdata/influxdb/client/v2"
-	"github.com/mainflux/mainflux"
 )
 
 const pointName = "messages"
@@ -36,7 +36,7 @@ func New(client influxdata.Client, database string) writers.MessageRepository {
 	}
 }
 
-func (repo *influxRepo) Save(messages ...mainflux.Message) error {
+func (repo *influxRepo) Save(messages ...senml.Message) error {
 	pts, err := influxdata.NewBatchPoints(repo.cfg)
 	if err != nil {
 		return err
@@ -57,7 +57,7 @@ func (repo *influxRepo) Save(messages ...mainflux.Message) error {
 	return repo.client.Write(pts)
 }
 
-func (repo *influxRepo) tagsOf(msg *mainflux.Message) tags {
+func (repo *influxRepo) tagsOf(msg *senml.Message) tags {
 	return tags{
 		"channel":   msg.Channel,
 		"subtopic":  msg.Subtopic,
@@ -66,7 +66,7 @@ func (repo *influxRepo) tagsOf(msg *mainflux.Message) tags {
 	}
 }
 
-func (repo *influxRepo) fieldsOf(msg *mainflux.Message) fields {
+func (repo *influxRepo) fieldsOf(msg *senml.Message) fields {
 	updateTime := strconv.FormatFloat(msg.UpdateTime, 'f', -1, 64)
 	ret := fields{
 		"protocol":   msg.Protocol,
@@ -76,13 +76,13 @@ func (repo *influxRepo) fieldsOf(msg *mainflux.Message) fields {
 	}
 
 	switch msg.Value.(type) {
-	case *mainflux.Message_FloatValue:
+	case *senml.Message_FloatValue:
 		ret["value"] = msg.GetFloatValue()
-	case *mainflux.Message_StringValue:
+	case *senml.Message_StringValue:
 		ret["stringValue"] = msg.GetStringValue()
-	case *mainflux.Message_DataValue:
+	case *senml.Message_DataValue:
 		ret["dataValue"] = msg.GetDataValue()
-	case *mainflux.Message_BoolValue:
+	case *senml.Message_BoolValue:
 		ret["boolValue"] = msg.GetBoolValue()
 	}
 

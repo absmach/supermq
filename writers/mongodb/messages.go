@@ -8,7 +8,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/mongo"
 
-	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/transformer/senml"
 	"github.com/mainflux/mainflux/writers"
 )
 
@@ -43,7 +43,7 @@ func New(db *mongo.Database) writers.MessageRepository {
 	return &mongoRepo{db}
 }
 
-func (repo *mongoRepo) Save(messages ...mainflux.Message) error {
+func (repo *mongoRepo) Save(messages ...senml.Message) error {
 	coll := repo.db.Collection(collectionName)
 	var msgs []interface{}
 	for _, msg := range messages {
@@ -60,16 +60,16 @@ func (repo *mongoRepo) Save(messages ...mainflux.Message) error {
 		}
 
 		switch msg.Value.(type) {
-		case *mainflux.Message_FloatValue:
+		case *senml.Message_FloatValue:
 			v := msg.GetFloatValue()
 			m.FloatValue = &v
-		case *mainflux.Message_StringValue:
+		case *senml.Message_StringValue:
 			v := msg.GetStringValue()
 			m.StringValue = &v
-		case *mainflux.Message_DataValue:
+		case *senml.Message_DataValue:
 			v := msg.GetDataValue()
 			m.DataValue = &v
-		case *mainflux.Message_BoolValue:
+		case *senml.Message_BoolValue:
 			v := msg.GetBoolValue()
 			m.BoolValue = &v
 		}

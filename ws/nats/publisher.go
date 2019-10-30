@@ -56,7 +56,7 @@ func (pubsub *natsPubSub) fmtSubject(chanID, subtopic string) string {
 	return subject
 }
 
-func (pubsub *natsPubSub) Publish(_ context.Context, _ string, msg mainflux.RawMessage) error {
+func (pubsub *natsPubSub) Publish(_ context.Context, _ string, msg mainflux.Message) error {
 	data, err := proto.Marshal(&msg)
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func (pubsub *natsPubSub) Subscribe(chanID, subtopic string, channel *ws.Channel
 			return
 		}
 
-		var rawMsg mainflux.RawMessage
+		var rawMsg mainflux.Message
 		if err := proto.Unmarshal(msg.Data, &rawMsg); err != nil {
 			pubsub.logger.Warn(fmt.Sprintf("Failed to deserialize received message: %s", err.Error()))
 			return

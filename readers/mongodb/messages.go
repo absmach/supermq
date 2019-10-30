@@ -6,8 +6,8 @@ package mongodb
 import (
 	"context"
 
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/readers"
+	"github.com/mainflux/mainflux/transformer/senml"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -59,14 +59,14 @@ func (repo mongoRepository) ReadAll(chanID string, offset, limit uint64, query m
 	}
 	defer cursor.Close(context.Background())
 
-	messages := []mainflux.Message{}
+	messages := []senml.Message{}
 	for cursor.Next(context.Background()) {
 		var m message
 		if err := cursor.Decode(&m); err != nil {
 			return readers.MessagesPage{}, err
 		}
 
-		msg := mainflux.Message{
+		msg := senml.Message{
 			Channel:    m.Channel,
 			Subtopic:   m.Subtopic,
 			Publisher:  m.Publisher,
@@ -80,17 +80,17 @@ func (repo mongoRepository) ReadAll(chanID string, offset, limit uint64, query m
 
 		switch {
 		case m.FloatValue != nil:
-			msg.Value = &mainflux.Message_FloatValue{FloatValue: *m.FloatValue}
+			msg.Value = &senml.Message_FloatValue{FloatValue: *m.FloatValue}
 		case m.StringValue != nil:
-			msg.Value = &mainflux.Message_StringValue{StringValue: *m.StringValue}
+			msg.Value = &senml.Message_StringValue{StringValue: *m.StringValue}
 		case m.DataValue != nil:
-			msg.Value = &mainflux.Message_DataValue{DataValue: *m.DataValue}
+			msg.Value = &senml.Message_DataValue{DataValue: *m.DataValue}
 		case m.BoolValue != nil:
-			msg.Value = &mainflux.Message_BoolValue{BoolValue: *m.BoolValue}
+			msg.Value = &senml.Message_BoolValue{BoolValue: *m.BoolValue}
 		}
 
 		if m.ValueSum != nil {
-			msg.ValueSum = &mainflux.SumValue{Value: *m.ValueSum}
+			msg.ValueSum = &senml.SumValue{Value: *m.ValueSum}
 		}
 
 		messages = append(messages, msg)

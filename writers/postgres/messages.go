@@ -11,7 +11,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq" // required for DB access
-	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/transformer/senml"
 	"github.com/mainflux/mainflux/writers"
 )
 
@@ -32,7 +32,7 @@ func New(db *sqlx.DB) writers.MessageRepository {
 	return &postgresRepo{db: db}
 }
 
-func (pr postgresRepo) Save(messages ...mainflux.Message) error {
+func (pr postgresRepo) Save(messages ...senml.Message) error {
 	q := `INSERT INTO messages (id, channel, subtopic, publisher, protocol,
     name, unit, value, string_value, bool_value, data_value, value_sum,
     time, update_time, link)
@@ -85,22 +85,22 @@ type dbMessage struct {
 	Link        string   `db:"link"`
 }
 
-func toDBMessage(msg mainflux.Message) (dbMessage, error) {
+func toDBMessage(msg senml.Message) (dbMessage, error) {
 	var floatVal, valSum *float64
 	var strVal, dataVal *string
 	var boolVal *bool
 
 	switch msg.Value.(type) {
-	case *mainflux.Message_FloatValue:
+	case *senml.Message_FloatValue:
 		v := msg.GetFloatValue()
 		floatVal = &v
-	case *mainflux.Message_StringValue:
+	case *senml.Message_StringValue:
 		v := msg.GetStringValue()
 		strVal = &v
-	case *mainflux.Message_DataValue:
+	case *senml.Message_DataValue:
 		v := msg.GetDataValue()
 		dataVal = &v
-	case *mainflux.Message_BoolValue:
+	case *senml.Message_BoolValue:
 		v := msg.GetBoolValue()
 		boolVal = &v
 	}

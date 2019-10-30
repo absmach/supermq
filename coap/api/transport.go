@@ -228,7 +228,7 @@ func receive(svc coap.Service, msg *gocoap.Message) *gocoap.Message {
 		return res
 	}
 
-	rawMsg := mainflux.RawMessage{
+	rawMsg := mainflux.Message{
 		Channel:     chanID,
 		Subtopic:    subtopic,
 		Publisher:   publisher,

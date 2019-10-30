@@ -1,4 +1,4 @@
-package mainflux
+package senml
 
 import "encoding/json"
 

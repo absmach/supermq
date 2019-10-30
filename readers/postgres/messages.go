@@ -8,8 +8,8 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx" // required for DB access
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/readers"
+	"github.com/mainflux/mainflux/transformer/senml"
 )
 
 const errInvalid = "invalid_text_representation"
@@ -53,7 +53,7 @@ func (tr postgresRepository) ReadAll(chanID string, offset, limit uint64, query 
 	page := readers.MessagesPage{
 		Offset:   offset,
 		Limit:    limit,
-		Messages: []mainflux.Message{},
+		Messages: []senml.Message{},
 	}
 	for rows.Next() {
 		dbm := dbMessage{Channel: chanID}
@@ -117,8 +117,8 @@ type dbMessage struct {
 	Link        string   `db:"link"`
 }
 
-func toMessage(dbm dbMessage) (mainflux.Message, error) {
-	msg := mainflux.Message{
+func toMessage(dbm dbMessage) (senml.Message, error) {
+	msg := senml.Message{
 		Channel:    dbm.Channel,
 		Subtopic:   dbm.Subtopic,
 		Publisher:  dbm.Publisher,
@@ -132,15 +132,15 @@ func toMessage(dbm dbMessage) (mainflux.Message, error) {
 
 	switch {
 	case dbm.FloatValue != nil:
-		msg.Value = &mainflux.Message_FloatValue{FloatValue: *dbm.FloatValue}
+		msg.Value = &senml.Message_FloatValue{FloatValue: *dbm.FloatValue}
 	case dbm.StringValue != nil:
-		msg.Value = &mainflux.Message_StringValue{StringValue: *dbm.StringValue}
+		msg.Value = &senml.Message_StringValue{StringValue: *dbm.StringValue}
 	case dbm.BoolValue != nil:
-		msg.Value = &mainflux.Message_BoolValue{BoolValue: *dbm.BoolValue}
+		msg.Value = &senml.Message_BoolValue{BoolValue: *dbm.BoolValue}
 	case dbm.DataValue != nil:
-		msg.Value = &mainflux.Message_DataValue{DataValue: *dbm.DataValue}
+		msg.Value = &senml.Message_DataValue{DataValue: *dbm.DataValue}
 	case dbm.ValueSum != nil:
-		msg.ValueSum = &mainflux.SumValue{Value: *dbm.ValueSum}
+		msg.ValueSum = &senml.SumValue{Value: *dbm.ValueSum}
 	}
 
 	return msg, nil
