@@ -36,8 +36,6 @@ func Start(nc *nats.Conn, repo MessageRepository, norm normalizer.Service, queue
 }
 
 func (c *consumer) consume(m *nats.Msg) {
-	// msg := &mainflux.Message{}
-
 	var msg mainflux.RawMessage
 	if err := proto.Unmarshal(m.Data, &msg); err != nil {
 		c.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
