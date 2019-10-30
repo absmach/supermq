@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/transformer/senml"
 	"github.com/mainflux/mainflux/writers/cassandra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,7 +18,7 @@ const keyspace = "mainflux"
 
 var (
 	addr = "localhost"
-	msg  = mainflux.Message{
+	msg  = senml.Message{
 		Channel:   "1",
 		Publisher: "1",
 		Protocol:  "mqtt",
@@ -36,23 +36,23 @@ func TestSave(t *testing.T) {
 
 	repo := cassandra.New(session)
 	now := time.Now().Unix()
-	var msgs []mainflux.Message
+	var msgs []senml.Message
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.
 		count := i % valueFields
 		switch count {
 		case 0:
-			msg.Value = &mainflux.Message_FloatValue{FloatValue: 5}
+			msg.Value = &senml.Message_FloatValue{FloatValue: 5}
 		case 1:
-			msg.Value = &mainflux.Message_BoolValue{BoolValue: false}
+			msg.Value = &senml.Message_BoolValue{BoolValue: false}
 		case 2:
-			msg.Value = &mainflux.Message_StringValue{StringValue: "value"}
+			msg.Value = &senml.Message_StringValue{StringValue: "value"}
 		case 3:
-			msg.Value = &mainflux.Message_DataValue{DataValue: "base64data"}
+			msg.Value = &senml.Message_DataValue{DataValue: "base64data"}
 		case 4:
 			msg.ValueSum = nil
 		case 5:
-			msg.ValueSum = &mainflux.SumValue{Value: 45}
+			msg.ValueSum = &senml.SumValue{Value: 45}
 		}
 		msg.Time = float64(now + int64(i))
 		msgs = append(msgs, msg)

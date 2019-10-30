@@ -10,8 +10,8 @@ import (
 	"time"
 
 	influxdata "github.com/influxdata/influxdb/client/v2"
-	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/transformer/senml"
 	writer "github.com/mainflux/mainflux/writers/influxdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -32,14 +32,14 @@ var (
 		Password: "test",
 	}
 
-	msg = mainflux.Message{
+	msg = senml.Message{
 		Channel:    "45",
 		Publisher:  "2580",
 		Protocol:   "http",
 		Name:       "test name",
 		Unit:       "km",
-		Value:      &mainflux.Message_FloatValue{FloatValue: 24},
-		ValueSum:   &mainflux.SumValue{Value: 22},
+		Value:      &senml.Message_FloatValue{FloatValue: 24},
+		ValueSum:   &senml.SumValue{Value: 22},
 		UpdateTime: 5456565466,
 		Link:       "link",
 	}
@@ -92,23 +92,23 @@ func TestSave(t *testing.T) {
 		require.Nil(t, err, fmt.Sprintf("Cleaning data from InfluxDB expected to succeed: %s.\n", err))
 
 		now := time.Now().Unix()
-		var msgs []mainflux.Message
+		var msgs []senml.Message
 		for i := 0; i < tc.msgsNum; i++ {
 			// Mix possible values as well as value sum.
 			count := i % valueFields
 			switch count {
 			case 0:
-				msg.Value = &mainflux.Message_FloatValue{FloatValue: 5}
+				msg.Value = &senml.Message_FloatValue{FloatValue: 5}
 			case 1:
-				msg.Value = &mainflux.Message_BoolValue{BoolValue: false}
+				msg.Value = &senml.Message_BoolValue{BoolValue: false}
 			case 2:
-				msg.Value = &mainflux.Message_StringValue{StringValue: "value"}
+				msg.Value = &senml.Message_StringValue{StringValue: "value"}
 			case 3:
-				msg.Value = &mainflux.Message_DataValue{DataValue: "base64data"}
+				msg.Value = &senml.Message_DataValue{DataValue: "base64data"}
 			case 4:
 				msg.ValueSum = nil
 			case 5:
-				msg.ValueSum = &mainflux.SumValue{Value: 42}
+				msg.ValueSum = &senml.SumValue{Value: 42}
 			}
 			msg.Time = float64(now + int64(i))
 			msgs = append(msgs, msg)

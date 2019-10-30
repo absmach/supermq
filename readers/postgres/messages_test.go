@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/readers"
 	preader "github.com/mainflux/mainflux/readers/postgres"
+	"github.com/mainflux/mainflux/transformer/senml"
 	pwriter "github.com/mainflux/mainflux/writers/postgres"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -33,14 +33,14 @@ func TestMessageReadAll(t *testing.T) {
 	wrongID, err := uuid.NewV4()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	msg := mainflux.Message{
+	msg := senml.Message{
 		Channel:   chanID.String(),
 		Publisher: pubID.String(),
 		Protocol:  "mqtt",
 	}
 
-	messages := []mainflux.Message{}
-	subtopicMsgs := []mainflux.Message{}
+	messages := []senml.Message{}
+	subtopicMsgs := []senml.Message{}
 	now := time.Now().Unix()
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.
@@ -49,15 +49,15 @@ func TestMessageReadAll(t *testing.T) {
 		switch count {
 		case 0:
 			msg.Subtopic = subtopic
-			msg.Value = &mainflux.Message_FloatValue{FloatValue: 5}
+			msg.Value = &senml.Message_FloatValue{FloatValue: 5}
 		case 1:
-			msg.Value = &mainflux.Message_BoolValue{BoolValue: false}
+			msg.Value = &senml.Message_BoolValue{BoolValue: false}
 		case 2:
-			msg.Value = &mainflux.Message_StringValue{StringValue: "value"}
+			msg.Value = &senml.Message_StringValue{StringValue: "value"}
 		case 3:
-			msg.Value = &mainflux.Message_DataValue{DataValue: "base64data"}
+			msg.Value = &senml.Message_DataValue{DataValue: "base64data"}
 		case 5:
-			msg.ValueSum = &mainflux.SumValue{Value: 45}
+			msg.ValueSum = &senml.SumValue{Value: 45}
 		}
 		msg.Time = float64(now - int64(i))
 
@@ -101,7 +101,7 @@ func TestMessageReadAll(t *testing.T) {
 				Total:    0,
 				Offset:   0,
 				Limit:    msgsNum,
-				Messages: []mainflux.Message{},
+				Messages: []senml.Message{},
 			},
 		},
 		"read message last page": {
@@ -124,7 +124,7 @@ func TestMessageReadAll(t *testing.T) {
 				Total:    0,
 				Offset:   0,
 				Limit:    msgsNum,
-				Messages: []mainflux.Message{},
+				Messages: []senml.Message{},
 			},
 		},
 		"read message with subtopic": {

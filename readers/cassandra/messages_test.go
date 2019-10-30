@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/readers"
 	creaders "github.com/mainflux/mainflux/readers/cassandra"
+	"github.com/mainflux/mainflux/transformer/senml"
 	cwriters "github.com/mainflux/mainflux/writers/cassandra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -26,7 +26,7 @@ const (
 
 var (
 	addr = "localhost"
-	msg  = mainflux.Message{
+	msg  = senml.Message{
 		Channel:   chanID,
 		Publisher: "1",
 		Protocol:  "mqtt",
@@ -42,8 +42,8 @@ func TestReadAll(t *testing.T) {
 	defer session.Close()
 	writer := cwriters.New(session)
 
-	messages := []mainflux.Message{}
-	subtopicMsgs := []mainflux.Message{}
+	messages := []senml.Message{}
+	subtopicMsgs := []senml.Message{}
 	now := time.Now().Unix()
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.
@@ -52,17 +52,17 @@ func TestReadAll(t *testing.T) {
 		switch count {
 		case 0:
 			msg.Subtopic = subtopic
-			msg.Value = &mainflux.Message_FloatValue{FloatValue: 5}
+			msg.Value = &senml.Message_FloatValue{FloatValue: 5}
 		case 1:
-			msg.Value = &mainflux.Message_BoolValue{BoolValue: false}
+			msg.Value = &senml.Message_BoolValue{BoolValue: false}
 		case 2:
-			msg.Value = &mainflux.Message_StringValue{StringValue: "value"}
+			msg.Value = &senml.Message_StringValue{StringValue: "value"}
 		case 3:
-			msg.Value = &mainflux.Message_DataValue{DataValue: "base64data"}
+			msg.Value = &senml.Message_DataValue{DataValue: "base64data"}
 		case 4:
 			msg.ValueSum = nil
 		case 5:
-			msg.ValueSum = &mainflux.SumValue{Value: 45}
+			msg.ValueSum = &senml.SumValue{Value: 45}
 		}
 		msg.Time = float64(now - int64(i))
 		messages = append(messages, msg)
@@ -105,7 +105,7 @@ func TestReadAll(t *testing.T) {
 				Total:    0,
 				Offset:   0,
 				Limit:    msgsNum,
-				Messages: []mainflux.Message{},
+				Messages: []senml.Message{},
 			},
 		},
 		"read message last page": {
@@ -128,7 +128,7 @@ func TestReadAll(t *testing.T) {
 				Total:    0,
 				Offset:   0,
 				Limit:    msgsNum,
-				Messages: []mainflux.Message{},
+				Messages: []senml.Message{},
 			},
 		},
 		"read message with subtopic": {
