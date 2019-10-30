@@ -6,7 +6,6 @@ package influxdb
 import (
 	"math"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/mainflux/mainflux/writers"
@@ -21,9 +20,6 @@ var _ writers.MessageRepository = (*influxRepo)(nil)
 
 type influxRepo struct {
 	client influxdata.Client
-	batch  influxdata.BatchPoints
-	mu     sync.Mutex
-	tick   <-chan time.Time
 	cfg    influxdata.BatchPointsConfig
 }
 

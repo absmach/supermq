@@ -50,16 +50,15 @@ const (
 )
 
 type config struct {
-	natsURL   string
-	logLevel  string
-	port      string
-	batchSize string
-	dbName    string
-	dbHost    string
-	dbPort    string
-	dbUser    string
-	dbPass    string
-	channels  map[string]bool
+	natsURL  string
+	logLevel string
+	port     string
+	dbName   string
+	dbHost   string
+	dbPort   string
+	dbUser   string
+	dbPass   string
+	channels map[string]bool
 }
 
 func main() {
