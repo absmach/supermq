@@ -34,7 +34,9 @@ func (res tokenRes) Empty() bool {
 	return res.Token == ""
 }
 
-type updateRes struct{}
+type updateRes struct {
+	Email string `json:"email"`
+}
 
 func (res updateRes) Code() int {
 	return http.StatusOK
@@ -45,7 +47,7 @@ func (res updateRes) Headers() map[string]string {
 }
 
 func (res updateRes) Empty() bool {
-	return true
+	return false
 }
 
 type identityRes struct {

@@ -28,13 +28,13 @@ func (req viewUserInfoReq) validate() error {
 	return nil
 }
 
-type updateUserReq struct {
-	token string
-	user  users.User
+type updateMetadataReq struct {
+	Token    string
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
-func (req updateUserReq) validate() error {
-	if req.token == "" {
+func (req updateMetadataReq) validate() error {
+	if req.Token == "" {
 		return users.ErrUnauthorizedAccess
 	}
 	return nil

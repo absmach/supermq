@@ -105,15 +105,15 @@ func decodeViewInfo(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeUpdateInfo(_ context.Context, r *http.Request) (interface{}, error) {
-	var user users.User
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+	var metadata map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&metadata); err != nil {
 		logger.Warn(fmt.Sprintf("Failed to decode user: %s", err))
 		return nil, err
 	}
 
-	req := updateUserReq{
-		token: r.Header.Get("Authorization"),
-		user:  user,
+	req := updateMetadataReq{
+		Token:    r.Header.Get("Authorization"),
+		Metadata: metadata,
 	}
 	return req, nil
 }

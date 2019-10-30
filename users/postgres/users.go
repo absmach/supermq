@@ -43,11 +43,6 @@ func (ur userRepository) Save(ctx context.Context, user users.User) error {
 	return nil
 }
 
-type dbMetaUser struct {
-	Email    string     `db:"email"`
-	Metadata dbMetadata `db:"metadata"`
-}
-
 func (ur userRepository) Update(ctx context.Context, user users.User) error {
 	q := `UPDATE users SET metadata = :metadata WHERE email = :email`
 
