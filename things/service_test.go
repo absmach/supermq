@@ -68,6 +68,42 @@ func TestAddThing(t *testing.T) {
 	}
 }
 
+func TestCreateThings(t *testing.T) {
+	svc := newService(map[string]string{token: email})
+
+	cases := []struct {
+		desc   string
+		things []things.Thing
+		token  string
+		err    error
+	}{
+		{
+			desc: "create new things",
+			things: []things.Thing{
+				things.Thing{Name: "a"},
+				things.Thing{Name: "b"},
+				things.Thing{Name: "c"},
+				things.Thing{Name: "d"},
+			},
+			token: token,
+			err:   nil,
+		},
+		{
+			desc: "create thing with wrong credentials",
+			things: []things.Thing{
+				things.Thing{Name: "e"},
+			},
+			token: wrongValue,
+			err:   things.ErrUnauthorizedAccess,
+		},
+	}
+
+	for _, tc := range cases {
+		_, err := svc.CreateThings(context.Background(), tc.token, tc.things)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+	}
+}
+
 func TestUpdateThing(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 	saved, _ := svc.AddThing(context.Background(), token, thing)
@@ -417,6 +453,42 @@ func TestCreateChannel(t *testing.T) {
 	for _, tc := range cases {
 		_, err := svc.CreateChannel(context.Background(), tc.token, tc.channel)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+	}
+}
+
+func TestCreateChannels(t *testing.T) {
+	svc := newService(map[string]string{token: email})
+
+	cases := []struct {
+		desc     string
+		channels []things.Channel
+		token    string
+		err      error
+	}{
+		{
+			desc: "create new channels",
+			channels: []things.Channel{
+				things.Channel{Name: "a"},
+				things.Channel{Name: "b"},
+				things.Channel{Name: "c"},
+				things.Channel{Name: "d"},
+			},
+			token: token,
+			err:   nil,
+		},
+		{
+			desc: "create channel with wrong credentials",
+			channels: []things.Channel{
+				things.Channel{Name: "e"},
+			},
+			token: wrongValue,
+			err:   things.ErrUnauthorizedAccess,
+		},
+	}
+
+	for _, cc := range cases {
+		_, err := svc.CreateChannels(context.Background(), cc.token, cc.channels)
+		assert.Equal(t, cc.err, err, fmt.Sprintf("%s: expected %s got %s\n", cc.desc, cc.err, err))
 	}
 }
 
@@ -827,7 +899,7 @@ func TestDisconnect(t *testing.T) {
 
 }
 
-func TestCanAccess(t *testing.T) {
+func TestCanAccessByKey(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 
 	sth, _ := svc.AddThing(context.Background(), token, thing)
@@ -857,7 +929,7 @@ func TestCanAccess(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		_, err := svc.CanAccess(context.Background(), tc.channel, tc.token)
+		_, err := svc.CanAccessByKey(context.Background(), tc.channel, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }

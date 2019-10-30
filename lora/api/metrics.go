@@ -84,8 +84,8 @@ func (mm *metricsMiddleware) RemoveChannel(mfxChanID string) error {
 
 func (mm *metricsMiddleware) Publish(ctx context.Context, token string, m lora.Message) error {
 	defer func(begin time.Time) {
-		mm.counter.With("method", "message_router").Add(1)
-		mm.latency.With("method", "message_router").Observe(time.Since(begin).Seconds())
+		mm.counter.With("method", "publish").Add(1)
+		mm.latency.With("method", "publish").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
 	return mm.svc.Publish(ctx, token, m)

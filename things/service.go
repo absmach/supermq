@@ -35,6 +35,9 @@ type Service interface {
 	// AddThing adds new thing to the user identified by the provided key.
 	AddThing(context.Context, string, Thing) (Thing, error)
 
+	// CreateThings adds a list of things to the user identified by the provided key.
+	CreateThings(context.Context, string, []Thing) ([]Thing, error)
+
 	// UpdateThing updates the thing identified by the provided ID, that
 	// belongs to the user identified by the provided key.
 	UpdateThing(context.Context, string, Thing) error
@@ -62,6 +65,9 @@ type Service interface {
 
 	// CreateChannel adds new channel to the user identified by the provided key.
 	CreateChannel(context.Context, string, Channel) (Channel, error)
+
+	// CreateChannels adds a list of channels to the user identified by the provided key.
+	CreateChannels(context.Context, string, []Channel) ([]Channel, error)
 
 	// UpdateChannel updates the channel identified by the provided ID, that
 	// belongs to the user identified by the provided key.
@@ -91,11 +97,11 @@ type Service interface {
 	// things.
 	Disconnect(context.Context, string, string, string) error
 
-	// CanAccess determines whether the channel can be accessed using the
+	// CanAccessByKey determines whether the channel can be accessed using the
 	// provided key and returns thing's id if access is allowed.
-	CanAccess(context.Context, string, string) (string, error)
+	CanAccessByKey(context.Context, string, string) (string, error)
 
-	// CanAccessByID determines whether the channnel can be accessed by
+	// CanAccessByID determines whether the channel can be accessed by
 	// the given thing and returns error if it cannot.
 	CanAccessByID(context.Context, string, string) error
 
@@ -161,6 +167,31 @@ func (ts *thingsService) AddThing(ctx context.Context, token string, thing Thing
 
 	thing.ID = id
 	return thing, nil
+}
+
+func (ts *thingsService) CreateThings(ctx context.Context, token string, things []Thing) ([]Thing, error) {
+	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	if err != nil {
+		return []Thing{}, ErrUnauthorizedAccess
+	}
+
+	for i := range things {
+		things[i].ID, err = ts.idp.ID()
+		if err != nil {
+			return []Thing{}, err
+		}
+
+		things[i].Owner = res.GetValue()
+
+		if things[i].Key == "" {
+			things[i].Key, err = ts.idp.ID()
+			if err != nil {
+				return []Thing{}, err
+			}
+		}
+	}
+
+	return ts.things.BulkSave(ctx, things)
 }
 
 func (ts *thingsService) UpdateThing(ctx context.Context, token string, thing Thing) error {
@@ -245,6 +276,24 @@ func (ts *thingsService) CreateChannel(ctx context.Context, token string, channe
 	return channel, nil
 }
 
+func (ts *thingsService) CreateChannels(ctx context.Context, token string, channels []Channel) ([]Channel, error) {
+	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	if err != nil {
+		return []Channel{}, ErrUnauthorizedAccess
+	}
+
+	for i := range channels {
+		channels[i].ID, err = ts.idp.ID()
+		if err != nil {
+			return []Channel{}, err
+		}
+
+		channels[i].Owner = res.GetValue()
+	}
+
+	return ts.channels.BulkSave(ctx, channels)
+}
+
 func (ts *thingsService) UpdateChannel(ctx context.Context, token string, channel Channel) error {
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -311,7 +360,7 @@ func (ts *thingsService) Disconnect(ctx context.Context, token, chanID, thingID 
 	return ts.channels.Disconnect(ctx, res.GetValue(), chanID, thingID)
 }
 
-func (ts *thingsService) CanAccess(ctx context.Context, chanID, key string) (string, error) {
+func (ts *thingsService) CanAccessByKey(ctx context.Context, chanID, key string) (string, error) {
 	thingID, err := ts.hasThing(ctx, chanID, key)
 	if err == nil {
 		return thingID, nil

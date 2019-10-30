@@ -1,3 +1,6 @@
+// Copyright (c) Mainflux
+// SPDX-License-Identifier: Apache-2.0
+
 package main
 
 import (
@@ -9,14 +12,14 @@ import (
 	"strconv"
 	"syscall"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
+	mqttPaho "github.com/eclipse/paho.mqtt.golang"
 	r "github.com/go-redis/redis"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/lora"
 	"github.com/mainflux/mainflux/lora/api"
+	"github.com/mainflux/mainflux/lora/mqtt"
 	pub "github.com/mainflux/mainflux/lora/nats"
-	mqttBroker "github.com/mainflux/mainflux/lora/paho"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux/lora/redis"
@@ -25,29 +28,29 @@ import (
 )
 
 const (
-	defHTTPPort     = "8180"
-	defLoraMsgURL   = "tcp://localhost:1883"
-	defNatsURL      = nats.DefaultURL
-	defLogLevel     = "error"
-	defESURL        = "localhost:6379"
-	defESPass       = ""
-	defESDB         = "0"
-	defInstanceName = "lora"
-	defRouteMapURL  = "localhost:6379"
-	defRouteMapPass = ""
-	defRouteMapDB   = "0"
+	defHTTPPort       = "8180"
+	defLoraMsgURL     = "tcp://localhost:1883"
+	defNatsURL        = nats.DefaultURL
+	defLogLevel       = "error"
+	defESURL          = "localhost:6379"
+	defESPass         = ""
+	defESDB           = "0"
+	defESConsumerName = "lora"
+	defRouteMapURL    = "localhost:6379"
+	defRouteMapPass   = ""
+	defRouteMapDB     = "0"
 
-	envHTTPPort     = "MF_LORA_ADAPTER_HTTP_PORT"
-	envLoraMsgURL   = "MF_LORA_ADAPTER_MESSAGES_URL"
-	envNatsURL      = "MF_NATS_URL"
-	envLogLevel     = "MF_LORA_ADAPTER_LOG_LEVEL"
-	envESURL        = "MF_THINGS_ES_URL"
-	envESPass       = "MF_THINGS_ES_PASS"
-	envESDB         = "MF_THINGS_ES_DB"
-	envInstanceName = "MF_LORA_ADAPTER_INSTANCE_NAME"
-	envRouteMapURL  = "MF_LORA_ADAPTER_ROUTEMAP_URL"
-	envRouteMapPass = "MF_LORA_ADAPTER_ROUTEMAP_PASS"
-	envRouteMapDB   = "MF_LORA_ADAPTER_ROUTEMAP_DB"
+	envHTTPPort       = "MF_LORA_ADAPTER_HTTP_PORT"
+	envLoraMsgURL     = "MF_LORA_ADAPTER_MESSAGES_URL"
+	envNatsURL        = "MF_NATS_URL"
+	envLogLevel       = "MF_LORA_ADAPTER_LOG_LEVEL"
+	envESURL          = "MF_THINGS_ES_URL"
+	envESPass         = "MF_THINGS_ES_PASS"
+	envESDB           = "MF_THINGS_ES_DB"
+	envESConsumerName = "MF_LORA_ADAPTER_EVENT_CONSUMER"
+	envRouteMapURL    = "MF_LORA_ADAPTER_ROUTE_MAP_URL"
+	envRouteMapPass   = "MF_LORA_ADAPTER_ROUTE_MAP_PASS"
+	envRouteMapDB     = "MF_LORA_ADAPTER_ROUTE_MAP_DB"
 
 	loraServerTopic = "application/+/device/+/rx"
 
@@ -56,17 +59,17 @@ const (
 )
 
 type config struct {
-	httpPort     string
-	loraMsgURL   string
-	natsURL      string
-	logLevel     string
-	esURL        string
-	esPass       string
-	esDB         string
-	instanceName string
-	routeMapURL  string
-	routeMapPass string
-	routeMapDB   string
+	httpPort       string
+	loraMsgURL     string
+	natsURL        string
+	logLevel       string
+	esURL          string
+	esPass         string
+	esDB           string
+	esConsumerName string
+	routeMapURL    string
+	routeMapPass   string
+	routeMapDB     string
 }
 
 func main() {
@@ -112,7 +115,7 @@ func main() {
 	)
 
 	go subscribeToLoRaBroker(svc, mqttConn, logger)
-	go subscribeToThingsES(svc, esConn, cfg.instanceName, logger)
+	go subscribeToThingsES(svc, esConn, cfg.esConsumerName, logger)
 
 	errs := make(chan error, 2)
 
@@ -130,17 +133,17 @@ func main() {
 
 func loadConfig() config {
 	return config{
-		httpPort:     mainflux.Env(envHTTPPort, defHTTPPort),
-		loraMsgURL:   mainflux.Env(envLoraMsgURL, defLoraMsgURL),
-		natsURL:      mainflux.Env(envNatsURL, defNatsURL),
-		logLevel:     mainflux.Env(envLogLevel, defLogLevel),
-		esURL:        mainflux.Env(envESURL, defESURL),
-		esPass:       mainflux.Env(envESPass, defESPass),
-		esDB:         mainflux.Env(envESDB, defESDB),
-		instanceName: mainflux.Env(envInstanceName, defInstanceName),
-		routeMapURL:  mainflux.Env(envRouteMapURL, defRouteMapURL),
-		routeMapPass: mainflux.Env(envRouteMapPass, defRouteMapPass),
-		routeMapDB:   mainflux.Env(envRouteMapDB, defRouteMapDB),
+		httpPort:       mainflux.Env(envHTTPPort, defHTTPPort),
+		loraMsgURL:     mainflux.Env(envLoraMsgURL, defLoraMsgURL),
+		natsURL:        mainflux.Env(envNatsURL, defNatsURL),
+		logLevel:       mainflux.Env(envLogLevel, defLogLevel),
+		esURL:          mainflux.Env(envESURL, defESURL),
+		esPass:         mainflux.Env(envESPass, defESPass),
+		esDB:           mainflux.Env(envESDB, defESDB),
+		esConsumerName: mainflux.Env(envESConsumerName, defESConsumerName),
+		routeMapURL:    mainflux.Env(envRouteMapURL, defRouteMapURL),
+		routeMapPass:   mainflux.Env(envRouteMapPass, defRouteMapPass),
+		routeMapDB:     mainflux.Env(envRouteMapDB, defRouteMapDB),
 	}
 }
 
@@ -155,20 +158,20 @@ func connectToNATS(url string, logger logger.Logger) *nats.Conn {
 	return conn
 }
 
-func connectToMQTTBroker(loraURL string, logger logger.Logger) mqtt.Client {
-	opts := mqtt.NewClientOptions()
+func connectToMQTTBroker(loraURL string, logger logger.Logger) mqttPaho.Client {
+	opts := mqttPaho.NewClientOptions()
 	opts.AddBroker(loraURL)
 	opts.SetUsername("")
 	opts.SetPassword("")
-	opts.SetOnConnectHandler(func(c mqtt.Client) {
+	opts.SetOnConnectHandler(func(c mqttPaho.Client) {
 		logger.Info("Connected to Lora MQTT broker")
 	})
-	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {
+	opts.SetConnectionLostHandler(func(c mqttPaho.Client, err error) {
 		logger.Error(fmt.Sprintf("MQTT connection lost: %s", err.Error()))
 		os.Exit(1)
 	})
 
-	client := mqtt.NewClient(opts)
+	client := mqttPaho.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to Lora MQTT broker: %s", token.Error()))
 		os.Exit(1)
@@ -191,10 +194,10 @@ func connectToRedis(redisURL, redisPass, redisDB string, logger logger.Logger) *
 	})
 }
 
-func subscribeToLoRaBroker(svc lora.Service, mc mqtt.Client, logger logger.Logger) {
-	mqttBroker := mqttBroker.NewBroker(svc, mc, logger)
+func subscribeToLoRaBroker(svc lora.Service, mc mqttPaho.Client, logger logger.Logger) {
+	mqtt := mqtt.NewBroker(svc, mc, logger)
 	logger.Info("Subscribed to Lora MQTT broker")
-	if err := mqttBroker.Subscribe(loraServerTopic); err != nil {
+	if err := mqtt.Subscribe(loraServerTopic); err != nil {
 		logger.Error(fmt.Sprintf("Failed to subscribe to Lora MQTT broker: %s", err))
 		os.Exit(1)
 	}
@@ -204,17 +207,17 @@ func subscribeToThingsES(svc lora.Service, client *r.Client, consumer string, lo
 	eventStore := redis.NewEventStore(svc, client, consumer, logger)
 	logger.Info("Subscribed to Redis Event Store")
 	if err := eventStore.Subscribe("mainflux.things"); err != nil {
-		logger.Warn(fmt.Sprintf("Lora-adapter service failed to subscribe to event sourcing: %s", err))
+		logger.Warn(fmt.Sprintf("Lora-adapter service failed to subscribe to Redis event source: %s", err))
 	}
 }
 
 func newRouteMapRepositoy(client *r.Client, prefix string, logger logger.Logger) lora.RouteMapRepository {
-	logger.Info("Connected to Redis Route map")
+	logger.Info(fmt.Sprintf("Connected to %s Redis Route-map", prefix))
 	return redis.NewRouteMapRepository(client, prefix)
 }
 
 func startHTTPServer(cfg config, logger logger.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", cfg.httpPort)
-	logger.Info(fmt.Sprintf("Lora-adapter service started, exposed port %s", cfg.httpPort))
+	logger.Info(fmt.Sprintf("lora-adapter service started, exposed port %s", cfg.httpPort))
 	errs <- http.ListenAndServe(p, api.MakeHandler())
 }

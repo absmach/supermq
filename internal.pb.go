@@ -9,8 +9,11 @@ import (
 	proto "github.com/golang/protobuf/proto"
 	empty "github.com/golang/protobuf/ptypes/empty"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	io "io"
 	math "math"
+	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -22,9 +25,9 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-type AccessReq struct {
+type AccessByKeyReq struct {
 	Token                string   `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
 	ChanID               string   `protobuf:"bytes,2,opt,name=chanID,proto3" json:"chanID,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -32,47 +35,47 @@ type AccessReq struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *AccessReq) Reset()         { *m = AccessReq{} }
-func (m *AccessReq) String() string { return proto.CompactTextString(m) }
-func (*AccessReq) ProtoMessage()    {}
-func (*AccessReq) Descriptor() ([]byte, []int) {
+func (m *AccessByKeyReq) Reset()         { *m = AccessByKeyReq{} }
+func (m *AccessByKeyReq) String() string { return proto.CompactTextString(m) }
+func (*AccessByKeyReq) ProtoMessage()    {}
+func (*AccessByKeyReq) Descriptor() ([]byte, []int) {
 	return fileDescriptor_41f4a519b878ee3b, []int{0}
 }
-func (m *AccessReq) XXX_Unmarshal(b []byte) error {
+func (m *AccessByKeyReq) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *AccessReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *AccessByKeyReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_AccessReq.Marshal(b, m, deterministic)
+		return xxx_messageInfo_AccessByKeyReq.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
-		n, err := m.MarshalTo(b)
+		n, err := m.MarshalToSizedBuffer(b)
 		if err != nil {
 			return nil, err
 		}
 		return b[:n], nil
 	}
 }
-func (m *AccessReq) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AccessReq.Merge(m, src)
+func (m *AccessByKeyReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccessByKeyReq.Merge(m, src)
 }
-func (m *AccessReq) XXX_Size() int {
+func (m *AccessByKeyReq) XXX_Size() int {
 	return m.Size()
 }
-func (m *AccessReq) XXX_DiscardUnknown() {
-	xxx_messageInfo_AccessReq.DiscardUnknown(m)
+func (m *AccessByKeyReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_AccessByKeyReq.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_AccessReq proto.InternalMessageInfo
+var xxx_messageInfo_AccessByKeyReq proto.InternalMessageInfo
 
-func (m *AccessReq) GetToken() string {
+func (m *AccessByKeyReq) GetToken() string {
 	if m != nil {
 		return m.Token
 	}
 	return ""
 }
 
-func (m *AccessReq) GetChanID() string {
+func (m *AccessByKeyReq) GetChanID() string {
 	if m != nil {
 		return m.ChanID
 	}
@@ -100,7 +103,7 @@ func (m *ThingID) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return xxx_messageInfo_ThingID.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
-		n, err := m.MarshalTo(b)
+		n, err := m.MarshalToSizedBuffer(b)
 		if err != nil {
 			return nil, err
 		}
@@ -148,7 +151,7 @@ func (m *AccessByIDReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error
 		return xxx_messageInfo_AccessByIDReq.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
-		n, err := m.MarshalTo(b)
+		n, err := m.MarshalToSizedBuffer(b)
 		if err != nil {
 			return nil, err
 		}
@@ -202,7 +205,7 @@ func (m *Token) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return xxx_messageInfo_Token.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
-		n, err := m.MarshalTo(b)
+		n, err := m.MarshalToSizedBuffer(b)
 		if err != nil {
 			return nil, err
 		}
@@ -249,7 +252,7 @@ func (m *UserID) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return xxx_messageInfo_UserID.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
-		n, err := m.MarshalTo(b)
+		n, err := m.MarshalToSizedBuffer(b)
 		if err != nil {
 			return nil, err
 		}
@@ -276,7 +279,7 @@ func (m *UserID) GetValue() string {
 }
 
 func init() {
-	proto.RegisterType((*AccessReq)(nil), "mainflux.AccessReq")
+	proto.RegisterType((*AccessByKeyReq)(nil), "mainflux.AccessByKeyReq")
 	proto.RegisterType((*ThingID)(nil), "mainflux.ThingID")
 	proto.RegisterType((*AccessByIDReq)(nil), "mainflux.AccessByIDReq")
 	proto.RegisterType((*Token)(nil), "mainflux.Token")
@@ -286,27 +289,27 @@ func init() {
 func init() { proto.RegisterFile("internal.proto", fileDescriptor_41f4a519b878ee3b) }
 
 var fileDescriptor_41f4a519b878ee3b = []byte{
-	// 316 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x50, 0x4d, 0x4e, 0xc2, 0x40,
-	0x18, 0xed, 0x98, 0xf0, 0xf7, 0x45, 0x14, 0x47, 0x83, 0x04, 0x63, 0x35, 0xb3, 0x72, 0x35, 0x18,
-	0x8c, 0x0b, 0x57, 0x06, 0xac, 0x8b, 0x6e, 0x11, 0x0f, 0x50, 0xea, 0xb4, 0x34, 0x96, 0x29, 0xb6,
-	0x53, 0x62, 0x6f, 0xe2, 0x61, 0x3c, 0x80, 0x4b, 0x8f, 0x60, 0xea, 0x45, 0xcc, 0xcc, 0xb4, 0xc5,
-	0x18, 0x70, 0xf9, 0x5e, 0xbe, 0xf7, 0xbd, 0x1f, 0xd8, 0x0b, 0xb8, 0x60, 0x31, 0x77, 0x42, 0xba,
-	0x8c, 0x23, 0x11, 0xe1, 0xe6, 0xc2, 0x09, 0xb8, 0x17, 0xa6, 0xaf, 0xfd, 0x13, 0x3f, 0x8a, 0xfc,
-	0x90, 0x0d, 0x14, 0x3f, 0x4b, 0xbd, 0x01, 0x5b, 0x2c, 0x45, 0xa6, 0xcf, 0xc8, 0x0d, 0xb4, 0x46,
-	0xae, 0xcb, 0x92, 0x64, 0xc2, 0x5e, 0xf0, 0x11, 0xd4, 0x44, 0xf4, 0xcc, 0x78, 0x0f, 0x9d, 0xa3,
-	0x8b, 0xd6, 0x44, 0x03, 0xdc, 0x85, 0xba, 0x3b, 0x77, 0xb8, 0x6d, 0xf5, 0x76, 0x14, 0x5d, 0x20,
-	0x72, 0x06, 0x8d, 0xe9, 0x3c, 0xe0, 0xbe, 0x6d, 0x49, 0xe1, 0xca, 0x09, 0x53, 0x56, 0x0a, 0x15,
-	0x20, 0x23, 0x68, 0xeb, 0xdf, 0xe3, 0xcc, 0xb6, 0xe4, 0xff, 0x1e, 0x34, 0x84, 0x56, 0x14, 0x87,
-	0x25, 0xdc, 0xea, 0x71, 0x0a, 0xb5, 0xa9, 0x0a, 0xb1, 0xd9, 0xc1, 0x84, 0xfa, 0x63, 0xc2, 0xe2,
-	0x6d, 0x09, 0x86, 0xef, 0x08, 0xda, 0x2a, 0x63, 0xf2, 0xc0, 0xe2, 0x55, 0xe0, 0x32, 0x7c, 0x0d,
-	0xad, 0x3b, 0x87, 0xeb, 0x58, 0xf8, 0x90, 0x96, 0x23, 0xd1, 0x6a, 0x84, 0xfe, 0xc1, 0x9a, 0x2c,
-	0xea, 0x11, 0x03, 0x8f, 0xa1, 0x5d, 0xc9, 0x64, 0x1b, 0x7c, 0xfc, 0x57, 0x5a, 0x74, 0xec, 0x77,
-	0xa9, 0x9e, 0x9b, 0x96, 0x73, 0xd3, 0x7b, 0x39, 0x37, 0x31, 0xf0, 0x25, 0x34, 0xed, 0x27, 0xc6,
-	0x45, 0xe0, 0x65, 0x78, 0xff, 0x97, 0x89, 0xec, 0xb7, 0xd1, 0x75, 0x78, 0x0b, 0xbb, 0xb2, 0x5e,
-	0x15, 0x7e, 0xf0, 0xdf, 0x87, 0xce, 0x9a, 0xd0, 0x9b, 0x10, 0x63, 0xdc, 0xf9, 0xc8, 0x4d, 0xf4,
-	0x99, 0x9b, 0xe8, 0x2b, 0x37, 0xd1, 0xdb, 0xb7, 0x69, 0xcc, 0xea, 0x2a, 0xd6, 0xd5, 0x4f, 0x00,
-	0x00, 0x00, 0xff, 0xff, 0xcf, 0x3f, 0x05, 0x40, 0x2f, 0x02, 0x00, 0x00,
+	// 317 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x50, 0x4d, 0x4e, 0xf2, 0x40,
+	0x18, 0xee, 0x7c, 0x09, 0x3f, 0xdf, 0x1b, 0x41, 0x9c, 0x18, 0x6c, 0x30, 0x56, 0x33, 0x2b, 0x57,
+	0x83, 0xc1, 0xbd, 0x04, 0xac, 0x8b, 0xc6, 0x1d, 0xe2, 0x01, 0x4a, 0x7d, 0x29, 0x8d, 0x65, 0x8a,
+	0xed, 0x94, 0xd8, 0x9b, 0x78, 0x22, 0xe3, 0xd2, 0x23, 0x98, 0x7a, 0x11, 0xd3, 0x69, 0x2b, 0x35,
+	0x82, 0xcb, 0xe7, 0x9d, 0x79, 0x7e, 0xa1, 0xed, 0x09, 0x89, 0xa1, 0xb0, 0x7d, 0xbe, 0x0a, 0x03,
+	0x19, 0xd0, 0xe6, 0xd2, 0xf6, 0xc4, 0xdc, 0x8f, 0x9f, 0x7b, 0xc7, 0x6e, 0x10, 0xb8, 0x3e, 0xf6,
+	0xd5, 0x7d, 0x16, 0xcf, 0xfb, 0xb8, 0x5c, 0xc9, 0x24, 0xff, 0xc6, 0xae, 0xa0, 0x3d, 0x72, 0x1c,
+	0x8c, 0xa2, 0x71, 0x72, 0x8b, 0xc9, 0x04, 0x9f, 0xe8, 0x21, 0xd4, 0x64, 0xf0, 0x88, 0x42, 0x27,
+	0x67, 0xe4, 0xfc, 0xff, 0x24, 0x07, 0xb4, 0x0b, 0x75, 0x67, 0x61, 0x0b, 0xcb, 0xd4, 0xff, 0xa9,
+	0x73, 0x81, 0xd8, 0x29, 0x34, 0xa6, 0x0b, 0x4f, 0xb8, 0x96, 0x99, 0x11, 0xd7, 0xb6, 0x1f, 0x63,
+	0x49, 0x54, 0x80, 0x8d, 0xa0, 0x55, 0x1a, 0x58, 0x66, 0xa6, 0xaf, 0x43, 0x43, 0xe6, 0x8c, 0xe2,
+	0x63, 0x09, 0x77, 0x7a, 0x9c, 0x40, 0x6d, 0xaa, 0x42, 0x6c, 0x77, 0x30, 0xa0, 0x7e, 0x1f, 0x61,
+	0xb8, 0x2b, 0xc1, 0xe0, 0x95, 0x40, 0x4b, 0x65, 0x8c, 0xee, 0x30, 0x5c, 0x7b, 0x0e, 0xd2, 0x21,
+	0xb4, 0xaf, 0x6d, 0x51, 0xe9, 0x4d, 0x75, 0x5e, 0xce, 0xc5, 0x7f, 0xce, 0xd1, 0x3b, 0xd8, 0xbc,
+	0x14, 0x45, 0x99, 0x46, 0xc7, 0xd0, 0xaa, 0x08, 0x58, 0x26, 0x3d, 0xfa, 0xcd, 0x57, 0x6d, 0x7b,
+	0x5d, 0x9e, 0xaf, 0xcf, 0xcb, 0xf5, 0xf9, 0x4d, 0xb6, 0x3e, 0xd3, 0xe8, 0x05, 0x34, 0xad, 0x07,
+	0x14, 0xd2, 0x9b, 0x27, 0x74, 0xbf, 0x62, 0x92, 0x35, 0xdd, 0xea, 0x3a, 0x18, 0xc2, 0x5e, 0x56,
+	0xf4, 0xbb, 0x46, 0xff, 0x2f, 0x85, 0xce, 0xe6, 0x90, 0xaf, 0xc3, 0xb4, 0x71, 0xe7, 0x2d, 0x35,
+	0xc8, 0x7b, 0x6a, 0x90, 0x8f, 0xd4, 0x20, 0x2f, 0x9f, 0x86, 0x36, 0xab, 0xab, 0x58, 0x97, 0x5f,
+	0x01, 0x00, 0x00, 0xff, 0xff, 0xc5, 0x0b, 0xb5, 0x3c, 0x3e, 0x02, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -321,7 +324,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ThingsServiceClient interface {
-	CanAccess(ctx context.Context, in *AccessReq, opts ...grpc.CallOption) (*ThingID, error)
+	CanAccessByKey(ctx context.Context, in *AccessByKeyReq, opts ...grpc.CallOption) (*ThingID, error)
 	CanAccessByID(ctx context.Context, in *AccessByIDReq, opts ...grpc.CallOption) (*empty.Empty, error)
 	Identify(ctx context.Context, in *Token, opts ...grpc.CallOption) (*ThingID, error)
 }
@@ -334,9 +337,9 @@ func NewThingsServiceClient(cc *grpc.ClientConn) ThingsServiceClient {
 	return &thingsServiceClient{cc}
 }
 
-func (c *thingsServiceClient) CanAccess(ctx context.Context, in *AccessReq, opts ...grpc.CallOption) (*ThingID, error) {
+func (c *thingsServiceClient) CanAccessByKey(ctx context.Context, in *AccessByKeyReq, opts ...grpc.CallOption) (*ThingID, error) {
 	out := new(ThingID)
-	err := c.cc.Invoke(ctx, "/mainflux.ThingsService/CanAccess", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mainflux.ThingsService/CanAccessByKey", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -363,29 +366,43 @@ func (c *thingsServiceClient) Identify(ctx context.Context, in *Token, opts ...g
 
 // ThingsServiceServer is the server API for ThingsService service.
 type ThingsServiceServer interface {
-	CanAccess(context.Context, *AccessReq) (*ThingID, error)
+	CanAccessByKey(context.Context, *AccessByKeyReq) (*ThingID, error)
 	CanAccessByID(context.Context, *AccessByIDReq) (*empty.Empty, error)
 	Identify(context.Context, *Token) (*ThingID, error)
+}
+
+// UnimplementedThingsServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedThingsServiceServer struct {
+}
+
+func (*UnimplementedThingsServiceServer) CanAccessByKey(ctx context.Context, req *AccessByKeyReq) (*ThingID, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CanAccessByKey not implemented")
+}
+func (*UnimplementedThingsServiceServer) CanAccessByID(ctx context.Context, req *AccessByIDReq) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CanAccessByID not implemented")
+}
+func (*UnimplementedThingsServiceServer) Identify(ctx context.Context, req *Token) (*ThingID, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Identify not implemented")
 }
 
 func RegisterThingsServiceServer(s *grpc.Server, srv ThingsServiceServer) {
 	s.RegisterService(&_ThingsService_serviceDesc, srv)
 }
 
-func _ThingsService_CanAccess_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AccessReq)
+func _ThingsService_CanAccessByKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AccessByKeyReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ThingsServiceServer).CanAccess(ctx, in)
+		return srv.(ThingsServiceServer).CanAccessByKey(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mainflux.ThingsService/CanAccess",
+		FullMethod: "/mainflux.ThingsService/CanAccessByKey",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ThingsServiceServer).CanAccess(ctx, req.(*AccessReq))
+		return srv.(ThingsServiceServer).CanAccessByKey(ctx, req.(*AccessByKeyReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -431,8 +448,8 @@ var _ThingsService_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*ThingsServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CanAccess",
-			Handler:    _ThingsService_CanAccess_Handler,
+			MethodName: "CanAccessByKey",
+			Handler:    _ThingsService_CanAccessByKey_Handler,
 		},
 		{
 			MethodName: "CanAccessByID",
@@ -476,6 +493,14 @@ type UsersServiceServer interface {
 	Identify(context.Context, *Token) (*UserID, error)
 }
 
+// UnimplementedUsersServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedUsersServiceServer struct {
+}
+
+func (*UnimplementedUsersServiceServer) Identify(ctx context.Context, req *Token) (*UserID, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Identify not implemented")
+}
+
 func RegisterUsersServiceServer(s *grpc.Server, srv UsersServiceServer) {
 	s.RegisterService(&_UsersService_serviceDesc, srv)
 }
@@ -511,43 +536,51 @@ var _UsersService_serviceDesc = grpc.ServiceDesc{
 	Metadata: "internal.proto",
 }
 
-func (m *AccessReq) Marshal() (dAtA []byte, err error) {
+func (m *AccessByKeyReq) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
 	return dAtA[:n], nil
 }
 
-func (m *AccessReq) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+func (m *AccessByKeyReq) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AccessByKeyReq) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Token) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintInternal(dAtA, i, uint64(len(m.Token)))
-		i += copy(dAtA[i:], m.Token)
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
 	}
 	if len(m.ChanID) > 0 {
-		dAtA[i] = 0x12
-		i++
+		i -= len(m.ChanID)
+		copy(dAtA[i:], m.ChanID)
 		i = encodeVarintInternal(dAtA, i, uint64(len(m.ChanID)))
-		i += copy(dAtA[i:], m.ChanID)
+		i--
+		dAtA[i] = 0x12
 	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
+	if len(m.Token) > 0 {
+		i -= len(m.Token)
+		copy(dAtA[i:], m.Token)
+		i = encodeVarintInternal(dAtA, i, uint64(len(m.Token)))
+		i--
+		dAtA[i] = 0xa
 	}
-	return i, nil
+	return len(dAtA) - i, nil
 }
 
 func (m *ThingID) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -555,26 +588,33 @@ func (m *ThingID) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *ThingID) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ThingID) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Value) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintInternal(dAtA, i, uint64(len(m.Value)))
-		i += copy(dAtA[i:], m.Value)
-	}
 	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
 	}
-	return i, nil
+	if len(m.Value) > 0 {
+		i -= len(m.Value)
+		copy(dAtA[i:], m.Value)
+		i = encodeVarintInternal(dAtA, i, uint64(len(m.Value)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *AccessByIDReq) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -582,32 +622,40 @@ func (m *AccessByIDReq) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *AccessByIDReq) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AccessByIDReq) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.ThingID) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintInternal(dAtA, i, uint64(len(m.ThingID)))
-		i += copy(dAtA[i:], m.ThingID)
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
 	}
 	if len(m.ChanID) > 0 {
-		dAtA[i] = 0x12
-		i++
+		i -= len(m.ChanID)
+		copy(dAtA[i:], m.ChanID)
 		i = encodeVarintInternal(dAtA, i, uint64(len(m.ChanID)))
-		i += copy(dAtA[i:], m.ChanID)
+		i--
+		dAtA[i] = 0x12
 	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
+	if len(m.ThingID) > 0 {
+		i -= len(m.ThingID)
+		copy(dAtA[i:], m.ThingID)
+		i = encodeVarintInternal(dAtA, i, uint64(len(m.ThingID)))
+		i--
+		dAtA[i] = 0xa
 	}
-	return i, nil
+	return len(dAtA) - i, nil
 }
 
 func (m *Token) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -615,26 +663,33 @@ func (m *Token) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *Token) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Token) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Value) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintInternal(dAtA, i, uint64(len(m.Value)))
-		i += copy(dAtA[i:], m.Value)
-	}
 	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
 	}
-	return i, nil
+	if len(m.Value) > 0 {
+		i -= len(m.Value)
+		copy(dAtA[i:], m.Value)
+		i = encodeVarintInternal(dAtA, i, uint64(len(m.Value)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *UserID) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
@@ -642,32 +697,41 @@ func (m *UserID) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *UserID) MarshalTo(dAtA []byte) (int, error) {
-	var i int
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *UserID) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Value) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintInternal(dAtA, i, uint64(len(m.Value)))
-		i += copy(dAtA[i:], m.Value)
-	}
 	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
 	}
-	return i, nil
+	if len(m.Value) > 0 {
+		i -= len(m.Value)
+		copy(dAtA[i:], m.Value)
+		i = encodeVarintInternal(dAtA, i, uint64(len(m.Value)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func encodeVarintInternal(dAtA []byte, offset int, v uint64) int {
+	offset -= sovInternal(v)
+	base := offset
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
 		v >>= 7
 		offset++
 	}
 	dAtA[offset] = uint8(v)
-	return offset + 1
+	return base
 }
-func (m *AccessReq) Size() (n int) {
+func (m *AccessByKeyReq) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -756,19 +820,12 @@ func (m *UserID) Size() (n int) {
 }
 
 func sovInternal(x uint64) (n int) {
-	for {
-		n++
-		x >>= 7
-		if x == 0 {
-			break
-		}
-	}
-	return n
+	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozInternal(x uint64) (n int) {
 	return sovInternal(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *AccessReq) Unmarshal(dAtA []byte) error {
+func (m *AccessByKeyReq) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -791,10 +848,10 @@ func (m *AccessReq) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: AccessReq: wiretype end group for non-group")
+			return fmt.Errorf("proto: AccessByKeyReq: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AccessReq: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AccessByKeyReq: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1265,6 +1322,7 @@ func (m *UserID) Unmarshal(dAtA []byte) error {
 func skipInternal(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
+	depth := 0
 	for iNdEx < l {
 		var wire uint64
 		for shift := uint(0); ; shift += 7 {
@@ -1296,10 +1354,8 @@ func skipInternal(dAtA []byte) (n int, err error) {
 					break
 				}
 			}
-			return iNdEx, nil
 		case 1:
 			iNdEx += 8
-			return iNdEx, nil
 		case 2:
 			var length int
 			for shift := uint(0); ; shift += 7 {
@@ -1320,55 +1376,30 @@ func skipInternal(dAtA []byte) (n int, err error) {
 				return 0, ErrInvalidLengthInternal
 			}
 			iNdEx += length
-			if iNdEx < 0 {
-				return 0, ErrInvalidLengthInternal
-			}
-			return iNdEx, nil
 		case 3:
-			for {
-				var innerWire uint64
-				var start int = iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, ErrIntOverflowInternal
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipInternal(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
-				if iNdEx < 0 {
-					return 0, ErrInvalidLengthInternal
-				}
-			}
-			return iNdEx, nil
+			depth++
 		case 4:
-			return iNdEx, nil
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupInternal
+			}
+			depth--
 		case 5:
 			iNdEx += 4
-			return iNdEx, nil
 		default:
 			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
 		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthInternal
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
 	}
-	panic("unreachable")
+	return 0, io.ErrUnexpectedEOF
 }
 
 var (
-	ErrInvalidLengthInternal = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowInternal   = fmt.Errorf("proto: integer overflow")
+	ErrInvalidLengthInternal        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowInternal          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupInternal = fmt.Errorf("proto: unexpected end of group")
 )
