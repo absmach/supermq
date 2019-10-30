@@ -31,7 +31,7 @@ func Start(nc *nats.Conn, repo MessageRepository, norm normalizer.Service, queue
 		logger:     logger,
 	}
 
-	_, err := nc.QueueSubscribe(mainflux.OutputChannels, queue, c.consume)
+	_, err := nc.QueueSubscribe(mainflux.InputChannels, queue, c.consume)
 	return err
 }
 
