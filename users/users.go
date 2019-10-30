@@ -42,6 +42,9 @@ type UserRepository interface {
 	// operation failure.
 	Save(context.Context, User) error
 
+	// Update update the user informations.
+	Update(context.Context, User) error
+
 	// RetrieveByID retrieves user by its unique identifier (i.e. email).
 	RetrieveByID(context.Context, string) (User, error)
 

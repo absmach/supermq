@@ -43,8 +43,13 @@ func (ur userRepository) Save(ctx context.Context, user users.User) error {
 	return nil
 }
 
+type dbMetaUser struct {
+	Email    string     `db:"email"`
+	Metadata dbMetadata `db:"metadata"`
+}
+
 func (ur userRepository) Update(ctx context.Context, user users.User) error {
-	q := `UPDATE users SET(email, password, metadata) VALUES (:email, :password, :metadata) WHERE email = :email`
+	q := `UPDATE users SET metadata = :metadata WHERE email = :email`
 
 	dbu := toDBUser(user)
 	if _, err := ur.db.NamedExecContext(ctx, q, dbu); err != nil {
@@ -76,7 +81,7 @@ func (ur userRepository) RetrieveByID(ctx context.Context, email string) (users.
 }
 
 func (ur userRepository) UpdatePassword(ctx context.Context, email, password string) error {
-	q := `UPDATE users SET  password = :password  WHERE email = :email`
+	q := `UPDATE users SET password = :password WHERE email = :email`
 
 	db := dbUser{
 		Email:    email,
