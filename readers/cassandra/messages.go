@@ -47,39 +47,20 @@ func (cr cassandraRepository) ReadAll(chanID string, offset, limit uint64, query
 		}
 	}
 
-	var floatVal, valueSum *float64
-	var strVal, dataVal *string
-	var boolVal *bool
-
 	page := readers.MessagesPage{
 		Offset:   offset,
 		Limit:    limit,
 		Messages: []senml.Message{},
 	}
+
 	for scanner.Next() {
 		var msg senml.Message
 		err := scanner.Scan(&msg.Channel, &msg.Subtopic, &msg.Publisher, &msg.Protocol,
-			&msg.Name, &msg.Unit, &floatVal, &strVal, &boolVal,
-			&dataVal, &valueSum, &msg.Time, &msg.UpdateTime, &msg.Link)
+			&msg.Name, &msg.Unit, &msg.Value, &msg.StringValue, &msg.BoolValue,
+			&msg.DataValue, &msg.Sum, &msg.Time, &msg.UpdateTime, &msg.Link)
 		if err != nil {
 			return readers.MessagesPage{}, err
 		}
-
-		switch {
-		case floatVal != nil:
-			msg.Value = &senml.Message_FloatValue{FloatValue: *floatVal}
-		case strVal != nil:
-			msg.Value = &senml.Message_StringValue{StringValue: *strVal}
-		case boolVal != nil:
-			msg.Value = &senml.Message_BoolValue{BoolValue: *boolVal}
-		case dataVal != nil:
-			msg.Value = &senml.Message_DataValue{DataValue: *dataVal}
-		}
-
-		if valueSum != nil {
-			msg.ValueSum = &senml.SumValue{Value: *valueSum}
-		}
-
 		page.Messages = append(page.Messages, msg)
 	}
 
@@ -93,7 +74,7 @@ func (cr cassandraRepository) ReadAll(chanID string, offset, limit uint64, query
 func buildSelectQuery(chanID string, offset, limit uint64, names []string) string {
 	var condCQL string
 	cql := `SELECT channel, subtopic, publisher, protocol, name, unit,
-	        value, string_value, bool_value, data_value, value_sum, time,
+	        value, string_value, bool_value, data_value, sum, time,
 			update_time, link FROM messages WHERE channel = ? %s LIMIT ?
 			ALLOW FILTERING`
 

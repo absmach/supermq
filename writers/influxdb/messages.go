@@ -41,6 +41,7 @@ func (repo *influxRepo) Save(messages ...senml.Message) error {
 	if err != nil {
 		return err
 	}
+
 	for _, msg := range messages {
 		tgs, flds := repo.tagsOf(&msg), repo.fieldsOf(&msg)
 
@@ -75,19 +76,19 @@ func (repo *influxRepo) fieldsOf(msg *senml.Message) fields {
 		"updateTime": updateTime,
 	}
 
-	switch msg.Value.(type) {
-	case *senml.Message_FloatValue:
-		ret["value"] = msg.GetFloatValue()
-	case *senml.Message_StringValue:
-		ret["stringValue"] = msg.GetStringValue()
-	case *senml.Message_DataValue:
-		ret["dataValue"] = msg.GetDataValue()
-	case *senml.Message_BoolValue:
-		ret["boolValue"] = msg.GetBoolValue()
+	switch {
+	case msg.Value != nil:
+		ret["value"] = *msg.Value
+	case msg.StringValue != nil:
+		ret["stringValue"] = *msg.StringValue
+	case msg.DataValue != nil:
+		ret["dataValue"] = *msg.DataValue
+	case msg.BoolValue != nil:
+		ret["boolValue"] = *msg.BoolValue
 	}
 
-	if msg.ValueSum != nil {
-		ret["valueSum"] = msg.GetValueSum().GetValue()
+	if msg.Sum != nil {
+		ret["sum"] = *msg.Sum
 	}
 
 	return ret

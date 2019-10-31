@@ -26,6 +26,14 @@ const (
 	valueFields   = 6
 )
 
+var (
+	v       float64 = 5
+	stringV         = "value"
+	boolV           = true
+	dataV           = "base64"
+	sum     float64 = 42
+)
+
 func newService() readers.MessageRepository {
 	messages := []senml.Message{}
 	for i := 0; i < numOfMessages; i++ {
@@ -36,20 +44,20 @@ func newService() readers.MessageRepository {
 		}
 		// Mix possible values as well as value sum.
 		count := i % valueFields
+
 		switch count {
 		case 0:
-			msg.Value = &senml.Message_FloatValue{FloatValue: 5}
+			msg.Value = &v
 		case 1:
-			msg.Value = &senml.Message_BoolValue{BoolValue: false}
+			msg.BoolValue = &boolV
 		case 2:
-			msg.Value = &senml.Message_StringValue{StringValue: "value"}
+			msg.StringValue = &stringV
 		case 3:
-			msg.Value = &senml.Message_DataValue{DataValue: "base64data"}
-		case 4:
-			msg.ValueSum = nil
+			msg.DataValue = &dataV
 		case 5:
-			msg.ValueSum = &senml.SumValue{Value: 45}
+			msg.Sum = &sum
 		}
+
 		messages = append(messages, msg)
 	}
 

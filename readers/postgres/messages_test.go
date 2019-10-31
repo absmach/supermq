@@ -23,6 +23,14 @@ const (
 	valueFields = 5
 )
 
+var (
+	v       float64 = 5
+	stringV         = "value"
+	boolV           = true
+	dataV           = "base64"
+	sum     float64 = 42
+)
+
 func TestMessageReadAll(t *testing.T) {
 	messageRepo := pwriter.New(db)
 
@@ -46,18 +54,19 @@ func TestMessageReadAll(t *testing.T) {
 		// Mix possible values as well as value sum.
 		count := i % valueFields
 		msg.Subtopic = ""
+
 		switch count {
 		case 0:
 			msg.Subtopic = subtopic
-			msg.Value = &senml.Message_FloatValue{FloatValue: 5}
+			msg.Value = &v
 		case 1:
-			msg.Value = &senml.Message_BoolValue{BoolValue: false}
+			msg.BoolValue = &boolV
 		case 2:
-			msg.Value = &senml.Message_StringValue{StringValue: "value"}
+			msg.StringValue = &stringV
 		case 3:
-			msg.Value = &senml.Message_DataValue{DataValue: "base64data"}
+			msg.DataValue = &dataV
 		case 5:
-			msg.ValueSum = &senml.SumValue{Value: 45}
+			msg.Sum = &sum
 		}
 		msg.Time = float64(now - int64(i))
 

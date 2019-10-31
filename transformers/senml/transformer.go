@@ -50,17 +50,17 @@ func (n transformer) Transform(msg mainflux.Message) (interface{}, error) {
 
 		switch {
 		case v.Value != nil:
-			m.Value = &Message_FloatValue{FloatValue: *v.Value}
+			m.Value = v.Value
 		case v.BoolValue != nil:
-			m.Value = &Message_BoolValue{BoolValue: *v.BoolValue}
+			m.BoolValue = v.BoolValue
 		case v.DataValue != "":
-			m.Value = &Message_DataValue{DataValue: v.DataValue}
+			m.DataValue = &v.DataValue
 		case v.StringValue != "":
-			m.Value = &Message_StringValue{StringValue: v.StringValue}
+			m.StringValue = &v.StringValue
 		}
 
 		if v.Sum != nil {
-			m.ValueSum = &SumValue{Value: *v.Sum}
+			m.Sum = v.Sum
 		}
 
 		msgs[k] = m

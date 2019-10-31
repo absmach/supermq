@@ -144,14 +144,14 @@ func fmtCondition(chanID string, query map[string]string) string {
 // results in form of rows and columns, this obscure message conversion is needed
 // to return actual []mainflux.Message from the query result.
 func parseValues(value interface{}, name string, msg *senml.Message) {
-	if name == "valueSum" && value != nil {
-		if sum, ok := value.(json.Number); ok {
-			valSum, err := sum.Float64()
+	if name == "sum" && value != nil {
+		if valSum, ok := value.(json.Number); ok {
+			sum, err := valSum.Float64()
 			if err != nil {
 				return
 			}
 
-			msg.ValueSum = &senml.SumValue{Value: valSum}
+			msg.Sum = &sum
 		}
 		return
 	}
@@ -159,22 +159,25 @@ func parseValues(value interface{}, name string, msg *senml.Message) {
 	if strings.HasSuffix(strings.ToLower(name), "value") {
 		switch value.(type) {
 		case bool:
-			msg.Value = &senml.Message_BoolValue{BoolValue: value.(bool)}
+			msg.BoolValue = value.(*bool)
 		case json.Number:
 			num, err := value.(json.Number).Float64()
+			fmt.Println("JSON")
 			if err != nil {
+				println(err.Error())
 				return
 			}
-
-			msg.Value = &senml.Message_FloatValue{FloatValue: num}
+			msg.Value = &num
 		case string:
 			if strings.HasPrefix(name, "string") {
-				msg.Value = &senml.Message_StringValue{StringValue: value.(string)}
+				v := value.(string)
+				msg.StringValue = &v
 				return
 			}
 
 			if strings.HasPrefix(name, "data") {
-				msg.Value = &senml.Message_DataValue{DataValue: value.(string)}
+				v := value.(string)
+				msg.DataValue = &v
 			}
 		}
 	}

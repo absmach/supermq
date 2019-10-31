@@ -54,7 +54,7 @@ func (c *consumer) consume(m *nats.Msg) {
 	}
 	var msgs []senml.Message
 	for _, v := range norm {
-		if c.channelExists(v.GetChannel()) {
+		if c.channelExists(v.Channel) {
 			msgs = append(msgs, v)
 		}
 	}
