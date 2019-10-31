@@ -13,9 +13,9 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/normalizer"
-	"github.com/mainflux/mainflux/normalizer/api"
-	"github.com/mainflux/mainflux/normalizer/nats"
+	"github.com/mainflux/mainflux/transformer/senml"
+	"github.com/mainflux/mainflux/transformer/senml/api"
+	"github.com/mainflux/mainflux/transformer/senml/nats"
 	broker "github.com/nats-io/go-nats"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
@@ -51,7 +51,7 @@ func main() {
 	}
 	defer nc.Close()
 
-	svc := normalizer.New()
+	svc := senml.New()
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,

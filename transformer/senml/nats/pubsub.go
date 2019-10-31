@@ -4,17 +4,19 @@
 package nats
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/normalizer"
+	"github.com/mainflux/mainflux/transformer"
+	"github.com/mainflux/mainflux/transformer/senml"
 	"github.com/nats-io/go-nats"
 )
 
 const (
-	queue         = "normalizers"
+	queue         = "transformer"
 	input         = "channel.>"
 	outputUnknown = "out.unknown"
 	senML         = "application/senml+json"
@@ -22,12 +24,12 @@ const (
 
 type pubsub struct {
 	nc     *nats.Conn
-	svc    normalizer.Service
+	svc    transformer.Transformer
 	logger log.Logger
 }
 
 // Subscribe to appropriate NATS topic and normalizes received messages.
-func Subscribe(svc normalizer.Service, nc *nats.Conn, logger log.Logger) {
+func Subscribe(svc transformer.Transformer, nc *nats.Conn, logger log.Logger) {
 	ps := pubsub{
 		nc:     nc,
 		svc:    svc,
@@ -51,7 +53,11 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 
 func (ps pubsub) publish(msg mainflux.Message) error {
 	output := mainflux.OutputSenML
-	normalized, err := ps.svc.Normalize(msg)
+	t, err := ps.svc.Transform(msg)
+	normalized, ok := t.([]senml.Message)
+	if !ok {
+		errors.New("Invalid type")
+	}
 	if err != nil {
 		switch ct := msg.ContentType; ct {
 		case senML:

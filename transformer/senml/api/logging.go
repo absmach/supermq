@@ -9,27 +9,27 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/normalizer"
+	"github.com/mainflux/mainflux/transformer"
 )
 
-var _ normalizer.Service = (*loggingMiddleware)(nil)
+var _ transformer.Transformer = (*loggingMiddleware)(nil)
 
 type loggingMiddleware struct {
 	logger logger.Logger
-	svc    normalizer.Service
+	svc    transformer.Transformer
 }
 
 // LoggingMiddleware adds logging facilities to the core service.
-func LoggingMiddleware(svc normalizer.Service, logger logger.Logger) normalizer.Service {
+func LoggingMiddleware(svc transformer.Transformer, logger logger.Logger) transformer.Transformer {
 	return &loggingMiddleware{
 		logger: logger,
 		svc:    svc,
 	}
 }
 
-func (lm loggingMiddleware) Normalize(msg mainflux.Message) (msgs []mainflux.Message, err error) {
+func (lm loggingMiddleware) Transform(msg mainflux.Message) (msgs interface{}, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method normalize took %s to complete", time.Since(begin))
+		message := fmt.Sprintf("Method transform took %s to complete", time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -37,5 +37,5 @@ func (lm loggingMiddleware) Normalize(msg mainflux.Message) (msgs []mainflux.Mes
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.Normalize(msg)
+	return lm.svc.Transform(msg)
 }

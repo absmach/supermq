@@ -21,6 +21,7 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/coap"
 	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/transformer/senml"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -334,9 +335,9 @@ func handleMessage(conn *net.UDPConn, addr *net.UDPAddr, o *coap.Observer, msg *
 
 		coapCT := senMLJSON
 		switch msg.ContentType {
-		case mainflux.SenMLJSON:
+		case senml.SenMLJSON:
 			coapCT = senMLJSON
-		case mainflux.SenMLCBOR:
+		case senml.SenMLCBOR:
 			coapCT = senMLCBOR
 		}
 		notifyMsg.SetOption(gocoap.ContentFormat, coapCT)
@@ -395,9 +396,9 @@ func contentType(msg *gocoap.Message) (string, error) {
 	ct := ""
 	switch ctid {
 	case senMLJSON:
-		ct = mainflux.SenMLJSON
+		ct = senml.SenMLJSON
 	case senMLCBOR:
-		ct = mainflux.SenMLCBOR
+		ct = senml.SenMLCBOR
 	}
 
 	return ct, nil
