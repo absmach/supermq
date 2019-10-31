@@ -602,7 +602,7 @@ definitions:
         description: Free-form channel name.
       metadata:
         type: object
-        description: Arbitrary, object-encoded thing's data.
+        description: Arbitrary, object-encoded channel's data.
     required:
       - id
   ChannelReq:
