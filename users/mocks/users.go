@@ -48,6 +48,20 @@ func (urm *userRepositoryMock) Update(ctx context.Context, user users.User) erro
 	return nil
 }
 
+func (urm *userRepositoryMock) UpdateMetadata(ctx context.Context, user users.User) error {
+	urm.mu.Lock()
+	defer urm.mu.Unlock()
+
+	if _, ok := urm.users[user.Email]; ok {
+		return users.ErrConflict
+	}
+
+	u := urm.users[user.Email]
+	u.Metadata = user.Metadata
+	urm.users[user.Email] = u
+	return nil
+}
+
 func (urm *userRepositoryMock) RetrieveByID(ctx context.Context, email string) (users.User, error) {
 	urm.mu.Lock()
 	defer urm.mu.Unlock()
