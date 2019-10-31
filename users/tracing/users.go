@@ -44,12 +44,12 @@ func (urm userRepositoryMiddleware) Save(ctx context.Context, user users.User) e
 	return urm.repo.Save(ctx, user)
 }
 
-func (urm userRepositoryMiddleware) Update(ctx context.Context, user users.User) error {
+func (urm userRepositoryMiddleware) UpdateMetadata(ctx context.Context, user users.User) error {
 	span := createSpan(ctx, urm.tracer, saveOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 
-	return urm.repo.Update(ctx, user)
+	return urm.repo.UpdateMetadata(ctx, user)
 }
 
 func (urm userRepositoryMiddleware) RetrieveByID(ctx context.Context, id string) (users.User, error) {

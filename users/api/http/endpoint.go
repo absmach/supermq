@@ -90,7 +90,7 @@ func userInfoEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
-func userUpdateEndpoint(svc users.Service) endpoint.Endpoint {
+func userUpdateMetaEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(updateMetadataReq)
 

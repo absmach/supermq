@@ -57,8 +57,8 @@ func MakeHandler(svc users.Service, tracer opentracing.Tracer, l log.Logger) htt
 	))
 
 	mux.Put("/users", kithttp.NewServer(
-		kitot.TraceServer(tracer, "user_update")(userUpdateEndpoint(svc)),
-		decodeUpdateInfo,
+		kitot.TraceServer(tracer, "user_update")(userUpdateMetaEndpoint(svc)),
+		decodeUpdateMetadata,
 		encodeResponse,
 		opts...,
 	))
@@ -104,7 +104,7 @@ func decodeViewInfo(_ context.Context, r *http.Request) (interface{}, error) {
 	return req, nil
 }
 
-func decodeUpdateInfo(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeUpdateMetadata(_ context.Context, r *http.Request) (interface{}, error) {
 	var metadata map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&metadata); err != nil {
 		logger.Warn(fmt.Sprintf("Failed to decode user: %s", err))
