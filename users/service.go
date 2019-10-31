@@ -156,7 +156,7 @@ func (svc usersService) UpdateMetadata(ctx context.Context, token string, metada
 		Metadata: metadata,
 	}
 
-	return email, svc.users.Update(ctx, user)
+	return email, svc.users.UpdateMetadata(ctx, user)
 }
 
 func (svc usersService) GenerateResetToken(ctx context.Context, email, host string) error {
