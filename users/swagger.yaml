@@ -251,7 +251,7 @@ definitions:
         description: Custom metadata related to User
   updateMetadataReq:
     type: object
-    description: Custom user's data in JSON format.
+    description: Arbitrary, object-encoded user's data.
   PasswordResetRequest:
     type: object
     properties:
