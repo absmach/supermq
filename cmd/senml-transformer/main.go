@@ -27,8 +27,8 @@ const (
 	defLogLevel string = "error"
 	defPort     string = "8180"
 	envNatsURL  string = "MF_NATS_URL"
-	envLogLevel string = "MF_NORMALIZER_LOG_LEVEL"
-	envPort     string = "MF_NORMALIZER_PORT"
+	envLogLevel string = "MF_SENML_TRANSFORMER_LOG_LEVEL"
+	envPort     string = "MF_SENML_TRANSFORMER_PORT"
 )
 
 type config struct {
@@ -56,14 +56,14 @@ func main() {
 	svc = api.MetricsMiddleware(
 		svc,
 		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
-			Namespace: "normalizer",
-			Subsystem: "api",
+			Namespace: "senml",
+			Subsystem: "transfomer",
 			Name:      "request_count",
 			Help:      "Number of requests received.",
 		}, []string{"method"}),
 		kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
-			Namespace: "normalizer",
-			Subsystem: "api",
+			Namespace: "senml",
+			Subsystem: "transformer",
 			Name:      "request_latency_microseconds",
 			Help:      "Total duration of requests in microseconds.",
 		}, []string{"method"}),
@@ -73,7 +73,7 @@ func main() {
 
 	go func() {
 		p := fmt.Sprintf(":%s", cfg.Port)
-		logger.Info(fmt.Sprintf("Normalizer service started, exposed port %s", cfg.Port))
+		logger.Info(fmt.Sprintf("SenML Transformer service started, exposed port %s", cfg.Port))
 		errs <- http.ListenAndServe(p, api.MakeHandler())
 	}()
 
@@ -86,7 +86,7 @@ func main() {
 	nats.Subscribe(svc, nc, logger)
 
 	err = <-errs
-	logger.Error(fmt.Sprintf("Normalizer service terminated: %s", err))
+	logger.Error(fmt.Sprintf("SenML Transformer service terminated: %s", err))
 }
 
 func loadConfig() config {

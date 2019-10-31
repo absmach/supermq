@@ -1,56 +1,11 @@
-# Message normalizer
+# Message Transformers
 
-Normalizer service consumes events published by adapters, normalizes SenML-formatted
-ones, and publishes them to the post-processing stream.
-Normalizer can also be imported as a package and used independently for message normalization.
-This reduces internal traffic because messages are not published back to the broker, but transformed
-on the message consumer side. Mainflux (writers) [https://github.com/mainflux/mainflux/tree/master/writers]
-are using Normalizer to preprocess messages before storing them.
+Transformers services consume events published by adapters and transform them to any other message format.
+They can be used as a service that transforms messages and publishes them to the post-processing stream or
+can be imported as a standalone package and used independently for message transformation on the consumer side.
+Mainflux (SenML transformer)[transformers] is an example of
+Transformer service for SenML messages.
+Mainflux (writers) [writers] are using a standalone SenML transformer to preprocess messages before storing them.
 
-## Configuration
-
-The service is configured using the environment variables presented in the
-following table. Note that any unset variables will be replaced with their
-default values.
-
-| Variable                  | Description                  | Default               |
-|---------------------------|------------------------------|-----------------------|
-| MF_NATS_URL               | NATS instance URL            | nats://localhost:4222 |
-| MF_NORMALIZER_LOG_LEVEL   | Log level for the Normalizer | error                 |
-| MF_NORMALIZER_PORT        | Normalizer service HTTP port | 8180                  |
-
-## Deployment
-
-The service itself is distributed as Docker container. The following snippet
-provides a compose file template that can be used to deploy the service container
-locally:
-
-```yaml
-version: "3.7"
-services:
-  normalizer:
-    image: mainflux/normalizer:[version]
-    container_name: [instance name]
-    environment:
-      MF_NATS_URL: [NATS instance URL]
-      MF_NORMALIZER_LOG_LEVEL: [Normalizer log level]
-      MF_NORMALIZER_PORT: [Service HTTP port]
-```
-
-To start the service outside of the container, execute the following shell script:
-
-```bash
-# download the latest version of the service
-go get github.com/mainflux/mainflux
-
-cd $GOPATH/src/github.com/mainflux/mainflux
-
-# compile the service; make sure to set the proper GOOS value
-make normalizer
-
-# copy binary to bin
-make install
-
-# set the environment variables and run the service
-MF_NATS_URL=[NATS instance URL] MF_NORMALIZER_LOG_LEVEL=[Normalizer log level] MF_NORMALIZER_PORT=[Service HTTP port] $GOBIN/mainflux-normalizer
-```
+[transformers]: https://github.com/mainflux/mainflux/tree/master/transformers/senml
+[writers]: https://github.com/mainflux/mainflux/tree/master/writers
