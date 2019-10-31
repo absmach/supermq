@@ -57,7 +57,7 @@ func MakeHandler(svc users.Service, tracer opentracing.Tracer, l log.Logger) htt
 	))
 
 	mux.Put("/users", kithttp.NewServer(
-		kitot.TraceServer(tracer, "user_update")(userUpdateMetaEndpoint(svc)),
+		kitot.TraceServer(tracer, "update_metadata")(userUpdateMetaEndpoint(svc)),
 		decodeUpdateMetadata,
 		encodeResponse,
 		opts...,

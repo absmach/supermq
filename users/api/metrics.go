@@ -67,8 +67,8 @@ func (ms *metricsMiddleware) UserInfo(ctx context.Context, token string) (users.
 
 func (ms *metricsMiddleware) UpdateMetadata(ctx context.Context, token string, metadata map[string]interface{}) (email string, err error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "user_update").Add(1)
-		ms.latency.With("method", "user_update").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "update_metadata").Add(1)
+		ms.latency.With("method", "update_metadata").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
 	return ms.svc.UpdateMetadata(ctx, token, metadata)
