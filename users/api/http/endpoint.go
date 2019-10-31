@@ -98,7 +98,10 @@ func updateUserEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		err := svc.UpdateUser(ctx, req.Token, req.User)
+		user := users.User{
+			Metadata: req.Metadata,
+		}
+		err := svc.UpdateUser(ctx, req.token, user)
 		if err != nil {
 			return nil, err
 		}
