@@ -32,9 +32,6 @@ var (
 // Service specifies an API that must be fullfiled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
-	// AddThing adds new thing to the user identified by the provided key.
-	AddThing(context.Context, string, Thing) (Thing, error)
-
 	// CreateThings adds a list of things to the user identified by the provided key.
 	CreateThings(context.Context, string, []Thing) ([]Thing, error)
 
@@ -62,9 +59,6 @@ type Service interface {
 	// RemoveThing removes the thing identified with the provided ID, that
 	// belongs to the user identified by the provided key.
 	RemoveThing(context.Context, string, string) error
-
-	// CreateChannel adds new channel to the user identified by the provided key.
-	CreateChannel(context.Context, string, Channel) (Channel, error)
 
 	// CreateChannels adds a list of channels to the user identified by the provided key.
 	CreateChannels(context.Context, string, []Channel) ([]Channel, error)
@@ -139,36 +133,6 @@ func New(users mainflux.UsersServiceClient, things ThingRepository, channels Cha
 		idp:          idp,
 	}
 }
-
-func (ts *thingsService) AddThing(ctx context.Context, token string, thing Thing) (Thing, error) {
-	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return Thing{}, ErrUnauthorizedAccess
-	}
-
-	thing.ID, err = ts.idp.ID()
-	if err != nil {
-		return Thing{}, err
-	}
-
-	thing.Owner = res.GetValue()
-
-	if thing.Key == "" {
-		thing.Key, err = ts.idp.ID()
-		if err != nil {
-			return Thing{}, err
-		}
-	}
-
-	id, err := ts.things.Save(ctx, thing)
-	if err != nil {
-		return Thing{}, err
-	}
-
-	thing.ID = id
-	return thing, nil
-}
-
 func (ts *thingsService) CreateThings(ctx context.Context, token string, things []Thing) ([]Thing, error) {
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -252,28 +216,6 @@ func (ts *thingsService) RemoveThing(ctx context.Context, token, id string) erro
 
 	ts.thingCache.Remove(ctx, id)
 	return ts.things.Remove(ctx, res.GetValue(), id)
-}
-
-func (ts *thingsService) CreateChannel(ctx context.Context, token string, channel Channel) (Channel, error) {
-	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return Channel{}, ErrUnauthorizedAccess
-	}
-
-	channel.ID, err = ts.idp.ID()
-	if err != nil {
-		return Channel{}, err
-	}
-
-	channel.Owner = res.GetValue()
-
-	id, err := ts.channels.Save(ctx, channel)
-	if err != nil {
-		return Channel{}, err
-	}
-
-	channel.ID = id
-	return channel, nil
 }
 
 func (ts *thingsService) CreateChannels(ctx context.Context, token string, channels []Channel) ([]Channel, error) {

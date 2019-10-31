@@ -34,23 +34,6 @@ func NewThingsService(things map[string]things.Thing, channels map[string]things
 	}
 }
 
-func (svc *mainfluxThings) AddThing(_ context.Context, owner string, thing things.Thing) (things.Thing, error) {
-	svc.mu.Lock()
-	defer svc.mu.Unlock()
-
-	userID, err := svc.users.Identify(context.Background(), &mainflux.Token{Value: owner})
-	if err != nil {
-		return things.Thing{}, things.ErrUnauthorizedAccess
-	}
-
-	svc.counter++
-	thing.Owner = userID.Value
-	thing.ID = strconv.FormatUint(svc.counter, 10)
-	thing.Key = thing.ID
-	svc.things[thing.ID] = thing
-	return thing, nil
-}
-
 func (svc *mainfluxThings) CreateThings(_ context.Context, owner string, ths []things.Thing) ([]things.Thing, error) {
 	svc.mu.Lock()
 	defer svc.mu.Unlock()
@@ -190,10 +173,6 @@ func (svc *mainfluxThings) ListChannelsByThing(context.Context, string, string, 
 }
 
 func (svc *mainfluxThings) ListThingsByChannel(context.Context, string, string, uint64, uint64) (things.ThingsPage, error) {
-	panic("not implemented")
-}
-
-func (svc *mainfluxThings) CreateChannel(context.Context, string, things.Channel) (things.Channel, error) {
 	panic("not implemented")
 }
 
