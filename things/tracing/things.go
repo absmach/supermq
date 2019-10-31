@@ -42,14 +42,6 @@ func ThingRepositoryMiddleware(tracer opentracing.Tracer, repo things.ThingRepos
 	}
 }
 
-func (trm thingRepositoryMiddleware) Save(ctx context.Context, th things.Thing) (string, error) {
-	span := createSpan(ctx, trm.tracer, saveThingOp)
-	defer span.Finish()
-	ctx = opentracing.ContextWithSpan(ctx, span)
-
-	return trm.repo.Save(ctx, th)
-}
-
 func (trm thingRepositoryMiddleware) BulkSave(ctx context.Context, ths []things.Thing) ([]things.Thing, error) {
 	span := createSpan(ctx, trm.tracer, bulkCreateThingsOp)
 	defer span.Finish()

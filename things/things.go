@@ -28,10 +28,6 @@ type ThingsPage struct {
 
 // ThingRepository specifies a thing persistence API.
 type ThingRepository interface {
-	// Save persists the thing. Successful operation is indicated by non-nil
-	// error response.
-	Save(context.Context, Thing) (string, error)
-
 	// BulkSave persistest multiple things. Successful operation is indicated by non-nil
 	// error response.
 	BulkSave(context.Context, []Thing) ([]Thing, error)
