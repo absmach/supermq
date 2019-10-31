@@ -9,11 +9,12 @@ The service is configured using the environment variables presented in the
 following table. Note that any unset variables will be replaced with their
 default values.
 
-| Variable                | Description                      | Default               |
-|-------------------------|----------------------------------|-----------------------|
-| MF_NATS_URL             | NATS instance URL                | nats://localhost:4222 |
-| MF_THINGS_AUTH_HTTP_URL | Things service HTTP URL for Auth | http://localhost:8989 |
-| MF_MQTT_ADAPTER_ES_URL  | Redis ES URL                     | http://localhost:6379 |
+| Variable                        | Description                         | Default               |
+|---------------------------------|-------------------------------------|-----------------------|
+| MF_NATS_URL                     | NATS instance URL                   | nats://localhost:4222 |
+| MF_THINGS_AUTH_GRPC_URL         | Things service gRPC URL for Auth    | tcp://localhost:8183  |
+| MF_MQTT_ADAPTER_ES_URL          | Redis ES URL                        | http://localhost:6379 |
+| MF_MQTT_VERNEMQ_GRPC_POOL_SIZE  | Number of processes to do gRPC comm | 10                    |
 
 Apart from this, VerneMQ configuration found
 [here](https://github.com/ThingMesh/docker-vernemq/blob/master/vernemq.conf.default) can be customized.
@@ -70,36 +71,10 @@ services:
 ```
 
 ### Native
-#### Prepare
-Install [gpb](https://github.com/tomas-abrahamsson/gpb)
+#### Generate protobuf files
 ```
-git clone https://github.com/tomas-abrahamsson/gpb.git
-cd gpb
-git checkout 4.10.5
-make -j 16
-```
-
-Then generate Erlang proto files:
-```
-mkdir -p ./src/proto
-./gpb/bin/protoc-erl -pkgs -maps -I ./gpb/ ../../*.proto -o ./src/proto
-cp ./gpb/include/gpb.hrl ./src/proto/
-```
-
-If gRPC us used for auth (not enabled yet, to be enabled in the future):
-```
-git clone https://github.com/Bluehouse-Technology/grpc_client.git
-cd grpc_client && make -j 16
-make shell
-```
-Then in Erlang shell:
-```
-1> grpc_client:compile("../../../internal.proto", [{use_packages, true}]).
-```
-
-Outside of shell:
-```
-mv ./internal_client.erl ../src/proto
+mkdir -p src/protos
+rebar3 grpc gen
 ```
 
 #### Compile
