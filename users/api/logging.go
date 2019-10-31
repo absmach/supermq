@@ -77,9 +77,9 @@ func (lm *loggingMiddleware) UserInfo(ctx context.Context, token string) (u user
 	return lm.svc.UserInfo(ctx, token)
 }
 
-func (lm *loggingMiddleware) UpdateMetadata(ctx context.Context, token string, metadata map[string]interface{}) (email string, err error) {
+func (lm *loggingMiddleware) UpdateUser(ctx context.Context, token string, u users.User) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method update_metadata for user %s took %s to complete", email, time.Since(begin))
+		message := fmt.Sprintf("Method update_user_info for user %s took %s to complete", u.Email, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -87,7 +87,7 @@ func (lm *loggingMiddleware) UpdateMetadata(ctx context.Context, token string, m
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.UpdateMetadata(ctx, token, metadata)
+	return lm.svc.UpdateUser(ctx, token, u)
 }
 
 func (lm *loggingMiddleware) GenerateResetToken(ctx context.Context, email, host string) (err error) {

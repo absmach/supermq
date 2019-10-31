@@ -43,7 +43,7 @@ type UserRepository interface {
 	Save(context.Context, User) error
 
 	// Update updates the user metadata.
-	UpdateMetadata(context.Context, User) error
+	UpdateUser(context.Context, User) error
 
 	// RetrieveByID retrieves user by its unique identifier (i.e. email).
 	RetrieveByID(context.Context, string) (User, error)

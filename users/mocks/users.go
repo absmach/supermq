@@ -48,7 +48,7 @@ func (urm *userRepositoryMock) Update(ctx context.Context, user users.User) erro
 	return nil
 }
 
-func (urm *userRepositoryMock) UpdateMetadata(ctx context.Context, user users.User) error {
+func (urm *userRepositoryMock) UpdateUser(ctx context.Context, user users.User) error {
 	urm.mu.Lock()
 	defer urm.mu.Unlock()
 
@@ -56,9 +56,7 @@ func (urm *userRepositoryMock) UpdateMetadata(ctx context.Context, user users.Us
 		return users.ErrConflict
 	}
 
-	u := urm.users[user.Email]
-	u.Metadata = user.Metadata
-	urm.users[user.Email] = u
+	urm.users[user.Email] = user
 	return nil
 }
 

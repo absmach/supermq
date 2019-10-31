@@ -62,8 +62,8 @@ type Service interface {
 	// Get authenticated user info for the given token
 	UserInfo(ctx context.Context, token string) (User, error)
 
-	// UpdateMetadata updates the user metadata
-	UpdateMetadata(ctx context.Context, token string, metadata map[string]interface{}) (string, error)
+	// UpdateUser updates the user metadata
+	UpdateUser(ctx context.Context, token string, user User) error
 
 	// GenerateResetToken email where mail will be sent.
 	// host is used for generating reset link.
@@ -145,18 +145,18 @@ func (svc usersService) UserInfo(ctx context.Context, token string) (User, error
 
 }
 
-func (svc usersService) UpdateMetadata(ctx context.Context, token string, metadata map[string]interface{}) (string, error) {
+func (svc usersService) UpdateUser(ctx context.Context, token string, u User) error {
 	email, err := svc.idp.Identity(token)
 	if err != nil {
-		return "", ErrUnauthorizedAccess
+		return ErrUnauthorizedAccess
 	}
 
 	user := User{
 		Email:    email,
-		Metadata: metadata,
+		Metadata: u.Metadata,
 	}
 
-	return email, svc.users.UpdateMetadata(ctx, user)
+	return svc.users.UpdateUser(ctx, user)
 }
 
 func (svc usersService) GenerateResetToken(ctx context.Context, email, host string) error {

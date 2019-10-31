@@ -65,13 +65,13 @@ func (ms *metricsMiddleware) UserInfo(ctx context.Context, token string) (users.
 	return ms.svc.UserInfo(ctx, token)
 }
 
-func (ms *metricsMiddleware) UpdateMetadata(ctx context.Context, token string, metadata map[string]interface{}) (email string, err error) {
+func (ms *metricsMiddleware) UpdateUser(ctx context.Context, token string, u users.User) (err error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "update_metadata").Add(1)
-		ms.latency.With("method", "update_metadata").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "update_user_info").Add(1)
+		ms.latency.With("method", "update_user_info").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.UpdateMetadata(ctx, token, metadata)
+	return ms.svc.UpdateUser(ctx, token, u)
 }
 
 func (ms *metricsMiddleware) GenerateResetToken(ctx context.Context, email, host string) error {

@@ -249,7 +249,7 @@ definitions:
       metadata:
         type: object
         description: Custom metadata related to User
-  updateMetadataReq:
+  updateUserReq:
     type: object
     description: Arbitrary, object-encoded user's data.
   PasswordResetRequest:

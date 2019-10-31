@@ -92,20 +92,18 @@ func userInfoEndpoint(svc users.Service) endpoint.Endpoint {
 
 func userUpdateMetaEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(updateMetadataReq)
+		req := request.(updateUserReq)
 
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
 
-		email, err := svc.UpdateMetadata(ctx, req.Token, req.Metadata)
+		err := svc.UpdateUser(ctx, req.Token, req.User)
 		if err != nil {
 			return nil, err
 		}
 
-		return updateRes{
-			Email: email,
-		}, nil
+		return updateUserRes{}, nil
 	}
 }
 
