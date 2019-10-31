@@ -1,12 +1,12 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-package transformer
+package transformers
 
 import "github.com/mainflux/mainflux"
 
-// Transformer specifies API form Message transformer.
-type Transformer interface {
+// Service specifies API form Message transformer.
+type Service interface {
 	// Transform Mainflux message to any other format.
 	Transform(mainflux.Message) (interface{}, error)
 }

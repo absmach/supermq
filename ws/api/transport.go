@@ -18,7 +18,7 @@ import (
 	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/things"
-	"github.com/mainflux/mainflux/transformer/senml"
+	"github.com/mainflux/mainflux/transformers/senml"
 	"github.com/mainflux/mainflux/ws"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc/codes"

@@ -9,8 +9,8 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/transformer"
-	"github.com/mainflux/mainflux/transformer/senml"
+	"github.com/mainflux/mainflux/transformers"
+	"github.com/mainflux/mainflux/transformers/senml"
 	nats "github.com/nats-io/go-nats"
 )
 
@@ -18,12 +18,12 @@ type consumer struct {
 	nc          *nats.Conn
 	channels    map[string]bool
 	repo        MessageRepository
-	transformer transformer.Transformer
+	transformer transformers.Service
 	logger      log.Logger
 }
 
 // Start method starts to consume normalized messages received from NATS.
-func Start(nc *nats.Conn, repo MessageRepository, transformer transformer.Transformer, queue string, channels map[string]bool, logger log.Logger) error {
+func Start(nc *nats.Conn, repo MessageRepository, transformer transformers.Service, queue string, channels map[string]bool, logger log.Logger) error {
 	c := consumer{
 		nc:          nc,
 		channels:    channels,

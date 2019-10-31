@@ -9,18 +9,18 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/transformer"
+	"github.com/mainflux/mainflux/transformers"
 )
 
-var _ transformer.Transformer = (*loggingMiddleware)(nil)
+var _ transformers.Service = (*loggingMiddleware)(nil)
 
 type loggingMiddleware struct {
 	logger logger.Logger
-	svc    transformer.Transformer
+	svc    transformers.Service
 }
 
 // LoggingMiddleware adds logging facilities to the core service.
-func LoggingMiddleware(svc transformer.Transformer, logger logger.Logger) transformer.Transformer {
+func LoggingMiddleware(svc transformers.Service, logger logger.Logger) transformers.Service {
 	return &loggingMiddleware{
 		logger: logger,
 		svc:    svc,

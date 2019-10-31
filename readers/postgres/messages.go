@@ -9,7 +9,7 @@ import (
 
 	"github.com/jmoiron/sqlx" // required for DB access
 	"github.com/mainflux/mainflux/readers"
-	"github.com/mainflux/mainflux/transformer/senml"
+	"github.com/mainflux/mainflux/transformers/senml"
 )
 
 const errInvalid = "invalid_text_representation"

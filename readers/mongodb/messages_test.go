@@ -12,7 +12,7 @@ import (
 
 	"github.com/mainflux/mainflux/readers"
 	mreaders "github.com/mainflux/mainflux/readers/mongodb"
-	"github.com/mainflux/mainflux/transformer/senml"
+	"github.com/mainflux/mainflux/transformers/senml"
 	mwriters "github.com/mainflux/mainflux/writers/mongodb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

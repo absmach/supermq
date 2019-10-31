@@ -6,7 +6,7 @@ package senml
 import (
 	"github.com/cisco/senml"
 	"github.com/mainflux/mainflux"
-	mfxTransformer "github.com/mainflux/mainflux/transformer"
+	"github.com/mainflux/mainflux/transformers"
 )
 
 var formats = map[string]senml.Format{
@@ -16,8 +16,8 @@ var formats = map[string]senml.Format{
 
 type transformer struct{}
 
-// New returns normalizer service implementation.
-func New() mfxTransformer.Transformer {
+// New returns transformer service implementation for SenML messages.
+func New() transformers.Service {
 	return transformer{}
 }
 

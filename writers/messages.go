@@ -3,7 +3,7 @@
 
 package writers
 
-import "github.com/mainflux/mainflux/transformer/senml"
+import "github.com/mainflux/mainflux/transformers/senml"
 
 // MessageRepository specifies message writing API.
 type MessageRepository interface {

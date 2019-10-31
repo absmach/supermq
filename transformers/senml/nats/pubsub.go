@@ -10,8 +10,8 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/transformer"
-	"github.com/mainflux/mainflux/transformer/senml"
+	"github.com/mainflux/mainflux/transformers"
+	"github.com/mainflux/mainflux/transformers/senml"
 	"github.com/nats-io/go-nats"
 )
 
@@ -24,12 +24,12 @@ const (
 
 type pubsub struct {
 	nc     *nats.Conn
-	svc    transformer.Transformer
+	svc    transformers.Service
 	logger log.Logger
 }
 
 // Subscribe to appropriate NATS topic and normalizes received messages.
-func Subscribe(svc transformer.Transformer, nc *nats.Conn, logger log.Logger) {
+func Subscribe(svc transformers.Service, nc *nats.Conn, logger log.Logger) {
 	ps := pubsub{
 		nc:     nc,
 		svc:    svc,

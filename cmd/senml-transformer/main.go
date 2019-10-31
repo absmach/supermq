@@ -13,9 +13,9 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/transformer/senml"
-	"github.com/mainflux/mainflux/transformer/senml/api"
-	"github.com/mainflux/mainflux/transformer/senml/nats"
+	"github.com/mainflux/mainflux/transformers/senml"
+	"github.com/mainflux/mainflux/transformers/senml/api"
+	"github.com/mainflux/mainflux/transformers/senml/nats"
 	broker "github.com/nats-io/go-nats"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"

@@ -9,7 +9,7 @@ import (
 	influxdata "github.com/influxdata/influxdb/client/v2"
 	"github.com/mainflux/mainflux/readers"
 	reader "github.com/mainflux/mainflux/readers/influxdb"
-	"github.com/mainflux/mainflux/transformer/senml"
+	"github.com/mainflux/mainflux/transformers/senml"
 	writer "github.com/mainflux/mainflux/writers/influxdb"
 
 	log "github.com/mainflux/mainflux/logger"

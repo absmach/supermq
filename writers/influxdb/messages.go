@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/mainflux/mainflux/transformer/senml"
+	"github.com/mainflux/mainflux/transformers/senml"
 	"github.com/mainflux/mainflux/writers"
 
 	influxdata "github.com/influxdata/influxdb/client/v2"
