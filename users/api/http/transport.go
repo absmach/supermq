@@ -105,8 +105,8 @@ func decodeViewInfo(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeUpdateUser(_ context.Context, r *http.Request) (interface{}, error) {
-	var user users.User
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+	var req updateUserReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.Warn(fmt.Sprintf("Failed to decode user: %s", err))
 		return nil, err
 	}
