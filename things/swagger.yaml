@@ -512,6 +512,7 @@ paths:
           description: Missing or invalid content type.
         500:
           $ref: "#/responses/ServiceError"
+
 parameters:
   Authorization:
     name: Authorization
@@ -599,6 +600,9 @@ definitions:
       name:
         type: string
         description: Free-form channel name.
+      metadata:
+        type: object
+        description: Arbitrary, object-encoded thing's data.
     required:
       - id
   ChannelReq:
@@ -607,6 +611,9 @@ definitions:
       name:
         type: string
         description: Free-form channel name.
+      metadata:
+        type: object
+        description: Arbitrary, object-encoded channel's data.
   ThingsPage:
     type: object
     properties:
