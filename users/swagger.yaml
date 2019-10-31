@@ -68,7 +68,9 @@ paths:
         - name: metadata
           description: JSON-formatted document containing user info.
           in: body
-          required: false
+          schema:
+            $ref: "#/definitions/CreateThingReq"
+          required: true
       responses:
         200:
           description: User updated.
@@ -225,6 +227,13 @@ parameters:
     in: header
     type: string
     required: true
+  Metadata:
+    name: metadata
+    description: Metadata filter. Filtering is performed matching the parameter with metadata on top level. Parameter is json.
+    in: query
+    type: string
+    minimum: 0
+    required: false
 
 responses:
   ServiceError:
@@ -240,6 +249,12 @@ definitions:
       metadata:
         type: object
         description: Custom metadata related to User
+  updateMetadataReq:
+    type: object
+    properties:
+      metadata:
+        type: object
+        description: Custom user's data in JSON format.
   PasswordResetRequest:
     type: object
     properties:
