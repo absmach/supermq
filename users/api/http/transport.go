@@ -111,10 +111,7 @@ func decodeUpdateUser(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	req := updateUserReq{
-		token:    r.Header.Get("Authorization"),
-		Metadata: user.Metadata,
-	}
+	req.token = r.Header.Get("Authorization")
 	return req, nil
 }
 
