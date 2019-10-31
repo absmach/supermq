@@ -667,7 +667,7 @@ definitions:
         description: Free-form thing name.
       metadata:
         type: object
-        description: Custom thing's data in JSON format.
+        description: Arbitrary, object-encoded thing's data.
   UpdateThingReq:
     type: object
     properties:
