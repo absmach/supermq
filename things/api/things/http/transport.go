@@ -46,7 +46,7 @@ func MakeHandler(tracer opentracing.Tracer, svc things.Service) http.Handler {
 	r := bone.New()
 
 	r.Post("/things", kithttp.NewServer(
-		kitot.TraceServer(tracer, "add_thing")(addThingEndpoint(svc)),
+		kitot.TraceServer(tracer, "create_thing")(createThingEndpoint(svc)),
 		decodeThingCreation,
 		encodeResponse,
 		opts...,
@@ -175,7 +175,7 @@ func decodeThingCreation(_ context.Context, r *http.Request) (interface{}, error
 		return nil, errUnsupportedContentType
 	}
 
-	req := addThingReq{token: r.Header.Get("Authorization")}
+	req := createThingReq{token: r.Header.Get("Authorization")}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}
