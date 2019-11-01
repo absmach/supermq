@@ -43,14 +43,12 @@ var (
 		Password: "test",
 	}
 
-	msg = senml.Message{
+	m = senml.Message{
 		Channel:    chanID,
 		Publisher:  "1",
 		Protocol:   "mqtt",
 		Name:       "name",
 		Unit:       "U",
-		Value:      &v,
-		Sum:        &sum,
 		Time:       123456,
 		UpdateTime: 1234,
 		Link:       "link",
@@ -66,6 +64,7 @@ func TestReadAll(t *testing.T) {
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.
 		count := i % valueFields
+		msg := m
 		msg.Subtopic = ""
 		switch count {
 		case 0:
@@ -175,6 +174,7 @@ func TestReadAll(t *testing.T) {
 		result, err := reader.ReadAll(tc.chanID, tc.offset, tc.limit, tc.query)
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %s", desc, err))
 		assert.ElementsMatch(t, tc.page.Messages, result.Messages, fmt.Sprintf("%s: expected: %v \n-------------\n got: %v", desc, tc.page.Messages, result.Messages))
+
 		assert.Equal(t, tc.page.Total, result.Total, fmt.Sprintf("%s: expected %d got %d", desc, tc.page.Total, result.Total))
 	}
 }

@@ -34,7 +34,7 @@ const (
 var (
 	port string
 	addr string
-	msg  = senml.Message{
+	m    = senml.Message{
 		Channel:   chanID,
 		Publisher: "1",
 		Protocol:  "mqtt",
@@ -62,8 +62,7 @@ func TestReadAll(t *testing.T) {
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.
 		count := i % valueFields
-		msg.Subtopic = ""
-
+		msg := m
 		switch count {
 		case 0:
 			msg.Subtopic = subtopic

@@ -159,12 +159,11 @@ func parseValues(value interface{}, name string, msg *senml.Message) {
 	if strings.HasSuffix(strings.ToLower(name), "value") {
 		switch value.(type) {
 		case bool:
-			msg.BoolValue = value.(*bool)
+			v := value.(bool)
+			msg.BoolValue = &v
 		case json.Number:
 			num, err := value.(json.Number).Float64()
-			fmt.Println("JSON")
 			if err != nil {
-				println(err.Error())
 				return
 			}
 			msg.Value = &num

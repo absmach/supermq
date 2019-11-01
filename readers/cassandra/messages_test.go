@@ -57,22 +57,6 @@ func TestReadAll(t *testing.T) {
 		// Mix possible values as well as value sum.
 		count := i % valueFields
 		msg.Subtopic = ""
-		// switch count {
-		// case 0:
-		// 	msg.Subtopic = subtopic
-		// 	*msg.Value = 5
-		// case 1:
-		// 	*msg.BoolValue = false
-		// case 2:
-		// 	*msg.StringValue = "value"
-		// case 3:
-		// 	*msg.DataValue = "base64data"
-		// case 4:
-		// 	msg.Sum = nil
-		// case 5:
-		// 	*msg.Sum = 42
-		// }
-
 		switch count {
 		case 0:
 			msg.Subtopic = subtopic

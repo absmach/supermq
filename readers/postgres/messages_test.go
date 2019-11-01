@@ -41,7 +41,7 @@ func TestMessageReadAll(t *testing.T) {
 	wrongID, err := uuid.NewV4()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	msg := senml.Message{
+	m := senml.Message{
 		Channel:   chanID.String(),
 		Publisher: pubID.String(),
 		Protocol:  "mqtt",
@@ -53,8 +53,7 @@ func TestMessageReadAll(t *testing.T) {
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.
 		count := i % valueFields
-		msg.Subtopic = ""
-
+		msg := m
 		switch count {
 		case 0:
 			msg.Subtopic = subtopic
