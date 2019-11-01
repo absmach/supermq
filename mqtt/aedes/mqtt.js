@@ -206,9 +206,9 @@ aedes.authorizePublish = function (client, packet, publish) {
 
     var channelTopic = st.length ? baseTopic + '.' + st.join('.') : baseTopic,
         onAuthorize = function (err, res) {
-            var rawMsg;
+            var msg;
             if (!err) {
-                rawMsg = Message.encode({
+                msg = Message.encode({
                     publisher: client.thingId,
                     channel: channelId,
                     subtopic: st.join('.'),
@@ -217,7 +217,7 @@ aedes.authorizePublish = function (client, packet, publish) {
                     payload: packet.payload
                 }).finish();
 
-                nats.publish(channelTopic, rawMsg);
+                nats.publish(channelTopic, msg);
 
                 publish(null);
             } else {
