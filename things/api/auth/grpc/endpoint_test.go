@@ -28,11 +28,11 @@ var (
 )
 
 func TestCanAccessByKey(t *testing.T) {
-	sths, _ := svc.CreateThings(context.Background(), token, []things.Thing{thing})
+	sths, _ := svc.CreateThings(context.Background(), token, thing)
 	oth := sths[0]
-	sths, _ = svc.CreateThings(context.Background(), token, []things.Thing{thing})
+	sths, _ = svc.CreateThings(context.Background(), token, thing)
 	cth := sths[0]
-	schs, _ := svc.CreateChannels(context.Background(), token, []things.Channel{channel})
+	schs, _ := svc.CreateChannels(context.Background(), token, channel)
 	sch := schs[0]
 	svc.Connect(context.Background(), token, sch.ID, cth.ID)
 
@@ -84,11 +84,11 @@ func TestCanAccessByKey(t *testing.T) {
 }
 
 func TestCanAccessByID(t *testing.T) {
-	sths, _ := svc.CreateThings(context.Background(), token, []things.Thing{thing})
+	sths, _ := svc.CreateThings(context.Background(), token, thing)
 	oth := sths[0]
-	sths, _ = svc.CreateThings(context.Background(), token, []things.Thing{thing})
+	sths, _ = svc.CreateThings(context.Background(), token, thing)
 	cth := sths[0]
-	schs, _ := svc.CreateChannels(context.Background(), token, []things.Channel{channel})
+	schs, _ := svc.CreateChannels(context.Background(), token, channel)
 	sch := schs[0]
 	svc.Connect(context.Background(), token, sch.ID, cth.ID)
 
@@ -139,7 +139,7 @@ func TestCanAccessByID(t *testing.T) {
 }
 
 func TestIdentify(t *testing.T) {
-	sths, _ := svc.CreateThings(context.Background(), token, []things.Thing{thing})
+	sths, _ := svc.CreateThings(context.Background(), token, thing)
 	sth := sths[0]
 
 	usersAddr := fmt.Sprintf("localhost:%d", port)

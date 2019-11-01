@@ -87,7 +87,7 @@ func TestIdentify(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	sths, err := svc.CreateThings(context.Background(), token, []things.Thing{thing})
+	sths, err := svc.CreateThings(context.Background(), token, thing)
 	require.Nil(t, err, fmt.Sprintf("failed to create thing: %s", err))
 	sth := sths[0]
 
@@ -147,11 +147,11 @@ func TestCanAccessByKey(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	sths, err := svc.CreateThings(context.Background(), token, []things.Thing{thing})
+	sths, err := svc.CreateThings(context.Background(), token, thing)
 	require.Nil(t, err, fmt.Sprintf("failed to create thing: %s", err))
 	sth := sths[0]
 
-	schs, err := svc.CreateChannels(context.Background(), token, []things.Channel{channel})
+	schs, err := svc.CreateChannels(context.Background(), token, channel)
 	require.Nil(t, err, fmt.Sprintf("failed to create channel: %s", err))
 	sch := schs[0]
 
@@ -226,11 +226,11 @@ func TestCanAccessByID(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	sths, err := svc.CreateThings(context.Background(), token, []things.Thing{thing})
+	sths, err := svc.CreateThings(context.Background(), token, thing)
 	require.Nil(t, err, fmt.Sprintf("failed to create thing: %s", err))
 	sth := sths[0]
 
-	schs, err := svc.CreateChannels(context.Background(), token, []things.Channel{channel})
+	schs, err := svc.CreateChannels(context.Background(), token, channel)
 	require.Nil(t, err, fmt.Sprintf("failed to create channel: %s", err))
 	sch := schs[0]
 

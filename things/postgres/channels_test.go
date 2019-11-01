@@ -621,7 +621,7 @@ func TestHasThing(t *testing.T) {
 		Owner: email,
 		Key:   thkey,
 	}
-	sths, _ := thingRepo.SaveSave(context.Background(), []things.Thing{thing})
+	sths, _ := thingRepo.Save(context.Background(), []things.Thing{thing})
 	thingID := sths[0].ID
 
 	chanRepo := postgres.NewChannelRepository(dbMiddleware)

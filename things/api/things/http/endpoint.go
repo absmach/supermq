@@ -23,7 +23,7 @@ func createThingEndpoint(svc things.Service) endpoint.Endpoint {
 			Name:     req.Name,
 			Metadata: req.Metadata,
 		}
-		saved, err := svc.CreateThings(ctx, req.token, []things.Thing{th})
+		saved, err := svc.CreateThings(ctx, req.token, th)
 		if err != nil {
 			return nil, err
 		}
@@ -54,7 +54,7 @@ func createThingsEndpoint(svc things.Service) endpoint.Endpoint {
 			ths = append(ths, th)
 		}
 
-		saved, err := svc.CreateThings(ctx, req.token, ths)
+		saved, err := svc.CreateThings(ctx, req.token, ths...)
 		if err != nil {
 			return nil, err
 		}
@@ -244,7 +244,7 @@ func createChannelEndpoint(svc things.Service) endpoint.Endpoint {
 		}
 
 		ch := things.Channel{Name: req.Name, Metadata: req.Metadata}
-		saved, err := svc.CreateChannels(ctx, req.token, []things.Channel{ch})
+		saved, err := svc.CreateChannels(ctx, req.token, ch)
 		if err != nil {
 			return nil, err
 		}
@@ -274,7 +274,7 @@ func createChannelsEndpoint(svc things.Service) endpoint.Endpoint {
 			chs = append(chs, ch)
 		}
 
-		saved, err := svc.CreateChannels(ctx, req.token, chs)
+		saved, err := svc.CreateChannels(ctx, req.token, chs...)
 		if err != nil {
 			return nil, err
 		}

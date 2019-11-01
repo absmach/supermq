@@ -34,7 +34,7 @@ func NewThingsService(things map[string]things.Thing, channels map[string]things
 	}
 }
 
-func (svc *mainfluxThings) CreateThings(_ context.Context, owner string, ths []things.Thing) ([]things.Thing, error) {
+func (svc *mainfluxThings) CreateThings(_ context.Context, owner string, ths ...things.Thing) ([]things.Thing, error) {
 	svc.mu.Lock()
 	defer svc.mu.Unlock()
 
@@ -176,7 +176,7 @@ func (svc *mainfluxThings) ListThingsByChannel(context.Context, string, string, 
 	panic("not implemented")
 }
 
-func (svc *mainfluxThings) CreateChannels(_ context.Context, owner string, chs []things.Channel) ([]things.Channel, error) {
+func (svc *mainfluxThings) CreateChannels(_ context.Context, owner string, chs ...things.Channel) ([]things.Channel, error) {
 	svc.mu.Lock()
 	defer svc.mu.Unlock()
 

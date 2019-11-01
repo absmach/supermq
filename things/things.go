@@ -28,7 +28,8 @@ type ThingsPage struct {
 
 // ThingRepository specifies a thing persistence API.
 type ThingRepository interface {
-	// Save persistest multiple things. Successful operation is indicated by non-nil
+	// Save persists multiple things. Things are saved using a transaction. If one thing
+	// fails then none will be saved. Successful operation is indicated by non-nil
 	// error response.
 	Save(context.Context, []Thing) ([]Thing, error)
 

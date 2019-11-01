@@ -23,7 +23,8 @@ type ChannelsPage struct {
 
 // ChannelRepository specifies a channel persistence API.
 type ChannelRepository interface {
-	// Save persistest multiple channels. Successful operation is indicated by non-nil
+	// Save persists multiple channels. Channels are saved using a transaction. If one channel
+	// fails then none will be saved. Successful operation is indicated by non-nil
 	// error response.
 	Save(context.Context, []Channel) ([]Channel, error)
 

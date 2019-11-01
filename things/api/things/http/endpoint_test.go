@@ -316,7 +316,7 @@ func TestUpdateThing(t *testing.T) {
 	defer ts.Close()
 
 	data := toJSON(thing)
-	sths, _ := svc.CreateThings(context.Background(), token, []things.Thing{thing})
+	sths, _ := svc.CreateThings(context.Background(), token, thing)
 	sth := sths[0]
 
 	th := thing
@@ -434,7 +434,7 @@ func TestUpdateKey(t *testing.T) {
 
 	th := thing
 	th.Key = "key"
-	sths, _ := svc.CreateThings(context.Background(), token, []things.Thing{th})
+	sths, _ := svc.CreateThings(context.Background(), token, th)
 	sth := sths[0]
 
 	sth.Key = "new-key"
@@ -553,7 +553,7 @@ func TestViewThing(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	sths, err := svc.CreateThings(context.Background(), token, []things.Thing{thing})
+	sths, err := svc.CreateThings(context.Background(), token, thing)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	sth := sths[0]
 
@@ -633,7 +633,7 @@ func TestListThings(t *testing.T) {
 
 	data := []thingRes{}
 	for i := 0; i < 100; i++ {
-		sths, err := svc.CreateThings(context.Background(), token, []things.Thing{thing})
+		sths, err := svc.CreateThings(context.Background(), token, thing)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		sth := sths[0]
 		thres := thingRes{
@@ -781,13 +781,13 @@ func TestListThingsByChannel(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	schs, err := svc.CreateChannels(context.Background(), token, []things.Channel{channel})
+	schs, err := svc.CreateChannels(context.Background(), token, channel)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	sch := schs[0]
 
 	data := []thingRes{}
 	for i := 0; i < 101; i++ {
-		sths, err := svc.CreateThings(context.Background(), token, []things.Thing{thing})
+		sths, err := svc.CreateThings(context.Background(), token, thing)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		sth := sths[0]
 		err = svc.Connect(context.Background(), token, sch.ID, sth.ID)
@@ -934,7 +934,7 @@ func TestRemoveThing(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	sths, _ := svc.CreateThings(context.Background(), token, []things.Thing{thing})
+	sths, _ := svc.CreateThings(context.Background(), token, thing)
 	sth := sths[0]
 
 	cases := []struct {
@@ -1189,7 +1189,7 @@ func TestUpdateChannel(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	schs, _ := svc.CreateChannels(context.Background(), token, []things.Channel{channel})
+	schs, _ := svc.CreateChannels(context.Background(), token, channel)
 	sch := schs[0]
 
 	ch := channel
@@ -1308,10 +1308,10 @@ func TestViewChannel(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	schs, _ := svc.CreateChannels(context.Background(), token, []things.Channel{channel})
+	schs, _ := svc.CreateChannels(context.Background(), token, channel)
 	sch := schs[0]
 
-	sths, _ := svc.CreateThings(context.Background(), token, []things.Thing{thing})
+	sths, _ := svc.CreateThings(context.Background(), token, thing)
 	sth := sths[0]
 	svc.Connect(context.Background(), token, sch.ID, sth.ID)
 
@@ -1390,10 +1390,10 @@ func TestListChannels(t *testing.T) {
 
 	channels := []channelRes{}
 	for i := 0; i < 101; i++ {
-		schs, err := svc.CreateChannels(context.Background(), token, []things.Channel{channel})
+		schs, err := svc.CreateChannels(context.Background(), token, channel)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		sch := schs[0]
-		sths, err := svc.CreateThings(context.Background(), token, []things.Thing{thing})
+		sths, err := svc.CreateThings(context.Background(), token, thing)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		sth := sths[0]
 		svc.Connect(context.Background(), token, sch.ID, sth.ID)
@@ -1542,13 +1542,13 @@ func TestListChannelsByThing(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	sths, err := svc.CreateThings(context.Background(), token, []things.Thing{thing})
+	sths, err := svc.CreateThings(context.Background(), token, thing)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	sth := sths[0]
 
 	channels := []channelRes{}
 	for i := 0; i < 101; i++ {
-		schs, err := svc.CreateChannels(context.Background(), token, []things.Channel{channel})
+		schs, err := svc.CreateChannels(context.Background(), token, channel)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		sch := schs[0]
 		err = svc.Connect(context.Background(), token, sch.ID, sth.ID)
@@ -1691,7 +1691,7 @@ func TestRemoveChannel(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	schs, _ := svc.CreateChannels(context.Background(), token, []things.Channel{channel})
+	schs, _ := svc.CreateChannels(context.Background(), token, channel)
 	sch := schs[0]
 
 	cases := []struct {
@@ -1755,11 +1755,11 @@ func TestConnect(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	sths, _ := svc.CreateThings(context.Background(), token, []things.Thing{thing})
+	sths, _ := svc.CreateThings(context.Background(), token, thing)
 	ath := sths[0]
-	schs, _ := svc.CreateChannels(context.Background(), token, []things.Channel{channel})
+	schs, _ := svc.CreateChannels(context.Background(), token, channel)
 	ach := schs[0]
-	schs, _ = svc.CreateChannels(context.Background(), otherToken, []things.Channel{channel})
+	schs, _ = svc.CreateChannels(context.Background(), otherToken, channel)
 	bch := schs[0]
 
 	cases := []struct {
@@ -1850,12 +1850,12 @@ func TestDisconnnect(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	sths, _ := svc.CreateThings(context.Background(), token, []things.Thing{thing})
+	sths, _ := svc.CreateThings(context.Background(), token, thing)
 	ath := sths[0]
-	schs, _ := svc.CreateChannels(context.Background(), token, []things.Channel{channel})
+	schs, _ := svc.CreateChannels(context.Background(), token, channel)
 	ach := schs[0]
 	svc.Connect(context.Background(), token, ach.ID, ath.ID)
-	schs, _ = svc.CreateChannels(context.Background(), otherToken, []things.Channel{channel})
+	schs, _ = svc.CreateChannels(context.Background(), otherToken, channel)
 	bch := schs[0]
 
 	cases := []struct {

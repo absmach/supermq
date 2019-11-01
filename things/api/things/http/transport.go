@@ -53,7 +53,7 @@ func MakeHandler(tracer opentracing.Tracer, svc things.Service) http.Handler {
 	))
 
 	r.Post("/things/bulk", kithttp.NewServer(
-		kitot.TraceServer(tracer, "bulk_create_things")(createThingsEndpoint(svc)),
+		kitot.TraceServer(tracer, "create_things")(createThingsEndpoint(svc)),
 		decodeThingsCreation,
 		encodeResponse,
 		opts...,
@@ -109,7 +109,7 @@ func MakeHandler(tracer opentracing.Tracer, svc things.Service) http.Handler {
 	))
 
 	r.Post("/channels/bulk", kithttp.NewServer(
-		kitot.TraceServer(tracer, "bulk_create_channels")(createChannelsEndpoint(svc)),
+		kitot.TraceServer(tracer, "create_channels")(createChannelsEndpoint(svc)),
 		decodeChannelsCreation,
 		encodeResponse,
 		opts...,

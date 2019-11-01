@@ -31,8 +31,8 @@ func NewEventStoreMiddleware(svc things.Service, client *redis.Client) things.Se
 	}
 }
 
-func (es eventStore) CreateThings(ctx context.Context, token string, ths []things.Thing) ([]things.Thing, error) {
-	sths, err := es.svc.CreateThings(ctx, token, ths)
+func (es eventStore) CreateThings(ctx context.Context, token string, ths ...things.Thing) ([]things.Thing, error) {
+	sths, err := es.svc.CreateThings(ctx, token, ths...)
 	if err != nil {
 		return sths, err
 	}
@@ -112,8 +112,8 @@ func (es eventStore) RemoveThing(ctx context.Context, token, id string) error {
 	return nil
 }
 
-func (es eventStore) CreateChannels(ctx context.Context, token string, channels []things.Channel) ([]things.Channel, error) {
-	schs, err := es.svc.CreateChannels(ctx, token, channels)
+func (es eventStore) CreateChannels(ctx context.Context, token string, channels ...things.Channel) ([]things.Channel, error) {
+	schs, err := es.svc.CreateChannels(ctx, token, channels...)
 	if err != nil {
 		return schs, err
 	}

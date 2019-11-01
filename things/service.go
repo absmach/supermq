@@ -33,7 +33,7 @@ var (
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
 	// CreateThings adds a list of things to the user identified by the provided key.
-	CreateThings(context.Context, string, []Thing) ([]Thing, error)
+	CreateThings(context.Context, string, ...Thing) ([]Thing, error)
 
 	// UpdateThing updates the thing identified by the provided ID, that
 	// belongs to the user identified by the provided key.
@@ -61,7 +61,7 @@ type Service interface {
 	RemoveThing(context.Context, string, string) error
 
 	// CreateChannels adds a list of channels to the user identified by the provided key.
-	CreateChannels(context.Context, string, []Channel) ([]Channel, error)
+	CreateChannels(context.Context, string, ...Channel) ([]Channel, error)
 
 	// UpdateChannel updates the channel identified by the provided ID, that
 	// belongs to the user identified by the provided key.
@@ -133,7 +133,7 @@ func New(users mainflux.UsersServiceClient, things ThingRepository, channels Cha
 		idp:          idp,
 	}
 }
-func (ts *thingsService) CreateThings(ctx context.Context, token string, things []Thing) ([]Thing, error) {
+func (ts *thingsService) CreateThings(ctx context.Context, token string, things ...Thing) ([]Thing, error) {
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return []Thing{}, ErrUnauthorizedAccess
@@ -218,7 +218,7 @@ func (ts *thingsService) RemoveThing(ctx context.Context, token, id string) erro
 	return ts.things.Remove(ctx, res.GetValue(), id)
 }
 
-func (ts *thingsService) CreateChannels(ctx context.Context, token string, channels []Channel) ([]Channel, error) {
+func (ts *thingsService) CreateChannels(ctx context.Context, token string, channels ...Channel) ([]Channel, error) {
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return []Channel{}, ErrUnauthorizedAccess

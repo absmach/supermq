@@ -88,7 +88,7 @@ func TestCreateThings(t *testing.T) {
 
 	lastID := "0"
 	for _, tc := range cases {
-		_, err := svc.CreateThings(context.Background(), tc.key, tc.ths)
+		_, err := svc.CreateThings(context.Background(), tc.key, tc.ths...)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 
 		streams := redisClient.XRead(&r.XReadArgs{
@@ -114,7 +114,7 @@ func TestUpdateThing(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 	// Create thing without sending event.
 	th := things.Thing{Name: "a", Metadata: map[string]interface{}{"test": "test"}}
-	sths, err := svc.CreateThings(context.Background(), token, []things.Thing{th})
+	sths, err := svc.CreateThings(context.Background(), token, th)
 	require.Nil(t, err, fmt.Sprintf("unexpected error %s", err))
 	sth := sths[0]
 
@@ -172,7 +172,7 @@ func TestViewThing(t *testing.T) {
 
 	svc := newService(map[string]string{token: email})
 	// Create thing without sending event.
-	sths, err := svc.CreateThings(context.Background(), token, []things.Thing{{Name: "a"}})
+	sths, err := svc.CreateThings(context.Background(), token, things.Thing{Name: "a"})
 	require.Nil(t, err, fmt.Sprintf("unexpected error %s", err))
 	sth := sths[0]
 
@@ -188,7 +188,7 @@ func TestListThings(t *testing.T) {
 
 	svc := newService(map[string]string{token: email})
 	// Create thing without sending event.
-	_, err := svc.CreateThings(context.Background(), token, []things.Thing{{Name: "a"}})
+	_, err := svc.CreateThings(context.Background(), token, things.Thing{Name: "a"})
 	require.Nil(t, err, fmt.Sprintf("unexpected error %s", err))
 
 	essvc := redis.NewEventStoreMiddleware(svc, redisClient)
@@ -203,10 +203,10 @@ func TestListThingsByChannel(t *testing.T) {
 
 	svc := newService(map[string]string{token: email})
 	// Create thing without sending event.
-	sths, err := svc.CreateThings(context.Background(), token, []things.Thing{{Name: "a"}})
+	sths, err := svc.CreateThings(context.Background(), token, things.Thing{Name: "a"})
 	require.Nil(t, err, fmt.Sprintf("unexpected error %s", err))
 	sth := sths[0]
-	schs, err := svc.CreateChannels(context.Background(), token, []things.Channel{{Name: "a"}})
+	schs, err := svc.CreateChannels(context.Background(), token, things.Channel{Name: "a"})
 	require.Nil(t, err, fmt.Sprintf("unexpected error %s", err))
 	sch := schs[0]
 	err = svc.Connect(context.Background(), token, sch.ID, sth.ID)
@@ -224,7 +224,7 @@ func TestRemoveThing(t *testing.T) {
 
 	svc := newService(map[string]string{token: email})
 	// Create thing without sending event.
-	sths, err := svc.CreateThings(context.Background(), token, []things.Thing{{Name: "a"}})
+	sths, err := svc.CreateThings(context.Background(), token, things.Thing{Name: "a"})
 	require.Nil(t, err, fmt.Sprintf("unexpected error %s", err))
 	sth := sths[0]
 
@@ -315,7 +315,7 @@ func TestCreateChannels(t *testing.T) {
 
 	lastID := "0"
 	for _, tc := range cases {
-		_, err := svc.CreateChannels(context.Background(), tc.key, tc.chs)
+		_, err := svc.CreateChannels(context.Background(), tc.key, tc.chs...)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 
 		streams := redisClient.XRead(&r.XReadArgs{
@@ -340,7 +340,7 @@ func TestUpdateChannel(t *testing.T) {
 
 	svc := newService(map[string]string{token: email})
 	// Create channel without sending event.
-	schs, err := svc.CreateChannels(context.Background(), token, []things.Channel{{Name: "a"}})
+	schs, err := svc.CreateChannels(context.Background(), token, things.Channel{Name: "a"})
 	require.Nil(t, err, fmt.Sprintf("unexpected error %s", err))
 	sch := schs[0]
 
@@ -408,7 +408,7 @@ func TestViewChannel(t *testing.T) {
 
 	svc := newService(map[string]string{token: email})
 	// Create channel without sending event.
-	schs, err := svc.CreateChannels(context.Background(), token, []things.Channel{{Name: "a"}})
+	schs, err := svc.CreateChannels(context.Background(), token, things.Channel{Name: "a"})
 	require.Nil(t, err, fmt.Sprintf("unexpected error %s", err))
 	sch := schs[0]
 
@@ -424,7 +424,7 @@ func TestListChannels(t *testing.T) {
 
 	svc := newService(map[string]string{token: email})
 	// Create thing without sending event.
-	_, err := svc.CreateChannels(context.Background(), token, []things.Channel{{Name: "a"}})
+	_, err := svc.CreateChannels(context.Background(), token, things.Channel{Name: "a"})
 	require.Nil(t, err, fmt.Sprintf("unexpected error %s", err))
 
 	essvc := redis.NewEventStoreMiddleware(svc, redisClient)
@@ -439,10 +439,10 @@ func TestListChannelsByThing(t *testing.T) {
 
 	svc := newService(map[string]string{token: email})
 	// Create thing without sending event.
-	sths, err := svc.CreateThings(context.Background(), token, []things.Thing{{Name: "a"}})
+	sths, err := svc.CreateThings(context.Background(), token, things.Thing{Name: "a"})
 	require.Nil(t, err, fmt.Sprintf("unexpected error %s", err))
 	sth := sths[0]
-	schs, err := svc.CreateChannels(context.Background(), token, []things.Channel{{Name: "a"}})
+	schs, err := svc.CreateChannels(context.Background(), token, things.Channel{Name: "a"})
 	require.Nil(t, err, fmt.Sprintf("unexpected error %s", err))
 	sch := schs[0]
 	err = svc.Connect(context.Background(), token, sch.ID, sth.ID)
@@ -460,7 +460,7 @@ func TestRemoveChannel(t *testing.T) {
 
 	svc := newService(map[string]string{token: email})
 	// Create channel without sending event.
-	schs, err := svc.CreateChannels(context.Background(), token, []things.Channel{{Name: "a"}})
+	schs, err := svc.CreateChannels(context.Background(), token, things.Channel{Name: "a"})
 	require.Nil(t, err, fmt.Sprintf("unexpected error %s", err))
 	sch := schs[0]
 
@@ -519,10 +519,10 @@ func TestConnectEvent(t *testing.T) {
 
 	svc := newService(map[string]string{token: email})
 	// Create thing and channel that will be connected.
-	sths, err := svc.CreateThings(context.Background(), token, []things.Thing{{Name: "a"}})
+	sths, err := svc.CreateThings(context.Background(), token, things.Thing{Name: "a"})
 	require.Nil(t, err, fmt.Sprintf("unexpected error %s", err))
 	sth := sths[0]
-	schs, err := svc.CreateChannels(context.Background(), token, []things.Channel{{Name: "a"}})
+	schs, err := svc.CreateChannels(context.Background(), token, things.Channel{Name: "a"})
 	require.Nil(t, err, fmt.Sprintf("unexpected error %s", err))
 	sch := schs[0]
 
@@ -585,10 +585,10 @@ func TestDisconnectEvent(t *testing.T) {
 
 	svc := newService(map[string]string{token: email})
 	// Create thing and channel that will be connected.
-	sths, err := svc.CreateThings(context.Background(), token, []things.Thing{{Name: "a"}})
+	sths, err := svc.CreateThings(context.Background(), token, things.Thing{Name: "a"})
 	require.Nil(t, err, fmt.Sprintf("unexpected error %s", err))
 	sth := sths[0]
-	schs, err := svc.CreateChannels(context.Background(), token, []things.Channel{{Name: "a"}})
+	schs, err := svc.CreateChannels(context.Background(), token, things.Channel{Name: "a"})
 	require.Nil(t, err, fmt.Sprintf("unexpected error %s", err))
 	sch := schs[0]
 	err = svc.Connect(context.Background(), token, sch.ID, sth.ID)
