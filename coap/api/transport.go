@@ -229,7 +229,7 @@ func receive(svc coap.Service, msg *gocoap.Message) *gocoap.Message {
 		return res
 	}
 
-	rawMsg := mainflux.Message{
+	m := mainflux.Message{
 		Channel:     chanID,
 		Subtopic:    subtopic,
 		Publisher:   publisher,
@@ -238,7 +238,7 @@ func receive(svc coap.Service, msg *gocoap.Message) *gocoap.Message {
 		Payload:     msg.Payload,
 	}
 
-	if err := svc.Publish(context.Background(), "", rawMsg); err != nil {
+	if err := svc.Publish(context.Background(), "", m); err != nil {
 		res.Code = gocoap.InternalServerError
 	}
 

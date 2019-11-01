@@ -51,11 +51,11 @@ func (pubsub *natsPublisher) Subscribe(chanID, subtopic, obsID string, observer 
 		if msg == nil {
 			return
 		}
-		var rawMsg mainflux.Message
-		if err := proto.Unmarshal(msg.Data, &rawMsg); err != nil {
+		var m mainflux.Message
+		if err := proto.Unmarshal(msg.Data, &m); err != nil {
 			return
 		}
-		observer.Messages <- rawMsg
+		observer.Messages <- m
 	})
 	if err != nil {
 		return err
