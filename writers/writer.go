@@ -18,14 +18,14 @@ type consumer struct {
 	nc          *nats.Conn
 	channels    map[string]bool
 	repo        MessageRepository
-	transformer transformers.Service
+	transformer transformers.Transformer
 	logger      log.Logger
 }
 
 // Start method starts consuming messages received from NATS.
 // This method transforms messages to SenML format before
 // using MessageRepository to store them.
-func Start(nc *nats.Conn, repo MessageRepository, transformer transformers.Service, queue string, channels map[string]bool, logger log.Logger) error {
+func Start(nc *nats.Conn, repo MessageRepository, transformer transformers.Transformer, queue string, channels map[string]bool, logger log.Logger) error {
 	c := consumer{
 		nc:          nc,
 		channels:    channels,

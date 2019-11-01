@@ -17,7 +17,7 @@ var formats = map[string]senml.Format{
 type transformer struct{}
 
 // New returns transformer service implementation for SenML messages.
-func New() transformers.Service {
+func New() transformers.Transformer {
 	return transformer{}
 }
 
