@@ -155,7 +155,7 @@ func (ts *thingsService) CreateThings(ctx context.Context, token string, things 
 		}
 	}
 
-	return ts.things.BulkSave(ctx, things)
+	return ts.things.Save(ctx, things)
 }
 
 func (ts *thingsService) UpdateThing(ctx context.Context, token string, thing Thing) error {
@@ -233,7 +233,7 @@ func (ts *thingsService) CreateChannels(ctx context.Context, token string, chann
 		channels[i].Owner = res.GetValue()
 	}
 
-	return ts.channels.BulkSave(ctx, channels)
+	return ts.channels.Save(ctx, channels)
 }
 
 func (ts *thingsService) UpdateChannel(ctx context.Context, token string, channel Channel) error {

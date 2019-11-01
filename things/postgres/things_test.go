@@ -21,7 +21,7 @@ const maxNameSize = 1024
 
 var invalidName = strings.Repeat("m", maxNameSize+1)
 
-func TestThingsBulkSave(t *testing.T) {
+func TestThingsSave(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
@@ -104,7 +104,7 @@ func TestThingsBulkSave(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, err := thingRepo.BulkSave(context.Background(), tc.things)
+		_, err := thingRepo.Save(context.Background(), tc.things)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
@@ -127,7 +127,7 @@ func TestThingUpdate(t *testing.T) {
 		Key:   thkey,
 	}
 
-	sths, _ := thingRepo.BulkSave(context.Background(), []things.Thing{thing})
+	sths, _ := thingRepo.Save(context.Background(), []things.Thing{thing})
 	thing.ID = sths[0].ID
 
 	nonexistentThingID, err := uuid.New().ID()
@@ -211,7 +211,7 @@ func TestUpdateKey(t *testing.T) {
 		Owner: email,
 		Key:   ethkey,
 	}
-	sths, _ := thingRepo.BulkSave(context.Background(), []things.Thing{existingThing})
+	sths, _ := thingRepo.Save(context.Background(), []things.Thing{existingThing})
 	existingThing.ID = sths[0].ID
 
 	thid, err := uuid.New().ID()
@@ -225,7 +225,7 @@ func TestUpdateKey(t *testing.T) {
 		Key:   thkey,
 	}
 
-	sths, _ = thingRepo.BulkSave(context.Background(), []things.Thing{thing})
+	sths, _ = thingRepo.Save(context.Background(), []things.Thing{thing})
 	thing.ID = sths[0].ID
 
 	nonexistentThingID, err := uuid.New().ID()
@@ -297,7 +297,7 @@ func TestSingleThingRetrieval(t *testing.T) {
 		Key:   thkey,
 	}
 
-	sths, _ := thingRepo.BulkSave(context.Background(), []things.Thing{thing})
+	sths, _ := thingRepo.Save(context.Background(), []things.Thing{thing})
 	thing.ID = sths[0].ID
 
 	nonexistentThingID, err := uuid.New().ID()
@@ -352,7 +352,7 @@ func TestThingRetrieveByKey(t *testing.T) {
 		Key:   thkey,
 	}
 
-	sths, _ := thingRepo.BulkSave(context.Background(), []things.Thing{thing})
+	sths, _ := thingRepo.Save(context.Background(), []things.Thing{thing})
 	thing.ID = sths[0].ID
 
 	cases := map[string]struct {
@@ -408,7 +408,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 			th.Name = name
 		}
 
-		thingRepo.BulkSave(context.Background(), []things.Thing{th})
+		thingRepo.Save(context.Background(), []things.Thing{th})
 	}
 
 	cases := map[string]struct {
@@ -488,7 +488,7 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 	chid, err := idp.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	schs, err := channelRepo.BulkSave(context.Background(), []things.Channel{{
+	schs, err := channelRepo.Save(context.Background(), []things.Channel{{
 		ID:    chid,
 		Owner: email,
 	}})
@@ -505,7 +505,7 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 			Key:   thkey,
 		}
 
-		sths, err := thingRepo.BulkSave(context.Background(), []things.Thing{th})
+		sths, err := thingRepo.Save(context.Background(), []things.Thing{th})
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		tid := sths[0].ID
 		err = channelRepo.Connect(context.Background(), email, cid, tid)
@@ -585,7 +585,7 @@ func TestThingRemoval(t *testing.T) {
 		Key:   thkey,
 	}
 
-	sths, _ := thingRepo.BulkSave(context.Background(), []things.Thing{thing})
+	sths, _ := thingRepo.Save(context.Background(), []things.Thing{thing})
 	thing.ID = sths[0].ID
 
 	// show that the removal works the same for both existing and non-existing

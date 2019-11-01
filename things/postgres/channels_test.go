@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestChannelsBulkSave(t *testing.T) {
+func TestChannelsSave(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
 	channelRepo := postgres.NewChannelRepository(dbMiddleware)
 
@@ -85,7 +85,7 @@ func TestChannelsBulkSave(t *testing.T) {
 	}
 
 	for _, cc := range cases {
-		_, err := channelRepo.BulkSave(context.Background(), cc.channels)
+		_, err := channelRepo.Save(context.Background(), cc.channels)
 		assert.Equal(t, cc.err, err, fmt.Sprintf("%s: expected %s got %s\n", cc.desc, cc.err, err))
 	}
 }
@@ -102,7 +102,7 @@ func TestChannelUpdate(t *testing.T) {
 		Owner: email,
 	}
 
-	schs, _ := chanRepo.BulkSave(context.Background(), []things.Channel{ch})
+	schs, _ := chanRepo.Save(context.Background(), []things.Channel{ch})
 	ch.ID = schs[0].ID
 
 	nonexistentChanID, err := uuid.New().ID()
@@ -167,7 +167,7 @@ func TestSingleChannelRetrieval(t *testing.T) {
 		Owner: email,
 		Key:   thkey,
 	}
-	sths, _ := thingRepo.BulkSave(context.Background(), []things.Thing{th})
+	sths, _ := thingRepo.Save(context.Background(), []things.Thing{th})
 	th.ID = sths[0].ID
 
 	chid, err := uuid.New().ID()
@@ -177,7 +177,7 @@ func TestSingleChannelRetrieval(t *testing.T) {
 		Owner: email,
 	}
 
-	schs, _ := chanRepo.BulkSave(context.Background(), []things.Channel{ch})
+	schs, _ := chanRepo.Save(context.Background(), []things.Channel{ch})
 	ch.ID = schs[0].ID
 	chanRepo.Connect(context.Background(), email, ch.ID, th.ID)
 
@@ -247,7 +247,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 			ch.Metadata = meta
 		}
 
-		chanRepo.BulkSave(context.Background(), []things.Channel{ch})
+		chanRepo.Save(context.Background(), []things.Channel{ch})
 	}
 
 	cases := map[string]struct {
@@ -333,7 +333,7 @@ func TestMultiChannelRetrievalByThing(t *testing.T) {
 	thid, err := idp.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	sths, err := thingRepo.BulkSave(context.Background(), []things.Thing{{
+	sths, err := thingRepo.Save(context.Background(), []things.Thing{{
 		ID:    thid,
 		Owner: email,
 	}})
@@ -348,7 +348,7 @@ func TestMultiChannelRetrievalByThing(t *testing.T) {
 			ID:    chid,
 			Owner: email,
 		}
-		schs, err := chanRepo.BulkSave(context.Background(), []things.Channel{ch})
+		schs, err := chanRepo.Save(context.Background(), []things.Channel{ch})
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		cid := schs[0].ID
 		err = chanRepo.Connect(context.Background(), email, cid, tid)
@@ -419,7 +419,7 @@ func TestChannelRemoval(t *testing.T) {
 
 	chid, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	schs, _ := chanRepo.BulkSave(context.Background(), []things.Channel{{
+	schs, _ := chanRepo.Save(context.Background(), []things.Channel{{
 		ID:    chid,
 		Owner: email,
 	}})
@@ -452,14 +452,14 @@ func TestConnect(t *testing.T) {
 		Key:      thkey,
 		Metadata: things.Metadata{},
 	}
-	sths, _ := thingRepo.BulkSave(context.Background(), []things.Thing{thing})
+	sths, _ := thingRepo.Save(context.Background(), []things.Thing{thing})
 	thingID := sths[0].ID
 
 	chanRepo := postgres.NewChannelRepository(dbMiddleware)
 
 	chid, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	schs, _ := chanRepo.BulkSave(context.Background(), []things.Channel{{
+	schs, _ := chanRepo.Save(context.Background(), []things.Channel{{
 		ID:    chid,
 		Owner: email,
 	}})
@@ -537,13 +537,13 @@ func TestDisconnect(t *testing.T) {
 		Key:      thkey,
 		Metadata: map[string]interface{}{},
 	}
-	sths, _ := thingRepo.BulkSave(context.Background(), []things.Thing{thing})
+	sths, _ := thingRepo.Save(context.Background(), []things.Thing{thing})
 	thingID := sths[0].ID
 
 	chanRepo := postgres.NewChannelRepository(dbMiddleware)
 	chid, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	schs, _ := chanRepo.BulkSave(context.Background(), []things.Channel{{
+	schs, _ := chanRepo.Save(context.Background(), []things.Channel{{
 		ID:    chid,
 		Owner: email,
 	}})
@@ -621,13 +621,13 @@ func TestHasThing(t *testing.T) {
 		Owner: email,
 		Key:   thkey,
 	}
-	sths, _ := thingRepo.BulkSave(context.Background(), []things.Thing{thing})
+	sths, _ := thingRepo.SaveSave(context.Background(), []things.Thing{thing})
 	thingID := sths[0].ID
 
 	chanRepo := postgres.NewChannelRepository(dbMiddleware)
 	chid, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	schs, _ := chanRepo.BulkSave(context.Background(), []things.Channel{{
+	schs, _ := chanRepo.Save(context.Background(), []things.Channel{{
 		ID:    chid,
 		Owner: email,
 	}})
@@ -681,7 +681,7 @@ func TestHasThingByID(t *testing.T) {
 		Owner: email,
 		Key:   thkey,
 	}
-	sths, _ := thingRepo.BulkSave(context.Background(), []things.Thing{thing})
+	sths, _ := thingRepo.Save(context.Background(), []things.Thing{thing})
 	thingID := sths[0].ID
 
 	disconnectedThID, err := uuid.New().ID()
@@ -694,13 +694,13 @@ func TestHasThingByID(t *testing.T) {
 		Owner: email,
 		Key:   disconnectedThKey,
 	}
-	sths, _ = thingRepo.BulkSave(context.Background(), []things.Thing{disconnectedThing})
+	sths, _ = thingRepo.Save(context.Background(), []things.Thing{disconnectedThing})
 	disconnectedThingID := sths[0].ID
 
 	chanRepo := postgres.NewChannelRepository(dbMiddleware)
 	chid, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	schs, _ := chanRepo.BulkSave(context.Background(), []things.Channel{{
+	schs, _ := chanRepo.Save(context.Background(), []things.Channel{{
 		ID:    chid,
 		Owner: email,
 	}})

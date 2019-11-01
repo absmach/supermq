@@ -12,7 +12,7 @@ import (
 
 const (
 	saveChannelOp             = "save_channel"
-	bulkCreateChannelsOp      = "bulk_create_channels"
+	saveChannelsOp            = "save_channels"
 	updateChannelOp           = "update_channel"
 	retrieveChannelByIDOp     = "retrieve_channel_by_id"
 	retrieveAllChannelsOp     = "retrieve_all_channels"
@@ -43,12 +43,12 @@ func ChannelRepositoryMiddleware(tracer opentracing.Tracer, repo things.ChannelR
 	}
 }
 
-func (crm channelRepositoryMiddleware) BulkSave(ctx context.Context, channels []things.Channel) ([]things.Channel, error) {
-	span := createSpan(ctx, crm.tracer, bulkCreateChannelsOp)
+func (crm channelRepositoryMiddleware) Save(ctx context.Context, channels []things.Channel) ([]things.Channel, error) {
+	span := createSpan(ctx, crm.tracer, saveChannelsOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 
-	return crm.repo.BulkSave(ctx, channels)
+	return crm.repo.Save(ctx, channels)
 }
 
 func (crm channelRepositoryMiddleware) Update(ctx context.Context, ch things.Channel) error {

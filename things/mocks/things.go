@@ -44,7 +44,7 @@ func NewThingRepository(conns chan Connection) things.ThingRepository {
 	return repo
 }
 
-func (trm *thingRepositoryMock) BulkSave(_ context.Context, ths []things.Thing) ([]things.Thing, error) {
+func (trm *thingRepositoryMock) Save(_ context.Context, ths []things.Thing) ([]things.Thing, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 

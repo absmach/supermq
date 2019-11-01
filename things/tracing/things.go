@@ -12,7 +12,7 @@ import (
 
 const (
 	saveThingOp               = "save_thing"
-	bulkCreateThingsOp        = "bulk_create_things"
+	saveThingsOp              = "save_things"
 	updateThingOp             = "update_thing"
 	updateThingKeyOp          = "update_thing_by_key"
 	retrieveThingByIDOp       = "retrieve_thing_by_id"
@@ -42,12 +42,12 @@ func ThingRepositoryMiddleware(tracer opentracing.Tracer, repo things.ThingRepos
 	}
 }
 
-func (trm thingRepositoryMiddleware) BulkSave(ctx context.Context, ths []things.Thing) ([]things.Thing, error) {
-	span := createSpan(ctx, trm.tracer, bulkCreateThingsOp)
+func (trm thingRepositoryMiddleware) Save(ctx context.Context, ths []things.Thing) ([]things.Thing, error) {
+	span := createSpan(ctx, trm.tracer, saveThingsOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 
-	return trm.repo.BulkSave(ctx, ths)
+	return trm.repo.Save(ctx, ths)
 }
 
 func (trm thingRepositoryMiddleware) Update(ctx context.Context, th things.Thing) error {

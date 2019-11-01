@@ -23,9 +23,9 @@ type ChannelsPage struct {
 
 // ChannelRepository specifies a channel persistence API.
 type ChannelRepository interface {
-	// BulkSave persistest multiple channels. Successful operation is indicated by non-nil
+	// Save persistest multiple channels. Successful operation is indicated by non-nil
 	// error response.
-	BulkSave(context.Context, []Channel) ([]Channel, error)
+	Save(context.Context, []Channel) ([]Channel, error)
 
 	// Update performs an update to the existing channel. A non-nil error is
 	// returned to indicate operation failure.
