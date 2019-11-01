@@ -8,7 +8,7 @@ const (
 	SenMLCBOR = "application/senml+cbor"
 )
 
-// Message represents a resolved (normalized) raw message.
+// Message represents a resolved (normalized) SenML record.
 type Message struct {
 	Channel     string   `json:"channel,omitempty"`
 	Subtopic    string   `json:"subtopic,omitempty"`

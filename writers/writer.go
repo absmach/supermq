@@ -22,7 +22,9 @@ type consumer struct {
 	logger      log.Logger
 }
 
-// Start method starts to consume normalized messages received from NATS.
+// Start method starts consuming messages received from NATS.
+// This method transforms messages to SenML format before
+// using MessageRepository to store them.
 func Start(nc *nats.Conn, repo MessageRepository, transformer transformers.Service, queue string, channels map[string]bool, logger log.Logger) error {
 	c := consumer{
 		nc:          nc,
