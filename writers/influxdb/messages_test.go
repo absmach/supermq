@@ -31,6 +31,7 @@ var (
 		Username: "test",
 		Password: "test",
 	}
+	subtopic = "topic"
 
 	msg = senml.Message{
 		Channel:    "45",
@@ -38,11 +39,17 @@ var (
 		Protocol:   "http",
 		Name:       "test name",
 		Unit:       "km",
-		Value:      &senml.Message_FloatValue{FloatValue: 24},
-		ValueSum:   &senml.SumValue{Value: 22},
 		UpdateTime: 5456565466,
 		Link:       "link",
 	}
+)
+
+var (
+	v       float64 = 5
+	stringV         = "value"
+	boolV           = true
+	dataV           = "base64"
+	sum     float64 = 42
 )
 
 // This is utility function to query the database.
@@ -98,18 +105,18 @@ func TestSave(t *testing.T) {
 			count := i % valueFields
 			switch count {
 			case 0:
-				msg.Value = &senml.Message_FloatValue{FloatValue: 5}
+				msg.Subtopic = subtopic
+				msg.Value = &v
 			case 1:
-				msg.Value = &senml.Message_BoolValue{BoolValue: false}
+				msg.BoolValue = &boolV
 			case 2:
-				msg.Value = &senml.Message_StringValue{StringValue: "value"}
+				msg.StringValue = &stringV
 			case 3:
-				msg.Value = &senml.Message_DataValue{DataValue: "base64data"}
-			case 4:
-				msg.ValueSum = nil
+				msg.DataValue = &dataV
 			case 5:
-				msg.ValueSum = &senml.SumValue{Value: 42}
+				msg.Sum = &sum
 			}
+
 			msg.Time = float64(now + int64(i))
 			msgs = append(msgs, msg)
 		}
