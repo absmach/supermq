@@ -32,16 +32,6 @@ var (
 		Password: "test",
 	}
 	subtopic = "topic"
-
-	msg = senml.Message{
-		Channel:    "45",
-		Publisher:  "2580",
-		Protocol:   "http",
-		Name:       "test name",
-		Unit:       "km",
-		UpdateTime: 5456565466,
-		Link:       "link",
-	}
 )
 
 var (
@@ -99,7 +89,17 @@ func TestSave(t *testing.T) {
 		require.Nil(t, err, fmt.Sprintf("Cleaning data from InfluxDB expected to succeed: %s.\n", err))
 
 		now := time.Now().Unix()
+		msg := senml.Message{
+			Channel:    "45",
+			Publisher:  "2580",
+			Protocol:   "http",
+			Name:       "test name",
+			Unit:       "km",
+			UpdateTime: 5456565466,
+			Link:       "link",
+		}
 		var msgs []senml.Message
+
 		for i := 0; i < tc.msgsNum; i++ {
 			// Mix possible values as well as value sum.
 			count := i % valueFields

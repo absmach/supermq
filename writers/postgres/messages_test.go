@@ -16,8 +16,7 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-var (
-	msg         = senml.Message{}
+const (
 	msgsNum     = 42
 	valueFields = 6
 	subtopic    = "topic"
@@ -36,6 +35,8 @@ func TestMessageSave(t *testing.T) {
 
 	chid, err := uuid.NewV4()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	msg := senml.Message{}
 	msg.Channel = chid.String()
 
 	pubid, err := uuid.NewV4()
@@ -44,6 +45,7 @@ func TestMessageSave(t *testing.T) {
 
 	now := time.Now().Unix()
 	var msgs []senml.Message
+
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.
 		count := i % valueFields

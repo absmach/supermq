@@ -46,6 +46,7 @@ func (n transformer) Transform(msg mainflux.Message) (interface{}, error) {
 			Time:       v.Time,
 			UpdateTime: v.UpdateTime,
 			Link:       v.Link,
+			Sum:        v.Sum,
 		}
 
 		switch {
@@ -57,10 +58,6 @@ func (n transformer) Transform(msg mainflux.Message) (interface{}, error) {
 			m.DataValue = &v.DataValue
 		case v.StringValue != "":
 			m.StringValue = &v.StringValue
-		}
-
-		if v.Sum != nil {
-			m.Sum = v.Sum
 		}
 
 		msgs[k] = m

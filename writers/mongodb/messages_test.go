@@ -43,6 +43,13 @@ var (
 )
 
 func TestSave(t *testing.T) {
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
+	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
+
+	db := client.Database(testDB)
+	repo := mongodb.New(db)
+
+	now := time.Now().Unix()
 	msg := senml.Message{
 		Channel:    "45",
 		Publisher:  "2580",
@@ -53,15 +60,8 @@ func TestSave(t *testing.T) {
 		UpdateTime: 5456565466,
 		Link:       "link",
 	}
-
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
-	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
-
-	db := client.Database(testDB)
-	repo := mongodb.New(db)
-
-	now := time.Now().Unix()
 	var msgs []senml.Message
+
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.
 		count := i % valueFields

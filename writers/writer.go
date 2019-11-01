@@ -45,11 +45,12 @@ func (c *consumer) consume(m *nats.Msg) {
 
 	t, err := c.transformer.Transform(msg)
 	if err != nil {
-		c.logger.Warn(fmt.Sprintf("Failed to normalize received message: %s", err))
+		c.logger.Warn(fmt.Sprintf("Failed to tranform received message: %s", err))
 		return
 	}
 	norm, ok := t.([]senml.Message)
 	if !ok {
+		c.logger.Warn("Invalid message format from the Transformer output.")
 		return
 	}
 	var msgs []senml.Message

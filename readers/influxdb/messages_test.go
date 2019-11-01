@@ -65,7 +65,6 @@ func TestReadAll(t *testing.T) {
 		// Mix possible values as well as value sum.
 		count := i % valueFields
 		msg := m
-		msg.Subtopic = ""
 		switch count {
 		case 0:
 			msg.Subtopic = subtopic

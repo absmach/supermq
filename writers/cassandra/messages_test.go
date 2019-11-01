@@ -14,19 +14,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const keyspace = "mainflux"
-
-var (
-	addr = "localhost"
-	msg  = senml.Message{
-		Channel:   "1",
-		Publisher: "1",
-		Protocol:  "mqtt",
-	}
+const (
+	keyspace    = "mainflux"
 	msgsNum     = 42
 	valueFields = 6
 	subtopic    = "topic"
 )
+
+var addr = "localhost"
 
 var (
 	v       float64 = 5
@@ -45,7 +40,13 @@ func TestSave(t *testing.T) {
 
 	repo := cassandra.New(session)
 	now := time.Now().Unix()
+	msg := senml.Message{
+		Channel:   "1",
+		Publisher: "1",
+		Protocol:  "mqtt",
+	}
 	var msgs []senml.Message
+
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.
 		count := i % valueFields
