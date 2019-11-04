@@ -43,12 +43,12 @@ func ChannelRepositoryMiddleware(tracer opentracing.Tracer, repo things.ChannelR
 	}
 }
 
-func (crm channelRepositoryMiddleware) Save(ctx context.Context, channels []things.Channel) ([]things.Channel, error) {
+func (crm channelRepositoryMiddleware) Save(ctx context.Context, channels ...things.Channel) ([]things.Channel, error) {
 	span := createSpan(ctx, crm.tracer, saveChannelsOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 
-	return crm.repo.Save(ctx, channels)
+	return crm.repo.Save(ctx, channels...)
 }
 
 func (crm channelRepositoryMiddleware) Update(ctx context.Context, ch things.Channel) error {

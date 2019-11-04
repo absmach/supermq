@@ -35,7 +35,7 @@ func NewThingRepository(db Database) things.ThingRepository {
 	}
 }
 
-func (tr thingRepository) Save(ctx context.Context, ths []things.Thing) ([]things.Thing, error) {
+func (tr thingRepository) Save(ctx context.Context, ths ...things.Thing) ([]things.Thing, error) {
 	tx, err := tr.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return nil, err

@@ -26,7 +26,7 @@ type ChannelRepository interface {
 	// Save persists multiple channels. Channels are saved using a transaction. If one channel
 	// fails then none will be saved. Successful operation is indicated by non-nil
 	// error response.
-	Save(context.Context, []Channel) ([]Channel, error)
+	Save(context.Context, ...Channel) ([]Channel, error)
 
 	// Update performs an update to the existing channel. A non-nil error is
 	// returned to indicate operation failure.

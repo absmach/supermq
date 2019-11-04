@@ -42,12 +42,12 @@ func ThingRepositoryMiddleware(tracer opentracing.Tracer, repo things.ThingRepos
 	}
 }
 
-func (trm thingRepositoryMiddleware) Save(ctx context.Context, ths []things.Thing) ([]things.Thing, error) {
+func (trm thingRepositoryMiddleware) Save(ctx context.Context, ths ...things.Thing) ([]things.Thing, error) {
 	span := createSpan(ctx, trm.tracer, saveThingsOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 
-	return trm.repo.Save(ctx, ths)
+	return trm.repo.Save(ctx, ths...)
 }
 
 func (trm thingRepositoryMiddleware) Update(ctx context.Context, th things.Thing) error {

@@ -30,7 +30,7 @@ func NewChannelRepository(db Database) things.ChannelRepository {
 	}
 }
 
-func (cr channelRepository) Save(ctx context.Context, channels []things.Channel) ([]things.Channel, error) {
+func (cr channelRepository) Save(ctx context.Context, channels ...things.Channel) ([]things.Channel, error) {
 	tx, err := cr.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return nil, err

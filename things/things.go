@@ -31,7 +31,7 @@ type ThingRepository interface {
 	// Save persists multiple things. Things are saved using a transaction. If one thing
 	// fails then none will be saved. Successful operation is indicated by non-nil
 	// error response.
-	Save(context.Context, []Thing) ([]Thing, error)
+	Save(context.Context, ...Thing) ([]Thing, error)
 
 	// Update performs an update to the existing thing. A non-nil error is
 	// returned to indicate operation failure.
