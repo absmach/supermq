@@ -59,7 +59,7 @@ func TestMessageSave(t *testing.T) {
 			msg.StringValue = &stringV
 		case 3:
 			msg.DataValue = &dataV
-		case 5:
+		case 4:
 			msg.Sum = &sum
 		}
 
