@@ -75,8 +75,8 @@ func main() {
 	defer session.Close()
 
 	repo := newService(session, logger)
-	norm := senml.New()
-	if err := writers.Start(nc, repo, norm, svcName, cfg.channels, logger); err != nil {
+	st := senml.New()
+	if err := writers.Start(nc, repo, st, svcName, cfg.channels, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to create Cassandra writer: %s", err))
 	}
 
