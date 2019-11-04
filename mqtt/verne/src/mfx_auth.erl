@@ -123,7 +123,7 @@ auth_on_publish(UserName, {_MountPoint, _ClientId} = SubscriberId, QoS, Topic, P
                 contentType => ContentType,
                 payload => Payload
             },
-            mfx_nats:publish(NatsSubject, message_pb:encode_msg(RawMessage, raw_message)),
+            mfx_nats:publish(NatsSubject, message_pb:encode_msg(RawMessage, message)),
             ok;
         Other ->
             error_logger:info_msg("Error auth: ~p", [Other]),
