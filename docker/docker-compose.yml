@@ -49,7 +49,8 @@ services:
     restart: on-failure
     networks:
       - mainflux-base-net
-
+    ports:
+      - 4222:4222
   users-db:
     image: postgres:10.8-alpine
     container_name: mainflux-users-db

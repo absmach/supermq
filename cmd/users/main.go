@@ -8,35 +8,33 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/mainflux/mainflux/internal/email"
 	"github.com/mainflux/mainflux/users"
 	"github.com/mainflux/mainflux/users/emailer"
 	"github.com/mainflux/mainflux/users/token"
 	"github.com/mainflux/mainflux/users/tracing"
-
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
+	authapi "github.com/mainflux/mainflux/auth/api/grpc"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/users/api"
-	grpcapi "github.com/mainflux/mainflux/users/api/grpc"
 	httpapi "github.com/mainflux/mainflux/users/api/http"
 	"github.com/mainflux/mainflux/users/bcrypt"
-	"github.com/mainflux/mainflux/users/jwt"
 	"github.com/mainflux/mainflux/users/postgres"
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"
-	"google.golang.org/grpc"
 )
 
 const (
@@ -56,6 +54,13 @@ const (
 	defServerCert    = ""
 	defServerKey     = ""
 	defJaegerURL     = ""
+
+	defAuthHTTPPort = "8989"
+	defAuthGRPCPort = "8181"
+	defAuthTimeout  = "1" // in seconds
+	defAuthTLS      = "false"
+	defAuthCACerts  = ""
+	defAuthURL      = "localhost:8181"
 
 	defEmailLogLevel    = "debug"
 	defEmailDriver      = "smtp"
@@ -88,6 +93,13 @@ const (
 	envServerKey     = "MF_USERS_SERVER_KEY"
 	envJaegerURL     = "MF_JAEGER_URL"
 
+	envAuthHTTPPort = "MF_AUTH_HTTP_PORT"
+	envAuthGRPCPort = "MF_AUTH_GRPC_PORT"
+	envAuthTimeout  = "MF_AUTH_TIMEOUT"
+	envAuthTLS      = "MF_AUTH_CLIENT_TLS"
+	envAuthCACerts  = "MF_AUTH_CA_CERTS"
+	envAuthURL      = "MF_AUTH_URL"
+
 	envEmailDriver      = "MF_EMAIL_DRIVER"
 	envEmailHost        = "MF_EMAIL_HOST"
 	envEmailPort        = "MF_EMAIL_PORT"
@@ -104,17 +116,23 @@ const (
 )
 
 type config struct {
-	logLevel   string
-	dbConfig   postgres.Config
-	emailConf  email.Config
-	tokenConf  tokenConfig
-	httpPort   string
-	grpcPort   string
-	secret     string
-	serverCert string
-	serverKey  string
-	jaegerURL  string
-	resetURL   string
+	logLevel     string
+	dbConfig     postgres.Config
+	authHTTPPort string
+	authGRPCPort string
+	authTimeout  time.Duration
+	authTLS      bool
+	authCACerts  string
+	authURL      string
+	emailConf    email.Config
+	tokenConf    tokenConfig
+	httpPort     string
+	grpcPort     string
+	secret       string
+	serverCert   string
+	serverKey    string
+	jaegerURL    string
+	resetURL     string
 }
 
 type tokenConfig struct {
@@ -133,17 +151,24 @@ func main() {
 	db := connectToDB(cfg.dbConfig, logger)
 	defer db.Close()
 
+	authTracer, closer := initJaeger("auth", cfg.jaegerURL, logger)
+	defer closer.Close()
+
+	auth, close := connectToAuth(cfg, authTracer, logger)
+	if close != nil {
+		defer close()
+	}
+
 	tracer, closer := initJaeger("users", cfg.jaegerURL, logger)
 	defer closer.Close()
 
 	dbTracer, dbCloser := initJaeger("users_db", cfg.jaegerURL, logger)
 	defer dbCloser.Close()
 
-	svc := newService(db, dbTracer, cfg, logger)
+	svc := newService(db, dbTracer, auth, cfg, logger)
 	errs := make(chan error, 2)
 
 	go startHTTPServer(tracer, svc, cfg.httpPort, cfg.serverCert, cfg.serverKey, logger, errs)
-	go startGRPCServer(tracer, svc, cfg.grpcPort, cfg.serverCert, cfg.serverKey, logger, errs)
 
 	go func() {
 		c := make(chan os.Signal)
@@ -156,6 +181,16 @@ func main() {
 }
 
 func loadConfig() config {
+	timeout, err := strconv.ParseInt(mainflux.Env(envAuthTimeout, defAuthTimeout), 10, 64)
+	if err != nil {
+		log.Fatalf("Invalid %s value: %s", envAuthTimeout, err.Error())
+	}
+
+	tls, err := strconv.ParseBool(mainflux.Env(envAuthTLS, defAuthTLS))
+	if err != nil {
+		log.Fatalf("Invalid value passed for %s\n", envAuthTLS)
+	}
+
 	dbConfig := postgres.Config{
 		Host:        mainflux.Env(envDBHost, defDBHost),
 		Port:        mainflux.Env(envDBPort, defDBPort),
@@ -185,17 +220,22 @@ func loadConfig() config {
 	}
 
 	return config{
-		logLevel:   mainflux.Env(envLogLevel, defLogLevel),
-		dbConfig:   dbConfig,
-		emailConf:  emailConf,
-		tokenConf:  tokenConf,
-		httpPort:   mainflux.Env(envHTTPPort, defHTTPPort),
-		grpcPort:   mainflux.Env(envGRPCPort, defGRPCPort),
-		secret:     mainflux.Env(envSecret, defSecret),
-		serverCert: mainflux.Env(envServerCert, defServerCert),
-		serverKey:  mainflux.Env(envServerKey, defServerKey),
-		jaegerURL:  mainflux.Env(envJaegerURL, defJaegerURL),
-		resetURL:   mainflux.Env(envTokenResetEndpoint, defTokenResetEndpoint),
+		logLevel:     mainflux.Env(envLogLevel, defLogLevel),
+		dbConfig:     dbConfig,
+		authHTTPPort: mainflux.Env(envAuthHTTPPort, defAuthHTTPPort),
+		authGRPCPort: mainflux.Env(envAuthGRPCPort, defAuthGRPCPort),
+		authTimeout:  time.Duration(timeout) * time.Second,
+		authTLS:      tls,
+		authURL:      mainflux.Env(envAuthURL, defAuthURL),
+		emailConf:    emailConf,
+		tokenConf:    tokenConf,
+		httpPort:     mainflux.Env(envHTTPPort, defHTTPPort),
+		grpcPort:     mainflux.Env(envGRPCPort, defGRPCPort),
+		secret:       mainflux.Env(envSecret, defSecret),
+		serverCert:   mainflux.Env(envServerCert, defServerCert),
+		serverKey:    mainflux.Env(envServerKey, defServerKey),
+		jaegerURL:    mainflux.Env(envJaegerURL, defJaegerURL),
+		resetURL:     mainflux.Env(envTokenResetEndpoint, defTokenResetEndpoint),
 	}
 
 }
@@ -233,11 +273,35 @@ func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sqlx.DB {
 	return db
 }
 
-func newService(db *sqlx.DB, tracer opentracing.Tracer, c config, logger logger.Logger) users.Service {
+func connectToAuth(cfg config, tracer opentracing.Tracer, logger logger.Logger) (mainflux.AuthServiceClient, func() error) {
+	var opts []grpc.DialOption
+	if cfg.authTLS {
+		if cfg.authCACerts != "" {
+			tpc, err := credentials.NewClientTLSFromFile(cfg.authCACerts, "")
+			if err != nil {
+				logger.Error(fmt.Sprintf("Failed to create tls credentials: %s", err))
+				os.Exit(1)
+			}
+			opts = append(opts, grpc.WithTransportCredentials(tpc))
+		}
+	} else {
+		opts = append(opts, grpc.WithInsecure())
+		logger.Info("gRPC communication is not encrypted")
+	}
+
+	conn, err := grpc.Dial(cfg.authURL, opts...)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to users service: %s", err))
+		os.Exit(1)
+	}
+
+	return authapi.NewClient(tracer, conn, cfg.authTimeout), conn.Close
+}
+
+func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServiceClient, c config, logger logger.Logger) users.Service {
 	database := postgres.NewDatabase(db)
 	repo := tracing.UserRepositoryMiddleware(postgres.New(database), tracer)
 	hasher := bcrypt.New()
-	idp := jwt.New(c.secret)
 	emailer, err := emailer.New(c.resetURL, &c.emailConf)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to configure e-mailing util: %s", err.Error()))
@@ -248,7 +312,7 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, c config, logger logger.
 	}
 	tokenizer := token.New(c.tokenConf.hmacSampleSecret, tDur)
 
-	svc := users.New(repo, hasher, idp, emailer, tokenizer)
+	svc := users.New(repo, hasher, auth, emailer, tokenizer)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
@@ -277,30 +341,4 @@ func startHTTPServer(tracer opentracing.Tracer, svc users.Service, port string, 
 		logger.Info(fmt.Sprintf("Users service started using http, exposed port %s", port))
 		errs <- http.ListenAndServe(p, httpapi.MakeHandler(svc, tracer, logger))
 	}
-}
-
-func startGRPCServer(tracer opentracing.Tracer, svc users.Service, port string, certFile string, keyFile string, logger logger.Logger, errs chan error) {
-	p := fmt.Sprintf(":%s", port)
-	listener, err := net.Listen("tcp", p)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to listen on port %s: %s", port, err))
-	}
-
-	var server *grpc.Server
-	if certFile != "" || keyFile != "" {
-		creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
-		if err != nil {
-			logger.Error(fmt.Sprintf("Failed to load users certificates: %s", err))
-			os.Exit(1)
-		}
-		logger.Info(fmt.Sprintf("Users gRPC service started using https on port %s with cert %s key %s", port, certFile, keyFile))
-		server = grpc.NewServer(grpc.Creds(creds))
-	} else {
-		logger.Info(fmt.Sprintf("Users gRPC service started using http on port %s", port))
-		server = grpc.NewServer()
-	}
-
-	mainflux.RegisterUsersServiceServer(server, grpcapi.NewServer(tracer, svc))
-	logger.Info(fmt.Sprintf("Users gRPC service started, exposed port %s", port))
-	errs <- server.Serve(listener)
 }

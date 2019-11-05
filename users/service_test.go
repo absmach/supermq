@@ -101,24 +101,24 @@ func TestLogin(t *testing.T) {
 	}
 }
 
-func TestIdentify(t *testing.T) {
-	svc := newService()
-	svc.Register(context.Background(), user)
-	key, _ := svc.Login(context.Background(), user)
+// func TestIdentify(t *testing.T) {
+// 	svc := newService()
+// 	svc.Register(context.Background(), user)
+// 	key, _ := svc.Login(context.Background(), user)
 
-	cases := map[string]struct {
-		key string
-		err error
-	}{
-		"valid token's identity":   {key, nil},
-		"invalid token's identity": {"", users.ErrUnauthorizedAccess},
-	}
+// 	cases := map[string]struct {
+// 		key string
+// 		err error
+// 	}{
+// 		"valid token's identity":   {key, nil},
+// 		"invalid token's identity": {"", users.ErrUnauthorizedAccess},
+// 	}
 
-	for desc, tc := range cases {
-		_, err := svc.Identify(tc.key)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
-	}
-}
+// 	for desc, tc := range cases {
+// 		_, err := svc.Identify(tc.key)
+// 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+// 	}
+// }
 
 func TestUserInfo(t *testing.T) {
 	svc := newService()

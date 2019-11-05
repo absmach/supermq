@@ -13,7 +13,8 @@ service ThingsService {
     rpc Identify(Token) returns (ThingID) {}
 }
 
-service UsersService {
+service AuthService {
+    rpc Issue(IssueReq) returns (Token) {}
     rpc Identify(Token) returns (UserID) {}
 }
 
@@ -37,4 +38,9 @@ message Token {
 
 message UserID {
     string value = 1;
+}
+
+message IssueReq{
+    string issuer = 2;
+    uint32 type = 3;
 }
