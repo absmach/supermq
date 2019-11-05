@@ -28,7 +28,7 @@ const (
 	chanID      = "1"
 	subtopic    = "subtopic"
 	msgsNum     = 42
-	valueFields = 6
+	valueFields = 5
 )
 
 var (

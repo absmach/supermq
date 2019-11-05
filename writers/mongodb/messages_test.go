@@ -30,7 +30,7 @@ var (
 	collection  = "mainflux"
 	db          mongo.Database
 	msgsNum     = 100
-	valueFields = 6
+	valueFields = 5
 	subtopic    = "topic"
 )
 

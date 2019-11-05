@@ -33,7 +33,7 @@ var (
 )
 
 var (
-	valueFields = 6
+	valueFields = 5
 	port        string
 	client      influxdata.Client
 	testLog, _  = log.New(os.Stdout, log.Info.String())

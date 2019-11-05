@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const valueFields = 6
+const valueFields = 5
 
 var (
 	port        string

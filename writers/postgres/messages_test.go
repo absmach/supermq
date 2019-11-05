@@ -18,7 +18,7 @@ import (
 
 const (
 	msgsNum     = 42
-	valueFields = 6
+	valueFields = 5
 	subtopic    = "topic"
 )
 

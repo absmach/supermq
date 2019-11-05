@@ -17,7 +17,7 @@ import (
 const (
 	keyspace    = "mainflux"
 	msgsNum     = 42
-	valueFields = 6
+	valueFields = 5
 	subtopic    = "topic"
 )
 

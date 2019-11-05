@@ -23,7 +23,7 @@ const (
 	invalid       = "invalid"
 	numOfMessages = 42
 	chanID        = "1"
-	valueFields   = 6
+	valueFields   = 5
 )
 
 var (
@@ -54,7 +54,7 @@ func newService() readers.MessageRepository {
 			msg.StringValue = &stringV
 		case 3:
 			msg.DataValue = &dataV
-		case 5:
+		case 4:
 			msg.Sum = &sum
 		}
 
