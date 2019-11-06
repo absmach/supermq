@@ -30,7 +30,9 @@ const (
 )
 
 var (
-	errMetadataType = errors.New("metadatada is not of type lora")
+	errMetadataType = errors.New("field lora is missing in the metadata")
+
+	errMetadataFormat = errors.New("malformed metadata")
 
 	errMetadataAppID = errors.New("application ID not found in channel metadatada")
 
@@ -90,12 +92,12 @@ func (es eventStore) Subscribe(subject string) error {
 				}
 				err = es.handleCreateThing(cte)
 			case thingUpdate:
-				ute, derr := decodeUpdateThing(event)
+				ute, derr := decodeCreateThing(event)
 				if derr != nil {
 					err = derr
 					break
 				}
-				err = es.handleUpdateThing(ute)
+				err = es.handleCreateThing(ute)
 			case thingRemove:
 				rte := decodeRemoveThing(event)
 				err = es.handleRemoveThing(rte)
@@ -107,12 +109,12 @@ func (es eventStore) Subscribe(subject string) error {
 				}
 				err = es.handleCreateChannel(cce)
 			case channelUpdate:
-				uce, derr := decodeUpdateChannel(event)
+				uce, derr := decodeCreateChannel(event)
 				if derr != nil {
 					err = derr
 					break
 				}
-				err = es.handleUpdateChannel(uce)
+				err = es.handleCreateChannel(uce)
 			case channelRemove:
 				rce := decodeRemoveChannel(event)
 				err = es.handleRemoveChannel(rce)
@@ -128,7 +130,7 @@ func (es eventStore) Subscribe(subject string) error {
 
 func decodeCreateThing(event map[string]interface{}) (createThingEvent, error) {
 	strmeta := read(event, "metadata", "{}")
-	var metadata map[string]thingMetadata
+	var metadata map[string]interface{}
 	if err := json.Unmarshal([]byte(strmeta), &metadata); err != nil {
 		return createThingEvent{}, err
 	}
@@ -137,39 +139,23 @@ func decodeCreateThing(event map[string]interface{}) (createThingEvent, error) {
 		id: read(event, "id", ""),
 	}
 
-	val, ok := metadata["lora"]
+	m, ok := metadata["lora"]
 	if !ok {
 		return createThingEvent{}, errMetadataType
 	}
-	if val.DevEUI == "" {
+
+	lm, ok := m.(map[string]interface{})
+	if !ok {
+		return createThingEvent{}, errMetadataFormat
+	}
+
+	val, ok := lm["devEUI"].(string)
+	if !ok {
 		return createThingEvent{}, errMetadataDevEUI
 	}
 
-	cte.metadata = val
+	cte.loraDevEUI = val
 	return cte, nil
-}
-
-func decodeUpdateThing(event map[string]interface{}) (updateThingEvent, error) {
-	strmeta := read(event, "metadata", "{}")
-	var metadata map[string]thingMetadata
-	if err := json.Unmarshal([]byte(strmeta), &metadata); err != nil {
-		return updateThingEvent{}, errMetadataType
-	}
-
-	ute := updateThingEvent{
-		id: read(event, "id", ""),
-	}
-
-	val, ok := metadata["lora"]
-	if !ok {
-		return updateThingEvent{}, errMetadataType
-	}
-	if val.DevEUI == "" {
-		return updateThingEvent{}, errMetadataDevEUI
-	}
-
-	ute.metadata = val
-	return ute, nil
 }
 
 func decodeRemoveThing(event map[string]interface{}) removeThingEvent {
@@ -180,8 +166,7 @@ func decodeRemoveThing(event map[string]interface{}) removeThingEvent {
 
 func decodeCreateChannel(event map[string]interface{}) (createChannelEvent, error) {
 	strmeta := read(event, "metadata", "{}")
-
-	var metadata map[string]channelMetadata
+	var metadata map[string]interface{}
 	if err := json.Unmarshal([]byte(strmeta), &metadata); err != nil {
 		return createChannelEvent{}, err
 	}
@@ -190,39 +175,23 @@ func decodeCreateChannel(event map[string]interface{}) (createChannelEvent, erro
 		id: read(event, "id", ""),
 	}
 
-	val, ok := metadata["lora"]
+	m, ok := metadata["lora"]
 	if !ok {
 		return createChannelEvent{}, errMetadataType
 	}
-	if val.AppID == "" {
+
+	lm, ok := m.(map[string]interface{})
+	if !ok {
+		return createChannelEvent{}, errMetadataFormat
+	}
+
+	val, ok := lm["appID"].(string)
+	if !ok {
 		return createChannelEvent{}, errMetadataAppID
 	}
 
-	cce.metadata = val
+	cce.loraAppID = val
 	return cce, nil
-}
-
-func decodeUpdateChannel(event map[string]interface{}) (updateChannelEvent, error) {
-	strmeta := read(event, "metadata", "{}")
-	var metadata map[string]channelMetadata
-	if err := json.Unmarshal([]byte(strmeta), &metadata); err != nil {
-		return updateChannelEvent{}, err
-	}
-
-	uce := updateChannelEvent{
-		id: read(event, "id", ""),
-	}
-
-	val, ok := metadata["lora"]
-	if !ok {
-		return updateChannelEvent{}, errMetadataType
-	}
-	if val.AppID == "" {
-		return updateChannelEvent{}, errMetadataAppID
-	}
-
-	uce.metadata = val
-	return uce, nil
 }
 
 func decodeRemoveChannel(event map[string]interface{}) removeChannelEvent {
@@ -232,11 +201,7 @@ func decodeRemoveChannel(event map[string]interface{}) removeChannelEvent {
 }
 
 func (es eventStore) handleCreateThing(cte createThingEvent) error {
-	return es.svc.CreateThing(cte.id, cte.metadata.DevEUI)
-}
-
-func (es eventStore) handleUpdateThing(ute updateThingEvent) error {
-	return es.svc.CreateThing(ute.id, ute.metadata.DevEUI)
+	return es.svc.CreateThing(cte.id, cte.loraDevEUI)
 }
 
 func (es eventStore) handleRemoveThing(rte removeThingEvent) error {
@@ -244,11 +209,7 @@ func (es eventStore) handleRemoveThing(rte removeThingEvent) error {
 }
 
 func (es eventStore) handleCreateChannel(cce createChannelEvent) error {
-	return es.svc.CreateChannel(cce.id, cce.metadata.AppID)
-}
-
-func (es eventStore) handleUpdateChannel(uce updateChannelEvent) error {
-	return es.svc.UpdateChannel(uce.id, uce.metadata.AppID)
+	return es.svc.CreateChannel(cce.id, cce.loraAppID)
 }
 
 func (es eventStore) handleRemoveChannel(rce removeChannelEvent) error {
