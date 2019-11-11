@@ -79,7 +79,7 @@ func (svc *mainfluxThings) Connect(_ context.Context, owner, chID string, thIDs 
 		return things.ErrUnauthorizedAccess
 	}
 	if svc.channels[chID].Owner != userID.Value {
-		return things.ErrNotFound
+		return things.ErrUnauthorizedAccess
 	}
 	for _, thID := range thIDs {
 		svc.connections[chID] = append(svc.connections[chID], thID)
