@@ -250,7 +250,7 @@ func (cr channelRepository) Remove(ctx context.Context, owner, id string) error 
 	return nil
 }
 
-func (cr channelRepository) Connect(ctx context.Context, owner string, chanID string, thIDs ...string) error {
+func (cr channelRepository) Connect(ctx context.Context, owner, chanID string, thIDs ...string) error {
 	tx, err := cr.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return err
