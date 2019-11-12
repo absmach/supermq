@@ -14,11 +14,11 @@ func registrationEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(userReq)
 
-		if err := req.validate(); !err.IsEmpty() {
+		if err := req.validate(); err != nil {
 			return nil, err
 		}
 
-		if err := svc.Register(ctx, req.user); !err.IsEmpty() {
+		if err := svc.Register(ctx, req.user); err != nil {
 			return tokenRes{}, err
 		}
 		return tokenRes{}, nil
@@ -79,12 +79,12 @@ func userInfoEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(viewUserInfoReq)
 
-		if err := req.validate(); !err.IsEmpty() {
+		if err := req.validate(); err != nil {
 			return nil, err
 		}
 
 		u, err := svc.UserInfo(ctx, req.token)
-		if !err.IsEmpty() {
+		if err != nil {
 			return nil, err
 		}
 
@@ -138,7 +138,7 @@ func loginEndpoint(svc users.Service) endpoint.Endpoint {
 		}
 
 		token, err := svc.Login(ctx, req.user)
-		if !err.IsEmpty() {
+		if err != nil {
 			return nil, err
 		}
 

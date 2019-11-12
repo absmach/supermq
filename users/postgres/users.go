@@ -9,7 +9,6 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 
-	"github.com/lib/pq"
 	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/users"
 )
@@ -38,44 +37,35 @@ func (ur userRepository) Save(ctx context.Context, user users.User) errors.Error
 
 	dbu := toDBUser(user)
 	if _, err := ur.db.NamedExecContext(ctx, q, dbu); err != nil {
-		if pqErr, ok := err.(*pq.Error); ok && errDuplicate == pqErr.Code.Name() {
-			return errors.Wrap(users.ErrConflict, errors.Cast(err))
-		}
-		return errors.Wrap(ErrDatabase, errors.Cast(err))
+		return errors.Wrap(ErrDatabase, err)
 	}
 
-	return errors.Empty()
+	return nil
 }
 
-func (ur userRepository) Update(ctx context.Context, user users.User) error {
+func (ur userRepository) Update(ctx context.Context, user users.User) errors.Error {
 	q := `UPDATE users SET(email, password, metadata) VALUES (:email, :password, :metadata) WHERE email = :email`
 
 	dbu := toDBUser(user)
 	if _, err := ur.db.NamedExecContext(ctx, q, dbu); err != nil {
-		if pqErr, ok := err.(*pq.Error); ok && errDuplicate == pqErr.Code.Name() {
-			return users.ErrConflict
-		}
-		return err
+		return errors.Wrap(ErrDatabase, err)
 	}
 
 	return nil
 }
 
-func (ur userRepository) UpdateUser(ctx context.Context, user users.User) error {
+func (ur userRepository) UpdateUser(ctx context.Context, user users.User) errors.Error {
 	q := `UPDATE users SET metadata = :metadata WHERE email = :email`
 
 	dbu := toDBUser(user)
 	if _, err := ur.db.NamedExecContext(ctx, q, dbu); err != nil {
-		if pqErr, ok := err.(*pq.Error); ok && errDuplicate == pqErr.Code.Name() {
-			return users.ErrConflict
-		}
-		return err
+		return errors.Wrap(ErrDatabase, err)
 	}
 
 	return nil
 }
 
-func (ur userRepository) RetrieveByID(_ context.Context, email string) (users.User, errors.Error) {
+func (ur userRepository) RetrieveByID(ctx context.Context, email string) (users.User, errors.Error) {
 	q := `SELECT password, metadata FROM users WHERE email = $1`
 
 	dbu := dbUser{
@@ -91,10 +81,10 @@ func (ur userRepository) RetrieveByID(_ context.Context, email string) (users.Us
 
 	user := toUser(dbu)
 
-	return user, errors.Empty()
+	return user, nil
 }
 
-func (ur userRepository) UpdatePassword(ctx context.Context, email, password string) error {
+func (ur userRepository) UpdatePassword(ctx context.Context, email, password string) errors.Error {
 	q := `UPDATE users SET password = :password WHERE email = :email`
 
 	db := dbUser{

@@ -36,7 +36,7 @@ func (u User) Validate() errors.Error {
 		return ErrMalformedEntity
 	}
 
-	return errors.Empty()
+	return nil
 }
 
 // UserRepository specifies an account persistence API.
@@ -46,13 +46,13 @@ type UserRepository interface {
 	Save(context.Context, User) errors.Error
 
 	// Update updates the user metadata.
-	UpdateUser(context.Context, User) error
+	UpdateUser(context.Context, User) errors.Error
 
 	// RetrieveByID retrieves user by its unique identifier (i.e. email).
-	RetrieveByID(context.Context, string) (User, error)
+	RetrieveByID(context.Context, string) (User, errors.Error)
 
 	// UpdatePassword updates password for user with given email
-	UpdatePassword(_ context.Context, email, password string) error
+	UpdatePassword(_ context.Context, email, password string) errors.Error
 }
 
 func isEmail(email string) bool {

@@ -5,10 +5,11 @@ package email
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"html/template"
 	"net/smtp"
+
+	"github.com/mainflux/mainflux/errors"
 
 	"github.com/mainflux/mainflux/logger"
 )
@@ -49,7 +50,7 @@ type Agent struct {
 }
 
 // New creates new email agent
-func New(c *Config) (*Agent, error) {
+func New(c *Config) (*Agent, errors.Error) {
 	a := &Agent{}
 	a.conf = c
 	a.auth = smtp.PlainAuth("", c.Username, c.Password, c.Host)
@@ -57,14 +58,14 @@ func New(c *Config) (*Agent, error) {
 
 	tmpl, err := template.ParseFiles(c.Template)
 	if err != nil {
-		return nil, err
+		return nil, errors.Cast(err)
 	}
 	a.tmpl = tmpl
 	return a, nil
 }
 
 // Send sends e-mail
-func (a *Agent) Send(To []string, From, Subject, Header, Content, Footer string) error {
+func (a *Agent) Send(To []string, From, Subject, Header, Content, Footer string) errors.Error {
 	if a.tmpl == nil {
 		return ErrMissingEmailTemplate
 	}
@@ -83,8 +84,12 @@ func (a *Agent) Send(To []string, From, Subject, Header, Content, Footer string)
 	}
 
 	if err := a.tmpl.Execute(email, tmpl); err != nil {
-		return err
+		return errors.Cast(err)
 	}
 
-	return smtp.SendMail(a.addr, a.auth, a.conf.FromAddress, To, email.Bytes())
+	if err := smtp.SendMail(a.addr, a.auth, a.conf.FromAddress, To, email.Bytes()); err != nil {
+		return errors.Cast(err)
+	}
+
+	return nil
 }

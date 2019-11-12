@@ -197,23 +197,21 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 		for k, v := range ar.Headers() {
 			w.Header().Set(k, v)
 		}
-
+		w.Header().Set("Content-Type", contentType)
 		w.WriteHeader(ar.Code())
 
 		if ar.Empty() {
 			return nil
 		}
-
-		w.Header().Set("Content-Type", contentType)
 	}
 
 	return json.NewEncoder(w).Encode(response)
 }
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
-
 	switch errorVal := err.(type) {
 	case errors.Error:
+		w.Header().Set("Content-Type", contentType)
 		switch {
 		case errorVal.Contains(users.ErrMalformedEntity):
 			w.WriteHeader(http.StatusBadRequest)
@@ -230,8 +228,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		case errorVal.Contains(io.EOF):
 			w.WriteHeader(http.StatusBadRequest)
 		}
-		if !errorVal.IsEmpty() {
-			w.Header().Set("Content-Type", contentType)
+		if errorVal.Msg() != "" {
 			json.NewEncoder(w).Encode(errorRes{Err: errorVal.Msg()})
 		}
 	default:

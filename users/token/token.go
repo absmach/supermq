@@ -7,10 +7,10 @@
 package token
 
 import (
-	"errors"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/users"
 )
 
@@ -34,7 +34,7 @@ func New(hmacSampleSecret []byte, tokenDuration int) users.Tokenizer {
 	return &tokenizer{hmacSampleSecret: hmacSampleSecret, tokenDuration: tokenDuration}
 }
 
-func (t *tokenizer) Generate(email string, offset int) (string, error) {
+func (t *tokenizer) Generate(email string, offset int) (string, errors.Error) {
 	exp := t.tokenDuration + offset
 	if exp < 0 {
 		exp = 0
@@ -52,11 +52,11 @@ func (t *tokenizer) Generate(email string, offset int) (string, error) {
 
 	// Sign and get the complete encoded token as a string using the secret
 	tokenString, err := token.SignedString(t.hmacSampleSecret)
-	return tokenString, err
+	return tokenString, errors.Cast(err)
 }
 
 // Verify verifies token validity
-func (t *tokenizer) Verify(tok string) (string, error) {
+func (t *tokenizer) Verify(tok string) (string, errors.Error) {
 	email := ""
 	token, err := jwt.Parse(tok, func(token *jwt.Token) (interface{}, error) {
 		// Don't forget to validate the alg is what you expect:
@@ -69,7 +69,7 @@ func (t *tokenizer) Verify(tok string) (string, error) {
 	})
 
 	if err != nil {
-		return email, err
+		return email, errors.Cast(err)
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {

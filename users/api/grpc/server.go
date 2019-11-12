@@ -37,12 +37,12 @@ func (s *grpcServer) Identify(ctx context.Context, token *mainflux.Token) (*main
 	if err != nil {
 		return nil, encodeError(errors.Cast(err))
 	}
-	return res.(*mainflux.UserID), errors.Empty()
+	return res.(*mainflux.UserID), nil
 }
 
 func decodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*mainflux.Token)
-	return identityReq{req.GetValue()}, errors.Empty()
+	return identityReq{req.GetValue()}, nil
 }
 
 func encodeIdentifyResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
@@ -51,8 +51,8 @@ func encodeIdentifyResponse(_ context.Context, grpcRes interface{}) (interface{}
 }
 
 func encodeError(err errors.Error) error {
-	if err.IsEmpty() {
-		return errors.Empty()
+	if err == nil {
+		return nil
 	}
 
 	switch {

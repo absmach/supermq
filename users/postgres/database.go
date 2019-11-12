@@ -5,6 +5,9 @@ import (
 	"database/sql"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
+	"github.com/mainflux/mainflux/errors"
+	"github.com/mainflux/mainflux/users"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -16,10 +19,10 @@ type database struct {
 
 // Database provides a database interface
 type Database interface {
-	NamedExecContext(context.Context, string, interface{}) (sql.Result, error)
+	NamedExecContext(context.Context, string, interface{}) (sql.Result, errors.Error)
 	QueryRowxContext(context.Context, string, ...interface{}) *sqlx.Row
-	NamedQueryContext(context.Context, string, interface{}) (*sqlx.Rows, error)
-	GetContext(context.Context, interface{}, string, ...interface{}) error
+	NamedQueryContext(context.Context, string, interface{}) (*sqlx.Rows, errors.Error)
+	GetContext(context.Context, interface{}, string, ...interface{}) errors.Error
 }
 
 // NewDatabase creates a ThingDatabase instance
@@ -29,24 +32,33 @@ func NewDatabase(db *sqlx.DB) Database {
 	}
 }
 
-func (dm database) NamedExecContext(ctx context.Context, query string, args interface{}) (sql.Result, error) {
+func (dm database) NamedExecContext(ctx context.Context, query string, args interface{}) (sql.Result, errors.Error) {
 	addSpanTags(ctx, query)
-	return dm.db.NamedExecContext(ctx, query, args)
+	println(query)
+	result, err := dm.db.NamedExecContext(ctx, query, args)
+	if pqErr, ok := err.(*pq.Error); ok && errDuplicate == pqErr.Code.Name() {
+		return result, errors.Wrap(users.ErrConflict, errors.Cast(err))
+	}
+	return result, errors.Cast(err)
 }
 
 func (dm database) QueryRowxContext(ctx context.Context, query string, args ...interface{}) *sqlx.Row {
 	addSpanTags(ctx, query)
+	println(query)
 	return dm.db.QueryRowxContext(ctx, query, args...)
 }
 
-func (dm database) NamedQueryContext(ctx context.Context, query string, args interface{}) (*sqlx.Rows, error) {
+func (dm database) NamedQueryContext(ctx context.Context, query string, args interface{}) (*sqlx.Rows, errors.Error) {
 	addSpanTags(ctx, query)
-	return dm.db.NamedQueryContext(ctx, query, args)
+	println(query)
+	result, err := dm.db.NamedQueryContext(ctx, query, args)
+	return result, errors.Cast(err)
 }
 
-func (dm database) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
+func (dm database) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) errors.Error {
 	addSpanTags(ctx, query)
-	return dm.db.GetContext(ctx, dest, query, args...)
+	println(query)
+	return errors.Cast((dm.db.GetContext(ctx, dest, query, args...)))
 }
 
 func addSpanTags(ctx context.Context, query string) {

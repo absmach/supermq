@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/users"
 	"github.com/mainflux/mainflux/users/postgres"
 	"github.com/stretchr/testify/assert"
@@ -29,7 +28,8 @@ func TestUserSave(t *testing.T) {
 				Email:    email,
 				Password: "pass",
 			},
-			err: errors.Empty(),
+			// err: errors.Empty(),
+			err: nil,
 		},
 		{
 			desc: "duplicate user",
@@ -59,13 +59,15 @@ func TestSingleUserRetrieval(t *testing.T) {
 		Email:    email,
 		Password: "pass",
 	})
-	require.True(t, err.IsEmpty(), fmt.Sprintf("unexpected error: %s", err))
+	// require.True(t, err.IsEmpty(), fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	cases := map[string]struct {
 		email string
 		err   error
 	}{
-		"existing user":     {email, errors.Empty()},
+		// "existing user":     {email, errors.Empty()},
+		"existing user":     {email, nil},
 		"non-existing user": {"unknown@example.com", users.ErrNotFound},
 	}
 

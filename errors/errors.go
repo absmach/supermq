@@ -18,9 +18,6 @@ type Error interface {
 	// in argument. If not it continues to examin in next
 	// layers of Error until it founds it or unwrap every layers
 	Contains(error) bool
-
-	//IsEmpty check if Error is empty
-	IsEmpty() bool
 }
 
 var _ Error = (*customError)(nil)
@@ -41,13 +38,6 @@ func (ce customError) Error() string {
 
 func (ce customError) Msg() string {
 	return ce.msg
-}
-
-func (ce customError) IsEmpty() bool {
-	if ce.Msg() == "" {
-		return true
-	}
-	return false
 }
 
 func (ce customError) Contains(e error) bool {
@@ -75,7 +65,8 @@ func Wrap(wrapper Error, err Error) Error {
 // Cast returns Error type with message of given error
 func Cast(err error) Error {
 	if err == nil {
-		return Empty()
+		// return Empty()
+		return nil
 	}
 	return New(err.Error())
 }
@@ -86,9 +77,4 @@ func New(text string) Error {
 		msg: text,
 		err: nil,
 	}
-}
-
-// Empty returns a new empty Error
-func Empty() Error {
-	return New("")
 }
