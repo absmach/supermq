@@ -224,7 +224,7 @@ func (tr thingRepository) RetrieveAll(ctx context.Context, owner string, offset,
 	case "":
 		switch metadata {
 		case nil:
-			cq = fmt.Sprintf("%s %s", cq, ";")
+			cq = fmt.Sprintf("%s;", cq)
 			if err := tr.db.GetContext(ctx, &total, cq, owner); err != nil {
 				return things.ThingsPage{}, err
 			}

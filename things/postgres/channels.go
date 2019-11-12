@@ -155,7 +155,7 @@ func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, offse
 	case "":
 		switch metadata {
 		case nil:
-			cq = fmt.Sprintf("%s %s", cq, ";")
+			cq = fmt.Sprintf("%s;", cq)
 			if err := cr.db.GetContext(ctx, &total, cq, owner); err != nil {
 				return things.ChannelsPage{}, err
 			}
