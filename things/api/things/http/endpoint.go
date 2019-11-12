@@ -453,6 +453,22 @@ func connectEndpoint(svc things.Service) endpoint.Endpoint {
 	}
 }
 
+func createConnectionsEndpoint(svc things.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		cr := request.(createConnectionsReq)
+
+		if err := cr.validate(); err != nil {
+			return nil, err
+		}
+
+		if err := svc.Connect(ctx, cr.token, cr.ChanID, cr.ThingIDs...); err != nil {
+			return nil, err
+		}
+
+		return createConnectionsRes{}, nil
+	}
+}
+
 func disconnectEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		cr := request.(connectionReq)

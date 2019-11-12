@@ -1840,6 +1840,117 @@ func TestConnect(t *testing.T) {
 	}
 }
 
+func TestCreateConnections(t *testing.T) {
+	otherToken := "other_token"
+	otherEmail := "other_user@example.com"
+	svc := newService(map[string]string{
+		token:      email,
+		otherToken: otherEmail,
+	})
+	ts := newServer(svc)
+	defer ts.Close()
+
+	sths, _ := svc.CreateThings(context.Background(), token, thing)
+	ths := []string{}
+	for _, th := range sths {
+		ths = append(ths, th.ID)
+	}
+
+	schs, _ := svc.CreateChannels(context.Background(), token, channel)
+	ach := schs[0]
+	schs, _ = svc.CreateChannels(context.Background(), otherToken, channel)
+	bch := schs[0]
+
+	cases := []struct {
+		desc     string
+		chanID   string
+		thingIDs []string
+		auth     string
+		status   int
+	}{
+		{
+			desc:     "connect existing things to existing channel",
+			chanID:   ach.ID,
+			thingIDs: ths,
+			auth:     token,
+			status:   http.StatusOK,
+		},
+		{
+			desc:     "connect existing things to non-existent channel",
+			chanID:   strconv.FormatUint(wrongID, 10),
+			thingIDs: ths,
+			auth:     token,
+			status:   http.StatusNotFound,
+		},
+		{
+			desc:     "connect non-existing things to existing channel",
+			chanID:   ach.ID,
+			thingIDs: []string{strconv.FormatUint(wrongID, 10)},
+			auth:     token,
+			status:   http.StatusNotFound,
+		},
+		{
+			desc:     "connect existing things to channel with invalid id",
+			chanID:   "invalid",
+			thingIDs: ths,
+			auth:     token,
+			status:   http.StatusNotFound,
+		},
+		{
+			desc:     "connect things with invalid id to existing channel",
+			chanID:   ach.ID,
+			thingIDs: []string{"invalid"},
+			auth:     token,
+			status:   http.StatusNotFound,
+		},
+		{
+			desc:     "connect existing things to existing channel with invalid token",
+			chanID:   ach.ID,
+			thingIDs: ths,
+			auth:     wrongValue,
+			status:   http.StatusForbidden,
+		},
+		{
+			desc:     "connect existing things to existing channel with empty token",
+			chanID:   ach.ID,
+			thingIDs: ths,
+			auth:     "",
+			status:   http.StatusForbidden,
+		},
+		{
+			desc:     "connect things from owner to channel of other user",
+			chanID:   bch.ID,
+			thingIDs: ths,
+			auth:     token,
+			status:   http.StatusNotFound,
+		},
+	}
+
+	for _, tc := range cases {
+		data := struct {
+			ChanID   string
+			ThingIDs []string
+		}{
+			tc.chanID,
+			tc.thingIDs,
+		}
+		body := toJSON(data)
+
+		req := testRequest{
+			client:      ts.Client(),
+			method:      http.MethodPost,
+			url:         fmt.Sprintf("%s/connect", ts.URL),
+			contentType: contentType,
+			token:       tc.auth,
+			body:        strings.NewReader(body),
+		}
+
+		res, err := req.make()
+		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
+	}
+}
+
 func TestDisconnnect(t *testing.T) {
 	otherToken := "other_token"
 	otherEmail := "other_user@example.com"

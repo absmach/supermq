@@ -220,10 +220,26 @@ func (res connectionRes) Code() int {
 }
 
 func (res connectionRes) Headers() map[string]string {
-	return map[string]string{}
+	return map[string]string{
+		"Warning-Deprecated": "This endpoint will be depreciated in 0.11.0. It will be replaced with the bulk endpoint found at /connect.",
+	}
 }
 
 func (res connectionRes) Empty() bool {
+	return true
+}
+
+type createConnectionsRes struct{}
+
+func (res createConnectionsRes) Code() int {
+	return http.StatusOK
+}
+
+func (res createConnectionsRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res createConnectionsRes) Empty() bool {
 	return true
 }
 
