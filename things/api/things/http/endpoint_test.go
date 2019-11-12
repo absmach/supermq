@@ -1928,8 +1928,8 @@ func TestCreateConnections(t *testing.T) {
 
 	for _, tc := range cases {
 		data := struct {
-			ChanID   string
-			ThingIDs []string
+			ChanID   string   `json:"chanID"`
+			ThingIDs []string `json:"thingIDs"`
 		}{
 			tc.chanID,
 			tc.thingIDs,
