@@ -149,22 +149,34 @@ func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, offse
 		items = append(items, ch)
 	}
 
-	cq := ""
-	if name != "" {
-		cq = `AND LOWER(name) LIKE $2`
-	}
-
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM channels WHERE owner = $1 %s;`, cq)
-
 	total := uint64(0)
+	cq := `SELECT COUNT(*) FROM channels WHERE owner = $1`
 	switch name {
 	case "":
-		if err := cr.db.GetContext(ctx, &total, q, owner); err != nil {
-			return things.ChannelsPage{}, err
+		switch metadata {
+		case nil:
+			cq = fmt.Sprintf("%s %s", cq, ";")
+			if err := cr.db.GetContext(ctx, &total, cq, owner); err != nil {
+				return things.ChannelsPage{}, err
+			}
+		default:
+			cq = fmt.Sprintf("%s %s", cq, "AND metadata @> $2;")
+			if err := cr.db.GetContext(ctx, &total, cq, owner, m); err != nil {
+				return things.ChannelsPage{}, err
+			}
 		}
 	default:
-		if err := cr.db.GetContext(ctx, &total, q, owner, name); err != nil {
-			return things.ChannelsPage{}, err
+		switch metadata {
+		case nil:
+			cq = fmt.Sprintf("%s %s", cq, "AND name LIKE $2;")
+			if err := cr.db.GetContext(ctx, &total, cq, owner, name); err != nil {
+				return things.ChannelsPage{}, err
+			}
+		default:
+			cq = fmt.Sprintf("%s %s", cq, "AND name LIKE $2 AND metadata @> $3;")
+			if err := cr.db.GetContext(ctx, &total, cq, owner, name, m); err != nil {
+				return things.ChannelsPage{}, err
+			}
 		}
 	}
 
