@@ -412,7 +412,7 @@ func getNameQuery(name string) (string, string) {
 	nq := ""
 	if name != "" {
 		name = fmt.Sprintf(`%%%s%%`, name)
-		nq = ` AND LOWER(name) LIKE :name`
+		nq = ` AND name LIKE :name`
 	}
 	return nq, name
 }
