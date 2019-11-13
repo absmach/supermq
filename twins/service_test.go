@@ -37,9 +37,9 @@ func newService(tokens map[string]string) twins.Service {
 	twinsRepo := mocks.NewTwinRepository()
 	idp := mocks.NewIdentityProvider()
 
-	opts := mqtt.NewClientOptions()
-
 	nc, _ := broker.Connect(natsURL)
+
+	opts := mqtt.NewClientOptions()
 	mc := mqtt.NewClient(opts)
 
 	return twins.New("secret", nc, mc, users, twinsRepo, idp)

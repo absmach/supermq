@@ -13,7 +13,7 @@ import (
 )
 
 // Twin represents a Mainflux thing digital twin. Each twin is owned by one thing, and
-// it is assigned with the unique identifier and (temporary) access key.
+// is assigned with the unique identifier and (temporary) access key.
 type Twin struct {
 	ID         string
 	Key        string
@@ -37,7 +37,7 @@ type SetMetadata struct {
 	Name  string
 }
 
-// TwinsSet contains page related metadata as well as list of twins that
+// TwinsSet contains page related metadata as well as a list of twins that
 // belong to this page.
 type TwinsSet struct {
 	SetMetadata
