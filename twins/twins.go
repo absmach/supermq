@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+type Metadata map[string]interface{}
+
 // Twin represents a Mainflux thing digital twin. Each twin is owned by one thing, and
 // is assigned with the unique identifier and (temporary) access key.
 type Twin struct {
@@ -27,7 +29,7 @@ type Twin struct {
 	state      map[string]interface{}
 	topic      string
 	revision   int
-	Metadata   map[string]interface{}
+	Metadata   Metadata
 }
 
 // SetMetadata contains page metadata that helps navigation.
@@ -65,7 +67,7 @@ type TwinRepository interface {
 	RetrieveByKey(context.Context, string) (string, error)
 
 	// RetrieveAll retrieves the subset of things owned by the specified user.
-	RetrieveAll(context.Context, string, uint64, string, SetMetadata) (TwinsSet, error)
+	RetrieveAll(context.Context, string, uint64, string, Metadata) (TwinsSet, error)
 
 	// RetrieveByChannel retrieves the subset of twins
 	// connected to specified channel.

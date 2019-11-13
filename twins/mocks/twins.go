@@ -120,7 +120,7 @@ func (trm *twinRepositoryMock) RetrieveByKey(_ context.Context, key string) (str
 	return "", twins.ErrNotFound
 }
 
-func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, limit uint64, name string, metadata twins.SetMetadata) (twins.TwinsSet, error) {
+func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, limit uint64, name string, metadata twins.Metadata) (twins.TwinsSet, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 

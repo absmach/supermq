@@ -20,6 +20,7 @@ import (
 	"github.com/mainflux/mainflux/twins/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -324,6 +325,102 @@ func TestTwinRetrieveByID(t *testing.T) {
 	for _, tc := range cases {
 		_, err := repo.RetrieveByID(context.Background(), email, tc.id)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+	}
+}
+
+func TestTwinRetrieveAll(t *testing.T) {
+	email := "twin-multi-retrieval@example.com"
+	name := "mainflux"
+	metadata := make(twins.Metadata)
+	metadata["serial"] = "123456"
+	metadata["type"] = "test"
+	idp := uuid.New()
+
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
+	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
+
+	db := client.Database(testDB)
+	db.Collection(collection).DeleteMany(context.Background(), bson.D{})
+
+	twinRepo := mongodb.NewTwinRepository(db)
+
+	n := uint64(10)
+	for i := uint64(0); i < n; i++ {
+		twid, err := idp.ID()
+		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+		twkey, err := idp.ID()
+		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+		tw := twins.Twin{
+			Owner:    email,
+			ID:       twid,
+			Key:      twkey,
+			Metadata: metadata,
+		}
+
+		// Create first two Twins with name.
+		if i < 2 {
+			tw.Name = name
+		}
+
+		twinRepo.Save(context.Background(), tw)
+	}
+
+	cases := map[string]struct {
+		owner    string
+		limit    uint64
+		name     string
+		size     uint64
+		total    uint64
+		metadata map[string]interface{}
+	}{
+		"retrieve all twins with existing owner": {
+			owner: email,
+			limit: n,
+			size:  n,
+			total: n,
+		},
+		"retrieve subset of twins with existing owner": {
+			owner: email,
+			limit: n / 2,
+			size:  n / 2,
+			total: n,
+		},
+		"retrieve twins with non-existing owner": {
+			owner: wrongValue,
+			limit: n,
+			size:  0,
+			total: 0,
+		},
+		"retrieve twins with existing name": {
+			owner: email,
+			limit: 1,
+			name:  name,
+			size:  1,
+			total: 2,
+		},
+		"retrieve twins with non-existing name": {
+			owner: email,
+			limit: n,
+			name:  "wrong",
+			size:  0,
+			total: 0,
+		},
+		"retrieve twins with metadata": {
+			owner:    email,
+			limit:    n,
+			size:     n,
+			total:    n,
+			metadata: metadata,
+		},
+	}
+
+	for desc, tc := range cases {
+		page, err := twinRepo.RetrieveAll(context.Background(), tc.owner, tc.limit, tc.name, tc.metadata)
+		size := uint64(len(page.Twins))
+		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
+		assert.Equal(t, tc.total, page.Total, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.total, page.Total))
+		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
 	}
 }
 

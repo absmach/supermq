@@ -152,13 +152,22 @@ func decodeDocuments(ctx context.Context, cur *mongo.Cursor) ([]twins.Twin, erro
 	return results, nil
 }
 
-func (tr *twinRepository) RetrieveAll(ctx context.Context, owner string, limit uint64, name string, metadata twins.SetMetadata) (twins.TwinsSet, error) {
+func (tr *twinRepository) RetrieveAll(ctx context.Context, owner string, limit uint64, name string, metadata twins.Metadata) (twins.TwinsSet, error) {
 	coll := tr.db.Collection(collectionName)
 
 	findOptions := options.Find()
 	findOptions.SetLimit((int64)(limit))
 
 	filter := bson.D{}
+	if owner != "" {
+		filter = append(filter, bson.E{"owner", owner})
+	}
+	if name != "" {
+		filter = append(filter, bson.E{"name", name})
+	}
+	if metadata != nil {
+		filter = append(filter, bson.E{"metadata", metadata})
+	}
 	cur, err := coll.Find(ctx, filter, findOptions)
 	if err != nil {
 		return twins.TwinsSet{}, err

@@ -41,7 +41,7 @@ func Subscribe(nc *nats.Conn, tr twins.TwinRepository, logger log.Logger) {
 }
 
 func (ps pubsub) handleMsg(m *nats.Msg) {
-	var msg mainflux.RawMessage
+	var msg mainflux.Message
 	if err := proto.Unmarshal(m.Data, &msg); err != nil {
 		ps.logger.Warn(fmt.Sprintf("Unmarshalling failed: %s", err))
 		return
@@ -60,7 +60,7 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 	}
 }
 
-func (ps pubsub) publish(msg mainflux.RawMessage, twin *twins.Twin) error {
+func (ps pubsub) publish(msg mainflux.Message, twin *twins.Twin) error {
 	data, err := json.Marshal(msg)
 	if err != nil {
 		ps.logger.Warn(fmt.Sprintf("Marshalling failed: %s", err))
