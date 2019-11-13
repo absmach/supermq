@@ -44,16 +44,15 @@ type Service interface {
 	// AddTwin adds new twin to the user identified by the provided key.
 	AddTwin(context.Context, string, Twin) (Twin, error)
 
-	// UpdateTwin updates the twin identified by the provided ID, that
+	// UpdateTwin updates twin identified by the provided Twin that
 	// belongs to the user identified by the provided key.
 	UpdateTwin(context.Context, string, Twin) error
 
-	// UpdateKey updates key value of the existing twin. A non-nil error is
-	// returned to indicate operation failure.
+	// UpdateKey updates key value of the existing twin.
 	UpdateKey(context.Context, string, string, string) error
 
-	// ViewTwin retrieves data about the twin identified with the provided
-	// ID, that belongs to the user identified by the provided key.
+	// ViewTwin retrieves data about twin with the provided
+	// ID belonging to the user identified by the provided key.
 	ViewTwin(context.Context, string, string) (Twin, error)
 
 	// ListTwinsByChannel retrieves data about subset of twins that are
@@ -126,6 +125,11 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin) (T
 
 	twin.ID = id
 
+	b, err := json.Marshal(twin)
+	if ts.publish(twin.thingID, "create/success", b); err != nil {
+		return Twin{}, err
+	}
+
 	return twin, nil
 }
 
@@ -157,6 +161,16 @@ func (ts *twinsService) UpdateKey(ctx context.Context, token, id, key string) er
 	}
 
 	if err := ts.twins.UpdateKey(ctx, res.GetValue(), id, key); err != nil {
+		return err
+	}
+
+	twin, err := ts.twins.RetrieveByID(ctx, res.GetValue(), id)
+	if err != nil {
+		return err
+	}
+
+	b, err := json.Marshal(twin)
+	if ts.publish(twin.thingID, "update/success", b); err != nil {
 		return err
 	}
 

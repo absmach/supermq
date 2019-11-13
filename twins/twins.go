@@ -37,7 +37,7 @@ type SetMetadata struct {
 	Name  string
 }
 
-// TwinsSet contains page related metadata as well as list of twins that
+// TwinsSet contains page related metadata as well as a list of twins that
 // belong to this page.
 type TwinsSet struct {
 	SetMetadata
