@@ -218,23 +218,7 @@ func (tr thingRepository) RetrieveAll(ctx context.Context, owner string, offset,
 		items = append(items, th)
 	}
 
-	cq := `SELECT COUNT(*) FROM things WHERE owner = :owner`
-	switch name {
-	case "":
-		switch metadata {
-		case nil:
-			cq = fmt.Sprintf("%s;", cq)
-		default:
-			cq = fmt.Sprintf("%s %s", cq, "AND metadata @> :metadata;")
-		}
-	default:
-		switch metadata {
-		case nil:
-			cq = fmt.Sprintf("%s %s", cq, "AND name LIKE :name;")
-		default:
-			cq = fmt.Sprintf("%s %s", cq, "AND name LIKE :name AND metadata @> :metadata;")
-		}
-	}
+	cq := fmt.Sprintf(`SELECT COUNT(*) FROM things WHERE owner = :owner %s%s;`, nq, mq)
 
 	total, err := total(ctx, tr.db, cq, params)
 	if err != nil {

@@ -155,23 +155,7 @@ func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, offse
 		items = append(items, ch)
 	}
 
-	cq := `SELECT COUNT(*) FROM channels WHERE owner = :owner`
-	switch name {
-	case "":
-		switch metadata {
-		case nil:
-			cq = fmt.Sprintf("%s;", cq)
-		default:
-			cq = fmt.Sprintf("%s %s", cq, "AND metadata @> :metadata;")
-		}
-	default:
-		switch metadata {
-		case nil:
-			cq = fmt.Sprintf("%s %s", cq, "AND name LIKE :name;")
-		default:
-			cq = fmt.Sprintf("%s %s", cq, "AND name LIKE :name AND metadata @> :metadata;")
-		}
-	}
+	cq := fmt.Sprintf(`SELECT COUNT(*) FROM channels WHERE owner = :owner %s%s;`, nq, mq)
 
 	total, err := total(ctx, cr.db, cq, params)
 	if err != nil {
