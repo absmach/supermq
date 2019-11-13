@@ -57,7 +57,7 @@ type Service interface {
 
 	// ListTwins retrieves data about subset of twins that belongs to the
 	// user identified by the provided key.
-	ListTwins(context.Context, string, uint64, string, SetMetadata) (TwinsSet, error)
+	ListTwins(context.Context, string, uint64, string, Metadata) (TwinsSet, error)
 
 	// ListTwinsByChannel retrieves data about subset of twins that are
 	// connected to specified channel and belong to the user identified by
@@ -200,7 +200,7 @@ func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (Twin, e
 	return twin, nil
 }
 
-func (ts *twinsService) ListTwins(ctx context.Context, token string, limit uint64, name string, metadata SetMetadata) (TwinsSet, error) {
+func (ts *twinsService) ListTwins(ctx context.Context, token string, limit uint64, name string, metadata Metadata) (TwinsSet, error) {
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return TwinsSet{}, ErrUnauthorizedAccess
