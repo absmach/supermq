@@ -173,7 +173,7 @@ func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, offse
 		}
 	}
 
-	total, err := cr.total(ctx, cq, params)
+	total, err := total(ctx, cr.db, cq, params)
 	if err != nil {
 		return things.ChannelsPage{}, err
 	}
@@ -448,8 +448,8 @@ func getMetadataQuery(m things.Metadata) ([]byte, string, error) {
 	return mb, mq, nil
 }
 
-func (cr channelRepository) total(ctx context.Context, query string, params map[string]interface{}) (uint64, error) {
-	rows, err := cr.db.NamedQueryContext(ctx, query, params)
+func total(ctx context.Context, db Database, query string, params map[string]interface{}) (uint64, error) {
+	rows, err := db.NamedQueryContext(ctx, query, params)
 	if err != nil {
 		return 0, err
 	}

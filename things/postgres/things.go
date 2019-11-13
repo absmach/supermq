@@ -236,7 +236,7 @@ func (tr thingRepository) RetrieveAll(ctx context.Context, owner string, offset,
 		}
 	}
 
-	total, err := tr.total(ctx, cq, params)
+	total, err := total(ctx, tr.db, cq, params)
 	if err != nil {
 		return things.ThingsPage{}, err
 	}
@@ -367,20 +367,4 @@ func toThing(dbth dbThing) (things.Thing, error) {
 		Key:      dbth.Key,
 		Metadata: metadata,
 	}, nil
-}
-
-func (tr thingRepository) total(ctx context.Context, query string, params map[string]interface{}) (uint64, error) {
-	rows, err := tr.db.NamedQueryContext(ctx, query, params)
-	if err != nil {
-		return 0, err
-	}
-
-	total := uint64(0)
-	if rows.Next() {
-		if err := rows.Scan(&total); err != nil {
-			return 0, err
-		}
-	}
-
-	return total, nil
 }
