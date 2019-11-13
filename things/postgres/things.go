@@ -377,8 +377,7 @@ func (tr thingRepository) total(ctx context.Context, query string, params map[st
 
 	total := uint64(0)
 	if rows.Next() {
-		err := rows.Scan(&total)
-		if err != nil {
+		if err := rows.Scan(&total); err != nil {
 			return 0, err
 		}
 	}
