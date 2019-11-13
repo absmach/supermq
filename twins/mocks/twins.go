@@ -9,8 +9,10 @@ package mocks
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/mainflux/mainflux/twins"
@@ -116,6 +118,43 @@ func (trm *twinRepositoryMock) RetrieveByKey(_ context.Context, key string) (str
 	}
 
 	return "", twins.ErrNotFound
+}
+
+func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, limit uint64, name string, metadata twins.SetMetadata) (twins.TwinsSet, error) {
+	trm.mu.Lock()
+	defer trm.mu.Unlock()
+
+	items := make([]twins.Twin, 0)
+
+	if limit <= 0 {
+		return twins.TwinsSet{}, nil
+	}
+
+	last := uint64(limit)
+
+	// This obscure way to examine map keys is enforced by the key structure
+	// itself (see mocks/commons.go).
+	prefix := fmt.Sprintf("%s-", owner)
+	for k, v := range trm.twins {
+		id, _ := strconv.ParseUint(v.ID, 10, 64)
+		if strings.HasPrefix(k, prefix) && id < last {
+			items = append(items, v)
+		}
+	}
+
+	sort.SliceStable(items, func(i, j int) bool {
+		return items[i].ID < items[j].ID
+	})
+
+	page := twins.TwinsSet{
+		Twins: items,
+		SetMetadata: twins.SetMetadata{
+			Total: trm.counter,
+			Limit: limit,
+		},
+	}
+
+	return page, nil
 }
 
 func (trm *twinRepositoryMock) RetrieveByChannel(_ context.Context, chanID string, limit uint64) (twins.TwinsSet, error) {

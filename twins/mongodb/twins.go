@@ -135,6 +135,54 @@ func (tr *twinRepository) RetrieveByKey(_ context.Context, key string) (string, 
 	return tw.ID, nil
 }
 
+func decodeDocuments(ctx context.Context, cur *mongo.Cursor) ([]twins.Twin, error) {
+	defer cur.Close(ctx)
+	var results []twins.Twin
+	for cur.Next(ctx) {
+		var elem twins.Twin
+		err := cur.Decode(&elem)
+		if err != nil {
+			return []twins.Twin{}, nil
+		}
+		results = append(results, elem)
+	}
+	if err := cur.Err(); err != nil {
+		return []twins.Twin{}, nil
+	}
+	return results, nil
+}
+
+func (tr *twinRepository) RetrieveAll(ctx context.Context, owner string, limit uint64, name string, metadata twins.SetMetadata) (twins.TwinsSet, error) {
+	coll := tr.db.Collection(collectionName)
+
+	findOptions := options.Find()
+	findOptions.SetLimit((int64)(limit))
+
+	filter := bson.D{}
+	cur, err := coll.Find(ctx, filter, findOptions)
+	if err != nil {
+		return twins.TwinsSet{}, err
+	}
+
+	results, err := decodeDocuments(ctx, cur)
+	if err != nil {
+		return twins.TwinsSet{}, err
+	}
+
+	total, err := coll.CountDocuments(ctx, filter)
+	if err != nil {
+		return twins.TwinsSet{}, err
+	}
+
+	return twins.TwinsSet{
+		Twins: results,
+		SetMetadata: twins.SetMetadata{
+			Total: (uint64)(total),
+			Limit: limit,
+		},
+	}, nil
+}
+
 func (tr *twinRepository) RetrieveByChannel(ctx context.Context, channel string, limit uint64) (twins.TwinsSet, error) {
 	if err := uuid.New().IsValid(channel); err != nil {
 		return twins.TwinsSet{}, twins.ErrNotFound
@@ -151,19 +199,10 @@ func (tr *twinRepository) RetrieveByChannel(ctx context.Context, channel string,
 		return twins.TwinsSet{}, err
 	}
 
-	var results []twins.Twin
-	for cur.Next(ctx) {
-		var elem twins.Twin
-		err := cur.Decode(&elem)
-		if err != nil {
-			return twins.TwinsSet{}, err
-		}
-		results = append(results, elem)
-	}
-	if err := cur.Err(); err != nil {
+	results, err := decodeDocuments(ctx, cur)
+	if err != nil {
 		return twins.TwinsSet{}, err
 	}
-	cur.Close(ctx)
 
 	total, err := coll.CountDocuments(ctx, filter)
 	if err != nil {
