@@ -218,35 +218,27 @@ func (tr thingRepository) RetrieveAll(ctx context.Context, owner string, offset,
 		items = append(items, th)
 	}
 
-	total := uint64(0)
-	cq := `SELECT COUNT(*) FROM things WHERE owner = $1`
+	cq := `SELECT COUNT(*) FROM things WHERE owner = :owner`
 	switch name {
 	case "":
 		switch metadata {
 		case nil:
 			cq = fmt.Sprintf("%s;", cq)
-			if err := tr.db.GetContext(ctx, &total, cq, owner); err != nil {
-				return things.ThingsPage{}, err
-			}
 		default:
-			cq = fmt.Sprintf("%s %s", cq, "AND metadata @> $2;")
-			if err := tr.db.GetContext(ctx, &total, cq, owner, m); err != nil {
-				return things.ThingsPage{}, err
-			}
+			cq = fmt.Sprintf("%s %s", cq, "AND metadata @> :metadata;")
 		}
 	default:
 		switch metadata {
 		case nil:
-			cq = fmt.Sprintf("%s %s", cq, "AND name LIKE $2;")
-			if err := tr.db.GetContext(ctx, &total, cq, owner, name); err != nil {
-				return things.ThingsPage{}, err
-			}
+			cq = fmt.Sprintf("%s %s", cq, "AND name LIKE :name;")
 		default:
-			cq = fmt.Sprintf("%s %s", cq, "AND name LIKE $2 AND metadata @> $3;")
-			if err := tr.db.GetContext(ctx, &total, cq, owner, name, m); err != nil {
-				return things.ThingsPage{}, err
-			}
+			cq = fmt.Sprintf("%s %s", cq, "AND name LIKE :name AND metadata @> :metadata;")
 		}
+	}
+
+	total, err := tr.total(ctx, cq, params)
+	if err != nil {
+		return things.ThingsPage{}, err
 	}
 
 	page := things.ThingsPage{
@@ -375,4 +367,21 @@ func toThing(dbth dbThing) (things.Thing, error) {
 		Key:      dbth.Key,
 		Metadata: metadata,
 	}, nil
+}
+
+func (tr thingRepository) total(ctx context.Context, query string, params map[string]interface{}) (uint64, error) {
+	rows, err := tr.db.NamedQueryContext(ctx, query, params)
+	if err != nil {
+		return 0, err
+	}
+
+	total := uint64(0)
+	if rows.Next() {
+		err := rows.Scan(&total)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	return total, nil
 }

@@ -22,6 +22,12 @@ type channelRepository struct {
 	db Database
 }
 
+type dbConnection struct {
+	Channel string `db:"channel"`
+	Thing   string `db:"thing"`
+	Owner   string `db:"owner"`
+}
+
 // NewChannelRepository instantiates a PostgreSQL implementation of channel
 // repository.
 func NewChannelRepository(db Database) things.ChannelRepository {
@@ -149,35 +155,27 @@ func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, offse
 		items = append(items, ch)
 	}
 
-	total := uint64(0)
-	cq := `SELECT COUNT(*) FROM channels WHERE owner = $1`
+	cq := `SELECT COUNT(*) FROM channels WHERE owner = :owner`
 	switch name {
 	case "":
 		switch metadata {
 		case nil:
 			cq = fmt.Sprintf("%s;", cq)
-			if err := cr.db.GetContext(ctx, &total, cq, owner); err != nil {
-				return things.ChannelsPage{}, err
-			}
 		default:
-			cq = fmt.Sprintf("%s %s", cq, "AND metadata @> $2;")
-			if err := cr.db.GetContext(ctx, &total, cq, owner, m); err != nil {
-				return things.ChannelsPage{}, err
-			}
+			cq = fmt.Sprintf("%s %s", cq, "AND metadata @> :metadata;")
 		}
 	default:
 		switch metadata {
 		case nil:
-			cq = fmt.Sprintf("%s %s", cq, "AND name LIKE $2;")
-			if err := cr.db.GetContext(ctx, &total, cq, owner, name); err != nil {
-				return things.ChannelsPage{}, err
-			}
+			cq = fmt.Sprintf("%s %s", cq, "AND name LIKE :name;")
 		default:
-			cq = fmt.Sprintf("%s %s", cq, "AND name LIKE $2 AND metadata @> $3;")
-			if err := cr.db.GetContext(ctx, &total, cq, owner, name, m); err != nil {
-				return things.ChannelsPage{}, err
-			}
+			cq = fmt.Sprintf("%s %s", cq, "AND name LIKE :name AND metadata @> :metadata;")
 		}
+	}
+
+	total, err := cr.total(ctx, cq, params)
+	if err != nil {
+		return things.ChannelsPage{}, err
 	}
 
 	page := things.ChannelsPage{
@@ -450,8 +448,19 @@ func getMetadataQuery(m things.Metadata) ([]byte, string, error) {
 	return mb, mq, nil
 }
 
-type dbConnection struct {
-	Channel string `db:"channel"`
-	Thing   string `db:"thing"`
-	Owner   string `db:"owner"`
+func (cr channelRepository) total(ctx context.Context, query string, params map[string]interface{}) (uint64, error) {
+	rows, err := cr.db.NamedQueryContext(ctx, query, params)
+	if err != nil {
+		return 0, err
+	}
+
+	total := uint64(0)
+	if rows.Next() {
+		err := rows.Scan(&total)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	return total, nil
 }
