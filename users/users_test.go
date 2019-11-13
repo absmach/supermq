@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/users"
 	"github.com/stretchr/testify/assert"
 )
@@ -28,7 +27,7 @@ func TestValidate(t *testing.T) {
 				Email:    email,
 				Password: password,
 			},
-			err: errors.Empty(),
+			err: nil,
 		},
 		"validate user with empty email": {
 			user: users.User{
@@ -55,7 +54,7 @@ func TestValidate(t *testing.T) {
 
 	for desc, tc := range cases {
 		err := tc.user.Validate()
-		assert.True(t, err.Contains(tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
-
+		// assert.True(t, err.Contains(tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s", desc, tc.err, err))
 	}
 }

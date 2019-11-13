@@ -44,7 +44,7 @@ func TestRegister(t *testing.T) {
 		{
 			desc: "register new user",
 			user: user,
-			err:  errors.Empty(),
+			err:  nil,
 		},
 		{
 			desc: "register existing user",
@@ -63,7 +63,8 @@ func TestRegister(t *testing.T) {
 
 	for _, tc := range cases {
 		err := svc.Register(context.Background(), tc.user)
-		assert.True(t, err.Contains(tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		// assert.True(t, err.Contains(tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
@@ -77,7 +78,7 @@ func TestLogin(t *testing.T) {
 	}{
 		"login with good credentials": {
 			user: user,
-			err:  errors.Empty(),
+			err:  nil,
 		},
 		"login with wrong e-mail": {
 			user: users.User{
@@ -110,7 +111,7 @@ func TestIdentify(t *testing.T) {
 		key string
 		err error
 	}{
-		"valid token's identity":   {key, errors.Empty()},
+		"valid token's identity":   {key, nil},
 		"invalid token's identity": {"", users.ErrUnauthorizedAccess},
 	}
 
