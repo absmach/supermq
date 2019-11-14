@@ -1868,67 +1868,108 @@ func TestCreateConnections(t *testing.T) {
 	}
 
 	cases := []struct {
-		desc       string
-		channelIDs []string
-		thingIDs   []string
-		auth       string
-		status     int
+		desc        string
+		channelIDs  []string
+		thingIDs    []string
+		auth        string
+		contentType string
+		body        string
+		status      int
 	}{
 		{
-			desc:       "connect existing things to existing channels",
-			channelIDs: achs,
-			thingIDs:   ths,
-			auth:       token,
-			status:     http.StatusOK,
+			desc:        "connect existing things to existing channels",
+			channelIDs:  achs,
+			thingIDs:    ths,
+			auth:        token,
+			contentType: contentType,
+			status:      http.StatusOK,
 		},
 		{
-			desc:       "connect existing things to non-existent channels",
-			channelIDs: []string{strconv.FormatUint(wrongID, 10)},
-			thingIDs:   ths,
-			auth:       token,
-			status:     http.StatusNotFound,
+			desc:        "connect existing things to non-existent channels",
+			channelIDs:  []string{strconv.FormatUint(wrongID, 10)},
+			thingIDs:    ths,
+			auth:        token,
+			contentType: contentType,
+			status:      http.StatusNotFound,
 		},
 		{
-			desc:       "connect non-existing things to existing channels",
-			channelIDs: achs,
-			thingIDs:   []string{strconv.FormatUint(wrongID, 10)},
-			auth:       token,
-			status:     http.StatusNotFound,
+			desc:        "connect non-existing things to existing channels",
+			channelIDs:  achs,
+			thingIDs:    []string{strconv.FormatUint(wrongID, 10)},
+			auth:        token,
+			contentType: contentType,
+			status:      http.StatusNotFound,
 		},
 		{
-			desc:       "connect existing things to channel with invalid id",
-			channelIDs: []string{"invalid"},
-			thingIDs:   ths,
-			auth:       token,
-			status:     http.StatusNotFound,
+			desc:        "connect existing things to channel with invalid id",
+			channelIDs:  []string{"invalid"},
+			thingIDs:    ths,
+			auth:        token,
+			contentType: contentType,
+			status:      http.StatusNotFound,
 		},
 		{
-			desc:       "connect things with invalid id to existing channels",
-			channelIDs: achs,
-			thingIDs:   []string{"invalid"},
-			auth:       token,
-			status:     http.StatusNotFound,
+			desc:        "connect things with invalid id to existing channels",
+			channelIDs:  achs,
+			thingIDs:    []string{"invalid"},
+			auth:        token,
+			contentType: contentType,
+			status:      http.StatusNotFound,
 		},
 		{
-			desc:       "connect existing things to existing channels with invalid token",
-			channelIDs: achs,
-			thingIDs:   ths,
-			auth:       wrongValue,
-			status:     http.StatusForbidden,
+			desc:        "connect existing things to empty channel ids",
+			channelIDs:  []string{""},
+			thingIDs:    ths,
+			auth:        token,
+			contentType: contentType,
+			status:      http.StatusBadRequest,
 		},
 		{
-			desc:       "connect existing things to existing channels with empty token",
-			channelIDs: achs,
-			thingIDs:   ths,
-			auth:       "",
-			status:     http.StatusForbidden,
+			desc:        "connect empty things id to existing channels",
+			channelIDs:  achs,
+			thingIDs:    []string{""},
+			auth:        token,
+			contentType: contentType,
+			status:      http.StatusBadRequest,
 		},
 		{
-			desc:       "connect things from owner to channels of other user",
-			channelIDs: bchs,
-			thingIDs:   ths,
-			auth:       token,
-			status:     http.StatusNotFound,
+			desc:        "connect existing things to existing channels with invalid token",
+			channelIDs:  achs,
+			thingIDs:    ths,
+			auth:        wrongValue,
+			contentType: contentType,
+			status:      http.StatusForbidden,
+		},
+		{
+			desc:        "connect existing things to existing channels with empty token",
+			channelIDs:  achs,
+			thingIDs:    ths,
+			auth:        "",
+			contentType: contentType,
+			status:      http.StatusForbidden,
+		},
+		{
+			desc:        "connect things from owner to channels of other user",
+			channelIDs:  bchs,
+			thingIDs:    ths,
+			auth:        token,
+			contentType: contentType,
+			status:      http.StatusNotFound,
+		},
+		{
+			desc:        "invalid content type",
+			channelIDs:  bchs,
+			thingIDs:    ths,
+			auth:        token,
+			contentType: "invalid",
+			status:      http.StatusUnsupportedMediaType,
+		},
+		{
+			desc:        "invalid JSON",
+			auth:        token,
+			contentType: contentType,
+			status:      http.StatusBadRequest,
+			body:        "{",
 		},
 	}
 
@@ -1942,13 +1983,15 @@ func TestCreateConnections(t *testing.T) {
 		}
 		body := toJSON(data)
 
-		fmt.Println(body)
+		if tc.body != "" {
+			body = tc.body
+		}
 
 		req := testRequest{
 			client:      ts.Client(),
 			method:      http.MethodPost,
 			url:         fmt.Sprintf("%s/connect", ts.URL),
-			contentType: contentType,
+			contentType: tc.contentType,
 			token:       tc.auth,
 			body:        strings.NewReader(body),
 		}
