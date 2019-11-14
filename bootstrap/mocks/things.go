@@ -70,7 +70,7 @@ func (svc *mainfluxThings) ViewThing(_ context.Context, owner, id string) (thing
 	return things.Thing{}, things.ErrNotFound
 }
 
-func (svc *mainfluxThings) Connect(_ context.Context, owner string, chIDs []string, thIDs []string) error {
+func (svc *mainfluxThings) Connect(_ context.Context, owner string, chIDs, thIDs []string) error {
 	svc.mu.Lock()
 	defer svc.mu.Unlock()
 

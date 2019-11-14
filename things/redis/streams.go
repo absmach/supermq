@@ -186,7 +186,7 @@ func (es eventStore) RemoveChannel(ctx context.Context, token, id string) error 
 	return nil
 }
 
-func (es eventStore) Connect(ctx context.Context, token string, chIDs []string, thIDs []string) error {
+func (es eventStore) Connect(ctx context.Context, token string, chIDs, thIDs []string) error {
 	if err := es.svc.Connect(ctx, token, chIDs, thIDs); err != nil {
 		return err
 	}

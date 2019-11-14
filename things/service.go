@@ -283,7 +283,7 @@ func (ts *thingsService) RemoveChannel(ctx context.Context, token, id string) er
 	return ts.channels.Remove(ctx, res.GetValue(), id)
 }
 
-func (ts *thingsService) Connect(ctx context.Context, token string, chIDs []string, thIDs []string) error {
+func (ts *thingsService) Connect(ctx context.Context, token string, chIDs, thIDs []string) error {
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return ErrUnauthorizedAccess

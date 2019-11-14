@@ -148,7 +148,7 @@ func (ms *metricsMiddleware) RemoveChannel(ctx context.Context, token, id string
 	return ms.svc.RemoveChannel(ctx, token, id)
 }
 
-func (ms *metricsMiddleware) Connect(ctx context.Context, token string, chIDs []string, thIDs []string) error {
+func (ms *metricsMiddleware) Connect(ctx context.Context, token string, chIDs, thIDs []string) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "connect").Add(1)
 		ms.latency.With("method", "connect").Observe(time.Since(begin).Seconds())

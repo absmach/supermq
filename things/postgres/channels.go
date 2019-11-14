@@ -244,7 +244,7 @@ func (cr channelRepository) Remove(ctx context.Context, owner, id string) error 
 	return nil
 }
 
-func (cr channelRepository) Connect(ctx context.Context, owner string, chIDs []string, thIDs []string) error {
+func (cr channelRepository) Connect(ctx context.Context, owner string, chIDs, thIDs []string) error {
 	tx, err := cr.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return err

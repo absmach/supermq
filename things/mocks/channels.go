@@ -160,7 +160,7 @@ func (crm *channelRepositoryMock) Remove(_ context.Context, owner, id string) er
 	return nil
 }
 
-func (crm *channelRepositoryMock) Connect(_ context.Context, owner string, chIDs []string, thIDs []string) error {
+func (crm *channelRepositoryMock) Connect(_ context.Context, owner string, chIDs, thIDs []string) error {
 	for _, chID := range chIDs {
 		ch, err := crm.RetrieveByID(context.Background(), owner, chID)
 		if err != nil {

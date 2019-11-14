@@ -201,7 +201,7 @@ func (lm *loggingMiddleware) RemoveChannel(ctx context.Context, token, id string
 	return lm.svc.RemoveChannel(ctx, token, id)
 }
 
-func (lm *loggingMiddleware) Connect(ctx context.Context, token string, chIDs []string, thIDs []string) (err error) {
+func (lm *loggingMiddleware) Connect(ctx context.Context, token string, chIDs, thIDs []string) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method connect for token %s, channel %s and things %s took %s to complete", token, chIDs, thIDs, time.Since(begin))
 		if err != nil {
