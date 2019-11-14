@@ -242,9 +242,9 @@ func (req connectionReq) validate() error {
 }
 
 type createConnectionsReq struct {
-	token    string
-	ChanID   string   `json:"chanID,omitempty"`
-	ThingIDs []string `json:"thingIDs,omitempty"`
+	token      string
+	ChannelIDs []string `json:"channel_ids,omitempty"`
+	ThingIDs   []string `json:"thing_ids,omitempty"`
 }
 
 func (req createConnectionsReq) validate() error {
@@ -252,10 +252,11 @@ func (req createConnectionsReq) validate() error {
 		return things.ErrUnauthorizedAccess
 	}
 
-	if req.ChanID == "" {
-		return things.ErrMalformedEntity
+	for _, chID := range req.ChannelIDs {
+		if chID == "" {
+			return things.ErrMalformedEntity
+		}
 	}
-
 	for _, thingID := range req.ThingIDs {
 		if thingID == "" {
 			return things.ErrMalformedEntity

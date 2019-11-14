@@ -790,7 +790,7 @@ func TestListThingsByChannel(t *testing.T) {
 		sths, err := svc.CreateThings(context.Background(), token, thing)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		sth := sths[0]
-		err = svc.Connect(context.Background(), token, sch.ID, sth.ID)
+		err = svc.Connect(context.Background(), token, []string{sch.ID}, []string{sth.ID})
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 		thres := thingRes{
@@ -1313,7 +1313,7 @@ func TestViewChannel(t *testing.T) {
 
 	sths, _ := svc.CreateThings(context.Background(), token, thing)
 	sth := sths[0]
-	svc.Connect(context.Background(), token, sch.ID, sth.ID)
+	svc.Connect(context.Background(), token, []string{sch.ID}, []string{sth.ID})
 
 	chres := channelRes{
 		ID:       sch.ID,
@@ -1396,7 +1396,7 @@ func TestListChannels(t *testing.T) {
 		sths, err := svc.CreateThings(context.Background(), token, thing)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		sth := sths[0]
-		svc.Connect(context.Background(), token, sch.ID, sth.ID)
+		svc.Connect(context.Background(), token, []string{sch.ID}, []string{sth.ID})
 
 		chres := channelRes{
 			ID:       sch.ID,
@@ -1551,7 +1551,7 @@ func TestListChannelsByThing(t *testing.T) {
 		schs, err := svc.CreateChannels(context.Background(), token, channel)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		sch := schs[0]
-		err = svc.Connect(context.Background(), token, sch.ID, sth.ID)
+		err = svc.Connect(context.Background(), token, []string{sch.ID}, []string{sth.ID})
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 		chres := channelRes{
@@ -1857,84 +1857,92 @@ func TestCreateConnections(t *testing.T) {
 	}
 
 	schs, _ := svc.CreateChannels(context.Background(), token, channel)
-	ach := schs[0]
+	achs := []string{}
+	for _, ch := range schs {
+		achs = append(achs, ch.ID)
+	}
 	schs, _ = svc.CreateChannels(context.Background(), otherToken, channel)
-	bch := schs[0]
+	bchs := []string{}
+	for _, ch := range schs {
+		bchs = append(bchs, ch.ID)
+	}
 
 	cases := []struct {
-		desc     string
-		chanID   string
-		thingIDs []string
-		auth     string
-		status   int
+		desc       string
+		channelIDs []string
+		thingIDs   []string
+		auth       string
+		status     int
 	}{
 		{
-			desc:     "connect existing things to existing channel",
-			chanID:   ach.ID,
-			thingIDs: ths,
-			auth:     token,
-			status:   http.StatusOK,
+			desc:       "connect existing things to existing channels",
+			channelIDs: achs,
+			thingIDs:   ths,
+			auth:       token,
+			status:     http.StatusOK,
 		},
 		{
-			desc:     "connect existing things to non-existent channel",
-			chanID:   strconv.FormatUint(wrongID, 10),
-			thingIDs: ths,
-			auth:     token,
-			status:   http.StatusNotFound,
+			desc:       "connect existing things to non-existent channels",
+			channelIDs: []string{strconv.FormatUint(wrongID, 10)},
+			thingIDs:   ths,
+			auth:       token,
+			status:     http.StatusNotFound,
 		},
 		{
-			desc:     "connect non-existing things to existing channel",
-			chanID:   ach.ID,
-			thingIDs: []string{strconv.FormatUint(wrongID, 10)},
-			auth:     token,
-			status:   http.StatusNotFound,
+			desc:       "connect non-existing things to existing channels",
+			channelIDs: achs,
+			thingIDs:   []string{strconv.FormatUint(wrongID, 10)},
+			auth:       token,
+			status:     http.StatusNotFound,
 		},
 		{
-			desc:     "connect existing things to channel with invalid id",
-			chanID:   "invalid",
-			thingIDs: ths,
-			auth:     token,
-			status:   http.StatusNotFound,
+			desc:       "connect existing things to channel with invalid id",
+			channelIDs: []string{"invalid"},
+			thingIDs:   ths,
+			auth:       token,
+			status:     http.StatusNotFound,
 		},
 		{
-			desc:     "connect things with invalid id to existing channel",
-			chanID:   ach.ID,
-			thingIDs: []string{"invalid"},
-			auth:     token,
-			status:   http.StatusNotFound,
+			desc:       "connect things with invalid id to existing channels",
+			channelIDs: achs,
+			thingIDs:   []string{"invalid"},
+			auth:       token,
+			status:     http.StatusNotFound,
 		},
 		{
-			desc:     "connect existing things to existing channel with invalid token",
-			chanID:   ach.ID,
-			thingIDs: ths,
-			auth:     wrongValue,
-			status:   http.StatusForbidden,
+			desc:       "connect existing things to existing channels with invalid token",
+			channelIDs: achs,
+			thingIDs:   ths,
+			auth:       wrongValue,
+			status:     http.StatusForbidden,
 		},
 		{
-			desc:     "connect existing things to existing channel with empty token",
-			chanID:   ach.ID,
-			thingIDs: ths,
-			auth:     "",
-			status:   http.StatusForbidden,
+			desc:       "connect existing things to existing channels with empty token",
+			channelIDs: achs,
+			thingIDs:   ths,
+			auth:       "",
+			status:     http.StatusForbidden,
 		},
 		{
-			desc:     "connect things from owner to channel of other user",
-			chanID:   bch.ID,
-			thingIDs: ths,
-			auth:     token,
-			status:   http.StatusNotFound,
+			desc:       "connect things from owner to channels of other user",
+			channelIDs: bchs,
+			thingIDs:   ths,
+			auth:       token,
+			status:     http.StatusNotFound,
 		},
 	}
 
 	for _, tc := range cases {
 		data := struct {
-			ChanID   string   `json:"chanID"`
-			ThingIDs []string `json:"thingIDs"`
+			ChannelIDs []string `json:"channel_ids"`
+			ThingIDs   []string `json:"thing_ids"`
 		}{
-			tc.chanID,
+			tc.channelIDs,
 			tc.thingIDs,
 		}
 		body := toJSON(data)
+
+		fmt.Println(body)
 
 		req := testRequest{
 			client:      ts.Client(),
@@ -1965,7 +1973,7 @@ func TestDisconnnect(t *testing.T) {
 	ath := sths[0]
 	schs, _ := svc.CreateChannels(context.Background(), token, channel)
 	ach := schs[0]
-	svc.Connect(context.Background(), token, ach.ID, ath.ID)
+	svc.Connect(context.Background(), token, []string{ach.ID}, []string{ath.ID})
 	schs, _ = svc.CreateChannels(context.Background(), otherToken, channel)
 	bch := schs[0]
 

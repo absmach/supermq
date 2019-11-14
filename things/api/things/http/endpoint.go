@@ -445,7 +445,7 @@ func connectEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		if err := svc.Connect(ctx, cr.token, cr.chanID, cr.thingID); err != nil {
+		if err := svc.Connect(ctx, cr.token, []string{cr.chanID}, []string{cr.thingID}); err != nil {
 			return nil, err
 		}
 
@@ -461,7 +461,7 @@ func createConnectionsEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		if err := svc.Connect(ctx, cr.token, cr.ChanID, cr.ThingIDs...); err != nil {
+		if err := svc.Connect(ctx, cr.token, cr.ChannelIDs, cr.ThingIDs); err != nil {
 			return nil, err
 		}
 

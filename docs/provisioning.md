@@ -256,7 +256,7 @@ curl -s -S -i --cacert docker/ssl/certs/mainflux-server.crt --insecure -X PUT -H
 To connect multiple things to a channel, you can send the following request:
 
 ```bash
-curl -s -S -i --cacert docker/ssl/certs/mainflux-server.crt --insecure -X POST -H "Content-Type: application/json" -H "Authorization: <user_auth_token>" https://localhost/connect -d '{"chanID":"<channel_id>","thingIDs":["<thing_id>", "<thing_id>"]}'
+curl -s -S -i --cacert docker/ssl/certs/mainflux-server.crt --insecure -X POST -H "Content-Type: application/json" -H "Authorization: <user_auth_token>" https://localhost/connect -d '{"channel_ids":["<channel_id>", "<channel_id>"],"thingIDs":["<thing_id>", "<thing_id>"]}'
 ```
 
 You can observe which things are connected to specific channel:
