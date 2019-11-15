@@ -52,7 +52,7 @@ func startGRPCServer(svc users.Service, port int) {
 
 func TestIdentify(t *testing.T) {
 	err := svc.Register(context.Background(), user)
-	require.True(t, err.IsEmpty(), fmt.Sprintf("Error creating User: %s", err))
+	require.Nil(t, err, fmt.Sprintf("Error creating User: %s", err))
 
 	usersAddr := fmt.Sprintf("localhost:%d", port)
 	conn, _ := grpc.Dial(usersAddr, grpc.WithInsecure())

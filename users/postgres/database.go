@@ -34,7 +34,6 @@ func NewDatabase(db *sqlx.DB) Database {
 
 func (dm database) NamedExecContext(ctx context.Context, query string, args interface{}) (sql.Result, errors.Error) {
 	addSpanTags(ctx, query)
-	println(query)
 	result, err := dm.db.NamedExecContext(ctx, query, args)
 	if pqErr, ok := err.(*pq.Error); ok && errDuplicate == pqErr.Code.Name() {
 		return result, errors.Wrap(users.ErrConflict, errors.Cast(err))
@@ -44,20 +43,17 @@ func (dm database) NamedExecContext(ctx context.Context, query string, args inte
 
 func (dm database) QueryRowxContext(ctx context.Context, query string, args ...interface{}) *sqlx.Row {
 	addSpanTags(ctx, query)
-	println(query)
 	return dm.db.QueryRowxContext(ctx, query, args...)
 }
 
 func (dm database) NamedQueryContext(ctx context.Context, query string, args interface{}) (*sqlx.Rows, errors.Error) {
 	addSpanTags(ctx, query)
-	println(query)
 	result, err := dm.db.NamedQueryContext(ctx, query, args)
 	return result, errors.Cast(err)
 }
 
 func (dm database) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) errors.Error {
 	addSpanTags(ctx, query)
-	println(query)
 	return errors.Cast((dm.db.GetContext(ctx, dest, query, args...)))
 }
 

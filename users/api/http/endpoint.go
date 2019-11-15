@@ -5,7 +5,6 @@ package http
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/mainflux/mainflux/users"
@@ -38,11 +37,7 @@ func registrationEndpoint(svc users.Service) endpoint.Endpoint {
 // must be sent as PUT request to 'password/reset' passwordResetEndpoint
 func passwordResetRequestEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		fmt.Printf("debug.... (%v, %T)\n", request, request)
-
 		req := request.(passwResetReq)
-		fmt.Printf("debug.... (%v, %T)\n", req, req)
-
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
@@ -51,8 +46,7 @@ func passwordResetRequestEndpoint(svc users.Service) endpoint.Endpoint {
 		email := req.Email
 
 		if err := svc.GenerateResetToken(ctx, email, req.Host); err != nil {
-			res.Msg = err.Error()
-			return res, nil
+			return nil, err
 		}
 		res.Msg = MailSent
 		return res, nil
@@ -71,8 +65,7 @@ func passwordResetEndpoint(svc users.Service) endpoint.Endpoint {
 		res := passwChangeRes{}
 
 		if err := svc.ResetPassword(ctx, req.Token, req.Password); err != nil {
-			res.Msg = err.Error()
-			return res, nil
+			return nil, err
 		}
 		res.Msg = ""
 		return res, nil
@@ -125,8 +118,7 @@ func passwordChangeEndpoint(svc users.Service) endpoint.Endpoint {
 		res := passwChangeRes{}
 
 		if err := svc.ChangePassword(ctx, req.Token, req.Password, req.OldPassword); err != nil {
-			res.Msg = err.Error()
-			return res, nil
+			return nil, err
 		}
 
 		return res, nil

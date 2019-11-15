@@ -29,7 +29,6 @@ func TestUserSave(t *testing.T) {
 				Email:    email,
 				Password: "pass",
 			},
-			// err: errors.Empty(),
 			err: nil,
 		},
 		{
@@ -66,7 +65,6 @@ func TestSingleUserRetrieval(t *testing.T) {
 		email string
 		err   error
 	}{
-		// "existing user":     {email, errors.Empty()},
 		"existing user":     {email, nil},
 		"non-existing user": {"unknown@example.com", users.ErrNotFound},
 	}

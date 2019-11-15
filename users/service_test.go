@@ -64,7 +64,6 @@ func TestRegister(t *testing.T) {
 	for _, tc := range cases {
 		err := svc.Register(context.Background(), tc.user)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		// assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
@@ -163,7 +162,6 @@ func TestUpdateUser(t *testing.T) {
 	for desc, tc := range cases {
 		err := svc.UpdateUser(context.Background(), tc.token, tc.user)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
-		// assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
 
@@ -181,7 +179,6 @@ func TestGenerateResetToken(t *testing.T) {
 
 	for desc, tc := range cases {
 		err := svc.GenerateResetToken(context.Background(), tc.email, host)
-		// assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
@@ -204,7 +201,6 @@ func TestChangePassword(t *testing.T) {
 
 	for desc, tc := range cases {
 		err := svc.ChangePassword(context.Background(), tc.token, tc.password, tc.oldPassword)
-		// assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 
 	}
@@ -228,7 +224,6 @@ func TestResetPassword(t *testing.T) {
 
 	for desc, tc := range cases {
 		err := svc.ResetPassword(context.Background(), tc.token, tc.password)
-		// assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 
 	}
@@ -249,7 +244,6 @@ func TestSendPasswordReset(t *testing.T) {
 
 	for desc, tc := range cases {
 		err := svc.SendPasswordReset(context.Background(), host, tc.email, tc.token)
-		// assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 
 	}
