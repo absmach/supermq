@@ -56,9 +56,9 @@ func encodeError(err errors.Error) error {
 	}
 
 	switch {
-	case err.Contains(users.ErrMalformedEntity):
+	case errors.Contains(err, users.ErrMalformedEntity):
 		return status.Error(codes.InvalidArgument, "received invalid token request")
-	case err.Contains(users.ErrUnauthorizedAccess):
+	case errors.Contains(err, users.ErrUnauthorizedAccess):
 		return status.Error(codes.Unauthenticated, "failed to identify user from token")
 	default:
 		return status.Error(codes.Internal, "internal server error")

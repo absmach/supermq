@@ -26,12 +26,12 @@ import (
 const contentType = "application/json"
 
 var (
-	errUnsupportedContentType = errors.New("unsupported content type")
+	// ErrUnsupportedContentType indicates unacceptable or lack of Content-Type
+	ErrUnsupportedContentType = errors.New("unsupported content type")
 	errMissingRefererHeader   = errors.New("missing referer header")
 	errInvalidToken           = errors.New("invalid token")
 	errNoTokenSupplied        = errors.New("no token supplied")
-	// ErrUnsupportedContentType indicates unacceptable or lack of Content-Type
-	ErrUnsupportedContentType = errors.New("unsupported content type")
+	errFailedDecode           = errors.New("failed to decode request body")
 	logger                    log.Logger
 )
 
@@ -119,6 +119,8 @@ func decodeUpdateUser(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeCredentials(_ context.Context, r *http.Request) (interface{}, error) {
+	fmt.Printf("debug...... (%v, %T)\n", r.Body, r.Body)
+
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, ErrUnsupportedContentType
 	}
@@ -134,13 +136,15 @@ func decodeCredentials(_ context.Context, r *http.Request) (interface{}, error) 
 func decodePasswordResetRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		logger.Warn("Invalid or missing content type.")
-		return nil, errUnsupportedContentType
+		return nil, ErrUnsupportedContentType
 	}
 
 	var req passwResetReq
+	fmt.Printf("debug...... (%v, %T)\n", r.Body, r.Body)
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.Warn(fmt.Sprintf("Failed to decode reset request: %s", err))
-		return nil, err
+		return nil, errors.Wrap(errFailedDecode, errors.Cast(err))
 	}
 
 	req.Host = r.Header.Get("Referer")
@@ -150,7 +154,7 @@ func decodePasswordResetRequest(_ context.Context, r *http.Request) (interface{}
 func decodePasswordReset(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		logger.Warn("Invalid or missing content type.")
-		return nil, errUnsupportedContentType
+		return nil, ErrUnsupportedContentType
 	}
 
 	var req resetTokenReq
@@ -165,7 +169,7 @@ func decodePasswordReset(_ context.Context, r *http.Request) (interface{}, error
 func decodePasswordChange(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		logger.Warn("Invalid or missing content type.")
-		return nil, errUnsupportedContentType
+		return nil, ErrUnsupportedContentType
 	}
 
 	var req passwChangeReq
@@ -209,28 +213,34 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 }
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
+	// For debug only:
+	fmt.Printf("debug... (%v, %T)\n", err, err)
 	switch errorVal := err.(type) {
 	case errors.Error:
 		w.Header().Set("Content-Type", contentType)
 		switch {
-		case errorVal.Contains(users.ErrMalformedEntity):
+		case errors.Contains(errorVal, users.ErrMalformedEntity):
 			w.WriteHeader(http.StatusBadRequest)
 			logger.Warn(fmt.Sprintf("Failed to decode user credentials: %s", errorVal))
-		case errorVal.Contains(users.ErrUnauthorizedAccess):
+		case errors.Contains(errorVal, users.ErrUnauthorizedAccess):
 			w.WriteHeader(http.StatusForbidden)
-		case errorVal.Contains(users.ErrConflict):
+		case errors.Contains(errorVal, users.ErrConflict):
 			w.WriteHeader(http.StatusConflict)
-		case errorVal.Contains(ErrUnsupportedContentType):
+		case errors.Contains(errorVal, ErrUnsupportedContentType):
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 			logger.Warn("Invalid or missing content type.")
-		case errorVal.Contains(io.ErrUnexpectedEOF):
+		case errors.Contains(errorVal, errFailedDecode):
 			w.WriteHeader(http.StatusBadRequest)
-		case errorVal.Contains(io.EOF):
+		case errors.Contains(errorVal, io.ErrUnexpectedEOF):
+			w.WriteHeader(http.StatusBadRequest)
+		case errors.Contains(errorVal, io.EOF):
 			w.WriteHeader(http.StatusBadRequest)
 		}
 		if errorVal.Msg() != "" {
 			json.NewEncoder(w).Encode(errorRes{Err: errorVal.Msg()})
 		}
+	// case *errorString:
+	// 	w.WriteHeader(http.StatusBadRequest)
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
 	}
