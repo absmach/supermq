@@ -16,10 +16,6 @@ type Error interface {
 
 	// Err returns wrapped error
 	Err() *customError
-
-	// Contains inspects if Error's message is same as error
-	// in argument. If not it continues to examin in next
-	// layers of Error until it founds it or unwrap every layers
 }
 
 var _ Error = (*customError)(nil)
@@ -46,11 +42,11 @@ func (ce *customError) Err() *customError {
 	return ce.err
 }
 
-// Contains contains
+// Contains inspects if Error's message is same as error
+// in argument. If not it continues to examin in next
+// layers of Error until it founds it or unwrap every layers
 func Contains(ce Error, e error) bool {
-	// if ce != nil {
 	if e == nil {
-		// return false
 		return ce == nil
 	}
 	if ce.Msg() == e.Error() {
@@ -61,8 +57,7 @@ func Contains(ce Error, e error) bool {
 	}
 
 	return Contains(ce.Err(), e)
-	// }
-	// return e == nil
+
 }
 
 // Wrap returns an Error that wrap err with wrapper
@@ -76,7 +71,6 @@ func Wrap(wrapper Error, err Error) Error {
 // Cast returns Error type with message of given error
 func Cast(err error) Error {
 	if err == nil {
-		// return Empty()
 		return nil
 	}
 	return New(err.Error())
