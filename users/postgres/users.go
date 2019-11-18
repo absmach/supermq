@@ -13,8 +13,13 @@ import (
 	"github.com/mainflux/mainflux/users"
 )
 
-// ErrDatabase indicates internal database error
-var ErrDatabase = errors.New("Database error")
+var (
+	errSaveUserDB       = errors.New("Save user to DB failed")
+	errUpdateDB         = errors.New("Update user email to DB failed")
+	errUpdateUserDB     = errors.New("Update user metadata to DB failed")
+	errRetrieveDB       = errors.New("Retreiving from DB failed")
+	errUpdatePasswordDB = errors.New("Update password to DB failed")
+)
 
 var _ users.UserRepository = (*userRepository)(nil)
 
@@ -37,7 +42,7 @@ func (ur userRepository) Save(ctx context.Context, user users.User) errors.Error
 
 	dbu := toDBUser(user)
 	if _, err := ur.db.NamedExecContext(ctx, q, dbu); err != nil {
-		return errors.Wrap(ErrDatabase, err)
+		return errors.Wrap(errSaveUserDB, err)
 	}
 
 	return nil
@@ -48,7 +53,7 @@ func (ur userRepository) Update(ctx context.Context, user users.User) errors.Err
 
 	dbu := toDBUser(user)
 	if _, err := ur.db.NamedExecContext(ctx, q, dbu); err != nil {
-		return errors.Wrap(ErrDatabase, err)
+		return errors.Wrap(errUpdateDB, err)
 	}
 
 	return nil
@@ -59,7 +64,7 @@ func (ur userRepository) UpdateUser(ctx context.Context, user users.User) errors
 
 	dbu := toDBUser(user)
 	if _, err := ur.db.NamedExecContext(ctx, q, dbu); err != nil {
-		return errors.Wrap(ErrDatabase, err)
+		return errors.Wrap(errUpdateUserDB, err)
 	}
 
 	return nil
@@ -73,10 +78,10 @@ func (ur userRepository) RetrieveByID(ctx context.Context, email string) (users.
 	}
 	if err := ur.db.QueryRowxContext(ctx, q, email).StructScan(&dbu); err != nil {
 		if err == sql.ErrNoRows {
-			return users.User{}, errors.Wrap(users.ErrNotFound, errors.Cast(err))
+			return users.User{}, errors.Wrap(users.ErrNotFound, err)
 
 		}
-		return users.User{}, errors.Wrap(ErrDatabase, errors.Cast(err))
+		return users.User{}, errors.Wrap(errRetrieveDB, err)
 	}
 
 	user := toUser(dbu)
@@ -93,7 +98,7 @@ func (ur userRepository) UpdatePassword(ctx context.Context, email, password str
 	}
 
 	if _, err := ur.db.NamedExecContext(ctx, q, db); err != nil {
-		return err
+		return errors.Wrap(errUpdatePasswordDB, err)
 	}
 
 	return nil

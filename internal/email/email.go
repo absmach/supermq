@@ -16,7 +16,10 @@ import (
 
 var (
 	// ErrMissingEmailTemplate missing email template file
-	ErrMissingEmailTemplate = errors.New("Missing e-mail template file")
+	errMissingEmailTemplate = errors.New("Missing e-mail template file")
+	errParseTemplate        = errors.New("Parse e-mail template failed")
+	errExecTemplate         = errors.New("Execute e-mail template failed")
+	errSendMail             = errors.New("Sending e-mail failed")
 )
 
 type emailTemplate struct {
@@ -58,7 +61,7 @@ func New(c *Config) (*Agent, errors.Error) {
 
 	tmpl, err := template.ParseFiles(c.Template)
 	if err != nil {
-		return nil, errors.Cast(err)
+		return nil, errors.Wrap(errParseTemplate, err)
 	}
 	a.tmpl = tmpl
 	return a, nil
@@ -67,7 +70,7 @@ func New(c *Config) (*Agent, errors.Error) {
 // Send sends e-mail
 func (a *Agent) Send(To []string, From, Subject, Header, Content, Footer string) errors.Error {
 	if a.tmpl == nil {
-		return ErrMissingEmailTemplate
+		return errMissingEmailTemplate
 	}
 
 	email := new(bytes.Buffer)
@@ -84,11 +87,11 @@ func (a *Agent) Send(To []string, From, Subject, Header, Content, Footer string)
 	}
 
 	if err := a.tmpl.Execute(email, tmpl); err != nil {
-		return errors.Cast(err)
+		return errors.Wrap(errExecTemplate, err)
 	}
 
 	if err := smtp.SendMail(a.addr, a.auth, a.conf.FromAddress, To, email.Bytes()); err != nil {
-		return errors.Cast(err)
+		return errors.Wrap(errSendMail, err)
 	}
 
 	return nil

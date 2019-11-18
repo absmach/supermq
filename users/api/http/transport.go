@@ -31,8 +31,9 @@ var (
 	errMissingRefererHeader   = errors.New("missing referer header")
 	errInvalidToken           = errors.New("invalid token")
 	errNoTokenSupplied        = errors.New("no token supplied")
-	ErrFailedDecode           = errors.New("failed to decode request body")
-	logger                    log.Logger
+	// ErrFailedDecode indicates failed to decode request body
+	ErrFailedDecode = errors.New("failed to decode request body")
+	logger          log.Logger
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -125,7 +126,7 @@ func decodeCredentials(_ context.Context, r *http.Request) (interface{}, error) 
 
 	var user users.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		return nil, errors.Wrap(users.ErrMalformedEntity, errors.Cast(err))
+		return nil, errors.Wrap(users.ErrMalformedEntity, err)
 	}
 
 	return userReq{user}, nil
@@ -141,7 +142,7 @@ func decodePasswordResetRequest(_ context.Context, r *http.Request) (interface{}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.Warn(fmt.Sprintf("Failed to decode reset request: %s", err))
-		return nil, errors.Wrap(ErrFailedDecode, errors.Cast(err))
+		return nil, errors.Wrap(ErrFailedDecode, err)
 	}
 
 	req.Host = r.Header.Get("Referer")
@@ -157,7 +158,7 @@ func decodePasswordReset(_ context.Context, r *http.Request) (interface{}, error
 	var req resetTokenReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.Warn(fmt.Sprintf("Failed to decode reset request: %s", err))
-		return nil, errors.Wrap(ErrFailedDecode, errors.Cast(err))
+		return nil, errors.Wrap(ErrFailedDecode, err)
 	}
 
 	return req, nil
@@ -172,7 +173,7 @@ func decodePasswordChange(_ context.Context, r *http.Request) (interface{}, erro
 	var req passwChangeReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.Warn(fmt.Sprintf("Failed to decode reset request: %s", err))
-		return nil, errors.Wrap(ErrFailedDecode, errors.Cast(err))
+		return nil, errors.Wrap(ErrFailedDecode, err)
 	}
 
 	req.Token = r.Header.Get("Authorization")

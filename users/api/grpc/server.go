@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+var errGrpc = errors.New("GRPC error")
 var _ mainflux.UsersServiceServer = (*grpcServer)(nil)
 
 type grpcServer struct {
@@ -35,7 +36,7 @@ func NewServer(tracer opentracing.Tracer, svc users.Service) mainflux.UsersServi
 func (s *grpcServer) Identify(ctx context.Context, token *mainflux.Token) (*mainflux.UserID, error) {
 	_, res, err := s.handler.ServeGRPC(ctx, token)
 	if err != nil {
-		return nil, encodeError(errors.Cast(err))
+		return nil, encodeError(errors.Wrap(errGrpc, err))
 	}
 	return res.(*mainflux.UserID), nil
 }
@@ -47,7 +48,11 @@ func decodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{},
 
 func encodeIdentifyResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(identityRes)
-	return &mainflux.UserID{Value: res.id}, encodeError(errors.Cast(res.err))
+	if res.err != nil {
+		return &mainflux.UserID{Value: res.id}, encodeError(errors.Wrap(errGrpc, res.err))
+	}
+	return &mainflux.UserID{Value: res.id}, nil
+
 }
 
 func encodeError(err errors.Error) error {

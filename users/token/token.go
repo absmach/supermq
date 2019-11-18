@@ -15,13 +15,12 @@ import (
 )
 
 var (
-
-	// ErrMalformedToken malformed token
-	ErrMalformedToken = errors.New("Malformed token")
-	// ErrExpiredToken  password reset token has expired
-	ErrExpiredToken = errors.New("Token is expired")
-	// ErrWrongSignature wrong signature
-	ErrWrongSignature = errors.New("Wrong token signature")
+	// errExpiredToken  password reset token has expired
+	errExpiredToken = errors.New("Token is expired")
+	// errWrongSignature wrong signature
+	errWrongSignature = errors.New("Wrong token signature")
+	// errValidateToken represents error when validating token
+	errValidateToken = errors.New("Validate token failed")
 )
 
 type tokenizer struct {
@@ -52,7 +51,10 @@ func (t *tokenizer) Generate(email string, offset int) (string, errors.Error) {
 
 	// Sign and get the complete encoded token as a string using the secret
 	tokenString, err := token.SignedString(t.hmacSampleSecret)
-	return tokenString, errors.Cast(err)
+	if err != nil {
+		return tokenString, errors.Wrap(users.ErrGetToken, err)
+	}
+	return tokenString, nil
 }
 
 // Verify verifies token validity
@@ -61,7 +63,7 @@ func (t *tokenizer) Verify(tok string) (string, errors.Error) {
 	token, err := jwt.Parse(tok, func(token *jwt.Token) (interface{}, error) {
 		// Don't forget to validate the alg is what you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, ErrWrongSignature
+			return nil, errWrongSignature
 		}
 
 		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
@@ -69,12 +71,12 @@ func (t *tokenizer) Verify(tok string) (string, errors.Error) {
 	})
 
 	if err != nil {
-		return email, errors.Cast(err)
+		return email, errors.Wrap(errValidateToken, err)
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		if claims.VerifyExpiresAt(time.Now().Unix(), false) == false {
-			return "", ErrExpiredToken
+			return "", errExpiredToken
 		}
 		email = claims["email"].(string)
 	}

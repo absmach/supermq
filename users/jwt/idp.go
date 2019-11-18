@@ -52,7 +52,7 @@ func (idp *jwtIdentityProvider) Identity(key string) (string, errors.Error) {
 	})
 
 	if err != nil {
-		return "", errors.Wrap(users.ErrUnauthorizedAccess, errors.Cast(err))
+		return "", errors.Wrap(users.ErrUnauthorizedAccess, err)
 
 	}
 
@@ -68,5 +68,8 @@ func (idp *jwtIdentityProvider) Identity(key string) (string, errors.Error) {
 func (idp *jwtIdentityProvider) jwt(claims jwt.StandardClaims) (string, errors.Error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tok, err := token.SignedString([]byte(idp.secret))
-	return tok, errors.Cast(err)
+	if err != nil {
+		return tok, errors.Wrap(users.ErrGetToken, err)
+	}
+	return tok, nil
 }

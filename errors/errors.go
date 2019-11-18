@@ -61,19 +61,27 @@ func Contains(ce Error, e error) bool {
 }
 
 // Wrap returns an Error that wrap err with wrapper
-func Wrap(wrapper Error, err Error) Error {
-	return &customError{
-		msg: wrapper.Msg(),
-		err: err.(*customError),
-	}
-}
-
-// Cast returns Error type with message of given error
-func Cast(err error) Error {
+func Wrap(wrapper Error, err error) Error {
 	if err == nil {
 		return nil
 	}
-	return New(err.Error())
+	return &customError{
+		msg: wrapper.Msg(),
+		err: cast(err),
+	}
+}
+
+func cast(err error) *customError {
+	if err == nil {
+		return nil
+	}
+	if e, ok := err.(*customError); ok {
+		return e
+	}
+	return &customError{
+		msg: err.Error(),
+		err: nil,
+	}
 }
 
 // New returns an Error that formats as the given text.

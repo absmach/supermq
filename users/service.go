@@ -41,6 +41,9 @@ var (
 	// ErrGeneratingResetToken indicates error in generating password recovery
 	// token
 	ErrGeneratingResetToken = errors.New("error missing reset token")
+
+	// ErrGetToken indicates error in getting signed token
+	ErrGetToken = errors.New("Get signed token failed")
 )
 
 // Service specifies an API that must be fullfiled by the domain service
