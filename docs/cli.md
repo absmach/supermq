@@ -164,14 +164,29 @@ mainflux-cli provision connect <file> <user_auth_token>
 * `file` - A CSV or JSON file containing thing and channel ids
 * `user_auth_token` - A valid user auth token for the current system
 
-An example file might be
+An example CSV file might be
 
 ```csv
-7f3216a2-f5c8-4410-a37e-a1bbd7f48231,f5dc42c8-0bf1-4850-bb0e-ddea435e7814
-f26688e7-8bdf-4ec8-b1dc-1bfb764cfa3a,ca3365f9-2202-40a6-a9d6-75b6690df466
+<thing_id>,<channel_id>
+<thing_id>,<channel_id>
 ```
 
-in which the first column is thingIDs and the second column is channelIDs.  A connection will be created for each thing to each channel.  This example would result in 4 connections being created.
+in which the first column is thing IDs and the second column is channel IDs.  A connection will be created for each thing to each channel.  This example would result in 4 connections being created.
+
+A comparable JSON file would be
+
+```json
+{
+    "thing_ids": [
+        "<thing_id>",
+        "<thing_id>"
+    ],
+    "channel_ids": [
+        "<channel_id>",
+        "<channel_id>"
+    ]
+}
+```
 
 #### Disconnect Thing from Channel
 ```
