@@ -10,7 +10,6 @@ import (
 	"net/smtp"
 
 	"github.com/mainflux/mainflux/errors"
-
 	"github.com/mainflux/mainflux/logger"
 )
 

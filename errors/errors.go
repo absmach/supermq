@@ -15,7 +15,7 @@ type Error interface {
 	Msg() string
 
 	// Err returns wrapped error
-	Err() *customError
+	Err() Error
 }
 
 var _ Error = (*customError)(nil)
@@ -23,22 +23,25 @@ var _ Error = (*customError)(nil)
 // customError struct represents a Mainflux error
 type customError struct {
 	msg string
-	err *customError
+	err Error
 }
 
 func (ce *customError) Error() string {
-	if ce.err != nil {
-		return fmt.Sprintf("%s: %s", ce.msg, ce.err.Error())
-	}
+	if ce != nil {
+		if ce.err != nil {
+			return fmt.Sprintf("%s: %s", ce.msg, ce.err.Error())
+		}
 
-	return ce.msg
+		return ce.msg
+	}
+	return ""
 }
 
 func (ce *customError) Msg() string {
 	return ce.msg
 }
 
-func (ce *customError) Err() *customError {
+func (ce *customError) Err() Error {
 	return ce.err
 }
 
@@ -46,7 +49,7 @@ func (ce *customError) Err() *customError {
 // in argument. If not it continues further unwrapping
 // layers of Error until it founds it or unwrap all layers
 func Contains(ce Error, e error) bool {
-	if e == nil {
+	if ce == nil || e == nil {
 		return ce == nil
 	}
 	if ce.Msg() == e.Error() {
@@ -57,12 +60,11 @@ func Contains(ce Error, e error) bool {
 	}
 
 	return Contains(ce.Err(), e)
-
 }
 
 // Wrap returns an Error that wrap err with wrapper
 func Wrap(wrapper Error, err error) Error {
-	if err == nil {
+	if wrapper == nil || err == nil {
 		return nil
 	}
 	return &customError{
@@ -71,11 +73,11 @@ func Wrap(wrapper Error, err error) Error {
 	}
 }
 
-func cast(err error) *customError {
+func cast(err error) Error {
 	if err == nil {
 		return nil
 	}
-	if e, ok := err.(*customError); ok {
+	if e, ok := err.(Error); ok {
 		return e
 	}
 	return &customError{
