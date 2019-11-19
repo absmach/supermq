@@ -79,6 +79,29 @@ var cmdProvision = []cobra.Command{
 		},
 	},
 	cobra.Command{
+		Use:   "connect",
+		Short: "connect <connections_file> <user_token>",
+		Long:  `Bulk connect things to channels`,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) != 2 {
+				logUsage(cmd.Short)
+				return
+			}
+
+			connIDs, err := connectionsFromFile(args[0])
+			if err != nil {
+				logError(err)
+				return
+			}
+
+			err = sdk.Connect(connIDs, args[1])
+			if err != nil {
+				logError(err)
+				return
+			}
+		},
+	},
+	cobra.Command{
 		Use:   "test",
 		Short: "test",
 		Long: `Provisions test setup: one test user, two things and two channels. \
@@ -274,4 +297,48 @@ func channelsFromFile(path string) ([]mfxsdk.Channel, error) {
 	}
 
 	return channels, nil
+}
+
+func connectionsFromFile(path string) (mfxsdk.ConnectionIDs, error) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return mfxsdk.ConnectionIDs{}, err
+	}
+
+	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
+	if err != nil {
+		return mfxsdk.ConnectionIDs{}, err
+	}
+	defer file.Close()
+
+	connections := mfxsdk.ConnectionIDs{}
+	switch filepath.Ext(path) {
+	case ".csv":
+		reader := csv.NewReader(file)
+
+		for {
+			l, err := reader.Read()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return mfxsdk.ConnectionIDs{}, err
+			}
+
+			if len(l) < 1 {
+				return mfxsdk.ConnectionIDs{}, errors.New("empty line found in file")
+			}
+
+			connections.ThingIDs = append(connections.ThingIDs, l[0])
+			connections.ChannelIDs = append(connections.ChannelIDs, l[1])
+		}
+	case ".json":
+		err := json.NewDecoder(file).Decode(&connections)
+		if err != nil {
+			return mfxsdk.ConnectionIDs{}, err
+		}
+	default:
+		return mfxsdk.ConnectionIDs{}, err
+	}
+
+	return connections, nil
 }
