@@ -48,13 +48,12 @@ func (dm database) QueryRowxContext(ctx context.Context, query string, args ...i
 
 func (dm database) NamedQueryContext(ctx context.Context, query string, args interface{}) (*sqlx.Rows, error) {
 	addSpanTags(ctx, query)
-	result, err := dm.db.NamedQueryContext(ctx, query, args)
-	return result, err
+	return dm.db.NamedQueryContext(ctx, query, args)
 }
 
 func (dm database) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
 	addSpanTags(ctx, query)
-	return (dm.db.GetContext(ctx, dest, query, args...))
+	return dm.db.GetContext(ctx, dest, query, args...)
 }
 
 func addSpanTags(ctx context.Context, query string) {
