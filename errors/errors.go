@@ -43,8 +43,8 @@ func (ce *customError) Err() *customError {
 }
 
 // Contains inspects if Error's message is same as error
-// in argument. If not it continues to examin in next
-// layers of Error until it founds it or unwrap every layers
+// in argument. If not it continues further unwrapping
+// layers of Error until it founds it or unwrap all layers
 func Contains(ce Error, e error) bool {
 	if e == nil {
 		return ce == nil
