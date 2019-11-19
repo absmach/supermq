@@ -58,8 +58,7 @@ func (urm userRepositoryMiddleware) RetrieveByID(ctx context.Context, id string)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 
-	user, err := urm.repo.RetrieveByID(ctx, id)
-	return user, err
+	return urm.repo.RetrieveByID(ctx, id)
 }
 
 func (urm userRepositoryMiddleware) UpdatePassword(ctx context.Context, email, password string) errors.Error {

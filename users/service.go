@@ -102,7 +102,6 @@ func New(users UserRepository, hasher Hasher, idp IdentityProvider, m Emailer, t
 func (svc usersService) Register(ctx context.Context, user User) errors.Error {
 	hash, err := svc.hasher.Hash(user.Password)
 	if err != nil {
-
 		return errors.Wrap(ErrMalformedEntity, err)
 	}
 
@@ -124,7 +123,6 @@ func (svc usersService) Login(ctx context.Context, user User) (string, errors.Er
 }
 
 func (svc usersService) Identify(token string) (string, errors.Error) {
-
 	id, err := svc.idp.Identity(token)
 	if err != nil {
 		return "", errors.Wrap(ErrUnauthorizedAccess, err)
