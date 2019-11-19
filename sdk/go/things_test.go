@@ -26,6 +26,7 @@ const (
 	token       = "token"
 	otherToken  = "other_token"
 	wrongValue  = "wrong_value"
+	badID       = "999"
 	emptyValue  = ""
 
 	keyPrefix = "123e4567-e89b-12d3-a456-"
@@ -740,13 +741,13 @@ func TestConnect(t *testing.T) {
 		{
 			desc:    "connect existing things to non-existing channels",
 			thingID: thingID,
-			chanID:  wrongValue,
+			chanID:  badID,
 			token:   token,
 			err:     sdk.ErrNotFound,
 		},
 		{
 			desc:    "connect non-existing things to existing channels",
-			thingID: wrongValue,
+			thingID: badID,
 			chanID:  chanID1,
 			token:   token,
 			err:     sdk.ErrNotFound,
