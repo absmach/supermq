@@ -26,6 +26,7 @@ const (
 	token       = "token"
 	otherToken  = "other_token"
 	wrongValue  = "wrong_value"
+	emptyValue  = ""
 
 	keyPrefix = "123e4567-e89b-12d3-a456-"
 )
@@ -739,13 +740,13 @@ func TestConnect(t *testing.T) {
 		{
 			desc:    "connect existing things to non-existing channels",
 			thingID: thingID,
-			chanID:  "9",
+			chanID:  wrongValue,
 			token:   token,
 			err:     sdk.ErrNotFound,
 		},
 		{
 			desc:    "connect non-existing things to existing channels",
-			thingID: "9",
+			thingID: wrongValue,
 			chanID:  chanID1,
 			token:   token,
 			err:     sdk.ErrNotFound,
@@ -753,13 +754,13 @@ func TestConnect(t *testing.T) {
 		{
 			desc:    "connect existing things to channels with invalid ID",
 			thingID: thingID,
-			chanID:  "",
+			chanID:  emptyValue,
 			token:   token,
 			err:     sdk.ErrFailedConnection,
 		},
 		{
 			desc:    "connect things with invalid ID to existing channels",
-			thingID: "",
+			thingID: emptyValue,
 			chanID:  chanID1,
 			token:   token,
 			err:     sdk.ErrFailedConnection,
@@ -776,7 +777,7 @@ func TestConnect(t *testing.T) {
 			desc:    "connect existing things to existing channels with empty token",
 			thingID: thingID,
 			chanID:  chanID1,
-			token:   "",
+			token:   emptyValue,
 			err:     sdk.ErrUnauthorized,
 		},
 		{
