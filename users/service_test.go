@@ -153,8 +153,8 @@ func TestUpdateUser(t *testing.T) {
 		token string
 		err   error
 	}{
-		"valid token update user":    {user, key, nil},
-		"invalid token's update use": {user, "non-existent", users.ErrUnauthorizedAccess},
+		"update user with valid token":   {user, key, nil},
+		"update user with invalid token": {user, "non-existent", users.ErrUnauthorizedAccess},
 	}
 
 	for desc, tc := range cases {
