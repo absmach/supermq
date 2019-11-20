@@ -265,7 +265,7 @@ func channelsFromFile(path string) ([]mfxsdk.Channel, error) {
 
 	channels := []mfxsdk.Channel{}
 	switch filepath.Ext(path) {
-	case ".csv":
+	case csvExt:
 		reader := csv.NewReader(file)
 
 		for {
@@ -287,7 +287,7 @@ func channelsFromFile(path string) ([]mfxsdk.Channel, error) {
 
 			channels = append(channels, channel)
 		}
-	case ".json":
+	case jsonExt:
 		err := json.NewDecoder(file).Decode(&channels)
 		if err != nil {
 			return []mfxsdk.Channel{}, err
@@ -312,7 +312,7 @@ func connectionsFromFile(path string) (mfxsdk.ConnectionIDs, error) {
 
 	connections := mfxsdk.ConnectionIDs{}
 	switch filepath.Ext(path) {
-	case ".csv":
+	case csvExt:
 		reader := csv.NewReader(file)
 
 		for {
@@ -331,7 +331,7 @@ func connectionsFromFile(path string) (mfxsdk.ConnectionIDs, error) {
 			connections.ThingIDs = append(connections.ThingIDs, l[0])
 			connections.ChannelIDs = append(connections.ChannelIDs, l[1])
 		}
-	case ".json":
+	case jsonExt:
 		err := json.NewDecoder(file).Decode(&connections)
 		if err != nil {
 			return mfxsdk.ConnectionIDs{}, err
