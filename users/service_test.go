@@ -145,7 +145,6 @@ func TestUpdateUser(t *testing.T) {
 	svc := newService()
 	svc.Register(context.Background(), user)
 	key, _ := svc.Login(context.Background(), user)
-	nonExistingKey, _ := svc.Login(context.Background(), nonExistingUser)
 
 	user.Metadata = map[string]interface{}{"role": "test"}
 
@@ -154,9 +153,8 @@ func TestUpdateUser(t *testing.T) {
 		token string
 		err   error
 	}{
-		"valid token update user":     {user, key, nil},
-		"invalid token's update user": {user, "", users.ErrUnauthorizedAccess},
-		"invalid user update":         {user, nonExistingKey, users.ErrUnauthorizedAccess},
+		"valid token update user":    {user, key, nil},
+		"invalid token's update use": {user, "non-existent", users.ErrUnauthorizedAccess},
 	}
 
 	for desc, tc := range cases {
