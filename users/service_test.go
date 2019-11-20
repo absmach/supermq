@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/users"
+
 	"github.com/mainflux/mainflux/users/mocks"
 	"github.com/stretchr/testify/assert"
 )
@@ -37,7 +39,7 @@ func TestRegister(t *testing.T) {
 	cases := []struct {
 		desc string
 		user users.User
-		err  error
+		err  errors.Error
 	}{
 		{
 			desc: "register new user",
@@ -61,7 +63,7 @@ func TestRegister(t *testing.T) {
 
 	for _, tc := range cases {
 		err := svc.Register(context.Background(), tc.user)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
@@ -71,7 +73,7 @@ func TestLogin(t *testing.T) {
 
 	cases := map[string]struct {
 		user users.User
-		err  error
+		err  errors.Error
 	}{
 		"login with good credentials": {
 			user: user,
@@ -95,7 +97,7 @@ func TestLogin(t *testing.T) {
 
 	for desc, tc := range cases {
 		_, err := svc.Login(context.Background(), tc.user)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
 
@@ -114,7 +116,7 @@ func TestIdentify(t *testing.T) {
 
 	for desc, tc := range cases {
 		_, err := svc.Identify(tc.key)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
 
@@ -136,17 +138,16 @@ func TestUserInfo(t *testing.T) {
 
 	for desc, tc := range cases {
 		u, err := svc.UserInfo(context.Background(), tc.key)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
-		assert.Equal(t, tc.user, u, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("expected %s got %s\n", tc.err, err))
+		assert.Equal(t, tc.user, u, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.user, u))
 	}
 }
-
-// UpdateUser updates the user metadata
 
 func TestUpdateUser(t *testing.T) {
 	svc := newService()
 	svc.Register(context.Background(), user)
 	key, _ := svc.Login(context.Background(), user)
+
 	user.Metadata = map[string]interface{}{"role": "test"}
 
 	cases := map[string]struct {
@@ -154,14 +155,13 @@ func TestUpdateUser(t *testing.T) {
 		token string
 		err   error
 	}{
-		"valid token update user":     {user, key, nil},
-		"invalid token's update user": {user, "", users.ErrUnauthorizedAccess},
-		"non existing user update":    {nonExistingUser, key, users.ErrUnauthorizedAccess},
+		"update user with valid token":   {user, key, nil},
+		"update user with invalid token": {user, "non-existent", users.ErrUnauthorizedAccess},
 	}
 
 	for desc, tc := range cases {
 		err := svc.UpdateUser(context.Background(), tc.token, tc.user)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
 
@@ -179,7 +179,7 @@ func TestGenerateResetToken(t *testing.T) {
 
 	for desc, tc := range cases {
 		err := svc.GenerateResetToken(context.Background(), tc.email, host)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
 
@@ -201,7 +201,8 @@ func TestChangePassword(t *testing.T) {
 
 	for desc, tc := range cases {
 		err := svc.ChangePassword(context.Background(), tc.token, tc.password, tc.oldPassword)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+
 	}
 }
 
@@ -223,7 +224,8 @@ func TestResetPassword(t *testing.T) {
 
 	for desc, tc := range cases {
 		err := svc.ResetPassword(context.Background(), tc.token, tc.password)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+
 	}
 }
 
@@ -242,6 +244,7 @@ func TestSendPasswordReset(t *testing.T) {
 
 	for desc, tc := range cases {
 		err := svc.SendPasswordReset(context.Background(), host, tc.email, tc.token)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+
 	}
 }
