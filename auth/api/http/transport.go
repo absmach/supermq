@@ -56,34 +56,6 @@ func MakeHandler(svc auth.Service, tracer opentracing.Tracer) http.Handler {
 		opts...,
 	))
 
-	mux.Post("/temp/keys", kithttp.NewServer(
-		kitot.TraceServer(tracer, "issue_temp")(issueEndpoint(svc)),
-		decodeIssue,
-		encodeResponse,
-		opts...,
-	))
-
-	mux.Delete("/temp/keys/:id", kithttp.NewServer(
-		kitot.TraceServer(tracer, "revoke_temp")(revokeEndpoint(svc)),
-		decodeKeyReq,
-		encodeResponse,
-		opts...,
-	))
-
-	mux.Get("/temp/keys/:id", kithttp.NewServer(
-		kitot.TraceServer(tracer, "retrieve_temp")(retrieveEndpoint(svc)),
-		decodeKeyReq,
-		encodeResponse,
-		opts...,
-	))
-
-	mux.Get("/temp/keys/validate", kithttp.NewServer(
-		kitot.TraceServer(tracer, "validate_temp")(retrieveEndpoint(svc)),
-		decodeKeyReq,
-		encodeResponse,
-		opts...,
-	))
-
 	mux.GetFunc("/version", mainflux.Version("auth"))
 	mux.Handle("/metrics", promhttp.Handler())
 
@@ -91,14 +63,14 @@ func MakeHandler(svc auth.Service, tracer opentracing.Tracer) http.Handler {
 }
 
 func decodeIssue(_ context.Context, r *http.Request) (interface{}, error) {
-	var req issueKeyReq
+	req := issueKeyReq{
+		issuer: r.Header.Get("Authorization"),
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}
 
-	req.issuer = r.Header.Get("Authorization")
 	return req, nil
-
 }
 
 func decodeKeyReq(_ context.Context, r *http.Request) (interface{}, error) {
@@ -131,14 +103,14 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", contentType)
 
 	switch err {
+	case auth.ErrMalformedEntity:
+		w.WriteHeader(http.StatusBadRequest)
 	case auth.ErrUnauthorizedAccess:
 		w.WriteHeader(http.StatusForbidden)
 	case auth.ErrNotFound:
 		w.WriteHeader(http.StatusNotFound)
 	case auth.ErrConflict:
 		w.WriteHeader(http.StatusConflict)
-	case io.ErrUnexpectedEOF:
-		w.WriteHeader(http.StatusBadRequest)
 	case io.EOF, io.ErrUnexpectedEOF:
 		w.WriteHeader(http.StatusBadRequest)
 	default:

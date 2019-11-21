@@ -69,7 +69,9 @@ func New(keys KeyRepository, idp IdentityProvider, secret string) Service {
 }
 
 func (svc authService) Issue(ctx context.Context, issuer string, key Key) (Key, error) {
-	key.IssuedAt = time.Now()
+	if key.IssuedAt.UTC().Nanosecond() == 0 {
+		return Key{}, ErrInvalidKeyIssuedAt
+	}
 	switch key.Type {
 	case UserKey:
 		return svc.userKey(ctx, issuer, key)

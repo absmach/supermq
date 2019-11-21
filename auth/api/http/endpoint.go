@@ -18,13 +18,15 @@ func issueEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		duration := time.Duration(req.Duration * time.Second)
 		now := time.Now().UTC()
 		newKey := auth.Key{
 			Issuer:   req.issuer,
 			Secret:   req.Secret,
 			IssuedAt: now,
+			Type:     req.Type,
 		}
+
+		duration := time.Duration(req.Duration * time.Second)
 		if duration != 0 {
 			exp := now.Add(duration)
 			newKey.ExpiresAt = &exp

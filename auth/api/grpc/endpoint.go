@@ -4,6 +4,8 @@
 package grpc
 
 import (
+	"time"
+
 	"github.com/go-kit/kit/endpoint"
 	"github.com/mainflux/mainflux/auth"
 	context "golang.org/x/net/context"
@@ -16,8 +18,10 @@ func issueEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
+		now := time.Now().UTC()
 		key := auth.Key{
-			Type: req.keyType,
+			Type:     req.keyType,
+			IssuedAt: now,
 		}
 
 		k, err := svc.Issue(ctx, req.issuer, key)
