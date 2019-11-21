@@ -95,7 +95,7 @@ func (lm *loggingMiddleware) ViewTwin(ctx context.Context, token, id string) (vi
 	return lm.svc.ViewTwin(ctx, token, id)
 }
 
-func (lm *loggingMiddleware) ListTwins(ctx context.Context, token string, limit uint64, name string, metadata twins.SetMetadata) (tw twins.TwinsSet, err error) {
+func (lm *loggingMiddleware) ListTwins(ctx context.Context, token string, limit uint64, name string, metadata twins.Metadata) (tw twins.TwinsSet, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method list_twins for for token %s took %s to complete", token, time.Since(begin))
 		if err != nil {
