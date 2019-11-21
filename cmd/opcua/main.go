@@ -122,7 +122,7 @@ func main() {
 		}, []string{"method"}),
 	)
 
-	go subscribeToOpcServer(svc, cfg.opcConfig, logger)
+	go subscribeToOpcuaServers(svc, cfg.opcConfig, logger)
 	go subscribeToThingsES(svc, esConn, cfg.esConsumerName, logger)
 
 	errs := make(chan error, 2)
@@ -189,14 +189,50 @@ func connectToRedis(redisURL, redisPass, redisDB string, logger logger.Logger) *
 	})
 }
 
-func subscribeToOpcServer(svc opcua.Service, cfg opcua.Config, logger logger.Logger) {
+func readFromOpcuaServer(svc opcua.Service, cfg opcua.Config, logger logger.Logger) {
 	ctx := context.Background()
 	gr := gopcua.NewReader(ctx, svc, logger)
 	if err := gr.Read(cfg); err != nil {
 		logger.Warn(fmt.Sprintf("OPC-UA Read failed: %s", err))
 	}
+}
 
+func subscribeToOpcuaServers(svc opcua.Service, cfg opcua.Config, logger logger.Logger) {
+	ctx := context.Background()
 	gc := gopcua.NewClient(ctx, svc, logger)
+
+	cases := []struct {
+		serverURI      string
+		nodeNamespace  string
+		nodeIdentifier string
+	}{
+		{
+			serverURI:      "opc.tcp://opcua.rocks:4840",
+			nodeNamespace:  "0",
+			nodeIdentifier: "2256",
+		},
+		{
+			serverURI:      "opc.tcp://opcua.rocks:4840",
+			nodeNamespace:  "0",
+			nodeIdentifier: "2254",
+		},
+		{
+			serverURI:      "opc.tcp://opcua.rocks:4840",
+			nodeNamespace:  "1",
+			nodeIdentifier: "2256",
+		},
+	}
+
+	for _, c := range cases {
+		cfg.ServerURI = c.serverURI
+		cfg.NodeNamespace = c.nodeNamespace
+		cfg.NodeIdintifier = c.nodeIdentifier
+
+		go subscribeToOpcuaServer(gc, cfg, logger)
+	}
+}
+
+func subscribeToOpcuaServer(gc opcua.Subscriber, cfg opcua.Config, logger logger.Logger) {
 	if err := gc.Subscribe(cfg); err != nil {
 		logger.Warn(fmt.Sprintf("OPC-UA Subscription failed: %s", err))
 	}

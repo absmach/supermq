@@ -35,12 +35,12 @@ func NewClient(ctx context.Context, svc opcua.Service, log logger.Logger) opcua.
 func (b client) Subscribe(cfg opcua.Config) error {
 	endpoints, err := opcuaGopcua.GetEndpoints(cfg.ServerURI)
 	if err != nil {
-		b.logger.Error(fmt.Sprintf("Failed to fetch OPC-UA server endpoints: %s", err.Error()))
+		return fmt.Errorf("Failed to fetch OPC-UA server endpoints: %s", err)
 	}
 
 	ep := opcuaGopcua.SelectEndpoint(endpoints, cfg.Policy, uaGopcua.MessageSecurityModeFromString(cfg.Mode))
 	if ep == nil {
-		b.logger.Error("Failed to find suitable endpoint")
+		return fmt.Errorf("Failed to find suitable endpoint")
 	}
 
 	opts := []opcuaGopcua.Option{
@@ -53,8 +53,8 @@ func (b client) Subscribe(cfg opcua.Config) error {
 	}
 
 	c := opcuaGopcua.NewClient(ep.EndpointURL, opts...)
-	if errC := c.Connect(b.ctx); err != nil {
-		b.logger.Error(errC.Error())
+	if err := c.Connect(b.ctx); err != nil {
+		return fmt.Errorf("Failed to connect: %s", err)
 	}
 	defer c.Close()
 
@@ -62,9 +62,10 @@ func (b client) Subscribe(cfg opcua.Config) error {
 		Interval: 2000 * time.Millisecond,
 	})
 	if err != nil {
-		b.logger.Error(err.Error())
+		return fmt.Errorf("Failed to subscribe: %s", err)
 	}
 	defer sub.Cancel()
+
 	b.logger.Info(fmt.Sprintf("OPC-UA server URI: %s", ep.SecurityPolicyURI))
 	b.logger.Info(fmt.Sprintf("Created subscription with id %v", sub.SubscriptionID))
 
@@ -79,7 +80,7 @@ func (b client) runHandler(sub *opcuaGopcua.Subscription, cfg opcua.Config) erro
 	nid := fmt.Sprintf("ns=%s;i=%s", cfg.NodeNamespace, cfg.NodeIdintifier)
 	nodeID, err := uaGopcua.ParseNodeID(nid)
 	if err != nil {
-		b.logger.Error(err.Error())
+		return fmt.Errorf("Failed to parse NodeID: %s", err)
 	}
 
 	// arbitrary client handle for the monitoring item
@@ -87,7 +88,7 @@ func (b client) runHandler(sub *opcuaGopcua.Subscription, cfg opcua.Config) erro
 	miCreateRequest := opcuaGopcua.NewMonitoredItemCreateRequestWithDefaults(nodeID, uaGopcua.AttributeIDValue, handle)
 	res, err := sub.Monitor(uaGopcua.TimestampsToReturnBoth, miCreateRequest)
 	if err != nil || res.Results[0].StatusCode != uaGopcua.StatusOK {
-		b.logger.Error(err.Error())
+		return fmt.Errorf("Failed to creeate request: %s", err)
 	}
 
 	go sub.Run(b.ctx)
