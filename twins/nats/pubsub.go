@@ -8,7 +8,6 @@
 package nats
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
@@ -41,23 +40,26 @@ func Subscribe(nc *nats.Conn, tr twins.TwinRepository, logger log.Logger) {
 }
 
 func (ps pubsub) handleMsg(m *nats.Msg) {
+	// ps.logger.Info("nats handleMsg")
+
 	var msg mainflux.Message
 	if err := proto.Unmarshal(m.Data, &msg); err != nil {
 		ps.logger.Warn(fmt.Sprintf("Unmarshalling failed: %s", err))
 		return
 	}
 
-	twinsSet, err := ps.tr.RetrieveByChannel(context.TODO(), msg.Channel, 10)
-	if err != nil {
-		ps.logger.Warn(fmt.Sprintf("Retrieving twins failed: %s", err))
-		return
-	}
+	// twinsSet, err := ps.tr.RetrieveByChannel(context.TODO(), msg.Channel, 10)
+	// if err != nil {
+	// 	ps.logger.Warn(fmt.Sprintf("Retrieving twins failed: %s", err))
+	// 	return
+	// }
+	// fmt.Printf("%+v\n", twinsSet)
 
-	for _, v := range twinsSet.Twins {
-		if err := ps.publish(msg, &v); err != nil {
-			ps.logger.Warn(fmt.Sprintf("Publishing failed: %s", err))
-		}
-	}
+	// for _, v := range twinsSet.Twins {
+	// 	if err := ps.publish(msg, &v); err != nil {
+	// 		ps.logger.Warn(fmt.Sprintf("Publishing failed: %s", err))
+	// 	}
+	// }
 }
 
 func (ps pubsub) publish(msg mainflux.Message, twin *twins.Twin) error {

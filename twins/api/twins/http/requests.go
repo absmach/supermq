@@ -17,28 +17,21 @@ type apiReq interface {
 	validate() error
 }
 
-type pingReq struct {
-	Secret string
-}
-
-func (req pingReq) validate() error {
-	if req.Secret == "" {
-		return twins.ErrUnauthorizedAccess
-	}
-
-	return nil
-}
-
 type addTwinReq struct {
 	token    string
 	Name     string                 `json:"name,omitempty"`
-	Key      string                 `key:"key,omitempty"`
+	Key      string                 `json:"key,omitempty"`
+	ThingID  string                 `json:"thingID"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
 func (req addTwinReq) validate() error {
 	if req.token == "" {
 		return twins.ErrUnauthorizedAccess
+	}
+
+	if req.ThingID == "" {
+		return twins.ErrMalformedEntity
 	}
 
 	if len(req.Name) > maxNameSize {

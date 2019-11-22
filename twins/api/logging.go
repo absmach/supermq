@@ -30,19 +30,6 @@ func LoggingMiddleware(svc twins.Service, logger log.Logger) twins.Service {
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) Ping(secret string) (response string, err error) {
-	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method ping for secret %s took %s to complete", secret, time.Since(begin))
-		if err != nil {
-			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
-			return
-		}
-		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
-	}(time.Now())
-
-	return lm.svc.Ping(secret)
-}
-
 func (lm *loggingMiddleware) AddTwin(ctx context.Context, token string, twin twins.Twin) (saved twins.Twin, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method add_twin for for token %s and twin %s took %s to complete", token, twin.ID, time.Since(begin))

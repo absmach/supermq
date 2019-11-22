@@ -38,9 +38,6 @@ var (
 // Service specifies an API that must be fullfiled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
-	// Ping compares a given string with secret
-	Ping(string) (string, error)
-
 	// AddTwin adds new twin to the user identified by the provided key.
 	AddTwin(context.Context, string, Twin) (Twin, error)
 
@@ -70,7 +67,6 @@ type Service interface {
 }
 
 type twinsService struct {
-	secret     string
 	natsClient *nats.Conn
 	mqttClient mqtt.Client
 	users      mainflux.UsersServiceClient
@@ -81,9 +77,8 @@ type twinsService struct {
 var _ Service = (*twinsService)(nil)
 
 // New instantiates the twins service implementation.
-func New(secret string, nc *nats.Conn, mc mqtt.Client, users mainflux.UsersServiceClient, twins TwinRepository, idp IdentityProvider) Service {
+func New(nc *nats.Conn, mc mqtt.Client, users mainflux.UsersServiceClient, twins TwinRepository, idp IdentityProvider) Service {
 	return &twinsService{
-		secret:     secret,
 		mqttClient: mc,
 		natsClient: nc,
 		users:      users,
@@ -92,17 +87,10 @@ func New(secret string, nc *nats.Conn, mc mqtt.Client, users mainflux.UsersServi
 	}
 }
 
-func (ts *twinsService) Ping(secret string) (string, error) {
-	if ts.secret != secret {
-		return "", ErrUnauthorizedAccess
-	}
-	return "Hello World :)", nil
-}
-
 func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin) (Twin, error) {
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
-		return Twin{}, ErrUnauthorizedAccess
+		return Twin{}, err
 	}
 
 	twin.ID, err = ts.idp.ID()
@@ -130,7 +118,7 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin) (T
 	twin.ID = id
 
 	b, err := json.Marshal(twin)
-	if ts.publish(twin.thingID, "create/success", b); err != nil {
+	if ts.publish(twin.ThingID, "create/success", b); err != nil {
 		return Twin{}, err
 	}
 
@@ -151,7 +139,7 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin)
 	}
 
 	b, err := json.Marshal(twin)
-	if ts.publish(twin.thingID, "update/success", b); err != nil {
+	if ts.publish(twin.ThingID, "update/success", b); err != nil {
 		return err
 	}
 
@@ -174,7 +162,7 @@ func (ts *twinsService) UpdateKey(ctx context.Context, token, id, key string) er
 	}
 
 	b, err := json.Marshal(twin)
-	if ts.publish(twin.thingID, "update/success", b); err != nil {
+	if ts.publish(twin.ThingID, "update/success", b); err != nil {
 		return err
 	}
 
@@ -193,7 +181,7 @@ func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (Twin, e
 	}
 
 	b, err := json.Marshal(twin)
-	if ts.publish(twin.thingID, "get/success", b); err != nil {
+	if ts.publish(twin.ThingID, "get/success", b); err != nil {
 		return Twin{}, err
 	}
 
@@ -233,6 +221,8 @@ func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) error 
 
 func (ts *twinsService) publish(thingID, op string, payload []byte) error {
 	topic := fmt.Sprintf("$mfx/things/%s/%s", thingID, op)
+	fmt.Printf("%s\n", topic)
+
 	token := ts.mqttClient.Publish(topic, 0, false, payload)
 	token.Wait()
 

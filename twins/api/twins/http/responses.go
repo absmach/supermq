@@ -15,27 +15,10 @@ import (
 )
 
 var (
-	_ mainflux.Response = (*pingRes)(nil)
 	_ mainflux.Response = (*twinRes)(nil)
 	_ mainflux.Response = (*viewTwinRes)(nil)
 	_ mainflux.Response = (*removeRes)(nil)
 )
-
-type pingRes struct {
-	Greeting string `json:"greeting"`
-}
-
-func (res pingRes) Code() int {
-	return http.StatusOK
-}
-
-func (res pingRes) Headers() map[string]string {
-	return map[string]string{}
-}
-
-func (res pingRes) Empty() bool {
-	return false
-}
 
 type twinRes struct {
 	id      string

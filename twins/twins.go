@@ -17,11 +17,11 @@ type Metadata map[string]interface{}
 // Twin represents a Mainflux thing digital twin. Each twin is owned by one thing, and
 // is assigned with the unique identifier and (temporary) access key.
 type Twin struct {
+	Owner      string
 	ID         string
 	Key        string
-	Owner      string
 	Name       string
-	thingID    string
+	ThingID    string
 	channelID  string
 	created    time.Time
 	updated    time.Time
