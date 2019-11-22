@@ -56,19 +56,6 @@ func (lm *loggingMiddleware) UpdateTwin(ctx context.Context, token string, twin 
 	return lm.svc.UpdateTwin(ctx, token, twin)
 }
 
-func (lm *loggingMiddleware) UpdateKey(ctx context.Context, token, id, key string) (err error) {
-	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method update_key for for token %s and twin %s took %s to complete", token, id, time.Since(begin))
-		if err != nil {
-			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
-			return
-		}
-		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
-	}(time.Now())
-
-	return lm.svc.UpdateKey(ctx, token, id, key)
-}
-
 func (lm *loggingMiddleware) ViewTwin(ctx context.Context, token, id string) (viewed twins.Twin, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method view_twin for for token %s and twin %s took %s to complete", token, id, time.Since(begin))

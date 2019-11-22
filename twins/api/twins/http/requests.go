@@ -45,6 +45,8 @@ type updateTwinReq struct {
 	token    string
 	id       string
 	Name     string                 `json:"name,omitempty"`
+	Key      string                 `json:"key,omitempty"`
+	ThingID  string                 `json:"thingID,omitempty"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
@@ -58,24 +60,6 @@ func (req updateTwinReq) validate() error {
 	}
 
 	if len(req.Name) > maxNameSize {
-		return twins.ErrMalformedEntity
-	}
-
-	return nil
-}
-
-type updateKeyReq struct {
-	token string
-	id    string
-	Key   string `json:"key"`
-}
-
-func (req updateKeyReq) validate() error {
-	if req.token == "" {
-		return twins.ErrUnauthorizedAccess
-	}
-
-	if req.id == "" || req.Key == "" {
 		return twins.ErrMalformedEntity
 	}
 

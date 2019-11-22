@@ -51,28 +51,13 @@ func updateTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 
 		twin := twins.Twin{
 			ID:       req.id,
+			Key:      req.Key,
 			Name:     req.Name,
+			ThingID:  req.ThingID,
 			Metadata: req.Metadata,
 		}
 
 		if err := svc.UpdateTwin(ctx, req.token, twin); err != nil {
-			return nil, err
-		}
-
-		res := twinRes{id: req.id, created: false}
-		return res, nil
-	}
-}
-
-func updateKeyEndpoint(svc twins.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(updateKeyReq)
-
-		if err := req.validate(); err != nil {
-			return nil, err
-		}
-
-		if err := svc.UpdateKey(ctx, req.token, req.id, req.Key); err != nil {
 			return nil, err
 		}
 
@@ -95,10 +80,14 @@ func viewTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 		}
 
 		res := viewTwinRes{
-			ID:       twin.ID,
 			Owner:    twin.Owner,
-			Name:     twin.Name,
+			ID:       twin.ID,
 			Key:      twin.Key,
+			Name:     twin.Name,
+			ThingID:  twin.ThingID,
+			Created:  twin.Created,
+			Updated:  twin.Updated,
+			Revision: twin.Revision,
 			Metadata: twin.Metadata,
 		}
 		return res, nil

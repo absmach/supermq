@@ -22,13 +22,11 @@ type Twin struct {
 	Key        string
 	Name       string
 	ThingID    string
-	channelID  string
-	created    time.Time
-	updated    time.Time
-	attributes map[string]interface{}
-	state      map[string]interface{}
-	topic      string
-	revision   int
+	Created    time.Time
+	Updated    time.Time
+	Attributes map[string]interface{}
+	State      map[string]interface{}
+	Revision   int
 	Metadata   Metadata
 }
 

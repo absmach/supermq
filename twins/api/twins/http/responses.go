@@ -10,6 +10,7 @@ package http
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/mainflux/mainflux"
 )
@@ -48,10 +49,14 @@ func (res twinRes) Empty() bool {
 }
 
 type viewTwinRes struct {
-	ID       string                 `json:"id"`
 	Owner    string                 `json:"owner,omitempty"`
-	Name     string                 `json:"name,omitempty"`
+	ID       string                 `json:"id"`
 	Key      string                 `json:"key"`
+	ThingID  string                 `json:"thingID"`
+	Name     string                 `json:"name,omitempty"`
+	Revision int                    `json:"revision"`
+	Created  time.Time              `json:"created"`
+	Updated  time.Time              `json:"updated"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 

@@ -68,9 +68,9 @@ func (tr *twinRepository) Update(ctx context.Context, tw twins.Twin) error {
 		return twins.ErrNotFound
 	}
 
-	if err := validate(tw); err != nil {
-		return err
-	}
+	// if err := validate(tw); err != nil {
+	// 	return err
+	// }
 
 	filter := bson.D{{"id", tw.ID}}
 	update := bson.D{{"$set", tw}}

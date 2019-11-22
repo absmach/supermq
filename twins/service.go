@@ -45,9 +45,6 @@ type Service interface {
 	// belongs to the user identified by the provided key.
 	UpdateTwin(context.Context, string, Twin) error
 
-	// UpdateKey updates key value of the existing twin.
-	UpdateKey(context.Context, string, string, string) error
-
 	// ViewTwin retrieves data about twin with the provided
 	// ID belonging to the user identified by the provided key.
 	ViewTwin(context.Context, string, string) (Twin, error)
@@ -110,8 +107,8 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin) (T
 		}
 	}
 
-	twin.created = time.Now()
-	twin.updated = time.Now()
+	twin.Created = time.Now()
+	twin.Updated = time.Now()
 
 	id, err := ts.twins.Save(ctx, twin)
 	if err != nil {
@@ -119,9 +116,10 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin) (T
 	}
 
 	twin.ID = id
+	twin.Revision = 0
 
 	b, err := json.Marshal(twin)
-	if ts.publish(twin.ThingID, "create/success", b); err != nil {
+	if ts.publish(twin.ID, "create/success", b); err != nil {
 		return Twin{}, err
 	}
 
@@ -135,37 +133,15 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin)
 	}
 
 	twin.Owner = res.GetValue()
+	twin.Updated = time.Now()
+	// twin.Revision++
 
-	twin.updated = time.Now()
 	if err := ts.twins.Update(ctx, twin); err != nil {
 		return err
 	}
 
 	b, err := json.Marshal(twin)
-	if ts.publish(twin.ThingID, "update/success", b); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (ts *twinsService) UpdateKey(ctx context.Context, token, id, key string) error {
-	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return ErrUnauthorizedAccess
-	}
-
-	if err := ts.twins.UpdateKey(ctx, res.GetValue(), id, key); err != nil {
-		return err
-	}
-
-	twin, err := ts.twins.RetrieveByID(ctx, res.GetValue(), id)
-	if err != nil {
-		return err
-	}
-
-	b, err := json.Marshal(twin)
-	if ts.publish(twin.ThingID, "update/success", b); err != nil {
+	if ts.publish(twin.ID, "update/success", b); err != nil {
 		return err
 	}
 
@@ -184,7 +160,7 @@ func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (Twin, e
 	}
 
 	b, err := json.Marshal(twin)
-	if ts.publish(twin.ThingID, "get/success", b); err != nil {
+	if ts.publish(twin.ID, "get/success", b); err != nil {
 		return Twin{}, err
 	}
 
@@ -219,7 +195,7 @@ func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) error 
 		return err
 	}
 
-	if ts.publish(id, "remove/success", nil); err != nil {
+	if ts.publish(id, "remove/success", []byte{}); err != nil {
 		return err
 	}
 
@@ -228,6 +204,7 @@ func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) error 
 
 func (ts *twinsService) publish(id, op string, payload []byte) error {
 	topic := fmt.Sprintf("channels/%s/messages/%s/%s", ts.mqttTopic, id, op)
+	fmt.Printf("%s\n", topic)
 
 	token := ts.mqttClient.Publish(topic, 0, false, payload)
 	token.Wait()

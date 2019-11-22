@@ -53,15 +53,6 @@ func (ms *metricsMiddleware) UpdateTwin(ctx context.Context, token string, twin 
 	return ms.svc.UpdateTwin(ctx, token, twin)
 }
 
-func (ms *metricsMiddleware) UpdateKey(ctx context.Context, token, id, key string) (err error) {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "update_key").Add(1)
-		ms.latency.With("method", "update_key").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-
-	return ms.svc.UpdateKey(ctx, token, id, key)
-}
-
 func (ms *metricsMiddleware) ViewTwin(ctx context.Context, token, id string) (viewed twins.Twin, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "view_twin").Add(1)
