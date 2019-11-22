@@ -5,7 +5,9 @@ package main
 
 import (
 	"context"
+	"encoding/csv"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -198,35 +200,42 @@ func readFromOpcuaServer(svc opcua.Service, cfg opcua.Config, logger logger.Logg
 }
 
 func subscribeToOpcuaServers(svc opcua.Service, cfg opcua.Config, logger logger.Logger) {
+	path := "./nodes.csv"
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		logger.Warn(fmt.Sprintf("Config file not found: %s", err))
+		return
+	}
+
+	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
+	if err != nil {
+		logger.Warn(fmt.Sprintf("Failed to open config file: %s", err))
+		return
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+
 	ctx := context.Background()
 	gc := gopcua.NewClient(ctx, svc, logger)
 
-	cases := []struct {
-		serverURI      string
-		nodeNamespace  string
-		nodeIdentifier string
-	}{
-		{
-			serverURI:      "opc.tcp://opcua.rocks:4840",
-			nodeNamespace:  "0",
-			nodeIdentifier: "2256",
-		},
-		{
-			serverURI:      "opc.tcp://opcua.rocks:4840",
-			nodeNamespace:  "0",
-			nodeIdentifier: "2254",
-		},
-		{
-			serverURI:      "opc.tcp://opcua.rocks:4840",
-			nodeNamespace:  "1",
-			nodeIdentifier: "2256",
-		},
-	}
+	for {
+		l, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			logger.Warn(fmt.Sprintf("Failed to read config file: %s", err))
+			return
+		}
 
-	for _, c := range cases {
-		cfg.ServerURI = c.serverURI
-		cfg.NodeNamespace = c.nodeNamespace
-		cfg.NodeIdintifier = c.nodeIdentifier
+		if len(l) < 3 {
+			logger.Warn(fmt.Sprintf("Empty or incomplete line found in file"))
+			return
+		}
+
+		cfg.ServerURI = l[0]
+		cfg.NodeNamespace = l[1]
+		cfg.NodeIdintifier = l[2]
 
 		go subscribeToOpcuaServer(gc, cfg, logger)
 	}
