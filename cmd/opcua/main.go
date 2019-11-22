@@ -30,41 +30,37 @@ import (
 )
 
 const (
-	defHTTPPort          = "8188"
-	defOPCServerURI      = "opc.tcp://opcua.rocks:4840"
-	defOPCNodeNamespace  = "0"
-	defOPCNodeIdentifier = "2256"
-	defOPCPolicy         = ""
-	defOPCMode           = ""
-	defOPCCertFile       = ""
-	defOPCKeyFile        = ""
-	defNatsURL           = nats.DefaultURL
-	defLogLevel          = "debug"
-	defESURL             = "localhost:6379"
-	defESPass            = ""
-	defESDB              = "0"
-	defESConsumerName    = "opcua"
-	defRouteMapURL       = "localhost:6379"
-	defRouteMapPass      = ""
-	defRouteMapDB        = "0"
+	defHTTPPort       = "8188"
+	defOPCPolicy      = ""
+	defOPCMode        = ""
+	defOPCCertFile    = ""
+	defOPCKeyFile     = ""
+	defNatsURL        = nats.DefaultURL
+	defLogLevel       = "debug"
+	defESURL          = "localhost:6379"
+	defESPass         = ""
+	defESDB           = "0"
+	defESConsumerName = "opcua"
+	defRouteMapURL    = "localhost:6379"
+	defRouteMapPass   = ""
+	defRouteMapDB     = "0"
+	defNodesConfig    = "/nodes.csv"
 
-	envHTTPPort          = "MF_OPCUA_ADAPTER_HTTP_PORT"
-	envLogLevel          = "MF_OPCUA_ADAPTER_LOG_LEVEL"
-	envOPCServerURI      = "MF_OPCUA_ADAPTER_SERVER_URI"
-	envOPCNodeNamespace  = "MF_OPCUA_ADAPTER_NODE_NAMESPACE"
-	envOPCNodeIdentifier = "MF_OPCUA_ADAPTER_NODE_IDENTIFIER"
-	envOPCPolicy         = "MF_OPCUA_ADAPTER_POLICY"
-	envOPCMode           = "MF_OPCUA_ADAPTER_MODE"
-	envOPCCertFile       = "MF_OPCUA_ADAPTER_CERT_FILE"
-	envOPCKeyFile        = "MF_OPCUA_ADAPTER_KEY_FILE"
-	envNatsURL           = "MF_NATS_URL"
-	envESURL             = "MF_THINGS_ES_URL"
-	envESPass            = "MF_THINGS_ES_PASS"
-	envESDB              = "MF_THINGS_ES_DB"
-	envESConsumerName    = "MF_OPCUA_ADAPTER_EVENT_CONSUMER"
-	envRouteMapURL       = "MF_OPCUA_ADAPTER_ROUTE_MAP_URL"
-	envRouteMapPass      = "MF_OPCUA_ADAPTER_ROUTE_MAP_PASS"
-	envRouteMapDB        = "MF_OPCUA_ADAPTER_ROUTE_MAP_DB"
+	envHTTPPort       = "MF_OPCUA_ADAPTER_HTTP_PORT"
+	envLogLevel       = "MF_OPCUA_ADAPTER_LOG_LEVEL"
+	envOPCPolicy      = "MF_OPCUA_ADAPTER_POLICY"
+	envOPCMode        = "MF_OPCUA_ADAPTER_MODE"
+	envOPCCertFile    = "MF_OPCUA_ADAPTER_CERT_FILE"
+	envOPCKeyFile     = "MF_OPCUA_ADAPTER_KEY_FILE"
+	envNatsURL        = "MF_NATS_URL"
+	envESURL          = "MF_THINGS_ES_URL"
+	envESPass         = "MF_THINGS_ES_PASS"
+	envESDB           = "MF_THINGS_ES_DB"
+	envESConsumerName = "MF_OPCUA_ADAPTER_EVENT_CONSUMER"
+	envRouteMapURL    = "MF_OPCUA_ADAPTER_ROUTE_MAP_URL"
+	envRouteMapPass   = "MF_OPCUA_ADAPTER_ROUTE_MAP_PASS"
+	envRouteMapDB     = "MF_OPCUA_ADAPTER_ROUTE_MAP_DB"
+	envNodesConfig    = "/nodes.csv"
 
 	thingsRMPrefix   = "thing"
 	channelsRMPrefix = "channel"
@@ -82,6 +78,7 @@ type config struct {
 	routeMapURL    string
 	routeMapPass   string
 	routeMapDB     string
+	nodesConfig    string
 }
 
 func main() {
@@ -124,7 +121,7 @@ func main() {
 		}, []string{"method"}),
 	)
 
-	go subscribeToOpcuaServers(svc, cfg.opcConfig, logger)
+	go subscribeToOpcuaServers(svc, cfg.nodesConfig, cfg.opcConfig, logger)
 	go subscribeToThingsES(svc, esConn, cfg.esConsumerName, logger)
 
 	errs := make(chan error, 2)
@@ -143,13 +140,10 @@ func main() {
 
 func loadConfig() config {
 	oc := opcua.Config{
-		ServerURI:      mainflux.Env(envOPCServerURI, defOPCServerURI),
-		NodeNamespace:  mainflux.Env(envOPCNodeNamespace, defOPCNodeNamespace),
-		NodeIdintifier: mainflux.Env(envOPCNodeIdentifier, defOPCNodeIdentifier),
-		Policy:         mainflux.Env(envOPCPolicy, defOPCPolicy),
-		Mode:           mainflux.Env(envOPCMode, defOPCMode),
-		CertFile:       mainflux.Env(envOPCCertFile, defOPCCertFile),
-		KeyFile:        mainflux.Env(envOPCKeyFile, defOPCKeyFile),
+		Policy:   mainflux.Env(envOPCPolicy, defOPCPolicy),
+		Mode:     mainflux.Env(envOPCMode, defOPCMode),
+		CertFile: mainflux.Env(envOPCCertFile, defOPCCertFile),
+		KeyFile:  mainflux.Env(envOPCKeyFile, defOPCKeyFile),
 	}
 	return config{
 		httpPort:       mainflux.Env(envHTTPPort, defHTTPPort),
@@ -163,6 +157,7 @@ func loadConfig() config {
 		routeMapURL:    mainflux.Env(envRouteMapURL, defRouteMapURL),
 		routeMapPass:   mainflux.Env(envRouteMapPass, defRouteMapPass),
 		routeMapDB:     mainflux.Env(envRouteMapDB, defRouteMapDB),
+		nodesConfig:    mainflux.Env(envNodesConfig, defNodesConfig),
 	}
 }
 
@@ -199,14 +194,13 @@ func readFromOpcuaServer(svc opcua.Service, cfg opcua.Config, logger logger.Logg
 	}
 }
 
-func subscribeToOpcuaServers(svc opcua.Service, cfg opcua.Config, logger logger.Logger) {
-	path := "./nodes.csv"
-	if _, err := os.Stat(path); os.IsNotExist(err) {
+func subscribeToOpcuaServers(svc opcua.Service, nodes string, cfg opcua.Config, logger logger.Logger) {
+	if _, err := os.Stat(nodes); os.IsNotExist(err) {
 		logger.Warn(fmt.Sprintf("Config file not found: %s", err))
 		return
 	}
 
-	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
+	file, err := os.OpenFile(nodes, os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Failed to open config file: %s", err))
 		return
