@@ -49,7 +49,7 @@ func (res twinRes) Empty() bool {
 
 type viewTwinRes struct {
 	ID       string                 `json:"id"`
-	Owner    string                 `json:"-"`
+	Owner    string                 `json:"owner,omitempty"`
 	Name     string                 `json:"name,omitempty"`
 	Key      string                 `json:"key"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`

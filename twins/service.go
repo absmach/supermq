@@ -69,6 +69,7 @@ type Service interface {
 type twinsService struct {
 	natsClient *nats.Conn
 	mqttClient mqtt.Client
+	mqttTopic  string
 	users      mainflux.UsersServiceClient
 	twins      TwinRepository
 	idp        IdentityProvider
@@ -77,14 +78,16 @@ type twinsService struct {
 var _ Service = (*twinsService)(nil)
 
 // New instantiates the twins service implementation.
-func New(nc *nats.Conn, mc mqtt.Client, users mainflux.UsersServiceClient, twins TwinRepository, idp IdentityProvider) Service {
+func New(nc *nats.Conn, mc mqtt.Client, topic string, users mainflux.UsersServiceClient, twins TwinRepository, idp IdentityProvider) Service {
 	return &twinsService{
-		mqttClient: mc,
 		natsClient: nc,
+		mqttClient: mc,
+		mqttTopic:  topic,
 		users:      users,
 		twins:      twins,
 		idp:        idp,
 	}
+
 }
 
 func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin) (Twin, error) {
@@ -216,12 +219,15 @@ func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) error 
 		return err
 	}
 
+	if ts.publish(id, "remove/success", nil); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (ts *twinsService) publish(thingID, op string, payload []byte) error {
-	topic := fmt.Sprintf("$mfx/things/%s/%s", thingID, op)
-	fmt.Printf("%s\n", topic)
+func (ts *twinsService) publish(id, op string, payload []byte) error {
+	topic := fmt.Sprintf("channels/%s/messages/%s/%s", ts.mqttTopic, id, op)
 
 	token := ts.mqttClient.Publish(topic, 0, false, payload)
 	token.Wait()

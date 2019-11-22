@@ -235,13 +235,14 @@ func (tr *twinRepository) Remove(ctx context.Context, owner, id string) error {
 		return err
 	}
 
-	if _, err := tr.RetrieveByID(ctx, "owner", id); err != nil {
-		return twins.ErrNotFound
+	filter := bson.D{{"id", id}}
+	res, err := coll.DeleteOne(context.Background(), filter)
+	if err != nil {
+		return err
 	}
 
-	filter := bson.D{{"id", id}}
-	if _, err := coll.DeleteOne(context.Background(), filter); err != nil {
-		return err
+	if res.DeletedCount < 1 {
+		return twins.ErrNotFound
 	}
 
 	return nil
