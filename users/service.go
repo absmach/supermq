@@ -122,35 +122,35 @@ func (svc usersService) Login(ctx context.Context, user User) (string, errors.Er
 		return "", errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	return svc.issue(ctx, dbUser.Email, auth.SessionKey)
+	return svc.issue(ctx, dbUser.Email, auth.LoginKey)
 }
 
 func (svc usersService) UserInfo(ctx context.Context, token string) (User, errors.Error) {
-	id, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token})
+	id, err := svc.identify(ctx, token)
 	if err != nil {
-		return User{}, errors.Wrap(ErrUnauthorizedAccess, err)
+		return User{}, err
 	}
 
-	dbUser, err := svc.users.RetrieveByID(ctx, id.GetValue())
+	dbUser, err := svc.users.RetrieveByID(ctx, id)
 	if err != nil {
 		return User{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
 	return User{
-		Email:    id.GetValue(),
+		Email:    id,
 		Password: "",
 		Metadata: dbUser.Metadata,
 	}, nil
 }
 
 func (svc usersService) UpdateUser(ctx context.Context, token string, u User) errors.Error {
-	email, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil || email.GetValue() != u.Email {
+	email, err := svc.identify(ctx, token)
+	if err != nil || email != u.Email {
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
 	user := User{
-		Email:    email.GetValue(),
+		Email:    email,
 		Metadata: u.Metadata,
 	}
 
@@ -221,7 +221,7 @@ func (svc usersService) SendPasswordReset(_ context.Context, host, email, token 
 }
 
 func (svc usersService) identify(ctx context.Context, token string) (string, errors.Error) {
-	email, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token})
+	email, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token, Type: auth.LoginKey})
 	if err != nil {
 		return "", errors.Wrap(ErrUnauthorizedAccess, err)
 	}
@@ -229,8 +229,7 @@ func (svc usersService) identify(ctx context.Context, token string) (string, err
 }
 
 func (svc usersService) issue(ctx context.Context, email string, keyType uint32) (string, errors.Error) {
-	ir := mainflux.IssueReq{Issuer: email, Type: keyType}
-	key, err := svc.auth.Issue(ctx, &ir)
+	key, err := svc.auth.Issue(ctx, &mainflux.IssueReq{Issuer: email, Type: keyType})
 	if err != nil {
 		return "", errors.Wrap(ErrUserNotFound, err)
 	}

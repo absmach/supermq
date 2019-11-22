@@ -49,21 +49,23 @@ type Service interface {
 	// Identify validates user's token. If token is valid, user's id
 	// is returned. If token is invalid, or invocation failed for some
 	// other reason, non-nil error values are returned in response.
-	Identify(context.Context, string) (string, error)
+	Identify(context.Context, string, uint32) (string, error)
 }
 
 type authService struct {
 	keys     KeyRepository
 	idp      IdentityProvider
+	hasher   Hasher
 	secret   string
 	duration time.Duration
 }
 
 // New instantiates the auth service implementation.
-func New(keys KeyRepository, idp IdentityProvider, secret string) Service {
+func New(keys KeyRepository, idp IdentityProvider, hasher Hasher, secret string) Service {
 	return &authService{
 		keys:   keys,
 		idp:    idp,
+		hasher: hasher,
 		secret: secret,
 	}
 }
@@ -83,7 +85,7 @@ func (svc authService) Issue(ctx context.Context, issuer string, key Key) (Key, 
 }
 
 func (svc authService) Revoke(ctx context.Context, issuer, id string) error {
-	email, err := svc.Identify(ctx, issuer)
+	email, err := svc.Identify(ctx, issuer, LoginKey)
 	if err != nil {
 		return err
 	}
@@ -91,7 +93,7 @@ func (svc authService) Revoke(ctx context.Context, issuer, id string) error {
 }
 
 func (svc authService) Retrieve(ctx context.Context, issuer, id string) (Key, error) {
-	email, err := svc.Identify(ctx, issuer)
+	email, err := svc.Identify(ctx, issuer, LoginKey)
 	if err != nil {
 		return Key{}, err
 	}
@@ -99,7 +101,7 @@ func (svc authService) Retrieve(ctx context.Context, issuer, id string) (Key, er
 	return svc.keys.Retrieve(ctx, email, id)
 }
 
-func (svc authService) Identify(ctx context.Context, key string) (string, error) {
+func (svc authService) Identify(ctx context.Context, key string, tokenType uint32) (string, error) {
 	token, err := jwt.Parse(key, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, ErrUnauthorizedAccess
@@ -148,11 +150,12 @@ func (svc authService) sessionKey(ctx context.Context, issuer string, duration t
 }
 
 func (svc authService) userKey(ctx context.Context, issuer string, key Key) (Key, error) {
-	email, err := svc.Identify(ctx, issuer)
+	email, err := svc.Identify(ctx, issuer, UserKey)
 	if err != nil {
 		return Key{}, err
 	}
 	key.Issuer = email
+
 	id, err := svc.idp.ID()
 	if err != nil {
 		return Key{}, err
@@ -161,15 +164,22 @@ func (svc authService) userKey(ctx context.Context, issuer string, key Key) (Key
 	if key.Secret == "" {
 		key.Secret = key.ID
 	}
+
 	value, err := svc.issueJwt(key)
 	if err != nil {
 		return Key{}, err
 	}
-	key.Secret = value
-
+	s, err := svc.hasher.Hash(value)
+	if err != nil {
+		return Key{}, err
+	}
+	// Store encrypted key.
+	key.Secret = s
 	if _, err := svc.keys.Save(ctx, key); err != nil {
 		return Key{}, err
 	}
+	// Return key. Since the key is store encrypted, it's impossible to retrieve it later.
+	key.Secret = value
 
 	return key, nil
 }

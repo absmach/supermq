@@ -69,7 +69,7 @@ func (lm *loggingMiddleware) Retrieve(ctx context.Context, owner, id string) (ke
 	return lm.svc.Retrieve(ctx, owner, id)
 }
 
-func (lm *loggingMiddleware) Identify(ctx context.Context, key string) (id string, err error) {
+func (lm *loggingMiddleware) Identify(ctx context.Context, key string, kind uint32) (id string, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method identify for took %s to complete", time.Since(begin))
 		if err != nil {
@@ -79,5 +79,5 @@ func (lm *loggingMiddleware) Identify(ctx context.Context, key string) (id strin
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.Identify(ctx, key)
+	return lm.svc.Identify(ctx, key, kind)
 }

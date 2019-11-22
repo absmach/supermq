@@ -18,8 +18,8 @@ var (
 )
 
 const (
-	// SessionKey is temporary User key received on successfull login.
-	SessionKey uint32 = iota
+	// LoginKey is temporary User key received on successfull login.
+	LoginKey uint32 = iota
 	// ResetKey represents a key for resseting password.
 	ResetKey
 	// UserKey enables the one to act on behalf of the user.

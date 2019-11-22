@@ -10,11 +10,11 @@ are able to do the following actions on API keys:
 
 There are *three types of API keys*:
 
-- session key - keys issued to the user upon Login request
+- login key - keys issued to the user upon Login request
 - user key - keys issued upon the user request
 - reset key - password reset key
 
-Session keys are issued when user logs in. Each user request (other than `registration` and `login`) contains session key that is used to authenticate the user. User keys are similar to the session keys. The main difference is that user keys have configurable expiration time. If no time is set, the key will never expire. For that reason, user keys are _the only key type that can be revoked_. Reset key is the password reset key. It's short-lived token used for password recovery process.
+Login keys are issued when user logs in. Each user request (other than `registration` and `login`) contains login key that is used to authenticate the user. User keys are similar to the login keys. The main difference is that user keys have configurable expiration time. If no time is set, the key will never expire. For that reason, user keys are _the only key type that can be revoked_. Reset key is the password reset key. It's short-lived token used for password recovery process.
 
 For in-depth explanation of the aforementioned scenarios, as well as thorough
 understanding of Mainflux, please check out the [official documentation][doc].

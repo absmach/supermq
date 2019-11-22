@@ -18,6 +18,7 @@ import (
 	api "github.com/mainflux/mainflux/auth/api"
 	grpcapi "github.com/mainflux/mainflux/auth/api/grpc"
 	httpapi "github.com/mainflux/mainflux/auth/api/http"
+	"github.com/mainflux/mainflux/auth/bcrypt"
 	mfidp "github.com/mainflux/mainflux/auth/idp"
 	"github.com/mainflux/mainflux/auth/postgres"
 	"github.com/mainflux/mainflux/auth/tracing"
@@ -96,7 +97,7 @@ func main() {
 	tracer, closer := initJaeger("auth", cfg.jaegerURL, logger)
 	defer closer.Close()
 
-	dbTracer, dbCloser := initJaeger("users_db", cfg.jaegerURL, logger)
+	dbTracer, dbCloser := initJaeger("auth_db", cfg.jaegerURL, logger)
 	defer dbCloser.Close()
 
 	svc := newService(db, dbTracer, cfg.secret, logger)
@@ -179,7 +180,8 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, secret string, logger lo
 	repo := tracing.New(postgres.New(database), tracer)
 
 	idp := mfidp.New()
-	svc := auth.New(repo, idp, secret)
+	hasher := bcrypt.New()
+	svc := auth.New(repo, idp, hasher, secret)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
@@ -223,7 +225,7 @@ func startGRPCServer(tracer opentracing.Tracer, svc auth.Service, port string, c
 	if certFile != "" || keyFile != "" {
 		creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
 		if err != nil {
-			logger.Error(fmt.Sprintf("Failed to load users certificates: %s", err))
+			logger.Error(fmt.Sprintf("Failed to load auth certificates: %s", err))
 			os.Exit(1)
 		}
 		logger.Info(fmt.Sprintf("Auth gRPC service started using https on port %s with cert %s key %s", port, certFile, keyFile))

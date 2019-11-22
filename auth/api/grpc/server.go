@@ -66,7 +66,7 @@ func encodeIssueResponse(_ context.Context, grpcRes interface{}) (interface{}, e
 
 func decodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*mainflux.Token)
-	return identityReq{req.GetValue()}, nil
+	return identityReq{token: req.GetValue(), kind: req.GetType()}, nil
 }
 
 func encodeIdentifyResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {

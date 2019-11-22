@@ -19,7 +19,7 @@ service AuthService {
 }
 
 message AccessByKeyReq {
-    string token = 1;
+    string token  = 1;
     string chanID = 2;
 }
 
@@ -29,18 +29,22 @@ message ThingID {
 
 message AccessByIDReq {
     string thingID = 1;
-    string chanID = 2;
+    string chanID  = 2;
 }
 
+// If a token is not carrying any information itself, the type
+// field can be used to determine how to validate the token.
+// Also, different tokens can be encoded in different ways.
 message Token {
     string value = 1;
+    uint32 type  = 2;
 }
 
 message UserID {
     string value = 1;
 }
 
-message IssueReq{
-    string issuer = 2;
-    uint32 type = 3;
+message IssueReq {
+    string issuer = 1;
+    uint32 type   = 2;
 }

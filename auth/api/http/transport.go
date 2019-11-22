@@ -49,8 +49,8 @@ func MakeHandler(svc auth.Service, tracer opentracing.Tracer) http.Handler {
 		opts...,
 	))
 
-	mux.Get("/keys/validate", kithttp.NewServer(
-		kitot.TraceServer(tracer, "validate")(retrieveEndpoint(svc)),
+	mux.Post("/keys/validate", kithttp.NewServer(
+		kitot.TraceServer(tracer, "validate")(validateEndpoint(svc)),
 		decodeKeyReq,
 		encodeResponse,
 		opts...,

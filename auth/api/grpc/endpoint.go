@@ -39,7 +39,7 @@ func identifyEndpoint(svc auth.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		id, err := svc.Identify(ctx, req.token)
+		id, err := svc.Identify(ctx, req.token, req.kind)
 		if err != nil {
 			return identityRes{}, err
 		}

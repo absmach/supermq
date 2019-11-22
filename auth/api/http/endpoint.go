@@ -80,3 +80,21 @@ func retrieveEndpoint(svc auth.Service) endpoint.Endpoint {
 		return key, nil
 	}
 }
+
+func validateEndpoint(svc auth.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(keyReq)
+
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+
+		key, err := svc.Retrieve(ctx, req.issuer, req.id)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return key, nil
+	}
+}
