@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -126,21 +127,47 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin) (T
 	return twin, nil
 }
 
+func IsZeroOfUnderlyingType(x interface{}) bool {
+	return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
+}
+
 func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin) error {
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return ErrUnauthorizedAccess
 	}
 
-	twin.Owner = res.GetValue()
-	twin.Updated = time.Now()
-	// twin.Revision++
+	tw, err := ts.twins.RetrieveByID(ctx, res.GetValue(), twin.ID)
+	if err != nil {
+		return err
+	}
+	tw.Updated = time.Now()
+	tw.Revision++
 
-	if err := ts.twins.Update(ctx, twin); err != nil {
+	if !IsZeroOfUnderlyingType(twin.Key) {
+		tw.Key = twin.Key
+	}
+	if !IsZeroOfUnderlyingType(twin.Name) {
+		tw.Name = twin.Name
+	}
+	if !IsZeroOfUnderlyingType(twin.ThingID) {
+		tw.ThingID = twin.ThingID
+	}
+	if !IsZeroOfUnderlyingType(twin.Attributes) {
+		tw.Attributes = twin.Attributes
+	}
+	if !IsZeroOfUnderlyingType(twin.State) {
+		tw.State = twin.State
+	}
+	if !IsZeroOfUnderlyingType(twin.Metadata) {
+		tw.Metadata = twin.Metadata
+	}
+
+	if err := ts.twins.Update(ctx, tw); err != nil {
 		return err
 	}
 
-	b, err := json.Marshal(twin)
+	b, err := json.Marshal(tw)
 	if ts.publish(twin.ID, "update/success", b); err != nil {
 		return err
 	}

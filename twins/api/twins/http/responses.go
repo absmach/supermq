@@ -49,15 +49,17 @@ func (res twinRes) Empty() bool {
 }
 
 type viewTwinRes struct {
-	Owner    string                 `json:"owner,omitempty"`
-	ID       string                 `json:"id"`
-	Key      string                 `json:"key"`
-	ThingID  string                 `json:"thingID"`
-	Name     string                 `json:"name,omitempty"`
-	Revision int                    `json:"revision"`
-	Created  time.Time              `json:"created"`
-	Updated  time.Time              `json:"updated"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	Owner      string                 `json:"owner,omitempty"`
+	ID         string                 `json:"id"`
+	Key        string                 `json:"key"`
+	ThingID    string                 `json:"thingID"`
+	Name       string                 `json:"name,omitempty"`
+	Revision   int                    `json:"revision"`
+	Created    time.Time              `json:"created"`
+	Updated    time.Time              `json:"updated"`
+	Attributes map[string]interface{} `json:"attributes,omitempty"`
+	State      map[string]interface{} `json:"state,omitempty"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }
 
 func (res viewTwinRes) Code() int {

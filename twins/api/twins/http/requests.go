@@ -18,11 +18,13 @@ type apiReq interface {
 }
 
 type addTwinReq struct {
-	token    string
-	Name     string                 `json:"name,omitempty"`
-	Key      string                 `json:"key,omitempty"`
-	ThingID  string                 `json:"thingID"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	token      string
+	Name       string                 `json:"name,omitempty"`
+	Key        string                 `json:"key,omitempty"`
+	ThingID    string                 `json:"thingID"`
+	Attributes map[string]interface{} `json:"attributes,omitempty"`
+	State      map[string]interface{} `json:"state,omitempty"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }
 
 func (req addTwinReq) validate() error {
@@ -42,12 +44,14 @@ func (req addTwinReq) validate() error {
 }
 
 type updateTwinReq struct {
-	token    string
-	id       string
-	Name     string                 `json:"name,omitempty"`
-	Key      string                 `json:"key,omitempty"`
-	ThingID  string                 `json:"thingID,omitempty"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	token      string
+	id         string
+	Name       string                 `json:"name,omitempty"`
+	Key        string                 `json:"key,omitempty"`
+	ThingID    string                 `json:"thingID,omitempty"`
+	Attributes map[string]interface{} `json:"attributes,omitempty"`
+	State      map[string]interface{} `json:"state,omitempty"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }
 
 func (req updateTwinReq) validate() error {

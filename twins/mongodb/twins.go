@@ -64,18 +64,15 @@ func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) (string, erro
 func (tr *twinRepository) Update(ctx context.Context, tw twins.Twin) error {
 	coll := tr.db.Collection(collectionName)
 
-	if _, err := tr.RetrieveByID(ctx, tw.Owner, tw.ID); err != nil {
-		return twins.ErrNotFound
-	}
-
-	// if err := validate(tw); err != nil {
-	// 	return err
-	// }
-
 	filter := bson.D{{"id", tw.ID}}
 	update := bson.D{{"$set", tw}}
-	if _, err := coll.UpdateOne(context.Background(), filter, update); err != nil {
+	res, err := coll.UpdateOne(context.Background(), filter, update)
+	if err != nil {
 		return err
+	}
+
+	if res.ModifiedCount < 1 {
+		return twins.ErrNotFound
 	}
 
 	return nil

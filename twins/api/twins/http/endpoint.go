@@ -50,11 +50,13 @@ func updateTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 		}
 
 		twin := twins.Twin{
-			ID:       req.id,
-			Key:      req.Key,
-			Name:     req.Name,
-			ThingID:  req.ThingID,
-			Metadata: req.Metadata,
+			ID:         req.id,
+			Key:        req.Key,
+			Name:       req.Name,
+			ThingID:    req.ThingID,
+			Attributes: req.Attributes,
+			State:      req.State,
+			Metadata:   req.Metadata,
 		}
 
 		if err := svc.UpdateTwin(ctx, req.token, twin); err != nil {
@@ -80,15 +82,17 @@ func viewTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 		}
 
 		res := viewTwinRes{
-			Owner:    twin.Owner,
-			ID:       twin.ID,
-			Key:      twin.Key,
-			Name:     twin.Name,
-			ThingID:  twin.ThingID,
-			Created:  twin.Created,
-			Updated:  twin.Updated,
-			Revision: twin.Revision,
-			Metadata: twin.Metadata,
+			Owner:      twin.Owner,
+			ID:         twin.ID,
+			Key:        twin.Key,
+			Name:       twin.Name,
+			ThingID:    twin.ThingID,
+			Created:    twin.Created,
+			Updated:    twin.Updated,
+			Revision:   twin.Revision,
+			Attributes: twin.Attributes,
+			State:      twin.State,
+			Metadata:   twin.Metadata,
 		}
 		return res, nil
 	}

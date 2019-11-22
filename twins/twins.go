@@ -24,9 +24,9 @@ type Twin struct {
 	ThingID    string
 	Created    time.Time
 	Updated    time.Time
+	Revision   int
 	Attributes map[string]interface{}
 	State      map[string]interface{}
-	Revision   int
 	Metadata   Metadata
 }
 
