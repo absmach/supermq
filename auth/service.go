@@ -46,9 +46,9 @@ type Service interface {
 	// ID, that is issued by the user identified by the provided key.
 	Retrieve(context.Context, string, string) (Key, error)
 
-	// Identify validates user's token. If token is valid, user's id
+	// Identify validates token token. If token is valid, content
 	// is returned. If token is invalid, or invocation failed for some
-	// other reason, non-nil error values are returned in response.
+	// other reason, non-nil error value is returned in response.
 	Identify(context.Context, string, uint32) (string, error)
 }
 
@@ -178,7 +178,7 @@ func (svc authService) userKey(ctx context.Context, issuer string, key Key) (Key
 	if _, err := svc.keys.Save(ctx, key); err != nil {
 		return Key{}, err
 	}
-	// Return key. Since the key is store encrypted, it's impossible to retrieve it later.
+	// The key is store encrypted, so the user needs to take care not to lose it.
 	key.Secret = value
 
 	return key, nil

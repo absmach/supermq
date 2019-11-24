@@ -81,7 +81,7 @@ func retrieveEndpoint(svc auth.Service) endpoint.Endpoint {
 	}
 }
 
-func validateEndpoint(svc auth.Service) endpoint.Endpoint {
+func identifyEndpoint(svc auth.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(keyReq)
 

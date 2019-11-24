@@ -34,7 +34,7 @@ func (repo singleUserRepo) Issue(ctx context.Context, req *mainflux.IssueReq, op
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
-	if repo.token != req.GetValue() {
+	if repo.token != req.GetIssuer() {
 		return nil, things.ErrUnauthorizedAccess
 	}
 

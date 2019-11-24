@@ -63,13 +63,13 @@ const (
 	defHTTPPort        = "8180"
 	defAuthHTTPPort    = "8989"
 	defAuthGRPCPort    = "8181"
-	defAuthTimeout     = "1" // in seconds
-	defAuthURL         = "localhost:8181"
 	defServerCert      = ""
 	defServerKey       = ""
 	defSingleUserEmail = ""
 	defSingleUserToken = ""
 	defJaegerURL       = ""
+	defAuthURL         = "localhost:8181"
+	defAuthTimeout     = "1" // in seconds
 
 	envLogLevel        = "MF_THINGS_LOG_LEVEL"
 	envDBHost          = "MF_THINGS_DB_HOST"
@@ -90,15 +90,15 @@ const (
 	envESPass          = "MF_THINGS_ES_PASS"
 	envESDB            = "MF_THINGS_ES_DB"
 	envHTTPPort        = "MF_THINGS_HTTP_PORT"
-	envAuthHTTPPort    = "MF_AUTH_HTTP_PORT"
-	envAuthGRPCPort    = "MF_AUTH_GRPC_PORT"
-	envAuthTimeout     = "MF_AUTH_TIMEOUT"
-	envAuthURL         = "MF_USERS_URL"
+	envAuthHTTPPort    = "MF_THINGS_AUTH_HTTP_PORT"
+	envAuthGRPCPort    = "MF_THINGS_AUTH_GRPC_PORT"
 	envServerCert      = "MF_THINGS_SERVER_CERT"
 	envServerKey       = "MF_THINGS_SERVER_KEY"
 	envSingleUserEmail = "MF_THINGS_SINGLE_USER_EMAIL"
 	envSingleUserToken = "MF_THINGS_SINGLE_USER_TOKEN"
 	envJaegerURL       = "MF_JAEGER_URL"
+	envAuthURL         = "MF_AUTH_URL"
+	envAuthTimeout     = "MF_AUTH_TIMEOUT"
 )
 
 type config struct {
@@ -115,13 +115,13 @@ type config struct {
 	httpPort        string
 	authHTTPPort    string
 	authGRPCPort    string
-	authTimeout     time.Duration
-	authURL         string
 	serverCert      string
 	serverKey       string
 	singleUserEmail string
 	singleUserToken string
 	jaegerURL       string
+	authURL         string
+	authTimeout     time.Duration
 }
 
 func main() {
@@ -145,7 +145,7 @@ func main() {
 	usersTracer, usersCloser := initJaeger("users", cfg.jaegerURL, logger)
 	defer usersCloser.Close()
 
-	auth, close := createUsersClient(cfg, usersTracer, logger)
+	auth, close := createAuthClient(cfg, usersTracer, logger)
 	if close != nil {
 		defer close()
 	}
@@ -210,13 +210,13 @@ func loadConfig() config {
 		httpPort:        mainflux.Env(envHTTPPort, defHTTPPort),
 		authHTTPPort:    mainflux.Env(envAuthHTTPPort, defAuthHTTPPort),
 		authGRPCPort:    mainflux.Env(envAuthGRPCPort, defAuthGRPCPort),
-		authTimeout:     time.Duration(timeout) * time.Second,
-		authURL:         mainflux.Env(envAuthURL, defAuthURL),
 		serverCert:      mainflux.Env(envServerCert, defServerCert),
 		serverKey:       mainflux.Env(envServerKey, defServerKey),
 		singleUserEmail: mainflux.Env(envSingleUserEmail, defSingleUserEmail),
 		singleUserToken: mainflux.Env(envSingleUserToken, defSingleUserToken),
 		jaegerURL:       mainflux.Env(envJaegerURL, defJaegerURL),
+		authURL:         mainflux.Env(envAuthURL, defAuthURL),
+		authTimeout:     time.Duration(timeout) * time.Second,
 	}
 }
 
@@ -267,7 +267,7 @@ func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sqlx.DB {
 	return db
 }
 
-func createUsersClient(cfg config, tracer opentracing.Tracer, logger logger.Logger) (mainflux.AuthServiceClient, func() error) {
+func createAuthClient(cfg config, tracer opentracing.Tracer, logger logger.Logger) (mainflux.AuthServiceClient, func() error) {
 	if cfg.singleUserEmail != "" && cfg.singleUserToken != "" {
 		return localusers.NewSingleUserService(cfg.singleUserEmail, cfg.singleUserToken), nil
 	}
