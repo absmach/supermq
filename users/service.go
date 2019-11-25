@@ -86,19 +86,17 @@ var _ Service = (*usersService)(nil)
 type usersService struct {
 	users  UserRepository
 	hasher Hasher
-	token  Tokenizer
 	email  Emailer
 	auth   mainflux.AuthServiceClient
 }
 
 // New instantiates the users service implementation
-func New(users UserRepository, hasher Hasher, auth mainflux.AuthServiceClient, m Emailer, t Tokenizer) Service {
+func New(users UserRepository, hasher Hasher, auth mainflux.AuthServiceClient, m Emailer) Service {
 	return &usersService{
 		users:  users,
 		hasher: hasher,
 		auth:   auth,
 		email:  m,
-		token:  t,
 	}
 }
 

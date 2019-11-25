@@ -150,14 +150,14 @@ func dec(in []byte) ([]byte, error) {
 	return in, nil
 }
 
-func newService(users mainflux.UsersServiceClient, unknown map[string]string, url string) bootstrap.Service {
+func newService(auth mainflux.AuthServiceClient, unknown map[string]string, url string) bootstrap.Service {
 	things := mocks.NewConfigsRepository(unknown)
 	config := mfsdk.Config{
 		BaseURL: url,
 	}
 
 	sdk := mfsdk.NewSDK(config)
-	return bootstrap.New(users, things, sdk, encKey)
+	return bootstrap.New(auth, things, sdk, encKey)
 }
 
 func generateChannels() map[string]things.Channel {
@@ -173,8 +173,8 @@ func generateChannels() map[string]things.Channel {
 	return channels
 }
 
-func newThingsService(users mainflux.UsersServiceClient) things.Service {
-	return mocks.NewThingsService(map[string]things.Thing{}, generateChannels(), users)
+func newThingsService(auth mainflux.AuthServiceClient) things.Service {
+	return mocks.NewThingsService(map[string]things.Thing{}, generateChannels(), auth)
 }
 
 func newThingsServer(svc things.Service) *httptest.Server {

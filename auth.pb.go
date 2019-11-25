@@ -186,6 +186,7 @@ func (m *AccessByIDReq) GetChanID() string {
 
 // If a token is not carrying any information itself, the type
 // field can be used to determine how to validate the token.
+// Also, different tokens can be encoded in different ways.
 type Token struct {
 	Value                string   `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
 	Type                 uint32   `protobuf:"varint,2,opt,name=type,proto3" json:"type,omitempty"`

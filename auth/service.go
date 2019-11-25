@@ -60,17 +60,15 @@ type claims struct {
 type authService struct {
 	keys     KeyRepository
 	idp      IdentityProvider
-	hasher   Hasher
 	secret   string
 	duration time.Duration
 }
 
 // New instantiates the auth service implementation.
-func New(keys KeyRepository, idp IdentityProvider, hasher Hasher, secret string) Service {
+func New(keys KeyRepository, idp IdentityProvider, secret string) Service {
 	return &authService{
 		keys:   keys,
 		idp:    idp,
-		hasher: hasher,
 		secret: secret,
 	}
 }
@@ -129,7 +127,8 @@ func (svc authService) Identify(ctx context.Context, key string, tokenType uint3
 		return "", ErrUnauthorizedAccess
 	}
 
-	if *t == UserKey {
+	switch *t {
+	case UserKey:
 		k, err := svc.keys.Retrieve(ctx, iss, sub)
 		if err != nil {
 			return "", err
@@ -137,11 +136,12 @@ func (svc authService) Identify(ctx context.Context, key string, tokenType uint3
 		if k.ExpiresAt != nil && k.ExpiresAt.Before(time.Now()) {
 			return "", svc.Revoke(ctx, iss, sub)
 		}
-
 		return iss, nil
+	case ResetKey:
+		return iss, nil
+	default:
+		return sub, nil
 	}
-
-	return sub, nil
 }
 
 func (svc authService) issueJwt(key Key) (string, error) {
@@ -214,17 +214,10 @@ func (svc authService) userKey(ctx context.Context, issuer string, key Key) (Key
 	if err != nil {
 		return Key{}, err
 	}
-	s, err := svc.hasher.Hash(value)
-	if err != nil {
-		return Key{}, err
-	}
-	// Store encrypted key.
-	key.Secret = s
+	key.Secret = value
 	if _, err := svc.keys.Save(ctx, key); err != nil {
 		return Key{}, err
 	}
-	// The key is store encrypted, so the user needs to take care not to lose it.
-	key.Secret = value
 
 	return key, nil
 }

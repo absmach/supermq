@@ -18,7 +18,6 @@ import (
 	"github.com/mainflux/mainflux/internal/email"
 	"github.com/mainflux/mainflux/users"
 	"github.com/mainflux/mainflux/users/emailer"
-	"github.com/mainflux/mainflux/users/token"
 	"github.com/mainflux/mainflux/users/tracing"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -29,7 +28,6 @@ import (
 	authapi "github.com/mainflux/mainflux/auth/api/grpc"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/users/api"
-	httpapi "github.com/mainflux/mainflux/users/api/http"
 	"github.com/mainflux/mainflux/users/bcrypt"
 	"github.com/mainflux/mainflux/users/postgres"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -72,8 +70,6 @@ const (
 	defEmailFromName    = ""
 	defEmailTemplate    = "email.tmpl"
 
-	defTokenSecret        = "mainflux-secret"
-	defTokenDuration      = "5"
 	defTokenResetEndpoint = "/reset-request" // URL where user lands after click on the reset link from email
 
 	envLogLevel      = "MF_USERS_LOG_LEVEL"
@@ -110,8 +106,6 @@ const (
 	envEmailLogLevel    = "MF_EMAIL_LOG_LEVEL"
 	envEmailTemplate    = "MF_EMAIL_TEMPLATE"
 
-	envTokenSecret        = "MF_TOKEN_SECRET"
-	envTokenDuration      = "MF_TOKEN_DURATION"
 	envTokenResetEndpoint = "MF_TOKEN_RESET_ENDPOINT"
 )
 
@@ -125,7 +119,6 @@ type config struct {
 	authCACerts  string
 	authURL      string
 	emailConf    email.Config
-	tokenConf    tokenConfig
 	httpPort     string
 	grpcPort     string
 	secret       string
@@ -133,11 +126,6 @@ type config struct {
 	serverKey    string
 	jaegerURL    string
 	resetURL     string
-}
-
-type tokenConfig struct {
-	hmacSampleSecret []byte // secret for signing token
-	tokenDuration    string // token in duration in min
 }
 
 func main() {
@@ -214,11 +202,6 @@ func loadConfig() config {
 		Template:    mainflux.Env(envEmailTemplate, defEmailTemplate),
 	}
 
-	tokenConf := tokenConfig{
-		hmacSampleSecret: []byte(mainflux.Env(envTokenSecret, defTokenSecret)),
-		tokenDuration:    mainflux.Env(envTokenDuration, defTokenDuration),
-	}
-
 	return config{
 		logLevel:     mainflux.Env(envLogLevel, defLogLevel),
 		dbConfig:     dbConfig,
@@ -228,7 +211,6 @@ func loadConfig() config {
 		authTLS:      tls,
 		authURL:      mainflux.Env(envAuthURL, defAuthURL),
 		emailConf:    emailConf,
-		tokenConf:    tokenConf,
 		httpPort:     mainflux.Env(envHTTPPort, defHTTPPort),
 		grpcPort:     mainflux.Env(envGRPCPort, defGRPCPort),
 		secret:       mainflux.Env(envSecret, defSecret),
@@ -306,13 +288,8 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServic
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to configure e-mailing util: %s", err.Error()))
 	}
-	tDur, err := strconv.Atoi(mainflux.Env(envTokenDuration, defTokenDuration))
-	if err != nil {
-		logger.Error(err.Error())
-	}
-	tokenizer := token.New(c.tokenConf.hmacSampleSecret, tDur)
 
-	svc := users.New(repo, hasher, auth, emailer, tokenizer)
+	svc := users.New(repo, hasher, auth, emailer)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
@@ -336,9 +313,9 @@ func startHTTPServer(tracer opentracing.Tracer, svc users.Service, port string, 
 	p := fmt.Sprintf(":%s", port)
 	if certFile != "" || keyFile != "" {
 		logger.Info(fmt.Sprintf("Users service started using https, cert %s key %s, exposed port %s", certFile, keyFile, port))
-		errs <- http.ListenAndServeTLS(p, certFile, keyFile, httpapi.MakeHandler(svc, tracer, logger))
+		errs <- http.ListenAndServeTLS(p, certFile, keyFile, api.MakeHandler(svc, tracer, logger))
 	} else {
 		logger.Info(fmt.Sprintf("Users service started using http, exposed port %s", port))
-		errs <- http.ListenAndServe(p, httpapi.MakeHandler(svc, tracer, logger))
+		errs <- http.ListenAndServe(p, api.MakeHandler(svc, tracer, logger))
 	}
 }

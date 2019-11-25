@@ -142,10 +142,10 @@ func main() {
 	db := connectToDB(cfg.dbConfig, logger)
 	defer db.Close()
 
-	usersTracer, usersCloser := initJaeger("users", cfg.jaegerURL, logger)
-	defer usersCloser.Close()
+	authTracer, authCloser := initJaeger("auth", cfg.jaegerURL, logger)
+	defer authCloser.Close()
 
-	auth, close := createAuthClient(cfg, usersTracer, logger)
+	auth, close := createAuthClient(cfg, authTracer, logger)
 	if close != nil {
 		defer close()
 	}

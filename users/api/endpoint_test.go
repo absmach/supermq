@@ -1,7 +1,7 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-package http_test
+package api_test
 
 import (
 	"context"
@@ -15,12 +15,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/users"
-	httpapi "github.com/mainflux/mainflux/users/api/http"
-	"github.com/mainflux/mainflux/users/jwt"
+	"github.com/mainflux/mainflux/users/api"
 	"github.com/mainflux/mainflux/users/mocks"
-	"github.com/mainflux/mainflux/users/token"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 )
@@ -62,16 +61,15 @@ func (tr testRequest) make() (*http.Response, error) {
 func newService() users.Service {
 	repo := mocks.NewUserRepository()
 	hasher := mocks.NewHasher()
-	idp := mocks.NewIdentityProvider()
-	token := mocks.NewTokenizer()
+	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
 	email := mocks.NewEmailer()
 
-	return users.New(repo, hasher, idp, email, token)
+	return users.New(repo, hasher, auth, email)
 }
 
 func newServer(svc users.Service) *httptest.Server {
 	logger, _ := log.New(os.Stdout, log.Info.String())
-	mux := httpapi.MakeHandler(svc, mocktracer.New(), logger)
+	mux := api.MakeHandler(svc, mocktracer.New(), logger)
 	return httptest.NewServer(mux)
 }
 
@@ -125,8 +123,9 @@ func TestLogin(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	client := ts.Client()
-	j := jwt.New("secret")
-	token, _ := j.TemporaryKey(user.Email)
+	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
+	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Issuer: user.Email, Type: 0})
+	token := tkn.GetValue()
 	tokenData := toJSON(map[string]string{"token": token})
 	data := toJSON(user)
 	invalidEmailData := toJSON(users.User{
@@ -157,7 +156,7 @@ func TestLogin(t *testing.T) {
 		{"login with invalid request format", "{", contentType, http.StatusBadRequest, toJSON(errorRes{users.ErrMalformedEntity.Error()})},
 		{"login with empty JSON request", "{}", contentType, http.StatusBadRequest, toJSON(errorRes{users.ErrMalformedEntity.Error()})},
 		{"login with empty request", "", contentType, http.StatusBadRequest, toJSON(errorRes{users.ErrMalformedEntity.Error()})},
-		{"login with missing content type", data, "", http.StatusUnsupportedMediaType, toJSON(errorRes{httpapi.ErrUnsupportedContentType.Error()})},
+		{"login with missing content type", data, "", http.StatusUnsupportedMediaType, toJSON(errorRes{api.ErrUnsupportedContentType.Error()})},
 	}
 
 	for _, tc := range cases {
@@ -185,10 +184,10 @@ func TestUserInfo(t *testing.T) {
 	defer ts.Close()
 	client := ts.Client()
 	svc.Register(context.Background(), user)
-	j := jwt.New("secret")
-	token, _ := j.TemporaryKey(user.Email)
-	invalidToken, _ := j.TemporaryKey("non-exist@example.com")
 
+	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
+	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Issuer: user.Email, Type: 0})
+	token := tkn.GetValue()
 	cases := []struct {
 		desc   string
 		token  string
@@ -196,7 +195,7 @@ func TestUserInfo(t *testing.T) {
 		res    string
 	}{
 		{"user info with valid token", token, http.StatusOK, ""},
-		{"user info with invalid token", invalidToken, http.StatusForbidden, ""},
+		{"user info with invalid token", "", http.StatusForbidden, ""},
 	}
 
 	for _, tc := range cases {
@@ -232,7 +231,7 @@ func TestPasswordResetRequest(t *testing.T) {
 	expectedExisting := toJSON(struct {
 		Msg string `json:"msg"`
 	}{
-		httpapi.MailSent,
+		api.MailSent,
 	})
 
 	svc.Register(context.Background(), user)
@@ -246,10 +245,10 @@ func TestPasswordResetRequest(t *testing.T) {
 	}{
 		{"password reset request with valid email", data, contentType, http.StatusCreated, expectedExisting},
 		{"password reset request with invalid email", nonexistentData, contentType, http.StatusBadRequest, toJSON(errorRes{users.ErrUserNotFound.Error()})},
-		{"password reset request with invalid request format", "{", contentType, http.StatusBadRequest, toJSON(errorRes{httpapi.ErrFailedDecode.Error()})},
+		{"password reset request with invalid request format", "{", contentType, http.StatusBadRequest, toJSON(errorRes{api.ErrFailedDecode.Error()})},
 		{"password reset request with empty JSON request", "{}", contentType, http.StatusBadRequest, toJSON(errorRes{users.ErrMalformedEntity.Error()})},
-		{"password reset request with empty request", "", contentType, http.StatusBadRequest, toJSON(errorRes{httpapi.ErrFailedDecode.Error()})},
-		{"password reset request with missing content type", data, "", http.StatusUnsupportedMediaType, toJSON(errorRes{httpapi.ErrUnsupportedContentType.Error()})},
+		{"password reset request with empty request", "", contentType, http.StatusBadRequest, toJSON(errorRes{api.ErrFailedDecode.Error()})},
+		{"password reset request with missing content type", data, "", http.StatusUnsupportedMediaType, toJSON(errorRes{api.ErrUnsupportedContentType.Error()})},
 	}
 
 	for _, tc := range cases {
@@ -276,7 +275,6 @@ func TestPasswordReset(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	client := ts.Client()
-	tokenizer := token.New([]byte("secret"), 1)
 	resData := struct {
 		Msg string `json:"msg"`
 	}{
@@ -293,17 +291,20 @@ func TestPasswordReset(t *testing.T) {
 	resData.Msg = users.ErrUserNotFound.Error()
 
 	svc.Register(context.Background(), user)
-	tok, _ := tokenizer.Generate(user.Email, 0)
+	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
+	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Issuer: user.Email, Type: 0})
+	token := tkn.GetValue()
 
 	reqData.Password = user.Password
 	reqData.ConfPass = user.Password
-	reqData.Token = tok
+	reqData.Token = token
 	reqExisting := toJSON(reqData)
 
-	reqData.Token, _ = tokenizer.Generate("non-existentuser@example.com", 0)
+	reqData.Token = "wrong"
 
 	reqNoExist := toJSON(reqData)
-	reqData.Token, _ = tokenizer.Generate(user.Email, -5)
+
+	reqData.Token = token
 
 	reqData.ConfPass = "wrong"
 	reqPassNoMatch := toJSON(reqData)
@@ -316,13 +317,13 @@ func TestPasswordReset(t *testing.T) {
 		res         string
 		tok         string
 	}{
-		{"password reset with valid token", reqExisting, contentType, http.StatusCreated, expectedSuccess, tok},
-		{"password reset with invalid token", reqNoExist, contentType, http.StatusBadRequest, toJSON(errorRes{users.ErrUserNotFound.Error()}), tok},
-		{"password reset with confirm password not matching", reqPassNoMatch, contentType, http.StatusBadRequest, toJSON(errorRes{users.ErrMalformedEntity.Error()}), tok},
-		{"password reset request with invalid request format", "{", contentType, http.StatusBadRequest, toJSON(errorRes{httpapi.ErrFailedDecode.Error()}), tok},
-		{"password reset request with empty JSON request", "{}", contentType, http.StatusBadRequest, toJSON(errorRes{users.ErrMalformedEntity.Error()}), tok},
-		{"password reset request with empty request", "", contentType, http.StatusBadRequest, toJSON(errorRes{httpapi.ErrFailedDecode.Error()}), tok},
-		{"password reset request with missing content type", reqExisting, "", http.StatusUnsupportedMediaType, toJSON(errorRes{httpapi.ErrUnsupportedContentType.Error()}), tok},
+		{"password reset with valid token", reqExisting, contentType, http.StatusCreated, expectedSuccess, token},
+		{"password reset with invalid token", reqNoExist, contentType, http.StatusForbidden, toJSON(errorRes{users.ErrUnauthorizedAccess.Error()}), token},
+		{"password reset with confirm password not matching", reqPassNoMatch, contentType, http.StatusBadRequest, toJSON(errorRes{users.ErrMalformedEntity.Error()}), token},
+		{"password reset request with invalid request format", "{", contentType, http.StatusBadRequest, toJSON(errorRes{api.ErrFailedDecode.Error()}), token},
+		{"password reset request with empty JSON request", "{}", contentType, http.StatusBadRequest, toJSON(errorRes{users.ErrMalformedEntity.Error()}), token},
+		{"password reset request with empty request", "", contentType, http.StatusBadRequest, toJSON(errorRes{api.ErrFailedDecode.Error()}), token},
+		{"password reset request with missing content type", reqExisting, "", http.StatusUnsupportedMediaType, toJSON(errorRes{api.ErrUnsupportedContentType.Error()}), token},
 	}
 
 	for _, tc := range cases {
@@ -350,7 +351,11 @@ func TestPasswordChange(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	client := ts.Client()
-	j := jwt.New("secret")
+	// j := jwt.New("secret")
+	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
+	// t, _ := auth.Issue()
+	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Issuer: user.Email, Type: 0})
+	token := tkn.GetValue()
 	resData := struct {
 		Msg string `json:"msg"`
 	}{
@@ -366,18 +371,18 @@ func TestPasswordChange(t *testing.T) {
 	resData.Msg = users.ErrUnauthorizedAccess.Error()
 
 	svc.Register(context.Background(), user)
-	tok, _ := j.TemporaryKey(user.Email)
-	tokNoUser, _ := j.TemporaryKey("non-existentuser@example.com")
+	// tok, _ := j.TemporaryKey(user.Email)
+	// tokNoUser, _ := j.TemporaryKey("non-existentuser@example.com")
 
 	reqData.Password = user.Password
 	reqData.OldPassw = user.Password
-	reqData.Token = tok
+	reqData.Token = token
 	dataResExisting := toJSON(reqData)
 
-	reqData.Token, _ = j.TemporaryKey(user.Email)
+	// reqData.Token, _ = j.TemporaryKey(user.Email)
 
 	reqNoExist := toJSON(reqData)
-	reqData.Token, _ = j.TemporaryKey(user.Email)
+	// reqData.Token, _ = j.TemporaryKey(user.Email)
 
 	reqData.OldPassw = "wrong"
 	reqWrongPass := toJSON(reqData)
@@ -392,12 +397,12 @@ func TestPasswordChange(t *testing.T) {
 		res         string
 		tok         string
 	}{
-		{"password change with valid token", dataResExisting, contentType, http.StatusCreated, expectedSuccess, tok},
-		{"password change with invalid token", reqNoExist, contentType, http.StatusForbidden, toJSON(errorRes{users.ErrUnauthorizedAccess.Error()}), tokNoUser},
-		{"password change with invalid old password", reqWrongPass, contentType, http.StatusForbidden, toJSON(errorRes{users.ErrUnauthorizedAccess.Error()}), tok},
-		{"password change with empty JSON request", "{}", contentType, http.StatusBadRequest, toJSON(errorRes{users.ErrMalformedEntity.Error()}), tok},
-		{"password change empty request", "", contentType, http.StatusBadRequest, toJSON(errorRes{httpapi.ErrFailedDecode.Error()}), tok},
-		{"password change missing content type", dataResExisting, "", http.StatusUnsupportedMediaType, toJSON(errorRes{httpapi.ErrUnsupportedContentType.Error()}), tok},
+		{"password change with valid token", dataResExisting, contentType, http.StatusCreated, expectedSuccess, token},
+		{"password change with invalid token", reqNoExist, contentType, http.StatusForbidden, toJSON(errorRes{users.ErrUnauthorizedAccess.Error()}), ""},
+		{"password change with invalid old password", reqWrongPass, contentType, http.StatusForbidden, toJSON(errorRes{users.ErrUnauthorizedAccess.Error()}), token},
+		{"password change with empty JSON request", "{}", contentType, http.StatusBadRequest, toJSON(errorRes{users.ErrMalformedEntity.Error()}), token},
+		{"password change empty request", "", contentType, http.StatusBadRequest, toJSON(errorRes{api.ErrFailedDecode.Error()}), token},
+		{"password change missing content type", dataResExisting, "", http.StatusUnsupportedMediaType, toJSON(errorRes{api.ErrUnsupportedContentType.Error()}), token},
 	}
 
 	for _, tc := range cases {
