@@ -22,6 +22,7 @@ import (
 	adapter "github.com/mainflux/mainflux/ws"
 	"github.com/mainflux/mainflux/ws/api"
 	"github.com/mainflux/mainflux/ws/nats"
+	"github.com/mainflux/mainflux/ws/tracing"
 	broker "github.com/nats-io/go-nats"
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
@@ -83,7 +84,12 @@ func main() {
 	defer thingsCloser.Close()
 
 	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
+
+	natsTracer, natsCloser := initJaeger("nats", cfg.jaegerURL, logger)
+	defer natsCloser.Close()
 	pubsub := nats.New(nc, logger)
+	pubsub = tracing.NatsPublisherMiddleware(pubsub, natsTracer)
+
 	svc := newService(pubsub, logger)
 
 	errs := make(chan error, 2)
