@@ -18,6 +18,7 @@ import (
 var (
 	_ mainflux.Response = (*twinRes)(nil)
 	_ mainflux.Response = (*viewTwinRes)(nil)
+	_ mainflux.Response = (*twinsSetRes)(nil)
 	_ mainflux.Response = (*removeRes)(nil)
 )
 
@@ -71,6 +72,28 @@ func (res viewTwinRes) Headers() map[string]string {
 }
 
 func (res viewTwinRes) Empty() bool {
+	return false
+}
+
+type setRes struct {
+	Total uint64 `json:"total"`
+	Limit uint64 `json:"limit"`
+}
+
+type twinsSetRes struct {
+	setRes
+	Twins []viewTwinRes `json:"twins"`
+}
+
+func (res twinsSetRes) Code() int {
+	return http.StatusOK
+}
+
+func (res twinsSetRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res twinsSetRes) Empty() bool {
 	return false
 }
 

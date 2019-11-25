@@ -27,6 +27,13 @@ import (
 
 const (
 	contentType = "application/json"
+
+	offset   = "offset"
+	limit    = "limit"
+	name     = "name"
+	metadata = "metadata"
+
+	defLimit = 10
 )
 
 var (
@@ -70,6 +77,13 @@ func MakeHandler(tracer opentracing.Tracer, svc twins.Service) http.Handler {
 		opts...,
 	))
 
+	r.Get("/twins", kithttp.NewServer(
+		kitot.TraceServer(tracer, "list_twins")(listTwinsEndpoint(svc)),
+		decodeList,
+		encodeResponse,
+		opts...,
+	))
+
 	r.GetFunc("/version", mainflux.Version("twins"))
 	r.Handle("/metrics", promhttp.Handler())
 
@@ -109,6 +123,32 @@ func decodeView(_ context.Context, r *http.Request) (interface{}, error) {
 	req := viewTwinReq{
 		token: r.Header.Get("Authorization"),
 		id:    bone.GetValue(r, "id"),
+	}
+
+	return req, nil
+}
+
+func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
+	l, err := readUintQuery(r, limit, defLimit)
+	if err != nil {
+		return nil, err
+	}
+
+	n, err := readStringQuery(r, name)
+	if err != nil {
+		return nil, err
+	}
+
+	m, err := readMetadataQuery(r, "metadata")
+	if err != nil {
+		return nil, err
+	}
+
+	req := listReq{
+		token:    r.Header.Get("Authorization"),
+		limit:    l,
+		name:     n,
+		metadata: m,
 	}
 
 	return req, nil
@@ -194,4 +234,23 @@ func readStringQuery(r *http.Request, key string) (string, error) {
 	}
 
 	return vals[0], nil
+}
+
+func readMetadataQuery(r *http.Request, key string) (map[string]interface{}, error) {
+	vals := bone.GetQuery(r, key)
+	if len(vals) > 1 {
+		return nil, errInvalidQueryParams
+	}
+
+	if len(vals) == 0 {
+		return nil, nil
+	}
+
+	m := make(map[string]interface{})
+	err := json.Unmarshal([]byte(vals[0]), &m)
+	if err != nil {
+		return nil, err
+	}
+
+	return m, nil
 }

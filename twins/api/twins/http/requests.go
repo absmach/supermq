@@ -8,10 +8,12 @@
 package http
 
 import (
+	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/twins"
 )
 
 const maxNameSize = 1024
+const maxLimitSize = 100
 
 type apiReq interface {
 	validate() error
@@ -82,6 +84,29 @@ func (req viewTwinReq) validate() error {
 
 	if req.id == "" {
 		return twins.ErrMalformedEntity
+	}
+
+	return nil
+}
+
+type listReq struct {
+	token    string
+	limit    uint64
+	name     string
+	metadata map[string]interface{}
+}
+
+func (req *listReq) validate() error {
+	if req.token == "" {
+		return things.ErrUnauthorizedAccess
+	}
+
+	if req.limit == 0 || req.limit > maxLimitSize {
+		return things.ErrMalformedEntity
+	}
+
+	if len(req.name) > maxNameSize {
+		return things.ErrMalformedEntity
 	}
 
 	return nil
