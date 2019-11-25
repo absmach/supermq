@@ -19,6 +19,7 @@ import (
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/http/tracing"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/http/nats"
@@ -88,7 +89,11 @@ func main() {
 	defer thingsCloser.Close()
 
 	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
+
+	natsTracer, natsCloser := initJaeger("nats", cfg.jaegerURL, logger)
+	defer natsCloser.Close()
 	pub := nats.NewMessagePublisher(nc)
+	pub = tracing.NatsPublisherMiddleware(pub, natsTracer)
 
 	svc := adapter.New(pub, cc)
 	svc = api.LoggingMiddleware(svc, logger)
