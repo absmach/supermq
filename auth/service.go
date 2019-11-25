@@ -52,6 +52,11 @@ type Service interface {
 	Identify(context.Context, string, uint32) (string, error)
 }
 
+type claims struct {
+	jwt.StandardClaims
+	Type *uint32 `json:"type,omitempty"`
+}
+
 type authService struct {
 	keys     KeyRepository
 	idp      IdentityProvider
@@ -102,31 +107,51 @@ func (svc authService) Retrieve(ctx context.Context, issuer, id string) (Key, er
 }
 
 func (svc authService) Identify(ctx context.Context, key string, tokenType uint32) (string, error) {
-	token, err := jwt.Parse(key, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, ErrUnauthorizedAccess
-		}
-		return []byte(svc.secret), nil
-	})
-
+	claims, err := svc.parseJwt(key)
 	if err != nil {
 		return "", ErrUnauthorizedAccess
 	}
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		if sub := claims["sub"]; sub != nil {
-			return sub.(string), nil
-		}
+	var sub, iss string
+	var t *uint32
+
+	if v, ok := claims["type"].(float64); ok {
+		v1 := uint32(v)
+		t = &v1
+	}
+	if v, ok := claims["sub"].(string); ok {
+		sub = v
+	}
+	if v, ok := claims["iss"].(string); ok {
+		iss = v
+	}
+	if t == nil || sub == "" || iss == "" {
+		return "", ErrUnauthorizedAccess
 	}
 
-	return "", ErrUnauthorizedAccess
+	if *t == UserKey {
+		k, err := svc.keys.Retrieve(ctx, iss, sub)
+		if err != nil {
+			return "", err
+		}
+		if k.ExpiresAt != nil && k.ExpiresAt.Before(time.Now()) {
+			return "", svc.Revoke(ctx, iss, sub)
+		}
+
+		return iss, nil
+	}
+
+	return sub, nil
 }
 
 func (svc authService) issueJwt(key Key) (string, error) {
-	claims := jwt.StandardClaims{
-		Issuer:   issuerName,
-		Subject:  key.Issuer,
-		IssuedAt: key.IssuedAt.Unix(),
+	claims := claims{
+		StandardClaims: jwt.StandardClaims{
+			Issuer:   key.Issuer,
+			Subject:  key.Secret,
+			IssuedAt: key.IssuedAt.Unix(),
+		},
+		Type: &key.Type,
 	}
 
 	if key.ExpiresAt != nil {
@@ -137,8 +162,28 @@ func (svc authService) issueJwt(key Key) (string, error) {
 	return token.SignedString([]byte(svc.secret))
 }
 
+func (svc authService) parseJwt(key string) (jwt.MapClaims, error) {
+	token, err := jwt.Parse(key, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, ErrUnauthorizedAccess
+		}
+		return []byte(svc.secret), nil
+	})
+
+	if err != nil {
+		return nil, ErrUnauthorizedAccess
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims, nil
+	}
+
+	return nil, ErrUnauthorizedAccess
+}
+
 func (svc authService) sessionKey(ctx context.Context, issuer string, duration time.Duration, key Key) (Key, error) {
-	key.Issuer = issuer
+	key.Issuer = issuerName
+	key.Secret = issuer
 	exp := key.IssuedAt.Add(duration)
 	key.ExpiresAt = &exp
 	val, err := svc.issueJwt(key)
@@ -182,9 +227,4 @@ func (svc authService) userKey(ctx context.Context, issuer string, key Key) (Key
 	key.Secret = value
 
 	return key, nil
-}
-
-func (svc authService) jwt(claims jwt.StandardClaims) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(svc.secret))
 }

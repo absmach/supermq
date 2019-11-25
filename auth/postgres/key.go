@@ -30,8 +30,8 @@ func New(db Database) auth.KeyRepository {
 }
 
 func (kr keyRepository) Save(ctx context.Context, key auth.Key) (string, error) {
-	q := `INSERT INTO keys (id, type, issuer, secret, issued_at, expires_at)
-	      VALUES (:id, :type, :issuer, :secret, :issued_at, :expires_at)`
+	q := `INSERT INTO keys (id, type, issuer, issued_at, expires_at)
+	      VALUES (:id, :type, :issuer, :issued_at, :expires_at)`
 
 	dbKey := toDBKey(key)
 	if _, err := kr.db.NamedExecContext(ctx, q, dbKey); err != nil {
@@ -54,7 +54,7 @@ func (kr keyRepository) Retrieve(ctx context.Context, issuer, id string) (auth.K
 		Issuer: issuer,
 		ID:     id,
 	}
-	q := `SELECT FROM keys VALUES (id, type, issuer, value, issued_at, expires_at) WHERE issuer = $1 AND id = $2`
+	q := `SELECT FROM keys VALUES (id, type, issuer, issued_at, expires_at) WHERE issuer = $1 AND id = $2`
 
 	if err := kr.db.QueryRowxContext(ctx, q, issuer, id).StructScan(&key); err != nil {
 		pqErr, ok := err.(*pq.Error)
@@ -82,7 +82,6 @@ type dbKey struct {
 	ID        string     `db:"id"`
 	Type      uint32     `db:"type"`
 	Issuer    string     `db:"issuer"`
-	Secret    string     `db:"secret"`
 	Revoked   bool       `db:"revoked"`
 	IssuedAt  time.Time  `db:"issued_at"`
 	ExpiresAt *time.Time `db:"expires_at"`
@@ -93,7 +92,6 @@ func toDBKey(key auth.Key) dbKey {
 		ID:        key.ID,
 		Type:      key.Type,
 		Issuer:    key.Issuer,
-		Secret:    key.Secret,
 		IssuedAt:  key.IssuedAt,
 		ExpiresAt: key.ExpiresAt,
 	}
@@ -104,7 +102,6 @@ func toKey(key dbKey) auth.Key {
 		ID:        key.ID,
 		Type:      key.Type,
 		Issuer:    key.Issuer,
-		Secret:    key.Secret,
 		IssuedAt:  key.IssuedAt,
 		ExpiresAt: key.ExpiresAt,
 	}

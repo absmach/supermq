@@ -52,7 +52,6 @@ func migrateDB(db *sqlx.DB) error {
 						id          UUID,
 						type        SMALLINT,
 						issuer      VARCHAR(254),
-						secret      TEXT UNIQUE NOT NULL,
 						issued_at   TIMESTAMP NOT NULL,
 						expires_at  TIMESTAMP,
 						PRIMARY KEY (id, issuer)
