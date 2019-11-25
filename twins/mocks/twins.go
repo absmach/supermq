@@ -24,14 +24,12 @@ type twinRepositoryMock struct {
 	mu      sync.Mutex
 	counter uint64
 	twins   map[string]twins.Twin
-	tconns  map[string]map[string]twins.Twin
 }
 
 // NewTwinRepository creates in-memory twin repository.
 func NewTwinRepository() twins.TwinRepository {
 	return &twinRepositoryMock{
-		twins:  make(map[string]twins.Twin),
-		tconns: make(map[string]map[string]twins.Twin),
+		twins: make(map[string]twins.Twin),
 	}
 }
 
@@ -157,19 +155,21 @@ func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, limi
 	return page, nil
 }
 
-func (trm *twinRepositoryMock) RetrieveByChannel(_ context.Context, chanID string, limit uint64) (twins.TwinsSet, error) {
+func (trm *twinRepositoryMock) RetrieveByThing(_ context.Context, thing string, limit uint64) (twins.TwinsSet, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
+	tws := make([]twins.Twin, 0)
 	items := make([]twins.Twin, 0)
 
 	if limit <= 0 {
 		return twins.TwinsSet{}, nil
 	}
 
-	tws, ok := trm.tconns[chanID]
-	if !ok {
-		return twins.TwinsSet{}, nil
+	for _, v := range trm.twins {
+		if v.ThingID == thing {
+			tws = append(tws, v)
+		}
 	}
 
 	for _, v := range tws {

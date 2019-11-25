@@ -26,6 +26,7 @@ const (
 	email      = "user@example.com"
 	token      = "token"
 	natsURL    = "nats://localhost:4222"
+	topic      = "topic"
 )
 
 var (
@@ -42,7 +43,7 @@ func newService(tokens map[string]string) twins.Service {
 	opts := mqtt.NewClientOptions()
 	mc := mqtt.NewClient(opts)
 
-	return twins.New("secret", nc, mc, users, twinsRepo, idp)
+	return twins.New(nc, mc, topic, users, twinsRepo, idp)
 }
 
 func TestAddTwin(t *testing.T) {
@@ -109,48 +110,6 @@ func TestUpdateTwin(t *testing.T) {
 
 	for _, tc := range cases {
 		err := svc.UpdateTwin(context.Background(), tc.token, tc.twin)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-	}
-}
-
-func TestUpdateKey(t *testing.T) {
-	key := "new-key"
-	svc := newService(map[string]string{token: email})
-	saved, err := svc.AddTwin(context.Background(), token, twin)
-	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
-
-	cases := []struct {
-		desc  string
-		token string
-		id    string
-		key   string
-		err   error
-	}{
-		{
-			desc:  "update key of an existing twin",
-			token: token,
-			id:    saved.ID,
-			key:   key,
-			err:   nil,
-		},
-		{
-			desc:  "update key with invalid credentials",
-			token: wrongValue,
-			id:    saved.ID,
-			key:   key,
-			err:   twins.ErrUnauthorizedAccess,
-		},
-		{
-			desc:  "update key of non-existing twin",
-			token: token,
-			id:    wrongID,
-			key:   wrongValue,
-			err:   twins.ErrNotFound,
-		},
-	}
-
-	for _, tc := range cases {
-		err := svc.UpdateKey(context.Background(), tc.token, tc.id, tc.key)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }

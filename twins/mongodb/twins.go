@@ -62,6 +62,10 @@ func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) (string, erro
 // Update performs an update to the existing twins. A non-nil error is
 // returned to indicate operation failure.
 func (tr *twinRepository) Update(ctx context.Context, tw twins.Twin) error {
+	if err := validate(tw); err != nil {
+		return err
+	}
+
 	coll := tr.db.Collection(collectionName)
 
 	filter := bson.D{{"id", tw.ID}}
@@ -156,13 +160,14 @@ func (tr *twinRepository) RetrieveAll(ctx context.Context, owner string, limit u
 	findOptions.SetLimit((int64)(limit))
 
 	filter := bson.D{}
+
 	if owner != "" {
 		filter = append(filter, bson.E{"owner", owner})
 	}
 	if name != "" {
 		filter = append(filter, bson.E{"name", name})
 	}
-	if metadata != nil {
+	if len(metadata) > 0 {
 		filter = append(filter, bson.E{"metadata", metadata})
 	}
 	cur, err := coll.Find(ctx, filter, findOptions)
@@ -189,8 +194,8 @@ func (tr *twinRepository) RetrieveAll(ctx context.Context, owner string, limit u
 	}, nil
 }
 
-func (tr *twinRepository) RetrieveByChannel(ctx context.Context, channel string, limit uint64) (twins.TwinsSet, error) {
-	if err := uuid.New().IsValid(channel); err != nil {
+func (tr *twinRepository) RetrieveByThing(ctx context.Context, thing string, limit uint64) (twins.TwinsSet, error) {
+	if err := uuid.New().IsValid(thing); err != nil {
 		return twins.TwinsSet{}, twins.ErrNotFound
 	}
 
@@ -199,7 +204,7 @@ func (tr *twinRepository) RetrieveByChannel(ctx context.Context, channel string,
 	findOptions := options.Find()
 	findOptions.SetLimit((int64)(limit))
 
-	filter := bson.D{{"channelID", channel}}
+	filter := bson.D{{"thingID", thing}}
 	cur, err := coll.Find(ctx, filter, findOptions)
 	if err != nil {
 		return twins.TwinsSet{}, err

@@ -160,6 +160,7 @@ func TestTwinUpdate(t *testing.T) {
 		testLog.Error(err.Error())
 	}
 
+	twin.Name = "new_name"
 	cases := []struct {
 		desc string
 		twin twins.Twin
@@ -181,7 +182,7 @@ func TestTwinUpdate(t *testing.T) {
 			err: twins.ErrNotFound,
 		},
 		{
-			desc: "update twin with invalid name",
+			desc: "update twin with invalid key",
 			twin: twins.Twin{
 				ID:    twid,
 				Owner: email,
@@ -372,7 +373,7 @@ func TestTwinRetrieveAll(t *testing.T) {
 		name     string
 		size     uint64
 		total    uint64
-		metadata map[string]interface{}
+		metadata twins.Metadata
 	}{
 		"retrieve all twins with existing owner": {
 			owner: email,

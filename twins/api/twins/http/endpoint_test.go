@@ -23,6 +23,7 @@ import (
 	"github.com/mainflux/mainflux/twins"
 	httpapi "github.com/mainflux/mainflux/twins/api/twins/http"
 	"github.com/mainflux/mainflux/twins/mocks"
+	broker "github.com/nats-io/go-nats"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -35,6 +36,8 @@ const (
 	wrongValue  = "wrong_value"
 	wrongID     = 0
 	maxNameSize = 1024
+	natsURL     = "nats://localhost:4222"
+	topic       = "topic"
 )
 
 var (
@@ -73,10 +76,12 @@ func newService(tokens map[string]string) twins.Service {
 	twinsRepo := mocks.NewTwinRepository()
 	idp := mocks.NewIdentityProvider()
 
+	nc, _ := broker.Connect(natsURL)
+
 	opts := mqtt.NewClientOptions()
 	mc := mqtt.NewClient(opts)
 
-	return twins.New("secret", mc, users, twinsRepo, idp)
+	return twins.New(nc, mc, topic, users, twinsRepo, idp)
 }
 
 func newServer(svc twins.Service) *httptest.Server {

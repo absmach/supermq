@@ -54,10 +54,10 @@ type Service interface {
 	// user identified by the provided key.
 	ListTwins(context.Context, string, uint64, string, Metadata) (TwinsSet, error)
 
-	// ListTwinsByChannel retrieves data about subset of twins that are
-	// connected to specified channel and belong to the user identified by
+	// ListTwinsByThing retrieves data about subset of twins that represent
+	// specified thing belong to the user identified by
 	// the provided key.
-	ListTwinsByChannel(context.Context, string, string, uint64) (TwinsSet, error)
+	ListTwinsByThing(context.Context, string, string, uint64) (TwinsSet, error)
 
 	// RemoveTwin removes the twin identified with the provided ID, that
 	// belongs to the user identified by the provided key.
@@ -91,7 +91,7 @@ func New(nc *nats.Conn, mc mqtt.Client, topic string, users mainflux.UsersServic
 func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin) (Twin, error) {
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
-		return Twin{}, err
+		return Twin{}, ErrUnauthorizedAccess
 	}
 
 	twin.ID, err = ts.idp.ID()
@@ -203,13 +203,13 @@ func (ts *twinsService) ListTwins(ctx context.Context, token string, limit uint6
 	return ts.twins.RetrieveAll(ctx, res.GetValue(), limit, name, metadata)
 }
 
-func (ts *twinsService) ListTwinsByChannel(ctx context.Context, token, channel string, limit uint64) (TwinsSet, error) {
+func (ts *twinsService) ListTwinsByThing(ctx context.Context, token, thing string, limit uint64) (TwinsSet, error) {
 	_, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return TwinsSet{}, ErrUnauthorizedAccess
 	}
 
-	return ts.twins.RetrieveByChannel(ctx, channel, limit)
+	return ts.twins.RetrieveByThing(ctx, thing, limit)
 }
 
 func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) error {
@@ -231,7 +231,6 @@ func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) error 
 
 func (ts *twinsService) publish(id, op string, payload []byte) error {
 	topic := fmt.Sprintf("channels/%s/messages/%s/%s", ts.mqttTopic, id, op)
-	fmt.Printf("%s\n", topic)
 
 	token := ts.mqttClient.Publish(topic, 0, false, payload)
 	token.Wait()
