@@ -204,7 +204,7 @@ func (tr *twinRepository) RetrieveByThing(ctx context.Context, thing string, lim
 	findOptions := options.Find()
 	findOptions.SetLimit((int64)(limit))
 
-	filter := bson.D{{"thingID", thing}}
+	filter := bson.D{{"thingid", thing}}
 	cur, err := coll.Find(ctx, filter, findOptions)
 	if err != nil {
 		return twins.TwinsSet{}, err

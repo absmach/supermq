@@ -111,3 +111,26 @@ func (req *listReq) validate() error {
 
 	return nil
 }
+
+type listByThingReq struct {
+	token    string
+	limit    uint64
+	thing    string
+	metadata map[string]interface{}
+}
+
+func (req *listByThingReq) validate() error {
+	if req.token == "" {
+		return things.ErrUnauthorizedAccess
+	}
+
+	if req.limit == 0 || req.limit > maxLimitSize {
+		return things.ErrMalformedEntity
+	}
+
+	if len(req.thing) < 1 {
+		return things.ErrMalformedEntity
+	}
+
+	return nil
+}
