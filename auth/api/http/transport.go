@@ -6,8 +6,10 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
+	"strings"
 
 	kitot "github.com/go-kit/kit/tracing/opentracing"
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -19,6 +21,8 @@ import (
 )
 
 const contentType = "application/json"
+
+var errUnsupportedContentType = errors.New("unsupported content type")
 
 // MakeHandler returns a HTTP handler for API endpoints.
 func MakeHandler(svc auth.Service, tracer opentracing.Tracer) http.Handler {
@@ -35,15 +39,15 @@ func MakeHandler(svc auth.Service, tracer opentracing.Tracer) http.Handler {
 		opts...,
 	))
 
-	mux.Delete("/keys/:id", kithttp.NewServer(
-		kitot.TraceServer(tracer, "revoke")(revokeEndpoint(svc)),
+	mux.Get("/keys/:id", kithttp.NewServer(
+		kitot.TraceServer(tracer, "retrieve")(retrieveEndpoint(svc)),
 		decodeKeyReq,
 		encodeResponse,
 		opts...,
 	))
 
-	mux.Get("/keys/:id", kithttp.NewServer(
-		kitot.TraceServer(tracer, "retrieve")(retrieveEndpoint(svc)),
+	mux.Delete("/keys/:id", kithttp.NewServer(
+		kitot.TraceServer(tracer, "revoke")(revokeEndpoint(svc)),
 		decodeKeyReq,
 		encodeResponse,
 		opts...,
@@ -56,6 +60,9 @@ func MakeHandler(svc auth.Service, tracer opentracing.Tracer) http.Handler {
 }
 
 func decodeIssue(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
+		return nil, errUnsupportedContentType
+	}
 	req := issueKeyReq{
 		issuer: r.Header.Get("Authorization"),
 	}
@@ -106,6 +113,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusConflict)
 	case io.EOF, io.ErrUnexpectedEOF:
 		w.WriteHeader(http.StatusBadRequest)
+	case errUnsupportedContentType:
+		w.WriteHeader(http.StatusUnsupportedMediaType)
 	default:
 		switch err.(type) {
 		case *json.SyntaxError:

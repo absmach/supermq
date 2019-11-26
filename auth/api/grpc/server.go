@@ -8,7 +8,6 @@ import (
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	mainflux "github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/auth"
-	"github.com/mainflux/mainflux/users"
 	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -78,9 +77,9 @@ func encodeError(err error) error {
 	switch err {
 	case nil:
 		return nil
-	case users.ErrMalformedEntity:
+	case auth.ErrMalformedEntity:
 		return status.Error(codes.InvalidArgument, "received invalid token request")
-	case users.ErrUnauthorizedAccess:
+	case auth.ErrUnauthorizedAccess:
 		return status.Error(codes.Unauthenticated, "failed to identify user from token")
 	default:
 		return status.Error(codes.Internal, "internal server error")
