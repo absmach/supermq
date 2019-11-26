@@ -134,9 +134,9 @@ services:
       MF_TOKEN_SECRET: ${MF_TOKEN_SECRET}
       MF_TOKEN_DURATION: ${MF_TOKEN_DURATION}
       MF_TOKEN_RESET_ENDPOINT: ${MF_TOKEN_RESET_ENDPOINT}
+      MF_AUTH_URL: auth:${MF_AUTH_GRPC_PORT}
     ports:
       - ${MF_USERS_HTTP_PORT}:${MF_USERS_HTTP_PORT}
-      - ${MF_USERS_GRPC_PORT}:${MF_USERS_GRPC_PORT}
     networks:
       - mainflux-base-net
 
