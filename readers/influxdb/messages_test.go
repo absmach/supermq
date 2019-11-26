@@ -110,17 +110,6 @@ func TestReadAll(t *testing.T) {
 				Messages: messages[0:10],
 			},
 		},
-		"read message page for too large limit": {
-			chanID: chanID,
-			offset: 0,
-			limit:  101,
-			page: readers.MessagesPage{
-				Total:    msgsNum,
-				Offset:   0,
-				Limit:    102,
-				Messages: messages[0:101],
-			},
-		},
 		"read message page for non-existent channel": {
 			chanID: "2",
 			offset: 0,
