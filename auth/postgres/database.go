@@ -22,8 +22,6 @@ type Database interface {
 	NamedExecContext(context.Context, string, interface{}) (sql.Result, error)
 	ExecContext(context.Context, string, ...interface{}) (sql.Result, error)
 	QueryRowxContext(context.Context, string, ...interface{}) *sqlx.Row
-	NamedQueryContext(context.Context, string, interface{}) (*sqlx.Rows, error)
-	GetContext(context.Context, interface{}, string, ...interface{}) error
 }
 
 // NewDatabase creates a ThingDatabase instance
@@ -46,16 +44,6 @@ func (d database) ExecContext(ctx context.Context, query string, args ...interfa
 func (d database) QueryRowxContext(ctx context.Context, query string, args ...interface{}) *sqlx.Row {
 	addSpanTags(ctx, query)
 	return d.db.QueryRowxContext(ctx, query, args...)
-}
-
-func (d database) NamedQueryContext(ctx context.Context, query string, args interface{}) (*sqlx.Rows, error) {
-	addSpanTags(ctx, query)
-	return d.db.NamedQueryContext(ctx, query, args)
-}
-
-func (d database) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
-	addSpanTags(ctx, query)
-	return d.db.GetContext(ctx, dest, query, args...)
 }
 
 func addSpanTags(ctx context.Context, query string) {
