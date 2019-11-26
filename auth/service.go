@@ -113,32 +113,32 @@ func (svc authService) Identify(ctx context.Context, token string) (string, erro
 	return svc.identify(ctx, c)
 }
 
-func (svc authService) identify(ctx context.Context, cl claims) (string, error) {
-	if cl.Type == nil {
+func (svc authService) identify(ctx context.Context, c claims) (string, error) {
+	if c.Type == nil {
 		return "", ErrUnauthorizedAccess
 	}
-	switch *cl.Type {
+	switch *c.Type {
 	case UserKey:
-		k, err := svc.keys.Retrieve(ctx, cl.Issuer, cl.Id)
+		k, err := svc.keys.Retrieve(ctx, c.Issuer, c.Id)
 		if err != nil {
 			return "", err
 		}
 		// Auto revoke expired key.
 		if k.ExpiresAt != nil && k.ExpiresAt.Before(time.Now()) {
-			svc.keys.Remove(ctx, cl.Issuer, cl.Id)
+			svc.keys.Remove(ctx, c.Issuer, c.Id)
 			return "", ErrUnauthorizedAccess
 		}
-		return cl.Issuer, nil
+		return c.Issuer, nil
 	case LoginKey:
-		if cl.Subject == "" {
+		if c.Subject == "" {
 			return "", ErrUnauthorizedAccess
 		}
-		return cl.Subject, nil
+		return c.Subject, nil
 	case ResetKey:
-		if cl.Issuer == "" {
+		if c.Issuer == "" {
 			return "", ErrUnauthorizedAccess
 		}
-		return cl.Issuer, nil
+		return c.Issuer, nil
 	default:
 		return "", ErrUnauthorizedAccess
 	}
@@ -201,25 +201,6 @@ func (svc authService) userKey(ctx context.Context, issuer string, key Key) (Key
 	}
 
 	return key, nil
-}
-
-func (svc authService) parseJwt(key string) (jwt.MapClaims, error) {
-	token, err := jwt.Parse(key, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, ErrUnauthorizedAccess
-		}
-		return []byte(svc.secret), nil
-	})
-
-	if err != nil {
-		return nil, ErrUnauthorizedAccess
-	}
-
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return claims, nil
-	}
-
-	return nil, ErrUnauthorizedAccess
 }
 
 func (svc authService) parseClaims(key string) (claims, error) {

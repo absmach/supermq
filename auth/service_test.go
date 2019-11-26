@@ -151,6 +151,12 @@ func TestRetrieve(t *testing.T) {
 	newKey, err := svc.Issue(context.Background(), loginKey.Secret, key)
 	assert.Nil(t, err, fmt.Sprintf("Issuing users key expected to succeed: %s", err))
 
+	resetKey, err := svc.Issue(context.Background(), loginKey.Secret, auth.Key{Type: auth.ResetKey, IssuedAt: time.Now()})
+	assert.Nil(t, err, fmt.Sprintf("Issuing reset key expected to succeed: %s", err))
+
+	userKey, err := svc.Issue(context.Background(), loginKey.Secret, auth.Key{Type: auth.UserKey, IssuedAt: time.Now()})
+	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
+
 	cases := map[string]struct {
 		id     string
 		issuer string
@@ -168,7 +174,17 @@ func TestRetrieve(t *testing.T) {
 		},
 		"retrieve unauthorized": {
 			id:     newKey.ID,
-			issuer: "",
+			issuer: "wrong",
+			err:    auth.ErrUnauthorizedAccess,
+		},
+		"retrieve with user key": {
+			id:     newKey.ID,
+			issuer: userKey.Secret,
+			err:    auth.ErrUnauthorizedAccess,
+		},
+		"retrieve with reset key": {
+			id:     newKey.ID,
+			issuer: resetKey.Secret,
 			err:    auth.ErrUnauthorizedAccess,
 		},
 	}
@@ -186,38 +202,64 @@ func TestIdentify(t *testing.T) {
 	resetKey, err := svc.Issue(context.Background(), loginKey.Secret, auth.Key{Type: auth.ResetKey, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing reset key expected to succeed: %s", err))
 
-	userKey, err := svc.Issue(context.Background(), loginKey.Secret, auth.Key{Type: auth.UserKey, IssuedAt: time.Now()})
+	exp := time.Now().Add(1 * time.Second)
+	userKey, err := svc.Issue(context.Background(), loginKey.Secret, auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), ExpiresAt: &exp})
 	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
 
-	cases := map[string]struct {
+	invalidKey, err := svc.Issue(context.Background(), loginKey.Secret, auth.Key{Type: 22, IssuedAt: time.Now()})
+	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
+
+	cases := []struct {
+		desc string
 		key  string
 		id   string
-		kind uint32
 		err  error
 	}{
-		"identify login key": {
+		{
+			desc: "identify login key",
 			key:  loginKey.Secret,
 			id:   email,
-			kind: auth.LoginKey,
 			err:  nil,
 		},
-		"identify reset key": {
+		{
+			desc: "identify reset key",
 			key:  resetKey.Secret,
 			id:   "mainflux.auth",
-			kind: auth.ResetKey,
 			err:  nil,
 		},
-		"identify user key": {
+		{
+			desc: "identify user key",
 			key:  userKey.Secret,
 			id:   email,
-			kind: auth.UserKey,
 			err:  nil,
+		},
+		{
+			desc: "identify expired user key",
+			key:  userKey.Secret,
+			id:   "",
+			err:  auth.ErrUnauthorizedAccess,
+		},
+		{
+			desc: "identify expired key",
+			key:  invalidKey.Secret,
+			id:   "",
+			err:  auth.ErrUnauthorizedAccess,
+		},
+		{
+			desc: "identify invalid key",
+			key:  "invalid",
+			id:   "",
+			err:  auth.ErrUnauthorizedAccess,
 		},
 	}
 
-	for desc, tc := range cases {
+	for i, tc := range cases {
 		id, err := svc.Identify(context.Background(), tc.key)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s expected %s got %s\n", desc, tc.err, err))
-		assert.Equal(t, tc.id, id, fmt.Sprintf("%s expected %s got %s\n", desc, tc.id, id))
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
+		assert.Equal(t, tc.id, id, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.id, id))
+		if i == 2 {
+			// Wait for key to expire.
+			time.Sleep(2 * time.Second)
+		}
 	}
 }

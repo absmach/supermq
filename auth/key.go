@@ -36,21 +36,6 @@ type Key struct {
 	ExpiresAt *time.Time
 }
 
-// Validate validates Key. Non-nil error indicates operation failure.
-func (k Key) Validate() error {
-	now := time.Now().UTC()
-
-	if k.IssuedAt.After(now) {
-		return ErrInvalidKeyIssuedAt
-	}
-
-	if k.ExpiresAt != nil && k.ExpiresAt.Before(now) {
-		return ErrKeyExpired
-	}
-
-	return nil
-}
-
 // KeyRepository specifies Key persistence API.
 type KeyRepository interface {
 	// Save persists the Key. A non-nil error is returned to indicate

@@ -49,13 +49,6 @@ func MakeHandler(svc auth.Service, tracer opentracing.Tracer) http.Handler {
 		opts...,
 	))
 
-	mux.Post("/keys/identify", kithttp.NewServer(
-		kitot.TraceServer(tracer, "identify")(identifyEndpoint(svc)),
-		decodeKeyReq,
-		encodeResponse,
-		opts...,
-	))
-
 	mux.GetFunc("/version", mainflux.Version("auth"))
 	mux.Handle("/metrics", promhttp.Handler())
 
