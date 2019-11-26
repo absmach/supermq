@@ -50,12 +50,8 @@ func (kr keyRepository) Save(ctx context.Context, key auth.Key) (string, error) 
 }
 
 func (kr keyRepository) Retrieve(ctx context.Context, issuer, id string) (auth.Key, error) {
-	key := auth.Key{
-		Issuer: issuer,
-		ID:     id,
-	}
-	q := `SELECT FROM keys VALUES (id, type, issuer, issued_at, expires_at) WHERE issuer = $1 AND id = $2`
-
+	q := `SELECT id, type, issuer, issued_at, expires_at FROM keys WHERE issuer = $1 AND id = $2`
+	key := dbKey{}
 	if err := kr.db.QueryRowxContext(ctx, q, issuer, id).StructScan(&key); err != nil {
 		pqErr, ok := err.(*pq.Error)
 		if err == sql.ErrNoRows || ok && errInvalid == pqErr.Code.Name() {
@@ -65,7 +61,7 @@ func (kr keyRepository) Retrieve(ctx context.Context, issuer, id string) (auth.K
 		return auth.Key{}, err
 	}
 
-	return auth.Key{}, nil
+	return toKey(key), nil
 }
 
 func (kr keyRepository) Remove(ctx context.Context, issuer, id string) error {
@@ -79,30 +75,36 @@ func (kr keyRepository) Remove(ctx context.Context, issuer, id string) error {
 }
 
 type dbKey struct {
-	ID        string     `db:"id"`
-	Type      uint32     `db:"type"`
-	Issuer    string     `db:"issuer"`
-	Revoked   bool       `db:"revoked"`
-	IssuedAt  time.Time  `db:"issued_at"`
-	ExpiresAt *time.Time `db:"expires_at"`
+	ID        string       `db:"id"`
+	Type      uint32       `db:"type"`
+	Issuer    string       `db:"issuer"`
+	Revoked   bool         `db:"revoked"`
+	IssuedAt  time.Time    `db:"issued_at"`
+	ExpiresAt sql.NullTime `db:"expires_at"`
 }
 
 func toDBKey(key auth.Key) dbKey {
-	return dbKey{
-		ID:        key.ID,
-		Type:      key.Type,
-		Issuer:    key.Issuer,
-		IssuedAt:  key.IssuedAt,
-		ExpiresAt: key.ExpiresAt,
+	ret := dbKey{
+		ID:       key.ID,
+		Type:     key.Type,
+		Issuer:   key.Issuer,
+		IssuedAt: key.IssuedAt,
 	}
+	if key.ExpiresAt != nil {
+		ret.ExpiresAt = sql.NullTime{Time: *key.ExpiresAt, Valid: true}
+	}
+	return ret
 }
 
 func toKey(key dbKey) auth.Key {
-	return auth.Key{
-		ID:        key.ID,
-		Type:      key.Type,
-		Issuer:    key.Issuer,
-		IssuedAt:  key.IssuedAt,
-		ExpiresAt: key.ExpiresAt,
+	ret := auth.Key{
+		ID:       key.ID,
+		Type:     key.Type,
+		Issuer:   key.Issuer,
+		IssuedAt: key.IssuedAt,
 	}
+	if key.ExpiresAt.Valid {
+		ret.ExpiresAt = &key.ExpiresAt.Time
+	}
+	return ret
 }

@@ -37,7 +37,6 @@ message AccessByIDReq {
 // Also, different tokens can be encoded in different ways.
 message Token {
     string value = 1;
-    uint32 type  = 2;
 }
 
 message UserID {

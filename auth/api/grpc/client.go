@@ -74,7 +74,7 @@ func (client grpcClient) Identify(ctx context.Context, token *mainflux.Token, _ 
 	ctx, close := context.WithTimeout(ctx, client.timeout)
 	defer close()
 
-	res, err := client.identify(ctx, identityReq{token: token.GetValue(), kind: token.GetType()})
+	res, err := client.identify(ctx, identityReq{token: token.GetValue()})
 	if err != nil {
 		return nil, err
 	}

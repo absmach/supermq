@@ -49,7 +49,7 @@ type Service interface {
 	// Identify validates token token. If token is valid, content
 	// is returned. If token is invalid, or invocation failed for some
 	// other reason, non-nil error value is returned in response.
-	Identify(context.Context, string, uint32) (string, error)
+	Identify(context.Context, string) (string, error)
 }
 
 type claims struct {
@@ -88,7 +88,7 @@ func (svc authService) Issue(ctx context.Context, issuer string, key Key) (Key, 
 }
 
 func (svc authService) Revoke(ctx context.Context, issuer, id string) error {
-	email, err := svc.Identify(ctx, issuer, LoginKey)
+	email, err := svc.login(ctx, issuer)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func (svc authService) Revoke(ctx context.Context, issuer, id string) error {
 }
 
 func (svc authService) Retrieve(ctx context.Context, issuer, id string) (Key, error) {
-	email, err := svc.Identify(ctx, issuer, LoginKey)
+	email, err := svc.login(ctx, issuer)
 	if err != nil {
 		return Key{}, err
 	}
@@ -104,43 +104,43 @@ func (svc authService) Retrieve(ctx context.Context, issuer, id string) (Key, er
 	return svc.keys.Retrieve(ctx, email, id)
 }
 
-func (svc authService) Identify(ctx context.Context, key string, tokenType uint32) (string, error) {
-	claims, err := svc.parseJwt(key)
+func (svc authService) Identify(ctx context.Context, token string) (string, error) {
+	c, err := svc.parseClaims(token)
 	if err != nil {
+		return "", err
+	}
+
+	return svc.identify(ctx, c)
+}
+
+func (svc authService) identify(ctx context.Context, cl claims) (string, error) {
+	if cl.Type == nil {
 		return "", ErrUnauthorizedAccess
 	}
-
-	var sub, iss string
-	var t *uint32
-
-	if v, ok := claims["type"].(float64); ok {
-		v1 := uint32(v)
-		t = &v1
-	}
-	if v, ok := claims["sub"].(string); ok {
-		sub = v
-	}
-	if v, ok := claims["iss"].(string); ok {
-		iss = v
-	}
-	if t == nil || sub == "" || iss == "" {
-		return "", ErrUnauthorizedAccess
-	}
-
-	switch *t {
+	switch *cl.Type {
 	case UserKey:
-		k, err := svc.keys.Retrieve(ctx, iss, sub)
+		k, err := svc.keys.Retrieve(ctx, cl.Issuer, cl.Id)
 		if err != nil {
 			return "", err
 		}
+		// Auto revoke expired key.
 		if k.ExpiresAt != nil && k.ExpiresAt.Before(time.Now()) {
-			return "", svc.Revoke(ctx, iss, sub)
+			svc.keys.Remove(ctx, cl.Issuer, cl.Id)
+			return "", ErrUnauthorizedAccess
 		}
-		return iss, nil
+		return cl.Issuer, nil
+	case LoginKey:
+		if cl.Subject == "" {
+			return "", ErrUnauthorizedAccess
+		}
+		return cl.Subject, nil
 	case ResetKey:
-		return iss, nil
+		if cl.Issuer == "" {
+			return "", ErrUnauthorizedAccess
+		}
+		return cl.Issuer, nil
 	default:
-		return sub, nil
+		return "", ErrUnauthorizedAccess
 	}
 }
 
@@ -157,9 +157,50 @@ func (svc authService) issueJwt(key Key) (string, error) {
 	if key.ExpiresAt != nil {
 		claims.ExpiresAt = key.ExpiresAt.Unix()
 	}
+	if key.ID != "" {
+		claims.Id = key.ID
+	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(svc.secret))
+}
+
+func (svc authService) sessionKey(ctx context.Context, issuer string, duration time.Duration, key Key) (Key, error) {
+	key.Issuer = issuerName
+	key.Secret = issuer
+	exp := key.IssuedAt.Add(duration)
+	key.ExpiresAt = &exp
+	val, err := svc.issueJwt(key)
+	if err != nil {
+		return Key{}, err
+	}
+	key.Secret = val
+	return key, nil
+}
+
+func (svc authService) userKey(ctx context.Context, issuer string, key Key) (Key, error) {
+	email, err := svc.login(ctx, issuer)
+	if err != nil {
+		return Key{}, err
+	}
+	key.Issuer = email
+
+	id, err := svc.idp.ID()
+	if err != nil {
+		return Key{}, err
+	}
+	key.ID = id
+
+	value, err := svc.issueJwt(key)
+	if err != nil {
+		return Key{}, err
+	}
+	key.Secret = value
+	if _, err := svc.keys.Save(ctx, key); err != nil {
+		return Key{}, err
+	}
+
+	return key, nil
 }
 
 func (svc authService) parseJwt(key string) (jwt.MapClaims, error) {
@@ -181,43 +222,35 @@ func (svc authService) parseJwt(key string) (jwt.MapClaims, error) {
 	return nil, ErrUnauthorizedAccess
 }
 
-func (svc authService) sessionKey(ctx context.Context, issuer string, duration time.Duration, key Key) (Key, error) {
-	key.Issuer = issuerName
-	key.Secret = issuer
-	exp := key.IssuedAt.Add(duration)
-	key.ExpiresAt = &exp
-	val, err := svc.issueJwt(key)
+func (svc authService) parseClaims(key string) (claims, error) {
+	c := claims{}
+	_, err := jwt.ParseWithClaims(key, &c, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, ErrUnauthorizedAccess
+		}
+		return []byte(svc.secret), nil
+	})
+
 	if err != nil {
-		return Key{}, err
+		if c.Type != nil && *c.Type == UserKey {
+			if e, ok := err.(*jwt.ValidationError); ok && e.Errors == jwt.ValidationErrorExpired {
+				return c, nil
+			}
+		}
+		return claims{}, ErrUnauthorizedAccess
 	}
-	key.Secret = val
-	return key, nil
+
+	return c, nil
 }
 
-func (svc authService) userKey(ctx context.Context, issuer string, key Key) (Key, error) {
-	email, err := svc.Identify(ctx, issuer, UserKey)
+func (svc authService) login(ctx context.Context, token string) (string, error) {
+	c, err := svc.parseClaims(token)
 	if err != nil {
-		return Key{}, err
+		return "", err
 	}
-	key.Issuer = email
-
-	id, err := svc.idp.ID()
-	if err != nil {
-		return Key{}, err
+	// Only user can perform actions over API keys.
+	if c.Type == nil || *c.Type != LoginKey {
+		return "", ErrUnauthorizedAccess
 	}
-	key.ID = id
-	if key.Secret == "" {
-		key.Secret = key.ID
-	}
-
-	value, err := svc.issueJwt(key)
-	if err != nil {
-		return Key{}, err
-	}
-	key.Secret = value
-	if _, err := svc.keys.Save(ctx, key); err != nil {
-		return Key{}, err
-	}
-
-	return key, nil
+	return svc.identify(ctx, c)
 }

@@ -56,11 +56,11 @@ func (ms *metricsMiddleware) Retrieve(ctx context.Context, issuer, id string) (a
 	return ms.svc.Retrieve(ctx, issuer, id)
 }
 
-func (ms *metricsMiddleware) Identify(ctx context.Context, key string, kind uint32) (string, error) {
+func (ms *metricsMiddleware) Identify(ctx context.Context, key string) (string, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "identify").Add(1)
 		ms.latency.With("method", "identify").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.Identify(ctx, key, kind)
+	return ms.svc.Identify(ctx, key)
 }

@@ -144,6 +144,7 @@ func TestRetrieve(t *testing.T) {
 	loginKey, err := svc.Issue(context.Background(), user.Email, auth.Key{Type: auth.LoginKey, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	key := auth.Key{
+		ID:       "id",
 		Type:     auth.UserKey,
 		IssuedAt: time.Now(),
 	}
@@ -161,7 +162,7 @@ func TestRetrieve(t *testing.T) {
 			err:    nil,
 		},
 		"retrieve non-existing user key": {
-			id:     "",
+			id:     "invalid",
 			issuer: loginKey.Secret,
 			err:    auth.ErrNotFound,
 		},
@@ -215,7 +216,7 @@ func TestIdentify(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		id, err := svc.Identify(context.Background(), tc.key, tc.kind)
+		id, err := svc.Identify(context.Background(), tc.key)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s expected %s got %s\n", desc, tc.err, err))
 		assert.Equal(t, tc.id, id, fmt.Sprintf("%s expected %s got %s\n", desc, tc.id, id))
 	}

@@ -219,7 +219,7 @@ func (svc usersService) SendPasswordReset(_ context.Context, host, email, token 
 }
 
 func (svc usersService) identify(ctx context.Context, token string) (string, errors.Error) {
-	email, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token, Type: auth.LoginKey})
+	email, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return "", errors.Wrap(ErrUnauthorizedAccess, err)
 	}
