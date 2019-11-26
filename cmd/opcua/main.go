@@ -211,7 +211,6 @@ func subscribeToOpcuaServers(svc opcua.Service, nodes string, cfg opcua.Config, 
 
 	ctx := context.Background()
 	gc := gopcua.NewClient(ctx, svc, logger)
-	gr := gopcua.NewReader(ctx, svc, logger)
 
 	for {
 		l, err := reader.Read()
@@ -232,10 +231,6 @@ func subscribeToOpcuaServers(svc opcua.Service, nodes string, cfg opcua.Config, 
 		cfg.NodeNamespace = l[1]
 		cfg.NodeIdentifierType = l[2]
 		cfg.NodeIdentifier = l[3]
-
-		if err := gr.Read(cfg); err != nil {
-			logger.Warn(fmt.Sprintf("OPC-UA Read failed: %s", err))
-		}
 
 		go subscribeToOpcuaServer(gc, cfg, logger)
 	}
