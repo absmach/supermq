@@ -117,8 +117,8 @@ func TestReadAll(t *testing.T) {
 			page: readers.MessagesPage{
 				Total:    msgsNum,
 				Offset:   0,
-				Limit:    101,
-				Messages: messages[0:100],
+				Limit:    102,
+				Messages: messages[0:101],
 			},
 		},
 		"read message page for non-existent channel": {
