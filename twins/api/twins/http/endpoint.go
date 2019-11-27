@@ -28,7 +28,7 @@ func addTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 			ThingID:  req.ThingID,
 			Metadata: req.Metadata,
 		}
-		saved, err := svc.AddTwin(ctx, req.token, twin)
+		saved, err := svc.AddTwin(ctx, req.token, twin, req.Definition)
 		if err != nil {
 			return nil, err
 		}
@@ -50,16 +50,14 @@ func updateTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 		}
 
 		twin := twins.Twin{
-			ID:         req.id,
-			Key:        req.Key,
-			Name:       req.Name,
-			ThingID:    req.ThingID,
-			Attributes: req.Attributes,
-			State:      req.State,
-			Metadata:   req.Metadata,
+			ID:       req.id,
+			Key:      req.Key,
+			Name:     req.Name,
+			ThingID:  req.ThingID,
+			Metadata: req.Metadata,
 		}
 
-		if err := svc.UpdateTwin(ctx, req.token, twin); err != nil {
+		if err := svc.UpdateTwin(ctx, req.token, twin, req.Definition); err != nil {
 			return nil, err
 		}
 
@@ -82,17 +80,16 @@ func viewTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 		}
 
 		res := viewTwinRes{
-			Owner:      twin.Owner,
-			ID:         twin.ID,
-			Key:        twin.Key,
-			Name:       twin.Name,
-			ThingID:    twin.ThingID,
-			Created:    twin.Created,
-			Updated:    twin.Updated,
-			Revision:   twin.Revision,
-			Attributes: twin.Attributes,
-			State:      twin.State,
-			Metadata:   twin.Metadata,
+			Owner:       twin.Owner,
+			ID:          twin.ID,
+			Key:         twin.Key,
+			Name:        twin.Name,
+			ThingID:     twin.ThingID,
+			Created:     twin.Created,
+			Updated:     twin.Updated,
+			Revision:    twin.Revision,
+			Definitions: twin.Definitions,
+			Metadata:    twin.Metadata,
 		}
 		return res, nil
 	}
@@ -120,17 +117,16 @@ func listTwinsEndpoint(svc twins.Service) endpoint.Endpoint {
 		}
 		for _, twin := range set.Twins {
 			view := viewTwinRes{
-				Owner:      twin.Owner,
-				ID:         twin.ID,
-				Key:        twin.Key,
-				Name:       twin.Name,
-				ThingID:    twin.ThingID,
-				Created:    twin.Created,
-				Updated:    twin.Updated,
-				Revision:   twin.Revision,
-				Attributes: twin.Attributes,
-				State:      twin.State,
-				Metadata:   twin.Metadata,
+				Owner:       twin.Owner,
+				ID:          twin.ID,
+				Key:         twin.Key,
+				Name:        twin.Name,
+				ThingID:     twin.ThingID,
+				Created:     twin.Created,
+				Updated:     twin.Updated,
+				Revision:    twin.Revision,
+				Definitions: twin.Definitions,
+				Metadata:    twin.Metadata,
 			}
 			res.Twins = append(res.Twins, view)
 		}
@@ -161,17 +157,16 @@ func listTwinsByThingEndpoint(svc twins.Service) endpoint.Endpoint {
 		}
 		for _, twin := range set.Twins {
 			view := viewTwinRes{
-				Owner:      twin.Owner,
-				ID:         twin.ID,
-				Key:        twin.Key,
-				Name:       twin.Name,
-				ThingID:    twin.ThingID,
-				Created:    twin.Created,
-				Updated:    twin.Updated,
-				Revision:   twin.Revision,
-				Attributes: twin.Attributes,
-				State:      twin.State,
-				Metadata:   twin.Metadata,
+				Owner:       twin.Owner,
+				ID:          twin.ID,
+				Key:         twin.Key,
+				Name:        twin.Name,
+				ThingID:     twin.ThingID,
+				Created:     twin.Created,
+				Updated:     twin.Updated,
+				Revision:    twin.Revision,
+				Definitions: twin.Definitions,
+				Metadata:    twin.Metadata,
 			}
 			res.Twins = append(res.Twins, view)
 		}

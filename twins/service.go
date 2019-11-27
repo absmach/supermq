@@ -40,11 +40,11 @@ var (
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
 	// AddTwin adds new twin to the user identified by the provided key.
-	AddTwin(context.Context, string, Twin) (Twin, error)
+	AddTwin(context.Context, string, Twin, Definition) (Twin, error)
 
 	// UpdateTwin updates twin identified by the provided Twin that
 	// belongs to the user identified by the provided key.
-	UpdateTwin(context.Context, string, Twin) error
+	UpdateTwin(context.Context, string, Twin, Definition) error
 
 	// ViewTwin retrieves data about twin with the provided
 	// ID belonging to the user identified by the provided key.
@@ -88,7 +88,7 @@ func New(nc *nats.Conn, mc mqtt.Client, topic string, users mainflux.UsersServic
 
 }
 
-func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin) (Twin, error) {
+func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, def Definition) (tw Twin, err error) {
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return Twin{}, ErrUnauthorizedAccess
@@ -111,6 +111,10 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin) (T
 	twin.Created = time.Now()
 	twin.Updated = time.Now()
 
+	def.Created = time.Now()
+	def.Revision = 0
+	twin.Definitions = append(twin.Definitions, def)
+
 	id, err := ts.twins.Save(ctx, twin)
 	if err != nil {
 		return Twin{}, err
@@ -127,11 +131,11 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin) (T
 	return twin, nil
 }
 
-func IsZeroOfUnderlyingType(x interface{}) bool {
+func isZeroOfUnderlyingType(x interface{}) bool {
 	return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
 }
 
-func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin) error {
+func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin, def Definition) error {
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return ErrUnauthorizedAccess
@@ -144,22 +148,29 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin)
 	tw.Updated = time.Now()
 	tw.Revision++
 
-	if !IsZeroOfUnderlyingType(twin.Key) {
+	if !isZeroOfUnderlyingType(twin.Key) {
 		tw.Key = twin.Key
 	}
-	if !IsZeroOfUnderlyingType(twin.Name) {
+
+	if !isZeroOfUnderlyingType(twin.Name) {
 		tw.Name = twin.Name
 	}
-	if !IsZeroOfUnderlyingType(twin.ThingID) {
+
+	if !isZeroOfUnderlyingType(twin.ThingID) {
 		tw.ThingID = twin.ThingID
 	}
-	if !IsZeroOfUnderlyingType(twin.Attributes) {
-		tw.Attributes = twin.Attributes
+
+	if !isZeroOfUnderlyingType(def) {
+		def.Created = time.Now()
+		def.Revision = tw.Definitions[len(tw.Definitions)-1].Revision + 1
+		tw.Definitions = append(tw.Definitions, def)
 	}
-	if !IsZeroOfUnderlyingType(twin.State) {
-		tw.State = twin.State
+
+	if !isZeroOfUnderlyingType(twin.States) {
+		tw.States = twin.States
 	}
-	if !IsZeroOfUnderlyingType(twin.Metadata) {
+
+	if !isZeroOfUnderlyingType(twin.Metadata) {
 		tw.Metadata = twin.Metadata
 	}
 

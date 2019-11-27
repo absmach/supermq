@@ -30,7 +30,7 @@ func LoggingMiddleware(svc twins.Service, logger log.Logger) twins.Service {
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) AddTwin(ctx context.Context, token string, twin twins.Twin) (saved twins.Twin, err error) {
+func (lm *loggingMiddleware) AddTwin(ctx context.Context, token string, twin twins.Twin, def twins.Definition) (saved twins.Twin, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method add_twin for for token %s and twin %s took %s to complete", token, twin.ID, time.Since(begin))
 		if err != nil {
@@ -40,10 +40,10 @@ func (lm *loggingMiddleware) AddTwin(ctx context.Context, token string, twin twi
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.AddTwin(ctx, token, twin)
+	return lm.svc.AddTwin(ctx, token, twin, def)
 }
 
-func (lm *loggingMiddleware) UpdateTwin(ctx context.Context, token string, twin twins.Twin) (err error) {
+func (lm *loggingMiddleware) UpdateTwin(ctx context.Context, token string, twin twins.Twin, def twins.Definition) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method update_twin for for token %s and twin %s took %s to complete", token, twin.ID, time.Since(begin))
 		if err != nil {
@@ -53,7 +53,7 @@ func (lm *loggingMiddleware) UpdateTwin(ctx context.Context, token string, twin 
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.UpdateTwin(ctx, token, twin)
+	return lm.svc.UpdateTwin(ctx, token, twin, def)
 }
 
 func (lm *loggingMiddleware) ViewTwin(ctx context.Context, token, id string) (viewed twins.Twin, err error) {

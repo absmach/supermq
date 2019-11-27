@@ -12,22 +12,38 @@ import (
 	"time"
 )
 
+// Metadata stores arbitrary twin data
 type Metadata map[string]interface{}
+
+// Definition stores entity's attributes
+type Definition struct {
+	Revision   int
+	Created    time.Time
+	Attributes map[string]interface{}
+}
+
+// State stores actual snapshot of entity's values
+type State struct {
+	Definition int
+	Serial     int
+	Created    time.Time
+	Payload    map[string]interface{}
+}
 
 // Twin represents a Mainflux thing digital twin. Each twin is owned by one thing, and
 // is assigned with the unique identifier and (temporary) access key.
 type Twin struct {
-	Owner      string
-	ID         string
-	Key        string
-	Name       string
-	ThingID    string
-	Created    time.Time
-	Updated    time.Time
-	Revision   int
-	Attributes map[string]interface{}
-	State      map[string]interface{}
-	Metadata   Metadata
+	Owner       string
+	ID          string
+	Key         string
+	Name        string
+	ThingID     string
+	Created     time.Time
+	Updated     time.Time
+	Revision    int
+	Definitions []Definition
+	States      []State
+	Metadata    Metadata
 }
 
 // SetMetadata contains page metadata that helps navigation.

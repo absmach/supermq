@@ -35,22 +35,22 @@ func MetricsMiddleware(svc twins.Service, counter metrics.Counter, latency metri
 	}
 }
 
-func (ms *metricsMiddleware) AddTwin(ctx context.Context, token string, twin twins.Twin) (saved twins.Twin, err error) {
+func (ms *metricsMiddleware) AddTwin(ctx context.Context, token string, twin twins.Twin, def twins.Definition) (saved twins.Twin, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "add_twin").Add(1)
 		ms.latency.With("method", "add_twin").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.AddTwin(ctx, token, twin)
+	return ms.svc.AddTwin(ctx, token, twin, def)
 }
 
-func (ms *metricsMiddleware) UpdateTwin(ctx context.Context, token string, twin twins.Twin) (err error) {
+func (ms *metricsMiddleware) UpdateTwin(ctx context.Context, token string, twin twins.Twin, def twins.Definition) (err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "update_twin").Add(1)
 		ms.latency.With("method", "update_twin").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.UpdateTwin(ctx, token, twin)
+	return ms.svc.UpdateTwin(ctx, token, twin, def)
 }
 
 func (ms *metricsMiddleware) ViewTwin(ctx context.Context, token, id string) (viewed twins.Twin, err error) {

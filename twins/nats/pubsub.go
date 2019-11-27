@@ -48,6 +48,8 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 		return
 	}
 
+	// fmt.Printf("%s\n", msg)
+
 	// twinsSet, err := ps.tr.RetrieveByChannel(context.TODO(), msg.Channel, 10)
 	// if err != nil {
 	// 	ps.logger.Warn(fmt.Sprintf("Retrieving twins failed: %s", err))

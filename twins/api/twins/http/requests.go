@@ -24,8 +24,7 @@ type addTwinReq struct {
 	Name       string                 `json:"name,omitempty"`
 	Key        string                 `json:"key,omitempty"`
 	ThingID    string                 `json:"thingID"`
-	Attributes map[string]interface{} `json:"attributes,omitempty"`
-	State      map[string]interface{} `json:"state,omitempty"`
+	Definition twins.Definition       `json:"definition,omitempty"`
 	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }
 
@@ -51,8 +50,7 @@ type updateTwinReq struct {
 	Name       string                 `json:"name,omitempty"`
 	Key        string                 `json:"key,omitempty"`
 	ThingID    string                 `json:"thingID,omitempty"`
-	Attributes map[string]interface{} `json:"attributes,omitempty"`
-	State      map[string]interface{} `json:"state,omitempty"`
+	Definition twins.Definition       `json:"definition,omitempty"`
 	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }
 
