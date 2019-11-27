@@ -15,7 +15,7 @@ import (
 	"reflect"
 	"time"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
+	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/mainflux/mainflux"
 	"github.com/nats-io/go-nats"
 )
@@ -64,10 +64,14 @@ type Service interface {
 	RemoveTwin(context.Context, string, string) error
 }
 
+type mqtt struct {
+	client paho.Client
+	topic  string
+}
+
 type twinsService struct {
 	natsClient *nats.Conn
-	mqttClient mqtt.Client
-	mqttTopic  string
+	mqtt       mqtt
 	users      mainflux.UsersServiceClient
 	twins      TwinRepository
 	idp        IdentityProvider
@@ -76,19 +80,32 @@ type twinsService struct {
 var _ Service = (*twinsService)(nil)
 
 // New instantiates the twins service implementation.
-func New(nc *nats.Conn, mc mqtt.Client, topic string, users mainflux.UsersServiceClient, twins TwinRepository, idp IdentityProvider) Service {
+func New(nc *nats.Conn, mc paho.Client, topic string, users mainflux.UsersServiceClient, twins TwinRepository, idp IdentityProvider) Service {
 	return &twinsService{
 		natsClient: nc,
-		mqttClient: mc,
-		mqttTopic:  topic,
-		users:      users,
-		twins:      twins,
-		idp:        idp,
+		mqtt: mqtt{
+			client: mc,
+			topic:  topic,
+		},
+		users: users,
+		twins: twins,
+		idp:   idp,
 	}
+}
 
+func (ts *twinsService) publish(id *string, err error, succOp, failOp string, payload *[]byte) {
+	if err != nil {
+		ts.mqtt.publish(*id, succOp, payload)
+	} else {
+		ts.mqtt.publish(*id, failOp, payload)
+	}
 }
 
 func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, def Definition) (tw Twin, err error) {
+	var b []byte
+	var id *string
+	defer ts.publish(id, err, "create/success", "create/failure", &b)
+
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return Twin{}, ErrUnauthorizedAccess
@@ -115,18 +132,14 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 	def.Revision = 0
 	twin.Definitions = append(twin.Definitions, def)
 
-	id, err := ts.twins.Save(ctx, twin)
+	_, err = ts.twins.Save(ctx, twin)
 	if err != nil {
 		return Twin{}, err
 	}
 
-	twin.ID = id
 	twin.Revision = 0
-
-	b, err := json.Marshal(twin)
-	if ts.publish(twin.ID, "create/success", b); err != nil {
-		return Twin{}, err
-	}
+	*id = twin.ID
+	b, err = json.Marshal(twin)
 
 	return twin, nil
 }
@@ -179,7 +192,7 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 	}
 
 	b, err := json.Marshal(tw)
-	if ts.publish(twin.ID, "update/success", b); err != nil {
+	if ts.mqtt.publish(twin.ID, "update/success", &b); err != nil {
 		return err
 	}
 
@@ -198,7 +211,7 @@ func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (Twin, e
 	}
 
 	b, err := json.Marshal(twin)
-	if ts.publish(twin.ID, "get/success", b); err != nil {
+	if ts.mqtt.publish(twin.ID, "get/success", &b); err != nil {
 		return Twin{}, err
 	}
 
@@ -233,17 +246,17 @@ func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) error 
 		return err
 	}
 
-	if ts.publish(id, "remove/success", []byte{}); err != nil {
+	if ts.mqtt.publish(id, "remove/success", nil); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (ts *twinsService) publish(id, op string, payload []byte) error {
-	topic := fmt.Sprintf("channels/%s/messages/%s/%s", ts.mqttTopic, id, op)
+func (mqtt *mqtt) publish(id, op string, payload *[]byte) error {
+	topic := fmt.Sprintf("channels/%s/messages/%s/%s", mqtt.topic, id, op)
 
-	token := ts.mqttClient.Publish(topic, 0, false, payload)
+	token := mqtt.client.Publish(topic, 0, false, &payload)
 	token.Wait()
 
 	return token.Error()
