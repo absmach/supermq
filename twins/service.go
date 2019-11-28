@@ -93,18 +93,26 @@ func New(nc *nats.Conn, mc paho.Client, topic string, users mainflux.UsersServic
 	}
 }
 
-func (ts *twinsService) publish(id *string, err error, succOp, failOp string, payload *[]byte) {
-	if err != nil {
-		ts.mqtt.publish(*id, succOp, payload)
-	} else {
-		ts.mqtt.publish(*id, failOp, payload)
+func (ts *twinsService) publish(id *string, err *error, succOp, failOp string, payload *[]byte) error {
+	op := succOp
+	if *err != nil {
+		op = failOp
+		esb := []byte((*err).Error())
+		payload = &esb
 	}
+
+	mqttErr := ts.mqtt.publish(*id, op, payload)
+	if mqttErr != nil {
+		return mqttErr
+	}
+
+	return nil
 }
 
 func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, def Definition) (tw Twin, err error) {
-	var b []byte
-	var id *string
-	defer ts.publish(id, err, "create/success", "create/failure", &b)
+	b := []byte{}
+	id := ""
+	defer ts.publish(&id, &err, "create/success", "create/failure", &b)
 
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -138,7 +146,7 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 	}
 
 	twin.Revision = 0
-	*id = twin.ID
+	id = twin.ID
 	b, err = json.Marshal(twin)
 
 	return twin, nil
@@ -148,7 +156,11 @@ func isZeroOfUnderlyingType(x interface{}) bool {
 	return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
 }
 
-func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin, def Definition) error {
+func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin, def Definition) (err error) {
+	b := []byte{}
+	id := ""
+	defer ts.publish(&id, &err, "update/success", "update/failure", &b)
+
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return ErrUnauthorizedAccess
@@ -191,15 +203,16 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 		return err
 	}
 
-	b, err := json.Marshal(tw)
-	if ts.mqtt.publish(twin.ID, "update/success", &b); err != nil {
-		return err
-	}
+	id = twin.ID
+	b, err = json.Marshal(tw)
 
 	return nil
 }
 
-func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (Twin, error) {
+func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (tw Twin, err error) {
+	b := []byte{}
+	defer ts.publish(&id, &err, "get/success", "get/failure", &b)
+
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return Twin{}, ErrUnauthorizedAccess
@@ -210,12 +223,25 @@ func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (Twin, e
 		return Twin{}, err
 	}
 
-	b, err := json.Marshal(twin)
-	if ts.mqtt.publish(twin.ID, "get/success", &b); err != nil {
-		return Twin{}, err
-	}
+	b, err = json.Marshal(twin)
 
 	return twin, nil
+}
+
+func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) (err error) {
+	b := []byte{}
+	defer ts.publish(&id, &err, "remove/success", "remove/failure", &b)
+
+	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	if err != nil {
+		return ErrUnauthorizedAccess
+	}
+
+	if err := ts.twins.Remove(ctx, res.GetValue(), id); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (ts *twinsService) ListTwins(ctx context.Context, token string, limit uint64, name string, metadata Metadata) (TwinsSet, error) {
@@ -236,27 +262,13 @@ func (ts *twinsService) ListTwinsByThing(ctx context.Context, token, thing strin
 	return ts.twins.RetrieveByThing(ctx, thing, limit)
 }
 
-func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) error {
-	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return ErrUnauthorizedAccess
-	}
-
-	if err := ts.twins.Remove(ctx, res.GetValue(), id); err != nil {
-		return err
-	}
-
-	if ts.mqtt.publish(id, "remove/success", nil); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (mqtt *mqtt) publish(id, op string, payload *[]byte) error {
 	topic := fmt.Sprintf("channels/%s/messages/%s/%s", mqtt.topic, id, op)
+	if len(id) < 1 {
+		topic = fmt.Sprintf("channels/%s/messages/%s", mqtt.topic, op)
+	}
 
-	token := mqtt.client.Publish(topic, 0, false, &payload)
+	token := mqtt.client.Publish(topic, 0, false, *payload)
 	token.Wait()
 
 	return token.Error()
