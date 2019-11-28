@@ -11,12 +11,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"reflect"
 	"time"
 
-	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/twins/paho"
 	"github.com/nats-io/go-nats"
 )
 
@@ -64,14 +63,14 @@ type Service interface {
 	RemoveTwin(context.Context, string, string) error
 }
 
-type mqtt struct {
-	client paho.Client
-	topic  string
-}
+// type mqtt struct {
+// 	client paho.Client
+// 	topic  string
+// }
 
 type twinsService struct {
 	natsClient *nats.Conn
-	mqtt       mqtt
+	mqttClient paho.Mqtt
 	users      mainflux.UsersServiceClient
 	twins      TwinRepository
 	idp        IdentityProvider
@@ -80,16 +79,13 @@ type twinsService struct {
 var _ Service = (*twinsService)(nil)
 
 // New instantiates the twins service implementation.
-func New(nc *nats.Conn, mc paho.Client, topic string, users mainflux.UsersServiceClient, twins TwinRepository, idp IdentityProvider) Service {
+func New(nc *nats.Conn, mc paho.Mqtt, users mainflux.UsersServiceClient, twins TwinRepository, idp IdentityProvider) Service {
 	return &twinsService{
 		natsClient: nc,
-		mqtt: mqtt{
-			client: mc,
-			topic:  topic,
-		},
-		users: users,
-		twins: twins,
-		idp:   idp,
+		mqttClient: mc,
+		users:      users,
+		twins:      twins,
+		idp:        idp,
 	}
 }
 
@@ -101,7 +97,7 @@ func (ts *twinsService) publish(id *string, err *error, succOp, failOp string, p
 		payload = &esb
 	}
 
-	mqttErr := ts.mqtt.publish(*id, op, payload)
+	mqttErr := ts.mqttClient.Publish(*id, op, payload)
 	if mqttErr != nil {
 		return mqttErr
 	}
@@ -262,14 +258,14 @@ func (ts *twinsService) ListTwinsByThing(ctx context.Context, token, thing strin
 	return ts.twins.RetrieveByThing(ctx, thing, limit)
 }
 
-func (mqtt *mqtt) publish(id, op string, payload *[]byte) error {
-	topic := fmt.Sprintf("channels/%s/messages/%s/%s", mqtt.topic, id, op)
-	if len(id) < 1 {
-		topic = fmt.Sprintf("channels/%s/messages/%s", mqtt.topic, op)
-	}
+// func (mqtt *mqtt) publish(id, op string, payload *[]byte) error {
+// 	topic := fmt.Sprintf("channels/%s/messages/%s/%s", mqtt.topic, id, op)
+// 	if len(id) < 1 {
+// 		topic = fmt.Sprintf("channels/%s/messages/%s", mqtt.topic, op)
+// 	}
 
-	token := mqtt.client.Publish(topic, 0, false, *payload)
-	token.Wait()
+// 	token := mqtt.client.Publish(topic, 0, false, *payload)
+// 	token.Wait()
 
-	return token.Error()
-}
+// 	return token.Error()
+// }

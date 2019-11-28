@@ -19,7 +19,8 @@ import (
 	"syscall"
 	"time"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/mainflux/mainflux/twins/paho"
+
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/twins"
@@ -129,7 +130,8 @@ func main() {
 	dbTracer, dbCloser := initJaeger("twins_db", cfg.jaegerURL, logger)
 	defer dbCloser.Close()
 
-	mc := connectToMQTTBroker(cfg.mqttURL, cfg.thingID, cfg.thingKey, logger)
+	pc := paho.Connect(cfg.mqttURL, cfg.thingID, cfg.thingKey, logger)
+	mc := paho.New(pc, cfg.channelID)
 
 	mcTracer, mcCloser := initJaeger("twins_mqtt", cfg.jaegerURL, logger)
 	defer mcCloser.Close()
@@ -147,8 +149,7 @@ func main() {
 	tracer, closer := initJaeger("twins", cfg.jaegerURL, logger)
 	defer closer.Close()
 
-	svc := newService(nc, ncTracer, mc, cfg.channelID, mcTracer,
-		users, dbTracer, db, logger)
+	svc := newService(nc, ncTracer, mc, mcTracer, users, dbTracer, db, logger)
 	errs := make(chan error, 2)
 
 	go startHTTPServer(twinshttpapi.MakeHandler(tracer, svc), cfg.httpPort, cfg, logger, errs)
@@ -261,14 +262,14 @@ func connectToUsers(cfg config, logger logger.Logger) *grpc.ClientConn {
 	return conn
 }
 
-func newService(nc *broker.Conn, ncTracer opentracing.Tracer, mc mqtt.Client, topic string, mcTracer opentracing.Tracer, users mainflux.UsersServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
+func newService(nc *broker.Conn, ncTracer opentracing.Tracer, mc paho.Mqtt, mcTracer opentracing.Tracer, users mainflux.UsersServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
 	twinRepo := twinsmongodb.NewTwinRepository(db)
 	idp := uuid.New()
 
 	// TODO twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, thingsRepo)
 	nats.Subscribe(nc, twinRepo, logger)
 
-	svc := twins.New(nc, mc, topic, users, twinRepo, idp)
+	svc := twins.New(nc, mc, users, twinRepo, idp)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
@@ -299,29 +300,4 @@ func startHTTPServer(handler http.Handler, port string, cfg config, logger logge
 	}
 	logger.Info(fmt.Sprintf("Twins service started using http on port %s", cfg.httpPort))
 	errs <- http.ListenAndServe(p, handler)
-}
-
-func connectToMQTTBroker(mqttURL, id, key string, logger logger.Logger) mqtt.Client {
-	opts := mqtt.NewClientOptions()
-	opts.AddBroker(mqttURL)
-	opts.SetClientID("twins")
-	opts.SetUsername(id)
-	opts.SetPassword(key)
-	opts.SetCleanSession(true)
-	opts.SetAutoReconnect(true)
-	opts.SetOnConnectHandler(func(c mqtt.Client) {
-		logger.Info("Connected to MQTT broker")
-	})
-	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {
-		logger.Error(fmt.Sprintf("MQTT connection lost: %s", err.Error()))
-		os.Exit(1)
-	})
-
-	client := mqtt.NewClient(opts)
-	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to MQTT broker: %s", token.Error()))
-		os.Exit(1)
-	}
-
-	return client
 }
