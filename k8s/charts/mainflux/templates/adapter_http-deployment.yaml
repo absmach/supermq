@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-adapter-http
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+      component: adapter-http
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+        component: adapter-http
+    spec:
+      containers:
+        - env:
+            - name: MF_JAEGER_URL
+              value: {{ .Release.Name }}-jaeger-operator-jaeger-agent:6831
+            - name: MF_HTTP_ADAPTER_LOG_LEVEL
+              value: {{ .Values.adapter_http.logLevel }}
+            - name: MF_HTTP_ADAPTER_PORT
+              value: "8185"
+            - name: MF_NATS_URL
+              value: nats://{{ .Release.Name }}-nats-client:4222
+            - name: MF_THINGS_URL
+              value: things:8183
+          image: "{{ .Values.adapter_http.image.repository }}/http:{{ .Values.adapter_http.image.tag }}"
+          imagePullPolicy: {{ .Values.adapter_http.image.pullPolicy }}
+          name: {{ .Release.Name }}-adapter-http
+          ports:
+            - containerPort: 8185
+              protocol: TCP
+          stdin: true
+          tty: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always

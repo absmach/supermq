@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-things
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+      component: things
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+        component: things
+    spec:
+      containers:
+        - env:
+            - name: MF_JAEGER_URL
+              value: {{ .Release.Name }}-jaeger-operator-jaeger-agent:6831
+            - name: MF_THINGS_AUTH_GRPC_PORT
+              value: "8183"
+            - name: MF_THINGS_AUTH_HTTP_PORT
+              value: "8989"
+            - name: MF_THINGS_CACHE_URL
+              value: {{ .Release.Name }}-redis-things-master:6379
+            - name: MF_THINGS_DB
+              value: things
+            - name: MF_THINGS_DB_HOST
+              value: {{ .Release.Name }}-postgresql-things
+            - name: MF_THINGS_DB_PASS
+              value: mainflux
+            - name: MF_THINGS_DB_PORT
+              value: "5432"
+            - name: MF_THINGS_DB_USER
+              value: mainflux
+            - name: MF_THINGS_ES_URL
+              value: {{ .Release.Name }}-redis-streams-master:6379
+            - name: MF_THINGS_HTTP_PORT
+              value: "8182"
+            - name: MF_THINGS_LOG_LEVEL
+              value: {{ .Values.things.logLevel }}
+            - name: MF_THINGS_SECRET
+              value: c8ee60b5-1317-4b7c-adb3-c0d73f30959c
+            - name: MF_USERS_URL
+              value: {{ .Release.Name }}-users:8181
+          image: "{{ .Values.things.image.repository }}/things:{{ .Values.things.image.tag }}"
+          imagePullPolicy: {{ .Values.things.image.pullPolicy }}
+          name: {{ .Release.Name }}-things
+          ports:
+            - containerPort: 8182
+              protocol: TCP
+            - containerPort: 8183
+              protocol: TCP
+            - containerPort: 8989
+              protocol: TCP
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-adapter-ws
+spec:
+  selector:
+    app: {{ .Release.Name }}
+    component: adapter-ws
+  ports:
+    - port: 8186
+      protocol: TCP

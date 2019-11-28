@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-adapter-coap
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+      component: adapter-coap
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+        component: adapter-coap
+    spec:
+      containers:
+        - env:
+            - name: MF_JAEGER_URL
+              value: {{ .Release.Name }}-jaeger-operator-jaeger-agent:6831
+            - name: MF_NATS_URL
+              value: nats://{{ .Release.Name }}-nats-client:4222
+            - name: MF_THINGS_URL
+              value: {{ .Release.Name }}-things:8183
+            - name: MF_COAP_ADAPTER_LOG_LEVEL
+              value: {{ .Values.adapter_coap.logLevel }}
+            - name: MF_COAP_ADAPTER_PORT
+              value: "5683"
+          image: "{{ .Values.adapter_coap.image.repository }}/coap:{{ .Values.adapter_coap.image.tag }}"
+          imagePullPolicy: {{ .Values.adapter_coap.image.pullPolicy }}
+          name: {{ .Release.Name }}-adapter-coap
+          ports:
+            - containerPort: 5683
+              protocol: TCP
+          stdin: true
+          tty: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always

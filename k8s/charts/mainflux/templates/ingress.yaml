@@ -1,0 +1,121 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+{{- if .Values.ingress.annotations }}
+  annotations:
+{{ toYaml .Values.ingress.annotations | indent 4 }}
+{{- end }}
+{{- if .Values.ingress.labels }}
+  labels:
+{{ toYaml .Values.ingress.labels | indent 4 }}
+{{- end }}
+  name: {{ .Release.Name }}-nginx-ingress
+spec:
+  rules:
+    - host: "{{ .Values.ingress.hostname }}"
+      http:
+        paths:
+          - path: /version
+            backend:
+              serviceName: {{ .Release.Name }}-things
+              servicePort: 8182
+{{- if .Values.ingress.tls }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.tls.hostname }}
+      secretName: {{ .Values.ingress.tls.secret }}
+{{- end }}
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+{{- if .Values.ingress.annotations }}
+{{ toYaml .Values.ingress.annotations | indent 4 }}
+{{- end }}
+{{- if .Values.ingress.labels }}
+  labels:
+{{ toYaml .Values.ingress.labels | indent 4 }}
+{{- end }}
+  name: {{ .Release.Name }}-nginx-rewrite-ingress
+spec:
+  rules:
+    - host: "{{ .Values.ingress.hostname }}"
+      http:
+        paths:
+          - path: /(users)
+            backend:
+              serviceName: {{ .Release.Name }}-users
+              servicePort: 8180
+          - path: /(tokens)
+            backend:
+              serviceName: {{ .Release.Name }}-users
+              servicePort: 8180
+          - path: /(things?.*)
+            backend:
+              serviceName: {{ .Release.Name }}-things
+              servicePort: 8182
+          - path: /(channels?.*)
+            backend:
+              serviceName: {{ .Release.Name }}-things
+              servicePort: 8182
+          - path: /http/?(.*)
+            backend:
+              serviceName: {{ .Release.Name }}-adapter-http
+              servicePort: 8185
+          # - backend:
+          #     serviceName: {{ .Release.Name }}-bootstrap
+          #     servicePort: 8200
+          #   path: /bs/?(.*)
+          - path: /ws/?(.*)
+            backend:
+              serviceName: {{ .Release.Name }}-adapter-ws
+              servicePort: 8186
+          # - backend:
+          #     serviceName: {{ .Release.Name }}-mongodb-reader
+          #     servicePort: 8904
+          #   path: /mongodbreader/?(.*)
+          - path: /version/users/?(.*)
+            backend:
+              serviceName: {{ .Release.Name }}-users
+              servicePort: 8180
+          - path: /version/things/?(.*)
+            backend:
+              serviceName: {{ .Release.Name }}-things
+              servicePort: 8182
+          - path: /version/http/?(.*)
+            backend:
+              serviceName: {{ .Release.Name }}-adapter-http
+              servicePort: 8185
+          - path: /version/ws/?(.*)
+            backend:
+              serviceName: {{ .Release.Name }}-adapter-ws
+              servicePort: 8186
+          # - backend:
+          #     serviceName: {{ .Release.Name }}-adapter-lora
+          #     servicePort: 8187
+          #   path: /version/lora/?(.*)
+{{- if .Values.ingress.tls }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.tls.hostname }}
+      secretName: {{ .Values.ingress.tls.secret }}
+{{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+data:
+  # MQTT adapter:
+  "1883": "{{ .Release.Namespace }}/{{ .Release.Name }}-envoy:1883:PROXY"
+  "8883": "{{ .Release.Namespace }}/{{ .Release.Name }}-nginx-internal:8883:PROXY"
+#   # Vault:
+#   # "8200": "mainflux/vault-ui:8200:PROXY"
+#   # LoRa adapter:
+#   # "8187": "mainflux/adapter-lora:8187:PROXY"
+#   # LoRa Server:
+#   # "1884": "mainflux/mosquitto:1883:PROXY"
+#   # "8884": "mainflux/nginx-mtls:8884:PROXY"
+#   # "8080": "mainflux/appserver:8080:PROXY"
+metadata:
+  name: tcp-services

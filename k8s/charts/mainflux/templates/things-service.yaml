@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-things
+spec:
+  selector:
+    app: {{ .Release.Name }}
+    component: things
+  ports:
+    - port: 8182
+      protocol: TCP
+      name: {{ .Release.Name }}-things-8182
+    - port: 8183
+      protocol: TCP
+      name: {{ .Release.Name }}-things-8183
+    - port: 8189
+      protocol: TCP
+      name: {{ .Release.Name }}-things-8189

@@ -1,0 +1,32 @@
+apiVersion: v2
+name: mainflux
+description: Mainflux IoT Platform
+icon: https://avatars1.githubusercontent.com/u/13207490
+type: application
+version: 0.1.0
+appVersion: "0.9.1"
+
+dependencies:
+  - name: nats
+    version: "4.2.6"
+    repository: "@stable"
+  - name: postgresql
+    version: "7.4.0"
+    repository: "@stable"
+    alias: postgresql-things
+  - name: postgresql
+    version: "7.4.0"
+    repository: "@stable"
+    alias: postgresql-users
+  - name: redis
+    version: "9.5.5"
+    repository: "@stable"
+    alias: redis-streams
+  - name: redis
+    version: "9.5.5"
+    repository: "@stable"
+    alias: redis-things
+  - name: redis
+    version: "9.5.5"
+    repository: "@stable"
+    alias: redis-mqtt

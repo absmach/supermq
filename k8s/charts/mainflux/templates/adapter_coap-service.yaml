@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-adapter-coap
+spec:
+  selector:
+    app: {{ .Release.Name }}
+    component: adapter-coap
+  ports:
+    - port: 5683
+      protocol: TCP

@@ -1,0 +1,123 @@
+defaults:
+  logLevel: &default_logLevel "debug"
+  image:
+    pullPolicy: &default_image_pullPolicy "IfNotPresent"
+    repository: &default_image_repository "mainflux"
+    tag: &default_image_tag "0.9.1"
+
+ingress:
+  enabled: true
+  annotations: {}
+  labels: {}
+  # hostname: ""
+  # tls:
+  #   hostname: ""
+  #   secret: ""
+
+nginx_internal:
+  mtls:
+    tls: ""
+    intermediate_crt: ""
+
+adapter_http:
+  logLevel: *default_logLevel
+  image:
+    pullPolicy: *default_image_pullPolicy
+    repository: *default_image_repository
+    tag: *default_image_tag
+
+adapter_ws:
+  logLevel: *default_logLevel
+  image:
+    pullPolicy: *default_image_pullPolicy
+    repository: *default_image_repository
+    tag: *default_image_tag
+
+adapter_coap:
+  logLevel: *default_logLevel
+  image:
+    pullPolicy: *default_image_pullPolicy
+    repository: *default_image_repository
+    tag: *default_image_tag
+
+adapter_mqtt:
+  logLevel: *default_logLevel
+  image:
+    pullPolicy: *default_image_pullPolicy
+    # FIXME
+    # repository: *default_image_repository
+    repository: isavcic
+    # FIXME
+    # tag: *default_image_tag
+    tag: latest
+
+users:
+  logLevel: *default_logLevel
+  image:
+    pullPolicy: *default_image_pullPolicy
+    repository: *default_image_repository
+    tag: *default_image_tag
+
+things:
+  logLevel: *default_logLevel
+  image:
+    pullPolicy: *default_image_pullPolicy
+    repository: *default_image_repository
+    tag: *default_image_tag
+
+mqtt:
+  enabled: true
+
+nats:
+  auth:
+    enabled: false
+  clusterAuth:
+    enabled: false
+
+postgresql-users:
+  name: postgresql-users
+  postgresqlUsername: mainflux
+  postgresqlPassword: mainflux
+  postgresqlDatabase: users
+  resources:
+    requests:
+      cpu: 25m
+
+postgresql-things:
+  name: postgresql-things
+  postgresqlUsername: mainflux
+  postgresqlPassword: mainflux
+  postgresqlDatabase: things
+  resources:
+    requests:
+      cpu: 25m
+
+redis-streams:
+  cluster:
+    enabled: false
+  usePassword: false
+
+redis-mqtt:
+  cluster:
+    enabled: false
+  usePassword: false
+
+redis-things:
+  cluster:
+    enabled: false
+  usePassword: false
+  master:
+    persistence:
+      enabled: false
+
+jaeger-operator:
+  jaeger:
+    create: true
+  rbac:
+    pspEnabled: true
+    clusterRole: true
+
+voyager:
+  apiserver:
+    enableValidatingWebhook: false
+  ingressClass: voyager

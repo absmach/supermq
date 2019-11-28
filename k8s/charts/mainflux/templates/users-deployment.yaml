@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-users
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+      component: users
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+        component: users
+    spec:
+      containers:
+        - env:
+            - name: MF_JAEGER_URL
+              value: {{ .Release.Name }}-jaeger-operator-jaeger-agent:6831
+            - name: MF_USERS_DB
+              value: users
+            - name: MF_USERS_DB_HOST
+              value: {{ .Release.Name }}-postgresql-users
+            - name: MF_USERS_DB_PASS
+              value: mainflux
+            - name: MF_USERS_DB_PORT
+              value: "5432"
+            - name: MF_USERS_DB_USER
+              value: mainflux
+            - name: MF_USERS_GRPC_PORT
+              value: "8181"
+            - name: MF_USERS_HTTP_PORT
+              value: "8180"
+            - name: MF_USERS_LOG_LEVEL
+              value: {{ .Values.users.logLevel }}
+            - name: MF_USERS_SECRET
+              value: c8ee60b5-1317-4b7c-adb3-c0d73f30959c
+          image: "{{ .Values.users.image.repository }}/users:{{ .Values.users.image.tag }}"
+          imagePullPolicy: {{ .Values.users.image.pullPolicy }}
+          name: {{ .Release.Name }}-users
+          ports:
+            - containerPort: 8180
+              # name: 8180tcp02
+              protocol: TCP
+            - containerPort: 8181
+              # name: 8181tcp02
+              protocol: TCP
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always

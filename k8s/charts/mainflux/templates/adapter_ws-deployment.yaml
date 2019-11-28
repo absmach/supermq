@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-adapter-ws
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+      component: adapter-ws
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+        component: adapter-ws
+    spec:
+      containers:
+        - env:
+            - name: MF_JAEGER_URL
+              value: {{ .Release.Name }}-jaeger-operator-jaeger-agent:6831
+            - name: MF_NATS_URL
+              value: nats://{{ .Release.Name }}-nats-client:4222
+            - name: MF_THINGS_URL
+              value: {{ .Release.Name }}-things:8183
+            - name: MF_WS_ADAPTER_LOG_LEVEL
+              value: {{ .Values.adapter_ws.logLevel }}
+            - name: MF_WS_ADAPTER_PORT
+              value: "8186"
+          image: "{{ .Values.adapter_ws.image.repository }}/ws:{{ .Values.adapter_ws.image.tag }}"
+          imagePullPolicy: {{ .Values.adapter_ws.image.pullPolicy }}
+          name: {{ .Release.Name }}-adapter-ws
+          ports:
+            - containerPort: 8186
+              protocol: TCP
+          stdin: true
+          tty: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always

@@ -1,0 +1,24 @@
+dependencies:
+- name: nats
+  repository: https://kubernetes-charts.storage.googleapis.com
+  version: 4.2.6
+- name: postgresql
+  repository: https://kubernetes-charts.storage.googleapis.com
+  version: 7.4.0
+- name: postgresql
+  repository: https://kubernetes-charts.storage.googleapis.com
+  version: 7.4.0
+- name: redis
+  repository: https://kubernetes-charts.storage.googleapis.com
+  version: 9.5.5
+- name: redis
+  repository: https://kubernetes-charts.storage.googleapis.com
+  version: 9.5.5
+- name: redis
+  repository: https://kubernetes-charts.storage.googleapis.com
+  version: 9.5.5
+- name: voyager
+  repository: https://charts.appscode.com/stable/
+  version: v11.0.1
+digest: sha256:10b7bac0e4145daf6bffe0d664bcee8924ad114840a550dfaaf680c4a3f7ec73
+generated: "2019-11-26T16:56:31.625133577+01:00"
