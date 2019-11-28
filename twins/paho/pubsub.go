@@ -48,7 +48,7 @@ func Connect(mqttURL, id, key string, logger logger.Logger) paho.Client {
 	return client
 }
 
-// Publish sends mqtt message to a specified topic
+// Publish sends mqtt message to a predefined topic
 func (mqtt *Mqtt) Publish(id, op string, payload *[]byte) error {
 	topic := fmt.Sprintf("channels/%s/messages/%s/%s", mqtt.topic, id, op)
 	if len(id) < 1 {

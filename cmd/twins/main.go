@@ -267,7 +267,7 @@ func newService(nc *broker.Conn, ncTracer opentracing.Tracer, mc paho.Mqtt, mcTr
 	idp := uuid.New()
 
 	// TODO twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, thingsRepo)
-	nats.Subscribe(nc, twinRepo, logger)
+	nats.Subscribe(nc, mc, twinRepo, logger)
 
 	svc := twins.New(nc, mc, users, twinRepo, idp)
 	svc = api.LoggingMiddleware(svc, logger)

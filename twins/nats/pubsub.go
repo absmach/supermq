@@ -15,6 +15,7 @@ import (
 	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/twins"
+	"github.com/mainflux/mainflux/twins/paho"
 	"github.com/nats-io/go-nats"
 )
 
@@ -25,14 +26,16 @@ const (
 
 type pubsub struct {
 	nc     *nats.Conn
+	mc     paho.Mqtt
 	logger log.Logger
 	tr     twins.TwinRepository
 }
 
 // Subscribe to appropriate NATS topic
-func Subscribe(nc *nats.Conn, tr twins.TwinRepository, logger log.Logger) {
+func Subscribe(nc *nats.Conn, mc paho.Mqtt, tr twins.TwinRepository, logger log.Logger) {
 	ps := pubsub{
 		nc:     nc,
+		mc:     mc,
 		logger: logger,
 		tr:     tr,
 	}
@@ -40,15 +43,14 @@ func Subscribe(nc *nats.Conn, tr twins.TwinRepository, logger log.Logger) {
 }
 
 func (ps pubsub) handleMsg(m *nats.Msg) {
-	// ps.logger.Info("nats handleMsg")
-
 	var msg mainflux.Message
 	if err := proto.Unmarshal(m.Data, &msg); err != nil {
 		ps.logger.Warn(fmt.Sprintf("Unmarshalling failed: %s", err))
 		return
 	}
 
-	// fmt.Printf("%s\n", msg)
+	// ps.mc.Publish(msg.Publisher, "msg", &msg.Payload)
+	// fmt.Printf("%s\n", string(msg.Payload))
 
 	// twinsSet, err := ps.tr.RetrieveByChannel(context.TODO(), msg.Channel, 10)
 	// if err != nil {
