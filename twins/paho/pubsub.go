@@ -48,8 +48,11 @@ func Connect(mqttURL, id, key string, logger logger.Logger) paho.Client {
 	return client
 }
 
-// Publish sends mqtt message to a predefined topic
-func (mqtt *Mqtt) Publish(id, op string, payload *[]byte) error {
+func (mqtt *Mqtt) Topic() string {
+	return mqtt.topic
+}
+
+func (mqtt *Mqtt) publish(id, op string, payload *[]byte) error {
 	topic := fmt.Sprintf("channels/%s/messages/%s/%s", mqtt.topic, id, op)
 	if len(id) < 1 {
 		topic = fmt.Sprintf("channels/%s/messages/%s", mqtt.topic, op)
@@ -59,4 +62,21 @@ func (mqtt *Mqtt) Publish(id, op string, payload *[]byte) error {
 	token.Wait()
 
 	return token.Error()
+}
+
+// Publish sends mqtt message to a predefined topic
+func (mqtt *Mqtt) Publish(id *string, err *error, succOp, failOp string, payload *[]byte) error {
+	op := succOp
+	if *err != nil {
+		op = failOp
+		esb := []byte((*err).Error())
+		payload = &esb
+	}
+
+	mqttErr := mqtt.publish(*id, op, payload)
+	if mqttErr != nil {
+		return mqttErr
+	}
+
+	return nil
 }
