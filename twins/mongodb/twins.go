@@ -147,6 +147,7 @@ func decodeDocuments(ctx context.Context, cur *mongo.Cursor) ([]twins.Twin, erro
 		}
 		results = append(results, elem)
 	}
+
 	if err := cur.Err(); err != nil {
 		return []twins.Twin{}, nil
 	}

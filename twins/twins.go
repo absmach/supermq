@@ -27,7 +27,7 @@ type State struct {
 	Definition int
 	Serial     int
 	Created    time.Time
-	Payload    map[string]interface{}
+	Payload    []byte
 }
 
 // Twin represents a Mainflux thing digital twin. Each twin is owned by one thing, and

@@ -45,20 +45,20 @@ func Subscribe(nc *nats.Conn, mc paho.Mqtt, tr twins.TwinRepository, logger log.
 }
 
 func (ps pubsub) handleMsg(m *nats.Msg) {
-	b := []byte{}
-	id := ""
 	var err error
-	var msg mainflux.Message
-	defer func() {
-		if msg.Channel != ps.mqttClient.Topic() {
-			ps.mqttClient.Publish(&id, &err, "state/success", "state/failure", &b)
-		}
-	}()
 
+	var msg mainflux.Message
 	if err := proto.Unmarshal(m.Data, &msg); err != nil {
 		ps.logger.Warn(fmt.Sprintf("Unmarshalling failed: %s", err))
 		return
 	}
+	if msg.Channel == ps.mqttClient.Topic() {
+		return
+	}
+
+	b := []byte{}
+	id := ""
+	defer ps.mqttClient.Publish(&id, &err, "state/success", "state/failure", &b)
 
 	twinsSet, err := ps.twins.RetrieveByThing(context.TODO(), msg.Publisher, 1)
 	if err != nil {
@@ -89,7 +89,8 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 		ps.logger.Warn(fmt.Sprintf("Updating twin for %s failed: %s", msg.Publisher, err))
 	}
 
-	b, err = json.Marshal(state)
+	id = msg.Publisher
+	b = msg.Payload
 
 	ps.logger.Info(fmt.Sprintf("Updating state for %s succeeded", msg.Publisher))
 }

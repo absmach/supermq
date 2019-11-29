@@ -89,26 +89,10 @@ func New(nc *nats.Conn, mc paho.Mqtt, users mainflux.UsersServiceClient, twins T
 	}
 }
 
-func (ts *twinsService) publish(id *string, err *error, succOp, failOp string, payload *[]byte) error {
-	op := succOp
-	if *err != nil {
-		op = failOp
-		esb := []byte((*err).Error())
-		payload = &esb
-	}
-
-	mqttErr := ts.mqttClient.Publish(*id, op, payload)
-	if mqttErr != nil {
-		return mqttErr
-	}
-
-	return nil
-}
-
 func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, def Definition) (tw Twin, err error) {
 	b := []byte{}
 	id := ""
-	defer ts.publish(&id, &err, "create/success", "create/failure", &b)
+	defer ts.mqttClient.Publish(&id, &err, "create/success", "create/failure", &b)
 
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -155,7 +139,7 @@ func isZeroOfUnderlyingType(x interface{}) bool {
 func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin, def Definition) (err error) {
 	b := []byte{}
 	id := ""
-	defer ts.publish(&id, &err, "update/success", "update/failure", &b)
+	defer ts.mqttClient.Publish(&id, &err, "update/success", "update/failure", &b)
 
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -207,7 +191,7 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 
 func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (tw Twin, err error) {
 	b := []byte{}
-	defer ts.publish(&id, &err, "get/success", "get/failure", &b)
+	defer ts.mqttClient.Publish(&id, &err, "get/success", "get/failure", &b)
 
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -226,7 +210,7 @@ func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (tw Twin
 
 func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) (err error) {
 	b := []byte{}
-	defer ts.publish(&id, &err, "remove/success", "remove/failure", &b)
+	defer ts.mqttClient.Publish(&id, &err, "remove/success", "remove/failure", &b)
 
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -257,15 +241,3 @@ func (ts *twinsService) ListTwinsByThing(ctx context.Context, token, thing strin
 
 	return ts.twins.RetrieveByThing(ctx, thing, limit)
 }
-
-// func (mqtt *mqtt) publish(id, op string, payload *[]byte) error {
-// 	topic := fmt.Sprintf("channels/%s/messages/%s/%s", mqtt.topic, id, op)
-// 	if len(id) < 1 {
-// 		topic = fmt.Sprintf("channels/%s/messages/%s", mqtt.topic, op)
-// 	}
-
-// 	token := mqtt.client.Publish(topic, 0, false, *payload)
-// 	token.Wait()
-
-// 	return token.Error()
-// }
