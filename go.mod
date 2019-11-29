@@ -32,6 +32,7 @@ require (
 	github.com/influxdata/influxdb v1.6.4
 	github.com/jmoiron/sqlx v1.2.1-0.20190319043955-cdf62fdf55f6
 	github.com/lib/pq v1.0.0
+	github.com/mainflux/senml v0.0.0-20191128185934-061491bfd7d6
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.3 // indirect
 	github.com/nats-io/go-nats v1.6.0
@@ -49,9 +50,10 @@ require (
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.5.0
-	github.com/stretchr/testify v1.2.2
+	github.com/stretchr/testify v1.4.0
 	github.com/uber/jaeger-client-go v2.16.0+incompatible
 	github.com/uber/jaeger-lib v2.0.0+incompatible // indirect
+	github.com/x448/senml v0.2.0
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c // indirect
 	github.com/xdg/stringprep v1.0.1-0.20180714160509-73f8eece6fdc // indirect
 	go.mongodb.org/mongo-driver v1.1.3
