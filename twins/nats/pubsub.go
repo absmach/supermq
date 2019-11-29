@@ -8,8 +8,10 @@
 package nats
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
@@ -25,45 +27,71 @@ const (
 )
 
 type pubsub struct {
-	nc     *nats.Conn
-	mc     paho.Mqtt
-	logger log.Logger
-	tr     twins.TwinRepository
+	natsClient *nats.Conn
+	mqttClient paho.Mqtt
+	logger     log.Logger
+	twins      twins.TwinRepository
 }
 
 // Subscribe to appropriate NATS topic
 func Subscribe(nc *nats.Conn, mc paho.Mqtt, tr twins.TwinRepository, logger log.Logger) {
 	ps := pubsub{
-		nc:     nc,
-		mc:     mc,
-		logger: logger,
-		tr:     tr,
+		natsClient: nc,
+		mqttClient: mc,
+		logger:     logger,
+		twins:      tr,
 	}
-	ps.nc.QueueSubscribe(input, queue, ps.handleMsg)
+	ps.natsClient.QueueSubscribe(input, queue, ps.handleMsg)
 }
 
 func (ps pubsub) handleMsg(m *nats.Msg) {
+	b := []byte{}
+	id := ""
+	var err error
 	var msg mainflux.Message
+	defer func() {
+		if msg.Channel != ps.mqttClient.Topic() {
+			ps.mqttClient.Publish(&id, &err, "state/success", "state/failure", &b)
+		}
+	}()
+
 	if err := proto.Unmarshal(m.Data, &msg); err != nil {
 		ps.logger.Warn(fmt.Sprintf("Unmarshalling failed: %s", err))
 		return
 	}
 
-	// ps.mc.Publish(msg.Publisher, "msg", &msg.Payload)
-	// fmt.Printf("%s\n", string(msg.Payload))
+	twinsSet, err := ps.twins.RetrieveByThing(context.TODO(), msg.Publisher, 1)
+	if err != nil {
+		ps.logger.Warn(fmt.Sprintf("Retrieving twin for %s failed: %s", msg.Publisher, err))
+		return
+	}
+	if len(twinsSet.Twins) < 1 {
+		err = twins.ErrNotFound
+		ps.logger.Warn(fmt.Sprintf("Retrieving twin for %s failed: %s", msg.Publisher, err))
+		return
+	}
 
-	// twinsSet, err := ps.tr.RetrieveByChannel(context.TODO(), msg.Channel, 10)
-	// if err != nil {
-	// 	ps.logger.Warn(fmt.Sprintf("Retrieving twins failed: %s", err))
-	// 	return
-	// }
-	// fmt.Printf("%+v\n", twinsSet)
+	tw := twinsSet.Twins[0]
+	df := tw.Definitions[len(tw.Definitions)-1].Revision
+	sr := 0
+	if len(tw.States) > 0 {
+		sr = tw.States[len(tw.States)-1].Serial + 1
+	}
+	state := twins.State{
+		Definition: df,
+		Serial:     sr,
+		Created:    time.Now(),
+		Payload:    msg.Payload,
+	}
+	tw.States = append(tw.States, state)
 
-	// for _, v := range twinsSet.Twins {
-	// 	if err := ps.publish(msg, &v); err != nil {
-	// 		ps.logger.Warn(fmt.Sprintf("Publishing failed: %s", err))
-	// 	}
-	// }
+	if err := ps.twins.Update(context.TODO(), tw); err != nil {
+		ps.logger.Warn(fmt.Sprintf("Updating twin for %s failed: %s", msg.Publisher, err))
+	}
+
+	b, err = json.Marshal(state)
+
+	ps.logger.Info(fmt.Sprintf("Updating state for %s succeeded", msg.Publisher))
 }
 
 func (ps pubsub) publish(msg mainflux.Message, twin *twins.Twin) error {
@@ -74,7 +102,7 @@ func (ps pubsub) publish(msg mainflux.Message, twin *twins.Twin) error {
 	}
 
 	subject := fmt.Sprintf("%s.%s", msg.Channel, msg.Subtopic)
-	if err := ps.nc.Publish(subject, data); err != nil {
+	if err := ps.natsClient.Publish(subject, data); err != nil {
 		ps.logger.Warn(fmt.Sprintf("Publishing failed: %s", err))
 		return err
 	}
