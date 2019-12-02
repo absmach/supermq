@@ -18,20 +18,28 @@ import (
 	broker "github.com/nats-io/go-nats"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/mainflux/mainflux/twins/paho"
 )
 
 const (
+	twinName   = "name"
+	wrongKey   = ""
 	wrongID    = ""
-	wrongValue = "wrong-value"
-	email      = "user@example.com"
 	token      = "token"
+	wrongToken = "wrong-token"
+	email      = "user@example.com"
 	natsURL    = "nats://localhost:4222"
+	mqttURL    = "tcp://localhost:1883"
 	topic      = "topic"
 )
 
-var (
-	twin = twins.Twin{Name: "test"}
-)
+func newTwin(name string) twins.Twin {
+	return twins.Twin{
+		Name:        name,
+		Definitions: []twins.Definition{twins.Definition{}},
+	}
+}
 
 func newService(tokens map[string]string) twins.Service {
 	users := mocks.NewUsersService(tokens)
@@ -41,9 +49,11 @@ func newService(tokens map[string]string) twins.Service {
 	nc, _ := broker.Connect(natsURL)
 
 	opts := mqtt.NewClientOptions()
-	mc := mqtt.NewClient(opts)
+	pc := mqtt.NewClient(opts)
 
-	return twins.New(nc, mc, topic, users, twinsRepo, idp)
+	mc := paho.New(pc, topic)
+
+	return twins.New(nc, mc, users, twinsRepo, idp)
 }
 
 func TestAddTwin(t *testing.T) {
@@ -57,30 +67,31 @@ func TestAddTwin(t *testing.T) {
 	}{
 		{
 			desc:  "add new twin",
-			twin:  twins.Twin{Name: "a"},
+			twin:  newTwin(twinName),
 			token: token,
 			err:   nil,
 		},
 		{
 			desc:  "add twin with wrong credentials",
-			twin:  twins.Twin{Name: "d"},
-			token: wrongValue,
+			twin:  newTwin(twinName),
+			token: wrongToken,
 			err:   twins.ErrUnauthorizedAccess,
 		},
 	}
 
 	for _, tc := range cases {
-		_, err := svc.AddTwin(context.Background(), tc.token, tc.twin)
+		_, err := svc.AddTwin(context.Background(), tc.token, tc.twin, tc.twin.Definitions[0])
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
 func TestUpdateTwin(t *testing.T) {
 	svc := newService(map[string]string{token: email})
-	saved, err := svc.AddTwin(context.Background(), token, twin)
+	twin := newTwin(twinName)
+	other := newTwin(twinName)
+	other.ID = wrongID
+	saved, err := svc.AddTwin(context.Background(), token, twin, twin.Definitions[0])
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
-
-	other := twins.Twin{ID: wrongID, Key: "x"}
 
 	cases := []struct {
 		desc  string
@@ -97,7 +108,7 @@ func TestUpdateTwin(t *testing.T) {
 		{
 			desc:  "update twin with wrong credentials",
 			twin:  saved,
-			token: wrongValue,
+			token: wrongToken,
 			err:   twins.ErrUnauthorizedAccess,
 		},
 		{
@@ -109,14 +120,15 @@ func TestUpdateTwin(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := svc.UpdateTwin(context.Background(), tc.token, tc.twin)
+		err := svc.UpdateTwin(context.Background(), tc.token, tc.twin, tc.twin.Definitions[0])
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
 func TestViewTwin(t *testing.T) {
 	svc := newService(map[string]string{token: email})
-	saved, err := svc.AddTwin(context.Background(), token, twin)
+	twin := newTwin(twinName)
+	saved, err := svc.AddTwin(context.Background(), token, twin, twin.Definitions[0])
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 
 	cases := map[string]struct {
@@ -131,7 +143,7 @@ func TestViewTwin(t *testing.T) {
 		},
 		"view twin with wrong credentials": {
 			id:    saved.ID,
-			token: wrongValue,
+			token: wrongToken,
 			err:   twins.ErrUnauthorizedAccess,
 		},
 		"view non-existing twin": {
@@ -150,13 +162,14 @@ func TestViewTwin(t *testing.T) {
 func TestListTwins(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 
+	twin := newTwin(twinName)
 	m := make(map[string]interface{})
 	m["serial"] = "123456"
 	twin.Metadata = m
 
 	n := uint64(10)
 	for i := uint64(0); i < n; i++ {
-		svc.AddTwin(context.Background(), token, twin)
+		svc.AddTwin(context.Background(), token, twin, twin.Definitions[0])
 	}
 
 	cases := map[string]struct {
@@ -181,7 +194,7 @@ func TestListTwins(t *testing.T) {
 			err:   nil,
 		},
 		"list with wrong credentials": {
-			token: wrongValue,
+			token: wrongToken,
 			limit: 0,
 			size:  0,
 			err:   twins.ErrUnauthorizedAccess,
@@ -205,7 +218,8 @@ func TestListTwins(t *testing.T) {
 
 func TestRemoveTwin(t *testing.T) {
 	svc := newService(map[string]string{token: email})
-	saved, err := svc.AddTwin(context.Background(), token, twin)
+	twin := newTwin(twinName)
+	saved, err := svc.AddTwin(context.Background(), token, twin, twin.Definitions[0])
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 
 	cases := []struct {
@@ -217,7 +231,7 @@ func TestRemoveTwin(t *testing.T) {
 		{
 			desc:  "remove twin with wrong credentials",
 			id:    saved.ID,
-			token: wrongValue,
+			token: wrongToken,
 			err:   twins.ErrUnauthorizedAccess,
 		},
 		{

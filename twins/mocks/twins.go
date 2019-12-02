@@ -49,8 +49,9 @@ func (trm *twinRepositoryMock) Save(ctx context.Context, twin twins.Twin) (strin
 		}
 	}
 
-	trm.counter++
-	twin.ID = strconv.FormatUint(trm.counter, 10)
+	// trm.counter++
+	// twin.ID = strconv.FormatUint(trm.counter, 10)
+
 	trm.twins[key(twin.Owner, twin.ID)] = twin
 
 	return twin.ID, nil
@@ -61,7 +62,6 @@ func (trm *twinRepositoryMock) Update(ctx context.Context, twin twins.Twin) erro
 	defer trm.mu.Unlock()
 
 	dbKey := key(twin.Owner, twin.ID)
-
 	if _, ok := trm.twins[dbKey]; !ok {
 		return twins.ErrNotFound
 	}
@@ -98,7 +98,8 @@ func (trm *twinRepositoryMock) RetrieveByID(_ context.Context, owner, id string)
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
-	if tw, ok := trm.twins[key(owner, id)]; ok {
+	tw, ok := trm.twins[key(owner, id)]
+	if ok {
 		return tw, nil
 	}
 

@@ -23,6 +23,7 @@ import (
 	"github.com/mainflux/mainflux/twins"
 	httpapi "github.com/mainflux/mainflux/twins/api/twins/http"
 	"github.com/mainflux/mainflux/twins/mocks"
+	"github.com/mainflux/mainflux/twins/paho"
 	broker "github.com/nats-io/go-nats"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
@@ -34,6 +35,7 @@ const (
 	email       = "user@example.com"
 	token       = "token"
 	wrongValue  = "wrong_value"
+	thingID     = "5b68df78-86f7-48a6-ac4f-bb24dd75c39e"
 	wrongID     = 0
 	maxNameSize = 1024
 	natsURL     = "nats://localhost:4222"
@@ -42,8 +44,10 @@ const (
 
 var (
 	twin = twins.Twin{
-		Name:     "test_app",
-		Metadata: map[string]interface{}{"test": "data"},
+		Name:        "test_app",
+		ThingID:     thingID,
+		Metadata:    map[string]interface{}{"test": "data"},
+		Definitions: []twins.Definition{twins.Definition{}},
 	}
 	invalidName = strings.Repeat("m", maxNameSize+1)
 )
@@ -79,9 +83,11 @@ func newService(tokens map[string]string) twins.Service {
 	nc, _ := broker.Connect(natsURL)
 
 	opts := mqtt.NewClientOptions()
-	mc := mqtt.NewClient(opts)
+	pc := mqtt.NewClient(opts)
 
-	return twins.New(nc, mc, topic, users, twinsRepo, idp)
+	mc := paho.New(pc, topic)
+
+	return twins.New(nc, mc, users, twinsRepo, idp)
 }
 
 func newServer(svc twins.Service) *httptest.Server {
@@ -120,7 +126,7 @@ func TestAddTwin(t *testing.T) {
 			contentType: contentType,
 			auth:        token,
 			status:      http.StatusCreated,
-			location:    "/twins/1",
+			location:    "/twins/123e4567-e89b-12d3-a456-000000000001",
 		},
 		{
 			desc:        "add twin with existing key",
@@ -135,8 +141,8 @@ func TestAddTwin(t *testing.T) {
 			req:         "{}",
 			contentType: contentType,
 			auth:        token,
-			status:      http.StatusCreated,
-			location:    "/twins/2",
+			status:      http.StatusBadRequest,
+			location:    "",
 		},
 		{
 			desc:        "add twin with invalid auth token",
@@ -212,7 +218,7 @@ func TestUpdateTwin(t *testing.T) {
 	defer ts.Close()
 
 	data := toJSON(twin)
-	stw, _ := svc.AddTwin(context.Background(), token, twin)
+	stw, _ := svc.AddTwin(context.Background(), token, twin, twin.Definitions[0])
 
 	tw := twin
 	tw.Name = invalidName
@@ -322,132 +328,12 @@ func TestUpdateTwin(t *testing.T) {
 	}
 }
 
-func TestUpdateKey(t *testing.T) {
-	svc := newService(map[string]string{token: email})
-	ts := newServer(svc)
-	defer ts.Close()
-
-	tw := twin
-	tw.Key = "key"
-	stw, _ := svc.AddTwin(context.Background(), token, tw)
-
-	stw.Key = "new-key"
-	data := toJSON(stw)
-
-	stw.Key = "key"
-	dummyData := toJSON(stw)
-
-	cases := []struct {
-		desc        string
-		req         string
-		id          string
-		contentType string
-		auth        string
-		status      int
-	}{
-		{
-			desc:        "update key for an existing twin",
-			req:         data,
-			id:          stw.ID,
-			contentType: contentType,
-			auth:        token,
-			status:      http.StatusOK,
-		},
-		{
-			desc:        "update twin with conflicting key",
-			req:         data,
-			id:          stw.ID,
-			contentType: contentType,
-			auth:        token,
-			status:      http.StatusUnprocessableEntity,
-		},
-		{
-			desc:        "update key with empty JSON request",
-			req:         "{}",
-			id:          stw.ID,
-			contentType: contentType,
-			auth:        token,
-			status:      http.StatusBadRequest,
-		},
-		{
-			desc:        "update key of non-existent twin",
-			req:         dummyData,
-			id:          strconv.FormatUint(wrongID, 10),
-			contentType: contentType,
-			auth:        token,
-			status:      http.StatusNotFound,
-		},
-		{
-			desc:        "update twin with invalid id",
-			req:         dummyData,
-			id:          "invalid",
-			contentType: contentType,
-			auth:        token,
-			status:      http.StatusNotFound,
-		},
-		{
-			desc:        "update twin with invalid user token",
-			req:         data,
-			id:          stw.ID,
-			contentType: contentType,
-			auth:        wrongValue,
-			status:      http.StatusForbidden,
-		},
-		{
-			desc:        "update twin with empty user token",
-			req:         data,
-			id:          stw.ID,
-			contentType: contentType,
-			auth:        "",
-			status:      http.StatusForbidden,
-		},
-		{
-			desc:        "update twin with invalid data format",
-			req:         "{",
-			id:          stw.ID,
-			contentType: contentType,
-			auth:        token,
-			status:      http.StatusBadRequest,
-		},
-		{
-			desc:        "update twin with empty request",
-			req:         "",
-			id:          stw.ID,
-			contentType: contentType,
-			auth:        token,
-			status:      http.StatusBadRequest,
-		},
-		{
-			desc:        "update twin without content type",
-			req:         data,
-			id:          stw.ID,
-			contentType: "",
-			auth:        token,
-			status:      http.StatusUnsupportedMediaType,
-		},
-	}
-
-	for _, tc := range cases {
-		req := testRequest{
-			client:      ts.Client(),
-			method:      http.MethodPatch,
-			url:         fmt.Sprintf("%s/twins/%s/key", ts.URL, tc.id),
-			contentType: tc.contentType,
-			token:       tc.auth,
-			body:        strings.NewReader(tc.req),
-		}
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-	}
-}
-
 func TestViewTwin(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 
-	stw, err := svc.AddTwin(context.Background(), token, twin)
+	stw, err := svc.AddTwin(context.Background(), token, twin, twin.Definitions[0])
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	twres := twinRes{
@@ -524,7 +410,7 @@ func TestRemoveTwin(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	stw, _ := svc.AddTwin(context.Background(), token, twin)
+	stw, _ := svc.AddTwin(context.Background(), token, twin, twin.Definitions[0])
 
 	cases := []struct {
 		desc   string

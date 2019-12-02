@@ -90,8 +90,8 @@ func New(nc *nats.Conn, mc paho.Mqtt, users mainflux.UsersServiceClient, twins T
 }
 
 func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, def Definition) (tw Twin, err error) {
-	b := []byte{}
 	id := ""
+	b := []byte{}
 	defer ts.mqttClient.Publish(&id, &err, "create/success", "create/failure", &b)
 
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
@@ -100,6 +100,7 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 	}
 
 	twin.ID, err = ts.idp.ID()
+
 	if err != nil {
 		return Twin{}, err
 	}
@@ -116,16 +117,22 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 	twin.Created = time.Now()
 	twin.Updated = time.Now()
 
+	if isZeroOfUnderlyingType(def) {
+		def = Definition{}
+	}
 	def.Created = time.Now()
 	def.Revision = 0
+	if l := len(tw.Definitions); l > 0 {
+		def.Revision = tw.Definitions[l-1].Revision + 1
+	}
 	twin.Definitions = append(twin.Definitions, def)
 
+	twin.Revision = 0
 	_, err = ts.twins.Save(ctx, twin)
 	if err != nil {
 		return Twin{}, err
 	}
 
-	twin.Revision = 0
 	id = twin.ID
 	b, err = json.Marshal(twin)
 
