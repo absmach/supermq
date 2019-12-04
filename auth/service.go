@@ -92,6 +92,7 @@ func (svc authService) Revoke(ctx context.Context, issuer, id string) error {
 	if err != nil {
 		return err
 	}
+
 	return svc.keys.Remove(ctx, email, id)
 }
 
@@ -174,6 +175,7 @@ func (svc authService) sessionKey(ctx context.Context, issuer string, duration t
 	if err != nil {
 		return Key{}, err
 	}
+
 	key.Secret = val
 	return key, nil
 }
@@ -196,6 +198,7 @@ func (svc authService) userKey(ctx context.Context, issuer string, key Key) (Key
 		return Key{}, err
 	}
 	key.Secret = value
+
 	if _, err := svc.keys.Save(ctx, key); err != nil {
 		return Key{}, err
 	}
@@ -233,5 +236,6 @@ func (svc authService) login(ctx context.Context, token string) (string, error) 
 	if c.Type == nil || *c.Type != LoginKey {
 		return "", ErrUnauthorizedAccess
 	}
+
 	return svc.identify(ctx, c)
 }

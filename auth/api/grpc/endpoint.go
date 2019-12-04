@@ -28,6 +28,7 @@ func issueEndpoint(svc auth.Service) endpoint.Endpoint {
 		if err != nil {
 			return identityRes{}, err
 		}
+
 		return identityRes{k.Secret, nil}, nil
 	}
 }
@@ -43,6 +44,7 @@ func identifyEndpoint(svc auth.Service) endpoint.Endpoint {
 		if err != nil {
 			return identityRes{}, err
 		}
+
 		return identityRes{id, nil}, nil
 	}
 }

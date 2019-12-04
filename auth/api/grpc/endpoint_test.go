@@ -47,8 +47,8 @@ func TestIssue(t *testing.T) {
 	loginKey, err := svc.Issue(context.Background(), email, auth.Key{Type: auth.LoginKey, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
-	usersAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(usersAddr, grpc.WithInsecure())
+	authAddr := fmt.Sprintf("localhost:%d", port)
+	conn, _ := grpc.Dial(authAddr, grpc.WithInsecure())
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	cases := map[string]struct {
@@ -71,8 +71,8 @@ func TestIdentify(t *testing.T) {
 	loginKey, err := svc.Issue(context.Background(), email, auth.Key{Type: auth.LoginKey, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
-	usersAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(usersAddr, grpc.WithInsecure())
+	authAddr := fmt.Sprintf("localhost:%d", port)
+	conn, _ := grpc.Dial(authAddr, grpc.WithInsecure())
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	cases := map[string]struct {

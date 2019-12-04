@@ -19,6 +19,7 @@ func (req identityReq) validate() error {
 		req.kind != auth.ResetKey {
 		return auth.ErrMalformedEntity
 	}
+
 	return nil
 }
 
@@ -36,5 +37,6 @@ func (req issueReq) validate() error {
 		req.keyType != auth.ResetKey {
 		return auth.ErrMalformedEntity
 	}
+
 	return nil
 }

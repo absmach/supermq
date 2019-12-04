@@ -11,18 +11,12 @@ import (
 
 	"github.com/mainflux/mainflux/auth"
 	"github.com/mainflux/mainflux/auth/mocks"
-	"github.com/mainflux/mainflux/users"
 	"github.com/stretchr/testify/assert"
 )
 
 const (
 	secret = "secret"
 	email  = "test@example.com"
-)
-
-var (
-	user            = users.User{Email: "user@example.com", Password: "password", Metadata: map[string]interface{}{"role": "user"}}
-	nonExistingUser = users.User{Email: "non-ex-user@example.com", Password: "password", Metadata: map[string]interface{}{"role": "user"}}
 )
 
 func newService() auth.Service {
@@ -33,7 +27,7 @@ func newService() auth.Service {
 
 func TestIssue(t *testing.T) {
 	svc := newService()
-	loginKey, err := svc.Issue(context.Background(), user.Email, auth.Key{Type: auth.LoginKey, IssuedAt: time.Now()})
+	loginKey, err := svc.Issue(context.Background(), email, auth.Key{Type: auth.LoginKey, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	cases := map[string]struct {
@@ -103,14 +97,14 @@ func TestIssue(t *testing.T) {
 }
 func TestRevoke(t *testing.T) {
 	svc := newService()
-	loginKey, err := svc.Issue(context.Background(), user.Email, auth.Key{Type: auth.LoginKey, IssuedAt: time.Now()})
+	loginKey, err := svc.Issue(context.Background(), email, auth.Key{Type: auth.LoginKey, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	key := auth.Key{
 		Type:     auth.UserKey,
 		IssuedAt: time.Now(),
 	}
 	newKey, err := svc.Issue(context.Background(), loginKey.Secret, key)
-	assert.Nil(t, err, fmt.Sprintf("Issuing users key expected to succeed: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("Issuing user's key expected to succeed: %s", err))
 
 	cases := map[string]struct {
 		id     string
@@ -141,7 +135,7 @@ func TestRevoke(t *testing.T) {
 }
 func TestRetrieve(t *testing.T) {
 	svc := newService()
-	loginKey, err := svc.Issue(context.Background(), user.Email, auth.Key{Type: auth.LoginKey, IssuedAt: time.Now()})
+	loginKey, err := svc.Issue(context.Background(), email, auth.Key{Type: auth.LoginKey, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	key := auth.Key{
 		ID:       "id",
@@ -149,7 +143,7 @@ func TestRetrieve(t *testing.T) {
 		IssuedAt: time.Now(),
 	}
 	newKey, err := svc.Issue(context.Background(), loginKey.Secret, key)
-	assert.Nil(t, err, fmt.Sprintf("Issuing users key expected to succeed: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("Issuing user's key expected to succeed: %s", err))
 
 	resetKey, err := svc.Issue(context.Background(), loginKey.Secret, auth.Key{Type: auth.ResetKey, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing reset key expected to succeed: %s", err))

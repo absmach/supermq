@@ -21,7 +21,7 @@ type grpcServer struct {
 	identify kitgrpc.Handler
 }
 
-// NewServer returns new UsersServiceServer instance.
+// NewServer returns new AuthServiceServer instance.
 func NewServer(tracer opentracing.Tracer, svc auth.Service) mainflux.AuthServiceServer {
 	return &grpcServer{
 		issue: kitgrpc.NewServer(

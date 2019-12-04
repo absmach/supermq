@@ -351,9 +351,8 @@ func TestPasswordChange(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	client := ts.Client()
-	// j := jwt.New("secret")
 	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
-	// t, _ := auth.Issue()
+
 	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Issuer: user.Email, Type: 0})
 	token := tkn.GetValue()
 	resData := struct {
@@ -371,18 +370,13 @@ func TestPasswordChange(t *testing.T) {
 	resData.Msg = users.ErrUnauthorizedAccess.Error()
 
 	svc.Register(context.Background(), user)
-	// tok, _ := j.TemporaryKey(user.Email)
-	// tokNoUser, _ := j.TemporaryKey("non-existentuser@example.com")
 
 	reqData.Password = user.Password
 	reqData.OldPassw = user.Password
 	reqData.Token = token
 	dataResExisting := toJSON(reqData)
 
-	// reqData.Token, _ = j.TemporaryKey(user.Email)
-
 	reqNoExist := toJSON(reqData)
-	// reqData.Token, _ = j.TemporaryKey(user.Email)
 
 	reqData.OldPassw = "wrong"
 	reqWrongPass := toJSON(reqData)
