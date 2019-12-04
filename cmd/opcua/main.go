@@ -62,8 +62,9 @@ const (
 	envRouteMapDB     = "MF_OPCUA_ADAPTER_ROUTE_MAP_DB"
 	envNodesConfig    = "MF_OPCUA_ADAPTER_CONFIG_FILE"
 
-	thingsRMPrefix   = "thing"
-	channelsRMPrefix = "channel"
+	thingsRMPrefix     = "thing"
+	channelsRMPrefix   = "channel"
+	connectionRMPrefix = "connection"
 )
 
 type config struct {
@@ -95,15 +96,16 @@ func main() {
 	rmConn := connectToRedis(cfg.routeMapURL, cfg.routeMapPass, cfg.routeMapDB, logger)
 	defer rmConn.Close()
 
+	thingRM := newRouteMapRepositoy(rmConn, thingsRMPrefix, logger)
+	chanRM := newRouteMapRepositoy(rmConn, channelsRMPrefix, logger)
+	connRM := newRouteMapRepositoy(rmConn, connectionRMPrefix, logger)
+
 	esConn := connectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
 	defer esConn.Close()
 
 	publisher := pub.NewMessagePublisher(natsConn)
 
-	thingRM := newRouteMapRepositoy(rmConn, thingsRMPrefix, logger)
-	chanRM := newRouteMapRepositoy(rmConn, channelsRMPrefix, logger)
-
-	svc := opcua.New(publisher, thingRM, chanRM)
+	svc := opcua.New(publisher, thingRM, chanRM, connRM)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
@@ -222,15 +224,13 @@ func subscribeToOpcuaServers(svc opcua.Service, nodes string, cfg opcua.Config, 
 			return
 		}
 
-		if len(l) < 4 {
+		if len(l) < 2 {
 			logger.Warn(fmt.Sprintf("Empty or incomplete line found in file"))
 			return
 		}
 
 		cfg.ServerURI = l[0]
-		cfg.NodeNamespace = l[1]
-		cfg.NodeIdentifierType = l[2]
-		cfg.NodeIdentifier = l[3]
+		cfg.NodeID = l[1]
 
 		go subscribeToOpcuaServer(gc, cfg, logger)
 	}

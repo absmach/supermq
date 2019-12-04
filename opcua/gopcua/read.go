@@ -5,7 +5,6 @@ package gopcua
 
 import (
 	"context"
-	"fmt"
 
 	opcuaGopcua "github.com/gopcua/opcua"
 	uaGopcua "github.com/gopcua/opcua/ua"
@@ -39,8 +38,7 @@ func (r reader) Read(cfg opcua.Config) error {
 	}
 	defer c.Close()
 
-	nid := fmt.Sprintf("ns=%s;%s=%s", cfg.NodeNamespace, cfg.NodeIdentifierType, cfg.NodeIdentifier)
-	id, err := uaGopcua.ParseNodeID(nid)
+	id, err := uaGopcua.ParseNodeID(cfg.NodeID)
 	if err != nil {
 		return errors.Wrap(errFailedParseNodeID, err)
 	}
@@ -63,8 +61,8 @@ func (r reader) Read(cfg opcua.Config) error {
 
 	// Publish on Mainflux NATS broker
 	msg := opcua.Message{
-		Namespace: cfg.NodeNamespace,
-		ID:        cfg.NodeIdentifier,
+		ServerURI: cfg.ServerURI,
+		NodeID:    cfg.NodeID,
 		Data:      resp.Results[0].Value.Float(),
 	}
 	r.svc.Publish(r.ctx, "", msg)

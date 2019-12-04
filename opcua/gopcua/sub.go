@@ -95,8 +95,7 @@ func (b client) Subscribe(cfg opcua.Config) error {
 }
 
 func (b client) runHandler(sub *opcuaGopcua.Subscription, cfg opcua.Config) error {
-	nid := fmt.Sprintf("ns=%s;%s=%s", cfg.NodeNamespace, cfg.NodeIdentifierType, cfg.NodeIdentifier)
-	nodeID, err := uaGopcua.ParseNodeID(nid)
+	nodeID, err := uaGopcua.ParseNodeID(cfg.NodeID)
 	if err != nil {
 		return errors.Wrap(errFailedParseNodeID, err)
 	}
@@ -128,8 +127,9 @@ func (b client) runHandler(sub *opcuaGopcua.Subscription, cfg opcua.Config) erro
 			case *uaGopcua.DataChangeNotification:
 				for _, item := range x.MonitoredItems {
 					msg := opcua.Message{
-						Namespace: cfg.NodeNamespace,
-						ID:        cfg.NodeIdentifier,
+						ServerURI: cfg.ServerURI,
+						NodeID:    cfg.NodeID,
+						Type:      item.Value.Value.Type().String(),
 					}
 
 					switch item.Value.Value.Type() {
@@ -139,7 +139,7 @@ func (b client) runHandler(sub *opcuaGopcua.Subscription, cfg opcua.Config) erro
 						msg.Data = item.Value.Value.Int()
 					case uaGopcua.TypeIDUint64:
 						msg.Data = item.Value.Value.Uint()
-					case uaGopcua.TypeIDFloat:
+					case uaGopcua.TypeIDFloat, uaGopcua.TypeIDDouble:
 						msg.Data = item.Value.Value.Float()
 					case uaGopcua.TypeIDString:
 						msg.Data = item.Value.Value.String()

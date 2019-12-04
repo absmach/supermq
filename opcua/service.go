@@ -11,25 +11,12 @@ import (
 	"github.com/mainflux/mainflux"
 )
 
-const (
-	protocol      = "opcua"
-	thingSuffix   = "thing"
-	channelSuffix = "channel"
-)
+const protocol = "opcua"
 
 var (
-	// ErrMalformedIdentity indicates malformed identity received (e.g.
-	// invalid namespace or ID).
-	ErrMalformedIdentity = errors.New("malformed identity received")
-
-	// ErrMalformedMessage indicates malformed OPC-UA message.
-	ErrMalformedMessage = errors.New("malformed message received")
-
-	// ErrNotFoundIdentifier indicates a non-existent route map for a Node Identifier.
-	ErrNotFoundIdentifier = errors.New("route map not found for this node identifier")
-
-	// ErrNotFoundNamespace indicates a non-existent route map for an Node Namespace.
-	ErrNotFoundNamespace = errors.New("route map not found for this node namespace")
+	errNotFoundServerURI = errors.New("route map not found for this Server URI")
+	errNotFoundNodeID    = errors.New("route map not found for this Node ID")
+	errNotFoundConn      = errors.New("connection not found")
 )
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -44,14 +31,20 @@ type Service interface {
 	// RemoveThing removes thing mfx:opc & opc:mfx route-map
 	RemoveThing(string) error
 
-	// CreateChannel creates channel mfx:opc & opc:mfx route-map
+	// CreateChannel creates channel route-map
 	CreateChannel(string, string) error
 
-	// UpdateChannel updates mfx:opc & opc:mfx route-map
+	// UpdateChannel updates chroute-map
 	UpdateChannel(string, string) error
 
-	// RemoveChannel removes channel mfx:opc & opc:mfx route-map
+	// RemoveChannel removes channel route-map
 	RemoveChannel(string) error
+
+	// ConnectThing creates thing and channel connection route-map
+	ConnectThing(string, string) error
+
+	// DisconnectThing removes thing and channel connection route-map
+	DisconnectThing(string, string) error
 
 	// Publish forwards messages from the OPC-UA MQTT broker to Mainflux NATS broker
 	Publish(context.Context, string, Message) error
@@ -59,14 +52,12 @@ type Service interface {
 
 // Config OPC-UA Server
 type Config struct {
-	ServerURI          string
-	NodeNamespace      string
-	NodeIdentifier     string
-	NodeIdentifierType string
-	Policy             string
-	Mode               string
-	CertFile           string
-	KeyFile            string
+	ServerURI string
+	NodeID    string
+	Policy    string
+	Mode      string
+	CertFile  string
+	KeyFile   string
 }
 
 var _ Service = (*adapterService)(nil)
@@ -75,33 +66,41 @@ type adapterService struct {
 	publisher  mainflux.MessagePublisher
 	thingsRM   RouteMapRepository
 	channelsRM RouteMapRepository
+	connectRM  RouteMapRepository
 }
 
 // New instantiates the OPC-UA adapter implementation.
-func New(pub mainflux.MessagePublisher, thingsRM, channelsRM RouteMapRepository) Service {
+func New(pub mainflux.MessagePublisher, thingsRM, channelsRM, connectRM RouteMapRepository) Service {
 	return &adapterService{
 		publisher:  pub,
 		thingsRM:   thingsRM,
 		channelsRM: channelsRM,
+		connectRM:  connectRM,
 	}
 }
 
 // Publish forwards messages from OPC-UA MQTT broker to Mainflux NATS broker
 func (as *adapterService) Publish(ctx context.Context, token string, m Message) error {
-	// Get route map of OPC-UA Node Namespace
-	channelID, err := as.channelsRM.Get(m.Namespace)
+	// Get route-map of the OPC-UA ServerURI
+	channelID, err := as.channelsRM.Get(m.ServerURI)
 	if err != nil {
-		return ErrNotFoundNamespace
+		return errNotFoundServerURI
 	}
 
-	// Get route map of OPC-UA Node Identifier
-	thingID, err := as.thingsRM.Get(m.ID)
+	// Get route-map of the OPC-UA NodeID
+	thingID, err := as.thingsRM.Get(m.NodeID)
 	if err != nil {
-		return ErrNotFoundIdentifier
+		return errNotFoundNodeID
+	}
+
+	// Check connection between ServerURI and NodeID
+	c := fmt.Sprintf("%s:%s", channelID, thingID)
+	if _, err := as.connectRM.Get(c); err != nil {
+		return errNotFoundConn
 	}
 
 	// Publish on Mainflux NATS broker
-	SenML := fmt.Sprintf(`[{"n":"opcua","v":%v}]`, m.Data)
+	SenML := fmt.Sprintf(`[{"n":"%s","v":%v}]`, m.Type, m.Data)
 	payload := []byte(SenML)
 	msg := mainflux.Message{
 		Publisher:   thingID,
@@ -114,26 +113,36 @@ func (as *adapterService) Publish(ctx context.Context, token string, m Message) 
 	return as.publisher.Publish(ctx, token, msg)
 }
 
-func (as *adapterService) CreateThing(mfxDevID string, opcID string) error {
-	return as.thingsRM.Save(mfxDevID, opcID)
+func (as *adapterService) CreateThing(mfxDevID, opcuaNodeID string) error {
+	return as.thingsRM.Save(mfxDevID, opcuaNodeID)
 }
 
-func (as *adapterService) UpdateThing(mfxDevID string, opcID string) error {
-	return as.thingsRM.Save(mfxDevID, opcID)
+func (as *adapterService) UpdateThing(mfxDevID, opcuaNodeID string) error {
+	return as.thingsRM.Save(mfxDevID, opcuaNodeID)
 }
 
 func (as *adapterService) RemoveThing(mfxDevID string) error {
 	return as.thingsRM.Remove(mfxDevID)
 }
 
-func (as *adapterService) CreateChannel(mfxChanID string, opcNamespace string) error {
-	return as.channelsRM.Save(mfxChanID, opcNamespace)
+func (as *adapterService) CreateChannel(mfxChanID, opcuaServerURI string) error {
+	return as.channelsRM.Save(mfxChanID, opcuaServerURI)
 }
 
-func (as *adapterService) UpdateChannel(mfxChanID string, opcNamespace string) error {
-	return as.channelsRM.Save(mfxChanID, opcNamespace)
+func (as *adapterService) UpdateChannel(mfxChanID, opcuaServerURI string) error {
+	return as.channelsRM.Save(mfxChanID, opcuaServerURI)
 }
 
 func (as *adapterService) RemoveChannel(mfxChanID string) error {
 	return as.channelsRM.Remove(mfxChanID)
+}
+
+func (as *adapterService) ConnectThing(mfxChanID, mfxThingID string) error {
+	c := fmt.Sprintf("%s:%s", mfxChanID, mfxThingID)
+	return as.connectRM.Save(c, c)
+}
+
+func (as *adapterService) DisconnectThing(mfxChanID, mfxThingID string) error {
+	c := fmt.Sprintf("%s:%s", mfxChanID, mfxThingID)
+	return as.connectRM.Remove(c)
 }
