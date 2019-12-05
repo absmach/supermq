@@ -114,7 +114,7 @@ type PageMetadata struct {
 var _ Service = (*thingsService)(nil)
 
 type thingsService struct {
-	auth         mainflux.AuthServiceClient
+	auth         mainflux.AuthnServiceClient
 	things       ThingRepository
 	channels     ChannelRepository
 	channelCache ChannelCache
@@ -123,7 +123,7 @@ type thingsService struct {
 }
 
 // New instantiates the things service implementation.
-func New(auth mainflux.AuthServiceClient, things ThingRepository, channels ChannelRepository, ccache ChannelCache, tcache ThingCache, idp IdentityProvider) Service {
+func New(auth mainflux.AuthnServiceClient, things ThingRepository, channels ChannelRepository, ccache ChannelCache, tcache ThingCache, idp IdentityProvider) Service {
 	return &thingsService{
 		auth:         auth,
 		things:       things,

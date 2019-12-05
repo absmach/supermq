@@ -350,7 +350,7 @@ func init() { proto.RegisterFile("auth.proto", fileDescriptor_8bbd6f3875b0e874) 
 var fileDescriptor_8bbd6f3875b0e874 = []byte{
 	// 362 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x91, 0xc1, 0x4e, 0xf2, 0x40,
-	0x10, 0xc7, 0xdb, 0x2f, 0x1f, 0x85, 0x6f, 0xbe, 0x14, 0x71, 0x62, 0xb0, 0xa9, 0xb1, 0x9a, 0x3d,
+	0x10, 0xc7, 0xdb, 0x2f, 0x1f, 0x85, 0x6f, 0xf2, 0x15, 0x71, 0x62, 0xb0, 0xa9, 0xb1, 0x9a, 0x3d,
 	0x79, 0x5a, 0x0c, 0x26, 0x1e, 0x35, 0x60, 0x3d, 0x34, 0xde, 0x10, 0x1f, 0xa0, 0xd4, 0x85, 0x36,
 	0xc2, 0x16, 0xdb, 0x2d, 0xb1, 0x6f, 0xe2, 0x13, 0x19, 0x8f, 0x3e, 0x82, 0xc1, 0x17, 0x31, 0xdd,
 	0x76, 0x03, 0x2a, 0x78, 0xdb, 0xff, 0xec, 0xcc, 0xfc, 0x67, 0x7e, 0x03, 0xe0, 0x67, 0x22, 0xa4,
@@ -367,11 +367,11 @@ var fileDescriptor_8bbd6f3875b0e874 = []byte{
 	0xf2, 0xf9, 0x1a, 0x2f, 0xb4, 0xa8, 0xc2, 0x4c, 0xbf, 0x62, 0xb4, 0x77, 0x57, 0x3f, 0x15, 0x20,
 	0xa2, 0x61, 0x1f, 0xcc, 0xb5, 0x06, 0x9e, 0x8b, 0xfb, 0x3f, 0xeb, 0x25, 0x25, 0xbb, 0x4d, 0xcb,
 	0xab, 0x51, 0x75, 0x35, 0x7a, 0x5d, 0x5c, 0x8d, 0x68, 0x78, 0x0a, 0x0d, 0xef, 0x9e, 0x71, 0x11,
-	0x8d, 0x73, 0xdc, 0x59, 0x33, 0x29, 0x08, 0x6d, 0x74, 0xed, 0x72, 0xf8, 0xdf, 0xcb, 0x44, 0xa8,
-	0xb6, 0xa0, 0x50, 0x93, 0x3c, 0x10, 0x57, 0xc9, 0x0a, 0x90, 0xfd, 0xbd, 0x23, 0xd1, 0xb0, 0xf3,
-	0x9b, 0x61, 0x6b, 0x15, 0x28, 0x8f, 0x40, 0xb4, 0x7e, 0xeb, 0x75, 0xe9, 0xe8, 0x6f, 0x4b, 0x47,
-	0x7f, 0x5f, 0x3a, 0xfa, 0xf3, 0x87, 0xa3, 0x8d, 0x0c, 0xb9, 0xc5, 0xd9, 0x67, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0xf9, 0x6f, 0x59, 0x51, 0xa1, 0x02, 0x00, 0x00,
+	0x8d, 0x73, 0xdc, 0x59, 0x33, 0x29, 0x08, 0x6d, 0x74, 0xed, 0xc6, 0xf0, 0xbf, 0x97, 0x89, 0x90,
+	0xab, 0x35, 0x28, 0xd4, 0x24, 0x10, 0xc4, 0x55, 0xb6, 0x22, 0x64, 0x7f, 0x6f, 0x49, 0x34, 0xec,
+	0xfc, 0xe6, 0xd8, 0x5a, 0x05, 0xca, 0x2b, 0x10, 0xad, 0xdf, 0x7a, 0x5d, 0x3a, 0xfa, 0xdb, 0xd2,
+	0xd1, 0xdf, 0x97, 0x8e, 0xfe, 0xfc, 0xe1, 0x68, 0x23, 0x43, 0xae, 0x71, 0xf6, 0x19, 0x00, 0x00,
+	0xff, 0xff, 0xd8, 0x7f, 0xdc, 0x39, 0xa2, 0x02, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -526,108 +526,108 @@ var _ThingsService_serviceDesc = grpc.ServiceDesc{
 	Metadata: "auth.proto",
 }
 
-// AuthServiceClient is the client API for AuthService service.
+// AuthnServiceClient is the client API for AuthnService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type AuthServiceClient interface {
+type AuthnServiceClient interface {
 	Issue(ctx context.Context, in *IssueReq, opts ...grpc.CallOption) (*Token, error)
 	Identify(ctx context.Context, in *Token, opts ...grpc.CallOption) (*UserID, error)
 }
 
-type authServiceClient struct {
+type authnServiceClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewAuthServiceClient(cc *grpc.ClientConn) AuthServiceClient {
-	return &authServiceClient{cc}
+func NewAuthnServiceClient(cc *grpc.ClientConn) AuthnServiceClient {
+	return &authnServiceClient{cc}
 }
 
-func (c *authServiceClient) Issue(ctx context.Context, in *IssueReq, opts ...grpc.CallOption) (*Token, error) {
+func (c *authnServiceClient) Issue(ctx context.Context, in *IssueReq, opts ...grpc.CallOption) (*Token, error) {
 	out := new(Token)
-	err := c.cc.Invoke(ctx, "/mainflux.AuthService/Issue", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mainflux.AuthnService/Issue", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *authServiceClient) Identify(ctx context.Context, in *Token, opts ...grpc.CallOption) (*UserID, error) {
+func (c *authnServiceClient) Identify(ctx context.Context, in *Token, opts ...grpc.CallOption) (*UserID, error) {
 	out := new(UserID)
-	err := c.cc.Invoke(ctx, "/mainflux.AuthService/Identify", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mainflux.AuthnService/Identify", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// AuthServiceServer is the server API for AuthService service.
-type AuthServiceServer interface {
+// AuthnServiceServer is the server API for AuthnService service.
+type AuthnServiceServer interface {
 	Issue(context.Context, *IssueReq) (*Token, error)
 	Identify(context.Context, *Token) (*UserID, error)
 }
 
-// UnimplementedAuthServiceServer can be embedded to have forward compatible implementations.
-type UnimplementedAuthServiceServer struct {
+// UnimplementedAuthnServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedAuthnServiceServer struct {
 }
 
-func (*UnimplementedAuthServiceServer) Issue(ctx context.Context, req *IssueReq) (*Token, error) {
+func (*UnimplementedAuthnServiceServer) Issue(ctx context.Context, req *IssueReq) (*Token, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Issue not implemented")
 }
-func (*UnimplementedAuthServiceServer) Identify(ctx context.Context, req *Token) (*UserID, error) {
+func (*UnimplementedAuthnServiceServer) Identify(ctx context.Context, req *Token) (*UserID, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Identify not implemented")
 }
 
-func RegisterAuthServiceServer(s *grpc.Server, srv AuthServiceServer) {
-	s.RegisterService(&_AuthService_serviceDesc, srv)
+func RegisterAuthnServiceServer(s *grpc.Server, srv AuthnServiceServer) {
+	s.RegisterService(&_AuthnService_serviceDesc, srv)
 }
 
-func _AuthService_Issue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _AuthnService_Issue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(IssueReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AuthServiceServer).Issue(ctx, in)
+		return srv.(AuthnServiceServer).Issue(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mainflux.AuthService/Issue",
+		FullMethod: "/mainflux.AuthnService/Issue",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).Issue(ctx, req.(*IssueReq))
+		return srv.(AuthnServiceServer).Issue(ctx, req.(*IssueReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AuthService_Identify_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _AuthnService_Identify_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Token)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AuthServiceServer).Identify(ctx, in)
+		return srv.(AuthnServiceServer).Identify(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mainflux.AuthService/Identify",
+		FullMethod: "/mainflux.AuthnService/Identify",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).Identify(ctx, req.(*Token))
+		return srv.(AuthnServiceServer).Identify(ctx, req.(*Token))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _AuthService_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "mainflux.AuthService",
-	HandlerType: (*AuthServiceServer)(nil),
+var _AuthnService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "mainflux.AuthnService",
+	HandlerType: (*AuthnServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Issue",
-			Handler:    _AuthService_Issue_Handler,
+			Handler:    _AuthnService_Issue_Handler,
 		},
 		{
 			MethodName: "Identify",
-			Handler:    _AuthService_Identify_Handler,
+			Handler:    _AuthnService_Identify_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

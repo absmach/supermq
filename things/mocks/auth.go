@@ -11,14 +11,14 @@ import (
 	"google.golang.org/grpc"
 )
 
-var _ mainflux.AuthServiceClient = (*authServiceMock)(nil)
+var _ mainflux.AuthnServiceClient = (*authServiceMock)(nil)
 
 type authServiceMock struct {
 	users map[string]string
 }
 
-// NewUsersService creates mock of users service.
-func NewAuthService(users map[string]string) mainflux.AuthServiceClient {
+// NewAuthService creates mock of users service.
+func NewAuthService(users map[string]string) mainflux.AuthnServiceClient {
 	return &authServiceMock{users}
 }
 

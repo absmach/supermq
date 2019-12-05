@@ -25,7 +25,7 @@ import (
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/go-redis/redis"
 	"github.com/mainflux/mainflux"
-	authapi "github.com/mainflux/mainflux/auth/api/grpc"
+	authapi "github.com/mainflux/mainflux/authn/api/grpc"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/things/api"
@@ -267,7 +267,7 @@ func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sqlx.DB {
 	return db
 }
 
-func createAuthClient(cfg config, tracer opentracing.Tracer, logger logger.Logger) (mainflux.AuthServiceClient, func() error) {
+func createAuthClient(cfg config, tracer opentracing.Tracer, logger logger.Logger) (mainflux.AuthnServiceClient, func() error) {
 	if cfg.singleUserEmail != "" && cfg.singleUserToken != "" {
 		return localusers.NewSingleUserService(cfg.singleUserEmail, cfg.singleUserToken), nil
 	}
@@ -301,7 +301,7 @@ func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
 	return conn
 }
 
-func newService(auth mainflux.AuthServiceClient, dbTracer opentracing.Tracer, cacheTracer opentracing.Tracer, db *sqlx.DB, cacheClient *redis.Client, esClient *redis.Client, logger logger.Logger) things.Service {
+func newService(auth mainflux.AuthnServiceClient, dbTracer opentracing.Tracer, cacheTracer opentracing.Tracer, db *sqlx.DB, cacheClient *redis.Client, esClient *redis.Client, logger logger.Logger) things.Service {
 	database := postgres.NewDatabase(db)
 
 	thingsRepo := postgres.NewThingRepository(database)

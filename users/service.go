@@ -6,8 +6,8 @@ package users
 import (
 	"context"
 
+	"github.com/mainflux/mainflux/authn"
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/auth"
 	"github.com/mainflux/mainflux/errors"
 )
 
@@ -87,11 +87,11 @@ type usersService struct {
 	users  UserRepository
 	hasher Hasher
 	email  Emailer
-	auth   mainflux.AuthServiceClient
+	auth   mainflux.AuthnServiceClient
 }
 
 // New instantiates the users service implementation
-func New(users UserRepository, hasher Hasher, auth mainflux.AuthServiceClient, m Emailer) Service {
+func New(users UserRepository, hasher Hasher, auth mainflux.AuthnServiceClient, m Emailer) Service {
 	return &usersService{
 		users:  users,
 		hasher: hasher,
@@ -120,7 +120,7 @@ func (svc usersService) Login(ctx context.Context, user User) (string, errors.Er
 		return "", errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	return svc.issue(ctx, dbUser.Email, auth.LoginKey)
+	return svc.issue(ctx, dbUser.Email, authn.LoginKey)
 }
 
 func (svc usersService) UserInfo(ctx context.Context, token string) (User, errors.Error) {
@@ -161,7 +161,7 @@ func (svc usersService) GenerateResetToken(ctx context.Context, email, host stri
 		return ErrUserNotFound
 	}
 
-	t, err := svc.issue(ctx, email, auth.ResetKey)
+	t, err := svc.issue(ctx, email, authn.ResetKey)
 	if err != nil {
 		return errors.Wrap(ErrGeneratingResetToken, err)
 	}
