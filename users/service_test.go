@@ -70,6 +70,12 @@ func TestRegister(t *testing.T) {
 func TestLogin(t *testing.T) {
 	svc := newService()
 	svc.Register(context.Background(), user)
+	noAuthUser := users.User{
+		Email:    "email@test.com",
+		Password: "pwd",
+	}
+	svc.Register(context.Background(), user)
+	svc.Register(context.Background(), noAuthUser)
 
 	cases := map[string]struct {
 		user users.User
@@ -92,6 +98,10 @@ func TestLogin(t *testing.T) {
 				Password: wrong,
 			},
 			err: users.ErrUnauthorizedAccess,
+		},
+		"login failed auth": {
+			user: noAuthUser,
+			err:  users.ErrUnauthorizedAccess,
 		},
 	}
 
