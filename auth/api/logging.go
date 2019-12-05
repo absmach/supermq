@@ -71,7 +71,7 @@ func (lm *loggingMiddleware) Retrieve(ctx context.Context, owner, id string) (ke
 
 func (lm *loggingMiddleware) Identify(ctx context.Context, key string) (id string, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method identify for took %s to complete", time.Since(begin))
+		message := fmt.Sprintf("Method identify took %s to complete", time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return

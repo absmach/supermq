@@ -14,7 +14,7 @@ var (
 	ErrInvalidKeyIssuedAt = errors.New("invalid issue time")
 
 	// ErrKeyExpired indicates that the Key is expired.
-	ErrKeyExpired = errors.New("use o expired key")
+	ErrKeyExpired = errors.New("use of expired key")
 )
 
 const (

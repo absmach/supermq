@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"time"
 
-	// required for DB access
 	"github.com/lib/pq"
 	"github.com/mainflux/mainflux/auth"
 )
@@ -21,8 +20,7 @@ type keyRepository struct {
 	db Database
 }
 
-// New instantiates a PostgreSQL implementation of key
-// repository.
+// New instantiates a PostgreSQL implementation of key repository.
 func New(db Database) auth.KeyRepository {
 	return &keyRepository{
 		db: db,
@@ -93,6 +91,7 @@ func toDBKey(key auth.Key) dbKey {
 	if key.ExpiresAt != nil {
 		ret.ExpiresAt = sql.NullTime{Time: *key.ExpiresAt, Valid: true}
 	}
+
 	return ret
 }
 
@@ -106,5 +105,6 @@ func toKey(key dbKey) auth.Key {
 	if key.ExpiresAt.Valid {
 		ret.ExpiresAt = &key.ExpiresAt.Time
 	}
+
 	return ret
 }
