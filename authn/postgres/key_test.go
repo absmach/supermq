@@ -12,6 +12,7 @@ import (
 	"github.com/mainflux/mainflux/authn"
 	"github.com/mainflux/mainflux/authn/postgres"
 	"github.com/mainflux/mainflux/authn/uuid"
+	"github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -118,7 +119,7 @@ func TestKeyRemove(t *testing.T) {
 		ExpiresAt: &expTime,
 		ID:        id,
 	}
-	_, err := repo.Save(context.Background(), key)
+	_, err := repo.Save(opentracing.ContextWithSpan(context.Background(), opentracing.StartSpan("")), key)
 	assert.Nil(t, err, fmt.Sprintf("Storing Key expected to succeed: %s", err))
 	cases := []struct {
 		desc   string
