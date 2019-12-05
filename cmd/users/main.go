@@ -47,10 +47,6 @@ const (
 	defDBSSLKey      = ""
 	defDBSSLRootCert = ""
 	defHTTPPort      = "8180"
-	defGRPCPort      = "8181"
-	defSecret        = "users"
-	defServerCert    = ""
-	defServerKey     = ""
 	defJaegerURL     = ""
 
 	defAuthnHTTPPort = "8989"
@@ -83,11 +79,7 @@ const (
 	envDBSSLKey      = "MF_USERS_DB_SSL_KEY"
 	envDBSSLRootCert = "MF_USERS_DB_SSL_ROOT_CERT"
 	envHTTPPort      = "MF_USERS_HTTP_PORT"
-	// envGRPCPort      = "MF_USERS_GRPC_PORT"
-	// envSecret        = "MF_USERS_SECRET"
-	// envServerCert    = "MF_USERS_SERVER_CERT"
-	// envServerKey     = "MF_USERS_SERVER_KEY"
-	envJaegerURL = "MF_JAEGER_URL"
+	envJaegerURL     = "MF_JAEGER_URL"
 
 	envAuthnHTTPPort = "MF_AUTHN_HTTP_PORT"
 	envAuthnGRPCPort = "MF_AUTHN_GRPC_PORT"
