@@ -36,6 +36,15 @@ type Key struct {
 	ExpiresAt *time.Time
 }
 
+// Expired verifies if the key is expired.
+func (k Key) Expired() bool {
+	if k.ExpiresAt == nil {
+		return false
+	}
+
+	return k.ExpiresAt.Before(time.Now())
+}
+
 // KeyRepository specifies Key persistence API.
 type KeyRepository interface {
 	// Save persists the Key. A non-nil error is returned to indicate

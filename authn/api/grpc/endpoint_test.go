@@ -71,6 +71,12 @@ func TestIdentify(t *testing.T) {
 	loginKey, err := svc.Issue(context.Background(), email, authn.Key{Type: authn.LoginKey, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
+	resetKey, err := svc.Issue(context.Background(), loginKey.Secret, authn.Key{Type: authn.ResetKey, IssuedAt: time.Now()})
+	assert.Nil(t, err, fmt.Sprintf("Issuing reset key expected to succeed: %s", err))
+
+	userKey, err := svc.Issue(context.Background(), loginKey.Secret, authn.Key{Type: authn.UserKey, IssuedAt: time.Now()})
+	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
+
 	authAddr := fmt.Sprintf("localhost:%d", port)
 	conn, _ := grpc.Dial(authAddr, grpc.WithInsecure())
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
@@ -80,7 +86,9 @@ func TestIdentify(t *testing.T) {
 		id    string
 		err   error
 	}{
-		"identify user with valid token":   {loginKey.Secret, email, nil},
+		"identify user with reset token":   {resetKey.Secret, email, nil},
+		"identify user with user token":    {userKey.Secret, email, nil},
+		"identify user with login token":   {"", "", status.Error(codes.InvalidArgument, "received invalid token request")},
 		"identify user that doesn't exist": {"", "", status.Error(codes.InvalidArgument, "received invalid token request")},
 	}
 

@@ -196,9 +196,12 @@ func TestIdentify(t *testing.T) {
 	resetKey, err := svc.Issue(context.Background(), loginKey.Secret, authn.Key{Type: authn.ResetKey, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing reset key expected to succeed: %s", err))
 
-	exp := time.Now().Add(1 * time.Second)
-	userKey, err := svc.Issue(context.Background(), loginKey.Secret, authn.Key{Type: authn.UserKey, IssuedAt: time.Now(), ExpiresAt: &exp})
+	userKey, err := svc.Issue(context.Background(), loginKey.Secret, authn.Key{Type: authn.UserKey, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
+
+	exp1 := time.Now().Add(-2 * time.Second)
+	expKey, err := svc.Issue(context.Background(), loginKey.Secret, authn.Key{Type: authn.UserKey, IssuedAt: time.Now(), ExpiresAt: &exp1})
+	assert.Nil(t, err, fmt.Sprintf("Issuing expired user key expected to succeed: %s", err))
 
 	invalidKey, err := svc.Issue(context.Background(), loginKey.Secret, authn.Key{Type: 22, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
@@ -218,7 +221,7 @@ func TestIdentify(t *testing.T) {
 		{
 			desc: "identify reset key",
 			key:  resetKey.Secret,
-			id:   "mainflux.authn",
+			id:   email,
 			err:  nil,
 		},
 		{
@@ -229,9 +232,9 @@ func TestIdentify(t *testing.T) {
 		},
 		{
 			desc: "identify expired user key",
-			key:  userKey.Secret,
+			key:  expKey.Secret,
 			id:   "",
-			err:  authn.ErrUnauthorizedAccess,
+			err:  authn.ErrKeyExpired,
 		},
 		{
 			desc: "identify expired key",
@@ -247,13 +250,9 @@ func TestIdentify(t *testing.T) {
 		},
 	}
 
-	for i, tc := range cases {
+	for _, tc := range cases {
 		id, err := svc.Identify(context.Background(), tc.key)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.id, id, fmt.Sprintf("%s expected %s got %s\n", tc.desc, tc.id, id))
-		if i == 2 {
-			// Wait for key to expire.
-			time.Sleep(2 * time.Second)
-		}
 	}
 }
