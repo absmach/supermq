@@ -24,15 +24,15 @@ func TestExpired(t *testing.T) {
 			desc: "not expired key",
 			key: authn.Key{
 				IssuedAt:  time.Now(),
-				ExpiresAt: &exp,
+				ExpiresAt: exp,
 			},
 			expired: false,
 		},
 		{
 			desc: "expired key",
 			key: authn.Key{
-				IssuedAt:  time.Now().Add(2 * time.Minute),
-				ExpiresAt: &exp1,
+				IssuedAt:  time.Now().UTC().Add(2 * time.Minute),
+				ExpiresAt: exp1,
 			},
 			expired: true,
 		},
@@ -41,7 +41,7 @@ func TestExpired(t *testing.T) {
 			key: authn.Key{
 				IssuedAt: time.Now(),
 			},
-			expired: false,
+			expired: true,
 		},
 	}
 

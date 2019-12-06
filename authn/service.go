@@ -144,8 +144,7 @@ func (svc authnService) resetKey(ctx context.Context, issuer string, key Key) (K
 
 func (svc authnService) tempKey(duration time.Duration, key Key) (Key, error) {
 	key.Issuer = issuerName
-	exp := key.IssuedAt.Add(duration)
-	key.ExpiresAt = &exp
+	key.ExpiresAt = key.IssuedAt.Add(duration)
 	val, err := svc.t.Issue(key)
 	if err != nil {
 		return Key{}, err

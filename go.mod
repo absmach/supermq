@@ -65,5 +65,4 @@ require (
 	google.golang.org/grpc v1.24.0
 	gopkg.in/gorp.v1 v1.7.1 // indirect
 	gopkg.in/ory-am/dockertest.v3 v3.3.2
-	gotest.tools v2.2.0+incompatible
 )

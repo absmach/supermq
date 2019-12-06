@@ -29,7 +29,7 @@ func issueEndpoint(svc authn.Service) endpoint.Endpoint {
 		duration := time.Duration(req.Duration * time.Second)
 		if duration != 0 {
 			exp := now.Add(duration)
-			newKey.ExpiresAt = &exp
+			newKey.ExpiresAt = exp
 		}
 
 		key, err := svc.Issue(ctx, req.issuer, newKey)

@@ -42,7 +42,7 @@ func (svc tokenizer) Issue(key authn.Key) (string, error) {
 		Type: &key.Type,
 	}
 
-	if key.ExpiresAt != nil {
+	if !key.ExpiresAt.IsZero() {
 		claims.ExpiresAt = key.ExpiresAt.UTC().Unix()
 	}
 	if key.ID != "" {
@@ -84,8 +84,7 @@ func (c claims) toKey() authn.Key {
 		IssuedAt: time.Unix(c.IssuedAt, 0).UTC(),
 	}
 	if c.ExpiresAt != 0 {
-		t := time.Unix(c.ExpiresAt, 0).UTC()
-		key.ExpiresAt = &t
+		key.ExpiresAt = time.Unix(c.ExpiresAt, 0).UTC()
 	}
 
 	// Default type is 0.

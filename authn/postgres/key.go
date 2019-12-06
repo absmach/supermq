@@ -88,8 +88,8 @@ func toDBKey(key authn.Key) dbKey {
 		Issuer:   key.Issuer,
 		IssuedAt: key.IssuedAt,
 	}
-	if key.ExpiresAt != nil {
-		ret.ExpiresAt = sql.NullTime{Time: *key.ExpiresAt, Valid: true}
+	if !key.ExpiresAt.IsZero() {
+		ret.ExpiresAt = sql.NullTime{Time: key.ExpiresAt, Valid: true}
 	}
 
 	return ret
@@ -103,7 +103,7 @@ func toKey(key dbKey) authn.Key {
 		IssuedAt: key.IssuedAt,
 	}
 	if key.ExpiresAt.Valid {
-		ret.ExpiresAt = &key.ExpiresAt.Time
+		ret.ExpiresAt = key.ExpiresAt.Time
 	}
 
 	return ret

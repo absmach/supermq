@@ -34,7 +34,7 @@ func TestKeySave(t *testing.T) {
 			key: authn.Key{
 				Issuer:    email,
 				IssuedAt:  time.Now(),
-				ExpiresAt: &expTime,
+				ExpiresAt: expTime,
 				ID:        id,
 			},
 			err: nil,
@@ -44,7 +44,7 @@ func TestKeySave(t *testing.T) {
 			key: authn.Key{
 				Issuer:    email,
 				IssuedAt:  time.Now(),
-				ExpiresAt: &expTime,
+				ExpiresAt: expTime,
 				ID:        id,
 			},
 			err: authn.ErrConflict,
@@ -68,7 +68,7 @@ func TestKeyRetrieve(t *testing.T) {
 	key := authn.Key{
 		Issuer:    email,
 		IssuedAt:  time.Now(),
-		ExpiresAt: &expTime,
+		ExpiresAt: expTime,
 		ID:        id,
 	}
 	_, err := repo.Save(context.Background(), key)
@@ -116,7 +116,7 @@ func TestKeyRemove(t *testing.T) {
 	key := authn.Key{
 		Issuer:    email,
 		IssuedAt:  time.Now(),
-		ExpiresAt: &expTime,
+		ExpiresAt: expTime,
 		ID:        id,
 	}
 	_, err := repo.Save(opentracing.ContextWithSpan(context.Background(), opentracing.StartSpan("")), key)

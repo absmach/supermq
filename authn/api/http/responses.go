@@ -16,10 +16,10 @@ var (
 )
 
 type issueKeyRes struct {
-	ID        string     `json:"id,omitempty"`
-	Value     string     `json:"value,omitempty"`
-	IssuedAt  time.Time  `json:"issued_at,omitempty"`
-	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+	ID        string    `json:"id,omitempty"`
+	Value     string    `json:"value,omitempty"`
+	IssuedAt  time.Time `json:"issued_at,omitempty"`
+	ExpiresAt time.Time `json:"expires_at,omitempty"`
 }
 
 func (res issueKeyRes) Code() int {

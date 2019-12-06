@@ -33,16 +33,12 @@ type Key struct {
 	Issuer    string
 	Secret    string
 	IssuedAt  time.Time
-	ExpiresAt *time.Time
+	ExpiresAt time.Time
 }
 
 // Expired verifies if the key is expired.
 func (k Key) Expired() bool {
-	if k.ExpiresAt == nil {
-		return false
-	}
-
-	return k.ExpiresAt.Before(time.Now())
+	return k.ExpiresAt.UTC().Before(time.Now().UTC())
 }
 
 // KeyRepository specifies Key persistence API.

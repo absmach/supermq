@@ -198,11 +198,11 @@ func TestIdentify(t *testing.T) {
 	resetKey, err := svc.Issue(context.Background(), loginKey.Secret, authn.Key{Type: authn.ResetKey, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing reset key expected to succeed: %s", err))
 
-	userKey, err := svc.Issue(context.Background(), loginKey.Secret, authn.Key{Type: authn.UserKey, IssuedAt: time.Now()})
+	userKey, err := svc.Issue(context.Background(), loginKey.Secret, authn.Key{Type: authn.UserKey, IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Minute)})
 	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
 
 	exp1 := time.Now().Add(-2 * time.Second)
-	expKey, err := svc.Issue(context.Background(), loginKey.Secret, authn.Key{Type: authn.UserKey, IssuedAt: time.Now(), ExpiresAt: &exp1})
+	expKey, err := svc.Issue(context.Background(), loginKey.Secret, authn.Key{Type: authn.UserKey, IssuedAt: time.Now(), ExpiresAt: exp1})
 	assert.Nil(t, err, fmt.Sprintf("Issuing expired user key expected to succeed: %s", err))
 
 	invalidKey, err := svc.Issue(context.Background(), loginKey.Secret, authn.Key{Type: 22, IssuedAt: time.Now()})

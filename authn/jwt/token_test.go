@@ -10,8 +10,8 @@ import (
 
 	"github.com/mainflux/mainflux/authn"
 	"github.com/mainflux/mainflux/authn/jwt"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gotest.tools/assert"
 )
 
 const secret = "test"
@@ -24,7 +24,7 @@ func key() authn.Key {
 		Issuer:    "user@email.com",
 		Secret:    "",
 		IssuedAt:  time.Now().UTC().Add(-10 * time.Second).Round(time.Second),
-		ExpiresAt: &exp,
+		ExpiresAt: exp,
 	}
 }
 
@@ -60,12 +60,12 @@ func TestParse(t *testing.T) {
 
 	userKey := key()
 	userKey.Type = authn.UserKey
-	*userKey.ExpiresAt = time.Now().UTC().Add(-1 * time.Minute).Round(time.Second)
+	userKey.ExpiresAt = time.Now().UTC().Add(-1 * time.Minute).Round(time.Second)
 	userToken, err := tokenizer.Issue(userKey)
 	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
 
 	expKey := key()
-	*expKey.ExpiresAt = time.Now().UTC().Add(-1 * time.Minute).Round(time.Second)
+	expKey.ExpiresAt = time.Now().UTC().Add(-1 * time.Minute).Round(time.Second)
 	expToken, err := tokenizer.Issue(expKey)
 	require.Nil(t, err, fmt.Sprintf("issuing expired key expected to succeed: %s", err))
 
@@ -105,6 +105,6 @@ func TestParse(t *testing.T) {
 	for _, tc := range cases {
 		key, err := tokenizer.Parse(tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s expected %s, got %s", tc.desc, tc.err, err))
-		assert.DeepEqual(t, tc.key, key)
+		assert.Equal(t, tc.key, key, fmt.Sprintf("%s expected %v, got %v", tc.desc, tc.key, key))
 	}
 }

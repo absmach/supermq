@@ -31,6 +31,11 @@ const (
 	email        = "user@example.com"
 )
 
+type issueRequest struct {
+	Duration time.Duration `json:"duration,omitempty"`
+	Type     uint32        `json:"type,omitempty"`
+}
+
 type testRequest struct {
 	client      *http.Client
 	method      string
@@ -82,9 +87,9 @@ func TestIssue(t *testing.T) {
 	defer ts.Close()
 	client := ts.Client()
 
-	lk := authn.Key{Type: authn.LoginKey}
-	uk := authn.Key{Type: authn.UserKey}
-	rk := authn.Key{Type: authn.ResetKey}
+	lk := issueRequest{Type: authn.LoginKey}
+	rk := issueRequest{Type: authn.ResetKey}
+	uk := issueRequest{Type: authn.UserKey, Duration: time.Hour}
 
 	cases := []struct {
 		desc   string
