@@ -18,6 +18,7 @@ import (
 	api "github.com/mainflux/mainflux/authn/api"
 	grpcapi "github.com/mainflux/mainflux/authn/api/grpc"
 	httpapi "github.com/mainflux/mainflux/authn/api/http"
+	"github.com/mainflux/mainflux/authn/jwt"
 	"github.com/mainflux/mainflux/authn/postgres"
 	"github.com/mainflux/mainflux/authn/tracing"
 	mfidp "github.com/mainflux/mainflux/authn/uuid"
@@ -179,7 +180,8 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, secret string, logger lo
 	repo := tracing.New(postgres.New(database), tracer)
 
 	idp := mfidp.New()
-	svc := authn.New(repo, idp, secret)
+	t := jwt.New(secret)
+	svc := authn.New(repo, idp, t)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,

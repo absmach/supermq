@@ -12,6 +12,7 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/authn"
 	grpcapi "github.com/mainflux/mainflux/authn/api/grpc"
+	"github.com/mainflux/mainflux/authn/jwt"
 	"github.com/mainflux/mainflux/authn/mocks"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
@@ -32,8 +33,9 @@ var svc authn.Service
 func newService() authn.Service {
 	repo := mocks.NewKeyRepository()
 	idp := mocks.NewIdentityProvider()
+	t := jwt.New(secret)
 
-	return authn.New(repo, idp, secret)
+	return authn.New(repo, idp, t)
 }
 
 func startGRPCServer(svc authn.Service, port int) {

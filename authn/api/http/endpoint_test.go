@@ -16,6 +16,7 @@ import (
 
 	authn "github.com/mainflux/mainflux/authn"
 	httpapi "github.com/mainflux/mainflux/authn/api/http"
+	"github.com/mainflux/mainflux/authn/jwt"
 	"github.com/mainflux/mainflux/authn/mocks"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
@@ -58,7 +59,8 @@ func (tr testRequest) make() (*http.Response, error) {
 func newService() authn.Service {
 	repo := mocks.NewKeyRepository()
 	idp := mocks.NewIdentityProvider()
-	return authn.New(repo, idp, secret)
+	t := jwt.New(secret)
+	return authn.New(repo, idp, t)
 }
 
 func newServer(svc authn.Service) *httptest.Server {

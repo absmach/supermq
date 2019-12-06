@@ -50,24 +50,25 @@ type Service interface {
 	Identify(context.Context, string) (string, error)
 }
 
-type authService struct {
-	keys     KeyRepository
-	idp      IdentityProvider
-	secret   string
-	duration time.Duration
+var _ Service = (*authnService)(nil)
+
+type authnService struct {
+	keys KeyRepository
+	idp  IdentityProvider
+	t    Tokenizer
 }
 
 // New instantiates the auth service implementation.
-func New(keys KeyRepository, idp IdentityProvider, secret string) Service {
-	return &authService{
-		keys:   keys,
-		idp:    idp,
-		secret: secret,
+func New(keys KeyRepository, idp IdentityProvider, tokenizer Tokenizer) Service {
+	return &authnService{
+		t:    tokenizer,
+		keys: keys,
+		idp:  idp,
 	}
 }
 
-func (svc authService) Issue(ctx context.Context, issuer string, key Key) (Key, error) {
-	if key.IssuedAt.UTC().Nanosecond() == 0 {
+func (svc authnService) Issue(ctx context.Context, issuer string, key Key) (Key, error) {
+	if key.IssuedAt.IsZero() {
 		return Key{}, ErrInvalidKeyIssuedAt
 	}
 	switch key.Type {
@@ -80,7 +81,7 @@ func (svc authService) Issue(ctx context.Context, issuer string, key Key) (Key, 
 	}
 }
 
-func (svc authService) Revoke(ctx context.Context, issuer, id string) error {
+func (svc authnService) Revoke(ctx context.Context, issuer, id string) error {
 	email, err := svc.login(issuer)
 	if err != nil {
 		return err
@@ -89,7 +90,7 @@ func (svc authService) Revoke(ctx context.Context, issuer, id string) error {
 	return svc.keys.Remove(ctx, email, id)
 }
 
-func (svc authService) Retrieve(ctx context.Context, issuer, id string) (Key, error) {
+func (svc authnService) Retrieve(ctx context.Context, issuer, id string) (Key, error) {
 	email, err := svc.login(issuer)
 	if err != nil {
 		return Key{}, err
@@ -98,24 +99,21 @@ func (svc authService) Retrieve(ctx context.Context, issuer, id string) (Key, er
 	return svc.keys.Retrieve(ctx, email, id)
 }
 
-func (svc authService) Identify(ctx context.Context, token string) (string, error) {
-	c, err := svc.parse(token)
+func (svc authnService) Identify(ctx context.Context, token string) (string, error) {
+	c, err := svc.t.Parse(token)
 	if err != nil {
 		return "", err
 	}
 
-	if c.Type == nil {
-		return "", ErrUnauthorizedAccess
-	}
-	switch *c.Type {
+	switch c.Type {
 	case UserKey:
-		k, err := svc.keys.Retrieve(ctx, c.Issuer, c.Id)
+		k, err := svc.keys.Retrieve(ctx, c.Issuer, c.ID)
 		if err != nil {
 			return "", err
 		}
 		// Auto revoke expired key.
 		if k.Expired() {
-			svc.keys.Remove(ctx, c.Issuer, c.Id)
+			svc.keys.Remove(ctx, c.Issuer, c.ID)
 			return "", ErrKeyExpired
 		}
 		return c.Issuer, nil
@@ -123,18 +121,18 @@ func (svc authService) Identify(ctx context.Context, token string) (string, erro
 		if c.Issuer != issuerName {
 			return "", ErrUnauthorizedAccess
 		}
-		return c.Subject, nil
+		return c.Secret, nil
 	default:
 		return "", ErrUnauthorizedAccess
 	}
 }
 
-func (svc authService) loginKey(issuer string, key Key) (Key, error) {
+func (svc authnService) loginKey(issuer string, key Key) (Key, error) {
 	key.Secret = issuer
 	return svc.tempKey(loginDuration, key)
 }
 
-func (svc authService) resetKey(ctx context.Context, issuer string, key Key) (Key, error) {
+func (svc authnService) resetKey(ctx context.Context, issuer string, key Key) (Key, error) {
 	issuer, err := svc.login(issuer)
 	if err != nil {
 		return Key{}, err
@@ -144,11 +142,11 @@ func (svc authService) resetKey(ctx context.Context, issuer string, key Key) (Ke
 	return svc.tempKey(resetDuration, key)
 }
 
-func (svc authService) tempKey(duration time.Duration, key Key) (Key, error) {
+func (svc authnService) tempKey(duration time.Duration, key Key) (Key, error) {
 	key.Issuer = issuerName
 	exp := key.IssuedAt.Add(duration)
 	key.ExpiresAt = &exp
-	val, err := svc.issue(key)
+	val, err := svc.t.Issue(key)
 	if err != nil {
 		return Key{}, err
 	}
@@ -157,7 +155,7 @@ func (svc authService) tempKey(duration time.Duration, key Key) (Key, error) {
 	return key, nil
 }
 
-func (svc authService) userKey(ctx context.Context, issuer string, key Key) (Key, error) {
+func (svc authnService) userKey(ctx context.Context, issuer string, key Key) (Key, error) {
 	email, err := svc.login(issuer)
 	if err != nil {
 		return Key{}, err
@@ -170,7 +168,7 @@ func (svc authService) userKey(ctx context.Context, issuer string, key Key) (Key
 	}
 	key.ID = id
 
-	value, err := svc.issue(key)
+	value, err := svc.t.Issue(key)
 	if err != nil {
 		return Key{}, err
 	}
@@ -183,18 +181,18 @@ func (svc authService) userKey(ctx context.Context, issuer string, key Key) (Key
 	return key, nil
 }
 
-func (svc authService) login(token string) (string, error) {
-	c, err := svc.parse(token)
+func (svc authnService) login(token string) (string, error) {
+	c, err := svc.t.Parse(token)
 	if err != nil {
 		return "", err
 	}
 	// Only login token is valid token type.
-	if c.Type == nil || *c.Type != LoginKey {
+	if c.Type != LoginKey {
 		return "", ErrUnauthorizedAccess
 	}
 
-	if c.Subject == "" {
+	if c.Secret == "" {
 		return "", ErrUnauthorizedAccess
 	}
-	return c.Subject, nil
+	return c.Secret, nil
 }
