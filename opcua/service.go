@@ -4,19 +4,21 @@
 package opcua
 
 import (
-	"context"
-	"errors"
 	"fmt"
 
-	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/errors"
+	"github.com/mainflux/mainflux/logger"
 )
 
 const protocol = "opcua"
 
 var (
-	errNotFoundServerURI = errors.New("route map not found for this Server URI")
-	errNotFoundNodeID    = errors.New("route map not found for this Node ID")
-	errNotFoundConn      = errors.New("connection not found")
+	// ErrNotFoundServerURI indicates missing ServerURI route-map
+	ErrNotFoundServerURI = errors.New("route map not found for this Server URI")
+	// ErrNotFoundNodeID indicates missing NodeID route-map
+	ErrNotFoundNodeID = errors.New("route map not found for this Node ID")
+	// ErrNotFoundConn indicates missing connection
+	ErrNotFoundConn = errors.New("connection not found")
 )
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -46,8 +48,8 @@ type Service interface {
 	// DisconnectThing removes thing and channel connection route-map
 	DisconnectThing(string, string) error
 
-	// Publish forwards messages from the OPC-UA MQTT broker to Mainflux NATS broker
-	Publish(context.Context, string, Message) error
+	// Subscribe subscribes to a given OPC-UA server
+	Subscribe(Config) error
 }
 
 // Config OPC-UA Server
@@ -63,54 +65,24 @@ type Config struct {
 var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
-	publisher  mainflux.MessagePublisher
+	subscriber Subscriber
 	thingsRM   RouteMapRepository
 	channelsRM RouteMapRepository
 	connectRM  RouteMapRepository
+	cfg        Config
+	logger     logger.Logger
 }
 
 // New instantiates the OPC-UA adapter implementation.
-func New(pub mainflux.MessagePublisher, thingsRM, channelsRM, connectRM RouteMapRepository) Service {
+func New(sub Subscriber, thingsRM, channelsRM, connectRM RouteMapRepository, cfg Config, log logger.Logger) Service {
 	return &adapterService{
-		publisher:  pub,
+		subscriber: sub,
 		thingsRM:   thingsRM,
 		channelsRM: channelsRM,
 		connectRM:  connectRM,
+		cfg:        cfg,
+		logger:     log,
 	}
-}
-
-// Publish forwards messages from OPC-UA MQTT broker to Mainflux NATS broker
-func (as *adapterService) Publish(ctx context.Context, token string, m Message) error {
-	// Get route-map of the OPC-UA ServerURI
-	channelID, err := as.channelsRM.Get(m.ServerURI)
-	if err != nil {
-		return errNotFoundServerURI
-	}
-
-	// Get route-map of the OPC-UA NodeID
-	thingID, err := as.thingsRM.Get(m.NodeID)
-	if err != nil {
-		return errNotFoundNodeID
-	}
-
-	// Check connection between ServerURI and NodeID
-	c := fmt.Sprintf("%s:%s", channelID, thingID)
-	if _, err := as.connectRM.Get(c); err != nil {
-		return errNotFoundConn
-	}
-
-	// Publish on Mainflux NATS broker
-	SenML := fmt.Sprintf(`[{"n":"%s","v":%v}]`, m.Type, m.Data)
-	payload := []byte(SenML)
-	msg := mainflux.Message{
-		Publisher:   thingID,
-		Protocol:    protocol,
-		ContentType: "Content-Type",
-		Channel:     channelID,
-		Payload:     payload,
-	}
-
-	return as.publisher.Publish(ctx, token, msg)
 }
 
 func (as *adapterService) CreateThing(mfxDevID, opcuaNodeID string) error {
@@ -138,6 +110,20 @@ func (as *adapterService) RemoveChannel(mfxChanID string) error {
 }
 
 func (as *adapterService) ConnectThing(mfxChanID, mfxThingID string) error {
+	serverURI, err := as.channelsRM.Get(mfxChanID)
+	if err != nil {
+		return err
+	}
+
+	nodeID, err := as.thingsRM.Get(mfxThingID)
+	if err != nil {
+		return err
+	}
+
+	as.cfg.NodeID = nodeID
+	as.cfg.ServerURI = serverURI
+	go as.subscriber.Subscribe(as.cfg)
+
 	c := fmt.Sprintf("%s:%s", mfxChanID, mfxThingID)
 	return as.connectRM.Save(c, c)
 }
@@ -145,4 +131,10 @@ func (as *adapterService) ConnectThing(mfxChanID, mfxThingID string) error {
 func (as *adapterService) DisconnectThing(mfxChanID, mfxThingID string) error {
 	c := fmt.Sprintf("%s:%s", mfxChanID, mfxThingID)
 	return as.connectRM.Remove(c)
+}
+
+// Subscribe subscribes to the OPC-UA Server.
+func (as *adapterService) Subscribe(cfg Config) error {
+	go as.subscriber.Subscribe(cfg)
+	return nil
 }

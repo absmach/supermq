@@ -4,7 +4,6 @@
 package api
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -105,19 +104,6 @@ func (lm loggingMiddleware) RemoveChannel(mfxChanID string) (err error) {
 	return lm.svc.RemoveChannel(mfxChanID)
 }
 
-func (lm loggingMiddleware) Publish(ctx context.Context, token string, m opcua.Message) (err error) {
-	defer func(begin time.Time) {
-		message := fmt.Sprintf("publish from server %s and node_id %s, took %s to complete", m.ServerURI, m.NodeID, time.Since(begin))
-		if err != nil {
-			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
-			return
-		}
-		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
-	}(time.Now())
-
-	return lm.svc.Publish(ctx, token, m)
-}
-
 func (lm loggingMiddleware) ConnectThing(mfxChanID, mfxThingID string) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("connect_thing for channel %s and thing %s, took %s to complete", mfxChanID, mfxThingID, time.Since(begin))
@@ -142,4 +128,17 @@ func (lm loggingMiddleware) DisconnectThing(mfxChanID, mfxThingID string) (err e
 	}(time.Now())
 
 	return lm.svc.DisconnectThing(mfxChanID, mfxThingID)
+}
+
+func (lm loggingMiddleware) Subscribe(cfg opcua.Config) (err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("subscribe to server %s and node_id %s, took %s to complete", cfg.ServerURI, cfg.NodeID, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+
+	return lm.svc.Subscribe(cfg)
 }

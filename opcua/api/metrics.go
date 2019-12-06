@@ -4,7 +4,6 @@
 package api
 
 import (
-	"context"
 	"time"
 
 	"github.com/go-kit/kit/metrics"
@@ -82,15 +81,6 @@ func (mm *metricsMiddleware) RemoveChannel(mfxChanID string) error {
 	return mm.svc.RemoveChannel(mfxChanID)
 }
 
-func (mm *metricsMiddleware) Publish(ctx context.Context, token string, m opcua.Message) error {
-	defer func(begin time.Time) {
-		mm.counter.With("method", "publish").Add(1)
-		mm.latency.With("method", "publish").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-
-	return mm.svc.Publish(ctx, token, m)
-}
-
 func (mm *metricsMiddleware) ConnectThing(mfxChanID, mfxThingID string) error {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "connect_thing").Add(1)
@@ -107,4 +97,13 @@ func (mm *metricsMiddleware) DisconnectThing(mfxChanID, mfxThingID string) error
 	}(time.Now())
 
 	return mm.svc.DisconnectThing(mfxChanID, mfxThingID)
+}
+
+func (mm *metricsMiddleware) Subscribe(cfg opcua.Config) error {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "subscribe").Add(1)
+		mm.latency.With("method", "subscribe").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.Subscribe(cfg)
 }
