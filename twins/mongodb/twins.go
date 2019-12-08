@@ -18,8 +18,9 @@ import (
 )
 
 const (
-	maxNameSize           = 1024
-	collectionName string = "mainflux"
+	maxNameSize             = 1024
+	twinsCollection  string = "twins"
+	statesCollection string = "states"
 )
 
 type twinRepository struct {
@@ -36,10 +37,9 @@ func NewTwinRepository(db *mongo.Database) twins.TwinRepository {
 	}
 }
 
-// Save persists the twin. Successful operation is indicated by a nil
-// error response.
+// Save persists the twin
 func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) (string, error) {
-	coll := tr.db.Collection(collectionName)
+	coll := tr.db.Collection(twinsCollection)
 
 	if _, err := tr.RetrieveByID(ctx, tw.Owner, tw.ID); err == nil {
 		return "", twins.ErrConflict
@@ -59,6 +59,30 @@ func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) (string, erro
 	return tw.ID, nil
 }
 
+// SaveState persists the state
+func (tr *twinRepository) SaveState(ctx context.Context, st twins.State) error {
+	coll := tr.db.Collection(statesCollection)
+
+	if _, err := coll.InsertOne(context.Background(), st); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// CountStates returns the number of states related to twin
+func (tr *twinRepository) CountStates(ctx context.Context, tw twins.Twin) (int64, error) {
+	coll := tr.db.Collection(statesCollection)
+
+	filter := bson.D{{"twinid", tw.ID}}
+	total, err := coll.CountDocuments(ctx, filter)
+	if err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
 // Update performs an update to the existing twins. A non-nil error is
 // returned to indicate operation failure.
 func (tr *twinRepository) Update(ctx context.Context, tw twins.Twin) error {
@@ -66,7 +90,7 @@ func (tr *twinRepository) Update(ctx context.Context, tw twins.Twin) error {
 		return err
 	}
 
-	coll := tr.db.Collection(collectionName)
+	coll := tr.db.Collection(twinsCollection)
 
 	filter := bson.D{{"id", tw.ID}}
 	update := bson.D{{"$set", tw}}
@@ -85,7 +109,7 @@ func (tr *twinRepository) Update(ctx context.Context, tw twins.Twin) error {
 // UpdateKey performs an update key of the existing twin. A non-nil error is
 // returned to indicate operation failure.
 func (tr *twinRepository) UpdateKey(ctx context.Context, owner, id, key string) error {
-	coll := tr.db.Collection(collectionName)
+	coll := tr.db.Collection(twinsCollection)
 
 	if _, err := tr.RetrieveByID(ctx, owner, id); err != nil {
 		return twins.ErrNotFound
@@ -107,7 +131,7 @@ func (tr *twinRepository) UpdateKey(ctx context.Context, owner, id, key string) 
 
 // RetrieveByID retrieves the twin having the provided identifier
 func (tr *twinRepository) RetrieveByID(_ context.Context, owner, id string) (twins.Twin, error) {
-	coll := tr.db.Collection(collectionName)
+	coll := tr.db.Collection(twinsCollection)
 	var tw twins.Twin
 
 	if err := uuid.New().IsValid(id); err != nil {
@@ -124,7 +148,7 @@ func (tr *twinRepository) RetrieveByID(_ context.Context, owner, id string) (twi
 
 // RetrieveByKey retrieves the twin having the provided key
 func (tr *twinRepository) RetrieveByKey(_ context.Context, key string) (string, error) {
-	coll := tr.db.Collection(collectionName)
+	coll := tr.db.Collection(twinsCollection)
 	var tw twins.Twin
 
 	filter := bson.D{{"key", key}}
@@ -155,7 +179,7 @@ func decodeDocuments(ctx context.Context, cur *mongo.Cursor) ([]twins.Twin, erro
 }
 
 func (tr *twinRepository) RetrieveAll(ctx context.Context, owner string, limit uint64, name string, metadata twins.Metadata) (twins.TwinsSet, error) {
-	coll := tr.db.Collection(collectionName)
+	coll := tr.db.Collection(twinsCollection)
 
 	findOptions := options.Find()
 	findOptions.SetLimit((int64)(limit))
@@ -200,7 +224,7 @@ func (tr *twinRepository) RetrieveByThing(ctx context.Context, thing string, lim
 		return twins.TwinsSet{}, twins.ErrNotFound
 	}
 
-	coll := tr.db.Collection(collectionName)
+	coll := tr.db.Collection(twinsCollection)
 
 	findOptions := options.Find()
 	findOptions.SetLimit((int64)(limit))
@@ -232,7 +256,7 @@ func (tr *twinRepository) RetrieveByThing(ctx context.Context, thing string, lim
 
 // Remove removes the twin having the provided id
 func (tr *twinRepository) Remove(ctx context.Context, owner, id string) error {
-	coll := tr.db.Collection(collectionName)
+	coll := tr.db.Collection(twinsCollection)
 
 	if err := uuid.New().IsValid(id); err != nil {
 		return err

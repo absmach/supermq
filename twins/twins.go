@@ -17,15 +17,16 @@ type Metadata map[string]interface{}
 
 // Definition stores entity's attributes
 type Definition struct {
-	Revision   int
+	ID         int
 	Created    time.Time
 	Attributes map[string]interface{}
 }
 
 // State stores actual snapshot of entity's values
 type State struct {
+	TwinID     string
+	ID         int64
 	Definition int
-	Serial     int
 	Created    time.Time
 	Payload    []byte
 }
@@ -42,7 +43,6 @@ type Twin struct {
 	Updated     time.Time
 	Revision    int
 	Definitions []Definition
-	States      []State
 	Metadata    Metadata
 }
 
@@ -62,9 +62,14 @@ type TwinsSet struct {
 
 // TwinRepository specifies a twin persistence API.
 type TwinRepository interface {
-	// Save persists the twin. Successful operation is indicated by non-nil
-	// error response.
+	// Save persists the twin
 	Save(context.Context, Twin) (string, error)
+
+	// Save persists the state
+	SaveState(context.Context, State) error
+
+	// CountStates returns the number of states related to twin
+	CountStates(context.Context, Twin) (int64, error)
 
 	// Update performs an update to the existing twin. A non-nil error is
 	// returned to indicate operation failure.

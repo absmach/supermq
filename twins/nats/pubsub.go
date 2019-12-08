@@ -72,21 +72,23 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 	}
 
 	tw := twinsSet.Twins[0]
-	df := tw.Definitions[len(tw.Definitions)-1].Revision
-	sr := 0
-	if len(tw.States) > 0 {
-		sr = tw.States[len(tw.States)-1].Serial + 1
+
+	numStates, err := ps.twins.CountStates(context.TODO(), tw)
+	if err != nil {
+		ps.logger.Warn(fmt.Sprintf("Counting states for %s failed: %s", msg.Publisher, err))
+		return
 	}
-	state := twins.State{
-		Definition: df,
-		Serial:     sr,
+	numStates++
+	st := twins.State{
+		TwinID:     tw.ID,
+		ID:         numStates,
+		Definition: tw.Definitions[len(tw.Definitions)-1].ID,
 		Created:    time.Now(),
 		Payload:    msg.Payload,
 	}
-	tw.States = append(tw.States, state)
-
-	if err := ps.twins.Update(context.TODO(), tw); err != nil {
-		ps.logger.Warn(fmt.Sprintf("Updating twin for %s failed: %s", msg.Publisher, err))
+	if err := ps.twins.SaveState(context.TODO(), st); err != nil {
+		ps.logger.Warn(fmt.Sprintf("Updating state for %s failed: %s", msg.Publisher, err))
+		return
 	}
 
 	id = msg.Publisher

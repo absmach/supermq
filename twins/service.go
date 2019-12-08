@@ -121,10 +121,7 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 		def = Definition{}
 	}
 	def.Created = time.Now()
-	def.Revision = 0
-	if l := len(tw.Definitions); l > 0 {
-		def.Revision = tw.Definitions[l-1].Revision + 1
-	}
+	def.ID = 0
 	twin.Definitions = append(twin.Definitions, def)
 
 	twin.Revision = 0
@@ -174,12 +171,8 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 
 	if !isZeroOfUnderlyingType(def) {
 		def.Created = time.Now()
-		def.Revision = tw.Definitions[len(tw.Definitions)-1].Revision + 1
+		def.ID = tw.Definitions[len(tw.Definitions)-1].ID + 1
 		tw.Definitions = append(tw.Definitions, def)
-	}
-
-	if !isZeroOfUnderlyingType(twin.States) {
-		tw.States = twin.States
 	}
 
 	if !isZeroOfUnderlyingType(twin.Metadata) {
