@@ -71,8 +71,12 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 		return
 	}
 
+	var pl []map[string]interface{}
+	if err := json.Unmarshal(msg.Payload, &pl); err != nil {
+		ps.logger.Warn(fmt.Sprintf("Unmarshal payload for %s failed: %s", msg.Publisher, err))
+		return
+	}
 	tw := twinsSet.Twins[0]
-
 	numStates, err := ps.twins.CountStates(context.TODO(), tw)
 	if err != nil {
 		ps.logger.Warn(fmt.Sprintf("Counting states for %s failed: %s", msg.Publisher, err))
@@ -84,7 +88,7 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 		ID:         numStates,
 		Definition: tw.Definitions[len(tw.Definitions)-1].ID,
 		Created:    time.Now(),
-		Payload:    msg.Payload,
+		Payload:    pl,
 	}
 	if err := ps.twins.SaveState(context.TODO(), st); err != nil {
 		ps.logger.Warn(fmt.Sprintf("Updating state for %s failed: %s", msg.Publisher, err))

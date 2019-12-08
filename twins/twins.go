@@ -28,7 +28,7 @@ type State struct {
 	ID         int64
 	Definition int
 	Created    time.Time
-	Payload    []byte
+	Payload    []map[string]interface{}
 }
 
 // Twin represents a Mainflux thing digital twin. Each twin is owned by one thing, and
