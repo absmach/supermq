@@ -51,12 +51,12 @@ type Service interface {
 
 	// ListTwins retrieves data about subset of twins that belongs to the
 	// user identified by the provided key.
-	ListTwins(context.Context, string, uint64, string, Metadata) (TwinsSet, error)
+	ListTwins(context.Context, string, uint64, uint64, string, Metadata) (TwinsSet, error)
 
 	// ListTwinsByThing retrieves data about subset of twins that represent
 	// specified thing belong to the user identified by
 	// the provided key.
-	ListTwinsByThing(context.Context, string, string, uint64) (TwinsSet, error)
+	ListTwinsByThing(context.Context, string, string, uint64, uint64) (TwinsSet, error)
 
 	// RemoveTwin removes the twin identified with the provided ID, that
 	// belongs to the user identified by the provided key.
@@ -224,20 +224,20 @@ func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) (err e
 	return nil
 }
 
-func (ts *twinsService) ListTwins(ctx context.Context, token string, limit uint64, name string, metadata Metadata) (TwinsSet, error) {
+func (ts *twinsService) ListTwins(ctx context.Context, token string, offset uint64, limit uint64, name string, metadata Metadata) (TwinsSet, error) {
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return TwinsSet{}, ErrUnauthorizedAccess
 	}
 
-	return ts.twins.RetrieveAll(ctx, res.GetValue(), limit, name, metadata)
+	return ts.twins.RetrieveAll(ctx, res.GetValue(), offset, limit, name, metadata)
 }
 
-func (ts *twinsService) ListTwinsByThing(ctx context.Context, token, thing string, limit uint64) (TwinsSet, error) {
+func (ts *twinsService) ListTwinsByThing(ctx context.Context, token, thing string, offset uint64, limit uint64) (TwinsSet, error) {
 	_, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return TwinsSet{}, ErrUnauthorizedAccess
 	}
 
-	return ts.twins.RetrieveByThing(ctx, thing, limit)
+	return ts.twins.RetrieveByThing(ctx, thing, offset, limit)
 }

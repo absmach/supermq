@@ -48,9 +48,10 @@ type Twin struct {
 
 // SetMetadata contains page metadata that helps navigation.
 type SetMetadata struct {
-	Total uint64
-	Limit uint64
-	Name  string
+	Total  uint64
+	Offset uint64
+	Limit  uint64
+	Name   string
 }
 
 // TwinsSet contains page related metadata as well as a list of twins that
@@ -86,11 +87,11 @@ type TwinRepository interface {
 	RetrieveByKey(context.Context, string) (string, error)
 
 	// RetrieveAll retrieves the subset of things owned by the specified user.
-	RetrieveAll(context.Context, string, uint64, string, Metadata) (TwinsSet, error)
+	RetrieveAll(context.Context, string, uint64, uint64, string, Metadata) (TwinsSet, error)
 
 	// RetrieveByThing retrieves the subset of twins that represent
 	// specified thing.
-	RetrieveByThing(context.Context, string, uint64) (TwinsSet, error)
+	RetrieveByThing(context.Context, string, uint64, uint64) (TwinsSet, error)
 
 	// Remove removes the twin having the provided identifier.
 	Remove(ctx context.Context, owner, id string) error

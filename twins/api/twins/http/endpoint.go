@@ -103,15 +103,16 @@ func listTwinsEndpoint(svc twins.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		set, err := svc.ListTwins(ctx, req.token, req.limit, req.name, req.metadata)
+		set, err := svc.ListTwins(ctx, req.token, req.offset, req.limit, req.name, req.metadata)
 		if err != nil {
 			return nil, err
 		}
 
 		res := twinsSetRes{
 			setRes: setRes{
-				Total: set.Total,
-				Limit: set.Limit,
+				Total:  set.Total,
+				Offset: set.Offset,
+				Limit:  set.Limit,
 			},
 			Twins: []viewTwinRes{},
 		}
@@ -143,15 +144,16 @@ func listTwinsByThingEndpoint(svc twins.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		set, err := svc.ListTwinsByThing(ctx, req.token, req.thing, req.limit)
+		set, err := svc.ListTwinsByThing(ctx, req.token, req.thing, req.offset, req.limit)
 		if err != nil {
 			return nil, err
 		}
 
 		res := twinsSetRes{
 			setRes: setRes{
-				Total: set.Total,
-				Limit: set.Limit,
+				Total:  set.Total,
+				Offset: set.Offset,
+				Limit:  set.Limit,
 			},
 			Twins: []viewTwinRes{},
 		}

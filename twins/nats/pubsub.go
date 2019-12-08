@@ -60,7 +60,7 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 	id := ""
 	defer ps.mqttClient.Publish(&id, &err, "state/success", "state/failure", &b)
 
-	twinsSet, err := ps.twins.RetrieveByThing(context.TODO(), msg.Publisher, 1)
+	twinsSet, err := ps.twins.RetrieveByThing(context.TODO(), msg.Publisher, 0, 1)
 	if err != nil {
 		ps.logger.Warn(fmt.Sprintf("Retrieving twin for %s failed: %s", msg.Publisher, err))
 		return

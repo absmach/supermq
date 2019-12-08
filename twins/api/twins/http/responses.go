@@ -76,8 +76,9 @@ func (res viewTwinRes) Empty() bool {
 }
 
 type setRes struct {
-	Total uint64 `json:"total"`
-	Limit uint64 `json:"limit"`
+	Total  uint64 `json:"total"`
+	Offset uint64 `json:"offset"`
+	Limit  uint64 `json:"limit"`
 }
 
 type twinsSetRes struct {

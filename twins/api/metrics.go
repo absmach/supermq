@@ -62,22 +62,22 @@ func (ms *metricsMiddleware) ViewTwin(ctx context.Context, token, id string) (vi
 	return ms.svc.ViewTwin(ctx, token, id)
 }
 
-func (ms *metricsMiddleware) ListTwins(ctx context.Context, token string, limit uint64, name string, metadata twins.Metadata) (tw twins.TwinsSet, err error) {
+func (ms *metricsMiddleware) ListTwins(ctx context.Context, token string, offset uint64, limit uint64, name string, metadata twins.Metadata) (tw twins.TwinsSet, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "list_twins").Add(1)
 		ms.latency.With("method", "list_twins").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.ListTwins(ctx, token, limit, name, metadata)
+	return ms.svc.ListTwins(ctx, token, offset, limit, name, metadata)
 }
 
-func (ms *metricsMiddleware) ListTwinsByThing(ctx context.Context, token, thing string, limit uint64) (tw twins.TwinsSet, err error) {
+func (ms *metricsMiddleware) ListTwinsByThing(ctx context.Context, token, thing string, offset uint64, limit uint64) (tw twins.TwinsSet, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "list_twins_by_thing").Add(1)
 		ms.latency.With("method", "list_twins_by_thing").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.ListTwinsByThing(ctx, token, thing, limit)
+	return ms.svc.ListTwinsByThing(ctx, token, thing, offset, limit)
 }
 
 func (ms *metricsMiddleware) RemoveTwin(ctx context.Context, token, id string) (err error) {

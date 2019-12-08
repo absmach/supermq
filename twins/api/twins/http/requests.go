@@ -89,6 +89,7 @@ func (req viewTwinReq) validate() error {
 
 type listReq struct {
 	token    string
+	offset   uint64
 	limit    uint64
 	name     string
 	metadata map[string]interface{}
@@ -112,6 +113,7 @@ func (req *listReq) validate() error {
 
 type listByThingReq struct {
 	token    string
+	offset   uint64
 	limit    uint64
 	thing    string
 	metadata map[string]interface{}
