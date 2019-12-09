@@ -111,3 +111,30 @@ func (sr *stateRepository) RetrieveAll(ctx context.Context, offset uint64, limit
 		},
 	}, nil
 }
+
+// RetrieveLast returns the last state related to twin spec by id
+func (sr *stateRepository) RetrieveLast(ctx context.Context, id string) (twins.State, error) {
+	coll := sr.db.Collection(statesCollection)
+
+	filter := bson.D{{"twinid", id}}
+	total, err := coll.CountDocuments(ctx, filter)
+	if err != nil {
+		return twins.State{}, err
+	}
+
+	findOptions := options.Find()
+	findOptions.SetSkip(total - 1)
+	findOptions.SetLimit(1)
+
+	cur, err := coll.Find(ctx, filter, findOptions)
+	if err != nil {
+		return twins.State{}, err
+	}
+
+	results, err := decodeStates(ctx, cur)
+	if err != nil {
+		return twins.State{}, err
+	}
+
+	return results[0], nil
+}

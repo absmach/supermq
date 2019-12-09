@@ -1,0 +1,180 @@
+[
+    {
+        "id": "af1ce290.bb971",
+        "type": "tab",
+        "label": "Rules",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "7bdae3bd.55196c",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": false,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": ""
+    },
+    {
+        "id": "27b4d642.e98fea",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": false,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": ""
+    },
+    {
+        "id": "b0933612.339288",
+        "type": "inject",
+        "z": "af1ce290.bb971",
+        "name": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "4",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "x": 110,
+        "y": 100,
+        "wires": [
+            [
+                "833ccb11.ba0488"
+            ]
+        ]
+    },
+    {
+        "id": "7ade6cfd.a36ab4",
+        "type": "debug",
+        "z": "af1ce290.bb971",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 330,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "be5b360.1458bc8",
+        "type": "mqtt out",
+        "z": "af1ce290.bb971",
+        "name": "measurements",
+        "topic": "channels/3b57b952-318e-47b5-b0d7-a14f61ecd03b/messages",
+        "qos": "",
+        "retain": "",
+        "broker": "7bdae3bd.55196c",
+        "x": 560,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "fd92503c.ea38f",
+        "type": "mqtt in",
+        "z": "af1ce290.bb971",
+        "name": "notifs",
+        "topic": "channels/f25d8a83-3a7d-4b87-a66f-cd5602e10db0/messages/#",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "27b4d642.e98fea",
+        "x": 90,
+        "y": 460,
+        "wires": [
+            [
+                "7ade6cfd.a36ab4"
+            ]
+        ]
+    },
+    {
+        "id": "833ccb11.ba0488",
+        "type": "change",
+        "z": "af1ce290.bb971",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "channels/3b57b952-318e-47b5-b0d7-a14f61ecd03b/messages/",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 110,
+        "y": 160,
+        "wires": [
+            [
+                "4745b7be.3e52c8"
+            ]
+        ]
+    },
+    {
+        "id": "4745b7be.3e52c8",
+        "type": "function",
+        "z": "af1ce290.bb971",
+        "name": "measurements",
+        "func": "var magnitudes = [\"temperature\", \"humidity\", \"pressure\"]\n\nvar msgs = []\nfor (var i = 0; i < magnitudes.length; i++) {\n  var payload = `[{\"n\":\"${magnitudes[i]}\",\"t\":${msg.payload},\"v\":${Math.random(5)}}]`;\n  msgs.push({ payload: payload, topic: msg.topic + magnitudes[i]})\n} \n\nreturn msgs;",
+        "outputs": 3,
+        "noerr": 0,
+        "x": 320,
+        "y": 160,
+        "wires": [
+            [
+                "10f0e189.8bd65e"
+            ],
+            [
+                "10f0e189.8bd65e"
+            ],
+            [
+                "10f0e189.8bd65e"
+            ]
+        ]
+    },
+    {
+        "id": "10f0e189.8bd65e",
+        "type": "debug",
+        "z": "af1ce290.bb971",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 550,
+        "y": 160,
+        "wires": []
+    }
+]
