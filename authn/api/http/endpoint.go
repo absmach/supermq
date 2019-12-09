@@ -38,10 +38,12 @@ func issueEndpoint(svc authn.Service) endpoint.Endpoint {
 		}
 
 		res := issueKeyRes{
-			ID:        key.ID,
-			Value:     key.Secret,
-			IssuedAt:  key.IssuedAt,
-			ExpiresAt: key.ExpiresAt,
+			ID:       key.ID,
+			Value:    key.Secret,
+			IssuedAt: key.IssuedAt,
+		}
+		if !key.ExpiresAt.IsZero() {
+			res.ExpiresAt = &key.ExpiresAt
 		}
 		return res, nil
 	}
