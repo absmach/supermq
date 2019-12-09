@@ -264,10 +264,11 @@ func connectToUsers(cfg config, logger logger.Logger) *grpc.ClientConn {
 
 func newService(nc *broker.Conn, ncTracer opentracing.Tracer, mc paho.Mqtt, mcTracer opentracing.Tracer, users mainflux.UsersServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
 	twinRepo := twinsmongodb.NewTwinRepository(db)
+	stateRepo := twinsmongodb.NewStateRepository(db)
 	idp := uuid.New()
 
 	// TODO twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, thingsRepo)
-	nats.Subscribe(nc, mc, twinRepo, logger)
+	nats.Subscribe(nc, mc, twinRepo, stateRepo, logger)
 
 	svc := twins.New(nc, mc, users, twinRepo, idp)
 	svc = api.LoggingMiddleware(svc, logger)

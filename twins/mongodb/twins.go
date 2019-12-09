@@ -19,9 +19,8 @@ import (
 )
 
 const (
-	maxNameSize             = 1024
-	twinsCollection  string = "twins"
-	statesCollection string = "states"
+	maxNameSize            = 1024
+	twinsCollection string = "twins"
 )
 
 type twinRepository struct {
@@ -58,30 +57,6 @@ func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) (string, erro
 	}
 
 	return tw.ID, nil
-}
-
-// SaveState persists the state
-func (tr *twinRepository) SaveState(ctx context.Context, st twins.State) error {
-	coll := tr.db.Collection(statesCollection)
-
-	if _, err := coll.InsertOne(context.Background(), st); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// CountStates returns the number of states related to twin
-func (tr *twinRepository) CountStates(ctx context.Context, tw twins.Twin) (int64, error) {
-	coll := tr.db.Collection(statesCollection)
-
-	filter := bson.D{{"twinid", tw.ID}}
-	total, err := coll.CountDocuments(ctx, filter)
-	if err != nil {
-		return 0, err
-	}
-
-	return total, nil
 }
 
 // Update performs an update to the existing twins. A non-nil error is

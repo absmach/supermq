@@ -28,15 +28,6 @@ type Definition struct {
 	Attributes map[string]Attribute
 }
 
-// State stores actual snapshot of entity's values
-type State struct {
-	TwinID     string
-	ID         int64
-	Definition int
-	Created    time.Time
-	Payload    []map[string]interface{}
-}
-
 // Twin represents a Mainflux thing digital twin. Each twin is owned by one thing, and
 // is assigned with the unique identifier and (temporary) access key.
 type Twin struct {
@@ -71,12 +62,6 @@ type Page struct {
 type TwinRepository interface {
 	// Save persists the twin
 	Save(context.Context, Twin) (string, error)
-
-	// Save persists the state
-	SaveState(context.Context, State) error
-
-	// CountStates returns the number of states related to twin
-	CountStates(context.Context, Twin) (int64, error)
 
 	// Update performs an update to the existing twin. A non-nil error is
 	// returned to indicate operation failure.

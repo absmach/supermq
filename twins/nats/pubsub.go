@@ -31,15 +31,17 @@ type pubsub struct {
 	mqttClient paho.Mqtt
 	logger     log.Logger
 	twins      twins.TwinRepository
+	states     twins.StateRepository
 }
 
 // Subscribe to appropriate NATS topic
-func Subscribe(nc *nats.Conn, mc paho.Mqtt, tr twins.TwinRepository, logger log.Logger) {
+func Subscribe(nc *nats.Conn, mc paho.Mqtt, tr twins.TwinRepository, sr twins.StateRepository, logger log.Logger) {
 	ps := pubsub{
 		natsClient: nc,
 		mqttClient: mc,
 		logger:     logger,
 		twins:      tr,
+		states:     sr,
 	}
 	ps.natsClient.QueueSubscribe(input, queue, ps.handleMsg)
 }
@@ -77,7 +79,7 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 		return
 	}
 	tw := twinsSet.Twins[0]
-	numStates, err := ps.twins.CountStates(context.TODO(), tw)
+	numStates, err := ps.states.Count(context.TODO(), tw)
 	if err != nil {
 		ps.logger.Warn(fmt.Sprintf("Counting states for %s failed: %s", msg.Publisher, err))
 		return
@@ -90,7 +92,7 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 		Created:    time.Now(),
 		Payload:    pl,
 	}
-	if err := ps.twins.SaveState(context.TODO(), st); err != nil {
+	if err := ps.states.Save(context.TODO(), st); err != nil {
 		ps.logger.Warn(fmt.Sprintf("Updating state for %s failed: %s", msg.Publisher, err))
 		return
 	}
