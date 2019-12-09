@@ -103,20 +103,20 @@ func listTwinsEndpoint(svc twins.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		set, err := svc.ListTwins(ctx, req.token, req.offset, req.limit, req.name, req.metadata)
+		page, err := svc.ListTwins(ctx, req.token, req.offset, req.limit, req.name, req.metadata)
 		if err != nil {
 			return nil, err
 		}
 
-		res := twinsSetRes{
-			setRes: setRes{
-				Total:  set.Total,
-				Offset: set.Offset,
-				Limit:  set.Limit,
+		res := twinsPageRes{
+			pageRes: pageRes{
+				Total:  page.Total,
+				Offset: page.Offset,
+				Limit:  page.Limit,
 			},
 			Twins: []viewTwinRes{},
 		}
-		for _, twin := range set.Twins {
+		for _, twin := range page.Twins {
 			view := viewTwinRes{
 				Owner:       twin.Owner,
 				ID:          twin.ID,
@@ -136,6 +136,42 @@ func listTwinsEndpoint(svc twins.Service) endpoint.Endpoint {
 	}
 }
 
+func listStatesEndpoint(svc twins.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(listStatesReq)
+
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+
+		page, err := svc.ListStates(ctx, req.token, req.offset, req.limit, req.id)
+		if err != nil {
+			return nil, err
+		}
+
+		res := statesPageRes{
+			pageRes: pageRes{
+				Total:  page.Total,
+				Offset: page.Offset,
+				Limit:  page.Limit,
+			},
+			States: []viewStateRes{},
+		}
+		for _, state := range page.States {
+			view := viewStateRes{
+				TwinID:     state.TwinID,
+				ID:         state.ID,
+				Definition: state.Definition,
+				Created:    state.Created,
+				Payload:    state.Payload,
+			}
+			res.States = append(res.States, view)
+		}
+
+		return res, nil
+	}
+}
+
 func listTwinsByThingEndpoint(svc twins.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listByThingReq)
@@ -144,20 +180,20 @@ func listTwinsByThingEndpoint(svc twins.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		set, err := svc.ListTwinsByThing(ctx, req.token, req.thing, req.offset, req.limit)
+		page, err := svc.ListTwinsByThing(ctx, req.token, req.thing, req.offset, req.limit)
 		if err != nil {
 			return nil, err
 		}
 
-		res := twinsSetRes{
-			setRes: setRes{
-				Total:  set.Total,
-				Offset: set.Offset,
-				Limit:  set.Limit,
+		res := twinsPageRes{
+			pageRes: pageRes{
+				Total:  page.Total,
+				Offset: page.Offset,
+				Limit:  page.Limit,
 			},
 			Twins: []viewTwinRes{},
 		}
-		for _, twin := range set.Twins {
+		for _, twin := range page.Twins {
 			view := viewTwinRes{
 				Owner:       twin.Owner,
 				ID:          twin.ID,

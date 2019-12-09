@@ -13,6 +13,7 @@ import (
 	"github.com/mainflux/mainflux/twins"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const (
@@ -55,4 +56,58 @@ func (sr *stateRepository) Count(ctx context.Context, tw twins.Twin) (int64, err
 	}
 
 	return total, nil
+}
+
+func decodeStates(ctx context.Context, cur *mongo.Cursor) ([]twins.State, error) {
+	defer cur.Close(ctx)
+
+	var results []twins.State
+	for cur.Next(ctx) {
+		var elem twins.State
+		err := cur.Decode(&elem)
+		if err != nil {
+			return []twins.State{}, nil
+		}
+		results = append(results, elem)
+	}
+
+	if err := cur.Err(); err != nil {
+		return []twins.State{}, nil
+	}
+	return results, nil
+}
+
+// RetrieveAll retrieves the subset of staes related to twin specified by id
+func (sr *stateRepository) RetrieveAll(ctx context.Context, offset uint64, limit uint64, id string) (twins.StatesPage, error) {
+	coll := sr.db.Collection(statesCollection)
+
+	findOptions := options.Find()
+	findOptions.SetSkip(int64(offset))
+	findOptions.SetLimit(int64(limit))
+
+	filter := bson.D{{"twinid", id}}
+
+	cur, err := coll.Find(ctx, filter, findOptions)
+	if err != nil {
+		return twins.StatesPage{}, err
+	}
+
+	results, err := decodeStates(ctx, cur)
+	if err != nil {
+		return twins.StatesPage{}, err
+	}
+
+	total, err := coll.CountDocuments(ctx, filter)
+	if err != nil {
+		return twins.StatesPage{}, err
+	}
+
+	return twins.StatesPage{
+		States: results,
+		PageMetadata: twins.PageMetadata{
+			Total:  uint64(total),
+			Offset: offset,
+			Limit:  limit,
+		},
+	}, nil
 }

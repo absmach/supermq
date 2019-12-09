@@ -14,6 +14,13 @@ type State struct {
 	Payload    []map[string]interface{}
 }
 
+// StatesPage contains page related metadata as well as a list of twins that
+// belong to this page.
+type StatesPage struct {
+	PageMetadata
+	States []State
+}
+
 // StateRepository specifies a state persistence API.
 type StateRepository interface {
 	// Save persists the state
@@ -21,4 +28,7 @@ type StateRepository interface {
 
 	// Count returns the number of states related to state
 	Count(context.Context, Twin) (int64, error)
+
+	// RetrieveAll retrieves the subset of staes related to twin specified by id
+	RetrieveAll(ctx context.Context, offset uint64, limit uint64, id string) (StatesPage, error)
 }

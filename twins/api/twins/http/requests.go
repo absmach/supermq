@@ -8,7 +8,6 @@
 package http
 
 import (
-	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/twins"
 )
 
@@ -97,15 +96,38 @@ type listReq struct {
 
 func (req *listReq) validate() error {
 	if req.token == "" {
-		return things.ErrUnauthorizedAccess
+		return twins.ErrUnauthorizedAccess
 	}
 
 	if req.limit == 0 || req.limit > maxLimitSize {
-		return things.ErrMalformedEntity
+		return twins.ErrMalformedEntity
 	}
 
 	if len(req.name) > maxNameSize {
-		return things.ErrMalformedEntity
+		return twins.ErrMalformedEntity
+	}
+
+	return nil
+}
+
+type listStatesReq struct {
+	token  string
+	offset uint64
+	limit  uint64
+	id     string
+}
+
+func (req *listStatesReq) validate() error {
+	if req.token == "" {
+		return twins.ErrUnauthorizedAccess
+	}
+
+	if req.id == "" {
+		return twins.ErrMalformedEntity
+	}
+
+	if req.limit == 0 || req.limit > maxLimitSize {
+		return twins.ErrMalformedEntity
 	}
 
 	return nil
@@ -121,15 +143,15 @@ type listByThingReq struct {
 
 func (req *listByThingReq) validate() error {
 	if req.token == "" {
-		return things.ErrUnauthorizedAccess
+		return twins.ErrUnauthorizedAccess
 	}
 
 	if req.limit == 0 || req.limit > maxLimitSize {
-		return things.ErrMalformedEntity
+		return twins.ErrMalformedEntity
 	}
 
 	if len(req.thing) < 1 {
-		return things.ErrMalformedEntity
+		return twins.ErrMalformedEntity
 	}
 
 	return nil

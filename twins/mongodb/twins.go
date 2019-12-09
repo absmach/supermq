@@ -138,7 +138,7 @@ func (tr *twinRepository) RetrieveByKey(_ context.Context, key string) (string, 
 	return tw.ID, nil
 }
 
-func decodeDocuments(ctx context.Context, cur *mongo.Cursor) ([]twins.Twin, error) {
+func decodeTwins(ctx context.Context, cur *mongo.Cursor) ([]twins.Twin, error) {
 	defer cur.Close(ctx)
 	var results []twins.Twin
 	for cur.Next(ctx) {
@@ -156,7 +156,7 @@ func decodeDocuments(ctx context.Context, cur *mongo.Cursor) ([]twins.Twin, erro
 	return results, nil
 }
 
-func (tr *twinRepository) RetrieveAll(ctx context.Context, owner string, offset uint64, limit uint64, name string, metadata twins.Metadata) (twins.Page, error) {
+func (tr *twinRepository) RetrieveAll(ctx context.Context, owner string, offset uint64, limit uint64, name string, metadata twins.Metadata) (twins.TwinsPage, error) {
 	coll := tr.db.Collection(twinsCollection)
 
 	findOptions := options.Find()
@@ -176,20 +176,20 @@ func (tr *twinRepository) RetrieveAll(ctx context.Context, owner string, offset 
 	}
 	cur, err := coll.Find(ctx, filter, findOptions)
 	if err != nil {
-		return twins.Page{}, err
+		return twins.TwinsPage{}, err
 	}
 
-	results, err := decodeDocuments(ctx, cur)
+	results, err := decodeTwins(ctx, cur)
 	if err != nil {
-		return twins.Page{}, err
+		return twins.TwinsPage{}, err
 	}
 
 	total, err := coll.CountDocuments(ctx, filter)
 	if err != nil {
-		return twins.Page{}, err
+		return twins.TwinsPage{}, err
 	}
 
-	return twins.Page{
+	return twins.TwinsPage{
 		Twins: results,
 		PageMetadata: twins.PageMetadata{
 			Total:  uint64(total),
@@ -199,9 +199,9 @@ func (tr *twinRepository) RetrieveAll(ctx context.Context, owner string, offset 
 	}, nil
 }
 
-func (tr *twinRepository) RetrieveByThing(ctx context.Context, thing string, offset uint64, limit uint64) (twins.Page, error) {
+func (tr *twinRepository) RetrieveByThing(ctx context.Context, thing string, offset uint64, limit uint64) (twins.TwinsPage, error) {
 	if err := uuid.New().IsValid(thing); err != nil {
-		return twins.Page{}, twins.ErrNotFound
+		return twins.TwinsPage{}, twins.ErrNotFound
 	}
 
 	coll := tr.db.Collection(twinsCollection)
@@ -213,20 +213,20 @@ func (tr *twinRepository) RetrieveByThing(ctx context.Context, thing string, off
 	filter := bson.D{{"thingid", thing}}
 	cur, err := coll.Find(ctx, filter, findOptions)
 	if err != nil {
-		return twins.Page{}, err
+		return twins.TwinsPage{}, err
 	}
 
-	results, err := decodeDocuments(ctx, cur)
+	results, err := decodeTwins(ctx, cur)
 	if err != nil {
-		return twins.Page{}, err
+		return twins.TwinsPage{}, err
 	}
 
 	total, err := coll.CountDocuments(ctx, filter)
 	if err != nil {
-		return twins.Page{}, err
+		return twins.TwinsPage{}, err
 	}
 
-	return twins.Page{
+	return twins.TwinsPage{
 		Twins: results,
 		PageMetadata: twins.PageMetadata{
 			Total:  uint64(total),

@@ -33,7 +33,8 @@ const (
 	name     = "name"
 	metadata = "metadata"
 
-	defLimit = 10
+	defLimit  = 10
+	defOffset = 0
 )
 
 var (
@@ -91,6 +92,13 @@ func MakeHandler(tracer opentracing.Tracer, svc twins.Service) http.Handler {
 		opts...,
 	))
 
+	r.Get("/states/:id", kithttp.NewServer(
+		kitot.TraceServer(tracer, "list_states")(listStatesEndpoint(svc)),
+		decodeListStates,
+		encodeResponse,
+		opts...,
+	))
+
 	r.GetFunc("/version", mainflux.Version("twins"))
 	r.Handle("/metrics", promhttp.Handler())
 
@@ -141,6 +149,11 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
+	o, err := readUintQuery(r, offset, defOffset)
+	if err != nil {
+		return nil, err
+	}
+
 	n, err := readStringQuery(r, name)
 	if err != nil {
 		return nil, err
@@ -154,8 +167,30 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 	req := listReq{
 		token:    r.Header.Get("Authorization"),
 		limit:    l,
+		offset:   o,
 		name:     n,
 		metadata: m,
+	}
+
+	return req, nil
+}
+
+func decodeListStates(_ context.Context, r *http.Request) (interface{}, error) {
+	l, err := readUintQuery(r, limit, defLimit)
+	if err != nil {
+		return nil, err
+	}
+
+	o, err := readUintQuery(r, offset, defOffset)
+	if err != nil {
+		return nil, err
+	}
+
+	req := listStatesReq{
+		token:  r.Header.Get("Authorization"),
+		limit:  l,
+		offset: o,
+		id:     bone.GetValue(r, "id"),
 	}
 
 	return req, nil

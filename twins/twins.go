@@ -51,9 +51,9 @@ type PageMetadata struct {
 	Name   string
 }
 
-// Page contains page related metadata as well as a list of twins that
+// TwinsPage contains page related metadata as well as a list of twins that
 // belong to this page.
-type Page struct {
+type TwinsPage struct {
 	PageMetadata
 	Twins []Twin
 }
@@ -78,11 +78,11 @@ type TwinRepository interface {
 	RetrieveByKey(context.Context, string) (string, error)
 
 	// RetrieveAll retrieves the subset of things owned by the specified user.
-	RetrieveAll(context.Context, string, uint64, uint64, string, Metadata) (Page, error)
+	RetrieveAll(context.Context, string, uint64, uint64, string, Metadata) (TwinsPage, error)
 
 	// RetrieveByThing retrieves the subset of twins that represent
 	// specified thing.
-	RetrieveByThing(context.Context, string, uint64, uint64) (Page, error)
+	RetrieveByThing(context.Context, string, uint64, uint64) (TwinsPage, error)
 
 	// Remove removes the twin having the provided identifier.
 	Remove(ctx context.Context, owner, id string) error

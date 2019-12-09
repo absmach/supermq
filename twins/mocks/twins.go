@@ -119,14 +119,14 @@ func (trm *twinRepositoryMock) RetrieveByKey(_ context.Context, key string) (str
 	return "", twins.ErrNotFound
 }
 
-func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, limit uint64, name string, metadata twins.Metadata) (twins.Page, error) {
+func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, limit uint64, name string, metadata twins.Metadata) (twins.TwinsPage, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
 	items := make([]twins.Twin, 0)
 
 	if limit <= 0 {
-		return twins.Page{}, nil
+		return twins.TwinsPage{}, nil
 	}
 
 	last := uint64(limit)
@@ -145,7 +145,7 @@ func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, limi
 		return items[i].ID < items[j].ID
 	})
 
-	page := twins.Page{
+	page := twins.TwinsPage{
 		Twins: items,
 		PageMetadata: twins.PageMetadata{
 			Total: trm.counter,
@@ -156,7 +156,7 @@ func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, limi
 	return page, nil
 }
 
-func (trm *twinRepositoryMock) RetrieveByThing(_ context.Context, thing string, limit uint64) (twins.Page, error) {
+func (trm *twinRepositoryMock) RetrieveByThing(_ context.Context, thing string, limit uint64) (twins.TwinsPage, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -164,7 +164,7 @@ func (trm *twinRepositoryMock) RetrieveByThing(_ context.Context, thing string, 
 	items := make([]twins.Twin, 0)
 
 	if limit <= 0 {
-		return twins.Page{}, nil
+		return twins.TwinsPage{}, nil
 	}
 
 	for _, v := range trm.twins {
@@ -184,7 +184,7 @@ func (trm *twinRepositoryMock) RetrieveByThing(_ context.Context, thing string, 
 		return items[i].ID < items[j].ID
 	})
 
-	page := twins.Page{
+	page := twins.TwinsPage{
 		Twins: items,
 		PageMetadata: twins.PageMetadata{
 			Total: trm.counter,

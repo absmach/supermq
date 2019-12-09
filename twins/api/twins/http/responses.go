@@ -19,7 +19,9 @@ import (
 var (
 	_ mainflux.Response = (*twinRes)(nil)
 	_ mainflux.Response = (*viewTwinRes)(nil)
-	_ mainflux.Response = (*twinsSetRes)(nil)
+	_ mainflux.Response = (*viewStateRes)(nil)
+	_ mainflux.Response = (*twinsPageRes)(nil)
+	_ mainflux.Response = (*statesPageRes)(nil)
 	_ mainflux.Response = (*removeRes)(nil)
 )
 
@@ -75,26 +77,63 @@ func (res viewTwinRes) Empty() bool {
 	return false
 }
 
-type setRes struct {
+type viewStateRes struct {
+	TwinID     string                   `json:"twinid"`
+	ID         int64                    `json:"id"`
+	Definition int                      `json:"definition"`
+	Created    time.Time                `json:"created"`
+	Payload    []map[string]interface{} `json:"payload"`
+}
+
+func (res viewStateRes) Code() int {
+	return http.StatusOK
+}
+
+func (res viewStateRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res viewStateRes) Empty() bool {
+	return false
+}
+
+type pageRes struct {
 	Total  uint64 `json:"total"`
 	Offset uint64 `json:"offset"`
 	Limit  uint64 `json:"limit"`
 }
 
-type twinsSetRes struct {
-	setRes
+type twinsPageRes struct {
+	pageRes
 	Twins []viewTwinRes `json:"twins"`
 }
 
-func (res twinsSetRes) Code() int {
+func (res twinsPageRes) Code() int {
 	return http.StatusOK
 }
 
-func (res twinsSetRes) Headers() map[string]string {
+func (res twinsPageRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res twinsSetRes) Empty() bool {
+func (res twinsPageRes) Empty() bool {
+	return false
+}
+
+type statesPageRes struct {
+	pageRes
+	States []viewStateRes `json:"states"`
+}
+
+func (res statesPageRes) Code() int {
+	return http.StatusOK
+}
+
+func (res statesPageRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res statesPageRes) Empty() bool {
 	return false
 }
 
