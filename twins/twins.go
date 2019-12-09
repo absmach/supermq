@@ -15,11 +15,17 @@ import (
 // Metadata stores arbitrary twin data
 type Metadata map[string]interface{}
 
+// Attribute stores indivdual attribute data
+type Attribute struct {
+	ChannelID   string
+	PeristState bool
+}
+
 // Definition stores entity's attributes
 type Definition struct {
 	ID         int
 	Created    time.Time
-	Attributes map[string]interface{}
+	Attributes map[string]Attribute
 }
 
 // State stores actual snapshot of entity's values
@@ -46,18 +52,18 @@ type Twin struct {
 	Metadata    Metadata
 }
 
-// SetMetadata contains page metadata that helps navigation.
-type SetMetadata struct {
+// PageMetadata contains page metadata that helps navigation.
+type PageMetadata struct {
 	Total  uint64
 	Offset uint64
 	Limit  uint64
 	Name   string
 }
 
-// TwinsSet contains page related metadata as well as a list of twins that
+// Page contains page related metadata as well as a list of twins that
 // belong to this page.
-type TwinsSet struct {
-	SetMetadata
+type Page struct {
+	PageMetadata
 	Twins []Twin
 }
 
@@ -87,11 +93,11 @@ type TwinRepository interface {
 	RetrieveByKey(context.Context, string) (string, error)
 
 	// RetrieveAll retrieves the subset of things owned by the specified user.
-	RetrieveAll(context.Context, string, uint64, uint64, string, Metadata) (TwinsSet, error)
+	RetrieveAll(context.Context, string, uint64, uint64, string, Metadata) (Page, error)
 
 	// RetrieveByThing retrieves the subset of twins that represent
 	// specified thing.
-	RetrieveByThing(context.Context, string, uint64, uint64) (TwinsSet, error)
+	RetrieveByThing(context.Context, string, uint64, uint64) (Page, error)
 
 	// Remove removes the twin having the provided identifier.
 	Remove(ctx context.Context, owner, id string) error

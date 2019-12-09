@@ -9,6 +9,7 @@ package mongodb
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/uuid"
@@ -139,7 +140,9 @@ func (tr *twinRepository) RetrieveByID(_ context.Context, owner, id string) (twi
 	}
 
 	filter := bson.D{{"id", id}}
+
 	if err := coll.FindOne(context.Background(), filter).Decode(&tw); err != nil {
+		fmt.Printf("%s\n", err)
 		return tw, twins.ErrNotFound
 	}
 
@@ -178,7 +181,7 @@ func decodeDocuments(ctx context.Context, cur *mongo.Cursor) ([]twins.Twin, erro
 	return results, nil
 }
 
-func (tr *twinRepository) RetrieveAll(ctx context.Context, owner string, offset uint64, limit uint64, name string, metadata twins.Metadata) (twins.TwinsSet, error) {
+func (tr *twinRepository) RetrieveAll(ctx context.Context, owner string, offset uint64, limit uint64, name string, metadata twins.Metadata) (twins.Page, error) {
 	coll := tr.db.Collection(twinsCollection)
 
 	findOptions := options.Find()
@@ -198,22 +201,22 @@ func (tr *twinRepository) RetrieveAll(ctx context.Context, owner string, offset 
 	}
 	cur, err := coll.Find(ctx, filter, findOptions)
 	if err != nil {
-		return twins.TwinsSet{}, err
+		return twins.Page{}, err
 	}
 
 	results, err := decodeDocuments(ctx, cur)
 	if err != nil {
-		return twins.TwinsSet{}, err
+		return twins.Page{}, err
 	}
 
 	total, err := coll.CountDocuments(ctx, filter)
 	if err != nil {
-		return twins.TwinsSet{}, err
+		return twins.Page{}, err
 	}
 
-	return twins.TwinsSet{
+	return twins.Page{
 		Twins: results,
-		SetMetadata: twins.SetMetadata{
+		PageMetadata: twins.PageMetadata{
 			Total:  uint64(total),
 			Offset: offset,
 			Limit:  limit,
@@ -221,9 +224,9 @@ func (tr *twinRepository) RetrieveAll(ctx context.Context, owner string, offset 
 	}, nil
 }
 
-func (tr *twinRepository) RetrieveByThing(ctx context.Context, thing string, offset uint64, limit uint64) (twins.TwinsSet, error) {
+func (tr *twinRepository) RetrieveByThing(ctx context.Context, thing string, offset uint64, limit uint64) (twins.Page, error) {
 	if err := uuid.New().IsValid(thing); err != nil {
-		return twins.TwinsSet{}, twins.ErrNotFound
+		return twins.Page{}, twins.ErrNotFound
 	}
 
 	coll := tr.db.Collection(twinsCollection)
@@ -235,22 +238,22 @@ func (tr *twinRepository) RetrieveByThing(ctx context.Context, thing string, off
 	filter := bson.D{{"thingid", thing}}
 	cur, err := coll.Find(ctx, filter, findOptions)
 	if err != nil {
-		return twins.TwinsSet{}, err
+		return twins.Page{}, err
 	}
 
 	results, err := decodeDocuments(ctx, cur)
 	if err != nil {
-		return twins.TwinsSet{}, err
+		return twins.Page{}, err
 	}
 
 	total, err := coll.CountDocuments(ctx, filter)
 	if err != nil {
-		return twins.TwinsSet{}, err
+		return twins.Page{}, err
 	}
 
-	return twins.TwinsSet{
+	return twins.Page{
 		Twins: results,
-		SetMetadata: twins.SetMetadata{
+		PageMetadata: twins.PageMetadata{
 			Total:  uint64(total),
 			Offset: offset,
 			Limit:  limit,

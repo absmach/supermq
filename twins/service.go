@@ -51,12 +51,12 @@ type Service interface {
 
 	// ListTwins retrieves data about subset of twins that belongs to the
 	// user identified by the provided key.
-	ListTwins(context.Context, string, uint64, uint64, string, Metadata) (TwinsSet, error)
+	ListTwins(context.Context, string, uint64, uint64, string, Metadata) (Page, error)
 
 	// ListTwinsByThing retrieves data about subset of twins that represent
 	// specified thing belong to the user identified by
 	// the provided key.
-	ListTwinsByThing(context.Context, string, string, uint64, uint64) (TwinsSet, error)
+	ListTwinsByThing(context.Context, string, string, uint64, uint64) (Page, error)
 
 	// RemoveTwin removes the twin identified with the provided ID, that
 	// belongs to the user identified by the provided key.
@@ -119,6 +119,7 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 
 	if isZeroOfUnderlyingType(def) {
 		def = Definition{}
+		def.Attributes = make(map[string]Attribute)
 	}
 	def.Created = time.Now()
 	def.ID = 0
@@ -224,19 +225,19 @@ func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) (err e
 	return nil
 }
 
-func (ts *twinsService) ListTwins(ctx context.Context, token string, offset uint64, limit uint64, name string, metadata Metadata) (TwinsSet, error) {
+func (ts *twinsService) ListTwins(ctx context.Context, token string, offset uint64, limit uint64, name string, metadata Metadata) (Page, error) {
 	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
-		return TwinsSet{}, ErrUnauthorizedAccess
+		return Page{}, ErrUnauthorizedAccess
 	}
 
 	return ts.twins.RetrieveAll(ctx, res.GetValue(), offset, limit, name, metadata)
 }
 
-func (ts *twinsService) ListTwinsByThing(ctx context.Context, token, thing string, offset uint64, limit uint64) (TwinsSet, error) {
+func (ts *twinsService) ListTwinsByThing(ctx context.Context, token, thing string, offset uint64, limit uint64) (Page, error) {
 	_, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
-		return TwinsSet{}, ErrUnauthorizedAccess
+		return Page{}, ErrUnauthorizedAccess
 	}
 
 	return ts.twins.RetrieveByThing(ctx, thing, offset, limit)
