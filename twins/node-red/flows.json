@@ -75,7 +75,7 @@
         "type": "debug",
         "z": "af1ce290.bb971",
         "name": "",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -89,7 +89,7 @@
         "type": "mqtt out",
         "z": "af1ce290.bb971",
         "name": "measurements",
-        "topic": "channels/3b57b952-318e-47b5-b0d7-a14f61ecd03b/messages",
+        "topic": "",
         "qos": "",
         "retain": "",
         "broker": "7bdae3bd.55196c",
@@ -136,9 +136,7 @@
         "x": 110,
         "y": 160,
         "wires": [
-            [
-                "4745b7be.3e52c8"
-            ]
+            []
         ]
     },
     {
@@ -146,20 +144,23 @@
         "type": "function",
         "z": "af1ce290.bb971",
         "name": "measurements",
-        "func": "var magnitudes = [\"temperature\", \"humidity\", \"pressure\"]\n\nvar msgs = []\nfor (var i = 0; i < magnitudes.length; i++) {\n  var payload = `[{\"n\":\"${magnitudes[i]}\",\"t\":${msg.payload},\"v\":${Math.random(5)}}]`;\n  msgs.push({ payload: payload, topic: msg.topic + magnitudes[i]})\n} \n\nreturn msgs;",
+        "func": "var magnitudes = [\"temperature\", \"humidity\", \"pressure\"]\n\nvar msgs = []\nfor (var i = 0; i < magnitudes.length; i++) {\n  var payload = `[{\"n\":\"${magnitudes[i]}\",\"t\":${msg.payload},\"v\":${Math.random()*10}}]`;\n  msgs.push({ payload: payload, topic: msg.topic + magnitudes[i]})\n} \n\nreturn msgs;",
         "outputs": 3,
         "noerr": 0,
         "x": 320,
-        "y": 160,
+        "y": 260,
         "wires": [
             [
-                "10f0e189.8bd65e"
+                "10f0e189.8bd65e",
+                "be5b360.1458bc8"
             ],
             [
-                "10f0e189.8bd65e"
+                "10f0e189.8bd65e",
+                "be5b360.1458bc8"
             ],
             [
-                "10f0e189.8bd65e"
+                "10f0e189.8bd65e",
+                "be5b360.1458bc8"
             ]
         ]
     },
@@ -168,13 +169,44 @@
         "type": "debug",
         "z": "af1ce290.bb971",
         "name": "",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
         "complete": "false",
         "x": 550,
         "y": 160,
+        "wires": []
+    },
+    {
+        "id": "d0d050e0.ac709",
+        "type": "function",
+        "z": "af1ce290.bb971",
+        "name": "batch",
+        "func": "var magnitudes = [\"temperature\", \"humidity\"]\n\nvar measurements = '[ '\nfor (var i = 0; i < magnitudes.length; i++) {\n  var payload = `{\"n\":\"${magnitudes[i]}\",\"t\":${msg.payload},\"v\":${Math.random()*10}}`;\n  measurements += payload + ', '\n} \nmeasurements += `{\"n\":\"${\"pressure\"}\",\"t\":${msg.payload},\"v\":${Math.random()*10}}` + ']'\n\nmsg.payload = measurements\nmsg.topic = msg.topic + '/batch'\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 310,
+        "y": 40,
+        "wires": [
+            [
+                "3d828207.6500de",
+                "be5b360.1458bc8"
+            ]
+        ]
+    },
+    {
+        "id": "3d828207.6500de",
+        "type": "debug",
+        "z": "af1ce290.bb971",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 550,
+        "y": 40,
         "wires": []
     }
 ]

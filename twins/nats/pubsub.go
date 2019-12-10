@@ -18,7 +18,6 @@ import (
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/paho"
-	"github.com/mainflux/senml"
 	"github.com/nats-io/go-nats"
 )
 
@@ -59,35 +58,27 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 		return
 	}
 
-	fmt.Println(msg.Channel)
-
 	b := []byte{}
 	id := ""
 	defer ps.mqttClient.Publish(&id, &err, "state/success", "state/failure", &b)
 
-	twinsSet, err := ps.twins.RetrieveByThing(context.TODO(), msg.Publisher, 0, 1)
+	twinsPage, err := ps.twins.RetrieveByThing(context.TODO(), msg.Publisher, 0, 1)
 	if err != nil {
 		ps.logger.Warn(fmt.Sprintf("Retrieving twin for %s failed: %s", msg.Publisher, err))
 		return
 	}
-	if len(twinsSet.Twins) < 1 {
+	if len(twinsPage.Twins) < 1 {
 		err = twins.ErrNotFound
 		ps.logger.Warn(fmt.Sprintf("Retrieving twin for %s failed: %s", msg.Publisher, err))
 		return
 	}
 
-	// var pl []map[string]interface{}
-	var pl []senml.Record
-	if err := json.Unmarshal(msg.Payload, &pl); err != nil {
+	var recs []Record
+	if err := json.Unmarshal(msg.Payload, &recs); err != nil {
 		ps.logger.Warn(fmt.Sprintf("Unmarshal payload for %s failed: %s", msg.Publisher, err))
 		return
 	}
-	tw := twinsSet.Twins[0]
-	numStates, err := ps.states.Count(context.TODO(), tw)
-	if err != nil {
-		ps.logger.Warn(fmt.Sprintf("Counting states for %s failed: %s", msg.Publisher, err))
-		return
-	}
+	tw := twinsPage.Twins[0]
 
 	st, err := ps.states.RetrieveLast(context.TODO(), tw.ID)
 	if err != nil {
@@ -95,20 +86,8 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 		return
 	}
 
-	def := tw.Definitions[len(tw.Definitions)-1]
-	st.TwinID = tw.ID
-	st.ID = numStates + 1
-	st.Created = time.Now()
-	st.Definition = def.ID
-	if st.Payload == nil {
-		st.Payload = make(map[string]interface{})
-	}
-
-	pl0 := pl[0]
-	for k, v := range def.Attributes {
-		if v.ChannelID == msg.Channel && v.Subtopic == msg.Subtopic {
-			st.Payload[k] = pl0.V
-		}
+	if save := prepareState(&st, &tw, recs, msg); !save {
+		return
 	}
 
 	if err := ps.states.Save(context.TODO(), st); err != nil {
@@ -120,6 +99,33 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 	b = msg.Payload
 
 	ps.logger.Info(fmt.Sprintf("Updating state for %s succeeded", msg.Publisher))
+}
+
+func prepareState(st *twins.State, tw *twins.Twin, recs []Record, msg mainflux.Message) bool {
+	def := tw.Definitions[len(tw.Definitions)-1]
+	st.TwinID = tw.ID
+	st.ID++
+	st.Created = time.Now()
+	st.Definition = def.ID
+	if st.Payload == nil {
+		st.Payload = make(map[string]interface{})
+	}
+
+	save := false
+
+	rec := recs[0]
+	for k, a := range def.Attributes {
+		if !a.PeristState {
+			continue
+		}
+		if a.ChannelID == msg.Channel && a.Subtopic == msg.Subtopic {
+			st.Payload[k] = rec.Value
+			save = true
+			break
+		}
+	}
+
+	return save
 }
 
 func (ps pubsub) publish(msg mainflux.Message, twin *twins.Twin) error {
