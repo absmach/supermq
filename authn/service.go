@@ -53,17 +53,17 @@ type Service interface {
 var _ Service = (*service)(nil)
 
 type service struct {
-	keys KeyRepository
-	idp  IdentityProvider
-	t    Tokenizer
+	keys      KeyRepository
+	idp       IdentityProvider
+	tokenizer Tokenizer
 }
 
 // New instantiates the auth service implementation.
 func New(keys KeyRepository, idp IdentityProvider, tokenizer Tokenizer) Service {
 	return &service{
-		t:    tokenizer,
-		keys: keys,
-		idp:  idp,
+		tokenizer: tokenizer,
+		keys:      keys,
+		idp:       idp,
 	}
 }
 
@@ -100,7 +100,7 @@ func (svc service) Retrieve(ctx context.Context, issuer, id string) (Key, error)
 }
 
 func (svc service) Identify(ctx context.Context, token string) (string, error) {
-	c, err := svc.t.Parse(token)
+	c, err := svc.tokenizer.Parse(token)
 	if err != nil {
 		return "", err
 	}
@@ -145,7 +145,7 @@ func (svc service) resetKey(ctx context.Context, issuer string, key Key) (Key, e
 func (svc service) tempKey(duration time.Duration, key Key) (Key, error) {
 	key.Issuer = issuerName
 	key.ExpiresAt = key.IssuedAt.Add(duration)
-	val, err := svc.t.Issue(key)
+	val, err := svc.tokenizer.Issue(key)
 	if err != nil {
 		return Key{}, err
 	}
@@ -167,7 +167,7 @@ func (svc service) userKey(ctx context.Context, issuer string, key Key) (Key, er
 	}
 	key.ID = id
 
-	value, err := svc.t.Issue(key)
+	value, err := svc.tokenizer.Issue(key)
 	if err != nil {
 		return Key{}, err
 	}
@@ -181,7 +181,7 @@ func (svc service) userKey(ctx context.Context, issuer string, key Key) (Key, er
 }
 
 func (svc service) login(token string) (string, error) {
-	c, err := svc.t.Parse(token)
+	c, err := svc.tokenizer.Parse(token)
 	if err != nil {
 		return "", err
 	}
