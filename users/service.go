@@ -143,7 +143,7 @@ func (svc usersService) UserInfo(ctx context.Context, token string) (User, error
 
 func (svc usersService) UpdateUser(ctx context.Context, token string, u User) errors.Error {
 	email, err := svc.identify(ctx, token)
-	if err != nil || email != u.Email {
+	if err != nil {
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
