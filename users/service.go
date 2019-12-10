@@ -6,8 +6,8 @@ package users
 import (
 	"context"
 
-	"github.com/mainflux/mainflux/authn"
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/authn"
 	"github.com/mainflux/mainflux/errors"
 )
 
@@ -87,11 +87,11 @@ type usersService struct {
 	users  UserRepository
 	hasher Hasher
 	email  Emailer
-	auth   mainflux.AuthnServiceClient
+	auth   mainflux.AuthNServiceClient
 }
 
 // New instantiates the users service implementation
-func New(users UserRepository, hasher Hasher, auth mainflux.AuthnServiceClient, m Emailer) Service {
+func New(users UserRepository, hasher Hasher, auth mainflux.AuthNServiceClient, m Emailer) Service {
 	return &usersService{
 		users:  users,
 		hasher: hasher,

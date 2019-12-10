@@ -16,7 +16,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-var _ mainflux.AuthnServiceClient = (*grpcClient)(nil)
+var _ mainflux.AuthNServiceClient = (*grpcClient)(nil)
 
 type grpcClient struct {
 	issue    endpoint.Endpoint
@@ -25,11 +25,11 @@ type grpcClient struct {
 }
 
 // NewClient returns new gRPC client instance.
-func NewClient(tracer opentracing.Tracer, conn *grpc.ClientConn, timeout time.Duration) mainflux.AuthnServiceClient {
+func NewClient(tracer opentracing.Tracer, conn *grpc.ClientConn, timeout time.Duration) mainflux.AuthNServiceClient {
 	return &grpcClient{
 		issue: kitot.TraceClient(tracer, "issue")(kitgrpc.NewClient(
 			conn,
-			"mainflux.AuthnService",
+			"mainflux.AuthNService",
 			"Issue",
 			encodeIssueRequest,
 			decodeIssueResponse,
@@ -37,7 +37,7 @@ func NewClient(tracer opentracing.Tracer, conn *grpc.ClientConn, timeout time.Du
 		).Endpoint()),
 		identify: kitot.TraceClient(tracer, "identify")(kitgrpc.NewClient(
 			conn,
-			"mainflux.AuthnService",
+			"mainflux.AuthNService",
 			"Identify",
 			encodeIdentifyRequest,
 			decodeIdentifyResponse,

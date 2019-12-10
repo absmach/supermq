@@ -248,7 +248,7 @@ func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sqlx.DB {
 	return db
 }
 
-func connectToAuthn(cfg config, tracer opentracing.Tracer, logger logger.Logger) (mainflux.AuthnServiceClient, func() error) {
+func connectToAuthn(cfg config, tracer opentracing.Tracer, logger logger.Logger) (mainflux.AuthNServiceClient, func() error) {
 	var opts []grpc.DialOption
 	if cfg.authnTLS {
 		if cfg.authnCACerts != "" {
@@ -273,7 +273,7 @@ func connectToAuthn(cfg config, tracer opentracing.Tracer, logger logger.Logger)
 	return authapi.NewClient(tracer, conn, cfg.authnTimeout), conn.Close
 }
 
-func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthnServiceClient, c config, logger logger.Logger) users.Service {
+func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthNServiceClient, c config, logger logger.Logger) users.Service {
 	database := postgres.NewDatabase(db)
 	repo := tracing.UserRepositoryMiddleware(postgres.New(database), tracer)
 	hasher := bcrypt.New()

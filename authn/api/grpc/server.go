@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-var _ mainflux.AuthnServiceServer = (*grpcServer)(nil)
+var _ mainflux.AuthNServiceServer = (*grpcServer)(nil)
 
 type grpcServer struct {
 	issue    kitgrpc.Handler
@@ -22,7 +22,7 @@ type grpcServer struct {
 }
 
 // NewServer returns new AuthnServiceServer instance.
-func NewServer(tracer opentracing.Tracer, svc authn.Service) mainflux.AuthnServiceServer {
+func NewServer(tracer opentracing.Tracer, svc authn.Service) mainflux.AuthNServiceServer {
 	return &grpcServer{
 		issue: kitgrpc.NewServer(
 			kitot.TraceServer(tracer, "issue")(issueEndpoint(svc)),

@@ -267,7 +267,7 @@ func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sqlx.DB {
 	return db
 }
 
-func createAuthClient(cfg config, tracer opentracing.Tracer, logger logger.Logger) (mainflux.AuthnServiceClient, func() error) {
+func createAuthClient(cfg config, tracer opentracing.Tracer, logger logger.Logger) (mainflux.AuthNServiceClient, func() error) {
 	if cfg.singleUserEmail != "" && cfg.singleUserToken != "" {
 		return localusers.NewSingleUserService(cfg.singleUserEmail, cfg.singleUserToken), nil
 	}
@@ -301,7 +301,7 @@ func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
 	return conn
 }
 
-func newService(auth mainflux.AuthnServiceClient, dbTracer opentracing.Tracer, cacheTracer opentracing.Tracer, db *sqlx.DB, cacheClient *redis.Client, esClient *redis.Client, logger logger.Logger) things.Service {
+func newService(auth mainflux.AuthNServiceClient, dbTracer opentracing.Tracer, cacheTracer opentracing.Tracer, db *sqlx.DB, cacheClient *redis.Client, esClient *redis.Client, logger logger.Logger) things.Service {
 	database := postgres.NewDatabase(db)
 
 	thingsRepo := postgres.NewThingRepository(database)

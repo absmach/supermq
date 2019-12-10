@@ -9,25 +9,25 @@ import (
 	"github.com/mainflux/mainflux/authn"
 )
 
-var _ authn.KeyRepository = (*keyRepository)(nil)
+var _ authn.KeyRepository = (*repo)(nil)
 
 const (
 	errDuplicate = "unique_violation"
 	errInvalid   = "invalid_text_representation"
 )
 
-type keyRepository struct {
+type repo struct {
 	db Database
 }
 
 // New instantiates a PostgreSQL implementation of key repository.
 func New(db Database) authn.KeyRepository {
-	return &keyRepository{
+	return &repo{
 		db: db,
 	}
 }
 
-func (kr keyRepository) Save(ctx context.Context, key authn.Key) (string, error) {
+func (kr repo) Save(ctx context.Context, key authn.Key) (string, error) {
 	q := `INSERT INTO keys (id, type, issuer, issued_at, expires_at)
 	      VALUES (:id, :type, :issuer, :issued_at, :expires_at)`
 
@@ -47,7 +47,7 @@ func (kr keyRepository) Save(ctx context.Context, key authn.Key) (string, error)
 	return dbKey.ID, nil
 }
 
-func (kr keyRepository) Retrieve(ctx context.Context, issuer, id string) (authn.Key, error) {
+func (kr repo) Retrieve(ctx context.Context, issuer, id string) (authn.Key, error) {
 	q := `SELECT id, type, issuer, issued_at, expires_at FROM keys WHERE issuer = $1 AND id = $2`
 	key := dbKey{}
 	if err := kr.db.QueryRowxContext(ctx, q, issuer, id).StructScan(&key); err != nil {
@@ -62,7 +62,7 @@ func (kr keyRepository) Retrieve(ctx context.Context, issuer, id string) (authn.
 	return toKey(key), nil
 }
 
-func (kr keyRepository) Remove(ctx context.Context, issuer, id string) error {
+func (kr repo) Remove(ctx context.Context, issuer, id string) error {
 	q := `DELETE FROM keys WHERE issuer = $1 AND id = $2`
 
 	if _, err := kr.db.ExecContext(ctx, q, issuer, id); err != nil {

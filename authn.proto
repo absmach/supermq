@@ -13,7 +13,7 @@ service ThingsService {
     rpc Identify(Token) returns (ThingID) {}
 }
 
-service AuthnService {
+service AuthNService {
     rpc Issue(IssueReq) returns (Token) {}
     rpc Identify(Token) returns (UserID) {}
 }

@@ -235,7 +235,7 @@ func startGRPCServer(tracer opentracing.Tracer, svc authn.Service, port string, 
 		server = grpc.NewServer()
 	}
 
-	mainflux.RegisterAuthnServiceServer(server, grpcapi.NewServer(tracer, svc))
+	mainflux.RegisterAuthNServiceServer(server, grpcapi.NewServer(tracer, svc))
 	logger.Info(fmt.Sprintf("Authentication gRPC service started, exposed port %s", port))
 	errs <- server.Serve(listener)
 }

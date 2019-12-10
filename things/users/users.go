@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-var _ mainflux.AuthnServiceClient = (*singleUserRepo)(nil)
+var _ mainflux.AuthNServiceClient = (*singleUserRepo)(nil)
 
 type singleUserRepo struct {
 	email string
@@ -23,7 +23,7 @@ type singleUserRepo struct {
 }
 
 // NewSingleUserService creates single user repository for constrained environments.
-func NewSingleUserService(email, token string) mainflux.AuthnServiceClient {
+func NewSingleUserService(email, token string) mainflux.AuthNServiceClient {
 	return singleUserRepo{
 		email: email,
 		token: token,

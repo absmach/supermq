@@ -41,7 +41,7 @@ func newService() authn.Service {
 func startGRPCServer(svc authn.Service, port int) {
 	listener, _ := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	server := grpc.NewServer()
-	mainflux.RegisterAuthnServiceServer(server, grpcapi.NewServer(mocktracer.New(), svc))
+	mainflux.RegisterAuthNServiceServer(server, grpcapi.NewServer(mocktracer.New(), svc))
 	go server.Serve(listener)
 }
 
