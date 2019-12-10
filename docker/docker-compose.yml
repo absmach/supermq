@@ -110,8 +110,6 @@ services:
     depends_on:
       - users-db
       - authn
-    expose:
-      - ${MF_USERS_GRPC_PORT}
     restart: on-failure
     environment:
       MF_USERS_LOG_LEVEL: ${MF_USERS_LOG_LEVEL}
@@ -121,7 +119,6 @@ services:
       MF_USERS_DB_PASS: ${MF_USERS_DB_PASS}
       MF_USERS_DB: ${MF_USERS_DB}
       MF_USERS_HTTP_PORT: ${MF_USERS_HTTP_PORT}
-      MF_USERS_SECRET: ${MF_USERS_SECRET}
       MF_JAEGER_URL: ${MF_JAEGER_URL}
       MF_EMAIL_DRIVER: ${MF_EMAIL_DRIVER}
       MF_EMAIL_HOST: ${MF_EMAIL_HOST}

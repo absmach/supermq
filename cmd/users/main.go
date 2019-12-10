@@ -47,6 +47,8 @@ const (
 	defDBSSLKey      = ""
 	defDBSSLRootCert = ""
 	defHTTPPort      = "8180"
+	defServerCert    = ""
+	defServerKey     = ""
 	defJaegerURL     = ""
 
 	defAuthnHTTPPort = "8989"
@@ -79,6 +81,8 @@ const (
 	envDBSSLKey      = "MF_USERS_DB_SSL_KEY"
 	envDBSSLRootCert = "MF_USERS_DB_SSL_ROOT_CERT"
 	envHTTPPort      = "MF_USERS_HTTP_PORT"
+	envServerCert    = "MF_USERS_SERVER_CERT"
+	envServerKey     = "MF_USERS_SERVER_KEY"
 	envJaegerURL     = "MF_JAEGER_URL"
 
 	envAuthnHTTPPort = "MF_AUTHN_HTTP_PORT"
@@ -112,8 +116,6 @@ type config struct {
 	authnURL      string
 	emailConf     email.Config
 	httpPort      string
-	grpcPort      string
-	secret        string
 	serverCert    string
 	serverKey     string
 	jaegerURL     string
@@ -204,12 +206,10 @@ func loadConfig() config {
 		authnTLS:      tls,
 		emailConf:     emailConf,
 		httpPort:      mainflux.Env(envHTTPPort, defHTTPPort),
-		// grpcPort:      mainflux.Env(envGRPCPort, defGRPCPort),
-		// secret:        mainflux.Env(envSecret, defSecret),
-		// serverCert:    mainflux.Env(envServerCert, defServerCert),
-		// serverKey:     mainflux.Env(envServerKey, defServerKey),
-		jaegerURL: mainflux.Env(envJaegerURL, defJaegerURL),
-		resetURL:  mainflux.Env(envTokenResetEndpoint, defTokenResetEndpoint),
+		serverCert:    mainflux.Env(envServerCert, defServerCert),
+		serverKey:     mainflux.Env(envServerKey, defServerKey),
+		jaegerURL:     mainflux.Env(envJaegerURL, defJaegerURL),
+		resetURL:      mainflux.Env(envTokenResetEndpoint, defTokenResetEndpoint),
 	}
 
 }

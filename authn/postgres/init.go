@@ -55,7 +55,7 @@ func migrateDB(db *sqlx.DB) error {
 						PRIMARY KEY (id, issuer)
 					)`,
 				},
-				Down: []string{"DROP TABLE IS EXISTS keys"},
+				Down: []string{"DROP TABLE IF EXISTS keys"},
 			},
 		},
 	}
