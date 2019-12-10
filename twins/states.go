@@ -11,7 +11,7 @@ type State struct {
 	ID         int64
 	Definition int
 	Created    time.Time
-	Payload    []map[string]interface{}
+	Payload    map[string]interface{}
 }
 
 // StatesPage contains page related metadata as well as a list of twins that

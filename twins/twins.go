@@ -18,6 +18,7 @@ type Metadata map[string]interface{}
 // Attribute stores indivdual attribute data
 type Attribute struct {
 	ChannelID   string
+	Subtopic    string
 	PeristState bool
 }
 

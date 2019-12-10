@@ -123,7 +123,11 @@ func (sr *stateRepository) RetrieveLast(ctx context.Context, id string) (twins.S
 	}
 
 	findOptions := options.Find()
-	findOptions.SetSkip(total - 1)
+	var skip int64
+	if total > 0 {
+		skip = total - 1
+	}
+	findOptions.SetSkip(skip)
 	findOptions.SetLimit(1)
 
 	cur, err := coll.Find(ctx, filter, findOptions)
@@ -136,5 +140,8 @@ func (sr *stateRepository) RetrieveLast(ctx context.Context, id string) (twins.S
 		return twins.State{}, err
 	}
 
+	if len(results) < 1 {
+		return twins.State{}, nil
+	}
 	return results[0], nil
 }

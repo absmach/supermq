@@ -78,11 +78,11 @@ func (res viewTwinRes) Empty() bool {
 }
 
 type viewStateRes struct {
-	TwinID     string                   `json:"twinid"`
-	ID         int64                    `json:"id"`
-	Definition int                      `json:"definition"`
-	Created    time.Time                `json:"created"`
-	Payload    []map[string]interface{} `json:"payload"`
+	TwinID     string                 `json:"twinid"`
+	ID         int64                  `json:"id"`
+	Definition int                    `json:"definition"`
+	Created    time.Time              `json:"created"`
+	Payload    map[string]interface{} `json:"payload"`
 }
 
 func (res viewStateRes) Code() int {
