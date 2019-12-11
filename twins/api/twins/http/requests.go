@@ -132,27 +132,3 @@ func (req *listStatesReq) validate() error {
 
 	return nil
 }
-
-type listByThingReq struct {
-	token    string
-	offset   uint64
-	limit    uint64
-	thing    string
-	metadata map[string]interface{}
-}
-
-func (req *listByThingReq) validate() error {
-	if req.token == "" {
-		return twins.ErrUnauthorizedAccess
-	}
-
-	if req.limit == 0 || req.limit > maxLimitSize {
-		return twins.ErrMalformedEntity
-	}
-
-	if len(req.thing) < 1 {
-		return twins.ErrMalformedEntity
-	}
-
-	return nil
-}

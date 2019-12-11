@@ -95,6 +95,36 @@ func viewTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 	}
 }
 
+func viewTwinByThingEndpoint(svc twins.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(viewTwinReq)
+
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+
+		twin, err := svc.ViewTwinByThing(ctx, req.token, req.id)
+		if err != nil {
+			return nil, err
+		}
+
+		res := viewTwinRes{
+			Owner:       twin.Owner,
+			ID:          twin.ID,
+			Key:         twin.Key,
+			Name:        twin.Name,
+			ThingID:     twin.ThingID,
+			Created:     twin.Created,
+			Updated:     twin.Updated,
+			Revision:    twin.Revision,
+			Definitions: twin.Definitions,
+			Metadata:    twin.Metadata,
+		}
+
+		return res, nil
+	}
+}
+
 func listTwinsEndpoint(svc twins.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listReq)
@@ -104,83 +134,6 @@ func listTwinsEndpoint(svc twins.Service) endpoint.Endpoint {
 		}
 
 		page, err := svc.ListTwins(ctx, req.token, req.offset, req.limit, req.name, req.metadata)
-		if err != nil {
-			return nil, err
-		}
-
-		res := twinsPageRes{
-			pageRes: pageRes{
-				Total:  page.Total,
-				Offset: page.Offset,
-				Limit:  page.Limit,
-			},
-			Twins: []viewTwinRes{},
-		}
-		for _, twin := range page.Twins {
-			view := viewTwinRes{
-				Owner:       twin.Owner,
-				ID:          twin.ID,
-				Key:         twin.Key,
-				Name:        twin.Name,
-				ThingID:     twin.ThingID,
-				Created:     twin.Created,
-				Updated:     twin.Updated,
-				Revision:    twin.Revision,
-				Definitions: twin.Definitions,
-				Metadata:    twin.Metadata,
-			}
-			res.Twins = append(res.Twins, view)
-		}
-
-		return res, nil
-	}
-}
-
-func listStatesEndpoint(svc twins.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(listStatesReq)
-
-		if err := req.validate(); err != nil {
-			return nil, err
-		}
-
-		page, err := svc.ListStates(ctx, req.token, req.offset, req.limit, req.id)
-		if err != nil {
-			return nil, err
-		}
-
-		res := statesPageRes{
-			pageRes: pageRes{
-				Total:  page.Total,
-				Offset: page.Offset,
-				Limit:  page.Limit,
-			},
-			States: []viewStateRes{},
-		}
-		for _, state := range page.States {
-			view := viewStateRes{
-				TwinID:     state.TwinID,
-				ID:         state.ID,
-				Definition: state.Definition,
-				Created:    state.Created,
-				Payload:    state.Payload,
-			}
-			res.States = append(res.States, view)
-		}
-
-		return res, nil
-	}
-}
-
-func listTwinsByThingEndpoint(svc twins.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(listByThingReq)
-
-		if err := req.validate(); err != nil {
-			return nil, err
-		}
-
-		page, err := svc.ListTwinsByThing(ctx, req.token, req.thing, req.offset, req.limit)
 		if err != nil {
 			return nil, err
 		}
@@ -231,5 +184,41 @@ func removeTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 		}
 
 		return removeRes{}, nil
+	}
+}
+
+func listStatesEndpoint(svc twins.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(listStatesReq)
+
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+
+		page, err := svc.ListStates(ctx, req.token, req.offset, req.limit, req.id)
+		if err != nil {
+			return nil, err
+		}
+
+		res := statesPageRes{
+			pageRes: pageRes{
+				Total:  page.Total,
+				Offset: page.Offset,
+				Limit:  page.Limit,
+			},
+			States: []viewStateRes{},
+		}
+		for _, state := range page.States {
+			view := viewStateRes{
+				TwinID:     state.TwinID,
+				ID:         state.ID,
+				Definition: state.Definition,
+				Created:    state.Created,
+				Payload:    state.Payload,
+			}
+			res.States = append(res.States, view)
+		}
+
+		return res, nil
 	}
 }

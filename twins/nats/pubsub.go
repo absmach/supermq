@@ -62,13 +62,8 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 	id := ""
 	defer ps.mqttClient.Publish(&id, &err, "state/success", "state/failure", &b)
 
-	twinsPage, err := ps.twins.RetrieveByThing(context.TODO(), msg.Publisher, 0, 1)
+	tw, err := ps.twins.RetrieveByThing(context.TODO(), msg.Publisher)
 	if err != nil {
-		ps.logger.Warn(fmt.Sprintf("Retrieving twin for %s failed: %s", msg.Publisher, err))
-		return
-	}
-	if len(twinsPage.Twins) < 1 {
-		err = twins.ErrNotFound
 		ps.logger.Warn(fmt.Sprintf("Retrieving twin for %s failed: %s", msg.Publisher, err))
 		return
 	}
@@ -78,7 +73,6 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 		ps.logger.Warn(fmt.Sprintf("Unmarshal payload for %s failed: %s", msg.Publisher, err))
 		return
 	}
-	tw := twinsPage.Twins[0]
 
 	st, err := ps.states.RetrieveLast(context.TODO(), tw.ID)
 	if err != nil {

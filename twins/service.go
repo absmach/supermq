@@ -60,7 +60,7 @@ type Service interface {
 	// ListTwinsByThing retrieves data about subset of twins that represent
 	// specified thing belong to the user identified by
 	// the provided key.
-	ListTwinsByThing(context.Context, string, string, uint64, uint64) (TwinsPage, error)
+	ViewTwinByThing(context.Context, string, string) (Twin, error)
 
 	// RemoveTwin removes the twin identified with the provided ID, that
 	// belongs to the user identified by the provided key.
@@ -215,6 +215,15 @@ func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (tw Twin
 	return twin, nil
 }
 
+func (ts *twinsService) ViewTwinByThing(ctx context.Context, token, thingid string) (Twin, error) {
+	_, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	if err != nil {
+		return Twin{}, ErrUnauthorizedAccess
+	}
+
+	return ts.twins.RetrieveByThing(ctx, thingid)
+}
+
 func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) (err error) {
 	b := []byte{}
 	defer ts.mqttClient.Publish(&id, &err, "remove/success", "remove/failure", &b)
@@ -238,15 +247,6 @@ func (ts *twinsService) ListTwins(ctx context.Context, token string, offset uint
 	}
 
 	return ts.twins.RetrieveAll(ctx, res.GetValue(), offset, limit, name, metadata)
-}
-
-func (ts *twinsService) ListTwinsByThing(ctx context.Context, token, thing string, offset uint64, limit uint64) (TwinsPage, error) {
-	_, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return TwinsPage{}, ErrUnauthorizedAccess
-	}
-
-	return ts.twins.RetrieveByThing(ctx, thing, offset, limit)
 }
 
 func (ts *twinsService) ListStates(ctx context.Context, token string, offset uint64, limit uint64, id string) (StatesPage, error) {

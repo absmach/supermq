@@ -86,8 +86,8 @@ func MakeHandler(tracer opentracing.Tracer, svc twins.Service) http.Handler {
 	))
 
 	r.Get("/things/:id", kithttp.NewServer(
-		kitot.TraceServer(tracer, "list_twins_by_thing")(listTwinsByThingEndpoint(svc)),
-		decodeListByThing,
+		kitot.TraceServer(tracer, "view_twin_by_thing")(viewTwinByThingEndpoint(svc)),
+		decodeViewTwinByThing,
 		encodeResponse,
 		opts...,
 	))
@@ -196,16 +196,10 @@ func decodeListStates(_ context.Context, r *http.Request) (interface{}, error) {
 	return req, nil
 }
 
-func decodeListByThing(_ context.Context, r *http.Request) (interface{}, error) {
-	l, err := readUintQuery(r, limit, defLimit)
-	if err != nil {
-		return nil, err
-	}
-
-	req := listByThingReq{
+func decodeViewTwinByThing(_ context.Context, r *http.Request) (interface{}, error) {
+	req := viewTwinReq{
 		token: r.Header.Get("Authorization"),
-		limit: l,
-		thing: bone.GetValue(r, "id"),
+		id:    bone.GetValue(r, "id"),
 	}
 
 	return req, nil

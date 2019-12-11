@@ -9,7 +9,6 @@ package mongodb
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/uuid"
@@ -117,7 +116,6 @@ func (tr *twinRepository) RetrieveByID(_ context.Context, owner, id string) (twi
 	filter := bson.D{{"id", id}}
 
 	if err := coll.FindOne(context.Background(), filter).Decode(&tw); err != nil {
-		fmt.Printf("%s\n", err)
 		return tw, twins.ErrNotFound
 	}
 
@@ -136,6 +134,22 @@ func (tr *twinRepository) RetrieveByKey(_ context.Context, key string) (string, 
 	}
 
 	return tw.ID, nil
+}
+
+func (tr *twinRepository) RetrieveByThing(ctx context.Context, thingid string) (twins.Twin, error) {
+	coll := tr.db.Collection(twinsCollection)
+	tw := twins.Twin{}
+
+	if err := uuid.New().IsValid(thingid); err != nil {
+		return tw, err
+	}
+
+	filter := bson.D{{"thingid", thingid}}
+	if err := coll.FindOne(context.Background(), filter).Decode(&tw); err != nil {
+		return tw, twins.ErrNotFound
+	}
+
+	return tw, nil
 }
 
 func decodeTwins(ctx context.Context, cur *mongo.Cursor) ([]twins.Twin, error) {
@@ -199,7 +213,7 @@ func (tr *twinRepository) RetrieveAll(ctx context.Context, owner string, offset 
 	}, nil
 }
 
-func (tr *twinRepository) RetrieveByThing(ctx context.Context, thing string, offset uint64, limit uint64) (twins.TwinsPage, error) {
+func (tr *twinRepository) RetrieveAllByThing(ctx context.Context, thing string, offset uint64, limit uint64) (twins.TwinsPage, error) {
 	if err := uuid.New().IsValid(thing); err != nil {
 		return twins.TwinsPage{}, twins.ErrNotFound
 	}

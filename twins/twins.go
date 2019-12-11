@@ -81,9 +81,8 @@ type TwinRepository interface {
 	// RetrieveAll retrieves the subset of things owned by the specified user.
 	RetrieveAll(context.Context, string, uint64, uint64, string, Metadata) (TwinsPage, error)
 
-	// RetrieveByThing retrieves the subset of twins that represent
-	// specified thing.
-	RetrieveByThing(context.Context, string, uint64, uint64) (TwinsPage, error)
+	// RetrieveByThing retrieves twin that represents specified thing
+	RetrieveByThing(context.Context, string) (Twin, error)
 
 	// Remove removes the twin having the provided identifier.
 	Remove(ctx context.Context, owner, id string) error
