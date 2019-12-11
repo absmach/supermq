@@ -44,6 +44,7 @@ func newTwin(name string) twins.Twin {
 func newService(tokens map[string]string) twins.Service {
 	users := mocks.NewUsersService(tokens)
 	twinsRepo := mocks.NewTwinRepository()
+	statesRepo := mocks.NewStateRepository()
 	idp := mocks.NewIdentityProvider()
 
 	nc, _ := broker.Connect(natsURL)
@@ -53,7 +54,7 @@ func newService(tokens map[string]string) twins.Service {
 
 	mc := paho.New(pc, topic)
 
-	return twins.New(nc, mc, users, twinsRepo, idp)
+	return twins.New(nc, mc, users, twinsRepo, statesRepo, idp)
 }
 
 func TestAddTwin(t *testing.T) {
@@ -209,7 +210,7 @@ func TestListTwins(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		page, err := svc.ListTwins(context.Background(), tc.token, tc.limit, tc.name, tc.metadata)
+		page, err := svc.ListTwins(context.Background(), tc.token, tc.limit, 10, tc.name, tc.metadata)
 		size := uint64(len(page.Twins))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))

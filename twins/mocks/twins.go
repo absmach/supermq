@@ -49,9 +49,6 @@ func (trm *twinRepositoryMock) Save(ctx context.Context, twin twins.Twin) (strin
 		}
 	}
 
-	// trm.counter++
-	// twin.ID = strconv.FormatUint(trm.counter, 10)
-
 	trm.twins[key(twin.Owner, twin.ID)] = twin
 
 	return twin.ID, nil
@@ -119,7 +116,7 @@ func (trm *twinRepositoryMock) RetrieveByKey(_ context.Context, key string) (str
 	return "", twins.ErrNotFound
 }
 
-func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, limit uint64, name string, metadata twins.Metadata) (twins.TwinsPage, error) {
+func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, offset uint64, limit uint64, name string, metadata twins.Metadata) (twins.TwinsPage, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -131,13 +128,19 @@ func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, limi
 
 	last := uint64(limit)
 
-	// This obscure way to examine map keys is enforced by the key structure
-	// itself (see mocks/commons.go).
+	// This obscure way to examine map keys is enforced by the key structure in mocks/commons.go
 	prefix := fmt.Sprintf("%s-", owner)
 	for k, v := range trm.twins {
-		id, _ := strconv.ParseUint(v.ID, 10, 64)
-		if strings.HasPrefix(k, prefix) && id < last {
+		if !strings.HasPrefix(k, prefix) {
+			continue
+		}
+		suffix := string(v.ID[len(u4Pref):])
+		id, _ := strconv.ParseUint(suffix, 10, 64)
+		if id > offset && id < last {
 			items = append(items, v)
+		}
+		if (uint64)(len(items)) >= limit {
+			break
 		}
 	}
 
@@ -148,51 +151,27 @@ func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, limi
 	page := twins.TwinsPage{
 		Twins: items,
 		PageMetadata: twins.PageMetadata{
-			Total: trm.counter,
-			Limit: limit,
+			Total:  trm.counter,
+			Offset: offset,
+			Limit:  limit,
 		},
 	}
 
 	return page, nil
 }
 
-func (trm *twinRepositoryMock) RetrieveByThing(_ context.Context, thing string, limit uint64) (twins.TwinsPage, error) {
+func (trm *twinRepositoryMock) RetrieveByThing(_ context.Context, thingid string) (twins.Twin, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
-	tws := make([]twins.Twin, 0)
-	items := make([]twins.Twin, 0)
-
-	if limit <= 0 {
-		return twins.TwinsPage{}, nil
-	}
-
-	for _, v := range trm.twins {
-		if v.ThingID == thing {
-			tws = append(tws, v)
+	for _, twin := range trm.twins {
+		if twin.ThingID == thingid {
+			return twin, nil
 		}
 	}
 
-	for _, v := range tws {
-		id, _ := strconv.ParseUint(v.ID, 10, 64)
-		if id < limit {
-			items = append(items, v)
-		}
-	}
+	return twins.Twin{}, twins.ErrNotFound
 
-	sort.SliceStable(items, func(i, j int) bool {
-		return items[i].ID < items[j].ID
-	})
-
-	page := twins.TwinsPage{
-		Twins: items,
-		PageMetadata: twins.PageMetadata{
-			Total: trm.counter,
-			Limit: limit,
-		},
-	}
-
-	return page, nil
 }
 
 func (trm *twinRepositoryMock) Remove(ctx context.Context, owner, id string) error {

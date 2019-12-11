@@ -15,7 +15,7 @@ import (
 	"github.com/mainflux/mainflux/twins"
 )
 
-const u4Frag = "123e4567-e89b-12d3-a456-"
+const u4Pref = "123e4567-e89b-12d3-a456-"
 
 var _ twins.IdentityProvider = (*identityProviderMock)(nil)
 
@@ -29,11 +29,11 @@ func (idp *identityProviderMock) ID() (string, error) {
 	defer idp.mu.Unlock()
 
 	idp.counter++
-	return fmt.Sprintf("%s%012d", u4Frag, idp.counter), nil
+	return fmt.Sprintf("%s%012d", u4Pref, idp.counter), nil
 }
 
 func (idp *identityProviderMock) IsValid(u4 string) error {
-	if !strings.Contains(u4Frag, u4) {
+	if !strings.Contains(u4Pref, u4) {
 		return twins.ErrMalformedEntity
 	}
 
