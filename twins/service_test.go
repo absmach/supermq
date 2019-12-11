@@ -24,7 +24,8 @@ import (
 
 const (
 	twinName   = "name"
-	wrongKey   = ""
+	key        = "key"
+	wrongKey   = "wrong-key"
 	wrongID    = ""
 	token      = "token"
 	wrongToken = "wrong-token"
@@ -33,13 +34,6 @@ const (
 	mqttURL    = "tcp://localhost:1883"
 	topic      = "topic"
 )
-
-func newTwin(name string) twins.Twin {
-	return twins.Twin{
-		Name:        name,
-		Definitions: []twins.Definition{twins.Definition{}},
-	}
-}
 
 func newService(tokens map[string]string) twins.Service {
 	users := mocks.NewUsersService(tokens)
@@ -59,6 +53,8 @@ func newService(tokens map[string]string) twins.Service {
 
 func TestAddTwin(t *testing.T) {
 	svc := newService(map[string]string{token: email})
+	twin := twins.Twin{}
+	def := twins.Definition{}
 
 	cases := []struct {
 		desc  string
@@ -68,30 +64,32 @@ func TestAddTwin(t *testing.T) {
 	}{
 		{
 			desc:  "add new twin",
-			twin:  newTwin(twinName),
+			twin:  twin,
 			token: token,
 			err:   nil,
 		},
 		{
 			desc:  "add twin with wrong credentials",
-			twin:  newTwin(twinName),
+			twin:  twin,
 			token: wrongToken,
 			err:   twins.ErrUnauthorizedAccess,
 		},
 	}
 
 	for _, tc := range cases {
-		_, err := svc.AddTwin(context.Background(), tc.token, tc.twin, tc.twin.Definitions[0])
+		_, err := svc.AddTwin(context.Background(), tc.token, tc.twin, def)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
 func TestUpdateTwin(t *testing.T) {
 	svc := newService(map[string]string{token: email})
-	twin := newTwin(twinName)
-	other := newTwin(twinName)
+	twin := twins.Twin{}
+	other := twins.Twin{}
+	def := twins.Definition{}
+
 	other.ID = wrongID
-	saved, err := svc.AddTwin(context.Background(), token, twin, twin.Definitions[0])
+	saved, err := svc.AddTwin(context.Background(), token, twin, def)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 
 	cases := []struct {
@@ -121,15 +119,16 @@ func TestUpdateTwin(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := svc.UpdateTwin(context.Background(), tc.token, tc.twin, tc.twin.Definitions[0])
+		err := svc.UpdateTwin(context.Background(), tc.token, tc.twin, def)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
 func TestViewTwin(t *testing.T) {
 	svc := newService(map[string]string{token: email})
-	twin := newTwin(twinName)
-	saved, err := svc.AddTwin(context.Background(), token, twin, twin.Definitions[0])
+	twin := twins.Twin{}
+	def := twins.Definition{}
+	saved, err := svc.AddTwin(context.Background(), token, twin, def)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 
 	cases := map[string]struct {
@@ -162,55 +161,57 @@ func TestViewTwin(t *testing.T) {
 
 func TestListTwins(t *testing.T) {
 	svc := newService(map[string]string{token: email})
-
-	twin := newTwin(twinName)
+	twin := twins.Twin{Name: twinName, Owner: email}
+	def := twins.Definition{}
 	m := make(map[string]interface{})
 	m["serial"] = "123456"
 	twin.Metadata = m
 
 	n := uint64(10)
 	for i := uint64(0); i < n; i++ {
-		svc.AddTwin(context.Background(), token, twin, twin.Definitions[0])
+		twin.Key = string(i)
+		svc.AddTwin(context.Background(), token, twin, def)
 	}
 
 	cases := map[string]struct {
 		token    string
 		offset   uint64
 		limit    uint64
-		name     string
 		size     uint64
 		metadata map[string]interface{}
 		err      error
 	}{
 		"list all twins": {
-			token: token,
-			limit: n + 1,
-			size:  n,
-			err:   nil,
+			token:  token,
+			offset: 0,
+			limit:  n,
+			size:   n,
+			err:    nil,
 		},
 		"list with zero limit": {
-			token: token,
-			limit: 0,
-			size:  0,
-			err:   nil,
+			token:  token,
+			limit:  0,
+			offset: 0,
+			size:   0,
+			err:    nil,
+		},
+		"list with offset and limit": {
+			token:  token,
+			offset: 8,
+			limit:  5,
+			size:   2,
+			err:    nil,
 		},
 		"list with wrong credentials": {
-			token: wrongToken,
-			limit: 0,
-			size:  0,
-			err:   twins.ErrUnauthorizedAccess,
-		},
-		"list with metadata": {
-			token:    token,
-			limit:    n + 1,
-			size:     n,
-			err:      nil,
-			metadata: m,
+			token:  wrongToken,
+			limit:  0,
+			offset: n,
+			err:    twins.ErrUnauthorizedAccess,
 		},
 	}
 
 	for desc, tc := range cases {
-		page, err := svc.ListTwins(context.Background(), tc.token, tc.limit, 10, tc.name, tc.metadata)
+		page, err := svc.ListTwins(context.Background(), tc.token, tc.offset, tc.limit, twinName, tc.metadata)
 		size := uint64(len(page.Twins))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
@@ -219,8 +220,9 @@ func TestListTwins(t *testing.T) {
 
 func TestRemoveTwin(t *testing.T) {
 	svc := newService(map[string]string{token: email})
-	twin := newTwin(twinName)
-	saved, err := svc.AddTwin(context.Background(), token, twin, twin.Definitions[0])
+	twin := twins.Twin{}
+	def := twins.Definition{}
+	saved, err := svc.AddTwin(context.Background(), token, twin, def)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 
 	cases := []struct {

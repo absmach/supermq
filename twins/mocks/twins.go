@@ -126,21 +126,19 @@ func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, offs
 		return twins.TwinsPage{}, nil
 	}
 
-	last := uint64(limit)
-
 	// This obscure way to examine map keys is enforced by the key structure in mocks/commons.go
 	prefix := fmt.Sprintf("%s-", owner)
 	for k, v := range trm.twins {
+		if (uint64)(len(items)) >= limit {
+			break
+		}
 		if !strings.HasPrefix(k, prefix) {
 			continue
 		}
 		suffix := string(v.ID[len(u4Pref):])
 		id, _ := strconv.ParseUint(suffix, 10, 64)
-		if id > offset && id < last {
+		if id > offset && id <= uint64(offset+limit) {
 			items = append(items, v)
-		}
-		if (uint64)(len(items)) >= limit {
-			break
 		}
 	}
 

@@ -106,7 +106,6 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 	}
 
 	twin.ID, err = ts.idp.ID()
-
 	if err != nil {
 		return Twin{}, err
 	}

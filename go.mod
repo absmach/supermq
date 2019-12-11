@@ -36,6 +36,7 @@ require (
 	github.com/mainflux/senml v1.0.0
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.3 // indirect
+	github.com/nats-io/gnatsd v1.4.1 // indirect
 	github.com/nats-io/go-nats v1.6.0
 	github.com/nats-io/nuid v1.0.0 // indirect
 	github.com/onsi/ginkgo v1.10.3 // indirect
