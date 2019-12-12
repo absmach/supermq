@@ -112,7 +112,7 @@ func prepareState(st *twins.State, tw *twins.Twin, recs []Record, msg mainflux.M
 		if !a.PeristState {
 			continue
 		}
-		if a.ChannelID == msg.Channel && a.Subtopic == msg.Subtopic {
+		if a.Channel == msg.Channel && a.Subtopic == msg.Subtopic {
 			st.Payload[k] = rec.Value
 			save = true
 			break

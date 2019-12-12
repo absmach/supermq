@@ -109,7 +109,6 @@ func (tr *twinRepository) RetrieveByKey(_ context.Context, key string) (string, 
 func (tr *twinRepository) RetrieveByThing(ctx context.Context, thingid string) (twins.Twin, error) {
 	coll := tr.db.Collection(twinsCollection)
 	tw := twins.Twin{}
-
 	filter := bson.D{{"thingid", thingid}}
 	if err := coll.FindOne(context.Background(), filter).Decode(&tw); err != nil {
 		return tw, twins.ErrNotFound
