@@ -213,7 +213,7 @@ func (tr *twinRepository) RetrieveAllByThing(ctx context.Context, thingid string
 }
 
 // Remove removes the twin having the provided id
-func (tr *twinRepository) Remove(ctx context.Context, owner, id string) error {
+func (tr *twinRepository) Remove(ctx context.Context, id string) error {
 	coll := tr.db.Collection(twinsCollection)
 
 	filter := bson.D{{"id", id}}

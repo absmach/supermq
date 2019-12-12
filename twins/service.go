@@ -227,12 +227,12 @@ func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) (err e
 	b := []byte{}
 	defer ts.mqttClient.Publish(&id, &err, "remove/success", "remove/failure", &b)
 
-	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	_, err = ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return ErrUnauthorizedAccess
 	}
 
-	if err := ts.twins.Remove(ctx, res.GetValue(), id); err != nil {
+	if err := ts.twins.Remove(ctx, id); err != nil {
 		return err
 	}
 

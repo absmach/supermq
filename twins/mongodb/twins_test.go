@@ -453,7 +453,7 @@ func TestTwinsRemove(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := repo.Remove(context.Background(), email, tc.id)
+		err := repo.Remove(context.Background(), tc.id)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }

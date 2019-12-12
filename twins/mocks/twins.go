@@ -150,11 +150,15 @@ func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, offs
 	return page, nil
 }
 
-func (trm *twinRepositoryMock) Remove(ctx context.Context, owner, id string) error {
+func (trm *twinRepositoryMock) Remove(ctx context.Context, id string) error {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
-	delete(trm.twins, key(owner, id))
+	for k, v := range trm.twins {
+		if id == v.ID {
+			delete(trm.twins, k)
+		}
+	}
 
 	return nil
 }

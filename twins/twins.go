@@ -81,5 +81,5 @@ type TwinRepository interface {
 	RetrieveByThing(context.Context, string) (Twin, error)
 
 	// Remove removes the twin having the provided identifier.
-	Remove(ctx context.Context, owner, id string) error
+	Remove(ctx context.Context, id string) error
 }
