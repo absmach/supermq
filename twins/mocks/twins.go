@@ -68,36 +68,14 @@ func (trm *twinRepositoryMock) Update(ctx context.Context, twin twins.Twin) erro
 	return nil
 }
 
-func (trm *twinRepositoryMock) UpdateKey(ctx context.Context, owner, id, val string) error {
+func (trm *twinRepositoryMock) RetrieveByID(_ context.Context, id string) (twins.Twin, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
-	for _, tw := range trm.twins {
-		if tw.Key == val {
-			return twins.ErrConflict
+	for k, v := range trm.twins {
+		if id == v.ID {
+			return trm.twins[k], nil
 		}
-	}
-
-	dbKey := key(owner, id)
-
-	tw, ok := trm.twins[dbKey]
-	if !ok {
-		return twins.ErrNotFound
-	}
-
-	tw.Key = val
-	trm.twins[dbKey] = tw
-
-	return nil
-}
-
-func (trm *twinRepositoryMock) RetrieveByID(_ context.Context, owner, id string) (twins.Twin, error) {
-	trm.mu.Lock()
-	defer trm.mu.Unlock()
-
-	tw, ok := trm.twins[key(owner, id)]
-	if ok {
-		return tw, nil
 	}
 
 	return twins.Twin{}, twins.ErrNotFound
@@ -114,6 +92,20 @@ func (trm *twinRepositoryMock) RetrieveByKey(_ context.Context, key string) (str
 	}
 
 	return "", twins.ErrNotFound
+}
+
+func (trm *twinRepositoryMock) RetrieveByThing(_ context.Context, thingid string) (twins.Twin, error) {
+	trm.mu.Lock()
+	defer trm.mu.Unlock()
+
+	for _, twin := range trm.twins {
+		if twin.ThingID == thingid {
+			return twin, nil
+		}
+	}
+
+	return twins.Twin{}, twins.ErrNotFound
+
 }
 
 func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, offset uint64, limit uint64, name string, metadata twins.Metadata) (twins.TwinsPage, error) {
@@ -156,20 +148,6 @@ func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, offs
 	}
 
 	return page, nil
-}
-
-func (trm *twinRepositoryMock) RetrieveByThing(_ context.Context, thingid string) (twins.Twin, error) {
-	trm.mu.Lock()
-	defer trm.mu.Unlock()
-
-	for _, twin := range trm.twins {
-		if twin.ThingID == thingid {
-			return twin, nil
-		}
-	}
-
-	return twins.Twin{}, twins.ErrNotFound
-
 }
 
 func (trm *twinRepositoryMock) Remove(ctx context.Context, owner, id string) error {

@@ -68,12 +68,8 @@ type TwinRepository interface {
 	// returned to indicate operation failure.
 	Update(context.Context, Twin) error
 
-	// UpdateKey performs an update key to the existing twin. A non-nil error is
-	// returned to indicate operation failure.
-	UpdateKey(ctx context.Context, owner, id, key string) error
-
 	// RetrieveByID retrieves the twin having the provided identifier.
-	RetrieveByID(ctx context.Context, owner, id string) (Twin, error)
+	RetrieveByID(ctx context.Context, id string) (Twin, error)
 
 	// RetrieveByKey retrieves the twin having the provided key.
 	RetrieveByKey(context.Context, string) (string, error)

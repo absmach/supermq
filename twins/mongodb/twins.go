@@ -11,7 +11,6 @@ import (
 	"context"
 
 	"github.com/mainflux/mainflux/twins"
-	"github.com/mainflux/mainflux/twins/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -38,17 +37,17 @@ func NewTwinRepository(db *mongo.Database) twins.TwinRepository {
 
 // Save persists the twin
 func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) (string, error) {
+	if len(tw.Name) > maxNameSize {
+		return "", twins.ErrMalformedEntity
+	}
+
 	coll := tr.db.Collection(twinsCollection)
 
-	if _, err := tr.RetrieveByID(ctx, tw.Owner, tw.ID); err == nil {
+	if _, err := tr.RetrieveByID(ctx, tw.ID); err == nil {
 		return "", twins.ErrConflict
 	}
 	if _, err := tr.RetrieveByKey(ctx, tw.Key); err == nil {
 		return "", twins.ErrConflict
-	}
-
-	if err := validate(tw); err != nil {
-		return "", err
 	}
 
 	if _, err := coll.InsertOne(context.Background(), tw); err != nil {
@@ -61,8 +60,8 @@ func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) (string, erro
 // Update performs an update to the existing twins. A non-nil error is
 // returned to indicate operation failure.
 func (tr *twinRepository) Update(ctx context.Context, tw twins.Twin) error {
-	if err := validate(tw); err != nil {
-		return err
+	if len(tw.Name) > maxNameSize {
+		return twins.ErrMalformedEntity
 	}
 
 	coll := tr.db.Collection(twinsCollection)
@@ -81,40 +80,12 @@ func (tr *twinRepository) Update(ctx context.Context, tw twins.Twin) error {
 	return nil
 }
 
-// UpdateKey performs an update key of the existing twin. A non-nil error is
-// returned to indicate operation failure.
-func (tr *twinRepository) UpdateKey(ctx context.Context, owner, id, key string) error {
-	coll := tr.db.Collection(twinsCollection)
-
-	if _, err := tr.RetrieveByID(ctx, owner, id); err != nil {
-		return twins.ErrNotFound
-	}
-
-	if err := uuid.New().IsValid(key); err != nil {
-		return err
-	}
-
-	filter := bson.D{{"id", id}}
-	update := bson.D{{"$set", bson.D{{"key", key}}}}
-
-	if _, err := coll.UpdateOne(context.Background(), filter, update); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // RetrieveByID retrieves the twin having the provided identifier
-func (tr *twinRepository) RetrieveByID(_ context.Context, owner, id string) (twins.Twin, error) {
+func (tr *twinRepository) RetrieveByID(_ context.Context, id string) (twins.Twin, error) {
 	coll := tr.db.Collection(twinsCollection)
 	var tw twins.Twin
 
-	if err := uuid.New().IsValid(id); err != nil {
-		return tw, err
-	}
-
 	filter := bson.D{{"id", id}}
-
 	if err := coll.FindOne(context.Background(), filter).Decode(&tw); err != nil {
 		return tw, twins.ErrNotFound
 	}
@@ -128,9 +99,8 @@ func (tr *twinRepository) RetrieveByKey(_ context.Context, key string) (string, 
 	var tw twins.Twin
 
 	filter := bson.D{{"key", key}}
-
 	if err := coll.FindOne(context.Background(), filter).Decode(&tw); err != nil {
-		return "", err
+		return "", twins.ErrNotFound
 	}
 
 	return tw.ID, nil
@@ -139,10 +109,6 @@ func (tr *twinRepository) RetrieveByKey(_ context.Context, key string) (string, 
 func (tr *twinRepository) RetrieveByThing(ctx context.Context, thingid string) (twins.Twin, error) {
 	coll := tr.db.Collection(twinsCollection)
 	tw := twins.Twin{}
-
-	if err := uuid.New().IsValid(thingid); err != nil {
-		return tw, err
-	}
 
 	filter := bson.D{{"thingid", thingid}}
 	if err := coll.FindOne(context.Background(), filter).Decode(&tw); err != nil {
@@ -213,18 +179,14 @@ func (tr *twinRepository) RetrieveAll(ctx context.Context, owner string, offset 
 	}, nil
 }
 
-func (tr *twinRepository) RetrieveAllByThing(ctx context.Context, thing string, offset uint64, limit uint64) (twins.TwinsPage, error) {
-	if err := uuid.New().IsValid(thing); err != nil {
-		return twins.TwinsPage{}, twins.ErrNotFound
-	}
-
+func (tr *twinRepository) RetrieveAllByThing(ctx context.Context, thingid string, offset uint64, limit uint64) (twins.TwinsPage, error) {
 	coll := tr.db.Collection(twinsCollection)
 
 	findOptions := options.Find()
 	findOptions.SetSkip(int64(offset))
 	findOptions.SetLimit(int64(limit))
 
-	filter := bson.D{{"thingid", thing}}
+	filter := bson.D{{"thingid", thingid}}
 	cur, err := coll.Find(ctx, filter, findOptions)
 	if err != nil {
 		return twins.TwinsPage{}, err
@@ -254,10 +216,6 @@ func (tr *twinRepository) RetrieveAllByThing(ctx context.Context, thing string, 
 func (tr *twinRepository) Remove(ctx context.Context, owner, id string) error {
 	coll := tr.db.Collection(twinsCollection)
 
-	if err := uuid.New().IsValid(id); err != nil {
-		return err
-	}
-
 	filter := bson.D{{"id", id}}
 	res, err := coll.DeleteOne(context.Background(), filter)
 	if err != nil {
@@ -268,18 +226,5 @@ func (tr *twinRepository) Remove(ctx context.Context, owner, id string) error {
 		return twins.ErrNotFound
 	}
 
-	return nil
-}
-
-func validate(tw twins.Twin) error {
-	if len(tw.Name) > maxNameSize {
-		return twins.ErrMalformedEntity
-	}
-	if err := uuid.New().IsValid(tw.ID); err != nil {
-		return twins.ErrMalformedEntity
-	}
-	if err := uuid.New().IsValid(tw.Key); err != nil {
-		return twins.ErrMalformedEntity
-	}
 	return nil
 }

@@ -151,12 +151,12 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 	id := ""
 	defer ts.mqttClient.Publish(&id, &err, "update/success", "update/failure", &b)
 
-	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	_, err = ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return ErrUnauthorizedAccess
 	}
 
-	tw, err := ts.twins.RetrieveByID(ctx, res.GetValue(), twin.ID)
+	tw, err := ts.twins.RetrieveByID(ctx, twin.ID)
 	if err != nil {
 		return err
 	}
@@ -199,12 +199,12 @@ func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (tw Twin
 	b := []byte{}
 	defer ts.mqttClient.Publish(&id, &err, "get/success", "get/failure", &b)
 
-	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	_, err = ts.users.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return Twin{}, ErrUnauthorizedAccess
 	}
 
-	twin, err := ts.twins.RetrieveByID(ctx, res.GetValue(), id)
+	twin, err := ts.twins.RetrieveByID(ctx, id)
 	if err != nil {
 		return Twin{}, err
 	}
