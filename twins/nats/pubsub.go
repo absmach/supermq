@@ -81,6 +81,7 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 	}
 
 	if save := prepareState(&st, &tw, recs, msg); !save {
+		ps.logger.Info(fmt.Sprintf("No persistent attributes for %s", msg.Publisher))
 		return
 	}
 

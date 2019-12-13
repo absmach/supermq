@@ -78,6 +78,7 @@ func (tr testRequest) make() (*http.Response, error) {
 func newService(tokens map[string]string) twins.Service {
 	users := mocks.NewUsersService(tokens)
 	twinsRepo := mocks.NewTwinRepository()
+	statesRepo := mocks.NewStateRepository()
 	idp := mocks.NewIdentityProvider()
 
 	nc, _ := broker.Connect(natsURL)
@@ -87,7 +88,7 @@ func newService(tokens map[string]string) twins.Service {
 
 	mc := paho.New(pc, topic)
 
-	return twins.New(nc, mc, users, twinsRepo, idp)
+	return twins.New(nc, mc, users, twinsRepo, statesRepo, idp)
 }
 
 func newServer(svc twins.Service) *httptest.Server {
@@ -105,7 +106,7 @@ func TestAddTwin(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	tw := twin
+	tw := twins.Twin{ThingID: thingID, Key: "key"}
 	tw.Key = "key"
 	data := toJSON(tw)
 
@@ -217,8 +218,10 @@ func TestUpdateTwin(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
+	twin := twins.Twin{ThingID: thingID, Key: "key"}
+	def := twins.Definition{}
 	data := toJSON(twin)
-	stw, _ := svc.AddTwin(context.Background(), token, twin, twin.Definitions[0])
+	stw, _ := svc.AddTwin(context.Background(), token, twin, def)
 
 	tw := twin
 	tw.Name = invalidName
@@ -252,14 +255,6 @@ func TestUpdateTwin(t *testing.T) {
 			desc:        "update non-existent twin",
 			req:         data,
 			id:          strconv.FormatUint(wrongID, 10),
-			contentType: contentType,
-			auth:        token,
-			status:      http.StatusNotFound,
-		},
-		{
-			desc:        "update twin with invalid id",
-			req:         data,
-			id:          "invalid",
 			contentType: contentType,
 			auth:        token,
 			status:      http.StatusNotFound,
