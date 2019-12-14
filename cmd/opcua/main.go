@@ -193,7 +193,7 @@ func connectToRedis(redisURL, redisPass, redisDB string, logger logger.Logger) *
 	})
 }
 
-func subscribeToNodesFromFile(pubsub opcua.Subscriber, nodes string, cfg opcua.Config, logger logger.Logger) {
+func subscribeToNodesFromFile(sub opcua.Subscriber, nodes string, cfg opcua.Config, logger logger.Logger) {
 	if _, err := os.Stat(nodes); os.IsNotExist(err) {
 		logger.Warn(fmt.Sprintf("Config file not found: %s", err))
 		return
@@ -224,7 +224,7 @@ func subscribeToNodesFromFile(pubsub opcua.Subscriber, nodes string, cfg opcua.C
 
 		cfg.ServerURI = l[0]
 		cfg.NodeID = l[1]
-		go subscribe(pubsub, cfg, logger)
+		go subscribe(sub, cfg, logger)
 	}
 }
 
