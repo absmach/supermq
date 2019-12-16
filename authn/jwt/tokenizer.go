@@ -16,7 +16,7 @@ type claims struct {
 }
 
 func (c claims) Valid() error {
-	if c.Type == nil || *c.Type > authn.UserKey {
+	if c.Type == nil || *c.Type > authn.APIKey {
 		return authn.ErrMalformedEntity
 	}
 
@@ -65,7 +65,7 @@ func (svc tokenizer) Parse(token string) (authn.Key, error) {
 	if err != nil {
 		if e, ok := err.(*jwt.ValidationError); ok && e.Errors == jwt.ValidationErrorExpired {
 			// Expired User key needs to be revoked.
-			if c.Type != nil && *c.Type == authn.UserKey {
+			if c.Type != nil && *c.Type == authn.APIKey {
 				return c.toKey(), nil
 			}
 			return authn.Key{}, authn.ErrKeyExpired

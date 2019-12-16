@@ -18,10 +18,10 @@ type issueKeyReq struct {
 
 // It is not possible to issue Reset key using HTTP API.
 func (req issueKeyReq) validate() error {
-	if req.Type == authn.LoginKey {
+	if req.Type == authn.UserKey {
 		return nil
 	}
-	if req.issuer == "" || (req.Type != authn.UserKey) {
+	if req.issuer == "" || (req.Type != authn.APIKey) {
 		return authn.ErrMalformedEntity
 	}
 	return nil

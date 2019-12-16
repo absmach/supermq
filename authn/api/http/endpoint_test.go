@@ -80,16 +80,16 @@ func toJSON(data interface{}) string {
 
 func TestIssue(t *testing.T) {
 	svc := newService()
-	loginKey, err := svc.Issue(context.Background(), email, authn.Key{Type: authn.LoginKey, IssuedAt: time.Now()})
+	loginKey, err := svc.Issue(context.Background(), email, authn.Key{Type: authn.UserKey, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	ts := newServer(svc)
 	defer ts.Close()
 	client := ts.Client()
 
-	lk := issueRequest{Type: authn.LoginKey}
-	rk := issueRequest{Type: authn.ResetKey}
-	uk := issueRequest{Type: authn.UserKey, Duration: time.Hour}
+	lk := issueRequest{Type: authn.UserKey}
+	rk := issueRequest{Type: authn.RecoveryKey}
+	uk := issueRequest{Type: authn.APIKey, Duration: time.Hour}
 
 	cases := []struct {
 		desc   string
@@ -186,9 +186,9 @@ func TestIssue(t *testing.T) {
 
 func TestRetrieve(t *testing.T) {
 	svc := newService()
-	loginKey, err := svc.Issue(context.Background(), email, authn.Key{Type: authn.LoginKey, IssuedAt: time.Now()})
+	loginKey, err := svc.Issue(context.Background(), email, authn.Key{Type: authn.UserKey, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	key := authn.Key{Type: authn.UserKey, IssuedAt: time.Now()}
+	key := authn.Key{Type: authn.APIKey, IssuedAt: time.Now()}
 
 	k, err := svc.Issue(context.Background(), loginKey.Secret, key)
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
@@ -238,9 +238,9 @@ func TestRetrieve(t *testing.T) {
 
 func TestRevoke(t *testing.T) {
 	svc := newService()
-	loginKey, err := svc.Issue(context.Background(), email, authn.Key{Type: authn.LoginKey, IssuedAt: time.Now()})
+	loginKey, err := svc.Issue(context.Background(), email, authn.Key{Type: authn.UserKey, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
-	key := authn.Key{Type: authn.UserKey, IssuedAt: time.Now()}
+	key := authn.Key{Type: authn.APIKey, IssuedAt: time.Now()}
 
 	k, err := svc.Issue(context.Background(), loginKey.Secret, key)
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))

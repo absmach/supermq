@@ -14,9 +14,9 @@ func (req identityReq) validate() error {
 	if req.token == "" {
 		return authn.ErrMalformedEntity
 	}
-	if req.kind != authn.LoginKey &&
-		req.kind != authn.UserKey &&
-		req.kind != authn.ResetKey {
+	if req.kind != authn.UserKey &&
+		req.kind != authn.APIKey &&
+		req.kind != authn.RecoveryKey {
 		return authn.ErrMalformedEntity
 	}
 
@@ -32,9 +32,9 @@ func (req issueReq) validate() error {
 	if req.issuer == "" {
 		return authn.ErrUnauthorizedAccess
 	}
-	if req.keyType != authn.LoginKey &&
-		req.keyType != authn.UserKey &&
-		req.keyType != authn.ResetKey {
+	if req.keyType != authn.UserKey &&
+		req.keyType != authn.APIKey &&
+		req.keyType != authn.RecoveryKey {
 		return authn.ErrMalformedEntity
 	}
 

@@ -120,7 +120,7 @@ func (svc usersService) Login(ctx context.Context, user User) (string, errors.Er
 		return "", errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	return svc.issue(ctx, dbUser.Email, authn.LoginKey)
+	return svc.issue(ctx, dbUser.Email, authn.UserKey)
 }
 
 func (svc usersService) UserInfo(ctx context.Context, token string) (User, errors.Error) {
@@ -161,7 +161,7 @@ func (svc usersService) GenerateResetToken(ctx context.Context, email, host stri
 		return ErrUserNotFound
 	}
 
-	t, err := svc.issue(ctx, email, authn.ResetKey)
+	t, err := svc.issue(ctx, email, authn.RecoveryKey)
 	if err != nil {
 		return errors.Wrap(ErrGeneratingResetToken, err)
 	}

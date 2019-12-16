@@ -72,9 +72,9 @@ func (svc service) Issue(ctx context.Context, issuer string, key Key) (Key, erro
 		return Key{}, ErrInvalidKeyIssuedAt
 	}
 	switch key.Type {
-	case UserKey:
+	case APIKey:
 		return svc.userKey(ctx, issuer, key)
-	case ResetKey:
+	case RecoveryKey:
 		return svc.resetKey(ctx, issuer, key)
 	default:
 		return svc.loginKey(issuer, key)
@@ -106,7 +106,7 @@ func (svc service) Identify(ctx context.Context, token string) (string, error) {
 	}
 
 	switch c.Type {
-	case UserKey:
+	case APIKey:
 		k, err := svc.keys.Retrieve(ctx, c.Issuer, c.ID)
 		if err != nil {
 			return "", err
@@ -117,7 +117,7 @@ func (svc service) Identify(ctx context.Context, token string) (string, error) {
 			return "", ErrKeyExpired
 		}
 		return c.Issuer, nil
-	case ResetKey, LoginKey:
+	case RecoveryKey, UserKey:
 		if c.Issuer != issuerName {
 			return "", ErrUnauthorizedAccess
 		}
@@ -186,7 +186,7 @@ func (svc service) login(token string) (string, error) {
 		return "", err
 	}
 	// Only login token is valid token type.
-	if c.Type != LoginKey {
+	if c.Type != UserKey {
 		return "", ErrUnauthorizedAccess
 	}
 

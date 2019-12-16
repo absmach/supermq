@@ -1,14 +1,14 @@
 # Authentication service
 
-Authentication service provides an API for managing API keys.
+Authentication service provides an API for managing authentication keys.
 
-There are *three types of API keys*:
+There are *three types of authentication keys*:
 
-- login key - keys issued to the user upon Login request
-- user key - keys issued upon the user request
-- reset key - password reset key
+- user key - keys issued to the user upon login request
+- API key - keys issued upon the user request
+- recovery key - password recovery key
 
-Login keys are issued when user logs in. Each user request (other than `registration` and `login`) contains login key that is used to authenticate the user. User keys are similar to the login keys. The main difference is that user keys have configurable expiration time. If no time is set, the key will never expire. For that reason, user keys are _the only key type that can be revoked_. Reset key is the password reset key. It's short-lived token used for password recovery process.
+User keys are issued when user logs in. Each user request (other than `registration` and `login`) contains user key that is used to authenticate the user. API keys are similar to the User keys. The main difference is that API keys have configurable expiration time. If no time is set, the key will never expire. For that reason, API keys are _the only key type that can be revoked_. Recovery key is the password recovery key. It's short-lived token used for password recovery process.
 
 For in-depth explanation of the aforementioned scenarios, as well as thorough
 understanding of Mainflux, please check out the [official documentation][doc].
@@ -17,8 +17,8 @@ The following actions are supported:
 
 - create (all key types)
 - verify (all key types)
-- obtain (User keys only; secret is never obtained)
-- revoke (User keys only)
+- obtain (API keys only; secret is never obtained)
+- revoke (API keys only)
 
 ## Configuration
 

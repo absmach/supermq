@@ -20,7 +20,7 @@ func key() authn.Key {
 	exp := time.Now().UTC().Add(10 * time.Minute).Round(time.Second)
 	return authn.Key{
 		ID:        "id",
-		Type:      authn.LoginKey,
+		Type:      authn.UserKey,
 		Issuer:    "user@email.com",
 		Secret:    "",
 		IssuedAt:  time.Now().UTC().Add(-10 * time.Second).Round(time.Second),
@@ -59,7 +59,7 @@ func TestParse(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("issuing key expected to succeed: %s", err))
 
 	userKey := key()
-	userKey.Type = authn.UserKey
+	userKey.Type = authn.APIKey
 	userKey.ExpiresAt = time.Now().UTC().Add(-1 * time.Minute).Round(time.Second)
 	userToken, err := tokenizer.Issue(userKey)
 	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))

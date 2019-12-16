@@ -46,7 +46,7 @@ func startGRPCServer(svc authn.Service, port int) {
 }
 
 func TestIssue(t *testing.T) {
-	loginKey, err := svc.Issue(context.Background(), email, authn.Key{Type: authn.LoginKey, IssuedAt: time.Now()})
+	loginKey, err := svc.Issue(context.Background(), email, authn.Key{Type: authn.UserKey, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	authAddr := fmt.Sprintf("localhost:%d", port)
@@ -59,7 +59,7 @@ func TestIssue(t *testing.T) {
 		kind  uint32
 		err   error
 	}{
-		"issue for user with valid token":   {"", email, authn.LoginKey, nil},
+		"issue for user with valid token":   {"", email, authn.UserKey, nil},
 		"issue for user that doesn't exist": {"", loginKey.Secret, 32, status.Error(codes.InvalidArgument, "received invalid token request")},
 	}
 
@@ -70,13 +70,13 @@ func TestIssue(t *testing.T) {
 }
 
 func TestIdentify(t *testing.T) {
-	loginKey, err := svc.Issue(context.Background(), email, authn.Key{Type: authn.LoginKey, IssuedAt: time.Now()})
+	loginKey, err := svc.Issue(context.Background(), email, authn.Key{Type: authn.UserKey, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
-	resetKey, err := svc.Issue(context.Background(), loginKey.Secret, authn.Key{Type: authn.ResetKey, IssuedAt: time.Now()})
+	resetKey, err := svc.Issue(context.Background(), loginKey.Secret, authn.Key{Type: authn.RecoveryKey, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing reset key expected to succeed: %s", err))
 
-	userKey, err := svc.Issue(context.Background(), loginKey.Secret, authn.Key{Type: authn.UserKey, IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Minute)})
+	userKey, err := svc.Issue(context.Background(), loginKey.Secret, authn.Key{Type: authn.APIKey, IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Minute)})
 	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
 
 	authAddr := fmt.Sprintf("localhost:%d", port)
