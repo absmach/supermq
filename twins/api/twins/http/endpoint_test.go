@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/mainflux/mainflux/twins"
@@ -43,12 +44,6 @@ const (
 )
 
 var (
-	twin = twins.Twin{
-		Name:        "test_app",
-		ThingID:     thingID,
-		Metadata:    map[string]interface{}{"test": "data"},
-		Definitions: []twins.Definition{twins.Definition{}},
-	}
 	invalidName = strings.Repeat("m", maxNameSize+1)
 )
 
@@ -328,14 +323,22 @@ func TestViewTwin(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	stw, err := svc.AddTwin(context.Background(), token, twin, twin.Definitions[0])
+	def := twins.Definition{}
+	twin := twins.Twin{ThingID: thingID}
+	stw, err := svc.AddTwin(context.Background(), token, twin, def)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	twres := twinRes{
-		ID:       stw.ID,
-		Name:     stw.Name,
-		Key:      stw.Key,
-		Metadata: stw.Metadata,
+		Owner:       stw.Owner,
+		Name:        stw.Name,
+		ID:          stw.ID,
+		Key:         stw.Key,
+		ThingID:     stw.ThingID,
+		Revision:    stw.Revision,
+		Created:     stw.Created,
+		Updated:     stw.Updated,
+		Definitions: stw.Definitions,
+		Metadata:    stw.Metadata,
 	}
 	data := toJSON(twres)
 
@@ -368,17 +371,17 @@ func TestViewTwin(t *testing.T) {
 			res:    "",
 		},
 		{
+			desc:   "view twin by passing empty id",
+			id:     "",
+			auth:   token,
+			status: http.StatusBadRequest,
+			res:    "",
+		},
+		{
 			desc:   "view twin by passing empty token",
 			id:     stw.ID,
 			auth:   "",
 			status: http.StatusForbidden,
-			res:    "",
-		},
-		{
-			desc:   "view twin by passing invalid id",
-			id:     "invalid",
-			auth:   token,
-			status: http.StatusNotFound,
 			res:    "",
 		},
 	}
@@ -392,10 +395,9 @@ func TestViewTwin(t *testing.T) {
 		}
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		body, err := ioutil.ReadAll(res.Body)
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		data := strings.Trim(string(body), "\n")
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
+		body, err := ioutil.ReadAll(res.Body)
+		data := strings.Trim(string(body), "\n")
 		assert.Equal(t, tc.res, data, fmt.Sprintf("%s: expected body %s got %s", tc.desc, tc.res, data))
 	}
 }
@@ -405,7 +407,9 @@ func TestRemoveTwin(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	stw, _ := svc.AddTwin(context.Background(), token, twin, twin.Definitions[0])
+	def := twins.Definition{}
+	twin := twins.Twin{ThingID: thingID}
+	stw, _ := svc.AddTwin(context.Background(), token, twin, def)
 
 	cases := []struct {
 		desc   string
@@ -424,6 +428,12 @@ func TestRemoveTwin(t *testing.T) {
 			id:     strconv.FormatUint(wrongID, 10),
 			auth:   token,
 			status: http.StatusNoContent,
+		},
+		{
+			desc:   "delete twin by passing empty id",
+			id:     "",
+			auth:   token,
+			status: http.StatusBadRequest,
 		},
 		{
 			desc:   "delete twin with invalid token",
@@ -453,8 +463,14 @@ func TestRemoveTwin(t *testing.T) {
 }
 
 type twinRes struct {
-	ID       string                 `json:"id"`
-	Name     string                 `json:"name,omitempty"`
-	Key      string                 `json:"key"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	Owner       string                 `json:"owner"`
+	Name        string                 `json:"name,omitempty"`
+	ID          string                 `json:"id"`
+	Key         string                 `json:"key"`
+	ThingID     string                 `json:"thingID"`
+	Revision    int                    `json:"revision"`
+	Created     time.Time              `json:"created"`
+	Updated     time.Time              `json:"updated"`
+	Definitions []twins.Definition     `json:"definitions"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
