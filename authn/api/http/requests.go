@@ -11,7 +11,6 @@ import (
 
 type issueKeyReq struct {
 	issuer   string
-	Secret   string        `json:"secret,omitempty"`
 	Type     uint32        `json:"type,omitempty"`
 	Duration time.Duration `json:"duration,omitempty"`
 }

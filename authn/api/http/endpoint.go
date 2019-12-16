@@ -21,7 +21,6 @@ func issueEndpoint(svc authn.Service) endpoint.Endpoint {
 		now := time.Now().UTC()
 		newKey := authn.Key{
 			Issuer:   req.issuer,
-			Secret:   req.Secret,
 			IssuedAt: now,
 			Type:     req.Type,
 		}

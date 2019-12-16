@@ -185,7 +185,7 @@ func (svc service) login(token string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	// Only login token is valid token type.
+	// Only user key token is valid for login.
 	if c.Type != UserKey {
 		return "", ErrUnauthorizedAccess
 	}
