@@ -98,16 +98,75 @@ func TestIssue(t *testing.T) {
 		token  string
 		status int
 	}{
-		{"issue login key", toJSON(lk), contentType, "", http.StatusCreated},
-		{"issue user key", toJSON(uk), contentType, loginKey.Secret, http.StatusCreated},
-		{"issue reset key", toJSON(rk), contentType, loginKey.Secret, http.StatusBadRequest},
-		{"issue login key wrong content type", toJSON(lk), "", loginKey.Secret, http.StatusUnsupportedMediaType},
-		{"issue key wrong content type", toJSON(rk), "", loginKey.Secret, http.StatusUnsupportedMediaType},
-		{"issue key unauthorized", toJSON(uk), contentType, "wrong", http.StatusForbidden},
-		{"issue reset key with empty token", toJSON(rk), contentType, "", http.StatusBadRequest},
-		{"issue key with invalid request", "{", contentType, "", http.StatusBadRequest},
-		{"issue key with invalid JSON", "{invalid}", contentType, "", http.StatusBadRequest},
-		{"issue key with invalid JSON content", `{"Type":{"key":"value"}}`, contentType, "", http.StatusBadRequest},
+		{
+			desc:   "issue login key",
+			req:    toJSON(lk),
+			ct:     contentType,
+			token:  "",
+			status: http.StatusCreated,
+		},
+		{
+			desc:   "issue user key",
+			req:    toJSON(uk),
+			ct:     contentType,
+			token:  loginKey.Secret,
+			status: http.StatusCreated,
+		},
+		{
+			desc:   "issue reset key",
+			req:    toJSON(rk),
+			ct:     contentType,
+			token:  loginKey.Secret,
+			status: http.StatusBadRequest,
+		},
+		{
+			desc: "issue login key wrong content type",
+			req:  toJSON(lk),
+			ct:   "", token: loginKey.Secret,
+			status: http.StatusUnsupportedMediaType,
+		},
+		{
+			desc:   "issue key wrong content type",
+			req:    toJSON(rk),
+			ct:     "",
+			token:  loginKey.Secret,
+			status: http.StatusUnsupportedMediaType,
+		},
+		{
+			desc:   "issue key unauthorized",
+			req:    toJSON(uk),
+			ct:     contentType,
+			token:  "wrong",
+			status: http.StatusForbidden,
+		},
+		{
+			desc:   "issue reset key with empty token",
+			req:    toJSON(rk),
+			ct:     contentType,
+			token:  "",
+			status: http.StatusBadRequest,
+		},
+		{
+			desc:   "issue key with invalid request",
+			req:    "{",
+			ct:     contentType,
+			token:  "",
+			status: http.StatusBadRequest,
+		},
+		{
+			desc:   "issue key with invalid JSON",
+			req:    "{invalid}",
+			ct:     contentType,
+			token:  "",
+			status: http.StatusBadRequest,
+		},
+		{
+			desc:   "issue key with invalid JSON content",
+			req:    `{"Type":{"key":"value"}}`,
+			ct:     contentType,
+			token:  "",
+			status: http.StatusBadRequest,
+		},
 	}
 
 	for _, tc := range cases {
@@ -144,9 +203,24 @@ func TestRetrieve(t *testing.T) {
 		token  string
 		status int
 	}{
-		{"retrieve an existing key", k.ID, loginKey.Secret, http.StatusOK},
-		{"retrieve a non-existing key", "non-existing", loginKey.Secret, http.StatusNotFound},
-		{"retrieve a key unauthorized", k.ID, "wrong", http.StatusForbidden},
+		{
+			desc:   "retrieve an existing key",
+			id:     k.ID,
+			token:  loginKey.Secret,
+			status: http.StatusOK,
+		},
+		{
+			desc:   "retrieve a non-existing key",
+			id:     "non-existing",
+			token:  loginKey.Secret,
+			status: http.StatusNotFound,
+		},
+		{
+			desc:   "retrieve a key unauthorized",
+			id:     k.ID,
+			token:  "wrong",
+			status: http.StatusForbidden,
+		},
 	}
 
 	for _, tc := range cases {
@@ -181,9 +255,23 @@ func TestRevoke(t *testing.T) {
 		token  string
 		status int
 	}{
-		{"revoke an existing key", k.ID, loginKey.Secret, http.StatusNoContent},
-		{"revoke a non-existing key", "non-existing", loginKey.Secret, http.StatusNoContent},
-		{"revoke a key unauthorized", k.ID, "wrong", http.StatusForbidden},
+		{
+			desc:   "revoke an existing key",
+			id:     k.ID,
+			token:  loginKey.Secret,
+			status: http.StatusNoContent,
+		},
+		{
+			desc:   "revoke a non-existing key",
+			id:     "non-existing",
+			token:  loginKey.Secret,
+			status: http.StatusNoContent,
+		},
+		{
+			desc:   "revoke a key unauthorized",
+			id:     k.ID,
+			token:  "wrong",
+			status: http.StatusForbidden},
 	}
 
 	for _, tc := range cases {

@@ -63,9 +63,12 @@ func (kr repo) Retrieve(ctx context.Context, issuer, id string) (authn.Key, erro
 }
 
 func (kr repo) Remove(ctx context.Context, issuer, id string) error {
-	q := `DELETE FROM keys WHERE issuer = $1 AND id = $2`
-
-	if _, err := kr.db.ExecContext(ctx, q, issuer, id); err != nil {
+	q := `DELETE FROM keys WHERE issuer = :issuer AND id = :id`
+	key := dbKey{
+		ID:     id,
+		Issuer: issuer,
+	}
+	if _, err := kr.db.NamedExecContext(ctx, q, key); err != nil {
 		return err
 	}
 

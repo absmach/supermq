@@ -83,20 +83,41 @@ func TestIdentify(t *testing.T) {
 	conn, _ := grpc.Dial(authAddr, grpc.WithInsecure())
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
-	cases := map[string]struct {
+	cases := []struct {
+		desc  string
 		token string
 		id    string
 		err   error
 	}{
-		"identify user with reset token":   {resetKey.Secret, email, nil},
-		"identify user with user token":    {userKey.Secret, email, nil},
-		"identify user with login token":   {"", "", status.Error(codes.InvalidArgument, "received invalid token request")},
-		"identify user that doesn't exist": {"", "", status.Error(codes.InvalidArgument, "received invalid token request")},
+		{
+			desc:  "identify user with reset token",
+			token: resetKey.Secret,
+			id:    email,
+			err:   nil,
+		},
+		{
+			desc:  "identify user with user token",
+			token: userKey.Secret,
+			id:    email,
+			err:   nil,
+		},
+		{
+			desc:  "identify user with invalid login token",
+			token: "invalid",
+			id:    "",
+			err:   status.Error(codes.Unauthenticated, "unauthorized access"),
+		},
+		{
+			desc:  "identify user that doesn't exist",
+			token: "",
+			id:    "",
+			err:   status.Error(codes.InvalidArgument, "received invalid token request"),
+		},
 	}
 
-	for desc, tc := range cases {
+	for _, tc := range cases {
 		id, err := client.Identify(context.Background(), &mainflux.Token{Value: tc.token})
-		assert.Equal(t, tc.id, id.GetValue(), fmt.Sprintf("%s: expected %s got %s", desc, tc.id, id.GetValue()))
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s", desc, tc.err, err))
+		assert.Equal(t, tc.id, id.GetValue(), fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.id, id.GetValue()))
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.err, err))
 	}
 }

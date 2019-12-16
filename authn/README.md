@@ -1,12 +1,6 @@
 # Authentication service
 
-Authentication service provides an API for managing API keys. Through this API clients
-are able to do the following actions on API keys:
-
-- create
-- obtain
-- verify
-- revoke
+Authentication service provides an API for managing API keys.
 
 There are *three types of API keys*:
 
@@ -18,6 +12,13 @@ Login keys are issued when user logs in. Each user request (other than `registra
 
 For in-depth explanation of the aforementioned scenarios, as well as thorough
 understanding of Mainflux, please check out the [official documentation][doc].
+
+The following actions are supported:
+
+- create (all key types)
+- verify (all key types)
+- obtain (User keys only; secret is never obtained)
+- revoke (User keys only)
 
 ## Configuration
 
