@@ -1972,7 +1972,7 @@ func TestCreateConnections(t *testing.T) {
 			body:        "{",
 		},
 		{
-			desc:        "connect valid things with empty channelIDs",
+			desc:        "connect valid thing ids with empty channel ids",
 			channelIDs:  []string{},
 			thingIDs:    ths,
 			auth:        token,
