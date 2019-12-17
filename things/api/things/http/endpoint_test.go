@@ -1957,7 +1957,7 @@ func TestCreateConnections(t *testing.T) {
 			status:      http.StatusNotFound,
 		},
 		{
-			desc:        "invalid content type",
+			desc:        "connect with invalid content type",
 			channelIDs:  bchs,
 			thingIDs:    ths,
 			auth:        token,
@@ -1965,14 +1965,14 @@ func TestCreateConnections(t *testing.T) {
 			status:      http.StatusUnsupportedMediaType,
 		},
 		{
-			desc:        "invalid JSON",
+			desc:        "connect with invalid JSON",
 			auth:        token,
 			contentType: contentType,
 			status:      http.StatusBadRequest,
 			body:        "{",
 		},
 		{
-			desc:        "Connect valid things with empty channelIDs",
+			desc:        "connect valid things with empty channelIDs",
 			channelIDs:  []string{},
 			thingIDs:    ths,
 			auth:        token,
@@ -1980,7 +1980,7 @@ func TestCreateConnections(t *testing.T) {
 			status:      http.StatusBadRequest,
 		},
 		{
-			desc:        "Connect valid channels with empty thingIDs",
+			desc:        "connect valid channel ids with empty thing ids",
 			channelIDs:  achs,
 			thingIDs:    []string{},
 			auth:        token,
@@ -1988,7 +1988,7 @@ func TestCreateConnections(t *testing.T) {
 			status:      http.StatusBadRequest,
 		},
 		{
-			desc:        "Connect empty channelIDs and empty thingIDs",
+			desc:        "connect empty channel ids and empty thing ids",
 			channelIDs:  []string{},
 			thingIDs:    []string{},
 			auth:        token,
