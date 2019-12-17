@@ -1972,7 +1972,7 @@ func TestCreateConnections(t *testing.T) {
 			body:        "{",
 		},
 		{
-			desc:        "Empty channelIDs",
+			desc:        "Connect valid things with empty channelIDs",
 			channelIDs:  []string{},
 			thingIDs:    ths,
 			auth:        token,
@@ -1980,7 +1980,7 @@ func TestCreateConnections(t *testing.T) {
 			status:      http.StatusBadRequest,
 		},
 		{
-			desc:        "Empty thingIDs",
+			desc:        "Connect valid channels with empty thingIDs",
 			channelIDs:  achs,
 			thingIDs:    []string{},
 			auth:        token,
@@ -1988,7 +1988,7 @@ func TestCreateConnections(t *testing.T) {
 			status:      http.StatusBadRequest,
 		},
 		{
-			desc:        "Empty channelIDs and empty thingIDs",
+			desc:        "Connect empty channelIDs and empty thingIDs",
 			channelIDs:  []string{},
 			thingIDs:    []string{},
 			auth:        token,
