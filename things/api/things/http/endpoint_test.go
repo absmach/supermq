@@ -1971,6 +1971,30 @@ func TestCreateConnections(t *testing.T) {
 			status:      http.StatusBadRequest,
 			body:        "{",
 		},
+		{
+			desc:        "Empty channelIDs",
+			channelIDs:  []string{},
+			thingIDs:    ths,
+			auth:        token,
+			contentType: contentType,
+			status:      http.StatusBadRequest,
+		},
+		{
+			desc:        "Empty thingIDs",
+			channelIDs:  achs,
+			thingIDs:    []string{},
+			auth:        token,
+			contentType: contentType,
+			status:      http.StatusBadRequest,
+		},
+		{
+			desc:        "Empty channelIDs and empty thingIDs",
+			channelIDs:  []string{},
+			thingIDs:    []string{},
+			auth:        token,
+			contentType: contentType,
+			status:      http.StatusBadRequest,
+		},
 	}
 
 	for _, tc := range cases {
