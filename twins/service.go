@@ -75,7 +75,7 @@ type Service interface {
 type twinsService struct {
 	natsClient *nats.Conn
 	mqttClient paho.Mqtt
-	users      mainflux.UsersServiceClient
+	auth       mainflux.AuthNServiceClient
 	twins      TwinRepository
 	states     StateRepository
 	idp        IdentityProvider
@@ -84,11 +84,11 @@ type twinsService struct {
 var _ Service = (*twinsService)(nil)
 
 // New instantiates the twins service implementation.
-func New(nc *nats.Conn, mc paho.Mqtt, users mainflux.UsersServiceClient, twins TwinRepository, sr StateRepository, idp IdentityProvider) Service {
+func New(nc *nats.Conn, mc paho.Mqtt, auth mainflux.AuthNServiceClient, twins TwinRepository, sr StateRepository, idp IdentityProvider) Service {
 	return &twinsService{
 		natsClient: nc,
 		mqttClient: mc,
-		users:      users,
+		auth:       auth,
 		twins:      twins,
 		states:     sr,
 		idp:        idp,
@@ -100,7 +100,7 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 	b := []byte{}
 	defer ts.mqttClient.Publish(&id, &err, "create/success", "create/failure", &b)
 
-	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	res, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return Twin{}, ErrUnauthorizedAccess
 	}
@@ -151,7 +151,7 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 	id := ""
 	defer ts.mqttClient.Publish(&id, &err, "update/success", "update/failure", &b)
 
-	_, err = ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	_, err = ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return ErrUnauthorizedAccess
 	}
@@ -199,7 +199,7 @@ func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (tw Twin
 	b := []byte{}
 	defer ts.mqttClient.Publish(&id, &err, "get/success", "get/failure", &b)
 
-	_, err = ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	_, err = ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return Twin{}, ErrUnauthorizedAccess
 	}
@@ -215,7 +215,7 @@ func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (tw Twin
 }
 
 func (ts *twinsService) ViewTwinByThing(ctx context.Context, token, thingid string) (Twin, error) {
-	_, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	_, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return Twin{}, ErrUnauthorizedAccess
 	}
@@ -227,7 +227,7 @@ func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) (err e
 	b := []byte{}
 	defer ts.mqttClient.Publish(&id, &err, "remove/success", "remove/failure", &b)
 
-	_, err = ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	_, err = ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return ErrUnauthorizedAccess
 	}
@@ -240,7 +240,7 @@ func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) (err e
 }
 
 func (ts *twinsService) ListTwins(ctx context.Context, token string, offset uint64, limit uint64, name string, metadata Metadata) (TwinsPage, error) {
-	res, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	res, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return TwinsPage{}, ErrUnauthorizedAccess
 	}
@@ -249,7 +249,7 @@ func (ts *twinsService) ListTwins(ctx context.Context, token string, offset uint
 }
 
 func (ts *twinsService) ListStates(ctx context.Context, token string, offset uint64, limit uint64, id string) (StatesPage, error) {
-	_, err := ts.users.Identify(ctx, &mainflux.Token{Value: token})
+	_, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return StatesPage{}, ErrUnauthorizedAccess
 	}

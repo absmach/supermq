@@ -21,24 +21,22 @@ import (
 
 	"github.com/mainflux/mainflux/twins/paho"
 
+	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
+	authapi "github.com/mainflux/mainflux/authn/api/grpc"
 	"github.com/mainflux/mainflux/logger"
+	localusers "github.com/mainflux/mainflux/things/users"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/api"
-	"github.com/mainflux/mainflux/twins/nats"
-	localusers "github.com/mainflux/mainflux/twins/users"
-	"github.com/mainflux/mainflux/twins/uuid"
-
 	twinshttpapi "github.com/mainflux/mainflux/twins/api/twins/http"
 	twinsmongodb "github.com/mainflux/mainflux/twins/mongodb"
-	usersapi "github.com/mainflux/mainflux/users/api/grpc"
-	"go.mongodb.org/mongo-driver/mongo"
-
-	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
+	"github.com/mainflux/mainflux/twins/nats"
+	"github.com/mainflux/mainflux/twins/uuid"
 	broker "github.com/nats-io/go-nats"
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -65,6 +63,11 @@ const (
 	defChannelID       = ""
 	defNatsURL         = broker.DefaultURL
 
+	defAuthnHTTPPort = "8989"
+	defAuthnGRPCPort = "8181"
+	defAuthnTimeout  = "1" // in seconds
+	defAuthnURL      = "localhost:8181"
+
 	envLogLevel        = "MF_TWINS_LOG_LEVEL"
 	envHTTPPort        = "MF_TWINS_HTTP_PORT"
 	envJaegerURL       = "MF_JAEGER_URL"
@@ -84,6 +87,11 @@ const (
 	envThingKey        = "MF_TWINS_THING_KEY"
 	envChannelID       = "MF_TWINS_CHANNEL_ID"
 	envNatsURL         = "MF_NATS_URL"
+
+	envAuthnHTTPPort = "MF_TWINS_HTTP_PORT"
+	envAuthnGRPCPort = "MF_TWINS_GRPC_PORT"
+	envAuthnTimeout  = "MF_AUTHN_TIMEOUT"
+	envAuthnURL      = "MF_AUTHN_URL"
 )
 
 type config struct {
@@ -104,6 +112,11 @@ type config struct {
 	thingKey        string
 	channelID       string
 	NatsURL         string
+
+	authnHTTPPort string
+	authnGRPCPort string
+	authnTimeout  time.Duration
+	authnURL      string
 }
 
 func main() {
@@ -119,10 +132,10 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	usersTracer, usersCloser := initJaeger("users", cfg.jaegerURL, logger)
-	defer usersCloser.Close()
+	authTracer, authCloser := initJaeger("auth", cfg.jaegerURL, logger)
+	defer authCloser.Close()
 
-	users, close := createUsersClient(cfg, usersTracer, logger)
+	auth, close := createAuthClient(cfg, authTracer, logger)
 	if close != nil {
 		defer close()
 	}
@@ -149,7 +162,7 @@ func main() {
 	tracer, closer := initJaeger("twins", cfg.jaegerURL, logger)
 	defer closer.Close()
 
-	svc := newService(nc, ncTracer, mc, mcTracer, users, dbTracer, db, logger)
+	svc := newService(nc, ncTracer, mc, mcTracer, auth, dbTracer, db, logger)
 	errs := make(chan error, 2)
 
 	go startHTTPServer(twinshttpapi.MakeHandler(tracer, svc), cfg.httpPort, cfg, logger, errs)
@@ -199,6 +212,10 @@ func loadConfig() config {
 		channelID:       mainflux.Env(envChannelID, defChannelID),
 		thingKey:        mainflux.Env(envThingKey, defThingKey),
 		NatsURL:         mainflux.Env(envNatsURL, defNatsURL),
+		authnHTTPPort:   mainflux.Env(envAuthnHTTPPort, defAuthnHTTPPort),
+		authnGRPCPort:   mainflux.Env(envAuthnGRPCPort, defAuthnGRPCPort),
+		authnURL:        mainflux.Env(envAuthnURL, defAuthnURL),
+		authnTimeout:    time.Duration(timeout) * time.Second,
 	}
 }
 
@@ -226,16 +243,16 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 	return tracer, closer
 }
 
-func createUsersClient(cfg config, tracer opentracing.Tracer, logger logger.Logger) (mainflux.UsersServiceClient, func() error) {
+func createAuthClient(cfg config, tracer opentracing.Tracer, logger logger.Logger) (mainflux.AuthNServiceClient, func() error) {
 	if cfg.singleUserEmail != "" && cfg.singleUserToken != "" {
 		return localusers.NewSingleUserService(cfg.singleUserEmail, cfg.singleUserToken), nil
 	}
 
-	conn := connectToUsers(cfg, logger)
-	return usersapi.NewClient(tracer, conn, cfg.usersTimeout), conn.Close
+	conn := connectToAuth(cfg, logger)
+	return authapi.NewClient(tracer, conn, cfg.authnTimeout), conn.Close
 }
 
-func connectToUsers(cfg config, logger logger.Logger) *grpc.ClientConn {
+func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
 	var opts []grpc.DialOption
 	if cfg.clientTLS {
 		if cfg.caCerts != "" {
@@ -251,18 +268,16 @@ func connectToUsers(cfg config, logger logger.Logger) *grpc.ClientConn {
 		logger.Info("gRPC communication is not encrypted")
 	}
 
-	conn, err := grpc.Dial(cfg.usersURL, opts...)
+	conn, err := grpc.Dial(cfg.authnURL, opts...)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to users service: %s", err))
 		os.Exit(1)
 	}
 
-	logger.Info("Connected to users")
-
 	return conn
 }
 
-func newService(nc *broker.Conn, ncTracer opentracing.Tracer, mc paho.Mqtt, mcTracer opentracing.Tracer, users mainflux.UsersServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
+func newService(nc *broker.Conn, ncTracer opentracing.Tracer, mc paho.Mqtt, mcTracer opentracing.Tracer, users mainflux.AuthNServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
 	twinRepo := twinsmongodb.NewTwinRepository(db)
 	stateRepo := twinsmongodb.NewStateRepository(db)
 	idp := uuid.New()
