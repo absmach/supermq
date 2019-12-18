@@ -81,7 +81,7 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 	}
 
 	if save := prepareState(&st, &tw, recs, msg); !save {
-		ps.logger.Info(fmt.Sprintf("No persistent attributes for %s", msg.Publisher))
+		ps.logger.Info(fmt.Sprintf("No persistent attributes on %s for %s", msg.Subtopic, msg.Publisher))
 		return
 	}
 
@@ -107,14 +107,12 @@ func prepareState(st *twins.State, tw *twins.Twin, recs []Record, msg mainflux.M
 	}
 
 	save := false
-
-	rec := recs[0]
 	for k, a := range def.Attributes {
 		if !a.PeristState {
 			continue
 		}
 		if a.Channel == msg.Channel && a.Subtopic == msg.Subtopic {
-			st.Payload[k] = rec.Value
+			st.Payload[k] = recs[0].Value
 			save = true
 			break
 		}

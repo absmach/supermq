@@ -71,7 +71,7 @@ func (tr testRequest) make() (*http.Response, error) {
 }
 
 func newService(tokens map[string]string) twins.Service {
-	users := mocks.NewUsersService(tokens)
+	users := mocks.NewAuthNServiceClient(tokens)
 	twinsRepo := mocks.NewTwinRepository()
 	statesRepo := mocks.NewStateRepository()
 	idp := mocks.NewIdentityProvider()

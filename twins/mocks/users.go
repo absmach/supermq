@@ -15,20 +15,24 @@ import (
 	"google.golang.org/grpc"
 )
 
-var _ mainflux.UsersServiceClient = (*usersServiceMock)(nil)
+var _ mainflux.AuthNServiceClient = (*authNServiceClient)(nil)
 
-type usersServiceMock struct {
+type authNServiceClient struct {
 	users map[string]string
 }
 
-// NewUsersService creates mock of users service.
-func NewUsersService(users map[string]string) mainflux.UsersServiceClient {
-	return &usersServiceMock{users}
+// NewAuthNServiceClient creates mock of users service.
+func NewAuthNServiceClient(users map[string]string) mainflux.AuthNServiceClient {
+	return &authNServiceClient{users}
 }
 
-func (svc usersServiceMock) Identify(ctx context.Context, in *mainflux.Token, opts ...grpc.CallOption) (*mainflux.UserID, error) {
+func (svc authNServiceClient) Identify(ctx context.Context, in *mainflux.Token, opts ...grpc.CallOption) (*mainflux.UserID, error) {
 	if id, ok := svc.users[in.Value]; ok {
 		return &mainflux.UserID{Value: id}, nil
 	}
 	return nil, users.ErrUnauthorizedAccess
+}
+
+func (c *authNServiceClient) Issue(ctx context.Context, in *mainflux.IssueReq, opts ...grpc.CallOption) (*mainflux.Token, error) {
+	return new(mainflux.Token), nil
 }

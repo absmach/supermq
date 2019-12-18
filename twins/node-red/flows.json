@@ -1,13 +1,35 @@
 [
     {
-        "id": "af1ce290.bb971",
+        "id": "d0364853.850dc8",
         "type": "tab",
         "label": "Rules",
         "disabled": false,
         "info": ""
     },
     {
-        "id": "7bdae3bd.55196c",
+        "id": "8cc74f9c.58e0d",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "twins",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": false,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": ""
+    },
+    {
+        "id": "b8f210d9.a032a",
         "type": "mqtt-broker",
         "z": "",
         "name": "",
@@ -29,10 +51,10 @@
         "willPayload": ""
     },
     {
-        "id": "27b4d642.e98fea",
+        "id": "346da1f2.c283ae",
         "type": "mqtt-broker",
         "z": "",
-        "name": "",
+        "name": "measurements",
         "broker": "localhost",
         "port": "1883",
         "clientid": "",
@@ -51,9 +73,31 @@
         "willPayload": ""
     },
     {
-        "id": "b0933612.339288",
+        "id": "24bcd582.a9df2a",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "notifs",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": false,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": ""
+    },
+    {
+        "id": "20439462.058d4c",
         "type": "inject",
-        "z": "af1ce290.bb971",
+        "z": "d0364853.850dc8",
         "name": "",
         "topic": "",
         "payload": "",
@@ -62,69 +106,70 @@
         "crontab": "",
         "once": true,
         "onceDelay": 0.1,
-        "x": 110,
-        "y": 100,
+        "x": 130,
+        "y": 300,
         "wires": [
             [
-                "833ccb11.ba0488"
+                "80c381c0.08ba"
             ]
         ]
     },
     {
-        "id": "7ade6cfd.a36ab4",
+        "id": "5b97f2bf.75ca5c",
         "type": "debug",
-        "z": "af1ce290.bb971",
+        "z": "d0364853.850dc8",
         "name": "",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
-        "complete": "false",
+        "complete": "payload",
+        "targetType": "msg",
         "x": 330,
-        "y": 460,
+        "y": 40,
         "wires": []
     },
     {
-        "id": "be5b360.1458bc8",
+        "id": "abf34e3.cc204b",
         "type": "mqtt out",
-        "z": "af1ce290.bb971",
+        "z": "d0364853.850dc8",
         "name": "measurements",
         "topic": "",
         "qos": "",
         "retain": "",
-        "broker": "7bdae3bd.55196c",
-        "x": 560,
-        "y": 80,
+        "broker": "346da1f2.c283ae",
+        "x": 580,
+        "y": 280,
         "wires": []
     },
     {
-        "id": "fd92503c.ea38f",
+        "id": "55b82409.cbdd5c",
         "type": "mqtt in",
-        "z": "af1ce290.bb971",
+        "z": "d0364853.850dc8",
         "name": "notifs",
-        "topic": "channels/f25d8a83-3a7d-4b87-a66f-cd5602e10db0/messages/#",
+        "topic": "channels/9306a46d-6a06-4c9f-b2bb-5822051632c0/messages/#",
         "qos": "2",
         "datatype": "auto",
-        "broker": "27b4d642.e98fea",
+        "broker": "24bcd582.a9df2a",
         "x": 90,
-        "y": 460,
+        "y": 40,
         "wires": [
             [
-                "7ade6cfd.a36ab4"
+                "5b97f2bf.75ca5c"
             ]
         ]
     },
     {
-        "id": "833ccb11.ba0488",
+        "id": "80c381c0.08ba",
         "type": "change",
-        "z": "af1ce290.bb971",
+        "z": "d0364853.850dc8",
         "name": "",
         "rules": [
             {
                 "t": "set",
                 "p": "topic",
                 "pt": "msg",
-                "to": "channels/3b57b952-318e-47b5-b0d7-a14f61ecd03b/messages/",
+                "to": "channels/f2502f65-ff02-4e43-9628-3acc6980a92d/messages/",
                 "tot": "str"
             }
         ],
@@ -133,80 +178,81 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 110,
-        "y": 160,
+        "x": 130,
+        "y": 360,
         "wires": [
-            []
+            [
+                "347781c2.e4264e"
+            ]
         ]
     },
     {
-        "id": "4745b7be.3e52c8",
+        "id": "347781c2.e4264e",
         "type": "function",
-        "z": "af1ce290.bb971",
+        "z": "d0364853.850dc8",
         "name": "measurements",
         "func": "var magnitudes = [\"temperature\", \"humidity\", \"pressure\"]\n\nvar msgs = []\nfor (var i = 0; i < magnitudes.length; i++) {\n  var payload = `[{\"n\":\"${magnitudes[i]}\",\"t\":${msg.payload},\"v\":${Math.random()*10}}]`;\n  msgs.push({ payload: payload, topic: msg.topic + magnitudes[i]})\n} \n\nreturn msgs;",
         "outputs": 3,
         "noerr": 0,
-        "x": 320,
-        "y": 260,
+        "x": 340,
+        "y": 460,
         "wires": [
             [
-                "10f0e189.8bd65e",
-                "be5b360.1458bc8"
+                "fc139091.5381e",
+                "abf34e3.cc204b"
             ],
             [
-                "10f0e189.8bd65e",
-                "be5b360.1458bc8"
+                "fc139091.5381e",
+                "abf34e3.cc204b"
             ],
             [
-                "10f0e189.8bd65e",
-                "be5b360.1458bc8"
+                "fc139091.5381e",
+                "abf34e3.cc204b"
             ]
         ]
     },
     {
-        "id": "10f0e189.8bd65e",
+        "id": "fc139091.5381e",
         "type": "debug",
-        "z": "af1ce290.bb971",
+        "z": "d0364853.850dc8",
         "name": "",
         "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
         "complete": "false",
-        "x": 550,
-        "y": 160,
+        "x": 570,
+        "y": 360,
         "wires": []
     },
     {
-        "id": "d0d050e0.ac709",
+        "id": "8a289485.0f9b18",
         "type": "function",
-        "z": "af1ce290.bb971",
+        "z": "d0364853.850dc8",
         "name": "batch",
         "func": "var magnitudes = [\"temperature\", \"humidity\"]\n\nvar measurements = '[ '\nfor (var i = 0; i < magnitudes.length; i++) {\n  var payload = `{\"n\":\"${magnitudes[i]}\",\"t\":${msg.payload},\"v\":${Math.random()*10}}`;\n  measurements += payload + ', '\n} \nmeasurements += `{\"n\":\"${\"pressure\"}\",\"t\":${msg.payload},\"v\":${Math.random()*10}}` + ']'\n\nmsg.payload = measurements\nmsg.topic = msg.topic + '/batch'\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
-        "x": 310,
-        "y": 40,
+        "x": 330,
+        "y": 240,
         "wires": [
             [
-                "3d828207.6500de",
-                "be5b360.1458bc8"
+                "43e08c6c.7385f4"
             ]
         ]
     },
     {
-        "id": "3d828207.6500de",
+        "id": "43e08c6c.7385f4",
         "type": "debug",
-        "z": "af1ce290.bb971",
+        "z": "d0364853.850dc8",
         "name": "",
         "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
         "complete": "false",
-        "x": 550,
-        "y": 40,
+        "x": 570,
+        "y": 240,
         "wires": []
     }
 ]
