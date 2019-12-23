@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2019
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package main
 
@@ -129,7 +125,8 @@ func main() {
 
 	db, err := twinsmongodb.Connect(cfg.dbCfg, logger)
 	if err != nil {
-		log.Fatalf(err.Error())
+		logger.Error(err.Error())
+		os.Exit(1)
 	}
 
 	authTracer, authCloser := initJaeger("auth", cfg.jaegerURL, logger)
