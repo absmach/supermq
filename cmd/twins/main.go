@@ -26,9 +26,9 @@ import (
 	"github.com/mainflux/mainflux/twins/api"
 	twinshttpapi "github.com/mainflux/mainflux/twins/api/twins/http"
 	twinsmongodb "github.com/mainflux/mainflux/twins/mongodb"
-	"github.com/mainflux/mainflux/twins/nats"
+	twinsnats "github.com/mainflux/mainflux/twins/nats"
 	"github.com/mainflux/mainflux/twins/uuid"
-	broker "github.com/nats-io/go-nats"
+	nats "github.com/nats-io/go-nats"
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"
@@ -57,7 +57,7 @@ const (
 	defThingID         = ""
 	defThingKey        = ""
 	defChannelID       = ""
-	defNatsURL         = broker.DefaultURL
+	defNatsURL         = nats.DefaultURL
 
 	defAuthnHTTPPort = "8989"
 	defAuthnGRPCPort = "8181"
@@ -146,7 +146,7 @@ func main() {
 	mcTracer, mcCloser := initJaeger("twins_mqtt", cfg.jaegerURL, logger)
 	defer mcCloser.Close()
 
-	nc, err := broker.Connect(cfg.NatsURL)
+	nc, err := nats.Connect(cfg.NatsURL)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
 		os.Exit(1)
@@ -274,13 +274,13 @@ func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
 	return conn
 }
 
-func newService(nc *broker.Conn, ncTracer opentracing.Tracer, mc paho.Mqtt, mcTracer opentracing.Tracer, users mainflux.AuthNServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
+func newService(nc *nats.Conn, ncTracer opentracing.Tracer, mc paho.Mqtt, mcTracer opentracing.Tracer, users mainflux.AuthNServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
 	twinRepo := twinsmongodb.NewTwinRepository(db)
 	stateRepo := twinsmongodb.NewStateRepository(db)
 	idp := uuid.New()
 
 	// TODO twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, thingsRepo)
-	nats.Subscribe(nc, mc, twinRepo, stateRepo, logger)
+	twinsnats.Subscribe(nc, mc, twinRepo, stateRepo, logger)
 
 	svc := twins.New(nc, mc, users, twinRepo, stateRepo, idp)
 	svc = api.LoggingMiddleware(svc, logger)

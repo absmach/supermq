@@ -14,6 +14,7 @@ import (
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/paho"
+	"github.com/mainflux/senml"
 	"github.com/nats-io/go-nats"
 )
 
@@ -48,10 +49,9 @@ func Subscribe(nc *nats.Conn, mc paho.Mqtt, tr twins.TwinRepository, sr twins.St
 }
 
 func (ps pubsub) handleMsg(m *nats.Msg) {
-	var err error
-
 	var msg mainflux.Message
-	if err := proto.Unmarshal(m.Data, &msg); err != nil {
+	err := proto.Unmarshal(m.Data, &msg)
+	if err != nil {
 		ps.logger.Warn(fmt.Sprintf("Unmarshalling failed: %s", err))
 		return
 	}
@@ -69,7 +69,7 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 		return
 	}
 
-	var recs []Record
+	var recs []senml.Record
 	if err := json.Unmarshal(msg.Payload, &recs); err != nil {
 		ps.logger.Warn(fmt.Sprintf("Unmarshal payload for %s failed: %s", msg.Publisher, err))
 		return
@@ -97,7 +97,7 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 	ps.logger.Info(fmt.Sprintf("Updating state for %s succeeded", msg.Publisher))
 }
 
-func prepareState(st *twins.State, tw *twins.Twin, recs []Record, msg mainflux.Message) bool {
+func prepareState(st *twins.State, tw *twins.Twin, recs []senml.Record, msg mainflux.Message) bool {
 	def := tw.Definitions[len(tw.Definitions)-1]
 	st.TwinID = tw.ID
 	st.ID++
