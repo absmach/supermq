@@ -34,7 +34,7 @@ var (
 // Service specifies an API that must be fullfiled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
-	// AddTwin adds new twin to the user identified by the provided key.
+	// AddTwin adds new twin related to user identified by the provided key.
 	AddTwin(context.Context, string, Twin, Definition) (Twin, error)
 
 	// UpdateTwin updates twin identified by the provided Twin that
@@ -63,10 +63,16 @@ type Service interface {
 	RemoveTwin(context.Context, string, string) error
 }
 
-// type mqtt struct {
-// 	client paho.Client
-// 	topic  string
-// }
+var mqttOp = map[string]string{
+	"createSucc": "create/success",
+	"createFail": "create/failure",
+	"updateSucc": "update/success",
+	"updateFail": "update/failure",
+	"getSucc":    "get/success",
+	"getFail":    "get/failure",
+	"removeSucc": "remove/success",
+	"removeFail": "remove/failure",
+}
 
 type twinsService struct {
 	natsClient *nats.Conn
@@ -92,9 +98,9 @@ func New(nc *nats.Conn, mc paho.Mqtt, auth mainflux.AuthNServiceClient, twins Tw
 }
 
 func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, def Definition) (tw Twin, err error) {
-	id := ""
-	b := []byte{}
-	defer ts.mqttClient.Publish(&id, &err, "create/success", "create/failure", &b)
+	var id string
+	var b []byte
+	defer ts.mqttClient.Publish(&id, &err, mqttOp["createSucc"], mqttOp["createFail"], &b)
 
 	res, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -143,9 +149,9 @@ func isZeroOfUnderlyingType(x interface{}) bool {
 }
 
 func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin, def Definition) (err error) {
-	b := []byte{}
-	id := ""
-	defer ts.mqttClient.Publish(&id, &err, "update/success", "update/failure", &b)
+	var b []byte
+	var id string
+	defer ts.mqttClient.Publish(&id, &err, mqttOp["updateSucc"], mqttOp["updateFail"], &b)
 
 	_, err = ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -192,8 +198,8 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 }
 
 func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (tw Twin, err error) {
-	b := []byte{}
-	defer ts.mqttClient.Publish(&id, &err, "get/success", "get/failure", &b)
+	var b []byte
+	defer ts.mqttClient.Publish(&id, &err, mqttOp["getSucc"], mqttOp["getFail"], &b)
 
 	_, err = ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -220,8 +226,8 @@ func (ts *twinsService) ViewTwinByThing(ctx context.Context, token, thingid stri
 }
 
 func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) (err error) {
-	b := []byte{}
-	defer ts.mqttClient.Publish(&id, &err, "remove/success", "remove/failure", &b)
+	var b []byte
+	defer ts.mqttClient.Publish(&id, &err, mqttOp["removeSucc"], mqttOp["removeFail"], &b)
 
 	_, err = ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {

@@ -22,6 +22,11 @@ const (
 	input = "channel.>"
 )
 
+var mqttOp = map[string]string{
+	"stateSucc": "state/success",
+	"stateFail": "state/failure",
+}
+
 type pubsub struct {
 	natsClient *nats.Conn
 	mqttClient paho.Mqtt
@@ -54,9 +59,9 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 		return
 	}
 
-	b := []byte{}
-	id := ""
-	defer ps.mqttClient.Publish(&id, &err, "state/success", "state/failure", &b)
+	var b []byte
+	var id string
+	defer ps.mqttClient.Publish(&id, &err, mqttOp["stateSucc"], mqttOp["stateFail"], &b)
 
 	tw, err := ps.twins.RetrieveByThing(context.TODO(), msg.Publisher)
 	if err != nil {
