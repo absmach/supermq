@@ -68,14 +68,6 @@ func TestTwinsSave(t *testing.T) {
 			err:  nil,
 		},
 		{
-			desc: "create twin with existing ID",
-			twin: twins.Twin{
-				ID:    twid,
-				Owner: email,
-			},
-			err: twins.ErrConflict,
-		},
-		{
 			desc: "create twin with invalid name",
 			twin: twins.Twin{
 				ID:    nonexistentTwinID,

@@ -39,10 +39,6 @@ func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) (string, erro
 
 	coll := tr.db.Collection(twinsCollection)
 
-	if _, err := tr.RetrieveByID(ctx, tw.ID); err == nil {
-		return "", twins.ErrConflict
-	}
-
 	if _, err := coll.InsertOne(context.Background(), tw); err != nil {
 		return "", err
 	}
