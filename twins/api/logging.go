@@ -28,7 +28,7 @@ func LoggingMiddleware(svc twins.Service, logger log.Logger) twins.Service {
 
 func (lm *loggingMiddleware) AddTwin(ctx context.Context, token string, twin twins.Twin, def twins.Definition) (saved twins.Twin, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method add_twin for for token %s and twin %s took %s to complete", token, twin.ID, time.Since(begin))
+		message := fmt.Sprintf("Method add_twin for token %s and twin %s took %s to complete", token, twin.ID, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -41,7 +41,7 @@ func (lm *loggingMiddleware) AddTwin(ctx context.Context, token string, twin twi
 
 func (lm *loggingMiddleware) UpdateTwin(ctx context.Context, token string, twin twins.Twin, def twins.Definition) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method update_twin for for token %s and twin %s took %s to complete", token, twin.ID, time.Since(begin))
+		message := fmt.Sprintf("Method update_twin for token %s and twin %s took %s to complete", token, twin.ID, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -54,7 +54,7 @@ func (lm *loggingMiddleware) UpdateTwin(ctx context.Context, token string, twin 
 
 func (lm *loggingMiddleware) ViewTwin(ctx context.Context, token, id string) (viewed twins.Twin, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method view_twin for for token %s and twin %s took %s to complete", token, id, time.Since(begin))
+		message := fmt.Sprintf("Method view_twin for token %s and twin %s took %s to complete", token, id, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -67,7 +67,7 @@ func (lm *loggingMiddleware) ViewTwin(ctx context.Context, token, id string) (vi
 
 func (lm *loggingMiddleware) ListTwins(ctx context.Context, token string, offset uint64, limit uint64, name string, metadata twins.Metadata) (tw twins.TwinsPage, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method list_twins for for token %s took %s to complete", token, time.Since(begin))
+		message := fmt.Sprintf("Method list_twins for token %s took %s to complete", token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -80,7 +80,7 @@ func (lm *loggingMiddleware) ListTwins(ctx context.Context, token string, offset
 
 func (lm *loggingMiddleware) ListStates(ctx context.Context, token string, offset uint64, limit uint64, id string) (st twins.StatesPage, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method list_states for for token %s took %s to complete", token, time.Since(begin))
+		message := fmt.Sprintf("Method list_states for token %s took %s to complete", token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -93,7 +93,7 @@ func (lm *loggingMiddleware) ListStates(ctx context.Context, token string, offse
 
 func (lm *loggingMiddleware) ViewTwinByThing(ctx context.Context, token, thingid string) (tw twins.Twin, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method view_twin_by_thing for for token %s and thing %s took %s to complete", token, thingid, time.Since(begin))
+		message := fmt.Sprintf("Method view_twin_by_thing for token %s and thing %s took %s to complete", token, thingid, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -106,7 +106,7 @@ func (lm *loggingMiddleware) ViewTwinByThing(ctx context.Context, token, thingid
 
 func (lm *loggingMiddleware) RemoveTwin(ctx context.Context, token, id string) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method remove_twin for for token %s and twin %s took %s to complete", token, id, time.Since(begin))
+		message := fmt.Sprintf("Method remove_twin for token %s and twin %s took %s to complete", token, id, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
