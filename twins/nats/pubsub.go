@@ -82,7 +82,7 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 	}
 
 	if save := prepareState(&st, &tw, recs, msg); !save {
-		ps.logger.Info(fmt.Sprintf("No persistent attributes on %s for %s", msg.Subtopic, msg.Publisher))
+		ps.logger.Info(fmt.Sprintf("No persistent attributes for %s for %s", msg.Subtopic, msg.Publisher))
 		return
 	}
 
@@ -94,7 +94,7 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 	id = msg.Publisher
 	b = msg.Payload
 
-	ps.logger.Info(fmt.Sprintf("Updating state for %s succeeded", msg.Publisher))
+	ps.logger.Info(fmt.Sprintf("Updating attribute %s for %s succeeded", msg.Subtopic, msg.Publisher))
 }
 
 func prepareState(st *twins.State, tw *twins.Twin, recs []senml.Record, msg mainflux.Message) bool {
