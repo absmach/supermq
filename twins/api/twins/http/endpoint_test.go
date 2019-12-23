@@ -21,7 +21,7 @@ import (
 	httpapi "github.com/mainflux/mainflux/twins/api/twins/http"
 	"github.com/mainflux/mainflux/twins/mocks"
 	"github.com/mainflux/mainflux/twins/paho"
-	broker "github.com/nats-io/go-nats"
+	nats "github.com/nats-io/go-nats"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -72,7 +72,7 @@ func newService(tokens map[string]string) twins.Service {
 	statesRepo := mocks.NewStateRepository()
 	idp := mocks.NewIdentityProvider()
 
-	nc, _ := broker.Connect(natsURL)
+	nc, _ := nats.Connect(natsURL)
 
 	opts := mqtt.NewClientOptions()
 	pc := mqtt.NewClient(opts)
@@ -97,8 +97,7 @@ func TestAddTwin(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	tw := twins.Twin{ThingID: thingID, Key: "key"}
-	tw.Key = "key"
+	tw := twins.Twin{ThingID: thingID}
 	data := toJSON(tw)
 
 	tw.Name = invalidName
@@ -119,14 +118,6 @@ func TestAddTwin(t *testing.T) {
 			auth:        token,
 			status:      http.StatusCreated,
 			location:    "/twins/123e4567-e89b-12d3-a456-000000000001",
-		},
-		{
-			desc:        "add twin with existing key",
-			req:         data,
-			contentType: contentType,
-			auth:        token,
-			status:      http.StatusUnprocessableEntity,
-			location:    "",
 		},
 		{
 			desc:        "add twin with empty JSON request",
@@ -209,7 +200,7 @@ func TestUpdateTwin(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	twin := twins.Twin{ThingID: thingID, Key: "key"}
+	twin := twins.Twin{ThingID: thingID}
 	def := twins.Definition{}
 	data := toJSON(twin)
 	stw, _ := svc.AddTwin(context.Background(), token, twin, def)
@@ -328,7 +319,6 @@ func TestViewTwin(t *testing.T) {
 		Owner:       stw.Owner,
 		Name:        stw.Name,
 		ID:          stw.ID,
-		Key:         stw.Key,
 		ThingID:     stw.ThingID,
 		Revision:    stw.Revision,
 		Created:     stw.Created,
@@ -462,7 +452,6 @@ type twinRes struct {
 	Owner       string                 `json:"owner"`
 	Name        string                 `json:"name,omitempty"`
 	ID          string                 `json:"id"`
-	Key         string                 `json:"key"`
 	ThingID     string                 `json:"thingID"`
 	Revision    int                    `json:"revision"`
 	Created     time.Time              `json:"created"`

@@ -39,12 +39,6 @@ func (trm *twinRepositoryMock) Save(ctx context.Context, twin twins.Twin) (strin
 		}
 	}
 
-	for _, tw := range trm.twins {
-		if tw.Key == twin.Key {
-			return "", twins.ErrConflict
-		}
-	}
-
 	trm.twins[key(twin.Owner, twin.ID)] = twin
 
 	return twin.ID, nil
@@ -75,19 +69,6 @@ func (trm *twinRepositoryMock) RetrieveByID(_ context.Context, id string) (twins
 	}
 
 	return twins.Twin{}, twins.ErrNotFound
-}
-
-func (trm *twinRepositoryMock) RetrieveByKey(_ context.Context, key string) (string, error) {
-	trm.mu.Lock()
-	defer trm.mu.Unlock()
-
-	for _, twin := range trm.twins {
-		if twin.Key == key {
-			return twin.ID, nil
-		}
-	}
-
-	return "", twins.ErrNotFound
 }
 
 func (trm *twinRepositoryMock) RetrieveByThing(_ context.Context, thingid string) (twins.Twin, error) {

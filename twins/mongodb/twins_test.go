@@ -48,19 +48,13 @@ func TestTwinsSave(t *testing.T) {
 
 	twid, err := idp.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	twkey, err := idp.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	nonexistentTwinID, err := idp.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-
-	nonexistentTwinKey, err := idp.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	twin := twins.Twin{
 		Owner: email,
 		ID:    twid,
-		Key:   twkey,
 	}
 
 	cases := []struct {
@@ -78,16 +72,6 @@ func TestTwinsSave(t *testing.T) {
 			twin: twins.Twin{
 				ID:    twid,
 				Owner: email,
-				Key:   nonexistentTwinKey,
-			},
-			err: twins.ErrConflict,
-		},
-		{
-			desc: "create twin with existing Key",
-			twin: twins.Twin{
-				ID:    nonexistentTwinID,
-				Owner: email,
-				Key:   twkey,
 			},
 			err: twins.ErrConflict,
 		},
@@ -96,7 +80,6 @@ func TestTwinsSave(t *testing.T) {
 			twin: twins.Twin{
 				ID:    nonexistentTwinID,
 				Owner: email,
-				Key:   nonexistentTwinKey,
 				Name:  invalidName,
 			},
 			err: twins.ErrMalformedEntity,
@@ -117,8 +100,6 @@ func TestTwinsUpdate(t *testing.T) {
 	repo := mongodb.NewTwinRepository(db)
 
 	twid, err := idp.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	twkey, err := idp.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	nonexistentTwinID, err := idp.ID()
@@ -156,7 +137,6 @@ func TestTwinsUpdate(t *testing.T) {
 			twin: twins.Twin{
 				ID:    twid,
 				Owner: email,
-				Key:   twkey,
 				Name:  invalidName,
 			},
 			err: twins.ErrMalformedEntity,
@@ -178,15 +158,12 @@ func TestTwinsRetrieveByID(t *testing.T) {
 
 	twid, err := idp.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	twkey, err := idp.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	nonexistentTwinID, err := idp.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	twin := twins.Twin{
-		ID:  twid,
-		Key: twkey,
+		ID: twid,
 	}
 
 	if _, err := repo.Save(context.Background(), twin); err != nil {
@@ -216,57 +193,6 @@ func TestTwinsRetrieveByID(t *testing.T) {
 	}
 }
 
-func TestTwinsRetrieveByKey(t *testing.T) {
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
-	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
-
-	db := client.Database(testDB)
-	repo := mongodb.NewTwinRepository(db)
-
-	twid, err := idp.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	twkey, err := idp.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-
-	nonexistentTwinKey, err := idp.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-
-	twin := twins.Twin{
-		ID:  twid,
-		Key: twkey,
-	}
-
-	if _, err := repo.Save(context.Background(), twin); err != nil {
-		testLog.Error(err.Error())
-	}
-
-	cases := []struct {
-		desc string
-		id   string
-		key  string
-		err  error
-	}{
-		{
-			desc: "retrieve an existing twin",
-			id:   twin.ID,
-			key:  twin.Key,
-			err:  nil,
-		},
-		{
-			desc: "retrieve a non-existing twin",
-			id:   "",
-			key:  nonexistentTwinKey,
-			err:  twins.ErrNotFound,
-		},
-	}
-
-	for _, tc := range cases {
-		id, err := repo.RetrieveByKey(context.Background(), tc.key)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		assert.Equal(t, id, tc.id, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.id, id))
-	}
-}
-
 func TestTwinsRetrieveByThing(t *testing.T) {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
 	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
@@ -275,8 +201,6 @@ func TestTwinsRetrieveByThing(t *testing.T) {
 	repo := mongodb.NewTwinRepository(db)
 
 	twid, err := idp.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	twkey, err := idp.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	thingid, err := idp.ID()
@@ -287,7 +211,6 @@ func TestTwinsRetrieveByThing(t *testing.T) {
 
 	twin := twins.Twin{
 		ID:      twid,
-		Key:     twkey,
 		ThingID: thingid,
 	}
 
@@ -338,13 +261,10 @@ func TestTwinsRetrieveAll(t *testing.T) {
 	for i := uint64(0); i < n; i++ {
 		twid, err := idp.ID()
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-		twkey, err := idp.ID()
-		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 		tw := twins.Twin{
 			Owner:    email,
 			ID:       twid,
-			Key:      twkey,
 			Metadata: metadata,
 		}
 

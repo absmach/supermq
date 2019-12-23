@@ -11,7 +11,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/mocks"
-	broker "github.com/nats-io/go-nats"
+	nats "github.com/nats-io/go-nats"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -20,8 +20,6 @@ import (
 
 const (
 	twinName   = "name"
-	key        = "key"
-	wrongKey   = "wrong-key"
 	wrongID    = ""
 	token      = "token"
 	wrongToken = "wrong-token"
@@ -37,7 +35,7 @@ func newService(tokens map[string]string) twins.Service {
 	statesRepo := mocks.NewStateRepository()
 	idp := mocks.NewIdentityProvider()
 
-	nc, _ := broker.Connect(natsURL)
+	nc, _ := nats.Connect(natsURL)
 
 	opts := mqtt.NewClientOptions()
 	pc := mqtt.NewClient(opts)
@@ -165,7 +163,6 @@ func TestListTwins(t *testing.T) {
 
 	n := uint64(10)
 	for i := uint64(0); i < n; i++ {
-		twin.Key = string(i)
 		svc.AddTwin(context.Background(), token, twin, def)
 	}
 

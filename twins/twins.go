@@ -26,11 +26,10 @@ type Definition struct {
 }
 
 // Twin represents a Mainflux thing digital twin. Each twin is owned by one thing, and
-// is assigned with the unique identifier and (temporary) access key.
+// is assigned with the unique identifier.
 type Twin struct {
 	Owner       string
 	ID          string
-	Key         string
 	Name        string
 	ThingID     string
 	Created     time.Time
@@ -66,9 +65,6 @@ type TwinRepository interface {
 
 	// RetrieveByID retrieves the twin having the provided identifier.
 	RetrieveByID(ctx context.Context, id string) (Twin, error)
-
-	// RetrieveByKey retrieves the twin having the provided key.
-	RetrieveByKey(context.Context, string) (string, error)
 
 	// RetrieveAll retrieves the subset of things owned by the specified user.
 	RetrieveAll(context.Context, string, uint64, uint64, string, Metadata) (TwinsPage, error)

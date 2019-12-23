@@ -42,9 +42,6 @@ func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) (string, erro
 	if _, err := tr.RetrieveByID(ctx, tw.ID); err == nil {
 		return "", twins.ErrConflict
 	}
-	if _, err := tr.RetrieveByKey(ctx, tw.Key); err == nil {
-		return "", twins.ErrConflict
-	}
 
 	if _, err := coll.InsertOne(context.Background(), tw); err != nil {
 		return "", err
@@ -87,19 +84,6 @@ func (tr *twinRepository) RetrieveByID(_ context.Context, id string) (twins.Twin
 	}
 
 	return tw, nil
-}
-
-// RetrieveByKey retrieves the twin having the provided key
-func (tr *twinRepository) RetrieveByKey(_ context.Context, key string) (string, error) {
-	coll := tr.db.Collection(twinsCollection)
-	var tw twins.Twin
-
-	filter := bson.D{{"key", key}}
-	if err := coll.FindOne(context.Background(), filter).Decode(&tw); err != nil {
-		return "", twins.ErrNotFound
-	}
-
-	return tw.ID, nil
 }
 
 func (tr *twinRepository) RetrieveByThing(ctx context.Context, thingid string) (twins.Twin, error) {

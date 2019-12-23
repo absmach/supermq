@@ -19,7 +19,6 @@ func addTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 		}
 
 		twin := twins.Twin{
-			Key:      req.Key,
 			Name:     req.Name,
 			ThingID:  req.ThingID,
 			Metadata: req.Metadata,
@@ -47,7 +46,6 @@ func updateTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 
 		twin := twins.Twin{
 			ID:       req.id,
-			Key:      req.Key,
 			Name:     req.Name,
 			ThingID:  req.ThingID,
 			Metadata: req.Metadata,
@@ -78,7 +76,6 @@ func viewTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 		res := viewTwinRes{
 			Owner:       twin.Owner,
 			ID:          twin.ID,
-			Key:         twin.Key,
 			Name:        twin.Name,
 			ThingID:     twin.ThingID,
 			Created:     twin.Created,
@@ -107,7 +104,6 @@ func viewTwinByThingEndpoint(svc twins.Service) endpoint.Endpoint {
 		res := viewTwinRes{
 			Owner:       twin.Owner,
 			ID:          twin.ID,
-			Key:         twin.Key,
 			Name:        twin.Name,
 			ThingID:     twin.ThingID,
 			Created:     twin.Created,
@@ -146,7 +142,6 @@ func listTwinsEndpoint(svc twins.Service) endpoint.Endpoint {
 			view := viewTwinRes{
 				Owner:       twin.Owner,
 				ID:          twin.ID,
-				Key:         twin.Key,
 				Name:        twin.Name,
 				ThingID:     twin.ThingID,
 				Created:     twin.Created,

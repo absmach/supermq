@@ -114,13 +114,6 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 
 	twin.Owner = res.GetValue()
 
-	if twin.Key == "" {
-		twin.Key, err = ts.idp.ID()
-		if err != nil {
-			return Twin{}, err
-		}
-	}
-
 	twin.Created = time.Now()
 	twin.Updated = time.Now()
 
@@ -164,10 +157,6 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 	}
 	tw.Updated = time.Now()
 	tw.Revision++
-
-	if !isZeroOfUnderlyingType(twin.Key) {
-		tw.Key = twin.Key
-	}
 
 	if !isZeroOfUnderlyingType(twin.Name) {
 		tw.Name = twin.Name
