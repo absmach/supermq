@@ -32,7 +32,7 @@ type StateRepository interface {
 	// Count returns the number of states related to state
 	Count(context.Context, Twin) (int64, error)
 
-	// RetrieveAll retrieves the subset of staes related to twin specified by id
+	// RetrieveAll retrieves the subset of states related to twin specified by id
 	RetrieveAll(ctx context.Context, offset uint64, limit uint64, id string) (StatesPage, error)
 
 	// RetrieveLast retrieves the last saved state

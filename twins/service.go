@@ -7,7 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"reflect"
+	"fmt"
 	"time"
 
 	"github.com/mainflux/mainflux"
@@ -117,7 +117,9 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 	twin.Created = time.Now()
 	twin.Updated = time.Now()
 
-	if isZeroOfUnderlyingType(def) {
+	fmt.Println(def)
+
+	if len(def.Attributes) == 0 {
 		def = Definition{}
 		def.Attributes = make(map[string]Attribute)
 	}
@@ -137,10 +139,6 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 	return twin, nil
 }
 
-func isZeroOfUnderlyingType(x interface{}) bool {
-	return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
-}
-
 func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin, def Definition) (err error) {
 	var b []byte
 	var id string
@@ -158,21 +156,21 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 	tw.Updated = time.Now()
 	tw.Revision++
 
-	if !isZeroOfUnderlyingType(twin.Name) {
+	if twin.Name != "" {
 		tw.Name = twin.Name
 	}
 
-	if !isZeroOfUnderlyingType(twin.ThingID) {
+	if twin.ThingID != "" {
 		tw.ThingID = twin.ThingID
 	}
 
-	if !isZeroOfUnderlyingType(def) {
+	if len(def.Attributes) == 0 {
 		def.Created = time.Now()
 		def.ID = tw.Definitions[len(tw.Definitions)-1].ID + 1
 		tw.Definitions = append(tw.Definitions, def)
 	}
 
-	if !isZeroOfUnderlyingType(twin.Metadata) {
+	if len(twin.Metadata) == 0 {
 		tw.Metadata = twin.Metadata
 	}
 

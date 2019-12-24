@@ -11,11 +11,11 @@ import (
 // Metadata stores arbitrary twin data
 type Metadata map[string]interface{}
 
-// Attribute stores indivdual attribute data
+// Attribute stores individual attribute data
 type Attribute struct {
-	Channel     string
-	Subtopic    string
-	PeristState bool
+	Channel      string
+	Subtopic     string
+	PersistState bool
 }
 
 // Definition stores entity's attributes

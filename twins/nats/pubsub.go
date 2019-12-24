@@ -109,7 +109,7 @@ func prepareState(st *twins.State, tw *twins.Twin, recs []senml.Record, msg main
 
 	save := false
 	for k, a := range def.Attributes {
-		if !a.PeristState {
+		if !a.PersistState {
 			continue
 		}
 		if a.Channel == msg.Channel && a.Subtopic == msg.Subtopic {
