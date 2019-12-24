@@ -51,8 +51,6 @@ const (
 	defSingleUserToken = ""
 	defClientTLS       = "false"
 	defCACerts         = ""
-	defUsersURL        = "localhost:8181"
-	defUsersTimeout    = "1" // in seconds
 	defMqttURL         = "tcp://localhost:1883"
 	defThingID         = ""
 	defThingKey        = ""
@@ -62,30 +60,28 @@ const (
 	defAuthnHTTPPort = "8989"
 	defAuthnGRPCPort = "8181"
 	defAuthnTimeout  = "1" // in seconds
-	defAuthnURL      = "localhost:8181"
+	defAuthnURL      = "localhost"
 
 	envLogLevel        = "MF_TWINS_LOG_LEVEL"
 	envHTTPPort        = "MF_TWINS_HTTP_PORT"
 	envJaegerURL       = "MF_JAEGER_URL"
 	envServerCert      = "MF_TWINS_SERVER_CERT"
 	envServerKey       = "MF_TWINS_SERVER_KEY"
-	envDBName          = "MF_MONGODB_NAME"
-	envDBHost          = "MF_MONGODB_HOST"
-	envDBPort          = "MF_MONGODB_PORT"
+	envDBName          = "MF_TWINS_DB_NAME"
+	envDBHost          = "MF_TWINS_DB_HOST"
+	envDBPort          = "MF_TWINS_DB_PORT"
 	envSingleUserEmail = "MF_TWINS_SINGLE_USER_EMAIL"
 	envSingleUserToken = "MF_TWINS_SINGLE_USER_TOKEN"
 	envClientTLS       = "MF_TWINS_CLIENT_TLS"
 	envCACerts         = "MF_TWINS_CA_CERTS"
-	envUsersURL        = "MF_USERS_URL"
-	envUsersTimeout    = "MF_TWINS_USERS_TIMEOUT"
 	envMqttURL         = "MF_TWINS_MQTT_URL"
 	envThingID         = "MF_TWINS_THING_ID"
 	envThingKey        = "MF_TWINS_THING_KEY"
 	envChannelID       = "MF_TWINS_CHANNEL_ID"
 	envNatsURL         = "MF_NATS_URL"
 
-	envAuthnHTTPPort = "MF_TWINS_HTTP_PORT"
-	envAuthnGRPCPort = "MF_TWINS_GRPC_PORT"
+	envAuthnHTTPPort = "MF_AUTHN_HTTP_PORT"
+	envAuthnGRPCPort = "MF_AUTHN_GRPC_PORT"
 	envAuthnTimeout  = "MF_AUTHN_TIMEOUT"
 	envAuthnURL      = "MF_AUTHN_URL"
 )
@@ -101,8 +97,6 @@ type config struct {
 	singleUserToken string
 	clientTLS       bool
 	caCerts         string
-	usersURL        string
-	usersTimeout    time.Duration
 	mqttURL         string
 	thingID         string
 	thingKey        string
@@ -180,9 +174,9 @@ func loadConfig() config {
 		log.Fatalf("Invalid value passed for %s\n", envClientTLS)
 	}
 
-	timeout, err := strconv.ParseInt(mainflux.Env(envUsersTimeout, defUsersTimeout), 10, 64)
+	timeout, err := strconv.ParseInt(mainflux.Env(envAuthnTimeout, defAuthnTimeout), 10, 64)
 	if err != nil {
-		log.Fatalf("Invalid %s value: %s", envUsersTimeout, err.Error())
+		log.Fatalf("Invalid %s value: %s", envAuthnTimeout, err.Error())
 	}
 
 	dbCfg := twinsmongodb.Config{
@@ -202,8 +196,6 @@ func loadConfig() config {
 		singleUserToken: mainflux.Env(envSingleUserToken, defSingleUserToken),
 		clientTLS:       tls,
 		caCerts:         mainflux.Env(envCACerts, defCACerts),
-		usersURL:        mainflux.Env(envUsersURL, defUsersURL),
-		usersTimeout:    time.Duration(timeout) * time.Second,
 		mqttURL:         mainflux.Env(envMqttURL, defMqttURL),
 		thingID:         mainflux.Env(envThingID, defThingID),
 		channelID:       mainflux.Env(envChannelID, defChannelID),
@@ -265,9 +257,10 @@ func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
 		logger.Info("gRPC communication is not encrypted")
 	}
 
-	conn, err := grpc.Dial(cfg.authnURL, opts...)
+	authnURL := fmt.Sprintf("%s:%s", cfg.authnURL, cfg.authnGRPCPort)
+	conn, err := grpc.Dial(authnURL, opts...)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to users service: %s", err))
+		logger.Error(fmt.Sprintf("Failed to connect to auth service: %s", err))
 		os.Exit(1)
 	}
 
