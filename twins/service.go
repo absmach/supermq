@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/twins/paho"
+	"github.com/mainflux/mainflux/twins/mqtt"
 	"github.com/nats-io/go-nats"
 )
 
@@ -76,7 +76,7 @@ var mqttOp = map[string]string{
 
 type twinsService struct {
 	natsClient *nats.Conn
-	mqttClient paho.Mqtt
+	mqttClient mqtt.Mqtt
 	auth       mainflux.AuthNServiceClient
 	twins      TwinRepository
 	states     StateRepository
@@ -86,7 +86,7 @@ type twinsService struct {
 var _ Service = (*twinsService)(nil)
 
 // New instantiates the twins service implementation.
-func New(nc *nats.Conn, mc paho.Mqtt, auth mainflux.AuthNServiceClient, twins TwinRepository, sr StateRepository, idp IdentityProvider) Service {
+func New(nc *nats.Conn, mc mqtt.Mqtt, auth mainflux.AuthNServiceClient, twins TwinRepository, sr StateRepository, idp IdentityProvider) Service {
 	return &twinsService{
 		natsClient: nc,
 		mqttClient: mc,
@@ -164,7 +164,7 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 		tw.ThingID = twin.ThingID
 	}
 
-	if len(def.Attributes) == 0 {
+	if len(def.Attributes) > 0 {
 		def.Created = time.Now()
 		def.ID = tw.Definitions[len(tw.Definitions)-1].ID + 1
 		tw.Definitions = append(tw.Definitions, def)

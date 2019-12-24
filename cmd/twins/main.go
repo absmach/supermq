@@ -15,7 +15,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/mainflux/mainflux/twins/paho"
+	"github.com/mainflux/mainflux/twins/mqtt"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
@@ -140,8 +140,8 @@ func main() {
 	dbTracer, dbCloser := initJaeger("twins_db", cfg.jaegerURL, logger)
 	defer dbCloser.Close()
 
-	pc := paho.Connect(cfg.mqttURL, cfg.thingID, cfg.thingKey, logger)
-	mc := paho.New(pc, cfg.channelID)
+	pc := mqtt.Connect(cfg.mqttURL, cfg.thingID, cfg.thingKey, logger)
+	mc := mqtt.New(pc, cfg.channelID)
 
 	mcTracer, mcCloser := initJaeger("twins_mqtt", cfg.jaegerURL, logger)
 	defer mcCloser.Close()
@@ -274,7 +274,7 @@ func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
 	return conn
 }
 
-func newService(nc *nats.Conn, ncTracer opentracing.Tracer, mc paho.Mqtt, mcTracer opentracing.Tracer, users mainflux.AuthNServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
+func newService(nc *nats.Conn, ncTracer opentracing.Tracer, mc mqtt.Mqtt, mcTracer opentracing.Tracer, users mainflux.AuthNServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
 	twinRepo := twinsmongodb.NewTwinRepository(db)
 	stateRepo := twinsmongodb.NewStateRepository(db)
 	idp := uuid.New()

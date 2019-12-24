@@ -13,7 +13,7 @@ import (
 	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/twins"
-	"github.com/mainflux/mainflux/twins/paho"
+	"github.com/mainflux/mainflux/twins/mqtt"
 	"github.com/mainflux/senml"
 	"github.com/nats-io/go-nats"
 )
@@ -30,14 +30,14 @@ var mqttOp = map[string]string{
 
 type pubsub struct {
 	natsClient *nats.Conn
-	mqttClient paho.Mqtt
+	mqttClient mqtt.Mqtt
 	logger     log.Logger
 	twins      twins.TwinRepository
 	states     twins.StateRepository
 }
 
 // Subscribe to appropriate NATS topic
-func Subscribe(nc *nats.Conn, mc paho.Mqtt, tr twins.TwinRepository, sr twins.StateRepository, logger log.Logger) {
+func Subscribe(nc *nats.Conn, mc mqtt.Mqtt, tr twins.TwinRepository, sr twins.StateRepository, logger log.Logger) {
 	ps := pubsub{
 		natsClient: nc,
 		mqttClient: mc,

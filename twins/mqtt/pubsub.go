@@ -1,24 +1,24 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-package paho
+package mqtt
 
 import (
 	"fmt"
 	"os"
 
-	paho "github.com/eclipse/paho.mqtt.golang"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/mainflux/mainflux/logger"
 )
 
 // Mqtt stores mqtt client and topic
 type Mqtt struct {
-	client paho.Client
+	client mqtt.Client
 	topic  string
 }
 
-// New instantiates the paho service.
-func New(mc paho.Client, topic string) Mqtt {
+// New instantiates the mqtt service.
+func New(mc mqtt.Client, topic string) Mqtt {
 	return Mqtt{
 		client: mc,
 		topic:  topic,
@@ -26,23 +26,23 @@ func New(mc paho.Client, topic string) Mqtt {
 }
 
 // Connect to MQTT broker
-func Connect(mqttURL, id, key string, logger logger.Logger) paho.Client {
-	opts := paho.NewClientOptions()
+func Connect(mqttURL, id, key string, logger logger.Logger) mqtt.Client {
+	opts := mqtt.NewClientOptions()
 	opts.AddBroker(mqttURL)
 	opts.SetClientID("twins")
 	opts.SetUsername(id)
 	opts.SetPassword(key)
 	opts.SetCleanSession(true)
 	opts.SetAutoReconnect(true)
-	opts.SetOnConnectHandler(func(c paho.Client) {
+	opts.SetOnConnectHandler(func(c mqtt.Client) {
 		logger.Info("Connected to MQTT broker")
 	})
-	opts.SetConnectionLostHandler(func(c paho.Client, err error) {
+	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {
 		logger.Error(fmt.Sprintf("MQTT connection lost: %s", err.Error()))
 		os.Exit(1)
 	})
 
-	client := paho.NewClient(opts)
+	client := mqtt.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to MQTT broker: %s", token.Error()))
 		os.Exit(1)
