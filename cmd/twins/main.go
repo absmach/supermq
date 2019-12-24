@@ -24,9 +24,9 @@ import (
 	localusers "github.com/mainflux/mainflux/things/users"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/api"
-	twinshttpapi "github.com/mainflux/mainflux/twins/api/twins/http"
-	twinsmongodb "github.com/mainflux/mainflux/twins/mongodb"
-	twinsnats "github.com/mainflux/mainflux/twins/nats"
+	twapi "github.com/mainflux/mainflux/twins/api/http"
+	twmongodb "github.com/mainflux/mainflux/twins/mongodb"
+	twnats "github.com/mainflux/mainflux/twins/nats"
 	"github.com/mainflux/mainflux/twins/uuid"
 	nats "github.com/nats-io/go-nats"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -92,7 +92,7 @@ type config struct {
 	jaegerURL       string
 	serverCert      string
 	serverKey       string
-	dbCfg           twinsmongodb.Config
+	dbCfg           twmongodb.Config
 	singleUserEmail string
 	singleUserToken string
 	clientTLS       bool
@@ -117,7 +117,7 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	db, err := twinsmongodb.Connect(cfg.dbCfg, logger)
+	db, err := twmongodb.Connect(cfg.dbCfg, logger)
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
@@ -156,7 +156,7 @@ func main() {
 	svc := newService(nc, ncTracer, mc, mcTracer, auth, dbTracer, db, logger)
 	errs := make(chan error, 2)
 
-	go startHTTPServer(twinshttpapi.MakeHandler(tracer, svc), cfg.httpPort, cfg, logger, errs)
+	go startHTTPServer(twapi.MakeHandler(tracer, svc), cfg.httpPort, cfg, logger, errs)
 
 	go func() {
 		c := make(chan os.Signal)
@@ -179,7 +179,7 @@ func loadConfig() config {
 		log.Fatalf("Invalid %s value: %s", envAuthnTimeout, err.Error())
 	}
 
-	dbCfg := twinsmongodb.Config{
+	dbCfg := twmongodb.Config{
 		Name: mainflux.Env(envDBName, defDBName),
 		Host: mainflux.Env(envDBHost, defDBHost),
 		Port: mainflux.Env(envDBPort, defDBPort),
@@ -268,12 +268,12 @@ func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
 }
 
 func newService(nc *nats.Conn, ncTracer opentracing.Tracer, mc mqtt.Mqtt, mcTracer opentracing.Tracer, users mainflux.AuthNServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
-	twinRepo := twinsmongodb.NewTwinRepository(db)
-	stateRepo := twinsmongodb.NewStateRepository(db)
+	twinRepo := twmongodb.NewTwinRepository(db)
+	stateRepo := twmongodb.NewStateRepository(db)
 	idp := uuid.New()
 
 	// TODO twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, thingsRepo)
-	twinsnats.Subscribe(nc, mc, twinRepo, stateRepo, logger)
+	twnats.Subscribe(nc, mc, twinRepo, stateRepo, logger)
 
 	svc := twins.New(nc, mc, users, twinRepo, stateRepo, idp)
 	svc = api.LoggingMiddleware(svc, logger)
