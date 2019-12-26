@@ -65,7 +65,7 @@ func (tr testRequest) make() (*http.Response, error) {
 }
 
 func newService(tokens map[string]string) twins.Service {
-	users := mocks.NewAuthNServiceClient(tokens)
+	auth := mocks.NewAuthNServiceClient(tokens)
 	twinsRepo := mocks.NewTwinRepository()
 	statesRepo := mocks.NewStateRepository()
 	idp := mocks.NewIdentityProvider()
@@ -77,7 +77,7 @@ func newService(tokens map[string]string) twins.Service {
 
 	mc := twmqtt.New(pc, topic)
 
-	return twins.New(nc, mc, users, twinsRepo, statesRepo, idp)
+	return twins.New(nc, mc, auth, twinsRepo, statesRepo, idp)
 }
 
 func newServer(svc twins.Service) *httptest.Server {
