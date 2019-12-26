@@ -68,7 +68,7 @@ func (m *Mqtt) publish(twinID, crudOp string, payload *[]byte) error {
 }
 
 // Publish sends mqtt message to a predefined topic
-func (m *Mqtt) Publish(id *string, err *error, succOp, failOp string, payload *[]byte) error {
+func (m *Mqtt) Publish(twinID *string, err *error, succOp, failOp string, payload *[]byte) error {
 	op := succOp
 	if *err != nil {
 		op = failOp
@@ -76,7 +76,7 @@ func (m *Mqtt) Publish(id *string, err *error, succOp, failOp string, payload *[
 		payload = &esb
 	}
 
-	if err := m.publish(*id, op, payload); err != nil {
+	if err := m.publish(*twinID, op, payload); err != nil {
 		return err
 	}
 
