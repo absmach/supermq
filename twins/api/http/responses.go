@@ -51,7 +51,7 @@ func (res twinRes) Empty() bool {
 type viewTwinRes struct {
 	Owner       string                 `json:"owner,omitempty"`
 	ID          string                 `json:"id"`
-	ThingID     string                 `json:"thingID"`
+	ThingID     string                 `json:"thing_id"`
 	Name        string                 `json:"name,omitempty"`
 	Revision    int                    `json:"revision"`
 	Created     time.Time              `json:"created"`
@@ -73,7 +73,7 @@ func (res viewTwinRes) Empty() bool {
 }
 
 type viewStateRes struct {
-	TwinID     string                 `json:"twinid"`
+	TwinID     string                 `json:"twin_id"`
 	ID         int64                  `json:"id"`
 	Definition int                    `json:"definition"`
 	Created    time.Time              `json:"created"`

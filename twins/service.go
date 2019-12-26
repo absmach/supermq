@@ -125,8 +125,7 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 	twin.Definitions = append(twin.Definitions, def)
 
 	twin.Revision = 0
-	_, err = ts.twins.Save(ctx, twin)
-	if err != nil {
+	if _, err = ts.twins.Save(ctx, twin); err != nil {
 		return Twin{}, err
 	}
 
