@@ -13,15 +13,15 @@ import (
 
 // Mqtt stores mqtt client and topic
 type Mqtt struct {
-	client mqtt.Client
-	topic  string
+	client    mqtt.Client
+	channelID string
 }
 
 // New instantiates the mqtt service.
-func New(mc mqtt.Client, topic string) Mqtt {
+func New(mc mqtt.Client, channelID string) Mqtt {
 	return Mqtt{
-		client: mc,
-		topic:  topic,
+		client:    mc,
+		channelID: channelID,
 	}
 }
 
@@ -51,24 +51,24 @@ func Connect(mqttURL, id, key string, logger logger.Logger) mqtt.Client {
 	return client
 }
 
-func (mqtt *Mqtt) Topic() string {
-	return mqtt.topic
+func (m *Mqtt) Channel() string {
+	return m.channelID
 }
 
-func (mqtt *Mqtt) publish(id, op string, payload *[]byte) error {
-	topic := fmt.Sprintf("channels/%s/messages/%s/%s", mqtt.topic, id, op)
-	if len(id) < 1 {
-		topic = fmt.Sprintf("channels/%s/messages/%s", mqtt.topic, op)
+func (m *Mqtt) publish(twinID, crudOp string, payload *[]byte) error {
+	topic := fmt.Sprintf("channels/%s/messages/%s/%s", m.channelID, twinID, crudOp)
+	if len(twinID) < 1 {
+		topic = fmt.Sprintf("channels/%s/messages/%s", m.channelID, crudOp)
 	}
 
-	token := mqtt.client.Publish(topic, 0, false, *payload)
+	token := m.client.Publish(topic, 0, false, *payload)
 	token.Wait()
 
 	return token.Error()
 }
 
 // Publish sends mqtt message to a predefined topic
-func (mqtt *Mqtt) Publish(id *string, err *error, succOp, failOp string, payload *[]byte) error {
+func (m *Mqtt) Publish(id *string, err *error, succOp, failOp string, payload *[]byte) error {
 	op := succOp
 	if *err != nil {
 		op = failOp
@@ -76,9 +76,8 @@ func (mqtt *Mqtt) Publish(id *string, err *error, succOp, failOp string, payload
 		payload = &esb
 	}
 
-	mqttErr := mqtt.publish(*id, op, payload)
-	if mqttErr != nil {
-		return mqttErr
+	if err := m.publish(*id, op, payload); err != nil {
+		return err
 	}
 
 	return nil

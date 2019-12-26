@@ -93,24 +93,6 @@ func (tr *twinRepository) RetrieveByThing(ctx context.Context, thingid string) (
 	return tw, nil
 }
 
-func decodeTwins(ctx context.Context, cur *mongo.Cursor) ([]twins.Twin, error) {
-	defer cur.Close(ctx)
-	var results []twins.Twin
-	for cur.Next(ctx) {
-		var elem twins.Twin
-		err := cur.Decode(&elem)
-		if err != nil {
-			return []twins.Twin{}, nil
-		}
-		results = append(results, elem)
-	}
-
-	if err := cur.Err(); err != nil {
-		return []twins.Twin{}, nil
-	}
-	return results, nil
-}
-
 func (tr *twinRepository) RetrieveAll(ctx context.Context, owner string, offset uint64, limit uint64, name string, metadata twins.Metadata) (twins.TwinsPage, error) {
 	coll := tr.db.Collection(twinsCollection)
 
@@ -202,4 +184,22 @@ func (tr *twinRepository) Remove(ctx context.Context, id string) error {
 	}
 
 	return nil
+}
+
+func decodeTwins(ctx context.Context, cur *mongo.Cursor) ([]twins.Twin, error) {
+	defer cur.Close(ctx)
+	var results []twins.Twin
+	for cur.Next(ctx) {
+		var elem twins.Twin
+		err := cur.Decode(&elem)
+		if err != nil {
+			return []twins.Twin{}, nil
+		}
+		results = append(results, elem)
+	}
+
+	if err := cur.Err(); err != nil {
+		return []twins.Twin{}, nil
+	}
+	return results, nil
 }

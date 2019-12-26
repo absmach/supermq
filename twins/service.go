@@ -62,7 +62,7 @@ type Service interface {
 	RemoveTwin(context.Context, string, string) error
 }
 
-var mqttOp = map[string]string{
+var crudOp = map[string]string{
 	"createSucc": "create/success",
 	"createFail": "create/failure",
 	"updateSucc": "update/success",
@@ -99,7 +99,7 @@ func New(nc *nats.Conn, mc mqtt.Mqtt, auth mainflux.AuthNServiceClient, twins Tw
 func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, def Definition) (tw Twin, err error) {
 	var id string
 	var b []byte
-	defer ts.mqttClient.Publish(&id, &err, mqttOp["createSucc"], mqttOp["createFail"], &b)
+	defer ts.mqttClient.Publish(&id, &err, crudOp["createSucc"], crudOp["createFail"], &b)
 
 	res, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -139,7 +139,7 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin, def Definition) (err error) {
 	var b []byte
 	var id string
-	defer ts.mqttClient.Publish(&id, &err, mqttOp["updateSucc"], mqttOp["updateFail"], &b)
+	defer ts.mqttClient.Publish(&id, &err, crudOp["updateSucc"], crudOp["updateFail"], &b)
 
 	_, err = ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -183,7 +183,7 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 
 func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (tw Twin, err error) {
 	var b []byte
-	defer ts.mqttClient.Publish(&id, &err, mqttOp["getSucc"], mqttOp["getFail"], &b)
+	defer ts.mqttClient.Publish(&id, &err, crudOp["getSucc"], crudOp["getFail"], &b)
 
 	_, err = ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -211,7 +211,7 @@ func (ts *twinsService) ViewTwinByThing(ctx context.Context, token, thingid stri
 
 func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) (err error) {
 	var b []byte
-	defer ts.mqttClient.Publish(&id, &err, mqttOp["removeSucc"], mqttOp["removeFail"], &b)
+	defer ts.mqttClient.Publish(&id, &err, crudOp["removeSucc"], crudOp["removeFail"], &b)
 
 	_, err = ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {

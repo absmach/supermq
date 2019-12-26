@@ -23,7 +23,7 @@ const (
 	input = "channel.>"
 )
 
-var mqttOp = map[string]string{
+var crudOp = map[string]string{
 	"stateSucc": "state/success",
 	"stateFail": "state/failure",
 }
@@ -55,13 +55,13 @@ func (ps pubsub) handleMsg(m *nats.Msg) {
 		ps.logger.Warn(fmt.Sprintf("Unmarshalling failed: %s", err))
 		return
 	}
-	if msg.Channel == ps.mqttClient.Topic() {
+	if msg.Channel == ps.mqttClient.Channel() {
 		return
 	}
 
 	var b []byte
 	var id string
-	defer ps.mqttClient.Publish(&id, &err, mqttOp["stateSucc"], mqttOp["stateFail"], &b)
+	defer ps.mqttClient.Publish(&id, &err, crudOp["stateSucc"], crudOp["stateFail"], &b)
 
 	tw, err := ps.twins.RetrieveByThing(context.TODO(), msg.Publisher)
 	if err != nil {
