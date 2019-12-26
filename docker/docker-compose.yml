@@ -48,8 +48,6 @@ services:
     image: nats:1.3.0
     container_name: mainflux-nats
     restart: on-failure
-    ports:
-      - 4222:4222
     networks:
       - mainflux-base-net
 
@@ -111,8 +109,7 @@ services:
       - ./users/emailer/templates/${MF_EMAIL_TEMPLATE}:/${MF_EMAIL_TEMPLATE}
     depends_on:
       - users-db
-    # expose:
-    #   - ${MF_USERS_GRPC_PORT}
+      - authn
     restart: on-failure
     environment:
       MF_USERS_LOG_LEVEL: ${MF_USERS_LOG_LEVEL}
@@ -135,7 +132,6 @@ services:
       MF_AUTHN_URL: authn:${MF_AUTHN_GRPC_PORT}
     ports:
       - ${MF_USERS_HTTP_PORT}:${MF_USERS_HTTP_PORT}
-      - ${MF_USERS_GRPC_PORT}:${MF_USERS_GRPC_PORT}      
     networks:
       - mainflux-base-net
 
