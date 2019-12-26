@@ -57,7 +57,6 @@ const (
 	defChannelID       = ""
 	defNatsURL         = nats.DefaultURL
 
-	defAuthnHTTPPort = "8989"
 	defAuthnGRPCPort = "8181"
 	defAuthnTimeout  = "1" // in seconds
 	defAuthnURL      = "localhost"
@@ -80,7 +79,6 @@ const (
 	envChannelID       = "MF_TWINS_CHANNEL_ID"
 	envNatsURL         = "MF_NATS_URL"
 
-	envAuthnHTTPPort = "MF_AUTHN_HTTP_PORT"
 	envAuthnGRPCPort = "MF_AUTHN_GRPC_PORT"
 	envAuthnTimeout  = "MF_AUTHN_TIMEOUT"
 	envAuthnURL      = "MF_AUTHN_URL"
@@ -103,7 +101,6 @@ type config struct {
 	channelID       string
 	NatsURL         string
 
-	authnHTTPPort string
 	authnGRPCPort string
 	authnTimeout  time.Duration
 	authnURL      string
@@ -201,7 +198,6 @@ func loadConfig() config {
 		channelID:       mainflux.Env(envChannelID, defChannelID),
 		thingKey:        mainflux.Env(envThingKey, defThingKey),
 		NatsURL:         mainflux.Env(envNatsURL, defNatsURL),
-		authnHTTPPort:   mainflux.Env(envAuthnHTTPPort, defAuthnHTTPPort),
 		authnGRPCPort:   mainflux.Env(envAuthnGRPCPort, defAuthnGRPCPort),
 		authnURL:        mainflux.Env(envAuthnURL, defAuthnURL),
 		authnTimeout:    time.Duration(timeout) * time.Second,

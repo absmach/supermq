@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mainflux/mainflux/twins/paho"
+	twmqtt "github.com/mainflux/mainflux/twins/mqtt"
 )
 
 const (
@@ -40,7 +40,7 @@ func newService(tokens map[string]string) twins.Service {
 	opts := mqtt.NewClientOptions()
 	pc := mqtt.NewClient(opts)
 
-	mc := paho.New(pc, topic)
+	mc := twmqtt.New(pc, topic)
 
 	return twins.New(nc, mc, users, twinsRepo, statesRepo, idp)
 }

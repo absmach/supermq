@@ -18,9 +18,9 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/mainflux/mainflux/twins"
-	httpapi "github.com/mainflux/mainflux/twins/api/twins/http"
+	httpapi "github.com/mainflux/mainflux/twins/api/http"
 	"github.com/mainflux/mainflux/twins/mocks"
-	"github.com/mainflux/mainflux/twins/paho"
+	twmqtt "github.com/mainflux/mainflux/twins/mqtt"
 	nats "github.com/nats-io/go-nats"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
@@ -39,9 +39,7 @@ const (
 	topic       = "topic"
 )
 
-var (
-	invalidName = strings.Repeat("m", maxNameSize+1)
-)
+var invalidName = strings.Repeat("m", maxNameSize+1)
 
 type testRequest struct {
 	client      *http.Client
@@ -77,7 +75,7 @@ func newService(tokens map[string]string) twins.Service {
 	opts := mqtt.NewClientOptions()
 	pc := mqtt.NewClient(opts)
 
-	mc := paho.New(pc, topic)
+	mc := twmqtt.New(pc, topic)
 
 	return twins.New(nc, mc, users, twinsRepo, statesRepo, idp)
 }

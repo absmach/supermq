@@ -121,19 +121,3 @@ func prepareState(st *twins.State, tw *twins.Twin, recs []senml.Record, msg main
 
 	return save
 }
-
-func (ps pubsub) publish(msg mainflux.Message, twin *twins.Twin) error {
-	data, err := json.Marshal(msg)
-	if err != nil {
-		ps.logger.Warn(fmt.Sprintf("Marshalling failed: %s", err))
-		return err
-	}
-
-	subject := fmt.Sprintf("%s.%s", msg.Channel, msg.Subtopic)
-	if err := ps.natsClient.Publish(subject, data); err != nil {
-		ps.logger.Warn(fmt.Sprintf("Publishing failed: %s", err))
-		return err
-	}
-
-	return nil
-}

@@ -20,7 +20,7 @@ default values.
 | MF_TWINS_SERVER_KEY        | Path to server key in PEM format                                     |                       |
 | MF_JAEGER_URL              | Jaeger server URL                                                    |                       |
 | MF_TWINS_DB_NAME           | Database name                                                        | mainflux              |
-| MF_TWINS_DB_HOST           | Database host adress                                                 | localhost             |
+| MF_TWINS_DB_HOST           | Database host address                                                 | localhost             |
 | MF_TWINS_DB_PORT           | Database host port                                                   | 27017                 |
 | MF_TWINS_SINGLE_USER_EMAIL | User email for single user mode (no gRPC communication with users)   |                       |
 | MF_TWINS_SINGLE_USER_TOKEN | User token for single user mode that should be passed in auth header |                       |
@@ -31,7 +31,6 @@ default values.
 | MF_TWINS_THING_KEY         | Key of thing representing twins service & mqtt pass                  |                       |
 | MF_TWINS_CHANNEL_ID        | Mqtt notifications topic                                             |                       |
 | MF_NATS_URL                | Mainflux NATS broker URL                                             | nats://127.0.0.1:4222 |
-| MF_AUTHN_HTTP_PORT         | Authn service HTTP port                                              | 8989                  |
 | MF_AUTHN_GRPC_PORT         | Authn service gRPC port                                              | 8181                  |
 | MF_AUTHN_TIMEOUT           | Authn gRPC request timeout in seconds                                | 1                     |
 | MF_AUTHN_URL               | Authn service URL                                                    | localhost:8181        |

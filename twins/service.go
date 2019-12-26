@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/mainflux/mainflux"
@@ -116,8 +115,6 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 
 	twin.Created = time.Now()
 	twin.Updated = time.Now()
-
-	fmt.Println(def)
 
 	if len(def.Attributes) == 0 {
 		def = Definition{}

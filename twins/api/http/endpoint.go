@@ -5,7 +5,6 @@ package http
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/mainflux/mainflux/twins"
@@ -52,7 +51,6 @@ func updateTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 			Metadata: req.Metadata,
 		}
 
-		fmt.Println(req.Definition)
 		if err := svc.UpdateTwin(ctx, req.token, twin, req.Definition); err != nil {
 			return nil, err
 		}
@@ -164,10 +162,6 @@ func removeTwinEndpoint(svc twins.Service) endpoint.Endpoint {
 		req := request.(viewTwinReq)
 
 		err := req.validate()
-		if err == twins.ErrNotFound {
-			return removeRes{}, nil
-		}
-
 		if err != nil {
 			return nil, err
 		}
