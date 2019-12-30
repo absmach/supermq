@@ -236,9 +236,12 @@ func TestTwinsRetrieveByThing(t *testing.T) {
 func TestTwinsRetrieveAll(t *testing.T) {
 	email := "twin-multi-retrieval@example.com"
 	name := "mainflux"
-	metadata := make(twins.Metadata)
-	metadata["serial"] = "123456"
-	metadata["type"] = "test"
+	metadata := twins.Metadata{
+		"type": "test",
+	}
+	wrongMetadata := twins.Metadata{
+		"wrong": "wrong",
+	}
 	idp := uuid.New()
 
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
@@ -312,13 +315,20 @@ func TestTwinsRetrieveAll(t *testing.T) {
 			size:   0,
 			total:  0,
 		},
-		// "retrieve twins with metadata": {
-		// 	offset:   0,
-		// 	limit:    n,
-		// 	size:     n,
-		// 	total:    n,
-		// 	metadata: metadata,
-		// },
+		"retrieve twins with metadata": {
+			offset:   0,
+			limit:    n,
+			size:     n,
+			total:    n,
+			metadata: metadata,
+		},
+		"retrieve twins with wrong metadata": {
+			offset:   0,
+			limit:    n,
+			size:     0,
+			total:    0,
+			metadata: wrongMetadata,
+		},
 	}
 
 	for desc, tc := range cases {
