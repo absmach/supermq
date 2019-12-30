@@ -95,7 +95,8 @@ func TestAddTwin(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	tw := twins.Twin{ThingID: thingID}
+	// tw := twins.Twin{ThingID: thingID}
+	tw := twinReq{ThingID: thingID}
 	data := toJSON(tw)
 
 	tw.Name = invalidName
@@ -446,11 +447,19 @@ func TestRemoveTwin(t *testing.T) {
 	}
 }
 
+type twinReq struct {
+	token      string
+	Name       string                 `json:"name,omitempty"`
+	ThingID    string                 `json:"thing_id"`
+	Definition twins.Definition       `json:"definition,omitempty"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
+}
+
 type twinRes struct {
 	Owner       string                 `json:"owner"`
 	Name        string                 `json:"name,omitempty"`
 	ID          string                 `json:"id"`
-	ThingID     string                 `json:"thingID"`
+	ThingID     string                 `json:"thing_id"`
 	Revision    int                    `json:"revision"`
 	Created     time.Time              `json:"created"`
 	Updated     time.Time              `json:"updated"`
