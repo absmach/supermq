@@ -7,10 +7,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/twins/mqtt"
+	"github.com/mainflux/senml"
 	"github.com/nats-io/go-nats"
 )
 
@@ -51,6 +53,9 @@ type Service interface {
 	// ListStates retrieves data about subset of states that belongs to the
 	// twin identified by the id.
 	ListStates(context.Context, string, uint64, uint64, string) (StatesPage, error)
+
+	// SaveState persists state into database
+	SaveState(*mainflux.Message) error
 
 	// ListTwinsByThing retrieves data about subset of twins that represent
 	// specified thing belong to the user identified by
@@ -233,6 +238,41 @@ func (ts *twinsService) ListTwins(ctx context.Context, token string, offset uint
 	return ts.twins.RetrieveAll(ctx, res.GetValue(), offset, limit, name, metadata)
 }
 
+func (ts *twinsService) SaveState(msg *mainflux.Message) error {
+	var b []byte
+	var id string
+	var err error
+	defer ts.mqttClient.Publish(&id, &err, crudOp["stateSucc"], crudOp["stateFail"], &b)
+
+	tw, err := ts.twins.RetrieveByThing(context.TODO(), msg.Publisher)
+	if err != nil {
+		return fmt.Errorf("Retrieving twin for %s failed: %s", msg.Publisher, err)
+	}
+
+	var recs []senml.Record
+	if err := json.Unmarshal(msg.Payload, &recs); err != nil {
+		return fmt.Errorf("Unmarshal payload for %s failed: %s", msg.Publisher, err)
+	}
+
+	st, err := ts.states.RetrieveLast(context.TODO(), tw.ID)
+	if err != nil {
+		return fmt.Errorf("Retrieve last state for %s failed: %s", msg.Publisher, err)
+	}
+
+	if save := prepareState(&st, &tw, recs, msg); !save {
+		return nil
+	}
+
+	if err := ts.states.Save(context.TODO(), st); err != nil {
+		return fmt.Errorf("Updating state for %s failed: %s", msg.Publisher, err)
+	}
+
+	id = msg.Publisher
+	b = msg.Payload
+
+	return nil
+}
+
 func (ts *twinsService) ListStates(ctx context.Context, token string, offset uint64, limit uint64, id string) (StatesPage, error) {
 	_, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -240,4 +280,29 @@ func (ts *twinsService) ListStates(ctx context.Context, token string, offset uin
 	}
 
 	return ts.states.RetrieveAll(ctx, offset, limit, id)
+}
+
+func prepareState(st *State, tw *Twin, recs []senml.Record, msg *mainflux.Message) bool {
+	def := tw.Definitions[len(tw.Definitions)-1]
+	st.TwinID = tw.ID
+	st.ID++
+	st.Created = time.Now()
+	st.Definition = def.ID
+	if st.Payload == nil {
+		st.Payload = make(map[string]interface{})
+	}
+
+	save := false
+	for k, a := range def.Attributes {
+		if !a.PersistState {
+			continue
+		}
+		if a.Channel == msg.Channel && a.Subtopic == msg.Subtopic {
+			st.Payload[k] = recs[0].Value
+			save = true
+			break
+		}
+	}
+
+	return save
 }

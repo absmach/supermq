@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/metrics"
+	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/twins"
 )
 
@@ -65,6 +66,15 @@ func (ms *metricsMiddleware) ListTwins(ctx context.Context, token string, offset
 	}(time.Now())
 
 	return ms.svc.ListTwins(ctx, token, offset, limit, name, metadata)
+}
+
+func (ms *metricsMiddleware) SaveState(msg *mainflux.Message) error {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "save_state").Add(1)
+		ms.latency.With("method", "save_state").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.SaveState(msg)
 }
 
 func (ms *metricsMiddleware) ListStates(ctx context.Context, token string, offset uint64, limit uint64, id string) (st twins.StatesPage, err error) {

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/twins"
 )
@@ -76,6 +77,19 @@ func (lm *loggingMiddleware) ListTwins(ctx context.Context, token string, offset
 	}(time.Now())
 
 	return lm.svc.ListTwins(ctx, token, offset, limit, name, metadata)
+}
+
+func (lm *loggingMiddleware) SaveState(msg *mainflux.Message) (err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method save_state took %s to complete", time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+
+	return lm.svc.SaveState(msg)
 }
 
 func (lm *loggingMiddleware) ListStates(ctx context.Context, token string, offset uint64, limit uint64, id string) (st twins.StatesPage, err error) {

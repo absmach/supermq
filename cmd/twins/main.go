@@ -268,9 +268,6 @@ func newService(nc *nats.Conn, ncTracer opentracing.Tracer, mc mqtt.Mqtt, mcTrac
 	stateRepo := twmongodb.NewStateRepository(db)
 	idp := uuid.New()
 
-	// TODO twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, thingsRepo)
-	twnats.Subscribe(nc, mc, twinRepo, stateRepo, logger)
-
 	svc := twins.New(nc, mc, users, twinRepo, stateRepo, idp)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
@@ -288,6 +285,8 @@ func newService(nc *nats.Conn, ncTracer opentracing.Tracer, mc mqtt.Mqtt, mcTrac
 			Help:      "Total duration of requests in microseconds.",
 		}, []string{"method"}),
 	)
+
+	twnats.Subscribe(nc, mc, svc, logger)
 
 	return svc
 }
