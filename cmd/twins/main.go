@@ -123,10 +123,7 @@ func main() {
 	authTracer, authCloser := initJaeger("auth", cfg.jaegerURL, logger)
 	defer authCloser.Close()
 
-	auth, close := createAuthClient(cfg, authTracer, logger)
-	if close != nil {
-		defer close()
-	}
+	auth, _ := createAuthClient(cfg, authTracer, logger)
 
 	dbTracer, dbCloser := initJaeger("twins_db", cfg.jaegerURL, logger)
 	defer dbCloser.Close()
