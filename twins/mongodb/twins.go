@@ -23,15 +23,13 @@ type twinRepository struct {
 
 var _ twins.TwinRepository = (*twinRepository)(nil)
 
-// NewTwinRepository instantiates a MongoDB implementation of twin
-// repository.
+// NewTwinRepository instantiates a MongoDB implementation of twin repository.
 func NewTwinRepository(db *mongo.Database) twins.TwinRepository {
 	return &twinRepository{
 		db: db,
 	}
 }
 
-// Save persists the twin
 func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) (string, error) {
 	if len(tw.Name) > maxNameSize {
 		return "", twins.ErrMalformedEntity
@@ -46,8 +44,6 @@ func (tr *twinRepository) Save(ctx context.Context, tw twins.Twin) (string, erro
 	return tw.ID, nil
 }
 
-// Update performs an update to the existing twins. A non-nil error is
-// returned to indicate operation failure.
 func (tr *twinRepository) Update(ctx context.Context, tw twins.Twin) error {
 	if len(tw.Name) > maxNameSize {
 		return twins.ErrMalformedEntity
@@ -69,7 +65,6 @@ func (tr *twinRepository) Update(ctx context.Context, tw twins.Twin) error {
 	return nil
 }
 
-// RetrieveByID retrieves the twin having the provided identifier
 func (tr *twinRepository) RetrieveByID(_ context.Context, id string) (twins.Twin, error) {
 	coll := tr.db.Collection(twinsCollection)
 	var tw twins.Twin
@@ -169,7 +164,6 @@ func (tr *twinRepository) RetrieveAllByThing(ctx context.Context, thingid string
 	}, nil
 }
 
-// Remove removes the twin having the provided id
 func (tr *twinRepository) Remove(ctx context.Context, id string) error {
 	coll := tr.db.Collection(twinsCollection)
 

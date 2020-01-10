@@ -4,8 +4,6 @@
 package http
 
 import (
-	"fmt"
-
 	"github.com/mainflux/mainflux/twins"
 )
 
@@ -30,8 +28,6 @@ func (req addTwinReq) validate() error {
 	}
 
 	if req.ThingID == "" {
-		fmt.Printf("%s\n", "HERE")
-
 		return twins.ErrMalformedEntity
 	}
 
