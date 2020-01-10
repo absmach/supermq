@@ -57,9 +57,8 @@ const (
 	defChannelID       = ""
 	defNatsURL         = nats.DefaultURL
 
-	defAuthnGRPCPort = "8181"
-	defAuthnTimeout  = "1" // in seconds
-	defAuthnURL      = "localhost"
+	defAuthnTimeout = "1" // in seconds
+	defAuthnURL     = "localhost:8181"
 
 	envLogLevel        = "MF_TWINS_LOG_LEVEL"
 	envHTTPPort        = "MF_TWINS_HTTP_PORT"
@@ -79,9 +78,8 @@ const (
 	envChannelID       = "MF_TWINS_CHANNEL_ID"
 	envNatsURL         = "MF_NATS_URL"
 
-	envAuthnGRPCPort = "MF_AUTHN_GRPC_PORT"
-	envAuthnTimeout  = "MF_AUTHN_TIMEOUT"
-	envAuthnURL      = "MF_AUTHN_URL"
+	envAuthnTimeout = "MF_AUTHN_TIMEOUT"
+	envAuthnURL     = "MF_AUTHN_URL"
 )
 
 type config struct {
@@ -101,9 +99,8 @@ type config struct {
 	channelID       string
 	NatsURL         string
 
-	authnGRPCPort string
-	authnTimeout  time.Duration
-	authnURL      string
+	authnTimeout time.Duration
+	authnURL     string
 }
 
 func main() {
@@ -195,7 +192,6 @@ func loadConfig() config {
 		channelID:       mainflux.Env(envChannelID, defChannelID),
 		thingKey:        mainflux.Env(envThingKey, defThingKey),
 		NatsURL:         mainflux.Env(envNatsURL, defNatsURL),
-		authnGRPCPort:   mainflux.Env(envAuthnGRPCPort, defAuthnGRPCPort),
 		authnURL:        mainflux.Env(envAuthnURL, defAuthnURL),
 		authnTimeout:    time.Duration(timeout) * time.Second,
 	}
@@ -250,8 +246,7 @@ func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
 		logger.Info("gRPC communication is not encrypted")
 	}
 
-	authnURL := fmt.Sprintf("%s:%s", cfg.authnURL, cfg.authnGRPCPort)
-	conn, err := grpc.Dial(authnURL, opts...)
+	conn, err := grpc.Dial(cfg.authnURL, opts...)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to auth service: %s", err))
 		os.Exit(1)
