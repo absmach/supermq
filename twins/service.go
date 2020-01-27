@@ -304,8 +304,7 @@ func prepareState(st *State, tw *Twin, recs []senml.Record, msg *mainflux.Messag
 		st.Payload = make(map[string]interface{})
 	} else {
 		for k := range st.Payload {
-			_, ok := def.Attributes[k]
-			if !ok || !def.Attributes[k].PersistState {
+			if _, ok := def.Attributes[k]; !ok || !def.Attributes[k].PersistState {
 				delete(st.Payload, k)
 			}
 		}
