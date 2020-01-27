@@ -299,8 +299,16 @@ func prepareState(st *State, tw *Twin, recs []senml.Record, msg *mainflux.Messag
 	st.ID++
 	st.Created = time.Now()
 	st.Definition = def.ID
+
 	if st.Payload == nil {
 		st.Payload = make(map[string]interface{})
+	} else {
+		for k := range st.Payload {
+			_, ok := def.Attributes[k]
+			if !ok || !def.Attributes[k].PersistState {
+				delete(st.Payload, k)
+			}
+		}
 	}
 
 	save := false
