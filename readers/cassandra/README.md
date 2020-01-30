@@ -69,11 +69,11 @@ make install
 
 # Set the environment variables and run the service
 MF_THINGS_URL=[Things service URL] \
-MF_CASSANDRA_READER_PORT=[Service HTTP port]\
-MF_CASSANDRA_READER_DB_CLUSTER=[Cassandra cluster comma separated addresses]\
+MF_CASSANDRA_READER_PORT=[Service HTTP port] \
+MF_CASSANDRA_READER_DB_CLUSTER=[Cassandra cluster comma separated addresses] \
 MF_CASSANDRA_READER_DB_KEYSPACE=[Cassandra keyspace name] \
 MF_CASSANDRA_READER_DB_USERNAME=[Cassandra DB username] \
-MF_CASSANDRA_READER_DB_PASSWORD=[Cassandra DB password]\
+MF_CASSANDRA_READER_DB_PASSWORD=[Cassandra DB password] \
 MF_CASSANDRA_READER_DB_PORT=[Cassandra DB port] \
 MF_CASSANDRA_READER_CLIENT_TLS=[Flag that indicates if TLS should be turned on] \
 MF_CASSANDRA_READER_CA_CERTS=[Path to trusted CAs in PEM format] \
