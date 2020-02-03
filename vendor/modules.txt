@@ -128,7 +128,7 @@ github.com/lib/pq/oid
 github.com/lib/pq/scram
 # github.com/magiconair/properties v1.8.1
 github.com/magiconair/properties
-# github.com/mainflux/mproxy v0.0.0-20200125222840-25c6600061bb
+# github.com/mainflux/mproxy v0.0.0-20200203145048-c6c91e2f34de
 github.com/mainflux/mproxy/pkg/events
 github.com/mainflux/mproxy/pkg/mqtt
 # github.com/mainflux/senml v1.0.0
