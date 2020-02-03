@@ -145,6 +145,11 @@ func main() {
 	defer closer.Close()
 
 	svc := newService(nc, ncTracer, mc, mcTracer, auth, dbTracer, db, logger)
+	if err := svc.MakeAttributeMap(); err != nil {
+		logger.Error(fmt.Sprintf("Failed to make attribute map: %s", err))
+		os.Exit(1)
+	}
+
 	errs := make(chan error, 2)
 
 	go startHTTPServer(twapi.MakeHandler(tracer, svc), cfg.httpPort, cfg, logger, errs)
@@ -257,6 +262,7 @@ func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
 
 func newService(nc *nats.Conn, ncTracer opentracing.Tracer, mc mqtt.Mqtt, mcTracer opentracing.Tracer, users mainflux.AuthNServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
 	twinRepo := twmongodb.NewTwinRepository(db)
+
 	stateRepo := twmongodb.NewStateRepository(db)
 	idp := uuid.New()
 

@@ -35,6 +35,9 @@ var (
 // Service specifies an API that must be fullfiled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
+	// MakeAttributeMap creates twin - channel/subtopic map
+	MakeAttributeMap() error
+
 	// AddTwin adds new twin related to user identified by the provided key.
 	AddTwin(context.Context, string, Twin, Definition) (Twin, error)
 
@@ -54,8 +57,8 @@ type Service interface {
 	// twin identified by the id.
 	ListStates(context.Context, string, uint64, uint64, string) (StatesPage, error)
 
-	// SaveState persists state into database
-	SaveState(*mainflux.Message) error
+	// SaveStates persists states into database
+	SaveStates(*mainflux.Message) error
 
 	// ListTwinsByThing retrieves data about subset of twins that represent
 	// specified thing belong to the user identified by
@@ -85,6 +88,7 @@ type twinsService struct {
 	twins      TwinRepository
 	states     StateRepository
 	idp        IdentityProvider
+	attrMap    map[string][]string
 }
 
 var _ Service = (*twinsService)(nil)
@@ -99,6 +103,31 @@ func New(nc *nats.Conn, mc mqtt.Mqtt, auth mainflux.AuthNServiceClient, twins Tw
 		states:     sr,
 		idp:        idp,
 	}
+}
+
+func (ts *twinsService) MakeAttributeMap() error {
+	page, err := ts.twins.RetrieveAll(context.TODO(), "", 0, 0, "", nil)
+	if err != nil {
+		return err
+	}
+
+	attrMap := make(map[string][]string)
+	tws := page.Twins
+	for _, tw := range tws {
+		df := tw.Definitions[len(tw.Definitions)-1]
+		for _, v := range df.Attributes {
+			attrKey := v.Channel + "/" + v.Subtopic
+			if _, ok := attrMap[attrKey]; !ok {
+				attrMap[attrKey] = []string{}
+			}
+			if v.PersistState {
+				attrMap[attrKey] = append(attrMap[attrKey], tw.ID)
+			}
+		}
+	}
+
+	ts.attrMap = attrMap
+	return nil
 }
 
 func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, def Definition) (tw Twin, err error) {
@@ -133,6 +162,8 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 	if _, err = ts.twins.Save(ctx, twin); err != nil {
 		return Twin{}, err
 	}
+
+	ts.MakeAttributeMap()
 
 	id = twin.ID
 	b, err = json.Marshal(twin)
@@ -190,6 +221,8 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 		return err
 	}
 
+	ts.MakeAttributeMap()
+
 	id = twin.ID
 	b, err = json.Marshal(tw)
 
@@ -237,6 +270,8 @@ func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) (err e
 		return err
 	}
 
+	ts.MakeAttributeMap()
+
 	return nil
 }
 
@@ -249,13 +284,32 @@ func (ts *twinsService) ListTwins(ctx context.Context, token string, offset uint
 	return ts.twins.RetrieveAll(ctx, res.GetValue(), offset, limit, name, metadata)
 }
 
-func (ts *twinsService) SaveState(msg *mainflux.Message) error {
+func (ts *twinsService) SaveStates(msg *mainflux.Message) error {
+	ids := ts.attrMap[msg.Channel+"/"+msg.Subtopic]
+	for _, id := range ids {
+		if err := ts.saveState(msg, id); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (ts *twinsService) ListStates(ctx context.Context, token string, offset uint64, limit uint64, id string) (StatesPage, error) {
+	_, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
+	if err != nil {
+		return StatesPage{}, ErrUnauthorizedAccess
+	}
+
+	return ts.states.RetrieveAll(ctx, offset, limit, id)
+}
+
+func (ts *twinsService) saveState(msg *mainflux.Message, id string) error {
 	var b []byte
-	var id string
 	var err error
 	defer ts.mqttClient.Publish(&id, &err, crudOp["stateSucc"], crudOp["stateFail"], &b)
 
-	tw, err := ts.twins.RetrieveByThing(context.TODO(), msg.Publisher)
+	tw, err := ts.twins.RetrieveByID(context.TODO(), id)
 	if err != nil {
 		return fmt.Errorf("Retrieving twin for %s failed: %s", msg.Publisher, err)
 	}
@@ -282,15 +336,6 @@ func (ts *twinsService) SaveState(msg *mainflux.Message) error {
 	b = msg.Payload
 
 	return nil
-}
-
-func (ts *twinsService) ListStates(ctx context.Context, token string, offset uint64, limit uint64, id string) (StatesPage, error) {
-	_, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return StatesPage{}, ErrUnauthorizedAccess
-	}
-
-	return ts.states.RetrieveAll(ctx, offset, limit, id)
 }
 
 func prepareState(st *State, tw *Twin, recs []senml.Record, msg *mainflux.Message) bool {

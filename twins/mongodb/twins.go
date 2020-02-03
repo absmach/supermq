@@ -164,6 +164,28 @@ func (tr *twinRepository) RetrieveAllByThing(ctx context.Context, thingid string
 	}, nil
 }
 
+// func (tr *twinRepository) RetrieveAllByAttribute(ctx context.Context, chanid string, subtopic string) ([]twins.Twin, error) {
+// 	coll := tr.db.Collection(twinsCollection)
+// 	tw := twins.Twin{}
+// 	filter := bson.D{{"thingid", thingid}}
+// 	if err := coll.FindOne(context.Background(), filter).Decode(&tw); err != nil {
+// 		return tw, twins.ErrNotFound
+// 	}
+
+// 	filter := bson.D{{"thingid", thingid}}
+// 	cur, err := coll.Find(ctx, filter, findOptions)
+// 	if err != nil {
+// 		return twins.TwinsPage{}, err
+// 	}
+
+// 	results, err := decodeTwins(ctx, cur)
+// 	if err != nil {
+// 		return twins.TwinsPage{}, err
+// 	}
+
+// 	return tw, nil
+// }
+
 func (tr *twinRepository) Remove(ctx context.Context, id string) error {
 	coll := tr.db.Collection(twinsCollection)
 

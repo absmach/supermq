@@ -32,6 +32,15 @@ func MetricsMiddleware(svc twins.Service, counter metrics.Counter, latency metri
 	}
 }
 
+func (ms *metricsMiddleware) MakeAttributeMap() (err error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "make_attribute_map").Add(1)
+		ms.latency.With("method", "make_attribute_map").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.MakeAttributeMap()
+}
+
 func (ms *metricsMiddleware) AddTwin(ctx context.Context, token string, twin twins.Twin, def twins.Definition) (saved twins.Twin, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "add_twin").Add(1)
@@ -68,13 +77,13 @@ func (ms *metricsMiddleware) ListTwins(ctx context.Context, token string, offset
 	return ms.svc.ListTwins(ctx, token, offset, limit, name, metadata)
 }
 
-func (ms *metricsMiddleware) SaveState(msg *mainflux.Message) error {
+func (ms *metricsMiddleware) SaveStates(msg *mainflux.Message) error {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "save_state").Add(1)
-		ms.latency.With("method", "save_state").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "save_states").Add(1)
+		ms.latency.With("method", "save_states").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.SaveState(msg)
+	return ms.svc.SaveStates(msg)
 }
 
 func (ms *metricsMiddleware) ListStates(ctx context.Context, token string, offset uint64, limit uint64, id string) (st twins.StatesPage, err error) {
