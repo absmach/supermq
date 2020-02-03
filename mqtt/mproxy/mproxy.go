@@ -20,7 +20,7 @@ import (
 
 var (
 	_                     events.Event = (*Event)(nil)
-	channelRegExp                      = regexp.MustCompile(`^channels\/([\w\-]+)\/messages(\/.*)\/ct\/([^\/]*)$`)
+	channelRegExp                      = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]*)?(\?.*)?$`)
 	ctRegExp                           = regexp.MustCompile(`^(\/.*)?\/ct\/([^\/]+)$`)
 	errUnauthorizedAccess              = errors.New("missing or invalid credentials provided")
 	errMalformedTopic                  = errors.New("malformed topic")
@@ -51,9 +51,9 @@ func New(tc mainflux.ThingsServiceClient, mp mainflux.MessagePublisher, es redis
 
 // AuthRegister is called on device connection,
 // prior forwarding to the MQTT broker
-func (e *Event) AuthRegister(clientID, username *string, password *[]byte) error {
-	e.logger.Info(fmt.Sprintf("AuthRegister() - clientID: %s, username: %s, password: %s",
-		*clientID, *username, string(*password)))
+func (e *Event) AuthRegister(username, clientID *string, password *[]byte) error {
+	e.logger.Info(fmt.Sprintf("AuthRegister() - clientID: %s, username: %s",
+		*clientID, *username))
 
 	t := &mainflux.Token{
 		Value: string(*password),
@@ -71,7 +71,7 @@ func (e *Event) AuthRegister(clientID, username *string, password *[]byte) error
 	return nil
 }
 
-func (e *Event) authAccess(clientID string, topic string) error {
+func (e *Event) authAccess(username string, topic string) error {
 	// Topics are in the format:
 	// channels/<channel_id>/messages/<subtopic>/.../ct/<content_type>
 	if !channelRegExp.Match([]byte(topic)) {
@@ -87,7 +87,7 @@ func (e *Event) authAccess(clientID string, topic string) error {
 	chanID := channelParts[1]
 
 	ar := &mainflux.AccessByIDReq{
-		ThingID: clientID,
+		ThingID: username,
 		ChanID:  chanID,
 	}
 	_, err := e.tc.CanAccessByID(context.TODO(), ar)
@@ -100,18 +100,18 @@ func (e *Event) authAccess(clientID string, topic string) error {
 
 // AuthPublish is called on device publish,
 // prior forwarding to the MQTT broker
-func (e *Event) AuthPublish(clientID string, topic *string, payload *[]byte) error {
+func (e *Event) AuthPublish(username, clientID string, topic *string, payload *[]byte) error {
 	e.logger.Info(fmt.Sprintf("AuthPublish() - clientID: %s, topic: %s", clientID, *topic))
-	return e.authAccess(clientID, *topic)
+	return e.authAccess(username, *topic)
 }
 
 // AuthSubscribe is called on device publish,
 // prior forwarding to the MQTT broker
-func (e *Event) AuthSubscribe(clientID string, topics *[]string) error {
+func (e *Event) AuthSubscribe(username, clientID string, topics *[]string) error {
 	e.logger.Info(fmt.Sprintf("AuthSubscribe() - clientID: %s, topics: %s", clientID, strings.Join(*topics, ",")))
 
 	for _, v := range *topics {
-		if err := e.authAccess(clientID, v); err != nil {
+		if err := e.authAccess(username, v); err != nil {
 			return err
 		}
 
