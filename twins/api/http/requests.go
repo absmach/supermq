@@ -27,10 +27,6 @@ func (req addTwinReq) validate() error {
 		return twins.ErrUnauthorizedAccess
 	}
 
-	if req.ThingID == "" {
-		return twins.ErrMalformedEntity
-	}
-
 	if len(req.Name) > maxNameSize {
 		return twins.ErrMalformedEntity
 	}
