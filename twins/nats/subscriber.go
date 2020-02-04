@@ -54,5 +54,8 @@ func (ps *pubsub) handleMsg(m *nats.Msg) {
 		return
 	}
 
-	ps.svc.SaveStates(&msg)
+	if err := ps.svc.SaveStates(&msg); err != nil {
+		ps.logger.Error(fmt.Sprintf("State save failed: %s", err))
+		return
+	}
 }

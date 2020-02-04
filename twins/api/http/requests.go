@@ -17,7 +17,6 @@ type apiReq interface {
 type addTwinReq struct {
 	token      string
 	Name       string                 `json:"name,omitempty"`
-	ThingID    string                 `json:"thing_id"`
 	Definition twins.Definition       `json:"definition,omitempty"`
 	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }
