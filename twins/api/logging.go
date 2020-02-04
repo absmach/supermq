@@ -27,19 +27,6 @@ func LoggingMiddleware(svc twins.Service, logger log.Logger) twins.Service {
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) MakeAttributeMap() (err error) {
-	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method make_attribute_map took %s to complete", time.Since(begin))
-		if err != nil {
-			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
-			return
-		}
-		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
-	}(time.Now())
-
-	return lm.svc.MakeAttributeMap()
-}
-
 func (lm *loggingMiddleware) AddTwin(ctx context.Context, token string, twin twins.Twin, def twins.Definition) (saved twins.Twin, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method add_twin for token %s and twin %s took %s to complete", token, twin.ID, time.Since(begin))

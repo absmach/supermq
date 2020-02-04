@@ -35,9 +35,6 @@ var (
 // Service specifies an API that must be fullfiled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
-	// MakeAttributeMap creates twin - channel/subtopic map
-	MakeAttributeMap() error
-
 	// AddTwin adds new twin related to user identified by the provided key.
 	AddTwin(context.Context, string, Twin, Definition) (Twin, error)
 
@@ -105,31 +102,6 @@ func New(nc *nats.Conn, mc mqtt.Mqtt, auth mainflux.AuthNServiceClient, twins Tw
 	}
 }
 
-func (ts *twinsService) MakeAttributeMap() error {
-	page, err := ts.twins.RetrieveAll(context.TODO(), "", 0, 0, "", nil)
-	if err != nil {
-		return err
-	}
-
-	attrMap := make(map[string][]string)
-	tws := page.Twins
-	for _, tw := range tws {
-		df := tw.Definitions[len(tw.Definitions)-1]
-		for _, v := range df.Attributes {
-			attrKey := v.Channel + "/" + v.Subtopic
-			if _, ok := attrMap[attrKey]; !ok {
-				attrMap[attrKey] = []string{}
-			}
-			if v.PersistState {
-				attrMap[attrKey] = append(attrMap[attrKey], tw.ID)
-			}
-		}
-	}
-
-	ts.attrMap = attrMap
-	return nil
-}
-
 func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, def Definition) (tw Twin, err error) {
 	var id string
 	var b []byte
@@ -162,8 +134,6 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 	if _, err = ts.twins.Save(ctx, twin); err != nil {
 		return Twin{}, err
 	}
-
-	ts.MakeAttributeMap()
 
 	id = twin.ID
 	b, err = json.Marshal(twin)
@@ -221,8 +191,6 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 		return err
 	}
 
-	ts.MakeAttributeMap()
-
 	id = twin.ID
 	b, err = json.Marshal(tw)
 
@@ -270,8 +238,6 @@ func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) (err e
 		return err
 	}
 
-	ts.MakeAttributeMap()
-
 	return nil
 }
 
@@ -284,17 +250,6 @@ func (ts *twinsService) ListTwins(ctx context.Context, token string, offset uint
 	return ts.twins.RetrieveAll(ctx, res.GetValue(), offset, limit, name, metadata)
 }
 
-func (ts *twinsService) SaveStates(msg *mainflux.Message) error {
-	ids := ts.attrMap[msg.Channel+"/"+msg.Subtopic]
-	for _, id := range ids {
-		if err := ts.saveState(msg, id); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func (ts *twinsService) ListStates(ctx context.Context, token string, offset uint64, limit uint64, id string) (StatesPage, error) {
 	_, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -302,6 +257,21 @@ func (ts *twinsService) ListStates(ctx context.Context, token string, offset uin
 	}
 
 	return ts.states.RetrieveAll(ctx, offset, limit, id)
+}
+
+func (ts *twinsService) SaveStates(msg *mainflux.Message) error {
+	ids, err := ts.twins.RetrieveByAttribute(context.TODO(), msg.Channel, msg.Subtopic)
+	if err != nil {
+		return err
+	}
+
+	for _, id := range ids {
+		if err := ts.saveState(msg, id); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (ts *twinsService) saveState(msg *mainflux.Message, id string) error {

@@ -32,15 +32,6 @@ func MetricsMiddleware(svc twins.Service, counter metrics.Counter, latency metri
 	}
 }
 
-func (ms *metricsMiddleware) MakeAttributeMap() (err error) {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "make_attribute_map").Add(1)
-		ms.latency.With("method", "make_attribute_map").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-
-	return ms.svc.MakeAttributeMap()
-}
-
 func (ms *metricsMiddleware) AddTwin(ctx context.Context, token string, twin twins.Twin, def twins.Definition) (saved twins.Twin, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "add_twin").Add(1)

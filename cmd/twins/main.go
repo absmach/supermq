@@ -145,10 +145,6 @@ func main() {
 	defer closer.Close()
 
 	svc := newService(nc, ncTracer, mc, mcTracer, auth, dbTracer, db, logger)
-	if err := svc.MakeAttributeMap(); err != nil {
-		logger.Error(fmt.Sprintf("Failed to make attribute map: %s", err))
-		os.Exit(1)
-	}
 
 	errs := make(chan error, 2)
 
