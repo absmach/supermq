@@ -85,7 +85,6 @@ type twinsService struct {
 	twins      TwinRepository
 	states     StateRepository
 	idp        IdentityProvider
-	attrMap    map[string][]string
 }
 
 var _ Service = (*twinsService)(nil)
