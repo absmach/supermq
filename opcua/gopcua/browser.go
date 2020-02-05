@@ -14,6 +14,8 @@ import (
 	"github.com/mainflux/mainflux/opcua"
 )
 
+const maxChildrens = 7
+
 // NodeDef represents the node browser responnse
 type NodeDef struct {
 	NodeID      *uaGopcua.NodeID
@@ -83,7 +85,7 @@ func (c browser) Browse(serverURI, nodeID string) ([]opcua.BrowsedNode, error) {
 }
 
 func browse(n *opcuaGopcua.Node, path string, level int) ([]NodeDef, error) {
-	if level > 7 {
+	if level > maxChildrens {
 		return nil, nil
 	}
 
