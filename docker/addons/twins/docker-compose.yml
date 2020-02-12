@@ -18,7 +18,7 @@ volumes:
 
 services:
   twins-db:
-    image: mongo:3.6-jessie
+    image: mongo:bionic
     command: mongod --port ${MF_TWINS_DB_PORT}
     container_name: mainflux-twins-db
     restart: on-failure
