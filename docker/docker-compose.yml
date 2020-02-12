@@ -13,8 +13,6 @@ volumes:
   mainflux-things-db-volume:
   mainflux-things-redis-volume:
   mainflux-es-redis-volume:
-  mainflux-twins-db-volume:
-  mainflux-twins-db-configdb-volume:
 
 services:
   nginx:
@@ -265,47 +263,3 @@ services:
       - ${MF_COAP_ADAPTER_PORT}:${MF_COAP_ADAPTER_PORT}/tcp
     networks:
       - mainflux-base-net
-
-  twins-db:
-    image: mongo:3.6-jessie
-    container_name: mainflux-twins-db
-    restart: on-failure
-    environment:
-      MONGO_INITDB_DATABASE: ${MF_TWINS_DB_NAME}
-    ports:
-      - ${MF_TWINS_DB_PORT}:${MF_TWINS_DB_PORT}
-    networks:
-      mainflux-base-net:
-        aliases:
-          - twins-db
-    volumes:
-      - mainflux-twins-db-volume:/data/db
-      - mainflux-twins-db-configdb-volume:/data/configdb
-
-  twins:
-    image: mainflux/twins:latest
-    container_name: mainflux-twins
-    restart: on-failure
-    environment:
-      MF_TWINS_LOG_LEVEL: ${MF_TWINS_LOG_LEVEL}
-      MF_TWINS_HTTP_PORT: ${MF_TWINS_HTTP_PORT}
-      MF_TWINS_DB_NAME: ${MF_TWINS_DB_NAME}
-      MF_TWINS_DB_HOST: ${MF_TWINS_DB_HOST}
-      MF_TWINS_DB_PORT: ${MF_TWINS_DB_PORT}
-      MF_TWINS_THING_ID: ${MF_TWINS_THING_ID}
-      MF_TWINS_THING_KEY: ${MF_TWINS_THING_KEY}
-      MF_TWINS_CHANNEL_ID: ${MF_TWINS_CHANNEL_ID}
-      MF_NATS_URL: ${MF_NATS_URL}
-      MF_AUTHN_URL: authn:${MF_AUTHN_GRPC_PORT}
-      MF_TWINS_MQTT_URL: ${MF_TWINS_MQTT_URL}
-    ports:
-      - ${MF_TWINS_HTTP_PORT}:${MF_TWINS_HTTP_PORT}
-    networks:
-       mainflux-base-net:
-         aliases:
-            - twins
-    depends_on:
-      - things
-      - users
-      - twins-db
-      - nats
