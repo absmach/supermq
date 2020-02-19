@@ -1,7 +1,7 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-package nats
+package subscriber
 
 import (
 	"fmt"
@@ -28,27 +28,31 @@ type Subscriber struct {
 
 // NewSubscriber instances Subscriber strucure and subscribes to appropriate NATS topic
 func NewSubscriber(nc *nats.Conn, chID string, svc twins.Service, logger log.Logger) *Subscriber {
-	ps := Subscriber{
+	s := Subscriber{
 		natsClient: nc,
 		logger:     logger,
 		svc:        svc,
 		channelID:  chID,
 	}
 
-	ps.natsClient.QueueSubscribe(input, queue, ps.handleMsg)
+	s.natsClient.QueueSubscribe(input, queue, s.handleMsg)
 
-	return &ps
+	return &s
 }
 
-func (ps *Subscriber) handleMsg(m *nats.Msg) {
+func (s *Subscriber) handleMsg(m *nats.Msg) {
 	var msg mainflux.Message
 	if err := proto.Unmarshal(m.Data, &msg); err != nil {
-		ps.logger.Warn(fmt.Sprintf("Unmarshalling failed: %s", err))
+		s.logger.Warn(fmt.Sprintf("Unmarshalling failed: %s", err))
 		return
 	}
 
-	if err := ps.svc.SaveStates(&msg); err != nil {
-		ps.logger.Error(fmt.Sprintf("State save failed: %s", err))
+	if msg.Channel == s.channelID {
+		return
+	}
+
+	if err := s.svc.SaveStates(&msg); err != nil {
+		s.logger.Error(fmt.Sprintf("State save failed: %s", err))
 		return
 	}
 }

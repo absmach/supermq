@@ -24,7 +24,8 @@ import (
 	"github.com/mainflux/mainflux/twins/api"
 	twapi "github.com/mainflux/mainflux/twins/api/http"
 	twmongodb "github.com/mainflux/mainflux/twins/mongodb"
-	twnats "github.com/mainflux/mainflux/twins/nats"
+	natspub "github.com/mainflux/mainflux/twins/nats/publisher"
+	natssub "github.com/mainflux/mainflux/twins/nats/subscriber"
 	"github.com/mainflux/mainflux/twins/uuid"
 	nats "github.com/nats-io/go-nats"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -250,7 +251,9 @@ func newService(nc *nats.Conn, ncTracer opentracing.Tracer, chanID string, users
 	stateRepo := twmongodb.NewStateRepository(db)
 	idp := uuid.New()
 
-	svc := twins.New(users, twinRepo, stateRepo, idp)
+	np := natspub.NewPublisher(nc, chanID)
+
+	svc := twins.New(users, twinRepo, stateRepo, idp, np)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
@@ -268,7 +271,7 @@ func newService(nc *nats.Conn, ncTracer opentracing.Tracer, chanID string, users
 		}, []string{"method"}),
 	)
 
-	twnats.NewSubscriber(nc, chanID, svc, logger)
+	natssub.NewSubscriber(nc, chanID, svc, logger)
 
 	return svc
 }
