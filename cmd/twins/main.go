@@ -251,7 +251,7 @@ func newService(nc *nats.Conn, ncTracer opentracing.Tracer, chanID string, users
 	stateRepo := twmongodb.NewStateRepository(db)
 	idp := uuid.New()
 
-	np := natspub.NewPublisher(nc, chanID)
+	np := natspub.NewPublisher(nc, chanID, logger)
 
 	svc := twins.New(users, twinRepo, stateRepo, idp, np)
 	svc = api.LoggingMiddleware(svc, logger)

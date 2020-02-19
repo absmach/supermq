@@ -6,31 +6,38 @@ package publisher
 import (
 	"fmt"
 
+	log "github.com/mainflux/mainflux/logger"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
 	"github.com/nats-io/go-nats"
 )
 
-const prefix = "channel"
+const (
+	prefix    = "channel"
+	publisher = "twins"
+)
 
 // Publisher is used to publish twins related notifications
 type Publisher struct {
 	natsClient *nats.Conn
 	channelID  string
+	logger     log.Logger
 }
 
 // NewPublisher instances Pubsub strucure
-func NewPublisher(nc *nats.Conn, chID string) *Publisher {
+func NewPublisher(nc *nats.Conn, chID string, logger log.Logger) *Publisher {
 	return &Publisher{
 		natsClient: nc,
 		channelID:  chID,
+		logger:     logger,
 	}
 }
 
 // Publish sends twins CRUD and state saving related operations
-func (p *Publisher) Publish(twinID *string, err *error, succOp, failOp string, payload *[]byte) error {
+func (p *Publisher) Publish(twinID *string, err *error, succOp, failOp string, payload *[]byte) {
 	if p.channelID == "" {
-		return nil
+		return
 	}
 
 	op := succOp
@@ -46,11 +53,14 @@ func (p *Publisher) Publish(twinID *string, err *error, succOp, failOp string, p
 	}
 	subject := fmt.Sprintf("%s.%s.%s", prefix, p.channelID, op)
 	mc := mainflux.Message{
-		Channel:  p.channelID,
-		Subtopic: op,
-		Payload:  pl,
+		Channel:   p.channelID,
+		Subtopic:  op,
+		Payload:   pl,
+		Publisher: publisher,
 	}
 	b, _ := proto.Marshal(&mc)
 
-	return p.natsClient.Publish(subject, []byte(b))
+	if err := p.natsClient.Publish(subject, []byte(b)); err != nil {
+		p.logger.Warn(fmt.Sprintf("Failed to publish notification on NATS: %s", err))
+	}
 }

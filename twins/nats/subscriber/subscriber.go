@@ -5,6 +5,7 @@ package subscriber
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
@@ -35,7 +36,10 @@ func NewSubscriber(nc *nats.Conn, chID string, svc twins.Service, logger log.Log
 		channelID:  chID,
 	}
 
-	s.natsClient.QueueSubscribe(input, queue, s.handleMsg)
+	if _, err := s.natsClient.QueueSubscribe(input, queue, s.handleMsg); err != nil {
+		logger.Error(fmt.Sprintf("Failed to subscribe to NATS: %s", err))
+		os.Exit(1)
+	}
 
 	return &s
 }
