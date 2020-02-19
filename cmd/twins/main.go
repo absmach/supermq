@@ -268,7 +268,7 @@ func newService(nc *nats.Conn, ncTracer opentracing.Tracer, chanID string, users
 		}, []string{"method"}),
 	)
 
-	twnats.Subscribe(nc, chanID, svc, logger)
+	twnats.NewSubscriber(nc, chanID, svc, logger)
 
 	return svc
 }

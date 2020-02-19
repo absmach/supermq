@@ -14,21 +14,21 @@ import (
 )
 
 const (
-	queue  = "twins"
-	input  = "channel.>"
-	prefix = "channel"
+	queue = "twins"
+	input = "channel.>"
 )
 
-type pubsub struct {
+// Subscriber is used to intercept messages and save corresponding twin states
+type Subscriber struct {
 	natsClient *nats.Conn
 	logger     log.Logger
 	svc        twins.Service
 	channelID  string
 }
 
-// Subscribe to appropriate NATS topic
-func Subscribe(nc *nats.Conn, chID string, svc twins.Service, logger log.Logger) {
-	ps := pubsub{
+// NewSubscriber instances Subscriber strucure and subscribes to appropriate NATS topic
+func NewSubscriber(nc *nats.Conn, chID string, svc twins.Service, logger log.Logger) *Subscriber {
+	ps := Subscriber{
 		natsClient: nc,
 		logger:     logger,
 		svc:        svc,
@@ -36,9 +36,11 @@ func Subscribe(nc *nats.Conn, chID string, svc twins.Service, logger log.Logger)
 	}
 
 	ps.natsClient.QueueSubscribe(input, queue, ps.handleMsg)
+
+	return &ps
 }
 
-func (ps *pubsub) handleMsg(m *nats.Msg) {
+func (ps *Subscriber) handleMsg(m *nats.Msg) {
 	var msg mainflux.Message
 	if err := proto.Unmarshal(m.Data, &msg); err != nil {
 		ps.logger.Warn(fmt.Sprintf("Unmarshalling failed: %s", err))
@@ -49,21 +51,4 @@ func (ps *pubsub) handleMsg(m *nats.Msg) {
 		ps.logger.Error(fmt.Sprintf("State save failed: %s", err))
 		return
 	}
-}
-
-func (ps *pubsub) Publish(twinID *string, err *error, succOp, failOp string, payload *[]byte) error {
-	if ps.channelID == "" {
-		return nil
-	}
-
-	op := succOp
-	if *err != nil {
-		op = failOp
-		esb := []byte((*err).Error())
-		payload = &esb
-	}
-
-	subject := fmt.Sprintf("%s.%s.%s", prefix, ps.channelID, op)
-
-	return ps.natsClient.Publish(subject, *payload)
 }
