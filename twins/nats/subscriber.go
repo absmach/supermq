@@ -10,7 +10,6 @@ import (
 	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/twins"
-	"github.com/mainflux/mainflux/twins/mqtt"
 	"github.com/nats-io/go-nats"
 )
 
@@ -20,26 +19,20 @@ const (
 	prefix = "channel"
 )
 
-var crudOp = map[string]string{
-	"stateSucc": "state/success",
-	"stateFail": "state/failure",
-}
-
 type pubsub struct {
 	natsClient *nats.Conn
-	mqttClient mqtt.Mqtt
 	logger     log.Logger
 	svc        twins.Service
 	channelID  string
 }
 
 // Subscribe to appropriate NATS topic
-func Subscribe(nc *nats.Conn, mc mqtt.Mqtt, svc twins.Service, logger log.Logger) {
+func Subscribe(nc *nats.Conn, chID string, svc twins.Service, logger log.Logger) {
 	ps := pubsub{
 		natsClient: nc,
-		mqttClient: mc,
 		logger:     logger,
 		svc:        svc,
+		channelID:  chID,
 	}
 
 	ps.natsClient.QueueSubscribe(input, queue, ps.handleMsg)
@@ -49,10 +42,6 @@ func (ps *pubsub) handleMsg(m *nats.Msg) {
 	var msg mainflux.Message
 	if err := proto.Unmarshal(m.Data, &msg); err != nil {
 		ps.logger.Warn(fmt.Sprintf("Unmarshalling failed: %s", err))
-		return
-	}
-
-	if msg.Channel == ps.mqttClient.Channel() {
 		return
 	}
 

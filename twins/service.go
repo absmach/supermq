@@ -11,9 +11,7 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/twins/mqtt"
 	"github.com/mainflux/senml"
-	"github.com/nats-io/go-nats"
 )
 
 var (
@@ -79,32 +77,28 @@ var crudOp = map[string]string{
 }
 
 type twinsService struct {
-	natsClient *nats.Conn
-	mqttClient mqtt.Mqtt
-	auth       mainflux.AuthNServiceClient
-	twins      TwinRepository
-	states     StateRepository
-	idp        IdentityProvider
+	auth   mainflux.AuthNServiceClient
+	twins  TwinRepository
+	states StateRepository
+	idp    IdentityProvider
 }
 
 var _ Service = (*twinsService)(nil)
 
 // New instantiates the twins service implementation.
-func New(nc *nats.Conn, mc mqtt.Mqtt, auth mainflux.AuthNServiceClient, twins TwinRepository, sr StateRepository, idp IdentityProvider) Service {
+func New(auth mainflux.AuthNServiceClient, twins TwinRepository, sr StateRepository, idp IdentityProvider) Service {
 	return &twinsService{
-		natsClient: nc,
-		mqttClient: mc,
-		auth:       auth,
-		twins:      twins,
-		states:     sr,
-		idp:        idp,
+		auth:   auth,
+		twins:  twins,
+		states: sr,
+		idp:    idp,
 	}
 }
 
 func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, def Definition) (tw Twin, err error) {
-	var id string
-	var b []byte
-	defer ts.mqttClient.Publish(&id, &err, crudOp["createSucc"], crudOp["createFail"], &b)
+	// var id string
+	// var b []byte
+	// defer ts.mqttClient.Publish(&id, &err, crudOp["createSucc"], crudOp["createFail"], &b)
 
 	res, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -134,16 +128,16 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 		return Twin{}, err
 	}
 
-	id = twin.ID
-	b, err = json.Marshal(twin)
+	// id = twin.ID
+	// b, err = json.Marshal(twin)
 
 	return twin, nil
 }
 
 func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin, def Definition) (err error) {
-	var b []byte
-	var id string
-	defer ts.mqttClient.Publish(&id, &err, crudOp["updateSucc"], crudOp["updateFail"], &b)
+	// var b []byte
+	// var id string
+	// defer ts.mqttClient.Publish(&id, &err, crudOp["updateSucc"], crudOp["updateFail"], &b)
 
 	_, err = ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -190,15 +184,15 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 		return err
 	}
 
-	id = twin.ID
-	b, err = json.Marshal(tw)
+	// id = twin.ID
+	// b, err = json.Marshal(tw)
 
 	return nil
 }
 
 func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (tw Twin, err error) {
-	var b []byte
-	defer ts.mqttClient.Publish(&id, &err, crudOp["getSucc"], crudOp["getFail"], &b)
+	// var b []byte
+	// defer ts.mqttClient.Publish(&id, &err, crudOp["getSucc"], crudOp["getFail"], &b)
 
 	_, err = ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -210,7 +204,7 @@ func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (tw Twin
 		return Twin{}, err
 	}
 
-	b, err = json.Marshal(twin)
+	// b, err = json.Marshal(twin)
 
 	return twin, nil
 }
@@ -225,8 +219,8 @@ func (ts *twinsService) ViewTwinByThing(ctx context.Context, token, thingid stri
 }
 
 func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) (err error) {
-	var b []byte
-	defer ts.mqttClient.Publish(&id, &err, crudOp["removeSucc"], crudOp["removeFail"], &b)
+	// var b []byte
+	// defer ts.mqttClient.Publish(&id, &err, crudOp["removeSucc"], crudOp["removeFail"], &b)
 
 	_, err = ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -274,9 +268,9 @@ func (ts *twinsService) SaveStates(msg *mainflux.Message) error {
 }
 
 func (ts *twinsService) saveState(msg *mainflux.Message, id string) error {
-	var b []byte
+	// var b []byte
 	var err error
-	defer ts.mqttClient.Publish(&id, &err, crudOp["stateSucc"], crudOp["stateFail"], &b)
+	// defer ts.mqttClient.Publish(&id, &err, crudOp["stateSucc"], crudOp["stateFail"], &b)
 
 	tw, err := ts.twins.RetrieveByID(context.TODO(), id)
 	if err != nil {
@@ -302,7 +296,7 @@ func (ts *twinsService) saveState(msg *mainflux.Message, id string) error {
 	}
 
 	id = msg.Publisher
-	b = msg.Payload
+	// b = msg.Payload
 
 	return nil
 }
