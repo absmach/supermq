@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	queue = "twins"
-	input = "channel.>"
+	queue  = "twins"
+	input  = "channel.>"
+	prefix = "channel"
 )
 
 var crudOp = map[string]string{
@@ -29,6 +30,7 @@ type pubsub struct {
 	mqttClient mqtt.Mqtt
 	logger     log.Logger
 	svc        twins.Service
+	channelID  string
 }
 
 // Subscribe to appropriate NATS topic
@@ -58,4 +60,21 @@ func (ps *pubsub) handleMsg(m *nats.Msg) {
 		ps.logger.Error(fmt.Sprintf("State save failed: %s", err))
 		return
 	}
+}
+
+func (ps *pubsub) Publish(twinID *string, err *error, succOp, failOp string, payload *[]byte) error {
+	if ps.channelID == "" {
+		return nil
+	}
+
+	op := succOp
+	if *err != nil {
+		op = failOp
+		esb := []byte((*err).Error())
+		payload = &esb
+	}
+
+	subject := fmt.Sprintf("%s.%s.%s", prefix, ps.channelID, op)
+
+	return ps.natsClient.Publish(subject, *payload)
 }
