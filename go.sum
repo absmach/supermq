@@ -178,6 +178,7 @@ github.com/mainflux/mproxy v0.0.0-20200125222840-25c6600061bb h1:1OVfaoAH48E/dvj
 github.com/mainflux/mproxy v0.0.0-20200125222840-25c6600061bb/go.mod h1:HrT+8h62rGLkFDmaOoPg5CLgEURlvPfT3jr/q5y/Qw0=
 github.com/mainflux/mproxy v0.0.0-20200203145048-c6c91e2f34de h1:KWChUnHzkAaaSW6DlfC9LyP98g5QFROP7/MbpuFmaPg=
 github.com/mainflux/mproxy v0.0.0-20200203145048-c6c91e2f34de/go.mod h1:HrT+8h62rGLkFDmaOoPg5CLgEURlvPfT3jr/q5y/Qw0=
+github.com/mainflux/mproxy v0.0.0-20200218164159-5d4b72740bc2 h1:cXlqvRW7I308eWSwt3seA8DhB6Gq+hyQ/bvlckVkfmE=
 github.com/mainflux/mproxy v0.0.0-20200218164159-5d4b72740bc2/go.mod h1:HrT+8h62rGLkFDmaOoPg5CLgEURlvPfT3jr/q5y/Qw0=
 github.com/mainflux/senml v1.0.0 h1:oLS5aBhvdHjgQ8kfq3jX7yD+DaquhvpyvIWNsPil3X0=
 github.com/mainflux/senml v1.0.0/go.mod h1:g9i8pj4WMs29KkUpXivbe/PP0qJd1kt3b1CF77S8A3s=
