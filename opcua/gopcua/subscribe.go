@@ -101,7 +101,7 @@ func (c client) Subscribe(cfg opcua.Config) error {
 	defer oc.Close()
 
 	sub, err := oc.Subscribe(&opcuaGopcua.SubscriptionParameters{
-		Interval: 2000 * time.Millisecond,
+		Interval: 1000 * time.Millisecond,
 	})
 	if err != nil {
 		return errors.Wrap(errFailedSub, err)

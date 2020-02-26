@@ -19,7 +19,7 @@ func browseEndpoint(svc opcua.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		nodeID := fmt.Sprintf("ns=%s;%s", req.Namespace, req.Identifier)
+		nodeID := fmt.Sprintf("%s;%s", req.Namespace, req.Identifier)
 		nodes, err := svc.Browse(req.ServerURI, nodeID)
 		if err != nil {
 			return nil, err
