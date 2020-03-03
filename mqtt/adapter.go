@@ -205,10 +205,13 @@ func (e *Event) Publish(clientID, topic string, payload []byte) {
 		Subtopic:    subtopic,
 		Payload:     payload,
 	}
+
 	for _, mp := range e.pubs {
-		if err := mp.Publish(context.TODO(), "", msg); err != nil {
-			e.logger.Info("Error publishing to Mainflux " + err.Error())
-		}
+		go func(pub mainflux.MessagePublisher) {
+			if err := pub.Publish(context.TODO(), "", msg); err != nil {
+				e.logger.Info("Error publishing to Mainflux " + err.Error())
+			}
+		}(mp)
 	}
 }
 
