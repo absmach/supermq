@@ -34,22 +34,22 @@ var (
 
 // Event implements events.Event interface
 type Event struct {
-	tc         mainflux.ThingsServiceClient
-	publishers []mainflux.MessagePublisher
-	tracer     opentracing.Tracer
-	logger     logger.Logger
-	es         redis.EventStore
+	tc     mainflux.ThingsServiceClient
+	pubs   []mainflux.MessagePublisher
+	tracer opentracing.Tracer
+	logger logger.Logger
+	es     redis.EventStore
 }
 
 // New creates new Event entity
-func New(tc mainflux.ThingsServiceClient, publishers []mainflux.MessagePublisher, es redis.EventStore,
+func New(tc mainflux.ThingsServiceClient, pubs []mainflux.MessagePublisher, es redis.EventStore,
 	logger logger.Logger, tracer opentracing.Tracer) *Event {
 	return &Event{
-		tc:         tc,
-		publishers: publishers,
-		es:         es,
-		tracer:     tracer,
-		logger:     logger,
+		tc:     tc,
+		pubs:   pubs,
+		es:     es,
+		tracer: tracer,
+		logger: logger,
 	}
 }
 
@@ -205,7 +205,7 @@ func (e *Event) Publish(clientID, topic string, payload []byte) {
 		Subtopic:    subtopic,
 		Payload:     payload,
 	}
-	for _, mp := range e.publishers {
+	for _, mp := range e.pubs {
 		if err := mp.Publish(context.TODO(), "", msg); err != nil {
 			e.logger.Info("Error publishing to Mainflux " + err.Error())
 		}
