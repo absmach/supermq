@@ -28,9 +28,9 @@ mainflux-cli users token john.doe@email.com password
 mainflux-cli users get <user_auth_token>
 ```
 
-#### Update User
+#### Update User metadata
 ```
-mainflux-cli users update '{"metadata":{"field1":"value1"}}' <user_auth_token>
+mainflux-cli users update '{"key1":"value1", "key2":"value2"}' <user_auth_token>
 ```
 
 #### Update User Password

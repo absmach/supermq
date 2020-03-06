@@ -86,7 +86,7 @@ var cmdUsers = []cobra.Command{
 			}
 
 			var user mfxsdk.User
-			if err := json.Unmarshal([]byte(args[0]), &user); err != nil {
+			if err := json.Unmarshal([]byte(args[0]), &user.Metadata); err != nil {
 				logError(err)
 				return
 			}
@@ -131,7 +131,7 @@ func NewUsersCmd() *cobra.Command {
 		Short: "Users management",
 		Long:  `Users management: create accounts and tokens"`,
 		Run: func(cmd *cobra.Command, args []string) {
-			logUsage("Usage: users [create | get | token | password]")
+			logUsage("Usage: users [create | get | update | token | password]")
 		},
 	}
 
