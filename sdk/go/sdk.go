@@ -9,7 +9,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/mainflux/mainflux/transformers/senml"
+	"github.com/mainflux/mainflux/things"
+	"github.com/mainflux/mainflux/users"
 )
 
 const (
@@ -74,12 +75,7 @@ type ContentType string
 var _ SDK = (*mfSDK)(nil)
 
 // User represents mainflux user its credentials.
-type User struct {
-	Email       string                 `json:"email"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
-	Password    string                 `json:"password,omitempty"`
-	OldPassword string                 `json:"old_password,omitempty"`
-}
+type User users.User
 
 // Validate returns an error if user representation is invalid.
 func (u User) validate() error {
@@ -96,43 +92,10 @@ func (u User) validate() error {
 }
 
 // Thing represents mainflux thing.
-type Thing struct {
-	ID       string                 `json:"id,omitempty"`
-	Name     string                 `json:"name,omitempty"`
-	Key      string                 `json:"key,omitempty"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
-
-// ThingsPage contains list of things in a page with proper metadata.
-type ThingsPage struct {
-	Things []Thing `json:"things"`
-	Total  uint64  `json:"total"`
-	Offset uint64  `json:"offset"`
-	Limit  uint64  `json:"limit"`
-}
+type Thing things.Thing
 
 // Channel represents mainflux channel.
-type Channel struct {
-	ID       string                 `json:"id,omitempty"`
-	Name     string                 `json:"name"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
-
-// ChannelsPage contains list of channels in a page with proper metadata.
-type ChannelsPage struct {
-	Channels []Channel `json:"channels"`
-	Total    uint64    `json:"total"`
-	Offset   uint64    `json:"offset"`
-	Limit    uint64    `json:"limit"`
-}
-
-// MessagesPage contains list of messages in a page with proper metadata.
-type MessagesPage struct {
-	Total    uint64          `json:"total"`
-	Offset   uint64          `json:"offset"`
-	Limit    uint64          `json:"limit"`
-	Messages []senml.Message `json:"messages,omitempty"`
-}
+type Channel things.Channel
 
 // ConnectionIDs contains ID lists of things and channels to be connected
 type ConnectionIDs struct {
@@ -155,7 +118,7 @@ type SDK interface {
 	UpdateUser(user User, token string) error
 
 	// UpdatePassword updates user password.
-	UpdatePassword(user User, token string) error
+	UpdatePassword(oldPass, newPass, token string) error
 
 	// CreateThing registers new thing and returns its id.
 	CreateThing(thing Thing, token string) (string, error)

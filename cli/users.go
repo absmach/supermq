@@ -109,12 +109,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 
-			user := mfxsdk.User{
-				OldPassword: args[0],
-				Password:    args[1],
-			}
-
-			if err := sdk.UpdatePassword(user, args[2]); err != nil {
+			if err := sdk.UpdatePassword(args[0], args[1], args[2]); err != nil {
 				logError(err)
 				return
 			}
