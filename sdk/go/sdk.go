@@ -97,12 +97,6 @@ type Thing things.Thing
 // Channel represents mainflux channel.
 type Channel things.Channel
 
-// ConnectionIDs contains ID lists of things and channels to be connected
-type ConnectionIDs struct {
-	ChannelIDs []string `json:"channel_ids"`
-	ThingIDs   []string `json:"thing_ids"`
-}
-
 // SDK contains Mainflux API.
 type SDK interface {
 	// CreateUser registers mainflux user.
