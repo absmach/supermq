@@ -37,11 +37,11 @@ const (
 	defOPCKeyFile     = ""
 	defNatsURL        = nats.DefaultURL
 	defLogLevel       = "debug"
-	defESURL          = "localhost:6379"
+	defESURL          = mainflux.DefRedisURL
 	defESPass         = ""
 	defESDB           = "0"
 	defESConsumerName = "opcua"
-	defRouteMapURL    = "localhost:6379"
+	defRouteMapURL    = mainflux.DefRedisURL
 	defRouteMapPass   = ""
 	defRouteMapDB     = "0"
 

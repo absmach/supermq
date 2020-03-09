@@ -28,15 +28,15 @@ import (
 )
 
 const (
+	defLogLevel       = "error"
 	defHTTPPort       = "8180"
 	defLoraMsgURL     = "tcp://localhost:1883"
 	defNatsURL        = nats.DefaultURL
-	defLogLevel       = "error"
-	defESURL          = "localhost:6379"
+	defESURL          = mainflux.DefRedisURL
 	defESPass         = ""
 	defESDB           = "0"
 	defESConsumerName = "lora"
-	defRouteMapURL    = "localhost:6379"
+	defRouteMapURL    = mainflux.DefRedisURL
 	defRouteMapPass   = ""
 	defRouteMapDB     = "0"
 

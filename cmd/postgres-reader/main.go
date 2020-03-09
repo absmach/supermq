@@ -34,50 +34,50 @@ const (
 	svcName = "postgres-writer"
 	sep     = ","
 
-	defThingsURL     = "localhost:8183"
-	defLogLevel      = "debug"
-	defPort          = "9204"
-	defClientTLS     = "false"
-	defCACerts       = ""
-	defDBHost        = "localhost"
-	defDBPort        = "5432"
-	defDBUser        = "mainflux"
-	defDBPass        = "mainflux"
-	defDBName        = "messages"
-	defDBSSLMode     = "disable"
-	defDBSSLCert     = ""
-	defDBSSLKey      = ""
-	defDBSSLRootCert = ""
-	defJaegerURL     = ""
-	defThingsTimeout = "1" // in seconds
+	defLogLevel          = "debug"
+	defPort              = "9204"
+	defClientTLS         = "false"
+	defCACerts           = ""
+	defDBHost            = "localhost"
+	defDBPort            = "5432"
+	defDBUser            = "mainflux"
+	defDBPass            = "mainflux"
+	defDBName            = "messages"
+	defDBSSLMode         = "disable"
+	defDBSSLCert         = ""
+	defDBSSLKey          = ""
+	defDBSSLRootCert     = ""
+	defJaegerURL         = ""
+	defThingsAuthURL     = mainflux.DefThingsAuthURL
+	defThingsAuthTimeout = "1" // in seconds
 
-	envThingsURL     = "MF_THINGS_URL"
-	envLogLevel      = "MF_POSTGRES_READER_LOG_LEVEL"
-	envPort          = "MF_POSTGRES_READER_PORT"
-	envClientTLS     = "MF_POSTGRES_READER_CLIENT_TLS"
-	envCACerts       = "MF_POSTGRES_READER_CA_CERTS"
-	envDBHost        = "MF_POSTGRES_READER_DB_HOST"
-	envDBPort        = "MF_POSTGRES_READER_DB_PORT"
-	envDBUser        = "MF_POSTGRES_READER_DB_USER"
-	envDBPass        = "MF_POSTGRES_READER_DB_PASS"
-	envDBName        = "MF_POSTGRES_READER_DB_NAME"
-	envDBSSLMode     = "MF_POSTGRES_READER_DB_SSL_MODE"
-	envDBSSLCert     = "MF_POSTGRES_READER_DB_SSL_CERT"
-	envDBSSLKey      = "MF_POSTGRES_READER_DB_SSL_KEY"
-	envDBSSLRootCert = "MF_POSTGRES_READER_DB_SSL_ROOT_CERT"
-	envJaegerURL     = "MF_JAEGER_URL"
-	envThingsTimeout = "MF_POSTGRES_READER_THINGS_TIMEOUT"
+	envLogLevel          = "MF_POSTGRES_READER_LOG_LEVEL"
+	envPort              = "MF_POSTGRES_READER_PORT"
+	envClientTLS         = "MF_POSTGRES_READER_CLIENT_TLS"
+	envCACerts           = "MF_POSTGRES_READER_CA_CERTS"
+	envDBHost            = "MF_POSTGRES_READER_DB_HOST"
+	envDBPort            = "MF_POSTGRES_READER_DB_PORT"
+	envDBUser            = "MF_POSTGRES_READER_DB_USER"
+	envDBPass            = "MF_POSTGRES_READER_DB_PASS"
+	envDBName            = "MF_POSTGRES_READER_DB_NAME"
+	envDBSSLMode         = "MF_POSTGRES_READER_DB_SSL_MODE"
+	envDBSSLCert         = "MF_POSTGRES_READER_DB_SSL_CERT"
+	envDBSSLKey          = "MF_POSTGRES_READER_DB_SSL_KEY"
+	envDBSSLRootCert     = "MF_POSTGRES_READER_DB_SSL_ROOT_CERT"
+	envJaegerURL         = "MF_JAEGER_URL"
+	envThingsAuthURL     = "MF_THINGS_AUTH_GRPC_URL"
+	envThingsAuthTimeout = "MF_THINGS_AUTH_GRPC_TIMEOUT"
 )
 
 type config struct {
-	thingsURL     string
-	logLevel      string
-	port          string
-	clientTLS     bool
-	caCerts       string
-	dbConfig      postgres.Config
-	jaegerURL     string
-	thingsTimeout time.Duration
+	logLevel          string
+	port              string
+	clientTLS         bool
+	caCerts           string
+	dbConfig          postgres.Config
+	jaegerURL         string
+	thingsAuthURL     string
+	thingsAuthTimeout time.Duration
 }
 
 func main() {
@@ -94,7 +94,7 @@ func main() {
 	thingsTracer, thingsCloser := initJaeger("things", cfg.jaegerURL, logger)
 	defer thingsCloser.Close()
 
-	tc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
+	tc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
 
 	db := connectToDB(cfg.dbConfig, logger)
 	defer db.Close()
@@ -128,18 +128,25 @@ func loadConfig() config {
 		SSLRootCert: mainflux.Env(envDBSSLRootCert, defDBSSLRootCert),
 	}
 
-	timeout, err := strconv.ParseInt(mainflux.Env(envThingsTimeout, defThingsTimeout), 10, 64)
+	tls, err := strconv.ParseBool(mainflux.Env(envClientTLS, defClientTLS))
 	if err != nil {
-		log.Fatalf("Invalid %s value: %s", envThingsTimeout, err.Error())
+		log.Fatalf("Invalid value passed for %s\n", envClientTLS)
+	}
+
+	timeout, err := strconv.ParseInt(mainflux.Env(envThingsAuthTimeout, defThingsAuthTimeout), 10, 64)
+	if err != nil {
+		log.Fatalf("Invalid %s value: %s", envThingsAuthTimeout, err.Error())
 	}
 
 	return config{
-		thingsURL:     mainflux.Env(envThingsURL, defThingsURL),
-		logLevel:      mainflux.Env(envLogLevel, defLogLevel),
-		port:          mainflux.Env(envPort, defPort),
-		dbConfig:      dbConfig,
-		jaegerURL:     mainflux.Env(envJaegerURL, defJaegerURL),
-		thingsTimeout: time.Duration(timeout) * time.Second,
+		logLevel:          mainflux.Env(envLogLevel, defLogLevel),
+		port:              mainflux.Env(envPort, defPort),
+		clientTLS:         tls,
+		caCerts:           mainflux.Env(envCACerts, defCACerts),
+		dbConfig:          dbConfig,
+		jaegerURL:         mainflux.Env(envJaegerURL, defJaegerURL),
+		thingsAuthURL:     mainflux.Env(envThingsAuthURL, defThingsAuthURL),
+		thingsAuthTimeout: time.Duration(timeout) * time.Second,
 	}
 }
 
@@ -192,7 +199,7 @@ func connectToThings(cfg config, logger logger.Logger) *grpc.ClientConn {
 		opts = append(opts, grpc.WithInsecure())
 	}
 
-	conn, err := grpc.Dial(cfg.thingsURL, opts...)
+	conn, err := grpc.Dial(cfg.thingsAuthURL, opts...)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to things service: %s", err))
 		os.Exit(1)

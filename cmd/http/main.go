@@ -37,8 +37,8 @@ const (
 	defPort          = "8180"
 	defLogLevel      = "error"
 	defNatsURL       = broker.DefaultURL
-	defThingsURL     = "localhost:8181"
 	defJaegerURL     = ""
+	defThingsAuthURL = mainflux.DefThingsAuthURL
 	defThingsTimeout = "1" // in seconds
 
 	envClientTLS     = "MF_HTTP_ADAPTER_CLIENT_TLS"
@@ -46,20 +46,20 @@ const (
 	envPort          = "MF_HTTP_ADAPTER_PORT"
 	envLogLevel      = "MF_HTTP_ADAPTER_LOG_LEVEL"
 	envNatsURL       = "MF_NATS_URL"
-	envThingsURL     = "MF_THINGS_URL"
 	envJaegerURL     = "MF_JAEGER_URL"
-	envThingsTimeout = "MF_HTTP_ADAPTER_THINGS_TIMEOUT"
+	envThingsAuthURL = "MF_THINGS_AUTH_GRPC_URL"
+	envThingsTimeout = "MF_THINGS_AUTH_GRPC_TIMEOUT"
 )
 
 type config struct {
-	thingsURL     string
-	natsURL       string
-	logLevel      string
-	port          string
-	clientTLS     bool
-	caCerts       string
-	jaegerURL     string
-	thingsTimeout time.Duration
+	natsURL           string
+	logLevel          string
+	port              string
+	clientTLS         bool
+	caCerts           string
+	jaegerURL         string
+	thingsAuthURL     string
+	thingsAuthTimeout time.Duration
 }
 
 func main() {
@@ -87,7 +87,7 @@ func main() {
 	thingsTracer, thingsCloser := initJaeger("things", cfg.jaegerURL, logger)
 	defer thingsCloser.Close()
 
-	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
+	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
 	pub := nats.NewMessagePublisher(nc)
 
 	svc := adapter.New(pub, cc)
@@ -138,14 +138,14 @@ func loadConfig() config {
 	}
 
 	return config{
-		thingsURL:     mainflux.Env(envThingsURL, defThingsURL),
-		natsURL:       mainflux.Env(envNatsURL, defNatsURL),
-		logLevel:      mainflux.Env(envLogLevel, defLogLevel),
-		port:          mainflux.Env(envPort, defPort),
-		clientTLS:     tls,
-		caCerts:       mainflux.Env(envCACerts, defCACerts),
-		jaegerURL:     mainflux.Env(envJaegerURL, defJaegerURL),
-		thingsTimeout: time.Duration(timeout) * time.Second,
+		natsURL:           mainflux.Env(envNatsURL, defNatsURL),
+		logLevel:          mainflux.Env(envLogLevel, defLogLevel),
+		port:              mainflux.Env(envPort, defPort),
+		clientTLS:         tls,
+		caCerts:           mainflux.Env(envCACerts, defCACerts),
+		jaegerURL:         mainflux.Env(envJaegerURL, defJaegerURL),
+		thingsAuthURL:     mainflux.Env(envThingsAuthURL, defThingsAuthURL),
+		thingsAuthTimeout: time.Duration(timeout) * time.Second,
 	}
 }
 
@@ -189,7 +189,7 @@ func connectToThings(cfg config, logger logger.Logger) *grpc.ClientConn {
 		opts = append(opts, grpc.WithInsecure())
 	}
 
-	conn, err := grpc.Dial(cfg.thingsURL, opts...)
+	conn, err := grpc.Dial(cfg.thingsAuthURL, opts...)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to things service: %s", err))
 		os.Exit(1)
