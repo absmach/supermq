@@ -17,6 +17,7 @@ import (
 type consumer struct {
 	nc          *nats.Conn
 	channels    map[string]bool
+	subtopics   map[string]bool
 	repo        MessageRepository
 	transformer transformers.Transformer
 	logger      log.Logger
@@ -25,10 +26,11 @@ type consumer struct {
 // Start method starts consuming messages received from NATS.
 // This method transforms messages to SenML format before
 // using MessageRepository to store them.
-func Start(nc *nats.Conn, repo MessageRepository, transformer transformers.Transformer, queue string, channels map[string]bool, logger log.Logger) error {
+func Start(nc *nats.Conn, repo MessageRepository, transformer transformers.Transformer, queue string, channels map[string]bool, subtopics map[string]bool, logger log.Logger) error {
 	c := consumer{
 		nc:          nc,
 		channels:    channels,
+		subtopics:   subtopics,
 		repo:        repo,
 		transformer: transformer,
 		logger:      logger,
@@ -58,8 +60,15 @@ func (c *consumer) consume(m *nats.Msg) {
 	var msgs []senml.Message
 	for _, v := range norm {
 		if c.channelExists(v.Channel) {
-			msgs = append(msgs, v)
+			if c.subtopicExists(v.Subtopic) {
+				msgs = append(msgs, v)
+			}
 		}
+	}
+
+	if msgs == nil {
+		c.logger.Debug("No message to saved.")
+		return
 	}
 
 	if err := c.repo.Save(msgs...); err != nil {
@@ -74,5 +83,14 @@ func (c *consumer) channelExists(channel string) bool {
 	}
 
 	_, found := c.channels[channel]
+	return found
+}
+
+func (c *consumer) subtopicExists(subtopic string) bool {
+	if _, ok := c.subtopics["*"]; ok {
+		return true
+	}
+
+	_, found := c.subtopics[subtopic]
 	return found
 }

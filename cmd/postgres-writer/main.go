@@ -42,6 +42,7 @@ const (
 	defDBSSLKey      = ""
 	defDBSSLRootCert = ""
 	defChanCfgPath   = "/config/channels.toml"
+	defSubtCfgPath   = "/config/subtopics.toml"
 
 	envNatsURL       = "MF_NATS_URL"
 	envLogLevel      = "MF_POSTGRES_WRITER_LOG_LEVEL"
@@ -56,14 +57,16 @@ const (
 	envDBSSLKey      = "MF_POSTGRES_WRITER_DB_SSL_KEY"
 	envDBSSLRootCert = "MF_POSTGRES_WRITER_DB_SSL_ROOT_CERT"
 	envChanCfgPath   = "MF_POSTGRES_WRITER_CHANNELS_CONFIG"
+	envSubtCfgPath   = "MF_POSTGRES_WRITER_SUBTOPICS_CONFIG"
 )
 
 type config struct {
-	natsURL  string
-	logLevel string
-	port     string
-	dbConfig postgres.Config
-	channels map[string]bool
+	natsURL   string
+	logLevel  string
+	port      string
+	dbConfig  postgres.Config
+	channels  map[string]bool
+	subtopics map[string]bool
 }
 
 func main() {
@@ -82,7 +85,7 @@ func main() {
 
 	repo := newService(db, logger)
 	st := senml.New()
-	if err = writers.Start(nc, repo, st, svcName, cfg.channels, logger); err != nil {
+	if err = writers.Start(nc, repo, st, svcName, cfg.channels, cfg.subtopics, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to create Postgres writer: %s", err))
 	}
 
@@ -102,6 +105,7 @@ func main() {
 
 func loadConfig() config {
 	chanCfgPath := mainflux.Env(envChanCfgPath, defChanCfgPath)
+	subtCfgPath := mainflux.Env(envSubtCfgPath, defSubtCfgPath)
 	dbConfig := postgres.Config{
 		Host:        mainflux.Env(envDBHost, defDBHost),
 		Port:        mainflux.Env(envDBPort, defDBPort),
@@ -120,15 +124,16 @@ func loadConfig() config {
 		port:     mainflux.Env(envPort, defPort),
 		dbConfig: dbConfig,
 		channels: loadChansConfig(chanCfgPath),
+		subtopics: loadSubtopicsConfig(subtCfgPath),
 	}
 }
 
-type channels struct {
+type filter struct {
 	List []string `toml:"filter"`
 }
 
 type chanConfig struct {
-	Channels channels `toml:"channels"`
+	Channels filter `toml:"channels"`
 }
 
 func loadChansConfig(chanConfigPath string) map[string]bool {
@@ -148,6 +153,29 @@ func loadChansConfig(chanConfigPath string) map[string]bool {
 	}
 
 	return chans
+}
+
+type subtConfig struct {
+	Subtopics filter `toml:"subtopics"`
+}
+
+func loadSubtopicsConfig(subtopicConfigPath string) map[string]bool {
+	data, err := ioutil.ReadFile(subtopicConfigPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var subtopicCfg subtConfig
+	if err := toml.Unmarshal(data, &subtopicCfg); err != nil {
+		log.Fatal(err)
+	}
+
+	subtopics := map[string]bool{}
+	for _, ch := range subtopicCfg.Subtopics.List {
+		subtopics[ch] = true
+	}
+
+	return subtopics
 }
 
 func connectToNATS(url string, logger logger.Logger) *nats.Conn {

@@ -37,6 +37,7 @@ const (
 	defDBHost      = "localhost"
 	defDBPort      = "27017"
 	defChanCfgPath = "/config/channels.toml"
+	defSubtCfgPath = "/config/subtopics.toml"
 
 	envNatsURL     = "MF_NATS_URL"
 	envLogLevel    = "MF_MONGO_WRITER_LOG_LEVEL"
@@ -45,16 +46,18 @@ const (
 	envDBHost      = "MF_MONGO_WRITER_DB_HOST"
 	envDBPort      = "MF_MONGO_WRITER_DB_PORT"
 	envChanCfgPath = "MF_MONGO_WRITER_CHANNELS_CONFIG"
+	envSubtCfgPath = "MF_MONGO_WRITER_SUBTOPICS_CONFIG"
 )
 
 type config struct {
-	natsURL  string
-	logLevel string
-	port     string
-	dbName   string
-	dbHost   string
-	dbPort   string
-	channels map[string]bool
+	natsURL   string
+	logLevel  string
+	port      string
+	dbName    string
+	dbHost    string
+	dbPort    string
+	channels  map[string]bool
+	subtopics map[string]bool
 }
 
 func main() {
@@ -86,7 +89,7 @@ func main() {
 	repo = api.LoggingMiddleware(repo, logger)
 	repo = api.MetricsMiddleware(repo, counter, latency)
 	st := senml.New()
-	if err := writers.Start(nc, repo, st, svcName, cfg.channels, logger); err != nil {
+	if err := writers.Start(nc, repo, st, svcName, cfg.channels, cfg.subtopics, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to start MongoDB writer: %s", err))
 		os.Exit(1)
 	}
@@ -106,6 +109,7 @@ func main() {
 
 func loadConfigs() config {
 	chanCfgPath := mainflux.Env(envChanCfgPath, defChanCfgPath)
+	subtCfgPath := mainflux.Env(envSubtCfgPath, defSubtCfgPath)
 	return config{
 		natsURL:  mainflux.Env(envNatsURL, defNatsURL),
 		logLevel: mainflux.Env(envLogLevel, defLogLevel),
@@ -114,15 +118,16 @@ func loadConfigs() config {
 		dbHost:   mainflux.Env(envDBHost, defDBHost),
 		dbPort:   mainflux.Env(envDBPort, defDBPort),
 		channels: loadChansConfig(chanCfgPath),
+		subtopics: loadSubtopicsConfig(subtCfgPath),
 	}
 }
 
-type channels struct {
+type filter struct {
 	List []string `toml:"filter"`
 }
 
 type chanConfig struct {
-	Channels channels `toml:"channels"`
+	Channels filter `toml:"channels"`
 }
 
 func loadChansConfig(chanConfigPath string) map[string]bool {
@@ -142,6 +147,29 @@ func loadChansConfig(chanConfigPath string) map[string]bool {
 	}
 
 	return chans
+}
+
+type subtConfig struct {
+	Subtopics filter `toml:"subtopics"`
+}
+
+func loadSubtopicsConfig(subtopicConfigPath string) map[string]bool {
+	data, err := ioutil.ReadFile(subtopicConfigPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var subtopicCfg subtConfig
+	if err := toml.Unmarshal(data, &subtopicCfg); err != nil {
+		log.Fatal(err)
+	}
+
+	subtopics := map[string]bool{}
+	for _, ch := range subtopicCfg.Subtopics.List {
+		subtopics[ch] = true
+	}
+
+	return subtopics
 }
 
 func makeMetrics() (*kitprometheus.Counter, *kitprometheus.Summary) {

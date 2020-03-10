@@ -1,0 +1,4 @@
+# If you want to listen on all subtopics, just pass one element ["*"], otherwise
+# pass the list of subtopics.
+[subtopics]
+filter = ["*"]
