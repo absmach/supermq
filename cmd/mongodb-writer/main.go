@@ -28,23 +28,23 @@ import (
 const (
 	svcName = "mongodb-writer"
 
-	defNatsURL     = nats.DefaultURL
-	defLogLevel    = "error"
-	defPort        = "8180"
-	defDBName      = "mainflux"
-	defDBHost      = "localhost"
-	defDBPort      = "27017"
-	defChanCfgPath = "/config/channels.toml"
-	defSubtCfgPath = "/config/subtopics.toml"
+	defNatsURL          = nats.DefaultURL
+	defLogLevel         = "error"
+	defPort             = "8180"
+	defDBName           = "mainflux"
+	defDBHost           = "localhost"
+	defDBPort           = "27017"
+	defChannelsCfgPath  = "/config/channels.toml"
+	defSubtopicsCfgPath = "/config/subtopics.toml"
 
-	envNatsURL     = "MF_NATS_URL"
-	envLogLevel    = "MF_MONGO_WRITER_LOG_LEVEL"
-	envPort        = "MF_MONGO_WRITER_PORT"
-	envDBName      = "MF_MONGO_WRITER_DB_NAME"
-	envDBHost      = "MF_MONGO_WRITER_DB_HOST"
-	envDBPort      = "MF_MONGO_WRITER_DB_PORT"
-	envChanCfgPath = "MF_MONGO_WRITER_CHANNELS_CONFIG"
-	envSubtCfgPath = "MF_MONGO_WRITER_SUBTOPICS_CONFIG"
+	envNatsURL          = "MF_NATS_URL"
+	envLogLevel         = "MF_MONGO_WRITER_LOG_LEVEL"
+	envPort             = "MF_MONGO_WRITER_PORT"
+	envDBName           = "MF_MONGO_WRITER_DB_NAME"
+	envDBHost           = "MF_MONGO_WRITER_DB_HOST"
+	envDBPort           = "MF_MONGO_WRITER_DB_PORT"
+	envChannelsCfgPath  = "MF_MONGO_WRITER_CHANNELS_CONFIG"
+	envSubtopicsCfgPath = "MF_MONGO_WRITER_SUBTOPICS_CONFIG"
 )
 
 type config struct {
@@ -106,8 +106,8 @@ func main() {
 }
 
 func loadConfigs() config {
-	chanCfgPath := mainflux.Env(envChanCfgPath, defChanCfgPath)
-	subtCfgPath := mainflux.Env(envSubtCfgPath, defSubtCfgPath)
+	channelsCfgPath := mainflux.Env(envChannelsCfgPath, defChannelsCfgPath)
+	subtopicsCfgPath := mainflux.Env(envSubtopicsCfgPath, defSubtopicsCfgPath)
 	return config{
 		natsURL:   mainflux.Env(envNatsURL, defNatsURL),
 		logLevel:  mainflux.Env(envLogLevel, defLogLevel),
@@ -115,8 +115,8 @@ func loadConfigs() config {
 		dbName:    mainflux.Env(envDBName, defDBName),
 		dbHost:    mainflux.Env(envDBHost, defDBHost),
 		dbPort:    mainflux.Env(envDBPort, defDBPort),
-		channels:  writers.LoadChansConfig(chanCfgPath),
-		subtopics: writers.LoadSubtopicsConfig(subtCfgPath),
+		channels:  writers.LoadChannelsConfig(channelsCfgPath),
+		subtopics: writers.LoadSubtopicsConfig(subtopicsCfgPath),
 	}
 }
 

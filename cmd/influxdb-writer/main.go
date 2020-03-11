@@ -26,27 +26,27 @@ import (
 const (
 	svcName = "influxdb-writer"
 
-	defNatsURL     = nats.DefaultURL
-	defLogLevel    = "error"
-	defPort        = "8180"
-	defDBName      = "mainflux"
-	defDBHost      = "localhost"
-	defDBPort      = "8086"
-	defDBUser      = "mainflux"
-	defDBPass      = "mainflux"
-	defChanCfgPath = "/config/channels.toml"
-	defSubtCfgPath = "/config/subtopics.toml"
+	defNatsURL          = nats.DefaultURL
+	defLogLevel         = "error"
+	defPort             = "8180"
+	defDBName           = "mainflux"
+	defDBHost           = "localhost"
+	defDBPort           = "8086"
+	defDBUser           = "mainflux"
+	defDBPass           = "mainflux"
+	defChannelsCfgPath  = "/config/channels.toml"
+	defSubtopicsCfgPath = "/config/subtopics.toml"
 
-	envNatsURL     = "MF_NATS_URL"
-	envLogLevel    = "MF_INFLUX_WRITER_LOG_LEVEL"
-	envPort        = "MF_INFLUX_WRITER_PORT"
-	envDBName      = "MF_INFLUX_WRITER_DB_NAME"
-	envDBHost      = "MF_INFLUX_WRITER_DB_HOST"
-	envDBPort      = "MF_INFLUX_WRITER_DB_PORT"
-	envDBUser      = "MF_INFLUX_WRITER_DB_USER"
-	envDBPass      = "MF_INFLUX_WRITER_DB_PASS"
-	envChanCfgPath = "MF_INFLUX_WRITER_CHANNELS_CONFIG"
-	envSubtCfgPath = "MF_INFLUX_WRITER_SUBTOPICS_CONFIG"
+	envNatsURL          = "MF_NATS_URL"
+	envLogLevel         = "MF_INFLUX_WRITER_LOG_LEVEL"
+	envPort             = "MF_INFLUX_WRITER_PORT"
+	envDBName           = "MF_INFLUX_WRITER_DB_NAME"
+	envDBHost           = "MF_INFLUX_WRITER_DB_HOST"
+	envDBPort           = "MF_INFLUX_WRITER_DB_PORT"
+	envDBUser           = "MF_INFLUX_WRITER_DB_USER"
+	envDBPass           = "MF_INFLUX_WRITER_DB_PASS"
+	envChannelsCfgPath  = "MF_INFLUX_WRITER_CHANNELS_CONFIG"
+	envSubtopicsCfgPath = "MF_INFLUX_WRITER_SUBTOPICS_CONFIG"
 )
 
 type config struct {
@@ -109,8 +109,8 @@ func main() {
 }
 
 func loadConfigs() (config, influxdata.HTTPConfig) {
-	chanCfgPath := mainflux.Env(envChanCfgPath, defChanCfgPath)
-	subtCfgPath := mainflux.Env(envSubtCfgPath, defSubtCfgPath)
+	channelsCfgPath := mainflux.Env(envChannelsCfgPath, defChannelsCfgPath)
+	subtopicsCfgPath := mainflux.Env(envSubtopicsCfgPath, defSubtopicsCfgPath)
 	cfg := config{
 		natsURL:   mainflux.Env(envNatsURL, defNatsURL),
 		logLevel:  mainflux.Env(envLogLevel, defLogLevel),
@@ -120,8 +120,8 @@ func loadConfigs() (config, influxdata.HTTPConfig) {
 		dbPort:    mainflux.Env(envDBPort, defDBPort),
 		dbUser:    mainflux.Env(envDBUser, defDBUser),
 		dbPass:    mainflux.Env(envDBPass, defDBPass),
-		channels:  writers.LoadChansConfig(chanCfgPath),
-		subtopics: writers.LoadSubtopicsConfig(subtCfgPath),
+		channels:  writers.LoadChannelsConfig(channelsCfgPath),
+		subtopics: writers.LoadSubtopicsConfig(subtopicsCfgPath),
 	}
 
 	clientCfg := influxdata.HTTPConfig{

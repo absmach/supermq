@@ -98,35 +98,35 @@ func (c *consumer) subtopicExists(subtopic string) bool {
 	return found
 }
 
-type filter struct {
+type filterConfig struct {
 	List []string `toml:"filter"`
 }
 
-type chanConfig struct {
-	Channels filter `toml:"channels"`
+type channelsConfig struct {
+	Channels filterConfig `toml:"channels"`
 }
 
-func LoadChansConfig(chanConfigPath string) map[string]bool {
+func LoadChannelsConfig(chanConfigPath string) map[string]bool {
 	data, err := ioutil.ReadFile(chanConfigPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var chanCfg chanConfig
-	if err := toml.Unmarshal(data, &chanCfg); err != nil {
+	var channelsCfg channelsConfig
+	if err := toml.Unmarshal(data, &channelsCfg); err != nil {
 		log.Fatal(err)
 	}
 
-	chans := map[string]bool{}
-	for _, ch := range chanCfg.Channels.List {
-		chans[ch] = true
+	channels := map[string]bool{}
+	for _, ch := range channelsCfg.Channels.List {
+		channels[ch] = true
 	}
 
-	return chans
+	return channels
 }
 
-type subtConfig struct {
-	Subtopics filter `toml:"subtopics"`
+type subtopicsConfig struct {
+	Subtopics filterConfig `toml:"subtopics"`
 }
 
 func LoadSubtopicsConfig(subtopicConfigPath string) map[string]bool {
@@ -135,7 +135,7 @@ func LoadSubtopicsConfig(subtopicConfigPath string) map[string]bool {
 		log.Fatal(err)
 	}
 
-	var subtopicCfg subtConfig
+	var subtopicCfg subtopicsConfig
 	if err := toml.Unmarshal(data, &subtopicCfg); err != nil {
 		log.Fatal(err)
 	}
