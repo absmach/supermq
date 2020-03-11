@@ -25,8 +25,8 @@ const (
 	defOffset = 0
 	defLimit  = 10
 
-	defNamespace  = "ns=0"
-	defIdentifier = "i=84"
+	defNamespace  = "ns=0" // Standard root namespace
+	defIdentifier = "i=84" // Standard root identifier
 )
 
 var (
