@@ -6,14 +6,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/BurntSushi/toml"
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
@@ -111,65 +109,15 @@ func loadConfigs() config {
 	chanCfgPath := mainflux.Env(envChanCfgPath, defChanCfgPath)
 	subtCfgPath := mainflux.Env(envSubtCfgPath, defSubtCfgPath)
 	return config{
-		natsURL:  mainflux.Env(envNatsURL, defNatsURL),
-		logLevel: mainflux.Env(envLogLevel, defLogLevel),
-		port:     mainflux.Env(envPort, defPort),
-		dbName:   mainflux.Env(envDBName, defDBName),
-		dbHost:   mainflux.Env(envDBHost, defDBHost),
-		dbPort:   mainflux.Env(envDBPort, defDBPort),
-		channels: loadChansConfig(chanCfgPath),
-		subtopics: loadSubtopicsConfig(subtCfgPath),
+		natsURL:   mainflux.Env(envNatsURL, defNatsURL),
+		logLevel:  mainflux.Env(envLogLevel, defLogLevel),
+		port:      mainflux.Env(envPort, defPort),
+		dbName:    mainflux.Env(envDBName, defDBName),
+		dbHost:    mainflux.Env(envDBHost, defDBHost),
+		dbPort:    mainflux.Env(envDBPort, defDBPort),
+		channels:  writers.LoadChansConfig(chanCfgPath),
+		subtopics: writers.LoadSubtopicsConfig(subtCfgPath),
 	}
-}
-
-type filter struct {
-	List []string `toml:"filter"`
-}
-
-type chanConfig struct {
-	Channels filter `toml:"channels"`
-}
-
-func loadChansConfig(chanConfigPath string) map[string]bool {
-	data, err := ioutil.ReadFile(chanConfigPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var chanCfg chanConfig
-	if err := toml.Unmarshal(data, &chanCfg); err != nil {
-		log.Fatal(err)
-	}
-
-	chans := map[string]bool{}
-	for _, ch := range chanCfg.Channels.List {
-		chans[ch] = true
-	}
-
-	return chans
-}
-
-type subtConfig struct {
-	Subtopics filter `toml:"subtopics"`
-}
-
-func loadSubtopicsConfig(subtopicConfigPath string) map[string]bool {
-	data, err := ioutil.ReadFile(subtopicConfigPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var subtopicCfg subtConfig
-	if err := toml.Unmarshal(data, &subtopicCfg); err != nil {
-		log.Fatal(err)
-	}
-
-	subtopics := map[string]bool{}
-	for _, ch := range subtopicCfg.Subtopics.List {
-		subtopics[ch] = true
-	}
-
-	return subtopics
 }
 
 func makeMetrics() (*kitprometheus.Counter, *kitprometheus.Summary) {

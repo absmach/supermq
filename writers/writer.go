@@ -5,10 +5,13 @@ package writers
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 
+	"github.com/BurntSushi/toml"
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
-	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/transformers"
 	"github.com/mainflux/mainflux/transformers/senml"
 	nats "github.com/nats-io/nats.go"
@@ -20,13 +23,13 @@ type consumer struct {
 	subtopics   map[string]bool
 	repo        MessageRepository
 	transformer transformers.Transformer
-	logger      log.Logger
+	logger      logger.Logger
 }
 
 // Start method starts consuming messages received from NATS.
 // This method transforms messages to SenML format before
 // using MessageRepository to store them.
-func Start(nc *nats.Conn, repo MessageRepository, transformer transformers.Transformer, queue string, channels map[string]bool, subtopics map[string]bool, logger log.Logger) error {
+func Start(nc *nats.Conn, repo MessageRepository, transformer transformers.Transformer, queue string, channels map[string]bool, subtopics map[string]bool, logger logger.Logger) error {
 	c := consumer{
 		nc:          nc,
 		channels:    channels,
@@ -93,4 +96,54 @@ func (c *consumer) subtopicExists(subtopic string) bool {
 
 	_, found := c.subtopics[subtopic]
 	return found
+}
+
+type filter struct {
+	List []string `toml:"filter"`
+}
+
+type chanConfig struct {
+	Channels filter `toml:"channels"`
+}
+
+func LoadChansConfig(chanConfigPath string) map[string]bool {
+	data, err := ioutil.ReadFile(chanConfigPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var chanCfg chanConfig
+	if err := toml.Unmarshal(data, &chanCfg); err != nil {
+		log.Fatal(err)
+	}
+
+	chans := map[string]bool{}
+	for _, ch := range chanCfg.Channels.List {
+		chans[ch] = true
+	}
+
+	return chans
+}
+
+type subtConfig struct {
+	Subtopics filter `toml:"subtopics"`
+}
+
+func LoadSubtopicsConfig(subtopicConfigPath string) map[string]bool {
+	data, err := ioutil.ReadFile(subtopicConfigPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var subtopicCfg subtConfig
+	if err := toml.Unmarshal(data, &subtopicCfg); err != nil {
+		log.Fatal(err)
+	}
+
+	subtopics := map[string]bool{}
+	for _, ch := range subtopicCfg.Subtopics.List {
+		subtopics[ch] = true
+	}
+
+	return subtopics
 }
