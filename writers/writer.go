@@ -26,6 +26,10 @@ type consumer struct {
 	logger      logger.Logger
 }
 
+func getDefaultFilter() map[string]bool {
+	return map[string]bool{"*": true}
+}
+
 // Start method starts consuming messages received from NATS.
 // This method transforms messages to SenML format before
 // using MessageRepository to store them.
@@ -109,12 +113,16 @@ type channelsConfig struct {
 func LoadChannelsConfig(chanConfigPath string) map[string]bool {
 	data, err := ioutil.ReadFile(chanConfigPath)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(fmt.Sprintf("Failed to open configuration file: %s", err))
+		log.Print(fmt.Sprintf("Default configuration is loaded"))
+		return getDefaultFilter()
 	}
 
 	var channelsCfg channelsConfig
 	if err := toml.Unmarshal(data, &channelsCfg); err != nil {
-		log.Fatal(err)
+		log.Print(fmt.Sprintf("Failed to unmarshal configuration file: %s", err))
+		log.Print(fmt.Sprintf("Default configuration is loaded"))
+		return getDefaultFilter()
 	}
 
 	channels := map[string]bool{}
@@ -132,12 +140,16 @@ type subtopicsConfig struct {
 func LoadSubtopicsConfig(subtopicConfigPath string) map[string]bool {
 	data, err := ioutil.ReadFile(subtopicConfigPath)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(fmt.Sprintf("Failed to open configuration file: %s", err))
+		log.Print(fmt.Sprintf("Default configuration is loaded"))
+		return getDefaultFilter()
 	}
 
 	var subtopicCfg subtopicsConfig
 	if err := toml.Unmarshal(data, &subtopicCfg); err != nil {
-		log.Fatal(err)
+		log.Print(fmt.Sprintf("Failed to unmarshal configuration file: %s", err))
+		log.Print(fmt.Sprintf("Default configuration is loaded"))
+		return getDefaultFilter()
 	}
 
 	subtopics := map[string]bool{}
