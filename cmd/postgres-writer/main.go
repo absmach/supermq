@@ -59,12 +59,11 @@ const (
 )
 
 type config struct {
-	natsURL   string
-	logLevel  string
-	port      string
-	dbConfig  postgres.Config
-	channels  map[string]bool
-	subtopics map[string]bool
+	natsURL  string
+	logLevel string
+	port     string
+	dbConfig postgres.Config
+	filters  writers.FiltersCfg
 }
 
 func main() {
@@ -83,7 +82,7 @@ func main() {
 
 	repo := newService(db, logger)
 	st := senml.New()
-	if err = writers.Start(nc, repo, st, svcName, cfg.channels, cfg.subtopics, logger); err != nil {
+	if err = writers.Start(nc, repo, st, svcName, cfg.filters, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to create Postgres writer: %s", err))
 	}
 
@@ -102,8 +101,6 @@ func main() {
 }
 
 func loadConfig() config {
-	channelsCfgPath := mainflux.Env(envChannelsCfgPath, defChannelsCfgPath)
-	subtopicsCfgPath := mainflux.Env(envSubtopicsCfgPath, defSubtopicsCfgPath)
 	dbConfig := postgres.Config{
 		Host:        mainflux.Env(envDBHost, defDBHost),
 		Port:        mainflux.Env(envDBPort, defDBPort),
@@ -116,13 +113,16 @@ func loadConfig() config {
 		SSLRootCert: mainflux.Env(envDBSSLRootCert, defDBSSLRootCert),
 	}
 
+	channelsCfgPath := mainflux.Env(envChannelsCfgPath, defChannelsCfgPath)
+	subtopicsCfgPath := mainflux.Env(envSubtopicsCfgPath, defSubtopicsCfgPath)
+	filters, _ := writers.LoadFiltersConfig(channelsCfgPath, subtopicsCfgPath)
+
 	return config{
-		natsURL:   mainflux.Env(envNatsURL, defNatsURL),
-		logLevel:  mainflux.Env(envLogLevel, defLogLevel),
-		port:      mainflux.Env(envPort, defPort),
-		dbConfig:  dbConfig,
-		channels:  writers.LoadChannelsConfig(channelsCfgPath),
-		subtopics: writers.LoadSubtopicsConfig(subtopicsCfgPath),
+		natsURL:  mainflux.Env(envNatsURL, defNatsURL),
+		logLevel: mainflux.Env(envLogLevel, defLogLevel),
+		port:     mainflux.Env(envPort, defPort),
+		dbConfig: dbConfig,
+		filters:  filters,
 	}
 }
 

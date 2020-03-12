@@ -53,12 +53,11 @@ const (
 )
 
 type config struct {
-	natsURL   string
-	logLevel  string
-	port      string
-	dbCfg     cassandra.DBConfig
-	channels  map[string]bool
-	subtopics map[string]bool
+	natsURL  string
+	logLevel string
+	port     string
+	dbCfg    cassandra.DBConfig
+	filters  writers.FiltersCfg
 }
 
 func main() {
@@ -77,7 +76,7 @@ func main() {
 
 	repo := newService(session, logger)
 	st := senml.New()
-	if err := writers.Start(nc, repo, st, svcName, cfg.channels, cfg.subtopics, logger); err != nil {
+	if err := writers.Start(nc, repo, st, svcName, cfg.filters, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to create Cassandra writer: %s", err))
 	}
 
@@ -111,13 +110,13 @@ func loadConfig() config {
 
 	channelsCfgPath := mainflux.Env(envChannelsCfgPath, defChannelsCfgPath)
 	subtopicsCfgPath := mainflux.Env(envSubtopicsCfgPath, defSubtopicsCfgPath)
+	filters, _ := writers.LoadFiltersConfig(channelsCfgPath, subtopicsCfgPath)
 	return config{
-		natsURL:   mainflux.Env(envNatsURL, defNatsURL),
-		logLevel:  mainflux.Env(envLogLevel, defLogLevel),
-		port:      mainflux.Env(envPort, defPort),
-		dbCfg:     dbCfg,
-		channels:  writers.LoadChannelsConfig(channelsCfgPath),
-		subtopics: writers.LoadSubtopicsConfig(subtopicsCfgPath),
+		natsURL:  mainflux.Env(envNatsURL, defNatsURL),
+		logLevel: mainflux.Env(envLogLevel, defLogLevel),
+		port:     mainflux.Env(envPort, defPort),
+		dbCfg:    dbCfg,
+		filters:  filters,
 	}
 }
 
