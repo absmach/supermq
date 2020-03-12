@@ -180,19 +180,19 @@ func browse(n *opcuaGopcua.Node, path string, level int) ([]NodeDef, error) {
 		nodes = append(nodes, def)
 	}
 
-	bc, err := broseChildren(n, def.Path, level, id.HasComponent)
+	bc, err := browseChildren(n, def.Path, level, id.HasComponent)
 	if err != nil {
 		return nil, err
 	}
 	nodes = append(nodes, bc...)
 
-	bc, err = broseChildren(n, def.Path, level, id.Organizes)
+	bc, err = browseChildren(n, def.Path, level, id.Organizes)
 	if err != nil {
 		return nil, err
 	}
 	nodes = append(nodes, bc...)
 
-	bc, err = broseChildren(n, def.Path, level, id.HasProperty)
+	bc, err = browseChildren(n, def.Path, level, id.HasProperty)
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +201,7 @@ func browse(n *opcuaGopcua.Node, path string, level int) ([]NodeDef, error) {
 	return nodes, nil
 }
 
-func broseChildren(n *opcuaGopcua.Node, path string, level int, typeDef uint32) ([]NodeDef, error) {
+func browseChildren(n *opcuaGopcua.Node, path string, level int, typeDef uint32) ([]NodeDef, error) {
 	nodes := []NodeDef{}
 	refs, err := n.ReferencedNodes(typeDef, uaGopcua.BrowseDirectionForward, uaGopcua.NodeClassAll, true)
 	if err != nil {
