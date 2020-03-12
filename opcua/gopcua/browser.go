@@ -211,7 +211,7 @@ func browseChildren(n *opcuaGopcua.Node, path string, level int, typeDef uint32)
 	for _, rn := range refs {
 		children, err := browse(rn, path, level+1)
 		if err != nil {
-			break
+			return []NodeDef{}, err
 		}
 		nodes = append(nodes, children...)
 	}
