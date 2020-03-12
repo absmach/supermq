@@ -72,7 +72,6 @@ func (c *consumer) consume(m *nats.Msg) {
 	}
 
 	if msgs == nil {
-		c.logger.Debug("No message to saved.")
 		return
 	}
 
