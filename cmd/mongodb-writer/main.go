@@ -65,6 +65,14 @@ func main() {
 		log.Fatal(err)
 	}
 
+	channelsCfgPath := mainflux.Env(envChannelsCfgPath, defChannelsCfgPath)
+	subtopicsCfgPath := mainflux.Env(envSubtopicsCfgPath, defSubtopicsCfgPath)
+	filters, err := writers.LoadFiltersConfig(channelsCfgPath, subtopicsCfgPath)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to load filters: %s", err))
+	}
+	cfg.filters = filters
+
 	nc, err := nats.Connect(cfg.natsURL)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
@@ -105,9 +113,6 @@ func main() {
 }
 
 func loadConfigs() config {
-	channelsCfgPath := mainflux.Env(envChannelsCfgPath, defChannelsCfgPath)
-	subtopicsCfgPath := mainflux.Env(envSubtopicsCfgPath, defSubtopicsCfgPath)
-	filters, _ := writers.LoadFiltersConfig(channelsCfgPath, subtopicsCfgPath)
 	return config{
 		natsURL:  mainflux.Env(envNatsURL, defNatsURL),
 		logLevel: mainflux.Env(envLogLevel, defLogLevel),
@@ -115,7 +120,6 @@ func loadConfigs() config {
 		dbName:   mainflux.Env(envDBName, defDBName),
 		dbHost:   mainflux.Env(envDBHost, defDBHost),
 		dbPort:   mainflux.Env(envDBPort, defDBPort),
-		filters:  filters,
 	}
 }
 

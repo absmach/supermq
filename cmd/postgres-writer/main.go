@@ -74,6 +74,14 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
+	channelsCfgPath := mainflux.Env(envChannelsCfgPath, defChannelsCfgPath)
+	subtopicsCfgPath := mainflux.Env(envSubtopicsCfgPath, defSubtopicsCfgPath)
+	filters, err := writers.LoadFiltersConfig(channelsCfgPath, subtopicsCfgPath)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to load filters: %s", err))
+	}
+	cfg.filters = filters
+
 	nc := connectToNATS(cfg.natsURL, logger)
 	defer nc.Close()
 
@@ -113,16 +121,11 @@ func loadConfig() config {
 		SSLRootCert: mainflux.Env(envDBSSLRootCert, defDBSSLRootCert),
 	}
 
-	channelsCfgPath := mainflux.Env(envChannelsCfgPath, defChannelsCfgPath)
-	subtopicsCfgPath := mainflux.Env(envSubtopicsCfgPath, defSubtopicsCfgPath)
-	filters, _ := writers.LoadFiltersConfig(channelsCfgPath, subtopicsCfgPath)
-
 	return config{
 		natsURL:  mainflux.Env(envNatsURL, defNatsURL),
 		logLevel: mainflux.Env(envLogLevel, defLogLevel),
 		port:     mainflux.Env(envPort, defPort),
 		dbConfig: dbConfig,
-		filters:  filters,
 	}
 }
 
