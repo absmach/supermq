@@ -23,8 +23,8 @@ var (
 
 type consumer struct {
 	nc          *nats.Conn
-	channels    map[string]bool
-	subtopics   map[string]bool
+	channels    []string
+	subtopics   []string
 	repo        MessageRepository
 	transformer transformers.Transformer
 	logger      logger.Logger
@@ -82,21 +82,21 @@ func (c *consumer) consume(m *nats.Msg) {
 }
 
 func (c *consumer) channelExists(channel string) bool {
-	if _, ok := c.channels["*"]; ok {
-		return true
+	for _, ch := range c.channels {
+		if ch == channel || ch == "*" {
+			return true
+		}
 	}
-
-	_, found := c.channels[channel]
-	return found
+	return false
 }
 
 func (c *consumer) subtopicExists(subtopic string) bool {
-	if _, ok := c.subtopics["*"]; ok {
-		return true
+	for _, s := range c.subtopics {
+		if s == subtopic || s == "*" {
+			return true
+		}
 	}
-
-	_, found := c.subtopics[subtopic]
-	return found
+	return false
 }
 
 type filterConfig struct {
@@ -112,15 +112,12 @@ type subtopicsConfig struct {
 }
 
 type FiltersCfg struct {
-	channels  map[string]bool
-	subtopics map[string]bool
+	channels  []string
+	subtopics []string
 }
 
 func LoadFiltersConfig(channelConfigPath string, subtopicConfigPath string) (FiltersCfg, error)  {
-	filters := FiltersCfg{
-		channels:  map[string]bool{"*": true},
-		subtopics: map[string]bool{"*": true},
-	}
+	filters := FiltersCfg{}
 
 	data, err := ioutil.ReadFile(channelConfigPath)
 	if err != nil {
@@ -132,11 +129,7 @@ func LoadFiltersConfig(channelConfigPath string, subtopicConfigPath string) (Fil
 		return filters, errors.Wrap(errParseConfFile, err)
 	}
 
-	channels := map[string]bool{}
-	for _, ch := range channelsCfg.Channels.List {
-		channels[ch] = true
-	}
-	filters.channels = channels
+	filters.channels = channelsCfg.Channels.List
 
 	data, err = ioutil.ReadFile(subtopicConfigPath)
 	if err != nil {
@@ -148,11 +141,7 @@ func LoadFiltersConfig(channelConfigPath string, subtopicConfigPath string) (Fil
 		return filters, errors.Wrap(errParseConfFile, err)
 	}
 
-	subtopics := map[string]bool{}
-	for _, ch := range subtopicCfg.Subtopics.List {
-		subtopics[ch] = true
-	}
-	filters.subtopics = subtopics
+	filters.subtopics = subtopicCfg.Subtopics.List
 
 	return filters, err
 }
