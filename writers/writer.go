@@ -117,31 +117,28 @@ type FiltersCfg struct {
 }
 
 func LoadFiltersConfig(channelConfigPath string, subtopicConfigPath string) (FiltersCfg, error)  {
-	filters := FiltersCfg{}
-
 	data, err := ioutil.ReadFile(channelConfigPath)
 	if err != nil {
-		return filters, errors.Wrap(errOpenConfFile, err)
+		return FiltersCfg{}, errors.Wrap(errOpenConfFile, err)
 	}
 
 	var channelsCfg channelsConfig
 	if err := toml.Unmarshal(data, &channelsCfg); err != nil {
-		return filters, errors.Wrap(errParseConfFile, err)
+		return FiltersCfg{}, errors.Wrap(errParseConfFile, err)
 	}
-
-	filters.channels = channelsCfg.Channels.List
 
 	data, err = ioutil.ReadFile(subtopicConfigPath)
 	if err != nil {
-		return filters, errors.Wrap(errOpenConfFile, err)
+		return FiltersCfg{}, errors.Wrap(errOpenConfFile, err)
 	}
 
 	var subtopicCfg subtopicsConfig
 	if err := toml.Unmarshal(data, &subtopicCfg); err != nil {
-		return filters, errors.Wrap(errParseConfFile, err)
+		return FiltersCfg{}, errors.Wrap(errParseConfFile, err)
 	}
 
-	filters.subtopics = subtopicCfg.Subtopics.List
-
-	return filters, err
+	return FiltersCfg{
+		channels: channelsCfg.Channels.List,
+		subtopics: subtopicCfg.Subtopics.List,
+	}, err
 }
