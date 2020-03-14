@@ -14,7 +14,7 @@ import (
 	"github.com/mainflux/mainflux/opcua"
 )
 
-const maxChildrens = 5 // max browsing node children level
+const maxChildrens = 4 // max browsing node children level
 
 // NodeDef represents the node browser responnse
 type NodeDef struct {
