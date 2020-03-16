@@ -293,12 +293,18 @@ func (ts *twinsService) saveState(msg *mainflux.Message, id string) error {
 	}
 
 	for _, rec := range recs {
-		if save := prepareState(&st, &tw, rec, msg); !save {
+		action := prepareState(&st, &tw, rec, msg)
+		switch action {
+		case 0:
 			return nil
-		}
-
-		if err := ts.states.Save(context.TODO(), st); err != nil {
-			return fmt.Errorf("Updating state for %s failed: %s", msg.Publisher, err)
+		case 1:
+			if err := ts.states.Update(context.TODO(), st); err != nil {
+				return fmt.Errorf("Update state for %s failed: %s", msg.Publisher, err)
+			}
+		case 2:
+			if err := ts.states.Save(context.TODO(), st); err != nil {
+				return fmt.Errorf("Save state for %s failed: %s", msg.Publisher, err)
+			}
 		}
 	}
 
@@ -308,11 +314,9 @@ func (ts *twinsService) saveState(msg *mainflux.Message, id string) error {
 	return nil
 }
 
-func prepareState(st *State, tw *Twin, rec senml.Record, msg *mainflux.Message) bool {
+func prepareState(st *State, tw *Twin, rec senml.Record, msg *mainflux.Message) int {
 	def := tw.Definitions[len(tw.Definitions)-1]
 	st.TwinID = tw.ID
-	st.ID++
-	st.Created = time.Now()
 	st.Definition = def.ID
 
 	if st.Payload == nil {
@@ -326,20 +330,29 @@ func prepareState(st *State, tw *Twin, rec senml.Record, msg *mainflux.Message) 
 		}
 	}
 
-	save := false
+	recTime := (rec.BaseTime + rec.Time) * 1000
+	action := 0 // 0 - do nothing, 1 - update, 2 - save
 	for _, attr := range def.Attributes {
 		if !attr.PersistState {
 			continue
 		}
 		if attr.Channel == msg.Channel && attr.Subtopic == msg.Subtopic {
+			action = 1
+			if recTime == 0 || st.Created.Nanosecond() != int(recTime) {
+				action = 2
+				st.ID++
+				st.Created = time.Now()
+				if recTime != 0 {
+					st.Created = time.Unix(0, int64(recTime))
+				}
+			}
 			val := findValue(rec)
 			st.Payload[attr.Name] = val
-			save = true
 			break
 		}
 	}
 
-	return save
+	return action
 }
 
 func findValue(rec senml.Record) interface{} {

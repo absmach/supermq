@@ -39,6 +39,20 @@ func (sr *stateRepository) Save(ctx context.Context, st twins.State) error {
 	return nil
 }
 
+// Update persists the state
+func (sr *stateRepository) Update(ctx context.Context, st twins.State) error {
+	coll := sr.db.Collection(statesCollection)
+
+	filter := bson.D{{"id", st.ID}, {"twinid", st.TwinID}}
+	update := bson.D{{"$set", st}}
+	_, err := coll.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // CountStates returns the number of states related to twin
 func (sr *stateRepository) Count(ctx context.Context, tw twins.Twin) (int64, error) {
 	coll := sr.db.Collection(statesCollection)
