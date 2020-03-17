@@ -45,8 +45,7 @@ func (sr *stateRepository) Update(ctx context.Context, st twins.State) error {
 
 	filter := bson.D{{"id", st.ID}, {"twinid", st.TwinID}}
 	update := bson.D{{"$set", st}}
-	_, err := coll.UpdateOne(context.Background(), filter, update)
-	if err != nil {
+	if _, err := coll.UpdateOne(context.Background(), filter, update); err != nil {
 		return err
 	}
 

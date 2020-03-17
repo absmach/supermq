@@ -6,9 +6,11 @@ package twins
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"math"
 	"time"
+
+	"github.com/mainflux/mainflux/errors"
 
 	"github.com/mainflux/mainflux"
 	nats "github.com/mainflux/mainflux/twins/nats/publisher"
@@ -330,7 +332,11 @@ func prepareState(st *State, tw *Twin, rec senml.Record, msg *mainflux.Message) 
 		}
 	}
 
-	recTime := (rec.BaseTime + rec.Time) * 1000
+	recSec := rec.BaseTime + rec.Time
+	recNano := recSec * 1e9
+	sec, dec := math.Modf(recSec)
+	recTime := time.Unix(int64(sec), int64(dec*1e9))
+
 	action := 0 // 0 - do nothing, 1 - update, 2 - save
 	for _, attr := range def.Attributes {
 		if !attr.PersistState {
@@ -338,12 +344,13 @@ func prepareState(st *State, tw *Twin, rec senml.Record, msg *mainflux.Message) 
 		}
 		if attr.Channel == msg.Channel && attr.Subtopic == msg.Subtopic {
 			action = 1
-			if recTime == 0 || st.Created.Nanosecond() != int(recTime) {
+			delta := math.Abs(float64(st.Created.UnixNano()) - recNano)
+			if recNano == 0 || delta > 1e6 { // delta > millisecond
 				action = 2
 				st.ID++
 				st.Created = time.Now()
-				if recTime != 0 {
-					st.Created = time.Unix(0, int64(recTime))
+				if recNano != 0 {
+					st.Created = recTime
 				}
 			}
 			val := findValue(rec)
