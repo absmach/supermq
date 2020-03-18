@@ -5,7 +5,8 @@ package things
 
 import (
 	"context"
-	"errors"
+
+	"github.com/mainflux/mainflux/errors"
 
 	"github.com/mainflux/mainflux"
 )
@@ -33,74 +34,74 @@ var (
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
 	// CreateThings adds a list of things to the user identified by the provided key.
-	CreateThings(context.Context, string, ...Thing) ([]Thing, error)
+	CreateThings(context.Context, string, ...Thing) ([]Thing, errors.Error)
 
 	// UpdateThing updates the thing identified by the provided ID, that
 	// belongs to the user identified by the provided key.
-	UpdateThing(context.Context, string, Thing) error
+	UpdateThing(context.Context, string, Thing) errors.Error
 
 	// UpdateKey updates key value of the existing thing. A non-nil error is
 	// returned to indicate operation failure.
-	UpdateKey(context.Context, string, string, string) error
+	UpdateKey(context.Context, string, string, string) errors.Error
 
 	// ViewThing retrieves data about the thing identified with the provided
 	// ID, that belongs to the user identified by the provided key.
-	ViewThing(context.Context, string, string) (Thing, error)
+	ViewThing(context.Context, string, string) (Thing, errors.Error)
 
 	// ListThings retrieves data about subset of things that belongs to the
 	// user identified by the provided key.
-	ListThings(context.Context, string, uint64, uint64, string, Metadata) (ThingsPage, error)
+	ListThings(context.Context, string, uint64, uint64, string, Metadata) (ThingsPage, errors.Error)
 
 	// ListThingsByChannel retrieves data about subset of things that are
 	// connected to specified channel and belong to the user identified by
 	// the provided key.
-	ListThingsByChannel(context.Context, string, string, uint64, uint64) (ThingsPage, error)
+	ListThingsByChannel(context.Context, string, string, uint64, uint64) (ThingsPage, errors.Error)
 
 	// RemoveThing removes the thing identified with the provided ID, that
 	// belongs to the user identified by the provided key.
-	RemoveThing(context.Context, string, string) error
+	RemoveThing(context.Context, string, string) errors.Error
 
 	// CreateChannels adds a list of channels to the user identified by the provided key.
-	CreateChannels(context.Context, string, ...Channel) ([]Channel, error)
+	CreateChannels(context.Context, string, ...Channel) ([]Channel, errors.Error)
 
 	// UpdateChannel updates the channel identified by the provided ID, that
 	// belongs to the user identified by the provided key.
-	UpdateChannel(context.Context, string, Channel) error
+	UpdateChannel(context.Context, string, Channel) errors.Error
 
 	// ViewChannel retrieves data about the channel identified by the provided
 	// ID, that belongs to the user identified by the provided key.
-	ViewChannel(context.Context, string, string) (Channel, error)
+	ViewChannel(context.Context, string, string) (Channel, errors.Error)
 
 	// ListChannels retrieves data about subset of channels that belongs to the
 	// user identified by the provided key.
-	ListChannels(context.Context, string, uint64, uint64, string, Metadata) (ChannelsPage, error)
+	ListChannels(context.Context, string, uint64, uint64, string, Metadata) (ChannelsPage, errors.Error)
 
 	// ListChannelsByThing retrieves data about subset of channels that have
 	// specified thing connected to them and belong to the user identified by
 	// the provided key.
-	ListChannelsByThing(context.Context, string, string, uint64, uint64) (ChannelsPage, error)
+	ListChannelsByThing(context.Context, string, string, uint64, uint64) (ChannelsPage, errors.Error)
 
 	// RemoveChannel removes the thing identified by the provided ID, that
 	// belongs to the user identified by the provided key.
-	RemoveChannel(context.Context, string, string) error
+	RemoveChannel(context.Context, string, string) errors.Error
 
 	// Connect adds things to the channel's list of connected things.
-	Connect(context.Context, string, []string, []string) error
+	Connect(context.Context, string, []string, []string) errors.Error
 
 	// Disconnect removes thing from the channel's list of connected
 	// things.
-	Disconnect(context.Context, string, string, string) error
+	Disconnect(context.Context, string, string, string) errors.Error
 
 	// CanAccessByKey determines whether the channel can be accessed using the
 	// provided key and returns thing's id if access is allowed.
-	CanAccessByKey(context.Context, string, string) (string, error)
+	CanAccessByKey(context.Context, string, string) (string, errors.Error)
 
 	// CanAccessByID determines whether the channel can be accessed by
 	// the given thing and returns error if it cannot.
-	CanAccessByID(context.Context, string, string) error
+	CanAccessByID(context.Context, string, string) errors.Error
 
 	// Identify returns thing ID for given thing key.
-	Identify(context.Context, string) (string, error)
+	Identify(context.Context, string) (string, errors.Error)
 }
 
 // PageMetadata contains page metadata that helps navigation.
@@ -134,7 +135,7 @@ func New(auth mainflux.AuthNServiceClient, things ThingRepository, channels Chan
 	}
 }
 
-func (ts *thingsService) CreateThings(ctx context.Context, token string, things ...Thing) ([]Thing, error) {
+func (ts *thingsService) CreateThings(ctx context.Context, token string, things ...Thing) ([]Thing, errors.Error) {
 	res, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return []Thing{}, ErrUnauthorizedAccess
@@ -159,7 +160,7 @@ func (ts *thingsService) CreateThings(ctx context.Context, token string, things 
 	return ts.things.Save(ctx, things...)
 }
 
-func (ts *thingsService) UpdateThing(ctx context.Context, token string, thing Thing) error {
+func (ts *thingsService) UpdateThing(ctx context.Context, token string, thing Thing) erros.Error {
 	res, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return ErrUnauthorizedAccess

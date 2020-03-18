@@ -3,7 +3,11 @@
 
 package things
 
-import "context"
+import (
+	"context"
+
+	"github.com/mainflux/mainflux/errors"
+)
 
 // Metadata to be used for mainflux thing or channel for customized
 // describing of particular thing or channel.
@@ -31,43 +35,43 @@ type ThingRepository interface {
 	// Save persists multiple things. Things are saved using a transaction. If one thing
 	// fails then none will be saved. Successful operation is indicated by non-nil
 	// error response.
-	Save(context.Context, ...Thing) ([]Thing, error)
+	Save(context.Context, ...Thing) ([]Thing, errors.Error)
 
 	// Update performs an update to the existing thing. A non-nil error is
 	// returned to indicate operation failure.
-	Update(context.Context, Thing) error
+	Update(context.Context, Thing) errors.Error
 
 	// UpdateKey updates key value of the existing thing. A non-nil error is
 	// returned to indicate operation failure.
-	UpdateKey(context.Context, string, string, string) error
+	UpdateKey(context.Context, string, string, string) errors.Error
 
 	// RetrieveByID retrieves the thing having the provided identifier, that is owned
 	// by the specified user.
-	RetrieveByID(context.Context, string, string) (Thing, error)
+	RetrieveByID(context.Context, string, string) (Thing, errors.Error)
 
 	// RetrieveByKey returns thing ID for given thing key.
-	RetrieveByKey(context.Context, string) (string, error)
+	RetrieveByKey(context.Context, string) (string, errors.Error)
 
 	// RetrieveAll retrieves the subset of things owned by the specified user.
-	RetrieveAll(context.Context, string, uint64, uint64, string, Metadata) (ThingsPage, error)
+	RetrieveAll(context.Context, string, uint64, uint64, string, Metadata) (ThingsPage, errors.Error)
 
 	// RetrieveByChannel retrieves the subset of things owned by the specified
 	// user and connected to specified channel.
-	RetrieveByChannel(context.Context, string, string, uint64, uint64) (ThingsPage, error)
+	RetrieveByChannel(context.Context, string, string, uint64, uint64) (ThingsPage, errors.Error)
 
 	// Remove removes the thing having the provided identifier, that is owned
 	// by the specified user.
-	Remove(context.Context, string, string) error
+	Remove(context.Context, string, string) errors.Error
 }
 
 // ThingCache contains thing caching interface.
 type ThingCache interface {
 	// Save stores pair thing key, thing id.
-	Save(context.Context, string, string) error
+	Save(context.Context, string, string) errors.Error
 
 	// ID returns thing ID for given key.
-	ID(context.Context, string) (string, error)
+	ID(context.Context, string) (string, errors.Error)
 
 	// Removes thing from cache.
-	Remove(context.Context, string) error
+	Remove(context.Context, string) errors.Error
 }

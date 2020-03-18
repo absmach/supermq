@@ -11,7 +11,23 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/lib/pq" // required for DB access
+	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/things"
+)
+
+var (
+	// ErrSaveDb indicates error while saving to database
+	ErrSaveDb = errors.New("Save Thing to DB error")
+	// ErrUpdateDb indicates error while updating database
+	ErrUpdateDb = errors.New("Update Thing in DB error")
+	// ErrSelectDb indicates error while reading from database
+	ErrSelectDb = errors.New("Select Thing from DB error")
+	// ErrDeleteDb indicates error while marshaling Thing to JSON
+	ErrDeleteDb = errors.New("Delete Thing from DB error")
+	// ErrMarshalThing indicates error while marshaling Thing to JSON
+	ErrMarshalThing = errors.New("Marshal to JSON error")
+	// ErrUnmarshalThing indicates error while unmarshaling JSON to Thing
+	ErrUnmarshalThing = errors.New("Unmarshal JSON error")
 )
 
 const (
@@ -35,10 +51,10 @@ func NewThingRepository(db Database) things.ThingRepository {
 	}
 }
 
-func (tr thingRepository) Save(ctx context.Context, ths ...things.Thing) ([]things.Thing, error) {
+func (tr thingRepository) Save(ctx context.Context, ths ...things.Thing) ([]things.Thing, errors.Error) {
 	tx, err := tr.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(ErrSaveDb, err)
 	}
 
 	q := `INSERT INTO things (id, owner, name, key, metadata)
@@ -63,18 +79,18 @@ func (tr thingRepository) Save(ctx context.Context, ths ...things.Thing) ([]thin
 				}
 			}
 
-			return []things.Thing{}, err
+			return []things.Thing{}, errors.Wrap(ErrSaveDb, err)
 		}
 	}
 
 	if err = tx.Commit(); err != nil {
-		return []things.Thing{}, err
+		return []things.Thing{}, errors.Wrap(ErrSaveDb, err)
 	}
 
 	return ths, nil
 }
 
-func (tr thingRepository) Update(ctx context.Context, thing things.Thing) error {
+func (tr thingRepository) Update(ctx context.Context, thing things.Thing) errors.Error {
 	q := `UPDATE things SET name = :name, metadata = :metadata WHERE owner = :owner AND id = :id;`
 
 	dbth, err := toDBThing(thing)
@@ -92,12 +108,12 @@ func (tr thingRepository) Update(ctx context.Context, thing things.Thing) error 
 			}
 		}
 
-		return err
+		return errors.Wrap(ErrUpdateDb, err)
 	}
 
 	cnt, err := res.RowsAffected()
 	if err != nil {
-		return err
+		return errors.Wrap(ErrUpdateDb, err)
 	}
 
 	if cnt == 0 {
@@ -107,7 +123,7 @@ func (tr thingRepository) Update(ctx context.Context, thing things.Thing) error 
 	return nil
 }
 
-func (tr thingRepository) UpdateKey(ctx context.Context, owner, id, key string) error {
+func (tr thingRepository) UpdateKey(ctx context.Context, owner, id, key string) errors.Error {
 	q := `UPDATE things SET key = :key WHERE owner = :owner AND id = :id;`
 
 	dbth := dbThing{
@@ -128,12 +144,12 @@ func (tr thingRepository) UpdateKey(ctx context.Context, owner, id, key string) 
 			}
 		}
 
-		return err
+		return errors.Wrap(ErrUpdateDb, err)
 	}
 
 	cnt, err := res.RowsAffected()
 	if err != nil {
-		return err
+		return errors.Wrap(ErrUpdateDb, err)
 	}
 
 	if cnt == 0 {
@@ -143,7 +159,7 @@ func (tr thingRepository) UpdateKey(ctx context.Context, owner, id, key string) 
 	return nil
 }
 
-func (tr thingRepository) RetrieveByID(ctx context.Context, owner, id string) (things.Thing, error) {
+func (tr thingRepository) RetrieveByID(ctx context.Context, owner, id string) (things.Thing, errors.Error) {
 	q := `SELECT name, key, metadata FROM things WHERE id = $1 AND owner = $2;`
 
 	dbth := dbThing{
@@ -159,13 +175,13 @@ func (tr thingRepository) RetrieveByID(ctx context.Context, owner, id string) (t
 			return empty, things.ErrNotFound
 		}
 
-		return empty, err
+		return empty, errors.Wrap(ErrSelectDb, err)
 	}
 
 	return toThing(dbth)
 }
 
-func (tr thingRepository) RetrieveByKey(ctx context.Context, key string) (string, error) {
+func (tr thingRepository) RetrieveByKey(ctx context.Context, key string) (string, errors.Error) {
 	q := `SELECT id FROM things WHERE key = $1;`
 
 	var id string
@@ -173,17 +189,17 @@ func (tr thingRepository) RetrieveByKey(ctx context.Context, key string) (string
 		if err == sql.ErrNoRows {
 			return "", things.ErrNotFound
 		}
-		return "", err
+		return "", errors.Wrap(ErrSelectDb, err)
 	}
 
 	return id, nil
 }
 
-func (tr thingRepository) RetrieveAll(ctx context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ThingsPage, error) {
+func (tr thingRepository) RetrieveAll(ctx context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ThingsPage, errors.Error) {
 	nq, name := getNameQuery(name)
 	m, mq, err := getMetadataQuery(metadata)
 	if err != nil {
-		return things.ThingsPage{}, err
+		return things.ThingsPage{}, errors.Wrap(ErrSelectDb, err)
 	}
 
 	q := fmt.Sprintf(`SELECT id, name, key, metadata FROM things
@@ -199,7 +215,7 @@ func (tr thingRepository) RetrieveAll(ctx context.Context, owner string, offset,
 
 	rows, err := tr.db.NamedQueryContext(ctx, q, params)
 	if err != nil {
-		return things.ThingsPage{}, err
+		return things.ThingsPage{}, errors.Wrap(ErrSelectDb, err)
 	}
 	defer rows.Close()
 
@@ -207,7 +223,7 @@ func (tr thingRepository) RetrieveAll(ctx context.Context, owner string, offset,
 	for rows.Next() {
 		dbth := dbThing{Owner: owner}
 		if err := rows.StructScan(&dbth); err != nil {
-			return things.ThingsPage{}, err
+			return things.ThingsPage{}, errors.Wrap(ErrSelectDb, err)
 		}
 
 		th, err := toThing(dbth)
@@ -222,7 +238,7 @@ func (tr thingRepository) RetrieveAll(ctx context.Context, owner string, offset,
 
 	total, err := total(ctx, tr.db, cq, params)
 	if err != nil {
-		return things.ThingsPage{}, err
+		return things.ThingsPage{}, errors.Wrap(ErrSelectDb, err)
 	}
 
 	page := things.ThingsPage{
@@ -237,7 +253,7 @@ func (tr thingRepository) RetrieveAll(ctx context.Context, owner string, offset,
 	return page, nil
 }
 
-func (tr thingRepository) RetrieveByChannel(ctx context.Context, owner, channel string, offset, limit uint64) (things.ThingsPage, error) {
+func (tr thingRepository) RetrieveByChannel(ctx context.Context, owner, channel string, offset, limit uint64) (things.ThingsPage, errors.Error) {
 	// Verify if UUID format is valid to avoid internal Postgres error
 	if _, err := uuid.FromString(channel); err != nil {
 		return things.ThingsPage{}, things.ErrNotFound
@@ -261,7 +277,7 @@ func (tr thingRepository) RetrieveByChannel(ctx context.Context, owner, channel 
 
 	rows, err := tr.db.NamedQueryContext(ctx, q, params)
 	if err != nil {
-		return things.ThingsPage{}, err
+		return things.ThingsPage{}, errors.Wrap(ErrSelectDb, err)
 	}
 	defer rows.Close()
 
@@ -269,7 +285,7 @@ func (tr thingRepository) RetrieveByChannel(ctx context.Context, owner, channel 
 	for rows.Next() {
 		dbth := dbThing{Owner: owner}
 		if err := rows.StructScan(&dbth); err != nil {
-			return things.ThingsPage{}, err
+			return things.ThingsPage{}, errors.Wrap(ErrSelectDb, err)
 		}
 
 		th, err := toThing(dbth)
@@ -288,7 +304,7 @@ func (tr thingRepository) RetrieveByChannel(ctx context.Context, owner, channel 
 
 	var total uint64
 	if err := tr.db.GetContext(ctx, &total, q, owner, channel); err != nil {
-		return things.ThingsPage{}, err
+		return things.ThingsPage{}, errors.Wrap(ErrSelectDb, err)
 	}
 
 	return things.ThingsPage{
@@ -301,13 +317,15 @@ func (tr thingRepository) RetrieveByChannel(ctx context.Context, owner, channel 
 	}, nil
 }
 
-func (tr thingRepository) Remove(ctx context.Context, owner, id string) error {
+func (tr thingRepository) Remove(ctx context.Context, owner, id string) errors.Error {
 	dbth := dbThing{
 		ID:    id,
 		Owner: owner,
 	}
 	q := `DELETE FROM things WHERE id = :id AND owner = :owner;`
-	tr.db.NamedExecContext(ctx, q, dbth)
+	if _, err := tr.db.NamedExecContext(ctx, q, dbth); err != nil {
+		return errors.Wrap(ErrDeleteDb, err)
+	}
 	return nil
 }
 
@@ -319,12 +337,12 @@ type dbThing struct {
 	Metadata []byte `db:"metadata"`
 }
 
-func toDBThing(th things.Thing) (dbThing, error) {
+func toDBThing(th things.Thing) (dbThing, errors.Error) {
 	data := []byte("{}")
 	if len(th.Metadata) > 0 {
 		b, err := json.Marshal(th.Metadata)
 		if err != nil {
-			return dbThing{}, err
+			return dbThing{}, errors.Wrap(ErrMarshalThing, err)
 		}
 		data = b
 	}
@@ -338,10 +356,10 @@ func toDBThing(th things.Thing) (dbThing, error) {
 	}, nil
 }
 
-func toThing(dbth dbThing) (things.Thing, error) {
+func toThing(dbth dbThing) (things.Thing, errors.Error) {
 	var metadata map[string]interface{}
 	if err := json.Unmarshal([]byte(dbth.Metadata), &metadata); err != nil {
-		return things.Thing{}, err
+		return things.Thing{}, errors.Wrap(ErrUnmarshalThing, err)
 	}
 
 	return things.Thing{
