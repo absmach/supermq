@@ -68,6 +68,14 @@ type Service interface {
 	RemoveTwin(context.Context, string, string) error
 }
 
+const (
+	noop = iota
+	update
+	save
+	millisec = 1e6
+	nanosec  = 1e9
+)
+
 var crudOp = map[string]string{
 	"createSucc": "create.success",
 	"createFail": "create.failure",
@@ -122,10 +130,13 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 	twin.Created = time.Now()
 	twin.Updated = time.Now()
 
-	if len(def.Attributes) == 0 {
-		def = Definition{}
+	if def.Attributes == nil {
 		def.Attributes = []Attribute{}
 	}
+	if def.Delta == 0 {
+		def.Delta = millisec
+	}
+
 	def.Created = time.Now()
 	def.ID = 0
 	twin.Definitions = append(twin.Definitions, def)
@@ -333,20 +344,20 @@ func prepareState(st *State, tw *Twin, rec senml.Record, msg *mainflux.Message) 
 	}
 
 	recSec := rec.BaseTime + rec.Time
-	recNano := recSec * 1e9
+	recNano := recSec * nanosec
 	sec, dec := math.Modf(recSec)
-	recTime := time.Unix(int64(sec), int64(dec*1e9))
+	recTime := time.Unix(int64(sec), int64(dec*nanosec))
 
-	action := 0 // 0 - do nothing, 1 - update, 2 - save
+	action := noop
 	for _, attr := range def.Attributes {
 		if !attr.PersistState {
 			continue
 		}
 		if attr.Channel == msg.Channel && attr.Subtopic == msg.Subtopic {
-			action = 1
+			action = update
 			delta := math.Abs(float64(st.Created.UnixNano()) - recNano)
-			if recNano == 0 || delta > 1e6 { // delta > millisecond
-				action = 2
+			if recNano == 0 || delta > float64(def.Delta) {
+				action = save
 				st.ID++
 				st.Created = time.Now()
 				if recNano != 0 {
