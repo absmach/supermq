@@ -308,13 +308,13 @@ func (ts *twinsService) saveState(msg *mainflux.Message, id string) error {
 	for _, rec := range recs {
 		action := prepareState(&st, &tw, rec, msg)
 		switch action {
-		case 0:
+		case noop:
 			return nil
-		case 1:
+		case update:
 			if err := ts.states.Update(context.TODO(), st); err != nil {
 				return fmt.Errorf("Update state for %s failed: %s", msg.Publisher, err)
 			}
-		case 2:
+		case save:
 			if err := ts.states.Save(context.TODO(), st); err != nil {
 				return fmt.Errorf("Save state for %s failed: %s", msg.Publisher, err)
 			}

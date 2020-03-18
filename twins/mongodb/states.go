@@ -43,8 +43,8 @@ func (sr *stateRepository) Save(ctx context.Context, st twins.State) error {
 func (sr *stateRepository) Update(ctx context.Context, st twins.State) error {
 	coll := sr.db.Collection(statesCollection)
 
-	filter := bson.D{{"id", st.ID}, {"twinid", st.TwinID}}
-	update := bson.D{{"$set", st}}
+	filter := bson.M{"id": st.ID, "twinid": st.TwinID}
+	update := bson.M{"$set": st}
 	if _, err := coll.UpdateOne(context.Background(), filter, update); err != nil {
 		return err
 	}
