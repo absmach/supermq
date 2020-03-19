@@ -66,10 +66,10 @@ func (tr thingRepository) Save(ctx context.Context, ths ...things.Thing) ([]thin
 			return []things.Thing{}, err
 		}
 
-		_, err = tx.NamedExecContext(ctx, q, dbth)
-		if err != nil {
+		_, err2 := tx.NamedExecContext(ctx, q, dbth)
+		if err2 != nil {
 			tx.Rollback()
-			pqErr, ok := err.(*pq.Error)
+			pqErr, ok := err2.(*pq.Error)
 			if ok {
 				switch pqErr.Code.Name() {
 				case errInvalid, errTruncation:
@@ -79,7 +79,7 @@ func (tr thingRepository) Save(ctx context.Context, ths ...things.Thing) ([]thin
 				}
 			}
 
-			return []things.Thing{}, errors.Wrap(ErrSaveDb, err)
+			return []things.Thing{}, errors.Wrap(ErrSaveDb, err2)
 		}
 	}
 
@@ -98,9 +98,9 @@ func (tr thingRepository) Update(ctx context.Context, thing things.Thing) errors
 		return err
 	}
 
-	res, err := tr.db.NamedExecContext(ctx, q, dbth)
-	if err != nil {
-		pqErr, ok := err.(*pq.Error)
+	res, err2 := tr.db.NamedExecContext(ctx, q, dbth)
+	if err2 != nil {
+		pqErr, ok := err2.(*pq.Error)
 		if ok {
 			switch pqErr.Code.Name() {
 			case errInvalid, errTruncation:
@@ -108,12 +108,12 @@ func (tr thingRepository) Update(ctx context.Context, thing things.Thing) errors
 			}
 		}
 
-		return errors.Wrap(ErrUpdateDb, err)
+		return errors.Wrap(ErrUpdateDb, err2)
 	}
 
-	cnt, err := res.RowsAffected()
+	cnt, err2 := res.RowsAffected()
 	if err != nil {
-		return errors.Wrap(ErrUpdateDb, err)
+		return errors.Wrap(ErrUpdateDb, err2)
 	}
 
 	if cnt == 0 {

@@ -13,7 +13,27 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/lib/pq"
+	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/things"
+)
+
+var (
+	// ErrSaveChannel indicates error while saving to database
+	ErrSaveChannel = errors.New("Save Channel to DB error")
+	// ErrUpdateChannel indicates error while updating channel in database
+	ErrUpdateChannel = errors.New("Update Channel to DB error")
+	// ErrDeleteChannel indicates error while deleting channel in database
+	ErrDeleteChannel = errors.New("Save Channel to DB error")
+	// ErrSelectChannel indicates error while reading channel from database
+	ErrSelectChannel = errors.New("Select Channel from DB error")
+	// ErrDeleteConnection indicates error while deleting connection in database
+	ErrDeleteConnection = errors.New("Unmarshal JSON error")
+	// ErrHasThing indicates error while checking connection in database
+	ErrHasThing = errors.New("Check Thing-Channel connection in database error")
+	//ErrScan indicates error in database scanner
+	ErrScan = errors.New("Database scanner error")
+	//ErrValue indicates error in database valuer
+	ErrValue = errors.New("Database valuer error")
 )
 
 var _ things.ChannelRepository = (*channelRepository)(nil)
@@ -36,10 +56,10 @@ func NewChannelRepository(db Database) things.ChannelRepository {
 	}
 }
 
-func (cr channelRepository) Save(ctx context.Context, channels ...things.Channel) ([]things.Channel, error) {
+func (cr channelRepository) Save(ctx context.Context, channels ...things.Channel) ([]things.Channel, errors.Error) {
 	tx, err := cr.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(ErrSaveChannel, err)
 	}
 
 	q := `INSERT INTO channels (id, owner, name, metadata)
@@ -61,18 +81,18 @@ func (cr channelRepository) Save(ctx context.Context, channels ...things.Channel
 				}
 			}
 
-			return []things.Channel{}, err
+			return []things.Channel{}, errors.Wrap(ErrSaveChannel, err)
 		}
 	}
 
 	if err = tx.Commit(); err != nil {
-		return []things.Channel{}, err
+		return []things.Channel{}, errors.Wrap(ErrSaveChannel, err)
 	}
 
 	return channels, nil
 }
 
-func (cr channelRepository) Update(ctx context.Context, channel things.Channel) error {
+func (cr channelRepository) Update(ctx context.Context, channel things.Channel) errors.Error {
 	q := `UPDATE channels SET name = :name, metadata = :metadata WHERE owner = :owner AND id = :id;`
 
 	dbch := toDBChannel(channel)
@@ -87,12 +107,12 @@ func (cr channelRepository) Update(ctx context.Context, channel things.Channel) 
 			}
 		}
 
-		return err
+		return errors.Wrap(ErrUpdateChannel, err)
 	}
 
 	cnt, err := res.RowsAffected()
 	if err != nil {
-		return err
+		return errors.Wrap(ErrUpdateChannel, err)
 	}
 
 	if cnt == 0 {
@@ -102,7 +122,7 @@ func (cr channelRepository) Update(ctx context.Context, channel things.Channel) 
 	return nil
 }
 
-func (cr channelRepository) RetrieveByID(ctx context.Context, owner, id string) (things.Channel, error) {
+func (cr channelRepository) RetrieveByID(ctx context.Context, owner, id string) (things.Channel, errors.Error) {
 	q := `SELECT name, metadata FROM channels WHERE id = $1 AND owner = $2;`
 
 	dbch := dbChannel{
@@ -115,17 +135,17 @@ func (cr channelRepository) RetrieveByID(ctx context.Context, owner, id string) 
 		if err == sql.ErrNoRows || ok && errInvalid == pqErr.Code.Name() {
 			return empty, things.ErrNotFound
 		}
-		return empty, err
+		return empty, errors.Wrap(ErrSelectChannel, err)
 	}
 
 	return toChannel(dbch), nil
 }
 
-func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ChannelsPage, error) {
+func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ChannelsPage, errors.Error) {
 	nq, name := getNameQuery(name)
 	m, mq, err := getMetadataQuery(metadata)
 	if err != nil {
-		return things.ChannelsPage{}, err
+		return things.ChannelsPage{}, errors.Wrap(ErrSelectChannel, err)
 	}
 
 	q := fmt.Sprintf(`SELECT id, name, metadata FROM channels
@@ -140,7 +160,7 @@ func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, offse
 	}
 	rows, err := cr.db.NamedQueryContext(ctx, q, params)
 	if err != nil {
-		return things.ChannelsPage{}, err
+		return things.ChannelsPage{}, errors.Wrap(ErrSelectChannel, err)
 	}
 	defer rows.Close()
 
@@ -148,7 +168,7 @@ func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, offse
 	for rows.Next() {
 		dbch := dbChannel{Owner: owner}
 		if err := rows.StructScan(&dbch); err != nil {
-			return things.ChannelsPage{}, err
+			return things.ChannelsPage{}, errors.Wrap(ErrSelectChannel, err)
 		}
 		ch := toChannel(dbch)
 
@@ -159,7 +179,7 @@ func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, offse
 
 	total, err := total(ctx, cr.db, cq, params)
 	if err != nil {
-		return things.ChannelsPage{}, err
+		return things.ChannelsPage{}, errors.Wrap(ErrSelectChannel, err)
 	}
 
 	page := things.ChannelsPage{
@@ -174,7 +194,7 @@ func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, offse
 	return page, nil
 }
 
-func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing string, offset, limit uint64) (things.ChannelsPage, error) {
+func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing string, offset, limit uint64) (things.ChannelsPage, errors.Error) {
 	// Verify if UUID format is valid to avoid internal Postgres error
 	if _, err := uuid.FromString(thing); err != nil {
 		return things.ChannelsPage{}, things.ErrNotFound
@@ -198,7 +218,7 @@ func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing st
 
 	rows, err := cr.db.NamedQueryContext(ctx, q, params)
 	if err != nil {
-		return things.ChannelsPage{}, err
+		return things.ChannelsPage{}, errors.Wrap(ErrSelectChannel, err)
 	}
 	defer rows.Close()
 
@@ -206,7 +226,7 @@ func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing st
 	for rows.Next() {
 		dbch := dbChannel{Owner: owner}
 		if err := rows.StructScan(&dbch); err != nil {
-			return things.ChannelsPage{}, err
+			return things.ChannelsPage{}, errors.Wrap(ErrSelectChannel, err)
 		}
 
 		ch := toChannel(dbch)
@@ -221,7 +241,7 @@ func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing st
 
 	var total uint64
 	if err := cr.db.GetContext(ctx, &total, q, owner, thing); err != nil {
-		return things.ChannelsPage{}, err
+		return things.ChannelsPage{}, errors.Wrap(ErrSelectChannel, err)
 	}
 
 	return things.ChannelsPage{
@@ -234,7 +254,7 @@ func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing st
 	}, nil
 }
 
-func (cr channelRepository) Remove(ctx context.Context, owner, id string) error {
+func (cr channelRepository) Remove(ctx context.Context, owner, id string) errors.Error {
 	dbch := dbChannel{
 		ID:    id,
 		Owner: owner,
@@ -244,10 +264,10 @@ func (cr channelRepository) Remove(ctx context.Context, owner, id string) error 
 	return nil
 }
 
-func (cr channelRepository) Connect(ctx context.Context, owner string, chIDs, thIDs []string) error {
+func (cr channelRepository) Connect(ctx context.Context, owner string, chIDs, thIDs []string) errors.Error {
 	tx, err := cr.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return err
+		return errors.Wrap(ErrDeleteChannel, err)
 	}
 
 	q := `INSERT INTO connections (channel_id, channel_owner, thing_id, thing_owner)
@@ -274,19 +294,19 @@ func (cr channelRepository) Connect(ctx context.Context, owner string, chIDs, th
 					}
 				}
 
-				return err
+				return errors.Wrap(ErrDeleteChannel, err)
 			}
 		}
 	}
 
 	if err = tx.Commit(); err != nil {
-		return err
+		return errors.Wrap(ErrDeleteChannel, err)
 	}
 
 	return nil
 }
 
-func (cr channelRepository) Disconnect(ctx context.Context, owner, chanID, thingID string) error {
+func (cr channelRepository) Disconnect(ctx context.Context, owner, chanID, thingID string) errors.Error {
 	q := `DELETE FROM connections
 	      WHERE channel_id = :channel AND channel_owner = :owner
 	      AND thing_id = :thing AND thing_owner = :owner`
@@ -299,12 +319,12 @@ func (cr channelRepository) Disconnect(ctx context.Context, owner, chanID, thing
 
 	res, err := cr.db.NamedExecContext(ctx, q, conn)
 	if err != nil {
-		return err
+		return errors.Wrap(ErrDeleteConnection, err)
 	}
 
 	cnt, err := res.RowsAffected()
 	if err != nil {
-		return err
+		return errors.Wrap(ErrDeleteConnection, err)
 	}
 
 	if cnt == 0 {
@@ -314,30 +334,30 @@ func (cr channelRepository) Disconnect(ctx context.Context, owner, chanID, thing
 	return nil
 }
 
-func (cr channelRepository) HasThing(ctx context.Context, chanID, key string) (string, error) {
+func (cr channelRepository) HasThing(ctx context.Context, chanID, key string) (string, errors.Error) {
 	var thingID string
 	q := `SELECT id FROM things WHERE key = $1`
 	if err := cr.db.QueryRowxContext(ctx, q, key).Scan(&thingID); err != nil {
-		return "", err
+		return "", errors.Wrap(ErrHasThing, err)
 
 	}
 
 	if err := cr.hasThing(ctx, chanID, thingID); err != nil {
-		return "", err
+		return "", errors.Wrap(ErrHasThing, err)
 	}
 
 	return thingID, nil
 }
 
-func (cr channelRepository) HasThingByID(ctx context.Context, chanID, thingID string) error {
+func (cr channelRepository) HasThingByID(ctx context.Context, chanID, thingID string) errors.Error {
 	return cr.hasThing(ctx, chanID, thingID)
 }
 
-func (cr channelRepository) hasThing(ctx context.Context, chanID, thingID string) error {
+func (cr channelRepository) hasThing(ctx context.Context, chanID, thingID string) errors.Error {
 	q := `SELECT EXISTS (SELECT 1 FROM connections WHERE channel_id = $1 AND thing_id = $2);`
 	exists := false
 	if err := cr.db.QueryRowxContext(ctx, q, chanID, thingID).Scan(&exists); err != nil {
-		return err
+		return errors.Wrap(ErrHasThing, err)
 	}
 
 	if !exists {
@@ -351,7 +371,7 @@ func (cr channelRepository) hasThing(ctx context.Context, chanID, thingID string
 type dbMetadata map[string]interface{}
 
 // Scan implements the database/sql scanner interface.
-func (m *dbMetadata) Scan(value interface{}) error {
+func (m *dbMetadata) Scan(value interface{}) errors.Error {
 	if value == nil {
 		m = nil
 		return nil
@@ -365,23 +385,23 @@ func (m *dbMetadata) Scan(value interface{}) error {
 
 	if err := json.Unmarshal(b, m); err != nil {
 		m = &dbMetadata{}
-		return err
+		return errors.Wrap(ErrScan, err)
 	}
 
 	return nil
 }
 
 // Value implements database/sql valuer interface.
-func (m dbMetadata) Value() (driver.Value, error) {
+func (m dbMetadata) Value() (driver.Value, errors.Error) {
 	if len(m) == 0 {
 		return nil, nil
 	}
 
 	b, err := json.Marshal(m)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(ErrValue, err)
 	}
-	return b, err
+	return b, errors.Wrap(ErrValue, err)
 }
 
 type dbChannel struct {

@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/go-redis/redis"
+	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/things"
 )
 
@@ -15,6 +16,9 @@ const (
 	keyPrefix = "thing_key"
 	idPrefix  = "thing"
 )
+
+// ErrThingRedis indicates error in redis
+var ErrThingRedis = errors.New("Thing Redis error")
 
 var _ things.ThingCache = (*thingCache)(nil)
 
@@ -29,34 +33,36 @@ func NewThingCache(client *redis.Client) things.ThingCache {
 	}
 }
 
-func (tc *thingCache) Save(_ context.Context, thingKey string, thingID string) error {
+func (tc *thingCache) Save(_ context.Context, thingKey string, thingID string) errors.Error {
 	tkey := fmt.Sprintf("%s:%s", keyPrefix, thingKey)
 	if err := tc.client.Set(tkey, thingID, 0).Err(); err != nil {
-		return err
+		return errors.Wrap(ErrThingRedis, err)
 	}
 
 	tid := fmt.Sprintf("%s:%s", idPrefix, thingID)
-	return tc.client.Set(tid, thingKey, 0).Err()
+	err := tc.client.Set(tid, thingKey, 0).Err()
+	return errors.Wrap(ErrThingRedis, err)
 }
 
-func (tc *thingCache) ID(_ context.Context, thingKey string) (string, error) {
+func (tc *thingCache) ID(_ context.Context, thingKey string) (string, errors.Error) {
 	tkey := fmt.Sprintf("%s:%s", keyPrefix, thingKey)
 	thingID, err := tc.client.Get(tkey).Result()
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(ErrThingRedis, err)
 	}
 
 	return thingID, nil
 }
 
-func (tc *thingCache) Remove(_ context.Context, thingID string) error {
+func (tc *thingCache) Remove(_ context.Context, thingID string) errors.Error {
 	tid := fmt.Sprintf("%s:%s", idPrefix, thingID)
 	key, err := tc.client.Get(tid).Result()
 	if err != nil {
-		return err
+		return errors.Wrap(ErrThingRedis, err)
 	}
 
 	tkey := fmt.Sprintf("%s:%s", keyPrefix, key)
 
-	return tc.client.Del(tkey, tid).Err()
+	err2 := tc.client.Del(tkey, tid).Err()
+	return errors.Wrap(ErrThingRedis, err2)
 }
