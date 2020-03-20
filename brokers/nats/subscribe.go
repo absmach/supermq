@@ -6,9 +6,7 @@ package nats
 
 import (
 	"fmt"
-	"os"
 
-	"github.com/mainflux/mainflux/logger"
 	"github.com/nats-io/nats.go"
 )
 
@@ -27,14 +25,13 @@ type natsSub struct {
 }
 
 // NewSubscriber instantiates NATS message publisher.
-func NewSubscriber(url string, log logger.Logger) NatsSubscriber {
+func NewSubscriber(url string) (NatsSubscriber, error) {
 	nc, err := nats.Connect(url)
 	if err != nil {
-		log.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
-		os.Exit(1)
+		return nil, err
 	}
 
-	return &natsSub{conn: nc}
+	return &natsSub{conn: nc}, nil
 }
 
 func fmtSubject(chanID, subtopic string) string {

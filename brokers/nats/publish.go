@@ -7,11 +7,9 @@ package nats
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/logger"
 	"github.com/nats-io/nats.go"
 )
 
@@ -32,14 +30,13 @@ type natsPub struct {
 }
 
 // NewPublisher NATS message publisher.
-func NewPublisher(url string, log logger.Logger) NatsPublisher {
+func NewPublisher(url string) (NatsPublisher, error) {
 	nc, err := nats.Connect(url)
 	if err != nil {
-		log.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
-		os.Exit(1)
+		return nil, err
 	}
 
-	return &natsPub{conn: nc}
+	return &natsPub{conn: nc}, nil
 }
 
 func (np natsPub) Publish(_ context.Context, _ string, msg mainflux.Message) error {

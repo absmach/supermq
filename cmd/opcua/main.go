@@ -15,7 +15,7 @@ import (
 
 	r "github.com/go-redis/redis"
 	"github.com/mainflux/mainflux"
-	brokersNats "github.com/mainflux/mainflux/brokers/nats"
+	broker "github.com/mainflux/mainflux/brokers/nats"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/opcua"
 	"github.com/mainflux/mainflux/opcua/api"
@@ -98,7 +98,11 @@ func main() {
 	esConn := connectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
 	defer esConn.Close()
 
-	pub := brokersNats.NewPublisher(cfg.natsURL, logger)
+	pub, err := broker.NewPublisher(cfg.natsURL)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
+		os.Exit(1)
+	}
 	defer pub.PubConn().Close()
 
 	ctx := context.Background()

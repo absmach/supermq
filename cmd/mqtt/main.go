@@ -13,8 +13,8 @@ import (
 
 	"github.com/go-redis/redis"
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/brokers"
-	brokersNats "github.com/mainflux/mainflux/brokers/nats"
+	broker "github.com/mainflux/mainflux/brokers/nats"
+	broker "github.com/mainflux/mainflux/brokers/nats"
 	"github.com/mainflux/mainflux/logger"
 	mqtt "github.com/mainflux/mainflux/mqtt"
 	mr "github.com/mainflux/mainflux/mqtt/redis"
@@ -100,9 +100,13 @@ func main() {
 
 	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
 
-	pub := brokersNats.NewPublisher(cfg.natsURL, logger)
+	pub, err := broker.NewPublisher(cfg.natsURL)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
+		os.Exit(1)
+	}
 	defer pub.PubConn().Close()
-	pubs := []brokers.NatsPublisher{pub}
+	pubs := []broker.NatsPublisher{pub}
 
 	es := mr.NewEventStore(rc, cfg.instance)
 

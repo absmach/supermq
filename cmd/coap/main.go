@@ -18,7 +18,7 @@ import (
 	gocoap "github.com/dustin/go-coap"
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
-	brokersNats "github.com/mainflux/mainflux/brokers/nats"
+	broker "github.com/mainflux/mainflux/brokers/nats"
 	"github.com/mainflux/mainflux/coap"
 	"github.com/mainflux/mainflux/coap/api"
 	logger "github.com/mainflux/mainflux/logger"
@@ -83,10 +83,18 @@ func main() {
 	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
 	respChan := make(chan string, 10000)
 
-	pub := brokersNats.NewPublisher(cfg.natsURL, logger)
+	pub, err := broker.NewPublisher(cfg.natsURL)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
+		os.Exit(1)
+	}
 	defer pub.PubConn().Close()
 
-	sub := brokersNats.NewSubscriber(cfg.natsURL, logger)
+	sub, err := broker.NewSubscriber(cfg.natsURL)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
+		os.Exit(1)
+	}
 	defer sub.SubConn().Close()
 
 	svc := coap.New(pub, sub, cc, respChan)

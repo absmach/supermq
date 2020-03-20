@@ -19,7 +19,7 @@ import (
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/brokers"
-	brokersNats "github.com/mainflux/mainflux/brokers/nats"
+	broker "github.com/mainflux/mainflux/brokers/nats"
 	"github.com/mainflux/mainflux/logger"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	adapter "github.com/mainflux/mainflux/ws"
@@ -86,10 +86,10 @@ func main() {
 
 	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
 
-	pub := brokersNats.NewPublisher(cfg.natsURL, logger)
+	pub := broker.NewPublisher(cfg.natsURL, logger)
 	defer pub.PubConn().Close()
 
-	sub := brokersNats.NewSubscriber(cfg.natsURL, logger)
+	sub := broker.NewSubscriber(cfg.natsURL, logger)
 	defer sub.SubConn().Close()
 
 	svc := newService(pub, sub, logger)
