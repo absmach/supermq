@@ -10,7 +10,7 @@ import (
 
 	"github.com/mainflux/mainflux/ws"
 	"github.com/mainflux/mainflux/ws/mocks"
-	broker "github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/mainflux/mainflux"
@@ -31,7 +31,7 @@ var msg = mainflux.Message{
 
 func newService(channel *ws.Channel) ws.Service {
 	subs := map[string]*ws.Channel{chanID: channel}
-	pubsub := mocks.NewService(subs, broker.ErrInvalidMsg)
+	pubsub := mocks.NewService(subs, nats.ErrInvalidMsg)
 	return ws.New(pubsub)
 }
 

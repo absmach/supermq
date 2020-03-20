@@ -7,6 +7,7 @@ import (
 	"errors"
 
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/brokers"
 )
 
 const (
@@ -58,13 +59,13 @@ type Service interface {
 var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
-	publisher  mainflux.MessagePublisher
+	publisher  brokers.MessagePublisher
 	thingsRM   RouteMapRepository
 	channelsRM RouteMapRepository
 }
 
 // New instantiates the LoRa adapter implementation.
-func New(pub mainflux.MessagePublisher, thingsRM, channelsRM RouteMapRepository) Service {
+func New(pub brokers.MessagePublisher, thingsRM, channelsRM RouteMapRepository) Service {
 	return &adapterService{
 		publisher:  pub,
 		thingsRM:   thingsRM,

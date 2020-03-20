@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,12 +18,13 @@ import (
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/brokers"
+	brokersNats "github.com/mainflux/mainflux/brokers/nats"
 	"github.com/mainflux/mainflux/logger"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	adapter "github.com/mainflux/mainflux/ws"
 	"github.com/mainflux/mainflux/ws/api"
-	"github.com/mainflux/mainflux/ws/nats"
-	broker "github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go"
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"
@@ -35,7 +37,7 @@ const (
 	defCACerts       = ""
 	defPort          = "8180"
 	defLogLevel      = "error"
-	defNatsURL       = broker.DefaultURL
+	defNatsURL       = nats.DefaultURL
 	defThingsURL     = "localhost:8181"
 	defJaegerURL     = ""
 	defThingsTimeout = "1" // in seconds
@@ -69,7 +71,7 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	nc, err := broker.Connect(cfg.natsURL)
+	nc, err := nats.Connect(cfg.natsURL)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
 		os.Exit(1)
@@ -83,8 +85,10 @@ func main() {
 	defer thingsCloser.Close()
 
 	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
-	pubsub := nats.New(nc, logger)
-	svc := newService(pubsub, logger)
+
+	pub := brokersNats.NewPublisher(cfg.natsURL, logger)
+	sub := brokersNats.NewSubscriber(cfg.natsURL, logger)
+	svc := newService(pub, sub, logger)
 
 	errs := make(chan error, 2)
 
@@ -175,9 +179,9 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 	return tracer, closer
 }
 
-func newService(pubsub adapter.Service, logger logger.Logger) adapter.Service {
-	svc := adapter.New(pubsub)
-	svc = api.LoggingMiddleware(svc, logger)
+func newService(pub brokers.MessagePublisher, sub brokers.MessageSubscriber, log logger.Logger) adapter.Service {
+	svc := adapter.New(pub, sub, log)
+	svc = api.LoggingMiddleware(svc, log)
 	svc = api.MetricsMiddleware(
 		svc,
 		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{

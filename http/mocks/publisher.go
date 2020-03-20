@@ -7,14 +7,15 @@ import (
 	"context"
 
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/brokers"
 )
 
-var _ (mainflux.MessagePublisher) = (*mockPublisher)(nil)
+var _ (brokers.MessagePublisher) = (*mockPublisher)(nil)
 
 type mockPublisher struct{}
 
 // NewPublisher returns mock message publisher.
-func NewPublisher() mainflux.MessagePublisher {
+func NewPublisher() brokers.MessagePublisher {
 	return mockPublisher{}
 }
 

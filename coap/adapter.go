@@ -12,8 +12,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
-	broker "github.com/nats-io/nats.go"
+	"github.com/mainflux/mainflux/brokers"
+	"github.com/nats-io/nats.go"
 )
 
 const (
@@ -40,18 +42,15 @@ var (
 	ErrFailedConnection = errors.New("failed to connect to message broker")
 )
 
-// Broker represents NATS broker instance.
-type Broker interface {
-	mainflux.MessagePublisher
+// Service specifies coap service API.
+type Service interface {
+	// Publish Messssage
+	Publish(context.Context, string, mainflux.Message) error
 
 	// Subscribes to channel with specified id, subtopic and adds subscription to
 	// service map of subscriptions under given ID.
 	Subscribe(string, string, string, *Observer) error
-}
 
-// Service specifies coap service API.
-type Service interface {
-	Broker
 	// Unsubscribe method is used to stop observing resource.
 	Unsubscribe(string)
 }
@@ -60,16 +59,20 @@ var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
 	auth    mainflux.ThingsServiceClient
-	pubsub  Broker
+	pub     brokers.MessagePublisher
+	sub     brokers.MessageSubscriber
 	obs     map[string]*Observer
 	obsLock sync.Mutex
 }
 
+const prefix = "channel"
+
 // New instantiates the CoAP adapter implementation.
-func New(pubsub Broker, auth mainflux.ThingsServiceClient, responses <-chan string) Service {
+func New(pub brokers.MessagePublisher, sub brokers.MessageSubscriber, auth mainflux.ThingsServiceClient, responses <-chan string) Service {
 	as := &adapterService{
 		auth:    auth,
-		pubsub:  pubsub,
+		pub:     pub,
+		sub:     sub,
 		obs:     make(map[string]*Observer),
 		obsLock: sync.Mutex{},
 	}
@@ -122,9 +125,9 @@ func (svc *adapterService) listenResponses(responses <-chan string) {
 }
 
 func (svc *adapterService) Publish(ctx context.Context, token string, msg mainflux.Message) error {
-	if err := svc.pubsub.Publish(ctx, token, msg); err != nil {
+	if err := svc.pub.Publish(ctx, token, msg); err != nil {
 		switch err {
-		case broker.ErrConnectionClosed, broker.ErrInvalidConnection:
+		case nats.ErrConnectionClosed, nats.ErrInvalidConnection:
 			return ErrFailedConnection
 		default:
 			return ErrFailedMessagePublish
@@ -135,9 +138,24 @@ func (svc *adapterService) Publish(ctx context.Context, token string, msg mainfl
 }
 
 func (svc *adapterService) Subscribe(chanID, subtopic, obsID string, o *Observer) error {
-	if err := svc.pubsub.Subscribe(chanID, subtopic, obsID, o); err != nil {
-		return ErrFailedSubscription
+	sub, err := svc.sub.Subscribe(chanID, subtopic, func(msg *nats.Msg) {
+		if msg == nil {
+			return
+		}
+		var m mainflux.Message
+		if err := proto.Unmarshal(msg.Data, &m); err != nil {
+			return
+		}
+		o.Messages <- m
+	})
+	if err != nil {
+		return err
 	}
+
+	go func() {
+		<-o.Cancel
+		sub.Unsubscribe()
+	}()
 
 	// Put method removes Observer if already exists.
 	svc.put(obsID, o)

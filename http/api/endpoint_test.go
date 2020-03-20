@@ -14,18 +14,19 @@ import (
 	"github.com/opentracing/opentracing-go/mocktracer"
 
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/brokers"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/http/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
-func newService(cc mainflux.ThingsServiceClient) mainflux.MessagePublisher {
+func newService(cc mainflux.ThingsServiceClient) brokers.MessagePublisher {
 	pub := mocks.NewPublisher()
 	return adapter.New(pub, cc)
 }
 
-func newHTTPServer(pub mainflux.MessagePublisher) *httptest.Server {
+func newHTTPServer(pub brokers.MessagePublisher) *httptest.Server {
 	mux := api.MakeHandler(pub, mocktracer.New())
 	return httptest.NewServer(mux)
 }

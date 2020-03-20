@@ -12,6 +12,7 @@ import (
 	opcuaGopcua "github.com/gopcua/opcua"
 	uaGopcua "github.com/gopcua/opcua/ua"
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/brokers"
 	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/opcua"
@@ -40,7 +41,7 @@ var _ opcua.Subscriber = (*client)(nil)
 
 type client struct {
 	ctx        context.Context
-	publisher  mainflux.MessagePublisher
+	pub        brokers.MessagePublisher
 	thingsRM   opcua.RouteMapRepository
 	channelsRM opcua.RouteMapRepository
 	connectRM  opcua.RouteMapRepository
@@ -57,10 +58,10 @@ type message struct {
 }
 
 // NewSubscriber returns new OPC-UA client instance.
-func NewSubscriber(ctx context.Context, pub mainflux.MessagePublisher, thingsRM, channelsRM, connectRM opcua.RouteMapRepository, log logger.Logger) opcua.Subscriber {
+func NewSubscriber(ctx context.Context, pub brokers.MessagePublisher, thingsRM, channelsRM, connectRM opcua.RouteMapRepository, log logger.Logger) opcua.Subscriber {
 	return client{
 		ctx:        ctx,
-		publisher:  pub,
+		pub:        pub,
 		thingsRM:   thingsRM,
 		channelsRM: channelsRM,
 		connectRM:  connectRM,
@@ -236,7 +237,7 @@ func (c client) publish(token string, m message) error {
 		Subtopic:    m.NodeID,
 	}
 
-	if err := c.publisher.Publish(c.ctx, token, msg); err != nil {
+	if err := c.pub.Publish(c.ctx, token, msg); err != nil {
 		return err
 	}
 

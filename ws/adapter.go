@@ -7,11 +7,16 @@ package ws
 
 import (
 	"context"
+
 	"errors"
+	"fmt"
 	"sync"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
-	broker "github.com/nats-io/nats.go"
+	"github.com/mainflux/mainflux/brokers"
+	"github.com/mainflux/mainflux/logger"
+	"github.com/nats-io/nats.go"
 )
 
 var (
@@ -27,7 +32,8 @@ var (
 
 // Service specifies web socket service API.
 type Service interface {
-	mainflux.MessagePublisher
+	// Publish Messssage
+	Publish(context.Context, string, mainflux.Message) error
 
 	// Subscribes to channel with specified id.
 	Subscribe(string, string, *Channel) error
@@ -75,18 +81,24 @@ func (channel *Channel) Close() {
 var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
-	pubsub Service
+	pub brokers.MessagePublisher
+	sub brokers.MessageSubscriber
+	log logger.Logger
 }
 
 // New instantiates the WS adapter implementation.
-func New(pubsub Service) Service {
-	return &adapterService{pubsub: pubsub}
+func New(pub brokers.MessagePublisher, sub brokers.MessageSubscriber, log logger.Logger) Service {
+	return &adapterService{
+		pub: pub,
+		sub: sub,
+		log: log,
+	}
 }
 
 func (as *adapterService) Publish(ctx context.Context, token string, msg mainflux.Message) error {
-	if err := as.pubsub.Publish(ctx, token, msg); err != nil {
+	if err := as.pub.Publish(ctx, token, msg); err != nil {
 		switch err {
-		case broker.ErrConnectionClosed, broker.ErrInvalidConnection:
+		case nats.ErrConnectionClosed, nats.ErrInvalidConnection:
 			return ErrFailedConnection
 		default:
 			return ErrFailedMessagePublish
@@ -96,9 +108,29 @@ func (as *adapterService) Publish(ctx context.Context, token string, msg mainflu
 }
 
 func (as *adapterService) Subscribe(chanID, subtopic string, channel *Channel) error {
-	if err := as.pubsub.Subscribe(chanID, subtopic, channel); err != nil {
-		return ErrFailedSubscription
-	}
+	sub, err := as.sub.Subscribe(chanID, subtopic, func(msg *nats.Msg) {
+		if msg == nil {
+			as.log.Warn("Received nil message")
+			return
+		}
 
-	return nil
+		m := mainflux.Message{}
+		if err := proto.Unmarshal(msg.Data, &m); err != nil {
+			as.log.Warn(fmt.Sprintf("Failed to deserialize received message: %s", err.Error()))
+			return
+		}
+
+		as.log.Debug(fmt.Sprintf("Successfully received message from NATS from channel %s", m.GetChannel()))
+
+		// Sends message to messages channel
+		channel.Send(m)
+	})
+
+	// Check if subscription should be closed
+	go func() {
+		<-channel.Closed
+		sub.Unsubscribe()
+	}()
+
+	return err
 }

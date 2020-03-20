@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/brokers"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/mqtt/redis"
 	"github.com/mainflux/mproxy/pkg/mqtt"
@@ -36,14 +37,14 @@ var (
 // Event implements events.Event interface
 type Event struct {
 	tc     mainflux.ThingsServiceClient
-	pubs   []mainflux.MessagePublisher
+	pubs   []brokers.MessagePublisher
 	tracer opentracing.Tracer
 	logger logger.Logger
 	es     redis.EventStore
 }
 
 // New creates new Event entity
-func New(tc mainflux.ThingsServiceClient, pubs []mainflux.MessagePublisher, es redis.EventStore,
+func New(tc mainflux.ThingsServiceClient, pubs []brokers.MessagePublisher, es redis.EventStore,
 	logger logger.Logger, tracer opentracing.Tracer) *Event {
 	return &Event{
 		tc:     tc,
@@ -166,7 +167,7 @@ func (e *Event) Publish(c *mqtt.Client, topic *string, payload *[]byte) {
 	}
 
 	for _, mp := range e.pubs {
-		go func(pub mainflux.MessagePublisher) {
+		go func(pub brokers.MessagePublisher) {
 			if err := pub.Publish(context.TODO(), "", msg); err != nil {
 				e.logger.Info("Error publishing to Mainflux " + err.Error())
 			}

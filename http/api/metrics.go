@@ -11,18 +11,19 @@ import (
 
 	"github.com/go-kit/kit/metrics"
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/brokers"
 )
 
-var _ mainflux.MessagePublisher = (*metricsMiddleware)(nil)
+var _ brokers.MessagePublisher = (*metricsMiddleware)(nil)
 
 type metricsMiddleware struct {
 	counter metrics.Counter
 	latency metrics.Histogram
-	svc     mainflux.MessagePublisher
+	svc     brokers.MessagePublisher
 }
 
 // MetricsMiddleware instruments adapter by tracking request count and latency.
-func MetricsMiddleware(svc mainflux.MessagePublisher, counter metrics.Counter, latency metrics.Histogram) mainflux.MessagePublisher {
+func MetricsMiddleware(svc brokers.MessagePublisher, counter metrics.Counter, latency metrics.Histogram) brokers.MessagePublisher {
 	return &metricsMiddleware{
 		counter: counter,
 		latency: latency,

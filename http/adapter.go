@@ -9,17 +9,18 @@ import (
 	"context"
 
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/brokers"
 )
 
-var _ mainflux.MessagePublisher = (*adapterService)(nil)
+var _ brokers.MessagePublisher = (*adapterService)(nil)
 
 type adapterService struct {
-	pub    mainflux.MessagePublisher
+	pub    brokers.MessagePublisher
 	things mainflux.ThingsServiceClient
 }
 
 // New instantiates the HTTP adapter implementation.
-func New(pub mainflux.MessagePublisher, things mainflux.ThingsServiceClient) mainflux.MessagePublisher {
+func New(pub brokers.MessagePublisher, things mainflux.ThingsServiceClient) brokers.MessagePublisher {
 	return &adapterService{
 		pub:    pub,
 		things: things,

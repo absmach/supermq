@@ -13,13 +13,14 @@ import (
 
 	"github.com/go-redis/redis"
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/brokers"
+	brokersNats "github.com/mainflux/mainflux/brokers/nats"
 	"github.com/mainflux/mainflux/logger"
 	mqtt "github.com/mainflux/mainflux/mqtt"
-	"github.com/mainflux/mainflux/mqtt/nats"
 	mr "github.com/mainflux/mainflux/mqtt/redis"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	mp "github.com/mainflux/mproxy/pkg/mqtt"
-	broker "github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go"
 	opentracing "github.com/opentracing/opentracing-go"
 	jconfig "github.com/uber/jaeger-client-go/config"
 	"google.golang.org/grpc"
@@ -41,7 +42,7 @@ const (
 	defThingsTimeout  = "1" // in seconds
 	envThingsURL      = "MF_THINGS_URL"
 	envThingsTimeout  = "MF_MQTT_ADAPTER_THINGS_TIMEOUT"
-	defNatsURL        = broker.DefaultURL
+	defNatsURL        = nats.DefaultURL
 	envNatsURL        = "MF_NATS_URL"
 	defJaegerURL      = ""
 	envJaegerURL      = "MF_JAEGER_URL"
@@ -85,13 +86,6 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	nc, err := broker.Connect(cfg.natsURL)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
-		os.Exit(1)
-	}
-	defer nc.Close()
-
 	conn := connectToThings(cfg, logger)
 	defer conn.Close()
 
@@ -102,13 +96,13 @@ func main() {
 	defer thingsCloser.Close()
 
 	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
-	pub := nats.NewMessagePublisher(nc)
+	pub := brokersNats.NewPublisher(cfg.natsURL, logger)
 
 	rc := connectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
 	defer rc.Close()
 
 	es := mr.NewEventStore(rc, cfg.instance)
-	pubs := []mainflux.MessagePublisher{pub}
+	pubs := []brokers.MessagePublisher{pub}
 
 	// Event handler for MQTT hooks
 	evt := mqtt.New(cc, pubs, es, logger, tracer)
