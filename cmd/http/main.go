@@ -81,6 +81,8 @@ func main() {
 	defer thingsCloser.Close()
 
 	pub := brokersNats.NewPublisher(cfg.natsURL, logger)
+	defer pub.PubConn().Close()
+
 	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
 	svc := adapter.New(pub, cc)
 

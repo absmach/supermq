@@ -14,7 +14,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/brokers"
+	broker "github.com/mainflux/mainflux/brokers/nats"
 	"github.com/nats-io/nats.go"
 )
 
@@ -59,8 +59,8 @@ var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
 	auth    mainflux.ThingsServiceClient
-	pub     brokers.MessagePublisher
-	sub     brokers.MessageSubscriber
+	pub     broker.NatsPublisher
+	sub     broker.NatsSubscriber
 	obs     map[string]*Observer
 	obsLock sync.Mutex
 }
@@ -68,7 +68,7 @@ type adapterService struct {
 const prefix = "channel"
 
 // New instantiates the CoAP adapter implementation.
-func New(pub brokers.MessagePublisher, sub brokers.MessageSubscriber, auth mainflux.ThingsServiceClient, responses <-chan string) Service {
+func New(pub broker.NatsPublisher, sub broker.NatsSubscriber, auth mainflux.ThingsServiceClient, responses <-chan string) Service {
 	as := &adapterService{
 		auth:    auth,
 		pub:     pub,

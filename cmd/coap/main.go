@@ -84,7 +84,11 @@ func main() {
 	respChan := make(chan string, 10000)
 
 	pub := brokersNats.NewPublisher(cfg.natsURL, logger)
+	defer pub.PubConn().Close()
+
 	sub := brokersNats.NewSubscriber(cfg.natsURL, logger)
+	defer sub.SubConn().Close()
+
 	svc := coap.New(pub, sub, cc, respChan)
 
 	svc = api.LoggingMiddleware(svc, logger)

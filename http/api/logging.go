@@ -11,19 +11,19 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/brokers"
+	"github.com/mainflux/mainflux/http"
 	log "github.com/mainflux/mainflux/logger"
 )
 
-var _ brokers.MessagePublisher = (*loggingMiddleware)(nil)
+var _ http.Service = (*loggingMiddleware)(nil)
 
 type loggingMiddleware struct {
 	logger log.Logger
-	svc    brokers.MessagePublisher
+	svc    http.Service
 }
 
 // LoggingMiddleware adds logging facilities to the adapter.
-func LoggingMiddleware(svc brokers.MessagePublisher, logger log.Logger) brokers.MessagePublisher {
+func LoggingMiddleware(svc http.Service, logger log.Logger) http.Service {
 	return &loggingMiddleware{logger, svc}
 }
 

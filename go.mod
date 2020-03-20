@@ -28,6 +28,7 @@ require (
 	github.com/lib/pq v1.0.0
 	github.com/mainflux/mproxy v0.1.3
 	github.com/mainflux/senml v1.0.1
+	github.com/nats-io/go-nats v1.6.0
 	github.com/nats-io/nats-server/v2 v2.1.4 // indirect
 	github.com/nats-io/nats.go v1.9.1
 	github.com/opentracing/opentracing-go v1.1.0

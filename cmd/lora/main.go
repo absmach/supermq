@@ -86,14 +86,15 @@ func main() {
 	esConn := connectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
 	defer esConn.Close()
 
-	publisher := brokersNats.NewPublisher(cfg.natsURL, logger)
+	pub := brokersNats.NewPublisher(cfg.natsURL, logger)
+	defer pub.PubConn().Close()
 
 	thingRM := newRouteMapRepositoy(rmConn, thingsRMPrefix, logger)
 	chanRM := newRouteMapRepositoy(rmConn, channelsRMPrefix, logger)
 
 	mqttConn := connectToMQTTBroker(cfg.loraMsgURL, logger)
 
-	svc := lora.New(publisher, thingRM, chanRM)
+	svc := lora.New(pub, thingRM, chanRM)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,

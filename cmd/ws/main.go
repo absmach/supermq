@@ -87,7 +87,11 @@ func main() {
 	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
 
 	pub := brokersNats.NewPublisher(cfg.natsURL, logger)
+	defer pub.PubConn().Close()
+
 	sub := brokersNats.NewSubscriber(cfg.natsURL, logger)
+	defer sub.SubConn().Close()
+
 	svc := newService(pub, sub, logger)
 
 	errs := make(chan error, 2)
@@ -179,7 +183,7 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 	return tracer, closer
 }
 
-func newService(pub brokers.MessagePublisher, sub brokers.MessageSubscriber, log logger.Logger) adapter.Service {
+func newService(pub brokers.NatsPublisher, sub brokers.NatsSubscriber, log logger.Logger) adapter.Service {
 	svc := adapter.New(pub, sub, log)
 	svc = api.LoggingMiddleware(svc, log)
 	svc = api.MetricsMiddleware(

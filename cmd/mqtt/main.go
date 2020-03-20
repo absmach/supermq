@@ -95,14 +95,16 @@ func main() {
 	thingsTracer, thingsCloser := initJaeger("things", cfg.jaegerURL, logger)
 	defer thingsCloser.Close()
 
-	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
-	pub := brokersNats.NewPublisher(cfg.natsURL, logger)
-
 	rc := connectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
 	defer rc.Close()
 
+	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
+
+	pub := brokersNats.NewPublisher(cfg.natsURL, logger)
+	defer pub.PubConn().Close()
+	pubs := []brokers.NatsPublisher{pub}
+
 	es := mr.NewEventStore(rc, cfg.instance)
-	pubs := []brokers.MessagePublisher{pub}
 
 	// Event handler for MQTT hooks
 	evt := mqtt.New(cc, pubs, es, logger, tracer)

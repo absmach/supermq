@@ -8,19 +8,26 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mainflux/mainflux/brokers"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/nats-io/nats.go"
 )
 
-var _ brokers.MessageSubscriber = (*natsSub)(nil)
+// NatsSubscriber specifies a message subscribing API.
+type NatsSubscriber interface {
+	// Subscribe subscribes to the message broker for a given channel ID and subtopic.
+	Subscribe(string, string, func(msg *nats.Msg)) (*nats.Subscription, error)
+
+	SubConn() *nats.Conn
+}
+
+var _ NatsSubscriber = (*natsSub)(nil)
 
 type natsSub struct {
 	conn *nats.Conn
 }
 
 // NewSubscriber instantiates NATS message publisher.
-func NewSubscriber(url string, log logger.Logger) brokers.MessageSubscriber {
+func NewSubscriber(url string, log logger.Logger) NatsSubscriber {
 	nc, err := nats.Connect(url)
 	if err != nil {
 		log.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
@@ -46,4 +53,8 @@ func (ns *natsSub) Subscribe(chanID, subtopic string, f func(msg *nats.Msg)) (*n
 	}
 
 	return sub, nil
+}
+
+func (ns *natsSub) SubConn() *nats.Conn {
+	return ns.conn
 }

@@ -41,7 +41,7 @@ var _ opcua.Subscriber = (*client)(nil)
 
 type client struct {
 	ctx        context.Context
-	pub        brokers.MessagePublisher
+	pub        brokers.NatsPublisher
 	thingsRM   opcua.RouteMapRepository
 	channelsRM opcua.RouteMapRepository
 	connectRM  opcua.RouteMapRepository
@@ -58,7 +58,7 @@ type message struct {
 }
 
 // NewSubscriber returns new OPC-UA client instance.
-func NewSubscriber(ctx context.Context, pub brokers.MessagePublisher, thingsRM, channelsRM, connectRM opcua.RouteMapRepository, log logger.Logger) opcua.Subscriber {
+func NewSubscriber(ctx context.Context, pub brokers.NatsPublisher, thingsRM, channelsRM, connectRM opcua.RouteMapRepository, log logger.Logger) opcua.Subscriber {
 	return client{
 		ctx:        ctx,
 		pub:        pub,
