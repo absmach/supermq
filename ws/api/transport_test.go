@@ -17,7 +17,6 @@ import (
 	"github.com/mainflux/mainflux/ws"
 	"github.com/mainflux/mainflux/ws/api"
 	"github.com/mainflux/mainflux/ws/mocks"
-	"github.com/nats-io/nats.go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -33,9 +32,9 @@ var (
 )
 
 func newService() ws.Service {
-	subs := map[string]*ws.Channel{id: channel}
-	pubsub := mocks.NewService(subs, nats.ErrConnectionClosed)
-	return ws.New(pubsub)
+	pub, err := mocks.NewPublisher("url", "lol", "lol")
+	sub, err := mocks.NewSubscriber("url", nil)
+	return ws.New(pub, sub, nil)
 }
 
 func newHTTPServer(svc ws.Service, tc mainflux.ThingsServiceClient) *httptest.Server {

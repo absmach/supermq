@@ -19,7 +19,7 @@ import (
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
-	broker "github.com/mainflux/mainflux/brokers/nats"
+	broker "github.com/mainflux/mainflux/broker/nats"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/logger"
@@ -82,7 +82,7 @@ func main() {
 
 	pub, err := broker.NewPublisher(cfg.natsURL)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
+		logger.Error(err.Error())
 		os.Exit(1)
 	}
 	defer pub.PubConn().Close()

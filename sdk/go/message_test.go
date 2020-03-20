@@ -18,12 +18,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func newMessageService(cc mainflux.ThingsServiceClient) brokers.NatsPublisher {
+func newMessageService(cc mainflux.ThingsServiceClient) brokers.Publisher {
 	pub := mocks.NewPublisher()
 	return adapter.New(pub, cc)
 }
 
-func newMessageServer(pub brokers.NatsPublisher) *httptest.Server {
+func newMessageServer(pub brokers.Publisher) *httptest.Server {
 	mux := api.MakeHandler(pub, mocktracer.New())
 	return httptest.NewServer(mux)
 }

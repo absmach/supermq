@@ -10,28 +10,28 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-// NatsSubscriber specifies a message subscribing API.
-type NatsSubscriber interface {
+// Subscriber specifies a message subscribing API.
+type Subscriber interface {
 	// Subscribe subscribes to the message broker for a given channel ID and subtopic.
 	Subscribe(string, string, func(msg *nats.Msg)) (*nats.Subscription, error)
 
 	SubConn() *nats.Conn
 }
 
-var _ NatsSubscriber = (*natsSub)(nil)
+var _ Subscriber = (*sub)(nil)
 
-type natsSub struct {
+type sub struct {
 	conn *nats.Conn
 }
 
 // NewSubscriber instantiates NATS message publisher.
-func NewSubscriber(url string) (NatsSubscriber, error) {
+func NewSubscriber(url string) (Subscriber, error) {
 	nc, err := nats.Connect(url)
 	if err != nil {
 		return nil, err
 	}
 
-	return &natsSub{conn: nc}, nil
+	return &sub{conn: nc}, nil
 }
 
 func fmtSubject(chanID, subtopic string) string {
@@ -42,9 +42,9 @@ func fmtSubject(chanID, subtopic string) string {
 	return subject
 }
 
-func (ns *natsSub) Subscribe(chanID, subtopic string, f func(msg *nats.Msg)) (*nats.Subscription, error) {
+func (s sub) Subscribe(chanID, subtopic string, f func(msg *nats.Msg)) (*nats.Subscription, error) {
 	subject := fmtSubject(chanID, subtopic)
-	sub, err := ns.conn.Subscribe(subject, f)
+	sub, err := s.conn.Subscribe(subject, f)
 	if err != nil {
 		return nil, err
 	}
@@ -52,6 +52,6 @@ func (ns *natsSub) Subscribe(chanID, subtopic string, f func(msg *nats.Msg)) (*n
 	return sub, nil
 }
 
-func (ns *natsSub) SubConn() *nats.Conn {
-	return ns.conn
+func (s sub) SubConn() *nats.Conn {
+	return s.conn
 }

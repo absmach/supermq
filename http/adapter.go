@@ -9,7 +9,7 @@ import (
 	"context"
 
 	"github.com/mainflux/mainflux"
-	broker "github.com/mainflux/mainflux/brokers/nats"
+	broker "github.com/mainflux/mainflux/broker/nats"
 )
 
 // Service specifies coap service API.
@@ -21,12 +21,12 @@ type Service interface {
 var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
-	pub    broker.NatsPublisher
+	pub    broker.Publisher
 	things mainflux.ThingsServiceClient
 }
 
 // New instantiates the HTTP adapter implementation.
-func New(pub broker.NatsPublisher, things mainflux.ThingsServiceClient) Service {
+func New(pub broker.Publisher, things mainflux.ThingsServiceClient) Service {
 	return &adapterService{
 		pub:    pub,
 		things: things,

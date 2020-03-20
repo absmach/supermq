@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/mainflux/mainflux"
+	broker "github.com/mainflux/mainflux/brokers/nats"
 	"github.com/mainflux/mainflux/ws"
 )
 
@@ -20,8 +21,8 @@ type mockService struct {
 }
 
 // NewService returns mock message publisher.
-func NewService(subs map[string]*ws.Channel, pubError error) ws.Service {
-	return &mockService{subs, pubError, sync.Mutex{}}
+func NewPublisher(subs map[string]*ws.Channel, pubError error) broker.NatsPublisher {
+	return &mockService{subs, pubError, sync.Mutex{}}, nil
 }
 
 func (svc *mockService) Publish(_ context.Context, _ string, msg mainflux.Message) error {

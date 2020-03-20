@@ -14,7 +14,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
-	broker "github.com/mainflux/mainflux/brokers/nats"
+	broker "github.com/mainflux/mainflux/broker/nats"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/nats-io/nats.go"
 )
@@ -81,13 +81,13 @@ func (channel *Channel) Close() {
 var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
-	pub broker.NatsPublisher
-	sub broker.NatsSubscriber
+	pub broker.Publisher
+	sub broker.Subscriber
 	log logger.Logger
 }
 
 // New instantiates the WS adapter implementation.
-func New(pub broker.NatsPublisher, sub broker.NatsSubscriber, log logger.Logger) Service {
+func New(pub broker.Publisher, sub broker.Subscriber, log logger.Logger) Service {
 	return &adapterService{
 		pub: pub,
 		sub: sub,

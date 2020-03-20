@@ -10,36 +10,39 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/errors"
 	"github.com/nats-io/nats.go"
 )
 
-// NatsPublisher specifies a message publishing API.
-type NatsPublisher interface {
+// Publisher specifies a message publishing API.
+type Publisher interface {
 	// Publish publishes message to the msessage broker.
 	Publish(context.Context, string, mainflux.Message) error
 
 	PubConn() *nats.Conn
 }
 
+var errNatsConn = errors.New("Failed to connect to NATS")
+
 const prefix = "channel"
 
-var _ NatsPublisher = (*natsPub)(nil)
+var _ Publisher = (*pub)(nil)
 
-type natsPub struct {
+type pub struct {
 	conn *nats.Conn
 }
 
 // NewPublisher NATS message publisher.
-func NewPublisher(url string) (NatsPublisher, error) {
+func NewPublisher(url string) (Publisher, error) {
 	nc, err := nats.Connect(url)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(errNatsConn, err)
 	}
 
-	return &natsPub{conn: nc}, nil
+	return &pub{conn: nc}, nil
 }
 
-func (np natsPub) Publish(_ context.Context, _ string, msg mainflux.Message) error {
+func (p pub) Publish(_ context.Context, _ string, msg mainflux.Message) error {
 	data, err := proto.Marshal(&msg)
 	if err != nil {
 		return err
@@ -49,9 +52,9 @@ func (np natsPub) Publish(_ context.Context, _ string, msg mainflux.Message) err
 	if msg.Subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, msg.Subtopic)
 	}
-	return np.conn.Publish(subject, data)
+	return p.conn.Publish(subject, data)
 }
 
-func (np natsPub) PubConn() *nats.Conn {
-	return np.conn
+func (p pub) PubConn() *nats.Conn {
+	return p.conn
 }

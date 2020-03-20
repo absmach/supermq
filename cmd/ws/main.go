@@ -18,8 +18,7 @@ import (
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/brokers"
-	broker "github.com/mainflux/mainflux/brokers/nats"
+	broker "github.com/mainflux/mainflux/broker/nats"
 	"github.com/mainflux/mainflux/logger"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	adapter "github.com/mainflux/mainflux/ws"
@@ -86,10 +85,18 @@ func main() {
 
 	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
 
-	pub := broker.NewPublisher(cfg.natsURL, logger)
+	pub, err := broker.NewPublisher(cfg.natsURL)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
 	defer pub.PubConn().Close()
 
-	sub := broker.NewSubscriber(cfg.natsURL, logger)
+	sub, err := broker.NewSubscriber(cfg.natsURL)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
+		os.Exit(1)
+	}
 	defer sub.SubConn().Close()
 
 	svc := newService(pub, sub, logger)
@@ -183,7 +190,7 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 	return tracer, closer
 }
 
-func newService(pub brokers.NatsPublisher, sub brokers.NatsSubscriber, log logger.Logger) adapter.Service {
+func newService(pub broker.Publisher, sub broker.Subscriber, log logger.Logger) adapter.Service {
 	svc := adapter.New(pub, sub, log)
 	svc = api.LoggingMiddleware(svc, log)
 	svc = api.MetricsMiddleware(

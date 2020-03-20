@@ -11,12 +11,12 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-var _ (brokers.NatsPublisher) = (*mockPublisher)(nil)
+var _ (brokers.Publisher) = (*mockPublisher)(nil)
 
 type mockPublisher struct{}
 
 // NewPublisher returns mock message publisher.
-func NewPublisher() brokers.NatsPublisher {
+func NewPublisher() brokers.Publisher {
 	return mockPublisher{}
 }
 

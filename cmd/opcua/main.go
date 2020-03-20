@@ -15,7 +15,7 @@ import (
 
 	r "github.com/go-redis/redis"
 	"github.com/mainflux/mainflux"
-	broker "github.com/mainflux/mainflux/brokers/nats"
+	broker "github.com/mainflux/mainflux/broker/nats"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/opcua"
 	"github.com/mainflux/mainflux/opcua/api"
@@ -99,8 +99,8 @@ func main() {
 	defer esConn.Close()
 
 	pub, err := broker.NewPublisher(cfg.natsURL)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
+  if err != nil {
+		logger.Error(err.Error())
 		os.Exit(1)
 	}
 	defer pub.PubConn().Close()
