@@ -9,12 +9,14 @@ package coap
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
 	broker "github.com/mainflux/mainflux/broker/nats"
+	"github.com/mainflux/mainflux/logger"
 	"github.com/nats-io/nats.go"
 )
 
@@ -61,18 +63,18 @@ type adapterService struct {
 	auth    mainflux.ThingsServiceClient
 	pub     broker.Publisher
 	sub     broker.Subscriber
+	log     logger.Logger
 	obs     map[string]*Observer
 	obsLock sync.Mutex
 }
 
-const prefix = "channel"
-
 // New instantiates the CoAP adapter implementation.
-func New(pub broker.Publisher, sub broker.Subscriber, auth mainflux.ThingsServiceClient, responses <-chan string) Service {
+func New(pub broker.Publisher, sub broker.Subscriber, log logger.Logger, auth mainflux.ThingsServiceClient, responses <-chan string) Service {
 	as := &adapterService{
 		auth:    auth,
 		pub:     pub,
 		sub:     sub,
+		log:     log,
 		obs:     make(map[string]*Observer),
 		obsLock: sync.Mutex{},
 	}
@@ -154,7 +156,9 @@ func (svc *adapterService) Subscribe(chanID, subtopic, obsID string, o *Observer
 
 	go func() {
 		<-o.Cancel
-		sub.Unsubscribe()
+		if err := sub.Unsubscribe(); err != nil {
+			svc.log.Error(fmt.Sprintf("Failed to unsubscribe from %s.%s", chanID, subtopic))
+		}
 	}()
 
 	// Put method removes Observer if already exists.

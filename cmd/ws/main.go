@@ -94,7 +94,7 @@ func main() {
 
 	sub, err := broker.NewSubscriber(cfg.natsURL)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
+		logger.Error(err.Error())
 		os.Exit(1)
 	}
 	defer sub.Conn().Close()

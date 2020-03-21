@@ -97,7 +97,7 @@ func main() {
 	}
 	defer sub.Conn().Close()
 
-	svc := coap.New(pub, sub, cc, respChan)
+	svc := coap.New(pub, sub, logger, cc, respChan)
 
 	svc = api.LoggingMiddleware(svc, logger)
 

@@ -129,7 +129,9 @@ func (as *adapterService) Subscribe(chanID, subtopic string, channel *Channel) e
 	// Check if subscription should be closed
 	go func() {
 		<-channel.Closed
-		sub.Unsubscribe()
+		if err := sub.Unsubscribe(); err != nil {
+			as.log.Error(fmt.Sprintf("Failed to unsubscribe from %s.%s", chanID, subtopic))
+		}
 	}()
 
 	return err
