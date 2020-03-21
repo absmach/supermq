@@ -7,16 +7,16 @@ import (
 	"context"
 
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/brokers"
+	broker "github.com/mainflux/mainflux/broker/nats"
 	"github.com/nats-io/nats.go"
 )
 
-var _ (brokers.Publisher) = (*mockPublisher)(nil)
+var _ (broker.Publisher) = (*mockPublisher)(nil)
 
 type mockPublisher struct{}
 
 // NewPublisher returns mock message publisher.
-func NewPublisher() brokers.Publisher {
+func NewPublisher() broker.Publisher {
 	return mockPublisher{}
 }
 
@@ -24,6 +24,6 @@ func (pub mockPublisher) Publish(_ context.Context, _ string, msg mainflux.Messa
 	return nil
 }
 
-func (pub mockPublisher) PubConn() *nats.Conn {
+func (pub mockPublisher) Conn() *nats.Conn {
 	return nil
 }

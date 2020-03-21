@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/brokers"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/http/mocks"
@@ -18,13 +17,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func newMessageService(cc mainflux.ThingsServiceClient) brokers.Publisher {
+func newMessageService(cc mainflux.ThingsServiceClient) adapter.Service {
 	pub := mocks.NewPublisher()
 	return adapter.New(pub, cc)
 }
 
-func newMessageServer(pub brokers.Publisher) *httptest.Server {
-	mux := api.MakeHandler(pub, mocktracer.New())
+func newMessageServer(svc adapter.Service) *httptest.Server {
+	mux := api.MakeHandler(svc, mocktracer.New())
 	return httptest.NewServer(mux)
 }
 

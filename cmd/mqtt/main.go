@@ -104,7 +104,7 @@ func main() {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
-	defer pub.PubConn().Close()
+	defer pub.Conn().Close()
 	pubs := []broker.Publisher{pub}
 
 	es := mr.NewEventStore(rc, cfg.instance)

@@ -19,7 +19,8 @@ type Publisher interface {
 	// Publish publishes message to the msessage broker.
 	Publish(context.Context, string, mainflux.Message) error
 
-	PubConn() *nats.Conn
+	// Conn returns NATS connection.
+	Conn() *nats.Conn
 }
 
 var errNatsConn = errors.New("Failed to connect to NATS")
@@ -55,6 +56,6 @@ func (p pub) Publish(_ context.Context, _ string, msg mainflux.Message) error {
 	return p.conn.Publish(subject, data)
 }
 
-func (p pub) PubConn() *nats.Conn {
+func (p pub) Conn() *nats.Conn {
 	return p.conn
 }

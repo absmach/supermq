@@ -99,11 +99,11 @@ func main() {
 	defer esConn.Close()
 
 	pub, err := broker.NewPublisher(cfg.natsURL)
-  if err != nil {
+	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
-	defer pub.PubConn().Close()
+	defer pub.Conn().Close()
 
 	ctx := context.Background()
 	sub := gopcua.NewSubscriber(ctx, pub, thingRM, chanRM, connRM, logger)

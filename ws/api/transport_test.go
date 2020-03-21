@@ -27,13 +27,15 @@ const (
 )
 
 var (
+	chanID  = "1"
 	msg     = []byte(`[{"n":"current","t":-5,"v":1.2}]`)
 	channel = ws.NewChannel()
 )
 
 func newService() ws.Service {
-	pub, err := mocks.NewPublisher("url", "lol", "lol")
-	sub, err := mocks.NewSubscriber("url", nil)
+	subs := map[string]*ws.Channel{chanID: channel}
+	pub := mocks.NewPublisher()
+	sub := mocks.NewSubscriber(subs)
 	return ws.New(pub, sub, nil)
 }
 

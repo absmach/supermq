@@ -5,44 +5,54 @@ package mocks
 
 import (
 	"context"
-	"sync"
 
 	"github.com/mainflux/mainflux"
-	broker "github.com/mainflux/mainflux/brokers/nats"
+	broker "github.com/mainflux/mainflux/broker/nats"
 	"github.com/mainflux/mainflux/ws"
+	"github.com/nats-io/nats.go"
 )
 
-var _ ws.Service = (*mockService)(nil)
+var _ broker.Publisher = (*mockPub)(nil)
+var _ broker.Subscriber = (*mockSub)(nil)
 
-type mockService struct {
+type mockPub struct {
+}
+
+type mockSub struct {
 	subscriptions map[string]*ws.Channel
-	pubError      error
-	mutex         sync.Mutex
 }
 
-// NewService returns mock message publisher.
-func NewPublisher(subs map[string]*ws.Channel, pubError error) broker.NatsPublisher {
-	return &mockService{subs, pubError, sync.Mutex{}}, nil
+// NewPublisher returns mock message publisher.
+func NewPublisher() broker.Publisher {
+	return &mockPub{}
 }
 
-func (svc *mockService) Publish(_ context.Context, _ string, msg mainflux.Message) error {
-	if len(msg.Payload) == 0 {
-		return svc.pubError
+// NewSubscriber returns mock message publisher.
+func NewSubscriber(subs map[string]*ws.Channel) broker.Subscriber {
+	return &mockSub{
+		subscriptions: subs,
 	}
-	svc.mutex.Lock()
-	defer svc.mutex.Unlock()
-	svc.subscriptions[msg.Channel].Messages <- msg
+}
+
+func (mp mockPub) Publish(_ context.Context, _ string, msg mainflux.Message) error {
+	if len(msg.Payload) == 0 {
+		return ws.ErrFailedMessagePublish
+	}
 	return nil
 }
 
-func (svc *mockService) Subscribe(chanID, subtopic string, channel *ws.Channel) error {
-	svc.mutex.Lock()
-	defer svc.mutex.Unlock()
+func (mp mockPub) Conn() *nats.Conn {
+	return nil
+}
 
-	if _, ok := svc.subscriptions[chanID+subtopic]; !ok {
-		return ws.ErrFailedSubscription
+func (mp mockSub) Subscribe(chanID, subtopic string, f func(*nats.Msg)) (*nats.Subscription, error) {
+	if _, ok := mp.subscriptions[chanID+subtopic]; !ok {
+		return nil, ws.ErrFailedSubscription
 	}
-	svc.subscriptions[chanID] = channel
 
+	return nil, nil
+}
+
+func (mp mockSub) Conn() *nats.Conn {
 	return nil
 }

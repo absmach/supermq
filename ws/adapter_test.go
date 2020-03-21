@@ -8,12 +8,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/ws"
 	"github.com/mainflux/mainflux/ws/mocks"
-	"github.com/nats-io/nats.go"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/mainflux/mainflux"
 )
 
 const (
@@ -31,8 +29,9 @@ var msg = mainflux.Message{
 
 func newService(channel *ws.Channel) ws.Service {
 	subs := map[string]*ws.Channel{chanID: channel}
-	pubsub := mocks.NewService(subs, nats.ErrInvalidMsg)
-	return ws.New(pubsub)
+	pub := mocks.NewPublisher()
+	sub := mocks.NewSubscriber(subs)
+	return ws.New(pub, sub, nil)
 }
 
 func TestPublish(t *testing.T) {
