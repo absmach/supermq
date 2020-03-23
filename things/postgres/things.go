@@ -73,9 +73,9 @@ func (tr thingRepository) Save(ctx context.Context, ths ...things.Thing) ([]thin
 			if ok {
 				switch pqErr.Code.Name() {
 				case errInvalid, errTruncation:
-					return []things.Thing{}, things.ErrMalformedEntity
+					return []things.Thing{}, errors.Wrap(things.ErrMalformedEntity, err2)
 				case errDuplicate:
-					return []things.Thing{}, things.ErrConflict
+					return []things.Thing{}, errors.Wrap(things.ErrConflict, err2)
 				}
 			}
 
@@ -104,7 +104,7 @@ func (tr thingRepository) Update(ctx context.Context, thing things.Thing) errors
 		if ok {
 			switch pqErr.Code.Name() {
 			case errInvalid, errTruncation:
-				return things.ErrMalformedEntity
+				return errors.Wrap(things.ErrMalformedEntity, err2)
 			}
 		}
 
@@ -138,9 +138,9 @@ func (tr thingRepository) UpdateKey(ctx context.Context, owner, id, key string) 
 		if ok {
 			switch pqErr.Code.Name() {
 			case errInvalid:
-				return things.ErrMalformedEntity
+				return errors.Wrap(things.ErrMalformedEntity, err)
 			case errDuplicate:
-				return things.ErrConflict
+				return errors.Wrap(things.ErrConflict, err)
 			}
 		}
 
@@ -172,7 +172,7 @@ func (tr thingRepository) RetrieveByID(ctx context.Context, owner, id string) (t
 
 		pqErr, ok := err.(*pq.Error)
 		if err == sql.ErrNoRows || ok && errInvalid == pqErr.Code.Name() {
-			return empty, things.ErrNotFound
+			return empty, errors.Wrap(things.ErrNotFound, err)
 		}
 
 		return empty, errors.Wrap(ErrSelectDb, err)
@@ -187,7 +187,7 @@ func (tr thingRepository) RetrieveByKey(ctx context.Context, key string) (string
 	var id string
 	if err := tr.db.QueryRowxContext(ctx, q, key).Scan(&id); err != nil {
 		if err == sql.ErrNoRows {
-			return "", things.ErrNotFound
+			return "", errors.Wrap(things.ErrNotFound, err)
 		}
 		return "", errors.Wrap(ErrSelectDb, err)
 	}

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/things"
 )
 
@@ -44,7 +45,7 @@ func NewThingRepository(conns chan Connection) things.ThingRepository {
 	return repo
 }
 
-func (trm *thingRepositoryMock) Save(_ context.Context, ths ...things.Thing) ([]things.Thing, error) {
+func (trm *thingRepositoryMock) Save(_ context.Context, ths ...things.Thing) ([]things.Thing, errors.Error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -63,7 +64,7 @@ func (trm *thingRepositoryMock) Save(_ context.Context, ths ...things.Thing) ([]
 	return ths, nil
 }
 
-func (trm *thingRepositoryMock) Update(_ context.Context, thing things.Thing) error {
+func (trm *thingRepositoryMock) Update(_ context.Context, thing things.Thing) errors.Error {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -78,7 +79,7 @@ func (trm *thingRepositoryMock) Update(_ context.Context, thing things.Thing) er
 	return nil
 }
 
-func (trm *thingRepositoryMock) UpdateKey(_ context.Context, owner, id, val string) error {
+func (trm *thingRepositoryMock) UpdateKey(_ context.Context, owner, id, val string) errors.Error {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -101,7 +102,7 @@ func (trm *thingRepositoryMock) UpdateKey(_ context.Context, owner, id, val stri
 	return nil
 }
 
-func (trm *thingRepositoryMock) RetrieveByID(_ context.Context, owner, id string) (things.Thing, error) {
+func (trm *thingRepositoryMock) RetrieveByID(_ context.Context, owner, id string) (things.Thing, errors.Error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -112,7 +113,7 @@ func (trm *thingRepositoryMock) RetrieveByID(_ context.Context, owner, id string
 	return things.Thing{}, things.ErrNotFound
 }
 
-func (trm *thingRepositoryMock) RetrieveAll(_ context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ThingsPage, error) {
+func (trm *thingRepositoryMock) RetrieveAll(_ context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ThingsPage, errors.Error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -151,7 +152,7 @@ func (trm *thingRepositoryMock) RetrieveAll(_ context.Context, owner string, off
 	return page, nil
 }
 
-func (trm *thingRepositoryMock) RetrieveByChannel(_ context.Context, owner, chanID string, offset, limit uint64) (things.ThingsPage, error) {
+func (trm *thingRepositoryMock) RetrieveByChannel(_ context.Context, owner, chanID string, offset, limit uint64) (things.ThingsPage, errors.Error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -192,14 +193,14 @@ func (trm *thingRepositoryMock) RetrieveByChannel(_ context.Context, owner, chan
 	return page, nil
 }
 
-func (trm *thingRepositoryMock) Remove(_ context.Context, owner, id string) error {
+func (trm *thingRepositoryMock) Remove(_ context.Context, owner, id string) errors.Error {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 	delete(trm.things, key(owner, id))
 	return nil
 }
 
-func (trm *thingRepositoryMock) RetrieveByKey(_ context.Context, key string) (string, error) {
+func (trm *thingRepositoryMock) RetrieveByKey(_ context.Context, key string) (string, errors.Error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -245,7 +246,7 @@ func NewThingCache() things.ThingCache {
 	}
 }
 
-func (tcm *thingCacheMock) Save(_ context.Context, key, id string) error {
+func (tcm *thingCacheMock) Save(_ context.Context, key, id string) errors.Error {
 	tcm.mu.Lock()
 	defer tcm.mu.Unlock()
 
@@ -253,7 +254,7 @@ func (tcm *thingCacheMock) Save(_ context.Context, key, id string) error {
 	return nil
 }
 
-func (tcm *thingCacheMock) ID(_ context.Context, key string) (string, error) {
+func (tcm *thingCacheMock) ID(_ context.Context, key string) (string, errors.Error) {
 	tcm.mu.Lock()
 	defer tcm.mu.Unlock()
 
@@ -265,7 +266,7 @@ func (tcm *thingCacheMock) ID(_ context.Context, key string) (string, error) {
 	return id, nil
 }
 
-func (tcm *thingCacheMock) Remove(_ context.Context, id string) error {
+func (tcm *thingCacheMock) Remove(_ context.Context, id string) errors.Error {
 	tcm.mu.Lock()
 	defer tcm.mu.Unlock()
 

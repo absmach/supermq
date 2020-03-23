@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/things"
 )
 
@@ -43,7 +44,7 @@ func NewChannelRepository(repo things.ThingRepository, tconns chan Connection) t
 	}
 }
 
-func (crm *channelRepositoryMock) Save(_ context.Context, channels ...things.Channel) ([]things.Channel, error) {
+func (crm *channelRepositoryMock) Save(_ context.Context, channels ...things.Channel) ([]things.Channel, errors.Error) {
 	crm.mu.Lock()
 	defer crm.mu.Unlock()
 
@@ -56,7 +57,7 @@ func (crm *channelRepositoryMock) Save(_ context.Context, channels ...things.Cha
 	return channels, nil
 }
 
-func (crm *channelRepositoryMock) Update(_ context.Context, channel things.Channel) error {
+func (crm *channelRepositoryMock) Update(_ context.Context, channel things.Channel) errors.Error {
 	crm.mu.Lock()
 	defer crm.mu.Unlock()
 
@@ -70,7 +71,7 @@ func (crm *channelRepositoryMock) Update(_ context.Context, channel things.Chann
 	return nil
 }
 
-func (crm *channelRepositoryMock) RetrieveByID(_ context.Context, owner, id string) (things.Channel, error) {
+func (crm *channelRepositoryMock) RetrieveByID(_ context.Context, owner, id string) (things.Channel, errors.Error) {
 	if c, ok := crm.channels[key(owner, id)]; ok {
 		return c, nil
 	}
@@ -78,7 +79,7 @@ func (crm *channelRepositoryMock) RetrieveByID(_ context.Context, owner, id stri
 	return things.Channel{}, things.ErrNotFound
 }
 
-func (crm *channelRepositoryMock) RetrieveAll(_ context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ChannelsPage, error) {
+func (crm *channelRepositoryMock) RetrieveAll(_ context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ChannelsPage, errors.Error) {
 	channels := make([]things.Channel, 0)
 
 	if offset < 0 || limit <= 0 {
@@ -114,7 +115,7 @@ func (crm *channelRepositoryMock) RetrieveAll(_ context.Context, owner string, o
 	return page, nil
 }
 
-func (crm *channelRepositoryMock) RetrieveByThing(_ context.Context, owner, thingID string, offset, limit uint64) (things.ChannelsPage, error) {
+func (crm *channelRepositoryMock) RetrieveByThing(_ context.Context, owner, thingID string, offset, limit uint64) (things.ChannelsPage, errors.Error) {
 	channels := make([]things.Channel, 0)
 
 	if offset < 0 || limit <= 0 {
@@ -147,7 +148,7 @@ func (crm *channelRepositoryMock) RetrieveByThing(_ context.Context, owner, thin
 	return page, nil
 }
 
-func (crm *channelRepositoryMock) Remove(_ context.Context, owner, id string) error {
+func (crm *channelRepositoryMock) Remove(_ context.Context, owner, id string) errors.Error {
 	delete(crm.channels, key(owner, id))
 	// delete channel from any thing list
 	for thk := range crm.cconns {
@@ -160,7 +161,7 @@ func (crm *channelRepositoryMock) Remove(_ context.Context, owner, id string) er
 	return nil
 }
 
-func (crm *channelRepositoryMock) Connect(_ context.Context, owner string, chIDs, thIDs []string) error {
+func (crm *channelRepositoryMock) Connect(_ context.Context, owner string, chIDs, thIDs []string) errors.Error {
 	for _, chID := range chIDs {
 		ch, err := crm.RetrieveByID(context.Background(), owner, chID)
 		if err != nil {
@@ -188,7 +189,7 @@ func (crm *channelRepositoryMock) Connect(_ context.Context, owner string, chIDs
 	return nil
 }
 
-func (crm *channelRepositoryMock) Disconnect(_ context.Context, owner, chanID, thingID string) error {
+func (crm *channelRepositoryMock) Disconnect(_ context.Context, owner, chanID, thingID string) errors.Error {
 	if _, ok := crm.cconns[thingID]; !ok {
 		return things.ErrNotFound
 	}
@@ -206,7 +207,7 @@ func (crm *channelRepositoryMock) Disconnect(_ context.Context, owner, chanID, t
 	return nil
 }
 
-func (crm *channelRepositoryMock) HasThing(_ context.Context, chanID, token string) (string, error) {
+func (crm *channelRepositoryMock) HasThing(_ context.Context, chanID, token string) (string, errors.Error) {
 	tid, err := crm.things.RetrieveByKey(context.Background(), token)
 	if err != nil {
 		return "", things.ErrNotFound
@@ -224,7 +225,7 @@ func (crm *channelRepositoryMock) HasThing(_ context.Context, chanID, token stri
 	return tid, nil
 }
 
-func (crm *channelRepositoryMock) HasThingByID(_ context.Context, chanID, thingID string) error {
+func (crm *channelRepositoryMock) HasThingByID(_ context.Context, chanID, thingID string) errors.Error {
 	chans, ok := crm.cconns[thingID]
 	if !ok {
 		return things.ErrNotFound
@@ -249,7 +250,7 @@ func NewChannelCache() things.ChannelCache {
 	}
 }
 
-func (ccm *channelCacheMock) Connect(_ context.Context, chanID, thingID string) error {
+func (ccm *channelCacheMock) Connect(_ context.Context, chanID, thingID string) errors.Error {
 	ccm.mu.Lock()
 	defer ccm.mu.Unlock()
 
@@ -264,7 +265,7 @@ func (ccm *channelCacheMock) HasThing(_ context.Context, chanID, thingID string)
 	return ccm.channels[chanID] == thingID
 }
 
-func (ccm *channelCacheMock) Disconnect(_ context.Context, chanID, thingID string) error {
+func (ccm *channelCacheMock) Disconnect(_ context.Context, chanID, thingID string) errors.Error {
 	ccm.mu.Lock()
 	defer ccm.mu.Unlock()
 
@@ -272,7 +273,7 @@ func (ccm *channelCacheMock) Disconnect(_ context.Context, chanID, thingID strin
 	return nil
 }
 
-func (ccm *channelCacheMock) Remove(_ context.Context, chanID string) error {
+func (ccm *channelCacheMock) Remove(_ context.Context, chanID string) errors.Error {
 	ccm.mu.Lock()
 	defer ccm.mu.Unlock()
 

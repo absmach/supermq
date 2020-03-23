@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/things"
 )
 
@@ -17,7 +18,7 @@ type identityProviderMock struct {
 	counter int
 }
 
-func (idp *identityProviderMock) ID() (string, error) {
+func (idp *identityProviderMock) ID() (string, errors.Error) {
 	idp.mu.Lock()
 	defer idp.mu.Unlock()
 

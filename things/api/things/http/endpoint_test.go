@@ -584,28 +584,28 @@ func TestViewThing(t *testing.T) {
 			id:     strconv.FormatUint(wrongID, 10),
 			auth:   token,
 			status: http.StatusNotFound,
-			res:    "",
+			res:    toJSON(errorRes{things.ErrNotFound.Error()}),
 		},
 		{
 			desc:   "view thing by passing invalid token",
 			id:     sth.ID,
 			auth:   wrongValue,
 			status: http.StatusForbidden,
-			res:    "",
+			res:    toJSON(errorRes{things.ErrUnauthorizedAccess.Error()}),
 		},
 		{
 			desc:   "view thing by passing empty token",
 			id:     sth.ID,
 			auth:   "",
 			status: http.StatusForbidden,
-			res:    "",
+			res:    toJSON(errorRes{things.ErrUnauthorizedAccess.Error()}),
 		},
 		{
 			desc:   "view thing by passing invalid id",
 			id:     "invalid",
 			auth:   token,
 			status: http.StatusNotFound,
-			res:    "",
+			res:    toJSON(errorRes{things.ErrNotFound.Error()}),
 		},
 	}
 
@@ -1341,28 +1341,28 @@ func TestViewChannel(t *testing.T) {
 			id:     strconv.FormatUint(wrongID, 10),
 			auth:   token,
 			status: http.StatusNotFound,
-			res:    "",
+			res:    toJSON(errorRes{things.ErrNotFound.Error()}),
 		},
 		{
 			desc:   "view channel with invalid token",
 			id:     sch.ID,
 			auth:   wrongValue,
 			status: http.StatusForbidden,
-			res:    "",
+			res:    toJSON(errorRes{things.ErrUnauthorizedAccess.Error()}),
 		},
 		{
 			desc:   "view channel with empty token",
 			id:     sch.ID,
 			auth:   "",
 			status: http.StatusForbidden,
-			res:    "",
+			res:    toJSON(errorRes{things.ErrUnauthorizedAccess.Error()}),
 		},
 		{
 			desc:   "view channel with invalid id",
 			id:     "invalid",
 			auth:   token,
 			status: http.StatusNotFound,
-			res:    "",
+			res:    toJSON(errorRes{things.ErrNotFound.Error()}),
 		},
 	}
 
@@ -2159,4 +2159,8 @@ type channelsPageRes struct {
 	Total    uint64       `json:"total"`
 	Offset   uint64       `json:"offset"`
 	Limit    uint64       `json:"limit"`
+}
+
+type errorRes struct {
+	Err string `json:"error"`
 }

@@ -185,7 +185,7 @@ func decodeThingCreation(_ context.Context, r *http.Request) (interface{}, error
 
 	req := createThingReq{token: r.Header.Get("Authorization")}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, err
+		return nil, errors.Wrap(things.ErrMalformedEntity, err)
 	}
 
 	return req, nil
@@ -198,7 +198,7 @@ func decodeThingsCreation(_ context.Context, r *http.Request) (interface{}, erro
 
 	req := createThingsReq{token: r.Header.Get("Authorization")}
 	if err := json.NewDecoder(r.Body).Decode(&req.Things); err != nil {
-		return nil, err
+		return nil, errors.Wrap(things.ErrMalformedEntity, err)
 	}
 
 	return req, nil
@@ -214,7 +214,7 @@ func decodeThingUpdate(_ context.Context, r *http.Request) (interface{}, error) 
 		id:    bone.GetValue(r, "id"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, err
+		return nil, errors.Wrap(things.ErrMalformedEntity, err)
 	}
 
 	return req, nil
@@ -230,7 +230,7 @@ func decodeKeyUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 		id:    bone.GetValue(r, "id"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, err
+		return nil, errors.Wrap(things.ErrMalformedEntity, err)
 	}
 
 	return req, nil
@@ -243,7 +243,7 @@ func decodeChannelCreation(_ context.Context, r *http.Request) (interface{}, err
 
 	req := createChannelReq{token: r.Header.Get("Authorization")}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, err
+		return nil, errors.Wrap(things.ErrMalformedEntity, err)
 	}
 
 	return req, nil
@@ -257,7 +257,7 @@ func decodeChannelsCreation(_ context.Context, r *http.Request) (interface{}, er
 	req := createChannelsReq{token: r.Header.Get("Authorization")}
 
 	if err := json.NewDecoder(r.Body).Decode(&req.Channels); err != nil {
-		return nil, err
+		return nil, errors.Wrap(things.ErrMalformedEntity, err)
 	}
 
 	return req, nil
@@ -273,7 +273,7 @@ func decodeChannelUpdate(_ context.Context, r *http.Request) (interface{}, error
 		id:    bone.GetValue(r, "id"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, err
+		return nil, errors.Wrap(things.ErrMalformedEntity, err)
 	}
 
 	return req, nil
@@ -358,7 +358,7 @@ func decodeCreateConnections(_ context.Context, r *http.Request) (interface{}, e
 
 	req := createConnectionsReq{token: r.Header.Get("Authorization")}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, err
+		return nil, errors.Wrap(things.ErrMalformedEntity, err)
 	}
 
 	return req, nil
@@ -394,7 +394,6 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		switch {
 		case errors.Contains(errorVal, things.ErrMalformedEntity):
 			w.WriteHeader(http.StatusBadRequest)
-			// logger.Warn(fmt.Sprintf("Failed to decode user credentials: %s", errorVal))
 		case errors.Contains(errorVal, things.ErrUnauthorizedAccess):
 			w.WriteHeader(http.StatusForbidden)
 		case errors.Contains(errorVal, things.ErrNotFound):
@@ -409,6 +408,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, io.EOF):
 			w.WriteHeader(http.StatusBadRequest)
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
 		}
 		if errorVal.Msg() != "" {
 			json.NewEncoder(w).Encode(errorRes{Err: errorVal.Msg()})
