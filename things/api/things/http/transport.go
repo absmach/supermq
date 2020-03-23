@@ -6,7 +6,7 @@ package http
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -16,6 +16,7 @@ import (
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/things"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -382,35 +383,61 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 }
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
-	w.Header().Set("Content-Type", contentType)
+	// For debug only:
+	fmt.Printf("debug... (%v, %T)\n", err, err)
 
-	switch err {
-	case things.ErrMalformedEntity:
-		w.WriteHeader(http.StatusBadRequest)
-	case things.ErrUnauthorizedAccess:
-		w.WriteHeader(http.StatusForbidden)
-	case things.ErrNotFound:
-		w.WriteHeader(http.StatusNotFound)
-	case things.ErrConflict:
-		w.WriteHeader(http.StatusUnprocessableEntity)
-	case errUnsupportedContentType:
-		w.WriteHeader(http.StatusUnsupportedMediaType)
-	case errInvalidQueryParams:
-		w.WriteHeader(http.StatusBadRequest)
-	case io.ErrUnexpectedEOF:
-		w.WriteHeader(http.StatusBadRequest)
-	case io.EOF:
-		w.WriteHeader(http.StatusBadRequest)
-	default:
-		switch err.(type) {
-		case *json.SyntaxError:
+	switch errorVal := err.(type) {
+	case errors.Error:
+		fmt.Printf("debugerrorVAl... (%v, %T)\n", errorVal, errorVal)
+
+		w.Header().Set("Content-Type", contentType)
+		switch {
+		case errors.Contains(errorVal, things.ErrMalformedEntity):
 			w.WriteHeader(http.StatusBadRequest)
-		case *json.UnmarshalTypeError:
+			// logger.Warn(fmt.Sprintf("Failed to decode user credentials: %s", errorVal))
+		case errors.Contains(errorVal, things.ErrUnauthorizedAccess):
+			w.WriteHeader(http.StatusForbidden)
+		case errors.Contains(errorVal, things.ErrNotFound):
+			w.WriteHeader(http.StatusNotFound)
+		case errors.Contains(errorVal, things.ErrConflict):
+			w.WriteHeader(http.StatusUnprocessableEntity)
+		case errors.Contains(errorVal, errUnsupportedContentType):
+			w.WriteHeader(http.StatusUnsupportedMediaType)
+		case errors.Contains(errorVal, errInvalidQueryParams):
 			w.WriteHeader(http.StatusBadRequest)
-		default:
-			w.WriteHeader(http.StatusInternalServerError)
+		case errors.Contains(errorVal, io.ErrUnexpectedEOF):
+			w.WriteHeader(http.StatusBadRequest)
+		case errors.Contains(errorVal, io.EOF):
+			w.WriteHeader(http.StatusBadRequest)
 		}
+		if errorVal.Msg() != "" {
+			json.NewEncoder(w).Encode(errorRes{Err: errorVal.Msg()})
+		}
+	default:
+		w.WriteHeader(http.StatusInternalServerError)
 	}
+
+	// switch err {
+	// case things.ErrConflict:
+	// 	w.WriteHeader(http.StatusUnprocessableEntity)
+	// case errUnsupportedContentType:
+	// 	w.WriteHeader(http.StatusUnsupportedMediaType)
+	// case errInvalidQueryParams:
+	// 	w.WriteHeader(http.StatusBadRequest)
+	// case io.ErrUnexpectedEOF:
+	// 	w.WriteHeader(http.StatusBadRequest)
+	// case io.EOF:
+	// 	w.WriteHeader(http.StatusBadRequest)
+	// default:
+	// 	switch err.(type) {
+	// 	case *json.SyntaxError:
+	// 		w.WriteHeader(http.StatusBadRequest)
+	// 	case *json.UnmarshalTypeError:
+	// 		w.WriteHeader(http.StatusBadRequest)
+	// 	default:
+	// 		w.WriteHeader(http.StatusInternalServerError)
+	// 	}
+	// }
 }
 
 func readUintQuery(r *http.Request, key string, def uint64) (uint64, error) {

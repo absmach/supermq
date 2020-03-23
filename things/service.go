@@ -201,16 +201,18 @@ func (ts *thingsService) ViewThing(ctx context.Context, token, id string) (Thing
 func (ts *thingsService) ListThings(ctx context.Context, token string, offset, limit uint64, name string, metadata Metadata) (ThingsPage, errors.Error) {
 	res, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
-		return ThingsPage{}, ErrUnauthorizedAccess
+		return ThingsPage{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
+	// tp, err := ts.things.RetrieveAll(ctx, res.GetValue(), offset, limit, name, metadata)
+	// return tp, errors.Wrap(ErrUnauthorizedAccess, err)
 	return ts.things.RetrieveAll(ctx, res.GetValue(), offset, limit, name, metadata)
 }
 
 func (ts *thingsService) ListThingsByChannel(ctx context.Context, token, channel string, offset, limit uint64) (ThingsPage, errors.Error) {
 	res, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
-		return ThingsPage{}, ErrUnauthorizedAccess
+		return ThingsPage{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
 	return ts.things.RetrieveByChannel(ctx, res.GetValue(), channel, offset, limit)
@@ -219,7 +221,7 @@ func (ts *thingsService) ListThingsByChannel(ctx context.Context, token, channel
 func (ts *thingsService) RemoveThing(ctx context.Context, token, id string) errors.Error {
 	res, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
-		return ErrUnauthorizedAccess
+		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
 	ts.thingCache.Remove(ctx, id)
