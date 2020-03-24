@@ -15,8 +15,11 @@ import (
 const (
 	minPassLen  = 8
 	maxLocalLen = 64
-	maxHostLen  = 255
+	maxDomainLen  = 255
 	maxTLDLen = 24 // longest TLD currently in existence
+
+	atSeparator = "@"
+	dotSeparator = "."
 )
 
 var (
@@ -67,31 +70,26 @@ func isEmail(email string) bool {
 		return false
 	}
 
-	es := strings.Split(email, "@")
+	es := strings.Split(email, atSeparator)
 	if len(es) != 2 {
 		return false
 	}
 	local, host := es[0], es[1]
 
-	if len(local) == 0 {
+	if local == "" || len(local) > maxLocalLen {
 		return false
 	}
 
-	hs := strings.Split(host, ".")
+	hs := strings.Split(host, dotSeparator)
 	if len(hs) != 2 {
 		return false
 	}
 	domain, ext := hs[0], hs[1]
 
-	if len(domain) == 0 || len(ext) == 0 {
+	if domain == "" || len(domain) > maxDomainLen {
 		return false
 	}
-
-	if len(local) > maxLocalLen || len(host) > maxHostLen {
-		return false
-	}
-
-	if len(ext) > maxTLDLen {
+	if ext == "" || len(ext) > maxTLDLen {
 		return false
 	}
 
