@@ -13,9 +13,10 @@ import (
 )
 
 const (
-	minPassLen = 8
-	minLocalLen = 64
-	minHostLen = 255
+	minPassLen  = 8
+	maxLocalLen = 64
+	maxHostLen  = 255
+	maxTLDLen = 24 // longest TLD currently in existence
 )
 
 var (
@@ -62,19 +63,35 @@ type UserRepository interface {
 }
 
 func isEmail(email string) bool {
-	if len(email) == 0 {
+	if email == "" {
 		return false
 	}
 
-	at := strings.LastIndex(email, "@")
-	if at <= 0 || at > len(email)-3 {
+	es := strings.Split(email, "@")
+	if len(es) != 2 {
+		return false
+	}
+	local, host := es[0], es[1]
+
+	if len(local) == 0 {
 		return false
 	}
 
-	local := email[:at]
-	host := email[at+1:]
+	hs := strings.Split(host, ".")
+	if len(hs) != 2 {
+		return false
+	}
+	domain, ext := hs[0], hs[1]
 
-	if len(local) > minLocalLen || len(host) > minHostLen {
+	if len(domain) == 0 || len(ext) == 0 {
+		return false
+	}
+
+	if len(local) > maxLocalLen || len(host) > maxHostLen {
+		return false
+	}
+
+	if len(ext) > maxTLDLen {
 		return false
 	}
 
@@ -86,7 +103,6 @@ func isEmail(email string) bool {
 	if err != nil {
 		return false
 	}
-
 
 	if userDotRegexp.MatchString(punyLocal) || !userRegexp.MatchString(punyLocal) || !hostRegexp.MatchString(punyHost) {
 		return false
