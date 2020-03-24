@@ -376,7 +376,7 @@ func (cr channelRepository) hasThing(ctx context.Context, chanID, thingID string
 type dbMetadata map[string]interface{}
 
 // Scan implements the database/sql scanner interface.
-func (m *dbMetadata) Scan(value interface{}) errors.Error {
+func (m *dbMetadata) Scan(value interface{}) error {
 	if value == nil {
 		m = nil
 		return nil
@@ -390,23 +390,26 @@ func (m *dbMetadata) Scan(value interface{}) errors.Error {
 
 	if err := json.Unmarshal(b, m); err != nil {
 		m = &dbMetadata{}
-		return errors.Wrap(ErrScan, err)
+		// return errors.Wrap(ErrScan, err)
+		return err
 	}
 
 	return nil
 }
 
 // Value implements database/sql valuer interface.
-func (m dbMetadata) Value() (driver.Value, errors.Error) {
+func (m dbMetadata) Value() (driver.Value, error) {
 	if len(m) == 0 {
 		return nil, nil
 	}
 
 	b, err := json.Marshal(m)
 	if err != nil {
-		return nil, errors.Wrap(ErrValue, err)
+		// return nil, errors.Wrap(ErrValue, err)
+		return nil, err
 	}
-	return b, errors.Wrap(ErrValue, err)
+	// return b, errors.Wrap(ErrValue, err)
+	return b, err
 }
 
 type dbChannel struct {
