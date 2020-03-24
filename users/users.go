@@ -9,9 +9,14 @@ import (
 	"strings"
 
 	"github.com/mainflux/mainflux/errors"
+	"golang.org/x/net/idna"
 )
 
-const minPassLen = 8
+const (
+	minPassLen = 8
+	minLocalLen = 64
+	minHostLen = 255
+)
 
 var (
 	userRegexp    = regexp.MustCompile("^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~.-]+$")
@@ -57,7 +62,7 @@ type UserRepository interface {
 }
 
 func isEmail(email string) bool {
-	if len(email) < 6 || len(email) > 254 {
+	if len(email) == 0 {
 		return false
 	}
 
@@ -66,14 +71,24 @@ func isEmail(email string) bool {
 		return false
 	}
 
-	user := email[:at]
+	local := email[:at]
 	host := email[at+1:]
 
-	if len(user) > 64 {
+	if len(local) > minLocalLen || len(host) > minHostLen {
 		return false
 	}
 
-	if userDotRegexp.MatchString(user) || !userRegexp.MatchString(user) || !hostRegexp.MatchString(host) {
+	punyLocal, err := idna.ToASCII(local)
+	if err != nil {
+		return false
+	}
+	punyHost, err := idna.ToASCII(host)
+	if err != nil {
+		return false
+	}
+
+
+	if userDotRegexp.MatchString(punyLocal) || !userRegexp.MatchString(punyLocal) || !hostRegexp.MatchString(punyHost) {
 		return false
 	}
 

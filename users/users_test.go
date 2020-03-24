@@ -51,6 +51,20 @@ func TestValidate(t *testing.T) {
 			},
 			err: users.ErrMalformedEntity,
 		},
+		"validate user with utf8 email (cyrillic)": {
+			user: users.User{
+				Email:    "почта@кино-россия.рф",
+				Password: password,
+			},
+			err: nil,
+		},
+		"validate user with utf8 email (hieroglyph)": {
+			user: users.User{
+				Email:    "艾付忧西开@艾付忧西开.再得",
+				Password: password,
+			},
+			err: nil,
+		},
 	}
 
 	for desc, tc := range cases {
