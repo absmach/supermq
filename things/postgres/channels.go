@@ -23,7 +23,7 @@ var (
 	// ErrUpdateChannel indicates error while updating channel in database
 	ErrUpdateChannel = errors.New("Update Channel to DB error")
 	// ErrDeleteChannel indicates error while deleting channel in database
-	ErrDeleteChannel = errors.New("Save Channel to DB error")
+	ErrDeleteChannel = errors.New("Delete Channel from DB error")
 	// ErrSelectChannel indicates error while reading channel from database
 	ErrSelectChannel = errors.New("Select Channel from DB error")
 	// ErrDeleteConnection indicates error while deleting connection in database
@@ -57,8 +57,12 @@ func NewChannelRepository(db Database) things.ChannelRepository {
 }
 
 func (cr channelRepository) Save(ctx context.Context, channels ...things.Channel) ([]things.Channel, errors.Error) {
+	fmt.Printf("KANALI: %v\n", channels)
+
 	tx, err := cr.db.BeginTxx(ctx, nil)
 	if err != nil {
+		// For debug only:
+		fmt.Printf("debug1... (%v, %T)\n", err, err)
 		return nil, errors.Wrap(ErrSaveChannel, err)
 	}
 
@@ -80,12 +84,13 @@ func (cr channelRepository) Save(ctx context.Context, channels ...things.Channel
 					return []things.Channel{}, things.ErrConflict
 				}
 			}
-
+			fmt.Printf("debug2... (%v, %T)\n", err, err)
 			return []things.Channel{}, errors.Wrap(ErrSaveChannel, err)
 		}
 	}
 
 	if err = tx.Commit(); err != nil {
+		fmt.Printf("debug3... (%v, %T)\n", err, err)
 		return []things.Channel{}, errors.Wrap(ErrSaveChannel, err)
 	}
 
