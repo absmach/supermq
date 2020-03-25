@@ -6,7 +6,6 @@ package http
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -383,13 +382,8 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 }
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
-	// For debug only:
-	fmt.Printf("debug... (%v, %T)\n", err, err)
-
 	switch errorVal := err.(type) {
 	case errors.Error:
-		fmt.Printf("debugerrorVAl... (%v, %T)\n", errorVal, errorVal)
-
 		w.Header().Set("Content-Type", contentType)
 		switch {
 		case errors.Contains(errorVal, things.ErrMalformedEntity):
@@ -417,28 +411,6 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-
-	// switch err {
-	// case things.ErrConflict:
-	// 	w.WriteHeader(http.StatusUnprocessableEntity)
-	// case errUnsupportedContentType:
-	// 	w.WriteHeader(http.StatusUnsupportedMediaType)
-	// case errInvalidQueryParams:
-	// 	w.WriteHeader(http.StatusBadRequest)
-	// case io.ErrUnexpectedEOF:
-	// 	w.WriteHeader(http.StatusBadRequest)
-	// case io.EOF:
-	// 	w.WriteHeader(http.StatusBadRequest)
-	// default:
-	// 	switch err.(type) {
-	// 	case *json.SyntaxError:
-	// 		w.WriteHeader(http.StatusBadRequest)
-	// 	case *json.UnmarshalTypeError:
-	// 		w.WriteHeader(http.StatusBadRequest)
-	// 	default:
-	// 		w.WriteHeader(http.StatusInternalServerError)
-	// 	}
-	// }
 }
 
 func readUintQuery(r *http.Request, key string, def uint64) (uint64, error) {

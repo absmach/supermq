@@ -17,8 +17,14 @@ const (
 	idPrefix  = "thing"
 )
 
-// ErrThingRedis indicates error in redis
-var ErrThingRedis = errors.New("Thing Redis error")
+// ErrRedisThingSave indicates error while saving Thing in redis cache
+var ErrRedisThingSave = errors.New("Saving Thing in redis cache error")
+
+// ErrRedisThingID indicates error while geting Thing ID from redis cache
+var ErrRedisThingID = errors.New("Get Thing ID from redis cache error")
+
+// ErrRedisThingRemove indicates error while removing Thing from redis cache
+var ErrRedisThingRemove = errors.New("Remove Thing from redis cache error")
 
 var _ things.ThingCache = (*thingCache)(nil)
 
@@ -36,19 +42,19 @@ func NewThingCache(client *redis.Client) things.ThingCache {
 func (tc *thingCache) Save(_ context.Context, thingKey string, thingID string) errors.Error {
 	tkey := fmt.Sprintf("%s:%s", keyPrefix, thingKey)
 	if err := tc.client.Set(tkey, thingID, 0).Err(); err != nil {
-		return errors.Wrap(ErrThingRedis, err)
+		return errors.Wrap(ErrRedisThingSave, err)
 	}
 
 	tid := fmt.Sprintf("%s:%s", idPrefix, thingID)
 	err := tc.client.Set(tid, thingKey, 0).Err()
-	return errors.Wrap(ErrThingRedis, err)
+	return errors.Wrap(ErrRedisThingSave, err)
 }
 
 func (tc *thingCache) ID(_ context.Context, thingKey string) (string, errors.Error) {
 	tkey := fmt.Sprintf("%s:%s", keyPrefix, thingKey)
 	thingID, err := tc.client.Get(tkey).Result()
 	if err != nil {
-		return "", errors.Wrap(ErrThingRedis, err)
+		return "", errors.Wrap(ErrRedisThingID, err)
 	}
 
 	return thingID, nil
@@ -58,11 +64,11 @@ func (tc *thingCache) Remove(_ context.Context, thingID string) errors.Error {
 	tid := fmt.Sprintf("%s:%s", idPrefix, thingID)
 	key, err := tc.client.Get(tid).Result()
 	if err != nil {
-		return errors.Wrap(ErrThingRedis, err)
+		return errors.Wrap(ErrRedisThingRemove, err)
 	}
 
 	tkey := fmt.Sprintf("%s:%s", keyPrefix, key)
 
 	err2 := tc.client.Del(tkey, tid).Err()
-	return errors.Wrap(ErrThingRedis, err2)
+	return errors.Wrap(ErrRedisThingRemove, err2)
 }

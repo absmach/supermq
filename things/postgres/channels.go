@@ -57,12 +57,8 @@ func NewChannelRepository(db Database) things.ChannelRepository {
 }
 
 func (cr channelRepository) Save(ctx context.Context, channels ...things.Channel) ([]things.Channel, errors.Error) {
-	fmt.Printf("KANALI: %v\n", channels)
-
 	tx, err := cr.db.BeginTxx(ctx, nil)
 	if err != nil {
-		// For debug only:
-		fmt.Printf("debug1... (%v, %T)\n", err, err)
 		return nil, errors.Wrap(ErrSaveChannel, err)
 	}
 
@@ -84,13 +80,11 @@ func (cr channelRepository) Save(ctx context.Context, channels ...things.Channel
 					return []things.Channel{}, things.ErrConflict
 				}
 			}
-			fmt.Printf("debug2... (%v, %T)\n", err, err)
 			return []things.Channel{}, errors.Wrap(ErrSaveChannel, err)
 		}
 	}
 
 	if err = tx.Commit(); err != nil {
-		fmt.Printf("debug3... (%v, %T)\n", err, err)
 		return []things.Channel{}, errors.Wrap(ErrSaveChannel, err)
 	}
 
