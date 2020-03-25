@@ -384,7 +384,6 @@ func (m *dbMetadata) Scan(value interface{}) error {
 
 	if err := json.Unmarshal(b, m); err != nil {
 		m = &dbMetadata{}
-		// return errors.Wrap(ErrScan, err)
 		return err
 	}
 
@@ -399,10 +398,8 @@ func (m dbMetadata) Value() (driver.Value, error) {
 
 	b, err := json.Marshal(m)
 	if err != nil {
-		// return nil, errors.Wrap(ErrValue, err)
 		return nil, err
 	}
-	// return b, errors.Wrap(ErrValue, err)
 	return b, err
 }
 

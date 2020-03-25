@@ -66,20 +66,19 @@ func (tr thingRepository) Save(ctx context.Context, ths ...things.Thing) ([]thin
 			return []things.Thing{}, err
 		}
 
-		_, err2 := tx.NamedExecContext(ctx, q, dbth)
-		if err2 != nil {
+		if _, err := tx.NamedExecContext(ctx, q, dbth); err != nil {
 			tx.Rollback()
-			pqErr, ok := err2.(*pq.Error)
+			pqErr, ok := err.(*pq.Error)
 			if ok {
 				switch pqErr.Code.Name() {
 				case errInvalid, errTruncation:
-					return []things.Thing{}, errors.Wrap(things.ErrMalformedEntity, err2)
+					return []things.Thing{}, errors.Wrap(things.ErrMalformedEntity, err)
 				case errDuplicate:
-					return []things.Thing{}, errors.Wrap(things.ErrConflict, err2)
+					return []things.Thing{}, errors.Wrap(things.ErrConflict, err)
 				}
 			}
 
-			return []things.Thing{}, errors.Wrap(ErrSaveDb, err2)
+			return []things.Thing{}, errors.Wrap(ErrSaveDb, err)
 		}
 	}
 
@@ -98,22 +97,22 @@ func (tr thingRepository) Update(ctx context.Context, thing things.Thing) errors
 		return err
 	}
 
-	res, err2 := tr.db.NamedExecContext(ctx, q, dbth)
-	if err2 != nil {
-		pqErr, ok := err2.(*pq.Error)
+	res, errdb := tr.db.NamedExecContext(ctx, q, dbth)
+	if errdb != nil {
+		pqErr, ok := errdb.(*pq.Error)
 		if ok {
 			switch pqErr.Code.Name() {
 			case errInvalid, errTruncation:
-				return errors.Wrap(things.ErrMalformedEntity, err2)
+				return errors.Wrap(things.ErrMalformedEntity, errdb)
 			}
 		}
 
-		return errors.Wrap(ErrUpdateDb, err2)
+		return errors.Wrap(ErrUpdateDb, errdb)
 	}
 
-	cnt, err2 := res.RowsAffected()
+	cnt, errdb := res.RowsAffected()
 	if err != nil {
-		return errors.Wrap(ErrUpdateDb, err2)
+		return errors.Wrap(ErrUpdateDb, errdb)
 	}
 
 	if cnt == 0 {

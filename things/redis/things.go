@@ -69,6 +69,6 @@ func (tc *thingCache) Remove(_ context.Context, thingID string) errors.Error {
 
 	tkey := fmt.Sprintf("%s:%s", keyPrefix, key)
 
-	err2 := tc.client.Del(tkey, tid).Err()
-	return errors.Wrap(ErrRedisThingRemove, err2)
+	err = tc.client.Del(tkey, tid).Err()
+	return errors.Wrap(ErrRedisThingRemove, err)
 }
