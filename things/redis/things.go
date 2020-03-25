@@ -18,13 +18,13 @@ const (
 )
 
 // ErrRedisThingSave indicates error while saving Thing in redis cache
-var ErrRedisThingSave = errors.New("Saving Thing in redis cache error")
+var ErrRedisThingSave = errors.New("saving thing in redis cache error")
 
 // ErrRedisThingID indicates error while geting Thing ID from redis cache
-var ErrRedisThingID = errors.New("Get Thing ID from redis cache error")
+var ErrRedisThingID = errors.New("get thing id from redis cache error")
 
 // ErrRedisThingRemove indicates error while removing Thing from redis cache
-var ErrRedisThingRemove = errors.New("Remove Thing from redis cache error")
+var ErrRedisThingRemove = errors.New("remove thing from redis cache error")
 
 var _ things.ThingCache = (*thingCache)(nil)
 

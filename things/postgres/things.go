@@ -17,17 +17,17 @@ import (
 
 var (
 	// ErrSaveDb indicates error while saving to database
-	ErrSaveDb = errors.New("Save Thing to DB error")
+	ErrSaveDb = errors.New("save thing to db error")
 	// ErrUpdateDb indicates error while updating database
-	ErrUpdateDb = errors.New("Update Thing in DB error")
+	ErrUpdateDb = errors.New("update thing in db error")
 	// ErrSelectDb indicates error while reading from database
-	ErrSelectDb = errors.New("Select Thing from DB error")
+	ErrSelectDb = errors.New("select thing from db error")
 	// ErrDeleteDb indicates error while marshaling Thing to JSON
-	ErrDeleteDb = errors.New("Delete Thing from DB error")
+	ErrDeleteDb = errors.New("delete thing from db error")
 	// ErrMarshalThing indicates error while marshaling Thing to JSON
-	ErrMarshalThing = errors.New("Marshal to JSON error")
+	ErrMarshalThing = errors.New("marshal to json error")
 	// ErrUnmarshalThing indicates error while unmarshaling JSON to Thing
-	ErrUnmarshalThing = errors.New("Unmarshal JSON error")
+	ErrUnmarshalThing = errors.New("unmarshal json error")
 )
 
 const (

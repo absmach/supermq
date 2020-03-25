@@ -19,21 +19,21 @@ import (
 
 var (
 	// ErrSaveChannel indicates error while saving to database
-	ErrSaveChannel = errors.New("Save Channel to DB error")
+	ErrSaveChannel = errors.New("save channel to db error")
 	// ErrUpdateChannel indicates error while updating channel in database
-	ErrUpdateChannel = errors.New("Update Channel to DB error")
+	ErrUpdateChannel = errors.New("update channel to db error")
 	// ErrDeleteChannel indicates error while deleting channel in database
-	ErrDeleteChannel = errors.New("Delete Channel from DB error")
+	ErrDeleteChannel = errors.New("delete channel from db error")
 	// ErrSelectChannel indicates error while reading channel from database
-	ErrSelectChannel = errors.New("Select Channel from DB error")
+	ErrSelectChannel = errors.New("select channel from db error")
 	// ErrDeleteConnection indicates error while deleting connection in database
-	ErrDeleteConnection = errors.New("Unmarshal JSON error")
+	ErrDeleteConnection = errors.New("unmarshal json error")
 	// ErrHasThing indicates error while checking connection in database
-	ErrHasThing = errors.New("Check Thing-Channel connection in database error")
+	ErrHasThing = errors.New("check thing-channel connection in database error")
 	//ErrScan indicates error in database scanner
-	ErrScan = errors.New("Database scanner error")
+	ErrScan = errors.New("database scanner error")
 	//ErrValue indicates error in database valuer
-	ErrValue = errors.New("Database valuer error")
+	ErrValue = errors.New("database valuer error")
 )
 
 var _ things.ChannelRepository = (*channelRepository)(nil)

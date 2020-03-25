@@ -27,13 +27,13 @@ var (
 	ErrConflict = errors.New("entity already exists")
 
 	// ErrScanMetadata indicates problem with metadata in db
-	ErrScanMetadata = errors.New("Failed to scan metadata")
+	ErrScanMetadata = errors.New("failed to scan metadata")
 
 	// ErrCreateThings indicates error in creating Thing
-	ErrCreateThings = errors.New("Create Thing failed")
+	ErrCreateThings = errors.New("create thing failed")
 
 	// ErrCreateChannels indicates error in creating Channel
-	ErrCreateChannels = errors.New("Create Channel failed")
+	ErrCreateChannels = errors.New("create channel failed")
 )
 
 // Service specifies an API that must be fullfiled by the domain service

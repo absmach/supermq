@@ -15,13 +15,13 @@ import (
 const chanPrefix = "channel"
 
 // ErrRedisConnectChannel indicates error while adding connection in redis cache
-var ErrRedisConnectChannel = errors.New("Add connection to Redis cache error")
+var ErrRedisConnectChannel = errors.New("add connection to redis cache error")
 
 // ErrRedisDisconnectChannel indicates error while removing connection from redis cache
-var ErrRedisDisconnectChannel = errors.New("Remove connection from Redis cache error")
+var ErrRedisDisconnectChannel = errors.New("remove connection from redis cache error")
 
 // ErrRedisRemoveChannel indicates error while removing channel from redis cache
-var ErrRedisRemoveChannel = errors.New("Remove channel from Redis cache error")
+var ErrRedisRemoveChannel = errors.New("remove channel from redis cache error")
 
 var _ things.ChannelCache = (*channelCache)(nil)
 

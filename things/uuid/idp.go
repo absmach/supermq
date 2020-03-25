@@ -11,7 +11,7 @@ import (
 )
 
 // ErrGeneratingID indicates error in generating UUID
-var ErrGeneratingID = errors.New("Generating ID failed")
+var ErrGeneratingID = errors.New("generating id failed")
 
 var _ things.IdentityProvider = (*uuidIdentityProvider)(nil)
 
