@@ -15,8 +15,8 @@ type Subscriber interface {
 	// Subscribe subscribes to the message broker for a given channel ID and subtopic.
 	Subscribe(string, string, func(msg *nats.Msg)) (*nats.Subscription, error)
 
-	// Conn returns NATS connection.
-	Conn() *nats.Conn
+	// Close closes NATS connection.
+	Close()
 }
 
 var _ Subscriber = (*sub)(nil)
@@ -53,6 +53,6 @@ func (s sub) Subscribe(chanID, subtopic string, f func(msg *nats.Msg)) (*nats.Su
 	return sub, nil
 }
 
-func (s sub) Conn() *nats.Conn {
-	return s.conn
+func (s sub) Close() {
+	s.conn.Close()
 }

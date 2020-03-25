@@ -85,7 +85,7 @@ func main() {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
-	defer pub.Conn().Close()
+	defer pub.Close()
 
 	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
 	svc := adapter.New(pub, cc)

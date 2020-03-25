@@ -91,7 +91,7 @@ func main() {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
-	defer pub.Conn().Close()
+	defer pub.Close()
 
 	thingRM := newRouteMapRepositoy(rmConn, thingsRMPrefix, logger)
 	chanRM := newRouteMapRepositoy(rmConn, channelsRMPrefix, logger)

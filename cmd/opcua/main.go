@@ -103,7 +103,7 @@ func main() {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
-	defer pub.Conn().Close()
+	defer pub.Close()
 
 	ctx := context.Background()
 	sub := gopcua.NewSubscriber(ctx, pub, thingRM, chanRM, connRM, logger)

@@ -88,14 +88,14 @@ func main() {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
-	defer pub.Conn().Close()
+	defer pub.Close()
 
 	sub, err := broker.NewSubscriber(cfg.natsURL)
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
-	defer sub.Conn().Close()
+	defer sub.Close()
 
 	svc := coap.New(pub, sub, logger, cc, respChan)
 
