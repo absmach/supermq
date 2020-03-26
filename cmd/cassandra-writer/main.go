@@ -29,27 +29,25 @@ const (
 	svcName = "cassandra-writer"
 	sep     = ","
 
-	defNatsURL          = nats.DefaultURL
-	defLogLevel         = "error"
-	defPort             = "8180"
-	defCluster          = "127.0.0.1"
-	defKeyspace         = "mainflux"
-	defDBUsername       = ""
-	defDBPassword       = ""
-	defDBPort           = "9042"
-	defChannelsCfgPath  = "/config/channels.toml"
-	defSubtopicsCfgPath = "/config/subtopics.toml"
+	defNatsURL         = nats.DefaultURL
+	defLogLevel        = "error"
+	defPort            = "8180"
+	defCluster         = "127.0.0.1"
+	defKeyspace        = "mainflux"
+	defDBUsername      = ""
+	defDBPassword      = ""
+	defDBPort          = "9042"
+	defSubjectsCfgPath = "/config/subjects.toml"
 
-	envNatsURL          = "MF_NATS_URL"
-	envLogLevel         = "MF_CASSANDRA_WRITER_LOG_LEVEL"
-	envPort             = "MF_CASSANDRA_WRITER_PORT"
-	envCluster          = "MF_CASSANDRA_WRITER_DB_CLUSTER"
-	envKeyspace         = "MF_CASSANDRA_WRITER_DB_KEYSPACE"
-	envDBUsername       = "MF_CASSANDRA_WRITER_DB_USERNAME"
-	envDBPassword       = "MF_CASSANDRA_WRITER_DB_PASSWORD"
-	envDBPort           = "MF_CASSANDRA_WRITER_DB_PORT"
-	envChannelsCfgPath  = "MF_CASSANDRA_WRITER_CHANNELS_CONFIG"
-	envSubtopicsCfgPath = "MF_CASSANDRA_WRITER_SUBTOPICS_CONFIG"
+	envNatsURL         = "MF_NATS_URL"
+	envLogLevel        = "MF_CASSANDRA_WRITER_LOG_LEVEL"
+	envPort            = "MF_CASSANDRA_WRITER_PORT"
+	envCluster         = "MF_CASSANDRA_WRITER_DB_CLUSTER"
+	envKeyspace        = "MF_CASSANDRA_WRITER_DB_KEYSPACE"
+	envDBUsername      = "MF_CASSANDRA_WRITER_DB_USERNAME"
+	envDBPassword      = "MF_CASSANDRA_WRITER_DB_PASSWORD"
+	envDBPort          = "MF_CASSANDRA_WRITER_DB_PORT"
+	envSubjectsCfgPath = "MF_CASSANDRA_WRITER_SUBJECTS_CONFIG"
 )
 
 type config struct {
@@ -68,9 +66,8 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	channelsCfgPath := mainflux.Env(envChannelsCfgPath, defChannelsCfgPath)
-	subtopicsCfgPath := mainflux.Env(envSubtopicsCfgPath, defSubtopicsCfgPath)
-	filters, err := writers.LoadFiltersConfig(channelsCfgPath, subtopicsCfgPath)
+	subjectsCfgPath := mainflux.Env(envSubjectsCfgPath, defSubjectsCfgPath)
+	filters, err := writers.LoadSubjectsConfig(subjectsCfgPath)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to load filters: %s", err))
 	}

@@ -26,27 +26,25 @@ import (
 const (
 	svcName = "influxdb-writer"
 
-	defNatsURL          = nats.DefaultURL
-	defLogLevel         = "error"
-	defPort             = "8180"
-	defDBName           = "mainflux"
-	defDBHost           = "localhost"
-	defDBPort           = "8086"
-	defDBUser           = "mainflux"
-	defDBPass           = "mainflux"
-	defChannelsCfgPath  = "/config/channels.toml"
-	defSubtopicsCfgPath = "/config/subtopics.toml"
+	defNatsURL         = nats.DefaultURL
+	defLogLevel        = "error"
+	defPort            = "8180"
+	defDBName          = "mainflux"
+	defDBHost          = "localhost"
+	defDBPort          = "8086"
+	defDBUser          = "mainflux"
+	defDBPass          = "mainflux"
+	defSubjectsCfgPath = "/config/subjects.toml"
 
-	envNatsURL          = "MF_NATS_URL"
-	envLogLevel         = "MF_INFLUX_WRITER_LOG_LEVEL"
-	envPort             = "MF_INFLUX_WRITER_PORT"
-	envDBName           = "MF_INFLUX_WRITER_DB_NAME"
-	envDBHost           = "MF_INFLUX_WRITER_DB_HOST"
-	envDBPort           = "MF_INFLUX_WRITER_DB_PORT"
-	envDBUser           = "MF_INFLUX_WRITER_DB_USER"
-	envDBPass           = "MF_INFLUX_WRITER_DB_PASS"
-	envChannelsCfgPath  = "MF_INFLUX_WRITER_CHANNELS_CONFIG"
-	envSubtopicsCfgPath = "MF_INFLUX_WRITER_SUBTOPICS_CONFIG"
+	envNatsURL         = "MF_NATS_URL"
+	envLogLevel        = "MF_INFLUX_WRITER_LOG_LEVEL"
+	envPort            = "MF_INFLUX_WRITER_PORT"
+	envDBName          = "MF_INFLUX_WRITER_DB_NAME"
+	envDBHost          = "MF_INFLUX_WRITER_DB_HOST"
+	envDBPort          = "MF_INFLUX_WRITER_DB_PORT"
+	envDBUser          = "MF_INFLUX_WRITER_DB_USER"
+	envDBPass          = "MF_INFLUX_WRITER_DB_PASS"
+	envSubjectsCfgPath = "MF_INFLUX_WRITER_SUBJECTS_CONFIG"
 )
 
 type config struct {
@@ -69,9 +67,8 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	channelsCfgPath := mainflux.Env(envChannelsCfgPath, defChannelsCfgPath)
-	subtopicsCfgPath := mainflux.Env(envSubtopicsCfgPath, defSubtopicsCfgPath)
-	filters, err := writers.LoadFiltersConfig(channelsCfgPath, subtopicsCfgPath)
+	subjectsCfgPath := mainflux.Env(envSubjectsCfgPath, defSubjectsCfgPath)
+	filters, err := writers.LoadSubjectsConfig(subjectsCfgPath)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to load filters: %s", err))
 	}

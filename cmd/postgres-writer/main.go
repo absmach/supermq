@@ -27,35 +27,33 @@ const (
 	svcName = "postgres-writer"
 	sep     = ","
 
-	defNatsURL          = nats.DefaultURL
-	defLogLevel         = "error"
-	defPort             = "9104"
-	defDBHost           = "postgres"
-	defDBPort           = "5432"
-	defDBUser           = "mainflux"
-	defDBPass           = "mainflux"
-	defDBName           = "messages"
-	defDBSSLMode        = "disable"
-	defDBSSLCert        = ""
-	defDBSSLKey         = ""
-	defDBSSLRootCert    = ""
-	defChannelsCfgPath  = "/config/channels.toml"
-	defSubtopicsCfgPath = "/config/subtopics.toml"
+	defNatsURL         = nats.DefaultURL
+	defLogLevel        = "error"
+	defPort            = "9104"
+	defDBHost          = "postgres"
+	defDBPort          = "5432"
+	defDBUser          = "mainflux"
+	defDBPass          = "mainflux"
+	defDBName          = "messages"
+	defDBSSLMode       = "disable"
+	defDBSSLCert       = ""
+	defDBSSLKey        = ""
+	defDBSSLRootCert   = ""
+	defSubjectsCfgPath = "/config/subjects.toml"
 
-	envNatsURL          = "MF_NATS_URL"
-	envLogLevel         = "MF_POSTGRES_WRITER_LOG_LEVEL"
-	envPort             = "MF_POSTGRES_WRITER_PORT"
-	envDBHost           = "MF_POSTGRES_WRITER_DB_HOST"
-	envDBPort           = "MF_POSTGRES_WRITER_DB_PORT"
-	envDBUser           = "MF_POSTGRES_WRITER_DB_USER"
-	envDBPass           = "MF_POSTGRES_WRITER_DB_PASS"
-	envDBName           = "MF_POSTGRES_WRITER_DB_NAME"
-	envDBSSLMode        = "MF_POSTGRES_WRITER_DB_SSL_MODE"
-	envDBSSLCert        = "MF_POSTGRES_WRITER_DB_SSL_CERT"
-	envDBSSLKey         = "MF_POSTGRES_WRITER_DB_SSL_KEY"
-	envDBSSLRootCert    = "MF_POSTGRES_WRITER_DB_SSL_ROOT_CERT"
-	envChannelsCfgPath  = "MF_POSTGRES_WRITER_CHANNELS_CONFIG"
-	envSubtopicsCfgPath = "MF_POSTGRES_WRITER_SUBTOPICS_CONFIG"
+	envNatsURL         = "MF_NATS_URL"
+	envLogLevel        = "MF_POSTGRES_WRITER_LOG_LEVEL"
+	envPort            = "MF_POSTGRES_WRITER_PORT"
+	envDBHost          = "MF_POSTGRES_WRITER_DB_HOST"
+	envDBPort          = "MF_POSTGRES_WRITER_DB_PORT"
+	envDBUser          = "MF_POSTGRES_WRITER_DB_USER"
+	envDBPass          = "MF_POSTGRES_WRITER_DB_PASS"
+	envDBName          = "MF_POSTGRES_WRITER_DB_NAME"
+	envDBSSLMode       = "MF_POSTGRES_WRITER_DB_SSL_MODE"
+	envDBSSLCert       = "MF_POSTGRES_WRITER_DB_SSL_CERT"
+	envDBSSLKey        = "MF_POSTGRES_WRITER_DB_SSL_KEY"
+	envDBSSLRootCert   = "MF_POSTGRES_WRITER_DB_SSL_ROOT_CERT"
+	envSubjectsCfgPath = "MF_POSTGRES_WRITER_SUBJECTS_CONFIG"
 )
 
 type config struct {
@@ -74,9 +72,8 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	channelsCfgPath := mainflux.Env(envChannelsCfgPath, defChannelsCfgPath)
-	subtopicsCfgPath := mainflux.Env(envSubtopicsCfgPath, defSubtopicsCfgPath)
-	filters, err := writers.LoadFiltersConfig(channelsCfgPath, subtopicsCfgPath)
+	subjectsCfgPath := mainflux.Env(envSubjectsCfgPath, defSubjectsCfgPath)
+	filters, err := writers.LoadSubjectsConfig(subjectsCfgPath)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to load filters: %s", err))
 	}
