@@ -16,8 +16,7 @@ default values.
 | MF_MONGO_WRITER_DB_NAME          | Default MongoDB database name               | mainflux               |
 | MF_MONGO_WRITER_DB_HOST          | Default MongoDB database host               | localhost              |
 | MF_MONGO_WRITER_DB_PORT          | Default MongoDB database port               | 27017                  |
-| MF_MONGO_WRITER_CHANNELS_CONFIG  | Configuration file path with channels list  | /config/channels.toml  |
-| MF_MONGO_WRITER_SUBTOPICS_CONFIG | Configuration file path with subtopics list | /config/subtopics.toml |
+| MF_MONGO_WRITER_SUBJECTS_CONFIG  | Configuration file path with subjects list  | /config/subjects.toml  |
 
 ## Deployment
 
@@ -39,13 +38,11 @@ default values.
       MF_MONGO_WRITER_DB_NAME: [MongoDB name]
       MF_MONGO_WRITER_DB_HOST: [MongoDB host]
       MF_MONGO_WRITER_DB_PORT: [MongoDB port]
-      MF_MONGO_WRITER_CHANNELS_CONFIG: [Configuration file path with channels list]
-      MF_MONGO_WRITER_SUBTOPICS_CONFIG: [Configuration file path with subtopics list]
+      MF_MONGO_WRITER_SUBJETCS_CONFIG: [Configuration file path with subjects list]
     ports:
       - [host machine port]:[configured HTTP port]
     volume:
-      - ./channels.yaml:/config/channels.yaml
-      - ./subtopics.yaml:/config/subtopics.yaml
+      - ./subjects.yaml:/config/subjects.yaml
 ```
 
 To start the service, execute the following shell script:
@@ -63,7 +60,7 @@ make mongodb-writer
 make install
 
 # Set the environment variables and run the service
-MF_NATS_URL=[NATS instance URL] MF_MONGO_WRITER_LOG_LEVEL=[MongoDB writer log level] MF_MONGO_WRITER_PORT=[Service HTTP port] MF_MONGO_WRITER_DB_NAME=[MongoDB database name] MF_MONGO_WRITER_DB_HOST=[MongoDB database host] MF_MONGO_WRITER_DB_PORT=[MongoDB database port] MF_MONGO_WRITER_CHANNELS_CONFIG=[Configuration file path with channels list] MF_MONGO_WRITER_SUBTOPICS_CONFIG=[Configuration file path with subtopics list] $GOBIN/mainflux-mongodb-writer
+MF_NATS_URL=[NATS instance URL] MF_MONGO_WRITER_LOG_LEVEL=[MongoDB writer log level] MF_MONGO_WRITER_PORT=[Service HTTP port] MF_MONGO_WRITER_DB_NAME=[MongoDB database name] MF_MONGO_WRITER_DB_HOST=[MongoDB database host] MF_MONGO_WRITER_DB_PORT=[MongoDB database port] MF_MONGO_WRITER_SUBJETCS_CONFIG=[Configuration file path with subjetcs list] $GOBIN/mainflux-mongodb-writer
 ```
 
 ## Usage

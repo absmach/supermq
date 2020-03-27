@@ -22,8 +22,7 @@ default values.
 | MF_POSTGRES_WRITER_DB_SSL_CERT       | Postgres SSL certificate path               | ""                     |
 | MF_POSTGRES_WRITER_DB_SSL_KEY        | Postgres SSL key                            | ""                     |
 | MF_POSTGRES_WRITER_DB_SSL_ROOT_CERT  | Postgres SSL root certificate path          | ""                     |
-| MF_POSTGRES_WRITER_CHANNELS_CONFIG   | Configuration file path with channels list  | /config/channels.toml  |
-| MF_POSTGRES_WRITER_SUBTOPICS_CONFIG  | Configuration file path with subtopics list | /config/subtopics.toml |
+| MF_POSTGRES_WRITER_SUBJECTS_CONFIG   | Configuration file path with subjects list  | /config/subjects.toml  |
 
 ## Deployment
 
@@ -49,15 +48,13 @@ default values.
       MF_POSTGRES_WRITER_DB_SSL_CERT: [Postgres SSL cert]
       MF_POSTGRES_WRITER_DB_SSL_KEY: [Postgres SSL key]
       MF_POSTGRES_WRITER_DB_SSL_ROOT_CERT: [Postgres SSL Root cert]
-      MF_POSTGRES_WRITER_CHANNELS_CONFIG: [Configuration file path with channels list]
-      MF_POSTGRES_WRITER_SUBTOPICS_CONFIG: [Configuration file path with subtopics list]
+      MF_POSTGRES_WRITER_SUBJECTS_CONFIG: [Configuration file path with subjects list]
     ports:
       - 9104:9104
     networks:
       - docker_mainflux-base-net
     volume:
-      - ./channels.yaml:/config/channels.yaml
-      - ./subtopics.yaml:/config/subtopics.yaml
+      - ./subjects.yaml:/config/subjects.yaml
 ```
 
 To start the service, execute the following shell script:
@@ -75,7 +72,7 @@ make postgres-writer
 make install
 
 # Set the environment variables and run the service
-MF_NATS_URL=[NATS instance URL] MF_POSTGRES_WRITER_LOG_LEVEL=[Service log level] MF_POSTGRES_WRITER_PORT=[Service HTTP port] MF_POSTGRES_WRITER_DB_HOST=[Postgres host] MF_POSTGRES_WRITER_DB_PORT=[Postgres port] MF_POSTGRES_WRITER_DB_USER=[Postgres user] MF_POSTGRES_WRITER_DB_PASS=[Postgres password] MF_POSTGRES_WRITER_DB_NAME=[Postgres database name] MF_POSTGRES_WRITER_DB_SSL_MODE=[Postgres SSL mode] MF_POSTGRES_WRITER_DB_SSL_CERT=[Postgres SSL cert] MF_POSTGRES_WRITER_DB_SSL_KEY=[Postgres SSL key] MF_POSTGRES_WRITER_DB_SSL_ROOT_CERT=[Postgres SSL Root cert] MF_POSTGRES_WRITER_CHANNELS_CONFIG=[Configuration file path with channels list] MF_POSTGRES_WRITER_SUBTOPICS_CONFIG=[Configuration file path with subtopics list] $GOBIN/mainflux-postgres-writer
+MF_NATS_URL=[NATS instance URL] MF_POSTGRES_WRITER_LOG_LEVEL=[Service log level] MF_POSTGRES_WRITER_PORT=[Service HTTP port] MF_POSTGRES_WRITER_DB_HOST=[Postgres host] MF_POSTGRES_WRITER_DB_PORT=[Postgres port] MF_POSTGRES_WRITER_DB_USER=[Postgres user] MF_POSTGRES_WRITER_DB_PASS=[Postgres password] MF_POSTGRES_WRITER_DB_NAME=[Postgres database name] MF_POSTGRES_WRITER_DB_SSL_MODE=[Postgres SSL mode] MF_POSTGRES_WRITER_DB_SSL_CERT=[Postgres SSL cert] MF_POSTGRES_WRITER_DB_SSL_KEY=[Postgres SSL key] MF_POSTGRES_WRITER_DB_SSL_ROOT_CERT=[Postgres SSL Root cert] MF_POSTGRES_WRITER_SUBJECTS_CONFIG=[Configuration file path with subjects list] $GOBIN/mainflux-postgres-writer
 ```
 
 ## Usage

@@ -18,8 +18,7 @@ default values.
 | MF_CASSANDRA_WRITER_DB_USERNAME      | Cassandra DB username                                       |                        |
 | MF_CASSANDRA_WRITER_DB_PASSWORD      | Cassandra DB password                                       |                        |
 | MF_CASSANDRA_WRITER_DB_PORT          | Cassandra DB port                                           | 9042                   |
-| MF_CASSANDRA_WRITER_CHANNELS_CONFIG  | Configuration file path with channels list                  | /config/channels.toml  |
-| MF_CASSANDRA_WRITER_SUBTOPICS_CONFIG | Configuration file path with subtopics list                 | /config/subtopics.toml |
+| MF_CASSANDRA_WRITER_SUBJECTS_CONFIG  | Configuration file path with subjects list                  | /config/subjects.toml  |
 ## Deployment
 
 ```yaml
@@ -39,13 +38,11 @@ default values.
       MF_CASSANDRA_WRITER_DB_USERNAME: [Cassandra DB username]
       MF_CASSANDRA_WRITER_DB_PASSWORD: [Cassandra DB password]
       MF_CASSANDRA_WRITER_DB_PORT: [Cassandra DB port]
-      MF_CASSANDRA_WRITER_CHANNELS_CONFIG: [Configuration file path with channels list]
-      MF_CASSANDRA_WRITER_SUBTOPICS_CONFIG: [Configuration file path with subtopics list]
+      MF_CASSANDRA_WRITER_SUBJECTS_CONFIG: [Configuration file path with subjects list]
     ports:
       - [host machine port]:[configured HTTP port]
     volume:
-      - ./channels.yaml:/config/channels.yaml
-      - ./subtopics.yaml:/config/subtopics.yaml
+      - ./subjects.yaml:/config/subjects.yaml
 ```
 
 To start the service, execute the following shell script:
@@ -63,7 +60,7 @@ make cassandra-writer
 make install
 
 # Set the environment variables and run the service
-MF_NATS_URL=[NATS instance URL] MF_CASSANDRA_WRITER_LOG_LEVEL=[Cassandra writer log level] MF_CASSANDRA_WRITER_PORT=[Service HTTP port] MF_CASSANDRA_WRITER_DB_CLUSTER=[Cassandra cluster comma separated addresses] MF_CASSANDRA_WRITER_DB_KEYSPACE=[Cassandra keyspace name] MF_CASSANDRA_READER_DB_USERNAME=[Cassandra DB username] MF_CASSANDRA_READER_DB_PASSWORD=[Cassandra DB password] MF_CASSANDRA_READER_DB_PORT=[Cassandra DB port] MF_CASSANDRA_WRITER_CHANNELS_CONFIG=[Configuration file path with channels list] MF_CASSANDRA_WRITER_SUBTOPICS_CONFIG=[Configuration file path with subtopics list] $GOBIN/mainflux-cassandra-writer
+MF_NATS_URL=[NATS instance URL] MF_CASSANDRA_WRITER_LOG_LEVEL=[Cassandra writer log level] MF_CASSANDRA_WRITER_PORT=[Service HTTP port] MF_CASSANDRA_WRITER_DB_CLUSTER=[Cassandra cluster comma separated addresses] MF_CASSANDRA_WRITER_DB_KEYSPACE=[Cassandra keyspace name] MF_CASSANDRA_READER_DB_USERNAME=[Cassandra DB username] MF_CASSANDRA_READER_DB_PASSWORD=[Cassandra DB password] MF_CASSANDRA_READER_DB_PORT=[Cassandra DB port] MF_CASSANDRA_WRITER_SUBJECTS_CONFIG=[Configuration file path with subjects list] $GOBIN/mainflux-cassandra-writer
 ```
 
 ### Using docker-compose
