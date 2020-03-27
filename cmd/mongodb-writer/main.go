@@ -46,13 +46,13 @@ const (
 )
 
 type config struct {
-	natsURL  string
-	logLevel string
-	port     string
-	dbName   string
-	dbHost   string
-	dbPort   string
-	filters  writers.FiltersCfg
+	natsURL         string
+	logLevel        string
+	port            string
+	dbName          string
+	dbHost          string
+	dbPort          string
+	subjectsCfgPath string
 }
 
 func main() {
@@ -62,13 +62,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	subjectsCfgPath := mainflux.Env(envSubjectsCfgPath, defSubjectsCfgPath)
-	filters, err := writers.LoadSubjectsConfig(subjectsCfgPath)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to load filters: %s", err))
-	}
-	cfg.filters = filters
 
 	nc, err := nats.Connect(cfg.natsURL)
 	if err != nil {
@@ -91,7 +84,7 @@ func main() {
 	repo = api.LoggingMiddleware(repo, logger)
 	repo = api.MetricsMiddleware(repo, counter, latency)
 	st := senml.New()
-	if err := writers.Start(nc, repo, st, svcName, cfg.filters, logger); err != nil {
+	if err := writers.Start(nc, repo, st, svcName, cfg.subjectsCfgPath, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to start MongoDB writer: %s", err))
 		os.Exit(1)
 	}
@@ -111,12 +104,13 @@ func main() {
 
 func loadConfigs() config {
 	return config{
-		natsURL:  mainflux.Env(envNatsURL, defNatsURL),
-		logLevel: mainflux.Env(envLogLevel, defLogLevel),
-		port:     mainflux.Env(envPort, defPort),
-		dbName:   mainflux.Env(envDBName, defDBName),
-		dbHost:   mainflux.Env(envDBHost, defDBHost),
-		dbPort:   mainflux.Env(envDBPort, defDBPort),
+		natsURL:         mainflux.Env(envNatsURL, defNatsURL),
+		logLevel:        mainflux.Env(envLogLevel, defLogLevel),
+		port:            mainflux.Env(envPort, defPort),
+		dbName:          mainflux.Env(envDBName, defDBName),
+		dbHost:          mainflux.Env(envDBHost, defDBHost),
+		dbPort:          mainflux.Env(envDBPort, defDBPort),
+		subjectsCfgPath: mainflux.Env(envSubjectsCfgPath, defSubjectsCfgPath),
 	}
 }
 

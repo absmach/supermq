@@ -48,15 +48,15 @@ const (
 )
 
 type config struct {
-	natsURL  string
-	logLevel string
-	port     string
-	dbName   string
-	dbHost   string
-	dbPort   string
-	dbUser   string
-	dbPass   string
-	filters  writers.FiltersCfg
+	natsURL         string
+	logLevel        string
+	port            string
+	dbName          string
+	dbHost          string
+	dbPort          string
+	dbUser          string
+	dbPass          string
+	subjectsCfgPath string
 }
 
 func main() {
@@ -66,13 +66,6 @@ func main() {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-
-	subjectsCfgPath := mainflux.Env(envSubjectsCfgPath, defSubjectsCfgPath)
-	filters, err := writers.LoadSubjectsConfig(subjectsCfgPath)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to load filters: %s", err))
-	}
-	cfg.filters = filters
 
 	nc, err := nats.Connect(cfg.natsURL)
 	if err != nil {
@@ -94,7 +87,7 @@ func main() {
 	repo = api.LoggingMiddleware(repo, logger)
 	repo = api.MetricsMiddleware(repo, counter, latency)
 	st := senml.New()
-	if err := writers.Start(nc, repo, st, svcName, cfg.filters, logger); err != nil {
+	if err := writers.Start(nc, repo, st, svcName, cfg.subjectsCfgPath, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to start InfluxDB writer: %s", err))
 		os.Exit(1)
 	}
@@ -114,14 +107,15 @@ func main() {
 
 func loadConfigs() (config, influxdata.HTTPConfig) {
 	cfg := config{
-		natsURL:  mainflux.Env(envNatsURL, defNatsURL),
-		logLevel: mainflux.Env(envLogLevel, defLogLevel),
-		port:     mainflux.Env(envPort, defPort),
-		dbName:   mainflux.Env(envDBName, defDBName),
-		dbHost:   mainflux.Env(envDBHost, defDBHost),
-		dbPort:   mainflux.Env(envDBPort, defDBPort),
-		dbUser:   mainflux.Env(envDBUser, defDBUser),
-		dbPass:   mainflux.Env(envDBPass, defDBPass),
+		natsURL:         mainflux.Env(envNatsURL, defNatsURL),
+		logLevel:        mainflux.Env(envLogLevel, defLogLevel),
+		port:            mainflux.Env(envPort, defPort),
+		dbName:          mainflux.Env(envDBName, defDBName),
+		dbHost:          mainflux.Env(envDBHost, defDBHost),
+		dbPort:          mainflux.Env(envDBPort, defDBPort),
+		dbUser:          mainflux.Env(envDBUser, defDBUser),
+		dbPass:          mainflux.Env(envDBPass, defDBPass),
+		subjectsCfgPath: mainflux.Env(envSubjectsCfgPath, defSubjectsCfgPath),
 	}
 
 	clientCfg := influxdata.HTTPConfig{

@@ -23,7 +23,6 @@ var (
 
 type consumer struct {
 	nc          *nats.Conn
-	subjects    []string
 	repo        MessageRepository
 	transformer transformers.Transformer
 	logger      logger.Logger
@@ -32,17 +31,22 @@ type consumer struct {
 // Start method starts consuming messages received from NATS.
 // This method transforms messages to SenML format before
 // using MessageRepository to store them.
-func Start(nc *nats.Conn, repo MessageRepository, transformer transformers.Transformer, queue string, filters FiltersCfg, logger logger.Logger) error {
+func Start(nc *nats.Conn, repo MessageRepository, transformer transformers.Transformer, queue string, subjectsCfgPath string, logger logger.Logger) error {
 	c := consumer{
 		nc:          nc,
-		subjects:    filters.subjects,
 		repo:        repo,
 		transformer: transformer,
 		logger:      logger,
 	}
 
+	subjects, err := LoadSubjectsConfig(subjectsCfgPath)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to load subjects: %s", err))
+	}
+
 	// TODO subscribe with only selected subjects
-	_, err := nc.QueueSubscribe(mainflux.InputChannels, queue, c.consume)
+	_ = subjects
+	_, err = nc.QueueSubscribe(mainflux.InputChannels, queue, c.consume)
 	return err
 }
 
@@ -78,22 +82,16 @@ type subjectsConfig struct {
 	Subjects filterConfig `toml:"subjects"`
 }
 
-type FiltersCfg struct {
-	subjects []string
-}
-
-func LoadSubjectsConfig(subjectsConfigPath string) (FiltersCfg, error)  {
+func LoadSubjectsConfig(subjectsConfigPath string) ([]string, error)  {
 	data, err := ioutil.ReadFile(subjectsConfigPath)
 	if err != nil {
-		return FiltersCfg{}, errors.Wrap(errOpenConfFile, err)
+		return []string{}, errors.Wrap(errOpenConfFile, err)
 	}
 
 	var subjectsCfg subjectsConfig
 	if err := toml.Unmarshal(data, &subjectsCfg); err != nil {
-		return FiltersCfg{}, errors.Wrap(errParseConfFile, err)
+		return []string{}, errors.Wrap(errParseConfFile, err)
 	}
 
-	return FiltersCfg{
-		subjects: subjectsCfg.Subjects.List,
-	}, err
+	return subjectsCfg.Subjects.List, err
 }

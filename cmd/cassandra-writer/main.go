@@ -51,11 +51,11 @@ const (
 )
 
 type config struct {
-	natsURL  string
-	logLevel string
-	port     string
-	dbCfg    cassandra.DBConfig
-	filters  writers.FiltersCfg
+	natsURL         string
+	logLevel        string
+	port            string
+	dbCfg           cassandra.DBConfig
+	subjectsCfgPath string
 }
 
 func main() {
@@ -66,13 +66,6 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	subjectsCfgPath := mainflux.Env(envSubjectsCfgPath, defSubjectsCfgPath)
-	filters, err := writers.LoadSubjectsConfig(subjectsCfgPath)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to load filters: %s", err))
-	}
-	cfg.filters = filters
-
 	nc := connectToNATS(cfg.natsURL, logger)
 	defer nc.Close()
 
@@ -81,7 +74,7 @@ func main() {
 
 	repo := newService(session, logger)
 	st := senml.New()
-	if err := writers.Start(nc, repo, st, svcName, cfg.filters, logger); err != nil {
+	if err := writers.Start(nc, repo, st, svcName, cfg.subjectsCfgPath, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to create Cassandra writer: %s", err))
 	}
 
@@ -114,10 +107,11 @@ func loadConfig() config {
 	}
 
 	return config{
-		natsURL:  mainflux.Env(envNatsURL, defNatsURL),
-		logLevel: mainflux.Env(envLogLevel, defLogLevel),
-		port:     mainflux.Env(envPort, defPort),
-		dbCfg:    dbCfg,
+		natsURL:         mainflux.Env(envNatsURL, defNatsURL),
+		logLevel:        mainflux.Env(envLogLevel, defLogLevel),
+		port:            mainflux.Env(envPort, defPort),
+		dbCfg:           dbCfg,
+		subjectsCfgPath: mainflux.Env(envSubjectsCfgPath, defSubjectsCfgPath),
 	}
 }
 
