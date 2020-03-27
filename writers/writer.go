@@ -14,6 +14,7 @@ import (
 	"github.com/mainflux/mainflux/transformers/senml"
 	nats "github.com/nats-io/nats.go"
 	"io/ioutil"
+	"reflect"
 )
 
 var (
@@ -44,10 +45,18 @@ func Start(nc *nats.Conn, repo MessageRepository, transformer transformers.Trans
 		logger.Error(fmt.Sprintf("Failed to load subjects: %s", err))
 	}
 
-	// TODO subscribe with only selected subjects
-	_ = subjects
-	_, err = nc.QueueSubscribe(mainflux.InputChannels, queue, c.consume)
-	return err
+	if reflect.DeepEqual([]string{"*"}, subjects) {
+		_, err := nc.QueueSubscribe(mainflux.InputChannels, queue, c.consume)
+		return err
+	} else {
+		for _, subject := range subjects {
+			_, err := nc.QueueSubscribe("channel." + subject, queue, c.consume)
+			if err != nil {
+				return err
+			}
+		}
+		return err
+	}
 }
 
 func (c *consumer) consume(m *nats.Msg) {
