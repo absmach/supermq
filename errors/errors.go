@@ -59,7 +59,7 @@ func Contains(e1 error, e2 error) bool {
 // Wrap returns an Error that wrap err with wrapper
 func Wrap(wrapper error, err error) error {
 	if wrapper == nil || err == nil {
-		return wrapper
+		return nil
 	}
 	if w, ok := wrapper.(Error); ok {
 		return &customError{

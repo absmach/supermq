@@ -36,8 +36,7 @@ func NewChannelCache(client *redis.Client) things.ChannelCache {
 
 func (cc channelCache) Connect(_ context.Context, chanID, thingID string) error {
 	cid, tid := kv(chanID, thingID)
-	err := cc.client.SAdd(cid, tid).Err()
-	return errors.Wrap(ErrRedisConnectChannel, err)
+	return errors.Wrap(ErrRedisConnectChannel, cc.client.SAdd(cid, tid).Err())
 }
 
 func (cc channelCache) HasThing(_ context.Context, chanID, thingID string) bool {
@@ -47,14 +46,12 @@ func (cc channelCache) HasThing(_ context.Context, chanID, thingID string) bool 
 
 func (cc channelCache) Disconnect(_ context.Context, chanID, thingID string) error {
 	cid, tid := kv(chanID, thingID)
-	err := cc.client.SRem(cid, tid).Err()
-	return errors.Wrap(ErrRedisDisconnectChannel, err)
+	return errors.Wrap(ErrRedisDisconnectChannel, cc.client.SRem(cid, tid).Err())
 }
 
 func (cc channelCache) Remove(_ context.Context, chanID string) error {
 	cid, _ := kv(chanID, "0")
-	err := cc.client.Del(cid).Err()
-	return errors.Wrap(ErrRedisRemoveChannel, err)
+	return errors.Wrap(ErrRedisRemoveChannel, cc.client.Del(cid).Err())
 }
 
 // Generates key-value pair
