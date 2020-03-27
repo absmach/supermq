@@ -46,7 +46,10 @@ func (tc *thingCache) Save(_ context.Context, thingKey string, thingID string) e
 	}
 
 	tid := fmt.Sprintf("%s:%s", idPrefix, thingID)
-	return errors.Wrap(ErrRedisThingSave, tc.client.Set(tid, thingKey, 0).Err())
+	if err := tc.client.Set(tid, thingKey, 0).Err(); err != nil {
+		return errors.Wrap(ErrRedisThingSave, err)
+	}
+	return nil
 }
 
 func (tc *thingCache) ID(_ context.Context, thingKey string) (string, error) {
@@ -67,6 +70,8 @@ func (tc *thingCache) Remove(_ context.Context, thingID string) error {
 	}
 
 	tkey := fmt.Sprintf("%s:%s", keyPrefix, key)
-
-	return errors.Wrap(ErrRedisThingRemove, tc.client.Del(tkey, tid).Err())
+	if err := tc.client.Del(tkey, tid).Err(); err != nil {
+		return errors.Wrap(ErrRedisThingRemove, err)
+	}
+	return nil
 }
