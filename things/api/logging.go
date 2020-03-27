@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mainflux/mainflux/errors"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/things"
 )
@@ -27,7 +26,7 @@ func LoggingMiddleware(svc things.Service, logger log.Logger) things.Service {
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) CreateThings(ctx context.Context, token string, ths ...things.Thing) (saved []things.Thing, err errors.Error) {
+func (lm *loggingMiddleware) CreateThings(ctx context.Context, token string, ths ...things.Thing) (saved []things.Thing, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method create_things for token %s and things %s took %s to complete", token, saved, time.Since(begin))
 		if err != nil {
@@ -40,7 +39,7 @@ func (lm *loggingMiddleware) CreateThings(ctx context.Context, token string, ths
 	return lm.svc.CreateThings(ctx, token, ths...)
 }
 
-func (lm *loggingMiddleware) UpdateThing(ctx context.Context, token string, thing things.Thing) (err errors.Error) {
+func (lm *loggingMiddleware) UpdateThing(ctx context.Context, token string, thing things.Thing) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method update_thing for token %s and thing %s took %s to complete", token, thing.ID, time.Since(begin))
 		if err != nil {
@@ -53,7 +52,7 @@ func (lm *loggingMiddleware) UpdateThing(ctx context.Context, token string, thin
 	return lm.svc.UpdateThing(ctx, token, thing)
 }
 
-func (lm *loggingMiddleware) UpdateKey(ctx context.Context, token, id, key string) (err errors.Error) {
+func (lm *loggingMiddleware) UpdateKey(ctx context.Context, token, id, key string) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method update_key for thing %s and key %s took %s to complete", id, key, time.Since(begin))
 		if err != nil {
@@ -66,7 +65,7 @@ func (lm *loggingMiddleware) UpdateKey(ctx context.Context, token, id, key strin
 	return lm.svc.UpdateKey(ctx, token, id, key)
 }
 
-func (lm *loggingMiddleware) ViewThing(ctx context.Context, token, id string) (thing things.Thing, err errors.Error) {
+func (lm *loggingMiddleware) ViewThing(ctx context.Context, token, id string) (thing things.Thing, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method view_thing for token %s and thing %s took %s to complete", token, id, time.Since(begin))
 		if err != nil {
@@ -79,7 +78,7 @@ func (lm *loggingMiddleware) ViewThing(ctx context.Context, token, id string) (t
 	return lm.svc.ViewThing(ctx, token, id)
 }
 
-func (lm *loggingMiddleware) ListThings(ctx context.Context, token string, offset, limit uint64, name string, metadata things.Metadata) (_ things.ThingsPage, err errors.Error) {
+func (lm *loggingMiddleware) ListThings(ctx context.Context, token string, offset, limit uint64, name string, metadata things.Metadata) (_ things.ThingsPage, err error) {
 	defer func(begin time.Time) {
 		nlog := ""
 		if name != "" {
@@ -96,7 +95,7 @@ func (lm *loggingMiddleware) ListThings(ctx context.Context, token string, offse
 	return lm.svc.ListThings(ctx, token, offset, limit, name, metadata)
 }
 
-func (lm *loggingMiddleware) ListThingsByChannel(ctx context.Context, token, id string, offset, limit uint64) (_ things.ThingsPage, err errors.Error) {
+func (lm *loggingMiddleware) ListThingsByChannel(ctx context.Context, token, id string, offset, limit uint64) (_ things.ThingsPage, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method list_things_by_channel for channel %s took %s to complete", id, time.Since(begin))
 		if err != nil {
@@ -108,7 +107,7 @@ func (lm *loggingMiddleware) ListThingsByChannel(ctx context.Context, token, id 
 	return lm.svc.ListThingsByChannel(ctx, token, id, offset, limit)
 }
 
-func (lm *loggingMiddleware) RemoveThing(ctx context.Context, token, id string) (err errors.Error) {
+func (lm *loggingMiddleware) RemoveThing(ctx context.Context, token, id string) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method remove_thing for token %s and thing %s took %s to complete", token, id, time.Since(begin))
 		if err != nil {
@@ -121,7 +120,7 @@ func (lm *loggingMiddleware) RemoveThing(ctx context.Context, token, id string) 
 	return lm.svc.RemoveThing(ctx, token, id)
 }
 
-func (lm *loggingMiddleware) CreateChannels(ctx context.Context, token string, channels ...things.Channel) (saved []things.Channel, err errors.Error) {
+func (lm *loggingMiddleware) CreateChannels(ctx context.Context, token string, channels ...things.Channel) (saved []things.Channel, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method create_channels for token %s and channels %s took %s to complete", token, saved, time.Since(begin))
 		if err != nil {
@@ -134,7 +133,7 @@ func (lm *loggingMiddleware) CreateChannels(ctx context.Context, token string, c
 	return lm.svc.CreateChannels(ctx, token, channels...)
 }
 
-func (lm *loggingMiddleware) UpdateChannel(ctx context.Context, token string, channel things.Channel) (err errors.Error) {
+func (lm *loggingMiddleware) UpdateChannel(ctx context.Context, token string, channel things.Channel) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method update_channel for token %s and channel %s took %s to complete", token, channel.ID, time.Since(begin))
 		if err != nil {
@@ -147,7 +146,7 @@ func (lm *loggingMiddleware) UpdateChannel(ctx context.Context, token string, ch
 	return lm.svc.UpdateChannel(ctx, token, channel)
 }
 
-func (lm *loggingMiddleware) ViewChannel(ctx context.Context, token, id string) (channel things.Channel, err errors.Error) {
+func (lm *loggingMiddleware) ViewChannel(ctx context.Context, token, id string) (channel things.Channel, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method view_channel for token %s and channel %s took %s to complete", token, id, time.Since(begin))
 		if err != nil {
@@ -160,7 +159,7 @@ func (lm *loggingMiddleware) ViewChannel(ctx context.Context, token, id string) 
 	return lm.svc.ViewChannel(ctx, token, id)
 }
 
-func (lm *loggingMiddleware) ListChannels(ctx context.Context, token string, offset, limit uint64, name string, metadata things.Metadata) (_ things.ChannelsPage, err errors.Error) {
+func (lm *loggingMiddleware) ListChannels(ctx context.Context, token string, offset, limit uint64, name string, metadata things.Metadata) (_ things.ChannelsPage, err error) {
 	defer func(begin time.Time) {
 		nlog := ""
 		if name != "" {
@@ -177,7 +176,7 @@ func (lm *loggingMiddleware) ListChannels(ctx context.Context, token string, off
 	return lm.svc.ListChannels(ctx, token, offset, limit, name, metadata)
 }
 
-func (lm *loggingMiddleware) ListChannelsByThing(ctx context.Context, token, id string, offset, limit uint64) (_ things.ChannelsPage, err errors.Error) {
+func (lm *loggingMiddleware) ListChannelsByThing(ctx context.Context, token, id string, offset, limit uint64) (_ things.ChannelsPage, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method list_channels_by_thing for thing %s took %s to complete", id, time.Since(begin))
 		if err != nil {
@@ -189,7 +188,7 @@ func (lm *loggingMiddleware) ListChannelsByThing(ctx context.Context, token, id 
 	return lm.svc.ListChannelsByThing(ctx, token, id, offset, limit)
 }
 
-func (lm *loggingMiddleware) RemoveChannel(ctx context.Context, token, id string) (err errors.Error) {
+func (lm *loggingMiddleware) RemoveChannel(ctx context.Context, token, id string) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method remove_channel for token %s and channel %s took %s to complete", token, id, time.Since(begin))
 		if err != nil {
@@ -202,7 +201,7 @@ func (lm *loggingMiddleware) RemoveChannel(ctx context.Context, token, id string
 	return lm.svc.RemoveChannel(ctx, token, id)
 }
 
-func (lm *loggingMiddleware) Connect(ctx context.Context, token string, chIDs, thIDs []string) (err errors.Error) {
+func (lm *loggingMiddleware) Connect(ctx context.Context, token string, chIDs, thIDs []string) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method connect for token %s, channels %s and things %s took %s to complete", token, chIDs, thIDs, time.Since(begin))
 		if err != nil {
@@ -215,7 +214,7 @@ func (lm *loggingMiddleware) Connect(ctx context.Context, token string, chIDs, t
 	return lm.svc.Connect(ctx, token, chIDs, thIDs)
 }
 
-func (lm *loggingMiddleware) Disconnect(ctx context.Context, token, chanID, thingID string) (err errors.Error) {
+func (lm *loggingMiddleware) Disconnect(ctx context.Context, token, chanID, thingID string) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method disconnect for token %s, channel %s and thing %s took %s to complete", token, chanID, thingID, time.Since(begin))
 		if err != nil {
@@ -228,7 +227,7 @@ func (lm *loggingMiddleware) Disconnect(ctx context.Context, token, chanID, thin
 	return lm.svc.Disconnect(ctx, token, chanID, thingID)
 }
 
-func (lm *loggingMiddleware) CanAccessByKey(ctx context.Context, id, key string) (thing string, err errors.Error) {
+func (lm *loggingMiddleware) CanAccessByKey(ctx context.Context, id, key string) (thing string, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method can_access for channel %s and thing %s took %s to complete", id, thing, time.Since(begin))
 		if err != nil {
@@ -241,7 +240,7 @@ func (lm *loggingMiddleware) CanAccessByKey(ctx context.Context, id, key string)
 	return lm.svc.CanAccessByKey(ctx, id, key)
 }
 
-func (lm *loggingMiddleware) CanAccessByID(ctx context.Context, chanID, thingID string) (err errors.Error) {
+func (lm *loggingMiddleware) CanAccessByID(ctx context.Context, chanID, thingID string) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method can_access_by_id for channel %s and thing %s took %s to complete", chanID, thingID, time.Since(begin))
 		if err != nil {
@@ -253,7 +252,7 @@ func (lm *loggingMiddleware) CanAccessByID(ctx context.Context, chanID, thingID 
 
 	return lm.svc.CanAccessByID(ctx, chanID, thingID)
 }
-func (lm *loggingMiddleware) Identify(ctx context.Context, key string) (id string, err errors.Error) {
+func (lm *loggingMiddleware) Identify(ctx context.Context, key string) (id string, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method identify for key %s and thing %s took %s to complete", key, id, time.Since(begin))
 		if err != nil {

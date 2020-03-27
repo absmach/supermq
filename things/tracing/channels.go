@@ -6,7 +6,6 @@ package tracing
 import (
 	"context"
 
-	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/things"
 	opentracing "github.com/opentracing/opentracing-go"
 )
@@ -44,7 +43,7 @@ func ChannelRepositoryMiddleware(tracer opentracing.Tracer, repo things.ChannelR
 	}
 }
 
-func (crm channelRepositoryMiddleware) Save(ctx context.Context, channels ...things.Channel) ([]things.Channel, errors.Error) {
+func (crm channelRepositoryMiddleware) Save(ctx context.Context, channels ...things.Channel) ([]things.Channel, error) {
 	span := createSpan(ctx, crm.tracer, saveChannelsOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -52,7 +51,7 @@ func (crm channelRepositoryMiddleware) Save(ctx context.Context, channels ...thi
 	return crm.repo.Save(ctx, channels...)
 }
 
-func (crm channelRepositoryMiddleware) Update(ctx context.Context, ch things.Channel) errors.Error {
+func (crm channelRepositoryMiddleware) Update(ctx context.Context, ch things.Channel) error {
 	span := createSpan(ctx, crm.tracer, updateChannelOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -60,7 +59,7 @@ func (crm channelRepositoryMiddleware) Update(ctx context.Context, ch things.Cha
 	return crm.repo.Update(ctx, ch)
 }
 
-func (crm channelRepositoryMiddleware) RetrieveByID(ctx context.Context, owner, id string) (things.Channel, errors.Error) {
+func (crm channelRepositoryMiddleware) RetrieveByID(ctx context.Context, owner, id string) (things.Channel, error) {
 	span := createSpan(ctx, crm.tracer, retrieveChannelByIDOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -68,7 +67,7 @@ func (crm channelRepositoryMiddleware) RetrieveByID(ctx context.Context, owner, 
 	return crm.repo.RetrieveByID(ctx, owner, id)
 }
 
-func (crm channelRepositoryMiddleware) RetrieveAll(ctx context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ChannelsPage, errors.Error) {
+func (crm channelRepositoryMiddleware) RetrieveAll(ctx context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ChannelsPage, error) {
 	span := createSpan(ctx, crm.tracer, retrieveAllChannelsOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -76,7 +75,7 @@ func (crm channelRepositoryMiddleware) RetrieveAll(ctx context.Context, owner st
 	return crm.repo.RetrieveAll(ctx, owner, offset, limit, name, metadata)
 }
 
-func (crm channelRepositoryMiddleware) RetrieveByThing(ctx context.Context, owner, thing string, offset, limit uint64) (things.ChannelsPage, errors.Error) {
+func (crm channelRepositoryMiddleware) RetrieveByThing(ctx context.Context, owner, thing string, offset, limit uint64) (things.ChannelsPage, error) {
 	span := createSpan(ctx, crm.tracer, retrieveChannelsByThingOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -84,7 +83,7 @@ func (crm channelRepositoryMiddleware) RetrieveByThing(ctx context.Context, owne
 	return crm.repo.RetrieveByThing(ctx, owner, thing, offset, limit)
 }
 
-func (crm channelRepositoryMiddleware) Remove(ctx context.Context, owner, id string) errors.Error {
+func (crm channelRepositoryMiddleware) Remove(ctx context.Context, owner, id string) error {
 	span := createSpan(ctx, crm.tracer, removeChannelOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -92,7 +91,7 @@ func (crm channelRepositoryMiddleware) Remove(ctx context.Context, owner, id str
 	return crm.repo.Remove(ctx, owner, id)
 }
 
-func (crm channelRepositoryMiddleware) Connect(ctx context.Context, owner string, chIDs, thIDs []string) errors.Error {
+func (crm channelRepositoryMiddleware) Connect(ctx context.Context, owner string, chIDs, thIDs []string) error {
 	span := createSpan(ctx, crm.tracer, connectOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -100,7 +99,7 @@ func (crm channelRepositoryMiddleware) Connect(ctx context.Context, owner string
 	return crm.repo.Connect(ctx, owner, chIDs, thIDs)
 }
 
-func (crm channelRepositoryMiddleware) Disconnect(ctx context.Context, owner, chanID, thingID string) errors.Error {
+func (crm channelRepositoryMiddleware) Disconnect(ctx context.Context, owner, chanID, thingID string) error {
 	span := createSpan(ctx, crm.tracer, disconnectOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -108,7 +107,7 @@ func (crm channelRepositoryMiddleware) Disconnect(ctx context.Context, owner, ch
 	return crm.repo.Disconnect(ctx, owner, chanID, thingID)
 }
 
-func (crm channelRepositoryMiddleware) HasThing(ctx context.Context, chanID, key string) (string, errors.Error) {
+func (crm channelRepositoryMiddleware) HasThing(ctx context.Context, chanID, key string) (string, error) {
 	span := createSpan(ctx, crm.tracer, hasThingOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -116,7 +115,7 @@ func (crm channelRepositoryMiddleware) HasThing(ctx context.Context, chanID, key
 	return crm.repo.HasThing(ctx, chanID, key)
 }
 
-func (crm channelRepositoryMiddleware) HasThingByID(ctx context.Context, chanID, thingID string) errors.Error {
+func (crm channelRepositoryMiddleware) HasThingByID(ctx context.Context, chanID, thingID string) error {
 	span := createSpan(ctx, crm.tracer, hasThingByIDOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -138,7 +137,7 @@ func ChannelCacheMiddleware(tracer opentracing.Tracer, cache things.ChannelCache
 	}
 }
 
-func (ccm channelCacheMiddleware) Connect(ctx context.Context, chanID, thingID string) errors.Error {
+func (ccm channelCacheMiddleware) Connect(ctx context.Context, chanID, thingID string) error {
 	span := createSpan(ctx, ccm.tracer, connectOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -154,7 +153,7 @@ func (ccm channelCacheMiddleware) HasThing(ctx context.Context, chanID, thingID 
 	return ccm.cache.HasThing(ctx, chanID, thingID)
 }
 
-func (ccm channelCacheMiddleware) Disconnect(ctx context.Context, chanID, thingID string) errors.Error {
+func (ccm channelCacheMiddleware) Disconnect(ctx context.Context, chanID, thingID string) error {
 	span := createSpan(ctx, ccm.tracer, disconnectOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -162,7 +161,7 @@ func (ccm channelCacheMiddleware) Disconnect(ctx context.Context, chanID, thingI
 	return ccm.cache.Disconnect(ctx, chanID, thingID)
 }
 
-func (ccm channelCacheMiddleware) Remove(ctx context.Context, chanID string) errors.Error {
+func (ccm channelCacheMiddleware) Remove(ctx context.Context, chanID string) error {
 	span := createSpan(ctx, ccm.tracer, removeChannelOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)

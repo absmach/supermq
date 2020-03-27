@@ -34,7 +34,7 @@ func NewChannelCache(client *redis.Client) things.ChannelCache {
 	return channelCache{client: client}
 }
 
-func (cc channelCache) Connect(_ context.Context, chanID, thingID string) errors.Error {
+func (cc channelCache) Connect(_ context.Context, chanID, thingID string) error {
 	cid, tid := kv(chanID, thingID)
 	err := cc.client.SAdd(cid, tid).Err()
 	return errors.Wrap(ErrRedisConnectChannel, err)
@@ -45,13 +45,13 @@ func (cc channelCache) HasThing(_ context.Context, chanID, thingID string) bool 
 	return cc.client.SIsMember(cid, tid).Val()
 }
 
-func (cc channelCache) Disconnect(_ context.Context, chanID, thingID string) errors.Error {
+func (cc channelCache) Disconnect(_ context.Context, chanID, thingID string) error {
 	cid, tid := kv(chanID, thingID)
 	err := cc.client.SRem(cid, tid).Err()
 	return errors.Wrap(ErrRedisDisconnectChannel, err)
 }
 
-func (cc channelCache) Remove(_ context.Context, chanID string) errors.Error {
+func (cc channelCache) Remove(_ context.Context, chanID string) error {
 	cid, _ := kv(chanID, "0")
 	err := cc.client.Del(cid).Err()
 	return errors.Wrap(ErrRedisRemoveChannel, err)

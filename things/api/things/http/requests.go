@@ -4,7 +4,6 @@
 package http
 
 import (
-	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/things"
 )
 
@@ -22,7 +21,7 @@ type createThingReq struct {
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
-func (req createThingReq) validate() errors.Error {
+func (req createThingReq) validate() error {
 	if req.token == "" {
 		return things.ErrUnauthorizedAccess
 	}
@@ -39,7 +38,7 @@ type createThingsReq struct {
 	Things []createThingReq
 }
 
-func (req createThingsReq) validate() errors.Error {
+func (req createThingsReq) validate() error {
 	if req.token == "" {
 		return things.ErrUnauthorizedAccess
 	}
@@ -64,7 +63,7 @@ type updateThingReq struct {
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
-func (req updateThingReq) validate() errors.Error {
+func (req updateThingReq) validate() error {
 	if req.token == "" {
 		return things.ErrUnauthorizedAccess
 	}
@@ -86,7 +85,7 @@ type updateKeyReq struct {
 	Key   string `json:"key"`
 }
 
-func (req updateKeyReq) validate() errors.Error {
+func (req updateKeyReq) validate() error {
 	if req.token == "" {
 		return things.ErrUnauthorizedAccess
 	}
@@ -104,7 +103,7 @@ type createChannelReq struct {
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
-func (req createChannelReq) validate() errors.Error {
+func (req createChannelReq) validate() error {
 	if req.token == "" {
 		return things.ErrUnauthorizedAccess
 	}
@@ -121,7 +120,7 @@ type createChannelsReq struct {
 	Channels []createChannelReq
 }
 
-func (req createChannelsReq) validate() errors.Error {
+func (req createChannelsReq) validate() error {
 	if req.token == "" {
 		return things.ErrUnauthorizedAccess
 	}
@@ -146,7 +145,7 @@ type updateChannelReq struct {
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
-func (req updateChannelReq) validate() errors.Error {
+func (req updateChannelReq) validate() error {
 	if req.token == "" {
 		return things.ErrUnauthorizedAccess
 	}
@@ -167,7 +166,7 @@ type viewResourceReq struct {
 	id    string
 }
 
-func (req viewResourceReq) validate() errors.Error {
+func (req viewResourceReq) validate() error {
 	if req.token == "" {
 		return things.ErrUnauthorizedAccess
 	}
@@ -187,7 +186,7 @@ type listResourcesReq struct {
 	metadata map[string]interface{}
 }
 
-func (req *listResourcesReq) validate() errors.Error {
+func (req *listResourcesReq) validate() error {
 	if req.token == "" {
 		return things.ErrUnauthorizedAccess
 	}
@@ -210,7 +209,7 @@ type listByConnectionReq struct {
 	limit  uint64
 }
 
-func (req listByConnectionReq) validate() errors.Error {
+func (req listByConnectionReq) validate() error {
 	if req.token == "" {
 		return things.ErrUnauthorizedAccess
 	}
@@ -232,7 +231,7 @@ type connectionReq struct {
 	thingID string
 }
 
-func (req connectionReq) validate() errors.Error {
+func (req connectionReq) validate() error {
 	if req.token == "" {
 		return things.ErrUnauthorizedAccess
 	}
@@ -250,7 +249,7 @@ type createConnectionsReq struct {
 	ThingIDs   []string `json:"thing_ids,omitempty"`
 }
 
-func (req createConnectionsReq) validate() errors.Error {
+func (req createConnectionsReq) validate() error {
 	if req.token == "" {
 		return things.ErrUnauthorizedAccess
 	}

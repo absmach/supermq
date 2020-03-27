@@ -22,7 +22,7 @@ func New() things.IdentityProvider {
 	return &uuidIdentityProvider{}
 }
 
-func (idp *uuidIdentityProvider) ID() (string, errors.Error) {
+func (idp *uuidIdentityProvider) ID() (string, error) {
 	id, err := uuid.NewV4()
 	if err != nil {
 		return "", errors.Wrap(ErrGeneratingID, err)

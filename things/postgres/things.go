@@ -51,7 +51,7 @@ func NewThingRepository(db Database) things.ThingRepository {
 	}
 }
 
-func (tr thingRepository) Save(ctx context.Context, ths ...things.Thing) ([]things.Thing, errors.Error) {
+func (tr thingRepository) Save(ctx context.Context, ths ...things.Thing) ([]things.Thing, error) {
 	tx, err := tr.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return nil, errors.Wrap(ErrSaveDb, err)
@@ -89,7 +89,7 @@ func (tr thingRepository) Save(ctx context.Context, ths ...things.Thing) ([]thin
 	return ths, nil
 }
 
-func (tr thingRepository) Update(ctx context.Context, thing things.Thing) errors.Error {
+func (tr thingRepository) Update(ctx context.Context, thing things.Thing) error {
 	q := `UPDATE things SET name = :name, metadata = :metadata WHERE owner = :owner AND id = :id;`
 
 	dbth, err := toDBThing(thing)
@@ -122,7 +122,7 @@ func (tr thingRepository) Update(ctx context.Context, thing things.Thing) errors
 	return nil
 }
 
-func (tr thingRepository) UpdateKey(ctx context.Context, owner, id, key string) errors.Error {
+func (tr thingRepository) UpdateKey(ctx context.Context, owner, id, key string) error {
 	q := `UPDATE things SET key = :key WHERE owner = :owner AND id = :id;`
 
 	dbth := dbThing{
@@ -158,7 +158,7 @@ func (tr thingRepository) UpdateKey(ctx context.Context, owner, id, key string) 
 	return nil
 }
 
-func (tr thingRepository) RetrieveByID(ctx context.Context, owner, id string) (things.Thing, errors.Error) {
+func (tr thingRepository) RetrieveByID(ctx context.Context, owner, id string) (things.Thing, error) {
 	q := `SELECT name, key, metadata FROM things WHERE id = $1 AND owner = $2;`
 
 	dbth := dbThing{
@@ -180,7 +180,7 @@ func (tr thingRepository) RetrieveByID(ctx context.Context, owner, id string) (t
 	return toThing(dbth)
 }
 
-func (tr thingRepository) RetrieveByKey(ctx context.Context, key string) (string, errors.Error) {
+func (tr thingRepository) RetrieveByKey(ctx context.Context, key string) (string, error) {
 	q := `SELECT id FROM things WHERE key = $1;`
 
 	var id string
@@ -194,7 +194,7 @@ func (tr thingRepository) RetrieveByKey(ctx context.Context, key string) (string
 	return id, nil
 }
 
-func (tr thingRepository) RetrieveAll(ctx context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ThingsPage, errors.Error) {
+func (tr thingRepository) RetrieveAll(ctx context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ThingsPage, error) {
 	nq, name := getNameQuery(name)
 	m, mq, err := getMetadataQuery(metadata)
 	if err != nil {
@@ -252,7 +252,7 @@ func (tr thingRepository) RetrieveAll(ctx context.Context, owner string, offset,
 	return page, nil
 }
 
-func (tr thingRepository) RetrieveByChannel(ctx context.Context, owner, channel string, offset, limit uint64) (things.ThingsPage, errors.Error) {
+func (tr thingRepository) RetrieveByChannel(ctx context.Context, owner, channel string, offset, limit uint64) (things.ThingsPage, error) {
 	// Verify if UUID format is valid to avoid internal Postgres error
 	if _, err := uuid.FromString(channel); err != nil {
 		return things.ThingsPage{}, things.ErrNotFound
@@ -316,7 +316,7 @@ func (tr thingRepository) RetrieveByChannel(ctx context.Context, owner, channel 
 	}, nil
 }
 
-func (tr thingRepository) Remove(ctx context.Context, owner, id string) errors.Error {
+func (tr thingRepository) Remove(ctx context.Context, owner, id string) error {
 	dbth := dbThing{
 		ID:    id,
 		Owner: owner,
@@ -336,7 +336,7 @@ type dbThing struct {
 	Metadata []byte `db:"metadata"`
 }
 
-func toDBThing(th things.Thing) (dbThing, errors.Error) {
+func toDBThing(th things.Thing) (dbThing, error) {
 	data := []byte("{}")
 	if len(th.Metadata) > 0 {
 		b, err := json.Marshal(th.Metadata)
@@ -355,7 +355,7 @@ func toDBThing(th things.Thing) (dbThing, errors.Error) {
 	}, nil
 }
 
-func toThing(dbth dbThing) (things.Thing, errors.Error) {
+func toThing(dbth dbThing) (things.Thing, error) {
 	var metadata map[string]interface{}
 	if err := json.Unmarshal([]byte(dbth.Metadata), &metadata); err != nil {
 		return things.Thing{}, errors.Wrap(ErrUnmarshalThing, err)

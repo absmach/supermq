@@ -6,7 +6,6 @@ package tracing
 import (
 	"context"
 
-	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/things"
 	opentracing "github.com/opentracing/opentracing-go"
 )
@@ -43,7 +42,7 @@ func ThingRepositoryMiddleware(tracer opentracing.Tracer, repo things.ThingRepos
 	}
 }
 
-func (trm thingRepositoryMiddleware) Save(ctx context.Context, ths ...things.Thing) ([]things.Thing, errors.Error) {
+func (trm thingRepositoryMiddleware) Save(ctx context.Context, ths ...things.Thing) ([]things.Thing, error) {
 	span := createSpan(ctx, trm.tracer, saveThingsOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -51,7 +50,7 @@ func (trm thingRepositoryMiddleware) Save(ctx context.Context, ths ...things.Thi
 	return trm.repo.Save(ctx, ths...)
 }
 
-func (trm thingRepositoryMiddleware) Update(ctx context.Context, th things.Thing) errors.Error {
+func (trm thingRepositoryMiddleware) Update(ctx context.Context, th things.Thing) error {
 	span := createSpan(ctx, trm.tracer, updateThingOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -59,7 +58,7 @@ func (trm thingRepositoryMiddleware) Update(ctx context.Context, th things.Thing
 	return trm.repo.Update(ctx, th)
 }
 
-func (trm thingRepositoryMiddleware) UpdateKey(ctx context.Context, owner, id, key string) errors.Error {
+func (trm thingRepositoryMiddleware) UpdateKey(ctx context.Context, owner, id, key string) error {
 	span := createSpan(ctx, trm.tracer, updateThingKeyOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -67,7 +66,7 @@ func (trm thingRepositoryMiddleware) UpdateKey(ctx context.Context, owner, id, k
 	return trm.repo.UpdateKey(ctx, owner, id, key)
 }
 
-func (trm thingRepositoryMiddleware) RetrieveByID(ctx context.Context, owner, id string) (things.Thing, errors.Error) {
+func (trm thingRepositoryMiddleware) RetrieveByID(ctx context.Context, owner, id string) (things.Thing, error) {
 	span := createSpan(ctx, trm.tracer, retrieveThingByIDOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -75,7 +74,7 @@ func (trm thingRepositoryMiddleware) RetrieveByID(ctx context.Context, owner, id
 	return trm.repo.RetrieveByID(ctx, owner, id)
 }
 
-func (trm thingRepositoryMiddleware) RetrieveByKey(ctx context.Context, key string) (string, errors.Error) {
+func (trm thingRepositoryMiddleware) RetrieveByKey(ctx context.Context, key string) (string, error) {
 	span := createSpan(ctx, trm.tracer, retrieveThingByKeyOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -83,7 +82,7 @@ func (trm thingRepositoryMiddleware) RetrieveByKey(ctx context.Context, key stri
 	return trm.repo.RetrieveByKey(ctx, key)
 }
 
-func (trm thingRepositoryMiddleware) RetrieveAll(ctx context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ThingsPage, errors.Error) {
+func (trm thingRepositoryMiddleware) RetrieveAll(ctx context.Context, owner string, offset, limit uint64, name string, metadata things.Metadata) (things.ThingsPage, error) {
 	span := createSpan(ctx, trm.tracer, retrieveAllThingsOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -91,7 +90,7 @@ func (trm thingRepositoryMiddleware) RetrieveAll(ctx context.Context, owner stri
 	return trm.repo.RetrieveAll(ctx, owner, offset, limit, name, metadata)
 }
 
-func (trm thingRepositoryMiddleware) RetrieveByChannel(ctx context.Context, owner, channel string, offset, limit uint64) (things.ThingsPage, errors.Error) {
+func (trm thingRepositoryMiddleware) RetrieveByChannel(ctx context.Context, owner, channel string, offset, limit uint64) (things.ThingsPage, error) {
 	span := createSpan(ctx, trm.tracer, retrieveThingsByChannelOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -99,7 +98,7 @@ func (trm thingRepositoryMiddleware) RetrieveByChannel(ctx context.Context, owne
 	return trm.repo.RetrieveByChannel(ctx, owner, channel, offset, limit)
 }
 
-func (trm thingRepositoryMiddleware) Remove(ctx context.Context, owner, id string) errors.Error {
+func (trm thingRepositoryMiddleware) Remove(ctx context.Context, owner, id string) error {
 	span := createSpan(ctx, trm.tracer, removeThingOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -121,7 +120,7 @@ func ThingCacheMiddleware(tracer opentracing.Tracer, cache things.ThingCache) th
 	}
 }
 
-func (tcm thingCacheMiddleware) Save(ctx context.Context, thingKey string, thingID string) errors.Error {
+func (tcm thingCacheMiddleware) Save(ctx context.Context, thingKey string, thingID string) error {
 	span := createSpan(ctx, tcm.tracer, saveThingOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -129,7 +128,7 @@ func (tcm thingCacheMiddleware) Save(ctx context.Context, thingKey string, thing
 	return tcm.cache.Save(ctx, thingKey, thingID)
 }
 
-func (tcm thingCacheMiddleware) ID(ctx context.Context, thingKey string) (string, errors.Error) {
+func (tcm thingCacheMiddleware) ID(ctx context.Context, thingKey string) (string, error) {
 	span := createSpan(ctx, tcm.tracer, retrieveThingIDByKeyOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
@@ -137,7 +136,7 @@ func (tcm thingCacheMiddleware) ID(ctx context.Context, thingKey string) (string
 	return tcm.cache.ID(ctx, thingKey)
 }
 
-func (tcm thingCacheMiddleware) Remove(ctx context.Context, thingID string) errors.Error {
+func (tcm thingCacheMiddleware) Remove(ctx context.Context, thingID string) error {
 	span := createSpan(ctx, tcm.tracer, removeThingOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
