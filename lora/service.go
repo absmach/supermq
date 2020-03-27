@@ -7,7 +7,7 @@ import (
 	"errors"
 
 	"github.com/mainflux/mainflux"
-	broker "github.com/mainflux/mainflux/broker/nats"
+	"github.com/mainflux/mainflux/broker"
 )
 
 const (
@@ -59,15 +59,15 @@ type Service interface {
 var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
-	publisher  broker.Publisher
+	pubsub     broker.Broker
 	thingsRM   RouteMapRepository
 	channelsRM RouteMapRepository
 }
 
 // New instantiates the LoRa adapter implementation.
-func New(pub broker.Publisher, thingsRM, channelsRM RouteMapRepository) Service {
+func New(pubsub broker.Broker, thingsRM, channelsRM RouteMapRepository) Service {
 	return &adapterService{
-		publisher:  pub,
+		pubsub:     pubsub,
 		thingsRM:   thingsRM,
 		channelsRM: channelsRM,
 	}
@@ -113,7 +113,7 @@ func (as *adapterService) Publish(ctx context.Context, token string, m Message) 
 		Payload:     payload,
 	}
 
-	return as.publisher.Publish(ctx, token, msg)
+	return as.pubsub.Publish(ctx, token, msg)
 }
 
 func (as *adapterService) CreateThing(mfxDevID string, loraDevEUI string) error {

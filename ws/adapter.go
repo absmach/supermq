@@ -14,7 +14,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
-	broker "github.com/mainflux/mainflux/broker/nats"
+	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/nats-io/nats.go"
 )
@@ -81,22 +81,20 @@ func (channel *Channel) Close() {
 var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
-	pub broker.Publisher
-	sub broker.Subscriber
-	log logger.Logger
+	pubsub broker.Broker
+	log    logger.Logger
 }
 
 // New instantiates the WS adapter implementation.
-func New(pub broker.Publisher, sub broker.Subscriber, log logger.Logger) Service {
+func New(pubsub broker.Broker, log logger.Logger) Service {
 	return &adapterService{
-		pub: pub,
-		sub: sub,
-		log: log,
+		pubsub: pubsub,
+		log:    log,
 	}
 }
 
 func (as *adapterService) Publish(ctx context.Context, token string, msg mainflux.Message) error {
-	if err := as.pub.Publish(ctx, token, msg); err != nil {
+	if err := as.pubsub.Publish(ctx, token, msg); err != nil {
 		switch err {
 		case nats.ErrConnectionClosed, nats.ErrInvalidConnection:
 			return ErrFailedConnection
@@ -108,7 +106,7 @@ func (as *adapterService) Publish(ctx context.Context, token string, msg mainflu
 }
 
 func (as *adapterService) Subscribe(chanID, subtopic string, channel *Channel) error {
-	sub, err := as.sub.Subscribe(chanID, subtopic, func(msg *nats.Msg) {
+	sub, err := as.pubsub.Subscribe(chanID, subtopic, func(msg *nats.Msg) {
 		if msg == nil {
 			as.log.Warn("Received nil message")
 			return

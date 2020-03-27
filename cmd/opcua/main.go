@@ -98,15 +98,15 @@ func main() {
 	esConn := connectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
 	defer esConn.Close()
 
-	pub, err := broker.NewPublisher(cfg.natsURL)
+	pubsub, err := broker.New(cfg.natsURL)
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
-	defer pub.Close()
+	defer pubsub.Close()
 
 	ctx := context.Background()
-	sub := gopcua.NewSubscriber(ctx, pub, thingRM, chanRM, connRM, logger)
+	sub := gopcua.NewSubscriber(ctx, pubsub, thingRM, chanRM, connRM, logger)
 	browser := gopcua.NewBrowser(ctx, logger)
 
 	svc := opcua.New(sub, browser, thingRM, chanRM, connRM, cfg.opcuaConfig, logger)

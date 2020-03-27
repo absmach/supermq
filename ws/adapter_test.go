@@ -29,9 +29,8 @@ var msg = mainflux.Message{
 
 func newService(channel *ws.Channel) ws.Service {
 	subs := map[string]*ws.Channel{chanID: channel}
-	pub := mocks.NewPublisher()
-	sub := mocks.NewSubscriber(subs)
-	return ws.New(pub, sub, nil)
+	pubsub := mocks.New(subs)
+	return ws.New(pubsub, nil)
 }
 
 func TestPublish(t *testing.T) {

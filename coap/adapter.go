@@ -15,7 +15,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
-	broker "github.com/mainflux/mainflux/broker/nats"
+	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/nats-io/nats.go"
 )
@@ -61,19 +61,17 @@ var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
 	auth    mainflux.ThingsServiceClient
-	pub     broker.Publisher
-	sub     broker.Subscriber
+	pubsub  broker.Broker
 	log     logger.Logger
 	obs     map[string]*Observer
 	obsLock sync.Mutex
 }
 
 // New instantiates the CoAP adapter implementation.
-func New(pub broker.Publisher, sub broker.Subscriber, log logger.Logger, auth mainflux.ThingsServiceClient, responses <-chan string) Service {
+func New(pubsub broker.Broker, log logger.Logger, auth mainflux.ThingsServiceClient, responses <-chan string) Service {
 	as := &adapterService{
 		auth:    auth,
-		pub:     pub,
-		sub:     sub,
+		pubsub:  pubsub,
 		log:     log,
 		obs:     make(map[string]*Observer),
 		obsLock: sync.Mutex{},
@@ -127,7 +125,7 @@ func (svc *adapterService) listenResponses(responses <-chan string) {
 }
 
 func (svc *adapterService) Publish(ctx context.Context, token string, msg mainflux.Message) error {
-	if err := svc.pub.Publish(ctx, token, msg); err != nil {
+	if err := svc.pubsub.Publish(ctx, token, msg); err != nil {
 		switch err {
 		case nats.ErrConnectionClosed, nats.ErrInvalidConnection:
 			return ErrFailedConnection
@@ -140,7 +138,7 @@ func (svc *adapterService) Publish(ctx context.Context, token string, msg mainfl
 }
 
 func (svc *adapterService) Subscribe(chanID, subtopic, obsID string, o *Observer) error {
-	sub, err := svc.sub.Subscribe(chanID, subtopic, func(msg *nats.Msg) {
+	sub, err := svc.pubsub.Subscribe(chanID, subtopic, func(msg *nats.Msg) {
 		if msg == nil {
 			return
 		}

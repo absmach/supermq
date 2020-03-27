@@ -128,18 +128,17 @@ func main() {
 
 	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
 
-	pub, err := broker.NewPublisher(cfg.natsURL)
+	pubsub, err := broker.New(cfg.natsURL)
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
-	defer pub.Close()
-	pubs := []broker.Publisher{pub}
+	defer pubsub.Close()
 
 	es := mr.NewEventStore(rc, cfg.instance)
 
 	// Event handler for MQTT hooks
-	evt := mqtt.New(cc, pubs, es, logger, tracer)
+	evt := mqtt.New(cc, pubsub, es, logger, tracer)
 
 	errs := make(chan error, 2)
 

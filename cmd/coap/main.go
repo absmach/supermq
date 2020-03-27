@@ -83,21 +83,14 @@ func main() {
 	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
 	respChan := make(chan string, 10000)
 
-	pub, err := broker.NewPublisher(cfg.natsURL)
+	pubsub, err := broker.New(cfg.natsURL)
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
-	defer pub.Close()
+	defer pubsub.Close()
 
-	sub, err := broker.NewSubscriber(cfg.natsURL)
-	if err != nil {
-		logger.Error(err.Error())
-		os.Exit(1)
-	}
-	defer sub.Close()
-
-	svc := coap.New(pub, sub, logger, cc, respChan)
+	svc := coap.New(pubsub, logger, cc, respChan)
 
 	svc = api.LoggingMiddleware(svc, logger)
 
