@@ -19,14 +19,14 @@ const prefix = "channel"
 
 var errNatsConn = errors.New("Failed to connect to NATS")
 
-var _ broker.Broker = (*pubsub)(nil)
+var _ broker.Nats = (*pubsub)(nil)
 
 type pubsub struct {
 	conn *nats.Conn
 }
 
 // New returns NATS message publisher.
-func New(url string) (broker.Broker, error) {
+func New(url string) (broker.Nats, error) {
 	nc, err := nats.Connect(url)
 	if err != nil {
 		return nil, errors.Wrap(errNatsConn, err)

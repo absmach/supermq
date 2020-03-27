@@ -14,7 +14,7 @@ import (
 type mockPublisher struct{}
 
 // NewPublisher returns mock message publisher.
-func NewPublisher() broker.Broker {
+func NewPublisher() broker.Nats {
 	return mockPublisher{}
 }
 

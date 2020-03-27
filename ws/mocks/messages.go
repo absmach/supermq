@@ -12,14 +12,14 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-var _ broker.Broker = (*mockPubSub)(nil)
+var _ broker.Nats = (*mockPubSub)(nil)
 
 type mockPubSub struct {
 	subscriptions map[string]*ws.Channel
 }
 
 // New returns mock message publisher.
-func New(sub map[string]*ws.Channel) broker.Broker {
+func New(sub map[string]*ws.Channel) broker.Nats {
 	return &mockPubSub{
 		subscriptions: sub,
 	}

@@ -61,14 +61,14 @@ var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
 	auth    mainflux.ThingsServiceClient
-	pubsub  broker.Broker
+	pubsub  broker.Nats
 	log     logger.Logger
 	obs     map[string]*Observer
 	obsLock sync.Mutex
 }
 
 // New instantiates the CoAP adapter implementation.
-func New(pubsub broker.Broker, log logger.Logger, auth mainflux.ThingsServiceClient, responses <-chan string) Service {
+func New(pubsub broker.Nats, log logger.Logger, auth mainflux.ThingsServiceClient, responses <-chan string) Service {
 	as := &adapterService{
 		auth:    auth,
 		pubsub:  pubsub,

@@ -10,8 +10,8 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-// Broker specifies a message publishing API.
-type Broker interface {
+// Nats specifies a NATS message API.
+type Nats interface {
 	// Publish publishes message to the msessage broker.
 	Publish(context.Context, string, mainflux.Message) error
 

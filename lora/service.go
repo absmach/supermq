@@ -59,13 +59,13 @@ type Service interface {
 var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
-	pubsub     broker.Broker
+	pubsub     broker.Nats
 	thingsRM   RouteMapRepository
 	channelsRM RouteMapRepository
 }
 
 // New instantiates the LoRa adapter implementation.
-func New(pubsub broker.Broker, thingsRM, channelsRM RouteMapRepository) Service {
+func New(pubsub broker.Nats, thingsRM, channelsRM RouteMapRepository) Service {
 	return &adapterService{
 		pubsub:     pubsub,
 		thingsRM:   thingsRM,

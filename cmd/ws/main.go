@@ -184,7 +184,7 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 	return tracer, closer
 }
 
-func newService(pubsub broker.Broker, log logger.Logger) adapter.Service {
+func newService(pubsub broker.Nats, log logger.Logger) adapter.Service {
 	svc := adapter.New(pubsub, log)
 	svc = api.LoggingMiddleware(svc, log)
 	svc = api.MetricsMiddleware(

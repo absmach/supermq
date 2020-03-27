@@ -37,14 +37,14 @@ var (
 // Event implements events.Event interface
 type Event struct {
 	tc     mainflux.ThingsServiceClient
-	pubsub broker.Broker
+	pubsub broker.Nats
 	tracer opentracing.Tracer
 	logger logger.Logger
 	es     redis.EventStore
 }
 
 // New creates new Event entity
-func New(tc mainflux.ThingsServiceClient, pubsub broker.Broker, es redis.EventStore,
+func New(tc mainflux.ThingsServiceClient, pubsub broker.Nats, es redis.EventStore,
 	logger logger.Logger, tracer opentracing.Tracer) *Event {
 	return &Event{
 		tc:     tc,

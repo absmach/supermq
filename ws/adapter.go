@@ -81,12 +81,12 @@ func (channel *Channel) Close() {
 var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
-	pubsub broker.Broker
+	pubsub broker.Nats
 	log    logger.Logger
 }
 
 // New instantiates the WS adapter implementation.
-func New(pubsub broker.Broker, log logger.Logger) Service {
+func New(pubsub broker.Nats, log logger.Logger) Service {
 	return &adapterService{
 		pubsub: pubsub,
 		log:    log,
