@@ -40,7 +40,7 @@ const (
 	defDBHost        = mainflux.DefDBHost
 	defDBPort        = "5432"
 	defDBUser        = mainflux.DefDBUser
-	defDBPass        = "mainflux"
+	defDBPass        = mainflux.DefDBPass
 	defDBName        = "users"
 	defDBSSLMode     = "disable"
 	defDBSSLCert     = ""
