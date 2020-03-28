@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -19,6 +20,7 @@ import (
 	mr "github.com/mainflux/mainflux/mqtt/redis"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	mp "github.com/mainflux/mproxy/pkg/mqtt"
+	ws "github.com/mainflux/mproxy/pkg/websocket"
 	broker "github.com/nats-io/nats.go"
 	opentracing "github.com/opentracing/opentracing-go"
 	jconfig "github.com/uber/jaeger-client-go/config"
@@ -27,37 +29,57 @@ import (
 )
 
 const (
-	defLogLevel          = "error"
-	defNatsURL           = broker.DefaultURL
-	defMQTTHost          = "0.0.0.0"
-	defMQTTPort          = "1883"
-	defMQTTTargetHost    = "0.0.0.0"
-	defMQTTTargetPort    = "1884"
-	defClientTLS         = "false"
-	defCACerts           = ""
-	defInstance          = ""
-	defESURL             = mainflux.DefRedisURL
-	defESPass            = ""
-	defESDB              = "0"
-	defJaegerURL         = ""
+	// MQTT
+	defMQTTHost       = "0.0.0.0"
+	defMQTTPort       = "1883"
+	defMQTTTargetHost = "0.0.0.0"
+	defMQTTTargetPort = "1883"
+	envMQTTHost       = "MF_MQTT_ADAPTER_MQTT_HOST"
+	envMQTTPort       = "MF_MQTT_ADAPTER_MQTT_PORT"
+	envMQTTTargetHost = "MF_MQTT_ADAPTER_MQTT_TARGET_HOST"
+	envMQTTTargetPort = "MF_MQTT_ADAPTER_MQTT_TARGET_PORT"
+	// HTTP
+	defHTTPHost       = "0.0.0.0"
+	defHTTPPort       = "8080"
+	defHTTPScheme     = "ws"
+	defHTTPTargetHost = "localhost"
+	defHTTPTargetPort = "8080"
+	defHTTPTargetPath = "/mqtt"
+	envHTTPHost       = "MF_MQTT_ADAPTER_WS_HOST"
+	envHTTPPort       = "MF_MQTT_ADAPTER_WS_PORT"
+	envHTTPScheme     = "MF_MQTT_ADAPTER_WS_SCHEMA"
+	envHTTPTargetHost = "MF_MQTT_ADAPTER_WS_TARGET_HOST"
+	envHTTPTargetPort = "MF_MQTT_ADAPTER_WS_TARGET_PORT"
+	envHTTPTargetPath = "MF_MQTT_ADAPTER_WS_TARGET_PATH"
+	// Logging
+	defLogLevel = "error"
+	envLogLevel = "MF_MQTT_ADAPTER_LOG_LEVEL"
+	// Things
 	defThingsAuthURL     = mainflux.DefThingsAuthURL
 	defThingsAuthTimeout = "1" // in seconds
-
-	envLogLevel          = "MF_MQTT_ADAPTER_LOG_LEVEL"
-	envNatsURL           = "MF_NATS_URL"
-	envMQTTHost          = "MF_MQTT_ADAPTER_MQTT_HOST"
-	envMQTTPort          = "MF_MQTT_ADAPTER_MQTT_PORT"
-	envMQTTTargetHost    = "MF_MQTT_ADAPTER_MQTT_TARGET_HOST"
-	envMQTTTargetPort    = "MF_MQTT_ADAPTER_MQTT_TARGET_PORT"
-	envClientTLS         = "MF_MQTT_ADAPTER_CLIENT_TLS"
-	envCACerts           = "MF_MQTT_ADAPTER_CA_CERTS"
-	envInstance          = "MF_MQTT_ADAPTER_INSTANCE"
-	envESURL             = "MF_MQTT_ADAPTER_ES_URL"
-	envESPass            = "MF_MQTT_ADAPTER_ES_PASS"
-	envESDB              = "MF_MQTT_ADAPTER_ES_DB"
-	envJaegerURL         = "MF_JAEGER_URL"
 	envThingsAuthURL     = "MF_THINGS_AUTH_GRPC_URL"
-	envThingsAuthTimeout = "MF_THINGS_AUTH_GRPC_TIMEOUT"
+	envThingsAuthTimeout = "MF_THINGS_AUTH_GRPC_TIMMEOUT"
+	// Nats
+	defNatsURL = broker.DefaultURL
+	envNatsURL = "MF_NATS_URL"
+	// Jaeger
+	defJaegerURL = ""
+	envJaegerURL = "MF_JAEGER_URL"
+	// TLS
+	defClientTLS = "false"
+	defCACerts   = ""
+	envClientTLS = "MF_MQTT_ADAPTER_CLIENT_TLS"
+	envCACerts   = "MF_MQTT_ADAPTER_CA_CERTS"
+	// Instance
+	envInstance = "MF_MQTT_ADAPTER_INSTANCE"
+	defInstance = ""
+	// ES
+	envESURL  = "MF_MQTT_ADAPTER_ES_URL"
+	envESPass = "MF_MQTT_ADAPTER_ES_PASS"
+	envESDB   = "MF_MQTT_ADAPTER_ES_DB"
+	defESURL  = mainflux.DefRedisURL
+	defESPass = ""
+	defESDB   = "0"
 )
 
 type config struct {
@@ -65,8 +87,17 @@ type config struct {
 	mqttPort          string
 	mqttTargetHost    string
 	mqttTargetPort    string
+	httpHost          string
+	httpPort          string
+	httpScheme        string
+	httpTargetHost    string
+	httpTargetPort    string
+	httpTargetPath    string
 	jaegerURL         string
 	logLevel          string
+	thingsURL         string
+	thingsAuthURL     string
+	thingsAuthTimeout time.Duration
 	natsURL           string
 	clientTLS         bool
 	caCerts           string
@@ -74,8 +105,6 @@ type config struct {
 	esURL             string
 	esPass            string
 	esDB              string
-	thingsAuthURL     string
-	thingsAuthTimeout time.Duration
 }
 
 func main() {
@@ -116,8 +145,11 @@ func main() {
 
 	errs := make(chan error, 2)
 
-	logger.Info(fmt.Sprintf("Starting MQTT proxy on port %s ", cfg.mqttPort))
+	logger.Info(fmt.Sprintf("Starting MQTT proxy on port %s", cfg.mqttPort))
 	go proxyMQTT(cfg, logger, evt, errs)
+
+	logger.Info(fmt.Sprintf("Starting MQTT over WS  proxy on port %s", cfg.httpPort))
+	go proxyWS(cfg, logger, evt, errs)
 
 	go func() {
 		c := make(chan os.Signal, 1)
@@ -141,23 +173,28 @@ func loadConfig() config {
 	}
 
 	return config{
-		mqttHost:       mainflux.Env(envMQTTHost, defMQTTHost),
-		mqttPort:       mainflux.Env(envMQTTPort, defMQTTPort),
-		mqttTargetHost: mainflux.Env(envMQTTTargetHost, defMQTTTargetHost),
-		mqttTargetPort: mainflux.Env(envMQTTTargetPort, defMQTTTargetPort),
-
-		natsURL:   mainflux.Env(envNatsURL, defNatsURL),
-		logLevel:  mainflux.Env(envLogLevel, defLogLevel),
-		clientTLS: tls,
-		caCerts:   mainflux.Env(envCACerts, defCACerts),
-		instance:  mainflux.Env(envInstance, defInstance),
-		esURL:     mainflux.Env(envESURL, defESURL),
-		esPass:    mainflux.Env(envESPass, defESPass),
-		esDB:      mainflux.Env(envESDB, defESDB),
-		jaegerURL: mainflux.Env(envJaegerURL, defJaegerURL),
-
+		mqttHost:          mainflux.Env(envMQTTHost, defMQTTHost),
+		mqttPort:          mainflux.Env(envMQTTPort, defMQTTPort),
+		mqttTargetHost:    mainflux.Env(envMQTTTargetHost, defMQTTTargetHost),
+		mqttTargetPort:    mainflux.Env(envMQTTTargetPort, defMQTTTargetPort),
+		httpHost:          mainflux.Env(envHTTPHost, defHTTPHost),
+		httpPort:          mainflux.Env(envHTTPPort, defHTTPPort),
+		httpScheme:        mainflux.Env(envHTTPScheme, defHTTPScheme),
+		httpTargetHost:    mainflux.Env(envHTTPTargetHost, defHTTPTargetHost),
+		httpTargetPort:    mainflux.Env(envHTTPTargetPort, defHTTPTargetPort),
+		httpTargetPath:    mainflux.Env(envHTTPTargetPath, defHTTPTargetPath),
+		jaegerURL:         mainflux.Env(envJaegerURL, defJaegerURL),
 		thingsAuthURL:     mainflux.Env(envThingsAuthURL, defThingsAuthURL),
 		thingsAuthTimeout: time.Duration(timeout) * time.Second,
+		thingsURL:         mainflux.Env(envThingsAuthURL, defThingsAuthURL),
+		natsURL:           mainflux.Env(envNatsURL, defNatsURL),
+		logLevel:          mainflux.Env(envLogLevel, defLogLevel),
+		clientTLS:         tls,
+		caCerts:           mainflux.Env(envCACerts, defCACerts),
+		instance:          mainflux.Env(envInstance, defInstance),
+		esURL:             mainflux.Env(envESURL, defESURL),
+		esPass:            mainflux.Env(envESPass, defESPass),
+		esDB:              mainflux.Env(envESDB, defESDB),
 	}
 }
 
@@ -224,7 +261,17 @@ func connectToRedis(redisURL, redisPass, redisDB string, logger logger.Logger) *
 }
 
 func proxyMQTT(cfg config, logger logger.Logger, evt *mqtt.Event, errs chan error) {
-	mp := mp.New(cfg.mqttHost, cfg.mqttPort, cfg.mqttTargetHost, cfg.mqttTargetPort, evt, logger)
+	address := fmt.Sprintf("%s:%s", cfg.mqttHost, cfg.mqttPort)
+	target := fmt.Sprintf("%s:%s", cfg.mqttTargetHost, cfg.mqttTargetPort)
+	mp := mp.New(address, target, evt, logger)
 
 	errs <- mp.Proxy()
+}
+func proxyWS(cfg config, logger logger.Logger, evt *mqtt.Event, errs chan error) {
+	target := fmt.Sprintf("%s:%s", cfg.httpTargetHost, cfg.httpTargetPort)
+	wp := ws.New(target, cfg.httpTargetPath, cfg.httpScheme, evt, logger)
+	http.Handle("/mqtt", wp.Handler())
+
+	p := fmt.Sprintf(":%s", cfg.httpPort)
+	errs <- http.ListenAndServe(p, nil)
 }
