@@ -8,8 +8,12 @@ import (
 )
 
 const (
+	// DefLogLevelError default loggger error flag
+	DefLogLevelError = "error"
 	// DefDBHost default DB Host
 	DefDBHost = "localhost"
+	// DefDBName default DB Name
+	DefDBName = "mainflux"
 	// DefDBUser default DB User
 	DefDBUser = "mainflux"
 	// DefDBPass default DB Password

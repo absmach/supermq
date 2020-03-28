@@ -38,12 +38,12 @@ import (
 )
 
 const (
-	defLogLevel        = "info"
+	defLogLevel        = mainflux.DefLogLevelError
 	defHTTPPort        = "9021"
 	defJaegerURL       = ""
 	defServerCert      = ""
 	defServerKey       = ""
-	defDBName          = "mainflux"
+	defDBName          = mainflux.DefDBName
 	defDBHost          = mainflux.DefDBHost
 	defDBPort          = "27017"
 	defSingleUserEmail = ""

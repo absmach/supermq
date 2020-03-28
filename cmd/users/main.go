@@ -36,12 +36,12 @@ import (
 )
 
 const (
-	defLogLevel      = "error"
+	defLogLevel      = mainflux.DefLogLevelError
 	defDBHost        = mainflux.DefDBHost
 	defDBPort        = "5432"
 	defDBUser        = mainflux.DefDBUser
 	defDBPass        = mainflux.DefDBPass
-	defDBName        = "users"
+	defDBName        = mainflux.DefDBName
 	defDBSSLMode     = "disable"
 	defDBSSLCert     = ""
 	defDBSSLKey      = ""

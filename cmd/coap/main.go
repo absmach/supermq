@@ -35,7 +35,7 @@ import (
 const (
 	defPort              = "5683"
 	defNatsURL           = broker.DefaultURL
-	defLogLevel          = "error"
+	defLogLevel          = mainflux.DefLogLevelError
 	defClientTLS         = "false"
 	defCACerts           = ""
 	defPingPeriod        = "12"

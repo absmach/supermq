@@ -32,19 +32,19 @@ import (
 )
 
 const (
+	defLogLevel      = mainflux.DefLogLevelError
 	defClientTLS     = "false"
 	defCACerts       = ""
 	defPort          = "8180"
-	defLogLevel      = "error"
 	defNatsURL       = broker.DefaultURL
 	defJaegerURL     = ""
 	defThingsAuthURL = mainflux.DefThingsAuthURL
 	defThingsTimeout = "1" // in seconds
 
+	envLogLevel      = "MF_HTTP_ADAPTER_LOG_LEVEL"
 	envClientTLS     = "MF_HTTP_ADAPTER_CLIENT_TLS"
 	envCACerts       = "MF_HTTP_ADAPTER_CA_CERTS"
 	envPort          = "MF_HTTP_ADAPTER_PORT"
-	envLogLevel      = "MF_HTTP_ADAPTER_LOG_LEVEL"
 	envNatsURL       = "MF_NATS_URL"
 	envJaegerURL     = "MF_JAEGER_URL"
 	envThingsAuthURL = "MF_THINGS_AUTH_GRPC_URL"

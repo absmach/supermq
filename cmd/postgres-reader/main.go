@@ -34,7 +34,7 @@ const (
 	svcName = "postgres-writer"
 	sep     = ","
 
-	defLogLevel          = "debug"
+	defLogLevel          = mainflux.DefLogLevelError
 	defPort              = "9204"
 	defClientTLS         = "false"
 	defCACerts           = ""
@@ -42,7 +42,7 @@ const (
 	defDBPort            = "5432"
 	defDBUser            = mainflux.DefDBUser
 	defDBPass            = mainflux.DefDBPass
-	defDBName            = "messages"
+	defDBName            = mainflux.DefDBName
 	defDBSSLMode         = "disable"
 	defDBSSLCert         = ""
 	defDBSSLKey          = ""

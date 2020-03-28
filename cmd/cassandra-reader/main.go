@@ -34,7 +34,7 @@ import (
 const (
 	sep = ","
 
-	defLogLevel          = "error"
+	defLogLevel          = mainflux.DefLogLevelError
 	defPort              = "8180"
 	defCluster           = "127.0.0.1"
 	defKeyspace          = "mainflux"

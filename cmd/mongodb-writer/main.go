@@ -30,16 +30,16 @@ import (
 const (
 	svcName = "mongodb-writer"
 
+	defLogLevel    = mainflux.DefLogLevelError
 	defNatsURL     = nats.DefaultURL
-	defLogLevel    = "error"
 	defPort        = "8180"
-	defDBName      = "mainflux"
+	defDBName      = mainflux.DefDBName
 	defDBHost      = mainflux.DefDBHost
 	defDBPort      = "27017"
 	defChanCfgPath = "/config/channels.toml"
 
-	envNatsURL     = "MF_NATS_URL"
 	envLogLevel    = "MF_MONGO_WRITER_LOG_LEVEL"
+	envNatsURL     = "MF_NATS_URL"
 	envPort        = "MF_MONGO_WRITER_PORT"
 	envDBName      = "MF_MONGO_WRITER_DB_NAME"
 	envDBHost      = "MF_MONGO_WRITER_DB_HOST"

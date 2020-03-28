@@ -29,9 +29,9 @@ const (
 	svcName = "influxdb-writer"
 
 	defNatsURL     = nats.DefaultURL
-	defLogLevel    = "error"
+	defLogLevel    = mainflux.DefLogLevelError
 	defPort        = "8180"
-	defDBName      = "mainflux"
+	defDBName      = mainflux.DefDBName
 	defDBHost      = mainflux.DefDBHost
 	defDBPort      = "8086"
 	defDBUser      = mainflux.DefDBUser

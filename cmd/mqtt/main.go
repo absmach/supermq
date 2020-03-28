@@ -29,6 +29,9 @@ import (
 )
 
 const (
+	// Logging
+	defLogLevel = mainflux.DefLogLevelError
+	envLogLevel = "MF_MQTT_ADAPTER_LOG_LEVEL"
 	// MQTT
 	defMQTTHost       = "0.0.0.0"
 	defMQTTPort       = "1883"
@@ -51,9 +54,6 @@ const (
 	envHTTPTargetHost = "MF_MQTT_ADAPTER_WS_TARGET_HOST"
 	envHTTPTargetPort = "MF_MQTT_ADAPTER_WS_TARGET_PORT"
 	envHTTPTargetPath = "MF_MQTT_ADAPTER_WS_TARGET_PATH"
-	// Logging
-	defLogLevel = "error"
-	envLogLevel = "MF_MQTT_ADAPTER_LOG_LEVEL"
 	// Things
 	defThingsAuthURL     = mainflux.DefThingsAuthURL
 	defThingsAuthTimeout = "1" // in seconds

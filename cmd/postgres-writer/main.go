@@ -30,13 +30,13 @@ const (
 	sep     = ","
 
 	defNatsURL       = nats.DefaultURL
-	defLogLevel      = "error"
+	defLogLevel      = mainflux.DefLogLevelError
 	defPort          = "9104"
 	defDBHost        = "postgres"
 	defDBPort        = "5432"
 	defDBUser        = mainflux.DefDBUser
 	defDBPass        = mainflux.DefDBPass
-	defDBName        = "messages"
+	defDBName        = mainflux.DefDBName
 	defDBSSLMode     = "disable"
 	defDBSSLCert     = ""
 	defDBSSLKey      = ""

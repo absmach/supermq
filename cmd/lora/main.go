@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	defLogLevel       = "error"
+	defLogLevel       = mainflux.DefLogLevelError
 	defHTTPPort       = "8180"
 	defLoraMsgURL     = "tcp://localhost:1883"
 	defNatsURL        = nats.DefaultURL

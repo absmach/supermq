@@ -31,8 +31,8 @@ const (
 	svcName = "cassandra-writer"
 	sep     = ","
 
+	defLogLevel    = mainflux.DefLogLevelError
 	defNatsURL     = nats.DefaultURL
-	defLogLevel    = "error"
 	defPort        = "8180"
 	defCluster     = "127.0.0.1"
 	defKeyspace    = "mainflux"
@@ -41,8 +41,8 @@ const (
 	defDBPort      = "9042"
 	defChanCfgPath = "/config/channels.toml"
 
-	envNatsURL     = "MF_NATS_URL"
 	envLogLevel    = "MF_CASSANDRA_WRITER_LOG_LEVEL"
+	envNatsURL     = "MF_NATS_URL"
 	envPort        = "MF_CASSANDRA_WRITER_PORT"
 	envCluster     = "MF_CASSANDRA_WRITER_DB_CLUSTER"
 	envKeyspace    = "MF_CASSANDRA_WRITER_DB_KEYSPACE"
