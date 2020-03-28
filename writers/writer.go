@@ -5,6 +5,8 @@ package writers
 
 import (
 	"fmt"
+	"io/ioutil"
+
 	"github.com/BurntSushi/toml"
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux"
@@ -13,8 +15,6 @@ import (
 	"github.com/mainflux/mainflux/transformers"
 	"github.com/mainflux/mainflux/transformers/senml"
 	nats "github.com/nats-io/nats.go"
-	"io/ioutil"
-	"reflect"
 )
 
 var (
@@ -42,21 +42,16 @@ func Start(nc *nats.Conn, repo MessageRepository, transformer transformers.Trans
 
 	subjects, err := LoadSubjectsConfig(subjectsCfgPath)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to load subjects: %s", err))
+		logger.Warn(fmt.Sprintf("Failed to load subjects: %s", err))
 	}
 
-	if reflect.DeepEqual([]string{"*"}, subjects) {
-		_, err := nc.QueueSubscribe(mainflux.InputChannels, queue, c.consume)
-		return err
-	} else {
-		for _, subject := range subjects {
-			_, err := nc.QueueSubscribe("channel." + subject, queue, c.consume)
-			if err != nil {
-				return err
-			}
+	for _, subject := range subjects {
+		_, err := nc.QueueSubscribe(mainflux.InputChannels + subject, queue, c.consume)
+		if err != nil {
+			return err
 		}
-		return err
 	}
+	return err
 }
 
 func (c *consumer) consume(m *nats.Msg) {
@@ -94,12 +89,12 @@ type subjectsConfig struct {
 func LoadSubjectsConfig(subjectsConfigPath string) ([]string, error)  {
 	data, err := ioutil.ReadFile(subjectsConfigPath)
 	if err != nil {
-		return []string{}, errors.Wrap(errOpenConfFile, err)
+		return []string{">"}, errors.Wrap(errOpenConfFile, err)
 	}
 
 	var subjectsCfg subjectsConfig
 	if err := toml.Unmarshal(data, &subjectsCfg); err != nil {
-		return []string{}, errors.Wrap(errParseConfFile, err)
+		return []string{">"}, errors.Wrap(errParseConfFile, err)
 	}
 
 	return subjectsCfg.Subjects.List, err

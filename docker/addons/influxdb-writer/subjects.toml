@@ -1,4 +1,4 @@
-# If you want to listen on all subjects, just pass one element ["*"], otherwise
+# If you want to listen on all subjects, just pass one element [">"], otherwise
 # pass the list of subjects.
 [subjects]
-filter = ["*"]
+filter = [">"]
