@@ -39,9 +39,9 @@ import (
 
 const (
 	defLogLevel       = "error"
-	defDBHost         = "localhost"
+	defDBHost         = mainflux.DefDBHost
 	defDBPort         = "5432"
-	defDBUser         = "mainflux"
+	defDBUser         = mainflux.DefDBUser
 	defDBPass         = "mainflux"
 	defDBName         = "bootstrap"
 	defDBSSLMode      = "disable"

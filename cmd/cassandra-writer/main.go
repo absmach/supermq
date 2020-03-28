@@ -36,8 +36,8 @@ const (
 	defPort        = "8180"
 	defCluster     = "127.0.0.1"
 	defKeyspace    = "mainflux"
-	defDBUsername  = ""
-	defDBPassword  = ""
+	defDBUser      = mainflux.DefDBUser
+	defDBPass      = mainflux.DefDBPass
 	defDBPort      = "9042"
 	defChanCfgPath = "/config/channels.toml"
 
@@ -46,8 +46,8 @@ const (
 	envPort        = "MF_CASSANDRA_WRITER_PORT"
 	envCluster     = "MF_CASSANDRA_WRITER_DB_CLUSTER"
 	envKeyspace    = "MF_CASSANDRA_WRITER_DB_KEYSPACE"
-	envDBUsername  = "MF_CASSANDRA_WRITER_DB_USERNAME"
-	envDBPassword  = "MF_CASSANDRA_WRITER_DB_PASSWORD"
+	envDBUser      = "MF_CASSANDRA_WRITER_DB_USERNAME"
+	envDBPass      = "MF_CASSANDRA_WRITER_DB_PASSWORD"
 	envDBPort      = "MF_CASSANDRA_WRITER_DB_PORT"
 	envChanCfgPath = "MF_CASSANDRA_WRITER_CHANNELS_CONFIG"
 )
@@ -103,8 +103,8 @@ func loadConfig() config {
 	dbCfg := cassandra.DBConfig{
 		Hosts:    strings.Split(mainflux.Env(envCluster, defCluster), sep),
 		Keyspace: mainflux.Env(envKeyspace, defKeyspace),
-		Username: mainflux.Env(envDBUsername, defDBUsername),
-		Password: mainflux.Env(envDBPassword, defDBPassword),
+		Username: mainflux.Env(envDBUser, defDBUser),
+		Password: mainflux.Env(envDBPass, defDBPass),
 		Port:     dbPort,
 	}
 

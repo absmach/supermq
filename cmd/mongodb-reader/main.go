@@ -36,7 +36,7 @@ const (
 	defLogLevel          = "error"
 	defPort              = "8180"
 	defDBName            = "mainflux"
-	defDBHost            = "localhost"
+	defDBHost            = mainflux.DefDBHost
 	defDBPort            = "27017"
 	defClientTLS         = "false"
 	defCACerts           = ""

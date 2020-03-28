@@ -44,7 +44,7 @@ const (
 	defServerCert      = ""
 	defServerKey       = ""
 	defDBName          = "mainflux"
-	defDBHost          = "localhost"
+	defDBHost          = mainflux.DefDBHost
 	defDBPort          = "27017"
 	defSingleUserEmail = ""
 	defSingleUserToken = ""

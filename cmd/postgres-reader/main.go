@@ -38,10 +38,10 @@ const (
 	defPort              = "9204"
 	defClientTLS         = "false"
 	defCACerts           = ""
-	defDBHost            = "localhost"
+	defDBHost            = mainflux.DefDBHost
 	defDBPort            = "5432"
-	defDBUser            = "mainflux"
-	defDBPass            = "mainflux"
+	defDBUser            = mainflux.DefDBUser
+	defDBPass            = mainflux.DefDBPass
 	defDBName            = "messages"
 	defDBSSLMode         = "disable"
 	defDBSSLCert         = ""

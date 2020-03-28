@@ -32,10 +32,10 @@ import (
 
 const (
 	defLogLevel      = "error"
-	defDBHost        = "localhost"
+	defDBHost        = mainflux.DefDBHost
 	defDBPort        = "5432"
-	defDBUser        = "mainflux"
-	defDBPass        = "mainflux"
+	defDBUser        = mainflux.DefDBUser
+	defDBPass        = mainflux.DefDBPass
 	defDBName        = "authn"
 	defDBSSLMode     = "disable"
 	defDBSSLCert     = ""

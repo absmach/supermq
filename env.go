@@ -8,10 +8,22 @@ import (
 )
 
 const (
+	// DefDBHost default DB Host
+	DefDBHost = "localhost"
+	// DefDBUser default DB User
+	DefDBUser = "mainflux"
+	// DefDBPass default DB Password
+	DefDBPass = "mainflux"
 	// DefRedisURL Redis service URL
 	DefRedisURL = "localhost:6379"
 	// DefAuthnURL AuthN service gRPC URL
 	DefAuthnURL = "localhost:8181"
+	// DefThingsHTTPPort Things service HTTP Port
+	DefThingsHTTPPort = "8180"
+	// DefThingsAuthHTTPPort Things service Auth HTTP Port
+	DefThingsAuthHTTPPort = "8989"
+	// DefThingsAuthGRPCPort Things service Auth gRPC Port
+	DefThingsAuthGRPCPort = "8183"
 	// DefThingsAuthURL Things service Auth gRPC URL
 	DefThingsAuthURL = "localhost:8183"
 )

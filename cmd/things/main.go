@@ -43,10 +43,10 @@ import (
 
 const (
 	defLogLevel        = "error"
-	defDBHost          = "localhost"
+	defDBHost          = mainflux.DefDBHost
 	defDBPort          = "5432"
-	defDBUser          = "mainflux"
-	defDBPass          = "mainflux"
+	defDBUser          = mainflux.DefDBUser
+	defDBPass          = mainflux.DefDBPass
 	defDBName          = "things"
 	defDBSSLMode       = "disable"
 	defDBSSLCert       = ""
@@ -60,9 +60,9 @@ const (
 	defESURL           = mainflux.DefRedisURL
 	defESPass          = ""
 	defESDB            = "0"
-	defHTTPPort        = "8180"
-	defAuthHTTPPort    = "8989"
-	defAuthGRPCPort    = "8183"
+	defHTTPPort        = mainflux.DefThingsHTTPPort
+	defAuthHTTPPort    = mainflux.DefThingsAuthHTTPPort
+	defAuthGRPCPort    = mainflux.DefThingsAuthGRPCPort
 	defServerCert      = ""
 	defServerKey       = ""
 	defSingleUserEmail = ""
