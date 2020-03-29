@@ -46,7 +46,7 @@ func Start(nc *nats.Conn, repo MessageRepository, transformer transformers.Trans
 	}
 
 	for _, subject := range subjects {
-		_, err := nc.QueueSubscribe(mainflux.InputChannels + subject, queue, c.consume)
+		_, err := nc.QueueSubscribe(subject, queue, c.consume)
 		if err != nil {
 			return err
 		}
@@ -89,12 +89,12 @@ type subjectsConfig struct {
 func LoadSubjectsConfig(subjectsConfigPath string) ([]string, error)  {
 	data, err := ioutil.ReadFile(subjectsConfigPath)
 	if err != nil {
-		return []string{">"}, errors.Wrap(errOpenConfFile, err)
+		return []string{mainflux.InputChannels}, errors.Wrap(errOpenConfFile, err)
 	}
 
 	var subjectsCfg subjectsConfig
 	if err := toml.Unmarshal(data, &subjectsCfg); err != nil {
-		return []string{">"}, errors.Wrap(errParseConfFile, err)
+		return []string{mainflux.InputChannels}, errors.Wrap(errParseConfFile, err)
 	}
 
 	return subjectsCfg.Subjects.List, err
