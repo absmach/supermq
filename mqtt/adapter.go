@@ -157,7 +157,7 @@ func (e *Event) Publish(c *session.Client, topic *string, payload *[]byte) {
 		return
 	}
 
-	msg := mainflux.Message{
+	msg := broker.Message{
 		Protocol:    "mqtt",
 		ContentType: ct,
 		Channel:     chanID,

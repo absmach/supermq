@@ -6,7 +6,6 @@ package mocks
 import (
 	"context"
 
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/broker"
 	"github.com/nats-io/nats.go"
 )
@@ -18,7 +17,7 @@ func NewPublisher() broker.Nats {
 	return mockPublisher{}
 }
 
-func (pub mockPublisher) Publish(_ context.Context, _ string, msg mainflux.Message) error {
+func (pub mockPublisher) Publish(_ context.Context, _ string, msg broker.Message) error {
 	return nil
 }
 

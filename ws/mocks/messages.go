@@ -6,7 +6,6 @@ package mocks
 import (
 	"context"
 
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/ws"
 	"github.com/nats-io/nats.go"
@@ -25,7 +24,7 @@ func New(sub map[string]*ws.Channel) broker.Nats {
 	}
 }
 
-func (mp mockPubSub) Publish(_ context.Context, _ string, msg mainflux.Message) error {
+func (mp mockPubSub) Publish(_ context.Context, _ string, msg broker.Message) error {
 	if len(msg.Payload) == 0 {
 		return ws.ErrFailedMessagePublish
 	}

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/broker"
 )
 
@@ -105,7 +104,7 @@ func (as *adapterService) Publish(ctx context.Context, token string, m Message) 
 	}
 
 	// Publish on Mainflux NATS broker
-	msg := mainflux.Message{
+	msg := broker.Message{
 		Publisher:   thing,
 		Protocol:    protocol,
 		ContentType: "Content-Type",

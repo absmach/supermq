@@ -15,7 +15,7 @@ import (
 // Service specifies coap service API.
 type Service interface {
 	// Publish Messssage
-	Publish(context.Context, string, mainflux.Message) error
+	Publish(context.Context, string, broker.Message) error
 }
 
 var _ Service = (*adapterService)(nil)
@@ -33,7 +33,7 @@ func New(pubsub broker.Nats, things mainflux.ThingsServiceClient) Service {
 	}
 }
 
-func (as *adapterService) Publish(ctx context.Context, token string, msg mainflux.Message) error {
+func (as *adapterService) Publish(ctx context.Context, token string, msg broker.Message) error {
 	ar := &mainflux.AccessByKeyReq{
 		Token:  token,
 		ChanID: msg.GetChannel(),

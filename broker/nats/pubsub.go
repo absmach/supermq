@@ -9,7 +9,6 @@ import (
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/errors"
 	"github.com/nats-io/nats.go"
@@ -37,7 +36,7 @@ func New(url string) (broker.Nats, error) {
 	}, nil
 }
 
-func (ps pubsub) Publish(_ context.Context, _ string, msg mainflux.Message) error {
+func (ps pubsub) Publish(_ context.Context, _ string, msg broker.Message) error {
 	data, err := proto.Marshal(&msg)
 	if err != nil {
 		return err

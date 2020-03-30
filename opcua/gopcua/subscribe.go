@@ -11,7 +11,6 @@ import (
 
 	opcuaGopcua "github.com/gopcua/opcua"
 	uaGopcua "github.com/gopcua/opcua/ua"
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/logger"
@@ -228,7 +227,7 @@ func (c client) publish(token string, m message) error {
 	// Publish on Mainflux NATS broker
 	SenML := fmt.Sprintf(`[{"n":"%s", "t": %d, "%s":%v}]`, m.Type, m.Time, m.DataKey, m.Data)
 	payload := []byte(SenML)
-	msg := mainflux.Message{
+	msg := broker.Message{
 		Publisher:   thingID,
 		Protocol:    protocol,
 		ContentType: "Content-Type",

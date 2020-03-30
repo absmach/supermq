@@ -13,7 +13,6 @@ import (
 	"sync"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/nats-io/nats.go"
@@ -33,7 +32,7 @@ var (
 // Service specifies web socket service API.
 type Service interface {
 	// Publish Messssage
-	Publish(context.Context, string, mainflux.Message) error
+	Publish(context.Context, string, broker.Message) error
 
 	// Subscribes to channel with specified id.
 	Subscribe(string, string, *Channel) error
@@ -41,7 +40,7 @@ type Service interface {
 
 // Channel is used for receiving and sending messages.
 type Channel struct {
-	Messages chan mainflux.Message
+	Messages chan broker.Message
 	Closed   chan bool
 	closed   bool
 	mutex    sync.Mutex
@@ -50,7 +49,7 @@ type Channel struct {
 // NewChannel instantiates empty channel.
 func NewChannel() *Channel {
 	return &Channel{
-		Messages: make(chan mainflux.Message),
+		Messages: make(chan broker.Message),
 		Closed:   make(chan bool),
 		closed:   false,
 		mutex:    sync.Mutex{},
@@ -58,7 +57,7 @@ func NewChannel() *Channel {
 }
 
 // Send method send message over Messages channel.
-func (channel *Channel) Send(msg mainflux.Message) {
+func (channel *Channel) Send(msg broker.Message) {
 	channel.mutex.Lock()
 	defer channel.mutex.Unlock()
 
@@ -93,7 +92,7 @@ func New(pubsub broker.Nats, log logger.Logger) Service {
 	}
 }
 
-func (as *adapterService) Publish(ctx context.Context, token string, msg mainflux.Message) error {
+func (as *adapterService) Publish(ctx context.Context, token string, msg broker.Message) error {
 	if err := as.pubsub.Publish(ctx, token, msg); err != nil {
 		switch err {
 		case nats.ErrConnectionClosed, nats.ErrInvalidConnection:
@@ -112,7 +111,7 @@ func (as *adapterService) Subscribe(chanID, subtopic string, channel *Channel) e
 			return
 		}
 
-		m := mainflux.Message{}
+		m := broker.Message{}
 		if err := proto.Unmarshal(msg.Data, &m); err != nil {
 			as.log.Warn(fmt.Sprintf("Failed to deserialize received message: %s", err.Error()))
 			return

@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/broker"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/transformers"
 	"github.com/mainflux/mainflux/transformers/senml"
@@ -34,12 +34,12 @@ func Start(nc *nats.Conn, repo MessageRepository, transformer transformers.Trans
 		logger:      logger,
 	}
 
-	_, err := nc.QueueSubscribe(mainflux.InputChannels, queue, c.consume)
+	_, err := nc.QueueSubscribe(broker.SubjectAllChannels, queue, c.consume)
 	return err
 }
 
 func (c *consumer) consume(m *nats.Msg) {
-	var msg mainflux.Message
+	var msg broker.Message
 	if err := proto.Unmarshal(m.Data, &msg); err != nil {
 		c.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
 		return

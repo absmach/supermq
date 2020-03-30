@@ -6,10 +6,10 @@ package publisher
 import (
 	"fmt"
 
+	"github.com/mainflux/mainflux/broker"
 	log "github.com/mainflux/mainflux/logger"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/mainflux/mainflux"
 	"github.com/nats-io/nats.go"
 )
 
@@ -52,7 +52,7 @@ func (p *Publisher) Publish(twinID *string, err *error, succOp, failOp string, p
 		pl = []byte(fmt.Sprintf("{\"deleted\":\"%s\"}", *twinID))
 	}
 	subject := fmt.Sprintf("%s.%s.%s", prefix, p.channelID, op)
-	mc := mainflux.Message{
+	mc := broker.Message{
 		Channel:   p.channelID,
 		Subtopic:  op,
 		Payload:   pl,

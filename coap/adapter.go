@@ -47,7 +47,7 @@ var (
 // Service specifies coap service API.
 type Service interface {
 	// Publish Messssage
-	Publish(context.Context, string, mainflux.Message) error
+	Publish(context.Context, string, broker.Message) error
 
 	// Subscribes to channel with specified id, subtopic and adds subscription to
 	// service map of subscriptions under given ID.
@@ -124,7 +124,7 @@ func (svc *adapterService) listenResponses(responses <-chan string) {
 	}
 }
 
-func (svc *adapterService) Publish(ctx context.Context, token string, msg mainflux.Message) error {
+func (svc *adapterService) Publish(ctx context.Context, token string, msg broker.Message) error {
 	if err := svc.pubsub.Publish(ctx, token, msg); err != nil {
 		switch err {
 		case nats.ErrConnectionClosed, nats.ErrInvalidConnection:
@@ -142,7 +142,7 @@ func (svc *adapterService) Subscribe(chanID, subtopic, obsID string, o *Observer
 		if msg == nil {
 			return
 		}
-		var m mainflux.Message
+		var m broker.Message
 		if err := proto.Unmarshal(msg.Data, &m); err != nil {
 			return
 		}

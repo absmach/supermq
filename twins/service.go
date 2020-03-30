@@ -10,6 +10,7 @@ import (
 	"math"
 	"time"
 
+	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/errors"
 
 	"github.com/mainflux/mainflux"
@@ -56,7 +57,7 @@ type Service interface {
 	ListStates(context.Context, string, uint64, uint64, string) (StatesPage, error)
 
 	// SaveStates persists states into database
-	SaveStates(*mainflux.Message) error
+	SaveStates(*broker.Message) error
 
 	// ListTwinsByThing retrieves data about subset of twins that represent
 	// specified thing belong to the user identified by
@@ -270,7 +271,7 @@ func (ts *twinsService) ListStates(ctx context.Context, token string, offset uin
 	return ts.states.RetrieveAll(ctx, offset, limit, id)
 }
 
-func (ts *twinsService) SaveStates(msg *mainflux.Message) error {
+func (ts *twinsService) SaveStates(msg *broker.Message) error {
 	ids, err := ts.twins.RetrieveByAttribute(context.TODO(), msg.Channel, msg.Subtopic)
 	if err != nil {
 		return err
@@ -285,7 +286,7 @@ func (ts *twinsService) SaveStates(msg *mainflux.Message) error {
 	return nil
 }
 
-func (ts *twinsService) saveState(msg *mainflux.Message, id string) error {
+func (ts *twinsService) saveState(msg *broker.Message, id string) error {
 	var b []byte
 	var err error
 	defer ts.nats.Publish(&id, &err, crudOp["stateSucc"], crudOp["stateFail"], &b)
@@ -327,7 +328,7 @@ func (ts *twinsService) saveState(msg *mainflux.Message, id string) error {
 	return nil
 }
 
-func prepareState(st *State, tw *Twin, rec senml.Record, msg *mainflux.Message) int {
+func prepareState(st *State, tw *Twin, rec senml.Record, msg *broker.Message) int {
 	def := tw.Definitions[len(tw.Definitions)-1]
 	st.TwinID = tw.ID
 	st.Definition = def.ID

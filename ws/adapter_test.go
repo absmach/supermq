@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/ws"
 	"github.com/mainflux/mainflux/ws/mocks"
 	"github.com/stretchr/testify/assert"
@@ -20,7 +20,7 @@ const (
 	protocol = "ws"
 )
 
-var msg = mainflux.Message{
+var msg = broker.Message{
 	Channel:   chanID,
 	Publisher: pubID,
 	Protocol:  protocol,
@@ -39,7 +39,7 @@ func TestPublish(t *testing.T) {
 
 	cases := []struct {
 		desc string
-		msg  mainflux.Message
+		msg  broker.Message
 		err  error
 	}{
 		{
@@ -49,14 +49,14 @@ func TestPublish(t *testing.T) {
 		},
 		{
 			desc: "publish empty message",
-			msg:  mainflux.Message{},
+			msg:  broker.Message{},
 			err:  ws.ErrFailedMessagePublish,
 		},
 	}
 
 	for _, tc := range cases {
 		// Check if message was sent.
-		go func(desc string, tcMsg mainflux.Message) {
+		go func(desc string, tcMsg broker.Message) {
 			receivedMsg := <-channel.Messages
 			assert.Equal(t, tcMsg, receivedMsg, fmt.Sprintf("%s: expected %v got %v\n", desc, tcMsg, receivedMsg))
 		}(tc.desc, tc.msg)
