@@ -43,6 +43,8 @@ var (
 		Metadata: map[string]interface{}{"test": "data"},
 	}
 	invalidName = strings.Repeat("m", maxNameSize+1)
+	notFoundRes = toJSON(errorRes{things.ErrNotFound.Error()})
+	unauthRes   = toJSON(errorRes{things.ErrUnauthorizedAccess.Error()})
 )
 
 type testRequest struct {
@@ -584,28 +586,28 @@ func TestViewThing(t *testing.T) {
 			id:     strconv.FormatUint(wrongID, 10),
 			auth:   token,
 			status: http.StatusNotFound,
-			res:    toJSON(errorRes{things.ErrNotFound.Error()}),
+			res:    notFoundRes,
 		},
 		{
 			desc:   "view thing by passing invalid token",
 			id:     sth.ID,
 			auth:   wrongValue,
 			status: http.StatusForbidden,
-			res:    toJSON(errorRes{things.ErrUnauthorizedAccess.Error()}),
+			res:    unauthRes,
 		},
 		{
 			desc:   "view thing by passing empty token",
 			id:     sth.ID,
 			auth:   "",
 			status: http.StatusForbidden,
-			res:    toJSON(errorRes{things.ErrUnauthorizedAccess.Error()}),
+			res:    unauthRes,
 		},
 		{
 			desc:   "view thing by passing invalid id",
 			id:     "invalid",
 			auth:   token,
 			status: http.StatusNotFound,
-			res:    toJSON(errorRes{things.ErrNotFound.Error()}),
+			res:    notFoundRes,
 		},
 	}
 
@@ -1341,28 +1343,28 @@ func TestViewChannel(t *testing.T) {
 			id:     strconv.FormatUint(wrongID, 10),
 			auth:   token,
 			status: http.StatusNotFound,
-			res:    toJSON(errorRes{things.ErrNotFound.Error()}),
+			res:    notFoundRes,
 		},
 		{
 			desc:   "view channel with invalid token",
 			id:     sch.ID,
 			auth:   wrongValue,
 			status: http.StatusForbidden,
-			res:    toJSON(errorRes{things.ErrUnauthorizedAccess.Error()}),
+			res:    unauthRes,
 		},
 		{
 			desc:   "view channel with empty token",
 			id:     sch.ID,
 			auth:   "",
 			status: http.StatusForbidden,
-			res:    toJSON(errorRes{things.ErrUnauthorizedAccess.Error()}),
+			res:    unauthRes,
 		},
 		{
 			desc:   "view channel with invalid id",
 			id:     "invalid",
 			auth:   token,
 			status: http.StatusNotFound,
-			res:    toJSON(errorRes{things.ErrNotFound.Error()}),
+			res:    notFoundRes,
 		},
 	}
 
