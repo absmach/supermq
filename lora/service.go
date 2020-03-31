@@ -58,15 +58,15 @@ type Service interface {
 var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
-	pubsub     broker.Nats
+	broker     broker.Nats
 	thingsRM   RouteMapRepository
 	channelsRM RouteMapRepository
 }
 
 // New instantiates the LoRa adapter implementation.
-func New(pubsub broker.Nats, thingsRM, channelsRM RouteMapRepository) Service {
+func New(broker broker.Nats, thingsRM, channelsRM RouteMapRepository) Service {
 	return &adapterService{
-		pubsub:     pubsub,
+		broker:     broker,
 		thingsRM:   thingsRM,
 		channelsRM: channelsRM,
 	}
@@ -112,7 +112,7 @@ func (as *adapterService) Publish(ctx context.Context, token string, m Message) 
 		Payload:     payload,
 	}
 
-	return as.pubsub.Publish(ctx, token, msg)
+	return as.broker.Publish(ctx, token, msg)
 }
 
 func (as *adapterService) CreateThing(mfxDevID string, loraDevEUI string) error {

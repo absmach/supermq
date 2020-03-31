@@ -36,19 +36,19 @@ var (
 
 // Event implements events.Event interface
 type Event struct {
+	broker broker.Nats
 	tc     mainflux.ThingsServiceClient
-	pubsub broker.Nats
 	tracer opentracing.Tracer
 	logger logger.Logger
 	es     redis.EventStore
 }
 
 // New creates new Event entity
-func New(tc mainflux.ThingsServiceClient, pubsub broker.Nats, es redis.EventStore,
+func New(broker broker.Nats, tc mainflux.ThingsServiceClient, es redis.EventStore,
 	logger logger.Logger, tracer opentracing.Tracer) *Event {
 	return &Event{
+		broker: broker,
 		tc:     tc,
-		pubsub: pubsub,
 		es:     es,
 		tracer: tracer,
 		logger: logger,
@@ -166,7 +166,7 @@ func (e *Event) Publish(c *session.Client, topic *string, payload *[]byte) {
 		Payload:     *payload,
 	}
 
-	if err := e.pubsub.Publish(context.TODO(), "", msg); err != nil {
+	if err := e.broker.Publish(context.TODO(), "", msg); err != nil {
 		e.logger.Info("Error publishing to Mainflux " + err.Error())
 	}
 }

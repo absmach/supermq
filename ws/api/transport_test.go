@@ -34,8 +34,8 @@ var (
 
 func newService() ws.Service {
 	subs := map[string]*ws.Channel{chanID: channel}
-	pubsub := mocks.New(subs)
-	return ws.New(pubsub, nil)
+	broker := mocks.New(subs)
+	return ws.New(broker, nil)
 }
 
 func newHTTPServer(svc ws.Service, tc mainflux.ThingsServiceClient) *httptest.Server {

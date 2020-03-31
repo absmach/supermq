@@ -18,7 +18,7 @@ import (
 	gocoap "github.com/dustin/go-coap"
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
-	broker "github.com/mainflux/mainflux/broker/nats"
+	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/coap"
 	"github.com/mainflux/mainflux/coap/api"
 	logger "github.com/mainflux/mainflux/logger"
@@ -28,13 +28,11 @@ import (
 	jconfig "github.com/uber/jaeger-client-go/config"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-
-	"github.com/nats-io/nats.go"
 )
 
 const (
 	defPort          = "5683"
-	defNatsURL       = nats.DefaultURL
+	defNatsURL       = mainflux.DefNatsURL
 	defThingsURL     = "localhost:8181"
 	defLogLevel      = "error"
 	defClientTLS     = "false"
@@ -83,14 +81,14 @@ func main() {
 	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
 	respChan := make(chan string, 10000)
 
-	pubsub, err := broker.New(cfg.natsURL)
+	b, err := broker.New(cfg.natsURL)
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
-	defer pubsub.Close()
+	defer b.Close()
 
-	svc := coap.New(pubsub, logger, cc, respChan)
+	svc := coap.New(b, logger, cc, respChan)
 
 	svc = api.LoggingMiddleware(svc, logger)
 

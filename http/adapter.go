@@ -21,14 +21,14 @@ type Service interface {
 var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
-	pubsub broker.Nats
+	broker broker.Nats
 	things mainflux.ThingsServiceClient
 }
 
 // New instantiates the HTTP adapter implementation.
-func New(pubsub broker.Nats, things mainflux.ThingsServiceClient) Service {
+func New(broker broker.Nats, things mainflux.ThingsServiceClient) Service {
 	return &adapterService{
-		pubsub: pubsub,
+		broker: broker,
 		things: things,
 	}
 }
@@ -44,5 +44,5 @@ func (as *adapterService) Publish(ctx context.Context, token string, msg broker.
 	}
 	msg.Publisher = thid.GetValue()
 
-	return as.pubsub.Publish(ctx, token, msg)
+	return as.broker.Publish(ctx, token, msg)
 }

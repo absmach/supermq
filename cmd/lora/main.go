@@ -15,7 +15,7 @@ import (
 	mqttPaho "github.com/eclipse/paho.mqtt.golang"
 	r "github.com/go-redis/redis"
 	"github.com/mainflux/mainflux"
-	broker "github.com/mainflux/mainflux/broker/nats"
+	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/lora"
 	"github.com/mainflux/mainflux/lora/api"
@@ -23,14 +23,13 @@ import (
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux/lora/redis"
-	"github.com/nats-io/nats.go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
 const (
 	defHTTPPort       = "8180"
 	defLoraMsgURL     = "tcp://localhost:1883"
-	defNatsURL        = nats.DefaultURL
+	defNatsURL        = mainflux.DefNatsURL
 	defLogLevel       = "error"
 	defESURL          = "localhost:6379"
 	defESPass         = ""
@@ -86,19 +85,19 @@ func main() {
 	esConn := connectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
 	defer esConn.Close()
 
-	pubsub, err := broker.New(cfg.natsURL)
+	b, err := broker.New(cfg.natsURL)
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
-	defer pubsub.Close()
+	defer b.Close()
 
 	thingRM := newRouteMapRepositoy(rmConn, thingsRMPrefix, logger)
 	chanRM := newRouteMapRepositoy(rmConn, channelsRMPrefix, logger)
 
 	mqttConn := connectToMQTTBroker(cfg.loraMsgURL, logger)
 
-	svc := lora.New(pubsub, thingRM, chanRM)
+	svc := lora.New(b, thingRM, chanRM)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,

@@ -10,12 +10,18 @@ import (
 	"math"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/errors"
+	"github.com/mainflux/mainflux/logger"
+	nats "github.com/nats-io/go-nats"
 
 	"github.com/mainflux/mainflux"
-	nats "github.com/mainflux/mainflux/twins/nats/publisher"
 	"github.com/mainflux/senml"
+)
+
+const (
+	publisher = "twins"
 )
 
 var (
@@ -91,30 +97,34 @@ var crudOp = map[string]string{
 }
 
 type twinsService struct {
-	auth   mainflux.AuthNServiceClient
-	twins  TwinRepository
-	states StateRepository
-	idp    IdentityProvider
-	nats   *nats.Publisher
+	broker    broker.Nats
+	auth      mainflux.AuthNServiceClient
+	twins     TwinRepository
+	states    StateRepository
+	idp       IdentityProvider
+	channelID string
+	logger    logger.Logger
 }
 
 var _ Service = (*twinsService)(nil)
 
 // New instantiates the twins service implementation.
-func New(auth mainflux.AuthNServiceClient, twins TwinRepository, sr StateRepository, idp IdentityProvider, n *nats.Publisher) Service {
+func New(broker broker.Nats, auth mainflux.AuthNServiceClient, twins TwinRepository, sr StateRepository, idp IdentityProvider, chann string, logger logger.Logger) Service {
 	return &twinsService{
-		auth:   auth,
-		twins:  twins,
-		states: sr,
-		idp:    idp,
-		nats:   n,
+		broker:    broker,
+		auth:      auth,
+		twins:     twins,
+		states:    sr,
+		idp:       idp,
+		channelID: chann,
+		logger:    logger,
 	}
 }
 
 func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, def Definition) (tw Twin, err error) {
 	var id string
 	var b []byte
-	defer ts.nats.Publish(&id, &err, crudOp["createSucc"], crudOp["createFail"], &b)
+	defer ts.publish(&id, &err, crudOp["createSucc"], crudOp["createFail"], &b)
 
 	res, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -156,7 +166,7 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin, def Definition) (err error) {
 	var b []byte
 	var id string
-	defer ts.nats.Publish(&id, &err, crudOp["updateSucc"], crudOp["updateFail"], &b)
+	defer ts.publish(&id, &err, crudOp["updateSucc"], crudOp["updateFail"], &b)
 
 	_, err = ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -211,7 +221,7 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 
 func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (tw Twin, err error) {
 	var b []byte
-	defer ts.nats.Publish(&id, &err, crudOp["getSucc"], crudOp["getFail"], &b)
+	defer ts.publish(&id, &err, crudOp["getSucc"], crudOp["getFail"], &b)
 
 	_, err = ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -239,7 +249,7 @@ func (ts *twinsService) ViewTwinByThing(ctx context.Context, token, thingid stri
 
 func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) (err error) {
 	var b []byte
-	defer ts.nats.Publish(&id, &err, crudOp["removeSucc"], crudOp["removeFail"], &b)
+	defer ts.publish(&id, &err, crudOp["removeSucc"], crudOp["removeFail"], &b)
 
 	_, err = ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -289,7 +299,7 @@ func (ts *twinsService) SaveStates(msg *broker.Message) error {
 func (ts *twinsService) saveState(msg *broker.Message, id string) error {
 	var b []byte
 	var err error
-	defer ts.nats.Publish(&id, &err, crudOp["stateSucc"], crudOp["stateFail"], &b)
+	defer ts.publish(&id, &err, crudOp["stateSucc"], crudOp["stateFail"], &b)
 
 	tw, err := ts.twins.RetrieveByID(context.TODO(), id)
 	if err != nil {
@@ -400,4 +410,50 @@ func findAttribute(name string, attrs []Attribute) (idx int) {
 		}
 	}
 	return -1
+}
+
+func (ts *twinsService) publish(twinID *string, err *error, succOp, failOp string, payload *[]byte) {
+	if ts.channelID == "" {
+		return
+	}
+
+	op := succOp
+	if *err != nil {
+		op = failOp
+		esb := []byte((*err).Error())
+		payload = &esb
+	}
+
+	pl := *payload
+	if pl == nil {
+		pl = []byte(fmt.Sprintf("{\"deleted\":\"%s\"}", *twinID))
+	}
+
+	mc := broker.Message{
+		Channel:   ts.channelID,
+		Subtopic:  op,
+		Payload:   pl,
+		Publisher: publisher,
+	}
+
+	if err := ts.broker.Publish(context.TODO(), "", mc); err != nil {
+		ts.logger.Warn(fmt.Sprintf("Failed to publish notification on NATS: %s", err))
+	}
+}
+
+func (ts *twinsService) handleMsg(m *nats.Msg) {
+	var msg broker.Message
+	if err := proto.Unmarshal(m.Data, &msg); err != nil {
+		ts.logger.Warn(fmt.Sprintf("Unmarshalling failed: %s", err))
+		return
+	}
+
+	if msg.Channel == ts.channelID {
+		return
+	}
+
+	if err := ts.SaveStates(&msg); err != nil {
+		ts.logger.Error(fmt.Sprintf("State save failed: %s", err))
+		return
+	}
 }

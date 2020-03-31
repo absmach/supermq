@@ -23,7 +23,7 @@ var (
 )
 
 type consumer struct {
-	nc          *nats.Conn
+	broker      broker.Nats
 	repo        MessageRepository
 	transformer transformers.Transformer
 	logger      logger.Logger
@@ -32,9 +32,9 @@ type consumer struct {
 // Start method starts consuming messages received from NATS.
 // This method transforms messages to SenML format before
 // using MessageRepository to store them.
-func Start(nc *nats.Conn, repo MessageRepository, transformer transformers.Transformer, queue string, subjectsCfgPath string, logger logger.Logger) error {
+func Start(broker broker.Nats, repo MessageRepository, transformer transformers.Transformer, queue string, subjectsCfgPath string, logger logger.Logger) error {
 	c := consumer{
-		nc:          nc,
+		broker:      broker,
 		repo:        repo,
 		transformer: transformer,
 		logger:      logger,
@@ -46,7 +46,7 @@ func Start(nc *nats.Conn, repo MessageRepository, transformer transformers.Trans
 	}
 
 	for _, subject := range subjects {
-		_, err := nc.QueueSubscribe(subject, queue, c.consume)
+		_, err := broker.QueueSubscribe(subject, queue, c.consume)
 		if err != nil {
 			return err
 		}

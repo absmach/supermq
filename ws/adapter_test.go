@@ -29,8 +29,8 @@ var msg = broker.Message{
 
 func newService(channel *ws.Channel) ws.Service {
 	subs := map[string]*ws.Channel{chanID: channel}
-	pubsub := mocks.New(subs)
-	return ws.New(pubsub, nil)
+	broker := mocks.New(subs)
+	return ws.New(broker, nil)
 }
 
 func TestPublish(t *testing.T) {

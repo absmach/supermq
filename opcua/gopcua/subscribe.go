@@ -40,7 +40,7 @@ var _ opcua.Subscriber = (*client)(nil)
 
 type client struct {
 	ctx        context.Context
-	pubsub     broker.Nats
+	broker     broker.Nats
 	thingsRM   opcua.RouteMapRepository
 	channelsRM opcua.RouteMapRepository
 	connectRM  opcua.RouteMapRepository
@@ -57,10 +57,10 @@ type message struct {
 }
 
 // NewSubscriber returns new OPC-UA client instance.
-func NewSubscriber(ctx context.Context, pubsub broker.Nats, thingsRM, channelsRM, connectRM opcua.RouteMapRepository, log logger.Logger) opcua.Subscriber {
+func NewSubscriber(ctx context.Context, broker broker.Nats, thingsRM, channelsRM, connectRM opcua.RouteMapRepository, log logger.Logger) opcua.Subscriber {
 	return client{
 		ctx:        ctx,
-		pubsub:     pubsub,
+		broker:     broker,
 		thingsRM:   thingsRM,
 		channelsRM: channelsRM,
 		connectRM:  connectRM,
@@ -236,7 +236,7 @@ func (c client) publish(token string, m message) error {
 		Subtopic:    m.NodeID,
 	}
 
-	if err := c.pubsub.Publish(c.ctx, token, msg); err != nil {
+	if err := c.broker.Publish(c.ctx, token, msg); err != nil {
 		return err
 	}
 

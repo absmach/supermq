@@ -19,12 +19,11 @@ import (
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
-	broker "github.com/mainflux/mainflux/broker/nats"
+	"github.com/mainflux/mainflux/broker"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/logger"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
-	"github.com/nats-io/nats.go"
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"
@@ -36,7 +35,7 @@ const (
 	defCACerts       = ""
 	defPort          = "8180"
 	defLogLevel      = "error"
-	defNatsURL       = nats.DefaultURL
+	defNatsURL       = mainflux.DefNatsURL
 	defThingsURL     = "localhost:8181"
 	defJaegerURL     = ""
 	defThingsTimeout = "1" // in seconds
@@ -80,15 +79,15 @@ func main() {
 	thingsTracer, thingsCloser := initJaeger("things", cfg.jaegerURL, logger)
 	defer thingsCloser.Close()
 
-	pubsub, err := broker.New(cfg.natsURL)
+	b, err := broker.New(cfg.natsURL)
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
-	defer pubsub.Close()
+	defer b.Close()
 
 	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
-	svc := adapter.New(pubsub, cc)
+	svc := adapter.New(b, cc)
 
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(

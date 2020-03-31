@@ -61,17 +61,17 @@ var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
 	auth    mainflux.ThingsServiceClient
-	pubsub  broker.Nats
+	broker  broker.Nats
 	log     logger.Logger
 	obs     map[string]*Observer
 	obsLock sync.Mutex
 }
 
 // New instantiates the CoAP adapter implementation.
-func New(pubsub broker.Nats, log logger.Logger, auth mainflux.ThingsServiceClient, responses <-chan string) Service {
+func New(broker broker.Nats, log logger.Logger, auth mainflux.ThingsServiceClient, responses <-chan string) Service {
 	as := &adapterService{
 		auth:    auth,
-		pubsub:  pubsub,
+		broker:  broker,
 		log:     log,
 		obs:     make(map[string]*Observer),
 		obsLock: sync.Mutex{},
@@ -125,7 +125,7 @@ func (svc *adapterService) listenResponses(responses <-chan string) {
 }
 
 func (svc *adapterService) Publish(ctx context.Context, token string, msg broker.Message) error {
-	if err := svc.pubsub.Publish(ctx, token, msg); err != nil {
+	if err := svc.broker.Publish(ctx, token, msg); err != nil {
 		switch err {
 		case nats.ErrConnectionClosed, nats.ErrInvalidConnection:
 			return ErrFailedConnection
@@ -138,7 +138,7 @@ func (svc *adapterService) Publish(ctx context.Context, token string, msg broker
 }
 
 func (svc *adapterService) Subscribe(chanID, subtopic, obsID string, o *Observer) error {
-	sub, err := svc.pubsub.Subscribe(chanID, subtopic, func(msg *nats.Msg) {
+	sub, err := svc.broker.Subscribe(chanID, subtopic, func(msg *nats.Msg) {
 		if msg == nil {
 			return
 		}

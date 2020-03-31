@@ -25,5 +25,9 @@ func (pub mockPublisher) Subscribe(chanID, subtopic string, f func(*nats.Msg)) (
 	return nil, nil
 }
 
+func (pub mockPublisher) QueueSubscribe(subject, queue string, f func(*nats.Msg)) (*nats.Subscription, error) {
+	return nil, nil
+}
+
 func (pub mockPublisher) Close() {
 }
