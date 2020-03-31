@@ -17,8 +17,8 @@ type Nats interface {
 	// Publish publishes message to the msessage broker.
 	Publish(context.Context, string, Message) error
 
-	// Subscribe subscribes to the message broker for a given channel ID and subtopic.
-	Subscribe(string, string, func(msg *nats.Msg)) (*nats.Subscription, error)
+	// Subscribe subscribes to a message broker subject.
+	Subscribe(string, func(msg *nats.Msg)) (*nats.Subscription, error)
 
 	// Subscribe subscribes to the message broker for a given channel ID and subtopic.
 	QueueSubscribe(string, string, func(msg *nats.Msg)) (*nats.Subscription, error)
@@ -66,17 +66,9 @@ func (b broker) Publish(_ context.Context, _ string, msg Message) error {
 	return b.conn.Publish(subject, data)
 }
 
-func fmtSubject(chanID, subtopic string) string {
-	subject := fmt.Sprintf("%s.%s", prefix, chanID)
-	if subtopic != "" {
-		subject = fmt.Sprintf("%s.%s", subject, subtopic)
-	}
-	return subject
-}
-
-func (b broker) Subscribe(chanID, subtopic string, f func(msg *nats.Msg)) (*nats.Subscription, error) {
-	subject := fmtSubject(chanID, subtopic)
-	sub, err := b.conn.Subscribe(subject, f)
+func (b broker) Subscribe(subject string, f func(msg *nats.Msg)) (*nats.Subscription, error) {
+	ps := fmt.Sprintf("%s.%s", prefix, subject)
+	sub, err := b.conn.Subscribe(ps, f)
 	if err != nil {
 		return nil, err
 	}

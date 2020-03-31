@@ -21,7 +21,7 @@ func (pub mockPublisher) Publish(_ context.Context, _ string, msg broker.Message
 	return nil
 }
 
-func (pub mockPublisher) Subscribe(chanID, subtopic string, f func(*nats.Msg)) (*nats.Subscription, error) {
+func (pub mockPublisher) Subscribe(subject string, f func(*nats.Msg)) (*nats.Subscription, error) {
 	return nil, nil
 }
 

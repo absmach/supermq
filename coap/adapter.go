@@ -138,7 +138,12 @@ func (svc *adapterService) Publish(ctx context.Context, token string, msg broker
 }
 
 func (svc *adapterService) Subscribe(chanID, subtopic, obsID string, o *Observer) error {
-	sub, err := svc.broker.Subscribe(chanID, subtopic, func(msg *nats.Msg) {
+	subject := chanID
+	if subtopic != "" {
+		subject = fmt.Sprintf("%s.%s", chanID, subtopic)
+	}
+
+	sub, err := svc.broker.Subscribe(subject, func(msg *nats.Msg) {
 		if msg == nil {
 			return
 		}

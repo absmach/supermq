@@ -105,7 +105,12 @@ func (as *adapterService) Publish(ctx context.Context, token string, msg broker.
 }
 
 func (as *adapterService) Subscribe(chanID, subtopic string, channel *Channel) error {
-	sub, err := as.broker.Subscribe(chanID, subtopic, func(msg *nats.Msg) {
+	subject := chanID
+	if subtopic != "" {
+		subject = fmt.Sprintf("%s.%s", chanID, subtopic)
+	}
+
+	sub, err := as.broker.Subscribe(subject, func(msg *nats.Msg) {
 		if msg == nil {
 			as.log.Warn("Received nil message")
 			return

@@ -31,8 +31,8 @@ func (mb mockBroker) Publish(_ context.Context, _ string, msg broker.Message) er
 	return nil
 }
 
-func (mb mockBroker) Subscribe(chanID, subtopic string, f func(*nats.Msg)) (*nats.Subscription, error) {
-	if _, ok := mb.subscriptions[chanID+subtopic]; !ok {
+func (mb mockBroker) Subscribe(subject string, f func(*nats.Msg)) (*nats.Subscription, error) {
+	if _, ok := mb.subscriptions[subject]; !ok {
 		return nil, ws.ErrFailedSubscription
 	}
 
