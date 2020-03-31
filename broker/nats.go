@@ -27,9 +27,9 @@ type Nats interface {
 	Close()
 }
 
-// SubjectAllChannels allows to subscribe to all subjects of all channels
 const (
-	prefix             = "channel"
+	prefix = "channel"
+	// SubjectAllChannels allows to subscribe to all subjects of all channels
 	SubjectAllChannels = "channel.>"
 )
 
