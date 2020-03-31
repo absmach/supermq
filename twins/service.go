@@ -14,7 +14,7 @@ import (
 	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/logger"
-	nats "github.com/nats-io/go-nats"
+	"github.com/nats-io/nats.go"
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/senml"
