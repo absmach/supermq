@@ -16,7 +16,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/twins"
 	httpapi "github.com/mainflux/mainflux/twins/api/http"
 	"github.com/mainflux/mainflux/twins/mocks"
@@ -35,7 +34,6 @@ const (
 	thingID     = "5b68df78-86f7-48a6-ac4f-bb24dd75c39e"
 	wrongID     = 0
 	maxNameSize = 1024
-	natsURL     = mainflux.DefNatsURL
 	topic       = "topic"
 )
 

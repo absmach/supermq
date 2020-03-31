@@ -10,11 +10,9 @@ import (
 	"math"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/nats-io/nats.go"
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/senml"
@@ -438,22 +436,5 @@ func (ts *twinsService) publish(twinID *string, err *error, succOp, failOp strin
 
 	if err := ts.broker.Publish(context.TODO(), "", mc); err != nil {
 		ts.logger.Warn(fmt.Sprintf("Failed to publish notification on NATS: %s", err))
-	}
-}
-
-func (ts *twinsService) handleMsg(m *nats.Msg) {
-	var msg broker.Message
-	if err := proto.Unmarshal(m.Data, &msg); err != nil {
-		ts.logger.Warn(fmt.Sprintf("Unmarshalling failed: %s", err))
-		return
-	}
-
-	if msg.Channel == ts.channelID {
-		return
-	}
-
-	if err := ts.SaveStates(&msg); err != nil {
-		ts.logger.Error(fmt.Sprintf("State save failed: %s", err))
-		return
 	}
 }
