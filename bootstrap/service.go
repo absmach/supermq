@@ -31,28 +31,28 @@ var (
 
 	// ErrThings indicates failure to communicate with Mainflux Things service.
 	// It can be due to networking error or invalid/unauthorized request.
-	ErrThings = errors.New("error receiving response from Things service")
+	ErrThings = errors.New("failed to receive response from Things service")
 
 	// ErrExternalKeyNotFound indicates a non-existent bootstrap configuration for given external key
-	ErrExternalKeyNotFound = errors.New("error getting bootstrap configuration for given external key")
+	ErrExternalKeyNotFound = errors.New("failed to get bootstrap configuration for given external key")
 
 	// ErrSecureBootstrap indicates erron in getting bootstrap configuration for given encrypted external key
-	ErrSecureBootstrap = errors.New("error getting bootstrap configuration for given encrypted external key")
+	ErrSecureBootstrap = errors.New("failed to get bootstrap configuration for given encrypted external key")
 
-	errAddBootstrap       = errors.New("error adding bootstrap configuration")
-	errUpdateConnections  = errors.New("error updating connections")
-	errRemoveBootstrap    = errors.New("error removing bootstrap configuration")
-	errBootstrap          = errors.New("error reading bootstrap configuration")
-	errChangeState        = errors.New("error changing state of bootstrap configuration")
-	errUpdateChannel      = errors.New("error updating channel")
-	errRemoveConfig       = errors.New("error removing bootstrap configuration")
-	errRemoveChannel      = errors.New("error removing channel")
-	errCreateThing        = errors.New("error creating thing")
-	errDisconnectThing    = errors.New("error disconnecting thing")
+	errAddBootstrap       = errors.New("failed to add bootstrap configuration")
+	errUpdateConnections  = errors.New("failed to update connections")
+	errRemoveBootstrap    = errors.New("failed to remove bootstrap configuration")
+	errBootstrap          = errors.New("failed to read bootstrap configuration")
+	errChangeState        = errors.New("failed to change state of bootstrap configuration")
+	errUpdateChannel      = errors.New("failed to update channel")
+	errRemoveConfig       = errors.New("failed to remove bootstrap configuration")
+	errRemoveChannel      = errors.New("failed to remove channel")
+	errCreateThing        = errors.New("failed to create thing")
+	errDisconnectThing    = errors.New("failed to disconnect thing")
 	errThingNotFound      = errors.New("thing not found")
-	errCheckChannels      = errors.New("error check if channels exists")
-	errConnectionChannels = errors.New("error checking channels connections")
-	errUpdateCert         = errors.New("error updating cert")
+	errCheckChannels      = errors.New("failed to check if channels exists")
+	errConnectionChannels = errors.New("failed to check channels connections")
+	errUpdateCert         = errors.New("failed to update cert")
 )
 
 var _ Service = (*bootstrapService)(nil)
