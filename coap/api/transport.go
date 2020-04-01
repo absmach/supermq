@@ -291,7 +291,7 @@ func observe(svc coap.Service, responses chan<- string) handler {
 			res.AddOption(gocoap.Observe, 1)
 			o := coap.NewObserver()
 			if err := svc.Subscribe(chanID, subtopic, obsID, o); err != nil {
-				logger.Warn(fmt.Sprintf("Failed to subscribe to NATS subject: %s", err))
+				logger.Warn(err.Error())
 				res.Code = gocoap.InternalServerError
 				return res
 			}

@@ -33,7 +33,12 @@ const (
 	SubjectAllChannels = "channel.>"
 )
 
-var errNatsConn = errors.New("Failed to connect to NATS")
+var (
+	errNatsConn     = errors.New("Failed to connect to NATS")
+	errNatsPub      = errors.New("Failed to publish to NATS")
+	errNatsSub      = errors.New("Failed to subscribe to NATS")
+	errNatsQueueSub = errors.New("Failed to queue subscribe to NATS")
+)
 
 var _ Nats = (*broker)(nil)
 
@@ -63,14 +68,18 @@ func (b broker) Publish(_ context.Context, _ string, msg Message) error {
 	if msg.Subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, msg.Subtopic)
 	}
-	return b.conn.Publish(subject, data)
+	if err := b.conn.Publish(subject, data); err != nil {
+		return errors.Wrap(errNatsPub, err)
+	}
+
+	return nil
 }
 
 func (b broker) Subscribe(subject string, f func(msg *nats.Msg)) (*nats.Subscription, error) {
 	ps := fmt.Sprintf("%s.%s", prefix, subject)
 	sub, err := b.conn.Subscribe(ps, f)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(errNatsSub, err)
 	}
 
 	return sub, nil
@@ -79,7 +88,7 @@ func (b broker) Subscribe(subject string, f func(msg *nats.Msg)) (*nats.Subscrip
 func (b broker) QueueSubscribe(subject, queue string, f func(msg *nats.Msg)) (*nats.Subscription, error) {
 	sub, err := b.conn.QueueSubscribe(subject, queue, f)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(errNatsQueueSub, err)
 	}
 
 	return sub, nil

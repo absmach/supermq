@@ -288,7 +288,7 @@ func newService(b broker.Nats, ncTracer opentracing.Tracer, chanID string, users
 		}
 	})
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to subscribe to NATS: %s", err))
+		logger.Error(err.Error())
 		os.Exit(1)
 	}
 
