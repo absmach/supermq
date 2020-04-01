@@ -51,7 +51,7 @@ func Start(broker broker.Nats, repo MessageRepository, transformer transformers.
 			return err
 		}
 	}
-	return err
+	return nil
 }
 
 func (c *consumer) consume(m *nats.Msg) {
@@ -97,5 +97,5 @@ func loadSubjectsConfig(subjectsConfigPath string) ([]string, error) {
 		return []string{broker.SubjectAllChannels}, errors.Wrap(errParseConfFile, err)
 	}
 
-	return subjectsCfg.Subjects.List, err
+	return subjectsCfg.Subjects.List, nil
 }
