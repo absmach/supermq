@@ -45,7 +45,7 @@ default values.
       MF_INFLUX_READER_SERVER_KEY: [String path to server key in pem format]
       MF_JAEGER_URL: [Jaeger server URL]
       MF_THINGS_AUTH_GRPC_URL: [Things service Auth gRPC URL]
-      MF_THINGS_AUtH_GRPC_TIMEOUT: [Things service Auth gRPC request timeout in seconds]
+      MF_THINGS_AUTH_GRPC_TIMEOUT: [Things service Auth gRPC request timeout in seconds]
     ports:
       - [host machine port]:[configured HTTP port]
 ```

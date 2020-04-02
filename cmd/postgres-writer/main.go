@@ -5,23 +5,21 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/BurntSushi/toml"
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/transformers/senml"
 	"github.com/mainflux/mainflux/writers"
 	"github.com/mainflux/mainflux/writers/api"
 	"github.com/mainflux/mainflux/writers/postgres"
-	nats "github.com/nats-io/nats.go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
@@ -29,41 +27,41 @@ const (
 	svcName = "postgres-writer"
 	sep     = ","
 
-	defNatsURL       = nats.DefaultURL
-	defLogLevel      = mainflux.DefLogLevelError
-	defPort          = "9104"
-	defDBHost        = "postgres"
-	defDBPort        = "5432"
-	defDBUser        = mainflux.DefDBUser
-	defDBPass        = mainflux.DefDBPass
-	defDBName        = mainflux.DefDBName
-	defDBSSLMode     = "disable"
-	defDBSSLCert     = ""
-	defDBSSLKey      = ""
-	defDBSSLRootCert = ""
-	defChanCfgPath   = "/config/channels.toml"
+	defLogLevel        = mainflux.DefLogLevelError
+	defNatsURL         = mainflux.DefNatsURL
+	defPort            = mainflux.DefPostgresWriterPort
+	defDBHost          = "postgres"
+	defDBPort          = mainflux.DefPostgresWriterDBPort
+	defDBUser          = mainflux.DefDBUser
+	defDBPass          = mainflux.DefDBPass
+	defDBName          = mainflux.DefDBName
+	defDBSSLMode       = "disable"
+	defDBSSLCert       = ""
+	defDBSSLKey        = ""
+	defDBSSLRootCert   = ""
+	defSubjectsCfgPath = "/config/subjects.toml"
 
-	envNatsURL       = "MF_NATS_URL"
-	envLogLevel      = "MF_POSTGRES_WRITER_LOG_LEVEL"
-	envPort          = "MF_POSTGRES_WRITER_PORT"
-	envDBHost        = "MF_POSTGRES_WRITER_DB_HOST"
-	envDBPort        = "MF_POSTGRES_WRITER_DB_PORT"
-	envDBUser        = "MF_POSTGRES_WRITER_DB_USER"
-	envDBPass        = "MF_POSTGRES_WRITER_DB_PASS"
-	envDBName        = "MF_POSTGRES_WRITER_DB_NAME"
-	envDBSSLMode     = "MF_POSTGRES_WRITER_DB_SSL_MODE"
-	envDBSSLCert     = "MF_POSTGRES_WRITER_DB_SSL_CERT"
-	envDBSSLKey      = "MF_POSTGRES_WRITER_DB_SSL_KEY"
-	envDBSSLRootCert = "MF_POSTGRES_WRITER_DB_SSL_ROOT_CERT"
-	envChanCfgPath   = "MF_POSTGRES_WRITER_CHANNELS_CONFIG"
+	envNatsURL         = "MF_NATS_URL"
+	envLogLevel        = "MF_POSTGRES_WRITER_LOG_LEVEL"
+	envPort            = "MF_POSTGRES_WRITER_PORT"
+	envDBHost          = "MF_POSTGRES_WRITER_DB_HOST"
+	envDBPort          = "MF_POSTGRES_WRITER_DB_PORT"
+	envDBUser          = "MF_POSTGRES_WRITER_DB_USER"
+	envDBPass          = "MF_POSTGRES_WRITER_DB_PASS"
+	envDBName          = "MF_POSTGRES_WRITER_DB_NAME"
+	envDBSSLMode       = "MF_POSTGRES_WRITER_DB_SSL_MODE"
+	envDBSSLCert       = "MF_POSTGRES_WRITER_DB_SSL_CERT"
+	envDBSSLKey        = "MF_POSTGRES_WRITER_DB_SSL_KEY"
+	envDBSSLRootCert   = "MF_POSTGRES_WRITER_DB_SSL_ROOT_CERT"
+	envSubjectsCfgPath = "MF_POSTGRES_WRITER_SUBJECTS_CONFIG"
 )
 
 type config struct {
-	natsURL  string
-	logLevel string
-	port     string
-	dbConfig postgres.Config
-	channels map[string]bool
+	natsURL         string
+	logLevel        string
+	port            string
+	dbConfig        postgres.Config
+	subjectsCfgPath string
 }
 
 func main() {
@@ -74,15 +72,19 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	nc := connectToNATS(cfg.natsURL, logger)
-	defer nc.Close()
+	b, err := broker.New(cfg.natsURL)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+	defer b.Close()
 
 	db := connectToDB(cfg.dbConfig, logger)
 	defer db.Close()
 
 	repo := newService(db, logger)
 	st := senml.New()
-	if err = writers.Start(nc, repo, st, svcName, cfg.channels, logger); err != nil {
+	if err = writers.Start(b, repo, st, svcName, cfg.subjectsCfgPath, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to create Postgres writer: %s", err))
 	}
 
@@ -101,7 +103,6 @@ func main() {
 }
 
 func loadConfig() config {
-	chanCfgPath := mainflux.Env(envChanCfgPath, defChanCfgPath)
 	dbConfig := postgres.Config{
 		Host:        mainflux.Env(envDBHost, defDBHost),
 		Port:        mainflux.Env(envDBPort, defDBPort),
@@ -115,49 +116,12 @@ func loadConfig() config {
 	}
 
 	return config{
-		natsURL:  mainflux.Env(envNatsURL, defNatsURL),
-		logLevel: mainflux.Env(envLogLevel, defLogLevel),
-		port:     mainflux.Env(envPort, defPort),
-		dbConfig: dbConfig,
-		channels: loadChansConfig(chanCfgPath),
+		natsURL:         mainflux.Env(envNatsURL, defNatsURL),
+		logLevel:        mainflux.Env(envLogLevel, defLogLevel),
+		port:            mainflux.Env(envPort, defPort),
+		dbConfig:        dbConfig,
+		subjectsCfgPath: mainflux.Env(envSubjectsCfgPath, defSubjectsCfgPath),
 	}
-}
-
-type channels struct {
-	List []string `toml:"filter"`
-}
-
-type chanConfig struct {
-	Channels channels `toml:"channels"`
-}
-
-func loadChansConfig(chanConfigPath string) map[string]bool {
-	data, err := ioutil.ReadFile(chanConfigPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var chanCfg chanConfig
-	if err := toml.Unmarshal(data, &chanCfg); err != nil {
-		log.Fatal(err)
-	}
-
-	chans := map[string]bool{}
-	for _, ch := range chanCfg.Channels.List {
-		chans[ch] = true
-	}
-
-	return chans
-}
-
-func connectToNATS(url string, logger logger.Logger) *nats.Conn {
-	nc, err := nats.Connect(url)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
-		os.Exit(1)
-	}
-
-	return nc
 }
 
 func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sqlx.DB {

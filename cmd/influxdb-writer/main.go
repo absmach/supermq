@@ -5,60 +5,58 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/BurntSushi/toml"
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	influxdata "github.com/influxdata/influxdb/client/v2"
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/transformers/senml"
 	"github.com/mainflux/mainflux/writers"
 	"github.com/mainflux/mainflux/writers/api"
 	"github.com/mainflux/mainflux/writers/influxdb"
-	nats "github.com/nats-io/nats.go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
 const (
 	svcName = "influxdb-writer"
 
-	defNatsURL     = nats.DefaultURL
-	defLogLevel    = mainflux.DefLogLevelError
-	defPort        = "8180"
-	defDBName      = mainflux.DefDBName
-	defDBHost      = mainflux.DefDBHost
-	defDBPort      = "8086"
-	defDBUser      = mainflux.DefDBUser
-	defDBPass      = mainflux.DefDBPass
-	defChanCfgPath = "/config/channels.toml"
+	defNatsURL         = mainflux.DefNatsURL
+	defLogLevel        = mainflux.DefLogLevelError
+	defPort            = mainflux.DefInfluxWriterPort
+	defDBName          = mainflux.DefDBName
+	defDBHost          = mainflux.DefDBHost
+	defDBPort          = mainflux.DefInfluxWriterDBPort
+	defDBUser          = mainflux.DefDBUser
+	defDBPass          = mainflux.DefDBPass
+	defSubjectsCfgPath = "/config/subjects.toml"
 
-	envNatsURL     = "MF_NATS_URL"
-	envLogLevel    = "MF_INFLUX_WRITER_LOG_LEVEL"
-	envPort        = "MF_INFLUX_WRITER_PORT"
-	envDBName      = "MF_INFLUX_WRITER_DB_NAME"
-	envDBHost      = "MF_INFLUX_WRITER_DB_HOST"
-	envDBPort      = "MF_INFLUX_WRITER_DB_PORT"
-	envDBUser      = "MF_INFLUX_WRITER_DB_USER"
-	envDBPass      = "MF_INFLUX_WRITER_DB_PASS"
-	envChanCfgPath = "MF_INFLUX_WRITER_CHANNELS_CONFIG"
+	envNatsURL         = "MF_NATS_URL"
+	envLogLevel        = "MF_INFLUX_WRITER_LOG_LEVEL"
+	envPort            = "MF_INFLUX_WRITER_PORT"
+	envDBName          = "MF_INFLUX_WRITER_DB_NAME"
+	envDBHost          = "MF_INFLUX_WRITER_DB_HOST"
+	envDBPort          = "MF_INFLUX_WRITER_DB_PORT"
+	envDBUser          = "MF_INFLUX_WRITER_DB_USER"
+	envDBPass          = "MF_INFLUX_WRITER_DB_PASS"
+	envSubjectsCfgPath = "MF_INFLUX_WRITER_SUBJECTS_CONFIG"
 )
 
 type config struct {
-	natsURL  string
-	logLevel string
-	port     string
-	dbName   string
-	dbHost   string
-	dbPort   string
-	dbUser   string
-	dbPass   string
-	channels map[string]bool
+	natsURL         string
+	logLevel        string
+	port            string
+	dbName          string
+	dbHost          string
+	dbPort          string
+	dbUser          string
+	dbPass          string
+	subjectsCfgPath string
 }
 
 func main() {
@@ -69,12 +67,12 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	nc, err := nats.Connect(cfg.natsURL)
+	b, err := broker.New(cfg.natsURL)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
+		logger.Error(err.Error())
 		os.Exit(1)
 	}
-	defer nc.Close()
+	defer b.Close()
 
 	client, err := influxdata.NewHTTPClient(clientCfg)
 	if err != nil {
@@ -89,7 +87,7 @@ func main() {
 	repo = api.LoggingMiddleware(repo, logger)
 	repo = api.MetricsMiddleware(repo, counter, latency)
 	st := senml.New()
-	if err := writers.Start(nc, repo, st, svcName, cfg.channels, logger); err != nil {
+	if err := writers.Start(b, repo, st, svcName, cfg.subjectsCfgPath, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to start InfluxDB writer: %s", err))
 		os.Exit(1)
 	}
@@ -108,17 +106,16 @@ func main() {
 }
 
 func loadConfigs() (config, influxdata.HTTPConfig) {
-	chanCfgPath := mainflux.Env(envChanCfgPath, defChanCfgPath)
 	cfg := config{
-		natsURL:  mainflux.Env(envNatsURL, defNatsURL),
-		logLevel: mainflux.Env(envLogLevel, defLogLevel),
-		port:     mainflux.Env(envPort, defPort),
-		dbName:   mainflux.Env(envDBName, defDBName),
-		dbHost:   mainflux.Env(envDBHost, defDBHost),
-		dbPort:   mainflux.Env(envDBPort, defDBPort),
-		dbUser:   mainflux.Env(envDBUser, defDBUser),
-		dbPass:   mainflux.Env(envDBPass, defDBPass),
-		channels: loadChansConfig(chanCfgPath),
+		natsURL:         mainflux.Env(envNatsURL, defNatsURL),
+		logLevel:        mainflux.Env(envLogLevel, defLogLevel),
+		port:            mainflux.Env(envPort, defPort),
+		dbName:          mainflux.Env(envDBName, defDBName),
+		dbHost:          mainflux.Env(envDBHost, defDBHost),
+		dbPort:          mainflux.Env(envDBPort, defDBPort),
+		dbUser:          mainflux.Env(envDBUser, defDBUser),
+		dbPass:          mainflux.Env(envDBPass, defDBPass),
+		subjectsCfgPath: mainflux.Env(envSubjectsCfgPath, defSubjectsCfgPath),
 	}
 
 	clientCfg := influxdata.HTTPConfig{
@@ -128,33 +125,6 @@ func loadConfigs() (config, influxdata.HTTPConfig) {
 	}
 
 	return cfg, clientCfg
-}
-
-type channels struct {
-	List []string `toml:"filter"`
-}
-
-type chanConfig struct {
-	Channels channels `toml:"channels"`
-}
-
-func loadChansConfig(chanConfigPath string) map[string]bool {
-	data, err := ioutil.ReadFile(chanConfigPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var chanCfg chanConfig
-	if err := toml.Unmarshal(data, &chanCfg); err != nil {
-		log.Fatal(err)
-	}
-
-	chans := map[string]bool{}
-	for _, ch := range chanCfg.Channels.List {
-		chans[ch] = true
-	}
-
-	return chans
 }
 
 func makeMetrics() (*kitprometheus.Counter, *kitprometheus.Summary) {

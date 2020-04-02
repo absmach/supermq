@@ -5,7 +5,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -14,16 +13,15 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/BurntSushi/toml"
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/gocql/gocql"
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/transformers/senml"
 	"github.com/mainflux/mainflux/writers"
 	"github.com/mainflux/mainflux/writers/api"
 	"github.com/mainflux/mainflux/writers/cassandra"
-	nats "github.com/nats-io/nats.go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
@@ -31,33 +29,33 @@ const (
 	svcName = "cassandra-writer"
 	sep     = ","
 
-	defLogLevel    = mainflux.DefLogLevelError
-	defNatsURL     = nats.DefaultURL
-	defPort        = "8180"
-	defCluster     = "127.0.0.1"
-	defKeyspace    = "mainflux"
-	defDBUser      = mainflux.DefDBUser
-	defDBPass      = mainflux.DefDBPass
-	defDBPort      = "9042"
-	defChanCfgPath = "/config/channels.toml"
+	defNatsURL         = mainflux.DefNatsURL
+	defLogLevel        = mainflux.DefLogLevelError
+	defPort            = mainflux.DefCassandraWriterPort
+	defCluster         = "127.0.0.1"
+	defKeyspace        = "mainflux"
+	defDBUser          = mainflux.DefDBUser
+	defDBPass          = mainflux.DefDBPass
+	defDBPort          = mainflux.DefCassandraWriterDBPort
+	defSubjectsCfgPath = "/config/subjects.toml"
 
-	envLogLevel    = "MF_CASSANDRA_WRITER_LOG_LEVEL"
-	envNatsURL     = "MF_NATS_URL"
-	envPort        = "MF_CASSANDRA_WRITER_PORT"
-	envCluster     = "MF_CASSANDRA_WRITER_DB_CLUSTER"
-	envKeyspace    = "MF_CASSANDRA_WRITER_DB_KEYSPACE"
-	envDBUser      = "MF_CASSANDRA_WRITER_DB_USERNAME"
-	envDBPass      = "MF_CASSANDRA_WRITER_DB_PASSWORD"
-	envDBPort      = "MF_CASSANDRA_WRITER_DB_PORT"
-	envChanCfgPath = "MF_CASSANDRA_WRITER_CHANNELS_CONFIG"
+	envNatsURL         = "MF_NATS_URL"
+	envLogLevel        = "MF_CASSANDRA_WRITER_LOG_LEVEL"
+	envPort            = "MF_CASSANDRA_WRITER_PORT"
+	envCluster         = "MF_CASSANDRA_WRITER_DB_CLUSTER"
+	envKeyspace        = "MF_CASSANDRA_WRITER_DB_KEYSPACE"
+	envDBUser          = "MF_CASSANDRA_WRITER_DB_USERNAME"
+	envDBPass          = "MF_CASSANDRA_WRITER_DB_PASSWORD"
+	envDBPort          = "MF_CASSANDRA_WRITER_DB_PORT"
+	envSubjectsCfgPath = "MF_CASSANDRA_WRITER_SUBJECTS_CONFIG"
 )
 
 type config struct {
-	natsURL  string
-	logLevel string
-	port     string
-	dbCfg    cassandra.DBConfig
-	channels map[string]bool
+	natsURL         string
+	logLevel        string
+	port            string
+	dbCfg           cassandra.DBConfig
+	subjectsCfgPath string
 }
 
 func main() {
@@ -68,15 +66,19 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	nc := connectToNATS(cfg.natsURL, logger)
-	defer nc.Close()
+	b, err := broker.New(cfg.natsURL)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+	defer b.Close()
 
 	session := connectToCassandra(cfg.dbCfg, logger)
 	defer session.Close()
 
 	repo := newService(session, logger)
 	st := senml.New()
-	if err := writers.Start(nc, repo, st, svcName, cfg.channels, logger); err != nil {
+	if err := writers.Start(b, repo, st, svcName, cfg.subjectsCfgPath, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to create Cassandra writer: %s", err))
 	}
 
@@ -108,51 +110,13 @@ func loadConfig() config {
 		Port:     dbPort,
 	}
 
-	chanCfgPath := mainflux.Env(envChanCfgPath, defChanCfgPath)
 	return config{
-		natsURL:  mainflux.Env(envNatsURL, defNatsURL),
-		logLevel: mainflux.Env(envLogLevel, defLogLevel),
-		port:     mainflux.Env(envPort, defPort),
-		dbCfg:    dbCfg,
-		channels: loadChansConfig(chanCfgPath),
+		natsURL:         mainflux.Env(envNatsURL, defNatsURL),
+		logLevel:        mainflux.Env(envLogLevel, defLogLevel),
+		port:            mainflux.Env(envPort, defPort),
+		dbCfg:           dbCfg,
+		subjectsCfgPath: mainflux.Env(envSubjectsCfgPath, defSubjectsCfgPath),
 	}
-}
-
-type channels struct {
-	List []string `toml:"filter"`
-}
-
-type chanConfig struct {
-	Channels channels `toml:"channels"`
-}
-
-func loadChansConfig(chanConfigPath string) map[string]bool {
-	data, err := ioutil.ReadFile(chanConfigPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var chanCfg chanConfig
-	if err := toml.Unmarshal(data, &chanCfg); err != nil {
-		log.Fatal(err)
-	}
-
-	chans := map[string]bool{}
-	for _, ch := range chanCfg.Channels.List {
-		chans[ch] = true
-	}
-
-	return chans
-}
-
-func connectToNATS(url string, logger logger.Logger) *nats.Conn {
-	nc, err := nats.Connect(url)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
-		os.Exit(1)
-	}
-
-	return nc
 }
 
 func connectToCassandra(dbCfg cassandra.DBConfig, logger logger.Logger) *gocql.Session {

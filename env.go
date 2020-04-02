@@ -5,9 +5,13 @@ package mainflux
 
 import (
 	"os"
+
+	"github.com/nats-io/nats.go"
 )
 
 const (
+	// DefNatsURL NATS broker URL
+	DefNatsURL = nats.DefaultURL
 	// DefLogLevelError default loggger error flag
 	DefLogLevelError = "error"
 	// DefDBHost default DB Host
@@ -30,6 +34,30 @@ const (
 	DefThingsAuthGRPCPort = "8183"
 	// DefThingsAuthURL Things service Auth gRPC URL
 	DefThingsAuthURL = "localhost:8183"
+	// DefHTTPPort HTTP adapter Port
+	DefHTTPPort = "8185"
+	// DefCoapPort CoAP adapter Port
+	DefCoapPort = "5683"
+	// DefTwinsHTTPort Twins HTTP Port
+	DefTwinsHTTPort = "9021"
+	// DefTwinsHTTPort Twins HTTP Port
+	DefWSPort = "8186"
+	// DefInfluxWriterPort infuxdb-writer HTTP Port
+	DefInfluxWriterPort = "8900"
+	// DefInfluxWriterDBPort influxdb-writer DB Port
+	DefInfluxWriterDBPort = "8086"
+	// DefMongoWriterPort mmongo-writer HTTP Port
+	DefMongoWriterPort = "8901"
+	// DefMongoWriterDBPort mongo-writer DB Port
+	DefMongoWriterDBPort = "27017"
+	// DefCassandraWriterPort cassandra-writer HTTP Port
+	DefCassandraWriterPort = "8902"
+	// DefCassandraWriterDBPort cassandra-writer DB Port
+	DefCassandraWriterDBPort = "9042"
+	// DefPostgresWriterPort postgres-writer HTTP Port
+	DefPostgresWriterPort = "9204"
+	// DefPostgresWriterDBPort postgrres-writer DB Port
+	DefPostgresWriterDBPort = "5432"
 )
 
 // Env reads specified environment variable. If no value has been found,
