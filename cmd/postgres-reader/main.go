@@ -35,11 +35,11 @@ const (
 	sep     = ","
 
 	defLogLevel          = mainflux.DefLogLevelError
-	defPort              = "9204"
+	defPort              = mainflux.DefPostgresWriterPort
 	defClientTLS         = "false"
 	defCACerts           = ""
 	defDBHost            = mainflux.DefDBHost
-	defDBPort            = "5432"
+	defDBPort            = mainflux.DefPostgresDBPort
 	defDBUser            = mainflux.DefDBUser
 	defDBPass            = mainflux.DefDBPass
 	defDBName            = mainflux.DefDBName

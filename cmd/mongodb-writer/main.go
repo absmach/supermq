@@ -33,7 +33,7 @@ const (
 	defPort            = mainflux.DefMongoWriterPort
 	defDBName          = mainflux.DefDBName
 	defDBHost          = mainflux.DefDBHost
-	defDBPort          = mainflux.DefMongoWriterDBPort
+	defDBPort          = mainflux.DefMongoDBPort
 	defSubjectsCfgPath = "/config/subjects.toml"
 
 	envNatsURL         = "MF_NATS_URL"

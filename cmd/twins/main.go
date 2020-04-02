@@ -47,7 +47,7 @@ const (
 	defServerKey       = ""
 	defDBName          = mainflux.DefDBName
 	defDBHost          = mainflux.DefDBHost
-	defDBPort          = mainflux.DefMongoWriterDBPort
+	defDBPort          = mainflux.DefMongoDBPort
 	defSingleUserEmail = ""
 	defSingleUserToken = ""
 	defClientTLS       = "false"

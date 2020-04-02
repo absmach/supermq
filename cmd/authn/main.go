@@ -33,10 +33,10 @@ import (
 const (
 	defLogLevel      = mainflux.DefLogLevelError
 	defDBHost        = mainflux.DefDBHost
-	defDBPort        = "5432"
+	defDBPort        = mainflux.DefPostgresDBPort
 	defDBUser        = mainflux.DefDBUser
 	defDBPass        = mainflux.DefDBPass
-	defDBName        = mainflux.DefDBName
+	defDBName        = mainflux.DefAuthnDBName
 	defDBSSLMode     = "disable"
 	defDBSSLCert     = ""
 	defDBSSLKey      = ""
