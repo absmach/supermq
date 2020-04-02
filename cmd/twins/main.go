@@ -52,8 +52,6 @@ const (
 	defSingleUserToken = ""
 	defClientTLS       = "false"
 	defCACerts         = ""
-	defThingID         = ""
-	defThingKey        = ""
 	defChannelID       = ""
 	defNatsURL         = nats.DefaultURL
 	defAuthnURL        = mainflux.DefAuthnURL
@@ -71,8 +69,6 @@ const (
 	envSingleUserToken = "MF_TWINS_SINGLE_USER_TOKEN"
 	envClientTLS       = "MF_TWINS_CLIENT_TLS"
 	envCACerts         = "MF_TWINS_CA_CERTS"
-	envThingID         = "MF_TWINS_THING_ID"
-	envThingKey        = "MF_TWINS_THING_KEY"
 	envChannelID       = "MF_TWINS_CHANNEL_ID"
 	envNatsURL         = "MF_NATS_URL"
 	envAuthnURL        = "MF_AUTHN_GRPC_URL"
@@ -90,8 +86,6 @@ type config struct {
 	singleUserToken string
 	clientTLS       bool
 	caCerts         string
-	thingID         string
-	thingKey        string
 	channelID       string
 	natsURL         string
 
@@ -178,9 +172,7 @@ func loadConfig() config {
 		singleUserToken: mainflux.Env(envSingleUserToken, defSingleUserToken),
 		clientTLS:       tls,
 		caCerts:         mainflux.Env(envCACerts, defCACerts),
-		thingID:         mainflux.Env(envThingID, defThingID),
 		channelID:       mainflux.Env(envChannelID, defChannelID),
-		thingKey:        mainflux.Env(envThingKey, defThingKey),
 		natsURL:         mainflux.Env(envNatsURL, defNatsURL),
 		authnURL:        mainflux.Env(envAuthnURL, defAuthnURL),
 		authnTimeout:    time.Duration(timeout) * time.Second,
