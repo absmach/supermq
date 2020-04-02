@@ -41,7 +41,7 @@ const (
 	defDBPort        = mainflux.DefPostgresDBPort
 	defDBUser        = mainflux.DefDBUser
 	defDBPass        = mainflux.DefDBPass
-	defDBName        = mainflux.DefDBName
+	defDBName        = mainflux.DefUsersDBName
 	defDBSSLMode     = "disable"
 	defDBSSLCert     = ""
 	defDBSSLKey      = ""

@@ -31,10 +31,10 @@ const (
 	defNatsURL         = mainflux.DefNatsURL
 	defPort            = mainflux.DefPostgresWriterPort
 	defDBHost          = "postgres"
-	defDBPort          = mainflux.DefPostgresWriterDBPort
+	defDBPort          = mainflux.DefPostgresDBPort
 	defDBUser          = mainflux.DefDBUser
 	defDBPass          = mainflux.DefDBPass
-	defDBName          = mainflux.DefDBName
+	defDBName          = mainflux.DefMessagesDBName
 	defDBSSLMode       = "disable"
 	defDBSSLCert       = ""
 	defDBSSLKey        = ""

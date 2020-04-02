@@ -29,7 +29,7 @@ const (
 	defNatsURL         = mainflux.DefNatsURL
 	defLogLevel        = mainflux.DefLogLevelError
 	defPort            = mainflux.DefInfluxWriterPort
-	defDBName          = mainflux.DefDBName
+	defDBName          = mainflux.DefMessagesDBName
 	defDBHost          = mainflux.DefDBHost
 	defDBPort          = mainflux.DefInfluxWriterDBPort
 	defDBUser          = mainflux.DefDBUser

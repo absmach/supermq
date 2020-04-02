@@ -16,16 +16,22 @@ const (
 	DefLogLevelError = "error"
 	// DefDBHost default DB Host
 	DefDBHost = "localhost"
-	// DefDBName default DB Name
-	DefDBName = "mainflux"
-	// DefUsersDBName default Users DB Name
-	DefUsersDBName = "users"
-	// DefAuthnDBName default Authn DB Name
-	DefAuthnDBName = "authn"
 	// DefDBUser default DB User
 	DefDBUser = "mainflux"
 	// DefDBPass default DB Password
 	DefDBPass = "mainflux"
+	// DefUsersDBName default users DB Name
+	DefUsersDBName = "users"
+	// DefAuthnDBName default authn DB Name
+	DefAuthnDBName = "authn"
+	// DefThingsDBName default things DB Name
+	DefThingsDBName = "things"
+	// DefBootstrapDBName default bootstrap DB Name
+	DefBootstrapDBName = "bootstrap"
+	// DefMessagesDBName default messages DB Name
+	DefMessagesDBName = "messages"
+	// DefTwinsDBName default twins DB Name
+	DefTwinsDBName = "mainflux-twins"
 	// DefRedisURL Redis service URL
 	DefRedisURL = "localhost:6379"
 	// DefAuthnURL AuthN service gRPC URL

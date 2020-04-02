@@ -31,7 +31,7 @@ const (
 	defLogLevel        = mainflux.DefLogLevelError
 	defNatsURL         = mainflux.DefNatsURL
 	defPort            = mainflux.DefMongoWriterPort
-	defDBName          = mainflux.DefDBName
+	defDBName          = mainflux.DefMessagesDBName
 	defDBHost          = mainflux.DefDBHost
 	defDBPort          = mainflux.DefMongoDBPort
 	defSubjectsCfgPath = "/config/subjects.toml"

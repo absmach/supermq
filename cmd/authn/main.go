@@ -31,22 +31,22 @@ import (
 )
 
 const (
-	defLogLevel      = mainflux.DefLogLevelError
-	defDBHost        = mainflux.DefDBHost
-	defDBPort        = mainflux.DefPostgresDBPort
-	defDBUser        = mainflux.DefDBUser
-	defDBPass        = mainflux.DefDBPass
-	defDBName        = mainflux.DefAuthnDBName
-	defDBSSLMode     = "disable"
-	defDBSSLCert     = ""
-	defDBSSLKey      = ""
-	defDBSSLRootCert = ""
-	defHTTPPort      = "8180"
-	defGRPCPort      = "8181"
-	defSecret        = "authn"
-	defServerCert    = ""
-	defServerKey     = ""
-	defJaegerURL     = ""
+	defLogLevel       = mainflux.DefLogLevelError
+	defDBHost         = mainflux.DefDBHost
+	defDBPort         = mainflux.DefPostgresDBPort
+	defDBUser         = mainflux.DefDBUser
+	defDBPass         = mainflux.DefDBPass
+	DefMessagesDBName = mainflux.DefAuthnDBName
+	defDBSSLMode      = "disable"
+	defDBSSLCert      = ""
+	defDBSSLKey       = ""
+	defDBSSLRootCert  = ""
+	defHTTPPort       = "8180"
+	defGRPCPort       = "8181"
+	defSecret         = "authn"
+	defServerCert     = ""
+	defServerKey      = ""
+	defJaegerURL      = ""
 
 	envLogLevel      = "MF_AUTHN_LOG_LEVEL"
 	envDBHost        = "MF_AUTHN_DB_HOST"
@@ -122,7 +122,7 @@ func loadConfig() config {
 		Port:        mainflux.Env(envDBPort, defDBPort),
 		User:        mainflux.Env(envDBUser, defDBUser),
 		Pass:        mainflux.Env(envDBPass, defDBPass),
-		Name:        mainflux.Env(envDBName, defDBName),
+		Name:        mainflux.Env(envDBName, DefMessagesDBName),
 		SSLMode:     mainflux.Env(envDBSSLMode, defDBSSLMode),
 		SSLCert:     mainflux.Env(envDBSSLCert, defDBSSLCert),
 		SSLKey:      mainflux.Env(envDBSSLKey, defDBSSLKey),

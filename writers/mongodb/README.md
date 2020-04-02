@@ -13,7 +13,7 @@ default values.
 | MF_NATS_URL                      | NATS instance URL                           | nats://localhost:4222  |
 | MF_MONGO_WRITER_LOG_LEVEL        | Log level for MongoDB writer                | error                  |
 | MF_MONGO_WRITER_PORT             | Service HTTP port                           | 8180                   |
-| MF_MONGO_WRITER_DB_NAME          | Default MongoDB database name               | mainflux               |
+| MF_MONGO_WRITER_DB_NAME          | Default MongoDB database name               | messages               |
 | MF_MONGO_WRITER_DB_HOST          | Default MongoDB database host               | localhost              |
 | MF_MONGO_WRITER_DB_PORT          | Default MongoDB database port               | 27017                  |
 | MF_MONGO_WRITER_SUBJECTS_CONFIG  | Configuration file path with subjects list  | /config/subjects.toml  |
