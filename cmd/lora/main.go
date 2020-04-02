@@ -28,7 +28,7 @@ import (
 
 const (
 	defLogLevel       = mainflux.DefLogLevelError
-	defHTTPPort       = "8180"
+	defHTTPPort       = mainflux.DefLoraHTTPPort
 	defLoraMsgURL     = "tcp://localhost:1883"
 	defNatsURL        = mainflux.DefNatsURL
 	defESURL          = mainflux.DefRedisURL

@@ -12,8 +12,10 @@ import (
 const (
 	// DefNatsURL NATS broker URL
 	DefNatsURL = nats.DefaultURL
+
 	// DefLogLevelError default loggger error flag
 	DefLogLevelError = "error"
+
 	// DefDBHost default DB Host
 	DefDBHost = "localhost"
 	// DefDBUser default DB User
@@ -32,16 +34,26 @@ const (
 	DefMessagesDBName = "messages"
 	// DefTwinsDBName default twins DB Name
 	DefTwinsDBName = "mainflux-twins"
+
 	// DefRedisURL Redis service URL
 	DefRedisURL = "localhost:6379"
 	// DefAuthnURL AuthN service gRPC URL
 	DefAuthnURL = "localhost:8181"
+	// DefAuthnGRPCPort AuthN service gRPC Port
+	DefAuthnGRPCPort = "8181"
+	// DefAuthnHTTPPort AuthN service HTTP Port
+	DefAuthnHTTPPort = "8189"
+	// DefUsersHTTPPort Users service HTTP Port
+	DefUsersHTTPPort = "8180"
 	// DefThingsHTTPPort Things service HTTP Port
-	DefThingsHTTPPort = "8180"
+	DefThingsHTTPPort = "8182"
+
 	// DefThingsAuthHTTPPort Things service Auth HTTP Port
 	DefThingsAuthHTTPPort = "8989"
 	// DefThingsAuthGRPCPort Things service Auth gRPC Port
 	DefThingsAuthGRPCPort = "8183"
+	// DefBootstrapPort service HTTP Port
+	DefBootstrapPort = "8202"
 	// DefThingsAuthURL Things service Auth gRPC URL
 	DefThingsAuthURL = "localhost:8183"
 	// DefHTTPPort HTTP adapter Port
@@ -52,20 +64,30 @@ const (
 	DefTwinsHTTPort = "9021"
 	// DefWSPort WS Port
 	DefWSPort = "8186"
+	// DefLoraHTTPPort Lora adapter HTTP Port
+	DefLoraHTTPPort = "8187"
+
+	// DefInfluxReaderPort infuxdb-reader HTTP Port
+	DefInfluxReaderPort = "8905"
 	// DefInfluxWriterPort infuxdb-writer HTTP Port
 	DefInfluxWriterPort = "8900"
-	// DefInfluxWriterDBPort influxdb-writer DB Port
-	DefInfluxWriterDBPort = "8086"
-	// DefMongoWriterPort mmongo-writer HTTP Port
+	// DefMongoReaderPort mongo-reader HTTP Port
+	DefMongoReaderPort = "8904"
+	// DefMongoWriterPort mongo-writer HTTP Port
 	DefMongoWriterPort = "8901"
-	// DefMongoDBPort mongo-writer DB Port
-	DefMongoDBPort = "27017"
+	// DefCassandraReaderPort cassandra-reader HTTP Port
+	DefCassandraReaderPort = "8903"
 	// DefCassandraWriterPort cassandra-writer HTTP Port
 	DefCassandraWriterPort = "8902"
-	// DefCassandraWriterDBPort cassandra-writer DB Port
-	DefCassandraWriterDBPort = "9042"
 	// DefPostgresWriterPort postgres-writer HTTP Port
 	DefPostgresWriterPort = "9204"
+
+	// DefInfluxDBPort Influx DB Port
+	DefInfluxDBPort = "8086"
+	// DefMongoDBPort Mongo DB Port
+	DefMongoDBPort = "27017"
+	// DefCassandraDBPort Casssandra DB Port
+	DefCassandraDBPort = "9042"
 	// DefPostgresDBPort Postgrres DB Port
 	DefPostgresDBPort = "5432"
 )

@@ -31,7 +31,7 @@ const (
 	defPort            = mainflux.DefInfluxWriterPort
 	defDBName          = mainflux.DefMessagesDBName
 	defDBHost          = mainflux.DefDBHost
-	defDBPort          = mainflux.DefInfluxWriterDBPort
+	defDBPort          = mainflux.DefInfluxDBPort
 	defDBUser          = mainflux.DefDBUser
 	defDBPass          = mainflux.DefDBPass
 	defSubjectsCfgPath = "/config/subjects.toml"

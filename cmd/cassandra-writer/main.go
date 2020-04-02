@@ -33,10 +33,10 @@ const (
 	defLogLevel        = mainflux.DefLogLevelError
 	defPort            = mainflux.DefCassandraWriterPort
 	defCluster         = "127.0.0.1"
-	defKeyspace        = "mainflux"
+	defKeyspace        = mainflux.DefMessagesDBName
 	defDBUser          = mainflux.DefDBUser
 	defDBPass          = mainflux.DefDBPass
-	defDBPort          = mainflux.DefCassandraWriterDBPort
+	defDBPort          = mainflux.DefCassandraDBPort
 	defSubjectsCfgPath = "/config/subjects.toml"
 
 	envNatsURL         = "MF_NATS_URL"

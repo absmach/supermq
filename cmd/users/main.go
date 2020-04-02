@@ -46,7 +46,7 @@ const (
 	defDBSSLCert     = ""
 	defDBSSLKey      = ""
 	defDBSSLRootCert = ""
-	defHTTPPort      = "8180"
+	defHTTPPort      = mainflux.DefUsersHTTPPort
 	defServerCert    = ""
 	defServerKey     = ""
 	defJaegerURL     = ""

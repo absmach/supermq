@@ -12,7 +12,7 @@ default values.
 |-----------------------------------|-----------------------------------------------------------|------------------------|
 | MF_NATS_URL                       | NATS instance URL                                         | nats://localhost:4222  |
 | MF_INFLUX_WRITER_LOG_LEVEL        | Log level for InfluxDB writer (debug, info, warn, error)  | error                  |
-| MF_INFLUX_WRITER_PORT             | Service HTTP port                                         | 8180                   |
+| MF_INFLUX_WRITER_PORT             | Service HTTP port                                         | 8900                   |
 | MF_INFLUX_WRITER_DB_HOST          | InfluxDB host                                             | localhost              |
 | MF_INFLUX_WRITER_DB_PORT          | Default port of InfluxDB database                         | 8086                   |
 | MF_INFLUX_WRITER_DB_USER          | Default user of InfluxDB database                         | mainflux               |

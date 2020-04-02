@@ -29,10 +29,10 @@ import (
 
 const (
 	defLogLevel          = mainflux.DefLogLevelError
-	defPort              = "8180"
+	defPort              = mainflux.DefInfluxReaderPort
 	defDBName            = mainflux.DefMessagesDBName
 	defDBHost            = mainflux.DefDBHost
-	defDBPort            = "8086"
+	defDBPort            = mainflux.DefInfluxDBPort
 	defDBUser            = mainflux.DefDBUser
 	defDBPass            = mainflux.DefDBPass
 	defClientTLS         = "false"

@@ -43,7 +43,7 @@ const (
 	defDBPort         = mainflux.DefPostgresDBPort
 	defDBUser         = mainflux.DefDBUser
 	defDBPass         = mainflux.DefDBPass
-	DefMessagesDBName = mainflux.DefBootstrapDBName
+	defDBName         = mainflux.DefBootstrapDBName
 	defDBSSLMode      = "disable"
 	defDBSSLCert      = ""
 	defDBSSLKey       = ""
@@ -51,7 +51,7 @@ const (
 	defEncryptKey     = "12345678910111213141516171819202"
 	defClientTLS      = "false"
 	defCACerts        = ""
-	defPort           = "8180"
+	defPort           = mainflux.DefBootstrapPort
 	defServerCert     = ""
 	defServerKey      = ""
 	defBaseURL        = "http://localhost"
@@ -171,7 +171,7 @@ func loadConfig() config {
 		Port:        mainflux.Env(envDBPort, defDBPort),
 		User:        mainflux.Env(envDBUser, defDBUser),
 		Pass:        mainflux.Env(envDBPass, defDBPass),
-		Name:        mainflux.Env(envDBName, DefMessagesDBName),
+		Name:        mainflux.Env(envDBName, defDBName),
 		SSLMode:     mainflux.Env(envDBSSLMode, defDBSSLMode),
 		SSLCert:     mainflux.Env(envDBSSLCert, defDBSSLCert),
 		SSLKey:      mainflux.Env(envDBSSLKey, defDBSSLKey),

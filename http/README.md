@@ -11,7 +11,7 @@ default values.
 | Variable                       | Description                                         | Default               |
 |--------------------------------|-----------------------------------------------------|-----------------------|
 | MF_HTTP_ADAPTER_LOG_LEVEL      | Log level for the HTTP Adapter                      | error                 |
-| MF_HTTP_ADAPTER_PORT           | Service HTTP port                                   | 8180                  |
+| MF_HTTP_ADAPTER_PORT           | Service HTTP port                                   | 8185                  |
 | MF_NATS_URL                    | NATS instance URL                                   | nats://localhost:4222 |
 | MF_HTTP_ADAPTER_CLIENT_TLS     | Flag that indicates if TLS should be turned on      | false                 |
 | MF_HTTP_ADAPTER_CA_CERTS       | Path to trusted CAs in PEM format                   |                       |
@@ -31,7 +31,7 @@ services:
     image: mainflux/http:[version]
     container_name: [instance name]
     ports:
-      - [host machine port]:8180
+      - [host machine port]:8185
     environment:
       MF_NATS_URL: [NATS instance URL]
       MF_HTTP_ADAPTER_LOG_LEVEL: [HTTP Adapter Log Level]

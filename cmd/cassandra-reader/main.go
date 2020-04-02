@@ -35,12 +35,12 @@ const (
 	sep = ","
 
 	defLogLevel          = mainflux.DefLogLevelError
-	defPort              = "8180"
+	defPort              = mainflux.DefCassandraReaderPort
 	defCluster           = "127.0.0.1"
-	defKeyspace          = "mainflux"
+	defKeyspace          = mainflux.DefMessagesDBName
 	defDBUser            = mainflux.DefDBUser
 	defDBPass            = mainflux.DefDBPass
-	defDBPort            = "9042"
+	defDBPort            = mainflux.DefCassandraDBPort
 	defClientTLS         = "false"
 	defCACerts           = ""
 	defServerCert        = ""

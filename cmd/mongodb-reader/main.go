@@ -34,7 +34,7 @@ import (
 
 const (
 	defLogLevel          = mainflux.DefLogLevelError
-	defPort              = "8180"
+	defPort              = mainflux.DefMongoReaderPort
 	defDBName            = mainflux.DefMessagesDBName
 	defDBHost            = mainflux.DefDBHost
 	defDBPort            = "27017"
