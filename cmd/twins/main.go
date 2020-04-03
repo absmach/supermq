@@ -40,21 +40,21 @@ import (
 const (
 	queue = "twins"
 
-	defLogLevel        = mainflux.DefLogLevelError
-	defHTTPPort        = mainflux.DefTwinsHTTPort
+	defLogLevel        = "error"
+	defHTTPPort        = "9021"
 	defJaegerURL       = ""
 	defServerCert      = ""
 	defServerKey       = ""
-	defDB              = mainflux.DefTwinsDB
-	defDBHost          = mainflux.DefDBHost
-	defDBPort          = mainflux.DefMongoDBPort
+	defDB              = "mainflux-twins"
+	defDBHost          = "localhost"
+	defDBPort          = "27017"
 	defSingleUserEmail = ""
 	defSingleUserToken = ""
 	defClientTLS       = "false"
 	defCACerts         = ""
 	defChannelID       = ""
 	defNatsURL         = nats.DefaultURL
-	defAuthnURL        = mainflux.DefAuthnURL
+	defAuthnURL        = "localhost:8181"
 	defAuthnTimeout    = "1" // in seconds
 
 	envLogLevel        = "MF_TWINS_LOG_LEVEL"

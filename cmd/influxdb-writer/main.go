@@ -20,20 +20,21 @@ import (
 	"github.com/mainflux/mainflux/writers"
 	"github.com/mainflux/mainflux/writers/api"
 	"github.com/mainflux/mainflux/writers/influxdb"
+	"github.com/nats-io/nats.go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
 const (
 	svcName = "influxdb-writer"
 
-	defNatsURL         = mainflux.DefNatsURL
-	defLogLevel        = mainflux.DefLogLevelError
-	defPort            = mainflux.DefInfluxWriterPort
-	defDBName          = mainflux.DefWritersDBName
-	defDBHost          = mainflux.DefDBHost
-	defDBPort          = mainflux.DefInfluxDBPort
-	defDBUser          = mainflux.DefDBUser
-	defDBPass          = mainflux.DefDBPass
+	defNatsURL         = nats.DefaultURL
+	defLogLevel        = "error"
+	defPort            = "8900"
+	defDBName          = "messages"
+	defDBHost          = "localhost"
+	defDBPorts         = "8086"
+	defDBUser          = "mainflux"
+	defDBPass          = "mainflux"
 	defSubjectsCfgPath = "/config/subjects.toml"
 
 	envNatsURL         = "MF_NATS_URL"

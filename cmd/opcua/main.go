@@ -22,25 +22,26 @@ import (
 	"github.com/mainflux/mainflux/opcua/db"
 	"github.com/mainflux/mainflux/opcua/gopcua"
 	"github.com/mainflux/mainflux/opcua/redis"
+	"github.com/nats-io/nats.go"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
 const (
-	defLogLevel       = mainflux.DefLogLevelError
+	defLogLevel       = "error"
 	defHTTPPort       = "8188"
 	defOPCIntervalMs  = "1000"
 	defOPCPolicy      = ""
 	defOPCMode        = ""
 	defOPCCertFile    = ""
 	defOPCKeyFile     = ""
-	defNatsURL        = mainflux.DefNatsURL
-	defESURL          = mainflux.DefRedisURL
+	defNatsURL        = nats.DefaultURL
+	defESURL          = "localhost:6379"
 	defESPass         = ""
 	defESDB           = "0"
 	defESConsumerName = "opcua"
-	defRouteMapURL    = mainflux.DefRedisURL
+	defRouteMapURL    = "localhost:6379"
 	defRouteMapPass   = ""
 	defRouteMapDB     = "0"
 

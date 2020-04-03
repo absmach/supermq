@@ -22,6 +22,7 @@ import (
 	"github.com/mainflux/mainflux/writers"
 	"github.com/mainflux/mainflux/writers/api"
 	"github.com/mainflux/mainflux/writers/cassandra"
+	"github.com/nats-io/nats.go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
@@ -29,14 +30,14 @@ const (
 	svcName = "cassandra-writer"
 	sep     = ","
 
-	defNatsURL         = mainflux.DefNatsURL
-	defLogLevel        = mainflux.DefLogLevelError
-	defPort            = mainflux.DefCassandraWriterPort
+	defNatsURL         = nats.DefaultURL
+	defLogLevel        = "error"
+	defPort            = "8902"
 	defCluster         = "127.0.0.1"
-	defKeyspace        = mainflux.DefWritersDBName
-	defDBUser          = mainflux.DefDBUser
-	defDBPass          = mainflux.DefDBPass
-	defDBPort          = mainflux.DefCassandraDBPort
+	defKeyspace        = "messages"
+	defDBUser          = "mainflux"
+	defDBPass          = "mainflux"
+	defDBPort          = "9042"
 	defSubjectsCfgPath = "/config/subjects.toml"
 
 	envNatsURL         = "MF_NATS_URL"

@@ -34,21 +34,21 @@ const (
 	svcName = "postgres-writer"
 	sep     = ","
 
-	defLogLevel          = mainflux.DefLogLevelError
-	defPort              = mainflux.DefPostgresWriterPort
+	defLogLevel          = "error"
+	defPort              = "9204"
 	defClientTLS         = "false"
 	defCACerts           = ""
-	defDBHost            = mainflux.DefDBHost
-	defDBPort            = mainflux.DefPostgresDBPort
-	defDBUser            = mainflux.DefDBUser
-	defDBPass            = mainflux.DefDBPass
-	defDBName            = mainflux.DefWritersDBName
+	defDBHost            = "localhost"
+	defDBPort            = "5432"
+	defDBUser            = "mainflux"
+	defDBPass            = "mainflux"
+	defDBName            = "messages"
 	defDBSSLMode         = "disable"
 	defDBSSLCert         = ""
 	defDBSSLKey          = ""
 	defDBSSLRootCert     = ""
 	defJaegerURL         = ""
-	defThingsAuthURL     = mainflux.DefThingsAuthURL
+	defThingsAuthURL     = "localhost:8183"
 	defThingsAuthTimeout = "1" // in seconds
 
 	envLogLevel          = "MF_POSTGRES_READER_LOG_LEVEL"

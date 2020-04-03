@@ -20,6 +20,7 @@ import (
 	"github.com/mainflux/mainflux/lora"
 	"github.com/mainflux/mainflux/lora/api"
 	"github.com/mainflux/mainflux/lora/mqtt"
+	"github.com/nats-io/nats.go"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux/lora/redis"
@@ -27,15 +28,15 @@ import (
 )
 
 const (
-	defLogLevel       = mainflux.DefLogLevelError
-	defHTTPPort       = mainflux.DefLoraHTTPPort
+	defLogLevel       = "error"
+	defHTTPPort       = "8187"
 	defLoraMsgURL     = "tcp://localhost:1883"
-	defNatsURL        = mainflux.DefNatsURL
-	defESURL          = mainflux.DefRedisURL
+	defNatsURL        = nats.DefaultURL
+	defESURL          = "localhost:6379"
 	defESPass         = ""
 	defESDB           = "0"
 	defESConsumerName = "lora"
-	defRouteMapURL    = mainflux.DefRedisURL
+	defRouteMapURL    = "localhost:6379"
 	defRouteMapPass   = ""
 	defRouteMapDB     = "0"
 

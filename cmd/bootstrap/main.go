@@ -38,12 +38,12 @@ import (
 )
 
 const (
-	defLogLevel       = mainflux.DefLogLevelError
-	defDBHost         = mainflux.DefDBHost
-	defDBPort         = mainflux.DefPostgresDBPort
-	defDBUser         = mainflux.DefDBUser
-	defDBPass         = mainflux.DefDBPass
-	defDB             = mainflux.DefBootstrapDB
+	defLogLevel       = "error"
+	defDBHost         = "localhost"
+	defDBPort         = "5432"
+	defDBUser         = "mainflux"
+	defDBPass         = "mainflux"
+	defDB             = "bootstrap"
 	defDBSSLMode      = "disable"
 	defDBSSLCert      = ""
 	defDBSSLKey       = ""
@@ -51,20 +51,20 @@ const (
 	defEncryptKey     = "12345678910111213141516171819202"
 	defClientTLS      = "false"
 	defCACerts        = ""
-	defPort           = mainflux.DefBootstrapPort
+	defPort           = "8202"
 	defServerCert     = ""
 	defServerKey      = ""
 	defBaseURL        = "http://localhost"
 	defThingsPrefix   = ""
-	defThingsESURL    = mainflux.DefRedisURL
+	defThingsESURL    = "localhost:6379"
 	defThingsESPass   = ""
 	defThingsESDB     = "0"
-	defESURL          = mainflux.DefRedisURL
+	defESURL          = "localhost:6379"
 	defESPass         = ""
 	defESDB           = "0"
 	defESConsumerName = "bootstrap"
 	defJaegerURL      = ""
-	defAuthnURL       = mainflux.DefAuthnURL
+	defAuthnURL       = "localhost:8181"
 	defAuthnTimeout   = "1" // in seconds
 
 	envLogLevel       = "MF_BOOTSTRAP_LOG_LEVEL"

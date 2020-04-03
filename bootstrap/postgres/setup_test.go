@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/bootstrap/postgres"
 	"github.com/mainflux/mainflux/logger"
 	dockertest "gopkg.in/ory/dockertest.v3"
@@ -42,7 +41,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not start container: %s", err)
 	}
 
-	port := container.GetPort(mainflux.DefPostgresDBPort + "/tcp")
+	port := container.GetPort("5432/tcp")
 
 	if err := pool.Retry(func() error {
 		url := fmt.Sprintf("host=localhost port=%s user=test dbname=test password=test sslmode=disable", port)

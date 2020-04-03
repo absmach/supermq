@@ -34,19 +34,19 @@ import (
 const (
 	sep = ","
 
-	defLogLevel          = mainflux.DefLogLevelError
-	defPort              = mainflux.DefCassandraReaderPort
+	defLogLevel          = "error"
+	defPort              = "8903"
 	defCluster           = "127.0.0.1"
-	defKeyspace          = mainflux.DefWritersDBName
-	defDBUser            = mainflux.DefDBUser
-	defDBPass            = mainflux.DefDBPass
-	defDBPort            = mainflux.DefCassandraDBPort
+	defKeyspace          = "messages"
+	defDBUser            = "mainflux"
+	defDBPass            = "mainflux"
+	defDBPort            = "9042"
 	defClientTLS         = "false"
 	defCACerts           = ""
 	defServerCert        = ""
 	defServerKey         = ""
 	defJaegerURL         = ""
-	defThingsAuthURL     = mainflux.DefThingsAuthURL
+	defThingsAuthURL     = "localhost:8183"
 	defThingsAuthTimeout = "1" // in seconds
 
 	envLogLevel          = "MF_CASSANDRA_READER_LOG_LEVEL"

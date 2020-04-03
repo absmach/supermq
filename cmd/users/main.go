@@ -36,17 +36,17 @@ import (
 )
 
 const (
-	defLogLevel      = mainflux.DefLogLevelError
-	defDBHost        = mainflux.DefDBHost
-	defDBPort        = mainflux.DefPostgresDBPort
-	defDBUser        = mainflux.DefDBUser
-	defDBPass        = mainflux.DefDBPass
-	defDB            = mainflux.DefUsersDB
+	defLogLevel      = "error"
+	defDBHost        = "localhost"
+	defDBPort        = "5432"
+	defDBUser        = "mainflux"
+	defDBPass        = "mainflux"
+	defDB            = "users"
 	defDBSSLMode     = "disable"
 	defDBSSLCert     = ""
 	defDBSSLKey      = ""
 	defDBSSLRootCert = ""
-	defHTTPPort      = mainflux.DefUsersHTTPPort
+	defHTTPPort      = "8180"
 	defServerCert    = ""
 	defServerKey     = ""
 	defJaegerURL     = ""
@@ -65,7 +65,7 @@ const (
 
 	defAuthnTLS     = "false"
 	defAuthnCACerts = ""
-	defAuthnURL     = mainflux.DefAuthnURL
+	defAuthnURL     = "localhost:8181"
 	defAuthnTimeout = "1" // in seconds
 
 	envLogLevel      = "MF_USERS_LOG_LEVEL"

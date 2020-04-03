@@ -42,33 +42,33 @@ import (
 )
 
 const (
-	defLogLevel        = mainflux.DefLogLevelError
-	defDBHost          = mainflux.DefDBHost
-	defDBPort          = mainflux.DefPostgresDBPort
-	defDBUser          = mainflux.DefDBUser
-	defDBPass          = mainflux.DefDBPass
-	defDB              = mainflux.DefThingsDB
+	defLogLevel        = "error"
+	defDBHost          = "localhost"
+	defDBPort          = 5432
+	defDBUser          = "mainflux"
+	defDBPass          = "mainflux"
+	defDB              = "things"
 	defDBSSLMode       = "disable"
 	defDBSSLCert       = ""
 	defDBSSLKey        = ""
 	defDBSSLRootCert   = ""
 	defClientTLS       = "false"
 	defCACerts         = ""
-	defCacheURL        = mainflux.DefRedisURL
+	defCacheURL        = "localhost:6379"
 	defCachePass       = ""
 	defCacheDB         = "0"
-	defESURL           = mainflux.DefRedisURL
+	defESURL           = "localhost:6379"
 	defESPass          = ""
 	defESDB            = "0"
-	defHTTPPort        = mainflux.DefThingsHTTPPort
-	defAuthHTTPPort    = mainflux.DefThingsAuthHTTPPort
-	defAuthGRPCPort    = mainflux.DefThingsAuthGRPCPort
+	defHTTPPort        = "8182"
+	defAuthHTTPPort    = "8989"
+	defAuthGRPCPort    = "8983"
 	defServerCert      = ""
 	defServerKey       = ""
 	defSingleUserEmail = ""
 	defSingleUserToken = ""
 	defJaegerURL       = ""
-	defAuthnURL        = mainflux.DefAuthnURL
+	defAuthnURL        = "localhost:8181"
 	defAuthnTimeout    = "1" // in seconds
 
 	envLogLevel        = "MF_THINGS_LOG_LEVEL"

@@ -21,6 +21,7 @@ import (
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	mp "github.com/mainflux/mproxy/pkg/mqtt"
 	ws "github.com/mainflux/mproxy/pkg/websocket"
+	"github.com/nats-io/nats.go"
 	opentracing "github.com/opentracing/opentracing-go"
 	jconfig "github.com/uber/jaeger-client-go/config"
 	"google.golang.org/grpc"
@@ -29,7 +30,7 @@ import (
 
 const (
 	// Logging
-	defLogLevel = mainflux.DefLogLevelError
+	defLogLevel = "error"
 	envLogLevel = "MF_MQTT_ADAPTER_LOG_LEVEL"
 	// MQTT
 	defMQTTHost       = "0.0.0.0"
@@ -54,12 +55,12 @@ const (
 	envHTTPTargetPort = "MF_MQTT_ADAPTER_WS_TARGET_PORT"
 	envHTTPTargetPath = "MF_MQTT_ADAPTER_WS_TARGET_PATH"
 	// Things
-	defThingsAuthURL     = mainflux.DefThingsAuthURL
+	defThingsAuthURL     = "localhost:8183"
 	defThingsAuthTimeout = "1" // in seconds
 	envThingsAuthURL     = "MF_THINGS_AUTH_GRPC_URL"
 	envThingsAuthTimeout = "MF_THINGS_AUTH_GRPC_TIMMEOUT"
 	// Nats
-	defNatsURL = mainflux.DefNatsURL
+	defNatsURL = nats.DefaultURL
 	envNatsURL = "MF_NATS_URL"
 	// Jaeger
 	defJaegerURL = ""
@@ -76,7 +77,7 @@ const (
 	envESURL  = "MF_MQTT_ADAPTER_ES_URL"
 	envESPass = "MF_MQTT_ADAPTER_ES_PASS"
 	envESDB   = "MF_MQTT_ADAPTER_ES_DB"
-	defESURL  = mainflux.DefRedisURL
+	defESURL  = "localhost:6379"
 	defESPass = ""
 	defESDB   = "0"
 )

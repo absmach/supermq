@@ -23,6 +23,7 @@ import (
 	"github.com/mainflux/mainflux/coap/api"
 	logger "github.com/mainflux/mainflux/logger"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
+	"github.com/nats-io/nats.go"
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"
@@ -31,14 +32,14 @@ import (
 )
 
 const (
-	defPort              = mainflux.DefCoapPort
-	defNatsURL           = mainflux.DefNatsURL
-	defLogLevel          = mainflux.DefLogLevelError
+	defPort              = "5683"
+	defNatsURL           = nats.DefaultURL
+	defLogLevel          = "error"
 	defClientTLS         = "false"
 	defCACerts           = ""
 	defPingPeriod        = "12"
 	defJaegerURL         = ""
-	defThingsAuthURL     = mainflux.DefThingsAuthURL
+	defThingsAuthURL     = "localhost:8183"
 	defThingsAuthTimeout = "1" // in seconds
 
 	envPort              = "MF_COAP_ADAPTER_PORT"

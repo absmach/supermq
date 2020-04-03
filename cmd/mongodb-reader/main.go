@@ -33,17 +33,17 @@ import (
 )
 
 const (
-	defLogLevel          = mainflux.DefLogLevelError
-	defPort              = mainflux.DefMongoReaderPort
-	defDBName            = mainflux.DefWritersDBName
-	defDBHost            = mainflux.DefDBHost
+	defLogLevel          = "error"
+	defPort              = "8904"
+	defDBName            = "messages"
+	defDBHost            = "localhost"
 	defDBPort            = "27017"
 	defClientTLS         = "false"
 	defCACerts           = ""
 	defServerCert        = ""
 	defServerKey         = ""
 	defJaegerURL         = ""
-	defThingsAuthURL     = mainflux.DefThingsAuthURL
+	defThingsAuthURL     = "localhost:8183"
 	defThingsAuthTimeout = "1" // in seconds
 
 	envLogLevel          = "MF_MONGO_READER_LOG_LEVEL"

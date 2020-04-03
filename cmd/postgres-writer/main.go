@@ -20,6 +20,7 @@ import (
 	"github.com/mainflux/mainflux/writers"
 	"github.com/mainflux/mainflux/writers/api"
 	"github.com/mainflux/mainflux/writers/postgres"
+	"github.com/nats-io/nats.go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
@@ -27,14 +28,14 @@ const (
 	svcName = "postgres-writer"
 	sep     = ","
 
-	defLogLevel        = mainflux.DefLogLevelError
-	defNatsURL         = mainflux.DefNatsURL
-	defPort            = mainflux.DefPostgresWriterPort
+	defLogLevel        = "error"
+	defNatsURL         = nats.DefaultURL
+	defPort            = "9204"
 	defDBHost          = "postgres"
-	defDBPort          = mainflux.DefPostgresDBPort
-	defDBUser          = mainflux.DefDBUser
-	defDBPass          = mainflux.DefDBPass
-	defDBName          = mainflux.DefWritersDBName
+	defDBPort          = 5432
+	defDBUser          = "mainflux"
+	defDBPass          = "mainflux"
+	defDBName          = "messages"
 	defDBSSLMode       = "disable"
 	defDBSSLCert       = ""
 	defDBSSLKey        = ""

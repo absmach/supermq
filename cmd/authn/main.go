@@ -31,18 +31,18 @@ import (
 )
 
 const (
-	defLogLevel      = mainflux.DefLogLevelError
-	defDBHost        = mainflux.DefDBHost
-	defDBPort        = mainflux.DefPostgresDBPort
-	defDBUser        = mainflux.DefDBUser
-	defDBPass        = mainflux.DefDBPass
-	defDB            = mainflux.DefAuthnDB
+	defLogLevel      = "error"
+	defDBHost        = "localhost"
+	defDBPort        = "5432"
+	defDBUser        = "mainflux"
+	defDBPass        = "mainflux"
+	defDB            = "authn"
 	defDBSSLMode     = "disable"
 	defDBSSLCert     = ""
 	defDBSSLKey      = ""
 	defDBSSLRootCert = ""
-	defHTTPPort      = mainflux.DefAuthnHTTPPort
-	defGRPCPort      = mainflux.DefAuthnGRPCPort
+	defHTTPPort      = "8189"
+	defGRPCPort      = "8181"
 	defSecret        = "authn"
 	defServerCert    = ""
 	defServerKey     = ""

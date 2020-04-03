@@ -24,6 +24,7 @@ import (
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/logger"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
+	"github.com/nats-io/nats.go"
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"
@@ -31,13 +32,13 @@ import (
 )
 
 const (
-	defLogLevel          = mainflux.DefLogLevelError
+	defLogLevel          = "error"
 	defClientTLS         = "false"
 	defCACerts           = ""
-	defPort              = mainflux.DefHTTPPort
-	defNatsURL           = mainflux.DefNatsURL
+	defPort              = "8185"
+	defNatsURL           = nats.DefaultURL
 	defJaegerURL         = ""
-	defThingsAuthURL     = mainflux.DefThingsAuthURL
+	defThingsAuthURL     = "localhost:8183"
 	defThingsAuthTimeout = "1" // in seconds
 
 	envLogLevel          = "MF_HTTP_ADAPTER_LOG_LEVEL"
