@@ -45,7 +45,7 @@ const (
 	defJaegerURL       = ""
 	defServerCert      = ""
 	defServerKey       = ""
-	defDB              = mainflux.DefTwinsDBName
+	defDB              = mainflux.DefTwinsDB
 	defDBHost          = mainflux.DefDBHost
 	defDBPort          = mainflux.DefMongoDBPort
 	defSingleUserEmail = ""
