@@ -37,7 +37,7 @@ const (
 	defLogLevel          = mainflux.DefLogLevelError
 	defPort              = mainflux.DefCassandraReaderPort
 	defCluster           = "127.0.0.1"
-	defKeyspace          = mainflux.DefMessagesDBName
+	defKeyspace          = mainflux.DefWritersDBName
 	defDBUser            = mainflux.DefDBUser
 	defDBPass            = mainflux.DefDBPass
 	defDBPort            = mainflux.DefCassandraDBPort

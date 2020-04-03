@@ -45,7 +45,7 @@ const (
 	defJaegerURL       = ""
 	defServerCert      = ""
 	defServerKey       = ""
-	defDBName          = mainflux.DefTwinsDBName
+	defDB              = mainflux.DefTwinsDBName
 	defDBHost          = mainflux.DefDBHost
 	defDBPort          = mainflux.DefMongoDBPort
 	defSingleUserEmail = ""
@@ -62,7 +62,7 @@ const (
 	envJaegerURL       = "MF_JAEGER_URL"
 	envServerCert      = "MF_TWINS_SERVER_CERT"
 	envServerKey       = "MF_TWINS_SERVER_KEY"
-	envDBName          = "MF_TWINS_DB_NAME"
+	envDB              = "MF_TWINS_DB"
 	envDBHost          = "MF_TWINS_DB_HOST"
 	envDBPort          = "MF_TWINS_DB_PORT"
 	envSingleUserEmail = "MF_TWINS_SINGLE_USER_EMAIL"
@@ -156,7 +156,7 @@ func loadConfig() config {
 	}
 
 	dbCfg := twmongodb.Config{
-		Name: mainflux.Env(envDBName, defDBName),
+		Name: mainflux.Env(envDB, defDB),
 		Host: mainflux.Env(envDBHost, defDBHost),
 		Port: mainflux.Env(envDBPort, defDBPort),
 	}

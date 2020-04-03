@@ -23,7 +23,7 @@ services:
     container_name: mainflux-twins-db
     restart: on-failure
     environment:
-      MONGO_INITDB_DATABASE: ${MF_TWINS_DB_NAME}
+      MONGO_INITDB_DATABASE: ${MF_TWINS_DB}
     ports:
       - ${MF_TWINS_DB_PORT}:${MF_TWINS_DB_PORT}
     networks:
@@ -39,7 +39,7 @@ services:
     environment:
       MF_TWINS_LOG_LEVEL: ${MF_TWINS_LOG_LEVEL}
       MF_TWINS_HTTP_PORT: ${MF_TWINS_HTTP_PORT}
-      MF_TWINS_DB_NAME: ${MF_TWINS_DB_NAME}
+      MF_TWINS_DB: ${MF_TWINS_DB}
       MF_TWINS_DB_HOST: ${MF_TWINS_DB_HOST}
       MF_TWINS_DB_PORT: ${MF_TWINS_DB_PORT}
       MF_TWINS_CHANNEL_ID: ${MF_TWINS_CHANNEL_ID}

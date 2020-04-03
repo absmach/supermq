@@ -30,7 +30,7 @@ import (
 const (
 	defLogLevel          = mainflux.DefLogLevelError
 	defPort              = mainflux.DefInfluxReaderPort
-	defDBName            = mainflux.DefMessagesDBName
+	defDBName            = mainflux.DefWritersDBName
 	defDBHost            = mainflux.DefDBHost
 	defDBPort            = mainflux.DefInfluxDBPort
 	defDBUser            = mainflux.DefDBUser

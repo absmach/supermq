@@ -22,18 +22,18 @@ const (
 	DefDBUser = "mainflux"
 	// DefDBPass default DB Password
 	DefDBPass = "mainflux"
-	// DefUsersDBName default users DB Name
-	DefUsersDBName = "users"
-	// DefAuthnDBName default authn DB Name
-	DefAuthnDBName = "authn"
-	// DefThingsDBName default things DB Name
-	DefThingsDBName = "things"
-	// DefBootstrapDBName default bootstrap DB Name
-	DefBootstrapDBName = "bootstrap"
-	// DefMessagesDBName default messages DB Name
-	DefMessagesDBName = "messages"
-	// DefTwinsDBName default twins DB Name
-	DefTwinsDBName = "mainflux-twins"
+	// DefUsersDB default users DB Name
+	DefUsersDB = "users"
+	// DefAuthnDB default authn DB Name
+	DefAuthnDB = "authn"
+	// DefThingsDB default things DB Name
+	DefThingsDB = "things"
+	// DefBootstrapDB default bootstrap DB Name
+	DefBootstrapDB = "bootstrap"
+	// DefWritersDBName default messages DB Name
+	DefWritersDBName = "writer"
+	// DefTwinsDB default twins DB Name
+	DefTwinsDB = "mainflux-twins"
 
 	// DefRedisURL Redis service URL
 	DefRedisURL = "localhost:6379"

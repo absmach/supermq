@@ -47,7 +47,7 @@ const (
 	defDBPort          = mainflux.DefPostgresDBPort
 	defDBUser          = mainflux.DefDBUser
 	defDBPass          = mainflux.DefDBPass
-	defDBName          = mainflux.DefThingsDBName
+	defDB              = mainflux.DefThingsDB
 	defDBSSLMode       = "disable"
 	defDBSSLCert       = ""
 	defDBSSLKey        = ""
@@ -76,7 +76,7 @@ const (
 	envDBPort          = "MF_THINGS_DB_PORT"
 	envDBUser          = "MF_THINGS_DB_USER"
 	envDBPass          = "MF_THINGS_DB_PASS"
-	envDBName          = "MF_THINGS_DB"
+	envDB              = "MF_THINGS_DB"
 	envDBSSLMode       = "MF_THINGS_DB_SSL_MODE"
 	envDBSSLCert       = "MF_THINGS_DB_SSL_CERT"
 	envDBSSLKey        = "MF_THINGS_DB_SSL_KEY"
@@ -189,7 +189,7 @@ func loadConfig() config {
 		Port:        mainflux.Env(envDBPort, defDBPort),
 		User:        mainflux.Env(envDBUser, defDBUser),
 		Pass:        mainflux.Env(envDBPass, defDBPass),
-		Name:        mainflux.Env(envDBName, defDBName),
+		Name:        mainflux.Env(envDB, defDB),
 		SSLMode:     mainflux.Env(envDBSSLMode, defDBSSLMode),
 		SSLCert:     mainflux.Env(envDBSSLCert, defDBSSLCert),
 		SSLKey:      mainflux.Env(envDBSSLKey, defDBSSLKey),

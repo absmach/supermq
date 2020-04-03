@@ -19,7 +19,7 @@ default values.
 | MF_TWINS_SERVER_CERT       | Path to server certificate in PEM format                             |                       |
 | MF_TWINS_SERVER_KEY        | Path to server key in PEM format                                     |                       |
 | MF_JAEGER_URL              | Jaeger server URL                                                    |                       |
-| MF_TWINS_DB_NAME           | Database name                                                        | mainflux              |
+| MF_TWINS_DB                | Database name                                                        | mainflux              |
 | MF_TWINS_DB_HOST           | Database host address                                                | localhost             |
 | MF_TWINS_DB_PORT           | Database host port                                                   | 27017                 |
 | MF_TWINS_SINGLE_USER_EMAIL | User email for single user mode (no gRPC communication with users)   |                       |
@@ -54,7 +54,7 @@ services:
       MF_TWINS_SERVER_CERT: [String path to server cert in pem format]
       MF_TWINS_SERVER_KEY: [String path to server key in pem format]
       MF_JAEGER_URL: [Jaeger server URL]
-      MF_TWINS_DB_NAME: [Database name]
+      MF_TWINS_DB: [Database name]
       MF_TWINS_DB_HOST: [Database host address]
       MF_TWINS_DB_PORT: [Database host port]
       MF_TWINS_SINGLE_USER_EMAIL: [User email for single user mode]
@@ -89,7 +89,7 @@ MF_TWINS_LOG_LEVEL: [Twins log level] \
 MF_TWINS_HTTP_PORT: [Service HTTP port] \
 MF_TWINS_SERVER_CERT: [String path to server cert in pem format] \
 MF_TWINS_SERVER_KEY: [String path to server key in pem format] \
-MF_JAEGER_URL: [Jaeger server URL] MF_TWINS_DB_NAME: [Database name] \
+MF_JAEGER_URL: [Jaeger server URL] MF_TWINS_DB: [Database name] \
 MF_TWINS_DB_HOST: [Database host address] \
 MF_TWINS_DB_PORT: [Database host port] \
 MF_TWINS_SINGLE_USER_EMAIL: [User email for single user mode] \

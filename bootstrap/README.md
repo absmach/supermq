@@ -42,7 +42,7 @@ The service is configured using the environment variables presented in the follo
 | MF_BOOTSTRAP_DB_PORT          | Database host port                                                      | 5432                             |
 | MF_BOOTSTRAP_DB_USER          | Database user                                                           | mainflux                         |
 | MF_BOOTSTRAP_DB_PASS          | Database password                                                       | mainflux                         |
-| MF_BOOTSTRAP_DB_NAME          | Name of the database used by the service                                | bootstrap                        |
+| MF_BOOTSTRAP_DB               | Name of the database used by the service                                | bootstrap                        |
 | MF_BOOTSTRAP_DB_SSL_MODE      | Database connection SSL mode (disable, require, verify-ca, verify-full) | disable                          |
 | MF_BOOTSTRAP_DB_SSL_CERT      | Path to the PEM encoded certificate file                                |                                  |
 | MF_BOOTSTRAP_DB_SSL_KEY       | Path to the PEM encoded key file                                        |                                  |
@@ -88,7 +88,7 @@ version: "2"
       MF_BOOTSTRAP_DB_PORT: [Database host port]
       MF_BOOTSTRAP_DB_USER: [Database user]
       MF_BOOTSTRAP_DB_PASS: [Database password]
-      MF_BOOTSTRAP_DB_NAME: [Name of the database used by the service]
+      MF_BOOTSTRAP_DB: [Name of the database used by the service]
       MF_BOOTSTRAP_DB_SSL_MODE: [SSL mode to connect to the database with]
       MF_BOOTSTRAP_DB_SSL_CERT: [Path to the PEM encoded certificate file]
       MF_BOOTSTRAP_DB_SSL_KEY: [Path to the PEM encoded key file]
@@ -133,7 +133,7 @@ MF_BOOTSTRAP_DB_HOST=[Database host address] \
 MF_BOOTSTRAP_DB_PORT=[Database host port] \
 MF_BOOTSTRAP_DB_USER=[Database user] \
 MF_BOOTSTRAP_DB_PASS=[Database password] \
-MF_BOOTSTRAP_DB_NAME=[Name of the database used by the service] \
+MF_BOOTSTRAP_DB=[Name of the database used by the service] \
 MF_BOOTSTRAP_DB_SSL_MODE=[SSL mode to connect to the database with] \
 MF_BOOTSTRAP_DB_SSL_CERT=[Path to the PEM encoded certificate file] \
 MF_BOOTSTRAP_DB_SSL_KEY=[Path to the PEM encoded key file] \
