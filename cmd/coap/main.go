@@ -39,7 +39,7 @@ const (
 	defCACerts           = ""
 	defPingPeriod        = "12"
 	defJaegerURL         = ""
-	defThingsAuthURL     = "localhost:8183"
+	defThingsAuthURL     = "localhost:8181"
 	defThingsAuthTimeout = "1" // in seconds
 
 	envPort              = "MF_COAP_ADAPTER_PORT"

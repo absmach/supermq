@@ -38,7 +38,7 @@ default values.
 | MF_AUTHN_DB_SSL_CERT      | Path to the PEM encoded certificate file                                |                |
 | MF_AUTHN_DB_SSL_KEY       | Path to the PEM encoded key file                                        |                |
 | MF_AUTHN_DB_SSL_ROOT_CERT | Path to the PEM encoded root certificate file                           |                |
-| MF_AUTHN_HTTP_PORT        | Authn service HTTP port                                                 | 8189           |
+| MF_AUTHN_HTTP_PORT        | Authn service HTTP port                                                 | 8180           |
 | MF_AUTHN_GRPC_PORT        | Authn service gRPC port                                                 | 8181           |
 | MF_AUTHN_SERVER_CERT      | Path to server certificate in pem format                                |                |
 | MF_AUTHN_SERVER_KEY       | Path to server key in pem format                                        |                |

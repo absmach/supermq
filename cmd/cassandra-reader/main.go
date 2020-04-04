@@ -35,7 +35,7 @@ const (
 	sep = ","
 
 	defLogLevel          = "error"
-	defPort              = "8903"
+	defPort              = "8180"
 	defCluster           = "127.0.0.1"
 	defKeyspace          = "messages"
 	defDBUser            = "mainflux"
@@ -46,7 +46,7 @@ const (
 	defServerCert        = ""
 	defServerKey         = ""
 	defJaegerURL         = ""
-	defThingsAuthURL     = "localhost:8183"
+	defThingsAuthURL     = "localhost:8181"
 	defThingsAuthTimeout = "1" // in seconds
 
 	envLogLevel          = "MF_CASSANDRA_READER_LOG_LEVEL"

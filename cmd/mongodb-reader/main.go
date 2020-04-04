@@ -34,7 +34,7 @@ import (
 
 const (
 	defLogLevel          = "error"
-	defPort              = "8904"
+	defPort              = "8180"
 	defDBName            = "messages"
 	defDBHost            = "localhost"
 	defDBPort            = "27017"
@@ -43,7 +43,7 @@ const (
 	defServerCert        = ""
 	defServerKey         = ""
 	defJaegerURL         = ""
-	defThingsAuthURL     = "localhost:8183"
+	defThingsAuthURL     = "localhost:8181"
 	defThingsAuthTimeout = "1" // in seconds
 
 	envLogLevel          = "MF_MONGO_READER_LOG_LEVEL"

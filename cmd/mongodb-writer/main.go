@@ -31,7 +31,7 @@ const (
 
 	defLogLevel        = "error"
 	defNatsURL         = nats.DefaultURL
-	defPort            = "8901"
+	defPort            = "8180"
 	defDBName          = "messages"
 	defDBHost          = "localhost"
 	defDBPort          = "27017"

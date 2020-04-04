@@ -32,7 +32,7 @@ const (
 
 	defNatsURL         = nats.DefaultURL
 	defLogLevel        = "error"
-	defPort            = "8902"
+	defPort            = "8180"
 	defCluster         = "127.0.0.1"
 	defKeyspace        = "messages"
 	defDBUser          = "mainflux"

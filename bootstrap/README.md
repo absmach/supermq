@@ -50,7 +50,7 @@ The service is configured using the environment variables presented in the follo
 | MF_BOOTSTRAP_ENCRYPT_KEY      | Secret key for secure bootstrapping encryption                          | 12345678910111213141516171819202 |
 | MF_BOOTSTRAP_CLIENT_TLS       | Flag that indicates if TLS should be turned on                          | false                            |
 | MF_BOOTSTRAP_CA_CERTS         | Path to trusted CAs in PEM format                                       |                                  |
-| MF_BOOTSTRAP_PORT             | Bootstrap service HTTP port                                             | 8202                             |
+| MF_BOOTSTRAP_PORT             | Bootstrap service HTTP port                                             | 8180                             |
 | MF_BOOTSTRAP_SERVER_CERT      | Path to server certificate in pem format                                |                                  |
 | MF_BOOTSTRAP_SERVER_KEY       | Path to server key in pem format                                        |                                  |
 | MF_SDK_BASE_URL               | Base url for Mainflux SDK                                               | http://localhost                 |

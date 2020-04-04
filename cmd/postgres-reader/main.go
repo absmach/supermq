@@ -35,7 +35,7 @@ const (
 	sep     = ","
 
 	defLogLevel          = "error"
-	defPort              = "9204"
+	defPort              = "8180"
 	defClientTLS         = "false"
 	defCACerts           = ""
 	defDBHost            = "localhost"
@@ -48,7 +48,7 @@ const (
 	defDBSSLKey          = ""
 	defDBSSLRootCert     = ""
 	defJaegerURL         = ""
-	defThingsAuthURL     = "localhost:8183"
+	defThingsAuthURL     = "localhost:8181"
 	defThingsAuthTimeout = "1" // in seconds
 
 	envLogLevel          = "MF_POSTGRES_READER_LOG_LEVEL"

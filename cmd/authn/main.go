@@ -41,7 +41,7 @@ const (
 	defDBSSLCert     = ""
 	defDBSSLKey      = ""
 	defDBSSLRootCert = ""
-	defHTTPPort      = "8189"
+	defHTTPPort      = "8180"
 	defGRPCPort      = "8181"
 	defSecret        = "authn"
 	defServerCert    = ""

@@ -16,7 +16,7 @@ default values.
 | MF_WS_ADAPTER_PORT           | Service WS port                                     | 8186                  |
 | MF_NATS_URL                  | NATS instance URL                                   | nats://localhost:4222 |
 | MF_JAEGER_URL                | Jaeger server URL                                   | localhost:6831        |
-| MF_THINGS_AUTH_GRPC_URL      | Things service Auth gRPC URL                        | localhost:8183        |
+| MF_THINGS_AUTH_GRPC_URL      | Things service Auth gRPC URL                        | localhost:8181        |
 | MF_THINGS_AUTH_GRPC_TIMEOUT  | Things service Auth gRPC request timeout in seconds | 1                     |
 
 ## Deployment

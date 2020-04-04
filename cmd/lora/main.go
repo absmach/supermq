@@ -29,7 +29,7 @@ import (
 
 const (
 	defLogLevel       = "error"
-	defHTTPPort       = "8187"
+	defHTTPPort       = "8180"
 	defLoraMsgURL     = "tcp://localhost:1883"
 	defNatsURL        = nats.DefaultURL
 	defESURL          = "localhost:6379"

@@ -41,7 +41,7 @@ const (
 	queue = "twins"
 
 	defLogLevel        = "error"
-	defHTTPPort        = "9021"
+	defHTTPPort        = "8180"
 	defJaegerURL       = ""
 	defServerCert      = ""
 	defServerKey       = ""

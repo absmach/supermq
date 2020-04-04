@@ -35,10 +35,10 @@ const (
 	defLogLevel          = "error"
 	defClientTLS         = "false"
 	defCACerts           = ""
-	defPort              = "8186"
+	defPort              = "8180"
 	defNatsURL           = nats.DefaultURL
 	defJaegerURL         = ""
-	defThingsAuthURL     = "localhost:8183"
+	defThingsAuthURL     = "localhost:8181"
 	defThingsAuthTimeout = "1" // in seconds
 
 	envLogLevel          = "MF_WS_ADAPTER_LOG_LEVEL"

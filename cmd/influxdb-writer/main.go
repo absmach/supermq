@@ -29,10 +29,10 @@ const (
 
 	defNatsURL         = nats.DefaultURL
 	defLogLevel        = "error"
-	defPort            = "8900"
+	defPort            = "8180"
 	defDBName          = "messages"
 	defDBHost          = "localhost"
-	defDBPorts         = "8086"
+	defDBPort          = "8086"
 	defDBUser          = "mainflux"
 	defDBPass          = "mainflux"
 	defSubjectsCfgPath = "/config/subjects.toml"

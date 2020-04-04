@@ -51,7 +51,7 @@ const (
 	defEncryptKey     = "12345678910111213141516171819202"
 	defClientTLS      = "false"
 	defCACerts        = ""
-	defPort           = "8202"
+	defPort           = "8180"
 	defServerCert     = ""
 	defServerKey      = ""
 	defBaseURL        = "http://localhost"

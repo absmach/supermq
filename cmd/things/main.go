@@ -44,7 +44,7 @@ import (
 const (
 	defLogLevel        = "error"
 	defDBHost          = "localhost"
-	defDBPort          = 5432
+	defDBPort          = "5432"
 	defDBUser          = "mainflux"
 	defDBPass          = "mainflux"
 	defDB              = "things"
@@ -60,7 +60,7 @@ const (
 	defESURL           = "localhost:6379"
 	defESPass          = ""
 	defESDB            = "0"
-	defHTTPPort        = "8182"
+	defHTTPPort        = "8180"
 	defAuthHTTPPort    = "8989"
 	defAuthGRPCPort    = "8983"
 	defServerCert      = ""
