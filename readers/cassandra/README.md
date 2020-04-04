@@ -10,7 +10,7 @@ default values.
 
 | Variable                           | Description                                         | Default        |
 |------------------------------------|-----------------------------------------------------|----------------|
-| MF_CASSANDRA_READER_PORT           | Service HTTP port                                   | 8903           |
+| MF_CASSANDRA_READER_PORT           | Service HTTP port                                   | 8180           |
 | MF_CASSANDRA_READER_DB_CLUSTER     | Cassandra cluster comma separated addresses         | 127.0.0.1      |
 | MF_CASSANDRA_READER_DB_USERNAME    | Cassandra DB username                               |                |
 | MF_CASSANDRA_READER_DB_PASSWORD    | Cassandra DB password                               |                |

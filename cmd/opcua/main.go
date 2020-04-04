@@ -29,7 +29,7 @@ import (
 
 const (
 	defLogLevel       = "error"
-	defHTTPPort       = "8188"
+	defHTTPPort       = "8180"
 	defOPCIntervalMs  = "1000"
 	defOPCPolicy      = ""
 	defOPCMode        = ""

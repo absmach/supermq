@@ -11,7 +11,7 @@ default values.
 | Variable                            | Description                                 | Default        |
 |-------------------------------------|---------------------------------------------|----------------|
 | MF_POSTGRES_READER_LOG_LEVEL        | Service log level                           | debug          |
-| MF_POSTGRES_READER_PORT             | Service HTTP port                           | 9204           |
+| MF_POSTGRES_READER_PORT             | Service HTTP port                           | 8180           |
 | MF_POSTGRES_READER_CLIENT_TLS       | TLS mode flag                               | false          |
 | MF_POSTGRES_READER_CA_CERTS         | Path to trusted CAs in PEM format           |                |
 | MF_POSTGRES_READER_DB_HOST          | Postgres DB host                            | postgres       |
@@ -55,7 +55,7 @@ default values.
       MF_THINGS_AUTH_GRPC_URL: [Things service Auth gRPC URL]
       MF_THINGS_AUTH_GRPC_TIMEOUT: [Things service Auth gRPC request timeout in seconds]
     ports:
-      - 8903:8903
+      - 8180:8180
     networks:
       - docker_mainflux-base-net
 ```
