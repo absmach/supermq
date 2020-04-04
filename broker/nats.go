@@ -28,9 +28,10 @@ type Nats interface {
 }
 
 const (
-	prefix = "channel"
+	chansPrefix = "channels"
+
 	// SubjectAllChannels define the subject to subscribe to all channels messages
-	SubjectAllChannels = "channel.>"
+	SubjectAllChannels = "channels.>"
 )
 
 var (
@@ -64,7 +65,7 @@ func (b broker) Publish(_ context.Context, _ string, msg Message) error {
 		return err
 	}
 
-	subject := fmt.Sprintf("%s.%s", prefix, msg.Channel)
+	subject := fmt.Sprintf("%s.%s", chansPrefix, msg.Channel)
 	if msg.Subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, msg.Subtopic)
 	}
@@ -76,7 +77,7 @@ func (b broker) Publish(_ context.Context, _ string, msg Message) error {
 }
 
 func (b broker) Subscribe(subject string, f func(msg *nats.Msg)) (*nats.Subscription, error) {
-	ps := fmt.Sprintf("%s.%s", prefix, subject)
+	ps := fmt.Sprintf("%s.%s", chansPrefix, subject)
 	sub, err := b.conn.Subscribe(ps, f)
 	if err != nil {
 		return nil, errors.Wrap(errNatsSub, err)
