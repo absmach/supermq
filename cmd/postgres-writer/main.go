@@ -20,7 +20,6 @@ import (
 	"github.com/mainflux/mainflux/writers"
 	"github.com/mainflux/mainflux/writers/api"
 	"github.com/mainflux/mainflux/writers/postgres"
-	"github.com/nats-io/nats.go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
@@ -29,7 +28,7 @@ const (
 	sep     = ","
 
 	defLogLevel        = "error"
-	defNatsURL         = nats.DefaultURL
+	defNatsURL         = "nats://localhost:4222"
 	defPort            = "8180"
 	defDBHost          = "postgres"
 	defDBPort          = "5432"

@@ -23,7 +23,6 @@ import (
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	adapter "github.com/mainflux/mainflux/ws"
 	"github.com/mainflux/mainflux/ws/api"
-	"github.com/nats-io/nats.go"
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"
@@ -36,7 +35,7 @@ const (
 	defClientTLS         = "false"
 	defCACerts           = ""
 	defPort              = "8180"
-	defNatsURL           = nats.DefaultURL
+	defNatsURL           = "nats://localhost:4222"
 	defJaegerURL         = ""
 	defThingsAuthURL     = "localhost:8181"
 	defThingsAuthTimeout = "1" // in seconds

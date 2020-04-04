@@ -20,7 +20,6 @@ import (
 	"github.com/mainflux/mainflux/writers"
 	"github.com/mainflux/mainflux/writers/api"
 	"github.com/mainflux/mainflux/writers/mongodb"
-	"github.com/nats-io/nats.go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -30,7 +29,7 @@ const (
 	svcName = "mongodb-writer"
 
 	defLogLevel        = "error"
-	defNatsURL         = nats.DefaultURL
+	defNatsURL         = "nats://localhost:4222"
 	defPort            = "8180"
 	defDBName          = "messages"
 	defDBHost          = "localhost"

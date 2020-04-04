@@ -21,7 +21,6 @@ import (
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	mp "github.com/mainflux/mproxy/pkg/mqtt"
 	ws "github.com/mainflux/mproxy/pkg/websocket"
-	"github.com/nats-io/nats.go"
 	opentracing "github.com/opentracing/opentracing-go"
 	jconfig "github.com/uber/jaeger-client-go/config"
 	"google.golang.org/grpc"
@@ -60,7 +59,7 @@ const (
 	envThingsAuthURL     = "MF_THINGS_AUTH_GRPC_URL"
 	envThingsAuthTimeout = "MF_THINGS_AUTH_GRPC_TIMMEOUT"
 	// Nats
-	defNatsURL = nats.DefaultURL
+	defNatsURL = "nats://localhost:4222"
 	envNatsURL = "MF_NATS_URL"
 	// Jaeger
 	defJaegerURL = ""

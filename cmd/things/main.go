@@ -62,7 +62,7 @@ const (
 	defESDB            = "0"
 	defHTTPPort        = "8180"
 	defAuthHTTPPort    = "8989"
-	defAuthGRPCPort    = "8983"
+	defAuthGRPCPort    = "8181"
 	defServerCert      = ""
 	defServerKey       = ""
 	defSingleUserEmail = ""

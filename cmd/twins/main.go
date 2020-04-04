@@ -53,7 +53,7 @@ const (
 	defClientTLS       = "false"
 	defCACerts         = ""
 	defChannelID       = ""
-	defNatsURL         = nats.DefaultURL
+	defNatsURL         = "nats://localhost:4222"
 	defAuthnURL        = "localhost:8181"
 	defAuthnTimeout    = "1" // in seconds
 

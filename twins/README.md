@@ -30,7 +30,7 @@ default values.
 | MF_TWINS_THING_ID          | ID of thing representing twins service & mqtt user                   |                       |
 | MF_TWINS_THING_KEY         | Key of thing representing twins service & mqtt pass                  |                       |
 | MF_TWINS_CHANNEL_ID        | Mqtt notifications topic                                             |                       |
-| MF_NATS_URL                | Mainflux NATS broker URL                                             | nats://127.0.0.1:4222 |
+| MF_NATS_URL                | Mainflux NATS broker URL                                             | nats://localhost:4222 |
 | MF_AUTHN_GRPC_URL          | AuthN service gRPC URL                                               | localhost:8181        |
 | MF_AUTHN_GRPC_TIMEOUT      | AuthN service gRPC request timeout in seconds                        | 1                     |
 

@@ -23,7 +23,6 @@ import (
 	"github.com/mainflux/mainflux/coap/api"
 	logger "github.com/mainflux/mainflux/logger"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
-	"github.com/nats-io/nats.go"
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"
@@ -33,7 +32,7 @@ import (
 
 const (
 	defPort              = "5683"
-	defNatsURL           = nats.DefaultURL
+	defNatsURL           = "nats://localhost:4222"
 	defLogLevel          = "error"
 	defClientTLS         = "false"
 	defCACerts           = ""
