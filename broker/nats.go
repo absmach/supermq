@@ -15,13 +15,13 @@ import (
 // Nats specifies a NATS message API.
 type Nats interface {
 	// Publish publishes message to the msessage broker.
-	Publish(context.Context, string, Message) error
+	Publish(ctx context.Context, token string, msg Message) error
 
 	// Subscribe subscribes to a message broker subject.
-	Subscribe(string, func(msg *nats.Msg)) (*nats.Subscription, error)
+	Subscribe(subject string, consumer func(msg *nats.Msg)) (*nats.Subscription, error)
 
 	// Subscribe subscribes to the message broker for a given channel ID and subtopic.
-	QueueSubscribe(string, string, func(msg *nats.Msg)) (*nats.Subscription, error)
+	QueueSubscribe(subject, queue string, f func(msg *nats.Msg)) (*nats.Subscription, error)
 
 	// Close closes NATS connection.
 	Close()
