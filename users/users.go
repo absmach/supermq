@@ -87,13 +87,20 @@ func isEmail(email string) bool {
 	domain, ext := hs[0], hs[1]
 
 	// Check subdomain and validate
-	if len(hs) == 3 {
-		sub := hs[1]
-		if domain == "" || sub == "" {
+	if len(hs) > 2 {
+		if domain == "" {
 			return false
 		}
-		domain = fmt.Sprintf("%s.%s", domain, sub)
-		ext = hs[2]
+
+		for i := 1; i < len(hs)-1; i++ {
+			sub := hs[i]
+			if sub == "" {
+				return false
+			}
+			domain = fmt.Sprintf("%s.%s", domain, sub)
+		}
+
+		ext = hs[len(hs)-1]
 	}
 
 	if domain == "" || len(domain) > maxDomainLen {
