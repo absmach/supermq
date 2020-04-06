@@ -5,6 +5,7 @@ package users
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -80,10 +81,20 @@ func isEmail(email string) bool {
 	}
 
 	hs := strings.Split(host, dotSeparator)
-	if len(hs) != 2 {
+	if len(hs) < 2 {
 		return false
 	}
 	domain, ext := hs[0], hs[1]
+
+	// Check subdomain and validate
+	if len(hs) == 3 {
+		sub := hs[1]
+		if domain == "" || sub == "" {
+			return false
+		}
+		domain = fmt.Sprintf("%s.%s", domain, sub)
+		ext = hs[2]
+	}
 
 	if domain == "" || len(domain) > maxDomainLen {
 		return false
