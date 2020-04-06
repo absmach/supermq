@@ -11,7 +11,6 @@ import (
 	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/users"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -55,7 +54,7 @@ func TestValidate(t *testing.T) {
 		},
 		"validate user with invalid subdomain": {
 			user: users.User{
-				Email:    "user@example..com",
+				Email:    "user@example..domain.com",
 				Password: password,
 			},
 			err: users.ErrMalformedEntity,
@@ -148,9 +147,6 @@ func TestValidate(t *testing.T) {
 
 	for desc, tc := range cases {
 		err := tc.user.Validate()
-		if tc.err == nil {
-			require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", desc))
-		}
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		assert.True(t, errors.Contains(tc.err, err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
