@@ -44,8 +44,8 @@ const (
 	envPort            = "MF_CASSANDRA_WRITER_PORT"
 	envCluster         = "MF_CASSANDRA_WRITER_DB_CLUSTER"
 	envKeyspace        = "MF_CASSANDRA_WRITER_DB_KEYSPACE"
-	envDBUser          = "MF_CASSANDRA_WRITER_DB_USERNAME"
-	envDBPass          = "MF_CASSANDRA_WRITER_DB_PASSWORD"
+	envDBUser          = "MF_CASSANDRA_WRITER_DB_USER"
+	envDBPass          = "MF_CASSANDRA_WRITER_DB_PASS"
 	envDBPort          = "MF_CASSANDRA_WRITER_DB_PORT"
 	envSubjectsCfgPath = "MF_CASSANDRA_WRITER_SUBJECTS_CONFIG"
 )
