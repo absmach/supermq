@@ -105,8 +105,8 @@ func loadConfig() config {
 	dbCfg := cassandra.DBConfig{
 		Hosts:    strings.Split(mainflux.Env(envCluster, defCluster), sep),
 		Keyspace: mainflux.Env(envKeyspace, defKeyspace),
-		Username: mainflux.Env(envDBUser, defDBUser),
-		Password: mainflux.Env(envDBPass, defDBPass),
+		User:     mainflux.Env(envDBUser, defDBUser),
+		Pass:     mainflux.Env(envDBPass, defDBPass),
 		Port:     dbPort,
 	}
 
