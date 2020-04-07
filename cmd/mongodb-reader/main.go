@@ -35,7 +35,7 @@ import (
 const (
 	defLogLevel          = "error"
 	defPort              = "8180"
-	defDBName            = "messages"
+	defDB                = "messages"
 	defDBHost            = "localhost"
 	defDBPort            = "27017"
 	defClientTLS         = "false"
@@ -48,7 +48,7 @@ const (
 
 	envLogLevel          = "MF_MONGO_READER_LOG_LEVEL"
 	envPort              = "MF_MONGO_READER_PORT"
-	envDBName            = "MF_MONGO_READER_DB_NAME"
+	envDB                = "MF_MONGO_READER_DB"
 	envDBHost            = "MF_MONGO_READER_DB_HOST"
 	envDBPort            = "MF_MONGO_READER_DB_PORT"
 	envClientTLS         = "MF_MONGO_READER_CLIENT_TLS"
@@ -121,7 +121,7 @@ func loadConfigs() config {
 	return config{
 		logLevel:          mainflux.Env(envLogLevel, defLogLevel),
 		port:              mainflux.Env(envPort, defPort),
-		dbName:            mainflux.Env(envDBName, defDBName),
+		dbName:            mainflux.Env(envDB, defDB),
 		dbHost:            mainflux.Env(envDBHost, defDBHost),
 		dbPort:            mainflux.Env(envDBPort, defDBPort),
 		clientTLS:         tls,

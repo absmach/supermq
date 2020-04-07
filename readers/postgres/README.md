@@ -18,7 +18,7 @@ default values.
 | MF_POSTGRES_READER_DB_PORT          | Postgres DB port                            | 5432           |
 | MF_POSTGRES_READER_DB_USER          | Postgres user                               | mainflux       |
 | MF_POSTGRES_READER_DB_PASS          | Postgres password                           | mainflux       |
-| MF_POSTGRES_READER_DB_NAME          | Postgres database name                      | messages       |
+| MF_POSTGRES_READER_DB               | Postgres database name                      | messages       |
 | MF_POSTGRES_READER_DB_SSL_MODE      | Postgres SSL mode                           | disabled       |
 | MF_POSTGRES_READER_DB_SSL_CERT      | Postgres SSL certificate path               | ""             |
 | MF_POSTGRES_READER_DB_SSL_KEY       | Postgres SSL key                            | ""             |
@@ -46,7 +46,7 @@ default values.
       MF_POSTGRES_READER_DB_PORT: [Postgres port]
       MF_POSTGRES_READER_DB_USER: [Postgres user]
       MF_POSTGRES_READER_DB_PASS: [Postgres password]
-      MF_POSTGRES_READER_DB_NAME: [Postgres database name]
+      MF_POSTGRES_READER_DB: [Postgres database name]
       MF_POSTGRES_READER_DB_SSL_MODE: [Postgres SSL mode]
       MF_POSTGRES_READER_DB_SSL_CERT: [Postgres SSL cert]
       MF_POSTGRES_READER_DB_SSL_KEY: [Postgres SSL key]
@@ -83,7 +83,7 @@ MF_POSTGRES_READER_DB_HOST=[Postgres host] \
 MF_POSTGRES_READER_DB_PORT=[Postgres port] \
 MF_POSTGRES_READER_DB_USER=[Postgres user] \
 MF_POSTGRES_READER_DB_PASS=[Postgres password] \
-MF_POSTGRES_READER_DB_NAME=[Postgres database name] \
+MF_POSTGRES_READER_DB=[Postgres database name] \
 MF_POSTGRES_READER_DB_SSL_MODE=[Postgres SSL mode] \
 MF_POSTGRES_READER_DB_SSL_CERT=[Postgres SSL cert] \
 MF_POSTGRES_READER_DB_SSL_KEY=[Postgres SSL key] \

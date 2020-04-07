@@ -11,7 +11,7 @@ default values.
 | Variable                    | Description                                         | Default        |
 |-----------------------------|-----------------------------------------------------|----------------|
 | MF_MONGO_READER_PORT        | Service HTTP port                                   | 8180           |
-| MF_MONGO_READER_DB_NAME     | MongoDB database name                               | messages       |
+| MF_MONGO_READER_DB          | MongoDB database name                               | messages       |
 | MF_MONGO_READER_DB_HOST     | MongoDB database host                               | localhost      |
 | MF_MONGO_READER_DB_PORT     | MongoDB database port                               | 27017          |
 | MF_MONGO_READER_CLIENT_TLS  | Flag that indicates if TLS should be turned on      | false          |
@@ -34,7 +34,7 @@ default values.
     restart: on-failure
     environment:
         MF_MONGO_READER_PORT: [Service HTTP port]
-        MF_MONGO_READER_DB_NAME: [MongoDB name]
+        MF_MONGO_READER_DB: [MongoDB name]
         MF_MONGO_READER_DB_HOST: [MongoDB host]
         MF_MONGO_READER_DB_PORT: [MongoDB port]
         MF_MONGO_READER_CLIENT_TLS: [Flag that indicates if TLS should be turned on]
@@ -64,7 +64,7 @@ make install
 
 # Set the environment variables and run the service
 MF_MONGO_READER_PORT=[Service HTTP port] \
-MF_MONGO_READER_DB_NAME=[MongoDB database name] \
+MF_MONGO_READER_DB=[MongoDB database name] \
 MF_MONGO_READER_DB_HOST=[MongoDB database host] \
 MF_MONGO_READER_DB_PORT=[MongoDB database port] \
 MF_MONGO_READER_CLIENT_TLS=[Flag that indicates if TLS should be turned on] \

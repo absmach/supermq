@@ -30,7 +30,7 @@ import (
 const (
 	defLogLevel          = "error"
 	defPort              = "8180"
-	defDBName            = "messages"
+	defDB                = "messages"
 	defDBHost            = "localhost"
 	defDBPort            = "8086"
 	defDBUser            = "mainflux"
@@ -45,7 +45,7 @@ const (
 
 	envLogLevel          = "MF_INFLUX_READER_LOG_LEVEL"
 	envPort              = "MF_INFLUX_READER_PORT"
-	envDBName            = "MF_INFLUX_READER_DB_NAME"
+	envDB                = "MF_INFLUX_READER_DB"
 	envDBHost            = "MF_INFLUX_READER_DB_HOST"
 	envDBPort            = "MF_INFLUX_READER_DB_PORT"
 	envDBUser            = "MF_INFLUX_READER_DB_USER"
@@ -126,7 +126,7 @@ func loadConfigs() (config, influxdata.HTTPConfig) {
 	cfg := config{
 		logLevel:          mainflux.Env(envLogLevel, defLogLevel),
 		port:              mainflux.Env(envPort, defPort),
-		dbName:            mainflux.Env(envDBName, defDBName),
+		dbName:            mainflux.Env(envDB, defDB),
 		dbHost:            mainflux.Env(envDBHost, defDBHost),
 		dbPort:            mainflux.Env(envDBPort, defDBPort),
 		dbUser:            mainflux.Env(envDBUser, defDBUser),
