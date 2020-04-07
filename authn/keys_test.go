@@ -37,7 +37,7 @@ func TestExpired(t *testing.T) {
 			expired: true,
 		},
 		{
-			desc: "login key with no expiration date",
+			desc: "user key with no expiration date",
 			key: authn.Key{
 				IssuedAt: time.Now(),
 			},
