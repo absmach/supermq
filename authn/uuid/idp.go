@@ -26,7 +26,6 @@ func (idp *uuidIdentityProvider) ID() (string, error) {
 	id, err := uuid.NewV4()
 	if err != nil {
 		return "", errors.Wrap(errGeneratingID, err)
-
 	}
 
 	return id.String(), nil
