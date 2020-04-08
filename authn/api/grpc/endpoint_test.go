@@ -100,7 +100,7 @@ func TestIssue(t *testing.T) {
 	for _, tc := range cases {
 		_, err := client.Issue(context.Background(), &mainflux.IssueReq{Issuer: tc.id, Type: tc.kind})
 		e, ok := status.FromError(err)
-		assert.True(t, ok, "OK expected to be true")
+		assert.True(t, ok, "gRPC status can't be extracted from the error")
 		assert.Equal(t, tc.code, e.Code(), fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.code, e.Code()))
 	}
 }
@@ -160,7 +160,7 @@ func TestIdentify(t *testing.T) {
 		id, err := client.Identify(context.Background(), &mainflux.Token{Value: tc.token})
 		assert.Equal(t, tc.id, id.GetValue(), fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.id, id.GetValue()))
 		e, ok := status.FromError(err)
-		assert.True(t, ok, "OK expected to be true")
+		assert.True(t, ok, "gRPC status can't be extracted from the error")
 		assert.Equal(t, tc.code, e.Code(), fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.code, e.Code()))
 	}
 }
