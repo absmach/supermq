@@ -39,6 +39,12 @@ func (n transformer) Transform(msg broker.Message) (interface{}, error) {
 
 	msgs := make([]Message, len(normalized.Records))
 	for i, v := range normalized.Records {
+		// Use reception timestamp if SenML messsage Time is missing
+		time := v.Time
+		if time == 0 {
+			time = float64(msg.Time)
+		}
+
 		msgs[i] = Message{
 			Channel:     msg.Channel,
 			Subtopic:    msg.Subtopic,
@@ -46,7 +52,7 @@ func (n transformer) Transform(msg broker.Message) (interface{}, error) {
 			Protocol:    msg.Protocol,
 			Name:        v.Name,
 			Unit:        v.Unit,
-			Time:        v.Time,
+			Time:        time,
 			UpdateTime:  v.UpdateTime,
 			Value:       v.Value,
 			BoolValue:   v.BoolValue,

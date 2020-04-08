@@ -12,4 +12,5 @@ message Message {
 	string protocol    = 4;
 	string contentType = 5;
 	bytes  payload     = 6;
+	int64  time        = 7;
 }

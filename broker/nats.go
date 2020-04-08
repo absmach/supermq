@@ -6,6 +6,7 @@ package broker
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux/errors"
@@ -59,7 +60,10 @@ func New(url string) (Nats, error) {
 	}, nil
 }
 
-func (b broker) Publish(_ context.Context, _ string, msg Message) error {
+func (b broker) Publish(_ context.Context, token string, msg Message) error {
+	// Add reception timmestamp
+	msg.Time = time.Now().Unix()
+
 	data, err := proto.Marshal(&msg)
 	if err != nil {
 		return err
