@@ -76,6 +76,8 @@ func encodeIdentifyResponse(_ context.Context, grpcRes interface{}) (interface{}
 
 func encodeError(err error) error {
 	switch {
+	case errors.Contains(err, nil):
+		return nil
 	case errors.Contains(err, authn.ErrMalformedEntity):
 		return status.Error(codes.InvalidArgument, "received invalid token request")
 	case errors.Contains(err, authn.ErrUnauthorizedAccess):
