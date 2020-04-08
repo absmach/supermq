@@ -4,6 +4,7 @@
 package http
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/mainflux/mainflux/authn"

@@ -5,8 +5,9 @@ package authn
 
 import (
 	"context"
-	"errors"
 	"time"
+
+	"github.com/mainflux/mainflux/errors"
 )
 
 const (
@@ -28,6 +29,11 @@ var (
 
 	// ErrConflict indicates that entity already exists.
 	ErrConflict = errors.New("entity already exists")
+
+	errIssue    = errors.New("failed to issue new key")
+	errRevoke   = errors.New("failed to remove key")
+	errRetrieve = errors.New("failed to retrieve key data")
+	errIdentify = errors.New("failed to validate token")
 )
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -84,16 +90,18 @@ func (svc service) Issue(ctx context.Context, issuer string, key Key) (Key, erro
 func (svc service) Revoke(ctx context.Context, issuer, id string) error {
 	email, err := svc.login(issuer)
 	if err != nil {
-		return err
+		return errors.Wrap(errRevoke, err)
 	}
-
-	return svc.keys.Remove(ctx, email, id)
+	if err := svc.keys.Remove(ctx, email, id); err != nil {
+		return errors.Wrap(errRevoke, err)
+	}
+	return nil
 }
 
 func (svc service) Retrieve(ctx context.Context, issuer, id string) (Key, error) {
 	email, err := svc.login(issuer)
 	if err != nil {
-		return Key{}, err
+		return Key{}, errors.Wrap(errRetrieve, err)
 	}
 
 	return svc.keys.Retrieve(ctx, email, id)
@@ -102,7 +110,7 @@ func (svc service) Retrieve(ctx context.Context, issuer, id string) (Key, error)
 func (svc service) Identify(ctx context.Context, token string) (string, error) {
 	c, err := svc.tokenizer.Parse(token)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(errIdentify, err)
 	}
 
 	switch c.Type {
