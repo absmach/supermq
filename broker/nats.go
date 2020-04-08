@@ -61,7 +61,7 @@ func New(url string) (Nats, error) {
 }
 
 func (b broker) Publish(_ context.Context, token string, msg Message) error {
-	// Add reception timmestamp
+	// Add publisher timestamp
 	msg.Time = time.Now().Unix()
 
 	data, err := proto.Marshal(&msg)
