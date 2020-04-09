@@ -8,7 +8,6 @@ package coap
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -31,8 +30,6 @@ const (
 	// MaxRetransmit is the maximum number of times a message will be retransmitted.
 	MaxRetransmit = 4
 )
-
-var errBadOption = errors.New("bad option")
 
 // Service specifies coap service API.
 type Service interface {
