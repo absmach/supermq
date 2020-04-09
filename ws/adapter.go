@@ -94,7 +94,7 @@ func New(broker broker.Nats, log logger.Logger) Service {
 }
 
 func (as *adapterService) Publish(ctx context.Context, token string, msg broker.Message) error {
-	msg.Timestamp = time.Now().Unix()
+	msg.Created = time.Now().Unix()
 
 	return as.broker.Publish(ctx, token, msg)
 }

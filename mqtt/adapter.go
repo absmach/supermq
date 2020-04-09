@@ -165,7 +165,7 @@ func (e *Event) Publish(c *session.Client, topic *string, payload *[]byte) {
 		Subtopic:    subtopic,
 		Publisher:   c.Username,
 		Payload:     *payload,
-		Timestamp:   time.Now().Unix(),
+		Created:     time.Now().Unix(),
 	}
 
 	if err := e.broker.Publish(context.TODO(), "", msg); err != nil {

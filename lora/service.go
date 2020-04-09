@@ -111,7 +111,7 @@ func (as *adapterService) Publish(ctx context.Context, token string, m Message) 
 		ContentType: "Content-Type",
 		Channel:     channel,
 		Payload:     payload,
-		Timestamp:   time.Now().Unix(),
+		Created:     time.Now().Unix(),
 	}
 
 	return as.broker.Publish(ctx, token, msg)

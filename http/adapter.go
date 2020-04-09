@@ -45,7 +45,7 @@ func (as *adapterService) Publish(ctx context.Context, token string, msg broker.
 	}
 	msg.Publisher = thid.GetValue()
 
-	msg.Timestamp = time.Now().Unix()
+	msg.Created = time.Now().Unix()
 
 	return as.broker.Publish(ctx, token, msg)
 }
