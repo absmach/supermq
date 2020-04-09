@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/mainflux/mainflux/broker"
-	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/ws"
 	"github.com/nats-io/nats.go"
 )
@@ -27,14 +26,14 @@ func New(sub map[string]*ws.Channel) broker.Nats {
 
 func (mb mockBroker) Publish(_ context.Context, _ string, msg broker.Message) error {
 	if len(msg.Payload) == 0 {
-		return errors.New("Payload is empty")
+		return ws.ErrFailedMessagePublish
 	}
 	return nil
 }
 
 func (mb mockBroker) Subscribe(subject string, f func(*nats.Msg)) (*nats.Subscription, error) {
 	if _, ok := mb.subscriptions[subject]; !ok {
-		return nil, errors.New("Subscription failed")
+		return nil, ws.ErrFailedSubscription
 	}
 
 	return nil, nil
