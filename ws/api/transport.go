@@ -229,7 +229,6 @@ func (sub subscription) broadcast(svc ws.Service, contentType string) {
 			Publisher:   sub.pubID,
 			Protocol:    protocol,
 			Payload:     payload,
-			Timestamp:   time.Now().Unix(),
 		}
 		if err := svc.Publish(context.Background(), "", msg); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to publish message to NATS: %s", err))

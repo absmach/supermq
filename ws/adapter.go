@@ -7,8 +7,8 @@ package ws
 
 import (
 	"context"
+	"time"
 
-	"errors"
 	"fmt"
 	"sync"
 
@@ -16,17 +16,6 @@ import (
 	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/nats-io/nats.go"
-)
-
-var (
-	// ErrFailedMessagePublish indicates that message publishing failed.
-	ErrFailedMessagePublish = errors.New("failed to publish message")
-
-	// ErrFailedSubscription indicates that client couldn't subscribe to specified channel.
-	ErrFailedSubscription = errors.New("failed to subscribe to a channel")
-
-	// ErrFailedConnection indicates that service couldn't connect to message broker.
-	ErrFailedConnection = errors.New("failed to connect to message broker")
 )
 
 // Service specifies web socket service API.
@@ -93,15 +82,9 @@ func New(broker broker.Nats, log logger.Logger) Service {
 }
 
 func (as *adapterService) Publish(ctx context.Context, token string, msg broker.Message) error {
-	if err := as.broker.Publish(ctx, token, msg); err != nil {
-		switch err {
-		case nats.ErrConnectionClosed, nats.ErrInvalidConnection:
-			return ErrFailedConnection
-		default:
-			return ErrFailedMessagePublish
-		}
-	}
-	return nil
+	msg.Timestamp = time.Now().Unix()
+
+	return as.broker.Publish(ctx, token, msg)
 }
 
 func (as *adapterService) Subscribe(chanID, subtopic string, channel *Channel) error {

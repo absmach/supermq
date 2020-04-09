@@ -7,6 +7,7 @@ package http
 
 import (
 	"context"
+	"time"
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/broker"
@@ -43,6 +44,8 @@ func (as *adapterService) Publish(ctx context.Context, token string, msg broker.
 		return err
 	}
 	msg.Publisher = thid.GetValue()
+
+	msg.Timestamp = time.Now().Unix()
 
 	return as.broker.Publish(ctx, token, msg)
 }

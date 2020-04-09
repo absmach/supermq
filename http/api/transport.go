@@ -12,7 +12,6 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
-	"time"
 
 	kitot "github.com/go-kit/kit/tracing/opentracing"
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -116,7 +115,6 @@ func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 		Channel:     chanID,
 		Subtopic:    subtopic,
 		Payload:     payload,
-		Timestamp:   time.Now().Unix(),
 	}
 
 	req := publishReq{
