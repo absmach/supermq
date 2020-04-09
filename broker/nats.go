@@ -59,7 +59,7 @@ func New(url string) (Nats, error) {
 	}, nil
 }
 
-func (b broker) Publish(_ context.Context, token string, msg Message) error {
+func (b broker) Publish(_ context.Context, _ string, msg Message) error {
 	data, err := proto.Marshal(&msg)
 	if err != nil {
 		return err
