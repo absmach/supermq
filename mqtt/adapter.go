@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/broker"
@@ -164,6 +165,7 @@ func (e *Event) Publish(c *session.Client, topic *string, payload *[]byte) {
 		Subtopic:    subtopic,
 		Publisher:   c.Username,
 		Payload:     *payload,
+		Timestamp:   time.Now().Unix(),
 	}
 
 	if err := e.broker.Publish(context.TODO(), "", msg); err != nil {
