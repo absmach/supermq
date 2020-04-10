@@ -112,8 +112,6 @@ func (svc *adapterService) listenResponses(responses <-chan string) {
 }
 
 func (svc *adapterService) Publish(ctx context.Context, token string, msg broker.Message) error {
-	msg.Created = time.Now().Unix()
-
 	return svc.broker.Publish(ctx, token, msg)
 }
 
