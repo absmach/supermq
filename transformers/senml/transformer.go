@@ -42,7 +42,8 @@ func (n transformer) Transform(msg broker.Message) (interface{}, error) {
 		// Use reception timestamp if SenML messsage Time is missing
 		time := v.Time
 		if time == 0 {
-			time = float64(msg.Created) / float64(1e9)
+			// Convert the timestamp into float64 with nanoseconds precision
+			time = float64(msg.Created.GetSeconds()) + float64(msg.Created.GetNanos())/float64(1e9)
 		}
 
 		msgs[i] = Message{

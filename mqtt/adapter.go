@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/logger"
@@ -165,7 +166,10 @@ func (e *Event) Publish(c *session.Client, topic *string, payload *[]byte) {
 		Subtopic:    subtopic,
 		Publisher:   c.Username,
 		Payload:     *payload,
-		Created:     time.Now().UnixNano(),
+		Created: &timestamp.Timestamp{
+			Seconds: time.Now().Unix(),
+			Nanos:   int32(time.Now().UnixNano()),
+		},
 	}
 
 	if err := e.broker.Publish(context.TODO(), "", msg); err != nil {

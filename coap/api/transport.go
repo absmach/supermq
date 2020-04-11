@@ -18,6 +18,7 @@ import (
 
 	gocoap "github.com/dustin/go-coap"
 	"github.com/go-zoo/bone"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/coap"
@@ -237,7 +238,10 @@ func receive(svc coap.Service, msg *gocoap.Message) *gocoap.Message {
 		ContentType: ct,
 		Protocol:    protocol,
 		Payload:     msg.Payload,
-		Created:     time.Now().UnixNano(),
+		Created: &timestamp.Timestamp{
+			Seconds: time.Now().Unix(),
+			Nanos:   int32(time.Now().UnixNano()),
+		},
 	}
 
 	if err := svc.Publish(context.Background(), "", m); err != nil {

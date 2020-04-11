@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/go-zoo/bone"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/broker"
@@ -230,7 +231,10 @@ func (sub subscription) broadcast(svc ws.Service, contentType string) {
 			Publisher:   sub.pubID,
 			Protocol:    protocol,
 			Payload:     payload,
-			Created:     time.Now().UnixNano(),
+			Created: &timestamp.Timestamp{
+				Seconds: time.Now().Unix(),
+				Nanos:   int32(time.Now().UnixNano()),
+			},
 		}
 		if err := svc.Publish(context.Background(), "", msg); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to publish message to NATS: %s", err))

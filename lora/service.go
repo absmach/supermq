@@ -7,6 +7,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/mainflux/mainflux/broker"
 )
 
@@ -111,7 +112,10 @@ func (as *adapterService) Publish(ctx context.Context, token string, m Message) 
 		ContentType: "Content-Type",
 		Channel:     channel,
 		Payload:     payload,
-		Created:     time.Now().UnixNano(),
+		Created: &timestamp.Timestamp{
+			Seconds: time.Now().Unix(),
+			Nanos:   int32(time.Now().UnixNano()),
+		},
 	}
 
 	return as.broker.Publish(ctx, token, msg)

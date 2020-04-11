@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/timestamp"
 	opcuaGopcua "github.com/gopcua/opcua"
 	uaGopcua "github.com/gopcua/opcua/ua"
 	"github.com/mainflux/mainflux/broker"
@@ -234,7 +235,10 @@ func (c client) publish(token string, m message) error {
 		Channel:     chanID,
 		Payload:     payload,
 		Subtopic:    m.NodeID,
-		Created:     time.Now().UnixNano(),
+		Created: &timestamp.Timestamp{
+			Seconds: time.Now().Unix(),
+			Nanos:   int32(time.Now().UnixNano()),
+		},
 	}
 
 	if err := c.broker.Publish(c.ctx, token, msg); err != nil {
