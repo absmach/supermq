@@ -222,6 +222,7 @@ func (sub subscription) broadcast(svc ws.Service, contentType string) {
 			logger.Warn(fmt.Sprintf("Failed to read message: %s", err))
 			return
 		}
+
 		msg := broker.Message{
 			Channel:     sub.chanID,
 			Subtopic:    sub.subtopic,
@@ -229,7 +230,7 @@ func (sub subscription) broadcast(svc ws.Service, contentType string) {
 			Publisher:   sub.pubID,
 			Protocol:    protocol,
 			Payload:     payload,
-			Created:     time.Now().Unix(),
+			Created:     time.Now().UnixNano(),
 		}
 		if err := svc.Publish(context.Background(), "", msg); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to publish message to NATS: %s", err))

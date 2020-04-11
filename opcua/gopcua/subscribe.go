@@ -234,7 +234,7 @@ func (c client) publish(token string, m message) error {
 		Channel:     chanID,
 		Payload:     payload,
 		Subtopic:    m.NodeID,
-		Created:     time.Now().Unix(),
+		Created:     time.Now().UnixNano(),
 	}
 
 	if err := c.broker.Publish(c.ctx, token, msg); err != nil {

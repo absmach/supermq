@@ -116,7 +116,7 @@ func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 		Channel:     chanID,
 		Subtopic:    subtopic,
 		Payload:     payload,
-		Created:     time.Now().Unix(),
+		Created:     time.Now().UnixNano(),
 	}
 
 	req := publishReq{
