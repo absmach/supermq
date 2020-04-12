@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/logger"
@@ -22,6 +22,8 @@ import (
 )
 
 var _ session.Event = (*Event)(nil)
+
+const protocol = "mqtt"
 
 var (
 	channelRegExp         = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]*)?(\?.*)?$`)
@@ -159,17 +161,20 @@ func (e *Event) Publish(c *session.Client, topic *string, payload *[]byte) {
 		return
 	}
 
+	created, err := ptypes.TimestampProto(time.Now())
+	if err != nil {
+		e.logger.Info("Error in mqtt publish: " + err.Error())
+		return
+	}
+
 	msg := broker.Message{
-		Protocol:    "mqtt",
+		Protocol:    protocol,
 		ContentType: ct,
 		Channel:     chanID,
 		Subtopic:    subtopic,
 		Publisher:   c.Username,
 		Payload:     *payload,
-		Created: &timestamp.Timestamp{
-			Seconds: time.Now().Unix(),
-			Nanos:   int32(time.Now().UnixNano()),
-		},
+		Created:     created,
 	}
 
 	if err := e.broker.Publish(context.TODO(), "", msg); err != nil {

@@ -17,7 +17,7 @@ import (
 	kitot "github.com/go-kit/kit/tracing/opentracing"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
-	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/broker"
 	adapter "github.com/mainflux/mainflux/http"
@@ -110,6 +110,11 @@ func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
+	created, err := ptypes.TimestampProto(time.Now())
+	if err != nil {
+		return nil, err
+	}
+
 	ct := r.Header.Get("Content-Type")
 	msg := broker.Message{
 		Protocol:    protocol,
@@ -117,10 +122,7 @@ func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 		Channel:     chanID,
 		Subtopic:    subtopic,
 		Payload:     payload,
-		Created: &timestamp.Timestamp{
-			Seconds: time.Now().Unix(),
-			Nanos:   int32(time.Now().UnixNano()),
-		},
+		Created:     created,
 	}
 
 	req := publishReq{
