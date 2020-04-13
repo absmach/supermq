@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	errDecode    = errors.New("failed to decode SenML")
-	errNormalize = errors.New("faled to normalize SenML")
+	errDecode    = errors.New("failed to decode senml")
+	errNormalize = errors.New("faled to normalize senml")
 )
 
 var formats = map[string]senml.Format{
