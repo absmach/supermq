@@ -66,7 +66,7 @@ func (pr postgresRepo) Save(messages ...senml.Message) error {
 		}
 	}
 	if err := tx.Commit(); err != nil {
-		errors.Wrap(errSaveMessage, err)
+		return errors.Wrap(errSaveMessage, err)
 	}
 	return nil
 }
