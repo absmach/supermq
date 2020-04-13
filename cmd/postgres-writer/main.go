@@ -30,7 +30,7 @@ const (
 	defLogLevel        = "error"
 	defNatsURL         = "nats://localhost:4222"
 	defPort            = "8180"
-	defDBHost          = "postgres"
+	defDBHost          = "localhost"
 	defDBPort          = "5432"
 	defDBUser          = "mainflux"
 	defDBPass          = "mainflux"
