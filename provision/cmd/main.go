@@ -12,10 +12,10 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/provision"
+	"github.com/mainflux/mainflux/provision/api"
+	provSDK "github.com/mainflux/mainflux/provision/sdk"
 	mfSDK "github.com/mainflux/mainflux/sdk/go"
-	"github.com/mainflux/provision"
-	"github.com/mainflux/provision/api"
-	provSDK "github.com/mainflux/provision/sdk"
 )
 
 const (
