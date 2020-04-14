@@ -17,6 +17,7 @@ func main() {
 		BaseURL:           "http://localhost",
 		ReaderURL:         "http://localhost:8905",
 		BootstrapURL:      "http://localhost:8202",
+		ReaderPrefix:      "",
 		UsersPrefix:       "",
 		ThingsPrefix:      "",
 		HTTPAdapterPrefix: "http",
