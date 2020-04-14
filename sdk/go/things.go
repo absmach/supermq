@@ -77,7 +77,7 @@ func (sdk mfSDK) CreateThings(things []Thing, token string) ([]Thing, error) {
 		return []Thing{}, err
 	}
 
-	ctr := createThingsRes{}
+	var ctr createThingsRes
 	if err := json.Unmarshal(body, &ctr); err != nil {
 		return []Thing{}, err
 	}
@@ -112,7 +112,7 @@ func (sdk mfSDK) Things(token string, offset, limit uint64, name string) (Things
 		return ThingsPage{}, ErrFetchFailed
 	}
 
-	tp := ThingsPage{}
+	var tp ThingsPage
 	if err := json.Unmarshal(body, &tp); err != nil {
 		return ThingsPage{}, err
 	}
@@ -147,7 +147,7 @@ func (sdk mfSDK) ThingsByChannel(token, chanID string, offset, limit uint64) (Th
 		return ThingsPage{}, ErrFetchFailed
 	}
 
-	tp := ThingsPage{}
+	var tp ThingsPage
 	if err := json.Unmarshal(body, &tp); err != nil {
 		return ThingsPage{}, err
 	}
@@ -182,7 +182,7 @@ func (sdk mfSDK) Thing(id, token string) (Thing, error) {
 		return Thing{}, ErrFetchFailed
 	}
 
-	t := Thing{}
+	var t Thing
 	if err := json.Unmarshal(body, &t); err != nil {
 		return Thing{}, err
 	}

@@ -76,7 +76,7 @@ func (sdk mfSDK) ReadMessages(chanName, token string) (MessagesPage, error) {
 		return MessagesPage{}, ErrFailedRead
 	}
 
-	mp := MessagesPage{}
+	var mp MessagesPage
 	if err := json.Unmarshal(body, &mp); err != nil {
 		return MessagesPage{}, err
 	}

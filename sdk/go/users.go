@@ -97,12 +97,12 @@ func (sdk mfSDK) CreateToken(user User) (string, error) {
 		return "", ErrFailedCreation
 	}
 
-	var t tokenRes
-	if err := json.Unmarshal(body, &t); err != nil {
+	var tr tokenRes
+	if err := json.Unmarshal(body, &tr); err != nil {
 		return "", err
 	}
 
-	return t.Token, nil
+	return tr.Token, nil
 }
 
 func (sdk mfSDK) UpdateUser(user User, token string) error {

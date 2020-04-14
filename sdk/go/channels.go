@@ -74,7 +74,7 @@ func (sdk mfSDK) CreateChannels(channels []Channel, token string) ([]Channel, er
 		return []Channel{}, err
 	}
 
-	ccr := createChannelsRes{}
+	var ccr createChannelsRes
 	if err := json.Unmarshal(body, &ccr); err != nil {
 		return []Channel{}, err
 	}
@@ -109,7 +109,7 @@ func (sdk mfSDK) Channels(token string, offset, limit uint64, name string) (Chan
 		return ChannelsPage{}, ErrFetchFailed
 	}
 
-	cp := ChannelsPage{}
+	var cp ChannelsPage
 	if err := json.Unmarshal(body, &cp); err != nil {
 		return ChannelsPage{}, err
 	}
@@ -144,7 +144,7 @@ func (sdk mfSDK) ChannelsByThing(token, thingID string, offset, limit uint64) (C
 		return ChannelsPage{}, ErrFetchFailed
 	}
 
-	cp := ChannelsPage{}
+	var cp ChannelsPage
 	if err := json.Unmarshal(body, &cp); err != nil {
 		return ChannelsPage{}, err
 	}
@@ -179,7 +179,7 @@ func (sdk mfSDK) Channel(id, token string) (Channel, error) {
 		return Channel{}, ErrFetchFailed
 	}
 
-	c := Channel{}
+	var c Channel
 	if err := json.Unmarshal(body, &c); err != nil {
 		return Channel{}, err
 	}
