@@ -6,21 +6,23 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"reflect"
 	"strconv"
-	"strings"
 	"syscall"
 
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/provision"
+	"github.com/mainflux/mainflux/provision/api"
+	provSDK "github.com/mainflux/mainflux/provision/sdk"
 	mfSDK "github.com/mainflux/mainflux/sdk/go"
-	"github.com/mainflux/provision"
-	"github.com/mainflux/provision/api"
-	provsdk "github.com/mainflux/provision/sdk"
 )
 
 const (
 	defLogLevel        = "debug"
-	defClientTLS       = "false"
+	defConfigFile      = "config.toml"
+	defTLS             = "false"
 	defCACerts         = ""
 	defServerCert      = ""
 	defServerKey       = ""
@@ -30,58 +32,77 @@ const (
 	defHTTPPort        = "8091"
 	defMfUser          = "test@example.com"
 	defMfPass          = "test"
-	defThingIDs        = "aa942ec2-6f4e-45ab-a0cc-87cc3c64a55c"
-	defMfBSURL         = "https://k8s-aws.mainflux.com/bs/things/configs"
-	defMfWhiteListURL  = "https://k8s-aws.mainflux.com/bs/things/state"
-	defMfCertsURL      = "https://k8s-aws.mainflux.com/certs"
+	defMfApiKey        = ""
+	defMfBSURL         = "http://localhost:8202/things/configs"
+	defMfWhiteListURL  = "http://localhost:8202/things/state"
+	defMfCertsURL      = "http://localhost/certs"
 	defProvisionCerts  = "false"
 	defProvisionBS     = "true"
 	defBSAutoWhitelist = "true"
 	defBSContent       = `{}`
 
-	envClientTLS        = "MF_ENV_CLIENTS_TLS"
+	envConfigFile       = "MF_PROVISION_CONFIG_FILE"
+	envLogLevel         = "MF_PROVISION_LOG_LEVEL"
+	envHTTPPort         = "MF_PROVISION_HTTP_PORT"
+	envTLS              = "MF_PROVISION_ENV_CLIENTS_TLS"
 	envCACerts          = "MF_PROVISION_CA_CERTS"
 	envServerCert       = "MF_PROVISION_SERVER_CERT"
 	envServerKey        = "MF_PROVISION_SERVER_KEY"
-	envMQTTURL          = "MF_MQTT_URL"
-	envUsersLocation    = "MF_USERS_LOCATION"
-	envThingsLocation   = "MF_THINGS_LOCATION"
-	envLogLevel         = "MF_PROVISION_LOG_LEVEL"
-	envHTTPPort         = "MF_PROVISION_HTTP_PORT"
-	envMfUser           = "MF_USER"
-	envMfPass           = "MF_PASS"
-	envThingIDs         = "MF_THING_IDS"
-	envMfBSURL          = "MF_BS_SVC_URL"
-	envMfBSWhiteListURL = "MF_BS_SVC_WHITELISTE_URL"
-	envMfCertsURL       = "MF_CERTS_SVC_URL"
-	envProvisionCerts   = "MF_X509_PROVISIONING"
-	envProvisionBS      = "MF_BS_CONFIG_PROVISIONING"
-	envBSAutoWhiteList  = "MF_BS_AUTO_WHITELIST"
-	envBSContent        = "MF_BS_CONTENT"
+	envMQTTURL          = "MF_PROVISION_MQTT_URL"
+	envUsersLocation    = "MF_PROVISION_USERS_LOCATION"
+	envThingsLocation   = "MF_PROVISION_THINGS_LOCATION"
+	envMfUser           = "MF_PROVISION_USER"
+	envMfPass           = "MF_PROVISION_PASS"
+	envMfApiKey         = "MF_PROVISION_API_KEY"
+	envMfCertsURL       = "MF_PROVISION_CERTS_SVC_URL"
+	envProvisionCerts   = "MF_PROVISION_X509_PROVISIONING"
+	envMfBSURL          = "MF_PROVISION_BS_SVC_URL"
+	envMfBSWhiteListURL = "MF_PROVISION_BS_SVC_WHITELIST_URL"
+	envProvisionBS      = "MF_PROVISION_BS_CONFIG_PROVISIONING"
+	envBSAutoWhiteList  = "MF_PROVISION_BS_AUTO_WHITELIST"
+	envBSContent        = "MF_PROVISION_BS_CONTENT"
 )
 
-type config struct {
-	provision.Config
-	logLevel         string
-	clientTLS        bool
-	caCerts          string
-	serverCert       string
-	serverKey        string
-	httpPort         string
-	mfBSURL          string
-	mfCertsURL       string
-	mfBSWhiteListURL string
-}
+var (
+	errMissingConfigFile        = errors.New("missing config file setting")
+	errFailedToGetAutoWhiteList = errors.New("failed to get auto whitelist setting")
+	errGettingCertificate       = errors.New("getting certificate file setting")
+	errGettingTLSConf           = errors.New("error getting certificate setting")
+	errSettingProvBS            = errors.New("error getting provision BS url setting")
+)
 
 func main() {
-	cfg := loadConfig()
-
-	logger, err := logger.New(os.Stdout, cfg.logLevel)
+	cfg, err := loadConfig()
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
+	logger, err := logger.New(os.Stdout, cfg.Server.LogLevel)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	cfg, err = loadConfigFromFile(cfg, logger)
+	if err != nil {
+		logger.Warn(fmt.Sprintf("Continue with settings from env vars: %s", err))
+	}
 
-	svc := provision.New(cfg.Config, logger)
+	thingSDKCfg := mfSDK.Config{
+		BaseURL:           mainflux.Env(envThingsLocation, defThingsLocation),
+		HTTPAdapterPrefix: "http",
+		MsgContentType:    "application/json",
+		TLSVerification:   cfg.Server.TLS,
+	}
+	thingsSDK := mfSDK.NewSDK(thingSDKCfg)
+
+	userSDKCfg := mfSDK.Config{
+		BaseURL:           mainflux.Env(envUsersLocation, defUsersLocation),
+		HTTPAdapterPrefix: "http",
+		MsgContentType:    "application/json",
+		TLSVerification:   cfg.Server.TLS,
+	}
+	userSDK := mfSDK.NewSDK(userSDKCfg)
+	SDK := provSDK.New(cfg.Server.MfCertsURL, cfg.Server.MfBSURL, cfg.Server.MfWhiteListURL, thingsSDK, userSDK)
+
+	svc := provision.New(cfg, SDK, logger)
 	svc = api.NewLoggingMiddleware(svc, logger)
 
 	errs := make(chan error, 2)
@@ -98,74 +119,130 @@ func main() {
 	logger.Error(fmt.Sprintf("Provision service terminated: %s", err))
 }
 
-func startHTTPServer(svc provision.Service, cfg config, logger logger.Logger, errs chan error) {
-	p := fmt.Sprintf(":%s", cfg.httpPort)
-	if cfg.serverCert != "" || cfg.serverKey != "" {
+func startHTTPServer(svc provision.Service, cfg provision.Config, logger logger.Logger, errs chan error) {
+	p := fmt.Sprintf(":%s", cfg.Server.HTTPPort)
+	if cfg.Server.ServerCert != "" || cfg.Server.ServerKey != "" {
 		logger.Info(fmt.Sprintf("Provision service started using https on port %s with cert %s key %s",
-			cfg.httpPort, cfg.serverCert, cfg.serverKey))
-		errs <- http.ListenAndServeTLS(p, cfg.serverCert, cfg.serverKey, api.MakeHandler(svc))
+			cfg.Server.HTTPPort, cfg.Server.ServerCert, cfg.Server.ServerKey))
+		errs <- http.ListenAndServeTLS(p, cfg.Server.ServerCert, cfg.Server.ServerKey, api.MakeHandler(svc))
 		return
 	}
-	logger.Info(fmt.Sprintf("Provision service started using http on port %s", cfg.httpPort))
+	logger.Info(fmt.Sprintf("Provision service started using http on port %s", cfg.Server.HTTPPort))
 	errs <- http.ListenAndServe(p, api.MakeHandler(svc))
 }
 
-func loadConfig() config {
-	tls, err := strconv.ParseBool(mainflux.Env(envClientTLS, defClientTLS))
+func loadConfigFromFile(cfg provision.Config, logger logger.Logger) (provision.Config, error) {
+	_, err := os.Stat(cfg.File)
+	if os.IsNotExist(err) {
+		return cfg, errMissingConfigFile
+	}
+	c, err := provision.Read(cfg.File)
 	if err != nil {
-		log.Fatalf(fmt.Sprintf("Cannot determine TLS variable %s", err.Error()))
+		return cfg, err
+	}
+	// We will merge settings from environment and from file.
+	merge(&c, &cfg)
+	logger.Info("Continue with settings from file:" + cfg.File)
+	return c, nil
+}
+
+func loadConfig() (provision.Config, error) {
+	tls, err := strconv.ParseBool(mainflux.Env(envTLS, defTLS))
+	if err != nil {
+		return provision.Config{}, errors.Wrap(errGettingTLSConf, err)
 	}
 	provisionX509, err := strconv.ParseBool(mainflux.Env(envProvisionCerts, defProvisionCerts))
 	if err != nil {
-		log.Fatalf("Invalid value passed for %s\n", envProvisionCerts)
+		return provision.Config{}, errors.Wrap(errGettingCertificate, err)
 	}
 	provisionBS, err := strconv.ParseBool(mainflux.Env(envProvisionBS, defProvisionBS))
 	if err != nil {
-		log.Fatalf("Invalid value passed for %s\n", envProvisionBS)
+		return provision.Config{}, errors.Wrap(errSettingProvBS, fmt.Errorf(" for %s", envProvisionBS))
 	}
+
 	autoWhiteList, err := strconv.ParseBool(mainflux.Env(envBSAutoWhiteList, defBSAutoWhitelist))
 	if err != nil {
-		log.Fatalf("Invalid value passed for %s\n", envBSAutoWhiteList)
+		return provision.Config{}, errors.Wrap(errFailedToGetAutoWhiteList, fmt.Errorf(" for %s", envBSAutoWhiteList))
 	}
 	if autoWhiteList && !provisionBS {
-		log.Fatalf("Can't auto whitelist if auto config save is off")
+		return provision.Config{}, errors.New("Can't auto whitelist if auto config save is off")
 	}
 
-	cfg := config{
-		logLevel:         mainflux.Env(envLogLevel, defLogLevel),
-		caCerts:          mainflux.Env(envCACerts, defCACerts),
-		serverCert:       mainflux.Env(envServerCert, defServerCert),
-		serverKey:        mainflux.Env(envServerKey, defServerKey),
-		httpPort:         mainflux.Env(envHTTPPort, defHTTPPort),
-		mfBSURL:          mainflux.Env(envMfBSURL, defMfBSURL),
-		mfBSWhiteListURL: mainflux.Env(envMfBSWhiteListURL, defMfWhiteListURL),
-		mfCertsURL:       mainflux.Env(envMfCertsURL, defMfCertsURL),
-		Config: provision.Config{
-			MFEmail:          mainflux.Env(envMfUser, defMfUser),
-			MFPass:           mainflux.Env(envMfPass, defMfPass),
-			PredefinedThings: strings.Split(mainflux.Env(envThingIDs, defThingIDs), ","),
-			X509Provision:    provisionX509,
-			BSProvision:      provisionBS,
-			AutoWhiteList:    autoWhiteList,
-			BSContent:        fmt.Sprintf(mainflux.Env(envBSContent, defBSContent), mainflux.Env(envMQTTURL, defMQTTURL)),
+	cfg := provision.Config{
+		Server: provision.ServiceConf{
+			LogLevel:       mainflux.Env(envLogLevel, defLogLevel),
+			CACerts:        mainflux.Env(envCACerts, defCACerts),
+			ServerCert:     mainflux.Env(envServerCert, defServerCert),
+			ServerKey:      mainflux.Env(envServerKey, defServerKey),
+			HTTPPort:       mainflux.Env(envHTTPPort, defHTTPPort),
+			MfBSURL:        mainflux.Env(envMfBSURL, defMfBSURL),
+			MfWhiteListURL: mainflux.Env(envMfBSWhiteListURL, defMfWhiteListURL),
+			MfCertsURL:     mainflux.Env(envMfCertsURL, defMfCertsURL),
+			MfUser:         mainflux.Env(envMfUser, defMfUser),
+			MfPass:         mainflux.Env(envMfPass, defMfPass),
+			MfApiKey:       mainflux.Env(envMfApiKey, defMfApiKey),
+			TLS:            tls,
+		},
+		Bootstrap: provision.Bootstrap{
+			X509Provision: provisionX509,
+			Provision:     provisionBS,
+			AutoWhiteList: autoWhiteList,
+			Content:       fmt.Sprintf(mainflux.Env(envBSContent, defBSContent), mainflux.Env(envMQTTURL, defMQTTURL)),
+		},
+
+		// This is default conf for provision if there is no config file
+		Channels: []provision.Channel{
+			provision.Channel{
+				Name:     "control-channel",
+				Metadata: map[string]interface{}{"type": "control"},
+			},
+			provision.Channel{
+				Name:     "data-channel",
+				Metadata: map[string]interface{}{"type": "data"},
+			},
+		},
+		Things: []provision.Thing{
+			provision.Thing{
+				Name:     "thing",
+				Metadata: map[string]interface{}{"externalID": "xxxxxx"},
+			},
 		},
 	}
-	thingSdkCfg := mfSDK.Config{
-		BaseURL:           mainflux.Env(envThingsLocation, defThingsLocation),
-		HTTPAdapterPrefix: "http",
-		MsgContentType:    "application/json",
-		TLSVerification:   tls,
-	}
-	thingsSDK := mfSDK.NewSDK(thingSdkCfg)
 
-	userSdkCfg := mfSDK.Config{
-		BaseURL:           mainflux.Env(envUsersLocation, defUsersLocation),
-		HTTPAdapterPrefix: "http",
-		MsgContentType:    "application/json",
-		TLSVerification:   tls,
+	cfg.File = mainflux.Env(envConfigFile, "")
+	if cfg.File == "" {
+		cfg.File = defConfigFile
+		if err != provision.Save(cfg, defConfigFile) {
+			return cfg, err
+		}
 	}
-	userSDK := mfSDK.NewSDK(userSdkCfg)
+	return cfg, nil
+}
 
-	cfg.SDK = provsdk.New(cfg.mfCertsURL, cfg.mfBSURL, cfg.mfBSWhiteListURL, thingsSDK, userSDK)
-	return cfg
+func merge(dst, src interface{}) interface{} {
+	d := reflect.ValueOf(dst).Elem()
+	s := reflect.ValueOf(src).Elem()
+
+	for i := 0; i < d.NumField(); i++ {
+		dField := d.Field(i)
+		sField := s.Field(i)
+		switch dField.Kind() {
+		case reflect.Struct:
+			dst := dField.Addr().Interface()
+			src := sField.Addr().Interface()
+			m := merge(dst, src)
+			val := reflect.ValueOf(m).Elem().Interface()
+			dField.Set(reflect.ValueOf(val))
+		case reflect.Slice:
+		case reflect.Bool:
+			if dField.Interface() == false {
+				dField.Set(reflect.ValueOf(sField.Interface()))
+			}
+		case reflect.String:
+			if dField.Interface() == "" {
+				dField.Set(reflect.ValueOf(sField.Interface()))
+			}
+		}
+	}
+	return dst
 }
