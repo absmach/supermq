@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/go-zoo/bone"
-	provsdk "github.com/mainflux/mainflux/provision/sdk"
-	mfsdk "github.com/mainflux/mainflux/sdk/go"
+	provSDK "github.com/mainflux/mainflux/provision/sdk"
+	mfSDK "github.com/mainflux/mainflux/sdk/go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -66,7 +66,7 @@ func delete(rw http.ResponseWriter, r *http.Request) {
 }
 
 func createToken(rw http.ResponseWriter, r *http.Request) {
-	u := mfsdk.User{}
+	var user mfSDK.User
 	if !ct(rw, r) {
 		return
 	}
@@ -84,7 +84,7 @@ func createToken(rw http.ResponseWriter, r *http.Request) {
 }
 
 func createThing(rw http.ResponseWriter, r *http.Request) {
-	t := mfsdk.Thing{}
+	t := mfSDK.Thing{}
 	if !ct(rw, r) || !auth(rw, r) {
 		return
 	}
@@ -113,13 +113,13 @@ func thing(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusNotFound)
 		return
 	}
-	data, _ := json.Marshal(mfsdk.Thing{})
+	data, _ := json.Marshal(mfSDK.Thing{})
 	rw.WriteHeader(http.StatusOK)
 	rw.Write(data)
 }
 
 func createChannel(rw http.ResponseWriter, r *http.Request) {
-	c := mfsdk.Channel{}
+	c := mfSDK.Channel{}
 	if !ct(rw, r) || !auth(rw, r) {
 		return
 	}
@@ -171,7 +171,7 @@ func cert(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, _ := json.Marshal(provsdk.Cert{})
+	data, _ := json.Marshal(provSDK.Cert{})
 	rw.WriteHeader(http.StatusCreated)
 	rw.Write(data)
 }
@@ -180,7 +180,7 @@ func saveToBootstrap(rw http.ResponseWriter, r *http.Request) {
 	if !auth(rw, r) || !ct(rw, r) {
 		return
 	}
-	cfg := provsdk.BSConfig{}
+	cfg := provSDK.BSConfig{}
 	json.NewDecoder(r.Body).Decode(&cfg)
 	defer r.Body.Close()
 
@@ -226,7 +226,7 @@ func whitelist(rw http.ResponseWriter, r *http.Request) {
 
 func removeCert(rw http.ResponseWriter, r *http.Request) {}
 
-func newSDK() provsdk.SDK {
+func newSDK() provSDK.SDK {
 	r := bone.New()
 	r.Post("/tokens", handler(createToken))
 	r.Post("/things", handler(createThing))
@@ -245,20 +245,20 @@ func newSDK() provsdk.SDK {
 	bs := fmt.Sprintf("%s/things/configs", svc.URL)
 	whl := fmt.Sprintf("%s/things/state", svc.URL)
 
-	thingSdkCfg := mfsdk.Config{
+	thingSdkCfg := mfSDK.Config{
 		BaseURL:         svc.URL,
 		MsgContentType:  "application/json",
 		TLSVerification: false,
 	}
-	things := mfsdk.NewSDK(thingSdkCfg)
+	things := mfSDK.NewSDK(thingSdkCfg)
 
-	userSdkCfg := mfsdk.Config{
+	userSdkCfg := mfSDK.Config{
 		BaseURL:         svc.URL,
 		MsgContentType:  "application/json",
 		TLSVerification: false,
 	}
-	users := mfsdk.NewSDK(userSdkCfg)
-	return provsdk.New(crt, bs, whl, things, users)
+	users := mfSDK.NewSDK(userSdkCfg)
+	return provSDK.New(crt, bs, whl, things, users)
 }
 
 func TestCreateToken(t *testing.T) {
@@ -280,7 +280,7 @@ func TestCreateToken(t *testing.T) {
 			desc:  "Create an invalid token",
 			email: invalid,
 			pass:  valid,
-			err:   mfsdk.ErrInvalidArgs,
+			err:   mfSDK.ErrInvalidArgs,
 		},
 	}
 	for _, tc := range cases {
@@ -305,7 +305,7 @@ func TestCreateThing(t *testing.T) {
 		{
 			desc:  "Create thing unauthorized",
 			token: invalid,
-			err:   mfsdk.ErrUnauthorized,
+			err:   mfSDK.ErrUnauthorized,
 		},
 	}
 	for _, tc := range cases {
@@ -333,19 +333,19 @@ func TestThing(t *testing.T) {
 			desc:    "Fetch non existent thing",
 			thingID: invalid,
 			token:   valid,
-			err:     mfsdk.ErrNotFound,
+			err:     mfSDK.ErrNotFound,
 		},
 		{
 			desc:    "Fetch thing wrong id",
 			thingID: "",
 			token:   valid,
-			err:     mfsdk.ErrFetchFailed,
+			err:     mfSDK.ErrFetchFailed,
 		},
 		{
 			desc:    "Fetch thing unauthorized",
 			thingID: exists,
 			token:   invalid,
-			err:     mfsdk.ErrUnauthorized,
+			err:     mfSDK.ErrUnauthorized,
 		},
 	}
 	for _, tc := range cases {
@@ -373,13 +373,13 @@ func TestDeleteThing(t *testing.T) {
 			desc:  "Delete thing unauthorized",
 			id:    valid,
 			token: invalid,
-			err:   mfsdk.ErrUnauthorized,
+			err:   mfSDK.ErrUnauthorized,
 		},
 		{
 			desc:  "Delete thing wrong ID",
 			id:    "",
 			token: valid,
-			err:   mfsdk.ErrInvalidArgs,
+			err:   mfSDK.ErrInvalidArgs,
 		},
 	}
 	for _, tc := range cases {
@@ -404,11 +404,15 @@ func TestCreateChannel(t *testing.T) {
 		{
 			desc:  "Create channel unauthorized",
 			token: invalid,
-			err:   mfsdk.ErrUnauthorized,
+			err:   mfSDK.ErrUnauthorized,
 		},
 	}
 	for _, tc := range cases {
-		_, err := sdk.CreateChannel("external", "ctrl", tc.token)
+		ch := mfSDK.Channel{
+			Name:     "external",
+			Metadata: map[string]interface{}{"type": "control"},
+		}
+		_, err := sdk.CreateChannel(ch, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
@@ -432,13 +436,13 @@ func TestDeleteChannel(t *testing.T) {
 			desc:  "Delete channel unauthorized",
 			id:    valid,
 			token: invalid,
-			err:   mfsdk.ErrUnauthorized,
+			err:   mfSDK.ErrUnauthorized,
 		},
 		{
 			desc:  "Delete channel wrong ID",
 			id:    "",
 			token: valid,
-			err:   mfsdk.ErrInvalidArgs,
+			err:   mfSDK.ErrInvalidArgs,
 		},
 	}
 	for _, tc := range cases {
@@ -469,21 +473,21 @@ func TestConnect(t *testing.T) {
 			thingID:   exists,
 			channelID: exists,
 			token:     invalid,
-			err:       mfsdk.ErrUnauthorized,
+			err:       mfSDK.ErrUnauthorized,
 		},
 		{
 			desc:      "Connect bad data",
 			thingID:   "",
 			channelID: exists,
 			token:     valid,
-			err:       mfsdk.ErrFailedConnection,
+			err:       mfSDK.ErrFailedConnection,
 		},
 		{
 			desc:      "Connect non existent data",
 			thingID:   valid,
 			channelID: exists,
 			token:     valid,
-			err:       mfsdk.ErrNotFound,
+			err:       mfSDK.ErrNotFound,
 		},
 	}
 	for _, tc := range cases {
@@ -514,21 +518,21 @@ func TestCert(t *testing.T) {
 			id:    valid,
 			key:   valid,
 			token: invalid,
-			err:   provsdk.ErrCerts,
+			err:   provSDK.ErrCerts,
 		},
 		{
 			desc:  "Create cert with an existing id",
 			id:    exists,
 			key:   valid,
 			token: valid,
-			err:   provsdk.ErrCerts,
+			err:   provSDK.ErrCerts,
 		},
 		{
 			desc:  "Create cert with an existing key",
 			id:    valid,
 			key:   exists,
 			token: valid,
-			err:   provsdk.ErrCerts,
+			err:   provSDK.ErrCerts,
 		},
 	}
 	for _, tc := range cases {
@@ -540,7 +544,7 @@ func TestCert(t *testing.T) {
 func TestBootstrap(t *testing.T) {
 	sdk := newSDK()
 
-	cfg1 := provsdk.BSConfig{
+	cfg1 := provSDK.BSConfig{
 		ThingID:     valid,
 		ExternalID:  valid,
 		ExternalKey: valid,
@@ -559,7 +563,7 @@ func TestBootstrap(t *testing.T) {
 
 	cases := []struct {
 		desc   string
-		config provsdk.BSConfig
+		config provSDK.BSConfig
 		token  string
 		err    error
 	}{
@@ -573,19 +577,19 @@ func TestBootstrap(t *testing.T) {
 			desc:   "Save config unauthorized",
 			config: cfg1,
 			token:  invalid,
-			err:    provsdk.ErrUnauthorized,
+			err:    provSDK.ErrUnauthorized,
 		},
 		{
 			desc:   "Save malformed config",
 			config: cfg2,
 			token:  valid,
-			err:    provsdk.ErrMalformedEntity,
+			err:    provSDK.ErrMalformedEntity,
 		},
 		{
 			desc:   "Save existing config",
 			config: cfg3,
 			token:  valid,
-			err:    provsdk.ErrConflict,
+			err:    provSDK.ErrConflict,
 		},
 	}
 	for _, tc := range cases {
@@ -619,21 +623,21 @@ func TestWhitelist(t *testing.T) {
 			id:    exists,
 			state: sValid,
 			token: invalid,
-			err:   provsdk.ErrUnauthorized,
+			err:   provSDK.ErrUnauthorized,
 		},
 		{
 			desc:  "Whitelist invalid state",
 			id:    exists,
 			state: sInvalid,
 			token: valid,
-			err:   provsdk.ErrMalformedEntity,
+			err:   provSDK.ErrMalformedEntity,
 		},
 		{
 			desc:  "Whitelist not found",
 			id:    valid,
 			state: sValid,
 			token: valid,
-			err:   provsdk.ErrNotFound,
+			err:   provSDK.ErrNotFound,
 		},
 	}
 	for _, tc := range cases {
@@ -661,13 +665,13 @@ func TestRemoveBootstrap(t *testing.T) {
 			desc:  "Delete config unauthorized",
 			id:    valid,
 			token: invalid,
-			err:   mfsdk.ErrUnauthorized,
+			err:   mfSDK.ErrUnauthorized,
 		},
 		{
 			desc:  "Delete config wrong ID",
 			id:    "",
 			token: valid,
-			err:   provsdk.ErrConfigRemove,
+			err:   provSDK.ErrConfigRemove,
 		},
 	}
 	for _, tc := range cases {
@@ -695,13 +699,13 @@ func TestRemoveCert(t *testing.T) {
 			desc:  "Delete cert unauthorized",
 			key:   valid,
 			token: invalid,
-			err:   mfsdk.ErrUnauthorized,
+			err:   mfSDK.ErrUnauthorized,
 		},
 		{
 			desc:  "Delete cert wrong ID",
 			key:   "",
 			token: valid,
-			err:   provsdk.ErrCertsRemove,
+			err:   provSDK.ErrCertsRemove,
 		},
 	}
 	for _, tc := range cases {

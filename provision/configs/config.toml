@@ -1,0 +1,45 @@
+file = "config.toml"
+
+[bootstrap]
+  autowhite_list = true
+  content = "{}%!(EXTRA string=tcp://localhost:1883)"
+  provision = true
+  x509_provision = false
+
+
+[server]
+  LogLevel = "debug"
+  ca_certs = ""
+  http_port = "2222"
+  mf_api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyOGMwY2M3Yy01MGE1LTQxM2MtYTU4Mi1mZDgyMmYxMThkN2MiLCJpYXQiOjE1ODY3OTA2NzIsImlzcyI6Im1pcmthc2hAZW1haWwuY29tIiwidHlwZSI6Mn0.K8VuiNhZDdhuSY8MLwkqqjarJ4Affz4DHcf4fpIvoV8"
+  mf_bs_url = "http://localhost:8202/things/configs"
+  mf_certs_url = "http://localhost/certs"
+  mf_pass = ""
+  mf_user = ""
+  mf_whit_list = "http://localhost:8202/things/state"
+  mqtt_url = ""
+  port = ""
+  server_cert = ""
+  server_key = ""
+  things_location = ""
+  tls = true
+  users_location = ""
+
+[[things]]
+  name = "thing"
+
+  [things.metadata]
+    externalID = "xxxxxx"
+
+
+[[channels]]
+  name = "control-channel"
+
+  [channels.metadata]
+    type = "control"
+
+[[channels]]
+  name = "data-channel"
+
+  [channels.metadata]
+    type = "data"

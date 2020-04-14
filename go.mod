@@ -15,17 +15,18 @@ require (
 	github.com/gocql/gocql v0.0.0-20181106112037-68ae1e384be4
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/gogo/protobuf v1.3.1
-	github.com/golang/protobuf v1.3.3
+	github.com/golang/protobuf v1.4.0
 	github.com/gopcua/opcua v0.1.6
 	github.com/hokaccha/go-prettyjson v0.0.0-20180920040306-f579f869bbfe
 	github.com/influxdata/influxdb v1.6.4
 	github.com/jmoiron/sqlx v1.2.1-0.20190319043955-cdf62fdf55f6
 	github.com/lib/pq v1.0.0
 	github.com/mainflux/mproxy v0.1.6
+	github.com/mainflux/provision v0.0.0-20200414213453-0a7255edfd38
 	github.com/mainflux/senml v1.0.1
 	github.com/nats-io/nats.go v1.9.1
 	github.com/opentracing/opentracing-go v1.1.0
-	github.com/prometheus/client_golang v0.9.3
+	github.com/prometheus/client_golang v1.5.1
 	github.com/rubenv/sql-migrate v0.0.0-20181106121204-ba2c6a7295c5
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.5.0

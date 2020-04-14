@@ -3,19 +3,19 @@ package sdk
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
-	mfsdk "github.com/mainflux/mainflux/sdk/go"
+	"github.com/mainflux/mainflux/errors"
+	mfSDK "github.com/mainflux/mainflux/sdk/go"
 )
 
 // Thing is Mainflux SDK thing.
-type Thing mfsdk.Thing
+type Thing mfSDK.Thing
 
 // Channel is Mainflux SDK channel.
-type Channel mfsdk.Channel
+type Channel mfSDK.Channel
 
 var (
 	// ErrGetThing indicates error when fetching new Thing.
@@ -84,7 +84,7 @@ type SDK interface {
 	CreateToken(email, pass string) (string, error)
 
 	// CreateThing registers new thing and returns its id.
-	CreateThing(externalID, name, token string) (string, error)
+	CreateThing(t mfSDK.Thing, token string) (string, error)
 
 	// Thing returns thing object by id.
 	Thing(id, token string) (Thing, error)
@@ -93,7 +93,7 @@ type SDK interface {
 	DeleteThing(id, token string) error
 
 	// CreateChannel creates a new Mainflux Channel.
-	CreateChannel(name, chantype, token string) (Channel, error)
+	CreateChannel(c mfSDK.Channel, token string) (Channel, error)
 
 	// DeleteChannel removes existing channel.
 	DeleteChannel(id, token string) error
@@ -118,15 +118,15 @@ type SDK interface {
 }
 
 type provisionSDK struct {
-	sdk          mfsdk.SDK
-	users        mfsdk.SDK
+	sdk          mfSDK.SDK
+	users        mfSDK.SDK
 	certsURL     string
 	bsURL        string
 	whitelistURL string
 }
 
 // New creates new Provision SDK.
-func New(certsURL, bsURL, whitelistURL string, thingsSDK, usersSDK mfsdk.SDK) SDK {
+func New(certsURL, bsURL, whitelistURL string, thingsSDK, usersSDK mfSDK.SDK) SDK {
 	return &provisionSDK{
 		sdk:          thingsSDK,
 		users:        usersSDK,
@@ -137,16 +137,12 @@ func New(certsURL, bsURL, whitelistURL string, thingsSDK, usersSDK mfsdk.SDK) SD
 }
 
 func (ps *provisionSDK) CreateToken(email, pass string) (string, error) {
-	user := mfsdk.User{Email: email, Password: pass}
+	user := mfSDK.User{Email: email, Password: pass}
 	return ps.users.CreateToken(user)
 }
 
-func (ps *provisionSDK) CreateThing(externalID, name, token string) (string, error) {
-	thing := mfsdk.Thing{
-		Name:     "",
-		Metadata: map[string]interface{}{"ExternalID": externalID},
-	}
-	return ps.sdk.CreateThing(thing, token)
+func (ps *provisionSDK) CreateThing(th mfSDK.Thing, token string) (string, error) {
+	return ps.sdk.CreateThing(th, token)
 }
 
 func (ps *provisionSDK) Thing(id, token string) (Thing, error) {
@@ -161,9 +157,12 @@ func (ps *provisionSDK) DeleteThing(id, token string) error {
 	return ps.sdk.DeleteThing(id, token)
 }
 
-func (ps *provisionSDK) CreateChannel(name, chantype, token string) (Channel, error) {
-	retChannel := mfsdk.Channel{}
-	retChannel = mfsdk.Channel{Name: name, Metadata: map[string]interface{}{"Type": chantype}}
+func (ps *provisionSDK) CreateChannel(ch mfSDK.Channel, token string) (Channel, error) {
+	retChannel := mfSDK.Channel{}
+	retChannel = mfSDK.Channel{
+		Name:     ch.Name,
+		Metadata: ch.Metadata,
+	}
 	chanID, err := ps.sdk.CreateChannel(retChannel, token)
 	if err != nil {
 		return Channel{}, err
@@ -178,7 +177,8 @@ func (ps *provisionSDK) DeleteChannel(id, token string) error {
 }
 
 func (ps *provisionSDK) Connect(thingID, chanID, token string) error {
-	return ps.sdk.ConnectThing(thingID, chanID, token)
+	conn := mfSDK.ConnectionIDs{ChannelIDs: []string{chanID}, ThingIDs: []string{thingID}}
+	return ps.sdk.Connect(conn, token)
 }
 
 func (ps *provisionSDK) Cert(thingID, thingKey, token string) (Cert, error) {
@@ -231,7 +231,7 @@ func (ps *provisionSDK) SaveConfig(data BSConfig, token string) error {
 	case http.StatusCreated:
 		return nil
 	default:
-		return fmt.Errorf("Failed to save Bootstrap configuration, response status code: %v", res.StatusCode)
+		return fmt.Errorf("Failed to save Bootstrap configuration: %s", http.StatusText(res.StatusCode))
 	}
 }
 

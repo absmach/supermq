@@ -7,12 +7,12 @@ import (
 )
 
 type provisionRes struct {
-	Thing       sdk.Thing     `json:"thing"`
-	Channels    []sdk.Channel `json:"channels"`
-	ClientCert  string        `json:"client_cert,omitempty"`
-	ClientKey   string        `json:"client_key,omitempty"`
-	CACert      string        `json:"ca_cert,omitempty"`
-	Whitelisted bool          `json:"whitelisted,omitempty"`
+	Things      []sdk.Thing       `json:"things"`
+	Channels    []sdk.Channel     `json:"channels"`
+	ClientCert  map[string]string `json:"client_cert,omitempty"`
+	ClientKey   map[string]string `json:"client_key,omitempty"`
+	CACert      string            `json:"ca_cert,omitempty"`
+	Whitelisted map[string]bool   `json:"whitelisted,omitempty"`
 }
 
 func (res provisionRes) Code() int {
