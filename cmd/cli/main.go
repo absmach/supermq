@@ -16,10 +16,11 @@ func main() {
 	sdkConf := sdk.Config{
 		BaseURL:           "http://localhost",
 		ReaderURL:         "http://localhost:8905",
-		ReaderPrefix:      "",
+		BootstrapURL:      "http://localhost:8202",
 		UsersPrefix:       "",
 		ThingsPrefix:      "",
 		HTTPAdapterPrefix: "http",
+		BootstrapPrefix:   "things",
 		MsgContentType:    sdk.ContentType(msgContentType),
 		TLSVerification:   false,
 	}
@@ -41,6 +42,7 @@ func main() {
 	channelsCmd := cli.NewChannelsCmd()
 	messagesCmd := cli.NewMessagesCmd()
 	provisionCmd := cli.NewProvisionCmd()
+	bootstrapCmd := cli.NewBootstrapCmd()
 
 	// Root Commands
 	rootCmd.AddCommand(versionCmd)
@@ -49,6 +51,7 @@ func main() {
 	rootCmd.AddCommand(channelsCmd)
 	rootCmd.AddCommand(messagesCmd)
 	rootCmd.AddCommand(provisionCmd)
+	rootCmd.AddCommand(bootstrapCmd)
 
 	// Root Flags
 	rootCmd.PersistentFlags().StringVarP(
