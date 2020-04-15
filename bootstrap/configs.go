@@ -54,11 +54,11 @@ type ConfigRepository interface {
 
 	// RetrieveByID retrieves the Config having the provided identifier, that is owned
 	// by the specified user.
-	RetrieveByID(key, id string) (Config, error)
+	RetrieveByID(owner, id string) (Config, error)
 
 	// RetrieveAll retrieves a subset of Configs that are owned
 	// by the specific user, with given filter parameters.
-	RetrieveAll(key string, filter Filter, offset, limit uint64) ConfigsPage
+	RetrieveAll(owner string, filter Filter, offset, limit uint64) ConfigsPage
 
 	// RetrieveByExternalID returns Config for given external ID.
 	RetrieveByExternalID(externalID string) (Config, error)
@@ -67,26 +67,26 @@ type ConfigRepository interface {
 	// to indicate operation failure.
 	Update(cfg Config) error
 
-	// UpdateCerts updates an existing Config certificate and key.
+	// UpdateCerts updates an existing Config certificate and owner.
 	// A non-nil error is returned to indicate operation failure.
 	UpdateCert(owner, thingID, clientCert, clientKey, caCert string) error
 
 	// UpdateConnections updates a list of Channels the Config is connected to
 	// adding new Channels if needed.
-	UpdateConnections(key, id string, channels []Channel, connections []string) error
+	UpdateConnections(owner, id string, channels []Channel, connections []string) error
 
 	// Remove removes the Config having the provided identifier, that is owned
 	// by the specified user.
-	Remove(key, id string) error
+	Remove(owner, id string) error
 
 	// ChangeState changes of the Config, that is owned by the specific user.
-	ChangeState(key, id string, state State) error
+	ChangeState(owner, id string, state State) error
 
 	// ListExisting retrieves those channels from the given list that exist in DB.
-	ListExisting(key string, ids []string) ([]Channel, error)
+	ListExisting(owner string, ids []string) ([]Channel, error)
 
 	// SaveUnknown saves Thing which unsuccessfully bootstrapped.
-	SaveUnknown(key, id string) error
+	SaveUnknown(owner, id string) error
 
 	// RetrieveUnknown returns a subset of unsuccessfully bootstrapped Things.
 	RetrieveUnknown(offset, limit uint64) ConfigsPage

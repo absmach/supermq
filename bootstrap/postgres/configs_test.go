@@ -399,7 +399,7 @@ func TestUpdateConnections(t *testing.T) {
 
 	cases := []struct {
 		desc        string
-		token       string
+		owner       string
 		id          string
 		channels    []bootstrap.Channel
 		connections []string
@@ -407,7 +407,7 @@ func TestUpdateConnections(t *testing.T) {
 	}{
 		{
 			desc:        "update connections of non-existing config",
-			token:       config.Owner,
+			owner:       config.Owner,
 			id:          "unknown",
 			channels:    nil,
 			connections: []string{channels[1]},
@@ -415,7 +415,7 @@ func TestUpdateConnections(t *testing.T) {
 		},
 		{
 			desc:        "update connections",
-			token:       config.Owner,
+			owner:       config.Owner,
 			id:          c.MFThing,
 			channels:    nil,
 			connections: []string{channels[1]},
@@ -423,7 +423,7 @@ func TestUpdateConnections(t *testing.T) {
 		},
 		{
 			desc:        "update connections with existing channels",
-			token:       config.Owner,
+			owner:       config.Owner,
 			id:          c2,
 			channels:    nil,
 			connections: channels,
@@ -431,7 +431,7 @@ func TestUpdateConnections(t *testing.T) {
 		},
 		{
 			desc:        "update connections no channels",
-			token:       config.Owner,
+			owner:       config.Owner,
 			id:          c.MFThing,
 			channels:    nil,
 			connections: nil,
@@ -439,7 +439,7 @@ func TestUpdateConnections(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		err := repo.UpdateConnections(tc.token, tc.id, tc.channels, tc.connections)
+		err := repo.UpdateConnections(tc.owner, tc.id, tc.channels, tc.connections)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
@@ -550,31 +550,31 @@ func TestListExisting(t *testing.T) {
 
 	cases := []struct {
 		desc        string
-		token       string
+		owner       string
 		connections []string
 		existing    []bootstrap.Channel
 	}{
 		{
 			desc:        "list all existing channels",
-			token:       c.Owner,
+			owner:       c.Owner,
 			connections: channels,
 			existing:    chs,
 		},
 		{
 			desc:        "list a subset of existing channels",
-			token:       c.Owner,
+			owner:       c.Owner,
 			connections: []string{channels[0], "5"},
 			existing:    []bootstrap.Channel{chs[0]},
 		},
 		{
 			desc:        "list a subset of existing channels empty",
-			token:       c.Owner,
+			owner:       c.Owner,
 			connections: []string{"5", "6"},
 			existing:    []bootstrap.Channel{},
 		},
 	}
 	for _, tc := range cases {
-		existing, err := repo.ListExisting(tc.token, tc.connections)
+		existing, err := repo.ListExisting(tc.owner, tc.connections)
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error: %s", tc.desc, err))
 		assert.ElementsMatch(t, tc.existing, existing, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.existing, existing))
 	}
