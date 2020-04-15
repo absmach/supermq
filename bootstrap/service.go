@@ -165,8 +165,9 @@ func (bs bootstrapService) Add(token string, cfg Config) (Config, error) {
 	saved, err := bs.configs.Save(cfg, toConnect)
 	if err != nil {
 		if id == "" {
-			// Fail silently.
-			bs.sdk.DeleteThing(cfg.MFThing, token)
+			if errT := bs.sdk.DeleteThing(cfg.MFThing, token); errT != nil {
+				err = errors.Wrap(err, errT)
+			}
 		}
 		return Config{}, errors.Wrap(errAddBootstrap, err)
 	}
@@ -415,10 +416,12 @@ func (bs bootstrapService) thing(token, id string) (mfsdk.Thing, error) {
 		}
 
 		if id != "" {
-			bs.sdk.DeleteThing(thingID, token)
+			if errT := bs.sdk.DeleteThing(thingID, token); errT != nil {
+				err = errors.Wrap(err, errT)
+			}
 		}
 
-		return mfsdk.Thing{}, ErrThings
+		return mfsdk.Thing{}, errors.Wrap(ErrThings, err)
 	}
 
 	return thing, nil
