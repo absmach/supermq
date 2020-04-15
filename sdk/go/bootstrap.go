@@ -69,7 +69,7 @@ func (sdk mfSDK) AddBootstrap(key string, cfg BoostrapConfig) (string, error) {
 }
 
 func (sdk mfSDK) ViewBoostrap(key, id string) (BoostrapConfig, error) {
-	endpoint := fmt.Sprintf("%s/%s", "configs", id)
+	endpoint := fmt.Sprintf("%s/%s", configsEndpoint, id)
 	url := createURL(sdk.bootstrapURL, sdk.bootstrapPrefix, endpoint)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
