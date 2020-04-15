@@ -4,6 +4,7 @@ go 1.11
 
 require (
 	github.com/BurntSushi/toml v0.3.1
+	github.com/ClickHouse/clickhouse-go v1.4.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/docker v1.13.1
 	github.com/dustin/go-coap v0.0.0-20170214053734-ddcc80675fa4
@@ -12,15 +13,16 @@ require (
 	github.com/go-kit/kit v0.9.0
 	github.com/go-redis/redis v6.15.0+incompatible
 	github.com/go-zoo/bone v1.3.0
-	github.com/gocql/gocql v0.0.0-20181106112037-68ae1e384be4
+	github.com/gocql/gocql v0.0.0-20190301043612-f6df8288f9b4
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/gogo/protobuf v1.3.1
+	github.com/golang-migrate/migrate/v4 v4.10.0
 	github.com/golang/protobuf v1.3.3
 	github.com/gopcua/opcua v0.1.6
 	github.com/hokaccha/go-prettyjson v0.0.0-20180920040306-f579f869bbfe
 	github.com/influxdata/influxdb v1.6.4
 	github.com/jmoiron/sqlx v1.2.1-0.20190319043955-cdf62fdf55f6
-	github.com/lib/pq v1.0.0
+	github.com/lib/pq v1.3.0
 	github.com/mainflux/mproxy v0.1.6
 	github.com/mainflux/senml v1.0.1
 	github.com/nats-io/nats.go v1.9.1
@@ -32,7 +34,7 @@ require (
 	github.com/stretchr/testify v1.5.1
 	github.com/uber/jaeger-client-go v2.22.1+incompatible
 	go.mongodb.org/mongo-driver v1.1.3
-	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
+	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073
 	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b
 	gonum.org/v1/gonum v0.0.0-20190808205415-ced62fe5104b
 	google.golang.org/grpc v1.27.1
