@@ -50,7 +50,7 @@ type ConfigsPage struct {
 type ConfigRepository interface {
 	// Save persists the Config. Successful operation is indicated by non-nil
 	// error response.
-	Save(cfg Config, connections []string) (string, error)
+	Save(cfg Config, chsConnIDs []string) (string, error)
 
 	// RetrieveByID retrieves the Config having the provided identifier, that is owned
 	// by the specified user.

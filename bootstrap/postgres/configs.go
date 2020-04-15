@@ -57,7 +57,7 @@ func NewConfigRepository(db *sqlx.DB, log logger.Logger) bootstrap.ConfigReposit
 	return &configRepository{db: db, log: log}
 }
 
-func (cr configRepository) Save(cfg bootstrap.Config, connections []string) (string, error) {
+func (cr configRepository) Save(cfg bootstrap.Config, chsConnIDs []string) (string, error) {
 	q := `INSERT INTO configs (mainflux_thing, owner, name, client_cert, client_key, ca_cert, mainflux_key, external_id, external_key, content, state)
 		  VALUES (:mainflux_thing, :owner, :name, :client_cert, :client_key, :ca_cert, :mainflux_key, :external_id, :external_key, :content, :state)`
 
@@ -85,7 +85,7 @@ func (cr configRepository) Save(cfg bootstrap.Config, connections []string) (str
 		return "", errors.Wrap(errSaveChannels, err)
 	}
 
-	if err := insertConnections(cfg, connections, tx); err != nil {
+	if err := insertConnections(cfg, chsConnIDs, tx); err != nil {
 		cr.rollback("Failed to insert connections", tx, err)
 
 		return "", errors.Wrap(errSaveConnections, err)
