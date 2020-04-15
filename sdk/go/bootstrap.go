@@ -10,7 +10,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/mainflux/mainflux/errors"
 )
+
+const configsEndpoint = "configs"
+const bootstrapEndpoint = "bootstrap"
 
 // BoostrapConfig represents Configuration entity. It wraps information about external entity
 // as well as info about corresponding Mainflux entities.
@@ -36,10 +41,10 @@ type BoostrapConfig struct {
 func (sdk mfSDK) AddBootstrap(key string, cfg BoostrapConfig) (string, error) {
 	data, err := json.Marshal(cfg)
 	if err != nil {
-		return "", ErrInvalidArgs
+		return "", errors.Wrap(ErrInvalidArgs, err)
 	}
 
-	url := createURL(sdk.bootstrapURL, sdk.bootstrapPrefix, "configs")
+	url := createURL(sdk.bootstrapURL, sdk.bootstrapPrefix, configsEndpoint)
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 	if err != nil {
@@ -101,10 +106,10 @@ func (sdk mfSDK) ViewBoostrap(key, id string) (BoostrapConfig, error) {
 func (sdk mfSDK) UpdateBoostrap(key string, cfg BoostrapConfig) error {
 	data, err := json.Marshal(cfg)
 	if err != nil {
-		return ErrInvalidArgs
+		return errors.Wrap(ErrInvalidArgs, err)
 	}
 
-	endpoint := fmt.Sprintf("%s/%s", "configs", cfg.MFThing)
+	endpoint := fmt.Sprintf("%s/%s", configsEndpoint, cfg.MFThing)
 	url := createURL(sdk.bootstrapURL, sdk.bootstrapPrefix, endpoint)
 
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
@@ -128,7 +133,7 @@ func (sdk mfSDK) UpdateBoostrap(key string, cfg BoostrapConfig) error {
 }
 
 func (sdk mfSDK) RemoveBoostrap(key, id string) error {
-	endpoint := fmt.Sprintf("%s/%s", "configs", id)
+	endpoint := fmt.Sprintf("%s/%s", configsEndpoint, id)
 	url := createURL(sdk.bootstrapURL, sdk.bootstrapPrefix, endpoint)
 
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
@@ -152,7 +157,7 @@ func (sdk mfSDK) RemoveBoostrap(key, id string) error {
 }
 
 func (sdk mfSDK) Boostrap(key, id string) (BoostrapConfig, error) {
-	endpoint := fmt.Sprintf("%s/%s", "bootstrap", id)
+	endpoint := fmt.Sprintf("%s/%s", bootstrapEndpoint, id)
 	url := createURL(sdk.bootstrapURL, sdk.bootstrapPrefix, endpoint)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
