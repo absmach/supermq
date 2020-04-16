@@ -15,7 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/errors"
 	log "github.com/mainflux/mainflux/logger"
 	sdk "github.com/mainflux/mainflux/sdk/go"
 	"github.com/mainflux/mainflux/users"
@@ -71,32 +70,32 @@ func TestCreateUser(t *testing.T) {
 		{
 			desc: "register existing user",
 			user: user,
-			err:  errors.Wrap(sdk.ErrFailedCreation, httpStatusErr(http.StatusConflict)),
+			err:  createError(sdk.ErrFailedCreation, http.StatusConflict),
 		},
 		{
 			desc: "register user with invalid email address",
 			user: sdk.User{Email: invalidEmail, Password: "password"},
-			err:  errors.Wrap(sdk.ErrFailedCreation, httpStatusErr(http.StatusBadRequest)),
+			err:  createError(sdk.ErrFailedCreation, http.StatusBadRequest),
 		},
 		{
 			desc: "register user with empty password",
 			user: sdk.User{Email: "user2@example.com", Password: ""},
-			err:  errors.Wrap(sdk.ErrFailedCreation, httpStatusErr(http.StatusBadRequest)),
+			err:  createError(sdk.ErrFailedCreation, http.StatusBadRequest),
 		},
 		{
 			desc: "register user without password",
 			user: sdk.User{Email: "user2@example.com"},
-			err:  errors.Wrap(sdk.ErrFailedCreation, httpStatusErr(http.StatusBadRequest)),
+			err:  createError(sdk.ErrFailedCreation, http.StatusBadRequest),
 		},
 		{
 			desc: "register user without email",
 			user: sdk.User{Password: "password"},
-			err:  errors.Wrap(sdk.ErrFailedCreation, httpStatusErr(http.StatusBadRequest)),
+			err:  createError(sdk.ErrFailedCreation, http.StatusBadRequest),
 		},
 		{
 			desc: "register empty user",
 			user: sdk.User{},
-			err:  errors.Wrap(sdk.ErrFailedCreation, httpStatusErr(http.StatusBadRequest)),
+			err:  createError(sdk.ErrFailedCreation, http.StatusBadRequest),
 		},
 	}
 
@@ -141,13 +140,13 @@ func TestCreateToken(t *testing.T) {
 			desc:  "create token for non existing user",
 			user:  sdk.User{Email: "user2@example.com", Password: "password"},
 			token: "",
-			err:   errors.Wrap(sdk.ErrFailedCreation, httpStatusErr(http.StatusForbidden)),
+			err:   createError(sdk.ErrFailedCreation, http.StatusForbidden),
 		},
 		{
 			desc:  "create user with empty email",
 			user:  sdk.User{Email: "", Password: "password"},
 			token: "",
-			err:   errors.Wrap(sdk.ErrFailedCreation, httpStatusErr(http.StatusBadRequest)),
+			err:   createError(sdk.ErrFailedCreation, http.StatusBadRequest),
 		},
 	}
 	for _, tc := range cases {
@@ -155,9 +154,4 @@ func TestCreateToken(t *testing.T) {
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.token, token, fmt.Sprintf("%s: expected response: %s, got:  %s", tc.desc, token, tc.token))
 	}
-}
-
-func httpStatusErr(statusCode int) error {
-	status := fmt.Sprintf("%d %s", statusCode, http.StatusText(statusCode))
-	return errors.New(status)
 }

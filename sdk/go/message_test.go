@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/errors"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/http/mocks"
@@ -65,13 +64,13 @@ func TestSendMessage(t *testing.T) {
 			chanID: chanID,
 			msg:    msg,
 			auth:   "",
-			err:    errors.Wrap(sdk.ErrFailedPublish, httpStatusErr(http.StatusForbidden)),
+			err:    createError(sdk.ErrFailedPublish, http.StatusForbidden),
 		},
 		"publish message with invalid authorization token": {
 			chanID: chanID,
 			msg:    msg,
 			auth:   invalidToken,
-			err:    errors.Wrap(sdk.ErrFailedPublish, httpStatusErr(http.StatusForbidden)),
+			err:    createError(sdk.ErrFailedPublish, http.StatusForbidden),
 		},
 		"publish message with wrong content type": {
 			chanID: chanID,
@@ -83,13 +82,13 @@ func TestSendMessage(t *testing.T) {
 			chanID: "",
 			msg:    msg,
 			auth:   atoken,
-			err:    errors.Wrap(sdk.ErrFailedPublish, httpStatusErr(http.StatusBadRequest)),
+			err:    createError(sdk.ErrFailedPublish, http.StatusBadRequest),
 		},
 		"publish message unable to authorize": {
 			chanID: chanID,
 			msg:    msg,
 			auth:   mocks.ServiceErrToken,
-			err:    errors.Wrap(sdk.ErrFailedPublish, httpStatusErr(http.StatusServiceUnavailable)),
+			err:    createError(sdk.ErrFailedPublish, http.StatusServiceUnavailable),
 		},
 	}
 	for desc, tc := range cases {
