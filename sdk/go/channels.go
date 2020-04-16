@@ -16,8 +16,8 @@ import (
 
 const channelsEndpoint = "channels"
 
-func (sdk mfSDK) CreateChannel(channel Channel, token string) (string, error) {
-	data, err := json.Marshal(channel)
+func (sdk mfSDK) CreateChannel(c Channel, token string) (string, error) {
+	data, err := json.Marshal(c)
 	if err != nil {
 		return "", err
 	}
@@ -41,8 +41,8 @@ func (sdk mfSDK) CreateChannel(channel Channel, token string) (string, error) {
 	return id, nil
 }
 
-func (sdk mfSDK) CreateChannels(channels []Channel, token string) ([]Channel, error) {
-	data, err := json.Marshal(channels)
+func (sdk mfSDK) CreateChannels(chs []Channel, token string) ([]Channel, error) {
+	data, err := json.Marshal(chs)
 	if err != nil {
 		return []Channel{}, err
 	}
@@ -174,13 +174,13 @@ func (sdk mfSDK) Channel(id, token string) (Channel, error) {
 	return c, nil
 }
 
-func (sdk mfSDK) UpdateChannel(channel Channel, token string) error {
-	data, err := json.Marshal(channel)
+func (sdk mfSDK) UpdateChannel(c Channel, token string) error {
+	data, err := json.Marshal(c)
 	if err != nil {
 		return ErrInvalidArgs
 	}
 
-	endpoint := fmt.Sprintf("%s/%s", channelsEndpoint, channel.ID)
+	endpoint := fmt.Sprintf("%s/%s", channelsEndpoint, c.ID)
 	url := createURL(sdk.baseURL, sdk.thingsPrefix, endpoint)
 
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))

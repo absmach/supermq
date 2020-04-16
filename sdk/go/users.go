@@ -12,8 +12,8 @@ import (
 	"github.com/mainflux/mainflux/errors"
 )
 
-func (sdk mfSDK) CreateUser(user User) error {
-	data, err := json.Marshal(user)
+func (sdk mfSDK) CreateUser(u User) error {
+	data, err := json.Marshal(u)
 	if err != nil {
 		return err
 	}
@@ -94,8 +94,8 @@ func (sdk mfSDK) CreateToken(user User) (string, error) {
 	return tr.Token, nil
 }
 
-func (sdk mfSDK) UpdateUser(user User, token string) error {
-	data, err := json.Marshal(user)
+func (sdk mfSDK) UpdateUser(u User, token string) error {
+	data, err := json.Marshal(u)
 	if err != nil {
 		return ErrInvalidArgs
 	}
