@@ -58,9 +58,6 @@ func (sdk mfSDK) AddBootstrap(key string, cfg BoostrapConfig) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		if err := encodeError(resp.StatusCode); err != nil {
-			return "", err
-		}
 		return "", errors.Wrap(ErrFailedCreation, errors.New(resp.Status))
 	}
 
@@ -89,10 +86,7 @@ func (sdk mfSDK) ViewBoostrap(key, id string) (BoostrapConfig, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		if err := encodeError(resp.StatusCode); err != nil {
-			return BoostrapConfig{}, err
-		}
-		return BoostrapConfig{}, errors.Wrap(ErrFetchFailed, errors.New(resp.Status))
+		return BoostrapConfig{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
 	}
 
 	var bc BoostrapConfig
@@ -123,9 +117,6 @@ func (sdk mfSDK) UpdateBoostrap(key string, cfg BoostrapConfig) error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		if err := encodeError(resp.StatusCode); err != nil {
-			return err
-		}
 		return errors.Wrap(ErrFailedUpdate, errors.New(resp.Status))
 	}
 
@@ -147,9 +138,6 @@ func (sdk mfSDK) RemoveBoostrap(key, id string) error {
 	}
 
 	if resp.StatusCode != http.StatusNoContent {
-		if err := encodeError(resp.StatusCode); err != nil {
-			return err
-		}
 		return errors.Wrap(ErrFailedRemoval, errors.New(resp.Status))
 	}
 
@@ -177,10 +165,7 @@ func (sdk mfSDK) Boostrap(key, id string) (BoostrapConfig, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		if err := encodeError(resp.StatusCode); err != nil {
-			return BoostrapConfig{}, err
-		}
-		return BoostrapConfig{}, errors.Wrap(ErrFetchFailed, errors.New(resp.Status))
+		return BoostrapConfig{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
 	}
 
 	var bc BoostrapConfig

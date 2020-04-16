@@ -19,7 +19,7 @@ const channelsEndpoint = "channels"
 func (sdk mfSDK) CreateChannel(channel Channel, token string) (string, error) {
 	data, err := json.Marshal(channel)
 	if err != nil {
-		return "", ErrInvalidArgs
+		return "", err
 	}
 
 	url := createURL(sdk.baseURL, sdk.thingsPrefix, channelsEndpoint)
@@ -34,9 +34,6 @@ func (sdk mfSDK) CreateChannel(channel Channel, token string) (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusCreated {
-		if err := encodeError(resp.StatusCode); err != nil {
-			return "", err
-		}
 		return "", errors.Wrap(ErrFailedCreation, errors.New(resp.Status))
 	}
 
@@ -47,7 +44,7 @@ func (sdk mfSDK) CreateChannel(channel Channel, token string) (string, error) {
 func (sdk mfSDK) CreateChannels(channels []Channel, token string) ([]Channel, error) {
 	data, err := json.Marshal(channels)
 	if err != nil {
-		return []Channel{}, ErrInvalidArgs
+		return []Channel{}, err
 	}
 
 	endpoint := fmt.Sprintf("%s/%s", channelsEndpoint, "bulk")
@@ -65,10 +62,7 @@ func (sdk mfSDK) CreateChannels(channels []Channel, token string) ([]Channel, er
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
-		if err := encodeError(resp.StatusCode); err != nil {
-			return []Channel{}, err
-		}
-		return []Channel{}, ErrFailedCreation
+		return []Channel{}, errors.Wrap(ErrFailedCreation, errors.New(resp.Status))
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -105,10 +99,7 @@ func (sdk mfSDK) Channels(token string, offset, limit uint64, name string) (Chan
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		if err := encodeError(resp.StatusCode); err != nil {
-			return ChannelsPage{}, err
-		}
-		return ChannelsPage{}, errors.Wrap(ErrFetchFailed, errors.New(resp.Status))
+		return ChannelsPage{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
 	}
 
 	var cp ChannelsPage
@@ -140,10 +131,7 @@ func (sdk mfSDK) ChannelsByThing(token, thingID string, offset, limit uint64) (C
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		if err := encodeError(resp.StatusCode); err != nil {
-			return ChannelsPage{}, err
-		}
-		return ChannelsPage{}, errors.Wrap(ErrFetchFailed, errors.New(resp.Status))
+		return ChannelsPage{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
 	}
 
 	var cp ChannelsPage
@@ -175,10 +163,7 @@ func (sdk mfSDK) Channel(id, token string) (Channel, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		if err := encodeError(resp.StatusCode); err != nil {
-			return Channel{}, err
-		}
-		return Channel{}, errors.Wrap(ErrFetchFailed, errors.New(resp.Status))
+		return Channel{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
 	}
 
 	var c Channel
@@ -209,9 +194,6 @@ func (sdk mfSDK) UpdateChannel(channel Channel, token string) error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		if err := encodeError(resp.StatusCode); err != nil {
-			return err
-		}
 		return errors.Wrap(ErrFailedUpdate, errors.New(resp.Status))
 	}
 
@@ -233,9 +215,6 @@ func (sdk mfSDK) DeleteChannel(id, token string) error {
 	}
 
 	if resp.StatusCode != http.StatusNoContent {
-		if err := encodeError(resp.StatusCode); err != nil {
-			return err
-		}
 		return errors.Wrap(ErrFailedRemoval, errors.New(resp.Status))
 	}
 

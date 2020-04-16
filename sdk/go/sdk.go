@@ -27,10 +27,6 @@ const (
 const minPassLen = 8
 
 var (
-	// ErrConflict indicates that create or update of entity failed because
-	// entity with same name already exists.
-	ErrConflict = errors.New("entity already exists")
-
 	// ErrFailedCreation indicates that entity creation failed.
 	ErrFailedCreation = errors.New("failed to create entity")
 
@@ -46,8 +42,8 @@ var (
 	// ErrFailedRemoval indicates that entity removal failed.
 	ErrFailedRemoval = errors.New("failed to remove entity")
 
-	// ErrFailedConnection indicates that connecting thing to channel failed.
-	ErrFailedConnection = errors.New("failed to connect thing to channel")
+	// ErrFailedConnect indicates that connecting thing to channel failed.
+	ErrFailedConnect = errors.New("failed to connect thing to channel")
 
 	// ErrFailedDisconnect indicates that disconnecting thing from a channel failed.
 	ErrFailedDisconnect = errors.New("failed to disconnect thing from channel")
@@ -55,14 +51,8 @@ var (
 	// ErrInvalidArgs indicates that invalid argument was passed.
 	ErrInvalidArgs = errors.New("invalid argument passed")
 
-	// ErrFetchFailed indicates that fetching of entity data failed.
-	ErrFetchFailed = errors.New("failed to fetch entity")
-
-	// ErrUnauthorized indicates unauthorized access.
-	ErrUnauthorized = errors.New("unauthorized access")
-
-	// ErrNotFound indicates that entity doesn't exist.
-	ErrNotFound = errors.New("entity not found")
+	// ErrFailedFetch indicates that fetching of entity data failed.
+	ErrFailedFetch = errors.New("failed to fetch entity")
 
 	// ErrInvalidContentType indicates that nonexistent message content type
 	// was passed.
@@ -79,20 +69,6 @@ var _ SDK = (*mfSDK)(nil)
 
 // User represents mainflux user its credentials.
 type User users.User
-
-// Validate returns an error if user representation is invalid.
-func (u User) validate() error {
-	if u.Email == "" {
-		return ErrInvalidArgs
-
-	}
-
-	if len(u.Password) < minPassLen {
-		return ErrInvalidArgs
-	}
-
-	return nil
-}
 
 // Thing represents mainflux thing.
 type Thing things.Thing
@@ -263,19 +239,4 @@ func createURL(baseURL, prefix, endpoint string) string {
 	}
 
 	return fmt.Sprintf("%s/%s/%s", baseURL, prefix, endpoint)
-}
-
-func encodeError(statusCode int) error {
-	switch statusCode {
-	case http.StatusBadRequest:
-		return ErrInvalidArgs
-	case http.StatusForbidden:
-		return ErrUnauthorized
-	case http.StatusNotFound:
-		return ErrNotFound
-	case http.StatusConflict:
-		return ErrConflict
-	default:
-		return nil
-	}
 }

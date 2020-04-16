@@ -13,13 +13,9 @@ import (
 )
 
 func (sdk mfSDK) CreateUser(user User) error {
-	if err := user.validate(); err != nil {
-		return err
-	}
-
 	data, err := json.Marshal(user)
 	if err != nil {
-		return ErrInvalidArgs
+		return err
 	}
 
 	url := createURL(sdk.baseURL, sdk.usersPrefix, "users")
@@ -30,10 +26,7 @@ func (sdk mfSDK) CreateUser(user User) error {
 	}
 
 	if resp.StatusCode != http.StatusCreated {
-		if err := encodeError(resp.StatusCode); err != nil {
-			return err
-		}
-		return ErrFailedCreation
+		return errors.Wrap(ErrFailedCreation, errors.New(resp.Status))
 	}
 
 	return nil
@@ -59,10 +52,7 @@ func (sdk mfSDK) User(token string) (User, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		if err := encodeError(resp.StatusCode); err != nil {
-			return User{}, err
-		}
-		return User{}, errors.Wrap(ErrFetchFailed, errors.New(resp.Status))
+		return User{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
 	}
 
 	var u User
@@ -76,7 +66,7 @@ func (sdk mfSDK) User(token string) (User, error) {
 func (sdk mfSDK) CreateToken(user User) (string, error) {
 	data, err := json.Marshal(user)
 	if err != nil {
-		return "", ErrInvalidArgs
+		return "", err
 	}
 
 	url := createURL(sdk.baseURL, sdk.usersPrefix, "tokens")
@@ -93,9 +83,6 @@ func (sdk mfSDK) CreateToken(user User) (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusCreated {
-		if err := encodeError(resp.StatusCode); err != nil {
-			return "", err
-		}
 		return "", errors.Wrap(ErrFailedCreation, errors.New(resp.Status))
 	}
 
@@ -126,9 +113,6 @@ func (sdk mfSDK) UpdateUser(user User, token string) error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		if err := encodeError(resp.StatusCode); err != nil {
-			return err
-		}
 		return errors.Wrap(ErrFailedUpdate, errors.New(resp.Status))
 	}
 
@@ -158,9 +142,6 @@ func (sdk mfSDK) UpdatePassword(oldPass, newPass, token string) error {
 	}
 
 	if resp.StatusCode != http.StatusCreated {
-		if err := encodeError(resp.StatusCode); err != nil {
-			return err
-		}
 		return errors.Wrap(ErrFailedUpdate, errors.New(resp.Status))
 	}
 
