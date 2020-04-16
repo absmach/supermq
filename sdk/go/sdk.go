@@ -54,6 +54,9 @@ var (
 	// ErrFailedFetch indicates that fetching of entity data failed.
 	ErrFailedFetch = errors.New("failed to fetch entity")
 
+	// ErrNotFound indicates that entity doesn't exist.
+	ErrNotFound = errors.New("entity not found")
+
 	// ErrInvalidContentType indicates that nonexistent message content type
 	// was passed.
 	ErrInvalidContentType = errors.New("Unknown Content Type")
