@@ -41,7 +41,7 @@ type BoostrapConfig struct {
 func (sdk mfSDK) AddBootstrap(key string, cfg BoostrapConfig) (string, error) {
 	data, err := json.Marshal(cfg)
 	if err != nil {
-		return "", errors.Wrap(ErrInvalidArgs, err)
+		return "", err
 	}
 
 	url := createURL(sdk.bootstrapURL, sdk.bootstrapPrefix, configsEndpoint)
@@ -100,7 +100,7 @@ func (sdk mfSDK) ViewBoostrap(key, id string) (BoostrapConfig, error) {
 func (sdk mfSDK) UpdateBoostrap(key string, cfg BoostrapConfig) error {
 	data, err := json.Marshal(cfg)
 	if err != nil {
-		return errors.Wrap(ErrInvalidArgs, err)
+		return err
 	}
 
 	endpoint := fmt.Sprintf("%s/%s", configsEndpoint, cfg.MFThing)

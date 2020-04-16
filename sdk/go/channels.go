@@ -177,7 +177,7 @@ func (sdk mfSDK) Channel(id, token string) (Channel, error) {
 func (sdk mfSDK) UpdateChannel(c Channel, token string) error {
 	data, err := json.Marshal(c)
 	if err != nil {
-		return ErrInvalidArgs
+		return err
 	}
 
 	endpoint := fmt.Sprintf("%s/%s", channelsEndpoint, c.ID)

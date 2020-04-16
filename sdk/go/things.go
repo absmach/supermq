@@ -47,7 +47,7 @@ func (sdk mfSDK) CreateThing(t Thing, token string) (string, error) {
 func (sdk mfSDK) CreateThings(things []Thing, token string) ([]Thing, error) {
 	data, err := json.Marshal(things)
 	if err != nil {
-		return []Thing{}, ErrInvalidArgs
+		return []Thing{}, err
 	}
 
 	endpoint := fmt.Sprintf("%s/%s", thingsEndpoint, "bulk")
@@ -180,7 +180,7 @@ func (sdk mfSDK) Thing(id, token string) (Thing, error) {
 func (sdk mfSDK) UpdateThing(t Thing, token string) error {
 	data, err := json.Marshal(t)
 	if err != nil {
-		return ErrInvalidArgs
+		return err
 	}
 
 	endpoint := fmt.Sprintf("%s/%s", thingsEndpoint, t.ID)
@@ -227,7 +227,7 @@ func (sdk mfSDK) DeleteThing(id, token string) error {
 func (sdk mfSDK) Connect(connIDs ConnectionIDs, token string) error {
 	data, err := json.Marshal(connIDs)
 	if err != nil {
-		return ErrInvalidArgs
+		return err
 	}
 
 	url := createURL(sdk.baseURL, sdk.thingsPrefix, connectEndpoint)

@@ -97,7 +97,7 @@ func (sdk mfSDK) CreateToken(user User) (string, error) {
 func (sdk mfSDK) UpdateUser(u User, token string) error {
 	data, err := json.Marshal(u)
 	if err != nil {
-		return ErrInvalidArgs
+		return err
 	}
 
 	url := createURL(sdk.baseURL, sdk.usersPrefix, "users")
@@ -126,7 +126,7 @@ func (sdk mfSDK) UpdatePassword(oldPass, newPass, token string) error {
 	}
 	data, err := json.Marshal(ur)
 	if err != nil {
-		return ErrInvalidArgs
+		return err
 	}
 
 	url := createURL(sdk.baseURL, sdk.usersPrefix, "password")

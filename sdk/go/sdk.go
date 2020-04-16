@@ -33,11 +33,8 @@ var (
 	// ErrFailedUpdate indicates that entity update failed.
 	ErrFailedUpdate = errors.New("failed to update entity")
 
-	// ErrFailedPublish indicates that publishing message failed.
-	ErrFailedPublish = errors.New("failed to publish message")
-
-	// ErrFailedRead indicates that read messages failed.
-	ErrFailedRead = errors.New("failed to read messages")
+	// ErrFailedFetch indicates that fetching of entity data failed.
+	ErrFailedFetch = errors.New("failed to fetch entity")
 
 	// ErrFailedRemoval indicates that entity removal failed.
 	ErrFailedRemoval = errors.New("failed to remove entity")
@@ -48,16 +45,13 @@ var (
 	// ErrFailedDisconnect indicates that disconnecting thing from a channel failed.
 	ErrFailedDisconnect = errors.New("failed to disconnect thing from channel")
 
-	// ErrInvalidArgs indicates that invalid argument was passed.
-	ErrInvalidArgs = errors.New("invalid argument passed")
+	// ErrFailedPublish indicates that publishing message failed.
+	ErrFailedPublish = errors.New("failed to publish message")
 
-	// ErrFailedFetch indicates that fetching of entity data failed.
-	ErrFailedFetch = errors.New("failed to fetch entity")
+	// ErrFailedRead indicates that read messages failed.
+	ErrFailedRead = errors.New("failed to read messages")
 
-	// ErrNotFound indicates that entity doesn't exist.
-	ErrNotFound = errors.New("entity not found")
-
-	// ErrInvalidContentType indicates that nonexistent message content type
+	// ErrInvalidContentType indicates that non-existent message content type
 	// was passed.
 	ErrInvalidContentType = errors.New("Unknown Content Type")
 
