@@ -10,6 +10,13 @@ import (
 	"github.com/mainflux/senml"
 )
 
+const (
+	// JSON represents SenML in JSON format content type.
+	JSON = "application/senml+json"
+	// CBOR represents SenML in CBOR format content type.
+	CBOR = "application/senml+cbor"
+)
+
 var (
 	errDecode    = errors.New("failed to decode senml")
 	errNormalize = errors.New("faled to normalize senml")
@@ -20,20 +27,19 @@ var formats = map[string]senml.Format{
 	CBOR: senml.CBOR,
 }
 
-type transformer struct{}
+type transformer struct {
+	format senml.Format
+}
 
 // New returns transformer service implementation for SenML messages.
-func New() transformers.Transformer {
-	return transformer{}
+func New(contentType string) transformers.Transformer {
+	return transformer{
+		format: formats[contentType],
+	}
 }
 
 func (n transformer) Transform(msg broker.Message) (interface{}, error) {
-	format, ok := formats[msg.ContentType]
-	if !ok {
-		format = senml.JSON
-	}
-
-	raw, err := senml.Decode(msg.Payload, format)
+	raw, err := senml.Decode(msg.Payload, n.format)
 	if err != nil {
 		return nil, errors.Wrap(errDecode, err)
 	}
