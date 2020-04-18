@@ -4,6 +4,7 @@ go 1.11
 
 require (
 	github.com/BurntSushi/toml v0.3.1
+	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/docker v1.13.1
 	github.com/dustin/go-coap v0.0.0-20170214053734-ddcc80675fa4
@@ -15,7 +16,7 @@ require (
 	github.com/gocql/gocql v0.0.0-20181106112037-68ae1e384be4
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/gogo/protobuf v1.3.1
-	github.com/golang/protobuf v1.4.0
+	github.com/golang/protobuf v1.3.3
 	github.com/gopcua/opcua v0.1.6
 	github.com/hokaccha/go-prettyjson v0.0.0-20180920040306-f579f869bbfe
 	github.com/influxdata/influxdb v1.6.4
@@ -26,7 +27,7 @@ require (
 	github.com/nats-io/nats.go v1.9.1
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pelletier/go-toml v1.7.0
-	github.com/prometheus/client_golang v1.5.1
+	github.com/prometheus/client_golang v0.9.3
 	github.com/rubenv/sql-migrate v0.0.0-20181106121204-ba2c6a7295c5
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.5.0

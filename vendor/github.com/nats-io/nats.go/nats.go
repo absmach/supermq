@@ -2101,7 +2101,6 @@ func (nc *Conn) waitForMsgs(s *Subscription) {
 	msgLen := -1
 
 	for {
-
 		s.mu.Lock()
 		// Do accounting for last msg delivered here so we only lock once
 		// and drain state trips after callback has returned.
