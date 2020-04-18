@@ -13,8 +13,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/golang/protobuf/internal/wire"
 	"google.golang.org/protobuf/encoding/prototext"
-	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -435,54 +435,54 @@ func (w *textWriter) writeUnknownFields(b []byte) {
 	}
 
 	for len(b) > 0 {
-		num, wtyp, n := protowire.ConsumeTag(b)
+		num, wtyp, n := wire.ConsumeTag(b)
 		if n < 0 {
 			return
 		}
 		b = b[n:]
 
-		if wtyp == protowire.EndGroupType {
+		if wtyp == wire.EndGroupType {
 			w.indent--
 			w.Write(endBraceNewline)
 			continue
 		}
 		fmt.Fprint(w, num)
-		if wtyp != protowire.StartGroupType {
+		if wtyp != wire.StartGroupType {
 			w.WriteByte(':')
 		}
-		if !w.compact || wtyp == protowire.StartGroupType {
+		if !w.compact || wtyp == wire.StartGroupType {
 			w.WriteByte(' ')
 		}
 		switch wtyp {
-		case protowire.VarintType:
-			v, n := protowire.ConsumeVarint(b)
+		case wire.VarintType:
+			v, n := wire.ConsumeVarint(b)
 			if n < 0 {
 				return
 			}
 			b = b[n:]
 			fmt.Fprint(w, v)
-		case protowire.Fixed32Type:
-			v, n := protowire.ConsumeFixed32(b)
+		case wire.Fixed32Type:
+			v, n := wire.ConsumeFixed32(b)
 			if n < 0 {
 				return
 			}
 			b = b[n:]
 			fmt.Fprint(w, v)
-		case protowire.Fixed64Type:
-			v, n := protowire.ConsumeFixed64(b)
+		case wire.Fixed64Type:
+			v, n := wire.ConsumeFixed64(b)
 			if n < 0 {
 				return
 			}
 			b = b[n:]
 			fmt.Fprint(w, v)
-		case protowire.BytesType:
-			v, n := protowire.ConsumeBytes(b)
+		case wire.BytesType:
+			v, n := wire.ConsumeBytes(b)
 			if n < 0 {
 				return
 			}
 			b = b[n:]
 			fmt.Fprintf(w, "%q", v)
-		case protowire.StartGroupType:
+		case wire.StartGroupType:
 			w.WriteByte('{')
 			w.indent++
 		default:
