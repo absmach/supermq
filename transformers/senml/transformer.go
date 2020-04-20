@@ -32,14 +32,19 @@ type transformer struct {
 }
 
 // New returns transformer service implementation for SenML messages.
-func New(contentType string) transformers.Transformer {
+func New(contentFormat string) transformers.Transformer {
+	format, ok := formats[contentFormat]
+	if !ok {
+		format = formats[JSON]
+	}
+
 	return transformer{
-		format: formats[contentType],
+		format: format,
 	}
 }
 
-func (n transformer) Transform(msg broker.Message) (interface{}, error) {
-	raw, err := senml.Decode(msg.Payload, n.format)
+func (t transformer) Transform(msg broker.Message) (interface{}, error) {
+	raw, err := senml.Decode(msg.Payload, t.format)
 	if err != nil {
 		return nil, errors.Wrap(errDecode, err)
 	}
