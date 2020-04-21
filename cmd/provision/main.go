@@ -12,10 +12,10 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/provision"
+	"github.com/mainflux/mainflux/provision/api"
+	provsdk "github.com/mainflux/mainflux/provision/sdk"
 	mfSDK "github.com/mainflux/mainflux/sdk/go"
-	"github.com/mainflux/provision"
-	"github.com/mainflux/provision/api"
-	provsdk "github.com/mainflux/provision/sdk"
 )
 
 const (
@@ -31,8 +31,8 @@ const (
 	defMfUser          = "test@example.com"
 	defMfPass          = "test"
 	defThingIDs        = "aa942ec2-6f4e-45ab-a0cc-87cc3c64a55c"
-	defMfBSURL         = "https://k8s-aws.mainflux.com/bs/things/configs"
-	defMfWhiteListURL  = "https://k8s-aws.mainflux.com/bs/things/state"
+	defMfBSURL         = "http://localhost:8202/things/configs"
+	defMfWhiteListURL  = "http://localhost:8202/things/state"
 	defMfCertsURL      = "https://k8s-aws.mainflux.com/certs"
 	defProvisionCerts  = "false"
 	defProvisionBS     = "true"

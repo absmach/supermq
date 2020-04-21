@@ -45,7 +45,7 @@ func NewSDK() provsdk.SDK {
 // CreateToken receives credentials and returns user token.
 func (s *mockSDK) CreateToken(email, pass string) (string, error) {
 	if email != validEmail || pass != validPass {
-		return "", mfsdk.ErrUnauthorized
+		return "", mfsdk.ErrFailedCreation
 	}
 	return validToken, nil
 }
@@ -94,7 +94,7 @@ func (s *mockSDK) RemoveCert(key string, token string) error {
 
 func (s *mockSDK) CreateThing(externalID string, name string, token string) (string, error) {
 	if token != validToken {
-		return "", mfsdk.ErrUnauthorized
+		return "", mfsdk.ErrFailedCreation
 	}
 
 	id, err := uuid.NewV4()
@@ -119,7 +119,7 @@ func (s *mockSDK) Thing(id, token string) (provsdk.Thing, error) {
 	t := provsdk.Thing{}
 
 	if token != validToken {
-		return t, mfsdk.ErrUnauthorized
+		return t, mfsdk.ErrFailedFetch
 	}
 
 	s.mu.Lock()
@@ -129,8 +129,7 @@ func (s *mockSDK) Thing(id, token string) (provsdk.Thing, error) {
 		return t, nil
 	}
 
-	return t, mfsdk.ErrNotFound
-
+	return t, mfsdk.ErrFailedFetch
 }
 
 func (s *mockSDK) DeleteThing(id string, token string) error {
@@ -146,7 +145,7 @@ func (s *mockSDK) DeleteThing(id string, token string) error {
 
 func (s *mockSDK) CreateChannel(name string, chantype string, token string) (provsdk.Channel, error) {
 	if token != validToken {
-		return provsdk.Channel{}, mfsdk.ErrUnauthorized
+		return provsdk.Channel{}, mfsdk.ErrFailedCreation
 	}
 
 	id, err := uuid.NewV4()
@@ -177,17 +176,17 @@ func (s *mockSDK) DeleteChannel(id string, token string) error {
 // ConnectThing connects thing to specified channel by id.
 func (s *mockSDK) Connect(thingID, chanID, token string) error {
 	if token != validToken {
-		return mfsdk.ErrUnauthorized
+		return mfsdk.ErrFailedCreation
 	}
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if _, ok := s.things[thingID]; !ok {
-		return mfsdk.ErrNotFound
+		return mfsdk.ErrFailedFetch
 	}
 	if _, ok := s.channels[chanID]; !ok {
-		return mfsdk.ErrNotFound
+		return mfsdk.ErrFailedFetch
 	}
 
 	conns := s.connections[thingID]

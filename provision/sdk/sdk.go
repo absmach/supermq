@@ -178,7 +178,11 @@ func (ps *provisionSDK) DeleteChannel(id, token string) error {
 }
 
 func (ps *provisionSDK) Connect(thingID, chanID, token string) error {
-	return ps.sdk.ConnectThing(thingID, chanID, token)
+	connIDs := mfsdk.ConnectionIDs{
+		ThingIDs:   []string{thingID},
+		ChannelIDs: []string{chanID},
+	}
+	return ps.sdk.Connect(connIDs, token)
 }
 
 func (ps *provisionSDK) Cert(thingID, thingKey, token string) (Cert, error) {

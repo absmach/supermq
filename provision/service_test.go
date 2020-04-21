@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/provision"
 	"github.com/mainflux/mainflux/provision/mocks"
 	sdk "github.com/mainflux/mainflux/provision/sdk"
@@ -21,7 +22,7 @@ var (
 		X509Provision:    true,
 		BSProvision:      true,
 		BSContent:        "",
-		PredefinedThings: []string{"pre"},
+		PredefinedThings: []string{"predefined"},
 		AutoWhiteList:    true,
 	}
 	log, _ = logger.New(os.Stdout, "info")
@@ -67,7 +68,6 @@ func TestProvision(t *testing.T) {
 
 	for _, tc := range cases {
 		_, err := tc.svc.Provision(tc.externalID, tc.externalKey)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
-
 }

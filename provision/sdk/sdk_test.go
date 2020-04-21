@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/go-zoo/bone"
+	"github.com/mainflux/mainflux/errors"
 	provsdk "github.com/mainflux/mainflux/provision/sdk"
 	mfsdk "github.com/mainflux/mainflux/sdk/go"
 	"github.com/stretchr/testify/assert"
@@ -139,13 +140,18 @@ func connect(rw http.ResponseWriter, r *http.Request) {
 	if !auth(rw, r) {
 		return
 	}
-	chanID := bone.GetValue(r, "chanId")
-	thingID := bone.GetValue(r, "thingId")
-	if chanID == "" || thingID == "" {
+	var conn mfsdk.ConnectionIDs
+	if err := json.NewDecoder(r.Body).Decode(&conn); err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if chanID != exists || thingID != exists {
+
+	if len(conn.ChannelIDs) == 0 || len(conn.ThingIDs) == 0 {
+		rw.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if conn.ChannelIDs[0] != exists || conn.ThingIDs[0] != exists {
 		rw.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -234,7 +240,7 @@ func newSDK() provsdk.SDK {
 	r.Delete("/things/:id", handler(delete))
 	r.Post("/channels", handler(createChannel))
 	r.Delete("/channels/:id", handler(delete))
-	r.Put("/channels/:chanId/things/:thingId", handler(connect))
+	r.Post("/connect", handler(connect))
 	r.Post("/certs", handler(cert))
 	r.Post("/things/configs", handler(saveToBootstrap))
 	r.Put("/things/state/:id", handler(whitelist))
@@ -280,12 +286,12 @@ func TestCreateToken(t *testing.T) {
 			desc:  "Create an invalid token",
 			email: invalid,
 			pass:  valid,
-			err:   mfsdk.ErrInvalidArgs,
+			err:   mfsdk.ErrFailedCreation,
 		},
 	}
 	for _, tc := range cases {
 		_, err := sdk.CreateToken(tc.email, tc.pass)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, err, tc.err))
 	}
 }
 
@@ -305,12 +311,12 @@ func TestCreateThing(t *testing.T) {
 		{
 			desc:  "Create thing unauthorized",
 			token: invalid,
-			err:   mfsdk.ErrUnauthorized,
+			err:   status(http.StatusForbidden),
 		},
 	}
 	for _, tc := range cases {
 		_, err := sdk.CreateThing("external", "name", tc.token)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, err, tc.err))
 	}
 }
 
@@ -333,24 +339,24 @@ func TestThing(t *testing.T) {
 			desc:    "Fetch non existent thing",
 			thingID: invalid,
 			token:   valid,
-			err:     mfsdk.ErrNotFound,
+			err:     mfsdk.ErrFailedFetch,
 		},
 		{
 			desc:    "Fetch thing wrong id",
 			thingID: "",
 			token:   valid,
-			err:     mfsdk.ErrFetchFailed,
+			err:     mfsdk.ErrFailedFetch,
 		},
 		{
 			desc:    "Fetch thing unauthorized",
 			thingID: exists,
 			token:   invalid,
-			err:     mfsdk.ErrUnauthorized,
+			err:     status(http.StatusForbidden),
 		},
 	}
 	for _, tc := range cases {
 		_, err := sdk.Thing(tc.thingID, tc.token)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, err, tc.err))
 	}
 }
 
@@ -373,18 +379,18 @@ func TestDeleteThing(t *testing.T) {
 			desc:  "Delete thing unauthorized",
 			id:    valid,
 			token: invalid,
-			err:   mfsdk.ErrUnauthorized,
+			err:   status(http.StatusForbidden),
 		},
 		{
 			desc:  "Delete thing wrong ID",
 			id:    "",
 			token: valid,
-			err:   mfsdk.ErrInvalidArgs,
+			err:   mfsdk.ErrFailedRemoval,
 		},
 	}
 	for _, tc := range cases {
 		err := sdk.DeleteThing(tc.id, tc.token)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, err, tc.err))
 	}
 }
 
@@ -404,12 +410,12 @@ func TestCreateChannel(t *testing.T) {
 		{
 			desc:  "Create channel unauthorized",
 			token: invalid,
-			err:   mfsdk.ErrUnauthorized,
+			err:   mfsdk.ErrFailedCreation,
 		},
 	}
 	for _, tc := range cases {
 		_, err := sdk.CreateChannel("external", "ctrl", tc.token)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, err, tc.err))
 	}
 }
 
@@ -432,18 +438,18 @@ func TestDeleteChannel(t *testing.T) {
 			desc:  "Delete channel unauthorized",
 			id:    valid,
 			token: invalid,
-			err:   mfsdk.ErrUnauthorized,
+			err:   status(http.StatusForbidden),
 		},
 		{
 			desc:  "Delete channel wrong ID",
 			id:    "",
 			token: valid,
-			err:   mfsdk.ErrInvalidArgs,
+			err:   mfsdk.ErrFailedRemoval,
 		},
 	}
 	for _, tc := range cases {
 		err := sdk.DeleteChannel(tc.id, tc.token)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
@@ -469,26 +475,26 @@ func TestConnect(t *testing.T) {
 			thingID:   exists,
 			channelID: exists,
 			token:     invalid,
-			err:       mfsdk.ErrUnauthorized,
+			err:       status(http.StatusForbidden),
 		},
 		{
 			desc:      "Connect bad data",
 			thingID:   "",
 			channelID: exists,
 			token:     valid,
-			err:       mfsdk.ErrFailedConnection,
+			err:       mfsdk.ErrFailedConnect,
 		},
 		{
 			desc:      "Connect non existent data",
 			thingID:   valid,
 			channelID: exists,
 			token:     valid,
-			err:       mfsdk.ErrNotFound,
+			err:       mfsdk.ErrFailedConnect,
 		},
 	}
 	for _, tc := range cases {
 		err := sdk.Connect(tc.thingID, tc.channelID, tc.token)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
@@ -533,7 +539,7 @@ func TestCert(t *testing.T) {
 	}
 	for _, tc := range cases {
 		_, err := sdk.Cert(tc.id, tc.key, tc.token)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
@@ -590,7 +596,7 @@ func TestBootstrap(t *testing.T) {
 	}
 	for _, tc := range cases {
 		err := sdk.SaveConfig(tc.config, tc.token)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
@@ -638,7 +644,7 @@ func TestWhitelist(t *testing.T) {
 	}
 	for _, tc := range cases {
 		err := sdk.Whitelist(tc.id, tc.state, tc.token)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
@@ -661,7 +667,7 @@ func TestRemoveBootstrap(t *testing.T) {
 			desc:  "Delete config unauthorized",
 			id:    valid,
 			token: invalid,
-			err:   mfsdk.ErrUnauthorized,
+			err:   provsdk.ErrUnauthorized,
 		},
 		{
 			desc:  "Delete config wrong ID",
@@ -672,7 +678,7 @@ func TestRemoveBootstrap(t *testing.T) {
 	}
 	for _, tc := range cases {
 		err := sdk.RemoveConfig(tc.id, tc.token)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
@@ -695,7 +701,7 @@ func TestRemoveCert(t *testing.T) {
 			desc:  "Delete cert unauthorized",
 			key:   valid,
 			token: invalid,
-			err:   mfsdk.ErrUnauthorized,
+			err:   provsdk.ErrUnauthorized,
 		},
 		{
 			desc:  "Delete cert wrong ID",
@@ -706,6 +712,10 @@ func TestRemoveCert(t *testing.T) {
 	}
 	for _, tc := range cases {
 		err := sdk.RemoveCert(tc.key, tc.token)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
+}
+
+func status(status int) error {
+	return errors.New(fmt.Sprintf("%d %s", status, http.StatusText(status)))
 }
