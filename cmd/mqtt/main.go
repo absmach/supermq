@@ -258,14 +258,14 @@ func connectToRedis(redisURL, redisPass, redisDB string, logger logger.Logger) *
 	})
 }
 
-func proxyMQTT(cfg config, logger logger.Logger, evt session.Event, errs chan error) {
+func proxyMQTT(cfg config, logger logger.Logger, evt session.EventHandler, errs chan error) {
 	address := fmt.Sprintf("%s:%s", cfg.mqttHost, cfg.mqttPort)
 	target := fmt.Sprintf("%s:%s", cfg.mqttTargetHost, cfg.mqttTargetPort)
 	mp := mp.New(address, target, evt, logger)
 
 	errs <- mp.Proxy()
 }
-func proxyWS(cfg config, logger logger.Logger, evt session.Event, errs chan error) {
+func proxyWS(cfg config, logger logger.Logger, evt session.EventHandler, errs chan error) {
 	target := fmt.Sprintf("%s:%s", cfg.httpTargetHost, cfg.httpTargetPort)
 	wp := ws.New(target, cfg.httpTargetPath, cfg.httpScheme, evt, logger)
 	http.Handle("/mqtt", wp.Handler())

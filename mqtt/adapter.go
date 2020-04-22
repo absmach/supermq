@@ -21,7 +21,7 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
-var _ session.Event = (*event)(nil)
+var _ session.EventHandler = (*handler)(nil)
 
 const protocol = "mqtt"
 
@@ -38,7 +38,7 @@ var (
 )
 
 // Event implements events.Event interface
-type event struct {
+type handler struct {
 	broker broker.Nats
 	tc     mainflux.ThingsServiceClient
 	tracer opentracing.Tracer
@@ -48,8 +48,8 @@ type event struct {
 
 // New creates new Event entity
 func New(broker broker.Nats, tc mainflux.ThingsServiceClient, es redis.EventStore,
-	logger logger.Logger, tracer opentracing.Tracer) session.Event {
-	return &event{
+	logger logger.Logger, tracer opentracing.Tracer) session.EventHandler {
+	return &handler{
 		broker: broker,
 		tc:     tc,
 		es:     es,
@@ -60,7 +60,7 @@ func New(broker broker.Nats, tc mainflux.ThingsServiceClient, es redis.EventStor
 
 // AuthConnect is called on device connection,
 // prior forwarding to the MQTT broker
-func (e *event) AuthConnect(c *session.Client) error {
+func (e *handler) AuthConnect(c *session.Client) error {
 	if c == nil {
 		return errInvalidConnect
 	}
@@ -88,7 +88,7 @@ func (e *event) AuthConnect(c *session.Client) error {
 
 // AuthPublish is called on device publish,
 // prior forwarding to the MQTT broker
-func (e *event) AuthPublish(c *session.Client, topic *string, payload *[]byte) error {
+func (e *handler) AuthPublish(c *session.Client, topic *string, payload *[]byte) error {
 	if c == nil {
 		return errNilClient
 	}
@@ -101,7 +101,7 @@ func (e *event) AuthPublish(c *session.Client, topic *string, payload *[]byte) e
 
 // AuthSubscribe is called on device publish,
 // prior forwarding to the MQTT broker
-func (e *event) AuthSubscribe(c *session.Client, topics *[]string) error {
+func (e *handler) AuthSubscribe(c *session.Client, topics *[]string) error {
 	if c == nil {
 		return errNilClient
 	}
@@ -121,7 +121,7 @@ func (e *event) AuthSubscribe(c *session.Client, topics *[]string) error {
 }
 
 // Connect - after client sucesfully connected
-func (e *event) Connect(c *session.Client) {
+func (e *handler) Connect(c *session.Client) {
 	if c == nil {
 		e.logger.Error("Nil client connect")
 		return
@@ -130,7 +130,7 @@ func (e *event) Connect(c *session.Client) {
 }
 
 // Publish - after client sucesfully published
-func (e *event) Publish(c *session.Client, topic *string, payload *[]byte) {
+func (e *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 	if c == nil {
 		e.logger.Error("Nil client publish")
 		return
@@ -175,7 +175,7 @@ func (e *event) Publish(c *session.Client, topic *string, payload *[]byte) {
 }
 
 // Subscribe - after client sucesfully subscribed
-func (e *event) Subscribe(c *session.Client, topics *[]string) {
+func (e *handler) Subscribe(c *session.Client, topics *[]string) {
 	if c == nil {
 		e.logger.Error("Nil client subscribe")
 		return
@@ -184,7 +184,7 @@ func (e *event) Subscribe(c *session.Client, topics *[]string) {
 }
 
 // Unsubscribe - after client unsubscribed
-func (e *event) Unsubscribe(c *session.Client, topics *[]string) {
+func (e *handler) Unsubscribe(c *session.Client, topics *[]string) {
 	if c == nil {
 		e.logger.Error("Nil client unsubscribe")
 		return
@@ -193,7 +193,7 @@ func (e *event) Unsubscribe(c *session.Client, topics *[]string) {
 }
 
 // Disconnect - connection with broker or client lost
-func (e *event) Disconnect(c *session.Client) {
+func (e *handler) Disconnect(c *session.Client) {
 	if c == nil {
 		e.logger.Error("Nil client disconnect")
 		return
@@ -204,7 +204,7 @@ func (e *event) Disconnect(c *session.Client) {
 	}
 }
 
-func (e *event) authAccess(username string, topic string) error {
+func (e *handler) authAccess(username string, topic string) error {
 	// Topics are in the format:
 	// channels/<channel_id>/messages/<subtopic>/.../ct/<content_type>
 	if !channelRegExp.Match([]byte(topic)) {

@@ -1,6 +1,7 @@
 package mqtt
 
 import (
+	"fmt"
 	"io"
 	"net"
 
@@ -12,11 +13,12 @@ import (
 type Proxy struct {
 	address string
 	target  string
-	event   session.Event
+	event   session.EventHandler
 	logger  logger.Logger
 }
 
-func New(address, target string, event session.Event, logger logger.Logger) *Proxy {
+// New returns a new mqtt Proxy instance.
+func New(address, target string, event session.EventHandler, logger logger.Logger) *Proxy {
 	return &Proxy{
 		address: address,
 		target:  target,
@@ -39,19 +41,19 @@ func (p Proxy) accept(l net.Listener) {
 }
 
 func (p Proxy) handleConnection(inbound net.Conn) {
-	defer inbound.Close()
+	defer p.close(inbound)
 
 	outbound, err := net.Dial("tcp", p.target)
 	if err != nil {
 		p.logger.Error("Cannot connect to remote broker " + p.target)
 		return
 	}
-	defer outbound.Close()
+	defer p.close(outbound)
 
-	c := session.New(inbound, outbound, p.event, p.logger)
+	s := session.New(inbound, outbound, p.event, p.logger)
 
-	if err := c.Stream(); err != io.EOF {
-		p.logger.Warn("Broken connection for client: " + c.Client.ID + " with error: " + err.Error())
+	if err := s.Stream(); err != io.EOF {
+		p.logger.Warn("Broken connection for client: " + s.Client.ID + " with error: " + err.Error())
 	}
 }
 
@@ -61,11 +63,17 @@ func (p Proxy) Proxy() error {
 	if err != nil {
 		return err
 	}
-	defer l.Close()
+	defer p.close(l)
 
 	// Acceptor loop
 	p.accept(l)
 
 	p.logger.Info("Server Exiting...")
 	return nil
+}
+
+func (p Proxy) close(closer io.Closer) {
+	if err := closer.Close(); err != nil {
+		p.logger.Warn(fmt.Sprintf("Error closing connection: %s", err.Error()))
+	}
 }

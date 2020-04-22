@@ -4,6 +4,7 @@ import (
 	"net"
 
 	"github.com/eclipse/paho.mqtt.golang/packets"
+	mferrors "github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/logger"
 )
 
@@ -14,15 +15,17 @@ const (
 
 type direction int
 
+// Session represents MQTT Proxy session between client and broker.
 type Session struct {
 	logger   logger.Logger
 	inbound  net.Conn
 	outbound net.Conn
-	event    Event
+	event    EventHandler
 	Client   Client
 }
 
-func New(inbound, outbound net.Conn, event Event, logger logger.Logger) *Session {
+// New creates a new Session.
+func New(inbound, outbound net.Conn, event EventHandler, logger logger.Logger) *Session {
 	return &Session{
 		logger:   logger,
 		inbound:  inbound,
@@ -31,7 +34,8 @@ func New(inbound, outbound net.Conn, event Event, logger logger.Logger) *Session
 	}
 }
 
-func (s Session) Stream() error {
+// Stream starts proxying traffic between client and broker.
+func (s *Session) Stream() error {
 	// In parallel read from client, send to broker
 	// and read from broker, send to client
 	errs := make(chan error, 2)
@@ -39,12 +43,15 @@ func (s Session) Stream() error {
 	go s.stream(up, s.inbound, s.outbound, errs)
 	go s.stream(down, s.outbound, s.inbound, errs)
 
-	err := <-errs
+	err1 := <-errs
 	s.event.Disconnect(&s.Client)
-	return err
+	// Drain errors channel and close it.
+	err2 := <-errs
+	close(errs)
+	return mferrors.Wrap(err1, err2)
 }
 
-func (s Session) stream(dir direction, r, w net.Conn, errs chan error) {
+func (s *Session) stream(dir direction, r, w net.Conn, errs chan error) {
 	for {
 		// Read from one connection
 		pkt, err := packets.ReadPacket(r)
