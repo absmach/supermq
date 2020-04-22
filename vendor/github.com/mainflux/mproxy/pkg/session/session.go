@@ -1,6 +1,8 @@
 package session
 
 import (
+	"fmt"
+	"io"
 	"net"
 
 	"github.com/eclipse/paho.mqtt.golang/packets"
@@ -37,18 +39,28 @@ func New(inbound, outbound net.Conn, event EventHandler, logger logger.Logger) *
 // Stream starts proxying traffic between client and broker.
 func (s *Session) Stream() error {
 	// In parallel read from client, send to broker
-	// and read from broker, send to client
+	// and read from broker, send to client.
 	errs := make(chan error, 2)
 
 	go s.stream(up, s.inbound, s.outbound, errs)
 	go s.stream(down, s.outbound, s.inbound, errs)
 
 	err1 := <-errs
+	if err := s.inbound.Close(); err != nil {
+		s.logger.Warn(fmt.Sprintf("Error closing client connection %s", err))
+	}
+	if err := s.outbound.Close(); err != nil {
+		s.logger.Warn(fmt.Sprintf("Error closing target connection %s", err))
+	}
+
 	s.event.Disconnect(&s.Client)
 	// Drain errors channel and close it.
 	err2 := <-errs
 	close(errs)
-	return mferrors.Wrap(err1, err2)
+	if err1 != io.EOF {
+		return mferrors.Wrap(err1, err2)
+	}
+	return err1
 }
 
 func (s *Session) stream(dir direction, r, w net.Conn, errs chan error) {

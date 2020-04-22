@@ -1,7 +1,6 @@
 package mqtt
 
 import (
-	"fmt"
 	"io"
 	"net"
 
@@ -36,23 +35,20 @@ func (p Proxy) accept(l net.Listener) {
 		}
 
 		p.logger.Info("Accepted new client")
-		go p.handleConnection(conn)
+		go p.handle(conn)
 	}
 }
 
-func (p Proxy) handleConnection(inbound net.Conn) {
-	defer p.close(inbound)
-
+func (p Proxy) handle(inbound net.Conn) {
 	outbound, err := net.Dial("tcp", p.target)
 	if err != nil {
 		p.logger.Error("Cannot connect to remote broker " + p.target)
 		return
 	}
-	defer p.close(outbound)
 
 	s := session.New(inbound, outbound, p.event, p.logger)
 
-	if err := s.Stream(); err != io.EOF {
+	if err = s.Stream(); err != io.EOF {
 		p.logger.Warn("Broken connection for client: " + s.Client.ID + " with error: " + err.Error())
 	}
 }
@@ -63,17 +59,11 @@ func (p Proxy) Proxy() error {
 	if err != nil {
 		return err
 	}
-	defer p.close(l)
+	defer l.Close()
 
 	// Acceptor loop
 	p.accept(l)
 
 	p.logger.Info("Server Exiting...")
 	return nil
-}
-
-func (p Proxy) close(closer io.Closer) {
-	if err := closer.Close(); err != nil {
-		p.logger.Warn(fmt.Sprintf("Error closing connection: %s", err.Error()))
-	}
 }
