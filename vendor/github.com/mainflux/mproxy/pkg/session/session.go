@@ -1,12 +1,9 @@
 package session
 
 import (
-	"fmt"
-	"io"
 	"net"
 
 	"github.com/eclipse/paho.mqtt.golang/packets"
-	mferrors "github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/logger"
 )
 
@@ -22,17 +19,17 @@ type Session struct {
 	logger   logger.Logger
 	inbound  net.Conn
 	outbound net.Conn
-	event    EventHandler
+	handler  Handler
 	Client   Client
 }
 
 // New creates a new Session.
-func New(inbound, outbound net.Conn, event EventHandler, logger logger.Logger) *Session {
+func New(inbound, outbound net.Conn, handler Handler, logger logger.Logger) *Session {
 	return &Session{
 		logger:   logger,
 		inbound:  inbound,
 		outbound: outbound,
-		event:    event,
+		handler:  handler,
 	}
 }
 
@@ -45,22 +42,13 @@ func (s *Session) Stream() error {
 	go s.stream(up, s.inbound, s.outbound, errs)
 	go s.stream(down, s.outbound, s.inbound, errs)
 
-	err1 := <-errs
-	if err := s.inbound.Close(); err != nil {
-		s.logger.Warn(fmt.Sprintf("Error closing client connection %s", err))
-	}
-	if err := s.outbound.Close(); err != nil {
-		s.logger.Warn(fmt.Sprintf("Error closing target connection %s", err))
-	}
+	// Handle whichever error happens first.
+	// The other routine won't be blocked when writing
+	// to the errors channel because it is buffered.
+	err := <-errs
 
-	s.event.Disconnect(&s.Client)
-	// Drain errors channel and close it.
-	err2 := <-errs
-	close(errs)
-	if err1 != io.EOF {
-		return mferrors.Wrap(err1, err2)
-	}
-	return err1
+	s.handler.Disconnect(&s.Client)
+	return err
 }
 
 func (s *Session) stream(dir direction, r, w net.Conn, errs chan error) {
@@ -99,7 +87,7 @@ func (s *Session) authorize(pkt packets.ControlPacket) error {
 			Username: p.Username,
 			Password: p.Password,
 		}
-		if err := s.event.AuthConnect(&s.Client); err != nil {
+		if err := s.handler.AuthConnect(&s.Client); err != nil {
 			return err
 		}
 		// Copy back to the packet in case values are changed by Event handler.
@@ -109,9 +97,9 @@ func (s *Session) authorize(pkt packets.ControlPacket) error {
 		p.Password = s.Client.Password
 		return nil
 	case *packets.PublishPacket:
-		return s.event.AuthPublish(&s.Client, &p.TopicName, &p.Payload)
+		return s.handler.AuthPublish(&s.Client, &p.TopicName, &p.Payload)
 	case *packets.SubscribePacket:
-		return s.event.AuthSubscribe(&s.Client, &p.Topics)
+		return s.handler.AuthSubscribe(&s.Client, &p.Topics)
 	default:
 		return nil
 	}
@@ -120,13 +108,13 @@ func (s *Session) authorize(pkt packets.ControlPacket) error {
 func (s Session) notify(pkt packets.ControlPacket) {
 	switch p := pkt.(type) {
 	case *packets.ConnectPacket:
-		s.event.Connect(&s.Client)
+		s.handler.Connect(&s.Client)
 	case *packets.PublishPacket:
-		s.event.Publish(&s.Client, &p.TopicName, &p.Payload)
+		s.handler.Publish(&s.Client, &p.TopicName, &p.Payload)
 	case *packets.SubscribePacket:
-		s.event.Subscribe(&s.Client, &p.Topics)
+		s.handler.Subscribe(&s.Client, &p.Topics)
 	case *packets.UnsubscribePacket:
-		s.event.Unsubscribe(&s.Client, &p.Topics)
+		s.handler.Unsubscribe(&s.Client, &p.Topics)
 	default:
 		return
 	}

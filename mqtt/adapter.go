@@ -21,7 +21,7 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
-var _ session.EventHandler = (*handler)(nil)
+var _ session.Handler = (*handler)(nil)
 
 const protocol = "mqtt"
 
@@ -48,7 +48,7 @@ type handler struct {
 
 // New creates new Event entity
 func New(broker broker.Nats, tc mainflux.ThingsServiceClient, es redis.EventStore,
-	logger logger.Logger, tracer opentracing.Tracer) session.EventHandler {
+	logger logger.Logger, tracer opentracing.Tracer) session.Handler {
 	return &handler{
 		broker: broker,
 		tc:     tc,
