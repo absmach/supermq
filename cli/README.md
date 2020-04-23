@@ -39,14 +39,14 @@ mainflux-cli users password <old_password> <password> <user_auth_token>
 ```
 
 ### System Provisioning
-#### Create Thing (type Device)
+#### Create Thing
 ```
 mainflux-cli things create '{"name":"myDevice"}' <user_auth_token>
 ```
 
-#### Create Thing (type Application)
+#### Create Thing with metadata
 ```
-mainflux-cli things create '{"name":"myDevice"}' <user_auth_token>
+mainflux-cli things create '{"name":"myDevice", "metadata": {\"type\":\"myType\"}}' <user_auth_token>
 ```
 
 #### Update Thing
@@ -125,4 +125,31 @@ mainflux-cli messages send <channel_id> '[{"bn":"Dev1","n":"temp","v":20}, {"n":
 #### Read messages over HTTP
 ```
 mainflux-cli messages read <channel_id> <thing_auth_token>
+```
+
+### Bootstrap
+
+#### Add configuration
+```
+mainflux-cli bootstrap add '{"external_id": "myExtID", "external_key": "myExtkey", "name": "myName", "content": "myContent"}' <user_auth_token>
+```
+
+#### View configuration
+```
+mainflux-cli bootstrap view <thing_id> <user_auth_token>
+```
+
+#### Update configuration
+```
+mainflux-cli bootstrap update '{"MFThing":"<thing_id>", "name": "newName", "content": "newContent"}' <user_auth_token>
+```
+
+#### Remove configuration
+```
+mainflux-cli bootstrap remove <thing_id> <user_auth_token>
+```
+
+#### Bootstrap configuration
+```
+mainflux-cli bootstrap bootstrap <external_id> <external_key>
 ```
