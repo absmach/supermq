@@ -59,7 +59,7 @@ func (n *nats) Publish(msg mainflux.Message) error {
 	return nil
 }
 
-func (n *nats) Subscribe(subHandler mainflux.SubscribeHandler) error {
+func (n *nats) Subscribe(subHandler mainflux.MessageHandler) error {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 
@@ -85,7 +85,7 @@ func (n *nats) Unsubscribe() error {
 	return nil
 }
 
-func (n *nats) subscribe(subHandler mainflux.SubscribeHandler) (*broker.Subscription, error) {
+func (n *nats) subscribe(subHandler mainflux.MessageHandler) (*broker.Subscription, error) {
 	if n.queue != "" {
 		return n.conn.QueueSubscribe(n.subject, n.queue, n.natsHandler(subHandler))
 	}
@@ -96,7 +96,7 @@ func (n *nats) subscribe(subHandler mainflux.SubscribeHandler) (*broker.Subscrip
 	return n.conn.Subscribe(ps, n.natsHandler(subHandler))
 }
 
-func (n *nats) natsHandler(h mainflux.SubscribeHandler) broker.MsgHandler {
+func (n *nats) natsHandler(h mainflux.MessageHandler) broker.MsgHandler {
 	return func(m *broker.Msg) {
 		var msg mainflux.Message
 		if err := proto.Unmarshal(m.Data, &msg); err != nil {

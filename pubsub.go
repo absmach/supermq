@@ -6,13 +6,13 @@ type Publisher interface {
 	Publish(msg Message) error
 }
 
-// SubscribeHandler represents Message handler for Subscriber.
-type SubscribeHandler func(Message) error
+// MessageHandler represents Message handler for Subscriber.
+type MessageHandler func(Message) error
 
 // Subscriber specifies message subscription API.
 type Subscriber interface {
 	// Subscribe subscribes to the message stream and consumes messages.
-	Subscribe(SubscribeHandler) error
+	Subscribe(MessageHandler) error
 
 	// Unsubscribe unsubscribes from the message stream and
 	// stops consuming messages.
