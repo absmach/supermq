@@ -23,6 +23,7 @@ require (
 	github.com/lib/pq v1.0.0
 	github.com/mainflux/mproxy v0.1.8
 	github.com/mainflux/senml v1.0.1
+	github.com/nats-io/go-nats v1.6.0 // indirect
 	github.com/nats-io/nats.go v1.9.1
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/prometheus/client_golang v0.9.3
@@ -35,6 +36,7 @@ require (
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b
 	gonum.org/v1/gonum v0.0.0-20190808205415-ced62fe5104b
+	google.golang.org/genproto v0.0.0-20200225123651-fc8f55426688 // indirect
 	google.golang.org/grpc v1.27.1
 	gopkg.in/ory/dockertest.v3 v3.3.5
 )

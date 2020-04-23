@@ -12,9 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/mqtt/redis"
 	"github.com/mainflux/mproxy/pkg/session"
@@ -39,38 +37,38 @@ var (
 
 // Event implements events.Event interface
 type handler struct {
-	broker broker.Nats
-	tc     mainflux.ThingsServiceClient
-	tracer opentracing.Tracer
-	logger logger.Logger
-	es     redis.EventStore
+	publishers []mainflux.Publisher
+	tc         mainflux.ThingsServiceClient
+	tracer     opentracing.Tracer
+	logger     logger.Logger
+	es         redis.EventStore
 }
 
 // New creates new Event entity
-func New(broker broker.Nats, tc mainflux.ThingsServiceClient, es redis.EventStore,
+func New(publishers []mainflux.Publisher, tc mainflux.ThingsServiceClient, es redis.EventStore,
 	logger logger.Logger, tracer opentracing.Tracer) session.Handler {
 	return &handler{
-		broker: broker,
-		tc:     tc,
-		es:     es,
-		tracer: tracer,
-		logger: logger,
+		publishers: publishers,
+		tc:         tc,
+		es:         es,
+		tracer:     tracer,
+		logger:     logger,
 	}
 }
 
 // AuthConnect is called on device connection,
 // prior forwarding to the MQTT broker
-func (e *handler) AuthConnect(c *session.Client) error {
+func (h *handler) AuthConnect(c *session.Client) error {
 	if c == nil {
 		return errInvalidConnect
 	}
-	e.logger.Info(fmt.Sprintf("AuthConnect - client ID: %s, username: %s", c.ID, c.Username))
+	h.logger.Info(fmt.Sprintf("AuthConnect - client ID: %s, username: %s", c.ID, c.Username))
 
 	t := &mainflux.Token{
 		Value: string(c.Password),
 	}
 
-	thid, err := e.tc.Identify(context.TODO(), t)
+	thid, err := h.tc.Identify(context.TODO(), t)
 	if err != nil {
 		return err
 	}
@@ -79,8 +77,8 @@ func (e *handler) AuthConnect(c *session.Client) error {
 		return errUnauthorizedAccess
 	}
 
-	if err := e.es.Connect(c.Username); err != nil {
-		e.logger.Warn("Failed to publish connect event: " + err.Error())
+	if err := h.es.Connect(c.Username); err != nil {
+		h.logger.Warn("Failed to publish connect event: " + err.Error())
 	}
 
 	return nil
@@ -88,30 +86,30 @@ func (e *handler) AuthConnect(c *session.Client) error {
 
 // AuthPublish is called on device publish,
 // prior forwarding to the MQTT broker
-func (e *handler) AuthPublish(c *session.Client, topic *string, payload *[]byte) error {
+func (h *handler) AuthPublish(c *session.Client, topic *string, payload *[]byte) error {
 	if c == nil {
 		return errNilClient
 	}
 	if topic == nil {
 		return errNilTopicPub
 	}
-	e.logger.Info("AuthPublish - client ID: " + c.ID + " topic: " + *topic)
-	return e.authAccess(c.Username, *topic)
+	h.logger.Info("AuthPublish - client ID: " + c.ID + " topic: " + *topic)
+	return h.authAccess(c.Username, *topic)
 }
 
 // AuthSubscribe is called on device publish,
 // prior forwarding to the MQTT broker
-func (e *handler) AuthSubscribe(c *session.Client, topics *[]string) error {
+func (h *handler) AuthSubscribe(c *session.Client, topics *[]string) error {
 	if c == nil {
 		return errNilClient
 	}
 	if topics == nil || *topics == nil {
 		return errNilTopicSub
 	}
-	e.logger.Info("AuthSubscribe - client ID: " + c.ID + " topics: " + strings.Join(*topics, ","))
+	h.logger.Info("AuthSubscribe - client ID: " + c.ID + " topics: " + strings.Join(*topics, ","))
 
 	for _, v := range *topics {
-		if err := e.authAccess(c.Username, v); err != nil {
+		if err := h.authAccess(c.Username, v); err != nil {
 			return err
 		}
 
@@ -121,27 +119,27 @@ func (e *handler) AuthSubscribe(c *session.Client, topics *[]string) error {
 }
 
 // Connect - after client sucesfully connected
-func (e *handler) Connect(c *session.Client) {
+func (h *handler) Connect(c *session.Client) {
 	if c == nil {
-		e.logger.Error("Nil client connect")
+		h.logger.Error("Nil client connect")
 		return
 	}
-	e.logger.Info("Connect - client with ID: " + c.ID)
+	h.logger.Info("Connect - client with ID: " + c.ID)
 }
 
 // Publish - after client sucesfully published
-func (e *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
+func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 	if c == nil {
-		e.logger.Error("Nil client publish")
+		h.logger.Error("Nil client publish")
 		return
 	}
-	e.logger.Info("Publish - client ID " + c.ID + " to the topic: " + *topic)
+	h.logger.Info("Publish - client ID " + c.ID + " to the topic: " + *topic)
 	// Topics are in the format:
 	// channels/<channel_id>/messages/<subtopic>/.../ct/<content_type>
 
 	channelParts := channelRegExp.FindStringSubmatch(*topic)
 	if len(channelParts) < 1 {
-		e.logger.Info("Error in mqtt publish %s" + errMalformedData.Error())
+		h.logger.Info("Error in mqtt publish %s" + errMalformedData.Error())
 		return
 	}
 
@@ -150,65 +148,61 @@ func (e *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 
 	subtopic, err := parseSubtopic(subtopic)
 	if err != nil {
-		e.logger.Info("Error in mqtt publish: " + err.Error())
+		h.logger.Info("Error in mqtt publish: " + err.Error())
 		return
 	}
 
-	created, err := ptypes.TimestampProto(time.Now())
-	if err != nil {
-		e.logger.Info("Error in mqtt publish: " + err.Error())
-		return
-	}
-
-	msg := broker.Message{
+	msg := mainflux.Message{
 		Protocol:  protocol,
 		Channel:   chanID,
 		Subtopic:  subtopic,
 		Publisher: c.Username,
 		Payload:   *payload,
-		Created:   created,
+		Occured:   time.Now().UnixNano(),
 	}
 
-	if err := e.broker.Publish(context.TODO(), "", msg); err != nil {
-		e.logger.Info("Error publishing to Mainflux " + err.Error())
+	for _, pub := range h.publishers {
+		if err := pub.Publish(msg); err != nil {
+			h.logger.Info("Error publishing to Mainflux " + err.Error())
+		}
 	}
 }
 
 // Subscribe - after client sucesfully subscribed
-func (e *handler) Subscribe(c *session.Client, topics *[]string) {
+func (h *handler) Subscribe(c *session.Client, topics *[]string) {
 	if c == nil {
-		e.logger.Error("Nil client subscribe")
+		h.logger.Error("Nil client subscribe")
 		return
 	}
-	e.logger.Info("Subscribe - client ID: " + c.ID + ", to topics: " + strings.Join(*topics, ","))
+	h.logger.Info("Subscribe - client ID: " + c.ID + ", to topics: " + strings.Join(*topics, ","))
 }
 
 // Unsubscribe - after client unsubscribed
-func (e *handler) Unsubscribe(c *session.Client, topics *[]string) {
+func (h *handler) Unsubscribe(c *session.Client, topics *[]string) {
 	if c == nil {
-		e.logger.Error("Nil client unsubscribe")
+		h.logger.Error("Nil client unsubscribe")
 		return
 	}
-	e.logger.Info("Unubscribe - client ID: " + c.ID + ", form topics: " + strings.Join(*topics, ","))
+	h.logger.Info("Unubscribe - client ID: " + c.ID + ", form topics: " + strings.Join(*topics, ","))
 }
 
 // Disconnect - connection with broker or client lost
-func (e *handler) Disconnect(c *session.Client) {
+func (h *handler) Disconnect(c *session.Client) {
 	if c == nil {
-		e.logger.Error("Nil client disconnect")
+		h.logger.Error("Nil client disconnect")
 		return
 	}
-	e.logger.Info("Disconnect - Client with ID: " + c.ID + " and username " + c.Username + " disconnected")
-	if err := e.es.Disconnect(c.Username); err != nil {
-		e.logger.Warn("Failed to publish disconnect event: " + err.Error())
+	h.logger.Info("Disconnect - Client with ID: " + c.ID + " and username " + c.Username + " disconnected")
+	if err := h.es.Disconnect(c.Username); err != nil {
+		h.logger.Warn("Failed to publish disconnect event: " + err.Error())
 	}
 }
 
-func (e *handler) authAccess(username string, topic string) error {
+func (h *handler) authAccess(username string, topic string) error {
 	// Topics are in the format:
 	// channels/<channel_id>/messages/<subtopic>/.../ct/<content_type>
 	if !channelRegExp.Match([]byte(topic)) {
-		e.logger.Info("Malformed topic: " + topic)
+		h.logger.Info("Malformed topic: " + topic)
 		return errMalformedTopic
 	}
 
@@ -223,12 +217,8 @@ func (e *handler) authAccess(username string, topic string) error {
 		ThingID: username,
 		ChanID:  chanID,
 	}
-	_, err := e.tc.CanAccessByID(context.TODO(), ar)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	_, err := h.tc.CanAccessByID(context.TODO(), ar)
+	return err
 }
 
 func parseSubtopic(subtopic string) (string, error) {

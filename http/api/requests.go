@@ -3,9 +3,11 @@
 
 package api
 
-import "github.com/mainflux/mainflux/broker"
+import (
+	"github.com/mainflux/mainflux"
+)
 
 type publishReq struct {
-	msg   broker.Message
+	msg   mainflux.Message
 	token string
 }

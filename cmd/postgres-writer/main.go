@@ -14,12 +14,12 @@ import (
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/broker"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/transformers/senml"
 	"github.com/mainflux/mainflux/writers"
 	"github.com/mainflux/mainflux/writers/api"
 	"github.com/mainflux/mainflux/writers/postgres"
+	broker "github.com/nats-io/nats.go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
@@ -75,19 +75,19 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	b, err := broker.New(cfg.natsURL)
+	nc, err := broker.Connect(cfg.natsURL)
 	if err != nil {
-		logger.Error(err.Error())
+		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
 		os.Exit(1)
 	}
-	defer b.Close()
+	defer nc.Close()
 
 	db := connectToDB(cfg.dbConfig, logger)
 	defer db.Close()
 
 	repo := newService(db, logger)
 	st := senml.New(cfg.contentType)
-	if err = writers.Start(b, repo, st, svcName, cfg.subjectsCfgPath, logger); err != nil {
+	if err = writers.Start(nc, repo, st, svcName, cfg.subjectsCfgPath, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to create Postgres writer: %s", err))
 	}
 
