@@ -6,7 +6,6 @@ package mqtt
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
@@ -62,7 +61,6 @@ func (h *handler) AuthConnect(c *session.Client) error {
 	if c == nil {
 		return errInvalidConnect
 	}
-	h.logger.Info(fmt.Sprintf("AuthConnect - client ID: %s, username: %s", c.ID, c.Username))
 
 	t := &mainflux.Token{
 		Value: string(c.Password),
@@ -93,7 +91,7 @@ func (h *handler) AuthPublish(c *session.Client, topic *string, payload *[]byte)
 	if topic == nil {
 		return errNilTopicPub
 	}
-	h.logger.Info("AuthPublish - client ID: " + c.ID + " topic: " + *topic)
+
 	return h.authAccess(c.Username, *topic)
 }
 
@@ -106,7 +104,6 @@ func (h *handler) AuthSubscribe(c *session.Client, topics *[]string) error {
 	if topics == nil || *topics == nil {
 		return errNilTopicSub
 	}
-	h.logger.Info("AuthSubscribe - client ID: " + c.ID + " topics: " + strings.Join(*topics, ","))
 
 	for _, v := range *topics {
 		if err := h.authAccess(c.Username, v); err != nil {
