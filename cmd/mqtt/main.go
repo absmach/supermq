@@ -137,12 +137,12 @@ func main() {
 	}
 	defer nc.Close()
 
-	b := nats.New(nc, "", "", logger)
+	n := nats.New(nc, "", logger)
 
 	es := mr.NewEventStore(rc, cfg.instance)
 
 	// Event handler for MQTT hooks
-	evt := mqtt.New([]mainflux.Publisher{b}, cc, es, logger, tracer)
+	evt := mqtt.New([]mainflux.Publisher{n}, cc, es, logger, tracer)
 
 	errs := make(chan error, 2)
 

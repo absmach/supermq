@@ -47,11 +47,11 @@ type handler struct {
 func New(publishers []mainflux.Publisher, tc mainflux.ThingsServiceClient, es redis.EventStore,
 	logger logger.Logger, tracer opentracing.Tracer) session.Handler {
 	return &handler{
-		publishers: publishers,
 		tc:         tc,
 		es:         es,
 		tracer:     tracer,
 		logger:     logger,
+		publishers: publishers,
 	}
 }
 
@@ -159,7 +159,7 @@ func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 	}
 
 	for _, pub := range h.publishers {
-		if err := pub.Publish(msg); err != nil {
+		if err := pub.Publish(msg.Channel, msg); err != nil {
 			h.logger.Info("Error publishing to Mainflux " + err.Error())
 		}
 	}
