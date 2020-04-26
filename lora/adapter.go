@@ -7,8 +7,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
-	"github.com/mainflux/mainflux/broker"
+	"github.com/mainflux/mainflux"
 )
 
 const (
@@ -56,15 +55,15 @@ type Service interface {
 var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
-	broker     broker.Nats
+	publisher  mainflux.Publisher
 	thingsRM   RouteMapRepository
 	channelsRM RouteMapRepository
 }
 
 // New instantiates the LoRa adapter implementation.
-func New(broker broker.Nats, thingsRM, channelsRM RouteMapRepository) Service {
+func New(publisher mainflux.Publisher, thingsRM, channelsRM RouteMapRepository) Service {
 	return &adapterService{
-		broker:     broker,
+		publisher:  publisher,
 		thingsRM:   thingsRM,
 		channelsRM: channelsRM,
 	}
@@ -101,21 +100,16 @@ func (as *adapterService) Publish(ctx context.Context, token string, m Message) 
 		payload = []byte(jo)
 	}
 
-	created, err := ptypes.TimestampProto(time.Now())
-	if err != nil {
-		return err
-	}
-
 	// Publish on Mainflux NATS broker
-	msg := broker.Message{
+	msg := mainflux.Message{
 		Publisher: thing,
 		Protocol:  protocol,
 		Channel:   channel,
 		Payload:   payload,
-		Created:   created,
+		Occured:   time.Now().UnixNano(),
 	}
 
-	return as.broker.Publish(ctx, token, msg)
+	return as.publisher.Publish(msg.Channel, msg)
 }
 
 func (as *adapterService) CreateThing(thingID string, devEUI string) error {
