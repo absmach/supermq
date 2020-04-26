@@ -36,6 +36,10 @@ type nats struct {
 }
 
 // New returns NATS message broker.
+// Paramter queue specifies the queue for the Subscribe method. If queue is specified (is not an empty string),
+// Subscribe method will execute NATS QueueSubscibe which is conceptually different from ordinary subscribe.
+// For more information, please take a look here: https://docs.nats.io/developing-with-nats/receiving/queues.
+// If the queue is empty, Subscribe will be used.
 func New(conn *broker.Conn, queue string, logger log.Logger) mainflux.PubSub {
 	return &nats{
 		conn:          conn,
