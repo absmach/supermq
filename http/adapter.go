@@ -35,7 +35,7 @@ func New(publisher mainflux.Publisher, things mainflux.ThingsServiceClient) Serv
 func (as *adapterService) Publish(ctx context.Context, token string, msg mainflux.Message) error {
 	ar := &mainflux.AccessByKeyReq{
 		Token:  token,
-		ChanID: msg.GetChannel(),
+		ChanID: msg.Channel,
 	}
 	thid, err := as.things.CanAccessByKey(ctx, ar)
 	if err != nil {
@@ -43,5 +43,5 @@ func (as *adapterService) Publish(ctx context.Context, token string, msg mainflu
 	}
 	msg.Publisher = thid.GetValue()
 
-	return as.publisher.Publish(msg)
+	return as.publisher.Publish(msg.Channel, msg)
 }
