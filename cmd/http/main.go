@@ -63,7 +63,6 @@ type config struct {
 }
 
 func main() {
-
 	cfg := loadConfig()
 
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
@@ -87,10 +86,10 @@ func main() {
 	}
 	defer nc.Close()
 
-	b := nats.New(nc, "", "", logger)
+	n := nats.New(nc, "", logger)
 
 	tc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
-	svc := adapter.New(b, tc)
+	svc := adapter.New(n, tc)
 
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(

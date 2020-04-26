@@ -14,7 +14,6 @@ import (
 	"github.com/mainflux/mainflux/nats"
 	"github.com/mainflux/mainflux/transformers"
 	"github.com/mainflux/mainflux/transformers/senml"
-	broker "github.com/nats-io/nats.go"
 )
 
 var (
@@ -32,7 +31,7 @@ type consumer struct {
 // Start method starts consuming messages received from NATS.
 // This method transforms messages to SenML format before
 // using MessageRepository to store them.
-func Start(conn *broker.Conn, repo MessageRepository, transformer transformers.Transformer, queue string, subjectsCfgPath string, logger logger.Logger) error {
+func Start(sub mainflux.Subscriber, repo MessageRepository, transformer transformers.Transformer, queue string, subjectsCfgPath string, logger logger.Logger) error {
 	c := consumer{
 		repo:        repo,
 		transformer: transformer,
@@ -45,8 +44,7 @@ func Start(conn *broker.Conn, repo MessageRepository, transformer transformers.T
 	}
 
 	for _, subject := range subjects {
-		sub := nats.New(conn, subject, queue, logger)
-		if err := sub.Subscribe(c.handler); err != nil {
+		if err := sub.Subscribe(subject, c.handler); err != nil {
 			return err
 		}
 	}

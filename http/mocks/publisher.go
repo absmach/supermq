@@ -14,6 +14,6 @@ func NewPublisher() mainflux.Publisher {
 	return mockPublisher{}
 }
 
-func (pub mockPublisher) Publish(mainflux.Message) error {
+func (pub mockPublisher) Publish(topic string, msg mainflux.Message) error {
 	return nil
 }
