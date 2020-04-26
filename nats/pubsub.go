@@ -22,24 +22,26 @@ const SubjectAllChannels = "channels.>"
 var (
 	errAlreadySubscribed = errors.New("already subscribed to topic")
 	errNotSubscribed     = errors.New("not subscribed")
+	errEmptyTopic        = errors.New("empty topic")
 )
 
 var _ mainflux.PubSub = (*nats)(nil)
 
 type nats struct {
 	conn          *broker.Conn
-	subscriptions map[string]*broker.Subscription
 	logger        log.Logger
 	mu            sync.Mutex
 	queue         string
+	subscriptions map[string]*broker.Subscription
 }
 
 // New returns NATS message broker.
 func New(conn *broker.Conn, queue string, logger log.Logger) mainflux.PubSub {
 	return &nats{
-		conn:   conn,
-		queue:  queue,
-		logger: logger,
+		conn:          conn,
+		queue:         queue,
+		logger:        logger,
+		subscriptions: make(map[string]*broker.Subscription),
 	}
 }
 
@@ -61,34 +63,39 @@ func (n *nats) Publish(topic string, msg mainflux.Message) error {
 }
 
 func (n *nats) Subscribe(topic string, handler mainflux.MessageHandler) error {
+	if topic == "" {
+		return errEmptyTopic
+	}
 	n.mu.Lock()
 	defer n.mu.Unlock()
 	if _, ok := n.subscriptions[topic]; ok {
 		return errAlreadySubscribed
 	}
-	s := SubjectAllChannels
-	if topic != "" {
-		s = fmt.Sprintf("%s.%s", chansPrefix, topic)
-	}
+	topic = fmt.Sprintf("%s.%s", chansPrefix, topic)
 	if n.queue != "" {
-		sub, err := n.conn.QueueSubscribe(s, n.queue, n.natsHandler(handler))
+		sub, err := n.conn.QueueSubscribe(topic, n.queue, n.natsHandler(handler))
 		if err != nil {
 			return err
 		}
-		n.subscriptions[s] = sub
+		n.subscriptions[topic] = sub
 		return nil
 	}
-	sub, err := n.conn.Subscribe(s, n.natsHandler(handler))
+	sub, err := n.conn.Subscribe(topic, n.natsHandler(handler))
 	if err != nil {
 		return err
 	}
-	n.subscriptions[s] = sub
+	n.subscriptions[topic] = sub
 	return nil
 }
 
 func (n *nats) Unsubscribe(topic string) error {
+	if topic == "" {
+		return errEmptyTopic
+	}
 	n.mu.Lock()
 	defer n.mu.Unlock()
+
+	topic = fmt.Sprintf("%s.%s", chansPrefix, topic)
 
 	sub, ok := n.subscriptions[topic]
 	if !ok {
@@ -102,17 +109,6 @@ func (n *nats) Unsubscribe(topic string) error {
 	delete(n.subscriptions, topic)
 	return nil
 }
-
-// func (n *nats) subscribe(topic string, handler mainflux.MessageHandler) (*broker.Subscription, error) {
-// 	if n.queue != "" {
-// 		return n.conn.QueueSubscribe(topic, n.queue, n.natsHandler(handler))
-// 	}
-// 	ps := SubjectAllChannels
-// 	if topic != "" {
-// 		ps = fmt.Sprintf("%s.%s", chansPrefix, topic)
-// 	}
-// 	return n.conn.Subscribe(ps, n.natsHandler(handler))
-// }
 
 func (n *nats) natsHandler(h mainflux.MessageHandler) broker.MsgHandler {
 	return func(m *broker.Msg) {
