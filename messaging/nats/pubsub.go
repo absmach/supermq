@@ -28,6 +28,13 @@ var (
 
 var _ messaging.PubSub = (*pubsub)(nil)
 
+// PubSub wraps messaging Publisher exposing
+// Close() method for NATS connection.
+type PubSub interface {
+	messaging.PubSub
+	Close()
+}
+
 type pubsub struct {
 	conn          *broker.Conn
 	logger        log.Logger
@@ -43,16 +50,21 @@ type pubsub struct {
 // from ordinary subscribe. For more information, please take a look
 // here: https://docs.nats.io/developing-with-nats/receiving/queues.
 // If the queue is empty, Subscribe will be used.
-func NewPubSub(conn *broker.Conn, queue string, logger log.Logger) messaging.PubSub {
-	return &pubsub{
+func NewPubSub(url, queue string, logger log.Logger) (PubSub, error) {
+	conn, err := broker.Connect(url)
+	if err != nil {
+		return nil, err
+	}
+	ret := &pubsub{
 		conn:          conn,
 		queue:         queue,
 		logger:        logger,
 		subscriptions: make(map[string]*broker.Subscription),
 	}
+	return ret, nil
 }
 
-func (n *pubsub) Publish(topic string, msg messaging.Message) error {
+func (ps *pubsub) Publish(topic string, msg messaging.Message) error {
 	data, err := proto.Marshal(&msg)
 	if err != nil {
 		return err
@@ -62,49 +74,49 @@ func (n *pubsub) Publish(topic string, msg messaging.Message) error {
 	if msg.Subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, msg.Subtopic)
 	}
-	if err := n.conn.Publish(subject, data); err != nil {
+	if err := ps.conn.Publish(subject, data); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (n *pubsub) Subscribe(topic string, handler messaging.MessageHandler) error {
+func (ps *pubsub) Subscribe(topic string, handler messaging.MessageHandler) error {
 	if topic == "" {
 		return errEmptyTopic
 	}
-	n.mu.Lock()
-	defer n.mu.Unlock()
-	if _, ok := n.subscriptions[topic]; ok {
+	ps.mu.Lock()
+	defer ps.mu.Unlock()
+	if _, ok := ps.subscriptions[topic]; ok {
 		return errAlreadySubscribed
 	}
 	topic = fmt.Sprintf("%s.%s", chansPrefix, topic)
-	if n.queue != "" {
-		sub, err := n.conn.QueueSubscribe(topic, n.queue, n.natsHandler(handler))
+	if ps.queue != "" {
+		sub, err := ps.conn.QueueSubscribe(topic, ps.queue, ps.natsHandler(handler))
 		if err != nil {
 			return err
 		}
-		n.subscriptions[topic] = sub
+		ps.subscriptions[topic] = sub
 		return nil
 	}
-	sub, err := n.conn.Subscribe(topic, n.natsHandler(handler))
+	sub, err := ps.conn.Subscribe(topic, ps.natsHandler(handler))
 	if err != nil {
 		return err
 	}
-	n.subscriptions[topic] = sub
+	ps.subscriptions[topic] = sub
 	return nil
 }
 
-func (n *pubsub) Unsubscribe(topic string) error {
+func (ps *pubsub) Unsubscribe(topic string) error {
 	if topic == "" {
 		return errEmptyTopic
 	}
-	n.mu.Lock()
-	defer n.mu.Unlock()
+	ps.mu.Lock()
+	defer ps.mu.Unlock()
 
 	topic = fmt.Sprintf("%s.%s", chansPrefix, topic)
 
-	sub, ok := n.subscriptions[topic]
+	sub, ok := ps.subscriptions[topic]
 	if !ok {
 		return errNotSubscribed
 	}
@@ -113,19 +125,23 @@ func (n *pubsub) Unsubscribe(topic string) error {
 		return err
 	}
 
-	delete(n.subscriptions, topic)
+	delete(ps.subscriptions, topic)
 	return nil
 }
 
-func (n *pubsub) natsHandler(h messaging.MessageHandler) broker.MsgHandler {
+func (ps *pubsub) Close() {
+	ps.conn.Close()
+}
+
+func (ps *pubsub) natsHandler(h messaging.MessageHandler) broker.MsgHandler {
 	return func(m *broker.Msg) {
 		var msg messaging.Message
 		if err := proto.Unmarshal(m.Data, &msg); err != nil {
-			n.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
+			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
 			return
 		}
 		if err := h(msg); err != nil {
-			n.logger.Warn(fmt.Sprintf("Failed handle Mainflux message: %s", err))
+			ps.logger.Warn(fmt.Sprintf("Failed handle Mainflux message: %s", err))
 		}
 	}
 }

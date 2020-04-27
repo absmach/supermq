@@ -15,12 +15,11 @@ import (
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
-	messaging "github.com/mainflux/mainflux/messaging/nats"
+	"github.com/mainflux/mainflux/messaging/nats"
 	"github.com/mainflux/mainflux/transformers/senml"
 	"github.com/mainflux/mainflux/writers"
 	"github.com/mainflux/mainflux/writers/api"
 	"github.com/mainflux/mainflux/writers/mongodb"
-	"github.com/nats-io/nats.go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -67,13 +66,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	nc, err := nats.Connect(cfg.natsURL)
+	n, err := nats.NewPubSub(cfg.natsURL, "", logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
 		os.Exit(1)
 	}
-	defer nc.Close()
-	ps := messaging.NewPubSub(nc, "", logger)
+	defer n.Close()
 
 	addr := fmt.Sprintf("mongodb://%s:%s", cfg.dbHost, cfg.dbPort)
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
@@ -90,7 +88,7 @@ func main() {
 	repo = api.MetricsMiddleware(repo, counter, latency)
 	st := senml.New(cfg.contentType)
 
-	if err := writers.Start(ps, repo, st, svcName, cfg.subjectsCfgPath, logger); err != nil {
+	if err := writers.Start(n, repo, st, svcName, cfg.subjectsCfgPath, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to start MongoDB writer: %s", err))
 		os.Exit(1)
 	}

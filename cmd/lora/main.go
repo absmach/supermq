@@ -19,8 +19,7 @@ import (
 	"github.com/mainflux/mainflux/lora"
 	"github.com/mainflux/mainflux/lora/api"
 	"github.com/mainflux/mainflux/lora/mqtt"
-	messaging "github.com/mainflux/mainflux/messaging/nats"
-	"github.com/nats-io/nats.go"
+	"github.com/mainflux/mainflux/messaging/nats"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux/lora/redis"
@@ -86,20 +85,19 @@ func main() {
 	esConn := connectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
 	defer esConn.Close()
 
-	nc, err := nats.Connect(cfg.natsURL)
+	n, err := nats.NewPublisher(cfg.natsURL)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
 		os.Exit(1)
 	}
-	defer nc.Close()
-	pub := messaging.NewPublisher(nc)
+	defer n.Close()
 
 	thingRM := newRouteMapRepositoy(rmConn, thingsRMPrefix, logger)
 	chanRM := newRouteMapRepositoy(rmConn, channelsRMPrefix, logger)
 
 	mqttConn := connectToMQTTBroker(cfg.loraMsgURL, logger)
 
-	svc := lora.New(pub, thingRM, chanRM)
+	svc := lora.New(n, thingRM, chanRM)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,

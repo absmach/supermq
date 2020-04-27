@@ -17,11 +17,23 @@ type pubsliher struct {
 	conn *broker.Conn
 }
 
+// Publisher wraps messaging Publisher exposing
+// Close() method for NATS connection.
+type Publisher interface {
+	messaging.Publisher
+	Close()
+}
+
 // NewPublisher returns NATS message Publisher.
-func NewPublisher(conn *broker.Conn) messaging.Publisher {
-	return &pubsub{
+func NewPublisher(url string) (Publisher, error) {
+	conn, err := broker.Connect(url)
+	if err != nil {
+		return nil, err
+	}
+	ret := &pubsub{
 		conn: conn,
 	}
+	return ret, nil
 }
 
 func (pub *pubsliher) Publish(topic string, msg messaging.Message) error {
@@ -39,4 +51,8 @@ func (pub *pubsliher) Publish(topic string, msg messaging.Message) error {
 	}
 
 	return nil
+}
+
+func (pub *pubsliher) Close() {
+	pub.conn.Close()
 }

@@ -15,12 +15,11 @@ import (
 	influxdata "github.com/influxdata/influxdb/client/v2"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
-	messaging "github.com/mainflux/mainflux/messaging/nats"
+	"github.com/mainflux/mainflux/messaging/nats"
 	"github.com/mainflux/mainflux/transformers/senml"
 	"github.com/mainflux/mainflux/writers"
 	"github.com/mainflux/mainflux/writers/api"
 	"github.com/mainflux/mainflux/writers/influxdb"
-	"github.com/nats-io/nats.go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 )
 
@@ -71,13 +70,12 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	nc, err := nats.Connect(cfg.natsURL)
+	n, err := nats.NewPubSub(cfg.natsURL, "", logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
 		os.Exit(1)
 	}
-	defer nc.Close()
-	ps := messaging.NewPubSub(nc, "", logger)
+	defer n.Close()
 
 	client, err := influxdata.NewHTTPClient(clientCfg)
 	if err != nil {
@@ -93,7 +91,7 @@ func main() {
 	repo = api.MetricsMiddleware(repo, counter, latency)
 	st := senml.New(cfg.contentType)
 
-	if err := writers.Start(ps, repo, st, svcName, cfg.subjectsCfgPath, logger); err != nil {
+	if err := writers.Start(n, repo, st, svcName, cfg.subjectsCfgPath, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to start InfluxDB writer: %s", err))
 		os.Exit(1)
 	}
