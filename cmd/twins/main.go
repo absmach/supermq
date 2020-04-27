@@ -262,7 +262,7 @@ func newService(ps messaging.PubSub, ncTracer opentracing.Tracer, chanID string,
 		}, []string{"method"}),
 	)
 
-	err := ps.Subscribe("channels.>", func(msg messaging.Message) error {
+	err := ps.Subscribe(pubsub.SubjectAllChannels, func(msg messaging.Message) error {
 		if msg.Channel == chanID {
 			return nil
 		}
