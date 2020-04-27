@@ -75,19 +75,19 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	n, err := nats.NewPubSub(cfg.natsURL, "", logger)
+	pubSub, err := nats.NewPubSub(cfg.natsURL, "", logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
 		os.Exit(1)
 	}
-	defer n.Close()
+	defer pubSub.Close()
 
 	db := connectToDB(cfg.dbConfig, logger)
 	defer db.Close()
 
 	repo := newService(db, logger)
 	st := senml.New(cfg.contentType)
-	if err = writers.Start(n, repo, st, svcName, cfg.subjectsCfgPath, logger); err != nil {
+	if err = writers.Start(pubSub, repo, st, svcName, cfg.subjectsCfgPath, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to create Postgres writer: %s", err))
 	}
 

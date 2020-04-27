@@ -114,12 +114,12 @@ func main() {
 	dbTracer, dbCloser := initJaeger("twins_db", cfg.jaegerURL, logger)
 	defer dbCloser.Close()
 
-	n, err := nats.NewPubSub(cfg.natsURL, queue, logger)
+	pubSub, err := nats.NewPubSub(cfg.natsURL, queue, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
 		os.Exit(1)
 	}
-	defer n.Close()
+	defer pubSub.Close()
 
 	ncTracer, ncCloser := initJaeger("twins_nats", cfg.jaegerURL, logger)
 	defer ncCloser.Close()
@@ -127,7 +127,7 @@ func main() {
 	tracer, closer := initJaeger("twins", cfg.jaegerURL, logger)
 	defer closer.Close()
 
-	svc := newService(n, ncTracer, cfg.channelID, auth, dbTracer, db, logger)
+	svc := newService(pubSub, ncTracer, cfg.channelID, auth, dbTracer, db, logger)
 
 	errs := make(chan error, 2)
 

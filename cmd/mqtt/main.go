@@ -130,17 +130,17 @@ func main() {
 
 	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
 
-	n, err := nats.NewPublisher(cfg.natsURL)
+	pub, err := nats.NewPublisher(cfg.natsURL)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
 		os.Exit(1)
 	}
-	defer n.Close()
+	defer pub.Close()
 
 	es := mr.NewEventStore(rc, cfg.instance)
 
 	// Event handler for MQTT hooks
-	evt := mqtt.New([]messaging.Publisher{n}, cc, es, logger, tracer)
+	evt := mqtt.New([]messaging.Publisher{pub}, cc, es, logger, tracer)
 
 	errs := make(chan error, 2)
 

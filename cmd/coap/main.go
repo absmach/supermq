@@ -81,14 +81,14 @@ func main() {
 	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
 	respChan := make(chan string, 10000)
 
-	n, err := nats.NewPubSub(cfg.natsURL, "", logger)
+	pubSub, err := nats.NewPubSub(cfg.natsURL, "", logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
 		os.Exit(1)
 	}
-	defer n.Close()
+	defer pubSub.Close()
 
-	svc := coap.New(n, logger, cc, respChan)
+	svc := coap.New(pubSub, logger, cc, respChan)
 
 	svc = api.LoggingMiddleware(svc, logger)
 
