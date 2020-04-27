@@ -225,7 +225,7 @@ func receive(svc coap.Service, msg *gocoap.Message) *gocoap.Message {
 		return res
 	}
 
-	occured, err := ptypes.TimestampProto(time.Now())
+	created, err := ptypes.TimestampProto(time.Now())
 	if err != nil {
 		return nil
 	}
@@ -236,7 +236,7 @@ func receive(svc coap.Service, msg *gocoap.Message) *gocoap.Message {
 		Publisher: publisher,
 		Protocol:  protocol,
 		Payload:   msg.Payload,
-		Created:   occured,
+		Created:   created,
 	}
 
 	if err := svc.Publish(m); err != nil {
