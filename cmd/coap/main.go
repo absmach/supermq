@@ -21,7 +21,7 @@ import (
 	"github.com/mainflux/mainflux/coap"
 	"github.com/mainflux/mainflux/coap/api"
 	logger "github.com/mainflux/mainflux/logger"
-	pubsub "github.com/mainflux/mainflux/pubsub/nats"
+	pubsub "github.com/mainflux/mainflux/messaging/nats"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	broker "github.com/nats-io/nats.go"
 	opentracing "github.com/opentracing/opentracing-go"

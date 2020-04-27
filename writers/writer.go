@@ -8,10 +8,10 @@ import (
 	"io/ioutil"
 
 	"github.com/BurntSushi/toml"
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/logger"
-	pubsub "github.com/mainflux/mainflux/pubsub/nats"
+	"github.com/mainflux/mainflux/messaging"
+	pubsub "github.com/mainflux/mainflux/messaging/nats"
 	"github.com/mainflux/mainflux/transformers"
 	"github.com/mainflux/mainflux/transformers/senml"
 )
@@ -31,7 +31,7 @@ type consumer struct {
 // Start method starts consuming messages received from NATS.
 // This method transforms messages to SenML format before
 // using MessageRepository to store them.
-func Start(sub mainflux.Subscriber, repo MessageRepository, transformer transformers.Transformer, queue string, subjectsCfgPath string, logger logger.Logger) error {
+func Start(sub messaging.Subscriber, repo MessageRepository, transformer transformers.Transformer, queue string, subjectsCfgPath string, logger logger.Logger) error {
 	c := consumer{
 		repo:        repo,
 		transformer: transformer,
@@ -51,7 +51,7 @@ func Start(sub mainflux.Subscriber, repo MessageRepository, transformer transfor
 	return nil
 }
 
-func (c *consumer) handler(msg mainflux.Message) error {
+func (c *consumer) handler(msg messaging.Message) error {
 	t, err := c.transformer.Transform(msg)
 	if err != nil {
 		return err

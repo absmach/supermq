@@ -4,10 +4,10 @@
 package api
 
 import (
-	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/messaging"
 )
 
 type publishReq struct {
-	msg   mainflux.Message
+	msg   messaging.Message
 	token string
 }

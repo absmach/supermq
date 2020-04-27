@@ -19,7 +19,8 @@ import (
 	"github.com/mainflux/mainflux"
 	authapi "github.com/mainflux/mainflux/authn/api/grpc"
 	"github.com/mainflux/mainflux/logger"
-	pubsub "github.com/mainflux/mainflux/pubsub/nats"
+	"github.com/mainflux/mainflux/messaging"
+	pubsub "github.com/mainflux/mainflux/messaging/nats"
 	localusers "github.com/mainflux/mainflux/things/users"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/api"
@@ -237,7 +238,7 @@ func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
 	return conn
 }
 
-func newService(ps mainflux.PubSub, ncTracer opentracing.Tracer, chanID string, users mainflux.AuthNServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
+func newService(ps messaging.PubSub, ncTracer opentracing.Tracer, chanID string, users mainflux.AuthNServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
 	twinRepo := twmongodb.NewTwinRepository(db)
 
 	stateRepo := twmongodb.NewStateRepository(db)
@@ -261,7 +262,7 @@ func newService(ps mainflux.PubSub, ncTracer opentracing.Tracer, chanID string, 
 		}, []string{"method"}),
 	)
 
-	err := ps.Subscribe("channels.>", func(msg mainflux.Message) error {
+	err := ps.Subscribe("channels.>", func(msg messaging.Message) error {
 		if msg.Channel == chanID {
 			return nil
 		}

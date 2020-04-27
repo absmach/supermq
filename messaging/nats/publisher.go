@@ -7,24 +7,24 @@ import (
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/messaging"
 	broker "github.com/nats-io/nats.go"
 )
 
-var _ mainflux.PubSub = (*pubsub)(nil)
+var _ messaging.Publisher = (*pubsliher)(nil)
 
 type pubsliher struct {
 	conn *broker.Conn
 }
 
 // NewPublisher returns NATS message Publisher.
-func NewPublisher(conn *broker.Conn) mainflux.Publisher {
+func NewPublisher(conn *broker.Conn) messaging.Publisher {
 	return &pubsub{
 		conn: conn,
 	}
 }
 
-func (pub *pubsliher) Publish(topic string, msg mainflux.Message) error {
+func (pub *pubsliher) Publish(topic string, msg messaging.Message) error {
 	data, err := proto.Marshal(&msg)
 	if err != nil {
 		return err

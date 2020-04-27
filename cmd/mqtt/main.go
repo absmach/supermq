@@ -15,9 +15,10 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/messaging"
+	pubsub "github.com/mainflux/mainflux/messaging/nats"
 	mqtt "github.com/mainflux/mainflux/mqtt"
 	mr "github.com/mainflux/mainflux/mqtt/redis"
-	pubsub "github.com/mainflux/mainflux/pubsub/nats"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	mp "github.com/mainflux/mproxy/pkg/mqtt"
 	"github.com/mainflux/mproxy/pkg/session"
@@ -141,7 +142,7 @@ func main() {
 	es := mr.NewEventStore(rc, cfg.instance)
 
 	// Event handler for MQTT hooks
-	evt := mqtt.New([]mainflux.Publisher{pub}, cc, es, logger, tracer)
+	evt := mqtt.New([]messaging.Publisher{pub}, cc, es, logger, tracer)
 
 	errs := make(chan error, 2)
 

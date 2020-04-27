@@ -9,9 +9,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/coap"
 	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/messaging"
 )
 
 var _ coap.Service = (*loggingMiddleware)(nil)
@@ -26,7 +26,7 @@ func LoggingMiddleware(svc coap.Service, logger log.Logger) coap.Service {
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) Publish(msg mainflux.Message) (err error) {
+func (lm *loggingMiddleware) Publish(msg messaging.Message) (err error) {
 	defer func(begin time.Time) {
 		destChannel := msg.Channel
 		if msg.Subtopic != "" {

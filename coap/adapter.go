@@ -13,6 +13,7 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/messaging"
 )
 
 const (
@@ -30,7 +31,7 @@ const (
 // Service specifies coap service API.
 type Service interface {
 	// Publish Messssage
-	Publish(msg mainflux.Message) error
+	Publish(msg messaging.Message) error
 
 	// Subscribes to channel with specified id, subtopic and adds subscription to
 	// service map of subscriptions under given ID.
@@ -44,14 +45,14 @@ var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
 	auth    mainflux.ThingsServiceClient
-	ps      mainflux.PubSub
+	ps      messaging.PubSub
 	log     logger.Logger
 	obs     map[string]*Observer
 	obsLock sync.Mutex
 }
 
 // New instantiates the CoAP adapter implementation.
-func New(ps mainflux.PubSub, log logger.Logger, auth mainflux.ThingsServiceClient, responses <-chan string) Service {
+func New(ps messaging.PubSub, log logger.Logger, auth mainflux.ThingsServiceClient, responses <-chan string) Service {
 	as := &adapterService{
 		auth:    auth,
 		ps:      ps,
@@ -107,7 +108,7 @@ func (svc *adapterService) listenResponses(responses <-chan string) {
 	}
 }
 
-func (svc *adapterService) Publish(msg mainflux.Message) error {
+func (svc *adapterService) Publish(msg messaging.Message) error {
 	return svc.ps.Publish(msg.Channel, msg)
 }
 
@@ -117,7 +118,7 @@ func (svc *adapterService) Subscribe(chanID, subtopic, obsID string, o *Observer
 		subject = fmt.Sprintf("%s.%s", chanID, subtopic)
 	}
 
-	err := svc.ps.Subscribe(subject, func(msg mainflux.Message) error {
+	err := svc.ps.Subscribe(subject, func(msg messaging.Message) error {
 		o.Messages <- msg
 		return nil
 	})

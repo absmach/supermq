@@ -9,8 +9,9 @@ import (
 	"sync"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/mainflux/mainflux"
+
 	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/messaging"
 	broker "github.com/nats-io/nats.go"
 )
 
@@ -25,7 +26,7 @@ var (
 	errEmptyTopic        = errors.New("empty topic")
 )
 
-var _ mainflux.PubSub = (*pubsub)(nil)
+var _ messaging.PubSub = (*pubsub)(nil)
 
 type pubsub struct {
 	conn          *broker.Conn
@@ -42,7 +43,7 @@ type pubsub struct {
 // from ordinary subscribe. For more information, please take a look
 // here: https://docs.nats.io/developing-with-nats/receiving/queues.
 // If the queue is empty, Subscribe will be used.
-func NewPubSub(conn *broker.Conn, queue string, logger log.Logger) mainflux.PubSub {
+func NewPubSub(conn *broker.Conn, queue string, logger log.Logger) messaging.PubSub {
 	return &pubsub{
 		conn:          conn,
 		queue:         queue,
@@ -51,7 +52,7 @@ func NewPubSub(conn *broker.Conn, queue string, logger log.Logger) mainflux.PubS
 	}
 }
 
-func (n *pubsub) Publish(topic string, msg mainflux.Message) error {
+func (n *pubsub) Publish(topic string, msg messaging.Message) error {
 	data, err := proto.Marshal(&msg)
 	if err != nil {
 		return err
@@ -68,7 +69,7 @@ func (n *pubsub) Publish(topic string, msg mainflux.Message) error {
 	return nil
 }
 
-func (n *pubsub) Subscribe(topic string, handler mainflux.MessageHandler) error {
+func (n *pubsub) Subscribe(topic string, handler messaging.MessageHandler) error {
 	if topic == "" {
 		return errEmptyTopic
 	}
@@ -116,9 +117,9 @@ func (n *pubsub) Unsubscribe(topic string) error {
 	return nil
 }
 
-func (n *pubsub) natsHandler(h mainflux.MessageHandler) broker.MsgHandler {
+func (n *pubsub) natsHandler(h messaging.MessageHandler) broker.MsgHandler {
 	return func(m *broker.Msg) {
-		var msg mainflux.Message
+		var msg messaging.Message
 		if err := proto.Unmarshal(m.Data, &msg); err != nil {
 			n.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
 			return

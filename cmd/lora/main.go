@@ -19,7 +19,7 @@ import (
 	"github.com/mainflux/mainflux/lora"
 	"github.com/mainflux/mainflux/lora/api"
 	"github.com/mainflux/mainflux/lora/mqtt"
-	pubsub "github.com/mainflux/mainflux/pubsub/nats"
+	pubsub "github.com/mainflux/mainflux/messaging/nats"
 	"github.com/nats-io/nats.go"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"

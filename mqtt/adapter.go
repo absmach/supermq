@@ -11,8 +11,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/messaging"
 	"github.com/mainflux/mainflux/mqtt/redis"
 	"github.com/mainflux/mproxy/pkg/session"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -36,7 +38,7 @@ var (
 
 // Event implements events.Event interface
 type handler struct {
-	publishers []mainflux.Publisher
+	publishers []messaging.Publisher
 	tc         mainflux.ThingsServiceClient
 	tracer     opentracing.Tracer
 	logger     logger.Logger
@@ -44,7 +46,7 @@ type handler struct {
 }
 
 // New creates new Event entity
-func New(publishers []mainflux.Publisher, tc mainflux.ThingsServiceClient, es redis.EventStore,
+func New(publishers []messaging.Publisher, tc mainflux.ThingsServiceClient, es redis.EventStore,
 	logger logger.Logger, tracer opentracing.Tracer) session.Handler {
 	return &handler{
 		tc:         tc,
@@ -145,17 +147,23 @@ func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 
 	subtopic, err := parseSubtopic(subtopic)
 	if err != nil {
-		h.logger.Info("Error in mqtt publish: " + err.Error())
+		h.logger.Info("Error parsing subtopic: " + err.Error())
 		return
 	}
 
-	msg := mainflux.Message{
+	occured, err := ptypes.TimestampProto(time.Now())
+	if err != nil {
+		h.logger.Info("Error creating message timestamp: " + err.Error())
+		return
+	}
+
+	msg := messaging.Message{
 		Protocol:  protocol,
 		Channel:   chanID,
 		Subtopic:  subtopic,
 		Publisher: c.Username,
 		Payload:   *payload,
-		Occurred:  time.Now().UnixNano(),
+		Occurred:  occured,
 	}
 
 	for _, pub := range h.publishers {

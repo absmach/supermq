@@ -17,8 +17,10 @@ import (
 	kitot "github.com/go-kit/kit/tracing/opentracing"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/mainflux/mainflux"
 	adapter "github.com/mainflux/mainflux/http"
+	"github.com/mainflux/mainflux/messaging"
 	"github.com/mainflux/mainflux/things"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -108,12 +110,17 @@ func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	msg := mainflux.Message{
+	occurred, err := ptypes.TimestampProto(time.Now())
+	if err != nil {
+		return nil, err
+	}
+
+	msg := messaging.Message{
 		Protocol: protocol,
 		Channel:  chanID,
 		Subtopic: subtopic,
 		Payload:  payload,
-		Occurred: time.Now().UnixNano(),
+		Occurred: occurred,
 	}
 
 	req := publishReq{

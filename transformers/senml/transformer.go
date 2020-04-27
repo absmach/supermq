@@ -6,8 +6,8 @@ package senml
 import (
 	"time"
 
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/errors"
+	"github.com/mainflux/mainflux/messaging"
 	"github.com/mainflux/mainflux/transformers"
 	"github.com/mainflux/senml"
 )
@@ -45,7 +45,7 @@ func New(contentFormat string) transformers.Transformer {
 	}
 }
 
-func (t transformer) Transform(msg mainflux.Message) (interface{}, error) {
+func (t transformer) Transform(msg messaging.Message) (interface{}, error) {
 	raw, err := senml.Decode(msg.Payload, t.format)
 	if err != nil {
 		return nil, errors.Wrap(errDecode, err)
