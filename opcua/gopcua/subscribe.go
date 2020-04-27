@@ -233,7 +233,7 @@ func (c client) publish(token string, m message) error {
 		Channel:   chanID,
 		Payload:   payload,
 		Subtopic:  m.NodeID,
-		Occured:   time.Now().UnixNano(),
+		Occurred:  time.Now().UnixNano(),
 	}
 
 	if err := c.publisher.Publish(msg.Channel, msg); err != nil {

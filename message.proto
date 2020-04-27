@@ -11,5 +11,7 @@ message Message {
 	string                    publisher   = 3;
 	string                    protocol    = 4;
 	bytes                     payload     = 5;
-	int64                     occured     = 6;
+	// Timestamp the Message occured in the system.
+	// By the default, occured represents Unix nanoseconds timestamp.
+	int64                     occurred     = 6;
 }

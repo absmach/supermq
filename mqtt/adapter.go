@@ -155,7 +155,7 @@ func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 		Subtopic:  subtopic,
 		Publisher: c.Username,
 		Payload:   *payload,
-		Occured:   time.Now().UnixNano(),
+		Occurred:  time.Now().UnixNano(),
 	}
 
 	for _, pub := range h.publishers {

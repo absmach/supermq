@@ -229,7 +229,7 @@ func receive(svc coap.Service, msg *gocoap.Message) *gocoap.Message {
 		Publisher: publisher,
 		Protocol:  protocol,
 		Payload:   msg.Payload,
-		Occured:   time.Now().UnixNano(),
+		Occurred:  time.Now().UnixNano(),
 	}
 
 	if err := svc.Publish(m); err != nil {

@@ -431,7 +431,7 @@ func (ts *twinsService) publish(twinID *string, err *error, succOp, failOp strin
 		Subtopic:  op,
 		Payload:   pl,
 		Publisher: publisher,
-		Occured:   time.Now().UnixNano(),
+		Occurred:  time.Now().UnixNano(),
 	}
 
 	if err := ts.publisher.Publish(msg.Channel, msg); err != nil {

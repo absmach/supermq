@@ -106,7 +106,7 @@ func (as *adapterService) Publish(ctx context.Context, token string, m Message) 
 		Protocol:  protocol,
 		Channel:   channel,
 		Payload:   payload,
-		Occured:   time.Now().UnixNano(),
+		Occurred:  time.Now().UnixNano(),
 	}
 
 	return as.publisher.Publish(msg.Channel, msg)
