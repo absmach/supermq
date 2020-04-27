@@ -219,7 +219,7 @@ func (c client) publish(token string, m message) error {
 		return errNotFoundNodeID
 	}
 
-	occured, err := ptypes.TimestampProto(time.Now())
+	created, err := ptypes.TimestampProto(time.Now())
 	if err != nil {
 		return nil
 	}
@@ -240,7 +240,7 @@ func (c client) publish(token string, m message) error {
 		Channel:   chanID,
 		Payload:   payload,
 		Subtopic:  m.NodeID,
-		Occurred:  occured,
+		Created:   created,
 	}
 
 	if err := c.publisher.Publish(msg.Channel, msg); err != nil {

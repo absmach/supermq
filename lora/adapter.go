@@ -101,7 +101,7 @@ func (as *adapterService) Publish(ctx context.Context, token string, m Message) 
 		payload = []byte(jo)
 	}
 
-	occured, err := ptypes.TimestampProto(time.Now())
+	created, err := ptypes.TimestampProto(time.Now())
 	if err != nil {
 		return nil
 	}
@@ -112,7 +112,7 @@ func (as *adapterService) Publish(ctx context.Context, token string, m Message) 
 		Protocol:  protocol,
 		Channel:   channel,
 		Payload:   payload,
-		Occurred:  occured,
+		Created:   created,
 	}
 
 	return as.publisher.Publish(msg.Channel, msg)

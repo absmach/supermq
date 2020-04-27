@@ -110,7 +110,7 @@ func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	occurred, err := ptypes.TimestampProto(time.Now())
+	created, err := ptypes.TimestampProto(time.Now())
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 		Channel:  chanID,
 		Subtopic: subtopic,
 		Payload:  payload,
-		Occurred: occurred,
+		Created:  created,
 	}
 
 	req := publishReq{

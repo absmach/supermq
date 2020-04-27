@@ -236,7 +236,7 @@ func receive(svc coap.Service, msg *gocoap.Message) *gocoap.Message {
 		Publisher: publisher,
 		Protocol:  protocol,
 		Payload:   msg.Payload,
-		Occurred:  occured,
+		Created:   occured,
 	}
 
 	if err := svc.Publish(m); err != nil {

@@ -428,7 +428,7 @@ func (ts *twinsService) publish(twinID *string, err *error, succOp, failOp strin
 		pl = []byte(fmt.Sprintf("{\"deleted\":\"%s\"}", *twinID))
 	}
 
-	occured, timeErr := ptypes.TimestampProto(time.Now())
+	created, timeErr := ptypes.TimestampProto(time.Now())
 	if timeErr != nil {
 		return
 	}
@@ -438,7 +438,7 @@ func (ts *twinsService) publish(twinID *string, err *error, succOp, failOp strin
 		Subtopic:  op,
 		Payload:   pl,
 		Publisher: publisher,
-		Occurred:  occured,
+		Created:   created,
 	}
 
 	if err := ts.publisher.Publish(msg.Channel, msg); err != nil {

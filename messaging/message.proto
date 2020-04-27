@@ -12,5 +12,5 @@ message Message {
 	string                    publisher   = 3;
 	string                    protocol    = 4;
 	bytes                     payload     = 5;
-	google.protobuf.Timestamp occurred     = 6;
+	google.protobuf.Timestamp created     = 6;
 }

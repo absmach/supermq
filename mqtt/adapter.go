@@ -151,7 +151,7 @@ func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 		return
 	}
 
-	occured, err := ptypes.TimestampProto(time.Now())
+	created, err := ptypes.TimestampProto(time.Now())
 	if err != nil {
 		h.logger.Info("Error creating message timestamp: " + err.Error())
 		return
@@ -163,7 +163,7 @@ func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 		Subtopic:  subtopic,
 		Publisher: c.Username,
 		Payload:   *payload,
-		Occurred:  occured,
+		Created:   created,
 	}
 
 	for _, pub := range h.publishers {
