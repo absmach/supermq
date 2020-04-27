@@ -73,7 +73,6 @@ func main() {
 		os.Exit(1)
 	}
 	defer nc.Close()
-
 	ps := pubsub.NewPubSub(nc, "", logger)
 
 	addr := fmt.Sprintf("mongodb://%s:%s", cfg.dbHost, cfg.dbPort)

@@ -120,7 +120,6 @@ func main() {
 		os.Exit(1)
 	}
 	defer nc.Close()
-
 	ps := pubsub.NewPubSub(nc, queue, logger)
 
 	ncTracer, ncCloser := initJaeger("twins_nats", cfg.jaegerURL, logger)

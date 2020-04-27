@@ -92,7 +92,6 @@ func main() {
 		os.Exit(1)
 	}
 	defer nc.Close()
-
 	pub := pubsub.NewPublisher(nc)
 
 	thingRM := newRouteMapRepositoy(rmConn, thingsRMPrefix, logger)

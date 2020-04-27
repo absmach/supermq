@@ -136,7 +136,6 @@ func main() {
 		os.Exit(1)
 	}
 	defer nc.Close()
-
 	pub := pubsub.NewPublisher(nc)
 
 	es := mr.NewEventStore(rc, cfg.instance)

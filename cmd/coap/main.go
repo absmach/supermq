@@ -90,7 +90,6 @@ func main() {
 	defer nc.Close()
 
 	ps := pubsub.NewPubSub(nc, "", logger)
-
 	svc := coap.New(ps, logger, cc, respChan)
 
 	svc = api.LoggingMiddleware(svc, logger)
