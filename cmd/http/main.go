@@ -22,9 +22,9 @@ import (
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/logger"
-	nats "github.com/mainflux/mainflux/nats"
+	pubsub "github.com/mainflux/mainflux/pubsub/nats"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
-	broker "github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go"
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"
@@ -79,17 +79,17 @@ func main() {
 	thingsTracer, thingsCloser := initJaeger("things", cfg.jaegerURL, logger)
 	defer thingsCloser.Close()
 
-	nc, err := broker.Connect(cfg.natsURL)
+	nc, err := nats.Connect(cfg.natsURL)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
 		os.Exit(1)
 	}
 	defer nc.Close()
 
-	n := nats.New(nc, "", logger)
+	pub := pubsub.NewPublisher(nc)
 
 	tc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
-	svc := adapter.New(n, tc)
+	svc := adapter.New(pub, tc)
 
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(

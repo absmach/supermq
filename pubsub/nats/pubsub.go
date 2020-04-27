@@ -25,9 +25,9 @@ var (
 	errEmptyTopic        = errors.New("empty topic")
 )
 
-var _ mainflux.PubSub = (*nats)(nil)
+var _ mainflux.PubSub = (*pubsub)(nil)
 
-type nats struct {
+type pubsub struct {
 	conn          *broker.Conn
 	logger        log.Logger
 	mu            sync.Mutex
@@ -35,13 +35,15 @@ type nats struct {
 	subscriptions map[string]*broker.Subscription
 }
 
-// New returns NATS message broker.
-// Paramter queue specifies the queue for the Subscribe method. If queue is specified (is not an empty string),
-// Subscribe method will execute NATS QueueSubscibe which is conceptually different from ordinary subscribe.
-// For more information, please take a look here: https://docs.nats.io/developing-with-nats/receiving/queues.
+// NewPubSub returns NATS message publisher/subscriber.
+// Paramter queue specifies the queue for the Subscribe method.
+// If queue is specified (is not an empty string), Subscribe method
+// will execute NATS QueueSubscibe which is conceptually different
+// from ordinary subscribe. For more information, please take a look
+// here: https://docs.nats.io/developing-with-nats/receiving/queues.
 // If the queue is empty, Subscribe will be used.
-func New(conn *broker.Conn, queue string, logger log.Logger) mainflux.PubSub {
-	return &nats{
+func NewPubSub(conn *broker.Conn, queue string, logger log.Logger) mainflux.PubSub {
+	return &pubsub{
 		conn:          conn,
 		queue:         queue,
 		logger:        logger,
@@ -49,7 +51,7 @@ func New(conn *broker.Conn, queue string, logger log.Logger) mainflux.PubSub {
 	}
 }
 
-func (n *nats) Publish(topic string, msg mainflux.Message) error {
+func (n *pubsub) Publish(topic string, msg mainflux.Message) error {
 	data, err := proto.Marshal(&msg)
 	if err != nil {
 		return err
@@ -66,7 +68,7 @@ func (n *nats) Publish(topic string, msg mainflux.Message) error {
 	return nil
 }
 
-func (n *nats) Subscribe(topic string, handler mainflux.MessageHandler) error {
+func (n *pubsub) Subscribe(topic string, handler mainflux.MessageHandler) error {
 	if topic == "" {
 		return errEmptyTopic
 	}
@@ -92,7 +94,7 @@ func (n *nats) Subscribe(topic string, handler mainflux.MessageHandler) error {
 	return nil
 }
 
-func (n *nats) Unsubscribe(topic string) error {
+func (n *pubsub) Unsubscribe(topic string) error {
 	if topic == "" {
 		return errEmptyTopic
 	}
@@ -114,7 +116,7 @@ func (n *nats) Unsubscribe(topic string) error {
 	return nil
 }
 
-func (n *nats) natsHandler(h mainflux.MessageHandler) broker.MsgHandler {
+func (n *pubsub) natsHandler(h mainflux.MessageHandler) broker.MsgHandler {
 	return func(m *broker.Msg) {
 		var msg mainflux.Message
 		if err := proto.Unmarshal(m.Data, &msg); err != nil {

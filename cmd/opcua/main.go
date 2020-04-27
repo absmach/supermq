@@ -16,13 +16,13 @@ import (
 	r "github.com/go-redis/redis"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/nats"
 	"github.com/mainflux/mainflux/opcua"
 	"github.com/mainflux/mainflux/opcua/api"
 	"github.com/mainflux/mainflux/opcua/db"
 	"github.com/mainflux/mainflux/opcua/gopcua"
 	"github.com/mainflux/mainflux/opcua/redis"
-	broker "github.com/nats-io/nats.go"
+	pubsub "github.com/mainflux/mainflux/pubsub/nats"
+	"github.com/nats-io/nats.go"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
@@ -98,17 +98,17 @@ func main() {
 	esConn := connectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
 	defer esConn.Close()
 
-	nc, err := broker.Connect(cfg.natsURL)
+	nc, err := nats.Connect(cfg.natsURL)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
 		os.Exit(1)
 	}
 	defer nc.Close()
 
-	n := nats.New(nc, "", logger)
+	ps := pubsub.NewPubSub(nc, "", logger)
 
 	ctx := context.Background()
-	sub := gopcua.NewSubscriber(ctx, n, thingRM, chanRM, connRM, logger)
+	sub := gopcua.NewSubscriber(ctx, ps, thingRM, chanRM, connRM, logger)
 	browser := gopcua.NewBrowser(ctx, logger)
 
 	svc := opcua.New(sub, browser, thingRM, chanRM, connRM, cfg.opcuaConfig, logger)

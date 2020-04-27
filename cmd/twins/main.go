@@ -19,14 +19,14 @@ import (
 	"github.com/mainflux/mainflux"
 	authapi "github.com/mainflux/mainflux/authn/api/grpc"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/nats"
+	pubsub "github.com/mainflux/mainflux/pubsub/nats"
 	localusers "github.com/mainflux/mainflux/things/users"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/api"
 	twapi "github.com/mainflux/mainflux/twins/api/http"
 	twmongodb "github.com/mainflux/mainflux/twins/mongodb"
 	"github.com/mainflux/mainflux/twins/uuid"
-	broker "github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go"
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"
@@ -114,14 +114,14 @@ func main() {
 	dbTracer, dbCloser := initJaeger("twins_db", cfg.jaegerURL, logger)
 	defer dbCloser.Close()
 
-	nc, err := broker.Connect(cfg.natsURL)
+	nc, err := nats.Connect(cfg.natsURL)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
 		os.Exit(1)
 	}
 	defer nc.Close()
 
-	n := nats.New(nc, queue, logger)
+	ps := pubsub.NewPubSub(nc, queue, logger)
 
 	ncTracer, ncCloser := initJaeger("twins_nats", cfg.jaegerURL, logger)
 	defer ncCloser.Close()
@@ -129,7 +129,7 @@ func main() {
 	tracer, closer := initJaeger("twins", cfg.jaegerURL, logger)
 	defer closer.Close()
 
-	svc := newService(n, ncTracer, cfg.channelID, auth, dbTracer, db, logger)
+	svc := newService(ps, ncTracer, cfg.channelID, auth, dbTracer, db, logger)
 
 	errs := make(chan error, 2)
 

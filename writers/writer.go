@@ -11,7 +11,7 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/nats"
+	pubsub "github.com/mainflux/mainflux/pubsub/nats"
 	"github.com/mainflux/mainflux/transformers"
 	"github.com/mainflux/mainflux/transformers/senml"
 )
@@ -75,12 +75,12 @@ type subjectsConfig struct {
 func loadSubjectsConfig(subjectsConfigPath string) ([]string, error) {
 	data, err := ioutil.ReadFile(subjectsConfigPath)
 	if err != nil {
-		return []string{nats.SubjectAllChannels}, errors.Wrap(errOpenConfFile, err)
+		return []string{pubsub.SubjectAllChannels}, errors.Wrap(errOpenConfFile, err)
 	}
 
 	var subjectsCfg subjectsConfig
 	if err := toml.Unmarshal(data, &subjectsCfg); err != nil {
-		return []string{nats.SubjectAllChannels}, errors.Wrap(errParseConfFile, err)
+		return []string{pubsub.SubjectAllChannels}, errors.Wrap(errParseConfFile, err)
 	}
 
 	return subjectsCfg.Subjects.List, nil

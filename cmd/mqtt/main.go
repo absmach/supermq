@@ -17,12 +17,12 @@ import (
 	"github.com/mainflux/mainflux/logger"
 	mqtt "github.com/mainflux/mainflux/mqtt"
 	mr "github.com/mainflux/mainflux/mqtt/redis"
-	nats "github.com/mainflux/mainflux/nats"
+	pubsub "github.com/mainflux/mainflux/pubsub/nats"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	mp "github.com/mainflux/mproxy/pkg/mqtt"
 	"github.com/mainflux/mproxy/pkg/session"
 	ws "github.com/mainflux/mproxy/pkg/websocket"
-	broker "github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go"
 	opentracing "github.com/opentracing/opentracing-go"
 	jconfig "github.com/uber/jaeger-client-go/config"
 	"google.golang.org/grpc"
@@ -130,19 +130,19 @@ func main() {
 
 	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
 
-	nc, err := broker.Connect(cfg.natsURL)
+	nc, err := nats.Connect(cfg.natsURL)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
 		os.Exit(1)
 	}
 	defer nc.Close()
 
-	n := nats.New(nc, "", logger)
+	pub := pubsub.NewPublisher(nc)
 
 	es := mr.NewEventStore(rc, cfg.instance)
 
 	// Event handler for MQTT hooks
-	evt := mqtt.New([]mainflux.Publisher{n}, cc, es, logger, tracer)
+	evt := mqtt.New([]mainflux.Publisher{pub}, cc, es, logger, tracer)
 
 	errs := make(chan error, 2)
 
