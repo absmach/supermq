@@ -21,7 +21,7 @@ import (
 	"github.com/mainflux/mainflux/coap"
 	"github.com/mainflux/mainflux/coap/api"
 	logger "github.com/mainflux/mainflux/logger"
-	pubsub "github.com/mainflux/mainflux/messaging/nats"
+	messaging "github.com/mainflux/mainflux/messaging/nats"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	"github.com/nats-io/nats.go"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -89,7 +89,7 @@ func main() {
 	}
 	defer nc.Close()
 
-	ps := pubsub.NewPubSub(nc, "", logger)
+	ps := messaging.NewPubSub(nc, "", logger)
 	svc := coap.New(ps, logger, cc, respChan)
 
 	svc = api.LoggingMiddleware(svc, logger)

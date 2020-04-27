@@ -16,7 +16,7 @@ import (
 	r "github.com/go-redis/redis"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
-	pubsub "github.com/mainflux/mainflux/messaging/nats"
+	messaging "github.com/mainflux/mainflux/messaging/nats"
 	"github.com/mainflux/mainflux/opcua"
 	"github.com/mainflux/mainflux/opcua/api"
 	"github.com/mainflux/mainflux/opcua/db"
@@ -104,7 +104,7 @@ func main() {
 		os.Exit(1)
 	}
 	defer nc.Close()
-	ps := pubsub.NewPubSub(nc, "", logger)
+	ps := messaging.NewPubSub(nc, "", logger)
 
 	ctx := context.Background()
 	sub := gopcua.NewSubscriber(ctx, ps, thingRM, chanRM, connRM, logger)

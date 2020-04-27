@@ -22,7 +22,7 @@ import (
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/logger"
-	pubsub "github.com/mainflux/mainflux/messaging/nats"
+	messaging "github.com/mainflux/mainflux/messaging/nats"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	"github.com/nats-io/nats.go"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -85,7 +85,7 @@ func main() {
 		os.Exit(1)
 	}
 	defer nc.Close()
-	pub := pubsub.NewPublisher(nc)
+	pub := messaging.NewPublisher(nc)
 
 	tc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
 	svc := adapter.New(pub, tc)

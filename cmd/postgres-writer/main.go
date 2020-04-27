@@ -15,7 +15,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
-	pubsub "github.com/mainflux/mainflux/messaging/nats"
+	messaging "github.com/mainflux/mainflux/messaging/nats"
 	"github.com/mainflux/mainflux/transformers/senml"
 	"github.com/mainflux/mainflux/writers"
 	"github.com/mainflux/mainflux/writers/api"
@@ -82,7 +82,7 @@ func main() {
 		os.Exit(1)
 	}
 	defer nc.Close()
-	ps := pubsub.NewPubSub(nc, "", logger)
+	ps := messaging.NewPubSub(nc, "", logger)
 
 	db := connectToDB(cfg.dbConfig, logger)
 	defer db.Close()

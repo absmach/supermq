@@ -19,7 +19,7 @@ import (
 	"github.com/mainflux/mainflux/lora"
 	"github.com/mainflux/mainflux/lora/api"
 	"github.com/mainflux/mainflux/lora/mqtt"
-	pubsub "github.com/mainflux/mainflux/messaging/nats"
+	messaging "github.com/mainflux/mainflux/messaging/nats"
 	"github.com/nats-io/nats.go"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
@@ -92,7 +92,7 @@ func main() {
 		os.Exit(1)
 	}
 	defer nc.Close()
-	pub := pubsub.NewPublisher(nc)
+	pub := messaging.NewPublisher(nc)
 
 	thingRM := newRouteMapRepositoy(rmConn, thingsRMPrefix, logger)
 	chanRM := newRouteMapRepositoy(rmConn, channelsRMPrefix, logger)
