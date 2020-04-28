@@ -44,9 +44,9 @@ type pubsub struct {
 }
 
 // NewPubSub returns NATS message publisher/subscriber.
-// Paramter queue specifies the queue for the Subscribe method.
+// Parameter queue specifies the queue for the Subscribe method.
 // If queue is specified (is not an empty string), Subscribe method
-// will execute NATS QueueSubscibe which is conceptually different
+// will execute NATS QueueSubscribe which is conceptually different
 // from ordinary subscribe. For more information, please take a look
 // here: https://docs.nats.io/developing-with-nats/receiving/queues.
 // If the queue is empty, Subscribe will be used.
@@ -90,16 +90,17 @@ func (ps *pubsub) Subscribe(topic string, handler messaging.MessageHandler) erro
 	if _, ok := ps.subscriptions[topic]; ok {
 		return errAlreadySubscribed
 	}
+	nh := ps.natsHandler(handler)
 	topic = fmt.Sprintf("%s.%s", chansPrefix, topic)
 	if ps.queue != "" {
-		sub, err := ps.conn.QueueSubscribe(topic, ps.queue, ps.natsHandler(handler))
+		sub, err := ps.conn.QueueSubscribe(topic, ps.queue, nh)
 		if err != nil {
 			return err
 		}
 		ps.subscriptions[topic] = sub
 		return nil
 	}
-	sub, err := ps.conn.Subscribe(topic, ps.natsHandler(handler))
+	sub, err := ps.conn.Subscribe(topic, nh)
 	if err != nil {
 		return err
 	}
@@ -141,7 +142,7 @@ func (ps *pubsub) natsHandler(h messaging.MessageHandler) broker.MsgHandler {
 			return
 		}
 		if err := h(msg); err != nil {
-			ps.logger.Warn(fmt.Sprintf("Failed handle Mainflux message: %s", err))
+			ps.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
 		}
 	}
 }

@@ -117,7 +117,7 @@ func (h *handler) AuthSubscribe(c *session.Client, topics *[]string) error {
 	return nil
 }
 
-// Connect - after client sucesfully connected
+// Connect - after client successfully connected
 func (h *handler) Connect(c *session.Client) {
 	if c == nil {
 		h.logger.Error("Nil client connect")
@@ -126,7 +126,7 @@ func (h *handler) Connect(c *session.Client) {
 	h.logger.Info("Connect - client with ID: " + c.ID)
 }
 
-// Publish - after client sucesfully published
+// Publish - after client successfully published
 func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 	if c == nil {
 		h.logger.Error("Nil client publish")
@@ -173,7 +173,7 @@ func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 	}
 }
 
-// Subscribe - after client sucesfully subscribed
+// Subscribe - after client successfully subscribed
 func (h *handler) Subscribe(c *session.Client, topics *[]string) {
 	if c == nil {
 		h.logger.Error("Nil client subscribe")
@@ -188,7 +188,7 @@ func (h *handler) Unsubscribe(c *session.Client, topics *[]string) {
 		h.logger.Error("Nil client unsubscribe")
 		return
 	}
-	h.logger.Info("Unubscribe - client ID: " + c.ID + ", form topics: " + strings.Join(*topics, ","))
+	h.logger.Info("Unsubscribe - client ID: " + c.ID + ", form topics: " + strings.Join(*topics, ","))
 }
 
 // Disconnect - connection with broker or client lost
