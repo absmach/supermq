@@ -49,6 +49,7 @@ func (res updateUserRes) Empty() bool {
 }
 
 type identityRes struct {
+	ID       string                 `json:"id"`
 	Email    string                 `json:"email"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }

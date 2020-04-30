@@ -85,7 +85,11 @@ func userInfoEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		return identityRes{u.Email, u.Metadata}, nil
+		return identityRes{
+			ID:       u.ID,
+			Email:    u.Email,
+			Metadata: u.Metadata,
+		}, nil
 	}
 }
 

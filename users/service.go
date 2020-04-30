@@ -6,6 +6,7 @@ package users
 import (
 	"context"
 
+	"github.com/gofrs/uuid"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/authn"
 	"github.com/mainflux/mainflux/errors"
@@ -31,20 +32,23 @@ var (
 	ErrUserNotFound = errors.New("non-existent user")
 
 	// ErrScanMetadata indicates problem with metadata in db.
-	ErrScanMetadata = errors.New("Failed to scan metadata")
+	ErrScanMetadata = errors.New("failed to scan metadata")
 
 	// ErrMissingEmail indicates missing email for password reset request.
 	ErrMissingEmail = errors.New("missing email for password reset")
 
 	// ErrMissingResetToken indicates malformed or missing reset token
 	// for reseting password.
-	ErrMissingResetToken = errors.New("error missing reset token")
+	ErrMissingResetToken = errors.New("missing reset token")
 
 	// ErrRecoveryToken indicates error in generating password recovery token.
-	ErrRecoveryToken = errors.New("error generating password recovery token")
+	ErrRecoveryToken = errors.New("failed to generate password recovery token")
 
 	// ErrGetToken indicates error in getting signed token.
-	ErrGetToken = errors.New("Get signed token failed")
+	ErrGetToken = errors.New("failed to fetch signed token")
+
+	// ErrGeneratingID indicates error in generating UUID
+	ErrGeneratingID = errors.New("failed to generate user id")
 )
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -106,6 +110,13 @@ func (svc usersService) Register(ctx context.Context, user User) error {
 	}
 
 	user.Password = hash
+
+	id, err := uuid.NewV4()
+	if err != nil {
+		return errors.Wrap(ErrGeneratingID, err)
+	}
+	user.ID = id.String()
+
 	return svc.users.Save(ctx, user)
 }
 
@@ -134,6 +145,7 @@ func (svc usersService) UserInfo(ctx context.Context, token string) (User, error
 	}
 
 	return User{
+		ID:       dbUser.ID,
 		Email:    id,
 		Password: "",
 		Metadata: dbUser.Metadata,

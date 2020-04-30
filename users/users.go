@@ -31,6 +31,7 @@ var (
 // User represents a Mainflux user account. Each user is identified given its
 // email and password.
 type User struct {
+	ID       string
 	Email    string
 	Password string
 	Metadata map[string]interface{}
