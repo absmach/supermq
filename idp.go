@@ -1,7 +1,7 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-package users
+package mainflux
 
 // IdentityProvider specifies an API for generating unique identifiers.
 type IdentityProvider interface {

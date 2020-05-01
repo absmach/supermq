@@ -6,10 +6,10 @@ package users
 import (
 	"context"
 
-	"github.com/gofrs/uuid"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/authn"
 	"github.com/mainflux/mainflux/errors"
+	"github.com/mainflux/mainflux/uuid"
 )
 
 var (
@@ -47,8 +47,8 @@ var (
 	// ErrGetToken indicates error in getting signed token.
 	ErrGetToken = errors.New("failed to fetch signed token")
 
-	// ErrGeneratingID indicates error in generating UUID
-	ErrGeneratingID = errors.New("failed to generate user id")
+	// ErrCreateUser indicates error in creating User
+	ErrCreateUser = errors.New("failed to create user")
 )
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -111,11 +111,11 @@ func (svc usersService) Register(ctx context.Context, user User) error {
 
 	user.Password = hash
 
-	id, err := uuid.NewV4()
+	uid, err := uuid.New().ID()
 	if err != nil {
-		return errors.Wrap(ErrGeneratingID, err)
+		return errors.Wrap(ErrCreateUser, err)
 	}
-	user.ID = id.String()
+	user.ID = uid
 
 	return svc.users.Save(ctx, user)
 }
