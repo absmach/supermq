@@ -3,7 +3,6 @@
 
 syntax = "proto3";
 package messaging;
-import "google/protobuf/timestamp.proto";
 
 // Message represents a message emitted by the Mainflux adapters layer.
 message Message {
@@ -12,5 +11,5 @@ message Message {
 	string                    publisher   = 3;
 	string                    protocol    = 4;
 	bytes                     payload     = 5;
-	google.protobuf.Timestamp created     = 6;
+	int64 created     = 6;
 }
