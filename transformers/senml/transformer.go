@@ -59,7 +59,7 @@ func (t transformer) Transform(msg messaging.Message) (interface{}, error) {
 		// Use reception timestamp if SenML messsage Time is missing
 		t := v.Time
 		if t == 0 {
-			// Convert the timestamp to float64 with nanoseconds precision
+			// Convert the Unix timestamp in nanoseconds to float64
 			t = float64(msg.Created) / float64(1e9)
 		}
 
