@@ -37,7 +37,7 @@ const (
 	defMQTTHost       = "0.0.0.0"
 	defMQTTPort       = "1883"
 	defMQTTTargetHost = "0.0.0.0"
-	defMQTTTargetPort = "1883"
+	defMQTTTargetPort = "1884"
 	envMQTTHost       = "MF_MQTT_ADAPTER_MQTT_HOST"
 	envMQTTPort       = "MF_MQTT_ADAPTER_MQTT_PORT"
 	envMQTTTargetHost = "MF_MQTT_ADAPTER_MQTT_TARGET_HOST"
@@ -136,6 +136,20 @@ func main() {
 		os.Exit(1)
 	}
 	defer pub.Close()
+
+	ps, err := nats.NewPubSub(cfg.natsURL, "mqtt", logger)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
+		os.Exit(1)
+	}
+	defer ps.Close()
+	f, err := mqtt.NewForwarder(fmt.Sprintf("%s:%s", cfg.mqttHost, cfg.mqttPort))
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to create MQTT forwarder: %s", err))
+		os.Exit(1)
+	}
+	ps.Subscribe(nats.SubjectAllChannels, f)
+	defer ps.Unsubscribe(nats.SubjectAllChannels)
 
 	es := mr.NewEventStore(rc, cfg.instance)
 

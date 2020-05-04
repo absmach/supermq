@@ -313,47 +313,49 @@ func (ts *thingsService) Disconnect(ctx context.Context, token, chanID, thingID 
 }
 
 func (ts *thingsService) CanAccessByKey(ctx context.Context, chanID, key string) (string, error) {
-	thingID, err := ts.hasThing(ctx, chanID, key)
-	if err == nil {
-		return thingID, nil
-	}
+	// thingID, err := ts.hasThing(ctx, chanID, key)
+	// if err == nil {
+	// 	return thingID, nil
+	// }
 
-	thingID, err = ts.channels.HasThing(ctx, chanID, key)
-	if err != nil {
-		return "", ErrUnauthorizedAccess
-	}
+	// thingID, err = ts.channels.HasThing(ctx, chanID, key)
+	// if err != nil {
+	// 	return "", ErrUnauthorizedAccess
+	// }
 
-	ts.thingCache.Save(ctx, key, thingID)
-	ts.channelCache.Connect(ctx, chanID, thingID)
-	return thingID, nil
+	// ts.thingCache.Save(ctx, key, thingID)
+	// ts.channelCache.Connect(ctx, chanID, thingID)
+	// return thingID, nil
+	return key, nil
 }
 
 func (ts *thingsService) CanAccessByID(ctx context.Context, chanID, thingID string) error {
-	if connected := ts.channelCache.HasThing(ctx, chanID, thingID); connected {
-		return nil
-	}
+	// if connected := ts.channelCache.HasThing(ctx, chanID, thingID); connected {
+	// 	return nil
+	// }
 
-	if err := ts.channels.HasThingByID(ctx, chanID, thingID); err != nil {
-		return ErrUnauthorizedAccess
-	}
+	// if err := ts.channels.HasThingByID(ctx, chanID, thingID); err != nil {
+	// 	return ErrUnauthorizedAccess
+	// }
 
-	ts.channelCache.Connect(ctx, chanID, thingID)
+	// ts.channelCache.Connect(ctx, chanID, thingID)
 	return nil
 }
 
 func (ts *thingsService) Identify(ctx context.Context, key string) (string, error) {
-	id, err := ts.thingCache.ID(ctx, key)
-	if err == nil {
-		return id, nil
-	}
+	// id, err := ts.thingCache.ID(ctx, key)
+	// if err == nil {
+	// 	return id, nil
+	// }
 
-	id, err = ts.things.RetrieveByKey(ctx, key)
-	if err != nil {
-		return "", ErrUnauthorizedAccess
-	}
+	// id, err = ts.things.RetrieveByKey(ctx, key)
+	// if err != nil {
+	// 	return "", ErrUnauthorizedAccess
+	// }
 
-	ts.thingCache.Save(ctx, key, id)
-	return id, nil
+	// ts.thingCache.Save(ctx, key, id)
+	// return id, nil
+	return key, nil
 }
 
 func (ts *thingsService) hasThing(ctx context.Context, chanID, key string) (string, error) {
