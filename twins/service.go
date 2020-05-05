@@ -374,7 +374,7 @@ func prepareState(st *State, tw *Twin, rec senml.Record, msg *messaging.Message)
 				}
 			}
 			val := findValue(rec)
-			st.Payload[attr.Name] = val
+			st.Payload[getKeyName(attr)] = val
 			break
 		}
 	}
@@ -401,9 +401,17 @@ func findValue(rec senml.Record) interface{} {
 	return nil
 }
 
-func findAttribute(name string, attrs []Attribute) (idx int) {
+func getKeyName(attr Attribute) string {
+	keyName := attr.Name
+	if len(attr.Subtopic) > 0 {
+		keyName = attr.Name + "/" + attr.Subtopic
+	}
+	return keyName
+}
+
+func findAttribute(payloadKey string, attrs []Attribute) (idx int) {
 	for idx, attr := range attrs {
-		if attr.Name == name {
+		if getKeyName(attr) == payloadKey {
 			return idx
 		}
 	}
