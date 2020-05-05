@@ -15,7 +15,7 @@ const (
 	id       = "mqtt-publisher"
 )
 
-var errConnect = errors.New("unable to connect to MQTT broker")
+var errConnect = errors.New("failed to connect to MQTT broker")
 
 func newClient(address string, timeout time.Duration) (mqtt.Client, error) {
 	opts := mqtt.NewClientOptions().
@@ -26,12 +26,13 @@ func newClient(address string, timeout time.Duration) (mqtt.Client, error) {
 		SetCleanSession(false)
 	client := mqtt.NewClient(opts)
 	tkn := client.Connect()
-	to := tkn.WaitTimeout(timeout)
-	if to && tkn.Error() != nil {
+	ok := tkn.WaitTimeout(timeout)
+	if ok && tkn.Error() != nil {
 		return nil, tkn.Error()
 	}
-	if !to {
+	if !ok {
 		return nil, errConnect
 	}
+
 	return client, nil
 }

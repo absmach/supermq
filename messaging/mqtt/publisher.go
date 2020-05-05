@@ -4,6 +4,7 @@
 package mqtt
 
 import (
+	"errors"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -11,6 +12,8 @@ import (
 )
 
 var _ messaging.Publisher = (*publisher)(nil)
+
+var errPublish = errors.New("failed to publish")
 
 type publisher struct {
 	client  mqtt.Client
@@ -36,8 +39,13 @@ func (pub publisher) Publish(topic string, msg messaging.Message) error {
 		return nil
 	}
 	tkn := pub.client.Publish(topic, 1, false, msg.Payload)
-	if tkn.WaitTimeout(pub.timeout) && tkn.Error() != nil {
+	ok := tkn.WaitTimeout(pub.timeout)
+	if ok && tkn.Error() != nil {
 		return tkn.Error()
 	}
+	if !ok {
+		return errPublish
+	}
+
 	return nil
 }

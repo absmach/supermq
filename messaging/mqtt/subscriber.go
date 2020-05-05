@@ -4,6 +4,7 @@
 package mqtt
 
 import (
+	"errors"
 	"fmt"
 
 	"time"
@@ -15,6 +16,11 @@ import (
 )
 
 var _ messaging.Publisher = (*publisher)(nil)
+
+var (
+	errSubscribe   = errors.New("failed to subscribe")
+	errUnsubscribe = errors.New("failed to unsubscribe")
+)
 
 type subscriber struct {
 	client  mqtt.Client
@@ -39,16 +45,24 @@ func NewSubscriber(address string, timeout time.Duration, logger log.Logger) (me
 
 func (sub subscriber) Subscribe(topic string, handler messaging.MessageHandler) error {
 	tkn := sub.client.Subscribe(topic, 2, sub.mqttHandler(handler))
-	if tkn.WaitTimeout(sub.timeout) && tkn.Error() != nil {
+	ok := tkn.WaitTimeout(sub.timeout)
+	if ok && tkn.Error() != nil {
 		return tkn.Error()
+	}
+	if !ok {
+		return errSubscribe
 	}
 	return nil
 }
 
 func (sub subscriber) Unsubscribe(topic string) error {
 	tkn := sub.client.Unsubscribe(topic)
-	if tkn.WaitTimeout(sub.timeout) && tkn.Error() != nil {
+	ok := tkn.WaitTimeout(sub.timeout)
+	if ok && tkn.Error() != nil {
 		return tkn.Error()
+	}
+	if !ok {
+		return errUnsubscribe
 	}
 	return nil
 }
