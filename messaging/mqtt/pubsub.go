@@ -11,10 +11,8 @@ import (
 )
 
 const (
-	channels = "channels"
-	messages = "messages"
 	protocol = "mqtt"
-	id       = "mqtt-adapter"
+	id       = "mqtt-publisher"
 )
 
 var errConnect = errors.New("unable to connect to MQTT broker")

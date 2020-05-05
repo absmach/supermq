@@ -6,22 +6,14 @@ package mqtt
 import (
 	"fmt"
 	"strings"
-	"time"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/mainflux/mainflux/messaging"
 )
 
 const (
 	channels = "channels"
 	messages = "messages"
-	id       = "mqtt-adapter"
 )
-
-type forwarder struct {
-	client  mqtt.Client
-	timeout time.Duration
-}
 
 // NewForwarder returns a new MQTT message forwarder.
 func NewForwarder(publisher messaging.Publisher) messaging.MessageHandler {
