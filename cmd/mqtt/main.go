@@ -16,8 +16,10 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/messaging"
+	mqttpub "github.com/mainflux/mainflux/messaging/mqtt"
 	"github.com/mainflux/mainflux/messaging/nats"
 	mqtt "github.com/mainflux/mainflux/mqtt"
+
 	mr "github.com/mainflux/mainflux/mqtt/redis"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	mp "github.com/mainflux/mproxy/pkg/mqtt"
@@ -140,12 +142,13 @@ func main() {
 		os.Exit(1)
 	}
 	defer ps.Close()
-	f, err := mqtt.NewForwarder(fmt.Sprintf("%s:%s", cfg.mqttTargetHost, cfg.mqttTargetPort), cfg.mqttForwarderTimeout)
+	mqttPub, err := mqttpub.NewPublisher(fmt.Sprintf("%s:%s", cfg.mqttTargetHost, cfg.mqttTargetPort), cfg.mqttForwarderTimeout)
+
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to create MQTT forwarder: %s", err))
 		os.Exit(1)
 	}
-	ps.Subscribe(nats.SubjectAllChannels, f)
+	ps.Subscribe(nats.SubjectAllChannels, mqtt.NewForwarder(mqttPub))
 	defer ps.Unsubscribe(nats.SubjectAllChannels)
 
 	pub, err := nats.NewPublisher(cfg.natsURL)
