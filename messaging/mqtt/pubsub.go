@@ -13,6 +13,7 @@ import (
 const (
 	protocol = "mqtt"
 	id       = "mqtt-publisher"
+	qos      = 1
 )
 
 var errConnect = errors.New("failed to connect to MQTT broker")

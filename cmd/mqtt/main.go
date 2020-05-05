@@ -143,13 +143,14 @@ func main() {
 	}
 	defer ps.Close()
 	mqttPub, err := mqttpub.NewPublisher(fmt.Sprintf("%s:%s", cfg.mqttTargetHost, cfg.mqttTargetPort), cfg.mqttForwarderTimeout)
-
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to create MQTT forwarder: %s", err))
+		logger.Error(fmt.Sprintf("Failed to create MQTT publisher: %s", err))
 		os.Exit(1)
 	}
-	ps.Subscribe(nats.SubjectAllChannels, mqtt.NewForwarder(mqttPub))
-	defer ps.Unsubscribe(nats.SubjectAllChannels)
+	if err := mqtt.Forward(nats.SubjectAllChannels, ps, mqttPub); err != nil {
+		logger.Error(fmt.Sprintf("Failed to forward NATS messages: %s", err))
+		os.Exit(1)
+	}
 
 	pub, err := nats.NewPublisher(cfg.natsURL)
 	if err != nil {

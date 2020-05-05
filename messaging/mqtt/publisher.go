@@ -35,10 +35,7 @@ func NewPublisher(address string, timeout time.Duration) (messaging.Publisher, e
 }
 
 func (pub publisher) Publish(topic string, msg messaging.Message) error {
-	if msg.Protocol == protocol {
-		return nil
-	}
-	tkn := pub.client.Publish(topic, 1, false, msg.Payload)
+	tkn := pub.client.Publish(topic, qos, false, msg.Payload)
 	ok := tkn.WaitTimeout(pub.timeout)
 	if ok && tkn.Error() != nil {
 		return tkn.Error()

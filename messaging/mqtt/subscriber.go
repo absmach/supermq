@@ -44,7 +44,7 @@ func NewSubscriber(address string, timeout time.Duration, logger log.Logger) (me
 }
 
 func (sub subscriber) Subscribe(topic string, handler messaging.MessageHandler) error {
-	tkn := sub.client.Subscribe(topic, 2, sub.mqttHandler(handler))
+	tkn := sub.client.Subscribe(topic, qos, sub.mqttHandler(handler))
 	ok := tkn.WaitTimeout(sub.timeout)
 	if ok && tkn.Error() != nil {
 		return tkn.Error()
