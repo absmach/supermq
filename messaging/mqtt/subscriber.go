@@ -4,13 +4,12 @@
 package mqtt
 
 import (
-	"errors"
 	"fmt"
-
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gogo/protobuf/proto"
+	"github.com/mainflux/mainflux/errors"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/messaging"
 )
