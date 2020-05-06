@@ -36,6 +36,9 @@ func NewPublisher(address string, timeout time.Duration) (messaging.Publisher, e
 
 func (pub publisher) Publish(topic string, msg messaging.Message) error {
 	token := pub.client.Publish(topic, qos, false, msg.Payload)
+	if token.Error() != nil {
+		return token.Error()
+	}
 	ok := token.WaitTimeout(pub.timeout)
 	if ok && token.Error() != nil {
 		return token.Error()
@@ -43,6 +46,5 @@ func (pub publisher) Publish(topic string, msg messaging.Message) error {
 	if !ok {
 		return errPublish
 	}
-
 	return nil
 }

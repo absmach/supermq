@@ -146,7 +146,7 @@ func main() {
 		logger.Error(fmt.Sprintf("Failed to create MQTT publisher: %s", err))
 		os.Exit(1)
 	}
-	fwd := mqtt.NewForwarder(nats.SubjectAllChannels)
+	fwd := mqtt.NewForwarder(nats.SubjectAllChannels, logger)
 	if err := fwd.Forward(nps, mp); err != nil {
 		logger.Error(fmt.Sprintf("Failed to forward NATS messages: %s", err))
 		os.Exit(1)

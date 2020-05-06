@@ -4,8 +4,10 @@
 package mqtt
 
 import (
+	"fmt"
 	"strings"
 
+	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/messaging"
 )
 
@@ -22,19 +24,23 @@ type Forwarder interface {
 }
 
 type forwarder struct {
-	topic string
+	topic  string
+	logger log.Logger
 }
 
 // NewForwarder returns new Forwarder implementation.
-func NewForwarder(topic string) Forwarder {
-	return forwarder{topic}
+func NewForwarder(topic string, logger log.Logger) Forwarder {
+	return forwarder{
+		topic:  topic,
+		logger: logger,
+	}
 }
 
 func (f forwarder) Forward(sub messaging.Subscriber, pub messaging.Publisher) error {
-	return sub.Subscribe(f.topic, handle(pub))
+	return sub.Subscribe(f.topic, f.handle(pub))
 }
 
-func handle(pub messaging.Publisher) messaging.MessageHandler {
+func (f forwarder) handle(pub messaging.Publisher) messaging.MessageHandler {
 	return func(msg messaging.Message) error {
 		if msg.Protocol == protocol {
 			return nil
@@ -45,6 +51,11 @@ func handle(pub messaging.Publisher) messaging.MessageHandler {
 		if msg.Subtopic != "" {
 			topic += "/" + strings.ReplaceAll(msg.Subtopic, ".", "/")
 		}
-		return pub.Publish(topic, msg)
+		go func() {
+			if err := pub.Publish(topic, msg); err != nil {
+				f.logger.Warn(fmt.Sprintf("Failed to forward message: %s", err))
+			}
+		}()
+		return nil
 	}
 }
