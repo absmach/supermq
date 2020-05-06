@@ -41,11 +41,10 @@ func handle(pub messaging.Publisher) messaging.MessageHandler {
 		}
 		// Use concatenation instead of mft.Sprintf for the
 		// sake of simplicity and performance.
-		topic := channels + "." + msg.Channel + "." + messages
+		topic := channels + "/" + msg.Channel + "/" + messages
 		if msg.Subtopic != "" {
-			topic += "." + msg.Subtopic
+			topic += "/" + strings.ReplaceAll(msg.Subtopic, ".", "/")
 		}
-		topic = strings.ReplaceAll(topic, ".", "/")
 		return pub.Publish(topic, msg)
 	}
 }
