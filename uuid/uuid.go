@@ -13,16 +13,16 @@ import (
 // ErrGeneratingID indicates error in generating UUID
 var ErrGeneratingID = errors.New("generating id failed")
 
-var _ mainflux.IdentityProvider = (*uuidIdentityProvider)(nil)
+var _ mainflux.UUIDProvider = (*uuidProvider)(nil)
 
-type uuidIdentityProvider struct{}
+type uuidProvider struct{}
 
 // New instantiates a UUID identity provider.
-func New() mainflux.IdentityProvider {
-	return &uuidIdentityProvider{}
+func New() mainflux.UUIDProvider {
+	return &uuidProvider{}
 }
 
-func (idp *uuidIdentityProvider) ID() (string, error) {
+func (idp *uuidProvider) ID() (string, error) {
 	id, err := uuid.NewV4()
 	if err != nil {
 		return "", errors.Wrap(ErrGeneratingID, err)

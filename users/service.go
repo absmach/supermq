@@ -121,7 +121,7 @@ func (svc usersService) Register(ctx context.Context, user User) error {
 }
 
 func (svc usersService) Login(ctx context.Context, user User) (string, error) {
-	dbUser, err := svc.users.RetrieveByID(ctx, user.Email)
+	dbUser, err := svc.users.RetrieveByEmail(ctx, user.Email)
 	if err != nil {
 		return "", errors.Wrap(ErrUnauthorizedAccess, err)
 	}
@@ -134,19 +134,19 @@ func (svc usersService) Login(ctx context.Context, user User) (string, error) {
 }
 
 func (svc usersService) UserInfo(ctx context.Context, token string) (User, error) {
-	id, err := svc.identify(ctx, token)
+	email, err := svc.identify(ctx, token)
 	if err != nil {
 		return User{}, err
 	}
 
-	dbUser, err := svc.users.RetrieveByID(ctx, id)
+	dbUser, err := svc.users.RetrieveByEmail(ctx, email)
 	if err != nil {
 		return User{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
 	return User{
 		ID:       dbUser.ID,
-		Email:    id,
+		Email:    email,
 		Password: "",
 		Metadata: dbUser.Metadata,
 	}, nil
@@ -167,7 +167,7 @@ func (svc usersService) UpdateUser(ctx context.Context, token string, u User) er
 }
 
 func (svc usersService) GenerateResetToken(ctx context.Context, email, host string) error {
-	user, err := svc.users.RetrieveByID(ctx, email)
+	user, err := svc.users.RetrieveByEmail(ctx, email)
 	if err != nil || user.Email == "" {
 		return ErrUserNotFound
 	}
@@ -185,7 +185,7 @@ func (svc usersService) ResetPassword(ctx context.Context, resetToken, password 
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	u, err := svc.users.RetrieveByID(ctx, email)
+	u, err := svc.users.RetrieveByEmail(ctx, email)
 	if err != nil || u.Email == "" {
 		return ErrUserNotFound
 	}
@@ -211,7 +211,7 @@ func (svc usersService) ChangePassword(ctx context.Context, authToken, password,
 		return ErrUnauthorizedAccess
 	}
 
-	u, err = svc.users.RetrieveByID(ctx, email)
+	u, err = svc.users.RetrieveByEmail(ctx, email)
 	if err != nil || u.Email == "" {
 		return ErrUserNotFound
 	}

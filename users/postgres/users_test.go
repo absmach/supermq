@@ -83,7 +83,7 @@ func TestSingleUserRetrieval(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		_, err := repo.RetrieveByID(context.Background(), tc.email)
+		_, err := repo.RetrieveByEmail(context.Background(), tc.email)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }

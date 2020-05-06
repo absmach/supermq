@@ -70,7 +70,7 @@ func (ur userRepository) UpdateUser(ctx context.Context, user users.User) error 
 	return nil
 }
 
-func (ur userRepository) RetrieveByID(ctx context.Context, email string) (users.User, error) {
+func (ur userRepository) RetrieveByEmail(ctx context.Context, email string) (users.User, error) {
 	q := `SELECT id, password, metadata FROM users WHERE email = $1`
 
 	dbu := dbUser{
