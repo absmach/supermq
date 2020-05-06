@@ -17,7 +17,7 @@ var _ mainflux.UUIDProvider = (*uuidProvider)(nil)
 
 type uuidProvider struct{}
 
-// New instantiates a UUID identity provider.
+// New instantiates a UUID provider.
 func New() mainflux.UUIDProvider {
 	return &uuidProvider{}
 }
