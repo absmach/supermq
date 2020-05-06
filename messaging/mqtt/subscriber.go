@@ -43,10 +43,10 @@ func NewSubscriber(address string, timeout time.Duration, logger log.Logger) (me
 }
 
 func (sub subscriber) Subscribe(topic string, handler messaging.MessageHandler) error {
-	tkn := sub.client.Subscribe(topic, qos, sub.mqttHandler(handler))
-	ok := tkn.WaitTimeout(sub.timeout)
-	if ok && tkn.Error() != nil {
-		return tkn.Error()
+	token := sub.client.Subscribe(topic, qos, sub.mqttHandler(handler))
+	ok := token.WaitTimeout(sub.timeout)
+	if ok && token.Error() != nil {
+		return token.Error()
 	}
 	if !ok {
 		return errSubscribe
@@ -55,10 +55,10 @@ func (sub subscriber) Subscribe(topic string, handler messaging.MessageHandler) 
 }
 
 func (sub subscriber) Unsubscribe(topic string) error {
-	tkn := sub.client.Unsubscribe(topic)
-	ok := tkn.WaitTimeout(sub.timeout)
-	if ok && tkn.Error() != nil {
-		return tkn.Error()
+	token := sub.client.Unsubscribe(topic)
+	ok := token.WaitTimeout(sub.timeout)
+	if ok && token.Error() != nil {
+		return token.Error()
 	}
 	if !ok {
 		return errUnsubscribe

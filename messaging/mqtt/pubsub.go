@@ -26,10 +26,10 @@ func newClient(address string, timeout time.Duration) (mqtt.Client, error) {
 		SetClientID(id).
 		SetCleanSession(false)
 	client := mqtt.NewClient(opts)
-	tkn := client.Connect()
-	ok := tkn.WaitTimeout(timeout)
-	if ok && tkn.Error() != nil {
-		return nil, tkn.Error()
+	token := client.Connect()
+	ok := token.WaitTimeout(timeout)
+	if ok && token.Error() != nil {
+		return nil, token.Error()
 	}
 	if !ok {
 		return nil, errConnect
