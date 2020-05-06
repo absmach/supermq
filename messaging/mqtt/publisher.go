@@ -13,7 +13,7 @@ import (
 
 var _ messaging.Publisher = (*publisher)(nil)
 
-var errPublish = errors.New("failed to publish")
+var errPublishTimeout = errors.New("failed to publish due to timeout reached")
 
 type publisher struct {
 	client  mqtt.Client
@@ -44,7 +44,7 @@ func (pub publisher) Publish(topic string, msg messaging.Message) error {
 		return token.Error()
 	}
 	if !ok {
-		return errPublish
+		return errPublishTimeout
 	}
 	return nil
 }

@@ -17,8 +17,8 @@ import (
 var _ messaging.Publisher = (*publisher)(nil)
 
 var (
-	errSubscribe   = errors.New("failed to subscribe")
-	errUnsubscribe = errors.New("failed to unsubscribe")
+	errSubscribeTimeout   = errors.New("failed to subscribe due to timeout reached")
+	errUnsubscribeTimeout = errors.New("failed to unsubscribe due to timeout reached")
 )
 
 type subscriber struct {
@@ -52,7 +52,7 @@ func (sub subscriber) Subscribe(topic string, handler messaging.MessageHandler) 
 		return token.Error()
 	}
 	if !ok {
-		return errSubscribe
+		return errSubscribeTimeout
 	}
 	return nil
 }
@@ -67,7 +67,7 @@ func (sub subscriber) Unsubscribe(topic string) error {
 		return token.Error()
 	}
 	if !ok {
-		return errUnsubscribe
+		return errUnsubscribeTimeout
 	}
 	return nil
 }
