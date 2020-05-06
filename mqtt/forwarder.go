@@ -4,7 +4,6 @@
 package mqtt
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/mainflux/mainflux/messaging"
@@ -15,10 +14,24 @@ const (
 	messages = "messages"
 )
 
-// Forward subscribes to the Subscriber and publishes all
-// the messages from the given topic using provided Publisher.
-func Forward(topic string, sub messaging.Subscriber, pub messaging.Publisher) error {
-	return sub.Subscribe(topic, handle(pub))
+// Forwarder specifies MQTT forwarder interface API.
+type Forwarder interface {
+	// Forward subscribes to the Subscriber and
+	// publishes messages using provided Publisher.
+	Forward(sub messaging.Subscriber, pub messaging.Publisher) error
+}
+
+type forwarder struct {
+	topic string
+}
+
+// NewForwarder returns new Forwarder implementation.
+func NewForwarder(topic string) Forwarder {
+	return forwarder{topic}
+}
+
+func (f forwarder) Forward(sub messaging.Subscriber, pub messaging.Publisher) error {
+	return sub.Subscribe(f.topic, handle(pub))
 }
 
 func handle(pub messaging.Publisher) messaging.MessageHandler {
@@ -26,7 +39,12 @@ func handle(pub messaging.Publisher) messaging.MessageHandler {
 		if msg.Protocol == protocol {
 			return nil
 		}
-		topic := fmt.Sprintf("%s.%s.%s.%s", channels, msg.Channel, messages, msg.Subtopic)
+		// Use concatenation instead of mft.Sprintf for the
+		// sake of simplicity and performance.
+		topic := channels + "." + msg.Channel + "." + messages
+		if msg.Subtopic != "" {
+			topic += "." + msg.Subtopic
+		}
 		topic = strings.ReplaceAll(topic, ".", "/")
 		return pub.Publish(topic, msg)
 	}
