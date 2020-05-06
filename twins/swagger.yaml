@@ -1,12 +1,12 @@
-swagger: "2.0"
+swagger: '2.0'
 info:
   title: Mainflux twins service
   description: HTTP API for managing digital twins and their states.
-  version: "1.0.0"
+  version: '1.0.0'
 consumes:
-  - "application/json"
+  - 'application/json'
 produces:
-  - "application/json"
+  - 'application/json'
 paths:
   /twins:
     post:
@@ -17,12 +17,12 @@ paths:
       tags:
         - twins
       parameters:
-        - $ref: "#/parameters/Authorization"
+        - $ref: '#/parameters/Authorization'
         - name: twin
           description: JSON-formatted document describing the new twin.
           in: body
           schema:
-            $ref: "#/definitions/CreateTwinReq"
+            $ref: '#/definitions/TwinReq'
           required: true
       responses:
         201:
@@ -38,7 +38,7 @@ paths:
         415:
           description: Missing or invalid content type.
         500:
-          $ref: "#/responses/ServiceError"
+          $ref: '#/responses/ServiceError'
 
     get:
       summary: Retrieves managed twins
@@ -48,21 +48,114 @@ paths:
       tags:
         - twins
       parameters:
-        - $ref: "#/parameters/Authorization"
-        - $ref: "#/parameters/Limit"
-        - $ref: "#/parameters/Offset"
-        - $ref: "#/parameters/Metadata"
+        - $ref: '#/parameters/Authorization'
+        - $ref: '#/parameters/Limit'
+        - $ref: '#/parameters/Offset'
+        - $ref: '#/parameters/Metadata'
       responses:
         200:
           description: Data retrieved.
           schema:
-            $ref: "#/definitions/TwinsPage"
+            $ref: '#/definitions/TwinsPage'
         400:
           description: Failed due to malformed query parameters.
         403:
           description: Missing or invalid access token provided.
         500:
-          $ref: "#/responses/ServiceError"
+          $ref: '#/responses/ServiceError'
+  
+  /twins/{twinID}:
+    get:
+      summary: Retrieves twin info
+      tags:
+        - twins
+      parameters:
+        - $ref: '#/parameters/Authorization'
+        - $ref: '#/parameters/TwinID'
+      responses:
+        200:
+          description: Data retrieved.
+          schema:
+            $ref: '#/definitions/TwinRes'
+        403:
+          description: Missing or invalid access token provided.
+        404:
+          description: Thing does not exist.
+        500:
+          $ref: '#/responses/ServiceError'
+    put:
+      summary: Updates twin info
+      description: |
+        Update is performed by replacing the current resource data with values
+        provided in a request payload. Note that the twin's ID cannot be changed.
+      tags:
+        - twins
+      parameters:
+        - $ref: '#/parameters/Authorization'
+        - $ref: '#/parameters/TwinID'
+        - name: twin
+          description: JSON-formatted document describing the updated thing.
+          in: body
+          schema:
+            $ref: '#/definitions/TwinReq'
+          required: true
+      responses:
+        200:
+          description: Twin updated.
+        400:
+          description: Failed due to malformed JSON.
+        403:
+          description: Missing or invalid access token provided.
+        404:
+          description: Thing does not exist.
+        415:
+          description: Missing or invalid content type.
+        500:
+          $ref: '#/responses/ServiceError'
+    delete:
+      summary: Removes a twin
+      description: Removes a twin.
+      tags:
+        - twins
+      parameters:
+        - $ref: '#/parameters/Authorization'
+        - $ref: '#/parameters/TwinID'
+      responses:
+        204:
+          description: Thing removed.
+        400:
+          description: Failed due to malformed thing's ID.
+        403:
+          description: Missing or invalid access token provided.
+        500:
+          $ref: '#/responses/ServiceError'
+  
+  /states/{twinID}:
+    get:
+      summary: Retrieves states of twin with id twinID
+      description: |
+        Retrieves a list of states. Due to performance concerns, data
+        is retrieved in subsets.
+      tags:
+        - states
+      parameters:
+        - $ref: '#/parameters/TwinID'
+        - $ref: '#/parameters/Authorization'
+        - $ref: '#/parameters/Limit'
+        - $ref: '#/parameters/Offset'
+        - $ref: '#/parameters/Metadata'
+      responses:
+        200:
+          description: Data retrieved.
+          schema:
+            $ref: '#/definitions/StatesPage'
+        400:
+          description: Failed due to malformed query parameters.
+        403:
+          description: Missing or invalid access token provided.
+        500:
+          $ref: '#/responses/ServiceError'  
+
 responses:
   ServiceError:
     description: Unexpected server-side error occurred.
@@ -100,6 +193,13 @@ parameters:
     type: string
     minimum: 0
     required: false
+  TwinID:
+    name: twinID
+    description: Unique twin identifier.
+    in: path
+    type: string
+    minimum: 1
+    required: true
 
 definitions:
   Definition:
@@ -129,7 +229,7 @@ definitions:
       persist_state:
         type: boolean
         description: Trigger state creation based on the attribute.
-  CreateTwinReq:
+  TwinReq:
     type: object
     properties:
       name:
@@ -180,7 +280,43 @@ definitions:
         minItems: 0
         uniqueItems: true
         items:
-          $ref: "#/definitions/TwinRes"
+          $ref: '#/definitions/TwinRes'
+      total:
+        type: integer
+        description: Total number of items.
+      offset:
+        type: integer
+        description: Number of items to skip during retrieval.
+      limit:
+        type: integer
+        description: Maximum number of items to return in one page.
+    required:
+      - twins
+  StateRes:
+    type: object
+    properties:
+      twin_id:
+        type: string
+        description: ID of twin state belongs to.
+      id:
+        type: number
+        description: State position in a time row of states.
+      created:
+        type: string
+        format: date
+        description: State creation date.
+      payload:
+        type: object
+        description: Object-encoded states's payload.
+  StatesPage:
+    type: object
+    properties:
+      twins:
+        type: array
+        minItems: 0
+        uniqueItems: true
+        items:
+          $ref: '#/definitions/StateRes' 
       total:
         type: integer
         description: Total number of items.
