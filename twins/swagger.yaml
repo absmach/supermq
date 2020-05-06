@@ -1,0 +1,93 @@
+swagger: "2.0"
+info:
+  title: Mainflux twins service
+  description: HTTP API for managing digital twins and their states.
+  version: "1.0.0"
+consumes:
+  - "application/json"
+produces:
+  - "application/json"
+paths:
+  /twins:
+    post:
+      summary: Adds new twin
+      description: |
+        Adds new twin to the list of twins owned by user identified using
+        the provided access token.
+      tags:
+        - twins
+      parameters:
+        - $ref: "#/parameters/Authorization"
+        - name: twin
+          description: JSON-formatted document describing the new twin.
+          in: body
+          schema:
+            $ref: "#/definitions/CreateTwinReq"
+          required: true
+      responses:
+        201:
+          description: Twin registered.
+          headers:
+            Location:
+              type: string
+              description: Created twin's relative URL (i.e. /twins/{twinID}).
+        400:
+          description: Failed due to malformed JSON.
+        403:
+          description: Missing or invalid access token provided.
+        415:
+          description: Missing or invalid content type.
+        500:
+          $ref: "#/responses/ServiceError"
+
+responses:
+  ServiceError:
+    description: Unexpected server-side error occurred.
+
+parameters:
+  Authorization:
+    name: Authorization
+    description: User's access token.
+    in: header
+    type: string
+    required: true
+
+definitions:
+  CreateTwinReq:
+    type: object
+    properties:
+      name:
+        type: string
+        description: Free-form twin name.
+      metadata:
+        type: object
+        description: Arbitrary, object-encoded twin's data.
+      definition:
+        $ref: '#/definitions/Definition'
+  Definition:
+    type: object
+    properties:
+      delta:
+        type: number
+        description: Minimal time delay before new state creation.
+      attributes:
+        type: array
+        minItems: 0
+        uniqueItems: true
+        items:
+          $ref: '#/definitions/Attribute'
+  Attribute:
+    type: object
+    properties:
+      name:
+        type: string
+        description: Name of the attribute.
+      channel:
+        type: string
+        description: Mainflux channel used by attribute.
+      subtopic:
+        type: string
+        description: Subtopic used by attribute.
+      persist_state:
+        type: boolean
+        description: Trigger state creation based on this attribute
