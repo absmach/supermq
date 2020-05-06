@@ -136,33 +136,33 @@ func main() {
 
 	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
 
-	ps, err := nats.NewPubSub(cfg.natsURL, "mqtt", logger)
+	nps, err := nats.NewPubSub(cfg.natsURL, "mqtt", logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
 		os.Exit(1)
 	}
-	defer ps.Close()
-	mqttPub, err := mqttpub.NewPublisher(fmt.Sprintf("%s:%s", cfg.mqttTargetHost, cfg.mqttTargetPort), cfg.mqttForwarderTimeout)
+	defer nps.Close()
+	mp, err := mqttpub.NewPublisher(fmt.Sprintf("%s:%s", cfg.mqttTargetHost, cfg.mqttTargetPort), cfg.mqttForwarderTimeout)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to create MQTT publisher: %s", err))
 		os.Exit(1)
 	}
-	if err := mqtt.Forward(nats.SubjectAllChannels, ps, mqttPub); err != nil {
+	if err := mqtt.Forward(nats.SubjectAllChannels, nps, mp); err != nil {
 		logger.Error(fmt.Sprintf("Failed to forward NATS messages: %s", err))
 		os.Exit(1)
 	}
 
-	pub, err := nats.NewPublisher(cfg.natsURL)
+	np, err := nats.NewPublisher(cfg.natsURL)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
 		os.Exit(1)
 	}
-	defer pub.Close()
+	defer np.Close()
 
 	es := mr.NewEventStore(rc, cfg.instance)
 
 	// Event handler for MQTT hooks
-	h := mqtt.NewHandler([]messaging.Publisher{pub}, cc, es, logger, tracer)
+	h := mqtt.NewHandler([]messaging.Publisher{np}, cc, es, logger, tracer)
 
 	errs := make(chan error, 2)
 
