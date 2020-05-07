@@ -58,7 +58,7 @@ paths:
           schema:
             $ref: '#/definitions/TwinsPage'
         400:
-          description: Failed due to malformed query parameters.
+          description: Failed due to malformed query parameters.            
         403:
           description: Missing or invalid access token provided.
         500:
@@ -77,10 +77,12 @@ paths:
           description: Data retrieved.
           schema:
             $ref: '#/definitions/TwinRes'
+        400:
+          description: Failed due to malformed twin's ID.            
         403:
           description: Missing or invalid access token provided.
         404:
-          description: Thing does not exist.
+          description: Twin does not exist.
         500:
           $ref: '#/responses/ServiceError'
     put:
@@ -94,7 +96,7 @@ paths:
         - $ref: '#/parameters/Authorization'
         - $ref: '#/parameters/TwinID'
         - name: twin
-          description: JSON-formatted document describing the updated thing.
+          description: JSON-formatted document describing the updated twin.
           in: body
           schema:
             $ref: '#/definitions/TwinReq'
@@ -103,11 +105,11 @@ paths:
         200:
           description: Twin updated.
         400:
-          description: Failed due to malformed JSON.
+          description: Failed due to malformed twin's ID or malformed JSON.
         403:
           description: Missing or invalid access token provided.
         404:
-          description: Thing does not exist.
+          description: Twin does not exist.
         415:
           description: Missing or invalid content type.
         500:
@@ -122,11 +124,13 @@ paths:
         - $ref: '#/parameters/TwinID'
       responses:
         204:
-          description: Thing removed.
+          description: Twin removed.
         400:
-          description: Failed due to malformed thing's ID.
+          description: Failed due to malformed twin's ID.
         403:
-          description: Missing or invalid access token provided.
+          description: Missing or invalid access token provided
+        404:
+          description: Twin does not exist.          
         500:
           $ref: '#/responses/ServiceError'
   
@@ -153,6 +157,8 @@ paths:
           description: Failed due to malformed query parameters.
         403:
           description: Missing or invalid access token provided.
+        404:
+          description: Twin does not exist.          
         500:
           $ref: '#/responses/ServiceError'  
 
