@@ -51,6 +51,7 @@ paths:
         - $ref: '#/parameters/Authorization'
         - $ref: '#/parameters/Limit'
         - $ref: '#/parameters/Offset'
+        - $ref: '#/parameters/Name'
         - $ref: '#/parameters/Metadata'
       responses:
         200:
@@ -190,6 +191,12 @@ parameters:
     default: 0
     minimum: 0
     required: false
+  Name:
+    name: name
+    description: Twin name
+    in: query
+    type: string
+    required: false    
   Metadata:
     name: metadata
     description: | 
