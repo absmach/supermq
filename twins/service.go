@@ -350,7 +350,7 @@ func prepareState(st *State, tw *Twin, rec senml.Record, msg *messaging.Message)
 			if recNano == 0 || delta > float64(def.Delta) {
 				action = save
 				st.ID++
-				st.Created = time.Now().Round(0)
+				st.Created = time.Now()
 				if recNano != 0 {
 					st.Created = recTime
 				}
@@ -414,7 +414,7 @@ func (ts *twinsService) publish(twinID *string, err *error, succOp, failOp strin
 		Subtopic:  op,
 		Payload:   pl,
 		Publisher: publisher,
-		Created:   time.Now().Round(0).UnixNano(),
+		Created:   time.Now().UnixNano(),
 	}
 
 	if err := ts.publisher.Publish(msg.Channel, msg); err != nil {

@@ -102,6 +102,9 @@ func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, offs
 		if (uint64)(len(items)) >= limit {
 			break
 		}
+		if len(name) > 0 && v.Name != name {
+			continue
+		}
 		if !strings.HasPrefix(k, prefix) {
 			continue
 		}
