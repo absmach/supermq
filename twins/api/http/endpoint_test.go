@@ -378,6 +378,67 @@ func TestViewTwin(t *testing.T) {
 	}
 }
 
+func TestListTwins(t *testing.T) {
+	svc := newService(map[string]string{token: email})
+	ts := newServer(svc)
+	defer ts.Close()
+
+	data := []twinRes{}
+	for i := 0; i < 100; i++ {
+		name := fmt.Sprintf("%s-%d", twinName, i)
+		twin := twins.Twin{
+			Owner: email,
+			Name:  name,
+		}
+		tw, err := svc.AddTwin(context.Background(), token, twin, twins.Definition{})
+		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+		twres := twinRes{
+			Owner:       tw.Owner,
+			ID:          tw.ID,
+			Name:        tw.Name,
+			Revision:    tw.Revision,
+			Created:     tw.Created,
+			Updated:     tw.Updated,
+			Definitions: tw.Definitions,
+			Metadata:    tw.Metadata,
+		}
+		data = append(data, twres)
+	}
+
+	twinsURL := fmt.Sprintf("%s/twins", ts.URL)
+	queryFmt := "%s?offset=%d&limit=%d"
+	cases := []struct {
+		desc   string
+		auth   string
+		status int
+		url    string
+		res    []twinRes
+	}{
+		{
+			desc:   "get a list of twins",
+			auth:   token,
+			status: http.StatusOK,
+			url:    fmt.Sprintf(queryFmt, twinsURL, 0, 1),
+			res:    data[0:1],
+		},
+	}
+
+	for _, tc := range cases {
+		req := testRequest{
+			client: ts.Client(),
+			method: http.MethodGet,
+			url:    tc.url,
+			token:  tc.auth,
+		}
+		res, err := req.make()
+		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+		var resData twinsPageRes
+		json.NewDecoder(res.Body).Decode(&resData)
+		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
+		assert.ElementsMatch(t, tc.res, resData.Twins, fmt.Sprintf("%s: expected body %v got %v", tc.desc, tc.res, resData.Twins))
+	}
+}
+
 func TestRemoveTwin(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 	ts := newServer(svc)
@@ -447,11 +508,18 @@ type twinReq struct {
 
 type twinRes struct {
 	Owner       string                 `json:"owner"`
-	Name        string                 `json:"name,omitempty"`
 	ID          string                 `json:"id"`
+	Name        string                 `json:"name,omitempty"`
 	Revision    int                    `json:"revision"`
 	Created     time.Time              `json:"created"`
 	Updated     time.Time              `json:"updated"`
 	Definitions []twins.Definition     `json:"definitions"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+}
+
+type twinsPageRes struct {
+	Twins  []twinRes `json:"twins"`
+	Total  uint64    `json:"total"`
+	Offset uint64    `json:"offset"`
+	Limit  uint64    `json:"limit"`
 }

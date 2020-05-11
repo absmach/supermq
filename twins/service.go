@@ -131,8 +131,9 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 
 	twin.Owner = res.GetValue()
 
-	twin.Created = time.Now()
-	twin.Updated = time.Now()
+	t := time.Now().Round(0)
+	twin.Created = t
+	twin.Updated = t
 
 	if def.Attributes == nil {
 		def.Attributes = []Attribute{}
@@ -141,7 +142,7 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 		def.Delta = millisec
 	}
 
-	def.Created = time.Now()
+	def.Created = time.Now().Round(0)
 	def.ID = 0
 	twin.Definitions = append(twin.Definitions, def)
 
@@ -180,7 +181,7 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 
 	if len(def.Attributes) > 0 {
 		revision = true
-		def.Created = time.Now()
+		def.Created = time.Now().Round(0)
 		def.ID = tw.Definitions[len(tw.Definitions)-1].ID + 1
 		tw.Definitions = append(tw.Definitions, def)
 	}
@@ -194,7 +195,7 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 		return ErrMalformedEntity
 	}
 
-	tw.Updated = time.Now()
+	tw.Updated = time.Now().Round(0)
 	tw.Revision++
 
 	if err := ts.twins.Update(ctx, tw); err != nil {
@@ -349,7 +350,7 @@ func prepareState(st *State, tw *Twin, rec senml.Record, msg *messaging.Message)
 			if recNano == 0 || delta > float64(def.Delta) {
 				action = save
 				st.ID++
-				st.Created = time.Now()
+				st.Created = time.Now().Round(0)
 				if recNano != 0 {
 					st.Created = recTime
 				}
@@ -413,7 +414,7 @@ func (ts *twinsService) publish(twinID *string, err *error, succOp, failOp strin
 		Subtopic:  op,
 		Payload:   pl,
 		Publisher: publisher,
-		Created:   time.Now().UnixNano(),
+		Created:   time.Now().Round(0).UnixNano(),
 	}
 
 	if err := ts.publisher.Publish(msg.Channel, msg); err != nil {
