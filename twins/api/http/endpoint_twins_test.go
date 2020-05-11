@@ -636,9 +636,13 @@ type twinRes struct {
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
+type pageRes struct {
+	Total  uint64 `json:"total"`
+	Offset uint64 `json:"offset"`
+	Limit  uint64 `json:"limit"`
+}
+
 type twinsPageRes struct {
-	Twins  []twinRes `json:"twins"`
-	Total  uint64    `json:"total"`
-	Offset uint64    `json:"offset"`
-	Limit  uint64    `json:"limit"`
+	pageRes
+	Twins []twinRes `json:"twins"`
 }
