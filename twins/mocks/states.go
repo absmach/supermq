@@ -107,5 +107,8 @@ func (srm *stateRepositoryMock) RetrieveLast(ctx context.Context, id string) (tw
 		return items[i].ID < items[j].ID
 	})
 
-	return items[len(items)-1], nil
+	if len(items) > 0 {
+		return items[len(items)-1], nil
+	}
+	return twins.State{}, nil
 }
