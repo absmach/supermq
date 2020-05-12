@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/mainflux/mainflux/things"
+	"github.com/mainflux/mainflux"
 )
 
-var _ things.IdentityProvider = (*identityProviderMock)(nil)
+var _ mainflux.UUIDProvider = (*identityProviderMock)(nil)
 
 type identityProviderMock struct {
 	mu      sync.Mutex
@@ -27,6 +27,6 @@ func (idp *identityProviderMock) ID() (string, error) {
 
 // NewIdentityProvider creates "mirror" identity provider, i.e. generated
 // token will hold value provided by the caller.
-func NewIdentityProvider() things.IdentityProvider {
+func NewIdentityProvider() mainflux.UUIDProvider {
 	return &identityProviderMock{}
 }

@@ -7,17 +7,17 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/mainflux/mainflux/authn"
+	"github.com/mainflux/mainflux"
 )
 
-var _ authn.IdentityProvider = (*identityProviderMock)(nil)
+var _ mainflux.UUIDProvider = (*uuidProviderMock)(nil)
 
-type identityProviderMock struct {
+type uuidProviderMock struct {
 	mu      sync.Mutex
 	counter int
 }
 
-func (idp *identityProviderMock) ID() (string, error) {
+func (idp *uuidProviderMock) ID() (string, error) {
 	idp.mu.Lock()
 	defer idp.mu.Unlock()
 
@@ -25,8 +25,8 @@ func (idp *identityProviderMock) ID() (string, error) {
 	return fmt.Sprintf("%s%012d", "123e4567-e89b-12d3-a456-", idp.counter), nil
 }
 
-// NewIdentityProvider creates "mirror" identity provider, i.e. generated
+// NewUUIDProvider creates "mirror" uuid provider, i.e. generated
 // token will hold value provided by the caller.
-func NewIdentityProvider() authn.IdentityProvider {
-	return &identityProviderMock{}
+func NewUUIDProvider() mainflux.UUIDProvider {
+	return &uuidProviderMock{}
 }

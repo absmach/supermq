@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/errors"
 )
 
@@ -61,12 +62,12 @@ var _ Service = (*service)(nil)
 
 type service struct {
 	keys      KeyRepository
-	idp       IdentityProvider
+	idp       mainflux.UUIDProvider
 	tokenizer Tokenizer
 }
 
 // New instantiates the auth service implementation.
-func New(keys KeyRepository, idp IdentityProvider, tokenizer Tokenizer) Service {
+func New(keys KeyRepository, idp mainflux.UUIDProvider, tokenizer Tokenizer) Service {
 	return &service{
 		tokenizer: tokenizer,
 		keys:      keys,

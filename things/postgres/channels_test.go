@@ -12,7 +12,7 @@ import (
 
 	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/things/postgres"
-	"github.com/mainflux/mainflux/things/uuid"
+	"github.com/mainflux/mainflux/uuid"
 	"github.com/stretchr/testify/assert"
 )
 

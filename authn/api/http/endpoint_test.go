@@ -63,7 +63,7 @@ func (tr testRequest) make() (*http.Response, error) {
 
 func newService() authn.Service {
 	repo := mocks.NewKeyRepository()
-	idp := mocks.NewIdentityProvider()
+	idp := mocks.NewUUIDProvider()
 	t := jwt.New(secret)
 	return authn.New(repo, idp, t)
 }
