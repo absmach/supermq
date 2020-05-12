@@ -66,15 +66,15 @@ func (srm *stateRepositoryMock) RetrieveAll(ctx context.Context, offset uint64, 
 	// This obscure way to examine map keys is enforced by the key structure in mocks/commons.go
 	prefix := fmt.Sprintf("%s-", id)
 	for k, v := range srm.states {
+		if (uint64)(len(items)) >= limit {
+			break
+		}
 		if !strings.HasPrefix(k, prefix) {
 			continue
 		}
 		id := uint64(v.ID)
-		if id > offset && id < limit {
+		if id >= offset && id < offset+limit {
 			items = append(items, v)
-		}
-		if (uint64)(len(items)) >= limit {
-			break
 		}
 	}
 

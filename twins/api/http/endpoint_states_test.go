@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
-	"math/rand"
 	"net/http"
 	"testing"
 	"time"
@@ -23,8 +22,7 @@ import (
 )
 
 const (
-	millisec = 1e6
-	nanosec  = 1e9
+	nanosec = 1e9
 
 	attrName1     = "temperature"
 	attrSubtopic1 = "engine"
@@ -63,32 +61,15 @@ func TestListStates(t *testing.T) {
 	}
 	tw, _ := svc.AddTwin(context.Background(), token, twin, def)
 
-	recs := createSenML(100, "temperature")
+	recs := createSenML(100, attrName1)
 	message := createMessage(attr1, recs)
 	err := svc.SaveStates(message)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	data := []stateRes{}
-	twDef := tw.Definitions[len(tw.Definitions)-1].ID
 	for i := 0; i < len(recs); i++ {
-		rec := recs[i]
-
-		recSec := rec.BaseTime + rec.Time
-		sec, dec := math.Modf(recSec)
-		recTime := time.Unix(int64(sec), int64(dec*nanosec)).Round(0)
-
-		pl := map[string]interface{}{
-			rec.BaseName: rec.Value,
-		}
-
-		stres := stateRes{
-			TwinID:     tw.ID,
-			ID:         int64(i),
-			Definition: twDef,
-			Created:    recTime,
-			Payload:    pl,
-		}
-		data = append(data, stres)
+		res := createStateResponse(i, tw, recs[i])
+		data = append(data, res)
 	}
 
 	statesURL := fmt.Sprintf("%s/states/%s", ts.URL, tw.ID)
@@ -104,8 +85,8 @@ func TestListStates(t *testing.T) {
 			desc:   "get a list of states",
 			auth:   token,
 			status: http.StatusOK,
-			url:    fmt.Sprintf(queryFmt, statesURL, 0, 5),
-			res:    data[0:5],
+			url:    fmt.Sprintf(queryFmt, statesURL, 0, 1),
+			res:    data[0:1],
 		},
 	}
 
@@ -117,6 +98,7 @@ func TestListStates(t *testing.T) {
 			token:  tc.auth,
 		}
 		res, err := req.make()
+
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		var resData statesPageRes
 		json.NewDecoder(res.Body).Decode(&resData)
@@ -137,15 +119,13 @@ func createAttribute(name, subtopic string) twins.Attribute {
 
 func createSenML(n int, bn string) []senml.Record {
 	var recs []senml.Record
-	bt := time.Now().Round(0).UnixNano()
+	bt := time.Now().Unix()
 	for i := 0; i < n; i++ {
-		t := 10e-6 * float64(i)
-		v := rand.Float64()
 		rec := senml.Record{
 			BaseName: bn,
 			BaseTime: float64(bt),
-			Time:     t,
-			Value:    &v,
+			Time:     float64(i),
+			Value:    nil,
 		}
 		recs = append(recs, rec)
 	}
@@ -153,11 +133,27 @@ func createSenML(n int, bn string) []senml.Record {
 }
 
 func createMessage(attr twins.Attribute, recs []senml.Record) *messaging.Message {
+	fmt.Printf("%+v\n", recs[0]) // output for debug
+
 	mRecs, _ := json.Marshal(recs)
 	return &messaging.Message{
 		Channel:   attr.Channel,
 		Subtopic:  attr.Subtopic,
 		Payload:   mRecs,
 		Publisher: "twins",
+	}
+}
+
+func createStateResponse(id int, tw twins.Twin, rec senml.Record) stateRes {
+	recSec := rec.BaseTime + rec.Time
+	sec, dec := math.Modf(recSec)
+	recTime := time.Unix(int64(sec), int64(dec*nanosec))
+
+	return stateRes{
+		TwinID:     tw.ID,
+		ID:         int64(id),
+		Definition: tw.Definitions[len(tw.Definitions)-1].ID,
+		Created:    recTime,
+		Payload:    map[string]interface{}{rec.BaseName: nil},
 	}
 }
