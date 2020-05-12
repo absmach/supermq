@@ -22,7 +22,7 @@ func New() mainflux.UUIDProvider {
 	return &uuidProvider{}
 }
 
-func (idp *uuidProvider) ID() (string, error) {
+func (up *uuidProvider) ID() (string, error) {
 	id, err := uuid.NewV4()
 	if err != nil {
 		return "", errors.Wrap(ErrGeneratingID, err)

@@ -65,10 +65,10 @@ func newService(tokens map[string]string) twins.Service {
 	auth := mocks.NewAuthNServiceClient(tokens)
 	twinsRepo := mocks.NewTwinRepository()
 	statesRepo := mocks.NewStateRepository()
-	idp := mocks.NewIdentityProvider()
+	up := mocks.NewUUIDProvider()
 	subs := map[string]string{"chanID": "chanID"}
 	broker := mocks.New(subs)
-	return twins.New(broker, auth, twinsRepo, statesRepo, idp, "chanID", nil)
+	return twins.New(broker, auth, twinsRepo, statesRepo, up, "chanID", nil)
 }
 
 func newServer(svc twins.Service) *httptest.Server {

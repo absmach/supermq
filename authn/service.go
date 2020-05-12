@@ -61,17 +61,17 @@ type Service interface {
 var _ Service = (*service)(nil)
 
 type service struct {
-	keys      KeyRepository
-	idp       mainflux.UUIDProvider
-	tokenizer Tokenizer
+	keys         KeyRepository
+	uuidProvider mainflux.UUIDProvider
+	tokenizer    Tokenizer
 }
 
 // New instantiates the auth service implementation.
-func New(keys KeyRepository, idp mainflux.UUIDProvider, tokenizer Tokenizer) Service {
+func New(keys KeyRepository, up mainflux.UUIDProvider, tokenizer Tokenizer) Service {
 	return &service{
-		tokenizer: tokenizer,
-		keys:      keys,
-		idp:       idp,
+		tokenizer:    tokenizer,
+		keys:         keys,
+		uuidProvider: up,
 	}
 }
 
@@ -157,7 +157,7 @@ func (svc service) userKey(ctx context.Context, issuer string, key Key) (Key, er
 	}
 	key.Issuer = email
 
-	id, err := svc.idp.ID()
+	id, err := svc.uuidProvider.ID()
 	if err != nil {
 		return Key{}, errors.Wrap(errIssueUser, err)
 	}

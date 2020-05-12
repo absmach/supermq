@@ -32,10 +32,10 @@ var svc authn.Service
 
 func newService() authn.Service {
 	repo := mocks.NewKeyRepository()
-	idp := mocks.NewUUIDProvider()
+	up := mocks.NewUUIDProvider()
 	t := jwt.New(secret)
 
-	return authn.New(repo, idp, t)
+	return authn.New(repo, up, t)
 }
 
 func startGRPCServer(svc authn.Service, port int) {

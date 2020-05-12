@@ -26,7 +26,7 @@ import (
 	"github.com/mainflux/mainflux/twins/api"
 	twapi "github.com/mainflux/mainflux/twins/api/http"
 	twmongodb "github.com/mainflux/mainflux/twins/mongodb"
-	"github.com/mainflux/mainflux/twins/uuid"
+	uuidProvider "github.com/mainflux/mainflux/uuid"
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"
@@ -240,9 +240,9 @@ func newService(ps messaging.PubSub, ncTracer opentracing.Tracer, chanID string,
 	twinRepo := twmongodb.NewTwinRepository(db)
 
 	stateRepo := twmongodb.NewStateRepository(db)
-	idp := uuid.New()
+	up := uuidProvider.New()
 
-	svc := twins.New(ps, users, twinRepo, stateRepo, idp, chanID, logger)
+	svc := twins.New(ps, users, twinRepo, stateRepo, up, chanID, logger)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
