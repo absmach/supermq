@@ -72,7 +72,7 @@ func TestListStates(t *testing.T) {
 		data = append(data, res)
 	}
 
-	statesURL := fmt.Sprintf("%s/states/%s", ts.URL, tw.ID)
+	baseURL := fmt.Sprintf("%s/states/%s", ts.URL, tw.ID)
 	queryFmt := "%s?offset=%d&limit=%d"
 	cases := []struct {
 		desc   string
@@ -85,8 +85,106 @@ func TestListStates(t *testing.T) {
 			desc:   "get a list of states",
 			auth:   token,
 			status: http.StatusOK,
-			url:    fmt.Sprintf(queryFmt, statesURL, 0, 1),
-			res:    data[0:1],
+			url:    baseURL,
+			res:    data[0:10],
+		},
+		{
+			desc:   "get a list of states with with valid offset and limit",
+			auth:   token,
+			status: http.StatusOK,
+			url:    fmt.Sprintf(queryFmt, baseURL, 20, 15),
+			res:    data[20:35],
+		},
+		{
+			desc:   "get a list of states with invalid token",
+			auth:   wrongValue,
+			status: http.StatusForbidden,
+			url:    fmt.Sprintf(queryFmt, baseURL, 0, 5),
+			res:    nil,
+		},
+		{
+			desc:   "get a list of states with empty token",
+			auth:   "",
+			status: http.StatusForbidden,
+			url:    fmt.Sprintf(queryFmt, baseURL, 0, 5),
+			res:    nil,
+		},
+		{
+			desc:   "get a list of states with with  + limit > total",
+			auth:   token,
+			status: http.StatusOK,
+			url:    fmt.Sprintf(queryFmt, baseURL, 91, 20),
+			res:    data[91:],
+		},
+		{
+			desc:   "get a list of states with negative offset",
+			auth:   token,
+			status: http.StatusBadRequest,
+			url:    fmt.Sprintf(queryFmt, baseURL, -1, 5),
+			res:    nil,
+		},
+		{
+			desc:   "get a list of states with negative limit",
+			auth:   token,
+			status: http.StatusBadRequest,
+			url:    fmt.Sprintf(queryFmt, baseURL, 0, -5),
+			res:    nil,
+		},
+		{
+			desc:   "get a list of states with zero limit",
+			auth:   token,
+			status: http.StatusBadRequest,
+			url:    fmt.Sprintf(queryFmt, baseURL, 0, 0),
+			res:    nil,
+		},
+		{
+			desc:   "get a list of states with limit greater than max",
+			auth:   token,
+			status: http.StatusBadRequest,
+			url:    fmt.Sprintf(queryFmt, baseURL, 0, 110),
+			res:    nil,
+		},
+		{
+			desc:   "get a list of states with invalid offset",
+			auth:   token,
+			status: http.StatusBadRequest,
+			url:    fmt.Sprintf("%s?offset=invalid&limit=%d", baseURL, 15),
+			res:    nil,
+		},
+		{
+			desc:   "get a list of states with invalid limit",
+			auth:   token,
+			status: http.StatusBadRequest,
+			url:    fmt.Sprintf("%s?offset=%d&limit=invalid", baseURL, 0),
+			res:    nil,
+		},
+		{
+			desc:   "get a list of states without offset",
+			auth:   token,
+			status: http.StatusOK,
+			url:    fmt.Sprintf("%s?limit=%d", baseURL, 15),
+			res:    data[0:15],
+		},
+		{
+			desc:   "get a list of states without limit",
+			auth:   token,
+			status: http.StatusOK,
+			url:    fmt.Sprintf("%s?offset=%d", baseURL, 14),
+			res:    data[14:24],
+		},
+		{
+			desc:   "get a list of states with invalid number of params",
+			auth:   token,
+			status: http.StatusBadRequest,
+			url:    fmt.Sprintf("%s%s", baseURL, "?offset=4&limit=4&limit=5&offset=5"),
+			res:    nil,
+		},
+		{
+			desc:   "get a list of states with redundant query params",
+			auth:   token,
+			status: http.StatusOK,
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d&value=something", baseURL, 0, 5),
+			res:    data[0:5],
 		},
 	}
 
@@ -133,8 +231,6 @@ func createSenML(n int, bn string) []senml.Record {
 }
 
 func createMessage(attr twins.Attribute, recs []senml.Record) *messaging.Message {
-	fmt.Printf("%+v\n", recs[0]) // output for debug
-
 	mRecs, _ := json.Marshal(recs)
 	return &messaging.Message{
 		Channel:   attr.Channel,
