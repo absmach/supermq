@@ -72,7 +72,7 @@ func toJSON(data interface{}) string {
 }
 
 func TestAddTwin(t *testing.T) {
-	svc := mocks.NewService(map[string]string{token: email})
+	svc := mocks.New(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 
@@ -175,7 +175,7 @@ func TestAddTwin(t *testing.T) {
 }
 
 func TestUpdateTwin(t *testing.T) {
-	svc := mocks.NewService(map[string]string{token: email})
+	svc := mocks.New(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 
@@ -287,7 +287,7 @@ func TestUpdateTwin(t *testing.T) {
 }
 
 func TestViewTwin(t *testing.T) {
-	svc := mocks.NewService(map[string]string{token: email})
+	svc := mocks.New(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 
@@ -369,7 +369,7 @@ func TestViewTwin(t *testing.T) {
 }
 
 func TestListTwins(t *testing.T) {
-	svc := mocks.NewService(map[string]string{token: email})
+	svc := mocks.New(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 
@@ -496,14 +496,14 @@ func TestListTwins(t *testing.T) {
 			res:    data[1:11],
 		},
 		{
-			desc:   "get a list of twins with invalid number of params",
+			desc:   "get a list of twins with invalid number of parameters",
 			auth:   token,
 			status: http.StatusBadRequest,
 			url:    fmt.Sprintf("%s%s", baseURL, "?offset=4&limit=4&limit=5&offset=5"),
 			res:    nil,
 		},
 		{
-			desc:   "get a list of twins with redundant query params",
+			desc:   "get a list of twins with redundant query parameters",
 			auth:   token,
 			status: http.StatusOK,
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d&value=something", baseURL, 0, 5),
@@ -542,7 +542,7 @@ func TestListTwins(t *testing.T) {
 }
 
 func TestRemoveTwin(t *testing.T) {
-	svc := mocks.NewService(map[string]string{token: email})
+	svc := mocks.New(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 

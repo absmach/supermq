@@ -45,7 +45,7 @@ type statesPageRes struct {
 }
 
 func TestListStates(t *testing.T) {
-	svc := mocks.NewService(map[string]string{token: email})
+	svc := mocks.New(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 
@@ -90,7 +90,7 @@ func TestListStates(t *testing.T) {
 			res:    data[0:10],
 		},
 		{
-			desc:   "get a list of states with with valid offset and limit",
+			desc:   "get a list of states with valid offset and limit",
 			auth:   token,
 			status: http.StatusOK,
 			url:    fmt.Sprintf(queryFmt, baseURL, 20, 15),
@@ -111,7 +111,7 @@ func TestListStates(t *testing.T) {
 			res:    nil,
 		},
 		{
-			desc:   "get a list of states with with  + limit > total",
+			desc:   "get a list of states with  + limit > total",
 			auth:   token,
 			status: http.StatusOK,
 			url:    fmt.Sprintf(queryFmt, baseURL, 91, 20),
@@ -174,14 +174,14 @@ func TestListStates(t *testing.T) {
 			res:    data[14:24],
 		},
 		{
-			desc:   "get a list of states with invalid number of params",
+			desc:   "get a list of states with invalid number of parameters",
 			auth:   token,
 			status: http.StatusBadRequest,
 			url:    fmt.Sprintf("%s%s", baseURL, "?offset=4&limit=4&limit=5&offset=5"),
 			res:    nil,
 		},
 		{
-			desc:   "get a list of states with redundant query params",
+			desc:   "get a list of states with redundant query parameters",
 			auth:   token,
 			status: http.StatusOK,
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d&value=something", baseURL, 0, 5),
@@ -218,11 +218,10 @@ func createAttribute(name, subtopic string) twins.Attribute {
 
 func createSenML(n int, bn string) []senml.Record {
 	var recs []senml.Record
-	bt := time.Now().Unix()
 	for i := 0; i < n; i++ {
 		rec := senml.Record{
 			BaseName: bn,
-			BaseTime: float64(bt),
+			BaseTime: float64(time.Now().UnixNano()) / float64(1e9),
 			Time:     float64(i),
 			Value:    nil,
 		}

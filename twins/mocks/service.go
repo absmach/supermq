@@ -4,7 +4,7 @@ import (
 	"github.com/mainflux/mainflux/twins"
 )
 
-func NewService(tokens map[string]string) twins.Service {
+func New(tokens map[string]string) twins.Service {
 	auth := NewAuthNServiceClient(tokens)
 	twinsRepo := NewTwinRepository()
 	statesRepo := NewStateRepository()
