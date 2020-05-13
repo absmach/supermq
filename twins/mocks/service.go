@@ -10,6 +10,6 @@ func New(tokens map[string]string) twins.Service {
 	statesRepo := NewStateRepository()
 	idp := NewIdentityProvider()
 	subs := map[string]string{"chanID": "chanID"}
-	broker := New(subs)
+	broker := NewBroker(subs)
 	return twins.New(broker, auth, twinsRepo, statesRepo, idp, "chanID", nil)
 }

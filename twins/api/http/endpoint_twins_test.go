@@ -181,7 +181,8 @@ func TestUpdateTwin(t *testing.T) {
 
 	twin := twins.Twin{}
 	def := twins.Definition{}
-	stw, _ := svc.AddTwin(context.Background(), token, twin, def)
+	stw, err := svc.AddTwin(context.Background(), token, twin, def)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	twin.Name = twinName
 	data := toJSON(twin)
@@ -373,7 +374,7 @@ func TestListTwins(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	data := []twinRes{}
+	var data []twinRes
 	for i := 0; i < 100; i++ {
 		name := fmt.Sprintf("%s-%d", twinName, i)
 		twin := twins.Twin{
@@ -548,7 +549,8 @@ func TestRemoveTwin(t *testing.T) {
 
 	def := twins.Definition{}
 	twin := twins.Twin{}
-	stw, _ := svc.AddTwin(context.Background(), token, twin, def)
+	stw, err := svc.AddTwin(context.Background(), token, twin, def)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	cases := []struct {
 		desc   string

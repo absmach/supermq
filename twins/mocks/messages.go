@@ -15,7 +15,7 @@ type mockBroker struct {
 }
 
 // New returns mock message publisher.
-func New(sub map[string]string) messaging.Publisher {
+func NewBroker(sub map[string]string) messaging.Publisher {
 	return &mockBroker{
 		subscriptions: sub,
 	}

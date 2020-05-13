@@ -29,6 +29,8 @@ const (
 	attrSubtopic1 = "engine"
 	attrName2     = "humidity"
 	attrSubtopic2 = "chassis"
+
+	publisher = "twins"
 )
 
 type stateRes struct {
@@ -60,14 +62,16 @@ func TestListStates(t *testing.T) {
 			attr2,
 		},
 	}
-	tw, _ := svc.AddTwin(context.Background(), token, twin, def)
-
-	recs := createSenML(100, attrName1)
-	message := createMessage(attr1, recs)
-	err := svc.SaveStates(message)
+	tw, err := svc.AddTwin(context.Background(), token, twin, def)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
-	data := []stateRes{}
+	recs := createSenML(100, attrName1)
+	message, err := createMessage(attr1, recs)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	err = svc.SaveStates(message)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+
+	var data []stateRes
 	for i := 0; i < len(recs); i++ {
 		res := createStateResponse(i, tw, recs[i])
 		data = append(data, res)
@@ -111,7 +115,7 @@ func TestListStates(t *testing.T) {
 			res:    nil,
 		},
 		{
-			desc:   "get a list of states with  + limit > total",
+			desc:   "get a list of states with + limit > total",
 			auth:   token,
 			status: http.StatusOK,
 			url:    fmt.Sprintf(queryFmt, baseURL, 91, 20),
@@ -221,23 +225,27 @@ func createSenML(n int, bn string) []senml.Record {
 	for i := 0; i < n; i++ {
 		rec := senml.Record{
 			BaseName: bn,
-			BaseTime: float64(time.Now().UnixNano()) / float64(1e9),
-			Time:     float64(i),
-			Value:    nil,
+			BaseTime: float64(time.Now().Unix()),
+			// BaseTime: float64(time.Now().UnixNano()) / float64(1e9),
+			Time:  float64(i),
+			Value: nil,
 		}
 		recs = append(recs, rec)
 	}
 	return recs
 }
 
-func createMessage(attr twins.Attribute, recs []senml.Record) *messaging.Message {
-	mRecs, _ := json.Marshal(recs)
+func createMessage(attr twins.Attribute, recs []senml.Record) (*messaging.Message, error) {
+	mRecs, err := json.Marshal(recs)
+	if err != nil {
+		return nil, err
+	}
 	return &messaging.Message{
 		Channel:   attr.Channel,
 		Subtopic:  attr.Subtopic,
 		Payload:   mRecs,
-		Publisher: "twins",
-	}
+		Publisher: publisher,
+	}, nil
 }
 
 func createStateResponse(id int, tw twins.Twin, rec senml.Record) stateRes {
