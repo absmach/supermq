@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/mainflux/mainflux/twins/mocks"
 	"github.com/mainflux/mainflux/twins/uuid"
 )
 
@@ -44,7 +45,7 @@ type statesPageRes struct {
 }
 
 func TestListStates(t *testing.T) {
-	svc := newService(map[string]string{token: email})
+	svc := mocks.NewService(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 

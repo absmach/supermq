@@ -61,16 +61,6 @@ func (tr testRequest) make() (*http.Response, error) {
 	return tr.client.Do(req)
 }
 
-func newService(tokens map[string]string) twins.Service {
-	auth := mocks.NewAuthNServiceClient(tokens)
-	twinsRepo := mocks.NewTwinRepository()
-	statesRepo := mocks.NewStateRepository()
-	idp := mocks.NewIdentityProvider()
-	subs := map[string]string{"chanID": "chanID"}
-	broker := mocks.New(subs)
-	return twins.New(broker, auth, twinsRepo, statesRepo, idp, "chanID", nil)
-}
-
 func newServer(svc twins.Service) *httptest.Server {
 	mux := httpapi.MakeHandler(mocktracer.New(), svc)
 	return httptest.NewServer(mux)
@@ -82,7 +72,7 @@ func toJSON(data interface{}) string {
 }
 
 func TestAddTwin(t *testing.T) {
-	svc := newService(map[string]string{token: email})
+	svc := mocks.NewService(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 
@@ -185,7 +175,7 @@ func TestAddTwin(t *testing.T) {
 }
 
 func TestUpdateTwin(t *testing.T) {
-	svc := newService(map[string]string{token: email})
+	svc := mocks.NewService(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 
@@ -297,7 +287,7 @@ func TestUpdateTwin(t *testing.T) {
 }
 
 func TestViewTwin(t *testing.T) {
-	svc := newService(map[string]string{token: email})
+	svc := mocks.NewService(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 
@@ -379,7 +369,7 @@ func TestViewTwin(t *testing.T) {
 }
 
 func TestListTwins(t *testing.T) {
-	svc := newService(map[string]string{token: email})
+	svc := mocks.NewService(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 
@@ -552,7 +542,7 @@ func TestListTwins(t *testing.T) {
 }
 
 func TestRemoveTwin(t *testing.T) {
-	svc := newService(map[string]string{token: email})
+	svc := mocks.NewService(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 
