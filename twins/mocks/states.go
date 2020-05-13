@@ -5,7 +5,6 @@ package mocks
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"strings"
 	"sync"
@@ -53,7 +52,7 @@ func (srm *stateRepositoryMock) Count(ctx context.Context, tw twins.Twin) (int64
 	return int64(len(srm.states)), nil
 }
 
-func (srm *stateRepositoryMock) RetrieveAll(ctx context.Context, offset uint64, limit uint64, id string) (twins.StatesPage, error) {
+func (srm *stateRepositoryMock) RetrieveAll(ctx context.Context, offset uint64, limit uint64, twinID string) (twins.StatesPage, error) {
 	srm.mu.Lock()
 	defer srm.mu.Unlock()
 
@@ -63,13 +62,11 @@ func (srm *stateRepositoryMock) RetrieveAll(ctx context.Context, offset uint64, 
 		return twins.StatesPage{}, nil
 	}
 
-	// This obscure way to examine map keys is enforced by the key structure in mocks/commons.go
-	prefix := fmt.Sprintf("%s-", id)
 	for k, v := range srm.states {
 		if (uint64)(len(items)) >= limit {
 			break
 		}
-		if !strings.HasPrefix(k, prefix) {
+		if !strings.HasPrefix(k, twinID) {
 			continue
 		}
 		id := uint64(v.ID)

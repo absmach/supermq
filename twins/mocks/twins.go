@@ -5,7 +5,6 @@ package mocks
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -96,8 +95,6 @@ func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, offs
 		return twins.Page{}, nil
 	}
 
-	// This obscure way to examine map keys is enforced by the key structure in mocks/commons.go
-	prefix := fmt.Sprintf("%s-", owner)
 	for k, v := range trm.twins {
 		if (uint64)(len(items)) >= limit {
 			break
@@ -105,12 +102,12 @@ func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, offs
 		if len(name) > 0 && v.Name != name {
 			continue
 		}
-		if !strings.HasPrefix(k, prefix) {
+		if !strings.HasPrefix(k, owner) {
 			continue
 		}
 		suffix := string(v.ID[len(u4Pref):])
 		id, _ := strconv.ParseUint(suffix, 10, 64)
-		if id > offset && id <= uint64(offset+limit) {
+		if id > offset && id <= offset+limit {
 			items = append(items, v)
 		}
 	}
@@ -138,6 +135,7 @@ func (trm *twinRepositoryMock) Remove(ctx context.Context, id string) error {
 	for k, v := range trm.twins {
 		if id == v.ID {
 			delete(trm.twins, k)
+			return nil
 		}
 	}
 
