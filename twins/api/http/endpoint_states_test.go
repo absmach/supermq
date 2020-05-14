@@ -201,10 +201,14 @@ func TestListStates(t *testing.T) {
 			token:  tc.auth,
 		}
 		res, err := req.make()
-
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+
 		var resData statesPageRes
-		json.NewDecoder(res.Body).Decode(&resData)
+		if tc.res != nil {
+			err = json.NewDecoder(res.Body).Decode(&resData)
+			assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+		}
+
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 		assert.ElementsMatch(t, tc.res, resData.States, fmt.Sprintf("%s: expected body %v got %v", tc.desc, tc.res, resData.States))
 	}
