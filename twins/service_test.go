@@ -24,7 +24,7 @@ const (
 )
 
 func TestAddTwin(t *testing.T) {
-	svc := mocks.New(map[string]string{token: email})
+	svc := mocks.NewService(map[string]string{token: email})
 	twin := twins.Twin{}
 	def := twins.Definition{}
 
@@ -55,7 +55,7 @@ func TestAddTwin(t *testing.T) {
 }
 
 func TestUpdateTwin(t *testing.T) {
-	svc := mocks.New(map[string]string{token: email})
+	svc := mocks.NewService(map[string]string{token: email})
 	twin := twins.Twin{}
 	other := twins.Twin{}
 	def := twins.Definition{}
@@ -99,7 +99,7 @@ func TestUpdateTwin(t *testing.T) {
 }
 
 func TestViewTwin(t *testing.T) {
-	svc := mocks.New(map[string]string{token: email})
+	svc := mocks.NewService(map[string]string{token: email})
 	twin := twins.Twin{}
 	def := twins.Definition{}
 	saved, err := svc.AddTwin(context.Background(), token, twin, def)
@@ -134,7 +134,7 @@ func TestViewTwin(t *testing.T) {
 }
 
 func TestListTwins(t *testing.T) {
-	svc := mocks.New(map[string]string{token: email})
+	svc := mocks.NewService(map[string]string{token: email})
 	twin := twins.Twin{Name: twinName, Owner: email}
 	def := twins.Definition{}
 	m := make(map[string]interface{})
@@ -192,7 +192,7 @@ func TestListTwins(t *testing.T) {
 }
 
 func TestRemoveTwin(t *testing.T) {
-	svc := mocks.New(map[string]string{token: email})
+	svc := mocks.NewService(map[string]string{token: email})
 	twin := twins.Twin{}
 	def := twins.Definition{}
 	saved, err := svc.AddTwin(context.Background(), token, twin, def)

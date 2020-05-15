@@ -4,7 +4,8 @@ import (
 	"github.com/mainflux/mainflux/twins"
 )
 
-func New(tokens map[string]string) twins.Service {
+// NewService use mock dependencies to create real twins service
+func NewService(tokens map[string]string) twins.Service {
 	auth := NewAuthNServiceClient(tokens)
 	twinsRepo := NewTwinRepository()
 	statesRepo := NewStateRepository()

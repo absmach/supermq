@@ -33,11 +33,10 @@ const (
 )
 
 type stateRes struct {
-	TwinID     string `json:"twin_id"`
-	ID         int64  `json:"id"`
-	Definition int    `json:"definition"`
-	// Created    time.Time              `json:"created"`
-	Payload map[string]interface{} `json:"payload"`
+	TwinID     string                 `json:"twin_id"`
+	ID         int64                  `json:"id"`
+	Definition int                    `json:"definition"`
+	Payload    map[string]interface{} `json:"payload"`
 }
 
 type statesPageRes struct {
@@ -46,7 +45,7 @@ type statesPageRes struct {
 }
 
 func TestListStates(t *testing.T) {
-	svc := mocks.New(map[string]string{token: email})
+	svc := mocks.NewService(map[string]string{token: email})
 	ts := newServer(svc)
 	defer ts.Close()
 
@@ -229,9 +228,8 @@ func createSenML(n int, bn string) []senml.Record {
 		rec := senml.Record{
 			BaseName: bn,
 			BaseTime: float64(time.Now().Unix()),
-			// BaseTime: float64(time.Now().UnixNano()) / float64(1e9),
-			Time:  float64(i),
-			Value: nil,
+			Time:     float64(i),
+			Value:    nil,
 		}
 		recs = append(recs, rec)
 	}
@@ -252,15 +250,10 @@ func createMessage(attr twins.Attribute, recs []senml.Record) (*messaging.Messag
 }
 
 func createStateResponse(id int, tw twins.Twin, rec senml.Record) stateRes {
-	// recSec := rec.BaseTime + rec.Time
-	// sec, dec := math.Modf(recSec)
-	// recTime := time.Unix(int64(sec), int64(dec*nanosec))
-
 	return stateRes{
 		TwinID:     tw.ID,
 		ID:         int64(id),
 		Definition: tw.Definitions[len(tw.Definitions)-1].ID,
-		// Created:    recTime,
-		Payload: map[string]interface{}{rec.BaseName: nil},
+		Payload:    map[string]interface{}{rec.BaseName: nil},
 	}
 }
