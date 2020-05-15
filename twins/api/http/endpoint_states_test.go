@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math"
 	"net/http"
 	"testing"
 	"time"
@@ -34,11 +33,11 @@ const (
 )
 
 type stateRes struct {
-	TwinID     string                 `json:"twin_id"`
-	ID         int64                  `json:"id"`
-	Definition int                    `json:"definition"`
-	Created    time.Time              `json:"created"`
-	Payload    map[string]interface{} `json:"payload"`
+	TwinID     string `json:"twin_id"`
+	ID         int64  `json:"id"`
+	Definition int    `json:"definition"`
+	// Created    time.Time              `json:"created"`
+	Payload map[string]interface{} `json:"payload"`
 }
 
 type statesPageRes struct {
@@ -253,15 +252,15 @@ func createMessage(attr twins.Attribute, recs []senml.Record) (*messaging.Messag
 }
 
 func createStateResponse(id int, tw twins.Twin, rec senml.Record) stateRes {
-	recSec := rec.BaseTime + rec.Time
-	sec, dec := math.Modf(recSec)
-	recTime := time.Unix(int64(sec), int64(dec*nanosec))
+	// recSec := rec.BaseTime + rec.Time
+	// sec, dec := math.Modf(recSec)
+	// recTime := time.Unix(int64(sec), int64(dec*nanosec))
 
 	return stateRes{
 		TwinID:     tw.ID,
 		ID:         int64(id),
 		Definition: tw.Definitions[len(tw.Definitions)-1].ID,
-		Created:    recTime,
-		Payload:    map[string]interface{}{rec.BaseName: nil},
+		// Created:    recTime,
+		Payload: map[string]interface{}{rec.BaseName: nil},
 	}
 }

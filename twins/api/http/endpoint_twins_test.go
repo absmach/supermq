@@ -8,13 +8,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/mainflux/mainflux/twins"
 	httpapi "github.com/mainflux/mainflux/twins/api/http"
@@ -302,54 +300,51 @@ func TestViewTwin(t *testing.T) {
 		Name:        stw.Name,
 		ID:          stw.ID,
 		Revision:    stw.Revision,
-		Created:     stw.Created,
-		Updated:     stw.Updated,
 		Definitions: stw.Definitions,
 		Metadata:    stw.Metadata,
 	}
-	data := toJSON(twres)
 
 	cases := []struct {
 		desc   string
 		id     string
 		auth   string
 		status int
-		res    string
+		res    twinRes
 	}{
 		{
 			desc:   "view existing twin",
 			id:     stw.ID,
 			auth:   token,
 			status: http.StatusOK,
-			res:    data,
+			res:    twres,
 		},
 		{
 			desc:   "view non-existent twin",
 			id:     strconv.FormatUint(wrongID, 10),
 			auth:   token,
 			status: http.StatusNotFound,
-			res:    "",
+			res:    twinRes{},
 		},
 		{
 			desc:   "view twin by passing invalid token",
 			id:     stw.ID,
 			auth:   wrongValue,
 			status: http.StatusForbidden,
-			res:    "",
+			res:    twinRes{},
 		},
 		{
 			desc:   "view twin by passing empty id",
 			id:     "",
 			auth:   token,
 			status: http.StatusBadRequest,
-			res:    "",
+			res:    twinRes{},
 		},
 		{
 			desc:   "view twin by passing empty token",
 			id:     stw.ID,
 			auth:   "",
 			status: http.StatusForbidden,
-			res:    "",
+			res:    twinRes{},
 		},
 	}
 
@@ -363,9 +358,14 @@ func TestViewTwin(t *testing.T) {
 		res, err := req.make()
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		body, err := ioutil.ReadAll(res.Body)
-		data := strings.Trim(string(body), "\n")
-		assert.Equal(t, tc.res, data, fmt.Sprintf("%s: expected body %s got %s", tc.desc, tc.res, data))
+
+		var resData twinRes
+		err = json.NewDecoder(res.Body).Decode(&resData)
+		assert.Equal(t, tc.res, resData, fmt.Sprintf("%s: expected body %v got %v", tc.desc, tc.res, resData))
+
+		// body, err := ioutil.ReadAll(res.Body)
+		// data := strings.Trim(string(body), "\n")
+		// assert.Equal(t, tc.res, data, fmt.Sprintf("%s: expected body %s got %s", tc.desc, tc.res, data))
 	}
 }
 
@@ -388,8 +388,6 @@ func TestListTwins(t *testing.T) {
 			ID:          tw.ID,
 			Name:        tw.Name,
 			Revision:    tw.Revision,
-			Created:     tw.Created,
-			Updated:     tw.Updated,
 			Definitions: tw.Definitions,
 			Metadata:    tw.Metadata,
 		}
@@ -620,8 +618,6 @@ type twinRes struct {
 	ID          string                 `json:"id"`
 	Name        string                 `json:"name,omitempty"`
 	Revision    int                    `json:"revision"`
-	Created     time.Time              `json:"created"`
-	Updated     time.Time              `json:"updated"`
 	Definitions []twins.Definition     `json:"definitions"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
