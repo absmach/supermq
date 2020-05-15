@@ -16,6 +16,7 @@ import (
 	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/things/mocks"
 	"github.com/mainflux/mainflux/things/redis"
+	uuidMocks "github.com/mainflux/mainflux/uuid/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -44,9 +45,9 @@ func newService(tokens map[string]string) things.Service {
 	channelsRepo := mocks.NewChannelRepository(thingsRepo, conns)
 	chanCache := mocks.NewChannelCache()
 	thingCache := mocks.NewThingCache()
-	up := mocks.NewUUIDProvider()
+	uuidProvider := uuidMocks.New()
 
-	return things.New(auth, thingsRepo, channelsRepo, chanCache, thingCache, up)
+	return things.New(auth, thingsRepo, channelsRepo, chanCache, thingCache, uuidProvider)
 }
 
 func TestCreateThings(t *testing.T) {

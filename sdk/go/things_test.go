@@ -18,6 +18,7 @@ import (
 	"github.com/mainflux/mainflux/things"
 	httpapi "github.com/mainflux/mainflux/things/api/things/http"
 	"github.com/mainflux/mainflux/things/mocks"
+	uuidMocks "github.com/mainflux/mainflux/uuid/mocks"
 )
 
 const (
@@ -47,9 +48,9 @@ func newThingsService(tokens map[string]string) things.Service {
 	channelsRepo := mocks.NewChannelRepository(thingsRepo, conns)
 	chanCache := mocks.NewChannelCache()
 	thingCache := mocks.NewThingCache()
-	up := mocks.NewUUIDProvider()
+	uuidProvider := uuidMocks.New()
 
-	return things.New(auth, thingsRepo, channelsRepo, chanCache, thingCache, up)
+	return things.New(auth, thingsRepo, channelsRepo, chanCache, thingCache, uuidProvider)
 }
 
 func newThingsServer(svc things.Service) *httptest.Server {

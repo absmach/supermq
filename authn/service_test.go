@@ -13,6 +13,7 @@ import (
 	"github.com/mainflux/mainflux/authn/jwt"
 	"github.com/mainflux/mainflux/authn/mocks"
 	"github.com/mainflux/mainflux/errors"
+	uuidMocks "github.com/mainflux/mainflux/uuid/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,9 +24,9 @@ const (
 
 func newService() authn.Service {
 	repo := mocks.NewKeyRepository()
-	up := mocks.NewUUIDProvider()
+	uuidProvider := uuidMocks.New()
 	t := jwt.New(secret)
-	return authn.New(repo, up, t)
+	return authn.New(repo, uuidProvider, t)
 }
 
 func TestIssue(t *testing.T) {

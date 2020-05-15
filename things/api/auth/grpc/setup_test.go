@@ -13,6 +13,7 @@ import (
 	"github.com/mainflux/mainflux/things"
 	grpcapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	"github.com/mainflux/mainflux/things/mocks"
+	uuidMocks "github.com/mainflux/mainflux/uuid/mocks"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"google.golang.org/grpc"
 )
@@ -47,7 +48,7 @@ func newService(tokens map[string]string) things.Service {
 	channelsRepo := mocks.NewChannelRepository(thingsRepo, conns)
 	chanCache := mocks.NewChannelCache()
 	thingCache := mocks.NewThingCache()
-	up := mocks.NewUUIDProvider()
+	uuidProvider := uuidMocks.New()
 
-	return things.New(auth, thingsRepo, channelsRepo, chanCache, thingCache, up)
+	return things.New(auth, thingsRepo, channelsRepo, chanCache, thingCache, uuidProvider)
 }
