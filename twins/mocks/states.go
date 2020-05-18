@@ -98,7 +98,9 @@ func (srm *stateRepositoryMock) RetrieveLast(ctx context.Context, id string) (tw
 
 	items := make([]twins.State, 0)
 	for _, v := range srm.states {
-		items = append(items, v)
+		if v.TwinID == id {
+			items = append(items, v)
+		}
 	}
 	sort.SliceStable(items, func(i, j int) bool {
 		return items[i].ID < items[j].ID

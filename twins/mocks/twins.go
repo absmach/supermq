@@ -81,7 +81,10 @@ func (trm *twinRepositoryMock) RetrieveByAttribute(ctx context.Context, channel,
 		}
 	}
 
-	return ids, nil
+	if len(ids) > 0 {
+		return ids, nil
+	}
+	return ids, twins.ErrNotFound
 }
 
 func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, offset uint64, limit uint64, name string, metadata twins.Metadata) (twins.Page, error) {

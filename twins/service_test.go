@@ -6,11 +6,11 @@ package twins_test
 import (
 	"context"
 	"fmt"
-	"math"
 	"testing"
 
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/mocks"
+	"github.com/mainflux/senml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -27,6 +27,8 @@ const (
 	attrSubtopic1 = "engine"
 	attrName2     = "humidity"
 	attrSubtopic2 = "chassis"
+	attrName3     = "speed"
+	attrSubtopic3 = "wheel_2"
 	numRecs       = 100
 )
 
@@ -249,6 +251,7 @@ func TestSaveStates(t *testing.T) {
 	twin := twins.Twin{Owner: email}
 	def := mocks.CreateDefinition([]string{attrName1, attrName2}, []string{attrSubtopic1, attrSubtopic2})
 	attr := def.Attributes[0]
+	attrSansTwin := mocks.CreateDefinition([]string{attrName3}, []string{attrSubtopic3}).Attributes[0]
 	tw, err := svc.AddTwin(context.Background(), token, twin, def)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
@@ -256,41 +259,47 @@ func TestSaveStates(t *testing.T) {
 	var ttlAdded uint64
 
 	cases := []struct {
-		desc   string
-		offset uint64
-		limit  uint64
-		err    error
+		desc string
+		recs []senml.Record
+		attr twins.Attribute
+		err  error
 	}{
 		{
-			desc:   "add 10 states",
-			offset: 0,
-			limit:  numRecs,
-			err:    nil,
+			desc: "add 100 states",
+			recs: recs,
+			attr: attr,
+			err:  nil,
 		},
 		{
-			desc:   "add 20 states",
-			offset: 10,
-			limit:  10,
-			err:    nil,
+			desc: "add 20 states",
+			recs: recs[10:30],
+			attr: attr,
+			err:  nil,
+		},
+		{
+			desc: "add 20 states for atttribute without twin",
+			recs: recs[30:50],
+			attr: attrSansTwin,
+			err:  twins.ErrNotFound,
+		},
+		{
+			desc: "use empty senml record",
+			recs: []senml.Record{},
+			attr: attr,
+			err:  nil,
 		},
 	}
 
 	for _, tc := range cases {
-
-		from := clamp(tc.offset, 0, numRecs)
-		to := clamp(tc.offset+tc.limit, 0, numRecs)
-		message, err := mocks.CreateMessage(attr, recs[from:to])
+		message, err := mocks.CreateMessage(tc.attr, tc.recs)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		err = svc.SaveStates(message)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		ttlAdded += to - from
-
-		page, err := svc.ListStates(context.TODO(), token, tc.offset, tc.limit, tw.ID)
+		if err == nil {
+			ttlAdded += uint64(len(tc.recs))
+		}
+		page, err := svc.ListStates(context.TODO(), token, 0, 10, tw.ID)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-		assert.Equal(t, ttlAdded, page.Total, fmt.Sprintf("%s: expected %s total got %s total\n", tc.desc, tc.err, err))
+		assert.Equal(t, ttlAdded, page.Total, fmt.Sprintf("%s: expected %d total got %d total\n", tc.desc, ttlAdded, page.Total))
 	}
-}
-
-func clamp(n, min, max uint64) uint64 {
-	return uint64(math.Min(math.Max(float64(n), float64(min)), float64(max)))
 }
