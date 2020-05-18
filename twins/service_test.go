@@ -262,23 +262,27 @@ func TestSaveStates(t *testing.T) {
 		desc string
 		recs []senml.Record
 		attr twins.Attribute
+		size uint64
 		err  error
 	}{
 		{
 			desc: "add 100 states",
 			recs: recs,
 			attr: attr,
+			size: numRecs,
 			err:  nil,
 		},
 		{
 			desc: "add 20 states",
 			recs: recs[10:30],
 			attr: attr,
+			size: 20,
 			err:  nil,
 		},
 		{
 			desc: "add 20 states for atttribute without twin",
 			recs: recs[30:50],
+			size: 0,
 			attr: attrSansTwin,
 			err:  twins.ErrNotFound,
 		},
@@ -286,6 +290,7 @@ func TestSaveStates(t *testing.T) {
 			desc: "use empty senml record",
 			recs: []senml.Record{},
 			attr: attr,
+			size: 0,
 			err:  nil,
 		},
 	}
@@ -293,13 +298,114 @@ func TestSaveStates(t *testing.T) {
 	for _, tc := range cases {
 		message, err := mocks.CreateMessage(tc.attr, tc.recs)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+
 		err = svc.SaveStates(message)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		if err == nil {
-			ttlAdded += uint64(len(tc.recs))
-		}
+
+		ttlAdded += tc.size
 		page, err := svc.ListStates(context.TODO(), token, 0, 10, tw.ID)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		assert.Equal(t, ttlAdded, page.Total, fmt.Sprintf("%s: expected %d total got %d total\n", tc.desc, ttlAdded, page.Total))
+	}
+}
+
+func TestListStates(t *testing.T) {
+	svc := mocks.NewService(map[string]string{token: email})
+
+	twin := twins.Twin{Owner: email}
+	def := mocks.CreateDefinition([]string{attrName1, attrName2}, []string{attrSubtopic1, attrSubtopic2})
+	attr := def.Attributes[0]
+	tw, err := svc.AddTwin(context.Background(), token, twin, def)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+
+	tw2, err := svc.AddTwin(context.Background(), token,
+		twins.Twin{Owner: email},
+		mocks.CreateDefinition([]string{attrName3}, []string{attrSubtopic3}))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+
+	recs := mocks.CreateSenML(numRecs, attrName1)
+	message, err := mocks.CreateMessage(attr, recs)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	err = svc.SaveStates(message)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+
+	cases := []struct {
+		desc   string
+		id     string
+		token  string
+		offset uint64
+		limit  uint64
+		size   int
+		err    error
+	}{
+		{
+			desc:   "get a list of first 10 states",
+			id:     tw.ID,
+			token:  token,
+			offset: 0,
+			limit:  10,
+			size:   10,
+			err:    nil,
+		},
+		{
+			desc:   "get a list of last 10 states",
+			id:     tw.ID,
+			token:  token,
+			offset: numRecs - 10,
+			limit:  numRecs,
+			size:   10,
+			err:    nil,
+		},
+		{
+			desc:   "get a list of last 10 states with limit > numRecs",
+			id:     tw.ID,
+			token:  token,
+			offset: numRecs - 10,
+			limit:  numRecs + 10,
+			size:   10,
+			err:    nil,
+		},
+		{
+			desc:   "get a list of first 10 states with offset == numRecs",
+			id:     tw.ID,
+			token:  token,
+			offset: numRecs,
+			limit:  numRecs + 10,
+			size:   0,
+			err:    nil,
+		},
+		{
+			desc:   "get a list with wrong user token",
+			id:     tw.ID,
+			token:  wrongToken,
+			offset: 0,
+			limit:  10,
+			size:   0,
+			err:    twins.ErrUnauthorizedAccess,
+		},
+		{
+			desc:   "get a list with id of non-existent twin",
+			id:     "1234567890",
+			token:  token,
+			offset: 0,
+			limit:  10,
+			size:   0,
+			err:    nil,
+		},
+		{
+			desc:   "get a list with id of existing twin without states ",
+			id:     tw2.ID,
+			token:  token,
+			offset: 0,
+			limit:  10,
+			size:   0,
+			err:    nil,
+		},
+	}
+
+	for _, tc := range cases {
+		page, err := svc.ListStates(context.TODO(), tc.token, tc.offset, tc.limit, tc.id)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.Equal(t, tc.size, len(page.States), fmt.Sprintf("%s: expected %d total got %d total\n", tc.desc, tc.size, len(page.States)))
 	}
 }

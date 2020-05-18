@@ -51,8 +51,8 @@ func TestListStates(t *testing.T) {
 	}
 	def := mocks.CreateDefinition([]string{attrName1, attrName2}, []string{attrSubtopic1, attrSubtopic2})
 	tw, err := svc.AddTwin(context.Background(), token, twin, def)
-	attr := def.Attributes[0]
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	attr := def.Attributes[0]
 
 	recs := mocks.CreateSenML(100, attrName1)
 	message, err := mocks.CreateMessage(attr, recs)
