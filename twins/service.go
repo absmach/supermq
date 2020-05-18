@@ -131,7 +131,7 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 
 	twin.Owner = res.GetValue()
 
-	t := time.Now().Round(0)
+	t := time.Now()
 	twin.Created = t
 	twin.Updated = t
 
@@ -142,7 +142,7 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 		def.Delta = millisec
 	}
 
-	def.Created = time.Now().Round(0)
+	def.Created = time.Now()
 	def.ID = 0
 	twin.Definitions = append(twin.Definitions, def)
 
@@ -181,7 +181,7 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 
 	if len(def.Attributes) > 0 {
 		revision = true
-		def.Created = time.Now().Round(0)
+		def.Created = time.Now()
 		def.ID = tw.Definitions[len(tw.Definitions)-1].ID + 1
 		tw.Definitions = append(tw.Definitions, def)
 	}
@@ -195,7 +195,7 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 		return ErrMalformedEntity
 	}
 
-	tw.Updated = time.Now().Round(0)
+	tw.Updated = time.Now()
 	tw.Revision++
 
 	if err := ts.twins.Update(ctx, tw); err != nil {
@@ -325,7 +325,7 @@ func prepareState(st *State, tw *Twin, rec senml.Record, msg *messaging.Message)
 
 	if st.Payload == nil {
 		st.Payload = make(map[string]interface{})
-		st.ID-- // st.ID == -1; state is incremented on save -> zero-based index
+		st.ID = -1 // state is incremented on save -> zero-based index
 	} else {
 		for k := range st.Payload {
 			idx := findAttribute(k, def.Attributes)

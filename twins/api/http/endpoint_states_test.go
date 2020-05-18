@@ -9,16 +9,13 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
-	"time"
 
-	"github.com/mainflux/mainflux/messaging"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/senml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mainflux/mainflux/twins/mocks"
-	"github.com/mainflux/mainflux/twins/uuid"
 )
 
 const (
@@ -52,19 +49,13 @@ func TestListStates(t *testing.T) {
 	twin := twins.Twin{
 		Owner: email,
 	}
-	attr1 := createAttribute(attrName1, attrSubtopic1)
-	attr2 := createAttribute(attrName2, attrSubtopic2)
-	def := twins.Definition{
-		Attributes: []twins.Attribute{
-			attr1,
-			attr2,
-		},
-	}
+	def := mocks.CreateDefinition([]string{attrName1, attrName2}, []string{attrSubtopic1, attrSubtopic2})
 	tw, err := svc.AddTwin(context.Background(), token, twin, def)
+	attr := def.Attributes[0]
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
-	recs := createSenML(100, attrName1)
-	message, err := createMessage(attr1, recs)
+	recs := mocks.CreateSenML(100, attrName1)
+	message, err := mocks.CreateMessage(attr, recs)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	err = svc.SaveStates(message)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -210,43 +201,6 @@ func TestListStates(t *testing.T) {
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
 		assert.ElementsMatch(t, tc.res, resData.States, fmt.Sprintf("%s: expected body %v got %v", tc.desc, tc.res, resData.States))
 	}
-}
-
-func createAttribute(name, subtopic string) twins.Attribute {
-	id, _ := uuid.New().ID()
-	return twins.Attribute{
-		Name:         name,
-		Channel:      id,
-		Subtopic:     subtopic,
-		PersistState: true,
-	}
-}
-
-func createSenML(n int, bn string) []senml.Record {
-	var recs []senml.Record
-	for i := 0; i < n; i++ {
-		rec := senml.Record{
-			BaseName: bn,
-			BaseTime: float64(time.Now().Unix()),
-			Time:     float64(i),
-			Value:    nil,
-		}
-		recs = append(recs, rec)
-	}
-	return recs
-}
-
-func createMessage(attr twins.Attribute, recs []senml.Record) (*messaging.Message, error) {
-	mRecs, err := json.Marshal(recs)
-	if err != nil {
-		return nil, err
-	}
-	return &messaging.Message{
-		Channel:   attr.Channel,
-		Subtopic:  attr.Subtopic,
-		Payload:   mRecs,
-		Publisher: publisher,
-	}, nil
 }
 
 func createStateResponse(id int, tw twins.Twin, rec senml.Record) stateRes {

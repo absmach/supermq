@@ -16,9 +16,8 @@ import (
 var _ twins.TwinRepository = (*twinRepositoryMock)(nil)
 
 type twinRepositoryMock struct {
-	mu      sync.Mutex
-	counter uint64
-	twins   map[string]twins.Twin
+	mu    sync.Mutex
+	twins map[string]twins.Twin
 }
 
 // NewTwinRepository creates in-memory twin repository.
@@ -116,10 +115,11 @@ func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, offs
 		return items[i].ID < items[j].ID
 	})
 
+	total := uint64(len(trm.twins))
 	page := twins.Page{
 		Twins: items,
 		PageMetadata: twins.PageMetadata{
-			Total:  trm.counter,
+			Total:  total,
 			Offset: offset,
 			Limit:  limit,
 		},

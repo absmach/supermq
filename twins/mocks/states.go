@@ -15,9 +15,8 @@ import (
 var _ twins.StateRepository = (*stateRepositoryMock)(nil)
 
 type stateRepositoryMock struct {
-	mu      sync.Mutex
-	counter uint64
-	states  map[string]twins.State
+	mu     sync.Mutex
+	states map[string]twins.State
 }
 
 // NewStateRepository creates in-memory twin repository.
@@ -79,10 +78,11 @@ func (srm *stateRepositoryMock) RetrieveAll(ctx context.Context, offset uint64, 
 		return items[i].ID < items[j].ID
 	})
 
+	total := uint64(len(srm.states))
 	page := twins.StatesPage{
 		States: items,
 		PageMetadata: twins.PageMetadata{
-			Total:  srm.counter,
+			Total:  total,
 			Offset: offset,
 			Limit:  limit,
 		},

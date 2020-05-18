@@ -6,6 +6,7 @@ package twins_test
 import (
 	"context"
 	"fmt"
+	"math"
 	"testing"
 
 	"github.com/mainflux/mainflux/twins"
@@ -21,6 +22,12 @@ const (
 	wrongToken = "wrong-token"
 	email      = "user@example.com"
 	natsURL    = "nats://localhost:4222"
+
+	attrName1     = "temperature"
+	attrSubtopic1 = "engine"
+	attrName2     = "humidity"
+	attrSubtopic2 = "chassis"
+	numRecs       = 100
 )
 
 func TestAddTwin(t *testing.T) {
@@ -234,4 +241,56 @@ func TestRemoveTwin(t *testing.T) {
 		err := svc.RemoveTwin(context.Background(), tc.token, tc.id)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
+}
+
+func TestSaveStates(t *testing.T) {
+	svc := mocks.NewService(map[string]string{token: email})
+
+	twin := twins.Twin{Owner: email}
+	def := mocks.CreateDefinition([]string{attrName1, attrName2}, []string{attrSubtopic1, attrSubtopic2})
+	attr := def.Attributes[0]
+	tw, err := svc.AddTwin(context.Background(), token, twin, def)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+
+	recs := mocks.CreateSenML(numRecs, attrName1)
+	var ttlAdded uint64
+
+	cases := []struct {
+		desc   string
+		offset uint64
+		limit  uint64
+		err    error
+	}{
+		{
+			desc:   "add 10 states",
+			offset: 0,
+			limit:  numRecs,
+			err:    nil,
+		},
+		{
+			desc:   "add 20 states",
+			offset: 10,
+			limit:  10,
+			err:    nil,
+		},
+	}
+
+	for _, tc := range cases {
+
+		from := clamp(tc.offset, 0, numRecs)
+		to := clamp(tc.offset+tc.limit, 0, numRecs)
+		message, err := mocks.CreateMessage(attr, recs[from:to])
+		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+		err = svc.SaveStates(message)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		ttlAdded += to - from
+
+		page, err := svc.ListStates(context.TODO(), token, tc.offset, tc.limit, tw.ID)
+		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+		assert.Equal(t, ttlAdded, page.Total, fmt.Sprintf("%s: expected %s total got %s total\n", tc.desc, tc.err, err))
+	}
+}
+
+func clamp(n, min, max uint64) uint64 {
+	return uint64(math.Min(math.Max(float64(n), float64(min)), float64(max)))
 }
