@@ -26,6 +26,7 @@ import (
 	"github.com/mainflux/mainflux/twins/api"
 	twapi "github.com/mainflux/mainflux/twins/api/http"
 	twmongodb "github.com/mainflux/mainflux/twins/mongodb"
+	"github.com/mainflux/mainflux/twins/tracing"
 	"github.com/mainflux/mainflux/twins/uuid"
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
@@ -238,6 +239,7 @@ func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
 
 func newService(ps messaging.PubSub, ncTracer opentracing.Tracer, chanID string, users mainflux.AuthNServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
 	twinRepo := twmongodb.NewTwinRepository(db)
+	twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, twinRepo)
 
 	stateRepo := twmongodb.NewStateRepository(db)
 	idp := uuid.New()
