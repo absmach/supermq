@@ -76,3 +76,15 @@ type TwinRepository interface {
 	// Remove removes the twin having the provided identifier.
 	Remove(ctx context.Context, id string) error
 }
+
+// TwinCache contains twin caching interface.
+type TwinCache interface {
+	// Save stores twin ID as element of channel-subtopic keyed set.
+	Save(context.Context, Twin) error
+
+	// ID returns twin IDs for given attribute.
+	ID(context.Context, Attribute) ([]string, error)
+
+	// Removes twin from cache.
+	Remove(context.Context, Twin) error
+}
