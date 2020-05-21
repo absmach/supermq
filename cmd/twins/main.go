@@ -122,16 +122,11 @@ func main() {
 	}
 	defer pubSub.Close()
 
-	ncTracer, ncCloser := initJaeger("twins_nats", cfg.jaegerURL, logger)
-	defer ncCloser.Close()
+	svc := newService(pubSub, cfg.channelID, auth, dbTracer, db, logger)
 
 	tracer, closer := initJaeger("twins", cfg.jaegerURL, logger)
 	defer closer.Close()
-
-	svc := newService(pubSub, ncTracer, cfg.channelID, auth, dbTracer, db, logger)
-
 	errs := make(chan error, 2)
-
 	go startHTTPServer(twapi.MakeHandler(tracer, svc), cfg.httpPort, cfg, logger, errs)
 
 	go func() {
@@ -237,7 +232,7 @@ func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
 	return conn
 }
 
-func newService(ps messaging.PubSub, ncTracer opentracing.Tracer, chanID string, users mainflux.AuthNServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
+func newService(ps messaging.PubSub, chanID string, users mainflux.AuthNServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
 	twinRepo := twmongodb.NewTwinRepository(db)
 	twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, twinRepo)
 
