@@ -242,6 +242,8 @@ func newService(ps messaging.PubSub, ncTracer opentracing.Tracer, chanID string,
 	twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, twinRepo)
 
 	stateRepo := twmongodb.NewStateRepository(db)
+	stateRepo = tracing.StateRepositoryMiddleware(dbTracer, stateRepo)
+
 	idp := uuid.New()
 
 	svc := twins.New(ps, users, twinRepo, stateRepo, idp, chanID, logger)
