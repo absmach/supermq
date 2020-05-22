@@ -11,7 +11,9 @@ import (
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/mocks"
 	"github.com/mainflux/mainflux/twins/redis"
+	"github.com/mainflux/mainflux/twins/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -26,10 +28,11 @@ const (
 func TestTwinSave(t *testing.T) {
 	twinCache := redis.NewTwinCache(redisClient)
 
-	def := mocks.CreateDefinition([]string{attrName1, attrName2}, []string{attrSubtopic1, attrSubtopic2})
-	twin := twins.Twin{
-		Definitions: []twins.Definition{def},
-	}
+	twin1, err := createTwin([]string{attrName1, attrName2}, []string{attrSubtopic1, attrSubtopic2})
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	twin2, err := createTwin([]string{attrName2, attrName3}, []string{attrSubtopic2, attrSubtopic3})
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := []struct {
 		desc string
@@ -38,19 +41,47 @@ func TestTwinSave(t *testing.T) {
 	}{
 		{
 			desc: "Save twin to cache",
-			twin: twin,
+			twin: twin1,
 			err:  nil,
 		},
 		{
 			desc: "Save already cached twin to cache",
-			twin: twin,
+			twin: twin1,
+			err:  nil,
+		},
+		{
+			desc: "Save another twin to cache",
+			twin: twin2,
+			err:  nil,
+		},
+		{
+			desc: "Save already cached twin to cache",
+			twin: twin2,
 			err:  nil,
 		},
 	}
 
 	for _, tc := range cases {
-		err := twinCache.Save(context.Background(), tc.twin)
+		ctx := context.Background()
+		err := twinCache.Save(ctx, tc.twin)
 		assert.Nil(t, err, fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.err, err))
 
+		def := tc.twin.Definitions[len(tc.twin.Definitions)-1]
+		for _, attr := range def.Attributes {
+			ids, err := twinCache.IDs(ctx, attr)
+			require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+			assert.Contains(t, ids, tc.twin.ID, fmt.Sprintf("%s: id %s not found in %v", tc.desc, tc.twin.ID, ids))
+		}
 	}
+}
+
+func createTwin(attrNames []string, subtopics []string) (twins.Twin, error) {
+	id, err := uuid.New().ID()
+	if err != nil {
+		return twins.Twin{}, err
+	}
+	return twins.Twin{
+		ID:          id,
+		Definitions: []twins.Definition{mocks.CreateDefinition(attrNames, subtopics)},
+	}, nil
 }
