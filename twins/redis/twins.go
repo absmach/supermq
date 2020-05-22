@@ -51,7 +51,7 @@ func (tc *twinCache) Save(_ context.Context, twin twins.Twin) error {
 	return nil
 }
 
-func (tc *twinCache) ID(_ context.Context, attr twins.Attribute) ([]string, error) {
+func (tc *twinCache) IDs(_ context.Context, attr twins.Attribute) ([]string, error) {
 	ids, err := tc.client.SMembers(attrKey(attr)).Result()
 	if err != nil {
 		return nil, errors.Wrap(ErrRedisTwinIDs, err)

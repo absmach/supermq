@@ -85,6 +85,44 @@ func (trm twinRepositoryMiddleware) Remove(ctx context.Context, id string) error
 	return trm.repo.Remove(ctx, id)
 }
 
+type twinCacheMiddleware struct {
+	tracer opentracing.Tracer
+	cache  twins.TwinCache
+}
+
+// TwinCacheMiddleware tracks request and their latency, and adds spans
+// to context.
+func TwinCacheMiddleware(tracer opentracing.Tracer, cache twins.TwinCache) twins.TwinCache {
+	return twinCacheMiddleware{
+		tracer: tracer,
+		cache:  cache,
+	}
+}
+
+func (tcm twinCacheMiddleware) Save(ctx context.Context, twin twins.Twin) error {
+	span := createSpan(ctx, tcm.tracer, saveTwinOp)
+	defer span.Finish()
+	ctx = opentracing.ContextWithSpan(ctx, span)
+
+	return tcm.cache.Save(ctx, twin)
+}
+
+func (tcm twinCacheMiddleware) IDs(ctx context.Context, attr twins.Attribute) ([]string, error) {
+	span := createSpan(ctx, tcm.tracer, retrieveTwinsByAttributeOp)
+	defer span.Finish()
+	ctx = opentracing.ContextWithSpan(ctx, span)
+
+	return tcm.cache.IDs(ctx, attr)
+}
+
+func (tcm twinCacheMiddleware) Remove(ctx context.Context, twin twins.Twin) error {
+	span := createSpan(ctx, tcm.tracer, removeTwinOp)
+	defer span.Finish()
+	ctx = opentracing.ContextWithSpan(ctx, span)
+
+	return tcm.cache.Remove(ctx, twin)
+}
+
 func createSpan(ctx context.Context, tracer opentracing.Tracer, opName string) opentracing.Span {
 	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
 		return tracer.StartSpan(

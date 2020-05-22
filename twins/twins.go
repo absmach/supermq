@@ -83,7 +83,7 @@ type TwinCache interface {
 	Save(context.Context, Twin) error
 
 	// ID returns twin IDs for given attribute.
-	ID(context.Context, Attribute) ([]string, error)
+	IDs(context.Context, Attribute) ([]string, error)
 
 	// Removes twin from cache.
 	Remove(context.Context, Twin) error

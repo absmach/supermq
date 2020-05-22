@@ -113,20 +113,20 @@ func main() {
 	}
 
 	cacheClient := connectToRedis(cfg.cacheURL, cfg.cachePass, cfg.cacheDB, logger)
+	cacheTracer, cacheCloser := initJaeger("twins_cache", cfg.jaegerURL, logger)
+	defer cacheCloser.Close()
 
 	db, err := twmongodb.Connect(cfg.dbCfg, logger)
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
+	dbTracer, dbCloser := initJaeger("twins_db", cfg.jaegerURL, logger)
+	defer dbCloser.Close()
 
 	authTracer, authCloser := initJaeger("auth", cfg.jaegerURL, logger)
 	defer authCloser.Close()
-
 	auth, _ := createAuthClient(cfg, authTracer, logger)
-
-	dbTracer, dbCloser := initJaeger("twins_db", cfg.jaegerURL, logger)
-	defer dbCloser.Close()
 
 	pubSub, err := nats.NewPubSub(cfg.natsURL, queue, logger)
 	if err != nil {
@@ -135,7 +135,7 @@ func main() {
 	}
 	defer pubSub.Close()
 
-	svc := newService(pubSub, cfg.channelID, auth, dbTracer, db, cacheClient, logger)
+	svc := newService(pubSub, cfg.channelID, auth, dbTracer, db, cacheTracer, cacheClient, logger)
 
 	tracer, closer := initJaeger("twins", cfg.jaegerURL, logger)
 	defer closer.Close()
@@ -262,7 +262,7 @@ func connectToRedis(cacheURL, cachePass, cacheDB string, logger logger.Logger) *
 	})
 }
 
-func newService(ps messaging.PubSub, chanID string, users mainflux.AuthNServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, cacheClient *redis.Client, logger logger.Logger) twins.Service {
+func newService(ps messaging.PubSub, chanID string, users mainflux.AuthNServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, cacheTracer opentracing.Tracer, cacheClient *redis.Client, logger logger.Logger) twins.Service {
 	twinRepo := twmongodb.NewTwinRepository(db)
 	twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, twinRepo)
 
@@ -271,6 +271,7 @@ func newService(ps messaging.PubSub, chanID string, users mainflux.AuthNServiceC
 
 	up := uuidProvider.New()
 	twinCache := rediscache.NewTwinCache(cacheClient)
+	twinCache = tracing.TwinCacheMiddleware(cacheTracer, twinCache)
 
 	svc := twins.New(ps, users, twinRepo, twinCache, stateRepo, up, chanID, logger)
 	svc = api.LoggingMiddleware(svc, logger)
