@@ -16,22 +16,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	attrName1     = "temperature"
-	attrSubtopic1 = "engine"
-	attrName2     = "humidity"
-	attrSubtopic2 = "chassis"
-	attrName3     = "speed"
-	attrSubtopic3 = "wheel_2"
-)
+var names = []string{"temperature", "humidity", "speed"}
+var subtopics = []string{"engine", "chassis", "wheel_2"}
 
 func TestTwinSave(t *testing.T) {
 	twinCache := redis.NewTwinCache(redisClient)
 
-	twin1, err := createTwin([]string{attrName1, attrName2}, []string{attrSubtopic1, attrSubtopic2})
+	twin1, err := createTwin(names[0:2], subtopics[0:2])
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	twin2, err := createTwin([]string{attrName2, attrName3}, []string{attrSubtopic2, attrSubtopic3})
+	twin2, err := createTwin(names[1:3], subtopics[1:3])
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := []struct {
@@ -75,13 +69,61 @@ func TestTwinSave(t *testing.T) {
 	}
 }
 
-func createTwin(attrNames []string, subtopics []string) (twins.Twin, error) {
+func TestTwinRemove(t *testing.T) {
+	twinCache := redis.NewTwinCache(redisClient)
+	ctx := context.Background()
+
+	var tws []twins.Twin
+	for i, v := range names {
+		tw, err := createTwin([]string{v}, []string{subtopics[i]})
+		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+		err = twinCache.Save(ctx, tw)
+		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+		tws = append(tws, tw)
+	}
+
+	cases := []struct {
+		desc string
+		twin twins.Twin
+		err  error
+	}{
+		{
+			desc: "Remove twin from cache",
+			twin: tws[0],
+			err:  nil,
+		},
+		{
+			desc: "Remove already removed twin from cache",
+			twin: tws[0],
+			err:  nil,
+		},
+		{
+			desc: "Remove another twin from cache",
+			twin: tws[1],
+			err:  nil,
+		},
+	}
+
+	for _, tc := range cases {
+		err := twinCache.Remove(ctx, tc.twin)
+		assert.Nil(t, err, fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.err, err))
+
+		def := tc.twin.Definitions[len(tc.twin.Definitions)-1]
+		for _, attr := range def.Attributes {
+			ids, err := twinCache.IDs(ctx, attr)
+			require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+			assert.NotContains(t, ids, tc.twin.ID, fmt.Sprintf("%s: id %s not found in %v", tc.desc, tc.twin.ID, ids))
+		}
+	}
+}
+
+func createTwin(names []string, subtopics []string) (twins.Twin, error) {
 	id, err := uuid.New().ID()
 	if err != nil {
 		return twins.Twin{}, err
 	}
 	return twins.Twin{
 		ID:          id,
-		Definitions: []twins.Definition{mocks.CreateDefinition(attrNames, subtopics)},
+		Definitions: []twins.Definition{mocks.CreateDefinition(names, subtopics)},
 	}, nil
 }
