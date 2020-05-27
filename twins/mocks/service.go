@@ -27,13 +27,12 @@ func NewService(tokens map[string]string) twins.Service {
 }
 
 // CreateDefinition creates twin definition
-func CreateDefinition(names []string, subtopics []string) twins.Definition {
+func CreateDefinition(names []string, channels []string, subtopics []string) twins.Definition {
 	var def twins.Definition
 	for i, v := range names {
-		id, _ := uuid.New().ID()
 		attr := twins.Attribute{
 			Name:         v,
-			Channel:      id,
+			Channel:      channels[i],
 			Subtopic:     subtopics[i],
 			PersistState: true,
 		}

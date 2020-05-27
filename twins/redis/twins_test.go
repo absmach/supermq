@@ -18,14 +18,15 @@ import (
 
 var names = []string{"temperature", "humidity", "speed"}
 var subtopics = []string{"engine", "chassis", "wheel_2"}
+var channels = []string{"01ec3c3e-0e66-4e69-9751-a0545b44e08f", "48061e4f-7c23-4f5c-9012-0f9b7cd9d18d", "5b2180e4-e96b-4469-9dc1-b6745078d0b6"}
 
 func TestTwinSave(t *testing.T) {
 	twinCache := redis.NewTwinCache(redisClient)
 
-	twin1, err := createTwin(names[0:2], subtopics[0:2])
+	twin1, err := createTwin(names[0:2], channels[0:2], subtopics[0:2])
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	twin2, err := createTwin(names[1:3], subtopics[1:3])
+	twin2, err := createTwin(names[1:3], channels[1:3], subtopics[1:3])
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := []struct {
@@ -74,8 +75,8 @@ func TestTwinRemove(t *testing.T) {
 	ctx := context.Background()
 
 	var tws []twins.Twin
-	for i, v := range names {
-		tw, err := createTwin([]string{v}, []string{subtopics[i]})
+	for i := range names {
+		tw, err := createTwin(names[i:i+1], channels[i:i+1], subtopics[i:i+1])
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 		err = twinCache.Save(ctx, tw)
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -117,13 +118,13 @@ func TestTwinRemove(t *testing.T) {
 	}
 }
 
-func createTwin(names []string, subtopics []string) (twins.Twin, error) {
+func createTwin(names []string, channels []string, subtopics []string) (twins.Twin, error) {
 	id, err := uuid.New().ID()
 	if err != nil {
 		return twins.Twin{}, err
 	}
 	return twins.Twin{
 		ID:          id,
-		Definitions: []twins.Definition{mocks.CreateDefinition(names, subtopics)},
+		Definitions: []twins.Definition{mocks.CreateDefinition(names, channels, subtopics)},
 	}, nil
 }
