@@ -22,11 +22,9 @@ const (
 	wrongToken = "wrong-token"
 	email      = "user@example.com"
 	natsURL    = "nats://localhost:4222"
-
-	numRecs = 100
+	numRecs    = 100
 )
 
-var names = []string{"temperature", "humidity", "speed"}
 var subtopics = []string{"engine", "chassis", "wheel_2"}
 var channels = []string{"01ec3c3e-0e66-4e69-9751-a0545b44e08f", "48061e4f-7c23-4f5c-9012-0f9b7cd9d18d", "5b2180e4-e96b-4469-9dc1-b6745078d0b6"}
 
@@ -247,13 +245,13 @@ func TestSaveStates(t *testing.T) {
 	svc := mocks.NewService(map[string]string{token: email})
 
 	twin := twins.Twin{Owner: email}
-	def := mocks.CreateDefinition(names[0:2], channels[0:2], subtopics[0:2])
+	def := mocks.CreateDefinition(channels[0:2], subtopics[0:2])
 	attr := def.Attributes[0]
-	attrSansTwin := mocks.CreateDefinition(names[2:3], channels[2:3], subtopics[2:3]).Attributes[0]
+	attrSansTwin := mocks.CreateDefinition(channels[2:3], subtopics[2:3]).Attributes[0]
 	tw, err := svc.AddTwin(context.Background(), token, twin, def)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
-	recs := mocks.CreateSenML(numRecs, names[0])
+	recs := mocks.CreateSenML(numRecs)
 	var ttlAdded uint64
 
 	cases := []struct {
@@ -311,17 +309,17 @@ func TestListStates(t *testing.T) {
 	svc := mocks.NewService(map[string]string{token: email})
 
 	twin := twins.Twin{Owner: email}
-	def := mocks.CreateDefinition(names[0:2], channels[0:2], subtopics[0:2])
+	def := mocks.CreateDefinition(channels[0:2], subtopics[0:2])
 	attr := def.Attributes[0]
 	tw, err := svc.AddTwin(context.Background(), token, twin, def)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	tw2, err := svc.AddTwin(context.Background(), token,
 		twins.Twin{Owner: email},
-		mocks.CreateDefinition(names[2:3], channels[2:3], subtopics[2:3]))
+		mocks.CreateDefinition(channels[2:3], subtopics[2:3]))
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
-	recs := mocks.CreateSenML(numRecs, names[0])
+	recs := mocks.CreateSenML(numRecs)
 	message, err := mocks.CreateMessage(attr, recs)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	err = svc.SaveStates(message)

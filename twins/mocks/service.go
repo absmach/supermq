@@ -27,11 +27,10 @@ func NewService(tokens map[string]string) twins.Service {
 }
 
 // CreateDefinition creates twin definition
-func CreateDefinition(names []string, channels []string, subtopics []string) twins.Definition {
+func CreateDefinition(channels []string, subtopics []string) twins.Definition {
 	var def twins.Definition
-	for i, v := range names {
+	for i := range channels {
 		attr := twins.Attribute{
-			Name:         v,
 			Channel:      channels[i],
 			Subtopic:     subtopics[i],
 			PersistState: true,
@@ -42,11 +41,10 @@ func CreateDefinition(names []string, channels []string, subtopics []string) twi
 }
 
 // CreateSenML creates SenML record array
-func CreateSenML(n int, bn string) []senml.Record {
+func CreateSenML(n int) []senml.Record {
 	var recs []senml.Record
 	for i := 0; i < n; i++ {
 		rec := senml.Record{
-			BaseName: bn,
 			BaseTime: float64(time.Now().Unix()),
 			Time:     float64(i),
 			Value:    nil,

@@ -23,7 +23,6 @@ const (
 	publisher = "twins"
 )
 
-var names = []string{"temperature", "humidity", "speed"}
 var subtopics = []string{"engine", "chassis", "wheel_2"}
 var channels = []string{"01ec3c3e-0e66-4e69-9751-a0545b44e08f", "48061e4f-7c23-4f5c-9012-0f9b7cd9d18d", "5b2180e4-e96b-4469-9dc1-b6745078d0b6"}
 
@@ -47,12 +46,12 @@ func TestListStates(t *testing.T) {
 	twin := twins.Twin{
 		Owner: email,
 	}
-	def := mocks.CreateDefinition(names[0:2], channels[0:2], subtopics[0:2])
+	def := mocks.CreateDefinition(channels[0:2], subtopics[0:2])
 	tw, err := svc.AddTwin(context.Background(), token, twin, def)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	attr := def.Attributes[0]
 
-	recs := mocks.CreateSenML(100, names[0])
+	recs := mocks.CreateSenML(100)
 	message, err := mocks.CreateMessage(attr, recs)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	err = svc.SaveStates(message)
