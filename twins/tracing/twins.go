@@ -115,12 +115,12 @@ func (tcm twinCacheMiddleware) IDs(ctx context.Context, attr twins.Attribute) ([
 	return tcm.cache.IDs(ctx, attr)
 }
 
-func (tcm twinCacheMiddleware) Remove(ctx context.Context, twin twins.Twin) error {
+func (tcm twinCacheMiddleware) Remove(ctx context.Context, twinID string) error {
 	span := createSpan(ctx, tcm.tracer, removeTwinOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 
-	return tcm.cache.Remove(ctx, twin)
+	return tcm.cache.Remove(ctx, twinID)
 }
 
 func createSpan(ctx context.Context, tracer opentracing.Tracer, opName string) opentracing.Span {

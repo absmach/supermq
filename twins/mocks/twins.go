@@ -199,24 +199,23 @@ func (tcm *twinCacheMock) IDs(_ context.Context, attr twins.Attribute) ([]string
 	return ids, nil
 }
 
-func (tcm *twinCacheMock) Remove(_ context.Context, twin twins.Twin) error {
+func (tcm *twinCacheMock) Remove(_ context.Context, twinID string) error {
 	tcm.mu.Lock()
 	defer tcm.mu.Unlock()
 
-	def := twin.Definitions[len(twin.Definitions)-1]
-	for _, attr := range def.Attributes {
-		attrKey := attr.Channel + attr.Subtopic
+	idKey := twinID
+	attrKeys := tcm.idAttrs[idKey]
+	for attrKey := range attrKeys {
 		if _, ok := tcm.attrIds[attrKey]; !ok {
 			return twins.ErrNotFound
 		}
-		delete(tcm.attrIds[attrKey], twin.ID)
+		delete(tcm.attrIds[attrKey], twinID)
 	}
 
-	idKey := twin.ID
 	if _, ok := tcm.idAttrs[idKey]; !ok {
 		return twins.ErrNotFound
 	}
-	delete(tcm.idAttrs, twin.ID)
+	delete(tcm.idAttrs, twinID)
 
 	return nil
 }

@@ -86,5 +86,5 @@ type TwinCache interface {
 	IDs(context.Context, Attribute) ([]string, error)
 
 	// Removes twin from cache.
-	Remove(context.Context, Twin) error
+	Remove(context.Context, string) error
 }

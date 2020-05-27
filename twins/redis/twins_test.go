@@ -167,7 +167,7 @@ func TestTwinRemove(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := twinCache.Remove(ctx, tc.twin)
+		err := twinCache.Remove(ctx, tc.twin.ID)
 		assert.Nil(t, err, fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.err, err))
 
 		def := tc.twin.Definitions[len(tc.twin.Definitions)-1]

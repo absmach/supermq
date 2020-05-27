@@ -44,7 +44,7 @@ func (tc *twinCache) Save(_ context.Context, twin twins.Twin) error {
 		if err := tc.client.SAdd(attrKey(attr), twin.ID).Err(); err != nil {
 			return errors.Wrap(ErrRedisTwinSave, err)
 		}
-		if err := tc.client.SAdd(twinKey(twin.ID), attrVal(attr)).Err(); err != nil {
+		if err := tc.client.SAdd(twinKey(twin.ID), attrKey(attr)).Err(); err != nil {
 			return errors.Wrap(ErrRedisTwinSave, err)
 		}
 	}
@@ -59,13 +59,17 @@ func (tc *twinCache) IDs(_ context.Context, attr twins.Attribute) ([]string, err
 	return ids, nil
 }
 
-func (tc *twinCache) Remove(_ context.Context, twin twins.Twin) error {
-	if err := tc.client.Del(twinKey(twin.ID)).Err(); err != nil {
+func (tc *twinCache) Remove(_ context.Context, twinID string) error {
+	twKey := twinKey(twinID)
+	attrKeys, err := tc.client.SMembers(twKey).Result()
+	if err != nil {
 		return errors.Wrap(ErrRedisTwinRemove, err)
 	}
-	def := twin.Definitions[len(twin.Definitions)-1]
-	for _, attr := range def.Attributes {
-		if err := tc.client.SRem(attrKey(attr), twin.ID).Err(); err != nil {
+	if err := tc.client.Del(twKey).Err(); err != nil {
+		return errors.Wrap(ErrRedisTwinRemove, err)
+	}
+	for _, key := range attrKeys {
+		if err := tc.client.SRem(key, twinID).Err(); err != nil {
 			return errors.Wrap(ErrRedisTwinRemove, err)
 		}
 	}
@@ -78,8 +82,4 @@ func twinKey(twinID string) string {
 
 func attrKey(attr twins.Attribute) string {
 	return fmt.Sprintf("%s:%s-%s", prefix, attr.Channel, attr.Subtopic)
-}
-
-func attrVal(attr twins.Attribute) string {
-	return fmt.Sprintf("%s-%s", attr.Channel, attr.Subtopic)
 }
