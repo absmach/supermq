@@ -21,6 +21,7 @@ var subtopics = []string{"engine", "chassis", "wheel_2"}
 var channels = []string{"01ec3c3e-0e66-4e69-9751-a0545b44e08f", "48061e4f-7c23-4f5c-9012-0f9b7cd9d18d", "5b2180e4-e96b-4469-9dc1-b6745078d0b6"}
 
 func TestTwinSave(t *testing.T) {
+	redisClient.FlushAll()
 	twinCache := redis.NewTwinCache(redisClient)
 
 	twin1, err := createTwin(names[0:2], channels[0:2], subtopics[0:2])
@@ -70,7 +71,69 @@ func TestTwinSave(t *testing.T) {
 	}
 }
 
+func TestTwinIDs(t *testing.T) {
+	redisClient.FlushAll()
+	twinCache := redis.NewTwinCache(redisClient)
+	ctx := context.Background()
+
+	var tws []twins.Twin
+	for i := range names {
+		tw, err := createTwin(names[i:i+1], channels[0:1], subtopics[0:1])
+		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+		err = twinCache.Save(ctx, tw)
+		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+		tws = append(tws, tw)
+	}
+	for i := range names {
+		tw, err := createTwin(names[i:i+1], channels[1:2], subtopics[1:2])
+		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+		err = twinCache.Save(ctx, tw)
+		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+		tws = append(tws, tw)
+	}
+
+	nonExistAttr := twins.Attribute{
+		Name:         names[0],
+		Channel:      channels[2],
+		Subtopic:     subtopics[0],
+		PersistState: true,
+	}
+
+	cases := []struct {
+		desc string
+		ids  []string
+		attr twins.Attribute
+		err  error
+	}{
+		{
+			desc: "Get twin IDs from cache for subset of ids",
+			ids:  []string{tws[0].ID, tws[1].ID, tws[2].ID},
+			attr: tws[0].Definitions[0].Attributes[0],
+			err:  nil,
+		},
+		{
+			desc: "Get twin IDs from cache for subset of ids",
+			ids:  []string{tws[3].ID, tws[4].ID, tws[5].ID},
+			attr: tws[3].Definitions[0].Attributes[0],
+			err:  nil,
+		},
+		{
+			desc: "Get twin IDs from cache for non existing attribute",
+			ids:  []string{},
+			attr: nonExistAttr,
+			err:  nil,
+		},
+	}
+
+	for _, tc := range cases {
+		ids, err := twinCache.IDs(ctx, tc.attr)
+		assert.Nil(t, err, fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.err, err))
+		assert.ElementsMatch(t, ids, tc.ids, fmt.Sprintf("%s: expected ids %v got ids %v", tc.desc, tc.ids, ids))
+	}
+}
+
 func TestTwinRemove(t *testing.T) {
+	redisClient.FlushAll()
 	twinCache := redis.NewTwinCache(redisClient)
 	ctx := context.Background()
 
