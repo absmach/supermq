@@ -63,7 +63,7 @@ func TestTwinSave(t *testing.T) {
 
 		def := tc.twin.Definitions[len(tc.twin.Definitions)-1]
 		for _, attr := range def.Attributes {
-			ids, err := twinCache.IDs(ctx, attr)
+			ids, err := twinCache.IDs(ctx, attr.Channel, attr.Subtopic)
 			require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 			assert.Contains(t, ids, tc.twin.ID, fmt.Sprintf("%s: id %s not found in %v", tc.desc, tc.twin.ID, ids))
 		}
@@ -124,7 +124,7 @@ func TestTwinIDs(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		ids, err := twinCache.IDs(ctx, tc.attr)
+		ids, err := twinCache.IDs(ctx, tc.attr.Channel, tc.attr.Subtopic)
 		assert.Nil(t, err, fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.err, err))
 		assert.ElementsMatch(t, ids, tc.ids, fmt.Sprintf("%s: expected ids %v got ids %v", tc.desc, tc.ids, ids))
 	}
@@ -172,7 +172,7 @@ func TestTwinRemove(t *testing.T) {
 
 		def := tc.twin.Definitions[len(tc.twin.Definitions)-1]
 		for _, attr := range def.Attributes {
-			ids, err := twinCache.IDs(ctx, attr)
+			ids, err := twinCache.IDs(ctx, attr.Channel, attr.Subtopic)
 			require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 			assert.NotContains(t, ids, tc.twin.ID, fmt.Sprintf("%s: id %s not found in %v", tc.desc, tc.twin.ID, ids))
 		}

@@ -51,8 +51,20 @@ func (tc *twinCache) Save(_ context.Context, twin twins.Twin) error {
 	return nil
 }
 
-func (tc *twinCache) IDs(_ context.Context, attr twins.Attribute) ([]string, error) {
-	ids, err := tc.client.SMembers(attrKey(attr.Channel, attr.Subtopic)).Result()
+func (tc *twinCache) SaveIDs(_ context.Context, channel, subtopic string, ids []string) error {
+	for _, id := range ids {
+		if err := tc.client.SAdd(attrKey(channel, subtopic), id).Err(); err != nil {
+			return errors.Wrap(ErrRedisTwinSave, err)
+		}
+		if err := tc.client.SAdd(twinKey(id), attrKey(channel, subtopic)).Err(); err != nil {
+			return errors.Wrap(ErrRedisTwinSave, err)
+		}
+	}
+	return nil
+}
+
+func (tc *twinCache) IDs(_ context.Context, channel, subtopic string) ([]string, error) {
+	ids, err := tc.client.SMembers(attrKey(channel, subtopic)).Result()
 	if err != nil {
 		return nil, errors.Wrap(ErrRedisTwinIDs, err)
 	}

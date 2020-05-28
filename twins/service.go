@@ -280,9 +280,21 @@ func (ts *twinsService) ListStates(ctx context.Context, token string, offset uin
 
 func (ts *twinsService) SaveStates(msg *messaging.Message) error {
 	var ids []string
-	ids, err := ts.twins.RetrieveByAttribute(context.TODO(), msg.Channel, msg.Subtopic)
+
+	ctx := context.TODO()
+	channel, subtopic := msg.Channel, msg.Subtopic
+	ids, err := ts.twinCache.IDs(ctx, channel, subtopic)
+	fmt.Printf("%+v\n", ids) // output for debug
+
 	if err != nil {
 		return err
+	}
+	if (len(ids)) < 1 {
+		ids, err = ts.twins.RetrieveByAttribute(ctx, channel, subtopic)
+		if err != nil {
+			return err
+		}
+		ts.twinCache.SaveIDs(ctx, channel, subtopic, ids)
 	}
 
 	for _, id := range ids {

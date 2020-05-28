@@ -51,8 +51,8 @@ func (tr *twinRepository) Update(ctx context.Context, tw twins.Twin) error {
 
 	coll := tr.db.Collection(twinsCollection)
 
-	filter := bson.D{{"id", tw.ID}}
-	update := bson.D{{"$set", tw}}
+	filter := bson.M{"id": tw.ID}
+	update := bson.M{"$set": tw}
 	res, err := coll.UpdateOne(context.Background(), filter, update)
 	if err != nil {
 		return err
@@ -69,7 +69,7 @@ func (tr *twinRepository) RetrieveByID(_ context.Context, id string) (twins.Twin
 	coll := tr.db.Collection(twinsCollection)
 	var tw twins.Twin
 
-	filter := bson.D{{"id", id}}
+	filter := bson.M{"id": id}
 	if err := coll.FindOne(context.Background(), filter).Decode(&tw); err != nil {
 		return tw, twins.ErrNotFound
 	}
@@ -90,7 +90,7 @@ func (tr *twinRepository) RetrieveByAttribute(ctx context.Context, channel, subt
 			"_id": 0,
 		},
 	}
-	match := bson.M{
+	match1 := bson.M{
 		"$match": bson.M{
 			"definition.channel":  channel,
 			"definition.subtopic": subtopic,
@@ -102,7 +102,7 @@ func (tr *twinRepository) RetrieveByAttribute(ctx context.Context, channel, subt
 		},
 	}
 
-	cur, err := coll.Aggregate(ctx, []bson.M{prj1, match, prj2}, findOptions)
+	cur, err := coll.Aggregate(ctx, []bson.M{prj1, match1, prj2}, findOptions)
 
 	var ids []string
 	if err != nil {
@@ -135,16 +135,16 @@ func (tr *twinRepository) RetrieveAll(ctx context.Context, owner string, offset 
 	findOptions.SetSkip(int64(offset))
 	findOptions.SetLimit(int64(limit))
 
-	filter := bson.D{}
+	filter := bson.M{}
 
 	if owner != "" {
-		filter = append(filter, bson.E{"owner", owner})
+		filter["owner"] = owner
 	}
 	if name != "" {
-		filter = append(filter, bson.E{"name", name})
+		filter["name"] = name
 	}
 	if len(metadata) > 0 {
-		filter = append(filter, bson.E{"metadata", metadata})
+		filter["metadata"] = metadata
 	}
 	cur, err := coll.Find(ctx, filter, findOptions)
 	if err != nil {
@@ -174,7 +174,7 @@ func (tr *twinRepository) RetrieveAll(ctx context.Context, owner string, offset 
 func (tr *twinRepository) Remove(ctx context.Context, id string) error {
 	coll := tr.db.Collection(twinsCollection)
 
-	filter := bson.D{{"id", id}}
+	filter := bson.M{"id": id}
 	res, err := coll.DeleteOne(context.Background(), filter)
 	if err != nil {
 		return err

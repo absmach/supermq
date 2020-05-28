@@ -12,6 +12,7 @@ import (
 
 const (
 	saveTwinOp                 = "save_twin"
+	saveTwinsOp                = "save_twins"
 	updateTwinOp               = "update_twin"
 	retrieveTwinByIDOp         = "retrieve_twin_by_id"
 	retrieveAllTwinsOp         = "retrieve_all_twins"
@@ -107,12 +108,20 @@ func (tcm twinCacheMiddleware) Save(ctx context.Context, twin twins.Twin) error 
 	return tcm.cache.Save(ctx, twin)
 }
 
-func (tcm twinCacheMiddleware) IDs(ctx context.Context, attr twins.Attribute) ([]string, error) {
+func (tcm twinCacheMiddleware) SaveIDs(ctx context.Context, channel, subtopic string, ids []string) error {
+	span := createSpan(ctx, tcm.tracer, saveTwinsOp)
+	defer span.Finish()
+	ctx = opentracing.ContextWithSpan(ctx, span)
+
+	return tcm.cache.SaveIDs(ctx, channel, subtopic, ids)
+}
+
+func (tcm twinCacheMiddleware) IDs(ctx context.Context, channel, subtopic string) ([]string, error) {
 	span := createSpan(ctx, tcm.tracer, retrieveTwinsByAttributeOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 
-	return tcm.cache.IDs(ctx, attr)
+	return tcm.cache.IDs(ctx, channel, subtopic)
 }
 
 func (tcm twinCacheMiddleware) Remove(ctx context.Context, twinID string) error {

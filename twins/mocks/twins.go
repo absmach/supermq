@@ -182,13 +182,33 @@ func (tcm *twinCacheMock) Save(_ context.Context, twin twins.Twin) error {
 	return nil
 }
 
-func (tcm *twinCacheMock) IDs(_ context.Context, attr twins.Attribute) ([]string, error) {
+func (tcm *twinCacheMock) SaveIDs(ctx context.Context, channel, subtopic string, ids []string) error {
+	tcm.mu.Lock()
+	defer tcm.mu.Unlock()
+
+	for _, id := range ids {
+		attrKey := channel + subtopic
+		if _, ok := tcm.attrIds[attrKey]; !ok {
+			tcm.attrIds[attrKey] = make(map[string]bool)
+		}
+		tcm.attrIds[attrKey][id] = true
+
+		if _, ok := tcm.idAttrs[id]; !ok {
+			tcm.idAttrs[id] = make(map[string]bool)
+		}
+		tcm.idAttrs[id][attrKey] = true
+	}
+
+	return nil
+}
+
+func (tcm *twinCacheMock) IDs(_ context.Context, channel, subtopic string) ([]string, error) {
 	tcm.mu.Lock()
 	defer tcm.mu.Unlock()
 
 	var ids []string
 
-	idsMap, ok := tcm.attrIds[attr.Channel+attr.Subtopic]
+	idsMap, ok := tcm.attrIds[channel+subtopic]
 	if !ok {
 		return ids, nil
 	}

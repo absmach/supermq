@@ -79,11 +79,14 @@ type TwinRepository interface {
 
 // TwinCache contains twin caching interface.
 type TwinCache interface {
-	// Save stores twin ID as element of channel-subtopic keyed set.
+	// Save stores twin ID as element of channel-subtopic keyed set and vice versa.
 	Save(context.Context, Twin) error
 
+	// SaveIDs stores twin IDs as elements of channel-subtopic keyed set and vice versa.
+	SaveIDs(_ context.Context, channel, subtopic string, ids []string) error
+
 	// ID returns twin IDs for given attribute.
-	IDs(context.Context, Attribute) ([]string, error)
+	IDs(ctx context.Context, channel, subtopic string) ([]string, error)
 
 	// Removes twin from cache.
 	Remove(context.Context, string) error
