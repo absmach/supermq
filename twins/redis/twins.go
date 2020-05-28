@@ -41,10 +41,10 @@ func NewTwinCache(client *redis.Client) twins.TwinCache {
 func (tc *twinCache) Save(_ context.Context, twin twins.Twin) error {
 	def := twin.Definitions[len(twin.Definitions)-1]
 	for _, attr := range def.Attributes {
-		if err := tc.client.SAdd(attrKey(attr), twin.ID).Err(); err != nil {
+		if err := tc.client.SAdd(attrKey(attr.Channel, attr.Subtopic), twin.ID).Err(); err != nil {
 			return errors.Wrap(ErrRedisTwinSave, err)
 		}
-		if err := tc.client.SAdd(twinKey(twin.ID), attrKey(attr)).Err(); err != nil {
+		if err := tc.client.SAdd(twinKey(twin.ID), attrKey(attr.Channel, attr.Subtopic)).Err(); err != nil {
 			return errors.Wrap(ErrRedisTwinSave, err)
 		}
 	}
@@ -52,7 +52,7 @@ func (tc *twinCache) Save(_ context.Context, twin twins.Twin) error {
 }
 
 func (tc *twinCache) IDs(_ context.Context, attr twins.Attribute) ([]string, error) {
-	ids, err := tc.client.SMembers(attrKey(attr)).Result()
+	ids, err := tc.client.SMembers(attrKey(attr.Channel, attr.Subtopic)).Result()
 	if err != nil {
 		return nil, errors.Wrap(ErrRedisTwinIDs, err)
 	}
@@ -80,6 +80,6 @@ func twinKey(twinID string) string {
 	return fmt.Sprintf("%s:%s", prefix, twinID)
 }
 
-func attrKey(attr twins.Attribute) string {
-	return fmt.Sprintf("%s:%s-%s", prefix, attr.Channel, attr.Subtopic)
+func attrKey(channel, subtopic string) string {
+	return fmt.Sprintf("%s:%s-%s", prefix, channel, subtopic)
 }

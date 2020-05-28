@@ -156,6 +156,10 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 	id = twin.ID
 	b, err = json.Marshal(twin)
 
+	if err := ts.twinCache.Save(ctx, twin); err != nil {
+		return Twin{}, err
+	}
+
 	return twin, nil
 }
 
@@ -207,6 +211,13 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 	id = twin.ID
 	b, err = json.Marshal(tw)
 
+	if err := ts.twinCache.Remove(ctx, id); err != nil {
+		return err
+	}
+	if err := ts.twinCache.Save(ctx, tw); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -242,6 +253,10 @@ func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) (err e
 		return err
 	}
 
+	if err := ts.twinCache.Remove(ctx, id); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -264,6 +279,7 @@ func (ts *twinsService) ListStates(ctx context.Context, token string, offset uin
 }
 
 func (ts *twinsService) SaveStates(msg *messaging.Message) error {
+	var ids []string
 	ids, err := ts.twins.RetrieveByAttribute(context.TODO(), msg.Channel, msg.Subtopic)
 	if err != nil {
 		return err
