@@ -36,27 +36,22 @@ const (
 	defLogLevel = "error"
 	envLogLevel = "MF_MQTT_ADAPTER_LOG_LEVEL"
 	// MQTT
-	defMQTTHost             = "0.0.0.0"
 	defMQTTPort             = "1883"
 	defMQTTTargetHost       = "0.0.0.0"
 	defMQTTTargetPort       = "1883"
 	defMQTTForwarderTimeout = "30s" // 30 seconds
-
-	envMQTTHost             = "MF_MQTT_ADAPTER_MQTT_HOST"
 	envMQTTPort             = "MF_MQTT_ADAPTER_MQTT_PORT"
 	envMQTTTargetHost       = "MF_MQTT_ADAPTER_MQTT_TARGET_HOST"
 	envMQTTTargetPort       = "MF_MQTT_ADAPTER_MQTT_TARGET_PORT"
 	envMQTTForwarderTimeout = "MF_MQTT_ADAPTER_FORWARDER_TIMEOUT"
 	// HTTP
-	defHTTPHost       = "0.0.0.0"
 	defHTTPPort       = "8080"
 	defHTTPScheme     = "ws"
 	defHTTPTargetHost = "localhost"
 	defHTTPTargetPort = "8080"
 	defHTTPTargetPath = "/mqtt"
-	envHTTPHost       = "MF_MQTT_ADAPTER_WS_HOST"
 	envHTTPPort       = "MF_MQTT_ADAPTER_WS_PORT"
-	envHTTPScheme     = "MF_MQTT_ADAPTER_WS_SCHEMA"
+	envHTTPScheme     = "MF_MQTT_ADAPTER_WS_SCHEME"
 	envHTTPTargetHost = "MF_MQTT_ADAPTER_WS_TARGET_HOST"
 	envHTTPTargetPort = "MF_MQTT_ADAPTER_WS_TARGET_PORT"
 	envHTTPTargetPath = "MF_MQTT_ADAPTER_WS_TARGET_PATH"
@@ -64,7 +59,7 @@ const (
 	defThingsAuthURL     = "localhost:8181"
 	defThingsAuthTimeout = "1s" // 1 second
 	envThingsAuthURL     = "MF_THINGS_AUTH_GRPC_URL"
-	envThingsAuthTimeout = "MF_THINGS_AUTH_GRPC_TIMMEOUT"
+	envThingsAuthTimeout = "MF_THINGS_AUTH_GRPC_TIMEOUT"
 	// Nats
 	defNatsURL = "nats://localhost:4222"
 	envNatsURL = "MF_NATS_URL"
@@ -86,7 +81,7 @@ const (
 	defESURL  = "localhost:6379"
 	defESPass = ""
 	defESDB   = "0"
-	// AUTH
+	// Auth cache
 	envAuthCacheURL  = "MF_AUTH_CACHE_URL"
 	envAuthCachePass = "MF_AUTH_CACHE_PASS"
 	envAuthCacheDB   = "MF_AUTH_CACHE_DB"
@@ -96,12 +91,10 @@ const (
 )
 
 type config struct {
-	mqttHost             string
 	mqttPort             string
 	mqttTargetHost       string
 	mqttTargetPort       string
 	mqttForwarderTimeout time.Duration
-	httpHost             string
 	httpPort             string
 	httpScheme           string
 	httpTargetHost       string
@@ -213,12 +206,10 @@ func loadConfig() config {
 	}
 
 	return config{
-		mqttHost:             mainflux.Env(envMQTTHost, defMQTTHost),
 		mqttPort:             mainflux.Env(envMQTTPort, defMQTTPort),
 		mqttTargetHost:       mainflux.Env(envMQTTTargetHost, defMQTTTargetHost),
 		mqttTargetPort:       mainflux.Env(envMQTTTargetPort, defMQTTTargetPort),
 		mqttForwarderTimeout: mqttTimeout,
-		httpHost:             mainflux.Env(envHTTPHost, defHTTPHost),
 		httpPort:             mainflux.Env(envHTTPPort, defHTTPPort),
 		httpScheme:           mainflux.Env(envHTTPScheme, defHTTPScheme),
 		httpTargetHost:       mainflux.Env(envHTTPTargetHost, defHTTPTargetHost),
