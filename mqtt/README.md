@@ -17,7 +17,6 @@ default values.
 | MF_MQTT_ADAPTER_MQTT_TARGET_HOST  | MQTT broker host                                       | 0.0.0.0               |
 | MF_MQTT_ADAPTER_MQTT_TARGET_PORT  | MQTT broker port                                       | 1883                  |
 | MF_MQTT_ADAPTER_WS_PORT           | mProxy MQTT iver WS port                               | 8080                  |
-| MF_MQTT_ADAPTER_WS_SCHEME         | MQTT over WS protocol scheme                           | ws                    |
 | MF_MQTT_ADAPTER_WS_TARGET_HOST    | MQTT broker host for MQTT over WS                      | localhost             |
 | MF_MQTT_ADAPTER_WS_TARGET_PORT    | MQTT boroker port for MQTT over WS                     | 8080                  |
 | MF_MQTT_ADAPTER_WS_TARGET_PATH    | MQTT broker MQTT over WS path                          | /mqtt                 |
@@ -89,7 +88,6 @@ MF_MQTT_ADAPTER_MQTT_PORT=[MQTT adapter MQTT port]
 MF_MQTT_ADAPTER_MQTT_TARGET_HOST=[MQTT broker host] \
 MF_MQTT_ADAPTER_MQTT_TARGET_PORT=[MQTT broker MQTT port]] \
 MF_MQTT_ADAPTER_WS_PORT=[MQTT adapter WS port] \
-MF_MQTT_ADAPTER_WS_SCHEME=[MQTT adapter WS scheme] \
 MF_MQTT_ADAPTER_WS_TARGET_HOST=[MQTT broker for MQTT over WS host] \
 MF_MQTT_ADAPTER_WS_TARGET_PORT=[MQTT broker for MQTT over WS port]] \
 MF_MQTT_ADAPTER_WS_TARGET_PATH=[MQTT adapter WS path] \

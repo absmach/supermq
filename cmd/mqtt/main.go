@@ -46,12 +46,10 @@ const (
 	envMQTTForwarderTimeout = "MF_MQTT_ADAPTER_FORWARDER_TIMEOUT"
 	// HTTP
 	defHTTPPort       = "8080"
-	defHTTPScheme     = "ws"
 	defHTTPTargetHost = "localhost"
 	defHTTPTargetPort = "8080"
 	defHTTPTargetPath = "/mqtt"
 	envHTTPPort       = "MF_MQTT_ADAPTER_WS_PORT"
-	envHTTPScheme     = "MF_MQTT_ADAPTER_WS_SCHEME"
 	envHTTPTargetHost = "MF_MQTT_ADAPTER_WS_TARGET_HOST"
 	envHTTPTargetPort = "MF_MQTT_ADAPTER_WS_TARGET_PORT"
 	envHTTPTargetPath = "MF_MQTT_ADAPTER_WS_TARGET_PATH"
@@ -96,7 +94,6 @@ type config struct {
 	mqttTargetPort       string
 	mqttForwarderTimeout time.Duration
 	httpPort             string
-	httpScheme           string
 	httpTargetHost       string
 	httpTargetPort       string
 	httpTargetPath       string
@@ -211,7 +208,6 @@ func loadConfig() config {
 		mqttTargetPort:       mainflux.Env(envMQTTTargetPort, defMQTTTargetPort),
 		mqttForwarderTimeout: mqttTimeout,
 		httpPort:             mainflux.Env(envHTTPPort, defHTTPPort),
-		httpScheme:           mainflux.Env(envHTTPScheme, defHTTPScheme),
 		httpTargetHost:       mainflux.Env(envHTTPTargetHost, defHTTPTargetHost),
 		httpTargetPort:       mainflux.Env(envHTTPTargetPort, defHTTPTargetPort),
 		httpTargetPath:       mainflux.Env(envHTTPTargetPath, defHTTPTargetPath),
@@ -304,7 +300,7 @@ func proxyMQTT(cfg config, logger mflog.Logger, handler session.Handler, errs ch
 }
 func proxyWS(cfg config, logger mflog.Logger, handler session.Handler, errs chan error) {
 	target := fmt.Sprintf("%s:%s", cfg.httpTargetHost, cfg.httpTargetPort)
-	wp := ws.New(target, cfg.httpTargetPath, cfg.httpScheme, handler, logger)
+	wp := ws.New(target, cfg.httpTargetPath, "ws", handler, logger)
 	http.Handle("/mqtt", wp.Handler())
 
 	p := fmt.Sprintf(":%s", cfg.httpPort)
