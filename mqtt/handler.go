@@ -4,7 +4,6 @@
 package mqtt
 
 import (
-	"context"
 	"errors"
 	"net/url"
 	"regexp"
@@ -14,6 +13,7 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/messaging"
+	"github.com/mainflux/mainflux/mqtt/auth"
 	"github.com/mainflux/mainflux/mqtt/redis"
 	"github.com/mainflux/mproxy/pkg/session"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -39,6 +39,7 @@ var (
 type handler struct {
 	publishers []messaging.Publisher
 	tc         mainflux.ThingsServiceClient
+	auth       auth.Client
 	tracer     opentracing.Tracer
 	logger     logger.Logger
 	es         redis.EventStore
@@ -46,13 +47,14 @@ type handler struct {
 
 // NewHandler creates new Handler entity
 func NewHandler(publishers []messaging.Publisher, tc mainflux.ThingsServiceClient, es redis.EventStore,
-	logger logger.Logger, tracer opentracing.Tracer) session.Handler {
+	logger logger.Logger, tracer opentracing.Tracer, auth auth.Client) session.Handler {
 	return &handler{
 		tc:         tc,
 		es:         es,
 		tracer:     tracer,
 		logger:     logger,
 		publishers: publishers,
+		auth:       auth,
 	}
 }
 
@@ -63,16 +65,16 @@ func (h *handler) AuthConnect(c *session.Client) error {
 		return errInvalidConnect
 	}
 
-	t := &mainflux.Token{
-		Value: string(c.Password),
-	}
+	// t := &mainflux.Token{
+	// 	Value: string(c.Password),
+	// }
 
-	thid, err := h.tc.Identify(context.TODO(), t)
+	thid, err := h.auth.Identify(string(c.Password))
 	if err != nil {
 		return err
 	}
 
-	if thid.Value != c.Username {
+	if thid != c.Username {
 		return errUnauthorizedAccess
 	}
 
@@ -210,13 +212,13 @@ func (h *handler) authAccess(username string, topic string) error {
 	}
 
 	chanID := channelParts[1]
-
-	ar := &mainflux.AccessByIDReq{
-		ThingID: username,
-		ChanID:  chanID,
-	}
-	_, err := h.tc.CanAccessByID(context.TODO(), ar)
-	return err
+	return h.auth.Authorize(chanID, username)
+	// ar := &mainflux.AccessByIDReq{
+	// 	ThingID: username,
+	// 	ChanID:  chanID,
+	// }
+	// _, err := h.tc.CanAccessByID(context.TODO(), ar)
+	// return err
 }
 
 func parseSubtopic(subtopic string) (string, error) {

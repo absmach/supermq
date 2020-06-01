@@ -19,6 +19,7 @@ import (
 	mqttpub "github.com/mainflux/mainflux/messaging/mqtt"
 	"github.com/mainflux/mainflux/messaging/nats"
 	"github.com/mainflux/mainflux/mqtt"
+	"github.com/mainflux/mainflux/mqtt/auth"
 	mqttredis "github.com/mainflux/mainflux/mqtt/redis"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	mp "github.com/mainflux/mproxy/pkg/mqtt"
@@ -85,6 +86,13 @@ const (
 	defESURL  = "localhost:6379"
 	defESPass = ""
 	defESDB   = "0"
+	// AUTH
+	envAuthURL  = "MF_MQTT_ADAPTER_AUTH_URL"
+	envAuthPass = "MF_MQTT_ADAPTER_AUTH_PASS"
+	envAuthDB   = "MF_MQTT_ADAPTER_AUTH_DB"
+	defAuthURL  = "localhost:6379"
+	defAuthPass = ""
+	defAuthDB   = "0"
 )
 
 type config struct {
@@ -111,6 +119,9 @@ type config struct {
 	esURL                string
 	esPass               string
 	esDB                 string
+	authURL              string
+	authPass             string
+	authDB               string
 }
 
 func main() {
@@ -127,13 +138,8 @@ func main() {
 	tracer, closer := initJaeger("mproxy", cfg.jaegerURL, logger)
 	defer closer.Close()
 
-	thingsTracer, thingsCloser := initJaeger("things", cfg.jaegerURL, logger)
-	defer thingsCloser.Close()
-
-	rc := connectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
-	defer rc.Close()
-
-	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
+	ec := connectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
+	defer ec.Close()
 
 	nps, err := nats.NewPubSub(cfg.natsURL, "mqtt", logger)
 	if err != nil {
@@ -141,11 +147,13 @@ func main() {
 		os.Exit(1)
 	}
 	defer nps.Close()
+
 	mp, err := mqttpub.NewPublisher(fmt.Sprintf("%s:%s", cfg.mqttTargetHost, cfg.mqttTargetPort), cfg.mqttForwarderTimeout)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to create MQTT publisher: %s", err))
 		os.Exit(1)
 	}
+
 	fwd := mqtt.NewForwarder(nats.SubjectAllChannels, logger)
 	if err := fwd.Forward(nps, mp); err != nil {
 		logger.Error(fmt.Sprintf("Failed to forward NATS messages: %s", err))
@@ -159,10 +167,19 @@ func main() {
 	}
 	defer np.Close()
 
-	es := mqttredis.NewEventStore(rc, cfg.instance)
+	es := mqttredis.NewEventStore(ec, cfg.instance)
+
+	ac := connectToRedis(cfg.authURL, cfg.authPass, cfg.authDB, logger)
+	defer ac.Close()
+
+	thingsTracer, thingsCloser := initJaeger("things", cfg.jaegerURL, logger)
+	defer thingsCloser.Close()
+	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
+
+	authClient := auth.New(ac, cc)
 
 	// Event handler for MQTT hooks
-	h := mqtt.NewHandler([]messaging.Publisher{np}, cc, es, logger, tracer)
+	h := mqtt.NewHandler([]messaging.Publisher{np}, cc, es, logger, tracer, authClient)
 
 	errs := make(chan error, 2)
 
@@ -222,6 +239,9 @@ func loadConfig() config {
 		esURL:                mainflux.Env(envESURL, defESURL),
 		esPass:               mainflux.Env(envESPass, defESPass),
 		esDB:                 mainflux.Env(envESDB, defESDB),
+		authURL:              mainflux.Env(envAuthURL, defAuthURL),
+		authPass:             mainflux.Env(envAuthPass, defAuthPass),
+		authDB:               mainflux.Env(envAuthDB, defAuthDB),
 	}
 }
 
