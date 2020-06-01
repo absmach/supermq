@@ -77,11 +77,11 @@ make install
 # set the environment variables and run the service
 MF_NATS_URL=[NATS instance URL] \
 MF_MQTT_ADAPTER_LOG_LEVEL=[HTTP Adapter Log Level] \
-MF_MQTT_ADAPTER_WS_PORT=[Service HTTP port] \
-MF_MQTT_ADAPTER_CA_CERTS=[Path to trusted CAs in PEM format] \
+MF_MQTT_ADAPTER_MQTT_TARGET_HOST=[MQTT broker host] \
+MF_MQTT_ADAPTER_MQTT_TARGET_PORT: [MQTT broker MQTT port]] \
+MF_MQTT_ADAPTER_WS_TARGET_HOST: [MQTT broker for MQTT over WS host] \
+MF_MQTT_ADAPTER_WS_TARGET_PORT: [MQTT broker for MQTT over WS port]] \
 MF_THINGS_AUTH_GRPC_URL=[Things service Auth gRPC URL] \
 MF_THINGS_AUTH_GRPC_TIMEOUT=[Things service Auth gRPC request timeout in seconds] \
 $GOBIN/mainflux-http
 ```
-
-Setting `MF_HTTP_ADAPTER_CA_CERTS` expects a file in PEM format of trusted CAs. This will enable TLS against the Things gRPC endpoint trusting only those CAs that are provided.

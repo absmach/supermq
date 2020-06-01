@@ -135,9 +135,6 @@ func main() {
 	conn := connectToThings(cfg, logger)
 	defer conn.Close()
 
-	tracer, closer := initJaeger("mproxy", cfg.jaegerURL, logger)
-	defer closer.Close()
-
 	ec := connectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
 	defer ec.Close()
 
@@ -174,12 +171,12 @@ func main() {
 
 	thingsTracer, thingsCloser := initJaeger("things", cfg.jaegerURL, logger)
 	defer thingsCloser.Close()
-	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
+	tc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
 
-	authClient := auth.New(ac, cc)
+	authClient := auth.New(ac, tc)
 
 	// Event handler for MQTT hooks
-	h := mqtt.NewHandler([]messaging.Publisher{np}, cc, es, logger, tracer, authClient)
+	h := mqtt.NewHandler([]messaging.Publisher{np}, es, logger, authClient)
 
 	errs := make(chan error, 2)
 

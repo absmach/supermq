@@ -10,13 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/messaging"
 	"github.com/mainflux/mainflux/mqtt/auth"
 	"github.com/mainflux/mainflux/mqtt/redis"
 	"github.com/mainflux/mproxy/pkg/session"
-	opentracing "github.com/opentracing/opentracing-go"
 )
 
 var _ session.Handler = (*handler)(nil)
@@ -38,20 +36,16 @@ var (
 // Event implements events.Event interface
 type handler struct {
 	publishers []messaging.Publisher
-	tc         mainflux.ThingsServiceClient
 	auth       auth.Client
-	tracer     opentracing.Tracer
 	logger     logger.Logger
 	es         redis.EventStore
 }
 
 // NewHandler creates new Handler entity
-func NewHandler(publishers []messaging.Publisher, tc mainflux.ThingsServiceClient, es redis.EventStore,
-	logger logger.Logger, tracer opentracing.Tracer, auth auth.Client) session.Handler {
+func NewHandler(publishers []messaging.Publisher, es redis.EventStore,
+	logger logger.Logger, auth auth.Client) session.Handler {
 	return &handler{
-		tc:         tc,
 		es:         es,
-		tracer:     tracer,
 		logger:     logger,
 		publishers: publishers,
 		auth:       auth,
