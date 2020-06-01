@@ -292,7 +292,7 @@ func connectToRedis(redisURL, redisPass, redisDB string, logger mflog.Logger) *r
 }
 
 func proxyMQTT(cfg config, logger mflog.Logger, handler session.Handler, errs chan error) {
-	address := fmt.Sprintf("0.0.0.0:%s", cfg.mqttPort)
+	address := fmt.Sprintf(":%s", cfg.mqttPort)
 	target := fmt.Sprintf("%s:%s", cfg.mqttTargetHost, cfg.mqttTargetPort)
 	mp := mp.New(address, target, handler, logger)
 
