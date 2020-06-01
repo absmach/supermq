@@ -10,23 +10,26 @@ The service is configured using the environment variables presented in the
 following table. Note that any unset variables will be replaced with their
 default values.
 
-| Variable                         | Description                                                      | Default               |
-| -------------------------------- | ---------------------------------------------------------------- | --------------------- |
-| MF_MQTT_ADAPTER_LOG_LEVEL        | mProxy Log level                                                 | error                 |
-| MF_MQTT_ADAPTER_MQTT_HOST        | mProxy    host                                                   | 0.0.0.0               |
-| MF_MQTT_ADAPTER_MQTT_PORT        | mProxy port                                                      | 1883                  |
-| MF_MQTT_ADAPTER_MQTT_TARGET_HOST | MQTT broker host                                                 | 0.0.0.0               |
-| MF_MQTT_ADAPTER_MQTT_TARGET_PORT | MQTT broker port                                                 | 1883                  |
-| MF_NATS_URL                      | NATS broker URL                                                  | nats://127.0.0.1:4222 |
-| MF_THINGS_AUTH_GRPC_URL          | Things gRPC endpoint URL                                         | localhost:8181        |
-| MF_THINGS_AUTH_GRPC_TIMEOUT      | Timeout in seconds for Things service gRPC calls                 | 1                     |
-| MF_JAEGER_URL                    | URL of Jaeger tracing service                                    | ""                    |
-| MF_MQTT_ADAPTER_CLIENT_TLS       | gRPC client TLS                                                  | false                 |
-| MF_MQTT_ADAPTER_CA_CERTS         | CA certs for gRPC client TLS                                     | ""                    |
-| MF_MQTT_ADAPTER_INSTANCE         | Instance name for event sourcing                                 | ""                    |
-| MF_MQTT_ADAPTER_ES_URL           | Event sourcing URL                                               | localhost:6379        |
-| MF_MQTT_ADAPTER_ES_PASS          | Event sourcing password                                          | ""                    |
-| MF_MQTT_ADAPTER_ES_DB            | Event sourcing database                                          | "0"                   |
+| Variable                         | Description                                      | Default               |
+| -------------------------------- | ------------------------------------------------ | --------------------- |
+| MF_MQTT_ADAPTER_LOG_LEVEL        | mProxy Log level                                 | error                 |
+| MF_MQTT_ADAPTER_MQTT_HOST        | mProxy    host                                   | 0.0.0.0               |
+| MF_MQTT_ADAPTER_MQTT_PORT        | mProxy port                                      | 1883                  |
+| MF_MQTT_ADAPTER_MQTT_TARGET_HOST | MQTT broker host                                 | 0.0.0.0               |
+| MF_MQTT_ADAPTER_MQTT_TARGET_PORT | MQTT broker port                                 | 1883                  |
+| MF_NATS_URL                      | NATS broker URL                                  | nats://127.0.0.1:4222 |
+| MF_THINGS_AUTH_GRPC_URL          | Things gRPC endpoint URL                         | localhost:8181        |
+| MF_THINGS_AUTH_GRPC_TIMEOUT      | Timeout in seconds for Things service gRPC calls | 1                     |
+| MF_JAEGER_URL                    | URL of Jaeger tracing service                    | ""                    |
+| MF_MQTT_ADAPTER_CLIENT_TLS       | gRPC client TLS                                  | false                 |
+| MF_MQTT_ADAPTER_CA_CERTS         | CA certs for gRPC client TLS                     | ""                    |
+| MF_MQTT_ADAPTER_INSTANCE         | Instance name for event sourcing                 | ""                    |
+| MF_MQTT_ADAPTER_ES_URL           | Event sourcing URL                               | localhost:6379        |
+| MF_MQTT_ADAPTER_ES_PASS          | Event sourcing password                          | ""                    |
+| MF_MQTT_ADAPTER_ES_DB            | Event sourcing database                          | "0"                   |
+| MF_AUTH_CACHE_URL                | Auth cache URL                                   | localhost:6379        |
+| MF_AUTH_CACHE_PASS               | Auth cache password                              | ""                    |
+| MF_AUTH_CACHE_DB                 | Auth cache database                              | "0"                   |
 
 ## Deployment
 

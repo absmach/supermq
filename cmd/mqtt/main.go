@@ -87,12 +87,12 @@ const (
 	defESPass = ""
 	defESDB   = "0"
 	// AUTH
-	envAuthURL  = "MF_MQTT_ADAPTER_AUTH_URL"
-	envAuthPass = "MF_MQTT_ADAPTER_AUTH_PASS"
-	envAuthDB   = "MF_MQTT_ADAPTER_AUTH_DB"
-	defAuthURL  = "localhost:6379"
-	defAuthPass = ""
-	defAuthDB   = "0"
+	envAuthCacheURL  = "MF_AUTH_CACHE_URL"
+	envAuthCachePass = "MF_AUTH_CACHE_PASS"
+	envAuthCacheDB   = "MF_AUTH_CACHE_DB"
+	defAuthcacheURL  = "localhost:6379"
+	defAuthCachePass = ""
+	defAuthCacheDB   = "0"
 )
 
 type config struct {
@@ -236,9 +236,9 @@ func loadConfig() config {
 		esURL:                mainflux.Env(envESURL, defESURL),
 		esPass:               mainflux.Env(envESPass, defESPass),
 		esDB:                 mainflux.Env(envESDB, defESDB),
-		authURL:              mainflux.Env(envAuthURL, defAuthURL),
-		authPass:             mainflux.Env(envAuthPass, defAuthPass),
-		authDB:               mainflux.Env(envAuthDB, defAuthDB),
+		authURL:              mainflux.Env(envAuthCacheURL, defAuthcacheURL),
+		authPass:             mainflux.Env(envAuthCachePass, defAuthCachePass),
+		authDB:               mainflux.Env(envAuthCacheDB, defAuthCacheDB),
 	}
 }
 
