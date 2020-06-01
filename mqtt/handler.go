@@ -59,10 +59,6 @@ func (h *handler) AuthConnect(c *session.Client) error {
 		return errInvalidConnect
 	}
 
-	// t := &mainflux.Token{
-	// 	Value: string(c.Password),
-	// }
-
 	thid, err := h.auth.Identify(string(c.Password))
 	if err != nil {
 		return err
@@ -207,12 +203,6 @@ func (h *handler) authAccess(username string, topic string) error {
 
 	chanID := channelParts[1]
 	return h.auth.Authorize(chanID, username)
-	// ar := &mainflux.AccessByIDReq{
-	// 	ThingID: username,
-	// 	ChanID:  chanID,
-	// }
-	// _, err := h.tc.CanAccessByID(context.TODO(), ar)
-	// return err
 }
 
 func parseSubtopic(subtopic string) (string, error) {
