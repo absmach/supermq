@@ -40,7 +40,7 @@ const (
 	defMQTTPort             = "1883"
 	defMQTTTargetHost       = "0.0.0.0"
 	defMQTTTargetPort       = "1883"
-	defMQTTForwarderTimeout = "30" // in seconds
+	defMQTTForwarderTimeout = "30s" // 30 seconds
 
 	envMQTTHost             = "MF_MQTT_ADAPTER_MQTT_HOST"
 	envMQTTPort             = "MF_MQTT_ADAPTER_MQTT_PORT"
@@ -62,7 +62,7 @@ const (
 	envHTTPTargetPath = "MF_MQTT_ADAPTER_WS_TARGET_PATH"
 	// Things
 	defThingsAuthURL     = "localhost:8181"
-	defThingsAuthTimeout = "1" // in seconds
+	defThingsAuthTimeout = "1s" // 1 second
 	envThingsAuthURL     = "MF_THINGS_AUTH_GRPC_URL"
 	envThingsAuthTimeout = "MF_THINGS_AUTH_GRPC_TIMMEOUT"
 	// Nats
@@ -202,12 +202,12 @@ func loadConfig() config {
 		log.Fatalf("Invalid value passed for %s\n", envClientTLS)
 	}
 
-	authTimeout, err := strconv.ParseInt(mainflux.Env(envThingsAuthTimeout, defThingsAuthTimeout), 10, 64)
+	authTimeout, err := time.ParseDuration(mainflux.Env(envThingsAuthTimeout, defThingsAuthTimeout))
 	if err != nil {
 		log.Fatalf("Invalid %s value: %s", envThingsAuthTimeout, err.Error())
 	}
 
-	mqttTimeout, err := strconv.ParseInt(mainflux.Env(envMQTTForwarderTimeout, defMQTTForwarderTimeout), 10, 64)
+	mqttTimeout, err := time.ParseDuration(mainflux.Env(envMQTTForwarderTimeout, defMQTTForwarderTimeout))
 	if err != nil {
 		log.Fatalf("Invalid %s value: %s", envThingsAuthTimeout, err.Error())
 	}
@@ -217,7 +217,7 @@ func loadConfig() config {
 		mqttPort:             mainflux.Env(envMQTTPort, defMQTTPort),
 		mqttTargetHost:       mainflux.Env(envMQTTTargetHost, defMQTTTargetHost),
 		mqttTargetPort:       mainflux.Env(envMQTTTargetPort, defMQTTTargetPort),
-		mqttForwarderTimeout: time.Duration(mqttTimeout) * time.Second,
+		mqttForwarderTimeout: mqttTimeout,
 		httpHost:             mainflux.Env(envHTTPHost, defHTTPHost),
 		httpPort:             mainflux.Env(envHTTPPort, defHTTPPort),
 		httpScheme:           mainflux.Env(envHTTPScheme, defHTTPScheme),
@@ -226,7 +226,7 @@ func loadConfig() config {
 		httpTargetPath:       mainflux.Env(envHTTPTargetPath, defHTTPTargetPath),
 		jaegerURL:            mainflux.Env(envJaegerURL, defJaegerURL),
 		thingsAuthURL:        mainflux.Env(envThingsAuthURL, defThingsAuthURL),
-		thingsAuthTimeout:    time.Duration(authTimeout) * time.Second,
+		thingsAuthTimeout:    authTimeout,
 		thingsURL:            mainflux.Env(envThingsAuthURL, defThingsAuthURL),
 		natsURL:              mainflux.Env(envNatsURL, defNatsURL),
 		logLevel:             mainflux.Env(envLogLevel, defLogLevel),
