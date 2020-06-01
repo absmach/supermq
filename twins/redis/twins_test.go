@@ -70,6 +70,60 @@ func TestTwinSave(t *testing.T) {
 	}
 }
 
+func TestTwinSaveIDs(t *testing.T) {
+	redisClient.FlushAll()
+	twinCache := redis.NewTwinCache(redisClient)
+
+	twinIDs := []string{"7956f132-0b42-488d-9bd1-0f6dd9d77f98", "a2210c42-1eaf-41ad-b8c1-813317719ed9", "6e815c79-a159-41b0-9ff0-cfa14430e07e"}
+
+	cases := []struct {
+		desc     string
+		channel  string
+		subtopic string
+		ids      []string
+		err      error
+	}{
+		{
+			desc:     "Save ids to cache",
+			channel:  channels[0],
+			subtopic: subtopics[0],
+			ids:      twinIDs,
+			err:      nil,
+		},
+		{
+			desc:     "Save emtpy ids array to cache",
+			channel:  channels[2],
+			subtopic: subtopics[2],
+			ids:      []string{},
+			err:      nil,
+		},
+		{
+			desc:     "Save already saved ids to cache",
+			channel:  channels[0],
+			subtopic: subtopics[0],
+			ids:      twinIDs,
+			err:      nil,
+		},
+		{
+			desc:     "Save ids to cache",
+			channel:  channels[1],
+			subtopic: subtopics[1],
+			ids:      twinIDs[0:2],
+			err:      nil,
+		},
+	}
+
+	for _, tc := range cases {
+		ctx := context.Background()
+		err := twinCache.SaveIDs(ctx, tc.channel, tc.subtopic, tc.ids)
+		assert.Nil(t, err, fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.err, err))
+
+		ids, err := twinCache.IDs(ctx, tc.channel, tc.subtopic)
+		require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+		assert.ElementsMatch(t, ids, tc.ids, fmt.Sprintf("%s: ids %v not found in %v", tc.desc, tc.ids, ids))
+	}
+}
+
 func TestTwinIDs(t *testing.T) {
 	redisClient.FlushAll()
 	twinCache := redis.NewTwinCache(redisClient)

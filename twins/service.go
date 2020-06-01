@@ -284,7 +284,6 @@ func (ts *twinsService) SaveStates(msg *messaging.Message) error {
 	ctx := context.TODO()
 	channel, subtopic := msg.Channel, msg.Subtopic
 	ids, err := ts.twinCache.IDs(ctx, channel, subtopic)
-	fmt.Printf("%+v\n", ids) // output for debug
 
 	if err != nil {
 		return err
