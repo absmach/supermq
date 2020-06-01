@@ -156,11 +156,7 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 	id = twin.ID
 	b, err = json.Marshal(twin)
 
-	if err := ts.twinCache.Save(ctx, twin); err != nil {
-		return Twin{}, err
-	}
-
-	return twin, nil
+	return twin, ts.twinCache.Save(ctx, twin)
 }
 
 func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin, def Definition) (err error) {
@@ -214,11 +210,8 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 	if err := ts.twinCache.Remove(ctx, id); err != nil {
 		return err
 	}
-	if err := ts.twinCache.Save(ctx, tw); err != nil {
-		return err
-	}
 
-	return nil
+	return ts.twinCache.Save(ctx, twin)
 }
 
 func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (tw Twin, err error) {
@@ -253,11 +246,7 @@ func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) (err e
 		return err
 	}
 
-	if err := ts.twinCache.Remove(ctx, id); err != nil {
-		return err
-	}
-
-	return nil
+	return ts.twinCache.Remove(ctx, id)
 }
 
 func (ts *twinsService) ListTwins(ctx context.Context, token string, offset uint64, limit uint64, name string, metadata Metadata) (Page, error) {

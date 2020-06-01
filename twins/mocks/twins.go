@@ -164,6 +164,9 @@ func (tcm *twinCacheMock) Save(_ context.Context, twin twins.Twin) error {
 	tcm.mu.Lock()
 	defer tcm.mu.Unlock()
 
+	if len(twin.Definitions) < 1 {
+		return nil
+	}
 	def := twin.Definitions[len(twin.Definitions)-1]
 	for _, attr := range def.Attributes {
 		attrKey := attr.Channel + attr.Subtopic

@@ -39,6 +39,10 @@ func NewTwinCache(client *redis.Client) twins.TwinCache {
 }
 
 func (tc *twinCache) Save(_ context.Context, twin twins.Twin) error {
+	if len(twin.Definitions) < 1 {
+		return nil
+	}
+
 	def := twin.Definitions[len(twin.Definitions)-1]
 	for _, attr := range def.Attributes {
 		if err := tc.client.SAdd(attrKey(attr.Channel, attr.Subtopic), twin.ID).Err(); err != nil {

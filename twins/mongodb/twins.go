@@ -90,7 +90,7 @@ func (tr *twinRepository) RetrieveByAttribute(ctx context.Context, channel, subt
 			"_id": 0,
 		},
 	}
-	match1 := bson.M{
+	match := bson.M{
 		"$match": bson.M{
 			"definition.channel":  channel,
 			"definition.subtopic": subtopic,
@@ -102,7 +102,7 @@ func (tr *twinRepository) RetrieveByAttribute(ctx context.Context, channel, subt
 		},
 	}
 
-	cur, err := coll.Aggregate(ctx, []bson.M{prj1, match1, prj2}, findOptions)
+	cur, err := coll.Aggregate(ctx, []bson.M{prj1, match, prj2}, findOptions)
 
 	var ids []string
 	if err != nil {

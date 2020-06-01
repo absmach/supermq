@@ -251,7 +251,9 @@ func TestSaveStates(t *testing.T) {
 	tw, err := svc.AddTwin(context.Background(), token, twin, def)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
-	recs := mocks.CreateSenML(numRecs)
+	var recs = make([]senml.Record, numRecs)
+	mocks.CreateSenML(numRecs, recs)
+
 	var ttlAdded uint64
 
 	cases := []struct {
@@ -319,7 +321,8 @@ func TestListStates(t *testing.T) {
 		mocks.CreateDefinition(channels[2:3], subtopics[2:3]))
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
-	recs := mocks.CreateSenML(numRecs)
+	var recs = make([]senml.Record, numRecs)
+	mocks.CreateSenML(numRecs, recs)
 	message, err := mocks.CreateMessage(attr, recs)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	err = svc.SaveStates(message)

@@ -21,6 +21,7 @@ import (
 const (
 	nanosec   = 1e9
 	publisher = "twins"
+	numRecs   = 100
 )
 
 var subtopics = []string{"engine", "chassis", "wheel_2"}
@@ -51,7 +52,8 @@ func TestListStates(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	attr := def.Attributes[0]
 
-	recs := mocks.CreateSenML(100)
+	var recs = make([]senml.Record, numRecs)
+	mocks.CreateSenML(numRecs, recs)
 	message, err := mocks.CreateMessage(attr, recs)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	err = svc.SaveStates(message)

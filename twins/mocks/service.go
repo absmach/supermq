@@ -41,17 +41,12 @@ func CreateDefinition(channels []string, subtopics []string) twins.Definition {
 }
 
 // CreateSenML creates SenML record array
-func CreateSenML(n int) []senml.Record {
-	var recs []senml.Record
-	for i := 0; i < n; i++ {
-		rec := senml.Record{
-			BaseTime: float64(time.Now().Unix()),
-			Time:     float64(i),
-			Value:    nil,
-		}
-		recs = append(recs, rec)
+func CreateSenML(n int, recs []senml.Record) {
+	for i, rec := range recs {
+		rec.BaseTime = float64(time.Now().Unix())
+		rec.Time = float64(i)
+		rec.Value = nil
 	}
-	return recs
 }
 
 // CreateMessage creates Mainflux message using SenML record array
