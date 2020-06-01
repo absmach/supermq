@@ -126,28 +126,26 @@ func Provision(conf Config) {
 
 	fmt.Println("# List of things that can be connected to MQTT broker")
 
-	// s.CreateThings
-
 	for i := 0; i < conf.Num; i++ {
 		things[i] = sdk.Thing{Name: fmt.Sprintf("%s-thing-%d", conf.Prefix, i)}
 		channels[i] = sdk.Channel{Name: fmt.Sprintf("%s-channel-%d", conf.Prefix, i)}
 	}
 
-	things2, err := s.CreateThings(things, token)
+	things, err = s.CreateThings(things, token)
 	if err != nil {
 		log.Fatalf("Failed to create the things: %s", err.Error())
 	}
 
-	channels2, err := s.CreateChannels(channels, token)
+	channels, err = s.CreateChannels(channels, token)
 	if err != nil {
 		log.Fatalf("Failed to create the chennels: %s", err.Error())
 	}
 
-	for _, t := range things2 {
+	for _, t := range things {
 		tIDs = append(tIDs, t.ID)
 	}
 
-	for _, c := range channels2 {
+	for _, c := range channels {
 		cIDs = append(cIDs, c.ID)
 	}
 
@@ -176,7 +174,7 @@ func Provision(conf Config) {
 				SerialNumber: serialNumber,
 				Subject: pkix.Name{
 					Organization:       []string{"Mainflux"},
-					CommonName:         things2[i].Key,
+					CommonName:         things[i].Key,
 					OrganizationalUnit: []string{"mainflux"},
 				},
 				NotBefore: notBefore,
@@ -210,7 +208,7 @@ func Provision(conf Config) {
 		}
 
 		// Print output
-		fmt.Printf("[[things]]\nthing_id = \"%s\"\nthing_key = \"%s\"\n", things2[i].ID, things2[i].Key)
+		fmt.Printf("[[things]]\nthing_id = \"%s\"\nthing_key = \"%s\"\n", things[i].ID, things[i].Key)
 		if conf.SSL {
 			fmt.Printf("mtls_cert = \"\"\"%s\"\"\"\n", cert)
 			fmt.Printf("mtls_key = \"\"\"%s\"\"\"\n", key)
