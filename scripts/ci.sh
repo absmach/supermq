@@ -1,6 +1,6 @@
 # This script contains commands to be executed by the CI tool.
 NPROC=$(nproc)
-GO_VERSION=1.13
+GO_VERSION=1.14
 PROTOC_VERSION=3.11.4
 PROTOC_GEN_VERSION=v1.4.1
 PROTOC_GOFAST_VERSION=v1.3.1
@@ -49,12 +49,6 @@ setup_protoc() {
 
 setup_mf() {
 	echo "Setting up Mainflux..."
-	MF_PATH=$GOPATH/src/github.com/mainflux/mainflux
-	if test $PWD != $MF_PATH; then
-		mkdir -p $MF_PATH
-		mv ./* $MF_PATH
-	fi
-	cd $MF_PATH
 	for p in $(ls *.pb.go); do
 		mv $p $p.tmp
 	done
