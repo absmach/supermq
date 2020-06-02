@@ -11,7 +11,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	log "github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/messaging"
+	"github.com/mainflux/mainflux/pkg/messaging"
 	broker "github.com/nats-io/nats.go"
 )
 

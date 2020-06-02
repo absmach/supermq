@@ -5,7 +5,7 @@ package senml
 
 import (
 	"github.com/mainflux/mainflux/errors"
-	"github.com/mainflux/mainflux/messaging"
+	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/transformers"
 	"github.com/mainflux/senml"
 )

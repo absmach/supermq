@@ -13,8 +13,8 @@ import (
 	uaGopcua "github.com/gopcua/opcua/ua"
 	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/messaging"
 	"github.com/mainflux/mainflux/opcua"
+	"github.com/mainflux/mainflux/pkg/messaging"
 )
 
 const protocol = "opcua"
