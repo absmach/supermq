@@ -58,8 +58,17 @@ setup_mf() {
 	for p in $(ls *.pb.go); do
 		mv $p $p.tmp
 	done
+	for p in $(ls pkg/*/*.pb.go); do
+		mv $p $p.tmp
+	done
 	make proto
 	for p in $(ls *.pb.go); do
+		if ! cmp -s $p $p.tmp; then
+			echo "Proto file and generated Go file $p are out of sync!"
+			exit 1
+		fi
+	done
+	for p in $(ls pkg/*/*.pb.go); do
 		if ! cmp -s $p $p.tmp; then
 			echo "Proto file and generated Go file $p are out of sync!"
 			exit 1
