@@ -11,8 +11,8 @@ import (
 	"syscall"
 
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/provision"
 	"github.com/mainflux/mainflux/provision/api"
 	mfSDK "github.com/mainflux/mainflux/sdk/go"

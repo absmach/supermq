@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/mainflux/mainflux/errors"
+	"github.com/mainflux/mainflux/pkg/errors"
 )
 
 const thingsEndpoint = "things"

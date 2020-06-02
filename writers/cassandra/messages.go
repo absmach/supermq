@@ -5,7 +5,7 @@ package cassandra
 
 import (
 	"github.com/gocql/gocql"
-	"github.com/mainflux/mainflux/errors"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/transformers/senml"
 	"github.com/mainflux/mainflux/writers"
 )
