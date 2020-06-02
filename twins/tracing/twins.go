@@ -29,8 +29,7 @@ type twinRepositoryMiddleware struct {
 	repo   twins.TwinRepository
 }
 
-// TwinRepositoryMiddleware tracks request and their latency, and adds spans
-// to context.
+// TwinRepositoryMiddleware tracks request and their latency, and adds spans to context.
 func TwinRepositoryMiddleware(tracer opentracing.Tracer, repo twins.TwinRepository) twins.TwinRepository {
 	return twinRepositoryMiddleware{
 		tracer: tracer,
@@ -91,8 +90,7 @@ type twinCacheMiddleware struct {
 	cache  twins.TwinCache
 }
 
-// TwinCacheMiddleware tracks request and their latency, and adds spans
-// to context.
+// TwinCacheMiddleware tracks request and their latency, and adds spans to context.
 func TwinCacheMiddleware(tracer opentracing.Tracer, cache twins.TwinCache) twins.TwinCache {
 	return twinCacheMiddleware{
 		tracer: tracer,
@@ -114,6 +112,14 @@ func (tcm twinCacheMiddleware) SaveIDs(ctx context.Context, channel, subtopic st
 	ctx = opentracing.ContextWithSpan(ctx, span)
 
 	return tcm.cache.SaveIDs(ctx, channel, subtopic, ids)
+}
+
+func (tcm twinCacheMiddleware) Update(ctx context.Context, twin twins.Twin) error {
+	span := createSpan(ctx, tcm.tracer, updateTwinOp)
+	defer span.Finish()
+	ctx = opentracing.ContextWithSpan(ctx, span)
+
+	return tcm.cache.Update(ctx, twin)
 }
 
 func (tcm twinCacheMiddleware) IDs(ctx context.Context, channel, subtopic string) ([]string, error) {

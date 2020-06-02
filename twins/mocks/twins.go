@@ -168,19 +168,7 @@ func (tcm *twinCacheMock) Save(_ context.Context, twin twins.Twin) error {
 		return nil
 	}
 	def := twin.Definitions[len(twin.Definitions)-1]
-	for _, attr := range def.Attributes {
-		attrKey := attr.Channel + attr.Subtopic
-		if _, ok := tcm.attrIds[attrKey]; !ok {
-			tcm.attrIds[attrKey] = make(map[string]bool)
-		}
-		tcm.attrIds[attrKey][twin.ID] = true
-
-		idKey := twin.ID
-		if _, ok := tcm.idAttrs[idKey]; !ok {
-			tcm.idAttrs[idKey] = make(map[string]bool)
-		}
-		tcm.idAttrs[idKey][attrKey] = true
-	}
+	tcm.save(def, twin.ID)
 
 	return nil
 }
@@ -202,6 +190,22 @@ func (tcm *twinCacheMock) SaveIDs(ctx context.Context, channel, subtopic string,
 		tcm.idAttrs[id][attrKey] = true
 	}
 
+	return nil
+}
+
+func (tcm *twinCacheMock) Update(_ context.Context, twin twins.Twin) error {
+	tcm.mu.Lock()
+	defer tcm.mu.Unlock()
+
+	if err := tcm.remove(twin.ID); err != nil {
+		return nil
+	}
+
+	if len(twin.Definitions) < 1 {
+		return nil
+	}
+	def := twin.Definitions[len(twin.Definitions)-1]
+	tcm.save(def, twin.ID)
 	return nil
 }
 
@@ -227,6 +231,10 @@ func (tcm *twinCacheMock) Remove(_ context.Context, twinID string) error {
 	tcm.mu.Lock()
 	defer tcm.mu.Unlock()
 
+	return tcm.remove(twinID)
+}
+
+func (tcm *twinCacheMock) remove(twinID string) error {
 	attrKeys, ok := tcm.idAttrs[twinID]
 	if !ok {
 		return nil
@@ -236,6 +244,21 @@ func (tcm *twinCacheMock) Remove(_ context.Context, twinID string) error {
 	for attrKey := range attrKeys {
 		delete(tcm.attrIds[attrKey], twinID)
 	}
-
 	return nil
+}
+
+func (tcm *twinCacheMock) save(def twins.Definition, twinID string) {
+	for _, attr := range def.Attributes {
+		attrKey := attr.Channel + attr.Subtopic
+		if _, ok := tcm.attrIds[attrKey]; !ok {
+			tcm.attrIds[attrKey] = make(map[string]bool)
+		}
+		tcm.attrIds[attrKey][twinID] = true
+
+		idKey := twinID
+		if _, ok := tcm.idAttrs[idKey]; !ok {
+			tcm.idAttrs[idKey] = make(map[string]bool)
+		}
+		tcm.idAttrs[idKey][attrKey] = true
+	}
 }

@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/go-redis/redis"
-	"github.com/mainflux/mainflux/errors"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/twins"
 )
 
@@ -17,13 +17,16 @@ const (
 )
 
 // ErrRedisTwinSave indicates error while saving Twin in redis cache
-var ErrRedisTwinSave = errors.New("saving twin in redis cache error")
+var ErrRedisTwinSave = errors.New("failed to save twin in redis cache")
+
+// ErrRedisTwinUpdate indicates error while saving Twin in redis cache
+var ErrRedisTwinUpdate = errors.New("failed to update twin in redis cache")
 
 // ErrRedisTwinIDs indicates error while geting Twin IDs from redis cache
-var ErrRedisTwinIDs = errors.New("get twin id from redis cache error")
+var ErrRedisTwinIDs = errors.New("failed to get twin id from redis cache")
 
 // ErrRedisTwinRemove indicates error while removing Twin from redis cache
-var ErrRedisTwinRemove = errors.New("remove twin from redis cache error")
+var ErrRedisTwinRemove = errors.New("failed to remove twin from redis cache")
 
 var _ twins.TwinCache = (*twinCache)(nil)
 
@@ -39,18 +42,15 @@ func NewTwinCache(client *redis.Client) twins.TwinCache {
 }
 
 func (tc *twinCache) Save(_ context.Context, twin twins.Twin) error {
-	if len(twin.Definitions) < 1 {
-		return nil
-	}
+	return tc.save(twin)
+}
 
-	def := twin.Definitions[len(twin.Definitions)-1]
-	for _, attr := range def.Attributes {
-		if err := tc.client.SAdd(attrKey(attr.Channel, attr.Subtopic), twin.ID).Err(); err != nil {
-			return errors.Wrap(ErrRedisTwinSave, err)
-		}
-		if err := tc.client.SAdd(twinKey(twin.ID), attrKey(attr.Channel, attr.Subtopic)).Err(); err != nil {
-			return errors.Wrap(ErrRedisTwinSave, err)
-		}
+func (tc *twinCache) Update(_ context.Context, twin twins.Twin) error {
+	if err := tc.remove(twin.ID); err != nil {
+		return errors.Wrap(ErrRedisTwinUpdate, err)
+	}
+	if err := tc.save(twin); err != nil {
+		return errors.Wrap(ErrRedisTwinUpdate, err)
 	}
 	return nil
 }
@@ -76,16 +76,36 @@ func (tc *twinCache) IDs(_ context.Context, channel, subtopic string) ([]string,
 }
 
 func (tc *twinCache) Remove(_ context.Context, twinID string) error {
-	twKey := twinKey(twinID)
-	attrKeys, err := tc.client.SMembers(twKey).Result()
+	return tc.remove(twinID)
+}
+
+func (tc *twinCache) save(twin twins.Twin) error {
+	if len(twin.Definitions) < 1 {
+		return nil
+	}
+	attributes := twin.Definitions[len(twin.Definitions)-1].Attributes
+	for _, attr := range attributes {
+		if err := tc.client.SAdd(attrKey(attr.Channel, attr.Subtopic), twin.ID).Err(); err != nil {
+			return errors.Wrap(ErrRedisTwinSave, err)
+		}
+		if err := tc.client.SAdd(twinKey(twin.ID), attrKey(attr.Channel, attr.Subtopic)).Err(); err != nil {
+			return errors.Wrap(ErrRedisTwinSave, err)
+		}
+	}
+	return nil
+}
+
+func (tc *twinCache) remove(twinID string) error {
+	twinKey := twinKey(twinID)
+	attrKeys, err := tc.client.SMembers(twinKey).Result()
 	if err != nil {
 		return errors.Wrap(ErrRedisTwinRemove, err)
 	}
-	if err := tc.client.Del(twKey).Err(); err != nil {
+	if err := tc.client.Del(twinKey).Err(); err != nil {
 		return errors.Wrap(ErrRedisTwinRemove, err)
 	}
-	for _, key := range attrKeys {
-		if err := tc.client.SRem(key, twinID).Err(); err != nil {
+	for _, attrKey := range attrKeys {
+		if err := tc.client.SRem(attrKey, twinID).Err(); err != nil {
 			return errors.Wrap(ErrRedisTwinRemove, err)
 		}
 	}

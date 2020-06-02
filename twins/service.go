@@ -207,11 +207,7 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 	id = twin.ID
 	b, err = json.Marshal(tw)
 
-	if err := ts.twinCache.Remove(ctx, id); err != nil {
-		return err
-	}
-
-	return ts.twinCache.Save(ctx, twin)
+	return ts.twinCache.Update(ctx, twin)
 }
 
 func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (tw Twin, err error) {
@@ -273,7 +269,6 @@ func (ts *twinsService) SaveStates(msg *messaging.Message) error {
 	ctx := context.TODO()
 	channel, subtopic := msg.Channel, msg.Subtopic
 	ids, err := ts.twinCache.IDs(ctx, channel, subtopic)
-
 	if err != nil {
 		return err
 	}

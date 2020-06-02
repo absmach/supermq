@@ -83,7 +83,10 @@ type TwinCache interface {
 	Save(context.Context, Twin) error
 
 	// SaveIDs stores twin IDs as elements of channel-subtopic keyed set and vice versa.
-	SaveIDs(_ context.Context, channel, subtopic string, ids []string) error
+	SaveIDs(ctx context.Context, channel, subtopic string, ids []string) error
+
+	// Update updates update twin id and channel-subtopic attributes mapping
+	Update(_ context.Context, twin Twin) error
 
 	// ID returns twin IDs for given attribute.
 	IDs(ctx context.Context, channel, subtopic string) ([]string, error)

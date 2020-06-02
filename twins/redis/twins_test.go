@@ -91,7 +91,7 @@ func TestTwinSaveIDs(t *testing.T) {
 			err:      nil,
 		},
 		{
-			desc:     "Save emtpy ids array to cache",
+			desc:     "Save empty ids array to cache",
 			channel:  channels[2],
 			subtopic: subtopics[2],
 			ids:      []string{},
@@ -121,6 +121,59 @@ func TestTwinSaveIDs(t *testing.T) {
 		ids, err := twinCache.IDs(ctx, tc.channel, tc.subtopic)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 		assert.ElementsMatch(t, ids, tc.ids, fmt.Sprintf("%s: ids %v not found in %v", tc.desc, tc.ids, ids))
+	}
+}
+
+func TestTwinUpdate(t *testing.T) {
+	redisClient.FlushAll()
+	twinCache := redis.NewTwinCache(redisClient)
+	ctx := context.Background()
+
+	var tws []twins.Twin
+	for i := range channels {
+		tw, err := createTwin(channels[i:i+1], subtopics[i:i+1])
+		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+		tws = append(tws, tw)
+	}
+	err := twinCache.Save(ctx, tws[0])
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	tws[1].ID = tws[0].ID
+
+	cases := []struct {
+		desc   string
+		twinID string
+		twin   twins.Twin
+		err    error
+	}{
+		{
+			desc:   "Update saved twin",
+			twinID: tws[0].ID,
+			twin:   tws[1],
+			err:    nil,
+		},
+		{
+			desc:   "Update twin with same definition",
+			twinID: tws[0].ID,
+			twin:   tws[1],
+			err:    nil,
+		},
+		{
+			desc:   "Update unsaved twin definition",
+			twinID: tws[2].ID,
+			twin:   tws[2],
+			err:    nil,
+		},
+	}
+
+	for _, tc := range cases {
+		err := twinCache.Update(ctx, tc.twin)
+		assert.Nil(t, err, fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.err, err))
+
+		attr := tc.twin.Definitions[0].Attributes[0]
+		ids, err := twinCache.IDs(ctx, attr.Channel, attr.Subtopic)
+		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+		assert.Contains(t, ids, tc.twinID, fmt.Sprintf("%s: ids %v do not contain id %s", tc.desc, ids, tc.twinID))
 	}
 }
 
@@ -228,7 +281,7 @@ func TestTwinRemove(t *testing.T) {
 		for _, attr := range def.Attributes {
 			ids, err := twinCache.IDs(ctx, attr.Channel, attr.Subtopic)
 			require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
-			assert.NotContains(t, ids, tc.twin.ID, fmt.Sprintf("%s: id %s not found in %v", tc.desc, tc.twin.ID, ids))
+			assert.NotContains(t, ids, tc.twin.ID, fmt.Sprintf("%s: id %s found in %v", tc.desc, tc.twin.ID, ids))
 		}
 	}
 }
