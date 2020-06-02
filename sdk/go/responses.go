@@ -3,7 +3,7 @@
 
 package sdk
 
-import "github.com/mainflux/mainflux/transformers/senml"
+import "github.com/mainflux/mainflux/pkg/transformers/senml"
 
 type tokenRes struct {
 	Token string `json:"token,omitempty"`
