@@ -12,7 +12,7 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/pkg/errors"
-	mfsdk "github.com/mainflux/mainflux/sdk/go"
+	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
 )
 
 var (

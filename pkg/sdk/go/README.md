@@ -8,8 +8,7 @@ Does both system administration (provisioning) and messaging.
 Import `"github.com/mainflux/mainflux/sdk/go"` in your Go package.
 
 ```
-import "github.com/mainflux/mainflux/sdk/go"
-```
+import "github.com/mainflux/mainflux/pkg/sdk/go"```
 
 Then call SDK Go functions to interact with the system.
 

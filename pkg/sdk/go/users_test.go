@@ -11,15 +11,14 @@ import (
 	"os"
 	"testing"
 
-	"github.com/opentracing/opentracing-go/mocktracer"
-	"github.com/stretchr/testify/assert"
-
 	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
-	sdk "github.com/mainflux/mainflux/sdk/go"
+	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/users"
 	"github.com/mainflux/mainflux/users/api"
 	"github.com/mainflux/mainflux/users/mocks"
+	"github.com/opentracing/opentracing-go/mocktracer"
+	"github.com/stretchr/testify/assert"
 )
 
 const (

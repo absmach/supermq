@@ -6,7 +6,7 @@ import (
 
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
-	SDK "github.com/mainflux/mainflux/sdk/go"
+	SDK "github.com/mainflux/mainflux/pkg/sdk/go"
 )
 
 const (

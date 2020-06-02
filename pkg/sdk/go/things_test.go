@@ -10,14 +10,13 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/opentracing/opentracing-go/mocktracer"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	sdk "github.com/mainflux/mainflux/sdk/go"
+	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/things"
 	httpapi "github.com/mainflux/mainflux/things/api/things/http"
 	"github.com/mainflux/mainflux/things/mocks"
+	"github.com/opentracing/opentracing-go/mocktracer"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
