@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/mainflux/mainflux/messaging"
+	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/uuid"
 	uuidMocks "github.com/mainflux/mainflux/uuid/mocks"

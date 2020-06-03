@@ -12,7 +12,7 @@ import (
 	"github.com/mainflux/mainflux/authn"
 	"github.com/mainflux/mainflux/authn/jwt"
 	"github.com/mainflux/mainflux/authn/mocks"
-	"github.com/mainflux/mainflux/errors"
+	"github.com/mainflux/mainflux/pkg/errors"
 	uuidMocks "github.com/mainflux/mainflux/uuid/mocks"
 	"github.com/stretchr/testify/assert"
 )

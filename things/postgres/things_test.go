@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mainflux/mainflux/errors"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/things/postgres"
 	uuidProvider "github.com/mainflux/mainflux/uuid"
