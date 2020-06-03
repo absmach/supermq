@@ -13,20 +13,19 @@ update_go() {
 	if version_gt $GO_VERSION $CURRENT_GO_VERSION; then
 		echo "Update go version from $CURRENT_GO_VERSION to $GO_VERSION ..."
 		sudo rm -rf /usr/local/go
+		sudo rm -rf /usr/local/golang
+		sudo rm -rf /usr/bin/go
 		wget https://dl.google.com/go/go$GO_VERSION.linux-amd64.tar.gz
-		sudo mkdir /usr/local/golang/$GO_VERSION && sudo tar -C /usr/local/golang/$GO_VERSION -xzf go$GO_VERSION.linux-amd64.tar.gz
+		tar -xvf go$GO_VERSION.linux-amd64.tar.gz
 		rm go$GO_VERSION.linux-amd64.tar.gz
-
+		sudo mv go /usr/local
+		export GOROOT=/usr/local/go
+		export GOPATH=/home/runner/go/src
+		export GOBIN=/home/runner/go/bin
+		mkdir -p $GOPATH
+		mkdir $GOBIN
 		# remove other Go version from path
-		export PATH=$(echo $PATH | sed -e 's|:/usr/local/golang/[1-9.]*/go/bin||')
-
-		sudo ln -fs /usr/local/golang/$GO_VERSION/go/bin/go /usr/local/bin/go
-
-		# setup GOROOT
-		export GOROOT="/usr/local/golang/$GO_VERSION/go"
-
-		# add new go installation to PATH
-		export PATH="$PATH:/usr/local/golang/$GO_VERSION/go/bin"
+		export PATH=$PATH:/usr/local/go/bin:$GOBIN
 	fi
 	go version
 }
@@ -72,8 +71,9 @@ setup_mf() {
 }
 
 setup_lint() {
-	# binary will be $(go env GOPATH)/bin/golangci-lint
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0
+	# binary will be $(go env GOBIN)/golangci-lint
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOBIN) v1.24.0
+
 }
 
 setup() {
