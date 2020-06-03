@@ -129,7 +129,7 @@ github.com/lib/pq/oid
 github.com/lib/pq/scram
 # github.com/magiconair/properties v1.8.1
 github.com/magiconair/properties
-# github.com/mainflux/mproxy v0.2.0
+# github.com/mainflux/mproxy v0.2.1-0.20200603122422-b08e1fa2cf5c
 github.com/mainflux/mproxy/pkg/mqtt
 github.com/mainflux/mproxy/pkg/session
 github.com/mainflux/mproxy/pkg/websocket

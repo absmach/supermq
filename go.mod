@@ -21,7 +21,7 @@ require (
 	github.com/influxdata/influxdb v1.8.0
 	github.com/jmoiron/sqlx v1.2.1-0.20190319043955-cdf62fdf55f6
 	github.com/lib/pq v1.5.2
-	github.com/mainflux/mproxy v0.2.0
+	github.com/mainflux/mproxy v0.2.1-0.20200603122422-b08e1fa2cf5c
 	github.com/mainflux/senml v1.0.1
 	github.com/nats-io/nats.go v1.10.0
 	github.com/opentracing/opentracing-go v1.1.0
