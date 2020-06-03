@@ -7,14 +7,14 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx" // required for DB access
-	"github.com/mainflux/mainflux/errors"
+	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/readers"
-	"github.com/mainflux/mainflux/transformers/senml"
 )
 
 const errInvalid = "invalid_text_representation"
 
-var errReadMessages = errors.New("faled to read messages from postgres database")
+var errReadMessages = errors.New("failed to read messages from postgres database")
 
 var _ readers.MessageRepository = (*postgresRepository)(nil)
 

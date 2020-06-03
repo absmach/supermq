@@ -6,7 +6,7 @@ package things
 import (
 	"context"
 
-	"github.com/mainflux/mainflux/errors"
+	"github.com/mainflux/mainflux/pkg/errors"
 
 	"github.com/mainflux/mainflux"
 )
@@ -34,6 +34,15 @@ var (
 
 	// ErrCreateChannels indicates error in creating Channel
 	ErrCreateChannels = errors.New("create channel failed")
+
+	// ErrRemoveThing indicates error in removing Thing
+	ErrRemoveThing = errors.New("remove thing failed")
+
+	// ErrRemoveChannel indicates error in removing Channel
+	ErrRemoveChannel = errors.New("remove channel failed")
+
+	// ErrDisconnect indicates error in removing connection
+	ErrDisconnect = errors.New("remove connection failed")
 )
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -126,18 +135,18 @@ type thingsService struct {
 	channels     ChannelRepository
 	channelCache ChannelCache
 	thingCache   ThingCache
-	idp          IdentityProvider
+	uuidProvider mainflux.UUIDProvider
 }
 
 // New instantiates the things service implementation.
-func New(auth mainflux.AuthNServiceClient, things ThingRepository, channels ChannelRepository, ccache ChannelCache, tcache ThingCache, idp IdentityProvider) Service {
+func New(auth mainflux.AuthNServiceClient, things ThingRepository, channels ChannelRepository, ccache ChannelCache, tcache ThingCache, up mainflux.UUIDProvider) Service {
 	return &thingsService{
 		auth:         auth,
 		things:       things,
 		channels:     channels,
 		channelCache: ccache,
 		thingCache:   tcache,
-		idp:          idp,
+		uuidProvider: up,
 	}
 }
 
@@ -148,7 +157,7 @@ func (ts *thingsService) CreateThings(ctx context.Context, token string, things 
 	}
 
 	for i := range things {
-		things[i].ID, err = ts.idp.ID()
+		things[i].ID, err = ts.uuidProvider.ID()
 		if err != nil {
 			return []Thing{}, errors.Wrap(ErrCreateThings, err)
 		}
@@ -156,7 +165,7 @@ func (ts *thingsService) CreateThings(ctx context.Context, token string, things 
 		things[i].Owner = res.GetValue()
 
 		if things[i].Key == "" {
-			things[i].Key, err = ts.idp.ID()
+			things[i].Key, err = ts.uuidProvider.ID()
 			if err != nil {
 				return []Thing{}, errors.Wrap(ErrCreateThings, err)
 			}
@@ -224,7 +233,9 @@ func (ts *thingsService) RemoveThing(ctx context.Context, token, id string) erro
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	ts.thingCache.Remove(ctx, id)
+	if err := ts.thingCache.Remove(ctx, id); err != nil {
+		return errors.Wrap(ErrRemoveThing, err)
+	}
 	return ts.things.Remove(ctx, res.GetValue(), id)
 }
 
@@ -235,7 +246,7 @@ func (ts *thingsService) CreateChannels(ctx context.Context, token string, chann
 	}
 
 	for i := range channels {
-		channels[i].ID, err = ts.idp.ID()
+		channels[i].ID, err = ts.uuidProvider.ID()
 		if err != nil {
 			return []Channel{}, errors.Wrap(ErrCreateChannels, err)
 		}
@@ -289,7 +300,9 @@ func (ts *thingsService) RemoveChannel(ctx context.Context, token, id string) er
 		return ErrUnauthorizedAccess
 	}
 
-	ts.channelCache.Remove(ctx, id)
+	if err := ts.channelCache.Remove(ctx, id); err != nil {
+		return errors.Wrap(ErrRemoveChannel, err)
+	}
 	return ts.channels.Remove(ctx, res.GetValue(), id)
 }
 
@@ -308,7 +321,9 @@ func (ts *thingsService) Disconnect(ctx context.Context, token, chanID, thingID 
 		return ErrUnauthorizedAccess
 	}
 
-	ts.channelCache.Disconnect(ctx, chanID, thingID)
+	if err := ts.channelCache.Disconnect(ctx, chanID, thingID); err != nil {
+		return errors.Wrap(ErrDisconnect, err)
+	}
 	return ts.channels.Disconnect(ctx, res.GetValue(), chanID, thingID)
 }
 

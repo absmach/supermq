@@ -11,11 +11,11 @@ import (
 	"syscall"
 
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/pkg/errors"
+	mfSDK "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/provision"
 	"github.com/mainflux/mainflux/provision/api"
-	mfSDK "github.com/mainflux/mainflux/sdk/go"
 )
 
 const (
@@ -38,7 +38,7 @@ const (
 	defProvisionCerts  = "false"
 	defProvisionBS     = "true"
 	defBSAutoWhitelist = "true"
-	defBSContent       = `{}`
+	defBSContent       = ""
 
 	envConfigFile       = "MF_PROVISION_CONFIG_FILE"
 	envLogLevel         = "MF_PROVISION_LOG_LEVEL"
@@ -183,7 +183,7 @@ func loadConfig() (provision.Config, error) {
 			X509Provision: provisionX509,
 			Provision:     provisionBS,
 			AutoWhiteList: autoWhiteList,
-			Content:       fmt.Sprintf(mainflux.Env(envBSContent, defBSContent), mainflux.Env(envMQTTURL, defMQTTURL)),
+			Content:       mainflux.Env(envBSContent, defBSContent),
 		},
 
 		// This is default conf for provision if there is no config file

@@ -10,10 +10,9 @@ import (
 	"math"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
-	"github.com/mainflux/mainflux/errors"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/messaging"
+	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/pkg/messaging"
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/senml"
@@ -53,11 +52,6 @@ type Service interface {
 	// ID belonging to the user identified by the provided key.
 	ViewTwin(ctx context.Context, token, id string) (tw Twin, err error)
 
-	// ViewTwinByThing retrieves data about subset of twins that represent
-	// specified thing belong to the user identified by
-	// the provided key.
-	ViewTwinByThing(ctx context.Context, token, thingid string) (Twin, error)
-
 	// RemoveTwin removes the twin identified with the provided ID, that
 	// belongs to the user identified by the provided key.
 	RemoveTwin(ctx context.Context, token, id string) (err error)
@@ -96,27 +90,27 @@ var crudOp = map[string]string{
 }
 
 type twinsService struct {
-	publisher messaging.Publisher
-	auth      mainflux.AuthNServiceClient
-	twins     TwinRepository
-	states    StateRepository
-	idp       IdentityProvider
-	channelID string
-	logger    logger.Logger
+	publisher    messaging.Publisher
+	auth         mainflux.AuthNServiceClient
+	twins        TwinRepository
+	states       StateRepository
+	uuidProvider mainflux.UUIDProvider
+	channelID    string
+	logger       logger.Logger
 }
 
 var _ Service = (*twinsService)(nil)
 
 // New instantiates the twins service implementation.
-func New(publisher messaging.Publisher, auth mainflux.AuthNServiceClient, twins TwinRepository, sr StateRepository, idp IdentityProvider, chann string, logger logger.Logger) Service {
+func New(publisher messaging.Publisher, auth mainflux.AuthNServiceClient, twins TwinRepository, sr StateRepository, up mainflux.UUIDProvider, chann string, logger logger.Logger) Service {
 	return &twinsService{
-		publisher: publisher,
-		auth:      auth,
-		twins:     twins,
-		states:    sr,
-		idp:       idp,
-		channelID: chann,
-		logger:    logger,
+		publisher:    publisher,
+		auth:         auth,
+		twins:        twins,
+		states:       sr,
+		uuidProvider: up,
+		channelID:    chann,
+		logger:       logger,
 	}
 }
 
@@ -130,15 +124,16 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 		return Twin{}, ErrUnauthorizedAccess
 	}
 
-	twin.ID, err = ts.idp.ID()
+	twin.ID, err = ts.uuidProvider.ID()
 	if err != nil {
 		return Twin{}, err
 	}
 
 	twin.Owner = res.GetValue()
 
-	twin.Created = time.Now()
-	twin.Updated = time.Now()
+	t := time.Now()
+	twin.Created = t
+	twin.Updated = t
 
 	if def.Attributes == nil {
 		def.Attributes = []Attribute{}
@@ -182,11 +177,6 @@ func (ts *twinsService) UpdateTwin(ctx context.Context, token string, twin Twin,
 	if twin.Name != "" {
 		revision = true
 		tw.Name = twin.Name
-	}
-
-	if twin.ThingID != "" {
-		revision = true
-		tw.ThingID = twin.ThingID
 	}
 
 	if len(def.Attributes) > 0 {
@@ -235,15 +225,6 @@ func (ts *twinsService) ViewTwin(ctx context.Context, token, id string) (tw Twin
 	b, err = json.Marshal(twin)
 
 	return twin, nil
-}
-
-func (ts *twinsService) ViewTwinByThing(ctx context.Context, token, thingid string) (Twin, error) {
-	_, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return Twin{}, ErrUnauthorizedAccess
-	}
-
-	return ts.twins.RetrieveByThing(ctx, thingid)
 }
 
 func (ts *twinsService) RemoveTwin(ctx context.Context, token, id string) (err error) {
@@ -344,6 +325,7 @@ func prepareState(st *State, tw *Twin, rec senml.Record, msg *messaging.Message)
 
 	if st.Payload == nil {
 		st.Payload = make(map[string]interface{})
+		st.ID = -1 // state is incremented on save -> zero-based index
 	} else {
 		for k := range st.Payload {
 			idx := findAttribute(k, def.Attributes)
@@ -376,6 +358,7 @@ func prepareState(st *State, tw *Twin, rec senml.Record, msg *messaging.Message)
 			}
 			val := findValue(rec)
 			st.Payload[attr.Name] = val
+
 			break
 		}
 	}
@@ -428,17 +411,12 @@ func (ts *twinsService) publish(twinID *string, err *error, succOp, failOp strin
 		pl = []byte(fmt.Sprintf("{\"deleted\":\"%s\"}", *twinID))
 	}
 
-	created, timeErr := ptypes.TimestampProto(time.Now())
-	if timeErr != nil {
-		return
-	}
-
 	msg := messaging.Message{
 		Channel:   ts.channelID,
 		Subtopic:  op,
 		Payload:   pl,
 		Publisher: publisher,
-		Created:   created,
+		Created:   time.Now().UnixNano(),
 	}
 
 	if err := ts.publisher.Publish(msg.Channel, msg); err != nil {

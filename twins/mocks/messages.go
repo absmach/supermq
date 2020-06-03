@@ -4,8 +4,8 @@
 package mocks
 
 import (
-	"github.com/mainflux/mainflux/errors"
-	"github.com/mainflux/mainflux/messaging"
+	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/pkg/messaging"
 )
 
 var _ messaging.Publisher = (*mockBroker)(nil)
@@ -14,8 +14,8 @@ type mockBroker struct {
 	subscriptions map[string]string
 }
 
-// New returns mock message publisher.
-func New(sub map[string]string) messaging.Publisher {
+// NewBroker returns mock message publisher.
+func NewBroker(sub map[string]string) messaging.Publisher {
 	return &mockBroker{
 		subscriptions: sub,
 	}

@@ -8,8 +8,8 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/authn"
-	"github.com/mainflux/mainflux/errors"
-	"github.com/mainflux/mainflux/uuid"
+	"github.com/mainflux/mainflux/pkg/errors"
+	uuidProvider "github.com/mainflux/mainflux/pkg/uuid"
 )
 
 var (
@@ -111,7 +111,7 @@ func (svc usersService) Register(ctx context.Context, user User) error {
 
 	user.Password = hash
 
-	uid, err := uuid.New().ID()
+	uid, err := uuidProvider.New().ID()
 	if err != nil {
 		return errors.Wrap(ErrCreateUser, err)
 	}

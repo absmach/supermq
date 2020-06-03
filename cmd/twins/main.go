@@ -19,14 +19,15 @@ import (
 	"github.com/mainflux/mainflux"
 	authapi "github.com/mainflux/mainflux/authn/api/grpc"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/messaging"
-	"github.com/mainflux/mainflux/messaging/nats"
+	"github.com/mainflux/mainflux/pkg/messaging"
+	"github.com/mainflux/mainflux/pkg/messaging/nats"
 	localusers "github.com/mainflux/mainflux/things/users"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/api"
 	twapi "github.com/mainflux/mainflux/twins/api/http"
 	twmongodb "github.com/mainflux/mainflux/twins/mongodb"
-	"github.com/mainflux/mainflux/twins/uuid"
+	"github.com/mainflux/mainflux/twins/tracing"
+	uuidProvider "github.com/mainflux/mainflux/pkg/uuid"
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"
@@ -121,16 +122,11 @@ func main() {
 	}
 	defer pubSub.Close()
 
-	ncTracer, ncCloser := initJaeger("twins_nats", cfg.jaegerURL, logger)
-	defer ncCloser.Close()
+	svc := newService(pubSub, cfg.channelID, auth, dbTracer, db, logger)
 
 	tracer, closer := initJaeger("twins", cfg.jaegerURL, logger)
 	defer closer.Close()
-
-	svc := newService(pubSub, ncTracer, cfg.channelID, auth, dbTracer, db, logger)
-
 	errs := make(chan error, 2)
-
 	go startHTTPServer(twapi.MakeHandler(tracer, svc), cfg.httpPort, cfg, logger, errs)
 
 	go func() {
@@ -236,13 +232,16 @@ func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
 	return conn
 }
 
-func newService(ps messaging.PubSub, ncTracer opentracing.Tracer, chanID string, users mainflux.AuthNServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
+func newService(ps messaging.PubSub, chanID string, users mainflux.AuthNServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, logger logger.Logger) twins.Service {
 	twinRepo := twmongodb.NewTwinRepository(db)
+	twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, twinRepo)
 
 	stateRepo := twmongodb.NewStateRepository(db)
-	idp := uuid.New()
+	stateRepo = tracing.StateRepositoryMiddleware(dbTracer, stateRepo)
 
-	svc := twins.New(ps, users, twinRepo, stateRepo, idp, chanID, logger)
+	up := uuidProvider.New()
+
+	svc := twins.New(ps, users, twinRepo, stateRepo, up, chanID, logger)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,

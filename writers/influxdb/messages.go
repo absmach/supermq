@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/mainflux/mainflux/errors"
-	"github.com/mainflux/mainflux/transformers/senml"
+	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/writers"
 
 	influxdata "github.com/influxdata/influxdb/client/v2"
@@ -17,7 +17,7 @@ import (
 
 const pointName = "messages"
 
-var errSaveMessage = errors.New("faled to save message to influxdb database")
+var errSaveMessage = errors.New("failed to save message to influxdb database")
 
 var _ writers.MessageRepository = (*influxRepo)(nil)
 

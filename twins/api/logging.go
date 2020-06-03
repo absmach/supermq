@@ -11,7 +11,7 @@ import (
 	"time"
 
 	log "github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/messaging"
+	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/twins"
 )
 
@@ -103,19 +103,6 @@ func (lm *loggingMiddleware) ListStates(ctx context.Context, token string, offse
 	}(time.Now())
 
 	return lm.svc.ListStates(ctx, token, offset, limit, id)
-}
-
-func (lm *loggingMiddleware) ViewTwinByThing(ctx context.Context, token, thingid string) (tw twins.Twin, err error) {
-	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method view_twin_by_thing for token %s and thing %s took %s to complete", token, thingid, time.Since(begin))
-		if err != nil {
-			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
-			return
-		}
-		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
-	}(time.Now())
-
-	return lm.svc.ViewTwinByThing(ctx, token, thingid)
 }
 
 func (lm *loggingMiddleware) RemoveTwin(ctx context.Context, token, id string) (err error) {

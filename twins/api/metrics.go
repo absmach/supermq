@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/metrics"
-	"github.com/mainflux/mainflux/messaging"
+	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/twins"
 )
 
@@ -84,15 +84,6 @@ func (ms *metricsMiddleware) ListStates(ctx context.Context, token string, offse
 	}(time.Now())
 
 	return ms.svc.ListStates(ctx, token, offset, limit, id)
-}
-
-func (ms *metricsMiddleware) ViewTwinByThing(ctx context.Context, token, thingid string) (twins.Twin, error) {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "view_twin_by_thing").Add(1)
-		ms.latency.With("method", "view_twin_by_thing").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-
-	return ms.svc.ViewTwinByThing(ctx, token, thingid)
 }
 
 func (ms *metricsMiddleware) RemoveTwin(ctx context.Context, token, id string) (err error) {

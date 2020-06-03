@@ -6,9 +6,9 @@ package mongodb
 import (
 	"context"
 
-	"github.com/mainflux/mainflux/errors"
+	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/readers"
-	"github.com/mainflux/mainflux/transformers/senml"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -16,7 +16,7 @@ import (
 
 const collection = "mainflux"
 
-var errReadMessages = errors.New("faled to read messages from mongodb database")
+var errReadMessages = errors.New("failed to read messages from mongodb database")
 
 var _ readers.MessageRepository = (*mongoRepository)(nil)
 

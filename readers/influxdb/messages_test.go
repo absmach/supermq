@@ -7,9 +7,9 @@ import (
 	"time"
 
 	influxdata "github.com/influxdata/influxdb/client/v2"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/readers"
 	reader "github.com/mainflux/mainflux/readers/influxdb"
-	"github.com/mainflux/mainflux/transformers/senml"
 	writer "github.com/mainflux/mainflux/writers/influxdb"
 
 	log "github.com/mainflux/mainflux/logger"
@@ -59,7 +59,7 @@ func TestReadAll(t *testing.T) {
 
 	messages := []senml.Message{}
 	subtopicMsgs := []senml.Message{}
-	now := time.Now().Unix()
+	now := time.Now().UnixNano()
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.
 		count := i % valueFields
@@ -78,7 +78,7 @@ func TestReadAll(t *testing.T) {
 			msg.Sum = &sum
 		}
 
-		msg.Time = float64(now - int64(i))
+		msg.Time = float64(now)/float64(1e9) - float64(i)
 		messages = append(messages, msg)
 		if count == 0 {
 			subtopicMsgs = append(subtopicMsgs, msg)

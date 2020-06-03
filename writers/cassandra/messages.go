@@ -5,12 +5,12 @@ package cassandra
 
 import (
 	"github.com/gocql/gocql"
-	"github.com/mainflux/mainflux/errors"
-	"github.com/mainflux/mainflux/transformers/senml"
+	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/writers"
 )
 
-var errSaveMessage = errors.New("faled to save message to cassandra database")
+var errSaveMessage = errors.New("failed to save message to cassandra database")
 
 var _ writers.MessageRepository = (*cassandraRepository)(nil)
 

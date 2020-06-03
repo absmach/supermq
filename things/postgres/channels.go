@@ -13,7 +13,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/lib/pq"
-	"github.com/mainflux/mainflux/errors"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things"
 )
 
@@ -383,7 +383,6 @@ func (m *dbMetadata) Scan(value interface{}) error {
 	}
 
 	if err := json.Unmarshal(b, m); err != nil {
-		m = &dbMetadata{}
 		return err
 	}
 

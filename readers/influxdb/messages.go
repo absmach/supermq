@@ -8,16 +8,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mainflux/mainflux/errors"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/readers"
 
 	influxdata "github.com/influxdata/influxdb/client/v2"
-	"github.com/mainflux/mainflux/transformers/senml"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 )
 
 const countCol = "count"
 
-var errReadMessages = errors.New("faled to read messages from influxdb database")
+var errReadMessages = errors.New("failed to read messages from influxdb database")
 
 var _ readers.MessageRepository = (*influxRepository)(nil)
 
@@ -196,12 +196,12 @@ func parseMessage(names []string, fields []interface{}) senml.Message {
 			}
 		case float64:
 			if name == "time" {
-				t, err := time.Parse(time.RFC3339, fields[i].(string))
+				t, err := time.Parse(time.RFC3339Nano, fields[i].(string))
 				if err != nil {
 					continue
 				}
 
-				v := float64(t.Unix())
+				v := float64(t.UnixNano()) / float64(1e9)
 				msgField.SetFloat(v)
 				continue
 			}
