@@ -35,7 +35,7 @@ import (
 	"github.com/mainflux/mainflux/things/postgres"
 	rediscache "github.com/mainflux/mainflux/things/redis"
 	localusers "github.com/mainflux/mainflux/things/users"
-	uuidProvider "github.com/mainflux/mainflux/uuid"
+	uuidProvider "github.com/mainflux/mainflux/pkg/uuid"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"
 	"google.golang.org/grpc"

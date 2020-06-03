@@ -13,10 +13,10 @@ import (
 
 	r "github.com/go-redis/redis"
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/things/mocks"
 	"github.com/mainflux/mainflux/things/redis"
-	uuidMocks "github.com/mainflux/mainflux/uuid/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -45,7 +45,7 @@ func newService(tokens map[string]string) things.Service {
 	channelsRepo := mocks.NewChannelRepository(thingsRepo, conns)
 	chanCache := mocks.NewChannelCache()
 	thingCache := mocks.NewThingCache()
-	uuidProvider := uuidMocks.New()
+	uuidProvider := uuid.NewMock()
 
 	return things.New(auth, thingsRepo, channelsRepo, chanCache, thingCache, uuidProvider)
 }

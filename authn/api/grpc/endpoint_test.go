@@ -14,7 +14,7 @@ import (
 	grpcapi "github.com/mainflux/mainflux/authn/api/grpc"
 	"github.com/mainflux/mainflux/authn/jwt"
 	"github.com/mainflux/mainflux/authn/mocks"
-	uuidMocks "github.com/mainflux/mainflux/uuid/mocks"
+	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
@@ -33,7 +33,7 @@ var svc authn.Service
 
 func newService() authn.Service {
 	repo := mocks.NewKeyRepository()
-	uuidProvider := uuidMocks.New()
+	uuidProvider := uuid.NewMock()
 	t := jwt.New(secret)
 
 	return authn.New(repo, uuidProvider, t)

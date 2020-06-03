@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/mocks"
-	uuidMocks "github.com/mainflux/mainflux/uuid/mocks"
 	"github.com/mainflux/senml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -36,7 +36,7 @@ func newService(tokens map[string]string) twins.Service {
 	auth := mocks.NewAuthNServiceClient(tokens)
 	twinsRepo := mocks.NewTwinRepository()
 	statesRepo := mocks.NewStateRepository()
-	uuidProvider := uuidMocks.New()
+	uuidProvider := uuid.NewMock()
 	subs := map[string]string{"chanID": "chanID"}
 	broker := mocks.NewBroker(subs)
 	return twins.New(broker, auth, twinsRepo, statesRepo, uuidProvider, "chanID", nil)

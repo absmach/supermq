@@ -14,10 +14,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/twins"
 	httpapi "github.com/mainflux/mainflux/twins/api/http"
 	"github.com/mainflux/mainflux/twins/mocks"
-	uuidMocks "github.com/mainflux/mainflux/uuid/mocks"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -90,7 +90,7 @@ func newService(tokens map[string]string) twins.Service {
 	statesRepo := mocks.NewStateRepository()
 	subs := map[string]string{"chanID": "chanID"}
 	broker := mocks.NewBroker(subs)
-	uuidProvider := uuidMocks.New()
+	uuidProvider := uuid.NewMock()
 	return twins.New(broker, auth, twinsRepo, statesRepo, uuidProvider, "chanID", nil)
 }
 

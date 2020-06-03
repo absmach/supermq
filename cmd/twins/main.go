@@ -27,7 +27,7 @@ import (
 	twapi "github.com/mainflux/mainflux/twins/api/http"
 	twmongodb "github.com/mainflux/mainflux/twins/mongodb"
 	"github.com/mainflux/mainflux/twins/tracing"
-	uuidProvider "github.com/mainflux/mainflux/uuid"
+	uuidProvider "github.com/mainflux/mainflux/pkg/uuid"
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"

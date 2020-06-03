@@ -16,10 +16,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/things"
 	httpapi "github.com/mainflux/mainflux/things/api/things/http"
 	"github.com/mainflux/mainflux/things/mocks"
-	uuidMocks "github.com/mainflux/mainflux/uuid/mocks"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -78,7 +78,7 @@ func newService(tokens map[string]string) things.Service {
 	channelsRepo := mocks.NewChannelRepository(thingsRepo, conns)
 	chanCache := mocks.NewChannelCache()
 	thingCache := mocks.NewThingCache()
-	uuidProvider := uuidMocks.New()
+	uuidProvider := uuid.NewMock()
 
 	return things.New(auth, thingsRepo, channelsRepo, chanCache, thingCache, uuidProvider)
 }

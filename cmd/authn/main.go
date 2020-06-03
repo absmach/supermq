@@ -22,7 +22,7 @@ import (
 	"github.com/mainflux/mainflux/authn/postgres"
 	"github.com/mainflux/mainflux/authn/tracing"
 	"github.com/mainflux/mainflux/logger"
-	uuidProvider "github.com/mainflux/mainflux/uuid"
+	uuidProvider "github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"

@@ -11,7 +11,7 @@ import (
 
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/mongodb"
-	uuidProvider "github.com/mainflux/mainflux/uuid"
+	uuidProvider "github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"

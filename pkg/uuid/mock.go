@@ -1,7 +1,7 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-package mocks
+package uuid
 
 import (
 	"fmt"
@@ -28,8 +28,8 @@ func (up *uuidProviderMock) ID() (string, error) {
 	return fmt.Sprintf("%s%012d", Prefix, up.counter), nil
 }
 
-// New creates "mirror" uuid provider, i.e. generated
+// NewMock creates "mirror" uuid provider, i.e. generated
 // token will hold value provided by the caller.
-func New() mainflux.UUIDProvider {
+func NewMock() mainflux.UUIDProvider {
 	return &uuidProviderMock{}
 }
