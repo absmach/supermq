@@ -140,7 +140,7 @@ func TestUserInfo(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		_, err := svc.UserInfo(context.Background(), tc.token)
+		_, err := svc.ViewUser(context.Background(), tc.token)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }

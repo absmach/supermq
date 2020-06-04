@@ -63,8 +63,8 @@ type Service interface {
 	// identified by the non-nil error values in the response.
 	Login(ctx context.Context, user User) (string, error)
 
-	// Get authenticated user info for the given token.
-	UserInfo(ctx context.Context, token string) (User, error)
+	// ViewUser authenticated user info for the given token.
+	ViewUser(ctx context.Context, token string) (User, error)
 
 	// UpdateUser updates the user metadata.
 	UpdateUser(ctx context.Context, token string, user User) error
@@ -133,7 +133,7 @@ func (svc usersService) Login(ctx context.Context, user User) (string, error) {
 	return svc.issue(ctx, dbUser.Email, authn.UserKey)
 }
 
-func (svc usersService) UserInfo(ctx context.Context, token string) (User, error) {
+func (svc usersService) ViewUser(ctx context.Context, token string) (User, error) {
 	email, err := svc.identify(ctx, token)
 	if err != nil {
 		return User{}, err

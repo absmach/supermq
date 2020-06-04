@@ -74,18 +74,18 @@ func passwordResetEndpoint(svc users.Service) endpoint.Endpoint {
 
 func userInfoEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(viewUserInfoReq)
+		req := request.(viewUserReq)
 
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
 
-		u, err := svc.UserInfo(ctx, req.token)
+		u, err := svc.ViewUser(ctx, req.token)
 		if err != nil {
 			return nil, err
 		}
 
-		return identityRes{
+		return viewUserRes{
 			ID:       u.ID,
 			Email:    u.Email,
 			Metadata: u.Metadata,
