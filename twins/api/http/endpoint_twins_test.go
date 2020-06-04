@@ -14,7 +14,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/twins"
 	httpapi "github.com/mainflux/mainflux/twins/api/http"
 	"github.com/mainflux/mainflux/twins/mocks"
@@ -82,16 +81,6 @@ func (tr testRequest) make() (*http.Response, error) {
 		req.Header.Set("Content-Type", tr.contentType)
 	}
 	return tr.client.Do(req)
-}
-
-func newService(tokens map[string]string) twins.Service {
-	auth := mocks.NewAuthNServiceClient(tokens)
-	twinsRepo := mocks.NewTwinRepository()
-	statesRepo := mocks.NewStateRepository()
-	subs := map[string]string{"chanID": "chanID"}
-	broker := mocks.NewBroker(subs)
-	uuidProvider := uuid.NewMock()
-	return twins.New(broker, auth, twinsRepo, statesRepo, uuidProvider, "chanID", nil)
 }
 
 func newServer(svc twins.Service) *httptest.Server {

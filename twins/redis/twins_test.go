@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/mocks"
 	"github.com/mainflux/mainflux/twins/redis"
-	"github.com/mainflux/mainflux/twins/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
