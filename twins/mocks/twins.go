@@ -57,12 +57,12 @@ func (trm *twinRepositoryMock) Update(ctx context.Context, twin twins.Twin) erro
 	return nil
 }
 
-func (trm *twinRepositoryMock) RetrieveByID(_ context.Context, id string) (twins.Twin, error) {
+func (trm *twinRepositoryMock) RetrieveByID(_ context.Context, twinID string) (twins.Twin, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
 	for k, v := range trm.twins {
-		if id == v.ID {
+		if twinID == v.ID {
 			return trm.twins[k], nil
 		}
 	}
@@ -132,12 +132,12 @@ func (trm *twinRepositoryMock) RetrieveAll(_ context.Context, owner string, offs
 	return page, nil
 }
 
-func (trm *twinRepositoryMock) Remove(ctx context.Context, id string) error {
+func (trm *twinRepositoryMock) Remove(ctx context.Context, twinID string) error {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
 	for k, v := range trm.twins {
-		if id == v.ID {
+		if twinID == v.ID {
 			delete(trm.twins, k)
 			return nil
 		}

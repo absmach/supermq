@@ -64,7 +64,7 @@ type TwinRepository interface {
 	Update(ctx context.Context, twin Twin) error
 
 	// RetrieveByID retrieves the twin having the provided identifier.
-	RetrieveByID(ctx context.Context, id string) (Twin, error)
+	RetrieveByID(ctx context.Context, twinID string) (Twin, error)
 
 	// RetrieveByAttribute retrieves twin ids whose definition contains
 	// the attribute with given channel and subtopic
@@ -74,7 +74,7 @@ type TwinRepository interface {
 	RetrieveAll(ctx context.Context, owner string, offset, limit uint64, name string, metadata Metadata) (Page, error)
 
 	// Remove removes the twin having the provided identifier.
-	Remove(ctx context.Context, id string) error
+	Remove(ctx context.Context, twinID string) error
 }
 
 // TwinCache contains twin caching interface.
@@ -83,7 +83,7 @@ type TwinCache interface {
 	Save(ctx context.Context, twin Twin) error
 
 	// SaveIDs stores twin IDs as elements of channel-subtopic keyed set and vice versa.
-	SaveIDs(ctx context.Context, channel, subtopic string, ids []string) error
+	SaveIDs(ctx context.Context, channel, subtopic string, twinIDs []string) error
 
 	// Update updates update twin id and channel-subtopic attributes mapping
 	Update(ctx context.Context, twin Twin) error
@@ -92,5 +92,5 @@ type TwinCache interface {
 	IDs(ctx context.Context, channel, subtopic string) ([]string, error)
 
 	// Removes twin from cache based on twin id.
-	Remove(ctx context.Context, id string) error
+	Remove(ctx context.Context, twinID string) error
 }

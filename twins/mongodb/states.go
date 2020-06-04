@@ -69,14 +69,14 @@ func (sr *stateRepository) Count(ctx context.Context, tw twins.Twin) (int64, err
 }
 
 // RetrieveAll retrieves the subset of states related to twin specified by id
-func (sr *stateRepository) RetrieveAll(ctx context.Context, offset uint64, limit uint64, id string) (twins.StatesPage, error) {
+func (sr *stateRepository) RetrieveAll(ctx context.Context, offset uint64, limit uint64, twinID string) (twins.StatesPage, error) {
 	coll := sr.db.Collection(statesCollection)
 
 	findOptions := options.Find()
 	findOptions.SetSkip(int64(offset))
 	findOptions.SetLimit(int64(limit))
 
-	filter := bson.M{twinid: id}
+	filter := bson.M{twinid: twinID}
 
 	cur, err := coll.Find(ctx, filter, findOptions)
 	if err != nil {
@@ -104,10 +104,10 @@ func (sr *stateRepository) RetrieveAll(ctx context.Context, offset uint64, limit
 }
 
 // RetrieveLast returns the last state related to twin spec by id
-func (sr *stateRepository) RetrieveLast(ctx context.Context, id string) (twins.State, error) {
+func (sr *stateRepository) RetrieveLast(ctx context.Context, twinID string) (twins.State, error) {
 	coll := sr.db.Collection(statesCollection)
 
-	filter := bson.M{twinid: id}
+	filter := bson.M{twinid: twinID}
 	total, err := coll.CountDocuments(ctx, filter)
 	if err != nil {
 		return twins.State{}, err

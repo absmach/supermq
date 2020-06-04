@@ -65,11 +65,11 @@ func (tr *twinRepository) Update(ctx context.Context, tw twins.Twin) error {
 	return nil
 }
 
-func (tr *twinRepository) RetrieveByID(_ context.Context, id string) (twins.Twin, error) {
+func (tr *twinRepository) RetrieveByID(_ context.Context, twinID string) (twins.Twin, error) {
 	coll := tr.db.Collection(twinsCollection)
 	var tw twins.Twin
 
-	filter := bson.M{"id": id}
+	filter := bson.M{"id": twinID}
 	if err := coll.FindOne(context.Background(), filter).Decode(&tw); err != nil {
 		return tw, twins.ErrNotFound
 	}
@@ -171,10 +171,10 @@ func (tr *twinRepository) RetrieveAll(ctx context.Context, owner string, offset 
 	}, nil
 }
 
-func (tr *twinRepository) Remove(ctx context.Context, id string) error {
+func (tr *twinRepository) Remove(ctx context.Context, twinID string) error {
 	coll := tr.db.Collection(twinsCollection)
 
-	filter := bson.M{"id": id}
+	filter := bson.M{"id": twinID}
 	res, err := coll.DeleteOne(context.Background(), filter)
 	if err != nil {
 		return err

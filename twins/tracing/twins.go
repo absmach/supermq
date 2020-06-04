@@ -53,12 +53,12 @@ func (trm twinRepositoryMiddleware) Update(ctx context.Context, tw twins.Twin) e
 	return trm.repo.Update(ctx, tw)
 }
 
-func (trm twinRepositoryMiddleware) RetrieveByID(ctx context.Context, id string) (twins.Twin, error) {
+func (trm twinRepositoryMiddleware) RetrieveByID(ctx context.Context, twinID string) (twins.Twin, error) {
 	span := createSpan(ctx, trm.tracer, retrieveTwinByIDOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 
-	return trm.repo.RetrieveByID(ctx, id)
+	return trm.repo.RetrieveByID(ctx, twinID)
 }
 
 func (trm twinRepositoryMiddleware) RetrieveAll(ctx context.Context, owner string, offset, limit uint64, name string, metadata twins.Metadata) (twins.Page, error) {
@@ -77,12 +77,12 @@ func (trm twinRepositoryMiddleware) RetrieveByAttribute(ctx context.Context, cha
 	return trm.repo.RetrieveByAttribute(ctx, channel, subtopic)
 }
 
-func (trm twinRepositoryMiddleware) Remove(ctx context.Context, id string) error {
+func (trm twinRepositoryMiddleware) Remove(ctx context.Context, twinID string) error {
 	span := createSpan(ctx, trm.tracer, removeTwinOp)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 
-	return trm.repo.Remove(ctx, id)
+	return trm.repo.Remove(ctx, twinID)
 }
 
 type twinCacheMiddleware struct {
