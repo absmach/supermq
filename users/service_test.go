@@ -112,7 +112,7 @@ func TestLogin(t *testing.T) {
 	}
 }
 
-func TestUserInfo(t *testing.T) {
+func TestViewUser(t *testing.T) {
 	svc := newService()
 	svc.Register(context.Background(), user)
 

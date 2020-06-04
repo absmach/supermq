@@ -72,7 +72,7 @@ func passwordResetEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
-func userInfoEndpoint(svc users.Service) endpoint.Endpoint {
+func viewUserEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(viewUserReq)
 

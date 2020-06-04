@@ -53,7 +53,7 @@ func MakeHandler(svc users.Service, tracer opentracing.Tracer, l log.Logger) htt
 	))
 
 	mux.Get("/users", kithttp.NewServer(
-		kitot.TraceServer(tracer, "view_user")(userInfoEndpoint(svc)),
+		kitot.TraceServer(tracer, "view_user")(viewUserEndpoint(svc)),
 		decodeViewUser,
 		encodeResponse,
 		opts...,
