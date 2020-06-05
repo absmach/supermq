@@ -10,9 +10,7 @@ import (
 	"github.com/mainflux/senml"
 )
 
-const (
-	publisher = "twins"
-)
+const publisher = "twins"
 
 // NewService use mock dependencies to create real twins service
 func NewService(tokens map[string]string) twins.Service {

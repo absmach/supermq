@@ -20,9 +20,7 @@ const (
 	removeTwinOp               = "remove_twin"
 )
 
-var (
-	_ twins.TwinRepository = (*twinRepositoryMiddleware)(nil)
-)
+var _ twins.TwinRepository = (*twinRepositoryMiddleware)(nil)
 
 type twinRepositoryMiddleware struct {
 	tracer opentracing.Tracer

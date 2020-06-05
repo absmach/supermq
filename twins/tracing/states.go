@@ -18,9 +18,7 @@ const (
 	retrieveLastStateOp = "retrieve_states_by_attribute"
 )
 
-var (
-	_ twins.StateRepository = (*stateRepositoryMiddleware)(nil)
-)
+var _ twins.StateRepository = (*stateRepositoryMiddleware)(nil)
 
 type stateRepositoryMiddleware struct {
 	tracer opentracing.Tracer

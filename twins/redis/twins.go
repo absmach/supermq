@@ -16,17 +16,19 @@ const (
 	prefix = "twin"
 )
 
-// ErrRedisTwinSave indicates error while saving Twin in redis cache
-var ErrRedisTwinSave = errors.New("failed to save twin in redis cache")
+var (
+	// ErrRedisTwinSave indicates error while saving Twin in redis cache
+	ErrRedisTwinSave = errors.New("failed to save twin in redis cache")
 
-// ErrRedisTwinUpdate indicates error while saving Twin in redis cache
-var ErrRedisTwinUpdate = errors.New("failed to update twin in redis cache")
+	// ErrRedisTwinUpdate indicates error while saving Twin in redis cache
+	ErrRedisTwinUpdate = errors.New("failed to update twin in redis cache")
 
-// ErrRedisTwinIDs indicates error while geting Twin IDs from redis cache
-var ErrRedisTwinIDs = errors.New("failed to get twin id from redis cache")
+	// ErrRedisTwinIDs indicates error while geting Twin IDs from redis cache
+	ErrRedisTwinIDs = errors.New("failed to get twin id from redis cache")
 
-// ErrRedisTwinRemove indicates error while removing Twin from redis cache
-var ErrRedisTwinRemove = errors.New("failed to remove twin from redis cache")
+	// ErrRedisTwinRemove indicates error while removing Twin from redis cache
+	ErrRedisTwinRemove = errors.New("failed to remove twin from redis cache")
+)
 
 var _ twins.TwinCache = (*twinCache)(nil)
 

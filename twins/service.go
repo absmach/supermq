@@ -18,9 +18,7 @@ import (
 	"github.com/mainflux/senml"
 )
 
-const (
-	publisher = "twins"
-)
+const publisher = "twins"
 
 var (
 	// ErrMalformedEntity indicates malformed entity specification (e.g.
@@ -272,12 +270,17 @@ func (ts *twinsService) SaveStates(msg *messaging.Message) error {
 	if err != nil {
 		return err
 	}
-	if (len(ids)) < 1 {
+	if len(ids) < 1 {
 		ids, err = ts.twins.RetrieveByAttribute(ctx, channel, subtopic)
 		if err != nil {
 			return err
 		}
-		ts.twinCache.SaveIDs(ctx, channel, subtopic, ids)
+		if len(ids) < 1 {
+			return nil
+		}
+		if err := ts.twinCache.SaveIDs(ctx, channel, subtopic, ids); err != nil {
+			return err
+		}
 	}
 
 	for _, id := range ids {

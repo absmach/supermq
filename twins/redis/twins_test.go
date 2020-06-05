@@ -16,8 +16,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var subtopics = []string{"engine", "chassis", "wheel_2"}
-var channels = []string{"01ec3c3e-0e66-4e69-9751-a0545b44e08f", "48061e4f-7c23-4f5c-9012-0f9b7cd9d18d", "5b2180e4-e96b-4469-9dc1-b6745078d0b6"}
+var (
+	subtopics = []string{"engine", "chassis", "wheel_2"}
+	channels  = []string{"01ec3c3e-0e66-4e69-9751-a0545b44e08f", "48061e4f-7c23-4f5c-9012-0f9b7cd9d18d", "5b2180e4-e96b-4469-9dc1-b6745078d0b6"}
+)
 
 func TestTwinSave(t *testing.T) {
 	redisClient.FlushAll()
@@ -172,7 +174,6 @@ func TestTwinUpdate(t *testing.T) {
 		attr := tc.twin.Definitions[0].Attributes[0]
 		ids, err := twinCache.IDs(ctx, attr.Channel, attr.Subtopic)
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-
 		assert.Contains(t, ids, tc.twinID, fmt.Sprintf("%s: ids %v do not contain id %s", tc.desc, ids, tc.twinID))
 	}
 }
