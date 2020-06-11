@@ -5,6 +5,7 @@ package errors_test
 
 import (
 	"fmt"
+	"math/rand"
 	"strconv"
 	"testing"
 
@@ -34,7 +35,7 @@ func (ce *customError) Error() string {
 	return ce.msg
 }
 
-func TestWrap(t *testing.T) {
+func TestError(t *testing.T) {
 	cases := []struct {
 		desc string
 		err  error
@@ -63,7 +64,8 @@ func TestWrap(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		assert.Equal(t, tc.msg, tc.err.Error(), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, tc.err.Error()))
+		errMsg := tc.err.Error()
+		assert.Equal(t, tc.msg, errMsg, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.msg, errMsg))
 	}
 }
 
@@ -96,10 +98,39 @@ func TestContains(t *testing.T) {
 	}
 	for _, tc := range cases {
 		contains := errors.Contains(tc.container, tc.contained)
-		cntStr := strconv.FormatBool(contains)
-		assert.Equal(t, true, contains, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, "true", cntStr))
+		assert.Equal(t, true, contains, fmt.Sprintf("%s: expected %v to contain %v\n", tc.desc, tc.container, tc.contained))
 	}
 
+}
+
+func TestWrap(t *testing.T) {
+	cases := []struct {
+		desc  string
+		level int
+	}{
+		{
+			desc:  "level 1 wrap",
+			level: 1,
+		},
+		{
+			desc:  "level 5 wrap",
+			level: 5,
+		},
+		{
+			desc:  "level 10 wrap",
+			level: 10,
+		},
+	}
+
+	for _, tc := range cases {
+		err := wrap(tc.level)
+		msg := message(tc.level)
+		errMsg := err.Error()
+		assert.Equal(t, msg, errMsg, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, msg, errMsg))
+		contained := errors.New(strconv.Itoa(rand.Intn(tc.level)))
+		contains := errors.Contains(err, contained)
+		assert.Equal(t, true, contains, fmt.Sprintf("%s: expected %v to contain %v\n", tc.desc, err, contained))
+	}
 }
 
 func wrap(n int) error {
