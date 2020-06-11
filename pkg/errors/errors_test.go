@@ -14,18 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const (
-	msg1  = "message 1"
-	msg2  = "message 2"
-	msg3  = "message 3"
-	level = 10
-)
-
-var (
-	err1 = errors.New(msg1)
-	err2 = errors.New(msg2)
-	err3 = errors.New(msg3)
-)
+const level = 10
 
 type customError struct {
 	msg string
@@ -43,18 +32,18 @@ func TestError(t *testing.T) {
 	}{
 		{
 			desc: "level 0 wrapped error",
-			err:  err1,
-			msg:  msg1,
+			err:  errors.New("0"),
+			msg:  "0",
 		},
 		{
 			desc: "level 1 wrapped error",
-			err:  errors.Wrap(err1, err2),
-			msg:  fmt.Sprintf("%s : %s", msg1, msg2),
+			err:  wrap(1),
+			msg:  message(1),
 		},
 		{
 			desc: "level 2 wrapped error",
-			err:  errors.Wrap(err1, errors.Wrap(err2, err3)),
-			msg:  fmt.Sprintf("%s : %s : %s", msg1, msg2, msg3),
+			err:  wrap(2),
+			msg:  message(2),
 		},
 		{
 			desc: fmt.Sprintf("level %d wrapped error", level),
@@ -70,25 +59,29 @@ func TestError(t *testing.T) {
 }
 
 func TestContains(t *testing.T) {
+	err0 := errors.New("0")
+	err1 := errors.New("1")
+	err2 := errors.New("2")
+
 	cases := []struct {
 		desc      string
 		container error
 		contained error
 	}{
 		{
-			desc:      "res of errors.Wrap(err1, err2) contains err1",
-			container: errors.Wrap(err1, err2),
+			desc:      "res of errors.Wrap(err1, err0) contains err0",
+			container: errors.Wrap(err1, err0),
+			contained: err0,
+		},
+		{
+			desc:      "res of errors.Wrap(err1, err0) contains err1",
+			container: errors.Wrap(err1, err0),
 			contained: err1,
 		},
 		{
-			desc:      "res of errors.Wrap(err1, err2) contains err2",
-			container: errors.Wrap(err1, err2),
-			contained: err2,
-		},
-		{
-			desc:      "res of errors.Wrap(err1, errors.Wrap(err2, err3)) contains err2",
-			container: errors.Wrap(err1, errors.Wrap(err2, err3)),
-			contained: err2,
+			desc:      "res of errors.Wrap(err2, errors.Wrap(err1, err0)) contains err1",
+			container: errors.Wrap(err2, errors.Wrap(err1, err0)),
+			contained: err1,
 		},
 		{
 			desc:      fmt.Sprintf("level %d wrapped error contains", level),
@@ -134,7 +127,7 @@ func TestWrap(t *testing.T) {
 }
 
 func wrap(n int) error {
-	if n < 1 {
+	if n == 0 {
 		return errors.New(strconv.Itoa(n))
 	}
 	return errors.Wrap(errors.New(strconv.Itoa(n)), wrap(n-1))
