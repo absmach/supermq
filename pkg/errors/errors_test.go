@@ -5,7 +5,6 @@ package errors_test
 
 import (
 	"fmt"
-	"math/rand"
 	"strconv"
 	"testing"
 
@@ -16,6 +15,12 @@ import (
 
 const level = 10
 
+var (
+	err0 = errors.New("0")
+	err1 = errors.New("1")
+	err2 = errors.New("2")
+)
+
 func TestError(t *testing.T) {
 	cases := []struct {
 		desc string
@@ -24,7 +29,7 @@ func TestError(t *testing.T) {
 	}{
 		{
 			desc: "level 0 wrapped error",
-			err:  errors.New("0"),
+			err:  err0,
 			msg:  "0",
 		},
 		{
@@ -51,10 +56,6 @@ func TestError(t *testing.T) {
 }
 
 func TestContains(t *testing.T) {
-	err0 := errors.New("0")
-	err1 := errors.New("1")
-	err2 := errors.New("2")
-
 	cases := []struct {
 		desc      string
 		container error
@@ -110,7 +111,7 @@ func TestContains(t *testing.T) {
 			contains:  true,
 		},
 		{
-			desc:      "wrapped error containes wrapped error",
+			desc:      "superset wrapper error containes subset wrapper error",
 			container: wrap(level),
 			contained: wrap(level / 2),
 			contains:  false,
@@ -125,31 +126,60 @@ func TestContains(t *testing.T) {
 
 func TestWrap(t *testing.T) {
 	cases := []struct {
-		desc  string
-		level int
+		desc      string
+		wrapper   error
+		wrapped   error
+		contained error
+		contains  bool
 	}{
 		{
-			desc:  "level 1 wrap",
-			level: 1,
+			desc:      "err 1 wraps err 2",
+			wrapper:   err1,
+			wrapped:   err0,
+			contained: err0,
+			contains:  true,
 		},
 		{
-			desc:  "level 5 wrap",
-			level: 5,
+			desc:      "err2 wraps err1 wraps err0 and contains err0",
+			wrapper:   err2,
+			wrapped:   errors.Wrap(err1, err0),
+			contained: err0,
+			contains:  true,
 		},
 		{
-			desc:  "level 10 wrap",
-			level: 10,
+			desc:      "err2 wraps err1 wraps err0 and contains err1",
+			wrapper:   err2,
+			wrapped:   errors.Wrap(err1, err0),
+			contained: err1,
+			contains:  true,
+		},
+		{
+			desc:      "nil wraps nil",
+			wrapper:   nil,
+			wrapped:   nil,
+			contained: nil,
+			contains:  true,
+		},
+		{
+			desc:      "err0 wraps nil",
+			wrapper:   err0,
+			wrapped:   nil,
+			contained: nil,
+			contains:  false,
+		},
+		{
+			desc:      "nil wraps err0",
+			wrapper:   nil,
+			wrapped:   err0,
+			contained: err0,
+			contains:  false,
 		},
 	}
 
 	for _, tc := range cases {
-		err := wrap(tc.level)
-		msg := message(tc.level)
-		errMsg := err.Error()
-		assert.Equal(t, msg, errMsg, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, msg, errMsg))
-		contained := errors.New(strconv.Itoa(rand.Intn(tc.level)))
-		contains := errors.Contains(err, contained)
-		assert.Equal(t, true, contains, fmt.Sprintf("%s: expected %v to contain %v\n", tc.desc, err, contained))
+		err := errors.Wrap(tc.wrapper, tc.wrapped)
+		contains := errors.Contains(err, tc.contained)
+		assert.Equal(t, tc.contains, contains, fmt.Sprintf("%s: expected %v to contain %v\n", tc.desc, tc.wrapper, tc.wrapped))
 	}
 }
 
