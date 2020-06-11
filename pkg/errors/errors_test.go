@@ -14,9 +14,10 @@ import (
 )
 
 const (
-	msg1 = "message 1"
-	msg2 = "message 2"
-	msg3 = "message 3"
+	msg1  = "message 1"
+	msg2  = "message 2"
+	msg3  = "message 3"
+	level = 10
 )
 
 var (
@@ -34,9 +35,6 @@ func (ce *customError) Error() string {
 }
 
 func TestWrap(t *testing.T) {
-	level := 10
-	err, msg := wrap(level)
-
 	cases := []struct {
 		desc string
 		err  error
@@ -59,8 +57,8 @@ func TestWrap(t *testing.T) {
 		},
 		{
 			desc: fmt.Sprintf("level %d wrapped error", level),
-			err:  err,
-			msg:  msg,
+			err:  wrap(level),
+			msg:  message(level),
 		},
 	}
 
@@ -70,9 +68,6 @@ func TestWrap(t *testing.T) {
 }
 
 func TestContains(t *testing.T) {
-	level := 10
-	err, _ := wrap(level)
-
 	cases := []struct {
 		desc      string
 		container error
@@ -89,9 +84,14 @@ func TestContains(t *testing.T) {
 			contained: err2,
 		},
 		{
+			desc:      "res of errors.Wrap(err1, errors.Wrap(err2, err3)) contains err2",
+			container: errors.Wrap(err1, errors.Wrap(err2, err3)),
+			contained: err2,
+		},
+		{
 			desc:      fmt.Sprintf("level %d wrapped error contains", level),
-			container: err,
-			contained: errors.New(""),
+			container: wrap(level),
+			contained: errors.New(strconv.Itoa(level / 2)),
 		},
 	}
 	for _, tc := range cases {
@@ -102,13 +102,17 @@ func TestContains(t *testing.T) {
 
 }
 
-func wrap(level int) (error, string) {
-	msg := "0"
-	err := error(&customError{msg: msg})
-	for i := 1; i < level; i++ {
-		err = errors.Wrap(errors.New(err.Error()), errors.New(strconv.Itoa(i)))
-		msg += fmt.Sprintf(" : %s", strconv.Itoa(i))
+func wrap(n int) error {
+	if n < 1 {
+		return errors.New(strconv.Itoa(n))
 	}
-	// msg == "0 : 1 : 2 : 3 : 4 : 5 : 6 : 7 : 8 : 9 : ... : level - 1"
-	return err, msg
+	return errors.Wrap(errors.New(strconv.Itoa(n)), wrap(n-1))
+}
+
+func message(level int) string {
+	msg := strconv.Itoa(level)
+	for i := level - 1; i >= 0; i-- {
+		msg = fmt.Sprintf("%s : %s", msg, strconv.Itoa(i))
+	}
+	return msg
 }
