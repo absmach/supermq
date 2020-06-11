@@ -16,14 +16,6 @@ import (
 
 const level = 10
 
-type customError struct {
-	msg string
-}
-
-func (ce *customError) Error() string {
-	return ce.msg
-}
-
 func TestError(t *testing.T) {
 	cases := []struct {
 		desc string
@@ -67,31 +59,66 @@ func TestContains(t *testing.T) {
 		desc      string
 		container error
 		contained error
+		contains  bool
 	}{
+		{
+			desc:      "nil contains nil",
+			container: nil,
+			contained: nil,
+			contains:  true,
+		},
+		{
+			desc:      "nil contains non-nil",
+			container: nil,
+			contained: err0,
+			contains:  false,
+		},
+		{
+			desc:      "non-nil contains nil",
+			container: err0,
+			contained: nil,
+			contains:  false,
+		},
+		{
+			desc:      "non-nil contains non-nil",
+			container: err0,
+			contained: err1,
+			contains:  false,
+		},
 		{
 			desc:      "res of errors.Wrap(err1, err0) contains err0",
 			container: errors.Wrap(err1, err0),
 			contained: err0,
+			contains:  true,
 		},
 		{
 			desc:      "res of errors.Wrap(err1, err0) contains err1",
 			container: errors.Wrap(err1, err0),
 			contained: err1,
+			contains:  true,
 		},
 		{
 			desc:      "res of errors.Wrap(err2, errors.Wrap(err1, err0)) contains err1",
 			container: errors.Wrap(err2, errors.Wrap(err1, err0)),
 			contained: err1,
+			contains:  true,
 		},
 		{
 			desc:      fmt.Sprintf("level %d wrapped error contains", level),
 			container: wrap(level),
 			contained: errors.New(strconv.Itoa(level / 2)),
+			contains:  true,
+		},
+		{
+			desc:      "wrapped error containes wrapped error",
+			container: wrap(level),
+			contained: wrap(level / 2),
+			contains:  false,
 		},
 	}
 	for _, tc := range cases {
 		contains := errors.Contains(tc.container, tc.contained)
-		assert.Equal(t, true, contains, fmt.Sprintf("%s: expected %v to contain %v\n", tc.desc, tc.container, tc.contained))
+		assert.Equal(t, tc.contains, contains, fmt.Sprintf("%s: expected %v to contain %v\n", tc.desc, tc.container, tc.contained))
 	}
 
 }
@@ -126,17 +153,17 @@ func TestWrap(t *testing.T) {
 	}
 }
 
-func wrap(n int) error {
-	if n == 0 {
-		return errors.New(strconv.Itoa(n))
+func wrap(level int) error {
+	if level == 0 {
+		return errors.New(strconv.Itoa(level))
 	}
-	return errors.Wrap(errors.New(strconv.Itoa(n)), wrap(n-1))
+	return errors.Wrap(errors.New(strconv.Itoa(level)), wrap(level-1))
 }
 
+// message generates error message of wrap() generated wrapper error
 func message(level int) string {
-	msg := strconv.Itoa(level)
-	for i := level - 1; i >= 0; i-- {
-		msg = fmt.Sprintf("%s : %s", msg, strconv.Itoa(i))
+	if level == 0 {
+		return "0"
 	}
-	return msg
+	return strconv.Itoa(level) + " : " + message(level-1)
 }
