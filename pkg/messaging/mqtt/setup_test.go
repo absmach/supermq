@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 	"testing"
 	"time"
 
@@ -24,7 +26,6 @@ const (
 )
 
 var (
-	//mqttClient mqtt.Client
 	publisher  messaging.Publisher
 	subscriber messaging.Subscriber
 )
@@ -39,7 +40,9 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatalf("Could not start container: %s", err)
 	}
+	handleInterrupt(pool, container)
 
+	fmt.Println("We're CONTAINER")
 	address := fmt.Sprintf("%s:%s", "localhost", container.GetPort("1883/tcp"))
 	if err := pool.Retry(func() error {
 		publisher, err = mqtt.NewPublisher(address, timeout)
@@ -66,4 +69,16 @@ func TestMain(m *testing.M) {
 	}
 
 	os.Exit(code)
+}
+
+func handleInterrupt(pool *dockertest.Pool, container *dockertest.Resource) {
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		if err := pool.Purge(container); err != nil {
+			log.Fatalf("Could not purge container: %s", err)
+		}
+		os.Exit(0)
+	}()
 }
