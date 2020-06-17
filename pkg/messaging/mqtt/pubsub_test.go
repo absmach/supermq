@@ -7,13 +7,17 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 const (
-	topic = "topic"
+	topic    = "topic"
+	data     = "payload"
+	channel  = "9b7b1b3f-b1b0-46a8-a717-b8213f9eda3b"
+	subtopic = "engine"
 )
 
 var (
@@ -25,28 +29,66 @@ func TestSubscribe(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := []struct {
-		desc    string
-		payload []byte
+		desc     string
+		channel  string
+		subtopic string
+		payload  []byte
 	}{
-		// {
-		// 	desc:    "publish empty payload message",
-		// 	payload: []byte{},
-		// },
+		{
+			desc:    "publish message with nil payload",
+			payload: nil,
+		},
 		{
 			desc:    "publish message with string payload",
-			payload: []byte("e03a31c4-5f53-483f-8f25-f7e570aa7101"),
+			payload: []byte(data),
+		},
+		{
+			desc:    "publish message with channel",
+			payload: []byte(data),
+			channel: channel,
+		},
+		{
+			desc:     "publish message with subtopic",
+			payload:  []byte(data),
+			subtopic: subtopic,
+		},
+		{
+			desc:     "publish message with channel and subtopic",
+			payload:  []byte(data),
+			channel:  channel,
+			subtopic: subtopic,
 		},
 	}
 
 	for _, tc := range cases {
-		err = publisher.Publish(topic, messaging.Message{Payload: tc.payload})
+		expectedMsg := message(tc.channel, tc.subtopic, tc.payload)
+		payload, err := payload(expectedMsg)
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-		msg := <-msgChan
-		assert.Equal(t, true, assert.ObjectsAreEqualValues(tc.payload, msg.Payload), fmt.Sprintf("%s: expected payload %s got %s\n", tc.desc, string(tc.payload), string(msg.Payload)))
+
+		err = publisher.Publish(topic, messaging.Message{Payload: payload})
+		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+		receivedMsg := <-msgChan
+		assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
 	}
 }
 
 func handler(msg messaging.Message) error {
 	msgChan <- msg
 	return nil
+}
+
+func message(channel, subtopic string, payload []byte) messaging.Message {
+	return messaging.Message{
+		Channel:  channel,
+		Subtopic: subtopic,
+		Payload:  payload,
+	}
+}
+func payload(m messaging.Message) ([]byte, error) {
+	protoMsg, err := proto.Marshal(&m)
+	if err != nil {
+		return nil, err
+	}
+	return protoMsg, nil
 }

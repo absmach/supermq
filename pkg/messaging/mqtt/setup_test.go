@@ -40,9 +40,10 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatalf("Could not start container: %s", err)
 	}
+	log.Println("VerneMQ container created")
+
 	handleInterrupt(pool, container)
 
-	fmt.Println("We're CONTAINER")
 	address := fmt.Sprintf("%s:%s", "localhost", container.GetPort("1883/tcp"))
 	if err := pool.Retry(func() error {
 		publisher, err = mqtt.NewPublisher(address, timeout)

@@ -74,7 +74,6 @@ func (sub subscriber) Unsubscribe(topic string) error {
 
 func (sub subscriber) mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
 	return func(c mqtt.Client, m mqtt.Message) {
-		fmt.Printf("%+v\n", m.Payload()) // output for debug
 		var msg messaging.Message
 		if err := proto.Unmarshal(m.Payload(), &msg); err != nil {
 			sub.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
