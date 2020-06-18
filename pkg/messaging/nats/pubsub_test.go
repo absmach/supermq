@@ -1,7 +1,7 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-package mqtt_test
+package nats_test
 
 import (
 	"fmt"
@@ -25,7 +25,7 @@ var (
 )
 
 func TestPubsub(t *testing.T) {
-	err := subscriber.Subscribe(topic, handler)
+	err := pubsub.Subscribe(topic, handler)
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := []struct {
@@ -65,11 +65,10 @@ func TestPubsub(t *testing.T) {
 		payload, err := payload(expectedMsg)
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-		err = publisher.Publish(topic, messaging.Message{Payload: payload})
+		err = pubsub.Publish(topic, messaging.Message{Payload: payload})
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 		receivedMsg := <-msgChan
-		// _ = receivedMsg
 		assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
 	}
 }

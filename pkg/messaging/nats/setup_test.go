@@ -1,7 +1,7 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-package mqtt_test
+package nats_test
 
 import (
 	"fmt"
@@ -10,24 +10,16 @@ import (
 	"os/signal"
 	"syscall"
 	"testing"
-	"time"
 
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
-	"github.com/mainflux/mainflux/pkg/messaging/mqtt"
+	"github.com/mainflux/mainflux/pkg/messaging/nats"
 	dockertest "github.com/ory/dockertest/v3"
 )
 
-const (
-	protocol = "mqtt"
-	id       = "mqtt-publisher"
-	timeout  = time.Second * 3
-	qos      = 1
-)
-
 var (
-	publisher  messaging.Publisher
-	subscriber messaging.Subscriber
+	publisher messaging.Publisher
+	pubsub    messaging.PubSub
 )
 
 func TestMain(m *testing.M) {
@@ -36,31 +28,33 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
-	container, err := pool.Run("vernemq/vernemq", "latest-alpine", []string{"DOCKER_VERNEMQ_ACCEPT_EULA=yes", "DOCKER_VERNEMQ_ALLOW_ANONYMOUS=on"})
+	container, err := pool.Run("nats", "1.3.0", []string{})
 	if err != nil {
 		log.Fatalf("Could not start container: %s", err)
 	}
-	log.Println("VerneMQ container created")
+	log.Println("NATS container created")
 	handleInterrupt(pool, container)
 
-	address := fmt.Sprintf("%s:%s", "localhost", container.GetPort("1883/tcp"))
+	address := fmt.Sprintf("%s:%s", "localhost", container.GetPort("4222/tcp"))
 	if err := pool.Retry(func() error {
-		publisher, err = mqtt.NewPublisher(address, timeout)
+		publisher, err = nats.NewPublisher(address)
 		return err
 	}); err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
+	log.Println("Publisher connected to NATS")
 
 	logger, err := logger.New(os.Stdout, "error")
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 	if err := pool.Retry(func() error {
-		subscriber, err = mqtt.NewSubscriber(address, timeout, logger)
+		pubsub, err = nats.NewPubSub(address, "", logger)
 		return err
 	}); err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
+	log.Println("PubSub connected to NATS")
 
 	code := m.Run()
 
