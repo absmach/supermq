@@ -41,7 +41,6 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not start container: %s", err)
 	}
 	log.Println("VerneMQ container created")
-
 	handleInterrupt(pool, container)
 
 	address := fmt.Sprintf("%s:%s", "localhost", container.GetPort("1883/tcp"))

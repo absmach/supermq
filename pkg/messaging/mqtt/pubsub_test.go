@@ -6,6 +6,7 @@ package mqtt_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/mainflux/mainflux/pkg/messaging"
@@ -18,15 +19,17 @@ const (
 	data     = "payload"
 	channel  = "9b7b1b3f-b1b0-46a8-a717-b8213f9eda3b"
 	subtopic = "engine"
+	wait     = 15
 )
 
 var (
 	msgChan = make(chan messaging.Message)
 )
 
-func TestSubscribe(t *testing.T) {
+func TestPubsub(t *testing.T) {
 	err := subscriber.Subscribe(topic, handler)
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	time.Sleep(time.Second * wait)
 
 	cases := []struct {
 		desc     string
@@ -69,6 +72,7 @@ func TestSubscribe(t *testing.T) {
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 		receivedMsg := <-msgChan
+		// _ = receivedMsg
 		assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
 	}
 }
