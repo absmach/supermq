@@ -7,17 +7,17 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 const (
-	topic    = "topic"
-	data     = "payload"
-	channel  = "9b7b1b3f-b1b0-46a8-a717-b8213f9eda3b"
-	subtopic = "engine"
+	topic       = "topic"
+	chansPrefix = "channels"
+	data        = "payload"
+	channel     = "9b7b1b3f-b1b0-46a8-a717-b8213f9eda3b"
+	subtopic    = "engine"
 )
 
 var (
@@ -25,7 +25,9 @@ var (
 )
 
 func TestPubsub(t *testing.T) {
-	err := pubsub.Subscribe(topic, handler)
+	err := pubsub.Subscribe(fmt.Sprintf("%s.%s", chansPrefix, topic), handler)
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	err = pubsub.Subscribe(fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic), handler)
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := []struct {
@@ -61,11 +63,14 @@ func TestPubsub(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		expectedMsg := message(tc.channel, tc.subtopic, tc.payload)
-		payload, err := payload(expectedMsg)
+		expectedMsg := messaging.Message{
+			Channel:  tc.channel,
+			Subtopic: tc.subtopic,
+			Payload:  tc.payload,
+		}
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-		err = pubsub.Publish(topic, messaging.Message{Payload: payload})
+		err = pubsub.Publish(topic, expectedMsg)
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 		receivedMsg := <-msgChan
@@ -76,19 +81,4 @@ func TestPubsub(t *testing.T) {
 func handler(msg messaging.Message) error {
 	msgChan <- msg
 	return nil
-}
-
-func message(channel, subtopic string, payload []byte) messaging.Message {
-	return messaging.Message{
-		Channel:  channel,
-		Subtopic: subtopic,
-		Payload:  payload,
-	}
-}
-func payload(m messaging.Message) ([]byte, error) {
-	protoMsg, err := proto.Marshal(&m)
-	if err != nil {
-		return nil, err
-	}
-	return protoMsg, nil
 }
