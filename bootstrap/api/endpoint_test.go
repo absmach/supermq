@@ -79,7 +79,7 @@ var (
 		CACert:     "newca",
 	}
 
-	notFoundRes          = toJSON(errorRes{bootstrap.ErrBootstrap.Error()})
+	bsErrorRes           = toJSON(errorRes{bootstrap.ErrBootstrap.Error()})
 	unauthRes            = toJSON(errorRes{bootstrap.ErrUnauthorizedAccess.Error()})
 	malformedRes         = toJSON(errorRes{bootstrap.ErrMalformedEntity.Error()})
 	extKeyNotFoundRes    = toJSON(errorRes{bootstrap.ErrExternalKeyNotFound.Error()})
@@ -1084,7 +1084,7 @@ func TestBootstrap(t *testing.T) {
 			externalID:  unknown,
 			externalKey: c.ExternalKey,
 			status:      http.StatusNotFound,
-			res:         notFoundRes,
+			res:         bsErrorRes,
 			secure:      false,
 		},
 		{
