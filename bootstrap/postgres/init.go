@@ -91,6 +91,19 @@ func migrateDB(db *sqlx.DB) error {
 					"DROP TABLE unknown_configs",
 				},
 			},
+			{
+				Id: "configs_2",
+				Up: []string{
+					"DROP TABLE IF EXISTS unknown_configs",
+				},
+				Down: []string{
+					`CREATE TABLE IF NOT EXISTS unknown_configs (
+						external_id  TEXT UNIQUE NOT NULL,
+						external_key TEXT NOT NULL,
+						PRIMARY KEY (external_id, external_key)
+					)`,
+				},
+			},
 		},
 	}
 
