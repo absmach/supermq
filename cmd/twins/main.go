@@ -42,63 +42,66 @@ import (
 const (
 	queue = "twins"
 
-	defLogLevel        = "error"
-	defHTTPPort        = "8180"
-	defJaegerURL       = ""
-	defServerCert      = ""
-	defServerKey       = ""
-	defDB              = "mainflux-twins"
-	defDBHost          = "localhost"
-	defDBPort          = "27017"
-	defCacheURL        = "localhost:6379"
-	defCachePass       = ""
-	defCacheDB         = "0"
-	defSingleUserEmail = ""
-	defSingleUserToken = ""
-	defClientTLS       = "false"
-	defCACerts         = ""
-	defChannelID       = ""
-	defNatsURL         = "nats://localhost:4222"
-	defAuthnURL        = "localhost:8181"
-	defAuthnTimeout    = "1s"
+	defLogLevel         = "error"
+	defHTTPPort         = "8180"
+	defJaegerURL        = ""
+	defServerCert       = ""
+	defServerKey        = ""
+	defDB               = "mainflux-twins"
+	defDBHost           = "localhost"
+	defDBPort           = "27017"
+	defCacheURL         = "localhost:6379"
+	defCachePass        = ""
+	defCacheDB          = "0"
+	defSingleUserEmail  = ""
+	defSingleUserToken  = ""
+	defClientTLS        = "false"
+	defCACerts          = ""
+	defChannelID        = ""
+	defSubtopicWildcard = "#"
+	defNatsURL          = "nats://localhost:4222"
+	defAuthnURL         = "localhost:8181"
+	defAuthnTimeout     = "1s"
 
-	envLogLevel        = "MF_TWINS_LOG_LEVEL"
-	envHTTPPort        = "MF_TWINS_HTTP_PORT"
-	envJaegerURL       = "MF_JAEGER_URL"
-	envServerCert      = "MF_TWINS_SERVER_CERT"
-	envServerKey       = "MF_TWINS_SERVER_KEY"
-	envDB              = "MF_TWINS_DB"
-	envDBHost          = "MF_TWINS_DB_HOST"
-	envDBPort          = "MF_TWINS_DB_PORT"
-	envCacheURL        = "MF_TWINS_CACHE_URL"
-	envCachePass       = "MF_TWINS_CACHE_PASS"
-	envCacheDB         = "MF_TWINS_CACHE_DB"
-	envSingleUserEmail = "MF_TWINS_SINGLE_USER_EMAIL"
-	envSingleUserToken = "MF_TWINS_SINGLE_USER_TOKEN"
-	envClientTLS       = "MF_TWINS_CLIENT_TLS"
-	envCACerts         = "MF_TWINS_CA_CERTS"
-	envChannelID       = "MF_TWINS_CHANNEL_ID"
-	envNatsURL         = "MF_NATS_URL"
-	envAuthnURL        = "MF_AUTHN_GRPC_URL"
-	envAuthnTimeout    = "MF_AUTHN_GRPC_TIMEOUT"
+	envLogLevel         = "MF_TWINS_LOG_LEVEL"
+	envHTTPPort         = "MF_TWINS_HTTP_PORT"
+	envJaegerURL        = "MF_JAEGER_URL"
+	envServerCert       = "MF_TWINS_SERVER_CERT"
+	envServerKey        = "MF_TWINS_SERVER_KEY"
+	envDB               = "MF_TWINS_DB"
+	envDBHost           = "MF_TWINS_DB_HOST"
+	envDBPort           = "MF_TWINS_DB_PORT"
+	envCacheURL         = "MF_TWINS_CACHE_URL"
+	envCachePass        = "MF_TWINS_CACHE_PASS"
+	envCacheDB          = "MF_TWINS_CACHE_DB"
+	envSingleUserEmail  = "MF_TWINS_SINGLE_USER_EMAIL"
+	envSingleUserToken  = "MF_TWINS_SINGLE_USER_TOKEN"
+	envClientTLS        = "MF_TWINS_CLIENT_TLS"
+	envCACerts          = "MF_TWINS_CA_CERTS"
+	envChannelID        = "MF_TWINS_CHANNEL_ID"
+	envSubtopicWildcard = "MF_TWINS_SUBTOPIC_WILDCARD"
+	envNatsURL          = "MF_NATS_URL"
+	envAuthnURL         = "MF_AUTHN_GRPC_URL"
+	envAuthnTimeout     = "MF_AUTHN_GRPC_TIMEOUT"
 )
 
 type config struct {
-	logLevel        string
-	httpPort        string
-	jaegerURL       string
-	serverCert      string
-	serverKey       string
-	dbCfg           twmongodb.Config
-	cacheURL        string
-	cachePass       string
-	cacheDB         string
-	singleUserEmail string
-	singleUserToken string
-	clientTLS       bool
-	caCerts         string
-	channelID       string
-	natsURL         string
+	logLevel         string
+	httpPort         string
+	jaegerURL        string
+	serverCert       string
+	serverKey        string
+	dbCfg            twmongodb.Config
+	cacheURL         string
+	cachePass        string
+	cacheDB          string
+	singleUserEmail  string
+	singleUserToken  string
+	clientTLS        bool
+	caCerts          string
+	channelID        string
+	subtopicWildcard string
+	natsURL          string
 
 	authnURL     string
 	authnTimeout time.Duration
@@ -135,7 +138,7 @@ func main() {
 	}
 	defer pubSub.Close()
 
-	svc := newService(pubSub, cfg.channelID, auth, dbTracer, db, cacheTracer, cacheClient, logger)
+	svc := newService(pubSub, cfg.channelID, cfg.subtopicWildcard, auth, dbTracer, db, cacheTracer, cacheClient, logger)
 
 	tracer, closer := initJaeger("twins", cfg.jaegerURL, logger)
 	defer closer.Close()
@@ -170,23 +173,24 @@ func loadConfig() config {
 	}
 
 	return config{
-		logLevel:        mainflux.Env(envLogLevel, defLogLevel),
-		httpPort:        mainflux.Env(envHTTPPort, defHTTPPort),
-		serverCert:      mainflux.Env(envServerCert, defServerCert),
-		serverKey:       mainflux.Env(envServerKey, defServerKey),
-		jaegerURL:       mainflux.Env(envJaegerURL, defJaegerURL),
-		dbCfg:           dbCfg,
-		cacheURL:        mainflux.Env(envCacheURL, defCacheURL),
-		cachePass:       mainflux.Env(envCachePass, defCachePass),
-		cacheDB:         mainflux.Env(envCacheDB, defCacheDB),
-		singleUserEmail: mainflux.Env(envSingleUserEmail, defSingleUserEmail),
-		singleUserToken: mainflux.Env(envSingleUserToken, defSingleUserToken),
-		clientTLS:       tls,
-		caCerts:         mainflux.Env(envCACerts, defCACerts),
-		channelID:       mainflux.Env(envChannelID, defChannelID),
-		natsURL:         mainflux.Env(envNatsURL, defNatsURL),
-		authnURL:        mainflux.Env(envAuthnURL, defAuthnURL),
-		authnTimeout:    authnTimeout,
+		logLevel:         mainflux.Env(envLogLevel, defLogLevel),
+		httpPort:         mainflux.Env(envHTTPPort, defHTTPPort),
+		serverCert:       mainflux.Env(envServerCert, defServerCert),
+		serverKey:        mainflux.Env(envServerKey, defServerKey),
+		jaegerURL:        mainflux.Env(envJaegerURL, defJaegerURL),
+		dbCfg:            dbCfg,
+		cacheURL:         mainflux.Env(envCacheURL, defCacheURL),
+		cachePass:        mainflux.Env(envCachePass, defCachePass),
+		cacheDB:          mainflux.Env(envCacheDB, defCacheDB),
+		singleUserEmail:  mainflux.Env(envSingleUserEmail, defSingleUserEmail),
+		singleUserToken:  mainflux.Env(envSingleUserToken, defSingleUserToken),
+		clientTLS:        tls,
+		caCerts:          mainflux.Env(envCACerts, defCACerts),
+		channelID:        mainflux.Env(envChannelID, defChannelID),
+		subtopicWildcard: mainflux.Env(envSubtopicWildcard, defSubtopicWildcard),
+		natsURL:          mainflux.Env(envNatsURL, defNatsURL),
+		authnURL:         mainflux.Env(envAuthnURL, defAuthnURL),
+		authnTimeout:     authnTimeout,
 	}
 }
 
@@ -262,8 +266,8 @@ func connectToRedis(cacheURL, cachePass, cacheDB string, logger logger.Logger) *
 	})
 }
 
-func newService(ps messaging.PubSub, chanID string, users mainflux.AuthNServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, cacheTracer opentracing.Tracer, cacheClient *redis.Client, logger logger.Logger) twins.Service {
-	twinRepo := twmongodb.NewTwinRepository(db)
+func newService(ps messaging.PubSub, chanID string, subtopicWildcard string, users mainflux.AuthNServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, cacheTracer opentracing.Tracer, cacheClient *redis.Client, logger logger.Logger) twins.Service {
+	twinRepo := twmongodb.NewTwinRepository(db, subtopicWildcard)
 	twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, twinRepo)
 
 	stateRepo := twmongodb.NewStateRepository(db)
@@ -273,7 +277,7 @@ func newService(ps messaging.PubSub, chanID string, users mainflux.AuthNServiceC
 	twinCache := rediscache.NewTwinCache(cacheClient)
 	twinCache = tracing.TwinCacheMiddleware(cacheTracer, twinCache)
 
-	svc := twins.New(ps, users, twinRepo, twinCache, stateRepo, up, chanID, logger)
+	svc := twins.New(ps, users, twinRepo, twinCache, stateRepo, up, chanID, subtopicWildcard, logger)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,

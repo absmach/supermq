@@ -11,9 +11,9 @@ import (
 	"testing"
 
 	log "github.com/mainflux/mainflux/logger"
+	uuidProvider "github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/mongodb"
-	uuidProvider "github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
@@ -28,6 +28,7 @@ const (
 	collection  = "twins"
 	email       = "mfx_twin@example.com"
 	validName   = "mfx_twin"
+	wildcard    = "#"
 )
 
 var (
@@ -44,7 +45,7 @@ func TestTwinsSave(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
 
 	db := client.Database(testDB)
-	repo := mongodb.NewTwinRepository(db)
+	repo := mongodb.NewTwinRepository(db, wildcard)
 
 	twid, err := uuid.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -89,7 +90,7 @@ func TestTwinsUpdate(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
 
 	db := client.Database(testDB)
-	repo := mongodb.NewTwinRepository(db)
+	repo := mongodb.NewTwinRepository(db, wildcard)
 
 	twid, err := uuid.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -146,7 +147,7 @@ func TestTwinsRetrieveByID(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
 
 	db := client.Database(testDB)
-	repo := mongodb.NewTwinRepository(db)
+	repo := mongodb.NewTwinRepository(db, wildcard)
 
 	twid, err := uuid.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -201,7 +202,7 @@ func TestTwinsRetrieveAll(t *testing.T) {
 	db := client.Database(testDB)
 	db.Collection(collection).DeleteMany(context.Background(), bson.D{})
 
-	twinRepo := mongodb.NewTwinRepository(db)
+	twinRepo := mongodb.NewTwinRepository(db, wildcard)
 
 	n := uint64(10)
 	for i := uint64(0); i < n; i++ {
@@ -296,7 +297,7 @@ func TestTwinsRemove(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
 
 	db := client.Database(testDB)
-	repo := mongodb.NewTwinRepository(db)
+	repo := mongodb.NewTwinRepository(db, wildcard)
 
 	twid, err := uuid.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))

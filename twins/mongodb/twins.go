@@ -18,15 +18,17 @@ const (
 )
 
 type twinRepository struct {
-	db *mongo.Database
+	db               *mongo.Database
+	subtopicWildcard string
 }
 
 var _ twins.TwinRepository = (*twinRepository)(nil)
 
 // NewTwinRepository instantiates a MongoDB implementation of twin repository.
-func NewTwinRepository(db *mongo.Database) twins.TwinRepository {
+func NewTwinRepository(db *mongo.Database, sw string) twins.TwinRepository {
 	return &twinRepository{
-		db: db,
+		db:               db,
+		subtopicWildcard: sw,
 	}
 }
 

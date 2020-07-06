@@ -26,11 +26,11 @@ default values.
 | MF_TWINS_SINGLE_USER_TOKEN | User token for single user mode that should be passed in auth header |                       |
 | MF_TWINS_CLIENT_TLS        | Flag that indicates if TLS should be turned on                       | false                 |
 | MF_TWINS_CA_CERTS          | Path to trusted CAs in PEM format                                    |                       |
-| MF_TWINS_MQTT_URL          | Mqtt broker URL for twin CRUD and states update notifications        | tcp://localhost:1883  |
-| MF_TWINS_CHANNEL_ID        | Mqtt notifications topic                                             |                       |
+| MF_TWINS_CHANNEL_ID        | NATS notifications channel id                                        |                       |
+| MF_TWINS_SUBTOPIC_WILDCARD | Subtopic wildcard for attribute's definition                         | #                     |
 | MF_NATS_URL                | Mainflux NATS broker URL                                             | nats://localhost:4222 |
 | MF_AUTHN_GRPC_URL          | AuthN service gRPC URL                                               | localhost:8181        |
-| MF_AUTHN_GRPC_TIMEOUT      | AuthN service gRPC request timeout in seconds                        | 1s                     |
+| MF_AUTHN_GRPC_TIMEOUT      | AuthN service gRPC request timeout in seconds                        | 1s                    |
 | MF_TWINS_CACHE_URL         | Cache database URL                                                   | localhost:6379        |
 | MF_TWINS_CACHE_PASS        | Cache database password                                              |                       |
 | MF_TWINS_CACHE_DB          | Cache instance name                                                  | 0                     |
@@ -63,8 +63,8 @@ services:
       MF_TWINS_SINGLE_USER_TOKEN: [User token for single user mode]
       MF_TWINS_CLIENT_TLS: [Flag that indicates if TLS should be turned on]
       MF_TWINS_CA_CERTS: [Path to trusted CAs in PEM format]
-      MF_TWINS_MQTT_URL: [Mqtt broker URL for twin CRUD and states]
-      MF_TWINS_CHANNEL_ID: [Mqtt notifications topic]
+      MF_TWINS_CHANNEL_ID: [NATS notifications channel id]
+      MF_TWINS_SUBTOPIC_WILDCARD: [Subtopic wildcard for attribute's definition]
       MF_NATS_URL: [Mainflux NATS broker URL]
       MF_AUTHN_GRPC_URL: [AuthN service gRPC URL]
       MF_AUTHN_GRPC_TIMEOUT: [AuthN service gRPC request timeout in seconds]
@@ -100,8 +100,8 @@ MF_TWINS_SINGLE_USER_EMAIL: [User email for single user mode] \
 MF_TWINS_SINGLE_USER_TOKEN: [User token for single user mode] \
 MF_TWINS_CLIENT_TLS: [Flag that indicates if TLS should be turned on] \
 MF_TWINS_CA_CERTS: [Path to trusted CAs in PEM format] \
-MF_TWINS_MQTT_URL: [Mqtt broker URL for twin CRUD and states] \
-MF_TWINS_CHANNEL_ID: [Mqtt notifications topic] \
+MF_TWINS_CHANNEL_ID: [NATS notifications channel id] \
+MF_TWINS_SUBTOPIC_WILDCARD: [Subtopic wildcard for attribute's definition] \
 MF_NATS_URL: [Mainflux NATS broker URL] \
 MF_AUTHN_GRPC_URL: [AuthN service gRPC URL] \
 MF_AUTHN_GRPC_TIMEOUT: [AuthN service gRPC request timeout in seconds] \
