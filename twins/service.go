@@ -362,7 +362,7 @@ func prepareState(st *State, tw *Twin, rec senml.Record, msg *messaging.Message)
 		if !attr.PersistState {
 			continue
 		}
-		if attr.Channel == msg.Channel && attr.Subtopic == msg.Subtopic {
+		if attr.Channel == msg.Channel && (attr.Subtopic == "#" || attr.Subtopic == msg.Subtopic) {
 			action = update
 			delta := math.Abs(float64(st.Created.UnixNano()) - recNano)
 			if recNano == 0 || delta > float64(def.Delta) {

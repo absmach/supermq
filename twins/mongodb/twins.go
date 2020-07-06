@@ -92,8 +92,11 @@ func (tr *twinRepository) RetrieveByAttribute(ctx context.Context, channel, subt
 	}
 	match := bson.M{
 		"$match": bson.M{
-			"definition.channel":  channel,
-			"definition.subtopic": subtopic,
+			"definition.channel": channel,
+			"$or": []interface{}{
+				bson.M{"definition.subtopic": subtopic},
+				bson.M{"definition.subtopic": "#"},
+			},
 		},
 	}
 	prj2 := bson.M{
