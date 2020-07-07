@@ -75,7 +75,7 @@ func (trm *twinRepositoryMock) RetrieveByAttribute(ctx context.Context, channel,
 	for _, twin := range trm.twins {
 		def := twin.Definitions[len(twin.Definitions)-1]
 		for _, attr := range def.Attributes {
-			if attr.Channel == channel && (attr.Subtopic == "#" || attr.Subtopic == subtopic) {
+			if attr.Channel == channel && (attr.Subtopic == twins.SubtopicWildcard || attr.Subtopic == subtopic) {
 				ids = append(ids, twin.ID)
 				break
 			}
@@ -218,7 +218,7 @@ func (tcm *twinCacheMock) IDs(_ context.Context, channel, subtopic string) ([]st
 	for k := range tcm.attrIds[channel+subtopic] {
 		ids = append(ids, k)
 	}
-	for k := range tcm.attrIds[channel+"#"] {
+	for k := range tcm.attrIds[channel+twins.SubtopicWildcard] {
 		ids = append(ids, k)
 	}
 
