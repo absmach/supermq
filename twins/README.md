@@ -27,7 +27,6 @@ default values.
 | MF_TWINS_CLIENT_TLS        | Flag that indicates if TLS should be turned on                       | false                 |
 | MF_TWINS_CA_CERTS          | Path to trusted CAs in PEM format                                    |                       |
 | MF_TWINS_CHANNEL_ID        | NATS notifications channel id                                        |                       |
-| MF_TWINS_SUBTOPIC_WILDCARD | Subtopic wildcard for attribute's definition                         | #                     |
 | MF_NATS_URL                | Mainflux NATS broker URL                                             | nats://localhost:4222 |
 | MF_AUTHN_GRPC_URL          | AuthN service gRPC URL                                               | localhost:8181        |
 | MF_AUTHN_GRPC_TIMEOUT      | AuthN service gRPC request timeout in seconds                        | 1s                    |
@@ -64,7 +63,6 @@ services:
       MF_TWINS_CLIENT_TLS: [Flag that indicates if TLS should be turned on]
       MF_TWINS_CA_CERTS: [Path to trusted CAs in PEM format]
       MF_TWINS_CHANNEL_ID: [NATS notifications channel id]
-      MF_TWINS_SUBTOPIC_WILDCARD: [Subtopic wildcard for attribute's definition]
       MF_NATS_URL: [Mainflux NATS broker URL]
       MF_AUTHN_GRPC_URL: [AuthN service gRPC URL]
       MF_AUTHN_GRPC_TIMEOUT: [AuthN service gRPC request timeout in seconds]
@@ -101,7 +99,6 @@ MF_TWINS_SINGLE_USER_TOKEN: [User token for single user mode] \
 MF_TWINS_CLIENT_TLS: [Flag that indicates if TLS should be turned on] \
 MF_TWINS_CA_CERTS: [Path to trusted CAs in PEM format] \
 MF_TWINS_CHANNEL_ID: [NATS notifications channel id] \
-MF_TWINS_SUBTOPIC_WILDCARD: [Subtopic wildcard for attribute's definition] \
 MF_NATS_URL: [Mainflux NATS broker URL] \
 MF_AUTHN_GRPC_URL: [AuthN service gRPC URL] \
 MF_AUTHN_GRPC_TIMEOUT: [AuthN service gRPC request timeout in seconds] \

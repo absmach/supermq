@@ -70,8 +70,9 @@ const (
 	noop = iota
 	update
 	save
-	millisec = 1e6
-	nanosec  = 1e9
+	millisec         = 1e6
+	nanosec          = 1e9
+	SubtopicWildcard = ">"
 )
 
 var crudOp = map[string]string{
@@ -88,31 +89,29 @@ var crudOp = map[string]string{
 }
 
 type twinsService struct {
-	publisher        messaging.Publisher
-	auth             mainflux.AuthNServiceClient
-	twins            TwinRepository
-	states           StateRepository
-	uuidProvider     mainflux.UUIDProvider
-	channelID        string
-	subtopicWildcard string
-	twinCache        TwinCache
-	logger           logger.Logger
+	publisher    messaging.Publisher
+	auth         mainflux.AuthNServiceClient
+	twins        TwinRepository
+	states       StateRepository
+	uuidProvider mainflux.UUIDProvider
+	channelID    string
+	twinCache    TwinCache
+	logger       logger.Logger
 }
 
 var _ Service = (*twinsService)(nil)
 
 // New instantiates the twins service implementation.
-func New(publisher messaging.Publisher, auth mainflux.AuthNServiceClient, twins TwinRepository, tcache TwinCache, sr StateRepository, idp mainflux.UUIDProvider, chann string, sw string, logger logger.Logger) Service {
+func New(publisher messaging.Publisher, auth mainflux.AuthNServiceClient, twins TwinRepository, tcache TwinCache, sr StateRepository, idp mainflux.UUIDProvider, chann string, logger logger.Logger) Service {
 	return &twinsService{
-		publisher:        publisher,
-		auth:             auth,
-		twins:            twins,
-		twinCache:        tcache,
-		states:           sr,
-		uuidProvider:     idp,
-		subtopicWildcard: sw,
-		channelID:        chann,
-		logger:           logger,
+		publisher:    publisher,
+		auth:         auth,
+		twins:        twins,
+		twinCache:    tcache,
+		states:       sr,
+		uuidProvider: idp,
+		channelID:    chann,
+		logger:       logger,
 	}
 }
 
@@ -364,7 +363,7 @@ func (ts *twinsService) prepareState(st *State, tw *Twin, rec senml.Record, msg 
 		if !attr.PersistState {
 			continue
 		}
-		if attr.Channel == msg.Channel && (attr.Subtopic == ts.subtopicWildcard || attr.Subtopic == msg.Subtopic) {
+		if attr.Channel == msg.Channel && (attr.Subtopic == SubtopicWildcard || attr.Subtopic == msg.Subtopic) {
 			action = update
 			delta := math.Abs(float64(st.Created.UnixNano()) - recNano)
 			if recNano == 0 || delta > float64(def.Delta) {

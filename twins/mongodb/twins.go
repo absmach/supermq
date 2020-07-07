@@ -25,10 +25,9 @@ type twinRepository struct {
 var _ twins.TwinRepository = (*twinRepository)(nil)
 
 // NewTwinRepository instantiates a MongoDB implementation of twin repository.
-func NewTwinRepository(db *mongo.Database, sw string) twins.TwinRepository {
+func NewTwinRepository(db *mongo.Database) twins.TwinRepository {
 	return &twinRepository{
-		db:               db,
-		subtopicWildcard: sw,
+		db: db,
 	}
 }
 
@@ -97,7 +96,7 @@ func (tr *twinRepository) RetrieveByAttribute(ctx context.Context, channel, subt
 			"definition.channel": channel,
 			"$or": []interface{}{
 				bson.M{"definition.subtopic": subtopic},
-				bson.M{"definition.subtopic": "#"},
+				bson.M{"definition.subtopic": twins.SubtopicWildcard},
 			},
 		},
 	}
