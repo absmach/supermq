@@ -29,6 +29,7 @@ const (
 	collection  = "twins"
 	email       = "mfx_twin@example.com"
 	validName   = "mfx_twin"
+	subtopic    = "engine"
 )
 
 var (
@@ -193,26 +194,18 @@ func TestTwinsRetrieveByAttribute(t *testing.T) {
 	db := client.Database(testDB)
 	repo := mongodb.NewTwinRepository(db)
 
-	tws := make(map[string]twins.Twin, 3)
 	chID, err := uuid.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	empty, wildcard, nonEmpty := "empty", "wildcard", "nonEmpty"
-	tws[empty] = twins.Twin{
-		ID:          empty,
-		Definitions: []twins.Definition{mocks.CreateDefinition([]string{chID}, []string{""})},
-	}
-	tws[wildcard] = twins.Twin{
-		ID:          wildcard,
-		Definitions: []twins.Definition{mocks.CreateDefinition([]string{chID}, []string{twins.SubtopicWildcard})},
-	}
-	tws[nonEmpty] = twins.Twin{
-		ID:          nonEmpty,
-		Definitions: []twins.Definition{mocks.CreateDefinition([]string{chID}, []string{nonEmpty})},
-	}
-	for _, tw := range tws {
-		_, err = repo.Save(context.Background(), tw)
-		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	}
+
+	empty := mocks.CreateTwin([]string{chID}, []string{""})
+	_, err = repo.Save(context.Background(), empty)
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	wildcard := mocks.CreateTwin([]string{chID}, []string{twins.SubtopicWildcard})
+	_, err = repo.Save(context.Background(), wildcard)
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	nonEmpty := mocks.CreateTwin([]string{chID}, []string{subtopic})
+	_, err = repo.Save(context.Background(), nonEmpty)
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := []struct {
 		desc     string
@@ -222,17 +215,17 @@ func TestTwinsRetrieveByAttribute(t *testing.T) {
 		{
 			desc:     "retrieve empty subtopic",
 			subtopic: "",
-			ids:      []string{wildcard, empty},
+			ids:      []string{wildcard.ID, empty.ID},
 		},
 		{
 			desc:     "retrieve wildcard subtopic",
 			subtopic: twins.SubtopicWildcard,
-			ids:      []string{wildcard},
+			ids:      []string{wildcard.ID},
 		},
 		{
 			desc:     "retrieve non-empty subtopic",
-			subtopic: nonEmpty,
-			ids:      []string{wildcard, nonEmpty},
+			subtopic: subtopic,
+			ids:      []string{wildcard.ID, nonEmpty.ID},
 		},
 	}
 
