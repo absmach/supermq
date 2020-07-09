@@ -32,7 +32,6 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatalf("Could not start container: %s", err)
 	}
-	log.Println("NATS container created")
 	handleInterrupt(pool, container)
 
 	address := fmt.Sprintf("%s:%s", "localhost", container.GetPort("4222/tcp"))
@@ -42,7 +41,6 @@ func TestMain(m *testing.M) {
 	}); err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
-	log.Println("Publisher connected to NATS")
 
 	logger, err := logger.New(os.Stdout, "error")
 	if err != nil {
@@ -54,10 +52,8 @@ func TestMain(m *testing.M) {
 	}); err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
-	log.Println("PubSub connected to NATS")
 
 	code := m.Run()
-
 	if err := pool.Purge(container); err != nil {
 		log.Fatalf("Could not purge container: %s", err)
 	}

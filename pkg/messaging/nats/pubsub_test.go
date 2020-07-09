@@ -15,13 +15,13 @@ import (
 const (
 	topic       = "topic"
 	chansPrefix = "channels"
-	data        = "payload"
 	channel     = "9b7b1b3f-b1b0-46a8-a717-b8213f9eda3b"
 	subtopic    = "engine"
 )
 
 var (
 	msgChan = make(chan messaging.Message)
+	data    = []byte("payload")
 )
 
 func TestPubsub(t *testing.T) {
@@ -42,21 +42,21 @@ func TestPubsub(t *testing.T) {
 		},
 		{
 			desc:    "publish message with string payload",
-			payload: []byte(data),
+			payload: data,
 		},
 		{
 			desc:    "publish message with channel",
-			payload: []byte(data),
+			payload: data,
 			channel: channel,
 		},
 		{
 			desc:     "publish message with subtopic",
-			payload:  []byte(data),
+			payload:  data,
 			subtopic: subtopic,
 		},
 		{
 			desc:     "publish message with channel and subtopic",
-			payload:  []byte(data),
+			payload:  data,
 			channel:  channel,
 			subtopic: subtopic,
 		},

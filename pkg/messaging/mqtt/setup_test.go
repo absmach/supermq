@@ -21,7 +21,7 @@ import (
 const (
 	protocol = "mqtt"
 	id       = "mqtt-publisher"
-	timeout  = time.Second * 3
+	timeout  = time.Second * 5
 	qos      = 1
 )
 
@@ -40,7 +40,6 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatalf("Could not start container: %s", err)
 	}
-	log.Println("VerneMQ container created")
 	handleInterrupt(pool, container)
 
 	address := fmt.Sprintf("%s:%s", "localhost", container.GetPort("1883/tcp"))
