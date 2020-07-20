@@ -19,6 +19,7 @@ require (
 	github.com/gopcua/opcua v0.1.6
 	github.com/hokaccha/go-prettyjson v0.0.0-20190818114111-108c894c2c0e
 	github.com/influxdata/influxdb v1.8.1
+	github.com/joho/godotenv v1.3.0
 	github.com/jmoiron/sqlx v1.2.1-0.20190319043955-cdf62fdf55f6
 	github.com/lib/pq v1.7.0
 	github.com/mainflux/mproxy v0.2.1
