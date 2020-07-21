@@ -360,7 +360,7 @@ func TestRetrieveByThing(t *testing.T) {
 	tid := sths[0].ID
 
 	n := uint64(10)
-	nonConnectedChs := uint64(1)
+	chsDisconNum := uint64(1)
 
 	for i := uint64(0); i < n; i++ {
 		chid, err := uuidProvider.New().ID()
@@ -374,7 +374,7 @@ func TestRetrieveByThing(t *testing.T) {
 		cid := schs[0].ID
 
 		// Don't connect last Channel
-		if i == n-nonConnectedChs {
+		if i == n-chsDisconNum {
 			break
 		}
 
@@ -400,7 +400,7 @@ func TestRetrieveByThing(t *testing.T) {
 			offset:    0,
 			limit:     n,
 			connected: true,
-			size:      n - nonConnectedChs,
+			size:      n - chsDisconNum,
 		},
 		"retrieve subset of channels by thing with existing owner": {
 			owner:     email,
@@ -408,7 +408,7 @@ func TestRetrieveByThing(t *testing.T) {
 			offset:    n / 2,
 			limit:     n,
 			connected: true,
-			size:      (n / 2) - nonConnectedChs,
+			size:      (n / 2) - chsDisconNum,
 		},
 		"retrieve channels by thing with non-existing owner": {
 			owner:     wrongValue,
@@ -441,7 +441,7 @@ func TestRetrieveByThing(t *testing.T) {
 			offset:    0,
 			limit:     n,
 			connected: false,
-			size:      nonConnectedChs,
+			size:      chsDisconNum,
 		},
 	}
 

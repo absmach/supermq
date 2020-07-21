@@ -520,7 +520,7 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 	channelRepo := postgres.NewChannelRepository(dbMiddleware)
 
 	n := uint64(10)
-	nonConnectedThs := uint64(1)
+	thsDisconNum := uint64(1)
 
 	chid, err := up.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -547,7 +547,7 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 		tid := sths[0].ID
 
 		// Don't connnect last Thing
-		if i == n-nonConnectedThs {
+		if i == n-thsDisconNum {
 			break
 		}
 
@@ -573,7 +573,7 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 			offset:    0,
 			limit:     n,
 			connected: true,
-			size:      n - nonConnectedThs,
+			size:      n - thsDisconNum,
 		},
 		"retrieve subset of things by channel with existing owner": {
 			owner:     email,
@@ -581,7 +581,7 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 			offset:    n / 2,
 			limit:     n,
 			connected: true,
-			size:      (n / 2) - nonConnectedThs,
+			size:      (n / 2) - thsDisconNum,
 		},
 		"retrieve things by channel with non-existing owner": {
 			owner:     wrongValue,
@@ -614,7 +614,7 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 			offset:    0,
 			limit:     n,
 			connected: false,
-			size:      nonConnectedThs,
+			size:      thsDisconNum,
 		},
 	}
 

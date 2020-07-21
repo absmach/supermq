@@ -280,7 +280,7 @@ func TestListThingsByChannel(t *testing.T) {
 	sch := schs[0]
 
 	n := uint64(10)
-	nonConnectedThs := uint64(1)
+	thsDisconNum := uint64(1)
 
 	for i := uint64(0); i < n; i++ {
 		sths, err := svc.CreateThings(context.Background(), token, thing)
@@ -288,7 +288,7 @@ func TestListThingsByChannel(t *testing.T) {
 		sth := sths[0]
 
 		// Don't connect last Channel
-		if i == n-nonConnectedThs {
+		if i == n-thsDisconNum {
 			break
 		}
 
@@ -313,7 +313,7 @@ func TestListThingsByChannel(t *testing.T) {
 			offset:    0,
 			limit:     n,
 			connected: true,
-			size:      n - nonConnectedThs,
+			size:      n - thsDisconNum,
 			err:       nil,
 		},
 		"list half of things by existing channel": {
@@ -322,13 +322,13 @@ func TestListThingsByChannel(t *testing.T) {
 			offset:    n / 2,
 			limit:     n,
 			connected: true,
-			size:      (n / 2) - nonConnectedThs,
+			size:      (n / 2) - thsDisconNum,
 			err:       nil,
 		},
 		"list last thing by existing channel": {
 			token:     token,
 			channel:   sch.ID,
-			offset:    n - 1 - nonConnectedThs,
+			offset:    n - 1 - thsDisconNum,
 			limit:     n,
 			connected: true,
 			size:      1,
@@ -376,7 +376,7 @@ func TestListThingsByChannel(t *testing.T) {
 			offset:    0,
 			limit:     n,
 			connected: false,
-			size:      nonConnectedThs,
+			size:      thsDisconNum,
 			err:       nil,
 		},
 	}
@@ -647,7 +647,7 @@ func TestListChannelsByThing(t *testing.T) {
 	sth := sths[0]
 
 	n := uint64(10)
-	nonConnectedChs := uint64(1)
+	chsDisconNum := uint64(1)
 
 	for i := uint64(0); i < n; i++ {
 		schs, err := svc.CreateChannels(context.Background(), token, channel)
@@ -655,7 +655,7 @@ func TestListChannelsByThing(t *testing.T) {
 		sch := schs[0]
 
 		// Don't connect last Channel
-		if i == n-nonConnectedChs {
+		if i == n-chsDisconNum {
 			break
 		}
 
@@ -680,7 +680,7 @@ func TestListChannelsByThing(t *testing.T) {
 			offset:    0,
 			limit:     n,
 			connected: true,
-			size:      n - nonConnectedChs,
+			size:      n - chsDisconNum,
 			err:       nil,
 		},
 		"list half of channels by existing thing": {
@@ -689,13 +689,13 @@ func TestListChannelsByThing(t *testing.T) {
 			offset:    n / 2,
 			limit:     n,
 			connected: true,
-			size:      (n / 2) - nonConnectedChs,
+			size:      (n / 2) - chsDisconNum,
 			err:       nil,
 		},
 		"list last channel by existing thing": {
 			token:     token,
 			thing:     sth.ID,
-			offset:    n - 1 - nonConnectedChs,
+			offset:    n - 1 - chsDisconNum,
 			limit:     n,
 			connected: true,
 			size:      1,
@@ -743,7 +743,7 @@ func TestListChannelsByThing(t *testing.T) {
 			offset:    0,
 			limit:     n,
 			connected: false,
-			size:      nonConnectedChs,
+			size:      chsDisconNum,
 			err:       nil,
 		},
 	}
