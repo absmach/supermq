@@ -94,7 +94,7 @@ paths:
           $ref: "#/responses/ServiceError"
   /channels/{chanId}/things:
     get:
-      summary: Retrieves list of things connected or non connected to specified channel
+      summary: Retrieves list of things connected or not connected to specified channel
       description: |
         Retrieves list of things connected to specified channel with pagination
         metadata.
@@ -368,7 +368,7 @@ paths:
           $ref: "#/responses/ServiceError"
   /things/{thingId}/channels:
     get:
-      summary: Retrieves list of channels connected or non-connected to specified thing
+      summary: Retrieves list of channels connected or not connected to specified thing
       description: |
         Retrieves list of channels connected to specified thing with pagination
         metadata.
