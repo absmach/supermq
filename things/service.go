@@ -68,7 +68,7 @@ type Service interface {
 	ListThings(ctx context.Context, token string, offset, limit uint64, name string, metadata Metadata) (Page, error)
 
 	// ListThingsByChannel retrieves data about subset of things that are
-	// connected to specified channel and belong to the user identified by
+	// connected or not connected to specified channel and belong to the user identified by
 	// the provided key.
 	ListThingsByChannel(ctx context.Context, token, channel string, offset, limit uint64, connected bool) (Page, error)
 
@@ -92,7 +92,7 @@ type Service interface {
 	ListChannels(ctx context.Context, token string, offset, limit uint64, name string, m Metadata) (ChannelsPage, error)
 
 	// ListChannelsByThing retrieves data about subset of channels that have
-	// specified thing connected to them and belong to the user identified by
+	// specified thing connected or not connected to them and belong to the user identified by
 	// the provided key.
 	ListChannelsByThing(ctx context.Context, token, thing string, offset, limit uint64, connected bool) (ChannelsPage, error)
 

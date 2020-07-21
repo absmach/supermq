@@ -258,26 +258,28 @@ func (tr thingRepository) RetrieveByChannel(ctx context.Context, owner, channel 
 		return things.Page{}, things.ErrNotFound
 	}
 
-	q := `SELECT id, name, key, metadata
-  FROM things th
-  INNER JOIN connections co
-  ON th.id = co.thing_id
-  WHERE th.owner = :owner AND co.channel_id = :channel
-  ORDER BY th.id
-  LIMIT :limit
-  OFFSET :offset;`
-
-	if !connected {
+	var q string
+	switch connected {
+	case true:
+		q = `SELECT id, name, key, metadata
+    FROM things th
+    INNER JOIN connections conn
+    ON th.id = conn.thing_id
+    WHERE th.owner = :owner AND conn.channel_id = :channel
+    ORDER BY th.id
+    LIMIT :limit
+    OFFSET :offset;`
+	case false:
 		q = `SELECT id, name, key, metadata
     FROM things th
     WHERE th.owner = :owner AND th.id NOT IN
     (SELECT id FROM things th
-      INNER JOIN connections co
-      ON th.id = co.thing_id
-      WHERE th.owner = :owner AND co.channel_id = :channel
+      INNER JOIN connections conn
+      ON th.id = conn.thing_id
+      WHERE th.owner = :owner AND conn.channel_id = :channel)
       ORDER BY th.id
       LIMIT :limit
-      OFFSET :offset);`
+      OFFSET :offset;`
 	}
 
 	params := map[string]interface{}{
@@ -308,11 +310,22 @@ func (tr thingRepository) RetrieveByChannel(ctx context.Context, owner, channel 
 		items = append(items, th)
 	}
 
-	q = `SELECT COUNT(*)
-	     FROM things th
-	     INNER JOIN connections co
-	     ON th.id = co.thing_id
-	     WHERE th.owner = $1 AND co.channel_id = $2;`
+	switch connected {
+	case true:
+		q = `SELECT COUNT(*)
+    FROM things th
+    INNER JOIN connections conn
+    ON th.id = conn.thing_id
+    WHERE th.owner = $1 AND conn.channel_id = $2;`
+	case false:
+		q = `SELECT COUNT(*)
+    FROM things th
+    WHERE th.owner = $1 AND th.id NOT IN
+    (SELECT id FROM things th
+      INNER JOIN connections conn
+      ON th.id = conn.thing_id
+      WHERE th.owner = $1 AND conn.channel_id = $2);`
+	}
 
 	var total uint64
 	if err := tr.db.GetContext(ctx, &total, q, owner, channel); err != nil {

@@ -199,24 +199,26 @@ func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing st
 		return things.ChannelsPage{}, things.ErrNotFound
 	}
 
-	q := `SELECT id, name, metadata FROM channels ch
-    INNER JOIN connections co ON ch.id = co.channel_id
-    WHERE ch.owner = :owner AND co.thing_id = :thing
-    ORDER BY ch.id
-    LIMIT :limit
-    OFFSET :offset;`
-
-	if !connected {
+	var q string
+	switch connected {
+	case true:
+		q = `SELECT id, name, metadata FROM channels ch
+      INNER JOIN connections conn ON ch.id = conn.channel_id
+      WHERE ch.owner = :owner AND conn.thing_id = :thing
+      ORDER BY ch.id
+      LIMIT :limit
+      OFFSET :offset;`
+	case false:
 		q = `SELECT id, name, metadata
     FROM channels ch
     WHERE ch.owner = :owner AND ch.id NOT IN
     (SELECT id FROM channels ch
-      INNER JOIN connections co
-      ON ch.id = co.channel_id
-      WHERE ch.owner = :owner AND co.thing_id = :thing
+      INNER JOIN connections conn
+      ON ch.id = conn.channel_id
+      WHERE ch.owner = :owner AND conn.thing_id = :thing)
       ORDER BY ch.id
       LIMIT :limit
-      OFFSET :offset);`
+      OFFSET :offset;`
 	}
 
 	params := map[string]interface{}{
@@ -243,11 +245,22 @@ func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing st
 		items = append(items, ch)
 	}
 
-	q = `SELECT COUNT(*)
-	     FROM channels ch
-	     INNER JOIN connections co
-	     ON ch.id = co.channel_id
-	     WHERE ch.owner = $1 AND co.thing_id = $2`
+	switch connected {
+	case true:
+		q = `SELECT COUNT(*)
+    FROM channels ch
+    INNER JOIN connections conn
+    ON ch.id = conn.channel_id
+    WHERE ch.owner = $1 AND conn.thing_id = $2`
+	case false:
+		q = `SELECT COUNT(*)
+    FROM channels ch
+    WHERE ch.owner = $1 AND ch.id NOT IN
+    (SELECT id FROM channels ch
+      INNER JOIN connections conn
+      ON ch.id = conn.channel_id
+      WHERE ch.owner = $1 AND conn.thing_id = $2);`
+	}
 
 	var total uint64
 	if err := cr.db.GetContext(ctx, &total, q, owner, thing); err != nil {
