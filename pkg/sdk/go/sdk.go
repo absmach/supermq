@@ -198,6 +198,9 @@ type SDK interface {
 
 	// RemoveCert removes a certificate
 	RemoveCert(id, token string) error
+
+	// RevokeCert revokes certificate with certID for thing with thingID
+	RevokeCert(thingID, certID, token string) error
 }
 
 type mfSDK struct {
@@ -208,6 +211,7 @@ type mfSDK struct {
 	readerPrefix      string
 	usersPrefix       string
 	thingsPrefix      string
+	certsPrefix       string
 	channelsPrefix    string
 	httpAdapterPrefix string
 	bootstrapPrefix   string

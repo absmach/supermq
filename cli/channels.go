@@ -155,7 +155,7 @@ func NewChannelsCmd() *cobra.Command {
 		Short: "Channels management",
 		Long:  `Channels management: create, get, update or delete Channel and get list of Things connected or not connected to a Channel`,
 		Run: func(cmd *cobra.Command, args []string) {
-			logUsage("channels [create | get | update | delete | connections | connections-false]")
+			logUsage("channels [create | get | update | delete | connections | not-connected]")
 		},
 	}
 
