@@ -124,15 +124,16 @@ func (crm *channelRepositoryMock) RetrieveByThing(_ context.Context, owner, thin
 	first := uint64(offset) + 1
 	last := first + uint64(limit)
 
-	// Append connected or non connected channels
-	if connected {
+	// Append connected or not connected channels
+	switch connected {
+	case true:
 		for _, co := range crm.cconns[thingID] {
 			id, _ := strconv.ParseUint(co.ID, 10, 64)
 			if id >= first && id < last {
 				channels = append(channels, co)
 			}
 		}
-	} else {
+	default:
 		for _, ch := range crm.channels {
 			conn := false
 			id, _ := strconv.ParseUint(ch.ID, 10, 64)

@@ -276,7 +276,7 @@ func (tr thingRepository) RetrieveByChannel(ctx context.Context, owner, channel 
     INNER JOIN connections conn
     ON th.id = conn.thing_id
     WHERE th.owner = $1 AND conn.channel_id = $2;`
-	case false:
+	default:
 		q = `SELECT id, name, key, metadata
     FROM things th
     WHERE th.owner = :owner AND th.id NOT IN
