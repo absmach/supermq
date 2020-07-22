@@ -199,41 +199,40 @@ func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing st
 		return things.ChannelsPage{}, things.ErrNotFound
 	}
 
-	var q string
-	var qc string
+	var q, qc string
 	switch connected {
 	case true:
 		q = `SELECT id, name, metadata FROM channels ch
-                INNER JOIN connections conn ON ch.id = conn.channel_id
-                WHERE ch.owner = :owner AND conn.thing_id = :thing
-                ORDER BY ch.id
-                LIMIT :limit
-                OFFSET :offset;`
+                  INNER JOIN connections conn ON ch.id = conn.channel_id
+                  WHERE ch.owner = :owner AND conn.thing_id = :thing
+                  ORDER BY ch.id
+                  LIMIT :limit
+                  OFFSET :offset;`
 
 		qc = `SELECT COUNT(*)
-                FROM channels ch
-                INNER JOIN connections conn
-                ON ch.id = conn.channel_id
-                WHERE ch.owner = $1 AND conn.thing_id = $2`
+                  FROM channels ch
+                  INNER JOIN connections conn
+                  ON ch.id = conn.channel_id
+                  WHERE ch.owner = $1 AND conn.thing_id = $2`
 	default:
 		q = `SELECT id, name, metadata
-                FROM channels ch
-                WHERE ch.owner = :owner AND ch.id NOT IN
-                (SELECT id FROM channels ch
-                INNER JOIN connections conn
-                ON ch.id = conn.channel_id
-                WHERE ch.owner = :owner AND conn.thing_id = :thing)
-                ORDER BY ch.id
-                LIMIT :limit
-                OFFSET :offset;`
+                  FROM channels ch
+                  WHERE ch.owner = :owner AND ch.id NOT IN
+                  (SELECT id FROM channels ch
+                    INNER JOIN connections conn
+                    ON ch.id = conn.channel_id
+                    WHERE ch.owner = :owner AND conn.thing_id = :thing)
+                  ORDER BY ch.id
+                  LIMIT :limit
+                  OFFSET :offset;`
 
 		qc = `SELECT COUNT(*)
-                FROM channels ch
-                WHERE ch.owner = $1 AND ch.id NOT IN
-                (SELECT id FROM channels ch
-                INNER JOIN connections conn
-                ON ch.id = conn.channel_id
-                WHERE ch.owner = $1 AND conn.thing_id = $2);`
+                  FROM channels ch
+                  WHERE ch.owner = $1 AND ch.id NOT IN
+                  (SELECT id FROM channels ch
+                    INNER JOIN connections conn
+                    ON ch.id = conn.channel_id
+                    WHERE ch.owner = $1 AND conn.thing_id = $2);`
 	}
 
 	params := map[string]interface{}{
