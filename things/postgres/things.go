@@ -263,38 +263,38 @@ func (tr thingRepository) RetrieveByChannel(ctx context.Context, owner, channel 
 	switch connected {
 	case true:
 		q = `SELECT id, name, key, metadata
-    FROM things th
-    INNER JOIN connections conn
-    ON th.id = conn.thing_id
-    WHERE th.owner = :owner AND conn.channel_id = :channel
-    ORDER BY th.id
-    LIMIT :limit
-    OFFSET :offset;`
+                FROM things th
+                INNER JOIN connections conn
+                ON th.id = conn.thing_id
+                WHERE th.owner = :owner AND conn.channel_id = :channel
+                ORDER BY th.id
+                LIMIT :limit
+                OFFSET :offset;`
 
 		qc = `SELECT COUNT(*)
-    FROM things th
-    INNER JOIN connections conn
-    ON th.id = conn.thing_id
-    WHERE th.owner = $1 AND conn.channel_id = $2;`
+                FROM things th
+                INNER JOIN connections conn
+                ON th.id = conn.thing_id
+                WHERE th.owner = $1 AND conn.channel_id = $2;`
 	default:
 		q = `SELECT id, name, key, metadata
-    FROM things th
-    WHERE th.owner = :owner AND th.id NOT IN
-    (SELECT id FROM things th
-      INNER JOIN connections conn
-      ON th.id = conn.thing_id
-      WHERE th.owner = :owner AND conn.channel_id = :channel)
-    ORDER BY th.id
-    LIMIT :limit
-    OFFSET :offset;`
+                FROM things th
+                WHERE th.owner = :owner AND th.id NOT IN
+                (SELECT id FROM things th
+                INNER JOIN connections conn
+                ON th.id = conn.thing_id
+                WHERE th.owner = :owner AND conn.channel_id = :channel)
+                ORDER BY th.id
+                LIMIT :limit
+                OFFSET :offset;`
 
 		qc = `SELECT COUNT(*)
-    FROM things th
-    WHERE th.owner = $1 AND th.id NOT IN
-    (SELECT id FROM things th
-      INNER JOIN connections conn
-      ON th.id = conn.thing_id
-      WHERE th.owner = $1 AND conn.channel_id = $2);`
+                FROM things th
+                WHERE th.owner = $1 AND th.id NOT IN
+                (SELECT id FROM things th
+                INNER JOIN connections conn
+                ON th.id = conn.thing_id
+	      WHERE th.owner = $1 AND conn.channel_id = $2);`
 	}
 
 	params := map[string]interface{}{
