@@ -19,21 +19,21 @@ paths:
       parameters:
       - $ref: "#/parameters/Authorization"
       - in: body
-         name: cert
-         description: 
-         schema:
-           type: object
-           required:
-             - thing_id
-             - days_valid
-             - rsa_bits
-           properties:
-              thing_id:
-                type: string
-              days_valid:
-                type: string
-              rsa_bits:
-                type: integer
+        name: cert
+        description: TODO
+        schema:
+          type: object
+          required:
+            - thing_id
+            - days_valid
+            - rsa_bits
+          properties:
+             thing_id:
+               type: string
+             days_valid:
+               type: string
+             rsa_bits:
+               type: integer
       responses:
         201:
           description: Created
@@ -49,7 +49,7 @@ paths:
       tags:
         - configs
       parameters:
-        - $ref: "#/parameters/ConfigAuth"
+        - $ref: "#/parameters/Authorization"
         - $ref: "#/parameters/ThingID"
       responses:
         200:
@@ -69,7 +69,7 @@ paths:
       tags:
         - configs
       parameters:
-        - $ref: "#/parameters/ConfigAuth"
+        - $ref: "#/parameters/Authorization"
         - $ref: "#/parameters/ThingID"
       responses:
         200:
@@ -109,7 +109,7 @@ definitions:
         description: Key for the client_cert.
       issuing_ca:
         type: string
-        description: 
+        description: TODO
       serial:
         type: string
         description: Certificate serial
@@ -122,4 +122,6 @@ definitions:
       revocation_time:
         type: string
         description: Certificate revocation time
-  
+responses:
+  ServiceError:
+    description: Unexpected server-side error occurred.
