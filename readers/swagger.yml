@@ -27,7 +27,7 @@ paths:
         200:
           description: Data retrieved.
           schema:
-            $ref: "#/definitions/MessagesPage"
+            $ref: "#/definitions/MessagePage"
         400:
           description: Failed due to malformed query parameters.
         403:
