@@ -20,7 +20,10 @@ paths:
       - $ref: "#/parameters/Authorization"
       - in: body
         name: cert
-        description: TODO
+        description: |
+            Issues a certificate that is required for mTLS. To create a certificate for a thing
+            provide a thing id, data identifying particular thing will be embedded into the Certificate.
+            x509 and ECC certificates are supported when using when Vault is used as PKI.
         schema:
           type: object
           required:
@@ -109,7 +112,7 @@ definitions:
         description: Key for the client_cert.
       issuing_ca:
         type: string
-        description: TODO
+        description: CA Certificate that is used to issue client certs, usually intermediate.
       serial:
         type: string
         description: Certificate serial

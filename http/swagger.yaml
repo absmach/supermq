@@ -38,7 +38,7 @@ paths:
           in: body
           required: true
           schema:
-              $ref: '#/definitions/array'
+              $ref: '#/definitions/SenMLArray'
       responses:
         202:
           description: Message is accepted for processing.
@@ -53,7 +53,7 @@ paths:
         500:
           description: Unexpected server-side error occurred.
 definitions:
-  SenML:
+  SenMLRecord:
     type: object
     properties:
       bn:
@@ -110,7 +110,7 @@ definitions:
         type: number
         format: double
         description: Update Time
-  array:
+  SenMLArray:
     type: array
     items:
-      $ref: "#/definitions/SenML"
+      $ref: "#/definitions/SenMLRecord"
