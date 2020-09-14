@@ -401,18 +401,31 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			w.WriteHeader(http.StatusNotFound)
 		case errors.Contains(errorVal, things.ErrConflict):
 			w.WriteHeader(http.StatusUnprocessableEntity)
+		case errors.Contains(errorVal, things.ErrScanMetadata):
+			w.WriteHeader(http.StatusInternalServerError)
+		case errors.Contains(errorVal, things.ErrCreateEntity):
+			w.WriteHeader(http.StatusInternalServerError)
+		case errors.Contains(errorVal, things.ErrUpdateEntity):
+			w.WriteHeader(http.StatusInternalServerError)
+		case errors.Contains(errorVal, things.ErrViewEntity):
+			w.WriteHeader(http.StatusInternalServerError)
+		case errors.Contains(errorVal, things.ErrRemoveEntity):
+			w.WriteHeader(http.StatusInternalServerError)
+		case errors.Contains(errorVal, things.ErrConnect):
+			w.WriteHeader(http.StatusInternalServerError)
+		case errors.Contains(errorVal, things.ErrDisconnect):
+			w.WriteHeader(http.StatusInternalServerError)
+
 		case errors.Contains(errorVal, errUnsupportedContentType):
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 		case errors.Contains(errorVal, errInvalidQueryParams):
 			w.WriteHeader(http.StatusBadRequest)
-		case errors.Contains(errorVal, things.ErrRemoveThing):
-			w.WriteHeader(http.StatusInternalServerError)
-		case errors.Contains(errorVal, things.ErrRemoveChannel):
-			w.WriteHeader(http.StatusInternalServerError)
+
 		case errors.Contains(errorVal, io.ErrUnexpectedEOF):
 			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, io.EOF):
 			w.WriteHeader(http.StatusBadRequest)
+
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}
