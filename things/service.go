@@ -12,22 +12,9 @@ import (
 )
 
 var (
-	// ErrMalformedEntity indicates malformed entity specification (e.g.
-	// invalid username or password).
-	ErrMalformedEntity = errors.New("malformed entity specification")
-
 	// ErrUnauthorizedAccess indicates missing or invalid credentials provided
 	// when accessing a protected resource.
 	ErrUnauthorizedAccess = errors.New("missing or invalid credentials provided")
-
-	// ErrNotFound indicates a non-existent entity request.
-	ErrNotFound = errors.New("non-existent entity")
-
-	// ErrConflict indicates that entity already exists.
-	ErrConflict = errors.New("entity already exists")
-
-	// ErrScanMetadata indicates problem with metadata in db
-	ErrScanMetadata = errors.New("failed to scan metadata")
 
 	// ErrCreateEntity indicates error in creating entity or entities
 	ErrCreateEntity = errors.New("create entity failed")
@@ -47,8 +34,11 @@ var (
 	// ErrDisconnect indicates error in removing connection
 	ErrDisconnect = errors.New("remove connection failed")
 
-	// ErrCache indicates error in entity cache CRUD
-	ErrCache = errors.New("cache change failed")
+	// ErrDisconnect indicates error in database handling
+	ErrDB = errors.New("database operation failed")
+
+	// ErrDisconnect indicates error in cache handling
+	ErrCache = errors.New("cache operation failed")
 )
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -180,7 +170,7 @@ func (ts *thingsService) CreateThings(ctx context.Context, token string, things 
 
 	things, err = ts.things.Save(ctx, things...)
 	if err != nil {
-		return []Thing{}, errors.Wrap(ErrCreateEntity, err)
+		return []Thing{}, errors.Wrap(ErrCreateEntity, errors.Wrap(ErrDB, err))
 	}
 	return things, nil
 }
@@ -194,7 +184,7 @@ func (ts *thingsService) UpdateThing(ctx context.Context, token string, thing Th
 	thing.Owner = res.GetValue()
 
 	if err = ts.things.Update(ctx, thing); err != nil {
-		return errors.Wrap(ErrUpdateEntity, err)
+		return errors.Wrap(ErrUpdateEntity, errors.Wrap(ErrDB, err))
 	}
 	return nil
 }
@@ -208,7 +198,7 @@ func (ts *thingsService) UpdateKey(ctx context.Context, token, id, key string) e
 	owner := res.GetValue()
 
 	if err = ts.things.UpdateKey(ctx, owner, id, key); err != nil {
-		return errors.Wrap(ErrUpdateEntity, err)
+		return errors.Wrap(ErrUpdateEntity, errors.Wrap(ErrDB, err))
 	}
 	return nil
 }
@@ -221,7 +211,7 @@ func (ts *thingsService) ViewThing(ctx context.Context, token, id string) (Thing
 
 	thing, err := ts.things.RetrieveByID(ctx, res.GetValue(), id)
 	if err != nil {
-		return Thing{}, errors.Wrap(ErrViewEntity, err)
+		return Thing{}, errors.Wrap(ErrViewEntity, errors.Wrap(ErrDB, err))
 	}
 	return thing, nil
 }
@@ -234,7 +224,7 @@ func (ts *thingsService) ListThings(ctx context.Context, token string, offset, l
 
 	page, err := ts.things.RetrieveAll(ctx, res.GetValue(), offset, limit, name, metadata)
 	if err != nil {
-		errors.Wrap(ErrViewEntity, err)
+		errors.Wrap(ErrViewEntity, errors.Wrap(ErrDB, err))
 	}
 	return page, nil
 }
@@ -247,7 +237,7 @@ func (ts *thingsService) ListThingsByChannel(ctx context.Context, token, channel
 
 	page, err := ts.things.RetrieveByChannel(ctx, res.GetValue(), channel, offset, limit, connected)
 	if err != nil {
-		errors.Wrap(ErrViewEntity, err)
+		errors.Wrap(ErrViewEntity, errors.Wrap(ErrDB, err))
 	}
 	return page, nil
 }
@@ -259,10 +249,10 @@ func (ts *thingsService) RemoveThing(ctx context.Context, token, id string) erro
 	}
 
 	if err := ts.thingCache.Remove(ctx, id); err != nil {
-		return errors.Wrap(ErrCache, err)
+		return errors.Wrap(ErrRemoveEntity, errors.Wrap(ErrCache, err))
 	}
 	if err = ts.things.Remove(ctx, res.GetValue(), id); err != nil {
-		return errors.Wrap(ErrRemoveEntity, err)
+		return errors.Wrap(ErrRemoveEntity, errors.Wrap(ErrDB, err))
 	}
 	return nil
 }
@@ -284,7 +274,7 @@ func (ts *thingsService) CreateChannels(ctx context.Context, token string, chann
 
 	channels, err = ts.channels.Save(ctx, channels...)
 	if err != nil {
-		return []Channel{}, errors.Wrap(ErrCreateEntity, err)
+		return []Channel{}, errors.Wrap(ErrCreateEntity, errors.Wrap(ErrDB, err))
 	}
 	return channels, nil
 }
@@ -297,7 +287,7 @@ func (ts *thingsService) UpdateChannel(ctx context.Context, token string, channe
 
 	channel.Owner = res.GetValue()
 	if err := ts.channels.Update(ctx, channel); err != nil {
-		return errors.Wrap(ErrUpdateEntity, err)
+		return errors.Wrap(ErrUpdateEntity, errors.Wrap(ErrDB, err))
 	}
 	return nil
 }
@@ -310,7 +300,7 @@ func (ts *thingsService) ViewChannel(ctx context.Context, token, id string) (Cha
 
 	channel, err := ts.channels.RetrieveByID(ctx, res.GetValue(), id)
 	if err != nil {
-		errors.Wrap(ErrViewEntity, err)
+		errors.Wrap(ErrViewEntity, errors.Wrap(ErrDB, err))
 	}
 	return channel, nil
 }
@@ -323,7 +313,7 @@ func (ts *thingsService) ListChannels(ctx context.Context, token string, offset,
 
 	page, err := ts.channels.RetrieveAll(ctx, res.GetValue(), offset, limit, name, m)
 	if err != nil {
-		errors.Wrap(ErrViewEntity, err)
+		errors.Wrap(ErrViewEntity, errors.Wrap(ErrDB, err))
 	}
 	return page, nil
 }
@@ -336,7 +326,7 @@ func (ts *thingsService) ListChannelsByThing(ctx context.Context, token, thing s
 
 	page, err := ts.channels.RetrieveByThing(ctx, res.GetValue(), thing, offset, limit, connected)
 	if err != nil {
-		errors.Wrap(ErrViewEntity, err)
+		errors.Wrap(ErrViewEntity, errors.Wrap(ErrDB, err))
 	}
 	return page, nil
 }
@@ -348,11 +338,11 @@ func (ts *thingsService) RemoveChannel(ctx context.Context, token, id string) er
 	}
 
 	if err := ts.channelCache.Remove(ctx, id); err != nil {
-		return errors.Wrap(ErrCache, err)
+		return errors.Wrap(ErrRemoveEntity, errors.Wrap(ErrCache, err))
 	}
 
 	if err := ts.channels.Remove(ctx, res.GetValue(), id); err != nil {
-		return errors.Wrap(ErrRemoveEntity, err)
+		return errors.Wrap(ErrRemoveEntity, errors.Wrap(ErrDB, err))
 	}
 	return nil
 }
@@ -364,7 +354,7 @@ func (ts *thingsService) Connect(ctx context.Context, token string, chIDs, thIDs
 	}
 
 	if err := ts.channels.Connect(ctx, res.GetValue(), chIDs, thIDs); err != nil {
-		return errors.Wrap(ErrConnect, err)
+		return errors.Wrap(ErrConnect, errors.Wrap(ErrDB, err))
 	}
 	return nil
 }
@@ -376,11 +366,11 @@ func (ts *thingsService) Disconnect(ctx context.Context, token, chanID, thingID 
 	}
 
 	if err := ts.channelCache.Disconnect(ctx, chanID, thingID); err != nil {
-		return errors.Wrap(ErrCache, err)
+		return errors.Wrap(ErrDisconnect, errors.Wrap(ErrCache, err))
 	}
 
 	if err := ts.channels.Disconnect(ctx, res.GetValue(), chanID, thingID); err != nil {
-		return errors.Wrap(ErrDisconnect, err)
+		return errors.Wrap(ErrDisconnect, errors.Wrap(ErrDB, err))
 	}
 	return nil
 }
@@ -393,14 +383,14 @@ func (ts *thingsService) CanAccessByKey(ctx context.Context, chanID, key string)
 
 	thingID, err = ts.channels.HasThing(ctx, chanID, key)
 	if err != nil {
-		return "", errors.Wrap(ErrUnauthorizedAccess, err)
+		return "", errors.Wrap(ErrUnauthorizedAccess, errors.Wrap(ErrDB, err))
 	}
 
 	if err := ts.thingCache.Save(ctx, key, thingID); err != nil {
-		return "", errors.Wrap(ErrCache, err)
+		return "", errors.Wrap(ErrUnauthorizedAccess, errors.Wrap(ErrCache, err))
 	}
 	if err := ts.channelCache.Connect(ctx, chanID, thingID); err != nil {
-		return "", errors.Wrap(ErrCache, err)
+		return "", errors.Wrap(ErrUnauthorizedAccess, errors.Wrap(ErrCache, err))
 	}
 	return thingID, nil
 }
@@ -411,11 +401,11 @@ func (ts *thingsService) CanAccessByID(ctx context.Context, chanID, thingID stri
 	}
 
 	if err := ts.channels.HasThingByID(ctx, chanID, thingID); err != nil {
-		return errors.Wrap(ErrUnauthorizedAccess, err)
+		return errors.Wrap(ErrUnauthorizedAccess, errors.Wrap(ErrDB, err))
 	}
 
 	if err := ts.channelCache.Connect(ctx, chanID, thingID); err != nil {
-		return errors.Wrap(ErrCache, err)
+		return errors.Wrap(ErrUnauthorizedAccess, errors.Wrap(ErrCache, err))
 	}
 	return nil
 }
@@ -428,11 +418,11 @@ func (ts *thingsService) Identify(ctx context.Context, key string) (string, erro
 
 	id, err = ts.things.RetrieveByKey(ctx, key)
 	if err != nil {
-		return "", errors.Wrap(ErrUnauthorizedAccess, err)
+		return "", errors.Wrap(ErrUnauthorizedAccess, errors.Wrap(ErrDB, err))
 	}
 
 	if err := ts.thingCache.Save(ctx, key, id); err != nil {
-		return "", errors.Wrap(ErrCache, err)
+		return "", errors.Wrap(ErrUnauthorizedAccess, errors.Wrap(ErrCache, err))
 	}
 	return id, nil
 }
@@ -440,11 +430,11 @@ func (ts *thingsService) Identify(ctx context.Context, key string) (string, erro
 func (ts *thingsService) hasThing(ctx context.Context, chanID, key string) (string, error) {
 	thingID, err := ts.thingCache.ID(ctx, key)
 	if err != nil {
-		return "", errors.Wrap(ErrCache, err)
+		return "", errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
 	if connected := ts.channelCache.HasThing(ctx, chanID, thingID); !connected {
-		return "", errors.Wrap(ErrUnauthorizedAccess, err)
+		return "", errors.Wrap(ErrUnauthorizedAccess, errors.Wrap(ErrCache, err))
 	}
 
 	return thingID, nil

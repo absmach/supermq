@@ -6,7 +6,6 @@ package http
 import (
 	"context"
 	"encoding/json"
-	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -393,14 +392,14 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	case errors.Error:
 		w.Header().Set("Content-Type", contentType)
 		switch {
-		case errors.Contains(errorVal, things.ErrMalformedEntity):
-			w.WriteHeader(http.StatusBadRequest)
-		case errors.Contains(errorVal, things.ErrUnauthorizedAccess):
-			w.WriteHeader(http.StatusForbidden)
-		case errors.Contains(errorVal, things.ErrNotFound):
-			w.WriteHeader(http.StatusNotFound)
-		case errors.Contains(errorVal, things.ErrConflict):
-			w.WriteHeader(http.StatusUnprocessableEntity)
+		// case errors.Contains(errorVal, things.ErrMalformedEntity):
+		// 	w.WriteHeader(http.StatusBadRequest)
+		// case errors.Contains(errorVal, things.ErrUnauthorizedAccess):
+		// 	w.WriteHeader(http.StatusForbidden)
+		// case errors.Contains(errorVal, things.ErrNotFound):
+		// 	w.WriteHeader(http.StatusNotFound)
+		// case errors.Contains(errorVal, things.ErrConflict):
+		// 	w.WriteHeader(http.StatusUnprocessableEntity)
 		case errors.Contains(errorVal, things.ErrScanMetadata):
 			w.WriteHeader(http.StatusInternalServerError)
 		case errors.Contains(errorVal, things.ErrCreateEntity):
@@ -415,16 +414,20 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			w.WriteHeader(http.StatusInternalServerError)
 		case errors.Contains(errorVal, things.ErrDisconnect):
 			w.WriteHeader(http.StatusInternalServerError)
+		case errors.Contains(errorVal, things.ErrDB):
+			w.WriteHeader(http.StatusInternalServerError)
+		case errors.Contains(errorVal, things.ErrCache):
+			w.WriteHeader(http.StatusInternalServerError)
 
-		case errors.Contains(errorVal, errUnsupportedContentType):
-			w.WriteHeader(http.StatusUnsupportedMediaType)
-		case errors.Contains(errorVal, errInvalidQueryParams):
-			w.WriteHeader(http.StatusBadRequest)
+		// case errors.Contains(errorVal, errUnsupportedContentType):
+		// 	w.WriteHeader(http.StatusUnsupportedMediaType)
+		// case errors.Contains(errorVal, errInvalidQueryParams):
+		// 	w.WriteHeader(http.StatusBadRequest)
 
-		case errors.Contains(errorVal, io.ErrUnexpectedEOF):
-			w.WriteHeader(http.StatusBadRequest)
-		case errors.Contains(errorVal, io.EOF):
-			w.WriteHeader(http.StatusBadRequest)
+		// case errors.Contains(errorVal, io.ErrUnexpectedEOF):
+		// 	w.WriteHeader(http.StatusBadRequest)
+		// case errors.Contains(errorVal, io.EOF):
+		// 	w.WriteHeader(http.StatusBadRequest)
 
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
