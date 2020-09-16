@@ -403,29 +403,29 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		case errors.Contains(errorVal, things.ErrNotFound):
 			w.WriteHeader(http.StatusNotFound)
 		case errors.Contains(errorVal, things.ErrConflict):
-			w.WriteHeader(http.StatusUnprocessableEntity)
+			w.WriteHeader(http.StatusConflict)
 		case errors.Contains(errorVal, things.ErrScanMetadata):
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusUnprocessableEntity)
+		case errors.Contains(errorVal, things.ErrSelectEntity):
+			w.WriteHeader(http.StatusUnprocessableEntity)
+		case errors.Contains(errorVal, things.ErrEntityConnected):
+			w.WriteHeader(http.StatusUnprocessableEntity)
 
 		case errors.Contains(errorVal, things.ErrUnauthorizedAccess):
-			w.WriteHeader(http.StatusForbidden)
+			w.WriteHeader(http.StatusUnauthorized)
 
 		case errors.Contains(errorVal, things.ErrCreateEntity):
-			// w.WriteHeader(http.StatusInternalServerError)
 			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, things.ErrUpdateEntity):
-			// w.WriteHeader(http.StatusInternalServerError)
 			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, things.ErrViewEntity):
-			// w.WriteHeader(http.StatusInternalServerError)
 			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, things.ErrRemoveEntity):
-			// w.WriteHeader(http.StatusInternalServerError)
 			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, things.ErrConnect):
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, things.ErrDisconnect):
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 
 		case errors.Contains(errorVal, io.ErrUnexpectedEOF):
 			w.WriteHeader(http.StatusBadRequest)

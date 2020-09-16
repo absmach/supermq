@@ -21,7 +21,7 @@ var (
 	ErrConflict = errors.New("entity already exists")
 
 	// ErrScanMetadata indicates problem with metadata in db
-	ErrScanMetadata = errors.New("failed to scan metadata")
+	ErrScanMetadata = errors.New("failed to scan metadata in db")
 
 	// ErrSelectEntity indicates error while reading entity from database
 	ErrSelectEntity = errors.New("select entity from db error")
