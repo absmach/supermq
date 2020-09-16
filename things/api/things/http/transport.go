@@ -400,16 +400,16 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 
 		case errors.Contains(errorVal, things.ErrMalformedEntity):
 			w.WriteHeader(http.StatusBadRequest)
-
-		// case errors.Contains(errorVal, things.ErrNotFound):
-		// 	w.WriteHeader(http.StatusNotFound)
-		// case errors.Contains(errorVal, things.ErrConflict):
-		// 	w.WriteHeader(http.StatusUnprocessableEntity)
-		// case errors.Contains(errorVal, things.ErrScanMetadata):
-		// 	w.WriteHeader(http.StatusInternalServerError)
+		case errors.Contains(errorVal, things.ErrNotFound):
+			w.WriteHeader(http.StatusNotFound)
+		case errors.Contains(errorVal, things.ErrConflict):
+			w.WriteHeader(http.StatusUnprocessableEntity)
+		case errors.Contains(errorVal, things.ErrScanMetadata):
+			w.WriteHeader(http.StatusInternalServerError)
 
 		case errors.Contains(errorVal, things.ErrUnauthorizedAccess):
 			w.WriteHeader(http.StatusForbidden)
+
 		case errors.Contains(errorVal, things.ErrCreateEntity):
 			// w.WriteHeader(http.StatusInternalServerError)
 			w.WriteHeader(http.StatusBadRequest)
@@ -425,10 +425,6 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		case errors.Contains(errorVal, things.ErrConnect):
 			w.WriteHeader(http.StatusInternalServerError)
 		case errors.Contains(errorVal, things.ErrDisconnect):
-			w.WriteHeader(http.StatusInternalServerError)
-		case errors.Contains(errorVal, things.ErrDB):
-			w.WriteHeader(http.StatusInternalServerError)
-		case errors.Contains(errorVal, things.ErrCache):
 			w.WriteHeader(http.StatusInternalServerError)
 
 		case errors.Contains(errorVal, io.ErrUnexpectedEOF):
