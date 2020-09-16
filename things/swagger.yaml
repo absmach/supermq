@@ -499,7 +499,6 @@ components:
         Thing key that is used for thing auth. If there is
         not one provided service will generate one in UUID
         format.
-      # format: byte
     Identity:
       type: object
       properties:
@@ -762,6 +761,12 @@ components:
   responses:
     ServiceError:
       description: Unexpected server-side error occurred.
+      content:
+        application/json:
+          schema:
+            type: string
+            format: byte
+
     ThingRes:
       description: Data retrieved.
       content:

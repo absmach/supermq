@@ -6,6 +6,7 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -392,24 +393,35 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	case errors.Error:
 		w.Header().Set("Content-Type", contentType)
 		switch {
-		// case errors.Contains(errorVal, things.ErrMalformedEntity):
-		// 	w.WriteHeader(http.StatusBadRequest)
-		// case errors.Contains(errorVal, things.ErrUnauthorizedAccess):
-		// 	w.WriteHeader(http.StatusForbidden)
+		case errors.Contains(errorVal, errInvalidQueryParams):
+			w.WriteHeader(http.StatusBadRequest)
+		case errors.Contains(errorVal, errUnsupportedContentType):
+			w.WriteHeader(http.StatusUnsupportedMediaType)
+
+		case errors.Contains(errorVal, things.ErrMalformedEntity):
+			w.WriteHeader(http.StatusBadRequest)
+
 		// case errors.Contains(errorVal, things.ErrNotFound):
 		// 	w.WriteHeader(http.StatusNotFound)
 		// case errors.Contains(errorVal, things.ErrConflict):
 		// 	w.WriteHeader(http.StatusUnprocessableEntity)
-		case errors.Contains(errorVal, things.ErrScanMetadata):
-			w.WriteHeader(http.StatusInternalServerError)
+		// case errors.Contains(errorVal, things.ErrScanMetadata):
+		// 	w.WriteHeader(http.StatusInternalServerError)
+
+		case errors.Contains(errorVal, things.ErrUnauthorizedAccess):
+			w.WriteHeader(http.StatusForbidden)
 		case errors.Contains(errorVal, things.ErrCreateEntity):
-			w.WriteHeader(http.StatusInternalServerError)
+			// w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, things.ErrUpdateEntity):
-			w.WriteHeader(http.StatusInternalServerError)
+			// w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, things.ErrViewEntity):
-			w.WriteHeader(http.StatusInternalServerError)
+			// w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, things.ErrRemoveEntity):
-			w.WriteHeader(http.StatusInternalServerError)
+			// w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, things.ErrConnect):
 			w.WriteHeader(http.StatusInternalServerError)
 		case errors.Contains(errorVal, things.ErrDisconnect):
@@ -419,15 +431,10 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		case errors.Contains(errorVal, things.ErrCache):
 			w.WriteHeader(http.StatusInternalServerError)
 
-		// case errors.Contains(errorVal, errUnsupportedContentType):
-		// 	w.WriteHeader(http.StatusUnsupportedMediaType)
-		// case errors.Contains(errorVal, errInvalidQueryParams):
-		// 	w.WriteHeader(http.StatusBadRequest)
-
-		// case errors.Contains(errorVal, io.ErrUnexpectedEOF):
-		// 	w.WriteHeader(http.StatusBadRequest)
-		// case errors.Contains(errorVal, io.EOF):
-		// 	w.WriteHeader(http.StatusBadRequest)
+		case errors.Contains(errorVal, io.ErrUnexpectedEOF):
+			w.WriteHeader(http.StatusBadRequest)
+		case errors.Contains(errorVal, io.EOF):
+			w.WriteHeader(http.StatusBadRequest)
 
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
@@ -487,7 +494,7 @@ func readMetadataQuery(r *http.Request, key string) (map[string]interface{}, err
 	m := make(map[string]interface{})
 	err := json.Unmarshal([]byte(vals[0]), &m)
 	if err != nil {
-		return nil, err
+		return nil, errInvalidQueryParams
 	}
 
 	return m, nil
