@@ -30,12 +30,12 @@ paths:
                     example: /things/{thingId}
         400:
           description: Failed due to malformed JSON.
-        403:
+        401:
           description: Missing or invalid access token provided.
+        409:
+          description: Entity already exist.
         415:
           description: Missing or invalid content type.
-        422:
-          description: Entity already exist.
         500:
           $ref: "#/components/responses/ServiceError"
     get:
@@ -62,10 +62,12 @@ paths:
                 $ref: "#/components/schemas/ThingsPage"
         400:
           description: Failed due to malformed query parameters.
-        403:
+        401:
           description: Missing or invalid access token provided.
         404:
           description: A non-existent entity request.            
+        422:
+          description: Database can't process request.
         500:
           $ref: "#/components/responses/ServiceError"
   /things/bulk:
@@ -85,7 +87,7 @@ paths:
           description: Things registered.
         400:
           description: Failed due to malformed JSON.
-        403:
+        401:
           description: Missing or invalid access token provided.
         415:
           description: Missing or invalid content type.
@@ -113,7 +115,7 @@ paths:
                 $ref: "#/components/schemas/ThingsPage"
         400:
           description: Failed due to malformed query parameters.
-        403:
+        401:
           description: Missing or invalid access token provided.
         500:
           $ref: "#/components/responses/ServiceError"
@@ -128,10 +130,12 @@ paths:
       responses:
         200:
           $ref: "#/components/responses/ThingRes"
-        403:
+        401:
           description: Missing or invalid access token provided.
         404:
           description: Thing does not exist.
+        422:
+          description: Database can't process request.            
         500:
           $ref: "#/components/responses/ServiceError"
     put:
@@ -152,7 +156,7 @@ paths:
           description: Thing updated.
         400:
           description: Failed due to malformed JSON.
-        403:
+        401:
           description: Missing or invalid access token provided.
         404:
           description: Thing does not exist.
@@ -175,7 +179,7 @@ paths:
           description: Thing removed.
         400:
           description: Failed due to malformed thing's ID.
-        403:
+        401:
           description: Missing or invalid access token provided.
         500:
           $ref: "#/components/responses/ServiceError"
@@ -196,7 +200,7 @@ paths:
           description: Thing key updated.
         400:
           description: Failed due to malformed JSON.
-        403:
+        401:
           description: Missing or invalid access token provided.
         404:
           description: Thing does not exist.
@@ -230,7 +234,7 @@ paths:
                     description: Created channel's relative URL (i.e. /channels/{chanId}).
         400:
           description: Failed due to malformed JSON.
-        403:
+        401:
           description: Missing or invalid access token provided.
         415:
           description: Missing or invalid content type.
@@ -259,7 +263,7 @@ paths:
                 $ref: "#/components/schemas/ChannelsPage"
         400:
           description: Failed due to malformed query parameters.
-        403:
+        401:
           description: Missing or invalid access token provided.
         500:
           $ref: "#/components/responses/ServiceError"
@@ -280,7 +284,7 @@ paths:
           description: Channels registered.
         400:
           description: Failed due to malformed JSON.
-        403:
+        401:
           description: Missing or invalid access token provided.
         415:
           description: Missing or invalid content type.
@@ -297,7 +301,7 @@ paths:
       responses:
         200:
           $ref: "#/components/responses/ChannelRes"
-        403:
+        401:
           description: Missing or invalid access token provided.
         404:
           description: Channel does not exist.
@@ -321,7 +325,7 @@ paths:
           description: Channel updated.
         400:
           description: Failed due to malformed JSON.
-        403:
+        401:
           description: Missing or invalid access token provided.
         404:
           description: Channel does not exist.
@@ -344,7 +348,7 @@ paths:
           description: Channel removed.
         400:
           description: Failed due to malformed channel's ID.
-        403:
+        401:
           description: Missing or invalid access token provided.
         500:
           $ref: "#/components/responses/ServiceError"
@@ -370,8 +374,12 @@ paths:
                 $ref: "#/components/schemas/ChannelsPage"
         400:
           description: Failed due to malformed query parameters.
-        403:
+        401:
           description: Missing or invalid access token provided.
+        404:
+          description: Thing does not exist.
+        422:
+          description: Database can't process request.
         500:
           $ref: "#/components/responses/ServiceError"
   /channels/{chanId}/things/{thingId}:
@@ -389,7 +397,7 @@ paths:
       responses:
         200:
           description: Thing connected.
-        403:
+        401:
           description: Missing or invalid access token provided.
         404:
           description: Channel or thing does not exist.
@@ -409,7 +417,7 @@ paths:
       responses:
         204:
           description: Thing disconnected.
-        403:
+        401:
           description: Missing or invalid access token provided.
         404:
           description: Channel or thing does not exist.
@@ -435,7 +443,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Identity"
-        403:
+        401:
           description: |
             Thing and channel are not connected, or thing with specified key doesn't
             exist.
@@ -458,7 +466,7 @@ paths:
       responses:
         200:
           description: Thing has access to the specified channel.
-        403:
+        401:
           description: |
             Thing and channel are not connected, or thing with specified ID doesn't
             exist.
@@ -483,7 +491,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Identity"
-        403:
+        401:
           description: Thing with specified key doesn't exist.
         415:
           description: Missing or invalid content type.

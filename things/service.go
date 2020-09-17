@@ -16,6 +16,9 @@ var (
 	// when accessing a protected resource.
 	ErrUnauthorizedAccess = errors.New("missing or invalid credentials provided")
 
+	// ErrCreateUUID indicates error in creating uuid for entity creation
+	ErrCreateUUID = errors.New("uuid creation failed")
+
 	// ErrCreateEntity indicates error in creating entity or entities
 	ErrCreateEntity = errors.New("create entity failed")
 
@@ -149,7 +152,7 @@ func (ts *thingsService) CreateThings(ctx context.Context, token string, things 
 	for i := range things {
 		things[i].ID, err = ts.uuidProvider.ID()
 		if err != nil {
-			return []Thing{}, errors.Wrap(ErrCreateEntity, err)
+			return []Thing{}, errors.Wrap(ErrCreateUUID, err)
 		}
 
 		things[i].Owner = res.GetValue()
@@ -157,7 +160,7 @@ func (ts *thingsService) CreateThings(ctx context.Context, token string, things 
 		if things[i].Key == "" {
 			things[i].Key, err = ts.uuidProvider.ID()
 			if err != nil {
-				return []Thing{}, errors.Wrap(ErrCreateEntity, err)
+				return []Thing{}, errors.Wrap(ErrCreateUUID, err)
 			}
 		}
 	}
@@ -235,7 +238,7 @@ func (ts *thingsService) CreateChannels(ctx context.Context, token string, chann
 	for i := range channels {
 		channels[i].ID, err = ts.uuidProvider.ID()
 		if err != nil {
-			return []Channel{}, errors.Wrap(ErrCreateEntity, err)
+			return []Channel{}, errors.Wrap(ErrCreateUUID, err)
 		}
 
 		channels[i].Owner = res.GetValue()

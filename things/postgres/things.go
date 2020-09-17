@@ -152,14 +152,11 @@ func (tr thingRepository) RetrieveByID(ctx context.Context, owner, id string) (t
 	}
 
 	if err := tr.db.QueryRowxContext(ctx, q, id, owner).StructScan(&dbth); err != nil {
-		var empty things.Thing
-
 		pqErr, ok := err.(*pq.Error)
 		if err == sql.ErrNoRows || ok && errInvalid == pqErr.Code.Name() {
-			return empty, errors.Wrap(things.ErrNotFound, err)
+			return things.Thing{}, errors.Wrap(things.ErrNotFound, err)
 		}
-
-		return empty, errors.Wrap(things.ErrSelectEntity, err)
+		return things.Thing{}, errors.Wrap(things.ErrSelectEntity, err)
 	}
 
 	return toThing(dbth)

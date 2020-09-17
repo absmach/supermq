@@ -393,6 +393,9 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	case errors.Error:
 		w.Header().Set("Content-Type", contentType)
 		switch {
+		case errors.Contains(errorVal, things.ErrUnauthorizedAccess):
+			w.WriteHeader(http.StatusUnauthorized)
+
 		case errors.Contains(errorVal, errInvalidQueryParams):
 			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, errUnsupportedContentType):
@@ -411,9 +414,6 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		case errors.Contains(errorVal, things.ErrEntityConnected):
 			w.WriteHeader(http.StatusUnprocessableEntity)
 
-		case errors.Contains(errorVal, things.ErrUnauthorizedAccess):
-			w.WriteHeader(http.StatusUnauthorized)
-
 		case errors.Contains(errorVal, things.ErrCreateEntity):
 			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, things.ErrUpdateEntity):
@@ -431,6 +431,9 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, io.EOF):
 			w.WriteHeader(http.StatusBadRequest)
+
+		case errors.Contains(errorVal, things.ErrCreateUUID):
+			w.WriteHeader(http.StatusInternalServerError)
 
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
