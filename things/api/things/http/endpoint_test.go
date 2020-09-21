@@ -126,7 +126,7 @@ func TestCreateThing(t *testing.T) {
 			req:         data,
 			contentType: contentType,
 			auth:        token,
-			status:      http.StatusUnprocessableEntity,
+			status:      http.StatusConflict,
 			location:    "",
 		},
 		{
@@ -142,7 +142,7 @@ func TestCreateThing(t *testing.T) {
 			req:         data,
 			contentType: contentType,
 			auth:        wrongValue,
-			status:      http.StatusForbidden,
+			status:      http.StatusUnauthorized,
 			location:    "",
 		},
 		{
@@ -150,7 +150,7 @@ func TestCreateThing(t *testing.T) {
 			req:         data,
 			contentType: contentType,
 			auth:        "",
-			status:      http.StatusForbidden,
+			status:      http.StatusUnauthorized,
 			location:    "",
 		},
 		{
@@ -266,7 +266,7 @@ func TestCreateThings(t *testing.T) {
 			data:        data,
 			contentType: contentType,
 			auth:        token,
-			status:      http.StatusUnprocessableEntity,
+			status:      http.StatusConflict,
 			response:    "",
 		},
 		{
@@ -274,7 +274,7 @@ func TestCreateThings(t *testing.T) {
 			data:        data,
 			contentType: contentType,
 			auth:        wrongValue,
-			status:      http.StatusForbidden,
+			status:      http.StatusUnauthorized,
 			response:    "",
 		},
 		{
@@ -282,7 +282,7 @@ func TestCreateThings(t *testing.T) {
 			data:        data,
 			contentType: contentType,
 			auth:        "",
-			status:      http.StatusForbidden,
+			status:      http.StatusUnauthorized,
 			response:    "",
 		},
 		{
@@ -372,7 +372,7 @@ func TestUpdateThing(t *testing.T) {
 			id:          sth.ID,
 			contentType: contentType,
 			auth:        wrongValue,
-			status:      http.StatusForbidden,
+			status:      http.StatusUnauthorized,
 		},
 		{
 			desc:        "update thing with empty user token",
@@ -380,7 +380,7 @@ func TestUpdateThing(t *testing.T) {
 			id:          sth.ID,
 			contentType: contentType,
 			auth:        "",
-			status:      http.StatusForbidden,
+			status:      http.StatusUnauthorized,
 		},
 		{
 			desc:        "update thing with invalid data format",
@@ -468,7 +468,7 @@ func TestUpdateKey(t *testing.T) {
 			id:          sth.ID,
 			contentType: contentType,
 			auth:        token,
-			status:      http.StatusUnprocessableEntity,
+			status:      http.StatusConflict,
 		},
 		{
 			desc:        "update key with empty JSON request",
@@ -500,7 +500,7 @@ func TestUpdateKey(t *testing.T) {
 			id:          sth.ID,
 			contentType: contentType,
 			auth:        wrongValue,
-			status:      http.StatusForbidden,
+			status:      http.StatusUnauthorized,
 		},
 		{
 			desc:        "update thing with empty user token",
@@ -508,7 +508,7 @@ func TestUpdateKey(t *testing.T) {
 			id:          sth.ID,
 			contentType: contentType,
 			auth:        "",
-			status:      http.StatusForbidden,
+			status:      http.StatusUnauthorized,
 		},
 		{
 			desc:        "update thing with invalid data format",
@@ -593,14 +593,14 @@ func TestViewThing(t *testing.T) {
 			desc:   "view thing by passing invalid token",
 			id:     sth.ID,
 			auth:   wrongValue,
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 			res:    unauthRes,
 		},
 		{
 			desc:   "view thing by passing empty token",
 			id:     sth.ID,
 			auth:   "",
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 			res:    unauthRes,
 		},
 		{
@@ -666,14 +666,14 @@ func TestListThings(t *testing.T) {
 		{
 			desc:   "get a list of things with invalid token",
 			auth:   wrongValue,
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d", thingURL, 0, 1),
 			res:    nil,
 		},
 		{
 			desc:   "get a list of things with empty token",
 			auth:   "",
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d", thingURL, 0, 1),
 			res:    nil,
 		},
@@ -826,14 +826,14 @@ func TestListThingsByChannel(t *testing.T) {
 		{
 			desc:   "get a list of things by channel with invalid token",
 			auth:   wrongValue,
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 			url:    fmt.Sprintf("%s/%s/things?offset=%d&limit=%d", thingURL, sch.ID, 0, 1),
 			res:    nil,
 		},
 		{
 			desc:   "get a list of things by channel with empty token",
 			auth:   "",
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 			url:    fmt.Sprintf("%s/%s/things?offset=%d&limit=%d", thingURL, sch.ID, 0, 1),
 			res:    nil,
 		},
@@ -962,13 +962,13 @@ func TestRemoveThing(t *testing.T) {
 			desc:   "delete thing with invalid token",
 			id:     sth.ID,
 			auth:   wrongValue,
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 		},
 		{
 			desc:   "delete thing with empty token",
 			id:     sth.ID,
 			auth:   "",
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 		},
 	}
 
@@ -1017,7 +1017,7 @@ func TestCreateChannel(t *testing.T) {
 			req:         data,
 			contentType: contentType,
 			auth:        wrongValue,
-			status:      http.StatusForbidden,
+			status:      http.StatusUnauthorized,
 			location:    "",
 		},
 		{
@@ -1025,7 +1025,7 @@ func TestCreateChannel(t *testing.T) {
 			req:         data,
 			contentType: contentType,
 			auth:        "",
-			status:      http.StatusForbidden,
+			status:      http.StatusUnauthorized,
 			location:    "",
 		},
 		{
@@ -1133,7 +1133,7 @@ func TestCreateChannels(t *testing.T) {
 			data:        data,
 			contentType: contentType,
 			auth:        wrongValue,
-			status:      http.StatusForbidden,
+			status:      http.StatusUnauthorized,
 			response:    "",
 		},
 		{
@@ -1141,7 +1141,7 @@ func TestCreateChannels(t *testing.T) {
 			data:        data,
 			contentType: contentType,
 			auth:        "",
-			status:      http.StatusForbidden,
+			status:      http.StatusUnauthorized,
 			response:    "",
 		},
 		{
@@ -1240,7 +1240,7 @@ func TestUpdateChannel(t *testing.T) {
 			id:          sch.ID,
 			contentType: contentType,
 			auth:        wrongValue,
-			status:      http.StatusForbidden,
+			status:      http.StatusUnauthorized,
 		},
 		{
 			desc:        "update channel with empty token",
@@ -1248,7 +1248,7 @@ func TestUpdateChannel(t *testing.T) {
 			id:          sch.ID,
 			contentType: contentType,
 			auth:        "",
-			status:      http.StatusForbidden,
+			status:      http.StatusUnauthorized,
 		},
 		{
 			desc:        "update channel with invalid data format",
@@ -1350,14 +1350,14 @@ func TestViewChannel(t *testing.T) {
 			desc:   "view channel with invalid token",
 			id:     sch.ID,
 			auth:   wrongValue,
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 			res:    unauthRes,
 		},
 		{
 			desc:   "view channel with empty token",
 			id:     sch.ID,
 			auth:   "",
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 			res:    unauthRes,
 		},
 		{
@@ -1427,14 +1427,14 @@ func TestListChannels(t *testing.T) {
 		{
 			desc:   "get a list of channels with invalid token",
 			auth:   wrongValue,
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d", channelURL, 0, 1),
 			res:    nil,
 		},
 		{
 			desc:   "get a list of channels with empty token",
 			auth:   "",
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d", channelURL, 0, 1),
 			res:    nil,
 		},
@@ -1583,14 +1583,14 @@ func TestListChannelsByThing(t *testing.T) {
 		{
 			desc:   "get a list of channels by thing with invalid token",
 			auth:   wrongValue,
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 			url:    fmt.Sprintf("%s/%s/channels?offset=%d&limit=%d", channelURL, sth.ID, 0, 1),
 			res:    nil,
 		},
 		{
 			desc:   "get a list of channels by thing with empty token",
 			auth:   "",
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 			url:    fmt.Sprintf("%s/%s/channels?offset=%d&limit=%d", channelURL, sth.ID, 0, 1),
 			res:    nil,
 		},
@@ -1707,7 +1707,7 @@ func TestRemoveChannel(t *testing.T) {
 			desc:   "remove channel with invalid token",
 			id:     sch.ID,
 			auth:   wrongValue,
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 		},
 		{
 			desc:   "remove existing channel",
@@ -1725,13 +1725,13 @@ func TestRemoveChannel(t *testing.T) {
 			desc:   "remove channel with invalid token",
 			id:     sch.ID,
 			auth:   wrongValue,
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 		},
 		{
 			desc:   "remove channel with empty token",
 			id:     sch.ID,
 			auth:   "",
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 		},
 	}
 
@@ -1812,14 +1812,14 @@ func TestConnect(t *testing.T) {
 			chanID:  ach.ID,
 			thingID: ath.ID,
 			auth:    wrongValue,
-			status:  http.StatusForbidden,
+			status:  http.StatusUnauthorized,
 		},
 		{
 			desc:    "connect existing thing to existing channel with empty token",
 			chanID:  ach.ID,
 			thingID: ath.ID,
 			auth:    "",
-			status:  http.StatusForbidden,
+			status:  http.StatusUnauthorized,
 		},
 		{
 			desc:    "connect thing from owner to channel of other user",
@@ -1941,7 +1941,7 @@ func TestCreateConnections(t *testing.T) {
 			thingIDs:    ths,
 			auth:        wrongValue,
 			contentType: contentType,
-			status:      http.StatusForbidden,
+			status:      http.StatusUnauthorized,
 		},
 		{
 			desc:        "connect existing things to existing channels with empty token",
@@ -1949,7 +1949,7 @@ func TestCreateConnections(t *testing.T) {
 			thingIDs:    ths,
 			auth:        "",
 			contentType: contentType,
-			status:      http.StatusForbidden,
+			status:      http.StatusUnauthorized,
 		},
 		{
 			desc:        "connect things from owner to channels of other user",
@@ -2087,14 +2087,14 @@ func TestDisconnnect(t *testing.T) {
 			chanID:  ach.ID,
 			thingID: ath.ID,
 			auth:    wrongValue,
-			status:  http.StatusForbidden,
+			status:  http.StatusUnauthorized,
 		},
 		{
 			desc:    "disconnect thing from channel with empty token",
 			chanID:  ach.ID,
 			thingID: ath.ID,
 			auth:    "",
-			status:  http.StatusForbidden,
+			status:  http.StatusUnauthorized,
 		},
 		{
 			desc:    "disconnect owner's thing from someone elses channel",

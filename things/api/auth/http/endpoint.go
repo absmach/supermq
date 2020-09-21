@@ -14,6 +14,7 @@ func identifyEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(identifyReq)
 		if err := req.validate(); err != nil {
+
 			return nil, err
 		}
 

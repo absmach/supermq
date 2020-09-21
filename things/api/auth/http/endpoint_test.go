@@ -88,11 +88,11 @@ func TestIdentify(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	sths, err := svc.CreateThings(context.Background(), token, thing)
+	ths, err := svc.CreateThings(context.Background(), token, thing)
 	require.Nil(t, err, fmt.Sprintf("failed to create thing: %s", err))
-	sth := sths[0]
+	th := ths[0]
 
-	ir := identifyReq{Token: sth.Key}
+	ir := identifyReq{Token: th.Key}
 	data := toJSON(ir)
 
 	nonexistentData := toJSON(identifyReq{Token: wrong})
@@ -110,7 +110,7 @@ func TestIdentify(t *testing.T) {
 		"identify non-existent thing": {
 			contentType: contentType,
 			req:         nonexistentData,
-			status:      http.StatusForbidden,
+			status:      http.StatusNotFound,
 		},
 		"identify with missing content type": {
 			contentType: wrong,
@@ -120,7 +120,7 @@ func TestIdentify(t *testing.T) {
 		"identify with empty JSON request": {
 			contentType: contentType,
 			req:         "{}",
-			status:      http.StatusForbidden,
+			status:      http.StatusUnauthorized,
 		},
 		"identify with invalid JSON request": {
 			contentType: contentType,
@@ -192,7 +192,7 @@ func TestCanAccessByKey(t *testing.T) {
 			contentType: contentType,
 			chanID:      sch.ID,
 			req:         "{}",
-			status:      http.StatusForbidden,
+			status:      http.StatusUnauthorized,
 		},
 		"check access with invalid JSON request": {
 			contentType: contentType,
@@ -271,7 +271,7 @@ func TestCanAccessByID(t *testing.T) {
 			contentType: contentType,
 			chanID:      sch.ID,
 			req:         "{}",
-			status:      http.StatusForbidden,
+			status:      http.StatusUnauthorized,
 		},
 		"check access with invalid JSON request": {
 			contentType: contentType,

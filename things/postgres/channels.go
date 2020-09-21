@@ -110,12 +110,11 @@ func (cr channelRepository) RetrieveByID(ctx context.Context, owner, id string) 
 		Owner: owner,
 	}
 	if err := cr.db.QueryRowxContext(ctx, q, id, owner).StructScan(&dbch); err != nil {
-		empty := things.Channel{}
 		pqErr, ok := err.(*pq.Error)
 		if err == sql.ErrNoRows || ok && errInvalid == pqErr.Code.Name() {
-			return empty, things.ErrNotFound
+			return things.Channel{}, things.ErrNotFound
 		}
-		return empty, errors.Wrap(things.ErrUpdateEntity, err)
+		return things.Channel{}, errors.Wrap(things.ErrSelectEntity, err)
 	}
 
 	return toChannel(dbch), nil
@@ -269,7 +268,7 @@ func (cr channelRepository) Remove(ctx context.Context, owner, id string) error 
 func (cr channelRepository) Connect(ctx context.Context, owner string, chIDs, thIDs []string) error {
 	tx, err := cr.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return errors.Wrap(things.ErrRemoveEntity, err)
+		return errors.Wrap(things.ErrConnect, err)
 	}
 
 	q := `INSERT INTO connections (channel_id, channel_owner, thing_id, thing_owner)
@@ -296,13 +295,13 @@ func (cr channelRepository) Connect(ctx context.Context, owner string, chIDs, th
 					}
 				}
 
-				return errors.Wrap(things.ErrRemoveEntity, err)
+				return errors.Wrap(things.ErrConnect, err)
 			}
 		}
 	}
 
 	if err = tx.Commit(); err != nil {
-		return errors.Wrap(things.ErrRemoveEntity, err)
+		return errors.Wrap(things.ErrConnect, err)
 	}
 
 	return nil

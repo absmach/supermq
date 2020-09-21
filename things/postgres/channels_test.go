@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/mainflux/mainflux/pkg/errors"
 	uuidProvider "github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/things/postgres"
@@ -86,7 +87,7 @@ func TestChannelsSave(t *testing.T) {
 
 	for _, cc := range cases {
 		_, err := channelRepo.Save(context.Background(), cc.channels...)
-		assert.Equal(t, cc.err, err, fmt.Sprintf("%s: expected %s got %s\n", cc.desc, cc.err, err))
+		assert.True(t, errors.Contains(err, cc.err), fmt.Sprintf("%s: expected %s got %s\n", cc.desc, cc.err, err))
 	}
 }
 
@@ -146,7 +147,7 @@ func TestChannelUpdate(t *testing.T) {
 
 	for _, tc := range cases {
 		err := chanRepo.Update(context.Background(), tc.channel)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
@@ -213,7 +214,7 @@ func TestSingleChannelRetrieval(t *testing.T) {
 
 	for desc, tc := range cases {
 		_, err := chanRepo.RetrieveByID(context.Background(), tc.owner, tc.ID)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
 
@@ -449,7 +450,7 @@ func TestRetrieveByThing(t *testing.T) {
 		page, err := chanRepo.RetrieveByThing(context.Background(), tc.owner, tc.thing, tc.offset, tc.limit, tc.connected)
 		size := uint64(len(page.Channels))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", desc, tc.size, size))
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected no error got %d\n", desc, err))
 	}
 }
 
@@ -473,7 +474,7 @@ func TestChannelRemoval(t *testing.T) {
 		require.Nil(t, err, fmt.Sprintf("#%d: failed to remove channel due to: %s", i, err))
 
 		_, err = chanRepo.RetrieveByID(context.Background(), email, chanID)
-		require.Equal(t, things.ErrNotFound, err, fmt.Sprintf("#%d: expected %s got %s", i, things.ErrNotFound, err))
+		assert.True(t, errors.Contains(err, things.ErrNotFound), fmt.Sprintf("#%d: expected %s got %s", i, things.ErrNotFound, err))
 	}
 }
 
@@ -558,7 +559,7 @@ func TestConnect(t *testing.T) {
 
 	for _, tc := range cases {
 		err := chanRepo.Connect(context.Background(), tc.owner, []string{tc.chanID}, []string{tc.thingID})
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
@@ -643,7 +644,7 @@ func TestDisconnect(t *testing.T) {
 
 	for _, tc := range cases {
 		err := chanRepo.Disconnect(context.Background(), tc.owner, tc.chanID, tc.thingID)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 

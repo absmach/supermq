@@ -652,7 +652,6 @@ func TestThingRemoval(t *testing.T) {
 		require.Nil(t, err, fmt.Sprintf("#%d: failed to remove thing due to: %s", i, err))
 
 		_, err = thingRepo.RetrieveByID(context.Background(), email, thing.ID)
-		// require.Equal(t, things.ErrNotFound, err, fmt.Sprintf("#%d: expected %s got %s", i, things.ErrNotFound, err))
 		require.True(t, errors.Contains(err, things.ErrNotFound), fmt.Sprintf("#%d: expected %s got %s", i, things.ErrNotFound, err))
 	}
 }

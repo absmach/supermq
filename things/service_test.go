@@ -464,7 +464,7 @@ func TestCreateChannels(t *testing.T) {
 
 	for _, cc := range cases {
 		_, err := svc.CreateChannels(context.Background(), cc.token, cc.channels...)
-		assert.Equal(t, cc.err, err, fmt.Sprintf("%s: expected %s got %s\n", cc.desc, cc.err, err))
+		assert.True(t, errors.Contains(err, cc.err), fmt.Sprintf("%s: expected %s got %s\n", cc.desc, cc.err, err))
 	}
 }
 
@@ -913,11 +913,9 @@ func TestDisconnect(t *testing.T) {
 func TestCanAccessByKey(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 
-	sths, _ := svc.CreateThings(context.Background(), token, thing)
-	sth := sths[0]
-	schs, _ := svc.CreateChannels(context.Background(), token, channel)
-	sch := schs[0]
-	svc.Connect(context.Background(), token, []string{sch.ID}, []string{sth.ID})
+	ths, _ := svc.CreateThings(context.Background(), token, thing)
+	chs, _ := svc.CreateChannels(context.Background(), token, channel, channel)
+	svc.Connect(context.Background(), token, []string{chs[0].ID}, []string{ths[0].ID})
 
 	cases := map[string]struct {
 		token   string
@@ -925,36 +923,41 @@ func TestCanAccessByKey(t *testing.T) {
 		err     error
 	}{
 		"allowed access": {
-			token:   sth.Key,
-			channel: sch.ID,
+			token:   ths[0].Key,
+			channel: chs[0].ID,
 			err:     nil,
 		},
-		"not-connected cannot access": {
+		"non-existing thing": {
 			token:   wrongValue,
-			channel: sch.ID,
-			err:     things.ErrUnauthorizedAccess,
+			channel: chs[0].ID,
+			err:     things.ErrNotFound,
 		},
-		"access to non-existing channel": {
-			token:   sth.Key,
-			channel: wrongID,
-			err:     things.ErrUnauthorizedAccess,
+		"non-existing chan": {
+			token:   ths[0].Key,
+			channel: wrongValue,
+			err:     things.ErrEntityConnected,
+		},
+		"non-connected channel": {
+			token:   ths[0].Key,
+			channel: chs[1].ID,
+			err:     things.ErrEntityConnected,
 		},
 	}
 
 	for desc, tc := range cases {
 		_, err := svc.CanAccessByKey(context.Background(), tc.channel, tc.token)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected '%s' got '%s'\n", desc, tc.err, err))
 	}
 }
 
 func TestCanAccessByID(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 
-	sths, _ := svc.CreateThings(context.Background(), token, thing)
-	sth := sths[0]
-	schs, _ := svc.CreateChannels(context.Background(), token, channel)
-	sch := schs[0]
-	svc.Connect(context.Background(), token, []string{sch.ID}, []string{sth.ID})
+	ths, _ := svc.CreateThings(context.Background(), token, thing, thing)
+	th := ths[0]
+	chs, _ := svc.CreateChannels(context.Background(), token, channel)
+	ch := chs[0]
+	svc.Connect(context.Background(), token, []string{ch.ID}, []string{th.ID})
 
 	cases := map[string]struct {
 		thingID string
@@ -962,19 +965,24 @@ func TestCanAccessByID(t *testing.T) {
 		err     error
 	}{
 		"allowed access": {
-			thingID: sth.ID,
-			channel: sch.ID,
+			thingID: th.ID,
+			channel: ch.ID,
 			err:     nil,
 		},
-		"not-connected cannot access": {
+		"access to non-existing thing": {
 			thingID: wrongValue,
-			channel: sch.ID,
-			err:     things.ErrUnauthorizedAccess,
+			channel: ch.ID,
+			err:     things.ErrEntityConnected,
 		},
 		"access to non-existing channel": {
-			thingID: sth.ID,
+			thingID: th.ID,
 			channel: wrongID,
-			err:     things.ErrUnauthorizedAccess,
+			err:     things.ErrEntityConnected,
+		},
+		"access to not-connected thing": {
+			thingID: ths[1].ID,
+			channel: ch.ID,
+			err:     things.ErrEntityConnected,
 		},
 	}
 
@@ -987,8 +995,8 @@ func TestCanAccessByID(t *testing.T) {
 func TestIdentify(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 
-	sths, _ := svc.CreateThings(context.Background(), token, thing)
-	sth := sths[0]
+	ths, _ := svc.CreateThings(context.Background(), token, thing)
+	th := ths[0]
 
 	cases := map[string]struct {
 		token string
@@ -996,14 +1004,14 @@ func TestIdentify(t *testing.T) {
 		err   error
 	}{
 		"identify existing thing": {
-			token: sth.Key,
-			id:    sth.ID,
+			token: th.Key,
+			id:    th.ID,
 			err:   nil,
 		},
 		"identify non-existing thing": {
 			token: wrongValue,
 			id:    wrongID,
-			err:   things.ErrUnauthorizedAccess,
+			err:   things.ErrNotFound,
 		},
 	}
 

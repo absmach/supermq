@@ -319,18 +319,18 @@ func (ts *thingsService) Disconnect(ctx context.Context, token, chanID, thingID 
 	return ts.channels.Disconnect(ctx, res.GetValue(), chanID, thingID)
 }
 
-func (ts *thingsService) CanAccessByKey(ctx context.Context, chanID, key string) (string, error) {
-	thingID, err := ts.hasThing(ctx, chanID, key)
+func (ts *thingsService) CanAccessByKey(ctx context.Context, chanID, thingKey string) (string, error) {
+	thingID, err := ts.hasThing(ctx, chanID, thingKey)
 	if err == nil {
 		return thingID, nil
 	}
 
-	thingID, err = ts.channels.HasThing(ctx, chanID, key)
+	thingID, err = ts.channels.HasThing(ctx, chanID, thingKey)
 	if err != nil {
-		return "", errors.Wrap(ErrUnauthorizedAccess, err)
+		return "", err
 	}
 
-	if err := ts.thingCache.Save(ctx, key, thingID); err != nil {
+	if err := ts.thingCache.Save(ctx, thingKey, thingID); err != nil {
 		return "", err
 	}
 	if err := ts.channelCache.Connect(ctx, chanID, thingID); err != nil {
@@ -371,15 +371,14 @@ func (ts *thingsService) Identify(ctx context.Context, key string) (string, erro
 	return id, nil
 }
 
-func (ts *thingsService) hasThing(ctx context.Context, chanID, key string) (string, error) {
-	thingID, err := ts.thingCache.ID(ctx, key)
+func (ts *thingsService) hasThing(ctx context.Context, chanID, thingKey string) (string, error) {
+	thingID, err := ts.thingCache.ID(ctx, thingKey)
 	if err != nil {
 		return "", err
 	}
 
 	if connected := ts.channelCache.HasThing(ctx, chanID, thingID); !connected {
-		return "", err
+		return "", ErrEntityConnected
 	}
-
 	return thingID, nil
 }

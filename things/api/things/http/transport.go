@@ -407,29 +407,22 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			w.WriteHeader(http.StatusNotFound)
 		case errors.Contains(errorVal, things.ErrConflict):
 			w.WriteHeader(http.StatusConflict)
-		case errors.Contains(errorVal, things.ErrScanMetadata):
-			w.WriteHeader(http.StatusUnprocessableEntity)
-		case errors.Contains(errorVal, things.ErrSelectEntity):
-			w.WriteHeader(http.StatusUnprocessableEntity)
-		case errors.Contains(errorVal, things.ErrEntityConnected):
+
+		case errors.Contains(errorVal, things.ErrScanMetadata),
+			errors.Contains(errorVal, things.ErrSelectEntity),
+			errors.Contains(errorVal, things.ErrEntityConnected):
 			w.WriteHeader(http.StatusUnprocessableEntity)
 
-		case errors.Contains(errorVal, things.ErrCreateEntity):
-			w.WriteHeader(http.StatusBadRequest)
-		case errors.Contains(errorVal, things.ErrUpdateEntity):
-			w.WriteHeader(http.StatusBadRequest)
-		case errors.Contains(errorVal, things.ErrViewEntity):
-			w.WriteHeader(http.StatusBadRequest)
-		case errors.Contains(errorVal, things.ErrRemoveEntity):
-			w.WriteHeader(http.StatusBadRequest)
-		case errors.Contains(errorVal, things.ErrConnect):
-			w.WriteHeader(http.StatusBadRequest)
-		case errors.Contains(errorVal, things.ErrDisconnect):
+		case errors.Contains(errorVal, things.ErrCreateEntity),
+			errors.Contains(errorVal, things.ErrUpdateEntity),
+			errors.Contains(errorVal, things.ErrViewEntity),
+			errors.Contains(errorVal, things.ErrRemoveEntity),
+			errors.Contains(errorVal, things.ErrConnect),
+			errors.Contains(errorVal, things.ErrDisconnect):
 			w.WriteHeader(http.StatusBadRequest)
 
-		case errors.Contains(errorVal, io.ErrUnexpectedEOF):
-			w.WriteHeader(http.StatusBadRequest)
-		case errors.Contains(errorVal, io.EOF):
+		case errors.Contains(errorVal, io.ErrUnexpectedEOF),
+			errors.Contains(errorVal, io.EOF):
 			w.WriteHeader(http.StatusBadRequest)
 
 		case errors.Contains(errorVal, things.ErrCreateUUID):
