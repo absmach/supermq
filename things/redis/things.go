@@ -47,7 +47,7 @@ func (tc *thingCache) ID(_ context.Context, thingKey string) (string, error) {
 	tkey := fmt.Sprintf("%s:%s", keyPrefix, thingKey)
 	thingID, err := tc.client.Get(tkey).Result()
 	if err != nil {
-		return "", errors.Wrap(things.ErrViewEntity, err)
+		return "", errors.Wrap(things.ErrNotFound, err)
 	}
 
 	return thingID, nil

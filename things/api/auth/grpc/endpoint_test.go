@@ -28,13 +28,12 @@ var (
 )
 
 func TestCanAccessByKey(t *testing.T) {
-	sths, _ := svc.CreateThings(context.Background(), token, thing)
-	oth := sths[0]
-	sths, _ = svc.CreateThings(context.Background(), token, thing)
-	cth := sths[0]
-	schs, _ := svc.CreateChannels(context.Background(), token, channel)
-	sch := schs[0]
-	svc.Connect(context.Background(), token, []string{sch.ID}, []string{cth.ID})
+	ths, _ := svc.CreateThings(context.Background(), token, thing, thing)
+	th := ths[0]
+	oth := ths[1]
+	chs, _ := svc.CreateChannels(context.Background(), token, channel)
+	ch := chs[0]
+	svc.Connect(context.Background(), token, []string{ch.ID}, []string{th.ID})
 
 	usersAddr := fmt.Sprintf("localhost:%d", port)
 	conn, _ := grpc.Dial(usersAddr, grpc.WithInsecure())
@@ -49,25 +48,25 @@ func TestCanAccessByKey(t *testing.T) {
 		code    codes.Code
 	}{
 		"check if connected thing can access existing channel": {
-			key:     cth.Key,
-			chanID:  sch.ID,
-			thingID: cth.ID,
+			key:     th.Key,
+			chanID:  ch.ID,
+			thingID: th.ID,
 			code:    codes.OK,
 		},
 		"check if unconnected thing can access existing channel": {
 			key:     oth.Key,
-			chanID:  sch.ID,
+			chanID:  ch.ID,
 			thingID: wrongID,
-			code:    codes.PermissionDenied,
+			code:    codes.InvalidArgument,
 		},
 		"check if thing with wrong access key can access existing channel": {
 			key:     wrong,
-			chanID:  sch.ID,
+			chanID:  ch.ID,
 			thingID: wrongID,
-			code:    codes.PermissionDenied,
+			code:    codes.NotFound,
 		},
 		"check if connected thing can access non-existent channel": {
-			key:     cth.Key,
+			key:     th.Key,
 			chanID:  wrongID,
 			thingID: wrongID,
 			code:    codes.InvalidArgument,
@@ -111,7 +110,7 @@ func TestCanAccessByID(t *testing.T) {
 		"check if unconnected thing can access existing channel": {
 			chanID:  sch.ID,
 			thingID: oth.ID,
-			code:    codes.PermissionDenied,
+			code:    codes.InvalidArgument,
 		},
 		"check if connected thing can access non-existent channel": {
 			chanID:  wrongID,
@@ -161,7 +160,7 @@ func TestIdentify(t *testing.T) {
 		"identify non-existent thing": {
 			key:  wrong,
 			id:   wrongID,
-			code: codes.PermissionDenied,
+			code: codes.NotFound,
 		},
 	}
 

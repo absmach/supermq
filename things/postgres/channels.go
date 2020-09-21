@@ -335,16 +335,15 @@ func (cr channelRepository) Disconnect(ctx context.Context, owner, chanID, thing
 	return nil
 }
 
-func (cr channelRepository) HasThing(ctx context.Context, chanID, key string) (string, error) {
+func (cr channelRepository) HasThing(ctx context.Context, chanID, thingKey string) (string, error) {
 	var thingID string
 	q := `SELECT id FROM things WHERE key = $1`
-	if err := cr.db.QueryRowxContext(ctx, q, key).Scan(&thingID); err != nil {
+	if err := cr.db.QueryRowxContext(ctx, q, thingKey).Scan(&thingID); err != nil {
 		return "", errors.Wrap(things.ErrEntityConnected, err)
-
 	}
 
 	if err := cr.hasThing(ctx, chanID, thingID); err != nil {
-		return "", errors.Wrap(things.ErrEntityConnected, err)
+		return "", err
 	}
 
 	return thingID, nil
@@ -362,7 +361,7 @@ func (cr channelRepository) hasThing(ctx context.Context, chanID, thingID string
 	}
 
 	if !exists {
-		return things.ErrUnauthorizedAccess
+		return things.ErrNotFound
 	}
 
 	return nil
