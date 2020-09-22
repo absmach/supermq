@@ -106,7 +106,7 @@ func encodeError(err error) error {
 	case things.ErrUnauthorizedAccess:
 		return status.Error(codes.PermissionDenied, "missing or invalid credentials provided")
 	case things.ErrEntityConnected:
-		return status.Error(codes.InvalidArgument, "entites are not connected")
+		return status.Error(codes.PermissionDenied, "entities are not connected")
 	case things.ErrNotFound:
 		return status.Error(codes.NotFound, "entity does not exist")
 	default:

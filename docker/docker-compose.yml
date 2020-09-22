@@ -144,8 +144,6 @@ services:
     image: postgres:10.8-alpine
     container_name: mainflux-things-db
     restart: on-failure
-    # ports:
-    #   - 5432:5432      
     environment:
       POSTGRES_USER: ${MF_THINGS_DB_USER}
       POSTGRES_PASSWORD: ${MF_THINGS_DB_PASS}

@@ -393,7 +393,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	case errors.Error:
 		w.Header().Set("Content-Type", contentType)
 		switch {
-		case errors.Contains(errorVal, things.ErrUnauthorizedAccess):
+		case errors.Contains(errorVal, things.ErrUnauthorizedAccess),
+			errors.Contains(errorVal, things.ErrEntityConnected):
 			w.WriteHeader(http.StatusUnauthorized)
 
 		case errors.Contains(errorVal, errInvalidQueryParams):
@@ -409,8 +410,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			w.WriteHeader(http.StatusConflict)
 
 		case errors.Contains(errorVal, things.ErrScanMetadata),
-			errors.Contains(errorVal, things.ErrSelectEntity),
-			errors.Contains(errorVal, things.ErrEntityConnected):
+			errors.Contains(errorVal, things.ErrSelectEntity):
 			w.WriteHeader(http.StatusUnprocessableEntity)
 
 		case errors.Contains(errorVal, things.ErrCreateEntity),
@@ -486,7 +486,7 @@ func readMetadataQuery(r *http.Request, key string) (map[string]interface{}, err
 	m := make(map[string]interface{})
 	err := json.Unmarshal([]byte(vals[0]), &m)
 	if err != nil {
-		return nil, errInvalidQueryParams
+		return nil, errors.Wrap(errInvalidQueryParams, err)
 	}
 
 	return m, nil
