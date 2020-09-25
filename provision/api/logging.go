@@ -45,3 +45,16 @@ func (lm *loggingMiddleware) Cert(token, thingID, duration string, keyBits int) 
 
 	return lm.svc.Cert(token, thingID, duration, keyBits)
 }
+
+func (lm *loggingMiddleware) Mapping(token string) (res interface{}, err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method mapping for token: %s took %s to complete", token, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+
+	return lm.svc.Mapping(token)
+}

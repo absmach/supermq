@@ -26,7 +26,7 @@ func TestValidate(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		req := addThingReq{
+		req := provisionReq{
 			ExternalID:  tc.ExternalID,
 			ExternalKey: tc.ExternalKey,
 		}
