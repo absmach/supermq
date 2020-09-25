@@ -90,7 +90,6 @@ func (ps *provisionService) Mapping(token string) (interface{}, error) {
 		return "", errors.Wrap(ErrUnauthorized, err)
 	}
 	return ps.conf.Bootstrap.Content, nil
-
 }
 
 // Provision is provision method for creating setup according to

@@ -74,5 +74,3 @@ parameters:
     in: header
     type: string
     required: false
-
-
