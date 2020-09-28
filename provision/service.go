@@ -48,7 +48,10 @@ type Service interface {
 	// - whitelist Thing in Bootstrap configuration == connect Thing to Channels
 	Provision(token, name, externalID, externalKey string) (Result, error)
 
-	Mapping(token string) (interface{}, error)
+	// Mapping returns current configuration used for provision
+	// useful for using in ui to create configuration that matches
+	// one created with Provision method.
+	Mapping(token string) (map[string]interface{}, error)
 
 	// Certs creates certificate for things that communicate over mTLS
 	// A duration string is a possibly signed sequence of decimal numbers,
@@ -85,9 +88,9 @@ func New(cfg Config, sdk SDK.SDK, logger logger.Logger) Service {
 }
 
 // Mapping retrieves current configuration
-func (ps *provisionService) Mapping(token string) (interface{}, error) {
+func (ps *provisionService) Mapping(token string) (map[string]interface{}, error) {
 	if _, err := ps.sdk.User(token); err != nil {
-		return "", errors.Wrap(ErrUnauthorized, err)
+		return map[string]interface{}{}, errors.Wrap(ErrUnauthorized, err)
 	}
 	return ps.conf.Bootstrap.Content, nil
 }

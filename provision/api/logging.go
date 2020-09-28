@@ -46,7 +46,7 @@ func (lm *loggingMiddleware) Cert(token, thingID, duration string, keyBits int) 
 	return lm.svc.Cert(token, thingID, duration, keyBits)
 }
 
-func (lm *loggingMiddleware) Mapping(token string) (res interface{}, err error) {
+func (lm *loggingMiddleware) Mapping(token string) (res map[string]interface{}, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method mapping for token: %s took %s to complete", token, time.Since(begin))
 		if err != nil {
