@@ -21,7 +21,7 @@ func TestValidate(t *testing.T) {
 			err:         nil,
 		},
 		"external id for device empty": {
-			err: errUnauthorized,
+			err: errMalformedEntity,
 		},
 	}
 
@@ -32,6 +32,6 @@ func TestValidate(t *testing.T) {
 		}
 
 		err := req.validate()
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected `%v` got `%v`", desc, err, tc.err))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected `%v` got `%v`", desc, tc.err, err))
 	}
 }
