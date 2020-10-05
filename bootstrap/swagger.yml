@@ -1,12 +1,9 @@
-swagger: "2.0"
+openapi: 3.0.1
 info:
   title: Mainflux Bootstrap service
   description: HTTP API for managing platform things configuration.
   version: "1.0.0"
-consumes:
-  - "application/json"
-produces:
-  - "application/json"
+
 paths:
   /things/configs:
     post:
@@ -17,20 +14,12 @@ paths:
       tags:
         - configs
       parameters:
-        - $ref: "#/parameters/Authorization"
-        - name: config
-          description: JSON-formatted document describing the new config.
-          in: body
-          schema:
-            $ref: "#/definitions/ConfigReq"
-          required: true
+        - $ref: "#/components/parameters/Authorization"
+      requestBody:
+        $ref: "#/components/requestBodies/ConfigReq"
       responses:
         201:
-          description: Config registered.
-          headers:
-            Location:
-              type: string
-              description: Created configuration's relative URL (i.e. /things/configs/{configId}).
+          $ref: "#/components/responses/CreateConfigRes"
         400:
           description: Failed due to malformed JSON.
         403:
@@ -38,7 +27,7 @@ paths:
         415:
           description: Missing or invalid content type.
         500:
-          $ref: "#/responses/ServiceError"
+          $ref: "#/components/responses/ServiceError"
     get:
       summary: Retrieves managed configs
       description: |
@@ -49,23 +38,20 @@ paths:
       tags:
         - configs
       parameters:
-        - $ref: "#/parameters/Authorization"
-        - $ref: "#/parameters/Limit"
-        - $ref: "#/parameters/Offset"
-        - $ref: "#/parameters/State"
-        - $ref: "#/parameters/Name"
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/State"
+        - $ref: "#/components/parameters/Name"
       responses:
         200:
-          description: |
-            Data retrieved. Configs from this list don't contain channels.
-          schema:
-            $ref: "#/definitions/ConfigList"
+          $ref: "#/components/responses/ConfigListRes"
         400:
           description: Failed due to malformed query parameters.
         403:
           description: Missing or invalid access token provided.
         500:
-          $ref: "#/responses/ServiceError"
+          $ref: "#/components/responses/ServiceError"
   /things/bootstrap/{externalId}:
     get:
       summary: Retrieves configuration
@@ -74,18 +60,20 @@ paths:
       tags:
         - configs
       parameters:
-        - $ref: "#/parameters/ConfigAuth"
-        - $ref: "#/parameters/ExternalId"
+        - $ref: "#/components/parameters/ConfigAuth"
+        - $ref: "#/components/parameters/ExternalId"
       responses:
         200:
           description: Data retrieved.
-          schema:
-            $ref: "#/definitions/BootstrapRes"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bootstrap"
         404:
           description: |
             Failed to retrieve corresponding config.
         500:
-          $ref: "#/responses/ServiceError"
+          $ref: "#/components/responses/ServiceError"
   /things/bootstrap/secure/{externalId}:
     get:
       summary: Retrieves configuration
@@ -94,39 +82,43 @@ paths:
       tags:
         - configs
       parameters:
-        - $ref: "#/parameters/EncConfigAuth"
-        - $ref: "#/parameters/ExternalId"
+        - $ref: "#/components/parameters/EncConfigAuth"
+        - $ref: "#/components/parameters/ExternalId"
       responses:
         200:
           description: |
             Data retrieved. In this case, Bootstrap response is encrypted using
             the secret key, so an actual response is in the binary format.
-          schema:
-            $ref: "#/definitions/BootstrapRes"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bootstrap"
         404:
           description: |
             Failed to retrieve corresponding config. 
         500:
-          $ref: "#/responses/ServiceError"
+          $ref: "#/components/responses/ServiceError"
   /things/configs/{configId}:
     get:
       summary: Retrieves config info (with channels)
       tags:
         - configs
       parameters:
-        - $ref: "#/parameters/Authorization"
-        - $ref: "#/parameters/ConfigId"
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/ConfigId"
       responses:
         200:
           description: Data retrieved.
-          schema:
-            $ref: "#/definitions/ConfigRes"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Config"
         403:
           description: Missing or invalid access token provided.
         404:
           description: Config does not exist.
         500:
-          $ref: "#/responses/ServiceError"
+          $ref: "#/components/responses/ServiceError"
     put:
       summary: Updates config info
       description: |
@@ -136,14 +128,10 @@ paths:
       tags:
         - configs
       parameters:
-        - $ref: "#/parameters/Authorization"
-        - $ref: "#/parameters/ConfigId"
-        - name: config
-          description: JSON-formatted document describing the updated thing.
-          in: body
-          schema:
-            $ref: "#/definitions/ConfigUpdateReq"
-          required: true
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/ConfigId"
+        - requestBody:
+          $ref: "#/components/requestBodies/ConfigUpdateReq"
       responses:
         200:
           description: Config updated.
@@ -156,7 +144,7 @@ paths:
         415:
           description: Missing or invalid content type.
         500:
-          $ref: "#/responses/ServiceError"
+          $ref: "#/components/responses/ServiceError"
     delete:
       summary: Removes a Config
       description: |
@@ -165,8 +153,8 @@ paths:
       tags:
         - configs
       parameters:
-        - $ref: "#/parameters/Authorization"
-        - $ref: "#/parameters/ConfigId"
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/ConfigId"
       responses:
         204:
           description: Config removed.
@@ -175,7 +163,7 @@ paths:
         403:
           description: Missing or invalid access token provided.
         500:
-          $ref: "#/responses/ServiceError"
+          $ref: "#/components/responses/ServiceError"
   /things/configs/certs/{configId}:
     patch:
       summary: Updates certs
@@ -185,14 +173,10 @@ paths:
       tags:
         - configs
       parameters:
-        - $ref: "#/parameters/Authorization"
-        - $ref: "#/parameters/ConfigId"
-        - name: config
-          description: JSON-formatted document describing the updated thing.
-          in: body
-          schema:
-            $ref: "#/definitions/ConfigUpdateCertReq"
-          required: true
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/ConfigId"
+      requestBody:
+        $ref: "#/components/requestBodies/ConfigUpdateCertReq"
       responses:
         200:
           description: Config updated.
@@ -205,7 +189,7 @@ paths:
         415:
           description: Missing or invalid content type.
         500:
-          $ref: "#/responses/ServiceError"
+          $ref: "#/components/responses/ServiceError"
   /things/configs/connections/{configId}:
     put:
       summary: Updates channels the thing is connected to
@@ -215,14 +199,10 @@ paths:
       tags:
         - configs
       parameters:
-        - $ref: "#/parameters/Authorization"
-        - $ref: "#/parameters/ConfigId"
-        - name: channels
-          description: Array if IDs the thing is be connected to.
-          in: body
-          schema:
-            $ref: "#/definitions/ConfigUpdateConnReq"
-          required: true
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/ConfigId"
+      requestBody:
+        $ref: "#/components/requestBodies/ConfigUpdateConnReq"
       responses:
         200:
           description: Config updated.
@@ -235,7 +215,7 @@ paths:
         415:
           description: Missing or invalid content type.
         500:
-          $ref: "#/responses/ServiceError"
+          $ref: "#/components/responses/ServiceError"
   /things/state/{configId}:
     put:
       summary: Updates Config state.
@@ -245,19 +225,10 @@ paths:
       tags:
         - configs
       parameters:
-        - $ref: "#/parameters/Authorization"
-        - $ref: "#/parameters/ConfigId"
-        - name: state
-          description: New state of the Config.
-          in: body
-          schema:
-            type: object
-            properties:
-              state:
-                type: integer
-                enum:
-                  - inactive
-                  - active
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/ConfigId"
+      requestBody:
+        $ref: '#/components/requestBodies/ConfigUpdateStateReq'
       responses:
         204:
           description: Config removed.
@@ -266,226 +237,282 @@ paths:
         403:
           description: Missing or invalid access token provided.
         500:
-          $ref: "#/responses/ServiceError"
+          $ref: "#/components/responses/ServiceError"
 
-parameters:
-  Authorization:
-    name: Authorization
-    description: User's access token.
-    in: header
-    type: string
-    required: true
-  ConfigAuth:
-    name: configAuthorization
-    description: Configuration external key.
-    in: header
-    type: string
-    required: true
-  EncConfigAuth:
-    name: configAuthorization
-    description: |
-      Hex-encoded configuration external key encrypted using 
-      the AES algorithm and SHA256 sum of the external key 
-      itself as an encryption key.
-    in: header
-    type: string
-    required: true
-  ConfigId:
-    name: configId
-    description: Unique Config identifier. It's the ID of the corresponding Thing.
-    in: path
-    type: string
-    required: true
-  ExternalId:
-    name: externalId
-    description: Unique Config identifier provided by external entity.
-    in: path
-    type: string
-    required: true
-  Limit:
-    name: limit
-    description: Size of the subset to retrieve.
-    in: query
-    type: integer
-    default: 10
-    maximum: 100
-    minimum: 1
-    required: false
-  Offset:
-    name: offset
-    description: Number of items to skip during retrieval.
-    in: query
-    type: integer
-    default: 0
-    minimum: 0
-    required: false
-  State:
-    name: state
-    description: A state of items
-    in: query
-    type: integer
-    enum:
-      - inactive
-      - active
-    required: false
-  Name:
-    name: name
-    description: Name of the config. Search by name is partial-match and case-insensitive.
-    in: query
-    type: string
-    required: false
+components:
+  schemas:
+    State:
+      type: integer
+      enum:
+        - active
+        - inactive
+    Config:
+      type: object
+      properties:
+        mainflux_id:
+          type: string
+          description: Corresponding Mainflux Thing ID.
+        mainflux_key:
+          type: string
+          description: Corresponding Mainflux Thing key.
+        mainflux_channels:
+          type: array
+          minItems: 0
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: ID of the Channel.
+              name:
+                type: string
+                description: Name of the Channel.
+              metadata:
+                type: object
+                description: Custom metadata related to the Channel.
+        external_id:
+          type: string
+          description: External ID (MAC address or some unique identifier).
+        external_key:
+          type: string
+          description: External key.
+        content:
+          type: string
+          description: Free-form custom configuration.
+        state:
+          $ref: '#/components/schemas/State'
+      required:
+        - external_id
+        - external_key    
+    ConfigList:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of results.
+          minimum: 0
+        offset:
+          type: integer
+          description: Number of items to skip during retrieval.
+          minimum: 0
+          default: 0
+        limit:
+          type: integer
+          description: Size of the subset to retrieve.
+          maximum: 100
+          default: 10
+        configs:
+          type: array
+          minItems: 0
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/Config"
+      required:
+        - configs
+    Bootstrap:
+      type: object
+      properties:
+        mainflux_id:
+          type: string
+          description: Corresponding Mainflux Thing ID.
+        mainflux_key:
+          type: string
+          description: Corresponding Mainflux Thing key.
+        mainflux_channels:
+          type: array
+          minItems: 0
+          items:
+            type: string
+        content:
+          type: string
+          description: Free-form custom configuration.
+        client_cert:
+          type: string
+          description: Client certificate.
+        client_key:
+          type: string
+          description: Key for the client_cert.
+        ca_cert:
+          type: string
+          description: Issuing CA certificate.
+      required:
+        - mainflux_id
+        - mainflux_key
+        - mainflux_channels
+        - content
 
-responses:
-  ServiceError:
-    description: Unexpected server-side error occurred.
-
-definitions:
-  ConfigList:
-    type: object
-    properties:
-      total:
+  parameters:
+    Authorization:
+      name: Authorization
+      description: User's access token.
+      in: header
+      schema:
+        type: string
+      required: true
+    ConfigAuth:
+      name: configAuthorization
+      description: Configuration external key.
+      in: header
+      schema:
+        type: string
+      required: true
+    EncConfigAuth:
+      name: configAuthorization
+      description: |
+        Hex-encoded configuration external key encrypted using 
+        the AES algorithm and SHA256 sum of the external key 
+        itself as an encryption key.
+      in: header
+      schema:
+        type: string
+      required: true
+    ConfigId:
+      name: configId
+      description: Unique Config identifier. It's the ID of the corresponding Thing.
+      in: path
+      schema:
+        type: string
+      required: true
+    ExternalId:
+      name: externalId
+      description: Unique Config identifier provided by external entity.
+      in: path
+      schema:
+        type: string
+      required: true
+    Limit:
+      name: limit
+      description: Size of the subset to retrieve.
+      in: query
+      schema:
         type: integer
-        description: Total number of results.
-        minimum: 0
-      offset:
-        type: integer
-        description: Number of items to skip during retrieval.
-        minimum: 0
-        default: 0
-      limit:
-        type: integer
-        description: Size of the subset to retrieve.
-        maximum: 100
         default: 10
-      configs:
-        type: array
-        minItems: 0
-        uniqueItems: true
-        items:
-          $ref: "#/definitions/ConfigRes"
-    required:
-      - configs
-  State:
-    type: integer
-    enum:
-      - active
-      - inactive
-  ConfigRes:
-    type: object
-    properties:
-      mainflux_id:
+        maximum: 100
+        minimum: 1
+      required: false
+    Offset:
+      name: offset
+      description: Number of items to skip during retrieval.
+      in: query
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+      required: false
+    State:
+      name: state
+      description: A state of items
+      in: query
+      schema:
+        type: integer
+        enum:
+          - inactive
+          - active
+      required: false
+    Name:
+      name: name
+      description: Name of the config. Search by name is partial-match and case-insensitive.
+      in: query
+      schema:
         type: string
-        description: Corresponding Mainflux Thing ID.
-      mainflux_key:
-        type: string
-        description: Corresponding Mainflux Thing key.
-      mainflux_channels:
-        type: array
-        minItems: 0
-        items:
-          type: object
-          properties:
-            id:
-              type: string
-              description: ID of the Channel.
-            name:
-              type: string
-              description: Name of the Channel.
-            metadata:
-              type: object
-              description: Custom metadata related to the Channel.
-      external_id:
-        type: string
-        description: External ID (MAC address or some unique identifier).
-      external_key:
-        type: string
-        description: External key.
-      content:
-        type: string
-        description: Free-form custom configuration.
-      state:
-        $ref: '#/definitions/State'
-    required:
-      - external_id
-      - external_key
-  BootstrapRes:
-    type: object
-    properties:
-      mainflux_id:
-        type: string
-        description: Corresponding Mainflux Thing ID.
-      mainflux_key:
-        type: string
-        description: Corresponding Mainflux Thing key.
-      mainflux_channels:
-        type: array
-        minItems: 0
-        items:
-          type: string
-      content:
-        type: string
-        description: Free-form custom configuration.
-      client_cert:
-        type: string
-        description: Client certificate.
-      client_key:
-        type: string
-        description: Key for the client_cert.
-      ca_cert:
-        type: string
-        description: Issuing CA certificate.
-    required:
-      - mainflux_id
-      - mainflux_key
-      - mainflux_channels
-      - content
+      required: false
 
-  ConfigReq:
-    type: object
-    properties:
-      external_id:
-        type: string
-        description: External ID (MAC address or some unique identifier).
-      external_key:
-        type: string
-        description: External key.
-      thing_id:
-        type: string
-        description: ID of the corresponding Mainflux Thing.
-      channels:
-        type: array
-        minItems: 0
-        items:
-          type: string
+  requestBodies:
+    ConfigReq:
+      description: JSON-formatted document describing the new config.
+      required: true
       content:
-        type: string
-    required:
-      - external_id
-      - external_key
-  ConfigUpdateReq:
-    type: object
-    properties:
+        application/json:
+          schema:
+            type: object
+            properties:
+              external_id:
+                type: string
+                description: External ID (MAC address or some unique identifier).
+              external_key:
+                type: string
+                description: External key.
+              thing_id:
+                type: string
+                description: ID of the corresponding Mainflux Thing.
+              channels:
+                type: array
+                minItems: 0
+                items:
+                  type: string
+              content:
+                type: string
+            required:
+              - external_id
+              - external_key
+    ConfigUpdateReq:
+      description: JSON-formatted document describing the updated thing.
       content:
-        type: string
-      name:
-        type: string
-    required:
-      - content
-      - name
-  ConfigUpdateConnReq:
-    type: object
-    properties:
-      channels:
-        type: array
-        minItems: 0
-        items:
-          type: string
-  ConfigUpdateCertReq:
-    type: object
-    properties:
-      client_cert:
-        type: string
-      client_key:
-        type: string
-      ca_cert:
-        type: string
+        application/json:
+          schema:
+            type: object
+            properties:
+              content:
+                type: string
+              name:
+                type: string
+            required:
+              - content
+              - name
+    ConfigUpdateConnReq:
+      description: Array if IDs the thing is be connected to.
+      content:
+        application/json:
+          schema:      
+            type: object
+            properties:
+              channels:
+                type: array
+                minItems: 0
+                items:
+                  type: string
+    ConfigUpdateStateReq:
+      description: Update the state of the Config.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              state:
+                type: integer
+                enum:
+                  - inactive
+                  - active
+    ConfigUpdateCertReq:
+      description: JSON-formatted document describing the updated thing.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              client_cert:
+                type: string
+              client_key:
+                type: string
+              ca_cert:
+                type: string
+
+  responses:
+    CreateConfigRes:
+     description: Config registered.
+     headers:
+       Location:
+         content:
+           text/plain:
+             schema:
+               type: string
+               description: Created configuration's relative URL (i.e. /things/configs/{configId}).
+      
+    ConfigListRes:
+      description: Data retrieved. Configs from this list don't contain channels.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ConfigList"
+    ServiceError:
+      description: Unexpected server-side error occurred.
