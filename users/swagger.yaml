@@ -60,6 +60,8 @@ paths:
           description: User updated.
         400:
           description: Failed due to malformed JSON.
+        404:
+          description: Failed due to non existing user.
         403:
           description: Missing or invalid access token provided.
         500:
