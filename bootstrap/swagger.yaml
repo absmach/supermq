@@ -130,7 +130,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/Authorization"
         - $ref: "#/components/parameters/ConfigId"
-        - requestBody:
+      requestBody:
           $ref: "#/components/requestBodies/ConfigUpdateReq"
       responses:
         200:

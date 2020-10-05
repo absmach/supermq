@@ -17,15 +17,7 @@ paths:
         $ref: "#/components/requestBodies/CreateUserReq"
       responses:
         201:
-          description: Registered new user.
-          headers:
-            Location:
-              content:
-                text/plain:
-                  schema:
-                    type: string
-                    description: Registred user relative URL
-                    example: /users/{userId}
+          $ref: "#/components/responses/CreateUserRes"
         400:
           description: Failed due to malformed JSON.
         409:
@@ -45,11 +37,7 @@ paths:
         - Authorization: []
       responses:
         200:
-          description: Data retrieved.
-          content: 
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserRes"
+          $ref: "#/components/responses/GetUserRes"
         400:
           description: Failed due to malformed query parameters.
         403:
@@ -79,23 +67,18 @@ paths:
   /users/{userId}/groups:
     get:
       summary: Get groups that user belongs to
-      description: |
-        Retrieves a list of groups that user belongs to.
+      description: Retrieves a list of groups that user belongs to.
       tags:
       - users
       security: 
         - Authorization: []
       parameters:
-        - $ref: "#/parameters/UserID"
-        - $ref: "#/parameters/Offset"
-        - $ref: "#/parameters/Limit"
+        - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Limit"
       responses:
         200:
-          description: Data retrieved.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GroupsPage'
+          $ref: '#/components/responses/GetGroupsRes'
         403:
           description: Missing or invalid access token provided.
         500:
@@ -117,7 +100,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GroupsRes'
+                $ref: '#/components/schemas/Group'
         403:
           description: Missing or invalid access token provided.
         500:
@@ -144,8 +127,7 @@ paths:
   /tokens:
     post:
       summary: User authentication
-      description: |
-        Generates an access token when provided with proper credentials.
+      description: Generates an access token when provided with proper credentials.
       tags:
         - users
       security: 
@@ -158,15 +140,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Token'
         400:
-          description: |
-            Failed due to malformed JSON.
+          description: Failed due to malformed JSON.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
         403:
-          description: |
-            Failed due to using invalid credentials.
+          description: Failed due to using invalid credentials.
           content:
             application/json:
               schema:
@@ -183,19 +163,19 @@ paths:
     post:
       summary: User password reset request
       description: |
-        Generates a reset token and sends and email with link for resetting password.
+        Generates a reset token and sends and
+        email with link for resetting password.
       tags:
         - users
       parameters:
-        - $ref: "#/parameters/Referer"
+        - $ref: "#/components/parameters/Referer"
       requestBody:
         $ref: '#/components/requestBodies/RequestPasswordReset'
       responses:
         201:
           description: Users link for reseting password.
         400:
-          description: |
-            Failed due to malformed JSON.
+          description: Failed due to malformed JSON.
         415:
           description: Missing or invalid content type.
         500:
@@ -204,7 +184,9 @@ paths:
     put:
       summary: User password reset endpoint
       description: |
-        When user gets reset token, after he submited email to `/password/reset-request`, posting a new password along to this endpoint will change password.
+        When user gets reset token, after he submited
+        email to `/password/reset-request`, posting a
+          new password along to this endpoint will change password.
       tags:
         - users
       requestBody:
@@ -213,8 +195,7 @@ paths:
         201:
           description: User link .
         400:
-          description: |
-            Failed due to malformed JSON.
+          description: Failed due to malformed JSON.
         415:
           description: Missing or invalid content type.
         500:
@@ -234,8 +215,7 @@ paths:
         201:
           description: User link .
         400:
-          description: |
-            Failed due to malformed JSON.
+          description: Failed due to malformed JSON.            
         415:
           description: Missing or invalid content type.
         500:
@@ -247,6 +227,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
   schemas:
     Token:
       type: object
@@ -256,7 +237,7 @@ components:
           description: Generated access token.
       required:
         - token
-    User:
+    NewUser:
       type: object
       properties:
         email:
@@ -272,7 +253,7 @@ components:
       required:
         - email
         - password
-    Group:
+    NewGroup:
       type: object
       properties:
         name:
@@ -290,7 +271,7 @@ components:
           description: Arbitrary, object-encoded thing's data.
       required: 
         - name
-    UserRes:
+    User:
       type: object
       properties:
         id:
@@ -307,7 +288,7 @@ components:
           type: string
           format: JSON
           description: Users metadata
-    GroupsRes:
+    Group:
       type: object
       properties:
         id:
@@ -348,7 +329,7 @@ components:
           minItems: 0
           uniqueItems: true
           items:
-            $ref: "#/components/schemas/GroupsRes"
+            $ref: "#/components/schemas/Group"
         total:
           type: integer
           description: Total number of items.
@@ -364,7 +345,51 @@ components:
         error:
           type: string
           description: Error message
-          
+
+  parameters:
+    Referer:
+      name: Referer
+      description: Host being sent by browser.
+      in: header
+      schema:
+        type: string
+      required: true
+    Metadata:
+      name: metadata
+      description: Metadata filter. Filtering is performed matching the parameter with metadata on top level. Parameter is json.
+      in: query
+      schema:
+        type: string
+        minimum: 0
+      required: false
+    UserID:
+      name: userId
+      description: Unique user identifier.
+      in: path
+      schema:      
+        type: string
+        format: UUID
+      required: true
+    Limit:
+      name: limit
+      description: Size of the subset to retrieve.
+      in: query
+      schema:      
+        type: integer
+        default: 10
+        maximum: 100
+        minimum: 1
+      required: false
+    Offset:
+      name: offset
+      description: Number of items to skip during retrieval.
+      in: query
+      schema:      
+        type: integer
+        default: 0
+        minimum: 0
+      required: false
+
   requestBodies:
     CreateUserReq:
       description: JSON-formatted document describing the new user to be registered
@@ -372,7 +397,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/User'
+            $ref: '#/components/schemas/NewUser'
     UpdateUserReq:
       description: JSON-formated document describing the metadata of user to be update
       required: true
@@ -386,7 +411,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Group'
+            $ref: '#/components/schemas/NewGroup'
     RequestPasswordReset:
       description: Initiate password request procedure.
       required: true
@@ -433,47 +458,28 @@ components:
                 description: Confirm password
       
   responses:
-   ServiceError:
+    CreateUserRes:
+      description: Registered new user.
+      headers:
+        Location:
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Registred user relative URL
+                example: /users/{userId}
+    GetUserRes:
+      description: Data retrieved.
+      content: 
+        application/json:
+          schema:
+            $ref: "#/components/schemas/User"
+    GetGroupsRes:            
+      description: Data retrieved.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GroupsPage'
+            
+    ServiceError:
       description: Unexpected server-side error occurred.
-    
-parameters:
-  Referer:
-    name: Referer
-    description: Host being sent by browser.
-    in: header
-    type: string
-    required: true
-  Metadata:
-    name: metadata
-    description: Metadata filter. Filtering is performed matching the parameter with metadata on top level. Parameter is json.
-    in: query
-    type: string
-    minimum: 0
-    required: false
-  UserID:
-    name: userId
-    description: Unique user identifier.
-    in: path
-    schema:      
-      type: string
-      format: UUID
-    required: true
-  Limit:
-    name: limit
-    description: Size of the subset to retrieve.
-    in: query
-    schema:      
-      type: integer
-      default: 10
-      maximum: 100
-      minimum: 1
-      required: false
-  Offset:
-    name: offset
-    description: Number of items to skip during retrieval.
-    in: query
-    schema:      
-      type: integer
-      default: 0
-      minimum: 0
-      required: false
