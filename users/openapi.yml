@@ -14,10 +14,10 @@ paths:
       tags:
         - users
       requestBody:
-        $ref: "#/components/requestBodies/CreateUserReq"
+        $ref: "#/components/requestBodies/UserCreateReq"
       responses:
         201:
-          $ref: "#/components/responses/CreateUserRes"
+          $ref: "#/components/responses/UserCreateRes"
         400:
           description: Failed due to malformed JSON.
         409:
@@ -37,7 +37,7 @@ paths:
         - Authorization: []
       responses:
         200:
-          $ref: "#/components/responses/GetUserRes"
+          $ref: "#/components/responses/UserRes"
         400:
           description: Failed due to malformed query parameters.
         403:
@@ -54,7 +54,7 @@ paths:
       security: 
         - Authorization: []
       requestBody:
-        $ref: "#/components/requestBodies/UpdateUserReq"
+        $ref: "#/components/requestBodies/UserUpdateReq"
       responses:
         200:
           description: User updated.
@@ -80,7 +80,7 @@ paths:
         - $ref: "#/components/parameters/Limit"
       responses:
         200:
-          $ref: '#/components/responses/GetGroupsRes'
+          $ref: '#/components/responses/GroupsRes'
         403:
           description: Missing or invalid access token provided.
         500:
@@ -393,14 +393,14 @@ components:
       required: false
 
   requestBodies:
-    CreateUserReq:
+    UserCreateReq:
       description: JSON-formatted document describing the new user to be registered
       required: true
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/NewUser'
-    UpdateUserReq:
+    UserUpdateReq:
       description: JSON-formated document describing the metadata of user to be update
       required: true
       content: 
@@ -460,7 +460,7 @@ components:
                 description: Confirm password
       
   responses:
-    CreateUserRes:
+    UserCreateRes:
       description: Registered new user.
       headers:
         Location:
@@ -470,13 +470,13 @@ components:
                 type: string
                 description: Registred user relative URL
                 example: /users/{userId}
-    GetUserRes:
+    UserRes:
       description: Data retrieved.
       content: 
         application/json:
           schema:
             $ref: "#/components/schemas/User"
-    GetGroupsRes:            
+    GroupsRes:            
       description: Data retrieved.
       content:
         application/json:
