@@ -16,18 +16,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/Authorization"
       requestBody: 
-        $ref: "#/components/requestBodies/CreateThingReq"
+        $ref: "#/components/requestBodies/ThingCreateReq"
       responses:
         201:
-          description: Thing registered.
-          headers:
-            Location:
-              content:
-                text/plain:
-                  schema:
-                    type: string
-                    description: Created thing's relative URL.
-                    example: /things/{thingId}
+          $ref: "#/components/responses/CreateThingRes"
         400:
           description: Failed due to malformed JSON.
         401:
@@ -57,11 +49,7 @@ paths:
         - $ref: "#/components/parameters/Metadata"
       responses:
         200:
-          description: Data retrieved.
-          content: 
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ThingsPage"
+          $ref: "#/components/responses/ThingsPageRes"
         400:
           description: Failed due to malformed query parameters.
         401:
@@ -83,7 +71,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/Authorization"
       requestBody: 
-        $ref: "#/components/requestBodies/CreateThingsReq"      
+        $ref: "#/components/requestBodies/ThingsCreateReq"      
       responses:
         201:
           description: Things registered.
@@ -126,7 +114,7 @@ paths:
         - $ref: "#/components/parameters/Authorization"
         - $ref: "#/components/parameters/ThingId"
       requestBody:
-        $ref: "#/components/requestBodies/UpdateThingReq"
+        $ref: "#/components/requestBodies/ThingUpdateReq"
       responses:
         200:
           description: Thing updated.
@@ -170,7 +158,7 @@ paths:
         - $ref: "#/components/parameters/Authorization"
         - $ref: "#/components/parameters/ThingId"
       requestBody: 
-        $ref: "#/components/requestBodies/UpdateKeyReq"  
+        $ref: "#/components/requestBodies/KeyUpdateReq"  
       responses:
         200:
           description: Thing key updated.
@@ -197,17 +185,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/Authorization"
       requestBody: 
-        $ref: "#/components/requestBodies/CreateChannelReq"  
+        $ref: "#/components/requestBodies/ChannelCreateReq"  
       responses:
         201:
-          description: Channel created.
-          headers:
-            Location:
-              content:
-                text/plain:
-                  schema:
-                    type: string
-                    description: Created channel's relative URL (i.e. /channels/{chanId}).
+          $ref: "#/components/responses/ChannelCreateRes"
         400:
           description: Failed due to malformed JSON.
         401:
@@ -234,11 +215,7 @@ paths:
         - $ref: "#/components/parameters/Name"
       responses:
         200:
-          description: Data retrieved.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ChannelsPage"
+          $ref: "#/components/responses/ChannelsPageRes"
         400:
           description: Failed due to malformed query parameters.
         401:
@@ -258,7 +235,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/Authorization"
       requestBody: 
-        $ref: "#/components/requestBodies/CreateChannelsReq"  
+        $ref: "#/components/requestBodies/ChannelsCreateReq"  
       responses:
         201:
           description: Channels registered.
@@ -305,7 +282,7 @@ paths:
         - $ref: "#/components/parameters/Authorization"
         - $ref: "#/components/parameters/ChanId"
       requestBody: 
-        $ref: "#/components/requestBodies/CreateChannelReq"
+        $ref: "#/components/requestBodies/ChannelCreateReq"
       responses:
         200:
           description: Channel updated.
@@ -349,18 +326,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/Authorization"
       requestBody: 
-        $ref: "#/components/requestBodies/CreateConnectionReq"
+        $ref: "#/components/requestBodies/ConnCreateReq"
       responses:
         201:
-          description: Thing registered.
-          headers:
-            Location:
-              content:
-                text/plain:
-                  schema:
-                    type: string
-                    description: Created thing's relative URL.
-                    example: /things/{thingId}
+          $ref: "#/components/responses/ConnCreateRes"
         400:
           description: Failed due to malformed JSON.
         401:
@@ -388,11 +357,7 @@ paths:
         - $ref: "#/components/parameters/Connected"
       responses:
         200:
-          description: Data retrieved.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ChannelsPage"
+          $ref: "#/components/responses/ChannelsPageRes"
         400:
           description: Failed due to malformed query parameters.
         401:
@@ -418,11 +383,7 @@ paths:
         - $ref: "#/components/parameters/Connected"
       responses:
         200:
-          description: Data retrieved.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ThingsPage"
+          $ref: "#/components/responses/ThingsPageRes"
         400:
           description: Failed due to malformed query parameters.
         401:
@@ -492,12 +453,7 @@ paths:
         $ref: "#/components/requestBodies/IdentityReq"  
       responses:
         200:
-          description: |
-            Thing has access to the specified channel and the thing ID is returned.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Identity"
+          $ref: "#/components/responses/AccessGrantedRes"
         401:
           description: |
             Thing and channel are not connected, or thing with specified key doesn't
@@ -541,11 +497,7 @@ paths:
         $ref: "#/components/requestBodies/IdentityReq"
       responses:
         200:
-          description: Thing ID returned.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Identity"
+          $ref: "#/components/responses/IdentityRes"
         401:
           description: Thing with specified key doesn't exist.
         415:
@@ -745,14 +697,14 @@ components:
         additionalProperties: {}
 
   requestBodies:
-    CreateThingReq:
+    ThingCreateReq:
       description: JSON-formatted document describing the new thing.
       required: true
       content:
         application/json:
           schema:
            $ref: "#/components/schemas/ThingReqSchema"
-    CreateThingsReq:
+    ThingsCreateReq:
       description: JSON-formatted document describing the new things.
       required: true
       content:
@@ -766,7 +718,7 @@ components:
                 type: array
                 items: 
                   $ref: "#/components/schemas/ThingReqSchema"
-    UpdateThingReq:
+    ThingUpdateReq:
       description: Arbitrary, object-encoded thing's data.
       required: true
       content:
@@ -779,7 +731,7 @@ components:
                 description: Free-form thing name.
               metadata:
                 type: object
-    UpdateKeyReq:
+    KeyUpdateReq:
       required: true
       description: JSON containing thing.
       content:
@@ -790,14 +742,14 @@ components:
               key:
                 type: string
                 description: Thing key that is used for thing auth.
-    CreateChannelReq:
+    ChannelCreateReq:
       description: JSON-formatted document describing the updated channel.
       required: true
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/ChannelReqSchema"
-    CreateChannelsReq:
+    ChannelsCreateReq:
       description: JSON-formatted document describing the new channels.
       required: true
       content:
@@ -811,7 +763,7 @@ components:
                 type: array
                 items: 
                   $ref: "#/components/schemas/ChannelReqSchema"
-    CreateConnectionReq:
+    ConnCreateReq:
       description: JSON-formatted document describing the new connection.
       required: true
       content:
@@ -844,6 +796,72 @@ components:
                 description: Thing ID by which thing is uniquely identified.
 
   responses:
+    CreateThingRes:
+      description: Thing registered.
+      headers:
+        Location:
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Created thing's relative URL.
+                example: /things/{thingId}
+    ThingRes:
+      description: Data retrieved.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ThingResSchema"
+    ThingsPageRes:
+      description: Data retrieved.
+      content: 
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ThingsPage"
+    ChannelCreateRes:            
+      description: Channel created.
+      headers:
+        Location:
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Created channel's relative URL (i.e. /channels/{chanId}).
+    ChannelRes:
+      description: Data retrieved.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ChannelResSchema"
+    ChannelsPageRes:
+      description: Data retrieved.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ChannelsPage"
+    ConnCreateRes:
+      description: Thing registered.
+      headers:
+        Location:
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Created thing's relative URL.
+                example: /things/{thingId}
+    AccessGrantedRes:
+      description: |
+        Thing has access to the specified channel and the thing ID is returned.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Identity"
+    IdentityRes:
+      description: Thing ID returned.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Identity"
     ServiceError:
       description: Unexpected server-side error occurred.
       content:
@@ -851,16 +869,3 @@ components:
           schema:
             type: string
             format: byte
-
-    ThingRes:
-      description: Data retrieved.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ThingResSchema"
-    ChannelRes:
-      description: Data retrieved.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ChannelResSchema"
