@@ -30,7 +30,7 @@ paths:
         500:
           $ref: "#/components/responses/ServiceError"
 
-components:          
+components:
   schemas:
     MessagesPage:
       type: object
@@ -100,7 +100,7 @@ components:
       name: chanId
       description: Unique channel identifier.
       in: path
-      schema:        
+      schema:
         type: integer
         minimum: 1
       required: true
@@ -108,7 +108,7 @@ components:
       name: limit
       description: Size of the subset to retrieve.
       in: query
-      schema:        
+      schema:
         type: integer
         default: 10
         maximum: 100
@@ -131,6 +131,6 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/MessagesPage"
-    
+
     ServiceError:
       description: Unexpected server-side error occurred.

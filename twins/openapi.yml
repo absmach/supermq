@@ -347,14 +347,14 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/TwinResObj'                  
+            $ref: '#/components/schemas/TwinResObj'
     TwinsPageRes:
       description: Data retrieved.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/TwinsPage'
-    StatesPageRes:            
+    StatesPageRes:
       description: Data retrieved.
       content:
         application/json:

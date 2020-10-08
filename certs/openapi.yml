@@ -37,7 +37,7 @@ paths:
           $ref: "#/components/responses/CertsRes"
         404:
           description: |
-            Failed to retrieve corresponding certificate. 
+            Failed to retrieve corresponding certificate.
         500:
           $ref: "#/components/responses/ServiceError"
   /certs/revoke:
@@ -55,11 +55,11 @@ paths:
           $ref: "#/components/responses/RevokeRes"
         404:
           description: |
-            Failed to revoke corresponding certificate. 
+            Failed to revoke corresponding certificate.
         500:
           $ref: "#/components/responses/ServiceError"
 
-components: 
+components:
   parameters:
     Authorization:
       name: Authorization
@@ -125,8 +125,8 @@ components:
                days_valid:
                  type: string
                rsa_bits:
-                 type: integer    
-  
+                 type: integer
+
   responses:
     ServiceError:
       description: Unexpected server-side error occurred.

@@ -33,7 +33,7 @@ paths:
         authorization token
       tags:
         - users
-      security: 
+      security:
         - Authorization: []
       responses:
         200:
@@ -51,7 +51,7 @@ paths:
         authorization token and the new received info.
       tags:
         - users
-      security: 
+      security:
         - Authorization: []
       requestBody:
         $ref: "#/components/requestBodies/UserUpdateReq"
@@ -72,7 +72,7 @@ paths:
       description: Retrieves a list of groups that user belongs to.
       tags:
       - users
-      security: 
+      security:
         - Authorization: []
       parameters:
         - $ref: "#/components/parameters/UserID"
@@ -92,9 +92,9 @@ paths:
         Create users group.
       tags:
         - groups
-      security: 
+      security:
         - Authorization: []
-      requestBody: 
+      requestBody:
         $ref: '#/components/requestBodies/CreateGroupReq'
       responses:
         200:
@@ -107,13 +107,13 @@ paths:
           description: Missing or invalid access token provided.
         500:
           $ref: '#/components/responses/ServiceError'
-    get: 
+    get:
       summary: Get users groups
       description: |
         Get all users groups
       tags:
         - groups
-      security: 
+      security:
         - Authorization: []
       responses:
         200:
@@ -132,7 +132,7 @@ paths:
       description: Generates an access token when provided with proper credentials.
       tags:
         - users
-      security: 
+      security:
         - Authorization: []
       responses:
         201:
@@ -209,7 +209,7 @@ paths:
         When authenticated user wants to change password.
       tags:
         - users
-      security: 
+      security:
         - Authorization: []
       requestBody:
         $ref: '#/components/requestBodies/PasswordChange'
@@ -217,7 +217,7 @@ paths:
         201:
           description: User link .
         400:
-          description: Failed due to malformed JSON.            
+          description: Failed due to malformed JSON.
         415:
           description: Missing or invalid content type.
         500:
@@ -239,7 +239,7 @@ components:
           description: Generated access token.
       required:
         - token
-    NewUser:
+    UserReqObj:
       type: object
       properties:
         email:
@@ -255,7 +255,7 @@ components:
       required:
         - email
         - password
-    NewGroup:
+    GroupReqObj:
       type: object
       properties:
         name:
@@ -271,7 +271,7 @@ components:
         metadata:
           type: object
           description: Arbitrary, object-encoded thing's data.
-      required: 
+      required:
         - name
     User:
       type: object
@@ -368,7 +368,7 @@ components:
       name: userId
       description: Unique user identifier.
       in: path
-      schema:      
+      schema:
         type: string
         format: UUID
       required: true
@@ -376,7 +376,7 @@ components:
       name: limit
       description: Size of the subset to retrieve.
       in: query
-      schema:      
+      schema:
         type: integer
         default: 10
         maximum: 100
@@ -386,7 +386,7 @@ components:
       name: offset
       description: Number of items to skip during retrieval.
       in: query
-      schema:      
+      schema:
         type: integer
         default: 0
         minimum: 0
@@ -399,11 +399,11 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/NewUser'
+            $ref: '#/components/schemas/UserReqObj'
     UserUpdateReq:
       description: JSON-formated document describing the metadata of user to be update
       required: true
-      content: 
+      content:
         application/json:
           schema:
             $ref: "#/components/schemas/UserMetadata"
@@ -413,7 +413,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/NewGroup'
+            $ref: '#/components/schemas/GroupReqObj'
     RequestPasswordReset:
       description: Initiate password request procedure.
       required: true
@@ -458,7 +458,7 @@ components:
               old_password:
                 type: string
                 description: Confirm password
-      
+
   responses:
     UserCreateRes:
       description: Registered new user.
@@ -472,16 +472,16 @@ components:
                 example: /users/{userId}
     UserRes:
       description: Data retrieved.
-      content: 
+      content:
         application/json:
           schema:
             $ref: "#/components/schemas/User"
-    GroupsRes:            
+    GroupsRes:
       description: Data retrieved.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/GroupsPage'
-            
+
     ServiceError:
       description: Unexpected server-side error occurred.

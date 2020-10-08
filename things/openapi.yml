@@ -15,7 +15,7 @@ paths:
         - things
       parameters:
         - $ref: "#/components/parameters/Authorization"
-      requestBody: 
+      requestBody:
         $ref: "#/components/requestBodies/ThingCreateReq"
       responses:
         201:
@@ -29,7 +29,7 @@ paths:
         415:
           description: Missing or invalid content type.
         422:
-          description: Database can't process request.            
+          description: Database can't process request.
         500:
           $ref: "#/components/responses/ServiceError"
     get:
@@ -55,7 +55,7 @@ paths:
         401:
           description: Missing or invalid access token provided.
         404:
-          description: A non-existent entity request.            
+          description: A non-existent entity request.
         422:
           description: Database can't process request.
         500:
@@ -70,8 +70,8 @@ paths:
         - things
       parameters:
         - $ref: "#/components/parameters/Authorization"
-      requestBody: 
-        $ref: "#/components/requestBodies/ThingsCreateReq"      
+      requestBody:
+        $ref: "#/components/requestBodies/ThingsCreateReq"
       responses:
         201:
           description: Things registered.
@@ -99,7 +99,7 @@ paths:
         404:
           description: Thing does not exist.
         422:
-          description: Database can't process request.            
+          description: Database can't process request.
         500:
           $ref: "#/components/responses/ServiceError"
     put:
@@ -157,8 +157,8 @@ paths:
       parameters:
         - $ref: "#/components/parameters/Authorization"
         - $ref: "#/components/parameters/ThingId"
-      requestBody: 
-        $ref: "#/components/requestBodies/KeyUpdateReq"  
+      requestBody:
+        $ref: "#/components/requestBodies/KeyUpdateReq"
       responses:
         200:
           description: Thing key updated.
@@ -184,8 +184,8 @@ paths:
         - channels
       parameters:
         - $ref: "#/components/parameters/Authorization"
-      requestBody: 
-        $ref: "#/components/requestBodies/ChannelCreateReq"  
+      requestBody:
+        $ref: "#/components/requestBodies/ChannelCreateReq"
       responses:
         201:
           $ref: "#/components/responses/ChannelCreateRes"
@@ -194,7 +194,7 @@ paths:
         401:
           description: Missing or invalid access token provided.
         409:
-          description: Entity already exist.            
+          description: Entity already exist.
         415:
           description: Missing or invalid content type.
         500:
@@ -221,7 +221,7 @@ paths:
         401:
           description: Missing or invalid access token provided.
         422:
-          description: Database can't process request.            
+          description: Database can't process request.
         500:
           $ref: "#/components/responses/ServiceError"
   /channels/bulk:
@@ -234,8 +234,8 @@ paths:
         - channels
       parameters:
         - $ref: "#/components/parameters/Authorization"
-      requestBody: 
-        $ref: "#/components/requestBodies/ChannelsCreateReq"  
+      requestBody:
+        $ref: "#/components/requestBodies/ChannelsCreateReq"
       responses:
         201:
           description: Channels registered.
@@ -244,7 +244,7 @@ paths:
         401:
           description: Missing or invalid access token provided.
         409:
-          description: Entity already exist.            
+          description: Entity already exist.
         415:
           description: Missing or invalid content type.
         500:
@@ -281,7 +281,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/Authorization"
         - $ref: "#/components/parameters/ChanId"
-      requestBody: 
+      requestBody:
         $ref: "#/components/requestBodies/ChannelCreateReq"
       responses:
         200:
@@ -325,7 +325,7 @@ paths:
         - things
       parameters:
         - $ref: "#/components/parameters/Authorization"
-      requestBody: 
+      requestBody:
         $ref: "#/components/requestBodies/ConnCreateReq"
       responses:
         201:
@@ -337,11 +337,11 @@ paths:
         404:
           description: A non-existent entity request.
         409:
-          description: Entity already exist.            
+          description: Entity already exist.
         415:
           description: Missing or invalid content type.
         500:
-          $ref: "#/components/responses/ServiceError"          
+          $ref: "#/components/responses/ServiceError"
   /things/{thingId}/channels:
     get:
       summary: Retrieves list of channels connected or not connected to specified thing
@@ -391,9 +391,9 @@ paths:
         404:
           description: A non-existent entity request.
         422:
-          description: Database can't process request.            
+          description: Database can't process request.
         500:
-          $ref: "#/components/responses/ServiceError"          
+          $ref: "#/components/responses/ServiceError"
   /channels/{chanId}/things/{thingId}:
     put:
       summary: Connects the thing to the channel
@@ -410,7 +410,7 @@ paths:
         200:
           description: Thing connected.
         400:
-          description: Failed due to malformed query parameters.            
+          description: Failed due to malformed query parameters.
         401:
           description: Missing or invalid access token provided.
         404:
@@ -432,7 +432,7 @@ paths:
         204:
           description: Thing disconnected.
         400:
-          description: Failed due to malformed query parameters.            
+          description: Failed due to malformed query parameters.
         401:
           description: Missing or invalid access token provided.
         404:
@@ -449,8 +449,8 @@ paths:
         - access
       parameters:
         - $ref: "#/components/parameters/ChanId"
-      requestBody: 
-        $ref: "#/components/requestBodies/IdentityReq"  
+      requestBody:
+        $ref: "#/components/requestBodies/IdentityReq"
       responses:
         200:
           $ref: "#/components/responses/AccessGrantedRes"
@@ -472,7 +472,7 @@ paths:
         - access
       parameters:
         - $ref: "#/components/parameters/ChanId"
-      requestBody: 
+      requestBody:
         $ref: "#/components/requestBodies/AccessByIDReq"
       responses:
         200:
@@ -493,7 +493,7 @@ paths:
         and is valid.
       tags:
         - identity
-      requestBody: 
+      requestBody:
         $ref: "#/components/requestBodies/IdentityReq"
       responses:
         200:
@@ -503,9 +503,9 @@ paths:
         415:
           description: Missing or invalid content type.
         500:
-          $ref: "#/components/responses/ServiceError"              
-        
-        
+          $ref: "#/components/responses/ServiceError"
+
+
 components:
   schemas:
     Key:
@@ -531,7 +531,7 @@ components:
         metadata:
           type: object
           description: Arbitrary, object-encoded thing's data.
-    ThingResSchema:        
+    ThingResSchema:
       type: object
       properties:
         id:
@@ -569,7 +569,7 @@ components:
           type: integer
           description: Maximum number of items to return in one page.
       required:
-        - things        
+        - things
     ChannelReqSchema:
       type: object
       properties:
@@ -578,8 +578,8 @@ components:
           description: Free-form channel name.
         metadata:
           type: object
-          description: Arbitrary, object-encoded channel's data. 
-    ChannelResSchema:      
+          description: Arbitrary, object-encoded channel's data.
+    ChannelResSchema:
       type: object
       properties:
         id:
@@ -620,7 +620,7 @@ components:
           $ref: "#/components/schemas/Key"
         channel_ids:
           type: array
-          description: Channel IDs.      
+          description: Channel IDs.
           items:
             type: string
         thing_ids:
@@ -641,7 +641,7 @@ components:
       name: chanId
       description: Unique channel identifier.
       in: path
-      schema:      
+      schema:
         type: string
       required: true
     ThingId:
@@ -656,7 +656,7 @@ components:
       name: limit
       description: Size of the subset to retrieve.
       in: query
-      schema:      
+      schema:
         type: integer
         default: 10
         maximum: 100
@@ -666,7 +666,7 @@ components:
       name: offset
       description: Number of items to skip during retrieval.
       in: query
-      schema:      
+      schema:
         type: integer
         default: 0
         minimum: 0
@@ -675,7 +675,7 @@ components:
       name: connected
       description: Connection state of the subset to retrieve.
       in: query
-      schema:      
+      schema:
         type: boolean
         default: true
       required: false
@@ -683,7 +683,7 @@ components:
       name: name
       description: Name filter. Filtering is performed as a case-insensitive partial match.
       in: query
-      schema:      
+      schema:
         type: string
         format: byte
       required: false
@@ -713,10 +713,10 @@ components:
             type: object
             properties:
               key:
-                $ref: "#/components/schemas/Key"            
+                $ref: "#/components/schemas/Key"
               things:
                 type: array
-                items: 
+                items:
                   $ref: "#/components/schemas/ThingReqSchema"
     ThingUpdateReq:
       description: Arbitrary, object-encoded thing's data.
@@ -756,12 +756,12 @@ components:
         application/json:
           schema:
             type: object
-            properties:    
+            properties:
               key:
                 $ref: "#/components/schemas/Key"
               things:
                 type: array
-                items: 
+                items:
                   $ref: "#/components/schemas/ChannelReqSchema"
     ConnCreateReq:
       description: JSON-formatted document describing the new connection.
@@ -788,7 +788,7 @@ components:
       required: true
       content:
         application/json:
-          schema:      
+          schema:
             type: object
             properties:
               thing_id:
@@ -814,11 +814,11 @@ components:
             $ref: "#/components/schemas/ThingResSchema"
     ThingsPageRes:
       description: Data retrieved.
-      content: 
+      content:
         application/json:
           schema:
             $ref: "#/components/schemas/ThingsPage"
-    ChannelCreateRes:            
+    ChannelCreateRes:
       description: Channel created.
       headers:
         Location:

@@ -505,6 +505,5 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/BootstrapConfig"
-            
     ServiceError:
       description: Unexpected server-side error occurred.

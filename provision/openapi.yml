@@ -27,7 +27,7 @@ paths:
     get:
       summary: Gets current mapping.
       description: Gets current mapping. This can be used in UI
-        so that when bootstrap config is created from UI matches 
+        so that when bootstrap config is created from UI matches
         configuration created with provision service.
       tags:
         - provision
@@ -55,7 +55,7 @@ components:
   requestBodies:
     ProvisionReq:
       description: MAC address of device or other identifier
-      content: 
+      content:
         application/json:
           schema:
             type: object
@@ -73,7 +73,7 @@ components:
   responses:
     ProvisionRes:
       description: Current mapping JSON representation.
-      content: 
+      content:
         application/json:
           schema:
             type: object
