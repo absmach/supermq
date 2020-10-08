@@ -16,10 +16,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/Authorization'
       requestBody:
-        $ref: "#/components/requestBodies/CreateTwinReq"
+        $ref: "#/components/requestBodies/TwinReq"
       responses:
         201:
-          $ref: "#/components/responses/CreateTwinRes"
+          $ref: "#/components/responses/TwinCreateRes"
         400:
           description: Failed due to malformed JSON.
         403:
@@ -44,11 +44,7 @@ paths:
         - $ref: '#/components/parameters/Metadata'
       responses:
         200:
-          description: Data retrieved.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TwinsPage'
+          $ref: '#/components/responses/TwinsPageRes'
         400:
           description: Failed due to malformed query parameters.
         403:
@@ -66,11 +62,7 @@ paths:
         - $ref: '#/components/parameters/TwinID'
       responses:
         200:
-          description: Data retrieved.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TwinResObj'
+          $ref: '#/components/responses/TwinRes'
         400:
           description: Failed due to malformed twin's ID.
         403:
@@ -90,12 +82,7 @@ paths:
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/TwinID'
       requestBody:
-          description: JSON-formatted document describing the updated twin.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TwinReqObj'
-          required: true
+        $ref: '#/components/requestBodies/TwinReq'
       responses:
         200:
           description: Twin updated.
@@ -145,11 +132,7 @@ paths:
         - $ref: '#/components/parameters/Metadata'
       responses:
         200:
-          description: Data retrieved.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StatesPage'
+          $ref: '#/components/responses/StatesPageRes'
         400:
           description: Failed due to malformed query parameters.
         403:
@@ -304,7 +287,7 @@ components:
           description: Maximum number of items to return in one page.
       required:
         - twins
-    StateRes:
+    State:
       type: object
       properties:
         twin_id:
@@ -328,7 +311,7 @@ components:
           minItems: 0
           uniqueItems: true
           items:
-            $ref: '#/components/schemas/StateRes'
+            $ref: '#/components/schemas/State'
         total:
           type: integer
           description: Total number of items.
@@ -342,8 +325,8 @@ components:
         - twins
 
   requestBodies:
-    CreateTwinReq:
-      description: JSON-formatted document describing the new twin.
+    TwinReq:
+      description: JSON-formatted document describing the twin to create or update.
       content:
         application/json:
           schema:
@@ -351,7 +334,7 @@ components:
       required: true
 
   responses:
-    CreateTwinRes:
+    TwinCreateRes:
       description: Created twin's relative URL (i.e. /twins/{twinID}).
       headers:
         Location:
@@ -359,6 +342,23 @@ components:
             text/plain:
               schema:
                 type: string
-
+    TwinRes:
+      description: Data retrieved.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TwinResObj'                  
+    TwinsPageRes:
+      description: Data retrieved.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TwinsPage'
+    StatesPageRes:            
+      description: Data retrieved.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StatesPage'
     ServiceError:
       description: Unexpected server-side error occurred.
