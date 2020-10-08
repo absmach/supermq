@@ -16,10 +16,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/Authorization"
       requestBody:
-        $ref: "#/components/requestBodies/ConfigReq"
+        $ref: "#/components/requestBodies/ConfigCreateReq"
       responses:
         201:
-          $ref: "#/components/responses/CreateConfigRes"
+          $ref: "#/components/responses/ConfigCreateRes"
         400:
           description: Failed due to malformed JSON.
         403:
@@ -52,55 +52,9 @@ paths:
           description: Missing or invalid access token provided.
         500:
           $ref: "#/components/responses/ServiceError"
-  /things/bootstrap/{externalId}:
-    get:
-      summary: Retrieves configuration
-      description: |
-        Retrieves a configuration with given external ID and external key.
-      tags:
-        - configs
-      parameters:
-        - $ref: "#/components/parameters/ConfigAuth"
-        - $ref: "#/components/parameters/ExternalId"
-      responses:
-        200:
-          description: Data retrieved.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Bootstrap"
-        404:
-          description: |
-            Failed to retrieve corresponding config.
-        500:
-          $ref: "#/components/responses/ServiceError"
-  /things/bootstrap/secure/{externalId}:
-    get:
-      summary: Retrieves configuration
-      description: |
-        Retrieves a configuration with given external ID and encrypted external key.
-      tags:
-        - configs
-      parameters:
-        - $ref: "#/components/parameters/EncConfigAuth"
-        - $ref: "#/components/parameters/ExternalId"
-      responses:
-        200:
-          description: |
-            Data retrieved. In this case, Bootstrap response is encrypted using
-            the secret key, so an actual response is in the binary format.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Bootstrap"
-        404:
-          description: |
-            Failed to retrieve corresponding config. 
-        500:
-          $ref: "#/components/responses/ServiceError"
   /things/configs/{configId}:
     get:
-      summary: Retrieves config info (with channels)
+      summary: Retrieves config info (with channels).
       tags:
         - configs
       parameters:
@@ -108,11 +62,7 @@ paths:
         - $ref: "#/components/parameters/ConfigId"
       responses:
         200:
-          description: Data retrieved.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Config"
+          $ref: "#/components/responses/ConfigRes"
         403:
           description: Missing or invalid access token provided.
         404:
@@ -176,7 +126,7 @@ paths:
         - $ref: "#/components/parameters/Authorization"
         - $ref: "#/components/parameters/ConfigId"
       requestBody:
-        $ref: "#/components/requestBodies/ConfigUpdateCertReq"
+        $ref: "#/components/requestBodies/ConfigCertUpdateReq"
       responses:
         200:
           description: Config updated.
@@ -202,7 +152,7 @@ paths:
         - $ref: "#/components/parameters/Authorization"
         - $ref: "#/components/parameters/ConfigId"
       requestBody:
-        $ref: "#/components/requestBodies/ConfigUpdateConnReq"
+        $ref: "#/components/requestBodies/ConfigConnUpdateReq"
       responses:
         200:
           description: Config updated.
@@ -214,6 +164,42 @@ paths:
           description: Config does not exist.
         415:
           description: Missing or invalid content type.
+        500:
+          $ref: "#/components/responses/ServiceError"
+  /things/bootstrap/{externalId}:
+    get:
+      summary: Retrieves configuration.
+      description: |
+        Retrieves a configuration with given external ID and external key.
+      tags:
+        - configs
+      parameters:
+        - $ref: "#/components/parameters/ConfigAuth"
+        - $ref: "#/components/parameters/ExternalId"
+      responses:
+        200:
+          $ref: "#/components/responses/BootstrapConfigRes"
+        404:
+          description: |
+            Failed to retrieve corresponding config.
+        500:
+          $ref: "#/components/responses/ServiceError"
+  /things/bootstrap/secure/{externalId}:
+    get:
+      summary: Retrieves configuration.
+      description: |
+        Retrieves a configuration with given external ID and encrypted external key.
+      tags:
+        - configs
+      parameters:
+        - $ref: "#/components/parameters/EncConfigAuth"
+        - $ref: "#/components/parameters/ExternalId"
+      responses:
+        200:
+          $ref: "#/components/responses/BootstrapConfigRes"
+        404:
+          description: |
+            Failed to retrieve corresponding config. 
         500:
           $ref: "#/components/responses/ServiceError"
   /things/state/{configId}:
@@ -228,7 +214,7 @@ paths:
         - $ref: "#/components/parameters/Authorization"
         - $ref: "#/components/parameters/ConfigId"
       requestBody:
-        $ref: '#/components/requestBodies/ConfigUpdateStateReq'
+        $ref: '#/components/requestBodies/ConfigStateUpdateReq'
       responses:
         204:
           description: Config removed.
@@ -243,9 +229,7 @@ components:
   schemas:
     State:
       type: integer
-      enum:
-        - active
-        - inactive
+      enum: [0, 1]    
     Config:
       type: object
       properties:
@@ -280,7 +264,7 @@ components:
           type: string
           description: Free-form custom configuration.
         state:
-          $ref: '#/components/schemas/State'
+          $ref: "#/components/schemas/State"
       required:
         - external_id
         - external_key    
@@ -309,7 +293,7 @@ components:
             $ref: "#/components/schemas/Config"
       required:
         - configs
-    Bootstrap:
+    BootstrapConfig:
       type: object
       properties:
         mainflux_id:
@@ -339,7 +323,7 @@ components:
         - mainflux_id
         - mainflux_key
         - mainflux_channels
-        - content
+        - content          
 
   parameters:
     Authorization:
@@ -404,10 +388,7 @@ components:
       description: A state of items
       in: query
       schema:
-        type: integer
-        enum:
-          - inactive
-          - active
+        $ref: "#/components/schemas/State"
       required: false
     Name:
       name: name
@@ -418,7 +399,7 @@ components:
       required: false
 
   requestBodies:
-    ConfigReq:
+    ConfigCreateReq:
       description: JSON-formatted document describing the new config.
       required: true
       content:
@@ -459,31 +440,7 @@ components:
             required:
               - content
               - name
-    ConfigUpdateConnReq:
-      description: Array if IDs the thing is be connected to.
-      content:
-        application/json:
-          schema:      
-            type: object
-            properties:
-              channels:
-                type: array
-                minItems: 0
-                items:
-                  type: string
-    ConfigUpdateStateReq:
-      description: Update the state of the Config.
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              state:
-                type: integer
-                enum:
-                  - inactive
-                  - active
-    ConfigUpdateCertReq:
+    ConfigCertUpdateReq:
       description: JSON-formatted document describing the updated thing.
       content:
         application/json:
@@ -495,10 +452,31 @@ components:
               client_key:
                 type: string
               ca_cert:
-                type: string
+                type: string                
+    ConfigConnUpdateReq:
+      description: Array if IDs the thing is be connected to.
+      content:
+        application/json:
+          schema:      
+            type: object
+            properties:
+              channels:
+                type: array
+                minItems: 0
+                items:
+                  type: string
+    ConfigStateUpdateReq:
+      description: Update the state of the Config.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              state:
+                $ref: "#/components/schemas/State"
 
   responses:
-    CreateConfigRes:
+    ConfigCreateRes:
      description: Config registered.
      headers:
        Location:
@@ -507,12 +485,26 @@ components:
              schema:
                type: string
                description: Created configuration's relative URL (i.e. /things/configs/{configId}).
-      
     ConfigListRes:
       description: Data retrieved. Configs from this list don't contain channels.
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/ConfigList"
+    ConfigRes:
+      description: Data retrieved.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Config"
+    BootstrapConfigRes:
+      description: |
+          Data retrieved. If secure, a response is encrypted using
+          the secret key, so the response is in the binary form.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BootstrapConfig"
+            
     ServiceError:
       description: Unexpected server-side error occurred.
