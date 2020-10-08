@@ -22,11 +22,7 @@ paths:
         - $ref: "#/components/parameters/ChanId"
       responses:
         200:
-          description: Data retrieved.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MessagesPage"
+          $ref: "#/components/responses/MessagesPageRes"
         400:
           description: Failed due to malformed query parameters.
         403:
@@ -129,5 +125,12 @@ components:
       required: false
 
   responses:
+    MessagesPageRes:
+      description: Data retrieved.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/MessagesPage"
+    
     ServiceError:
       description: Unexpected server-side error occurred.
