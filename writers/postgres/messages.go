@@ -35,13 +35,17 @@ func New(db *sqlx.DB) writers.MessageRepository {
 	return &postgresRepo{db: db}
 }
 
-func (pr postgresRepo) Save(messages ...transformers.Message) (err error) {
+func (pr postgresRepo) Save(messages interface{}) (err error) {
+	msgs, ok := messages.([]senml.Message)
+	if !ok {
+		return errSaveMessage
+	}
 	q := `INSERT INTO messages (id, channel, subtopic, publisher, protocol,
     name, unit, value, string_value, bool_value, data_value, sum,
     time, update_time)
     VALUES (:id, :channel, :subtopic, :publisher, :protocol, :name, :unit,
     :value, :string_value, :bool_value, :data_value, :sum,
-    :time, :update_time);`
+	:time, :update_time);`
 
 	tx, err := pr.db.BeginTxx(context.Background(), nil)
 	if err != nil {
@@ -61,7 +65,7 @@ func (pr postgresRepo) Save(messages ...transformers.Message) (err error) {
 		return
 	}()
 
-	for _, msg := range messages {
+	for _, msg := range msgs {
 		dbth, err := toDBMessage(msg)
 		if err != nil {
 			return errors.Wrap(errSaveMessage, err)

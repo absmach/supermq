@@ -83,7 +83,7 @@ func TestReadAll(t *testing.T) {
 			subtopicMsgs = append(subtopicMsgs, msg)
 		}
 	}
-	err = writer.Save(messages...)
+	err = writer.Save(messages)
 	require.Nil(t, err, fmt.Sprintf("failed to store message to MongoDB: %s", err))
 
 	reader := mreaders.New(db)

@@ -9,7 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/pkg/transformers"
 	"github.com/mainflux/mainflux/writers"
 )
 
@@ -45,10 +44,14 @@ func New(db *mongo.Database) writers.MessageRepository {
 	return &mongoRepo{db}
 }
 
-func (repo *mongoRepo) Save(messages ...transformers.Message) error {
+func (repo *mongoRepo) Save(messages interface{}) error {
+	senmlMsgs, ok := messages.([]senml.Message)
+	if !ok {
+		return errSaveMessage
+	}
 	coll := repo.db.Collection(collectionName)
 	var msgs []interface{}
-	for _, msg := range messages {
+	for _, msg := range senmlMsgs {
 		m := message{
 			Channel:    msg.Channel,
 			Subtopic:   msg.Subtopic,

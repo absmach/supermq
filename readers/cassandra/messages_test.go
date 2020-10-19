@@ -78,7 +78,7 @@ func TestReadAll(t *testing.T) {
 		}
 	}
 
-	err = writer.Save(messages...)
+	err = writer.Save(messages)
 	require.Nil(t, err, fmt.Sprintf("failed to store message to Cassandra: %s", err))
 
 	reader := creaders.New(session)

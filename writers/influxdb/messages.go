@@ -39,13 +39,17 @@ func New(client influxdata.Client, database string) writers.MessageRepository {
 	}
 }
 
-func (repo *influxRepo) Save(messages ...transformers.Message) error {
+func (repo *influxRepo) Save(messages interface{}) error {
+	msgs, ok := messages.([]senml.Message)
+	if !ok {
+		return errSaveMessage
+	}
 	pts, err := influxdata.NewBatchPoints(repo.cfg)
 	if err != nil {
 		return errors.Wrap(errSaveMessage, err)
 	}
 
-	for _, msg := range messages {
+	for _, msg := range msgs {
 		tgs, flds := repo.tagsOf(&msg), repo.fieldsOf(&msg)
 
 		sec, dec := math.Modf(msg.Time)

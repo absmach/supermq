@@ -75,7 +75,7 @@ func TestMessageReadAll(t *testing.T) {
 		}
 	}
 
-	err = messageRepo.Save(messages...)
+	err = messageRepo.Save(messages)
 	assert.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
 
 	reader := preader.New(db)

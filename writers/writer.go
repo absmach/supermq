@@ -13,7 +13,6 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging"
 	pubsub "github.com/mainflux/mainflux/pkg/messaging/nats"
 	"github.com/mainflux/mainflux/pkg/transformers"
-	"github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 )
 
@@ -66,12 +65,8 @@ func (c *consumer) handler(msg messaging.Message) error {
 	if err != nil {
 		return err
 	}
-	msgs, ok := t.([]transformers.Message)
-	if !ok {
-		return errMessageConversion
-	}
 
-	return c.repo.Save(msgs...)
+	return c.repo.Save(t)
 }
 
 type filterConfig struct {
