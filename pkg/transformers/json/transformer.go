@@ -5,88 +5,63 @@ package json
 
 import (
 	"encoding/json"
+	"errors"
+	"strings"
 
-	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/transformers"
 )
 
-const (
-	// ContentType represents JSON format content type.
-	ContentType = "application/json"
-)
-
 var (
-	errDecode = errors.New("failed to decode json")
+	errInvalidKey = errors.New("invalid object key")
 )
 
-type transformer struct {
-	keys []string
+type funcTransformer func(messaging.Message) (interface{}, error)
+
+// New returns a new JSON transformer.
+func New() transformers.Transformer {
+	return funcTransformer(transformer)
 }
 
-// New returns transformer service implementation for SenML messages.
-func New(keys []string) transformers.Transformer {
-	return transformer{
-		keys: keys,
+func (fh funcTransformer) Transform(msg messaging.Message) (interface{}, error) {
+	return fh(msg)
+}
+
+func transformer(msg messaging.Message) (interface{}, error) {
+	ret := Message{
+		Publisher: msg.Publisher,
+		Created:   msg.Created,
+		Protocol:  msg.Protocol,
+		Channel:   msg.Channel,
+		Subtopic:  msg.Subtopic,
 	}
-}
-
-func (t transformer) Transform(mm messaging.Message) (interface{}, error) {
-	var payload map[string]interface{}
-	err := json.Unmarshal(mm.Payload, &payload)
+	if err := json.Unmarshal(msg.Payload, &ret.Payload); err != nil {
+		return nil, err
+	}
+	var err error
+	var pld = make(map[string]interface{})
+	ret.Payload, err = flatten("", pld, ret.Payload)
 	if err != nil {
-		return []transformers.Message{}, errors.Wrap(errDecode, err)
+		return nil, err
 	}
-
-	var msgs []transformers.Message
-
-	for k, v := range payload {
-		// Apply key filter
-		for _, tk := range t.keys {
-			if tk == "*" || tk == k {
-				kvmgs := createKeyValMsg(mm, k, v)
-				msgs = append(msgs, kvmgs...)
-				continue
-			}
-		}
-	}
-
-	return msgs, nil
+	return ret, nil
 }
 
-func createKeyValMsg(mm messaging.Message, key string, val interface{}) []transformers.Message {
-	msg := transformers.Message{
-		Channel:   mm.Channel,
-		Subtopic:  mm.Subtopic,
-		Publisher: mm.Publisher,
-		Protocol:  mm.Protocol,
-		Name:      key,
-		Time:      float64(mm.Created) / float64(1e9),
-	}
-
-	switch val.(type) {
-	case string:
-		s := val.(string)
-		msg.StringValue = &s
-	case float64:
-		f := val.(float64)
-		msg.Value = &f
-	case bool:
-		b := val.(bool)
-		msg.BoolValue = &b
-	case []byte:
-		d := string(val.([]byte))
-		msg.DataValue = &d
-	case map[string]interface{}:
-		var msgs []transformers.Message
-
-		for k, v := range val.(map[string]interface{}) {
-			nKey := key + "/" + k
-			kvmgs := createKeyValMsg(mm, nKey, v)
-			msgs = append(msgs, kvmgs...)
+func flatten(prefix string, m, m1 map[string]interface{}) (map[string]interface{}, error) {
+	for k, v := range m1 {
+		if k == "publisher" || k == "protocol" || k == "channel" || k == "subtopic" || strings.Contains(k, ".") {
+			return nil, errInvalidKey
 		}
-		return msgs
+		switch val := v.(type) {
+		case map[string]interface{}:
+			var err error
+			m, err = flatten(prefix+k+".", m, val)
+			if err != nil {
+				return nil, err
+			}
+		default:
+			m[prefix+k] = v
+		}
 	}
-
-	return []transformers.Message{msg}
+	return m, nil
 }
