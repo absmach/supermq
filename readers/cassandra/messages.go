@@ -8,7 +8,7 @@ import (
 
 	"github.com/gocql/gocql"
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/pkg/transformers"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/readers"
 )
 
@@ -53,11 +53,11 @@ func (cr cassandraRepository) ReadAll(chanID string, offset, limit uint64, query
 	page := readers.MessagesPage{
 		Offset:   offset,
 		Limit:    limit,
-		Messages: []transformers.Message{},
+		Messages: []senml.Message{},
 	}
 
 	for scanner.Next() {
-		var msg transformers.Message
+		var msg senml.Message
 		err := scanner.Scan(&msg.Channel, &msg.Subtopic, &msg.Publisher, &msg.Protocol,
 			&msg.Name, &msg.Unit, &msg.Value, &msg.StringValue, &msg.BoolValue,
 			&msg.DataValue, &msg.Sum, &msg.Time, &msg.UpdateTime)
@@ -78,7 +78,7 @@ func buildSelectQuery(chanID string, offset, limit uint64, names []string) strin
 	var condCQL string
 	cql := `SELECT channel, subtopic, publisher, protocol, name, unit,
 	        value, string_value, bool_value, data_value, sum, time,
-			update_time FROM messages WHERE channel = ? %s LIMIT ?
+			update_time FROM senml WHERE channel = ? %s LIMIT ?
 			ALLOW FILTERING`
 
 	for _, name := range names {
@@ -98,7 +98,7 @@ func buildSelectQuery(chanID string, offset, limit uint64, names []string) strin
 
 func buildCountQuery(chanID string, names []string) string {
 	var condCQL string
-	cql := `SELECT COUNT(*) FROM messages WHERE channel = ? %s ALLOW FILTERING`
+	cql := `SELECT COUNT(*) FROM senml WHERE channel = ? %s ALLOW FILTERING`
 
 	for _, name := range names {
 		switch name {

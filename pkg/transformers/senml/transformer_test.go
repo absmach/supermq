@@ -10,7 +10,6 @@ import (
 
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
-	"github.com/mainflux/mainflux/pkg/transformers"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	mfsenml "github.com/mainflux/senml"
 	"github.com/stretchr/testify/assert"
@@ -24,7 +23,7 @@ func TestTransformJSON(t *testing.T) {
 	jsonBytes, err := hex.DecodeString("5b7b22626e223a22626173652d6e616d65222c226274223a3130302c226275223a22626173652d756e6974222c2262766572223a31302c226276223a31302c226273223a3130302c226e223a226e616d65222c2275223a22756e6974222c2274223a3330302c227574223a3135302c2276223a34322c2273223a31307d5d")
 	require.Nil(t, err, "Decoding JSON expected to succeed")
 
-	tr := senml.New(senml.ContentTypeJSON)
+	tr := senml.New(senml.JSON)
 	msg := messaging.Message{
 		Channel:   "channel",
 		Subtopic:  "subtopic",
@@ -40,7 +39,7 @@ func TestTransformJSON(t *testing.T) {
 
 	val := 52.0
 	sum := 110.0
-	msgs := []transformers.Message{transformers.Message{
+	msgs := []senml.Message{senml.Message{
 		Channel:    "channel",
 		Subtopic:   "subtopic",
 		Publisher:  "publisher",
@@ -91,7 +90,7 @@ func TestTransformCBOR(t *testing.T) {
 	tooManyBytes, err := hex.DecodeString("82AD2169626173652D6E616D6522F956402369626173652D756E6974200A24F9490025F9564000646E616D650164756E697406F95CB0036331323307F958B002F9514005F94900AA2169626173652D6E616D6522F956402369626173652D756E6974200A24F9490025F9564000646E616D6506F95CB007F958B005F94900")
 	require.Nil(t, err, "Decoding CBOR expected to succeed")
 
-	tr := senml.New(senml.ContentTypeCBOR)
+	tr := senml.New(senml.CBOR)
 	msg := messaging.Message{
 		Channel:   "channel",
 		Subtopic:  "subtopic",
@@ -110,7 +109,7 @@ func TestTransformCBOR(t *testing.T) {
 
 	val := 52.0
 	sum := 110.0
-	msgs := []transformers.Message{
+	msgs := []senml.Message{
 		{
 			Channel:    "channel",
 			Subtopic:   "subtopic",

@@ -48,7 +48,7 @@ func migrateDB(db *sqlx.DB) error {
 			{
 				Id: "messages_1",
 				Up: []string{
-					`CREATE TABLE IF NOT EXISTS messages (
+					`CREATE TABLE IF NOT EXISTS senml (
                         id            UUID,
                         channel       UUID,
                         subtopic      VARCHAR(254),
@@ -67,7 +67,7 @@ func migrateDB(db *sqlx.DB) error {
                     )`,
 				},
 				Down: []string{
-					"DROP TABLE messages",
+					"DROP TABLE senml",
 				},
 			},
 		},

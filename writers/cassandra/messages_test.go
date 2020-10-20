@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mainflux/mainflux/pkg/transformers"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/writers/cassandra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -40,12 +40,12 @@ func TestSave(t *testing.T) {
 
 	repo := cassandra.New(session)
 	now := time.Now().Unix()
-	msg := transformers.Message{
+	msg := senml.Message{
 		Channel:   "1",
 		Publisher: "1",
 		Protocol:  "mqtt",
 	}
-	var msgs []transformers.Message
+	var msgs []senml.Message
 
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.

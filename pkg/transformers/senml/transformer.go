@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	// ContentTypeJSON represents SenML in JSON format content type.
-	ContentTypeJSON = "application/senml+json"
-	// ContentTypeCBOR represents SenML in CBOR format content type.
-	ContentTypeCBOR = "application/senml+cbor"
+	// JSON represents SenML in JSON format content type.
+	JSON = "application/senml+json"
+	// CBOR represents SenML in CBOR format content type.
+	CBOR = "application/senml+cbor"
 )
 
 var (
@@ -23,8 +23,8 @@ var (
 )
 
 var formats = map[string]senml.Format{
-	ContentTypeJSON: senml.JSON,
-	ContentTypeCBOR: senml.CBOR,
+	JSON: senml.JSON,
+	CBOR: senml.CBOR,
 }
 
 type transformer struct {
@@ -35,7 +35,7 @@ type transformer struct {
 func New(contentFormat string) transformers.Transformer {
 	format, ok := formats[contentFormat]
 	if !ok {
-		format = formats[ContentTypeJSON]
+		format = formats[JSON]
 	}
 
 	return transformer{
@@ -54,7 +54,7 @@ func (t transformer) Transform(msg messaging.Message) (interface{}, error) {
 		return nil, errors.Wrap(errNormalize, err)
 	}
 
-	msgs := make([]transformers.Message, len(normalized.Records))
+	msgs := make([]Message, len(normalized.Records))
 	for i, v := range normalized.Records {
 		// Use reception timestamp if SenML messsage Time is missing
 		t := v.Time
@@ -63,7 +63,7 @@ func (t transformer) Transform(msg messaging.Message) (interface{}, error) {
 			t = float64(msg.Created) / float64(1e9)
 		}
 
-		msgs[i] = transformers.Message{
+		msgs[i] = Message{
 			Channel:     msg.Channel,
 			Subtopic:    msg.Subtopic,
 			Publisher:   msg.Publisher,

@@ -3,7 +3,7 @@
 
 package sdk
 
-import "github.com/mainflux/mainflux/pkg/transformers"
+import "github.com/mainflux/mainflux/pkg/transformers/senml"
 
 type tokenRes struct {
 	Token string `json:"token,omitempty"`
@@ -37,7 +37,7 @@ type ChannelsPage struct {
 
 // MessagesPage contains list of messages in a page with proper metadata.
 type MessagesPage struct {
-	Messages []transformers.Message `json:"messages,omitempty"`
+	Messages []senml.Message `json:"messages,omitempty"`
 	pageRes
 }
 

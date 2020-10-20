@@ -6,6 +6,7 @@ package cassandra
 import (
 	"github.com/gocql/gocql"
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/writers"
 )
 
@@ -27,7 +28,7 @@ func (cr *cassandraRepository) Save(messages interface{}) error {
 	if !ok {
 		return errSaveMessage
 	}
-	cql := `INSERT INTO messages (id, channel, subtopic, publisher, protocol,
+	cql := `INSERT INTO senml (id, channel, subtopic, publisher, protocol,
 			name, unit, value, string_value, bool_value, data_value, sum,
 			time, update_time)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`

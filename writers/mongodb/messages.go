@@ -9,10 +9,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/writers"
 )
 
-const collectionName string = "mainflux"
+const collectionName string = "senml"
 
 var errSaveMessage = errors.New("failed to save message to mongodb database")
 
@@ -45,13 +46,13 @@ func New(db *mongo.Database) writers.MessageRepository {
 }
 
 func (repo *mongoRepo) Save(messages interface{}) error {
-	senmlMsgs, ok := messages.([]senml.Message)
+	msgs, ok := messages.([]senml.Message)
 	if !ok {
 		return errSaveMessage
 	}
 	coll := repo.db.Collection(collectionName)
-	var msgs []interface{}
-	for _, msg := range senmlMsgs {
+	var dbMsgs []interface{}
+	for _, msg := range msgs {
 		m := message{
 			Channel:    msg.Channel,
 			Subtopic:   msg.Subtopic,
@@ -75,10 +76,10 @@ func (repo *mongoRepo) Save(messages interface{}) error {
 		}
 		m.Sum = msg.Sum
 
-		msgs = append(msgs, m)
+		dbMsgs = append(dbMsgs, m)
 	}
 
-	_, err := coll.InsertMany(context.Background(), msgs)
+	_, err := coll.InsertMany(context.Background(), dbMsgs)
 	if err != nil {
 		return errors.Wrap(errSaveMessage, err)
 	}

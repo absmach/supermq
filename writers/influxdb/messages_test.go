@@ -11,7 +11,7 @@ import (
 
 	influxdata "github.com/influxdata/influxdb/client/v2"
 	log "github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/pkg/transformers"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	writer "github.com/mainflux/mainflux/writers/influxdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -24,8 +24,8 @@ var (
 	testLog, _  = log.New(os.Stdout, log.Info.String())
 	testDB      = "test"
 	streamsSize = 250
-	selectMsgs  = "SELECT * FROM test..messages"
-	dropMsgs    = "DROP SERIES FROM messages"
+	selectMsgs  = "SELECT * FROM test..senml"
+	dropMsgs    = "DROP SERIES FROM senml"
 	client      influxdata.Client
 	clientCfg   = influxdata.HTTPConfig{
 		Username: "test",
@@ -89,7 +89,7 @@ func TestSave(t *testing.T) {
 		require.Nil(t, err, fmt.Sprintf("Cleaning data from InfluxDB expected to succeed: %s.\n", err))
 
 		now := time.Now().UnixNano()
-		msg := transformers.Message{
+		msg := senml.Message{
 			Channel:    "45",
 			Publisher:  "2580",
 			Protocol:   "http",
@@ -97,7 +97,7 @@ func TestSave(t *testing.T) {
 			Unit:       "km",
 			UpdateTime: 5456565466,
 		}
-		var msgs []transformers.Message
+		var msgs []senml.Message
 
 		for i := 0; i < tc.msgsNum; i++ {
 			// Mix possible values as well as value sum.

@@ -16,6 +16,7 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging/nats"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/writers"
 	"github.com/mainflux/mainflux/writers/api"
 	"github.com/mainflux/mainflux/writers/postgres"
@@ -85,8 +86,9 @@ func main() {
 	defer db.Close()
 
 	repo := newService(db, logger)
+	st := senml.New(cfg.contentType)
 
-	if err = writers.Start(pubSub, repo, cfg.contentType, svcName, cfg.configPath, logger); err != nil {
+	if err = writers.Start(pubSub, repo, st, cfg.configPath, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to create Postgres writer: %s", err))
 	}
 

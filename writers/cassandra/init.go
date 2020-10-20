@@ -5,7 +5,7 @@ package cassandra
 
 import "github.com/gocql/gocql"
 
-const table = `CREATE TABLE IF NOT EXISTS messages (
+const table = `CREATE TABLE IF NOT EXISTS senml (
         id uuid,
         channel text,
         subtopic text,

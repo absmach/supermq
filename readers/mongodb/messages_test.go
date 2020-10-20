@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mainflux/mainflux/pkg/transformers"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/readers"
 	mreaders "github.com/mainflux/mainflux/readers/mongodb"
 	mwriters "github.com/mainflux/mainflux/writers/mongodb"
@@ -34,7 +34,7 @@ const (
 var (
 	port string
 	addr string
-	m    = transformers.Message{
+	m    = senml.Message{
 		Channel:   chanID,
 		Publisher: "1",
 		Protocol:  "mqtt",
@@ -56,8 +56,8 @@ func TestReadAll(t *testing.T) {
 	db := client.Database(testDB)
 	writer := mwriters.New(db)
 
-	messages := []transformers.Message{}
-	subtopicMsgs := []transformers.Message{}
+	messages := []senml.Message{}
+	subtopicMsgs := []senml.Message{}
 	now := time.Now().Unix()
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.
@@ -114,7 +114,7 @@ func TestReadAll(t *testing.T) {
 				Total:    0,
 				Offset:   0,
 				Limit:    10,
-				Messages: []transformers.Message{},
+				Messages: []senml.Message{},
 			},
 		},
 		"read message last page": {
@@ -137,7 +137,7 @@ func TestReadAll(t *testing.T) {
 				Total:    0,
 				Offset:   0,
 				Limit:    msgsNum,
-				Messages: []transformers.Message{},
+				Messages: []senml.Message{},
 			},
 		},
 		"read message with subtopic": {

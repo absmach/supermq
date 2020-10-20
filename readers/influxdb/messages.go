@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/pkg/transformers"
 	"github.com/mainflux/mainflux/readers"
 
 	influxdata "github.com/influxdata/influxdb/client/v2"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 )
 
 const countCol = "count"
@@ -36,13 +36,13 @@ func New(client influxdata.Client, database string) readers.MessageRepository {
 
 func (repo *influxRepository) ReadAll(chanID string, offset, limit uint64, query map[string]string) (readers.MessagesPage, error) {
 	condition := fmtCondition(chanID, query)
-	cmd := fmt.Sprintf(`SELECT * FROM messages WHERE %s ORDER BY time DESC LIMIT %d OFFSET %d`, condition, limit, offset)
+	cmd := fmt.Sprintf(`SELECT * FROM senml WHERE %s ORDER BY time DESC LIMIT %d OFFSET %d`, condition, limit, offset)
 	q := influxdata.Query{
 		Command:  cmd,
 		Database: repo.database,
 	}
 
-	ret := []transformers.Message{}
+	ret := []senml.Message{}
 
 	resp, err := repo.client.Query(q)
 	if err != nil {
@@ -75,7 +75,7 @@ func (repo *influxRepository) ReadAll(chanID string, offset, limit uint64, query
 }
 
 func (repo *influxRepository) count(condition string) (uint64, error) {
-	cmd := fmt.Sprintf(`SELECT COUNT(protocol) FROM messages WHERE %s`, condition)
+	cmd := fmt.Sprintf(`SELECT COUNT(protocol) FROM senml WHERE %s`, condition)
 	q := influxdata.Query{
 		Command:  cmd,
 		Database: repo.database,
@@ -139,7 +139,7 @@ func fmtCondition(chanID string, query map[string]string) string {
 // ParseMessage and parseValues are util methods. Since InfluxDB client returns
 // results in form of rows and columns, this obscure message conversion is needed
 // to return actual []broker.Message from the query result.
-func parseValues(value interface{}, name string, msg *transformers.Message) {
+func parseValues(value interface{}, name string, msg *senml.Message) {
 	if name == "sum" && value != nil {
 		if valSum, ok := value.(json.Number); ok {
 			sum, err := valSum.Float64()
@@ -178,8 +178,8 @@ func parseValues(value interface{}, name string, msg *transformers.Message) {
 	}
 }
 
-func parseMessage(names []string, fields []interface{}) transformers.Message {
-	m := transformers.Message{}
+func parseMessage(names []string, fields []interface{}) senml.Message {
+	m := senml.Message{}
 	v := reflect.ValueOf(&m).Elem()
 	for i, name := range names {
 		parseValues(fields[i], name, &m)

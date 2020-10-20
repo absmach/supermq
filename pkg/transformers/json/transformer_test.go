@@ -10,14 +10,14 @@ import (
 
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
-	"github.com/mainflux/mainflux/pkg/transformers"
 	"github.com/mainflux/mainflux/pkg/transformers/json"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTransformJSON(t *testing.T) {
 	now := time.Now().Unix()
-	tr := json.New([]string{"key1", "key2"})
+	tr := json.New()
 	msg := messaging.Message{
 		Channel:   "channel-1",
 		Subtopic:  "subtopic-1",
@@ -29,16 +29,17 @@ func TestTransformJSON(t *testing.T) {
 
 	val1 := "val1"
 	val2 := "val2"
-	msgs := []transformers.Message{transformers.Message{
-		Channel:     "channel-1",
-		Subtopic:    "subtopic-1",
-		Publisher:   "publisher-1",
-		Protocol:    "protocol",
-		Name:        "key1",
-		Time:        float64(now) / float64(1e9),
-		StringValue: &val1,
-	},
-		transformers.Message{
+	msgs := []senml.Message{
+		{
+			Channel:     "channel-1",
+			Subtopic:    "subtopic-1",
+			Publisher:   "publisher-1",
+			Protocol:    "protocol",
+			Name:        "key1",
+			Time:        float64(now) / float64(1e9),
+			StringValue: &val1,
+		},
+		{
 			Channel:     "channel-1",
 			Subtopic:    "subtopic-1",
 			Publisher:   "publisher-1",

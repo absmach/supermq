@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mainflux/mainflux/pkg/transformers"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/writers/postgres"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -36,7 +36,7 @@ func TestMessageSave(t *testing.T) {
 	chid, err := uuid.NewV4()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	msg := transformers.Message{}
+	msg := senml.Message{}
 	msg.Channel = chid.String()
 
 	pubid, err := uuid.NewV4()
@@ -44,7 +44,7 @@ func TestMessageSave(t *testing.T) {
 	msg.Publisher = pubid.String()
 
 	now := time.Now().Unix()
-	var msgs []transformers.Message
+	var msgs []senml.Message
 
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.

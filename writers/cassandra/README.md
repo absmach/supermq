@@ -18,7 +18,7 @@ default values.
 | MF_CASSANDRA_WRITER_DB_USER         | Cassandra DB username                                     |                        |
 | MF_CASSANDRA_WRITER_DB_PASS         | Cassandra DB password                                     |                        |
 | MF_CASSANDRA_WRITER_DB_PORT         | Cassandra DB port                                         | 9042                   |
-| MF_CASSANDRA_WRITER_CONFIG_PATH     | Configuration file path with filters list                 | /configs.toml          |
+| MF_CASSANDRA_WRITER_SUBJECTS_CONFIG | Configuration file path with subjects list                | /config/subjects.toml  |
 | MF_CASSANDRA_WRITER_CONTENT_TYPE    | Message payload Content Type                              | application/senml+json |
 
 ## Deployment
@@ -40,12 +40,12 @@ default values.
       MF_CASSANDRA_WRITER_DB_USER: [Cassandra DB username]
       MF_CASSANDRA_WRITER_DB_PASS: [Cassandra DB password]
       MF_CASSANDRA_WRITER_DB_PORT: [Cassandra DB port]
-      MF_CASSANDRA_WRITER_CONFIG_PATH: [Configuration file path with filters list]
+      MF_CASSANDRA_WRITER_SUBJECTS_CONFIG: [Configuration file path with subjects list]
       MF_CASSANDRA_WRITER_CONTENT_TYPE: [Message payload Content Type]
     ports:
       - [host machine port]:[configured HTTP port]
     volume:
-      - ./configs.toml:/configs.toml
+      - ./subjects.yaml:/config/subjects.yaml
 ```
 
 To start the service, execute the following shell script:
@@ -71,7 +71,7 @@ MF_CASSANDRA_WRITER_DB_KEYSPACE=[Cassandra keyspace name] \
 MF_CASSANDRA_READER_DB_USER=[Cassandra DB username] \
 MF_CASSANDRA_READER_DB_PASS=[Cassandra DB password] \
 MF_CASSANDRA_READER_DB_PORT=[Cassandra DB port] \
-MF_CASSANDRA_WRITER_CONFIG_PATH=[Configuration file path with filters list] \
+MF_CASSANDRA_WRITER_SUBJECTS_CONFIG=[Configuration file path with subjects list] \
 $GOBIN/mainflux-cassandra-writer
 ```
 

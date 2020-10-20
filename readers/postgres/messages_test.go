@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/mainflux/mainflux/pkg/transformers"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/readers"
 	preader "github.com/mainflux/mainflux/readers/postgres"
 	pwriter "github.com/mainflux/mainflux/writers/postgres"
@@ -41,14 +41,14 @@ func TestMessageReadAll(t *testing.T) {
 	wrongID, err := uuid.NewV4()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	m := transformers.Message{
+	m := senml.Message{
 		Channel:   chanID.String(),
 		Publisher: pubID.String(),
 		Protocol:  "mqtt",
 	}
 
-	messages := []transformers.Message{}
-	subtopicMsgs := []transformers.Message{}
+	messages := []senml.Message{}
+	subtopicMsgs := []senml.Message{}
 	now := time.Now().Unix()
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.
@@ -109,7 +109,7 @@ func TestMessageReadAll(t *testing.T) {
 				Total:    0,
 				Offset:   0,
 				Limit:    msgsNum,
-				Messages: []transformers.Message{},
+				Messages: []senml.Message{},
 			},
 		},
 		"read message last page": {
@@ -132,7 +132,7 @@ func TestMessageReadAll(t *testing.T) {
 				Total:    0,
 				Offset:   0,
 				Limit:    msgsNum,
-				Messages: []transformers.Message{},
+				Messages: []senml.Message{},
 			},
 		},
 		"read message with subtopic": {

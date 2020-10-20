@@ -7,14 +7,14 @@ import (
 	"context"
 
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/pkg/transformers"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/readers"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const collection = "mainflux"
+const collection = "senml"
 
 var errReadMessages = errors.New("failed to read messages from mongodb database")
 
@@ -61,14 +61,14 @@ func (repo mongoRepository) ReadAll(chanID string, offset, limit uint64, query m
 	}
 	defer cursor.Close(context.Background())
 
-	messages := []transformers.Message{}
+	messages := []senml.Message{}
 	for cursor.Next(context.Background()) {
 		var m message
 		if err := cursor.Decode(&m); err != nil {
 			return readers.MessagesPage{}, errors.Wrap(errReadMessages, err)
 		}
 
-		msg := transformers.Message{
+		msg := senml.Message{
 			Channel:    m.Channel,
 			Subtopic:   m.Subtopic,
 			Publisher:  m.Publisher,

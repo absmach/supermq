@@ -48,26 +48,26 @@ func migrateDB(db *sqlx.DB) error {
 			{
 				Id: "messages_1",
 				Up: []string{
-					`CREATE TABLE IF NOT EXISTS messages (
-            id            UUID,
-            channel       UUID,
-            subtopic      VARCHAR(254),
-            publisher     UUID,
-            protocol      TEXT,
-            name          TEXT,
-            unit          TEXT,
-            value         FLOAT,
-            string_value  TEXT,
-            bool_value    BOOL,
-            data_value    TEXT,
-            sum           FLOAT,
-            time          FlOAT,
-            update_time   FLOAT,
-            PRIMARY KEY (id)
+					`CREATE TABLE IF NOT EXISTS senml (
+            			id            UUID,
+            			channel       UUID,
+            			subtopic      VARCHAR(254),
+            			publisher     UUID,
+            			protocol      TEXT,
+            			name          TEXT,
+            			unit          TEXT,
+            			value         FLOAT,
+            			string_value  TEXT,
+            			bool_value    BOOL,
+            			data_value    TEXT,
+            			sum           FLOAT,
+            			time          FlOAT,
+            			update_time   FLOAT,
+            			PRIMARY KEY (id)
 					)`,
 				},
 				Down: []string{
-					"DROP TABLE messages",
+					"DROP TABLE senml",
 				},
 			},
 		},
