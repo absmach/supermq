@@ -5,17 +5,20 @@ package influxdb
 
 import (
 	"math"
-	"strconv"
 	"time"
 
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/pkg/transformers"
+	"github.com/mainflux/mainflux/pkg/transformers/json"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/writers"
 
 	influxdata "github.com/influxdata/influxdb/client/v2"
 )
 
-const pointName = "messages"
+const (
+	senmlPoints = "senml"
+	jsonPoints  = "json"
+)
 
 var errSaveMessage = errors.New("failed to save message to influxdb database")
 
@@ -25,9 +28,6 @@ type influxRepo struct {
 	client influxdata.Client
 	cfg    influxdata.BatchPointsConfig
 }
-
-type fields map[string]interface{}
-type tags map[string]string
 
 // New returns new InfluxDB writer.
 func New(client influxdata.Client, database string) writers.MessageRepository {
@@ -40,64 +40,62 @@ func New(client influxdata.Client, database string) writers.MessageRepository {
 }
 
 func (repo *influxRepo) Save(messages interface{}) error {
-	msgs, ok := messages.([]senml.Message)
-	if !ok {
-		return errSaveMessage
-	}
 	pts, err := influxdata.NewBatchPoints(repo.cfg)
 	if err != nil {
 		return errors.Wrap(errSaveMessage, err)
 	}
-
-	for _, msg := range msgs {
-		tgs, flds := repo.tagsOf(&msg), repo.fieldsOf(&msg)
-
-		sec, dec := math.Modf(msg.Time)
-		t := time.Unix(int64(sec), int64(dec*(1e9)))
-
-		pt, err := influxdata.NewPoint(pointName, tgs, flds, t)
-		if err != nil {
-			return errors.Wrap(errSaveMessage, err)
-		}
-		pts.AddPoint(pt)
+	switch messages.(type) {
+	case json.Message:
+		pts, err = repo.jsonPoints(pts, messages)
+	default:
+		pts, err = repo.senmlPoints(pts, messages)
 	}
+	if err != nil {
+		return err
+	}
+
 	if err := repo.client.Write(pts); err != nil {
 		return errors.Wrap(errSaveMessage, err)
 	}
 	return nil
 }
 
-func (repo *influxRepo) tagsOf(msg *transformers.Message) tags {
-	return tags{
-		"channel":   msg.Channel,
-		"subtopic":  msg.Subtopic,
-		"publisher": msg.Publisher,
-		"name":      msg.Name,
+func (repo *influxRepo) senmlPoints(pts influxdata.BatchPoints, messages interface{}) (influxdata.BatchPoints, error) {
+	msgs, ok := messages.([]senml.Message)
+	if !ok {
+		return nil, errSaveMessage
 	}
+
+	for _, msg := range msgs {
+		tgs, flds := senmlTags(msg), senmlFields(msg)
+
+		sec, dec := math.Modf(msg.Time)
+		t := time.Unix(int64(sec), int64(dec*(1e9)))
+
+		pt, err := influxdata.NewPoint(senmlPoints, tgs, flds, t)
+		if err != nil {
+			return nil, errors.Wrap(errSaveMessage, err)
+		}
+		pts.AddPoint(pt)
+	}
+
+	return pts, nil
 }
 
-func (repo *influxRepo) fieldsOf(msg *transformers.Message) fields {
-	updateTime := strconv.FormatFloat(msg.UpdateTime, 'f', -1, 64)
-	ret := fields{
-		"protocol":   msg.Protocol,
-		"unit":       msg.Unit,
-		"updateTime": updateTime,
+func (repo *influxRepo) jsonPoints(pts influxdata.BatchPoints, messages interface{}) (influxdata.BatchPoints, error) {
+	msg, ok := messages.(json.Message)
+	if !ok {
+		return nil, errSaveMessage
 	}
 
-	switch {
-	case msg.Value != nil:
-		ret["value"] = *msg.Value
-	case msg.StringValue != nil:
-		ret["stringValue"] = *msg.StringValue
-	case msg.DataValue != nil:
-		ret["dataValue"] = *msg.DataValue
-	case msg.BoolValue != nil:
-		ret["boolValue"] = *msg.BoolValue
-	}
+	tgs, flds := jsonTags(msg), jsonFields(msg)
+	t := time.Unix(0, msg.Created)
 
-	if msg.Sum != nil {
-		ret["sum"] = *msg.Sum
+	pt, err := influxdata.NewPoint(jsonPoints, tgs, flds, t)
+	if err != nil {
+		return nil, errors.Wrap(errSaveMessage, err)
 	}
+	pts.AddPoint(pt)
 
-	return ret
+	return pts, nil
 }
