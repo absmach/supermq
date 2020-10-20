@@ -77,6 +77,9 @@ type UserRepository interface {
 
 	// Members retrieves all users that belong to a group
 	Members(ctx context.Context, groupID string, offset, limit uint64, um Metadata) (UserPage, error)
+
+	// Users retrieves all users that belong to admin
+	Users(ctx context.Context, offset, limit uint64) (UserPage, error)
 }
 
 func isEmail(email string) bool {

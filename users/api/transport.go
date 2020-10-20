@@ -59,9 +59,16 @@ func MakeHandler(svc users.Service, tracer opentracing.Tracer) http.Handler {
 		opts...,
 	))
 
-	mux.Get("/users", kithttp.NewServer(
+	mux.Get("/users/:userID", kithttp.NewServer(
 		kitot.TraceServer(tracer, "view_user")(viewUserEndpoint(svc)),
 		decodeViewUser,
+		encodeResponse,
+		opts...,
+	))
+
+	mux.Get("/users", kithttp.NewServer(
+		kitot.TraceServer(tracer, "users")(listUsersEndpoint(svc)),
+		decodeListUsers,
 		encodeResponse,
 		opts...,
 	))
@@ -179,7 +186,27 @@ func MakeHandler(svc users.Service, tracer opentracing.Tracer) http.Handler {
 
 func decodeViewUser(_ context.Context, r *http.Request) (interface{}, error) {
 	req := viewUserReq{
-		token: r.Header.Get("Authorization"),
+		token:  r.Header.Get("Authorization"),
+		userID: bone.GetValue(r, "userID"),
+	}
+	return req, nil
+}
+
+func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
+	o, err := readUintQuery(r, offsetKey, defOffset)
+	if err != nil {
+		return nil, err
+	}
+
+	l, err := readUintQuery(r, limitKey, defLimit)
+	if err != nil {
+		return nil, err
+	}
+
+	req := listUsersReq{
+		token:  r.Header.Get("Authorization"),
+		offset: o,
+		limit:  l,
 	}
 	return req, nil
 }

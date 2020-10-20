@@ -127,24 +127,27 @@ func TestUser(t *testing.T) {
 	u.Password = ""
 
 	cases := map[string]struct {
-		user  users.User
-		token string
-		err   error
+		user   users.User
+		token  string
+		userID string
+		err    error
 	}{
 		"valid token's user info": {
-			user:  u,
-			token: token,
-			err:   nil,
+			user:   u,
+			token:  token,
+			userID: "",
+			err:    nil,
 		},
 		"invalid token's user info": {
-			user:  users.User{},
-			token: "",
-			err:   users.ErrUnauthorizedAccess,
+			user:   users.User{},
+			token:  "",
+			userID: "",
+			err:    users.ErrUnauthorizedAccess,
 		},
 	}
 
 	for desc, tc := range cases {
-		_, err := svc.User(context.Background(), tc.token)
+		_, err := svc.User(context.Background(), tc.token, tc.userID)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }

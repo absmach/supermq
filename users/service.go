@@ -79,7 +79,10 @@ type Service interface {
 	Login(ctx context.Context, user User) (string, error)
 
 	// User authenticated user info for the given token.
-	User(ctx context.Context, token string) (User, error)
+	User(ctx context.Context, token, id string) (User, error)
+
+	// Users retrieves users list for a valid admin token.
+	Users(ctx context.Context, token string, offset, limit uint64) (UserPage, error)
 
 	// UpdateUser updates the user metadata.
 	UpdateUser(ctx context.Context, token string, user User) error
@@ -198,15 +201,21 @@ func (svc usersService) Login(ctx context.Context, user User) (string, error) {
 	return svc.issue(ctx, dbUser.Email, authn.UserKey)
 }
 
-func (svc usersService) User(ctx context.Context, token string) (User, error) {
+func (svc usersService) User(ctx context.Context, token, id string) (User, error) {
 	email, err := svc.identify(ctx, token)
 	if err != nil {
 		return User{}, err
 	}
+
+	// TODO Retrieve by ID
+	// if email != "admin@example.com" {
+	// }
+
 	dbUser, err := svc.users.RetrieveByEmail(ctx, email)
 	if err != nil {
 		return User{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
+
 	return User{
 		ID:       dbUser.ID,
 		Email:    email,
@@ -287,38 +296,34 @@ func (svc usersService) ChangePassword(ctx context.Context, authToken, password,
 	return svc.users.UpdatePassword(ctx, email, password)
 }
 
-// SendPasswordReset sends password recovery link to user
 func (svc usersService) SendPasswordReset(_ context.Context, host, email, token string) error {
 	to := []string{email}
 	return svc.email.SendPasswordReset(to, host, token)
-}
-
-func (svc usersService) identify(ctx context.Context, token string) (string, error) {
-	email, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return "", errors.Wrap(ErrUnauthorizedAccess, err)
-	}
-	return email.GetValue(), nil
 }
 
 func (svc usersService) CreateGroup(ctx context.Context, token string, group Group) (Group, error) {
 	if group.Name == "" || !groupRegexp.MatchString(group.Name) {
 		return Group{}, ErrMalformedEntity
 	}
-	userID, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token})
+
+	email, err := svc.identify(ctx, token)
+	if err != nil {
+		return Group{}, err
+	}
+
+	user, err := svc.users.RetrieveByEmail(ctx, email)
 	if err != nil {
 		return Group{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
-	user, err := svc.users.RetrieveByEmail(ctx, userID.Value)
-	if err != nil {
-		return Group{}, errors.Wrap(ErrUnauthorizedAccess, err)
-	}
+
 	uid, err := uuidProvider.New().ID()
 	if err != nil {
 		return Group{}, errors.Wrap(ErrCreateUser, err)
 	}
+
 	group.ID = uid
 	group.OwnerID = user.ID
+
 	return svc.groups.Save(ctx, group)
 }
 
@@ -331,53 +336,68 @@ func (svc usersService) Groups(ctx context.Context, token string, parentID strin
 }
 
 func (svc usersService) Members(ctx context.Context, token, groupID string, offset, limit uint64, meta Metadata) (UserPage, error) {
-	_, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return UserPage{}, errors.Wrap(ErrUnauthorizedAccess, err)
+	if _, err := svc.identify(ctx, token); err != nil {
+		return UserPage{}, err
 	}
 	return svc.users.Members(ctx, groupID, offset, limit, meta)
 }
 
 func (svc usersService) RemoveGroup(ctx context.Context, token, id string) error {
-	_, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return errors.Wrap(ErrUnauthorizedAccess, err)
+	if _, err := svc.identify(ctx, token); err != nil {
+		return err
 	}
 	return svc.groups.Delete(ctx, id)
 }
 
 func (svc usersService) Unassign(ctx context.Context, token, userID, groupID string) error {
-	_, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return errors.Wrap(ErrUnauthorizedAccess, err)
+	if _, err := svc.identify(ctx, token); err != nil {
+		return err
 	}
 	return svc.groups.Unassign(ctx, userID, groupID)
 }
 
 func (svc usersService) UpdateGroup(ctx context.Context, token string, group Group) error {
-	_, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return errors.Wrap(ErrUnauthorizedAccess, err)
+	if _, err := svc.identify(ctx, token); err != nil {
+		return err
 	}
 	return svc.groups.Update(ctx, group)
 }
 
 func (svc usersService) Group(ctx context.Context, token, id string) (Group, error) {
-	_, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return Group{}, errors.Wrap(ErrUnauthorizedAccess, err)
+	if _, err := svc.identify(ctx, token); err != nil {
+		return Group{}, err
 	}
 	return svc.groups.RetrieveByID(ctx, id)
 }
 
 func (svc usersService) Assign(ctx context.Context, token, userID, groupID string) error {
-	_, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		return errors.Wrap(ErrUnauthorizedAccess, err)
+	if _, err := svc.identify(ctx, token); err != nil {
+		return err
 	}
 	return svc.groups.Assign(ctx, userID, groupID)
 }
 
+func (svc usersService) Memberships(ctx context.Context, token, userID string, offset, limit uint64, meta Metadata) (GroupPage, error) {
+	if _, err := svc.identify(ctx, token); err != nil {
+		return GroupPage{}, err
+	}
+	return svc.groups.Memberships(ctx, userID, offset, limit, meta)
+}
+
+func (svc usersService) Users(ctx context.Context, token string, offset, limit uint64) (UserPage, error) {
+	email, err := svc.identify(ctx, token)
+	if err != nil {
+		return UserPage{}, err
+	}
+
+	if email != "admin@example.com" {
+		return UserPage{}, ErrUnauthorizedAccess
+	}
+
+	return svc.users.Users(ctx, offset, limit)
+}
+
+// Auth helpers
 func (svc usersService) issue(ctx context.Context, email string, keyType uint32) (string, error) {
 	key, err := svc.auth.Issue(ctx, &mainflux.IssueReq{Issuer: email, Type: keyType})
 	if err != nil {
@@ -386,10 +406,10 @@ func (svc usersService) issue(ctx context.Context, email string, keyType uint32)
 	return key.GetValue(), nil
 }
 
-func (svc usersService) Memberships(ctx context.Context, token, userID string, offset, limit uint64, meta Metadata) (GroupPage, error) {
-	_, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token})
+func (svc usersService) identify(ctx context.Context, token string) (string, error) {
+	email, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
-		return GroupPage{}, errors.Wrap(ErrUnauthorizedAccess, err)
+		return "", errors.Wrap(ErrUnauthorizedAccess, err)
 	}
-	return svc.groups.Memberships(ctx, userID, offset, limit, meta)
+	return email.GetValue(), nil
 }

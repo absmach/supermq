@@ -64,6 +64,19 @@ func (lm *loggingMiddleware) User(ctx context.Context, token string) (u users.Us
 	return lm.svc.User(ctx, token)
 }
 
+func (lm *loggingMiddleware) Users(ctx context.Context, token string, offset, limit uint64) (e users.UserPage, err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method users for token %s took %s to complete", token, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+
+	return lm.svc.Users(ctx, token, offset, limit)
+}
+
 func (lm *loggingMiddleware) UpdateUser(ctx context.Context, token string, u users.User) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method update_user for user %s took %s to complete", u.Email, time.Since(begin))

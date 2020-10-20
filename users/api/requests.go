@@ -21,10 +21,24 @@ func (req userReq) validate() error {
 }
 
 type viewUserReq struct {
-	token string
+	token  string
+	userID string
 }
 
 func (req viewUserReq) validate() error {
+	if req.token == "" {
+		return users.ErrUnauthorizedAccess
+	}
+	return nil
+}
+
+type listUsersReq struct {
+	token  string
+	offset uint64
+	limit  uint64
+}
+
+func (req listUsersReq) validate() error {
 	if req.token == "" {
 		return users.ErrUnauthorizedAccess
 	}

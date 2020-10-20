@@ -33,7 +33,7 @@ type userRepository struct {
 	db Database
 }
 
-// New instantiates a PostgreSQL implementation of user
+// NewUserRepo instantiates a PostgreSQL implementation of user
 // repository.
 func NewUserRepo(db Database) users.UserRepository {
 	return &userRepository{
@@ -141,6 +141,54 @@ func (ur userRepository) RetrieveByID(ctx context.Context, id string) (users.Use
 	return toUser(dbu)
 }
 
+func (ur userRepository) Users(ctx context.Context, offset, limit uint64) (users.UserPage, error) {
+	q := `SELECT id, email, metadata FROM users ORDER BY id LIMIT :limit OFFSET :offset;`
+
+	params := map[string]interface{}{
+		"limit":  limit,
+		"offset": offset,
+	}
+
+	rows, err := ur.db.NamedQueryContext(ctx, q, params)
+	if err != nil {
+		return users.UserPage{}, errors.Wrap(errSelectDb, err)
+	}
+	defer rows.Close()
+
+	var items []users.User
+	for rows.Next() {
+		dbusr := dbUser{}
+		if err := rows.StructScan(&dbusr); err != nil {
+			return users.UserPage{}, errors.Wrap(errSelectDb, err)
+		}
+
+		user, err := toUser(dbusr)
+		if err != nil {
+			return users.UserPage{}, err
+		}
+
+		items = append(items, user)
+	}
+
+	cq := `SELECT COUNT(*) FROM users;`
+
+	total, err := total(ctx, ur.db, cq, params)
+	if err != nil {
+		return users.UserPage{}, errors.Wrap(errSelectDb, err)
+	}
+
+	page := users.UserPage{
+		Users: items,
+		PageMetadata: users.PageMetadata{
+			Total:  total,
+			Offset: offset,
+			Limit:  limit,
+		},
+	}
+
+	return page, nil
+}
+
 func (ur userRepository) UpdatePassword(ctx context.Context, email, password string) error {
 	q := `UPDATE users SET password = :password WHERE email = :email`
 
@@ -163,7 +211,7 @@ func (ur userRepository) Members(ctx context.Context, groupID string, offset, li
 	}
 
 	q := fmt.Sprintf(`SELECT u.id, u.email, u.metadata FROM users u, group_relations g
-                      WHERE u.id = g.user_id AND g.group_id = :group 
+                      WHERE u.id = g.user_id AND g.group_id = :group
                       %s ORDER BY id LIMIT :limit OFFSET :offset;`, mq)
 
 	params := map[string]interface{}{
@@ -249,11 +297,12 @@ func (m dbMetadata) Value() (driver.Value, error) {
 }
 
 type dbUser struct {
-	ID       string `db:"id"`
-	Owner    string `db:"owner"`
-	Email    string `db:"email"`
-	Password string `db:"password"`
-	Metadata []byte `db:"metadata"`
+	ID       string        `db:"id"`
+	Owner    string        `db:"owner"`
+	Email    string        `db:"email"`
+	Password string        `db:"password"`
+	Metadata []byte        `db:"metadata"`
+	Groups   []users.Group `db:"groups"`
 }
 
 func toDBUser(u users.User) (dbUser, error) {

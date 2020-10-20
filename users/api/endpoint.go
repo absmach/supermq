@@ -81,7 +81,7 @@ func viewUserEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		u, err := svc.User(ctx, req.token)
+		u, err := svc.User(ctx, req.token, req.userID)
 		if err != nil {
 			return nil, err
 		}
@@ -90,6 +90,20 @@ func viewUserEndpoint(svc users.Service) endpoint.Endpoint {
 			Email:    u.Email,
 			Metadata: u.Metadata,
 		}, nil
+	}
+}
+
+func listUsersEndpoint(svc users.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(listUsersReq)
+		if err := req.validate(); err != nil {
+			return users.UserPage{}, err
+		}
+		up, err := svc.Users(ctx, req.token, req.offset, req.limit)
+		if err != nil {
+			return users.UserPage{}, err
+		}
+		return buildUsersResponse(up), nil
 	}
 }
 
