@@ -5,11 +5,13 @@ package postgres
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq" // required for DB access
 	"github.com/mainflux/mainflux/pkg/errors"
+	mfjson "github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/writers"
 )
@@ -36,6 +38,15 @@ func New(db *sqlx.DB) writers.MessageRepository {
 }
 
 func (pr postgresRepo) Save(messages interface{}) (err error) {
+	switch messages.(type) {
+	case mfjson.Message:
+		return pr.saveJSON(messages)
+	default:
+		return pr.saveSenml(messages)
+	}
+}
+
+func (pr postgresRepo) saveSenml(messages interface{}) error {
 	msgs, ok := messages.([]senml.Message)
 	if !ok {
 		return errSaveMessage
@@ -66,12 +77,12 @@ func (pr postgresRepo) Save(messages interface{}) (err error) {
 	}()
 
 	for _, msg := range msgs {
-		dbth, err := toDBMessage(msg)
+		dbmsg, err := toSenmlMessage(msg)
 		if err != nil {
 			return errors.Wrap(errSaveMessage, err)
 		}
 
-		if _, err := tx.NamedExec(q, dbth); err != nil {
+		if _, err := tx.NamedExec(q, dbmsg); err != nil {
 			pqErr, ok := err.(*pq.Error)
 			if ok {
 				switch pqErr.Code.Name() {
@@ -86,12 +97,43 @@ func (pr postgresRepo) Save(messages interface{}) (err error) {
 	return err
 }
 
+func (pr postgresRepo) saveJSON(messages interface{}) error {
+	msg, ok := messages.(mfjson.Message)
+	if !ok {
+		return errSaveMessage
+	}
+	q := `INSERT INTO json (id, channel, subtopic, publisher, protocol, payload)
+    VALUES (:id, :channel, :subtopic, :publisher, :protocol, :payload);`
+
+	dbmsg, err := toJSONMessage(msg)
+	if err != nil {
+		return errors.Wrap(errSaveMessage, err)
+	}
+
+	if _, err := pr.db.NamedExec(q, dbmsg); err != nil {
+		pqErr, ok := err.(*pq.Error)
+		if ok {
+			switch pqErr.Code.Name() {
+			case errInvalid:
+				return errors.Wrap(errSaveMessage, ErrInvalidMessage)
+			}
+		}
+
+		return errors.Wrap(errSaveMessage, err)
+	}
+	return err
+}
+
 type dbMessage struct {
-	ID          string   `db:"id"`
-	Channel     string   `db:"channel"`
-	Subtopic    string   `db:"subtopic"`
-	Publisher   string   `db:"publisher"`
-	Protocol    string   `db:"protocol"`
+	ID        string `db:"id"`
+	Channel   string `db:"channel"`
+	Subtopic  string `db:"subtopic"`
+	Publisher string `db:"publisher"`
+	Protocol  string `db:"protocol"`
+}
+
+type senmlMessage struct {
+	dbMessage
 	Name        string   `db:"name"`
 	Unit        string   `db:"unit"`
 	Value       *float64 `db:"value"`
@@ -103,18 +145,54 @@ type dbMessage struct {
 	UpdateTime  float64  `db:"update_time"`
 }
 
-func toDBMessage(msg senml.Message) (dbMessage, error) {
+type jsonMessage struct {
+	dbMessage
+	Payload []byte `db:"payload"`
+}
+
+func toJSONMessage(msg mfjson.Message) (jsonMessage, error) {
 	id, err := uuid.NewV4()
 	if err != nil {
-		return dbMessage{}, err
+		return jsonMessage{}, err
 	}
 
-	m := dbMessage{
-		ID:         id.String(),
-		Channel:    msg.Channel,
-		Subtopic:   msg.Subtopic,
-		Publisher:  msg.Publisher,
-		Protocol:   msg.Protocol,
+	data := []byte("{}")
+	if len(msg.Payload) > 0 {
+		b, err := json.Marshal(msg.Payload)
+		if err != nil {
+			return jsonMessage{}, errors.Wrap(errSaveMessage, err)
+		}
+		data = b
+	}
+
+	m := jsonMessage{
+		dbMessage: dbMessage{
+			ID:        id.String(),
+			Channel:   msg.Channel,
+			Subtopic:  msg.Subtopic,
+			Publisher: msg.Publisher,
+			Protocol:  msg.Protocol,
+		},
+		Payload: data,
+	}
+
+	return m, nil
+}
+
+func toSenmlMessage(msg senml.Message) (senmlMessage, error) {
+	id, err := uuid.NewV4()
+	if err != nil {
+		return senmlMessage{}, err
+	}
+
+	m := senmlMessage{
+		dbMessage: dbMessage{
+			ID:        id.String(),
+			Channel:   msg.Channel,
+			Subtopic:  msg.Subtopic,
+			Publisher: msg.Publisher,
+			Protocol:  msg.Protocol,
+		},
 		Name:       msg.Name,
 		Unit:       msg.Unit,
 		Time:       msg.Time,
