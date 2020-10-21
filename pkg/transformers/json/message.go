@@ -9,6 +9,6 @@ type Message struct {
 	Subtopic  string                 `json:"subtopic,omitempty"`
 	Publisher string                 `json:"publisher,omitempty"`
 	Protocol  string                 `json:"protocol,omitempty"`
-	Payload   map[string]interface{} `json:"payload,omitempty"`
 	Created   int64                  `json:"created,omitempty"`
+	Payload   map[string]interface{} `json:"payload,omitempty"`
 }

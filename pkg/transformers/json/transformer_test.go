@@ -11,8 +11,12 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/transformers/json"
-	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/stretchr/testify/assert"
+)
+
+const (
+	validPayload   = `{"key1": "val1", "key2": 123, "key3": "val3", "key4": {"key5": "val5"}}`
+	invalidPayload = `{"key1": "val1", "key2": 123, "key3.1": "val3", "key4": {"key5": "val5"}}`
 )
 
 func TestTransformJSON(t *testing.T) {
@@ -23,50 +27,49 @@ func TestTransformJSON(t *testing.T) {
 		Subtopic:  "subtopic-1",
 		Publisher: "publisher-1",
 		Protocol:  "protocol",
-		Payload:   []byte(`{"key1": "val1", "key2": "val2", "key3": "val3"}`),
+		Payload:   []byte(validPayload),
 		Created:   now,
 	}
+	invalid := msg
+	invalid.Payload = []byte(invalidPayload)
 
-	val1 := "val1"
-	val2 := "val2"
-	msgs := []senml.Message{
-		{
-			Channel:     "channel-1",
-			Subtopic:    "subtopic-1",
-			Publisher:   "publisher-1",
-			Protocol:    "protocol",
-			Name:        "key1",
-			Time:        float64(now) / float64(1e9),
-			StringValue: &val1,
-		},
-		{
-			Channel:     "channel-1",
-			Subtopic:    "subtopic-1",
-			Publisher:   "publisher-1",
-			Protocol:    "protocol",
-			Name:        "key2",
-			Time:        float64(now) / float64(1e9),
-			StringValue: &val2,
+	jsonMsg := json.Message{
+		Channel:   msg.Channel,
+		Subtopic:  msg.Subtopic,
+		Publisher: msg.Publisher,
+		Protocol:  msg.Protocol,
+		Created:   msg.Created,
+		Payload: map[string]interface{}{
+			"key1":      "val1",
+			"key2":      float64(123),
+			"key3":      "val3",
+			"key4.key5": "val5",
 		},
 	}
 
 	cases := []struct {
 		desc string
 		msg  messaging.Message
-		msgs interface{}
+		json interface{}
 		err  error
 	}{
 		{
-			desc: "test normalize JSON",
+			desc: "test transform JSON",
 			msg:  msg,
-			msgs: msgs,
+			json: jsonMsg,
 			err:  nil,
+		},
+		{
+			desc: "test transform JSON with invalid payload",
+			msg:  invalid,
+			json: nil,
+			err:  json.ErrInvalidKey,
 		},
 	}
 
 	for _, tc := range cases {
-		msgs, err := tr.Transform(tc.msg)
-		assert.Equal(t, tc.msgs, msgs, fmt.Sprintf("%s expected %v, got %v", tc.desc, tc.msgs, msgs))
+		m, err := tr.Transform(tc.msg)
+		assert.Equal(t, tc.json, m, fmt.Sprintf("%s expected %v, got %v", tc.desc, tc.json, m))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s, got %s", tc.desc, tc.err, err))
 	}
 }
