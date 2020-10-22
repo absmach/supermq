@@ -147,6 +147,7 @@ func (ur userRepository) Users(ctx context.Context, offset, limit uint64, email 
 		return users.UserPage{}, errors.Wrap(errRetrieveDB, err)
 	}
 
+	// Create LIKE operator to search Users with email containing a given string
 	if email != "" {
 		email = fmt.Sprintf(`%%%s%%`, email)
 	}
