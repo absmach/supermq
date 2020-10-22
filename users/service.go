@@ -7,6 +7,8 @@ import (
 	"context"
 	"regexp"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/authn"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -207,7 +209,21 @@ func (svc usersService) User(ctx context.Context, token, id string) (User, error
 		return User{}, err
 	}
 
-	// TODO: Retrieve by User Email if User is not Admin
+	// Retrieve User infos by ID if User is Admin and UUID is valid
+	if _, err := uuid.FromString(id); email == "admin@example.com" && err == nil {
+		dbUser, err := svc.users.RetrieveByID(ctx, id)
+		if err != nil {
+			return User{}, errors.Wrap(ErrUnauthorizedAccess, err)
+		}
+
+		return User{
+			ID:       id,
+			Email:    dbUser.Email,
+			Password: "",
+			Metadata: dbUser.Metadata,
+		}, nil
+	}
+
 	dbUser, err := svc.users.RetrieveByEmail(ctx, email)
 	if err != nil {
 		return User{}, errors.Wrap(ErrUnauthorizedAccess, err)
