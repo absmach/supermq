@@ -140,11 +140,13 @@ type PageMetadata struct {
 	Name   string
 }
 
+// GroupPage contains a page of groups.
 type GroupPage struct {
 	PageMetadata
 	Groups []Group
 }
 
+// UserPage contains a page of users.
 type UserPage struct {
 	PageMetadata
 	Users []User
@@ -209,8 +211,8 @@ func (svc usersService) User(ctx context.Context, token, id string) (User, error
 		return User{}, err
 	}
 
-	// Retrieve User infos by ID if User is Admin and UUID is valid
-	if _, err := uuid.FromString(id); email == "admin@example.com" && err == nil {
+	// Retrieve User info by ID if UUID is valid
+	if _, err := uuid.FromString(id); err == nil {
 		dbUser, err := svc.users.RetrieveByID(ctx, id)
 		if err != nil {
 			return User{}, errors.Wrap(ErrUnauthorizedAccess, err)
@@ -238,13 +240,9 @@ func (svc usersService) User(ctx context.Context, token, id string) (User, error
 }
 
 func (svc usersService) Users(ctx context.Context, token string, offset, limit uint64, email string, m Metadata) (UserPage, error) {
-	user, err := svc.identify(ctx, token)
+	_, err := svc.identify(ctx, token)
 	if err != nil {
 		return UserPage{}, err
-	}
-
-	if user != "admin@example.com" {
-		return UserPage{}, ErrUnauthorizedAccess
 	}
 
 	return svc.users.Users(ctx, offset, limit, email, m)
