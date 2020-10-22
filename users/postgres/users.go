@@ -147,12 +147,12 @@ func (ur userRepository) Users(ctx context.Context, offset, limit uint64, email 
 		return users.UserPage{}, errors.Wrap(errRetrieveDB, err)
 	}
 
+	q := fmt.Sprintf(`SELECT id, email, metadata FROM users %s ORDER BY email LIMIT :limit OFFSET :offset;`, emq)
+
 	// Create LIKE operator to search Users with email containing a given string
 	if email != "" {
 		email = fmt.Sprintf(`%%%s%%`, email)
 	}
-
-	q := fmt.Sprintf(`SELECT id, email, metadata FROM users %s ORDER BY email LIMIT :limit OFFSET :offset;`, emq)
 
 	params := map[string]interface{}{
 		"limit":    limit,
@@ -210,6 +210,7 @@ func createUsersListQuery(email string, m users.Metadata) (string, []byte, error
 	}
 
 	if email != "" && len(m) == 0 {
+		q = "WHERE email like :email"
 		return q, qMeta, nil
 	}
 
