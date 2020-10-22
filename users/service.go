@@ -222,12 +222,12 @@ func (svc usersService) User(ctx context.Context, token, id string) (User, error
 }
 
 func (svc usersService) Users(ctx context.Context, token string, offset, limit uint64, email string, m Metadata) (UserPage, error) {
-	aemail, err := svc.identify(ctx, token)
+	user, err := svc.identify(ctx, token)
 	if err != nil {
 		return UserPage{}, err
 	}
 
-	if aemail != "admin@example.com" {
+	if user != "admin@example.com" {
 		return UserPage{}, ErrUnauthorizedAccess
 	}
 
