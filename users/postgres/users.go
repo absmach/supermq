@@ -156,11 +156,9 @@ func (ur userRepository) Users(ctx context.Context, offset, limit uint64, email 
 	if eq != "" && mq == "" {
 		emq = fmt.Sprintf("WHERE %s", eq)
 	}
-
 	if eq == "" && mq != "" {
 		emq = fmt.Sprintf("WHERE %s", mq)
 	}
-
 	if eq != "" && mq != "" {
 		emq = fmt.Sprintf("WHERE %s AND %s", eq, mq)
 	}

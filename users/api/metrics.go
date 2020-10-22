@@ -56,6 +56,15 @@ func (ms *metricsMiddleware) User(ctx context.Context, token, id string) (users.
 	return ms.svc.User(ctx, token, id)
 }
 
+func (ms *metricsMiddleware) Profile(ctx context.Context, token string) (users.User, error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "view_profile").Add(1)
+		ms.latency.With("method", "view_profile").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.Profile(ctx, token)
+}
+
 func (ms *metricsMiddleware) Users(ctx context.Context, token string, offset, limit uint64, email string, um users.Metadata) (users.UserPage, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "users").Add(1)

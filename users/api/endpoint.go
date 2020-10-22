@@ -93,6 +93,25 @@ func viewUserEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
+func viewProfileEndpoint(svc users.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(viewUserReq)
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+
+		u, err := svc.Profile(ctx, req.token)
+		if err != nil {
+			return nil, err
+		}
+		return viewUserRes{
+			ID:       u.ID,
+			Email:    u.Email,
+			Metadata: u.Metadata,
+		}, nil
+	}
+}
+
 func listUsersEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listUsersReq)

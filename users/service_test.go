@@ -117,7 +117,7 @@ func TestLogin(t *testing.T) {
 
 func TestUser(t *testing.T) {
 	svc := newService()
-	_, err := svc.Register(context.Background(), user)
+	id, err := svc.Register(context.Background(), user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	token, err := svc.Login(context.Background(), user)
@@ -132,15 +132,21 @@ func TestUser(t *testing.T) {
 		userID string
 		err    error
 	}{
-		"valid token's user info": {
+		"view user with authorized token": {
 			user:   u,
 			token:  token,
-			userID: "",
+			userID: id,
 			err:    nil,
 		},
-		"invalid token's user info": {
+		"view user with unauthorized token": {
 			user:   users.User{},
 			token:  "",
+			userID: id,
+			err:    users.ErrUnauthorizedAccess,
+		},
+		"view user with authorized token and invalid user id": {
+			user:   users.User{},
+			token:  token,
 			userID: "",
 			err:    users.ErrUnauthorizedAccess,
 		},
@@ -148,6 +154,40 @@ func TestUser(t *testing.T) {
 
 	for desc, tc := range cases {
 		_, err := svc.User(context.Background(), tc.token, tc.userID)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+	}
+}
+
+func TestProfile(t *testing.T) {
+	svc := newService()
+	_, err := svc.Register(context.Background(), user)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+
+	token, err := svc.Login(context.Background(), user)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+
+	u := user
+	u.Password = ""
+
+	cases := map[string]struct {
+		user  users.User
+		token string
+		err   error
+	}{
+		"valid token's user info": {
+			user:  u,
+			token: token,
+			err:   nil,
+		},
+		"invalid token's user info": {
+			user:  users.User{},
+			token: "",
+			err:   users.ErrUnauthorizedAccess,
+		},
+	}
+
+	for desc, tc := range cases {
+		_, err := svc.Profile(context.Background(), tc.token)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }

@@ -64,6 +64,19 @@ func (lm *loggingMiddleware) User(ctx context.Context, token, id string) (u user
 	return lm.svc.User(ctx, token, id)
 }
 
+func (lm *loggingMiddleware) Profile(ctx context.Context, token string) (u users.User, err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method view_profile for usser %s took %s to complete", u.Email, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+
+	return lm.svc.Profile(ctx, token)
+}
+
 func (lm *loggingMiddleware) Users(ctx context.Context, token string, offset, limit uint64, email string, um users.Metadata) (e users.UserPage, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method users for token %s took %s to complete", token, time.Since(begin))

@@ -7,8 +7,6 @@ import (
 	"context"
 	"regexp"
 
-	"github.com/gofrs/uuid"
-
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/authn"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -80,8 +78,11 @@ type Service interface {
 	// identified by the non-nil error values in the response.
 	Login(ctx context.Context, user User) (string, error)
 
-	// User authenticated user info for the given token.
+	// User retrievess user info for a given user ID and an authorized token.
 	User(ctx context.Context, token, id string) (User, error)
+
+	// Profile retrieves user info for a given token.
+	Profile(ctx context.Context, token string) (User, error)
 
 	// Users retrieves users list for a valid admin token.
 	Users(ctx context.Context, token string, offset, limit uint64, email string, m Metadata) (UserPage, error)
@@ -206,24 +207,29 @@ func (svc usersService) Login(ctx context.Context, user User) (string, error) {
 }
 
 func (svc usersService) User(ctx context.Context, token, id string) (User, error) {
-	email, err := svc.identify(ctx, token)
+	// TODO: Check Policy
+	_, err := svc.identify(ctx, token)
 	if err != nil {
 		return User{}, err
 	}
 
-	// Retrieve User info by ID if UUID is valid
-	if _, err := uuid.FromString(id); err == nil {
-		dbUser, err := svc.users.RetrieveByID(ctx, id)
-		if err != nil {
-			return User{}, errors.Wrap(ErrUnauthorizedAccess, err)
-		}
+	dbUser, err := svc.users.RetrieveByID(ctx, id)
+	if err != nil {
+		return User{}, errors.Wrap(ErrUnauthorizedAccess, err)
+	}
 
-		return User{
-			ID:       id,
-			Email:    dbUser.Email,
-			Password: "",
-			Metadata: dbUser.Metadata,
-		}, nil
+	return User{
+		ID:       id,
+		Email:    dbUser.Email,
+		Password: "",
+		Metadata: dbUser.Metadata,
+	}, nil
+}
+
+func (svc usersService) Profile(ctx context.Context, token string) (User, error) {
+	email, err := svc.identify(ctx, token)
+	if err != nil {
+		return User{}, err
 	}
 
 	dbUser, err := svc.users.RetrieveByEmail(ctx, email)
@@ -240,6 +246,7 @@ func (svc usersService) User(ctx context.Context, token, id string) (User, error
 }
 
 func (svc usersService) Users(ctx context.Context, token string, offset, limit uint64, email string, m Metadata) (UserPage, error) {
+	// TODO: Check Policy
 	_, err := svc.identify(ctx, token)
 	if err != nil {
 		return UserPage{}, err
