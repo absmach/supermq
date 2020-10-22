@@ -142,23 +142,36 @@ func (ur userRepository) RetrieveByID(ctx context.Context, id string) (users.Use
 }
 
 func (ur userRepository) Users(ctx context.Context, offset, limit uint64, email string, um users.Metadata) (users.UserPage, error) {
-	emq, mb, err := createUsersListQuery(email, um)
+	eq, ep, err := createEmailQuery("", email)
 	if err != nil {
 		return users.UserPage{}, errors.Wrap(errRetrieveDB, err)
 	}
 
-	q := fmt.Sprintf(`SELECT id, email, metadata FROM users %s ORDER BY email LIMIT :limit OFFSET :offset;`, emq)
-
-	// Create LIKE operator to search Users with email containing a given string
-	if email != "" {
-		email = fmt.Sprintf(`%%%s%%`, email)
+	mq, mp, err := createMetadataQuery("", um)
+	if err != nil {
+		return users.UserPage{}, errors.Wrap(errRetrieveDB, err)
 	}
+
+	emq := ""
+	if eq != "" && mq == "" {
+		emq = fmt.Sprintf("WHERE %s", eq)
+	}
+
+	if eq == "" && mq != "" {
+		emq = fmt.Sprintf("WHERE %s", mq)
+	}
+
+	if eq != "" && mq != "" {
+		emq = fmt.Sprintf("WHERE %s AND %s", eq, mq)
+	}
+
+	q := fmt.Sprintf(`SELECT id, email, metadata FROM users %s ORDER BY email LIMIT :limit OFFSET :offset;`, emq)
 
 	params := map[string]interface{}{
 		"limit":    limit,
 		"offset":   offset,
-		"email":    email,
-		"metadata": mb,
+		"email":    ep,
+		"metadata": mp,
 	}
 
 	rows, err := ur.db.NamedQueryContext(ctx, q, params)
@@ -201,36 +214,6 @@ func (ur userRepository) Users(ctx context.Context, offset, limit uint64, email 
 	return page, nil
 }
 
-func createUsersListQuery(email string, m users.Metadata) (string, []byte, error) {
-	q := ""
-	qMeta := []byte("{}")
-
-	if email == "" && len(m) == 0 {
-		return q, qMeta, nil
-	}
-
-	if email != "" && len(m) == 0 {
-		q = "WHERE email like :email"
-		return q, qMeta, nil
-	}
-
-	if len(m) > 0 {
-		b, err := json.Marshal(m)
-		if err != nil {
-			return "", []byte{}, err
-		}
-		qMeta = b
-	}
-
-	if email != "" {
-		q = "WHERE email like :email AND metadata @> :metadata"
-		return q, qMeta, nil
-	}
-
-	q = "WHERE metadata @> :metadata"
-	return q, qMeta, nil
-}
-
 func (ur userRepository) UpdatePassword(ctx context.Context, email, password string) error {
 	q := `UPDATE users SET password = :password WHERE email = :email`
 
@@ -247,9 +230,13 @@ func (ur userRepository) UpdatePassword(ctx context.Context, email, password str
 }
 
 func (ur userRepository) Members(ctx context.Context, groupID string, offset, limit uint64, gm users.Metadata) (users.UserPage, error) {
-	m, mq, err := getUsersMetadataQuery(gm)
+	mq, mp, err := createMetadataQuery("users.", gm)
 	if err != nil {
 		return users.UserPage{}, errors.Wrap(errRetrieveDB, err)
+	}
+
+	if mq != "" {
+		mq = fmt.Sprintf(" AND %s", mq)
 	}
 
 	q := fmt.Sprintf(`SELECT u.id, u.email, u.metadata FROM users u, group_relations g
@@ -260,7 +247,7 @@ func (ur userRepository) Members(ctx context.Context, groupID string, offset, li
 		"group":    groupID,
 		"limit":    limit,
 		"offset":   offset,
-		"metadata": m,
+		"metadata": mp,
 	}
 
 	rows, err := ur.db.NamedQueryContext(ctx, q, params)
@@ -381,17 +368,30 @@ func toUser(dbu dbUser) (users.User, error) {
 	}, nil
 }
 
-func getUsersMetadataQuery(m users.Metadata) ([]byte, string, error) {
-	mq := ""
-	mb := []byte("{}")
-	if len(m) > 0 {
-		mq = ` AND users.metadata @> :metadata`
+func createEmailQuery(entity string, email string) (string, string, error) {
+	query := ""
+	param := ""
 
-		b, err := json.Marshal(m)
-		if err != nil {
-			return nil, "", err
-		}
-		mb = b
+	if email != "" {
+		// Create LIKE operator to search Users with email containing a given string
+		param = fmt.Sprintf(`%%%s%%`, email)
+		query = fmt.Sprintf("%semail LIKE :email", entity)
+		return query, param, nil
 	}
-	return mb, mq, nil
+
+	return query, param, nil
+}
+
+func createMetadataQuery(entity string, meta users.Metadata) (string, []byte, error) {
+	query := ""
+	param := []byte("{}")
+	if len(meta) > 0 {
+		query = fmt.Sprintf("%smetadata @> :metadata", entity)
+		b, err := json.Marshal(meta)
+		if err != nil {
+			return "", nil, err
+		}
+		param = b
+	}
+	return query, param, nil
 }
