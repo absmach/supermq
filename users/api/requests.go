@@ -33,9 +33,11 @@ func (req viewUserReq) validate() error {
 }
 
 type listUsersReq struct {
-	token  string
-	offset uint64
-	limit  uint64
+	token    string
+	offset   uint64
+	limit    uint64
+	email    string
+	metadata users.Metadata
 }
 
 func (req listUsersReq) validate() error {

@@ -141,12 +141,23 @@ func (ur userRepository) RetrieveByID(ctx context.Context, id string) (users.Use
 	return toUser(dbu)
 }
 
-func (ur userRepository) Users(ctx context.Context, offset, limit uint64) (users.UserPage, error) {
-	q := `SELECT id, email, metadata FROM users ORDER BY id LIMIT :limit OFFSET :offset;`
+func (ur userRepository) Users(ctx context.Context, offset, limit uint64, email string, um users.Metadata) (users.UserPage, error) {
+	emq, mb, err := createUsersListQuery(email, um)
+	if err != nil {
+		return users.UserPage{}, errors.Wrap(errRetrieveDB, err)
+	}
+
+	if email != "" {
+		email = fmt.Sprintf(`%%%s%%`, email)
+	}
+
+	q := fmt.Sprintf(`SELECT id, email, metadata FROM users %s ORDER BY email LIMIT :limit OFFSET :offset;`, emq)
 
 	params := map[string]interface{}{
-		"limit":  limit,
-		"offset": offset,
+		"limit":    limit,
+		"offset":   offset,
+		"email":    email,
+		"metadata": mb,
 	}
 
 	rows, err := ur.db.NamedQueryContext(ctx, q, params)
@@ -170,7 +181,7 @@ func (ur userRepository) Users(ctx context.Context, offset, limit uint64) (users
 		items = append(items, user)
 	}
 
-	cq := `SELECT COUNT(*) FROM users;`
+	cq := fmt.Sprintf(`SELECT COUNT(*) FROM users %s;`, emq)
 
 	total, err := total(ctx, ur.db, cq, params)
 	if err != nil {
@@ -187,6 +198,35 @@ func (ur userRepository) Users(ctx context.Context, offset, limit uint64) (users
 	}
 
 	return page, nil
+}
+
+func createUsersListQuery(email string, m users.Metadata) (string, []byte, error) {
+	q := ""
+	qMeta := []byte("{}")
+
+	if email == "" && len(m) == 0 {
+		return q, qMeta, nil
+	}
+
+	if email != "" && len(m) == 0 {
+		return q, qMeta, nil
+	}
+
+	if len(m) > 0 {
+		b, err := json.Marshal(m)
+		if err != nil {
+			return "", []byte{}, err
+		}
+		qMeta = b
+	}
+
+	if email != "" {
+		q = "WHERE email like :email AND metadata @> :metadata"
+		return q, qMeta, nil
+	}
+
+	q = "WHERE metadata @> :metadata"
+	return q, qMeta, nil
 }
 
 func (ur userRepository) UpdatePassword(ctx context.Context, email, password string) error {

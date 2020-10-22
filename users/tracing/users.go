@@ -75,12 +75,12 @@ func (urm userRepositoryMiddleware) UpdatePassword(ctx context.Context, email, p
 	return urm.repo.UpdatePassword(ctx, email, password)
 }
 
-func (urm userRepositoryMiddleware) Users(ctx context.Context, offset, limit uint64) (users.UserPage, error) {
+func (urm userRepositoryMiddleware) Users(ctx context.Context, offset, limit uint64, email string, m users.Metadata) (users.UserPage, error) {
 	span := createSpan(ctx, urm.tracer, members)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 
-	return urm.repo.Users(ctx, offset, limit)
+	return urm.repo.Users(ctx, offset, limit, email, m)
 }
 
 func (urm userRepositoryMiddleware) Members(ctx context.Context, groupID string, offset, limit uint64, gm users.Metadata) (users.UserPage, error) {

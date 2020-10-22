@@ -82,7 +82,7 @@ type Service interface {
 	User(ctx context.Context, token, id string) (User, error)
 
 	// Users retrieves users list for a valid admin token.
-	Users(ctx context.Context, token string, offset, limit uint64) (UserPage, error)
+	Users(ctx context.Context, token string, offset, limit uint64, email string, m Metadata) (UserPage, error)
 
 	// UpdateUser updates the user metadata.
 	UpdateUser(ctx context.Context, token string, user User) error
@@ -207,10 +207,7 @@ func (svc usersService) User(ctx context.Context, token, id string) (User, error
 		return User{}, err
 	}
 
-	// TODO Retrieve by ID
-	// if email != "admin@example.com" {
-	// }
-
+	// TODO: Retrieve by User Email if User is not Admin
 	dbUser, err := svc.users.RetrieveByEmail(ctx, email)
 	if err != nil {
 		return User{}, errors.Wrap(ErrUnauthorizedAccess, err)
@@ -224,12 +221,17 @@ func (svc usersService) User(ctx context.Context, token, id string) (User, error
 	}, nil
 }
 
-func (svc usersService) ListUsers(ctx context.Context, token string, groupID string, offset, limit uint64, um Metadata) (UserPage, error) {
-	_, err := svc.identify(ctx, token)
+func (svc usersService) Users(ctx context.Context, token string, offset, limit uint64, email string, m Metadata) (UserPage, error) {
+	aemail, err := svc.identify(ctx, token)
 	if err != nil {
 		return UserPage{}, err
 	}
-	return svc.users.Members(ctx, groupID, offset, limit, um)
+
+	if aemail != "admin@example.com" {
+		return UserPage{}, ErrUnauthorizedAccess
+	}
+
+	return svc.users.Users(ctx, offset, limit, email, m)
 }
 
 func (svc usersService) UpdateUser(ctx context.Context, token string, u User) error {
@@ -382,19 +384,6 @@ func (svc usersService) Memberships(ctx context.Context, token, userID string, o
 		return GroupPage{}, err
 	}
 	return svc.groups.Memberships(ctx, userID, offset, limit, meta)
-}
-
-func (svc usersService) Users(ctx context.Context, token string, offset, limit uint64) (UserPage, error) {
-	email, err := svc.identify(ctx, token)
-	if err != nil {
-		return UserPage{}, err
-	}
-
-	if email != "admin@example.com" {
-		return UserPage{}, ErrUnauthorizedAccess
-	}
-
-	return svc.users.Users(ctx, offset, limit)
 }
 
 // Auth helpers

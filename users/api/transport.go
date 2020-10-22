@@ -28,6 +28,7 @@ const (
 	offsetKey   = "offset"
 	limitKey    = "limit"
 	nameKey     = "name"
+	emailKey    = "email"
 	metadataKey = "metadata"
 
 	defOffset = 0
@@ -203,10 +204,22 @@ func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
+	e, err := readStringQuery(r, emailKey)
+	if err != nil {
+		return nil, err
+	}
+
+	m, err := readMetadataQuery(r, metadataKey)
+	if err != nil {
+		return nil, err
+	}
+
 	req := listUsersReq{
-		token:  r.Header.Get("Authorization"),
-		offset: o,
-		limit:  l,
+		token:    r.Header.Get("Authorization"),
+		offset:   o,
+		limit:    l,
+		email:    e,
+		metadata: m,
 	}
 	return req, nil
 }

@@ -99,7 +99,7 @@ func listUsersEndpoint(svc users.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return users.UserPage{}, err
 		}
-		up, err := svc.Users(ctx, req.token, req.offset, req.limit)
+		up, err := svc.Users(ctx, req.token, req.offset, req.limit, req.email, req.metadata)
 		if err != nil {
 			return users.UserPage{}, err
 		}
