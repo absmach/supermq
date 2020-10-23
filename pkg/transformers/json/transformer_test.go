@@ -43,7 +43,7 @@ func TestTransformJSON(t *testing.T) {
 			"key1":      "val1",
 			"key2":      float64(123),
 			"key3":      "val3",
-			"key4.key5": "val5",
+			"key4/key5": "val5",
 		},
 	}
 

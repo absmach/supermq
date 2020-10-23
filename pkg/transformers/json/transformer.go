@@ -12,9 +12,10 @@ import (
 	"github.com/mainflux/mainflux/pkg/transformers"
 )
 
-var (
-	ErrInvalidKey = errors.New("invalid object key")
-)
+const sep = "/"
+
+// ErrInvalidKey represents an invalid JSON key format.
+var ErrInvalidKey = errors.New("invalid object key")
 
 type funcTransformer func(messaging.Message) (interface{}, error)
 
@@ -49,13 +50,13 @@ func transformer(msg messaging.Message) (interface{}, error) {
 
 func flatten(prefix string, m, m1 map[string]interface{}) (map[string]interface{}, error) {
 	for k, v := range m1 {
-		if k == "publisher" || k == "protocol" || k == "channel" || k == "subtopic" || strings.Contains(k, ".") {
+		if k == "publisher" || k == "protocol" || k == "channel" || k == "subtopic" || strings.Contains(k, sep) {
 			return nil, ErrInvalidKey
 		}
 		switch val := v.(type) {
 		case map[string]interface{}:
 			var err error
-			m, err = flatten(prefix+k+".", m, val)
+			m, err = flatten(prefix+k+sep, m, val)
 			if err != nil {
 				return nil, err
 			}
