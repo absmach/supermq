@@ -115,7 +115,7 @@ func TestLogin(t *testing.T) {
 	}
 }
 
-func TestUser(t *testing.T) {
+func TestViewUser(t *testing.T) {
 	svc := newService()
 	id, err := svc.Register(context.Background(), user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -158,7 +158,7 @@ func TestUser(t *testing.T) {
 	}
 }
 
-func TestProfile(t *testing.T) {
+func TestViewProfile(t *testing.T) {
 	svc := newService()
 	_, err := svc.Register(context.Background(), user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -188,6 +188,60 @@ func TestProfile(t *testing.T) {
 
 	for desc, tc := range cases {
 		_, err := svc.ViewProfile(context.Background(), tc.token)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+	}
+}
+func TestListUsers(t *testing.T) {
+	svc := newService()
+
+	_, err := svc.Register(context.Background(), user)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+
+	token, err := svc.Login(context.Background(), user)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+
+	var nUsers = uint64(10)
+
+	for i := uint64(1); i < nUsers; i++ {
+		email := fmt.Sprintf("TestListUsers%d@example.com", i)
+		user := users.User{
+			Email:    email,
+			Password: "passpass",
+		}
+		_, err := svc.Register(context.Background(), user)
+		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	}
+
+	cases := map[string]struct {
+		token  string
+		offset uint64
+		limit  uint64
+		email  string
+		size   uint64
+		err    error
+	}{
+		"list users with authorized token": {
+			token: token,
+			size:  0,
+			err:   nil,
+		},
+		"list user with unauthorized token": {
+			token: "",
+			size:  0,
+			err:   users.ErrUnauthorizedAccess,
+		},
+		"list users with offset and limit": {
+			token:  token,
+			offset: 6,
+			limit:  nUsers,
+			size:   nUsers - 6,
+		},
+	}
+
+	for desc, tc := range cases {
+		page, err := svc.ListUsers(context.Background(), tc.token, tc.offset, tc.limit, tc.email, nil)
+		size := uint64(len(page.Users))
+		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", desc, tc.size, size))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }

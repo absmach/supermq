@@ -93,7 +93,21 @@ func (urm *userRepositoryMock) RetrieveAll(ctx context.Context, offset, limit ui
 	urm.mu.Lock()
 	defer urm.mu.Unlock()
 
-	return users.UserPage{}, nil
+	up := users.UserPage{}
+	i := uint64(0)
+
+	for _, u := range urm.users {
+		if i >= offset && i < (limit+offset) {
+			up.Users = append(up.Users, u)
+		}
+		i++
+	}
+
+	up.Offset = offset
+	up.Limit = limit
+	up.Total = uint64(i)
+
+	return up, nil
 }
 
 func (urm *userRepositoryMock) RetrieveMembers(ctx context.Context, groupID string, offset, limit uint64, um users.Metadata) (users.UserPage, error) {

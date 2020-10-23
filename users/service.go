@@ -207,7 +207,6 @@ func (svc usersService) Login(ctx context.Context, user User) (string, error) {
 }
 
 func (svc usersService) ViewUser(ctx context.Context, token, id string) (User, error) {
-	// TODO: Check Policy
 	_, err := svc.identify(ctx, token)
 	if err != nil {
 		return User{}, err
@@ -246,7 +245,6 @@ func (svc usersService) ViewProfile(ctx context.Context, token string) (User, er
 }
 
 func (svc usersService) ListUsers(ctx context.Context, token string, offset, limit uint64, email string, m Metadata) (UserPage, error) {
-	// TODO: Check Policy
 	_, err := svc.identify(ctx, token)
 	if err != nil {
 		return UserPage{}, err
