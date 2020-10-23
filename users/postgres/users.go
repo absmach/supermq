@@ -227,8 +227,8 @@ func (ur userRepository) UpdatePassword(ctx context.Context, email, password str
 	return nil
 }
 
-func (ur userRepository) RetrieveMembers(ctx context.Context, groupID string, offset, limit uint64, gm users.Metadata) (users.UserPage, error) {
-	mq, mp, err := createMetadataQuery("users.", gm)
+func (ur userRepository) RetrieveMembers(ctx context.Context, groupID string, offset, limit uint64, um users.Metadata) (users.UserPage, error) {
+	mq, mp, err := createMetadataQuery("users.", um)
 	if err != nil {
 		return users.UserPage{}, errors.Wrap(errRetrieveDB, err)
 	}
@@ -378,12 +378,12 @@ func createEmailQuery(entity string, email string) (string, string, error) {
 	return query, param, nil
 }
 
-func createMetadataQuery(entity string, meta users.Metadata) (string, []byte, error) {
-	if len(meta) == 0 {
+func createMetadataQuery(entity string, um users.Metadata) (string, []byte, error) {
+	if len(um) == 0 {
 		return "", nil, nil
 	}
 
-	param, err := json.Marshal(meta)
+	param, err := json.Marshal(um)
 	if err != nil {
 		return "", nil, err
 	}

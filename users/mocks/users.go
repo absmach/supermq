@@ -96,7 +96,7 @@ func (urm *userRepositoryMock) RetrieveAll(ctx context.Context, offset, limit ui
 	return users.UserPage{}, nil
 }
 
-func (urm *userRepositoryMock) RetrieveMembers(ctx context.Context, groupID string, offset, limit uint64, gm users.Metadata) (users.UserPage, error) {
+func (urm *userRepositoryMock) RetrieveMembers(ctx context.Context, groupID string, offset, limit uint64, um users.Metadata) (users.UserPage, error) {
 	urm.mu.Lock()
 	defer urm.mu.Unlock()
 

@@ -128,22 +128,22 @@ func (ms *metricsMiddleware) CreateGroup(ctx context.Context, token string, grou
 	return ms.svc.CreateGroup(ctx, token, group)
 }
 
-func (ms *metricsMiddleware) ListGroups(ctx context.Context, token, id string, offset, limit uint64, meta users.Metadata) (users.GroupPage, error) {
+func (ms *metricsMiddleware) ListGroups(ctx context.Context, token, id string, offset, limit uint64, um users.Metadata) (users.GroupPage, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "list_groups").Add(1)
 		ms.latency.With("method", "list_groups").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.ListGroups(ctx, token, id, offset, limit, meta)
+	return ms.svc.ListGroups(ctx, token, id, offset, limit, um)
 }
 
-func (ms *metricsMiddleware) ListMembers(ctx context.Context, token, id string, offset, limit uint64, meta users.Metadata) (users.UserPage, error) {
+func (ms *metricsMiddleware) ListMembers(ctx context.Context, token, id string, offset, limit uint64, um users.Metadata) (users.UserPage, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "list_members").Add(1)
 		ms.latency.With("method", "list_members").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.ListMembers(ctx, token, id, offset, limit, meta)
+	return ms.svc.ListMembers(ctx, token, id, offset, limit, um)
 }
 
 func (ms *metricsMiddleware) RemoveGroup(ctx context.Context, token, id string) error {
@@ -192,11 +192,11 @@ func (ms *metricsMiddleware) Unassign(ctx context.Context, token, userID, groupI
 	return ms.svc.Unassign(ctx, token, userID, groupID)
 }
 
-func (ms *metricsMiddleware) ListMemberships(ctx context.Context, token, id string, offset, limit uint64, meta users.Metadata) (users.GroupPage, error) {
+func (ms *metricsMiddleware) ListMemberships(ctx context.Context, token, id string, offset, limit uint64, um users.Metadata) (users.GroupPage, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "list_memberships").Add(1)
 		ms.latency.With("method", "list_memberships").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.ListMemberships(ctx, token, id, offset, limit, meta)
+	return ms.svc.ListMemberships(ctx, token, id, offset, limit, um)
 }

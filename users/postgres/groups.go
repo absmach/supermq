@@ -148,8 +148,8 @@ func (gr groupRepository) RetrieveByName(ctx context.Context, name string) (user
 	return group, nil
 }
 
-func (gr groupRepository) RetrieveAllWithAncestors(ctx context.Context, groupID string, offset, limit uint64, gm users.Metadata) (users.GroupPage, error) {
-	_, mq, err := getGroupsMetadataQuery(gm)
+func (gr groupRepository) RetrieveAllWithAncestors(ctx context.Context, groupID string, offset, limit uint64, um users.Metadata) (users.GroupPage, error) {
+	_, mq, err := getGroupsMetadataQuery(um)
 	if err != nil {
 		return users.GroupPage{}, errors.Wrap(errRetrieveDB, err)
 	}
@@ -176,7 +176,7 @@ func (gr groupRepository) RetrieveAllWithAncestors(ctx context.Context, groupID 
 		cq = fmt.Sprintf("%s SELECT COUNT(*) FROM subordinates", sq)
 	}
 
-	dbPage, err := toDBGroupPage("", groupID, offset, limit, gm)
+	dbPage, err := toDBGroupPage("", groupID, offset, limit, um)
 	if err != nil {
 		return users.GroupPage{}, errors.Wrap(errSelectDb, err)
 	}
@@ -217,8 +217,8 @@ func (gr groupRepository) RetrieveAllWithAncestors(ctx context.Context, groupID 
 	return page, nil
 }
 
-func (gr groupRepository) RetrieveMemberships(ctx context.Context, userID string, offset, limit uint64, gm users.Metadata) (users.GroupPage, error) {
-	m, mq, err := getGroupsMetadataQuery(gm)
+func (gr groupRepository) RetrieveMemberships(ctx context.Context, userID string, offset, limit uint64, um users.Metadata) (users.GroupPage, error) {
+	m, mq, err := getGroupsMetadataQuery(um)
 	if err != nil {
 		return users.GroupPage{}, errors.Wrap(errRetrieveDB, err)
 	}
@@ -372,7 +372,7 @@ func toDBGroup(g users.Group) (dbGroup, error) {
 	}, nil
 }
 
-func toDBGroupPage(ownerID, groupID string, offset, limit uint64, metadata users.Metadata) (dbGroupPage, error) {
+func toDBGroupPage(ownerID, groupID string, offset, limit uint64, um users.Metadata) (dbGroupPage, error) {
 	owner, err := toUUID(ownerID)
 	if err != nil {
 		return dbGroupPage{}, err
@@ -386,7 +386,7 @@ func toDBGroupPage(ownerID, groupID string, offset, limit uint64, metadata users
 	}
 	return dbGroupPage{
 		ID:       group,
-		Metadata: dbMetadata(metadata),
+		Metadata: dbMetadata(um),
 		OwnerID:  owner,
 		Offset:   offset,
 		Limit:    limit,
@@ -424,13 +424,13 @@ func toDBGroupRelation(userID, groupID string) (dbGroupRelation, error) {
 	}, nil
 }
 
-func getGroupsMetadataQuery(m users.Metadata) ([]byte, string, error) {
+func getGroupsMetadataQuery(um users.Metadata) ([]byte, string, error) {
 	mq := ""
 	mb := []byte("{}")
-	if len(m) > 0 {
+	if len(um) > 0 {
 		mq = `groups.metadata @> :metadata`
 
-		b, err := json.Marshal(m)
+		b, err := json.Marshal(um)
 		if err != nil {
 			return nil, "", err
 		}
