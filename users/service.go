@@ -115,13 +115,13 @@ type Service interface {
 
 	// ListGroups retrieves groups that are children to group identified by parenID
 	// if parentID is empty all groups are listed.
-	ListGroups(ctx context.Context, token, parentID string, offset, limit uint64, meta Metadata) (GroupPage, error)
+	ListGroups(ctx context.Context, token, parentID string, offset, limit uint64, m Metadata) (GroupPage, error)
 
 	// Members retrieves users that are assigned to a group identified by groupID.
-	ListMembers(ctx context.Context, token, groupID string, offset, limit uint64, meta Metadata) (UserPage, error)
+	ListMembers(ctx context.Context, token, groupID string, offset, limit uint64, m Metadata) (UserPage, error)
 
 	// ListMemberships retrieves groups that user identified with userID belongs to.
-	ListMemberships(ctx context.Context, token, groupID string, offset, limit uint64, meta Metadata) (GroupPage, error)
+	ListMemberships(ctx context.Context, token, groupID string, offset, limit uint64, m Metadata) (GroupPage, error)
 
 	// RemoveGroup removes the group identified with the provided ID.
 	RemoveGroup(ctx context.Context, token, id string) error
@@ -350,19 +350,19 @@ func (svc usersService) CreateGroup(ctx context.Context, token string, group Gro
 	return svc.groups.Save(ctx, group)
 }
 
-func (svc usersService) ListGroups(ctx context.Context, token string, parentID string, offset, limit uint64, meta Metadata) (GroupPage, error) {
+func (svc usersService) ListGroups(ctx context.Context, token string, parentID string, offset, limit uint64, m Metadata) (GroupPage, error) {
 	_, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return GroupPage{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
-	return svc.groups.RetrieveAllWithAncestors(ctx, parentID, offset, limit, meta)
+	return svc.groups.RetrieveAllWithAncestors(ctx, parentID, offset, limit, m)
 }
 
-func (svc usersService) ListMembers(ctx context.Context, token, groupID string, offset, limit uint64, meta Metadata) (UserPage, error) {
+func (svc usersService) ListMembers(ctx context.Context, token, groupID string, offset, limit uint64, m Metadata) (UserPage, error) {
 	if _, err := svc.identify(ctx, token); err != nil {
 		return UserPage{}, err
 	}
-	return svc.users.RetrieveMembers(ctx, groupID, offset, limit, meta)
+	return svc.users.RetrieveMembers(ctx, groupID, offset, limit, m)
 }
 
 func (svc usersService) RemoveGroup(ctx context.Context, token, id string) error {
@@ -400,11 +400,11 @@ func (svc usersService) Assign(ctx context.Context, token, userID, groupID strin
 	return svc.groups.Assign(ctx, userID, groupID)
 }
 
-func (svc usersService) ListMemberships(ctx context.Context, token, userID string, offset, limit uint64, meta Metadata) (GroupPage, error) {
+func (svc usersService) ListMemberships(ctx context.Context, token, userID string, offset, limit uint64, m Metadata) (GroupPage, error) {
 	if _, err := svc.identify(ctx, token); err != nil {
 		return GroupPage{}, err
 	}
-	return svc.groups.RetrieveMemberships(ctx, userID, offset, limit, meta)
+	return svc.groups.RetrieveMemberships(ctx, userID, offset, limit, m)
 }
 
 // Auth helpers
