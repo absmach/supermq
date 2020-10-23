@@ -153,7 +153,7 @@ func TestUser(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		_, err := svc.User(context.Background(), tc.token, tc.userID)
+		_, err := svc.ViewUser(context.Background(), tc.token, tc.userID)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
@@ -187,7 +187,7 @@ func TestProfile(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		_, err := svc.Profile(context.Background(), tc.token)
+		_, err := svc.ViewProfile(context.Background(), tc.token)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
@@ -387,7 +387,7 @@ func TestUpdateGroup(t *testing.T) {
 	for _, tc := range cases {
 		err := svc.UpdateGroup(context.Background(), token, tc.group)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		g, err := svc.Group(context.Background(), token, saved.ID)
+		g, err := svc.ViewGroup(context.Background(), token, saved.ID)
 		assert.Nil(t, err, fmt.Sprintf("retrieve group failed: %s", err))
 		assert.Equal(t, tc.group.Description, g.Description, tc.desc, tc.err)
 		assert.Equal(t, tc.group.Name, g.Name, tc.desc, tc.err)

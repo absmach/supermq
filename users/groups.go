@@ -37,8 +37,8 @@ type GroupRepository interface {
 	// RetrieveAllWithAncestors retrieves all groups if groupID == "",  if groupID is specified returns children groups
 	RetrieveAllWithAncestors(ctx context.Context, groupID string, offset, limit uint64, gm Metadata) (GroupPage, error)
 
-	// Memberships retrieves all groups that user belongs to
-	Memberships(ctx context.Context, userID string, offset, limit uint64, gm Metadata) (GroupPage, error)
+	// RetrieveMemberships retrieves all groups that user belongs to
+	RetrieveMemberships(ctx context.Context, userID string, offset, limit uint64, gm Metadata) (GroupPage, error)
 
 	// Assign adds user to group.
 	Assign(ctx context.Context, userID, groupID string) error

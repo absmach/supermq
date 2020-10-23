@@ -141,7 +141,7 @@ func (ur userRepository) RetrieveByID(ctx context.Context, id string) (users.Use
 	return toUser(dbu)
 }
 
-func (ur userRepository) Users(ctx context.Context, offset, limit uint64, email string, um users.Metadata) (users.UserPage, error) {
+func (ur userRepository) RetrieveAll(ctx context.Context, offset, limit uint64, email string, um users.Metadata) (users.UserPage, error) {
 	eq, ep, err := createEmailQuery("", email)
 	if err != nil {
 		return users.UserPage{}, errors.Wrap(errRetrieveDB, err)
@@ -227,7 +227,7 @@ func (ur userRepository) UpdatePassword(ctx context.Context, email, password str
 	return nil
 }
 
-func (ur userRepository) Members(ctx context.Context, groupID string, offset, limit uint64, gm users.Metadata) (users.UserPage, error) {
+func (ur userRepository) RetrieveMembers(ctx context.Context, groupID string, offset, limit uint64, gm users.Metadata) (users.UserPage, error) {
 	mq, mp, err := createMetadataQuery("users.", gm)
 	if err != nil {
 		return users.UserPage{}, errors.Wrap(errRetrieveDB, err)
