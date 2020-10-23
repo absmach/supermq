@@ -367,29 +367,27 @@ func toUser(dbu dbUser) (users.User, error) {
 }
 
 func createEmailQuery(entity string, email string) (string, string, error) {
-	query := ""
-	param := ""
-
-	if email != "" {
-		// Create LIKE operator to search Users with email containing a given string
-		param = fmt.Sprintf(`%%%s%%`, email)
-		query = fmt.Sprintf("%semail LIKE :email", entity)
-		return query, param, nil
+	if email == "" {
+		return "", "", nil
 	}
+
+	// Create LIKE operator to search Users with email containing a given string
+	param := fmt.Sprintf(`%%%s%%`, email)
+	query := fmt.Sprintf("%semail LIKE :email", entity)
 
 	return query, param, nil
 }
 
 func createMetadataQuery(entity string, meta users.Metadata) (string, []byte, error) {
-	query := ""
-	param := []byte("{}")
-	if len(meta) > 0 {
-		query = fmt.Sprintf("%smetadata @> :metadata", entity)
-		b, err := json.Marshal(meta)
-		if err != nil {
-			return "", nil, err
-		}
-		param = b
+	if len(meta) == 0 {
+		return "", nil, nil
 	}
+
+	param, err := json.Marshal(meta)
+	if err != nil {
+		return "", nil, err
+	}
+	query := fmt.Sprintf("%smetadata @> :metadata", entity)
+
 	return query, param, nil
 }
