@@ -78,7 +78,7 @@ type UserRepository interface {
 	// UpdatePassword updates password for user with given email
 	UpdatePassword(ctx context.Context, email, password string) error
 
-	// RettrieveMembers retrieves all users that belong to a group
+	// RetrieveMembers retrieves all users that belong to a group
 	RetrieveMembers(ctx context.Context, groupID string, offset, limit uint64, m Metadata) (UserPage, error)
 }
 
