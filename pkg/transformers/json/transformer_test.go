@@ -16,7 +16,7 @@ import (
 
 const (
 	validPayload   = `{"key1": "val1", "key2": 123, "key3": "val3", "key4": {"key5": "val5"}}`
-	invalidPayload = `{"key1": "val1", "key2": 123, "key3.1": "val3", "key4": {"key5": "val5"}}`
+	invalidPayload = `{"key1": "val1", "key2": 123, "key3/1": "val3", "key4": {"key5": "val5"}}`
 )
 
 func TestTransformJSON(t *testing.T) {
