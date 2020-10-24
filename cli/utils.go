@@ -43,7 +43,10 @@ func logUsage(u string) {
 }
 
 func logError(err error) {
-	fmt.Printf("\n%s\n\n", color.RedString(err.Error()))
+	boldRed := color.New(color.FgRed, color.Bold)
+	boldRed.Print("\nerror: ")
+
+	fmt.Printf("%s\n\n", color.RedString(err.Error()))
 }
 
 func logOK() {
