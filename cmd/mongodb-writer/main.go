@@ -34,7 +34,7 @@ const (
 	defDB          = "mainflux"
 	defDBHost      = "localhost"
 	defDBPort      = "27017"
-	defConfigPath  = "/configs.toml"
+	defConfigPath  = "/config.toml"
 	defContentType = "application/senml+json"
 
 	envNatsURL     = "MF_NATS_URL"

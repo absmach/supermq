@@ -34,7 +34,7 @@ const (
 	defDBPort          = "8086"
 	defDBUser          = "mainflux"
 	defDBPass          = "mainflux"
-	defSubjectsCfgPath = "/config/subjects.toml"
+	defSubjectsCfgPath = "/config.toml"
 	defContentType     = "application/senml+json"
 
 	envNatsURL         = "MF_NATS_URL"
@@ -45,7 +45,7 @@ const (
 	envDBPort          = "MF_INFLUX_WRITER_DB_PORT"
 	envDBUser          = "MF_INFLUX_WRITER_DB_USER"
 	envDBPass          = "MF_INFLUX_WRITER_DB_PASS"
-	envSubjectsCfgPath = "MF_INFLUX_WRITER_SUBJECTS_CONFIG"
+	envSubjectsCfgPath = "MF_INFLUX_WRITER_CONFIG_PATH"
 	envContentType     = "MF_INFLUX_WRITER_CONTENT_TYPE"
 )
 

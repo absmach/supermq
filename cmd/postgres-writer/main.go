@@ -39,7 +39,7 @@ const (
 	defDBSSLCert     = ""
 	defDBSSLKey      = ""
 	defDBSSLRootCert = ""
-	defConfigPath    = "/configs.toml"
+	defConfigPath    = "/config.toml"
 	defContentType   = "application/senml+json"
 
 	envNatsURL       = "MF_NATS_URL"
