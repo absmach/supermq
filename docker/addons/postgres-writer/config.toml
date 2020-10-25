@@ -3,10 +3,3 @@
 # followed by a subtopic (e.g ["channels.<channel_id>.sub.topic.x", ...]).
 [subjects]
 filter = ["channels.>"]
-
-# Payload of type JSON can be transformed if writer ContentType is application/json.
-# To transform all key-value pairs of the JSON messsage use default value "*".
-# To filter certain key-value pairs pass the list of keys that have to be
-# transformed  (e.g ["temperature", "humidity"]).
-[keys]
-filter = ["*"]
