@@ -263,6 +263,7 @@ func updateGroupEndpoint(svc users.Service) endpoint.Endpoint {
 		}
 
 		group := users.Group{
+			ID:          req.id,
 			Name:        req.Name,
 			Description: req.Description,
 			Metadata:    req.Metadata,
