@@ -52,11 +52,11 @@ func (pr postgresRepo) saveSenml(messages interface{}) error {
 		return errSaveMessage
 	}
 	q := `INSERT INTO senml (id, channel, subtopic, publisher, protocol,
-    name, unit, value, string_value, bool_value, data_value, sum,
-    time, update_time)
-    VALUES (:id, :channel, :subtopic, :publisher, :protocol, :name, :unit,
-    :value, :string_value, :bool_value, :data_value, :sum,
-    :time, :update_time);`
+          name, unit, value, string_value, bool_value, data_value, sum,
+          time, update_time)
+          VALUES (:id, :channel, :subtopic, :publisher, :protocol, :name, :unit,
+          :value, :string_value, :bool_value, :data_value, :sum,
+          :time, :update_time);`
 
 	tx, err := pr.db.BeginTxx(context.Background(), nil)
 	if err != nil {
@@ -103,7 +103,7 @@ func (pr postgresRepo) saveJSON(messages interface{}) error {
 		return errSaveMessage
 	}
 	q := `INSERT INTO json (id, channel, subtopic, publisher, protocol, payload)
-    VALUES (:id, :channel, :subtopic, :publisher, :protocol, :payload);`
+          VALUES (:id, :channel, :subtopic, :publisher, :protocol, :payload);`
 
 	dbmsg, err := toJSONMessage(msg)
 	if err != nil {

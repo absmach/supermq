@@ -60,7 +60,7 @@ func (c *consumer) handler(msg messaging.Message) error {
 }
 
 type filterConfig struct {
-	List []string `toml:"filter"`
+	Filter []string `toml:"filter"`
 }
 
 type subjectsConfig struct {
@@ -78,5 +78,5 @@ func loadSubjectsConfig(subjectsConfigPath string) ([]string, error) {
 		return []string{pubsub.SubjectAllChannels}, errors.Wrap(errParseConfFile, err)
 	}
 
-	return subjectsCfg.Subjects.List, nil
+	return subjectsCfg.Subjects.Filter, nil
 }
