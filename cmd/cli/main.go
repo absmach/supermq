@@ -117,6 +117,13 @@ func main() {
 		"Do not check for TLS cert",
 	)
 
+
+	rootCmd.PersistentFlags().BoolVar(
+		&cli.RawOutput,
+		"raw",
+		false,
+		"Enables raw output mode for easier parsing of output",
+	)
 	// Client and Channels Flags
 	rootCmd.PersistentFlags().UintVarP(
 		&cli.Limit,

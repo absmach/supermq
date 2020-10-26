@@ -18,6 +18,8 @@ var (
 	Offset uint = 0
 	// Name query parameter
 	Name string = ""
+	// RawOutput raw output mode
+	RawOutput bool = false
 )
 
 func logJSON(iList ...interface{}) {
@@ -54,5 +56,9 @@ func logOK() {
 }
 
 func logCreated(e string) {
-	fmt.Printf(color.BlueString("\ncreated: %s\n\n"), e)
+	if RawOutput {
+		fmt.Println(e)
+	} else {
+		fmt.Printf(color.BlueString("\ncreated: %s\n\n"), e)
+	}
 }
