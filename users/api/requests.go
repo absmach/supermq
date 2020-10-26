@@ -143,10 +143,7 @@ func (req updateGroupReq) validate() error {
 	if req.id == "" {
 		return users.ErrMalformedEntity
 	}
-	if req.Name == "" {
-		return users.ErrMalformedEntity
-	}
-	if len(req.Name) > maxNameSize {
+	if req.Name == "" || len(req.Name) > maxNameSize {
 		return users.ErrMalformedEntity
 	}
 
