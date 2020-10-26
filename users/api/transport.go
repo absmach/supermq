@@ -327,7 +327,7 @@ func decodeGroupUpdate(_ context.Context, r *http.Request) (interface{}, error) 
 
 	req := updateGroupReq{
 		token: r.Header.Get("Authorization"),
-		id:    bone.GetValue(r, "id"),
+		id:    bone.GetValue(r, "groupID"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(users.ErrMalformedEntity, err)
