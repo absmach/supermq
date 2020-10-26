@@ -6,6 +6,7 @@ package postgres_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -18,9 +19,14 @@ import (
 )
 
 const (
-	groupName = "Mainflux"
-	password  = "12345678"
+	maxNameSize = 254
+	maxDescSize = 1024
+	groupName   = "Mainflux"
+	password    = "12345678"
 )
+
+var invalidName = strings.Repeat("m", maxNameSize+1)
+var invalidDesc = strings.Repeat("m", maxDescSize+1)
 
 func TestGroupSave(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
@@ -152,10 +158,6 @@ func TestGroupUpdate(t *testing.T) {
 		ID:   gid,
 		Name: groupName,
 	}
-	groupUp := users.Group{
-		ID:   gid,
-		Name: groupName + "-TestGroupUpdate",
-	}
 
 	_, err = groupRepo.Save(context.Background(), group)
 	require.Nil(t, err, fmt.Sprintf("group save got unexpected error: %s", err))
@@ -166,9 +168,36 @@ func TestGroupUpdate(t *testing.T) {
 		err   error
 	}{
 		{
-			desc:  "update group for existing id",
-			group: groupUp,
-			err:   nil,
+			desc: "update group for existing id",
+			group: users.Group{
+				ID:   gid,
+				Name: groupName + "-1",
+			},
+			err: nil,
+		},
+		{
+			desc: "update group for non-existing id",
+			group: users.Group{
+				ID:   "wrong",
+				Name: groupName + "-2",
+			},
+			err: users.ErrUpdateGroup,
+		},
+		{
+			desc: "update group for invalid name",
+			group: users.Group{
+				ID:   gid,
+				Name: invalidName,
+			},
+			err: users.ErrUpdateGroup,
+		},
+		{
+			desc: "update group for invalid description",
+			group: users.Group{
+				ID:          gid,
+				Description: invalidDesc,
+			},
+			err: users.ErrUpdateGroup,
 		},
 	}
 
