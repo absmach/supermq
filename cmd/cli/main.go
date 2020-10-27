@@ -117,6 +117,12 @@ func main() {
 		"Do not check for TLS cert",
 	)
 
+	rootCmd.PersistentFlags().StringVar(
+		&cli.UserAuthToken,
+		"user-auth-token",
+		"",
+		"Mainflux user auth token",
+	)
 
 	rootCmd.PersistentFlags().BoolVar(
 		&cli.RawOutput,
