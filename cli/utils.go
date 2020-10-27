@@ -21,6 +21,8 @@ var (
 	Name string = ""
 	// UserAuthToken user auth token parameter
 	UserAuthToken string = ""
+	// ConfigPath config path parameter
+	ConfigPath string = ""
 	// RawOutput raw output mode
 	RawOutput bool = false
 )

@@ -32,6 +32,8 @@ func main() {
 	var rootCmd = &cobra.Command{
 		Use: "mainflux-cli",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			cli.ParseConfig()
+
 			sdkConf.MsgContentType = sdk.ContentType(msgContentType)
 			s := sdk.NewSDK(sdkConf)
 			cli.SetSDK(s)
@@ -124,12 +126,20 @@ func main() {
 		"Mainflux user auth token",
 	)
 
+	rootCmd.PersistentFlags().StringVar(
+		&cli.ConfigPath,
+		"config",
+		"",
+		"Mainflux config path",
+	)
+
 	rootCmd.PersistentFlags().BoolVar(
 		&cli.RawOutput,
 		"raw",
 		false,
 		"Enables raw output mode for easier parsing of output",
 	)
+
 	// Client and Channels Flags
 	rootCmd.PersistentFlags().UintVarP(
 		&cli.Limit,
