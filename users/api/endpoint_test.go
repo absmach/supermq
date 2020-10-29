@@ -130,7 +130,7 @@ func TestLogin(t *testing.T) {
 	defer ts.Close()
 	client := ts.Client()
 	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
-	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Issuer: user.Email, Type: 0})
+	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
 	token := tkn.GetValue()
 	tokenData := toJSON(map[string]string{"token": token})
 	data := toJSON(user)
@@ -190,11 +190,11 @@ func TestUser(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	client := ts.Client()
-	_, err := svc.Register(context.Background(), user)
+	userID, err := svc.Register(context.Background(), user)
 	require.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
 
 	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
-	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Issuer: user.Email, Type: 0})
+	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
 	token := tkn.GetValue()
 	cases := []struct {
 		desc   string
@@ -210,7 +210,7 @@ func TestUser(t *testing.T) {
 		req := testRequest{
 			client: client,
 			method: http.MethodGet,
-			url:    fmt.Sprintf("%s/users", ts.URL),
+			url:    fmt.Sprintf("%s/users/%s", ts.URL, userID),
 			token:  tc.token,
 		}
 		res, err := req.make()
@@ -304,7 +304,7 @@ func TestPasswordReset(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
 
-	tkn, err := auth.Issue(context.Background(), &mainflux.IssueReq{Issuer: user.Email, Type: 0})
+	tkn, err := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
 	require.Nil(t, err, fmt.Sprintf("issue user token error: %s", err))
 
 	token := tkn.GetValue()
@@ -367,7 +367,7 @@ func TestPasswordChange(t *testing.T) {
 	client := ts.Client()
 	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
 
-	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Issuer: user.Email, Type: 0})
+	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
 	token := tkn.GetValue()
 	resData := struct {
 		Msg string `json:"msg"`
@@ -445,7 +445,7 @@ func TestGroupCreate(t *testing.T) {
 	_, err := svc.Register(context.Background(), user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
-	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Issuer: user.Email, Type: 0})
+	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
 	token := tkn.GetValue()
 
 	expectedSuccess := ""
@@ -475,7 +475,7 @@ func TestGroupCreate(t *testing.T) {
 		{"group create with existing name", createValidTokenRequest, contentType, http.StatusConflict, groupExists, token},
 		{"group create with invalid token", createInvalidTokenRequest, contentType, http.StatusForbidden, unauthRes, ""},
 		{"group create with empty JSON request", "{}", contentType, http.StatusBadRequest, malformedRes, token},
-		{"group create empty request", "", contentType, http.StatusBadRequest, failDecodeRes, token},
+		{"group create empty request", "", contentType, http.StatusBadRequest, malformedRes, token},
 		{"group create missing content type", createValidTokenRequest, "", http.StatusUnsupportedMediaType, unsupportedRes, token},
 	}
 

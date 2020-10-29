@@ -21,10 +21,26 @@ func (req userReq) validate() error {
 }
 
 type viewUserReq struct {
-	token string
+	token  string
+	userID string
 }
 
 func (req viewUserReq) validate() error {
+	if req.token == "" {
+		return users.ErrUnauthorizedAccess
+	}
+	return nil
+}
+
+type listUsersReq struct {
+	token    string
+	offset   uint64
+	limit    uint64
+	email    string
+	metadata users.Metadata
+}
+
+func (req listUsersReq) validate() error {
 	if req.token == "" {
 		return users.ErrUnauthorizedAccess
 	}
@@ -113,7 +129,9 @@ func (req createGroupReq) validate() error {
 
 type updateGroupReq struct {
 	token       string
+	id          string
 	Name        string                 `json:"name,omitempty"`
+	ParentID    string                 `json:"parent_id,omitempty"`
 	Description string                 `json:"description,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
@@ -122,12 +140,13 @@ func (req updateGroupReq) validate() error {
 	if req.token == "" {
 		return users.ErrUnauthorizedAccess
 	}
-	if req.Name == "" {
+	if req.id == "" {
 		return users.ErrMalformedEntity
 	}
-	if len(req.Name) > maxNameSize {
+	if req.Name == "" || len(req.Name) > maxNameSize {
 		return users.ErrMalformedEntity
 	}
+
 	return nil
 }
 
