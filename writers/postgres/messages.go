@@ -24,6 +24,7 @@ var (
 	ErrInvalidMessage = errors.New("invalid message representation")
 	errSaveMessage    = errors.New("failed to save message to postgres database")
 	errTransRollback  = errors.New("failed to rollback transaction")
+	errMessageFormat  = errors.New("invalid message format")
 )
 
 var _ writers.MessageRepository = (*postgresRepo)(nil)
@@ -98,29 +99,57 @@ func (pr postgresRepo) saveSenml(messages interface{}) error {
 }
 
 func (pr postgresRepo) saveJSON(messages interface{}) error {
-	msg, ok := messages.(mfjson.Message)
-	if !ok {
-		return errSaveMessage
+	msgs := []mfjson.Message{}
+	switch m := messages.(type) {
+	case mfjson.Message:
+		msgs = append(msgs, m)
+	case []mfjson.Message:
+		msgs = append(msgs, m...)
+	default:
+		return errMessageFormat
 	}
-	q := `INSERT INTO json (id, channel, subtopic, publisher, protocol, payload)
-          VALUES (:id, :channel, :subtopic, :publisher, :protocol, :payload);`
 
-	dbmsg, err := toJSONMessage(msg)
+	tx, err := pr.db.BeginTxx(context.Background(), nil)
 	if err != nil {
 		return errors.Wrap(errSaveMessage, err)
 	}
 
-	if _, err := pr.db.NamedExec(q, dbmsg); err != nil {
-		pqErr, ok := err.(*pq.Error)
-		if ok {
-			switch pqErr.Code.Name() {
-			case errInvalid:
-				return errors.Wrap(errSaveMessage, ErrInvalidMessage)
+	q := `INSERT INTO json (id, channel, subtopic, publisher, protocol, payload)
+		  VALUES (:id, :channel, :subtopic, :publisher, :protocol, :payload);`
+
+	defer func() {
+		if err != nil {
+			if txErr := tx.Rollback(); txErr != nil {
+				err = errors.Wrap(err, errors.Wrap(errTransRollback, txErr))
 			}
+			return
 		}
 
-		return errors.Wrap(errSaveMessage, err)
+		if err = tx.Commit(); err != nil {
+			err = errors.Wrap(errSaveMessage, err)
+		}
+		return
+	}()
+
+	for _, msg := range msgs {
+		var dbmsg jsonMessage
+		dbmsg, err = toJSONMessage(msg)
+		if err != nil {
+			return errors.Wrap(errSaveMessage, err)
+		}
+		if _, err = tx.NamedExec(q, dbmsg); err != nil {
+			pqErr, ok := err.(*pq.Error)
+			if ok {
+				switch pqErr.Code.Name() {
+				case errInvalid:
+					return errors.Wrap(errSaveMessage, ErrInvalidMessage)
+				}
+			}
+
+			return errors.Wrap(errSaveMessage, err)
+		}
 	}
+
 	return err
 }
 

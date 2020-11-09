@@ -20,8 +20,10 @@ const (
 	jsonPoints  = "json"
 )
 
-var errSaveMessage = errors.New("failed to save message to influxdb database")
-
+var (
+	errSaveMessage   = errors.New("failed to save message to influxdb database")
+	errMessageFormat = errors.New("invalid message format")
+)
 var _ writers.MessageRepository = (*influxRepo)(nil)
 
 type influxRepo struct {
@@ -83,19 +85,35 @@ func (repo *influxRepo) senmlPoints(pts influxdata.BatchPoints, messages interfa
 }
 
 func (repo *influxRepo) jsonPoints(pts influxdata.BatchPoints, messages interface{}) (influxdata.BatchPoints, error) {
-	msg, ok := messages.(json.Message)
-	if !ok {
-		return nil, errSaveMessage
+	msgs := []json.Message{}
+	switch m := messages.(type) {
+	case json.Message:
+		msgs = append(msgs, m)
+	case []json.Message:
+		for i, v := range m {
+			msgs = append(msgs, v)
+			// If messages are send as an array, the time
+			// needs to be different.
+			v.Created += int64(i)
+		}
+	default:
+		return nil, errMessageFormat
 	}
 
-	tgs, flds := jsonTags(msg), jsonFields(msg)
-	t := time.Unix(0, msg.Created)
+	for _, m := range msgs {
+		t := time.Unix(0, m.Created)
 
-	pt, err := influxdata.NewPoint(jsonPoints, tgs, flds, t)
-	if err != nil {
-		return nil, errors.Wrap(errSaveMessage, err)
+		pt, err := influxdata.NewPoint(jsonPoints, jsonTags(m), m.Payload, t)
+		if err != nil {
+			return nil, errors.Wrap(errSaveMessage, err)
+		}
+		pts.AddPoint(pt)
 	}
-	pts.AddPoint(pt)
 
 	return pts, nil
+}
+
+type message struct {
+	json.Message
+	payload map[string]interface{}
 }

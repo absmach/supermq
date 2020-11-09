@@ -3,7 +3,6 @@ package influxdb
 import (
 	"strconv"
 
-	"github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 )
 
@@ -33,8 +32,4 @@ func senmlFields(msg senml.Message) fields {
 	}
 
 	return ret
-}
-
-func jsonFields(msg json.Message) fields {
-	return msg.Payload
 }

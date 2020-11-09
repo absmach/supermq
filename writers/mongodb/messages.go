@@ -19,7 +19,10 @@ const (
 	jsonCollection  string = "json"
 )
 
-var errSaveMessage = errors.New("failed to save message to mongodb database")
+var (
+	errSaveMessage   = errors.New("failed to save message to mongodb database")
+	errMessageFormat = errors.New("invalid message format")
+)
 
 var _ writers.MessageRepository = (*mongoRepo)(nil)
 
@@ -33,9 +36,8 @@ func New(db *mongo.Database) writers.MessageRepository {
 }
 
 func (repo *mongoRepo) Save(messages interface{}) error {
-
 	switch messages.(type) {
-	case json.Message:
+	case json.Message, []json.Message:
 		return repo.saveJSON(messages)
 	default:
 		return repo.saveSenml(messages)
@@ -85,19 +87,33 @@ func (repo *mongoRepo) saveSenml(messages interface{}) error {
 }
 
 func (repo *mongoRepo) saveJSON(messages interface{}) error {
-	msg, ok := messages.(json.Message)
-	if !ok {
-		return errSaveMessage
+	msgs := []interface{}{}
+	switch msg := messages.(type) {
+	case json.Message:
+		add := message{
+			Channel:   msg.Channel,
+			Subtopic:  msg.Subtopic,
+			Publisher: msg.Publisher,
+			Protocol:  msg.Protocol,
+			Payload:   msg.Payload,
+		}
+		msgs = append(msgs, add)
+	case []json.Message:
+		for _, m := range msg {
+			add := message{
+				Channel:   m.Channel,
+				Subtopic:  m.Subtopic,
+				Publisher: m.Publisher,
+				Protocol:  m.Protocol,
+				Payload:   m.Payload,
+			}
+			msgs = append(msgs, add)
+		}
 	}
+
 	coll := repo.db.Collection(jsonCollection)
-	m := message{
-		Channel:   msg.Channel,
-		Subtopic:  msg.Subtopic,
-		Publisher: msg.Publisher,
-		Protocol:  msg.Protocol,
-		Payload:   msg.Payload,
-	}
-	_, err := coll.InsertOne(context.Background(), m)
+
+	_, err := coll.InsertMany(context.Background(), msgs)
 	if err != nil {
 		return errors.Wrap(errSaveMessage, err)
 	}
