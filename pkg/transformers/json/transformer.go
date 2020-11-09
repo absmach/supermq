@@ -14,8 +14,13 @@ import (
 
 const sep = "/"
 
-// ErrInvalidKey represents an invalid JSON key format.
-var ErrInvalidKey = errors.New("invalid object key")
+var (
+	// ErrInvalidKey represents an invalid JSON key format.
+	ErrInvalidKey = errors.New("invalid object key")
+
+	errInvalidFormat     = errors.New("invalid JSON object")
+	errInvalidNestedJSON = errors.New("invalid nested JSON object")
+)
 
 type funcTransformer func(messaging.Message) (interface{}, error)
 
@@ -27,7 +32,6 @@ func New() transformers.Transformer {
 func (fh funcTransformer) Transform(msg messaging.Message) (interface{}, error) {
 	return fh(msg)
 }
-
 func transformer(msg messaging.Message) (interface{}, error) {
 	ret := Message{
 		Publisher: msg.Publisher,
@@ -39,11 +43,30 @@ func transformer(msg messaging.Message) (interface{}, error) {
 	if err := json.Unmarshal(msg.Payload, &ret.Payload); err != nil {
 		return nil, err
 	}
-	var err error
-	var pld = make(map[string]interface{})
-	ret.Payload, err = flatten("", pld, ret.Payload)
-	if err != nil {
-		return nil, err
+	switch payload := ret.Payload.(type) {
+	case map[string]interface{}:
+		pld := make(map[string]interface{})
+		p, err := flatten("", pld, payload)
+		if err != nil {
+			return nil, err
+		}
+		ret.Payload = p
+	case []interface{}:
+		resPld := []map[string]interface{}{}
+		for _, val := range payload {
+			v, ok := val.(map[string]interface{})
+			if !ok {
+				return nil, errInvalidNestedJSON
+			}
+			pld := make(map[string]interface{})
+			p, err := flatten("", pld, v)
+			if err != nil {
+				return nil, err
+			}
+			resPld = append(resPld, p)
+
+		}
+		ret.Payload = resPld
 	}
 	return ret, nil
 }
