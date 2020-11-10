@@ -53,30 +53,7 @@ func (repo *mongoRepo) saveSenml(messages interface{}) error {
 	coll := repo.db.Collection(senmlCollection)
 	var dbMsgs []interface{}
 	for _, msg := range msgs {
-		m := message{
-			Channel:    msg.Channel,
-			Subtopic:   msg.Subtopic,
-			Publisher:  msg.Publisher,
-			Protocol:   msg.Protocol,
-			Name:       msg.Name,
-			Unit:       msg.Unit,
-			Time:       msg.Time,
-			UpdateTime: msg.UpdateTime,
-		}
-
-		switch {
-		case msg.Value != nil:
-			m.Value = msg.Value
-		case msg.StringValue != nil:
-			m.StringValue = msg.StringValue
-		case msg.DataValue != nil:
-			m.DataValue = msg.DataValue
-		case msg.BoolValue != nil:
-			m.BoolValue = msg.BoolValue
-		}
-		m.Sum = msg.Sum
-
-		dbMsgs = append(dbMsgs, m)
+		dbMsgs = append(dbMsgs, msg)
 	}
 
 	_, err := coll.InsertMany(context.Background(), dbMsgs)
@@ -90,24 +67,10 @@ func (repo *mongoRepo) saveJSON(messages interface{}) error {
 	msgs := []interface{}{}
 	switch msg := messages.(type) {
 	case json.Message:
-		add := message{
-			Channel:   msg.Channel,
-			Subtopic:  msg.Subtopic,
-			Publisher: msg.Publisher,
-			Protocol:  msg.Protocol,
-			Payload:   msg.Payload,
-		}
-		msgs = append(msgs, add)
+		msgs = append(msgs, msg)
 	case []json.Message:
 		for _, m := range msg {
-			add := message{
-				Channel:   m.Channel,
-				Subtopic:  m.Subtopic,
-				Publisher: m.Publisher,
-				Protocol:  m.Protocol,
-				Payload:   m.Payload,
-			}
-			msgs = append(msgs, add)
+			msgs = append(msgs, m)
 		}
 	}
 
@@ -118,21 +81,4 @@ func (repo *mongoRepo) saveJSON(messages interface{}) error {
 		return errors.Wrap(errSaveMessage, err)
 	}
 	return nil
-}
-
-type message struct {
-	Channel     string                 `bson:"channel,omitempty"`
-	Subtopic    string                 `bson:"subtopic,omitempty"`
-	Publisher   string                 `bson:"publisher,omitempty"`
-	Protocol    string                 `bson:"protocol,omitempty"`
-	Name        string                 `bson:"name,omitempty"`
-	Unit        string                 `bson:"unit,omitempty"`
-	Value       *float64               `bson:"value,omitempty"`
-	StringValue *string                `bson:"stringValue,omitempty"`
-	BoolValue   *bool                  `bson:"boolValue,omitempty"`
-	DataValue   *string                `bson:"dataValue,omitempty"`
-	Sum         *float64               `bson:"sum,omitempty"`
-	Time        float64                `bson:"time,omitempty"`
-	UpdateTime  float64                `bson:"updateTime,omitempty"`
-	Payload     map[string]interface{} `bson:"payload,omitempty"`
 }

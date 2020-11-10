@@ -39,9 +39,14 @@ func New(db *sqlx.DB) writers.MessageRepository {
 }
 
 func (pr postgresRepo) Save(messages interface{}) (err error) {
-	switch messages.(type) {
+	msgs := []mfjson.Message{}
+	switch m := messages.(type) {
 	case mfjson.Message:
-		return pr.saveJSON(messages)
+		msgs = append(msgs, m)
+		return pr.saveJSON(msgs)
+	case []mfjson.Message:
+		msgs = append(msgs, m...)
+		return pr.saveJSON(msgs)
 	default:
 		return pr.saveSenml(messages)
 	}
@@ -78,12 +83,12 @@ func (pr postgresRepo) saveSenml(messages interface{}) error {
 	}()
 
 	for _, msg := range msgs {
-		dbmsg, err := toSenmlMessage(msg)
+		id, err := uuid.NewV4()
 		if err != nil {
-			return errors.Wrap(errSaveMessage, err)
+			return err
 		}
-
-		if _, err := tx.NamedExec(q, dbmsg); err != nil {
+		m := senmlMessage{Message: msg, ID: id.String()}
+		if _, err := tx.NamedExec(q, m); err != nil {
 			pqErr, ok := err.(*pq.Error)
 			if ok {
 				switch pqErr.Code.Name() {
@@ -98,17 +103,7 @@ func (pr postgresRepo) saveSenml(messages interface{}) error {
 	return err
 }
 
-func (pr postgresRepo) saveJSON(messages interface{}) error {
-	msgs := []mfjson.Message{}
-	switch m := messages.(type) {
-	case mfjson.Message:
-		msgs = append(msgs, m)
-	case []mfjson.Message:
-		msgs = append(msgs, m...)
-	default:
-		return errMessageFormat
-	}
-
+func (pr postgresRepo) saveJSON(messages []mfjson.Message) error {
 	tx, err := pr.db.BeginTxx(context.Background(), nil)
 	if err != nil {
 		return errors.Wrap(errSaveMessage, err)
@@ -131,7 +126,7 @@ func (pr postgresRepo) saveJSON(messages interface{}) error {
 		return
 	}()
 
-	for _, msg := range msgs {
+	for _, msg := range messages {
 		var dbmsg jsonMessage
 		dbmsg, err = toJSONMessage(msg)
 		if err != nil {
@@ -153,30 +148,18 @@ func (pr postgresRepo) saveJSON(messages interface{}) error {
 	return err
 }
 
-type dbMessage struct {
+type senmlMessage struct {
+	senml.Message
+	ID string `db:"id"`
+}
+
+type jsonMessage struct {
 	ID        string `db:"id"`
 	Channel   string `db:"channel"`
 	Subtopic  string `db:"subtopic"`
 	Publisher string `db:"publisher"`
 	Protocol  string `db:"protocol"`
-}
-
-type senmlMessage struct {
-	dbMessage
-	Name        string   `db:"name"`
-	Unit        string   `db:"unit"`
-	Value       *float64 `db:"value"`
-	StringValue *string  `db:"string_value"`
-	BoolValue   *bool    `db:"bool_value"`
-	DataValue   *string  `db:"data_value"`
-	Sum         *float64 `db:"sum"`
-	Time        float64  `db:"time"`
-	UpdateTime  float64  `db:"update_time"`
-}
-
-type jsonMessage struct {
-	dbMessage
-	Payload []byte `db:"payload"`
+	Payload   []byte `db:"payload"`
 }
 
 func toJSONMessage(msg mfjson.Message) (jsonMessage, error) {
@@ -195,49 +178,12 @@ func toJSONMessage(msg mfjson.Message) (jsonMessage, error) {
 	}
 
 	m := jsonMessage{
-		dbMessage: dbMessage{
-			ID:        id.String(),
-			Channel:   msg.Channel,
-			Subtopic:  msg.Subtopic,
-			Publisher: msg.Publisher,
-			Protocol:  msg.Protocol,
-		},
-		Payload: data,
-	}
-
-	return m, nil
-}
-
-func toSenmlMessage(msg senml.Message) (senmlMessage, error) {
-	id, err := uuid.NewV4()
-	if err != nil {
-		return senmlMessage{}, err
-	}
-
-	m := senmlMessage{
-		dbMessage: dbMessage{
-			ID:        id.String(),
-			Channel:   msg.Channel,
-			Subtopic:  msg.Subtopic,
-			Publisher: msg.Publisher,
-			Protocol:  msg.Protocol,
-		},
-		Name:       msg.Name,
-		Unit:       msg.Unit,
-		Time:       msg.Time,
-		UpdateTime: msg.UpdateTime,
-		Sum:        msg.Sum,
-	}
-
-	switch {
-	case msg.Value != nil:
-		m.Value = msg.Value
-	case msg.StringValue != nil:
-		m.StringValue = msg.StringValue
-	case msg.DataValue != nil:
-		m.DataValue = msg.DataValue
-	case msg.BoolValue != nil:
-		m.BoolValue = msg.BoolValue
+		ID:        id.String(),
+		Channel:   msg.Channel,
+		Subtopic:  msg.Subtopic,
+		Publisher: msg.Publisher,
+		Protocol:  msg.Protocol,
+		Payload:   data,
 	}
 
 	return m, nil
