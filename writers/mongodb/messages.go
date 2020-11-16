@@ -5,6 +5,7 @@ package mongodb
 
 import (
 	"context"
+	"strings"
 
 	"go.mongodb.org/mongo-driver/mongo"
 
@@ -36,9 +37,9 @@ func New(db *mongo.Database) writers.MessageRepository {
 }
 
 func (repo *mongoRepo) Save(messages interface{}) error {
-	switch messages.(type) {
-	case json.Message, []json.Message:
-		return repo.saveJSON(messages)
+	switch m := messages.(type) {
+	case json.Message:
+		return repo.saveJSON(m)
 	default:
 		return repo.saveSenml(messages)
 	}
@@ -63,18 +64,20 @@ func (repo *mongoRepo) saveSenml(messages interface{}) error {
 	return nil
 }
 
-func (repo *mongoRepo) saveJSON(messages interface{}) error {
+func (repo *mongoRepo) saveJSON(message json.Message) error {
 	msgs := []interface{}{}
-	switch msg := messages.(type) {
-	case json.Message:
-		msgs = append(msgs, msg)
-	case []json.Message:
-		for _, m := range msg {
-			msgs = append(msgs, m)
+	switch pld := message.Payload.(type) {
+	case map[string]interface{}:
+		msgs = append(msgs, message)
+	case []map[string]interface{}:
+		for _, p := range pld {
+			add := message
+			add.Payload = p
+			msgs = append(msgs, add)
 		}
 	}
 
-	coll := repo.db.Collection(jsonCollection)
+	coll := repo.db.Collection(strings.Split(msgs[0].(json.Message).Subtopic, ".")[0])
 
 	_, err := coll.InsertMany(context.Background(), msgs)
 	if err != nil {

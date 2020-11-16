@@ -48,9 +48,14 @@ func (repo *influxRepo) Save(messages interface{}) error {
 	}
 	switch m := messages.(type) {
 	case json.Message:
-		pts, err = repo.jsonPoints(pts, []json.Message{m})
-	case []json.Message:
-		pts, err = repo.jsonPoints(pts, m)
+		msg := message{Message: m}
+		switch pld := m.Payload.(type) {
+		case map[string]interface{}:
+			msg.payload = append(msg.payload, pld)
+		case []map[string]interface{}:
+			msg.payload = append(msg.payload, pld...)
+		}
+		pts, err = repo.jsonPoints(pts, msg)
 	default:
 		pts, err = repo.senmlPoints(pts, messages)
 	}
@@ -86,10 +91,10 @@ func (repo *influxRepo) senmlPoints(pts influxdata.BatchPoints, messages interfa
 	return pts, nil
 }
 
-func (repo *influxRepo) jsonPoints(pts influxdata.BatchPoints, messages []json.Message) (influxdata.BatchPoints, error) {
-	for i, m := range messages {
-		t := time.Unix(0, m.Created+int64(i))
-		pt, err := influxdata.NewPoint(jsonPoints, jsonTags(m), m.Payload, t)
+func (repo *influxRepo) jsonPoints(pts influxdata.BatchPoints, msg message) (influxdata.BatchPoints, error) {
+	for i, p := range msg.payload {
+		t := time.Unix(0, msg.Created+int64(i))
+		pt, err := influxdata.NewPoint(jsonPoints, jsonTags(msg.Message), p, t)
 		if err != nil {
 			return nil, errors.Wrap(errSaveMessage, err)
 		}
@@ -101,5 +106,5 @@ func (repo *influxRepo) jsonPoints(pts influxdata.BatchPoints, messages []json.M
 
 type message struct {
 	json.Message
-	payload map[string]interface{}
+	payload []map[string]interface{}
 }
