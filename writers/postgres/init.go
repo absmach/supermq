@@ -75,7 +75,8 @@ func migrateDB(db *sqlx.DB) error {
 				Up: []string{
 					`CREATE TABLE IF NOT EXISTS json (
                         id            UUID,
-                        channel       UUID,
+						channel       UUID,
+						created       BIGINT,
                         subtopic      VARCHAR(254),
                         publisher     UUID,
 						protocol      TEXT,

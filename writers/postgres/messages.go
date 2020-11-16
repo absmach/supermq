@@ -6,6 +6,8 @@ package postgres
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"strings"
 
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
@@ -16,7 +18,10 @@ import (
 	"github.com/mainflux/mainflux/writers"
 )
 
-const errInvalid = "invalid_text_representation"
+const (
+	errInvalid        = "invalid_text_representation"
+	errUndefinedTable = "undefined_table"
+)
 
 var (
 	// ErrInvalidMessage indicates that service received message that
@@ -25,6 +30,8 @@ var (
 	errSaveMessage    = errors.New("failed to save message to postgres database")
 	errTransRollback  = errors.New("failed to rollback transaction")
 	errMessageFormat  = errors.New("invalid message format")
+	errNoMessages     = errors.New("empty message")
+	errNoTable        = errors.New("relation does not exist")
 )
 
 var _ writers.MessageRepository = (*postgresRepo)(nil)
@@ -38,17 +45,22 @@ func New(db *sqlx.DB) writers.MessageRepository {
 	return &postgresRepo{db: db}
 }
 
-func (pr postgresRepo) Save(messages interface{}) (err error) {
-	msgs := []mfjson.Message{}
-	switch m := messages.(type) {
+func (pr postgresRepo) Save(message interface{}) (err error) {
+	switch m := message.(type) {
 	case mfjson.Message:
-		msgs = append(msgs, m)
-		return pr.saveJSON(msgs)
-	case []mfjson.Message:
-		msgs = append(msgs, m...)
-		return pr.saveJSON(msgs)
+		table := strings.Split(m.Subtopic, ".")[0]
+		if err := pr.saveJSON(table, m); err != nil {
+			if err == errNoTable {
+				if err := pr.createTable(table); err != nil {
+					return err
+				}
+				return pr.saveJSON(table, m)
+			}
+			return err
+		}
+		return nil
 	default:
-		return pr.saveSenml(messages)
+		return pr.saveSenml(message)
 	}
 }
 
@@ -103,15 +115,11 @@ func (pr postgresRepo) saveSenml(messages interface{}) error {
 	return err
 }
 
-func (pr postgresRepo) saveJSON(messages []mfjson.Message) error {
+func (pr postgresRepo) saveJSON(table string, message mfjson.Message) error {
 	tx, err := pr.db.BeginTxx(context.Background(), nil)
 	if err != nil {
 		return errors.Wrap(errSaveMessage, err)
 	}
-
-	q := `INSERT INTO json (id, channel, subtopic, publisher, protocol, payload)
-		  VALUES (:id, :channel, :subtopic, :publisher, :protocol, :payload);`
-
 	defer func() {
 		if err != nil {
 			if txErr := tx.Rollback(); txErr != nil {
@@ -126,9 +134,22 @@ func (pr postgresRepo) saveJSON(messages []mfjson.Message) error {
 		return
 	}()
 
-	for _, msg := range messages {
+	q := `INSERT INTO %s (id, channel, created, subtopic, publisher, protocol, payload)
+          VALUES (:id, :channel, :created, :subtopic, :publisher, :protocol, :payload);`
+	q = fmt.Sprintf(q, table)
+
+	plds := []map[string]interface{}{}
+	switch pld := message.Payload.(type) {
+	case map[string]interface{}:
+		plds = append(plds, pld)
+	case []map[string]interface{}:
+		plds = append(plds, pld...)
+	}
+	for _, p := range plds {
+		tmp := message
+		tmp.Payload = p
 		var dbmsg jsonMessage
-		dbmsg, err = toJSONMessage(msg)
+		dbmsg, err = toJSONMessage(tmp)
 		if err != nil {
 			return errors.Wrap(errSaveMessage, err)
 		}
@@ -138,13 +159,30 @@ func (pr postgresRepo) saveJSON(messages []mfjson.Message) error {
 				switch pqErr.Code.Name() {
 				case errInvalid:
 					return errors.Wrap(errSaveMessage, ErrInvalidMessage)
+				case errUndefinedTable:
+					return errNoTable
 				}
 			}
-
-			return errors.Wrap(errSaveMessage, err)
+			return err
 		}
 	}
+	return nil
+}
 
+func (pr postgresRepo) createTable(name string) error {
+	q := `CREATE TABLE IF NOT EXISTS %s (
+                        id            UUID,
+                        created       BIGINT,
+                        channel       UUID,
+                        subtopic      VARCHAR(254),
+                        publisher     UUID,
+                        protocol      TEXT,
+                        payload       JSONB,
+                        PRIMARY KEY (id)
+                    )`
+	q = fmt.Sprintf(q, name)
+
+	_, err := pr.db.Exec(q)
 	return err
 }
 
@@ -156,6 +194,7 @@ type senmlMessage struct {
 type jsonMessage struct {
 	ID        string `db:"id"`
 	Channel   string `db:"channel"`
+	Created   int64  `db:"created"`
 	Subtopic  string `db:"subtopic"`
 	Publisher string `db:"publisher"`
 	Protocol  string `db:"protocol"`
@@ -169,7 +208,7 @@ func toJSONMessage(msg mfjson.Message) (jsonMessage, error) {
 	}
 
 	data := []byte("{}")
-	if len(msg.Payload) > 0 {
+	if msg.Payload != nil {
 		b, err := json.Marshal(msg.Payload)
 		if err != nil {
 			return jsonMessage{}, errors.Wrap(errSaveMessage, err)
@@ -180,6 +219,7 @@ func toJSONMessage(msg mfjson.Message) (jsonMessage, error) {
 	m := jsonMessage{
 		ID:        id.String(),
 		Channel:   msg.Channel,
+		Created:   msg.Created,
 		Subtopic:  msg.Subtopic,
 		Publisher: msg.Publisher,
 		Protocol:  msg.Protocol,
