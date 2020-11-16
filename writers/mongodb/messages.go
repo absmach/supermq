@@ -61,6 +61,7 @@ func (repo *mongoRepo) saveSenml(messages interface{}) error {
 	if err != nil {
 		return errors.Wrap(errSaveMessage, err)
 	}
+
 	return nil
 }
 

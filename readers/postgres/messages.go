@@ -56,13 +56,12 @@ func (tr postgresRepository) ReadAll(chanID string, offset, limit uint64, query 
 		Messages: []senml.Message{},
 	}
 	for rows.Next() {
-		dbm := dbMessage{Channel: chanID}
-		if err := rows.StructScan(&dbm); err != nil {
+		msg := dbMessage{Message: senml.Message{Channel: chanID}}
+		if err := rows.StructScan(&msg); err != nil {
 			return readers.MessagesPage{}, errors.Wrap(errReadMessages, err)
 		}
 
-		msg := toMessage(dbm)
-		page.Messages = append(page.Messages, msg)
+		page.Messages = append(page.Messages, msg.Message)
 	}
 
 	q = `SELECT COUNT(*) FROM messages WHERE channel = $1;`
@@ -96,45 +95,6 @@ func fmtCondition(chanID string, query map[string]string) string {
 }
 
 type dbMessage struct {
-	ID          string   `db:"id"`
-	Channel     string   `db:"channel"`
-	Subtopic    string   `db:"subtopic"`
-	Publisher   string   `db:"publisher"`
-	Protocol    string   `db:"protocol"`
-	Name        string   `db:"name"`
-	Unit        string   `db:"unit"`
-	Value       *float64 `db:"value"`
-	StringValue *string  `db:"string_value"`
-	BoolValue   *bool    `db:"bool_value"`
-	DataValue   *string  `db:"data_value"`
-	Sum         *float64 `db:"sum"`
-	Time        float64  `db:"time"`
-	UpdateTime  float64  `db:"update_time"`
-}
-
-func toMessage(dbm dbMessage) senml.Message {
-	msg := senml.Message{
-		Channel:    dbm.Channel,
-		Subtopic:   dbm.Subtopic,
-		Publisher:  dbm.Publisher,
-		Protocol:   dbm.Protocol,
-		Name:       dbm.Name,
-		Unit:       dbm.Unit,
-		Time:       dbm.Time,
-		UpdateTime: dbm.UpdateTime,
-		Sum:        dbm.Sum,
-	}
-
-	switch {
-	case dbm.Value != nil:
-		msg.Value = dbm.Value
-	case dbm.StringValue != nil:
-		msg.StringValue = dbm.StringValue
-	case dbm.DataValue != nil:
-		msg.DataValue = dbm.DataValue
-	case dbm.BoolValue != nil:
-		msg.BoolValue = dbm.BoolValue
-	}
-
-	return msg
+	ID string `db:"id"`
+	senml.Message
 }

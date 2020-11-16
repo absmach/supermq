@@ -98,7 +98,7 @@ func buildSelectQuery(chanID string, offset, limit uint64, names []string) strin
 
 func buildCountQuery(chanID string, names []string) string {
 	var condCQL string
-	cql := `SELECT COUNT(*) FROM senml WHERE channel = ? %s ALLOW FILTERING`
+	cql := `SELECT COUNT(*) FROM messages WHERE channel = ? %s ALLOW FILTERING`
 
 	for _, name := range names {
 		switch name {

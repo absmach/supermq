@@ -12,8 +12,8 @@ import (
 
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/readers"
-	mreaders "github.com/mainflux/mainflux/readers/mongodb"
-	mwriters "github.com/mainflux/mainflux/writers/mongodb"
+	mreader "github.com/mainflux/mainflux/readers/mongodb"
+	mwriter "github.com/mainflux/mainflux/writers/mongodb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -24,7 +24,7 @@ import (
 
 const (
 	testDB      = "test"
-	collection  = "mainflux"
+	collection  = "messages"
 	chanID      = "1"
 	subtopic    = "subtopic"
 	msgsNum     = 42
@@ -54,7 +54,7 @@ func TestReadAll(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
 
 	db := client.Database(testDB)
-	writer := mwriters.New(db)
+	writer := mwriter.New(db)
 
 	messages := []senml.Message{}
 	subtopicMsgs := []senml.Message{}
@@ -77,7 +77,6 @@ func TestReadAll(t *testing.T) {
 			msg.Sum = &sum
 		}
 		msg.Time = float64(now - int64(i))
-
 		messages = append(messages, msg)
 		if count == 0 {
 			subtopicMsgs = append(subtopicMsgs, msg)
@@ -85,8 +84,7 @@ func TestReadAll(t *testing.T) {
 	}
 	err = writer.Save(messages)
 	require.Nil(t, err, fmt.Sprintf("failed to store message to MongoDB: %s", err))
-
-	reader := mreaders.New(db)
+	reader := mreader.New(db)
 
 	cases := map[string]struct {
 		chanID string
@@ -98,12 +96,12 @@ func TestReadAll(t *testing.T) {
 		"read message page for existing channel": {
 			chanID: chanID,
 			offset: 0,
-			limit:  10,
+			limit:  11,
 			page: readers.MessagesPage{
 				Total:    msgsNum,
 				Offset:   0,
-				Limit:    10,
-				Messages: messages[0:10],
+				Limit:    11,
+				Messages: messages[0:11],
 			},
 		},
 		"read message page for non-existent channel": {
@@ -156,6 +154,7 @@ func TestReadAll(t *testing.T) {
 
 	for desc, tc := range cases {
 		result, err := reader.ReadAll(tc.chanID, tc.offset, tc.limit, tc.query)
+
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %s", desc, err))
 		assert.ElementsMatch(t, tc.page.Messages, result.Messages, fmt.Sprintf("%s: expected %v got %v", desc, tc.page.Messages, result.Messages))
 		assert.Equal(t, tc.page.Total, result.Total, fmt.Sprintf("%s: expected %v got %v", desc, tc.page.Total, result.Total))
