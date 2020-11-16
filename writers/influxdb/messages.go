@@ -5,7 +5,6 @@ package influxdb
 
 import (
 	"math"
-	"strings"
 	"time"
 
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -48,7 +47,7 @@ func (repo *influxRepo) Save(message interface{}) error {
 		return errors.Wrap(errSaveMessage, err)
 	}
 	switch m := message.(type) {
-	case []json.Message:
+	case json.Messages:
 		pts, err = repo.jsonPoints(pts, m)
 	default:
 		pts, err = repo.senmlPoints(pts, m)
@@ -85,14 +84,10 @@ func (repo *influxRepo) senmlPoints(pts influxdata.BatchPoints, messages interfa
 	return pts, nil
 }
 
-func (repo *influxRepo) jsonPoints(pts influxdata.BatchPoints, msgs []json.Message) (influxdata.BatchPoints, error) {
-	if len(msgs) == 0 {
-		return pts, nil
-	}
-	name := strings.Split(msgs[0].Subtopic, ".")[0]
-	for i, m := range msgs {
+func (repo *influxRepo) jsonPoints(pts influxdata.BatchPoints, msgs json.Messages) (influxdata.BatchPoints, error) {
+	for i, m := range msgs.Messages {
 		t := time.Unix(0, m.Created+int64(i))
-		pt, err := influxdata.NewPoint(name, jsonTags(m), m.Payload, t)
+		pt, err := influxdata.NewPoint(msgs.Format, jsonTags(m), m.Payload, t)
 		if err != nil {
 			return nil, errors.Wrap(errSaveMessage, err)
 		}

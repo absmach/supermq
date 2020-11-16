@@ -18,6 +18,7 @@ var (
 	// ErrInvalidKey represents an invalid JSON key format.
 	ErrInvalidKey = errors.New("invalid object key")
 
+	errUnknownFormat     = errors.New("unknown format of JSON message")
 	errInvalidFormat     = errors.New("invalid JSON object")
 	errInvalidNestedJSON = errors.New("invalid nested JSON object")
 )
@@ -40,6 +41,11 @@ func transformer(msg messaging.Message) (interface{}, error) {
 		Channel:   msg.Channel,
 		Subtopic:  msg.Subtopic,
 	}
+	subs := strings.Split(ret.Subtopic, ".")
+	if len(subs) == 0 {
+		return nil, errUnknownFormat
+	}
+	format := subs[len(subs)-1]
 	var payload interface{}
 	if err := json.Unmarshal(msg.Payload, &payload); err != nil {
 		return nil, err
@@ -52,7 +58,8 @@ func transformer(msg messaging.Message) (interface{}, error) {
 			return nil, err
 		}
 		ret.Payload = flat
-		return []Message{ret}, nil
+
+		return Messages{[]Message{ret}, format}, nil
 	case []interface{}:
 		res := []Message{}
 		// Make an array of messages from the root array.
@@ -70,7 +77,7 @@ func transformer(msg messaging.Message) (interface{}, error) {
 			newMsg.Payload = flat
 			res = append(res, newMsg)
 		}
-		return res, nil
+		return Messages{res, format}, nil
 	default:
 		return nil, errInvalidFormat
 	}

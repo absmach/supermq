@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
@@ -47,7 +46,7 @@ func New(db *sqlx.DB) writers.MessageRepository {
 
 func (pr postgresRepo) Save(message interface{}) (err error) {
 	switch m := message.(type) {
-	case []mfjson.Message:
+	case mfjson.Messages:
 		return pr.saveJSON(m)
 	default:
 		return pr.saveSenml(m)
@@ -105,24 +104,20 @@ func (pr postgresRepo) saveSenml(messages interface{}) error {
 	return err
 }
 
-func (pr postgresRepo) saveJSON(msgs []mfjson.Message) error {
-	if len(msgs) == 0 {
-		return nil
-	}
-	table := strings.Split(msgs[0].Subtopic, ".")[0]
-	if err := pr.insertJSON(table, msgs); err != nil {
+func (pr postgresRepo) saveJSON(msgs mfjson.Messages) error {
+	if err := pr.insertJSON(msgs); err != nil {
 		if err == errNoTable {
-			if err := pr.createTable(table); err != nil {
+			if err := pr.createTable(msgs.Format); err != nil {
 				return err
 			}
-			return pr.insertJSON(table, msgs)
+			return pr.insertJSON(msgs)
 		}
 		return err
 	}
 	return nil
 }
 
-func (pr postgresRepo) insertJSON(table string, msgs []mfjson.Message) error {
+func (pr postgresRepo) insertJSON(msgs mfjson.Messages) error {
 	tx, err := pr.db.BeginTxx(context.Background(), nil)
 	if err != nil {
 		return errors.Wrap(errSaveMessage, err)
@@ -143,9 +138,9 @@ func (pr postgresRepo) insertJSON(table string, msgs []mfjson.Message) error {
 
 	q := `INSERT INTO %s (id, channel, created, subtopic, publisher, protocol, payload)
           VALUES (:id, :channel, :created, :subtopic, :publisher, :protocol, :payload);`
-	q = fmt.Sprintf(q, table)
+	q = fmt.Sprintf(q, msgs.Format)
 
-	for _, m := range msgs {
+	for _, m := range msgs.Messages {
 		var dbmsg jsonMessage
 		dbmsg, err = toJSONMessage(m)
 		if err != nil {

@@ -6,7 +6,6 @@ package cassandra
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/gocql/gocql"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -32,7 +31,7 @@ func New(session *gocql.Session) writers.MessageRepository {
 
 func (cr *cassandraRepository) Save(message interface{}) error {
 	switch m := message.(type) {
-	case []mfjson.Message:
+	case mfjson.Messages:
 		return cr.saveJSON(m)
 	default:
 		return cr.saveSenml(m)
@@ -62,37 +61,33 @@ func (cr *cassandraRepository) saveSenml(messages interface{}) error {
 	return nil
 }
 
-func (cr *cassandraRepository) saveJSON(msgs []mfjson.Message) error {
-	if len(msgs) == 0 {
-		return nil
-	}
-	table := strings.Split(msgs[0].Subtopic, ".")[0]
-	if err := cr.insertJSON(table, msgs); err != nil {
+func (cr *cassandraRepository) saveJSON(msgs mfjson.Messages) error {
+	if err := cr.insertJSON(msgs); err != nil {
 		if err == errNoTable {
-			if err := cr.creteTable(table); err != nil {
+			if err := cr.creteTable(msgs.Format); err != nil {
 				return err
 			}
-			return cr.insertJSON(table, msgs)
+			return cr.insertJSON(msgs)
 		}
 		return err
 	}
 	return nil
 }
 
-func (cr *cassandraRepository) insertJSON(table string, msgs []mfjson.Message) error {
-	for _, msg := range msgs {
+func (cr *cassandraRepository) insertJSON(msgs mfjson.Messages) error {
+	for _, msg := range msgs.Messages {
 		pld, err := json.Marshal(msg.Payload)
 		if err != nil {
 			return err
 		}
 		cql := `INSERT INTO %s (id, channel, created, subtopic, publisher, payload)
             VALUES (?, ?, ?, ?, ?, ?)`
-		cql = fmt.Sprintf(cql, table)
+		cql = fmt.Sprintf(cql, msgs.Format)
 		id := gocql.TimeUUID()
 
 		err = cr.session.Query(cql, id, msg.Channel, msg.Created, msg.Subtopic, msg.Publisher, string(pld)).Exec()
 		if err != nil {
-			if err.Error() == fmt.Sprintf("unconfigured table %s", table) {
+			if err.Error() == fmt.Sprintf("unconfigured table %s", msgs.Format) {
 				return errNoTable
 			}
 			return errors.Wrap(errSaveMessage, err)

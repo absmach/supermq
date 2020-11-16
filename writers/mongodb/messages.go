@@ -5,7 +5,6 @@ package mongodb
 
 import (
 	"context"
-	"strings"
 
 	"go.mongodb.org/mongo-driver/mongo"
 
@@ -38,7 +37,7 @@ func New(db *mongo.Database) writers.MessageRepository {
 
 func (repo *mongoRepo) Save(message interface{}) error {
 	switch m := message.(type) {
-	case []json.Message:
+	case json.Messages:
 		return repo.saveJSON(m)
 	default:
 		return repo.saveSenml(m)
@@ -65,13 +64,13 @@ func (repo *mongoRepo) saveSenml(messages interface{}) error {
 	return nil
 }
 
-func (repo *mongoRepo) saveJSON(msgs []json.Message) error {
+func (repo *mongoRepo) saveJSON(msgs json.Messages) error {
 	m := []interface{}{}
-	for _, msg := range msgs {
+	for _, msg := range msgs.Messages {
 		m = append(m, msg)
 	}
 
-	coll := repo.db.Collection(strings.Split(msgs[0].Subtopic, ".")[0])
+	coll := repo.db.Collection(msgs.Format)
 
 	_, err := coll.InsertMany(context.Background(), m)
 	if err != nil {
