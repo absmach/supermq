@@ -36,12 +36,12 @@ func New(db *mongo.Database) writers.MessageRepository {
 	return &mongoRepo{db}
 }
 
-func (repo *mongoRepo) Save(messages interface{}) error {
-	switch m := messages.(type) {
+func (repo *mongoRepo) Save(message interface{}) error {
+	switch m := message.(type) {
 	case json.Message:
 		return repo.saveJSON(m)
 	default:
-		return repo.saveSenml(messages)
+		return repo.saveSenml(m)
 	}
 
 }
