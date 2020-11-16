@@ -46,9 +46,11 @@ func (repo *influxRepo) Save(messages interface{}) error {
 	if err != nil {
 		return errors.Wrap(errSaveMessage, err)
 	}
-	switch messages.(type) {
+	switch m := messages.(type) {
 	case json.Message:
-		pts, err = repo.jsonPoints(pts, messages)
+		pts, err = repo.jsonPoints(pts, []json.Message{m})
+	case []json.Message:
+		pts, err = repo.jsonPoints(pts, m)
 	default:
 		pts, err = repo.senmlPoints(pts, messages)
 	}
@@ -84,25 +86,9 @@ func (repo *influxRepo) senmlPoints(pts influxdata.BatchPoints, messages interfa
 	return pts, nil
 }
 
-func (repo *influxRepo) jsonPoints(pts influxdata.BatchPoints, messages interface{}) (influxdata.BatchPoints, error) {
-	msgs := []json.Message{}
-	switch m := messages.(type) {
-	case json.Message:
-		msgs = append(msgs, m)
-	case []json.Message:
-		for i, v := range m {
-			msgs = append(msgs, v)
-			// If messages are send as an array, the time
-			// needs to be different.
-			v.Created += int64(i)
-		}
-	default:
-		return nil, errMessageFormat
-	}
-
-	for _, m := range msgs {
-		t := time.Unix(0, m.Created)
-
+func (repo *influxRepo) jsonPoints(pts influxdata.BatchPoints, messages []json.Message) (influxdata.BatchPoints, error) {
+	for i, m := range messages {
+		t := time.Unix(0, m.Created+int64(i))
 		pt, err := influxdata.NewPoint(jsonPoints, jsonTags(m), m.Payload, t)
 		if err != nil {
 			return nil, errors.Wrap(errSaveMessage, err)
