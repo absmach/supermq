@@ -38,7 +38,7 @@ func New(db *mongo.Database) writers.MessageRepository {
 
 func (repo *mongoRepo) Save(message interface{}) error {
 	switch m := message.(type) {
-	case json.Message:
+	case []json.Message:
 		return repo.saveJSON(m)
 	default:
 		return repo.saveSenml(m)
@@ -64,24 +64,17 @@ func (repo *mongoRepo) saveSenml(messages interface{}) error {
 	return nil
 }
 
-func (repo *mongoRepo) saveJSON(message json.Message) error {
-	msgs := []interface{}{}
-	switch pld := message.Payload.(type) {
-	case map[string]interface{}:
-		msgs = append(msgs, message)
-	case []map[string]interface{}:
-		for _, p := range pld {
-			add := message
-			add.Payload = p
-			msgs = append(msgs, add)
-		}
+func (repo *mongoRepo) saveJSON(msgs []json.Message) error {
+	m := []interface{}{}
+	for _, msg := range msgs {
+		m = append(m, msg)
 	}
 
-	coll := repo.db.Collection(strings.Split(msgs[0].(json.Message).Subtopic, ".")[0])
-
-	_, err := coll.InsertMany(context.Background(), msgs)
+	coll := repo.db.Collection(strings.Split(msgs[0].Subtopic, ".")[0])
+	_, err := coll.InsertMany(context.Background(), m)
 	if err != nil {
 		return errors.Wrap(errSaveMessage, err)
 	}
+
 	return nil
 }

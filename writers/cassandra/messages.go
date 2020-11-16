@@ -32,7 +32,7 @@ func New(session *gocql.Session) writers.MessageRepository {
 
 func (cr *cassandraRepository) Save(message interface{}) error {
 	switch m := message.(type) {
-	case mfjson.Message:
+	case []mfjson.Message:
 		return cr.saveJSON(m)
 	default:
 		return cr.saveSenml(m)
@@ -62,38 +62,42 @@ func (cr *cassandraRepository) saveSenml(messages interface{}) error {
 	return nil
 }
 
-func (cr *cassandraRepository) saveJSON(msg mfjson.Message) error {
-	table := strings.Split(msg.Subtopic, ".")[0]
-	if err := cr.insertJSON(table, msg); err != nil {
+func (cr *cassandraRepository) saveJSON(msgs []mfjson.Message) error {
+	if len(msgs) == 0 {
+		return nil
+	}
+	table := strings.Split(msgs[0].Subtopic, ".")[0]
+	if err := cr.insertJSON(table, msgs); err != nil {
 		if err == errNoTable {
 			if err := cr.creteTable(table); err != nil {
 				return err
 			}
-			return cr.insertJSON(table, msg)
+			return cr.insertJSON(table, msgs)
 		}
 		return err
 	}
 	return nil
 }
 
-func (cr *cassandraRepository) insertJSON(table string, msg mfjson.Message) error {
-	pld, err := json.Marshal(msg.Payload)
-	if err != nil {
-		return err
-	}
-	cql := `INSERT INTO %s (id, channel, created, subtopic, publisher, payload)
-            VALUES (?, ?, ?, ?, ?, ?)`
-	cql = fmt.Sprintf(cql, table)
-	id := gocql.TimeUUID()
-
-	err = cr.session.Query(cql, id, msg.Channel, msg.Created, msg.Subtopic, msg.Publisher, string(pld)).Exec()
-	if err != nil {
-		if err.Error() == fmt.Sprintf("unconfigured table %s", table) {
-			return errNoTable
+func (cr *cassandraRepository) insertJSON(table string, msgs []mfjson.Message) error {
+	for _, msg := range msgs {
+		pld, err := json.Marshal(msg.Payload)
+		if err != nil {
+			return err
 		}
-		return errors.Wrap(errSaveMessage, err)
-	}
+		cql := `INSERT INTO %s (id, channel, created, subtopic, publisher, payload)
+            VALUES (?, ?, ?, ?, ?, ?)`
+		cql = fmt.Sprintf(cql, table)
+		id := gocql.TimeUUID()
 
+		err = cr.session.Query(cql, id, msg.Channel, msg.Created, msg.Subtopic, msg.Publisher, string(pld)).Exec()
+		if err != nil {
+			if err.Error() == fmt.Sprintf("unconfigured table %s", table) {
+				return errNoTable
+			}
+			return errors.Wrap(errSaveMessage, err)
+		}
+	}
 	return nil
 }
 

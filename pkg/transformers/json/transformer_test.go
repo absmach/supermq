@@ -33,17 +33,19 @@ func TestTransformJSON(t *testing.T) {
 	invalid := msg
 	invalid.Payload = []byte(invalidPayload)
 
-	jsonMsg := json.Message{
-		Channel:   msg.Channel,
-		Subtopic:  msg.Subtopic,
-		Publisher: msg.Publisher,
-		Protocol:  msg.Protocol,
-		Created:   msg.Created,
-		Payload: map[string]interface{}{
-			"key1":      "val1",
-			"key2":      float64(123),
-			"key3":      "val3",
-			"key4/key5": "val5",
+	jsonMsg := []json.Message{
+		{
+			Channel:   msg.Channel,
+			Subtopic:  msg.Subtopic,
+			Publisher: msg.Publisher,
+			Protocol:  msg.Protocol,
+			Created:   msg.Created,
+			Payload: map[string]interface{}{
+				"key1":      "val1",
+				"key2":      float64(123),
+				"key3":      "val3",
+				"key4/key5": "val5",
+			},
 		},
 	}
 

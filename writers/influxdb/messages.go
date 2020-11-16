@@ -5,6 +5,7 @@ package influxdb
 
 import (
 	"math"
+	"strings"
 	"time"
 
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -41,23 +42,16 @@ func New(client influxdata.Client, database string) writers.MessageRepository {
 	}
 }
 
-func (repo *influxRepo) Save(messages interface{}) error {
+func (repo *influxRepo) Save(message interface{}) error {
 	pts, err := influxdata.NewBatchPoints(repo.cfg)
 	if err != nil {
 		return errors.Wrap(errSaveMessage, err)
 	}
-	switch m := messages.(type) {
-	case json.Message:
-		msg := message{Message: m}
-		switch pld := m.Payload.(type) {
-		case map[string]interface{}:
-			msg.payload = append(msg.payload, pld)
-		case []map[string]interface{}:
-			msg.payload = append(msg.payload, pld...)
-		}
-		pts, err = repo.jsonPoints(pts, msg)
+	switch m := message.(type) {
+	case []json.Message:
+		pts, err = repo.jsonPoints(pts, m)
 	default:
-		pts, err = repo.senmlPoints(pts, messages)
+		pts, err = repo.senmlPoints(pts, m)
 	}
 	if err != nil {
 		return err
@@ -91,10 +85,14 @@ func (repo *influxRepo) senmlPoints(pts influxdata.BatchPoints, messages interfa
 	return pts, nil
 }
 
-func (repo *influxRepo) jsonPoints(pts influxdata.BatchPoints, msg message) (influxdata.BatchPoints, error) {
-	for i, p := range msg.payload {
-		t := time.Unix(0, msg.Created+int64(i))
-		pt, err := influxdata.NewPoint(jsonPoints, jsonTags(msg.Message), p, t)
+func (repo *influxRepo) jsonPoints(pts influxdata.BatchPoints, msgs []json.Message) (influxdata.BatchPoints, error) {
+	if len(msgs) == 0 {
+		return pts, nil
+	}
+	name := strings.Split(msgs[0].Subtopic, ".")[0]
+	for i, m := range msgs {
+		t := time.Unix(0, m.Created+int64(i))
+		pt, err := influxdata.NewPoint(name, jsonTags(m), m.Payload, t)
 		if err != nil {
 			return nil, errors.Wrap(errSaveMessage, err)
 		}

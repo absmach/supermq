@@ -47,7 +47,7 @@ func New(db *sqlx.DB) writers.MessageRepository {
 
 func (pr postgresRepo) Save(message interface{}) (err error) {
 	switch m := message.(type) {
-	case mfjson.Message:
+	case []mfjson.Message:
 		return pr.saveJSON(m)
 	default:
 		return pr.saveSenml(m)
@@ -105,21 +105,24 @@ func (pr postgresRepo) saveSenml(messages interface{}) error {
 	return err
 }
 
-func (pr postgresRepo) saveJSON(msg mfjson.Message) error {
-	table := strings.Split(msg.Subtopic, ".")[0]
-	if err := pr.insertJSON(table, msg); err != nil {
+func (pr postgresRepo) saveJSON(msgs []mfjson.Message) error {
+	if len(msgs) == 0 {
+		return nil
+	}
+	table := strings.Split(msgs[0].Subtopic, ".")[0]
+	if err := pr.insertJSON(table, msgs); err != nil {
 		if err == errNoTable {
 			if err := pr.createTable(table); err != nil {
 				return err
 			}
-			return pr.insertJSON(table, msg)
+			return pr.insertJSON(table, msgs)
 		}
 		return err
 	}
 	return nil
 }
 
-func (pr postgresRepo) insertJSON(table string, msg mfjson.Message) error {
+func (pr postgresRepo) insertJSON(table string, msgs []mfjson.Message) error {
 	tx, err := pr.db.BeginTxx(context.Background(), nil)
 	if err != nil {
 		return errors.Wrap(errSaveMessage, err)
@@ -142,18 +145,9 @@ func (pr postgresRepo) insertJSON(table string, msg mfjson.Message) error {
           VALUES (:id, :channel, :created, :subtopic, :publisher, :protocol, :payload);`
 	q = fmt.Sprintf(q, table)
 
-	plds := []map[string]interface{}{}
-	switch pld := msg.Payload.(type) {
-	case map[string]interface{}:
-		plds = append(plds, pld)
-	case []map[string]interface{}:
-		plds = append(plds, pld...)
-	}
-	for _, p := range plds {
-		tmp := msg
-		tmp.Payload = p
+	for _, m := range msgs {
 		var dbmsg jsonMessage
-		dbmsg, err = toJSONMessage(tmp)
+		dbmsg, err = toJSONMessage(m)
 		if err != nil {
 			return errors.Wrap(errSaveMessage, err)
 		}

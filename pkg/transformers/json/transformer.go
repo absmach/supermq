@@ -40,38 +40,40 @@ func transformer(msg messaging.Message) (interface{}, error) {
 		Channel:   msg.Channel,
 		Subtopic:  msg.Subtopic,
 	}
-	if err := json.Unmarshal(msg.Payload, &ret.Payload); err != nil {
+	var payload interface{}
+	if err := json.Unmarshal(msg.Payload, &payload); err != nil {
 		return nil, err
 	}
-	switch payload := ret.Payload.(type) {
+	switch p := payload.(type) {
 	case map[string]interface{}:
 		pld := make(map[string]interface{})
-		p, err := flatten("", pld, payload)
+		flat, err := flatten("", pld, p)
 		if err != nil {
 			return nil, err
 		}
-		ret.Payload = p
+		ret.Payload = flat
+		return []Message{ret}, nil
 	case []interface{}:
-		// Convert an array to the flat map array.
-		resPld := []map[string]interface{}{}
-		for _, val := range payload {
+		res := []Message{}
+		// Make an array of messages from the root array.
+		for _, val := range p {
 			v, ok := val.(map[string]interface{})
 			if !ok {
 				return nil, errInvalidNestedJSON
 			}
 			pld := make(map[string]interface{})
-			p, err := flatten("", pld, v)
+			flat, err := flatten("", pld, v)
 			if err != nil {
 				return nil, err
 			}
-			resPld = append(resPld, p)
-
+			newMsg := ret
+			newMsg.Payload = flat
+			res = append(res, newMsg)
 		}
-		ret.Payload = resPld
+		return res, nil
 	default:
 		return nil, errInvalidFormat
 	}
-	return ret, nil
 }
 
 func flatten(prefix string, m, m1 map[string]interface{}) (map[string]interface{}, error) {
