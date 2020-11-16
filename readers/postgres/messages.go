@@ -30,7 +30,7 @@ func New(db *sqlx.DB) readers.MessageRepository {
 }
 
 func (tr postgresRepository) ReadAll(chanID string, offset, limit uint64, query map[string]string) (readers.MessagesPage, error) {
-	q := fmt.Sprintf(`SELECT * FROM senml
+	q := fmt.Sprintf(`SELECT * FROM messages
     WHERE %s ORDER BY time DESC
     LIMIT :limit OFFSET :offset;`, fmtCondition(chanID, query))
 
@@ -65,11 +65,11 @@ func (tr postgresRepository) ReadAll(chanID string, offset, limit uint64, query 
 		page.Messages = append(page.Messages, msg)
 	}
 
-	q = `SELECT COUNT(*) FROM senml WHERE channel = $1;`
+	q = `SELECT COUNT(*) FROM messages WHERE channel = $1;`
 	qParams := []interface{}{chanID}
 
 	if query["subtopic"] != "" {
-		q = `SELECT COUNT(*) FROM senml WHERE channel = $1 AND subtopic = $2;`
+		q = `SELECT COUNT(*) FROM messages WHERE channel = $1 AND subtopic = $2;`
 		qParams = append(qParams, query["subtopic"])
 	}
 

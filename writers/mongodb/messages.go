@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	senmlCollection string = "senml"
+	senmlCollection string = "messages"
 	jsonCollection  string = "json"
 )
 
@@ -71,6 +71,7 @@ func (repo *mongoRepo) saveJSON(msgs []json.Message) error {
 	}
 
 	coll := repo.db.Collection(strings.Split(msgs[0].Subtopic, ".")[0])
+
 	_, err := coll.InsertMany(context.Background(), m)
 	if err != nil {
 		return errors.Wrap(errSaveMessage, err)

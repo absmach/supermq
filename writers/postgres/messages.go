@@ -59,7 +59,7 @@ func (pr postgresRepo) saveSenml(messages interface{}) error {
 	if !ok {
 		return errSaveMessage
 	}
-	q := `INSERT INTO senml (id, channel, subtopic, publisher, protocol,
+	q := `INSERT INTO messages (id, channel, subtopic, publisher, protocol,
           name, unit, value, string_value, bool_value, data_value, sum,
           time, update_time)
           VALUES (:id, :channel, :subtopic, :publisher, :protocol, :name, :unit,

@@ -102,17 +102,6 @@ func (cr *cassandraRepository) insertJSON(table string, msgs []mfjson.Message) e
 }
 
 func (cr *cassandraRepository) creteTable(name string) error {
-	q := `CREATE TABLE IF NOT EXISTS %s (
-        id uuid,
-        channel text,
-        subtopic text,
-        publisher text,
-        protocol text,
-        created bigint,
-        payload text,
-        PRIMARY KEY (channel, created, id)
-    ) WITH CLUSTERING ORDER BY (created DESC)`
-
-	q = fmt.Sprintf(q, name)
+	q := fmt.Sprintf(jsonTable, name)
 	return cr.session.Query(q).Exec()
 }

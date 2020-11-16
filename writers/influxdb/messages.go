@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	senmlPoints = "senml"
+	senmlPoints = "messages"
 	jsonPoints  = "json"
 )
 

@@ -78,7 +78,7 @@ func buildSelectQuery(chanID string, offset, limit uint64, names []string) strin
 	var condCQL string
 	cql := `SELECT channel, subtopic, publisher, protocol, name, unit,
 	        value, string_value, bool_value, data_value, sum, time,
-			update_time FROM senml WHERE channel = ? %s LIMIT ?
+			update_time FROM messages WHERE channel = ? %s LIMIT ?
 			ALLOW FILTERING`
 
 	for _, name := range names {

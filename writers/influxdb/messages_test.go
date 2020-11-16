@@ -24,8 +24,8 @@ var (
 	testLog, _  = log.New(os.Stdout, log.Info.String())
 	testDB      = "test"
 	streamsSize = 250
-	selectMsgs  = "SELECT * FROM test..senml"
-	dropMsgs    = "DROP SERIES FROM senml"
+	selectMsgs  = "SELECT * FROM test..messages"
+	dropMsgs    = "DROP SERIES FROM messages"
 	client      influxdata.Client
 	clientCfg   = influxdata.HTTPConfig{
 		Username: "test",

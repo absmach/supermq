@@ -27,7 +27,7 @@ var (
 	addr        string
 	testLog, _  = log.New(os.Stdout, log.Info.String())
 	testDB      = "test"
-	collection  = "senml"
+	collection  = "messages"
 	db          mongo.Database
 	msgsNum     = 100
 	valueFields = 5

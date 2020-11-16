@@ -36,7 +36,7 @@ func New(client influxdata.Client, database string) readers.MessageRepository {
 
 func (repo *influxRepository) ReadAll(chanID string, offset, limit uint64, query map[string]string) (readers.MessagesPage, error) {
 	condition := fmtCondition(chanID, query)
-	cmd := fmt.Sprintf(`SELECT * FROM senml WHERE %s ORDER BY time DESC LIMIT %d OFFSET %d`, condition, limit, offset)
+	cmd := fmt.Sprintf(`SELECT * FROM messages WHERE %s ORDER BY time DESC LIMIT %d OFFSET %d`, condition, limit, offset)
 	q := influxdata.Query{
 		Command:  cmd,
 		Database: repo.database,
@@ -75,7 +75,7 @@ func (repo *influxRepository) ReadAll(chanID string, offset, limit uint64, query
 }
 
 func (repo *influxRepository) count(condition string) (uint64, error) {
-	cmd := fmt.Sprintf(`SELECT COUNT(protocol) FROM senml WHERE %s`, condition)
+	cmd := fmt.Sprintf(`SELECT COUNT(protocol) FROM messages WHERE %s`, condition)
 	q := influxdata.Query{
 		Command:  cmd,
 		Database: repo.database,
