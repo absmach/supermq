@@ -80,8 +80,7 @@ func (cr *cassandraRepository) insertJSON(msgs mfjson.Messages) error {
 		if err != nil {
 			return err
 		}
-		cql := `INSERT INTO %s (id, channel, created, subtopic, publisher, payload)
-                VALUES (?, ?, ?, ?, ?, ?)`
+		cql := `INSERT INTO %s (id, channel, created, subtopic, publisher, payload) VALUES (?, ?, ?, ?, ?, ?)`
 		cql = fmt.Sprintf(cql, msgs.Format)
 		id := gocql.TimeUUID()
 
