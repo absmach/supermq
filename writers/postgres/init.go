@@ -70,24 +70,6 @@ func migrateDB(db *sqlx.DB) error {
 					"DROP TABLE messages",
 				},
 			},
-			{
-				Id: "messages_2",
-				Up: []string{
-					`CREATE TABLE IF NOT EXISTS json (
-                        id            UUID,
-                        channel       UUID,
-                        created       BIGINT,
-                        subtopic      VARCHAR(254),
-                        publisher     UUID,
-                        protocol      TEXT,
-                        payload       JSONB,
-                        PRIMARY KEY (id)
-                    )`,
-				},
-				Down: []string{
-					"DROP TABLE json",
-				},
-			},
 		},
 	}
 

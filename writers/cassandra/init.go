@@ -4,8 +4,6 @@
 package cassandra
 
 import (
-	"fmt"
-
 	"github.com/gocql/gocql"
 )
 
@@ -66,9 +64,6 @@ func Connect(cfg DBConfig) (*gocql.Session, error) {
 	}
 
 	if err := session.Query(table).Exec(); err != nil {
-		return nil, err
-	}
-	if err := session.Query(fmt.Sprintf(jsonTable, "json")).Exec(); err != nil {
 		return nil, err
 	}
 

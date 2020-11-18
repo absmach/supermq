@@ -23,9 +23,7 @@ const (
 )
 
 var (
-	// ErrInvalidMessage indicates that service received message that
-	// doesn't fit required format.
-	ErrInvalidMessage = errors.New("invalid message representation")
+	errInvalidMessage = errors.New("invalid message representation")
 	errSaveMessage    = errors.New("failed to save message to postgres database")
 	errTransRollback  = errors.New("failed to rollback transaction")
 	errMessageFormat  = errors.New("invalid message format")
@@ -94,7 +92,7 @@ func (pr postgresRepo) saveSenml(messages interface{}) error {
 			if ok {
 				switch pqErr.Code.Name() {
 				case errInvalid:
-					return errors.Wrap(errSaveMessage, ErrInvalidMessage)
+					return errors.Wrap(errSaveMessage, errInvalidMessage)
 				}
 			}
 
@@ -151,7 +149,7 @@ func (pr postgresRepo) insertJSON(msgs mfjson.Messages) error {
 			if ok {
 				switch pqErr.Code.Name() {
 				case errInvalid:
-					return errors.Wrap(errSaveMessage, ErrInvalidMessage)
+					return errors.Wrap(errSaveMessage, errInvalidMessage)
 				case errUndefinedTable:
 					return errNoTable
 				}
@@ -166,9 +164,9 @@ func (pr postgresRepo) createTable(name string) error {
 	q := `CREATE TABLE IF NOT EXISTS %s (
                         id            UUID,
                         created       BIGINT,
-                        channel       UUID,
+                        channel       VARCHAR(254),
                         subtopic      VARCHAR(254),
-                        publisher     UUID,
+                        publisher     VARCHAR(254),
                         protocol      TEXT,
                         payload       JSONB,
                         PRIMARY KEY (id)
