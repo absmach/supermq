@@ -64,7 +64,7 @@ func (cr *cassandraRepository) saveSenml(messages interface{}) error {
 func (cr *cassandraRepository) saveJSON(msgs mfjson.Messages) error {
 	if err := cr.insertJSON(msgs); err != nil {
 		if err == errNoTable {
-			if err := cr.creteTable(msgs.Format); err != nil {
+			if err := cr.createTable(msgs.Format); err != nil {
 				return err
 			}
 			return cr.insertJSON(msgs)
@@ -96,7 +96,7 @@ func (cr *cassandraRepository) insertJSON(msgs mfjson.Messages) error {
 	return nil
 }
 
-func (cr *cassandraRepository) creteTable(name string) error {
+func (cr *cassandraRepository) createTable(name string) error {
 	q := fmt.Sprintf(jsonTable, name)
 	return cr.session.Query(q).Exec()
 }

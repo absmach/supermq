@@ -56,7 +56,7 @@ func TestTransformJSON(t *testing.T) {
 		Format: msg.Subtopic,
 	}
 
-	listJsonMsg := json.Messages{
+	listJSON := json.Messages{
 		Messages: []json.Message{
 			{
 				Channel:   msg.Channel,
@@ -103,7 +103,7 @@ func TestTransformJSON(t *testing.T) {
 		{
 			desc: "test transform JSON array",
 			msg:  listMsg,
-			json: listJsonMsg,
+			json: listJSON,
 			err:  nil,
 		},
 		{
