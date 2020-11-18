@@ -16,6 +16,7 @@ import (
 
 const (
 	validPayload   = `{"key1": "val1", "key2": 123, "key3": "val3", "key4": {"key5": "val5"}}`
+	listPayload    = `[{"key1": "val1", "key2": 123, "keylist3": "val3", "key4": {"key5": "val5"}}, {"key1": "val1", "key2": 123, "key3": "val3", "key4": {"key5": "val5"}}]`
 	invalidPayload = `{"key1": "val1", "key2": 123, "key3/1": "val3", "key4": {"key5": "val5"}}`
 )
 
@@ -33,8 +34,43 @@ func TestTransformJSON(t *testing.T) {
 	invalid := msg
 	invalid.Payload = []byte(invalidPayload)
 
+	listMsg := msg
+	listMsg.Payload = []byte(listPayload)
+
 	jsonMsg := json.Messages{
 		Messages: []json.Message{
+			{
+				Channel:   msg.Channel,
+				Subtopic:  msg.Subtopic,
+				Publisher: msg.Publisher,
+				Protocol:  msg.Protocol,
+				Created:   msg.Created,
+				Payload: map[string]interface{}{
+					"key1":      "val1",
+					"key2":      float64(123),
+					"key3":      "val3",
+					"key4/key5": "val5",
+				},
+			},
+		},
+		Format: msg.Subtopic,
+	}
+
+	listJsonMsg := json.Messages{
+		Messages: []json.Message{
+			{
+				Channel:   msg.Channel,
+				Subtopic:  msg.Subtopic,
+				Publisher: msg.Publisher,
+				Protocol:  msg.Protocol,
+				Created:   msg.Created,
+				Payload: map[string]interface{}{
+					"key1":      "val1",
+					"key2":      float64(123),
+					"keylist3":  "val3",
+					"key4/key5": "val5",
+				},
+			},
 			{
 				Channel:   msg.Channel,
 				Subtopic:  msg.Subtopic,
@@ -65,10 +101,16 @@ func TestTransformJSON(t *testing.T) {
 			err:  nil,
 		},
 		{
+			desc: "test transform JSON array",
+			msg:  listMsg,
+			json: listJsonMsg,
+			err:  nil,
+		},
+		{
 			desc: "test transform JSON with invalid payload",
 			msg:  invalid,
 			json: nil,
-			err:  json.ErrInvalidKey,
+			err:  json.ErrTransform,
 		},
 	}
 
