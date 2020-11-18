@@ -64,7 +64,7 @@ func migrateDB(db *sqlx.DB) error {
                         time          FLOAT,
                         update_time   FLOAT,
                         PRIMARY KEY (id)
-					)`,
+                    )`,
 				},
 				Down: []string{
 					"DROP TABLE messages",
@@ -75,12 +75,12 @@ func migrateDB(db *sqlx.DB) error {
 				Up: []string{
 					`CREATE TABLE IF NOT EXISTS json (
                         id            UUID,
-						channel       UUID,
-						created       BIGINT,
+                        channel       UUID,
+                        created       BIGINT,
                         subtopic      VARCHAR(254),
                         publisher     UUID,
-						protocol      TEXT,
-						payload       JSONB,
+                        protocol      TEXT,
+                        payload       JSONB,
                         PRIMARY KEY (id)
                     )`,
 				},
