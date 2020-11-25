@@ -128,7 +128,7 @@ func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, offse
 	}
 
 	q := fmt.Sprintf(`SELECT id, name, metadata FROM channels
-	      WHERE owner = :owner %s%s ORDER BY id LIMIT :limit OFFSET :offset;`, mq, nq)
+	      WHERE owner = :owner %s%s ORDER BY name LIMIT :limit OFFSET :offset;`, mq, nq)
 
 	params := map[string]interface{}{
 		"owner":    owner,
@@ -186,7 +186,7 @@ func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing st
 		        INNER JOIN connections conn
 		        ON ch.id = conn.channel_id
 		        WHERE ch.owner = :owner AND conn.thing_id = :thing
-		        ORDER BY ch.id
+		        ORDER BY ch.name
 		        LIMIT :limit
 		        OFFSET :offset;`
 
@@ -203,7 +203,7 @@ func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing st
 		          INNER JOIN connections conn
 		          ON ch.id = conn.channel_id
 		          WHERE ch.owner = :owner AND conn.thing_id = :thing)
-		        ORDER BY ch.id
+		        ORDER BY ch.name
 		        LIMIT :limit
 		        OFFSET :offset;`
 
