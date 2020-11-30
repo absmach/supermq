@@ -16,7 +16,7 @@ for building complex IoT solutions.
 
 For more details, check out the [official documentation][docs].
 
-Mainflux is member of the [Linux Foundation][lf] and an active contributor
+Mainflux is a member of the [Linux Foundation][lf] and an active contributor
 to the [EdgeX Foundry][edgex] project. It has been made with :heart: by [Mainflux Labs][company],
 which maintains the project and offers professional services around it.
 
