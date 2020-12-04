@@ -373,7 +373,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	email := "thing-multi-retrieval@example.com"
-	name := "mainflux"
+	name := "thing_name"
 	metadata := things.Metadata{
 		"field": "value",
 	}
@@ -401,7 +401,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 
 		// Create Things with name.
 		if i < nameNum {
-			th.Name = name
+			th.Name = fmt.Sprintf("%s-%d", name, i)
 		}
 		// Create Things with metadata.
 		if i >= nameNum && i < nameNum+metaNum {
@@ -419,83 +419,111 @@ func TestMultiThingRetrieval(t *testing.T) {
 
 	cases := map[string]struct {
 		owner    string
-		offset   uint64
-		limit    uint64
-		name     string
+		pageMeta things.PageMetadata
 		size     uint64
-		total    uint64
-		metadata map[string]interface{}
 	}{
 		"retrieve all things with existing owner": {
-			owner:  email,
-			offset: 0,
-			limit:  n,
-			size:   n,
-			total:  n,
+			owner: email,
+			pageMeta: things.PageMetadata{
+				Offset: 0,
+				Limit:  n,
+				Total:  n,
+			},
+			size: n,
 		},
 		"retrieve subset of things with existing owner": {
-			owner:  email,
-			offset: n / 2,
-			limit:  n,
-			size:   n / 2,
-			total:  n,
+			owner: email,
+			pageMeta: things.PageMetadata{
+				Offset: n / 2,
+				Limit:  n,
+				Total:  n,
+			},
+			size: n / 2,
 		},
 		"retrieve things with non-existing owner": {
-			owner:  wrongValue,
-			offset: 0,
-			limit:  n,
-			size:   0,
-			total:  0,
+			owner: wrongValue,
+			pageMeta: things.PageMetadata{
+				Offset: 0,
+				Limit:  n,
+				Total:  0,
+			},
+			size: 0,
 		},
 		"retrieve things with existing name": {
-			owner:  email,
-			offset: 1,
-			limit:  n,
-			name:   name,
-			size:   nameNum + nameMetaNum - offset,
-			total:  nameNum + nameMetaNum,
+			owner: email,
+			pageMeta: things.PageMetadata{
+				Offset: 1,
+				Limit:  n,
+				Name:   name,
+				Total:  nameNum + nameMetaNum,
+			},
+			size: nameNum + nameMetaNum - offset,
 		},
 		"retrieve things with non-existing name": {
-			owner:  email,
-			offset: 0,
-			limit:  n,
-			name:   "wrong",
-			size:   0,
-			total:  0,
+			owner: email,
+			pageMeta: things.PageMetadata{
+				Offset: 0,
+				Limit:  n,
+				Name:   "wrong",
+				Total:  0,
+			},
+			size: 0,
 		},
 		"retrieve things with existing metadata": {
-			owner:    email,
-			offset:   0,
-			limit:    n,
-			size:     metaNum + nameMetaNum,
-			total:    metaNum + nameMetaNum,
-			metadata: metadata,
+			owner: email,
+			pageMeta: things.PageMetadata{
+				Offset:   0,
+				Limit:    n,
+				Total:    metaNum + nameMetaNum,
+				Metadata: metadata,
+			},
+			size: metaNum + nameMetaNum,
 		},
 		"retrieve things with non-existing metadata": {
-			owner:    email,
-			offset:   0,
-			limit:    n,
-			size:     0,
-			total:    0,
-			metadata: wrongMeta,
+			owner: email,
+			pageMeta: things.PageMetadata{
+				Offset:   0,
+				Limit:    n,
+				Total:    0,
+				Metadata: wrongMeta,
+			},
+			size: 0,
 		},
 		"retrieve all things with existing name and metadata": {
-			owner:    email,
-			offset:   0,
-			limit:    n,
-			size:     nameMetaNum,
-			total:    nameMetaNum,
-			name:     name,
-			metadata: metadata,
+			owner: email,
+			pageMeta: things.PageMetadata{
+				Offset:   0,
+				Limit:    n,
+				Total:    nameMetaNum,
+				Name:     name,
+				Metadata: metadata,
+			},
+			size: nameMetaNum,
+		},
+		"retrieve things sorted by name": {
+			owner: email,
+			pageMeta: things.PageMetadata{
+				Offset: 0,
+				Limit:  n,
+				Total:  n,
+				Sort:   "name",
+			},
+			size: n,
 		},
 	}
 
 	for desc, tc := range cases {
-		page, err := thingRepo.RetrieveAll(context.Background(), tc.owner, tc.offset, tc.limit, tc.name, tc.metadata)
+		page, err := thingRepo.RetrieveAll(context.Background(), tc.owner, tc.pageMeta)
 		size := uint64(len(page.Things))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", desc, tc.size, size))
-		assert.Equal(t, tc.total, page.Total, fmt.Sprintf("%s: expected total %d got %d\n", desc, tc.total, page.Total))
+		assert.Equal(t, tc.pageMeta.Total, page.Total, fmt.Sprintf("%s: expected total %d got %d\n", desc, tc.pageMeta.Total, page.Total))
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
+		// Check if name have been sorted properly
+		if tc.pageMeta.Sort != "" {
+			firstName := fmt.Sprintf("%s-2", name)
+			name := page.Things[2].Name
+			assert.Equal(t, name, firstName, fmt.Sprintf("%s: expected name %s got %s\n", desc, firstName, name))
+		}
 	}
 }
 

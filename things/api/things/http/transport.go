@@ -28,6 +28,7 @@ const (
 	offsetKey   = "offset"
 	limitKey    = "limit"
 	nameKey     = "name"
+	sortKey     = "sort"
 	metadataKey = "metadata"
 	connKey     = "connected"
 
@@ -383,17 +384,25 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
+	s, err := readStringQuery(r, sortKey)
+	if err != nil {
+		return nil, err
+	}
+
 	m, err := readMetadataQuery(r, metadataKey)
 	if err != nil {
 		return nil, err
 	}
 
 	req := listResourcesReq{
-		token:    r.Header.Get("Authorization"),
-		offset:   o,
-		limit:    l,
-		name:     n,
-		metadata: m,
+		token: r.Header.Get("Authorization"),
+		pageMeta: things.PageMetadata{
+			Offset:   o,
+			Limit:    l,
+			Name:     n,
+			Sort:     s,
+			Metadata: m,
+		},
 	}
 
 	return req, nil

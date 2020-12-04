@@ -180,10 +180,7 @@ func (req viewResourceReq) validate() error {
 
 type listResourcesReq struct {
 	token    string
-	offset   uint64
-	limit    uint64
-	name     string
-	metadata map[string]interface{}
+	pageMeta things.PageMetadata
 }
 
 func (req *listResourcesReq) validate() error {
@@ -191,11 +188,11 @@ func (req *listResourcesReq) validate() error {
 		return things.ErrUnauthorizedAccess
 	}
 
-	if req.limit == 0 || req.limit > maxLimitSize {
+	if req.pageMeta.Limit == 0 || req.pageMeta.Limit > maxLimitSize {
 		return things.ErrMalformedEntity
 	}
 
-	if len(req.name) > maxNameSize {
+	if len(req.pageMeta.Name) > maxNameSize {
 		return things.ErrMalformedEntity
 	}
 

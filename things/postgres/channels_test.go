@@ -235,7 +235,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 
 		// Create Channels with name.
 		if i < nameNum {
-			ch.Name = name
+			ch.Name = fmt.Sprintf("%s-%d", name, i)
 		}
 		// Create Channels with metadata.
 		if i >= nameNum && i < nameNum+metaNum {
@@ -252,82 +252,110 @@ func TestMultiChannelRetrieval(t *testing.T) {
 
 	cases := map[string]struct {
 		owner    string
-		offset   uint64
-		limit    uint64
-		name     string
 		size     uint64
-		total    uint64
-		metadata things.Metadata
+		pageMeta things.PageMetadata
 	}{
 		"retrieve all channels with existing owner": {
-			owner:  email,
-			offset: 0,
-			limit:  n,
-			size:   n,
-			total:  n,
+			owner: email,
+			pageMeta: things.PageMetadata{
+				Offset: 0,
+				Limit:  n,
+				Total:  n,
+			},
+			size: n,
 		},
 		"retrieve subset of channels with existing owner": {
-			owner:  email,
-			offset: n / 2,
-			limit:  n,
-			size:   n / 2,
-			total:  n,
+			owner: email,
+			pageMeta: things.PageMetadata{
+				Offset: n / 2,
+				Limit:  n,
+				Total:  n,
+			},
+			size: n / 2,
 		},
 		"retrieve channels with non-existing owner": {
-			owner:  wrongValue,
-			offset: n / 2,
-			limit:  n,
-			size:   0,
-			total:  0,
+			owner: wrongValue,
+			pageMeta: things.PageMetadata{
+				Offset: n / 2,
+				Limit:  n,
+				Total:  0,
+			},
+			size: 0,
 		},
 		"retrieve channels with existing name": {
-			owner:  email,
-			offset: offset,
-			limit:  n,
-			name:   name,
-			size:   nameNum + nameMetaNum - offset,
-			total:  nameNum + nameMetaNum,
+			owner: email,
+			pageMeta: things.PageMetadata{
+				Offset: offset,
+				Limit:  n,
+				Name:   name,
+				Total:  nameNum + nameMetaNum,
+			},
+			size: nameNum + nameMetaNum - offset,
 		},
 		"retrieve all channels with non-existing name": {
-			owner:  email,
-			offset: 0,
-			limit:  n,
-			name:   "wrong",
-			size:   0,
-			total:  0,
+			owner: email,
+			pageMeta: things.PageMetadata{
+				Offset: 0,
+				Limit:  n,
+				Name:   "wrong",
+				Total:  0,
+			},
+			size: 0,
 		},
 		"retrieve all channels with existing metadata": {
-			owner:    email,
-			offset:   0,
-			limit:    n,
-			size:     metaNum + nameMetaNum,
-			total:    metaNum + nameMetaNum,
-			metadata: metadata,
+			owner: email,
+			pageMeta: things.PageMetadata{
+				Offset:   0,
+				Limit:    n,
+				Metadata: metadata,
+				Total:    metaNum + nameMetaNum,
+			},
+			size: metaNum + nameMetaNum,
 		},
 		"retrieve all channels with non-existing metadata": {
-			owner:    email,
-			offset:   0,
-			limit:    n,
-			total:    0,
-			metadata: wrongMeta,
+			owner: email,
+			pageMeta: things.PageMetadata{
+				Offset:   0,
+				Limit:    n,
+				Metadata: wrongMeta,
+				Total:    0,
+			},
 		},
 		"retrieve all channels with existing name and metadata": {
-			owner:    email,
-			offset:   0,
-			limit:    n,
-			size:     nameMetaNum,
-			total:    nameMetaNum,
-			name:     name,
-			metadata: metadata,
+			owner: email,
+			pageMeta: things.PageMetadata{
+				Offset:   0,
+				Limit:    n,
+				Name:     name,
+				Metadata: metadata,
+				Total:    nameMetaNum,
+			},
+			size: nameMetaNum,
+		},
+		"retrieve channels sorted by name": {
+			owner: email,
+			pageMeta: things.PageMetadata{
+				Offset: 0,
+				Limit:  n,
+				Total:  n,
+				Sort:   "name",
+			},
+			size: n,
 		},
 	}
 
 	for desc, tc := range cases {
-		page, err := chanRepo.RetrieveAll(context.Background(), tc.owner, tc.offset, tc.limit, tc.name, tc.metadata)
+		page, err := chanRepo.RetrieveAll(context.Background(), tc.owner, tc.pageMeta)
 		size := uint64(len(page.Channels))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", desc, tc.size, size))
-		assert.Equal(t, tc.total, page.Total, fmt.Sprintf("%s: expected total %d got %d\n", desc, tc.total, page.Total))
+		assert.Equal(t, tc.pageMeta.Total, page.Total, fmt.Sprintf("%s: expected total %d got %d\n", desc, tc.pageMeta.Total, page.Total))
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
+		// Check if name have been sorted properly (index 2, third position)
+		if tc.pageMeta.Sort != "" {
+			firstName := fmt.Sprintf("%s-2", name)
+			name := page.Channels[2].Name
+			assert.Equal(t, name, firstName, fmt.Sprintf("%s: expected name %s got %s\n", desc, firstName, name))
+		}
 	}
 }
 
