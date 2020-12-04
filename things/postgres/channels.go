@@ -122,7 +122,7 @@ func (cr channelRepository) RetrieveByID(ctx context.Context, owner, id string) 
 
 func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, pm things.PageMetadata) (things.ChannelsPage, error) {
 	nq, name := getNameQuery(pm.Name)
-	sort := getSortQuery(pm.Sort)
+	sort := getOrderQuery(pm.Order)
 	meta, mq, err := getMetadataQuery(pm.Metadata)
 	if err != nil {
 		return things.ChannelsPage{}, errors.Wrap(things.ErrSelectEntity, err)
@@ -169,6 +169,7 @@ func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, pm th
 			Total:  total,
 			Offset: pm.Offset,
 			Limit:  pm.Limit,
+			Order:  pm.Order,
 		},
 	}
 
@@ -440,7 +441,7 @@ func getNameQuery(name string) (string, string) {
 	return nq, name
 }
 
-func getSortQuery(sort string) string {
+func getOrderQuery(sort string) string {
 	if sort == "name" {
 		return sort
 	}

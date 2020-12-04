@@ -46,7 +46,7 @@ paths:
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
         - $ref: "#/components/parameters/Name"
-        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Order"
         - $ref: "#/components/parameters/Metadata"
       responses:
         200:
@@ -214,7 +214,7 @@ paths:
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
         - $ref: "#/components/parameters/Name"
-        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Order"
         - $ref: "#/components/parameters/Metadata"
       responses:
         200:
@@ -690,9 +690,9 @@ components:
         type: string
         format: byte
       required: false
-    Sort:
-      name: sort
-      description: Sort by name.
+    Order:
+      name: order
+      description: Order by name.
       in: query
       schema:
         type: string

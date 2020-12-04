@@ -28,7 +28,7 @@ const (
 	offsetKey   = "offset"
 	limitKey    = "limit"
 	nameKey     = "name"
-	sortKey     = "sort"
+	orderKey    = "order"
 	metadataKey = "metadata"
 	connKey     = "connected"
 
@@ -384,7 +384,7 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	s, err := readStringQuery(r, sortKey)
+	or, err := readStringQuery(r, orderKey)
 	if err != nil {
 		return nil, err
 	}
@@ -400,7 +400,7 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 			Offset:   o,
 			Limit:    l,
 			Name:     n,
-			Sort:     s,
+			Order:    or,
 			Metadata: m,
 		},
 	}

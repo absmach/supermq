@@ -338,7 +338,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 				Offset: 0,
 				Limit:  n,
 				Total:  n,
-				Sort:   "name",
+				Order:  "name",
 			},
 			size: n,
 		},
@@ -351,7 +351,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 		assert.Equal(t, tc.pageMeta.Total, page.Total, fmt.Sprintf("%s: expected total %d got %d\n", desc, tc.pageMeta.Total, page.Total))
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
 		// Check if name have been sorted properly (index 2, third position)
-		if tc.pageMeta.Sort != "" {
+		if tc.pageMeta.Order != "" {
 			firstName := fmt.Sprintf("%s-2", name)
 			name := page.Channels[2].Name
 			assert.Equal(t, name, firstName, fmt.Sprintf("%s: expected name %s got %s\n", desc, firstName, name))
