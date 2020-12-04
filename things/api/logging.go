@@ -83,9 +83,9 @@ func (lm *loggingMiddleware) ListThings(ctx context.Context, token string, pm th
 	defer func(begin time.Time) {
 		nlog := ""
 		if pm.Name != "" {
-			nlog = fmt.Sprintf("with name %s ", pm.Name)
+			nlog = fmt.Sprintf("with name %s", pm.Name)
 		}
-		message := fmt.Sprintf("Method list_things %sfor token %s took %s to complete", nlog, token, time.Since(begin))
+		message := fmt.Sprintf("Method list_things %s for token %s took %s to complete", nlog, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -164,7 +164,7 @@ func (lm *loggingMiddleware) ListChannels(ctx context.Context, token string, pm 
 	defer func(begin time.Time) {
 		nlog := ""
 		if pm.Name != "" {
-			nlog = fmt.Sprintf("with name %s ", pm.Name)
+			nlog = fmt.Sprintf("with name %s", pm.Name)
 		}
 		message := fmt.Sprintf("Method list_channels %s for token %s took %s to complete", nlog, token, time.Since(begin))
 		if err != nil {
