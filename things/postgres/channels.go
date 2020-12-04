@@ -188,7 +188,7 @@ func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing st
 		        INNER JOIN connections conn
 		        ON ch.id = conn.channel_id
 		        WHERE ch.owner = :owner AND conn.thing_id = :thing
-		        ORDER BY ch.name
+		        ORDER BY ch.id
 		        LIMIT :limit
 		        OFFSET :offset;`
 
@@ -205,7 +205,7 @@ func (cr channelRepository) RetrieveByThing(ctx context.Context, owner, thing st
 		          INNER JOIN connections conn
 		          ON ch.id = conn.channel_id
 		          WHERE ch.owner = :owner AND conn.thing_id = :thing)
-		        ORDER BY ch.name
+		        ORDER BY ch.id
 		        LIMIT :limit
 		        OFFSET :offset;`
 
