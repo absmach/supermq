@@ -441,9 +441,9 @@ func getNameQuery(name string) (string, string) {
 	return nq, name
 }
 
-func getOrderQuery(sort string) string {
-	if sort == "name" {
-		return sort
+func getOrderQuery(order string) string {
+	if order == "name" {
+		return order
 	}
 
 	return "id"
