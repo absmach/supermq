@@ -352,9 +352,10 @@ func TestMultiChannelRetrieval(t *testing.T) {
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
 		// Check if name have been sorted properly (index 2, third position)
 		if tc.pageMeta.Order != "" {
-			firstName := fmt.Sprintf("%s-2", name)
-			name := page.Channels[2].Name
-			assert.Equal(t, name, firstName, fmt.Sprintf("%s: expected name %s got %s\n", desc, firstName, name))
+			for i := uint64(0); i < nameNum; i++ {
+				resName := fmt.Sprintf("%s-%d", name, i)
+				assert.Equal(t, page.Channels[i].Name, resName, fmt.Sprintf("%s: expected name %s got %s\n", desc, resName, name))
+			}
 		}
 	}
 }

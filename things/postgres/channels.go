@@ -122,21 +122,21 @@ func (cr channelRepository) RetrieveByID(ctx context.Context, owner, id string) 
 
 func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, pm things.PageMetadata) (things.ChannelsPage, error) {
 	nq, name := getNameQuery(pm.Name)
-	sort := getOrderQuery(pm.Order)
+	order := getOrderQuery(pm.Order)
 	meta, mq, err := getMetadataQuery(pm.Metadata)
 	if err != nil {
 		return things.ChannelsPage{}, errors.Wrap(things.ErrSelectEntity, err)
 	}
 
 	q := fmt.Sprintf(`SELECT id, name, metadata FROM channels
-	      WHERE owner = :owner %s%s ORDER BY :sort LIMIT :limit OFFSET :offset;`, mq, nq)
+	      WHERE owner = :owner %s%s ORDER BY :order LIMIT :limit OFFSET :offset;`, mq, nq)
 
 	params := map[string]interface{}{
 		"owner":    owner,
 		"limit":    pm.Limit,
 		"offset":   pm.Offset,
 		"name":     name,
-		"sort":     sort,
+		"order":    order,
 		"metadata": meta,
 	}
 	rows, err := cr.db.NamedQueryContext(ctx, q, params)
