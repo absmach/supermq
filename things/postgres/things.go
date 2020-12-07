@@ -183,20 +183,19 @@ func (tr thingRepository) RetrieveByKey(ctx context.Context, key string) (string
 
 func (tr thingRepository) RetrieveAll(ctx context.Context, owner string, pm things.PageMetadata) (things.Page, error) {
 	nq, name := getNameQuery(pm.Name)
-	order := getOrderQuery(pm.Order)
+	oq := getOrderQuery(pm.Order)
 	m, mq, err := getMetadataQuery(pm.Metadata)
 	if err != nil {
 		return things.Page{}, errors.Wrap(things.ErrSelectEntity, err)
 	}
 
 	q := fmt.Sprintf(`SELECT id, name, key, metadata FROM things
-	      WHERE owner = :owner %s%s ORDER BY :order LIMIT :limit OFFSET :offset;`, mq, nq)
+	      WHERE owner = :owner %s%s ORDER BY %s LIMIT :limit OFFSET :offset;`, mq, nq, oq)
 	params := map[string]interface{}{
 		"owner":    owner,
 		"limit":    pm.Limit,
 		"offset":   pm.Offset,
 		"name":     name,
-		"order":    order,
 		"metadata": m,
 	}
 

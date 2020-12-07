@@ -210,7 +210,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 	chanRepo := postgres.NewChannelRepository(dbMiddleware)
 
 	email := "channel-multi-retrieval@example.com"
-	name := "channel_name"
+	name := "channel-name"
 	metadata := things.Metadata{
 		"field": "value",
 	}
@@ -352,9 +352,10 @@ func TestMultiChannelRetrieval(t *testing.T) {
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
 		// Check if name have been sorted properly (index 2, third position)
 		if tc.pageMeta.Order != "" {
-			for i := uint64(0); i < nameNum; i++ {
-				resName := fmt.Sprintf("%s-%d", name, i)
-				assert.Equal(t, page.Channels[i].Name, resName, fmt.Sprintf("%s: expected name %s got %s\n", desc, resName, name))
+			current := page.Channels[0]
+			for _, res := range page.Channels {
+				assert.GreaterOrEqual(t, res.Name, current.Name)
+				current = res
 			}
 		}
 	}

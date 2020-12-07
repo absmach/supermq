@@ -520,9 +520,10 @@ func TestMultiThingRetrieval(t *testing.T) {
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
 		// Check if name have been sorted properly (index 2, third position)
 		if tc.pageMeta.Order != "" {
-			for i := uint64(0); i < nameNum; i++ {
-				resName := fmt.Sprintf("%s-%d", name, i)
-				assert.Equal(t, page.Things[i].Name, resName, fmt.Sprintf("%s: expected name %s got %s\n", desc, resName, name))
+			current := page.Things[0]
+			for _, res := range page.Things {
+				assert.GreaterOrEqual(t, res.Name, current.Name)
+				current = res
 			}
 		}
 	}
