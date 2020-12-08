@@ -671,6 +671,20 @@ func TestListThings(t *testing.T) {
 			res:    data[0:5],
 		},
 		{
+			desc:   "get a list of things with invalid order",
+			auth:   token,
+			status: http.StatusBadRequest,
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d&order=wrong", thingURL, 0, 5),
+			res:    nil,
+		},
+		{
+			desc:   "get a list of things with invalid dir",
+			auth:   token,
+			status: http.StatusBadRequest,
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d&order=name&dir=wrong", thingURL, 0, 5),
+			res:    nil,
+		},
+		{
 			desc:   "get a list of things with invalid token",
 			auth:   wrongValue,
 			status: http.StatusUnauthorized,
@@ -1438,6 +1452,20 @@ func TestListChannels(t *testing.T) {
 			status: http.StatusOK,
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d&order=name&dir=desc", channelURL, 0, 6),
 			res:    channels[0:6],
+		},
+		{
+			desc:   "get a list of channels with invalid order",
+			auth:   token,
+			status: http.StatusBadRequest,
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d&order=wrong", channelURL, 0, 6),
+			res:    nil,
+		},
+		{
+			desc:   "get a list of channels with invalid dir",
+			auth:   token,
+			status: http.StatusBadRequest,
+			url:    fmt.Sprintf("%s?offset=%d&limit=%d&order=name&dir=wrong", channelURL, 0, 6),
+			res:    nil,
 		},
 		{
 			desc:   "get a list of channels with invalid token",

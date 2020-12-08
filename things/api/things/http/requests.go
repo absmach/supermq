@@ -196,6 +196,16 @@ func (req *listResourcesReq) validate() error {
 		return things.ErrMalformedEntity
 	}
 
+	if req.pageMeta.Order != "" &&
+		req.pageMeta.Order != "name" && req.pageMeta.Order != "id" {
+		return things.ErrMalformedEntity
+	}
+
+	if req.pageMeta.Dir != "" &&
+		req.pageMeta.Dir != "asc" && req.pageMeta.Dir != "desc" {
+		return things.ErrMalformedEntity
+	}
+
 	return nil
 }
 
