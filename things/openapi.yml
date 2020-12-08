@@ -47,6 +47,7 @@ paths:
         - $ref: "#/components/parameters/Offset"
         - $ref: "#/components/parameters/Name"
         - $ref: "#/components/parameters/Order"
+        - $ref: "#/components/parameters/Direction"
         - $ref: "#/components/parameters/Metadata"
       responses:
         200:
@@ -215,6 +216,7 @@ paths:
         - $ref: "#/components/parameters/Offset"
         - $ref: "#/components/parameters/Name"
         - $ref: "#/components/parameters/Order"
+        - $ref: "#/components/parameters/Direction"
         - $ref: "#/components/parameters/Metadata"
       responses:
         200:
@@ -702,7 +704,7 @@ components:
           - name
           - id
       required: false
-    Dir:
+    Direction:
       name: dir
       description: Sort direction.
       in: query
