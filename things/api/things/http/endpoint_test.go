@@ -664,7 +664,7 @@ func TestListThings(t *testing.T) {
 			res:    data[0:5],
 		},
 		{
-			desc:   "get a list of things ordered by ascendent name",
+			desc:   "get a list of things ordered by name descendent",
 			auth:   token,
 			status: http.StatusOK,
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d&order=name&dir=desc", thingURL, 0, 5),
@@ -1433,7 +1433,7 @@ func TestListChannels(t *testing.T) {
 			res:    channels[0:6],
 		},
 		{
-			desc:   "get a list of channels ordered by ascendent name",
+			desc:   "get a list of channels ordered by name descendent",
 			auth:   token,
 			status: http.StatusOK,
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d&order=name&dir=desc", channelURL, 0, 6),

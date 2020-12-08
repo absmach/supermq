@@ -647,14 +647,14 @@ components:
       description: Unique channel identifier.
       in: path
       schema:
-        type: string
+        type: uuid
       required: true
     ThingId:
       name: thingId
       description: Unique thing identifier.
       in: path
       schema:
-        type: string
+        type: uuid
       required: true
     Limit:
       name: limit

@@ -332,7 +332,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 			},
 			size: nameMetaNum,
 		},
-		"retrieve channels sorted by ascendent name": {
+		"retrieve channels sorted by name ascendent": {
 			owner: email,
 			pageMeta: things.PageMetadata{
 				Offset: 0,
@@ -343,7 +343,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 			},
 			size: n,
 		},
-		"retrieve channels sorted by descendent name": {
+		"retrieve channels sorted by name descendent": {
 			owner: email,
 			pageMeta: things.PageMetadata{
 				Offset: 0,

@@ -500,7 +500,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 			},
 			size: nameMetaNum,
 		},
-		"retrieve things sorted by ascendent name": {
+		"retrieve things sorted by name ascendent": {
 			owner: email,
 			pageMeta: things.PageMetadata{
 				Offset: 0,
@@ -511,7 +511,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 			},
 			size: n,
 		},
-		"retrieve things sorted by descendent name": {
+		"retrieve things sorted by name descendent": {
 			owner: email,
 			pageMeta: things.PageMetadata{
 				Offset: 0,
