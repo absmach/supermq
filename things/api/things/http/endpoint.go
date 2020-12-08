@@ -162,6 +162,7 @@ func listThingsEndpoint(svc things.Service) endpoint.Endpoint {
 				Offset: page.Offset,
 				Limit:  page.Limit,
 				Order:  page.Order,
+				Dir:    page.Dir,
 			},
 			Things: []viewThingRes{},
 		}
@@ -367,6 +368,7 @@ func listChannelsEndpoint(svc things.Service) endpoint.Endpoint {
 				Offset: page.Offset,
 				Limit:  page.Limit,
 				Order:  page.Order,
+				Dir:    page.Dir,
 			},
 			Channels: []viewChannelRes{},
 		}

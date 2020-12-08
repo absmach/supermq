@@ -332,23 +332,25 @@ func TestMultiChannelRetrieval(t *testing.T) {
 			},
 			size: nameMetaNum,
 		},
-		"retrieve channels sorted by name ascendent": {
+		"retrieve channels sorted by ascendent name": {
 			owner: email,
 			pageMeta: things.PageMetadata{
 				Offset: 0,
 				Limit:  n,
 				Total:  n,
-				Order:  "name-asc",
+				Order:  "name",
+				Dir:    "asc",
 			},
 			size: n,
 		},
-		"retrieve channels sorted by name descendent": {
+		"retrieve channels sorted by descendent name": {
 			owner: email,
 			pageMeta: things.PageMetadata{
 				Offset: 0,
 				Limit:  n,
 				Total:  n,
-				Order:  "name-desc",
+				Order:  "name",
+				Dir:    "desc",
 			},
 			size: n,
 		},
@@ -362,16 +364,15 @@ func TestMultiChannelRetrieval(t *testing.T) {
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
 		// Check if name have been sorted properly
 		switch tc.pageMeta.Order {
-		case "name-asc":
+		case "name":
 			current := page.Channels[0]
 			for _, res := range page.Channels {
-				assert.GreaterOrEqual(t, res.Name, current.Name)
-				current = res
-			}
-		case "name-desc":
-			current := page.Channels[0]
-			for _, res := range page.Channels {
-				assert.GreaterOrEqual(t, current.Name, res.Name)
+				if tc.pageMeta.Dir == "asc" {
+					assert.GreaterOrEqual(t, res.Name, current.Name)
+				}
+				if tc.pageMeta.Dir == "desc" {
+					assert.GreaterOrEqual(t, current.Name, res.Name)
+				}
 				current = res
 			}
 		default:

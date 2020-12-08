@@ -692,16 +692,27 @@ components:
       required: false
     Order:
       name: order
-      description: Order by name (ascendent or descendent) or by id.
+      description: Sort type.
       in: query
       schema:
         type: string
         default: id
         format: byte
         enum:
-          - name-asc
-          - name-desc
+          - name
           - id
+      required: false
+    Dir:
+      name: dir
+      description: Sort direction.
+      in: query
+      schema:
+        type: string
+        default: desc
+        format: byte
+        enum:
+          - asc
+          - desc
       required: false
     Metadata:
       name: metadata

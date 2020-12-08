@@ -131,6 +131,7 @@ type PageMetadata struct {
 	Limit    uint64
 	Name     string
 	Order    string
+	Dir      string
 	Metadata map[string]interface{}
 }
 

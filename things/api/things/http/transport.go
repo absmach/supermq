@@ -29,6 +29,7 @@ const (
 	limitKey    = "limit"
 	nameKey     = "name"
 	orderKey    = "order"
+	dirKey      = "dir"
 	metadataKey = "metadata"
 	connKey     = "connected"
 
@@ -389,6 +390,11 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
+	d, err := readStringQuery(r, dirKey)
+	if err != nil {
+		return nil, err
+	}
+
 	m, err := readMetadataQuery(r, metadataKey)
 	if err != nil {
 		return nil, err
@@ -401,6 +407,7 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 			Limit:    l,
 			Name:     n,
 			Order:    or,
+			Dir:      d,
 			Metadata: m,
 		},
 	}

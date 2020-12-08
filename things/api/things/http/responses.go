@@ -262,6 +262,7 @@ type pageRes struct {
 	Offset uint64 `json:"offset"`
 	Limit  uint64 `json:"limit"`
 	Order  string `json:"order"`
+	Dir    string `json:"direction"`
 }
 
 type errorRes struct {
