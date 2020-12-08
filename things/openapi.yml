@@ -694,7 +694,7 @@ components:
       required: false
     Order:
       name: order
-      description: Sort type.
+      description: Order type.
       in: query
       schema:
         type: string
@@ -706,7 +706,7 @@ components:
       required: false
     Direction:
       name: dir
-      description: Sort direction.
+      description: Order direction.
       in: query
       schema:
         type: string
