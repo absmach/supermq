@@ -431,12 +431,11 @@ func toChannel(ch dbChannel) things.Channel {
 }
 
 func getNameQuery(name string) (string, string) {
-	name = strings.ToLower(name)
-	nq := ""
-	if name != "" {
-		name = fmt.Sprintf(`%%%s%%`, name)
-		nq = ` AND LOWER(name) LIKE :name`
+	if name == "" {
+		return "", ""
 	}
+	name = fmt.Sprintf(`%%%s%%`, strings.ToLower(name))
+	nq := ` AND LOWER(name) LIKE :name`
 	return nq, name
 }
 
