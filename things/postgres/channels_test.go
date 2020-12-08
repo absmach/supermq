@@ -350,7 +350,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", desc, tc.size, size))
 		assert.Equal(t, tc.pageMeta.Total, page.Total, fmt.Sprintf("%s: expected total %d got %d\n", desc, tc.pageMeta.Total, page.Total))
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
-		// Check if name have been sorted properly (index 2, third position)
+		// Check if name have been sorted properly
 		if tc.pageMeta.Order != "" {
 			current := page.Channels[0]
 			for _, res := range page.Channels {
