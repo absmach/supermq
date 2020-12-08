@@ -210,7 +210,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 	chanRepo := postgres.NewChannelRepository(dbMiddleware)
 
 	email := "channel-multi-retrieval@example.com"
-	name := "channel-name"
+	name := "channel_name"
 	metadata := things.Metadata{
 		"field": "value",
 	}
