@@ -419,12 +419,12 @@ func TestMultiThingRetrieval(t *testing.T) {
 
 	cases := map[string]struct {
 		owner    string
-		pageMeta things.PageMetadata
+		pageMetadata things.PageMetadata
 		size     uint64
 	}{
 		"retrieve all things with existing owner": {
 			owner: email,
-			pageMeta: things.PageMetadata{
+			pageMetadata: things.PageMetadata{
 				Offset: 0,
 				Limit:  n,
 				Total:  n,
@@ -433,7 +433,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 		},
 		"retrieve subset of things with existing owner": {
 			owner: email,
-			pageMeta: things.PageMetadata{
+			pageMetadata: things.PageMetadata{
 				Offset: n / 2,
 				Limit:  n,
 				Total:  n,
@@ -442,7 +442,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 		},
 		"retrieve things with non-existing owner": {
 			owner: wrongValue,
-			pageMeta: things.PageMetadata{
+			pageMetadata: things.PageMetadata{
 				Offset: 0,
 				Limit:  n,
 				Total:  0,
@@ -451,7 +451,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 		},
 		"retrieve things with existing name": {
 			owner: email,
-			pageMeta: things.PageMetadata{
+			pageMetadata: things.PageMetadata{
 				Offset: 1,
 				Limit:  n,
 				Name:   name,
@@ -461,7 +461,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 		},
 		"retrieve things with non-existing name": {
 			owner: email,
-			pageMeta: things.PageMetadata{
+			pageMetadata: things.PageMetadata{
 				Offset: 0,
 				Limit:  n,
 				Name:   "wrong",
@@ -471,7 +471,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 		},
 		"retrieve things with existing metadata": {
 			owner: email,
-			pageMeta: things.PageMetadata{
+			pageMetadata: things.PageMetadata{
 				Offset:   0,
 				Limit:    n,
 				Total:    metaNum + nameMetaNum,
@@ -481,7 +481,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 		},
 		"retrieve things with non-existing metadata": {
 			owner: email,
-			pageMeta: things.PageMetadata{
+			pageMetadata: things.PageMetadata{
 				Offset:   0,
 				Limit:    n,
 				Total:    0,
@@ -491,7 +491,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 		},
 		"retrieve all things with existing name and metadata": {
 			owner: email,
-			pageMeta: things.PageMetadata{
+			pageMetadata: things.PageMetadata{
 				Offset:   0,
 				Limit:    n,
 				Total:    nameMetaNum,
@@ -502,7 +502,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 		},
 		"retrieve things sorted by name ascendent": {
 			owner: email,
-			pageMeta: things.PageMetadata{
+			pageMetadata: things.PageMetadata{
 				Offset: 0,
 				Limit:  n,
 				Total:  n,
@@ -513,7 +513,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 		},
 		"retrieve things sorted by name descendent": {
 			owner: email,
-			pageMeta: things.PageMetadata{
+			pageMetadata: things.PageMetadata{
 				Offset: 0,
 				Limit:  n,
 				Total:  n,
@@ -525,20 +525,20 @@ func TestMultiThingRetrieval(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		page, err := thingRepo.RetrieveAll(context.Background(), tc.owner, tc.pageMeta)
+		page, err := thingRepo.RetrieveAll(context.Background(), tc.owner, tc.pageMetadata)
 		size := uint64(len(page.Things))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", desc, tc.size, size))
-		assert.Equal(t, tc.pageMeta.Total, page.Total, fmt.Sprintf("%s: expected total %d got %d\n", desc, tc.pageMeta.Total, page.Total))
+		assert.Equal(t, tc.pageMetadata.Total, page.Total, fmt.Sprintf("%s: expected total %d got %d\n", desc, tc.pageMetadata.Total, page.Total))
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
 		// Check if name have been sorted properly
-		switch tc.pageMeta.Order {
+		switch tc.pageMetadata.Order {
 		case "name":
 			current := page.Things[0]
 			for _, res := range page.Things {
-				if tc.pageMeta.Dir == "asc" {
+				if tc.pageMetadata.Dir == "asc" {
 					assert.GreaterOrEqual(t, res.Name, current.Name)
 				}
-				if tc.pageMeta.Dir == "desc" {
+				if tc.pageMetadata.Dir == "desc" {
 					assert.GreaterOrEqual(t, current.Name, res.Name)
 				}
 				current = res

@@ -253,11 +253,11 @@ func TestMultiChannelRetrieval(t *testing.T) {
 	cases := map[string]struct {
 		owner    string
 		size     uint64
-		pageMeta things.PageMetadata
+		pageMetadata things.PageMetadata
 	}{
 		"retrieve all channels with existing owner": {
 			owner: email,
-			pageMeta: things.PageMetadata{
+			pageMetadata: things.PageMetadata{
 				Offset: 0,
 				Limit:  n,
 				Total:  n,
@@ -266,7 +266,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 		},
 		"retrieve subset of channels with existing owner": {
 			owner: email,
-			pageMeta: things.PageMetadata{
+			pageMetadata: things.PageMetadata{
 				Offset: n / 2,
 				Limit:  n,
 				Total:  n,
@@ -275,7 +275,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 		},
 		"retrieve channels with non-existing owner": {
 			owner: wrongValue,
-			pageMeta: things.PageMetadata{
+			pageMetadata: things.PageMetadata{
 				Offset: n / 2,
 				Limit:  n,
 				Total:  0,
@@ -284,7 +284,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 		},
 		"retrieve channels with existing name": {
 			owner: email,
-			pageMeta: things.PageMetadata{
+			pageMetadata: things.PageMetadata{
 				Offset: offset,
 				Limit:  n,
 				Name:   name,
@@ -294,7 +294,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 		},
 		"retrieve all channels with non-existing name": {
 			owner: email,
-			pageMeta: things.PageMetadata{
+			pageMetadata: things.PageMetadata{
 				Offset: 0,
 				Limit:  n,
 				Name:   "wrong",
@@ -304,7 +304,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 		},
 		"retrieve all channels with existing metadata": {
 			owner: email,
-			pageMeta: things.PageMetadata{
+			pageMetadata: things.PageMetadata{
 				Offset:   0,
 				Limit:    n,
 				Metadata: metadata,
@@ -314,7 +314,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 		},
 		"retrieve all channels with non-existing metadata": {
 			owner: email,
-			pageMeta: things.PageMetadata{
+			pageMetadata: things.PageMetadata{
 				Offset:   0,
 				Limit:    n,
 				Metadata: wrongMeta,
@@ -323,7 +323,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 		},
 		"retrieve all channels with existing name and metadata": {
 			owner: email,
-			pageMeta: things.PageMetadata{
+			pageMetadata: things.PageMetadata{
 				Offset:   0,
 				Limit:    n,
 				Name:     name,
@@ -334,7 +334,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 		},
 		"retrieve channels sorted by name ascendent": {
 			owner: email,
-			pageMeta: things.PageMetadata{
+			pageMetadata: things.PageMetadata{
 				Offset: 0,
 				Limit:  n,
 				Total:  n,
@@ -345,7 +345,7 @@ func TestMultiChannelRetrieval(t *testing.T) {
 		},
 		"retrieve channels sorted by name descendent": {
 			owner: email,
-			pageMeta: things.PageMetadata{
+			pageMetadata: things.PageMetadata{
 				Offset: 0,
 				Limit:  n,
 				Total:  n,
@@ -357,20 +357,20 @@ func TestMultiChannelRetrieval(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		page, err := chanRepo.RetrieveAll(context.Background(), tc.owner, tc.pageMeta)
+		page, err := chanRepo.RetrieveAll(context.Background(), tc.owner, tc.pageMetadata)
 		size := uint64(len(page.Channels))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", desc, tc.size, size))
-		assert.Equal(t, tc.pageMeta.Total, page.Total, fmt.Sprintf("%s: expected total %d got %d\n", desc, tc.pageMeta.Total, page.Total))
+		assert.Equal(t, tc.pageMetadata.Total, page.Total, fmt.Sprintf("%s: expected total %d got %d\n", desc, tc.pageMetadata.Total, page.Total))
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
 		// Check if name have been sorted properly
-		switch tc.pageMeta.Order {
+		switch tc.pageMetadata.Order {
 		case "name":
 			current := page.Channels[0]
 			for _, res := range page.Channels {
-				if tc.pageMeta.Dir == "asc" {
+				if tc.pageMetadata.Dir == "asc" {
 					assert.GreaterOrEqual(t, res.Name, current.Name)
 				}
-				if tc.pageMeta.Dir == "desc" {
+				if tc.pageMetadata.Dir == "desc" {
 					assert.GreaterOrEqual(t, current.Name, res.Name)
 				}
 				current = res

@@ -180,7 +180,7 @@ func (req viewResourceReq) validate() error {
 
 type listResourcesReq struct {
 	token    string
-	pageMeta things.PageMetadata
+	pageMetadata things.PageMetadata
 }
 
 func (req *listResourcesReq) validate() error {
@@ -188,21 +188,21 @@ func (req *listResourcesReq) validate() error {
 		return things.ErrUnauthorizedAccess
 	}
 
-	if req.pageMeta.Limit == 0 || req.pageMeta.Limit > maxLimitSize {
+	if req.pageMetadata.Limit == 0 || req.pageMetadata.Limit > maxLimitSize {
 		return things.ErrMalformedEntity
 	}
 
-	if len(req.pageMeta.Name) > maxNameSize {
+	if len(req.pageMetadata.Name) > maxNameSize {
 		return things.ErrMalformedEntity
 	}
 
-	if req.pageMeta.Order != "" &&
-		req.pageMeta.Order != "name" && req.pageMeta.Order != "id" {
+	if req.pageMetadata.Order != "" &&
+		req.pageMetadata.Order != "name" && req.pageMetadata.Order != "id" {
 		return things.ErrMalformedEntity
 	}
 
-	if req.pageMeta.Dir != "" &&
-		req.pageMeta.Dir != "asc" && req.pageMeta.Dir != "desc" {
+	if req.pageMetadata.Dir != "" &&
+		req.pageMetadata.Dir != "asc" && req.pageMetadata.Dir != "desc" {
 		return things.ErrMalformedEntity
 	}
 

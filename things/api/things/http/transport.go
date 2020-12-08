@@ -402,7 +402,7 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 
 	req := listResourcesReq{
 		token: r.Header.Get("Authorization"),
-		pageMeta: things.PageMetadata{
+		pageMetadata: things.PageMetadata{
 			Offset:   o,
 			Limit:    l,
 			Name:     n,
