@@ -500,13 +500,23 @@ func TestMultiThingRetrieval(t *testing.T) {
 			},
 			size: nameMetaNum,
 		},
-		"retrieve things sorted by name": {
+		"retrieve things sorted by name ascendent": {
 			owner: email,
 			pageMeta: things.PageMetadata{
 				Offset: 0,
 				Limit:  n,
 				Total:  n,
-				Order:  "name",
+				Order:  "name-asc",
+			},
+			size: n,
+		},
+		"retrieve things sorted by name descendent": {
+			owner: email,
+			pageMeta: things.PageMetadata{
+				Offset: 0,
+				Limit:  n,
+				Total:  n,
+				Order:  "name-desc",
 			},
 			size: n,
 		},
@@ -519,12 +529,21 @@ func TestMultiThingRetrieval(t *testing.T) {
 		assert.Equal(t, tc.pageMeta.Total, page.Total, fmt.Sprintf("%s: expected total %d got %d\n", desc, tc.pageMeta.Total, page.Total))
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
 		// Check if name have been sorted properly
-		if tc.pageMeta.Order != "" {
+		switch tc.pageMeta.Order {
+		case "name-asc":
 			current := page.Things[0]
 			for _, res := range page.Things {
 				assert.GreaterOrEqual(t, res.Name, current.Name)
 				current = res
 			}
+		case "name-desc":
+			current := page.Things[0]
+			for _, res := range page.Things {
+				assert.GreaterOrEqual(t, current.Name, res.Name)
+				current = res
+			}
+		default:
+			continue
 		}
 	}
 }

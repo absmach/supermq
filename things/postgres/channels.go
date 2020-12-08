@@ -440,11 +440,14 @@ func getNameQuery(name string) (string, string) {
 }
 
 func getOrderQuery(order string) string {
-	if order == "name" {
+	switch order {
+	case "name-asc":
 		return "name ASC"
+	case "name-desc":
+		return "name DESC"
+	default:
+		return "id"
 	}
-
-	return "id"
 }
 
 func getMetadataQuery(m things.Metadata) ([]byte, string, error) {
