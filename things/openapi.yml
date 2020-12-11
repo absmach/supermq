@@ -33,7 +33,7 @@ paths:
         500:
           $ref: "#/components/responses/ServiceError"
     get:
-      summary: Retrieves managed things
+      summary: Retrieves things
       description: |
         Retrieves a list of managed things. Due to performance concerns, data
         is retrieved in subsets. The API things must ensure that the entire
@@ -349,13 +349,14 @@ paths:
           $ref: "#/components/responses/ServiceError"
   /things/{thingId}/channels:
     get:
-      summary: Retrieves list of channels connected or not connected to specified thing
+      summary: List of channels connected to specified thing
       description: |
         Retrieves list of channels connected to specified thing with pagination
         metadata.
       tags:
         - channels
       parameters:
+        - $ref: "#/components/parameters/Authorization"
         - $ref: "#/components/parameters/ThingId"
         - $ref: "#/components/parameters/Offset"
         - $ref: "#/components/parameters/Limit"
@@ -375,13 +376,14 @@ paths:
           $ref: "#/components/responses/ServiceError"
   /channels/{chanId}/things:
     get:
-      summary: Retrieves list of things connected or not connected to specified channel
+      summary: List of things connected to specified channel
       description: |
         Retrieves list of things connected to specified channel with pagination
         metadata.
       tags:
         - things
       parameters:
+        - $ref: "#/components/parameters/Authorization"        
         - $ref: "#/components/parameters/ChanId"
         - $ref: "#/components/parameters/Offset"
         - $ref: "#/components/parameters/Limit"
@@ -621,8 +623,6 @@ components:
     ConnectionReqSchema:
       type: object
       properties:
-        key:
-          $ref: "#/components/schemas/Key"
         channel_ids:
           type: array
           description: Channel IDs.
@@ -641,6 +641,7 @@ components:
       in: header
       schema:
         type: string
+        format: uuid
       required: true
     ChanId:
       name: chanId

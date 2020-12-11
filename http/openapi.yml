@@ -102,6 +102,7 @@ components:
       in: header
       schema:
         type: string
+        format: uuid
       required: true
     ID:
       name: id
