@@ -132,8 +132,8 @@ paths:
       description: Generates an access token when provided with proper credentials.
       tags:
         - users
-      security:
-        - Authorization: []
+      requestBody:
+        $ref: "#/components/requestBodies/UserCreateReq"
       responses:
         201:
           description: User authenticated.
