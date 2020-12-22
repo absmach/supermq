@@ -131,6 +131,22 @@ func fmtCondition(chanID string, query map[string]string) string {
 			"protocol":
 			condition = fmt.Sprintf(`%s AND "%s"='%s'`, condition, name,
 				strings.Replace(value, "\"", "\\\"", -1))
+		case
+			"v",
+			"value":
+			condition = fmt.Sprintf(`%s AND value = %s`, condition, value)
+		case "vb":
+			condition = fmt.Sprintf(`%s AND boolValue = %s`, condition, value)
+		case "vs":
+			condition = fmt.Sprintf(`%s AND "stringValue"='%s'`, condition,
+				strings.Replace(value, "\"", "\\\"", -1))
+		case "vd":
+			condition = fmt.Sprintf(`%s AND "dataValue"='%s'`, condition,
+				strings.Replace(value, "\"", "\\\"", -1))
+		case "from":
+			condition = fmt.Sprintf(`%s AND time >= %s`, condition, value)
+		case "to":
+			condition = fmt.Sprintf(`%s AND time <= %s`, condition, value)
 		}
 	}
 	return condition

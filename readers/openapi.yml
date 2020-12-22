@@ -22,6 +22,13 @@ paths:
         - $ref: "#/components/parameters/Offset"
         - $ref: "#/components/parameters/Publisher"
         - $ref: "#/components/parameters/Name"
+        - $ref: "#/components/parameters/Value"
+        - $ref: "#/components/parameters/V"
+        - $ref: "#/components/parameters/Vb"
+        - $ref: "#/components/parameters/Vs"
+        - $ref: "#/components/parameters/Vd"
+        - $ref: "#/components/parameters/From"
+        - $ref: "#/components/parameters/To"
       responses:
         '200':
           $ref: "#/components/responses/MessagesPageRes"
@@ -139,6 +146,55 @@ components:
       in: query
       schema:
         type: string
+      required: false
+    Value:
+      name: value
+      description: SenML message value.
+      in: query
+      schema:
+        type: string
+      required: false
+    V:
+      name: v
+      description: SenML message value.
+      in: query
+      schema:
+        type: string
+      required: false
+    Vb:
+      name: vb
+      description: SenML message bool value.
+      in: query
+      schema:
+        type: boolean
+      required: false
+    Vs:
+      name: vs
+      description: SenML message string value.
+      in: query
+      schema:
+        type: string
+      required: false
+    Vd:
+      name: vd
+      description: SenML message data value.
+      in: query
+      schema:
+        type: string
+      required: false
+    From:
+      name: from
+      description: SenML message time in nanoseconds (int64).
+      in: query
+      schema:
+        type: integer
+      required: false
+    To:
+      name: to
+      description: SenML message time in nanoseconds (int64).
+      in: query
+      schema:
+        type: integer
       required: false
 
   responses:

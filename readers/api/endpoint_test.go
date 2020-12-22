@@ -27,11 +27,11 @@ const (
 )
 
 var (
-	v       float64 = 5
-	stringV         = "value"
-	boolV           = true
-	dataV           = "base64"
-	sum     float64 = 42
+	val       float64 = 5
+	stringVal         = "value"
+	boolVal           = true
+	dataVal           = "dataValue"
+	sum       float64 = 42
 )
 
 func newService() readers.MessageRepository {
@@ -47,13 +47,13 @@ func newService() readers.MessageRepository {
 
 		switch count {
 		case 0:
-			msg.Value = &v
+			msg.Value = &val
 		case 1:
-			msg.BoolValue = &boolV
+			msg.BoolValue = &boolVal
 		case 2:
-			msg.StringValue = &stringV
+			msg.StringValue = &stringVal
 		case 3:
-			msg.DataValue = &dataV
+			msg.DataValue = &dataVal
 		case 4:
 			msg.Sum = &sum
 		}
@@ -163,6 +163,41 @@ func TestReadAll(t *testing.T) {
 		},
 		"read page with default limit": {
 			url:    fmt.Sprintf("%s/channels/%s/messages?offset=0", ts.URL, chanID),
+			token:  token,
+			status: http.StatusOK,
+		},
+		"read page with from": {
+			url:    fmt.Sprintf("%s/channels/%s/messages?from=1577836800", ts.URL, chanID),
+			token:  token,
+			status: http.StatusOK,
+		},
+		"read page with to": {
+			url:    fmt.Sprintf("%s/channels/%s/messages?to=1608630754", ts.URL, chanID),
+			token:  token,
+			status: http.StatusOK,
+		},
+		"read page with value": {
+			url:    fmt.Sprintf("%s/channels/%s/messages?value=%f", ts.URL, chanID, val),
+			token:  token,
+			status: http.StatusOK,
+		},
+		"read page with v": {
+			url:    fmt.Sprintf("%s/channels/%s/messages?v=%f", ts.URL, chanID, val),
+			token:  token,
+			status: http.StatusOK,
+		},
+		"read page with vb": {
+			url:    fmt.Sprintf("%s/channels/%s/messages?vb=%t", ts.URL, chanID, boolVal),
+			token:  token,
+			status: http.StatusOK,
+		},
+		"read page with vs": {
+			url:    fmt.Sprintf("%s/channels/%s/messages?vs=%s", ts.URL, chanID, dataVal),
+			token:  token,
+			status: http.StatusOK,
+		},
+		"read page with vd": {
+			url:    fmt.Sprintf("%s/channels/%s/messages?vd=%s", ts.URL, chanID, dataVal),
 			token:  token,
 			status: http.StatusOK,
 		},
