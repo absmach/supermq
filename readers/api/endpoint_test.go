@@ -166,16 +166,6 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 		},
-		"read page with from": {
-			url:    fmt.Sprintf("%s/channels/%s/messages?from=1577836800", ts.URL, chanID),
-			token:  token,
-			status: http.StatusOK,
-		},
-		"read page with to": {
-			url:    fmt.Sprintf("%s/channels/%s/messages?to=1608630754", ts.URL, chanID),
-			token:  token,
-			status: http.StatusOK,
-		},
 		"read page with value": {
 			url:    fmt.Sprintf("%s/channels/%s/messages?value=%f", ts.URL, chanID, val),
 			token:  token,
@@ -198,6 +188,16 @@ func TestReadAll(t *testing.T) {
 		},
 		"read page with vd": {
 			url:    fmt.Sprintf("%s/channels/%s/messages?vd=%s", ts.URL, chanID, dataVal),
+			token:  token,
+			status: http.StatusOK,
+		},
+		"read page with from": {
+			url:    fmt.Sprintf("%s/channels/%s/messages?from=1608651539.673909", ts.URL, chanID),
+			token:  token,
+			status: http.StatusOK,
+		},
+		"read page with to": {
+			url:    fmt.Sprintf("%s/channels/%s/messages?to=1508651539.673909", ts.URL, chanID),
 			token:  token,
 			status: http.StatusOK,
 		},

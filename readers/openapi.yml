@@ -184,17 +184,17 @@ components:
       required: false
     From:
       name: from
-      description: SenML message time in nanoseconds as float64 (integer part represent seconds).
+      description: SenML message time in nanoseconds (integer part represents seconds).
       in: query
       schema:
-        type: integer
+        type: float
       required: false
     To:
       name: to
-      description: SenML message time in nanoseconds as float64 (integer part represent seconds).
+      description: SenML message time in nanoseconds (integer part represents seconds).
       in: query
       schema:
-        type: integer
+        type: float
       required: false
 
   responses:

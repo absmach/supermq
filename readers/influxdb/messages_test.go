@@ -163,21 +163,6 @@ func TestReadAll(t *testing.T) {
 				Messages: valSubtopicMsgs[0:10],
 			},
 		},
-		"read message with from/to": {
-			chanID: chanID,
-			offset: 0,
-			limit:  10,
-			query: map[string]string{
-				"from": fmt.Sprintf("%f", messages[fromToNum].Time),
-				"to":   fmt.Sprintf("%f", messages[0].Time),
-			},
-			page: readers.MessagesPage{
-				Total:    fromToNum,
-				Offset:   0,
-				Limit:    10,
-				Messages: messages[1:5],
-			},
-		},
 		"read message with value": {
 			chanID: chanID,
 			offset: 0,
@@ -236,6 +221,21 @@ func TestReadAll(t *testing.T) {
 				Offset:   0,
 				Limit:    10,
 				Messages: dataMsgs[0:10],
+			},
+		},
+		"read message with from/to": {
+			chanID: chanID,
+			offset: 0,
+			limit:  10,
+			query: map[string]string{
+				"from": fmt.Sprintf("%f", messages[fromToNum].Time),
+				"to":   fmt.Sprintf("%f", messages[0].Time),
+			},
+			page: readers.MessagesPage{
+				Total:    fromToNum,
+				Offset:   0,
+				Limit:    10,
+				Messages: messages[1:5],
 			},
 		},
 	}

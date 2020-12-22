@@ -148,14 +148,14 @@ func fmtCondition(chanID string, query map[string]string) string {
 			if err != nil {
 				continue
 			}
-			iVal := int64(float64(fVal) * float64(1e9))
+			iVal := int64(fVal * 1e9)
 			condition = fmt.Sprintf(`%s AND time >= %d`, condition, iVal)
 		case "to":
 			fVal, err := strconv.ParseFloat(value, 64)
 			if err != nil {
 				continue
 			}
-			iVal := int64(float64(fVal) * float64(1e9))
+			iVal := int64(fVal * 1e9)
 			condition = fmt.Sprintf(`%s AND time < %d`, condition, iVal)
 		}
 	}
