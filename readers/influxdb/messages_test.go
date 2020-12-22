@@ -24,7 +24,7 @@ const (
 	msgsNum    = 100
 	fromToNum  = 4
 	msgsValNum = 20
-	n          = 10
+	limit      = 10
 )
 
 var (
@@ -110,33 +110,33 @@ func TestReadAll(t *testing.T) {
 		"read message page for existing channel": {
 			chanID: chanID,
 			offset: 0,
-			limit:  n,
+			limit:  limit,
 			page: readers.MessagesPage{
 				Total:    msgsNum,
 				Offset:   0,
-				Limit:    n,
-				Messages: messages[0:10],
+				Limit:    limit,
+				Messages: messages[0:limit],
 			},
 		},
 		"read message page for non-existent channel": {
 			chanID: "2",
 			offset: 0,
-			limit:  n,
+			limit:  limit,
 			page: readers.MessagesPage{
 				Total:    0,
 				Offset:   0,
-				Limit:    n,
+				Limit:    limit,
 				Messages: []senml.Message{},
 			},
 		},
 		"read message last page": {
 			chanID: chanID,
 			offset: 95,
-			limit:  n,
+			limit:  limit,
 			page: readers.MessagesPage{
 				Total:    msgsNum,
 				Offset:   95,
-				Limit:    n,
+				Limit:    limit,
 				Messages: messages[95:msgsNum],
 			},
 		},
@@ -155,79 +155,79 @@ func TestReadAll(t *testing.T) {
 		"read message with subtopic": {
 			chanID: chanID,
 			offset: 0,
-			limit:  n,
+			limit:  limit,
 			query:  map[string]string{"subtopic": subtopic},
 			page: readers.MessagesPage{
 				Total:    uint64(len(valSubtopicMsgs)),
 				Offset:   0,
-				Limit:    n,
-				Messages: valSubtopicMsgs[0:10],
+				Limit:    limit,
+				Messages: valSubtopicMsgs[0:limit],
 			},
 		},
 		"read message with value": {
 			chanID: chanID,
 			offset: 0,
-			limit:  n,
+			limit:  limit,
 			query:  map[string]string{"value": fmt.Sprintf("%f", val)},
 			page: readers.MessagesPage{
 				Total:    msgsValNum,
 				Offset:   0,
-				Limit:    n,
-				Messages: valSubtopicMsgs[0:10],
+				Limit:    limit,
+				Messages: valSubtopicMsgs[0:limit],
 			},
 		},
 		"read message with v": {
 			chanID: chanID,
 			offset: 0,
-			limit:  n,
+			limit:  limit,
 			query:  map[string]string{"v": fmt.Sprintf("%f", val)},
 			page: readers.MessagesPage{
 				Total:    msgsValNum,
 				Offset:   0,
-				Limit:    n,
-				Messages: valSubtopicMsgs[0:n],
+				Limit:    limit,
+				Messages: valSubtopicMsgs[0:limit],
 			},
 		},
 		"read message with vb": {
 			chanID: chanID,
 			offset: 0,
-			limit:  n,
+			limit:  limit,
 			query:  map[string]string{"vb": fmt.Sprintf("%t", boolVal)},
 			page: readers.MessagesPage{
 				Total:    msgsValNum,
 				Offset:   0,
-				Limit:    n,
-				Messages: boolMsgs[0:n],
+				Limit:    limit,
+				Messages: boolMsgs[0:limit],
 			},
 		},
 		"read message with vs": {
 			chanID: chanID,
 			offset: 0,
-			limit:  n,
+			limit:  limit,
 			query:  map[string]string{"vs": stringVal},
 			page: readers.MessagesPage{
 				Total:    msgsValNum,
 				Offset:   0,
-				Limit:    n,
-				Messages: stringMsgs[0:n],
+				Limit:    limit,
+				Messages: stringMsgs[0:limit],
 			},
 		},
 		"read message with vd": {
 			chanID: chanID,
 			offset: 0,
-			limit:  n,
+			limit:  limit,
 			query:  map[string]string{"vd": dataVal},
 			page: readers.MessagesPage{
 				Total:    msgsValNum,
 				Offset:   0,
-				Limit:    n,
-				Messages: dataMsgs[0:n],
+				Limit:    limit,
+				Messages: dataMsgs[0:limit],
 			},
 		},
 		"read message with from/to": {
 			chanID: chanID,
 			offset: 0,
-			limit:  n,
+			limit:  limit,
 			query: map[string]string{
 				"from": fmt.Sprintf("%f", messages[fromToNum].Time),
 				"to":   fmt.Sprintf("%f", messages[0].Time),
@@ -235,7 +235,7 @@ func TestReadAll(t *testing.T) {
 			page: readers.MessagesPage{
 				Total:    fromToNum,
 				Offset:   0,
-				Limit:    n,
+				Limit:    limit,
 				Messages: messages[1:5],
 			},
 		},
