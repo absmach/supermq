@@ -144,9 +144,19 @@ func fmtCondition(chanID string, query map[string]string) string {
 			condition = fmt.Sprintf(`%s AND "dataValue"='%s'`, condition,
 				strings.Replace(value, "\"", "\\\"", -1))
 		case "from":
-			condition = fmt.Sprintf(`%s AND time >= %s`, condition, value)
+			fVal, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				continue
+			}
+			iVal := int64(float64(fVal) * float64(1e9))
+			condition = fmt.Sprintf(`%s AND time >= %d`, condition, iVal)
 		case "to":
-			condition = fmt.Sprintf(`%s AND time <= %s`, condition, value)
+			fVal, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				continue
+			}
+			iVal := int64(float64(fVal) * float64(1e9))
+			condition = fmt.Sprintf(`%s AND time < %d`, condition, iVal)
 		}
 	}
 	return condition

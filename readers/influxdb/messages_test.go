@@ -168,14 +168,14 @@ func TestReadAll(t *testing.T) {
 			offset: 0,
 			limit:  10,
 			query: map[string]string{
-				"from": fmt.Sprintf("%d", now-fromToNum*1e9),
-				"to":   fmt.Sprintf("%d", now),
+				"from": fmt.Sprintf("%f", messages[fromToNum].Time),
+				"to":   fmt.Sprintf("%f", messages[0].Time),
 			},
 			page: readers.MessagesPage{
 				Total:    fromToNum,
 				Offset:   0,
 				Limit:    10,
-				Messages: messages[0:fromToNum],
+				Messages: messages[1:5],
 			},
 		},
 		"read message with value": {
