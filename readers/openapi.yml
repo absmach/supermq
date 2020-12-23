@@ -23,10 +23,9 @@ paths:
         - $ref: "#/components/parameters/Publisher"
         - $ref: "#/components/parameters/Name"
         - $ref: "#/components/parameters/Value"
-        - $ref: "#/components/parameters/V"
-        - $ref: "#/components/parameters/Vb"
-        - $ref: "#/components/parameters/Vs"
-        - $ref: "#/components/parameters/Vd"
+        - $ref: "#/components/parameters/BoolValue"
+        - $ref: "#/components/parameters/StringValue"
+        - $ref: "#/components/parameters/DataValue"
         - $ref: "#/components/parameters/From"
         - $ref: "#/components/parameters/To"
       responses:
@@ -148,34 +147,27 @@ components:
         type: string
       required: false
     Value:
-      name: value
-      description: SenML message value.
-      in: query
-      schema:
-        type: string
-      required: false
-    V:
       name: v
       description: SenML message value.
       in: query
       schema:
         type: string
       required: false
-    Vb:
+    BoolValue:
       name: vb
       description: SenML message bool value.
       in: query
       schema:
         type: boolean
       required: false
-    Vs:
+    StringValue:
       name: vs
       description: SenML message string value.
       in: query
       schema:
         type: string
       required: false
-    Vd:
+    DataValue:
       name: vd
       description: SenML message data value.
       in: query

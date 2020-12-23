@@ -168,18 +168,6 @@ func TestReadAll(t *testing.T) {
 			chanID: chanID,
 			offset: 0,
 			limit:  limit,
-			query:  map[string]string{"value": fmt.Sprintf("%f", val)},
-			page: readers.MessagesPage{
-				Total:    msgsValNum,
-				Offset:   0,
-				Limit:    limit,
-				Messages: valSubtopicMsgs[0:limit],
-			},
-		},
-		"read message with v": {
-			chanID: chanID,
-			offset: 0,
-			limit:  limit,
 			query:  map[string]string{"v": fmt.Sprintf("%f", val)},
 			page: readers.MessagesPage{
 				Total:    msgsValNum,
@@ -188,7 +176,7 @@ func TestReadAll(t *testing.T) {
 				Messages: valSubtopicMsgs[0:limit],
 			},
 		},
-		"read message with vb": {
+		"read message with boolean value": {
 			chanID: chanID,
 			offset: 0,
 			limit:  limit,
@@ -200,7 +188,7 @@ func TestReadAll(t *testing.T) {
 				Messages: boolMsgs[0:limit],
 			},
 		},
-		"read message with vs": {
+		"read message with string value": {
 			chanID: chanID,
 			offset: 0,
 			limit:  limit,
@@ -212,7 +200,7 @@ func TestReadAll(t *testing.T) {
 				Messages: stringMsgs[0:limit],
 			},
 		},
-		"read message with vd": {
+		"read message with data value": {
 			chanID: chanID,
 			offset: 0,
 			limit:  limit,

@@ -167,26 +167,21 @@ func TestReadAll(t *testing.T) {
 			status: http.StatusOK,
 		},
 		"read page with value": {
-			url:    fmt.Sprintf("%s/channels/%s/messages?value=%f", ts.URL, chanID, val),
-			token:  token,
-			status: http.StatusOK,
-		},
-		"read page with v": {
 			url:    fmt.Sprintf("%s/channels/%s/messages?v=%f", ts.URL, chanID, val),
 			token:  token,
 			status: http.StatusOK,
 		},
-		"read page with vb": {
+		"read page with boolean value": {
 			url:    fmt.Sprintf("%s/channels/%s/messages?vb=%t", ts.URL, chanID, boolVal),
 			token:  token,
 			status: http.StatusOK,
 		},
-		"read page with vs": {
+		"read page with string value": {
 			url:    fmt.Sprintf("%s/channels/%s/messages?vs=%s", ts.URL, chanID, dataVal),
 			token:  token,
 			status: http.StatusOK,
 		},
-		"read page with vd": {
+		"read page with data value": {
 			url:    fmt.Sprintf("%s/channels/%s/messages?vd=%s", ts.URL, chanID, dataVal),
 			token:  token,
 			status: http.StatusOK,
