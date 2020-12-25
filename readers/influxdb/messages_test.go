@@ -28,11 +28,11 @@ const (
 )
 
 var (
-	val       float64 = 5
-	stringVal         = "value"
-	boolVal           = true
-	dataVal           = "dataValue"
-	sum       float64 = 42
+	v   float64 = 5
+	vs          = "value"
+	vb          = true
+	vd          = "dataValue"
+	sum float64 = 42
 )
 
 var (
@@ -76,16 +76,16 @@ func TestReadAll(t *testing.T) {
 		switch count {
 		case 0:
 			msg.Subtopic = subtopic
-			msg.Value = &val
+			msg.Value = &v
 			valSubtopicMsgs = append(valSubtopicMsgs, msg)
 		case 1:
-			msg.BoolValue = &boolVal
+			msg.BoolValue = &vb
 			boolMsgs = append(boolMsgs, msg)
 		case 2:
-			msg.StringValue = &stringVal
+			msg.StringValue = &vs
 			stringMsgs = append(stringMsgs, msg)
 		case 3:
-			msg.DataValue = &dataVal
+			msg.DataValue = &vd
 			dataMsgs = append(dataMsgs, msg)
 		case 4:
 			msg.Sum = &sum
@@ -168,7 +168,7 @@ func TestReadAll(t *testing.T) {
 			chanID: chanID,
 			offset: 0,
 			limit:  limit,
-			query:  map[string]string{"v": fmt.Sprintf("%f", val)},
+			query:  map[string]string{"v": fmt.Sprintf("%f", v)},
 			page: readers.MessagesPage{
 				Total:    msgsValNum,
 				Offset:   0,
@@ -180,7 +180,7 @@ func TestReadAll(t *testing.T) {
 			chanID: chanID,
 			offset: 0,
 			limit:  limit,
-			query:  map[string]string{"vb": fmt.Sprintf("%t", boolVal)},
+			query:  map[string]string{"vb": fmt.Sprintf("%t", vb)},
 			page: readers.MessagesPage{
 				Total:    msgsValNum,
 				Offset:   0,
@@ -192,7 +192,7 @@ func TestReadAll(t *testing.T) {
 			chanID: chanID,
 			offset: 0,
 			limit:  limit,
-			query:  map[string]string{"vs": stringVal},
+			query:  map[string]string{"vs": vs},
 			page: readers.MessagesPage{
 				Total:    msgsValNum,
 				Offset:   0,
@@ -204,7 +204,7 @@ func TestReadAll(t *testing.T) {
 			chanID: chanID,
 			offset: 0,
 			limit:  limit,
-			query:  map[string]string{"vd": dataVal},
+			query:  map[string]string{"vd": vd},
 			page: readers.MessagesPage{
 				Total:    msgsValNum,
 				Offset:   0,
