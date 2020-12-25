@@ -27,11 +27,11 @@ const (
 )
 
 var (
-	val       float64 = 5
-	stringVal         = "value"
-	boolVal           = true
-	dataVal           = "dataValue"
-	sum       float64 = 42
+	v   float64 = 5
+	vs          = "value"
+	vb          = true
+	vd          = "dataValue"
+	sum float64 = 42
 )
 
 func newService() readers.MessageRepository {
@@ -47,13 +47,13 @@ func newService() readers.MessageRepository {
 
 		switch count {
 		case 0:
-			msg.Value = &val
+			msg.Value = &v
 		case 1:
-			msg.BoolValue = &boolVal
+			msg.BoolValue = &vb
 		case 2:
-			msg.StringValue = &stringVal
+			msg.StringValue = &vs
 		case 3:
-			msg.DataValue = &dataVal
+			msg.DataValue = &vd
 		case 4:
 			msg.Sum = &sum
 		}
@@ -167,22 +167,22 @@ func TestReadAll(t *testing.T) {
 			status: http.StatusOK,
 		},
 		"read page with value": {
-			url:    fmt.Sprintf("%s/channels/%s/messages?v=%f", ts.URL, chanID, val),
+			url:    fmt.Sprintf("%s/channels/%s/messages?v=%f", ts.URL, chanID, v),
 			token:  token,
 			status: http.StatusOK,
 		},
 		"read page with boolean value": {
-			url:    fmt.Sprintf("%s/channels/%s/messages?vb=%t", ts.URL, chanID, boolVal),
+			url:    fmt.Sprintf("%s/channels/%s/messages?vb=%t", ts.URL, chanID, vb),
 			token:  token,
 			status: http.StatusOK,
 		},
 		"read page with string value": {
-			url:    fmt.Sprintf("%s/channels/%s/messages?vs=%s", ts.URL, chanID, dataVal),
+			url:    fmt.Sprintf("%s/channels/%s/messages?vs=%s", ts.URL, chanID, vd),
 			token:  token,
 			status: http.StatusOK,
 		},
 		"read page with data value": {
-			url:    fmt.Sprintf("%s/channels/%s/messages?vd=%s", ts.URL, chanID, dataVal),
+			url:    fmt.Sprintf("%s/channels/%s/messages?vd=%s", ts.URL, chanID, vd),
 			token:  token,
 			status: http.StatusOK,
 		},
