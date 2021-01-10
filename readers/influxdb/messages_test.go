@@ -24,7 +24,7 @@ const (
 	valueFields = 5
 	mqttProt    = "mqtt"
 	httpProt    = "http"
- msgName = "temperature"
+	msgName     = "temperature"
 )
 
 var (
@@ -190,7 +190,7 @@ func TestReadAll(t *testing.T) {
 				Messages: fromSenml(queryMsgs[0:limit]),
 			},
 		},
-    "read message with name": {
+		"read message with name": {
 			chanID: chanID,
 			offset: 0,
 			limit:  limit,
