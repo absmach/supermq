@@ -103,12 +103,20 @@ func (tr postgresRepository) ReadAll(chanID string, offset, limit uint64, query 
 
 	}
 
-	qConds, qParams := fmtCount(chanID, query)
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE %s;`, table, qConds)
-
-	if err := tr.db.QueryRow(q, qParams...).Scan(&page.Total); err != nil {
+	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE %s;`, table, fmtCondition(chanID, query))
+	rows, err = tr.db.NamedQuery(q, params)
+	if err != nil {
 		return readers.MessagesPage{}, errors.Wrap(errReadMessages, err)
 	}
+	defer rows.Close()
+
+	total := uint64(0)
+	if rows.Next() {
+		if err := rows.Scan(&total); err != nil {
+			return page, err
+		}
+	}
+	page.Total = total
 
 	return page, nil
 }
@@ -138,37 +146,6 @@ func fmtCondition(chanID string, query map[string]string) string {
 		}
 	}
 	return condition
-}
-
-func fmtCount(chanID string, query map[string]string) (string, []interface{}) {
-	condition := `channel = $1`
-	params := []interface{}{chanID}
-	ind := 2
-	for name, value := range query {
-		switch name {
-		case
-			"subtopic",
-			"publisher",
-			"name",
-			"protocol":
-			condition = fmt.Sprintf(`%s AND %s = $%d`, condition, name, ind)
-		case "v":
-			condition = fmt.Sprintf(`%s AND value = $%d`, condition, ind)
-		case "vb":
-			condition = fmt.Sprintf(`%s AND bool_value = $%d`, condition, ind)
-		case "vs":
-			condition = fmt.Sprintf(`%s AND string_value = $%d`, condition, ind)
-		case "vd":
-			condition = fmt.Sprintf(`%s AND data_value = $%d`, condition, ind)
-		case "from":
-			condition = fmt.Sprintf(`%s AND time >= $%d`, condition, ind)
-		case "to":
-			condition = fmt.Sprintf(`%s AND "time" < $%d`, condition, ind)
-		}
-		params = append(params, value)
-		ind++
-	}
-	return condition, params
 }
 
 type dbMessage struct {
