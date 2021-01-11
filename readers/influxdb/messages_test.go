@@ -9,8 +9,8 @@ import (
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	uuidProvider "github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/readers"
-	influxReader "github.com/mainflux/mainflux/readers/influxdb"
-	influxWriter "github.com/mainflux/mainflux/writers/influxdb"
+	ireader "github.com/mainflux/mainflux/readers/influxdb"
+	iwriter "github.com/mainflux/mainflux/writers/influxdb"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -38,7 +38,7 @@ var (
 )
 
 func TestReadAll(t *testing.T) {
-	writer := influxWriter.New(client, testDB)
+	writer := iwriter.New(client, testDB)
 
 	chanID, err := uuidProvider.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -99,7 +99,7 @@ func TestReadAll(t *testing.T) {
 	err = writer.Save(messages)
 	require.Nil(t, err, fmt.Sprintf("failed to store message to InfluxDB: %s", err))
 
-	reader := influxReader.New(client, testDB)
+	reader := ireader.New(client, testDB)
 	require.Nil(t, err, fmt.Sprintf("Creating new InfluxDB reader expected to succeed: %s.\n", err))
 
 	cases := map[string]struct {
