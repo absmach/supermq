@@ -51,13 +51,19 @@ func (tr postgresRepository) ReadAll(chanID string, offset, limit uint64, query 
 	LIMIT :limit OFFSET :offset;`, table, fmtCondition(chanID, query), order)
 
 	params := map[string]interface{}{
-		"channel":   chanID,
-		"limit":     limit,
-		"offset":    offset,
-		"subtopic":  query["subtopic"],
-		"publisher": query["publisher"],
-		"name":      query["name"],
-		"protocol":  query["protocol"],
+		"channel":      chanID,
+		"limit":        limit,
+		"offset":       offset,
+		"subtopic":     query["subtopic"],
+		"publisher":    query["publisher"],
+		"name":         query["name"],
+		"protocol":     query["protocol"],
+		"value":        query["v"],
+		"bool_value":   query["vb"],
+		"string_value": query["vs"],
+		"data_value":   query["vd"],
+		"from":         query["from"],
+		"to":           query["to"],
 	}
 
 	rows, err := tr.db.NamedQuery(q, params)
@@ -97,13 +103,8 @@ func (tr postgresRepository) ReadAll(chanID string, offset, limit uint64, query 
 
 	}
 
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE channel = $1;`, table)
-	qParams := []interface{}{chanID}
-
-	if query["subtopic"] != "" {
-		q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE channel = $1 AND subtopic = $2;`, table)
-		qParams = append(qParams, query["subtopic"])
-	}
+	qConds, qParams := fmtCount(chanID, query)
+	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE %s;`, table, qConds)
 
 	if err := tr.db.QueryRow(q, qParams...).Scan(&page.Total); err != nil {
 		return readers.MessagesPage{}, errors.Wrap(errReadMessages, err)
@@ -122,9 +123,52 @@ func fmtCondition(chanID string, query map[string]string) string {
 			"name",
 			"protocol":
 			condition = fmt.Sprintf(`%s AND %s = :%s`, condition, name, name)
+		case "v":
+			condition = fmt.Sprintf(`%s AND value = :value`, condition)
+		case "vb":
+			condition = fmt.Sprintf(`%s AND bool_value = :bool_value`, condition)
+		case "vs":
+			condition = fmt.Sprintf(`%s AND string_value = :string_value`, condition)
+		case "vd":
+			condition = fmt.Sprintf(`%s AND data_value = :data_value`, condition)
+		case "from":
+			condition = fmt.Sprintf(`%s AND time >= :from`, condition)
+		case "to":
+			condition = fmt.Sprintf(`%s AND time < :to`, condition)
 		}
 	}
 	return condition
+}
+
+func fmtCount(chanID string, query map[string]string) (string, []interface{}) {
+	condition := `channel = $1`
+	params := []interface{}{chanID}
+	ind := 2
+	for name, value := range query {
+		switch name {
+		case
+			"subtopic",
+			"publisher",
+			"name",
+			"protocol":
+			condition = fmt.Sprintf(`%s AND %s = $%d`, condition, name, ind)
+		case "v":
+			condition = fmt.Sprintf(`%s AND value = $%d`, condition, ind)
+		case "vb":
+			condition = fmt.Sprintf(`%s AND bool_value = $%d`, condition, ind)
+		case "vs":
+			condition = fmt.Sprintf(`%s AND string_value = $%d`, condition, ind)
+		case "vd":
+			condition = fmt.Sprintf(`%s AND data_value = $%d`, condition, ind)
+		case "from":
+			condition = fmt.Sprintf(`%s AND time >= $%d`, condition, ind)
+		case "to":
+			condition = fmt.Sprintf(`%s AND "time" < $%d`, condition, ind)
+		}
+		params = append(params, value)
+		ind++
+	}
+	return condition, params
 }
 
 type dbMessage struct {
