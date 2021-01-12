@@ -5,6 +5,7 @@ package mongodb
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/mainflux/mainflux/pkg/errors"
 	jsont "github.com/mainflux/mainflux/pkg/transformers/json"
@@ -109,6 +110,34 @@ func fmtCondition(chanID string, query map[string]string) *bson.D {
 			"name",
 			"protocol":
 			filter = append(filter, bson.E{Key: name, Value: value})
+		case "v":
+			fVal, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				continue
+			}
+			filter = append(filter, bson.E{Key: "value", Value: fVal})
+		case "vb":
+			bVal, err := strconv.ParseBool(value)
+			if err != nil {
+				continue
+			}
+			filter = append(filter, bson.E{Key: "bool_value", Value: bVal})
+		case "vs":
+			filter = append(filter, bson.E{Key: "string_value", Value: value})
+		case "vd":
+			filter = append(filter, bson.E{Key: "data_value", Value: value})
+		case "from":
+			fVal, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				continue
+			}
+			filter = append(filter, bson.E{Key: "time", Value: bson.M{"$gte": fVal}})
+		case "to":
+			fVal, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				continue
+			}
+			filter = append(filter, bson.E{Key: "time", Value: bson.M{"$lt": fVal}})
 		}
 	}
 

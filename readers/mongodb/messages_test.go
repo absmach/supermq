@@ -6,18 +6,17 @@ package mongodb_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
 	writer "github.com/mainflux/mainflux/consumers/writers/mongodb"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
+	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/readers"
 	reader "github.com/mainflux/mainflux/readers/mongodb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	log "github.com/mainflux/mainflux/logger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -25,28 +24,24 @@ import (
 const (
 	testDB      = "test"
 	collection  = "messages"
-	chanID      = "1"
 	subtopic    = "subtopic"
-	msgsNum     = 42
+	msgsNum     = 100
+	limit       = 10
 	valueFields = 5
+	mqttProt    = "mqtt"
+	httpProt    = "http"
+	msgName     = "temperature"
 )
 
 var (
 	port string
 	addr string
-	m    = senml.Message{
-		Channel:   chanID,
-		Publisher: "1",
-		Protocol:  "mqtt",
-	}
-	testLog, _ = log.New(os.Stdout, log.Info.String())
-)
-var (
-	v       float64 = 5
-	stringV         = "value"
-	boolV           = true
-	dataV           = "base64"
-	sum     float64 = 42
+
+	v   float64 = 5
+	vs          = "value"
+	vb          = true
+	vd          = "dataValue"
+	sum float64 = 42
 )
 
 func TestReadSenml(t *testing.T) {
@@ -56,31 +51,55 @@ func TestReadSenml(t *testing.T) {
 	db := client.Database(testDB)
 	writer := writer.New(db)
 
+	chanID, err := uuid.New().ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	pubID, err := uuid.New().ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	pub2ID, err := uuid.New().ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	m := senml.Message{
+		Channel:   chanID,
+		Publisher: pubID,
+		Protocol:  mqttProt,
+	}
+
 	messages := []senml.Message{}
-	subtopicMsgs := []senml.Message{}
+	valueMsgs := []senml.Message{}
+	boolMsgs := []senml.Message{}
+	stringMsgs := []senml.Message{}
+	dataMsgs := []senml.Message{}
+	queryMsgs := []senml.Message{}
 	now := time.Now().Unix()
+
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.
-		count := i % valueFields
 		msg := m
+		msg.Time = float64(now - int64(i))
+
+		count := i % valueFields
 		switch count {
 		case 0:
-			msg.Subtopic = subtopic
 			msg.Value = &v
+			valueMsgs = append(valueMsgs, msg)
 		case 1:
-			msg.BoolValue = &boolV
+			msg.BoolValue = &vb
+			boolMsgs = append(boolMsgs, msg)
 		case 2:
-			msg.StringValue = &stringV
+			msg.StringValue = &vs
+			stringMsgs = append(stringMsgs, msg)
 		case 3:
-			msg.DataValue = &dataV
+			msg.DataValue = &vd
+			dataMsgs = append(dataMsgs, msg)
 		case 4:
 			msg.Sum = &sum
+			msg.Subtopic = subtopic
+			msg.Protocol = httpProt
+			msg.Publisher = pub2ID
+			msg.Name = msgName
+			queryMsgs = append(queryMsgs, msg)
 		}
-		msg.Time = float64(now - int64(i))
 		messages = append(messages, msg)
-		if count == 0 {
-			subtopicMsgs = append(subtopicMsgs, msg)
-		}
 	}
 	err = writer.Consume(messages)
 	require.Nil(t, err, fmt.Sprintf("failed to store message to MongoDB: %s", err))
@@ -117,13 +136,13 @@ func TestReadSenml(t *testing.T) {
 		},
 		"read message last page": {
 			chanID: chanID,
-			offset: 40,
-			limit:  10,
+			offset: 95,
+			limit:  limit,
 			page: readers.MessagesPage{
 				Total:    msgsNum,
-				Offset:   40,
-				Limit:    10,
-				Messages: fromSenml(messages[40:42]),
+				Offset:   95,
+				Limit:    limit,
+				Messages: fromSenml(messages[95:msgsNum]),
 			},
 		},
 		"read message with non-existent subtopic": {
@@ -141,13 +160,112 @@ func TestReadSenml(t *testing.T) {
 		"read message with subtopic": {
 			chanID: chanID,
 			offset: 0,
-			limit:  10,
+			limit:  uint64(len(queryMsgs)),
 			query:  map[string]string{"subtopic": subtopic},
 			page: readers.MessagesPage{
-				Total:    uint64(len(subtopicMsgs)),
+				Total:    uint64(len(queryMsgs)),
 				Offset:   0,
-				Limit:    10,
-				Messages: fromSenml(subtopicMsgs),
+				Limit:    uint64(len(queryMsgs)),
+				Messages: fromSenml(queryMsgs),
+			},
+		},
+		"read message with publisher": {
+			chanID: chanID,
+			offset: 0,
+			limit:  limit,
+			query:  map[string]string{"publisher": pub2ID},
+			page: readers.MessagesPage{
+				Total:    uint64(len(queryMsgs)),
+				Offset:   0,
+				Limit:    limit,
+				Messages: fromSenml(queryMsgs[0:limit]),
+			},
+		},
+		"read message with protocol": {
+			chanID: chanID,
+			offset: 0,
+			limit:  limit,
+			query:  map[string]string{"protocol": httpProt},
+			page: readers.MessagesPage{
+				Total:    uint64(len(queryMsgs)),
+				Offset:   0,
+				Limit:    limit,
+				Messages: fromSenml(queryMsgs[0:limit]),
+			},
+		},
+		"read message with name": {
+			chanID: chanID,
+			offset: 0,
+			limit:  limit,
+			query:  map[string]string{"name": msgName},
+			page: readers.MessagesPage{
+				Total:    uint64(len(queryMsgs)),
+				Offset:   0,
+				Limit:    limit,
+				Messages: fromSenml(queryMsgs[0:limit]),
+			},
+		},
+		"read message with value": {
+			chanID: chanID,
+			offset: 0,
+			limit:  limit,
+			query:  map[string]string{"v": fmt.Sprintf("%f", v)},
+			page: readers.MessagesPage{
+				Total:    uint64(len(valueMsgs)),
+				Offset:   0,
+				Limit:    limit,
+				Messages: fromSenml(valueMsgs[0:limit]),
+			},
+		},
+		"read message with boolean value": {
+			chanID: chanID,
+			offset: 0,
+			limit:  limit,
+			query:  map[string]string{"vb": fmt.Sprintf("%t", vb)},
+			page: readers.MessagesPage{
+				Total:    uint64(len(boolMsgs)),
+				Offset:   0,
+				Limit:    limit,
+				Messages: fromSenml(boolMsgs[0:limit]),
+			},
+		},
+		"read message with string value": {
+			chanID: chanID,
+			offset: 0,
+			limit:  limit,
+			query:  map[string]string{"vs": vs},
+			page: readers.MessagesPage{
+				Total:    uint64(len(stringMsgs)),
+				Offset:   0,
+				Limit:    limit,
+				Messages: fromSenml(stringMsgs[0:limit]),
+			},
+		},
+		"read message with data value": {
+			chanID: chanID,
+			offset: 0,
+			limit:  limit,
+			query:  map[string]string{"vd": vd},
+			page: readers.MessagesPage{
+				Total:    uint64(len(dataMsgs)),
+				Offset:   0,
+				Limit:    limit,
+				Messages: fromSenml(dataMsgs[0:limit]),
+			},
+		},
+		"read message with from/to": {
+			chanID: chanID,
+			offset: 0,
+			limit:  limit,
+			query: map[string]string{
+				"from": fmt.Sprintf("%f", messages[5].Time),
+				"to":   fmt.Sprintf("%f", messages[0].Time),
+			},
+			page: readers.MessagesPage{
+				Total:    5,
+				Offset:   0,
+				Limit:    limit,
+				Messages: fromSenml(messages[1:6]),
 			},
 		},
 	}
