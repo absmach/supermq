@@ -18,14 +18,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var uuidProvider = uuid.New()
+const (
+	email = "user-save@example.com"
+)
+
+var (
+	expTime      = time.Now().Add(5 * time.Minute)
+	uuidProvider = uuid.New()
+)
 
 func TestKeySave(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
 	repo := postgres.New(dbMiddleware)
 
-	email := "user-save@example.com"
-	expTime := time.Now().Add(5 * time.Minute)
 	id, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
@@ -68,8 +73,6 @@ func TestKeyRetrieve(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
 	repo := postgres.New(dbMiddleware)
 
-	email := "user-save@example.com"
-	expTime := time.Now().Add(5 * time.Minute)
 	id, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
@@ -118,8 +121,6 @@ func TestKeyRemove(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
 	repo := postgres.New(dbMiddleware)
 
-	email := "user-save@example.com"
-	expTime := time.Now().Add(5 * time.Minute)
 	id, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
