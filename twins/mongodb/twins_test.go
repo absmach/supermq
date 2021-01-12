@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	log "github.com/mainflux/mainflux/logger"
-	uuidProvider "github.com/mainflux/mainflux/pkg/uuid"
+	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/mocks"
 	"github.com/mainflux/mainflux/twins/mongodb"
@@ -33,12 +33,12 @@ const (
 )
 
 var (
-	port        string
-	addr        string
-	testLog, _  = log.New(os.Stdout, log.Info.String())
-	uuid        = uuidProvider.New()
-	db          mongo.Database
-	invalidName = strings.Repeat("m", maxNameSize+1)
+	port         string
+	addr         string
+	testLog, _   = log.New(os.Stdout, log.Info.String())
+	uuidProvider = uuid.New()
+	db           mongo.Database
+	invalidName  = strings.Repeat("m", maxNameSize+1)
 )
 
 func TestTwinsSave(t *testing.T) {
@@ -48,10 +48,10 @@ func TestTwinsSave(t *testing.T) {
 	db := client.Database(testDB)
 	repo := mongodb.NewTwinRepository(db)
 
-	twid, err := uuid.ID()
+	twid, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	nonexistentTwinID, err := uuid.ID()
+	nonexistentTwinID, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	twin := twins.Twin{
@@ -93,10 +93,10 @@ func TestTwinsUpdate(t *testing.T) {
 	db := client.Database(testDB)
 	repo := mongodb.NewTwinRepository(db)
 
-	twid, err := uuid.ID()
+	twid, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	nonexistentTwinID, err := uuid.ID()
+	nonexistentTwinID, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	twin := twins.Twin{
@@ -150,10 +150,10 @@ func TestTwinsRetrieveByID(t *testing.T) {
 	db := client.Database(testDB)
 	repo := mongodb.NewTwinRepository(db)
 
-	twid, err := uuid.ID()
+	twid, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	nonexistentTwinID, err := uuid.ID()
+	nonexistentTwinID, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	twin := twins.Twin{
@@ -194,7 +194,7 @@ func TestTwinsRetrieveByAttribute(t *testing.T) {
 	db := client.Database(testDB)
 	repo := mongodb.NewTwinRepository(db)
 
-	chID, err := uuid.ID()
+	chID, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	empty := mocks.CreateTwin([]string{chID}, []string{""})
@@ -256,7 +256,7 @@ func TestTwinsRetrieveAll(t *testing.T) {
 
 	n := uint64(10)
 	for i := uint64(0); i < n; i++ {
-		twid, err := uuidProvider.New().ID()
+		twid, err := uuidProvider.ID()
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 		tw := twins.Twin{
@@ -349,10 +349,10 @@ func TestTwinsRemove(t *testing.T) {
 	db := client.Database(testDB)
 	repo := mongodb.NewTwinRepository(db)
 
-	twid, err := uuid.ID()
+	twid, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	nonexistentTwinID, err := uuid.ID()
+	nonexistentTwinID, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	twin := twins.Twin{

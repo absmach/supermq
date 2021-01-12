@@ -10,7 +10,7 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/pkg/errors"
-	uuidProvider "github.com/mainflux/mainflux/pkg/uuid"
+	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/users"
 
 	"github.com/mainflux/mainflux/users/mocks"
@@ -374,11 +374,11 @@ func TestCreateGroup(t *testing.T) {
 	token, err := svc.Login(context.Background(), user)
 	assert.Nil(t, err, fmt.Sprintf("authenticating user expected to succeed: %s", err))
 
-	uuid, err := uuidProvider.New().ID()
+	id, err := uuid.New().ID()
 	assert.Nil(t, err, fmt.Sprintf("generating uuid expected to succeed: %s", err))
 
 	group := users.Group{
-		ID:   uuid,
+		ID:   id,
 		Name: groupName,
 	}
 

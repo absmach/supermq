@@ -12,9 +12,10 @@ import (
 	"github.com/mainflux/mainflux/auth"
 	"github.com/mainflux/mainflux/auth/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
-	uuidProvider "github.com/mainflux/mainflux/pkg/uuid"
+	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestKeySave(t *testing.T) {
@@ -23,7 +24,9 @@ func TestKeySave(t *testing.T) {
 
 	email := "user-save@example.com"
 	expTime := time.Now().Add(5 * time.Minute)
-	id, _ := uuidProvider.New().ID()
+	id, err := uuid.New().ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
 	cases := []struct {
 		desc string
 		key  auth.Key
@@ -65,7 +68,7 @@ func TestKeyRetrieve(t *testing.T) {
 
 	email := "user-save@example.com"
 	expTime := time.Now().Add(5 * time.Minute)
-	id, _ := uuidProvider.New().ID()
+	id, _ := uuid.New().ID()
 	key := auth.Key{
 		Subject:   email,
 		IssuedAt:  time.Now(),
@@ -113,7 +116,7 @@ func TestKeyRemove(t *testing.T) {
 
 	email := "user-save@example.com"
 	expTime := time.Now().Add(5 * time.Minute)
-	id, _ := uuidProvider.New().ID()
+	id, _ := uuid.New().ID()
 	key := auth.Key{
 		Subject:   email,
 		IssuedAt:  time.Now(),

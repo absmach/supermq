@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
-	uuidProvider "github.com/mainflux/mainflux/pkg/uuid"
+	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/readers"
 	preader "github.com/mainflux/mainflux/readers/postgres"
 	pwriter "github.com/mainflux/mainflux/writers/postgres"
@@ -38,13 +38,13 @@ var (
 func TestReadSenml(t *testing.T) {
 	messageRepo := pwriter.New(db)
 
-	chanID, err := uuidProvider.New().ID()
+	chanID, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	pubID, err := uuidProvider.New().ID()
+	pubID, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	pub2ID, err := uuidProvider.New().ID()
+	pub2ID, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	wrongID, err := uuidProvider.New().ID()
+	wrongID, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	m := senml.Message{

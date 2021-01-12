@@ -11,7 +11,6 @@ import (
 
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
-	uuidProvider "github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/users"
 	"github.com/mainflux/mainflux/users/postgres"
 	"github.com/stretchr/testify/assert"
@@ -122,7 +121,7 @@ func TestGroupRetrieveByID(t *testing.T) {
 	g2, err := repo.Save(context.Background(), group2)
 	require.Nil(t, err, fmt.Sprintf("group save got unexpected error: %s", err))
 
-	g2.ID, err = uuidProvider.New().ID()
+	g2.ID, err = uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("failed to generate id error: %s", err))
 
 	cases := []struct {
@@ -312,7 +311,7 @@ func TestAssignUser(t *testing.T) {
 	g2, err := repo.Save(context.Background(), group2)
 	require.Nil(t, err, fmt.Sprintf("group save got unexpected error: %s", err))
 
-	gid, err = uuidProvider.New().ID()
+	gid, err = uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("group id generating error: %s", err))
 	g3 := users.Group{
 		ID: gid,

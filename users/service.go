@@ -10,7 +10,7 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/auth"
 	"github.com/mainflux/mainflux/pkg/errors"
-	uuidProvider "github.com/mainflux/mainflux/pkg/uuid"
+	"github.com/mainflux/mainflux/pkg/uuid"
 )
 
 var (
@@ -186,7 +186,7 @@ func (svc usersService) Register(ctx context.Context, user User) (string, error)
 		return "", errors.Wrap(ErrMalformedEntity, err)
 	}
 	user.Password = hash
-	uid, err := uuidProvider.New().ID()
+	uid, err := uuid.New().ID()
 	if err != nil {
 		return "", errors.Wrap(ErrCreateUser, err)
 	}
@@ -335,7 +335,7 @@ func (svc usersService) CreateGroup(ctx context.Context, token string, group Gro
 		return Group{}, err
 	}
 
-	uid, err := uuidProvider.New().ID()
+	uid, err := uuid.New().ID()
 	if err != nil {
 		return Group{}, errors.Wrap(ErrCreateUser, err)
 	}

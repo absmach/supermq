@@ -7,7 +7,7 @@ import (
 
 	influxdata "github.com/influxdata/influxdb/client/v2"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
-	uuidProvider "github.com/mainflux/mainflux/pkg/uuid"
+	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/readers"
 	ireader "github.com/mainflux/mainflux/readers/influxdb"
 	iwriter "github.com/mainflux/mainflux/writers/influxdb"
@@ -40,11 +40,11 @@ var (
 func TestReadAll(t *testing.T) {
 	writer := iwriter.New(client, testDB)
 
-	chanID, err := uuidProvider.New().ID()
+	chanID, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	pubID, err := uuidProvider.New().ID()
+	pubID, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	pub2ID, err := uuidProvider.New().ID()
+	pub2ID, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	m := senml.Message{

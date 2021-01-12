@@ -200,10 +200,10 @@ func TestListThings(t *testing.T) {
 	}
 
 	cases := map[string]struct {
-		token    string
+		token        string
 		pageMetadata things.PageMetadata
-		size     uint64
-		err      error
+		size         uint64
+		err          error
 	}{
 		"list all things": {
 			token: token,
@@ -559,10 +559,10 @@ func TestListChannels(t *testing.T) {
 		svc.CreateChannels(context.Background(), token, channel)
 	}
 	cases := map[string]struct {
-		token    string
+		token        string
 		pageMetadata things.PageMetadata
-		size     uint64
-		err      error
+		size         uint64
+		err          error
 	}{
 		"list all channels": {
 			token: token,

@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/mainflux/mainflux/pkg/errors"
-	uuidProvider "github.com/mainflux/mainflux/pkg/uuid"
+	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/things/postgres"
 	"github.com/stretchr/testify/assert"
@@ -27,14 +27,14 @@ func TestThingsSave(t *testing.T) {
 
 	email := "thing-save@example.com"
 
-	nonexistentThingKey, err := uuidProvider.New().ID()
+	nonexistentThingKey, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	ths := []things.Thing{}
 	for i := 1; i <= 5; i++ {
-		thid, err := uuidProvider.New().ID()
+		thid, err := uuid.New().ID()
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-		thkey, err := uuidProvider.New().ID()
+		thkey, err := uuid.New().ID()
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 		thing := things.Thing{
@@ -103,9 +103,9 @@ func TestThingUpdate(t *testing.T) {
 	email := "thing-update@example.com"
 	validName := "mfx_device"
 
-	thid, err := uuidProvider.New().ID()
+	thid, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	thkey, err := uuidProvider.New().ID()
+	thkey, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	thing := things.Thing{
@@ -119,7 +119,7 @@ func TestThingUpdate(t *testing.T) {
 
 	thing.ID = sths[0].ID
 
-	nonexistentThingID, err := uuidProvider.New().ID()
+	nonexistentThingID, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := []struct {
@@ -190,9 +190,9 @@ func TestUpdateKey(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
-	id, err := uuidProvider.New().ID()
+	id, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	key, err := uuidProvider.New().ID()
+	key, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	th1 := things.Thing{
 		ID:    id,
@@ -203,9 +203,9 @@ func TestUpdateKey(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	th1.ID = ths[0].ID
 
-	id, err = uuidProvider.New().ID()
+	id, err = uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	key, err = uuidProvider.New().ID()
+	key, err = uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	th2 := things.Thing{
 		ID:    id,
@@ -216,7 +216,7 @@ func TestUpdateKey(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	th2.ID = ths[0].ID
 
-	nonexistentThingID, err := uuidProvider.New().ID()
+	nonexistentThingID, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := []struct {
@@ -274,9 +274,9 @@ func TestSingleThingRetrieval(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
-	id, err := uuidProvider.New().ID()
+	id, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	key, err := uuidProvider.New().ID()
+	key, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	th := things.Thing{
 		ID:    id,
@@ -288,7 +288,7 @@ func TestSingleThingRetrieval(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	th.ID = ths[0].ID
 
-	nonexistentThingID, err := uuidProvider.New().ID()
+	nonexistentThingID, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := map[string]struct {
@@ -329,9 +329,9 @@ func TestThingRetrieveByKey(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
-	id, err := uuidProvider.New().ID()
+	id, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	key, err := uuidProvider.New().ID()
+	key, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	th := things.Thing{
@@ -381,7 +381,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 		"wrong": "wrong",
 	}
 
-	up := uuidProvider.New()
+	uuidProvider := uuid.New()
 	offset := uint64(1)
 	nameNum := uint64(3)
 	metaNum := uint64(3)
@@ -389,9 +389,9 @@ func TestMultiThingRetrieval(t *testing.T) {
 
 	n := uint64(10)
 	for i := uint64(0); i < n; i++ {
-		id, err := up.ID()
+		id, err := uuidProvider.ID()
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-		key, err := up.ID()
+		key, err := uuidProvider.ID()
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 		th := things.Thing{
 			Owner: email,
@@ -418,9 +418,9 @@ func TestMultiThingRetrieval(t *testing.T) {
 	}
 
 	cases := map[string]struct {
-		owner    string
+		owner        string
 		pageMetadata things.PageMetadata
-		size     uint64
+		size         uint64
 	}{
 		"retrieve all things with existing owner": {
 			owner: email,
@@ -551,7 +551,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 
 func TestMultiThingRetrievalByChannel(t *testing.T) {
 	email := "thing-multi-retrieval-by-channel@example.com"
-	up := uuidProvider.New()
+	uuidProvider := uuid.New()
 	dbMiddleware := postgres.NewDatabase(db)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 	channelRepo := postgres.NewChannelRepository(dbMiddleware)
@@ -559,7 +559,7 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 	n := uint64(10)
 	thsDisconNum := uint64(1)
 
-	chid, err := up.ID()
+	chid, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	chs, err := channelRepo.Save(context.Background(), things.Channel{
@@ -569,9 +569,9 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	cid := chs[0].ID
 	for i := uint64(0); i < n; i++ {
-		thid, err := up.ID()
+		thid, err := uuidProvider.ID()
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-		thkey, err := up.ID()
+		thkey, err := uuidProvider.ID()
 		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 		th := things.Thing{
 			ID:    thid,
@@ -592,7 +592,7 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	}
 
-	nonexistentChanID, err := up.ID()
+	nonexistentChanID, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := map[string]struct {
@@ -668,9 +668,9 @@ func TestThingRemoval(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
-	id, err := uuidProvider.New().ID()
+	id, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	key, err := uuidProvider.New().ID()
+	key, err := uuid.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	thing := things.Thing{
 		ID:    id,
