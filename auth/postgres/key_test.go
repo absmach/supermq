@@ -68,7 +68,9 @@ func TestKeyRetrieve(t *testing.T) {
 
 	email := "user-save@example.com"
 	expTime := time.Now().Add(5 * time.Minute)
-	id, _ := uuid.New().ID()
+	id, err := uuid.New().ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
 	key := auth.Key{
 		Subject:   email,
 		IssuedAt:  time.Now(),
@@ -76,7 +78,7 @@ func TestKeyRetrieve(t *testing.T) {
 		ID:        id,
 		IssuerID:  id,
 	}
-	_, err := repo.Save(context.Background(), key)
+	_, err = repo.Save(context.Background(), key)
 	assert.Nil(t, err, fmt.Sprintf("Storing Key expected to succeed: %s", err))
 	cases := []struct {
 		desc  string
@@ -116,7 +118,9 @@ func TestKeyRemove(t *testing.T) {
 
 	email := "user-save@example.com"
 	expTime := time.Now().Add(5 * time.Minute)
-	id, _ := uuid.New().ID()
+	id, err := uuid.New().ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
 	key := auth.Key{
 		Subject:   email,
 		IssuedAt:  time.Now(),
@@ -124,7 +128,7 @@ func TestKeyRemove(t *testing.T) {
 		ID:        id,
 		IssuerID:  id,
 	}
-	_, err := repo.Save(opentracing.ContextWithSpan(context.Background(), opentracing.StartSpan("")), key)
+	_, err = repo.Save(opentracing.ContextWithSpan(context.Background(), opentracing.StartSpan("")), key)
 	assert.Nil(t, err, fmt.Sprintf("Storing Key expected to succeed: %s", err))
 	cases := []struct {
 		desc  string
