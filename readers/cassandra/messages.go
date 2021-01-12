@@ -10,6 +10,7 @@ import (
 
 	"github.com/gocql/gocql"
 	"github.com/mainflux/mainflux/pkg/errors"
+	jsont "github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/readers"
 )
@@ -17,6 +18,7 @@ import (
 var errReadMessages = errors.New("failed to read messages from cassandra database")
 
 const (
+	format = "format"
 	// Table for SenML messages
 	defTable = "messages"
 )
@@ -35,12 +37,24 @@ func New(session *gocql.Session) readers.MessageRepository {
 }
 
 func (cr cassandraRepository) ReadAll(chanID string, offset, limit uint64, query map[string]string) (readers.MessagesPage, error) {
+	table, ok := query[format]
+	if !ok {
+		table = defTable
+	}
+	// Remove format filter and format the rest properly.
+	delete(query, format)
+
 	q, vals := buildQuery(chanID, offset, limit, query)
 
 	selectCQL := fmt.Sprintf(`SELECT channel, subtopic, publisher, protocol, name, unit,
 		value, string_value, bool_value, data_value, sum, time,
 		update_time FROM messages WHERE channel = ? %s LIMIT ?
 		ALLOW FILTERING`, q)
+	if table != defTable {
+		selectCQL = fmt.Sprintf(`SELECT channel, subtopic, publisher, protocol, created, payload FROM %s WHERE channel = ? %s LIMIT ?
+			ALLOW FILTERING`, table, q)
+	}
+
 	countCQL := fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE channel = ? %s ALLOW FILTERING`, defTable, q)
 
 	iter := cr.session.Query(selectCQL, vals...).Iter()
@@ -60,15 +74,32 @@ func (cr cassandraRepository) ReadAll(chanID string, offset, limit uint64, query
 		Messages: []readers.Message{},
 	}
 
-	for scanner.Next() {
-		var msg senml.Message
-		err := scanner.Scan(&msg.Channel, &msg.Subtopic, &msg.Publisher, &msg.Protocol,
-			&msg.Name, &msg.Unit, &msg.Value, &msg.StringValue, &msg.BoolValue,
-			&msg.DataValue, &msg.Sum, &msg.Time, &msg.UpdateTime)
-		if err != nil {
-			return readers.MessagesPage{}, errors.Wrap(errReadMessages, err)
+	switch table {
+	case defTable:
+		for scanner.Next() {
+			var msg senml.Message
+			err := scanner.Scan(&msg.Channel, &msg.Subtopic, &msg.Publisher, &msg.Protocol,
+				&msg.Name, &msg.Unit, &msg.Value, &msg.StringValue, &msg.BoolValue,
+				&msg.DataValue, &msg.Sum, &msg.Time, &msg.UpdateTime)
+			if err != nil {
+				return readers.MessagesPage{}, errors.Wrap(errReadMessages, err)
+			}
+			page.Messages = append(page.Messages, msg)
 		}
-		page.Messages = append(page.Messages, msg)
+	default:
+		for scanner.Next() {
+			var msg jsonMessage
+			err := scanner.Scan(&msg.Channel, &msg.Subtopic, &msg.Publisher, &msg.Protocol, &msg.Created, &msg.Payload)
+			if err != nil {
+				return readers.MessagesPage{}, errors.Wrap(errReadMessages, err)
+			}
+			m, err := msg.toMap()
+			if err != nil {
+				return readers.MessagesPage{}, errors.Wrap(errReadMessages, err)
+			}
+			m["payload"] = jsont.ParseFlat(m["payload"])
+			page.Messages = append(page.Messages, m)
+		}
 	}
 
 	if err := cr.session.Query(countCQL, vals[:len(vals)-1]...).Scan(&page.Total); err != nil {
