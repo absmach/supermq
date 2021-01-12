@@ -33,18 +33,20 @@ var (
 	vb          = true
 	vd          = "dataValue"
 	sum float64 = 42
+
+	uuidProvider = uuid.New()
 )
 
 func TestReadSenml(t *testing.T) {
 	writer := pwriter.New(db)
 
-	chanID, err := uuid.New().ID()
+	chanID, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	pubID, err := uuid.New().ID()
+	pubID, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	pub2ID, err := uuid.New().ID()
+	pub2ID, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	wrongID, err := uuid.New().ID()
+	wrongID, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	m := senml.Message{

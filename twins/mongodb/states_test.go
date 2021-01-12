@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/mongodb"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +25,7 @@ func TestStateSave(t *testing.T) {
 	db := client.Database(testDB)
 	repo := mongodb.NewStateRepository(db)
 
-	twid, err := uuid.New().ID()
+	twid, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	var id int64
@@ -63,7 +62,7 @@ func TestStatesRetrieveAll(t *testing.T) {
 
 	repo := mongodb.NewStateRepository(db)
 
-	twid, err := uuid.New().ID()
+	twid, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	n := uint64(10)

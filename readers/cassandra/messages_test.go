@@ -36,6 +36,8 @@ var (
 	vb          = true
 	vd          = "base64"
 	sum float64 = 42
+
+	uuidProvider = uuid.New()
 )
 
 func TestReadSenml(t *testing.T) {
@@ -47,11 +49,11 @@ func TestReadSenml(t *testing.T) {
 	defer session.Close()
 	writer := writer.New(session)
 
-	chanID, err := uuid.New().ID()
+	chanID, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	pubID, err := uuid.New().ID()
+	pubID, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	pub2ID, err := uuid.New().ID()
+	pub2ID, err := uuidProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	m := senml.Message{
