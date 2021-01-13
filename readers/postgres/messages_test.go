@@ -102,15 +102,11 @@ func TestReadSenml(t *testing.T) {
 	// checking data result set size, but not content.
 	cases := map[string]struct {
 		chanID string
-		offset uint64
-		limit  uint64
 		query  map[string]string
 		page   readers.MessagesPage
 	}{
 		"read message page for existing channel": {
 			chanID: chanID,
-			offset: 0,
-			limit:  msgsNum,
 			page: readers.MessagesPage{
 				Total:    msgsNum,
 				Offset:   0,
@@ -120,8 +116,6 @@ func TestReadSenml(t *testing.T) {
 		},
 		"read message page for non-existent channel": {
 			chanID: wrongID,
-			offset: 0,
-			limit:  msgsNum,
 			page: readers.MessagesPage{
 				Total:    0,
 				Offset:   0,
@@ -131,8 +125,6 @@ func TestReadSenml(t *testing.T) {
 		},
 		"read message last page": {
 			chanID: chanID,
-			offset: msgsNum - 20,
-			limit:  msgsNum,
 			page: readers.MessagesPage{
 				Total:    msgsNum,
 				Offset:   msgsNum - 20,
@@ -142,8 +134,6 @@ func TestReadSenml(t *testing.T) {
 		},
 		"read message with non-existent subtopic": {
 			chanID: chanID,
-			offset: 0,
-			limit:  msgsNum,
 			query:  map[string]string{"subtopic": "not-present"},
 			page: readers.MessagesPage{
 				Total:    0,
@@ -154,8 +144,6 @@ func TestReadSenml(t *testing.T) {
 		},
 		"read message with subtopic": {
 			chanID: chanID,
-			offset: 0,
-			limit:  uint64(len(queryMsgs)),
 			query:  map[string]string{"subtopic": subtopic},
 			page: readers.MessagesPage{
 				Total:    uint64(len(queryMsgs)),
@@ -166,8 +154,6 @@ func TestReadSenml(t *testing.T) {
 		},
 		"read message with publisher": {
 			chanID: chanID,
-			offset: 0,
-			limit:  uint64(len(queryMsgs)),
 			query:  map[string]string{"publisher": pub2ID},
 			page: readers.MessagesPage{
 				Total:    uint64(len(queryMsgs)),
@@ -178,8 +164,6 @@ func TestReadSenml(t *testing.T) {
 		},
 		"read message with protocol": {
 			chanID: chanID,
-			offset: 0,
-			limit:  uint64(len(queryMsgs)),
 			query:  map[string]string{"protocol": httpProt},
 			page: readers.MessagesPage{
 				Total:    uint64(len(queryMsgs)),
@@ -190,8 +174,6 @@ func TestReadSenml(t *testing.T) {
 		},
 		"read message with name": {
 			chanID: chanID,
-			offset: 0,
-			limit:  limit,
 			query:  map[string]string{"name": msgName},
 			page: readers.MessagesPage{
 				Total:    uint64(len(queryMsgs)),
@@ -202,8 +184,6 @@ func TestReadSenml(t *testing.T) {
 		},
 		"read message with value": {
 			chanID: chanID,
-			offset: 0,
-			limit:  limit,
 			query:  map[string]string{"v": fmt.Sprintf("%f", v)},
 			page: readers.MessagesPage{
 				Total:    uint64(len(valueMsgs)),
@@ -214,8 +194,6 @@ func TestReadSenml(t *testing.T) {
 		},
 		"read message with boolean value": {
 			chanID: chanID,
-			offset: 0,
-			limit:  limit,
 			query:  map[string]string{"vb": fmt.Sprintf("%t", vb)},
 			page: readers.MessagesPage{
 				Total:    uint64(len(boolMsgs)),
@@ -226,8 +204,6 @@ func TestReadSenml(t *testing.T) {
 		},
 		"read message with string value": {
 			chanID: chanID,
-			offset: 0,
-			limit:  limit,
 			query:  map[string]string{"vs": vs},
 			page: readers.MessagesPage{
 				Total:    uint64(len(stringMsgs)),
@@ -238,8 +214,6 @@ func TestReadSenml(t *testing.T) {
 		},
 		"read message with data value": {
 			chanID: chanID,
-			offset: 0,
-			limit:  limit,
 			query:  map[string]string{"vd": vd},
 			page: readers.MessagesPage{
 				Total:    uint64(len(dataMsgs)),
@@ -250,8 +224,6 @@ func TestReadSenml(t *testing.T) {
 		},
 		"read message with from/to": {
 			chanID: chanID,
-			offset: 0,
-			limit:  limit,
 			query: map[string]string{
 				"from": fmt.Sprintf("%f", messages[5].Time),
 				"to":   fmt.Sprintf("%f", messages[0].Time),
@@ -266,7 +238,7 @@ func TestReadSenml(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		result, err := reader.ReadAll(tc.chanID, tc.offset, tc.limit, tc.query)
+		result, err := reader.ReadAll(tc.chanID, tc.page.Offset, tc.page.Limit, tc.query)
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %s", desc, err))
 		assert.ElementsMatch(t, tc.page.Messages, result.Messages, fmt.Sprintf("%s: expected %v got %v", desc, tc.page.Messages, result.Messages))
 		assert.Equal(t, tc.page.Total, result.Total, fmt.Sprintf("%s: expected %v got %v", desc, tc.page.Total, result.Total))
