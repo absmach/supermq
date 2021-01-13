@@ -18,9 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	email = "user-save@example.com"
-)
+const email = "user-save@example.com"
 
 var (
 	expTime      = time.Now().Add(5 * time.Minute)
