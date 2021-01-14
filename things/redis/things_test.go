@@ -16,11 +16,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var uuidProvider = uuid.New()
+var idProvider = uuid.New()
 
 func TestThingSave(t *testing.T) {
 	thingCache := redis.NewThingCache(redisClient)
-	key, err := uuidProvider.ID()
+	key, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	id := "123"
 	id2 := "124"
@@ -58,7 +58,7 @@ func TestThingSave(t *testing.T) {
 func TestThingID(t *testing.T) {
 	thingCache := redis.NewThingCache(redisClient)
 
-	key, err := uuidProvider.ID()
+	key, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	id := "123"
 	err = thingCache.Save(context.Background(), key, id)
@@ -91,7 +91,7 @@ func TestThingID(t *testing.T) {
 func TestThingRemove(t *testing.T) {
 	thingCache := redis.NewThingCache(redisClient)
 
-	key, err := uuidProvider.ID()
+	key, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	id := "123"
 	id2 := "321"

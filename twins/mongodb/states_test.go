@@ -25,7 +25,7 @@ func TestStateSave(t *testing.T) {
 	db := client.Database(testDB)
 	repo := mongodb.NewStateRepository(db)
 
-	twid, err := uuidProvider.ID()
+	twid, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	var id int64
@@ -62,7 +62,7 @@ func TestStatesRetrieveAll(t *testing.T) {
 
 	repo := mongodb.NewStateRepository(db)
 
-	twid, err := uuidProvider.ID()
+	twid, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	n := uint64(10)
@@ -124,7 +124,7 @@ func TestStatesRetrieveLast(t *testing.T) {
 
 	repo := mongodb.NewStateRepository(db)
 
-	twid, err := uuidProvider.ID()
+	twid, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	n := int64(10)

@@ -21,15 +21,15 @@ import (
 const email = "user-save@example.com"
 
 var (
-	expTime      = time.Now().Add(5 * time.Minute)
-	uuidProvider = uuid.New()
+	expTime    = time.Now().Add(5 * time.Minute)
+	idProvider = uuid.New()
 )
 
 func TestKeySave(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
 	repo := postgres.New(dbMiddleware)
 
-	id, err := uuidProvider.ID()
+	id, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := []struct {
@@ -71,7 +71,7 @@ func TestKeyRetrieve(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
 	repo := postgres.New(dbMiddleware)
 
-	id, err := uuidProvider.ID()
+	id, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	key := auth.Key{
@@ -119,7 +119,7 @@ func TestKeyRemove(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
 	repo := postgres.New(dbMiddleware)
 
-	id, err := uuidProvider.ID()
+	id, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	key := auth.Key{

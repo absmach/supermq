@@ -34,18 +34,18 @@ var (
 	vd          = "dataValue"
 	sum float64 = 42
 
-	client       influxdata.Client
-	uuidProvider = uuid.New()
+	client     influxdata.Client
+	idProvider = uuid.New()
 )
 
 func TestReadAll(t *testing.T) {
 	writer := iwriter.New(client, testDB)
 
-	chanID, err := uuidProvider.ID()
+	chanID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	pubID, err := uuidProvider.ID()
+	pubID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	pub2ID, err := uuidProvider.ID()
+	pub2ID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	m := senml.Message{
