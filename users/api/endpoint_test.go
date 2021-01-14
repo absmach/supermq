@@ -71,9 +71,9 @@ func newService() users.Service {
 	hasher := bcrypt.New()
 	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
 	email := mocks.NewEmailer()
-	uuidProvider := uuid.New()
+	idProvider := uuid.New()
 
-	return users.New(usersRepo, groupRepo, hasher, auth, email, uuidProvider)
+	return users.New(usersRepo, groupRepo, hasher, auth, email, idProvider)
 }
 
 func newServer(svc users.Service) *httptest.Server {

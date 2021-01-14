@@ -269,11 +269,11 @@ func newService(ps messaging.PubSub, chanID string, users mainflux.AuthServiceCl
 	stateRepo := twmongodb.NewStateRepository(db)
 	stateRepo = tracing.StateRepositoryMiddleware(dbTracer, stateRepo)
 
-	uuidProvider := uuid.New()
+	idProvider := uuid.New()
 	twinCache := rediscache.NewTwinCache(cacheClient)
 	twinCache = tracing.TwinCacheMiddleware(cacheTracer, twinCache)
 
-	svc := twins.New(ps, users, twinRepo, twinCache, stateRepo, uuidProvider, chanID, logger)
+	svc := twins.New(ps, users, twinRepo, twinCache, stateRepo, idProvider, chanID, logger)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,

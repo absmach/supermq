@@ -26,7 +26,7 @@ var (
 	host            = "example.com"
 	groupName       = "Mainflux"
 
-	uuidProvider = uuid.New()
+	idProvider = uuid.New()
 )
 
 func newService() users.Service {
@@ -36,7 +36,7 @@ func newService() users.Service {
 	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
 	e := mocks.NewEmailer()
 
-	return users.New(userRepo, groupRepo, hasher, auth, e, uuidProvider)
+	return users.New(userRepo, groupRepo, hasher, auth, e, idProvider)
 }
 
 func TestRegister(t *testing.T) {
@@ -376,7 +376,7 @@ func TestCreateGroup(t *testing.T) {
 	token, err := svc.Login(context.Background(), user)
 	assert.Nil(t, err, fmt.Sprintf("authenticating user expected to succeed: %s", err))
 
-	id, err := uuidProvider.ID()
+	id, err := idProvider.ID()
 	assert.Nil(t, err, fmt.Sprintf("generating uuid expected to succeed: %s", err))
 
 	group := users.Group{

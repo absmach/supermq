@@ -30,9 +30,9 @@ func newUserService() users.Service {
 	hasher := mocks.NewHasher()
 	auth := mocks.NewAuthService(map[string]string{"user@example.com": "user@example.com"})
 	emailer := mocks.NewEmailer()
-	uuidProvider := uuid.New()
+	idProvider := uuid.New()
 
-	return users.New(usersRepo, groupsRepo, hasher, auth, emailer, uuidProvider)
+	return users.New(usersRepo, groupsRepo, hasher, auth, emailer, idProvider)
 }
 
 func newUserServer(svc users.Service) *httptest.Server {

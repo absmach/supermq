@@ -318,9 +318,9 @@ func newService(auth mainflux.AuthServiceClient, dbTracer opentracing.Tracer, ca
 
 	thingCache := rediscache.NewThingCache(cacheClient)
 	thingCache = tracing.ThingCacheMiddleware(cacheTracer, thingCache)
-	uuidProvider := uuid.New()
+	idProvider := uuid.New()
 
-	svc := things.New(auth, thingsRepo, channelsRepo, groupsRepo, chanCache, thingCache, uuidProvider)
+	svc := things.New(auth, thingsRepo, channelsRepo, groupsRepo, chanCache, thingCache, idProvider)
 	svc = rediscache.NewEventStoreMiddleware(svc, esClient)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(

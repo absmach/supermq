@@ -285,9 +285,9 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServic
 		logger.Error(fmt.Sprintf("Failed to configure e-mailing util: %s", err.Error()))
 	}
 
-	uuidProvider := uuid.New()
+	idProvider := uuid.New()
 
-	svc := users.New(userRepo, groupRepo, hasher, auth, emailer, uuidProvider)
+	svc := users.New(userRepo, groupRepo, hasher, auth, emailer, idProvider)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
