@@ -44,7 +44,7 @@ func TestReadAll(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	pubID, err := uuidProvider.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	pub2ID, err := uuidProvider.New().ID()
+	pubID2, err := uuidProvider.New().ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	m := senml.Message{
@@ -88,7 +88,7 @@ func TestReadAll(t *testing.T) {
 			msg.Sum = &sum
 			msg.Subtopic = subtopic
 			msg.Protocol = httpProt
-			msg.Publisher = pub2ID
+			msg.Publisher = pubID2
 			msg.Name = msgName
 			queryMsgs = append(queryMsgs, msg)
 		}
@@ -156,7 +156,7 @@ func TestReadAll(t *testing.T) {
 		},
 		"read message with publisher": {
 			chanID: chanID,
-			query:  map[string]string{"publisher": pub2ID},
+			query:  map[string]string{"publisher": pubID2},
 			page: readers.MessagesPage{
 				Total:    uint64(len(queryMsgs)),
 				Offset:   0,
