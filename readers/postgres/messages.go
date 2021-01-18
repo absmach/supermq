@@ -142,7 +142,7 @@ func fmtCondition(chanID string, query map[string]string) string {
 		case "from":
 			condition = fmt.Sprintf(`%s AND time >= :from`, condition)
 		case "to":
-			condition = fmt.Sprintf(`%s AND time < :to`, condition)
+			condition = fmt.Sprintf(`%s AND time <= :to`, condition)
 		}
 	}
 	return condition
