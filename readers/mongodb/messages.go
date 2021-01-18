@@ -94,7 +94,7 @@ func (repo mongoRepository) ReadAll(chanID string, offset, limit uint64, query m
 	}, nil
 }
 
-func fmtCondition(chanID string, query map[string]string) *bson.D {
+func fmtCondition(chanID string, query map[string]string) bson.D {
 	filter := bson.D{
 		bson.E{
 			Key:   "channel",
@@ -141,5 +141,5 @@ func fmtCondition(chanID string, query map[string]string) *bson.D {
 		}
 	}
 
-	return &filter
+	return filter
 }
