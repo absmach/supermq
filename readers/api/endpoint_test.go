@@ -11,10 +11,12 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
+	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/readers"
 	"github.com/mainflux/mainflux/readers/api"
 	"github.com/mainflux/mainflux/readers/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -22,8 +24,8 @@ const (
 	token         = "1"
 	invalid       = "invalid"
 	numOfMessages = 42
-	chanID        = "1"
 	valueFields   = 5
+	mqttProt      = "mqtt"
 )
 
 var (
@@ -32,39 +34,9 @@ var (
 	vb          = true
 	vd          = "dataValue"
 	sum float64 = 42
+
+	idProvider = uuid.New()
 )
-
-func newService() readers.MessageRepository {
-	var messages []readers.Message
-	for i := 0; i < numOfMessages; i++ {
-		msg := senml.Message{
-			Channel:   chanID,
-			Publisher: "1",
-			Protocol:  "mqtt",
-		}
-		// Mix possible values as well as value sum.
-		count := i % valueFields
-
-		switch count {
-		case 0:
-			msg.Value = &v
-		case 1:
-			msg.BoolValue = &vb
-		case 2:
-			msg.StringValue = &vs
-		case 3:
-			msg.DataValue = &vd
-		case 4:
-			msg.Sum = &sum
-		}
-
-		messages = append(messages, msg)
-	}
-
-	return mocks.NewMessageRepository(map[string][]readers.Message{
-		chanID: messages,
-	})
-}
 
 func newServer(repo readers.MessageRepository, tc mainflux.ThingsServiceClient) *httptest.Server {
 	mux := api.MakeHandler(repo, tc, svcName)
@@ -91,7 +63,44 @@ func (tr testRequest) make() (*http.Response, error) {
 }
 
 func TestReadAll(t *testing.T) {
-	svc := newService()
+	chanID, err := idProvider.ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	pubID, err := idProvider.ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	m := senml.Message{
+		Channel:   chanID,
+		Publisher: pubID,
+		Protocol:  mqttProt,
+	}
+
+	var messages []readers.Message
+	for i := 0; i < numOfMessages; i++ {
+		// Mix possible values as well as value sum.
+		msg := m
+
+		count := i % valueFields
+		switch count {
+		case 0:
+			msg.Value = &v
+		case 1:
+			msg.BoolValue = &vb
+		case 2:
+			msg.StringValue = &vs
+		case 3:
+			msg.DataValue = &vd
+		case 4:
+			msg.Name = "msgName"
+			msg.Sum = &sum
+		}
+
+		messages = append(messages, msg)
+	}
+
+	svc := mocks.NewMessageRepository(map[string][]readers.Message{
+		chanID: messages,
+	})
+
 	tc := mocks.NewThingsService()
 	ts := newServer(svc, tc)
 	defer ts.Close()
@@ -166,15 +175,50 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 		},
+		"read page with fornat": {
+			url:    fmt.Sprintf("%s/channels/%s/messages?format=messages", ts.URL, chanID),
+			token:  token,
+			status: http.StatusOK,
+		},
+		"read page with subtopic": {
+			url:    fmt.Sprintf("%s/channels/%s/messages?subtopic=%f", ts.URL, chanID, v),
+			token:  token,
+			status: http.StatusOK,
+		},
+		"read page with publisher": {
+			url:    fmt.Sprintf("%s/channels/%s/messages?publisher=%s", ts.URL, chanID, pubID),
+			token:  token,
+			status: http.StatusOK,
+		},
+		"read page with protocol": {
+			url:    fmt.Sprintf("%s/channels/%s/messages?protocol=http", ts.URL, chanID),
+			token:  token,
+			status: http.StatusOK,
+		},
+		"read page with name": {
+			url:    fmt.Sprintf("%s/channels/%s/messages?name=msgName", ts.URL, chanID),
+			token:  token,
+			status: http.StatusOK,
+		},
 		"read page with value": {
 			url:    fmt.Sprintf("%s/channels/%s/messages?v=%f", ts.URL, chanID, v),
 			token:  token,
 			status: http.StatusOK,
 		},
+		"read page with non-float value": {
+			url:    fmt.Sprintf("%s/channels/%s/messages?v=ab01", ts.URL, chanID),
+			token:  token,
+			status: http.StatusBadRequest,
+		},
 		"read page with boolean value": {
 			url:    fmt.Sprintf("%s/channels/%s/messages?vb=%t", ts.URL, chanID, vb),
 			token:  token,
 			status: http.StatusOK,
+		},
+		"read page with non-bool boolean value": {
+			url:    fmt.Sprintf("%s/channels/%s/messages?vb=yes", ts.URL, chanID),
+			token:  token,
+			status: http.StatusBadRequest,
 		},
 		"read page with string value": {
 			url:    fmt.Sprintf("%s/channels/%s/messages?vs=%s", ts.URL, chanID, vd),
@@ -191,10 +235,20 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 		},
+		"read page with non-float from": {
+			url:    fmt.Sprintf("%s/channels/%s/messages?from=ABCD", ts.URL, chanID),
+			token:  token,
+			status: http.StatusBadRequest,
+		},
 		"read page with to": {
 			url:    fmt.Sprintf("%s/channels/%s/messages?to=1508651539.673909", ts.URL, chanID),
 			token:  token,
 			status: http.StatusOK,
+		},
+		"read page with non-float to": {
+			url:    fmt.Sprintf("%s/channels/%s/messages?to=ABCD", ts.URL, chanID),
+			token:  token,
+			status: http.StatusBadRequest,
 		},
 	}
 

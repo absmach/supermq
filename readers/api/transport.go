@@ -32,7 +32,6 @@ var (
 	errInvalidRequest     = errors.New("received invalid request")
 	errUnauthorizedAccess = errors.New("missing or invalid credentials provided")
 	auth                  mainflux.ThingsServiceClient
-	queryFields           = []string{"format", "subtopic", "publisher", "protocol", "name", "v", "vs", "vb", "vd", "from", "to"}
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -67,31 +66,87 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	offset, err := getQuery(r, "offset", defOffset)
+	offset, err := readUintQuery(r, "offset", defOffset)
 	if err != nil {
 		return nil, err
 	}
 
-	limit, err := getQuery(r, "limit", defLimit)
+	limit, err := readUintQuery(r, "limit", defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	query := map[string]string{}
-	for _, name := range queryFields {
-		if value := bone.GetQuery(r, name); len(value) == 1 {
-			query[name] = value[0]
-		}
+	format, err := readStringQuery(r, "format")
+	if err != nil {
+		return nil, err
 	}
-	if query[format] == "" {
-		query[format] = defFormat
+	if format != "" {
+		format = defFormat
+	}
+
+	subtopic, err := readStringQuery(r, "subtopic")
+	if err != nil {
+		return nil, err
+	}
+
+	publisher, err := readStringQuery(r, "publisher")
+	if err != nil {
+		return nil, err
+	}
+
+	protocol, err := readStringQuery(r, "protocol")
+	if err != nil {
+		return nil, err
+	}
+
+	name, err := readStringQuery(r, "name")
+	if err != nil {
+		return nil, err
+	}
+
+	v, err := readFloatQuery(r, "v")
+	if err != nil {
+		return nil, err
+	}
+	vb, err := readBoolQuery(r, "vb")
+	if err != nil {
+		return nil, err
+	}
+	vs, err := readStringQuery(r, "vs")
+	if err != nil {
+		return nil, err
+	}
+	vd, err := readStringQuery(r, "vd")
+	if err != nil {
+		return nil, err
+	}
+
+	from, err := readFloatQuery(r, "from")
+	if err != nil {
+		return nil, err
+	}
+	to, err := readFloatQuery(r, "to")
+	if err != nil {
+		return nil, err
 	}
 
 	req := listMessagesReq{
 		chanID: chanID,
-		offset: offset,
-		limit:  limit,
-		query:  query,
+		pageMeta: readers.PageMetadata{
+			Offset:      offset,
+			Limit:       limit,
+			Format:      format,
+			Subtopic:    subtopic,
+			Publisher:   publisher,
+			Protocol:    protocol,
+			Name:        name,
+			Value:       v,
+			BoolValue:   vb,
+			StringValue: vs,
+			DataValue:   vd,
+			From:        from,
+			To:          to,
+		},
 	}
 
 	return req, nil
@@ -155,20 +210,71 @@ func authorize(r *http.Request, chanID string) error {
 	return nil
 }
 
-func getQuery(req *http.Request, name string, fallback uint64) (uint64, error) {
-	vals := bone.GetQuery(req, name)
-	if len(vals) == 0 {
-		return fallback, nil
-	}
-
+func readUintQuery(r *http.Request, key string, def uint64) (uint64, error) {
+	vals := bone.GetQuery(r, key)
 	if len(vals) > 1 {
 		return 0, errInvalidRequest
 	}
 
-	val, err := strconv.ParseUint(vals[0], 10, 64)
+	if len(vals) == 0 {
+		return def, nil
+	}
+
+	strval := vals[0]
+	val, err := strconv.ParseUint(strval, 10, 64)
 	if err != nil {
 		return 0, errInvalidRequest
 	}
 
-	return uint64(val), nil
+	return val, nil
+}
+
+func readFloatQuery(r *http.Request, key string) (float64, error) {
+	vals := bone.GetQuery(r, key)
+	if len(vals) > 1 {
+		return 0, errInvalidRequest
+	}
+
+	if len(vals) == 0 {
+		return 0, nil
+	}
+
+	fval := vals[0]
+	val, err := strconv.ParseFloat(fval, 64)
+	if err != nil {
+		return 0, errInvalidRequest
+	}
+
+	return val, nil
+}
+
+func readStringQuery(r *http.Request, key string) (string, error) {
+	vals := bone.GetQuery(r, key)
+	if len(vals) > 1 {
+		return "", errInvalidRequest
+	}
+
+	if len(vals) == 0 {
+		return "", nil
+	}
+
+	return vals[0], nil
+}
+
+func readBoolQuery(r *http.Request, key string) (bool, error) {
+	vals := bone.GetQuery(r, key)
+	if len(vals) > 1 {
+		return true, errInvalidRequest
+	}
+
+	if len(vals) == 0 {
+		return true, nil
+	}
+
+	b, err := strconv.ParseBool(vals[0])
+	if err != nil {
+		return true, errInvalidRequest
+	}
+
+	return b, nil
 }
