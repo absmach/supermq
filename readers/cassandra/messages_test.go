@@ -146,8 +146,10 @@ func TestReadSenml(t *testing.T) {
 				Limit:  msgsNum,
 			},
 			page: readers.MessagesPage{
-				PageMetadata: readers.PageMetadata{Total: msgsNum},
-				Messages:     fromSenml(messages[msgsNum-20 : msgsNum]),
+				PageMetadata: readers.PageMetadata{
+					Total: msgsNum,
+				},
+				Messages: fromSenml(messages[msgsNum-20 : msgsNum]),
 			},
 		},
 		"read message with non-existent subtopic": {

@@ -38,6 +38,39 @@ var (
 	idProvider = uuid.New()
 )
 
+func newMessageRepo(chanID, pubID string) readers.MessageRepository {
+	var messages []readers.Message
+	for i := 0; i < numOfMessages; i++ {
+		// Mix possible values as well as value sum.
+		msg := senml.Message{
+			Channel:   chanID,
+			Publisher: pubID,
+			Protocol:  mqttProt,
+		}
+
+		count := i % valueFields
+		switch count {
+		case 0:
+			msg.Value = &v
+		case 1:
+			msg.BoolValue = &vb
+		case 2:
+			msg.StringValue = &vs
+		case 3:
+			msg.DataValue = &vd
+		case 4:
+			msg.Name = "msgName"
+			msg.Sum = &sum
+		}
+
+		messages = append(messages, msg)
+	}
+
+	return mocks.NewMessageRepository(map[string][]readers.Message{
+		chanID: messages,
+	})
+}
+
 func newServer(repo readers.MessageRepository, tc mainflux.ThingsServiceClient) *httptest.Server {
 	mux := api.MakeHandler(repo, tc, svcName)
 	return httptest.NewServer(mux)
@@ -68,41 +101,9 @@ func TestReadAll(t *testing.T) {
 	pubID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	m := senml.Message{
-		Channel:   chanID,
-		Publisher: pubID,
-		Protocol:  mqttProt,
-	}
-
-	var messages []readers.Message
-	for i := 0; i < numOfMessages; i++ {
-		// Mix possible values as well as value sum.
-		msg := m
-
-		count := i % valueFields
-		switch count {
-		case 0:
-			msg.Value = &v
-		case 1:
-			msg.BoolValue = &vb
-		case 2:
-			msg.StringValue = &vs
-		case 3:
-			msg.DataValue = &vd
-		case 4:
-			msg.Name = "msgName"
-			msg.Sum = &sum
-		}
-
-		messages = append(messages, msg)
-	}
-
-	svc := mocks.NewMessageRepository(map[string][]readers.Message{
-		chanID: messages,
-	})
-
-	tc := mocks.NewThingsService()
-	ts := newServer(svc, tc)
+	svc := mocks.NewThingsService()
+	repo := newMessageRepo(chanID, pubID)
+	ts := newServer(repo, svc)
 	defer ts.Close()
 
 	cases := map[string]struct {
