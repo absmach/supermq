@@ -157,7 +157,7 @@ func buildQuery(chanID string, offset, limit uint64, query map[string]string) (s
 				continue
 			}
 			vals = append(vals, fVal)
-			condCQL = fmt.Sprintf(`%s AND time <= ?`, condCQL)
+			condCQL = fmt.Sprintf(`%s AND time < ?`, condCQL)
 		}
 	}
 	vals = append(vals, offset+limit)

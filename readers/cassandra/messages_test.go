@@ -249,23 +249,23 @@ func TestReadSenml(t *testing.T) {
 				"to": fmt.Sprintf("%f", messages[20].Time),
 			},
 			page: readers.MessagesPage{
-				Total:    uint64(len(messages[20:])),
+				Total:    uint64(len(messages[21:])),
 				Offset:   0,
-				Limit:    uint64(len(messages[20:])),
-				Messages: fromSenml(messages[20:]),
+				Limit:    uint64(len(messages[21:])),
+				Messages: fromSenml(messages[21:]),
 			},
 		},
 		"read message with from/to": {
 			chanID: chanID,
 			query: map[string]string{
-				"from": fmt.Sprintf("%f", messages[4].Time),
+				"from": fmt.Sprintf("%f", messages[5].Time),
 				"to":   fmt.Sprintf("%f", messages[0].Time),
 			},
 			page: readers.MessagesPage{
 				Total:    5,
 				Offset:   0,
 				Limit:    limit,
-				Messages: fromSenml(messages[0:5]),
+				Messages: fromSenml(messages[1:6]),
 			},
 		},
 	}

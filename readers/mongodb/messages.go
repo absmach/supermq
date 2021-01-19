@@ -137,7 +137,7 @@ func fmtCondition(chanID string, query map[string]string) bson.D {
 			if err != nil {
 				continue
 			}
-			filter = append(filter, bson.E{Key: "time", Value: bson.M{"$lte": fVal}})
+			filter = append(filter, bson.E{Key: "time", Value: bson.M{"$lt": fVal}})
 		}
 	}
 
