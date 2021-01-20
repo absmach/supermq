@@ -31,7 +31,7 @@ func (repo *messageRepositoryMock) ReadAll(chanID string, rpm readers.PageMetada
 	end := rpm.Offset + rpm.Limit
 
 	numOfMessages := uint64(len(repo.messages[chanID]))
-	if rpm.Offset < 0 || rpm.Offset >= numOfMessages {
+	if rpm.Offset >= numOfMessages {
 		return readers.MessagesPage{}, nil
 	}
 
