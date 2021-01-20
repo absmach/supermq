@@ -88,9 +88,9 @@ func (repo mongoRepository) ReadAll(chanID string, rpm readers.PageMetadata) (re
 
 	mp := readers.MessagesPage{
 		PageMetadata: rpm,
+		Total:        uint64(total),
 		Messages:     messages,
 	}
-	mp.Total = uint64(total)
 
 	return mp, nil
 }

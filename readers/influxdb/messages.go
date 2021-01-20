@@ -77,9 +77,9 @@ func (repo *influxRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 		return readers.MessagesPage{}, errors.Wrap(errReadMessages, err)
 	}
 
-	rpm.Total = total
 	page := readers.MessagesPage{
 		PageMetadata: rpm,
+		Total:        total,
 		Messages:     ret,
 	}
 

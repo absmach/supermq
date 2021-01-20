@@ -22,12 +22,12 @@ type Message interface{}
 // belong to this page.
 type MessagesPage struct {
 	PageMetadata
+	Total    uint64
 	Messages []Message
 }
 
 // PageMetadata represents the parameters used to create database queries
 type PageMetadata struct {
-	Total       uint64  `json:"total,omitempty"`
 	Offset      uint64  `json:"offset,omitempty"`
 	Limit       uint64  `json:"limit,omitempty"`
 	Subtopic    string  `json:"subtopic,omitempty"`

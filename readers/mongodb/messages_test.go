@@ -121,8 +121,8 @@ func TestReadSenml(t *testing.T) {
 				Limit:  msgsNum,
 			},
 			page: readers.MessagesPage{
-				PageMetadata: readers.PageMetadata{Total: msgsNum},
-				Messages:     fromSenml(messages),
+				Total:    msgsNum,
+				Messages: fromSenml(messages),
 			},
 		},
 		"read message page for non-existent channel": {
@@ -142,9 +142,7 @@ func TestReadSenml(t *testing.T) {
 				Limit:  msgsNum,
 			},
 			page: readers.MessagesPage{
-				PageMetadata: readers.PageMetadata{
-					Total: msgsNum,
-				},
+				Total:    msgsNum,
 				Messages: fromSenml(messages[msgsNum-20 : msgsNum]),
 			},
 		},
@@ -167,9 +165,7 @@ func TestReadSenml(t *testing.T) {
 				Subtopic: subtopic,
 			},
 			page: readers.MessagesPage{
-				PageMetadata: readers.PageMetadata{
-					Total: uint64(len(queryMsgs)),
-				},
+				Total:    uint64(len(queryMsgs)),
 				Messages: fromSenml(queryMsgs),
 			},
 		},
@@ -181,9 +177,7 @@ func TestReadSenml(t *testing.T) {
 				Publisher: pubID2,
 			},
 			page: readers.MessagesPage{
-				PageMetadata: readers.PageMetadata{
-					Total: uint64(len(queryMsgs)),
-				},
+				Total:    uint64(len(queryMsgs)),
 				Messages: fromSenml(queryMsgs),
 			},
 		},
@@ -195,9 +189,7 @@ func TestReadSenml(t *testing.T) {
 				Protocol: httpProt,
 			},
 			page: readers.MessagesPage{
-				PageMetadata: readers.PageMetadata{
-					Total: uint64(len(queryMsgs)),
-				},
+				Total:    uint64(len(queryMsgs)),
 				Messages: fromSenml(queryMsgs),
 			},
 		},
@@ -209,9 +201,7 @@ func TestReadSenml(t *testing.T) {
 				Name:   msgName,
 			},
 			page: readers.MessagesPage{
-				PageMetadata: readers.PageMetadata{
-					Total: uint64(len(queryMsgs)),
-				},
+				Total:    uint64(len(queryMsgs)),
 				Messages: fromSenml(queryMsgs[0:limit]),
 			},
 		},
@@ -223,9 +213,7 @@ func TestReadSenml(t *testing.T) {
 				Value:  v,
 			},
 			page: readers.MessagesPage{
-				PageMetadata: readers.PageMetadata{
-					Total: uint64(len(queryMsgs)),
-				},
+				Total:    uint64(len(queryMsgs)),
 				Messages: fromSenml(valueMsgs[0:limit]),
 			},
 		},
@@ -237,9 +225,7 @@ func TestReadSenml(t *testing.T) {
 				BoolValue: vb,
 			},
 			page: readers.MessagesPage{
-				PageMetadata: readers.PageMetadata{
-					Total: uint64(len(boolMsgs)),
-				},
+				Total:    uint64(len(boolMsgs)),
 				Messages: fromSenml(boolMsgs[0:limit]),
 			},
 		},
@@ -251,9 +237,7 @@ func TestReadSenml(t *testing.T) {
 				StringValue: vs,
 			},
 			page: readers.MessagesPage{
-				PageMetadata: readers.PageMetadata{
-					Total: uint64(len(stringMsgs)),
-				},
+				Total:    uint64(len(stringMsgs)),
 				Messages: fromSenml(stringMsgs[0:limit]),
 			},
 		},
@@ -265,9 +249,7 @@ func TestReadSenml(t *testing.T) {
 				DataValue: vd,
 			},
 			page: readers.MessagesPage{
-				PageMetadata: readers.PageMetadata{
-					Total: uint64(len(dataMsgs)),
-				},
+				Total:    uint64(len(dataMsgs)),
 				Messages: fromSenml(dataMsgs[0:limit]),
 			},
 		},
@@ -279,9 +261,7 @@ func TestReadSenml(t *testing.T) {
 				From:   messages[20].Time,
 			},
 			page: readers.MessagesPage{
-				PageMetadata: readers.PageMetadata{
-					Total: uint64(len(messages[0:21])),
-				},
+				Total:    uint64(len(messages[0:21])),
 				Messages: fromSenml(messages[0:21]),
 			},
 		},
@@ -293,9 +273,7 @@ func TestReadSenml(t *testing.T) {
 				To:     messages[20].Time,
 			},
 			page: readers.MessagesPage{
-				PageMetadata: readers.PageMetadata{
-					Total: uint64(len(messages[21:])),
-				},
+				Total:    uint64(len(messages[21:])),
 				Messages: fromSenml(messages[21:]),
 			},
 		},
@@ -308,9 +286,7 @@ func TestReadSenml(t *testing.T) {
 				To:     messages[0].Time,
 			},
 			page: readers.MessagesPage{
-				PageMetadata: readers.PageMetadata{
-					Total: 5,
-				},
+				Total:    5,
 				Messages: fromSenml(messages[1:6]),
 			},
 		},
