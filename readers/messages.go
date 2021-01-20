@@ -25,7 +25,7 @@ type MessagesPage struct {
 	Messages []Message
 }
 
-// PageMetadata represents DB query paarameters
+// PageMetadata represents the parameters used to create database queries
 type PageMetadata struct {
 	Total       uint64  `json:"total,omitempty"`
 	Offset      uint64  `json:"offset,omitempty"`
