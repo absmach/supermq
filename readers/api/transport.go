@@ -31,6 +31,7 @@ const (
 var (
 	errInvalidRequest     = errors.New("received invalid request")
 	errUnauthorizedAccess = errors.New("missing or invalid credentials provided")
+	errNotInQuery         = errors.New("parameter missing in the query")
 	auth                  mainflux.ThingsServiceClient
 )
 
@@ -108,10 +109,6 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	vb, err := readBoolQuery(r, "vb")
-	if err != nil {
-		return nil, err
-	}
 	vs, err := readStringQuery(r, "vs")
 	if err != nil {
 		return nil, err
@@ -141,12 +138,20 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 			Protocol:    protocol,
 			Name:        name,
 			Value:       v,
-			BoolValue:   vb,
 			StringValue: vs,
 			DataValue:   vd,
 			From:        from,
 			To:          to,
 		},
+	}
+
+	vb, err := readBoolQuery(r, "vb")
+	// Check if vb is in the query
+	if err != nil && err != errNotInQuery {
+		return nil, err
+	}
+	if err == nil {
+		req.pageMeta.BoolValue = vb
 	}
 
 	return req, nil
@@ -264,16 +269,16 @@ func readStringQuery(r *http.Request, key string) (string, error) {
 func readBoolQuery(r *http.Request, key string) (bool, error) {
 	vals := bone.GetQuery(r, key)
 	if len(vals) > 1 {
-		return true, errInvalidRequest
+		return false, errInvalidRequest
 	}
 
 	if len(vals) == 0 {
-		return true, nil
+		return false, errNotInQuery
 	}
 
 	b, err := strconv.ParseBool(vals[0])
 	if err != nil {
-		return true, errInvalidRequest
+		return false, errInvalidRequest
 	}
 
 	return b, nil
