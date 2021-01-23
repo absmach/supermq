@@ -77,7 +77,7 @@ func TestReadAll(t *testing.T) {
 	pubID2, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	now := float64(time.Now().UTC().Second())
+	now := time.Now().Unix()
 
 	var messages []senml.Message
 	var queryMsgs []senml.Message
@@ -92,7 +92,7 @@ func TestReadAll(t *testing.T) {
 			Channel:   chanID,
 			Publisher: pubID,
 			Protocol:  mqttProt,
-			Time:      now - float64(i),
+			Time:      float64(now - int64(i)),
 			Name:      "name",
 		}
 
@@ -141,6 +141,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
+				Total:    uint64(numOfMessages),
 				Messages: messages[0:10],
 			},
 		},
@@ -210,6 +211,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
+				Total:    uint64(numOfMessages),
 				Messages: messages[0:10],
 			},
 		},
@@ -219,6 +221,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
+				Total:    uint64(numOfMessages),
 				Messages: messages[0:10],
 			},
 		},
@@ -228,15 +231,27 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
+				Total:    uint64(numOfMessages),
 				Messages: messages[0:10],
 			},
 		},
 		{
 			desc:   "read page with subtopic",
-			url:    fmt.Sprintf("%s/channels/%s/messages?subtopic=%s", ts.URL, chanID, subtopic),
+			url:    fmt.Sprintf("%s/channels/%s/messages?subtopic=%s&protocol=%s", ts.URL, chanID, subtopic, httpProt),
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
+				Total:    uint64(numOfMessages / valueFields),
+				Messages: queryMsgs[0:10],
+			},
+		},
+		{
+			desc:   "read page with subtopic and protocol",
+			url:    fmt.Sprintf("%s/channels/%s/messages?subtopic=%s&protocol=%s", ts.URL, chanID, subtopic, httpProt),
+			token:  token,
+			status: http.StatusOK,
+			res: pageRes{
+				Total:    uint64(numOfMessages / valueFields),
 				Messages: queryMsgs[0:10],
 			},
 		},
@@ -246,6 +261,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
+				Total:    uint64(numOfMessages / valueFields),
 				Messages: queryMsgs[0:10],
 			},
 		},
@@ -255,6 +271,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
+				Total:    uint64(numOfMessages / valueFields),
 				Messages: queryMsgs[0:10],
 			},
 		},
@@ -264,6 +281,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
+				Total:    uint64(numOfMessages / valueFields),
 				Messages: queryMsgs[0:10],
 			},
 		},
@@ -273,6 +291,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
+				Total:    uint64(numOfMessages / valueFields),
 				Messages: valueMsgs[0:10],
 			},
 		},
@@ -288,6 +307,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
+				Total:    uint64(numOfMessages / valueFields),
 				Messages: boolMsgs[0:10],
 			},
 		},
@@ -303,6 +323,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
+				Total:    uint64(numOfMessages / valueFields),
 				Messages: stringMsgs[0:10],
 			},
 		},
@@ -312,38 +333,33 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
+				Total:    uint64(numOfMessages / valueFields),
 				Messages: dataMsgs[0:10],
 			},
 		},
-		{
-			desc:   "read page with from",
-			url:    fmt.Sprintf("%s/channels/%s/messages?from=%f", ts.URL, chanID, messages[9].Time),
-			token:  token,
-			status: http.StatusOK,
-			res: pageRes{
-				Messages: messages[0:10],
-			},
-		},
+
 		{
 			desc:   "read page with non-float from",
 			url:    fmt.Sprintf("%s/channels/%s/messages?from=ABCD", ts.URL, chanID),
 			token:  token,
 			status: http.StatusBadRequest,
 		},
-		{
-			desc:   "read page with to",
-			url:    fmt.Sprintf("%s/channels/%s/messages?to=%f", ts.URL, chanID, messages[9].Time),
-			token:  token,
-			status: http.StatusOK,
-			res: pageRes{
-				Messages: messages[10:20],
-			},
-		},
+
 		{
 			desc:   "read page with non-float to",
 			url:    fmt.Sprintf("%s/channels/%s/messages?to=ABCD", ts.URL, chanID),
 			token:  token,
 			status: http.StatusBadRequest,
+		},
+		{
+			desc:   "read page with from/to",
+			url:    fmt.Sprintf("%s/channels/%s/messages?from=%f&to=%f", ts.URL, chanID, messages[9].Time, messages[4].Time),
+			token:  token,
+			status: http.StatusOK,
+			res: pageRes{
+				Total:    uint64(5),
+				Messages: messages[5:10],
+			},
 		},
 	}
 
@@ -361,12 +377,14 @@ func TestReadAll(t *testing.T) {
 		json.NewDecoder(res.Body).Decode(&page)
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected %d got %d", tc.desc, tc.status, res.StatusCode))
+		assert.Equal(t, tc.res.Total, page.Total, fmt.Sprintf("%s: expected %d got %d", tc.desc, tc.res.Total, page.Total))
 		assert.ElementsMatch(t, tc.res.Messages, page.Messages, fmt.Sprintf("%s: expected body %v got %v", tc.desc, tc.res.Messages, page.Messages))
 	}
 }
 
 type pageRes struct {
 	readers.PageMetadata
+	Total    uint64          `json:"total"`
 	Messages []senml.Message `json:"messages,omitempty"`
 }
 

@@ -25,6 +25,7 @@ func listMessagesEndpoint(svc readers.MessageRepository) endpoint.Endpoint {
 
 		return pageRes{
 			PageMetadata: page.PageMetadata,
+			Total:        page.Total,
 			Messages:     page.Messages,
 		}, nil
 	}

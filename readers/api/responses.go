@@ -14,6 +14,7 @@ var _ mainflux.Response = (*pageRes)(nil)
 
 type pageRes struct {
 	readers.PageMetadata
+	Total    uint64            `json:"total"`
 	Messages []readers.Message `json:"messages,omitempty"`
 }
 

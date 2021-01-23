@@ -43,67 +43,93 @@ func (repo *messageRepositoryMock) ReadAll(chanID string, rpm readers.PageMetada
 	json.Unmarshal(meta, &query)
 
 	var msgs []readers.Message
+	filter := false
 	for _, m := range repo.messages[chanID] {
 		senml := m.(senml.Message)
+		filterOk := false
 
-		filter := false
+	forLoop:
 		for name := range query {
 			switch name {
 			case "subtopic":
-				filter = true
+				filter, filterOk = true, false
 				if rpm.Subtopic == senml.Subtopic {
-					msgs = append(msgs, m)
+					filterOk = true
+				} else {
+					break forLoop
 				}
 			case "publisher":
-				filter = true
+				filter, filterOk = true, false
 				if rpm.Publisher == senml.Publisher {
-					msgs = append(msgs, m)
+					filterOk = true
+				} else {
+					break forLoop
 				}
 			case "name":
-				filter = true
+				filter, filterOk = true, false
 				if rpm.Name == senml.Name {
-					msgs = append(msgs, m)
+					filterOk = true
+				} else {
+					break forLoop
 				}
 			case "protocol":
-				filter = true
+				filter, filterOk = true, false
 				if rpm.Protocol == senml.Protocol {
-					msgs = append(msgs, m)
+					filterOk = true
+				} else {
+					break forLoop
 				}
 			case "v":
-				filter = true
+				filter, filterOk = true, false
 				if senml.Value != nil &&
 					*senml.Value == rpm.Value {
-					msgs = append(msgs, m)
+					filterOk = true
+				} else {
+					break forLoop
 				}
 			case "vb":
-				filter = true
+				filter, filterOk = true, false
 				if senml.BoolValue != nil &&
 					*senml.BoolValue == rpm.BoolValue {
-					msgs = append(msgs, m)
+					filterOk = true
+				} else {
+					break forLoop
 				}
 			case "vs":
-				filter = true
+				filter, filterOk = true, false
 				if senml.StringValue != nil &&
 					*senml.StringValue == rpm.StringValue {
-					msgs = append(msgs, m)
+					filterOk = true
+				} else {
+					break forLoop
 				}
 			case "vd":
-				filter = true
+				filter, filterOk = true, false
 				if senml.DataValue != nil &&
 					*senml.DataValue == rpm.DataValue {
-					msgs = append(msgs, m)
+					filterOk = true
+				} else {
+					break forLoop
 				}
 			case "from":
-				filter = true
+				filter, filterOk = true, false
 				if senml.Time >= rpm.From {
-					msgs = append(msgs, m)
+					filterOk = true
+				} else {
+					break forLoop
 				}
 			case "to":
-				filter = true
+				filter, filterOk = true, false
 				if senml.Time < rpm.To {
-					msgs = append(msgs, m)
+					filterOk = true
+				} else {
+					break forLoop
 				}
 			}
+		}
+
+		if filter && filterOk {
+			msgs = append(msgs, m)
 		}
 
 		if !filter {
@@ -128,6 +154,7 @@ func (repo *messageRepositoryMock) ReadAll(chanID string, rpm readers.PageMetada
 
 	return readers.MessagesPage{
 		PageMetadata: rpm,
+		Total:        uint64(len(msgs)),
 		Messages:     msgs[rpm.Offset:end],
 	}, nil
 }
