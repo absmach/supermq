@@ -141,7 +141,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
-				Total:    uint64(numOfMessages),
+				Total:    uint64(len(messages)),
 				Messages: messages[0:10],
 			},
 		},
@@ -211,7 +211,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
-				Total:    uint64(numOfMessages),
+				Total:    uint64(len(messages)),
 				Messages: messages[0:10],
 			},
 		},
@@ -221,7 +221,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
-				Total:    uint64(numOfMessages),
+				Total:    uint64(len(messages)),
 				Messages: messages[0:10],
 			},
 		},
@@ -231,7 +231,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
-				Total:    uint64(numOfMessages),
+				Total:    uint64(len(messages)),
 				Messages: messages[0:10],
 			},
 		},
@@ -241,7 +241,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
-				Total:    uint64(numOfMessages / valueFields),
+				Total:    uint64(len(queryMsgs)),
 				Messages: queryMsgs[0:10],
 			},
 		},
@@ -251,7 +251,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
-				Total:    uint64(numOfMessages / valueFields),
+				Total:    uint64(len(queryMsgs)),
 				Messages: queryMsgs[0:10],
 			},
 		},
@@ -261,7 +261,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
-				Total:    uint64(numOfMessages / valueFields),
+				Total:    uint64(len(queryMsgs)),
 				Messages: queryMsgs[0:10],
 			},
 		},
@@ -271,7 +271,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
-				Total:    uint64(numOfMessages / valueFields),
+				Total:    uint64(len(queryMsgs)),
 				Messages: queryMsgs[0:10],
 			},
 		},
@@ -281,7 +281,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
-				Total:    uint64(numOfMessages / valueFields),
+				Total:    uint64(len(queryMsgs)),
 				Messages: queryMsgs[0:10],
 			},
 		},
@@ -291,7 +291,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
-				Total:    uint64(numOfMessages / valueFields),
+				Total:    uint64(len(valueMsgs)),
 				Messages: valueMsgs[0:10],
 			},
 		},
@@ -307,7 +307,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
-				Total:    uint64(numOfMessages / valueFields),
+				Total:    uint64(len(boolMsgs)),
 				Messages: boolMsgs[0:10],
 			},
 		},
@@ -323,7 +323,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
-				Total:    uint64(numOfMessages / valueFields),
+				Total:    uint64(len(stringMsgs)),
 				Messages: stringMsgs[0:10],
 			},
 		},
@@ -333,7 +333,7 @@ func TestReadAll(t *testing.T) {
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
-				Total:    uint64(numOfMessages / valueFields),
+				Total:    uint64(len(dataMsgs)),
 				Messages: dataMsgs[0:10],
 			},
 		},
@@ -353,12 +353,12 @@ func TestReadAll(t *testing.T) {
 		},
 		{
 			desc:   "read page with from/to",
-			url:    fmt.Sprintf("%s/channels/%s/messages?from=%f&to=%f", ts.URL, chanID, messages[9].Time, messages[4].Time),
+			url:    fmt.Sprintf("%s/channels/%s/messages?from=%f&to=%f", ts.URL, chanID, messages[19].Time, messages[4].Time),
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
-				Total:    uint64(5),
-				Messages: messages[5:10],
+				Total:    uint64(len(messages[5:20])),
+				Messages: messages[5:15],
 			},
 		},
 	}
