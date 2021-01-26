@@ -43,96 +43,69 @@ func (repo *messageRepositoryMock) ReadAll(chanID string, rpm readers.PageMetada
 	json.Unmarshal(meta, &query)
 
 	var msgs []readers.Message
-	filter := false
 	for _, m := range repo.messages[chanID] {
 		senml := m.(senml.Message)
-		filterOk := false
 
-	forLoop:
+		ok := true
+
 		for name := range query {
 			switch name {
 			case "subtopic":
-				filter, filterOk = true, false
-				if rpm.Subtopic == senml.Subtopic {
-					filterOk = true
-				} else {
-					break forLoop
+				if rpm.Subtopic != senml.Subtopic {
+					ok = false
 				}
 			case "publisher":
-				filter, filterOk = true, false
-				if rpm.Publisher == senml.Publisher {
-					filterOk = true
-				} else {
-					break forLoop
+				if rpm.Publisher != senml.Publisher {
+					ok = false
 				}
 			case "name":
-				filter, filterOk = true, false
-				if rpm.Name == senml.Name {
-					filterOk = true
-				} else {
-					break forLoop
+				if rpm.Name != senml.Name {
+					ok = false
 				}
 			case "protocol":
-				filter, filterOk = true, false
-				if rpm.Protocol == senml.Protocol {
-					filterOk = true
-				} else {
-					break forLoop
+				if rpm.Protocol != senml.Protocol {
+					ok = false
 				}
 			case "v":
-				filter, filterOk = true, false
-				if senml.Value != nil &&
-					*senml.Value == rpm.Value {
-					filterOk = true
-				} else {
-					break forLoop
+				if senml.Value == nil ||
+					(senml.Value != nil &&
+						*senml.Value != rpm.Value) {
+					ok = false
 				}
 			case "vb":
-				filter, filterOk = true, false
-				if senml.BoolValue != nil &&
-					*senml.BoolValue == rpm.BoolValue {
-					filterOk = true
-				} else {
-					break forLoop
+				if senml.BoolValue == nil ||
+					(senml.BoolValue != nil &&
+						*senml.BoolValue != rpm.BoolValue) {
+					ok = false
 				}
 			case "vs":
-				filter, filterOk = true, false
-				if senml.StringValue != nil &&
-					*senml.StringValue == rpm.StringValue {
-					filterOk = true
-				} else {
-					break forLoop
+				if senml.StringValue == nil ||
+					(senml.StringValue != nil &&
+						*senml.StringValue != rpm.StringValue) {
+					ok = false
 				}
 			case "vd":
-				filter, filterOk = true, false
-				if senml.DataValue != nil &&
-					*senml.DataValue == rpm.DataValue {
-					filterOk = true
-				} else {
-					break forLoop
+				if senml.DataValue == nil ||
+					(senml.DataValue != nil &&
+						*senml.DataValue != rpm.DataValue) {
+					ok = false
 				}
 			case "from":
-				filter, filterOk = true, false
-				if senml.Time >= rpm.From {
-					filterOk = true
-				} else {
-					break forLoop
+				if senml.Time < rpm.From {
+					ok = false
 				}
 			case "to":
-				filter, filterOk = true, false
-				if senml.Time < rpm.To {
-					filterOk = true
-				} else {
-					break forLoop
+				if senml.Time >= rpm.To {
+					ok = false
 				}
+			}
+
+			if !ok {
+				break
 			}
 		}
 
-		if filter && filterOk {
-			msgs = append(msgs, m)
-		}
-
-		if !filter {
+		if ok {
 			msgs = append(msgs, m)
 		}
 	}
