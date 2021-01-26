@@ -109,10 +109,12 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	vs, err := readStringQuery(r, "vs")
 	if err != nil {
 		return nil, err
 	}
+
 	vd, err := readStringQuery(r, "vd")
 	if err != nil {
 		return nil, err
@@ -122,6 +124,7 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	to, err := readFloatQuery(r, "to")
 	if err != nil {
 		return nil, err
