@@ -82,9 +82,6 @@ func (repo mongoRepository) ReadAll(chanID string, rpm readers.PageMetadata) (re
 	if err != nil {
 		return readers.MessagesPage{}, errors.Wrap(errReadMessages, err)
 	}
-	if total < 0 {
-		return readers.MessagesPage{}, nil
-	}
 
 	mp := readers.MessagesPage{
 		PageMetadata: rpm,
