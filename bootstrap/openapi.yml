@@ -239,7 +239,7 @@ components:
           description: Corresponding Mainflux Thing ID.
         mainflux_key:
           type: string
-          format: jwt
+          format: uuid
           description: Corresponding Mainflux Thing key.
         mainflux_channels:
           type: array
@@ -305,7 +305,7 @@ components:
           description: Corresponding Mainflux Thing ID.
         mainflux_key:
           type: string
-          format: jwt
+          format: uuid
           description: Corresponding Mainflux Thing key.
         mainflux_channels:
           type: array

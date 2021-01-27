@@ -517,7 +517,7 @@ components:
   schemas:
     Key:
       type: string
-      format: jwt
+      format: uuid
       description: |
         Thing key that is used for thing auth. If there is
         not one provided service will generate one in UUID
@@ -552,7 +552,7 @@ components:
           description: Free-form thing name.
         key:
           type: string
-          format: jwt
+          format: uuid
           description: Auto-generated access key.
         metadata:
           type: object
@@ -773,7 +773,7 @@ components:
             properties:
               key:
                 type: string
-                format: jwt
+                format: uuid
                 description: Thing key that is used for thing auth.
     ChannelCreateReq:
       description: JSON-formatted document describing the updated channel.
@@ -813,7 +813,7 @@ components:
             properties:
               token:
                 type: string
-                format: jwt
+                format: uuid
                 description: Thing key that is used for thing auth.
             required:
               - token

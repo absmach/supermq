@@ -69,7 +69,7 @@ components:
     Authorization:
       type: http
       scheme: bearer
-      bearerFormat: JWT
+      bearerFormat: jwt
   schemas:
     Key:
       type: object
