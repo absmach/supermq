@@ -32,8 +32,6 @@ func main() {
 	var rootCmd = &cobra.Command{
 		Use: "mainflux-cli",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			cli.ParseConfig()
-
 			sdkConf.MsgContentType = sdk.ContentType(msgContentType)
 			s := sdk.NewSDK(sdkConf)
 			cli.SetSDK(s)
@@ -117,13 +115,6 @@ func main() {
 		"i",
 		sdkConf.TLSVerification,
 		"Do not check for TLS cert",
-	)
-
-	rootCmd.PersistentFlags().StringVar(
-		&cli.UserAuthToken,
-		"user-auth-token",
-		"",
-		"Mainflux user auth token",
 	)
 
 	rootCmd.PersistentFlags().StringVar(

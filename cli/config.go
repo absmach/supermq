@@ -64,10 +64,10 @@ func getConfigPath() (string, error) {
 	return ConfigPath, nil
 }
 
-func ParseConfig() {
+func ParseConfig() Config {
 	path, err := getConfigPath()
 	if err != nil {
-		return
+		return Config{}
 	}
 
 	config, err := read(path)
@@ -75,7 +75,5 @@ func ParseConfig() {
 		log.Fatal(err)
 	}
 
-	if UserAuthToken == "" {
-		UserAuthToken = config.AuthToken
-	}
+	return config
 }
