@@ -78,8 +78,19 @@ func ParseConfig() {
 		log.Fatal(err)
 	}
 
-	Offset = config.Offset
-	Limit = config.Limit
-	Name = config.Name
-	RawOutput = config.RawOutput
+	if config.Offset != 0 {
+		Offset = config.Offset
+	}
+
+	if config.Limit != 0 {
+		Limit = config.Limit
+	}
+
+	if config.Name != "" {
+		Name = config.Name
+	}
+
+	if config.RawOutput {
+		RawOutput = config.RawOutput
+	}
 }
