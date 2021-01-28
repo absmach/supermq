@@ -12,7 +12,10 @@ import (
 )
 
 type Config struct {
-	AuthToken string `toml:"auth_token"`
+	Offset    uint   `toml:"offset"`
+	Limit     uint   `toml:"limit"`
+	Name      string `toml:"name"`
+	RawOutput bool   `toml:"raw_output"`
 }
 
 // save - store config in a file
@@ -64,10 +67,10 @@ func getConfigPath() (string, error) {
 	return ConfigPath, nil
 }
 
-func ParseConfig() Config {
+func ParseConfig() {
 	path, err := getConfigPath()
 	if err != nil {
-		return Config{}
+		return
 	}
 
 	config, err := read(path)
@@ -75,5 +78,8 @@ func ParseConfig() Config {
 		log.Fatal(err)
 	}
 
-	return config
+	Offset = config.Offset
+	Limit = config.Limit
+	Name = config.Name
+	RawOutput = config.RawOutput
 }
