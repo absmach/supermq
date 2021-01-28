@@ -32,6 +32,8 @@ func main() {
 	var rootCmd = &cobra.Command{
 		Use: "mainflux-cli",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			cli.ParseConfig()
+
 			sdkConf.MsgContentType = sdk.ContentType(msgContentType)
 			s := sdk.NewSDK(sdkConf)
 			cli.SetSDK(s)
