@@ -38,11 +38,12 @@ func New(db *mongo.Database) readers.MessageRepository {
 }
 
 func (repo mongoRepository) ReadAll(chanID string, rpm readers.PageMetadata) (readers.MessagesPage, error) {
-	if rpm.Format == "" {
-		rpm.Format = defCollection
+	format := defCollection
+	if rpm.Format != "" {
+		format = rpm.Format
 	}
 
-	col := repo.db.Collection(rpm.Format)
+	col := repo.db.Collection(format)
 
 	sortMap := map[string]interface{}{
 		"time": -1,
@@ -56,7 +57,7 @@ func (repo mongoRepository) ReadAll(chanID string, rpm readers.PageMetadata) (re
 	defer cursor.Close(context.Background())
 
 	var messages []readers.Message
-	switch rpm.Format {
+	switch format {
 	case defCollection:
 		for cursor.Next(context.Background()) {
 			var m senml.Message
@@ -117,7 +118,23 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) bson.D {
 			"protocol":
 			filter = append(filter, bson.E{Key: name, Value: value})
 		case "v":
-			filter = append(filter, bson.E{Key: "value", Value: value})
+			bsonFilter := value
+			val, ok := query["comparison"]
+			if ok {
+				switch val.(string) {
+				case "equal":
+					bsonFilter = value
+				case "lower-than":
+					bsonFilter = bson.M{"$lt": value}
+				case "lower-equal-than":
+					bsonFilter = bson.M{"$lte": value}
+				case "greater-than":
+					bsonFilter = bson.M{"$gt": value}
+				case "greater-equal-than":
+					bsonFilter = bson.M{"$gte": value}
+				}
+			}
+			filter = append(filter, bson.E{Key: "value", Value: bsonFilter})
 		case "vb":
 			filter = append(filter, bson.E{Key: "bool_value", Value: value})
 		case "vs":

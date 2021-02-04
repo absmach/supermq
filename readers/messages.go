@@ -28,17 +28,40 @@ type MessagesPage struct {
 
 // PageMetadata represents the parameters used to create database queries
 type PageMetadata struct {
-	Offset      uint64  `json:"offset,omitempty"`
-	Limit       uint64  `json:"limit,omitempty"`
+	Offset      uint64  `json:"offset"`
+	Limit       uint64  `json:"limit"`
 	Subtopic    string  `json:"subtopic,omitempty"`
 	Publisher   string  `json:"publisher,omitempty"`
 	Protocol    string  `json:"protocol,omitempty"`
 	Name        string  `json:"name,omitempty"`
 	Value       float64 `json:"v,omitempty"`
+	Comparison  string  `json:"comparison,omitempty"`
 	BoolValue   bool    `json:"vb,omitempty"`
 	StringValue string  `json:"vs,omitempty"`
 	DataValue   string  `json:"vd,omitempty"`
 	From        float64 `json:"from,omitempty"`
 	To          float64 `json:"to,omitempty"`
 	Format      string  `json:"format,omitempty"`
+}
+
+// ParseValueComparison convert comparison types to the mathematic anotation
+func ParseValueComparison(query map[string]interface{}) string {
+	comparison := "="
+	val, ok := query["comparison"]
+	if ok {
+		switch val.(string) {
+		case "equal":
+			comparison = "="
+		case "lower-than":
+			comparison = "<"
+		case "lower-equal-than":
+			comparison = "<="
+		case "greater-than":
+			comparison = ">"
+		case "greater-equal-than":
+			comparison = ">="
+		}
+	}
+
+	return comparison
 }

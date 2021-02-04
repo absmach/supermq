@@ -213,6 +213,71 @@ func TestReadAll(t *testing.T) {
 				Messages: fromSenml(valueMsgs[0:limit]),
 			},
 		},
+		"read message with value and equal comparison": {
+			chanID: chanID,
+			pageMeta: readers.PageMetadata{
+				Offset:     0,
+				Limit:      limit,
+				Value:      v,
+				Comparison: "equal",
+			},
+			page: readers.MessagesPage{
+				Total:    uint64(len(valueMsgs)),
+				Messages: fromSenml(valueMsgs[0:limit]),
+			},
+		},
+		"read message with value and lower-than comparison": {
+			chanID: chanID,
+			pageMeta: readers.PageMetadata{
+				Offset:     0,
+				Limit:      limit,
+				Value:      v + 1,
+				Comparison: "lower-than",
+			},
+			page: readers.MessagesPage{
+				Total:    uint64(len(valueMsgs)),
+				Messages: fromSenml(valueMsgs[0:limit]),
+			},
+		},
+		"read message with value and lower-equal-than comparison": {
+			chanID: chanID,
+			pageMeta: readers.PageMetadata{
+				Offset:     0,
+				Limit:      limit,
+				Value:      v + 1,
+				Comparison: "lower-than",
+			},
+			page: readers.MessagesPage{
+				Total:    uint64(len(valueMsgs)),
+				Messages: fromSenml(valueMsgs[0:limit]),
+			},
+		},
+		"read message with value and greater-than comparison": {
+			chanID: chanID,
+			pageMeta: readers.PageMetadata{
+				Offset:     0,
+				Limit:      limit,
+				Value:      v - 1,
+				Comparison: "greater-than",
+			},
+			page: readers.MessagesPage{
+				Total:    uint64(len(valueMsgs)),
+				Messages: fromSenml(valueMsgs[0:limit]),
+			},
+		},
+		"read message with value and greater-equal-than comparison": {
+			chanID: chanID,
+			pageMeta: readers.PageMetadata{
+				Offset:     0,
+				Limit:      limit,
+				Value:      v - 1,
+				Comparison: "greater-than",
+			},
+			page: readers.MessagesPage{
+				Total:    uint64(len(valueMsgs)),
+				Messages: fromSenml(valueMsgs[0:limit]),
+			},
+		},
 		"read message with boolean value": {
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{

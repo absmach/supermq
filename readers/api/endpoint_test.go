@@ -296,6 +296,56 @@ func TestReadAll(t *testing.T) {
 			},
 		},
 		{
+			desc:   "read page with value and equal comparison",
+			url:    fmt.Sprintf("%s/channels/%s/messages?v=%f&comparison=equal", ts.URL, chanID, v),
+			token:  token,
+			status: http.StatusOK,
+			res: pageRes{
+				Total:    uint64(len(valueMsgs)),
+				Messages: valueMsgs[0:10],
+			},
+		},
+		{
+			desc:   "read page with value and lower-than comparison",
+			url:    fmt.Sprintf("%s/channels/%s/messages?v=%f&comparison=lower-than", ts.URL, chanID, v+1),
+			token:  token,
+			status: http.StatusOK,
+			res: pageRes{
+				Total:    uint64(len(valueMsgs)),
+				Messages: valueMsgs[0:10],
+			},
+		},
+		{
+			desc:   "read page with value and lower-equal-than comparison",
+			url:    fmt.Sprintf("%s/channels/%s/messages?v=%f&comparison=lower-equal-than", ts.URL, chanID, v+1),
+			token:  token,
+			status: http.StatusOK,
+			res: pageRes{
+				Total:    uint64(len(valueMsgs)),
+				Messages: valueMsgs[0:10],
+			},
+		},
+		{
+			desc:   "read page with value and greater-than comparison",
+			url:    fmt.Sprintf("%s/channels/%s/messages?v=%f&comparison=greater-than", ts.URL, chanID, v-1),
+			token:  token,
+			status: http.StatusOK,
+			res: pageRes{
+				Total:    uint64(len(valueMsgs)),
+				Messages: valueMsgs[0:10],
+			},
+		},
+		{
+			desc:   "read page with value and greater-equal-than comparison",
+			url:    fmt.Sprintf("%s/channels/%s/messages?v=%f&comparison=greater-equal-than", ts.URL, chanID, v-1),
+			token:  token,
+			status: http.StatusOK,
+			res: pageRes{
+				Total:    uint64(len(valueMsgs)),
+				Messages: valueMsgs[0:10],
+			},
+		},
+		{
 			desc:   "read page with non-float value",
 			url:    fmt.Sprintf("%s/channels/%s/messages?v=ab01", ts.URL, chanID),
 			token:  token,
@@ -337,7 +387,6 @@ func TestReadAll(t *testing.T) {
 				Messages: dataMsgs[0:10],
 			},
 		},
-
 		{
 			desc:   "read page with non-float from",
 			url:    fmt.Sprintf("%s/channels/%s/messages?from=ABCD", ts.URL, chanID),
