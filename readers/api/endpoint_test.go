@@ -352,6 +352,12 @@ func TestReadAll(t *testing.T) {
 			status: http.StatusBadRequest,
 		},
 		{
+			desc:   "read page with value and wrong comparison",
+			url:    fmt.Sprintf("%s/channels/%s/messages?v=%f&comparison=wrong", ts.URL, chanID, v-1),
+			token:  token,
+			status: http.StatusBadRequest,
+		},
+		{
 			desc:   "read page with boolean value",
 			url:    fmt.Sprintf("%s/channels/%s/messages?vb=true", ts.URL, chanID),
 			token:  token,
