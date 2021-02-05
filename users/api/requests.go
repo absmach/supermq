@@ -17,6 +17,9 @@ type userReq struct {
 }
 
 func (req userReq) validate() error {
+	if !passRegex.MatchString(req.user.Password) {
+		return users.ErrMalformedEntity
+	}
 	return req.user.Validate()
 }
 
@@ -101,6 +104,9 @@ func (req passwChangeReq) validate() error {
 		return users.ErrUnauthorizedAccess
 	}
 	if len(req.Password) < minPassLen {
+		return users.ErrMalformedEntity
+	}
+	if !passRegex.MatchString(req.Password) {
 		return users.ErrMalformedEntity
 	}
 	if req.OldPassword == "" {

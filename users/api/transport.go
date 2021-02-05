@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -35,6 +36,8 @@ const (
 	defLimit  = 10
 )
 
+var passRegex *regexp.Regexp
+
 var (
 	errInvalidQueryParams = errors.New("invalid query params")
 
@@ -46,7 +49,8 @@ var (
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc users.Service, tracer opentracing.Tracer) http.Handler {
+func MakeHandler(svc users.Service, tracer opentracing.Tracer, passRegexVar *regexp.Regexp) http.Handler {
+	passRegex = passRegexVar
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),
 	}
