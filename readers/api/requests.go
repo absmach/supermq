@@ -19,11 +19,11 @@ func (req listMessagesReq) validate() error {
 		return errInvalidRequest
 	}
 	if req.pageMeta.Comparison != "" &&
-		req.pageMeta.Comparison != "equal" &&
-		req.pageMeta.Comparison != "lower-than" &&
-		req.pageMeta.Comparison != "lower-equal-than" &&
-		req.pageMeta.Comparison != "greater-than" &&
-		req.pageMeta.Comparison != "greater-equal-than" {
+		req.pageMeta.Comparison != readers.EqualKey &&
+		req.pageMeta.Comparison != readers.LowerThanKey &&
+		req.pageMeta.Comparison != readers.LowerEqualThanKey &&
+		req.pageMeta.Comparison != readers.GreaterThanKey &&
+		req.pageMeta.Comparison != readers.GreaterEqualThanKey {
 		return errInvalidRequest
 	}
 

@@ -182,11 +182,11 @@ components:
         type: string
         default: equal
         enum:
-          - equal
-          - less-than
-          - less-equal-than
-          - greater-than
-          - greater-equal-than
+          - eq
+          - lt
+          - lte
+          - gt
+          - gte
       required: false
     From:
       name: from

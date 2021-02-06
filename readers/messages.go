@@ -5,6 +5,19 @@ package readers
 
 import "errors"
 
+const (
+	// EqualKey represents the equal comparison operator key
+	EqualKey = "eq"
+	// LowerThanKey represents the lower-than comparison operator key
+	LowerThanKey = "lt"
+	// LowerEqualThanKey represents the lower-or-equal-than comparison operator key
+	LowerEqualThanKey = "lte"
+	// GreaterThanKey represents the greater-or-equal-than comparison operator key
+	GreaterThanKey = "gt"
+	// GreaterEqualThanKey represents the greater-or-equal-than comparison operator key
+	GreaterEqualThanKey = "gte"
+)
+
 // ErrNotFound indicates that requested entity doesn't exist.
 var ErrNotFound = errors.New("entity not found")
 
@@ -44,21 +57,21 @@ type PageMetadata struct {
 	Format      string  `json:"format,omitempty"`
 }
 
-// ParseValueComparison convert comparison types to the mathematic anotation
+// ParseValueComparison convert comparison operator keys into mathematic anotation
 func ParseValueComparison(query map[string]interface{}) string {
 	comparison := "="
 	val, ok := query["comparison"]
 	if ok {
 		switch val.(string) {
-		case "equal":
+		case EqualKey:
 			comparison = "="
-		case "lower-than":
+		case LowerThanKey:
 			comparison = "<"
-		case "lower-equal-than":
+		case LowerEqualThanKey:
 			comparison = "<="
-		case "greater-than":
+		case GreaterThanKey:
 			comparison = ">"
-		case "greater-equal-than":
+		case GreaterEqualThanKey:
 			comparison = ">="
 		}
 	}

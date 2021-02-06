@@ -122,15 +122,15 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) bson.D {
 			val, ok := query["comparison"]
 			if ok {
 				switch val.(string) {
-				case "equal":
+				case readers.EqualKey:
 					bsonFilter = value
-				case "lower-than":
+				case readers.LowerThanKey:
 					bsonFilter = bson.M{"$lt": value}
-				case "lower-equal-than":
+				case readers.LowerEqualThanKey:
 					bsonFilter = bson.M{"$lte": value}
-				case "greater-than":
+				case readers.GreaterThanKey:
 					bsonFilter = bson.M{"$gt": value}
-				case "greater-equal-than":
+				case readers.GreaterEqualThanKey:
 					bsonFilter = bson.M{"$gte": value}
 				}
 			}

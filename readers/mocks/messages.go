@@ -74,27 +74,27 @@ func (repo *messageRepositoryMock) ReadAll(chanID string, rpm readers.PageMetada
 				val, okQuery := query["comparison"]
 				if okQuery {
 					switch val.(string) {
-					case "lower-than":
+					case readers.LowerThanKey:
 						if senml.Value != nil &&
 							*senml.Value >= rpm.Value {
 							ok = false
 						}
-					case "lower-equal-than":
+					case readers.LowerEqualThanKey:
 						if senml.Value != nil &&
 							*senml.Value > rpm.Value {
 							ok = false
 						}
-					case "greater-than":
+					case readers.GreaterThanKey:
 						if senml.Value != nil &&
 							*senml.Value <= rpm.Value {
 							ok = false
 						}
-					case "greater-equal-than":
+					case readers.GreaterEqualThanKey:
 						if senml.Value != nil &&
 							*senml.Value < rpm.Value {
 							ok = false
 						}
-					case "equal":
+					case readers.EqualKey:
 					default:
 						if senml.Value != nil &&
 							*senml.Value != rpm.Value {
