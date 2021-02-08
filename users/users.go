@@ -6,6 +6,7 @@ package users
 import (
 	"context"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -23,9 +24,10 @@ const (
 )
 
 var (
-	userRegexp    = regexp.MustCompile("^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~.-]+$")
-	hostRegexp    = regexp.MustCompile("^[^\\s]+\\.[^\\s]+$")
-	userDotRegexp = regexp.MustCompile("(^[.]{1})|([.]{1}$)|([.]{2,})")
+	userRegexp       = regexp.MustCompile("^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~.-]+$")
+	hostRegexp       = regexp.MustCompile("^[^\\s]+\\.[^\\s]+$")
+	userDotRegexp    = regexp.MustCompile("(^[.]{1})|([.]{1}$)|([.]{2,})")
+	defaultPassRegex = regexp.MustCompile("^.{8,}$")
 )
 
 // Metadata to be used for mainflux thing or channel for customized
@@ -46,8 +48,15 @@ func (u User) Validate() error {
 	if !isEmail(u.Email) {
 		return ErrMalformedEntity
 	}
-
-	if len(u.Password) < minPassLen {
+	envPassRegex := os.Getenv("ENVPASSREGEX")
+	if envPassRegex != "" {
+		match, _ := regexp.MatchString(envPassRegex, u.Password)
+		if !match {
+			return ErrMalformedEntity
+		}
+		return nil
+	}
+	if !defaultPassRegex.MatchString(u.Password) {
 		return ErrMalformedEntity
 	}
 

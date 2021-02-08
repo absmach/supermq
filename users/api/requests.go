@@ -4,12 +4,16 @@
 package api
 
 import (
+	"os"
+	"regexp"
+
 	"github.com/mainflux/mainflux/users"
 )
 
 const (
-	minPassLen  = 8
-	maxNameSize = 1024
+	minPassLen       = 8
+	maxNameSize      = 1024
+	defaultPassRegex = "^.{8,}$"
 )
 
 type userReq struct {
@@ -100,7 +104,13 @@ func (req passwChangeReq) validate() error {
 	if req.Token == "" {
 		return users.ErrUnauthorizedAccess
 	}
-	if len(req.Password) < minPassLen {
+	envPassRegex := os.Getenv("ENVPASSREGEX")
+	if envPassRegex != "" {
+		match, _ := regexp.MatchString(envPassRegex, req.Password)
+		if !match {
+			return users.ErrMalformedEntity
+		}
+	} else if match, _ := regexp.MatchString(defaultPassRegex, req.Password); !match {
 		return users.ErrMalformedEntity
 	}
 	if req.OldPassword == "" {
