@@ -225,7 +225,7 @@ func TestReadSenml(t *testing.T) {
 				Offset:     0,
 				Limit:      limit,
 				Value:      v,
-				Comparison: "eq",
+				Comparison: readers.EqualKey,
 			},
 			page: readers.MessagesPage{
 				Total:    uint64(len(valueMsgs)),
@@ -238,7 +238,7 @@ func TestReadSenml(t *testing.T) {
 				Offset:     0,
 				Limit:      limit,
 				Value:      v + 1,
-				Comparison: "lt",
+				Comparison: readers.LowerThanKey,
 			},
 			page: readers.MessagesPage{
 				Total:    uint64(len(valueMsgs)),
@@ -251,7 +251,7 @@ func TestReadSenml(t *testing.T) {
 				Offset:     0,
 				Limit:      limit,
 				Value:      v + 1,
-				Comparison: "lte",
+				Comparison: readers.LowerEqualThanKey,
 			},
 			page: readers.MessagesPage{
 				Total:    uint64(len(valueMsgs)),
@@ -264,7 +264,7 @@ func TestReadSenml(t *testing.T) {
 				Offset:     0,
 				Limit:      limit,
 				Value:      v - 1,
-				Comparison: "gt",
+				Comparison: readers.GreaterThanKey,
 			},
 			page: readers.MessagesPage{
 				Total:    uint64(len(valueMsgs)),
@@ -277,7 +277,7 @@ func TestReadSenml(t *testing.T) {
 				Offset:     0,
 				Limit:      limit,
 				Value:      v - 1,
-				Comparison: "gte",
+				Comparison: readers.GreaterEqualThanKey,
 			},
 			page: readers.MessagesPage{
 				Total:    uint64(len(valueMsgs)),
