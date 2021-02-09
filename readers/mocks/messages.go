@@ -79,7 +79,7 @@ func (repo *messageRepositoryMock) ReadAll(chanID string, rpm readers.PageMetada
 							*senml.Value >= rpm.Value {
 							ok = false
 						}
-					case readers.LowerEqualThanKey:
+					case readers.LowerThanEqualKey:
 						if senml.Value != nil &&
 							*senml.Value > rpm.Value {
 							ok = false
@@ -89,7 +89,7 @@ func (repo *messageRepositoryMock) ReadAll(chanID string, rpm readers.PageMetada
 							*senml.Value <= rpm.Value {
 							ok = false
 						}
-					case readers.GreaterEqualThanKey:
+					case readers.GreaterThanEqualKey:
 						if senml.Value != nil &&
 							*senml.Value < rpm.Value {
 							ok = false

@@ -236,13 +236,13 @@ func TestReadSenml(t *testing.T) {
 				Messages: fromSenml(valueMsgs[0:limit]),
 			},
 		},
-		"read message with value and lower-or-equal-than comparator": {
+		"read message with value and lower-than-or-equal comparator": {
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset:     0,
 				Limit:      limit,
 				Value:      v + 1,
-				Comparator: readers.LowerEqualThanKey,
+				Comparator: readers.LowerThanEqualKey,
 			},
 			page: readers.MessagesPage{
 				Total:    uint64(len(valueMsgs)),
@@ -262,13 +262,13 @@ func TestReadSenml(t *testing.T) {
 				Messages: fromSenml(valueMsgs[0:limit]),
 			},
 		},
-		"read message with value and greater-or-equal-than comparator": {
+		"read message with value and greater-than-or-equal comparator": {
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset:     0,
 				Limit:      limit,
 				Value:      v - 1,
-				Comparator: readers.GreaterEqualThanKey,
+				Comparator: readers.GreaterThanEqualKey,
 			},
 			page: readers.MessagesPage{
 				Total:    uint64(len(valueMsgs)),

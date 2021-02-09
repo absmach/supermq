@@ -21,9 +21,9 @@ func (req listMessagesReq) validate() error {
 	if req.pageMeta.Comparator != "" &&
 		req.pageMeta.Comparator != readers.EqualKey &&
 		req.pageMeta.Comparator != readers.LowerThanKey &&
-		req.pageMeta.Comparator != readers.LowerEqualThanKey &&
+		req.pageMeta.Comparator != readers.LowerThanEqualKey &&
 		req.pageMeta.Comparator != readers.GreaterThanKey &&
-		req.pageMeta.Comparator != readers.GreaterEqualThanKey {
+		req.pageMeta.Comparator != readers.GreaterThanEqualKey {
 		return errInvalidRequest
 	}
 

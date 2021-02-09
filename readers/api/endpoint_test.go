@@ -316,8 +316,8 @@ func TestReadAll(t *testing.T) {
 			},
 		},
 		{
-			desc:   "read page with value and lower-or-equal-than comparator",
-			url:    fmt.Sprintf("%s/channels/%s/messages?v=%f&comparator=%s", ts.URL, chanID, v+1, readers.LowerEqualThanKey),
+			desc:   "read page with value and lower-than-or-equal comparator",
+			url:    fmt.Sprintf("%s/channels/%s/messages?v=%f&comparator=%s", ts.URL, chanID, v+1, readers.LowerThanEqualKey),
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{
@@ -336,8 +336,8 @@ func TestReadAll(t *testing.T) {
 			},
 		},
 		{
-			desc:   "read page with value and greater-or-equal-than comparator",
-			url:    fmt.Sprintf("%s/channels/%s/messages?v=%f&comparator=%s", ts.URL, chanID, v-1, readers.GreaterEqualThanKey),
+			desc:   "read page with value and greater-than-or-equal comparator",
+			url:    fmt.Sprintf("%s/channels/%s/messages?v=%f&comparator=%s", ts.URL, chanID, v-1, readers.GreaterThanEqualKey),
 			token:  token,
 			status: http.StatusOK,
 			res: pageRes{

@@ -6,16 +6,16 @@ package readers
 import "errors"
 
 const (
-	// EqualKey represents the equal comparison operator key
+	// EqualKey represents the equal comparison operator key.
 	EqualKey = "eq"
-	// LowerThanKey represents the lower-than comparison operator key
+	// LowerThanKey represents the lower-than comparison operator key.
 	LowerThanKey = "lt"
-	// LowerEqualThanKey represents the lower-or-equal-than comparison operator key
-	LowerEqualThanKey = "le"
-	// GreaterThanKey represents the greater-or-equal-than comparison operator key
+	// LowerThanEqualKey represents the lower-than-or-equal comparison operator key.
+	LowerThanEqualKey = "le"
+	// GreaterThanKey represents the greater-than-or-equal comparison operator key.
 	GreaterThanKey = "gt"
-	// GreaterEqualThanKey represents the greater-or-equal-than comparison operator key
-	GreaterEqualThanKey = "ge"
+	// GreaterThanEqualKey represents the greater-than-or-equal comparison operator key.
+	GreaterThanEqualKey = "ge"
 )
 
 // ErrNotFound indicates that requested entity doesn't exist.
@@ -67,11 +67,11 @@ func ParseValueComparator(query map[string]interface{}) string {
 			comparator = "="
 		case LowerThanKey:
 			comparator = "<"
-		case LowerEqualThanKey:
+		case LowerThanEqualKey:
 			comparator = "<="
 		case GreaterThanKey:
 			comparator = ">"
-		case GreaterEqualThanKey:
+		case GreaterThanEqualKey:
 			comparator = ">="
 		}
 	}

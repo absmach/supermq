@@ -126,11 +126,11 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) bson.D {
 					bsonFilter = value
 				case readers.LowerThanKey:
 					bsonFilter = bson.M{"$lt": value}
-				case readers.LowerEqualThanKey:
+				case readers.LowerThanEqualKey:
 					bsonFilter = bson.M{"$lte": value}
 				case readers.GreaterThanKey:
 					bsonFilter = bson.M{"$gt": value}
-				case readers.GreaterEqualThanKey:
+				case readers.GreaterThanEqualKey:
 					bsonFilter = bson.M{"$gte": value}
 				}
 			}
