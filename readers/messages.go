@@ -11,11 +11,11 @@ const (
 	// LowerThanKey represents the lower-than comparison operator key
 	LowerThanKey = "lt"
 	// LowerEqualThanKey represents the lower-or-equal-than comparison operator key
-	LowerEqualThanKey = "lte"
+	LowerEqualThanKey = "le"
 	// GreaterThanKey represents the greater-or-equal-than comparison operator key
 	GreaterThanKey = "gt"
 	// GreaterEqualThanKey represents the greater-or-equal-than comparison operator key
-	GreaterEqualThanKey = "gte"
+	GreaterEqualThanKey = "ge"
 )
 
 // ErrNotFound indicates that requested entity doesn't exist.
@@ -48,7 +48,7 @@ type PageMetadata struct {
 	Protocol    string  `json:"protocol,omitempty"`
 	Name        string  `json:"name,omitempty"`
 	Value       float64 `json:"v,omitempty"`
-	Comparison  string  `json:"comparison,omitempty"`
+	Comparator  string  `json:"comparator,omitempty"`
 	BoolValue   bool    `json:"vb,omitempty"`
 	StringValue string  `json:"vs,omitempty"`
 	DataValue   string  `json:"vd,omitempty"`
@@ -57,24 +57,24 @@ type PageMetadata struct {
 	Format      string  `json:"format,omitempty"`
 }
 
-// ParseValueComparison convert comparison operator keys into mathematic anotation
-func ParseValueComparison(query map[string]interface{}) string {
-	comparison := "="
-	val, ok := query["comparison"]
+// ParseValueComparator convert comparison operator keys into mathematic anotation
+func ParseValueComparator(query map[string]interface{}) string {
+	comparator := "="
+	val, ok := query["comparator"]
 	if ok {
 		switch val.(string) {
 		case EqualKey:
-			comparison = "="
+			comparator = "="
 		case LowerThanKey:
-			comparison = "<"
+			comparator = "<"
 		case LowerEqualThanKey:
-			comparison = "<="
+			comparator = "<="
 		case GreaterThanKey:
-			comparison = ">"
+			comparator = ">"
 		case GreaterEqualThanKey:
-			comparison = ">="
+			comparator = ">="
 		}
 	}
 
-	return comparison
+	return comparator
 }

@@ -110,7 +110,7 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	comparison, err := readStringQuery(r, "comparison")
+	comparator, err := readStringQuery(r, "comparator")
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 			Protocol:    protocol,
 			Name:        name,
 			Value:       v,
-			Comparison:  comparison,
+			Comparator:  comparator,
 			StringValue: vs,
 			DataValue:   vd,
 			From:        from,

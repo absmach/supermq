@@ -71,7 +71,7 @@ func (repo *messageRepositoryMock) ReadAll(chanID string, rpm readers.PageMetada
 					ok = false
 				}
 
-				val, okQuery := query["comparison"]
+				val, okQuery := query["comparator"]
 				if okQuery {
 					switch val.(string) {
 					case readers.LowerThanKey:

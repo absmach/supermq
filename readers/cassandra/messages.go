@@ -129,8 +129,8 @@ func buildQuery(chanID string, rpm readers.PageMetadata) (string, []interface{})
 			condCQL = fmt.Sprintf(`%s AND %s = ?`, condCQL, name)
 		case "v":
 			vals = append(vals, val)
-			comparison := readers.ParseValueComparison(query)
-			condCQL = fmt.Sprintf(`%s AND value %s ?`, condCQL, comparison)
+			comparator := readers.ParseValueComparator(query)
+			condCQL = fmt.Sprintf(`%s AND value %s ?`, condCQL, comparator)
 		case "vb":
 			vals = append(vals, val)
 			condCQL = fmt.Sprintf(`%s AND bool_value = ?`, condCQL)

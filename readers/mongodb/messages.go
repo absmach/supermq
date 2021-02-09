@@ -119,7 +119,7 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) bson.D {
 			filter = append(filter, bson.E{Key: name, Value: value})
 		case "v":
 			bsonFilter := value
-			val, ok := query["comparison"]
+			val, ok := query["comparator"]
 			if ok {
 				switch val.(string) {
 				case readers.EqualKey:

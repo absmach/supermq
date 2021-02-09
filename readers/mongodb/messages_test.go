@@ -217,65 +217,65 @@ func TestReadSenml(t *testing.T) {
 				Messages: fromSenml(valueMsgs[0:limit]),
 			},
 		},
-		"read message with value and equal comparison": {
+		"read message with value and equal comparator": {
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset:     0,
 				Limit:      limit,
 				Value:      v,
-				Comparison: readers.EqualKey,
+				Comparator: readers.EqualKey,
 			},
 			page: readers.MessagesPage{
 				Total:    uint64(len(valueMsgs)),
 				Messages: fromSenml(valueMsgs[0:limit]),
 			},
 		},
-		"read message with value and lower-than comparison": {
+		"read message with value and lower-than comparator": {
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset:     0,
 				Limit:      limit,
 				Value:      v + 1,
-				Comparison: readers.LowerThanKey,
+				Comparator: readers.LowerThanKey,
 			},
 			page: readers.MessagesPage{
 				Total:    uint64(len(valueMsgs)),
 				Messages: fromSenml(valueMsgs[0:limit]),
 			},
 		},
-		"read message with value and lower-or-equal-than comparison": {
+		"read message with value and lower-or-equal-than comparator": {
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset:     0,
 				Limit:      limit,
 				Value:      v + 1,
-				Comparison: readers.LowerEqualThanKey,
+				Comparator: readers.LowerEqualThanKey,
 			},
 			page: readers.MessagesPage{
 				Total:    uint64(len(valueMsgs)),
 				Messages: fromSenml(valueMsgs[0:limit]),
 			},
 		},
-		"read message with value and greater-than comparison": {
+		"read message with value and greater-than comparator": {
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset:     0,
 				Limit:      limit,
 				Value:      v - 1,
-				Comparison: readers.GreaterThanKey,
+				Comparator: readers.GreaterThanKey,
 			},
 			page: readers.MessagesPage{
 				Total:    uint64(len(valueMsgs)),
 				Messages: fromSenml(valueMsgs[0:limit]),
 			},
 		},
-		"read message with value and greater-or-equal-than comparison": {
+		"read message with value and greater-or-equal-than comparator": {
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset:     0,
 				Limit:      limit,
 				Value:      v - 1,
-				Comparison: readers.GreaterEqualThanKey,
+				Comparator: readers.GreaterEqualThanKey,
 			},
 			page: readers.MessagesPage{
 				Total:    uint64(len(valueMsgs)),

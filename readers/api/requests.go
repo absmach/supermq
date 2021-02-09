@@ -18,12 +18,12 @@ func (req listMessagesReq) validate() error {
 	if req.pageMeta.Limit < 1 || req.pageMeta.Offset < 0 {
 		return errInvalidRequest
 	}
-	if req.pageMeta.Comparison != "" &&
-		req.pageMeta.Comparison != readers.EqualKey &&
-		req.pageMeta.Comparison != readers.LowerThanKey &&
-		req.pageMeta.Comparison != readers.LowerEqualThanKey &&
-		req.pageMeta.Comparison != readers.GreaterThanKey &&
-		req.pageMeta.Comparison != readers.GreaterEqualThanKey {
+	if req.pageMeta.Comparator != "" &&
+		req.pageMeta.Comparator != readers.EqualKey &&
+		req.pageMeta.Comparator != readers.LowerThanKey &&
+		req.pageMeta.Comparator != readers.LowerEqualThanKey &&
+		req.pageMeta.Comparator != readers.GreaterThanKey &&
+		req.pageMeta.Comparator != readers.GreaterEqualThanKey {
 		return errInvalidRequest
 	}
 

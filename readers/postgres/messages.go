@@ -139,8 +139,8 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) string {
 			"protocol":
 			condition = fmt.Sprintf(`%s AND %s = :%s`, condition, name, name)
 		case "v":
-			comparison := readers.ParseValueComparison(query)
-			condition = fmt.Sprintf(`%s AND value %s :value`, condition, comparison)
+			comparator := readers.ParseValueComparator(query)
+			condition = fmt.Sprintf(`%s AND value %s :value`, condition, comparator)
 		case "vb":
 			condition = fmt.Sprintf(`%s AND bool_value = :bool_value`, condition)
 		case "vs":
