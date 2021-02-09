@@ -174,19 +174,19 @@ components:
       schema:
         type: string
       required: false
-    Comparison:
-      name: comparison
+    Comparator:
+      name: comparator
       description: Value comparison operator.
       in: query
       schema:
         type: string
-        default: equal
+        default: eq
         enum:
           - eq
           - lt
-          - lte
+          - le
           - gt
-          - gte
+          - ge
       required: false
     From:
       name: from
