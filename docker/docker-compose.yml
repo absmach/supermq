@@ -110,7 +110,7 @@ services:
     image: mainflux/users:${MF_RELEASE_TAG}
     container_name: mainflux-users
     volumes:
-      - ./users/emailer/templates/${MF_EMAIL_TEMPLATE}:/${MF_EMAIL_TEMPLATE}
+      - ./templates/${MF_USERS_RESET_PWD_TEMPLATE}:/${MF_EMAIL_TEMPLATE}
     depends_on:
       - users-db
       - auth
@@ -124,7 +124,6 @@ services:
       MF_USERS_DB: ${MF_USERS_DB}
       MF_USERS_HTTP_PORT: ${MF_USERS_HTTP_PORT}
       MF_JAEGER_URL: ${MF_JAEGER_URL}
-      MF_EMAIL_DRIVER: ${MF_EMAIL_DRIVER}
       MF_EMAIL_HOST: ${MF_EMAIL_HOST}
       MF_EMAIL_PORT: ${MF_EMAIL_PORT}
       MF_EMAIL_USERNAME: ${MF_EMAIL_USERNAME}
