@@ -151,23 +151,23 @@ func (trm *thingRepositoryMock) RetrieveAll(_ context.Context, owner string, pm 
 	return page, nil
 }
 
-func (trm *thingRepositoryMock) RetrieveByChannel(_ context.Context, owner, chanID string, offset, limit uint64, connected bool) (things.Page, error) {
+func (trm *thingRepositoryMock) RetrieveByChannel(_ context.Context, owner, chID string, pm things.PageMetadata) (things.Page, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
 	ths := make([]things.Thing, 0)
 
-	if offset < 0 || limit <= 0 {
+	if pm.Offset < 0 || pm.Limit <= 0 {
 		return things.Page{}, nil
 	}
 
-	first := uint64(offset) + 1
-	last := first + uint64(limit)
+	first := uint64(pm.Offset) + 1
+	last := first + uint64(pm.Limit)
 
 	// Append connected or not connected channels
-	switch connected {
+	switch pm.Connected {
 	case true:
-		for _, co := range trm.tconns[chanID] {
+		for _, co := range trm.tconns[chID] {
 			id, _ := strconv.ParseUint(co.ID, 10, 64)
 			if id >= first && id < last {
 				ths = append(ths, co)
@@ -178,7 +178,7 @@ func (trm *thingRepositoryMock) RetrieveByChannel(_ context.Context, owner, chan
 			conn := false
 			id, _ := strconv.ParseUint(th.ID, 10, 64)
 			if id >= first && id < last {
-				for _, co := range trm.tconns[chanID] {
+				for _, co := range trm.tconns[chID] {
 					if th.ID == co.ID {
 						conn = true
 					}
@@ -200,8 +200,8 @@ func (trm *thingRepositoryMock) RetrieveByChannel(_ context.Context, owner, chan
 		Things: ths,
 		PageMetadata: things.PageMetadata{
 			Total:  trm.counter,
-			Offset: offset,
-			Limit:  limit,
+			Offset: pm.Offset,
+			Limit:  pm.Limit,
 		},
 	}
 
