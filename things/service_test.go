@@ -401,19 +401,6 @@ func TestListThingsByChannel(t *testing.T) {
 			size: thsDisconNum,
 			err:  nil,
 		},
-		"list all connected things by existing channel": {
-			token: token,
-			chID:  ch.ID,
-			pageMetadata: things.PageMetadata{
-				Offset:    0,
-				Limit:     n,
-				Connected: true,
-				Order:     "name",
-				Dir:       "asc",
-			},
-			size: n - thsDisconNum,
-			err:  nil,
-		},
 	}
 
 	for desc, tc := range cases {
