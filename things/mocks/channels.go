@@ -117,7 +117,7 @@ func (crm *channelRepositoryMock) RetrieveAll(_ context.Context, owner string, p
 func (crm *channelRepositoryMock) RetrieveByThing(_ context.Context, owner, thID string, pm things.PageMetadata) (things.ChannelsPage, error) {
 	channels := make([]things.Channel, 0)
 
-	if pm.Offset < 0 || pm.Limit <= 0 {
+	if pm.Limit <= 0 {
 		return things.ChannelsPage{}, nil
 	}
 

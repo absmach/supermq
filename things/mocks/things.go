@@ -118,7 +118,7 @@ func (trm *thingRepositoryMock) RetrieveAll(_ context.Context, owner string, pm 
 
 	items := make([]things.Thing, 0)
 
-	if pm.Offset < 0 || pm.Limit <= 0 {
+	if pm.Limit <= 0 {
 		return things.Page{}, nil
 	}
 

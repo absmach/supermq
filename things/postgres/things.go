@@ -247,7 +247,7 @@ func (tr thingRepository) RetrieveByChannel(ctx context.Context, owner, chID str
 
 	// Verify if UUID format is valid to avoid internal Postgres error
 	if _, err := uuid.FromString(chID); err != nil {
-		return things.Page{}, things.ErrNotFound
+		return things.Page{}, errors.Wrap(things.ErrNotFound, err)
 	}
 
 	var q, qc string
