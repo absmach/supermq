@@ -128,7 +128,6 @@ type config struct {
 	authTimeout   time.Duration
 	adminEmail    string
 	adminPassword string
-	// passRegex     *regexp.Regexp
 }
 
 func main() {
@@ -181,11 +180,6 @@ func loadConfig() config {
 		log.Fatalf("Invalid value passed for %s\n", envAuthTLS)
 	}
 
-	// passRegex, err := regexp.Compile(mainflux.Env(envPassRegex, defPassRegex))
-	// if err != nil {
-	// 	log.Fatalf("Invalid value passed for %s\n", envPassRegex)
-	// }
-
 	dbConfig := postgres.Config{
 		Host:        mainflux.Env(envDBHost, defDBHost),
 		Port:        mainflux.Env(envDBPort, defDBPort),
@@ -224,7 +218,6 @@ func loadConfig() config {
 		authTimeout:   authTimeout,
 		adminEmail:    mainflux.Env(envAdminEmail, defAdminEmail),
 		adminPassword: mainflux.Env(envAdminPassword, defAdminPassword),
-		// passRegex:     passRegex,
 	}
 
 }
