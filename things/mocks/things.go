@@ -6,7 +6,6 @@ package mocks
 import (
 	"context"
 	"fmt"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -116,8 +115,6 @@ func (trm *thingRepositoryMock) RetrieveAll(_ context.Context, owner string, pm 
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
-	items := make([]things.Thing, 0)
-
 	if pm.Limit <= 0 {
 		return things.Page{}, nil
 	}
@@ -125,22 +122,23 @@ func (trm *thingRepositoryMock) RetrieveAll(_ context.Context, owner string, pm 
 	first := uint64(pm.Offset) + 1
 	last := first + uint64(pm.Limit)
 
+	var ths []things.Thing
+
 	// This obscure way to examine map keys is enforced by the key structure
 	// itself (see mocks/commons.go).
 	prefix := fmt.Sprintf("%s-", owner)
 	for k, v := range trm.things {
 		id, _ := strconv.ParseUint(v.ID, 10, 64)
 		if strings.HasPrefix(k, prefix) && id >= first && id < last {
-			items = append(items, v)
+			ths = append(ths, v)
 		}
 	}
 
-	sort.SliceStable(items, func(i, j int) bool {
-		return items[i].ID < items[j].ID
-	})
+	// Sort Things list
+	ths = sortThings(pm, ths)
 
 	page := things.Page{
-		Things: items,
+		Things: ths,
 		PageMetadata: things.PageMetadata{
 			Total:  trm.counter,
 			Offset: pm.Offset,
@@ -155,14 +153,14 @@ func (trm *thingRepositoryMock) RetrieveByChannel(_ context.Context, owner, chID
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
-	ths := make([]things.Thing, 0)
-
 	if pm.Limit <= 0 {
 		return things.Page{}, nil
 	}
 
 	first := uint64(pm.Offset) + 1
 	last := first + uint64(pm.Limit)
+
+	var ths []things.Thing
 
 	// Append connected or not connected channels
 	switch pm.Connected {
@@ -192,9 +190,8 @@ func (trm *thingRepositoryMock) RetrieveByChannel(_ context.Context, owner, chID
 		}
 	}
 
-	sort.SliceStable(ths, func(i, j int) bool {
-		return ths[i].ID < ths[j].ID
-	})
+	// Sort Things by Channel list
+	ths = sortThings(pm, ths)
 
 	page := things.Page{
 		Things: ths,

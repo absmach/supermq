@@ -533,22 +533,8 @@ func TestMultiThingRetrieval(t *testing.T) {
 		assert.Equal(t, tc.pageMetadata.Total, page.Total, fmt.Sprintf("%s: expected total %d got %d\n", desc, tc.pageMetadata.Total, page.Total))
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
 
-		// Check if connections list have been sorted properly
-		switch tc.pageMetadata.Order {
-		case "name":
-			current := page.Things[0]
-			for _, res := range page.Things {
-				if tc.pageMetadata.Dir == "asc" {
-					assert.GreaterOrEqual(t, res.Name, current.Name)
-				}
-				if tc.pageMetadata.Dir == "desc" {
-					assert.GreaterOrEqual(t, current.Name, res.Name)
-				}
-				current = res
-			}
-		default:
-			continue
-		}
+		// Check if Things list have been sorted properly
+		testSortThings(t, tc.pageMetadata, page.Things)
 	}
 }
 
@@ -678,6 +664,18 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 			},
 			size: n - thsDisconNum,
 		},
+		"retrieve all non-connected things by channel sorted by name ascendent": {
+			owner: email,
+			chID:  chID,
+			pageMetadata: things.PageMetadata{
+				Offset:    0,
+				Limit:     n,
+				Connected: false,
+				Order:     "name",
+				Dir:       "asc",
+			},
+			size: thsDisconNum,
+		},
 		"retrieve all things by channel sorted by name descendent": {
 			owner: email,
 			chID:  chID,
@@ -690,6 +688,18 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 			},
 			size: n - thsDisconNum,
 		},
+		"retrieve all non-connected things by channel sorted by name descendent": {
+			owner: email,
+			chID:  chID,
+			pageMetadata: things.PageMetadata{
+				Offset:    0,
+				Limit:     n,
+				Connected: false,
+				Order:     "name",
+				Dir:       "desc",
+			},
+			size: thsDisconNum,
+		},
 	}
 
 	for desc, tc := range cases {
@@ -698,22 +708,8 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", desc, tc.size, size))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected no error got %d\n", desc, err))
 
-		// Check if connections list have been sorted properly
-		switch tc.pageMetadata.Order {
-		case "name":
-			current := page.Things[0]
-			for _, res := range page.Things {
-				if tc.pageMetadata.Dir == "asc" {
-					assert.GreaterOrEqual(t, res.Name, current.Name)
-				}
-				if tc.pageMetadata.Dir == "desc" {
-					assert.GreaterOrEqual(t, current.Name, res.Name)
-				}
-				current = res
-			}
-		default:
-			continue
-		}
+		// Check if Things by Channel list have been sorted properly
+		testSortThings(t, tc.pageMetadata, page.Things)
 	}
 }
 
@@ -743,5 +739,23 @@ func TestThingRemoval(t *testing.T) {
 
 		_, err = thingRepo.RetrieveByID(context.Background(), email, thing.ID)
 		require.True(t, errors.Contains(err, things.ErrNotFound), fmt.Sprintf("#%d: expected %s got %s", i, things.ErrNotFound, err))
+	}
+}
+
+func testSortThings(t *testing.T, pm things.PageMetadata, ths []things.Thing) {
+	switch pm.Order {
+	case "name":
+		current := ths[0]
+		for _, res := range ths {
+			if pm.Dir == "asc" {
+				assert.GreaterOrEqual(t, res.Name, current.Name)
+			}
+			if pm.Dir == "desc" {
+				assert.GreaterOrEqual(t, current.Name, res.Name)
+			}
+			current = res
+		}
+	default:
+		break
 	}
 }

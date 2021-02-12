@@ -6,7 +6,6 @@ package mocks
 import (
 	"context"
 	"fmt"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -79,8 +78,6 @@ func (crm *channelRepositoryMock) RetrieveByID(_ context.Context, owner, id stri
 }
 
 func (crm *channelRepositoryMock) RetrieveAll(_ context.Context, owner string, pm things.PageMetadata) (things.ChannelsPage, error) {
-	channels := make([]things.Channel, 0)
-
 	if pm.Limit <= 0 {
 		return things.ChannelsPage{}, nil
 	}
@@ -88,22 +85,23 @@ func (crm *channelRepositoryMock) RetrieveAll(_ context.Context, owner string, p
 	first := uint64(pm.Offset) + 1
 	last := first + uint64(pm.Limit)
 
+	var chs []things.Channel
+
 	// This obscure way to examine map keys is enforced by the key structure
 	// itself (see mocks/commons.go).
 	prefix := fmt.Sprintf("%s-", owner)
 	for k, v := range crm.channels {
 		id, _ := strconv.ParseUint(v.ID, 10, 64)
 		if strings.HasPrefix(k, prefix) && id >= first && id < last {
-			channels = append(channels, v)
+			chs = append(chs, v)
 		}
 	}
 
-	sort.SliceStable(channels, func(i, j int) bool {
-		return channels[i].ID < channels[j].ID
-	})
+	// Sort Channels list
+	chs = sortChannels(pm, chs)
 
 	page := things.ChannelsPage{
-		Channels: channels,
+		Channels: chs,
 		PageMetadata: things.PageMetadata{
 			Total:  crm.counter,
 			Offset: pm.Offset,
@@ -115,8 +113,6 @@ func (crm *channelRepositoryMock) RetrieveAll(_ context.Context, owner string, p
 }
 
 func (crm *channelRepositoryMock) RetrieveByThing(_ context.Context, owner, thID string, pm things.PageMetadata) (things.ChannelsPage, error) {
-	channels := make([]things.Channel, 0)
-
 	if pm.Limit <= 0 {
 		return things.ChannelsPage{}, nil
 	}
@@ -124,13 +120,15 @@ func (crm *channelRepositoryMock) RetrieveByThing(_ context.Context, owner, thID
 	first := uint64(pm.Offset) + 1
 	last := first + uint64(pm.Limit)
 
+	var chs []things.Channel
+
 	// Append connected or not connected channels
 	switch pm.Connected {
 	case true:
 		for _, co := range crm.cconns[thID] {
 			id, _ := strconv.ParseUint(co.ID, 10, 64)
 			if id >= first && id < last {
-				channels = append(channels, co)
+				chs = append(chs, co)
 			}
 		}
 	default:
@@ -146,18 +144,17 @@ func (crm *channelRepositoryMock) RetrieveByThing(_ context.Context, owner, thID
 
 				// Append if not found in connections list
 				if !conn {
-					channels = append(channels, ch)
+					chs = append(chs, ch)
 				}
 			}
 		}
 	}
 
-	sort.SliceStable(channels, func(i, j int) bool {
-		return channels[i].ID < channels[j].ID
-	})
+	// Sort Channels by Thing list
+	chs = sortChannels(pm, chs)
 
 	page := things.ChannelsPage{
-		Channels: channels,
+		Channels: chs,
 		PageMetadata: things.PageMetadata{
 			Total:  crm.counter,
 			Offset: pm.Offset,

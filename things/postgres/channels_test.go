@@ -361,22 +361,9 @@ func TestMultiChannelRetrieval(t *testing.T) {
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", desc, tc.size, size))
 		assert.Equal(t, tc.pageMetadata.Total, page.Total, fmt.Sprintf("%s: expected total %d got %d\n", desc, tc.pageMetadata.Total, page.Total))
 		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %d\n", desc, err))
-		// Check if name have been sorted properly
-		switch tc.pageMetadata.Order {
-		case "name":
-			current := page.Channels[0]
-			for _, res := range page.Channels {
-				if tc.pageMetadata.Dir == "asc" {
-					assert.GreaterOrEqual(t, res.Name, current.Name)
-				}
-				if tc.pageMetadata.Dir == "desc" {
-					assert.GreaterOrEqual(t, current.Name, res.Name)
-				}
-				current = res
-			}
-		default:
-			continue
-		}
+
+		// Check if Channels list have been sorted properly
+		testSortChannels(t, tc.pageMetadata, page.Channels)
 	}
 }
 
@@ -501,6 +488,18 @@ func TestRetrieveByThing(t *testing.T) {
 			},
 			size: n - chsDisconNum,
 		},
+		"retrieve all non-connected channels by thing sorted by name ascendent": {
+			owner: email,
+			thID:  thID,
+			pageMetadata: things.PageMetadata{
+				Offset:    0,
+				Limit:     n,
+				Connected: false,
+				Order:     "name",
+				Dir:       "asc",
+			},
+			size: chsDisconNum,
+		},
 		"retrieve all channels by thing sorted by name descendent": {
 			owner: email,
 			thID:  thID,
@@ -513,6 +512,18 @@ func TestRetrieveByThing(t *testing.T) {
 			},
 			size: n - chsDisconNum,
 		},
+		"retrieve all non-connected channels by thing sorted by name descendent": {
+			owner: email,
+			thID:  thID,
+			pageMetadata: things.PageMetadata{
+				Offset:    0,
+				Limit:     n,
+				Connected: false,
+				Order:     "name",
+				Dir:       "desc",
+			},
+			size: chsDisconNum,
+		},
 	}
 
 	for desc, tc := range cases {
@@ -521,22 +532,8 @@ func TestRetrieveByThing(t *testing.T) {
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", desc, tc.size, size))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected no error got %d\n", desc, err))
 
-		// Check if connections list have been sorted properly
-		switch tc.pageMetadata.Order {
-		case "name":
-			current := page.Channels[0]
-			for _, res := range page.Channels {
-				if tc.pageMetadata.Dir == "asc" {
-					assert.GreaterOrEqual(t, res.Name, current.Name)
-				}
-				if tc.pageMetadata.Dir == "desc" {
-					assert.GreaterOrEqual(t, current.Name, res.Name)
-				}
-				current = res
-			}
-		default:
-			continue
-		}
+		// Check if Channels by Thing list have been sorted properly
+		testSortChannels(t, tc.pageMetadata, page.Channels)
 	}
 }
 
@@ -877,5 +874,23 @@ func TestHasThingByID(t *testing.T) {
 		err := chanRepo.HasThingByID(context.Background(), tc.chID, tc.thID)
 		hasAccess := err == nil
 		assert.Equal(t, tc.hasAccess, hasAccess, fmt.Sprintf("%s: expected %t got %t\n", desc, tc.hasAccess, hasAccess))
+	}
+}
+
+func testSortChannels(t *testing.T, pm things.PageMetadata, chs []things.Channel) {
+	switch pm.Order {
+	case "name":
+		current := chs[0]
+		for _, res := range chs {
+			if pm.Dir == "asc" {
+				assert.GreaterOrEqual(t, res.Name, current.Name)
+			}
+			if pm.Dir == "desc" {
+				assert.GreaterOrEqual(t, current.Name, res.Name)
+			}
+			current = res
+		}
+	default:
+		break
 	}
 }

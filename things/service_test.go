@@ -22,6 +22,7 @@ const (
 	wrongValue = "wrong-value"
 	email      = "user@example.com"
 	token      = "token"
+	n          = uint64(10)
 )
 
 var (
@@ -193,11 +194,15 @@ func TestListThings(t *testing.T) {
 	m["serial"] = "123456"
 	thing.Metadata = m
 
-	n := uint64(10)
+	var ths []things.Thing
 	for i := uint64(0); i < n; i++ {
-		_, err := svc.CreateThings(context.Background(), token, thing)
-		require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+		th := thing
+		th.Name = fmt.Sprintf("name-%d", i)
+		ths = append(ths, th)
 	}
+
+	_, err := svc.CreateThings(context.Background(), token, ths...)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	cases := map[string]struct {
 		token        string
@@ -269,6 +274,28 @@ func TestListThings(t *testing.T) {
 			size: n,
 			err:  nil,
 		},
+		"list all things sorted by name ascendent": {
+			token: token,
+			pageMetadata: things.PageMetadata{
+				Offset: 0,
+				Limit:  n,
+				Order:  "name",
+				Dir:    "asc",
+			},
+			size: n,
+			err:  nil,
+		},
+		"list all things sorted by name descendent": {
+			token: token,
+			pageMetadata: things.PageMetadata{
+				Offset: 0,
+				Limit:  n,
+				Order:  "name",
+				Dir:    "desc",
+			},
+			size: n,
+			err:  nil,
+		},
 	}
 
 	for desc, tc := range cases {
@@ -276,6 +303,9 @@ func TestListThings(t *testing.T) {
 		size := uint64(len(page.Things))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+
+		// Check if Things list have been sorted properly
+		testSortThings(t, tc.pageMetadata, page.Things)
 	}
 }
 
@@ -286,22 +316,26 @@ func TestListThingsByChannel(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	ch := chs[0]
 
-	n := uint64(10)
-	thsDisconNum := uint64(1)
+	thsDisconNum := uint64(4)
 
+	var ths []things.Thing
 	for i := uint64(0); i < n; i++ {
-		ths, err := svc.CreateThings(context.Background(), token, thing)
-		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-		th := ths[0]
-
-		// Don't connect last Channel
-		if i == n-thsDisconNum {
-			break
-		}
-
-		err = svc.Connect(context.Background(), token, []string{ch.ID}, []string{th.ID})
-		require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+		th := thing
+		th.Name = fmt.Sprintf("name-%d", i)
+		ths = append(ths, th)
 	}
+
+	thsc, err := svc.CreateThings(context.Background(), token, ths...)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+
+	var thIDs []string
+	for _, thID := range thsc {
+		thIDs = append(thIDs, thID.ID)
+	}
+	chIDs := []string{chs[0].ID}
+
+	err = svc.Connect(context.Background(), token, chIDs, thIDs[0:n-thsDisconNum])
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 
 	// Wait for things and channels to connect
 	time.Sleep(time.Second)
@@ -384,7 +418,7 @@ func TestListThingsByChannel(t *testing.T) {
 			chID:  "non-existent",
 			pageMetadata: things.PageMetadata{
 				Offset:    0,
-				Limit:     10,
+				Limit:     n,
 				Connected: true,
 			},
 			size: 0,
@@ -401,6 +435,58 @@ func TestListThingsByChannel(t *testing.T) {
 			size: thsDisconNum,
 			err:  nil,
 		},
+		"list all things by channel sorted by name ascendent": {
+			token: token,
+			chID:  ch.ID,
+			pageMetadata: things.PageMetadata{
+				Offset:    0,
+				Limit:     n,
+				Connected: true,
+				Order:     "name",
+				Dir:       "asc",
+			},
+			size: n - thsDisconNum,
+			err:  nil,
+		},
+		"list all non-connected things by channel sorted by name ascendent": {
+			token: token,
+			chID:  ch.ID,
+			pageMetadata: things.PageMetadata{
+				Offset:    0,
+				Limit:     n,
+				Connected: false,
+				Order:     "name",
+				Dir:       "asc",
+			},
+			size: thsDisconNum,
+			err:  nil,
+		},
+		"list all things by channel sorted by name descendent": {
+			token: token,
+			chID:  ch.ID,
+			pageMetadata: things.PageMetadata{
+				Offset:    0,
+				Limit:     n,
+				Connected: true,
+				Order:     "name",
+				Dir:       "desc",
+			},
+			size: n - thsDisconNum,
+			err:  nil,
+		},
+		"list all non-connected things by channel sorted by name descendent": {
+			token: token,
+			chID:  ch.ID,
+			pageMetadata: things.PageMetadata{
+				Offset:    0,
+				Limit:     n,
+				Connected: false,
+				Order:     "name",
+				Dir:       "desc",
+			},
+			size: thsDisconNum,
+			err:  nil,
+		},
 	}
 
 	for desc, tc := range cases {
@@ -408,6 +494,9 @@ func TestListThingsByChannel(t *testing.T) {
 		size := uint64(len(page.Things))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+
+		// Check if Things by Channel list have been sorted properly
+		testSortThings(t, tc.pageMetadata, page.Things)
 	}
 }
 
@@ -568,10 +657,17 @@ func TestListChannels(t *testing.T) {
 	meta := things.Metadata{}
 	meta["name"] = "test-channel"
 	channel.Metadata = meta
-	n := uint64(10)
+
+	var chs []things.Channel
 	for i := uint64(0); i < n; i++ {
-		svc.CreateChannels(context.Background(), token, channel)
+		ch := channel
+		ch.Name = fmt.Sprintf("name-%d", i)
+		chs = append(chs, ch)
 	}
+
+	_, err := svc.CreateChannels(context.Background(), token, chs...)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+
 	cases := map[string]struct {
 		token        string
 		pageMetadata things.PageMetadata
@@ -662,6 +758,28 @@ func TestListChannels(t *testing.T) {
 			size: n,
 			err:  nil,
 		},
+		"list all channels sorted by name ascendent": {
+			token: token,
+			pageMetadata: things.PageMetadata{
+				Offset: 0,
+				Limit:  n,
+				Order:  "name",
+				Dir:    "asc",
+			},
+			size: n,
+			err:  nil,
+		},
+		"list all channels sorted by name descendent": {
+			token: token,
+			pageMetadata: things.PageMetadata{
+				Offset: 0,
+				Limit:  n,
+				Order:  "name",
+				Dir:    "desc",
+			},
+			size: n,
+			err:  nil,
+		},
 	}
 
 	for desc, tc := range cases {
@@ -669,6 +787,9 @@ func TestListChannels(t *testing.T) {
 		size := uint64(len(page.Channels))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+
+		// Check if channels list have been sorted properly
+		testSortChannels(t, tc.pageMetadata, page.Channels)
 	}
 }
 
@@ -679,22 +800,26 @@ func TestListChannelsByThing(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	th := ths[0]
 
-	n := uint64(10)
-	chsDisconNum := uint64(1)
+	chsDisconNum := uint64(4)
 
+	var chs []things.Channel
 	for i := uint64(0); i < n; i++ {
-		schs, err := svc.CreateChannels(context.Background(), token, channel)
-		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-		sch := schs[0]
-
-		// Don't connect last Channel
-		if i == n-chsDisconNum {
-			break
-		}
-
-		err = svc.Connect(context.Background(), token, []string{sch.ID}, []string{th.ID})
-		require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+		ch := channel
+		ch.Name = fmt.Sprintf("name-%d", i)
+		chs = append(chs, ch)
 	}
+
+	chsc, err := svc.CreateChannels(context.Background(), token, chs...)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+
+	var chIDs []string
+	for _, chID := range chsc {
+		chIDs = append(chIDs, chID.ID)
+	}
+	thIDs := []string{ths[0].ID}
+
+	err = svc.Connect(context.Background(), token, chIDs[0:n-chsDisconNum], thIDs)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 
 	// Wait for things and channels to connect.
 	time.Sleep(time.Second)
@@ -721,11 +846,11 @@ func TestListChannelsByThing(t *testing.T) {
 			token: token,
 			thID:  th.ID,
 			pageMetadata: things.PageMetadata{
-				Offset:    n / 2,
+				Offset:    (n - chsDisconNum) / 2,
 				Limit:     n,
 				Connected: true,
 			},
-			size: (n / 2) - chsDisconNum,
+			size: (n - chsDisconNum) / 2,
 			err:  nil,
 		},
 		"list last channel by existing thing": {
@@ -777,19 +902,71 @@ func TestListChannelsByThing(t *testing.T) {
 			thID:  "non-existent",
 			pageMetadata: things.PageMetadata{
 				Offset:    0,
-				Limit:     10,
+				Limit:     n,
 				Connected: true,
 			},
 			size: 0,
 			err:  nil,
 		},
-		"list all non connected channels by existing thing": {
+		"list all non-connected channels by existing thing": {
 			token: token,
 			thID:  th.ID,
 			pageMetadata: things.PageMetadata{
 				Offset:    0,
 				Limit:     n,
 				Connected: false,
+			},
+			size: chsDisconNum,
+			err:  nil,
+		},
+		"list all channels by thing sorted by name ascendent": {
+			token: token,
+			thID:  th.ID,
+			pageMetadata: things.PageMetadata{
+				Offset:    0,
+				Limit:     n,
+				Connected: true,
+				Order:     "name",
+				Dir:       "asc",
+			},
+			size: n - chsDisconNum,
+			err:  nil,
+		},
+		"list all non-connected channels by thing sorted by name ascendent": {
+			token: token,
+			thID:  th.ID,
+			pageMetadata: things.PageMetadata{
+				Offset:    0,
+				Limit:     n,
+				Connected: false,
+				Order:     "name",
+				Dir:       "asc",
+			},
+			size: chsDisconNum,
+			err:  nil,
+		},
+		"list all channels by thing sorted by name descendent": {
+			token: token,
+			thID:  th.ID,
+			pageMetadata: things.PageMetadata{
+				Offset:    0,
+				Limit:     n,
+				Connected: true,
+				Order:     "name",
+				Dir:       "desc",
+			},
+			size: n - chsDisconNum,
+			err:  nil,
+		},
+		"list all non-connected channels by thing sorted by name descendent": {
+			token: token,
+			thID:  th.ID,
+			pageMetadata: things.PageMetadata{
+				Offset:    0,
+				Limit:     n,
+				Connected: false,
+				Order:     "name",
+				Dir:       "desc",
 			},
 			size: chsDisconNum,
 			err:  nil,
@@ -801,6 +978,9 @@ func TestListChannelsByThing(t *testing.T) {
 		size := uint64(len(page.Channels))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", desc, tc.size, size))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+
+		// Check if Channels by Thing list have been sorted properly
+		testSortChannels(t, tc.pageMetadata, page.Channels)
 	}
 }
 
@@ -1080,5 +1260,41 @@ func TestIdentify(t *testing.T) {
 		id, err := svc.Identify(context.Background(), tc.token)
 		assert.Equal(t, tc.id, id, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.id, id))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
+	}
+}
+
+func testSortThings(t *testing.T, pm things.PageMetadata, ths []things.Thing) {
+	switch pm.Order {
+	case "name":
+		current := ths[0]
+		for _, res := range ths {
+			if pm.Dir == "asc" {
+				assert.GreaterOrEqual(t, res.Name, current.Name)
+			}
+			if pm.Dir == "desc" {
+				assert.GreaterOrEqual(t, current.Name, res.Name)
+			}
+			current = res
+		}
+	default:
+		break
+	}
+}
+
+func testSortChannels(t *testing.T, pm things.PageMetadata, chs []things.Channel) {
+	switch pm.Order {
+	case "name":
+		current := chs[0]
+		for _, res := range chs {
+			if pm.Dir == "asc" {
+				assert.GreaterOrEqual(t, res.Name, current.Name)
+			}
+			if pm.Dir == "desc" {
+				assert.GreaterOrEqual(t, current.Name, res.Name)
+			}
+			current = res
+		}
+	default:
+		break
 	}
 }
