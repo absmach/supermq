@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -38,6 +39,7 @@ var (
 	unsupportedRes = toJSON(errorRes{api.ErrUnsupportedContentType.Error()})
 	failDecodeRes  = toJSON(errorRes{api.ErrFailedDecode.Error()})
 	groupExists    = toJSON(errorRes{users.ErrGroupConflict.Error()})
+	passRegex      = regexp.MustCompile("^.{8,}$")
 )
 
 type testRequest struct {
@@ -77,7 +79,7 @@ func newService() users.Service {
 }
 
 func newServer(svc users.Service) *httptest.Server {
-	mux := api.MakeHandler(svc, mocktracer.New())
+	mux := api.MakeHandler(svc, mocktracer.New(), passRegex)
 	return httptest.NewServer(mux)
 }
 

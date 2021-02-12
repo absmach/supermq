@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	minPassLen  = 8
 	maxNameSize = 1024
 )
 
@@ -18,6 +17,7 @@ type userReq struct {
 
 func (req userReq) validate() error {
 	if !passRegex.MatchString(req.user.Password) {
+		// return errors.Wrap(users.ErrWeakPassword, users.ErrMalformedEntity)
 		return users.ErrMalformedEntity
 	}
 	return req.user.Validate()
@@ -103,10 +103,8 @@ func (req passwChangeReq) validate() error {
 	if req.Token == "" {
 		return users.ErrUnauthorizedAccess
 	}
-	if len(req.Password) < minPassLen {
-		return users.ErrMalformedEntity
-	}
 	if !passRegex.MatchString(req.Password) {
+		// return errors.Wrap(users.ErrWeakPassword, users.ErrMalformedEntity)
 		return users.ErrMalformedEntity
 	}
 	if req.OldPassword == "" {

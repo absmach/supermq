@@ -36,7 +36,8 @@ const (
 	defLimit  = 10
 )
 
-var passRegex *regexp.Regexp
+// PassRegex regular expression for password validation
+var PassRegex *regexp.Regexp
 
 var (
 	errInvalidQueryParams = errors.New("invalid query params")
@@ -49,8 +50,8 @@ var (
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc users.Service, tracer opentracing.Tracer, passRegexVar *regexp.Regexp) http.Handler {
-	passRegex = passRegexVar
+func MakeHandler(svc users.Service, tracer opentracing.Tracer, passRegex *regexp.Regexp) http.Handler {
+	PassRegex = passRegex
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),
 	}

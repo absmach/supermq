@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"testing"
 
 	"github.com/mainflux/mainflux"
@@ -24,6 +25,10 @@ const (
 	invalidEmail = "userexample.com"
 )
 
+var (
+	passRegex = regexp.MustCompile("^.{8,}$")
+)
+
 func newUserService() users.Service {
 	usersRepo := mocks.NewUserRepository()
 	groupsRepo := mocks.NewGroupRepository()
@@ -36,7 +41,7 @@ func newUserService() users.Service {
 }
 
 func newUserServer(svc users.Service) *httptest.Server {
-	mux := api.MakeHandler(svc, mocktracer.New())
+	mux := api.MakeHandler(svc, mocktracer.New(), passRegex)
 	return httptest.NewServer(mux)
 }
 

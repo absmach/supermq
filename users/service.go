@@ -26,6 +26,9 @@ var (
 	// (e.g. invalid username or password).
 	ErrMalformedEntity = errors.New("malformed entity specification")
 
+	// // ErrWeakPassword indicates password not mathicng regular expression
+	// ErrWeakPassword = errors.New("password too weak")
+
 	// ErrUnauthorizedAccess indicates missing or invalid credentials provided
 	// when accessing a protected resource.
 	ErrUnauthorizedAccess = errors.New("missing or invalid credentials provided")

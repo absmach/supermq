@@ -9,11 +9,12 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/mainflux/mainflux/users/api"
+
 	"golang.org/x/net/idna"
 )
 
 const (
-	minPassLen   = 8
 	maxLocalLen  = 64
 	maxDomainLen = 255
 	maxTLDLen    = 24 // longest TLD currently in existence
@@ -47,7 +48,7 @@ func (u User) Validate() error {
 		return ErrMalformedEntity
 	}
 
-	if len(u.Password) < minPassLen {
+	if !api.PassRegex.MatchString(u.Password) {
 		return ErrMalformedEntity
 	}
 

@@ -64,7 +64,7 @@ const (
 	defEmailTemplate    = "email.tmpl"
 	defAdminEmail       = ""
 	defAdminPassword    = ""
-	defPassRegex        = "/^.{8,}$/"
+	defPassRegex        = "^.{8,}$"
 	defAdminGroup       = "mainflux"
 
 	defTokenResetEndpoint = "/reset-request" // URL where user lands after click on the reset link from email
@@ -111,7 +111,7 @@ const (
 	envAuthTimeout = "MF_AUTH_GRPC_TIMEOUT"
 )
 
-var passRegexVar = regexp.MustCompile(mainflux.Env(envPassRegex, defPassRegex))
+var passRegex = regexp.MustCompile(mainflux.Env(envPassRegex, defPassRegex))
 
 type config struct {
 	logLevel      string
@@ -128,7 +128,7 @@ type config struct {
 	authTimeout   time.Duration
 	adminEmail    string
 	adminPassword string
-	passRegex     *regexp.Regexp
+	// passRegex     *regexp.Regexp
 }
 
 func main() {
@@ -181,10 +181,10 @@ func loadConfig() config {
 		log.Fatalf("Invalid value passed for %s\n", envAuthTLS)
 	}
 
-	passRegex, err := regexp.Compile(mainflux.Env(envPassRegex, defPassRegex))
-	if err != nil {
-		log.Fatalf("Invalid value passed for %s\n", envPassRegex)
-	}
+	// passRegex, err := regexp.Compile(mainflux.Env(envPassRegex, defPassRegex))
+	// if err != nil {
+	// 	log.Fatalf("Invalid value passed for %s\n", envPassRegex)
+	// }
 
 	dbConfig := postgres.Config{
 		Host:        mainflux.Env(envDBHost, defDBHost),
@@ -224,7 +224,7 @@ func loadConfig() config {
 		authTimeout:   authTimeout,
 		adminEmail:    mainflux.Env(envAdminEmail, defAdminEmail),
 		adminPassword: mainflux.Env(envAdminPassword, defAdminPassword),
-		passRegex:     passRegex,
+		// passRegex:     passRegex,
 	}
 
 }
@@ -345,9 +345,9 @@ func startHTTPServer(tracer opentracing.Tracer, svc users.Service, port string, 
 	p := fmt.Sprintf(":%s", port)
 	if certFile != "" || keyFile != "" {
 		logger.Info(fmt.Sprintf("Users service started using https, cert %s key %s, exposed port %s", certFile, keyFile, port))
-		errs <- http.ListenAndServeTLS(p, certFile, keyFile, api.MakeHandler(svc, tracer, passRegexVar))
+		errs <- http.ListenAndServeTLS(p, certFile, keyFile, api.MakeHandler(svc, tracer, passRegex))
 	} else {
 		logger.Info(fmt.Sprintf("Users service started using http, exposed port %s", port))
-		errs <- http.ListenAndServe(p, api.MakeHandler(svc, tracer, passRegexVar))
+		errs <- http.ListenAndServe(p, api.MakeHandler(svc, tracer, passRegex))
 	}
 }
