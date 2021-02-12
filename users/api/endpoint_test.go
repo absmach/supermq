@@ -402,6 +402,10 @@ func TestPasswordChange(t *testing.T) {
 	reqData.OldPassw = "wrong"
 	reqWrongPass := toJSON(reqData)
 
+	reqData.OldPassw = user.Password
+	reqData.Password = "wrong"
+	reqWeakPass := toJSON(reqData)
+
 	resData.Msg = users.ErrUnauthorizedAccess.Error()
 
 	cases := []struct {
@@ -415,6 +419,7 @@ func TestPasswordChange(t *testing.T) {
 		{"password change with valid token", dataResExisting, contentType, http.StatusCreated, expectedSuccess, token},
 		{"password change with invalid token", reqNoExist, contentType, http.StatusForbidden, unauthRes, ""},
 		{"password change with invalid old password", reqWrongPass, contentType, http.StatusForbidden, unauthRes, token},
+		{"password change with invalid new password", reqWeakPass, contentType, http.StatusBadRequest, malformedRes, token},
 		{"password change with empty JSON request", "{}", contentType, http.StatusBadRequest, malformedRes, token},
 		{"password change empty request", "", contentType, http.StatusBadRequest, failDecodeRes, token},
 		{"password change missing content type", dataResExisting, "", http.StatusUnsupportedMediaType, unsupportedRes, token},
