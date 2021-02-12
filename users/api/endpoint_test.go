@@ -96,6 +96,7 @@ func TestRegister(t *testing.T) {
 
 	data := toJSON(user)
 	invalidData := toJSON(users.User{Email: invalidEmail, Password: "password"})
+	invalidPasswordData := toJSON(users.User{Email: "user@example.com", Password: "pass"})
 	invalidFieldData := fmt.Sprintf(`{"email": "%s", "pass": "%s"}`, user.Email, user.Password)
 
 	cases := []struct {
@@ -107,6 +108,7 @@ func TestRegister(t *testing.T) {
 		{"register new user", data, contentType, http.StatusCreated},
 		{"register existing user", data, contentType, http.StatusConflict},
 		{"register user with invalid email address", invalidData, contentType, http.StatusBadRequest},
+		{"register user with weak password", invalidPasswordData, contentType, http.StatusBadRequest},
 		{"register user with invalid request format", "{", contentType, http.StatusBadRequest},
 		{"register user with empty JSON request", "{}", contentType, http.StatusBadRequest},
 		{"register user with empty request", "", contentType, http.StatusBadRequest},

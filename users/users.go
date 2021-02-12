@@ -9,8 +9,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/mainflux/mainflux/users/api"
-
 	"golang.org/x/net/idna"
 )
 
@@ -45,10 +43,6 @@ type User struct {
 // Validate returns an error if user representation is invalid.
 func (u User) Validate() error {
 	if !isEmail(u.Email) {
-		return ErrMalformedEntity
-	}
-
-	if !api.PassRegex.MatchString(u.Password) {
 		return ErrMalformedEntity
 	}
 
