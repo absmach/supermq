@@ -16,7 +16,7 @@ type userReq struct {
 }
 
 func (req userReq) validate() error {
-	if !passRegex.MatchString(req.user.Password) {
+	if !PassRegex.MatchString(req.user.Password) {
 		// return errors.Wrap(users.ErrWeakPassword, users.ErrMalformedEntity)
 		return users.ErrMalformedEntity
 	}
@@ -103,7 +103,7 @@ func (req passwChangeReq) validate() error {
 	if req.Token == "" {
 		return users.ErrUnauthorizedAccess
 	}
-	if !passRegex.MatchString(req.Password) {
+	if !PassRegex.MatchString(req.Password) {
 		// return errors.Wrap(users.ErrWeakPassword, users.ErrMalformedEntity)
 		return users.ErrMalformedEntity
 	}
