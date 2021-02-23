@@ -15,6 +15,9 @@ import (
 var (
 	groupRegexp = regexp.MustCompile("^[a-zA-Z0-9]+$")
 
+	// PassRegex represents regular expression for password validation
+	PassRegex *regexp.Regexp
+
 	// ErrConflict indicates usage of the existing email during account
 	// registration.
 	ErrConflict = errors.New("email already taken")
@@ -66,6 +69,9 @@ var (
 
 	// ErrAssignUserToGroup indicates an error in assigning user to a group.
 	ErrAssignUserToGroup = errors.New("failed assigning user to a group")
+
+	// ErrPasswordPolicy indicates weak password.
+	ErrPasswordPolicy = errors.New("password doesn't match policy")
 )
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -164,10 +170,12 @@ type usersService struct {
 	email      Emailer
 	auth       mainflux.AuthServiceClient
 	idProvider mainflux.IDProvider
+	// passRegex  *regexp.Regexp
 }
 
 // New instantiates the users service implementation
-func New(users UserRepository, groups GroupRepository, hasher Hasher, auth mainflux.AuthServiceClient, m Emailer, idp mainflux.IDProvider) Service {
+func New(users UserRepository, groups GroupRepository, hasher Hasher, auth mainflux.AuthServiceClient, m Emailer, idp mainflux.IDProvider, passRegex *regexp.Regexp) Service {
+	PassRegex = passRegex
 	return &usersService{
 		users:      users,
 		groups:     groups,
@@ -175,6 +183,7 @@ func New(users UserRepository, groups GroupRepository, hasher Hasher, auth mainf
 		auth:       auth,
 		email:      m,
 		idProvider: idp,
+		// passRegex:  passRegex,
 	}
 }
 

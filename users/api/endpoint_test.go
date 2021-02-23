@@ -36,6 +36,7 @@ var (
 	notFoundRes    = toJSON(errorRes{users.ErrUserNotFound.Error()})
 	unauthRes      = toJSON(errorRes{users.ErrUnauthorizedAccess.Error()})
 	malformedRes   = toJSON(errorRes{users.ErrMalformedEntity.Error()})
+	weakPassword   = toJSON(errorRes{users.ErrPasswordPolicy.Error()})
 	unsupportedRes = toJSON(errorRes{api.ErrUnsupportedContentType.Error()})
 	failDecodeRes  = toJSON(errorRes{api.ErrFailedDecode.Error()})
 	groupExists    = toJSON(errorRes{users.ErrGroupConflict.Error()})
@@ -75,11 +76,11 @@ func newService() users.Service {
 	email := mocks.NewEmailer()
 	idProvider := uuid.New()
 
-	return users.New(usersRepo, groupRepo, hasher, auth, email, idProvider)
+	return users.New(usersRepo, groupRepo, hasher, auth, email, idProvider, passRegex)
 }
 
 func newServer(svc users.Service) *httptest.Server {
-	mux := api.MakeHandler(svc, mocktracer.New(), passRegex)
+	mux := api.MakeHandler(svc, mocktracer.New())
 	return httptest.NewServer(mux)
 }
 
@@ -403,7 +404,7 @@ func TestPasswordChange(t *testing.T) {
 	reqWrongPass := toJSON(reqData)
 
 	reqData.OldPassw = user.Password
-	reqData.Password = "wrong"
+	reqData.Password = "weak"
 	reqWeakPass := toJSON(reqData)
 
 	resData.Msg = users.ErrUnauthorizedAccess.Error()
@@ -419,7 +420,7 @@ func TestPasswordChange(t *testing.T) {
 		{"password change with valid token", dataResExisting, contentType, http.StatusCreated, expectedSuccess, token},
 		{"password change with invalid token", reqNoExist, contentType, http.StatusForbidden, unauthRes, ""},
 		{"password change with invalid old password", reqWrongPass, contentType, http.StatusForbidden, unauthRes, token},
-		{"password change with invalid new password", reqWeakPass, contentType, http.StatusBadRequest, malformedRes, token},
+		{"password change with invalid new password", reqWeakPass, contentType, http.StatusBadRequest, weakPassword, token},
 		{"password change with empty JSON request", "{}", contentType, http.StatusBadRequest, malformedRes, token},
 		{"password change empty request", "", contentType, http.StatusBadRequest, failDecodeRes, token},
 		{"password change missing content type", dataResExisting, "", http.StatusUnsupportedMediaType, unsupportedRes, token},

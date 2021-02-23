@@ -45,6 +45,9 @@ func (u User) Validate() error {
 	if !isEmail(u.Email) {
 		return ErrMalformedEntity
 	}
+	if !PassRegex.MatchString(u.Password) {
+		return ErrPasswordPolicy
+	}
 
 	return nil
 }

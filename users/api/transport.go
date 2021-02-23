@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -37,7 +36,7 @@ const (
 )
 
 // passRegex represents regular expression for password validation
-var passRegex *regexp.Regexp
+// var passRegex *regexp.Regexp
 
 var (
 	errInvalidQueryParams = errors.New("invalid query params")
@@ -50,8 +49,10 @@ var (
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc users.Service, tracer opentracing.Tracer, passRegexArg *regexp.Regexp) http.Handler {
-	passRegex = passRegexArg
+// func MakeHandler(svc users.Service, tracer opentracing.Tracer, passRegexArg *regexp.Regexp) http.Handler {
+func MakeHandler(svc users.Service, tracer opentracing.Tracer) http.Handler {
+
+	// passRegex = passRegexArg
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),
 	}
@@ -437,6 +438,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, users.ErrRecoveryToken):
 			w.WriteHeader(http.StatusNotFound)
+		case errors.Contains(errorVal, users.ErrPasswordPolicy):
+			w.WriteHeader(http.StatusBadRequest)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}

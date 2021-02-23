@@ -111,7 +111,7 @@ const (
 	envAuthTimeout = "MF_AUTH_GRPC_TIMEOUT"
 )
 
-var passRegex = regexp.MustCompile(mainflux.Env(envPassRegex, defPassRegex))
+// var passRegex = regexp.MustCompile(mainflux.Env(envPassRegex, defPassRegex))
 
 type config struct {
 	logLevel      string
@@ -128,6 +128,7 @@ type config struct {
 	authTimeout   time.Duration
 	adminEmail    string
 	adminPassword string
+	passRegex     *regexp.Regexp
 }
 
 func main() {
@@ -180,6 +181,11 @@ func loadConfig() config {
 		log.Fatalf("Invalid value passed for %s\n", envAuthTLS)
 	}
 
+	passRegex, err := regexp.Compile(mainflux.Env(envPassRegex, defPassRegex))
+	if err != nil {
+		passRegex = regexp.MustCompile(defPassRegex)
+	}
+
 	dbConfig := postgres.Config{
 		Host:        mainflux.Env(envDBHost, defDBHost),
 		Port:        mainflux.Env(envDBPort, defDBPort),
@@ -218,6 +224,7 @@ func loadConfig() config {
 		authTimeout:   authTimeout,
 		adminEmail:    mainflux.Env(envAdminEmail, defAdminEmail),
 		adminPassword: mainflux.Env(envAdminPassword, defAdminPassword),
+		passRegex:     passRegex,
 	}
 
 }
@@ -292,7 +299,7 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServic
 
 	idProvider := uuid.New()
 
-	svc := users.New(userRepo, groupRepo, hasher, auth, emailer, idProvider)
+	svc := users.New(userRepo, groupRepo, hasher, auth, emailer, idProvider, c.passRegex)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
@@ -338,9 +345,11 @@ func startHTTPServer(tracer opentracing.Tracer, svc users.Service, port string, 
 	p := fmt.Sprintf(":%s", port)
 	if certFile != "" || keyFile != "" {
 		logger.Info(fmt.Sprintf("Users service started using https, cert %s key %s, exposed port %s", certFile, keyFile, port))
-		errs <- http.ListenAndServeTLS(p, certFile, keyFile, api.MakeHandler(svc, tracer, passRegex))
+		// errs <- http.ListenAndServeTLS(p, certFile, keyFile, api.MakeHandler(svc, tracer, passRegex))
+		errs <- http.ListenAndServeTLS(p, certFile, keyFile, api.MakeHandler(svc, tracer))
 	} else {
 		logger.Info(fmt.Sprintf("Users service started using http, exposed port %s", port))
-		errs <- http.ListenAndServe(p, api.MakeHandler(svc, tracer, passRegex))
+		// errs <- http.ListenAndServe(p, api.MakeHandler(svc, tracer, passRegex))
+		errs <- http.ListenAndServe(p, api.MakeHandler(svc, tracer))
 	}
 }
