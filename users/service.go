@@ -310,6 +310,9 @@ func (svc usersService) ChangePassword(ctx context.Context, authToken, password,
 	if err != nil {
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
+	if !svc.passRegex.MatchString(password) {
+		return ErrPasswordPolicy
+	}
 	u := User{
 		Email:    email,
 		Password: oldPassword,
