@@ -37,11 +37,11 @@ func newUserService() users.Service {
 	emailer := mocks.NewEmailer()
 	idProvider := uuid.New()
 
-	return users.New(usersRepo, groupsRepo, hasher, auth, emailer, idProvider)
+	return users.New(usersRepo, groupsRepo, hasher, auth, emailer, idProvider, passRegex)
 }
 
 func newUserServer(svc users.Service) *httptest.Server {
-	mux := api.MakeHandler(svc, mocktracer.New(), passRegex)
+	mux := api.MakeHandler(svc, mocktracer.New())
 	return httptest.NewServer(mux)
 }
 
