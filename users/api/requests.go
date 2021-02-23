@@ -102,9 +102,6 @@ func (req passwChangeReq) validate() error {
 	if req.OldPassword == "" {
 		return users.ErrMalformedEntity
 	}
-	if !users.PassRegex.MatchString(req.Password) {
-		return users.ErrPasswordPolicy
-	}
 	return nil
 }
 

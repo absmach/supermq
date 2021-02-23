@@ -47,8 +47,6 @@ var (
 
 // MakeHandler returns a HTTP handler for API endpoints.
 func MakeHandler(svc users.Service, tracer opentracing.Tracer) http.Handler {
-
-	// passRegex = passRegexArg
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),
 	}
