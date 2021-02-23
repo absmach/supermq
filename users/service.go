@@ -187,6 +187,9 @@ func (svc usersService) Register(ctx context.Context, user User) (string, error)
 	if err := user.Validate(); err != nil {
 		return "", err
 	}
+	if !svc.passRegex.MatchString(user.Password) {
+		return "", ErrPasswordPolicy
+	}
 	hash, err := svc.hasher.Hash(user.Password)
 	if err != nil {
 		return "", errors.Wrap(ErrMalformedEntity, err)
