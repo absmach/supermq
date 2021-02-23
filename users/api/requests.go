@@ -16,17 +16,7 @@ type userReq struct {
 }
 
 func (req userReq) validate() error {
-	// if !passRegex.MatchString(req.user.Password) {
-	// 	return users.ErrPasswordPolicy
-	// }
 	return req.user.Validate()
-	// if err := req.user.Validate(); err != nil {
-	// 	return err
-	// }
-	// if !passRegex.MatchString(req.user.Password) {
-	// 	return users.ErrPasswordPolicy
-	// }
-	// return nil
 }
 
 type viewUserReq struct {
@@ -109,9 +99,6 @@ func (req passwChangeReq) validate() error {
 	if req.Token == "" {
 		return users.ErrUnauthorizedAccess
 	}
-	// if !passRegex.MatchString(req.Password) {
-	// 	return users.ErrPasswordPolicy
-	// }
 	if req.OldPassword == "" {
 		return users.ErrMalformedEntity
 	}

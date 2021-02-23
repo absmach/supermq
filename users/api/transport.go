@@ -35,9 +35,6 @@ const (
 	defLimit  = 10
 )
 
-// passRegex represents regular expression for password validation
-// var passRegex *regexp.Regexp
-
 var (
 	errInvalidQueryParams = errors.New("invalid query params")
 
@@ -49,7 +46,6 @@ var (
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-// func MakeHandler(svc users.Service, tracer opentracing.Tracer, passRegexArg *regexp.Regexp) http.Handler {
 func MakeHandler(svc users.Service, tracer opentracing.Tracer) http.Handler {
 
 	// passRegex = passRegexArg

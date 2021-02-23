@@ -170,7 +170,6 @@ type usersService struct {
 	email      Emailer
 	auth       mainflux.AuthServiceClient
 	idProvider mainflux.IDProvider
-	// passRegex  *regexp.Regexp
 }
 
 // New instantiates the users service implementation
@@ -183,7 +182,6 @@ func New(users UserRepository, groups GroupRepository, hasher Hasher, auth mainf
 		auth:       auth,
 		email:      m,
 		idProvider: idp,
-		// passRegex:  passRegex,
 	}
 }
 
