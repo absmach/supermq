@@ -181,7 +181,7 @@ func loadConfig() config {
 
 	passRegex, err := regexp.Compile(mainflux.Env(envPassRegex, defPassRegex))
 	if err != nil {
-		passRegex = regexp.MustCompile(defPassRegex)
+		log.Fatalf("Invalid password validation rules %s\n", envPassRegex)
 	}
 
 	dbConfig := postgres.Config{
