@@ -67,8 +67,8 @@ var (
 	// ErrAssignUserToGroup indicates an error in assigning user to a group.
 	ErrAssignUserToGroup = errors.New("failed assigning user to a group")
 
-	// ErrPasswordPolicy indicates weak password.
-	ErrPasswordPolicy = errors.New("password doesn't match policy")
+	// ErrPasswordFormat indicates weak password.
+	ErrPasswordFormat = errors.New("password does not meet the requirements")
 )
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -188,7 +188,7 @@ func (svc usersService) Register(ctx context.Context, user User) (string, error)
 		return "", err
 	}
 	if !svc.passRegex.MatchString(user.Password) {
-		return "", ErrPasswordPolicy
+		return "", ErrPasswordFormat
 	}
 	hash, err := svc.hasher.Hash(user.Password)
 	if err != nil {
@@ -298,6 +298,9 @@ func (svc usersService) ResetPassword(ctx context.Context, resetToken, password 
 	if err != nil || u.Email == "" {
 		return ErrUserNotFound
 	}
+	if !svc.passRegex.MatchString(password) {
+		return ErrPasswordFormat
+	}
 	password, err = svc.hasher.Hash(password)
 	if err != nil {
 		return err
@@ -311,7 +314,7 @@ func (svc usersService) ChangePassword(ctx context.Context, authToken, password,
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 	if !svc.passRegex.MatchString(password) {
-		return ErrPasswordPolicy
+		return ErrPasswordFormat
 	}
 	u := User{
 		Email:    email,

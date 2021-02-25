@@ -36,7 +36,7 @@ var (
 	notFoundRes    = toJSON(errorRes{users.ErrUserNotFound.Error()})
 	unauthRes      = toJSON(errorRes{users.ErrUnauthorizedAccess.Error()})
 	malformedRes   = toJSON(errorRes{users.ErrMalformedEntity.Error()})
-	weakPassword   = toJSON(errorRes{users.ErrPasswordPolicy.Error()})
+	weakPassword   = toJSON(errorRes{users.ErrPasswordFormat.Error()})
 	unsupportedRes = toJSON(errorRes{api.ErrUnsupportedContentType.Error()})
 	failDecodeRes  = toJSON(errorRes{api.ErrFailedDecode.Error()})
 	groupExists    = toJSON(errorRes{users.ErrGroupConflict.Error()})
@@ -330,6 +330,9 @@ func TestPasswordReset(t *testing.T) {
 	reqData.ConfPass = "wrong"
 	reqPassNoMatch := toJSON(reqData)
 
+	reqData.Password = "wrong"
+	reqPassWeak := toJSON(reqData)
+
 	cases := []struct {
 		desc        string
 		req         string
@@ -345,6 +348,7 @@ func TestPasswordReset(t *testing.T) {
 		{"password reset request with empty JSON request", "{}", contentType, http.StatusBadRequest, malformedRes, token},
 		{"password reset request with empty request", "", contentType, http.StatusBadRequest, failDecodeRes, token},
 		{"password reset request with missing content type", reqExisting, "", http.StatusUnsupportedMediaType, unsupportedRes, token},
+		{"password reset with weak password", reqPassWeak, contentType, http.StatusBadRequest, weakPassword, token},
 	}
 
 	for _, tc := range cases {

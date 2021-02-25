@@ -65,7 +65,7 @@ func TestRegister(t *testing.T) {
 				Email:    user.Email,
 				Password: "weak",
 			},
-			err: users.ErrPasswordPolicy,
+			err: users.ErrPasswordFormat,
 		},
 	}
 
