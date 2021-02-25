@@ -28,11 +28,14 @@ import (
 
 const (
 	contentType  = "application/json"
+	validEmail   = "user@example.com"
 	invalidEmail = "userexample.com"
+	validPass    = "password"
+	invalidPass  = "wrong"
 )
 
 var (
-	user           = users.User{Email: "user@example.com", Password: "password"}
+	user           = users.User{Email: validEmail, Password: validPass}
 	notFoundRes    = toJSON(errorRes{users.ErrUserNotFound.Error()})
 	unauthRes      = toJSON(errorRes{users.ErrUnauthorizedAccess.Error()})
 	malformedRes   = toJSON(errorRes{users.ErrMalformedEntity.Error()})
@@ -96,8 +99,8 @@ func TestRegister(t *testing.T) {
 	client := ts.Client()
 
 	data := toJSON(user)
-	invalidData := toJSON(users.User{Email: invalidEmail, Password: "password"})
-	invalidPasswordData := toJSON(users.User{Email: "user@example.com", Password: "pass"})
+	invalidData := toJSON(users.User{Email: invalidEmail, Password: validPass})
+	invalidPasswordData := toJSON(users.User{Email: validEmail, Password: invalidPass})
 	invalidFieldData := fmt.Sprintf(`{"email": "%s", "pass": "%s"}`, user.Email, user.Password)
 
 	cases := []struct {
@@ -143,15 +146,15 @@ func TestLogin(t *testing.T) {
 	data := toJSON(user)
 	invalidEmailData := toJSON(users.User{
 		Email:    invalidEmail,
-		Password: "password",
+		Password: validPass,
 	})
 	invalidData := toJSON(users.User{
-		Email:    "user@example.com",
+		Email:    validEmail,
 		Password: "invalid_password",
 	})
 	nonexistentData := toJSON(users.User{
 		Email:    "non-existentuser@example.com",
-		Password: "password",
+		Password: validPass,
 	})
 	_, err := svc.Register(context.Background(), user)
 	require.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
@@ -240,7 +243,7 @@ func TestPasswordResetRequest(t *testing.T) {
 
 	nonexistentData := toJSON(users.User{
 		Email:    "non-existentuser@example.com",
-		Password: "password",
+		Password: validPass,
 	})
 
 	expectedExisting := toJSON(struct {
@@ -327,10 +330,10 @@ func TestPasswordReset(t *testing.T) {
 
 	reqData.Token = token
 
-	reqData.ConfPass = "wrong"
+	reqData.ConfPass = invalidPass
 	reqPassNoMatch := toJSON(reqData)
 
-	reqData.Password = "wrong"
+	reqData.Password = invalidPass
 	reqPassWeak := toJSON(reqData)
 
 	cases := []struct {
@@ -404,11 +407,11 @@ func TestPasswordChange(t *testing.T) {
 
 	reqNoExist := toJSON(reqData)
 
-	reqData.OldPassw = "wrong"
+	reqData.OldPassw = invalidPass
 	reqWrongPass := toJSON(reqData)
 
 	reqData.OldPassw = user.Password
-	reqData.Password = "weak"
+	reqData.Password = invalidPass
 	reqWeakPass := toJSON(reqData)
 
 	resData.Msg = users.ErrUnauthorizedAccess.Error()
