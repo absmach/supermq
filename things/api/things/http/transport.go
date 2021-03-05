@@ -352,36 +352,7 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeListByMetadata(_ context.Context, r *http.Request) (interface{}, error) {
-	o, err := readUintQuery(r, offsetKey, defOffset)
-	if err != nil {
-		return nil, err
-	}
-
-	l, err := readUintQuery(r, limitKey, defLimit)
-	if err != nil {
-		return nil, err
-	}
-
-	or, err := readStringQuery(r, orderKey)
-	if err != nil {
-		return nil, err
-	}
-
-	d, err := readStringQuery(r, dirKey)
-	if err != nil {
-		return nil, err
-	}
-
-	req := listResourcesReq{
-		token: r.Header.Get("Authorization"),
-		pageMetadata: things.PageMetadata{
-			Offset: o,
-			Limit:  l,
-			Order:  or,
-			Dir:    d,
-		},
-	}
-
+	req := listResourcesReq{token: r.Header.Get("Authorization")}
 	if err := json.NewDecoder(r.Body).Decode(&req.pageMetadata); err != nil {
 		return nil, errors.Wrap(things.ErrMalformedEntity, err)
 	}
