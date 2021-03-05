@@ -29,7 +29,7 @@ paths:
         '415':
           description: Missing or invalid content type.
         '422':
-          description: Database can't process request.
+          description: Unprocessable Entity.
         '500':
           $ref: "#/components/responses/ServiceError"
     get:
@@ -75,10 +75,6 @@ paths:
         - things
       parameters:
         - $ref: "#/components/parameters/Authorization"
-        - $ref: "#/components/parameters/Limit"
-        - $ref: "#/components/parameters/Offset"
-        - $ref: "#/components/parameters/Order"
-        - $ref: "#/components/parameters/Direction"
       requestBody:
         $ref: "#/components/requestBodies/ThingsSearchReq"
       responses:
@@ -610,6 +606,21 @@ components:
         metadata:
           type: object
           description: Object-encoded thing's data.
+        total:
+          type: integer
+          description: Total number of items.
+        offset:
+          type: integer
+          description: Number of items to skip during retrieval.
+        limit:
+          type: integer
+          description: Maximum number of items to return in one page.
+        order:
+          type: string
+          description: Order type.
+        dir:
+          type: string
+          description: Order direction.
     ThingResSchema:
       type: object
       properties:
