@@ -29,7 +29,7 @@ paths:
         '415':
           description: Missing or invalid content type.
         '422':
-          description: Unprocessable Entity.
+          description: Database can't process request.
         '500':
           $ref: "#/components/responses/ServiceError"
     get:
@@ -87,7 +87,7 @@ paths:
         '404':
           description: A non-existent entity request.
         '422':
-          description: Database can't process request.
+          description: Unprocessable Entity
         '500':
           $ref: "#/components/responses/ServiceError"
   /things/bulk:
