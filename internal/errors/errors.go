@@ -11,7 +11,7 @@ var (
 	// ErrInvalidQueryParams indicates invalid query parameters
 	ErrInvalidQueryParams = errors.New("invalid query parameters")
 	// ErrNotInQuery indicates boolean parameter missing in the query
-	ErrNotInQuery = errors.New("ignore parameter")
-	// ErrMalformedEntity indicates malformed entity
+	ErrNotInQuery = errors.New("missing in the query")
+	// ErrMalformedEntity indicates a malformed entity specification
 	ErrMalformedEntity = errors.New("malformed entity specification")
 )

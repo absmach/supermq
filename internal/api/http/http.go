@@ -13,7 +13,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
-// ReadUintQuery get the uint64 value for a given http query parameter
+// ReadUintQuery reads uint64 query parameters in a given http request
 func ReadUintQuery(r *http.Request, key string, def uint64) (uint64, error) {
 	vals := bone.GetQuery(r, key)
 	if len(vals) > 1 {
@@ -33,7 +33,7 @@ func ReadUintQuery(r *http.Request, key string, def uint64) (uint64, error) {
 	return val, nil
 }
 
-// ReadStringQuery get the string value for a given http query parameter
+// ReadStringQuery reads string query parameters in a given http request
 func ReadStringQuery(r *http.Request, key string) (string, error) {
 	vals := bone.GetQuery(r, key)
 	if len(vals) > 1 {
@@ -47,7 +47,7 @@ func ReadStringQuery(r *http.Request, key string) (string, error) {
 	return vals[0], nil
 }
 
-// ReadMetadataQuery get the map[string]interface value for a given http query parameter
+// ReadMetadataQuery reads map[string]interface query parameters in a given http request
 func ReadMetadataQuery(r *http.Request, key string) (map[string]interface{}, error) {
 	vals := bone.GetQuery(r, key)
 	if len(vals) > 1 {
@@ -67,7 +67,7 @@ func ReadMetadataQuery(r *http.Request, key string) (map[string]interface{}, err
 	return m, nil
 }
 
-// ReadBoolQuery get the boolean value for a given http query parameter
+// ReadBoolQuery reads boolean query parameters in a given http request
 func ReadBoolQuery(r *http.Request, key string) (bool, error) {
 	vals := bone.GetQuery(r, key)
 	if len(vals) == 0 {
@@ -86,7 +86,7 @@ func ReadBoolQuery(r *http.Request, key string) (bool, error) {
 	return b, nil
 }
 
-// ReadFloatQuery get the float64 value for a given http query parameter
+// ReadFloatQuery reads float64 query parameters in a given http request
 func ReadFloatQuery(r *http.Request, key string) (float64, error) {
 	vals := bone.GetQuery(r, key)
 	if len(vals) > 1 {
