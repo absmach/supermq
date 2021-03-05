@@ -8,13 +8,14 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 
 	kitot "github.com/go-kit/kit/tracing/opentracing"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
+	intapihttp "github.com/mainflux/mainflux/internal/api/http"
+	internalerr "github.com/mainflux/mainflux/internal/errors"
 	"github.com/mainflux/mainflux/internal/groups"
 	groupsAPI "github.com/mainflux/mainflux/internal/groups/api"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -35,11 +36,6 @@ const (
 
 	defOffset = 0
 	defLimit  = 10
-)
-
-var (
-	errUnsupportedContentType = errors.New("unsupported content type")
-	errInvalidQueryParams     = errors.New("invalid query params")
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -261,7 +257,7 @@ func MakeHandler(tracer opentracing.Tracer, svc things.Service) http.Handler {
 
 func decodeThingCreation(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errUnsupportedContentType
+		return nil, internalerr.ErrUnsupportedContentType
 	}
 
 	req := createThingReq{token: r.Header.Get("Authorization")}
@@ -274,7 +270,7 @@ func decodeThingCreation(_ context.Context, r *http.Request) (interface{}, error
 
 func decodeThingsCreation(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errUnsupportedContentType
+		return nil, internalerr.ErrUnsupportedContentType
 	}
 
 	req := createThingsReq{token: r.Header.Get("Authorization")}
@@ -287,7 +283,7 @@ func decodeThingsCreation(_ context.Context, r *http.Request) (interface{}, erro
 
 func decodeThingUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errUnsupportedContentType
+		return nil, internalerr.ErrUnsupportedContentType
 	}
 
 	req := updateThingReq{
@@ -303,7 +299,7 @@ func decodeThingUpdate(_ context.Context, r *http.Request) (interface{}, error) 
 
 func decodeKeyUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errUnsupportedContentType
+		return nil, internalerr.ErrUnsupportedContentType
 	}
 
 	req := updateKeyReq{
@@ -319,7 +315,7 @@ func decodeKeyUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeChannelCreation(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errUnsupportedContentType
+		return nil, internalerr.ErrUnsupportedContentType
 	}
 
 	req := createChannelReq{token: r.Header.Get("Authorization")}
@@ -332,7 +328,7 @@ func decodeChannelCreation(_ context.Context, r *http.Request) (interface{}, err
 
 func decodeChannelsCreation(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errUnsupportedContentType
+		return nil, internalerr.ErrUnsupportedContentType
 	}
 
 	req := createChannelsReq{token: r.Header.Get("Authorization")}
@@ -346,7 +342,7 @@ func decodeChannelsCreation(_ context.Context, r *http.Request) (interface{}, er
 
 func decodeChannelUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errUnsupportedContentType
+		return nil, internalerr.ErrUnsupportedContentType
 	}
 
 	req := updateChannelReq{
@@ -370,32 +366,32 @@ func decodeView(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
-	o, err := readUintQuery(r, offsetKey, defOffset)
+	o, err := intapihttp.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
 		return nil, err
 	}
 
-	l, err := readUintQuery(r, limitKey, defLimit)
+	l, err := intapihttp.ReadUintQuery(r, limitKey, defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	n, err := readStringQuery(r, nameKey)
+	n, err := intapihttp.ReadStringQuery(r, nameKey)
 	if err != nil {
 		return nil, err
 	}
 
-	or, err := readStringQuery(r, orderKey)
+	or, err := intapihttp.ReadStringQuery(r, orderKey)
 	if err != nil {
 		return nil, err
 	}
 
-	d, err := readStringQuery(r, dirKey)
+	d, err := intapihttp.ReadStringQuery(r, dirKey)
 	if err != nil {
 		return nil, err
 	}
 
-	m, err := readMetadataQuery(r, metadataKey)
+	m, err := intapihttp.ReadMetadataQuery(r, metadataKey)
 	if err != nil {
 		return nil, err
 	}
@@ -416,27 +412,27 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeListByConnection(_ context.Context, r *http.Request) (interface{}, error) {
-	o, err := readUintQuery(r, offsetKey, defOffset)
+	o, err := intapihttp.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
 		return nil, err
 	}
 
-	l, err := readUintQuery(r, limitKey, defLimit)
+	l, err := intapihttp.ReadUintQuery(r, limitKey, defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	c, err := readBoolQuery(r, connKey)
+	c, err := intapihttp.ReadBoolQuery(r, connKey)
+	if err != nil && err != internalerr.ErrNotInQuery {
+		return nil, err
+	}
+
+	or, err := intapihttp.ReadStringQuery(r, orderKey)
 	if err != nil {
 		return nil, err
 	}
 
-	or, err := readStringQuery(r, orderKey)
-	if err != nil {
-		return nil, err
-	}
-
-	d, err := readStringQuery(r, dirKey)
+	d, err := intapihttp.ReadStringQuery(r, dirKey)
 	if err != nil {
 		return nil, err
 	}
@@ -468,7 +464,7 @@ func decodeConnection(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeCreateConnections(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errUnsupportedContentType
+		return nil, internalerr.ErrUnsupportedContentType
 	}
 
 	req := createConnectionsReq{token: r.Header.Get("Authorization")}
@@ -506,9 +502,9 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			errors.Contains(errorVal, things.ErrEntityConnected):
 			w.WriteHeader(http.StatusUnauthorized)
 
-		case errors.Contains(errorVal, errInvalidQueryParams):
+		case errors.Contains(errorVal, internalerr.ErrInvalidQueryParams):
 			w.WriteHeader(http.StatusBadRequest)
-		case errors.Contains(errorVal, errUnsupportedContentType):
+		case errors.Contains(errorVal, internalerr.ErrUnsupportedContentType):
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 
 		case errors.Contains(errorVal, things.ErrMalformedEntity):
@@ -549,73 +545,4 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-}
-
-func readUintQuery(r *http.Request, key string, def uint64) (uint64, error) {
-	vals := bone.GetQuery(r, key)
-	if len(vals) > 1 {
-		return 0, errInvalidQueryParams
-	}
-
-	if len(vals) == 0 {
-		return def, nil
-	}
-
-	strval := vals[0]
-	val, err := strconv.ParseUint(strval, 10, 64)
-	if err != nil {
-		return 0, errInvalidQueryParams
-	}
-
-	return val, nil
-}
-
-func readStringQuery(r *http.Request, key string) (string, error) {
-	vals := bone.GetQuery(r, key)
-	if len(vals) > 1 {
-		return "", errInvalidQueryParams
-	}
-
-	if len(vals) == 0 {
-		return "", nil
-	}
-
-	return vals[0], nil
-}
-
-func readMetadataQuery(r *http.Request, key string) (map[string]interface{}, error) {
-	vals := bone.GetQuery(r, key)
-	if len(vals) > 1 {
-		return nil, errInvalidQueryParams
-	}
-
-	if len(vals) == 0 {
-		return nil, nil
-	}
-
-	m := make(map[string]interface{})
-	err := json.Unmarshal([]byte(vals[0]), &m)
-	if err != nil {
-		return nil, errors.Wrap(errInvalidQueryParams, err)
-	}
-
-	return m, nil
-}
-
-func readBoolQuery(r *http.Request, key string) (bool, error) {
-	vals := bone.GetQuery(r, key)
-	if len(vals) > 1 {
-		return true, errInvalidQueryParams
-	}
-
-	if len(vals) == 0 {
-		return true, nil
-	}
-
-	b, err := strconv.ParseBool(vals[0])
-	if err != nil {
-		return true, errInvalidQueryParams
-	}
-
-	return b, nil
 }

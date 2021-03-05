@@ -8,14 +8,14 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strconv"
-
-	"github.com/mainflux/mainflux/certs"
-	"github.com/mainflux/mainflux/pkg/errors"
 
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/certs"
+	intapihttp "github.com/mainflux/mainflux/internal/api/http"
+	internalerr "github.com/mainflux/mainflux/internal/errors"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -29,11 +29,8 @@ const (
 )
 
 var (
-	errUnsupportedContentType = errors.New("unsupported content type")
-	errUnauthorized           = errors.New("missing or invalid credentials provided")
-	errInvalidQueryParams     = errors.New("invalid query params")
-	errMalformedEntity        = errors.New("malformed entity")
-	errConflict               = errors.New("entity already exists")
+	errUnauthorized = errors.New("missing or invalid credentials provided")
+	errConflict     = errors.New("entity already exists")
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -90,11 +87,11 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 }
 
 func decodeListCerts(_ context.Context, r *http.Request) (interface{}, error) {
-	l, err := readUintQuery(r, limit, defLimit)
+	l, err := intapihttp.ReadUintQuery(r, limit, defLimit)
 	if err != nil {
 		return nil, err
 	}
-	o, err := readUintQuery(r, offset, defOffset)
+	o, err := intapihttp.ReadUintQuery(r, offset, defOffset)
 	if err != nil {
 		return nil, err
 	}
@@ -106,28 +103,9 @@ func decodeListCerts(_ context.Context, r *http.Request) (interface{}, error) {
 	return req, nil
 }
 
-func readUintQuery(r *http.Request, key string, def uint64) (uint64, error) {
-	vals := bone.GetQuery(r, key)
-	if len(vals) > 1 {
-		return 0, errInvalidQueryParams
-	}
-
-	if len(vals) == 0 {
-		return def, nil
-	}
-
-	strval := vals[0]
-	val, err := strconv.ParseUint(strval, 10, 64)
-	if err != nil {
-		return 0, errInvalidQueryParams
-	}
-
-	return val, nil
-}
-
 func decodeCerts(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
-		return nil, errUnsupportedContentType
+		return nil, internalerr.ErrUnsupportedContentType
 	}
 
 	req := addCertsReq{token: r.Header.Get("Authorization")}
@@ -140,7 +118,7 @@ func decodeCerts(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeRevokeCerts(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
-		return nil, errUnsupportedContentType
+		return nil, internalerr.ErrUnsupportedContentType
 	}
 
 	req := revokeReq{token: r.Header.Get("Authorization")}
@@ -155,9 +133,10 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", contentType)
 
 	switch err {
-	case errUnsupportedContentType:
+	case internalerr.ErrUnsupportedContentType:
 		w.WriteHeader(http.StatusUnsupportedMediaType)
-	case io.EOF, errMalformedEntity:
+	case io.EOF, internalerr.ErrMalformedEntity,
+		internalerr.ErrInvalidQueryParams:
 		w.WriteHeader(http.StatusBadRequest)
 	case errConflict:
 		w.WriteHeader(http.StatusConflict)

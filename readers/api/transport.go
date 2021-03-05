@@ -7,12 +7,13 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"time"
 
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
+	intapihttp "github.com/mainflux/mainflux/internal/api/http"
+	internalerr "github.com/mainflux/mainflux/internal/errors"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/readers"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -29,9 +30,7 @@ const (
 )
 
 var (
-	errInvalidRequest     = errors.New("received invalid request")
 	errUnauthorizedAccess = errors.New("missing or invalid credentials provided")
-	errNotInQuery         = errors.New("parameter missing in the query")
 	auth                  mainflux.ThingsServiceClient
 )
 
@@ -60,24 +59,24 @@ func MakeHandler(svc readers.MessageRepository, tc mainflux.ThingsServiceClient,
 func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 	chanID := bone.GetValue(r, "chanID")
 	if chanID == "" {
-		return nil, errInvalidRequest
+		return nil, internalerr.ErrInvalidQueryParams
 	}
 
 	if err := authorize(r, chanID); err != nil {
 		return nil, err
 	}
 
-	offset, err := readUintQuery(r, "offset", defOffset)
+	offset, err := intapihttp.ReadUintQuery(r, "offset", defOffset)
 	if err != nil {
 		return nil, err
 	}
 
-	limit, err := readUintQuery(r, "limit", defLimit)
+	limit, err := intapihttp.ReadUintQuery(r, "limit", defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	format, err := readStringQuery(r, "format")
+	format, err := intapihttp.ReadStringQuery(r, "format")
 	if err != nil {
 		return nil, err
 	}
@@ -85,52 +84,52 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		format = defFormat
 	}
 
-	subtopic, err := readStringQuery(r, "subtopic")
+	subtopic, err := intapihttp.ReadStringQuery(r, "subtopic")
 	if err != nil {
 		return nil, err
 	}
 
-	publisher, err := readStringQuery(r, "publisher")
+	publisher, err := intapihttp.ReadStringQuery(r, "publisher")
 	if err != nil {
 		return nil, err
 	}
 
-	protocol, err := readStringQuery(r, "protocol")
+	protocol, err := intapihttp.ReadStringQuery(r, "protocol")
 	if err != nil {
 		return nil, err
 	}
 
-	name, err := readStringQuery(r, "name")
+	name, err := intapihttp.ReadStringQuery(r, "name")
 	if err != nil {
 		return nil, err
 	}
 
-	v, err := readFloatQuery(r, "v")
+	v, err := intapihttp.ReadFloatQuery(r, "v")
 	if err != nil {
 		return nil, err
 	}
 
-	comparator, err := readStringQuery(r, "comparator")
+	comparator, err := intapihttp.ReadStringQuery(r, "comparator")
 	if err != nil {
 		return nil, err
 	}
 
-	vs, err := readStringQuery(r, "vs")
+	vs, err := intapihttp.ReadStringQuery(r, "vs")
 	if err != nil {
 		return nil, err
 	}
 
-	vd, err := readStringQuery(r, "vd")
+	vd, err := intapihttp.ReadStringQuery(r, "vd")
 	if err != nil {
 		return nil, err
 	}
 
-	from, err := readFloatQuery(r, "from")
+	from, err := intapihttp.ReadFloatQuery(r, "from")
 	if err != nil {
 		return nil, err
 	}
 
-	to, err := readFloatQuery(r, "to")
+	to, err := intapihttp.ReadFloatQuery(r, "to")
 	if err != nil {
 		return nil, err
 	}
@@ -154,9 +153,8 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		},
 	}
 
-	vb, err := readBoolQuery(r, "vb")
-	// Check if vb is in the query
-	if err != nil && err != errNotInQuery {
+	vb, err := intapihttp.ReadBoolQuery(r, "vb")
+	if err != nil && err != internalerr.ErrNotInQuery {
 		return nil, err
 	}
 	if err == nil {
@@ -187,7 +185,7 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
 	case errors.Contains(err, nil):
-	case errors.Contains(err, errInvalidRequest):
+	case errors.Contains(err, internalerr.ErrInvalidQueryParams):
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, errUnauthorizedAccess):
 		w.WriteHeader(http.StatusForbidden)
@@ -222,73 +220,4 @@ func authorize(r *http.Request, chanID string) error {
 	}
 
 	return nil
-}
-
-func readUintQuery(r *http.Request, key string, def uint64) (uint64, error) {
-	vals := bone.GetQuery(r, key)
-	if len(vals) > 1 {
-		return 0, errInvalidRequest
-	}
-
-	if len(vals) == 0 {
-		return def, nil
-	}
-
-	strval := vals[0]
-	val, err := strconv.ParseUint(strval, 10, 64)
-	if err != nil {
-		return 0, errInvalidRequest
-	}
-
-	return val, nil
-}
-
-func readFloatQuery(r *http.Request, key string) (float64, error) {
-	vals := bone.GetQuery(r, key)
-	if len(vals) > 1 {
-		return 0, errInvalidRequest
-	}
-
-	if len(vals) == 0 {
-		return 0, nil
-	}
-
-	fval := vals[0]
-	val, err := strconv.ParseFloat(fval, 64)
-	if err != nil {
-		return 0, errInvalidRequest
-	}
-
-	return val, nil
-}
-
-func readStringQuery(r *http.Request, key string) (string, error) {
-	vals := bone.GetQuery(r, key)
-	if len(vals) > 1 {
-		return "", errInvalidRequest
-	}
-
-	if len(vals) == 0 {
-		return "", nil
-	}
-
-	return vals[0], nil
-}
-
-func readBoolQuery(r *http.Request, key string) (bool, error) {
-	vals := bone.GetQuery(r, key)
-	if len(vals) > 1 {
-		return false, errInvalidRequest
-	}
-
-	if len(vals) == 0 {
-		return false, errNotInQuery
-	}
-
-	b, err := strconv.ParseBool(vals[0])
-	if err != nil {
-		return false, errInvalidRequest
-	}
-
-	return b, nil
 }

@@ -8,15 +8,14 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
-
-	"github.com/mainflux/mainflux/pkg/errors"
 
 	kitot "github.com/go-kit/kit/tracing/opentracing"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
+	intapihttp "github.com/mainflux/mainflux/internal/api/http"
+	internalerr "github.com/mainflux/mainflux/internal/errors"
 	"github.com/mainflux/mainflux/twins"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -32,11 +31,6 @@ const (
 
 	defLimit  = 10
 	defOffset = 0
-)
-
-var (
-	errUnsupportedContentType = errors.New("unsupported content type")
-	errInvalidQueryParams     = errors.New("invalid query params")
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -97,7 +91,7 @@ func MakeHandler(tracer opentracing.Tracer, svc twins.Service) http.Handler {
 
 func decodeTwinCreation(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errUnsupportedContentType
+		return nil, internalerr.ErrUnsupportedContentType
 	}
 
 	req := addTwinReq{token: r.Header.Get("Authorization")}
@@ -110,7 +104,7 @@ func decodeTwinCreation(_ context.Context, r *http.Request) (interface{}, error)
 
 func decodeTwinUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errUnsupportedContentType
+		return nil, internalerr.ErrUnsupportedContentType
 	}
 
 	req := updateTwinReq{
@@ -134,22 +128,22 @@ func decodeView(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
-	l, err := readUintQuery(r, limit, defLimit)
+	l, err := intapihttp.ReadUintQuery(r, limit, defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	o, err := readUintQuery(r, offset, defOffset)
+	o, err := intapihttp.ReadUintQuery(r, offset, defOffset)
 	if err != nil {
 		return nil, err
 	}
 
-	n, err := readStringQuery(r, name)
+	n, err := intapihttp.ReadStringQuery(r, name)
 	if err != nil {
 		return nil, err
 	}
 
-	m, err := readMetadataQuery(r, "metadata")
+	m, err := intapihttp.ReadMetadataQuery(r, "metadata")
 	if err != nil {
 		return nil, err
 	}
@@ -166,12 +160,12 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeListStates(_ context.Context, r *http.Request) (interface{}, error) {
-	l, err := readUintQuery(r, limit, defLimit)
+	l, err := intapihttp.ReadUintQuery(r, limit, defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	o, err := readUintQuery(r, offset, defOffset)
+	o, err := intapihttp.ReadUintQuery(r, offset, defOffset)
 	if err != nil {
 		return nil, err
 	}
@@ -216,9 +210,9 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusNotFound)
 	case twins.ErrConflict:
 		w.WriteHeader(http.StatusUnprocessableEntity)
-	case errUnsupportedContentType:
+	case internalerr.ErrUnsupportedContentType:
 		w.WriteHeader(http.StatusUnsupportedMediaType)
-	case errInvalidQueryParams:
+	case internalerr.ErrInvalidQueryParams:
 		w.WriteHeader(http.StatusBadRequest)
 	case io.ErrUnexpectedEOF:
 		w.WriteHeader(http.StatusBadRequest)
@@ -234,55 +228,4 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
-}
-
-func readUintQuery(r *http.Request, key string, def uint64) (uint64, error) {
-	vals := bone.GetQuery(r, key)
-	if len(vals) > 1 {
-		return 0, errInvalidQueryParams
-	}
-
-	if len(vals) == 0 {
-		return def, nil
-	}
-
-	strval := vals[0]
-	val, err := strconv.ParseUint(strval, 10, 64)
-	if err != nil {
-		return 0, errInvalidQueryParams
-	}
-
-	return val, nil
-}
-
-func readStringQuery(r *http.Request, key string) (string, error) {
-	vals := bone.GetQuery(r, key)
-	if len(vals) > 1 {
-		return "", errInvalidQueryParams
-	}
-
-	if len(vals) == 0 {
-		return "", nil
-	}
-
-	return vals[0], nil
-}
-
-func readMetadataQuery(r *http.Request, key string) (map[string]interface{}, error) {
-	vals := bone.GetQuery(r, key)
-	if len(vals) > 1 {
-		return nil, errInvalidQueryParams
-	}
-
-	if len(vals) == 0 {
-		return nil, nil
-	}
-
-	m := make(map[string]interface{})
-	err := json.Unmarshal([]byte(vals[0]), &m)
-	if err != nil {
-		return nil, errInvalidQueryParams
-	}
-
-	return m, nil
 }

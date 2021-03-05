@@ -1,5 +1,9 @@
 package api
 
+import (
+	internalerr "github.com/mainflux/mainflux/internal/errors"
+)
+
 type provisionReq struct {
 	token       string
 	Name        string `json:"name"`
@@ -9,7 +13,7 @@ type provisionReq struct {
 
 func (req provisionReq) validate() error {
 	if req.ExternalID == "" || req.ExternalKey == "" {
-		return errMalformedEntity
+		return internalerr.ErrMalformedEntity
 	}
 	return nil
 }

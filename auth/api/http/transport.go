@@ -15,6 +15,7 @@ import (
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/auth"
+	internalerr "github.com/mainflux/mainflux/internal/errors"
 	groupsAPI "github.com/mainflux/mainflux/internal/groups/api"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/opentracing/opentracing-go"
@@ -22,8 +23,6 @@ import (
 )
 
 const contentType = "application/json"
-
-var errUnsupportedContentType = errors.New("unsupported content type")
 
 // MakeHandler returns a HTTP handler for API endpoints.
 func MakeHandler(svc auth.Service, tracer opentracing.Tracer) http.Handler {
@@ -139,7 +138,7 @@ func MakeHandler(svc auth.Service, tracer opentracing.Tracer) http.Handler {
 
 func decodeIssue(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errUnsupportedContentType
+		return nil, internalerr.ErrUnsupportedContentType
 	}
 	req := issueKeyReq{
 		token: r.Header.Get("Authorization"),
@@ -191,7 +190,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, io.ErrUnexpectedEOF):
 		w.WriteHeader(http.StatusBadRequest)
-	case errors.Contains(err, errUnsupportedContentType):
+	case errors.Contains(err, internalerr.ErrUnsupportedContentType):
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	default:
 		w.WriteHeader(http.StatusInternalServerError)

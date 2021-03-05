@@ -12,6 +12,7 @@ import (
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
+	internalerr "github.com/mainflux/mainflux/internal/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -20,10 +21,8 @@ const (
 )
 
 var (
-	errUnsupportedContentType = errors.New("unsupported content type")
-	errUnauthorized           = errors.New("missing or invalid credentials provided")
-	errMalformedEntity        = errors.New("malformed entity")
-	errConflict               = errors.New("entity already exists")
+	errUnauthorized = errors.New("missing or invalid credentials provided")
+	errConflict     = errors.New("entity already exists")
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -75,7 +74,7 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 
 func decodeProvisionRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
-		return nil, errUnsupportedContentType
+		return nil, internalerr.ErrUnsupportedContentType
 	}
 
 	req := provisionReq{token: r.Header.Get("Authorization")}
@@ -88,7 +87,7 @@ func decodeProvisionRequest(_ context.Context, r *http.Request) (interface{}, er
 
 func decodeMappingRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
-		return nil, errUnsupportedContentType
+		return nil, internalerr.ErrUnsupportedContentType
 	}
 
 	req := mappingReq{token: r.Header.Get("Authorization")}
@@ -100,9 +99,9 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", contentType)
 
 	switch err {
-	case errUnsupportedContentType:
+	case internalerr.ErrUnsupportedContentType:
 		w.WriteHeader(http.StatusUnsupportedMediaType)
-	case io.EOF, errMalformedEntity:
+	case io.EOF, internalerr.ErrMalformedEntity:
 		w.WriteHeader(http.StatusBadRequest)
 	case errConflict:
 		w.WriteHeader(http.StatusConflict)
