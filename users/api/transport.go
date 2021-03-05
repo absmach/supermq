@@ -27,7 +27,6 @@ const (
 
 	offsetKey   = "offset"
 	limitKey    = "limit"
-	nameKey     = "name"
 	emailKey    = "email"
 	metadataKey = "metadata"
 
@@ -78,13 +77,6 @@ func MakeHandler(svc users.Service, tracer opentracing.Tracer) http.Handler {
 		opts...,
 	))
 
-	mux.Get("/users/:userID/groups", kithttp.NewServer(
-		kitot.TraceServer(tracer, "list_memberships")(listMembershipsEndpoint(svc)),
-		decodeListUserGroupsRequest,
-		encodeResponse,
-		opts...,
-	))
-
 	mux.Post("/password/reset-request", kithttp.NewServer(
 		kitot.TraceServer(tracer, "res-req")(passwordResetRequestEndpoint(svc)),
 		decodePasswordResetRequest,
@@ -106,65 +98,9 @@ func MakeHandler(svc users.Service, tracer opentracing.Tracer) http.Handler {
 		opts...,
 	))
 
-	mux.Post("/groups", kithttp.NewServer(
-		kitot.TraceServer(tracer, "add_group")(createGroupEndpoint(svc)),
-		decodeGroupCreate,
-		encodeResponse,
-		opts...,
-	))
-
-	mux.Get("/groups", kithttp.NewServer(
-		kitot.TraceServer(tracer, "list_groups")(listGroupsEndpoint(svc)),
-		decodeListUserGroupsRequest,
-		encodeResponse,
-		opts...,
-	))
-
-	mux.Delete("/groups/:groupID", kithttp.NewServer(
-		kitot.TraceServer(tracer, "delete_group")(deleteGroupEndpoint(svc)),
-		decodeGroupRequest,
-		encodeResponse,
-		opts...,
-	))
-
-	mux.Put("/groups/:groupID/users/:userID", kithttp.NewServer(
-		kitot.TraceServer(tracer, "assign_user_to_group")(assignUserToGroup(svc)),
-		decodeUserGroupRequest,
-		encodeResponse,
-		opts...,
-	))
-
-	mux.Delete("/groups/:groupID/users/:userID", kithttp.NewServer(
-		kitot.TraceServer(tracer, "remove_user_from_group")(removeUserFromGroup(svc)),
-		decodeUserGroupRequest,
-		encodeResponse,
-		opts...,
-	))
-
-	mux.Get("/groups/:groupID/users", kithttp.NewServer(
+	mux.Get("/groups/:groupId", kithttp.NewServer(
 		kitot.TraceServer(tracer, "list_members")(listMembersEndpoint(svc)),
-		decodeListUserGroupsRequest,
-		encodeResponse,
-		opts...,
-	))
-
-	mux.Patch("/groups/:groupID", kithttp.NewServer(
-		kitot.TraceServer(tracer, "update_group")(updateGroupEndpoint(svc)),
-		decodeGroupUpdate,
-		encodeResponse,
-		opts...,
-	))
-
-	mux.Get("/groups/:groupID/groups", kithttp.NewServer(
-		kitot.TraceServer(tracer, "list_children_groups")(listGroupsEndpoint(svc)),
-		decodeListUserGroupsRequest,
-		encodeResponse,
-		opts...,
-	))
-
-	mux.Get("/groups/:groupID", kithttp.NewServer(
-		kitot.TraceServer(tracer, "group")(viewGroupEndpoint(svc)),
-		decodeGroupRequest,
+		decodeListMemberGroupRequest,
 		encodeResponse,
 		opts...,
 	))
@@ -294,49 +230,7 @@ func decodePasswordChange(_ context.Context, r *http.Request) (interface{}, erro
 	return req, nil
 }
 
-// Group related methods
-func decodeGroupCreate(_ context.Context, r *http.Request) (interface{}, error) {
-	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
-	}
-
-	var req createGroupReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(internalerr.ErrMalformedEntity, err)
-	}
-
-	req.token = r.Header.Get("Authorization")
-
-	return req, nil
-}
-
-func decodeGroupUpdate(_ context.Context, r *http.Request) (interface{}, error) {
-	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
-	}
-
-	req := updateGroupReq{
-		token: r.Header.Get("Authorization"),
-		id:    bone.GetValue(r, "groupID"),
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(internalerr.ErrMalformedEntity, err)
-	}
-
-	return req, nil
-}
-
-func decodeGroupRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	req := groupReq{
-		token:   r.Header.Get("Authorization"),
-		groupID: bone.GetValue(r, "groupID"),
-		name:    bone.GetValue(r, "name"),
-	}
-
-	return req, nil
-}
-
-func decodeListUserGroupsRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeListMemberGroupRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	o, err := intapihttp.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
 		return nil, err
@@ -347,36 +241,17 @@ func decodeListUserGroupsRequest(_ context.Context, r *http.Request) (interface{
 		return nil, err
 	}
 
-	n, err := intapihttp.ReadStringQuery(r, nameKey)
-	if err != nil {
-		return nil, err
-	}
-
 	m, err := intapihttp.ReadMetadataQuery(r, metadataKey)
 	if err != nil {
 		return nil, err
 	}
 
-	groupID := bone.GetValue(r, "groupID")
-	userID := bone.GetValue(r, "userID")
-
-	req := listUserGroupReq{
+	req := listMemberGroupReq{
 		token:    r.Header.Get("Authorization"),
-		groupID:  groupID,
-		userID:   userID,
+		groupID:  bone.GetValue(r, "groupId"),
 		offset:   o,
 		limit:    l,
-		name:     n,
 		metadata: m,
-	}
-	return req, nil
-}
-
-func decodeUserGroupRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	req := userGroupReq{
-		token:   r.Header.Get("Authorization"),
-		groupID: bone.GetValue(r, "groupID"),
-		userID:  bone.GetValue(r, "userID"),
 	}
 	return req, nil
 }
@@ -424,6 +299,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, users.ErrRecoveryToken):
 			w.WriteHeader(http.StatusNotFound)
+		case errors.Contains(errorVal, users.ErrPasswordFormat):
+			w.WriteHeader(http.StatusBadRequest)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}

@@ -37,10 +37,25 @@ func canAccessByIDEndpoint(svc things.Service) endpoint.Endpoint {
 	}
 }
 
+func isChannelOwnerEndpoint(svc things.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(channelOwnerReq)
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+
+		err := svc.IsChannelOwner(ctx, req.owner, req.chanID)
+		return emptyRes{err: err}, err
+	}
+}
+
 func identifyEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(identifyReq)
 		id, err := svc.Identify(ctx, req.key)
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
 		if err != nil {
 			return identityRes{}, err
 		}

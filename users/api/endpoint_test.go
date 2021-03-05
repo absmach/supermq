@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -28,16 +29,21 @@ import (
 
 const (
 	contentType  = "application/json"
+	validEmail   = "user@example.com"
 	invalidEmail = "userexample.com"
+	validPass    = "password"
+	invalidPass  = "wrong"
 )
 
 var (
-	user           = users.User{Email: "user@example.com", Password: "password"}
+	user           = users.User{Email: validEmail, Password: validPass}
 	notFoundRes    = toJSON(errorRes{users.ErrUserNotFound.Error()})
 	unauthRes      = toJSON(errorRes{users.ErrUnauthorizedAccess.Error()})
-	malformedRes   = toJSON(errorRes{internalerr.ErrMalformedEntity.Error()})
+	malformedRes   = toJSON(errorRes{users.ErrMalformedEntity.Error()})
+	weakPassword   = toJSON(errorRes{users.ErrPasswordFormat.Error()})
 	unsupportedRes = toJSON(errorRes{internalerr.ErrUnsupportedContentType.Error()})
-	groupExists    = toJSON(errorRes{users.ErrGroupConflict.Error()})
+	failDecodeRes  = toJSON(errorRes{internalerr.ErrMalformedEntity.Error()})
+	passRegex      = regexp.MustCompile("^.{8,}$")
 )
 
 type testRequest struct {
@@ -67,13 +73,12 @@ func (tr testRequest) make() (*http.Response, error) {
 
 func newService() users.Service {
 	usersRepo := mocks.NewUserRepository()
-	groupRepo := mocks.NewGroupRepository()
 	hasher := bcrypt.New()
 	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
 	email := mocks.NewEmailer()
 	idProvider := uuid.New()
 
-	return users.New(usersRepo, groupRepo, hasher, auth, email, idProvider)
+	return users.New(usersRepo, hasher, auth, email, idProvider, passRegex)
 }
 
 func newServer(svc users.Service) *httptest.Server {
@@ -93,7 +98,8 @@ func TestRegister(t *testing.T) {
 	client := ts.Client()
 
 	data := toJSON(user)
-	invalidData := toJSON(users.User{Email: invalidEmail, Password: "password"})
+	invalidData := toJSON(users.User{Email: invalidEmail, Password: validPass})
+	invalidPasswordData := toJSON(users.User{Email: validEmail, Password: invalidPass})
 	invalidFieldData := fmt.Sprintf(`{"email": "%s", "pass": "%s"}`, user.Email, user.Password)
 
 	cases := []struct {
@@ -105,6 +111,7 @@ func TestRegister(t *testing.T) {
 		{"register new user", data, contentType, http.StatusCreated},
 		{"register existing user", data, contentType, http.StatusConflict},
 		{"register user with invalid email address", invalidData, contentType, http.StatusBadRequest},
+		{"register user with weak password", invalidPasswordData, contentType, http.StatusBadRequest},
 		{"register user with invalid request format", "{", contentType, http.StatusBadRequest},
 		{"register user with empty JSON request", "{}", contentType, http.StatusBadRequest},
 		{"register user with empty request", "", contentType, http.StatusBadRequest},
@@ -138,15 +145,15 @@ func TestLogin(t *testing.T) {
 	data := toJSON(user)
 	invalidEmailData := toJSON(users.User{
 		Email:    invalidEmail,
-		Password: "password",
+		Password: validPass,
 	})
 	invalidData := toJSON(users.User{
-		Email:    "user@example.com",
+		Email:    validEmail,
 		Password: "invalid_password",
 	})
 	nonexistentData := toJSON(users.User{
 		Email:    "non-existentuser@example.com",
-		Password: "password",
+		Password: validPass,
 	})
 	_, err := svc.Register(context.Background(), user)
 	require.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
@@ -235,7 +242,7 @@ func TestPasswordResetRequest(t *testing.T) {
 
 	nonexistentData := toJSON(users.User{
 		Email:    "non-existentuser@example.com",
-		Password: "password",
+		Password: validPass,
 	})
 
 	expectedExisting := toJSON(struct {
@@ -322,8 +329,11 @@ func TestPasswordReset(t *testing.T) {
 
 	reqData.Token = token
 
-	reqData.ConfPass = "wrong"
+	reqData.ConfPass = invalidPass
 	reqPassNoMatch := toJSON(reqData)
+
+	reqData.Password = invalidPass
+	reqPassWeak := toJSON(reqData)
 
 	cases := []struct {
 		desc        string
@@ -340,6 +350,7 @@ func TestPasswordReset(t *testing.T) {
 		{"password reset request with empty JSON request", "{}", contentType, http.StatusBadRequest, malformedRes, token},
 		{"password reset request with empty request", "", contentType, http.StatusBadRequest, malformedRes, token},
 		{"password reset request with missing content type", reqExisting, "", http.StatusUnsupportedMediaType, unsupportedRes, token},
+		{"password reset with weak password", reqPassWeak, contentType, http.StatusBadRequest, weakPassword, token},
 	}
 
 	for _, tc := range cases {
@@ -395,8 +406,12 @@ func TestPasswordChange(t *testing.T) {
 
 	reqNoExist := toJSON(reqData)
 
-	reqData.OldPassw = "wrong"
+	reqData.OldPassw = invalidPass
 	reqWrongPass := toJSON(reqData)
+
+	reqData.OldPassw = user.Password
+	reqData.Password = invalidPass
+	reqWeakPass := toJSON(reqData)
 
 	resData.Msg = users.ErrUnauthorizedAccess.Error()
 
@@ -411,6 +426,7 @@ func TestPasswordChange(t *testing.T) {
 		{"password change with valid token", dataResExisting, contentType, http.StatusCreated, expectedSuccess, token},
 		{"password change with invalid token", reqNoExist, contentType, http.StatusForbidden, unauthRes, ""},
 		{"password change with invalid old password", reqWrongPass, contentType, http.StatusForbidden, unauthRes, token},
+		{"password change with invalid new password", reqWeakPass, contentType, http.StatusBadRequest, weakPassword, token},
 		{"password change with empty JSON request", "{}", contentType, http.StatusBadRequest, malformedRes, token},
 		{"password change empty request", "", contentType, http.StatusBadRequest, malformedRes, token},
 		{"password change missing content type", dataResExisting, "", http.StatusUnsupportedMediaType, unsupportedRes, token},
@@ -421,71 +437,6 @@ func TestPasswordChange(t *testing.T) {
 			client:      client,
 			method:      http.MethodPatch,
 			url:         fmt.Sprintf("%s/password", ts.URL),
-			contentType: tc.contentType,
-			body:        strings.NewReader(tc.req),
-			token:       tc.tok,
-		}
-
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		body, err := ioutil.ReadAll(res.Body)
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		token := strings.Trim(string(body), "\n")
-
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		assert.Equal(t, tc.res, token, fmt.Sprintf("%s: expected body %s got %s", tc.desc, tc.res, token))
-	}
-}
-
-func TestGroupCreate(t *testing.T) {
-	svc := newService()
-	ts := newServer(svc)
-	defer ts.Close()
-	client := ts.Client()
-	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
-
-	_, err := svc.Register(context.Background(), user)
-	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-
-	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
-	token := tkn.GetValue()
-
-	expectedSuccess := ""
-
-	groupData := struct {
-		Token       string `json:"token,omitempty"`
-		Name        string `json:"name,omitempty"`
-		Description string `json:"description,omitempty"`
-	}{}
-
-	groupData.Token = token
-	groupData.Name = "Mainflux"
-	createValidTokenRequest := toJSON(groupData)
-
-	groupData.Token = "invalid"
-	createInvalidTokenRequest := toJSON(groupData)
-
-	cases := []struct {
-		desc        string
-		req         string
-		contentType string
-		status      int
-		res         string
-		tok         string
-	}{
-		{"group create with valid token", createValidTokenRequest, contentType, http.StatusCreated, expectedSuccess, token},
-		{"group create with existing name", createValidTokenRequest, contentType, http.StatusConflict, groupExists, token},
-		{"group create with invalid token", createInvalidTokenRequest, contentType, http.StatusForbidden, unauthRes, ""},
-		{"group create with empty JSON request", "{}", contentType, http.StatusBadRequest, malformedRes, token},
-		{"group create empty request", "", contentType, http.StatusBadRequest, malformedRes, token},
-		{"group create missing content type", createValidTokenRequest, "", http.StatusUnsupportedMediaType, unsupportedRes, token},
-	}
-
-	for _, tc := range cases {
-		req := testRequest{
-			client:      client,
-			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/groups", ts.URL),
 			contentType: tc.contentType,
 			body:        strings.NewReader(tc.req),
 			token:       tc.tok,
