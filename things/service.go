@@ -128,11 +128,11 @@ type PageMetadata struct {
 	Total     uint64
 	Offset    uint64
 	Limit     uint64
-	Name      string
+	Name      string `json:"name,omitempty"`
 	Order     string
 	Dir       string
-	Metadata  map[string]interface{}
-	Connected bool // Used for connected or disconnected lists
+	Metadata  map[string]interface{} `json:"metadata,omitempty"`
+	Connected bool                   // Used for connected or disconnected lists
 }
 
 var _ Service = (*thingsService)(nil)

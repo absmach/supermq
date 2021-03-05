@@ -183,47 +183,6 @@ func listThingsEndpoint(svc things.Service) endpoint.Endpoint {
 	}
 }
 
-func listThingsMetaEndpoint(svc things.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(listResourcesMetaReq)
-
-		if err := req.validate(); err != nil {
-			return nil, err
-		}
-
-		req.pageMetadata.Name = req.Name
-		req.pageMetadata.Metadata = req.Metadata
-
-		page, err := svc.ListThings(ctx, req.token, req.pageMetadata)
-		if err != nil {
-			return nil, err
-		}
-
-		res := thingsPageRes{
-			pageRes: pageRes{
-				Total:  page.Total,
-				Offset: page.Offset,
-				Limit:  page.Limit,
-				Order:  page.Order,
-				Dir:    page.Dir,
-			},
-			Things: []viewThingRes{},
-		}
-		for _, thing := range page.Things {
-			view := viewThingRes{
-				ID:       thing.ID,
-				Owner:    thing.Owner,
-				Name:     thing.Name,
-				Key:      thing.Key,
-				Metadata: thing.Metadata,
-			}
-			res.Things = append(res.Things, view)
-		}
-
-		return res, nil
-	}
-}
-
 func listThingsByChannelEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listByConnectionReq)

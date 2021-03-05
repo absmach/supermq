@@ -105,8 +105,8 @@ func MakeHandler(tracer opentracing.Tracer, svc things.Service) http.Handler {
 		opts...,
 	))
 
-	r.Post("/things/list", kithttp.NewServer(
-		kitot.TraceServer(tracer, "list_things")(listThingsMetaEndpoint(svc)),
+	r.Post("/things/search", kithttp.NewServer(
+		kitot.TraceServer(tracer, "list_things")(listThingsEndpoint(svc)),
 		decodeListByMetadata,
 		encodeResponse,
 		opts...,
@@ -372,7 +372,7 @@ func decodeListByMetadata(_ context.Context, r *http.Request) (interface{}, erro
 		return nil, err
 	}
 
-	req := listResourcesMetaReq{
+	req := listResourcesReq{
 		token: r.Header.Get("Authorization"),
 		pageMetadata: things.PageMetadata{
 			Offset: o,
@@ -382,7 +382,7 @@ func decodeListByMetadata(_ context.Context, r *http.Request) (interface{}, erro
 		},
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req.pageMetadata); err != nil {
 		return nil, errors.Wrap(things.ErrMalformedEntity, err)
 	}
 
