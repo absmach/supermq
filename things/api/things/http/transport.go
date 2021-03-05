@@ -105,6 +105,13 @@ func MakeHandler(tracer opentracing.Tracer, svc things.Service) http.Handler {
 		opts...,
 	))
 
+	r.Post("/things/list", kithttp.NewServer(
+		kitot.TraceServer(tracer, "list_things")(listThingsMetaEndpoint(svc)),
+		decodeListByMetadata,
+		encodeResponse,
+		opts...,
+	))
+
 	r.Post("/channels", kithttp.NewServer(
 		kitot.TraceServer(tracer, "create_channel")(createChannelEndpoint(svc)),
 		decodeChannelCreation,
@@ -339,6 +346,44 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 			Dir:      d,
 			Metadata: m,
 		},
+	}
+
+	return req, nil
+}
+
+func decodeListByMetadata(_ context.Context, r *http.Request) (interface{}, error) {
+	o, err := readUintQuery(r, offsetKey, defOffset)
+	if err != nil {
+		return nil, err
+	}
+
+	l, err := readUintQuery(r, limitKey, defLimit)
+	if err != nil {
+		return nil, err
+	}
+
+	or, err := readStringQuery(r, orderKey)
+	if err != nil {
+		return nil, err
+	}
+
+	d, err := readStringQuery(r, dirKey)
+	if err != nil {
+		return nil, err
+	}
+
+	req := listResourcesMetaReq{
+		token: r.Header.Get("Authorization"),
+		pageMetadata: things.PageMetadata{
+			Offset: o,
+			Limit:  l,
+			Order:  or,
+			Dir:    d,
+		},
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, errors.Wrap(things.ErrMalformedEntity, err)
 	}
 
 	return req, nil
