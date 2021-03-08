@@ -1,8 +1,6 @@
 package api
 
-import (
-	internalerr "github.com/mainflux/mainflux/internal/errors"
-)
+import internalerr "github.com/mainflux/mainflux/internal/errors"
 
 type provisionReq struct {
 	token       string
