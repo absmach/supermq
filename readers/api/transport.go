@@ -12,7 +12,7 @@ import (
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
-	intapihttp "github.com/mainflux/mainflux/internal/api/http"
+	internalhttp "github.com/mainflux/mainflux/internal/http"
 	internalerr "github.com/mainflux/mainflux/internal/errors"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/readers"
@@ -66,17 +66,17 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	offset, err := intapihttp.ReadUintQuery(r, "offset", defOffset)
+	offset, err := internalhttp.ReadUintQuery(r, "offset", defOffset)
 	if err != nil {
 		return nil, err
 	}
 
-	limit, err := intapihttp.ReadUintQuery(r, "limit", defLimit)
+	limit, err := internalhttp.ReadUintQuery(r, "limit", defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	format, err := intapihttp.ReadStringQuery(r, "format")
+	format, err := internalhttp.ReadStringQuery(r, "format")
 	if err != nil {
 		return nil, err
 	}
@@ -84,52 +84,52 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		format = defFormat
 	}
 
-	subtopic, err := intapihttp.ReadStringQuery(r, "subtopic")
+	subtopic, err := internalhttp.ReadStringQuery(r, "subtopic")
 	if err != nil {
 		return nil, err
 	}
 
-	publisher, err := intapihttp.ReadStringQuery(r, "publisher")
+	publisher, err := internalhttp.ReadStringQuery(r, "publisher")
 	if err != nil {
 		return nil, err
 	}
 
-	protocol, err := intapihttp.ReadStringQuery(r, "protocol")
+	protocol, err := internalhttp.ReadStringQuery(r, "protocol")
 	if err != nil {
 		return nil, err
 	}
 
-	name, err := intapihttp.ReadStringQuery(r, "name")
+	name, err := internalhttp.ReadStringQuery(r, "name")
 	if err != nil {
 		return nil, err
 	}
 
-	v, err := intapihttp.ReadFloatQuery(r, "v")
+	v, err := internalhttp.ReadFloatQuery(r, "v")
 	if err != nil {
 		return nil, err
 	}
 
-	comparator, err := intapihttp.ReadStringQuery(r, "comparator")
+	comparator, err := internalhttp.ReadStringQuery(r, "comparator")
 	if err != nil {
 		return nil, err
 	}
 
-	vs, err := intapihttp.ReadStringQuery(r, "vs")
+	vs, err := internalhttp.ReadStringQuery(r, "vs")
 	if err != nil {
 		return nil, err
 	}
 
-	vd, err := intapihttp.ReadStringQuery(r, "vd")
+	vd, err := internalhttp.ReadStringQuery(r, "vd")
 	if err != nil {
 		return nil, err
 	}
 
-	from, err := intapihttp.ReadFloatQuery(r, "from")
+	from, err := internalhttp.ReadFloatQuery(r, "from")
 	if err != nil {
 		return nil, err
 	}
 
-	to, err := intapihttp.ReadFloatQuery(r, "to")
+	to, err := internalhttp.ReadFloatQuery(r, "to")
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +153,7 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		},
 	}
 
-	vb, err := intapihttp.ReadBoolQuery(r, "vb")
+	vb, err := internalhttp.ReadBoolQuery(r, "vb")
 	if err != nil && err != internalerr.ErrNotInQuery {
 		return nil, err
 	}

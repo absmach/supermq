@@ -11,7 +11,7 @@ import (
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
-	intapihttp "github.com/mainflux/mainflux/internal/api/http"
+	internalhttp "github.com/mainflux/mainflux/internal/http"
 	internalerr "github.com/mainflux/mainflux/internal/errors"
 	"github.com/mainflux/mainflux/opcua"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -52,17 +52,17 @@ func MakeHandler(svc opcua.Service) http.Handler {
 }
 
 func decodeBrowse(_ context.Context, r *http.Request) (interface{}, error) {
-	s, err := intapihttp.ReadStringQuery(r, serverParam)
+	s, err := internalhttp.ReadStringQuery(r, serverParam)
 	if err != nil {
 		return nil, err
 	}
 
-	n, err := intapihttp.ReadStringQuery(r, namespaceParam)
+	n, err := internalhttp.ReadStringQuery(r, namespaceParam)
 	if err != nil {
 		return nil, err
 	}
 
-	i, err := intapihttp.ReadStringQuery(r, identifierParam)
+	i, err := internalhttp.ReadStringQuery(r, identifierParam)
 	if err != nil {
 		return nil, err
 	}

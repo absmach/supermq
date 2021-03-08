@@ -15,7 +15,7 @@ import (
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
 	notifiers "github.com/mainflux/mainflux/consumers/notifiers"
-	intapihttp "github.com/mainflux/mainflux/internal/api/http"
+	internalhttp "github.com/mainflux/mainflux/internal/http"
 	internalerr "github.com/mainflux/mainflux/internal/errors"
 	"github.com/mainflux/mainflux/pkg/errors"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -102,13 +102,13 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		req.contact = vals[0]
 	}
 
-	offset, err := intapihttp.ReadUintQuery(r, "offset", 0)
+	offset, err := internalhttp.ReadUintQuery(r, "offset", 0)
 	if err != nil {
 		return listSubsReq{}, err
 	}
 	req.offset = uint(offset)
 
-	limit, err := intapihttp.ReadUintQuery(r, "limit", 20)
+	limit, err := internalhttp.ReadUintQuery(r, "limit", 20)
 	if err != nil {
 		return listSubsReq{}, err
 	}

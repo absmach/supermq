@@ -14,7 +14,7 @@ import (
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
-	intapihttp "github.com/mainflux/mainflux/internal/api/http"
+	internalhttp "github.com/mainflux/mainflux/internal/http"
 	internalerr "github.com/mainflux/mainflux/internal/errors"
 	"github.com/mainflux/mainflux/twins"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -128,22 +128,22 @@ func decodeView(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
-	l, err := intapihttp.ReadUintQuery(r, limit, defLimit)
+	l, err := internalhttp.ReadUintQuery(r, limit, defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	o, err := intapihttp.ReadUintQuery(r, offset, defOffset)
+	o, err := internalhttp.ReadUintQuery(r, offset, defOffset)
 	if err != nil {
 		return nil, err
 	}
 
-	n, err := intapihttp.ReadStringQuery(r, name)
+	n, err := internalhttp.ReadStringQuery(r, name)
 	if err != nil {
 		return nil, err
 	}
 
-	m, err := intapihttp.ReadMetadataQuery(r, "metadata")
+	m, err := internalhttp.ReadMetadataQuery(r, "metadata")
 	if err != nil {
 		return nil, err
 	}
@@ -160,12 +160,12 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeListStates(_ context.Context, r *http.Request) (interface{}, error) {
-	l, err := intapihttp.ReadUintQuery(r, limit, defLimit)
+	l, err := internalhttp.ReadUintQuery(r, limit, defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	o, err := intapihttp.ReadUintQuery(r, offset, defOffset)
+	o, err := internalhttp.ReadUintQuery(r, offset, defOffset)
 	if err != nil {
 		return nil, err
 	}
