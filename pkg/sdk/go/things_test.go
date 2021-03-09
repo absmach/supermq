@@ -366,7 +366,7 @@ func TestThingsByChannel(t *testing.T) {
 	var things []sdk.Thing
 	for i := 1; i < n+1; i++ {
 		th := sdk.Thing{
-			ID:       strconv.Itoa(i),
+			ID:       fmt.Sprintf("%03d", i),
 			Name:     "test_device",
 			Metadata: metadata,
 			Key:      fmt.Sprintf("%s%012d", keyPrefix, 2*i+1),
