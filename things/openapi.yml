@@ -602,25 +602,38 @@ components:
       properties:
         name:
           type: string
-          description: Free-form thing name.
+          description: Name filter. Filtering is performed as a case-insensitive partial match.
         metadata:
           type: object
-          description: Object-encoded thing's data.
+          description: Metadata filter. Filtering is performed matching the parameter with metadata on top level. Parameter is json.
         total:
           type: integer
           description: Total number of items.
         offset:
           type: integer
           description: Number of items to skip during retrieval.
+          default: 0
+          minimum: 0
         limit:
           type: integer
-          description: Maximum number of items to return in one page.
+          description: Size of the subset to retrieve.
+          default: 10
+          maximum: 100
+          minimum: 1
         order:
           type: string
           description: Order type.
+          default: id
+          enum:
+            - name
+            - id
         dir:
           type: string
           description: Order direction.
+          default: desc
+          enum:
+            - asc
+            - desc
     ThingResSchema:
       type: object
       properties:

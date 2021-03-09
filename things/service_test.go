@@ -717,7 +717,7 @@ func TestListChannels(t *testing.T) {
 				Offset: 1,
 				Limit:  0,
 			},
-			size: 9,
+			size: n - 1,
 			err:  nil,
 		},
 		"list with wrong credentials": {

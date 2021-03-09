@@ -106,7 +106,7 @@ func MakeHandler(tracer opentracing.Tracer, svc things.Service) http.Handler {
 	))
 
 	r.Post("/things/search", kithttp.NewServer(
-		kitot.TraceServer(tracer, "list_things")(listThingsEndpoint(svc)),
+		kitot.TraceServer(tracer, "search_things")(listThingsEndpoint(svc)),
 		decodeListByMetadata,
 		encodeResponse,
 		opts...,
