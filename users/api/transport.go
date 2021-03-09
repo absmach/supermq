@@ -15,7 +15,6 @@ import (
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
 	internalhttp "github.com/mainflux/mainflux/internal/http"
-	internalerr "github.com/mainflux/mainflux/internal/errors"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -176,12 +175,12 @@ func decodeUpdateUser(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeCredentials(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	var user users.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		return nil, errors.Wrap(internalerr.ErrMalformedEntity, err)
+		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
 
 	return userReq{user}, nil
@@ -189,13 +188,13 @@ func decodeCredentials(_ context.Context, r *http.Request) (interface{}, error) 
 
 func decodePasswordResetRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	var req passwResetReq
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(internalerr.ErrMalformedEntity, err)
+		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
 
 	req.Host = r.Header.Get("Referer")
@@ -204,12 +203,12 @@ func decodePasswordResetRequest(_ context.Context, r *http.Request) (interface{}
 
 func decodePasswordReset(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	var req resetTokenReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(internalerr.ErrMalformedEntity, err)
+		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
 
 	return req, nil
@@ -217,12 +216,12 @@ func decodePasswordReset(_ context.Context, r *http.Request) (interface{}, error
 
 func decodePasswordChange(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	var req passwChangeReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(internalerr.ErrMalformedEntity, err)
+		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
 
 	req.Token = r.Header.Get("Authorization")
@@ -277,7 +276,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	case errors.Error:
 		w.Header().Set("Content-Type", contentType)
 		switch {
-		case errors.Contains(errorVal, internalerr.ErrInvalidQueryParams):
+		case errors.Contains(errorVal, errors.ErrInvalidQueryParams):
 			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, users.ErrMalformedEntity):
 			w.WriteHeader(http.StatusBadRequest)
@@ -287,9 +286,9 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			w.WriteHeader(http.StatusConflict)
 		case errors.Contains(errorVal, users.ErrGroupConflict):
 			w.WriteHeader(http.StatusConflict)
-		case errors.Contains(errorVal, internalerr.ErrUnsupportedContentType):
+		case errors.Contains(errorVal, errors.ErrUnsupportedContentType):
 			w.WriteHeader(http.StatusUnsupportedMediaType)
-		case errors.Contains(errorVal, internalerr.ErrMalformedEntity):
+		case errors.Contains(errorVal, errors.ErrMalformedEntity):
 			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, io.ErrUnexpectedEOF):
 			w.WriteHeader(http.StatusBadRequest)

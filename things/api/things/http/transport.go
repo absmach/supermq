@@ -16,7 +16,6 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/auth"
 	internalhttp "github.com/mainflux/mainflux/internal/http"
-	internalerr "github.com/mainflux/mainflux/internal/errors"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -186,7 +185,7 @@ func MakeHandler(tracer opentracing.Tracer, svc things.Service) http.Handler {
 
 func decodeThingCreation(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := createThingReq{token: r.Header.Get("Authorization")}
@@ -199,7 +198,7 @@ func decodeThingCreation(_ context.Context, r *http.Request) (interface{}, error
 
 func decodeThingsCreation(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := createThingsReq{token: r.Header.Get("Authorization")}
@@ -212,7 +211,7 @@ func decodeThingsCreation(_ context.Context, r *http.Request) (interface{}, erro
 
 func decodeThingUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := updateThingReq{
@@ -228,7 +227,7 @@ func decodeThingUpdate(_ context.Context, r *http.Request) (interface{}, error) 
 
 func decodeKeyUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := updateKeyReq{
@@ -244,7 +243,7 @@ func decodeKeyUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeChannelCreation(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := createChannelReq{token: r.Header.Get("Authorization")}
@@ -257,7 +256,7 @@ func decodeChannelCreation(_ context.Context, r *http.Request) (interface{}, err
 
 func decodeChannelsCreation(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := createChannelsReq{token: r.Header.Get("Authorization")}
@@ -271,7 +270,7 @@ func decodeChannelsCreation(_ context.Context, r *http.Request) (interface{}, er
 
 func decodeChannelUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := updateChannelReq{
@@ -352,7 +351,7 @@ func decodeListByConnection(_ context.Context, r *http.Request) (interface{}, er
 	}
 
 	c, err := internalhttp.ReadBoolQuery(r, connKey)
-	if err != nil && err != internalerr.ErrNotInQuery {
+	if err != nil && err != errors.ErrNotInQuery {
 		return nil, err
 	}
 
@@ -393,7 +392,7 @@ func decodeConnection(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeCreateConnections(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := createConnectionsReq{token: r.Header.Get("Authorization")}
@@ -459,9 +458,9 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			errors.Contains(errorVal, things.ErrEntityConnected):
 			w.WriteHeader(http.StatusUnauthorized)
 
-		case errors.Contains(errorVal, internalerr.ErrInvalidQueryParams):
+		case errors.Contains(errorVal, errors.ErrInvalidQueryParams):
 			w.WriteHeader(http.StatusBadRequest)
-		case errors.Contains(errorVal, internalerr.ErrUnsupportedContentType):
+		case errors.Contains(errorVal, errors.ErrUnsupportedContentType):
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 
 		case errors.Contains(errorVal, things.ErrMalformedEntity):

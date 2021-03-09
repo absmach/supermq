@@ -14,7 +14,7 @@ import (
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
-	internalerr "github.com/mainflux/mainflux/internal/errors"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things"
 	opentracing "github.com/opentracing/opentracing-go"
 )
@@ -55,7 +55,7 @@ func MakeHandler(tracer opentracing.Tracer, svc things.Service) http.Handler {
 
 func decodeIdentify(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := identifyReq{}
@@ -68,7 +68,7 @@ func decodeIdentify(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeCanAccessByKey(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := canAccessByKeyReq{
@@ -83,7 +83,7 @@ func decodeCanAccessByKey(_ context.Context, r *http.Request) (interface{}, erro
 
 func decodeCanAccessByID(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := canAccessByIDReq{
@@ -123,7 +123,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	case things.ErrEntityConnected:
 		w.WriteHeader(http.StatusForbidden)
 
-	case internalerr.ErrUnsupportedContentType:
+	case errors.ErrUnsupportedContentType:
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 
 	case io.ErrUnexpectedEOF:

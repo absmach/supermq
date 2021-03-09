@@ -16,7 +16,6 @@ import (
 	"github.com/mainflux/mainflux"
 	notifiers "github.com/mainflux/mainflux/consumers/notifiers"
 	internalhttp "github.com/mainflux/mainflux/internal/http"
-	internalerr "github.com/mainflux/mainflux/internal/errors"
 	"github.com/mainflux/mainflux/pkg/errors"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -68,11 +67,11 @@ func MakeHandler(svc notifiers.Service, tracer opentracing.Tracer) http.Handler 
 
 func decodeCreate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 	var req createSubReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(internalerr.ErrMalformedEntity, err)
+		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
 
 	req.token = r.Header.Get("Authorization")
@@ -138,10 +137,10 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	case errors.Error:
 		w.Header().Set("Content-Type", contentType)
 		switch {
-		case errors.Contains(errorVal, internalerr.ErrMalformedEntity),
+		case errors.Contains(errorVal, errors.ErrMalformedEntity),
 			errors.Contains(errorVal, errInvalidContact),
 			errors.Contains(errorVal, errInvalidTopic),
-			errors.Contains(errorVal, internalerr.ErrInvalidQueryParams):
+			errors.Contains(errorVal, errors.ErrInvalidQueryParams):
 			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, notifiers.ErrNotFound),
 			errors.Contains(errorVal, errNotFound):
@@ -150,7 +149,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			w.WriteHeader(http.StatusUnauthorized)
 		case errors.Contains(errorVal, notifiers.ErrConflict):
 			w.WriteHeader(http.StatusConflict)
-		case errors.Contains(errorVal, internalerr.ErrUnsupportedContentType):
+		case errors.Contains(errorVal, errors.ErrUnsupportedContentType):
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 		case errors.Contains(errorVal, io.ErrUnexpectedEOF):
 			w.WriteHeader(http.StatusBadRequest)

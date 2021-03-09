@@ -16,7 +16,6 @@ import (
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/bootstrap"
-	internalerr "github.com/mainflux/mainflux/internal/errors"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -109,7 +108,7 @@ func MakeHandler(svc bootstrap.Service, reader bootstrap.ConfigReader) http.Hand
 
 func decodeAddRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := addReq{token: r.Header.Get("Authorization")}
@@ -122,7 +121,7 @@ func decodeAddRequest(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeUpdateRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := updateReq{key: r.Header.Get("Authorization")}
@@ -136,7 +135,7 @@ func decodeUpdateRequest(_ context.Context, r *http.Request) (interface{}, error
 
 func decodeUpdateCertRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := updateCertReq{
@@ -153,7 +152,7 @@ func decodeUpdateCertRequest(_ context.Context, r *http.Request) (interface{}, e
 
 func decodeUpdateConnRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := updateConnReq{key: r.Header.Get("Authorization")}
@@ -168,7 +167,7 @@ func decodeUpdateConnRequest(_ context.Context, r *http.Request) (interface{}, e
 func decodeListRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	q, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
-		return nil, internalerr.ErrInvalidQueryParams
+		return nil, errors.ErrInvalidQueryParams
 	}
 
 	offset, limit, err := parsePagePrams(q)
@@ -199,7 +198,7 @@ func decodeBootstrapRequest(_ context.Context, r *http.Request) (interface{}, er
 
 func decodeStateRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := changeStateReq{key: r.Header.Get("Authorization")}
@@ -253,9 +252,9 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	case errors.Error:
 		w.Header().Set("Content-Type", contentType)
 		switch {
-		case errors.Contains(errorVal, internalerr.ErrUnsupportedContentType):
+		case errors.Contains(errorVal, errors.ErrUnsupportedContentType):
 			w.WriteHeader(http.StatusUnsupportedMediaType)
-		case errors.Contains(errorVal, internalerr.ErrInvalidQueryParams):
+		case errors.Contains(errorVal, errors.ErrInvalidQueryParams):
 			w.WriteHeader(http.StatusBadRequest)
 
 		case errors.Contains(errorVal, bootstrap.ErrMalformedEntity):
@@ -292,7 +291,7 @@ func parseUint(s string) (uint64, error) {
 
 	ret, err := strconv.ParseUint(s, 10, 64)
 	if err != nil {
-		return 0, internalerr.ErrInvalidQueryParams
+		return 0, errors.ErrInvalidQueryParams
 	}
 
 	return ret, nil

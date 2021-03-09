@@ -12,8 +12,8 @@ import (
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
 	internalhttp "github.com/mainflux/mainflux/internal/http"
-	internalerr "github.com/mainflux/mainflux/internal/errors"
 	"github.com/mainflux/mainflux/opcua"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -105,7 +105,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch err {
 	case opcua.ErrMalformedEntity:
 		w.WriteHeader(http.StatusBadRequest)
-	case internalerr.ErrInvalidQueryParams:
+	case errors.ErrInvalidQueryParams:
 		w.WriteHeader(http.StatusBadRequest)
 	default:
 		w.WriteHeader(http.StatusInternalServerError)

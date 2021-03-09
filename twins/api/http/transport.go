@@ -15,7 +15,7 @@ import (
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
 	internalhttp "github.com/mainflux/mainflux/internal/http"
-	internalerr "github.com/mainflux/mainflux/internal/errors"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/twins"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -91,7 +91,7 @@ func MakeHandler(tracer opentracing.Tracer, svc twins.Service) http.Handler {
 
 func decodeTwinCreation(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := addTwinReq{token: r.Header.Get("Authorization")}
@@ -104,7 +104,7 @@ func decodeTwinCreation(_ context.Context, r *http.Request) (interface{}, error)
 
 func decodeTwinUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := updateTwinReq{
@@ -210,9 +210,9 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusNotFound)
 	case twins.ErrConflict:
 		w.WriteHeader(http.StatusUnprocessableEntity)
-	case internalerr.ErrUnsupportedContentType:
+	case errors.ErrUnsupportedContentType:
 		w.WriteHeader(http.StatusUnsupportedMediaType)
-	case internalerr.ErrInvalidQueryParams:
+	case errors.ErrInvalidQueryParams:
 		w.WriteHeader(http.StatusBadRequest)
 	case io.ErrUnexpectedEOF:
 		w.WriteHeader(http.StatusBadRequest)

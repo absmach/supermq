@@ -14,7 +14,6 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/certs"
 	internalhttp "github.com/mainflux/mainflux/internal/http"
-	internalerr "github.com/mainflux/mainflux/internal/errors"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -105,7 +104,7 @@ func decodeListCerts(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeCerts(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := addCertsReq{token: r.Header.Get("Authorization")}
@@ -118,7 +117,7 @@ func decodeCerts(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeRevokeCerts(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := revokeReq{token: r.Header.Get("Authorization")}
@@ -133,10 +132,10 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", contentType)
 
 	switch err {
-	case internalerr.ErrUnsupportedContentType:
+	case errors.ErrUnsupportedContentType:
 		w.WriteHeader(http.StatusUnsupportedMediaType)
-	case io.EOF, internalerr.ErrMalformedEntity,
-		internalerr.ErrInvalidQueryParams:
+	case io.EOF, errors.ErrMalformedEntity,
+		errors.ErrInvalidQueryParams:
 		w.WriteHeader(http.StatusBadRequest)
 	case errConflict:
 		w.WriteHeader(http.StatusConflict)

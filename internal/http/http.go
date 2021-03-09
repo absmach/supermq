@@ -9,7 +9,6 @@ import (
 	"strconv"
 
 	"github.com/go-zoo/bone"
-	internalerr "github.com/mainflux/mainflux/internal/errors"
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
@@ -17,7 +16,7 @@ import (
 func ReadUintQuery(r *http.Request, key string, def uint64) (uint64, error) {
 	vals := bone.GetQuery(r, key)
 	if len(vals) > 1 {
-		return 0, internalerr.ErrInvalidQueryParams
+		return 0, errors.ErrInvalidQueryParams
 	}
 
 	if len(vals) == 0 {
@@ -27,7 +26,7 @@ func ReadUintQuery(r *http.Request, key string, def uint64) (uint64, error) {
 	strval := vals[0]
 	val, err := strconv.ParseUint(strval, 10, 64)
 	if err != nil {
-		return 0, internalerr.ErrInvalidQueryParams
+		return 0, errors.ErrInvalidQueryParams
 	}
 
 	return val, nil
@@ -37,7 +36,7 @@ func ReadUintQuery(r *http.Request, key string, def uint64) (uint64, error) {
 func ReadStringQuery(r *http.Request, key string) (string, error) {
 	vals := bone.GetQuery(r, key)
 	if len(vals) > 1 {
-		return "", internalerr.ErrInvalidQueryParams
+		return "", errors.ErrInvalidQueryParams
 	}
 
 	if len(vals) == 0 {
@@ -51,7 +50,7 @@ func ReadStringQuery(r *http.Request, key string) (string, error) {
 func ReadMetadataQuery(r *http.Request, key string) (map[string]interface{}, error) {
 	vals := bone.GetQuery(r, key)
 	if len(vals) > 1 {
-		return nil, internalerr.ErrInvalidQueryParams
+		return nil, errors.ErrInvalidQueryParams
 	}
 
 	if len(vals) == 0 {
@@ -61,7 +60,7 @@ func ReadMetadataQuery(r *http.Request, key string) (map[string]interface{}, err
 	m := make(map[string]interface{})
 	err := json.Unmarshal([]byte(vals[0]), &m)
 	if err != nil {
-		return nil, errors.Wrap(internalerr.ErrInvalidQueryParams, err)
+		return nil, errors.Wrap(errors.ErrInvalidQueryParams, err)
 	}
 
 	return m, nil
@@ -71,16 +70,16 @@ func ReadMetadataQuery(r *http.Request, key string) (map[string]interface{}, err
 func ReadBoolQuery(r *http.Request, key string) (bool, error) {
 	vals := bone.GetQuery(r, key)
 	if len(vals) == 0 {
-		return true, internalerr.ErrNotInQuery
+		return true, errors.ErrNotInQuery
 	}
 
 	if len(vals) > 1 {
-		return false, internalerr.ErrInvalidQueryParams
+		return false, errors.ErrInvalidQueryParams
 	}
 
 	b, err := strconv.ParseBool(vals[0])
 	if err != nil {
-		return false, internalerr.ErrInvalidQueryParams
+		return false, errors.ErrInvalidQueryParams
 	}
 
 	return b, nil
@@ -90,7 +89,7 @@ func ReadBoolQuery(r *http.Request, key string) (bool, error) {
 func ReadFloatQuery(r *http.Request, key string) (float64, error) {
 	vals := bone.GetQuery(r, key)
 	if len(vals) > 1 {
-		return 0, internalerr.ErrInvalidQueryParams
+		return 0, errors.ErrInvalidQueryParams
 	}
 
 	if len(vals) == 0 {
@@ -100,7 +99,7 @@ func ReadFloatQuery(r *http.Request, key string) (float64, error) {
 	fval := vals[0]
 	val, err := strconv.ParseFloat(fval, 64)
 	if err != nil {
-		return 0, internalerr.ErrInvalidQueryParams
+		return 0, errors.ErrInvalidQueryParams
 	}
 
 	return val, nil

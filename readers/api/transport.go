@@ -13,7 +13,6 @@ import (
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
 	internalhttp "github.com/mainflux/mainflux/internal/http"
-	internalerr "github.com/mainflux/mainflux/internal/errors"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/readers"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -59,7 +58,7 @@ func MakeHandler(svc readers.MessageRepository, tc mainflux.ThingsServiceClient,
 func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 	chanID := bone.GetValue(r, "chanID")
 	if chanID == "" {
-		return nil, internalerr.ErrInvalidQueryParams
+		return nil, errors.ErrInvalidQueryParams
 	}
 
 	if err := authorize(r, chanID); err != nil {
@@ -154,7 +153,7 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 	}
 
 	vb, err := internalhttp.ReadBoolQuery(r, "vb")
-	if err != nil && err != internalerr.ErrNotInQuery {
+	if err != nil && err != errors.ErrNotInQuery {
 		return nil, err
 	}
 	if err == nil {
@@ -185,7 +184,7 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
 	case errors.Contains(err, nil):
-	case errors.Contains(err, internalerr.ErrInvalidQueryParams):
+	case errors.Contains(err, errors.ErrInvalidQueryParams):
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, errUnauthorizedAccess):
 		w.WriteHeader(http.StatusForbidden)

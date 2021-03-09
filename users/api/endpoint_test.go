@@ -16,7 +16,7 @@ import (
 	"testing"
 
 	"github.com/mainflux/mainflux"
-	internalerr "github.com/mainflux/mainflux/internal/errors"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/users"
 	"github.com/mainflux/mainflux/users/api"
@@ -41,8 +41,8 @@ var (
 	unauthRes      = toJSON(errorRes{users.ErrUnauthorizedAccess.Error()})
 	malformedRes   = toJSON(errorRes{users.ErrMalformedEntity.Error()})
 	weakPassword   = toJSON(errorRes{users.ErrPasswordFormat.Error()})
-	unsupportedRes = toJSON(errorRes{internalerr.ErrUnsupportedContentType.Error()})
-	failDecodeRes  = toJSON(errorRes{internalerr.ErrMalformedEntity.Error()})
+	unsupportedRes = toJSON(errorRes{errors.ErrUnsupportedContentType.Error()})
+	failDecodeRes  = toJSON(errorRes{errors.ErrMalformedEntity.Error()})
 	passRegex      = regexp.MustCompile("^.{8,}$")
 )
 

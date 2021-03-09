@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	internalerr "github.com/mainflux/mainflux/internal/errors"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,7 +21,7 @@ func TestValidate(t *testing.T) {
 			err:         nil,
 		},
 		"external id for device empty": {
-			err: internalerr.ErrMalformedEntity,
+			err: errors.ErrMalformedEntity,
 		},
 	}
 

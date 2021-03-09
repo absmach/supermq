@@ -6,13 +6,11 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/provision"
-
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
-	internalerr "github.com/mainflux/mainflux/internal/errors"
+	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/provision"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -74,7 +72,7 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 
 func decodeProvisionRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := provisionReq{token: r.Header.Get("Authorization")}
@@ -87,7 +85,7 @@ func decodeProvisionRequest(_ context.Context, r *http.Request) (interface{}, er
 
 func decodeMappingRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if r.Header.Get("Content-Type") != contentType {
-		return nil, internalerr.ErrUnsupportedContentType
+		return nil, errors.ErrUnsupportedContentType
 	}
 
 	req := mappingReq{token: r.Header.Get("Authorization")}
@@ -99,9 +97,9 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", contentType)
 
 	switch err {
-	case internalerr.ErrUnsupportedContentType:
+	case errors.ErrUnsupportedContentType:
 		w.WriteHeader(http.StatusUnsupportedMediaType)
-	case io.EOF, internalerr.ErrMalformedEntity:
+	case io.EOF, errors.ErrMalformedEntity:
 		w.WriteHeader(http.StatusBadRequest)
 	case errConflict:
 		w.WriteHeader(http.StatusConflict)
