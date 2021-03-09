@@ -892,7 +892,6 @@ func TestSearchThings(t *testing.T) {
 		})
 	}
 
-	thingURL := fmt.Sprintf("%s/things/search", ts.URL)
 	cases := []struct {
 		desc   string
 		auth   string
