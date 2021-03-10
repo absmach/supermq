@@ -46,10 +46,10 @@ var (
 		Name:     "test",
 		Metadata: map[string]interface{}{"test": "data"},
 	}
-	invalidName = strings.Repeat("m", maxNameSize+1)
-	notFoundRes = toJSON(errorRes{things.ErrNotFound.Error()})
-	unauthRes   = toJSON(errorRes{things.ErrUnauthorizedAccess.Error()})
-	searchThReq = things.PageMetadata{
+	invalidName    = strings.Repeat("m", maxNameSize+1)
+	notFoundRes    = toJSON(errorRes{things.ErrNotFound.Error()})
+	unauthRes      = toJSON(errorRes{things.ErrUnauthorizedAccess.Error()})
+	searchThingReq = things.PageMetadata{
 		Limit:  5,
 		Offset: 0,
 	}
@@ -847,7 +847,7 @@ func TestSearchThings(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 
-	th := searchThReq
+	th := searchThingReq
 	validData := toJSON(th)
 
 	th.Dir = "desc"
@@ -860,18 +860,18 @@ func TestSearchThings(t *testing.T) {
 	th.Order = "wrong"
 	invalidOrderData := toJSON(th)
 
-	th = searchThReq
+	th = searchThingReq
 	th.Dir = "wrong"
 	invalidDirData := toJSON(th)
 
-	th = searchThReq
+	th = searchThingReq
 	th.Limit = 110
 	limitMaxData := toJSON(th)
 
 	th.Limit = 0
 	zeroLimitData := toJSON(th)
 
-	th = searchThReq
+	th = searchThingReq
 	th.Name = invalidName
 	invalidNameData := toJSON(th)
 
