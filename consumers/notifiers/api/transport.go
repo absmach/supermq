@@ -15,7 +15,7 @@ import (
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
 	notifiers "github.com/mainflux/mainflux/consumers/notifiers"
-	internalhttp "github.com/mainflux/mainflux/internal/http"
+	"github.com/mainflux/mainflux/internal/httputil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -101,13 +101,13 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		req.contact = vals[0]
 	}
 
-	offset, err := internalhttp.ReadUintQuery(r, "offset", 0)
+	offset, err := httputil.ReadUintQuery(r, "offset", 0)
 	if err != nil {
 		return listSubsReq{}, err
 	}
 	req.offset = uint(offset)
 
-	limit, err := internalhttp.ReadUintQuery(r, "limit", 20)
+	limit, err := httputil.ReadUintQuery(r, "limit", 20)
 	if err != nil {
 		return listSubsReq{}, err
 	}

@@ -15,7 +15,7 @@ import (
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/auth"
-	internalhttp "github.com/mainflux/mainflux/internal/http"
+	"github.com/mainflux/mainflux/internal/httputil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -301,32 +301,32 @@ func decodeView(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
-	o, err := internalhttp.ReadUintQuery(r, offsetKey, defOffset)
+	o, err := httputil.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
 		return nil, err
 	}
 
-	l, err := internalhttp.ReadUintQuery(r, limitKey, defLimit)
+	l, err := httputil.ReadUintQuery(r, limitKey, defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	n, err := internalhttp.ReadStringQuery(r, nameKey)
+	n, err := httputil.ReadStringQuery(r, nameKey)
 	if err != nil {
 		return nil, err
 	}
 
-	or, err := internalhttp.ReadStringQuery(r, orderKey)
+	or, err := httputil.ReadStringQuery(r, orderKey)
 	if err != nil {
 		return nil, err
 	}
 
-	d, err := internalhttp.ReadStringQuery(r, dirKey)
+	d, err := httputil.ReadStringQuery(r, dirKey)
 	if err != nil {
 		return nil, err
 	}
 
-	m, err := internalhttp.ReadMetadataQuery(r, metadataKey)
+	m, err := httputil.ReadMetadataQuery(r, metadataKey)
 	if err != nil {
 		return nil, err
 	}
@@ -356,27 +356,27 @@ func decodeListByMetadata(_ context.Context, r *http.Request) (interface{}, erro
 }
 
 func decodeListByConnection(_ context.Context, r *http.Request) (interface{}, error) {
-	o, err := internalhttp.ReadUintQuery(r, offsetKey, defOffset)
+	o, err := httputil.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
 		return nil, err
 	}
 
-	l, err := internalhttp.ReadUintQuery(r, limitKey, defLimit)
+	l, err := httputil.ReadUintQuery(r, limitKey, defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	c, err := internalhttp.ReadBoolQuery(r, connKey)
+	c, err := httputil.ReadBoolQuery(r, connKey)
 	if err != nil && err != errors.ErrNotInQuery {
 		return nil, err
 	}
 
-	or, err := internalhttp.ReadStringQuery(r, orderKey)
+	or, err := httputil.ReadStringQuery(r, orderKey)
 	if err != nil {
 		return nil, err
 	}
 
-	d, err := internalhttp.ReadStringQuery(r, dirKey)
+	d, err := httputil.ReadStringQuery(r, dirKey)
 	if err != nil {
 		return nil, err
 	}
@@ -420,17 +420,17 @@ func decodeCreateConnections(_ context.Context, r *http.Request) (interface{}, e
 }
 
 func decodeListThingsGroupRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	o, err := internalhttp.ReadUintQuery(r, offsetKey, defOffset)
+	o, err := httputil.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
 		return nil, err
 	}
 
-	l, err := internalhttp.ReadUintQuery(r, limitKey, defLimit)
+	l, err := httputil.ReadUintQuery(r, limitKey, defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	m, err := internalhttp.ReadMetadataQuery(r, metadataKey)
+	m, err := httputil.ReadMetadataQuery(r, metadataKey)
 	if err != nil {
 		return nil, err
 	}

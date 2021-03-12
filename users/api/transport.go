@@ -14,7 +14,7 @@ import (
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
-	internalhttp "github.com/mainflux/mainflux/internal/http"
+	"github.com/mainflux/mainflux/internal/httputil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -133,22 +133,22 @@ func decodeViewProfile(_ context.Context, r *http.Request) (interface{}, error) 
 }
 
 func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
-	o, err := internalhttp.ReadUintQuery(r, offsetKey, defOffset)
+	o, err := httputil.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
 		return nil, err
 	}
 
-	l, err := internalhttp.ReadUintQuery(r, limitKey, defLimit)
+	l, err := httputil.ReadUintQuery(r, limitKey, defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	e, err := internalhttp.ReadStringQuery(r, emailKey)
+	e, err := httputil.ReadStringQuery(r, emailKey)
 	if err != nil {
 		return nil, err
 	}
 
-	m, err := internalhttp.ReadMetadataQuery(r, metadataKey)
+	m, err := httputil.ReadMetadataQuery(r, metadataKey)
 	if err != nil {
 		return nil, err
 	}
@@ -230,17 +230,17 @@ func decodePasswordChange(_ context.Context, r *http.Request) (interface{}, erro
 }
 
 func decodeListMemberGroupRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	o, err := internalhttp.ReadUintQuery(r, offsetKey, defOffset)
+	o, err := httputil.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
 		return nil, err
 	}
 
-	l, err := internalhttp.ReadUintQuery(r, limitKey, defLimit)
+	l, err := httputil.ReadUintQuery(r, limitKey, defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	m, err := internalhttp.ReadMetadataQuery(r, metadataKey)
+	m, err := httputil.ReadMetadataQuery(r, metadataKey)
 	if err != nil {
 		return nil, err
 	}

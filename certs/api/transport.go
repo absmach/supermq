@@ -13,7 +13,7 @@ import (
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/certs"
-	internalhttp "github.com/mainflux/mainflux/internal/http"
+	"github.com/mainflux/mainflux/internal/httputil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -86,11 +86,11 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 }
 
 func decodeListCerts(_ context.Context, r *http.Request) (interface{}, error) {
-	l, err := internalhttp.ReadUintQuery(r, limit, defLimit)
+	l, err := httputil.ReadUintQuery(r, limit, defLimit)
 	if err != nil {
 		return nil, err
 	}
-	o, err := internalhttp.ReadUintQuery(r, offset, defOffset)
+	o, err := httputil.ReadUintQuery(r, offset, defOffset)
 	if err != nil {
 		return nil, err
 	}

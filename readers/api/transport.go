@@ -12,7 +12,7 @@ import (
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
-	internalhttp "github.com/mainflux/mainflux/internal/http"
+	"github.com/mainflux/mainflux/internal/httputil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/readers"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -65,17 +65,17 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	offset, err := internalhttp.ReadUintQuery(r, "offset", defOffset)
+	offset, err := httputil.ReadUintQuery(r, "offset", defOffset)
 	if err != nil {
 		return nil, err
 	}
 
-	limit, err := internalhttp.ReadUintQuery(r, "limit", defLimit)
+	limit, err := httputil.ReadUintQuery(r, "limit", defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	format, err := internalhttp.ReadStringQuery(r, "format")
+	format, err := httputil.ReadStringQuery(r, "format")
 	if err != nil {
 		return nil, err
 	}
@@ -83,52 +83,52 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		format = defFormat
 	}
 
-	subtopic, err := internalhttp.ReadStringQuery(r, "subtopic")
+	subtopic, err := httputil.ReadStringQuery(r, "subtopic")
 	if err != nil {
 		return nil, err
 	}
 
-	publisher, err := internalhttp.ReadStringQuery(r, "publisher")
+	publisher, err := httputil.ReadStringQuery(r, "publisher")
 	if err != nil {
 		return nil, err
 	}
 
-	protocol, err := internalhttp.ReadStringQuery(r, "protocol")
+	protocol, err := httputil.ReadStringQuery(r, "protocol")
 	if err != nil {
 		return nil, err
 	}
 
-	name, err := internalhttp.ReadStringQuery(r, "name")
+	name, err := httputil.ReadStringQuery(r, "name")
 	if err != nil {
 		return nil, err
 	}
 
-	v, err := internalhttp.ReadFloatQuery(r, "v")
+	v, err := httputil.ReadFloatQuery(r, "v")
 	if err != nil {
 		return nil, err
 	}
 
-	comparator, err := internalhttp.ReadStringQuery(r, "comparator")
+	comparator, err := httputil.ReadStringQuery(r, "comparator")
 	if err != nil {
 		return nil, err
 	}
 
-	vs, err := internalhttp.ReadStringQuery(r, "vs")
+	vs, err := httputil.ReadStringQuery(r, "vs")
 	if err != nil {
 		return nil, err
 	}
 
-	vd, err := internalhttp.ReadStringQuery(r, "vd")
+	vd, err := httputil.ReadStringQuery(r, "vd")
 	if err != nil {
 		return nil, err
 	}
 
-	from, err := internalhttp.ReadFloatQuery(r, "from")
+	from, err := httputil.ReadFloatQuery(r, "from")
 	if err != nil {
 		return nil, err
 	}
 
-	to, err := internalhttp.ReadFloatQuery(r, "to")
+	to, err := httputil.ReadFloatQuery(r, "to")
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +152,7 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		},
 	}
 
-	vb, err := internalhttp.ReadBoolQuery(r, "vb")
+	vb, err := httputil.ReadBoolQuery(r, "vb")
 	if err != nil && err != errors.ErrNotInQuery {
 		return nil, err
 	}
