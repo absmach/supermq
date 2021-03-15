@@ -47,14 +47,14 @@ func MakeHandler(svc certs.Service) http.Handler {
 		opts...,
 	))
 
-	r.Get("/certs", kithttp.NewServer(
+	r.Get("/certs/:thingId", kithttp.NewServer(
 		listCerts(svc),
 		decodeListCerts,
 		encodeResponse,
 		opts...,
 	))
 
-	r.Delete("/certs/revoke", kithttp.NewServer(
+	r.Delete("/certs/:certId", kithttp.NewServer(
 		revokeCert(svc),
 		decodeRevokeCerts,
 		encodeResponse,
@@ -95,9 +95,10 @@ func decodeListCerts(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 	req := listReq{
-		token:  r.Header.Get("Authorization"),
-		limit:  l,
-		offset: o,
+		token:   r.Header.Get("Authorization"),
+		thingID: bone.GetValue(r, "thingId"),
+		limit:   l,
+		offset:  o,
 	}
 	return req, nil
 }
@@ -116,13 +117,9 @@ func decodeCerts(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeRevokeCerts(_ context.Context, r *http.Request) (interface{}, error) {
-	if r.Header.Get("Content-Type") != contentType {
-		return nil, errors.ErrUnsupportedContentType
-	}
-
-	req := revokeReq{token: r.Header.Get("Authorization")}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, err
+	req := revokeReq{
+		token:  r.Header.Get("Authorization"),
+		certID: bone.GetValue(r, "certId"),
 	}
 
 	return req, nil
