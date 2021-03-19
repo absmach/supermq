@@ -30,7 +30,7 @@ const (
 	orderKey    = "order"
 	dirKey      = "dir"
 	metadataKey = "metadata"
-	connKey     = "connected"
+	disconnKey  = "disconnected"
 
 	defOffset = 0
 	defLimit  = 10
@@ -366,8 +366,8 @@ func decodeListByConnection(_ context.Context, r *http.Request) (interface{}, er
 		return nil, err
 	}
 
-	c, err := httputil.ReadBoolQuery(r, connKey)
-	if err != nil && err != errors.ErrNotInQuery {
+	c, err := httputil.ReadBoolQuery(r, disconnKey)
+	if err != nil {
 		return nil, err
 	}
 
@@ -385,11 +385,11 @@ func decodeListByConnection(_ context.Context, r *http.Request) (interface{}, er
 		token: r.Header.Get("Authorization"),
 		id:    bone.GetValue(r, "id"),
 		pageMetadata: things.PageMetadata{
-			Offset:    o,
-			Limit:     l,
-			Connected: c,
-			Order:     or,
-			Dir:       d,
+			Offset:       o,
+			Limit:        l,
+			Disconnected: c,
+			Order:        or,
+			Dir:          d,
 		},
 	}
 

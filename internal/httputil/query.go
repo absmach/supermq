@@ -69,12 +69,12 @@ func ReadMetadataQuery(r *http.Request, key string) (map[string]interface{}, err
 // ReadBoolQuery reads boolean query parameters in a given http request
 func ReadBoolQuery(r *http.Request, key string) (bool, error) {
 	vals := bone.GetQuery(r, key)
-	if len(vals) == 0 {
-		return true, errors.ErrNotInQuery
-	}
-
 	if len(vals) > 1 {
 		return false, errors.ErrInvalidQueryParams
+	}
+
+	if len(vals) == 0 {
+		return false, nil
 	}
 
 	b, err := strconv.ParseBool(vals[0])
@@ -83,6 +83,25 @@ func ReadBoolQuery(r *http.Request, key string) (bool, error) {
 	}
 
 	return b, nil
+}
+
+// ReadBoolValueQuery reads BoolValue query parameters in a given http request
+func ReadBoolValueQuery(r *http.Request, key string) (*bool, error) {
+	vals := bone.GetQuery(r, key)
+	if len(vals) > 1 {
+		return nil, errors.ErrInvalidQueryParams
+	}
+
+	if len(vals) == 0 {
+		return nil, nil
+	}
+
+	b, err := strconv.ParseBool(vals[0])
+	if err != nil {
+		return nil, errors.ErrInvalidQueryParams
+	}
+
+	return &b, nil
 }
 
 // ReadFloatQuery reads the value of float64 http query parameters for a given key

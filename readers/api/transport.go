@@ -152,12 +152,12 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		},
 	}
 
-	vb, err := httputil.ReadBoolQuery(r, "vb")
-	if err != nil && err != errors.ErrNotInQuery {
+	vb, err := httputil.ReadBoolValueQuery(r, "vb")
+	if err != nil {
 		return nil, err
 	}
-	if err == nil {
-		req.pageMeta.BoolValue = vb
+	if vb != nil {
+		req.pageMeta.BoolValue = *vb
 	}
 
 	return req, nil
