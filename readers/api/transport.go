@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -152,7 +153,7 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		},
 	}
 
-	vb, err := httputil.ReadBoolValueQuery(r, "vb")
+	vb, err := readBoolValueQuery(r, "vb")
 	if err != nil {
 		return nil, err
 	}
@@ -219,4 +220,22 @@ func authorize(r *http.Request, chanID string) error {
 	}
 
 	return nil
+}
+
+func readBoolValueQuery(r *http.Request, key string) (*bool, error) {
+	vals := bone.GetQuery(r, key)
+	if len(vals) > 1 {
+		return nil, errors.ErrInvalidQueryParams
+	}
+
+	if len(vals) == 0 {
+		return nil, nil
+	}
+
+	b, err := strconv.ParseBool(vals[0])
+	if err != nil {
+		return nil, errors.ErrInvalidQueryParams
+	}
+
+	return &b, nil
 }
