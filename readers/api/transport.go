@@ -154,11 +154,11 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 	}
 
 	vb, err := readBoolValueQuery(r, "vb")
-	if err != nil {
+	if err != nil && err != errors.ErrNotFoundParam {
 		return nil, err
 	}
-	if vb != nil {
-		req.pageMeta.BoolValue = *vb
+	if err == nil {
+		req.pageMeta.BoolValue = vb
 	}
 
 	return req, nil
@@ -222,20 +222,20 @@ func authorize(r *http.Request, chanID string) error {
 	return nil
 }
 
-func readBoolValueQuery(r *http.Request, key string) (*bool, error) {
+func readBoolValueQuery(r *http.Request, key string) (bool, error) {
 	vals := bone.GetQuery(r, key)
 	if len(vals) > 1 {
-		return nil, errors.ErrInvalidQueryParams
+		return false, errors.ErrInvalidQueryParams
 	}
 
 	if len(vals) == 0 {
-		return nil, nil
+		return false, errors.ErrNotFoundParam
 	}
 
 	b, err := strconv.ParseBool(vals[0])
 	if err != nil {
-		return nil, errors.ErrInvalidQueryParams
+		return false, errors.ErrInvalidQueryParams
 	}
 
-	return &b, nil
+	return b, nil
 }

@@ -10,8 +10,8 @@ var (
 	// ErrInvalidQueryParams indicates invalid query parameters
 	ErrInvalidQueryParams = New("invalid query parameters")
 
-	// ErrNotInQuery indicates boolean parameter missing in the query
-	ErrNotInQuery = New("missing in the query")
+	// ErrNotFoundParam indicates that the parameter was not found in the query
+	ErrNotFoundParam = New("parameter not found in the query")
 
 	// ErrMalformedEntity indicates a malformed entity specification
 	ErrMalformedEntity = New("malformed entity specification")
