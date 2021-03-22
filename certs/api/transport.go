@@ -22,9 +22,8 @@ const (
 	contentType = "application/json"
 	offset      = "offset"
 	limit       = "limit"
-
-	defOffset = 0
-	defLimit  = 10
+	defOffset   = 0
+	defLimit    = 10
 )
 
 var (

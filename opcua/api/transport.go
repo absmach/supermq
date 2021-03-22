@@ -22,12 +22,10 @@ const (
 	serverParam     = "server"
 	namespaceParam  = "namespace"
 	identifierParam = "identifier"
-
-	defOffset = 0
-	defLimit  = 10
-
-	defNamespace  = "ns=0" // Standard root namespace
-	defIdentifier = "i=84" // Standard root identifier
+	defOffset       = 0
+	defLimit        = 10
+	defNamespace    = "ns=0" // Standard root namespace
+	defIdentifier   = "i=84" // Standard root identifier
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.

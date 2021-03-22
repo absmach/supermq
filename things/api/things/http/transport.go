@@ -31,9 +31,8 @@ const (
 	dirKey      = "dir"
 	metadataKey = "metadata"
 	disconnKey  = "disconnected"
-
-	defOffset = 0
-	defLimit  = 10
+	defOffset   = 0
+	defLimit    = 10
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.

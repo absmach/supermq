@@ -23,14 +23,12 @@ import (
 
 const (
 	contentType = "application/json"
-
 	offsetKey   = "offset"
 	limitKey    = "limit"
 	emailKey    = "email"
 	metadataKey = "metadata"
-
-	defOffset = 0
-	defLimit  = 10
+	defOffset   = 0
+	defLimit    = 10
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -134,13 +132,16 @@ func decodeViewProfile(_ context.Context, r *http.Request) (interface{}, error) 
 
 func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
 	o, err := httputil.ReadUintQuery(r, offsetKey, defOffset)
-	if err != nil {
+	if err != nil && err != errors.ErrNotFoundParam {
 		return nil, err
 	}
 
 	l, err := httputil.ReadUintQuery(r, limitKey, defLimit)
-	if err != nil {
+	if err != nil && err != errors.ErrNotFoundParam {
 		return nil, err
+	}
+	if err == errors.ErrNotFoundParam {
+		l = defLimit
 	}
 
 	e, err := httputil.ReadStringQuery(r, emailKey)
@@ -231,13 +232,16 @@ func decodePasswordChange(_ context.Context, r *http.Request) (interface{}, erro
 
 func decodeListMemberGroupRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	o, err := httputil.ReadUintQuery(r, offsetKey, defOffset)
-	if err != nil {
+	if err != nil && err != errors.ErrNotFoundParam {
 		return nil, err
 	}
 
 	l, err := httputil.ReadUintQuery(r, limitKey, defLimit)
-	if err != nil {
+	if err != nil && err != errors.ErrNotFoundParam {
 		return nil, err
+	}
+	if err == errors.ErrNotFoundParam {
+		l = defLimit
 	}
 
 	m, err := httputil.ReadMetadataQuery(r, metadataKey)
