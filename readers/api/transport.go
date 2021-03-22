@@ -22,11 +22,23 @@ import (
 )
 
 const (
-	contentType = "application/json"
-	defLimit    = 10
-	defOffset   = 0
-	format      = "format"
-	defFormat   = "messages"
+	contentType    = "application/json"
+	offsetKey      = "offset"
+	limitKey       = "limit"
+	formatKey      = "format"
+	subtopicKey    = "subtopic"
+	publisherKey   = "publisher"
+	protocolKey    = "protocol"
+	nameKey        = "name"
+	valueKey       = "v"
+	stringValueKey = "vs"
+	dataValueKey   = "vd"
+	comparatorKey  = "comparator"
+	fromKey        = "from"
+	toKey          = "to"
+	defLimit       = 10
+	defOffset      = 0
+	defFormat      = "messages"
 )
 
 var (
@@ -66,70 +78,67 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	offset, err := httputil.ReadUintQuery(r, "offset", defOffset)
+	offset, err := httputil.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
 		return nil, err
 	}
 
-	limit, err := httputil.ReadUintQuery(r, "limit", defLimit)
+	limit, err := httputil.ReadUintQuery(r, limitKey, defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	format, err := httputil.ReadStringQuery(r, "format")
-	if err != nil {
-		return nil, err
-	}
-	if format != "" {
-		format = defFormat
-	}
-
-	subtopic, err := httputil.ReadStringQuery(r, "subtopic")
+	format, err := httputil.ReadStringQuery(r, formatKey, defFormat)
 	if err != nil {
 		return nil, err
 	}
 
-	publisher, err := httputil.ReadStringQuery(r, "publisher")
+	subtopic, err := httputil.ReadStringQuery(r, subtopicKey, "")
 	if err != nil {
 		return nil, err
 	}
 
-	protocol, err := httputil.ReadStringQuery(r, "protocol")
+	publisher, err := httputil.ReadStringQuery(r, publisherKey, "")
 	if err != nil {
 		return nil, err
 	}
 
-	name, err := httputil.ReadStringQuery(r, "name")
+	protocol, err := httputil.ReadStringQuery(r, protocolKey, "")
 	if err != nil {
 		return nil, err
 	}
 
-	v, err := httputil.ReadFloatQuery(r, "v")
+	name, err := httputil.ReadStringQuery(r, nameKey, "")
 	if err != nil {
 		return nil, err
 	}
 
-	comparator, err := httputil.ReadStringQuery(r, "comparator")
+	v, err := httputil.ReadFloatQuery(r, valueKey, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	vs, err := httputil.ReadStringQuery(r, "vs")
+	comparator, err := httputil.ReadStringQuery(r, comparatorKey, "")
 	if err != nil {
 		return nil, err
 	}
 
-	vd, err := httputil.ReadStringQuery(r, "vd")
+	vs, err := httputil.ReadStringQuery(r, stringValueKey, "")
 	if err != nil {
 		return nil, err
 	}
 
-	from, err := httputil.ReadFloatQuery(r, "from")
+	vd, err := httputil.ReadStringQuery(r, dataValueKey, "")
 	if err != nil {
 		return nil, err
 	}
 
-	to, err := httputil.ReadFloatQuery(r, "to")
+	from, err := httputil.ReadFloatQuery(r, fromKey, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	to, err := httputil.ReadFloatQuery(r, toKey, 0)
 	if err != nil {
 		return nil, err
 	}

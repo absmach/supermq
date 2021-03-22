@@ -132,12 +132,12 @@ func decodeListGroupsRequest(_ context.Context, r *http.Request) (interface{}, e
 		return nil, err
 	}
 
-	m, err := httputil.ReadMetadataQuery(r, metadataKey)
+	m, err := httputil.ReadMetadataQuery(r, metadataKey, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	t, err := httputil.ReadBoolQuery(r, treeKey)
+	t, err := httputil.ReadBoolQuery(r, treeKey, false)
 	if err != nil {
 		return nil, err
 	}
@@ -167,17 +167,17 @@ func decodeListMembersRequest(_ context.Context, r *http.Request) (interface{}, 
 		return nil, err
 	}
 
-	m, err := httputil.ReadMetadataQuery(r, metadataKey)
+	m, err := httputil.ReadMetadataQuery(r, metadataKey, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	tree, err := httputil.ReadBoolQuery(r, treeKey)
+	tree, err := httputil.ReadBoolQuery(r, treeKey, false)
 	if err != nil {
 		return nil, err
 	}
 
-	t, err := httputil.ReadStringQuery(r, groupType)
+	t, err := httputil.ReadStringQuery(r, groupType, "")
 	if err != nil {
 		return nil, err
 	}
@@ -209,12 +209,12 @@ func decodeListMembershipsRequest(_ context.Context, r *http.Request) (interface
 		return nil, err
 	}
 
-	m, err := httputil.ReadMetadataQuery(r, metadataKey)
+	m, err := httputil.ReadMetadataQuery(r, metadataKey, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	tree, err := httputil.ReadBoolQuery(r, treeKey)
+	tree, err := httputil.ReadBoolQuery(r, treeKey, false)
 	if err != nil {
 		return nil, err
 	}

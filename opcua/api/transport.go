@@ -50,17 +50,17 @@ func MakeHandler(svc opcua.Service) http.Handler {
 }
 
 func decodeBrowse(_ context.Context, r *http.Request) (interface{}, error) {
-	s, err := httputil.ReadStringQuery(r, serverParam)
+	s, err := httputil.ReadStringQuery(r, serverParam, "")
 	if err != nil {
 		return nil, err
 	}
 
-	n, err := httputil.ReadStringQuery(r, namespaceParam)
+	n, err := httputil.ReadStringQuery(r, namespaceParam, "")
 	if err != nil {
 		return nil, err
 	}
 
-	i, err := httputil.ReadStringQuery(r, identifierParam)
+	i, err := httputil.ReadStringQuery(r, identifierParam, "")
 	if err != nil {
 		return nil, err
 	}

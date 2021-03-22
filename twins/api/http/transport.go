@@ -23,10 +23,10 @@ import (
 
 const (
 	contentType = "application/json"
-	offset      = "offset"
-	limit       = "limit"
-	name        = "name"
-	metadata    = "metadata"
+	offsetKey   = "offset"
+	limitKey    = "limit"
+	nameKey     = "name"
+	metadataKey = "metadata"
 	defLimit    = 10
 	defOffset   = 0
 )
@@ -126,22 +126,22 @@ func decodeView(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
-	l, err := httputil.ReadUintQuery(r, limit, defLimit)
+	l, err := httputil.ReadUintQuery(r, limitKey, defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	o, err := httputil.ReadUintQuery(r, offset, defOffset)
+	o, err := httputil.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
 		return nil, err
 	}
 
-	n, err := httputil.ReadStringQuery(r, name)
+	n, err := httputil.ReadStringQuery(r, nameKey, "")
 	if err != nil {
 		return nil, err
 	}
 
-	m, err := httputil.ReadMetadataQuery(r, "metadata")
+	m, err := httputil.ReadMetadataQuery(r, metadataKey, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -158,12 +158,12 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeListStates(_ context.Context, r *http.Request) (interface{}, error) {
-	l, err := httputil.ReadUintQuery(r, limit, defLimit)
+	l, err := httputil.ReadUintQuery(r, limitKey, defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	o, err := httputil.ReadUintQuery(r, offset, defOffset)
+	o, err := httputil.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
 		return nil, err
 	}

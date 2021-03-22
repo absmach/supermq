@@ -144,12 +144,12 @@ func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
 		l = defLimit
 	}
 
-	e, err := httputil.ReadStringQuery(r, emailKey)
+	e, err := httputil.ReadStringQuery(r, emailKey, "")
 	if err != nil {
 		return nil, err
 	}
 
-	m, err := httputil.ReadMetadataQuery(r, metadataKey)
+	m, err := httputil.ReadMetadataQuery(r, metadataKey, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +244,7 @@ func decodeListMemberGroupRequest(_ context.Context, r *http.Request) (interface
 		l = defLimit
 	}
 
-	m, err := httputil.ReadMetadataQuery(r, metadataKey)
+	m, err := httputil.ReadMetadataQuery(r, metadataKey, nil)
 	if err != nil {
 		return nil, err
 	}

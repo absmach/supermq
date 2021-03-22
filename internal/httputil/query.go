@@ -33,28 +33,28 @@ func ReadUintQuery(r *http.Request, key string, def uint64) (uint64, error) {
 }
 
 // ReadStringQuery reads the value of string http query parameters for a given key
-func ReadStringQuery(r *http.Request, key string) (string, error) {
+func ReadStringQuery(r *http.Request, key string, def string) (string, error) {
 	vals := bone.GetQuery(r, key)
 	if len(vals) > 1 {
 		return "", errors.ErrInvalidQueryParams
 	}
 
 	if len(vals) == 0 {
-		return "", nil
+		return def, nil
 	}
 
 	return vals[0], nil
 }
 
 // ReadMetadataQuery reads the value of json http query parameters for a given key
-func ReadMetadataQuery(r *http.Request, key string) (map[string]interface{}, error) {
+func ReadMetadataQuery(r *http.Request, key string, def map[string]interface{}) (map[string]interface{}, error) {
 	vals := bone.GetQuery(r, key)
 	if len(vals) > 1 {
 		return nil, errors.ErrInvalidQueryParams
 	}
 
 	if len(vals) == 0 {
-		return nil, nil
+		return def, nil
 	}
 
 	m := make(map[string]interface{})
@@ -67,14 +67,14 @@ func ReadMetadataQuery(r *http.Request, key string) (map[string]interface{}, err
 }
 
 // ReadBoolQuery reads boolean query parameters in a given http request
-func ReadBoolQuery(r *http.Request, key string) (bool, error) {
+func ReadBoolQuery(r *http.Request, key string, def bool) (bool, error) {
 	vals := bone.GetQuery(r, key)
 	if len(vals) > 1 {
 		return false, errors.ErrInvalidQueryParams
 	}
 
 	if len(vals) == 0 {
-		return false, nil
+		return def, nil
 	}
 
 	b, err := strconv.ParseBool(vals[0])
@@ -86,14 +86,14 @@ func ReadBoolQuery(r *http.Request, key string) (bool, error) {
 }
 
 // ReadFloatQuery reads the value of float64 http query parameters for a given key
-func ReadFloatQuery(r *http.Request, key string) (float64, error) {
+func ReadFloatQuery(r *http.Request, key string, def float64) (float64, error) {
 	vals := bone.GetQuery(r, key)
 	if len(vals) > 1 {
 		return 0, errors.ErrInvalidQueryParams
 	}
 
 	if len(vals) == 0 {
-		return 0, nil
+		return def, nil
 	}
 
 	fval := vals[0]

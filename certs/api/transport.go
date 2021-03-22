@@ -20,8 +20,8 @@ import (
 
 const (
 	contentType = "application/json"
-	offset      = "offset"
-	limit       = "limit"
+	offsetKey   = "offset"
+	limitKey    = "limit"
 	defOffset   = 0
 	defLimit    = 10
 )
@@ -85,11 +85,11 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 }
 
 func decodeListCerts(_ context.Context, r *http.Request) (interface{}, error) {
-	l, err := httputil.ReadUintQuery(r, limit, defLimit)
+	l, err := httputil.ReadUintQuery(r, limitKey, defLimit)
 	if err != nil {
 		return nil, err
 	}
-	o, err := httputil.ReadUintQuery(r, offset, defOffset)
+	o, err := httputil.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
 		return nil, err
 	}

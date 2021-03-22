@@ -310,22 +310,22 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	n, err := httputil.ReadStringQuery(r, nameKey)
+	n, err := httputil.ReadStringQuery(r, nameKey, "")
 	if err != nil {
 		return nil, err
 	}
 
-	or, err := httputil.ReadStringQuery(r, orderKey)
+	or, err := httputil.ReadStringQuery(r, orderKey, "")
 	if err != nil {
 		return nil, err
 	}
 
-	d, err := httputil.ReadStringQuery(r, dirKey)
+	d, err := httputil.ReadStringQuery(r, dirKey, "")
 	if err != nil {
 		return nil, err
 	}
 
-	m, err := httputil.ReadMetadataQuery(r, metadataKey)
+	m, err := httputil.ReadMetadataQuery(r, metadataKey, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -365,17 +365,17 @@ func decodeListByConnection(_ context.Context, r *http.Request) (interface{}, er
 		return nil, err
 	}
 
-	c, err := httputil.ReadBoolQuery(r, disconnKey)
+	c, err := httputil.ReadBoolQuery(r, disconnKey, false)
 	if err != nil {
 		return nil, err
 	}
 
-	or, err := httputil.ReadStringQuery(r, orderKey)
+	or, err := httputil.ReadStringQuery(r, orderKey, "")
 	if err != nil {
 		return nil, err
 	}
 
-	d, err := httputil.ReadStringQuery(r, dirKey)
+	d, err := httputil.ReadStringQuery(r, dirKey, "")
 	if err != nil {
 		return nil, err
 	}
@@ -429,7 +429,7 @@ func decodeListThingsGroupRequest(_ context.Context, r *http.Request) (interface
 		return nil, err
 	}
 
-	m, err := httputil.ReadMetadataQuery(r, metadataKey)
+	m, err := httputil.ReadMetadataQuery(r, metadataKey, nil)
 	if err != nil {
 		return nil, err
 	}
