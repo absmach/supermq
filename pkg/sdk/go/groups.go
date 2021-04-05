@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/mainflux/mainflux/auth"
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
@@ -97,10 +96,9 @@ func (sdk mfSDK) Assign(memberIDs []string, memberType, groupID string, token st
 	return nil
 }
 
-func (sdk mfSDK) Unassign(groupID, token string, memberIDs ...string) error {
-	endpoint := fmt.Sprintf("%s/%s/members", groupsEndpoint, groupID)
-	url := createURL(sdk.baseURL, sdk.groupsPrefix, endpoint)
-
+func (sdk mfSDK) Unassign(token, groupID string, memberIDs ...string) error {
+	var ids []string
+	url := fmt.Sprintf("%s/%s/%s/members", sdk.authURL, groupsEndpoint, groupID)
 	ids = append(ids, memberIDs...)
 	assignReq := assignRequest{
 		Members: ids,
@@ -128,10 +126,8 @@ func (sdk mfSDK) Unassign(groupID, token string, memberIDs ...string) error {
 	return nil
 }
 
-func (sdk mfSDK) Members(groupID, token string, offset, limit uint64) (auth.MemberPage, error) {
-
-	endpoint := fmt.Sprintf("%s/%s/members?offset=%d&limit=%d&", groupsEndpoint, groupID, offset, limit)
-	url := createURL(sdk.baseURL, sdk.groupsPrefix, endpoint)
+func (sdk mfSDK) Members(groupID, token string, offset, limit uint64) (MembersPage, error) {
+	url := fmt.Sprintf("%s/%s/%s/members?offset=%d&limit=%d&", sdk.authURL, groupsEndpoint, groupID, offset, limit)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return MembersPage{}, err
@@ -160,15 +156,13 @@ func (sdk mfSDK) Members(groupID, token string, offset, limit uint64) (auth.Memb
 	return tp, nil
 }
 
-func (sdk mfSDK) Groups(offset, limit uint64, token string) (auth.GroupPage, error) {
-	endpoint := fmt.Sprintf("%s?offset=%d&limit=%d&tree=false", groupsEndpoint, offset, limit)
-	url := createURL(sdk.baseURL, sdk.groupsPrefix, endpoint)
+func (sdk mfSDK) Groups(offset, limit uint64, token string) (GroupsPage, error) {
+	url := fmt.Sprintf("%s/%s?offset=%d&limit=%d&tree=false", sdk.authURL, groupsEndpoint, offset, limit)
 	return sdk.getGroups(token, url)
 }
 
-func (sdk mfSDK) Parents(id string, offset, limit uint64, token string) (auth.GroupPage, error) {
-	endpoint := fmt.Sprintf("%s/%s/parents?offset=%d&limit=%d&tree=false&level=%d", groupsEndpoint, id, offset, limit, auth.MaxLevel)
-	url := createURL(sdk.baseURL, sdk.groupsPrefix, endpoint)
+func (sdk mfSDK) Parents(id string, offset, limit uint64, token string) (GroupsPage, error) {
+	url := fmt.Sprintf("%s/%s/%s/parents?offset=%d&limit=%d&tree=false&level=%d", sdk.authURL, groupsEndpoint, id, offset, limit, MaxLevel)
 	return sdk.getGroups(token, url)
 }
 
