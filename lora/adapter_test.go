@@ -4,7 +4,6 @@
 package lora_test
 
 import (
-	"context"
 	"encoding/base64"
 	"fmt"
 	"testing"
@@ -107,7 +106,7 @@ func TestPublish(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := svc.Publish(context.Background(), tc.msg)
+		err := svc.Publish(tc.msg)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
