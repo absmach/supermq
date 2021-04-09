@@ -4,7 +4,6 @@
 package api
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -131,7 +130,7 @@ func (lm loggingMiddleware) DisconnectThing(chanID, thingID string) (err error) 
 	return lm.svc.DisconnectThing(chanID, thingID)
 }
 
-func (lm loggingMiddleware) Publish(ctx context.Context, m lora.Message) (err error) {
+func (lm loggingMiddleware) Publish(m lora.Message) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("publish application/%s/device/%s/rx took %s to complete", m.ApplicationID, m.DevEUI, time.Since(begin))
 		if err != nil {
@@ -141,5 +140,5 @@ func (lm loggingMiddleware) Publish(ctx context.Context, m lora.Message) (err er
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.Publish(ctx, m)
+	return lm.svc.Publish(m)
 }

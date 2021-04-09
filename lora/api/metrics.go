@@ -4,7 +4,6 @@
 package api
 
 import (
-	"context"
 	"time"
 
 	"github.com/go-kit/kit/metrics"
@@ -100,11 +99,11 @@ func (mm *metricsMiddleware) DisconnectThing(chanID, thingID string) error {
 	return mm.svc.DisconnectThing(chanID, thingID)
 }
 
-func (mm *metricsMiddleware) Publish(ctx context.Context, m lora.Message) error {
+func (mm *metricsMiddleware) Publish(m lora.Message) error {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "publish").Add(1)
 		mm.latency.With("method", "publish").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.Publish(ctx, m)
+	return mm.svc.Publish(m)
 }

@@ -4,7 +4,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -187,7 +186,7 @@ func subscribeToLoRaBroker(svc lora.Service, msub messaging.Subscriber, logger l
 			logger.Warn(fmt.Sprintf("Failed to Unmarshal message: %s", err.Error()))
 			return err
 		}
-		if err := svc.Publish(context.Background(), m); err != nil {
+		if err := svc.Publish(m); err != nil {
 			return err
 		}
 		return nil
