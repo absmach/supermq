@@ -100,7 +100,7 @@ func (as *adapterService) Publish(ctx context.Context, m Message) error {
 		return ErrNotConnected
 	}
 
-	// Use the SenML message decoded on LoRa server application if
+	// Use the SenML message decoded on ChirpStack application if
 	// field Object isn't empty. Otherwise, decode standard field Data.
 	var payload []byte
 	switch m.Object {

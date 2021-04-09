@@ -1,9 +1,9 @@
-# LoRa Adapter
-Adapter between Mainflux IoT system and [LoRa Server](https://github.com/brocaar/loraserver).
+ChirpStack# LoRa Adapter
+Adapter between Mainflux IoT system and [ChirpStack](https://github.com/brocaar/chirpstack-network-server).
 
-This adapter sits between Mainflux and LoRa server and just forwards the messages from one system to another via MQTT protocol, using the adequate MQTT topics and in the good message format (JSON and SenML), i.e. respecting the APIs of both systems.
+This adapter sits between Mainflux and ChirpStack and just forwards the messages from one system to another via MQTT protocol, using the adequate MQTT topics and in the good message format (JSON and SenML), i.e. respecting the APIs of both systems.
 
-LoRa Server is used for connectivity layer and data is pushed via this adapter service to Mainflux, where it is persisted and routed to other protocols via Mainflux multi-protocol message broker. Mainflux adds user accounts, application management and security in order to obtain the overall end-to-end LoRa solution.
+ChirpStack is used for connectivity layer and data is pushed via this adapter service to Mainflux, where it is persisted and routed to other protocols via Mainflux multi-protocol message broker. Mainflux adds user accounts, application management and security in order to obtain the overall end-to-end LoRa solution.
 
 ## Configuration
 
@@ -16,7 +16,7 @@ default values.
 | MF_LORA_ADAPTER_HTTP_PORT        | Service HTTP port                    | 8180                  |
 | MF_LORA_ADAPTER_LOG_LEVEL        | Service Log level                    | error                 |
 | MF_NATS_URL                      | NATS instance URL                    | nats://localhost:4222 |
-| MF_LORA_ADAPTER_MESSAGES_URL     | LoRa Server MQTT broker URL          | tcp://localhost:1883  |
+| MF_LORA_ADAPTER_MESSAGES_URL     | ChirpStack MQTT broker URL           | tcp://localhost:1883  |
 | MF_LORA_ADAPTER_ROUTE_MAP_URL    | Route-map database URL               | localhost:6379        |
 | MF_LORA_ADAPTER_ROUTE_MAP_PASS   | Route-map database password          |                       |
 | MF_LORA_ADAPTER_ROUTE_MAP_DB     | Route-map instance                   | 0                     |
@@ -27,7 +27,7 @@ default values.
 
 ## Deployment
 
-The service itself is distributed as Docker container. Check the [`lora-adapter`](https://github.com/mainflux/mainflux/blob/master/docker/addons/lora-adapter/docker-compose.yml#L23-L37) service section in 
+The service itself is distributed as Docker container. Check the [`lora-adapter`](https://github.com/mainflux/mainflux/blob/master/docker/addons/lora-adapter/docker-compose.yml#L23-L37) service section in
 docker-compose to see how service is deployed.
 
 To start the service outside of the container, execute the following shell script:
@@ -45,7 +45,17 @@ make lora
 make install
 
 # set the environment variables and run the service
-MF_LORA_ADAPTER_LOG_LEVEL=[Lora Adapter Log Level] MF_NATS_URL=[NATS instance URL] MF_LORA_ADAPTER_MESSAGES_URL=[LoRa Server mqtt broker URL] MF_LORA_ADAPTER_ROUTE_MAP_URL=[Lora adapter routemap URL] MF_LORA_ADAPTER_ROUTE_MAP_PASS=[Lora adapter routemap password] MF_LORA_ADAPTER_ROUTE_MAP_DB=[Lora adapter routemap instance] MF_THINGS_ES_URL=[Things service event source URL] MF_THINGS_ES_PASS=[Things service event source password] MF_THINGS_ES_DB=[Things service event source password] MF_OPCUA_ADAPTER_EVENT_CONSUMER=[LoRa adapter instance name] $GOBIN/mainflux-lora
+MF_LORA_ADAPTER_LOG_LEVEL=[Lora Adapter Log Level] \
+MF_NATS_URL=[NATS instance URL] \
+MF_LORA_ADAPTER_MESSAGES_URL=[ChirpStack mqtt broker URL] \
+MF_LORA_ADAPTER_ROUTE_MAP_URL=[Lora adapter routemap URL] \
+MF_LORA_ADAPTER_ROUTE_MAP_PASS=[Lora adapter routemap password] \
+MF_LORA_ADAPTER_ROUTE_MAP_DB=[Lora adapter routemap instance] \
+MF_THINGS_ES_URL=[Things service event source URL] \
+MF_THINGS_ES_PASS=[Things service event source password] \
+MF_THINGS_ES_DB=[Things service event source password] \
+MF_OPCUA_ADAPTER_EVENT_CONSUMER=[LoRa adapter instance name] \
+$GOBIN/mainflux-lora
 ```
 
 ### Using docker-compose
