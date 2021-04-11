@@ -1,9 +1,9 @@
-ChirpStack# LoRa Adapter
-Adapter between Mainflux IoT system and [ChirpStack](https://github.com/brocaar/chirpstack-network-server).
+# LoRa Adapter
+Adapter between Mainflux IoT system and [LoRa Server](https://github.com/brocaar/LoRa Server-network-server).
 
-This adapter sits between Mainflux and ChirpStack and just forwards the messages from one system to another via MQTT protocol, using the adequate MQTT topics and in the good message format (JSON and SenML), i.e. respecting the APIs of both systems.
+This adapter sits between Mainflux and LoRa Server and just forwards the messages from one system to another via MQTT protocol, using the adequate MQTT topics and in the good message format (JSON and SenML), i.e. respecting the APIs of both systems.
 
-ChirpStack is used for connectivity layer and data is pushed via this adapter service to Mainflux, where it is persisted and routed to other protocols via Mainflux multi-protocol message broker. Mainflux adds user accounts, application management and security in order to obtain the overall end-to-end LoRa solution.
+LoRa Server is used for connectivity layer and data is pushed via this adapter service to Mainflux, where it is persisted and routed to other protocols via Mainflux multi-protocol message broker. Mainflux adds user accounts, application management and security in order to obtain the overall end-to-end LoRa solution.
 
 ## Configuration
 
@@ -16,7 +16,7 @@ default values.
 | MF_LORA_ADAPTER_HTTP_PORT        | Service HTTP port                    | 8180                  |
 | MF_LORA_ADAPTER_LOG_LEVEL        | Service Log level                    | error                 |
 | MF_NATS_URL                      | NATS instance URL                    | nats://localhost:4222 |
-| MF_LORA_ADAPTER_MESSAGES_URL     | ChirpStack MQTT broker URL           | tcp://localhost:1883  |
+| MF_LORA_ADAPTER_MESSAGES_URL     | LoRa Server MQTT broker URL          | tcp://localhost:1883  |
 | MF_LORA_ADAPTER_ROUTE_MAP_URL    | Route-map database URL               | localhost:6379        |
 | MF_LORA_ADAPTER_ROUTE_MAP_PASS   | Route-map database password          |                       |
 | MF_LORA_ADAPTER_ROUTE_MAP_DB     | Route-map instance                   | 0                     |
@@ -47,7 +47,7 @@ make install
 # set the environment variables and run the service
 MF_LORA_ADAPTER_LOG_LEVEL=[Lora Adapter Log Level] \
 MF_NATS_URL=[NATS instance URL] \
-MF_LORA_ADAPTER_MESSAGES_URL=[ChirpStack mqtt broker URL] \
+MF_LORA_ADAPTER_MESSAGES_URL=[LoRa Server mqtt broker URL] \
 MF_LORA_ADAPTER_ROUTE_MAP_URL=[Lora adapter routemap URL] \
 MF_LORA_ADAPTER_ROUTE_MAP_PASS=[Lora adapter routemap password] \
 MF_LORA_ADAPTER_ROUTE_MAP_DB=[Lora adapter routemap instance] \

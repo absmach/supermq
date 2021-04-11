@@ -55,7 +55,7 @@ const (
 	envRouteMapPass   = "MF_LORA_ADAPTER_ROUTE_MAP_PASS"
 	envRouteMapDB     = "MF_LORA_ADAPTER_ROUTE_MAP_DB"
 
-	chirpStackTopic = "application/+/device/+/rx"
+	loraServerTopic = "application/+/device/+/rx"
 
 	thingsRMPrefix   = "thing"
 	channelsRMPrefix = "channel"
@@ -180,7 +180,7 @@ func connectToRedis(redisURL, redisPass, redisDB string, logger logger.Logger) *
 }
 
 func subscribeToLoRaBroker(svc lora.Service, msub messaging.Subscriber, logger logger.Logger) {
-	err := msub.Subscribe(chirpStackTopic, func(msg messaging.Message) error {
+	err := msub.Subscribe(loraServerTopic, func(msg messaging.Message) error {
 		var m lora.Message
 		if err := json.Unmarshal(msg.Payload, &m); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to Unmarshal message: %s", err.Error()))
