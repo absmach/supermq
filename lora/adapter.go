@@ -153,11 +153,27 @@ func (as *adapterService) RemoveChannel(chanID string) error {
 }
 
 func (as *adapterService) ConnectThing(chanID, thingID string) error {
+	if _, err := as.channelsRM.Get(chanID); err != nil {
+		return nil
+	}
+
+	if _, err := as.thingsRM.Get(thingID); err != nil {
+		return err
+	}
+
 	c := fmt.Sprintf("%s:%s", chanID, thingID)
 	return as.connectRM.Save(c, c)
 }
 
 func (as *adapterService) DisconnectThing(chanID, thingID string) error {
+	if _, err := as.channelsRM.Get(chanID); err != nil {
+		return nil
+	}
+
+	if _, err := as.thingsRM.Get(thingID); err != nil {
+		return err
+	}
+
 	c := fmt.Sprintf("%s:%s", chanID, thingID)
 	return as.connectRM.Remove(c)
 }

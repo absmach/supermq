@@ -27,6 +27,7 @@ func (trm *routeMapMock) Save(mfxID, extID string) error {
 	defer trm.mu.Unlock()
 
 	trm.routes[extID] = mfxID
+	trm.routes[mfxID] = extID
 	return nil
 }
 
@@ -46,8 +47,16 @@ func (trm *routeMapMock) Remove(extID string) error {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
+	var mfxID string
 	for i, val := range trm.routes {
 		if val == extID {
+			mfxID = val
+			delete(trm.routes, i)
+		}
+	}
+
+	for i, val := range trm.routes {
+		if val == mfxID {
 			delete(trm.routes, i)
 			return nil
 		}
