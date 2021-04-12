@@ -1,5 +1,5 @@
 # LoRa Adapter
-Adapter between Mainflux IoT system and [LoRa Server](https://github.com/brocaar/LoRa Server-network-server).
+Adapter between Mainflux IoT system and [LoRa Server](https://github.com/brocaar/chirpstack-network-server).
 
 This adapter sits between Mainflux and LoRa Server and just forwards the messages from one system to another via MQTT protocol, using the adequate MQTT topics and in the good message format (JSON and SenML), i.e. respecting the APIs of both systems.
 

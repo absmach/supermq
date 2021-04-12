@@ -27,7 +27,7 @@ type TxInfo struct {
 	CodeRate  string   `json:"codeRate"`
 }
 
-// Message lora msg (https://www.LoRa Server.io/application-server/integrations/events)
+// Message lora msg (https://www.chirpstack.io/application-server/integrations/events)
 type Message struct {
 	ApplicationID       string      `json:"applicationID"`
 	ApplicationName     string      `json:"applicationName"`
