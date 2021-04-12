@@ -10,11 +10,6 @@ import (
 	"github.com/mainflux/mainflux/lora"
 )
 
-const (
-	mfxMapPrefix  = "mfx:lora"
-	loraMapPrefix = "lora:mfx"
-)
-
 var _ lora.RouteMapRepository = (*routerMap)(nil)
 
 type routerMap struct {

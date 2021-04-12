@@ -158,7 +158,7 @@ func (as *adapterService) ConnectThing(chanID, thingID string) error {
 	}
 
 	if _, err := as.thingsRM.Get(thingID); err != nil {
-		return err
+		return nil
 	}
 
 	c := fmt.Sprintf("%s:%s", chanID, thingID)
@@ -171,7 +171,7 @@ func (as *adapterService) DisconnectThing(chanID, thingID string) error {
 	}
 
 	if _, err := as.thingsRM.Get(thingID); err != nil {
-		return err
+		return nil
 	}
 
 	c := fmt.Sprintf("%s:%s", chanID, thingID)
