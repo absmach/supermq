@@ -154,11 +154,11 @@ func (as *adapterService) RemoveChannel(chanID string) error {
 
 func (as *adapterService) ConnectThing(chanID, thingID string) error {
 	if _, err := as.channelsRM.Get(chanID); err != nil {
-		return nil
+		return ErrNotFoundApp
 	}
 
 	if _, err := as.thingsRM.Get(thingID); err != nil {
-		return nil
+		return ErrNotFoundDev
 	}
 
 	c := fmt.Sprintf("%s:%s", chanID, thingID)
@@ -167,11 +167,11 @@ func (as *adapterService) ConnectThing(chanID, thingID string) error {
 
 func (as *adapterService) DisconnectThing(chanID, thingID string) error {
 	if _, err := as.channelsRM.Get(chanID); err != nil {
-		return nil
+		return ErrNotFoundApp
 	}
 
 	if _, err := as.thingsRM.Get(thingID); err != nil {
-		return nil
+		return ErrNotFoundDev
 	}
 
 	c := fmt.Sprintf("%s:%s", chanID, thingID)
