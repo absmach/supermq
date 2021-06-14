@@ -15,11 +15,13 @@ import (
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	influxdata "github.com/influxdata/influxdb/client/v2"
 	"github.com/mainflux/mainflux"
+	authapi "github.com/mainflux/mainflux/auth/api/grpc"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/readers"
 	"github.com/mainflux/mainflux/readers/api"
 	"github.com/mainflux/mainflux/readers/influxdb"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
+
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"
@@ -40,8 +42,10 @@ const (
 	defServerCert        = ""
 	defServerKey         = ""
 	defJaegerURL         = ""
-	defThingsAuthURL     = "localhost:8181"
+	defThingsAuthURL     = "localhost:8183"
+	defUsersAuthURL      = "localhost:8181"
 	defThingsAuthTimeout = "1s"
+	defUsersAuthTimeout  = "1s"
 
 	envLogLevel          = "MF_INFLUX_READER_LOG_LEVEL"
 	envPort              = "MF_INFLUX_READER_PORT"
@@ -57,6 +61,8 @@ const (
 	envJaegerURL         = "MF_JAEGER_URL"
 	envThingsAuthURL     = "MF_THINGS_AUTH_GRPC_URL"
 	envThingsAuthTimeout = "MF_THINGS_AUTH_GRPC_TIMEOUT"
+	envAuthURL           = "MF_AUTH_GRPC_URL"
+	envUsersAuthTimeout  = "MF_AUTH_GRPC_TIMEOUT"
 )
 
 type config struct {
@@ -73,7 +79,9 @@ type config struct {
 	serverKey         string
 	jaegerURL         string
 	thingsAuthURL     string
+	usersAuthURL      string
 	thingsAuthTimeout time.Duration
+	usersAuthTimeout  time.Duration
 }
 
 func main() {
@@ -89,6 +97,16 @@ func main() {
 	defer thingsCloser.Close()
 
 	tc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
+
+	authTracer, authCloser := initJaeger("auth", cfg.jaegerURL, logger)
+	defer authCloser.Close()
+
+	authConn := connectToAuth(cfg, logger)
+	defer authConn.Close()
+
+	auth := authapi.NewClient(authTracer, authConn, cfg.usersAuthTimeout)
+
+	authReader := readers.NewAuthService(tc, auth)
 
 	client, err := influxdata.NewHTTPClient(clientCfg)
 	if err != nil {
@@ -106,10 +124,36 @@ func main() {
 		errs <- fmt.Errorf("%s", <-c)
 	}()
 
-	go startHTTPServer(repo, tc, cfg, logger, errs)
+	go startHTTPServer(repo, authReader, cfg, logger, errs)
 
 	err = <-errs
 	logger.Error(fmt.Sprintf("InfluxDB writer service terminated: %s", err))
+}
+
+func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
+	var opts []grpc.DialOption
+	logger.Info("connecting to auth via gRPC")
+	if cfg.clientTLS {
+		if cfg.caCerts != "" {
+			tpc, err := credentials.NewClientTLSFromFile(cfg.caCerts, "")
+			if err != nil {
+				logger.Error(fmt.Sprintf("Failed to create tls credentials: %s", err))
+				os.Exit(1)
+			}
+			opts = append(opts, grpc.WithTransportCredentials(tpc))
+		}
+	} else {
+		opts = append(opts, grpc.WithInsecure())
+		logger.Info("gRPC communication is not encrypted")
+	}
+
+	conn, err := grpc.Dial(cfg.usersAuthURL, opts...)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to auth service: %s", err))
+		os.Exit(1)
+	}
+
+	return conn
 }
 
 func loadConfigs() (config, influxdata.HTTPConfig) {
@@ -119,6 +163,11 @@ func loadConfigs() (config, influxdata.HTTPConfig) {
 	}
 
 	authTimeout, err := time.ParseDuration(mainflux.Env(envThingsAuthTimeout, defThingsAuthTimeout))
+	if err != nil {
+		log.Fatalf("Invalid %s value: %s", envThingsAuthTimeout, err.Error())
+	}
+
+	userAuthTimeout, err := time.ParseDuration(mainflux.Env(envUsersAuthTimeout, defUsersAuthTimeout))
 	if err != nil {
 		log.Fatalf("Invalid %s value: %s", envThingsAuthTimeout, err.Error())
 	}
@@ -138,6 +187,8 @@ func loadConfigs() (config, influxdata.HTTPConfig) {
 		jaegerURL:         mainflux.Env(envJaegerURL, defJaegerURL),
 		thingsAuthURL:     mainflux.Env(envThingsAuthURL, defThingsAuthURL),
 		thingsAuthTimeout: authTimeout,
+		usersAuthURL:      mainflux.Env(envAuthURL, defUsersAuthURL),
+		usersAuthTimeout:  userAuthTimeout,
 	}
 
 	clientCfg := influxdata.HTTPConfig{
@@ -151,6 +202,7 @@ func loadConfigs() (config, influxdata.HTTPConfig) {
 
 func connectToThings(cfg config, logger logger.Logger) *grpc.ClientConn {
 	var opts []grpc.DialOption
+	logger.Info("connecting to things via gRPC")
 	if cfg.clientTLS {
 		if cfg.caCerts != "" {
 			tpc, err := credentials.NewClientTLSFromFile(cfg.caCerts, "")
@@ -219,7 +271,7 @@ func newService(client influxdata.Client, dbName string, logger logger.Logger) r
 	return repo
 }
 
-func startHTTPServer(repo readers.MessageRepository, tc mainflux.ThingsServiceClient, cfg config, logger logger.Logger, errs chan error) {
+func startHTTPServer(repo readers.MessageRepository, tc readers.Auth, cfg config, logger logger.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", cfg.port)
 	if cfg.serverCert != "" || cfg.serverKey != "" {
 		logger.Info(fmt.Sprintf("InfluxDB reader service started using https on port %s with cert %s key %s",
