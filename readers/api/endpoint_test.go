@@ -12,12 +12,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/readers"
 	"github.com/mainflux/mainflux/readers/api"
 	"github.com/mainflux/mainflux/readers/mocks"
+	authmocks "github.com/mainflux/mainflux/users/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -44,7 +44,7 @@ var (
 	idProvider = uuid.New()
 )
 
-func newServer(repo readers.MessageRepository, tc mainflux.ThingsServiceClient) *httptest.Server {
+func newServer(repo readers.MessageRepository, tc readers.Auth) *httptest.Server {
 	mux := api.MakeHandler(repo, tc, svcName)
 	return httptest.NewServer(mux)
 }
@@ -123,8 +123,10 @@ func TestReadAll(t *testing.T) {
 	}
 
 	svc := mocks.NewThingsService()
+	svcUsr := authmocks.NewAuthService(map[string]string{"user@example.com": "user@example.com"})
 	repo := mocks.NewMessageRepository(chanID, fromSenml(messages))
-	ts := newServer(repo, svc)
+	au := readers.NewAuthService(svc, svcUsr)
+	ts := newServer(repo, au)
 	defer ts.Close()
 
 	cases := []struct {

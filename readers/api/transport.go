@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -41,10 +42,13 @@ const (
 	defFormat      = "messages"
 )
 
-var auth mainflux.ThingsServiceClient
+var (
+	errUnauthorizedAccess = errors.New("missing or invalid credentials provided")
+	auth                  readers.Auth
+)
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc readers.MessageRepository, tc mainflux.ThingsServiceClient, svcName string) http.Handler {
+func MakeHandler(svc readers.MessageRepository, tc readers.Auth, svcName string) http.Handler {
 	auth = tc
 
 	opts := []kithttp.ServerOption{
@@ -207,17 +211,39 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	}
 }
 
-func authorize(r *http.Request, chanID string) error {
+func authorize(r *http.Request, chanID string) (err error) {
 	token := r.Header.Get("Authorization")
 	if token == "" {
 		return errors.ErrAuthentication
 	}
 
+	if strings.Contains(token, "Bearer ") {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
+		token = strings.ReplaceAll(token, "Bearer ", "")
+		user, err := auth.Identify(ctx, &mainflux.Token{Value: token})
+		if err != nil {
+			e, ok := status.FromError(err)
+			if ok && e.Code() == codes.PermissionDenied {
+				return errUnauthorizedAccess
+			}
+			return err
+		}
+		_, err = auth.IsChannelOwner(ctx, &mainflux.ChannelOwnerReq{Owner: user.Email, ChanID: chanID})
+		if err != nil {
+			e, ok := status.FromError(err)
+			if ok && e.Code() == codes.PermissionDenied {
+				return errUnauthorizedAccess
+			}
+			return err
+		}
+		return nil
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	_, err := auth.CanAccessByKey(ctx, &mainflux.AccessByKeyReq{Token: token, ChanID: chanID})
-	if err != nil {
+	if _, err := auth.CanAccessByKey(ctx, &mainflux.AccessByKeyReq{Token: token, ChanID: chanID}); err != nil {
 		e, ok := status.FromError(err)
 		if ok && e.Code() == codes.PermissionDenied {
 			return errors.ErrAuthorization
