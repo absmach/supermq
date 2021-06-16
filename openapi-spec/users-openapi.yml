@@ -3,15 +3,6 @@ info:
   title: Mainflux users service
   description: HTTP API for managing platform users.
   version: "1.0.0"
-servers:
-- url: http://mainflux-users:8180
-  description: Docker server
-- url: http://localhost
-  description: Docker compose
-- url: http://localhost:8180
-  description: Native
-- url: https://mainflux.ga
-  description: k8s    
 paths:
   /users:
     post:
