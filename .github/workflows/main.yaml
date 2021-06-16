@@ -8,7 +8,7 @@ on:
 
 jobs:
   deploy:
-    needs: generate-openapi-spec
+    # needs: generate-openapi-spec
     runs-on: ubuntu-latest
     steps:
       # - name: Download openapi.json
