@@ -16,7 +16,7 @@ jobs:
         id: swagger-ui-action
         uses: pjoc-team/swagger-ui-action@v0.0.2
         with:
-          dir: './auth'
+          dir: './openapi-spec'
           pattern: 'openapi.yml'
           debug: 'true'
       - name: Deploy to GitHub Pages
