@@ -3,6 +3,7 @@ info:
   title: Mainflux users service
   description: HTTP API for managing platform users.
   version: "1.0.0"
+
 paths:
   /users:
     post:
