@@ -174,7 +174,7 @@ func makeTransformer(cfg config, logger logger.Logger) transformers.Transformer 
 		return senml.New(cfg.contentType)
 	case "JSON":
 		logger.Info("Using JSON transformer")
-		return json.New()
+		return json.New(false)
 	default:
 		logger.Error(fmt.Sprintf("Can't create transformer: unknown transformer type %s", cfg.transformer))
 		os.Exit(1)

@@ -17,7 +17,7 @@ const sep = "/"
 var keys = [...]string{"publisher", "protocol", "channel", "subtopic"}
 
 var (
-	// ErrTransform reprents an error during parsing message.
+	// ErrTransform represents an error during parsing message.
 	ErrTransform         = errors.New("unable to parse JSON object")
 	errInvalidKey        = errors.New("invalid object key")
 	errUnknownFormat     = errors.New("unknown format of JSON message")
@@ -28,65 +28,77 @@ var (
 type funcTransformer func(messaging.Message) (interface{}, error)
 
 // New returns a new JSON transformer.
-func New() transformers.Transformer {
-	return funcTransformer(transformer)
+func New(flatten bool) transformers.Transformer {
+	return transformer(flatten)
+}
+
+func transformer(flatten bool) funcTransformer {
+	return func(msg messaging.Message) (interface{}, error) {
+		ret := Message{
+			Publisher: msg.Publisher,
+			Created:   msg.Created,
+			Protocol:  msg.Protocol,
+			Channel:   msg.Channel,
+			Subtopic:  msg.Subtopic,
+		}
+		if ret.Subtopic == "" {
+			return nil, errors.Wrap(ErrTransform, errUnknownFormat)
+		}
+		subs := strings.Split(ret.Subtopic, ".")
+		if len(subs) == 0 {
+			return nil, errors.Wrap(ErrTransform, errUnknownFormat)
+		}
+		format := subs[len(subs)-1]
+		var payload interface{}
+		if err := json.Unmarshal(msg.Payload, &payload); err != nil {
+			return nil, errors.Wrap(ErrTransform, err)
+		}
+
+		switch p := payload.(type) {
+		case map[string]interface{}:
+			if flatten {
+				flat, err := Flatten(p)
+				if err != nil {
+					return nil, errors.Wrap(ErrTransform, err)
+				}
+				ret.Payload = flat
+				return Messages{[]Message{ret}, format}, nil
+			}
+
+			ret.Payload = p
+			return Messages{[]Message{ret}, format}, nil
+		case []interface{}:
+			res := []Message{}
+			// Make an array of messages from the root array.
+			for _, val := range p {
+				v, ok := val.(map[string]interface{})
+				if !ok {
+					return nil, errors.Wrap(ErrTransform, errInvalidNestedJSON)
+				}
+
+				newMsg := ret
+				newMsg.Payload = v
+				if flatten {
+					flat, err := Flatten(v)
+					if err != nil {
+						return nil, errors.Wrap(ErrTransform, err)
+					}
+					newMsg.Payload = flat
+				}
+				res = append(res, newMsg)
+			}
+			return Messages{res, format}, nil
+		default:
+			return nil, errors.Wrap(ErrTransform, errInvalidFormat)
+		}
+	}
 }
 
 func (fh funcTransformer) Transform(msg messaging.Message) (interface{}, error) {
 	return fh(msg)
 }
 
-func transformer(msg messaging.Message) (interface{}, error) {
-	ret := Message{
-		Publisher: msg.Publisher,
-		Created:   msg.Created,
-		Protocol:  msg.Protocol,
-		Channel:   msg.Channel,
-		Subtopic:  msg.Subtopic,
-	}
-	if ret.Subtopic == "" {
-		return nil, errors.Wrap(ErrTransform, errUnknownFormat)
-	}
-	subs := strings.Split(ret.Subtopic, ".")
-	if len(subs) == 0 {
-		return nil, errors.Wrap(ErrTransform, errUnknownFormat)
-	}
-	format := subs[len(subs)-1]
-	var payload interface{}
-	if err := json.Unmarshal(msg.Payload, &payload); err != nil {
-		return nil, errors.Wrap(ErrTransform, err)
-	}
-	switch p := payload.(type) {
-	case map[string]interface{}:
-		flat, err := Flatten(p)
-		if err != nil {
-			return nil, errors.Wrap(ErrTransform, err)
-		}
-		ret.Payload = flat
-		return Messages{[]Message{ret}, format}, nil
-	case []interface{}:
-		res := []Message{}
-		// Make an array of messages from the root array.
-		for _, val := range p {
-			v, ok := val.(map[string]interface{})
-			if !ok {
-				return nil, errors.Wrap(ErrTransform, errInvalidNestedJSON)
-			}
-			flat, err := Flatten(v)
-			if err != nil {
-				return nil, errors.Wrap(ErrTransform, err)
-			}
-			newMsg := ret
-			newMsg.Payload = flat
-			res = append(res, newMsg)
-		}
-		return Messages{res, format}, nil
-	default:
-		return nil, errors.Wrap(ErrTransform, errInvalidFormat)
-	}
-}
-
-// ParseFlat receives flat map that reprents complex JSON objects and returns
+// ParseFlat receives flat map that represents complex JSON objects and returns
 // the corresponding complex JSON object with nested maps. It's the opposite
 // of the Flatten function.
 func ParseFlat(flat interface{}) interface{} {
