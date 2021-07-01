@@ -94,6 +94,7 @@ func transformer(flatten bool) funcTransformer {
 	}
 }
 
+// Transform transforms Mainflux message to a list of JSON messages.
 func (fh funcTransformer) Transform(msg messaging.Message) (interface{}, error) {
 	return fh(msg)
 }
@@ -109,14 +110,14 @@ func ParseFlat(flat interface{}) interface{} {
 			if value == nil {
 				continue
 			}
-			keys := strings.Split(key, sep)
-			n := len(keys)
+			subKeys := strings.Split(key, sep)
+			n := len(subKeys)
 			if n == 1 {
 				msg[key] = value
 				continue
 			}
 			current := msg
-			for i, k := range keys {
+			for i, k := range subKeys {
 				if _, ok := current[k]; !ok {
 					current[k] = make(map[string]interface{})
 				}
