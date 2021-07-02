@@ -169,6 +169,13 @@ func MakeHandler(tracer opentracing.Tracer, svc things.Service) http.Handler {
 		opts...,
 	))
 
+	r.Delete("/disconnect", kithttp.NewServer(
+		kitot.TraceServer(tracer, "create_disconnections")(createDisconnectionsEndpoint(svc)),
+		decodeCreateDisconnections,
+		encodeResponse,
+		opts...,
+	))
+
 	r.Delete("/channels/:chanId/things/:thingId", kithttp.NewServer(
 		kitot.TraceServer(tracer, "disconnect")(disconnectEndpoint(svc)),
 		decodeConnection,
@@ -406,6 +413,19 @@ func decodeConnection(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeCreateConnections(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
+		return nil, errors.ErrUnsupportedContentType
+	}
+
+	req := createConnectionsReq{token: r.Header.Get("Authorization")}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, errors.Wrap(things.ErrMalformedEntity, err)
+	}
+
+	return req, nil
+}
+
+func decodeCreateDisconnections(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, errors.ErrUnsupportedContentType
 	}

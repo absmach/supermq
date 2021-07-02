@@ -216,21 +216,26 @@ func (crm *channelRepositoryMock) Connect(_ context.Context, owner string, chIDs
 	return nil
 }
 
-func (crm *channelRepositoryMock) Disconnect(_ context.Context, owner, chanID, thingID string) error {
-	if _, ok := crm.cconns[thingID]; !ok {
-		return things.ErrNotFound
+func (crm *channelRepositoryMock) Disconnect(_ context.Context, owner string, chIDs, thIDs []string) error {
+	for _, chID := range chIDs {
+		for _, thID := range thIDs {
+			if _, ok := crm.cconns[thID]; !ok {
+				return things.ErrNotFound
+			}
+
+			if _, ok := crm.cconns[thID][chID]; !ok {
+				return things.ErrNotFound
+			}
+
+			crm.tconns <- Connection{
+				chanID:    chID,
+				thing:     things.Thing{ID: thID, Owner: owner},
+				connected: false,
+			}
+			delete(crm.cconns[thID], chID)
+		}
 	}
 
-	if _, ok := crm.cconns[thingID][chanID]; !ok {
-		return things.ErrNotFound
-	}
-
-	crm.tconns <- Connection{
-		chanID:    chanID,
-		thing:     things.Thing{ID: thingID, Owner: owner},
-		connected: false,
-	}
-	delete(crm.cconns[thingID], chanID)
 	return nil
 }
 

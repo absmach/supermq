@@ -8,7 +8,7 @@ import (
 )
 
 // Channel represents a Mainflux "communication group". This group contains the
-// things that can exchange messages between eachother.
+// things that can exchange messages between each other.
 type Channel struct {
 	ID       string
 	Owner    string
@@ -54,7 +54,7 @@ type ChannelRepository interface {
 
 	// Disconnect removes thing from the channel's list of connected
 	// things.
-	Disconnect(ctx context.Context, owner, chanID, thingID string) error
+	Disconnect(ctx context.Context, owner string, chIDs, thIDs []string) error
 
 	// HasThing determines whether the thing with the provided access key, is
 	// "connected" to the specified channel. If that's the case, it returns

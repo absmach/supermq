@@ -476,6 +476,21 @@ func createConnectionsEndpoint(svc things.Service) endpoint.Endpoint {
 	}
 }
 
+func createDisconnectionsEndpoint(svc things.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		cr := request.(createConnectionsReq)
+		if err := cr.validate(); err != nil {
+			return nil, err
+		}
+
+		if err := svc.Disconnect(ctx, cr.token, cr.ChannelIDs, cr.ThingIDs); err != nil {
+			return nil, err
+		}
+
+		return createDisconnectionRes{}, nil
+	}
+}
+
 func disconnectEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		cr := request.(connectionReq)
@@ -484,7 +499,7 @@ func disconnectEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		if err := svc.Disconnect(ctx, cr.token, cr.chanID, cr.thingID); err != nil {
+		if err := svc.Disconnect(ctx, cr.token, []string{cr.chanID}, []string{cr.thingID}); err != nil {
 			return nil, err
 		}
 

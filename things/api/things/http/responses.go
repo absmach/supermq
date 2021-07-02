@@ -243,6 +243,20 @@ func (res createConnectionsRes) Empty() bool {
 	return true
 }
 
+type createDisconnectionRes struct{}
+
+func (res createDisconnectionRes) Code() int {
+	return http.StatusOK
+}
+
+func (res createDisconnectionRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res createDisconnectionRes) Empty() bool {
+	return true
+}
+
 type disconnectionRes struct{}
 
 func (res disconnectionRes) Code() int {
