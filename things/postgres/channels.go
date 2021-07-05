@@ -315,6 +315,11 @@ func (cr channelRepository) Connect(ctx context.Context, owner string, chIDs, th
 }
 
 func (cr channelRepository) Disconnect(ctx context.Context, owner string, chIDs, thIDs []string) error {
+	tx, err := cr.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return errors.Wrap(things.ErrConnect, err)
+	}
+
 	q := `DELETE FROM connections
 	      WHERE channel_id = :channel AND channel_owner = :owner
 	      AND thing_id = :thing AND thing_owner = :owner`
@@ -327,8 +332,18 @@ func (cr channelRepository) Disconnect(ctx context.Context, owner string, chIDs,
 				Owner:   owner,
 			}
 
-			res, err := cr.db.NamedExecContext(ctx, q, dbco)
+			res, err := tx.NamedExecContext(ctx, q, dbco)
 			if err != nil {
+				tx.Rollback()
+				pqErr, ok := err.(*pq.Error)
+				if ok {
+					switch pqErr.Code.Name() {
+					case errFK:
+						return things.ErrNotFound
+					case errDuplicate:
+						return things.ErrConflict
+					}
+				}
 				return errors.Wrap(things.ErrDisconnect, err)
 			}
 
@@ -341,6 +356,10 @@ func (cr channelRepository) Disconnect(ctx context.Context, owner string, chIDs,
 				return things.ErrNotFound
 			}
 		}
+	}
+
+	if err = tx.Commit(); err != nil {
+		return errors.Wrap(things.ErrConnect, err)
 	}
 
 	return nil
