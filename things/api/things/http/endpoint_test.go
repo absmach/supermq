@@ -2407,7 +2407,7 @@ func TestCreateConnections(t *testing.T) {
 	}
 }
 
-func TestCreateDisconnections(t *testing.T) {
+func TestDisconnectList(t *testing.T) {
 	otherToken := "other_token"
 	otherEmail := "other_user@example.com"
 	svc := newService(map[string]string{
@@ -2451,7 +2451,7 @@ func TestCreateDisconnections(t *testing.T) {
 		status      int
 	}{
 		{
-			desc:        "disconnect existing things to existing channels",
+			desc:        "disconnect from existing things to existing channels",
 			channelIDs:  chIDs1,
 			thingIDs:    thIDs,
 			auth:        token,
@@ -2459,7 +2459,7 @@ func TestCreateDisconnections(t *testing.T) {
 			status:      http.StatusOK,
 		},
 		{
-			desc:        "disconnect existing things to non-existent channels",
+			desc:        "disconnect from existing things to non-existent channels",
 			channelIDs:  []string{strconv.FormatUint(wrongID, 10)},
 			thingIDs:    thIDs,
 			auth:        token,
@@ -2467,7 +2467,7 @@ func TestCreateDisconnections(t *testing.T) {
 			status:      http.StatusNotFound,
 		},
 		{
-			desc:        "disconnect non-existing things to existing channels",
+			desc:        "disconnect from non-existing things to existing channels",
 			channelIDs:  chIDs1,
 			thingIDs:    []string{strconv.FormatUint(wrongID, 10)},
 			auth:        token,
@@ -2475,7 +2475,7 @@ func TestCreateDisconnections(t *testing.T) {
 			status:      http.StatusNotFound,
 		},
 		{
-			desc:        "disconnect existing things to channel with invalid id",
+			desc:        "disconnect from existing things to channel with invalid id",
 			channelIDs:  []string{"invalid"},
 			thingIDs:    thIDs,
 			auth:        token,
@@ -2483,7 +2483,7 @@ func TestCreateDisconnections(t *testing.T) {
 			status:      http.StatusNotFound,
 		},
 		{
-			desc:        "disconnect things with invalid id to existing channels",
+			desc:        "disconnect from things with invalid id to existing channels",
 			channelIDs:  chIDs1,
 			thingIDs:    []string{"invalid"},
 			auth:        token,
@@ -2491,7 +2491,7 @@ func TestCreateDisconnections(t *testing.T) {
 			status:      http.StatusNotFound,
 		},
 		{
-			desc:        "disconnect existing things to empty channel ids",
+			desc:        "disconnect from existing things to empty channel ids",
 			channelIDs:  []string{""},
 			thingIDs:    thIDs,
 			auth:        token,
@@ -2499,7 +2499,7 @@ func TestCreateDisconnections(t *testing.T) {
 			status:      http.StatusBadRequest,
 		},
 		{
-			desc:        "disconnect empty things id to existing channels",
+			desc:        "disconnect from empty things id to existing channels",
 			channelIDs:  chIDs1,
 			thingIDs:    []string{""},
 			auth:        token,
@@ -2507,7 +2507,7 @@ func TestCreateDisconnections(t *testing.T) {
 			status:      http.StatusBadRequest,
 		},
 		{
-			desc:        "disconnect existing things to existing channels with invalid token",
+			desc:        "disconnect from existing things to existing channels with invalid token",
 			channelIDs:  chIDs1,
 			thingIDs:    thIDs,
 			auth:        wrongValue,
@@ -2515,7 +2515,7 @@ func TestCreateDisconnections(t *testing.T) {
 			status:      http.StatusUnauthorized,
 		},
 		{
-			desc:        "disconnect existing things to existing channels with empty token",
+			desc:        "disconnect from existing things to existing channels with empty token",
 			channelIDs:  chIDs1,
 			thingIDs:    thIDs,
 			auth:        "",
@@ -2523,7 +2523,7 @@ func TestCreateDisconnections(t *testing.T) {
 			status:      http.StatusUnauthorized,
 		},
 		{
-			desc:        "disconnect things from owner to channels of other user",
+			desc:        "disconnect from things to channels of other user",
 			channelIDs:  chIDs2,
 			thingIDs:    thIDs,
 			auth:        token,
@@ -2546,7 +2546,7 @@ func TestCreateDisconnections(t *testing.T) {
 			body:        "{",
 		},
 		{
-			desc:        "disconnect valid thing ids with empty channel ids",
+			desc:        "disconnect from valid thing ids with empty channel ids",
 			channelIDs:  []string{},
 			thingIDs:    thIDs,
 			auth:        token,
@@ -2554,7 +2554,7 @@ func TestCreateDisconnections(t *testing.T) {
 			status:      http.StatusBadRequest,
 		},
 		{
-			desc:        "disconnect valid channel ids with empty thing ids",
+			desc:        "disconnect from empty thing ids with valid channel ids",
 			channelIDs:  chIDs1,
 			thingIDs:    []string{},
 			auth:        token,
@@ -2562,7 +2562,7 @@ func TestCreateDisconnections(t *testing.T) {
 			status:      http.StatusBadRequest,
 		},
 		{
-			desc:        "disconnect empty channel ids and empty thing ids",
+			desc:        "disconnect from empty thing ids with empty channel ids",
 			channelIDs:  []string{},
 			thingIDs:    []string{},
 			auth:        token,

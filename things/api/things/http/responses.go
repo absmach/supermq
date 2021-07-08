@@ -20,6 +20,7 @@ var (
 	_ mainflux.Response = (*channelsPageRes)(nil)
 	_ mainflux.Response = (*connectionRes)(nil)
 	_ mainflux.Response = (*disconnectionRes)(nil)
+	_ mainflux.Response = (*disconnectListRes)(nil)
 )
 
 type removeRes struct{}
@@ -243,17 +244,17 @@ func (res createConnectionsRes) Empty() bool {
 	return true
 }
 
-type createDisconnectionRes struct{}
+type disconnectListRes struct{}
 
-func (res createDisconnectionRes) Code() int {
+func (res disconnectListRes) Code() int {
 	return http.StatusOK
 }
 
-func (res createDisconnectionRes) Headers() map[string]string {
+func (res disconnectListRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res createDisconnectionRes) Empty() bool {
+func (res disconnectListRes) Empty() bool {
 	return true
 }
 

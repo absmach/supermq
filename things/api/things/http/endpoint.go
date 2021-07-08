@@ -487,7 +487,7 @@ func createDisconnectionsEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		return createDisconnectionRes{}, nil
+		return disconnectListRes{}, nil
 	}
 }
 

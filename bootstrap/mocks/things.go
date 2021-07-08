@@ -95,35 +95,33 @@ func (svc *mainfluxThings) Disconnect(_ context.Context, owner string, chIDs, th
 	defer svc.mu.Unlock()
 
 	userID, err := svc.auth.Identify(context.Background(), &mainflux.Token{Value: owner})
-
-	for _, chID := range chIDs {
-		for _, thID := range thIDs {
-			if err != nil || svc.channels[chID].Owner != userID.Email {
-				return things.ErrUnauthorizedAccess
-			}
-
-			ids := svc.connections[chID]
-			i := 0
-			for _, t := range ids {
-				if t == thID {
-					break
-				}
-				i++
-			}
-
-			if i == len(ids) {
-				return things.ErrNotFound
-			}
-
-			var tmp []string
-			if i != len(ids)-2 {
-				tmp = ids[i+1:]
-			}
-			ids = append(ids[:i], tmp...)
-			svc.connections[chID] = ids
-		}
+	if err != nil {
+		return things.ErrUnauthorizedAccess
 	}
 
+	for _, chID := range chIDs {
+		if svc.channels[chID].Owner != userID.Email {
+			return things.ErrUnauthorizedAccess
+		}
+
+		ids := svc.connections[chID]
+		var count int
+		var newConns []string
+		for _, thID := range thIDs {
+			for _, id := range ids {
+				if id == thID {
+					count++
+					continue
+				}
+				newConns = append(newConns, id)
+			}
+
+			if len(newConns)-len(ids) != count {
+				return things.ErrNotFound
+			}
+			svc.connections[chID] = newConns
+		}
+	}
 	return nil
 }
 
