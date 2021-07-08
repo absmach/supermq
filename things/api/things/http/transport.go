@@ -170,8 +170,8 @@ func MakeHandler(tracer opentracing.Tracer, svc things.Service) http.Handler {
 	))
 
 	r.Delete("/disconnect", kithttp.NewServer(
-		kitot.TraceServer(tracer, "create_disconnections")(createDisconnectionsEndpoint(svc)),
-		decodeCreateDisconnections,
+		kitot.TraceServer(tracer, "disconnect_list")(disconnectListEndpoint(svc)),
+		decodeDisconnectList,
 		encodeResponse,
 		opts...,
 	))
@@ -425,7 +425,7 @@ func decodeCreateConnections(_ context.Context, r *http.Request) (interface{}, e
 	return req, nil
 }
 
-func decodeCreateDisconnections(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeDisconnectList(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, errors.ErrUnsupportedContentType
 	}

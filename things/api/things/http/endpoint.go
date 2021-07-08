@@ -476,7 +476,7 @@ func createConnectionsEndpoint(svc things.Service) endpoint.Endpoint {
 	}
 }
 
-func createDisconnectionsEndpoint(svc things.Service) endpoint.Endpoint {
+func disconnectListEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		cr := request.(createConnectionsReq)
 		if err := cr.validate(); err != nil {
