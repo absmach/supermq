@@ -444,9 +444,9 @@ func removeChannelEndpoint(svc things.Service) endpoint.Endpoint {
 	}
 }
 
-func connectEndpoint(svc things.Service) endpoint.Endpoint {
+func connectThingEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		cr := request.(connectionReq)
+		cr := request.(connectThingReq)
 
 		if err := cr.validate(); err != nil {
 			return nil, err
@@ -456,13 +456,13 @@ func connectEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		return connectionRes{}, nil
+		return connectThingRes{}, nil
 	}
 }
 
-func createConnectionsEndpoint(svc things.Service) endpoint.Endpoint {
+func connectEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		cr := request.(createConnectionsReq)
+		cr := request.(connectReq)
 
 		if err := cr.validate(); err != nil {
 			return nil, err
@@ -472,13 +472,13 @@ func createConnectionsEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		return createConnectionsRes{}, nil
+		return connectRes{}, nil
 	}
 }
 
-func disconnectListEndpoint(svc things.Service) endpoint.Endpoint {
+func disconnectEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		cr := request.(createConnectionsReq)
+		cr := request.(connectReq)
 		if err := cr.validate(); err != nil {
 			return nil, err
 		}
@@ -487,13 +487,13 @@ func disconnectListEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		return disconnectListRes{}, nil
+		return disconnectRes{}, nil
 	}
 }
 
-func disconnectEndpoint(svc things.Service) endpoint.Endpoint {
+func disconnectThingEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(connectionReq)
+		req := request.(connectThingReq)
 
 		if err := req.validate(); err != nil {
 			return nil, err
@@ -503,7 +503,7 @@ func disconnectEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		return disconnectionRes{}, nil
+		return disconnectThingRes{}, nil
 	}
 }
 

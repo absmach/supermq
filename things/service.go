@@ -97,10 +97,10 @@ type Service interface {
 	// belongs to the user identified by the provided key.
 	RemoveChannel(ctx context.Context, token, id string) error
 
-	// Connect adds things to the channel's list of connected things.
+	// Connect adds things to the channels list of connected things.
 	Connect(ctx context.Context, token string, chIDs, thIDs []string) error
 
-	// Disconnect removes thing from the channel's list of connected
+	// Disconnect removes things from the channels list of connected
 	// things.
 	Disconnect(ctx context.Context, token string, chIDs, thIDs []string) error
 

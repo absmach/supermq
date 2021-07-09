@@ -27,7 +27,7 @@ type channelRepositoryMock struct {
 	mu       sync.Mutex
 	counter  uint64
 	channels map[string]things.Channel
-	tconns   chan Connection                      // used for syncronization with thing repo
+	tconns   chan Connection                      // used for synchronization with thing repo
 	cconns   map[string]map[string]things.Channel // used to track connections
 	things   things.ThingRepository
 }
