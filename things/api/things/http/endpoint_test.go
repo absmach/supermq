@@ -2587,7 +2587,7 @@ func TestDisconnectList(t *testing.T) {
 
 		req := testRequest{
 			client:      ts.Client(),
-			method:      http.MethodDelete,
+			method:      http.MethodPost,
 			url:         fmt.Sprintf("%s/disconnect", ts.URL),
 			contentType: tc.contentType,
 			token:       tc.auth,
