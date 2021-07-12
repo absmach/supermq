@@ -376,7 +376,7 @@ paths:
         '500':
           $ref: "#/components/responses/ServiceError"
   /disconnect:
-    post:
+    put:
       summary: Disconnect things and channels using lists of IDs.
       description: |
         Disconnect things from channels specified by lists of IDs.

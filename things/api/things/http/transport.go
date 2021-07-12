@@ -162,7 +162,7 @@ func MakeHandler(tracer opentracing.Tracer, svc things.Service) http.Handler {
 		opts...,
 	))
 
-	r.Post("/disconnect", kithttp.NewServer(
+	r.Put("/disconnect", kithttp.NewServer(
 		kitot.TraceServer(tracer, "disconnect")(disconnectEndpoint(svc)),
 		decodeConnectList,
 		encodeResponse,
