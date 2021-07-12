@@ -380,13 +380,13 @@ paths:
       summary: Disconnect things and channels using lists of IDs.
       description: |
         Disconnect things from channels specified by lists of IDs.
-        Channel and thing are owned by user identified using the provided access token.
+        Channels and things are owned by user identified using the provided access token.
       tags:
       - things
       parameters:
       - $ref: "#/components/parameters/Authorization"
       requestBody:
-        $ref: "#/components/requestBodies/DisConnCreateReq"
+        $ref: "#/components/requestBodies/DisconnReq"
       responses:
         '200':
           $ref: "#/components/responses/DisconnRes"
@@ -937,7 +937,7 @@ components:
         application/json:
           schema:
            $ref: "#/components/schemas/ConnectionReqSchema"
-    DisConnCreateReq:
+    DisconnReq:
       description: JSON-formatted document describing the entities for disconnection.
       required: true
       content:
