@@ -15,16 +15,14 @@ import (
 )
 
 const (
-	validPayload       = `{"key1": "val1", "key2": 123, "key3": "val3", "key4": {"key5": "val5"}}`
-	listPayload        = `[{"key1": "val1", "key2": 123, "keylist3": "val3", "key4": {"key5": "val5"}}, {"key1": "val1", "key2": 123, "key3": "val3", "key4": {"key5": "val5"}}]`
-	invalidPayload     = `{"key1": "val1", "key2": 123, "key3/1": "val3", "key4": {"key5": "val5"}}`
-	invalidFlatPayload = `{"key1"}`
+	validPayload   = `{"key1": "val1", "key2": 123, "key3": "val3", "key4": {"key5": "val5"}}`
+	listPayload    = `[{"key1": "val1", "key2": 123, "keylist3": "val3", "key4": {"key5": "val5"}}, {"key1": "val1", "key2": 123, "key3": "val3", "key4": {"key5": "val5"}}]`
+	invalidPayload = `{"key1": }`
 )
 
-func TestTransformerFlat(t *testing.T) {
+func TestTransformJSON(t *testing.T) {
 	now := time.Now().Unix()
-	tr := json.New(true)
-
+	tr := json.New()
 	msg := messaging.Message{
 		Channel:   "channel-1",
 		Subtopic:  "subtopic-1",
@@ -35,117 +33,6 @@ func TestTransformerFlat(t *testing.T) {
 	}
 	invalid := msg
 	invalid.Payload = []byte(invalidPayload)
-
-	listMsg := msg
-	listMsg.Payload = []byte(listPayload)
-
-	jsonMsg := json.Messages{
-		Data: []json.Message{
-			{
-				Channel:   msg.Channel,
-				Subtopic:  msg.Subtopic,
-				Publisher: msg.Publisher,
-				Protocol:  msg.Protocol,
-				Created:   msg.Created,
-				Payload: map[string]interface{}{
-					"key1":      "val1",
-					"key2":      float64(123),
-					"key3":      "val3",
-					"key4/key5": "val5",
-				},
-			},
-		},
-		Format: msg.Subtopic,
-	}
-
-	invalidFmt := msg
-	invalidFmt.Subtopic = ""
-
-	listJSON := json.Messages{
-		Data: []json.Message{
-			{
-				Channel:   msg.Channel,
-				Subtopic:  msg.Subtopic,
-				Publisher: msg.Publisher,
-				Protocol:  msg.Protocol,
-				Created:   msg.Created,
-				Payload: map[string]interface{}{
-					"key1":      "val1",
-					"key2":      float64(123),
-					"keylist3":  "val3",
-					"key4/key5": "val5",
-				},
-			},
-			{
-				Channel:   msg.Channel,
-				Subtopic:  msg.Subtopic,
-				Publisher: msg.Publisher,
-				Protocol:  msg.Protocol,
-				Created:   msg.Created,
-				Payload: map[string]interface{}{
-					"key1":      "val1",
-					"key2":      float64(123),
-					"key3":      "val3",
-					"key4/key5": "val5",
-				},
-			},
-		},
-		Format: msg.Subtopic,
-	}
-
-	cases := []struct {
-		desc string
-		msg  messaging.Message
-		json interface{}
-		err  error
-	}{
-		{
-			desc: "test transform JSON",
-			msg:  msg,
-			json: jsonMsg,
-			err:  nil,
-		},
-		{
-			desc: "test transform JSON with an invalid subtopic",
-			msg:  invalidFmt,
-			json: nil,
-			err:  json.ErrTransform,
-		},
-		{
-			desc: "test transform JSON array",
-			msg:  listMsg,
-			json: listJSON,
-			err:  nil,
-		},
-		{
-			desc: "test transform JSON with invalid payload",
-			msg:  invalid,
-			json: nil,
-			err:  json.ErrTransform,
-		},
-	}
-
-	for _, tc := range cases {
-		m, err := tr.Transform(tc.msg)
-		assert.Equal(t, tc.json, m, fmt.Sprintf("%s expected %v, got %v", tc.desc, tc.json, m))
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s, got %s", tc.desc, tc.err, err))
-	}
-}
-
-func TestTransformerNested(t *testing.T) {
-	now := time.Now().Unix()
-	tr := json.New(false)
-
-	msg := messaging.Message{
-		Channel:   "channel-1",
-		Subtopic:  "subtopic-1",
-		Publisher: "publisher-1",
-		Protocol:  "protocol",
-		Payload:   []byte(validPayload),
-		Created:   now,
-	}
-	invalid := msg
-	invalid.Payload = []byte(invalidFlatPayload)
 
 	listMsg := msg
 	listMsg.Payload = []byte(listPayload)
@@ -162,7 +49,9 @@ func TestTransformerNested(t *testing.T) {
 					"key1": "val1",
 					"key2": float64(123),
 					"key3": "val3",
-					"key4": map[string]interface{}{"key5": "val5"},
+					"key4": map[string]interface{}{
+						"key5": "val5",
+					},
 				},
 			},
 		},
@@ -184,7 +73,9 @@ func TestTransformerNested(t *testing.T) {
 					"key1":     "val1",
 					"key2":     float64(123),
 					"keylist3": "val3",
-					"key4":     map[string]interface{}{"key5": "val5"},
+					"key4": map[string]interface{}{
+						"key5": "val5",
+					},
 				},
 			},
 			{
@@ -197,7 +88,9 @@ func TestTransformerNested(t *testing.T) {
 					"key1": "val1",
 					"key2": float64(123),
 					"key3": "val3",
-					"key4": map[string]interface{}{"key5": "val5"},
+					"key4": map[string]interface{}{
+						"key5": "val5",
+					},
 				},
 			},
 		},
@@ -211,25 +104,25 @@ func TestTransformerNested(t *testing.T) {
 		err  error
 	}{
 		{
-			desc: "test no-flattening transform JSON",
+			desc: "test transform JSON",
 			msg:  msg,
 			json: jsonMsgs,
 			err:  nil,
 		},
 		{
-			desc: "test no-flattening transform JSON with an invalid subtopic",
+			desc: "test transform JSON with an invalid subtopic",
 			msg:  invalidFmt,
 			json: nil,
 			err:  json.ErrTransform,
 		},
 		{
-			desc: "test no-flattening transform JSON array",
+			desc: "test transform JSON array",
 			msg:  listMsg,
 			json: listJSON,
 			err:  nil,
 		},
 		{
-			desc: "test no-flattening transform JSON with invalid payload",
+			desc: "test transform JSON with invalid payload",
 			msg:  invalid,
 			json: nil,
 			err:  json.ErrTransform,
