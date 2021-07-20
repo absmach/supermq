@@ -103,6 +103,11 @@ func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	token := r.Header.Get("Authorization")
+	_, pass, ok := r.BasicAuth()
+	if ok {
+		token = pass
+	}
 
 	payload, err := decodePayload(r.Body)
 	if err != nil {
@@ -119,7 +124,7 @@ func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 
 	req := publishReq{
 		msg:   msg,
-		token: r.Header.Get("Authorization"),
+		token: token,
 	}
 
 	return req, nil
