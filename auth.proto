@@ -64,9 +64,10 @@ message IssueReq {
 }
 
 message AuthorizeReq {
-    string sub = 1;
-    string obj = 2;
-    string act = 3;
+    string sub  = 1;
+    string obj  = 2;
+    string act  = 3;
+    bool check  = 4;
 }
 
 message AuthorizeRes {

@@ -12,6 +12,17 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
+const (
+	defAdminEmail     = ""
+	envAdminEmail     = "MF_USERS_ADMIN_EMAIL"
+	memberRelationKey = "member"
+	createRelationKey = "create"
+	authoritiesObjKey = "authorities"
+	usersObjKey       = "users"
+	createPolicy      = false
+	checkPolicy       = true
+)
+
 var (
 	// ErrConflict indicates usage of the existing email during account
 	// registration.
@@ -27,6 +38,9 @@ var (
 	// ErrUnauthorizedAccess indicates missing or invalid credentials provided
 	// when accessing a protected resource.
 	ErrUnauthorizedAccess = errors.New("missing or invalid credentials provided")
+
+	// ErrAuthorization indicates failure occurred while authorizing the entity.
+	ErrAuthorization = errors.New("failed to perform authorization over the entity")
 
 	// ErrNotFound indicates a non-existent entity request.
 	ErrNotFound = errors.New("non-existent entity")
@@ -64,6 +78,12 @@ type Service interface {
 	// non-nil error value is returned.
 	Register(ctx context.Context, user User) (string, error)
 
+	// CreateUser creates a new user after verifying the given token and
+	// access rights of the user having this token. It sets the new user's
+	// access right and returns the id of the newly created user and the
+	// non-nil error in case of failure during the user creation.
+	CreateUser(ctx context.Context, token string, user User) (string, error)
+
 	// Login authenticates the user given its credentials. Successful
 	// authentication generates new access token. Failed invocations are
 	// identified by the non-nil error values in the response.
@@ -92,7 +112,7 @@ type Service interface {
 	// token can be authentication token or password reset token.
 	ResetPassword(ctx context.Context, resetToken, password string) error
 
-	//SendPasswordReset sends reset password link to email.
+	// SendPasswordReset sends reset password link to email.
 	SendPasswordReset(ctx context.Context, host, email, token string) error
 
 	// ListMembers retrieves everything that is assigned to a group identified by groupID.
@@ -149,16 +169,77 @@ func (svc usersService) Register(ctx context.Context, user User) (string, error)
 	if !svc.passRegex.MatchString(user.Password) {
 		return "", ErrPasswordFormat
 	}
-	hash, err := svc.hasher.Hash(user.Password)
-	if err != nil {
-		return "", errors.Wrap(ErrMalformedEntity, err)
+
+	object := usersObjKey
+	if user.Email == mainflux.Env(envAdminEmail, defAdminEmail) {
+		object = authoritiesObjKey
 	}
-	user.Password = hash
+
 	uid, err := svc.idProvider.ID()
 	if err != nil {
 		return "", errors.Wrap(ErrCreateUser, err)
 	}
 	user.ID = uid
+
+	authorized, err := svc.authorize(ctx, createPolicy, user.ID, object, memberRelationKey)
+	if err != nil {
+		return "", err
+	}
+	if !authorized {
+		return "", ErrAuthorization
+	}
+
+	hash, err := svc.hasher.Hash(user.Password)
+	if err != nil {
+		return "", errors.Wrap(ErrMalformedEntity, err)
+	}
+	user.Password = hash
+	uid, err = svc.users.Save(ctx, user)
+	if err != nil {
+		return "", err
+	}
+	return uid, nil
+}
+
+func (svc usersService) CreateUser(ctx context.Context, token string, user User) (string, error) {
+	ir, err := svc.identify(ctx, token)
+	if err != nil {
+		return "", err
+	}
+
+	authorized, err := svc.authorize(ctx, checkPolicy, ir.id, authoritiesObjKey, memberRelationKey)
+	if err != nil {
+		return "", err
+	}
+	if !authorized {
+		return "", ErrAuthorization
+	}
+
+	uid, err := svc.idProvider.ID()
+	if err != nil {
+		return "", errors.Wrap(ErrCreateUser, err)
+	}
+	user.ID = uid
+
+	authorized, err = svc.authorize(ctx, createPolicy, user.ID, usersObjKey, memberRelationKey)
+	if err != nil {
+		return "", err
+	}
+	if !authorized {
+		return "", ErrAuthorization
+	}
+
+	if err := user.Validate(); err != nil {
+		return "", err
+	}
+	if !svc.passRegex.MatchString(user.Password) {
+		return "", ErrPasswordFormat
+	}
+	hash, err := svc.hasher.Hash(user.Password)
+	if err != nil {
+		return "", errors.Wrap(ErrMalformedEntity, err)
+	}
+	user.Password = hash
 	uid, err = svc.users.Save(ctx, user)
 	if err != nil {
 		return "", err
@@ -197,19 +278,19 @@ func (svc usersService) ViewUser(ctx context.Context, token, id string) (User, e
 }
 
 func (svc usersService) ViewProfile(ctx context.Context, token string) (User, error) {
-	email, err := svc.identify(ctx, token)
+	ir, err := svc.identify(ctx, token)
 	if err != nil {
 		return User{}, err
 	}
 
-	dbUser, err := svc.users.RetrieveByEmail(ctx, email)
+	dbUser, err := svc.users.RetrieveByEmail(ctx, ir.email)
 	if err != nil {
 		return User{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
 	return User{
 		ID:       dbUser.ID,
-		Email:    email,
+		Email:    ir.email,
 		Password: "",
 		Metadata: dbUser.Metadata,
 	}, nil
@@ -225,12 +306,12 @@ func (svc usersService) ListUsers(ctx context.Context, token string, offset, lim
 }
 
 func (svc usersService) UpdateUser(ctx context.Context, token string, u User) error {
-	email, err := svc.identify(ctx, token)
+	ir, err := svc.identify(ctx, token)
 	if err != nil {
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 	user := User{
-		Email:    email,
+		Email:    ir.email,
 		Metadata: u.Metadata,
 	}
 	return svc.users.UpdateUser(ctx, user)
@@ -249,11 +330,11 @@ func (svc usersService) GenerateResetToken(ctx context.Context, email, host stri
 }
 
 func (svc usersService) ResetPassword(ctx context.Context, resetToken, password string) error {
-	email, err := svc.identify(ctx, resetToken)
+	ir, err := svc.identify(ctx, resetToken)
 	if err != nil {
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
-	u, err := svc.users.RetrieveByEmail(ctx, email)
+	u, err := svc.users.RetrieveByEmail(ctx, ir.email)
 	if err != nil || u.Email == "" {
 		return ErrUserNotFound
 	}
@@ -264,11 +345,11 @@ func (svc usersService) ResetPassword(ctx context.Context, resetToken, password 
 	if err != nil {
 		return err
 	}
-	return svc.users.UpdatePassword(ctx, email, password)
+	return svc.users.UpdatePassword(ctx, ir.email, password)
 }
 
 func (svc usersService) ChangePassword(ctx context.Context, authToken, password, oldPassword string) error {
-	email, err := svc.identify(ctx, authToken)
+	ir, err := svc.identify(ctx, authToken)
 	if err != nil {
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
@@ -276,13 +357,13 @@ func (svc usersService) ChangePassword(ctx context.Context, authToken, password,
 		return ErrPasswordFormat
 	}
 	u := User{
-		Email:    email,
+		Email:    ir.email,
 		Password: oldPassword,
 	}
 	if _, err := svc.Login(ctx, u); err != nil {
 		return ErrUnauthorizedAccess
 	}
-	u, err = svc.users.RetrieveByEmail(ctx, email)
+	u, err = svc.users.RetrieveByEmail(ctx, ir.email)
 	if err != nil || u.Email == "" {
 		return ErrUserNotFound
 	}
@@ -291,7 +372,7 @@ func (svc usersService) ChangePassword(ctx context.Context, authToken, password,
 	if err != nil {
 		return err
 	}
-	return svc.users.UpdatePassword(ctx, email, password)
+	return svc.users.UpdatePassword(ctx, ir.email, password)
 }
 
 func (svc usersService) SendPasswordReset(_ context.Context, host, email, token string) error {
@@ -321,12 +402,32 @@ func (svc usersService) issue(ctx context.Context, id, email string, keyType uin
 	return key.GetValue(), nil
 }
 
-func (svc usersService) identify(ctx context.Context, token string) (string, error) {
+type identityRes struct {
+	id    string
+	email string
+}
+
+func (svc usersService) identify(ctx context.Context, token string) (identityRes, error) {
 	identity, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
-		return "", errors.Wrap(ErrUnauthorizedAccess, err)
+		return identityRes{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
-	return identity.GetEmail(), nil
+
+	return identityRes{identity.Id, identity.Email}, nil
+}
+
+func (svc usersService) authorize(ctx context.Context, check bool, sub, obj, act string) (bool, error) {
+	req := &mainflux.AuthorizeReq{
+		Sub:   sub,
+		Act:   act,
+		Obj:   obj,
+		Check: check,
+	}
+	res, err := svc.auth.Authorize(ctx, req)
+	if err != nil {
+		return false, errors.Wrap(ErrAuthorization, err)
+	}
+	return res.Authorized, nil
 }
 
 func (svc usersService) members(ctx context.Context, token, groupID string, limit, offset uint64) ([]string, error) {

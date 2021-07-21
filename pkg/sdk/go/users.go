@@ -15,10 +15,11 @@ import (
 )
 
 const (
-	usersEndpoint    = "users"
-	tokensEndpoint   = "tokens"
-	passwordEndpoint = "password"
-	membersEndpoint  = "members"
+	usersEndpoint      = "users"
+	createUserEndpoint = "users/create"
+	tokensEndpoint     = "tokens"
+	passwordEndpoint   = "password"
+	membersEndpoint    = "members"
 )
 
 func (sdk mfSDK) CreateUser(u User) (string, error) {
@@ -27,7 +28,7 @@ func (sdk mfSDK) CreateUser(u User) (string, error) {
 		return "", err
 	}
 
-	url := createURL(sdk.baseURL, sdk.usersPrefix, usersEndpoint)
+	url := createURL(sdk.baseURL, sdk.usersPrefix, createUserEndpoint)
 
 	resp, err := sdk.client.Post(url, string(CTJSON), bytes.NewReader(data))
 	if err != nil {

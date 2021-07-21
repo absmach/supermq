@@ -82,7 +82,7 @@ func (lm *loggingMiddleware) Identify(ctx context.Context, key string) (id auth.
 	return lm.svc.Identify(ctx, key)
 }
 
-func (lm *loggingMiddleware) Authorize(ctx context.Context, token, sub, obj, act string) (auth bool, err error) {
+func (lm *loggingMiddleware) Authorize(ctx context.Context, check bool, sub, obj, act string) (auth bool, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method authorize took %s to complete", time.Since(begin))
 		if err != nil {
@@ -92,7 +92,7 @@ func (lm *loggingMiddleware) Authorize(ctx context.Context, token, sub, obj, act
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.Authorize(ctx, token, sub, obj, act)
+	return lm.svc.Authorize(ctx, check, sub, obj, act)
 }
 
 func (lm *loggingMiddleware) CreateGroup(ctx context.Context, token string, group auth.Group) (g auth.Group, err error) {

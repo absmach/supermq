@@ -33,7 +33,7 @@ func newService() auth.Service {
 	groupRepo := mocks.NewGroupRepository()
 	idProvider := uuid.NewMock()
 	t := jwt.New(secret)
-	return auth.New(repo, groupRepo, idProvider, t)
+	return auth.New(repo, groupRepo, idProvider, t, auth.KetoConfig{})
 }
 
 func TestIssue(t *testing.T) {

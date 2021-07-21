@@ -38,6 +38,20 @@ func (lm *loggingMiddleware) Register(ctx context.Context, user users.User) (uid
 	return lm.svc.Register(ctx, user)
 }
 
+func (lm *loggingMiddleware) CreateUser(ctx context.Context, token string, user users.User) (uid string, err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method create_user for user %s took %s to complete", user.Email, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+
+	}(time.Now())
+
+	return lm.svc.CreateUser(ctx, token, user)
+}
+
 func (lm *loggingMiddleware) Login(ctx context.Context, user users.User) (token string, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method login for user %s took %s to complete", user.Email, time.Since(begin))

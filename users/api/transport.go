@@ -39,9 +39,16 @@ func MakeHandler(svc users.Service, tracer opentracing.Tracer) http.Handler {
 
 	mux := bone.New()
 
-	mux.Post("/users", kithttp.NewServer(
+	mux.Post("/users/create", kithttp.NewServer(
 		kitot.TraceServer(tracer, "register")(registrationEndpoint(svc)),
 		decodeCredentials,
+		encodeResponse,
+		opts...,
+	))
+
+	mux.Post("/users", kithttp.NewServer(
+		kitot.TraceServer(tracer, "create_user")(createUserEndpoint(svc)),
+		decodeCreateUserReq,
 		encodeResponse,
 		opts...,
 	))
@@ -184,6 +191,19 @@ func decodeCredentials(_ context.Context, r *http.Request) (interface{}, error) 
 	return userReq{user}, nil
 }
 
+func decodeCreateUserReq(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
+		return nil, errors.ErrUnsupportedContentType
+	}
+
+	var user users.User
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
+	}
+
+	return createUserReq{user, r.Header.Get("Authorization")}, nil
+}
+
 func decodePasswordResetRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, errors.ErrUnsupportedContentType
@@ -279,6 +299,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		case errors.Contains(errorVal, users.ErrMalformedEntity):
 			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, users.ErrUnauthorizedAccess):
+			w.WriteHeader(http.StatusForbidden)
+		case errors.Contains(errorVal, users.ErrAuthorization):
 			w.WriteHeader(http.StatusForbidden)
 		case errors.Contains(errorVal, users.ErrConflict):
 			w.WriteHeader(http.StatusConflict)

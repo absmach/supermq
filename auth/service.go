@@ -5,7 +5,11 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"time"
+
+	acl "github.com/ory/keto/proto/ory/keto/acl/v1alpha1"
+	"google.golang.org/grpc"
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -13,8 +17,10 @@ import (
 )
 
 const (
-	loginDuration    = 10 * time.Hour
-	recoveryDuration = 5 * time.Minute
+	loginDuration     = 10 * time.Hour
+	recoveryDuration  = 5 * time.Minute
+	ketoContainerName = "mainflux-keto"
+	ketoNamespace     = "members"
 )
 
 var (
@@ -81,8 +87,16 @@ type Authn interface {
 // Authz specifies an API for the authorization and will be implemented
 // by evaluation of policies.
 type Authz interface {
-	// Authorize checks access rights
-	Authorize(ctx context.Context, token, sub, obj, act string) (bool, error)
+
+	// Authorize does authorization operations on the given `subject`.
+	// If the `check` bool is true, Authorize verifies that Is `sub`
+	// allowed to `act` the object `obj`. Otherwise, if the `check`
+	// bool is false, `Authorize` gives authorization to `sub` to
+	// perform `act` on the `obj`. Authorize returns the bool indicating
+	// the authorization situation and the error. For example, the
+	// response false, nil means that `sub` is not allowed to perform
+	// `act` on the `obj`.
+	Authorize(ctx context.Context, check bool, sub, obj, act string) (bool, error)
 }
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -99,22 +113,29 @@ type Service interface {
 
 var _ Service = (*service)(nil)
 
+type KetoConfig struct {
+	WritePort string
+	ReadPort  string
+}
+
 type service struct {
 	keys         KeyRepository
 	groups       GroupRepository
 	idProvider   mainflux.IDProvider
 	ulidProvider mainflux.IDProvider
 	tokenizer    Tokenizer
+	ketoConfig   KetoConfig
 }
 
 // New instantiates the auth service implementation.
-func New(keys KeyRepository, groups GroupRepository, idp mainflux.IDProvider, tokenizer Tokenizer) Service {
+func New(keys KeyRepository, groups GroupRepository, idp mainflux.IDProvider, tokenizer Tokenizer, kc KetoConfig) Service {
 	return &service{
 		tokenizer:    tokenizer,
 		keys:         keys,
 		groups:       groups,
 		idProvider:   idp,
 		ulidProvider: ulid.New(),
+		ketoConfig:   kc,
 	}
 }
 
@@ -170,7 +191,55 @@ func (svc service) Identify(ctx context.Context, token string) (Identity, error)
 	}
 }
 
-func (svc service) Authorize(ctx context.Context, token, sub, obj, act string) (bool, error) {
+func (svc service) Authorize(ctx context.Context, check bool, sub, obj, act string) (bool, error) {
+	return svc.authorize(ctx, check, sub, obj, act)
+}
+
+func (svc service) authorize(ctx context.Context, check bool, sub, obj, act string) (bool, error) {
+	if check {
+		conn, err := grpc.Dial(fmt.Sprintf("%s:%s", ketoContainerName, svc.ketoConfig.ReadPort), grpc.WithInsecure())
+		if err != nil {
+			return false, err
+		}
+		client := acl.NewCheckServiceClient(conn)
+		res, err := client.Check(context.Background(), &acl.CheckRequest{
+			Namespace: ketoNamespace,
+			Object:    obj,
+			Relation:  act,
+			Subject: &acl.Subject{Ref: &acl.Subject_Id{
+				Id: sub,
+			}},
+		})
+		if err != nil {
+			return false, err
+		}
+
+		return res.Allowed, nil
+	}
+
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", ketoContainerName, svc.ketoConfig.WritePort), grpc.WithInsecure())
+	if err != nil {
+		return false, err
+	}
+	client := acl.NewWriteServiceClient(conn)
+	_, err = client.TransactRelationTuples(context.Background(), &acl.TransactRelationTuplesRequest{
+		RelationTupleDeltas: []*acl.RelationTupleDelta{
+			{
+				Action: acl.RelationTupleDelta_INSERT,
+				RelationTuple: &acl.RelationTuple{
+					Namespace: ketoNamespace,
+					Object:    obj,
+					Relation:  act,
+					Subject: &acl.Subject{Ref: &acl.Subject_Id{
+						Id: sub,
+					}},
+				},
+			},
+		},
+	})
+	if err != nil {
+		return false, err
+	}
 	return true, nil
 }
 

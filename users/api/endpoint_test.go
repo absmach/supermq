@@ -123,7 +123,7 @@ func TestRegister(t *testing.T) {
 		req := testRequest{
 			client:      client,
 			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/users", ts.URL),
+			url:         fmt.Sprintf("%s/users/create", ts.URL),
 			contentType: tc.contentType,
 			body:        strings.NewReader(tc.req),
 		}

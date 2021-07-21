@@ -64,13 +64,13 @@ func (ms *metricsMiddleware) Identify(ctx context.Context, token string) (auth.I
 	return ms.svc.Identify(ctx, token)
 }
 
-func (ms *metricsMiddleware) Authorize(ctx context.Context, token, sub, obj, act string) (auth bool, err error) {
+func (ms *metricsMiddleware) Authorize(ctx context.Context, check bool, sub, obj, act string) (auth bool, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "authorize").Add(1)
 		ms.latency.With("method", "authorize").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.Authorize(ctx, token, sub, obj, act)
+	return ms.svc.Authorize(ctx, check, sub, obj, act)
 }
 
 func (ms *metricsMiddleware) CreateGroup(ctx context.Context, token string, group auth.Group) (gr auth.Group, err error) {

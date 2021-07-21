@@ -31,6 +31,25 @@ func registrationEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
+func createUserEndpoint(svc users.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(createUserReq)
+		if err := req.validate(); err != nil {
+			return createUserRes{}, err
+		}
+
+		uid, err := svc.CreateUser(ctx, req.token, req.user)
+		if err != nil {
+			return createUserRes{}, err
+		}
+		cur := createUserRes{
+			ID:      uid,
+			created: true,
+		}
+		return cur, nil
+	}
+}
+
 // Password reset request endpoint.
 // When successful password reset link is generated.
 // Link is generated using MF_TOKEN_RESET_ENDPOINT env.

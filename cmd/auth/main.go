@@ -47,6 +47,8 @@ const (
 	defServerCert    = ""
 	defServerKey     = ""
 	defJaegerURL     = ""
+	defKetoWritePort = "4467"
+	defKetoReadPort  = "4466"
 
 	envLogLevel      = "MF_AUTH_LOG_LEVEL"
 	envDBHost        = "MF_AUTH_DB_HOST"
@@ -64,6 +66,8 @@ const (
 	envServerCert    = "MF_AUTH_SERVER_CERT"
 	envServerKey     = "MF_AUTH_SERVER_KEY"
 	envJaegerURL     = "MF_JAEGER_URL"
+	envKetoWritePort = "MF_KETO_WRITE_REMOTE_PORT"
+	envKetoReadPort  = "MF_KETO_READ_REMOTE_PORT"
 )
 
 type config struct {
@@ -76,6 +80,7 @@ type config struct {
 	serverKey  string
 	jaegerURL  string
 	resetURL   string
+	ketoConfig auth.KetoConfig
 }
 
 type tokenConfig struct {
@@ -100,7 +105,7 @@ func main() {
 	dbTracer, dbCloser := initJaeger("auth_db", cfg.jaegerURL, logger)
 	defer dbCloser.Close()
 
-	svc := newService(db, dbTracer, cfg.secret, logger)
+	svc := newService(db, dbTracer, cfg.secret, logger, cfg.ketoConfig)
 	errs := make(chan error, 2)
 
 	go startHTTPServer(tracer, svc, cfg.httpPort, cfg.serverCert, cfg.serverKey, logger, errs)
@@ -129,6 +134,11 @@ func loadConfig() config {
 		SSLRootCert: mainflux.Env(envDBSSLRootCert, defDBSSLRootCert),
 	}
 
+	kc := auth.KetoConfig{
+		WritePort: mainflux.Env(envKetoWritePort, defKetoWritePort),
+		ReadPort:  mainflux.Env(envKetoReadPort, defKetoReadPort),
+	}
+
 	return config{
 		logLevel:   mainflux.Env(envLogLevel, defLogLevel),
 		dbConfig:   dbConfig,
@@ -138,6 +148,7 @@ func loadConfig() config {
 		serverCert: mainflux.Env(envServerCert, defServerCert),
 		serverKey:  mainflux.Env(envServerKey, defServerKey),
 		jaegerURL:  mainflux.Env(envJaegerURL, defJaegerURL),
+		ketoConfig: kc,
 	}
 
 }
@@ -175,7 +186,7 @@ func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sqlx.DB {
 	return db
 }
 
-func newService(db *sqlx.DB, tracer opentracing.Tracer, secret string, logger logger.Logger) auth.Service {
+func newService(db *sqlx.DB, tracer opentracing.Tracer, secret string, logger logger.Logger, kc auth.KetoConfig) auth.Service {
 	database := postgres.NewDatabase(db)
 	keysRepo := tracing.New(postgres.New(database), tracer)
 
@@ -185,7 +196,7 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, secret string, logger lo
 	idProvider := uuid.New()
 	t := jwt.New(secret)
 
-	svc := auth.New(keysRepo, groupsRepo, idProvider, t)
+	svc := auth.New(keysRepo, groupsRepo, idProvider, t, kc)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,

@@ -120,12 +120,12 @@ func encodeIdentifyResponse(_ context.Context, grpcRes interface{}) (interface{}
 
 func decodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*mainflux.AuthorizeReq)
-	return authReq{Act: req.Act, Obj: req.Obj, Sub: req.Sub}, nil
+	return authReq{Act: req.GetAct(), Obj: req.GetObj(), Sub: req.GetSub(), Check: req.GetCheck()}, nil
 }
 
 func encodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
-	res := grpcRes.(*mainflux.AuthorizeRes)
-	return res, nil
+	res := grpcRes.(authorizeRes)
+	return &mainflux.AuthorizeRes{Authorized: res.authorized}, nil
 }
 
 func decodeAssignRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {

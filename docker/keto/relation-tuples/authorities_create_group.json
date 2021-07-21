@@ -1,0 +1,6 @@
+{
+  "namespace": "members",
+  "object":    "group",
+  "relation":  "create",
+  "subject":   "members:authorities#member"
+}

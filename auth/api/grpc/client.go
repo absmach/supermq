@@ -129,7 +129,7 @@ func (client grpcClient) Authorize(ctx context.Context, req *mainflux.AuthorizeR
 	ctx, close := context.WithTimeout(ctx, client.timeout)
 	defer close()
 
-	res, err := client.authorize(ctx, authReq{Act: req.Act, Obj: req.Obj, Sub: req.Sub})
+	res, err := client.authorize(ctx, authReq{Act: req.Act, Obj: req.Obj, Sub: req.Sub, Check: req.Check})
 	if err != nil {
 		return &mainflux.AuthorizeRes{Authorized: false}, err
 	}
@@ -146,9 +146,10 @@ func decodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{
 func encodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(authReq)
 	return &mainflux.AuthorizeReq{
-		Sub: req.Sub,
-		Obj: req.Obj,
-		Act: req.Act,
+		Sub:   req.Sub,
+		Obj:   req.Obj,
+		Act:   req.Act,
+		Check: req.Check,
 	}, nil
 }
 

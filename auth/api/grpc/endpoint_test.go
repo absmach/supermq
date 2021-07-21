@@ -44,7 +44,7 @@ func newService() auth.Service {
 	idProvider := uuid.NewMock()
 	t := jwt.New(secret)
 
-	return auth.New(repo, groupRepo, idProvider, t)
+	return auth.New(repo, groupRepo, idProvider, t, auth.KetoConfig{})
 }
 
 func startGRPCServer(svc auth.Service, port int) {

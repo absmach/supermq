@@ -87,17 +87,13 @@ func (req membersReq) validate() error {
 // 2. object - an entity over which action will be executed
 // 3. action - type of action that will be executed (read/write)
 type authReq struct {
-	token string
 	Sub   string
 	Obj   string
 	Act   string
+	Check bool
 }
 
 func (req authReq) validate() error {
-	if req.token == "" {
-		return auth.ErrMalformedEntity
-	}
-
 	if req.Sub == "" {
 		return auth.ErrMalformedEntity
 	}
