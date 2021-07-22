@@ -62,11 +62,26 @@ func authorizeEndpoint(svc auth.Service) endpoint.Endpoint {
 			return authorizeRes{}, err
 		}
 
-		authorized, err := svc.Authorize(ctx, req.Check, req.Sub, req.Obj, req.Act)
+		authorized, err := svc.Authorize(ctx, req.Sub, req.Obj, req.Act)
 		if err != nil {
 			return authorizeRes{}, err
 		}
 		return authorizeRes{authorized: authorized}, err
+	}
+}
+
+func addPolicyEndpoint(svc auth.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(addPolicyReq)
+		if err := req.validate(); err != nil {
+			return addPolicyRes{}, err
+		}
+
+		err := svc.AddPolicy(ctx, req.Sub, req.Obj, req.Act)
+		if err != nil {
+			return addPolicyRes{}, err
+		}
+		return addPolicyRes{authorized: true}, err
 	}
 }
 

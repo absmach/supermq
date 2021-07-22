@@ -26,6 +26,9 @@ var (
 	// ErrUpdateEntity indicates error in updating entity or entities
 	ErrUpdateEntity = errors.New("update entity failed")
 
+	// ErrAuthorization indicates a failure occurred while authorizing the entity.
+	ErrAuthorization = errors.New("failed to perform authorization over the entity")
+
 	// ErrViewEntity indicates error in viewing entity or entities
 	ErrViewEntity = errors.New("view entity failed")
 
@@ -40,6 +43,12 @@ var (
 
 	// ErrFailedToRetrieveThings failed to retrieve things.
 	ErrFailedToRetrieveThings = errors.New("failed to retrieve group members")
+)
+
+const (
+	checkPolicy     = true
+	createActionKey = "create"
+	thingObjectKey  = "thing"
 )
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -164,6 +173,14 @@ func (ts *thingsService) CreateThings(ctx context.Context, token string, things 
 	res, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return []Thing{}, errors.Wrap(ErrUnauthorizedAccess, err)
+	}
+
+	authorized, err := ts.authorize(ctx, res.GetId(), thingObjectKey, createActionKey)
+	if err != nil {
+		return []Thing{}, errors.Wrap(ErrAuthorization, err)
+	}
+	if !authorized {
+		return []Thing{}, ErrAuthorization
 	}
 
 	for i := range things {
@@ -438,4 +455,17 @@ func (ts *thingsService) members(ctx context.Context, token, groupID, groupType 
 		return nil, nil
 	}
 	return res.Members, nil
+}
+
+func (ts *thingsService) authorize(ctx context.Context, subject, object, relation string) (bool, error) {
+	req := &mainflux.AuthorizeReq{
+		Sub: subject,
+		Obj: object,
+		Act: relation,
+	}
+	res, err := ts.auth.Authorize(ctx, req)
+	if err != nil {
+		return false, errors.Wrap(ErrAuthorization, err)
+	}
+	return res.Authorized, nil
 }

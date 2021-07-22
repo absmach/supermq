@@ -82,17 +82,28 @@ func (lm *loggingMiddleware) Identify(ctx context.Context, key string) (id auth.
 	return lm.svc.Identify(ctx, key)
 }
 
-func (lm *loggingMiddleware) Authorize(ctx context.Context, check bool, sub, obj, act string) (auth bool, err error) {
+func (lm *loggingMiddleware) Authorize(ctx context.Context, subject, object, relation string) (authorized bool, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method authorize took %s to complete", time.Since(begin))
+		message := fmt.Sprintf("Method authorize %s#%s@%s took %s to complete", object, relation, subject, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
 		}
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
+	return lm.svc.Authorize(ctx, subject, object, relation)
+}
 
-	return lm.svc.Authorize(ctx, check, sub, obj, act)
+func (lm *loggingMiddleware) AddPolicy(ctx context.Context, subject, object, relation string) (err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method add_policy %s#%s@%s took %s to complete", object, relation, subject, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+	return lm.svc.AddPolicy(ctx, subject, object, relation)
 }
 
 func (lm *loggingMiddleware) CreateGroup(ctx context.Context, token string, group auth.Group) (g auth.Group, err error) {

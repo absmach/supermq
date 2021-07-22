@@ -44,6 +44,10 @@ func (svc authServiceMock) Authorize(ctx context.Context, req *mainflux.Authoriz
 	return &mainflux.AuthorizeRes{Authorized: true}, nil
 }
 
+func (svc authServiceMock) AddPolicy(ctx context.Context, in *mainflux.AddPolicyReq, opts ...grpc.CallOption) (*mainflux.AddPolicyRes, error) {
+	return &mainflux.AddPolicyRes{Authorized: true}, nil
+}
+
 func (svc authServiceMock) Members(ctx context.Context, req *mainflux.MembersReq, _ ...grpc.CallOption) (r *mainflux.MembersRes, err error) {
 	panic("not implemented")
 }

@@ -5,11 +5,7 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"time"
-
-	acl "github.com/ory/keto/proto/ory/keto/acl/v1alpha1"
-	"google.golang.org/grpc"
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -21,11 +17,16 @@ const (
 	recoveryDuration  = 5 * time.Minute
 	ketoContainerName = "mainflux-keto"
 	ketoNamespace     = "members"
+	memberRelationKey = "member"
+	authoritiesObjKey = "authorities"
 )
 
 var (
 	// ErrUnauthorizedAccess represents unauthorized access.
 	ErrUnauthorizedAccess = errors.New("unauthorized access")
+
+	// ErrAuthorization indicates failure occurred while authorizing the entity.
+	ErrAuthorization = errors.New("failed to perform authorization over the entity")
 
 	// ErrMalformedEntity indicates malformed entity specification (e.g.
 	// invalid owner or ID).
@@ -84,28 +85,13 @@ type Authn interface {
 	Identify(ctx context.Context, token string) (Identity, error)
 }
 
-// Authz specifies an API for the authorization and will be implemented
-// by evaluation of policies.
-type Authz interface {
-
-	// Authorize does authorization operations on the given `subject`.
-	// If the `check` bool is true, Authorize verifies that Is `sub`
-	// allowed to `act` the object `obj`. Otherwise, if the `check`
-	// bool is false, `Authorize` gives authorization to `sub` to
-	// perform `act` on the `obj`. Authorize returns the bool indicating
-	// the authorization situation and the error. For example, the
-	// response false, nil means that `sub` is not allowed to perform
-	// `act` on the `obj`.
-	Authorize(ctx context.Context, check bool, sub, obj, act string) (bool, error)
-}
-
-// Service specifies an API that must be fullfiled by the domain service
+// Service specifies an API that must be fulfilled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
 // Token is a string value of the actual Key and is used to authenticate
 // an Auth service request.
 type Service interface {
 	Authn
-	Authz
+	PolicyService
 
 	// Implements groups API, creating groups, assigning members
 	GroupService
@@ -113,29 +99,24 @@ type Service interface {
 
 var _ Service = (*service)(nil)
 
-type KetoConfig struct {
-	WritePort string
-	ReadPort  string
-}
-
 type service struct {
 	keys         KeyRepository
 	groups       GroupRepository
 	idProvider   mainflux.IDProvider
 	ulidProvider mainflux.IDProvider
+	keto         PolicyCommunicator
 	tokenizer    Tokenizer
-	ketoConfig   KetoConfig
 }
 
 // New instantiates the auth service implementation.
-func New(keys KeyRepository, groups GroupRepository, idp mainflux.IDProvider, tokenizer Tokenizer, kc KetoConfig) Service {
+func New(keys KeyRepository, groups GroupRepository, idp mainflux.IDProvider, tokenizer Tokenizer, policy PolicyCommunicator) Service {
 	return &service{
 		tokenizer:    tokenizer,
 		keys:         keys,
 		groups:       groups,
 		idProvider:   idp,
 		ulidProvider: ulid.New(),
-		ketoConfig:   kc,
+		keto:         policy,
 	}
 }
 
@@ -191,56 +172,16 @@ func (svc service) Identify(ctx context.Context, token string) (Identity, error)
 	}
 }
 
-func (svc service) Authorize(ctx context.Context, check bool, sub, obj, act string) (bool, error) {
-	return svc.authorize(ctx, check, sub, obj, act)
+func (svc service) Authorize(ctx context.Context, subject, object, relation string) (bool, error) {
+	pr, err := svc.keto.CheckPolicy(ctx, subject, object, relation)
+	if err != nil {
+		return false, err
+	}
+	return pr.Authorized, nil
 }
 
-func (svc service) authorize(ctx context.Context, check bool, sub, obj, act string) (bool, error) {
-	if check {
-		conn, err := grpc.Dial(fmt.Sprintf("%s:%s", ketoContainerName, svc.ketoConfig.ReadPort), grpc.WithInsecure())
-		if err != nil {
-			return false, err
-		}
-		client := acl.NewCheckServiceClient(conn)
-		res, err := client.Check(context.Background(), &acl.CheckRequest{
-			Namespace: ketoNamespace,
-			Object:    obj,
-			Relation:  act,
-			Subject: &acl.Subject{Ref: &acl.Subject_Id{
-				Id: sub,
-			}},
-		})
-		if err != nil {
-			return false, err
-		}
-
-		return res.Allowed, nil
-	}
-
-	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", ketoContainerName, svc.ketoConfig.WritePort), grpc.WithInsecure())
-	if err != nil {
-		return false, err
-	}
-	client := acl.NewWriteServiceClient(conn)
-	_, err = client.TransactRelationTuples(context.Background(), &acl.TransactRelationTuplesRequest{
-		RelationTupleDeltas: []*acl.RelationTupleDelta{
-			{
-				Action: acl.RelationTupleDelta_INSERT,
-				RelationTuple: &acl.RelationTuple{
-					Namespace: ketoNamespace,
-					Object:    obj,
-					Relation:  act,
-					Subject: &acl.Subject{Ref: &acl.Subject_Id{
-						Id: sub,
-					}},
-				},
-			},
-		},
-	})
-	if err != nil {
-		return false, err
-	}
-	return true, nil
+func (svc service) AddPolicy(ctx context.Context, subject, object, relation string) error {
+	return svc.keto.AddPolicy(ctx, subject, object, relation)
 }
 
 func (svc service) tmpKey(duration time.Duration, key Key) (Key, string, error) {
@@ -299,6 +240,14 @@ func (svc service) CreateGroup(ctx context.Context, token string, group Group) (
 	user, err := svc.Identify(ctx, token)
 	if err != nil {
 		return Group{}, errors.Wrap(ErrUnauthorizedAccess, err)
+	}
+
+	pr, err := svc.keto.CheckPolicy(ctx, user.ID, authoritiesObjKey, memberRelationKey)
+	if err != nil {
+		return Group{}, errors.Wrap(ErrAuthorization, err)
+	}
+	if !pr.Authorized {
+		return Group{}, ErrAuthorization
 	}
 
 	ulid, err := svc.ulidProvider.ID()

@@ -16,11 +16,8 @@ const (
 	defAdminEmail     = ""
 	envAdminEmail     = "MF_USERS_ADMIN_EMAIL"
 	memberRelationKey = "member"
-	createRelationKey = "create"
 	authoritiesObjKey = "authorities"
 	usersObjKey       = "users"
-	createPolicy      = false
-	checkPolicy       = true
 )
 
 var (
@@ -181,7 +178,7 @@ func (svc usersService) Register(ctx context.Context, user User) (string, error)
 	}
 	user.ID = uid
 
-	authorized, err := svc.authorize(ctx, createPolicy, user.ID, object, memberRelationKey)
+	authorized, err := svc.addPolicy(ctx, user.ID, object, memberRelationKey)
 	if err != nil {
 		return "", err
 	}
@@ -207,7 +204,7 @@ func (svc usersService) CreateUser(ctx context.Context, token string, user User)
 		return "", err
 	}
 
-	authorized, err := svc.authorize(ctx, checkPolicy, ir.id, authoritiesObjKey, memberRelationKey)
+	authorized, err := svc.authorize(ctx, ir.id, authoritiesObjKey, memberRelationKey)
 	if err != nil {
 		return "", err
 	}
@@ -221,7 +218,7 @@ func (svc usersService) CreateUser(ctx context.Context, token string, user User)
 	}
 	user.ID = uid
 
-	authorized, err = svc.authorize(ctx, createPolicy, user.ID, usersObjKey, memberRelationKey)
+	authorized, err = svc.addPolicy(ctx, user.ID, usersObjKey, memberRelationKey)
 	if err != nil {
 		return "", err
 	}
@@ -416,14 +413,26 @@ func (svc usersService) identify(ctx context.Context, token string) (identityRes
 	return identityRes{identity.Id, identity.Email}, nil
 }
 
-func (svc usersService) authorize(ctx context.Context, check bool, sub, obj, act string) (bool, error) {
+func (svc usersService) authorize(ctx context.Context, subject, object, relation string) (bool, error) {
 	req := &mainflux.AuthorizeReq{
-		Sub:   sub,
-		Act:   act,
-		Obj:   obj,
-		Check: check,
+		Sub: subject,
+		Obj: object,
+		Act: relation,
 	}
 	res, err := svc.auth.Authorize(ctx, req)
+	if err != nil {
+		return false, errors.Wrap(ErrAuthorization, err)
+	}
+	return res.Authorized, nil
+}
+
+func (svc usersService) addPolicy(ctx context.Context, subject, object, relation string) (bool, error) {
+	req := &mainflux.AddPolicyReq{
+		Sub: subject,
+		Obj: object,
+		Act: relation,
+	}
+	res, err := svc.auth.AddPolicy(ctx, req)
 	if err != nil {
 		return false, errors.Wrap(ErrAuthorization, err)
 	}

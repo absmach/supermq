@@ -143,6 +143,7 @@ services:
     container_name: mainflux-auth
     depends_on:
       - auth-db
+      - keto
     expose:
       - ${MF_AUTH_GRPC_PORT}
     restart: on-failure
@@ -184,8 +185,6 @@ services:
     depends_on:
       - users-db
       - auth
-      - keto
-      - keto-init
     restart: on-failure
     environment:
       MF_USERS_LOG_LEVEL: ${MF_USERS_LOG_LEVEL}

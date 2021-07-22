@@ -11,6 +11,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	acl "github.com/ory/keto/proto/ory/keto/acl/v1alpha1"
+
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
@@ -47,6 +49,7 @@ const (
 	defServerCert    = ""
 	defServerKey     = ""
 	defJaegerURL     = ""
+	ketoContainer    = "mainflux-keto"
 	defKetoWritePort = "4467"
 	defKetoReadPort  = "4466"
 
@@ -104,6 +107,8 @@ func main() {
 
 	dbTracer, dbCloser := initJaeger("auth_db", cfg.jaegerURL, logger)
 	defer dbCloser.Close()
+
+	initKeto(&cfg.ketoConfig, logger)
 
 	svc := newService(db, dbTracer, cfg.secret, logger, cfg.ketoConfig)
 	errs := make(chan error, 2)
@@ -177,6 +182,22 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 	return tracer, closer
 }
 
+func initKeto(kc *auth.KetoConfig, logger logger.Logger) {
+	checkConn, err := grpc.Dial(fmt.Sprintf("%s:%s", ketoContainer, kc.ReadPort), grpc.WithInsecure())
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to dial %s:%s for Keto Check Service: %s", ketoContainer, kc.ReadPort, err))
+		os.Exit(1)
+	}
+	kc.Checker = acl.NewCheckServiceClient(checkConn)
+
+	writeConn, err := grpc.Dial(fmt.Sprintf("%s:%s", ketoContainer, kc.WritePort), grpc.WithInsecure())
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to dial %s:%s for Keto Write Service: %s", ketoContainer, kc.WritePort, err))
+		os.Exit(1)
+	}
+	kc.Writer = acl.NewWriteServiceClient(writeConn)
+}
+
 func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sqlx.DB {
 	db, err := postgres.Connect(dbConfig)
 	if err != nil {
@@ -193,10 +214,12 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, secret string, logger lo
 	groupsRepo := postgres.NewGroupRepo(database)
 	groupsRepo = tracing.GroupRepositoryMiddleware(tracer, groupsRepo)
 
+	keto := auth.NewPolicyCommunicator(kc)
+
 	idProvider := uuid.New()
 	t := jwt.New(secret)
 
-	svc := auth.New(keysRepo, groupsRepo, idProvider, t, kc)
+	svc := auth.New(keysRepo, groupsRepo, idProvider, t, keto)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
