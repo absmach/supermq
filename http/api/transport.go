@@ -104,8 +104,7 @@ func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 	token := r.Header.Get("Authorization")
-	_, pass, ok := r.BasicAuth()
-	if ok {
+	if _, pass, ok := r.BasicAuth(); ok {
 		token = pass
 	}
 
