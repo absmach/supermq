@@ -1,0 +1,8 @@
+[
+  {
+    "namespace":"members",
+    "object":"thing",
+    "relation":"create",
+    "subject":"members:users#member"
+  }
+]

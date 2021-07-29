@@ -21,18 +21,25 @@ import (
 var idProvider = uuid.New()
 
 const (
-	secret      = "secret"
-	email       = "test@example.com"
-	id          = "testID"
-	groupName   = "mfx"
-	description = "Description"
+	secret           = "secret"
+	email            = "test@example.com"
+	id               = "testID"
+	unauthzID        = "unauthTestID"
+	unauthzEmail     = "unauthztest@example.com"
+	groupName        = "mfx"
+	description      = "Description"
+	groupMemRelation = "groupmember"
 )
 
 func newService() auth.Service {
 	repo := mocks.NewKeyRepository()
 	groupRepo := mocks.NewGroupRepository()
 	idProvider := uuid.NewMock()
-	ketoMock := mocks.NewKetoMock()
+
+	mockAuthzDB := map[string][]mocks.MockSubjectSet{}
+	mockAuthzDB[id] = append(mockAuthzDB[id], mocks.MockSubjectSet{Object: "authorities", Relation: "member"})
+	ketoMock := mocks.NewKetoMock(mockAuthzDB)
+
 	t := jwt.New(secret)
 	return auth.New(repo, groupRepo, idProvider, t, ketoMock)
 }
@@ -789,6 +796,7 @@ func TestListMemberships(t *testing.T) {
 		g, err := svc.CreateGroup(context.Background(), apiToken, group)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 
+		_ = svc.AddPolicy(context.Background(), id, memberID, "owner")
 		err = svc.Assign(context.Background(), apiToken, g.ID, "things", memberID)
 		require.Nil(t, err, fmt.Sprintf("Assign member expected to succeed: %s\n", err))
 	}

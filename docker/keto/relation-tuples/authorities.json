@@ -1,0 +1,20 @@
+[
+  {
+    "namespace":"members",
+    "object":"group",
+    "relation":"create",
+    "subject":"members:authorities#member"
+  },
+  {
+    "namespace":"members",
+    "object":"user",
+    "relation":"create",
+    "subject":"members:authorities#member"
+  },
+  {
+    "namespace":"members",
+    "object":"thing",
+    "relation":"create",
+    "subject":"members:authorities#member"
+  }
+]

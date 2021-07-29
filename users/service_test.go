@@ -28,12 +28,20 @@ var (
 
 	idProvider = uuid.New()
 	passRegex  = regexp.MustCompile("^.{8,}$")
+
+	unauthzToken = "unauthorizedtoken"
 )
 
 func newService() users.Service {
 	userRepo := mocks.NewUserRepository()
 	hasher := mocks.NewHasher()
-	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
+
+	mockAuthzDB := map[string][]mocks.SubjectSet{}
+	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: "authorities", Relation: "member"})
+	mockAuthzDB[unauthzToken] = append(mockAuthzDB[unauthzToken], mocks.SubjectSet{Object: "nothing", Relation: "do"})
+	mockUsers := map[string]string{user.Email: user.Email, unauthzToken: unauthzToken}
+
+	auth := mocks.NewAuthService(mockUsers, mockAuthzDB)
 	e := mocks.NewEmailer()
 
 	return users.New(userRepo, hasher, auth, e, idProvider, passRegex)
@@ -71,6 +79,57 @@ func TestRegister(t *testing.T) {
 		_, err := svc.Register(context.Background(), tc.user)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
+}
+
+func TestCreateUser(t *testing.T) {
+	svc := newService()
+
+	cases := []struct {
+		desc  string
+		user  users.User
+		token string
+		err   error
+	}{
+		{
+			desc:  "create a new user",
+			user:  user,
+			err:   nil,
+			token: user.Email,
+		},
+		{
+			desc:  "create a new user with empty token",
+			user:  users.User{Email: "newuser@example.com", Password: "12345678"},
+			err:   users.ErrUnauthorizedAccess,
+			token: "",
+		},
+		{
+			desc:  "create a new user with unauthorized access",
+			user:  users.User{Email: "newuser@example.com", Password: "12345678"},
+			err:   users.ErrAuthorization,
+			token: unauthzToken,
+		},
+		{
+			desc:  "create existing user",
+			user:  user,
+			err:   users.ErrConflict,
+			token: user.Email,
+		},
+		{
+			desc: "create a new user with weak password",
+			user: users.User{
+				Email:    user.Email,
+				Password: "weak",
+			},
+			err:   users.ErrPasswordFormat,
+			token: user.Email,
+		},
+	}
+
+	for _, tc := range cases {
+		_, err := svc.CreateUser(context.Background(), tc.token, tc.user)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+	}
+
 }
 
 func TestLogin(t *testing.T) {
@@ -193,6 +252,7 @@ func TestViewProfile(t *testing.T) {
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 	}
 }
+
 func TestListUsers(t *testing.T) {
 	svc := newService()
 
@@ -329,7 +389,11 @@ func TestResetPassword(t *testing.T) {
 	svc := newService()
 	_, err := svc.Register(context.Background(), user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
+
+	mockAuthzDB := map[string][]mocks.SubjectSet{}
+	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: "authorities", Relation: "member"})
+	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
+
 	resetToken, err := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 2})
 	assert.Nil(t, err, fmt.Sprintf("Generating reset token expected to succeed: %s", err))
 	cases := map[string]struct {

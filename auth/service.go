@@ -13,12 +13,15 @@ import (
 )
 
 const (
-	loginDuration     = 10 * time.Hour
-	recoveryDuration  = 5 * time.Minute
-	ketoContainerName = "mainflux-keto"
-	ketoNamespace     = "members"
-	memberRelationKey = "member"
-	authoritiesObjKey = "authorities"
+	loginDuration    = 10 * time.Hour
+	recoveryDuration = 5 * time.Minute
+
+	ketoNamespace         = "members"
+	memberRelationKey     = "member"
+	groupAdminRelationKey = "groupadmin"
+	groupMemRelationKey   = "groupmember"
+	ownerRelationKey      = "owner"
+	authoritiesObjKey     = "authorities"
 )
 
 var (
@@ -175,7 +178,7 @@ func (svc service) Identify(ctx context.Context, token string) (Identity, error)
 func (svc service) Authorize(ctx context.Context, subject, object, relation string) (bool, error) {
 	pr, err := svc.keto.CheckPolicy(ctx, subject, object, relation)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(ErrAuthorization, err)
 	}
 	return pr.Authorized, nil
 }
@@ -240,14 +243,6 @@ func (svc service) CreateGroup(ctx context.Context, token string, group Group) (
 	user, err := svc.Identify(ctx, token)
 	if err != nil {
 		return Group{}, errors.Wrap(ErrUnauthorizedAccess, err)
-	}
-
-	pr, err := svc.keto.CheckPolicy(ctx, user.ID, authoritiesObjKey, memberRelationKey)
-	if err != nil {
-		return Group{}, errors.Wrap(ErrAuthorization, err)
-	}
-	if !pr.Authorized {
-		return Group{}, ErrAuthorization
 	}
 
 	ulid, err := svc.ulidProvider.ID()

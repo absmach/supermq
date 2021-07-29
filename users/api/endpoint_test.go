@@ -28,11 +28,14 @@ import (
 )
 
 const (
-	contentType  = "application/json"
-	validEmail   = "user@example.com"
-	invalidEmail = "userexample.com"
-	validPass    = "password"
-	invalidPass  = "wrong"
+	contentType       = "application/json"
+	validEmail        = "user@example.com"
+	invalidEmail      = "userexample.com"
+	validPass         = "password"
+	invalidPass       = "wrong"
+	memberRelationKey = "member"
+	authoritiesObjKey = "authorities"
+	usersObjKey       = "users"
 )
 
 var (
@@ -74,7 +77,11 @@ func (tr testRequest) make() (*http.Response, error) {
 func newService() users.Service {
 	usersRepo := mocks.NewUserRepository()
 	hasher := bcrypt.New()
-	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
+
+	mockAuthzDB := map[string][]mocks.SubjectSet{}
+	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: authoritiesObjKey, Relation: memberRelationKey})
+
+	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
 	email := mocks.NewEmailer()
 	idProvider := uuid.New()
 
@@ -133,12 +140,64 @@ func TestRegister(t *testing.T) {
 	}
 }
 
+func TestCreateUser(t *testing.T) {
+	svc := newService()
+	ts := newServer(svc)
+	defer ts.Close()
+	client := ts.Client()
+
+	data := toJSON(user)
+	invalidData := toJSON(users.User{Email: invalidEmail, Password: validPass})
+	invalidPasswordData := toJSON(users.User{Email: validEmail, Password: invalidPass})
+	invalidFieldData := fmt.Sprintf(`{"email": "%s", "pass": "%s"}`, user.Email, user.Password)
+	unauthzEmail := "unauthz@example.com"
+
+	cases := []struct {
+		desc        string
+		req         string
+		contentType string
+		status      int
+		token       string
+	}{
+		{"create a new user with authorized access", data, contentType, http.StatusCreated, user.Email},
+		{"create an existing user", data, contentType, http.StatusConflict, user.Email},
+		{"create a new user with unauthorized access", data, contentType, http.StatusForbidden, unauthzEmail},
+		{"create an existing user with unauthorized access", data, contentType, http.StatusForbidden, unauthzEmail},
+		{"create a user with invalid email address", invalidData, contentType, http.StatusBadRequest, user.Email},
+		{"create a user with weak password", invalidPasswordData, contentType, http.StatusBadRequest, user.Email},
+		{"create a user with invalid request format", "{", contentType, http.StatusBadRequest, user.Email},
+		{"create user with empty JSON request", "{}", contentType, http.StatusBadRequest, user.Email},
+		{"create user with empty request", "", contentType, http.StatusBadRequest, user.Email},
+		{"create user with empty token", data, contentType, http.StatusForbidden, ""},
+		{"create user with invalid field name", invalidFieldData, contentType, http.StatusBadRequest, user.Email},
+		{"create user with missing content type", data, "", http.StatusUnsupportedMediaType, user.Email},
+	}
+
+	for _, tc := range cases {
+		req := testRequest{
+			client:      client,
+			method:      http.MethodPost,
+			url:         fmt.Sprintf("%s/users", ts.URL),
+			contentType: tc.contentType,
+			token:       tc.token,
+			body:        strings.NewReader(tc.req),
+		}
+		res, err := req.make()
+		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
+		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
+	}
+}
+
 func TestLogin(t *testing.T) {
 	svc := newService()
 	ts := newServer(svc)
 	defer ts.Close()
 	client := ts.Client()
-	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
+
+	mockAuthzDB := map[string][]mocks.SubjectSet{}
+	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: authoritiesObjKey, Relation: memberRelationKey})
+
+	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
 	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
 	token := tkn.GetValue()
 	tokenData := toJSON(map[string]string{"token": token})
@@ -202,7 +261,10 @@ func TestUser(t *testing.T) {
 	userID, err := svc.Register(context.Background(), user)
 	require.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
 
-	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
+	mockAuthzDB := map[string][]mocks.SubjectSet{}
+	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: authoritiesObjKey, Relation: memberRelationKey})
+
+	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
 	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
 	token := tkn.GetValue()
 	cases := []struct {
@@ -302,7 +364,10 @@ func TestPasswordReset(t *testing.T) {
 	_, err := svc.Register(context.Background(), user)
 	require.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
+	mockAuthzDB := map[string][]mocks.SubjectSet{}
+	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: authoritiesObjKey, Relation: memberRelationKey})
+
+	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
 
 	tkn, err := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
 	require.Nil(t, err, fmt.Sprintf("issue user token error: %s", err))
@@ -369,7 +434,10 @@ func TestPasswordChange(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	client := ts.Client()
-	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
+	mockAuthzDB := map[string][]mocks.SubjectSet{}
+	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: authoritiesObjKey, Relation: memberRelationKey})
+
+	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
 
 	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
 	token := tkn.GetValue()

@@ -6,6 +6,8 @@ package things
 import (
 	"context"
 
+	"github.com/mainflux/mainflux/users"
+
 	"github.com/mainflux/mainflux/pkg/errors"
 
 	"github.com/mainflux/mainflux"
@@ -46,9 +48,13 @@ var (
 )
 
 const (
-	checkPolicy     = true
-	createActionKey = "create"
-	thingObjectKey  = "thing"
+	thingObjectKey    = "thing"
+	authoritiesObjKey = "authorities"
+
+	createRelationKey = "create"
+	ownerRelationKey  = "owner"
+	accessRelationKey = "access"
+	memberRelationKey = "member"
 )
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -175,12 +181,8 @@ func (ts *thingsService) CreateThings(ctx context.Context, token string, things 
 		return []Thing{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	authorized, err := ts.authorize(ctx, res.GetId(), thingObjectKey, createActionKey)
-	if err != nil {
-		return []Thing{}, errors.Wrap(ErrAuthorization, err)
-	}
-	if !authorized {
-		return []Thing{}, ErrAuthorization
+	if err := ts.authorize(ctx, res.GetId(), thingObjectKey, createRelationKey); err != nil {
+		return []Thing{}, err
 	}
 
 	for i := range things {
@@ -197,6 +199,9 @@ func (ts *thingsService) CreateThings(ctx context.Context, token string, things 
 				return []Thing{}, errors.Wrap(ErrCreateUUID, err)
 			}
 		}
+		if err := ts.addPolicy(ctx, res.GetId(), things[i].ID, ownerRelationKey); err != nil {
+			return []Thing{}, err
+		}
 	}
 
 	return ts.things.Save(ctx, things...)
@@ -206,6 +211,10 @@ func (ts *thingsService) UpdateThing(ctx context.Context, token string, thing Th
 	res, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return errors.Wrap(ErrUnauthorizedAccess, err)
+	}
+
+	if err := ts.authorize(ctx, res.GetId(), thing.ID, ownerRelationKey); err != nil {
+		return err
 	}
 
 	thing.Owner = res.GetEmail()
@@ -219,6 +228,10 @@ func (ts *thingsService) UpdateKey(ctx context.Context, token, id, key string) e
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
+	if err := ts.authorize(ctx, res.GetId(), id, ownerRelationKey); err != nil {
+		return err
+	}
+
 	owner := res.GetEmail()
 
 	return ts.things.UpdateKey(ctx, owner, id, key)
@@ -228,6 +241,10 @@ func (ts *thingsService) ViewThing(ctx context.Context, token, id string) (Thing
 	res, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return Thing{}, errors.Wrap(ErrUnauthorizedAccess, err)
+	}
+
+	if err := ts.authorize(ctx, res.GetId(), id, ownerRelationKey, accessRelationKey); err != nil {
+		return Thing{}, err
 	}
 
 	return ts.things.RetrieveByID(ctx, res.GetEmail(), id)
@@ -255,6 +272,10 @@ func (ts *thingsService) RemoveThing(ctx context.Context, token, id string) erro
 	res, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return errors.Wrap(ErrUnauthorizedAccess, err)
+	}
+
+	if err := ts.authorize(ctx, res.GetId(), id, ownerRelationKey); err != nil {
+		return err
 	}
 
 	if err := ts.thingCache.Remove(ctx, id); err != nil {
@@ -457,15 +478,37 @@ func (ts *thingsService) members(ctx context.Context, token, groupID, groupType 
 	return res.Members, nil
 }
 
-func (ts *thingsService) authorize(ctx context.Context, subject, object, relation string) (bool, error) {
+func (ts *thingsService) authorize(ctx context.Context, subject, object string, relations ...string) error {
 	req := &mainflux.AuthorizeReq{
+		Sub: subject,
+		Obj: object,
+	}
+	for _, relation := range relations {
+		req.Act = relation
+		res, err := ts.auth.Authorize(ctx, req)
+		if err != nil {
+			return errors.Wrap(ErrAuthorization, err)
+		}
+		if res.Authorized {
+			return nil
+		}
+	}
+	return ErrAuthorization
+}
+
+func (ts *thingsService) addPolicy(ctx context.Context, subject, object, relation string) error {
+	req := &mainflux.AddPolicyReq{
 		Sub: subject,
 		Obj: object,
 		Act: relation,
 	}
-	res, err := ts.auth.Authorize(ctx, req)
+
+	apr, err := ts.auth.AddPolicy(ctx, req)
 	if err != nil {
-		return false, errors.Wrap(ErrAuthorization, err)
+		return err
 	}
-	return res.Authorized, nil
+	if !apr.GetAuthorized() {
+		return users.ErrAuthorization
+	}
+	return nil
 }

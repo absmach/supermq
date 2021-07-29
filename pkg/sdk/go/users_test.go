@@ -32,7 +32,12 @@ var (
 func newUserService() users.Service {
 	usersRepo := mocks.NewUserRepository()
 	hasher := mocks.NewHasher()
-	auth := mocks.NewAuthService(map[string]string{"user@example.com": "user@example.com"})
+	userEmail := "user@example.com"
+
+	mockAuthzDB := map[string][]mocks.SubjectSet{}
+	mockAuthzDB[userEmail] = append(mockAuthzDB[userEmail], mocks.SubjectSet{Object: "authorities", Relation: "member"})
+	auth := mocks.NewAuthService(map[string]string{userEmail: userEmail}, mockAuthzDB)
+
 	emailer := mocks.NewEmailer()
 	idProvider := uuid.New()
 
@@ -124,7 +129,11 @@ func TestCreateToken(t *testing.T) {
 
 	mainfluxSDK := sdk.NewSDK(sdkConf)
 	user := sdk.User{Email: "user@example.com", Password: "password"}
-	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
+
+	mockAuthzDB := map[string][]mocks.SubjectSet{}
+	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: "authorities", Relation: "member"})
+	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
+
 	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
 	token := tkn.GetValue()
 	mainfluxSDK.CreateUser(user)
