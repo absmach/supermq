@@ -9,9 +9,9 @@ import (
 	acl "github.com/ory/keto/proto/ory/keto/acl/v1alpha1"
 )
 
-// PolicyService represents a authorization service. It exposes
+// Authz represents a authorization service. It exposes
 // functionalities through `auth` to perform authorization.
-type PolicyService interface {
+type Authz interface {
 	// Authorize checks authorization of the given `subject`. Basically,
 	// Authorize verifies that Is `subject` allowed to `relation` on
 	// `object`. Authorize returns the bool indicating the authorization
@@ -26,14 +26,14 @@ type PolicyService interface {
 	AddPolicy(ctx context.Context, subject, object, relation string) error
 }
 
-// PolicyCommunicator facilitates the communication to authorization
-// services and implements PolicyService functionalities for certain
+// PolicyAgent facilitates the communication to authorization
+// services and implements Authz functionalities for certain
 // authorization services (e.g. ORY Keto).
-type PolicyCommunicator interface {
+type PolicyAgent interface {
 	// CheckPolicy checks if the subject has a relation on the object.
-	// It returns PolicyResult consisting of one boolean which indicates
+	// It returns AuthorizationResult consisting of one boolean which indicates
 	// result of the authorization (true: Allowed, false: Denied) and error.
-	CheckPolicy(ctx context.Context, subject, object, relation string) (PolicyResult, error)
+	CheckPolicy(ctx context.Context, subject, object, relation string) (AuthorizationResult, error)
 
 	// AddPolicy creates a policy for the given subject. So that, after
 	// AddPolicy, `subject` has a `relation` on `object`. Returns non-nil
@@ -41,36 +41,26 @@ type PolicyCommunicator interface {
 	AddPolicy(ctx context.Context, subject, object, relation string) error
 }
 
-// PolicyResult shows the result of the authorization check operations.
-// Authorized field is true when the operation is allowed. If Authorized
-// is false, the operation is denied.
-type PolicyResult struct {
-	Authorized bool
+// AuthorizationResult shows the result of the authorization check operations.
+// AuthzError field is nil when the operation is allowed. If AuthzError is
+// non-nil, the operation is denied.
+type AuthorizationResult struct {
+	AuthzError error
 }
 
-// KetoConfig represents config variables and functions in order to establish
-// a connection to Keto through gRPC. The config variable (WritePort and ReadPort)
-// are read from the ./docker/.env file. If you want to modify these config variables,
-// you can change them through that .env file (under docker/ from the root directory).
-type KetoConfig struct {
-	WritePort string
-	ReadPort  string
-	Checker   acl.CheckServiceClient
-	Writer    acl.WriteServiceClient
+type policyAgent struct {
+	writer  acl.WriteServiceClient
+	checker acl.CheckServiceClient
 }
 
-type communicator struct {
-	kc KetoConfig
-}
-
-// NewPolicyCommunicator returns a gRPC communication functionalities
+// NewPolicyAgent returns a gRPC communication functionalities
 // to communicate with the authorization services, e.g. ORY Keto.
-func NewPolicyCommunicator(kc KetoConfig) PolicyCommunicator {
-	return communicator{kc}
+func NewPolicyAgent(checker acl.CheckServiceClient, writer acl.WriteServiceClient) PolicyAgent {
+	return policyAgent{checker: checker, writer: writer}
 }
 
-func (c communicator) CheckPolicy(ctx context.Context, subject, object, relation string) (PolicyResult, error) {
-	res, err := c.kc.Checker.Check(context.Background(), &acl.CheckRequest{
+func (c policyAgent) CheckPolicy(ctx context.Context, subject, object, relation string) (AuthorizationResult, error) {
+	res, err := c.checker.Check(context.Background(), &acl.CheckRequest{
 		Namespace: ketoNamespace,
 		Object:    object,
 		Relation:  relation,
@@ -79,14 +69,17 @@ func (c communicator) CheckPolicy(ctx context.Context, subject, object, relation
 		}},
 	})
 	if err != nil {
-		return PolicyResult{}, err
+		return AuthorizationResult{err}, err
+	}
+	if !res.GetAllowed() {
+		return AuthorizationResult{ErrAuthorization}, err
 	}
 
-	return PolicyResult{res.Allowed}, nil
+	return AuthorizationResult{}, nil
 }
 
-func (c communicator) AddPolicy(ctx context.Context, subject, object, relation string) error {
-	_, err := c.kc.Writer.TransactRelationTuples(context.Background(), &acl.TransactRelationTuplesRequest{
+func (c policyAgent) AddPolicy(ctx context.Context, subject, object, relation string) error {
+	_, err := c.writer.TransactRelationTuples(context.Background(), &acl.TransactRelationTuplesRequest{
 		RelationTupleDeltas: []*acl.RelationTupleDelta{
 			{
 				Action: acl.RelationTupleDelta_INSERT,

@@ -20,18 +20,18 @@ type ketoMock struct {
 
 // NewKetoMock returns a mock service for Keto.
 // This mock is not implemented yet.
-func NewKetoMock(db map[string][]MockSubjectSet) auth.PolicyCommunicator {
+func NewKetoMock(db map[string][]MockSubjectSet) auth.PolicyAgent {
 	return &ketoMock{db}
 }
 
-func (k *ketoMock) CheckPolicy(ctx context.Context, subject, object, relation string) (auth.PolicyResult, error) {
+func (k *ketoMock) CheckPolicy(ctx context.Context, subject, object, relation string) (auth.AuthorizationResult, error) {
 	ssList := k.authzDB[subject]
 	for _, ss := range ssList {
 		if ss.Object == object && ss.Relation == relation {
-			return auth.PolicyResult{Authorized: true}, nil
+			return auth.AuthorizationResult{}, nil
 		}
 	}
-	return auth.PolicyResult{Authorized: false}, nil
+	return auth.AuthorizationResult{AuthzError: auth.ErrAuthorization}, nil
 }
 
 func (k *ketoMock) AddPolicy(ctx context.Context, subject, object, relation string) error {
