@@ -14,11 +14,11 @@ import (
 
 func registrationEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(userReq)
+		req := request.(createUserReq)
 		if err := req.validate(); err != nil {
 			return createUserRes{}, err
 		}
-		uid, err := svc.Register(ctx, req.user)
+		uid, err := svc.Register(ctx, req.token, req.user)
 		if err != nil {
 			return createUserRes{}, err
 		}
@@ -31,14 +31,14 @@ func registrationEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
-func createUserEndpoint(svc users.Service) endpoint.Endpoint {
+func selfSignonEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(createUserReq)
+		req := request.(userReq)
 		if err := req.validate(); err != nil {
 			return createUserRes{}, err
 		}
 
-		uid, err := svc.CreateUser(ctx, req.token, req.user)
+		uid, err := svc.SelfSignon(ctx, req.user)
 		if err != nil {
 			return createUserRes{}, err
 		}

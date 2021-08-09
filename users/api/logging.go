@@ -24,7 +24,7 @@ func LoggingMiddleware(svc users.Service, logger log.Logger) users.Service {
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) Register(ctx context.Context, user users.User) (uid string, err error) {
+func (lm *loggingMiddleware) Register(ctx context.Context, token string, user users.User) (uid string, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method register for user %s took %s to complete", user.Email, time.Since(begin))
 		if err != nil {
@@ -35,12 +35,12 @@ func (lm *loggingMiddleware) Register(ctx context.Context, user users.User) (uid
 
 	}(time.Now())
 
-	return lm.svc.Register(ctx, user)
+	return lm.svc.Register(ctx, token, user)
 }
 
-func (lm *loggingMiddleware) CreateUser(ctx context.Context, token string, user users.User) (uid string, err error) {
+func (lm *loggingMiddleware) SelfSignon(ctx context.Context, user users.User) (uid string, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method create_user for user %s took %s to complete", user.Email, time.Since(begin))
+		message := fmt.Sprintf("Method self_sign_on for user %s took %s to complete", user.Email, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -49,7 +49,7 @@ func (lm *loggingMiddleware) CreateUser(ctx context.Context, token string, user 
 
 	}(time.Now())
 
-	return lm.svc.CreateUser(ctx, token, user)
+	return lm.svc.SelfSignon(ctx, user)
 }
 
 func (lm *loggingMiddleware) Login(ctx context.Context, user users.User) (token string, err error) {

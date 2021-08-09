@@ -28,22 +28,22 @@ func MetricsMiddleware(svc users.Service, counter metrics.Counter, latency metri
 	}
 }
 
-func (ms *metricsMiddleware) Register(ctx context.Context, user users.User) (string, error) {
+func (ms *metricsMiddleware) Register(ctx context.Context, token string, user users.User) (string, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "register").Add(1)
 		ms.latency.With("method", "register").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.Register(ctx, user)
+	return ms.svc.Register(ctx, token, user)
 }
 
-func (ms *metricsMiddleware) CreateUser(ctx context.Context, token string, user users.User) (string, error) {
+func (ms *metricsMiddleware) SelfSignon(ctx context.Context, user users.User) (string, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "create_user").Add(1)
-		ms.latency.With("method", "create_user").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "self_sign_on").Add(1)
+		ms.latency.With("method", "self_sign_on").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.CreateUser(ctx, token, user)
+	return ms.svc.SelfSignon(ctx, user)
 }
 
 func (ms *metricsMiddleware) Login(ctx context.Context, user users.User) (string, error) {

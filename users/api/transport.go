@@ -39,19 +39,21 @@ func MakeHandler(svc users.Service, tracer opentracing.Tracer) http.Handler {
 
 	mux := bone.New()
 
-	mux.Post("/users/create", kithttp.NewServer(
-		kitot.TraceServer(tracer, "register")(registrationEndpoint(svc)),
-		decodeCredentials,
-		encodeResponse,
-		opts...,
-	))
-
 	mux.Post("/users", kithttp.NewServer(
-		kitot.TraceServer(tracer, "create_user")(createUserEndpoint(svc)),
+		kitot.TraceServer(tracer, "register")(registrationEndpoint(svc)),
 		decodeCreateUserReq,
 		encodeResponse,
 		opts...,
 	))
+
+	if v := mainflux.Env("MF_SELFSIGNON_ENDPOINT", "inactive"); v == "active" {
+		mux.Post("/selfsignon", kithttp.NewServer(
+			kitot.TraceServer(tracer, "self_sign_on")(selfSignonEndpoint(svc)),
+			decodeCredentials,
+			encodeResponse,
+			opts...,
+		))
+	}
 
 	mux.Get("/users/profile", kithttp.NewServer(
 		kitot.TraceServer(tracer, "view_profile")(viewProfileEndpoint(svc)),

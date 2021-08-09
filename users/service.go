@@ -13,8 +13,6 @@ import (
 )
 
 const (
-	defAdminEmail     = ""
-	envAdminEmail     = "MF_USERS_ADMIN_EMAIL"
 	memberRelationKey = "member"
 	authoritiesObjKey = "authorities"
 	usersObjKey       = "users"
@@ -72,14 +70,13 @@ var (
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
 	// Register creates new user account. In case of the failed registration, a
-	// non-nil error value is returned.
-	Register(ctx context.Context, user User) (string, error)
+	// non-nil error value is returned. The user registration is only allowed
+	// for admin.
+	Register(ctx context.Context, token string, user User) (string, error)
 
-	// CreateUser creates a new user after verifying the given token and
-	// access rights of the user having this token. It sets the new user's
-	// access right and returns the id of the newly created user and the
-	// non-nil error in case of failure during the user creation.
-	CreateUser(ctx context.Context, token string, user User) (string, error)
+	// Selfsignon creates a new user without any authorization restriction like
+	// Register.
+	SelfSignon(ctx context.Context, user User) (string, error)
 
 	// Login authenticates the user given its credentials. Successful
 	// authentication generates new access token. Failed invocations are
@@ -159,17 +156,25 @@ func New(users UserRepository, hasher Hasher, auth mainflux.AuthServiceClient, e
 	}
 }
 
-func (svc usersService) Register(ctx context.Context, user User) (string, error) {
+func (svc usersService) Register(ctx context.Context, token string, user User) (string, error) {
+	ir, err := svc.identify(ctx, token)
+	if err != nil {
+		return "", err
+	}
+
+	authorized, err := svc.authorize(ctx, ir.id, authoritiesObjKey, memberRelationKey)
+	if err != nil {
+		return "", err
+	}
+	if !authorized {
+		return "", ErrAuthorization
+	}
+
 	if err := user.Validate(); err != nil {
 		return "", err
 	}
 	if !svc.passRegex.MatchString(user.Password) {
 		return "", ErrPasswordFormat
-	}
-
-	object := usersObjKey
-	if user.Email == mainflux.Env(envAdminEmail, defAdminEmail) {
-		object = authoritiesObjKey
 	}
 
 	uid, err := svc.idProvider.ID()
@@ -178,7 +183,7 @@ func (svc usersService) Register(ctx context.Context, user User) (string, error)
 	}
 	user.ID = uid
 
-	authorized, err := svc.addPolicy(ctx, user.ID, object, memberRelationKey)
+	authorized, err = svc.addPolicy(ctx, user.ID, usersObjKey, memberRelationKey)
 	if err != nil {
 		return "", err
 	}
@@ -198,27 +203,14 @@ func (svc usersService) Register(ctx context.Context, user User) (string, error)
 	return uid, nil
 }
 
-func (svc usersService) CreateUser(ctx context.Context, token string, user User) (string, error) {
-	ir, err := svc.identify(ctx, token)
-	if err != nil {
-		return "", err
-	}
-
-	authorized, err := svc.authorize(ctx, ir.id, authoritiesObjKey, memberRelationKey)
-	if err != nil {
-		return "", err
-	}
-	if !authorized {
-		return "", ErrAuthorization
-	}
-
+func (svc usersService) SelfSignon(ctx context.Context, user User) (string, error) {
 	uid, err := svc.idProvider.ID()
 	if err != nil {
 		return "", errors.Wrap(ErrCreateUser, err)
 	}
 	user.ID = uid
 
-	authorized, err = svc.addPolicy(ctx, user.ID, usersObjKey, memberRelationKey)
+	authorized, err := svc.addPolicy(ctx, user.ID, usersObjKey, memberRelationKey)
 	if err != nil {
 		return "", err
 	}
