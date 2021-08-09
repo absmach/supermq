@@ -16,12 +16,7 @@ const (
 	loginDuration    = 10 * time.Hour
 	recoveryDuration = 5 * time.Minute
 
-	ketoNamespace         = "members"
-	memberRelationKey     = "member"
-	groupAdminRelationKey = "groupadmin"
-	groupMemRelationKey   = "groupmember"
-	ownerRelationKey      = "owner"
-	authoritiesObjKey     = "authorities"
+	ketoNamespace = "members"
 )
 
 var (
@@ -94,7 +89,7 @@ type Authn interface {
 // an Auth service request.
 type Service interface {
 	Authn
-	PolicyService
+	Authz
 
 	// Implements groups API, creating groups, assigning members
 	GroupService
@@ -107,12 +102,12 @@ type service struct {
 	groups       GroupRepository
 	idProvider   mainflux.IDProvider
 	ulidProvider mainflux.IDProvider
-	keto         PolicyCommunicator
+	keto         PolicyAgent
 	tokenizer    Tokenizer
 }
 
 // New instantiates the auth service implementation.
-func New(keys KeyRepository, groups GroupRepository, idp mainflux.IDProvider, tokenizer Tokenizer, policy PolicyCommunicator) Service {
+func New(keys KeyRepository, groups GroupRepository, idp mainflux.IDProvider, tokenizer Tokenizer, policy PolicyAgent) Service {
 	return &service{
 		tokenizer:    tokenizer,
 		keys:         keys,
@@ -176,11 +171,14 @@ func (svc service) Identify(ctx context.Context, token string) (Identity, error)
 }
 
 func (svc service) Authorize(ctx context.Context, subject, object, relation string) (bool, error) {
-	pr, err := svc.keto.CheckPolicy(ctx, subject, object, relation)
+	ar, err := svc.keto.CheckPolicy(ctx, subject, object, relation)
 	if err != nil {
 		return false, errors.Wrap(ErrAuthorization, err)
 	}
-	return pr.Authorized, nil
+	if ar.AuthzError != nil {
+		return false, errors.Wrap(ErrAuthorization, err)
+	}
+	return true, nil
 }
 
 func (svc service) AddPolicy(ctx context.Context, subject, object, relation string) error {

@@ -35,7 +35,6 @@ const (
 	invalidPass       = "wrong"
 	memberRelationKey = "member"
 	authoritiesObjKey = "authorities"
-	usersObjKey       = "users"
 )
 
 var (
@@ -108,48 +107,6 @@ func TestRegister(t *testing.T) {
 	invalidData := toJSON(users.User{Email: invalidEmail, Password: validPass})
 	invalidPasswordData := toJSON(users.User{Email: validEmail, Password: invalidPass})
 	invalidFieldData := fmt.Sprintf(`{"email": "%s", "pass": "%s"}`, user.Email, user.Password)
-
-	cases := []struct {
-		desc        string
-		req         string
-		contentType string
-		status      int
-	}{
-		{"register new user", data, contentType, http.StatusCreated},
-		{"register existing user", data, contentType, http.StatusConflict},
-		{"register user with invalid email address", invalidData, contentType, http.StatusBadRequest},
-		{"register user with weak password", invalidPasswordData, contentType, http.StatusBadRequest},
-		{"register user with invalid request format", "{", contentType, http.StatusBadRequest},
-		{"register user with empty JSON request", "{}", contentType, http.StatusBadRequest},
-		{"register user with empty request", "", contentType, http.StatusBadRequest},
-		{"register user with invalid field name", invalidFieldData, contentType, http.StatusBadRequest},
-		{"register user with missing content type", data, "", http.StatusUnsupportedMediaType},
-	}
-
-	for _, tc := range cases {
-		req := testRequest{
-			client:      client,
-			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/users/create", ts.URL),
-			contentType: tc.contentType,
-			body:        strings.NewReader(tc.req),
-		}
-		res, err := req.make()
-		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-	}
-}
-
-func TestCreateUser(t *testing.T) {
-	svc := newService()
-	ts := newServer(svc)
-	defer ts.Close()
-	client := ts.Client()
-
-	data := toJSON(user)
-	invalidData := toJSON(users.User{Email: invalidEmail, Password: validPass})
-	invalidPasswordData := toJSON(users.User{Email: validEmail, Password: invalidPass})
-	invalidFieldData := fmt.Sprintf(`{"email": "%s", "pass": "%s"}`, user.Email, user.Password)
 	unauthzEmail := "unauthz@example.com"
 
 	cases := []struct {
@@ -159,18 +116,18 @@ func TestCreateUser(t *testing.T) {
 		status      int
 		token       string
 	}{
-		{"create a new user with authorized access", data, contentType, http.StatusCreated, user.Email},
-		{"create an existing user", data, contentType, http.StatusConflict, user.Email},
-		{"create a new user with unauthorized access", data, contentType, http.StatusForbidden, unauthzEmail},
-		{"create an existing user with unauthorized access", data, contentType, http.StatusForbidden, unauthzEmail},
-		{"create a user with invalid email address", invalidData, contentType, http.StatusBadRequest, user.Email},
-		{"create a user with weak password", invalidPasswordData, contentType, http.StatusBadRequest, user.Email},
-		{"create a user with invalid request format", "{", contentType, http.StatusBadRequest, user.Email},
-		{"create user with empty JSON request", "{}", contentType, http.StatusBadRequest, user.Email},
-		{"create user with empty request", "", contentType, http.StatusBadRequest, user.Email},
-		{"create user with empty token", data, contentType, http.StatusForbidden, ""},
-		{"create user with invalid field name", invalidFieldData, contentType, http.StatusBadRequest, user.Email},
-		{"create user with missing content type", data, "", http.StatusUnsupportedMediaType, user.Email},
+		{"register new user", data, contentType, http.StatusCreated, user.Email},
+		{"register user with empty token", data, contentType, http.StatusForbidden, ""},
+		{"register existing user", data, contentType, http.StatusConflict, user.Email},
+		{"register user with invalid email address", invalidData, contentType, http.StatusBadRequest, user.Email},
+		{"register user with weak password", invalidPasswordData, contentType, http.StatusBadRequest, user.Email},
+		{"register new user with unauthorized access", data, contentType, http.StatusForbidden, unauthzEmail},
+		{"register existing user with unauthorized access", data, contentType, http.StatusForbidden, unauthzEmail},
+		{"register user with invalid request format", "{", contentType, http.StatusBadRequest, user.Email},
+		{"register user with empty JSON request", "{}", contentType, http.StatusBadRequest, user.Email},
+		{"register user with empty request", "", contentType, http.StatusBadRequest, user.Email},
+		{"register user with invalid field name", invalidFieldData, contentType, http.StatusBadRequest, user.Email},
+		{"register user with missing content type", data, "", http.StatusUnsupportedMediaType, user.Email},
 	}
 
 	for _, tc := range cases {
@@ -214,7 +171,7 @@ func TestLogin(t *testing.T) {
 		Email:    "non-existentuser@example.com",
 		Password: validPass,
 	})
-	_, err := svc.Register(context.Background(), user)
+	_, err := svc.Register(context.Background(), token, user)
 	require.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
 
 	cases := []struct {
@@ -258,8 +215,6 @@ func TestUser(t *testing.T) {
 	ts := newServer(svc)
 	defer ts.Close()
 	client := ts.Client()
-	userID, err := svc.Register(context.Background(), user)
-	require.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
 
 	mockAuthzDB := map[string][]mocks.SubjectSet{}
 	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: authoritiesObjKey, Relation: memberRelationKey})
@@ -267,6 +222,10 @@ func TestUser(t *testing.T) {
 	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
 	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
 	token := tkn.GetValue()
+
+	userID, err := svc.Register(context.Background(), token, user)
+	require.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
+
 	cases := []struct {
 		desc   string
 		token  string
@@ -313,7 +272,14 @@ func TestPasswordResetRequest(t *testing.T) {
 		api.MailSent,
 	})
 
-	_, err := svc.Register(context.Background(), user)
+	mockAuthzDB := map[string][]mocks.SubjectSet{}
+	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: authoritiesObjKey, Relation: memberRelationKey})
+
+	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
+	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
+	token := tkn.GetValue()
+
+	_, err := svc.Register(context.Background(), token, user)
 	require.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
 
 	cases := []struct {
@@ -361,9 +327,6 @@ func TestPasswordReset(t *testing.T) {
 		ConfPass string `json:"confirm_password,omitempty"`
 	}{}
 
-	_, err := svc.Register(context.Background(), user)
-	require.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	mockAuthzDB := map[string][]mocks.SubjectSet{}
 	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: authoritiesObjKey, Relation: memberRelationKey})
 
@@ -373,6 +336,9 @@ func TestPasswordReset(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("issue user token error: %s", err))
 
 	token := tkn.GetValue()
+
+	_, err = svc.Register(context.Background(), token, user)
+	require.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
 
 	reqData.Password = user.Password
 	reqData.ConfPass = user.Password
@@ -448,7 +414,7 @@ func TestPasswordChange(t *testing.T) {
 		OldPassw string `json:"old_password,omitempty"`
 	}{}
 
-	_, err := svc.Register(context.Background(), user)
+	_, err := svc.Register(context.Background(), token, user)
 	require.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
 
 	reqData.Password = user.Password

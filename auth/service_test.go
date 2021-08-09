@@ -21,14 +21,11 @@ import (
 var idProvider = uuid.New()
 
 const (
-	secret           = "secret"
-	email            = "test@example.com"
-	id               = "testID"
-	unauthzID        = "unauthTestID"
-	unauthzEmail     = "unauthztest@example.com"
-	groupName        = "mfx"
-	description      = "Description"
-	groupMemRelation = "groupmember"
+	secret      = "secret"
+	email       = "test@example.com"
+	id          = "testID"
+	groupName   = "mfx"
+	description = "Description"
 )
 
 func newService() auth.Service {

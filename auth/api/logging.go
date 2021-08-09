@@ -96,7 +96,7 @@ func (lm *loggingMiddleware) Authorize(ctx context.Context, subject, object, rel
 
 func (lm *loggingMiddleware) AddPolicy(ctx context.Context, subject, object, relation string) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method add_policy %s#%s@%s took %s to complete", object, relation, subject, time.Since(begin))
+		message := fmt.Sprintf("Method add_policy took %s to complete", time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return

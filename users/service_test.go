@@ -51,19 +51,22 @@ func TestRegister(t *testing.T) {
 	svc := newService()
 
 	cases := []struct {
-		desc string
-		user users.User
-		err  error
+		desc  string
+		user  users.User
+		token string
+		err   error
 	}{
 		{
-			desc: "register new user",
-			user: user,
-			err:  nil,
+			desc:  "register new user",
+			user:  user,
+			token: user.Email,
+			err:   nil,
 		},
 		{
-			desc: "register existing user",
-			user: user,
-			err:  users.ErrConflict,
+			desc:  "register existing user",
+			user:  user,
+			token: user.Email,
+			err:   users.ErrConflict,
 		},
 		{
 			desc: "register new user with weak password",
@@ -71,48 +74,46 @@ func TestRegister(t *testing.T) {
 				Email:    user.Email,
 				Password: "weak",
 			},
-			err: users.ErrPasswordFormat,
-		},
-	}
-
-	for _, tc := range cases {
-		_, err := svc.Register(context.Background(), tc.user)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-	}
-}
-
-func TestCreateUser(t *testing.T) {
-	svc := newService()
-
-	cases := []struct {
-		desc  string
-		user  users.User
-		token string
-		err   error
-	}{
-		{
-			desc:  "create a new user",
-			user:  user,
-			err:   nil,
 			token: user.Email,
+			err:   users.ErrPasswordFormat,
 		},
 		{
-			desc:  "create a new user with empty token",
-			user:  users.User{Email: "newuser@example.com", Password: "12345678"},
-			err:   users.ErrUnauthorizedAccess,
-			token: "",
-		},
-		{
-			desc:  "create a new user with unauthorized access",
+			desc:  "register a new user with unauthorized access",
 			user:  users.User{Email: "newuser@example.com", Password: "12345678"},
 			err:   users.ErrAuthorization,
 			token: unauthzToken,
 		},
 		{
-			desc:  "create existing user",
-			user:  user,
-			err:   users.ErrConflict,
-			token: user.Email,
+			desc:  "register a new user with empty token",
+			user:  users.User{Email: "newuser@example.com", Password: "12345678"},
+			err:   users.ErrUnauthorizedAccess,
+			token: "",
+		},
+	}
+
+	for _, tc := range cases {
+		_, err := svc.Register(context.Background(), tc.token, tc.user)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+	}
+}
+
+func TestSelfSignon(t *testing.T) {
+	svc := newService()
+
+	cases := []struct {
+		desc string
+		user users.User
+		err  error
+	}{
+		{
+			desc: "create a new user",
+			user: user,
+			err:  nil,
+		},
+		{
+			desc: "create existing user",
+			user: user,
+			err:  users.ErrConflict,
 		},
 		{
 			desc: "create a new user with weak password",
@@ -120,13 +121,20 @@ func TestCreateUser(t *testing.T) {
 				Email:    user.Email,
 				Password: "weak",
 			},
-			err:   users.ErrPasswordFormat,
-			token: user.Email,
+			err: users.ErrPasswordFormat,
+		},
+		{
+			desc: "create a new user with invalid credentials",
+			user: users.User{
+				Email:    "",
+				Password: user.Password,
+			},
+			err: users.ErrMalformedEntity,
 		},
 	}
 
 	for _, tc := range cases {
-		_, err := svc.CreateUser(context.Background(), tc.token, tc.user)
+		_, err := svc.SelfSignon(context.Background(), tc.user)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 
@@ -134,7 +142,7 @@ func TestCreateUser(t *testing.T) {
 
 func TestLogin(t *testing.T) {
 	svc := newService()
-	_, err := svc.Register(context.Background(), user)
+	_, err := svc.Register(context.Background(), user.Email, user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	noAuthUser := users.User{
@@ -178,7 +186,7 @@ func TestLogin(t *testing.T) {
 
 func TestViewUser(t *testing.T) {
 	svc := newService()
-	id, err := svc.Register(context.Background(), user)
+	id, err := svc.Register(context.Background(), user.Email, user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	token, err := svc.Login(context.Background(), user)
@@ -221,7 +229,7 @@ func TestViewUser(t *testing.T) {
 
 func TestViewProfile(t *testing.T) {
 	svc := newService()
-	_, err := svc.Register(context.Background(), user)
+	_, err := svc.Register(context.Background(), user.Email, user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	token, err := svc.Login(context.Background(), user)
@@ -256,7 +264,7 @@ func TestViewProfile(t *testing.T) {
 func TestListUsers(t *testing.T) {
 	svc := newService()
 
-	_, err := svc.Register(context.Background(), user)
+	_, err := svc.Register(context.Background(), user.Email, user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	token, err := svc.Login(context.Background(), user)
@@ -270,7 +278,7 @@ func TestListUsers(t *testing.T) {
 			Email:    email,
 			Password: "passpass",
 		}
-		_, err := svc.Register(context.Background(), user)
+		_, err := svc.Register(context.Background(), token, user)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	}
 
@@ -311,7 +319,7 @@ func TestListUsers(t *testing.T) {
 func TestUpdateUser(t *testing.T) {
 	svc := newService()
 
-	_, err := svc.Register(context.Background(), user)
+	_, err := svc.Register(context.Background(), user.Email, user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	token, err := svc.Login(context.Background(), user)
@@ -344,7 +352,7 @@ func TestUpdateUser(t *testing.T) {
 
 func TestGenerateResetToken(t *testing.T) {
 	svc := newService()
-	_, err := svc.Register(context.Background(), user)
+	_, err := svc.Register(context.Background(), user.Email, user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	cases := map[string]struct {
@@ -363,7 +371,7 @@ func TestGenerateResetToken(t *testing.T) {
 
 func TestChangePassword(t *testing.T) {
 	svc := newService()
-	_, err := svc.Register(context.Background(), user)
+	_, err := svc.Register(context.Background(), user.Email, user)
 	require.Nil(t, err, fmt.Sprintf("register user error: %s", err))
 	token, _ := svc.Login(context.Background(), user)
 
@@ -387,7 +395,7 @@ func TestChangePassword(t *testing.T) {
 
 func TestResetPassword(t *testing.T) {
 	svc := newService()
-	_, err := svc.Register(context.Background(), user)
+	_, err := svc.Register(context.Background(), user.Email, user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	mockAuthzDB := map[string][]mocks.SubjectSet{}
@@ -413,7 +421,7 @@ func TestResetPassword(t *testing.T) {
 
 func TestSendPasswordReset(t *testing.T) {
 	svc := newService()
-	_, err := svc.Register(context.Background(), user)
+	_, err := svc.Register(context.Background(), user.Email, user)
 	require.Nil(t, err, fmt.Sprintf("register user error: %s", err))
 	token, _ := svc.Login(context.Background(), user)
 

@@ -16,20 +16,44 @@ import (
 
 const (
 	usersEndpoint      = "users"
-	createUserEndpoint = "users/create"
+	selfSignonEndpoint = "selfsignon"
 	tokensEndpoint     = "tokens"
 	passwordEndpoint   = "password"
 	membersEndpoint    = "members"
 )
 
-func (sdk mfSDK) CreateUser(u User) (string, error) {
+func (sdk mfSDK) CreateUser(token string, u User) (string, error) {
 	data, err := json.Marshal(u)
 	if err != nil {
 		return "", err
 	}
 
-	url := createURL(sdk.baseURL, sdk.usersPrefix, createUserEndpoint)
+	url := createURL(sdk.baseURL, sdk.usersPrefix, usersEndpoint)
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+	if err != nil {
+		return "", err
+	}
 
+	resp, err := sdk.sendRequest(req, token, string(CTJSON))
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode != http.StatusCreated {
+		return "", errors.Wrap(ErrFailedCreation, errors.New(resp.Status))
+	}
+
+	id := strings.TrimPrefix(resp.Header.Get("Location"), fmt.Sprintf("/%s/", usersEndpoint))
+	return id, nil
+}
+
+func (sdk mfSDK) SelfSignon(u User) (string, error) {
+	data, err := json.Marshal(u)
+	if err != nil {
+		return "", err
+	}
+
+	url := createURL(sdk.baseURL, sdk.usersPrefix, selfSignonEndpoint)
 	resp, err := sdk.client.Post(url, string(CTJSON), bytes.NewReader(data))
 	if err != nil {
 		return "", err

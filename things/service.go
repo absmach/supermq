@@ -185,26 +185,55 @@ func (ts *thingsService) CreateThings(ctx context.Context, token string, things 
 		return []Thing{}, err
 	}
 
-	for i := range things {
-		things[i].ID, err = ts.idProvider.ID()
+	ths := []Thing{}
+	for _, thing := range things {
+		th, err := ts.createThing(ctx, &thing, res)
 		if err != nil {
-			return []Thing{}, errors.Wrap(ErrCreateUUID, err)
-		}
-
-		things[i].Owner = res.GetEmail()
-
-		if things[i].Key == "" {
-			things[i].Key, err = ts.idProvider.ID()
-			if err != nil {
-				return []Thing{}, errors.Wrap(ErrCreateUUID, err)
-			}
-		}
-		if err := ts.addPolicy(ctx, res.GetId(), things[i].ID, ownerRelationKey); err != nil {
 			return []Thing{}, err
+		}
+		ths = append(ths, th)
+	}
+
+	return ths, nil
+}
+
+func (ts *thingsService) createThing(ctx context.Context, thing *Thing, identity *mainflux.UserIdentity) (Thing, error) {
+	thID, err := ts.idProvider.ID()
+	if err != nil {
+		return Thing{}, errors.Wrap(ErrCreateUUID, err)
+	}
+	thing.ID = thID
+
+	thing.Owner = identity.GetEmail()
+
+	if thing.Key == "" {
+		thing.Key, err = ts.idProvider.ID()
+		if err != nil {
+			return Thing{}, errors.Wrap(ErrCreateUUID, err)
 		}
 	}
 
-	return ts.things.Save(ctx, things...)
+	req := &mainflux.AddPolicyReq{
+		Sub: identity.GetId(),
+		Obj: thing.ID,
+		Act: ownerRelationKey,
+	}
+	apr, err := ts.auth.AddPolicy(ctx, req)
+	if err != nil {
+		return Thing{}, err
+	}
+	if !apr.GetAuthorized() {
+		return Thing{}, users.ErrAuthorization
+	}
+
+	ths, err := ts.things.Save(ctx, *thing)
+	if err != nil {
+		return Thing{}, err
+	}
+	if len(ths) == 0 {
+		return Thing{}, ErrCreateEntity
+	}
+	return ths[0], nil
 }
 
 func (ts *thingsService) UpdateThing(ctx context.Context, token string, thing Thing) error {
@@ -243,7 +272,7 @@ func (ts *thingsService) ViewThing(ctx context.Context, token, id string) (Thing
 		return Thing{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	if err := ts.authorize(ctx, res.GetId(), id, ownerRelationKey, accessRelationKey); err != nil {
+	if err := ts.authorize(ctx, res.GetId(), id, ownerRelationKey); err != nil {
 		return Thing{}, err
 	}
 
@@ -478,37 +507,18 @@ func (ts *thingsService) members(ctx context.Context, token, groupID, groupType 
 	return res.Members, nil
 }
 
-func (ts *thingsService) authorize(ctx context.Context, subject, object string, relations ...string) error {
+func (ts *thingsService) authorize(ctx context.Context, subject, object string, relation string) error {
 	req := &mainflux.AuthorizeReq{
-		Sub: subject,
-		Obj: object,
-	}
-	for _, relation := range relations {
-		req.Act = relation
-		res, err := ts.auth.Authorize(ctx, req)
-		if err != nil {
-			return errors.Wrap(ErrAuthorization, err)
-		}
-		if res.Authorized {
-			return nil
-		}
-	}
-	return ErrAuthorization
-}
-
-func (ts *thingsService) addPolicy(ctx context.Context, subject, object, relation string) error {
-	req := &mainflux.AddPolicyReq{
 		Sub: subject,
 		Obj: object,
 		Act: relation,
 	}
-
-	apr, err := ts.auth.AddPolicy(ctx, req)
+	res, err := ts.auth.Authorize(ctx, req)
 	if err != nil {
-		return err
+		return errors.Wrap(ErrAuthorization, err)
 	}
-	if !apr.GetAuthorized() {
-		return users.ErrAuthorization
+	if !res.GetAuthorized() {
+		return ErrAuthorization
 	}
 	return nil
 }
