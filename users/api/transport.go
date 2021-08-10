@@ -46,9 +46,9 @@ func MakeHandler(svc users.Service, tracer opentracing.Tracer) http.Handler {
 		opts...,
 	))
 
-	if v := mainflux.Env("MF_SELFSIGNON_ENDPOINT", "inactive"); v == "active" {
-		mux.Post("/selfsignon", kithttp.NewServer(
-			kitot.TraceServer(tracer, "self_sign_on")(selfSignonEndpoint(svc)),
+	if v := mainflux.Env("MF_SELFREGISTER", ""); v != "" {
+		mux.Post("/selfregister", kithttp.NewServer(
+			kitot.TraceServer(tracer, "self_register")(selfRegisterEndpoint(svc)),
 			decodeCredentials,
 			encodeResponse,
 			opts...,

@@ -119,8 +119,8 @@ type SDK interface {
 	// CreateUser registers mainflux user. It is only allowed to perform by admins.
 	CreateUser(token string, user User) (string, error)
 
-	// SelfSignon registers mainflux user.
-	SelfSignon(user User) (string, error)
+	// SelfRegister registers mainflux user.
+	SelfRegister(user User) (string, error)
 
 	// User returns user object.
 	User(token string) (User, error)

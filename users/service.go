@@ -74,9 +74,9 @@ type Service interface {
 	// for admin.
 	Register(ctx context.Context, token string, user User) (string, error)
 
-	// Selfsignon creates a new user without any authorization restriction like
-	// Register.
-	SelfSignon(ctx context.Context, user User) (string, error)
+	// SelfRegister creates a new user without any authorization restriction
+	// unlike Register.
+	SelfRegister(ctx context.Context, user User) (string, error)
 
 	// Login authenticates the user given its credentials. Successful
 	// authentication generates new access token. Failed invocations are
@@ -203,7 +203,7 @@ func (svc usersService) Register(ctx context.Context, token string, user User) (
 	return uid, nil
 }
 
-func (svc usersService) SelfSignon(ctx context.Context, user User) (string, error) {
+func (svc usersService) SelfRegister(ctx context.Context, user User) (string, error) {
 	uid, err := svc.idProvider.ID()
 	if err != nil {
 		return "", errors.Wrap(ErrCreateUser, err)

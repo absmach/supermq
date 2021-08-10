@@ -331,7 +331,7 @@ func createAdmin(svc users.Service, userRepo users.UserRepository, c config, aut
 		return nil
 	}
 
-	uid, err := svc.SelfSignon(context.Background(), user)
+	uid, err := svc.SelfRegister(context.Background(), user)
 	if err != nil {
 		return err
 	}

@@ -31,14 +31,14 @@ func registrationEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
-func selfSignonEndpoint(svc users.Service) endpoint.Endpoint {
+func selfRegisterEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(userReq)
 		if err := req.validate(); err != nil {
 			return createUserRes{}, err
 		}
 
-		uid, err := svc.SelfSignon(ctx, req.user)
+		uid, err := svc.SelfRegister(ctx, req.user)
 		if err != nil {
 			return createUserRes{}, err
 		}

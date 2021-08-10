@@ -15,11 +15,11 @@ import (
 )
 
 const (
-	usersEndpoint      = "users"
-	selfSignonEndpoint = "selfsignon"
-	tokensEndpoint     = "tokens"
-	passwordEndpoint   = "password"
-	membersEndpoint    = "members"
+	usersEndpoint        = "users"
+	selfRegisterEndpoint = "selfregister"
+	tokensEndpoint       = "tokens"
+	passwordEndpoint     = "password"
+	membersEndpoint      = "members"
 )
 
 func (sdk mfSDK) CreateUser(token string, u User) (string, error) {
@@ -47,13 +47,13 @@ func (sdk mfSDK) CreateUser(token string, u User) (string, error) {
 	return id, nil
 }
 
-func (sdk mfSDK) SelfSignon(u User) (string, error) {
+func (sdk mfSDK) SelfRegister(u User) (string, error) {
 	data, err := json.Marshal(u)
 	if err != nil {
 		return "", err
 	}
 
-	url := createURL(sdk.baseURL, sdk.usersPrefix, selfSignonEndpoint)
+	url := createURL(sdk.baseURL, sdk.usersPrefix, selfRegisterEndpoint)
 	resp, err := sdk.client.Post(url, string(CTJSON), bytes.NewReader(data))
 	if err != nil {
 		return "", err
