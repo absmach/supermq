@@ -102,19 +102,19 @@ type service struct {
 	groups       GroupRepository
 	idProvider   mainflux.IDProvider
 	ulidProvider mainflux.IDProvider
-	keto         PolicyAgent
+	policyAgent  PolicyAgent
 	tokenizer    Tokenizer
 }
 
 // New instantiates the auth service implementation.
-func New(keys KeyRepository, groups GroupRepository, idp mainflux.IDProvider, tokenizer Tokenizer, policy PolicyAgent) Service {
+func New(keys KeyRepository, groups GroupRepository, idp mainflux.IDProvider, tokenizer Tokenizer, policyAgent PolicyAgent) Service {
 	return &service{
 		tokenizer:    tokenizer,
 		keys:         keys,
 		groups:       groups,
 		idProvider:   idp,
 		ulidProvider: ulid.New(),
-		keto:         policy,
+		policyAgent:  policyAgent,
 	}
 }
 
@@ -171,7 +171,7 @@ func (svc service) Identify(ctx context.Context, token string) (Identity, error)
 }
 
 func (svc service) Authorize(ctx context.Context, subject, object, relation string) (bool, error) {
-	ar, err := svc.keto.CheckPolicy(ctx, subject, object, relation)
+	ar, err := svc.policyAgent.CheckPolicy(ctx, subject, object, relation)
 	if err != nil {
 		return false, errors.Wrap(ErrAuthorization, err)
 	}
@@ -182,7 +182,7 @@ func (svc service) Authorize(ctx context.Context, subject, object, relation stri
 }
 
 func (svc service) AddPolicy(ctx context.Context, subject, object, relation string) error {
-	return svc.keto.AddPolicy(ctx, subject, object, relation)
+	return svc.policyAgent.AddPolicy(ctx, subject, object, relation)
 }
 
 func (svc service) tmpKey(duration time.Duration, key Key) (Key, string, error) {

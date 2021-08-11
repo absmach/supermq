@@ -49,7 +49,7 @@ const (
 	defServerCert    = ""
 	defServerKey     = ""
 	defJaegerURL     = ""
-	ketoContainer    = "mainflux-keto"
+	defKetoHost      = "mainflux-keto"
 	defKetoWritePort = "4467"
 	defKetoReadPort  = "4466"
 
@@ -69,6 +69,7 @@ const (
 	envServerCert    = "MF_AUTH_SERVER_CERT"
 	envServerKey     = "MF_AUTH_SERVER_KEY"
 	envJaegerURL     = "MF_JAEGER_URL"
+	envKetoHost      = "MF_KETO_HOST"
 	envKetoWritePort = "MF_KETO_WRITE_REMOTE_PORT"
 	envKetoReadPort  = "MF_KETO_READ_REMOTE_PORT"
 )
@@ -83,6 +84,7 @@ type config struct {
 	serverKey     string
 	jaegerURL     string
 	resetURL      string
+	ketoHost      string
 	ketoWritePort string
 	ketoReadPort  string
 }
@@ -109,7 +111,7 @@ func main() {
 	dbTracer, dbCloser := initJaeger("auth_db", cfg.jaegerURL, logger)
 	defer dbCloser.Close()
 
-	reader, writer := initKeto(cfg.ketoReadPort, cfg.ketoWritePort, logger)
+	reader, writer := initKeto(cfg.ketoHost, cfg.ketoReadPort, cfg.ketoWritePort, logger)
 
 	svc := newService(db, dbTracer, cfg.secret, logger, reader, writer)
 	errs := make(chan error, 2)
@@ -149,6 +151,7 @@ func loadConfig() config {
 		serverCert:    mainflux.Env(envServerCert, defServerCert),
 		serverKey:     mainflux.Env(envServerKey, defServerKey),
 		jaegerURL:     mainflux.Env(envJaegerURL, defJaegerURL),
+		ketoHost:      mainflux.Env(envKetoHost, defKetoHost),
 		ketoReadPort:  mainflux.Env(envKetoReadPort, defKetoReadPort),
 		ketoWritePort: mainflux.Env(envKetoWritePort, defKetoWritePort),
 	}
@@ -179,16 +182,16 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 	return tracer, closer
 }
 
-func initKeto(readPort, writePort string, logger logger.Logger) (acl.CheckServiceClient, acl.WriteServiceClient) {
-	checkConn, err := grpc.Dial(fmt.Sprintf("%s:%s", ketoContainer, readPort), grpc.WithInsecure())
+func initKeto(hostAddress, readPort, writePort string, logger logger.Logger) (acl.CheckServiceClient, acl.WriteServiceClient) {
+	checkConn, err := grpc.Dial(fmt.Sprintf("%s:%s", hostAddress, readPort), grpc.WithInsecure())
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to dial %s:%s for Keto Check Service: %s", ketoContainer, readPort, err))
+		logger.Error(fmt.Sprintf("Failed to dial %s:%s for Keto Check Service: %s", hostAddress, readPort, err))
 		os.Exit(1)
 	}
 
-	writeConn, err := grpc.Dial(fmt.Sprintf("%s:%s", ketoContainer, writePort), grpc.WithInsecure())
+	writeConn, err := grpc.Dial(fmt.Sprintf("%s:%s", hostAddress, writePort), grpc.WithInsecure())
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to dial %s:%s for Keto Write Service: %s", ketoContainer, writePort, err))
+		logger.Error(fmt.Sprintf("Failed to dial %s:%s for Keto Write Service: %s", hostAddress, writePort, err))
 		os.Exit(1)
 	}
 	return acl.NewCheckServiceClient(checkConn), acl.NewWriteServiceClient(writeConn)

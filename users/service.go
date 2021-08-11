@@ -391,18 +391,18 @@ func (svc usersService) issue(ctx context.Context, id, email string, keyType uin
 	return key.GetValue(), nil
 }
 
-type identityRes struct {
+type userIdentity struct {
 	id    string
 	email string
 }
 
-func (svc usersService) identify(ctx context.Context, token string) (identityRes, error) {
+func (svc usersService) identify(ctx context.Context, token string) (userIdentity, error) {
 	identity, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
-		return identityRes{}, errors.Wrap(ErrUnauthorizedAccess, err)
+		return userIdentity{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	return identityRes{identity.Id, identity.Email}, nil
+	return userIdentity{identity.Id, identity.Email}, nil
 }
 
 func (svc usersService) authorize(ctx context.Context, subject, object, relation string) (bool, error) {
