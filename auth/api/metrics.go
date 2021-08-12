@@ -64,7 +64,7 @@ func (ms *metricsMiddleware) Identify(ctx context.Context, token string) (auth.I
 	return ms.svc.Identify(ctx, token)
 }
 
-func (ms *metricsMiddleware) Authorize(ctx context.Context, subject, object, relation string) (bool, error) {
+func (ms *metricsMiddleware) Authorize(ctx context.Context, subject, object, relation string) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "authorize").Add(1)
 		ms.latency.With("method", "authorize").Observe(time.Since(begin).Seconds())

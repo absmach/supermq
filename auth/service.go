@@ -170,15 +170,15 @@ func (svc service) Identify(ctx context.Context, token string) (Identity, error)
 	}
 }
 
-func (svc service) Authorize(ctx context.Context, subject, object, relation string) (bool, error) {
+func (svc service) Authorize(ctx context.Context, subject, object, relation string) error {
 	ar, err := svc.policyAgent.CheckPolicy(ctx, subject, object, relation)
 	if err != nil {
-		return false, errors.Wrap(ErrAuthorization, err)
+		return errors.Wrap(ErrAuthorization, err)
 	}
 	if ar.AuthzError != nil {
-		return false, errors.Wrap(ErrAuthorization, err)
+		return errors.Wrap(ErrAuthorization, err)
 	}
-	return true, nil
+	return nil
 }
 
 func (svc service) AddPolicy(ctx context.Context, subject, object, relation string) error {

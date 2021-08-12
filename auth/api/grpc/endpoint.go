@@ -62,11 +62,11 @@ func authorizeEndpoint(svc auth.Service) endpoint.Endpoint {
 			return authorizeRes{}, err
 		}
 
-		authorized, err := svc.Authorize(ctx, req.Sub, req.Obj, req.Act)
+		err := svc.Authorize(ctx, req.Sub, req.Obj, req.Act)
 		if err != nil {
 			return authorizeRes{}, err
 		}
-		return authorizeRes{authorized: authorized}, err
+		return authorizeRes{authorized: true}, err
 	}
 }
 

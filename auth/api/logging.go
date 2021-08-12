@@ -82,7 +82,7 @@ func (lm *loggingMiddleware) Identify(ctx context.Context, key string) (id auth.
 	return lm.svc.Identify(ctx, key)
 }
 
-func (lm *loggingMiddleware) Authorize(ctx context.Context, subject, object, relation string) (authorized bool, err error) {
+func (lm *loggingMiddleware) Authorize(ctx context.Context, subject, object, relation string) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method authorize %s#%s@%s took %s to complete", object, relation, subject, time.Since(begin))
 		if err != nil {

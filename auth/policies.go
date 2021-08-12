@@ -18,7 +18,7 @@ type Authz interface {
 	// of the given subject and the error. For example, the response as:
 	// `false, nil` means that `subject` has not `relation` on the `object`.
 	// Therefore, this response means that incoming request is denied.
-	Authorize(ctx context.Context, subject, object, relation string) (bool, error)
+	Authorize(ctx context.Context, subject, object, relation string) error
 
 	// AddPolicy creates a policy for the given subject. So that, after
 	// AddPolicy, `subject`has a `relation` on `object`. Returns non-nil
@@ -79,7 +79,8 @@ func (c policyAgent) CheckPolicy(ctx context.Context, subject, object, relation 
 }
 
 func (c policyAgent) AddPolicy(ctx context.Context, subject, object, relation string) error {
-	_, err := c.writer.TransactRelationTuples(context.Background(), &acl.TransactRelationTuplesRequest{
+	trt := c.writer.TransactRelationTuples
+	_, err := trt(context.Background(), &acl.TransactRelationTuplesRequest{
 		RelationTupleDeltas: []*acl.RelationTupleDelta{
 			{
 				Action: acl.RelationTupleDelta_INSERT,
@@ -94,8 +95,5 @@ func (c policyAgent) AddPolicy(ctx context.Context, subject, object, relation st
 			},
 		},
 	})
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
