@@ -35,25 +35,6 @@ services:
       - mainflux-base-net
     depends_on:
       - keto-db
-      - keto-migrate
-
-  keto-init:
-    image: oryd/keto:v0.6.0-alpha.3
-    container_name: mainflux-keto-init
-    environment:
-      - KETO_WRITE_REMOTE=keto:${MF_KETO_WRITE_REMOTE_PORT}
-      - DSN=postgresql://${MF_KETO_DB_USER}:${MF_KETO_DB_PASS}@keto-db:${MF_KETO_DB_PORT}/${MF_KETO_DB}?sslmode=disable
-    volumes:
-      - type: bind
-        source: ./keto
-        target: /home/ory
-    command: relation-tuple create /home/ory/relation-tuples
-    restart: on-failure
-    networks:
-      - mainflux-base-net
-    depends_on:
-      - keto-db
-      - keto-migrate
 
   keto-migrate:
     image: oryd/keto:v0.6.0-alpha.3
@@ -211,7 +192,6 @@ services:
       MF_AUTH_GRPC_TIMEOUT: ${MF_AUTH_GRPC_TIMEOUT}
       MF_USERS_ADMIN_EMAIL: ${MF_USERS_ADMIN_EMAIL}
       MF_USERS_ADMIN_PASSWORD: ${MF_USERS_ADMIN_PASSWORD}
-      MF_SELFREGISTER: ${MF_SELFREGISTER}
     ports:
       - ${MF_USERS_HTTP_PORT}:${MF_USERS_HTTP_PORT}
     networks:
