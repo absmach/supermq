@@ -124,7 +124,7 @@ var cmdProvision = []cobra.Command{
 				Email:    un,
 				Password: "12345678",
 			}
-			if _, err := sdk.SelfRegister(user); err != nil {
+			if _, err := sdk.CreateUser("t", user); err != nil {
 				logError(err)
 				return
 			}

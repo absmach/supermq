@@ -331,12 +331,22 @@ func createAdmin(svc users.Service, userRepo users.UserRepository, c config, aut
 		return nil
 	}
 
-	uid, err := svc.SelfRegister(context.Background(), user)
+	// Add a policy that allows anybody to create a user
+	apr, err := auth.AddPolicy(context.Background(), &mainflux.AddPolicyReq{Obj: "user", Act: "create", Sub: "*"})
+	if err != nil {
+		return err
+	}
+	if !apr.GetAuthorized() {
+		return users.ErrAuthorization
+	}
+
+	// Create an admin
+	uid, err := svc.Register(context.Background(), "", user)
 	if err != nil {
 		return err
 	}
 
-	apr, err := auth.AddPolicy(context.Background(), &mainflux.AddPolicyReq{Obj: "authorities", Act: "member", Sub: uid})
+	apr, err = auth.AddPolicy(context.Background(), &mainflux.AddPolicyReq{Obj: "authorities", Act: "member", Sub: uid})
 	if err != nil {
 		return err
 	}

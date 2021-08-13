@@ -15,11 +15,10 @@ import (
 )
 
 const (
-	usersEndpoint        = "users"
-	selfRegisterEndpoint = "selfregister"
-	tokensEndpoint       = "tokens"
-	passwordEndpoint     = "password"
-	membersEndpoint      = "members"
+	usersEndpoint    = "users"
+	tokensEndpoint   = "tokens"
+	passwordEndpoint = "password"
+	membersEndpoint  = "members"
 )
 
 func (sdk mfSDK) CreateUser(token string, u User) (string, error) {
@@ -35,26 +34,6 @@ func (sdk mfSDK) CreateUser(token string, u User) (string, error) {
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return "", err
-	}
-
-	if resp.StatusCode != http.StatusCreated {
-		return "", errors.Wrap(ErrFailedCreation, errors.New(resp.Status))
-	}
-
-	id := strings.TrimPrefix(resp.Header.Get("Location"), fmt.Sprintf("/%s/", usersEndpoint))
-	return id, nil
-}
-
-func (sdk mfSDK) SelfRegister(u User) (string, error) {
-	data, err := json.Marshal(u)
-	if err != nil {
-		return "", err
-	}
-
-	url := createURL(sdk.baseURL, sdk.usersPrefix, selfRegisterEndpoint)
-	resp, err := sdk.client.Post(url, string(CTJSON), bytes.NewReader(data))
 	if err != nil {
 		return "", err
 	}

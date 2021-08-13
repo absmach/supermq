@@ -48,12 +48,8 @@ var (
 )
 
 const (
-	thingObjectKey    = "thing"
-	authoritiesObjKey = "authorities"
-
-	createRelationKey = "create"
+	usersObjectKey    = "users"
 	ownerRelationKey  = "owner"
-	accessRelationKey = "access"
 	memberRelationKey = "member"
 )
 
@@ -181,7 +177,7 @@ func (ts *thingsService) CreateThings(ctx context.Context, token string, things 
 		return []Thing{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	if err := ts.authorize(ctx, res.GetId(), thingObjectKey, createRelationKey); err != nil {
+	if err := ts.authorize(ctx, res.GetId(), usersObjectKey, memberRelationKey); err != nil {
 		return []Thing{}, err
 	}
 

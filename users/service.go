@@ -74,10 +74,6 @@ type Service interface {
 	// for admin.
 	Register(ctx context.Context, token string, user User) (string, error)
 
-	// SelfRegister creates a new user without any authorization restriction
-	// unlike Register.
-	SelfRegister(ctx context.Context, user User) (string, error)
-
 	// Login authenticates the user given its credentials. Successful
 	// authentication generates new access token. Failed invocations are
 	// identified by the non-nil error values in the response.
@@ -157,17 +153,8 @@ func New(users UserRepository, hasher Hasher, auth mainflux.AuthServiceClient, e
 }
 
 func (svc usersService) Register(ctx context.Context, token string, user User) (string, error) {
-	ir, err := svc.identify(ctx, token)
-	if err != nil {
+	if err := svc.checkAuthz(ctx, token); err != nil {
 		return "", err
-	}
-
-	authorized, err := svc.authorize(ctx, ir.id, authoritiesObjKey, memberRelationKey)
-	if err != nil {
-		return "", err
-	}
-	if !authorized {
-		return "", ErrAuthorization
 	}
 
 	if err := user.Validate(); err != nil {
@@ -183,12 +170,8 @@ func (svc usersService) Register(ctx context.Context, token string, user User) (
 	}
 	user.ID = uid
 
-	authorized, err = svc.addPolicy(ctx, user.ID, usersObjKey, memberRelationKey)
-	if err != nil {
+	if err := svc.addPolicy(ctx, user.ID, usersObjKey, memberRelationKey); err != nil {
 		return "", err
-	}
-	if !authorized {
-		return "", ErrAuthorization
 	}
 
 	hash, err := svc.hasher.Hash(user.Password)
@@ -203,37 +186,16 @@ func (svc usersService) Register(ctx context.Context, token string, user User) (
 	return uid, nil
 }
 
-func (svc usersService) SelfRegister(ctx context.Context, user User) (string, error) {
-	uid, err := svc.idProvider.ID()
-	if err != nil {
-		return "", errors.Wrap(ErrCreateUser, err)
+func (svc usersService) checkAuthz(ctx context.Context, token string) error {
+	if err := svc.authorize(ctx, "*", "user", "create"); err == nil {
+		return nil
 	}
-	user.ID = uid
-
-	authorized, err := svc.addPolicy(ctx, user.ID, usersObjKey, memberRelationKey)
+	ir, err := svc.identify(ctx, token)
 	if err != nil {
-		return "", err
-	}
-	if !authorized {
-		return "", ErrAuthorization
+		return err
 	}
 
-	if err := user.Validate(); err != nil {
-		return "", err
-	}
-	if !svc.passRegex.MatchString(user.Password) {
-		return "", ErrPasswordFormat
-	}
-	hash, err := svc.hasher.Hash(user.Password)
-	if err != nil {
-		return "", errors.Wrap(ErrMalformedEntity, err)
-	}
-	user.Password = hash
-	uid, err = svc.users.Save(ctx, user)
-	if err != nil {
-		return "", err
-	}
-	return uid, nil
+	return svc.authorize(ctx, ir.id, authoritiesObjKey, memberRelationKey)
 }
 
 func (svc usersService) Login(ctx context.Context, user User) (string, error) {
@@ -405,7 +367,7 @@ func (svc usersService) identify(ctx context.Context, token string) (userIdentit
 	return userIdentity{identity.Id, identity.Email}, nil
 }
 
-func (svc usersService) authorize(ctx context.Context, subject, object, relation string) (bool, error) {
+func (svc usersService) authorize(ctx context.Context, subject, object, relation string) error {
 	req := &mainflux.AuthorizeReq{
 		Sub: subject,
 		Obj: object,
@@ -413,12 +375,15 @@ func (svc usersService) authorize(ctx context.Context, subject, object, relation
 	}
 	res, err := svc.auth.Authorize(ctx, req)
 	if err != nil {
-		return false, errors.Wrap(ErrAuthorization, err)
+		return errors.Wrap(ErrAuthorization, err)
 	}
-	return res.Authorized, nil
+	if !res.GetAuthorized() {
+		return ErrAuthorization
+	}
+	return nil
 }
 
-func (svc usersService) addPolicy(ctx context.Context, subject, object, relation string) (bool, error) {
+func (svc usersService) addPolicy(ctx context.Context, subject, object, relation string) error {
 	req := &mainflux.AddPolicyReq{
 		Sub: subject,
 		Obj: object,
@@ -426,9 +391,12 @@ func (svc usersService) addPolicy(ctx context.Context, subject, object, relation
 	}
 	res, err := svc.auth.AddPolicy(ctx, req)
 	if err != nil {
-		return false, errors.Wrap(ErrAuthorization, err)
+		return errors.Wrap(ErrAuthorization, err)
 	}
-	return res.Authorized, nil
+	if !res.GetAuthorized() {
+		return ErrAuthorization
+	}
+	return nil
 }
 
 func (svc usersService) members(ctx context.Context, token, groupID string, limit, offset uint64) ([]string, error) {

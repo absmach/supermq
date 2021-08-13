@@ -83,61 +83,12 @@ func TestRegister(t *testing.T) {
 			err:   users.ErrAuthorization,
 			token: unauthzToken,
 		},
-		{
-			desc:  "register a new user with empty token",
-			user:  users.User{Email: "newuser@example.com", Password: "12345678"},
-			err:   users.ErrUnauthorizedAccess,
-			token: "",
-		},
 	}
 
 	for _, tc := range cases {
 		_, err := svc.Register(context.Background(), tc.token, tc.user)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
-}
-
-func TestSelfRegister(t *testing.T) {
-	svc := newService()
-
-	cases := []struct {
-		desc string
-		user users.User
-		err  error
-	}{
-		{
-			desc: "create a new user",
-			user: user,
-			err:  nil,
-		},
-		{
-			desc: "create existing user",
-			user: user,
-			err:  users.ErrConflict,
-		},
-		{
-			desc: "create a new user with weak password",
-			user: users.User{
-				Email:    user.Email,
-				Password: "weak",
-			},
-			err: users.ErrPasswordFormat,
-		},
-		{
-			desc: "create a new user with invalid credentials",
-			user: users.User{
-				Email:    "",
-				Password: user.Password,
-			},
-			err: users.ErrMalformedEntity,
-		},
-	}
-
-	for _, tc := range cases {
-		_, err := svc.SelfRegister(context.Background(), tc.user)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-	}
-
 }
 
 func TestLogin(t *testing.T) {

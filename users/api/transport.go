@@ -46,15 +46,6 @@ func MakeHandler(svc users.Service, tracer opentracing.Tracer) http.Handler {
 		opts...,
 	))
 
-	if v := mainflux.Env("MF_SELFREGISTER", ""); v != "" {
-		mux.Post("/selfregister", kithttp.NewServer(
-			kitot.TraceServer(tracer, "self_register")(selfRegisterEndpoint(svc)),
-			decodeCredentials,
-			encodeResponse,
-			opts...,
-		))
-	}
-
 	mux.Get("/users/profile", kithttp.NewServer(
 		kitot.TraceServer(tracer, "view_profile")(viewProfileEndpoint(svc)),
 		decodeViewProfile,

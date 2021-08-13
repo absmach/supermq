@@ -37,15 +37,6 @@ func (ms *metricsMiddleware) Register(ctx context.Context, token string, user us
 	return ms.svc.Register(ctx, token, user)
 }
 
-func (ms *metricsMiddleware) SelfRegister(ctx context.Context, user users.User) (string, error) {
-	defer func(begin time.Time) {
-		ms.counter.With("method", "self_register").Add(1)
-		ms.latency.With("method", "self_register").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-
-	return ms.svc.SelfRegister(ctx, user)
-}
-
 func (ms *metricsMiddleware) Login(ctx context.Context, user users.User) (string, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "login").Add(1)
