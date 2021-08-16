@@ -6,24 +6,32 @@ package auth
 import (
 	"context"
 
+	"github.com/mainflux/mainflux/pkg/errors"
 	acl "github.com/ory/keto/proto/ory/keto/acl/v1alpha1"
 )
+
+// PolicyReq represents an argument struct for making a policy related
+// function calls.
+type PolicyReq struct {
+	Subject  string
+	Object   string
+	Relation string
+}
 
 // Authz represents a authorization service. It exposes
 // functionalities through `auth` to perform authorization.
 type Authz interface {
 	// Authorize checks authorization of the given `subject`. Basically,
 	// Authorize verifies that Is `subject` allowed to `relation` on
-	// `object`. Authorize returns the bool indicating the authorization
-	// of the given subject and the error. For example, the response as:
-	// `false, nil` means that `subject` has not `relation` on the `object`.
-	// Therefore, this response means that incoming request is denied.
-	Authorize(ctx context.Context, subject, object, relation string) error
+	// `object`. Authorize returns a non-nil error if the subject has
+	// no relation on the object (which simply means the operation is
+	// denied).
+	Authorize(ctx context.Context, pr PolicyReq) error
 
 	// AddPolicy creates a policy for the given subject. So that, after
 	// AddPolicy, `subject`has a `relation` on `object`. Returns non-nil
 	// error in case of failures.
-	AddPolicy(ctx context.Context, subject, object, relation string) error
+	AddPolicy(ctx context.Context, pr PolicyReq) error
 }
 
 // PolicyAgent facilitates the communication to authorization
@@ -31,21 +39,14 @@ type Authz interface {
 // authorization services (e.g. ORY Keto).
 type PolicyAgent interface {
 	// CheckPolicy checks if the subject has a relation on the object.
-	// It returns AuthorizationResult consisting of one boolean which indicates
-	// result of the authorization (true: Allowed, false: Denied) and error.
-	CheckPolicy(ctx context.Context, subject, object, relation string) (AuthorizationResult, error)
+	// It returns a non-nil error if the subject has no relation on
+	// the object (which simply means the operation is denied).
+	CheckPolicy(ctx context.Context, pr PolicyReq) error
 
 	// AddPolicy creates a policy for the given subject. So that, after
 	// AddPolicy, `subject` has a `relation` on `object`. Returns non-nil
 	// error in case of failures.
-	AddPolicy(ctx context.Context, subject, object, relation string) error
-}
-
-// AuthorizationResult shows the result of the authorization check operations.
-// AuthzError field is nil when the operation is allowed. If AuthzError is
-// non-nil, the operation is denied.
-type AuthorizationResult struct {
-	AuthzError error
+	AddPolicy(ctx context.Context, pr PolicyReq) error
 }
 
 type policyAgent struct {
@@ -59,26 +60,25 @@ func NewPolicyAgent(checker acl.CheckServiceClient, writer acl.WriteServiceClien
 	return policyAgent{checker: checker, writer: writer}
 }
 
-func (c policyAgent) CheckPolicy(ctx context.Context, subject, object, relation string) (AuthorizationResult, error) {
+func (c policyAgent) CheckPolicy(ctx context.Context, pr PolicyReq) error {
 	res, err := c.checker.Check(context.Background(), &acl.CheckRequest{
 		Namespace: ketoNamespace,
-		Object:    object,
-		Relation:  relation,
+		Object:    pr.Object,
+		Relation:  pr.Relation,
 		Subject: &acl.Subject{Ref: &acl.Subject_Id{
-			Id: subject,
+			Id: pr.Subject,
 		}},
 	})
 	if err != nil {
-		return AuthorizationResult{err}, err
+		return errors.Wrap(err, ErrAuthorization)
 	}
 	if !res.GetAllowed() {
-		return AuthorizationResult{ErrAuthorization}, err
+		return ErrAuthorization
 	}
-
-	return AuthorizationResult{}, nil
+	return nil
 }
 
-func (c policyAgent) AddPolicy(ctx context.Context, subject, object, relation string) error {
+func (c policyAgent) AddPolicy(ctx context.Context, pr PolicyReq) error {
 	trt := c.writer.TransactRelationTuples
 	_, err := trt(context.Background(), &acl.TransactRelationTuplesRequest{
 		RelationTupleDeltas: []*acl.RelationTupleDelta{
@@ -86,10 +86,10 @@ func (c policyAgent) AddPolicy(ctx context.Context, subject, object, relation st
 				Action: acl.RelationTupleDelta_INSERT,
 				RelationTuple: &acl.RelationTuple{
 					Namespace: ketoNamespace,
-					Object:    object,
-					Relation:  relation,
+					Object:    pr.Object,
+					Relation:  pr.Relation,
 					Subject: &acl.Subject{Ref: &acl.Subject_Id{
-						Id: subject,
+						Id: pr.Subject,
 					}},
 				},
 			},

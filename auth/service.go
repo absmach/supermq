@@ -102,7 +102,7 @@ type service struct {
 	groups       GroupRepository
 	idProvider   mainflux.IDProvider
 	ulidProvider mainflux.IDProvider
-	policyAgent  PolicyAgent
+	agent        PolicyAgent
 	tokenizer    Tokenizer
 }
 
@@ -114,7 +114,7 @@ func New(keys KeyRepository, groups GroupRepository, idp mainflux.IDProvider, to
 		groups:       groups,
 		idProvider:   idp,
 		ulidProvider: ulid.New(),
-		policyAgent:  policyAgent,
+		agent:        policyAgent,
 	}
 }
 
@@ -170,19 +170,13 @@ func (svc service) Identify(ctx context.Context, token string) (Identity, error)
 	}
 }
 
-func (svc service) Authorize(ctx context.Context, subject, object, relation string) error {
-	ar, err := svc.policyAgent.CheckPolicy(ctx, subject, object, relation)
-	if err != nil {
-		return errors.Wrap(ErrAuthorization, err)
-	}
-	if ar.AuthzError != nil {
-		return errors.Wrap(ErrAuthorization, err)
-	}
-	return nil
+// func (svc service) Authorize(ctx context.Context, subject, object, relation string) error {
+func (svc service) Authorize(ctx context.Context, pr PolicyReq) error {
+	return svc.agent.CheckPolicy(ctx, pr)
 }
 
-func (svc service) AddPolicy(ctx context.Context, subject, object, relation string) error {
-	return svc.policyAgent.AddPolicy(ctx, subject, object, relation)
+func (svc service) AddPolicy(ctx context.Context, pr PolicyReq) error {
+	return svc.agent.AddPolicy(ctx, pr)
 }
 
 func (svc service) tmpKey(duration time.Duration, key Key) (Key, string, error) {

@@ -793,7 +793,7 @@ func TestListMemberships(t *testing.T) {
 		g, err := svc.CreateGroup(context.Background(), apiToken, group)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 
-		_ = svc.AddPolicy(context.Background(), id, memberID, "owner")
+		_ = svc.AddPolicy(context.Background(), auth.PolicyReq{Subject: id, Object: memberID, Relation: "owner"})
 		err = svc.Assign(context.Background(), apiToken, g.ID, "things", memberID)
 		require.Nil(t, err, fmt.Sprintf("Assign member expected to succeed: %s\n", err))
 	}

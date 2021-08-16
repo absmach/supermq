@@ -242,7 +242,6 @@ func (svc usersService) ViewProfile(ctx context.Context, token string) (User, er
 	return User{
 		ID:       dbUser.ID,
 		Email:    ir.email,
-		Password: "",
 		Metadata: dbUser.Metadata,
 	}, nil
 }
@@ -286,7 +285,10 @@ func (svc usersService) ResetPassword(ctx context.Context, resetToken, password 
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 	u, err := svc.users.RetrieveByEmail(ctx, ir.email)
-	if err != nil || u.Email == "" {
+	if err != nil {
+		return err
+	}
+	if u.Email == "" {
 		return ErrUserNotFound
 	}
 	if !svc.passRegex.MatchString(password) {

@@ -14,27 +14,27 @@ type MockSubjectSet struct {
 	Relation string
 }
 
-type ketoMock struct {
+type policyAgentMock struct {
 	authzDB map[string][]MockSubjectSet
 }
 
 // NewKetoMock returns a mock service for Keto.
 // This mock is not implemented yet.
 func NewKetoMock(db map[string][]MockSubjectSet) auth.PolicyAgent {
-	return &ketoMock{db}
+	return &policyAgentMock{db}
 }
 
-func (k *ketoMock) CheckPolicy(ctx context.Context, subject, object, relation string) (auth.AuthorizationResult, error) {
-	ssList := k.authzDB[subject]
+func (k *policyAgentMock) CheckPolicy(ctx context.Context, pr auth.PolicyReq) error {
+	ssList := k.authzDB[pr.Subject]
 	for _, ss := range ssList {
-		if ss.Object == object && ss.Relation == relation {
-			return auth.AuthorizationResult{}, nil
+		if ss.Object == pr.Object && ss.Relation == pr.Relation {
+			return nil
 		}
 	}
-	return auth.AuthorizationResult{AuthzError: auth.ErrAuthorization}, nil
+	return auth.ErrAuthorization
 }
 
-func (k *ketoMock) AddPolicy(ctx context.Context, subject, object, relation string) error {
-	k.authzDB[subject] = append(k.authzDB[subject], MockSubjectSet{Object: object, Relation: relation})
+func (k *policyAgentMock) AddPolicy(ctx context.Context, pr auth.PolicyReq) error {
+	k.authzDB[pr.Subject] = append(k.authzDB[pr.Subject], MockSubjectSet{Object: pr.Object, Relation: pr.Relation})
 	return nil
 }

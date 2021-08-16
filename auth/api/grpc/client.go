@@ -140,7 +140,7 @@ func (client grpcClient) Authorize(ctx context.Context, req *mainflux.AuthorizeR
 
 	res, err := client.authorize(ctx, authReq{Act: req.GetAct(), Obj: req.GetObj(), Sub: req.GetSub()})
 	if err != nil {
-		return &mainflux.AuthorizeRes{Authorized: false}, err
+		return &mainflux.AuthorizeRes{}, err
 	}
 
 	ar := res.(authorizeRes)
@@ -167,7 +167,7 @@ func (client grpcClient) AddPolicy(ctx context.Context, in *mainflux.AddPolicyRe
 
 	res, err := client.addPolicy(ctx, addPolicyReq{Act: in.GetAct(), Obj: in.GetObj(), Sub: in.GetSub()})
 	if err != nil {
-		return &mainflux.AddPolicyRes{Authorized: false}, err
+		return &mainflux.AddPolicyRes{}, err
 	}
 
 	apr := res.(addPolicyRes)
