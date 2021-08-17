@@ -116,7 +116,7 @@ type Channel struct {
 
 // SDK contains Mainflux API.
 type SDK interface {
-	// CreateUser registers mainflux user. It is only allowed to perform by admins.
+	// CreateUser registers mainflux user.
 	CreateUser(token string, user User) (string, error)
 
 	// User returns user object.

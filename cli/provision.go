@@ -19,8 +19,12 @@ import (
 
 var errMalformedCSV = errors.New("malformed CSV")
 
-const jsonExt = ".json"
-const csvExt = ".csv"
+const (
+	jsonExt = ".json"
+	csvExt  = ".csv"
+	// tmpToken is defined to avoid validation failure while user registration.
+	tmpToken = "token"
+)
 
 var cmdProvision = []cobra.Command{
 	cobra.Command{
@@ -124,7 +128,7 @@ var cmdProvision = []cobra.Command{
 				Email:    un,
 				Password: "12345678",
 			}
-			if _, err := sdk.CreateUser("t", user); err != nil {
+			if _, err := sdk.CreateUser(tmpToken, user); err != nil {
 				logError(err)
 				return
 			}
