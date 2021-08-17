@@ -190,6 +190,10 @@ func (svc usersService) checkAuthz(ctx context.Context, token string) error {
 	if err := svc.authorize(ctx, "*", "user", "create"); err == nil {
 		return nil
 	}
+	if token == "" {
+		return ErrUnauthorizedAccess
+	}
+
 	ir, err := svc.identify(ctx, token)
 	if err != nil {
 		return err

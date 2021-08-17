@@ -128,7 +128,7 @@ var cmdProvision = []cobra.Command{
 				Email:    un,
 				Password: "12345678",
 			}
-			if _, err := sdk.CreateUser(tmpToken, user); err != nil {
+			if _, err := sdk.CreateUser("", user); err != nil {
 				logError(err)
 				return
 			}

@@ -22,9 +22,6 @@ type createUserReq struct {
 }
 
 func (req createUserReq) validate() error {
-	if req.token == "" {
-		return users.ErrUnauthorizedAccess
-	}
 	return req.user.Validate()
 }
 
