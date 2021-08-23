@@ -17,9 +17,6 @@ github.com/cespare/xxhash/v2
 github.com/containerd/continuity/pathdriver
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/dgrijalva/jwt-go v3.2.0+incompatible
-## explicit
-github.com/dgrijalva/jwt-go
 # github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f
 github.com/dgryski/go-rendezvous
 # github.com/docker/docker v20.10.6+incompatible
@@ -82,6 +79,9 @@ github.com/gofrs/uuid
 # github.com/gogo/protobuf v1.3.2
 ## explicit
 github.com/gogo/protobuf/proto
+# github.com/golang-jwt/jwt/v4 v4.0.0
+## explicit
+github.com/golang-jwt/jwt/v4
 # github.com/golang/protobuf v1.4.3
 ## explicit
 github.com/golang/protobuf/proto
@@ -366,7 +366,7 @@ github.com/xdg-go/scram
 github.com/xdg-go/stringprep
 # github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d
 github.com/youmark/pkcs8
-# go.mongodb.org/mongo-driver v1.4.0-beta2.0.20210512200446-5f449ba049cc
+# go.mongodb.org/mongo-driver v1.7.1
 ## explicit
 go.mongodb.org/mongo-driver/bson
 go.mongodb.org/mongo-driver/bson/bsoncodec

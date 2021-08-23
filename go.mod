@@ -4,7 +4,6 @@ go 1.14
 
 require (
 	github.com/cenkalti/backoff/v4 v4.1.0
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/docker v20.10.6+incompatible
 	github.com/eclipse/paho.mqtt.golang v1.3.4
 	github.com/fatih/color v1.10.0
@@ -14,6 +13,7 @@ require (
 	github.com/gocql/gocql v0.0.0-20210504150947-558dfae50b5d
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/gogo/protobuf v1.3.2
+	github.com/golang-jwt/jwt/v4 v4.0.0
 	github.com/golang/protobuf v1.4.3
 	github.com/gopcua/opcua v0.1.6
 	github.com/hashicorp/vault/api v1.1.0
@@ -38,7 +38,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/subosito/gotenv v1.2.0
 	github.com/uber/jaeger-client-go v2.28.0+incompatible
-	go.mongodb.org/mongo-driver v1.4.0-beta2.0.20210512200446-5f449ba049cc
+	go.mongodb.org/mongo-driver v1.7.1
 	golang.org/x/crypto v0.0.0-20210314154223-e6e6c4f2bb5b
 	golang.org/x/net v0.0.0-20210510120150-4163338589ed
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
