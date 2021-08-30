@@ -170,7 +170,7 @@ func (svc usersService) Register(ctx context.Context, token string, user User) (
 	}
 	user.ID = uid
 
-	if err := svc.addPolicy(ctx, user.ID, usersObjKey, memberRelationKey); err != nil {
+	if err := svc.claimOwnership(ctx, user.ID, usersObjKey, memberRelationKey); err != nil {
 		return "", err
 	}
 
@@ -389,7 +389,7 @@ func (svc usersService) authorize(ctx context.Context, subject, object, relation
 	return nil
 }
 
-func (svc usersService) addPolicy(ctx context.Context, subject, object, relation string) error {
+func (svc usersService) claimOwnership(ctx context.Context, subject, object, relation string) error {
 	req := &mainflux.AddPolicyReq{
 		Sub: subject,
 		Obj: object,
