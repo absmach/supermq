@@ -52,7 +52,6 @@ func (repo *influxRepo) Consume(message interface{}) error {
 		repo.senmlPoints(m)
 	}
 
-	defer repo.writeAPI.Flush()
 	return nil
 }
 
@@ -80,7 +79,7 @@ func (repo *influxRepo) senmlPoints(messages interface{}) error {
 		pt := influxdata.NewPoint(measurement, tgs, flds, t)
 		repo.writeAPI.WritePoint(pt)
 	}
-
+	repo.writeAPI.Flush()
 	return nil
 }
 
