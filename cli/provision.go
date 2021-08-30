@@ -22,8 +22,6 @@ var errMalformedCSV = errors.New("malformed CSV")
 const (
 	jsonExt = ".json"
 	csvExt  = ".csv"
-	// tmpToken is defined to avoid validation failure while user registration.
-	tmpToken = "token"
 )
 
 var cmdProvision = []cobra.Command{

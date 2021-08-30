@@ -341,7 +341,8 @@ func TestMembers(t *testing.T) {
 		thID, err := uuid.New().ID()
 		assert.Nil(t, err, fmt.Sprintf("Generate thing id expected to succeed: %s", err))
 
-		_ = svc.AddPolicy(context.Background(), auth.PolicyReq{Subject: id, Object: thID, Relation: "owner"})
+		err = svc.AddPolicy(context.Background(), auth.PolicyReq{Subject: id, Object: thID, Relation: "owner"})
+		assert.Nil(t, err, fmt.Sprintf("Adding a policy expected to succeed: %s", err))
 
 		things = append(things, thID)
 	}
@@ -356,7 +357,8 @@ func TestMembers(t *testing.T) {
 
 	group, err = svc.CreateGroup(context.Background(), token, group)
 	assert.Nil(t, err, fmt.Sprintf("Creating group expected to succeed: %s", err))
-	_ = svc.AddPolicy(context.Background(), auth.PolicyReq{Subject: id, Object: group.ID, Relation: "groupadmin"})
+	err = svc.AddPolicy(context.Background(), auth.PolicyReq{Subject: id, Object: group.ID, Relation: "groupadmin"})
+	assert.Nil(t, err, fmt.Sprintf("Adding a policy expected to succeed: %s", err))
 
 	err = svc.Assign(context.Background(), token, group.ID, thingsType, things...)
 	assert.Nil(t, err, fmt.Sprintf("Assign members to  expected to succeed: %s", err))
