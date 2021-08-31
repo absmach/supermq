@@ -11,8 +11,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	acl "github.com/ory/keto/proto/ory/keto/acl/v1alpha1"
-
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
@@ -21,11 +19,13 @@ import (
 	grpcapi "github.com/mainflux/mainflux/auth/api/grpc"
 	httpapi "github.com/mainflux/mainflux/auth/api/http"
 	"github.com/mainflux/mainflux/auth/jwt"
+	"github.com/mainflux/mainflux/auth/keto"
 	"github.com/mainflux/mainflux/auth/postgres"
 	"github.com/mainflux/mainflux/auth/tracing"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/opentracing/opentracing-go"
+	acl "github.com/ory/keto/proto/ory/keto/acl/v1alpha1"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"
 	"google.golang.org/grpc"
@@ -213,12 +213,12 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, secret string, logger lo
 	groupsRepo := postgres.NewGroupRepo(database)
 	groupsRepo = tracing.GroupRepositoryMiddleware(tracer, groupsRepo)
 
-	keto := auth.NewPolicyAgent(reader, writer)
+	pa := keto.NewPolicyAgent(reader, writer)
 
 	idProvider := uuid.New()
 	t := jwt.New(secret)
 
-	svc := auth.New(keysRepo, groupsRepo, idProvider, t, keto)
+	svc := auth.New(keysRepo, groupsRepo, idProvider, t, pa)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,

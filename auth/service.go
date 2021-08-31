@@ -15,8 +15,6 @@ import (
 const (
 	loginDuration    = 10 * time.Hour
 	recoveryDuration = 5 * time.Minute
-
-	ketoNamespace = "members"
 )
 
 var (
