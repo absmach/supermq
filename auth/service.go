@@ -170,7 +170,6 @@ func (svc service) Identify(ctx context.Context, token string) (Identity, error)
 	}
 }
 
-// func (svc service) Authorize(ctx context.Context, subject, object, relation string) error {
 func (svc service) Authorize(ctx context.Context, pr PolicyReq) error {
 	return svc.agent.CheckPolicy(ctx, pr)
 }

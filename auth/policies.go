@@ -28,8 +28,8 @@ type Authz interface {
 	// denied).
 	Authorize(ctx context.Context, pr PolicyReq) error
 
-	// AddPolicy creates a policy for the given subject. So that, after
-	// AddPolicy, `subject`has a `relation` on `object`. Returns non-nil
+	// AddPolicy creates a policy for the given subject, so that, after
+	// AddPolicy, `subject` has a `relation` on `object`. Returns a non-nil
 	// error in case of failures.
 	AddPolicy(ctx context.Context, pr PolicyReq) error
 }
@@ -43,8 +43,8 @@ type PolicyAgent interface {
 	// the object (which simply means the operation is denied).
 	CheckPolicy(ctx context.Context, pr PolicyReq) error
 
-	// AddPolicy creates a policy for the given subject. So that, after
-	// AddPolicy, `subject` has a `relation` on `object`. Returns non-nil
+	// AddPolicy creates a policy for the given subject, so that, after
+	// AddPolicy, `subject` has a `relation` on `object`. Returns a non-nil
 	// error in case of failures.
 	AddPolicy(ctx context.Context, pr PolicyReq) error
 }
@@ -55,7 +55,7 @@ type policyAgent struct {
 }
 
 // NewPolicyAgent returns a gRPC communication functionalities
-// to communicate with the authorization services, e.g. ORY Keto.
+// to communicate with ORY Keto.
 func NewPolicyAgent(checker acl.CheckServiceClient, writer acl.WriteServiceClient) PolicyAgent {
 	return policyAgent{checker: checker, writer: writer}
 }
