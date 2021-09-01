@@ -38,6 +38,10 @@ func (svc *authServiceClient) Authorize(ctx context.Context, req *mainflux.Autho
 	panic("not implemented")
 }
 
+func (svc authServiceClient) AddPolicy(ctx context.Context, in *mainflux.AddPolicyReq, opts ...grpc.CallOption) (*mainflux.AddPolicyRes, error) {
+	panic("not implemented")
+}
+
 func (svc *authServiceClient) Members(ctx context.Context, req *mainflux.MembersReq, _ ...grpc.CallOption) (r *mainflux.MembersRes, err error) {
 	panic("not implemented")
 }

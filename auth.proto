@@ -18,6 +18,7 @@ service AuthService {
     rpc Issue(IssueReq) returns (Token) {}
     rpc Identify(Token) returns (UserIdentity) {}
     rpc Authorize(AuthorizeReq) returns (AuthorizeRes) {}
+    rpc AddPolicy(AddPolicyReq) returns (AddPolicyRes) {}
     rpc Assign(Assignment) returns(google.protobuf.Empty) {}
     rpc Members(MembersReq) returns (MembersRes) {}
 }
@@ -70,6 +71,16 @@ message AuthorizeReq {
 }
 
 message AuthorizeRes {
+    bool authorized = 1;
+}
+
+message AddPolicyReq {
+    string sub = 1;
+    string obj = 2;
+    string act = 3;
+}
+
+message AddPolicyRes {
     bool authorized = 1;
 }
 
