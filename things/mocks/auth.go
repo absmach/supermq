@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/users"
 	"google.golang.org/grpc"
 )
@@ -41,7 +42,16 @@ func (svc authServiceMock) Issue(ctx context.Context, in *mainflux.IssueReq, opt
 }
 
 func (svc authServiceMock) Authorize(ctx context.Context, req *mainflux.AuthorizeReq, _ ...grpc.CallOption) (r *mainflux.AuthorizeRes, err error) {
-	panic("not implemented")
+	if email, ok := svc.users["token"]; ok {
+		if email == req.GetSub() {
+			return &mainflux.AuthorizeRes{Authorized: true}, nil
+		}
+	}
+	return nil, things.ErrAuthorization
+}
+
+func (svc authServiceMock) AddPolicy(ctx context.Context, in *mainflux.AddPolicyReq, opts ...grpc.CallOption) (*mainflux.AddPolicyRes, error) {
+	return &mainflux.AddPolicyRes{Authorized: true}, nil
 }
 
 func (svc authServiceMock) Members(ctx context.Context, req *mainflux.MembersReq, _ ...grpc.CallOption) (r *mainflux.MembersRes, err error) {

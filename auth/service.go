@@ -21,6 +21,9 @@ var (
 	// ErrUnauthorizedAccess represents unauthorized access.
 	ErrUnauthorizedAccess = errors.New("unauthorized access")
 
+	// ErrAuthorization indicates failure occurred while authorizing the entity.
+	ErrAuthorization = errors.New("failed to perform authorization over the entity")
+
 	// ErrMalformedEntity indicates malformed entity specification (e.g.
 	// invalid owner or ID).
 	ErrMalformedEntity = errors.New("malformed entity specification")
@@ -78,14 +81,7 @@ type Authn interface {
 	Identify(ctx context.Context, token string) (Identity, error)
 }
 
-// Authz specifies an API for the authorization and will be implemented
-// by evaluation of policies.
-type Authz interface {
-	// Authorize checks access rights
-	Authorize(ctx context.Context, token, sub, obj, act string) (bool, error)
-}
-
-// Service specifies an API that must be fullfiled by the domain service
+// Service specifies an API that must be fulfilled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
 // Token is a string value of the actual Key and is used to authenticate
 // an Auth service request.
@@ -104,17 +100,19 @@ type service struct {
 	groups       GroupRepository
 	idProvider   mainflux.IDProvider
 	ulidProvider mainflux.IDProvider
+	agent        PolicyAgent
 	tokenizer    Tokenizer
 }
 
 // New instantiates the auth service implementation.
-func New(keys KeyRepository, groups GroupRepository, idp mainflux.IDProvider, tokenizer Tokenizer) Service {
+func New(keys KeyRepository, groups GroupRepository, idp mainflux.IDProvider, tokenizer Tokenizer, policyAgent PolicyAgent) Service {
 	return &service{
 		tokenizer:    tokenizer,
 		keys:         keys,
 		groups:       groups,
 		idProvider:   idp,
 		ulidProvider: ulid.New(),
+		agent:        policyAgent,
 	}
 }
 
@@ -170,8 +168,12 @@ func (svc service) Identify(ctx context.Context, token string) (Identity, error)
 	}
 }
 
-func (svc service) Authorize(ctx context.Context, token, sub, obj, act string) (bool, error) {
-	return true, nil
+func (svc service) Authorize(ctx context.Context, pr PolicyReq) error {
+	return svc.agent.CheckPolicy(ctx, pr)
+}
+
+func (svc service) AddPolicy(ctx context.Context, pr PolicyReq) error {
+	return svc.agent.AddPolicy(ctx, pr)
 }
 
 func (svc service) tmpKey(duration time.Duration, key Key) (Key, string, error) {

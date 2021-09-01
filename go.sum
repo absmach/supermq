@@ -959,6 +959,10 @@ github.com/ory/dockertest v3.3.0+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnh
 github.com/ory/dockertest/v3 v3.6.0/go.mod h1:4ZOpj8qBUmh8fcBSVzkH2bws2s91JdGvHUqan4GHEuQ=
 github.com/ory/dockertest/v3 v3.7.0 h1:Bijzonc69Ont3OU0a3TWKJ1Rzlh3TsDXP1JrTAkSmsM=
 github.com/ory/dockertest/v3 v3.7.0/go.mod h1:PvCCgnP7AfBZeVrzwiUTjZx/IUXlGLC1zQlUQrLIlUE=
+github.com/ory/keto v0.5.2 h1:xJ/k/vnYXLCiD1IdL7PdaonWnlG+0udQ8/61zKOeH7s=
+github.com/ory/keto/proto v0.0.0-20210713150328-f8af777f0b20 h1:z8OVqSG5tokGjsK1atdp1RU+IoMten11OfCDYi2WJU0=
+github.com/ory/keto/proto/ory/keto/acl/v1alpha1 v0.0.0-20210616104402-80e043246cf9 h1:gP86NkMkUlqMOTjFQ8lt8T1HbHtCJGGeeeh/6c+nla0=
+github.com/ory/keto/proto/ory/keto/acl/v1alpha1 v0.0.0-20210616104402-80e043246cf9/go.mod h1:8IoeBQqIRKWU5L6dTKQTlTwVhlUawpqSBJZWfLLN4FM=
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pascaldekloe/goe v0.1.0 h1:cBOtyMzM9HTpWjXfbbunk26uA6nG3a8n06Wieeh0MwY=

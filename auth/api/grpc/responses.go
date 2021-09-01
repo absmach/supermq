@@ -15,6 +15,11 @@ type issueRes struct {
 type authorizeRes struct {
 	authorized bool
 }
+
+type addPolicyRes struct {
+	authorized bool
+}
+
 type membersRes struct {
 	total     uint64
 	offset    uint64

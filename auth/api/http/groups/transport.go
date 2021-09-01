@@ -307,6 +307,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusNotFound)
 	case errors.Contains(err, auth.ErrConflict):
 		w.WriteHeader(http.StatusConflict)
+	case errors.Contains(err, auth.ErrAuthorization):
+		w.WriteHeader(http.StatusForbidden)
 	case errors.Contains(err, auth.ErrMemberAlreadyAssigned):
 		w.WriteHeader(http.StatusConflict)
 	case errors.Contains(err, io.EOF):
