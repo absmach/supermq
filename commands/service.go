@@ -22,6 +22,7 @@ var (
 type Service interface {
 	// Ping compares a given string with secret
 	Ping(string) (string, error)
+	Get(string) (string, error)
 }
 
 type commandsService struct {
@@ -38,6 +39,13 @@ func New(secret string) Service {
 }
 
 func (ks *commandsService) Ping(secret string) (string, error) {
+	if ks.secret != secret {
+		return "", ErrUnauthorizedAccess
+	}
+	return "Hello World :)", nil
+}
+
+func (ks *commandsService) Get(secret string) (string, error) {
 	if ks.secret != secret {
 		return "", ErrUnauthorizedAccess
 	}

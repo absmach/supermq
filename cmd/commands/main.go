@@ -1,9 +1,5 @@
-//
-// Copyright (c) 2019
-// Mainflux
-//
+// Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
-//
 
 package main
 
@@ -18,10 +14,10 @@ import (
 	"syscall"
 
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/commands"
 	"github.com/mainflux/mainflux/commands/api"
 	commandshttpapi "github.com/mainflux/mainflux/commands/api/commands/http"
+	"github.com/mainflux/mainflux/logger"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	opentracing "github.com/opentracing/opentracing-go"

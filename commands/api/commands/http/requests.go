@@ -20,3 +20,15 @@ func (req pingReq) validate() error {
 
 	return nil
 }
+
+type getReq struct {
+	Secret string `json:"secret"`
+}
+
+func (req getReq) validate() error {
+	if req.Secret == "" {
+		return commands.ErrMalformedEntity
+	}
+
+	return nil
+}

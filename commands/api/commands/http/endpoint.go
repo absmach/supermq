@@ -29,3 +29,23 @@ func pingEndpoint(svc commands.Service) endpoint.Endpoint {
 		return res, nil
 	}
 }
+
+func getEndpoint(svc commands.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(getReq)
+
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+
+		greeting, err := svc.Get(req.Secret)
+		if err != nil {
+			return nil, err
+		}
+
+		res := getRes{
+			Greeting: greeting,
+		}
+		return res, nil
+	}
+}
