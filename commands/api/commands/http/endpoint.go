@@ -10,40 +10,40 @@ import (
 	"github.com/mainflux/mainflux/commands"
 )
 
-func pingEndpoint(svc commands.Service) endpoint.Endpoint {
+func viewCommandsEndpoint(svc commands.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(pingReq)
+		req := request.(viewCommandsReq)
 
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
 
-		greeting, err := svc.Ping(req.Secret)
+		greeting, err := svc.ViewCommands(req.Secret)
 		if err != nil {
 			return nil, err
 		}
 
-		res := pingRes{
+		res := viewCommandsRes{
 			Greeting: greeting,
 		}
 		return res, nil
 	}
 }
 
-func getEndpoint(svc commands.Service) endpoint.Endpoint {
+func listCommandsEndpoint(svc commands.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(getReq)
+		req := request.(listCommandsReq)
 
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
 
-		greeting, err := svc.Get(req.Secret)
+		greeting, err := svc.ListCommands(req.Secret)
 		if err != nil {
 			return nil, err
 		}
 
-		res := getRes{
+		res := listCommandsRes{
 			Greeting: greeting,
 		}
 		return res, nil

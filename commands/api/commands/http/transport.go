@@ -38,16 +38,16 @@ func MakeHandler(tracer opentracing.Tracer, svc commands.Service) http.Handler {
 
 	r := bone.New()
 
-	r.Post("/commands", kithttp.NewServer(
-		kitot.TraceServer(tracer, "ping")(pingEndpoint(svc)),
-		decodePing,
+	r.Get("/commands", kithttp.NewServer(
+		kitot.TraceServer(tracer, "viewCommands")(viewCommandsEndpoint(svc)),
+		decodeViewCommands,
 		encodeResponse,
 		opts...,
 	))
 
-	r.Get("/commands", kithttp.NewServer(
-		kitot.TraceServer(tracer, "get")(getEndpoint(svc)),
-		decodeGet,
+	r.Get("/commands/:id", kithttp.NewServer(
+		kitot.TraceServer(tracer, "listCommands")(listCommandsEndpoint(svc)),
+		decodeListCommands,
 		encodeResponse,
 		opts...,
 	))
@@ -58,12 +58,12 @@ func MakeHandler(tracer opentracing.Tracer, svc commands.Service) http.Handler {
 	return r
 }
 
-func decodePing(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeViewCommands(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, errUnsupportedContentType
 	}
 
-	req := pingReq{}
+	req := viewCommandsReq{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}
@@ -71,12 +71,12 @@ func decodePing(_ context.Context, r *http.Request) (interface{}, error) {
 	return req, nil
 }
 
-func decodeGet(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeListCommands(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, errUnsupportedContentType
 	}
 
-	req := getReq{}
+	req := listCommandsReq{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}

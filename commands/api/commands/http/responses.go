@@ -9,37 +9,37 @@ import (
 	"github.com/mainflux/mainflux"
 )
 
-var _ mainflux.Response = (*pingRes)(nil)
-var _ mainflux.Response = (*getRes)(nil)
+var _ mainflux.Response = (*viewCommandsRes)(nil)
+var _ mainflux.Response = (*listCommandsRes)(nil)
 
-type pingRes struct {
+type viewCommandsRes struct {
 	Greeting string `json:"greeting"`
 }
 
-func (res pingRes) Code() int {
+func (res viewCommandsRes) Code() int {
 	return http.StatusOK
 }
 
-func (res pingRes) Headers() map[string]string {
+func (res viewCommandsRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res pingRes) Empty() bool {
+func (res viewCommandsRes) Empty() bool {
 	return false
 }
 
-type getRes struct {
+type listCommandsRes struct {
 	Greeting string `json:"greeting"`
 }
 
-func (res getRes) Code() int {
+func (res listCommandsRes) Code() int {
 	return http.StatusOK
 }
 
-func (res getRes) Headers() map[string]string {
+func (res listCommandsRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res getRes) Empty() bool {
+func (res listCommandsRes) Empty() bool {
 	return false
 }

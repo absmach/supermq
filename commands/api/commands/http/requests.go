@@ -9,11 +9,11 @@ type apiReq interface {
 	validate() error
 }
 
-type pingReq struct {
+type viewCommandsReq struct {
 	Secret string `json:"secret"`
 }
 
-func (req pingReq) validate() error {
+func (req viewCommandsReq) validate() error {
 	if req.Secret == "" {
 		return commands.ErrMalformedEntity
 	}
@@ -21,11 +21,11 @@ func (req pingReq) validate() error {
 	return nil
 }
 
-type getReq struct {
+type listCommandsReq struct {
 	Secret string `json:"secret"`
 }
 
-func (req getReq) validate() error {
+func (req listCommandsReq) validate() error {
 	if req.Secret == "" {
 		return commands.ErrMalformedEntity
 	}

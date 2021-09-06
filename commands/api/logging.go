@@ -25,9 +25,9 @@ func LoggingMiddleware(svc commands.Service, logger log.Logger) commands.Service
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) Ping(secret string) (response string, err error) {
+func (lm *loggingMiddleware) ViewCommands(secret string) (response string, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method ping for secret %s took %s to complete", secret, time.Since(begin))
+		message := fmt.Sprintf("Method ViewCommands for secret %s took %s to complete", secret, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -35,12 +35,12 @@ func (lm *loggingMiddleware) Ping(secret string) (response string, err error) {
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.Ping(secret)
+	return lm.svc.ViewCommands(secret)
 }
 
-func (lm *loggingMiddleware) Get(secret string) (response string, err error) {
+func (lm *loggingMiddleware) ListCommands(secret string) (response string, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method get for secret %s took %s to complete", secret, time.Since(begin))
+		message := fmt.Sprintf("Method ListCommands for secret %s took %s to complete", secret, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -48,5 +48,5 @@ func (lm *loggingMiddleware) Get(secret string) (response string, err error) {
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.Get(secret)
+	return lm.svc.ListCommands(secret)
 }
