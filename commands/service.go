@@ -21,8 +21,11 @@ var (
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
 	// ViewCommands compares a given string with secret
+	CreateCommands(string) (string, error)
 	ViewCommands(string) (string, error)
 	ListCommands(string) (string, error)
+	UpdateCommands(string) (string, error)
+	RemoveCommands(string) (string, error)
 }
 
 type commandsService struct {
@@ -37,6 +40,12 @@ func New(secret string) Service {
 		secret: secret,
 	}
 }
+func (ks *commandsService) CreateCommands(secret string) (string, error) {
+	if ks.secret != secret {
+		return "", ErrUnauthorizedAccess
+	}
+	return "Hello World :)", nil
+}
 
 func (ks *commandsService) ViewCommands(secret string) (string, error) {
 	if ks.secret != secret {
@@ -46,6 +55,20 @@ func (ks *commandsService) ViewCommands(secret string) (string, error) {
 }
 
 func (ks *commandsService) ListCommands(secret string) (string, error) {
+	if ks.secret != secret {
+		return "", ErrUnauthorizedAccess
+	}
+	return "Hello World :)", nil
+}
+
+func (ks *commandsService) UpdateCommands(secret string) (string, error) {
+	if ks.secret != secret {
+		return "", ErrUnauthorizedAccess
+	}
+	return "Hello World :)", nil
+}
+
+func (ks *commandsService) RemoveCommands(secret string) (string, error) {
 	if ks.secret != secret {
 		return "", ErrUnauthorizedAccess
 	}

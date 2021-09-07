@@ -25,6 +25,19 @@ func LoggingMiddleware(svc commands.Service, logger log.Logger) commands.Service
 	return &loggingMiddleware{logger, svc}
 }
 
+func (lm *loggingMiddleware) CreateCommands(secret string) (response string, err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method CreateCommands for secret %s took %s to complete", secret, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+
+	return lm.svc.ViewCommands(secret)
+}
+
 func (lm *loggingMiddleware) ViewCommands(secret string) (response string, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method ViewCommands for secret %s took %s to complete", secret, time.Since(begin))
@@ -49,4 +62,30 @@ func (lm *loggingMiddleware) ListCommands(secret string) (response string, err e
 	}(time.Now())
 
 	return lm.svc.ListCommands(secret)
+}
+
+func (lm *loggingMiddleware) UpdateCommands(secret string) (response string, err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method UpdateCommands for secret %s took %s to complete", secret, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+
+	return lm.svc.UpdateCommands(secret)
+}
+
+func (lm *loggingMiddleware) RemoveCommands(secret string) (response string, err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method RemoveCommands for secret %s took %s to complete", secret, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+
+	return lm.svc.RemoveCommands(secret)
 }

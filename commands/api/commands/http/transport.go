@@ -38,6 +38,13 @@ func MakeHandler(tracer opentracing.Tracer, svc commands.Service) http.Handler {
 
 	r := bone.New()
 
+	r.Post("/commands", kithttp.NewServer(
+		kitot.TraceServer(tracer, "createCommands")(createCommandsEndpoint(svc)),
+		decodeCreateCommands,
+		encodeResponse,
+		opts...,
+	))
+
 	r.Get("/commands", kithttp.NewServer(
 		kitot.TraceServer(tracer, "viewCommands")(viewCommandsEndpoint(svc)),
 		decodeViewCommands,
@@ -52,10 +59,37 @@ func MakeHandler(tracer opentracing.Tracer, svc commands.Service) http.Handler {
 		opts...,
 	))
 
+	r.Put("/commands/:id", kithttp.NewServer(
+		kitot.TraceServer(tracer, "updateCommands")(updateCommandsEndpoint(svc)),
+		decodeUpdateCommands,
+		encodeResponse,
+		opts...,
+	))
+
+	r.Delete("/commands/:id", kithttp.NewServer(
+		kitot.TraceServer(tracer, "updateCommands")(updateCommandsEndpoint(svc)),
+		decodeUpdateCommands,
+		encodeResponse,
+		opts...,
+	))
+
 	r.GetFunc("/version", mainflux.Version("things"))
 	r.Handle("/metrics", promhttp.Handler())
 
 	return r
+}
+
+func decodeCreateCommands(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
+		return nil, errUnsupportedContentType
+	}
+
+	req := createCommandsReq{}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, err
+	}
+
+	return req, nil
 }
 
 func decodeViewCommands(_ context.Context, r *http.Request) (interface{}, error) {
@@ -77,6 +111,32 @@ func decodeListCommands(_ context.Context, r *http.Request) (interface{}, error)
 	}
 
 	req := listCommandsReq{}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+func decodeUpdateCommands(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
+		return nil, errUnsupportedContentType
+	}
+
+	req := updateCommandsReq{}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+func decodeRemoveCommands(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
+		return nil, errUnsupportedContentType
+	}
+
+	req := removeCommandsReq{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}

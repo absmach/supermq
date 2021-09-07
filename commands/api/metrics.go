@@ -30,6 +30,15 @@ func MetricsMiddleware(svc commands.Service, counter metrics.Counter, latency me
 	}
 }
 
+func (ms *metricsMiddleware) CreateCommands(secret string) (response string, err error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "createCommands").Add(1)
+		ms.latency.With("method", "createCommands").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.ViewCommands(secret)
+}
+
 func (ms *metricsMiddleware) ViewCommands(secret string) (response string, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "viewCommands").Add(1)
@@ -46,4 +55,22 @@ func (ms *metricsMiddleware) ListCommands(secret string) (response string, err e
 	}(time.Now())
 
 	return ms.svc.ListCommands(secret)
+}
+
+func (ms *metricsMiddleware) UpdateCommands(secret string) (response string, err error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "updateCommands").Add(1)
+		ms.latency.With("method", "updateCommands").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.UpdateCommands(secret)
+}
+
+func (ms *metricsMiddleware) RemoveCommands(secret string) (response string, err error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "removeCommands").Add(1)
+		ms.latency.With("method", "removeCommands").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.RemoveCommands(secret)
 }
