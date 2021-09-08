@@ -10,9 +10,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	influxdata "github.com/influxdata/influxdb-client-go/v2"
 	writer "github.com/mainflux/mainflux/consumers/writers/influxdb"
 	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -136,104 +139,106 @@ func TestSaveSenml(t *testing.T) {
 }
 
 // TODO: Bring back json support
-// func TestSaveJSON(t *testing.T) {
-// 	repo := writer.New(client, testOrg, testBucket, testMainfluxToken)
+func TestSaveJSON(t *testing.T) {
+	repo := writer.New(client, testOrg, testBucket, testMainfluxToken, testMainfluxUrl)
 
-// 	chid, err := uuid.NewV4()
-// 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-// 	pubid, err := uuid.NewV4()
-// 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	chid, err := uuid.NewV4()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	pubid, err := uuid.NewV4()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-// 	msg := json.Message{
-// 		Channel:   chid.String(),
-// 		Publisher: pubid.String(),
-// 		Created:   time.Now().Unix(),
-// 		Subtopic:  "subtopic/format/some_json",
-// 		Protocol:  "mqtt",
-// 		Payload: map[string]interface{}{
-// 			"field_1": 123,
-// 			"field_2": "value",
-// 			"field_3": false,
-// 			"field_4": 12.344,
-// 			"field_5": map[string]interface{}{
-// 				"field_1": "value",
-// 				"field_2": 42,
-// 			},
-// 		},
-// 	}
+	msg := json.Message{
+		Channel:   chid.String(),
+		Publisher: pubid.String(),
+		Created:   time.Now().UnixNano(),
+		Subtopic:  "subtopic/format/some_json",
+		Protocol:  "mqtt",
+		Payload: map[string]interface{}{
+			// "field_1": 123,
+			// "field_2": "value",
+			// "field_3": false,
+			"field_4": 12.344,
+			// "field_5": map[string]interface{}{
+			// 	// "field_1": "value",
+			// 	"field_2": 42,
+			// },
+			"deviceName":  "device-123",
+			"measurement": "lighting",
+		},
+	}
 
-// 	invalidKeySepMsg := msg
-// 	invalidKeySepMsg.Payload = map[string]interface{}{
-// 		"field_1": 123,
-// 		"field_2": "value",
-// 		"field_3": false,
-// 		"field_4": 12.344,
-// 		"field_5": map[string]interface{}{
-// 			"field_1": "value",
-// 			"field_2": 42,
-// 		},
-// 		"field_6/field_7": "value",
-// 	}
-// 	invalidKeyNameMsg := msg
-// 	invalidKeyNameMsg.Payload = map[string]interface{}{
-// 		"field_1": 123,
-// 		"field_2": "value",
-// 		"field_3": false,
-// 		"field_4": 12.344,
-// 		"field_5": map[string]interface{}{
-// 			"field_1": "value",
-// 			"field_2": 42,
-// 		},
-// 		"publisher": "value",
-// 	}
+	invalidKeySepMsg := msg
+	invalidKeySepMsg.Payload = map[string]interface{}{
+		"field_1": 123,
+		"field_2": "value",
+		"field_3": false,
+		"field_4": 12.344,
+		"field_5": map[string]interface{}{
+			"field_1": "value",
+			"field_2": 42,
+		},
+		"field_6/field_7": "value",
+	}
+	invalidKeyNameMsg := msg
+	invalidKeyNameMsg.Payload = map[string]interface{}{
+		"field_1": 123,
+		"field_2": "value",
+		"field_3": false,
+		"field_4": 12.344,
+		"field_5": map[string]interface{}{
+			"field_1": "value",
+			"field_2": 42,
+		},
+		"publisher": "value",
+	}
 
-// 	now := time.Now().Unix()
-// 	msgs := json.Messages{
-// 		Format: "some_json",
-// 	}
-// 	invalidKeySepMsgs := json.Messages{
-// 		Format: "some_json",
-// 	}
-// 	invalidKeyNameMsgs := json.Messages{
-// 		Format: "some_json",
-// 	}
+	now := time.Now().UnixNano()
+	msgs := json.Messages{
+		Format: "some_json",
+	}
+	// invalidKeySepMsgs := json.Messages{
+	// 	Format: "some_json",
+	// }
+	// invalidKeyNameMsgs := json.Messages{
+	// 	Format: "some_json",
+	// }
 
-// 	for i := 0; i < streamsSize; i++ {
-// 		msg.Created = now + int64(i)
-// 		msgs.Data = append(msgs.Data, msg)
-// 		invalidKeySepMsgs.Data = append(invalidKeySepMsgs.Data, invalidKeySepMsg)
-// 		invalidKeyNameMsgs.Data = append(invalidKeyNameMsgs.Data, invalidKeyNameMsg)
-// 	}
+	for i := 0; i < streamsSize; i++ {
+		msg.Created = now + int64(i)
+		msgs.Data = append(msgs.Data, msg)
+		// invalidKeySepMsgs.Data = append(invalidKeySepMsgs.Data, invalidKeySepMsg)
+		// invalidKeyNameMsgs.Data = append(invalidKeyNameMsgs.Data, invalidKeyNameMsg)
+	}
 
-// 	cases := []struct {
-// 		desc string
-// 		msgs json.Messages
-// 		err  error
-// 	}{
-// 		{
-// 			desc: "consume valid json messages",
-// 			msgs: msgs,
-// 			err:  nil,
-// 		},
-// 		{
-// 			desc: "consume invalid json messages containing invalid key separator",
-// 			msgs: invalidKeySepMsgs,
-// 			err:  json.ErrInvalidKey,
-// 		},
-// 		{
-// 			desc: "consume invalid json messages containing invalid key name",
-// 			msgs: invalidKeySepMsgs,
-// 			err:  json.ErrInvalidKey,
-// 		},
-// 	}
-// 	for _, tc := range cases {
-// 		err = repo.Consume(tc.msgs)
-// 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s, got %s", tc.desc, tc.err, err))
+	cases := []struct {
+		desc string
+		msgs json.Messages
+		err  error
+	}{
+		{
+			desc: "consume valid json messages",
+			msgs: msgs,
+			err:  nil,
+		},
+		// {
+		// 	desc: "consume invalid json messages containing invalid key separator",
+		// 	msgs: invalidKeySepMsgs,
+		// 	err:  json.ErrInvalidKey,
+		// },
+		// {
+		// 	desc: "consume invalid json messages containing invalid key name",
+		// 	msgs: invalidKeySepMsgs,
+		// 	err:  json.ErrInvalidKey,
+		// },
+	}
+	for _, tc := range cases {
+		err = repo.Consume(tc.msgs)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s expected %s, got %s", tc.desc, tc.err, err))
 
-// 		row, err := queryDB(selectMsgs)
-// 		assert.Nil(t, err, fmt.Sprintf("Querying InfluxDB to retrieve data expected to succeed: %s.\n", err))
+		row, err := queryDB(selectMsgs)
+		assert.Nil(t, err, fmt.Sprintf("Querying InfluxDB to retrieve data expected to succeed: %s.\n", err))
 
-// 		count := len(row)
-// 		assert.Equal(t, streamsSize, count, fmt.Sprintf("Expected to have %d messages saved, found %d instead.\n", streamsSize, count))
-// 	}
-// }
+		count := len(row)
+		assert.Equal(t, streamsSize, count, fmt.Sprintf("Expected to have %d messages saved, found %d instead.\n", streamsSize, count))
+	}
+}

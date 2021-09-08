@@ -4,6 +4,7 @@
 package influxdb
 
 import (
+	"fmt"
 	"math"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/influxdata/influxdb-client-go/v2/api"
 	"github.com/mainflux/mainflux/consumers"
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 )
 
@@ -46,8 +48,8 @@ func New(client influxdata.Client, org, bucket, mainfluxApiToken, mainfluxUrl st
 func (repo *influxRepo) Consume(message interface{}) error {
 	switch m := message.(type) {
 	// TODO: Bring back json support
-	// case json.Messages:
-	// 	pts, err := repo.jsonPoints(pts, m)
+	case json.Messages:
+		repo.jsonPoints(m)
 	default:
 		repo.senmlPoints(m)
 	}
@@ -68,7 +70,9 @@ func (repo *influxRepo) senmlPoints(messages interface{}) error {
 			deviceName = msg.Name
 			measurement = msg.Name
 		}
-		meta, err := repo.thingsService.GetThingMetaById(msg.Publisher)
+		// if there eorr of getting meta, ignore it
+		// still save it to influx db
+		meta, _ := repo.thingsService.GetThingMetaById(msg.Publisher)
 
 		tgs := senmlTags(msg, deviceName, meta)
 
@@ -84,29 +88,51 @@ func (repo *influxRepo) senmlPoints(messages interface{}) error {
 }
 
 // TODO: Bring back json support
-// func (repo *influxRepo) jsonPoints(pts influxdata.BatchPoints, msgs json.Messages) (influxdata.BatchPoints, error) {
-// 	for i, m := range msgs.Data {
-// 		t := time.Unix(0, m.Created+int64(i))
+func (repo *influxRepo) jsonPoints(msgs json.Messages) error {
+	for i, m := range msgs.Data {
 
-// 		flat, err := json.Flatten(m.Payload)
-// 		if err != nil {
-// 			return nil, errors.Wrap(json.ErrTransform, err)
-// 		}
-// 		m.Payload = flat
+		flat, err := json.Flatten(m.Payload)
+		if err != nil {
+			return errors.Wrap(json.ErrTransform, err)
+		}
 
-// 		// Copy first-level fields so that the original Payload is unchanged.
-// 		fields := make(map[string]interface{})
-// 		for k, v := range m.Payload {
-// 			fields[k] = v
-// 		}
-// 		// At least one known field need to exist so that COUNT can be performed.
-// 		fields["protocol"] = m.Protocol
-// 		pt, err := influxdata.NewPoint(msgs.Format, jsonTags(m), fields, t)
-// 		if err != nil {
-// 			return nil, errors.Wrap(errSaveMessage, err)
-// 		}
-// 		pts.AddPoint(pt)
-// 	}
+		// if there eorr of getting meta, ignore it
+		// still save it to influx db
+		meta, _ := repo.thingsService.GetThingMetaById(m.Publisher)
 
-// return pts, nil
-// }
+		m.Payload = flat
+		measurement := ""
+		deviceName := ""
+		// Copy first-level fields so that the original Payload is unchanged.
+		fields := make(map[string]interface{})
+		for k, v := range m.Payload {
+			if k == "deviceName" {
+				deviceName = v.(string)
+			} else if k == "measurement" {
+				measurement = v.(string)
+			} else {
+				fields["value"] = v
+			}
+
+		}
+
+		if measurement == "" {
+			// if no measurement, ignore the message.
+			// TODO add a log message here.
+			continue
+		}
+
+		t := time.Unix(0, m.Created+int64(i))
+		// sec, dec := math.Modf(float64(m.Created + int64(i)))
+		// t := time.Unix(m.Created, 0)
+
+		fmt.Print(t.UnixNano())
+
+		tgs := jsonTags(m, deviceName, meta)
+		pt := influxdata.NewPoint(measurement, tgs, fields, t)
+		repo.writeAPI.WritePoint(pt)
+	}
+
+	repo.writeAPI.Flush()
+	return nil
+}
