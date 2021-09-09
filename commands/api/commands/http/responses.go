@@ -9,87 +9,90 @@ import (
 	"github.com/mainflux/mainflux"
 )
 
-var _ mainflux.Response = (*createCommandsRes)(nil)
-var _ mainflux.Response = (*viewCommandsRes)(nil)
-var _ mainflux.Response = (*listCommandsRes)(nil)
-var _ mainflux.Response = (*updateCommandsRes)(nil)
+var _ mainflux.Response = (*createCommandRes)(nil)
+var _ mainflux.Response = (*viewCommandRes)(nil)
+var _ mainflux.Response = (*listCommandRes)(nil)
+var _ mainflux.Response = (*updateCommandRes)(nil)
+var _ mainflux.Response = (*removeCommandRes)(nil)
 
-type createCommandsRes struct {
-	Greeting string `json:"greeting"`
+type createCommandRes struct {
+	command string `json:"greeting"`
+	channel string
+	// time    Time
 }
 
-func (res createCommandsRes) Code() int {
+func (res createCommandRes) Code() int {
 	return http.StatusOK
 }
 
-func (res createCommandsRes) Headers() map[string]string {
+func (res createCommandRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res createCommandsRes) Empty() bool {
+func (res createCommandRes) Empty() bool {
 	return false
 }
 
-type viewCommandsRes struct {
+type viewCommandRes struct {
 	Greeting string `json:"greeting"`
 }
 
-func (res viewCommandsRes) Code() int {
+func (res viewCommandRes) Code() int {
 	return http.StatusOK
 }
 
-func (res viewCommandsRes) Headers() map[string]string {
+func (res viewCommandRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res viewCommandsRes) Empty() bool {
+func (res viewCommandRes) Empty() bool {
 	return false
 }
 
-type listCommandsRes struct {
+type listCommandRes struct {
 	Greeting string `json:"greeting"`
 }
 
-func (res listCommandsRes) Code() int {
+func (res listCommandRes) Code() int {
 	return http.StatusOK
 }
 
-func (res listCommandsRes) Headers() map[string]string {
+func (res listCommandRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res listCommandsRes) Empty() bool {
+func (res listCommandRes) Empty() bool {
 	return false
 }
 
-type updateCommandsRes struct {
+type updateCommandRes struct {
 	Greeting string `json:"greeting"`
 }
 
-func (res updateCommandsRes) Code() int {
+func (res updateCommandRes) Code() int {
 	return http.StatusOK
 }
 
-func (res updateCommandsRes) Headers() map[string]string {
+func (res updateCommandRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res updateCommandsRes) Empty() bool {
+func (res updateCommandRes) Empty() bool {
 	return false
 }
 
-type removeCommandsRes struct {
+type removeCommandRes struct {
 	Greeting string `json:"greeting"`
 }
 
-func (res removeCommandsRes) Code() int {
+func (res removeCommandRes) Code() int {
 	return http.StatusOK
 }
 
-func (res removeCommandsRes) Headers() map[string]string {
+func (res removeCommandRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res removeCommandsRes) Empty() bool {
+func (res removeCommandRes) Empty() bool {
 	return false
 }

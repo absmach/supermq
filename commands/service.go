@@ -21,11 +21,11 @@ var (
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
 	// ViewCommands compares a given string with secret
-	CreateCommands(string) (string, error)
-	ViewCommands(string) (string, error)
-	ListCommands(string) (string, error)
-	UpdateCommands(string) (string, error)
-	RemoveCommands(string) (string, error)
+	CreateCommand(string) (string, error)
+	ViewCommand(string) (string, error)
+	ListCommand(string) (string, error)
+	UpdateCommand(string) (string, error)
+	RemoveCommand(string) (string, error)
 }
 
 type commandsService struct {
@@ -40,35 +40,35 @@ func New(secret string) Service {
 		secret: secret,
 	}
 }
-func (ks *commandsService) CreateCommands(secret string) (string, error) {
+func (ks *commandsService) CreateCommand(command string) (string, error) {
+	if ks.secret != command {
+		return "", ErrUnauthorizedAccess
+	}
+	return "Hello World :)", nil
+}
+
+func (ks *commandsService) ViewCommand(secret string) (string, error) {
 	if ks.secret != secret {
 		return "", ErrUnauthorizedAccess
 	}
 	return "Hello World :)", nil
 }
 
-func (ks *commandsService) ViewCommands(secret string) (string, error) {
+func (ks *commandsService) ListCommand(secret string) (string, error) {
 	if ks.secret != secret {
 		return "", ErrUnauthorizedAccess
 	}
 	return "Hello World :)", nil
 }
 
-func (ks *commandsService) ListCommands(secret string) (string, error) {
+func (ks *commandsService) UpdateCommand(secret string) (string, error) {
 	if ks.secret != secret {
 		return "", ErrUnauthorizedAccess
 	}
 	return "Hello World :)", nil
 }
 
-func (ks *commandsService) UpdateCommands(secret string) (string, error) {
-	if ks.secret != secret {
-		return "", ErrUnauthorizedAccess
-	}
-	return "Hello World :)", nil
-}
-
-func (ks *commandsService) RemoveCommands(secret string) (string, error) {
+func (ks *commandsService) RemoveCommand(secret string) (string, error) {
 	if ks.secret != secret {
 		return "", ErrUnauthorizedAccess
 	}

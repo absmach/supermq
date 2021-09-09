@@ -3,17 +3,35 @@
 
 package http
 
-import "github.com/mainflux/mainflux/commands"
+import (
+	"time"
+
+	"github.com/mainflux/mainflux/commands"
+)
 
 type apiReq interface {
 	validate() error
 }
 
-type createCommandsReq struct {
+type createCommandReq struct {
+	command   string    `josn:"secret"`
+	channel   string    `json: “<chan_id>”`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+func (req createCommandReq) validate() error {
+	if req.command == "" {
+		return commands.ErrMalformedEntity
+	}
+
+	return nil
+}
+
+type viewCommandReq struct {
 	Secret string `json:"secret"`
 }
 
-func (req createCommandsReq) validate() error {
+func (req viewCommandReq) validate() error {
 	if req.Secret == "" {
 		return commands.ErrMalformedEntity
 	}
@@ -21,11 +39,11 @@ func (req createCommandsReq) validate() error {
 	return nil
 }
 
-type viewCommandsReq struct {
+type listCommandReq struct {
 	Secret string `json:"secret"`
 }
 
-func (req viewCommandsReq) validate() error {
+func (req listCommandReq) validate() error {
 	if req.Secret == "" {
 		return commands.ErrMalformedEntity
 	}
@@ -33,11 +51,11 @@ func (req viewCommandsReq) validate() error {
 	return nil
 }
 
-type listCommandsReq struct {
+type updateCommandReq struct {
 	Secret string `json:"secret"`
 }
 
-func (req listCommandsReq) validate() error {
+func (req updateCommandReq) validate() error {
 	if req.Secret == "" {
 		return commands.ErrMalformedEntity
 	}
@@ -45,23 +63,11 @@ func (req listCommandsReq) validate() error {
 	return nil
 }
 
-type updateCommandsReq struct {
+type removeCommandReq struct {
 	Secret string `json:"secret"`
 }
 
-func (req updateCommandsReq) validate() error {
-	if req.Secret == "" {
-		return commands.ErrMalformedEntity
-	}
-
-	return nil
-}
-
-type removeCommandsReq struct {
-	Secret string `json:"secret"`
-}
-
-func (req removeCommandsReq) validate() error {
+func (req removeCommandReq) validate() error {
 	if req.Secret == "" {
 		return commands.ErrMalformedEntity
 	}

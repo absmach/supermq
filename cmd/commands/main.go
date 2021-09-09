@@ -27,7 +27,7 @@ import (
 
 const (
 	defLogLevel   = "error"
-	defHTTPPort   = "9021"
+	defHTTPPort   = "8191"
 	defJaegerURL  = ""
 	defServerCert = ""
 	defServerKey  = ""

@@ -10,100 +10,100 @@ import (
 	"github.com/mainflux/mainflux/commands"
 )
 
-func createCommandsEndpoint(svc commands.Service) endpoint.Endpoint {
+func createCommandEndpoint(svc commands.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(createCommandsReq)
+		req := request.(createCommandReq)
 
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
 
-		greeting, err := svc.CreateCommands(req.Secret)
+		command, err := svc.CreateCommand(req.command)
 		if err != nil {
 			return nil, err
 		}
 
-		res := createCommandsRes{
+		res := createCommandRes{
+			command: command,
+		}
+		return res, nil
+	}
+}
+
+func viewCommandEndpoint(svc commands.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(viewCommandReq)
+
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+
+		greeting, err := svc.ViewCommand(req.Secret)
+		if err != nil {
+			return nil, err
+		}
+
+		res := viewCommandRes{
 			Greeting: greeting,
 		}
 		return res, nil
 	}
 }
 
-func viewCommandsEndpoint(svc commands.Service) endpoint.Endpoint {
+func listCommandEndpoint(svc commands.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(viewCommandsReq)
+		req := request.(listCommandReq)
 
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
 
-		greeting, err := svc.ViewCommands(req.Secret)
+		greeting, err := svc.ListCommand(req.Secret)
 		if err != nil {
 			return nil, err
 		}
 
-		res := viewCommandsRes{
+		res := listCommandRes{
 			Greeting: greeting,
 		}
 		return res, nil
 	}
 }
 
-func listCommandsEndpoint(svc commands.Service) endpoint.Endpoint {
+func updateCommandEndpoint(svc commands.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(listCommandsReq)
+		req := request.(updateCommandReq)
 
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
 
-		greeting, err := svc.ListCommands(req.Secret)
+		greeting, err := svc.UpdateCommand(req.Secret)
 		if err != nil {
 			return nil, err
 		}
 
-		res := listCommandsRes{
+		res := updateCommandRes{
 			Greeting: greeting,
 		}
 		return res, nil
 	}
 }
 
-func updateCommandsEndpoint(svc commands.Service) endpoint.Endpoint {
+func removeCommandEndpoint(svc commands.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(updateCommandsReq)
+		req := request.(removeCommandReq)
 
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
 
-		greeting, err := svc.UpdateCommands(req.Secret)
+		greeting, err := svc.RemoveCommand(req.Secret)
 		if err != nil {
 			return nil, err
 		}
 
-		res := updateCommandsRes{
-			Greeting: greeting,
-		}
-		return res, nil
-	}
-}
-
-func removeCommandsEndpoint(svc commands.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(removeCommandsReq)
-
-		if err := req.validate(); err != nil {
-			return nil, err
-		}
-
-		greeting, err := svc.RemoveCommands(req.Secret)
-		if err != nil {
-			return nil, err
-		}
-
-		res := removeCommandsRes{
+		res := removeCommandRes{
 			Greeting: greeting,
 		}
 		return res, nil

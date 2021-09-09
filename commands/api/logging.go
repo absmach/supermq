@@ -25,9 +25,9 @@ func LoggingMiddleware(svc commands.Service, logger log.Logger) commands.Service
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) CreateCommands(secret string) (response string, err error) {
+func (lm *loggingMiddleware) CreateCommand(secret string) (response string, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method CreateCommands for secret %s took %s to complete", secret, time.Since(begin))
+		message := fmt.Sprintf("Method create_command for secret %s took %s to complete", secret, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -35,12 +35,12 @@ func (lm *loggingMiddleware) CreateCommands(secret string) (response string, err
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.ViewCommands(secret)
+	return lm.svc.CreateCommand(secret)
 }
 
-func (lm *loggingMiddleware) ViewCommands(secret string) (response string, err error) {
+func (lm *loggingMiddleware) ViewCommand(secret string) (response string, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method ViewCommands for secret %s took %s to complete", secret, time.Since(begin))
+		message := fmt.Sprintf("Method ViewCommand for secret %s took %s to complete", secret, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -48,12 +48,12 @@ func (lm *loggingMiddleware) ViewCommands(secret string) (response string, err e
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.ViewCommands(secret)
+	return lm.svc.ViewCommand(secret)
 }
 
-func (lm *loggingMiddleware) ListCommands(secret string) (response string, err error) {
+func (lm *loggingMiddleware) ListCommand(secret string) (response string, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method ListCommands for secret %s took %s to complete", secret, time.Since(begin))
+		message := fmt.Sprintf("Method ListCommand for secret %s took %s to complete", secret, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -61,12 +61,12 @@ func (lm *loggingMiddleware) ListCommands(secret string) (response string, err e
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.ListCommands(secret)
+	return lm.svc.ListCommand(secret)
 }
 
-func (lm *loggingMiddleware) UpdateCommands(secret string) (response string, err error) {
+func (lm *loggingMiddleware) UpdateCommand(secret string) (response string, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method UpdateCommands for secret %s took %s to complete", secret, time.Since(begin))
+		message := fmt.Sprintf("Method UpdateCommand for secret %s took %s to complete", secret, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -74,12 +74,12 @@ func (lm *loggingMiddleware) UpdateCommands(secret string) (response string, err
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.UpdateCommands(secret)
+	return lm.svc.UpdateCommand(secret)
 }
 
-func (lm *loggingMiddleware) RemoveCommands(secret string) (response string, err error) {
+func (lm *loggingMiddleware) RemoveCommand(secret string) (response string, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method RemoveCommands for secret %s took %s to complete", secret, time.Since(begin))
+		message := fmt.Sprintf("Method RemoveCommand for secret %s took %s to complete", secret, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -87,5 +87,5 @@ func (lm *loggingMiddleware) RemoveCommands(secret string) (response string, err
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.RemoveCommands(secret)
+	return lm.svc.RemoveCommand(secret)
 }
