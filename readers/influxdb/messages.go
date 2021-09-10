@@ -64,7 +64,7 @@ func (repo *influxRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 		return readers.MessagesPage{}, errors.Wrap(errReadMessages, resp.Error())
 	}
 
-	if len(resp.Results) < 1 || len(resp.Results[0].Series) < 1 {
+	if len(resp.Results) == 0 || len(resp.Results[0].Series) == 0 {
 		return readers.MessagesPage{}, nil
 	}
 
@@ -106,9 +106,9 @@ func (repo *influxRepository) count(measurement, condition string) (uint64, erro
 		return 0, resp.Error()
 	}
 
-	if len(resp.Results) < 1 ||
-		len(resp.Results[0].Series) < 1 ||
-		len(resp.Results[0].Series[0].Values) < 1 {
+	if len(resp.Results) == 0 ||
+		len(resp.Results[0].Series) == 0 ||
+		len(resp.Results[0].Series[0].Values) == 0 {
 		return 0, nil
 	}
 
@@ -239,8 +239,13 @@ func parseSenml(names []string, fields []interface{}) interface{} {
 				msgField.SetString(s)
 			}
 		case float64:
+			value, ok := fields[i].(string)
+			if !ok {
+				continue
+			}
+			
 			if name == "time" {
-				t, err := time.Parse(time.RFC3339Nano, fields[i].(string))
+				t, err := time.Parse(time.RFC3339Nano, value)
 				if err != nil {
 					continue
 				}
@@ -250,7 +255,8 @@ func parseSenml(names []string, fields []interface{}) interface{} {
 				continue
 			}
 
-			val, _ := strconv.ParseFloat(fields[i].(string), 64)
+			
+			val, _ := strconv.ParseFloat(value, 64)
 			msgField.SetFloat(val)
 		}
 	}
