@@ -179,9 +179,9 @@ paths:
           $ref: "#/components/responses/ServiceError"
   /things/{thingId}/share:
     post:
-      summary: Shares a thing with users identified by request body.
+      summary: Shares a thing with user identified by request body.
       description: |
-        Adds 'read', 'write' or 'delete' policies to the list of users identified by the request body.
+        Adds 'read', 'write' or 'delete' policies to the user identified by the request body.
         Sharing a particular thing is only allowed to users who have 'write' access to that thing.
       tags:
         - things
@@ -785,9 +785,9 @@ components:
     ShareThingReqSchema:
       type: object
       properties:
-        user_ids:
-          type: array
-          description: User IDs.
+        user_id:
+          type: string
+          description: User ID.
           items:
             type: string
         policies:
