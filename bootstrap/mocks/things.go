@@ -228,7 +228,7 @@ func (svc *mainfluxThings) Identify(context.Context, string) (string, error) {
 	panic("not implemented")
 }
 
-func (svc *mainfluxThings) ShareThing(ctx context.Context, token, thingID string, policies, userIDs []string) error {
+func (svc *mainfluxThings) ShareThing(ctx context.Context, token, thingID, userID string, policies []string) error {
 	panic("not implemented")
 }
 

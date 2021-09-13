@@ -168,7 +168,7 @@ func TestShareThing(t *testing.T) {
 		token    string
 		thingID  string
 		policies []string
-		userIDs  []string
+		userID   string
 		err      error
 	}{
 		{
@@ -176,7 +176,7 @@ func TestShareThing(t *testing.T) {
 			token:    token,
 			thingID:  th.ID,
 			policies: policies,
-			userIDs:  []string{email2},
+			userID:   email2,
 			err:      nil,
 		},
 		{
@@ -184,7 +184,7 @@ func TestShareThing(t *testing.T) {
 			token:    token2,
 			thingID:  th.ID,
 			policies: policies,
-			userIDs:  []string{email2},
+			userID:   email2,
 			err:      things.ErrAuthorization,
 		},
 		{
@@ -192,13 +192,13 @@ func TestShareThing(t *testing.T) {
 			token:    wrongValue,
 			thingID:  th.ID,
 			policies: policies,
-			userIDs:  []string{email2},
+			userID:   email2,
 			err:      things.ErrUnauthorizedAccess,
 		},
 	}
 
 	for _, tc := range cases {
-		err := svc.ShareThing(context.Background(), tc.token, tc.thingID, tc.policies, tc.userIDs)
+		err := svc.ShareThing(context.Background(), tc.token, tc.thingID, tc.userID, tc.policies)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 

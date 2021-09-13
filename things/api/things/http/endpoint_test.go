@@ -447,13 +447,13 @@ func TestShareThing(t *testing.T) {
 	defer ts.Close()
 
 	type shareThingReq struct {
-		UserIDs  []string `json:"user_ids"`
+		UserID   string   `json:"user_id"`
 		Policies []string `json:"policies"`
 	}
 
-	data := toJSON(shareThingReq{UserIDs: []string{"token2"}, Policies: []string{"read"}})
+	data := toJSON(shareThingReq{UserID: "token2", Policies: []string{"read"}})
 	invalidData := toJSON(shareThingReq{})
-	invalidPolicies := toJSON(shareThingReq{UserIDs: []string{"token2"}, Policies: []string{"wrong"}})
+	invalidPolicies := toJSON(shareThingReq{UserID: "token2", Policies: []string{"wrong"}})
 
 	ths, err := svc.CreateThings(context.Background(), token, thing)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
