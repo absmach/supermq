@@ -64,8 +64,8 @@ type Service interface {
 	// belongs to the user identified by the provided key.
 	UpdateThing(ctx context.Context, token string, thing Thing) error
 
-	// ShareThing gives an access policy of thingID to the given user ID.
-	ShareThing(ctx context.Context, token, thingID, userID string, policies []string) error
+	// ShareThing gives an access policy of thingID to the given user IDs.
+	ShareThing(ctx context.Context, token, thingID string, policies, userIDs []string) error
 
 	// UpdateKey updates key value of the existing thing. A non-nil error is
 	// returned to indicate operation failure.
@@ -213,7 +213,7 @@ func (ts *thingsService) createThing(ctx context.Context, thing *Thing, identity
 		}
 	}
 
-	if err := ts.claimOwnership(ctx, thing.ID, identity.GetId(), []string{readRelationKey, writeRelationKey, deleteRelationKey}); err != nil {
+	if err := ts.claimOwnership(ctx, thing.ID, []string{readRelationKey, writeRelationKey, deleteRelationKey}, []string{identity.GetId()}); err != nil {
 		return Thing{}, err
 	}
 
@@ -242,7 +242,7 @@ func (ts *thingsService) UpdateThing(ctx context.Context, token string, thing Th
 	return ts.things.Update(ctx, thing)
 }
 
-func (ts *thingsService) ShareThing(ctx context.Context, token, thingID, userID string, policies []string) error {
+func (ts *thingsService) ShareThing(ctx context.Context, token, thingID string, policies, userIDs []string) error {
 	res, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return errors.Wrap(ErrUnauthorizedAccess, err)
@@ -252,18 +252,20 @@ func (ts *thingsService) ShareThing(ctx context.Context, token, thingID, userID 
 		return err
 	}
 
-	return ts.claimOwnership(ctx, thingID, userID, policies)
+	return ts.claimOwnership(ctx, thingID, policies, userIDs)
 }
 
-func (ts *thingsService) claimOwnership(ctx context.Context, thingID, userID string, policies []string) error {
+func (ts *thingsService) claimOwnership(ctx context.Context, thingID string, policies, userIDs []string) error {
 	var errs error
-	for _, policy := range policies {
-		apr, err := ts.auth.AddPolicy(ctx, &mainflux.AddPolicyReq{Obj: thingID, Act: policy, Sub: userID})
-		if err != nil {
-			errs = accumulateError(errs, errors.Wrap(ErrAuthorization, err), thingID, userID)
-		}
-		if !apr.GetAuthorized() {
-			errs = accumulateError(errs, ErrAuthorization, thingID, userID)
+	for _, userID := range userIDs {
+		for _, policy := range policies {
+			apr, err := ts.auth.AddPolicy(ctx, &mainflux.AddPolicyReq{Obj: thingID, Act: policy, Sub: userID})
+			if err != nil {
+				errs = accumulateError(errs, errors.Wrap(ErrAuthorization, err), thingID, userID)
+			}
+			if !apr.GetAuthorized() {
+				errs = accumulateError(errs, ErrAuthorization, thingID, userID)
+			}
 		}
 	}
 	return errs

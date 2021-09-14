@@ -88,7 +88,7 @@ func shareThingEndpoint(svc things.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		if err := svc.ShareThing(ctx, req.token, req.thingID, req.UserID, req.Policies); err != nil {
+		if err := svc.ShareThing(ctx, req.token, req.thingID, req.Policies, req.UserIDs); err != nil {
 			return nil, err
 		}
 

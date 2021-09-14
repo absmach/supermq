@@ -65,7 +65,7 @@ func (req createThingsReq) validate() error {
 type shareThingReq struct {
 	token    string
 	thingID  string
-	UserID   string   `json:"user_id"`
+	UserIDs  []string `json:"user_ids"`
 	Policies []string `json:"policies"`
 }
 
@@ -74,7 +74,7 @@ func (req shareThingReq) validate() error {
 		return things.ErrUnauthorizedAccess
 	}
 
-	if req.thingID == "" || req.UserID == "" || len(req.Policies) == 0 {
+	if req.thingID == "" || len(req.UserIDs) == 0 || len(req.Policies) == 0 {
 		return things.ErrMalformedEntity
 	}
 	for _, p := range req.Policies {
