@@ -57,6 +57,10 @@ func (svc authServiceMock) Authorize(ctx context.Context, req *mainflux.Authoriz
 }
 
 func (svc authServiceMock) AddPolicy(ctx context.Context, in *mainflux.AddPolicyReq, opts ...grpc.CallOption) (*mainflux.AddPolicyRes, error) {
+	// Mock thingsRepository saves the thing ID after padding the ID by 3. (see things/mocks/things.go)
+	// Since we are adding policies within the Service layer, we are storing them as a full ID which is
+	// eventually not compatible with the one inside  of the mock things repository. Therefore, we are
+	// getting last three part of the ID as below.
 	obj := in.GetObj()
 	obj = obj[len(obj)-3:]
 	svc.policies[in.GetSub()] = append(svc.policies[in.GetSub()], MockSubjectSet{Object: obj, Relation: in.GetAct()})
