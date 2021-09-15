@@ -7,11 +7,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	
+
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/readers"
-	
+
 	influxdata "github.com/influxdata/influxdb/client/v2"
+
 	jsont "github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 )
@@ -44,15 +45,15 @@ func (repo *influxRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 	if rpm.Format != "" {
 		format = rpm.Format
 	}
-	
+
 	condition := fmtCondition(chanID, rpm)
-	
+
 	cmd := fmt.Sprintf(`SELECT * FROM %s WHERE %s ORDER BY time DESC LIMIT %d OFFSET %d`, format, condition, rpm.Limit, rpm.Offset)
 	q := influxdata.Query{
 		Command:  cmd,
 		Database: repo.database,
 	}
-	
+
 	resp, err := repo.client.Query(q)
 	if err != nil {
 		return readers.MessagesPage{}, errors.Wrap(errReadMessages, err)
@@ -60,13 +61,13 @@ func (repo *influxRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 	if resp.Error() != nil {
 		return readers.MessagesPage{}, errors.Wrap(errReadMessages, resp.Error())
 	}
-	
+
 	if len(resp.Results) == 0 || len(resp.Results[0].Series) == 0 {
 		return readers.MessagesPage{}, nil
 	}
-	
+
 	var messages []readers.Message
-	
+
 	result := resp.Results[0].Series[0]
 	for _, v := range result.Values {
 		msg, err := parseMessage(format, result.Columns, v)
@@ -75,18 +76,18 @@ func (repo *influxRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 		}
 		messages = append(messages, msg)
 	}
-	
+
 	total, err := repo.count(format, condition)
 	if err != nil {
 		return readers.MessagesPage{}, errors.Wrap(errReadMessages, err)
 	}
-	
+
 	page := readers.MessagesPage{
 		PageMetadata: rpm,
 		Total:        total,
 		Messages:     messages,
 	}
-	
+
 	return page, nil
 }
 
@@ -96,7 +97,7 @@ func (repo *influxRepository) count(measurement, condition string) (uint64, erro
 		Command:  cmd,
 		Database: repo.database,
 	}
-	
+
 	resp, err := repo.client.Query(q)
 	if err != nil {
 		return 0, err
@@ -104,13 +105,13 @@ func (repo *influxRepository) count(measurement, condition string) (uint64, erro
 	if resp.Error() != nil {
 		return 0, resp.Error()
 	}
-	
+
 	if len(resp.Results) == 0 ||
 		len(resp.Results[0].Series) == 0 ||
 		len(resp.Results[0].Series[0].Values) == 0 {
 		return 0, nil
 	}
-	
+
 	countIndex := 0
 	for i, col := range resp.Results[0].Series[0].Columns {
 		if col == countCol {
@@ -118,12 +119,12 @@ func (repo *influxRepository) count(measurement, condition string) (uint64, erro
 			break
 		}
 	}
-	
+
 	result := resp.Results[0].Series[0].Values[0]
 	if len(result) < countIndex+1 {
 		return 0, nil
 	}
-	
+
 	count, ok := result[countIndex].(json.Number)
 	if !ok {
 		return 0, nil
@@ -133,15 +134,15 @@ func (repo *influxRepository) count(measurement, condition string) (uint64, erro
 
 func fmtCondition(chanID string, rpm readers.PageMetadata) string {
 	condition := fmt.Sprintf(`channel='%s'`, chanID)
-	
+
 	var query map[string]interface{}
 	meta, err := json.Marshal(rpm)
 	if err != nil {
 		return condition
 	}
-	
+
 	_ = json.Unmarshal(meta, &query)
-	
+
 	for name, value := range query {
 		switch name {
 		case
@@ -181,16 +182,16 @@ func parseValues(value interface{}, name string, msg *senml.Message) {
 			if err != nil {
 				return
 			}
-			
+
 			msg.Sum = &sum
 		}
 		return
 	}
-	
+
 	if !strings.HasSuffix(strings.ToLower(name), "value") {
 		return
 	}
-	
+
 	switch value.(type) {
 	case bool:
 		v := value.(bool)
@@ -207,7 +208,7 @@ func parseValues(value interface{}, name string, msg *senml.Message) {
 			msg.StringValue = &v
 			return
 		}
-		
+
 		if strings.HasPrefix(name, "data") {
 			v := value.(string)
 			msg.DataValue = &v
@@ -233,7 +234,7 @@ func parseSenml(names []string, fields []interface{}) interface{} {
 		if !msgField.IsValid() {
 			continue
 		}
-		
+
 		f := msgField.Interface()
 		switch f.(type) {
 		case string:
@@ -245,18 +246,18 @@ func parseSenml(names []string, fields []interface{}) interface{} {
 			if !ok {
 				continue
 			}
-			
+
 			if name == "time" {
 				t, err := time.Parse(time.RFC3339Nano, fs)
 				if err != nil {
 					continue
 				}
-				
+
 				v := float64(t.UnixNano()) / 1e9
 				msgField.SetFloat(v)
 				continue
 			}
-			
+
 			v, err := strconv.ParseFloat(fs, 64)
 			if err != nil {
 				continue
@@ -264,7 +265,7 @@ func parseSenml(names []string, fields []interface{}) interface{} {
 			msgField.SetFloat(v)
 		}
 	}
-	
+
 	return m
 }
 
