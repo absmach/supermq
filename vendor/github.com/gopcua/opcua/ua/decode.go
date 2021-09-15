@@ -1,4 +1,4 @@
-// Copyright 2018-2019 opcua authors. All rights reserved.
+// Copyright 2018-2020 opcua authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -32,11 +32,7 @@ type BinaryDecoder interface {
 
 func Decode(b []byte, v interface{}) (int, error) {
 	val := reflect.ValueOf(v)
-	n, err := decode(b, val, val.Type().String())
-	if err != nil {
-		return n, err
-	}
-	return n, nil
+	return decode(b, val, val.Type().String())
 }
 
 func decode(b []byte, val reflect.Value, name string) (n int, err error) {

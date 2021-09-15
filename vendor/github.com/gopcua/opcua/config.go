@@ -1,4 +1,4 @@
-// Copyright 2018-2019 opcua authors. All rights reserved.
+// Copyright 2018-2020 opcua authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -39,7 +39,7 @@ func DefaultSessionConfig() *uasc.SessionConfig {
 		ClientDescription: &ua.ApplicationDescription{
 			ApplicationURI:  "urn:gopcua:client",
 			ProductURI:      "urn:gopcua",
-			ApplicationName: &ua.LocalizedText{Text: "gopcua - OPC UA implementation in Go"},
+			ApplicationName: ua.NewLocalizedText("gopcua - OPC UA implementation in Go"),
 			ApplicationType: ua.ApplicationTypeClient,
 		},
 		LocaleIDs:          []string{"en-us"},
@@ -64,7 +64,7 @@ type Option func(*uasc.Config, *uasc.SessionConfig)
 // ApplicationName sets the application name in the session configuration.
 func ApplicationName(s string) Option {
 	return func(c *uasc.Config, sc *uasc.SessionConfig) {
-		sc.ClientDescription.ApplicationName = &ua.LocalizedText{Text: s}
+		sc.ClientDescription.ApplicationName = ua.NewLocalizedText(s)
 	}
 }
 
@@ -99,7 +99,7 @@ func ProductURI(s string) Option {
 // RandomRequestID assigns a random initial request id.
 func RandomRequestID() Option {
 	return func(c *uasc.Config, sc *uasc.SessionConfig) {
-		c.RequestID = uint32(rand.Int31())
+		c.RequestIDSeed = uint32(rand.Int31())
 	}
 }
 
@@ -141,6 +141,13 @@ func SecurityModeString(s string) Option {
 func SecurityPolicy(s string) Option {
 	return func(c *uasc.Config, sc *uasc.SessionConfig) {
 		c.SecurityPolicyURI = ua.FormatSecurityPolicyURI(s)
+	}
+}
+
+// SessionName sets the name in the session configuration.
+func SessionName(s string) Option {
+	return func(c *uasc.Config, sc *uasc.SessionConfig) {
+		sc.SessionName = s
 	}
 }
 

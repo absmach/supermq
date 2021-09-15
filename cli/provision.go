@@ -19,8 +19,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const jsonExt = ".json"
-const csvExt = ".csv"
+var errMalformedCSV = errors.New("malformed CSV")
+
+const (
+	jsonExt = ".json"
+	csvExt  = ".csv"
+)
 
 var cmdProvision = []cobra.Command{
 	{
@@ -125,7 +129,7 @@ var cmdProvision = []cobra.Command{
 				Email:    un,
 				Password: "12345678",
 			}
-			if _, err := sdk.CreateUser(user); err != nil {
+			if _, err := sdk.CreateUser("", user); err != nil {
 				logError(err)
 				return
 			}

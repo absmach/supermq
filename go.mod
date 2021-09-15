@@ -15,20 +15,21 @@ require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang-jwt/jwt/v4 v4.0.0
 	github.com/golang/protobuf v1.5.2
-	github.com/gopcua/opcua v0.1.6
+	github.com/gopcua/opcua v0.1.13
 	github.com/hashicorp/vault/api v1.1.1
 	github.com/hokaccha/go-prettyjson v0.0.0-20210113012101-fb4e108d2519
 	github.com/influxdata/influxdb v1.9.3
 	github.com/jmoiron/sqlx v1.3.4
-	github.com/lib/pq v1.10.2
+	github.com/lib/pq v1.10.3
 	github.com/mainflux/mproxy v0.2.2
 	github.com/mainflux/senml v1.5.0
-	github.com/mitchellh/mapstructure v1.4.1
-	github.com/nats-io/nats.go v1.11.0
+	github.com/mitchellh/mapstructure v1.4.2
+	github.com/nats-io/nats.go v1.12.1
 	github.com/oklog/ulid/v2 v2.0.2
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/ory/dockertest/v3 v3.7.0
-	github.com/pelletier/go-toml v1.9.3
+	github.com/ory/keto/proto/ory/keto/acl/v1alpha1 v0.0.0-20210616104402-80e043246cf9
+	github.com/pelletier/go-toml v1.9.4
 	github.com/plgd-dev/go-coap/v2 v2.4.0
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rubenv/sql-migrate v0.0.0-20210614095031-55d5740dbbcc
@@ -37,9 +38,9 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/subosito/gotenv v1.2.0
 	github.com/uber/jaeger-client-go v2.29.1+incompatible
-	go.mongodb.org/mongo-driver v1.7.1
+	go.mongodb.org/mongo-driver v1.7.2
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
-	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d
+	golang.org/x/net v0.0.0-20210913180222-943fd674d43e
 	gonum.org/v1/gonum v0.9.3
 	google.golang.org/grpc v1.40.0
 )

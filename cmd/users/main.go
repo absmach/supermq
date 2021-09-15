@@ -313,14 +313,14 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServic
 			Help:      "Total duration of requests in microseconds.",
 		}, []string{"method"}),
 	)
-	if err := createAdmin(svc, userRepo, c); err != nil {
+	if err := createAdmin(svc, userRepo, c, auth); err != nil {
 		logger.Error("failed to create admin user: " + err.Error())
 		os.Exit(1)
 	}
 	return svc
 }
 
-func createAdmin(svc users.Service, userRepo users.UserRepository, c config) error {
+func createAdmin(svc users.Service, userRepo users.UserRepository, c config, auth mainflux.AuthServiceClient) error {
 	user := users.User{
 		Email:    c.adminEmail,
 		Password: c.adminPassword,
@@ -331,8 +331,27 @@ func createAdmin(svc users.Service, userRepo users.UserRepository, c config) err
 		return nil
 	}
 
-	if _, err := svc.Register(context.Background(), user); err != nil {
+	// Add a policy that allows anybody to create a user
+	apr, err := auth.AddPolicy(context.Background(), &mainflux.AddPolicyReq{Obj: "user", Act: "create", Sub: "*"})
+	if err != nil {
 		return err
+	}
+	if !apr.GetAuthorized() {
+		return users.ErrAuthorization
+	}
+
+	// Create an admin
+	uid, err := svc.Register(context.Background(), "", user)
+	if err != nil {
+		return err
+	}
+
+	apr, err = auth.AddPolicy(context.Background(), &mainflux.AddPolicyReq{Obj: "authorities", Act: "member", Sub: uid})
+	if err != nil {
+		return err
+	}
+	if !apr.GetAuthorized() {
+		return users.ErrAuthorization
 	}
 
 	return nil

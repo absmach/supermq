@@ -1,4 +1,4 @@
-// Copyright 2018-2019 opcua authors. All rights reserved.
+// Copyright 2018-2020 opcua authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -8,7 +8,6 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
-	"io"
 	"log"
 	"reflect"
 	"sort"
@@ -47,7 +46,7 @@ func SelectEndpoint(endpoints []*ua.EndpointDescription, policy string, mode ua.
 		return nil
 	}
 
-	sort.Sort(bySecurityLevel(endpoints))
+	sort.Sort(sort.Reverse(bySecurityLevel(endpoints)))
 	policy = ua.FormatSecurityPolicyURI(policy)
 
 	// don't care -> return highest security level
@@ -92,6 +91,9 @@ type Client struct {
 	// sessionCfg is the configuration for the session.
 	sessionCfg *uasc.SessionConfig
 
+	// conn is the open connection
+	conn *uacp.Conn
+
 	// sechan is the open secure channel.
 	sechan *uasc.SecureChannel
 
@@ -102,9 +104,6 @@ type Client struct {
 	// access guarded by subMux
 	subscriptions map[uint32]*Subscription
 	subMux        sync.RWMutex
-
-	//cancelMonitor cancels the monitorChannel goroutine
-	cancelMonitor context.CancelFunc
 
 	// once initializes session
 	once sync.Once
@@ -165,62 +164,53 @@ func (c *Client) Dial(ctx context.Context) error {
 	if c.sechan != nil {
 		return errors.Errorf("secure channel already connected")
 	}
-	conn, err := uacp.Dial(ctx, c.endpointURL)
+
+	var err error
+	c.conn, err = uacp.Dial(ctx, c.endpointURL)
 	if err != nil {
 		return err
 	}
-	sechan, err := uasc.NewSecureChannel(c.endpointURL, conn, c.cfg)
+
+	c.sechan, err = uasc.NewSecureChannel(c.endpointURL, c.conn, c.cfg)
 	if err != nil {
-		_ = conn.Close()
-		return err
-	}
-	c.sechan = sechan
-	ctx, c.cancelMonitor = context.WithCancel(ctx)
-	go c.monitorChannel(ctx)
-
-	if err := sechan.Open(); err != nil {
-		c.cancelMonitor()
-
-		_ = conn.Close()
-		c.sechan = nil
+		_ = c.conn.Close()
 		return err
 	}
 
-	return nil
-}
-
-func (c *Client) monitorChannel(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			msg := c.sechan.Receive(ctx)
-			if msg.Err != nil {
-				if msg.Err == io.EOF {
-					debug.Printf("Connection closed")
-				} else {
-					debug.Printf("Received error: %s", msg.Err)
-				}
-				// todo (dh): apart from the above message, we're ignoring this error because there is nothing watching it
-				// I'd prefer to have a way to return the error to the upper application.
-				return
-			}
-			debug.Printf("Received unsolicited message from server: %T", msg.V)
-		}
-	}
+	return c.sechan.Open(ctx)
 }
 
 // Close closes the session and the secure channel.
 func (c *Client) Close() error {
+	defer c.conn.Close()
+
 	// try to close the session but ignore any error
 	// so that we close the underlying channel and connection.
 	_ = c.CloseSession()
-	if c.cancelMonitor != nil {
-		c.cancelMonitor()
-	}
 
-	return c.sechan.Close()
+	_ = c.sechan.Close()
+
+	return nil
+}
+
+var errNotConnected = errors.New("not connected")
+
+// SetReadBuffer sets the operating system's TCP receive buffer
+// of the underlying UACP connection.
+func (c *Client) SetReadBuffer(bytes int) error {
+	if c.conn == nil {
+		return errNotConnected
+	}
+	return c.conn.SetReadBuffer(bytes)
+}
+
+// SetWriteBuffer sets the operating system's TCP transmit buffer
+// of the underlying UACP connection.
+func (c *Client) SetWriteBuffer(bytes int) error {
+	if c.conn == nil {
+		return errNotConnected
+	}
+	return c.conn.SetWriteBuffer(bytes)
 }
 
 // Session returns the active session.
@@ -258,7 +248,7 @@ type Session struct {
 // See Part 4, 5.6.2
 func (c *Client) CreateSession(cfg *uasc.SessionConfig) (*Session, error) {
 	if c.sechan == nil {
-		return nil, errors.Errorf("secure channel not connected")
+		return nil, ua.StatusBadServerNotConnected
 	}
 
 	nonce := make([]byte, 32)
@@ -266,10 +256,15 @@ func (c *Client) CreateSession(cfg *uasc.SessionConfig) (*Session, error) {
 		return nil, err
 	}
 
+	name := cfg.SessionName
+	if name == "" {
+		name = fmt.Sprintf("gopcua-%d", time.Now().UnixNano())
+	}
+
 	req := &ua.CreateSessionRequest{
 		ClientDescription:       cfg.ClientDescription,
 		EndpointURL:             c.endpointURL,
-		SessionName:             fmt.Sprintf("gopcua-%d", time.Now().UnixNano()),
+		SessionName:             name,
 		ClientNonce:             nonce,
 		ClientCertificate:       c.cfg.Certificate,
 		RequestedSessionTimeout: float64(cfg.SessionTimeout / time.Millisecond),
@@ -336,6 +331,9 @@ func anonymousPolicyID(endpoints []*ua.EndpointDescription) string {
 //
 // See Part 4, 5.6.3
 func (c *Client) ActivateSession(s *Session) error {
+	if c.sechan == nil {
+		return ua.StatusBadServerNotConnected
+	}
 	sig, sigAlg, err := c.sechan.NewSessionSignature(s.serverCertificate, s.serverNonce)
 	if err != nil {
 		log.Printf("error creating session signature: %s", err)
@@ -443,6 +441,9 @@ func (c *Client) Send(req ua.Request, h func(interface{}) error) error {
 // the response. If the client has an active session it injects the
 // authentication token.
 func (c *Client) sendWithTimeout(req ua.Request, timeout time.Duration, h func(interface{}) error) error {
+	if c.sechan == nil {
+		return ua.StatusBadServerNotConnected
+	}
 	var authToken *ua.NodeID
 	if s := c.Session(); s != nil {
 		authToken = s.resp.AuthenticationToken
@@ -539,12 +540,27 @@ func (c *Client) Call(req *ua.CallMethodRequest) (*ua.CallMethodResult, error) {
 func (c *Client) BrowseNext(req *ua.BrowseNextRequest) (*ua.BrowseNextResponse, error) {
 	var res *ua.BrowseNextResponse
 	err := c.Send(req, func(v interface{}) error {
-		r, ok := v.(*ua.BrowseNextResponse)
-		if !ok {
-			return errors.Errorf("invalid response: %T", v)
-		}
-		res = r
-		return nil
+		return safeAssign(v, &res)
+	})
+	return res, err
+}
+
+// RegisterNodes registers node ids for more efficient reads.
+// Part 4, Section 5.8.5
+func (c *Client) RegisterNodes(req *ua.RegisterNodesRequest) (*ua.RegisterNodesResponse, error) {
+	var res *ua.RegisterNodesResponse
+	err := c.Send(req, func(v interface{}) error {
+		return safeAssign(v, &res)
+	})
+	return res, err
+}
+
+// UnregisterNodes unregisters node ids previously registered with RegisterNodes.
+// Part 4, Section 5.8.6
+func (c *Client) UnregisterNodes(req *ua.UnregisterNodesRequest) (*ua.UnregisterNodesResponse, error) {
+	var res *ua.UnregisterNodesResponse
+	err := c.Send(req, func(v interface{}) error {
+		return safeAssign(v, &res)
 	})
 	return res, err
 }
@@ -552,7 +568,7 @@ func (c *Client) BrowseNext(req *ua.BrowseNextRequest) (*ua.BrowseNextResponse, 
 // Subscribe creates a Subscription with given parameters. Parameters that have not been set
 // (have zero values) are overwritten with default values.
 // See opcua.DefaultSubscription* constants
-func (c *Client) Subscribe(params *SubscriptionParameters) (*Subscription, error) {
+func (c *Client) Subscribe(params *SubscriptionParameters, notifyCh chan *PublishNotificationData) (*Subscription, error) {
 	if params == nil {
 		params = &SubscriptionParameters{}
 	}
@@ -582,9 +598,10 @@ func (c *Client) Subscribe(params *SubscriptionParameters) (*Subscription, error
 		time.Duration(res.RevisedPublishingInterval) * time.Millisecond,
 		res.RevisedLifetimeCount,
 		res.RevisedMaxKeepAliveCount,
-		params.Notifs,
+		notifyCh,
 		c,
 	}
+
 	c.subMux.Lock()
 	if sub.SubscriptionID == 0 || c.subscriptions[sub.SubscriptionID] != nil {
 		// this should not happen and is usually indicative of a server bug
@@ -630,22 +647,12 @@ func (c *Client) notifySubscription(ctx context.Context, response *ua.PublishRes
 		return
 	}
 
-	// Check for errors
-	status := ua.StatusOK
-	for _, res := range response.Results {
-		if res != ua.StatusOK {
-			status = res
-			break
-		}
-	}
-
-	if status != ua.StatusOK {
-		sub.sendNotification(ctx, &PublishNotificationData{
-			SubscriptionID: response.SubscriptionID,
-			Error:          status,
-		})
-		return
-	}
+	// todo(fs): response.Results contains the status codes of which messages were
+	// todo(fs): were successfully removed from the transmission queue on the server.
+	// todo(fs): The client sent the list of ids in the *previous* PublishRequest.
+	// todo(fs): If we want to handle them then we probably need to keep track
+	// todo(fs): of the message ids we have ack'ed.
+	// todo(fs): see discussion in https://github.com/gopcua/opcua/issues/337
 
 	if response.NotificationMessage == nil {
 		sub.sendNotification(ctx, &PublishNotificationData{

@@ -1,4 +1,4 @@
-// Copyright 2018-2019 opcua authors. All rights reserved.
+// Copyright 2018-2020 opcua authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -6,7 +6,6 @@ package opcua
 
 import (
 	"strings"
-	"time"
 
 	"github.com/gopcua/opcua/id"
 	"github.com/gopcua/opcua/ua"
@@ -184,8 +183,7 @@ func (n *Node) References(refType uint32, dir ua.BrowseDirection, mask ua.NodeCl
 
 	req := &ua.BrowseRequest{
 		View: &ua.ViewDescription{
-			ViewID:    ua.NewTwoByteNodeID(0),
-			Timestamp: time.Now(),
+			ViewID: ua.NewTwoByteNodeID(0),
 		},
 		RequestedMaxReferencesPerNode: 0,
 		NodesToBrowse:                 []*ua.BrowseDescription{desc},

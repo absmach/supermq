@@ -32,8 +32,13 @@ func newService() auth.Service {
 	repo := mocks.NewKeyRepository()
 	groupRepo := mocks.NewGroupRepository()
 	idProvider := uuid.NewMock()
+
+	mockAuthzDB := map[string][]mocks.MockSubjectSet{}
+	mockAuthzDB[id] = append(mockAuthzDB[id], mocks.MockSubjectSet{Object: "authorities", Relation: "member"})
+	ketoMock := mocks.NewKetoMock(mockAuthzDB)
+
 	t := jwt.New(secret)
-	return auth.New(repo, groupRepo, idProvider, t)
+	return auth.New(repo, groupRepo, idProvider, t, ketoMock)
 }
 
 func TestIssue(t *testing.T) {
@@ -788,6 +793,7 @@ func TestListMemberships(t *testing.T) {
 		g, err := svc.CreateGroup(context.Background(), apiToken, group)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 
+		_ = svc.AddPolicy(context.Background(), auth.PolicyReq{Subject: id, Object: memberID, Relation: "owner"})
 		err = svc.Assign(context.Background(), apiToken, g.ID, "things", memberID)
 		require.Nil(t, err, fmt.Sprintf("Assign member expected to succeed: %s\n", err))
 	}

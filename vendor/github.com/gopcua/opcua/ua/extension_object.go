@@ -1,4 +1,4 @@
-// Copyright 2018-2019 opcua authors. All rights reserved.
+// Copyright 2018-2020 opcua authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -11,19 +11,6 @@ import (
 
 // eotypes contains all known extension objects.
 var eotypes = NewTypeRegistry()
-
-// init registers known built-in extension objects.
-func init() {
-	RegisterExtensionObject(NewNumericNodeID(0, id.AnonymousIdentityToken_Encoding_DefaultBinary), new(AnonymousIdentityToken))
-	RegisterExtensionObject(NewNumericNodeID(0, id.UserNameIdentityToken_Encoding_DefaultBinary), new(UserNameIdentityToken))
-	RegisterExtensionObject(NewNumericNodeID(0, id.X509IdentityToken_Encoding_DefaultBinary), new(X509IdentityToken))
-	RegisterExtensionObject(NewNumericNodeID(0, id.IssuedIdentityToken_Encoding_DefaultBinary), new(IssuedIdentityToken))
-	RegisterExtensionObject(NewNumericNodeID(0, id.ServerStatusDataType_Encoding_DefaultBinary), new(ServerStatusDataType))
-	RegisterExtensionObject(NewNumericNodeID(0, id.DataChangeNotification_Encoding_DefaultBinary), new(DataChangeNotification))
-	RegisterExtensionObject(NewNumericNodeID(0, id.ReadRawModifiedDetails_Encoding_DefaultBinary), new(ReadRawModifiedDetails))
-	RegisterExtensionObject(NewNumericNodeID(0, id.HistoryData_Encoding_DefaultBinary), new(HistoryData))
-	RegisterExtensionObject(NewNumericNodeID(0, id.SubscriptionDiagnosticsDataType_Encoding_DefaultBinary), new(SubscriptionDiagnosticsDataType))
-}
 
 // RegisterExtensionObject registers a new extension object type.
 // It panics if the type or the id is already registered.

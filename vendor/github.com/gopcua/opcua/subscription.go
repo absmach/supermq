@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/gopcua/opcua/debug"
 	"github.com/gopcua/opcua/errors"
 	"github.com/gopcua/opcua/id"
 	"github.com/gopcua/opcua/ua"
@@ -33,7 +34,6 @@ type SubscriptionParameters struct {
 	MaxKeepAliveCount          uint32
 	MaxNotificationsPerPublish uint32
 	Priority                   uint8
-	Notifs                     chan *PublishNotificationData
 }
 
 func NewMonitoredItemCreateRequestWithDefaults(nodeID *ua.NodeID, attributeID ua.AttributeID, clientHandle uint32) *ua.MonitoredItemCreateRequest {
@@ -112,6 +112,25 @@ func (s *Subscription) Unmonitor(monitoredItemIDs ...uint32) (*ua.DeleteMonitore
 	return res, err
 }
 
+// SetTriggering sends a request to the server to add and/or remove triggering links from a triggering item.
+// To add links from a triggering item to an item to report provide the server assigned ID(s) in the `add` argument.
+// To remove links from a triggering item to an item to report provide the server assigned ID(s) in the `remove` argument.
+func (s *Subscription) SetTriggering(triggeringItemID uint32, add, remove []uint32) (*ua.SetTriggeringResponse, error) {
+	// Part 4, 5.12.5.2 SetTriggering Service Parameters
+	req := &ua.SetTriggeringRequest{
+		SubscriptionID:   s.SubscriptionID,
+		TriggeringItemID: triggeringItemID,
+		LinksToAdd:       add,
+		LinksToRemove:    remove,
+	}
+
+	var res *ua.SetTriggeringResponse
+	err := s.c.Send(req, func(v interface{}) error {
+		return safeAssign(v, &res)
+	})
+	return res, err
+}
+
 func (s *Subscription) publish(acks []*ua.SubscriptionAcknowledgement) (*ua.PublishResponse, error) {
 	if acks == nil {
 		acks = []*ua.SubscriptionAcknowledgement{}
@@ -165,6 +184,7 @@ func (s *Subscription) Run(ctx context.Context) {
 			case err != nil:
 				// irrecoverable error
 				s.c.notifySubscriptionsOfError(ctx, res, err)
+				debug.Printf("subscription %v Run loop stopped", s.SubscriptionID)
 				return
 			}
 
@@ -239,8 +259,5 @@ func (p *SubscriptionParameters) setDefaults() {
 		// made only to allow for a one-liner change of default priority should a need arise
 		// and to explicitly expose the default priority as a constant
 		p.Priority = DefaultSubscriptionPriority
-	}
-	if p.Notifs == nil {
-		p.Notifs = make(chan *PublishNotificationData)
 	}
 }
