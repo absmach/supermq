@@ -480,6 +480,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			errors.Contains(errorVal, things.ErrEntityConnected):
 			w.WriteHeader(http.StatusUnauthorized)
 
+		case errors.Contains(errorVal, things.ErrAuthorization):
+			w.WriteHeader(http.StatusForbidden)
 		case errors.Contains(errorVal, errors.ErrInvalidQueryParams):
 			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, errors.ErrUnsupportedContentType):

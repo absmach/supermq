@@ -19,7 +19,6 @@ import (
 	"github.com/mainflux/mainflux/users/mocks"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -33,7 +32,12 @@ var (
 func newUserService() users.Service {
 	usersRepo := mocks.NewUserRepository()
 	hasher := mocks.NewHasher()
-	auth := mocks.NewAuthService(map[string]string{"user@example.com": "user@example.com"})
+	userEmail := "user@example.com"
+
+	mockAuthzDB := map[string][]mocks.SubjectSet{}
+	mockAuthzDB[userEmail] = append(mockAuthzDB[userEmail], mocks.SubjectSet{Object: "authorities", Relation: "member"})
+	auth := mocks.NewAuthService(map[string]string{userEmail: userEmail}, mockAuthzDB)
+
 	emailer := mocks.NewEmailer()
 	idProvider := uuid.New()
 
@@ -55,52 +59,68 @@ func TestCreateUser(t *testing.T) {
 		TLSVerification: false,
 	}
 
-	mainfluxSDK := sdk.NewSDK(sdkConf)
 	user := sdk.User{Email: "user@example.com", Password: "password"}
+
+	mockAuthzDB := map[string][]mocks.SubjectSet{}
+	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: "authorities", Relation: "member"})
+	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
+
+	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
+	token := tkn.GetValue()
+
+	mainfluxSDK := sdk.NewSDK(sdkConf)
 	cases := []struct {
-		desc string
-		user sdk.User
-		err  error
+		desc  string
+		user  sdk.User
+		token string
+		err   error
 	}{
 		{
-			desc: "register new user",
-			user: user,
-			err:  nil,
+			desc:  "register new user",
+			user:  user,
+			token: token,
+			err:   nil,
 		},
 		{
-			desc: "register existing user",
-			user: user,
-			err:  createError(sdk.ErrFailedCreation, http.StatusConflict),
+			desc:  "register existing user",
+			user:  user,
+			token: token,
+			err:   createError(sdk.ErrFailedCreation, http.StatusConflict),
 		},
 		{
-			desc: "register user with invalid email address",
-			user: sdk.User{Email: invalidEmail, Password: "password"},
-			err:  createError(sdk.ErrFailedCreation, http.StatusBadRequest),
+			desc:  "register user with invalid email address",
+			user:  sdk.User{Email: invalidEmail, Password: "password"},
+			token: token,
+			err:   createError(sdk.ErrFailedCreation, http.StatusBadRequest),
 		},
 		{
-			desc: "register user with empty password",
-			user: sdk.User{Email: "user2@example.com", Password: ""},
-			err:  createError(sdk.ErrFailedCreation, http.StatusBadRequest),
+			desc:  "register user with empty password",
+			user:  sdk.User{Email: "user2@example.com", Password: ""},
+			token: token,
+			err:   createError(sdk.ErrFailedCreation, http.StatusBadRequest),
 		},
 		{
-			desc: "register user without password",
-			user: sdk.User{Email: "user2@example.com"},
-			err:  createError(sdk.ErrFailedCreation, http.StatusBadRequest),
+			desc:  "register user without password",
+			user:  sdk.User{Email: "user2@example.com"},
+			token: token,
+			err:   createError(sdk.ErrFailedCreation, http.StatusBadRequest),
 		},
 		{
-			desc: "register user without email",
-			user: sdk.User{Password: "password"},
-			err:  createError(sdk.ErrFailedCreation, http.StatusBadRequest),
+			desc:  "register user without email",
+			user:  sdk.User{Password: "password"},
+			token: token,
+			err:   createError(sdk.ErrFailedCreation, http.StatusBadRequest),
 		},
 		{
-			desc: "register empty user",
-			user: sdk.User{},
-			err:  createError(sdk.ErrFailedCreation, http.StatusBadRequest),
+			desc:  "register empty user",
+			user:  sdk.User{},
+			token: token,
+			err:   createError(sdk.ErrFailedCreation, http.StatusBadRequest),
 		},
 	}
 
 	for _, tc := range cases {
-		_, err := mainfluxSDK.CreateUser(tc.user)
+		_, err := mainfluxSDK.CreateUser(tc.token, tc.user)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 	}
 }
@@ -117,11 +137,15 @@ func TestCreateToken(t *testing.T) {
 
 	mainfluxSDK := sdk.NewSDK(sdkConf)
 	user := sdk.User{Email: "user@example.com", Password: "password"}
-	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email})
+
+	mockAuthzDB := map[string][]mocks.SubjectSet{}
+	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: "authorities", Relation: "member"})
+	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
+
 	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
 	token := tkn.GetValue()
-	_, err := mainfluxSDK.CreateUser(user)
-	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	mainfluxSDK.CreateUser(token, user)
+
 	cases := []struct {
 		desc  string
 		user  sdk.User

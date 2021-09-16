@@ -21,7 +21,7 @@ const (
 	membersEndpoint  = "members"
 )
 
-func (sdk mfSDK) CreateUser(u User) (string, error) {
+func (sdk mfSDK) CreateUser(token string, u User) (string, error) {
 	data, err := json.Marshal(u)
 	if err != nil {
 		return "", err
