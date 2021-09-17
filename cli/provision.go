@@ -19,10 +19,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	jsonExt = ".json"
-	csvExt  = ".csv"
-)
+const jsonExt = ".json"
+const csvExt = ".csv"
 
 var cmdProvision = []cobra.Command{
 	{

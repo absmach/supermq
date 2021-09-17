@@ -5,8 +5,7 @@ package things
 
 import (
 	"context"
-
-	"github.com/mainflux/mainflux/users"
+	"fmt"
 
 	"github.com/mainflux/mainflux/pkg/errors"
 
@@ -49,8 +48,10 @@ var (
 
 const (
 	usersObjectKey    = "users"
-	ownerRelationKey  = "owner"
 	memberRelationKey = "member"
+	readRelationKey   = "read"
+	writeRelationKey  = "write"
+	deleteRelationKey = "delete"
 )
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -62,6 +63,9 @@ type Service interface {
 	// UpdateThing updates the thing identified by the provided ID, that
 	// belongs to the user identified by the provided key.
 	UpdateThing(ctx context.Context, token string, thing Thing) error
+
+	// ShareThing gives an access policy of thingID to the given user IDs.
+	ShareThing(ctx context.Context, token, thingID string, policies, userIDs []string) error
 
 	// UpdateKey updates key value of the existing thing. A non-nil error is
 	// returned to indicate operation failure.
@@ -193,13 +197,13 @@ func (ts *thingsService) CreateThings(ctx context.Context, token string, things 
 	return ths, nil
 }
 
+// createThing saves the Thing and adds identity as an owner(Read, Write, Delete policies) of the Thing.
 func (ts *thingsService) createThing(ctx context.Context, thing *Thing, identity *mainflux.UserIdentity) (Thing, error) {
 	thID, err := ts.idProvider.ID()
 	if err != nil {
 		return Thing{}, errors.Wrap(ErrCreateUUID, err)
 	}
 	thing.ID = thID
-
 	thing.Owner = identity.GetEmail()
 
 	if thing.Key == "" {
@@ -209,17 +213,8 @@ func (ts *thingsService) createThing(ctx context.Context, thing *Thing, identity
 		}
 	}
 
-	req := &mainflux.AddPolicyReq{
-		Sub: identity.GetId(),
-		Obj: thing.ID,
-		Act: ownerRelationKey,
-	}
-	apr, err := ts.auth.AddPolicy(ctx, req)
-	if err != nil {
+	if err := ts.claimOwnership(ctx, thing.ID, []string{readRelationKey, writeRelationKey, deleteRelationKey}, []string{identity.GetId()}); err != nil {
 		return Thing{}, err
-	}
-	if !apr.GetAuthorized() {
-		return Thing{}, users.ErrAuthorization
 	}
 
 	ths, err := ts.things.Save(ctx, *thing)
@@ -238,7 +233,7 @@ func (ts *thingsService) UpdateThing(ctx context.Context, token string, thing Th
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	if err := ts.authorize(ctx, res.GetId(), thing.ID, ownerRelationKey); err != nil {
+	if err := ts.authorize(ctx, res.GetId(), thing.ID, writeRelationKey); err != nil {
 		return err
 	}
 
@@ -247,13 +242,46 @@ func (ts *thingsService) UpdateThing(ctx context.Context, token string, thing Th
 	return ts.things.Update(ctx, thing)
 }
 
+func (ts *thingsService) ShareThing(ctx context.Context, token, thingID string, policies, userIDs []string) error {
+	res, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
+	if err != nil {
+		return errors.Wrap(ErrUnauthorizedAccess, err)
+	}
+
+	if err := ts.authorize(ctx, res.GetId(), thingID, writeRelationKey); err != nil {
+		return err
+	}
+
+	return ts.claimOwnership(ctx, thingID, policies, userIDs)
+}
+
+func (ts *thingsService) claimOwnership(ctx context.Context, thingID string, policies, userIDs []string) error {
+	var errs error
+	for _, userID := range userIDs {
+		for _, policy := range policies {
+			apr, err := ts.auth.AddPolicy(ctx, &mainflux.AddPolicyReq{Obj: thingID, Act: policy, Sub: userID})
+			if err != nil {
+				errs = accumulateError(errs, errors.Wrap(ErrAuthorization, err), thingID, userID)
+			}
+			if !apr.GetAuthorized() {
+				errs = accumulateError(errs, ErrAuthorization, thingID, userID)
+			}
+		}
+	}
+	return errs
+}
+
+func accumulateError(errs, newErr error, thingID, userID string) error {
+	return errors.Wrap(newErr, errors.Wrap(fmt.Errorf("cannot claim ownership on thing: %s by user: %s", thingID, userID), errs))
+}
+
 func (ts *thingsService) UpdateKey(ctx context.Context, token, id, key string) error {
 	res, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	if err := ts.authorize(ctx, res.GetId(), id, ownerRelationKey); err != nil {
+	if err := ts.authorize(ctx, res.GetId(), id, writeRelationKey); err != nil {
 		return err
 	}
 
@@ -268,7 +296,7 @@ func (ts *thingsService) ViewThing(ctx context.Context, token, id string) (Thing
 		return Thing{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	if err := ts.authorize(ctx, res.GetId(), id, ownerRelationKey); err != nil {
+	if err := ts.authorize(ctx, res.GetId(), id, readRelationKey); err != nil {
 		return Thing{}, err
 	}
 
@@ -299,7 +327,7 @@ func (ts *thingsService) RemoveThing(ctx context.Context, token, id string) erro
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	if err := ts.authorize(ctx, res.GetId(), id, ownerRelationKey); err != nil {
+	if err := ts.authorize(ctx, res.GetId(), id, deleteRelationKey); err != nil {
 		return err
 	}
 
