@@ -67,7 +67,6 @@ func (repo *influxRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 	}
 
 	var messages []readers.Message
-
 	result := resp.Results[0].Series[0]
 	for _, v := range result.Values {
 		msg, err := parseMessage(format, result.Columns, v)
@@ -141,7 +140,9 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) string {
 		return condition
 	}
 
-	_ = json.Unmarshal(meta, &query)
+	if err := json.Unmarshal(meta, &query); err != nil {
+		return condition
+	}
 
 	for name, value := range query {
 		switch name {
@@ -188,30 +189,28 @@ func parseValues(value interface{}, name string, msg *senml.Message) {
 		return
 	}
 
-	if !strings.HasSuffix(strings.ToLower(name), "value") {
-		return
-	}
+	if strings.HasSuffix(strings.ToLower(name), "value") {
+		switch value.(type) {
+		case bool:
+			v := value.(bool)
+			msg.BoolValue = &v
+		case json.Number:
+			num, err := value.(json.Number).Float64()
+			if err != nil {
+				return
+			}
+			msg.Value = &num
+		case string:
+			if strings.HasPrefix(name, "string") {
+				v := value.(string)
+				msg.StringValue = &v
+				return
+			}
 
-	switch value.(type) {
-	case bool:
-		v := value.(bool)
-		msg.BoolValue = &v
-	case json.Number:
-		num, err := value.(json.Number).Float64()
-		if err != nil {
-			return
-		}
-		msg.Value = &num
-	case string:
-		if strings.HasPrefix(name, "string") {
-			v := value.(string)
-			msg.StringValue = &v
-			return
-		}
-
-		if strings.HasPrefix(name, "data") {
-			v := value.(string)
-			msg.DataValue = &v
+			if strings.HasPrefix(name, "data") {
+				v := value.(string)
+				msg.DataValue = &v
+			}
 		}
 	}
 }

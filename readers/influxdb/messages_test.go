@@ -6,6 +6,7 @@ import (
 	"time"
 
 	influxdata "github.com/influxdata/influxdb/client/v2"
+
 	iwriter "github.com/mainflux/mainflux/consumers/writers/influxdb"
 	"github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
@@ -499,7 +500,7 @@ func TestReadJSON(t *testing.T) {
 	for desc, tc := range cases {
 		result, err := reader.ReadAll(tc.chanID, tc.pageMeta)
 		require.NoError(t, err)
-		
+
 		for i := 0; i < len(result.Messages); i++ {
 			m := result.Messages[i]
 			// Remove time as it is not sent by the client.
