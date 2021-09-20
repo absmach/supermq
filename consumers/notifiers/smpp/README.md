@@ -26,7 +26,7 @@ default values.
 | MF_SMTP_NOTIFY_SERVER_KEY         | Path to server key in pem format                                        |                       |
 | MF_JAEGER_URL                     | Jaeger server URL                                                       | localhost:6831        |
 | MF_NATS_URL                       | NATS broker URL                                                         | nats://127.0.0.1:4222 |
-| MF_SMPP_ADDRESS                   | SMPP address                                                            |                       |
+| MF_SMPP_ADDRESS                   | SMPP address [host:port]                                                |                       |
 | MF_SMPP_USERNAME                  | SMPP Username                                                           |                       |
 | MF_SMPP_PASSWORD                  | SMPP PAssword                                                           |                       |
 | MF_SMPP_SYSTEM_TYPE               | SMPP System Type                                                        |                       |
@@ -40,6 +40,6 @@ default values.
 
 ## Usage
 
-Starting service will start consuming messages and sending emails when a message is received.
+Starting service will start consuming messages and sending SMS when a message is received.
 
 [doc]: http://mainflux.readthedocs.io
