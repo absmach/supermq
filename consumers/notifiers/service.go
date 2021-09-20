@@ -28,7 +28,7 @@ var (
 	ErrSave = errors.New("failed to subscription")
 
 	// ErrNotFound indicates a non-existent entity request.
-	ErrNotFound = errors.New("non-existent entity")
+	ErrNotFound = errors.New("non-existent entityty")
 
 	// ErrSelectEntity indicates problem with scanning data from db.
 	ErrSelectEntity = errors.New("failed to select entity")
@@ -65,15 +65,17 @@ type notifierService struct {
 	subs     SubscriptionsRepository
 	idp      mainflux.IDProvider
 	notifier Notifier
+	from     string
 }
 
 // New instantiates the subscriptions service implementation.
-func New(auth mainflux.AuthServiceClient, subs SubscriptionsRepository, idp mainflux.IDProvider, notifier Notifier) Service {
+func New(auth mainflux.AuthServiceClient, subs SubscriptionsRepository, idp mainflux.IDProvider, notifier Notifier, from string) Service {
 	return &notifierService{
 		auth:     auth,
 		subs:     subs,
 		idp:      idp,
 		notifier: notifier,
+		from:     from,
 	}
 }
 
@@ -139,7 +141,7 @@ func (ns *notifierService) Consume(message interface{}) error {
 		to = append(to, sub.Contact)
 	}
 	if len(to) > 0 {
-		err := ns.notifier.Notify("", to, msg)
+		err := ns.notifier.Notify(ns.from, to, msg)
 		if err != nil {
 			return errors.Wrap(ErrNotify, err)
 		}
