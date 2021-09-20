@@ -28,7 +28,7 @@ var (
 	ErrSave = errors.New("failed to subscription")
 
 	// ErrNotFound indicates a non-existent entity request.
-	ErrNotFound = errors.New("non-existent entityty")
+	ErrNotFound = errors.New("non-existent entity")
 
 	// ErrSelectEntity indicates problem with scanning data from db.
 	ErrSelectEntity = errors.New("failed to select entity")

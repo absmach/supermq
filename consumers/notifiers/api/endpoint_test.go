@@ -68,7 +68,7 @@ func newService(tokens map[string]string) notifiers.Service {
 	repo := mocks.NewRepo(make(map[string]notifiers.Subscription))
 	idp := uuid.NewMock()
 	notif := mocks.NewNotifier()
-	from := ""
+	from := "exampleFrom"
 	return notifiers.New(auth, repo, idp, notif, from)
 }
 

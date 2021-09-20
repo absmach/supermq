@@ -49,9 +49,6 @@ func New(cfg Config) notifiers.Notifier {
 }
 
 func (n *notifier) Notify(from string, to []string, msg messaging.Message) error {
-	fmt.Println(to)
-	fmt.Println(len(to))
-
 	send := &smpp.ShortMessage{
 		Src:           from,
 		DstList:       to,
