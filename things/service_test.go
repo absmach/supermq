@@ -21,6 +21,7 @@ const (
 	wrongID    = ""
 	wrongValue = "wrong-value"
 	email      = "user@example.com"
+	email2     = "user2@example.com"
 	token      = "token"
 	token2     = "token2"
 	n          = uint64(10)
@@ -156,7 +157,6 @@ func TestUpdateKey(t *testing.T) {
 }
 
 func TestShareThing(t *testing.T) {
-	email2 := "user2@example.com"
 	svc := newService(map[string]string{token: email, token2: email2})
 	ths, err := svc.CreateThings(context.Background(), token, thing)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))

@@ -64,8 +64,10 @@ type Service interface {
 	// belongs to the user identified by the provided key.
 	UpdateThing(ctx context.Context, token string, thing Thing) error
 
-	// ShareThing gives an access policy of thingID to the given user IDs.
-	ShareThing(ctx context.Context, token, thingID string, policies, userIDs []string) error
+	// ShareThing gives actions associated with the thing to the given user IDs.
+	// The requester user identified by the token has to have a "write" relation
+	// on the thing in order to share the thing.
+	ShareThing(ctx context.Context, token, thingID string, actions, userIDs []string) error
 
 	// UpdateKey updates key value of the existing thing. A non-nil error is
 	// returned to indicate operation failure.
@@ -242,7 +244,7 @@ func (ts *thingsService) UpdateThing(ctx context.Context, token string, thing Th
 	return ts.things.Update(ctx, thing)
 }
 
-func (ts *thingsService) ShareThing(ctx context.Context, token, thingID string, policies, userIDs []string) error {
+func (ts *thingsService) ShareThing(ctx context.Context, token, thingID string, actions, userIDs []string) error {
 	res, err := ts.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return errors.Wrap(ErrUnauthorizedAccess, err)
@@ -252,14 +254,14 @@ func (ts *thingsService) ShareThing(ctx context.Context, token, thingID string, 
 		return err
 	}
 
-	return ts.claimOwnership(ctx, thingID, policies, userIDs)
+	return ts.claimOwnership(ctx, thingID, actions, userIDs)
 }
 
-func (ts *thingsService) claimOwnership(ctx context.Context, thingID string, policies, userIDs []string) error {
+func (ts *thingsService) claimOwnership(ctx context.Context, thingID string, actions, userIDs []string) error {
 	var errs error
 	for _, userID := range userIDs {
-		for _, policy := range policies {
-			apr, err := ts.auth.AddPolicy(ctx, &mainflux.AddPolicyReq{Obj: thingID, Act: policy, Sub: userID})
+		for _, action := range actions {
+			apr, err := ts.auth.AddPolicy(ctx, &mainflux.AddPolicyReq{Obj: thingID, Act: action, Sub: userID})
 			if err != nil {
 				errs = errors.Wrap(fmt.Errorf("cannot claim ownership on thing '%s' by user '%s': %s", thingID, userID, err), errs)
 			}
