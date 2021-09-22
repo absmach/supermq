@@ -195,6 +195,14 @@ func TestShareThing(t *testing.T) {
 			userIDs:  []string{email2},
 			err:      things.ErrUnauthorizedAccess,
 		},
+		{
+			desc:     "share a thing with partially invalid policies",
+			token:    token,
+			thingID:  th.ID,
+			policies: []string{"", "read"},
+			userIDs:  []string{email2},
+			err:      fmt.Errorf("cannot claim ownership on thing '%s' by user '%s': %s", th.ID, email2, things.ErrMalformedEntity),
+		},
 	}
 
 	for _, tc := range cases {

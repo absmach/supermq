@@ -261,18 +261,14 @@ func (ts *thingsService) claimOwnership(ctx context.Context, thingID string, pol
 		for _, policy := range policies {
 			apr, err := ts.auth.AddPolicy(ctx, &mainflux.AddPolicyReq{Obj: thingID, Act: policy, Sub: userID})
 			if err != nil {
-				errs = accumulateError(errs, errors.Wrap(ErrAuthorization, err), thingID, userID)
+				errs = errors.Wrap(fmt.Errorf("cannot claim ownership on thing '%s' by user '%s': %s", thingID, userID, err), errs)
 			}
 			if !apr.GetAuthorized() {
-				errs = accumulateError(errs, ErrAuthorization, thingID, userID)
+				errs = errors.Wrap(fmt.Errorf("cannot claim ownership on thing '%s' by user '%s': unauthorized", thingID, userID), errs)
 			}
 		}
 	}
 	return errs
-}
-
-func accumulateError(errs, newErr error, thingID, userID string) error {
-	return errors.Wrap(newErr, errors.Wrap(fmt.Errorf("cannot claim ownership on thing: %s by user: %s", thingID, userID), errs))
 }
 
 func (ts *thingsService) UpdateKey(ctx context.Context, token, id, key string) error {
