@@ -4,6 +4,7 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/mainflux/mainflux"
@@ -16,16 +17,24 @@ var _ mainflux.Response = (*updateCommandRes)(nil)
 var _ mainflux.Response = (*removeCommandRes)(nil)
 
 type createCommandRes struct {
-	command string `json:"greeting"`
-	channel string
-	// time    Time
+	ID      string
+	created bool
 }
 
 func (res createCommandRes) Code() int {
+	if res.created {
+		return http.StatusCreated
+	}
+
 	return http.StatusOK
 }
-
 func (res createCommandRes) Headers() map[string]string {
+	if res.created {
+		return map[string]string{
+			"Location": fmt.Sprintf("/commands/%s", res.ID),
+		}
+	}
+
 	return map[string]string{}
 }
 
@@ -34,7 +43,11 @@ func (res createCommandRes) Empty() bool {
 }
 
 type viewCommandRes struct {
-	Greeting string `json:"greeting"`
+	ID       string                 `json:"id"`
+	Owner    string                 `json:"-"`
+	Name     string                 `json:"name,omitempty"`
+	Key      string                 `json:"key"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
 func (res viewCommandRes) Code() int {
@@ -65,9 +78,7 @@ func (res listCommandRes) Empty() bool {
 	return false
 }
 
-type updateCommandRes struct {
-	Greeting string `json:"greeting"`
-}
+type updateCommandRes struct{}
 
 func (res updateCommandRes) Code() int {
 	return http.StatusOK

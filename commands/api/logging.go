@@ -25,9 +25,9 @@ func LoggingMiddleware(svc commands.Service, logger log.Logger) commands.Service
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) CreateCommand(secret string) (response string, err error) {
+func (lm *loggingMiddleware) CreateCommand(cmds ...commands.Command) (response string, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method create_command for secret %s took %s to complete", secret, time.Since(begin))
+		message := fmt.Sprintf("Method CreateCommands for cmds %s took %s to complete", cmds, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -35,12 +35,12 @@ func (lm *loggingMiddleware) CreateCommand(secret string) (response string, err 
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.CreateCommand(secret)
+	return lm.svc.CreateCommand(cmds...)
 }
 
-func (lm *loggingMiddleware) ViewCommand(secret string) (response string, err error) {
+func (lm *loggingMiddleware) ViewCommand(cmds ...commands.Command) (response string, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method ViewCommand for secret %s took %s to complete", secret, time.Since(begin))
+		message := fmt.Sprintf("Method ViewCommand for secret %s took %s to complete", cmds, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -48,12 +48,12 @@ func (lm *loggingMiddleware) ViewCommand(secret string) (response string, err er
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.ViewCommand(secret)
+	return lm.svc.ViewCommand(cmds...)
 }
 
-func (lm *loggingMiddleware) ListCommand(secret string) (response string, err error) {
+func (lm *loggingMiddleware) ListCommand(cmds ...commands.Command) (response string, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method ListCommand for secret %s took %s to complete", secret, time.Since(begin))
+		message := fmt.Sprintf("Method ListCommand for secret %s took %s to complete", cmds, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -61,12 +61,12 @@ func (lm *loggingMiddleware) ListCommand(secret string) (response string, err er
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.ListCommand(secret)
+	return lm.svc.ListCommand(cmds...)
 }
 
-func (lm *loggingMiddleware) UpdateCommand(secret string) (response string, err error) {
+func (lm *loggingMiddleware) UpdateCommand(cmds ...commands.Command) (response string, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method UpdateCommand for secret %s took %s to complete", secret, time.Since(begin))
+		message := fmt.Sprintf("Method UpdateCommand for secret %s took %s to complete", cmds, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -74,12 +74,12 @@ func (lm *loggingMiddleware) UpdateCommand(secret string) (response string, err 
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.UpdateCommand(secret)
+	return lm.svc.UpdateCommand(cmds...)
 }
 
-func (lm *loggingMiddleware) RemoveCommand(secret string) (response string, err error) {
+func (lm *loggingMiddleware) RemoveCommand(cmds ...commands.Command) (response string, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method RemoveCommand for secret %s took %s to complete", secret, time.Since(begin))
+		message := fmt.Sprintf("Method RemoveCommand for secret %s took %s to complete", cmds, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -87,5 +87,5 @@ func (lm *loggingMiddleware) RemoveCommand(secret string) (response string, err 
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.RemoveCommand(secret)
+	return lm.svc.RemoveCommand(cmds...)
 }

@@ -18,13 +18,18 @@ func createCommandEndpoint(svc commands.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		command, err := svc.CreateCommand(req.command)
+		cmd := commands.Command{
+			Command:   req.Command,
+			ChannelID: req.ChannelID,
+			// ExecuteTime: req.ExecuteTime,
+		}
+		cid, err := svc.CreateCommand(cmd)
 		if err != nil {
 			return nil, err
 		}
-
 		res := createCommandRes{
-			command: command,
+			ID:      cid,
+			created: true,
 		}
 		return res, nil
 	}
@@ -38,13 +43,13 @@ func viewCommandEndpoint(svc commands.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		greeting, err := svc.ViewCommand(req.Secret)
+		cid, err := svc.ViewCommand()
 		if err != nil {
 			return nil, err
 		}
 
 		res := viewCommandRes{
-			Greeting: greeting,
+			ID: cid,
 		}
 		return res, nil
 	}
@@ -58,13 +63,27 @@ func listCommandEndpoint(svc commands.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		greeting, err := svc.ListCommand(req.Secret)
+		page, err := svc.ListCommands(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		res := listCommandRes{
-			Greeting: greeting,
+		res := commandsPageRes{
+			pageRes: pageRes{
+				Total:  page.Total,
+				Offset: page.Offset,
+				Limit:  page.Limit,
+				Order:  page.Order,
+				Dir:    page.Dir,
+			},
+			Commands: []viewCommandRes{},
+		}
+		for _, command := range page.Commands {
+			view := viewCommandRes{
+				ID:       command.ID,
+				Metadata: command.Metadata,
+			}
+			res.Commands = append(res.Commands, view)
 		}
 		return res, nil
 	}
@@ -94,18 +113,18 @@ func removeCommandEndpoint(svc commands.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(removeCommandReq)
 
-		if err := req.validate(); err != nil {
-			return nil, err
+		err := req.validate()
+		if err == commands.ErrNotFound {
+			return removeCommandRes{}, nil
 		}
 
-		greeting, err := svc.RemoveCommand(req.Secret)
 		if err != nil {
 			return nil, err
 		}
 
-		res := removeCommandRes{
-			Greeting: greeting,
+		if err := svc.RemoveCommand(commands.Command{}, req.id); err != nil {
+			return nil, err
 		}
-		return res, nil
+		return removeCommandRes{}, nil
 	}
 }

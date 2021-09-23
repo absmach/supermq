@@ -5,6 +5,7 @@ package commands
 
 import (
 	"errors"
+	"fmt"
 )
 
 var (
@@ -21,56 +22,39 @@ var (
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
 	// ViewCommands compares a given string with secret
-	CreateCommand(string) (string, error)
-	ViewCommand(string) (string, error)
-	ListCommand(string) (string, error)
-	UpdateCommand(string) (string, error)
-	RemoveCommand(string) (string, error)
+	CreateCommand(commands ...Command) (string, error)
+	ViewCommand(commands ...Command) (string, error)
+	ListCommand(commands ...Command) (string, error)
+	UpdateCommand(commands ...Command) (string, error)
+	RemoveCommand(commands ...Command) error
 }
 
 type commandsService struct {
-	secret string
 }
 
 var _ Service = (*commandsService)(nil)
 
 // New instantiates the commands service implementation.
 func New(secret string) Service {
-	return &commandsService{
-		secret: secret,
-	}
+	return &commandsService{}
 }
-func (ks *commandsService) CreateCommand(command string) (string, error) {
-	if ks.secret != command {
-		return "", ErrUnauthorizedAccess
-	}
-	return "Hello World :)", nil
+func (ks *commandsService) CreateCommand(commands ...Command) (string, error) {
+	fmt.Println("proba")
+	return "Create Command", nil
 }
 
-func (ks *commandsService) ViewCommand(secret string) (string, error) {
-	if ks.secret != secret {
-		return "", ErrUnauthorizedAccess
-	}
-	return "Hello World :)", nil
+func (ks *commandsService) ViewCommand(commands ...Command) (string, error) {
+	return "View Command", nil
 }
 
-func (ks *commandsService) ListCommand(secret string) (string, error) {
-	if ks.secret != secret {
-		return "", ErrUnauthorizedAccess
-	}
-	return "Hello World :)", nil
+func (ks *commandsService) ListCommand(commands ...Command) (string, error) {
+	return "Command list", nil
 }
 
-func (ks *commandsService) UpdateCommand(secret string) (string, error) {
-	if ks.secret != secret {
-		return "", ErrUnauthorizedAccess
-	}
-	return "Hello World :)", nil
+func (ks *commandsService) UpdateCommand(commands ...Command) (string, error) {
+	return "Command updated", nil
 }
 
-func (ks *commandsService) RemoveCommand(secret string) (string, error) {
-	if ks.secret != secret {
-		return "", ErrUnauthorizedAccess
-	}
-	return "Hello World :)", nil
+func (ks *commandsService) RemoveCommand(commands ...Command) (string, error) {
+	return "Command removed", nil
 }
