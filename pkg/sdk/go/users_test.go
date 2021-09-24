@@ -19,6 +19,7 @@ import (
 	"github.com/mainflux/mainflux/users/mocks"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -144,7 +145,8 @@ func TestCreateToken(t *testing.T) {
 
 	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
 	token := tkn.GetValue()
-	mainfluxSDK.CreateUser(token, user)
+	_, err := mainfluxSDK.CreateUser(token, user)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	cases := []struct {
 		desc  string

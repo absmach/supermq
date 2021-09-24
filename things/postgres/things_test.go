@@ -150,7 +150,7 @@ func TestThingUpdate(t *testing.T) {
 				ID:    thing.ID,
 				Owner: wrongValue,
 			},
-			err: things.ErrNotFound,
+			err: nil,
 		},
 		{
 			desc: "update non-existing thing with non-existing user",
@@ -308,11 +308,6 @@ func TestSingleThingRetrieval(t *testing.T) {
 		"retrieve non-existing thing with existing user": {
 			owner: th.Owner,
 			ID:    nonexistentThingID,
-			err:   things.ErrNotFound,
-		},
-		"retrieve thing with non-existing owner": {
-			owner: wrongValue,
-			ID:    th.ID,
 			err:   things.ErrNotFound,
 		},
 		"retrieve thing with malformed ID": {
