@@ -4,7 +4,6 @@
 package smpp
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/fiorix/go-smpp/smpp"
@@ -60,10 +59,9 @@ func (n *notifier) Notify(from string, to []string, msg messaging.Message) error
 		Text:          pdutext.Raw(msg.Payload),
 		Register:      pdufield.NoDeliveryReceipt,
 	}
-	sm, err := n.t.Submit(send)
+	_, err := n.t.Submit(send)
 	if err != nil {
 		return err
 	}
-	fmt.Println("Message ID:", sm.RespID())
 	return nil
 }
