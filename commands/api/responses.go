@@ -1,13 +1,15 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-package http
+package api
 
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/commands"
 )
 
 var _ mainflux.Response = (*createCommandRes)(nil)
@@ -43,11 +45,14 @@ func (res createCommandRes) Empty() bool {
 }
 
 type viewCommandRes struct {
-	ID       string                 `json:"id"`
-	Owner    string                 `json:"-"`
-	Name     string                 `json:"name,omitempty"`
-	Key      string                 `json:"key"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	ID          string            `json:"id"`
+	Owner       string            `json:"-"`
+	Name        string            `json:"name,omitempty"`
+	Key         string            `json:"key"`
+	Metadata    commands.Metadata `json:"metadata,omitempty"`
+	C           string            `json:"command"`
+	ChannelID   string            `json:"channel_id"`
+	ExecuteTime time.Time         `json:"execution_time"`
 }
 
 func (res viewCommandRes) Code() int {
@@ -63,7 +68,6 @@ func (res viewCommandRes) Empty() bool {
 }
 
 type listCommandRes struct {
-	Greeting string `json:"greeting"`
 }
 
 func (res listCommandRes) Code() int {
@@ -78,7 +82,8 @@ func (res listCommandRes) Empty() bool {
 	return false
 }
 
-type updateCommandRes struct{}
+type updateCommandRes struct {
+}
 
 func (res updateCommandRes) Code() int {
 	return http.StatusOK
@@ -92,9 +97,7 @@ func (res updateCommandRes) Empty() bool {
 	return false
 }
 
-type removeCommandRes struct {
-	Greeting string `json:"greeting"`
-}
+type removeCommandRes struct{}
 
 func (res removeCommandRes) Code() int {
 	return http.StatusOK

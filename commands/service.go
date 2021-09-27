@@ -21,40 +21,49 @@ var (
 // Service specifies an API that must be fullfiled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
-	// ViewCommands compares a given string with secret
-	CreateCommand(commands ...Command) (string, error)
-	ViewCommand(commands ...Command) (string, error)
-	ListCommand(commands ...Command) (string, error)
-	UpdateCommand(commands ...Command) (string, error)
-	RemoveCommand(commands ...Command) error
+	CreateCommand(token string, commands Command) (string, error)
+
+	ViewCommand(token string, id string) (Command, error)
+
+	ListCommands(token string, filter interface{}) ([]Command, error)
+
+	UpdateCommand(token string, commands Command) error
+
+	RemoveCommand(token string, id string) error
 }
 
 type commandsService struct {
+	repo CommandRepository
 }
 
 var _ Service = (*commandsService)(nil)
 
-// New instantiates the commands service implementation.
-func New(secret string) Service {
-	return &commandsService{}
+func New(repo CommandRepository) Service {
+	return commandsService{
+		repo: repo,
+	}
 }
-func (ks *commandsService) CreateCommand(commands ...Command) (string, error) {
-	fmt.Println("proba")
-	return "Create Command", nil
-}
-
-func (ks *commandsService) ViewCommand(commands ...Command) (string, error) {
-	return "View Command", nil
+func (ks commandsService) CreateCommand(token string, commands Command) (string, error) {
+	fmt.Println("Command Created")
+	return "", nil
 }
 
-func (ks *commandsService) ListCommand(commands ...Command) (string, error) {
-	return "Command list", nil
+func (ks commandsService) ViewCommand(token, id string) (Command, error) {
+	fmt.Println("View Command")
+	return Command{}, nil
 }
 
-func (ks *commandsService) UpdateCommand(commands ...Command) (string, error) {
-	return "Command updated", nil
+func (ks commandsService) ListCommands(token string, filter interface{}) ([]Command, error) {
+	fmt.Println("List Command")
+	return nil, nil
 }
 
-func (ks *commandsService) RemoveCommand(commands ...Command) (string, error) {
-	return "Command removed", nil
+func (ks commandsService) UpdateCommand(token string, command Command) error {
+	fmt.Println("Command Updated")
+	return nil
+}
+
+func (ks commandsService) RemoveCommand(token, id string) error {
+	fmt.Println("Command removed")
+	return nil
 }

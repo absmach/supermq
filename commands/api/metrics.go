@@ -30,47 +30,47 @@ func MetricsMiddleware(svc commands.Service, counter metrics.Counter, latency me
 	}
 }
 
-func (ms *metricsMiddleware) CreateCommand(cmds ...commands.Command) (response string, err error) {
+func (ms *metricsMiddleware) CreateCommand(token string, cmd commands.Command) (id string, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "createCommand").Add(1)
 		ms.latency.With("method", "createCommand").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.CreateCommand(cmds...)
+	return ms.svc.CreateCommand(token, cmd)
 }
 
-func (ms *metricsMiddleware) ViewCommand(cmds ...commands.Command) (response string, err error) {
+func (ms *metricsMiddleware) ViewCommand(token, id string) (cmd commands.Command, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "viewCommand").Add(1)
 		ms.latency.With("method", "viewCommand").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.ViewCommand(cmds...)
+	return ms.svc.ViewCommand(token, id)
 }
 
-func (ms *metricsMiddleware) ListCommand(cmds ...commands.Command) (response string, err error) {
+func (ms *metricsMiddleware) ListCommands(token string, filter interface{}) (cmd []commands.Command, err error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "listCommand").Add(1)
-		ms.latency.With("method", "listCommand").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "listCommands").Add(1)
+		ms.latency.With("method", "listCommands").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.ListCommand(cmds...)
+	return ms.svc.ListCommands(token, filter)
 }
 
-func (ms *metricsMiddleware) UpdateCommand(cmds ...commands.Command) (response string, err error) {
+func (ms *metricsMiddleware) UpdateCommand(token string, cmd commands.Command) (err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "updateCommand").Add(1)
 		ms.latency.With("method", "updateCommand").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.UpdateCommand(cmds...)
+	return ms.svc.UpdateCommand(token, cmd)
 }
 
-func (ms *metricsMiddleware) RemoveCommand(cmds ...commands.Command) (response string, err error) {
+func (ms *metricsMiddleware) RemoveCommand(token, id string) (err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "removeCommand").Add(1)
 		ms.latency.With("method", "removeCommand").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.RemoveCommand(cmds...)
+	return ms.svc.RemoveCommand(token, id)
 }

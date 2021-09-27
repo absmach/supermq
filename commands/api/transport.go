@@ -1,7 +1,7 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-package http
+package api
 
 import (
 	"context"
@@ -83,7 +83,9 @@ func decodeCreateCommand(_ context.Context, r *http.Request) (interface{}, error
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, errUnsupportedContentType
 	}
-	req := createCommandReq{}
+	req := createCommandReq{
+		token: r.Header.Get("Authorization"),
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}
@@ -96,7 +98,10 @@ func decodeViewCommand(_ context.Context, r *http.Request) (interface{}, error) 
 		return nil, errUnsupportedContentType
 	}
 
-	req := viewCommandReq{}
+	req := viewCommandReq{
+		token: r.Header.Get("Authorization"),
+		id:    bone.GetValue(r, "id"),
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}
@@ -122,7 +127,10 @@ func decodeUpdateCommand(_ context.Context, r *http.Request) (interface{}, error
 		return nil, errUnsupportedContentType
 	}
 
-	req := updateCommandReq{}
+	req := updateCommandReq{
+		token: r.Header.Get("Authorization"),
+		id:    bone.GetValue(r, "id"),
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}
@@ -135,7 +143,10 @@ func decodeRemoveCommand(_ context.Context, r *http.Request) (interface{}, error
 		return nil, errUnsupportedContentType
 	}
 
-	req := removeCommandReq{}
+	req := removeCommandReq{
+		token: r.Header.Get("Authorization"),
+		id:    bone.GetValue(r, "id"),
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}

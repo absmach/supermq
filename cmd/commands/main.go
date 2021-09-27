@@ -13,10 +13,12 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/commands"
 	"github.com/mainflux/mainflux/commands/api"
-	commandshttpapi "github.com/mainflux/mainflux/commands/api/commands/http"
+	commandshttpapi "github.com/mainflux/mainflux/commands/api"
+	"github.com/mainflux/mainflux/commands/postgres"
 	"github.com/mainflux/mainflux/logger"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
@@ -26,12 +28,20 @@ import (
 )
 
 const (
-	defLogLevel   = "error"
-	defHTTPPort   = "8191"
-	defJaegerURL  = ""
-	defServerCert = ""
-	defServerKey  = ""
-	defSecret     = "secret"
+	defLogLevel      = "error"
+	defHTTPPort      = "8191"
+	defJaegerURL     = ""
+	defServerCert    = ""
+	defServerKey     = ""
+	defDBHost        = "localhost"
+	defDBPort        = "5432"
+	defDBUser        = "mainflux"
+	defDBPass        = "mainflux"
+	defDB            = "users"
+	defDBSSLMode     = "disable"
+	defDBSSLCert     = ""
+	defDBSSLKey      = ""
+	defDBSSLRootCert = ""
 
 	envLogLevel   = "MF_COMMANDS_LOG_LEVEL"
 	envHTTPPort   = "MF_COMMANDS_HTTP_PORT"
@@ -39,6 +49,16 @@ const (
 	envServerKey  = "MF_COMMANDS_SERVER_KEY"
 	envSecret     = "MF_COMMANDS_SECRET"
 	envJaegerURL  = "MF_JAEGER_URL"
+
+	envDBHost        = "MF_COMMANDS_DB_HOST"
+	envDBPort        = "MF_COMMANDS_DB_PORT"
+	envDBUser        = "MF_COMMANDS_DB_USER"
+	envDBPass        = "MF_COMMANDS_DB_PASS"
+	envDB            = "MF_COMMANDS_DB"
+	envDBSSLMode     = "MF_COMMANDS_DB_SSL_MODE"
+	envDBSSLCert     = "MF_COMMANDS_DB_SSL_CERT"
+	envDBSSLKey      = "MF_COMMANDS_DB_SSL_KEY"
+	envDBSSLRootCert = "MF_COMMANDS_DB_SSL_ROOT_CERT"
 )
 
 type config struct {
@@ -50,6 +70,7 @@ type config struct {
 	serverKey    string
 	secret       string
 	jaegerURL    string
+	dbConfig     postgres.Config
 }
 
 func main() {
@@ -63,7 +84,10 @@ func main() {
 	commandsTracer, commandsCloser := initJaeger("commands", cfg.jaegerURL, logger)
 	defer commandsCloser.Close()
 
-	svc := newService(cfg.secret, logger)
+	db := connectToDB(cfg.dbConfig, logger)
+	defer db.Close()
+
+	svc := newService(nil, logger)
 	errs := make(chan error, 2)
 
 	go startHTTPServer(commandshttpapi.MakeHandler(commandsTracer, svc), cfg.httpPort, cfg, logger, errs)
@@ -79,13 +103,24 @@ func main() {
 }
 
 func loadConfig() config {
+	dbConfig := postgres.Config{
+		Host:        mainflux.Env(envDBHost, defDBHost),
+		Port:        mainflux.Env(envDBPort, defDBPort),
+		User:        mainflux.Env(envDBUser, defDBUser),
+		Pass:        mainflux.Env(envDBPass, defDBPass),
+		Name:        mainflux.Env(envDB, defDB),
+		SSLMode:     mainflux.Env(envDBSSLMode, defDBSSLMode),
+		SSLCert:     mainflux.Env(envDBSSLCert, defDBSSLCert),
+		SSLKey:      mainflux.Env(envDBSSLKey, defDBSSLKey),
+		SSLRootCert: mainflux.Env(envDBSSLRootCert, defDBSSLRootCert),
+	}
 	return config{
 		logLevel:   mainflux.Env(envLogLevel, defLogLevel),
 		httpPort:   mainflux.Env(envHTTPPort, defHTTPPort),
 		serverCert: mainflux.Env(envServerCert, defServerCert),
 		serverKey:  mainflux.Env(envServerKey, defServerKey),
 		jaegerURL:  mainflux.Env(envJaegerURL, defJaegerURL),
-		secret:     mainflux.Env(envSecret, defSecret),
+		dbConfig:   dbConfig,
 	}
 }
 
@@ -113,8 +148,8 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 	return tracer, closer
 }
 
-func newService(secret string, logger logger.Logger) commands.Service {
-	svc := commands.New(secret)
+func newService(repo commands.CommandRepository, logger logger.Logger) commands.Service {
+	svc := commands.New(repo)
 
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
@@ -146,4 +181,13 @@ func startHTTPServer(handler http.Handler, port string, cfg config, logger logge
 	}
 	logger.Info(fmt.Sprintf("Commands service started using http on port %s", cfg.httpPort))
 	errs <- http.ListenAndServe(p, handler)
+}
+
+func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sqlx.DB {
+	db, err := postgres.Connect(dbConfig)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to postgres: %s", err))
+		os.Exit(1)
+	}
+	return db
 }
