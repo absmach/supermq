@@ -250,10 +250,23 @@ func (tr thingRepository) RetrieveAll(ctx context.Context, owner string, pm thin
 		return things.Page{}, errors.Wrap(things.ErrSelectEntity, err)
 	}
 
+	var query []string
+	if mq != "" {
+		query = append(query, mq)
+	}
+	if nq != "" {
+		query = append(query, nq)
+	}
+
+	var whereClause string
+	if len(query) > 0 {
+		whereClause = fmt.Sprintf(" WHERE %s", strings.Join(query, " AND "))
+	}
+
 	q := fmt.Sprintf(`SELECT id, name, key, metadata FROM things
-	      WHERE owner = :owner %s%s ORDER BY %s %s LIMIT :limit OFFSET :offset;`, mq, nq, oq, dq)
+	      %s ORDER BY %s %s LIMIT :limit OFFSET :offset;`, whereClause, oq, dq)
 	params := map[string]interface{}{
-		"owner":    owner,
+		// "owner":    owner,
 		"limit":    pm.Limit,
 		"offset":   pm.Offset,
 		"name":     name,
@@ -281,7 +294,7 @@ func (tr thingRepository) RetrieveAll(ctx context.Context, owner string, pm thin
 		items = append(items, th)
 	}
 
-	cq := fmt.Sprintf(`SELECT COUNT(*) FROM things WHERE owner = :owner %s%s;`, nq, mq)
+	cq := fmt.Sprintf(`SELECT COUNT(*) FROM things %s;`, whereClause)
 
 	total, err := total(ctx, tr.db, cq, params)
 	if err != nil {

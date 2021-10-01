@@ -5,13 +5,17 @@ package keto
 
 import (
 	"context"
+	"regexp"
 
 	"github.com/mainflux/mainflux/auth"
 	"github.com/mainflux/mainflux/pkg/errors"
 	acl "github.com/ory/keto/proto/ory/keto/acl/v1alpha1"
 )
 
-const ketoNamespace = "members"
+const (
+	subjectSetRegex = "^.{1,}:.{1,}#.{1,}$" // expected subject set structure is <namespace>:<object>#<relation>
+	ketoNamespace   = "members"
+)
 
 type policyAgent struct {
 	writer  acl.WriteServiceClient
@@ -29,9 +33,7 @@ func (c policyAgent) CheckPolicy(ctx context.Context, pr auth.PolicyReq) error {
 		Namespace: ketoNamespace,
 		Object:    pr.Object,
 		Relation:  pr.Relation,
-		Subject: &acl.Subject{Ref: &acl.Subject_Id{
-			Id: pr.Subject,
-		}},
+		Subject:   getSubject(pr),
 	})
 	if err != nil {
 		return errors.Wrap(err, auth.ErrAuthorization)
@@ -80,4 +82,31 @@ func (c policyAgent) DeletePolicy(ctx context.Context, pr auth.PolicyReq) error 
 		},
 	})
 	return err
+}
+
+// getSubject returns a 'subject' field for ACL(access control lists).
+// If the given PolicyReq argument contains a subject as subject set,
+// it returns subject set; otherwise, it returns a subject.
+func getSubject(pr auth.PolicyReq) *acl.Subject {
+	if isSubjectSet(pr.Subject) {
+		return &acl.Subject{
+			Ref: &acl.Subject_Set{Set: &acl.SubjectSet{
+				Namespace: ketoNamespace,
+				Object:    pr.Object,
+				Relation:  pr.Relation,
+			}},
+		}
+	}
+
+	return &acl.Subject{Ref: &acl.Subject_Id{Id: pr.Subject}}
+}
+
+// isSubjectSet returns true when given subject is subject set.
+// Otherwise, it returns false.
+func isSubjectSet(subject string) bool {
+	r, err := regexp.Compile(subjectSetRegex)
+	if err != nil {
+		return false
+	}
+	return r.MatchString(subject)
 }

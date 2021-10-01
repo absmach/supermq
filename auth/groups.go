@@ -139,6 +139,9 @@ type GroupService interface {
 
 	// Unassign removes member with memberID from group identified by groupID.
 	Unassign(ctx context.Context, token, groupID string, memberIDs ...string) error
+
+	// ShareAccessRight adds access rights for user group on thing group.
+	ShareAccessRight(ctx context.Context, token, thingGroupID, userGroupID string) error
 }
 
 type GroupRepository interface {

@@ -5,6 +5,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/mainflux/mainflux"
@@ -15,6 +16,8 @@ import (
 const (
 	loginDuration    = 10 * time.Hour
 	recoveryDuration = 5 * time.Minute
+
+	memberRelation = "member"
 )
 
 var (
@@ -255,6 +258,10 @@ func (svc service) CreateGroup(ctx context.Context, token string, group Group) (
 		return Group{}, err
 	}
 
+	if err := svc.agent.AddPolicy(ctx, PolicyReq{Object: group.ID, Relation: memberRelation, Subject: user.ID}); err != nil {
+		return Group{}, err
+	}
+
 	return group, nil
 }
 
@@ -317,7 +324,39 @@ func (svc service) Assign(ctx context.Context, token string, groupID, groupType 
 	if _, err := svc.Identify(ctx, token); err != nil {
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
-	return svc.groups.Assign(ctx, groupID, groupType, memberIDs...)
+
+	if err := svc.groups.Assign(ctx, groupID, groupType, memberIDs...); err != nil {
+		return err
+	}
+
+	if groupType == "things" {
+		ss := buildSubjectSet("members", groupID, "access")
+		var errs error
+		for _, memberID := range memberIDs {
+			for _, action := range []string{"read", "write", "delete"} {
+				if err := svc.agent.AddPolicy(ctx, PolicyReq{Object: memberID, Relation: action, Subject: ss}); err != nil {
+					errs = errors.Wrap(fmt.Errorf("cannot add thing: '%s' to thing group: '%s'", memberID, groupID), errs)
+				}
+			}
+		}
+		return errs
+	}
+
+	var errs error
+	for _, memberID := range memberIDs {
+		if err := svc.agent.AddPolicy(ctx, PolicyReq{Object: groupID, Relation: memberRelation, Subject: memberID}); err != nil {
+			errs = errors.Wrap(fmt.Errorf("cannot add user: '%s' to user group: '%s'", memberID, groupID), errs)
+		}
+	}
+	return errs
+}
+
+func (svc service) ShareAccessRight(ctx context.Context, token, thingGroupID, userGroupID string) error {
+	return svc.agent.AddPolicy(ctx, PolicyReq{Object: thingGroupID, Relation: "access", Subject: buildSubjectSet("members", userGroupID, memberRelation)})
+}
+
+func buildSubjectSet(namespace, object, relation string) string {
+	return fmt.Sprintf("%s:%s#%s", namespace, object, relation)
 }
 
 func (svc service) Unassign(ctx context.Context, token string, groupID string, memberIDs ...string) error {

@@ -215,10 +215,6 @@ func (ts *thingsService) createThing(ctx context.Context, thing *Thing, identity
 		}
 	}
 
-	if err := ts.claimOwnership(ctx, thing.ID, []string{readRelationKey, writeRelationKey, deleteRelationKey}, []string{identity.GetId()}); err != nil {
-		return Thing{}, err
-	}
-
 	ths, err := ts.things.Save(ctx, *thing)
 	if err != nil {
 		return Thing{}, err
@@ -226,6 +222,11 @@ func (ts *thingsService) createThing(ctx context.Context, thing *Thing, identity
 	if len(ths) == 0 {
 		return Thing{}, ErrCreateEntity
 	}
+
+	if err := ts.claimOwnership(ctx, ths[0].ID, []string{readRelationKey, writeRelationKey, deleteRelationKey}, []string{identity.GetId()}); err != nil {
+		return Thing{}, err
+	}
+
 	return ths[0], nil
 }
 
@@ -307,7 +308,19 @@ func (ts *thingsService) ListThings(ctx context.Context, token string, pm PageMe
 		return Page{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	return ts.things.RetrieveAll(ctx, res.GetEmail(), pm)
+	page, err := ts.things.RetrieveAll(ctx, res.GetEmail(), pm)
+	if err != nil {
+		return Page{}, err
+	}
+
+	ths := []Thing{}
+	for _, thing := range page.Things {
+		if err := ts.authorize(ctx, res.GetId(), thing.ID, readRelationKey); err == nil {
+			ths = append(ths, thing)
+		}
+	}
+	page.Things = ths
+	return page, nil
 }
 
 func (ts *thingsService) ListThingsByChannel(ctx context.Context, token, chID string, pm PageMetadata) (Page, error) {
