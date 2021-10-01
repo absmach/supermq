@@ -17,6 +17,7 @@ func createCommandEndpoint(svc commands.Service) endpoint.Endpoint {
 			return nil, err
 		}
 		cmd := commands.Command{
+			Name:        req.Name,
 			Command:     req.Command,
 			ChannelID:   req.ChannelID,
 			ExecuteTime: req.ExecuteTime,
@@ -50,7 +51,7 @@ func viewCommandEndpoint(svc commands.Service) endpoint.Endpoint {
 			ID:          cmd.ID,
 			Owner:       cmd.Owner,
 			Name:        cmd.Name,
-			C:           cmd.Command,
+			Command:     cmd.Command,
 			ChannelID:   cmd.ChannelID,
 			ExecuteTime: cmd.ExecuteTime,
 			Metadata:    cmd.Metadata,
@@ -101,9 +102,10 @@ func updateCommandEndpoint(svc commands.Service) endpoint.Endpoint {
 			return nil, err
 		}
 		cmd := commands.Command{
-			ID:       req.id,
-			Name:     req.Name,
-			Metadata: req.Metadata,
+			Command:     req.Command,
+			Name:        req.Name,
+			ExecuteTime: req.ExecuteTime,
+			Metadata:    req.Metadata,
 		}
 		if err := svc.UpdateCommand(req.token, cmd); err != nil {
 			return nil, err

@@ -22,13 +22,9 @@ var (
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
 	CreateCommand(token string, commands Command) (string, error)
-
 	ViewCommand(token string, id string) (Command, error)
-
 	ListCommands(token string, filter interface{}) ([]Command, error)
-
 	UpdateCommand(token string, commands Command) error
-
 	RemoveCommand(token string, id string) error
 }
 

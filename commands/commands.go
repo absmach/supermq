@@ -2,7 +2,6 @@ package commands
 
 import (
 	"context"
-	"time"
 )
 
 type Metadata map[string]interface{}
@@ -13,7 +12,7 @@ type Command struct {
 	Name        string
 	Command     string
 	ChannelID   string
-	ExecuteTime time.Time
+	ExecuteTime string
 	Metadata    Metadata
 }
 

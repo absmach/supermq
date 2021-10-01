@@ -48,11 +48,10 @@ type viewCommandRes struct {
 	ID          string            `json:"id"`
 	Owner       string            `json:"-"`
 	Name        string            `json:"name,omitempty"`
-	Key         string            `json:"key"`
-	Metadata    commands.Metadata `json:"metadata,omitempty"`
-	C           string            `json:"command"`
+	Command     string            `json:"command"`
 	ChannelID   string            `json:"channel_id"`
-	ExecuteTime time.Time         `json:"execution_time"`
+	ExecuteTime string            `json:"execution_time"`
+	Metadata    commands.Metadata `json:"metadata,omitempty"`
 }
 
 func (res viewCommandRes) Code() int {
@@ -83,6 +82,10 @@ func (res listCommandRes) Empty() bool {
 }
 
 type updateCommandRes struct {
+	Command     string            `json:"command"`
+	Name        string            `json:"name,omitempty"`
+	ExecuteTime time.Time         `json:"execution_time"`
+	Metadata    commands.Metadata `json:"metadata,omitempty"`
 }
 
 func (res updateCommandRes) Code() int {

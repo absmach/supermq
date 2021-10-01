@@ -4,8 +4,6 @@
 package api
 
 import (
-	"time"
-
 	"github.com/mainflux/mainflux/commands"
 )
 
@@ -15,10 +13,10 @@ type apiReq interface {
 
 type createCommandReq struct {
 	token       string
-	Command     string    `json:"command"`
-	Name        string    `josn:"name"`
-	ChannelID   string    `json:"channel_id"`
-	ExecuteTime time.Time `json:"execute_time"`
+	Command     string `json:"command"`
+	Name        string `josn:"name"`
+	ChannelID   string `json:"channel_id"`
+	ExecuteTime string `json:"execute_time"`
 }
 
 func (req createCommandReq) validate() error {
@@ -53,10 +51,12 @@ func (req listCommandReq) validate() error {
 }
 
 type updateCommandReq struct {
-	token    string
-	id       string
-	Name     string                 `json:"name,omitempty"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	token       string
+	id          string
+	Command     string                 `json:"command"`
+	Name        string                 `josn:"name"`
+	ExecuteTime string                 `json:"execute_time"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
 func (req updateCommandReq) validate() error {
