@@ -216,7 +216,6 @@ func authorize(r *http.Request, chanID string) (err error) {
 	if token == "" {
 		return errors.ErrAuthentication
 	}
-
 	if strings.Contains(token, "Bearer ") {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
@@ -228,7 +227,7 @@ func authorize(r *http.Request, chanID string) (err error) {
 			if ok && e.Code() == codes.PermissionDenied {
 				return errUnauthorizedAccess
 			}
-			return err
+			return errUnauthorizedAccess
 		}
 		_, err = auth.IsChannelOwner(ctx, &mainflux.ChannelOwnerReq{Owner: user.Email, ChanID: chanID})
 		if err != nil {
