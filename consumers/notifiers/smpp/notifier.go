@@ -18,8 +18,8 @@ import (
 var _ notifiers.Notifier = (*notifier)(nil)
 
 type notifier struct {
-	t             *smpp.Transmitter
-	tr            transformers.Transformer
+	transmiter    *smpp.Transmitter
+	tranformer    transformers.Transformer
 	sourceAddrTON uint8
 	sourceAddrNPI uint8
 	destAddrTON   uint8
@@ -37,8 +37,8 @@ func New(cfg Config) notifiers.Notifier {
 	}
 	t.Bind()
 	ret := &notifier{
-		t:             t,
-		tr:            json.New(),
+		transmiter:    t,
+		tranformer:    json.New(),
 		sourceAddrTON: cfg.SourceAddrTON,
 		destAddrTON:   cfg.DestAddrTON,
 		sourceAddrNPI: cfg.SourceAddrNPI,
@@ -59,7 +59,7 @@ func (n *notifier) Notify(from string, to []string, msg messaging.Message) error
 		Text:          pdutext.Raw(msg.Payload),
 		Register:      pdufield.NoDeliveryReceipt,
 	}
-	_, err := n.t.Submit(send)
+	_, err := n.transmiter.Submit(send)
 	if err != nil {
 		return err
 	}
