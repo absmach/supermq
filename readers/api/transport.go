@@ -8,11 +8,11 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
+	"github.com/gofrs/uuid"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/httputil"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -44,6 +44,7 @@ const (
 
 var (
 	errUnauthorizedAccess = errors.New("missing or invalid credentials provided")
+	errTokenNotBearer     = errors.New("authentication scheme must be Bearer")
 	auth                  readers.Auth
 )
 
@@ -216,11 +217,16 @@ func authorize(r *http.Request, chanID string) (err error) {
 	if token == "" {
 		return errors.ErrAuthentication
 	}
-	if strings.Contains(token, "Bearer ") {
+	// if strings.Contains(token, "Bearer ") {
+	// 	token = strings.ReplaceAll(token, "Bearer ", "")
+	// } else {
+	// 	return errTokenNotBearer
+	// }
+
+	if uuid.FromStringOrNil(token) == uuid.Nil {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 
-		token = strings.ReplaceAll(token, "Bearer ", "")
 		user, err := auth.Identify(ctx, &mainflux.Token{Value: token})
 		if err != nil {
 			e, ok := status.FromError(err)
@@ -239,6 +245,7 @@ func authorize(r *http.Request, chanID string) (err error) {
 		}
 		return nil
 	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
