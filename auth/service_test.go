@@ -26,6 +26,9 @@ const (
 	id          = "testID"
 	groupName   = "mfx"
 	description = "Description"
+
+	memberRel      = "member"
+	authoritiesObj = "authorities"
 )
 
 func newService() auth.Service {
@@ -34,7 +37,7 @@ func newService() auth.Service {
 	idProvider := uuid.NewMock()
 
 	mockAuthzDB := map[string][]mocks.MockSubjectSet{}
-	mockAuthzDB[id] = append(mockAuthzDB[id], mocks.MockSubjectSet{Object: "authorities", Relation: "member"})
+	mockAuthzDB[id] = append(mockAuthzDB[id], mocks.MockSubjectSet{Object: authoritiesObj, Relation: memberRel})
 	ketoMock := mocks.NewKetoMock(mockAuthzDB)
 
 	t := jwt.New(secret)
@@ -1005,7 +1008,34 @@ func TestUnassign(t *testing.T) {
 	assert.True(t, errors.Contains(err, auth.ErrGroupNotFound), fmt.Sprintf("Unauthorized access: expected %v got %v", nil, err))
 }
 
-func TestShareGroup(t *testing.T) {
+func TestAuthorize(t *testing.T) {
+	svc := newService()
+
+	pr := auth.PolicyReq{Object: authoritiesObj, Relation: memberRel, Subject: id}
+	err := svc.Authorize(context.Background(), pr)
+	require.Nil(t, err, fmt.Sprintf("authorizing initial %v policy expected to succeed: %s", pr, err))
+}
+
+func TestAddPolicy(t *testing.T) {
+	svc := newService()
+
+	pr := auth.PolicyReq{Object: "obj", Relation: "rel", Subject: "sub"}
+	err := svc.AddPolicy(context.Background(), pr)
+	require.Nil(t, err, fmt.Sprintf("adding %v policy expected to succeed: %v", pr, err))
+
+	err = svc.Authorize(context.Background(), pr)
+	require.Nil(t, err, fmt.Sprintf("checking shared %v policy expected to be succeed: %#v", pr, err))
+}
+
+func TestDeletePolicy(t *testing.T) {
+	svc := newService()
+
+	pr := auth.PolicyReq{Object: authoritiesObj, Relation: memberRel, Subject: id}
+	err := svc.DeletePolicy(context.Background(), pr)
+	require.Nil(t, err, fmt.Sprintf("deleting %v policy expected to succeed: %s", pr, err))
+}
+
+func TestShareAccessRight(t *testing.T) {
 	svc := newService()
 
 	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
