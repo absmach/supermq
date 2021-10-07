@@ -74,7 +74,7 @@ type Authn interface {
 	// issued by the user identified by the provided key.
 	Revoke(ctx context.Context, token, id string) error
 
-	// Retrieve retrieves data for the Key identified by the provided
+	// RetrieveKey retrieves data for the Key identified by the provided
 	// ID, that is issued by the user identified by the provided key.
 	RetrieveKey(ctx context.Context, token, id string) (Key, error)
 
@@ -181,6 +181,13 @@ func (svc service) AddPolicy(ctx context.Context, pr PolicyReq) error {
 
 func (svc service) DeletePolicy(ctx context.Context, pr PolicyReq) error {
 	return svc.agent.DeletePolicy(ctx, pr)
+}
+
+func (svc service) ShareAccessRight(ctx context.Context, token, thingGroupID, userGroupID string) error {
+	if _, err := svc.Identify(ctx, token); err != nil {
+		return errors.Wrap(ErrUnauthorizedAccess, err)
+	}
+	return svc.agent.AddPolicy(ctx, PolicyReq{Object: thingGroupID, Relation: "access", Subject: buildSubjectSet("members", userGroupID, memberRelation)})
 }
 
 func (svc service) tmpKey(duration time.Duration, key Key) (Key, string, error) {
@@ -349,10 +356,6 @@ func (svc service) Assign(ctx context.Context, token string, groupID, groupType 
 		}
 	}
 	return errs
-}
-
-func (svc service) ShareAccessRight(ctx context.Context, token, thingGroupID, userGroupID string) error {
-	return svc.agent.AddPolicy(ctx, PolicyReq{Object: thingGroupID, Relation: "access", Subject: buildSubjectSet("members", userGroupID, memberRelation)})
 }
 
 func buildSubjectSet(namespace, object, relation string) string {
