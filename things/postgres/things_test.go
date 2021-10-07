@@ -369,7 +369,8 @@ func TestThingRetrieveByKey(t *testing.T) {
 
 func TestMultiThingRetrieval(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
-	cleanTestTable(t, context.Background(), "things", dbMiddleware)
+	err := cleanTestTable(context.Background(), "things", dbMiddleware)
+	assert.Nil(t, err, fmt.Sprintf("cleaning table 'things' expected to success %v", err))
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	email := "thing-multi-retrieval@example.com"
@@ -757,8 +758,8 @@ func testSortThings(t *testing.T, pm things.PageMetadata, ths []things.Thing) {
 	}
 }
 
-func cleanTestTable(t *testing.T, ctx context.Context, table string, db postgres.Database) {
+func cleanTestTable(ctx context.Context, table string, db postgres.Database) error {
 	q := fmt.Sprintf(`DELETE FROM %s CASCADE;`, table)
 	_, err := db.NamedExecContext(ctx, q, map[string]interface{}{})
-	assert.Nil(t, err, fmt.Sprintf("cleaning table '%s' expected to success %v", table, err))
+	return err
 }
