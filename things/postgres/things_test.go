@@ -369,6 +369,7 @@ func TestThingRetrieveByKey(t *testing.T) {
 
 func TestMultiThingRetrieval(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
+	cleanTestTable(t, context.Background(), "things", dbMiddleware)
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	email := "thing-multi-retrieval@example.com"
@@ -426,7 +427,7 @@ func TestMultiThingRetrieval(t *testing.T) {
 		pageMetadata things.PageMetadata
 		size         uint64
 	}{
-		"retrieve all things with existing owner": {
+		"retrieve all things": {
 			owner: email,
 			pageMetadata: things.PageMetadata{
 				Offset: 0,
@@ -443,15 +444,6 @@ func TestMultiThingRetrieval(t *testing.T) {
 				Total:  n,
 			},
 			size: n / 2,
-		},
-		"retrieve things with non-existing owner": {
-			owner: wrongValue,
-			pageMetadata: things.PageMetadata{
-				Offset: 0,
-				Limit:  n,
-				Total:  0,
-			},
-			size: 0,
 		},
 		"retrieve things with existing name": {
 			owner: email,
@@ -763,4 +755,10 @@ func testSortThings(t *testing.T, pm things.PageMetadata, ths []things.Thing) {
 	default:
 		break
 	}
+}
+
+func cleanTestTable(t *testing.T, ctx context.Context, table string, db postgres.Database) {
+	q := fmt.Sprintf(`DELETE FROM %s CASCADE;`, table)
+	_, err := db.NamedExecContext(ctx, q, map[string]interface{}{})
+	assert.Nil(t, err, fmt.Sprintf("cleaning table '%s' expected to success %v", table, err))
 }
