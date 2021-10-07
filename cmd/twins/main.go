@@ -23,7 +23,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/nats"
 	"github.com/mainflux/mainflux/pkg/uuid"
-	localusers "github.com/mainflux/mainflux/things/users"
+	localusers "github.com/mainflux/mainflux/things/auth"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/api"
 	twapi "github.com/mainflux/mainflux/twins/api/http"
