@@ -101,6 +101,10 @@ $GOBIN/mainflux-things
 
 Setting `MF_THINGS_CA_CERTS` expects a file in PEM format of trusted CAs. This will enable TLS against the Users gRPC endpoint trusting only those CAs that are provided.
 
+In constrained environments, sometimes it makes sense to run Things service as a standalone to reduce network traffic and simplify deployment. This means that Things service
+operates only using a single user and is able to authorize it without gRPC communication with Auth service.
+To run service in a standalone mode, set `MF_THINGS_SINGLE_USER_EMAIL` and `MF_THINGS_SINGLE_USER_TOKEN`.
+
 ## Usage
 
 For more information about service capabilities and its usage, please check out
