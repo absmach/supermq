@@ -6,13 +6,13 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
-	"github.com/gofrs/uuid"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/httputil"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -223,41 +223,33 @@ func authorize(r *http.Request, chanID string) (err error) {
 	// 	return errTokenNotBearer
 	// }
 
-	if uuid.FromStringOrNil(token) == uuid.Nil {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-		defer cancel()
-
-		user, err := auth.Identify(ctx, &mainflux.Token{Value: token})
-		if err != nil {
-			e, ok := status.FromError(err)
-			if ok && e.Code() == codes.PermissionDenied {
-				return errUnauthorizedAccess
-			}
-			return errUnauthorizedAccess
-		}
-		_, err = auth.IsChannelOwner(ctx, &mainflux.ChannelOwnerReq{Owner: user.Email, ChanID: chanID})
-		if err != nil {
-			e, ok := status.FromError(err)
-			if ok && e.Code() == codes.PermissionDenied {
-				return errUnauthorizedAccess
-			}
-			return err
-		}
-		return nil
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	if _, err := auth.CanAccessByKey(ctx, &mainflux.AccessByKeyReq{Token: token, ChanID: chanID}); err != nil {
+	t, err := auth.CanAccessByKey(ctx, &mainflux.AccessByKeyReq{Token: token, ChanID: chanID})
+	if err == nil {
+		return nil
+	}
+	fmt.Println(t)
+
+	user, err := auth.Identify(ctx, &mainflux.Token{Value: token})
+	if err != nil {
 		e, ok := status.FromError(err)
 		if ok && e.Code() == codes.PermissionDenied {
-			return errors.ErrAuthorization
+			return errUnauthorizedAccess
+		}
+		return errUnauthorizedAccess
+	}
+	_, err = auth.IsChannelOwner(ctx, &mainflux.ChannelOwnerReq{Owner: user.Email, ChanID: chanID})
+	if err != nil {
+		e, ok := status.FromError(err)
+		if ok && e.Code() == codes.PermissionDenied {
+			return errUnauthorizedAccess
 		}
 		return err
 	}
-
 	return nil
+
 }
 
 func readBoolValueQuery(r *http.Request, key string) (bool, error) {
