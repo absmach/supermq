@@ -6,10 +6,8 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
@@ -70,13 +68,13 @@ func MakeHandler(svc readers.MessageRepository, tc readers.Auth, svcName string)
 	return mux
 }
 
-func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeList(ctx context.Context, r *http.Request) (interface{}, error) {
 	chanID := bone.GetValue(r, "chanID")
 	if chanID == "" {
 		return nil, errors.ErrInvalidQueryParams
 	}
 
-	if err := authorize(r, chanID); err != nil {
+	if err := authorize(ctx, r, chanID); err != nil {
 		return nil, err
 	}
 
@@ -212,25 +210,15 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	}
 }
 
-func authorize(r *http.Request, chanID string) (err error) {
+func authorize(ctx context.Context, r *http.Request, chanID string) (err error) {
 	token := r.Header.Get("Authorization")
 	if token == "" {
 		return errors.ErrAuthentication
 	}
-	// if strings.Contains(token, "Bearer ") {
-	// 	token = strings.ReplaceAll(token, "Bearer ", "")
-	// } else {
-	// 	return errTokenNotBearer
-	// }
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	t, err := auth.CanAccessByKey(ctx, &mainflux.AccessByKeyReq{Token: token, ChanID: chanID})
-	if err == nil {
+	if _, err := auth.CanAccessByKey(ctx, &mainflux.AccessByKeyReq{Token: token, ChanID: chanID}); err == nil {
 		return nil
 	}
-	fmt.Println(t)
 
 	user, err := auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
@@ -240,6 +228,7 @@ func authorize(r *http.Request, chanID string) (err error) {
 		}
 		return errUnauthorizedAccess
 	}
+
 	_, err = auth.IsChannelOwner(ctx, &mainflux.ChannelOwnerReq{Owner: user.Email, ChanID: chanID})
 	if err != nil {
 		e, ok := status.FromError(err)
