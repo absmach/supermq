@@ -366,7 +366,22 @@ func (svc service) Unassign(ctx context.Context, token string, groupID string, m
 	if _, err := svc.Identify(ctx, token); err != nil {
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
-	return svc.groups.Unassign(ctx, groupID, memberIDs...)
+
+	ss := buildSubjectSet("members", groupID, "access")
+	var errs error
+	for _, memberID := range memberIDs {
+		for _, action := range []string{"read", "write", "delete"} {
+			if err := svc.agent.DeletePolicy(ctx, PolicyReq{Object: groupID, Relation: memberRelation, Subject: memberID}); err != nil {
+				errs = errors.Wrap(fmt.Errorf("cannot delete a membership of member '%s' from group '%s'", memberID, groupID), errs)
+			}
+			if err := svc.agent.DeletePolicy(ctx, PolicyReq{Object: memberID, Relation: action, Subject: ss}); err != nil {
+				errs = errors.Wrap(fmt.Errorf("cannot delete '%s' policy from member '%s'", action, memberID), errs)
+			}
+		}
+	}
+
+	err := svc.groups.Unassign(ctx, groupID, memberIDs...)
+	return errors.Wrap(err, errs)
 }
 
 func (svc service) ListMemberships(ctx context.Context, token string, memberID string, pm PageMetadata) (GroupPage, error) {
