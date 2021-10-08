@@ -67,6 +67,8 @@ func (res viewCommandRes) Empty() bool {
 }
 
 type listCommandRes struct {
+	ID       string            `json:"id"`
+	Metadata commands.Metadata `json:"metadata,omitempty"`
 }
 
 func (res listCommandRes) Code() int {

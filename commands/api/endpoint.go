@@ -60,40 +60,39 @@ func viewCommandEndpoint(svc commands.Service) endpoint.Endpoint {
 	}
 }
 
-func listCommandEndpoint(svc commands.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(listCommandReq)
+// func listCommandEndpoint(svc commands.Service) endpoint.Endpoint {
+// 	return func(ctx context.Context, request interface{}) (interface{}, error) {
+// 		req := request.(listCommandReq)
 
-		if err := req.validate(); err != nil {
-			return nil, err
-		}
+// 		if err := req.validate(); err != nil {
+// 			return nil, err
+// 		}
 
-		// page, err := svc.ListCommands(ctx)
-		// if err != nil {
-		// 	return nil, err
-		// }
+// 		cmd, err := svc.ListCommands(req.token, req.id)
+// 		if err != nil {
+// 			return nil, err
+// 		}
 
-		// res := commandsPageRes{
-		// 	pageRes: pageRes{
-		// 		Total:  page.Total,
-		// 		Offset: page.Offset,
-		// 		Limit:  page.Limit,
-		// 		Order:  page.Order,
-		// 		Dir:    page.Dir,
-		// 	},
-		// 	Commands: []viewCommandRes{},
-		// }
-		// for _, command := range page.Commands {
-		// 	view := viewCommandRes{
-		// 		ID:       command.ID,
-		// 		Metadata: command.Metadata,
-		// 	}
-		// 	res.Commands = append(res.Commands, view)
-		// }
-		// return res, nil
-		return nil, nil
-	}
-}
+// 		res := listCommandRes{
+// 			cmdRes: cmdRes{
+// 				Total:  cmd.Total,
+// 				Offset: cmd.Offset,
+// 				Limit:  cmd.Limit,
+// 				Order:  cmd.Order,
+// 				Dir:    cmd.Dir,
+// 			},
+// 			Commands: []listCommandRes{},
+// 		}
+// 		for _, command := range command.Commands {
+// 			list := listCommandRes{
+// 				ID:       command.ID,
+// 				Metadata: command.Metadata,
+// 			}
+// 			res.Commands = append(res.Commands, list)
+// 		}
+// 		return res, nil
+// 	}
+// }
 
 func updateCommandEndpoint(svc commands.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {

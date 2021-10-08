@@ -39,11 +39,12 @@ func (req viewCommandReq) validate() error {
 }
 
 type listCommandReq struct {
-	Secret string `json:"secret"`
+	token string
+	id    string
 }
 
 func (req listCommandReq) validate() error {
-	if req.Secret == "" {
+	if req.token == "" {
 		return commands.ErrMalformedEntity
 	}
 

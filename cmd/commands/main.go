@@ -149,11 +149,11 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 }
 
 func newService(repo commands.CommandRepository, logger logger.Logger) commands.Service {
-	svc := commands.New(repo)
+	commandRepo := postgres.NewCommandRepository(repo)
 
-	svc = api.LoggingMiddleware(svc, logger)
-	svc = api.MetricsMiddleware(
-		svc,
+	commandRepo = api.LoggingMiddleware(commandRepo, logger)
+	commandRepo = api.MetricsMiddleware(
+		commandRepo,
 		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 			Namespace: "commands",
 			Subsystem: "api",
@@ -168,7 +168,7 @@ func newService(repo commands.CommandRepository, logger logger.Logger) commands.
 		}, []string{"method"}),
 	)
 
-	return svc
+	return commandRepo
 }
 
 func startHTTPServer(handler http.Handler, port string, cfg config, logger logger.Logger, errs chan error) {

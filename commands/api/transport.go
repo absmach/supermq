@@ -23,6 +23,11 @@ import (
 
 const (
 	contentType = "application/json"
+	offsetKey   = "offset"
+	limitKey    = "limit"
+	metadataKey = "metadata"
+	defOffset   = 0
+	defLimit    = 10
 )
 
 var (
