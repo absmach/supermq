@@ -129,7 +129,7 @@ func main() {
 
 func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
 	var opts []grpc.DialOption
-	logger.Info("connecting to auth via gRPC")
+	logger.Info("Connecting to auth via gRPC")
 	if cfg.clientTLS {
 		if cfg.caCerts != "" {
 			tpc, err := credentials.NewClientTLSFromFile(cfg.caCerts, "")
@@ -149,7 +149,7 @@ func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
 		logger.Error(fmt.Sprintf("Failed to connect to auth service: %s", err))
 		os.Exit(1)
 	}
-
+	logger.Info("Established gRPC connection to auth via gRPC")
 	return conn
 }
 
