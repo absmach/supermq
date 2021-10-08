@@ -266,6 +266,29 @@ paths:
           description: Missing or invalid access token provided.
         '500':
           $ref: "#/components/responses/ServiceError"
+  /groups/{groupId}/share:
+    post:
+      summary: Adds access rights for user group on thing group.
+      description: |
+        Takes user group id through parameter and adds access rights for user group on thing group received via request body.
+      tags:
+        - auth
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/GroupId"
+      requestBody:
+        $ref: "#/components/requestBodies/ShareGroupAccessReq"
+      responses:
+        '200':
+          description: User group shared with thing group.
+        '400':
+          description: Failed due to malformed JSON.
+        '403':
+          description: Missing or invalid access token provided.
+        '415':
+          description: Missing or invalid content type.
+        '500':
+          $ref: "#/components/responses/ServiceError"
   /members/{memberId}/groups:
     get:
       summary: Gets memberships for a member with member id.
@@ -406,6 +429,16 @@ components:
         type:
           type: string
           description: Type of entity
+    ShareGroupAccessReqSchema:
+      type: object
+      properties:
+        members:
+          type: array
+          minItems: 0
+          uniqueItems: true
+          items:
+            type: string
+            format: uuid | ulid
     GroupsPage:
       type: object
       properties:
@@ -545,7 +578,7 @@ components:
                 format: integer
                 example: 23456
                 description: Number of seconds issued token is valid for.
-    GroupCreateReq:  
+    GroupCreateReq:   
       description: JSON-formatted document describing group create request.
       required: true
       content:
@@ -566,6 +599,13 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/MembersReqSchema"
+    ShareGroupAccessReq:
+      description: test
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ShareGroupAccessReqSchema"
   responses:
     ServiceError:
       description: Unexpected server-side error occurred.
@@ -585,6 +625,8 @@ components:
                 type: string
                 description: Created group's relative URL.
                 example: /groups/{groupId}
+    ShareAccessRightRes:
+      description: User group shared with thing group.
     GroupRes:
       description: Data retrieved.
       content:
