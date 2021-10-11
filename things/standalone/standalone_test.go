@@ -1,7 +1,7 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-package auth_test
+package standalone_test
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/things"
-	"github.com/mainflux/mainflux/things/auth"
+	"github.com/mainflux/mainflux/things/standalone"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,7 +20,7 @@ const (
 )
 
 func TestIdentify(t *testing.T) {
-	svc := auth.NewSingleUserService(email, token)
+	svc := standalone.NewAuthService(email, token)
 
 	cases := map[string]struct {
 		token string
@@ -47,7 +47,7 @@ func TestIdentify(t *testing.T) {
 }
 
 func TestIssue(t *testing.T) {
-	svc := auth.NewSingleUserService(email, token)
+	svc := standalone.NewAuthService(email, token)
 
 	cases := map[string]struct {
 		token string

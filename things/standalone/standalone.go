@@ -1,7 +1,7 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-package auth
+package standalone
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-var errUnsupported = errors.New("not supported in single user mode")
+var errUnsupported = errors.New("not supported in standalone mode")
 
 var _ mainflux.AuthServiceClient = (*singleUserRepo)(nil)
 
@@ -23,8 +23,8 @@ type singleUserRepo struct {
 	token string
 }
 
-// NewSingleUserService creates single user repository for constrained environments.
-func NewSingleUserService(email, token string) mainflux.AuthServiceClient {
+// NewAuthService creates single user repository for constrained environments.
+func NewAuthService(email, token string) mainflux.AuthServiceClient {
 	return singleUserRepo{
 		email: email,
 		token: token,
