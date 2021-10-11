@@ -6,6 +6,7 @@ package things
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/mainflux/mainflux/pkg/errors"
 
@@ -315,7 +316,14 @@ func (ts *thingsService) ListThings(ctx context.Context, token string, pm PageMe
 
 	ths := []Thing{}
 	for _, thing := range page.Things {
-		if err := ts.authorize(ctx, res.GetId(), thing.ID, readRelationKey); err == nil {
+		policies := []string{}
+		for _, action := range []string{readRelationKey, writeRelationKey, deleteRelationKey} {
+			if err := ts.authorize(ctx, res.GetId(), thing.ID, action); err == nil {
+				policies = append(policies, action)
+			}
+		}
+		if len(policies) > 0 {
+			thing.Policy = strings.Join(policies, ", ")
 			ths = append(ths, thing)
 		}
 	}
