@@ -1035,7 +1035,7 @@ func TestDeletePolicy(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("deleting %v policy expected to succeed: %s", pr, err))
 }
 
-func TestShareAccessRight(t *testing.T) {
+func TestAssignAccessRights(t *testing.T) {
 	svc := newService()
 
 	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
@@ -1054,7 +1054,7 @@ func TestShareAccessRight(t *testing.T) {
 
 	userGroupID := "user-group"
 	thingGroupID := "thing-group"
-	err = svc.ShareAccessRight(context.Background(), apiToken, thingGroupID, userGroupID)
+	err = svc.AssignAccessRights(context.Background(), apiToken, thingGroupID, userGroupID)
 	require.Nil(t, err, fmt.Sprintf("sharing the user group with thing group expected to succeed: %v", err))
 
 	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: thingGroupID, Relation: "access", Subject: buildSubjectSet("members", userGroupID, "member")})

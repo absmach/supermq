@@ -183,7 +183,7 @@ func (svc service) DeletePolicy(ctx context.Context, pr PolicyReq) error {
 	return svc.agent.DeletePolicy(ctx, pr)
 }
 
-func (svc service) ShareAccessRight(ctx context.Context, token, thingGroupID, userGroupID string) error {
+func (svc service) AssignAccessRights(ctx context.Context, token, thingGroupID, userGroupID string) error {
 	if _, err := svc.Identify(ctx, token); err != nil {
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}

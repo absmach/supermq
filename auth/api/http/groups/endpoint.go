@@ -149,7 +149,7 @@ func shareGroupAccessEndpoint(svc auth.Service) endpoint.Endpoint {
 			return shareGroupRes{}, err
 		}
 
-		if err := svc.ShareAccessRight(ctx, req.token, req.ThingGroupID, req.userGroupID); err != nil {
+		if err := svc.AssignAccessRights(ctx, req.token, req.ThingGroupID, req.userGroupID); err != nil {
 			return shareGroupRes{}, err
 		}
 		return shareGroupRes{}, nil

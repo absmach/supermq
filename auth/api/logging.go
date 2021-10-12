@@ -262,7 +262,7 @@ func (lm *loggingMiddleware) Unassign(ctx context.Context, token string, groupID
 	return lm.svc.Unassign(ctx, token, groupID, memberIDs...)
 }
 
-func (lm *loggingMiddleware) ShareAccessRight(ctx context.Context, token, thingGroupID, userGroupID string) (err error) {
+func (lm *loggingMiddleware) AssignAccessRights(ctx context.Context, token, thingGroupID, userGroupID string) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method share_group_access took %s to complete", time.Since(begin))
 		if err != nil {
@@ -272,5 +272,5 @@ func (lm *loggingMiddleware) ShareAccessRight(ctx context.Context, token, thingG
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.ShareAccessRight(ctx, token, thingGroupID, userGroupID)
+	return lm.svc.AssignAccessRights(ctx, token, thingGroupID, userGroupID)
 }
