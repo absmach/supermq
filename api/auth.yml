@@ -89,7 +89,7 @@ paths:
         be returned as JSON array or JSON tree.
       tags:
         - auth
-      parameters:    
+      parameters:
         - $ref: "#/components/parameters/Authorization"
         - $ref: "#/components/parameters/Level"
         - $ref: "#/components/parameters/Metadata"
@@ -266,16 +266,16 @@ paths:
           description: Missing or invalid access token provided.
         '500':
           $ref: "#/components/responses/ServiceError"
-  /groups/{groupId}/share:
+  /groups/{userGroupID}/share:
     post:
-      summary: Adds access rights for user group on thing group.
+      summary: Adds access rights on thing groups to user group with userGroupID.
       description: |
         Takes user group id through parameter and adds access rights for user group on thing group received via request body.
       tags:
         - auth
       parameters:
         - $ref: "#/components/parameters/Authorization"
-        - $ref: "#/components/parameters/GroupId"
+        - $ref: "#/components/parameters/UserGroupID"
       requestBody:
         $ref: "#/components/requestBodies/ShareGroupAccessReq"
       responses:
@@ -351,7 +351,7 @@ components:
             Free-form group name. Group name is unique on the given hierarchy level.
         description:
           type: string
-          description: Group description, free form text. 
+          description: Group description, free form text.
         parent_id:
           type: string
           format: ulid
@@ -368,7 +368,7 @@ components:
             Free-form group name. Group name is unique on the given hierarchy level.
         description:
           type: string
-          description: Group description, free form text. 
+          description: Group description, free form text.
         metadata:
           type: object
           description: Arbitrary, object-encoded group's data.
@@ -432,13 +432,9 @@ components:
     ShareGroupAccessReqSchema:
       type: object
       properties:
-        members:
-          type: array
-          minItems: 0
-          uniqueItems: true
-          items:
-            type: string
-            format: uuid | ulid
+        thing_group_id:
+          type: string
+          description: Group ID of the Thing Group.
     GroupsPage:
       type: object
       properties:
@@ -490,6 +486,14 @@ components:
     ApiKeyId:
       name: id
       description: API Key ID.
+      in: path
+      schema:
+        type: string
+        format: uuid
+      required: true
+    UserGroupID:
+      name: userGroupID
+      description: User Group ID.
       in: path
       schema:
         type: string
@@ -578,20 +582,20 @@ components:
                 format: integer
                 example: 23456
                 description: Number of seconds issued token is valid for.
-    GroupCreateReq:   
+    GroupCreateReq:
       description: JSON-formatted document describing group create request.
       required: true
       content:
         application/json:
           schema:
-           $ref: "#/components/schemas/GroupReqSchema"
+            $ref: "#/components/schemas/GroupReqSchema"
     GroupUpdateReq:
       description: JSON-formatted document describing group create request.
       required: true
       content:
         application/json:
           schema:
-           $ref: "#/components/schemas/GroupUpdateSchema"
+            $ref: "#/components/schemas/GroupUpdateSchema"
     MembersReq:
       description: JSON array of member IDs.
       required: true
