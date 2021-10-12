@@ -69,7 +69,7 @@ func MakeHandler(svc auth.Service, mux *bone.Mux, tracer opentracing.Tracer) *bo
 		opts...,
 	))
 
-	mux.Post("/groups/:groupID/share", kithttp.NewServer(
+	mux.Post("/groups/:userGroupID/share", kithttp.NewServer(
 		kitot.TraceServer(tracer, "share_group_access")(shareGroupAccessEndpoint(svc)),
 		decodeShareGroupRequest,
 		encodeResponse,
@@ -138,7 +138,7 @@ func decodeShareGroupRequest(ctx context.Context, r *http.Request) (interface{},
 		return nil, errors.Wrap(auth.ErrFailedDecode, err)
 	}
 
-	req.userGroupID = bone.GetValue(r, "groupID")
+	req.userGroupID = bone.GetValue(r, "userGroupID")
 	req.token = r.Header.Get("Authorization")
 	return req, nil
 }

@@ -17,7 +17,8 @@ const (
 	loginDuration    = 10 * time.Hour
 	recoveryDuration = 5 * time.Minute
 
-	memberRelation = "member"
+	thingsGroupType = "things"
+	memberRelation  = "member"
 )
 
 var (
@@ -183,7 +184,7 @@ func (svc service) DeletePolicy(ctx context.Context, pr PolicyReq) error {
 	return svc.agent.DeletePolicy(ctx, pr)
 }
 
-func (svc service) AssignAccessRights(ctx context.Context, token, thingGroupID, userGroupID string) error {
+func (svc service) AssignGroupAccessRights(ctx context.Context, token, thingGroupID, userGroupID string) error {
 	if _, err := svc.Identify(ctx, token); err != nil {
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
@@ -336,8 +337,8 @@ func (svc service) Assign(ctx context.Context, token string, groupID, groupType 
 		return err
 	}
 
-	if groupType == "things" {
-		ss := buildSubjectSet("members", groupID, "access")
+	if groupType == thingsGroupType {
+		ss := fmt.Sprintf("%s:%s#%s", "members", groupID, "access")
 		var errs error
 		for _, memberID := range memberIDs {
 			for _, action := range []string{"read", "write", "delete"} {
@@ -367,7 +368,7 @@ func (svc service) Unassign(ctx context.Context, token string, groupID string, m
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	ss := buildSubjectSet("members", groupID, "access")
+	ss := fmt.Sprintf("%s:%s#%s", "members", groupID, "access")
 	var errs error
 	for _, memberID := range memberIDs {
 		for _, action := range []string{"read", "write", "delete"} {

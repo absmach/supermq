@@ -1054,7 +1054,7 @@ func TestAssignAccessRights(t *testing.T) {
 
 	userGroupID := "user-group"
 	thingGroupID := "thing-group"
-	err = svc.AssignAccessRights(context.Background(), apiToken, thingGroupID, userGroupID)
+	err = svc.AssignGroupAccessRights(context.Background(), apiToken, thingGroupID, userGroupID)
 	require.Nil(t, err, fmt.Sprintf("sharing the user group with thing group expected to succeed: %v", err))
 
 	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: thingGroupID, Relation: "access", Subject: buildSubjectSet("members", userGroupID, "member")})

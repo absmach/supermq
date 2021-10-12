@@ -1,7 +1,6 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build !test
 // +build !test
 
 package api
@@ -262,7 +261,7 @@ func (lm *loggingMiddleware) Unassign(ctx context.Context, token string, groupID
 	return lm.svc.Unassign(ctx, token, groupID, memberIDs...)
 }
 
-func (lm *loggingMiddleware) AssignAccessRights(ctx context.Context, token, thingGroupID, userGroupID string) (err error) {
+func (lm *loggingMiddleware) AssignGroupAccessRights(ctx context.Context, token, thingGroupID, userGroupID string) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method share_group_access took %s to complete", time.Since(begin))
 		if err != nil {
@@ -272,5 +271,5 @@ func (lm *loggingMiddleware) AssignAccessRights(ctx context.Context, token, thin
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.AssignAccessRights(ctx, token, thingGroupID, userGroupID)
+	return lm.svc.AssignGroupAccessRights(ctx, token, thingGroupID, userGroupID)
 }
