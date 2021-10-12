@@ -110,7 +110,6 @@ type viewThingRes struct {
 	Owner    string                 `json:"-"`
 	Name     string                 `json:"name,omitempty"`
 	Key      string                 `json:"key"`
-	Policy   string                 `json:"policy,omitempty"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 

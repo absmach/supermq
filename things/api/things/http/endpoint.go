@@ -190,7 +190,6 @@ func listThingsEndpoint(svc things.Service) endpoint.Endpoint {
 				Name:     thing.Name,
 				Key:      thing.Key,
 				Metadata: thing.Metadata,
-				Policy:   thing.Policy,
 			}
 			res.Things = append(res.Things, view)
 		}

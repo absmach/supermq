@@ -41,7 +41,6 @@ type Thing struct {
 	Owner    string
 	Name     string
 	Key      string
-	Policy   string
 	Metadata Metadata
 }
 
