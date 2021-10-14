@@ -159,7 +159,7 @@ func newService(auth mainflux.AuthServiceClient, dbTracer opentracing.Tracer, db
 
 	idProvider := uuid.New()
 
-	svc := commands.New(auth, commandsRepo, idProvider)
+	// svc := commands.New(auth, commandsRepo, idProvider)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,
