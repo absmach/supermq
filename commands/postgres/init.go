@@ -47,12 +47,12 @@ func migrateDB(db *sqlx.DB) error {
 	migrations := &migrate.MemoryMigrationSource{
 		Migrations: []*migrate.Migration{
 			{
-				Id: "users_1",
+				Id: "commands_1",
 				Up: []string{
 					`CREATE TABLE IF NOT EXISTS commands (
 					)`,
 				},
-				Down: []string{"DROP TABLE users"},
+				Down: []string{"DROP TABLE commands"},
 			},
 		},
 	}

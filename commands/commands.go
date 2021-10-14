@@ -43,13 +43,13 @@ type CommandPage struct {
 }
 
 type CommandRepository interface {
-	Save(ctx context.Context, c Command) (string, error)
+	Save(ctx context.Context, cmds ...Command) ([]Command, error)
 
 	Update(ctx context.Context, u Command) error
 
 	RetrieveByID(ctx context.Context, id string) (Command, error)
 
-	RetrieveAll(ctx context.Context, offset, limit uint64, commandIDs []string, m Metadata) (CommandPage, error)
+	// RetrieveAll(ctx context.Context, offset, limit uint64, commandIDs []string, m Metadata) (CommandPage, error)
 
 	Remove(ctx context.Context, owner, id string) error
 }

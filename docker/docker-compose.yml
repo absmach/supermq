@@ -11,6 +11,7 @@ volumes:
   mainflux-auth-db-volume:
   mainflux-users-db-volume:
   mainflux-things-db-volume:
+  mainflux-commands-db-volume:  
   mainflux-auth-redis-volume:
   mainflux-es-redis-volume:
   mainflux-mqtt-broker-volume:
@@ -154,6 +155,20 @@ services:
     volumes:
       - mainflux-things-db-volume:/var/lib/postgresql/data
 
+commands-db:
+    image: postgres:13.3-alpine
+    container_name: mainflux-commands-db
+    restart: on-failure
+    environment:
+      POSTGRES_USER: ${MF_COMMANDS_DB_USER}
+      POSTGRES_PASSWORD: ${MF_COMMANDS_DB_PASS}
+      POSTGRES_DB: ${MF_COMMANDS_DB}
+    networks:
+      - mainflux-base-net
+    volumes:
+      - mainflux-commands-db-volume:/var/lib/postgresql/data
+
+
   auth-redis:
     image: redis:6.2.2-alpine
     container_name: mainflux-auth-redis
@@ -189,6 +204,35 @@ services:
       - ${MF_THINGS_HTTP_PORT}:${MF_THINGS_HTTP_PORT}
       - ${MF_THINGS_AUTH_HTTP_PORT}:${MF_THINGS_AUTH_HTTP_PORT}
       - ${MF_THINGS_AUTH_GRPC_PORT}:${MF_THINGS_AUTH_GRPC_PORT}
+    networks:
+      - mainflux-base-net
+
+      commands:
+    image: mainflux/commands:${MF_RELEASE_TAG}
+    container_name: mainflux-commands
+    depends_on:
+      - commands-db
+      - auth
+    restart: on-failure
+    environment:
+      MF_COMMANDS_LOG_LEVEL: ${MF_COMMANDS_LOG_LEVEL}
+      MF_COMMANDS_DB_HOST: commands-db
+      MF_COMMANDS_DB_PORT: ${MF_COMMANDS_DB_PORT}
+      MF_COMMANDS_DB_USER: ${MF_COMMANDS_DB_USER}
+      MF_COMMANDS_DB_PASS: ${MF_COMMANDS_DB_PASS}
+      MF_COMMANDS_DB: ${MF_COMMANDS_DB}
+      MF_COMMANDS_CACHE_URL: auth-redis:${MF_REDIS_TCP_PORT}
+      MF_COMMANDS_ES_URL: es-redis:${MF_REDIS_TCP_PORT}
+      MF_COMMANDS_HTTP_PORT: ${MF_COMMANDS_HTTP_PORT}
+      MF_COMMANDS_AUTH_HTTP_PORT: ${MF_COMMANDS_AUTH_HTTP_PORT}
+      MF_COMMANDS_AUTH_GRPC_PORT: ${MF_COMMANDS_AUTH_GRPC_PORT}
+      MF_JAEGER_URL: ${MF_JAEGER_URL}
+      MF_AUTH_GRPC_URL: ${MF_AUTH_GRPC_URL}
+      MF_AUTH_GRPC_TIMEOUT: ${MF_AUTH_GRPC_TIMEOUT}
+    ports:
+      - ${MF_COMMANDS_HTTP_PORT}:${MF_COMMANDS_HTTP_PORT}
+      - ${MF_COMMANDS_AUTH_HTTP_PORT}:${MF_COMMANDS_AUTH_HTTP_PORT}
+      - ${MF_COMMANDS_AUTH_GRPC_PORT}:${MF_COMMANDS_AUTH_GRPC_PORT}
     networks:
       - mainflux-base-net
 

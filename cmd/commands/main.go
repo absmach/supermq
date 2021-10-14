@@ -13,6 +13,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/commands"
@@ -20,6 +21,8 @@ import (
 	commandshttpapi "github.com/mainflux/mainflux/commands/api"
 	"github.com/mainflux/mainflux/commands/postgres"
 	"github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/pkg/uuid"
+	"github.com/mainflux/mainflux/things/tracing"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -37,7 +40,7 @@ const (
 	defDBPort        = "5432"
 	defDBUser        = "mainflux"
 	defDBPass        = "mainflux"
-	defDB            = "users"
+	defDB            = "commands"
 	defDBSSLMode     = "disable"
 	defDBSSLCert     = ""
 	defDBSSLKey      = ""
@@ -148,12 +151,18 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 	return tracer, closer
 }
 
-func newService(repo commands.CommandRepository, logger logger.Logger) commands.Service {
-	commandRepo := postgres.NewCommandRepository(repo)
+func newService(auth mainflux.AuthServiceClient, dbTracer opentracing.Tracer, db *sqlx.DB, esClient *redis.Client, logger logger.Logger) commands.Service {
+	database := postgres.NewDatabase(db)
 
-	commandRepo = api.LoggingMiddleware(commandRepo, logger)
-	commandRepo = api.MetricsMiddleware(
-		commandRepo,
+	commandsRepo := postgres.NewCommandRepository(database)
+	commandsRepo = tracing.CommandRepositoryMiddleware(dbTracer, commandsRepo)
+
+	idProvider := uuid.New()
+
+	svc := commands.New(auth, commandsRepo, idProvider)
+	svc = api.LoggingMiddleware(svc, logger)
+	svc = api.MetricsMiddleware(
+		svc,
 		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 			Namespace: "commands",
 			Subsystem: "api",
@@ -167,8 +176,7 @@ func newService(repo commands.CommandRepository, logger logger.Logger) commands.
 			Help:      "Total duration of requests in microseconds.",
 		}, []string{"method"}),
 	)
-
-	return commandRepo
+	return svc
 }
 
 func startHTTPServer(handler http.Handler, port string, cfg config, logger logger.Logger, errs chan error) {

@@ -107,51 +107,14 @@ func (cr commandRepository) Update(ctx context.Context, cmd commands.Command) er
 	return nil
 }
 
-func (cr commandRepository) UpdateKey(ctx context.Context, owner, id, key string) error {
-	q := `UPDATE commands SET key = :key WHERE owner = :owner AND id = :id;`
-
-	dbcmd := dbCommand{
-		ID:    id,
-		Owner: owner,
-		Key:   key,
-	}
-
-	res, err := cr.db.NamedExecContext(ctx, q, dbcmd)
-	if err != nil {
-		pqErr, ok := err.(*pq.Error)
-		if ok {
-			switch pqErr.Code.Name() {
-			case errInvalid:
-				return errors.Wrap(commands.ErrMalformedEntity, err)
-			case errDuplicate:
-				return errors.Wrap(commands.ErrConflict, err)
-			}
-		}
-
-		return errors.Wrap(commands.ErrUpdateEntity, err)
-	}
-
-	cnt, err := res.RowsAffected()
-	if err != nil {
-		return errors.Wrap(commands.ErrUpdateEntity, err)
-	}
-
-	if cnt == 0 {
-		return commands.ErrNotFound
-	}
-
-	return nil
-}
-
-func (cr commandRepository) RetrieveByID(ctx context.Context, owner, id string) (commands.Command, error) {
+func (cr commandRepository) RetrieveByID(ctx context.Context, id string) (commands.Command, error) {
 	q := `SELECT name, key, metadata FROM commands WHERE id = $1 AND owner = $2;`
 
 	dbcmd := dbCommand{
-		ID:    id,
-		Owner: owner,
+		ID: id,
 	}
 
-	if err := cr.db.QueryRowxContext(ctx, q, id, owner).StructScan(&dbcmd); err != nil {
+	if err := cr.db.QueryRowxContext(ctx, q, id).StructScan(&dbcmd); err != nil {
 		pqErr, ok := err.(*pq.Error)
 		if err == sql.ErrNoRows || ok && errInvalid == pqErr.Code.Name() {
 			return commands.Command{}, errors.Wrap(commands.ErrNotFound, err)
@@ -162,147 +125,66 @@ func (cr commandRepository) RetrieveByID(ctx context.Context, owner, id string) 
 	return toCommand(dbcmd)
 }
 
-func (cr commandRepository) RetrieveByKey(ctx context.Context, key string) (string, error) {
-	q := `SELECT id FROM commands WHERE key = $1;`
+// func (cr commandRepository) RetrieveAll(ctx context.Context, owner string, pm commands.PageMetadata) (commands.CommandPage, error) {
+// 	nq, name := getNameQuery(pm.Name)
+// 	oq := getOrderQuery(pm.Order)
+// 	dq := getDirQuery(pm.Dir)
+// 	m, mq, err := getMetadataQuery(pm.Metadata)
+// 	if err != nil {
+// 		return commands.CommandPage{}, errors.Wrap(commands.ErrSelectEntity, err)
+// 	}
 
-	var id string
-	if err := cr.db.QueryRowxContext(ctx, q, key).Scan(&id); err != nil {
-		if err == sql.ErrNoRows {
-			return "", errors.Wrap(commands.ErrNotFound, err)
-		}
-		return "", errors.Wrap(commands.ErrSelectEntity, err)
-	}
+// 	q := fmt.Sprintf(`SELECT id, name, key, metadata FROM commands
+// 	      WHERE owner = :owner %s%s ORDER BY %s %s LIMIT :limit OFFSET :offset;`, mq, nq, oq, dq)
+// 	params := map[string]interface{}{
+// 		"owner":    owner,
+// 		"limit":    pm.Limit,
+// 		"offset":   pm.Offset,
+// 		"name":     name,
+// 		"metadata": m,
+// 	}
 
-	return id, nil
-}
+// 	rows, err := cr.db.NamedQueryContext(ctx, q, params)
+// 	if err != nil {
+// 		return commands.CommandPage{}, errors.Wrap(commands.ErrSelectEntity, err)
+// 	}
+// 	defer rows.Close()
 
-func (cr commandRepository) RetrieveByIDs(ctx context.Context, CommandIDs []string, pm commands.PageMetadata) (commands.CommandPage, error) {
-	if len(CommandIDs) == 0 {
-		return commands.CommandPage{}, nil
-	}
+// 	var items []commands.Command
+// 	for rows.Next() {
+// 		dbcmd := dbCommand{Owner: owner}
+// 		if err := rows.StructScan(&dbcmd); err != nil {
+// 			return commands.CommandPage{}, errors.Wrap(commands.ErrSelectEntity, err)
+// 		}
 
-	nq, name := getNameQuery(pm.Name)
-	oq := getOrderQuery(pm.Order)
-	dq := getDirQuery(pm.Dir)
-	idq := fmt.Sprintf("WHERE id IN ('%s') ", strings.Join(CommandIDs, "','"))
+// 		cmd, err := toCommand(dbcmd)
+// 		if err != nil {
+// 			return commands.CommandPage{}, errors.Wrap(commands.ErrViewEntity, err)
+// 		}
 
-	m, mq, err := getMetadataQuery(pm.Metadata)
-	if err != nil {
-		return commands.CommandPage{}, errors.Wrap(commands.ErrSelectEntity, err)
-	}
+// 		items = append(items, cmd)
+// 	}
 
-	q := fmt.Sprintf(`SELECT id, owner, name, key, metadata FROM commands
-					   %s%s%s ORDER BY %s %s LIMIT :limit OFFSET :offset;`, idq, mq, nq, oq, dq)
+// 	cq := fmt.Sprintf(`SELECT COUNT(*) FROM commands WHERE owner = :owner %s%s;`, nq, mq)
 
-	params := map[string]interface{}{
-		"limit":    pm.Limit,
-		"offset":   pm.Offset,
-		"name":     name,
-		"metadata": m,
-	}
+// 	total, err := total(ctx, cr.db, cq, params)
+// 	if err != nil {
+// 		return commands.CommandPage{}, errors.Wrap(commands.ErrSelectEntity, err)
+// 	}
 
-	rows, err := cr.db.NamedQueryContext(ctx, q, params)
-	if err != nil {
-		return commands.CommandPage{}, errors.Wrap(commands.ErrSelectEntity, err)
-	}
-	defer rows.Close()
+// 	page := commands.CommandPage{
+// 		Commands: items,
+// 		PageMetadata: commands.PageMetadata{
+// 			Total:  total,
+// 			Offset: pm.Offset,
+// 			Limit:  pm.Limit,
+// 			Order:  pm.Order,
+// 			Dir:    pm.Dir,
+// 		},
+// 	}
 
-	var items []commands.Command
-	for rows.Next() {
-		dbcmd := dbCommand{}
-		if err := rows.StructScan(&dbcmd); err != nil {
-			return commands.CommandPage{}, errors.Wrap(commands.ErrSelectEntity, err)
-		}
-
-		cmd, err := toCommand(dbcmd)
-		if err != nil {
-			return commands.CommandPage{}, errors.Wrap(commands.ErrViewEntity, err)
-		}
-
-		items = append(items, cmd)
-	}
-
-	cq := fmt.Sprintf(`SELECT COUNT(*) FROM commands %s%s%s;`, idq, mq, nq)
-
-	total, err := total(ctx, cr.db, cq, params)
-	if err != nil {
-		return commands.CommandPage{}, errors.Wrap(commands.ErrSelectEntity, err)
-	}
-
-	page := commands.CommandPage{
-		Commands: items,
-		PageMetadata: commands.PageMetadata{
-			Total:  total,
-			Offset: pm.Offset,
-			Limit:  pm.Limit,
-			Order:  pm.Order,
-			Dir:    pm.Dir,
-		},
-	}
-
-	return page, nil
-}
-
-func (cr commandRepository) RetrieveAll(ctx context.Context, owner string, pm commands.PageMetadata) (commands.CommandPage, error) {
-	nq, name := getNameQuery(pm.Name)
-	oq := getOrderQuery(pm.Order)
-	dq := getDirQuery(pm.Dir)
-	m, mq, err := getMetadataQuery(pm.Metadata)
-	if err != nil {
-		return commands.CommandPage{}, errors.Wrap(commands.ErrSelectEntity, err)
-	}
-
-	q := fmt.Sprintf(`SELECT id, name, key, metadata FROM commands
-	      WHERE owner = :owner %s%s ORDER BY %s %s LIMIT :limit OFFSET :offset;`, mq, nq, oq, dq)
-	params := map[string]interface{}{
-		"owner":    owner,
-		"limit":    pm.Limit,
-		"offset":   pm.Offset,
-		"name":     name,
-		"metadata": m,
-	}
-
-	rows, err := cr.db.NamedQueryContext(ctx, q, params)
-	if err != nil {
-		return commands.CommandPage{}, errors.Wrap(commands.ErrSelectEntity, err)
-	}
-	defer rows.Close()
-
-	var items []commands.Command
-	for rows.Next() {
-		dbcmd := dbCommand{Owner: owner}
-		if err := rows.StructScan(&dbcmd); err != nil {
-			return commands.CommandPage{}, errors.Wrap(commands.ErrSelectEntity, err)
-		}
-
-		cmd, err := toCommand(dbcmd)
-		if err != nil {
-			return commands.CommandPage{}, errors.Wrap(commands.ErrViewEntity, err)
-		}
-
-		items = append(items, cmd)
-	}
-
-	cq := fmt.Sprintf(`SELECT COUNT(*) FROM commands WHERE owner = :owner %s%s;`, nq, mq)
-
-	total, err := total(ctx, cr.db, cq, params)
-	if err != nil {
-		return commands.CommandPage{}, errors.Wrap(commands.ErrSelectEntity, err)
-	}
-
-	page := commands.CommandPage{
-		Commands: items,
-		PageMetadata: commands.PageMetadata{
-			Total:  total,
-			Offset: pm.Offset,
-			Limit:  pm.Limit,
-			Order:  pm.Order,
-			Dir:    pm.Dir,
-		},
-	}
-
-	return page, nil
-}
+// 	return page, nil
+// }
 
 func (cr commandRepository) Remove(ctx context.Context, owner, id string) error {
 	dbcmd := dbCommand{
@@ -320,7 +202,6 @@ type dbCommand struct {
 	ID       string `db:"id"`
 	Owner    string `db:"owner"`
 	Name     string `db:"name"`
-	Key      string `db:"key"`
 	Metadata []byte `db:"metadata"`
 }
 
