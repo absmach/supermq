@@ -13,7 +13,7 @@ func createPolicyEndpoint(svc auth.Service) endpoint.Endpoint {
 			return createPolicyRes{}, err
 		}
 
-		if err := svc.AddPolicyBulk(ctx, req.token, req.Object, req.SubjectIDs, req.Policies); err != nil {
+		if err := svc.AddPolicies(ctx, req.token, req.Object, req.SubjectIDs, req.Policies); err != nil {
 			return createPolicyRes{}, err
 		}
 

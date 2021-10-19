@@ -16,13 +16,9 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-var (
-	errUnsupportedContentType = errors.New("unsupported content type")
-)
+var errUnsupportedContentType = errors.New("unsupported content type")
 
-const (
-	contentType = "application/json"
-)
+const contentType = "application/json"
 
 // MakeHandler returns a HTTP handler for API endpoints.
 func MakeHandler(svc auth.Service, mux *bone.Mux, tracer opentracing.Tracer) *bone.Mux {

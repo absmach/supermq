@@ -30,9 +30,9 @@ type Authz interface {
 	// error in case of failures.
 	AddPolicy(ctx context.Context, pr PolicyReq) error
 
-	// AddPolicyBulk adds new policies for given subjects. This method is
+	// AddPolicies adds new policies for given subjects. This method is
 	// only allowed to use as an admin.
-	AddPolicyBulk(ctx context.Context, token, object string, subjectIDs, relations []string) error
+	AddPolicies(ctx context.Context, token, object string, subjectIDs, relations []string) error
 
 	// DeletePolicy removes a policy.
 	DeletePolicy(ctx context.Context, pr PolicyReq) error

@@ -106,7 +106,7 @@ func (lm *loggingMiddleware) AddPolicy(ctx context.Context, pr auth.PolicyReq) (
 	return lm.svc.AddPolicy(ctx, pr)
 }
 
-func (lm *loggingMiddleware) AddPolicyBulk(ctx context.Context, token, object string, subjectIDs, relations []string) (err error) {
+func (lm *loggingMiddleware) AddPolicies(ctx context.Context, token, object string, subjectIDs, relations []string) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method create_policy_bulk took %s to complete", time.Since(begin))
 		if err != nil {
@@ -116,7 +116,7 @@ func (lm *loggingMiddleware) AddPolicyBulk(ctx context.Context, token, object st
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.AddPolicyBulk(ctx, token, object, subjectIDs, relations)
+	return lm.svc.AddPolicies(ctx, token, object, subjectIDs, relations)
 }
 
 func (lm *loggingMiddleware) DeletePolicy(ctx context.Context, pr auth.PolicyReq) (err error) {

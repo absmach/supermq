@@ -177,7 +177,7 @@ func (svc service) AddPolicy(ctx context.Context, pr PolicyReq) error {
 	return svc.agent.AddPolicy(ctx, pr)
 }
 
-func (svc service) AddPolicyBulk(ctx context.Context, token, object string, subjectIDs, relations []string) error {
+func (svc service) AddPolicies(ctx context.Context, token, object string, subjectIDs, relations []string) error {
 	user, err := svc.Identify(ctx, token)
 	if err != nil {
 		return errors.Wrap(ErrUnauthorizedAccess, err)
