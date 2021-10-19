@@ -110,8 +110,6 @@ func main() {
 
 	auth := authapi.NewClient(authTracer, authConn, cfg.usersAuthTimeout)
 
-	authReader := readers.NewAuthService(tc, auth)
-
 	db := connectToDB(cfg.dbConfig, logger)
 	defer db.Close()
 
@@ -119,7 +117,7 @@ func main() {
 
 	errs := make(chan error, 2)
 
-	go startHTTPServer(repo, authReader, cfg.port, logger, errs)
+	go startHTTPServer(repo, tc, auth, cfg.port, logger, errs)
 
 	go func() {
 		c := make(chan os.Signal)
@@ -153,7 +151,7 @@ func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
 		logger.Error(fmt.Sprintf("Failed to connect to auth service: %s", err))
 		os.Exit(1)
 	}
-	logger.Info("Established gRPC connection to auth via gRPC")
+	logger.Info(fmt.Sprintf("Established gRPC connection to auth via gRPC: %s", cfg.usersAuthURL))
 	return conn
 }
 
@@ -246,6 +244,7 @@ func connectToThings(cfg config, logger logger.Logger) *grpc.ClientConn {
 		logger.Error(fmt.Sprintf("Failed to connect to things service: %s", err))
 		os.Exit(1)
 	}
+	logger.Info(fmt.Sprintf("Established gRPC connection to things via gRPC: %s", cfg.thingsAuthURL))
 	return conn
 }
 
@@ -271,8 +270,8 @@ func newService(db *sqlx.DB, logger logger.Logger) readers.MessageRepository {
 	return svc
 }
 
-func startHTTPServer(repo readers.MessageRepository, auth readers.Auth, port string, logger logger.Logger, errs chan error) {
+func startHTTPServer(repo readers.MessageRepository, tc mainflux.ThingsServiceClient, ac mainflux.AuthServiceClient, port string, logger logger.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", port)
 	logger.Info(fmt.Sprintf("Postgres reader service started, exposed port %s", port))
-	errs <- http.ListenAndServe(p, api.MakeHandler(repo, auth, svcName))
+	errs <- http.ListenAndServe(p, api.MakeHandler(repo, tc, ac, svcName))
 }

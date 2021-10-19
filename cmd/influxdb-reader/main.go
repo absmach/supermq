@@ -105,8 +105,6 @@ func main() {
 
 	auth := authapi.NewClient(authTracer, authConn, cfg.usersAuthTimeout)
 
-	authReader := readers.NewAuthService(tc, auth)
-
 	client, err := influxdata.NewHTTPClient(clientCfg)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to create InfluxDB client: %s", err))
@@ -123,7 +121,7 @@ func main() {
 		errs <- fmt.Errorf("%s", <-c)
 	}()
 
-	go startHTTPServer(repo, authReader, cfg, logger, errs)
+	go startHTTPServer(repo, tc, auth, cfg, logger, errs)
 
 	err = <-errs
 	logger.Error(fmt.Sprintf("InfluxDB writer service terminated: %s", err))
@@ -221,6 +219,7 @@ func connectToThings(cfg config, logger logger.Logger) *grpc.ClientConn {
 		logger.Error(fmt.Sprintf("Failed to connect to things service: %s", err))
 		os.Exit(1)
 	}
+	logger.Info(fmt.Sprintf("Established gRPC connection to things via gRPC: %s", cfg.thingsAuthURL))
 	return conn
 }
 
@@ -270,14 +269,14 @@ func newService(client influxdata.Client, dbName string, logger logger.Logger) r
 	return repo
 }
 
-func startHTTPServer(repo readers.MessageRepository, tc readers.Auth, cfg config, logger logger.Logger, errs chan error) {
+func startHTTPServer(repo readers.MessageRepository, tc mainflux.ThingsServiceClient, ac mainflux.AuthServiceClient, cfg config, logger logger.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", cfg.port)
 	if cfg.serverCert != "" || cfg.serverKey != "" {
 		logger.Info(fmt.Sprintf("InfluxDB reader service started using https on port %s with cert %s key %s",
 			cfg.port, cfg.serverCert, cfg.serverKey))
-		errs <- http.ListenAndServeTLS(p, cfg.serverCert, cfg.serverKey, api.MakeHandler(repo, tc, "influxdb-reader"))
+		errs <- http.ListenAndServeTLS(p, cfg.serverCert, cfg.serverKey, api.MakeHandler(repo, tc, ac, "influxdb-reader"))
 		return
 	}
 	logger.Info(fmt.Sprintf("InfluxDB reader service started, exposed port %s", cfg.port))
-	errs <- http.ListenAndServe(p, api.MakeHandler(repo, tc, "influxdb-reader"))
+	errs <- http.ListenAndServe(p, api.MakeHandler(repo, tc, ac, "influxdb-reader"))
 }

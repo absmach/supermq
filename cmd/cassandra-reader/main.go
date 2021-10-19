@@ -109,13 +109,11 @@ func main() {
 
 	auth := authapi.NewClient(authTracer, authConn, cfg.usersAuthTimeout)
 
-	authReader := readers.NewAuthService(tc, auth)
-
 	repo := newService(session, logger)
 
 	errs := make(chan error, 2)
 
-	go startHTTPServer(repo, authReader, cfg, errs, logger)
+	go startHTTPServer(repo, tc, auth, cfg, errs, logger)
 
 	go func() {
 		c := make(chan os.Signal)
@@ -149,7 +147,7 @@ func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
 		logger.Error(fmt.Sprintf("Failed to connect to auth service: %s", err))
 		os.Exit(1)
 	}
-	logger.Info("Established gRPC connection to auth via gRPC")
+	logger.Info(fmt.Sprintf("Established gRPC connection to things via gRPC: %s", cfg.usersAuthURL))
 	return conn
 }
 
@@ -222,6 +220,7 @@ func connectToThings(cfg config, logger logger.Logger) *grpc.ClientConn {
 		logger.Error(fmt.Sprintf("Failed to connect to things service: %s", err))
 		os.Exit(1)
 	}
+	logger.Info(fmt.Sprintf("Established gRPC connection to things via gRPC: %s", cfg.thingsAuthURL))
 	return conn
 }
 
@@ -271,14 +270,14 @@ func newService(session *gocql.Session, logger logger.Logger) readers.MessageRep
 	return repo
 }
 
-func startHTTPServer(repo readers.MessageRepository, auth readers.Auth, cfg config, errs chan error, logger logger.Logger) {
+func startHTTPServer(repo readers.MessageRepository, tc mainflux.ThingsServiceClient, ac mainflux.AuthServiceClient, cfg config, errs chan error, logger logger.Logger) {
 	p := fmt.Sprintf(":%s", cfg.port)
 	if cfg.serverCert != "" || cfg.serverKey != "" {
 		logger.Info(fmt.Sprintf("Cassandra reader service started using https on port %s with cert %s key %s",
 			cfg.port, cfg.serverCert, cfg.serverKey))
-		errs <- http.ListenAndServeTLS(p, cfg.serverCert, cfg.serverKey, api.MakeHandler(repo, auth, "cassandra-reader"))
+		errs <- http.ListenAndServeTLS(p, cfg.serverCert, cfg.serverKey, api.MakeHandler(repo, tc, ac, "cassandra-reader"))
 		return
 	}
 	logger.Info(fmt.Sprintf("Cassandra reader service started, exposed port %s", cfg.port))
-	errs <- http.ListenAndServe(p, api.MakeHandler(repo, auth, "cassandra-reader"))
+	errs <- http.ListenAndServe(p, api.MakeHandler(repo, tc, ac, "cassandra-reader"))
 }

@@ -6,8 +6,10 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
@@ -38,17 +40,24 @@ const (
 	defLimit       = 10
 	defOffset      = 0
 	defFormat      = "messages"
+	thingToken     = "Thing "
+	userToken      = "Bearer "
 )
 
 var (
-	errUnauthorizedAccess = errors.New("missing or invalid credentials provided")
-	errTokenNotBearer     = errors.New("authentication scheme must be Bearer")
-	auth                  readers.Auth
+	errUnauthorizedAccess  = errors.New("missing or invalid credentials provided")
+	errCannotAuthorizeUser = errors.New("authorization failed")
+	errThingAccess         = errors.New("thing has no permission")
+	errUserAccess          = errors.New("user has no permission")
+	errWrongToken          = errors.New("incorrect or missing Authorization header")
+	thingsAuth             mainflux.ThingsServiceClient
+	usersAuth              mainflux.AuthServiceClient
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc readers.MessageRepository, tc readers.Auth, svcName string) http.Handler {
-	auth = tc
+func MakeHandler(svc readers.MessageRepository, tc mainflux.ThingsServiceClient, uc mainflux.AuthServiceClient, svcName string) http.Handler {
+	thingsAuth = tc
+	usersAuth = uc
 
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),
@@ -215,29 +224,36 @@ func authorize(ctx context.Context, r *http.Request, chanID string) (err error) 
 	if token == "" {
 		return errors.ErrAuthentication
 	}
-
-	if _, err := auth.CanAccessByKey(ctx, &mainflux.AccessByKeyReq{Token: token, ChanID: chanID}); err == nil {
+	if strings.HasPrefix(token, thingToken) {
+		token = strings.ReplaceAll(token, thingToken, "")
+		if _, err := thingsAuth.CanAccessByKey(ctx, &mainflux.AccessByKeyReq{Token: token, ChanID: chanID}); err != nil {
+			return errors.Wrap(errUnauthorizedAccess, errThingAccess)
+		}
 		return nil
 	}
 
-	user, err := auth.Identify(ctx, &mainflux.Token{Value: token})
-	if err != nil {
-		e, ok := status.FromError(err)
-		if ok && e.Code() == codes.PermissionDenied {
-			return errUnauthorizedAccess
+	if strings.HasPrefix(token, userToken) {
+		token = strings.ReplaceAll(token, userToken, "")
+		user, err := usersAuth.Identify(ctx, &mainflux.Token{Value: token})
+		if err != nil {
+			e, ok := status.FromError(err)
+			if ok && e.Code() == codes.PermissionDenied {
+				return errUnauthorizedAccess
+			}
+			return errors.Wrap(errUnauthorizedAccess, errCannotAuthorizeUser)
 		}
-		return errUnauthorizedAccess
+		_, err = thingsAuth.IsChannelOwner(ctx, &mainflux.ChannelOwnerReq{Owner: user.Email, ChanID: chanID})
+		if err != nil {
+			e, ok := status.FromError(err)
+			if ok && e.Code() == codes.PermissionDenied {
+				return errors.Wrap(errUnauthorizedAccess, errUserAccess)
+			}
+			return err
+		}
+		return nil
 	}
 
-	_, err = auth.IsChannelOwner(ctx, &mainflux.ChannelOwnerReq{Owner: user.Email, ChanID: chanID})
-	if err != nil {
-		e, ok := status.FromError(err)
-		if ok && e.Code() == codes.PermissionDenied {
-			return errUnauthorizedAccess
-		}
-		return err
-	}
-	return nil
+	return errors.Wrap(errUnauthorizedAccess, errWrongToken)
 
 }
 
