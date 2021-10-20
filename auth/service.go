@@ -183,7 +183,7 @@ func (svc service) AddPolicies(ctx context.Context, token, object string, subjec
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	if err := svc.Authorize(ctx, PolicyReq{Object: "", Relation: "", Subject: user.ID}); err != nil {
+	if err := svc.Authorize(ctx, PolicyReq{Object: "authorities", Relation: "member", Subject: user.ID}); err != nil {
 		return err
 	}
 

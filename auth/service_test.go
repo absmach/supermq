@@ -987,3 +987,40 @@ func TestUnassign(t *testing.T) {
 	err = svc.Unassign(context.Background(), apiToken, group.ID, mid)
 	assert.True(t, errors.Contains(err, auth.ErrGroupNotFound), fmt.Sprintf("Unauthorized access: expected %v got %v", nil, err))
 }
+
+func TestAddPolicies(t *testing.T) {
+	svc := newService()
+	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
+
+	key := auth.Key{
+		ID:       "id",
+		Type:     auth.APIKey,
+		IssuerID: id,
+		Subject:  email,
+		IssuedAt: time.Now(),
+	}
+
+	_, apiToken, err := svc.Issue(context.Background(), secret, key)
+	assert.Nil(t, err, fmt.Sprintf("Issuing user's key expected to succeed: %s", err))
+
+	thingID, err := idProvider.ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	tmpID := "tmpid"
+	readPolicy := "read"
+	err = svc.AddPolicies(context.Background(), apiToken, thingID, []string{id, tmpID}, []string{readPolicy})
+	require.Nil(t, err, fmt.Sprintf("adding policies expected to succeed: %s", err))
+
+	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: thingID, Relation: readPolicy, Subject: id})
+	require.Nil(t, err, fmt.Sprintf("authorizing valid 'read' policy for '%s' expected to succeed: %s", id, err))
+
+	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: thingID, Relation: readPolicy, Subject: tmpID})
+	require.Nil(t, err, fmt.Sprintf("authorizing valid 'read' policy for '%s' expected to succeed: %s", tmpID, err))
+
+	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: thingID, Relation: "write", Subject: id})
+	assert.True(t, errors.Contains(err, auth.ErrAuthorization), fmt.Sprintf("authorizing invalid 'write' policy for '%s' expected to fail: %s", id, err))
+
+	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: thingID, Relation: "write", Subject: tmpID})
+	assert.True(t, errors.Contains(err, auth.ErrAuthorization), fmt.Sprintf("authorizing invalid 'write' policy for '%s' expected to fail: %s", tmpID, err))
+}
