@@ -45,7 +45,7 @@ This script is used to generate the root certificate, intermediate certificate a
 After it runs, it copies the necessary certificates and keys to the `docker/ssl/certs` folder.
 
 The CA parameters as well as vault root token script reads from the environment variables starting with `MF_VAULT_CA` in `.env` file.
-So you need to populate `.env` prior to executing this script.
+So you need to populate [`.env`](../../../docker/.env) prior to executing this script, setting `MF_VAULT_TOKEN` populated with root token from previous step.
 
 ## Vault CLI 
 
