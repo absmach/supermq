@@ -27,57 +27,25 @@ When the Vault service is started, some initialization steps need to be done to 
 
 The following scripts are provided, which work on the running Vault service in Docker.
 
-1. `vault-init.sh`
+1. `init.sh`
 
-Calls `vault operator init` to perform the initial vault initialization and generates
+This script is execetud in `vault-operator` container. Script waits for vault to be ready and then initializes and unseals `vault`.  
+`vault-operator` container uses custom built image `mainflux/vault:latest` see [Dockerfile](./Dockerfile).
+
+
+Script calls `vault operator init` to perform the initial vault initialization and generates
 a `data/secrets` file which contains the Vault unseal keys and root tokens.
 
-After this step, the corresponding Vault environment variables (`MF_VAULT_TOKEN`, `MF_VAULT_UNSEAL_KEY_1`,
-`MF_VAULT_UNSEAL_KEY_2`, `MF_VAULT_UNSEAL_KEY_3`) should be updated in `.env` file.
+This procedure is not production safe, this is only for development.
 
-Example contents for `data/secrets`:
 
-```
-Unseal Key 1: Ay0YZecYJ2HVtNtXfPootXK5LtF+JZoDmBb7IbbYdLBI
-Unseal Key 2: P6hb7x2cglv0p61jdLyNE3+d44cJUOFaDt9jHFDfr8Df
-Unseal Key 3: zSBfDHzUiWoOzXKY1pnnBqKO8UD2MDLuy8DNTxNtEBFy
-Unseal Key 4: 5oJuDDuMI0I8snaw/n4VLNpvndvvKi6JlkgOxuWXqMSz
-Unseal Key 5: ZhsUkk2tXBYEcWgz4WUCHH9rocoW6qZoiARWlkE5Epi5
-
-Initial Root Token: s.V2hdd00P4bHtUQnoWZK2hSaS
-
-Vault initialized with 5 key shares and a key threshold of 3. Please securely
-distribute the key shares printed above. When the Vault is re-sealed,
-restarted, or stopped, you must supply at least 3 of these keys to unseal it
-before it can start servicing requests.
-
-Vault does not store the generated master key. Without at least 3 key to
-reconstruct the master key, Vault will remain permanently sealed!
-
-It is possible to generate new unseal keys, provided you have a quorum of
-existing unseal keys shares. See "vault operator rekey" for more information.
-bash-4.4
-
-Use 3 out of five keys presented and put it into .env file and than start the composition again Vault should be in unsealed state ( take a note that this is not recommended in terms of security, this is deployment for development) A real production deployment can use Vault auto unseal mode where vault gets unseal keys from some 3rd party KMS ( on AWS for example)
-```
-
-2. `vault-unseal.sh`
-
-This can be run after the initialization to unseal Vault, which is necessary for it to be used to store and/or get secrets.
-This can be used if you don't want to restart the service.
-
-The unseal environment variables need to be set in `.env` for the script to work (`MF_VAULT_TOKEN`, `MF_VAULT_UNSEAL_KEY_1`,
-`MF_VAULT_UNSEAL_KEY_2`, `MF_VAULT_UNSEAL_KEY_3`).
-
-This script should not be necessary to run after the initial setup, since the Vault service unseals itself when
-starting the container.
-
-3. `vault-set-pki.sh`
+2. `vault-set-pki.sh`
 
 This script is used to generate the root certificate, intermediate certificate and HTTPS server certificate.
 After it runs, it copies the necessary certificates and keys to the `docker/ssl/certs` folder.
 
-The CA parameters are obtained from the environment variables starting with `MF_VAULT_CA` in `.env` file.
+The CA parameters as well as vault root token script reads from the environment variables starting with `MF_VAULT_CA` in `.env` file.
+So you need to populate `.env` prior to executing this script.
 
 ## Vault CLI 
 

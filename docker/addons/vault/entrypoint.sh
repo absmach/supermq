@@ -7,6 +7,4 @@ VAULT_PID=$!
 
 sleep 2
 
-
-
 wait $VAULT_PID

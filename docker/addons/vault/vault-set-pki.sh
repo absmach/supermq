@@ -2,7 +2,7 @@
 set -euo pipefail
 
 scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-export MAINFLUX_DIR=$scriptdir/../../../
+export MAINFLUX_DIR=$scriptdir/../../
 
 cd $scriptdir
 
@@ -132,10 +132,10 @@ vaultCleanupFiles
 
 echo "Copying certificate files"
 
-cp -v data/${MF_VAULT_CA_CN}.crt     ${MAINFLUX_DIR}/docker/ssl/certs/mainflux-server.crt
-cp -v data/${MF_VAULT_CA_CN}.key     ${MAINFLUX_DIR}/docker/ssl/certs/mainflux-server.key
-cp -v data/${MF_VAULT_CA_NAME}_int.key        ${MAINFLUX_DIR}/docker/ssl/certs/ca.key
-cp -v data/${MF_VAULT_CA_NAME}_int.crt        ${MAINFLUX_DIR}/docker/ssl/certs/ca.crt
-cp -v data/${MF_VAULT_CA_NAME}_int_bundle.crt ${MAINFLUX_DIR}/docker/ssl/bundle.pem
+cp -v data/${MF_VAULT_CA_CN}.crt     ${MAINFLUX_DIR}/../docker/ssl/certs/mainflux-server.crt
+cp -v data/${MF_VAULT_CA_CN}.key     ${MAINFLUX_DIR}/../docker/ssl/certs/mainflux-server.key
+cp -v data/${MF_VAULT_CA_NAME}_int.key        ${MAINFLUX_DIR}/../docker/ssl/certs/ca.key
+cp -v data/${MF_VAULT_CA_NAME}_int.crt        ${MAINFLUX_DIR}/../docker/ssl/certs/ca.crt
+cp -v data/${MF_VAULT_CA_NAME}_int_bundle.crt ${MAINFLUX_DIR}/../docker/ssl/bundle.pem
 
 exit 0

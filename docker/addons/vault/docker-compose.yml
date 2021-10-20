@@ -33,16 +33,13 @@ services:
     environment:
       VAULT_ADDR: http://${MF_VAULT_HOST}:${MF_VAULT_PORT}
       MF_VAULT_PORT: ${MF_VAULT_PORT}
-      MF_VAULT_UNSEAL_KEY_1: ${MF_VAULT_UNSEAL_KEY_1}
-      MF_VAULT_UNSEAL_KEY_2: ${MF_VAULT_UNSEAL_KEY_2}
-      MF_VAULT_UNSEAL_KEY_3: ${MF_VAULT_UNSEAL_KEY_3}
     entrypoint: /bin/sh
     command: /entrypoint.sh
     cap_add:
       - IPC_LOCK
 
   vault-operator:
-    image: mainflux-vault:latest
+    image: mainflux/vault:latest
     container_name: mainflux-vault-init
     networks:
       - docker_mainflux-base-net
@@ -51,5 +48,6 @@ services:
       - ./data:/data
     environment:
       VAULT_ADDR: http://${MF_VAULT_HOST}:${MF_VAULT_PORT}
+      WAIT_HOSTS: http://${MF_VAULT_HOST}:${MF_VAULT_PORT}
     entrypoint: bash
-    command: /init.sh
+    command:  /init.sh
