@@ -31,7 +31,7 @@ services:
       - ./config.hcl:/vault/config/config.hcl
       - ./entrypoint.sh:/entrypoint.sh
     environment:
-      VAULT_ADDR: http://127.0.0.1:${MF_VAULT_PORT}
+      VAULT_ADDR: http://${MF_VAULT_HOST}:${MF_VAULT_PORT}
       MF_VAULT_PORT: ${MF_VAULT_PORT}
       MF_VAULT_UNSEAL_KEY_1: ${MF_VAULT_UNSEAL_KEY_1}
       MF_VAULT_UNSEAL_KEY_2: ${MF_VAULT_UNSEAL_KEY_2}
@@ -40,3 +40,16 @@ services:
     command: /entrypoint.sh
     cap_add:
       - IPC_LOCK
+
+  vault-operator:
+    image: mainflux-vault:latest
+    container_name: mainflux-vault-init
+    networks:
+      - docker_mainflux-base-net
+    volumes:
+      - ./init.sh:/init.sh
+      - ./data:/data
+    environment:
+      VAULT_ADDR: http://${MF_VAULT_HOST}:${MF_VAULT_PORT}
+    entrypoint: bash
+    command: /init.sh

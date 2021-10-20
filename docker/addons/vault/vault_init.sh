@@ -1,9 +1,10 @@
 #!/usr/bin/bash
 set -euo pipefail
+export VAULT_ADDR=https://vault
 
-vault() {
-    docker exec -it mainflux-vault vault "$@"
-}
+# vault() {
+#     docker exec -it mainflux-vault vault "$@"
+# }
 
 mkdir -p data
 
