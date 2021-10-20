@@ -5,14 +5,36 @@ import (
 	"github.com/mainflux/mainflux/things"
 )
 
+// Action represents an enum for the policies used in the Mainflux.
+type Action int
+
 const (
-	readPolicy   = "read"
-	writePolicy  = "write"
-	deletePolicy = "delete"
-	accessPolicy = "access"
-	memberPolicy = "member"
-	createPolicy = "create"
+	Create Action = iota
+	Read
+	Write
+	Delete
+	Access
+	Member
+	unknown
 )
+
+var actions = [...]string{
+	Create: "create",
+	Read:   "read",
+	Write:  "write",
+	Delete: "delete",
+	Access: "access",
+	Member: "member",
+}
+
+func parsePolicy(incomingAction string) Action {
+	for i, action := range actions {
+		if incomingAction == action {
+			return Action(i)
+		}
+	}
+	return unknown
+}
 
 type createPolicyReq struct {
 	token      string
@@ -31,8 +53,7 @@ func (req createPolicyReq) validate() error {
 	}
 
 	for _, policy := range req.Policies {
-		if policy != readPolicy && policy != writePolicy && policy != deletePolicy &&
-			policy != accessPolicy && policy != memberPolicy && policy != createPolicy {
+		if action := parsePolicy(policy); action > Member || action < Create {
 			return things.ErrMalformedEntity
 		}
 	}

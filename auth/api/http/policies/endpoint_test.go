@@ -105,6 +105,7 @@ func TestAddPolicies(t *testing.T) {
 	client := ts.Client()
 
 	valid := addPolicyRequest{Object: "obj", Policies: []string{"read"}, SubjectIDs: []string{"user1", "user2"}}
+	multipleValid := addPolicyRequest{Object: "obj", Policies: []string{"write", "delete"}, SubjectIDs: []string{"user1", "user2"}}
 	invalidObject := addPolicyRequest{Object: "", Policies: []string{"read"}, SubjectIDs: []string{"user1", "user2"}}
 	invalidPolicies := addPolicyRequest{Object: "obj", Policies: []string{"read", "invalid"}, SubjectIDs: []string{"user1", "user2"}}
 	invalidSubjects := addPolicyRequest{Object: "obj", Policies: []string{"read", "access"}, SubjectIDs: []string{"", "user2"}}
@@ -122,6 +123,13 @@ func TestAddPolicies(t *testing.T) {
 			ct:     contentType,
 			status: http.StatusOK,
 			req:    toJSON(valid),
+		},
+		{
+			desc:   "Add multiple policies to multiple user",
+			token:  loginSecret,
+			ct:     contentType,
+			status: http.StatusOK,
+			req:    toJSON(multipleValid),
 		},
 		{
 			desc:   "Add policies with unauthorized access",

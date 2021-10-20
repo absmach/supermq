@@ -1009,18 +1009,36 @@ func TestAddPolicies(t *testing.T) {
 
 	tmpID := "tmpid"
 	readPolicy := "read"
+	writePolicy := "write"
+	deletePolicy := "delete"
+
+	// Add read policy to users.
 	err = svc.AddPolicies(context.Background(), apiToken, thingID, []string{id, tmpID}, []string{readPolicy})
 	require.Nil(t, err, fmt.Sprintf("adding policies expected to succeed: %s", err))
 
+	// Add write and delete policies to users.
+	err = svc.AddPolicies(context.Background(), apiToken, thingID, []string{id, tmpID}, []string{writePolicy, deletePolicy})
+	require.Nil(t, err, fmt.Sprintf("adding multiple policies expected to succeed: %s", err))
+
+	// Verify policies of the user with id.
 	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: thingID, Relation: readPolicy, Subject: id})
 	require.Nil(t, err, fmt.Sprintf("authorizing valid 'read' policy for '%s' expected to succeed: %s", id, err))
+	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: thingID, Relation: writePolicy, Subject: id})
+	require.Nil(t, err, fmt.Sprintf("authorizing valid 'write' policy for '%s' expected to succeed: %s", id, err))
+	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: thingID, Relation: deletePolicy, Subject: id})
+	require.Nil(t, err, fmt.Sprintf("authorizing valid 'delete' policy for '%s' expected to succeed: %s", id, err))
 
+	// Verify policies of the user with tmpid.
 	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: thingID, Relation: readPolicy, Subject: tmpID})
 	require.Nil(t, err, fmt.Sprintf("authorizing valid 'read' policy for '%s' expected to succeed: %s", tmpID, err))
+	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: thingID, Relation: writePolicy, Subject: tmpID})
+	require.Nil(t, err, fmt.Sprintf("authorizing valid 'write' policy for '%s' expected to succeed: %s", tmpID, err))
+	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: thingID, Relation: deletePolicy, Subject: tmpID})
+	require.Nil(t, err, fmt.Sprintf("authorizing valid 'delete' policy for '%s' expected to succeed: %s", tmpID, err))
 
-	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: thingID, Relation: "write", Subject: id})
-	assert.True(t, errors.Contains(err, auth.ErrAuthorization), fmt.Sprintf("authorizing invalid 'write' policy for '%s' expected to fail: %s", id, err))
+	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: thingID, Relation: "access", Subject: id})
+	assert.True(t, errors.Contains(err, auth.ErrAuthorization), fmt.Sprintf("authorizing invalid 'access' policy for '%s' expected to fail: %s", id, err))
 
-	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: thingID, Relation: "write", Subject: tmpID})
-	assert.True(t, errors.Contains(err, auth.ErrAuthorization), fmt.Sprintf("authorizing invalid 'write' policy for '%s' expected to fail: %s", tmpID, err))
+	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: thingID, Relation: "access", Subject: tmpID})
+	assert.True(t, errors.Contains(err, auth.ErrAuthorization), fmt.Sprintf("authorizing invalid 'access' policy for '%s' expected to fail: %s", tmpID, err))
 }
