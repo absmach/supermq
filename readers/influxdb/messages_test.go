@@ -499,7 +499,7 @@ func TestReadJSON(t *testing.T) {
 
 	for desc, tc := range cases {
 		result, err := reader.ReadAll(tc.chanID, tc.pageMeta)
-		require.NoError(t, err)
+		assert.Nil(t, err, fmt.Sprintf("%s: expected no error got %s", desc, err))
 
 		for i := 0; i < len(result.Messages); i++ {
 			m := result.Messages[i]
