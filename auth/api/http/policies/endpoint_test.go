@@ -26,16 +26,11 @@ import (
 const (
 	secret       = "secret"
 	contentType  = "application/json"
-	id           = "123e4567-e89b-12d3-a456-000000000001"
+	id           = uuid.Prefix + "-000000000001"
 	email        = "user@example.com"
-	unauthzID    = "123e4567-e89b-12d3-a456-000000000002"
+	unauthzID    = uuid.Prefix + "-000000000002"
 	unauthzEmail = "unauthz@example.com"
 )
-
-type issueRequest struct {
-	Duration time.Duration `json:"duration,omitempty"`
-	Type     uint32        `json:"type,omitempty"`
-}
 
 type testRequest struct {
 	client      *http.Client
