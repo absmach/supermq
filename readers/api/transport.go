@@ -223,16 +223,15 @@ func authorize(ctx context.Context, r *http.Request, chanID string) (err error) 
 	if token == "" {
 		return errors.ErrAuthentication
 	}
-	if strings.HasPrefix(token, thingToken) {
-		token = strings.ReplaceAll(token, thingToken, "")
+	switch {
+	case strings.HasPrefix(token, thingToken):
+		token = strings.TrimPrefix(token, thingToken)
 		if _, err := thingsAuth.CanAccessByKey(ctx, &mainflux.AccessByKeyReq{Token: token, ChanID: chanID}); err != nil {
 			return errors.Wrap(errUnauthorizedAccess, errThingAccess)
 		}
 		return nil
-	}
-
-	if strings.HasPrefix(token, userToken) {
-		token = strings.ReplaceAll(token, userToken, "")
+	case strings.HasPrefix(token, userToken):
+		token = strings.TrimPrefix(token, userToken)
 		user, err := usersAuth.Identify(ctx, &mainflux.Token{Value: token})
 		if err != nil {
 			e, ok := status.FromError(err)
@@ -250,10 +249,10 @@ func authorize(ctx context.Context, r *http.Request, chanID string) (err error) 
 			return err
 		}
 		return nil
+	default:
+		return errors.Wrap(errUnauthorizedAccess, errWrongToken)
+
 	}
-
-	return errors.Wrap(errUnauthorizedAccess, errWrongToken)
-
 }
 
 func readBoolValueQuery(r *http.Request, key string) (bool, error) {
