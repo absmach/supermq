@@ -180,6 +180,27 @@ func (svc service) AddPolicy(ctx context.Context, pr PolicyReq) error {
 	return svc.agent.AddPolicy(ctx, pr)
 }
 
+func (svc service) AddPolicies(ctx context.Context, token, object string, subjectIDs, relations []string) error {
+	user, err := svc.Identify(ctx, token)
+	if err != nil {
+		return errors.Wrap(ErrUnauthorizedAccess, err)
+	}
+
+	if err := svc.Authorize(ctx, PolicyReq{Object: "authorities", Relation: "member", Subject: user.ID}); err != nil {
+		return err
+	}
+
+	var errs error
+	for _, subjectID := range subjectIDs {
+		for _, relation := range relations {
+			if err := svc.AddPolicy(ctx, PolicyReq{Object: object, Relation: relation, Subject: subjectID}); err != nil {
+				errs = errors.Wrap(fmt.Errorf("cannot add '%s' policy on object '%s' for subject '%s': %s", relation, object, subjectID, err), errs)
+			}
+		}
+	}
+	return errs
+}
+
 func (svc service) DeletePolicy(ctx context.Context, pr PolicyReq) error {
 	return svc.agent.DeletePolicy(ctx, pr)
 }

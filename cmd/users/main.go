@@ -345,8 +345,18 @@ func createAdmin(svc users.Service, userRepo users.UserRepository, c config, aut
 		Password: c.adminPassword,
 	}
 
-	if _, err := userRepo.RetrieveByEmail(context.Background(), user.Email); err == nil {
-		// Exiting if user already exists
+	if admin, err := userRepo.RetrieveByEmail(context.Background(), user.Email); err == nil {
+		// The admin is already created. Check existence of the admin policy.
+		_, err := auth.Authorize(context.Background(), &mainflux.AuthorizeReq{Obj: "authorities", Act: "member", Sub: admin.ID})
+		if err != nil {
+			apr, err := auth.AddPolicy(context.Background(), &mainflux.AddPolicyReq{Obj: "authorities", Act: "member", Sub: admin.ID})
+			if err != nil {
+				return err
+			}
+			if !apr.GetAuthorized() {
+				return users.ErrAuthorization
+			}
+		}
 		return nil
 	}
 

@@ -1061,6 +1061,91 @@ func TestAssignAccessRights(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("checking shared group access policy expected to be succeed: %#v", err))
 }
 
+func TestAddPolicies(t *testing.T) {
+	svc := newService()
+	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
+
+	key := auth.Key{
+		ID:       "id",
+		Type:     auth.APIKey,
+		IssuerID: id,
+		Subject:  email,
+		IssuedAt: time.Now(),
+	}
+
+	_, apiToken, err := svc.Issue(context.Background(), secret, key)
+	assert.Nil(t, err, fmt.Sprintf("Issuing user's key expected to succeed: %s", err))
+
+	thingID, err := idProvider.ID()
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	tmpID := "tmpid"
+	readPolicy := "read"
+	writePolicy := "write"
+	deletePolicy := "delete"
+
+	// Add read policy to users.
+	err = svc.AddPolicies(context.Background(), apiToken, thingID, []string{id, tmpID}, []string{readPolicy})
+	assert.Nil(t, err, fmt.Sprintf("adding policies expected to succeed: %s", err))
+
+	// Add write and delete policies to users.
+	err = svc.AddPolicies(context.Background(), apiToken, thingID, []string{id, tmpID}, []string{writePolicy, deletePolicy})
+	assert.Nil(t, err, fmt.Sprintf("adding multiple policies expected to succeed: %s", err))
+
+	cases := []struct {
+		desc   string
+		policy auth.PolicyReq
+		err    error
+	}{
+		{
+			desc:   "check valid 'read' policy of user with id",
+			policy: auth.PolicyReq{Object: thingID, Relation: readPolicy, Subject: id},
+			err:    nil,
+		},
+		{
+			desc:   "check valid 'write' policy of user with id",
+			policy: auth.PolicyReq{Object: thingID, Relation: writePolicy, Subject: id},
+			err:    nil,
+		},
+		{
+			desc:   "check valid 'delete' policy of user with id",
+			policy: auth.PolicyReq{Object: thingID, Relation: deletePolicy, Subject: id},
+			err:    nil,
+		},
+		{
+			desc:   "check valid 'read' policy of user with tmpid",
+			policy: auth.PolicyReq{Object: thingID, Relation: readPolicy, Subject: tmpID},
+			err:    nil,
+		},
+		{
+			desc:   "check valid 'write' policy of user with tmpid",
+			policy: auth.PolicyReq{Object: thingID, Relation: writePolicy, Subject: tmpID},
+			err:    nil,
+		},
+		{
+			desc:   "check valid 'delete' policy of user with tmpid",
+			policy: auth.PolicyReq{Object: thingID, Relation: deletePolicy, Subject: tmpID},
+			err:    nil,
+		},
+		{
+			desc:   "check invalid 'access' policy of user with id",
+			policy: auth.PolicyReq{Object: thingID, Relation: "access", Subject: id},
+			err:    auth.ErrAuthorization,
+		},
+		{
+			desc:   "check invalid 'access' policy of user with tmpid",
+			policy: auth.PolicyReq{Object: thingID, Relation: "access", Subject: tmpID},
+			err:    auth.ErrAuthorization,
+		},
+	}
+
+	for _, tc := range cases {
+		err := svc.Authorize(context.Background(), tc.policy)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v, got %v", tc.desc, tc.err, err))
+	}
+}
+
 func buildSubjectSet(namespace, object, relation string) string {
 	return fmt.Sprintf("%s:%s#%s", namespace, object, relation)
 }
