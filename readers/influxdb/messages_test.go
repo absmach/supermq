@@ -2,11 +2,11 @@ package influxdb_test
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
 	"time"
 
 	influxdata "github.com/influxdata/influxdb/client/v2"
-
 	iwriter "github.com/mainflux/mainflux/consumers/writers/influxdb"
 	"github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
@@ -62,7 +62,6 @@ func TestReadAll(t *testing.T) {
 		Protocol:   mqttProt,
 		Name:       "name",
 		Unit:       "U",
-		Time:       123456,
 		UpdateTime: 1234,
 	}
 
@@ -72,7 +71,10 @@ func TestReadAll(t *testing.T) {
 	stringMsgs := []senml.Message{}
 	dataMsgs := []senml.Message{}
 	queryMsgs := []senml.Message{}
-	now := float64(time.Now().UTC().Second())
+	rand.Seed(time.Now().UnixNano())
+	to := msgsNum
+	from := 21
+	now := float64(rand.Intn(to) + from)
 
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.
@@ -531,8 +533,7 @@ func fromJSON(msg []map[string]interface{}) []readers.Message {
 
 func toMap(msg json.Message) map[string]interface{} {
 	return map[string]interface{}{
-		"channel": msg.Channel,
-		// "created":   msg.Created,
+		"channel":   msg.Channel,
 		"subtopic":  msg.Subtopic,
 		"publisher": msg.Publisher,
 		"protocol":  msg.Protocol,
