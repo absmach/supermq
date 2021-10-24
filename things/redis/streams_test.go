@@ -36,7 +36,6 @@ const (
 	channelCreate = channelPrefix + "create"
 	channelUpdate = channelPrefix + "update"
 	channelRemove = channelPrefix + "remove"
-	Prefix        = "fe6b4e92-cc98-425e-b0aa-"
 )
 
 func newService(tokens map[string]string) things.Service {
