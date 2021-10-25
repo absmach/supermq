@@ -266,7 +266,6 @@ func (tr thingRepository) RetrieveAll(ctx context.Context, owner string, pm thin
 	q := fmt.Sprintf(`SELECT id, name, key, metadata FROM things
 	      %s ORDER BY %s %s LIMIT :limit OFFSET :offset;`, whereClause, oq, dq)
 	params := map[string]interface{}{
-		// "owner":    owner,
 		"limit":    pm.Limit,
 		"offset":   pm.Offset,
 		"name":     name,
