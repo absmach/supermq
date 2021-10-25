@@ -27,6 +27,7 @@ const (
 	mqttProt    = "mqtt"
 	httpProt    = "http"
 	msgName     = "temperature"
+	from        = 21
 
 	format1 = "format1"
 	format2 = "format2"
@@ -73,7 +74,6 @@ func TestReadAll(t *testing.T) {
 	queryMsgs := []senml.Message{}
 	rand.Seed(time.Now().UnixNano())
 	to := msgsNum
-	from := 21
 	now := float64(rand.Intn(to) + from)
 
 	for i := 0; i < msgsNum; i++ {
