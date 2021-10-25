@@ -209,7 +209,7 @@ func (svc service) AssignGroupAccessRights(ctx context.Context, token, thingGrou
 	if _, err := svc.Identify(ctx, token); err != nil {
 		return errors.Wrap(ErrUnauthorizedAccess, err)
 	}
-	return svc.agent.AddPolicy(ctx, PolicyReq{Object: thingGroupID, Relation: "access", Subject: buildSubjectSet("members", userGroupID, memberRelation)})
+	return svc.agent.AddPolicy(ctx, PolicyReq{Object: thingGroupID, Relation: "access", Subject: fmt.Sprintf("%s:%s#%s", "members", userGroupID, memberRelation)})
 }
 
 func (svc service) tmpKey(duration time.Duration, key Key) (Key, string, error) {
@@ -378,10 +378,6 @@ func (svc service) Assign(ctx context.Context, token string, groupID, groupType 
 		}
 	}
 	return errs
-}
-
-func buildSubjectSet(namespace, object, relation string) string {
-	return fmt.Sprintf("%s:%s#%s", namespace, object, relation)
 }
 
 func (svc service) Unassign(ctx context.Context, token string, groupID string, memberIDs ...string) error {

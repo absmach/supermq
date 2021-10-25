@@ -937,7 +937,7 @@ func TestAssign(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("member assign save unexpected error: %s", err))
 
 	// check access control policies things members.
-	subjectSet := buildSubjectSet("members", group.ID, "access")
+	subjectSet := fmt.Sprintf("%s:%s#%s", "members", group.ID, "access")
 	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: mid, Relation: "read", Subject: subjectSet})
 	require.Nil(t, err, fmt.Sprintf("entites having an access to group %s must have %s policy on %s: %s", group.ID, "read", mid, err))
 	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: mid, Relation: "write", Subject: subjectSet})
@@ -1057,7 +1057,7 @@ func TestAssignAccessRights(t *testing.T) {
 	err = svc.AssignGroupAccessRights(context.Background(), apiToken, thingGroupID, userGroupID)
 	require.Nil(t, err, fmt.Sprintf("sharing the user group with thing group expected to succeed: %v", err))
 
-	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: thingGroupID, Relation: "access", Subject: buildSubjectSet("members", userGroupID, "member")})
+	err = svc.Authorize(context.Background(), auth.PolicyReq{Object: thingGroupID, Relation: "access", Subject: fmt.Sprintf("%s:%s#%s", "members", userGroupID, "member")})
 	require.Nil(t, err, fmt.Sprintf("checking shared group access policy expected to be succeed: %#v", err))
 }
 
@@ -1144,8 +1144,4 @@ func TestAddPolicies(t *testing.T) {
 		err := svc.Authorize(context.Background(), tc.policy)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %v, got %v", tc.desc, tc.err, err))
 	}
-}
-
-func buildSubjectSet(namespace, object, relation string) string {
-	return fmt.Sprintf("%s:%s#%s", namespace, object, relation)
 }
