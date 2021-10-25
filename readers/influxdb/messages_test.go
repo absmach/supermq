@@ -27,7 +27,7 @@ const (
 	mqttProt    = "mqtt"
 	httpProt    = "http"
 	msgName     = "temperature"
-	from        = 21
+	offset      = 21
 
 	format1 = "format1"
 	format2 = "format2"
@@ -74,7 +74,7 @@ func TestReadAll(t *testing.T) {
 	queryMsgs := []senml.Message{}
 	rand.Seed(time.Now().UnixNano())
 	to := msgsNum
-	now := float64(rand.Intn(to) + from)
+	now := float64(rand.Intn(to) + offset)
 
 	for i := 0; i < msgsNum; i++ {
 		// Mix possible values as well as value sum.
@@ -338,24 +338,24 @@ func TestReadAll(t *testing.T) {
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset: 0,
-				Limit:  uint64(len(messages[0:21])),
-				From:   messages[20].Time,
+				Limit:  uint64(len(messages[0:offset])),
+				From:   messages[offset-1].Time,
 			},
 			page: readers.MessagesPage{
-				Total:    uint64(len(messages[0:21])),
-				Messages: fromSenml(messages[0:21]),
+				Total:    uint64(len(messages[0:offset])),
+				Messages: fromSenml(messages[0:offset]),
 			},
 		},
 		"read message with to": {
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
 				Offset: 0,
-				Limit:  uint64(len(messages[21:])),
-				To:     messages[20].Time,
+				Limit:  uint64(len(messages[offset:])),
+				To:     messages[offset-1].Time,
 			},
 			page: readers.MessagesPage{
-				Total:    uint64(len(messages[21:])),
-				Messages: fromSenml(messages[21:]),
+				Total:    uint64(len(messages[offset:])),
+				Messages: fromSenml(messages[offset:]),
 			},
 		},
 		"read message with from/to": {
