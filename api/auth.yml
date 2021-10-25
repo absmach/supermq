@@ -307,6 +307,29 @@ paths:
           description: Missing or invalid access token provided.
         '500':
           $ref: "#/components/responses/ServiceError"
+  /policies:
+    post:
+      summary: Creates a new policy.
+      description: |
+        Creates a new policy. Only admin can use this endpoint. Therefore, you need an authentication token for the admin.
+        Also, only policies defined on the system are allowed to add. For more details, please see the docs for Authorization.
+      tags:
+        - auth
+      parameters:
+        - $ref: "#/components/parameters/AdminAuthorization"
+      requestBody:
+        $ref: "#/components/requestBodies/PoliciesReq"
+      responses:
+        '201':
+          description: Policy created.
+        '400':
+          description: Failed due to malformed JSON.
+        '409':
+          description: Failed due to using an existing email address.
+        '415':
+          description: Missing or invalid content type.
+        '500':
+          $ref: "#/components/responses/ServiceError"
 components:
   schemas:
     Key:
@@ -474,6 +497,27 @@ components:
           description: Total number of items.
       required:
         - groups
+    PoliciesReqSchema:
+      type: object
+      properties:
+        object:
+          type: string
+          description: |
+            Specifies an object field for the field.
+            Object indicates application objects such as ThingID.
+        subjects:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: string
+        policies:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: string
+
   parameters:
     Authorization:
       name: Authorization
@@ -559,6 +603,15 @@ components:
       schema:
         type: boolean
         default: false
+    AdminAuthorization:
+      name: Authorization
+      description: Admin's access token.
+      in: header
+      schema:
+        type: string
+        format: jwt
+      required: true
+
   requestBodies:
     KeyRequest:
       description: JSON-formatted document describing key request.
@@ -610,6 +663,14 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ShareGroupAccessReqSchema"
+    PoliciesReq:
+      description: JSON-formatted document describing adding policies request.
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/PoliciesReqSchema"
+
   responses:
     ServiceError:
       description: Unexpected server-side error occurred.

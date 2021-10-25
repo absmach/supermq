@@ -17,6 +17,6 @@ func createPolicyEndpoint(svc auth.Service) endpoint.Endpoint {
 			return createPolicyRes{}, err
 		}
 
-		return createPolicyRes{}, nil
+		return createPolicyRes{created: true}, nil
 	}
 }
