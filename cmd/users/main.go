@@ -131,7 +131,7 @@ type config struct {
 	adminEmail     string
 	adminPassword  string
 	passRegex      *regexp.Regexp
-	userSelfSigned string
+	userSelfSigned bool
 }
 
 func main() {
@@ -189,6 +189,11 @@ func loadConfig() config {
 		log.Fatalf("Invalid password validation rules %s\n", envPassRegex)
 	}
 
+	selfSigned, err := strconv.ParseBool(mainflux.Env(envUserSelfSigned, defUserSelfSigned))
+	if err != nil {
+		log.Fatalf("Invalid %s value: %s", envUserSelfSigned, err.Error())
+	}
+
 	dbConfig := postgres.Config{
 		Host:        mainflux.Env(envDBHost, defDBHost),
 		Port:        mainflux.Env(envDBPort, defDBPort),
@@ -228,7 +233,7 @@ func loadConfig() config {
 		adminEmail:     mainflux.Env(envAdminEmail, defAdminEmail),
 		adminPassword:  mainflux.Env(envAdminPassword, defAdminPassword),
 		passRegex:      passRegex,
-		userSelfSigned: mainflux.Env(envUserSelfSigned, defUserSelfSigned),
+		userSelfSigned: selfSigned,
 	}
 
 }
@@ -324,7 +329,10 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServic
 		os.Exit(1)
 	}
 
-	if c.userSelfSigned != defUserSelfSigned {
+	if !c.userSelfSigned {
+		// If MF_USERS_ALLOW_SELF_SIGNED environment variable is not "true",
+		// everybody cannot create a new user. Therefore, delete a policy that
+		// allows everybody to create a new user.
 		dpr, err := auth.DeletePolicy(context.Background(), &mainflux.DeletePolicyReq{Obj: "user", Act: "create", Sub: "*"})
 		if err != nil {
 			logger.Error("failed to delete a policy: " + err.Error())
