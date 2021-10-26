@@ -2,9 +2,15 @@ package policies
 
 import "net/http"
 
-type createPolicyRes struct{}
+type createPolicyRes struct{
+	created bool
+}
 
 func (res createPolicyRes) Code() int {
+	if res.created {
+		return http.StatusCreated
+	}
+
 	return http.StatusOK
 }
 

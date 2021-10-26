@@ -116,14 +116,14 @@ func TestAddPolicies(t *testing.T) {
 			desc:   "Add policies with authorized access",
 			token:  loginSecret,
 			ct:     contentType,
-			status: http.StatusOK,
+			status: http.StatusCreated,
 			req:    toJSON(valid),
 		},
 		{
 			desc:   "Add multiple policies to multiple user",
 			token:  loginSecret,
 			ct:     contentType,
-			status: http.StatusOK,
+			status: http.StatusCreated,
 			req:    toJSON(multipleValid),
 		},
 		{
@@ -195,7 +195,7 @@ func TestAddPolicies(t *testing.T) {
 		req := testRequest{
 			client:      client,
 			method:      http.MethodPost,
-			url:         fmt.Sprintf("%s/policy", ts.URL),
+			url:         fmt.Sprintf("%s/policies", ts.URL),
 			contentType: tc.ct,
 			token:       tc.token,
 			body:        strings.NewReader(tc.req),
