@@ -22,11 +22,11 @@ paths:
           description: Failed due to malformed JSON.
         '500':
           description: Unexpected server-side error ocurred.
-  /certs/{thingId}:
+  /certs/{thingID}/list:
     get:
       summary: Retrieves certificates
       description: |
-        Retrieves a certificates for given thing ID .
+        Retrieves a list of issued certificates for a given thing ID.
       tags:
         - configs
       parameters:
@@ -34,17 +34,52 @@ paths:
         - $ref: "#/components/parameters/ThingID"
       responses:
         '200':
-          $ref: "#/components/responses/CertsRes"
+          $ref: "#/components/responses/CertsPageRes"
+        '404':
+          description: |
+            Failed to retrieve corresponding certificates.
+        '500':
+          $ref: "#/components/responses/ServiceError"
+  /certs/{thingID}/serials:
+    get:
+      summary: Retrieves certificates serial IDs
+      description: |
+        Retrieves a list of issued certificates serial IDs for a given thing ID.
+      tags:
+        - configs
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/ThingID"
+      responses:
+        '200':
+          $ref: "#/components/responses/SerialsPageRes"
+        '404':
+          description: |
+            Failed to retrieve corresponding certificates.
+        '500':
+          $ref: "#/components/responses/ServiceError"
+  /certs/{certID}:
+    get:
+      summary: Retrieves a certificate
+      description: |
+        Retrieves an issued certificate for a given cert ID.
+      tags:
+        - configs
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/CertID"
+      responses:
+        '200':
+          $ref: "#/components/responses/CertRes"
         '404':
           description: |
             Failed to retrieve corresponding certificate.
         '500':
           $ref: "#/components/responses/ServiceError"
-  /certs/{certId}:
     delete:
       summary: Revokes certificate
       description: |
-        Revokes a certificates for given cert ID .
+        Revokes a certificates for a given cert ID.
       tags:
         - configs
       parameters:
@@ -86,7 +121,7 @@ components:
       required: true
 
   schemas:
-    Certs:
+    Cert:
       type: object
       properties:
         thing_id:
@@ -108,6 +143,49 @@ components:
         expire:
           type: string
           description: Certificate expiry date
+    Serial:
+      type: object
+      properties:
+        serial:
+          type: string
+          description: Certificate serial
+    CertsPage:
+      type: object
+      properties:
+        certs:
+          type: array
+          minItems: 0
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/Cert"
+        total:
+          type: integer
+          description: Total number of items.
+        offset:
+          type: integer
+          description: Number of items to skip during retrieval.
+        limit:
+          type: integer
+          description: Maximum number of items to return in one page.
+    SerialsPage:
+      type: object
+      properties:
+        serials:
+          type: array
+          description: Certificate serials IDs.
+          minItems: 0
+          uniqueItems: true
+          items:
+            type: string
+        total:
+          type: integer
+          description: Total number of items.
+        offset:
+          type: integer
+          description: Number of items to skip during retrieval.
+        limit:
+          type: integer
+          description: Maximum number of items to return in one page.
     Revoke:
       type: object
       properties:
@@ -141,12 +219,24 @@ components:
   responses:
     ServiceError:
       description: Unexpected server-side error occurred.
-    CertsRes:
-      description: Data retrieved.
+    CertRes:
+      description: Certificate data.
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Certs"
+            $ref: "#/components/schemas/Cert"
+    CertsPageRes:
+      description: Certificates page.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CertsPage"
+    SerialsPageRes:
+      description: Serials page.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/SerialsPage"
     RevokeRes:
       description: Certificate revoked.
       content:

@@ -39,6 +39,22 @@ func (req *listReq) validate() error {
 	return nil
 }
 
+type viewReq struct {
+	serialID string
+	token    string
+}
+
+func (req *viewReq) validate() error {
+	if req.token == "" {
+		return errUnauthorized
+	}
+	if req.serialID == "" {
+		return certs.ErrMalformedEntity
+	}
+
+	return nil
+}
+
 type revokeReq struct {
 	token  string
 	certID string

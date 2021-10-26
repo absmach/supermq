@@ -20,12 +20,14 @@ func issueCert(svc certs.Service) endpoint.Endpoint {
 		if err != nil {
 			return certsRes{}, err
 		}
+
 		return certsRes{
 			CertSerial: res.Serial,
 			ThingID:    res.ThingID,
 			CertKey:    res.ClientKey,
 			Cert:       res.ClientCert,
 			CACert:     res.IssuingCA,
+			created:    true,
 		}, nil
 	}
 }
@@ -61,6 +63,60 @@ func listCerts(svc certs.Service) endpoint.Endpoint {
 			res.Certs = append(res.Certs, view)
 		}
 		return res, nil
+	}
+}
+
+func listSerials(svc certs.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(listReq)
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+
+		page, err := svc.ListSerials(ctx, req.token, req.thingID, req.offset, req.limit)
+		if err != nil {
+			return certsPageRes{}, err
+		}
+		res := certsPageRes{
+			pageRes: pageRes{
+				Total:  page.Total,
+				Offset: page.Offset,
+				Limit:  page.Limit,
+			},
+			Certs: []certsRes{},
+		}
+
+		for _, cert := range page.Certs {
+			cr := certsRes{
+				CertSerial: cert.Serial,
+			}
+			res.Certs = append(res.Certs, cr)
+		}
+		return res, nil
+	}
+}
+
+func viewCert(svc certs.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(viewReq)
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+
+		cert, err := svc.ViewCert(ctx, req.token, req.serialID)
+		if err != nil {
+			return certsPageRes{}, err
+		}
+
+		certRes := certsRes{
+			CertSerial: cert.Serial,
+			ThingID:    cert.ThingID,
+			CertKey:    cert.ClientKey,
+			Cert:       cert.ClientCert,
+			CACert:     cert.IssuingCA,
+		}
+
+		return certRes, nil
 	}
 }
 

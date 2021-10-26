@@ -49,6 +49,10 @@ func (a *agent) IssueCert(cn string, ttl, keyType string, keyBits int) (pki.Cert
 	return a.certs(cn, ttl, keyBits)
 }
 
+func (a *agent) Read(serial string) (pki.Cert, error) {
+	return pki.Cert{}, nil
+}
+
 func (a *agent) Revoke(serial string) (time.Time, error) {
 	return time.Now(), nil
 }
