@@ -205,13 +205,13 @@ components:
             type: object
             required:
               - thing_id
-              - days_valid
+              - hours_valid
               - key_bits
             properties:
                thing_id:
                  type: string
                  format: uuid
-               days_valid:
+               hours_valid:
                  type: string
                key_bits:
                  type: integer
