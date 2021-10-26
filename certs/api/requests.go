@@ -8,11 +8,11 @@ import "github.com/mainflux/mainflux/certs"
 const maxLimitSize = 100
 
 type addCertsReq struct {
-	token   string
-	ThingID string `json:"thing_id"`
-	KeyBits int    `json:"key_bits"`
-	KeyType string `json:"key_type"`
-	Valid   string `json:"valid"`
+	token      string
+	ThingID    string `json:"thing_id"`
+	KeyBits    int    `json:"key_bits"`
+	KeyType    string `json:"key_type"`
+	HoursValid string `json:"hours_valid"`
 }
 
 func (req addCertsReq) validate() error {
