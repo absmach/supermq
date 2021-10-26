@@ -46,8 +46,8 @@ func NewRepository(db *sqlx.DB, log logger.Logger) certs.Repository {
 }
 
 func (cr certsRepository) RetrieveAll(ctx context.Context, ownerID, thingID string, offset, limit uint64) (certs.Page, error) {
-	q := `SELECT thing_id, owner_id, serial, expire FROM certs WHERE owner_id = $1 ORDER BY expire LIMIT $2 OFFSET $3;`
-	rows, err := cr.db.Query(q, ownerID, limit, offset)
+	q := `SELECT thing_id, owner_id, serial, expire FROM certs WHERE owner_id = $1 AND thing_id = $2 ORDER BY expire LIMIT $3 OFFSET $4;`
+	rows, err := cr.db.Query(q, ownerID, thingID, limit, offset)
 	if err != nil {
 		cr.log.Error(fmt.Sprintf("Failed to retrieve configs due to %s", err))
 		return certs.Page{}, err
@@ -109,8 +109,8 @@ func (cr certsRepository) Save(ctx context.Context, cert certs.Cert) (string, er
 	return cert.Serial, nil
 }
 
-func (cr certsRepository) Remove(ctx context.Context, serial string) error {
-	if _, err := cr.retrieveBySerial(ctx, serial); err != nil {
+func (cr certsRepository) Remove(ctx context.Context, ownerID, serial string) error {
+	if _, err := cr.RetrieveBySerial(ctx, ownerID, serial); err != nil {
 		return errors.Wrap(errRemove, err)
 	}
 	q := `DELETE FROM certs WHERE serial = :serial`
@@ -142,12 +142,12 @@ func (cr certsRepository) RetrieveByThing(ctx context.Context, thingID string) (
 	return c, nil
 }
 
-func (cr certsRepository) retrieveBySerial(ctx context.Context, serial string) (certs.Cert, error) {
-	q := `SELECT thing_id, owner_id, serial, expire FROM certs WHERE serial = $1`
+func (cr certsRepository) RetrieveBySerial(ctx context.Context, ownerID, serialID string) (certs.Cert, error) {
+	q := `SELECT thing_id, owner_id, serial, expire FROM certs WHERE owner_id = $1 AND serial = $2`
 	var dbcrt dbCert
 	var c certs.Cert
 
-	if err := cr.db.QueryRowxContext(ctx, q, serial).StructScan(&dbcrt); err != nil {
+	if err := cr.db.QueryRowxContext(ctx, q, ownerID, serialID).StructScan(&dbcrt); err != nil {
 
 		pqErr, ok := err.(*pq.Error)
 		if err == sql.ErrNoRows || ok && errInvalid == pqErr.Code.Name() {

@@ -64,7 +64,7 @@ func (c *certsRepoMock) RetrieveAll(ctx context.Context, ownerID, thingID string
 	return page, nil
 }
 
-func (c *certsRepoMock) Remove(ctx context.Context, serial string) error {
+func (c *certsRepoMock) Remove(ctx context.Context, ownerID, serial string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	crt, ok := c.certs[serial]
@@ -84,4 +84,8 @@ func (c *certsRepoMock) RetrieveByThing(ctx context.Context, thingID string) (ce
 		return certs.Cert{}, certs.ErrNotFound
 	}
 	return crt, nil
+}
+
+func (c *certsRepoMock) RetrieveBySerial(ctx context.Context, ownerID, thingID string) (certs.Cert, error) {
+	return certs.Cert{}, nil
 }

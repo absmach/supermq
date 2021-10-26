@@ -24,10 +24,11 @@ type certsRes struct {
 	CertKey    string `json:"cert_key"`
 	CertSerial string `json:"cert_serial"`
 	CACert     string `json:"ca_cert"`
+	created    bool
 }
 
 func (res certsPageRes) Code() int {
-	return http.StatusCreated
+	return http.StatusOK
 }
 
 func (res certsPageRes) Headers() map[string]string {
@@ -39,7 +40,11 @@ func (res certsPageRes) Empty() bool {
 }
 
 func (res certsRes) Code() int {
-	return http.StatusCreated
+	if res.created {
+		return http.StatusCreated
+	}
+
+	return http.StatusOK
 }
 
 func (res certsRes) Headers() map[string]string {
