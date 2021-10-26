@@ -41,7 +41,7 @@ var _ Service = (*certsService)(nil)
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
 	// IssueCert issues certificate for given thing id if access is granted with token
-	IssueCert(ctx context.Context, token, thingID, daysValid string, keyBits int, keyType string) (Cert, error)
+	IssueCert(ctx context.Context, token, thingID, hoursValid string, keyBits int, keyType string) (Cert, error)
 
 	// ListCerts lists certificates issued for a given thing ID
 	ListCerts(ctx context.Context, token, thingID string, offset, limit uint64) (Page, error)
@@ -115,7 +115,7 @@ type Cert struct {
 	Expire         time.Time `json:"expire" mapstructure:"-"`
 }
 
-func (cs *certsService) IssueCert(ctx context.Context, token, thingID string, daysValid string, keyBits int, keyType string) (Cert, error) {
+func (cs *certsService) IssueCert(ctx context.Context, token, thingID string, hoursValid string, keyBits int, keyType string) (Cert, error) {
 	owner, err := cs.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
 		return Cert{}, errors.Wrap(ErrUnauthorizedAccess, err)
@@ -126,14 +126,14 @@ func (cs *certsService) IssueCert(ctx context.Context, token, thingID string, da
 		return Cert{}, errors.Wrap(ErrFailedCertCreation, err)
 	}
 
-	cert, err := cs.pki.IssueCert(thing.Key, daysValid, keyType, keyBits)
+	cert, err := cs.pki.IssueCert(thing.Key, hoursValid, keyType, keyBits)
 	if err != nil {
 		return Cert{}, errors.Wrap(ErrFailedCertCreation, err)
 	}
 
 	c := Cert{
 		ThingID:        thingID,
-		OwnerID:        owner.GetEmail(),
+		OwnerID:        owner.GetId(),
 		ClientCert:     cert.ClientCert,
 		IssuingCA:      cert.IssuingCA,
 		CAChain:        cert.CAChain,
@@ -168,7 +168,7 @@ func (cs *certsService) RevokeCert(ctx context.Context, token, thingID string) (
 		return revoke, errors.Wrap(ErrFailedCertRevocation, err)
 	}
 	revoke.RevocationTime = revTime
-	if err = cs.certsRepo.Remove(context.Background(), u.GetEmail(), cert.Serial); err != nil {
+	if err = cs.certsRepo.Remove(context.Background(), u.GetId(), cert.Serial); err != nil {
 		return revoke, errors.Wrap(errFailedToRemoveCertFromDB, err)
 	}
 	return revoke, nil
@@ -180,7 +180,7 @@ func (cs *certsService) ListCerts(ctx context.Context, token, thingID string, of
 		return Page{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	cp, err := cs.certsRepo.RetrieveAll(ctx, u.GetEmail(), thingID, offset, limit)
+	cp, err := cs.certsRepo.RetrieveAll(ctx, u.GetId(), thingID, offset, limit)
 	if err != nil {
 		return Page{}, err
 	}
@@ -203,7 +203,7 @@ func (cs *certsService) ListSerials(ctx context.Context, token, thingID string, 
 		return Page{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	return cs.certsRepo.RetrieveAll(ctx, u.GetEmail(), thingID, offset, limit)
+	return cs.certsRepo.RetrieveAll(ctx, u.GetId(), thingID, offset, limit)
 }
 
 func (cs *certsService) ViewCert(ctx context.Context, token, serialID string) (Cert, error) {
@@ -212,7 +212,7 @@ func (cs *certsService) ViewCert(ctx context.Context, token, serialID string) (C
 		return Cert{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	cert, err := cs.certsRepo.RetrieveBySerial(ctx, u.GetEmail(), serialID)
+	cert, err := cs.certsRepo.RetrieveBySerial(ctx, u.GetId(), serialID)
 	if err != nil {
 		return Cert{}, err
 	}
@@ -224,7 +224,7 @@ func (cs *certsService) ViewCert(ctx context.Context, token, serialID string) (C
 
 	c := Cert{
 		ThingID:        cert.ThingID,
-		OwnerID:        u.GetEmail(),
+		OwnerID:        u.GetId(),
 		ClientCert:     vcert.ClientCert,
 		IssuingCA:      vcert.IssuingCA,
 		CAChain:        vcert.CAChain,

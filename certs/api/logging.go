@@ -24,7 +24,7 @@ func NewLoggingMiddleware(svc certs.Service, logger log.Logger) certs.Service {
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) IssueCert(ctx context.Context, token, thingID, daysValid string, keyBits int, keyType string) (c certs.Cert, err error) {
+func (lm *loggingMiddleware) IssueCert(ctx context.Context, token, thingID, hoursValid string, keyBits int, keyType string) (c certs.Cert, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method issue_cert for token: %s and thing: %s took %s to complete", token, thingID, time.Since(begin))
 		if err != nil {
@@ -34,7 +34,7 @@ func (lm *loggingMiddleware) IssueCert(ctx context.Context, token, thingID, days
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.IssueCert(ctx, token, thingID, daysValid, keyBits, keyType)
+	return lm.svc.IssueCert(ctx, token, thingID, hoursValid, keyBits, keyType)
 }
 
 func (lm *loggingMiddleware) ListCerts(ctx context.Context, token, thingID string, offset, limit uint64) (cp certs.Page, err error) {
