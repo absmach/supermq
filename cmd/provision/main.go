@@ -17,6 +17,7 @@ import (
 	mfSDK "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/provision"
 	"github.com/mainflux/mainflux/provision/api"
+	"github.com/mainflux/mainflux/things"
 )
 
 const (
@@ -193,7 +194,7 @@ func loadConfig() (provision.Config, error) {
 			UsersURL:       mainflux.Env(envUsersURL, defUsersURL),
 			TLS:            tls,
 		},
-		Certs: provision.Certs{
+		Cert: provision.Cert{
 			HoursValid: mainflux.Env(envCertsHoursValid, defCertsHoursValid),
 			KeyBits:    keyBits,
 		},
@@ -205,7 +206,7 @@ func loadConfig() (provision.Config, error) {
 		},
 
 		// This is default conf for provision if there is no config file
-		Channels: []provision.Channel{
+		Channels: []things.Channel{
 			{
 				Name:     "control-channel",
 				Metadata: map[string]interface{}{"type": "control"},
@@ -214,7 +215,7 @@ func loadConfig() (provision.Config, error) {
 				Metadata: map[string]interface{}{"type": "data"},
 			},
 		},
-		Things: []provision.Thing{
+		Things: []things.Thing{
 			{
 				Name:     "thing",
 				Metadata: map[string]interface{}{"external_id": "xxxxxx"},
