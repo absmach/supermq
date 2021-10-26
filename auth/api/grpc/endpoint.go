@@ -96,7 +96,7 @@ func deletePolicyEndpoint(svc auth.Service) endpoint.Endpoint {
 		if err != nil {
 			return deletePolicyRes{}, err
 		}
-		return deletePolicyRes{deleted: true}, err
+		return deletePolicyRes{deleted: true}, nil
 	}
 }
 

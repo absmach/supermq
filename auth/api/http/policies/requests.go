@@ -15,25 +15,16 @@ const (
 	Delete
 	Access
 	Member
-	unknown
+	Unknown
 )
 
-var actions = [...]string{
-	Create: "create",
-	Read:   "read",
-	Write:  "write",
-	Delete: "delete",
-	Access: "access",
-	Member: "member",
-}
-
-func parsePolicy(incomingAction string) Action {
-	for i, action := range actions {
-		if incomingAction == action {
-			return Action(i)
-		}
-	}
-	return unknown
+var actions = map[string]Action{
+	"create": Create,
+	"read":   Read,
+	"write":  Write,
+	"delete": Delete,
+	"access": Access,
+	"member": Member,
 }
 
 type createPolicyReq struct {
@@ -53,8 +44,8 @@ func (req createPolicyReq) validate() error {
 	}
 
 	for _, policy := range req.Policies {
-		if action := parsePolicy(policy); action > Member || action < Create {
-			return things.ErrMalformedEntity
+		if _, ok := actions[policy]; !ok {
+			return auth.ErrMalformedEntity
 		}
 	}
 
