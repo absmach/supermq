@@ -54,7 +54,7 @@ type Config struct {
 func Provision(conf Config) {
 	const (
 		rsaBits   = 4096
-		daysValid = "2400h"
+		hoursValid = "2400h"
 	)
 
 	msgContentType := string(sdk.CTJSONSenML)
@@ -157,7 +157,7 @@ func Provision(conf Config) {
 			priv, err = rsa.GenerateKey(rand.Reader, rsaBits)
 
 			notBefore := time.Now()
-			validFor, err := time.ParseDuration(daysValid)
+			validFor, err := time.ParseDuration(hoursValid)
 			if err != nil {
 				log.Fatalf("Failed to set date %v", validFor)
 			}

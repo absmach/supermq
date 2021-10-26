@@ -57,7 +57,7 @@ func (a *agent) Revoke(serial string) (time.Time, error) {
 	return time.Now(), nil
 }
 
-func (a *agent) certs(cn, daysValid string, keyBits int) (pki.Cert, error) {
+func (a *agent) certs(cn, hoursValid string, keyBits int) (pki.Cert, error) {
 	if a.X509Cert == nil {
 		return pki.Cert{}, errors.Wrap(pki.ErrFailedCertCreation, pki.ErrMissingCACertificate)
 	}
@@ -68,12 +68,12 @@ func (a *agent) certs(cn, daysValid string, keyBits int) (pki.Cert, error) {
 		return pki.Cert{}, errors.Wrap(pki.ErrFailedCertCreation, err)
 	}
 
-	if daysValid == "" {
-		daysValid = a.HoursValid
+	if hoursValid == "" {
+		hoursValid = a.HoursValid
 	}
 
 	notBefore := time.Now()
-	validFor, err := time.ParseDuration(daysValid)
+	validFor, err := time.ParseDuration(hoursValid)
 	if err != nil {
 		return pki.Cert{}, errors.Wrap(pki.ErrFailedCertCreation, err)
 	}

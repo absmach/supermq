@@ -242,7 +242,7 @@ func (ps *provisionService) Provision(token, name, externalID, externalKey strin
 	return res, nil
 }
 
-func (ps *provisionService) Cert(token, thingID, daysValid string, keyBits int) (string, string, error) {
+func (ps *provisionService) Cert(token, thingID, hoursValid string, keyBits int) (string, string, error) {
 	token, err := ps.createTokenIfEmpty(token)
 	if err != nil {
 		return "", "", err

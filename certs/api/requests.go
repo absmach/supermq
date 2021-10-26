@@ -19,6 +19,10 @@ func (req addCertsReq) validate() error {
 	if req.ThingID == "" && req.token == "" {
 		return errUnauthorized
 	}
+
+	if req.HoursValid == "" || req.KeyType == "" || req.KeyBits == 0 {
+		return certs.ErrMalformedEntity
+	}
 	return nil
 }
 
