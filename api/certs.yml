@@ -207,11 +207,14 @@ components:
               - thing_id
               - hours_valid
               - key_bits
+              - key_type
             properties:
                thing_id:
                  type: string
                  format: uuid
                hours_valid:
+                 type: string
+               key_type:
                  type: string
                key_bits:
                  type: integer
