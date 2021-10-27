@@ -74,7 +74,7 @@ const (
 	defAuthURL     = "localhost:8181"
 	defAuthTimeout = "1s"
 
-	defUserSelfSigned = "true" // By default, everybody can create a user. Otherwise, only admin can create a user.
+	defSelfRegister = "true" // By default, everybody can create a user. Otherwise, only admin can create a user.
 
 	envLogLevel      = "MF_USERS_LOG_LEVEL"
 	envDBHost        = "MF_USERS_DB_HOST"
@@ -112,26 +112,26 @@ const (
 	envAuthURL     = "MF_AUTH_GRPC_URL"
 	envAuthTimeout = "MF_AUTH_GRPC_TIMEOUT"
 
-	envUserSelfSigned = "MF_USERS_ALLOW_SELF_SIGNED"
+	envSelfRegister = "MF_USERS_ALLOW_SELF_REGISTER"
 )
 
 type config struct {
-	logLevel       string
-	dbConfig       postgres.Config
-	emailConf      email.Config
-	httpPort       string
-	serverCert     string
-	serverKey      string
-	jaegerURL      string
-	resetURL       string
-	authTLS        bool
-	authCACerts    string
-	authURL        string
-	authTimeout    time.Duration
-	adminEmail     string
-	adminPassword  string
-	passRegex      *regexp.Regexp
-	userSelfSigned bool
+	logLevel      string
+	dbConfig      postgres.Config
+	emailConf     email.Config
+	httpPort      string
+	serverCert    string
+	serverKey     string
+	jaegerURL     string
+	resetURL      string
+	authTLS       bool
+	authCACerts   string
+	authURL       string
+	authTimeout   time.Duration
+	adminEmail    string
+	adminPassword string
+	passRegex     *regexp.Regexp
+	selfRegister  bool
 }
 
 func main() {
@@ -189,9 +189,9 @@ func loadConfig() config {
 		log.Fatalf("Invalid password validation rules %s\n", envPassRegex)
 	}
 
-	selfSigned, err := strconv.ParseBool(mainflux.Env(envUserSelfSigned, defUserSelfSigned))
+	selfRegister, err := strconv.ParseBool(mainflux.Env(envSelfRegister, defSelfRegister))
 	if err != nil {
-		log.Fatalf("Invalid %s value: %s", envUserSelfSigned, err.Error())
+		log.Fatalf("Invalid %s value: %s", envSelfRegister, err.Error())
 	}
 
 	dbConfig := postgres.Config{
@@ -218,22 +218,22 @@ func loadConfig() config {
 	}
 
 	return config{
-		logLevel:       mainflux.Env(envLogLevel, defLogLevel),
-		dbConfig:       dbConfig,
-		emailConf:      emailConf,
-		httpPort:       mainflux.Env(envHTTPPort, defHTTPPort),
-		serverCert:     mainflux.Env(envServerCert, defServerCert),
-		serverKey:      mainflux.Env(envServerKey, defServerKey),
-		jaegerURL:      mainflux.Env(envJaegerURL, defJaegerURL),
-		resetURL:       mainflux.Env(envTokenResetEndpoint, defTokenResetEndpoint),
-		authTLS:        tls,
-		authCACerts:    mainflux.Env(envAuthCACerts, defAuthCACerts),
-		authURL:        mainflux.Env(envAuthURL, defAuthURL),
-		authTimeout:    authTimeout,
-		adminEmail:     mainflux.Env(envAdminEmail, defAdminEmail),
-		adminPassword:  mainflux.Env(envAdminPassword, defAdminPassword),
-		passRegex:      passRegex,
-		userSelfSigned: selfSigned,
+		logLevel:      mainflux.Env(envLogLevel, defLogLevel),
+		dbConfig:      dbConfig,
+		emailConf:     emailConf,
+		httpPort:      mainflux.Env(envHTTPPort, defHTTPPort),
+		serverCert:    mainflux.Env(envServerCert, defServerCert),
+		serverKey:     mainflux.Env(envServerKey, defServerKey),
+		jaegerURL:     mainflux.Env(envJaegerURL, defJaegerURL),
+		resetURL:      mainflux.Env(envTokenResetEndpoint, defTokenResetEndpoint),
+		authTLS:       tls,
+		authCACerts:   mainflux.Env(envAuthCACerts, defAuthCACerts),
+		authURL:       mainflux.Env(envAuthURL, defAuthURL),
+		authTimeout:   authTimeout,
+		adminEmail:    mainflux.Env(envAdminEmail, defAdminEmail),
+		adminPassword: mainflux.Env(envAdminPassword, defAdminPassword),
+		passRegex:     passRegex,
+		selfRegister:  selfRegister,
 	}
 
 }
@@ -329,8 +329,8 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServic
 		os.Exit(1)
 	}
 
-	if !c.userSelfSigned {
-		// If MF_USERS_ALLOW_SELF_SIGNED environment variable is not "true",
+	if !c.selfRegister {
+		// If MF_USERS_ALLOW_SELF_REGISTER environment variable is not "true",
 		// everybody cannot create a new user. Therefore, delete a policy that
 		// allows everybody to create a new user.
 		dpr, err := auth.DeletePolicy(context.Background(), &mainflux.DeletePolicyReq{Obj: "user", Act: "create", Sub: "*"})
