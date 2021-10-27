@@ -38,7 +38,7 @@ const (
 	thingsNum  = 1
 	thingKey   = "thingKey"
 	thingID    = "1"
-	hoursValid  = "1h"
+	hoursValid = "1h"
 	keyBits    = 2048
 	key        = "rsa"
 	certNum    = 10
@@ -119,58 +119,58 @@ func TestIssueCert(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
 
 	cases := []struct {
-		token     string
-		desc      string
-		thingID   string
+		token      string
+		desc       string
+		thingID    string
 		hoursValid string
-		key       string
-		keyBits   int
-		err       error
+		key        string
+		keyBits    int
+		err        error
 	}{
 		{
-			desc:      "issue new cert",
-			token:     token,
-			thingID:   thingID,
+			desc:       "issue new cert",
+			token:      token,
+			thingID:    thingID,
 			hoursValid: hoursValid,
-			key:       key,
-			keyBits:   2048,
-			err:       nil,
+			key:        key,
+			keyBits:    2048,
+			err:        nil,
 		},
 		{
-			desc:      "issue new cert for non existing thing id",
-			token:     token,
-			thingID:   "2",
+			desc:       "issue new cert for non existing thing id",
+			token:      token,
+			thingID:    "2",
 			hoursValid: hoursValid,
-			key:       key,
-			keyBits:   2048,
-			err:       certs.ErrFailedCertCreation,
+			key:        key,
+			keyBits:    2048,
+			err:        certs.ErrFailedCertCreation,
 		},
 		{
-			desc:      "issue new cert for non existing thing id",
-			token:     wrongValue,
-			thingID:   thingID,
+			desc:       "issue new cert for non existing thing id",
+			token:      wrongValue,
+			thingID:    thingID,
 			hoursValid: hoursValid,
-			key:       key,
-			keyBits:   2048,
-			err:       certs.ErrUnauthorizedAccess,
+			key:        key,
+			keyBits:    2048,
+			err:        certs.ErrUnauthorizedAccess,
 		},
 		{
-			desc:      "issue new cert for bad key bits",
-			token:     token,
-			thingID:   thingID,
+			desc:       "issue new cert for bad key bits",
+			token:      token,
+			thingID:    thingID,
 			hoursValid: hoursValid,
-			key:       key,
-			keyBits:   -2,
-			err:       certs.ErrFailedCertCreation,
+			key:        key,
+			keyBits:    -2,
+			err:        certs.ErrFailedCertCreation,
 		},
 		{
-			desc:      "issue new cert for bad key bits",
-			token:     token,
-			thingID:   thingID,
+			desc:       "issue new cert for bad key bits",
+			token:      token,
+			thingID:    thingID,
 			hoursValid: hoursValid,
-			key:       key,
-			keyBits:   -2,
-			err:       certs.ErrFailedCertCreation,
+			key:        key,
+			keyBits:    -2,
+			err:        certs.ErrFailedCertCreation,
 		},
 	}
 

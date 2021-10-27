@@ -53,7 +53,7 @@ type Config struct {
 // Provision - function that does actual provisiong
 func Provision(conf Config) {
 	const (
-		rsaBits   = 4096
+		rsaBits    = 4096
 		hoursValid = "2400h"
 	)
 
