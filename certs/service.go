@@ -223,15 +223,10 @@ func (cs *certsService) ViewCert(ctx context.Context, token, serialID string) (C
 	}
 
 	c := Cert{
-		ThingID:        cert.ThingID,
-		OwnerID:        u.GetId(),
-		ClientCert:     vcert.ClientCert,
-		IssuingCA:      vcert.IssuingCA,
-		CAChain:        vcert.CAChain,
-		ClientKey:      vcert.ClientKey,
-		PrivateKeyType: vcert.PrivateKeyType,
-		Serial:         vcert.Serial,
-		Expire:         vcert.Expire,
+		ThingID:    cert.ThingID,
+		ClientCert: vcert.ClientCert,
+		Serial:     cert.Serial,
+		Expire:     cert.Expire,
 	}
 
 	return c, nil
