@@ -147,17 +147,6 @@ type thingsService struct {
 	ulidProvider mainflux.IDProvider
 }
 
-// provideUUID: Generates UUID or takes external ID if supplied.
-func (ts *thingsService) provideUUID(extID string) (id string, err error) {
-	if extID == "" {
-		id, err = ts.idProvider.ID()
-	} else {
-		id, err = extID, nil
-	}
-
-	return id, err
-}
-
 // New instantiates the things service implementation.
 func New(auth mainflux.AuthServiceClient, things ThingRepository, channels ChannelRepository, ccache ChannelCache, tcache ThingCache, idp mainflux.IDProvider) Service {
 	return &thingsService{
@@ -176,21 +165,26 @@ func (ts *thingsService) CreateThings(ctx context.Context, token string, things 
 	if err != nil {
 		return []Thing{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
+	email := res.GetEmail()
 
-	for i := range things {
-		things[i].ID, err = ts.provideUUID(things[i].ID)
-		if err != nil {
-			return []Thing{}, errors.Wrap(ErrCreateUUID, err)
-		}
-
-		things[i].Owner = res.GetEmail()
-
-		if things[i].Key == "" {
-			things[i].Key, err = ts.idProvider.ID()
+	for i, th := range things {
+		if th.ID == "" {
+			id, err := ts.idProvider.ID()
 			if err != nil {
 				return []Thing{}, errors.Wrap(ErrCreateUUID, err)
 			}
+			things[i].ID = id
 		}
+
+		if th.Key == "" {
+			key, err := ts.idProvider.ID()
+			if err != nil {
+				return []Thing{}, errors.Wrap(ErrCreateUUID, err)
+			}
+			things[i].Key = key
+		}
+
+		things[i].Owner = email
 	}
 
 	return ts.things.Save(ctx, things...)
@@ -263,10 +257,13 @@ func (ts *thingsService) CreateChannels(ctx context.Context, token string, chann
 		return []Channel{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	for i := range channels {
-		channels[i].ID, err = ts.provideUUID(channels[i].ID)
-		if err != nil {
-			return []Channel{}, errors.Wrap(ErrCreateUUID, err)
+	for i, ch := range channels {
+		if ch.ID == "" {
+			id, err := ts.idProvider.ID()
+			if err != nil {
+				return []Channel{}, errors.Wrap(ErrCreateUUID, err)
+			}
+			channels[i].ID = id
 		}
 
 		channels[i].Owner = res.GetEmail()

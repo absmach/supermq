@@ -585,7 +585,7 @@ func TestCreateChannels(t *testing.T) {
 			err:    nil,
 		},
 		{
-			desc:   "create new channels with external wrong UUID",
+			desc:   "create new channels with invalid external UUID",
 			channels: []things.Channel{{ID: "b0aa-000000000001", Name: "a"}, {ID: "b0aa-000000000002", Name: "b"}},
 			token:  token,
 			err:    nil,

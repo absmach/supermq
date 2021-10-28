@@ -28,10 +28,6 @@ type createThingReq struct {
 
 // validateUUID: validates the externally supplied UUID as per standard
 func validateUUID(extID string) (err error) {
-	if extID == "" {
-		return nil
-	}
-
 	id, err := uuid.FromString(extID)
 	if id.String() != extID || err != nil {
 		return things.ErrMalformedEntity
@@ -45,7 +41,7 @@ func (req createThingReq) validate() error {
 		return things.ErrUnauthorizedAccess
 	}
 
-	if validateUUID(req.ID) != nil {
+	if req.ID != "" && validateUUID(req.ID) != nil {
 		return things.ErrMalformedEntity
 	}
 
@@ -71,7 +67,7 @@ func (req createThingsReq) validate() error {
 	}
 
 	for _, thing := range req.Things {
-		if validateUUID(thing.ID) != nil {
+		if thing.ID != "" && validateUUID(thing.ID) != nil {
 			return things.ErrMalformedEntity
 		}
 
@@ -136,7 +132,7 @@ func (req createChannelReq) validate() error {
 		return things.ErrUnauthorizedAccess
 	}
 
-	if validateUUID(req.ID) != nil {
+	if req.ID != "" && validateUUID(req.ID) != nil {
 		return things.ErrMalformedEntity
 	}
 
@@ -162,7 +158,7 @@ func (req createChannelsReq) validate() error {
 	}
 
 	for _, channel := range req.Channels {
-		if validateUUID(channel.ID) != nil {
+		if channel.ID != "" && validateUUID(channel.ID) != nil {
 			return things.ErrMalformedEntity
 		}
 

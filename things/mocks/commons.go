@@ -92,8 +92,6 @@ func parseID(ID string) (id uint64) {
 
 	if len(ID) == uuidLen {
 		slNum = ID[len(ID) - 6:]
-	} else {
-		slNum = ID
 	}
 	id, _ = strconv.ParseUint(slNum, 10, 64)
 
