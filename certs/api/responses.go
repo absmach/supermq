@@ -5,6 +5,7 @@ package api
 
 import (
 	"net/http"
+	"time"
 )
 
 type pageRes struct {
@@ -19,11 +20,10 @@ type certsPageRes struct {
 }
 
 type certsRes struct {
-	ThingID    string `json:"thing_id"`
-	Cert       string `json:"cert"`
-	CertKey    string `json:"cert_key"`
-	CertSerial string `json:"cert_serial"`
-	CACert     string `json:"ca_cert"`
+	ThingID    string    `json:"thing_id"`
+	Cert       string    `json:"cert"`
+	CertSerial string    `json:"cert_serial"`
+	HoursValid time.Time `json:"hour_valid"`
 	created    bool
 }
 

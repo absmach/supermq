@@ -147,8 +147,8 @@ func (p *pkiAgent) IssueCert(cn string, ttl, keyType string, keyBits int) (Cert,
 	if err != nil {
 		return cert, err
 	}
-	expTime := time.Unix(0, int64(exp)*int64(time.Millisecond))
-	cert.Expire = expTime
+	cert.Expire = time.Unix(int64(exp), 0)
+
 	return cert, nil
 }
 
