@@ -23,7 +23,7 @@ type certsRes struct {
 	ThingID    string    `json:"thing_id"`
 	Cert       string    `json:"cert"`
 	CertSerial string    `json:"cert_serial"`
-	HoursValid time.Time `json:"hour_valid"`
+	Expiration time.Time `json:"expiration"`
 	created    bool
 }
 

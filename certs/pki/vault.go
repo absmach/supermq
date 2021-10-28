@@ -135,19 +135,15 @@ func (p *pkiAgent) IssueCert(cn string, ttl, keyType string, keyBits int) (Cert,
 		return Cert{}, errors.Wrap(errFailedVaultCertIssue, err)
 	}
 
-	s, _ := api.ParseSecret(resp.Body)
-	cert := Cert{}
+	s, err := api.ParseSecret(resp.Body)
+	if err != nil {
+		return Cert{}, err
+	}
 
+	cert := Cert{}
 	if err = mapstructure.Decode(s.Data, &cert); err != nil {
 		return Cert{}, errors.Wrap(errFailedCertDecoding, err)
 	}
-
-	// Expire time calc must be revised value doesnt look correct
-	exp, err := s.Data["expiration"].(json.Number).Float64()
-	if err != nil {
-		return cert, err
-	}
-	cert.Expire = time.Unix(int64(exp), 0)
 
 	return cert, nil
 }
