@@ -66,3 +66,12 @@ func (mm *metricsMiddleware) ListChannels(ctx context.Context, token string) (b 
 
 	return mm.svc.ListChannels(ctx, token)
 }
+
+func (mm *metricsMiddleware) CreateChannels(ctx context.Context, token string, channels ...sdk.Channel) (b []byte, err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "create_channels").Add(1)
+		mm.latency.With("method", "create_channels").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.CreateChannels(ctx, token, channels...)
+}

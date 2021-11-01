@@ -31,31 +31,37 @@ import (
 )
 
 const (
-	defLogLevel          = "info"
-	defClientTLS         = "false"
-	defCACerts           = ""
-	defPort              = "9090"
-	defJaegerURL         = ""
-	defThingsAuthURL     = "localhost:8181"
-	defThingsAuthTimeout = "1s"
+	defLogLevel            = "info"
+	defClientTLS           = "false"
+	defCACerts             = ""
+	defPort                = "9090"
+	defJaegerURL           = ""
+	defThingsAuthURL       = "localhost:8181"
+	defThingsAuthTimeout   = "1s"
+	defChannelsAuthURL     = "localhost:8181"
+	defChannelsAuthTimeout = "1s"
 
-	envLogLevel          = "MF_GUI_LOG_LEVEL"
-	envClientTLS         = "MF_GUI_CLIENT_TLS"
-	envCACerts           = "MF_GUI_CA_CERTS"
-	envPort              = "MF_GUI_PORT"
-	envJaegerURL         = "MF_JAEGER_URL"
-	envThingsAuthURL     = "MF_THINGS_AUTH_GRPC_URL"
-	envThingsAuthTimeout = "MF_THINGS_AUTH_GRPC_TIMEOUT"
+	envLogLevel            = "MF_GUI_LOG_LEVEL"
+	envClientTLS           = "MF_GUI_CLIENT_TLS"
+	envCACerts             = "MF_GUI_CA_CERTS"
+	envPort                = "MF_GUI_PORT"
+	envJaegerURL           = "MF_JAEGER_URL"
+	envThingsAuthURL       = "MF_THINGS_AUTH_GRPC_URL"
+	envThingsAuthTimeout   = "MF_THINGS_AUTH_GRPC_TIMEOUT"
+	envChannelsAuthURL     = "MF_THINGS_AUTH_GRPC_URL"
+	envChannelsAuthTimeout = "MF_THINGS_AUTH_GRPC_TIMEOUT"
 )
 
 type config struct {
-	logLevel          string
-	port              string
-	clientTLS         bool
-	caCerts           string
-	jaegerURL         string
-	thingsAuthURL     string
-	thingsAuthTimeout time.Duration
+	logLevel            string
+	port                string
+	clientTLS           bool
+	caCerts             string
+	jaegerURL           string
+	thingsAuthURL       string
+	thingsAuthTimeout   time.Duration
+	channelsAuthURL     string
+	channelsAuthTimeout time.Duration
 }
 
 func main() {
@@ -69,11 +75,17 @@ func main() {
 	conn := connectToThings(cfg, logger)
 	defer conn.Close()
 
+	conn1 := connectToChannels(cfg, logger)
+	defer conn.Close()
+
 	tracer, closer := initJaeger("ui", cfg.jaegerURL, logger)
 	defer closer.Close()
 
 	thingsTracer, thingsCloser := initJaeger("things", cfg.jaegerURL, logger)
 	defer thingsCloser.Close()
+
+	channelsTracer, channelsCloser := initJaeger("channels", cfg.jaegerURL, logger)
+	defer channelsCloser.Close()
 
 	msgContentType := string(sdk.CTJSONSenML)
 	sdkConf := sdk.Config{
@@ -84,7 +96,9 @@ func main() {
 	sdk := sdk.NewSDK(sdkConf)
 
 	tc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
-	svc := ui.New(tc, sdk)
+	cc := thingsapi.NewClient(conn1, channelsTracer, cfg.channelsAuthTimeout)
+
+	svc := ui.New(tc, cc, sdk)
 
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
@@ -133,13 +147,15 @@ func loadConfig() config {
 	}
 
 	return config{
-		logLevel:          mainflux.Env(envLogLevel, defLogLevel),
-		port:              mainflux.Env(envPort, defPort),
-		clientTLS:         tls,
-		caCerts:           mainflux.Env(envCACerts, defCACerts),
-		jaegerURL:         mainflux.Env(envJaegerURL, defJaegerURL),
-		thingsAuthURL:     mainflux.Env(envThingsAuthURL, defThingsAuthURL),
-		thingsAuthTimeout: authTimeout,
+		logLevel:            mainflux.Env(envLogLevel, defLogLevel),
+		port:                mainflux.Env(envPort, defPort),
+		clientTLS:           tls,
+		caCerts:             mainflux.Env(envCACerts, defCACerts),
+		jaegerURL:           mainflux.Env(envJaegerURL, defJaegerURL),
+		thingsAuthURL:       mainflux.Env(envThingsAuthURL, defThingsAuthURL),
+		thingsAuthTimeout:   authTimeout,
+		channelsAuthURL:     mainflux.Env(envChannelsAuthURL, defChannelsAuthURL),
+		channelsAuthTimeout: authTimeout,
 	}
 }
 
@@ -189,4 +205,28 @@ func connectToThings(cfg config, logger logger.Logger) *grpc.ClientConn {
 		os.Exit(1)
 	}
 	return conn
+}
+
+func connectToChannels(cfg config, logger logger.Logger) *grpc.ClientConn {
+	var opts []grpc.DialOption
+	if cfg.clientTLS {
+		if cfg.caCerts != "" {
+			tpc, err := credentials.NewClientTLSFromFile(cfg.caCerts, "")
+			if err != nil {
+				logger.Error(fmt.Sprintf("Failed to load certs: %s", err))
+				os.Exit(1)
+			}
+			opts = append(opts, grpc.WithTransportCredentials(tpc))
+		}
+	} else {
+		logger.Info("gRPC communication is not encrypted")
+		opts = append(opts, grpc.WithInsecure())
+	}
+
+	conn1, err := grpc.Dial(cfg.channelsAuthURL, opts...)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to channels service: %s", err))
+		os.Exit(1)
+	}
+	return conn1
 }

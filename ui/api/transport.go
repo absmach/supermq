@@ -61,8 +61,15 @@ func MakeHandler(svc ui.Service, tracer opentracing.Tracer) http.Handler {
 		opts...,
 	))
 
+	r.Post("/channels", kithttp.NewServer(
+		kitot.TraceServer(tracer, "create_channels")(createChannelsEndpoint(svc)),
+		decodeChannelCreation,
+		encodeResponse,
+		opts...,
+	))
+
 	r.Get("/channels", kithttp.NewServer(
-		kitot.TraceServer(tracer, "list_channels")(channelsEndpoint(svc)),
+		kitot.TraceServer(tracer, "list_channels")(listChannelsEndpoint(svc)),
 		decodeListChannelsRequest,
 		encodeResponse,
 		opts...,
@@ -107,6 +114,20 @@ func decodeThingCreation(_ context.Context, r *http.Request) (interface{}, error
 func decodeListThingsRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	req := listThingsReq{
 		token: r.Header.Get("Authorization"),
+	}
+
+	return req, nil
+}
+
+func decodeChannelCreation(_ context.Context, r *http.Request) (interface{}, error) {
+
+	fmt.Println(r.Method)
+	fmt.Println(r.PostFormValue("name"))
+	fmt.Println(r.PostFormValue("metadata"))
+
+	req := createChannelsReq{
+		// token: r.Header.Get("Authorization"),
+		Name: r.PostFormValue("name"),
 	}
 
 	return req, nil

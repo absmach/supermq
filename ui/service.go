@@ -33,28 +33,26 @@ var (
 // Service specifies coap service API.
 type Service interface {
 	Index(ctx context.Context, token string) ([]byte, error)
-	// CreateThings adds things to the user identified by the provided key.
 	CreateThings(ctx context.Context, token string, things ...sdk.Thing) ([]byte, error)
-	// ListThings retrieves data about subset of things that belongs to the
-	// user identified by the provided key.
 	ListThings(ctx context.Context, token string) ([]byte, error)
-	// ListChannels retrieves data about subset of channels that belongs to the
-	// user identified by the provided key.
+	CreateChannels(ctx context.Context, token string, channels ...sdk.Channel) ([]byte, error)
 	ListChannels(ctx context.Context, token string) ([]byte, error)
 }
 
 var _ Service = (*uiService)(nil)
 
 type uiService struct {
-	things mainflux.ThingsServiceClient
-	sdk    sdk.SDK
+	things   mainflux.ThingsServiceClient
+	channels mainflux.ThingsServiceClient
+	sdk      sdk.SDK
 }
 
 // New instantiates the HTTP adapter implementation.
-func New(things mainflux.ThingsServiceClient, sdk sdk.SDK) Service {
+func New(things, channels mainflux.ThingsServiceClient, sdk sdk.SDK) Service {
 	return &uiService{
-		things: things,
-		sdk:    sdk,
+		channels: channels,
+		things:   things,
+		sdk:      sdk,
 	}
 }
 
@@ -119,16 +117,59 @@ func (gs *uiService) ListThings(ctx context.Context, token string) ([]byte, erro
 	return btpl.Bytes(), nil
 }
 
+// func (ts *uiService) UpdateThing(ctx context.Context, token string, things sdk.Thing) ([]byte, error) {
+// 	tpl, err := template.ParseGlob(ctx, &mainflux.Token{Value: token})
+// 	if err != nil {
+// 		return errors.Wrap(ErrUnauthorizedAccess, err)
+// 	}
+
+// 	data := struct {
+// 		NavbarActive string
+// 		Things       []sdk.Thing
+// 	}{
+// 		"things",
+// 		thsPage.Things,
+// 	}
+
+// 	var btpl bytes.Buffer
+// 	if err := tpl.ExecuteTemplate(&btpl, "things", data); err != nil {
+// 		println(err.Error())
+// 	}
+
+// 	return btpl.Bytes(), err
+// }
+
+func (gs *uiService) CreateChannels(ctx context.Context, token string, channels ...sdk.Channel) ([]byte, error) {
+
+	for i := range channels {
+		fmt.Println(channels[i])
+		_, err := gs.sdk.CreateChannel(channels[i], "123")
+		if err != nil {
+			return []byte{}, err
+		}
+	}
+
+	return gs.ListChannels(ctx, "123")
+}
+
 func (gs *uiService) ListChannels(ctx context.Context, token string) ([]byte, error) {
 	tpl, err := template.ParseGlob(templateDir + "/*")
 	if err != nil {
 		return []byte{}, err
 	}
 
+	chsPage, err := gs.sdk.Channels("123", 0, 100, "")
+	if err != nil {
+		return []byte{}, err
+	}
+	fmt.Println(chsPage.Channels)
+
 	data := struct {
 		NavbarActive string
+		Channels     []sdk.Channel
 	}{
 		"channels",
+		chsPage.Channels,
 	}
 
 	var btpl bytes.Buffer
