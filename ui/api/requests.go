@@ -41,6 +41,32 @@ type listThingsReq struct {
 	token string
 }
 
+type updateThingsReq struct {
+	token    string
+	Name     string                 `json:"name,omitempty"`
+	Key      string                 `json:"key,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
+}
+
+type createChannelsReq struct {
+	token    string
+	Name     string                 `json:"name,omitempty"`
+	Key      string                 `json:"key,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
+}
+
+func (req createChannelsReq) validate() error {
+	if req.token == "" {
+		return ui.ErrUnauthorizedAccess
+	}
+
+	if len(req.Name) > maxNameSize {
+		return ui.ErrMalformedEntity
+	}
+
+	return nil
+}
+
 type listChannelsReq struct {
 	token string
 }

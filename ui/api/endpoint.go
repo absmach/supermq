@@ -55,7 +55,41 @@ func listThingsEndpoint(svc ui.Service) endpoint.Endpoint {
 	}
 }
 
-func channelsEndpoint(svc ui.Service) endpoint.Endpoint {
+// func UpdateThing(svc ui.Service) endpoint.Endpoint {
+// 	return func(ctx context.Context, request interface{}) (interface{}, error) {
+// 		req := request.(updateThingReq)
+// 		res, err := svc.UpdateThing(ctx, req.token)
+// 		return uiRes{
+// 			html: res,
+// 		}, err
+// 	}
+// }
+
+func createChannelsEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(createChannelsReq)
+
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+
+		ch := sdk.Channel{
+			Key:      req.Key,
+			Name:     req.Name,
+			Metadata: req.Metadata,
+		}
+		res, err := svc.CreateChannels(ctx, req.token, ch)
+		if err != nil {
+			return nil, err
+		}
+
+		return uiRes{
+			html: res,
+		}, err
+	}
+}
+
+func listChannelsEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listChannelsReq)
 		res, err := svc.ListChannels(ctx, req.token)
