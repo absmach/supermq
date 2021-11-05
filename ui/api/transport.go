@@ -5,10 +5,12 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	kitot "github.com/go-kit/kit/tracing/opentracing"
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -54,6 +56,13 @@ func MakeHandler(svc ui.Service, tracer opentracing.Tracer) http.Handler {
 		opts...,
 	))
 
+	r.Put("/things/:id", kithttp.NewServer(
+		kitot.TraceServer(tracer, "update_things")(updateThingsEndpoint(svc)),
+		decodeThingUpdate,
+		encodeResponse,
+		opts...,
+	))
+
 	r.Get("/things", kithttp.NewServer(
 		kitot.TraceServer(tracer, "list_things")(listThingsEndpoint(svc)),
 		decodeListThingsRequest,
@@ -63,7 +72,7 @@ func MakeHandler(svc ui.Service, tracer opentracing.Tracer) http.Handler {
 
 	r.Post("/channels", kithttp.NewServer(
 		kitot.TraceServer(tracer, "create_channels")(createChannelsEndpoint(svc)),
-		decodeChannelCreation,
+		decodeChannelsCreation,
 		encodeResponse,
 		opts...,
 	))
@@ -111,6 +120,24 @@ func decodeThingCreation(_ context.Context, r *http.Request) (interface{}, error
 	return req, nil
 }
 
+func decodeThingUpdate(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
+		return nil, errors.ErrUnsupportedContentType
+	}
+	fmt.Println("upd")
+	fmt.Println(r.PostFormValue("name"))
+	fmt.Println(r.PostFormValue("metadata"))
+
+	req := updateThingReq{
+		id: bone.GetValue(r, "id"),
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, errors.Wrap(things.ErrMalformedEntity, err)
+	}
+
+	return req, nil
+}
+
 func decodeListThingsRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	req := listThingsReq{
 		token: r.Header.Get("Authorization"),
@@ -119,15 +146,13 @@ func decodeListThingsRequest(ctx context.Context, r *http.Request) (interface{},
 	return req, nil
 }
 
-func decodeChannelCreation(_ context.Context, r *http.Request) (interface{}, error) {
-
-	fmt.Println(r.Method)
+func decodeChannelsCreation(_ context.Context, r *http.Request) (interface{}, error) {
 	fmt.Println(r.PostFormValue("name"))
 	fmt.Println(r.PostFormValue("metadata"))
 
 	req := createChannelsReq{
-		// token: r.Header.Get("Authorization"),
-		Name: r.PostFormValue("name"),
+		token: r.Header.Get("Authorization"),
+		Name:  r.PostFormValue("name"),
 	}
 
 	return req, nil

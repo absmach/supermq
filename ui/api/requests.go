@@ -3,7 +3,10 @@
 
 package api
 
-import "github.com/mainflux/mainflux/ui"
+import (
+	"github.com/mainflux/mainflux/things"
+	"github.com/mainflux/mainflux/ui"
+)
 
 const (
 	maxLimitSize = 100
@@ -41,11 +44,23 @@ type listThingsReq struct {
 	token string
 }
 
-type updateThingsReq struct {
-	token    string
+type updateThingReq struct {
+	id       string
 	Name     string                 `json:"name,omitempty"`
-	Key      string                 `json:"key,omitempty"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
+}
+
+func (req updateThingReq) validate() error {
+
+	if req.id == "" {
+		return things.ErrMalformedEntity
+	}
+
+	if len(req.Name) > maxNameSize {
+		return things.ErrMalformedEntity
+	}
+
+	return nil
 }
 
 type createChannelsReq struct {

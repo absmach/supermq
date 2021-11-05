@@ -35,6 +35,7 @@ type Service interface {
 	Index(ctx context.Context, token string) ([]byte, error)
 	CreateThings(ctx context.Context, token string, things ...sdk.Thing) ([]byte, error)
 	ListThings(ctx context.Context, token string) ([]byte, error)
+	UpdateThing(ctx context.Context, token string, thing sdk.Thing) ([]byte, error)
 	CreateChannels(ctx context.Context, token string, channels ...sdk.Channel) ([]byte, error)
 	ListChannels(ctx context.Context, token string) ([]byte, error)
 }
@@ -42,9 +43,8 @@ type Service interface {
 var _ Service = (*uiService)(nil)
 
 type uiService struct {
-	things   mainflux.ThingsServiceClient
-	channels mainflux.ThingsServiceClient
-	sdk      sdk.SDK
+	things, channels mainflux.ThingsServiceClient
+	sdk              sdk.SDK
 }
 
 // New instantiates the HTTP adapter implementation.
@@ -117,30 +117,17 @@ func (gs *uiService) ListThings(ctx context.Context, token string) ([]byte, erro
 	return btpl.Bytes(), nil
 }
 
-// func (ts *uiService) UpdateThing(ctx context.Context, token string, things sdk.Thing) ([]byte, error) {
-// 	tpl, err := template.ParseGlob(ctx, &mainflux.Token{Value: token})
-// 	if err != nil {
-// 		return errors.Wrap(ErrUnauthorizedAccess, err)
-// 	}
+func (gs *uiService) UpdateThing(ctx context.Context, token string, thing sdk.Thing) ([]byte, error) {
+	_, err := template.ParseGlob(templateDir + "/*")
+	if err != nil {
+		return []byte{}, err
+	}
 
-// 	data := struct {
-// 		NavbarActive string
-// 		Things       []sdk.Thing
-// 	}{
-// 		"things",
-// 		thsPage.Things,
-// 	}
-
-// 	var btpl bytes.Buffer
-// 	if err := tpl.ExecuteTemplate(&btpl, "things", data); err != nil {
-// 		println(err.Error())
-// 	}
-
-// 	return btpl.Bytes(), err
-// }
+	return gs.ListThings(ctx, "123")
+}
 
 func (gs *uiService) CreateChannels(ctx context.Context, token string, channels ...sdk.Channel) ([]byte, error) {
-
+	fmt.Println("assss")
 	for i := range channels {
 		fmt.Println(channels[i])
 		_, err := gs.sdk.CreateChannel(channels[i], "123")

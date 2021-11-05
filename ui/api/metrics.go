@@ -49,6 +49,15 @@ func (mm *metricsMiddleware) CreateThings(ctx context.Context, token string, thi
 	return mm.svc.CreateThings(ctx, token, things...)
 }
 
+func (ms *metricsMiddleware) UpdateThing(ctx context.Context, token string, thing sdk.Thing) (b []byte, err error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "update_thing").Add(1)
+		ms.latency.With("method", "update_thing").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.UpdateThing(ctx, token, thing)
+}
+
 func (mm *metricsMiddleware) ListThings(ctx context.Context, token string) (b []byte, err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "list_things").Add(1)
@@ -58,15 +67,6 @@ func (mm *metricsMiddleware) ListThings(ctx context.Context, token string) (b []
 	return mm.svc.ListThings(ctx, token)
 }
 
-func (mm *metricsMiddleware) ListChannels(ctx context.Context, token string) (b []byte, err error) {
-	defer func(begin time.Time) {
-		mm.counter.With("method", "list_channels").Add(1)
-		mm.latency.With("method", "list_channels").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-
-	return mm.svc.ListChannels(ctx, token)
-}
-
 func (mm *metricsMiddleware) CreateChannels(ctx context.Context, token string, channels ...sdk.Channel) (b []byte, err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "create_channels").Add(1)
@@ -74,4 +74,13 @@ func (mm *metricsMiddleware) CreateChannels(ctx context.Context, token string, c
 	}(time.Now())
 
 	return mm.svc.CreateChannels(ctx, token, channels...)
+}
+
+func (mm *metricsMiddleware) ListChannels(ctx context.Context, token string) (b []byte, err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "list_channels").Add(1)
+		mm.latency.With("method", "list_channels").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.ListChannels(ctx, token)
 }
