@@ -126,8 +126,9 @@ func TestReadAll(t *testing.T) {
 	}
 
 	thSvc := mocks.NewThingsService(map[string]string{email: chanID})
-
-	usrSvc := authmocks.NewAuthService(map[string]string{userToken: email})
+	mockAuthzDB := map[string][]authmocks.SubjectSet{}
+	mockAuthzDB[email] = append(mockAuthzDB[email], authmocks.SubjectSet{Object: "authorities", Relation: "member"})
+	usrSvc := authmocks.NewAuthService(map[string]string{userToken: email}, mockAuthzDB)
 
 	repo := mocks.NewMessageRepository(chanID, fromSenml(messages))
 	ts := newServer(repo, thSvc, usrSvc)
