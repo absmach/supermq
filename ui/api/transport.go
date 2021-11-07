@@ -6,7 +6,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -52,6 +51,13 @@ func MakeHandler(svc ui.Service, tracer opentracing.Tracer) http.Handler {
 	r.Post("/things", kithttp.NewServer(
 		kitot.TraceServer(tracer, "create_things")(createThingsEndpoint(svc)),
 		decodeThingCreation,
+		encodeResponse,
+		opts...,
+	))
+
+	r.Get("/things/:id", kithttp.NewServer(
+		kitot.TraceServer(tracer, "view_thing")(viewThingEndpoint(svc)),
+		decodeView,
 		encodeResponse,
 		opts...,
 	))
@@ -106,15 +112,18 @@ func decodeThingCreation(_ context.Context, r *http.Request) (interface{}, error
 	// if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 	// 	return nil, errors.ErrUnsupportedContentType
 	// }
-
-	fmt.Println("HERE!!!")
-	fmt.Println(r.Method)
-	fmt.Println(r.PostFormValue("name"))
-	fmt.Println(r.PostFormValue("metadata"))
-
 	req := createThingsReq{
 		token: r.Header.Get("Authorization"),
 		Name:  r.PostFormValue("name"),
+	}
+
+	return req, nil
+}
+
+func decodeView(_ context.Context, r *http.Request) (interface{}, error) {
+	req := viewResourceReq{
+		token: r.Header.Get("Authorization"),
+		id:    bone.GetValue(r, "id"),
 	}
 
 	return req, nil
@@ -124,9 +133,6 @@ func decodeThingUpdate(_ context.Context, r *http.Request) (interface{}, error) 
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, errors.ErrUnsupportedContentType
 	}
-	fmt.Println("upd")
-	fmt.Println(r.PostFormValue("name"))
-	fmt.Println(r.PostFormValue("metadata"))
 
 	req := updateThingReq{
 		id: bone.GetValue(r, "id"),
@@ -147,15 +153,13 @@ func decodeListThingsRequest(ctx context.Context, r *http.Request) (interface{},
 }
 
 func decodeChannelsCreation(_ context.Context, r *http.Request) (interface{}, error) {
-	fmt.Println(r.PostFormValue("name"))
-	fmt.Println(r.PostFormValue("metadata"))
 
 	req := createChannelsReq{
 		token: r.Header.Get("Authorization"),
 		Name:  r.PostFormValue("name"),
 	}
-
 	return req, nil
+
 }
 
 func decodeListChannelsRequest(ctx context.Context, r *http.Request) (interface{}, error) {

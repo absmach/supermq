@@ -49,6 +49,15 @@ func (mm *metricsMiddleware) CreateThings(ctx context.Context, token string, thi
 	return mm.svc.CreateThings(ctx, token, things...)
 }
 
+func (ms *metricsMiddleware) ViewThing(ctx context.Context, token, id string) (b []byte, err error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "view_thing").Add(1)
+		ms.latency.With("method", "view_thing").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.ViewThing(ctx, token, id)
+}
+
 func (ms *metricsMiddleware) UpdateThing(ctx context.Context, token string, thing sdk.Thing) (b []byte, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "update_thing").Add(1)

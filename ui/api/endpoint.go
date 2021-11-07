@@ -5,6 +5,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-kit/kit/endpoint"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
@@ -45,6 +46,24 @@ func createThingsEndpoint(svc ui.Service) endpoint.Endpoint {
 	}
 }
 
+func viewThingEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(viewResourceReq)
+
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
+
+		res, err := svc.ViewThing(ctx, req.token, req.id)
+		if err != nil {
+			return nil, err
+		}
+		return uiRes{
+			html: res,
+		}, err
+	}
+}
+
 func listThingsEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listThingsReq)
@@ -79,16 +98,17 @@ func createChannelsEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(createChannelsReq)
 
-		if err := req.validate(); err != nil {
-			return nil, err
-		}
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
 
 		ch := sdk.Channel{
 			Key:      req.Key,
 			Name:     req.Name,
 			Metadata: req.Metadata,
 		}
-		res, err := svc.CreateChannels(ctx, req.token, ch)
+		fmt.Println("tester")
+		res, err := svc.CreateChannels(ctx, "123", ch)
 		if err != nil {
 			return nil, err
 		}

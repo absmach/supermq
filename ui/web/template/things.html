@@ -47,31 +47,6 @@
               </div>
             </div>
 
-            <div class="modal fade" id="addModal1" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
-              <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="addModalLabel">Update Thing</h5>
-                  </div>
-                  <div class="modal-body">
-                    <form method="patch">
-                      <div class="mb-3">
-                        <label for="name" class="form-label">Name</label>
-                        <input type="text" class="form-control" name="name" id="name" aria-describedby="nameHelp">
-                        <div id="nameHelp" class="form-text">Enter device name.</div>
-                      </div>
-                      <div class="mb-3">
-                        <label for="meatadata" class="form-label">Metadata</label>
-                        <input type="text" class="form-control" name= "metadata" id="metadata">
-                        <div id="metadataHelp" class="form-text">Enter device metadata in JSON format.</div>
-                      </div>
-                      <button type="submit" class="btn btn-primary">Submit</button>
-                    </form>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <table class="table table-striped">
               <thead>
                 <tr>
@@ -85,7 +60,7 @@
                   <tr>
                     <th scope="row">{{ $i }}</th>
                     <td>{{ $t.Name }}</td>
-                    <td>{{ $t.ID }}</td>
+                    <td><a href={{printf "/things/%s" $t.ID}}>{{ $t.ID }} </a></td>
                   </tr>
                 {{ end }}
               </tbody>

@@ -44,6 +44,23 @@ type listThingsReq struct {
 	token string
 }
 
+type viewResourceReq struct {
+	token string
+	id    string
+}
+
+func (req viewResourceReq) validate() error {
+	if req.token == "" {
+		return things.ErrUnauthorizedAccess
+	}
+
+	if req.id == "" {
+		return things.ErrMalformedEntity
+	}
+
+	return nil
+}
+
 type updateThingReq struct {
 	id       string
 	Name     string                 `json:"name,omitempty"`
