@@ -53,6 +53,19 @@ func (lm *loggingMiddleware) CreateThings(ctx context.Context, token string, thi
 	return lm.svc.CreateThings(ctx, token, things...)
 }
 
+func (lm *loggingMiddleware) ViewThing(ctx context.Context, token, id string) (b []byte, err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method view_thing for token %s and thing %s took %s to complete", token, id, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+
+	return lm.svc.ViewThing(ctx, token, id)
+}
+
 func (lm *loggingMiddleware) UpdateThing(ctx context.Context, token string, thing sdk.Thing) (b []byte, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method update_thing for token %s and thing %s took %s to complete", token, thing.ID, time.Since(begin))

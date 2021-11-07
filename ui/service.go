@@ -8,6 +8,7 @@ package ui
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -34,6 +35,7 @@ var (
 type Service interface {
 	Index(ctx context.Context, token string) ([]byte, error)
 	CreateThings(ctx context.Context, token string, things ...sdk.Thing) ([]byte, error)
+	ViewThing(ctx context.Context, token, id string) ([]byte, error)
 	ListThings(ctx context.Context, token string) ([]byte, error)
 	UpdateThing(ctx context.Context, token string, thing sdk.Thing) ([]byte, error)
 	CreateChannels(ctx context.Context, token string, channels ...sdk.Channel) ([]byte, error)
@@ -48,11 +50,10 @@ type uiService struct {
 }
 
 // New instantiates the HTTP adapter implementation.
-func New(things, channels mainflux.ThingsServiceClient, sdk sdk.SDK) Service {
+func New(things mainflux.ThingsServiceClient, sdk sdk.SDK) Service {
 	return &uiService{
-		channels: channels,
-		things:   things,
-		sdk:      sdk,
+		things: things,
+		sdk:    sdk,
 	}
 }
 
@@ -114,6 +115,42 @@ func (gs *uiService) ListThings(ctx context.Context, token string) ([]byte, erro
 		println(err.Error())
 	}
 
+	return btpl.Bytes(), nil
+}
+
+func (gs *uiService) ViewThing(ctx context.Context, token, id string) ([]byte, error) {
+	tpl, err := template.ParseGlob(templateDir + "/*")
+	if err != nil {
+		return []byte{}, err
+	}
+	thing, err := gs.sdk.Thing(id, "123")
+	if err != nil {
+		return []byte{}, err
+	}
+	fmt.Println(thing)
+
+	j, err := json.Marshal(thing)
+	fmt.Println(string(j))
+	if err != nil {
+		return []byte{}, err
+	}
+
+	m := make(map[string]interface{})
+	json.Unmarshal(j, &m)
+
+	data := struct {
+		NavbarActive string
+		JSONThing    map[string]interface{}
+	}{
+		"things",
+		m,
+	}
+
+	var btpl bytes.Buffer
+	if err := tpl.ExecuteTemplate(&btpl, "thing", data); err != nil {
+		println(err.Error())
+	}
+	fmt.Println(btpl.String())
 	return btpl.Bytes(), nil
 }
 

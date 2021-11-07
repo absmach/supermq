@@ -69,17 +69,11 @@ func main() {
 	conn := connectToThings(cfg, logger)
 	defer conn.Close()
 
-	conn1 := connectToChannels(cfg, logger)
-	defer conn.Close()
-
 	tracer, closer := initJaeger("ui", cfg.jaegerURL, logger)
 	defer closer.Close()
 
 	thingsTracer, thingsCloser := initJaeger("things", cfg.jaegerURL, logger)
 	defer thingsCloser.Close()
-
-	channelsTracer, channelsCloser := initJaeger("channels", cfg.jaegerURL, logger)
-	defer channelsCloser.Close()
 
 	msgContentType := string(sdk.CTJSONSenML)
 	sdkConf := sdk.Config{
@@ -90,9 +84,8 @@ func main() {
 	sdk := sdk.NewSDK(sdkConf)
 
 	tc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
-	cc := thingsapi.NewClient(conn1, channelsTracer, cfg.thingsAuthTimeout)
 
-	svc := ui.New(tc, cc, sdk)
+	svc := ui.New(tc, sdk)
 
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
@@ -197,28 +190,4 @@ func connectToThings(cfg config, logger logger.Logger) *grpc.ClientConn {
 		os.Exit(1)
 	}
 	return conn
-}
-
-func connectToChannels(cfg config, logger logger.Logger) *grpc.ClientConn {
-	var opts []grpc.DialOption
-	if cfg.clientTLS {
-		if cfg.caCerts != "" {
-			tpc, err := credentials.NewClientTLSFromFile(cfg.caCerts, "")
-			if err != nil {
-				logger.Error(fmt.Sprintf("Failed to load certs: %s", err))
-				os.Exit(1)
-			}
-			opts = append(opts, grpc.WithTransportCredentials(tpc))
-		}
-	} else {
-		logger.Info("gRPC communication is not encrypted")
-		opts = append(opts, grpc.WithInsecure())
-	}
-
-	conn1, err := grpc.Dial(cfg.thingsAuthURL, opts...)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to channels service: %s", err))
-		os.Exit(1)
-	}
-	return conn1
 }
