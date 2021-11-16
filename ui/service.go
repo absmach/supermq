@@ -39,14 +39,15 @@ type Service interface {
 	ListThings(ctx context.Context, token string) ([]byte, error)
 	UpdateThing(ctx context.Context, token string, thing sdk.Thing) ([]byte, error)
 	CreateChannels(ctx context.Context, token string, channels ...sdk.Channel) ([]byte, error)
+	ViewChannel(ctx context.Context, token, id string) ([]byte, error)
 	ListChannels(ctx context.Context, token string) ([]byte, error)
 }
 
 var _ Service = (*uiService)(nil)
 
 type uiService struct {
-	things, channels mainflux.ThingsServiceClient
-	sdk              sdk.SDK
+	things mainflux.ThingsServiceClient
+	sdk    sdk.SDK
 }
 
 // New instantiates the HTTP adapter implementation.
@@ -174,6 +175,42 @@ func (gs *uiService) CreateChannels(ctx context.Context, token string, channels 
 	}
 
 	return gs.ListChannels(ctx, "123")
+}
+
+func (gs *uiService) ViewChannel(ctx context.Context, token, id string) ([]byte, error) {
+	tpl, err := template.ParseGlob(templateDir + "/*")
+	if err != nil {
+		return []byte{}, err
+	}
+	channel, err := gs.sdk.Channel(id, "123")
+	if err != nil {
+		return []byte{}, err
+	}
+	fmt.Println(channel)
+
+	j, err := json.Marshal(channel)
+	fmt.Println(string(j))
+	if err != nil {
+		return []byte{}, err
+	}
+
+	m := make(map[string]interface{})
+	json.Unmarshal(j, &m)
+
+	data := struct {
+		NavbarActive string
+		JSONChannel  map[string]interface{}
+	}{
+		"channels",
+		m,
+	}
+
+	var btpl bytes.Buffer
+	if err := tpl.ExecuteTemplate(&btpl, "channel", data); err != nil {
+		println(err.Error())
+	}
+	fmt.Println(btpl.String())
+	return btpl.Bytes(), nil
 }
 
 func (gs *uiService) ListChannels(ctx context.Context, token string) ([]byte, error) {

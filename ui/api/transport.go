@@ -90,6 +90,13 @@ func MakeHandler(svc ui.Service, tracer opentracing.Tracer) http.Handler {
 		opts...,
 	))
 
+	r.Get("/channels/:id", kithttp.NewServer(
+		kitot.TraceServer(tracer, "view_channel")(viewChannelEndpoint(svc)),
+		decodeView,
+		encodeResponse,
+		opts...,
+	))
+
 	r.GetFunc("/version", mainflux.Version("ui"))
 	r.Handle("/metrics", promhttp.Handler())
 

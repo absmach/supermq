@@ -105,6 +105,19 @@ func (lm *loggingMiddleware) CreateChannels(ctx context.Context, token string, c
 	return lm.svc.CreateChannels(ctx, token, channels...)
 }
 
+func (lm *loggingMiddleware) ViewChannel(ctx context.Context, token, id string) (b []byte, err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method view_channel for token %s and channel %s took %s to complete", token, id, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+
+	return lm.svc.ViewChannel(ctx, token, id)
+}
+
 func (lm *loggingMiddleware) ListChannels(ctx context.Context, token string) (b []byte, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method list_channels took %s to complete", time.Since(begin))

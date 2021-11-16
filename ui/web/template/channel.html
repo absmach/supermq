@@ -1,4 +1,4 @@
-{{define "thing"}}
+{{define "channel"}}
 <!doctype html>
 <html lang="en">
   {{template "header"}}
@@ -15,11 +15,11 @@
             <table class="table table-striped">
               <thead>
                 <tr>
-                  <th scope="row">THING</th>
+                  <th scope="row">CHANNEL</th>
                 </tr>
               </thead>
               <tbody>
-                {{ range $key, $value := .JSONThing}}
+                {{ range $key, $value := .JSONChannel}}
                   <tr>
                     <td>{{ $key }}</td>
                     <td>{{ $value }}</td>
