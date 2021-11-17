@@ -119,6 +119,24 @@ func createChannelsEndpoint(svc ui.Service) endpoint.Endpoint {
 	}
 }
 
+func viewChannelEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(viewResourceReq)
+
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
+
+		res, err := svc.ViewChannel(ctx, req.token, req.id)
+		if err != nil {
+			return nil, err
+		}
+		return uiRes{
+			html: res,
+		}, err
+	}
+}
+
 func listChannelsEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listChannelsReq)
