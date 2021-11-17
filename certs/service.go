@@ -158,19 +158,24 @@ func (cs *certsService) RevokeCert(ctx context.Context, token, thingID string) (
 		return revoke, errors.Wrap(ErrFailedCertRevocation, err)
 	}
 
-	cert, err := cs.certsRepo.RetrieveByThing(ctx, thing.ID)
+	// TODO: Replace offset and limit
+	offset, limit := uint64(0), uint64(10000)
+	cp, err := cs.certsRepo.RetrieveByThing(ctx, u.GetId(), thing.ID, offset, limit)
 	if err != nil {
 		return revoke, errors.Wrap(ErrFailedCertRevocation, err)
 	}
 
-	revTime, err := cs.pki.Revoke(cert.Serial)
-	if err != nil {
-		return revoke, errors.Wrap(ErrFailedCertRevocation, err)
+	for _, c := range cp.Certs {
+		revTime, err := cs.pki.Revoke(c.Serial)
+		if err != nil {
+			return revoke, errors.Wrap(ErrFailedCertRevocation, err)
+		}
+		revoke.RevocationTime = revTime
+		if err = cs.certsRepo.Remove(context.Background(), u.GetId(), c.Serial); err != nil {
+			return revoke, errors.Wrap(errFailedToRemoveCertFromDB, err)
+		}
 	}
-	revoke.RevocationTime = revTime
-	if err = cs.certsRepo.Remove(context.Background(), u.GetId(), cert.Serial); err != nil {
-		return revoke, errors.Wrap(errFailedToRemoveCertFromDB, err)
-	}
+
 	return revoke, nil
 }
 
@@ -180,7 +185,7 @@ func (cs *certsService) ListCerts(ctx context.Context, token, thingID string, of
 		return Page{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	cp, err := cs.certsRepo.RetrieveAll(ctx, u.GetId(), thingID, offset, limit)
+	cp, err := cs.certsRepo.RetrieveByThing(ctx, u.GetId(), thingID, offset, limit)
 	if err != nil {
 		return Page{}, err
 	}
@@ -203,7 +208,7 @@ func (cs *certsService) ListSerials(ctx context.Context, token, thingID string, 
 		return Page{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
-	return cs.certsRepo.RetrieveAll(ctx, u.GetId(), thingID, offset, limit)
+	return cs.certsRepo.RetrieveByThing(ctx, u.GetId(), thingID, offset, limit)
 }
 
 func (cs *certsService) ViewCert(ctx context.Context, token, serialID string) (Cert, error) {
