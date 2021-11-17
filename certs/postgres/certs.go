@@ -142,9 +142,9 @@ func (cr certsRepository) RetrieveByThing(ctx context.Context, ownerID, thingID 
 		certificates = append(certificates, c)
 	}
 
-	q = `SELECT COUNT(*) FROM certs WHERE owner_id = $1`
+	q = `SELECT COUNT(*) FROM certs WHERE owner_id = $1 AND thing_id = $2`
 	var total uint64
-	if err := cr.db.QueryRow(q, ownerID).Scan(&total); err != nil {
+	if err := cr.db.QueryRow(q, ownerID, thingID).Scan(&total); err != nil {
 		cr.log.Error(fmt.Sprintf("Failed to count certs due to %s", err))
 		return certs.Page{}, err
 	}
