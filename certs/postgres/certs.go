@@ -45,9 +45,9 @@ func NewRepository(db *sqlx.DB, log logger.Logger) certs.Repository {
 	return &certsRepository{db: db, log: log}
 }
 
-func (cr certsRepository) RetrieveAll(ctx context.Context, ownerID, thingID string, offset, limit uint64) (certs.Page, error) {
-	q := `SELECT thing_id, owner_id, serial, expire FROM certs WHERE owner_id = $1 AND thing_id = $2 ORDER BY expire LIMIT $3 OFFSET $4;`
-	rows, err := cr.db.Query(q, ownerID, thingID, limit, offset)
+func (cr certsRepository) RetrieveAll(ctx context.Context, ownerID string, offset, limit uint64) (certs.Page, error) {
+	q := `SELECT thing_id, owner_id, serial, expire FROM certs WHERE owner_id = $1 ORDER BY expire LIMIT $2 OFFSET $3;`
+	rows, err := cr.db.Query(q, ownerID, limit, offset)
 	if err != nil {
 		cr.log.Error(fmt.Sprintf("Failed to retrieve configs due to %s", err))
 		return certs.Page{}, err
@@ -55,7 +55,6 @@ func (cr certsRepository) RetrieveAll(ctx context.Context, ownerID, thingID stri
 	defer rows.Close()
 
 	certificates := []certs.Cert{}
-
 	for rows.Next() {
 		c := certs.Cert{}
 		if err := rows.Scan(&c.ThingID, &c.OwnerID, &c.Serial, &c.Expire); err != nil {
@@ -123,23 +122,39 @@ func (cr certsRepository) Remove(ctx context.Context, ownerID, serial string) er
 	return nil
 }
 
-func (cr certsRepository) RetrieveByThing(ctx context.Context, thingID string) (certs.Cert, error) {
-	q := `SELECT thing_id, owner_id, serial, expire FROM certs WHERE thing_id = $1`
-	var dbcrt dbCert
-	var c certs.Cert
-
-	if err := cr.db.QueryRowxContext(ctx, q, thingID).StructScan(&dbcrt); err != nil {
-
-		pqErr, ok := err.(*pq.Error)
-		if err == sql.ErrNoRows || ok && errInvalid == pqErr.Code.Name() {
-			return c, errors.Wrap(things.ErrNotFound, err)
-		}
-
-		return c, errors.Wrap(errRetrieveDB, err)
+func (cr certsRepository) RetrieveByThing(ctx context.Context, ownerID, thingID string, offset, limit uint64) (certs.Page, error) {
+	q := `SELECT thing_id, owner_id, serial, expire FROM certs WHERE owner_id = $1 AND thing_id = $2 ORDER BY expire LIMIT $3 OFFSET $4;`
+	rows, err := cr.db.Query(q, ownerID, thingID, limit, offset)
+	if err != nil {
+		cr.log.Error(fmt.Sprintf("Failed to retrieve configs due to %s", err))
+		return certs.Page{}, err
 	}
-	c = toCert(dbcrt)
+	defer rows.Close()
 
-	return c, nil
+	certificates := []certs.Cert{}
+	for rows.Next() {
+		c := certs.Cert{}
+		if err := rows.Scan(&c.ThingID, &c.OwnerID, &c.Serial, &c.Expire); err != nil {
+			cr.log.Error(fmt.Sprintf("Failed to read retrieved config due to %s", err))
+			return certs.Page{}, err
+
+		}
+		certificates = append(certificates, c)
+	}
+
+	q = `SELECT COUNT(*) FROM certs WHERE owner_id = $1`
+	var total uint64
+	if err := cr.db.QueryRow(q, ownerID).Scan(&total); err != nil {
+		cr.log.Error(fmt.Sprintf("Failed to count certs due to %s", err))
+		return certs.Page{}, err
+	}
+
+	return certs.Page{
+		Total:  total,
+		Limit:  limit,
+		Offset: offset,
+		Certs:  certificates,
+	}, nil
 }
 
 func (cr certsRepository) RetrieveBySerial(ctx context.Context, ownerID, serialID string) (certs.Cert, error) {

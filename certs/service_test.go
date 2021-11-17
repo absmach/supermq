@@ -262,7 +262,7 @@ func TestListCerts(t *testing.T) {
 			err:     certs.ErrUnauthorizedAccess,
 		},
 		{
-			desc:    "list half certs with invalid token",
+			desc:    "list half certs with valid token",
 			token:   token,
 			thingID: thingID,
 			offset:  certNum / 2,
@@ -271,7 +271,7 @@ func TestListCerts(t *testing.T) {
 			err:     nil,
 		},
 		{
-			desc:    "list last certs with invalid token",
+			desc:    "list last cert with valid token",
 			token:   token,
 			thingID: thingID,
 			offset:  certNum - 1,
@@ -287,7 +287,78 @@ func TestListCerts(t *testing.T) {
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected %d got %d\n", tc.desc, tc.size, size))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
+}
 
+func TestListSerials(t *testing.T) {
+	svc, err := newService(map[string]string{token: email})
+	require.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
+
+	var issuedCerts []certs.Cert
+	for i := 0; i < certNum; i++ {
+		cert, err := svc.IssueCert(context.Background(), token, thingID, hoursValid, keyBits, key)
+		require.Nil(t, err, fmt.Sprintf("unexpected cert creation error: %s\n", err))
+
+		crt := certs.Cert{
+			OwnerID: cert.OwnerID,
+			ThingID: cert.ThingID,
+			Serial:  cert.Serial,
+			Expire:  cert.Expire,
+		}
+		issuedCerts = append(issuedCerts, crt)
+	}
+
+	cases := []struct {
+		token   string
+		desc    string
+		thingID string
+		offset  uint64
+		limit   uint64
+		certs   []certs.Cert
+		err     error
+	}{
+		{
+			desc:    "list all certs with valid token",
+			token:   token,
+			thingID: thingID,
+			offset:  0,
+			limit:   certNum,
+			certs:   issuedCerts,
+			err:     nil,
+		},
+		{
+			desc:    "list all certs with invalid token",
+			token:   wrongValue,
+			thingID: thingID,
+			offset:  0,
+			limit:   certNum,
+			certs:   nil,
+			err:     certs.ErrUnauthorizedAccess,
+		},
+		{
+			desc:    "list half certs with valid token",
+			token:   token,
+			thingID: thingID,
+			offset:  certNum / 2,
+			limit:   certNum,
+			certs:   issuedCerts[certNum/2:],
+			err:     nil,
+		},
+		{
+			desc:    "list last cert with valid token",
+			token:   token,
+			thingID: thingID,
+			offset:  certNum - 1,
+			limit:   certNum,
+			certs:   []certs.Cert{issuedCerts[certNum-1]},
+			err:     nil,
+		},
+	}
+
+	for _, tc := range cases {
+		page, err := svc.ListSerials(context.Background(), tc.token, tc.thingID, tc.offset, tc.limit)
+		assert.Equal(t, tc.certs, page.Certs, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.certs, page.Certs))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+	}
 }
 
 func newThingsServer(svc things.Service) *httptest.Server {
