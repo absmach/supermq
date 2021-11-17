@@ -361,6 +361,57 @@ func TestListSerials(t *testing.T) {
 	}
 }
 
+func TestViewCert(t *testing.T) {
+	svc, err := newService(map[string]string{token: email})
+	require.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
+
+	ic, err := svc.IssueCert(context.Background(), token, thingID, hoursValid, keyBits, key)
+	require.Nil(t, err, fmt.Sprintf("unexpected cert creation error: %s\n", err))
+
+	cert := certs.Cert{
+		ThingID:    thingID,
+		ClientCert: ic.ClientCert,
+		Serial:     ic.Serial,
+		Expire:     ic.Expire,
+	}
+
+	cases := []struct {
+		token    string
+		desc     string
+		serialID string
+		cert     certs.Cert
+		err      error
+	}{
+		{
+			desc:     "list cert with valid token and serial",
+			token:    token,
+			serialID: cert.Serial,
+			cert:     cert,
+			err:      nil,
+		},
+		{
+			desc:     "list cert with invalid token",
+			token:    wrongValue,
+			serialID: cert.Serial,
+			cert:     certs.Cert{},
+			err:      certs.ErrUnauthorizedAccess,
+		},
+		{
+			desc:     "list cert with invalid serial",
+			token:    token,
+			serialID: wrongValue,
+			cert:     certs.Cert{},
+			err:      things.ErrNotFound,
+		},
+	}
+
+	for _, tc := range cases {
+		cert, err := svc.ViewCert(context.Background(), tc.token, tc.serialID)
+		assert.Equal(t, tc.cert, cert, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.cert, cert))
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+	}
+}
+
 func newThingsServer(svc things.Service) *httptest.Server {
 	mux := httpapi.MakeHandler(mocktracer.New(), svc)
 	return httptest.NewServer(mux)
