@@ -122,6 +122,14 @@ func (c *certsRepoMock) RetrieveByThing(ctx context.Context, ownerID, thingID st
 	return page, nil
 }
 
-func (c *certsRepoMock) RetrieveBySerial(ctx context.Context, ownerID, thingID string) (certs.Cert, error) {
-	return certs.Cert{}, nil
+func (c *certsRepoMock) RetrieveBySerial(ctx context.Context, ownerID, serialID string) (certs.Cert, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	crt, ok := c.certsBySerial[serialID]
+	if !ok {
+		return certs.Cert{}, certs.ErrNotFound
+	}
+
+	return crt, nil
 }
