@@ -87,7 +87,7 @@ func (mm *metricsMiddleware) CreateChannels(ctx context.Context, token string, c
 
 func (ms *metricsMiddleware) ViewChannel(ctx context.Context, token, id string) (b []byte, err error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "view_thing").Add(1)
+		ms.counter.With("method", "view_channel").Add(1)
 		ms.latency.With("method", "view_channel").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
