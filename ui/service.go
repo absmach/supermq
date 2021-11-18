@@ -153,7 +153,7 @@ func (gs *uiService) ViewThing(ctx context.Context, token, id string) ([]byte, e
 	if err := tpl.ExecuteTemplate(&btpl, "thing", data); err != nil {
 		println(err.Error())
 	}
-	fmt.Println(btpl.String())
+	// fmt.Println(btpl.String())
 	return btpl.Bytes(), nil
 }
 
@@ -179,7 +179,6 @@ func (gs *uiService) RemoveThing(ctx context.Context, token, id string) ([]byte,
 }
 
 func (gs *uiService) CreateChannels(ctx context.Context, token string, channels ...sdk.Channel) ([]byte, error) {
-	fmt.Println("assss")
 	for i := range channels {
 		fmt.Println(channels[i])
 		_, err := gs.sdk.CreateChannel(channels[i], "123")
@@ -196,6 +195,7 @@ func (gs *uiService) ViewChannel(ctx context.Context, token, id string) ([]byte,
 	if err != nil {
 		return []byte{}, err
 	}
+	fmt.Println(id)
 	channel, err := gs.sdk.Channel(id, "123")
 	if err != nil {
 		return []byte{}, err
@@ -223,15 +223,16 @@ func (gs *uiService) ViewChannel(ctx context.Context, token, id string) ([]byte,
 	if err := tpl.ExecuteTemplate(&btpl, "channel", data); err != nil {
 		println(err.Error())
 	}
-	fmt.Println(btpl.String())
+	// fmt.Println(btpl.String())
 	return btpl.Bytes(), nil
 }
 
 func (gs *uiService) UpdateChannel(ctx context.Context, token, id string, channel sdk.Channel) ([]byte, error) {
+	fmt.Println(channel)
 	if err := gs.sdk.UpdateChannel(channel, "123"); err != nil {
 		return []byte{}, err
 	}
-	return gs.ViewChannel(ctx, id, "123")
+	return gs.ViewChannel(ctx, "123", id)
 }
 
 func (gs *uiService) ListChannels(ctx context.Context, token string) ([]byte, error) {

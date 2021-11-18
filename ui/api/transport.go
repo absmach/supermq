@@ -6,6 +6,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -97,7 +98,7 @@ func MakeHandler(svc ui.Service, tracer opentracing.Tracer) http.Handler {
 		opts...,
 	))
 
-	r.Put("/channels/:id", kithttp.NewServer(
+	r.Post("/channels/:id", kithttp.NewServer(
 		kitot.TraceServer(tracer, "update_channel")(updateChannelEndpoint(svc)),
 		decodeChannelUpdate,
 		encodeResponse,
@@ -184,17 +185,15 @@ func decodeChannelsCreation(_ context.Context, r *http.Request) (interface{}, er
 }
 
 func decodeChannelUpdate(_ context.Context, r *http.Request) (interface{}, error) {
-	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errors.ErrUnsupportedContentType
-	}
-
+	// if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
+	// 	return nil, errors.ErrUnsupportedContentType
+	// }
+	fmt.Println("paspdapsdpaspdapsdpaspdpasdpaspdpasdapsdpaspdpasd")
 	req := updateChannelReq{
-		id: bone.GetValue(r, "id"),
+		token: r.Header.Get("Authorization"),
+		id:    bone.GetValue(r, "id"),
+		Name:  r.PostFormValue("name"),
 	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(things.ErrMalformedEntity, err)
-	}
-
 	return req, nil
 }
 

@@ -151,14 +151,14 @@ func viewChannelEndpoint(svc ui.Service) endpoint.Endpoint {
 func updateChannelEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(updateChannelReq)
-
+		fmt.Println("chanupd")
 		uch := sdk.Channel{
 			ID:       req.id,
 			Name:     req.Name,
 			Metadata: req.Metadata,
 		}
 
-		res, err := svc.UpdateChannel(ctx, req.id, req.token, uch)
+		res, err := svc.UpdateChannel(ctx, req.token, req.id, uch)
 		if err != nil {
 			return nil, err
 		}
