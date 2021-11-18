@@ -94,6 +94,17 @@ func updateThingsEndpoint(svc ui.Service) endpoint.Endpoint {
 	}
 }
 
+func removeThingEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(viewResourceReq)
+
+		res, err := svc.RemoveThing(ctx, req.token, req.id)
+		return uiRes{
+			html: res,
+		}, err
+	}
+}
+
 func createChannelsEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(createChannelsReq)

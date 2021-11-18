@@ -76,6 +76,13 @@ func MakeHandler(svc ui.Service, tracer opentracing.Tracer) http.Handler {
 		opts...,
 	))
 
+	r.Delete("/things/:id", kithttp.NewServer(
+		kitot.TraceServer(tracer, "remove_thing")(removeThingEndpoint(svc)),
+		decodeView,
+		encodeResponse,
+		opts...,
+	))
+
 	r.Post("/channels", kithttp.NewServer(
 		kitot.TraceServer(tracer, "create_channels")(createChannelsEndpoint(svc)),
 		decodeChannelsCreation,
