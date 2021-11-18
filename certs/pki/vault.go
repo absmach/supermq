@@ -165,9 +165,12 @@ func (p *pkiAgent) Read(serial string) (Cert, error) {
 		return Cert{}, errors.Wrap(errFailedVaultRead, err)
 	}
 
-	s, _ := api.ParseSecret(resp.Body)
-	cert := Cert{}
+	s, err := api.ParseSecret(resp.Body)
+	if err != nil {
+		return Cert{}, err
+	}
 
+	cert := Cert{}
 	if err = mapstructure.Decode(s.Data, &cert); err != nil {
 		return Cert{}, errors.Wrap(errFailedCertDecoding, err)
 	}
