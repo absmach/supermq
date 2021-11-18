@@ -90,16 +90,23 @@ func MakeHandler(svc ui.Service, tracer opentracing.Tracer) http.Handler {
 		opts...,
 	))
 
-	r.Get("/channels", kithttp.NewServer(
-		kitot.TraceServer(tracer, "list_channels")(listChannelsEndpoint(svc)),
-		decodeListChannelsRequest,
+	r.Get("/channels/:id", kithttp.NewServer(
+		kitot.TraceServer(tracer, "view_channel")(viewChannelEndpoint(svc)),
+		decodeView,
 		encodeResponse,
 		opts...,
 	))
 
-	r.Get("/channels/:id", kithttp.NewServer(
-		kitot.TraceServer(tracer, "view_channel")(viewChannelEndpoint(svc)),
-		decodeView,
+	r.Put("/channels/:id", kithttp.NewServer(
+		kitot.TraceServer(tracer, "update_channel")(updateChannelEndpoint(svc)),
+		decodeChannelUpdate,
+		encodeResponse,
+		opts...,
+	))
+
+	r.Get("/channels", kithttp.NewServer(
+		kitot.TraceServer(tracer, "list_channels")(listChannelsEndpoint(svc)),
+		decodeListChannelsRequest,
 		encodeResponse,
 		opts...,
 	))
@@ -174,6 +181,21 @@ func decodeChannelsCreation(_ context.Context, r *http.Request) (interface{}, er
 	}
 	return req, nil
 
+}
+
+func decodeChannelUpdate(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
+		return nil, errors.ErrUnsupportedContentType
+	}
+
+	req := updateChannelReq{
+		id: bone.GetValue(r, "id"),
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, errors.Wrap(things.ErrMalformedEntity, err)
+	}
+
+	return req, nil
 }
 
 func decodeListChannelsRequest(ctx context.Context, r *http.Request) (interface{}, error) {

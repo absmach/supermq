@@ -41,6 +41,7 @@ type Service interface {
 	RemoveThing(ctx context.Context, token, id string) ([]byte, error)
 	CreateChannels(ctx context.Context, token string, channels ...sdk.Channel) ([]byte, error)
 	ViewChannel(ctx context.Context, token, id string) ([]byte, error)
+	UpdateChannel(ctx context.Context, token, id string, channel sdk.Channel) ([]byte, error)
 	ListChannels(ctx context.Context, token string) ([]byte, error)
 }
 
@@ -224,6 +225,13 @@ func (gs *uiService) ViewChannel(ctx context.Context, token, id string) ([]byte,
 	}
 	fmt.Println(btpl.String())
 	return btpl.Bytes(), nil
+}
+
+func (gs *uiService) UpdateChannel(ctx context.Context, token, id string, channel sdk.Channel) ([]byte, error) {
+	if err := gs.sdk.UpdateChannel(channel, "123"); err != nil {
+		return []byte{}, err
+	}
+	return gs.ViewChannel(ctx, id, "123")
 }
 
 func (gs *uiService) ListChannels(ctx context.Context, token string) ([]byte, error) {

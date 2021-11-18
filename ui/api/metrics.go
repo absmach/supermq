@@ -103,6 +103,15 @@ func (ms *metricsMiddleware) ViewChannel(ctx context.Context, token, id string) 
 	return ms.svc.ViewChannel(ctx, token, id)
 }
 
+func (ms *metricsMiddleware) UpdateChannel(ctx context.Context, token, id string, channel sdk.Channel) (b []byte, err error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "update_channel").Add(1)
+		ms.latency.With("method", "update_channel").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.UpdateChannel(ctx, token, id, channel)
+}
+
 func (mm *metricsMiddleware) ListChannels(ctx context.Context, token string) (b []byte, err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "list_channels").Add(1)

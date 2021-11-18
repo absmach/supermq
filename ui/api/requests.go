@@ -99,6 +99,26 @@ func (req createChannelsReq) validate() error {
 	return nil
 }
 
+type updateChannelReq struct {
+	token    string
+	id       string
+	Name     string                 `json:"name,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
+}
+
+func (req updateChannelReq) validate() error {
+
+	if req.id == "" {
+		return things.ErrMalformedEntity
+	}
+
+	if len(req.Name) > maxNameSize {
+		return things.ErrMalformedEntity
+	}
+
+	return nil
+}
+
 type listChannelsReq struct {
 	token string
 }
