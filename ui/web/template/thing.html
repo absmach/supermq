@@ -12,12 +12,36 @@
 
           <!-- Partial goes here -->
           <div class="col-md-4">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal1">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updatethModal">
               Update
             </button>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal1">
+            <td><a type="button" class="btn btn-primary" href= {{printf "%s/delete" .ID}}>
               Delete
-            </button>
+            </a></td>
+            <div class="modal fade" id="updatethModal" tabindex="-1" role="dialog" aria-labelledby="updatethModalLabel" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="updatethModalLabel">Update Thing</h5>
+                  </div>
+                  <div class="modal-body">
+                    <form method="post">
+                      <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" name="name" id="name" aria-describedby="nameHelp">
+                        <div id="nameHelp" class="form-text">Enter device name.</div>
+                      </div>
+                      <div class="mb-3">
+                        <label for="meatadata" class="form-label">Metadata</label>
+                        <input type="text" class="form-control" name="metadata" id="metadata">
+                        <div id="metadataHelp" class="form-text">Enter device metadata in JSON format.</div>
+                      </div>
+                      <button type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
             <table class="table table-striped">
               <thead>
                 <tr>

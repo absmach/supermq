@@ -5,12 +5,9 @@ package api
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"strings"
 
 	kitot "github.com/go-kit/kit/tracing/opentracing"
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -63,8 +60,8 @@ func MakeHandler(svc ui.Service, tracer opentracing.Tracer) http.Handler {
 		opts...,
 	))
 
-	r.Put("/things/:id", kithttp.NewServer(
-		kitot.TraceServer(tracer, "update_things")(updateThingsEndpoint(svc)),
+	r.Post("/things/:id", kithttp.NewServer(
+		kitot.TraceServer(tracer, "update_thing")(updateThingEndpoint(svc)),
 		decodeThingUpdate,
 		encodeResponse,
 		opts...,
@@ -77,7 +74,7 @@ func MakeHandler(svc ui.Service, tracer opentracing.Tracer) http.Handler {
 		opts...,
 	))
 
-	r.Delete("/things/:id", kithttp.NewServer(
+	r.Get("/things/:id/delete", kithttp.NewServer(
 		kitot.TraceServer(tracer, "remove_thing")(removeThingEndpoint(svc)),
 		decodeView,
 		encodeResponse,
@@ -108,6 +105,13 @@ func MakeHandler(svc ui.Service, tracer opentracing.Tracer) http.Handler {
 	r.Get("/channels", kithttp.NewServer(
 		kitot.TraceServer(tracer, "list_channels")(listChannelsEndpoint(svc)),
 		decodeListChannelsRequest,
+		encodeResponse,
+		opts...,
+	))
+
+	r.Get("/channels/:id/delete", kithttp.NewServer(
+		kitot.TraceServer(tracer, "remove_channel")(removeChannelEndpoint(svc)),
+		decodeView,
 		encodeResponse,
 		opts...,
 	))
@@ -147,22 +151,19 @@ func decodeView(_ context.Context, r *http.Request) (interface{}, error) {
 		token: r.Header.Get("Authorization"),
 		id:    bone.GetValue(r, "id"),
 	}
-
 	return req, nil
 }
 
 func decodeThingUpdate(_ context.Context, r *http.Request) (interface{}, error) {
-	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, errors.ErrUnsupportedContentType
-	}
+	// if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
+	// 	return nil, errors.ErrUnsupportedContentType
+	// }
 
 	req := updateThingReq{
-		id: bone.GetValue(r, "id"),
+		token: r.Header.Get("Authorization"),
+		id:    bone.GetValue(r, "id"),
+		Name:  r.PostFormValue("name"),
 	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(things.ErrMalformedEntity, err)
-	}
-
 	return req, nil
 }
 
@@ -188,7 +189,7 @@ func decodeChannelUpdate(_ context.Context, r *http.Request) (interface{}, error
 	// if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 	// 	return nil, errors.ErrUnsupportedContentType
 	// }
-	fmt.Println("paspdapsdpaspdapsdpaspdpasdpaspdpasdapsdpaspdpasd")
+
 	req := updateChannelReq{
 		token: r.Header.Get("Authorization"),
 		id:    bone.GetValue(r, "id"),

@@ -34,9 +34,7 @@
                       </div>
                       <div class="mb-3">
                         <label for="meatadata" class="form-label">Metadata</label>
-                        <div class="form-group">
-                          <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
-                        </div>
+                        <input type="text" class="form-control" name= "metadata" id="metadata">
                         <div id="metadataHelp" class="form-text">Enter device metadata in JSON format.</div>
                       </div>
                       <button type="submit" class="btn btn-primary">Submit</button>
@@ -54,7 +52,7 @@
                   <th scope="col">ID</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody> 
                 {{ range $i, $t := .Channels }}
                   <tr>
                     <th scope="row">{{ $i }}</th>

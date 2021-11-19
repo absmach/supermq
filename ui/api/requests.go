@@ -62,6 +62,7 @@ func (req viewResourceReq) validate() error {
 }
 
 type updateThingReq struct {
+	token    string
 	id       string
 	Name     string                 `json:"name,omitempty"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`

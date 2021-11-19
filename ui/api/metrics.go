@@ -58,13 +58,13 @@ func (mm *metricsMiddleware) ViewThing(ctx context.Context, token, id string) (b
 	return mm.svc.ViewThing(ctx, token, id)
 }
 
-func (mm *metricsMiddleware) UpdateThing(ctx context.Context, token string, thing sdk.Thing) (b []byte, err error) {
+func (mm *metricsMiddleware) UpdateThing(ctx context.Context, token, id string, thing sdk.Thing) (b []byte, err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "update_thing").Add(1)
 		mm.latency.With("method", "update_thing").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.UpdateThing(ctx, token, thing)
+	return mm.svc.UpdateThing(ctx, token, id, thing)
 }
 
 func (mm *metricsMiddleware) ListThings(ctx context.Context, token string) (b []byte, err error) {
@@ -81,7 +81,6 @@ func (mm *metricsMiddleware) RemoveThing(ctx context.Context, token, id string) 
 		mm.counter.With("method", "remove_thing").Add(1)
 		mm.latency.With("method", "remove_thing").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-
 	return mm.svc.RemoveThing(ctx, token, id)
 }
 
@@ -119,4 +118,13 @@ func (mm *metricsMiddleware) ListChannels(ctx context.Context, token string) (b 
 	}(time.Now())
 
 	return mm.svc.ListChannels(ctx, token)
+}
+
+func (mm *metricsMiddleware) RemoveChannel(ctx context.Context, token, id string) (b []byte, err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "remove_channel").Add(1)
+		mm.latency.With("method", "remove_channel").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.RemoveChannel(ctx, token, id)
 }
