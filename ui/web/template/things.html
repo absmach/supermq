@@ -53,13 +53,13 @@
                 </tr>
               </thead>
               <tbody>
-                {{ range $i, $t := .Things }}
+                {{range $i, $t := .Things}}
                   <tr>
-                    <th scope="row">{{ $i }}</th>
-                    <td>{{ $t.Name }}</td>
-                    <td><a href={{printf "/things/%s" $t.ID}}>{{ $t.ID }} </a></td>
+                    <th scope="row">{{$i}}</th>
+                    <td>{{$t.Name}}</td>
+                    <td><a href={{printf "/things/%s" $t.ID}}>{{$t.ID}} </a></td>
                   </tr>
-                {{ end }}
+                {{end}}
               </tbody>
             </table>
           </div>

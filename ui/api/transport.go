@@ -138,6 +138,7 @@ func decodeThingCreation(_ context.Context, r *http.Request) (interface{}, error
 	// if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 	// 	return nil, errors.ErrUnsupportedContentType
 	// }
+
 	req := createThingsReq{
 		token: r.Header.Get("Authorization"),
 		Name:  r.PostFormValue("name"),

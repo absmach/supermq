@@ -15,6 +15,9 @@
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateModal">
               Update
             </button>
+            <td><a type="button" class="btn btn-primary" href= {{printf "%s/delete" .ID}}>
+              Delete
+            </a></td>
             <div class="modal fade" id="updateModal" tabindex="-1" role="dialog" aria-labelledby="updateModalLabel" aria-hidden="true">
               <div class="modal-dialog" role="document">
                 <div class="modal-content">
@@ -46,12 +49,12 @@
                 </tr>
               </thead>
               <tbody>
-                {{ range $key, $value := .JSONChannel}}
+                {{range $key, $value := .JSONChannel}}
                   <tr>
-                    <td>{{ $key }}</td>
-                    <td>{{ $value }}</td>
+                    <td>{{$key}}</td>
+                    <td>{{$value}}</td>
                   </tr>
-                {{ end }}
+                {{end}}
               </tbody>
             </table>
           </div>

@@ -10,7 +10,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"html/template"
 
 	"github.com/mainflux/mainflux"
@@ -165,7 +164,6 @@ func (gs *uiService) UpdateThing(ctx context.Context, token, id string, thing sd
 func (gs *uiService) RemoveThing(ctx context.Context, token, id string) ([]byte, error) {
 	err := gs.sdk.DeleteThing(id, "123")
 	if err != nil {
-		fmt.Println("servisni")
 		return []byte{}, err
 	}
 	return gs.ListThings(ctx, "123")
@@ -201,9 +199,11 @@ func (gs *uiService) ViewChannel(ctx context.Context, token, id string) ([]byte,
 
 	data := struct {
 		NavbarActive string
+		ID           string
 		JSONChannel  map[string]interface{}
 	}{
 		"channels",
+		id,
 		m,
 	}
 
