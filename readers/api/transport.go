@@ -54,9 +54,9 @@ var (
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc readers.MessageRepository, tc mainflux.ThingsServiceClient, uc mainflux.AuthServiceClient, svcName string) http.Handler {
+func MakeHandler(svc readers.MessageRepository, tc mainflux.ThingsServiceClient, ac mainflux.AuthServiceClient, svcName string) http.Handler {
 	thingsAuth = tc
-	usersAuth = uc
+	usersAuth = ac
 
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),
