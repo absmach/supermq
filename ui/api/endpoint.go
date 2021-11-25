@@ -22,7 +22,7 @@ func indexEndpoint(svc ui.Service) endpoint.Endpoint {
 	}
 }
 
-func createThingsEndpoint(svc ui.Service) endpoint.Endpoint {
+func createThingEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(createThingsReq)
 
@@ -109,7 +109,7 @@ func removeThingEndpoint(svc ui.Service) endpoint.Endpoint {
 	}
 }
 
-func createChannelsEndpoint(svc ui.Service) endpoint.Endpoint {
+func createChannelEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(createChannelsReq)
 
@@ -197,7 +197,7 @@ func removeChannelEndpoint(svc ui.Service) endpoint.Endpoint {
 	}
 }
 
-func createGroupsEndpoint(svc ui.Service) endpoint.Endpoint {
+func createGroupEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(createGroupsReq)
 

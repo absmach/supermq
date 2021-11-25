@@ -38,6 +38,7 @@ const (
 	defRedirectURL       = "http://localhost:9090/"
 	defJaegerURL         = ""
 	defThingsAuthURL     = "localhost:8181"
+	defAuthURL           = "localhost:8189"
 	defThingsAuthTimeout = "1s"
 
 	envLogLevel          = "MF_GUI_LOG_LEVEL"
@@ -81,6 +82,7 @@ func main() {
 	msgContentType := string(sdk.CTJSONSenML)
 	sdkConf := sdk.Config{
 		ThingsURL:       "http://localhost:8182",
+		AuthURL:         "http://localhost:8189",
 		MsgContentType:  sdk.ContentType(msgContentType),
 		TLSVerification: false,
 	}

@@ -50,7 +50,7 @@ func MakeHandler(svc ui.Service, redirect string, tracer opentracing.Tracer) htt
 	))
 
 	r.Post("/things", kithttp.NewServer(
-		kitot.TraceServer(tracer, "create_things")(createThingsEndpoint(svc)),
+		kitot.TraceServer(tracer, "create_things")(createThingEndpoint(svc)),
 		decodeThingCreation,
 		encodeResponse,
 		opts...,
@@ -85,7 +85,7 @@ func MakeHandler(svc ui.Service, redirect string, tracer opentracing.Tracer) htt
 	))
 
 	r.Post("/channels", kithttp.NewServer(
-		kitot.TraceServer(tracer, "create_channels")(createChannelsEndpoint(svc)),
+		kitot.TraceServer(tracer, "create_channels")(createChannelEndpoint(svc)),
 		decodeChannelsCreation,
 		encodeResponse,
 		opts...,
@@ -120,7 +120,7 @@ func MakeHandler(svc ui.Service, redirect string, tracer opentracing.Tracer) htt
 	))
 
 	r.Post("/groups", kithttp.NewServer(
-		kitot.TraceServer(tracer, "create_groups")(createGroupsEndpoint(svc)),
+		kitot.TraceServer(tracer, "create_groups")(createGroupEndpoint(svc)),
 		decodeGroupCreation,
 		encodeResponse,
 		opts...,

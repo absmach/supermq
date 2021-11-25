@@ -12,17 +12,17 @@
 
           <!-- Partial goes here -->
           <div class="col-md-4">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updatethingModal">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateThingModal">
               Update
             </button>
             <td><a type="button" class="btn btn-primary" href= {{printf "%s/delete" .ID}}>
               Delete
             </a></td>
-            <div class="modal fade" id="updatethingModal" tabindex="-1" role="dialog" aria-labelledby="updatethingModalLabel" aria-hidden="true">
+            <div class="modal fade" id="updateThingModal" tabindex="-1" role="dialog" aria-labelledby="updateThingModalLabel" aria-hidden="true">
               <div class="modal-dialog" role="document">
                 <div class="modal-content">
                   <div class="modal-header">
-                    <h5 class="modal-title" id="updatethingModalLabel">Update Thing</h5>
+                    <h5 class="modal-title" id="updateThingModalLabel">Update Thing</h5>
                   </div>
                   <div class="modal-body">
                     <form method="post">
@@ -49,12 +49,20 @@
                 </tr>
               </thead>
               <tbody>
-                {{range $key, $value := .JSONThing}}
-                  <tr>
-                    <td>{{$key}}</td>
-                    <td>{{$value}}</td>
-                  </tr>
-                {{end}}
+                <tr>
+                  <th>ID</th>
+                  <td>{{ .Thing.ID }}</td>
+                </tr>
+                <tr>
+                  <th>Key</th>
+                  <td>{{ .Thing.Key }}</td>
+                </tr>
+                <tr>
+                  <th>Metadata</th>
+                  <td>
+                    <pre>{{ toJSON .Thing.Metadata }}</pre>
+                    </td>
+                </tr>
               </tbody>
             </table>
           </div>

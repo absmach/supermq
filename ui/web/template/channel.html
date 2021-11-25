@@ -12,17 +12,17 @@
 
           <!-- Partial goes here -->
           <div class="col-md-4">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateModal">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateChannelModal">
               Update
             </button>
             <td><a type="button" class="btn btn-primary" href= {{printf "%s/delete" .ID}}>
               Delete
             </a></td>
-            <div class="modal fade" id="updateModal" tabindex="-1" role="dialog" aria-labelledby="updateModalLabel" aria-hidden="true">
+            <div class="modal fade" id="updateChannelModal" tabindex="-1" role="dialog" aria-labelledby="updateChannelModalLabel" aria-hidden="true">
               <div class="modal-dialog" role="document">
                 <div class="modal-content">
                   <div class="modal-header">
-                    <h5 class="modal-title" id="updateModalLabel">Update Channel</h5>
+                    <h5 class="modal-title" id="updateChannelModalLabel">Update Channel</h5>
                   </div>
                   <div class="modal-body">
                     <form method="post">

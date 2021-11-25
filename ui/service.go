@@ -13,6 +13,7 @@ import (
 	"html/template"
 
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/auth"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
 )
 
@@ -98,7 +99,16 @@ func (gs *uiService) CreateThings(ctx context.Context, token string, things ...s
 }
 
 func (gs *uiService) ListThings(ctx context.Context, token string) ([]byte, error) {
-	tpl, err := template.ParseGlob(templateDir + "/*")
+	tpl := template.New("things")
+	tpl = tpl.Funcs(template.FuncMap{
+		"toJSON": func(data map[string]interface{}) string {
+			ret, _ := json.Marshal(data)
+			return string(ret)
+		},
+	})
+	var err error
+
+	tpl, err = tpl.ParseGlob(templateDir + "/*")
 	if err != nil {
 		return []byte{}, err
 	}
@@ -125,7 +135,15 @@ func (gs *uiService) ListThings(ctx context.Context, token string) ([]byte, erro
 }
 
 func (gs *uiService) ViewThing(ctx context.Context, token, id string) ([]byte, error) {
-	tpl, err := template.ParseGlob(templateDir + "/*")
+	tpl := template.New("things")
+	tpl = tpl.Funcs(template.FuncMap{
+		"toJSON": func(data map[string]interface{}) string {
+			ret, _ := json.Marshal(data)
+			return string(ret)
+		},
+	})
+	var err error
+	tpl, err = tpl.ParseGlob(templateDir + "/*")
 	if err != nil {
 		return []byte{}, err
 	}
@@ -134,22 +152,14 @@ func (gs *uiService) ViewThing(ctx context.Context, token, id string) ([]byte, e
 		return []byte{}, err
 	}
 
-	j, err := json.Marshal(thing)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	m := make(map[string]interface{})
-	json.Unmarshal(j, &m)
-
 	data := struct {
 		NavbarActive string
 		ID           string
-		JSONThing    map[string]interface{}
+		Thing        sdk.Thing
 	}{
 		"things",
 		id,
-		m,
+		thing,
 	}
 
 	var btpl bytes.Buffer
@@ -284,7 +294,7 @@ func (gs *uiService) ListGroups(ctx context.Context, token string) ([]byte, erro
 
 	data := struct {
 		NavbarActive string
-		Groups       []sdk.Group
+		Groups       []auth.Group
 	}{
 		"groups",
 		grpsPage.Groups,
