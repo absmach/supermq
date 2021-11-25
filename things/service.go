@@ -48,6 +48,7 @@ var (
 
 const (
 	usersObjectKey    = "users"
+	authoritiesObject = "authorities"
 	memberRelationKey = "member"
 	readRelationKey   = "read"
 	writeRelationKey  = "write"
@@ -142,14 +143,15 @@ type Service interface {
 
 // PageMetadata contains page metadata that helps navigation.
 type PageMetadata struct {
-	Total        uint64
-	Offset       uint64                 `json:"offset,omitempty"`
-	Limit        uint64                 `json:"limit,omitempty"`
-	Name         string                 `json:"name,omitempty"`
-	Order        string                 `json:"order,omitempty"`
-	Dir          string                 `json:"dir,omitempty"`
-	Metadata     map[string]interface{} `json:"metadata,omitempty"`
-	Disconnected bool                   // Used for connected or disconnected lists
+	Total             uint64
+	Offset            uint64                 `json:"offset,omitempty"`
+	Limit             uint64                 `json:"limit,omitempty"`
+	Name              string                 `json:"name,omitempty"`
+	Order             string                 `json:"order,omitempty"`
+	Dir               string                 `json:"dir,omitempty"`
+	Metadata          map[string]interface{} `json:"metadata,omitempty"`
+	Disconnected      bool                   // Used for connected or disconnected lists
+	FetchSharedThings bool                   // Used for identifying fetching either all or shared things.
 }
 
 var _ Service = (*thingsService)(nil)
@@ -223,7 +225,8 @@ func (ts *thingsService) createThing(ctx context.Context, thing *Thing, identity
 		return Thing{}, ErrCreateEntity
 	}
 
-	if err := ts.claimOwnership(ctx, ths[0].ID, []string{readRelationKey, writeRelationKey, deleteRelationKey}, []string{identity.GetId()}); err != nil {
+	ss := fmt.Sprintf("%s:%s#%s", "members", authoritiesObject, memberRelationKey)
+	if err := ts.claimOwnership(ctx, ths[0].ID, []string{readRelationKey, writeRelationKey, deleteRelationKey}, []string{identity.GetId(), ss}); err != nil {
 		return Thing{}, err
 	}
 
@@ -237,7 +240,9 @@ func (ts *thingsService) UpdateThing(ctx context.Context, token string, thing Th
 	}
 
 	if err := ts.authorize(ctx, res.GetId(), thing.ID, writeRelationKey); err != nil {
-		return err
+		if err := ts.authorize(ctx, res.GetId(), authoritiesObject, memberRelationKey); err != nil {
+			return err
+		}
 	}
 
 	thing.Owner = res.GetEmail()
@@ -281,7 +286,9 @@ func (ts *thingsService) UpdateKey(ctx context.Context, token, id, key string) e
 	}
 
 	if err := ts.authorize(ctx, res.GetId(), id, writeRelationKey); err != nil {
-		return err
+		if err := ts.authorize(ctx, res.GetId(), authoritiesObject, memberRelationKey); err != nil {
+			return err
+		}
 	}
 
 	owner := res.GetEmail()
@@ -296,7 +303,9 @@ func (ts *thingsService) ViewThing(ctx context.Context, token, id string) (Thing
 	}
 
 	if err := ts.authorize(ctx, res.GetId(), id, readRelationKey); err != nil {
-		return Thing{}, err
+		if err := ts.authorize(ctx, res.GetId(), authoritiesObject, memberRelationKey); err != nil {
+			return Thing{}, err
+		}
 	}
 
 	return ts.things.RetrieveByID(ctx, res.GetEmail(), id)
@@ -308,21 +317,39 @@ func (ts *thingsService) ListThings(ctx context.Context, token string, pm PageMe
 		return Page{}, errors.Wrap(ErrUnauthorizedAccess, err)
 	}
 
+	subject := res.GetId()
+	// If the user is admin, fetch all things from database.
+	if err := ts.authorize(ctx, res.GetId(), authoritiesObject, memberRelationKey); err == nil {
+		pm.FetchSharedThings = true
+		page, err := ts.things.RetrieveAll(ctx, res.GetEmail(), pm)
+		if err != nil {
+			return Page{}, err
+		}
+		return page, err
+	}
+
+	// If the user is not admin, check 'shared' parameter from pagemetada.
+	// If user provides 'shared' key, fetch things from policies.
+	if pm.FetchSharedThings {
+		req := &mainflux.ListPoliciesReq{Act: "read", Sub: subject}
+		lpr, err := ts.auth.ListPolicies(ctx, req)
+		if err != nil {
+			return Page{}, err
+		}
+
+		var page Page
+		for _, thingID := range lpr.Policies {
+			page.Things = append(page.Things, Thing{ID: thingID})
+		}
+		return page, nil
+	}
+
+	// By default, fetch things from Things service.
 	page, err := ts.things.RetrieveAll(ctx, res.GetEmail(), pm)
 	if err != nil {
 		return Page{}, err
 	}
 
-	ths := []Thing{}
-	for _, thing := range page.Things {
-		for _, action := range []string{readRelationKey, writeRelationKey, deleteRelationKey} {
-			if err := ts.authorize(ctx, res.GetId(), thing.ID, action); err == nil {
-				ths = append(ths, thing)
-				break
-			}
-		}
-	}
-	page.Things = ths
 	return page, nil
 }
 
@@ -342,7 +369,9 @@ func (ts *thingsService) RemoveThing(ctx context.Context, token, id string) erro
 	}
 
 	if err := ts.authorize(ctx, res.GetId(), id, deleteRelationKey); err != nil {
-		return err
+		if err := ts.authorize(ctx, res.GetId(), authoritiesObject, memberRelationKey); err != nil {
+			return err
+		}
 	}
 
 	if err := ts.thingCache.Remove(ctx, id); err != nil {
