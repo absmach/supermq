@@ -35,6 +35,7 @@ const (
 	defClientTLS         = "false"
 	defCACerts           = ""
 	defPort              = "9090"
+	defRedirectURL       = "http://localhost:9090/"
 	defJaegerURL         = ""
 	defThingsAuthURL     = "localhost:8181"
 	defThingsAuthTimeout = "1s"
@@ -43,6 +44,7 @@ const (
 	envClientTLS         = "MF_GUI_CLIENT_TLS"
 	envCACerts           = "MF_GUI_CA_CERTS"
 	envPort              = "MF_GUI_PORT"
+	envRedirectURL       = "MF_GUI_REDIRECT_URL"
 	envJaegerURL         = "MF_JAEGER_URL"
 	envThingsAuthURL     = "MF_THINGS_AUTH_GRPC_URL"
 	envThingsAuthTimeout = "MF_THINGS_AUTH_GRPC_TIMEOUT"
@@ -51,6 +53,7 @@ const (
 type config struct {
 	logLevel          string
 	port              string
+	redirectURL       string
 	clientTLS         bool
 	caCerts           string
 	jaegerURL         string
@@ -109,7 +112,7 @@ func main() {
 	go func() {
 		p := fmt.Sprintf(":%s", cfg.port)
 		logger.Info(fmt.Sprintf("GUI service started on port %s", cfg.port))
-		errs <- http.ListenAndServe(p, api.MakeHandler(svc, tracer))
+		errs <- http.ListenAndServe(p, api.MakeHandler(svc, cfg.redirectURL, tracer))
 	}()
 
 	go func() {
@@ -136,6 +139,7 @@ func loadConfig() config {
 	return config{
 		logLevel:          mainflux.Env(envLogLevel, defLogLevel),
 		port:              mainflux.Env(envPort, defPort),
+		redirectURL:       mainflux.Env(envRedirectURL, defRedirectURL),
 		clientTLS:         tls,
 		caCerts:           mainflux.Env(envCACerts, defCACerts),
 		jaegerURL:         mainflux.Env(envJaegerURL, defJaegerURL),

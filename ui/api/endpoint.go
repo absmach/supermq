@@ -5,6 +5,7 @@ package api
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/go-kit/kit/endpoint"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
@@ -76,7 +77,6 @@ func listThingsEndpoint(svc ui.Service) endpoint.Endpoint {
 func updateThingEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(updateThingReq)
-
 		uth := sdk.Thing{
 			ID:       req.id,
 			Name:     req.Name,
@@ -102,7 +102,9 @@ func removeThingEndpoint(svc ui.Service) endpoint.Endpoint {
 			return nil, err
 		}
 		return uiRes{
-			html: res,
+			html:    res,
+			headers: map[string]string{"location": redirectURL + "things"},
+			code:    http.StatusPermanentRedirect,
 		}, err
 	}
 }
@@ -188,7 +190,96 @@ func removeChannelEndpoint(svc ui.Service) endpoint.Endpoint {
 			return nil, err
 		}
 		return uiRes{
+			html:    res,
+			headers: map[string]string{"location": redirectURL + "channels"},
+			code:    http.StatusPermanentRedirect,
+		}, err
+	}
+}
+
+func createGroupsEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(createGroupsReq)
+
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
+
+		gr := sdk.Group{
+			Name:        req.Name,
+			Description: req.Description,
+			ParentID:    req.ParentID,
+			Metadata:    req.Metadata,
+		}
+
+		res, err := svc.CreateGroups(ctx, req.token, gr)
+		if err != nil {
+			return nil, err
+		}
+
+		return uiRes{
 			html: res,
+		}, err
+	}
+}
+
+func listGroupsEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(listGroupsReq)
+		res, err := svc.ListGroups(ctx, req.token)
+		return uiRes{
+			html: res,
+		}, err
+	}
+}
+
+func viewGroupEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(viewResourceReq)
+
+		res, err := svc.ViewGroup(ctx, req.token, req.id)
+		if err != nil {
+			return nil, err
+		}
+
+		return uiRes{
+			html: res,
+		}, err
+	}
+}
+
+func updateGroupEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(updateGroupReq)
+
+		uch := sdk.Group{
+			ID:       req.id,
+			Name:     req.Name,
+			Metadata: req.Metadata,
+		}
+
+		res, err := svc.UpdateGroup(ctx, req.token, req.id, uch)
+		if err != nil {
+			return nil, err
+		}
+		return uiRes{
+			html: res,
+		}, err
+	}
+}
+
+func removeGroupEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(viewResourceReq)
+
+		res, err := svc.RemoveGroup(ctx, req.token, req.id)
+		if err != nil {
+			return nil, err
+		}
+		return uiRes{
+			html:    res,
+			headers: map[string]string{"location": redirectURL + "groups"},
+			code:    http.StatusPermanentRedirect,
 		}, err
 	}
 }

@@ -43,6 +43,11 @@ type Service interface {
 	UpdateChannel(ctx context.Context, token, id string, channel sdk.Channel) ([]byte, error)
 	ListChannels(ctx context.Context, token string) ([]byte, error)
 	RemoveChannel(ctx context.Context, token, id string) ([]byte, error)
+	CreateGroups(ctx context.Context, token string, groups ...sdk.Group) ([]byte, error)
+	ViewGroup(ctx context.Context, token, id string) ([]byte, error)
+	UpdateGroup(ctx context.Context, token, id string, group sdk.Group) ([]byte, error)
+	ListGroups(ctx context.Context, token string) ([]byte, error)
+	RemoveGroup(ctx context.Context, token, id string) ([]byte, error)
 }
 
 var _ Service = (*uiService)(nil)
@@ -166,7 +171,7 @@ func (gs *uiService) RemoveThing(ctx context.Context, token, id string) ([]byte,
 	if err != nil {
 		return []byte{}, err
 	}
-	return gs.ListThings(ctx, "123")
+	return []byte{}, nil
 }
 
 func (gs *uiService) CreateChannels(ctx context.Context, token string, channels ...sdk.Channel) ([]byte, error) {
@@ -254,4 +259,90 @@ func (gs *uiService) RemoveChannel(ctx context.Context, token, id string) ([]byt
 		return []byte{}, err
 	}
 	return gs.ListChannels(ctx, "123")
+}
+
+func (gs *uiService) CreateGroups(ctx context.Context, token string, groups ...sdk.Group) ([]byte, error) {
+	for i := range groups {
+		_, err := gs.sdk.CreateGroup(groups[i], "123")
+		if err != nil {
+			return []byte{}, err
+		}
+	}
+	return gs.ListGroups(ctx, "123")
+}
+
+func (gs *uiService) ListGroups(ctx context.Context, token string) ([]byte, error) {
+	tpl, err := template.ParseGlob(templateDir + "/*")
+	if err != nil {
+		return []byte{}, err
+	}
+
+	grpsPage, err := gs.sdk.Groups(0, 100, "123")
+	if err != nil {
+		return []byte{}, err
+	}
+
+	data := struct {
+		NavbarActive string
+		Groups       []sdk.Group
+	}{
+		"groups",
+		grpsPage.Groups,
+	}
+
+	var btpl bytes.Buffer
+	if err := tpl.ExecuteTemplate(&btpl, "groups", data); err != nil {
+		println(err.Error())
+	}
+
+	return btpl.Bytes(), nil
+}
+
+func (gs *uiService) ViewGroup(ctx context.Context, token, id string) ([]byte, error) {
+	tpl, err := template.ParseGlob(templateDir + "/*")
+	if err != nil {
+		return []byte{}, err
+	}
+	group, err := gs.sdk.Group(id, "123")
+	if err != nil {
+		return []byte{}, err
+	}
+
+	j, err := json.Marshal(group)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	m := make(map[string]interface{})
+	json.Unmarshal(j, &m)
+
+	data := struct {
+		NavbarActive string
+		ID           string
+		JSONGroup    map[string]interface{}
+	}{
+		"groups",
+		id,
+		m,
+	}
+	var btpl bytes.Buffer
+	if err := tpl.ExecuteTemplate(&btpl, "group", data); err != nil {
+		println(err.Error())
+	}
+	return btpl.Bytes(), nil
+}
+
+func (gs *uiService) UpdateGroup(ctx context.Context, token, id string, group sdk.Group) ([]byte, error) {
+	if err := gs.sdk.UpdateGroup(group, "123"); err != nil {
+		return []byte{}, err
+	}
+	return gs.ViewGroup(ctx, "123", id)
+}
+
+func (gs *uiService) RemoveGroup(ctx context.Context, token, id string) ([]byte, error) {
+	err := gs.sdk.DeleteGroup(id, "123")
+	if err != nil {
+		return []byte{}, err
+	}
+	return []byte{}, nil
 }

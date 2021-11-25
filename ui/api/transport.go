@@ -5,6 +5,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -30,10 +31,12 @@ const (
 var (
 	errMalformedData     = errors.New("malformed request data")
 	errMalformedSubtopic = errors.New("malformed subtopic")
+	redirectURL          = ""
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc ui.Service, tracer opentracing.Tracer) http.Handler {
+func MakeHandler(svc ui.Service, redirect string, tracer opentracing.Tracer) http.Handler {
+	redirectURL = redirect
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),
 	}
@@ -116,6 +119,41 @@ func MakeHandler(svc ui.Service, tracer opentracing.Tracer) http.Handler {
 		opts...,
 	))
 
+	r.Post("/groups", kithttp.NewServer(
+		kitot.TraceServer(tracer, "create_groups")(createGroupsEndpoint(svc)),
+		decodeGroupCreation,
+		encodeResponse,
+		opts...,
+	))
+
+	r.Get("/groups", kithttp.NewServer(
+		kitot.TraceServer(tracer, "list_groups")(listGroupsEndpoint(svc)),
+		decodeListGroupsRequest,
+		encodeResponse,
+		opts...,
+	))
+
+	r.Get("/groups/:id", kithttp.NewServer(
+		kitot.TraceServer(tracer, "view_group")(viewGroupEndpoint(svc)),
+		decodeView,
+		encodeResponse,
+		opts...,
+	))
+
+	r.Post("/groups/:id", kithttp.NewServer(
+		kitot.TraceServer(tracer, "update_group")(updateGroupEndpoint(svc)),
+		decodeGroupUpdate,
+		encodeResponse,
+		opts...,
+	))
+
+	r.Get("/groups/:id/delete", kithttp.NewServer(
+		kitot.TraceServer(tracer, "remove_group")(removeGroupEndpoint(svc)),
+		decodeView,
+		encodeResponse,
+		opts...,
+	))
+
 	r.GetFunc("/version", mainflux.Version("ui"))
 	r.Handle("/metrics", promhttp.Handler())
 
@@ -160,10 +198,16 @@ func decodeThingUpdate(_ context.Context, r *http.Request) (interface{}, error) 
 	// 	return nil, errors.ErrUnsupportedContentType
 	// }
 
+	var meta map[string]interface{}
+	if err := json.Unmarshal([]byte(r.PostFormValue("metadata")), &meta); err != nil {
+		return nil, err
+	}
+
 	req := updateThingReq{
-		token: r.Header.Get("Authorization"),
-		id:    bone.GetValue(r, "id"),
-		Name:  r.PostFormValue("name"),
+		token:    r.Header.Get("Authorization"),
+		id:       bone.GetValue(r, "id"),
+		Name:     r.PostFormValue("name"),
+		Metadata: meta,
 	}
 	return req, nil
 }
@@ -191,10 +235,16 @@ func decodeChannelUpdate(_ context.Context, r *http.Request) (interface{}, error
 	// 	return nil, errors.ErrUnsupportedContentType
 	// }
 
+	var meta map[string]interface{}
+	if err := json.Unmarshal([]byte(r.PostFormValue("metadata")), &meta); err != nil {
+		return nil, err
+	}
+
 	req := updateChannelReq{
-		token: r.Header.Get("Authorization"),
-		id:    bone.GetValue(r, "id"),
-		Name:  r.PostFormValue("name"),
+		token:    r.Header.Get("Authorization"),
+		id:       bone.GetValue(r, "id"),
+		Name:     r.PostFormValue("name"),
+		Metadata: meta,
 	}
 	return req, nil
 }
@@ -204,6 +254,46 @@ func decodeListChannelsRequest(ctx context.Context, r *http.Request) (interface{
 		token: r.Header.Get("Authorization"),
 	}
 
+	return req, nil
+}
+
+func decodeGroupCreation(_ context.Context, r *http.Request) (interface{}, error) {
+	// if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
+	// 	return nil, errors.ErrUnsupportedContentType
+	// }
+
+	req := createGroupsReq{
+		ID:   r.Header.Get("Authorization"),
+		Name: r.PostFormValue("name"),
+	}
+
+	return req, nil
+}
+
+func decodeListGroupsRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	req := listGroupsReq{
+		token: r.Header.Get("Authorization"),
+	}
+
+	return req, nil
+}
+
+func decodeGroupUpdate(_ context.Context, r *http.Request) (interface{}, error) {
+	// if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
+	// 	return nil, errors.ErrUnsupportedContentType
+	// }
+
+	var meta map[string]interface{}
+	if err := json.Unmarshal([]byte(r.PostFormValue("metadata")), &meta); err != nil {
+		return nil, err
+	}
+
+	req := updateGroupReq{
+		token:    r.Header.Get("Authorization"),
+		id:       bone.GetValue(r, "id"),
+		Name:     r.PostFormValue("name"),
+		Metadata: meta,
+	}
 	return req, nil
 }
 
@@ -233,7 +323,6 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 	if ar.Empty() {
 		return nil
 	}
-
 	w.Write(ar.html)
 	return nil
 }
