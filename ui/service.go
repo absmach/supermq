@@ -67,7 +67,16 @@ func New(things mainflux.ThingsServiceClient, sdk sdk.SDK) Service {
 }
 
 func (gs *uiService) Index(ctx context.Context, token string) ([]byte, error) {
-	tpl, err := template.ParseGlob(templateDir + "/*")
+	tpl := template.New("index")
+	tpl = tpl.Funcs(template.FuncMap{
+		"toJSON": func(data map[string]interface{}) string {
+			ret, _ := json.Marshal(data)
+			return string(ret)
+		},
+	})
+	var err error
+
+	tpl, err = tpl.ParseGlob(templateDir + "/*")
 	if err != nil {
 		return []byte{}, err
 	}
@@ -195,7 +204,15 @@ func (gs *uiService) CreateChannels(ctx context.Context, token string, channels 
 }
 
 func (gs *uiService) ViewChannel(ctx context.Context, token, id string) ([]byte, error) {
-	tpl, err := template.ParseGlob(templateDir + "/*")
+	tpl := template.New("channels")
+	tpl = tpl.Funcs(template.FuncMap{
+		"toJSON": func(data map[string]interface{}) string {
+			ret, _ := json.Marshal(data)
+			return string(ret)
+		},
+	})
+	var err error
+	tpl, err = tpl.ParseGlob(templateDir + "/*")
 	if err != nil {
 		return []byte{}, err
 	}
@@ -204,22 +221,14 @@ func (gs *uiService) ViewChannel(ctx context.Context, token, id string) ([]byte,
 		return []byte{}, err
 	}
 
-	j, err := json.Marshal(channel)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	m := make(map[string]interface{})
-	json.Unmarshal(j, &m)
-
 	data := struct {
 		NavbarActive string
 		ID           string
-		JSONChannel  map[string]interface{}
+		Channel      sdk.Channel
 	}{
 		"channels",
 		id,
-		m,
+		channel,
 	}
 
 	var btpl bytes.Buffer
@@ -237,11 +246,19 @@ func (gs *uiService) UpdateChannel(ctx context.Context, token, id string, channe
 }
 
 func (gs *uiService) ListChannels(ctx context.Context, token string) ([]byte, error) {
-	tpl, err := template.ParseGlob(templateDir + "/*")
+	tpl := template.New("channels")
+	tpl = tpl.Funcs(template.FuncMap{
+		"toJSON": func(data map[string]interface{}) string {
+			ret, _ := json.Marshal(data)
+			return string(ret)
+		},
+	})
+	var err error
+
+	tpl, err = tpl.ParseGlob(templateDir + "/*")
 	if err != nil {
 		return []byte{}, err
 	}
-
 	chsPage, err := gs.sdk.Channels("123", 0, 100, "")
 	if err != nil {
 		return []byte{}, err

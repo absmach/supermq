@@ -52,12 +52,12 @@
                   <th scope="col">ID</th>
                 </tr>
               </thead>
-              <tbody> 
+              <tbody>
                 {{range $i, $c := .Channels}}
                   <tr>
                     <th scope="row">{{$i}}</th>
                     <td>{{$c.Name}}</td>
-                    <td><a href={{printf "/channels/%s" $c.ID}}>{{$c.ID}}</a></td>
+                    <td><a href={{printf "/channels/%s" $c.ID}}>{{$c.ID}} </a></td>
                   </tr>
                 {{end}}
               </tbody>

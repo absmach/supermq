@@ -177,9 +177,15 @@ func decodeThingCreation(_ context.Context, r *http.Request) (interface{}, error
 	// 	return nil, errors.ErrUnsupportedContentType
 	// }
 
+	var meta map[string]interface{}
+	if err := json.Unmarshal([]byte(r.PostFormValue("metadata")), &meta); err != nil {
+		return nil, err
+	}
+
 	req := createThingsReq{
-		token: r.Header.Get("Authorization"),
-		Name:  r.PostFormValue("name"),
+		token:    r.Header.Get("Authorization"),
+		Name:     r.PostFormValue("name"),
+		Metadata: meta,
 	}
 
 	return req, nil
@@ -222,12 +228,18 @@ func decodeListThingsRequest(ctx context.Context, r *http.Request) (interface{},
 
 func decodeChannelsCreation(_ context.Context, r *http.Request) (interface{}, error) {
 
-	req := createChannelsReq{
-		token: r.Header.Get("Authorization"),
-		Name:  r.PostFormValue("name"),
+	var meta map[string]interface{}
+	if err := json.Unmarshal([]byte(r.PostFormValue("metadata")), &meta); err != nil {
+		return nil, err
 	}
-	return req, nil
 
+	req := createChannelsReq{
+		token:    r.Header.Get("Authorization"),
+		Name:     r.PostFormValue("name"),
+		Metadata: meta,
+	}
+
+	return req, nil
 }
 
 func decodeChannelUpdate(_ context.Context, r *http.Request) (interface{}, error) {
