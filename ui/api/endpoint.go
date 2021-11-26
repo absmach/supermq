@@ -26,6 +26,10 @@ func createThingEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(createThingsReq)
 
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
+
 		th := sdk.Thing{
 			Key:      req.Key,
 			Name:     req.Name,
@@ -46,6 +50,10 @@ func viewThingEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(viewResourceReq)
 
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
+
 		res, err := svc.ViewThing(ctx, req.token, req.id)
 		if err != nil {
 			return nil, err
@@ -59,6 +67,11 @@ func viewThingEndpoint(svc ui.Service) endpoint.Endpoint {
 func listThingsEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listThingsReq)
+
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
+
 		res, err := svc.ListThings(ctx, req.token)
 		return uiRes{
 			html: res,
@@ -69,6 +82,11 @@ func listThingsEndpoint(svc ui.Service) endpoint.Endpoint {
 func updateThingEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(updateThingReq)
+
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
+
 		uth := sdk.Thing{
 			ID:       req.id,
 			Name:     req.Name,
@@ -89,6 +107,10 @@ func removeThingEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(viewResourceReq)
 
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
+
 		res, err := svc.RemoveThing(ctx, req.token, req.id)
 		if err != nil {
 			return nil, err
@@ -104,6 +126,10 @@ func removeThingEndpoint(svc ui.Service) endpoint.Endpoint {
 func createChannelEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(createChannelsReq)
+
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
 
 		ch := sdk.Channel{
 			Key:      req.Key,
@@ -125,6 +151,10 @@ func viewChannelEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(viewResourceReq)
 
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
+
 		res, err := svc.ViewChannel(ctx, req.token, req.id)
 		if err != nil {
 			return nil, err
@@ -138,6 +168,10 @@ func viewChannelEndpoint(svc ui.Service) endpoint.Endpoint {
 func updateChannelEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(updateChannelReq)
+
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
 
 		uch := sdk.Channel{
 			ID:       req.id,
@@ -158,6 +192,11 @@ func updateChannelEndpoint(svc ui.Service) endpoint.Endpoint {
 func listChannelsEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listChannelsReq)
+
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
+
 		res, err := svc.ListChannels(ctx, req.token)
 		return uiRes{
 			html: res,
@@ -168,6 +207,10 @@ func listChannelsEndpoint(svc ui.Service) endpoint.Endpoint {
 func removeChannelEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(viewResourceReq)
+
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
 
 		res, err := svc.RemoveChannel(ctx, req.token, req.id)
 		if err != nil {
@@ -184,6 +227,10 @@ func removeChannelEndpoint(svc ui.Service) endpoint.Endpoint {
 func createGroupEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(createGroupsReq)
+
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
 
 		gr := sdk.Group{
 			Name:        req.Name,
@@ -206,6 +253,11 @@ func createGroupEndpoint(svc ui.Service) endpoint.Endpoint {
 func listGroupsEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listGroupsReq)
+
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
+
 		res, err := svc.ListGroups(ctx, req.token)
 		return uiRes{
 			html: res,
@@ -216,6 +268,10 @@ func listGroupsEndpoint(svc ui.Service) endpoint.Endpoint {
 func viewGroupEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(viewResourceReq)
+
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
 
 		res, err := svc.ViewGroup(ctx, req.token, req.id)
 		if err != nil {
@@ -231,6 +287,10 @@ func viewGroupEndpoint(svc ui.Service) endpoint.Endpoint {
 func updateGroupEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(updateGroupReq)
+
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
 
 		uch := sdk.Group{
 			ID:       req.id,
@@ -251,6 +311,10 @@ func updateGroupEndpoint(svc ui.Service) endpoint.Endpoint {
 func removeGroupEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(viewResourceReq)
+
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
 
 		res, err := svc.RemoveGroup(ctx, req.token, req.id)
 		if err != nil {
