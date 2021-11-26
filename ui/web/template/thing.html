@@ -50,17 +50,21 @@
               </thead>
               <tbody>
                 <tr>
+                  <th>Name</th>
+                  <td>{{.Thing.Name}}</td>
+                </tr>
+                <tr>
                   <th>ID</th>
-                  <td>{{ .Thing.ID }}</td>
+                  <td>{{.Thing.ID}}</td>
                 </tr>
                 <tr>
                   <th>Key</th>
-                  <td>{{ .Thing.Key }}</td>
+                  <td>{{.Thing.Key}}</td>
                 </tr>
                 <tr>
                   <th>Metadata</th>
                   <td>
-                    <pre>{{ toJSON .Thing.Metadata }}</pre>
+                    <pre>{{toJSON .Thing.Metadata}}</pre>
                     </td>
                 </tr>
               </tbody>

@@ -49,12 +49,24 @@
                 </tr>
               </thead>
               <tbody>
-                {{range $key, $value := .JSONGroup}}
+                <tr>
                   <tr>
-                    <td>{{$key}}</td>
-                    <td>{{$value}}</td>
+                    <th>Name</th>
+                    <td>{{.Group.Name}}</td>
                   </tr>
-                {{end}}
+                  <th>ID</th>
+                  <td>{{.Group.ID}}</td>
+                </tr>
+                <tr>
+                  <th>Key</th>
+                  <td>{{.Group.Key}}</td>
+                </tr>
+                <tr>
+                  <th>Metadata</th>
+                  <td>
+                    <pre>{{toJSON .Channel.Metadata}}</pre>
+                    </td>
+                </tr>
               </tbody>
             </table>
           </div>

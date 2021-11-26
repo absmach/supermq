@@ -50,17 +50,21 @@
               </thead>
               <tbody>
                 <tr>
+                  <tr>
+                    <th>Name</th>
+                    <td>{{.Channel.Name}}</td>
+                  </tr>
                   <th>ID</th>
-                  <td>{{ .Channel.ID }}</td>
+                  <td>{{.Channel.ID}}</td>
                 </tr>
                 <tr>
                   <th>Key</th>
-                  <td>{{ .Channel.Key }}</td>
+                  <td>{{.Channel.Key}}</td>
                 </tr>
                 <tr>
                   <th>Metadata</th>
                   <td>
-                    <pre>{{ toJSON .Channel.Metadata }}</pre>
+                    <pre>{{toJSON .Channel.Metadata}}</pre>
                     </td>
                 </tr>
               </tbody>

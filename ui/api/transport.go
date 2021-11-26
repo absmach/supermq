@@ -173,10 +173,6 @@ func decodeIndexRequest(ctx context.Context, r *http.Request) (interface{}, erro
 }
 
 func decodeThingCreation(_ context.Context, r *http.Request) (interface{}, error) {
-	// if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-	// 	return nil, errors.ErrUnsupportedContentType
-	// }
-
 	var meta map[string]interface{}
 	if err := json.Unmarshal([]byte(r.PostFormValue("metadata")), &meta); err != nil {
 		return nil, err
@@ -200,10 +196,6 @@ func decodeView(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeThingUpdate(_ context.Context, r *http.Request) (interface{}, error) {
-	// if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-	// 	return nil, errors.ErrUnsupportedContentType
-	// }
-
 	var meta map[string]interface{}
 	if err := json.Unmarshal([]byte(r.PostFormValue("metadata")), &meta); err != nil {
 		return nil, err
@@ -243,10 +235,6 @@ func decodeChannelsCreation(_ context.Context, r *http.Request) (interface{}, er
 }
 
 func decodeChannelUpdate(_ context.Context, r *http.Request) (interface{}, error) {
-	// if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-	// 	return nil, errors.ErrUnsupportedContentType
-	// }
-
 	var meta map[string]interface{}
 	if err := json.Unmarshal([]byte(r.PostFormValue("metadata")), &meta); err != nil {
 		return nil, err
@@ -270,9 +258,6 @@ func decodeListChannelsRequest(ctx context.Context, r *http.Request) (interface{
 }
 
 func decodeGroupCreation(_ context.Context, r *http.Request) (interface{}, error) {
-	// if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-	// 	return nil, errors.ErrUnsupportedContentType
-	// }
 
 	req := createGroupsReq{
 		ID:   r.Header.Get("Authorization"),
@@ -291,10 +276,6 @@ func decodeListGroupsRequest(ctx context.Context, r *http.Request) (interface{},
 }
 
 func decodeGroupUpdate(_ context.Context, r *http.Request) (interface{}, error) {
-	// if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-	// 	return nil, errors.ErrUnsupportedContentType
-	// }
-
 	var meta map[string]interface{}
 	if err := json.Unmarshal([]byte(r.PostFormValue("metadata")), &meta); err != nil {
 		return nil, err
