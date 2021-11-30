@@ -46,20 +46,6 @@ func MakeHandler(svc certs.Service) http.Handler {
 		opts...,
 	))
 
-	r.Get("/certs/:thingId/list", kithttp.NewServer(
-		listCerts(svc),
-		decodeListCerts,
-		encodeResponse,
-		opts...,
-	))
-
-	r.Get("/certs/:thingId/serials", kithttp.NewServer(
-		listSerials(svc),
-		decodeListCerts,
-		encodeResponse,
-		opts...,
-	))
-
 	r.Get("/certs/:certId", kithttp.NewServer(
 		viewCert(svc),
 		decodeViewCert,
@@ -70,6 +56,13 @@ func MakeHandler(svc certs.Service) http.Handler {
 	r.Delete("/certs/:certId", kithttp.NewServer(
 		revokeCert(svc),
 		decodeRevokeCerts,
+		encodeResponse,
+		opts...,
+	))
+
+	r.Get("/serials/:thingId", kithttp.NewServer(
+		listSerials(svc),
+		decodeListCerts,
 		encodeResponse,
 		opts...,
 	))

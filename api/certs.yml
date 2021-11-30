@@ -22,42 +22,6 @@ paths:
           description: Failed due to malformed JSON.
         '500':
           description: Unexpected server-side error ocurred.
-  /certs/{thingID}/list:
-    get:
-      summary: Retrieves certificates
-      description: |
-        Retrieves a list of issued certificates for a given thing ID.
-      tags:
-        - configs
-      parameters:
-        - $ref: "#/components/parameters/Authorization"
-        - $ref: "#/components/parameters/ThingID"
-      responses:
-        '200':
-          $ref: "#/components/responses/CertsPageRes"
-        '404':
-          description: |
-            Failed to retrieve corresponding certificates.
-        '500':
-          $ref: "#/components/responses/ServiceError"
-  /certs/{thingID}/serials:
-    get:
-      summary: Retrieves certificates serial IDs
-      description: |
-        Retrieves a list of issued certificates serial IDs for a given thing ID.
-      tags:
-        - configs
-      parameters:
-        - $ref: "#/components/parameters/Authorization"
-        - $ref: "#/components/parameters/ThingID"
-      responses:
-        '200':
-          $ref: "#/components/responses/SerialsPageRes"
-        '404':
-          description: |
-            Failed to retrieve corresponding certificates.
-        '500':
-          $ref: "#/components/responses/ServiceError"
   /certs/{certID}:
     get:
       summary: Retrieves a certificate
@@ -91,6 +55,24 @@ paths:
         '404':
           description: |
             Failed to revoke corresponding certificate.
+        '500':
+          $ref: "#/components/responses/ServiceError"
+  /serials/{thingID}:
+    get:
+      summary: Retrieves certificates's serial IDs
+      description: |
+        Retrieves a list of issued certificates serial IDs for a given thing ID.
+      tags:
+        - configs
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/ThingID"
+      responses:
+        '200':
+          $ref: "#/components/responses/SerialsPageRes"
+        '404':
+          description: |
+            Failed to retrieve corresponding certificates.
         '500':
           $ref: "#/components/responses/ServiceError"
 

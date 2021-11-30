@@ -9,7 +9,7 @@ SERVICES = users things http coap lora influxdb-writer influxdb-reader mongodb-w
 DOCKERS = $(addprefix docker_,$(SERVICES))
 DOCKERS_DEV = $(addprefix docker_dev_,$(SERVICES))
 CGO_ENABLED ?= 0
-GOARCH ?= amd64
+GOARCH ?= arm64
 
 define compile_service
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) go build -mod=vendor -ldflags "-s -w" -o ${BUILD_DIR}/mainflux-$(1) cmd/$(1)/main.go
@@ -101,4 +101,3 @@ rundev:
 
 run:
 	docker-compose -f docker/docker-compose.yml up
-
