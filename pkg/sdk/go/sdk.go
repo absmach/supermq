@@ -157,13 +157,13 @@ type SDK interface {
 	DeleteGroup(id, token string) error
 
 	// Groups returns page of users groups.
-	Groups(offset, limit uint64, token string) (auth.GroupPage, error)
+	Groups(offset, limit uint64, token string) (GroupsPage, error)
 
 	// Parents returns page of users groups.
-	Parents(id string, offset, limit uint64, token string) (auth.GroupPage, error)
+	Parents(id string, offset, limit uint64, token string) (GroupsPage, error)
 
 	// Children returns page of users groups.
-	Children(id string, offset, limit uint64, token string) (auth.GroupPage, error)
+	Children(id string, offset, limit uint64, token string) (GroupsPage, error)
 
 	// Group returns users group object by id.
 	Group(id, token string) (Group, error)
@@ -255,13 +255,13 @@ type SDK interface {
 }
 
 type mfSDK struct {
-	authURL        string
 	bootstrapURL   string
 	certsURL       string
 	httpAdapterURL string
 	readerURL      string
 	thingsURL      string
 	usersURL       string
+	groupsURL      string
 
 	msgContentType ContentType
 	client         *http.Client
@@ -269,13 +269,13 @@ type mfSDK struct {
 
 // Config contains sdk configuration parameters.
 type Config struct {
-	AuthURL        string
 	BootstrapURL   string
 	CertsURL       string
 	HTTPAdapterURL string
 	ReaderURL      string
 	ThingsURL      string
 	UsersURL       string
+	GroupsURL      string
 
 	MsgContentType  ContentType
 	TLSVerification bool
@@ -284,13 +284,13 @@ type Config struct {
 // NewSDK returns new mainflux SDK instance.
 func NewSDK(conf Config) SDK {
 	return &mfSDK{
-		authURL:        conf.AuthURL,
 		bootstrapURL:   conf.BootstrapURL,
 		certsURL:       conf.CertsURL,
 		httpAdapterURL: conf.HTTPAdapterURL,
 		readerURL:      conf.ReaderURL,
 		thingsURL:      conf.ThingsURL,
 		usersURL:       conf.UsersURL,
+		groupsURL:      conf.GroupsURL,
 
 		msgContentType: conf.MsgContentType,
 		client: &http.Client{
