@@ -6,6 +6,8 @@ package consumers
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
+	"strings"
 
 	"github.com/pelletier/go-toml"
 
@@ -14,6 +16,8 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging"
 	pubsub "github.com/mainflux/mainflux/pkg/messaging/nats"
 	"github.com/mainflux/mainflux/pkg/transformers"
+	"github.com/mainflux/mainflux/pkg/transformers/json"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 )
 
 var (
@@ -24,13 +28,15 @@ var (
 // Start method starts consuming messages received from NATS.
 // This method transforms messages to SenML format before
 // using MessageRepository to store them.
-func Start(sub messaging.Subscriber, consumer Consumer, transformer transformers.Transformer, subjectsCfgPath string, logger logger.Logger) error {
-	subjects, err := loadSubjectsConfig(subjectsCfgPath)
+func Start(sub messaging.Subscriber, consumer Consumer, configPath string, logger logger.Logger) error {
+	cfg, err := loadConfig(configPath)
 	if err != nil {
-		logger.Warn(fmt.Sprintf("Failed to load subjects: %s", err))
+		logger.Warn(fmt.Sprintf("Failed to load consumer config: %s", err))
 	}
 
-	for _, subject := range subjects {
+	transformer := makeTransformer(cfg.transformer, logger)
+
+	for _, subject := range cfg.subscriber.subjects {
 		if err := sub.Subscribe(subject, handler(transformer, consumer)); err != nil {
 			return err
 		}
@@ -52,24 +58,51 @@ func handler(t transformers.Transformer, c Consumer) messaging.MessageHandler {
 	}
 }
 
-type filterConfig struct {
-	Filter []string `toml:"filter"`
+type subscriberConfig struct {
+	subjects []string `toml:"subjects"`
 }
 
-type subjectsConfig struct {
-	Subjects filterConfig `toml:"subjects"`
+type transformerConfig struct {
+	format      string            `toml:"format"`
+	contentType string            `toml:"content_type"`
+	timestamps  map[string]string `toml:"timestamps"`
 }
 
-func loadSubjectsConfig(subjectsConfigPath string) ([]string, error) {
+type config struct {
+	subscriber  subscriberConfig  `toml:"subscriber"`
+	transformer transformerConfig `toml:"transformer"`
+}
+
+func loadConfig(subjectsConfigPath string) (config, error) {
+	cfg := config{
+		subscriber: subscriberConfig{
+			subjects: []string{pubsub.SubjectAllChannels},
+		},
+	}
+
 	data, err := ioutil.ReadFile(subjectsConfigPath)
 	if err != nil {
-		return []string{pubsub.SubjectAllChannels}, errors.Wrap(errOpenConfFile, err)
+		return cfg, errors.Wrap(errOpenConfFile, err)
 	}
 
-	var subjectsCfg subjectsConfig
-	if err := toml.Unmarshal(data, &subjectsCfg); err != nil {
-		return []string{pubsub.SubjectAllChannels}, errors.Wrap(errParseConfFile, err)
+	if err := toml.Unmarshal(data, &cfg); err != nil {
+		return cfg, errors.Wrap(errParseConfFile, err)
 	}
 
-	return subjectsCfg.Subjects.Filter, nil
+	return cfg, nil
+}
+
+func makeTransformer(cfg transformerConfig, logger logger.Logger) transformers.Transformer {
+	switch strings.ToUpper(cfg.format) {
+	case "SENML":
+		logger.Info("Using SenML transformer")
+		return senml.New(cfg.contentType)
+	case "JSON":
+		logger.Info("Using JSON transformer")
+		return json.New(cfg.timestamps)
+	default:
+		logger.Error(fmt.Sprintf("Can't create transformer: unknown transformer type %s", cfg.format))
+		os.Exit(1)
+		return nil
+	}
 }

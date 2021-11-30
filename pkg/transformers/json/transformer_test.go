@@ -22,7 +22,7 @@ const (
 
 func TestTransformJSON(t *testing.T) {
 	now := time.Now().Unix()
-	tr := json.New()
+	tr := json.New(map[string]string{})
 	msg := messaging.Message{
 		Channel:   "channel-1",
 		Subtopic:  "subtopic-1",

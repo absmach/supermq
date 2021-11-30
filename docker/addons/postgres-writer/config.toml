@@ -1,5 +1,15 @@
 # To listen all messsage broker subjects use default value "channels.>".
 # To subscribe to specific subjects use values starting by "channels." and
 # followed by a subtopic (e.g ["channels.<channel_id>.sub.topic.x", ...]).
-[subjects]
-filter = ["channels.>"]
+[subscriber]
+subjects = ["channels.>"]
+
+[transformer]
+format = "senml"
+content_type = "application/senml+json"
+# key/unit pairs: { <my_key> = "[unix|unix_ms|unix_us|unix_ns]"}
+timestamp_keys = [{ ts_seconds_key = "unix"},
+                  { ts_milliseconds_key = "unix_ms"},
+                  { ts_microsenconds_key = "unix_us"},
+                  { ts_nanoseconds = "unix_ns"},
+                  { ts = "unix_ns"}]
