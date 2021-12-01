@@ -29,15 +29,15 @@ var (
 	errInvalidFormat     = errors.New("invalid JSON object")
 	errInvalidNestedJSON = errors.New("invalid nested JSON object")
 
-	timestamps = map[string]string{}
+	tku = map[string]string{}
 )
 
 type funcTransformer func(messaging.Message) (interface{}, error)
 
 // New returns a new JSON transformer.
-func New(ts map[string]string) transformers.Transformer {
+func New(timestampKeysUnits map[string]string) transformers.Transformer {
 	// TODO: Improve the timestamp config
-	timestamps = ts
+	tku = timestampKeysUnits
 	return funcTransformer(transformer)
 }
 
@@ -75,12 +75,11 @@ func transformer(msg messaging.Message) (interface{}, error) {
 		ret.Payload = p
 
 		// Apply timestamnp transformation rules depending on key/unit pairs
-		if len(timestamps) > 0 {
-			ts, err := transformTimestamp(msg.Payload)
-			if ts != 0 && err != nil {
-				ret.Created = ts
-			}
+		ts, err := transformTimestamp(msg.Payload)
+		if ts != 0 && err == nil {
+			ret.Created = ts
 		}
+
 		return Messages{[]Message{ret}, format}, nil
 	case []interface{}:
 		res := []Message{}
@@ -93,11 +92,9 @@ func transformer(msg messaging.Message) (interface{}, error) {
 			newMsg := ret
 
 			// Apply timestamnp transformation rules depending on key/unit pairs
-			if len(timestamps) > 0 {
-				ts, err := transformTimestamp(msg.Payload)
-				if ts != 0 && err != nil {
-					ret.Created = ts
-				}
+			ts, err := transformTimestamp(msg.Payload)
+			if ts != 0 && err != nil {
+				ret.Created = ts
 			}
 
 			newMsg.Payload = v
@@ -172,17 +169,21 @@ func flatten(prefix string, m, m1 map[string]interface{}) (map[string]interface{
 }
 
 func transformTimestamp(payload []byte) (int64, error) {
+	if len(tku) == 0 {
+		return 0, nil
+	}
 	var data map[string]interface{}
 	if err := json.Unmarshal(payload, &data); err != nil {
 		return 0, err
 	}
 
-	for field, format := range timestamps {
+	for field, format := range tku {
 		if fieldVal, ok := data[field]; ok {
 			t, err := parseTimestamp(format, fieldVal, "")
 			if err != nil {
 				return 0, err
 			}
+
 			return t.UnixNano(), nil
 		}
 	}

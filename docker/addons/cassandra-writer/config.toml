@@ -8,8 +8,8 @@ subjects = ["channels.>"]
 format = "senml"
 content_type = "application/senml+json"
 # key/unit pairs: { <my_key> = "[unix|unix_ms|unix_us|unix_ns]"}
-timestamp_keys = [{ ts_seconds_key = "unix"},
-                  { ts_milliseconds_key = "unix_ms"},
-                  { ts_microsenconds_key = "unix_us"},
-                  { ts_nanoseconds = "unix_ns"},
-                  { ts = "unix_ns"}]
+timestamp_keys = { ts_seconds_key = "unix",
+                   ts_milliseconds_key = "unix_ms",
+                   ts_microsenconds_key = "unix_us",
+                   ts_nanoseconds_key = "unix_ns",
+                   ts = "unix_ns" }

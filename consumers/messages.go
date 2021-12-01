@@ -20,6 +20,11 @@ import (
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 )
 
+const (
+	defContentType = "application/senml+json"
+	defFormat      = "senml"
+)
+
 var (
 	errOpenConfFile  = errors.New("unable to open configuration file")
 	errParseConfFile = errors.New("unable to parse configuration file")
@@ -77,6 +82,10 @@ func loadConfig(subjectsConfigPath string) (config, error) {
 	cfg := config{
 		subscriber: subscriberConfig{
 			subjects: []string{pubsub.SubjectAllChannels},
+		},
+		transformer: transformerConfig{
+			format:      defFormat,
+			contentType: defContentType,
 		},
 	}
 
