@@ -255,13 +255,13 @@ type SDK interface {
 }
 
 type mfSDK struct {
+	authURL        string
 	bootstrapURL   string
 	certsURL       string
 	httpAdapterURL string
 	readerURL      string
 	thingsURL      string
 	usersURL       string
-	groupsURL      string
 
 	msgContentType ContentType
 	client         *http.Client
@@ -269,13 +269,13 @@ type mfSDK struct {
 
 // Config contains sdk configuration parameters.
 type Config struct {
+	AuthURL        string
 	BootstrapURL   string
 	CertsURL       string
 	HTTPAdapterURL string
 	ReaderURL      string
 	ThingsURL      string
 	UsersURL       string
-	GroupsURL      string
 
 	MsgContentType  ContentType
 	TLSVerification bool
@@ -284,13 +284,13 @@ type Config struct {
 // NewSDK returns new mainflux SDK instance.
 func NewSDK(conf Config) SDK {
 	return &mfSDK{
+		authURL:        conf.AuthURL,
 		bootstrapURL:   conf.BootstrapURL,
 		certsURL:       conf.CertsURL,
 		httpAdapterURL: conf.HTTPAdapterURL,
 		readerURL:      conf.ReaderURL,
 		thingsURL:      conf.ThingsURL,
 		usersURL:       conf.UsersURL,
-		groupsURL:      conf.GroupsURL,
 
 		msgContentType: conf.MsgContentType,
 		client: &http.Client{
