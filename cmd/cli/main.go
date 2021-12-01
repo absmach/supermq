@@ -17,7 +17,6 @@ const defURL string = "http://localhost"
 func main() {
 	msgContentType := string(sdk.CTJSONSenML)
 	sdkConf := sdk.Config{
-		GroupsURL:       defURL,
 		ThingsURL:       defURL,
 		UsersURL:        defURL,
 		ReaderURL:       defURL,
@@ -64,10 +63,10 @@ func main() {
 
 	// Root Flags
 	rootCmd.PersistentFlags().StringVarP(
-		&sdkConf.GroupsURL,
+		&sdkConf.AuthURL,
 		"auth-url",
 		"a",
-		sdkConf.GroupsURL,
+		sdkConf.AuthURL,
 		"Mainflux Auth URL",
 	)
 

@@ -7,8 +7,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"net/http"
-
-	"github.com/mainflux/mainflux/auth"
 )
 
 const (
@@ -175,7 +173,7 @@ type SDK interface {
 	Unassign(token, groupID string, memberIDs ...string) error
 
 	// Members lists members of a group.
-	Members(groupID, token string, offset, limit uint64) (auth.MemberPage, error)
+	Members(groupID, token string, offset, limit uint64) (MembersPage, error)
 
 	// Memberships lists groups for user.
 	Memberships(userID, token string, offset, limit uint64) (GroupsPage, error)
