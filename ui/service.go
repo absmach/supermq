@@ -316,7 +316,7 @@ func (gs *uiService) ListGroups(ctx context.Context, token string) ([]byte, erro
 		return []byte{}, err
 	}
 
-	thsPage, err := gs.sdk.Groups(0, 100, gs.token)
+	grpPage, err := gs.sdk.Groups(0, 100, gs.token)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -326,7 +326,7 @@ func (gs *uiService) ListGroups(ctx context.Context, token string) ([]byte, erro
 		Groups       []sdk.Group
 	}{
 		"groups",
-		thsPage.Groups,
+		grpPage.Groups,
 	}
 
 	var btpl bytes.Buffer
