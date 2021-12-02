@@ -20,16 +20,6 @@ const (
 	MinLevel       = uint64(1)
 )
 
-type assignRequest struct {
-	Type    string   `json:"type,omitempty"`
-	Members []string `json:"members"`
-}
-
-type Member struct {
-	ID   string
-	Type string
-}
-
 func (sdk mfSDK) CreateGroup(g Group, token string) (string, error) {
 	data, err := json.Marshal(g)
 	if err != nil {

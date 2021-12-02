@@ -109,6 +109,12 @@ type Channel struct {
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
+//Member represents mainflux member.
+type Member struct {
+	ID   string
+	Type string
+}
+
 // SDK contains Mainflux API.
 type SDK interface {
 	// CreateUser registers mainflux user.
