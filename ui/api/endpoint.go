@@ -292,13 +292,13 @@ func updateGroupEndpoint(svc ui.Service) endpoint.Endpoint {
 		// 	return nil, err
 		// }
 
-		uch := sdk.Group{
+		ugr := sdk.Group{
 			ID:       req.id,
 			Name:     req.Name,
 			Metadata: req.Metadata,
 		}
 
-		res, err := svc.UpdateGroup(ctx, req.token, req.id, uch)
+		res, err := svc.UpdateGroup(ctx, req.token, req.id, ugr)
 		if err != nil {
 			return nil, err
 		}
