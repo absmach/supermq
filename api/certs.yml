@@ -61,7 +61,7 @@ paths:
     get:
       summary: Retrieves certificates's serial IDs
       description: |
-        Retrieves a list of issued certificates serial IDs for a given thing ID.
+        Retrieves a list of issued certificates' serial IDs for a given thing ID.
       tags:
         - configs
       parameters:
