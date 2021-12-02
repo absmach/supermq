@@ -1,6 +1,7 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
+//go:build !test
 // +build !test
 
 package api
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux/auth"
+	"github.com/mainflux/mainflux/internal/groups"
 	log "github.com/mainflux/mainflux/logger"
 )
 
@@ -156,7 +158,7 @@ func (lm *loggingMiddleware) DeletePolicies(ctx context.Context, token, object s
 	return lm.svc.DeletePolicies(ctx, token, object, subjectIDs, relations)
 }
 
-func (lm *loggingMiddleware) CreateGroup(ctx context.Context, token string, group auth.Group) (g auth.Group, err error) {
+func (lm *loggingMiddleware) CreateGroup(ctx context.Context, token string, group groups.Group) (g groups.Group, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method create_group for token %s and name %s took %s to complete", token, group.Name, time.Since(begin))
 		if err != nil {
@@ -169,7 +171,7 @@ func (lm *loggingMiddleware) CreateGroup(ctx context.Context, token string, grou
 	return lm.svc.CreateGroup(ctx, token, group)
 }
 
-func (lm *loggingMiddleware) UpdateGroup(ctx context.Context, token string, group auth.Group) (gr auth.Group, err error) {
+func (lm *loggingMiddleware) UpdateGroup(ctx context.Context, token string, group groups.Group) (gr groups.Group, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method update_group for token %s and name %s took %s to complete", token, group.Name, time.Since(begin))
 		if err != nil {
@@ -195,7 +197,7 @@ func (lm *loggingMiddleware) RemoveGroup(ctx context.Context, token string, id s
 	return lm.svc.RemoveGroup(ctx, token, id)
 }
 
-func (lm *loggingMiddleware) ViewGroup(ctx context.Context, token, id string) (group auth.Group, err error) {
+func (lm *loggingMiddleware) ViewGroup(ctx context.Context, token, id string) (group groups.Group, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method view_group for token %s and id %s took %s to complete", token, id, time.Since(begin))
 		if err != nil {
@@ -208,7 +210,7 @@ func (lm *loggingMiddleware) ViewGroup(ctx context.Context, token, id string) (g
 	return lm.svc.ViewGroup(ctx, token, id)
 }
 
-func (lm *loggingMiddleware) ListGroups(ctx context.Context, token string, pm auth.PageMetadata) (gp auth.GroupPage, err error) {
+func (lm *loggingMiddleware) ListGroups(ctx context.Context, token string, pm groups.PageMetadata) (gp groups.GroupPage, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method list_groups for token %s took %s to complete", token, time.Since(begin))
 		if err != nil {
@@ -221,7 +223,7 @@ func (lm *loggingMiddleware) ListGroups(ctx context.Context, token string, pm au
 	return lm.svc.ListGroups(ctx, token, pm)
 }
 
-func (lm *loggingMiddleware) ListChildren(ctx context.Context, token, parentID string, pm auth.PageMetadata) (gp auth.GroupPage, err error) {
+func (lm *loggingMiddleware) ListChildren(ctx context.Context, token, parentID string, pm groups.PageMetadata) (gp groups.GroupPage, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method list_children for token %s and parent %s took %s to complete", token, parentID, time.Since(begin))
 		if err != nil {
@@ -234,7 +236,7 @@ func (lm *loggingMiddleware) ListChildren(ctx context.Context, token, parentID s
 	return lm.svc.ListChildren(ctx, token, parentID, pm)
 }
 
-func (lm *loggingMiddleware) ListParents(ctx context.Context, token, childID string, pm auth.PageMetadata) (gp auth.GroupPage, err error) {
+func (lm *loggingMiddleware) ListParents(ctx context.Context, token, childID string, pm groups.PageMetadata) (gp groups.GroupPage, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method list_parents for token %s and child %s took for child %s to complete", token, childID, time.Since(begin))
 		if err != nil {
@@ -247,7 +249,7 @@ func (lm *loggingMiddleware) ListParents(ctx context.Context, token, childID str
 	return lm.svc.ListParents(ctx, token, childID, pm)
 }
 
-func (lm *loggingMiddleware) ListMembers(ctx context.Context, token, groupID, groupType string, pm auth.PageMetadata) (gp auth.MemberPage, err error) {
+func (lm *loggingMiddleware) ListMembers(ctx context.Context, token, groupID, groupType string, pm groups.PageMetadata) (gp groups.MemberPage, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method list_members for token %s and group id %s took %s to complete", token, groupID, time.Since(begin))
 		if err != nil {
@@ -260,7 +262,7 @@ func (lm *loggingMiddleware) ListMembers(ctx context.Context, token, groupID, gr
 	return lm.svc.ListMembers(ctx, token, groupID, groupType, pm)
 }
 
-func (lm *loggingMiddleware) ListMemberships(ctx context.Context, token, memberID string, pm auth.PageMetadata) (gp auth.GroupPage, err error) {
+func (lm *loggingMiddleware) ListMemberships(ctx context.Context, token, memberID string, pm groups.PageMetadata) (gp groups.GroupPage, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method list_memberships for token %s and member id %s took %s to complete", token, memberID, time.Since(begin))
 		if err != nil {

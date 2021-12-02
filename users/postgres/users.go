@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/lib/pq"
-	"github.com/mainflux/mainflux/auth"
+	"github.com/mainflux/mainflux/internal/groups"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users"
 )
@@ -274,11 +274,11 @@ func (m dbMetadata) Value() (driver.Value, error) {
 }
 
 type dbUser struct {
-	ID       string       `db:"id"`
-	Email    string       `db:"email"`
-	Password string       `db:"password"`
-	Metadata []byte       `db:"metadata"`
-	Groups   []auth.Group `db:"groups"`
+	ID       string         `db:"id"`
+	Email    string         `db:"email"`
+	Password string         `db:"password"`
+	Metadata []byte         `db:"metadata"`
+	Groups   []groups.Group `db:"groups"`
 }
 
 func toDBUser(u users.User) (dbUser, error) {

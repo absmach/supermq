@@ -20,6 +20,7 @@ import (
 var (
 	errInvalidQueryParams     = errors.New("invalid query params")
 	errUnsupportedContentType = errors.New("unsupported content type")
+	errFailedDecode           = errors.New("failed to decode group")
 )
 
 const (
@@ -130,12 +131,12 @@ func MakeHandler(svc auth.Service, mux *bone.Mux, tracer opentracing.Tracer) *bo
 
 func decodeShareGroupRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, auth.ErrUnsupportedContentType
+		return nil, errUnsupportedContentType
 	}
 
 	var req shareGroupAccessReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(auth.ErrFailedDecode, err)
+		return nil, errors.Wrap(errFailedDecode, err)
 	}
 
 	req.userGroupID = bone.GetValue(r, "subjectGroupID")
@@ -236,12 +237,12 @@ func decodeListMembershipsRequest(_ context.Context, r *http.Request) (interface
 
 func decodeGroupCreate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, auth.ErrUnsupportedContentType
+		return nil, errUnsupportedContentType
 	}
 
 	var req createGroupReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(auth.ErrFailedDecode, err)
+		return nil, errors.Wrap(errFailedDecode, err)
 	}
 
 	req.token = r.Header.Get("Authorization")
@@ -250,12 +251,12 @@ func decodeGroupCreate(_ context.Context, r *http.Request) (interface{}, error) 
 
 func decodeGroupUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, auth.ErrUnsupportedContentType
+		return nil, errUnsupportedContentType
 	}
 
 	var req updateGroupReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(auth.ErrFailedDecode, err)
+		return nil, errors.Wrap(errFailedDecode, err)
 	}
 
 	req.id = bone.GetValue(r, "groupID")
@@ -330,8 +331,6 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusConflict)
 	case errors.Contains(err, auth.ErrAuthorization):
 		w.WriteHeader(http.StatusForbidden)
-	case errors.Contains(err, auth.ErrMemberAlreadyAssigned):
-		w.WriteHeader(http.StatusConflict)
 	case errors.Contains(err, io.EOF):
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, io.ErrUnexpectedEOF):

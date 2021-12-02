@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/mainflux/mainflux/auth"
+	auth "github.com/mainflux/mainflux/internal/groups"
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
@@ -15,7 +15,7 @@ type createGroupReq struct {
 
 func (req createGroupReq) validate() error {
 	if req.token == "" {
-		return auth.ErrUnauthorizedAccess
+		return auth.ErrUnauthorized
 	}
 	if len(req.Name) > maxNameSize || req.Name == "" {
 		return errors.Wrap(auth.ErrMalformedEntity, auth.ErrBadGroupName)
@@ -34,7 +34,7 @@ type updateGroupReq struct {
 
 func (req updateGroupReq) validate() error {
 	if req.token == "" {
-		return auth.ErrUnauthorizedAccess
+		return auth.ErrUnauthorized
 	}
 
 	if req.id == "" {
@@ -56,7 +56,7 @@ type listGroupsReq struct {
 
 func (req listGroupsReq) validate() error {
 	if req.token == "" {
-		return auth.ErrUnauthorizedAccess
+		return auth.ErrUnauthorized
 	}
 
 	if req.level > auth.MaxLevel || req.level < auth.MinLevel {
@@ -78,7 +78,7 @@ type listMembersReq struct {
 
 func (req listMembersReq) validate() error {
 	if req.token == "" {
-		return auth.ErrUnauthorizedAccess
+		return auth.ErrUnauthorized
 	}
 
 	if req.id == "" {
@@ -98,7 +98,7 @@ type listMembershipsReq struct {
 
 func (req listMembershipsReq) validate() error {
 	if req.token == "" {
-		return auth.ErrUnauthorizedAccess
+		return auth.ErrUnauthorized
 	}
 
 	if req.id == "" {
@@ -117,7 +117,7 @@ type assignReq struct {
 
 func (req assignReq) validate() error {
 	if req.token == "" {
-		return auth.ErrUnauthorizedAccess
+		return auth.ErrUnauthorized
 	}
 
 	if req.Type == "" || req.groupID == "" || len(req.Members) == 0 {
@@ -135,7 +135,7 @@ type shareGroupAccessReq struct {
 
 func (req shareGroupAccessReq) validate() error {
 	if req.token == "" {
-		return auth.ErrUnauthorizedAccess
+		return auth.ErrUnauthorized
 	}
 
 	if req.ThingGroupID == "" || req.userGroupID == "" {
@@ -151,7 +151,7 @@ type unassignReq struct {
 
 func (req unassignReq) validate() error {
 	if req.token == "" {
-		return auth.ErrUnauthorizedAccess
+		return auth.ErrUnauthorized
 	}
 
 	if req.groupID == "" || len(req.Members) == 0 {
@@ -168,7 +168,7 @@ type groupReq struct {
 
 func (req groupReq) validate() error {
 	if req.token == "" {
-		return auth.ErrUnauthorizedAccess
+		return auth.ErrUnauthorized
 	}
 
 	if req.id == "" {

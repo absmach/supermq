@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/mainflux/mainflux/auth"
+	"github.com/mainflux/mainflux/internal/groups"
 )
 
 func createGroupEndpoint(svc auth.Service) endpoint.Endpoint {
@@ -14,7 +15,7 @@ func createGroupEndpoint(svc auth.Service) endpoint.Endpoint {
 			return groupRes{}, err
 		}
 
-		group := auth.Group{
+		group := groups.Group{
 			Name:        req.Name,
 			Description: req.Description,
 			ParentID:    req.ParentID,
@@ -64,7 +65,7 @@ func updateGroupEndpoint(svc auth.Service) endpoint.Endpoint {
 			return groupRes{}, err
 		}
 
-		group := auth.Group{
+		group := groups.Group{
 			ID:          req.id,
 			Name:        req.Name,
 			Description: req.Description,
@@ -102,7 +103,7 @@ func listGroupsEndpoint(svc auth.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return groupPageRes{}, err
 		}
-		pm := auth.PageMetadata{
+		pm := groups.PageMetadata{
 			Level:    req.level,
 			Metadata: req.metadata,
 		}
@@ -126,7 +127,7 @@ func listMemberships(svc auth.Service) endpoint.Endpoint {
 			return memberPageRes{}, err
 		}
 
-		pm := auth.PageMetadata{
+		pm := groups.PageMetadata{
 			Offset:   req.offset,
 			Limit:    req.limit,
 			Metadata: req.metadata,
@@ -162,7 +163,7 @@ func listChildrenEndpoint(svc auth.Service) endpoint.Endpoint {
 			return groupPageRes{}, err
 		}
 
-		pm := auth.PageMetadata{
+		pm := groups.PageMetadata{
 			Level:    req.level,
 			Metadata: req.metadata,
 		}
@@ -185,7 +186,7 @@ func listParentsEndpoint(svc auth.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return groupPageRes{}, err
 		}
-		pm := auth.PageMetadata{
+		pm := groups.PageMetadata{
 			Level:    req.level,
 			Metadata: req.metadata,
 		}
@@ -240,7 +241,7 @@ func listMembersEndpoint(svc auth.Service) endpoint.Endpoint {
 			return memberPageRes{}, err
 		}
 
-		pm := auth.PageMetadata{
+		pm := groups.PageMetadata{
 			Offset:   req.offset,
 			Limit:    req.limit,
 			Metadata: req.metadata,
@@ -254,14 +255,14 @@ func listMembersEndpoint(svc auth.Service) endpoint.Endpoint {
 	}
 }
 
-func buildGroupsResponseTree(page auth.GroupPage) groupPageRes {
-	groupsMap := map[string]*auth.Group{}
+func buildGroupsResponseTree(page groups.GroupPage) groupPageRes {
+	groupsMap := map[string]*groups.Group{}
 	// Parents' map keeps its array of children.
-	parentsMap := map[string][]*auth.Group{}
+	parentsMap := map[string][]*groups.Group{}
 	for i := range page.Groups {
 		if _, ok := groupsMap[page.Groups[i].ID]; !ok {
 			groupsMap[page.Groups[i].ID] = &page.Groups[i]
-			parentsMap[page.Groups[i].ID] = make([]*auth.Group, 0)
+			parentsMap[page.Groups[i].ID] = make([]*groups.Group, 0)
 		}
 	}
 
@@ -299,7 +300,7 @@ func buildGroupsResponseTree(page auth.GroupPage) groupPageRes {
 	return res
 }
 
-func toViewGroupRes(group auth.Group) viewGroupRes {
+func toViewGroupRes(group groups.Group) viewGroupRes {
 	view := viewGroupRes{
 		ID:          group.ID,
 		ParentID:    group.ParentID,
@@ -322,7 +323,7 @@ func toViewGroupRes(group auth.Group) viewGroupRes {
 	return view
 }
 
-func buildGroupsResponse(gp auth.GroupPage) groupPageRes {
+func buildGroupsResponse(gp groups.GroupPage) groupPageRes {
 	res := groupPageRes{
 		pageRes: pageRes{
 			Total: gp.Total,
@@ -350,7 +351,7 @@ func buildGroupsResponse(gp auth.GroupPage) groupPageRes {
 	return res
 }
 
-func buildUsersResponse(mp auth.MemberPage) memberPageRes {
+func buildUsersResponse(mp groups.MemberPage) memberPageRes {
 	res := memberPageRes{
 		pageRes: pageRes{
 			Total:  mp.Total,

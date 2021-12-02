@@ -15,6 +15,7 @@ import (
 	grpcapi "github.com/mainflux/mainflux/auth/api/grpc"
 	"github.com/mainflux/mainflux/auth/jwt"
 	"github.com/mainflux/mainflux/auth/mocks"
+	"github.com/mainflux/mainflux/internal/groups"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
@@ -383,7 +384,7 @@ func TestMembers(t *testing.T) {
 	_, token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
 
-	group := auth.Group{
+	group := groups.Group{
 		Name:        "Mainflux",
 		Description: description,
 	}

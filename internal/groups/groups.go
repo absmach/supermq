@@ -57,6 +57,31 @@ var (
 
 	// ErrSelectEntity indicates error while reading entity from database
 	ErrSelectEntity = errors.New("select entity from db error")
+
+	// ErrConflict indicates that entity already exists.
+	ErrConflict = errors.New("entity already exists")
+
+	// ErrFailedToRetrieveMembers failed to retrieve group members.
+	ErrFailedToRetrieveMembers = errors.New("failed to retrieve group members")
+
+	// ErrFailedToRetrieveMembership failed to retrieve memberships
+	ErrFailedToRetrieveMembership = errors.New("failed to retrieve memberships")
+
+	// ErrFailedToRetrieveAll failed to retrieve groups.
+	ErrFailedToRetrieveAll = errors.New("failed to retrieve all groups")
+
+	// ErrFailedToRetrieveParents failed to retrieve groups.
+	ErrFailedToRetrieveParents = errors.New("failed to retrieve all groups")
+
+	// ErrFailedToRetrieveChildren failed to retrieve groups.
+	ErrFailedToRetrieveChildren = errors.New("failed to retrieve all groups")
+
+	// ErrMalformedEntity indicates malformed entity specification (e.g.
+	// invalid owner or ID).
+	ErrMalformedEntity = errors.New("malformed group specification")
+
+	ErrUnauthorized = errors.New("unauthorized access")
+	ErrNotFound     = errors.New("group not found")
 )
 
 type GroupMetadata map[string]interface{}
@@ -106,7 +131,7 @@ type MemberPage struct {
 	Members []Member
 }
 
-type GroupService interface {
+type Service interface {
 	// CreateGroup creates new  group.
 	CreateGroup(ctx context.Context, token string, g Group) (Group, error)
 

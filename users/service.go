@@ -9,6 +9,7 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/auth"
+	"github.com/mainflux/mainflux/internal/groups"
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
@@ -120,7 +121,7 @@ type PageMetadata struct {
 // GroupPage contains a page of groups.
 type GroupPage struct {
 	PageMetadata
-	Groups []auth.Group
+	Groups []groups.Group
 }
 
 // UserPage contains a page of users.

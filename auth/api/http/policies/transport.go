@@ -12,11 +12,15 @@ import (
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/auth"
+	"github.com/mainflux/mainflux/internal/groups"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/opentracing/opentracing-go"
 )
 
-var errUnsupportedContentType = errors.New("unsupported content type")
+var (
+	errUnsupportedContentType = errors.New("unsupported content type")
+	errFailedDecode           = errors.New("failed to decode request")
+)
 
 const contentType = "application/json"
 
@@ -45,12 +49,12 @@ func MakeHandler(svc auth.Service, mux *bone.Mux, tracer opentracing.Tracer) *bo
 
 func decodePoliciesRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-		return nil, auth.ErrUnsupportedContentType
+		return nil, errUnsupportedContentType
 	}
 
 	var req policiesReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(auth.ErrFailedDecode, err)
+		return nil, errors.Wrap(errFailedDecode, err)
 	}
 
 	req.token = r.Header.Get("Authorization")
@@ -87,7 +91,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusConflict)
 	case errors.Contains(err, auth.ErrAuthorization):
 		w.WriteHeader(http.StatusForbidden)
-	case errors.Contains(err, auth.ErrMemberAlreadyAssigned):
+	case errors.Contains(err, groups.ErrMemberAlreadyAssigned):
 		w.WriteHeader(http.StatusConflict)
 	case errors.Contains(err, io.EOF):
 		w.WriteHeader(http.StatusBadRequest)

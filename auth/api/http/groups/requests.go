@@ -2,6 +2,7 @@ package groups
 
 import (
 	"github.com/mainflux/mainflux/auth"
+	"github.com/mainflux/mainflux/internal/groups"
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
@@ -18,7 +19,7 @@ func (req createGroupReq) validate() error {
 		return auth.ErrUnauthorizedAccess
 	}
 	if len(req.Name) > maxNameSize || req.Name == "" {
-		return errors.Wrap(auth.ErrMalformedEntity, auth.ErrBadGroupName)
+		return errors.Wrap(auth.ErrMalformedEntity, groups.ErrBadGroupName)
 	}
 
 	return nil
@@ -51,7 +52,7 @@ type listGroupsReq struct {
 	// - `true`  - result is JSON tree representing groups hierarchy,
 	// - `false` - result is JSON array of groups.
 	tree     bool
-	metadata auth.GroupMetadata
+	metadata groups.GroupMetadata
 }
 
 func (req listGroupsReq) validate() error {
@@ -59,8 +60,8 @@ func (req listGroupsReq) validate() error {
 		return auth.ErrUnauthorizedAccess
 	}
 
-	if req.level > auth.MaxLevel || req.level < auth.MinLevel {
-		return auth.ErrMaxLevelExceeded
+	if req.level > groups.MaxLevel || req.level < groups.MinLevel {
+		return groups.ErrMaxLevelExceeded
 	}
 
 	return nil
@@ -73,7 +74,7 @@ type listMembersReq struct {
 	offset    uint64
 	limit     uint64
 	tree      bool
-	metadata  auth.GroupMetadata
+	metadata  groups.GroupMetadata
 }
 
 func (req listMembersReq) validate() error {
@@ -93,7 +94,7 @@ type listMembershipsReq struct {
 	id       string
 	offset   uint64
 	limit    uint64
-	metadata auth.GroupMetadata
+	metadata groups.GroupMetadata
 }
 
 func (req listMembershipsReq) validate() error {

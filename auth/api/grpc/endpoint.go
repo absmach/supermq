@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/mainflux/mainflux/auth"
+	"github.com/mainflux/mainflux/internal/groups"
 )
 
 func issueEndpoint(svc auth.Service) endpoint.Endpoint {
@@ -141,7 +142,7 @@ func membersEndpoint(svc auth.Service) endpoint.Endpoint {
 			return membersRes{}, err
 		}
 
-		pm := auth.PageMetadata{
+		pm := groups.PageMetadata{
 			Offset: req.offset,
 			Limit:  req.limit,
 		}
