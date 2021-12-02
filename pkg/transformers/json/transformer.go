@@ -91,7 +91,7 @@ func transformer(msg messaging.Message) (interface{}, error) {
 			// Apply timestamp transformation rules depending on key/unit pairs
 			ts, err := transformTimestamp(msg.Payload)
 			if ts != 0 && err != nil {
-				ret.Created = ts
+				newMsg.Created = ts
 			}
 
 			newMsg.Payload = v
