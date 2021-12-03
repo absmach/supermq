@@ -5,7 +5,7 @@
 subjects = ["channels.>"]
 
 [transformer]
-# SenNL or JSON
+# SenML or JSON
 format = "senml"
 # Used if format is SenML
 content_type = "application/senml+json"
