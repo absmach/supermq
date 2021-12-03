@@ -5,11 +5,12 @@
 subjects = ["channels.>"]
 
 [transformer]
+# SenNL or JSON
 format = "senml"
+# Used if format is SenML
 content_type = "application/senml+json"
-# key/unit pairs: { <my_key> = "[unix|unix_ms|unix_us|unix_ns]"}
-timestamp_keys = { ts_seconds_key = "unix",
-                   ts_milliseconds_key = "unix_ms",
-                   ts_microsenconds_key = "unix_us",
-                   ts_nanoseconds_key = "unix_ns",
-                   ts = "unix_ns" }
+# Used if format is JSON
+timestamps = [{ field_name = "seconds_key", field_format = "unix",    location = "UTC"},
+              { field_name = "millis_key",  field_format = "unix_ms", location = "UTC"},
+              { field_name = "micros_key",  field_format = "unix_us", location = "UTC"},
+              { field_name = "nanos_key",   field_format = "unix_ns", location = "UTC"}]

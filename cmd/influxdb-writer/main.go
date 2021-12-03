@@ -25,17 +25,15 @@ import (
 const (
 	svcName = "influxdb-writer"
 
-	defNatsURL     = "nats://localhost:4222"
-	defLogLevel    = "error"
-	defPort        = "8180"
-	defDB          = "mainflux"
-	defDBHost      = "localhost"
-	defDBPort      = "8086"
-	defDBUser      = "mainflux"
-	defDBPass      = "mainflux"
-	defConfigPath  = "/config.toml"
-	defContentType = "application/senml+json"
-	defTransformer = "senml"
+	defNatsURL    = "nats://localhost:4222"
+	defLogLevel   = "error"
+	defPort       = "8180"
+	defDB         = "mainflux"
+	defDBHost     = "localhost"
+	defDBPort     = "8086"
+	defDBUser     = "mainflux"
+	defDBPass     = "mainflux"
+	defConfigPath = "/config.toml"
 
 	envNatsURL    = "MF_NATS_URL"
 	envLogLevel   = "MF_INFLUX_WRITER_LOG_LEVEL"
@@ -49,17 +47,15 @@ const (
 )
 
 type config struct {
-	natsURL     string
-	logLevel    string
-	port        string
-	dbName      string
-	dbHost      string
-	dbPort      string
-	dbUser      string
-	dbPass      string
-	configPath  string
-	contentType string
-	transformer string
+	natsURL    string
+	logLevel   string
+	port       string
+	dbName     string
+	dbHost     string
+	dbPort     string
+	dbUser     string
+	dbPass     string
+	configPath string
 }
 
 func main() {
@@ -110,17 +106,15 @@ func main() {
 
 func loadConfigs() (config, influxdata.HTTPConfig) {
 	cfg := config{
-		natsURL:     mainflux.Env(envNatsURL, defNatsURL),
-		logLevel:    mainflux.Env(envLogLevel, defLogLevel),
-		port:        mainflux.Env(envPort, defPort),
-		dbName:      mainflux.Env(envDB, defDB),
-		dbHost:      mainflux.Env(envDBHost, defDBHost),
-		dbPort:      mainflux.Env(envDBPort, defDBPort),
-		dbUser:      mainflux.Env(envDBUser, defDBUser),
-		dbPass:      mainflux.Env(envDBPass, defDBPass),
-		configPath:  mainflux.Env(envConfigPath, defConfigPath),
-		contentType: mainflux.Env(envContentType, defContentType),
-		transformer: mainflux.Env(envTransformer, defTransformer),
+		natsURL:    mainflux.Env(envNatsURL, defNatsURL),
+		logLevel:   mainflux.Env(envLogLevel, defLogLevel),
+		port:       mainflux.Env(envPort, defPort),
+		dbName:     mainflux.Env(envDB, defDB),
+		dbHost:     mainflux.Env(envDBHost, defDBHost),
+		dbPort:     mainflux.Env(envDBPort, defDBPort),
+		dbUser:     mainflux.Env(envDBUser, defDBUser),
+		dbPass:     mainflux.Env(envDBPass, defDBPass),
+		configPath: mainflux.Env(envConfigPath, defConfigPath),
 	}
 
 	clientCfg := influxdata.HTTPConfig{

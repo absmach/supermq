@@ -70,7 +70,7 @@ type subscriberConfig struct {
 type transformerConfig struct {
 	Format      string            `toml:"format"`
 	ContentType string            `toml:"content_type"`
-	Timestamps  map[string]string `toml:"timestamp_keys"`
+	Timestamps  []json.Timestamps `toml:"timestamps"`
 }
 
 type config struct {
@@ -108,6 +108,7 @@ func makeTransformer(cfg transformerConfig, logger logger.Logger) transformers.T
 		return senml.New(cfg.ContentType)
 	case "JSON":
 		logger.Info("Using JSON transformer")
+		fmt.Printf("HEREEEEEE %v", cfg.Timestamps)
 		return json.New(cfg.Timestamps)
 	default:
 		logger.Error(fmt.Sprintf("Can't create transformer: unknown transformer type %s", cfg.Format))

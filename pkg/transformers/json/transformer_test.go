@@ -24,7 +24,16 @@ const (
 
 func TestTransformJSON(t *testing.T) {
 	now := time.Now().Unix()
-	tr := json.New(map[string]string{"custom_ts_key": "unix", "custom_ts_micro_key": "unix_us"})
+	ts := []json.Timestamps{
+		{
+			FieldName:   "custom_ts_key",
+			FieldFormat: "unix",
+		}, {
+			FieldName:   "custom_ts_micro_key",
+			FieldFormat: "unix_us",
+		},
+	}
+	tr := json.New(ts)
 	msg := messaging.Message{
 		Channel:   "channel-1",
 		Subtopic:  "subtopic-1",

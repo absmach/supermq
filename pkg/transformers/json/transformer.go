@@ -26,15 +26,22 @@ var (
 	errInvalidFormat     = errors.New("invalid JSON object")
 	errInvalidNestedJSON = errors.New("invalid nested JSON object")
 
-	tku = map[string]string{}
+	timestamps = []Timestamps{}
 )
 
 type funcTransformer func(messaging.Message) (interface{}, error)
 
+// Timestamps represents the message fields to use as timestamp
+type Timestamps struct {
+	FieldName   string `toml:"field_name"`
+	FieldFormat string `toml:"field_format"`
+	Location    string `toml:"location"`
+}
+
 // New returns a new JSON transformer.
-func New(timestampKeysUnits map[string]string) transformers.Transformer {
+func New(ts []Timestamps) transformers.Transformer {
 	// TODO: Improve the timestamp config
-	tku = timestampKeysUnits
+	timestamps = ts
 	return funcTransformer(transformer)
 }
 
@@ -166,7 +173,7 @@ func flatten(prefix string, m, m1 map[string]interface{}) (map[string]interface{
 }
 
 func transformTimestamp(payload []byte) (int64, error) {
-	if len(tku) == 0 {
+	if len(timestamps) == 0 {
 		return 0, nil
 	}
 	var data map[string]interface{}
@@ -174,9 +181,9 @@ func transformTimestamp(payload []byte) (int64, error) {
 		return 0, err
 	}
 
-	for field, format := range tku {
-		if fieldVal, ok := data[field]; ok {
-			t, err := parseTimestamp(format, fieldVal, "")
+	for _, ts := range timestamps {
+		if val, ok := data[ts.FieldName]; ok {
+			t, err := parseTimestamp(ts.FieldFormat, val, ts.Location)
 			if err != nil {
 				return 0, err
 			}
