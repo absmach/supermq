@@ -74,6 +74,8 @@ const (
 	defAuthURL     = "localhost:8181"
 	defAuthTimeout = "1s"
 
+	defSelfRegister = "true" // By default, everybody can create a user. Otherwise, only admin can create a user.
+
 	envLogLevel      = "MF_USERS_LOG_LEVEL"
 	envDBHost        = "MF_USERS_DB_HOST"
 	envDBPort        = "MF_USERS_DB_PORT"
@@ -109,6 +111,8 @@ const (
 	envAuthCACerts = "MF_AUTH_CA_CERTS"
 	envAuthURL     = "MF_AUTH_GRPC_URL"
 	envAuthTimeout = "MF_AUTH_GRPC_TIMEOUT"
+
+	envSelfRegister = "MF_USERS_ALLOW_SELF_REGISTER"
 )
 
 type config struct {
@@ -127,6 +131,7 @@ type config struct {
 	adminEmail    string
 	adminPassword string
 	passRegex     *regexp.Regexp
+	selfRegister  bool
 }
 
 func main() {
@@ -184,6 +189,11 @@ func loadConfig() config {
 		log.Fatalf("Invalid password validation rules %s\n", envPassRegex)
 	}
 
+	selfRegister, err := strconv.ParseBool(mainflux.Env(envSelfRegister, defSelfRegister))
+	if err != nil {
+		log.Fatalf("Invalid %s value: %s", envSelfRegister, err.Error())
+	}
+
 	dbConfig := postgres.Config{
 		Host:        mainflux.Env(envDBHost, defDBHost),
 		Port:        mainflux.Env(envDBPort, defDBPort),
@@ -223,6 +233,7 @@ func loadConfig() config {
 		adminEmail:    mainflux.Env(envAdminEmail, defAdminEmail),
 		adminPassword: mainflux.Env(envAdminPassword, defAdminPassword),
 		passRegex:     passRegex,
+		selfRegister:  selfRegister,
 	}
 
 }
@@ -313,26 +324,90 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServic
 			Help:      "Total duration of requests in microseconds.",
 		}, []string{"method"}),
 	)
-	if err := createAdmin(svc, userRepo, c); err != nil {
+	if err := createAdmin(svc, userRepo, c, auth); err != nil {
 		logger.Error("failed to create admin user: " + err.Error())
 		os.Exit(1)
 	}
+
+	switch c.selfRegister {
+	case true:
+		// If MF_USERS_ALLOW_SELF_REGISTER environment variable is "true",
+		// everybody can create a new user. Here, check the existence of that
+		// policy. If the policy does not exist, create it; otherwise, there is
+		// no need to do anything further.
+		_, err := auth.Authorize(context.Background(), &mainflux.AuthorizeReq{Obj: "user", Act: "create", Sub: "*"})
+		if err != nil {
+			// Add a policy that allows anybody to create a user
+			apr, err := auth.AddPolicy(context.Background(), &mainflux.AddPolicyReq{Obj: "user", Act: "create", Sub: "*"})
+			if err != nil {
+				logger.Error("failed to add the policy related to MF_USERS_ALLOW_SELF_REGISTER: " + err.Error())
+				os.Exit(1)
+			}
+			if !apr.GetAuthorized() {
+				logger.Error("failed to authorized the policy result related to MF_USERS_ALLOW_SELF_REGISTER: " + users.ErrAuthorization.Error())
+				os.Exit(1)
+			}
+		}
+	default:
+		// If MF_USERS_ALLOW_SELF_REGISTER environment variable is "false",
+		// everybody cannot create a new user. Therefore, delete a policy that
+		// allows everybody to create a new user.
+		dpr, err := auth.DeletePolicy(context.Background(), &mainflux.DeletePolicyReq{Obj: "user", Act: "create", Sub: "*"})
+		if err != nil {
+			logger.Error("failed to delete a policy: " + err.Error())
+			os.Exit(1)
+		}
+		if !dpr.GetDeleted() {
+			logger.Error("deleting a policy expected to succeed.")
+			os.Exit(1)
+		}
+	}
+
 	return svc
 }
 
-func createAdmin(svc users.Service, userRepo users.UserRepository, c config) error {
+func createAdmin(svc users.Service, userRepo users.UserRepository, c config, auth mainflux.AuthServiceClient) error {
 	user := users.User{
 		Email:    c.adminEmail,
 		Password: c.adminPassword,
 	}
 
-	if _, err := userRepo.RetrieveByEmail(context.Background(), user.Email); err == nil {
-		// Exiting if user already exists
+	if admin, err := userRepo.RetrieveByEmail(context.Background(), user.Email); err == nil {
+		// The admin is already created. Check existence of the admin policy.
+		_, err := auth.Authorize(context.Background(), &mainflux.AuthorizeReq{Obj: "authorities", Act: "member", Sub: admin.ID})
+		if err != nil {
+			apr, err := auth.AddPolicy(context.Background(), &mainflux.AddPolicyReq{Obj: "authorities", Act: "member", Sub: admin.ID})
+			if err != nil {
+				return err
+			}
+			if !apr.GetAuthorized() {
+				return users.ErrAuthorization
+			}
+		}
 		return nil
 	}
 
-	if _, err := svc.Register(context.Background(), user); err != nil {
+	// Add a policy that allows anybody to create a user
+	apr, err := auth.AddPolicy(context.Background(), &mainflux.AddPolicyReq{Obj: "user", Act: "create", Sub: "*"})
+	if err != nil {
 		return err
+	}
+	if !apr.GetAuthorized() {
+		return users.ErrAuthorization
+	}
+
+	// Create an admin
+	uid, err := svc.Register(context.Background(), "", user)
+	if err != nil {
+		return err
+	}
+
+	apr, err = auth.AddPolicy(context.Background(), &mainflux.AddPolicyReq{Obj: "authorities", Act: "member", Sub: uid})
+	if err != nil {
+		return err
+	}
+	if !apr.GetAuthorized() {
+		return users.ErrAuthorization
 	}
 
 	return nil

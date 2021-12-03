@@ -28,6 +28,15 @@ func MetricsMiddleware(svc auth.Service, counter metrics.Counter, latency metric
 	}
 }
 
+func (ms *metricsMiddleware) ListPolicies(ctx context.Context, pr auth.PolicyReq) (p auth.PolicyPage, err error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "list_policies").Add(1)
+		ms.latency.With("method", "list_policies").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.ListPolicies(ctx, pr)
+}
+
 func (ms *metricsMiddleware) Issue(ctx context.Context, token string, key auth.Key) (auth.Key, string, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "issue_key").Add(1)
@@ -64,13 +73,45 @@ func (ms *metricsMiddleware) Identify(ctx context.Context, token string) (auth.I
 	return ms.svc.Identify(ctx, token)
 }
 
-func (ms *metricsMiddleware) Authorize(ctx context.Context, token, sub, obj, act string) (auth bool, err error) {
+func (ms *metricsMiddleware) Authorize(ctx context.Context, pr auth.PolicyReq) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "authorize").Add(1)
 		ms.latency.With("method", "authorize").Observe(time.Since(begin).Seconds())
 	}(time.Now())
+	return ms.svc.Authorize(ctx, pr)
+}
 
-	return ms.svc.Authorize(ctx, token, sub, obj, act)
+func (ms *metricsMiddleware) AddPolicy(ctx context.Context, pr auth.PolicyReq) error {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "add_policy").Add(1)
+		ms.latency.With("method", "add_policy").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.AddPolicy(ctx, pr)
+}
+
+func (ms *metricsMiddleware) AddPolicies(ctx context.Context, token, object string, subjectIDs, relations []string) (err error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "create_policy_bulk").Add(1)
+		ms.latency.With("method", "create_policy_bulk").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.AddPolicies(ctx, token, object, subjectIDs, relations)
+}
+
+func (ms *metricsMiddleware) DeletePolicy(ctx context.Context, pr auth.PolicyReq) error {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "delete_policy").Add(1)
+		ms.latency.With("method", "delete_policy").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.DeletePolicy(ctx, pr)
+}
+
+func (ms *metricsMiddleware) DeletePolicies(ctx context.Context, token, object string, subjectIDs, relations []string) error {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "delete_policies").Add(1)
+		ms.latency.With("method", "delete_policies").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.DeletePolicies(ctx, token, object, subjectIDs, relations)
 }
 
 func (ms *metricsMiddleware) CreateGroup(ctx context.Context, token string, group auth.Group) (gr auth.Group, err error) {
@@ -167,4 +208,13 @@ func (ms *metricsMiddleware) Unassign(ctx context.Context, token, groupID string
 	}(time.Now())
 
 	return ms.svc.Unassign(ctx, token, groupID, memberIDs...)
+}
+
+func (ms *metricsMiddleware) AssignGroupAccessRights(ctx context.Context, token, thingGroupID, userGroupID string) error {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "share_group_access").Add(1)
+		ms.latency.With("method", "share_group_access").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.AssignGroupAccessRights(ctx, token, thingGroupID, userGroupID)
 }

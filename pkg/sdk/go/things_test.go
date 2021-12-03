@@ -22,6 +22,7 @@ import (
 const (
 	contentType = "application/senml+json"
 	email       = "user@example.com"
+	adminEmail  = "admin@example.com"
 	otherEmail  = "other_user@example.com"
 	token       = "token"
 	otherToken  = "other_token"
@@ -39,7 +40,10 @@ var (
 )
 
 func newThingsService(tokens map[string]string) things.Service {
-	auth := mocks.NewAuthService(tokens)
+	userPolicy := mocks.MockSubjectSet{Object: "users", Relation: "member"}
+	adminPolicy := mocks.MockSubjectSet{Object: "authorities", Relation: "member"}
+	auth := mocks.NewAuthService(tokens, map[string][]mocks.MockSubjectSet{
+		adminEmail: {userPolicy, adminPolicy}, email: {userPolicy}})
 	conns := make(chan mocks.Connection)
 	thingsRepo := mocks.NewThingRepository(conns)
 	channelsRepo := mocks.NewChannelRepository(thingsRepo, conns)
@@ -232,7 +236,7 @@ func TestThing(t *testing.T) {
 			desc:     "get non-existent thing",
 			thID:     "43",
 			token:    token,
-			err:      createError(sdk.ErrFailedFetch, http.StatusNotFound),
+			err:      createError(sdk.ErrFailedFetch, http.StatusForbidden),
 			response: sdk.Thing{},
 		},
 		{
@@ -516,7 +520,7 @@ func TestUpdateThing(t *testing.T) {
 				Metadata: metadata,
 			},
 			token: token,
-			err:   createError(sdk.ErrFailedUpdate, http.StatusNotFound),
+			err:   createError(sdk.ErrFailedUpdate, http.StatusForbidden),
 		},
 		{
 			desc: "update channel with invalid id",
@@ -586,7 +590,7 @@ func TestDeleteThing(t *testing.T) {
 			desc:    "delete non-existing thing",
 			thingID: "2",
 			token:   token,
-			err:     nil,
+			err:     createError(sdk.ErrFailedRemoval, http.StatusForbidden),
 		},
 		{
 			desc:    "delete thing with invalid id",

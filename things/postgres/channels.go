@@ -103,13 +103,12 @@ func (cr channelRepository) Update(ctx context.Context, channel things.Channel) 
 }
 
 func (cr channelRepository) RetrieveByID(ctx context.Context, owner, id string) (things.Channel, error) {
-	q := `SELECT name, metadata FROM channels WHERE id = $1 AND owner = $2;`
+	q := `SELECT name, metadata, owner FROM channels WHERE id = $1;`
 
 	dbch := dbChannel{
-		ID:    id,
-		Owner: owner,
+		ID: id,
 	}
-	if err := cr.db.QueryRowxContext(ctx, q, id, owner).StructScan(&dbch); err != nil {
+	if err := cr.db.QueryRowxContext(ctx, q, id).StructScan(&dbch); err != nil {
 		pqErr, ok := err.(*pq.Error)
 		if err == sql.ErrNoRows || ok && errInvalid == pqErr.Code.Name() {
 			return things.Channel{}, things.ErrNotFound
@@ -124,13 +123,30 @@ func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, pm th
 	nq, name := getNameQuery(pm.Name)
 	oq := getOrderQuery(pm.Order)
 	dq := getDirQuery(pm.Dir)
+	ownerQuery := getOwnerQuery(pm.FetchSharedThings)
 	meta, mq, err := getMetadataQuery(pm.Metadata)
 	if err != nil {
 		return things.ChannelsPage{}, errors.Wrap(things.ErrSelectEntity, err)
 	}
 
+	var whereClause string
+	var query []string
+	if mq != "" {
+		query = append(query, mq)
+	}
+	if nq != "" {
+		query = append(query, nq)
+	}
+	if ownerQuery != "" {
+		query = append(query, ownerQuery)
+	}
+
+	if len(query) > 0 {
+		whereClause = fmt.Sprintf(" WHERE %s", strings.Join(query, " AND "))
+	}
+
 	q := fmt.Sprintf(`SELECT id, name, metadata FROM channels
-	      WHERE owner = :owner %s%s ORDER BY %s %s LIMIT :limit OFFSET :offset;`, mq, nq, oq, dq)
+		%s ORDER BY %s %s LIMIT :limit OFFSET :offset;`, whereClause, oq, dq)
 
 	params := map[string]interface{}{
 		"owner":    owner,
@@ -156,7 +172,7 @@ func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, pm th
 		items = append(items, ch)
 	}
 
-	cq := fmt.Sprintf(`SELECT COUNT(*) FROM channels WHERE owner = :owner %s%s;`, nq, mq)
+	cq := fmt.Sprintf(`SELECT COUNT(*) FROM channels %s;`, whereClause)
 
 	total, err := total(ctx, cr.db, cq, params)
 	if err != nil {
@@ -465,7 +481,7 @@ func getNameQuery(name string) (string, string) {
 		return "", ""
 	}
 	name = fmt.Sprintf(`%%%s%%`, strings.ToLower(name))
-	nq := ` AND LOWER(name) LIKE :name`
+	nq := `LOWER(name) LIKE :name`
 	return nq, name
 }
 
@@ -500,7 +516,7 @@ func getMetadataQuery(m things.Metadata) ([]byte, string, error) {
 	mq := ""
 	mb := []byte("{}")
 	if len(m) > 0 {
-		mq = ` AND metadata @> :metadata`
+		mq = `metadata @> :metadata`
 
 		b, err := json.Marshal(m)
 		if err != nil {

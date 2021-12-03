@@ -18,6 +18,10 @@ type authServiceClient struct {
 	users map[string]string
 }
 
+func (svc authServiceClient) ListPolicies(ctx context.Context, in *mainflux.ListPoliciesReq, opts ...grpc.CallOption) (*mainflux.ListPoliciesRes, error) {
+	panic("not implemented")
+}
+
 // NewAuthServiceClient creates mock of auth service.
 func NewAuthServiceClient(users map[string]string) mainflux.AuthServiceClient {
 	return &authServiceClient{users}
@@ -35,6 +39,14 @@ func (svc *authServiceClient) Issue(ctx context.Context, in *mainflux.IssueReq, 
 }
 
 func (svc *authServiceClient) Authorize(ctx context.Context, req *mainflux.AuthorizeReq, _ ...grpc.CallOption) (r *mainflux.AuthorizeRes, err error) {
+	panic("not implemented")
+}
+
+func (svc authServiceClient) AddPolicy(ctx context.Context, in *mainflux.AddPolicyReq, opts ...grpc.CallOption) (*mainflux.AddPolicyRes, error) {
+	panic("not implemented")
+}
+
+func (svc authServiceClient) DeletePolicy(ctx context.Context, in *mainflux.DeletePolicyReq, opts ...grpc.CallOption) (*mainflux.DeletePolicyRes, error) {
 	panic("not implemented")
 }
 
