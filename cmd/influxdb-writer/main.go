@@ -37,17 +37,15 @@ const (
 	defContentType = "application/senml+json"
 	defTransformer = "senml"
 
-	envNatsURL     = "MF_NATS_URL"
-	envLogLevel    = "MF_INFLUX_WRITER_LOG_LEVEL"
-	envPort        = "MF_INFLUX_WRITER_PORT"
-	envDB          = "MF_INFLUXDB_DB"
-	envDBHost      = "MF_INFLUX_WRITER_DB_HOST"
-	envDBPort      = "MF_INFLUXDB_PORT"
-	envDBUser      = "MF_INFLUXDB_ADMIN_USER"
-	envDBPass      = "MF_INFLUXDB_ADMIN_PASSWORD"
-	envConfigPath  = "MF_INFLUX_WRITER_CONFIG_PATH"
-	envContentType = "MF_INFLUX_WRITER_CONTENT_TYPE"
-	envTransformer = "MF_INFLUX_WRITER_TRANSFORMER"
+	envNatsURL    = "MF_NATS_URL"
+	envLogLevel   = "MF_INFLUX_WRITER_LOG_LEVEL"
+	envPort       = "MF_INFLUX_WRITER_PORT"
+	envDB         = "MF_INFLUXDB_DB"
+	envDBHost     = "MF_INFLUX_WRITER_DB_HOST"
+	envDBPort     = "MF_INFLUXDB_PORT"
+	envDBUser     = "MF_INFLUXDB_ADMIN_USER"
+	envDBPass     = "MF_INFLUXDB_ADMIN_PASSWORD"
+	envConfigPath = "MF_INFLUX_WRITER_CONFIG_PATH"
 )
 
 type config struct {

@@ -39,9 +39,9 @@ func Start(sub messaging.Subscriber, consumer Consumer, configPath string, logge
 		logger.Warn(fmt.Sprintf("Failed to load consumer config: %s", err))
 	}
 
-	transformer := makeTransformer(cfg.transformer, logger)
+	transformer := makeTransformer(cfg.Transformer, logger)
 
-	for _, subject := range cfg.subscriber.subjects {
+	for _, subject := range cfg.Subscriber.Subjects {
 		if err := sub.Subscribe(subject, handler(transformer, consumer)); err != nil {
 			return err
 		}
@@ -64,32 +64,32 @@ func handler(t transformers.Transformer, c Consumer) messaging.MessageHandler {
 }
 
 type subscriberConfig struct {
-	subjects []string `toml:"subjects"`
+	Subjects []string `toml:"subjects"`
 }
 
 type transformerConfig struct {
-	format      string            `toml:"format"`
-	contentType string            `toml:"content_type"`
-	timestamps  map[string]string `toml:"timestamps"`
+	Format      string            `toml:"format"`
+	ContentType string            `toml:"content_type"`
+	Timestamps  map[string]string `toml:"timestamp_keys"`
 }
 
 type config struct {
-	subscriber  subscriberConfig  `toml:"subscriber"`
-	transformer transformerConfig `toml:"transformer"`
+	Subscriber  subscriberConfig  `toml:"subscriber"`
+	Transformer transformerConfig `toml:"transformer"`
 }
 
-func loadConfig(subjectsConfigPath string) (config, error) {
+func loadConfig(configPath string) (config, error) {
 	cfg := config{
-		subscriber: subscriberConfig{
-			subjects: []string{pubsub.SubjectAllChannels},
+		Subscriber: subscriberConfig{
+			Subjects: []string{pubsub.SubjectAllChannels},
 		},
-		transformer: transformerConfig{
-			format:      defFormat,
-			contentType: defContentType,
+		Transformer: transformerConfig{
+			Format:      defFormat,
+			ContentType: defContentType,
 		},
 	}
 
-	data, err := ioutil.ReadFile(subjectsConfigPath)
+	data, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		return cfg, errors.Wrap(errOpenConfFile, err)
 	}
@@ -102,15 +102,15 @@ func loadConfig(subjectsConfigPath string) (config, error) {
 }
 
 func makeTransformer(cfg transformerConfig, logger logger.Logger) transformers.Transformer {
-	switch strings.ToUpper(cfg.format) {
+	switch strings.ToUpper(cfg.Format) {
 	case "SENML":
 		logger.Info("Using SenML transformer")
-		return senml.New(cfg.contentType)
+		return senml.New(cfg.ContentType)
 	case "JSON":
 		logger.Info("Using JSON transformer")
-		return json.New(cfg.timestamps)
+		return json.New(cfg.Timestamps)
 	default:
-		logger.Error(fmt.Sprintf("Can't create transformer: unknown transformer type %s", cfg.format))
+		logger.Error(fmt.Sprintf("Can't create transformer: unknown transformer type %s", cfg.Format))
 		os.Exit(1)
 		return nil
 	}
