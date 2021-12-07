@@ -136,7 +136,7 @@ func createChannelEndpoint(svc ui.Service) endpoint.Endpoint {
 			Name:     req.Name,
 			Metadata: req.Metadata,
 		}
-		res, err := svc.CreateChannels(ctx, "123", ch)
+		res, err := svc.CreateChannels(ctx, req.token, ch)
 		if err != nil {
 			return nil, err
 		}

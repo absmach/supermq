@@ -40,14 +40,12 @@ const (
 	defThingsAuthURL     = "localhost:8181"
 	defAuthURL           = "localhost:8189"
 	defThingsAuthTimeout = "1s"
-	defAuthToken         = "123"
 
 	envLogLevel          = "MF_GUI_LOG_LEVEL"
 	envClientTLS         = "MF_GUI_CLIENT_TLS"
 	envCACerts           = "MF_GUI_CA_CERTS"
 	envPort              = "MF_GUI_PORT"
 	envRedirectURL       = "MF_GUI_REDIRECT_URL"
-	envAuthToken         = "MF_GUI_AUTH_TOKEN"
 	envJaegerURL         = "MF_JAEGER_URL"
 	envThingsAuthURL     = "MF_THINGS_AUTH_GRPC_URL"
 	envThingsAuthTimeout = "MF_THINGS_AUTH_GRPC_TIMEOUT"
@@ -62,7 +60,6 @@ type config struct {
 	jaegerURL         string
 	thingsAuthURL     string
 	thingsAuthTimeout time.Duration
-	authToken         string
 }
 
 func main() {
@@ -93,7 +90,7 @@ func main() {
 
 	tc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
 
-	svc := ui.New(tc, cfg.authToken, sdk)
+	svc := ui.New(tc, sdk)
 
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
@@ -149,7 +146,6 @@ func loadConfig() config {
 		caCerts:           mainflux.Env(envCACerts, defCACerts),
 		jaegerURL:         mainflux.Env(envJaegerURL, defJaegerURL),
 		thingsAuthURL:     mainflux.Env(envThingsAuthURL, defThingsAuthURL),
-		authToken:         mainflux.Env(envAuthToken, defAuthToken),
 		thingsAuthTimeout: authTimeout,
 	}
 }

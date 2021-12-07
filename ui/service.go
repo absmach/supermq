@@ -55,14 +55,12 @@ var _ Service = (*uiService)(nil)
 type uiService struct {
 	things mainflux.ThingsServiceClient
 	sdk    sdk.SDK
-	token  string
 }
 
 // New instantiates the HTTP adapter implementation.
-func New(things mainflux.ThingsServiceClient, token string, sdk sdk.SDK) Service {
+func New(things mainflux.ThingsServiceClient, sdk sdk.SDK) Service {
 	return &uiService{
 		things: things,
-		token:  token,
 		sdk:    sdk,
 	}
 }
@@ -99,13 +97,13 @@ func (gs *uiService) Index(ctx context.Context, token string) ([]byte, error) {
 func (gs *uiService) CreateThings(ctx context.Context, token string, things ...sdk.Thing) ([]byte, error) {
 
 	for i := range things {
-		_, err := gs.sdk.CreateThing(things[i], gs.token)
+		_, err := gs.sdk.CreateThing(things[i], token)
 		if err != nil {
 			return []byte{}, err
 		}
 	}
 
-	return gs.ListThings(ctx, gs.token)
+	return gs.ListThings(ctx, token)
 }
 
 func (gs *uiService) ListThings(ctx context.Context, token string) ([]byte, error) {
@@ -123,7 +121,7 @@ func (gs *uiService) ListThings(ctx context.Context, token string) ([]byte, erro
 		return []byte{}, err
 	}
 
-	thsPage, err := gs.sdk.Things(gs.token, 0, 100, "")
+	thsPage, err := gs.sdk.Things(token, 0, 100, "")
 	if err != nil {
 		return []byte{}, err
 	}
@@ -157,7 +155,7 @@ func (gs *uiService) ViewThing(ctx context.Context, token, id string) ([]byte, e
 	if err != nil {
 		return []byte{}, err
 	}
-	thing, err := gs.sdk.Thing(id, gs.token)
+	thing, err := gs.sdk.Thing(id, token)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -180,14 +178,14 @@ func (gs *uiService) ViewThing(ctx context.Context, token, id string) ([]byte, e
 }
 
 func (gs *uiService) UpdateThing(ctx context.Context, token, id string, thing sdk.Thing) ([]byte, error) {
-	if err := gs.sdk.UpdateThing(thing, gs.token); err != nil {
+	if err := gs.sdk.UpdateThing(thing, token); err != nil {
 		return []byte{}, err
 	}
-	return gs.ViewThing(ctx, gs.token, id)
+	return gs.ViewThing(ctx, token, id)
 }
 
 func (gs *uiService) RemoveThing(ctx context.Context, token, id string) ([]byte, error) {
-	err := gs.sdk.DeleteThing(id, gs.token)
+	err := gs.sdk.DeleteThing(id, token)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -196,12 +194,12 @@ func (gs *uiService) RemoveThing(ctx context.Context, token, id string) ([]byte,
 
 func (gs *uiService) CreateChannels(ctx context.Context, token string, channels ...sdk.Channel) ([]byte, error) {
 	for i := range channels {
-		_, err := gs.sdk.CreateChannel(channels[i], gs.token)
+		_, err := gs.sdk.CreateChannel(channels[i], token)
 		if err != nil {
 			return []byte{}, err
 		}
 	}
-	return gs.ListChannels(ctx, gs.token)
+	return gs.ListChannels(ctx, token)
 }
 
 func (gs *uiService) ViewChannel(ctx context.Context, token, id string) ([]byte, error) {
@@ -217,7 +215,7 @@ func (gs *uiService) ViewChannel(ctx context.Context, token, id string) ([]byte,
 	if err != nil {
 		return []byte{}, err
 	}
-	channel, err := gs.sdk.Channel(id, gs.token)
+	channel, err := gs.sdk.Channel(id, token)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -240,10 +238,10 @@ func (gs *uiService) ViewChannel(ctx context.Context, token, id string) ([]byte,
 }
 
 func (gs *uiService) UpdateChannel(ctx context.Context, token, id string, channel sdk.Channel) ([]byte, error) {
-	if err := gs.sdk.UpdateChannel(channel, gs.token); err != nil {
+	if err := gs.sdk.UpdateChannel(channel, token); err != nil {
 		return []byte{}, err
 	}
-	return gs.ViewChannel(ctx, gs.token, id)
+	return gs.ViewChannel(ctx, token, id)
 }
 
 func (gs *uiService) ListChannels(ctx context.Context, token string) ([]byte, error) {
@@ -260,7 +258,7 @@ func (gs *uiService) ListChannels(ctx context.Context, token string) ([]byte, er
 	if err != nil {
 		return []byte{}, err
 	}
-	chsPage, err := gs.sdk.Channels(gs.token, 0, 100, "")
+	chsPage, err := gs.sdk.Channels(token, 0, 100, "")
 	if err != nil {
 		return []byte{}, err
 	}
@@ -282,23 +280,23 @@ func (gs *uiService) ListChannels(ctx context.Context, token string) ([]byte, er
 }
 
 func (gs *uiService) RemoveChannel(ctx context.Context, token, id string) ([]byte, error) {
-	err := gs.sdk.DeleteChannel(id, gs.token)
+	err := gs.sdk.DeleteChannel(id, token)
 	if err != nil {
 		return []byte{}, err
 	}
-	return gs.ListChannels(ctx, gs.token)
+	return gs.ListChannels(ctx, token)
 }
 
 func (gs *uiService) CreateGroups(ctx context.Context, token string, groups ...sdk.Group) ([]byte, error) {
 
 	for i := range groups {
-		_, err := gs.sdk.CreateGroup(groups[i], gs.token)
+		_, err := gs.sdk.CreateGroup(groups[i], token)
 		if err != nil {
 			return []byte{}, err
 		}
 	}
 
-	return gs.ListGroups(ctx, gs.token)
+	return gs.ListGroups(ctx, token)
 }
 
 func (gs *uiService) ListGroups(ctx context.Context, token string) ([]byte, error) {
@@ -316,7 +314,7 @@ func (gs *uiService) ListGroups(ctx context.Context, token string) ([]byte, erro
 		return []byte{}, err
 	}
 
-	grpPage, err := gs.sdk.Groups(0, 100, gs.token)
+	grpPage, err := gs.sdk.Groups(0, 100, token)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -350,7 +348,7 @@ func (gs *uiService) ViewGroup(ctx context.Context, token, id string) ([]byte, e
 	if err != nil {
 		return []byte{}, err
 	}
-	group, err := gs.sdk.Group(id, gs.token)
+	group, err := gs.sdk.Group(id, token)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -373,14 +371,14 @@ func (gs *uiService) ViewGroup(ctx context.Context, token, id string) ([]byte, e
 }
 
 func (gs *uiService) UpdateGroup(ctx context.Context, token, id string, group sdk.Group) ([]byte, error) {
-	if err := gs.sdk.UpdateGroup(group, gs.token); err != nil {
+	if err := gs.sdk.UpdateGroup(group, token); err != nil {
 		return []byte{}, err
 	}
-	return gs.ViewGroup(ctx, gs.token, id)
+	return gs.ViewGroup(ctx, token, id)
 }
 
 func (gs *uiService) RemoveGroup(ctx context.Context, token, id string) ([]byte, error) {
-	err := gs.sdk.DeleteGroup(id, gs.token)
+	err := gs.sdk.DeleteGroup(id, token)
 	if err != nil {
 		return []byte{}, err
 	}
