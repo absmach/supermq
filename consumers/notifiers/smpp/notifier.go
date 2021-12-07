@@ -19,7 +19,7 @@ var _ notifiers.Notifier = (*notifier)(nil)
 
 type notifier struct {
 	transmitter   *smpp.Transmitter
-	transformer    transformers.Transformer
+	transformer   transformers.Transformer
 	sourceAddrTON uint8
 	sourceAddrNPI uint8
 	destAddrTON   uint8
@@ -38,7 +38,7 @@ func New(cfg Config) notifiers.Notifier {
 	t.Bind()
 	ret := &notifier{
 		transmitter:   t,
-		transformer:    json.New(map[string]string{}),
+		transformer:   json.New([]json.Timestamps{}),
 		sourceAddrTON: cfg.SourceAddrTON,
 		destAddrTON:   cfg.DestAddrTON,
 		sourceAddrNPI: cfg.SourceAddrNPI,
