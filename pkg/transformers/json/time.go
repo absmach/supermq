@@ -12,6 +12,8 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
+var errUnsupportedType = errors.New("unsupported type")
+
 func parseTimestamp(format string, timestamp interface{}, location string) (time.Time, error) {
 	switch format {
 	case "unix", "unix_ms", "unix_us", "unix_ns":
@@ -40,7 +42,7 @@ func parseUnix(format string, timestamp interface{}) (time.Time, error) {
 	case "unix_ns":
 		return time.Unix(0, integer).UTC(), nil
 	default:
-		return time.Unix(0, 0), errors.New("unsupported type")
+		return time.Unix(0, 0), errUnsupportedType
 	}
 }
 
@@ -85,7 +87,7 @@ func parseComponents(timestamp interface{}) (int64, int64, error) {
 		integer, fractional := math.Modf(ts)
 		return int64(integer), int64(fractional * 1e9), nil
 	default:
-		return 0, 0, errors.New("unsupported type")
+		return 0, 0, errUnsupportedType
 	}
 }
 
@@ -145,6 +147,6 @@ func parseTime(format string, timestamp interface{}, location string) (time.Time
 		}
 		return time.ParseInLocation(format, ts, loc)
 	default:
-		return time.Unix(0, 0), errors.New("unsupported type")
+		return time.Unix(0, 0), errUnsupportedType
 	}
 }
