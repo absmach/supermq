@@ -6,7 +6,6 @@ package auth
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -142,9 +141,7 @@ func (svc service) RetrieveKey(ctx context.Context, token, id string) (Key, erro
 }
 
 func (svc service) Identify(ctx context.Context, token string) (Identity, error) {
-	fmt.Println(fmt.Sprintf("identify:%v", token))
 	if svc.oidc {
-		token = strings.ReplaceAll(token, "Bearer ", "")
 		parsed, _ := jwt.Parse(token, nil)
 		fmt.Println(token)
 
@@ -152,11 +149,11 @@ func (svc service) Identify(ctx context.Context, token string) (Identity, error)
 		claims, _ := parsed.Claims.(jwt.MapClaims)
 		id, ok := claims["sub"].(string)
 		if !ok {
-			return Identity{}, errors.Wrap(errors.ErrAuthorization, errors.New("Missing claim sub"))
+			return Identity{}, errors.Wrap(ErrUnauthorizedAccess, errors.New("Missing claim sub"))
 		}
 		email, ok := claims["email"].(string)
 		if !ok {
-			return Identity{}, errors.Wrap(errors.ErrAuthorization, errors.New("Missing email in token"))
+			return Identity{}, errors.Wrap(ErrUnauthorizedAccess, errors.New("Missing email in token"))
 		}
 
 		return Identity{
