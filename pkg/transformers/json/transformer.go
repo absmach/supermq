@@ -25,32 +25,28 @@ var (
 	errUnknownFormat     = errors.New("unknown format of JSON message")
 	errInvalidFormat     = errors.New("invalid JSON object")
 	errInvalidNestedJSON = errors.New("invalid nested JSON object")
-
-	timestamps = []Timestamps{}
 )
 
-type funcTransformer func(messaging.Message) (interface{}, error)
-
-// Timestamps represents the message fields to use as timestamp
-type Timestamps struct {
+// TimeField represents the message fields to use as timestamp
+type TimeField struct {
 	FieldName   string `toml:"field_name"`
 	FieldFormat string `toml:"field_format"`
 	Location    string `toml:"location"`
 }
 
+type transformerService struct {
+	timeFields []TimeField
+}
+
 // New returns a new JSON transformer.
-func New(ts []Timestamps) transformers.Transformer {
-	// TODO: Improve the timestamp config
-	timestamps = ts
-	return funcTransformer(transformer)
+func New(tfs []TimeField) transformers.Transformer {
+	return &transformerService{
+		timeFields: tfs,
+	}
 }
 
 // Transform transforms Mainflux message to a list of JSON messages.
-func (fh funcTransformer) Transform(msg messaging.Message) (interface{}, error) {
-	return fh(msg)
-}
-
-func transformer(msg messaging.Message) (interface{}, error) {
+func (ts *transformerService) Transform(msg messaging.Message) (interface{}, error) {
 	ret := Message{
 		Publisher: msg.Publisher,
 		Created:   msg.Created,
@@ -79,7 +75,7 @@ func transformer(msg messaging.Message) (interface{}, error) {
 		ret.Payload = p
 
 		// Apply timestamp transformation rules depending on key/unit pairs
-		ts, err := transformTimestamp(msg.Payload)
+		ts, err := ts.transformTimestamp(msg.Payload)
 		if ts != 0 && err == nil {
 			ret.Created = ts
 		}
@@ -96,7 +92,7 @@ func transformer(msg messaging.Message) (interface{}, error) {
 			newMsg := ret
 
 			// Apply timestamp transformation rules depending on key/unit pairs
-			ts, err := transformTimestamp(msg.Payload)
+			ts, err := ts.transformTimestamp(msg.Payload)
 			if ts != 0 && err != nil {
 				newMsg.Created = ts
 			}
@@ -172,8 +168,8 @@ func flatten(prefix string, m, m1 map[string]interface{}) (map[string]interface{
 	return m, nil
 }
 
-func transformTimestamp(payload []byte) (int64, error) {
-	if len(timestamps) == 0 {
+func (ts *transformerService) transformTimestamp(payload []byte) (int64, error) {
+	if len(ts.timeFields) == 0 {
 		return 0, nil
 	}
 	var data map[string]interface{}
@@ -181,9 +177,9 @@ func transformTimestamp(payload []byte) (int64, error) {
 		return 0, err
 	}
 
-	for _, ts := range timestamps {
-		if val, ok := data[ts.FieldName]; ok {
-			t, err := parseTimestamp(ts.FieldFormat, val, ts.Location)
+	for _, tf := range ts.timeFields {
+		if val, ok := data[tf.FieldName]; ok {
+			t, err := parseTimestamp(tf.FieldFormat, val, tf.Location)
 			if err != nil {
 				return 0, err
 			}

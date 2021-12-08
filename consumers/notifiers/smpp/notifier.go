@@ -38,7 +38,7 @@ func New(cfg Config) notifiers.Notifier {
 	t.Bind()
 	ret := &notifier{
 		transmitter:   t,
-		transformer:   json.New([]json.Timestamps{}),
+		transformer:   json.New([]json.TimeField{}),
 		sourceAddrTON: cfg.SourceAddrTON,
 		destAddrTON:   cfg.DestAddrTON,
 		sourceAddrNPI: cfg.SourceAddrNPI,

@@ -39,9 +39,9 @@ func Start(sub messaging.Subscriber, consumer Consumer, configPath string, logge
 		logger.Warn(fmt.Sprintf("Failed to load consumer config: %s", err))
 	}
 
-	transformer := makeTransformer(cfg.Transformer, logger)
+	transformer := makeTransformer(cfg.TransformerCfg, logger)
 
-	for _, subject := range cfg.Subscriber.Subjects {
+	for _, subject := range cfg.SubscriberCfg.Subjects {
 		if err := sub.Subscribe(subject, handler(transformer, consumer)); err != nil {
 			return err
 		}
@@ -68,22 +68,22 @@ type subscriberConfig struct {
 }
 
 type transformerConfig struct {
-	Format      string            `toml:"format"`
-	ContentType string            `toml:"content_type"`
-	Timestamps  []json.Timestamps `toml:"timestamps"`
+	Format      string           `toml:"format"`
+	ContentType string           `toml:"content_type"`
+	TimeFields  []json.TimeField `toml:"time_fields"`
 }
 
 type config struct {
-	Subscriber  subscriberConfig  `toml:"subscriber"`
-	Transformer transformerConfig `toml:"transformer"`
+	SubscriberCfg  subscriberConfig  `toml:"subscriber"`
+	TransformerCfg transformerConfig `toml:"transformer"`
 }
 
 func loadConfig(configPath string) (config, error) {
 	cfg := config{
-		Subscriber: subscriberConfig{
+		SubscriberCfg: subscriberConfig{
 			Subjects: []string{pubsub.SubjectAllChannels},
 		},
-		Transformer: transformerConfig{
+		TransformerCfg: transformerConfig{
 			Format:      defFormat,
 			ContentType: defContentType,
 		},
@@ -108,8 +108,7 @@ func makeTransformer(cfg transformerConfig, logger logger.Logger) transformers.T
 		return senml.New(cfg.ContentType)
 	case "JSON":
 		logger.Info("Using JSON transformer")
-		fmt.Printf("HEREEEEEE %v", cfg.Timestamps)
-		return json.New(cfg.Timestamps)
+		return json.New(cfg.TimeFields)
 	default:
 		logger.Error(fmt.Sprintf("Can't create transformer: unknown transformer type %s", cfg.Format))
 		os.Exit(1)

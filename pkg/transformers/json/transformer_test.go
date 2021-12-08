@@ -24,7 +24,7 @@ const (
 
 func TestTransformJSON(t *testing.T) {
 	now := time.Now().Unix()
-	ts := []json.Timestamps{
+	ts := []json.TimeField{
 		{
 			FieldName:   "custom_ts_key",
 			FieldFormat: "unix",
