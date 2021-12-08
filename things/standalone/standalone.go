@@ -30,7 +30,7 @@ func NewAuthService(email, token string) mainflux.AuthServiceClient {
 }
 
 func (repo singleUserRepo) Issue(ctx context.Context, req *mainflux.IssueReq, opts ...grpc.CallOption) (*mainflux.Token, error) {
-	if repo.token != req.GetEmail() {
+	if repo.token != req.GetId() {
 		return nil, errors.ErrAuthentication
 	}
 

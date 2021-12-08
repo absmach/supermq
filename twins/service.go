@@ -114,7 +114,7 @@ func (ts *twinsService) AddTwin(ctx context.Context, token string, twin Twin, de
 		return Twin{}, err
 	}
 
-	twin.Owner = res.GetEmail()
+	twin.Owner = res.GetId()
 
 	t := time.Now()
 	twin.Created = t
