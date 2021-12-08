@@ -189,13 +189,8 @@ func (svc usersService) LoginWithJWT(ctx context.Context, token string) (string,
 	}
 
 	dbUser, err := svc.users.RetrieveByID(ctx, user.Id)
-<<<<<<< HEAD
 	if err != nil && !errors.Contains(err, errors.ErrNotFound) {
 		err = errors.Wrap(errors.ErrAuthorization, err)
-=======
-	if err != nil && !errors.Contains(err, ErrNotFound) {
-		err = errors.Wrap(ErrUnauthorizedAccess, err)
->>>>>>> abc49a11 (enable login with jwt)
 	}
 
 	if dbUser.ID == "" {
