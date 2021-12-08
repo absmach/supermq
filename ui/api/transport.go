@@ -26,7 +26,7 @@ import (
 const (
 	contentType = "text/html"
 	staticDir   = "ui/web/static"
-	token       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzg5MTY3MjAsImlhdCI6MTYzODg4MDcyMCwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImZscDFAZW1haWwuY29tIiwiaXNzdWVyX2lkIjoiYzkzY2FmYjMtYjNhNy00ZTdmLWE0NzAtMTVjMTRkOGVkMWUwIiwidHlwZSI6MH0.HLUpRvLSoVOcvlx45oekTixQ_IZ1LaMKzY7_RgD0lGY"
+	token       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzg5OTU5NDYsImlhdCI6MTYzODk1OTk0NiwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImZscDFAZW1haWwuY29tIiwiaXNzdWVyX2lkIjoiYzkzY2FmYjMtYjNhNy00ZTdmLWE0NzAtMTVjMTRkOGVkMWUwIiwidHlwZSI6MH0.S4YxJg_Nz_BwtKY0j6bdL5aUaqDvXiuGzJ0Jp2xuwv8"
 )
 
 var (
@@ -264,10 +264,14 @@ func decodeListChannelsRequest(ctx context.Context, r *http.Request) (interface{
 }
 
 func decodeGroupCreation(_ context.Context, r *http.Request) (interface{}, error) {
-
+	var meta map[string]interface{}
+	if err := json.Unmarshal([]byte(r.PostFormValue("metadata")), &meta); err != nil {
+		return nil, err
+	}
 	req := createGroupsReq{
-		ID:   getAuthorization(r),
-		Name: r.PostFormValue("name"),
+		token:    getAuthorization(r),
+		Name:     r.PostFormValue("name"),
+		Metadata: meta,
 	}
 
 	return req, nil

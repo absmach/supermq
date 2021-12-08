@@ -18,6 +18,9 @@ import (
 
 const (
 	templateDir = "ui/web/template"
+	header      = templateDir + "/header.html"
+	footer      = templateDir + "/footer.html"
+	navbar      = templateDir + "/navbar.html"
 )
 
 var (
@@ -65,17 +68,24 @@ func New(things mainflux.ThingsServiceClient, sdk sdk.SDK) Service {
 	}
 }
 
-func (gs *uiService) Index(ctx context.Context, token string) ([]byte, error) {
-	tpl := template.New("index")
+func ParseTemplate(tmp string) (*template.Template, error) {
+	tpl := template.New(tmp)
 	tpl = tpl.Funcs(template.FuncMap{
 		"toJSON": func(data map[string]interface{}) string {
 			ret, _ := json.Marshal(data)
 			return string(ret)
 		},
 	})
-	var err error
+	tpl, err := tpl.ParseFiles(header, navbar, templateDir+tmp, footer)
+	if err != nil {
+		return nil, err
+	}
 
-	tpl, err = tpl.ParseGlob(templateDir + "/*")
+	return tpl, nil
+}
+
+func (gs *uiService) Index(ctx context.Context, token string) ([]byte, error) {
+	tpl, err := ParseTemplate("/index.html")
 	if err != nil {
 		return []byte{}, err
 	}
@@ -95,7 +105,6 @@ func (gs *uiService) Index(ctx context.Context, token string) ([]byte, error) {
 }
 
 func (gs *uiService) CreateThings(ctx context.Context, token string, things ...sdk.Thing) ([]byte, error) {
-
 	for i := range things {
 		_, err := gs.sdk.CreateThing(things[i], token)
 		if err != nil {
@@ -107,16 +116,7 @@ func (gs *uiService) CreateThings(ctx context.Context, token string, things ...s
 }
 
 func (gs *uiService) ListThings(ctx context.Context, token string) ([]byte, error) {
-	tpl := template.New("things")
-	tpl = tpl.Funcs(template.FuncMap{
-		"toJSON": func(data map[string]interface{}) string {
-			ret, _ := json.Marshal(data)
-			return string(ret)
-		},
-	})
-	var err error
-
-	tpl, err = tpl.ParseGlob(templateDir + "/*")
+	tpl, err := ParseTemplate("/things.html")
 	if err != nil {
 		return []byte{}, err
 	}
@@ -143,18 +143,11 @@ func (gs *uiService) ListThings(ctx context.Context, token string) ([]byte, erro
 }
 
 func (gs *uiService) ViewThing(ctx context.Context, token, id string) ([]byte, error) {
-	tpl := template.New("things")
-	tpl = tpl.Funcs(template.FuncMap{
-		"toJSON": func(data map[string]interface{}) string {
-			ret, _ := json.Marshal(data)
-			return string(ret)
-		},
-	})
-	var err error
-	tpl, err = tpl.ParseGlob(templateDir + "/*")
+	tpl, err := ParseTemplate("/thing.html")
 	if err != nil {
 		return []byte{}, err
 	}
+
 	thing, err := gs.sdk.Thing(id, token)
 	if err != nil {
 		return []byte{}, err
@@ -203,18 +196,11 @@ func (gs *uiService) CreateChannels(ctx context.Context, token string, channels 
 }
 
 func (gs *uiService) ViewChannel(ctx context.Context, token, id string) ([]byte, error) {
-	tpl := template.New("channels")
-	tpl = tpl.Funcs(template.FuncMap{
-		"toJSON": func(data map[string]interface{}) string {
-			ret, _ := json.Marshal(data)
-			return string(ret)
-		},
-	})
-	var err error
-	tpl, err = tpl.ParseGlob(templateDir + "/*")
+	tpl, err := ParseTemplate("/channel.html")
 	if err != nil {
 		return []byte{}, err
 	}
+
 	channel, err := gs.sdk.Channel(id, token)
 	if err != nil {
 		return []byte{}, err
@@ -245,19 +231,11 @@ func (gs *uiService) UpdateChannel(ctx context.Context, token, id string, channe
 }
 
 func (gs *uiService) ListChannels(ctx context.Context, token string) ([]byte, error) {
-	tpl := template.New("channels")
-	tpl = tpl.Funcs(template.FuncMap{
-		"toJSON": func(data map[string]interface{}) string {
-			ret, _ := json.Marshal(data)
-			return string(ret)
-		},
-	})
-	var err error
-
-	tpl, err = tpl.ParseGlob(templateDir + "/*")
+	tpl, err := ParseTemplate("/channels.html")
 	if err != nil {
 		return []byte{}, err
 	}
+
 	chsPage, err := gs.sdk.Channels(token, 0, 100, "")
 	if err != nil {
 		return []byte{}, err
@@ -288,28 +266,17 @@ func (gs *uiService) RemoveChannel(ctx context.Context, token, id string) ([]byt
 }
 
 func (gs *uiService) CreateGroups(ctx context.Context, token string, groups ...sdk.Group) ([]byte, error) {
-
 	for i := range groups {
 		_, err := gs.sdk.CreateGroup(groups[i], token)
 		if err != nil {
 			return []byte{}, err
 		}
 	}
-
 	return gs.ListGroups(ctx, token)
 }
 
 func (gs *uiService) ListGroups(ctx context.Context, token string) ([]byte, error) {
-	tpl := template.New("groups")
-	tpl = tpl.Funcs(template.FuncMap{
-		"toJSON": func(data map[string]interface{}) string {
-			ret, _ := json.Marshal(data)
-			return string(ret)
-		},
-	})
-	var err error
-
-	tpl, err = tpl.ParseGlob(templateDir + "/*")
+	tpl, err := ParseTemplate("/groups.html")
 	if err != nil {
 		return []byte{}, err
 	}
@@ -336,18 +303,11 @@ func (gs *uiService) ListGroups(ctx context.Context, token string) ([]byte, erro
 }
 
 func (gs *uiService) ViewGroup(ctx context.Context, token, id string) ([]byte, error) {
-	tpl := template.New("groups")
-	tpl = tpl.Funcs(template.FuncMap{
-		"toJSON": func(data map[string]interface{}) string {
-			ret, _ := json.Marshal(data)
-			return string(ret)
-		},
-	})
-	var err error
-	tpl, err = tpl.ParseGlob(templateDir + "/*")
+	tpl, err := ParseTemplate("/group.html")
 	if err != nil {
 		return []byte{}, err
 	}
+
 	group, err := gs.sdk.Group(id, token)
 	if err != nil {
 		return []byte{}, err
