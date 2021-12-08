@@ -71,7 +71,7 @@ func newService() auth.Service {
 	mockAuthzDB[unauthzID] = append(mockAuthzDB[unauthzID], mocks.MockSubjectSet{Object: "users", Relation: "member"})
 	ketoMock := mocks.NewKetoMock(mockAuthzDB)
 
-	return auth.New(repo, groupRepo, idProvider, t, ketoMock, loginDuration)
+	return auth.New(repo, groupRepo, false, idProvider, t, ketoMock, loginDuration)
 }
 
 func newServer(svc auth.Service) *httptest.Server {

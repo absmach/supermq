@@ -46,6 +46,8 @@ type Service interface {
 	// identified by the non-nil error values in the response.
 	Login(ctx context.Context, user User) (string, error)
 
+	LoginWithJWT(ctx context.Context, token string) (string, error)
+
 	// ViewUser retrieves user info for a given user ID and an authorized token.
 	ViewUser(ctx context.Context, token, id string) (User, error)
 
@@ -178,6 +180,27 @@ func (svc usersService) Login(ctx context.Context, user User) (string, error) {
 		return "", errors.Wrap(errors.ErrAuthentication, err)
 	}
 	return svc.issue(ctx, dbUser.ID, dbUser.Email, auth.LoginKey)
+}
+
+func (svc usersService) LoginWithJWT(ctx context.Context, token string) (string, error) {
+	user, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token})
+	if err != nil {
+		return "", err
+	}
+
+	dbUser, err := svc.users.RetrieveByID(ctx, user.Id)
+	if err != nil && !errors.Contains(err, ErrNotFound) {
+		err = errors.Wrap(ErrUnauthorizedAccess, err)
+	}
+
+	if dbUser.ID == "" {
+		_, err = svc.users.Save(ctx, User{ID: user.Id, Email: user.Email})
+		if err != nil {
+			return "", err
+		}
+
+	}
+	return token, nil
 }
 
 func (svc usersService) ViewUser(ctx context.Context, token, id string) (User, error) {

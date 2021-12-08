@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/ulid"
@@ -88,10 +89,11 @@ type service struct {
 	agent         PolicyAgent
 	tokenizer     Tokenizer
 	loginDuration time.Duration
+	oidc          bool
 }
 
 // New instantiates the auth service implementation.
-func New(keys KeyRepository, groups GroupRepository, idp mainflux.IDProvider, tokenizer Tokenizer, policyAgent PolicyAgent, duration time.Duration) Service {
+func New(keys KeyRepository, groups GroupRepository, oidc bool, idp mainflux.IDProvider, tokenizer Tokenizer, policyAgent PolicyAgent, duration time.Duration) Service {
 	return &service{
 		tokenizer:     tokenizer,
 		keys:          keys,
@@ -100,6 +102,7 @@ func New(keys KeyRepository, groups GroupRepository, idp mainflux.IDProvider, to
 		ulidProvider:  ulid.New(),
 		agent:         policyAgent,
 		loginDuration: duration,
+		oidc:          oidc,
 	}
 }
 
@@ -138,6 +141,27 @@ func (svc service) RetrieveKey(ctx context.Context, token, id string) (Key, erro
 }
 
 func (svc service) Identify(ctx context.Context, token string) (Identity, error) {
+	if svc.oidc {
+		parsed, _ := jwt.Parse(token, nil)
+		fmt.Println(token)
+
+		fmt.Println(fmt.Sprintf("%v", parsed))
+		claims, _ := parsed.Claims.(jwt.MapClaims)
+		id, ok := claims["sub"].(string)
+		if !ok {
+			return Identity{}, errors.Wrap(ErrUnauthorizedAccess, errors.New("Missing claim sub"))
+		}
+		email, ok := claims["email"].(string)
+		if !ok {
+			return Identity{}, errors.Wrap(ErrUnauthorizedAccess, errors.New("Missing email in token"))
+		}
+
+		return Identity{
+			ID:    id,
+			Email: email,
+		}, nil
+	}
+
 	key, err := svc.tokenizer.Parse(token)
 	if err == ErrAPIKeyExpired {
 		err = svc.keys.Remove(ctx, key.IssuerID, key.ID)

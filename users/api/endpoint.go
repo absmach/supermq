@@ -160,12 +160,21 @@ func passwordChangeEndpoint(svc users.Service) endpoint.Endpoint {
 func loginEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(userReq)
+		var e error
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
+		if req.token != "" {
+			token, err := svc.LoginWithJWT(ctx, req.token)
+			if err == nil {
+				return token, nil
+			}
+			e = err
+		}
+
 		token, err := svc.Login(ctx, req.user)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, e)
 		}
 
 		return tokenRes{token}, nil

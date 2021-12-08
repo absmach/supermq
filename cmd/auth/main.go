@@ -9,6 +9,9 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
+	"strconv"
+	"syscall"
 	"time"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
@@ -60,6 +63,7 @@ const (
 	defKetoReadPort  = "4466"
 	defKetoWritePort = "4467"
 	defLoginDuration = "10h"
+	defOIDC          = "false"
 
 	envLogLevel      = "MF_AUTH_LOG_LEVEL"
 	envDBHost        = "MF_AUTH_DB_HOST"
@@ -82,6 +86,7 @@ const (
 	envKetoReadPort  = "MF_KETO_READ_REMOTE_PORT"
 	envKetoWritePort = "MF_KETO_WRITE_REMOTE_PORT"
 	envLoginDuration = "MF_AUTH_LOGIN_TOKEN_DURATION"
+	envOIDC          = "MF_OIDC"
 )
 
 type config struct {
@@ -99,6 +104,7 @@ type config struct {
 	ketoWritePort string
 	ketoReadPort  string
 	loginDuration time.Duration
+	oidc          bool
 }
 
 type tokenConfig struct {
@@ -126,7 +132,17 @@ func main() {
 
 	readerConn, writerConn := initKeto(cfg.ketoReadHost, cfg.ketoReadPort, cfg.ketoWriteHost, cfg.ketoWritePort, logger)
 
-	svc := newService(db, dbTracer, cfg.secret, logger, readerConn, writerConn, cfg.loginDuration)
+	svc := newService(db, dbTracer, cfg.oidc, logger, readerConn, writerConn, cfg.loginDuration)
+	errs := make(chan error, 2)
+
+	go startHTTPServer(tracer, svc, cfg.httpPort, cfg.serverCert, cfg.serverKey, logger, errs)
+	go startGRPCServer(tracer, svc, cfg.grpcPort, cfg.serverCert, cfg.serverKey, logger, errs)
+
+	go func() {
+		c := make(chan os.Signal)
+		signal.Notify(c, syscall.SIGINT)
+		errs <- fmt.Errorf("%s", <-c)
+	}()
 
 	g.Go(func() error {
 		return startHTTPServer(ctx, tracer, svc, cfg.httpPort, cfg.serverCert, cfg.serverKey, logger)
@@ -165,6 +181,10 @@ func loadConfig() config {
 		log.Fatal(err)
 	}
 
+	oidc, err := strconv.ParseBool(mainflux.Env(envOIDC, defOIDC))
+	if err != nil {
+		log.Fatalf("Invalid value passed for %s\n", envOIDC)
+	}
 	return config{
 		logLevel:      mainflux.Env(envLogLevel, defLogLevel),
 		dbConfig:      dbConfig,
@@ -179,6 +199,7 @@ func loadConfig() config {
 		ketoReadPort:  mainflux.Env(envKetoReadPort, defKetoReadPort),
 		ketoWritePort: mainflux.Env(envKetoWritePort, defKetoWritePort),
 		loginDuration: loginDuration,
+		oidc:          oidc,
 	}
 
 }
@@ -232,7 +253,7 @@ func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sqlx.DB {
 	return db
 }
 
-func newService(db *sqlx.DB, tracer opentracing.Tracer, secret string, logger logger.Logger, readerConn, writerConn *grpc.ClientConn, duration time.Duration) auth.Service {
+func newService(db *sqlx.DB, tracer opentracing.Tracer, oidc bool, secret string, logger logger.Logger, readerConn, writerConn *grpc.ClientConn, duration time.Duration) auth.Service {
 	database := postgres.NewDatabase(db)
 	keysRepo := tracing.New(postgres.New(database), tracer)
 
@@ -244,7 +265,7 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, secret string, logger lo
 	idProvider := uuid.New()
 	t := jwt.New(secret)
 
-	svc := auth.New(keysRepo, groupsRepo, idProvider, t, pa, duration)
+	svc := auth.New(keysRepo, groupsRepo, oidc, idProvider, t, pa, duration)
 	svc = api.LoggingMiddleware(svc, logger)
 	svc = api.MetricsMiddleware(
 		svc,

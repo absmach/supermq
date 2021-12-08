@@ -180,8 +180,11 @@ func decodeCredentials(_ context.Context, r *http.Request) (interface{}, error) 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
+	return userReq{
+		token: r.Header.Get("Authorization"),
+		user:  user,
+	}, nil
 
-	return userReq{user}, nil
 }
 
 func decodeCreateUserReq(_ context.Context, r *http.Request) (interface{}, error) {
