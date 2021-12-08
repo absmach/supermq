@@ -75,7 +75,7 @@ func (ts *transformerService) Transform(msg messaging.Message) (interface{}, err
 		ret.Payload = p
 
 		// Apply timestamp transformation rules depending on key/unit pairs
-		ts, err := ts.transformTimestamp(msg.Payload)
+		ts, err := ts.transformTimeField(p)
 		if ts != 0 && err == nil {
 			ret.Created = ts
 		}
@@ -92,7 +92,7 @@ func (ts *transformerService) Transform(msg messaging.Message) (interface{}, err
 			newMsg := ret
 
 			// Apply timestamp transformation rules depending on key/unit pairs
-			ts, err := ts.transformTimestamp(msg.Payload)
+			ts, err := ts.transformTimeField(v)
 			if ts != 0 && err != nil {
 				newMsg.Created = ts
 			}
@@ -168,17 +168,13 @@ func flatten(prefix string, m, m1 map[string]interface{}) (map[string]interface{
 	return m, nil
 }
 
-func (ts *transformerService) transformTimestamp(payload []byte) (int64, error) {
+func (ts *transformerService) transformTimeField(payload map[string]interface{}) (int64, error) {
 	if len(ts.timeFields) == 0 {
 		return 0, nil
 	}
-	var data map[string]interface{}
-	if err := json.Unmarshal(payload, &data); err != nil {
-		return 0, err
-	}
 
 	for _, tf := range ts.timeFields {
-		if val, ok := data[tf.FieldName]; ok {
+		if val, ok := payload[tf.FieldName]; ok {
 			t, err := parseTimestamp(tf.FieldFormat, val, tf.Location)
 			if err != nil {
 				return 0, err
