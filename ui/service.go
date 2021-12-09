@@ -78,7 +78,7 @@ func parseTemplate(name string, tmpls ...string) (tpl *template.Template, err er
 	})
 
 	a := append(tmplFiles, tmpls...)
-	for i, _ := range a {
+	for i := range a {
 		a[i] = fmt.Sprintf("%s/%s", templateDir, a[i])
 	}
 
