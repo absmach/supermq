@@ -18,9 +18,6 @@ import (
 
 const (
 	templateDir = "ui/web/template"
-	header      = templateDir + "/header.html"
-	footer      = templateDir + "/footer.html"
-	navbar      = templateDir + "/navbar.html"
 )
 
 var (
@@ -31,6 +28,8 @@ var (
 	// ErrMalformedEntity indicates malformed entity specification (e.g.
 	// invalid username or password).
 	ErrMalformedEntity = errors.New("malformed entity specification")
+
+	tmplFiles = []string{templateDir + "/header.html", templateDir + "/footer.html", templateDir + "/navbar.html"}
 )
 
 // Service specifies coap service API.
@@ -68,24 +67,27 @@ func New(things mainflux.ThingsServiceClient, sdk sdk.SDK) Service {
 	}
 }
 
-func ParseTemplate(tmp string) (*template.Template, error) {
-	tpl := template.New(tmp)
-	tpl = tpl.Funcs(template.FuncMap{
-		"toJSON": func(data map[string]interface{}) string {
-			ret, _ := json.Marshal(data)
-			return string(ret)
-		},
-	})
-	tpl, err := tpl.ParseFiles(header, navbar, templateDir+tmp, footer)
-	if err != nil {
-		return nil, err
-	}
+func parseTemplate(tmps ...string) (tpl *template.Template, err error) {
+	for _, tmp := range tmps {
 
+		tpl = template.New(tmp)
+		tpl = tpl.Funcs(template.FuncMap{
+			"toJSON": func(data map[string]interface{}) string {
+				ret, _ := json.Marshal(data)
+				return string(ret)
+			},
+		})
+		a := append(tmplFiles, templateDir+tmp)
+		tpl, err = tpl.ParseFiles(a...)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return tpl, nil
 }
 
 func (gs *uiService) Index(ctx context.Context, token string) ([]byte, error) {
-	tpl, err := ParseTemplate("/index.html")
+	tpl, err := parseTemplate("/index.html")
 	if err != nil {
 		return []byte{}, err
 	}
@@ -116,7 +118,7 @@ func (gs *uiService) CreateThings(ctx context.Context, token string, things ...s
 }
 
 func (gs *uiService) ListThings(ctx context.Context, token string) ([]byte, error) {
-	tpl, err := ParseTemplate("/things.html")
+	tpl, err := parseTemplate("/things.html")
 	if err != nil {
 		return []byte{}, err
 	}
@@ -143,7 +145,7 @@ func (gs *uiService) ListThings(ctx context.Context, token string) ([]byte, erro
 }
 
 func (gs *uiService) ViewThing(ctx context.Context, token, id string) ([]byte, error) {
-	tpl, err := ParseTemplate("/thing.html")
+	tpl, err := parseTemplate("/thing.html")
 	if err != nil {
 		return []byte{}, err
 	}
@@ -196,7 +198,7 @@ func (gs *uiService) CreateChannels(ctx context.Context, token string, channels 
 }
 
 func (gs *uiService) ViewChannel(ctx context.Context, token, id string) ([]byte, error) {
-	tpl, err := ParseTemplate("/channel.html")
+	tpl, err := parseTemplate("/channel.html")
 	if err != nil {
 		return []byte{}, err
 	}
@@ -231,7 +233,7 @@ func (gs *uiService) UpdateChannel(ctx context.Context, token, id string, channe
 }
 
 func (gs *uiService) ListChannels(ctx context.Context, token string) ([]byte, error) {
-	tpl, err := ParseTemplate("/channels.html")
+	tpl, err := parseTemplate("/channels.html")
 	if err != nil {
 		return []byte{}, err
 	}
@@ -276,7 +278,7 @@ func (gs *uiService) CreateGroups(ctx context.Context, token string, groups ...s
 }
 
 func (gs *uiService) ListGroups(ctx context.Context, token string) ([]byte, error) {
-	tpl, err := ParseTemplate("/groups.html")
+	tpl, err := parseTemplate("/groups.html")
 	if err != nil {
 		return []byte{}, err
 	}
@@ -303,7 +305,7 @@ func (gs *uiService) ListGroups(ctx context.Context, token string) ([]byte, erro
 }
 
 func (gs *uiService) ViewGroup(ctx context.Context, token, id string) ([]byte, error) {
-	tpl, err := ParseTemplate("/group.html")
+	tpl, err := parseTemplate("/group.html")
 	if err != nil {
 		return []byte{}, err
 	}
