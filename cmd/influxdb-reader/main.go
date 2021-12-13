@@ -42,8 +42,8 @@ const (
 	defServerKey         = ""
 	defJaegerURL         = ""
 	defThingsAuthURL     = "localhost:8183"
-	defUsersAuthURL      = "localhost:8181"
 	defThingsAuthTimeout = "1s"
+	defUsersAuthURL      = "localhost:8181"
 	defUsersAuthTimeout  = "1s"
 
 	envLogLevel          = "MF_INFLUX_READER_LOG_LEVEL"

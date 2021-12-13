@@ -47,8 +47,9 @@ const (
 	defServerCert        = ""
 	defServerKey         = ""
 	defJaegerURL         = ""
-	defThingsAuthURL     = "localhost:8181"
+	defThingsAuthURL     = "localhost:8183"
 	defThingsAuthTimeout = "1s"
+	defUsersAuthURL      = "localhost:8181"
 	defUsersAuthTimeout  = "1s"
 
 	envLogLevel          = "MF_CASSANDRA_READER_LOG_LEVEL"
@@ -65,6 +66,7 @@ const (
 	envJaegerURL         = "MF_JAEGER_URL"
 	envThingsAuthURL     = "MF_THINGS_AUTH_GRPC_URL"
 	envThingsAuthTimeout = "MF_THINGS_AUTH_GRPC_TIMEOUT"
+	envUsersAuthURL      = "MF_AUTH_GRPC_URL"
 	envUsersAuthTimeout  = "MF_AUTH_GRPC_TIMEOUT"
 )
 
@@ -175,6 +177,11 @@ func loadConfig() config {
 		log.Fatalf("Invalid %s value: %s", envThingsAuthTimeout, err.Error())
 	}
 
+	usersAuthTimeout, err := time.ParseDuration(mainflux.Env(envUsersAuthTimeout, defUsersAuthTimeout))
+	if err != nil {
+		log.Fatalf("Invalid %s value: %s", envThingsAuthTimeout, err.Error())
+	}
+
 	return config{
 		logLevel:          mainflux.Env(envLogLevel, defLogLevel),
 		port:              mainflux.Env(envPort, defPort),
@@ -185,6 +192,8 @@ func loadConfig() config {
 		serverKey:         mainflux.Env(envServerKey, defServerKey),
 		jaegerURL:         mainflux.Env(envJaegerURL, defJaegerURL),
 		thingsAuthURL:     mainflux.Env(envThingsAuthURL, defThingsAuthURL),
+		usersAuthURL:      mainflux.Env(envUsersAuthURL, defUsersAuthURL),
+		usersAuthTimeout:  usersAuthTimeout,
 		thingsAuthTimeout: authTimeout,
 	}
 }
