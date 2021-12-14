@@ -15,11 +15,12 @@ import (
 )
 
 const (
-	validPayload   = `{"key1": "val1", "key2": 123, "key3": "val3", "key4": {"key5": "val5"}}`
-	tsPayload      = `{"custom_ts_key": "1638310819", "key1": "val1", "key2": 123, "key3": "val3", "key4": {"key5": "val5"}}`
-	microsPayload  = `{"custom_ts_micro_key": "1638310819000000", "key1": "val1", "key2": 123, "key3": "val3", "key4": {"key5": "val5"}}`
-	listPayload    = `[{"key1": "val1", "key2": 123, "keylist3": "val3", "key4": {"key5": "val5"}}, {"key1": "val1", "key2": 123, "key3": "val3", "key4": {"key5": "val5"}}]`
-	invalidPayload = `{"key1": }`
+	validPayload     = `{"key1": "val1", "key2": 123, "key3": "val3", "key4": {"key5": "val5"}}`
+	tsPayload        = `{"custom_ts_key": "1638310819", "key1": "val1", "key2": 123, "key3": "val3", "key4": {"key5": "val5"}}`
+	microsPayload    = `{"custom_ts_micro_key": "1638310819000000", "key1": "val1", "key2": 123, "key3": "val3", "key4": {"key5": "val5"}}`
+	invalidTsPayload = `{"custom_ts_key": "abc", "key1": "val1", "key2": 123, "key3": "val3", "key4": {"key5": "val5"}}`
+	listPayload      = `[{"key1": "val1", "key2": 123, "keylist3": "val3", "key4": {"key5": "val5"}}, {"key1": "val1", "key2": 123, "key3": "val3", "key4": {"key5": "val5"}}]`
+	invalidPayload   = `{"key1": }`
 )
 
 func TestTransformJSON(t *testing.T) {
@@ -56,6 +57,9 @@ func TestTransformJSON(t *testing.T) {
 
 	invalidFmt := msg
 	invalidFmt.Subtopic = ""
+
+	invalidTimeField := msg
+	invalidTimeField.Payload = []byte(invalidTsPayload)
 
 	jsonMsgs := json.Messages{
 		Data: []json.Message{
@@ -199,6 +203,12 @@ func TestTransformJSON(t *testing.T) {
 			msg:  microsMsg,
 			json: jsonMicrosMsgs,
 			err:  nil,
+		},
+		{
+			desc: "test transform JSON with invalid timestamp transformation in micros",
+			msg:  invalidTimeField,
+			json: nil,
+			err:  json.ErrInvalidTimeField,
 		},
 	}
 

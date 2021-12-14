@@ -21,6 +21,8 @@ var (
 	ErrTransform = errors.New("unable to parse JSON object")
 	// ErrInvalidKey represents the use of a reserved message field.
 	ErrInvalidKey = errors.New("invalid object key")
+	// ErrInvalidTimeField represents the use an invalid time field.
+	ErrInvalidTimeField = errors.New("invalid time field")
 
 	errUnknownFormat     = errors.New("unknown format of JSON message")
 	errInvalidFormat     = errors.New("invalid JSON object")
@@ -76,7 +78,10 @@ func (ts *transformerService) Transform(msg messaging.Message) (interface{}, err
 
 		// Apply timestamp transformation rules depending on key/unit pairs
 		ts, err := ts.transformTimeField(p)
-		if ts != 0 && err == nil {
+		if err != nil {
+			return nil, errors.Wrap(ErrInvalidTimeField, err)
+		}
+		if ts != 0 {
 			ret.Created = ts
 		}
 
@@ -93,8 +98,11 @@ func (ts *transformerService) Transform(msg messaging.Message) (interface{}, err
 
 			// Apply timestamp transformation rules depending on key/unit pairs
 			ts, err := ts.transformTimeField(v)
-			if ts != 0 && err != nil {
-				newMsg.Created = ts
+			if err != nil {
+				return nil, errors.Wrap(ErrInvalidTimeField, err)
+			}
+			if ts != 0 {
+				ret.Created = ts
 			}
 
 			newMsg.Payload = v
