@@ -130,6 +130,33 @@ func (mm *metricsMiddleware) RemoveChannel(ctx context.Context, token, id string
 	return mm.svc.RemoveChannel(ctx, token, id)
 }
 
+func (mm *metricsMiddleware) Connect(ctx context.Context, token string, chIDs, thIDs []string) (b []byte, err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "connect").Add(1)
+		mm.latency.With("method", "connect").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.Connect(ctx, token, chIDs, thIDs)
+}
+
+func (mm *metricsMiddleware) ListChannelsByThing(ctx context.Context, token, thID string) (b []byte, err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "list_channels_by_thing").Add(1)
+		mm.latency.With("method", "list_channels_by_thing").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.ListChannelsByThing(ctx, token, thID)
+}
+
+func (mm *metricsMiddleware) Disconnect(ctx context.Context, token string, chIDs, thIDs []string) (b []byte, err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "disconnect").Add(1)
+		mm.latency.With("method", "disconnect").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.Disconnect(ctx, token, chIDs, thIDs)
+}
+
 func (mm *metricsMiddleware) CreateGroups(ctx context.Context, token string, groups ...sdk.Group) (b []byte, err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "create_groups").Add(1)

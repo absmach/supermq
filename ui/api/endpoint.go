@@ -224,6 +224,76 @@ func removeChannelEndpoint(svc ui.Service) endpoint.Endpoint {
 	}
 }
 
+func connectThingEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		cr := request.(connectThingReq)
+
+		if err := cr.validate(); err != nil {
+			return nil, err
+		}
+
+		res, err := svc.Connect(ctx, cr.token, []string{cr.ChanID}, []string{cr.ThingID})
+		if err != nil {
+			return nil, err
+		}
+		return uiRes{
+			html: res,
+		}, err
+	}
+}
+
+func connectEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		cr := request.(connectReq)
+
+		if err := cr.validate(); err != nil {
+			return nil, err
+		}
+
+		res, err := svc.Connect(ctx, cr.token, cr.ChannelIDs, cr.ThingIDs)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return uiRes{
+			html: res,
+		}, err
+	}
+}
+
+func listChannelsByThingEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(listByConnectionReq)
+
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+		res, err := svc.ListChannels(ctx, req.token)
+		return uiRes{
+			html: res,
+		}, err
+	}
+}
+func disconnectEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		cr := request.(connectReq)
+
+		if err := cr.validate(); err != nil {
+			return nil, err
+		}
+
+		res, err := svc.Disconnect(ctx, cr.token, cr.ChannelIDs, cr.ThingIDs)
+
+		if err != nil {
+			return nil, err
+		}
+		return uiRes{
+			html: res,
+		}, err
+	}
+}
+
 func createGroupEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(createGroupsReq)

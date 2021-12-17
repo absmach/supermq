@@ -168,3 +168,82 @@ func (req updateGroupReq) validate() error {
 
 	return nil
 }
+
+type connectThingReq struct {
+	token   string
+	ChanID  string `json:"chan_id,omitempty"`
+	ThingID string `json:"thing_id,omitempty"`
+}
+
+func (req connectThingReq) validate() error {
+	// if req.token == "" {
+	// 	return things.ErrUnauthorizedAccess
+	// }
+
+	if req.ChanID == "" || req.ThingID == "" {
+		return things.ErrMalformedEntity
+	}
+
+	return nil
+}
+
+type connectReq struct {
+	token      string
+	ChannelIDs []string `json:"channel_ids,omitempty"`
+	ThingIDs   []string `json:"thing_ids,omitempty"`
+}
+
+func (req connectReq) validate() error {
+	// if req.token == "" {
+	// 	return things.ErrUnauthorizedAccess
+	// }
+
+	if len(req.ChannelIDs) == 0 || len(req.ThingIDs) == 0 {
+		return things.ErrMalformedEntity
+	}
+
+	for _, chID := range req.ChannelIDs {
+		if chID == "" {
+			return things.ErrMalformedEntity
+		}
+	}
+	for _, thingID := range req.ThingIDs {
+		if thingID == "" {
+			return things.ErrMalformedEntity
+		}
+	}
+
+	return nil
+}
+
+type listByConnectionReq struct {
+	token        string
+	id           string
+	pageMetadata things.PageMetadata
+}
+
+func (req listByConnectionReq) validate() error {
+	if req.token == "" {
+		return things.ErrUnauthorizedAccess
+	}
+
+	if req.id == "" {
+		return things.ErrMalformedEntity
+	}
+
+	if req.pageMetadata.Limit == 0 || req.pageMetadata.Limit > maxLimitSize {
+		return things.ErrMalformedEntity
+	}
+
+	if req.pageMetadata.Order != "" &&
+		req.pageMetadata.Order != nameOrder && req.pageMetadata.Order != idOrder {
+		return things.ErrMalformedEntity
+	}
+
+	if req.pageMetadata.Dir != "" &&
+		req.pageMetadata.Dir != ascDir && req.pageMetadata.Dir != descDir {
+		return things.ErrMalformedEntity
+	}
+
+	return nil
+}

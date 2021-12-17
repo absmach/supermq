@@ -42,6 +42,29 @@
                 </div>
               </div>
             </div>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#connectModal">
+              Connect
+            </button>
+            <div class="modal fade" id="connectModal" tabindex="-1" role="dialog" aria-labelledby="connectModal" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="connectModal">Connect</h5>
+                  </div>
+                  <div class="modal-body">
+                    <form action="/connect" method="post">
+                      <div class="mb-3">
+                        <label for="name" class="form-label">Channel ID</label>
+                        <input type="text" class="form-control" name="chanId" id="chanId" aria-describedby="chanelIDHelp">
+                        <input type="text" class="form-control" name="thingId" id="thingId" aria-describedby="thingIDHelp" value="{{.Thing.ID}}">
+                        <div id="channelIDHelp" class="form-text">Enter channel ID.</div>
+                      </div>
+                      <button type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
             <table class="table table-striped">
               <thead>
                 <tr>
