@@ -10,7 +10,7 @@ import (
 )
 
 type issueKeyReq struct {
-	token    string
+	Token    string        `json:"token,omitempty"`
 	Type     uint32        `json:"type,omitempty"`
 	Duration time.Duration `json:"duration,omitempty"`
 }
@@ -20,7 +20,7 @@ func (req issueKeyReq) validate() error {
 	if req.Type == auth.UserKey {
 		return nil
 	}
-	if req.token == "" || (req.Type != auth.APIKey) {
+	if req.Token == "" || (req.Type != auth.APIKey) {
 		return auth.ErrMalformedEntity
 	}
 	return nil
