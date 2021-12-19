@@ -86,7 +86,7 @@ func toJSON(data interface{}) string {
 func TestIssue(t *testing.T) {
 	svc := newService()
 	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
-	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	ts := newServer(svc)
 	defer ts.Close()
@@ -104,11 +104,11 @@ func TestIssue(t *testing.T) {
 		status int
 	}{
 		{
-			desc:   "issue user key",
+			desc:   "issue login key",
 			req:    toJSON(uk),
 			ct:     contentType,
 			token:  "",
-			status: http.StatusCreated,
+			status: http.StatusForbidden,
 		},
 		{
 			desc:   "issue API key",
@@ -122,10 +122,10 @@ func TestIssue(t *testing.T) {
 			req:    toJSON(rk),
 			ct:     contentType,
 			token:  loginSecret,
-			status: http.StatusBadRequest,
+			status: http.StatusForbidden,
 		},
 		{
-			desc:   "issue user key wrong content type",
+			desc:   "issue login key wrong content type",
 			req:    toJSON(uk),
 			ct:     "",
 			token:  loginSecret,
@@ -150,7 +150,7 @@ func TestIssue(t *testing.T) {
 			req:    toJSON(rk),
 			ct:     contentType,
 			token:  "",
-			status: http.StatusBadRequest,
+			status: http.StatusForbidden,
 		},
 		{
 			desc:   "issue key with invalid request",
@@ -245,11 +245,11 @@ func TestRetrieve(t *testing.T) {
 func TestRevoke(t *testing.T) {
 	svc := newService()
 	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
-	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	key := auth.Key{Type: auth.APIKey, IssuedAt: time.Now(), IssuerID: id, Subject: email}
 
 	k, _, err := svc.Issue(context.Background(), loginSecret, key)
-	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	ts := newServer(svc)
 	defer ts.Close()
