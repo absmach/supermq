@@ -10,18 +10,15 @@ import (
 )
 
 type issueKeyReq struct {
-	Token    string        `json:"token,omitempty"`
+	token    string
 	Type     uint32        `json:"type,omitempty"`
 	Duration time.Duration `json:"duration,omitempty"`
 }
 
 // It is not possible to issue Reset key using HTTP API.
 func (req issueKeyReq) validate() error {
-	if req.Type == auth.UserKey {
-		return nil
-	}
-	if req.Token == "" || (req.Type != auth.APIKey) {
-		return auth.ErrMalformedEntity
+	if req.Type != auth.APIKey || req.token == "" {
+		return auth.ErrUnauthorizedAccess
 	}
 	return nil
 }

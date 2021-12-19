@@ -56,7 +56,7 @@ func decodeIssue(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, errUnsupportedContentType
 	}
 	req := issueKeyReq{
-		Token: r.Header.Get("Authorization"),
+		token: r.Header.Get("Authorization"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(auth.ErrMalformedEntity, err)

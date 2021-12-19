@@ -46,7 +46,7 @@ func newService() auth.Service {
 
 func TestIssue(t *testing.T) {
 	svc := newService()
-	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	cases := []struct {
@@ -58,7 +58,7 @@ func TestIssue(t *testing.T) {
 		{
 			desc: "issue user key",
 			key: auth.Key{
-				Type:     auth.UserKey,
+				Type:     auth.LoginKey,
 				IssuedAt: time.Now(),
 			},
 			token: secret,
@@ -67,7 +67,7 @@ func TestIssue(t *testing.T) {
 		{
 			desc: "issue user key with no time",
 			key: auth.Key{
-				Type: auth.UserKey,
+				Type: auth.LoginKey,
 			},
 			token: secret,
 			err:   auth.ErrInvalidKeyIssuedAt,
@@ -125,7 +125,7 @@ func TestIssue(t *testing.T) {
 
 func TestRevoke(t *testing.T) {
 	svc := newService()
-	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	key := auth.Key{
 		Type:     auth.APIKey,
@@ -170,7 +170,7 @@ func TestRevoke(t *testing.T) {
 
 func TestRetrieve(t *testing.T) {
 	svc := newService()
-	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), Subject: email, IssuerID: id})
+	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), Subject: email, IssuerID: id})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	key := auth.Key{
 		ID:       "id",
@@ -180,7 +180,7 @@ func TestRetrieve(t *testing.T) {
 		IssuedAt: time.Now(),
 	}
 
-	_, userToken, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	_, userToken, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
 
 	apiKey, apiToken, err := svc.Issue(context.Background(), secret, key)
@@ -236,7 +236,7 @@ func TestRetrieve(t *testing.T) {
 func TestIdentify(t *testing.T) {
 	svc := newService()
 
-	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	_, recoverySecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.RecoveryKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
@@ -305,7 +305,7 @@ func TestIdentify(t *testing.T) {
 
 func TestCreateGroup(t *testing.T) {
 	svc := newService()
-	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	key := auth.Key{
@@ -381,7 +381,7 @@ func TestCreateGroup(t *testing.T) {
 
 func TestUpdateGroup(t *testing.T) {
 	svc := newService()
-	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	key := auth.Key{
@@ -438,7 +438,7 @@ func TestUpdateGroup(t *testing.T) {
 
 func TestViewGroup(t *testing.T) {
 	svc := newService()
-	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	key := auth.Key{
@@ -498,7 +498,7 @@ func TestViewGroup(t *testing.T) {
 
 func TestListGroups(t *testing.T) {
 	svc := newService()
-	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	key := auth.Key{
@@ -566,7 +566,7 @@ func TestListGroups(t *testing.T) {
 
 func TestListChildren(t *testing.T) {
 	svc := newService()
-	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	key := auth.Key{
@@ -631,7 +631,7 @@ func TestListChildren(t *testing.T) {
 
 func TestListParents(t *testing.T) {
 	svc := newService()
-	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	key := auth.Key{
@@ -696,7 +696,7 @@ func TestListParents(t *testing.T) {
 
 func TestListMembers(t *testing.T) {
 	svc := newService()
-	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	key := auth.Key{
@@ -774,7 +774,7 @@ func TestListMembers(t *testing.T) {
 
 func TestListMemberships(t *testing.T) {
 	svc := newService()
-	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	key := auth.Key{
@@ -853,7 +853,7 @@ func TestListMemberships(t *testing.T) {
 
 func TestRemoveGroup(t *testing.T) {
 	svc := newService()
-	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	key := auth.Key{
@@ -902,7 +902,7 @@ func TestRemoveGroup(t *testing.T) {
 
 func TestAssign(t *testing.T) {
 	svc := newService()
-	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	key := auth.Key{
@@ -956,7 +956,7 @@ func TestAssign(t *testing.T) {
 
 func TestUnassign(t *testing.T) {
 	svc := newService()
-	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	key := auth.Key{
@@ -1038,7 +1038,7 @@ func TestDeletePolicy(t *testing.T) {
 func TestAssignAccessRights(t *testing.T) {
 	svc := newService()
 
-	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	key := auth.Key{
@@ -1063,7 +1063,7 @@ func TestAssignAccessRights(t *testing.T) {
 
 func TestAddPolicies(t *testing.T) {
 	svc := newService()
-	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	key := auth.Key{
@@ -1148,7 +1148,7 @@ func TestAddPolicies(t *testing.T) {
 
 func TestDeletePolicies(t *testing.T) {
 	svc := newService()
-	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	key := auth.Key{
@@ -1238,7 +1238,7 @@ func TestDeletePolicies(t *testing.T) {
 
 func TestListPolicies(t *testing.T) {
 	svc := newService()
-	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
+	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	key := auth.Key{

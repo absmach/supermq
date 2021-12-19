@@ -167,7 +167,15 @@ func (svc service) Identify(ctx context.Context, token string) (Identity, error)
 	}
 
 	switch key.Type {
-	case APIKey, RecoveryKey, UserKey:
+	case RecoveryKey, LoginKey:
+
+		return Identity{ID: key.IssuerID, Email: key.Subject}, nil
+	case APIKey:
+
+		_, err := svc.keys.Retrieve(context.TODO(), key.IssuerID, key.ID)
+		if err != nil {
+			return Identity{}, ErrUnauthorizedAccess
+		}
 		return Identity{ID: key.IssuerID, Email: key.Subject}, nil
 	default:
 		return Identity{}, ErrUnauthorizedAccess
@@ -293,7 +301,7 @@ func (svc service) login(token string) (string, string, error) {
 		return "", "", err
 	}
 	// Only user key token is valid for login.
-	if key.Type != UserKey || key.IssuerID == "" {
+	if key.Type != LoginKey || key.IssuerID == "" {
 		return "", "", ErrUnauthorizedAccess
 	}
 
