@@ -168,7 +168,6 @@ func (svc service) Identify(ctx context.Context, token string) (Identity, error)
 
 	switch key.Type {
 	case RecoveryKey, LoginKey:
-
 		return Identity{ID: key.IssuerID, Email: key.Subject}, nil
 	case APIKey:
 
