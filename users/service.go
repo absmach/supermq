@@ -228,14 +228,15 @@ func (svc usersService) ViewProfile(ctx context.Context, token string) (User, er
 		return User{}, err
 	}
 
-	dbUser, err := svc.users.RetrieveByEmail(ctx, ir.email)
+	dbUser, err := svc.users.RetrieveByID(ctx, ir.id)
 	if err != nil {
 		return User{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
 
 	return User{
 		ID:       dbUser.ID,
-		Email:    ir.email,
+		Email:    dbUser.Email,
+		Password: "",
 		Metadata: dbUser.Metadata,
 	}, nil
 }
@@ -281,11 +282,8 @@ func (svc usersService) ResetPassword(ctx context.Context, resetToken, password 
 	if err != nil {
 		return errors.Wrap(errors.ErrAuthentication, err)
 	}
-	u, err := svc.users.RetrieveByEmail(ctx, ir.email)
-	if err != nil {
-		return err
-	}
-	if u.Email == "" {
+	u, err := svc.users.RetrieveByID(ctx, ir.id)
+	if err != nil || u.Email == "" {
 		return errors.ErrNotFound
 	}
 	if !svc.passRegex.MatchString(password) {
@@ -295,7 +293,7 @@ func (svc usersService) ResetPassword(ctx context.Context, resetToken, password 
 	if err != nil {
 		return err
 	}
-	return svc.users.UpdatePassword(ctx, ir.email, password)
+	return svc.users.UpdatePassword(ctx, u.Email, password)
 }
 
 func (svc usersService) ChangePassword(ctx context.Context, authToken, password, oldPassword string) error {
@@ -306,23 +304,21 @@ func (svc usersService) ChangePassword(ctx context.Context, authToken, password,
 	if !svc.passRegex.MatchString(password) {
 		return ErrPasswordFormat
 	}
-	u := User{
-		Email:    ir.email,
-		Password: oldPassword,
-	}
-	if _, err := svc.Login(ctx, u); err != nil {
-		return errors.ErrAuthentication
-	}
-	u, err = svc.users.RetrieveByEmail(ctx, ir.email)
+	u, err := svc.users.RetrieveByID(ctx, ir.id)
 	if err != nil || u.Email == "" {
 		return errors.ErrNotFound
+	}
+
+	u.Password = oldPassword
+	if _, err := svc.Login(ctx, u); err != nil {
+		return errors.ErrAuthentication
 	}
 
 	password, err = svc.hasher.Hash(password)
 	if err != nil {
 		return err
 	}
-	return svc.users.UpdatePassword(ctx, ir.email, password)
+	return svc.users.UpdatePassword(ctx, ir.id, password)
 }
 
 func (svc usersService) SendPasswordReset(_ context.Context, host, email, token string) error {

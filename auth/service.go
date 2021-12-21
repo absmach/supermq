@@ -6,6 +6,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -141,7 +142,9 @@ func (svc service) RetrieveKey(ctx context.Context, token, id string) (Key, erro
 }
 
 func (svc service) Identify(ctx context.Context, token string) (Identity, error) {
+	fmt.Println(fmt.Sprintf("identify:%v", token))
 	if svc.oidc {
+		token = strings.ReplaceAll(token, "Bearer ", "")
 		parsed, _ := jwt.Parse(token, nil)
 		fmt.Println(token)
 

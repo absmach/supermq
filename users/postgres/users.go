@@ -213,11 +213,11 @@ func (ur userRepository) RetrieveAll(ctx context.Context, offset, limit uint64, 
 	return page, nil
 }
 
-func (ur userRepository) UpdatePassword(ctx context.Context, email, password string) error {
-	q := `UPDATE users SET password = :password WHERE email = :email`
+func (ur userRepository) UpdatePassword(ctx context.Context, id, password string) error {
+	q := `UPDATE users SET password = :password WHERE id = :id`
 
 	db := dbUser{
-		Email:    email,
+		ID:       id,
 		Password: password,
 	}
 
