@@ -28,7 +28,7 @@ import (
 const (
 	contentType = "text/html"
 	staticDir   = "ui/web/static"
-	token       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2NzczMjUsImlhdCI6MTYzOTY0MTMyNSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImZscDFAZW1haWwuY29tIiwiaXNzdWVyX2lkIjoiYzkzY2FmYjMtYjNhNy00ZTdmLWE0NzAtMTVjMTRkOGVkMWUwIiwidHlwZSI6MH0.-tg86JDfSL5hgigNWRhYHEHdg3tQTkZ8hFl2ed-07cM"
+	token       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDAxMTU5MTMsImlhdCI6MTY0MDA3OTkxMywiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImZscDFAZW1haWwuY29tIiwiaXNzdWVyX2lkIjoiYzkzY2FmYjMtYjNhNy00ZTdmLWE0NzAtMTVjMTRkOGVkMWUwIiwidHlwZSI6MH0.YEp5CB2GWDX4GDiB7KZDj-FRjfGabHuw8U7ZZF4x1tE"
 	offsetKey   = "offset"
 	limitKey    = "limit"
 	nameKey     = "name"
@@ -132,23 +132,16 @@ func MakeHandler(svc ui.Service, redirect string, tracer opentracing.Tracer) htt
 		opts...,
 	))
 
-	// r.Post("/connect", kithttp.NewServer(
-	// 	kitot.TraceServer(tracer, "connect_thing")(connectEndpoint(svc)),
-	// 	decodeConnectList,
-	// 	encodeResponse,
-	// 	opts...,
-	// ))
-
-	r.Get("/channels/:id/delete", kithttp.NewServer(
-		kitot.TraceServer(tracer, "remove_channel")(removeChannelEndpoint(svc)),
+	r.Get("/connections/:id", kithttp.NewServer(
+		kitot.TraceServer(tracer, "view_connection")(connectEndpoint(svc)),
 		decodeView,
 		encodeResponse,
 		opts...,
 	))
 
-	r.Get("/things/:id/channels", kithttp.NewServer(
-		kitot.TraceServer(tracer, "list_channels_by_thing")(listChannelsByThingEndpoint(svc)),
-		decodeListByConnection,
+	r.Get("/channels/:id/delete", kithttp.NewServer(
+		kitot.TraceServer(tracer, "remove_channel")(removeChannelEndpoint(svc)),
+		decodeView,
 		encodeResponse,
 		opts...,
 	))

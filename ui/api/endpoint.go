@@ -244,37 +244,22 @@ func connectThingEndpoint(svc ui.Service) endpoint.Endpoint {
 
 func connectEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		cr := request.(connectReq)
+		req := request.(viewResourceReq)
 
-		if err := cr.validate(); err != nil {
-			return nil, err
-		}
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
 
-		res, err := svc.Connect(ctx, cr.token, cr.ChannelIDs, cr.ThingIDs)
-
+		res, err := svc.ViewConnections(ctx, req.token, req.id)
 		if err != nil {
 			return nil, err
 		}
-
 		return uiRes{
 			html: res,
 		}, err
 	}
 }
 
-func listChannelsByThingEndpoint(svc ui.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(listByConnectionReq)
-
-		if err := req.validate(); err != nil {
-			return nil, err
-		}
-		res, err := svc.ListChannels(ctx, req.token)
-		return uiRes{
-			html: res,
-		}, err
-	}
-}
 func disconnectEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		cr := request.(connectReq)

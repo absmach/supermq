@@ -139,13 +139,13 @@ func (mm *metricsMiddleware) Connect(ctx context.Context, token string, chIDs, t
 	return mm.svc.Connect(ctx, token, chIDs, thIDs)
 }
 
-func (mm *metricsMiddleware) ListChannelsByThing(ctx context.Context, token, thID string) (b []byte, err error) {
+func (mm *metricsMiddleware) ViewConnections(ctx context.Context, token, id string) (b []byte, err error) {
 	defer func(begin time.Time) {
-		mm.counter.With("method", "list_channels_by_thing").Add(1)
-		mm.latency.With("method", "list_channels_by_thing").Observe(time.Since(begin).Seconds())
+		mm.counter.With("method", "view_connections").Add(1)
+		mm.latency.With("method", "view_connections").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.ListChannelsByThing(ctx, token, thID)
+	return mm.svc.ViewConnections(ctx, token, id)
 }
 
 func (mm *metricsMiddleware) Disconnect(ctx context.Context, token string, chIDs, thIDs []string) (b []byte, err error) {

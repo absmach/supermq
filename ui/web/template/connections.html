@@ -10,26 +10,24 @@
 
           {{template "navbar" .}}
 
+          <!-- Partial goes here -->
           <div class="col-md-4">
-
-            <!-- Button trigger modal -->
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addChannelModal">
-              Add
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#connectModal">
+              Connect
             </button>
-
-            <!-- Modal -->
-            <div class="modal fade" id="addChannelModal" tabindex="-1" role="dialog" aria-labelledby="addChannelModalLabel" aria-hidden="true">
+            <div class="modal fade" id="connectModal" tabindex="-1" role="dialog" aria-labelledby="connectModal" aria-hidden="true">
               <div class="modal-dialog" role="document">
                 <div class="modal-content">
                   <div class="modal-header">
-                    <h5 class="modal-title" id="addChannelModalLabel">Add Connection</h5>
+                    <h5 class="modal-title" id="connectModal">Connect</h5>
                   </div>
                   <div class="modal-body">
-                    <form method="post">
+                    <form action="/connect" method="post">
                       <div class="mb-3">
-                        <label for="name" class="form-label">Name</label>
-                        <input type="text" class="form-control" name="name" id="name" aria-describedby="nameHelp">
-                        <div id="nameHelp" class="form-text">Enter channel ID.</div>
+                        <label for="name" class="form-label">Channel ID</label>
+                        <input type="text" class="form-control" name="chanId" id="chanId" aria-describedby="chanelIDHelp">
+                        <input type="text" class="invisible" name="thingId" id="thingId" aria-describedby="thingIDHelp" value="{{.Thing.ID}}">
+                        <div id="channelIDHelp" class="form-text">Enter channel ID.</div>
                       </div>
                       <button type="submit" class="btn btn-primary">Submit</button>
                     </form>
@@ -37,22 +35,58 @@
                 </div>
               </div>
             </div>
-
             <table class="table table-striped">
-                <thead>
+              <thead>
+                <tr>
+                  <th scope="row">THING</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>Name</th>
+                  <td>{{.Thing.Name}}</td>
+                </tr>
+                <tr>
+                  <th>ID</th>
+                  <td>{{.Thing.ID}}</td>
+                </tr>
+                <tr>
+                  <th>Key</th>
+                  <td>{{.Thing.Key}}</td>
+                </tr>
+                <tr>
+                  <th>Metadata</th>
+                  <td>
+                    <pre>{{toJSON .Thing.Metadata}}</pre>
+                    </td>
+                </tr>
+              </tbody>
+            </table>
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th scope="col">CHANNELS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{range $i, $c := .Channels}}
                   <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">NAME</th>
-                    <th scope="col">ID</th>
+                    <th scope="row">{{$i}}</th>
+                    <td>{{$c.Name}}</td>
+                    <td><a href={{printf "/channels/%s" $c.ID}}>{{$c.ID}}</a></td>
                   </tr>
-                </thead>
-                <tbody>
-                  {{range $i, $c := .Connections}}
-                    <tr>
-                      <th scope="row">{{$i}}</th>
-                      <td>{{$c.Name}}</td>
-                      <td><a href={{printf "/channels/%s" $c.ID}}>{{$c.ID}}</a></td>
-                    </tr>
-                  {{end}}
-                </tbody>
-              </table>
+                {{end}}
+              </tbody>
+            </table>
+          </div>
+          <!-- End of partial-->
+
+        </div>
+      </div> <!-- /container -->
+    </main>
+
+    {{template "footer"}}
+
+  </body>
+</html>
+{{end}}

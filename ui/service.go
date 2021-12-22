@@ -48,7 +48,7 @@ type Service interface {
 	ListChannels(ctx context.Context, token string) ([]byte, error)
 	RemoveChannel(ctx context.Context, token, id string) ([]byte, error)
 	Connect(ctx context.Context, token string, chIDs, thIDs []string) ([]byte, error)
-	ListChannelsByThing(ctx context.Context, token, thID string) ([]byte, error)
+	ViewConnections(ctx context.Context, token, id string) ([]byte, error)
 	// DisconnectThing(thingID, chanID, token string) ([]byte, error)
 	Disconnect(ctx context.Context, token string, chIDs, thIDs []string) ([]byte, error)
 	CreateGroups(ctx context.Context, token string, groups ...sdk.Group) ([]byte, error)
@@ -288,30 +288,38 @@ func (gs *uiService) Connect(ctx context.Context, token string, chIDs, thIDs []s
 	return gs.ListChannels(ctx, token)
 }
 
-func (gs *uiService) ListChannelsByThing(ctx context.Context, token, thID string) ([]byte, error) {
-	tpl, err := parseTemplate("channels", "channels.html")
+func (gs *uiService) ViewConnections(ctx context.Context, token, id string) ([]byte, error) {
+	tpl, err := parseTemplate("connections", "connections.html")
 	if err != nil {
 		return []byte{}, err
 	}
 
-	chsPage, err := gs.sdk.ChannelsByThing(token, thID, 100, 10, true)
+	thing, err := gs.sdk.Thing(id, token)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	chsPage, err := gs.sdk.ChannelsByThing(token, id, 0, 100, true)
 	if err != nil {
 		return []byte{}, err
 	}
 
 	data := struct {
 		NavbarActive string
+		ID           string
+		Thing        sdk.Thing
 		Channels     []sdk.Channel
 	}{
-		"channels",
+		"things",
+		id,
+		thing,
 		chsPage.Channels,
 	}
 
 	var btpl bytes.Buffer
-	if err := tpl.ExecuteTemplate(&btpl, "channels", data); err != nil {
+	if err := tpl.ExecuteTemplate(&btpl, "connections", data); err != nil {
 		println(err.Error())
 	}
-
 	return btpl.Bytes(), nil
 }
 
