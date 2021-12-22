@@ -299,7 +299,7 @@ func (gs *uiService) ViewConnections(ctx context.Context, token, id string) ([]b
 		return []byte{}, err
 	}
 
-	chsPage, err := gs.sdk.ChannelsByThing(token, id, 0, 100, true)
+	chsPage, err := gs.sdk.ChannelsByThing(token, id, 0, 100, false)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -324,22 +324,15 @@ func (gs *uiService) ViewConnections(ctx context.Context, token, id string) ([]b
 }
 
 func (gs *uiService) Disconnect(ctx context.Context, token string, chIDs, thIDs []string) ([]byte, error) {
-	dcids := sdk.ConnectionIDs{
-		ThingIDs:   thIDs,
-		ChannelIDs: chIDs,
-	}
 	for _, chID := range chIDs {
 		for _, thID := range thIDs {
 			if err := gs.sdk.DisconnectThing(thID, chID, token); err != nil {
 				return []byte{}, err
 			}
 		}
-		if err := gs.sdk.Connect(dcids, token); err != nil {
-			return []byte{}, err
-		}
 	}
 
-	return gs.ListChannels(ctx, token)
+	return gs.ViewConnections(ctx, token, thIDs[0])
 }
 
 func (gs *uiService) CreateGroups(ctx context.Context, token string, groups ...sdk.Group) ([]byte, error) {

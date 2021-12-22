@@ -260,16 +260,15 @@ func connectEndpoint(svc ui.Service) endpoint.Endpoint {
 	}
 }
 
-func disconnectEndpoint(svc ui.Service) endpoint.Endpoint {
+func disconnectThingEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		cr := request.(connectReq)
+		dcr := request.(disconnectThingReq)
 
-		if err := cr.validate(); err != nil {
+		if err := dcr.validate(); err != nil {
 			return nil, err
 		}
 
-		res, err := svc.Disconnect(ctx, cr.token, cr.ChannelIDs, cr.ThingIDs)
-
+		res, err := svc.Disconnect(ctx, dcr.token, []string{dcr.ChanID}, []string{dcr.ThingID})
 		if err != nil {
 			return nil, err
 		}

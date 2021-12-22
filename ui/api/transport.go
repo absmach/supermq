@@ -6,7 +6,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -15,7 +14,6 @@ import (
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/internal/httputil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/ui"
@@ -28,7 +26,7 @@ import (
 const (
 	contentType = "text/html"
 	staticDir   = "ui/web/static"
-	token       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDAxMTU5MTMsImlhdCI6MTY0MDA3OTkxMywiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImZscDFAZW1haWwuY29tIiwiaXNzdWVyX2lkIjoiYzkzY2FmYjMtYjNhNy00ZTdmLWE0NzAtMTVjMTRkOGVkMWUwIiwidHlwZSI6MH0.YEp5CB2GWDX4GDiB7KZDj-FRjfGabHuw8U7ZZF4x1tE"
+	token       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDAyMDk0MTYsImlhdCI6MTY0MDE3MzQxNiwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImZscDFAZW1haWwuY29tIiwiaXNzdWVyX2lkIjoiM2VjN2IzNmYtMmUxZi00NDMwLWFkY2ItMjkxYmExZDJlZjRlIiwidHlwZSI6MH0.zMJdwSmJLG0aD0YdIAZ6hjrJo7UuegUVhakH-JqFZH4"
 	offsetKey   = "offset"
 	limitKey    = "limit"
 	nameKey     = "name"
@@ -135,6 +133,13 @@ func MakeHandler(svc ui.Service, redirect string, tracer opentracing.Tracer) htt
 	r.Get("/connections/:id", kithttp.NewServer(
 		kitot.TraceServer(tracer, "view_connection")(connectEndpoint(svc)),
 		decodeView,
+		encodeResponse,
+		opts...,
+	))
+
+	r.Post("/disconnect", kithttp.NewServer(
+		kitot.TraceServer(tracer, "disconnect_thing")(disconnectThingEndpoint(svc)),
+		decodeDisconnectThing,
 		encodeResponse,
 		opts...,
 	))
@@ -251,7 +256,6 @@ func decodeListThingsRequest(ctx context.Context, r *http.Request) (interface{},
 }
 
 func decodeChannelsCreation(_ context.Context, r *http.Request) (interface{}, error) {
-
 	var meta map[string]interface{}
 	if err := json.Unmarshal([]byte(r.PostFormValue("metadata")), &meta); err != nil {
 		return nil, err
@@ -301,59 +305,15 @@ func decodeConnectThing(_ context.Context, r *http.Request) (interface{}, error)
 	return req, nil
 }
 
-func decodeConnectList(_ context.Context, r *http.Request) (interface{}, error) {
-	// if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
-	// 	return nil, errors.ErrUnsupportedContentType
-	// }
-	fmt.Println("decodeConnectList")
-	req := connectReq{
-		token: getAuthorization(r),
+func decodeDisconnectThing(_ context.Context, r *http.Request) (interface{}, error) {
+	r.ParseForm()                  // Parses the request body
+	chanId := r.Form.Get("chanId") // x will be "" if parameter is not set
+	thingId := r.Form.Get("thingId")
+	req := disconnectThingReq{
+		token:   getAuthorization(r),
+		ChanID:  chanId,
+		ThingID: thingId,
 	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(things.ErrMalformedEntity, err)
-	}
-	fmt.Printf("req:%v\n", req)
-	return req, nil
-}
-
-func decodeListByConnection(_ context.Context, r *http.Request) (interface{}, error) {
-	o, err := httputil.ReadUintQuery(r, offsetKey, defOffset)
-	if err != nil {
-		return nil, err
-	}
-
-	l, err := httputil.ReadUintQuery(r, limitKey, defLimit)
-	if err != nil {
-		return nil, err
-	}
-
-	c, err := httputil.ReadBoolQuery(r, disconnKey, false)
-	if err != nil {
-		return nil, err
-	}
-
-	or, err := httputil.ReadStringQuery(r, orderKey, "")
-	if err != nil {
-		return nil, err
-	}
-
-	d, err := httputil.ReadStringQuery(r, dirKey, "")
-	if err != nil {
-		return nil, err
-	}
-
-	req := listByConnectionReq{
-		token: r.Header.Get("Authorization"),
-		id:    bone.GetValue(r, "id"),
-		pageMetadata: things.PageMetadata{
-			Offset:       o,
-			Limit:        l,
-			Disconnected: c,
-			Order:        or,
-			Dir:          d,
-		},
-	}
-
 	return req, nil
 }
 

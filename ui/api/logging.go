@@ -207,7 +207,7 @@ func (lm *loggingMiddleware) Disconnect(ctx context.Context, token string, chIDs
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.Disconnect(ctx, token, thIDs, chIDs)
+	return lm.svc.Disconnect(ctx, token, chIDs, thIDs)
 }
 
 func (lm *loggingMiddleware) CreateGroups(ctx context.Context, token string, groups ...sdk.Group) (b []byte, err error) {

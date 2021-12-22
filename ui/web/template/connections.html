@@ -35,6 +35,24 @@
                 </div>
               </div>
             </div>
+            <!-- <div class="modal fade" id="disconnectModal" tabindex="-1" role="dialog" aria-labelledby="disconnectModal" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="disconnectModal">Disconnect</h5>
+                  </div>
+                  <div class="modal-body">
+                    <form action="/disconnect" method="post">
+                      <div class="mb-3">
+                        <label for="name" class="form-label">Thing ID</label>
+                        <input type="text" class="form-control" name="thingId" id="thingId" aria-describedby="thingIDHelp" value="{{.Thing.ID}}">
+                      </div>
+                      <button type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div> -->
             <table class="table table-striped">
               <thead>
                 <tr>
@@ -62,10 +80,11 @@
                 </tr>
               </tbody>
             </table>
+            {{ $t := .Thing.ID }}
             <table class="table table-striped">
               <thead>
                 <tr>
-                  <th scope="col">CHANNELS</th>
+                  <th colspan="4">CONNECTED CHANNELS</th>
                 </tr>
               </thead>
               <tbody>
@@ -74,6 +93,13 @@
                     <th scope="row">{{$i}}</th>
                     <td>{{$c.Name}}</td>
                     <td><a href={{printf "/channels/%s" $c.ID}}>{{$c.ID}}</a></td>
+                    <td>
+                      <form action="/disconnect" method="post">
+                        <input type="hidden" name="thingId" id="thingId" value="{{$t}}">
+                        <input type="hidden" name="chanId" id="chanId" value="{{$c.ID}}">
+                        <button type="submit" class="btn btn-danger btn-sm">Disconnect</button>
+                      </form>
+                    </td>
                   </tr>
                 {{end}}
               </tbody>
