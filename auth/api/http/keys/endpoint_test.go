@@ -92,7 +92,7 @@ func TestIssue(t *testing.T) {
 	defer ts.Close()
 	client := ts.Client()
 
-	uk := issueRequest{Type: auth.LoginKey}
+	lk := issueRequest{Type: auth.LoginKey}
 	ak := issueRequest{Type: auth.APIKey, Duration: time.Hour}
 	rk := issueRequest{Type: auth.RecoveryKey}
 
@@ -105,7 +105,7 @@ func TestIssue(t *testing.T) {
 	}{
 		{
 			desc:   "issue login key",
-			req:    toJSON(uk),
+			req:    toJSON(lk),
 			ct:     contentType,
 			token:  "",
 			status: http.StatusForbidden,
@@ -126,7 +126,7 @@ func TestIssue(t *testing.T) {
 		},
 		{
 			desc:   "issue login key wrong content type",
-			req:    toJSON(uk),
+			req:    toJSON(lk),
 			ct:     "",
 			token:  loginSecret,
 			status: http.StatusUnsupportedMediaType,

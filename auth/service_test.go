@@ -56,7 +56,7 @@ func TestIssue(t *testing.T) {
 		err   error
 	}{
 		{
-			desc: "issue user key",
+			desc: "issue login key",
 			key: auth.Key{
 				Type:     auth.LoginKey,
 				IssuedAt: time.Now(),
@@ -65,7 +65,7 @@ func TestIssue(t *testing.T) {
 			err:   nil,
 		},
 		{
-			desc: "issue user key with no time",
+			desc: "issue login key with no time",
 			key: auth.Key{
 				Type: auth.LoginKey,
 			},
@@ -143,13 +143,13 @@ func TestRevoke(t *testing.T) {
 		err   error
 	}{
 		{
-			desc:  "revoke user key",
+			desc:  "revoke login key",
 			id:    newKey.ID,
 			token: secret,
 			err:   nil,
 		},
 		{
-			desc:  "revoke non-existing user key",
+			desc:  "revoke non-existing login key",
 			id:    newKey.ID,
 			token: secret,
 			err:   nil,
@@ -181,10 +181,10 @@ func TestRetrieve(t *testing.T) {
 	}
 
 	_, userToken, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
-	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	apiKey, apiToken, err := svc.Issue(context.Background(), secret, key)
-	assert.Nil(t, err, fmt.Sprintf("Issuing user's key expected to succeed: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("Issuing login's key expected to succeed: %s", err))
 
 	_, resetToken, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.RecoveryKey, IssuedAt: time.Now()})
 	assert.Nil(t, err, fmt.Sprintf("Issuing reset key expected to succeed: %s", err))
@@ -196,13 +196,13 @@ func TestRetrieve(t *testing.T) {
 		err   error
 	}{
 		{
-			desc:  "retrieve user key",
+			desc:  "retrieve login key",
 			id:    apiKey.ID,
 			token: userToken,
 			err:   nil,
 		},
 		{
-			desc:  "retrieve non-existing user key",
+			desc:  "retrieve non-existing login key",
 			id:    "invalid",
 			token: userToken,
 			err:   auth.ErrNotFound,
@@ -243,14 +243,14 @@ func TestIdentify(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("Issuing reset key expected to succeed: %s", err))
 
 	_, apiSecret, err := svc.Issue(context.Background(), loginSecret, auth.Key{Type: auth.APIKey, IssuerID: id, Subject: email, IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Minute)})
-	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	exp1 := time.Now().Add(-2 * time.Second)
 	_, expSecret, err := svc.Issue(context.Background(), loginSecret, auth.Key{Type: auth.APIKey, IssuedAt: time.Now(), ExpiresAt: exp1})
-	assert.Nil(t, err, fmt.Sprintf("Issuing expired user key expected to succeed: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("Issuing expired login key expected to succeed: %s", err))
 
 	_, invalidSecret, err := svc.Issue(context.Background(), loginSecret, auth.Key{Type: 22, IssuedAt: time.Now()})
-	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	cases := []struct {
 		desc string
