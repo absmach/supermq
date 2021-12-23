@@ -26,7 +26,7 @@ import (
 const (
 	contentType = "text/html"
 	staticDir   = "ui/web/static"
-	token       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDAyMDk0MTYsImlhdCI6MTY0MDE3MzQxNiwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImZscDFAZW1haWwuY29tIiwiaXNzdWVyX2lkIjoiM2VjN2IzNmYtMmUxZi00NDMwLWFkY2ItMjkxYmExZDJlZjRlIiwidHlwZSI6MH0.zMJdwSmJLG0aD0YdIAZ6hjrJo7UuegUVhakH-JqFZH4"
+	token       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDAyODE1NjEsImlhdCI6MTY0MDI0NTU2MSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImZscDFAZW1haWwuY29tIiwiaXNzdWVyX2lkIjoiM2VjN2IzNmYtMmUxZi00NDMwLWFkY2ItMjkxYmExZDJlZjRlIiwidHlwZSI6MH0.SFNNqaMVpvYw0-YXbRdOqejUt8uTXfLmLWI8-SPUoC0"
 	offsetKey   = "offset"
 	limitKey    = "limit"
 	nameKey     = "name"
@@ -172,6 +172,13 @@ func MakeHandler(svc ui.Service, redirect string, tracer opentracing.Tracer) htt
 		opts...,
 	))
 
+	r.Post("/groups/:id/members", kithttp.NewServer(
+		kitot.TraceServer(tracer, "assign")(assignEndpoint(svc)),
+		decodeAssignRequest,
+		encodeResponse,
+		opts...,
+	))
+
 	r.Post("/groups/:id", kithttp.NewServer(
 		kitot.TraceServer(tracer, "update_group")(updateGroupEndpoint(svc)),
 		decodeGroupUpdate,
@@ -294,8 +301,8 @@ func decodeListChannelsRequest(ctx context.Context, r *http.Request) (interface{
 }
 
 func decodeConnectThing(_ context.Context, r *http.Request) (interface{}, error) {
-	r.ParseForm()                  // Parses the request body
-	chanId := r.Form.Get("chanId") // x will be "" if parameter is not set
+	r.ParseForm()
+	chanId := r.Form.Get("chanId")
 	thingId := r.Form.Get("thingId")
 	req := connectThingReq{
 		token:   getAuthorization(r),
@@ -306,8 +313,8 @@ func decodeConnectThing(_ context.Context, r *http.Request) (interface{}, error)
 }
 
 func decodeDisconnectThing(_ context.Context, r *http.Request) (interface{}, error) {
-	r.ParseForm()                  // Parses the request body
-	chanId := r.Form.Get("chanId") // x will be "" if parameter is not set
+	r.ParseForm()
+	chanId := r.Form.Get("chanId")
 	thingId := r.Form.Get("thingId")
 	req := disconnectThingReq{
 		token:   getAuthorization(r),
@@ -336,6 +343,21 @@ func decodeListGroupsRequest(ctx context.Context, r *http.Request) (interface{},
 		token: getAuthorization(r),
 	}
 
+	return req, nil
+}
+
+func decodeAssignRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	memberid := r.PostFormValue("memberId")
+	println(memberid)
+	println("rrrrrrrrr")
+
+	req := assignReq{
+		token:   getAuthorization(r),
+		groupID: bone.GetValue(r, "id"),
+		Type:    r.PostFormValue("Type"),
+		Member:  memberid,
+	}
+	println(req.Type)
 	return req, nil
 }
 

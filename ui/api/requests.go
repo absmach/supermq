@@ -4,6 +4,7 @@
 package api
 
 import (
+	"github.com/mainflux/mainflux/auth"
 	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/ui"
 )
@@ -200,6 +201,25 @@ func (req disconnectThingReq) validate() error {
 
 	if req.ChanID == "" || req.ThingID == "" {
 		return things.ErrMalformedEntity
+	}
+
+	return nil
+}
+
+type assignReq struct {
+	token   string
+	groupID string
+	Type    string `json:"type,omitempty"`
+	Member  string `json:"member"`
+}
+
+func (req assignReq) validate() error {
+	if req.token == "" {
+		return auth.ErrUnauthorizedAccess
+	}
+
+	if req.Type == "" || req.groupID == "" || req.Member == "" {
+		return auth.ErrMalformedEntity
 	}
 
 	return nil

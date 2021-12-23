@@ -49,9 +49,9 @@ type Service interface {
 	RemoveChannel(ctx context.Context, token, id string) ([]byte, error)
 	Connect(ctx context.Context, token string, chIDs, thIDs []string) ([]byte, error)
 	ViewConnections(ctx context.Context, token, id string) ([]byte, error)
-	// DisconnectThing(thingID, chanID, token string) ([]byte, error)
 	Disconnect(ctx context.Context, token string, chIDs, thIDs []string) ([]byte, error)
 	CreateGroups(ctx context.Context, token string, groups ...sdk.Group) ([]byte, error)
+	Assign(ctx context.Context, token, groupID, groupType string, memberIDs ...string) ([]byte, error)
 	ViewGroup(ctx context.Context, token, id string) ([]byte, error)
 	UpdateGroup(ctx context.Context, token, id string, group sdk.Group) ([]byte, error)
 	ListGroups(ctx context.Context, token string) ([]byte, error)
@@ -285,7 +285,7 @@ func (gs *uiService) Connect(ctx context.Context, token string, chIDs, thIDs []s
 		return []byte{}, err
 	}
 
-	return gs.ListChannels(ctx, token)
+	return gs.ViewConnections(ctx, token, thIDs[0])
 }
 
 func (gs *uiService) ViewConnections(ctx context.Context, token, id string) ([]byte, error) {
@@ -382,15 +382,22 @@ func (gs *uiService) ViewGroup(ctx context.Context, token, id string) ([]byte, e
 	if err != nil {
 		return []byte{}, err
 	}
-
+	msPage, err := gs.sdk.Members(id, token, 0, 100)
+	if err != nil {
+		return []byte{}, err
+	}
+	fmt.Println("rrr")
+	fmt.Println(msPage)
 	data := struct {
 		NavbarActive string
 		ID           string
 		Group        sdk.Group
+		Members      []sdk.Member
 	}{
 		"groups",
 		id,
 		group,
+		msPage.Members,
 	}
 
 	var btpl bytes.Buffer
@@ -398,6 +405,16 @@ func (gs *uiService) ViewGroup(ctx context.Context, token, id string) ([]byte, e
 		println(err.Error())
 	}
 	return btpl.Bytes(), nil
+}
+
+func (gs *uiService) Assign(ctx context.Context, token string, groupID, groupType string, memberIDs ...string) ([]byte, error) {
+	fmt.Println(groupType)
+	fmt.Println("aaaaaaaaaaaaaaaaa")
+	if err := gs.sdk.Assign(memberIDs, groupType, groupID, token); err != nil {
+		return []byte{}, err
+	}
+
+	return gs.ListGroups(ctx, token)
 }
 
 func (gs *uiService) UpdateGroup(ctx context.Context, token, id string, group sdk.Group) ([]byte, error) {

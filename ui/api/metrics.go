@@ -184,6 +184,15 @@ func (mm *metricsMiddleware) ViewGroup(ctx context.Context, token, id string) (b
 	return mm.svc.ViewGroup(ctx, token, id)
 }
 
+func (mm *metricsMiddleware) Assign(ctx context.Context, token, groupID, groupType string, memberIDs ...string) (b []byte, err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "assign").Add(1)
+		mm.latency.With("method", "assign").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.Assign(ctx, token, groupID, groupType, memberIDs...)
+}
+
 func (mm *metricsMiddleware) UpdateGroup(ctx context.Context, token, id string, group sdk.Group) (b []byte, err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "update_group").Add(1)
