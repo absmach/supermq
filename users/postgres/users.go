@@ -73,7 +73,7 @@ func (ur userRepository) Save(ctx context.Context, user users.User) (string, err
 }
 
 func (ur userRepository) Update(ctx context.Context, user users.User) error {
-	q := `UPDATE users SET(email, password, metadata) VALUES (:email, :password, :metadata) WHERE email = :email`
+	q := `UPDATE users SET(email, password, metadata) VALUES (:email, :password, :metadata) WHERE id = :id`
 
 	dbu, err := toDBUser(user)
 	if err != nil {
@@ -88,7 +88,7 @@ func (ur userRepository) Update(ctx context.Context, user users.User) error {
 }
 
 func (ur userRepository) UpdateUser(ctx context.Context, user users.User) error {
-	q := `UPDATE users SET metadata = :metadata WHERE email = :email`
+	q := `UPDATE users SET metadata = :metadata WHERE id = :id`
 
 	dbu, err := toDBUser(user)
 	if err != nil {
