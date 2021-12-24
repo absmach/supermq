@@ -130,21 +130,8 @@ func MakeHandler(svc ui.Service, redirect string, tracer opentracing.Tracer) htt
 		opts...,
 	))
 
-	r.Post("/connect", kithttp.NewServer(
-		kitot.TraceServer(tracer, "connect_channel")(connectChannelEndpoint(svc)),
-		decodeConnectChannel,
-		encodeResponse,
-		opts...,
-	))
-	r.Get("/things/:id/channels", kithttp.NewServer(
-		kitot.TraceServer(tracer, "connect_thing")(viewChannelsByThingEndpoint(svc)),
-		decodeConnectThing,
-		encodeResponse,
-		opts...,
-	))
-
-	r.Get("/channels/:id/things", kithttp.NewServer(
-		kitot.TraceServer(tracer, "view_connection")(viewThingsByChannelEndpoint(svc)),
+	r.Get("/connections/:id", kithttp.NewServer(
+		kitot.TraceServer(tracer, "view_connection")(connectEndpoint(svc)),
 		decodeView,
 		encodeResponse,
 		opts...,
@@ -153,13 +140,6 @@ func MakeHandler(svc ui.Service, redirect string, tracer opentracing.Tracer) htt
 	r.Post("/disconnect", kithttp.NewServer(
 		kitot.TraceServer(tracer, "disconnect_thing")(disconnectThingEndpoint(svc)),
 		decodeDisconnectThing,
-		encodeResponse,
-		opts...,
-	))
-
-	r.Post("/disconnect", kithttp.NewServer(
-		kitot.TraceServer(tracer, "disconnect_channel")(disconnectChannelEndpoint(svc)),
-		decodeDisconnectChannel,
 		encodeResponse,
 		opts...,
 	))
@@ -360,30 +340,6 @@ func decodeUnassignRequest(_ context.Context, r *http.Request) (interface{}, err
 			Type:    r.PostFormValue("Type"),
 			Member:  r.PostFormValue("memberId"),
 		},
-	}
-	return req, nil
-}
-
-func decodeConnectChannel(_ context.Context, r *http.Request) (interface{}, error) {
-	r.ParseForm()
-	thingId := r.Form.Get("thingId")
-	chanId := r.Form.Get("chanId")
-	req := connectThingReq{
-		token:   getAuthorization(r),
-		ThingID: thingId,
-		ChanID:  chanId,
-	}
-	return req, nil
-}
-
-func decodeDisconnectChannel(_ context.Context, r *http.Request) (interface{}, error) {
-	r.ParseForm()
-	thingId := r.Form.Get("thingId")
-	chanId := r.Form.Get("chanId")
-	req := disconnectChannelReq{
-		token:   getAuthorization(r),
-		ThingID: thingId,
-		ChanID:  chanId,
 	}
 	return req, nil
 }
