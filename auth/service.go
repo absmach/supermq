@@ -58,7 +58,7 @@ var (
 	// ErrFailedToRetrieveChildren failed to retrieve groups.
 	ErrFailedToRetrieveChildren = errors.New("failed to retrieve all groups")
 
-	errIssueUser = errors.New("failed to issue new user key")
+	errIssueUser = errors.New("failed to issue new login key")
 	errIssueTmp  = errors.New("failed to issue new temporary key")
 	errRevoke    = errors.New("failed to remove key")
 	errRetrieve  = errors.New("failed to retrieve key data")
@@ -298,7 +298,7 @@ func (svc service) login(token string) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-	// Only user key token is valid for login.
+	// Only login key token is valid for login.
 	if key.Type != LoginKey || key.IssuerID == "" {
 		return "", "", ErrUnauthorizedAccess
 	}
