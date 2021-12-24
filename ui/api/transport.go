@@ -164,6 +164,13 @@ func MakeHandler(svc ui.Service, redirect string, tracer opentracing.Tracer) htt
 		opts...,
 	))
 
+	r.Post("/unassign", kithttp.NewServer(
+		kitot.TraceServer(tracer, "unassign")(unassignEndpoint(svc)),
+		decodeUnassignRequest,
+		encodeResponse,
+		opts...,
+	))
+
 	r.Get("/channels/:id/delete", kithttp.NewServer(
 		kitot.TraceServer(tracer, "remove_channel")(removeChannelEndpoint(svc)),
 		decodeView,
@@ -195,13 +202,6 @@ func MakeHandler(svc ui.Service, redirect string, tracer opentracing.Tracer) htt
 	r.Post("/groups/:id/members", kithttp.NewServer(
 		kitot.TraceServer(tracer, "assign")(assignEndpoint(svc)),
 		decodeAssignRequest,
-		encodeResponse,
-		opts...,
-	))
-
-	r.Delete("/groups/:groupID/members", kithttp.NewServer(
-		kitot.TraceServer(tracer, "unassign")(unassignEndpoint(svc)),
-		decodeUnassignEndpoint,
 		encodeResponse,
 		opts...,
 	))
@@ -351,6 +351,19 @@ func decodeDisconnectThing(_ context.Context, r *http.Request) (interface{}, err
 	return req, nil
 }
 
+func decodeUnassignRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	r.ParseForm()
+	req := unassignReq{
+		assignReq{
+			token:   getAuthorization(r),
+			groupID: r.PostFormValue("groupId"),
+			Type:    r.PostFormValue("Type"),
+			Member:  r.PostFormValue("memberId"),
+		},
+	}
+	return req, nil
+}
+
 func decodeConnectChannel(_ context.Context, r *http.Request) (interface{}, error) {
 	r.ParseForm()
 	thingId := r.Form.Get("thingId")
@@ -407,13 +420,6 @@ func decodeAssignRequest(_ context.Context, r *http.Request) (interface{}, error
 		Member:  memberid,
 	}
 	println(req.Type)
-	return req, nil
-}
-
-func decodeUnassignEndpoint(ctx context.Context, r *http.Request) (interface{}, error) {
-
-	req := unassignReq{}
-
 	return req, nil
 }
 
