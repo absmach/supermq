@@ -188,6 +188,24 @@ func (req connectThingReq) validate() error {
 	return nil
 }
 
+type connectChannelReq struct {
+	token   string
+	ThingID string `json:"thing_id,omitempty"`
+	ChanID  string `json:"chan_id,omitempty"`
+}
+
+func (req connectChannelReq) validate() error {
+	// if req.token == "" {
+	// 	return things.ErrUnauthorizedAccess
+	// }
+
+	if req.ChanID == "" || req.ThingID == "" {
+		return things.ErrMalformedEntity
+	}
+
+	return nil
+}
+
 type disconnectThingReq struct {
 	token   string
 	ChanID  string `json:"chan_id,omitempty"`
@@ -195,6 +213,24 @@ type disconnectThingReq struct {
 }
 
 func (req disconnectThingReq) validate() error {
+	// if req.token == "" {
+	// 	return things.ErrUnauthorizedAccess
+	// }
+
+	if req.ChanID == "" || req.ThingID == "" {
+		return things.ErrMalformedEntity
+	}
+
+	return nil
+}
+
+type disconnectChannelReq struct {
+	token   string
+	ThingID string `json:"thing_id,omitempty"`
+	ChanID  string `json:"chan_id,omitempty"`
+}
+
+func (req disconnectChannelReq) validate() error {
 	// if req.token == "" {
 	// 	return things.ErrUnauthorizedAccess
 	// }
@@ -219,6 +255,22 @@ func (req assignReq) validate() error {
 	}
 
 	if req.Type == "" || req.groupID == "" || req.Member == "" {
+		return auth.ErrMalformedEntity
+	}
+
+	return nil
+}
+
+type unassignReq struct {
+	assignReq
+}
+
+func (req unassignReq) validate() error {
+	if req.token == "" {
+		return auth.ErrUnauthorizedAccess
+	}
+
+	if req.groupID == "" || req.Member == "" {
 		return auth.ErrMalformedEntity
 	}
 

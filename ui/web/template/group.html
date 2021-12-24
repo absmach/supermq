@@ -108,8 +108,8 @@
                     <td>{{$m.Type}}</td>
                     <td>
                       <form action="/disconnect" method="post">
-                        <input type="hidden" name="thingId" id="thingId" value="{{$g}}">
-                        <input type="hidden" name="chanId" id="chanId" value="{{$m.ID}}">
+                        <input type="hidden" name="groupId" id="groupId" value="{{$g}}">
+                        <input type="hidden" name="memberId" id="memberId" value="{{$m.ID}}">
                         <button type="submit" class="btn btn-danger btn-sm">Unassign</button>
                       </form>
                     </td>

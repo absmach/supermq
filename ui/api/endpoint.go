@@ -232,7 +232,7 @@ func connectThingEndpoint(svc ui.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		res, err := svc.Connect(ctx, cr.token, []string{cr.ChanID}, []string{cr.ThingID})
+		res, err := svc.ConnectChannelsByThing(ctx, cr.token, []string{cr.ChanID}, []string{cr.ThingID})
 		if err != nil {
 			return nil, err
 		}
@@ -242,7 +242,25 @@ func connectThingEndpoint(svc ui.Service) endpoint.Endpoint {
 	}
 }
 
-func connectEndpoint(svc ui.Service) endpoint.Endpoint {
+func connectChannelEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		cr := request.(connectChannelReq)
+
+		if err := cr.validate(); err != nil {
+			return nil, err
+		}
+
+		res, err := svc.ConnectThingsByChannel(ctx, cr.token, []string{cr.ChanID}, []string{cr.ThingID})
+		if err != nil {
+			return nil, err
+		}
+		return uiRes{
+			html: res,
+		}, err
+	}
+}
+
+func viewChannelsByThingEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(viewResourceReq)
 
@@ -250,7 +268,25 @@ func connectEndpoint(svc ui.Service) endpoint.Endpoint {
 		// 	return nil, err
 		// }
 
-		res, err := svc.ViewConnections(ctx, req.token, req.id)
+		res, err := svc.ViewConnectionsChannelsByThing(ctx, req.token, req.id)
+		if err != nil {
+			return nil, err
+		}
+		return uiRes{
+			html: res,
+		}, err
+	}
+}
+
+func viewThingsByChannelEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(viewResourceReq)
+
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
+
+		res, err := svc.ViewConnectionsThingsByChannel(ctx, req.token, req.id)
 		if err != nil {
 			return nil, err
 		}
@@ -268,7 +304,25 @@ func disconnectThingEndpoint(svc ui.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		res, err := svc.Disconnect(ctx, dcr.token, []string{dcr.ChanID}, []string{dcr.ThingID})
+		res, err := svc.DisconnectChannelsByThing(ctx, dcr.token, []string{dcr.ChanID}, []string{dcr.ThingID})
+		if err != nil {
+			return nil, err
+		}
+		return uiRes{
+			html: res,
+		}, err
+	}
+}
+
+func disconnectChannelEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		dcr := request.(disconnectChannelReq)
+
+		if err := dcr.validate(); err != nil {
+			return nil, err
+		}
+
+		res, err := svc.DisconnectThingsByChannel(ctx, dcr.token, []string{dcr.ChanID}, []string{dcr.ChanID})
 		if err != nil {
 			return nil, err
 		}
@@ -350,6 +404,23 @@ func assignEndpoint(svc ui.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
+		return uiRes{
+			html: res,
+		}, err
+	}
+}
+
+func unassignEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(unassignReq)
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+
+		res, err := svc.Unassign(ctx, req.token, req.groupID, req.Member)
+		if err != nil {
+			return nil, err
+		}
 		return uiRes{
 			html: res,
 		}, err

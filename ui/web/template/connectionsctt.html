@@ -1,0 +1,100 @@
+{{define "connectionsctt"}}
+<!doctype html>
+<html lang="en">
+  {{template "header"}}
+
+  <body>
+    <main role="main">
+      <div class="container-fluid">
+        <div class="row">
+
+          {{template "navbar" .}}
+
+          <!-- Partial goes here -->
+          <div class="col-md-4">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#connectModal">
+              Connect
+            </button>
+            <div class="modal fade" id="connectModal" tabindex="-1" role="dialog" aria-labelledby="connectModal" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="connectModal">Connect</h5>
+                  </div>
+                  <div class="modal-body">
+                    <form action="/connect" method="post">
+                      <div class="mb-3">
+                        <label for="name" class="form-label">Channel ID</label>
+                        <input type="text" class="form-control" name="thingId" id="thingId" aria-describedby="thingIDHelp">
+                        <input type="text" class="invisible" name="chanId" id="chanId" aria-describedby="channelIDHelp" value="{{.Channel.ID}}">
+                        <div id="channelIDHelp" class="form-text">Enter channel ID.</div>
+                      </div>
+                      <button type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th scope="row">CHANNEL</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>Name</th>
+                  <td>{{.Channel.Name}}</td>
+                </tr>
+                <tr>
+                  <th>ID</th>
+                  <td>{{.Channel.ID}}</td>
+                </tr>
+                <tr>
+                  <th>Key</th>
+                  <td>{{.Channel.Key}}</td>
+                </tr>
+                <tr>
+                  <th>Metadata</th>
+                  <td>
+                    <pre>{{toJSON .Channel.Metadata}}</pre>
+                    </td>
+                </tr>
+              </tbody>
+            </table>
+            {{ $t := .Channel.ID }}
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th colspan="4">CONNECTED CHANNELS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{range $i, $c := .Channels}}
+                  <tr>
+                    <th scope="row">{{$i}}</th>
+                    <td>{{$c.Name}}</td>
+                    <td><a href={{printf "/channels/%s" $c.ID}}>{{$c.ID}}</a></td>
+                    <td>
+                      <form action="/disconnect" method="post">
+                        <input type="hidden" name="chanId" id="chanId" value="{{$c}}">
+                        <input type="hidden" name="thingId" id="thingId" value="{{$t.ID}}">
+                        <button type="submit" class="btn btn-danger btn-sm">Disconnect</button>
+                      </form>
+                    </td>
+                  </tr>
+                {{end}}
+              </tbody>
+            </table>
+          </div>
+          <!-- End of partial-->
+
+        </div>
+      </div> <!-- /container -->
+    </main>
+
+    {{template "footer"}}
+
+  </body>
+</html>
+{{end}}

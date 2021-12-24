@@ -26,7 +26,7 @@ import (
 const (
 	contentType = "text/html"
 	staticDir   = "ui/web/static"
-	token       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDAyODE1NjEsImlhdCI6MTY0MDI0NTU2MSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImZscDFAZW1haWwuY29tIiwiaXNzdWVyX2lkIjoiM2VjN2IzNmYtMmUxZi00NDMwLWFkY2ItMjkxYmExZDJlZjRlIiwidHlwZSI6MH0.SFNNqaMVpvYw0-YXbRdOqejUt8uTXfLmLWI8-SPUoC0"
+	token       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDAzNjU3MzQsImlhdCI6MTY0MDMyOTczNCwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImZscDFAZW1haWwuY29tIiwiaXNzdWVyX2lkIjoiYzkzY2FmYjMtYjNhNy00ZTdmLWE0NzAtMTVjMTRkOGVkMWUwIiwidHlwZSI6MH0.SkRJci-CpMNTwMpaSA_MFrfCQntmEUwFeTXCj2DijMs"
 	offsetKey   = "offset"
 	limitKey    = "limit"
 	nameKey     = "name"
@@ -130,8 +130,21 @@ func MakeHandler(svc ui.Service, redirect string, tracer opentracing.Tracer) htt
 		opts...,
 	))
 
-	r.Get("/connections/:id", kithttp.NewServer(
-		kitot.TraceServer(tracer, "view_connection")(connectEndpoint(svc)),
+	r.Post("/connect", kithttp.NewServer(
+		kitot.TraceServer(tracer, "connect_channel")(connectChannelEndpoint(svc)),
+		decodeConnectChannel,
+		encodeResponse,
+		opts...,
+	))
+	r.Get("/things/:id/channels", kithttp.NewServer(
+		kitot.TraceServer(tracer, "connect_thing")(viewChannelsByThingEndpoint(svc)),
+		decodeConnectThing,
+		encodeResponse,
+		opts...,
+	))
+
+	r.Get("/channels/:id/things", kithttp.NewServer(
+		kitot.TraceServer(tracer, "view_connection")(viewThingsByChannelEndpoint(svc)),
 		decodeView,
 		encodeResponse,
 		opts...,
@@ -140,6 +153,13 @@ func MakeHandler(svc ui.Service, redirect string, tracer opentracing.Tracer) htt
 	r.Post("/disconnect", kithttp.NewServer(
 		kitot.TraceServer(tracer, "disconnect_thing")(disconnectThingEndpoint(svc)),
 		decodeDisconnectThing,
+		encodeResponse,
+		opts...,
+	))
+
+	r.Post("/disconnect", kithttp.NewServer(
+		kitot.TraceServer(tracer, "disconnect_channel")(disconnectChannelEndpoint(svc)),
+		decodeDisconnectChannel,
 		encodeResponse,
 		opts...,
 	))
@@ -175,6 +195,13 @@ func MakeHandler(svc ui.Service, redirect string, tracer opentracing.Tracer) htt
 	r.Post("/groups/:id/members", kithttp.NewServer(
 		kitot.TraceServer(tracer, "assign")(assignEndpoint(svc)),
 		decodeAssignRequest,
+		encodeResponse,
+		opts...,
+	))
+
+	r.Delete("/groups/:groupID/members", kithttp.NewServer(
+		kitot.TraceServer(tracer, "unassign")(unassignEndpoint(svc)),
+		decodeUnassignEndpoint,
 		encodeResponse,
 		opts...,
 	))
@@ -324,6 +351,30 @@ func decodeDisconnectThing(_ context.Context, r *http.Request) (interface{}, err
 	return req, nil
 }
 
+func decodeConnectChannel(_ context.Context, r *http.Request) (interface{}, error) {
+	r.ParseForm()
+	thingId := r.Form.Get("thingId")
+	chanId := r.Form.Get("chanId")
+	req := connectThingReq{
+		token:   getAuthorization(r),
+		ThingID: thingId,
+		ChanID:  chanId,
+	}
+	return req, nil
+}
+
+func decodeDisconnectChannel(_ context.Context, r *http.Request) (interface{}, error) {
+	r.ParseForm()
+	thingId := r.Form.Get("thingId")
+	chanId := r.Form.Get("chanId")
+	req := disconnectChannelReq{
+		token:   getAuthorization(r),
+		ThingID: thingId,
+		ChanID:  chanId,
+	}
+	return req, nil
+}
+
 func decodeGroupCreation(_ context.Context, r *http.Request) (interface{}, error) {
 	var meta map[string]interface{}
 	if err := json.Unmarshal([]byte(r.PostFormValue("metadata")), &meta); err != nil {
@@ -348,8 +399,6 @@ func decodeListGroupsRequest(ctx context.Context, r *http.Request) (interface{},
 
 func decodeAssignRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	memberid := r.PostFormValue("memberId")
-	println(memberid)
-	println("rrrrrrrrr")
 
 	req := assignReq{
 		token:   getAuthorization(r),
@@ -358,6 +407,13 @@ func decodeAssignRequest(_ context.Context, r *http.Request) (interface{}, error
 		Member:  memberid,
 	}
 	println(req.Type)
+	return req, nil
+}
+
+func decodeUnassignEndpoint(ctx context.Context, r *http.Request) (interface{}, error) {
+
+	req := unassignReq{}
+
 	return req, nil
 }
 

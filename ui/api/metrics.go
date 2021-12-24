@@ -130,31 +130,58 @@ func (mm *metricsMiddleware) RemoveChannel(ctx context.Context, token, id string
 	return mm.svc.RemoveChannel(ctx, token, id)
 }
 
-func (mm *metricsMiddleware) Connect(ctx context.Context, token string, chIDs, thIDs []string) (b []byte, err error) {
+func (mm *metricsMiddleware) ConnectChannelsByThing(ctx context.Context, token string, chIDs, thIDs []string) (b []byte, err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "connect").Add(1)
 		mm.latency.With("method", "connect").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.Connect(ctx, token, chIDs, thIDs)
+	return mm.svc.ConnectChannelsByThing(ctx, token, chIDs, thIDs)
 }
 
-func (mm *metricsMiddleware) ViewConnections(ctx context.Context, token, id string) (b []byte, err error) {
+func (mm *metricsMiddleware) ViewConnectionsChannelsByThing(ctx context.Context, token, id string) (b []byte, err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "view_connections").Add(1)
 		mm.latency.With("method", "view_connections").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.ViewConnections(ctx, token, id)
+	return mm.svc.ViewConnectionsChannelsByThing(ctx, token, id)
 }
 
-func (mm *metricsMiddleware) Disconnect(ctx context.Context, token string, chIDs, thIDs []string) (b []byte, err error) {
+func (mm *metricsMiddleware) DisconnectChannelsByThing(ctx context.Context, token string, chIDs, thIDs []string) (b []byte, err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "disconnect").Add(1)
 		mm.latency.With("method", "disconnect").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.Disconnect(ctx, token, chIDs, thIDs)
+	return mm.svc.DisconnectChannelsByThing(ctx, token, chIDs, thIDs)
+}
+
+func (mm *metricsMiddleware) ConnectThingsByChannel(ctx context.Context, token string, chIDs, thIDs []string) (b []byte, err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "connect").Add(1)
+		mm.latency.With("method", "connect").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.ConnectChannelsByThing(ctx, token, chIDs, thIDs)
+}
+
+func (mm *metricsMiddleware) ViewConnectionsThingsByChannel(ctx context.Context, token, id string) (b []byte, err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "view_connections").Add(1)
+		mm.latency.With("method", "view_connections").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.ViewConnectionsThingsByChannel(ctx, token, id)
+}
+
+func (mm *metricsMiddleware) DisconnectThingsByChannel(ctx context.Context, token string, chIDs, thIDs []string) (b []byte, err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "disconnect").Add(1)
+		mm.latency.With("method", "disconnect").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.DisconnectThingsByChannel(ctx, token, chIDs, thIDs)
 }
 
 func (mm *metricsMiddleware) CreateGroups(ctx context.Context, token string, groups ...sdk.Group) (b []byte, err error) {
@@ -191,6 +218,15 @@ func (mm *metricsMiddleware) Assign(ctx context.Context, token, groupID, groupTy
 	}(time.Now())
 
 	return mm.svc.Assign(ctx, token, groupID, groupType, memberIDs...)
+}
+
+func (mm *metricsMiddleware) Unassign(ctx context.Context, token, groupID string, memberIDs ...string) (b []byte, err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "unassign").Add(1)
+		mm.latency.With("method", "unassign").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.Unassign(ctx, token, groupID, memberIDs...)
 }
 
 func (mm *metricsMiddleware) UpdateGroup(ctx context.Context, token, id string, group sdk.Group) (b []byte, err error) {
