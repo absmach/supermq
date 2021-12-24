@@ -1,4 +1,4 @@
-{{define "connectionsctt"}}
+{{define "connectionsttc"}}
 <!doctype html>
 <html lang="en">
   {{template "header"}}
@@ -24,9 +24,9 @@
                   <div class="modal-body">
                     <form action="/connect" method="post">
                       <div class="mb-3">
-                        <label for="name" class="form-label">Channel ID</label>
-                        <input type="text" class="form-control" name="thingId" id="thingId" aria-describedby="thingIDHelp">
-                        <input type="text" class="invisible" name="chanId" id="chanId" aria-describedby="channelIDHelp" value="{{.Channel.ID}}">
+                        <label for="name" class="form-label">Thing ID</label>
+                        <input type="text" class="form-control" name="thingID" id="thingID" aria-describedby="thingIDHelp">
+                        <input type="text" class="invisible" name="chanID" id="chanID" aria-describedby="channelIDHelp" value="{{.Channel.ID}}">
                         <div id="channelIDHelp" class="form-text">Enter channel ID.</div>
                       </div>
                       <button type="submit" class="btn btn-primary">Submit</button>
@@ -38,7 +38,7 @@
             <table class="table table-striped">
               <thead>
                 <tr>
-                  <th scope="row">CHANNEL</th>
+                  <th scope="row">Channel</th>
                 </tr>
               </thead>
               <tbody>
@@ -51,10 +51,6 @@
                   <td>{{.Channel.ID}}</td>
                 </tr>
                 <tr>
-                  <th>Key</th>
-                  <td>{{.Channel.Key}}</td>
-                </tr>
-                <tr>
                   <th>Metadata</th>
                   <td>
                     <pre>{{toJSON .Channel.Metadata}}</pre>
@@ -62,7 +58,7 @@
                 </tr>
               </tbody>
             </table>
-            {{ $t := .Channel.ID }}
+            {{ $c := .Channel.ID }}
             <table class="table table-striped">
               <thead>
                 <tr>
@@ -70,15 +66,15 @@
                 </tr>
               </thead>
               <tbody>
-                {{range $i, $c := .Channels}}
+                {{range $i, $t := .Things}}
                   <tr>
                     <th scope="row">{{$i}}</th>
-                    <td>{{$c.Name}}</td>
-                    <td><a href={{printf "/channels/%s" $c.ID}}>{{$c.ID}}</a></td>
+                    <td>{{$t.Name}}</td>
+                    <td><a href={{printf "/things/%s" $t.ID}}>{{$t.ID}}</a></td>
                     <td>
                       <form action="/disconnect" method="post">
-                        <input type="hidden" name="chanId" id="chanId" value="{{$c}}">
-                        <input type="hidden" name="thingId" id="thingId" value="{{$t.ID}}">
+                        <input type="hidden" name="chanID" id="chanID" value="{{$c}}">
+                        <input type="hidden" name="thingID" id="thingID" value="{{$t.ID}}">
                         <button type="submit" class="btn btn-danger btn-sm">Disconnect</button>
                       </form>
                     </td>

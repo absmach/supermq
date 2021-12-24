@@ -25,8 +25,8 @@
                     <form action="/connect" method="post">
                       <div class="mb-3">
                         <label for="name" class="form-label">Channel ID</label>
-                        <input type="text" class="form-control" name="chanId" id="chanId" aria-describedby="chanelIDHelp">
-                        <input type="text" class="invisible" name="thingId" id="thingId" aria-describedby="thingIDHelp" value="{{.Thing.ID}}">
+                        <input type="text" class="form-control" name="chanID" id="chanID" aria-describedby="chanelIDHelp">
+                        <input type="text" class="invisible" name="thingID" id="thingID" aria-describedby="thingIDHelp" value="{{.Thing.ID}}">
                         <div id="channelIDHelp" class="form-text">Enter channel ID.</div>
                       </div>
                       <button type="submit" class="btn btn-primary">Submit</button>
@@ -77,8 +77,8 @@
                     <td><a href={{printf "/channels/%s" $c.ID}}>{{$c.ID}}</a></td>
                     <td>
                       <form action="/disconnect" method="post">
-                        <input type="hidden" name="thingId" id="thingId" value="{{$t}}">
-                        <input type="hidden" name="chanId" id="chanId" value="{{$c.ID}}">
+                        <input type="hidden" name="thingID" id="thingID" value="{{$t}}">
+                        <input type="hidden" name="chanID" id="chanID" value="{{$c.ID}}">
                         <button type="submit" class="btn btn-danger btn-sm">Disconnect</button>
                       </form>
                     </td>

@@ -48,8 +48,11 @@ type Service interface {
 	ListChannels(ctx context.Context, token string) ([]byte, error)
 	RemoveChannel(ctx context.Context, token, id string) ([]byte, error)
 	Connect(ctx context.Context, token string, chIDs, thIDs []string) ([]byte, error)
+	ConnectThingToChannel(ctx context.Context, token string, chIDs, thIDs []string) ([]byte, error)
 	ViewConnections(ctx context.Context, token, id string) ([]byte, error)
+	ViewChannelConnections(ctx context.Context, token, id string) ([]byte, error)
 	Disconnect(ctx context.Context, token string, chIDs, thIDs []string) ([]byte, error)
+	DisconnectChannel(ctx context.Context, token string, chIDs, thIDs []string) ([]byte, error)
 	CreateGroups(ctx context.Context, token string, groups ...sdk.Group) ([]byte, error)
 	Assign(ctx context.Context, token, groupID, groupType string, memberIDs ...string) ([]byte, error)
 	Unassign(ctx context.Context, token, groupID string, memberIDs ...string) ([]byte, error)
@@ -289,6 +292,18 @@ func (gs *uiService) Connect(ctx context.Context, token string, chIDs, thIDs []s
 	return gs.ViewConnections(ctx, token, thIDs[0])
 }
 
+func (gs *uiService) ConnectThingToChannel(ctx context.Context, token string, chIDs, thIDs []string) ([]byte, error) {
+	cids := sdk.ConnectionIDs{
+		ThingIDs:   thIDs,
+		ChannelIDs: chIDs,
+	}
+	if err := gs.sdk.Connect(cids, token); err != nil {
+		return []byte{}, err
+	}
+
+	return gs.ViewChannelConnections(ctx, token, chIDs[0])
+}
+
 func (gs *uiService) ViewConnections(ctx context.Context, token, id string) ([]byte, error) {
 	tpl, err := parseTemplate("connections", "connections.html")
 	if err != nil {
@@ -324,6 +339,41 @@ func (gs *uiService) ViewConnections(ctx context.Context, token, id string) ([]b
 	return btpl.Bytes(), nil
 }
 
+func (gs *uiService) ViewChannelConnections(ctx context.Context, token, id string) ([]byte, error) {
+	tpl, err := parseTemplate("connectionsttc", "connectionsttc.html")
+	if err != nil {
+		return []byte{}, err
+	}
+
+	channel, err := gs.sdk.Channel(id, token)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	thsPage, err := gs.sdk.ThingsByChannel(token, id, 0, 100, false)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	data := struct {
+		NavbarActive string
+		ID           string
+		Channel      sdk.Channel
+		Things       []sdk.Thing
+	}{
+		"channels",
+		id,
+		channel,
+		thsPage.Things,
+	}
+
+	var btpl bytes.Buffer
+	if err := tpl.ExecuteTemplate(&btpl, "connectionsttc", data); err != nil {
+		println(err.Error())
+	}
+	return btpl.Bytes(), nil
+}
+
 func (gs *uiService) Disconnect(ctx context.Context, token string, chIDs, thIDs []string) ([]byte, error) {
 	for _, chID := range chIDs {
 		for _, thID := range thIDs {
@@ -334,6 +384,18 @@ func (gs *uiService) Disconnect(ctx context.Context, token string, chIDs, thIDs 
 	}
 
 	return gs.ViewConnections(ctx, token, thIDs[0])
+}
+
+func (gs *uiService) DisconnectChannel(ctx context.Context, token string, chIDs, thIDs []string) ([]byte, error) {
+	for _, thID := range thIDs {
+		for _, chID := range chIDs {
+			if err := gs.sdk.DisconnectThing(thID, chID, token); err != nil {
+				return []byte{}, err
+			}
+		}
+	}
+
+	return gs.ViewChannelConnections(ctx, token, chIDs[0])
 }
 
 func (gs *uiService) CreateGroups(ctx context.Context, token string, groups ...sdk.Group) ([]byte, error) {

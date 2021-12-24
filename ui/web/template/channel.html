@@ -42,7 +42,7 @@
                 </div>
               </div>
             </div>
-            <a class="btn btn-primary" href="/connectionsctt/{{.Channel.ID}}" role="button">Connections</a>
+            <a class="btn btn-primary" href="/connectionsttc/{{.Channel.ID}}" role="button">Connections</a>
             <div class="modal fade" id="connectModal" tabindex="-1" role="dialog" aria-labelledby="connectModal" aria-hidden="true">
               <div class="modal-dialog" role="document">
                 <div class="modal-content">
@@ -53,8 +53,8 @@
                     <form action="/connect" method="post">
                       <div class="mb-3">
                         <label for="name" class="form-label">Channel ID</label>
-                        <input type="text" class="form-control" name="thingId" id="thingId" aria-describedby="chanelIDHelp">
-                        <input type="text" class="invisible" name="chanId" id="chanId" aria-describedby="channelIDHelp" value="{{.Channel.ID}}">
+                        <input type="text" class="form-control" name="thingID" id="thingID" aria-describedby="chanelIDHelp">
+                        <input type="text" class="invisible" name="chanID" id="chanID" aria-describedby="channelIDHelp" value="{{.Channel.ID}}">
                         <div id="channelIDHelp" class="form-text">Enter channel ID.</div>
                       </div>
                       <button type="submit" class="btn btn-primary">Submit</button>

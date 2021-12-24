@@ -139,6 +139,15 @@ func (mm *metricsMiddleware) Connect(ctx context.Context, token string, chIDs, t
 	return mm.svc.Connect(ctx, token, chIDs, thIDs)
 }
 
+func (mm *metricsMiddleware) ConnectThingToChannel(ctx context.Context, token string, chIDs, thIDs []string) (b []byte, err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "connect_thing_to_channel").Add(1)
+		mm.latency.With("method", "connect_thing_to_channel").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.ConnectThingToChannel(ctx, token, chIDs, thIDs)
+}
+
 func (mm *metricsMiddleware) ViewConnections(ctx context.Context, token, id string) (b []byte, err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "view_connections").Add(1)
@@ -148,6 +157,15 @@ func (mm *metricsMiddleware) ViewConnections(ctx context.Context, token, id stri
 	return mm.svc.ViewConnections(ctx, token, id)
 }
 
+func (mm *metricsMiddleware) ViewChannelConnections(ctx context.Context, token, id string) (b []byte, err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "view_connections").Add(1)
+		mm.latency.With("method", "view_connections").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.ViewChannelConnections(ctx, token, id)
+}
+
 func (mm *metricsMiddleware) Disconnect(ctx context.Context, token string, chIDs, thIDs []string) (b []byte, err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "disconnect").Add(1)
@@ -155,6 +173,15 @@ func (mm *metricsMiddleware) Disconnect(ctx context.Context, token string, chIDs
 	}(time.Now())
 
 	return mm.svc.Disconnect(ctx, token, chIDs, thIDs)
+}
+
+func (mm *metricsMiddleware) DisconnectChannel(ctx context.Context, token string, chIDs, thIDs []string) (b []byte, err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "disconnect_channel").Add(1)
+		mm.latency.With("method", "disconnect_channel").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.DisconnectChannel(ctx, token, chIDs, thIDs)
 }
 
 func (mm *metricsMiddleware) CreateGroups(ctx context.Context, token string, groups ...sdk.Group) (b []byte, err error) {

@@ -260,6 +260,24 @@ func connectEndpoint(svc ui.Service) endpoint.Endpoint {
 	}
 }
 
+func connectChannelEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(viewResourceReq)
+
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
+
+		res, err := svc.ViewChannelConnections(ctx, req.token, req.id)
+		if err != nil {
+			return nil, err
+		}
+		return uiRes{
+			html: res,
+		}, err
+	}
+}
+
 func disconnectThingEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		dcr := request.(disconnectThingReq)
@@ -269,6 +287,24 @@ func disconnectThingEndpoint(svc ui.Service) endpoint.Endpoint {
 		}
 
 		res, err := svc.Disconnect(ctx, dcr.token, []string{dcr.ChanID}, []string{dcr.ThingID})
+		if err != nil {
+			return nil, err
+		}
+		return uiRes{
+			html: res,
+		}, err
+	}
+}
+
+func disconnectChannelEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		dcr := request.(disconnectChannelReq)
+
+		if err := dcr.validate(); err != nil {
+			return nil, err
+		}
+
+		res, err := svc.DisconnectChannel(ctx, dcr.token, []string{dcr.ThingID}, []string{dcr.ChanID})
 		if err != nil {
 			return nil, err
 		}
