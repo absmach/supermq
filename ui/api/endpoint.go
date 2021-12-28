@@ -452,3 +452,19 @@ func removeGroupEndpoint(svc ui.Service) endpoint.Endpoint {
 		}, err
 	}
 }
+
+func sendMessageEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(sendMessageReq)
+		// if err := req.validate(); err != nil {
+		// 	return nil, err
+		// }
+		res, err := svc.SendMessage(ctx, req.token)
+		if err != nil {
+			return nil, err
+		}
+		return uiRes{
+			html: res,
+		}, err
+	}
+}

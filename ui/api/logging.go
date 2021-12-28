@@ -12,6 +12,7 @@ import (
 	"time"
 
 	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/pkg/messaging"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/ui"
 )
@@ -338,4 +339,34 @@ func (lm *loggingMiddleware) RemoveGroup(ctx context.Context, token, id string) 
 	}(time.Now())
 
 	return lm.svc.RemoveGroup(ctx, token, id)
+}
+
+func (lm *loggingMiddleware) Publish(ctx context.Context, token string, msg messaging.Message) (b []byte, err error) {
+	defer func(begin time.Time) {
+		destChannel := msg.Channel
+		if msg.Subtopic != "" {
+			destChannel = fmt.Sprintf("%s.%s", destChannel, msg.Subtopic)
+		}
+		message := fmt.Sprintf("Method publish to channel %s took %s to complete", destChannel, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+
+	return lm.svc.Publish(ctx, token, msg)
+}
+
+func (lm *loggingMiddleware) SendMessage(ctx context.Context, token string) (b []byte, err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method send_message took %s to complete", time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+
+	return lm.svc.SendMessage(ctx, token)
 }

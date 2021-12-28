@@ -5,6 +5,7 @@ package api
 
 import (
 	"github.com/mainflux/mainflux/auth"
+	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/ui"
 )
@@ -275,4 +276,13 @@ func (req unassignReq) validate() error {
 	}
 
 	return nil
+}
+
+type publishReq struct {
+	msg   messaging.Message
+	token string
+}
+
+type sendMessageReq struct {
+	token string
 }

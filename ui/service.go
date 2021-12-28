@@ -13,6 +13,7 @@ import (
 	"html/template"
 
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/pkg/messaging"
 
 	"github.com/mainflux/mainflux"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
@@ -60,6 +61,8 @@ type Service interface {
 	UpdateGroup(ctx context.Context, token, id string, group sdk.Group) ([]byte, error)
 	ListGroups(ctx context.Context, token string) ([]byte, error)
 	RemoveGroup(ctx context.Context, token, id string) ([]byte, error)
+	Publish(ctx context.Context, token string, msg messaging.Message) ([]byte, error)
+	SendMessage(ctx context.Context, token string) ([]byte, error)
 }
 
 var _ Service = (*uiService)(nil)
@@ -496,4 +499,50 @@ func (gs *uiService) RemoveGroup(ctx context.Context, token, id string) ([]byte,
 		return []byte{}, err
 	}
 	return []byte{}, nil
+}
+
+func (gs *uiService) Publish(ctx context.Context, token string, msg messaging.Message) ([]byte, error) {
+	tpl, err := parseTemplate("messages", "messages.html")
+	if err != nil {
+		return []byte{}, err
+	}
+
+	err = gs.sdk.SendMessage(msg.Channel, string(msg.Payload), token)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	data := struct {
+		NavbarActive string
+		token        string
+	}{
+		"messages",
+		token,
+	}
+
+	var btpl bytes.Buffer
+	if err := tpl.ExecuteTemplate(&btpl, "messages", data); err != nil {
+		println(err.Error())
+	}
+	return btpl.Bytes(), nil
+}
+
+func (gs *uiService) SendMessage(ctx context.Context, token string) ([]byte, error) {
+	tpl, err := parseTemplate("messages", "messages.html")
+	if err != nil {
+		return []byte{}, err
+	}
+
+	data := struct {
+		NavbarActive string
+	}{
+		"messages",
+	}
+
+	var btpl bytes.Buffer
+	if err := tpl.ExecuteTemplate(&btpl, "messages", data); err != nil {
+		println(err.Error())
+	}
+
+	return btpl.Bytes(), nil
 }

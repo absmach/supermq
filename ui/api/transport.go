@@ -9,12 +9,17 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"regexp"
+	"strings"
+	"time"
 
 	kitot "github.com/go-kit/kit/tracing/opentracing"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/ui"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -26,7 +31,7 @@ import (
 const (
 	contentType = "text/html"
 	staticDir   = "ui/web/static"
-	token       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDA0MDE4NzgsImlhdCI6MTY0MDM2NTg3OCwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImZscDFAZW1haWwuY29tIiwiaXNzdWVyX2lkIjoiYzkzY2FmYjMtYjNhNy00ZTdmLWE0NzAtMTVjMTRkOGVkMWUwIiwidHlwZSI6MH0.fc0XF6GUAdomkcuC2t3Ko5YZ8m_xLaIr9Zj0vynQn6o"
+	token       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDA3MzY1MzIsImlhdCI6MTY0MDcwMDUzMiwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImZscDFAZW1haWwuY29tIiwiaXNzdWVyX2lkIjoiYzkzY2FmYjMtYjNhNy00ZTdmLWE0NzAtMTVjMTRkOGVkMWUwIiwidHlwZSI6MH0.ZJhfgf-SVcH91HYR6t7l8_Qxhxd1oxcoMgI_Xbsz2WA"
 	offsetKey   = "offset"
 	limitKey    = "limit"
 	nameKey     = "name"
@@ -37,12 +42,14 @@ const (
 	sharedKey   = "shared"
 	defOffset   = 0
 	defLimit    = 10
+	protocol    = "http"
 )
 
 var (
 	errMalformedData     = errors.New("malformed request data")
 	errMalformedSubtopic = errors.New("malformed subtopic")
 	redirectURL          = ""
+	channelPartRegExp    = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -217,6 +224,27 @@ func MakeHandler(svc ui.Service, redirect string, tracer opentracing.Tracer) htt
 	r.Get("/groups/:id/delete", kithttp.NewServer(
 		kitot.TraceServer(tracer, "remove_group")(removeGroupEndpoint(svc)),
 		decodeView,
+		encodeResponse,
+		opts...,
+	))
+
+	r.Get("/messages", kithttp.NewServer(
+		kitot.TraceServer(tracer, "send_messages")(sendMessageEndpoint(svc)),
+		decodeSendMessageRequest,
+		encodeResponse,
+		opts...,
+	))
+
+	r.Post("/channels/:id/messages", kithttp.NewServer(
+		kitot.TraceServer(tracer, "publish")(sendMessageEndpoint(svc)),
+		decodeRequest,
+		encodeResponse,
+		opts...,
+	))
+
+	r.Post("/channels/:id/messages/*", kithttp.NewServer(
+		kitot.TraceServer(tracer, "publish")(sendMessageEndpoint(svc)),
+		decodeRequest,
 		encodeResponse,
 		opts...,
 	))
@@ -436,6 +464,76 @@ func decodeGroupUpdate(_ context.Context, r *http.Request) (interface{}, error) 
 		Name:     r.PostFormValue("name"),
 		Metadata: meta,
 	}
+	return req, nil
+}
+
+func parseSubtopic(subtopic string) (string, error) {
+	if subtopic == "" {
+		return subtopic, nil
+	}
+
+	subtopic, err := url.QueryUnescape(subtopic)
+	if err != nil {
+		return "", errMalformedSubtopic
+	}
+	subtopic = strings.Replace(subtopic, "/", ".", -1)
+
+	elems := strings.Split(subtopic, ".")
+	filteredElems := []string{}
+	for _, elem := range elems {
+		if elem == "" {
+			continue
+		}
+
+		if len(elem) > 1 && (strings.Contains(elem, "*") || strings.Contains(elem, ">")) {
+			return "", errMalformedSubtopic
+		}
+
+		filteredElems = append(filteredElems, elem)
+	}
+
+	subtopic = strings.Join(filteredElems, ".")
+	return subtopic, nil
+}
+
+func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
+	if len(channelParts) < 2 {
+		return nil, errMalformedData
+	}
+
+	chanID := bone.GetValue(r, "id")
+	subtopic, err := parseSubtopic(channelParts[2])
+	if err != nil {
+		return nil, err
+	}
+
+	payload, err := decodePayload(r.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	msg := messaging.Message{
+		Protocol: protocol,
+		Channel:  chanID,
+		Subtopic: subtopic,
+		Payload:  payload,
+		Created:  time.Now().UnixNano(),
+	}
+
+	req := publishReq{
+		msg:   msg,
+		token: getAuthorization(r),
+	}
+
+	return req, nil
+}
+
+func decodeSendMessageRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	req := sendMessageReq{
+		token: getAuthorization(r),
+	}
+
 	return req, nil
 }
 

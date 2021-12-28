@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/metrics"
+	"github.com/mainflux/mainflux/pkg/messaging"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/ui"
 )
@@ -245,4 +246,22 @@ func (mm *metricsMiddleware) RemoveGroup(ctx context.Context, token, id string) 
 	}(time.Now())
 
 	return mm.svc.RemoveGroup(ctx, token, id)
+}
+
+func (mm *metricsMiddleware) Publish(ctx context.Context, token string, msg messaging.Message) (b []byte, err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "publish").Add(1)
+		mm.latency.With("method", "publish").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.Publish(ctx, token, msg)
+}
+
+func (mm *metricsMiddleware) SendMessage(ctx context.Context, token string) (b []byte, err error) {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "send_message").Add(1)
+		mm.latency.With("method", "send_message").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.SendMessage(ctx, token)
 }
