@@ -243,7 +243,7 @@ func TestReadAll(t *testing.T) {
 			},
 		},
 		{
-			desc:   "read page with senml fornat",
+			desc:   "read page with senml format",
 			url:    fmt.Sprintf("%s/channels/%s/messages?format=messages", ts.URL, chanID),
 			token:  fmt.Sprintf("Thing %s", thingToken),
 			status: http.StatusOK,
@@ -524,7 +524,7 @@ func TestReadAll(t *testing.T) {
 			},
 		},
 		{
-			desc:   "read page with senml fornat",
+			desc:   "read page with senml format",
 			url:    fmt.Sprintf("%s/channels/%s/messages?format=messages", ts.URL, chanID),
 			token:  fmt.Sprintf("Bearer %s", userToken),
 			status: http.StatusOK,
