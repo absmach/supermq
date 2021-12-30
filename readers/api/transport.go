@@ -224,12 +224,6 @@ func authorize(ctx context.Context, r *http.Request, chanID string) (err error) 
 		return errors.ErrAuthentication
 	}
 	switch {
-	case strings.HasPrefix(token, thingToken):
-		token = strings.TrimPrefix(token, thingToken)
-		if _, err := thingsAuth.CanAccessByKey(ctx, &mainflux.AccessByKeyReq{Token: token, ChanID: chanID}); err != nil {
-			return errors.Wrap(errUnauthorizedAccess, errThingAccess)
-		}
-		return nil
 	case strings.HasPrefix(token, userToken):
 		token = strings.TrimPrefix(token, userToken)
 		user, err := usersAuth.Identify(ctx, &mainflux.Token{Value: token})
@@ -250,8 +244,11 @@ func authorize(ctx context.Context, r *http.Request, chanID string) (err error) 
 		}
 		return nil
 	default:
-		return errors.Wrap(errUnauthorizedAccess, errWrongToken)
-
+		token = strings.TrimPrefix(token, thingToken)
+		if _, err := thingsAuth.CanAccessByKey(ctx, &mainflux.AccessByKeyReq{Token: token, ChanID: chanID}); err != nil {
+			return errors.Wrap(errUnauthorizedAccess, errThingAccess)
+		}
+		return nil
 	}
 }
 
