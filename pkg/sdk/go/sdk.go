@@ -268,13 +268,13 @@ type SDK interface {
 	RevokeCert(thingID, certID, token string) error
 
 	// // Issue issues a new Key, returning its token value alongside.
-	// Issue(token string, key Key) (Key, string, error)
+	Issue(token string, key Key) (issueKeyRes, error)
 
 	// Revoke removes the Key with the provided id that is issued by the user identified by the provided key.
 	Revoke(token, id string) error
 
 	// // RetrieveKey retrieves data for the Key identified by the provided ID, that is issued by the user identified by the provided key.
-	// RetrieveKey(token, id string) (Key, error)
+	RetrieveKey(token, id string) (retrieveKeyRes, error)
 }
 
 type mfSDK struct {
