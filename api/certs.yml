@@ -24,9 +24,9 @@ paths:
           description: Unexpected server-side error ocurred.
   /certs/{certID}:
     get:
-      summary: Retrieves a certificate
+      summary: Retrieve a certificate
       description: |
-        Retrieves an issued certificate for a given cert ID.
+        Retrieve an issued certificate for a given cert ID.
       tags:
         - configs
       parameters:
@@ -59,9 +59,9 @@ paths:
           $ref: "#/components/responses/ServiceError"
   /serials/{thingID}:
     get:
-      summary: Retrieves certificates's serial IDs
+      summary: Retrieve certificates serial IDs
       description: |
-        Retrieves a list of issued certificates' serial IDs for a given thing ID.
+        Retrieve a list of issued certificates serial IDs for a given thing ID.
       tags:
         - configs
       parameters:

@@ -39,11 +39,12 @@ func (c *certsRepoMock) Save(ctx context.Context, cert certs.Cert) (string, erro
 	}
 
 	_, ok := c.certsByThingID[cert.OwnerID][cert.ThingID]
-	if !ok {
+	switch ok {
+	case false:
 		c.certsByThingID[cert.OwnerID] = map[string][]certs.Cert{
 			cert.ThingID: []certs.Cert{crt},
 		}
-	} else {
+	default:
 		c.certsByThingID[cert.OwnerID][cert.ThingID] = append(c.certsByThingID[cert.OwnerID][cert.ThingID], crt)
 	}
 
