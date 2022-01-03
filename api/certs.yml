@@ -26,7 +26,7 @@ paths:
     get:
       summary: Retrieves a certificate
       description: |
-        Retrieves an issued certificate for a given cert ID.
+        Retrieves a certificate for a given cert ID.
       tags:
         - configs
       parameters:
@@ -61,7 +61,7 @@ paths:
     get:
       summary: Retrieves certificates' serial IDs
       description: |
-        Retrieves a list of issued certificates' serial IDs for a given thing ID.
+        Retrieves a list of certificates' serial IDs for a given thing ID.
       tags:
         - configs
       parameters:
