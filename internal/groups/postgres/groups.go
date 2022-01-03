@@ -173,7 +173,7 @@ func (gr groupRepository) RetrieveByID(ctx context.Context, id string) (groups.G
 			return groups.Group{}, errors.Wrap(groups.ErrGroupNotFound, err)
 
 		}
-		return groups.Group{}, errors.Wrap(groups.ErrSelectEntity, err)
+		return groups.Group{}, errors.Wrap(groups.ErrRetrieveGroup, err)
 	}
 	return toGroup(dbu)
 }
@@ -181,7 +181,7 @@ func (gr groupRepository) RetrieveByID(ctx context.Context, id string) (groups.G
 func (gr groupRepository) RetrieveAll(ctx context.Context, pm groups.PageMetadata) (groups.GroupPage, error) {
 	_, metaQuery, err := getGroupsMetadataQuery("groups", pm.Metadata)
 	if err != nil {
-		return groups.GroupPage{}, errors.Wrap(groups.ErrFailedToRetrieveAll, err)
+		return groups.GroupPage{}, errors.Wrap(groups.ErrRetrieveGroup, err)
 	}
 
 	var mq string
@@ -194,18 +194,18 @@ func (gr groupRepository) RetrieveAll(ctx context.Context, pm groups.PageMetadat
 
 	dbPage, err := toDBGroupPage("", "", pm)
 	if err != nil {
-		return groups.GroupPage{}, errors.Wrap(groups.ErrFailedToRetrieveAll, err)
+		return groups.GroupPage{}, errors.Wrap(groups.ErrRetrieveGroup, err)
 	}
 
 	rows, err := gr.db.NamedQueryContext(ctx, q, dbPage)
 	if err != nil {
-		return groups.GroupPage{}, errors.Wrap(groups.ErrFailedToRetrieveAll, err)
+		return groups.GroupPage{}, errors.Wrap(groups.ErrRetrieveGroup, err)
 	}
 	defer rows.Close()
 
 	items, err := gr.processRows(rows)
 	if err != nil {
-		return groups.GroupPage{}, errors.Wrap(groups.ErrFailedToRetrieveAll, err)
+		return groups.GroupPage{}, errors.Wrap(groups.ErrRetrieveGroup, err)
 	}
 
 	cq := "SELECT COUNT(*) FROM groups"
@@ -215,7 +215,7 @@ func (gr groupRepository) RetrieveAll(ctx context.Context, pm groups.PageMetadat
 
 	total, err := total(ctx, gr.db, cq, dbPage)
 	if err != nil {
-		return groups.GroupPage{}, errors.Wrap(groups.ErrFailedToRetrieveAll, err)
+		return groups.GroupPage{}, errors.Wrap(groups.ErrRetrieveGroup, err)
 	}
 
 	page := groups.GroupPage{
@@ -250,9 +250,148 @@ func (gr groupRepository) RetrieveAllChildren(ctx context.Context, groupID strin
 	cq := `SELECT COUNT(*) FROM groups parent, groups g WHERE parent.id = :id AND g.path <@ parent.path `
 	gp, err := gr.retrieve(ctx, groupID, q, cq, pm)
 	if err != nil {
-		return groups.GroupPage{}, errors.Wrap(groups.ErrFailedToRetrieveChildren, err)
+		return groups.GroupPage{}, errors.Wrap(groups.ErrChildrenRetrieve, err)
 	}
 	return gp, nil
+}
+
+func (gr groupRepository) Memberships(ctx context.Context, memberID string, pm groups.PageMetadata) (groups.GroupPage, error) {
+	_, mq, err := getGroupsMetadataQuery("groups", pm.Metadata)
+	if err != nil {
+		return groups.GroupPage{}, errors.Wrap(groups.ErrMembershipRetrieve, err)
+	}
+
+	if mq != "" {
+		mq = fmt.Sprintf("AND %s", mq)
+	}
+	q := fmt.Sprintf(`SELECT g.id, g.owner_id, g.parent_id, g.name, g.description, g.metadata 
+					  FROM group_relations gr, groups g
+					  WHERE gr.group_id = g.id and gr.member_id = :member_id
+		  			  %s ORDER BY id LIMIT :limit OFFSET :offset;`, mq)
+
+	params, err := toDBMemberPage(memberID, "", "", pm)
+	if err != nil {
+		return groups.GroupPage{}, err
+	}
+
+	rows, err := gr.db.NamedQueryContext(ctx, q, params)
+	if err != nil {
+		return groups.GroupPage{}, errors.Wrap(groups.ErrMembershipRetrieve, err)
+	}
+	defer rows.Close()
+
+	var items []groups.Group
+	for rows.Next() {
+		dbg := dbGroup{}
+		if err := rows.StructScan(&dbg); err != nil {
+			return groups.GroupPage{}, errors.Wrap(groups.ErrMembershipRetrieve, err)
+		}
+		gr, err := toGroup(dbg)
+		if err != nil {
+			return groups.GroupPage{}, err
+		}
+		items = append(items, gr)
+	}
+
+	cq := fmt.Sprintf(`SELECT COUNT(*) FROM group_relations gr, groups g
+					   WHERE gr.group_id = g.id and gr.member_id = :member_id %s `, mq)
+
+	total, err := total(ctx, gr.db, cq, params)
+	if err != nil {
+		return groups.GroupPage{}, errors.Wrap(groups.ErrMembershipRetrieve, err)
+	}
+
+	page := groups.GroupPage{
+		Groups: items,
+		PageMetadata: groups.PageMetadata{
+			Total:  total,
+			Offset: pm.Offset,
+			Limit:  pm.Limit,
+			Size:   uint64(len(items)),
+		},
+	}
+
+	return page, nil
+}
+
+func (gr groupRepository) Assign(ctx context.Context, groupID string, ids ...string) error {
+	tx, err := gr.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return errors.Wrap(groups.ErrAssignToGroup, err)
+	}
+
+	qIns := `INSERT INTO group_relations (group_id, member_id, type, created_at, updated_at) 
+			 VALUES(:group_id, :member_id, :type, :created_at, :updated_at)`
+
+	for _, id := range ids {
+		dbg, err := toDBGroupRelation(id, groupID)
+		if err != nil {
+			return errors.Wrap(groups.ErrAssignToGroup, err)
+		}
+		created := time.Now()
+		dbg.CreatedAt = created
+		dbg.UpdatedAt = created
+
+		if _, err := tx.NamedExecContext(ctx, qIns, dbg); err != nil {
+			tx.Rollback()
+			pqErr, ok := err.(*pq.Error)
+			if ok {
+				switch pqErr.Code.Name() {
+				case errInvalid, errTruncation:
+					return errors.Wrap(groups.ErrMalformedEntity, err)
+				case errFK:
+					return errors.Wrap(groups.ErrConflict, errors.New(pqErr.Detail))
+				case errDuplicate:
+					return errors.Wrap(groups.ErrMemberAlreadyAssigned, errors.New(pqErr.Detail))
+				}
+			}
+
+			return errors.Wrap(groups.ErrAssignToGroup, err)
+		}
+	}
+
+	if err = tx.Commit(); err != nil {
+		return errors.Wrap(groups.ErrAssignToGroup, err)
+	}
+
+	return nil
+}
+
+func (gr groupRepository) Unassign(ctx context.Context, groupID string, ids ...string) error {
+	tx, err := gr.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return errors.Wrap(groups.ErrAssignToGroup, err)
+	}
+
+	qDel := `DELETE from group_relations WHERE group_id = :group_id AND member_id = :member_id`
+
+	for _, id := range ids {
+		dbg, err := toDBGroupRelation(id, groupID)
+		if err != nil {
+			return errors.Wrap(groups.ErrAssignToGroup, err)
+		}
+
+		if _, err := tx.NamedExecContext(ctx, qDel, dbg); err != nil {
+			tx.Rollback()
+			pqErr, ok := err.(*pq.Error)
+			if ok {
+				switch pqErr.Code.Name() {
+				case errInvalid, errTruncation:
+					return errors.Wrap(groups.ErrMalformedEntity, err)
+				case errDuplicate:
+					return errors.Wrap(groups.ErrConflict, err)
+				}
+			}
+
+			return errors.Wrap(groups.ErrAssignToGroup, err)
+		}
+	}
+
+	if err = tx.Commit(); err != nil {
+		return errors.Wrap(groups.ErrAssignToGroup, err)
+	}
+
+	return nil
 }
 
 func (gr groupRepository) retrieve(ctx context.Context, groupID, retQuery, cntQuery string, pm groups.PageMetadata) (groups.GroupPage, error) {
@@ -301,206 +440,6 @@ func (gr groupRepository) retrieve(ctx context.Context, groupID, retQuery, cntQu
 	}
 
 	return page, nil
-
-}
-
-func (gr groupRepository) Members(ctx context.Context, groupID, groupType string, pm groups.PageMetadata) (groups.MemberPage, error) {
-	_, mq, err := getGroupsMetadataQuery("groups", pm.Metadata)
-	if err != nil {
-		return groups.MemberPage{}, errors.Wrap(groups.ErrFailedToRetrieveMembers, err)
-	}
-
-	q := fmt.Sprintf(`SELECT gr.member_id, gr.group_id, gr.type, gr.created_at, gr.updated_at FROM group_relations gr
-					  WHERE gr.group_id = :group_id AND gr.type = :type %s`, mq)
-
-	if groupType == "" {
-		q = fmt.Sprintf(`SELECT gr.member_id, gr.group_id, gr.type, gr.created_at, gr.updated_at FROM group_relations gr
-		                 WHERE gr.group_id = :group_id %s`, mq)
-	}
-
-	params, err := toDBMemberPage("", groupID, groupType, pm)
-	if err != nil {
-		return groups.MemberPage{}, err
-	}
-
-	rows, err := gr.db.NamedQueryContext(ctx, q, params)
-	if err != nil {
-		return groups.MemberPage{}, errors.Wrap(groups.ErrFailedToRetrieveMembers, err)
-	}
-	defer rows.Close()
-
-	var items []groups.Member
-	for rows.Next() {
-		member := dbMember{}
-		if err := rows.StructScan(&member); err != nil {
-			return groups.MemberPage{}, errors.Wrap(groups.ErrFailedToRetrieveMembers, err)
-		}
-
-		if err != nil {
-			return groups.MemberPage{}, err
-		}
-
-		items = append(items, groups.Member{ID: member.MemberID, Type: member.Type})
-	}
-
-	cq := fmt.Sprintf(`SELECT COUNT(*) FROM groups g, group_relations gr
-					   WHERE gr.group_id = :group_id AND gr.group_id = g.id AND gr.type = :type %s;`, mq)
-
-	total, err := total(ctx, gr.db, cq, params)
-	if err != nil {
-		return groups.MemberPage{}, errors.Wrap(groups.ErrFailedToRetrieveMembers, err)
-	}
-
-	page := groups.MemberPage{
-		Members: items,
-		PageMetadata: groups.PageMetadata{
-			Total:  total,
-			Offset: pm.Offset,
-			Limit:  pm.Limit,
-			Size:   uint64(len(items)),
-		},
-	}
-
-	return page, nil
-}
-
-func (gr groupRepository) Memberships(ctx context.Context, memberID string, pm groups.PageMetadata) (groups.GroupPage, error) {
-	_, mq, err := getGroupsMetadataQuery("groups", pm.Metadata)
-	if err != nil {
-		return groups.GroupPage{}, errors.Wrap(groups.ErrFailedToRetrieveMembership, err)
-	}
-
-	if mq != "" {
-		mq = fmt.Sprintf("AND %s", mq)
-	}
-	q := fmt.Sprintf(`SELECT g.id, g.owner_id, g.parent_id, g.name, g.description, g.metadata 
-					  FROM group_relations gr, groups g
-					  WHERE gr.group_id = g.id and gr.member_id = :member_id
-		  			  %s ORDER BY id LIMIT :limit OFFSET :offset;`, mq)
-
-	params, err := toDBMemberPage(memberID, "", "", pm)
-	if err != nil {
-		return groups.GroupPage{}, err
-	}
-
-	rows, err := gr.db.NamedQueryContext(ctx, q, params)
-	if err != nil {
-		return groups.GroupPage{}, errors.Wrap(groups.ErrFailedToRetrieveMembership, err)
-	}
-	defer rows.Close()
-
-	var items []groups.Group
-	for rows.Next() {
-		dbg := dbGroup{}
-		if err := rows.StructScan(&dbg); err != nil {
-			return groups.GroupPage{}, errors.Wrap(groups.ErrFailedToRetrieveMembership, err)
-		}
-		gr, err := toGroup(dbg)
-		if err != nil {
-			return groups.GroupPage{}, err
-		}
-		items = append(items, gr)
-	}
-
-	cq := fmt.Sprintf(`SELECT COUNT(*) FROM group_relations gr, groups g
-					   WHERE gr.group_id = g.id and gr.member_id = :member_id %s `, mq)
-
-	total, err := total(ctx, gr.db, cq, params)
-	if err != nil {
-		return groups.GroupPage{}, errors.Wrap(groups.ErrFailedToRetrieveMembership, err)
-	}
-
-	page := groups.GroupPage{
-		Groups: items,
-		PageMetadata: groups.PageMetadata{
-			Total:  total,
-			Offset: pm.Offset,
-			Limit:  pm.Limit,
-			Size:   uint64(len(items)),
-		},
-	}
-
-	return page, nil
-}
-
-func (gr groupRepository) Assign(ctx context.Context, groupID, groupType string, ids ...string) error {
-	tx, err := gr.db.BeginTxx(ctx, nil)
-	if err != nil {
-		return errors.Wrap(groups.ErrAssignToGroup, err)
-	}
-
-	qIns := `INSERT INTO group_relations (group_id, member_id, type, created_at, updated_at) 
-			 VALUES(:group_id, :member_id, :type, :created_at, :updated_at)`
-
-	for _, id := range ids {
-		dbg, err := toDBGroupRelation(id, groupID, groupType)
-		if err != nil {
-			return errors.Wrap(groups.ErrAssignToGroup, err)
-		}
-		created := time.Now()
-		dbg.CreatedAt = created
-		dbg.UpdatedAt = created
-
-		if _, err := tx.NamedExecContext(ctx, qIns, dbg); err != nil {
-			tx.Rollback()
-			pqErr, ok := err.(*pq.Error)
-			if ok {
-				switch pqErr.Code.Name() {
-				case errInvalid, errTruncation:
-					return errors.Wrap(groups.ErrMalformedEntity, err)
-				case errFK:
-					return errors.Wrap(groups.ErrConflict, errors.New(pqErr.Detail))
-				case errDuplicate:
-					return errors.Wrap(groups.ErrMemberAlreadyAssigned, errors.New(pqErr.Detail))
-				}
-			}
-
-			return errors.Wrap(groups.ErrAssignToGroup, err)
-		}
-	}
-
-	if err = tx.Commit(); err != nil {
-		return errors.Wrap(groups.ErrAssignToGroup, err)
-	}
-
-	return nil
-}
-
-func (gr groupRepository) Unassign(ctx context.Context, groupID string, ids ...string) error {
-	tx, err := gr.db.BeginTxx(ctx, nil)
-	if err != nil {
-		return errors.Wrap(groups.ErrAssignToGroup, err)
-	}
-
-	qDel := `DELETE from group_relations WHERE group_id = :group_id AND member_id = :member_id`
-
-	for _, id := range ids {
-		dbg, err := toDBGroupRelation(id, groupID, "")
-		if err != nil {
-			return errors.Wrap(groups.ErrAssignToGroup, err)
-		}
-
-		if _, err := tx.NamedExecContext(ctx, qDel, dbg); err != nil {
-			tx.Rollback()
-			pqErr, ok := err.(*pq.Error)
-			if ok {
-				switch pqErr.Code.Name() {
-				case errInvalid, errTruncation:
-					return errors.Wrap(groups.ErrMalformedEntity, err)
-				case errDuplicate:
-					return errors.Wrap(groups.ErrConflict, err)
-				}
-			}
-
-			return errors.Wrap(groups.ErrAssignToGroup, err)
-		}
-	}
-
-	if err = tx.Commit(); err != nil {
-		return errors.Wrap(groups.ErrAssignToGroup, err)
-	}
-
-	return nil
 }
 
 type dbMember struct {
@@ -508,7 +447,6 @@ type dbMember struct {
 	GroupID   string    `db:"group_id"`
 	Type      string    `db:"type"`
 	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
 }
 
 type dbGroup struct {
@@ -630,7 +568,7 @@ func toGroup(dbu dbGroup) (groups.Group, error) {
 		ParentID:    dbu.ParentID.String,
 		OwnerID:     ownerID,
 		Description: dbu.Description,
-		Metadata:    groups.GroupMetadata(dbu.Metadata),
+		Metadata:    groups.Metadata(dbu.Metadata),
 		Level:       dbu.Level,
 		Path:        dbu.Path,
 		UpdatedAt:   dbu.UpdatedAt,
@@ -643,10 +581,9 @@ type dbGroupRelation struct {
 	MemberID  sql.NullString `db:"member_id"`
 	CreatedAt time.Time      `db:"created_at"`
 	UpdatedAt time.Time      `db:"updated_at"`
-	Type      string         `db:"type"`
 }
 
-func toDBGroupRelation(memberID, groupID, groupType string) (dbGroupRelation, error) {
+func toDBGroupRelation(memberID, groupID string) (dbGroupRelation, error) {
 	var grID sql.NullString
 	if groupID != "" {
 		grID = sql.NullString{String: groupID, Valid: true}
@@ -660,11 +597,10 @@ func toDBGroupRelation(memberID, groupID, groupType string) (dbGroupRelation, er
 	return dbGroupRelation{
 		GroupID:  grID,
 		MemberID: mID,
-		Type:     groupType,
 	}, nil
 }
 
-func getGroupsMetadataQuery(db string, m groups.GroupMetadata) (mb []byte, mq string, err error) {
+func getGroupsMetadataQuery(db string, m groups.Metadata) (mb []byte, mq string, err error) {
 	if len(m) > 0 {
 		mq = `metadata @> :metadata`
 		if db != "" {
@@ -714,7 +650,7 @@ func total(ctx context.Context, db postgres.Database, query string, params inter
 // dbMetadata type for handling metadata properly in database/sql
 type dbMetadata map[string]interface{}
 
-// Scan - Implement the database/sql scanner interface
+// Scan - implement the database/sql scanner interface
 func (m *dbMetadata) Scan(value interface{}) error {
 	if value == nil {
 		return nil

@@ -141,20 +141,6 @@ func listMemberships(svc groups.Service) endpoint.Endpoint {
 	}
 }
 
-func shareGroupAccessEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(shareGroupAccessReq)
-		if err := req.validate(); err != nil {
-			return shareGroupRes{}, err
-		}
-
-		if err := svc.AssignGroupAccessRights(ctx, req.token, req.ThingGroupID, req.userGroupID); err != nil {
-			return shareGroupRes{}, err
-		}
-		return shareGroupRes{}, nil
-	}
-}
-
 func listChildrenEndpoint(svc groups.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listGroupsReq)
@@ -210,7 +196,7 @@ func assignEndpoint(svc groups.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		if err := svc.Assign(ctx, req.token, req.groupID, req.Type, req.Members...); err != nil {
+		if err := svc.Assign(ctx, req.token, req.groupID, req.Members...); err != nil {
 			return nil, err
 		}
 
@@ -230,27 +216,6 @@ func unassignEndpoint(svc groups.Service) endpoint.Endpoint {
 		}
 
 		return unassignRes{}, nil
-	}
-}
-
-func listMembersEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(listMembersReq)
-		if err := req.validate(); err != nil {
-			return memberPageRes{}, err
-		}
-
-		pm := groups.PageMetadata{
-			Offset:   req.offset,
-			Limit:    req.limit,
-			Metadata: req.metadata,
-		}
-		page, err := svc.ListMembers(ctx, req.token, req.id, req.groupType, pm)
-		if err != nil {
-			return memberPageRes{}, err
-		}
-
-		return buildUsersResponse(page), nil
 	}
 }
 
@@ -345,24 +310,6 @@ func buildGroupsResponse(gp groups.GroupPage) groupPageRes {
 			UpdatedAt:   group.UpdatedAt,
 		}
 		res.Groups = append(res.Groups, view)
-	}
-
-	return res
-}
-
-func buildUsersResponse(mp groups.MemberPage) memberPageRes {
-	res := memberPageRes{
-		pageRes: pageRes{
-			Total:  mp.Total,
-			Offset: mp.Offset,
-			Limit:  mp.Limit,
-			Name:   mp.Name,
-		},
-		Members: []interface{}{},
-	}
-
-	for _, m := range mp.Members {
-		res.Members = append(res.Members, m)
 	}
 
 	return res

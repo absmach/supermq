@@ -1,7 +1,7 @@
 package api
 
 import (
-	auth "github.com/mainflux/mainflux/internal/groups"
+	groups "github.com/mainflux/mainflux/internal/groups"
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
@@ -15,10 +15,10 @@ type createGroupReq struct {
 
 func (req createGroupReq) validate() error {
 	if req.token == "" {
-		return auth.ErrUnauthorized
+		return groups.ErrUnauthorized
 	}
 	if len(req.Name) > maxNameSize || req.Name == "" {
-		return errors.Wrap(auth.ErrMalformedEntity, auth.ErrBadGroupName)
+		return errors.Wrap(groups.ErrMalformedEntity, groups.ErrBadGroupName)
 	}
 
 	return nil
@@ -34,11 +34,11 @@ type updateGroupReq struct {
 
 func (req updateGroupReq) validate() error {
 	if req.token == "" {
-		return auth.ErrUnauthorized
+		return groups.ErrUnauthorized
 	}
 
 	if req.id == "" {
-		return auth.ErrMalformedEntity
+		return groups.ErrMalformedEntity
 	}
 
 	return nil
@@ -51,16 +51,16 @@ type listGroupsReq struct {
 	// - `true`  - result is JSON tree representing groups hierarchy,
 	// - `false` - result is JSON array of groups.
 	tree     bool
-	metadata auth.GroupMetadata
+	metadata groups.Metadata
 }
 
 func (req listGroupsReq) validate() error {
 	if req.token == "" {
-		return auth.ErrUnauthorized
+		return groups.ErrUnauthorized
 	}
 
-	if req.level > auth.MaxLevel || req.level < auth.MinLevel {
-		return auth.ErrMaxLevelExceeded
+	if req.level > groups.MaxLevel || req.level < groups.MinLevel {
+		return groups.ErrMaxLevelExceeded
 	}
 
 	return nil
@@ -73,16 +73,16 @@ type listMembersReq struct {
 	offset    uint64
 	limit     uint64
 	tree      bool
-	metadata  auth.GroupMetadata
+	metadata  groups.Metadata
 }
 
 func (req listMembersReq) validate() error {
 	if req.token == "" {
-		return auth.ErrUnauthorized
+		return groups.ErrUnauthorized
 	}
 
 	if req.id == "" {
-		return auth.ErrMalformedEntity
+		return groups.ErrMalformedEntity
 	}
 
 	return nil
@@ -93,16 +93,16 @@ type listMembershipsReq struct {
 	id       string
 	offset   uint64
 	limit    uint64
-	metadata auth.GroupMetadata
+	metadata groups.Metadata
 }
 
 func (req listMembershipsReq) validate() error {
 	if req.token == "" {
-		return auth.ErrUnauthorized
+		return groups.ErrUnauthorized
 	}
 
 	if req.id == "" {
-		return auth.ErrMalformedEntity
+		return groups.ErrMalformedEntity
 	}
 
 	return nil
@@ -117,11 +117,11 @@ type assignReq struct {
 
 func (req assignReq) validate() error {
 	if req.token == "" {
-		return auth.ErrUnauthorized
+		return groups.ErrUnauthorized
 	}
 
 	if req.Type == "" || req.groupID == "" || len(req.Members) == 0 {
-		return auth.ErrMalformedEntity
+		return groups.ErrMalformedEntity
 	}
 
 	return nil
@@ -135,11 +135,11 @@ type shareGroupAccessReq struct {
 
 func (req shareGroupAccessReq) validate() error {
 	if req.token == "" {
-		return auth.ErrUnauthorized
+		return groups.ErrUnauthorized
 	}
 
 	if req.ThingGroupID == "" || req.userGroupID == "" {
-		return auth.ErrMalformedEntity
+		return groups.ErrMalformedEntity
 	}
 
 	return nil
@@ -151,11 +151,11 @@ type unassignReq struct {
 
 func (req unassignReq) validate() error {
 	if req.token == "" {
-		return auth.ErrUnauthorized
+		return groups.ErrUnauthorized
 	}
 
 	if req.groupID == "" || len(req.Members) == 0 {
-		return auth.ErrMalformedEntity
+		return groups.ErrMalformedEntity
 	}
 
 	return nil
@@ -168,11 +168,11 @@ type groupReq struct {
 
 func (req groupReq) validate() error {
 	if req.token == "" {
-		return auth.ErrUnauthorized
+		return groups.ErrUnauthorized
 	}
 
 	if req.id == "" {
-		return auth.ErrMalformedEntity
+		return groups.ErrMalformedEntity
 	}
 
 	return nil

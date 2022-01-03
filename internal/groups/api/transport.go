@@ -69,13 +69,6 @@ func MakeHandler(svc groups.Service, mux *bone.Mux, tracer opentracing.Tracer) *
 		opts...,
 	))
 
-	mux.Post("/groups/:subjectGroupID/share", kithttp.NewServer(
-		kitot.TraceServer(tracer, "share_group_access")(shareGroupAccessEndpoint(svc)),
-		decodeShareGroupRequest,
-		encodeResponse,
-		opts...,
-	))
-
 	mux.Get("/groups", kithttp.NewServer(
 		kitot.TraceServer(tracer, "list_groups")(listGroupsEndpoint(svc)),
 		decodeListGroupsRequest,
@@ -107,13 +100,6 @@ func MakeHandler(svc groups.Service, mux *bone.Mux, tracer opentracing.Tracer) *
 	mux.Delete("/groups/:groupID/members", kithttp.NewServer(
 		kitot.TraceServer(tracer, "unassign")(unassignEndpoint(svc)),
 		decodeUnassignRequest,
-		encodeResponse,
-		opts...,
-	))
-
-	mux.Get("/groups/:groupID/members", kithttp.NewServer(
-		kitot.TraceServer(tracer, "list_members")(listMembersEndpoint(svc)),
-		decodeListMembersRequest,
 		encodeResponse,
 		opts...,
 	))
@@ -324,7 +310,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, groups.ErrUnauthorized):
 		w.WriteHeader(http.StatusForbidden)
-	case errors.Contains(err, groups.ErrNotFound):
+	case errors.Contains(err, groups.ErrGroupNotFound):
 		w.WriteHeader(http.StatusNotFound)
 	case errors.Contains(err, groups.ErrConflict):
 		w.WriteHeader(http.StatusConflict)

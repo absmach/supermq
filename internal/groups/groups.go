@@ -10,20 +10,11 @@ const MaxLevel = uint64(5)
 const MinLevel = uint64(1)
 
 var (
-	// ErrMaxLevelExceeded malformed entity.
-	ErrMaxLevelExceeded = errors.New("level must be less than or equal 5")
-
-	// ErrBadGroupName malformed entity.
-	ErrBadGroupName = errors.New("incorrect group name")
-
-	// ErrGroupConflict group conflict.
+	// ErrGroupConflict indicates that group already exists.
 	ErrGroupConflict = errors.New("group already exists")
 
 	// ErrCreateGroup indicates failure to create group.
 	ErrCreateGroup = errors.New("failed to create group")
-
-	// ErrFetchGroups indicates failure to fetch groups.
-	ErrFetchGroups = errors.New("failed to fetch groups")
 
 	// ErrUpdateGroup indicates failure to update group.
 	ErrUpdateGroup = errors.New("failed to update group")
@@ -37,59 +28,44 @@ var (
 	// ErrAssignToGroup indicates failure to assign member to a group.
 	ErrAssignToGroup = errors.New("failed to assign member to a group")
 
-	// ErrUnassignFromGroup indicates failure to unassign member from a group.
-	ErrUnassignFromGroup = errors.New("failed to unassign member from a group")
-
-	// ErrUnsupportedContentType indicates unacceptable or lack of Content-Type
-	ErrUnsupportedContentType = errors.New("unsupported content type")
-
-	// ErrFailedDecode indicates failed to decode request body
-	ErrFailedDecode = errors.New("failed to decode request body")
-
-	// ErrMissingParent indicates that parent can't be found
-	ErrMissingParent = errors.New("failed to retrieve parent")
-
 	// ErrGroupNotEmpty indicates group is not empty, can't be deleted.
 	ErrGroupNotEmpty = errors.New("group is not empty")
 
 	// ErrMemberAlreadyAssigned indicates that members is already assigned.
 	ErrMemberAlreadyAssigned = errors.New("member is already assigned")
 
-	// ErrSelectEntity indicates error while reading entity from database
-	ErrSelectEntity = errors.New("select entity from db error")
+	// ErrRetrieveGroup indicates error while reading entity from database
+	ErrRetrieveGroup = errors.New("retrieve group from db error")
 
 	// ErrConflict indicates that entity already exists.
 	ErrConflict = errors.New("entity already exists")
 
-	// ErrFailedToRetrieveMembers failed to retrieve group members.
-	ErrFailedToRetrieveMembers = errors.New("failed to retrieve group members")
-
-	// ErrFailedToRetrieveMembership failed to retrieve memberships
-	ErrFailedToRetrieveMembership = errors.New("failed to retrieve memberships")
-
-	// ErrFailedToRetrieveAll failed to retrieve groups.
-	ErrFailedToRetrieveAll = errors.New("failed to retrieve all groups")
+	// ErrMembershipRetrieve failed to retrieve memberships
+	ErrMembershipRetrieve = errors.New("failed to retrieve memberships")
 
 	// ErrFailedToRetrieveParents failed to retrieve groups.
 	ErrFailedToRetrieveParents = errors.New("failed to retrieve all groups")
 
-	// ErrFailedToRetrieveChildren failed to retrieve groups.
-	ErrFailedToRetrieveChildren = errors.New("failed to retrieve all groups")
+	// ErrChildrenRetrieve failed to retrieve groups.
+	ErrChildrenRetrieve = errors.New("failed to retrieve child groups")
 
 	// ErrMalformedEntity indicates malformed entity specification (e.g.
 	// invalid owner or ID).
 	ErrMalformedEntity = errors.New("malformed group specification")
-
-	ErrUnauthorized = errors.New("unauthorized access")
-	ErrNotFound     = errors.New("group not found")
 )
 
-type GroupMetadata map[string]interface{}
+var (
+	// ErrMaxLevelExceeded malformed entity.
+	ErrMaxLevelExceeded = errors.New("level must be less than or equal 5")
 
-type Member struct {
-	ID   string
-	Type string
-}
+	// ErrBadGroupName represnets malformed group name error.
+	ErrBadGroupName = errors.New("incorrect group name")
+
+	// ErrUnauthorized indicates unauthorized access to group.
+	ErrUnauthorized = errors.New("unauthorized access")
+)
+
+type Metadata map[string]interface{}
 
 type Group struct {
 	ID          string
@@ -97,7 +73,7 @@ type Group struct {
 	ParentID    string
 	Name        string
 	Description string
-	Metadata    GroupMetadata
+	Metadata    Metadata
 	// Indicates a level in tree hierarchy.
 	// Root node is level 1.
 	Level int
@@ -118,17 +94,12 @@ type PageMetadata struct {
 	Level    uint64
 	Name     string
 	Type     string
-	Metadata GroupMetadata
+	Metadata Metadata
 }
 
 type GroupPage struct {
 	PageMetadata
 	Groups []Group
-}
-
-type MemberPage struct {
-	PageMetadata
-	Members []Member
 }
 
 type Service interface {
@@ -150,9 +121,6 @@ type Service interface {
 	// ListParents retrieves groups that are parent to group identified by childID.
 	ListParents(ctx context.Context, token, childID string, pm PageMetadata) (GroupPage, error)
 
-	// ListMembers retrieves everything that is assigned to a group identified by groupID.
-	ListMembers(ctx context.Context, token, groupID, groupType string, pm PageMetadata) (MemberPage, error)
-
 	// ListMemberships retrieves all groups for member that is identified with memberID belongs to.
 	ListMemberships(ctx context.Context, token, memberID string, pm PageMetadata) (GroupPage, error)
 
@@ -160,13 +128,10 @@ type Service interface {
 	RemoveGroup(ctx context.Context, token, id string) error
 
 	// Assign adds a member with memberID into the group identified by groupID.
-	Assign(ctx context.Context, token, groupID, groupType string, memberIDs ...string) error
+	Assign(ctx context.Context, token, groupID string, memberIDs ...string) error
 
 	// Unassign removes member with memberID from group identified by groupID.
 	Unassign(ctx context.Context, token, groupID string, memberIDs ...string) error
-
-	// AssignGroupAccessRights adds access rights on thing groups to user group.
-	AssignGroupAccessRights(ctx context.Context, token, thingGroupID, userGroupID string) error
 }
 
 type GroupRepository interface {
@@ -194,11 +159,8 @@ type GroupRepository interface {
 	//  Retrieves list of groups that member belongs to
 	Memberships(ctx context.Context, memberID string, pm PageMetadata) (GroupPage, error)
 
-	// Members retrieves everything that is assigned to a group identified by groupID.
-	Members(ctx context.Context, groupID, groupType string, pm PageMetadata) (MemberPage, error)
-
 	// Assign adds a member to group.
-	Assign(ctx context.Context, groupID, groupType string, memberIDs ...string) error
+	Assign(ctx context.Context, groupID string, memberIDs ...string) error
 
 	// Unassign removes a member from a group
 	Unassign(ctx context.Context, groupID string, memberIDs ...string) error
