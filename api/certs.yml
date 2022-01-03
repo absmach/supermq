@@ -187,14 +187,14 @@ components:
             type: object
             required:
               - thing_id
-              - hours_valid
+              - ttl
               - key_bits
               - key_type
             properties:
                thing_id:
                  type: string
                  format: uuid
-               hours_valid:
+               ttl:
                  type: string
                key_type:
                  type: string

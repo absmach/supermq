@@ -34,7 +34,7 @@ type agent struct {
 	TLSCert     tls.Certificate
 	X509Cert    *x509.Certificate
 	RSABits     int
-	HoursValid  string
+	TTL         string
 	mu          sync.Mutex
 	counter     uint64
 	certs       map[string]pki.Cert
@@ -46,7 +46,7 @@ func NewPkiAgent(tlsCert tls.Certificate, caCert *x509.Certificate, keyBits int,
 		TLSCert:     tlsCert,
 		X509Cert:    caCert,
 		RSABits:     keyBits,
-		HoursValid:  hoursValid,
+		TTL:         hoursValid,
 		certs:       make(map[string]pki.Cert),
 	}
 }
@@ -66,7 +66,7 @@ func (a *agent) IssueCert(cn string, ttl, keyType string, keyBits int) (pki.Cert
 	}
 
 	if ttl == "" {
-		ttl = a.HoursValid
+		ttl = a.TTL
 	}
 
 	notBefore := time.Now()
