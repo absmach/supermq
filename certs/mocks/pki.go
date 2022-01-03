@@ -40,13 +40,13 @@ type agent struct {
 	certs       map[string]pki.Cert
 }
 
-func NewPkiAgent(tlsCert tls.Certificate, caCert *x509.Certificate, keyBits int, hoursValid string, timeout time.Duration) pki.Agent {
+func NewPkiAgent(tlsCert tls.Certificate, caCert *x509.Certificate, keyBits int, ttl string, timeout time.Duration) pki.Agent {
 	return &agent{
 		AuthTimeout: timeout,
 		TLSCert:     tlsCert,
 		X509Cert:    caCert,
 		RSABits:     keyBits,
-		TTL:         hoursValid,
+		TTL:         ttl,
 		certs:       make(map[string]pki.Cert),
 	}
 }
