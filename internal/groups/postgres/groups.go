@@ -72,13 +72,13 @@ func (gr groupsRepository) Save(ctx context.Context, g groups.Group) (groups.Gro
 			case errInvalid, errTruncation:
 				return groups.Group{}, errors.Wrap(groups.ErrMalformedEntity, err)
 			case errFK:
-				return groups.Group{}, errors.Wrap(groups.ErrCreateGroup, err)
+				return groups.Group{}, errors.Wrap(groups.ErrCreate, err)
 			case errDuplicate:
 				return groups.Group{}, errors.Wrap(groups.ErrGroupConflict, err)
 			}
 		}
 
-		return groups.Group{}, errors.Wrap(groups.ErrCreateGroup, errors.New(pqErr.Message))
+		return groups.Group{}, errors.Wrap(groups.ErrCreate, errors.New(pqErr.Message))
 	}
 
 	defer row.Close()
@@ -144,7 +144,7 @@ func (gr groupsRepository) Delete(ctx context.Context, groupID string) error {
 			case errFK:
 				switch pqErr.Constraint {
 				case groupIDFkeyy:
-					return errors.Wrap(groups.ErrGroupNotEmpty, err)
+					return errors.Wrap(groups.ErrNotEmpty, err)
 				}
 				return errors.Wrap(groups.ErrGroupConflict, err)
 			}
@@ -170,10 +170,10 @@ func (gr groupsRepository) RetrieveByID(ctx context.Context, id string) (groups.
 	q := `SELECT id, name, owner_id, parent_id, description, metadata, path, nlevel(path) as level, created_at, updated_at FROM groups WHERE id = $1`
 	if err := gr.db.QueryRowxContext(ctx, q, id).StructScan(&dbu); err != nil {
 		if err == sql.ErrNoRows {
-			return groups.Group{}, errors.Wrap(groups.ErrGroupNotFound, err)
+			return groups.Group{}, errors.Wrap(groups.ErrNotFound, err)
 
 		}
-		return groups.Group{}, errors.Wrap(groups.ErrRetrieveGroup, err)
+		return groups.Group{}, errors.Wrap(groups.ErrRetrieve, err)
 	}
 	return toGroup(dbu)
 }
@@ -181,7 +181,7 @@ func (gr groupsRepository) RetrieveByID(ctx context.Context, id string) (groups.
 func (gr groupsRepository) RetrieveAll(ctx context.Context, pm groups.PageMetadata) (groups.GroupPage, error) {
 	_, metaQuery, err := getGroupsMetadataQuery("groups", pm.Metadata)
 	if err != nil {
-		return groups.GroupPage{}, errors.Wrap(groups.ErrRetrieveGroup, err)
+		return groups.GroupPage{}, errors.Wrap(groups.ErrRetrieve, err)
 	}
 
 	var mq string
@@ -194,18 +194,18 @@ func (gr groupsRepository) RetrieveAll(ctx context.Context, pm groups.PageMetada
 
 	dbPage, err := toDBGroupPage("", "", pm)
 	if err != nil {
-		return groups.GroupPage{}, errors.Wrap(groups.ErrRetrieveGroup, err)
+		return groups.GroupPage{}, errors.Wrap(groups.ErrRetrieve, err)
 	}
 
 	rows, err := gr.db.NamedQueryContext(ctx, q, dbPage)
 	if err != nil {
-		return groups.GroupPage{}, errors.Wrap(groups.ErrRetrieveGroup, err)
+		return groups.GroupPage{}, errors.Wrap(groups.ErrRetrieve, err)
 	}
 	defer rows.Close()
 
 	items, err := gr.processRows(rows)
 	if err != nil {
-		return groups.GroupPage{}, errors.Wrap(groups.ErrRetrieveGroup, err)
+		return groups.GroupPage{}, errors.Wrap(groups.ErrRetrieve, err)
 	}
 
 	cq := "SELECT COUNT(*) FROM groups"
@@ -215,7 +215,7 @@ func (gr groupsRepository) RetrieveAll(ctx context.Context, pm groups.PageMetada
 
 	total, err := total(ctx, gr.db, cq, dbPage)
 	if err != nil {
-		return groups.GroupPage{}, errors.Wrap(groups.ErrRetrieveGroup, err)
+		return groups.GroupPage{}, errors.Wrap(groups.ErrRetrieve, err)
 	}
 
 	page := groups.GroupPage{
@@ -317,7 +317,7 @@ func (gr groupsRepository) Memberships(ctx context.Context, memberID string, pm 
 func (gr groupsRepository) Assign(ctx context.Context, groupID string, ids ...string) error {
 	tx, err := gr.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return errors.Wrap(groups.ErrAssignToGroup, err)
+		return errors.Wrap(groups.ErrAssign, err)
 	}
 
 	qIns := `INSERT INTO group_relations (group_id, member_id, type, created_at, updated_at) 
@@ -326,7 +326,7 @@ func (gr groupsRepository) Assign(ctx context.Context, groupID string, ids ...st
 	for _, id := range ids {
 		dbg, err := toDBGroupRelation(id, groupID)
 		if err != nil {
-			return errors.Wrap(groups.ErrAssignToGroup, err)
+			return errors.Wrap(groups.ErrAssign, err)
 		}
 		created := time.Now()
 		dbg.CreatedAt = created
@@ -342,16 +342,16 @@ func (gr groupsRepository) Assign(ctx context.Context, groupID string, ids ...st
 				case errFK:
 					return errors.Wrap(groups.ErrConflict, errors.New(pqErr.Detail))
 				case errDuplicate:
-					return errors.Wrap(groups.ErrMemberAlreadyAssigned, errors.New(pqErr.Detail))
+					return errors.Wrap(groups.ErrAlreadyAssigned, errors.New(pqErr.Detail))
 				}
 			}
 
-			return errors.Wrap(groups.ErrAssignToGroup, err)
+			return errors.Wrap(groups.ErrAssign, err)
 		}
 	}
 
 	if err = tx.Commit(); err != nil {
-		return errors.Wrap(groups.ErrAssignToGroup, err)
+		return errors.Wrap(groups.ErrAssign, err)
 	}
 
 	return nil
@@ -360,7 +360,7 @@ func (gr groupsRepository) Assign(ctx context.Context, groupID string, ids ...st
 func (gr groupsRepository) Unassign(ctx context.Context, groupID string, ids ...string) error {
 	tx, err := gr.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return errors.Wrap(groups.ErrAssignToGroup, err)
+		return errors.Wrap(groups.ErrAssign, err)
 	}
 
 	qDel := `DELETE from group_relations WHERE group_id = :group_id AND member_id = :member_id`
@@ -368,7 +368,7 @@ func (gr groupsRepository) Unassign(ctx context.Context, groupID string, ids ...
 	for _, id := range ids {
 		dbg, err := toDBGroupRelation(id, groupID)
 		if err != nil {
-			return errors.Wrap(groups.ErrAssignToGroup, err)
+			return errors.Wrap(groups.ErrAssign, err)
 		}
 
 		if _, err := tx.NamedExecContext(ctx, qDel, dbg); err != nil {
@@ -383,12 +383,12 @@ func (gr groupsRepository) Unassign(ctx context.Context, groupID string, ids ...
 				}
 			}
 
-			return errors.Wrap(groups.ErrAssignToGroup, err)
+			return errors.Wrap(groups.ErrAssign, err)
 		}
 	}
 
 	if err = tx.Commit(); err != nil {
-		return errors.Wrap(groups.ErrAssignToGroup, err)
+		return errors.Wrap(groups.ErrAssign, err)
 	}
 
 	return nil

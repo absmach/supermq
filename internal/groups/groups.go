@@ -13,8 +13,8 @@ var (
 	// ErrGroupConflict indicates that group already exists.
 	ErrGroupConflict = errors.New("group already exists")
 
-	// ErrCreateGroup indicates failure to create group.
-	ErrCreateGroup = errors.New("failed to create group")
+	// ErrCreate indicates failure to create group.
+	ErrCreate = errors.New("failed to create group")
 
 	// ErrUpdateGroup indicates failure to update group.
 	ErrUpdateGroup = errors.New("failed to update group")
@@ -22,20 +22,20 @@ var (
 	// ErrDeleteGroup indicates failure to delete group.
 	ErrDeleteGroup = errors.New("failed to delete group")
 
-	// ErrGroupNotFound indicates failure to find group.
-	ErrGroupNotFound = errors.New("failed to find group")
+	// ErrNotFound indicates failure to find group.
+	ErrNotFound = errors.New("failed to find group")
 
-	// ErrAssignToGroup indicates failure to assign member to a group.
-	ErrAssignToGroup = errors.New("failed to assign member to a group")
+	// ErrAssign indicates failure to assign member to a group.
+	ErrAssign = errors.New("failed to assign member to a group")
 
-	// ErrGroupNotEmpty indicates group is not empty, can't be deleted.
-	ErrGroupNotEmpty = errors.New("group is not empty")
+	// ErrNotEmpty indicates group is not empty, can't be deleted.
+	ErrNotEmpty = errors.New("group is not empty")
 
-	// ErrMemberAlreadyAssigned indicates that members is already assigned.
-	ErrMemberAlreadyAssigned = errors.New("member is already assigned")
+	// ErrAlreadyAssigned indicates that members is already assigned.
+	ErrAlreadyAssigned = errors.New("member is already assigned")
 
-	// ErrRetrieveGroup indicates error while reading entity from database
-	ErrRetrieveGroup = errors.New("retrieve group from db error")
+	// ErrRetrieve indicates error while reading entity from database
+	ErrRetrieve = errors.New("retrieve group from db error")
 
 	// ErrConflict indicates that entity already exists.
 	ErrConflict = errors.New("entity already exists")
