@@ -35,20 +35,6 @@ The following actions are supported:
 - obtain (API keys only)
 - revoke (API keys only)
 
-# Groups
-User and Things service are using Auth gRPC API to get the list of ids that are part of a group. Groups can be organized as tree structure.
-Group consists of the following fields:
-
-- ID - ULID id uniquely representing group
-- Name - name of the group, name of the group is unique at the same level of tree hierarchy for a given tree.
-- ParentID - id of the parent group
-- OwnerID - id of the user that created a group
-- Description - free form text, up to 1024 characters
-- Metadata - Arbitrary, object-encoded group's data
-- Path - tree path consisting of group ids
-- CreatedAt - timestamp at which the group is created
-- UpdatedAt - timestamp at which the group is updated
-
 ## Configuration
 
 The service is configured using the environment variables presented in the

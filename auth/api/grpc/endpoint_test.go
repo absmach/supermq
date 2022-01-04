@@ -15,7 +15,6 @@ import (
 	grpcapi "github.com/mainflux/mainflux/auth/api/grpc"
 	"github.com/mainflux/mainflux/auth/jwt"
 	"github.com/mainflux/mainflux/auth/mocks"
-	"github.com/mainflux/mainflux/internal/groups"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
@@ -377,86 +376,5 @@ func TestDeletePolicy(t *testing.T) {
 		assert.True(t, ok, "gRPC status can't be extracted from the error")
 		assert.Equal(t, tc.code, e.Code(), fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.code, e.Code()))
 		assert.Equal(t, tc.dpr.GetDeleted(), dpr.GetDeleted(), fmt.Sprintf("%s: expected %v got %v", tc.desc, tc.dpr.GetDeleted(), dpr.GetDeleted()))
-	}
-}
-
-func TestMembers(t *testing.T) {
-	_, token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.UserKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
-	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
-
-	group := groups.Group{
-		Name:        "Mainflux",
-		Description: description,
-	}
-
-	var things []string
-	for i := 0; i < numOfThings; i++ {
-		thID, err := uuid.New().ID()
-		assert.Nil(t, err, fmt.Sprintf("Generate thing id expected to succeed: %s", err))
-
-		err = svc.AddPolicy(context.Background(), auth.PolicyReq{Subject: id, Object: thID, Relation: "owner"})
-		assert.Nil(t, err, fmt.Sprintf("Adding a policy expected to succeed: %s", err))
-
-		things = append(things, thID)
-	}
-
-	var users []string
-	for i := 0; i < numOfUsers; i++ {
-		id, err := uuid.New().ID()
-		assert.Nil(t, err, fmt.Sprintf("Generate thing id expected to succeed: %s", err))
-
-		users = append(users, id)
-	}
-
-	group, err = svc.CreateGroup(context.Background(), token, group)
-	assert.Nil(t, err, fmt.Sprintf("Creating group expected to succeed: %s", err))
-	err = svc.AddPolicy(context.Background(), auth.PolicyReq{Subject: id, Object: group.ID, Relation: "groupadmin"})
-	assert.Nil(t, err, fmt.Sprintf("Adding a policy expected to succeed: %s", err))
-
-	err = svc.Assign(context.Background(), token, group.ID, thingsType, things...)
-	assert.Nil(t, err, fmt.Sprintf("Assign members to  expected to succeed: %s", err))
-
-	err = svc.Assign(context.Background(), token, group.ID, usersType, users...)
-	assert.Nil(t, err, fmt.Sprintf("Assign members to group expected to succeed: %s", err))
-
-	cases := []struct {
-		desc      string
-		token     string
-		groupID   string
-		groupType string
-		size      int
-		err       error
-		code      codes.Code
-	}{
-		{
-			desc:      "get all things with user token",
-			groupID:   group.ID,
-			token:     token,
-			groupType: thingsType,
-			size:      numOfThings,
-			err:       nil,
-			code:      codes.OK,
-		},
-		{
-			desc:      "get all users with user token",
-			groupID:   group.ID,
-			token:     token,
-			groupType: usersType,
-			size:      numOfUsers,
-			err:       nil,
-			code:      codes.OK,
-		},
-	}
-
-	authAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(authAddr, grpc.WithInsecure())
-	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
-
-	for _, tc := range cases {
-		m, err := client.Members(context.Background(), &mainflux.MembersReq{Token: tc.token, GroupID: tc.groupID, Type: tc.groupType, Offset: 0, Limit: 10})
-		e, ok := status.FromError(err)
-		assert.Equal(t, tc.size, len(m.Members), fmt.Sprintf("%s: expected %d got %d", tc.desc, tc.size, len(m.Members)))
-		assert.Equal(t, tc.code, e.Code(), fmt.Sprintf("%s: expected %s got %s", tc.desc, tc.code, e.Code()))
-		assert.True(t, ok, "OK expected to be true")
 	}
 }

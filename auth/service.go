@@ -95,9 +95,6 @@ type Authn interface {
 type Service interface {
 	Authn
 	Authz
-
-	// GroupService implements groups API, creating groups, assigning members
-	groups.Service
 }
 
 var _ Service = (*service)(nil)
@@ -301,154 +298,154 @@ func (svc service) login(token string) (string, string, error) {
 	return key.IssuerID, key.Subject, nil
 }
 
-func (svc service) CreateGroup(ctx context.Context, token string, group groups.Group) (groups.Group, error) {
-	user, err := svc.Identify(ctx, token)
-	if err != nil {
-		return groups.Group{}, errors.Wrap(ErrUnauthorizedAccess, err)
-	}
+// func (svc service) CreateGroup(ctx context.Context, token string, group groups.Group) (groups.Group, error) {
+// 	user, err := svc.Identify(ctx, token)
+// 	if err != nil {
+// 		return groups.Group{}, errors.Wrap(ErrUnauthorizedAccess, err)
+// 	}
 
-	ulid, err := svc.ulidProvider.ID()
-	if err != nil {
-		return groups.Group{}, errors.Wrap(ErrGenerateGroupID, err)
-	}
+// 	ulid, err := svc.ulidProvider.ID()
+// 	if err != nil {
+// 		return groups.Group{}, errors.Wrap(ErrGenerateGroupID, err)
+// 	}
 
-	timestamp := getTimestmap()
-	group.UpdatedAt = timestamp
-	group.CreatedAt = timestamp
+// 	timestamp := getTimestmap()
+// 	group.UpdatedAt = timestamp
+// 	group.CreatedAt = timestamp
 
-	group.ID = ulid
-	group.OwnerID = user.ID
+// 	group.ID = ulid
+// 	group.OwnerID = user.ID
 
-	group, err = svc.groups.Save(ctx, group)
-	if err != nil {
-		return groups.Group{}, err
-	}
+// 	group, err = svc.groups.Save(ctx, group)
+// 	if err != nil {
+// 		return groups.Group{}, err
+// 	}
 
-	if err := svc.agent.AddPolicy(ctx, PolicyReq{Object: group.ID, Relation: memberRelation, Subject: user.ID}); err != nil {
-		return groups.Group{}, err
-	}
+// 	if err := svc.agent.AddPolicy(ctx, PolicyReq{Object: group.ID, Relation: memberRelation, Subject: user.ID}); err != nil {
+// 		return groups.Group{}, err
+// 	}
 
-	return group, nil
-}
+// 	return group, nil
+// }
 
-func (svc service) ListGroups(ctx context.Context, token string, pm groups.PageMetadata) (groups.GroupPage, error) {
-	if _, err := svc.Identify(ctx, token); err != nil {
-		return groups.GroupPage{}, errors.Wrap(ErrUnauthorizedAccess, err)
-	}
-	return svc.groups.RetrieveAll(ctx, pm)
-}
+// func (svc service) ListGroups(ctx context.Context, token string, pm groups.PageMetadata) (groups.GroupPage, error) {
+// 	if _, err := svc.Identify(ctx, token); err != nil {
+// 		return groups.GroupPage{}, errors.Wrap(ErrUnauthorizedAccess, err)
+// 	}
+// 	return svc.groups.RetrieveAll(ctx, pm)
+// }
 
-func (svc service) ListParents(ctx context.Context, token string, childID string, pm groups.PageMetadata) (groups.GroupPage, error) {
-	if _, err := svc.Identify(ctx, token); err != nil {
-		return groups.GroupPage{}, errors.Wrap(ErrUnauthorizedAccess, err)
-	}
-	return svc.groups.RetrieveAllParents(ctx, childID, pm)
-}
+// func (svc service) ListParents(ctx context.Context, token string, childID string, pm groups.PageMetadata) (groups.GroupPage, error) {
+// 	if _, err := svc.Identify(ctx, token); err != nil {
+// 		return groups.GroupPage{}, errors.Wrap(ErrUnauthorizedAccess, err)
+// 	}
+// 	return svc.groups.RetrieveAllParents(ctx, childID, pm)
+// }
 
-func (svc service) ListChildren(ctx context.Context, token string, parentID string, pm groups.PageMetadata) (groups.GroupPage, error) {
-	if _, err := svc.Identify(ctx, token); err != nil {
-		return groups.GroupPage{}, errors.Wrap(ErrUnauthorizedAccess, err)
-	}
-	return svc.groups.RetrieveAllChildren(ctx, parentID, pm)
-}
+// func (svc service) ListChildren(ctx context.Context, token string, parentID string, pm groups.PageMetadata) (groups.GroupPage, error) {
+// 	if _, err := svc.Identify(ctx, token); err != nil {
+// 		return groups.GroupPage{}, errors.Wrap(ErrUnauthorizedAccess, err)
+// 	}
+// 	return svc.groups.RetrieveAllChildren(ctx, parentID, pm)
+// }
 
-func (svc service) ListMembers(ctx context.Context, token string, groupID, groupType string, pm groups.PageMetadata) (groups.MemberPage, error) {
-	if _, err := svc.Identify(ctx, token); err != nil {
-		return groups.MemberPage{}, errors.Wrap(ErrUnauthorizedAccess, err)
-	}
-	mp, err := svc.groups.Members(ctx, groupID, groupType, pm)
-	if err != nil {
-		return groups.MemberPage{}, errors.Wrap(ErrFailedToRetrieveMembers, err)
-	}
-	return mp, nil
-}
+// func (svc service) ListMembers(ctx context.Context, token string, groupID, groupType string, pm groups.PageMetadata) (groups.MemberPage, error) {
+// 	if _, err := svc.Identify(ctx, token); err != nil {
+// 		return groups.MemberPage{}, errors.Wrap(ErrUnauthorizedAccess, err)
+// 	}
+// 	mp, err := svc.groups.Members(ctx, groupID, groupType, pm)
+// 	if err != nil {
+// 		return groups.MemberPage{}, errors.Wrap(ErrFailedToRetrieveMembers, err)
+// 	}
+// 	return mp, nil
+// }
 
-func (svc service) RemoveGroup(ctx context.Context, token, id string) error {
-	if _, err := svc.Identify(ctx, token); err != nil {
-		return errors.Wrap(ErrUnauthorizedAccess, err)
-	}
-	return svc.groups.Delete(ctx, id)
-}
+// func (svc service) RemoveGroup(ctx context.Context, token, id string) error {
+// 	if _, err := svc.Identify(ctx, token); err != nil {
+// 		return errors.Wrap(ErrUnauthorizedAccess, err)
+// 	}
+// 	return svc.groups.Delete(ctx, id)
+// }
 
-func (svc service) UpdateGroup(ctx context.Context, token string, group groups.Group) (groups.Group, error) {
-	if _, err := svc.Identify(ctx, token); err != nil {
-		return groups.Group{}, errors.Wrap(ErrUnauthorizedAccess, err)
-	}
+// func (svc service) UpdateGroup(ctx context.Context, token string, group groups.Group) (groups.Group, error) {
+// 	if _, err := svc.Identify(ctx, token); err != nil {
+// 		return groups.Group{}, errors.Wrap(ErrUnauthorizedAccess, err)
+// 	}
 
-	group.UpdatedAt = getTimestmap()
-	return svc.groups.Update(ctx, group)
-}
+// 	group.UpdatedAt = getTimestmap()
+// 	return svc.groups.Update(ctx, group)
+// }
 
-func (svc service) ViewGroup(ctx context.Context, token, id string) (groups.Group, error) {
-	if _, err := svc.Identify(ctx, token); err != nil {
-		return groups.Group{}, errors.Wrap(ErrUnauthorizedAccess, err)
-	}
-	return svc.groups.RetrieveByID(ctx, id)
-}
+// func (svc service) ViewGroup(ctx context.Context, token, id string) (groups.Group, error) {
+// 	if _, err := svc.Identify(ctx, token); err != nil {
+// 		return groups.Group{}, errors.Wrap(ErrUnauthorizedAccess, err)
+// 	}
+// 	return svc.groups.RetrieveByID(ctx, id)
+// }
 
-func (svc service) Assign(ctx context.Context, token string, groupID, groupType string, memberIDs ...string) error {
-	if _, err := svc.Identify(ctx, token); err != nil {
-		return errors.Wrap(ErrUnauthorizedAccess, err)
-	}
+// func (svc service) Assign(ctx context.Context, token string, groupID, groupType string, memberIDs ...string) error {
+// 	if _, err := svc.Identify(ctx, token); err != nil {
+// 		return errors.Wrap(ErrUnauthorizedAccess, err)
+// 	}
 
-	if err := svc.groups.Assign(ctx, groupID, groupType, memberIDs...); err != nil {
-		return err
-	}
+// 	if err := svc.groups.Assign(ctx, groupID, groupType, memberIDs...); err != nil {
+// 		return err
+// 	}
 
-	if groupType == thingsGroupType {
-		ss := fmt.Sprintf("%s:%s#%s", "members", groupID, memberRelation)
-		var errs error
-		for _, memberID := range memberIDs {
-			for _, action := range []string{"read", "write", "delete"} {
-				if err := svc.agent.AddPolicy(ctx, PolicyReq{Object: memberID, Relation: action, Subject: ss}); err != nil {
-					errs = errors.Wrap(fmt.Errorf("cannot add thing: '%s' to thing group: '%s'", memberID, groupID), errs)
-				}
-			}
-		}
-		return errs
-	}
+// 	if groupType == thingsGroupType {
+// 		ss := fmt.Sprintf("%s:%s#%s", "members", groupID, memberRelation)
+// 		var errs error
+// 		for _, memberID := range memberIDs {
+// 			for _, action := range []string{"read", "write", "delete"} {
+// 				if err := svc.agent.AddPolicy(ctx, PolicyReq{Object: memberID, Relation: action, Subject: ss}); err != nil {
+// 					errs = errors.Wrap(fmt.Errorf("cannot add thing: '%s' to thing group: '%s'", memberID, groupID), errs)
+// 				}
+// 			}
+// 		}
+// 		return errs
+// 	}
 
-	var errs error
-	for _, memberID := range memberIDs {
-		if err := svc.agent.AddPolicy(ctx, PolicyReq{Object: groupID, Relation: memberRelation, Subject: memberID}); err != nil {
-			errs = errors.Wrap(fmt.Errorf("cannot add user: '%s' to user group: '%s'", memberID, groupID), errs)
-		}
-	}
-	return errs
-}
+// 	var errs error
+// 	for _, memberID := range memberIDs {
+// 		if err := svc.agent.AddPolicy(ctx, PolicyReq{Object: groupID, Relation: memberRelation, Subject: memberID}); err != nil {
+// 			errs = errors.Wrap(fmt.Errorf("cannot add user: '%s' to user group: '%s'", memberID, groupID), errs)
+// 		}
+// 	}
+// 	return errs
+// }
 
-func (svc service) Unassign(ctx context.Context, token string, groupID string, memberIDs ...string) error {
-	if _, err := svc.Identify(ctx, token); err != nil {
-		return errors.Wrap(ErrUnauthorizedAccess, err)
-	}
+// func (svc service) Unassign(ctx context.Context, token string, groupID string, memberIDs ...string) error {
+// 	if _, err := svc.Identify(ctx, token); err != nil {
+// 		return errors.Wrap(ErrUnauthorizedAccess, err)
+// 	}
 
-	ss := fmt.Sprintf("%s:%s#%s", "members", groupID, memberRelation)
-	var errs error
-	for _, memberID := range memberIDs {
-		// If the member is a user, <groupID>#member@memberID must be deleted.
-		if err := svc.agent.DeletePolicy(ctx, PolicyReq{Object: groupID, Relation: memberRelation, Subject: memberID}); err != nil {
-			errs = errors.Wrap(fmt.Errorf("cannot delete a membership of member '%s' from group '%s'", memberID, groupID), errs)
-		}
+// 	ss := fmt.Sprintf("%s:%s#%s", "members", groupID, memberRelation)
+// 	var errs error
+// 	for _, memberID := range memberIDs {
+// 		// If the member is a user, <groupID>#member@memberID must be deleted.
+// 		if err := svc.agent.DeletePolicy(ctx, PolicyReq{Object: groupID, Relation: memberRelation, Subject: memberID}); err != nil {
+// 			errs = errors.Wrap(fmt.Errorf("cannot delete a membership of member '%s' from group '%s'", memberID, groupID), errs)
+// 		}
 
-		// If the member is a Thing, memberID#read|write|delete@(members:groupID#member) must be deleted.
-		for _, action := range []string{"read", "write", "delete"} {
-			if err := svc.agent.DeletePolicy(ctx, PolicyReq{Object: memberID, Relation: action, Subject: ss}); err != nil {
-				errs = errors.Wrap(fmt.Errorf("cannot delete '%s' policy from member '%s'", action, memberID), errs)
-			}
-		}
-	}
+// 		// If the member is a Thing, memberID#read|write|delete@(members:groupID#member) must be deleted.
+// 		for _, action := range []string{"read", "write", "delete"} {
+// 			if err := svc.agent.DeletePolicy(ctx, PolicyReq{Object: memberID, Relation: action, Subject: ss}); err != nil {
+// 				errs = errors.Wrap(fmt.Errorf("cannot delete '%s' policy from member '%s'", action, memberID), errs)
+// 			}
+// 		}
+// 	}
 
-	err := svc.groups.Unassign(ctx, groupID, memberIDs...)
-	return errors.Wrap(err, errs)
-}
+// 	err := svc.groups.Unassign(ctx, groupID, memberIDs...)
+// 	return errors.Wrap(err, errs)
+// }
 
-func (svc service) ListMemberships(ctx context.Context, token string, memberID string, pm groups.PageMetadata) (groups.GroupPage, error) {
-	if _, err := svc.Identify(ctx, token); err != nil {
-		return groups.GroupPage{}, errors.Wrap(ErrUnauthorizedAccess, err)
-	}
-	return svc.groups.Memberships(ctx, memberID, pm)
-}
+// func (svc service) ListMemberships(ctx context.Context, token string, memberID string, pm groups.PageMetadata) (groups.GroupPage, error) {
+// 	if _, err := svc.Identify(ctx, token); err != nil {
+// 		return groups.GroupPage{}, errors.Wrap(ErrUnauthorizedAccess, err)
+// 	}
+// 	return svc.groups.Memberships(ctx, memberID, pm)
+// }
 
-func getTimestmap() time.Time {
-	return time.Now().UTC().Round(time.Millisecond)
-}
+// func getTimestmap() time.Time {
+// 	return time.Now().UTC().Round(time.Millisecond)
+// }

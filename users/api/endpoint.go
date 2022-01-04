@@ -7,8 +7,6 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/mainflux/mainflux/auth"
-	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users"
 )
 
@@ -173,21 +171,21 @@ func loginEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
-func listMembersEndpoint(svc users.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(listMemberGroupReq)
-		if err := req.validate(); err != nil {
-			return userPageRes{}, errors.Wrap(auth.ErrMalformedEntity, err)
-		}
+// func listMembersEndpoint(svc users.Service) endpoint.Endpoint {
+// 	return func(ctx context.Context, request interface{}) (interface{}, error) {
+// 		req := request.(listMemberGroupReq)
+// 		if err := req.validate(); err != nil {
+// 			return userPageRes{}, errors.Wrap(auth.ErrMalformedEntity, err)
+// 		}
 
-		page, err := svc.ListMembers(ctx, req.token, req.groupID, req.offset, req.limit, req.metadata)
-		if err != nil {
-			return userPageRes{}, err
-		}
+// 		page, err := svc.ListMembers(ctx, req.token, req.groupID, req.metadata)
+// 		if err != nil {
+// 			return userPageRes{}, err
+// 		}
 
-		return buildUsersResponse(page), nil
-	}
-}
+// 		return buildUsersResponse(page), nil
+// 	}
+// }
 
 func buildUsersResponse(up users.UserPage) userPageRes {
 	res := userPageRes{

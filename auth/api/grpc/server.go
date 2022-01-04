@@ -63,16 +63,16 @@ func NewServer(tracer opentracing.Tracer, svc auth.Service) mainflux.AuthService
 			decodeListPoliciesRequest,
 			encodeListPoliciesResponse,
 		),
-		assign: kitgrpc.NewServer(
-			kitot.TraceServer(tracer, "assign")(assignEndpoint(svc)),
-			decodeAssignRequest,
-			encodeEmptyResponse,
-		),
-		members: kitgrpc.NewServer(
-			kitot.TraceServer(tracer, "members")(membersEndpoint(svc)),
-			decodeMembersRequest,
-			encodeMembersResponse,
-		),
+		// assign: kitgrpc.NewServer(
+		// 	kitot.TraceServer(tracer, "assign")(assignEndpoint(svc)),
+		// 	decodeAssignRequest,
+		// 	encodeEmptyResponse,
+		// ),
+		// members: kitgrpc.NewServer(
+		// 	kitot.TraceServer(tracer, "members")(membersEndpoint(svc)),
+		// 	decodeMembersRequest,
+		// 	encodeMembersResponse,
+		// ),
 	}
 }
 

@@ -4,7 +4,7 @@
 package api
 
 import (
-	groups "github.com/mainflux/mainflux/auth"
+	groups "github.com/mainflux/mainflux/internal/groups"
 	"github.com/mainflux/mainflux/users"
 )
 
@@ -115,13 +115,13 @@ type listMemberGroupReq struct {
 	token    string
 	offset   uint64
 	limit    uint64
-	metadata users.Metadata
+	metadata groups.Metadata
 	groupID  string
 }
 
 func (req listMemberGroupReq) validate() error {
 	if req.token == "" {
-		return groups.ErrUnauthorizedAccess
+		return groups.ErrUnauthorized
 	}
 
 	if req.groupID == "" {

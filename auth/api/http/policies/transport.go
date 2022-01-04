@@ -91,7 +91,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusConflict)
 	case errors.Contains(err, auth.ErrAuthorization):
 		w.WriteHeader(http.StatusForbidden)
-	case errors.Contains(err, groups.ErrMemberAlreadyAssigned):
+	case errors.Contains(err, groups.ErrAlreadyAssigned):
 		w.WriteHeader(http.StatusConflict)
 	case errors.Contains(err, io.EOF):
 		w.WriteHeader(http.StatusBadRequest)

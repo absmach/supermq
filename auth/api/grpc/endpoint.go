@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/mainflux/mainflux/auth"
-	"github.com/mainflux/mainflux/internal/groups"
 )
 
 func issueEndpoint(svc auth.Service) endpoint.Endpoint {
@@ -113,52 +112,52 @@ func listPoliciesEndpoint(svc auth.Service) endpoint.Endpoint {
 	}
 }
 
-func assignEndpoint(svc auth.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(assignReq)
+// func assignEndpoint(svc auth.Service) endpoint.Endpoint {
+// 	return func(ctx context.Context, request interface{}) (interface{}, error) {
+// 		req := request.(assignReq)
 
-		if err := req.validate(); err != nil {
-			return emptyRes{}, err
-		}
+// 		if err := req.validate(); err != nil {
+// 			return emptyRes{}, err
+// 		}
 
-		_, err := svc.Identify(ctx, req.token)
-		if err != nil {
-			return emptyRes{}, err
-		}
+// 		_, err := svc.Identify(ctx, req.token)
+// 		if err != nil {
+// 			return emptyRes{}, err
+// 		}
 
-		err = svc.Assign(ctx, req.token, req.memberID, req.groupID, req.groupType)
-		if err != nil {
-			return emptyRes{}, err
-		}
-		return emptyRes{}, nil
+// 		err = svc.Assign(ctx, req.token, req.memberID, req.groupID, req.groupType)
+// 		if err != nil {
+// 			return emptyRes{}, err
+// 		}
+// 		return emptyRes{}, nil
 
-	}
-}
+// 	}
+// }
 
-func membersEndpoint(svc auth.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(membersReq)
-		if err := req.validate(); err != nil {
-			return membersRes{}, err
-		}
+// func membersEndpoint(svc auth.Service) endpoint.Endpoint {
+// 	return func(ctx context.Context, request interface{}) (interface{}, error) {
+// 		req := request.(membersReq)
+// 		if err := req.validate(); err != nil {
+// 			return membersRes{}, err
+// 		}
 
-		pm := groups.PageMetadata{
-			Offset: req.offset,
-			Limit:  req.limit,
-		}
-		mp, err := svc.ListMembers(ctx, req.token, req.groupID, req.memberType, pm)
-		if err != nil {
-			return membersRes{}, err
-		}
-		var members []string
-		for _, m := range mp.Members {
-			members = append(members, m.ID)
-		}
-		return membersRes{
-			offset:  req.offset,
-			limit:   req.limit,
-			total:   mp.PageMetadata.Total,
-			members: members,
-		}, nil
-	}
-}
+// 		pm := groups.PageMetadata{
+// 			Offset: req.offset,
+// 			Limit:  req.limit,
+// 		}
+// 		mp, err := svc.ListMembers(ctx, req.token, req.groupID, req.memberType, pm)
+// 		if err != nil {
+// 			return membersRes{}, err
+// 		}
+// 		var members []string
+// 		for _, m := range mp.Members {
+// 			members = append(members, m.ID)
+// 		}
+// 		return membersRes{
+// 			offset:  req.offset,
+// 			limit:   req.limit,
+// 			total:   mp.PageMetadata.Total,
+// 			members: members,
+// 		}, nil
+// 	}
+// }

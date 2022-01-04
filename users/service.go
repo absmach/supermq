@@ -70,6 +70,7 @@ var (
 // Service specifies an API that must be fullfiled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
+	groups.Service
 	// Register creates new user account. In case of the failed registration, a
 	// non-nil error value is returned. The user registration is only allowed
 	// for admin.
@@ -106,8 +107,8 @@ type Service interface {
 	// SendPasswordReset sends reset password link to email.
 	SendPasswordReset(ctx context.Context, host, email, token string) error
 
-	// ListMembers retrieves everything that is assigned to a group identified by groupID.
-	ListMembers(ctx context.Context, token, groupID string, offset, limit uint64, meta Metadata) (UserPage, error)
+	// // ListMembers retrieves everything that is assigned to a group identified by groupID.
+	// ListMembers(ctx context.Context, token, groupID string, meta groups.Metadata) (UserPage, error)
 }
 
 // PageMetadata contains page metadata that helps navigation.
@@ -116,12 +117,6 @@ type PageMetadata struct {
 	Offset uint64
 	Limit  uint64
 	Name   string
-}
-
-// GroupPage contains a page of groups.
-type GroupPage struct {
-	PageMetadata
-	Groups []groups.Group
 }
 
 // UserPage contains a page of users.
@@ -134,6 +129,7 @@ var _ Service = (*usersService)(nil)
 
 type usersService struct {
 	users      UserRepository
+	groups     groups.GroupRepository
 	hasher     Hasher
 	email      Emailer
 	auth       mainflux.AuthServiceClient
@@ -336,30 +332,6 @@ func (svc usersService) ChangePassword(ctx context.Context, authToken, password,
 func (svc usersService) SendPasswordReset(_ context.Context, host, email, token string) error {
 	to := []string{email}
 	return svc.email.SendPasswordReset(to, host, token)
-}
-
-func (svc usersService) ListMembers(ctx context.Context, token, groupID string, offset, limit uint64, m Metadata) (UserPage, error) {
-	if _, err := svc.identify(ctx, token); err != nil {
-		return UserPage{}, err
-	}
-
-	userIDs, err := svc.members(ctx, token, groupID, offset, limit)
-	if err != nil {
-		return UserPage{}, err
-	}
-
-	if len(userIDs) == 0 {
-		return UserPage{
-			Users: []User{},
-			PageMetadata: PageMetadata{
-				Total:  0,
-				Offset: offset,
-				Limit:  limit,
-			},
-		}, nil
-	}
-
-	return svc.users.RetrieveAll(ctx, offset, limit, userIDs, "", m)
 }
 
 // Auth helpers
