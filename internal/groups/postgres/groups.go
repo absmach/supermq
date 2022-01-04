@@ -33,21 +33,21 @@ var (
 	groupIDFkeyy  = "group_relations_group_id_fkey"
 )
 
-var _ groups.GroupRepository = (*groupRepository)(nil)
+var _ groups.GroupRepository = (*groupsRepository)(nil)
 
-type groupRepository struct {
+type groupsRepository struct {
 	db postgres.Database
 }
 
 // NewGroupRepo instantiates a PostgreSQL implementation of group
 // repository.
 func NewGroupRepo(db postgres.Database) groups.GroupRepository {
-	return &groupRepository{
+	return &groupsRepository{
 		db: db,
 	}
 }
 
-func (gr groupRepository) Save(ctx context.Context, g groups.Group) (groups.Group, error) {
+func (gr groupsRepository) Save(ctx context.Context, g groups.Group) (groups.Group, error) {
 	// For root group path is initialized with id
 	q := `INSERT INTO groups (name, description, id, path, owner_id, metadata, created_at, updated_at) 
 		  VALUES (:name, :description, :id, :id, :owner_id, :metadata, :created_at, :updated_at) 
@@ -91,7 +91,7 @@ func (gr groupRepository) Save(ctx context.Context, g groups.Group) (groups.Grou
 	return toGroup(dbg)
 }
 
-func (gr groupRepository) Update(ctx context.Context, g groups.Group) (groups.Group, error) {
+func (gr groupsRepository) Update(ctx context.Context, g groups.Group) (groups.Group, error) {
 	q := `UPDATE groups SET name = :name, description = :description, metadata = :metadata, updated_at = :updated_at WHERE id = :id 
 		  RETURNING id, name, owner_id, parent_id, description, metadata, path, nlevel(path) as level, created_at, updated_at`
 
@@ -124,7 +124,7 @@ func (gr groupRepository) Update(ctx context.Context, g groups.Group) (groups.Gr
 	return toGroup(dbu)
 }
 
-func (gr groupRepository) Delete(ctx context.Context, groupID string) error {
+func (gr groupsRepository) Delete(ctx context.Context, groupID string) error {
 	qd := `DELETE FROM groups WHERE id = :id`
 	group := groups.Group{
 		ID: groupID,
@@ -163,7 +163,7 @@ func (gr groupRepository) Delete(ctx context.Context, groupID string) error {
 	return nil
 }
 
-func (gr groupRepository) RetrieveByID(ctx context.Context, id string) (groups.Group, error) {
+func (gr groupsRepository) RetrieveByID(ctx context.Context, id string) (groups.Group, error) {
 	dbu := dbGroup{
 		ID: id,
 	}
@@ -178,7 +178,7 @@ func (gr groupRepository) RetrieveByID(ctx context.Context, id string) (groups.G
 	return toGroup(dbu)
 }
 
-func (gr groupRepository) RetrieveAll(ctx context.Context, pm groups.PageMetadata) (groups.GroupPage, error) {
+func (gr groupsRepository) RetrieveAll(ctx context.Context, pm groups.PageMetadata) (groups.GroupPage, error) {
 	_, metaQuery, err := getGroupsMetadataQuery("groups", pm.Metadata)
 	if err != nil {
 		return groups.GroupPage{}, errors.Wrap(groups.ErrRetrieveGroup, err)
@@ -229,7 +229,7 @@ func (gr groupRepository) RetrieveAll(ctx context.Context, pm groups.PageMetadat
 	return page, nil
 }
 
-func (gr groupRepository) RetrieveAllParents(ctx context.Context, groupID string, pm groups.PageMetadata) (groups.GroupPage, error) {
+func (gr groupsRepository) RetrieveAllParents(ctx context.Context, groupID string, pm groups.PageMetadata) (groups.GroupPage, error) {
 	q := `SELECT g.id, g.name, g.owner_id, g.parent_id, g.description, g.metadata, g.path, nlevel(g.path) as level, g.created_at, g.updated_at
 		  FROM groups parent, groups g
 	      WHERE parent.id = :id AND g.path @> parent.path AND nlevel(parent.path) - nlevel(g.path) <= :level`
@@ -242,7 +242,7 @@ func (gr groupRepository) RetrieveAllParents(ctx context.Context, groupID string
 	return gp, nil
 }
 
-func (gr groupRepository) RetrieveAllChildren(ctx context.Context, groupID string, pm groups.PageMetadata) (groups.GroupPage, error) {
+func (gr groupsRepository) RetrieveAllChildren(ctx context.Context, groupID string, pm groups.PageMetadata) (groups.GroupPage, error) {
 	q := `SELECT g.id, g.name, g.owner_id, g.parent_id, g.description, g.metadata, g.path,  nlevel(g.path) as level, g.created_at, g.updated_at 
 	FROM groups parent, groups g
 	WHERE parent.id = :id AND g.path <@ parent.path AND nlevel(g.path) - nlevel(parent.path) < :level`
@@ -255,7 +255,7 @@ func (gr groupRepository) RetrieveAllChildren(ctx context.Context, groupID strin
 	return gp, nil
 }
 
-func (gr groupRepository) Memberships(ctx context.Context, memberID string, pm groups.PageMetadata) (groups.GroupPage, error) {
+func (gr groupsRepository) Memberships(ctx context.Context, memberID string, pm groups.PageMetadata) (groups.GroupPage, error) {
 	_, mq, err := getGroupsMetadataQuery("groups", pm.Metadata)
 	if err != nil {
 		return groups.GroupPage{}, errors.Wrap(groups.ErrMembershipRetrieve, err)
@@ -314,7 +314,7 @@ func (gr groupRepository) Memberships(ctx context.Context, memberID string, pm g
 	return page, nil
 }
 
-func (gr groupRepository) Assign(ctx context.Context, groupID string, ids ...string) error {
+func (gr groupsRepository) Assign(ctx context.Context, groupID string, ids ...string) error {
 	tx, err := gr.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return errors.Wrap(groups.ErrAssignToGroup, err)
@@ -357,7 +357,7 @@ func (gr groupRepository) Assign(ctx context.Context, groupID string, ids ...str
 	return nil
 }
 
-func (gr groupRepository) Unassign(ctx context.Context, groupID string, ids ...string) error {
+func (gr groupsRepository) Unassign(ctx context.Context, groupID string, ids ...string) error {
 	tx, err := gr.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return errors.Wrap(groups.ErrAssignToGroup, err)
@@ -394,7 +394,7 @@ func (gr groupRepository) Unassign(ctx context.Context, groupID string, ids ...s
 	return nil
 }
 
-func (gr groupRepository) retrieve(ctx context.Context, groupID, retQuery, cntQuery string, pm groups.PageMetadata) (groups.GroupPage, error) {
+func (gr groupsRepository) retrieve(ctx context.Context, groupID, retQuery, cntQuery string, pm groups.PageMetadata) (groups.GroupPage, error) {
 	if groupID == "" {
 		return groups.GroupPage{}, nil
 	}
@@ -616,7 +616,7 @@ func getGroupsMetadataQuery(db string, m groups.Metadata) (mb []byte, mq string,
 	return mb, mq, nil
 }
 
-func (gr groupRepository) processRows(rows *sqlx.Rows) ([]groups.Group, error) {
+func (gr groupsRepository) processRows(rows *sqlx.Rows) ([]groups.Group, error) {
 	var items []groups.Group
 	for rows.Next() {
 		dbg := dbGroup{}
