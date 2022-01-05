@@ -61,7 +61,7 @@ type Service interface {
 	UpdateGroup(ctx context.Context, token, id string, group sdk.Group) ([]byte, error)
 	ListGroups(ctx context.Context, token string) ([]byte, error)
 	RemoveGroup(ctx context.Context, token, id string) ([]byte, error)
-	Publish(ctx context.Context, token string, msg messaging.Message) ([]byte, error)
+	Publish(ctx context.Context, thingKey string, msg messaging.Message) ([]byte, error)
 	SendMessage(ctx context.Context, token string) ([]byte, error)
 }
 
@@ -475,7 +475,6 @@ func (gs *uiService) Assign(ctx context.Context, token string, groupID, groupTyp
 	if err := gs.sdk.Assign(memberIDs, groupType, groupID, token); err != nil {
 		return []byte{}, err
 	}
-
 	return gs.ViewGroup(ctx, token, groupID)
 }
 
@@ -501,30 +500,12 @@ func (gs *uiService) RemoveGroup(ctx context.Context, token, id string) ([]byte,
 	return []byte{}, nil
 }
 
-func (gs *uiService) Publish(ctx context.Context, token string, msg messaging.Message) ([]byte, error) {
-	tpl, err := parseTemplate("messages", "messages.html")
+func (gs *uiService) Publish(ctx context.Context, thingKey string, msg messaging.Message) ([]byte, error) {
+	err := gs.sdk.SendMessage(msg.Channel, string(msg.Payload), thingKey)
 	if err != nil {
 		return []byte{}, err
 	}
-
-	err = gs.sdk.SendMessage(msg.Channel, string(msg.Payload), token)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	data := struct {
-		NavbarActive string
-		token        string
-	}{
-		"messages",
-		token,
-	}
-
-	var btpl bytes.Buffer
-	if err := tpl.ExecuteTemplate(&btpl, "messages", data); err != nil {
-		println(err.Error())
-	}
-	return btpl.Bytes(), nil
+	return gs.SendMessage(ctx, thingKey)
 }
 
 func (gs *uiService) SendMessage(ctx context.Context, token string) ([]byte, error) {
@@ -543,6 +524,5 @@ func (gs *uiService) SendMessage(ctx context.Context, token string) ([]byte, err
 	if err := tpl.ExecuteTemplate(&btpl, "messages", data); err != nil {
 		println(err.Error())
 	}
-
 	return btpl.Bytes(), nil
 }

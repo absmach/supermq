@@ -279,8 +279,9 @@ func (req unassignReq) validate() error {
 }
 
 type publishReq struct {
-	msg   messaging.Message
-	token string
+	msg      messaging.Message
+	thingKey string
+	token    string
 }
 
 type sendMessageReq struct {

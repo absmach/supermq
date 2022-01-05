@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strings"
 	"time"
 
@@ -31,7 +30,7 @@ import (
 const (
 	contentType = "text/html"
 	staticDir   = "ui/web/static"
-	token       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDA3MzY1MzIsImlhdCI6MTY0MDcwMDUzMiwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImZscDFAZW1haWwuY29tIiwiaXNzdWVyX2lkIjoiYzkzY2FmYjMtYjNhNy00ZTdmLWE0NzAtMTVjMTRkOGVkMWUwIiwidHlwZSI6MH0.ZJhfgf-SVcH91HYR6t7l8_Qxhxd1oxcoMgI_Xbsz2WA"
+	token       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDE0MTQ2NDgsImlhdCI6MTY0MTM3ODY0OCwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImZscDFAZW1haWwuY29tIiwiaXNzdWVyX2lkIjoiM2VjN2IzNmYtMmUxZi00NDMwLWFkY2ItMjkxYmExZDJlZjRlIiwidHlwZSI6MH0.eyV0VntBEs7T9ck5NexsFhu6_PFWM_7THhbzlvUfTTY"
 	offsetKey   = "offset"
 	limitKey    = "limit"
 	nameKey     = "name"
@@ -49,7 +48,7 @@ var (
 	errMalformedData     = errors.New("malformed request data")
 	errMalformedSubtopic = errors.New("malformed subtopic")
 	redirectURL          = ""
-	channelPartRegExp    = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
+	// channelPartRegExp    = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -235,19 +234,19 @@ func MakeHandler(svc ui.Service, redirect string, tracer opentracing.Tracer) htt
 		opts...,
 	))
 
-	r.Post("/channels/:id/messages", kithttp.NewServer(
-		kitot.TraceServer(tracer, "publish")(sendMessageEndpoint(svc)),
-		decodeRequest,
+	r.Post("/messages", kithttp.NewServer(
+		kitot.TraceServer(tracer, "publish")(publishMessageEndpoint(svc)),
+		decodePublishRequest,
 		encodeResponse,
 		opts...,
 	))
 
-	r.Post("/channels/:id/messages/*", kithttp.NewServer(
-		kitot.TraceServer(tracer, "publish")(sendMessageEndpoint(svc)),
-		decodeRequest,
-		encodeResponse,
-		opts...,
-	))
+	// r.Post("/channels/:id/messages/*", kithttp.NewServer(
+	// 	kitot.TraceServer(tracer, "publish")(sendMessageEndpoint(svc)),
+	// 	decodeRequest,
+	// 	encodeResponse,
+	// 	opts...,
+	// ))
 
 	r.GetFunc("/version", mainflux.Version("ui"))
 	r.Handle("/metrics", promhttp.Handler())
@@ -496,34 +495,23 @@ func parseSubtopic(subtopic string) (string, error) {
 	return subtopic, nil
 }
 
-func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
-	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
-	if len(channelParts) < 2 {
-		return nil, errMalformedData
-	}
-
-	chanID := bone.GetValue(r, "id")
-	subtopic, err := parseSubtopic(channelParts[2])
-	if err != nil {
-		return nil, err
-	}
-
-	payload, err := decodePayload(r.Body)
-	if err != nil {
-		return nil, err
-	}
+func decodePublishRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	chanID := r.PostFormValue("chanID")
+	payload := r.PostFormValue("message")
+	thingKey := r.PostFormValue("thingKey")
 
 	msg := messaging.Message{
 		Protocol: protocol,
 		Channel:  chanID,
-		Subtopic: subtopic,
-		Payload:  payload,
+		Subtopic: "",
+		Payload:  []byte(payload),
 		Created:  time.Now().UnixNano(),
 	}
 
 	req := publishReq{
-		msg:   msg,
-		token: getAuthorization(r),
+		msg:      msg,
+		thingKey: thingKey,
+		token:    getAuthorization(r),
 	}
 
 	return req, nil

@@ -468,3 +468,17 @@ func sendMessageEndpoint(svc ui.Service) endpoint.Endpoint {
 		}, err
 	}
 }
+
+func publishMessageEndpoint(svc ui.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(publishReq)
+		res, err := svc.Publish(ctx, req.thingKey, req.msg)
+		if err != nil {
+			return nil, err
+		}
+
+		return uiRes{
+			html: res,
+		}, err
+	}
+}

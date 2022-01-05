@@ -341,7 +341,7 @@ func (lm *loggingMiddleware) RemoveGroup(ctx context.Context, token, id string) 
 	return lm.svc.RemoveGroup(ctx, token, id)
 }
 
-func (lm *loggingMiddleware) Publish(ctx context.Context, token string, msg messaging.Message) (b []byte, err error) {
+func (lm *loggingMiddleware) Publish(ctx context.Context, thingKey string, msg messaging.Message) (b []byte, err error) {
 	defer func(begin time.Time) {
 		destChannel := msg.Channel
 		if msg.Subtopic != "" {
@@ -355,7 +355,7 @@ func (lm *loggingMiddleware) Publish(ctx context.Context, token string, msg mess
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.Publish(ctx, token, msg)
+	return lm.svc.Publish(ctx, thingKey, msg)
 }
 
 func (lm *loggingMiddleware) SendMessage(ctx context.Context, token string) (b []byte, err error) {
