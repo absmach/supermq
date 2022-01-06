@@ -51,7 +51,7 @@ var cmdAPIKeys = []cobra.Command{
 		},
 	},
 	cobra.Command{
-		Use:   "RetrieveKey",
+		Use:   "retrieveKey",
 		Short: "retrievekey <key_id> <api_key_token>",
 		Long:  `Get API key id`,
 		Run: func(cmd *cobra.Command, args []string) {
