@@ -110,7 +110,7 @@ type Channel struct {
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
-// Member represents mainflux member.
+// Member represents group member.
 type Member struct {
 	ID   string
 	Type string

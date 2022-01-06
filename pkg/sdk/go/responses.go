@@ -100,22 +100,3 @@ func (res retrieveKeyRes) Headers() map[string]string {
 func (res retrieveKeyRes) Empty() bool {
 	return false
 }
-
-type revokeKeyRes struct {
-}
-
-func (res revokeKeyRes) Code() int {
-	return http.StatusNoContent
-}
-
-func (res revokeKeyRes) Headers() map[string]string {
-	return map[string]string{}
-}
-
-func (res revokeKeyRes) Empty() bool {
-	return true
-}
-
-type errorRes struct {
-	Err string `json:"error"`
-}
