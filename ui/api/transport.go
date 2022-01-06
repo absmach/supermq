@@ -28,6 +28,7 @@ import (
 const (
 	contentType = "text/html"
 	staticDir   = "ui/web/static"
+	// TODO
 	token       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDE1MTkyNjEsImlhdCI6MTY0MTQ4MzI2MSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImZscDFAZW1haWwuY29tIiwiaXNzdWVyX2lkIjoiYzkzY2FmYjMtYjNhNy00ZTdmLWE0NzAtMTVjMTRkOGVkMWUwIiwidHlwZSI6MH0.cqDOZdqiH9sXd1yuDwsv6-Mtb6_nVe_4c6cJK-iJ-Ig"
 	offsetKey   = "offset"
 	limitKey    = "limit"
@@ -134,14 +135,14 @@ func MakeHandler(svc ui.Service, redirect string, tracer opentracing.Tracer) htt
 		opts...,
 	))
 
-	r.Get("/connections/:id", kithttp.NewServer(
+	r.Get("/thingconn/:id", kithttp.NewServer(
 		kitot.TraceServer(tracer, "view_connection")(listThingConnectionsEndpoint(svc)),
 		decodeView,
 		encodeResponse,
 		opts...,
 	))
 
-	r.Get("/connectionsttc/:id", kithttp.NewServer(
+	r.Get("/channelconn/:id", kithttp.NewServer(
 		kitot.TraceServer(tracer, "view_connection")(listChannelConnectionsEndpoint(svc)),
 		decodeView,
 		encodeResponse,

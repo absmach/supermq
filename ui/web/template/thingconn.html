@@ -1,4 +1,4 @@
-{{define "connectionsttc"}}
+{{define "thingconn"}}
 <!doctype html>
 <html lang="en">
   {{template "header"}}
@@ -24,9 +24,9 @@
                   <div class="modal-body">
                     <form action="/connect" method="post">
                       <div class="mb-3">
-                        <label for="name" class="form-label">Thing ID</label>
-                        <input type="text" class="form-control" name="thingID" id="thingID" aria-describedby="thingIDHelp">
-                        <input type="text" class="invisible" name="chanID" id="chanID" aria-describedby="channelIDHelp" value="{{.Channel.ID}}">
+                        <label for="name" class="form-label">Channel ID</label>
+                        <input type="text" class="form-control" name="chanID" id="chanID" aria-describedby="chanelIDHelp">
+                        <input type="text" class="invisible" name="thingID" id="thingID" aria-describedby="thingIDHelp" value="{{.Thing.ID}}">
                         <div id="channelIDHelp" class="form-text">Enter channel ID.</div>
                       </div>
                       <button type="submit" class="btn btn-primary">Submit</button>
@@ -38,27 +38,31 @@
             <table class="table table-striped">
               <thead>
                 <tr>
-                  <th scope="row">Channel</th>
+                  <th scope="row">THING</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <th>Name</th>
-                  <td>{{.Channel.Name}}</td>
+                  <td>{{.Thing.Name}}</td>
                 </tr>
                 <tr>
                   <th>ID</th>
-                  <td>{{.Channel.ID}}</td>
+                  <td>{{.Thing.ID}}</td>
+                </tr>
+                <tr>
+                  <th>Key</th>
+                  <td>{{.Thing.Key}}</td>
                 </tr>
                 <tr>
                   <th>Metadata</th>
                   <td>
-                    <pre>{{toJSON .Channel.Metadata}}</pre>
+                    <pre>{{toJSON .Thing.Metadata}}</pre>
                     </td>
                 </tr>
               </tbody>
             </table>
-            {{ $c := .Channel.ID }}
+            {{ $t := .Thing.ID }}
             <table class="table table-striped">
               <thead>
                 <tr>
@@ -66,15 +70,15 @@
                 </tr>
               </thead>
               <tbody>
-                {{range $i, $t := .Things}}
+                {{range $i, $c := .Channels}}
                   <tr>
                     <th scope="row">{{$i}}</th>
-                    <td>{{$t.Name}}</td>
-                    <td><a href={{printf "/things/%s" $t.ID}}>{{$t.ID}}</a></td>
+                    <td>{{$c.Name}}</td>
+                    <td><a href={{printf "/channels/%s" $c.ID}}>{{$c.ID}}</a></td>
                     <td>
                       <form action="/disconnect" method="post">
-                        <input type="hidden" name="chanID" id="chanID" value="{{$c}}">
-                        <input type="hidden" name="thingID" id="thingID" value="{{$t.ID}}">
+                        <input type="hidden" name="thingID" id="thingID" value="{{$t}}">
+                        <input type="hidden" name="chanID" id="chanID" value="{{$c.ID}}">
                         <button type="submit" class="btn btn-danger btn-sm">Disconnect</button>
                       </form>
                     </td>

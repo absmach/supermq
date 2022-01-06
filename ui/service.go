@@ -295,7 +295,7 @@ func (gs *uiService) Connect(ctx context.Context, token string, chIDs, thIDs []s
 }
 
 func (gs *uiService) ListThingConnections(ctx context.Context, token, id string) ([]byte, error) {
-	tpl, err := parseTemplate("connections", "connections.html")
+	tpl, err := parseTemplate("thingconn", "thingconn.html")
 	if err != nil {
 		return []byte{}, err
 	}
@@ -323,14 +323,14 @@ func (gs *uiService) ListThingConnections(ctx context.Context, token, id string)
 	}
 
 	var btpl bytes.Buffer
-	if err := tpl.ExecuteTemplate(&btpl, "connections", data); err != nil {
+	if err := tpl.ExecuteTemplate(&btpl, "thingconn", data); err != nil {
 		println(err.Error())
 	}
 	return btpl.Bytes(), nil
 }
 
 func (gs *uiService) ListChannelConnections(ctx context.Context, token, id string) ([]byte, error) {
-	tpl, err := parseTemplate("connectionsttc", "connectionsttc.html")
+	tpl, err := parseTemplate("channelconn", "channelconn.html")
 	if err != nil {
 		return []byte{}, err
 	}
@@ -358,7 +358,7 @@ func (gs *uiService) ListChannelConnections(ctx context.Context, token, id strin
 	}
 
 	var btpl bytes.Buffer
-	if err := tpl.ExecuteTemplate(&btpl, "connectionsttc", data); err != nil {
+	if err := tpl.ExecuteTemplate(&btpl, "channelconn", data); err != nil {
 		println(err.Error())
 	}
 	return btpl.Bytes(), nil
