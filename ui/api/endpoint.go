@@ -242,7 +242,7 @@ func connectThingEndpoint(svc ui.Service) endpoint.Endpoint {
 	}
 }
 
-func connectEndpoint(svc ui.Service) endpoint.Endpoint {
+func listThingConnectionsEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(viewResourceReq)
 
@@ -250,7 +250,7 @@ func connectEndpoint(svc ui.Service) endpoint.Endpoint {
 		// 	return nil, err
 		// }
 
-		res, err := svc.ViewConnections(ctx, req.token, req.id)
+		res, err := svc.ListThingConnections(ctx, req.token, req.id)
 		if err != nil {
 			return nil, err
 		}
@@ -260,7 +260,7 @@ func connectEndpoint(svc ui.Service) endpoint.Endpoint {
 	}
 }
 
-func connectChannelEndpoint(svc ui.Service) endpoint.Endpoint {
+func listChannelConnectionsEndpoint(svc ui.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(viewResourceReq)
 
@@ -268,7 +268,7 @@ func connectChannelEndpoint(svc ui.Service) endpoint.Endpoint {
 		// 	return nil, err
 		// }
 
-		res, err := svc.ViewChannelConnections(ctx, req.token, req.id)
+		res, err := svc.ListChannelConnections(ctx, req.token, req.id)
 		if err != nil {
 			return nil, err
 		}
@@ -286,7 +286,7 @@ func disconnectThingEndpoint(svc ui.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		res, err := svc.Disconnect(ctx, dcr.token, []string{dcr.ChanID}, []string{dcr.ThingID})
+		res, err := svc.DisconnectThing(ctx, dcr.token, []string{dcr.ChanID}, []string{dcr.ThingID})
 		if err != nil {
 			return nil, err
 		}

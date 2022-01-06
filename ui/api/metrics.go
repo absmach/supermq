@@ -140,40 +140,31 @@ func (mm *metricsMiddleware) Connect(ctx context.Context, token string, chIDs, t
 	return mm.svc.Connect(ctx, token, chIDs, thIDs)
 }
 
-func (mm *metricsMiddleware) ConnectThingToChannel(ctx context.Context, token string, chIDs, thIDs []string) (b []byte, err error) {
-	defer func(begin time.Time) {
-		mm.counter.With("method", "connect_thing_to_channel").Add(1)
-		mm.latency.With("method", "connect_thing_to_channel").Observe(time.Since(begin).Seconds())
-	}(time.Now())
-
-	return mm.svc.ConnectThingToChannel(ctx, token, chIDs, thIDs)
-}
-
-func (mm *metricsMiddleware) ViewConnections(ctx context.Context, token, id string) (b []byte, err error) {
+func (mm *metricsMiddleware) ListThingConnections(ctx context.Context, token, id string) (b []byte, err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "view_connections").Add(1)
 		mm.latency.With("method", "view_connections").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.ViewConnections(ctx, token, id)
+	return mm.svc.ListThingConnections(ctx, token, id)
 }
 
-func (mm *metricsMiddleware) ViewChannelConnections(ctx context.Context, token, id string) (b []byte, err error) {
+func (mm *metricsMiddleware) ListChannelConnections(ctx context.Context, token, id string) (b []byte, err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "view_connections").Add(1)
 		mm.latency.With("method", "view_connections").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.ViewChannelConnections(ctx, token, id)
+	return mm.svc.ListChannelConnections(ctx, token, id)
 }
 
-func (mm *metricsMiddleware) Disconnect(ctx context.Context, token string, chIDs, thIDs []string) (b []byte, err error) {
+func (mm *metricsMiddleware) DisconnectThing(ctx context.Context, token string, chIDs, thIDs []string) (b []byte, err error) {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "disconnect").Add(1)
 		mm.latency.With("method", "disconnect").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.Disconnect(ctx, token, chIDs, thIDs)
+	return mm.svc.DisconnectThing(ctx, token, chIDs, thIDs)
 }
 
 func (mm *metricsMiddleware) DisconnectChannel(ctx context.Context, token string, chIDs, thIDs []string) (b []byte, err error) {

@@ -185,20 +185,7 @@ func (lm *loggingMiddleware) Connect(ctx context.Context, token string, chIDs, t
 	return lm.svc.Connect(ctx, token, chIDs, thIDs)
 }
 
-func (lm *loggingMiddleware) ConnectThingToChannel(ctx context.Context, token string, chIDs, thIDs []string) (b []byte, err error) {
-	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method connect for token %s, channels %s and things %s took %s to complete", token, chIDs, thIDs, time.Since(begin))
-		if err != nil {
-			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
-			return
-		}
-		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
-	}(time.Now())
-
-	return lm.svc.ConnectThingToChannel(ctx, token, chIDs, thIDs)
-}
-
-func (lm *loggingMiddleware) ViewConnections(ctx context.Context, token, id string) (b []byte, err error) {
+func (lm *loggingMiddleware) ListThingConnections(ctx context.Context, token, id string) (b []byte, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method view_connections for token %s and connections %s took %s to complete", token, id, time.Since(begin))
 		if err != nil {
@@ -208,10 +195,10 @@ func (lm *loggingMiddleware) ViewConnections(ctx context.Context, token, id stri
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.ViewConnections(ctx, token, id)
+	return lm.svc.ListThingConnections(ctx, token, id)
 }
 
-func (lm *loggingMiddleware) ViewChannelConnections(ctx context.Context, token, id string) (b []byte, err error) {
+func (lm *loggingMiddleware) ListChannelConnections(ctx context.Context, token, id string) (b []byte, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method view_connections for token %s and connections %s took %s to complete", token, id, time.Since(begin))
 		if err != nil {
@@ -221,10 +208,10 @@ func (lm *loggingMiddleware) ViewChannelConnections(ctx context.Context, token, 
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.ViewChannelConnections(ctx, token, id)
+	return lm.svc.ListChannelConnections(ctx, token, id)
 }
 
-func (lm *loggingMiddleware) Disconnect(ctx context.Context, token string, chIDs, thIDs []string) (b []byte, err error) {
+func (lm *loggingMiddleware) DisconnectThing(ctx context.Context, token string, chIDs, thIDs []string) (b []byte, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method disconnect for token %s, channels %v and things %v took %s to complete", token, chIDs, thIDs, time.Since(begin))
 		if err != nil {
@@ -234,7 +221,7 @@ func (lm *loggingMiddleware) Disconnect(ctx context.Context, token string, chIDs
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.Disconnect(ctx, token, chIDs, thIDs)
+	return lm.svc.DisconnectThing(ctx, token, chIDs, thIDs)
 }
 
 func (lm *loggingMiddleware) DisconnectChannel(ctx context.Context, token string, chIDs, thIDs []string) (b []byte, err error) {

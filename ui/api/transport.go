@@ -28,7 +28,7 @@ import (
 const (
 	contentType = "text/html"
 	staticDir   = "ui/web/static"
-	token       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDE0MTQ2NDgsImlhdCI6MTY0MTM3ODY0OCwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImZscDFAZW1haWwuY29tIiwiaXNzdWVyX2lkIjoiM2VjN2IzNmYtMmUxZi00NDMwLWFkY2ItMjkxYmExZDJlZjRlIiwidHlwZSI6MH0.eyV0VntBEs7T9ck5NexsFhu6_PFWM_7THhbzlvUfTTY"
+	token       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDE1MTkyNjEsImlhdCI6MTY0MTQ4MzI2MSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImZscDFAZW1haWwuY29tIiwiaXNzdWVyX2lkIjoiYzkzY2FmYjMtYjNhNy00ZTdmLWE0NzAtMTVjMTRkOGVkMWUwIiwidHlwZSI6MH0.cqDOZdqiH9sXd1yuDwsv6-Mtb6_nVe_4c6cJK-iJ-Ig"
 	offsetKey   = "offset"
 	limitKey    = "limit"
 	nameKey     = "name"
@@ -129,27 +129,20 @@ func MakeHandler(svc ui.Service, redirect string, tracer opentracing.Tracer) htt
 
 	r.Post("/connect", kithttp.NewServer(
 		kitot.TraceServer(tracer, "connect_thing")(connectThingEndpoint(svc)),
-		decodeConnectThing,
-		encodeResponse,
-		opts...,
-	))
-
-	r.Post("/connectttc", kithttp.NewServer(
-		kitot.TraceServer(tracer, "connect_channel")(connectChannelEndpoint(svc)),
-		decodeConnectChannel,
+		decodeConnect,
 		encodeResponse,
 		opts...,
 	))
 
 	r.Get("/connections/:id", kithttp.NewServer(
-		kitot.TraceServer(tracer, "view_connection")(connectEndpoint(svc)),
+		kitot.TraceServer(tracer, "view_connection")(listThingConnectionsEndpoint(svc)),
 		decodeView,
 		encodeResponse,
 		opts...,
 	))
 
 	r.Get("/connectionsttc/:id", kithttp.NewServer(
-		kitot.TraceServer(tracer, "view_connection")(connectChannelEndpoint(svc)),
+		kitot.TraceServer(tracer, "view_connection")(listChannelConnectionsEndpoint(svc)),
 		decodeView,
 		encodeResponse,
 		opts...,
@@ -353,23 +346,11 @@ func decodeListChannelsRequest(ctx context.Context, r *http.Request) (interface{
 	return req, nil
 }
 
-func decodeConnectThing(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeConnect(_ context.Context, r *http.Request) (interface{}, error) {
 	r.ParseForm()
 	chanID := r.Form.Get("chanID")
 	thingID := r.Form.Get("thingID")
 	req := connectThingReq{
-		token:   getAuthorization(r),
-		ChanID:  chanID,
-		ThingID: thingID,
-	}
-	return req, nil
-}
-
-func decodeConnectChannel(_ context.Context, r *http.Request) (interface{}, error) {
-	r.ParseForm()
-	chanID := r.Form.Get("chanID")
-	thingID := r.Form.Get("thingID")
-	req := connectChannelReq{
 		token:   getAuthorization(r),
 		ChanID:  chanID,
 		ThingID: thingID,
