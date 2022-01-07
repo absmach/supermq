@@ -108,7 +108,7 @@ func TestIssue(t *testing.T) {
 			req:    toJSON(lk),
 			ct:     contentType,
 			token:  "",
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 		},
 		{
 			desc:   "issue API key",
@@ -122,7 +122,7 @@ func TestIssue(t *testing.T) {
 			req:    toJSON(rk),
 			ct:     contentType,
 			token:  loginSecret,
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 		},
 		{
 			desc:   "issue login key wrong content type",
@@ -143,14 +143,14 @@ func TestIssue(t *testing.T) {
 			req:    toJSON(ak),
 			ct:     contentType,
 			token:  "wrong",
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 		},
 		{
 			desc:   "issue recovery key with empty token",
 			req:    toJSON(rk),
 			ct:     contentType,
 			token:  "",
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 		},
 		{
 			desc:   "issue key with invalid request",
@@ -225,7 +225,7 @@ func TestRetrieve(t *testing.T) {
 			desc:   "retrieve a key unauthorized",
 			id:     k.ID,
 			token:  "wrong",
-			status: http.StatusForbidden,
+			status: http.StatusUnauthorized,
 		},
 	}
 
@@ -277,7 +277,7 @@ func TestRevoke(t *testing.T) {
 			desc:   "revoke a key unauthorized",
 			id:     k.ID,
 			token:  "wrong",
-			status: http.StatusForbidden},
+			status: http.StatusUnauthorized},
 	}
 
 	for _, tc := range cases {

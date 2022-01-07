@@ -563,7 +563,7 @@ func TestBootstrap(t *testing.T) {
 			config:      bootstrap.Config{},
 			externalID:  saved.ExternalID,
 			externalKey: "invalid",
-			err:         bootstrap.ErrNotFound,
+			err:         bootstrap.ErrExternalKeyNotFound,
 			encrypted:   false,
 		},
 		{

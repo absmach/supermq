@@ -26,6 +26,9 @@ var (
 	// when accessing a protected resource.
 	ErrUnauthorizedAccess = errors.New("missing or invalid credentials provided")
 
+	// ErrAuthorization indicates a failure occurred while authorizing the entity.
+	ErrAuthorization = errors.New("failed to perform authorization over the entity")
+
 	// ErrConflict indicates that entity with the same ID or external ID already exists.
 	ErrConflict = errors.New("entity already exists")
 
@@ -55,6 +58,7 @@ var (
 	errCheckChannels      = errors.New("failed to check if channels exists")
 	errConnectionChannels = errors.New("failed to check channels connections")
 	errUpdateCert         = errors.New("failed to update cert")
+	errDecodeExtKey       = errors.New("failed to decode external key")
 )
 
 var _ Service = (*bootstrapService)(nil)
@@ -303,7 +307,7 @@ func (bs bootstrapService) Bootstrap(ctx context.Context, externalKey, externalI
 	}
 
 	if cfg.ExternalKey != externalKey {
-		return Config{}, errors.Wrap(ErrExternalKeyNotFound, ErrNotFound)
+		return Config{}, ErrExternalKeyNotFound
 	}
 
 	return cfg, nil
@@ -490,14 +494,14 @@ func (bs bootstrapService) toIDList(channels []Channel) []string {
 func (bs bootstrapService) dec(in string) (string, error) {
 	ciphertext, err := hex.DecodeString(in)
 	if err != nil {
-		return "", ErrNotFound
+		return "", errDecodeExtKey
 	}
 	block, err := aes.NewCipher(bs.encKey)
 	if err != nil {
-		return "", err
+		return "", errDecodeExtKey
 	}
 	if len(ciphertext) < aes.BlockSize {
-		return "", ErrMalformedEntity
+		return "", errDecodeExtKey
 	}
 	iv := ciphertext[:aes.BlockSize]
 	ciphertext = ciphertext[aes.BlockSize:]

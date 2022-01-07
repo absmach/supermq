@@ -232,7 +232,7 @@ func TestBootstrapReqValidation(t *testing.T) {
 			desc:      "empty external key",
 			externKey: "",
 			externID:  "id",
-			err:       bootstrap.ErrUnauthorizedAccess,
+			err:       bootstrap.ErrAuthorization,
 		},
 		{
 			desc:      "empty external id",

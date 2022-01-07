@@ -203,7 +203,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	case twins.ErrMalformedEntity:
 		w.WriteHeader(http.StatusBadRequest)
 	case twins.ErrUnauthorizedAccess:
-		w.WriteHeader(http.StatusForbidden)
+		w.WriteHeader(http.StatusUnauthorized)
 	case twins.ErrNotFound:
 		w.WriteHeader(http.StatusNotFound)
 	case twins.ErrConflict:
