@@ -80,12 +80,12 @@ var (
 		CACert:     "newca",
 	}
 
-	bsErrorRes           = toJSON(errorRes{bootstrap.ErrBootstrap.Error()})
-	unauthRes            = toJSON(errorRes{bootstrap.ErrUnauthorizedAccess.Error()})
-	authzRes             = toJSON(errorRes{bootstrap.ErrAuthorization.Error()})
-	malformedRes         = toJSON(errorRes{bootstrap.ErrMalformedEntity.Error()})
-	extKeyNotFoundRes    = toJSON(errorRes{bootstrap.ErrExternalKeyNotFound.Error()})
-	extSecKeyNotFoundRes = toJSON(errorRes{bootstrap.ErrSecureBootstrap.Error()})
+	bsErrorRes   = toJSON(errorRes{bootstrap.ErrBootstrap.Error()})
+	unauthRes    = toJSON(errorRes{bootstrap.ErrUnauthorizedAccess.Error()})
+	authzRes     = toJSON(errorRes{bootstrap.ErrAuthorization.Error()})
+	malformedRes = toJSON(errorRes{bootstrap.ErrMalformedEntity.Error()})
+	extKeyRes    = toJSON(errorRes{bootstrap.ErrExternalKey.Error()})
+	extSecKeyRes = toJSON(errorRes{bootstrap.ErrExternalKeySecure.Error()})
 )
 
 type testRequest struct {
@@ -1103,7 +1103,7 @@ func TestBootstrap(t *testing.T) {
 			externalID:  c.ExternalID,
 			externalKey: unknown,
 			status:      http.StatusForbidden,
-			res:         extKeyNotFoundRes,
+			res:         extKeyRes,
 			secure:      false,
 		},
 		{
@@ -1135,7 +1135,7 @@ func TestBootstrap(t *testing.T) {
 			externalID:  fmt.Sprintf("secure/%s", c.ExternalID),
 			externalKey: c.ExternalKey,
 			status:      http.StatusForbidden,
-			res:         extSecKeyNotFoundRes,
+			res:         extSecKeyRes,
 			secure:      true,
 		},
 	}

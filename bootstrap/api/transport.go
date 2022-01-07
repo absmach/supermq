@@ -263,8 +263,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			w.WriteHeader(http.StatusNotFound)
 		case errors.Contains(errorVal, bootstrap.ErrUnauthorizedAccess):
 			w.WriteHeader(http.StatusUnauthorized)
-		case errors.Contains(errorVal, bootstrap.ErrExternalKeyNotFound),
-			errors.Contains(errorVal, bootstrap.ErrSecureBootstrap),
+		case errors.Contains(errorVal, bootstrap.ErrExternalKey),
+			errors.Contains(errorVal, bootstrap.ErrExternalKeySecure),
 			errors.Contains(errorVal, bootstrap.ErrAuthorization):
 			w.WriteHeader(http.StatusForbidden)
 		case errors.Contains(errorVal, bootstrap.ErrConflict):

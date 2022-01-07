@@ -36,11 +36,11 @@ var (
 	// It can be due to networking error or invalid/unauthorized request.
 	ErrThings = errors.New("failed to receive response from Things service")
 
-	// ErrExternalKeyNotFound indicates a non-existent bootstrap configuration for given external key
-	ErrExternalKeyNotFound = errors.New("failed to get bootstrap configuration for given external key")
+	// ErrExternalKey indicates a non-existent bootstrap configuration for given external key
+	ErrExternalKey = errors.New("failed to get bootstrap configuration for given external key")
 
-	// ErrSecureBootstrap indicates error in getting bootstrap configuration for given encrypted external key
-	ErrSecureBootstrap = errors.New("failed to get bootstrap configuration for given encrypted external key")
+	// ErrExternalKeySecure indicates error in getting bootstrap configuration for given encrypted external key
+	ErrExternalKeySecure = errors.New("failed to get bootstrap configuration for given encrypted external key")
 
 	// ErrBootstrap indicates error in getting bootstrap configuration.
 	ErrBootstrap = errors.New("failed to read bootstrap configuration")
@@ -301,13 +301,13 @@ func (bs bootstrapService) Bootstrap(ctx context.Context, externalKey, externalI
 	if secure {
 		dec, err := bs.dec(externalKey)
 		if err != nil {
-			return Config{}, errors.Wrap(ErrSecureBootstrap, err)
+			return Config{}, errors.Wrap(ErrExternalKeySecure, err)
 		}
 		externalKey = dec
 	}
 
 	if cfg.ExternalKey != externalKey {
-		return Config{}, ErrExternalKeyNotFound
+		return Config{}, ErrExternalKey
 	}
 
 	return cfg, nil
