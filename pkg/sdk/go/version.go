@@ -12,12 +12,12 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
-type version struct {
-	Value string `json:"version"`
+type health struct {
+	Version string `json:"version"`
 }
 
 func (sdk mfSDK) Version() (string, error) {
-	url := fmt.Sprintf("%s/version", sdk.thingsURL)
+	url := fmt.Sprintf("%s/health", sdk.thingsURL)
 
 	resp, err := sdk.client.Get(url)
 	if err != nil {
@@ -34,10 +34,10 @@ func (sdk mfSDK) Version() (string, error) {
 		return "", errors.Wrap(ErrFetchVersion, errors.New(resp.Status))
 	}
 
-	var ver version
-	if err := json.Unmarshal(body, &ver); err != nil {
+	var h health
+	if err := json.Unmarshal(body, &h); err != nil {
 		return "", err
 	}
 
-	return ver.Value, nil
+	return h.Version, nil
 }

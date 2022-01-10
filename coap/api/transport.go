@@ -43,7 +43,7 @@ var (
 //MakeHTTPHandler creates handler for version endpoint.
 func MakeHTTPHandler() http.Handler {
 	b := bone.New()
-	b.GetFunc("/version", mainflux.Version(protocol))
+	b.GetFunc("/health", mainflux.Health(protocol))
 	b.Handle("/metrics", promhttp.Handler())
 
 	return b
