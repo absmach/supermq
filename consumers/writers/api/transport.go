@@ -11,7 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// MakeHandler returns a HTTP API handler with version and metrics.
+// MakeHandler returns a HTTP API handler with health check and metrics.
 func MakeHandler(svcName string) http.Handler {
 	r := bone.New()
 	r.GetFunc("/health", mainflux.Health(svcName))
