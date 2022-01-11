@@ -9,35 +9,32 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
-type health struct {
-	Version string `json:"version"`
-}
-
-func (sdk mfSDK) Version() (string, error) {
+func (sdk mfSDK) Health() (mainflux.HealthInfo, error) {
 	url := fmt.Sprintf("%s/health", sdk.thingsURL)
 
 	resp, err := sdk.client.Get(url)
 	if err != nil {
-		return "", err
+		return mainflux.HealthInfo{}, err
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return mainflux.HealthInfo{}, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", errors.Wrap(ErrFetchVersion, errors.New(resp.Status))
+		return mainflux.HealthInfo{}, errors.Wrap(ErrFetchHealth, errors.New(resp.Status))
 	}
 
-	var h health
+	var h mainflux.HealthInfo
 	if err := json.Unmarshal(body, &h); err != nil {
-		return "", err
+		return mainflux.HealthInfo{}, err
 	}
 
-	return h.Version, nil
+	return h, nil
 }

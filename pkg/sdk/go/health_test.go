@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestVersion(t *testing.T) {
+func TestHealth(t *testing.T) {
 	svc := newThingsService(map[string]string{token: email})
 	ts := newThingsServer(svc)
 	defer ts.Close()
@@ -24,14 +24,14 @@ func TestVersion(t *testing.T) {
 		empty bool
 		err   error
 	}{
-		"get version": {
+		"get things service version": {
 			empty: false,
 			err:   nil,
 		},
 	}
 	for desc, tc := range cases {
-		ver, err := mainfluxSDK.Version()
+		h, err := mainfluxSDK.Health()
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", desc, tc.err, err))
-		assert.Equal(t, tc.empty, ver == "", fmt.Sprintf("%s: expected non-empty result version, got %s", desc, ver))
+		assert.Equal(t, tc.empty, h.Version == "", fmt.Sprintf("%s: expected non-empty result version, got %s", desc, h.Version))
 	}
 }

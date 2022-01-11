@@ -20,7 +20,7 @@ type HealthInfo struct {
 	// Status contains service status.
 	Status string `json:"status"`
 
-	// Version contains service current version.
+	// Version contains current service version.
 	Version string `json:"version"`
 
 	// Description contains service description.

@@ -175,10 +175,10 @@ import (
 )
 
 func init() {
-  rootCmd.AddCommand(versionCmd)
+  rootCmd.AddCommand(healthCmd)
 }
 
-var versionCmd = &cobra.Command{
+var healthCmd = &cobra.Command{
   Use:   "version",
   Short: "Print the version number of Hugo",
   Long:  `All software has versions. This is Hugo's`,
