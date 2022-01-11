@@ -42,7 +42,10 @@ func Health(service string) http.HandlerFunc {
 			Version:     version,
 		}
 
+		if err := json.NewEncoder(w).Encode(res); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
 		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(res)
 	})
 }
