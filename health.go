@@ -6,14 +6,13 @@ package mainflux
 import (
 	"encoding/json"
 	"net/http"
-
-	"github.com/nelkinda/http-go/header"
 )
 
 const (
-	version     string = "0.12.1"
-	contentType string = "application/json"
-	svcStatus   string = "pass"
+	version         string = "0.12.1"
+	contentType            = "Content-Type"
+	contentTypeJSON string = "application/json"
+	svcStatus       string = "pass"
 )
 
 // HealthInfo contains version endpoint response.
@@ -31,7 +30,7 @@ type HealthInfo struct {
 // Health exposes an HTTP handler for retrieving service health.
 func Health(service string) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add(header.ContentType, contentType)
+		w.Header().Add(contentType, contentTypeJSON)
 		if r.Method != http.MethodGet && r.Method != http.MethodHead {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return

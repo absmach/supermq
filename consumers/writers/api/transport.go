@@ -1,9 +1,6 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build !test
-// +build !test
-
 package api
 
 import (
