@@ -23,13 +23,10 @@ default values.
 | MF_Timescale_WRITER_DB_SSL_KEY       | Timescale SSL key                               | ""                     |
 | MF_Timescale_WRITER_DB_SSL_ROOT_CERT | Timescale SSL root certificate path             | ""                     |
 | MF_Timescale_WRITER_CONFIG_PATH      | Configuration file path with NATS subjects list | /config.toml           |
-| MF_Timescale_WRITER_CONTENT_TYPE     | Message payload Content Type                    | application/senml+json |
-| MF_Timescale_WRITER_TRANSFORMER      | Message transformer type                        | senml                  |
 
 ## Deployment
 
-The service itself is distributed as Docker container. Check the [`timescale-writer`](https://github.com/mainflux/mainflux/blob/master/docker/addons/timescale-writer/docker-compose.yml#L34-L59) service section in 
-docker-compose to see how service is deployed.
+The service itself is distributed as Docker container. Check the [`timescale-writer`](https://github.com/mainflux/mainflux/blob/master/docker/addons/timescale-writer/docker-compose.yml#L34-L59) service section in docker-compose to see how service is deployed.
 
 To start the service, execute the following shell script:
 

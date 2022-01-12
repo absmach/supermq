@@ -14,8 +14,6 @@ import (
 	"github.com/mainflux/mainflux/readers"
 )
 
-const errInvalid = "invalid_text_representation"
-
 const (
 	format = "format"
 	// Table for SenML messages
@@ -23,6 +21,8 @@ const (
 
 	// Error code for Undefined table error.
 	undefinedTableCode = "42P01"
+
+	errInvalid = "invalid_text_representation"
 )
 
 var errReadMessages = errors.New("failed to read messages from timescale database")
@@ -49,9 +49,7 @@ func (tr timescaleRepository) ReadAll(chanID string, rpm readers.PageMetadata) (
 		format = rpm.Format
 	}
 
-	q := fmt.Sprintf(`SELECT * FROM %s
-    WHERE %s ORDER BY %s DESC
-	LIMIT :limit OFFSET :offset;`, format, fmtCondition(chanID, rpm), order)
+	q := fmt.Sprintf(`SELECT * FROM %s WHERE %s ORDER BY %s DESC LIMIT :limit OFFSET :offset;`, format, fmtCondition(chanID, rpm), order)
 
 	params := map[string]interface{}{
 		"channel":      chanID,

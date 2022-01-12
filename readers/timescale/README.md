@@ -29,8 +29,7 @@ default values.
 
 ## Deployment
 
-The service itself is distributed as Docker container. Check the [`timescale-reader`](https://github.com/mainflux/mainflux/blob/master/docker/addons/timescale-reader/docker-compose.yml#L17-L41) service section in 
-docker-compose to see how service is deployed.
+The service itself is distributed as Docker container. Check the [`timescale-reader`](https://github.com/mainflux/mainflux/blob/master/docker/addons/timescale-reader/docker-compose.yml#L17-L41) service section in docker-compose to see how service is deployed.
 
 To start the service, execute the following shell script:
 

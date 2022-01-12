@@ -40,8 +40,6 @@ const (
 	defDBSSLKey      = ""
 	defDBSSLRootCert = ""
 	defConfigPath    = "/config.toml"
-	defContentType   = "application/senml+json"
-	defTransformer   = "senml"
 
 	envNatsURL       = "MF_NATS_URL"
 	envLogLevel      = "MF_TIMESCALE_WRITER_LOG_LEVEL"
@@ -56,18 +54,14 @@ const (
 	envDBSSLKey      = "MF_TIMESCALE_WRITER_DB_SSL_KEY"
 	envDBSSLRootCert = "MF_TIMESCALE_WRITER_DB_SSL_ROOT_CERT"
 	envConfigPath    = "MF_TIMESCALE_WRITER_CONFIG_PATH"
-	envContentType   = "MF_TIMESCALE_WRITER_CONTENT_TYPE"
-	envTransformer   = "MF_TIMESCALE_WRITER_TRANSFORMER"
 )
 
 type config struct {
-	natsURL     string
-	logLevel    string
-	port        string
-	configPath  string
-	contentType string
-	transformer string
-	dbConfig    timescale.Config
+	natsURL    string
+	logLevel   string
+	port       string
+	configPath string
+	dbConfig   timescale.Config
 }
 
 func main() {
@@ -122,13 +116,11 @@ func loadConfig() config {
 	}
 
 	return config{
-		natsURL:     mainflux.Env(envNatsURL, defNatsURL),
-		logLevel:    mainflux.Env(envLogLevel, defLogLevel),
-		port:        mainflux.Env(envPort, defPort),
-		configPath:  mainflux.Env(envConfigPath, defConfigPath),
-		contentType: mainflux.Env(envContentType, defContentType),
-		transformer: mainflux.Env(envTransformer, defTransformer),
-		dbConfig:    dbConfig,
+		natsURL:    mainflux.Env(envNatsURL, defNatsURL),
+		logLevel:   mainflux.Env(envLogLevel, defLogLevel),
+		port:       mainflux.Env(envPort, defPort),
+		configPath: mainflux.Env(envConfigPath, defConfigPath),
+		dbConfig:   dbConfig,
 	}
 }
 
