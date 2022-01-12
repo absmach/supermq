@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/readers"
@@ -45,7 +46,8 @@ var (
 )
 
 func newServer(repo readers.MessageRepository, tc mainflux.ThingsServiceClient) *httptest.Server {
-	mux := api.MakeHandler(repo, tc, svcName)
+	logger, _ := logger.NewMock()
+	mux := api.MakeHandler(repo, tc, svcName, logger)
 	return httptest.NewServer(mux)
 }
 

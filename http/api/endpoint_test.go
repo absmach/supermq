@@ -17,6 +17,7 @@ import (
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/http/mocks"
+	"github.com/mainflux/mainflux/logger"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,7 +27,8 @@ func newService(cc mainflux.ThingsServiceClient) adapter.Service {
 }
 
 func newHTTPServer(svc adapter.Service) *httptest.Server {
-	mux := api.MakeHandler(svc, mocktracer.New())
+	logger, _ := logger.NewMock()
+	mux := api.MakeHandler(svc, mocktracer.New(), logger)
 	return httptest.NewServer(mux)
 }
 

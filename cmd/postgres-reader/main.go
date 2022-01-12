@@ -232,5 +232,5 @@ func newService(db *sqlx.DB, logger logger.Logger) readers.MessageRepository {
 func startHTTPServer(repo readers.MessageRepository, tc mainflux.ThingsServiceClient, port string, logger logger.Logger, errs chan error) {
 	p := fmt.Sprintf(":%s", port)
 	logger.Info(fmt.Sprintf("Postgres reader service started, exposed port %s", port))
-	errs <- http.ListenAndServe(p, api.MakeHandler(repo, tc, svcName))
+	errs <- http.ListenAndServe(p, api.MakeHandler(repo, tc, svcName, logger))
 }

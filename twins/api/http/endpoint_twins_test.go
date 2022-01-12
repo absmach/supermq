@@ -14,6 +14,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/twins"
 	httpapi "github.com/mainflux/mainflux/twins/api/http"
 	"github.com/mainflux/mainflux/twins/mocks"
@@ -84,7 +85,8 @@ func (tr testRequest) make() (*http.Response, error) {
 }
 
 func newServer(svc twins.Service) *httptest.Server {
-	mux := httpapi.MakeHandler(mocktracer.New(), svc)
+	logger, _ := logger.NewMock()
+	mux := httpapi.MakeHandler(mocktracer.New(), svc, logger)
 	return httptest.NewServer(mux)
 }
 

@@ -9,6 +9,8 @@ import (
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/internal/httputil"
+	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/provision"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -24,10 +26,10 @@ var (
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc provision.Service) http.Handler {
+func MakeHandler(svc provision.Service, logger logger.Logger) http.Handler {
 
 	opts := []kithttp.ServerOption{
-		kithttp.ServerErrorEncoder(encodeError),
+		kithttp.ServerErrorEncoder((httputil.LoggingErrorEncoder(logger))(encodeError)),
 	}
 
 	r := bone.New()

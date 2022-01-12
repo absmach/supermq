@@ -28,6 +28,8 @@ import (
 )
 
 const (
+	svcName = "influxdb-reader"
+
 	defLogLevel          = "error"
 	defPort              = "8180"
 	defDB                = "mainflux"
@@ -224,9 +226,9 @@ func startHTTPServer(repo readers.MessageRepository, tc mainflux.ThingsServiceCl
 	if cfg.serverCert != "" || cfg.serverKey != "" {
 		logger.Info(fmt.Sprintf("InfluxDB reader service started using https on port %s with cert %s key %s",
 			cfg.port, cfg.serverCert, cfg.serverKey))
-		errs <- http.ListenAndServeTLS(p, cfg.serverCert, cfg.serverKey, api.MakeHandler(repo, tc, "influxdb-reader"))
+		errs <- http.ListenAndServeTLS(p, cfg.serverCert, cfg.serverKey, api.MakeHandler(repo, tc, svcName, logger))
 		return
 	}
 	logger.Info(fmt.Sprintf("InfluxDB reader service started, exposed port %s", cfg.port))
-	errs <- http.ListenAndServe(p, api.MakeHandler(repo, tc, "influxdb-reader"))
+	errs <- http.ListenAndServe(p, api.MakeHandler(repo, tc, svcName, logger))
 }

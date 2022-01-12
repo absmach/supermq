@@ -23,6 +23,7 @@ import (
 	"github.com/mainflux/mainflux/bootstrap"
 	bsapi "github.com/mainflux/mainflux/bootstrap/api"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
+	"github.com/mainflux/mainflux/logger"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/things"
 	thingsapi "github.com/mainflux/mainflux/things/api/things/http"
@@ -185,12 +186,14 @@ func newThingsService(auth mainflux.AuthServiceClient) things.Service {
 }
 
 func newThingsServer(svc things.Service) *httptest.Server {
-	mux := thingsapi.MakeHandler(mocktracer.New(), svc)
+	logger, _ := logger.NewMock()
+	mux := thingsapi.MakeHandler(mocktracer.New(), svc, logger)
 	return httptest.NewServer(mux)
 }
 
 func newBootstrapServer(svc bootstrap.Service) *httptest.Server {
-	mux := bsapi.MakeHandler(svc, bootstrap.NewConfigReader(encKey))
+	logger, _ := logger.NewMock()
+	mux := bsapi.MakeHandler(svc, bootstrap.NewConfigReader(encKey), logger)
 	return httptest.NewServer(mux)
 }
 
@@ -976,6 +979,7 @@ func TestRemove(t *testing.T) {
 
 	ts := newThingsServer(newThingsService(auth))
 	svc := newService(auth, ts.URL)
+
 	bs := newBootstrapServer(svc)
 
 	c := newConfig([]bootstrap.Channel{{ID: "1"}})
@@ -1166,6 +1170,7 @@ func TestChangeState(t *testing.T) {
 
 	ts := newThingsServer(newThingsService(auth))
 	svc := newService(auth, ts.URL)
+
 	bs := newBootstrapServer(svc)
 
 	c := newConfig([]bootstrap.Channel{{ID: "1"}})

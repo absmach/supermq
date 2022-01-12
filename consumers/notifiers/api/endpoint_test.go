@@ -17,6 +17,7 @@ import (
 	notifiers "github.com/mainflux/mainflux/consumers/notifiers"
 	httpapi "github.com/mainflux/mainflux/consumers/notifiers/api"
 	"github.com/mainflux/mainflux/consumers/notifiers/mocks"
+	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/opentracing/opentracing-go/mocktracer"
@@ -73,7 +74,8 @@ func newService(tokens map[string]string) notifiers.Service {
 }
 
 func newServer(svc notifiers.Service) *httptest.Server {
-	mux := httpapi.MakeHandler(svc, mocktracer.New())
+	logger, _ := logger.NewMock()
+	mux := httpapi.MakeHandler(svc, mocktracer.New(), logger)
 	return httptest.NewServer(mux)
 }
 

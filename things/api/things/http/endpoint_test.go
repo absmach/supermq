@@ -16,6 +16,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/things"
 	httpapi "github.com/mainflux/mainflux/things/api/things/http"
@@ -97,7 +98,8 @@ func newService(tokens map[string]string) things.Service {
 }
 
 func newServer(svc things.Service) *httptest.Server {
-	mux := httpapi.MakeHandler(mocktracer.New(), svc)
+	logger, _ := logger.NewMock()
+	mux := httpapi.MakeHandler(mocktracer.New(), svc, logger)
 	return httptest.NewServer(mux)
 }
 
@@ -767,7 +769,7 @@ func TestListThings(t *testing.T) {
 
 	data := []thingRes{}
 	for i := 0; i < 100; i++ {
-		id := fmt.Sprintf("%s%012d", prefix, i + 1)
+		id := fmt.Sprintf("%s%012d", prefix, i+1)
 		thing1 := thing
 		thing1.ID = id
 		ths, err := svc.CreateThings(context.Background(), token, thing1)
@@ -1007,7 +1009,7 @@ func TestSearchThings(t *testing.T) {
 	data := []thingRes{}
 	for i := 0; i < 100; i++ {
 		name := "name_" + fmt.Sprintf("%03d", i+1)
-		id := fmt.Sprintf("%s%012d", prefix, i + 1)
+		id := fmt.Sprintf("%s%012d", prefix, i+1)
 		ths, err := svc.CreateThings(context.Background(), token, things.Thing{ID: id, Name: name, Metadata: map[string]interface{}{"test": name}})
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		th := ths[0]
@@ -1175,7 +1177,7 @@ func TestListThingsByChannel(t *testing.T) {
 
 	data := []thingRes{}
 	for i := 0; i < 101; i++ {
-		id := fmt.Sprintf("%s%012d", prefix, i + 1)
+		id := fmt.Sprintf("%s%012d", prefix, i+1)
 		thing1 := thing
 		thing1.ID = id
 		ths, err := svc.CreateThings(context.Background(), token, thing1)
@@ -2029,7 +2031,7 @@ func TestListChannelsByThing(t *testing.T) {
 
 	channels := []channelRes{}
 	for i := 0; i < 101; i++ {
-		id := fmt.Sprintf("%s%012d", prefix, i + 1)
+		id := fmt.Sprintf("%s%012d", prefix, i+1)
 		channel1 := channel
 		channel1.ID = id
 		chs, err := svc.CreateChannels(context.Background(), token, channel1)

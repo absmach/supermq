@@ -14,6 +14,8 @@ import (
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/internal/httputil"
+	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -22,9 +24,9 @@ import (
 const contentType = "application/json"
 
 // MakeHandler returns a HTTP handler for auth API endpoints.
-func MakeHandler(tracer opentracing.Tracer, svc things.Service) http.Handler {
+func MakeHandler(tracer opentracing.Tracer, svc things.Service, logger logger.Logger) http.Handler {
 	opts := []kithttp.ServerOption{
-		kithttp.ServerErrorEncoder(encodeError),
+		kithttp.ServerErrorEncoder((httputil.LoggingErrorEncoder(logger))(encodeError)),
 	}
 
 	r := bone.New()
