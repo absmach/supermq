@@ -9,10 +9,11 @@ import (
 )
 
 const (
-	version         string = "0.12.1"
-	contentType            = "Content-Type"
-	contentTypeJSON string = "application/json"
-	svcStatus       string = "pass"
+	version         = "0.12.1"
+	contentType     = "Content-Type"
+	contentTypeJSON = "application/json"
+	svcStatus       = "pass"
+	description     = " service"
 )
 
 // HealthInfo contains version endpoint response.
@@ -38,7 +39,7 @@ func Health(service string) http.HandlerFunc {
 
 		res := HealthInfo{
 			Status:      svcStatus,
-			Description: service + " service",
+			Description: service + description,
 			Version:     version,
 		}
 
