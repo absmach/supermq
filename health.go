@@ -38,14 +38,14 @@ func Health(service string) http.HandlerFunc {
 
 		res := HealthInfo{
 			Status:      svcStatus,
-			Description: service,
+			Description: service + " service",
 			Version:     version,
 		}
+
+		w.WriteHeader(http.StatusOK)
 
 		if err := json.NewEncoder(w).Encode(res); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
-
-		w.WriteHeader(http.StatusOK)
 	})
 }
