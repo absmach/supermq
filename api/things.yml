@@ -621,6 +621,17 @@ paths:
           description: Database can't process request.
         '500':
           $ref: "#/components/responses/ServiceError"
+  /health:
+    get:
+      summary: Retrieves service health check info.
+      tags:
+        - health
+      responses:
+        '200':
+          $ref: "#/components/responses/HealthRes"
+        '500':
+          $ref: "#/components/responses/ServiceError"
+
 components:
   schemas:
     Key:
@@ -798,6 +809,18 @@ components:
           description: Policies
           items:
             type: string
+    HealthInfo:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Service status.
+        version:
+          type: string
+          description: Service version.
+        description:
+          type: string
+          description: Service description.
 
   parameters:
     Authorization:
@@ -1096,3 +1119,9 @@ components:
           schema:
             type: string
             format: byte
+    HealthRes:
+      description: Service Health Check.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/HealthInfo"

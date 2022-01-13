@@ -40,9 +40,18 @@ paths:
           description: Unauthorized.
         '500':
           description: Unexpected server-side error ocurred.
+  /health:
+    get:
+      summary: Retrieves service health check info.
+      tags:
+        - health
+      responses:
+        '200':
+          $ref: "#/components/responses/HealthRes"
+        '500':
+          $ref: "#/components/responses/ServiceError"
 
 components:
-
   parameters:
     Authorization:
       name: Authorization
@@ -52,6 +61,19 @@ components:
         type: string
         format: jwt
       required: false
+  schemas:
+    HealthInfo:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Service status.
+        version:
+          type: string
+          description: Service version.
+        description:
+          type: string
+          description: Service description.
 
   requestBodies:
     ProvisionReq:
@@ -78,3 +100,9 @@ components:
         application/json:
           schema:
             type: object
+    HealthRes:
+      description: Service Health Check.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/HealthInfo"

@@ -25,7 +25,7 @@ paths:
         '415':
           description: Missing or invalid content type.
         '500':
-          $ref: "#/components/responses/ServiceError" 
+          $ref: "#/components/responses/ServiceError"
     get:
       summary: Retrieves users
       description: |
@@ -219,6 +219,16 @@ paths:
           description: Missing or invalid content type.
         '500':
           $ref: "#/components/responses/ServiceError"
+  /health:
+    get:
+      summary: Retrieves service health check info.
+      tags:
+        - health
+      responses:
+        '200':
+          $ref: "#/components/responses/HealthRes"
+        '500':
+          $ref: "#/components/responses/ServiceError"
 
 components:
   securitySchemes:
@@ -301,6 +311,19 @@ components:
         error:
           type: string
           description: Error message
+    HealthInfo:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Service status.
+        version:
+          type: string
+          description: Service version.
+        description:
+          type: string
+          description: Service description.
+
   parameters:
     Authorization:
       name: Authorization
@@ -452,3 +475,9 @@ components:
             $ref: "#/components/schemas/UsersPage"
     ServiceError:
       description: Unexpected server-side error occurred.
+    HealthRes:
+      description: Service Health Check.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/HealthInfo"
