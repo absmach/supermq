@@ -98,7 +98,7 @@ func newService(tokens map[string]string) things.Service {
 }
 
 func newServer(svc things.Service) *httptest.Server {
-	logger, _ := logger.NewMock()
+	logger := logger.NewMock()
 	mux := httpapi.MakeHandler(mocktracer.New(), svc, logger)
 	return httptest.NewServer(mux)
 }

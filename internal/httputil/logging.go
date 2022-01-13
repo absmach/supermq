@@ -19,7 +19,7 @@ func LoggingErrorEncoder(logger logger.Logger) Middleware {
 	return func(encode kithttp.ErrorEncoder) kithttp.ErrorEncoder {
 		return func(ctx context.Context, err error, w http.ResponseWriter) {
 			logger.Error(err.Error())
-			defer encode(ctx, err, w)
+			encode(ctx, err, w)
 		}
 	}
 }

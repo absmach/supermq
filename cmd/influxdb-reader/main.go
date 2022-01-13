@@ -28,8 +28,7 @@ import (
 )
 
 const (
-	svcName = "influxdb-reader"
-
+	svcName              = "influxdb-reader"
 	defLogLevel          = "error"
 	defPort              = "8180"
 	defDB                = "mainflux"

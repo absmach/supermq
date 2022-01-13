@@ -186,13 +186,13 @@ func newThingsService(auth mainflux.AuthServiceClient) things.Service {
 }
 
 func newThingsServer(svc things.Service) *httptest.Server {
-	logger, _ := logger.NewMock()
+	logger := logger.NewMock()
 	mux := thingsapi.MakeHandler(mocktracer.New(), svc, logger)
 	return httptest.NewServer(mux)
 }
 
 func newBootstrapServer(svc bootstrap.Service) *httptest.Server {
-	logger, _ := logger.NewMock()
+	logger := logger.NewMock()
 	mux := bsapi.MakeHandler(svc, bootstrap.NewConfigReader(encKey), logger)
 	return httptest.NewServer(mux)
 }

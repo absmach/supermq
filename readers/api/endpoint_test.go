@@ -46,7 +46,7 @@ var (
 )
 
 func newServer(repo readers.MessageRepository, tc mainflux.ThingsServiceClient) *httptest.Server {
-	logger, _ := logger.NewMock()
+	logger := logger.NewMock()
 	mux := api.MakeHandler(repo, tc, svcName, logger)
 	return httptest.NewServer(mux)
 }

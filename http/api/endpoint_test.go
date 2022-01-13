@@ -27,7 +27,7 @@ func newService(cc mainflux.ThingsServiceClient) adapter.Service {
 }
 
 func newHTTPServer(svc adapter.Service) *httptest.Server {
-	logger, _ := logger.NewMock()
+	logger := logger.NewMock()
 	mux := api.MakeHandler(svc, mocktracer.New(), logger)
 	return httptest.NewServer(mux)
 }

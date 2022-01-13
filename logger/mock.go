@@ -8,8 +8,8 @@ var _ Logger = (*loggerMock)(nil)
 type loggerMock struct{}
 
 // NewMock returns wrapped go kit logger mock.
-func NewMock() (Logger, error) {
-	return &loggerMock{}, nil
+func NewMock() Logger {
+	return &loggerMock{}
 }
 
 func (l loggerMock) Debug(msg string) {

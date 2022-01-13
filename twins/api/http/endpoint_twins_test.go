@@ -85,7 +85,7 @@ func (tr testRequest) make() (*http.Response, error) {
 }
 
 func newServer(svc twins.Service) *httptest.Server {
-	logger, _ := logger.NewMock()
+	logger := logger.NewMock()
 	mux := httpapi.MakeHandler(mocktracer.New(), svc, logger)
 	return httptest.NewServer(mux)
 }

@@ -47,7 +47,7 @@ func newUserService() users.Service {
 }
 
 func newUserServer(svc users.Service) *httptest.Server {
-	logger, _ := logger.NewMock()
+	logger := logger.NewMock()
 	mux := api.MakeHandler(svc, mocktracer.New(), logger)
 	return httptest.NewServer(mux)
 }
