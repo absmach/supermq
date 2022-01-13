@@ -32,9 +32,8 @@ import (
 )
 
 const (
-	svcName = "cassandra-reader"
-	sep     = ","
-
+	svcName              = "cassandra-reader"
+	sep                  = ","
 	defLogLevel          = "error"
 	defPort              = "8180"
 	defCluster           = "127.0.0.1"

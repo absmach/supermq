@@ -979,7 +979,6 @@ func TestRemove(t *testing.T) {
 
 	ts := newThingsServer(newThingsService(auth))
 	svc := newService(auth, ts.URL)
-
 	bs := newBootstrapServer(svc)
 
 	c := newConfig([]bootstrap.Channel{{ID: "1"}})
@@ -1170,7 +1169,6 @@ func TestChangeState(t *testing.T) {
 
 	ts := newThingsServer(newThingsService(auth))
 	svc := newService(auth, ts.URL)
-
 	bs := newBootstrapServer(svc)
 
 	c := newConfig([]bootstrap.Channel{{ID: "1"}})

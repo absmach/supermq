@@ -33,8 +33,7 @@ import (
 )
 
 const (
-	svcName = "mongodb-reader"
-
+	svcName              = "mongodb-reader"
 	defLogLevel          = "error"
 	defPort              = "8180"
 	defDB                = "mainflux"
