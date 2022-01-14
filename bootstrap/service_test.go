@@ -9,6 +9,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http/httptest"
@@ -60,6 +61,9 @@ func newService(auth mainflux.AuthServiceClient, url string) bootstrap.Service {
 		ThingsURL: url,
 	}
 
+	t := map[string]interface{}{}
+	t["test"]= "test"
+	json.Marshal(t)
 	sdk := mfsdk.NewSDK(config)
 	return bootstrap.New(auth, things, sdk, encKey)
 }
