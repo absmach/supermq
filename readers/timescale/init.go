@@ -49,7 +49,7 @@ func migrateDB(db *sqlx.DB) error {
 				Id: "messages_1",
 				Up: []string{
 					`CREATE TABLE IF NOT EXISTS messages (
-						time BIGINT NOT NULL,
+                        time BIGINT NOT NULL,
                         channel       UUID,
                         subtopic      VARCHAR(254),
                         publisher     UUID,
@@ -64,9 +64,7 @@ func migrateDB(db *sqlx.DB) error {
                         update_time   FLOAT,
                         PRIMARY KEY (time, publisher, subtopic, name)
                     );
-					
-					SELECT create_hypertable('messages', 'time', create_default_indexes => FALSE, chunk_time_interval => 86400000, if_not_exists => TRUE);
-					`,
+                    SELECT create_hypertable('messages', 'time', create_default_indexes => FALSE, chunk_time_interval => 86400000, if_not_exists => TRUE);`,
 				},
 				Down: []string{
 					"DROP TABLE messages",

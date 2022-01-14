@@ -11,18 +11,18 @@ default values.
 | Variable                             | Description                                     | Default                |
 | -----------------------------------  | ----------------------------------------------- | ---------------------- |
 | MF_NATS_URL                          | NATS instance URL                               | nats://localhost:4222  |
-| MF_Timescale_WRITER_LOG_LEVEL        | Service log level                               | error                  |
-| MF_Timescale_WRITER_PORT             | Service HTTP port                               | 9104                   |
-| MF_Timescale_WRITER_DB_HOST          | Timescale DB host                               | timescale              |
-| MF_Timescale_WRITER_DB_PORT          | Timescale DB port                               | 5432                   |
-| MF_Timescale_WRITER_DB_USER          | Timescale user                                  | mainflux               |
-| MF_Timescale_WRITER_DB_PASS          | Timescale password                              | mainflux               |
-| MF_Timescale_WRITER_DB               | Timescale database name                         | messages               |
-| MF_Timescale_WRITER_DB_SSL_MODE      | Timescale SSL mode                              | disabled               |
-| MF_Timescale_WRITER_DB_SSL_CERT      | Timescale SSL certificate path                  | ""                     |
-| MF_Timescale_WRITER_DB_SSL_KEY       | Timescale SSL key                               | ""                     |
-| MF_Timescale_WRITER_DB_SSL_ROOT_CERT | Timescale SSL root certificate path             | ""                     |
-| MF_Timescale_WRITER_CONFIG_PATH      | Configuration file path with NATS subjects list | /config.toml           |
+| MF_TIMESCALE_WRITER_LOG_LEVEL        | Service log level                               | error                  |
+| MF_TIMESCALE_WRITER_PORT             | Service HTTP port                               | 9104                   |
+| MF_TIMESCALE_WRITER_DB_HOST          | Timescale DB host                               | timescale              |
+| MF_TIMESCALE_WRITER_DB_PORT          | Timescale DB port                               | 5432                   |
+| MF_TIMESCALE_WRITER_DB_USER          | Timescale user                                  | mainflux               |
+| MF_TIMESCALE_WRITER_DB_PASS          | Timescale password                              | mainflux               |
+| MF_TIMESCALE_WRITER_DB               | Timescale database name                         | messages               |
+| MF_TIMESCALE_WRITER_DB_SSL_MODE      | Timescale SSL mode                              | disabled               |
+| MF_TIMESCALE_WRITER_DB_SSL_CERT      | Timescale SSL certificate path                  | ""                     |
+| MF_TIMESCALE_WRITER_DB_SSL_KEY       | Timescale SSL key                               | ""                     |
+| MF_TIMESCALE_WRITER_DB_SSL_ROOT_CERT | Timescale SSL root certificate path             | ""                     |
+| MF_TIMESCALE_WRITER_CONFIG_PATH      | Configuration file path with NATS subjects list | /config.toml           |
 
 ## Deployment
 
