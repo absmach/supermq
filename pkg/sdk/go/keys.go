@@ -12,7 +12,7 @@ import (
 
 const keysEndpoint = "keys"
 
-func (sdk mfSDK) Issue(token string, k Key) (issueKeyRes, error) {
+func (sdk mfSDK) Issue(token string, k KeyReq) (issueKeyRes, error) {
 	data, err := json.Marshal(k)
 	if err != nil {
 		return issueKeyRes{}, err
