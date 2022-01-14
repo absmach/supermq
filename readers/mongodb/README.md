@@ -21,6 +21,9 @@ default values.
 | MF_JAEGER_URL               | Jaeger server URL                                   | localhost:6831 |
 | MF_THINGS_AUTH_GRPC_URL     | Things service Auth gRPC URL                        | localhost:8181 |
 | MF_THINGS_AUTH_GRPC_TIMEOUT | Things service Auth gRPC request timeout in seconds | 1s             |
+| MF_AUTH_GRPC_URL            | Auth service gRPC URL                               | localhost:8181 |
+| MF_AUTH_GRPC_TIMEOUT        | Auth service gRPC request timeout in seconds        | 1s             |
+
 
 ## Deployment
 
