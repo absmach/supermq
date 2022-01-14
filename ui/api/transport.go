@@ -28,7 +28,7 @@ import (
 const (
 	contentType = "text/html"
 	staticDir   = "ui/web/static"
-	// TODO
+	// TODO -this is a temporary token and it will be removed once auth proxy is in place.
 	token       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDE1MTkyNjEsImlhdCI6MTY0MTQ4MzI2MSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImZscDFAZW1haWwuY29tIiwiaXNzdWVyX2lkIjoiYzkzY2FmYjMtYjNhNy00ZTdmLWE0NzAtMTVjMTRkOGVkMWUwIiwidHlwZSI6MH0.cqDOZdqiH9sXd1yuDwsv6-Mtb6_nVe_4c6cJK-iJ-Ig"
 	offsetKey   = "offset"
 	limitKey    = "limit"
