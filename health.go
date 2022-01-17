@@ -9,11 +9,17 @@ import (
 )
 
 const (
-	version         = "0.12.1"
 	contentType     = "Content-Type"
 	contentTypeJSON = "application/json"
 	svcStatus       = "pass"
 	description     = " service"
+)
+
+var (
+	// Version represents the service version.
+	Version = "0.12.1"
+	// BuildTime represents the service build time.
+	BuildTime = "1970-01-01_00:00:00"
 )
 
 // HealthInfo contains version endpoint response.
@@ -26,6 +32,9 @@ type HealthInfo struct {
 
 	// Description contains service description.
 	Description string `json:"description"`
+
+	// BuildTime contains service build time.
+	BuildTime string `json:"build_time"`
 }
 
 // Health exposes an HTTP handler for retrieving service health.
@@ -40,7 +49,8 @@ func Health(service string) http.HandlerFunc {
 		res := HealthInfo{
 			Status:      svcStatus,
 			Description: service + description,
-			Version:     version,
+			Version:     Version,
+			BuildTime:   BuildTime,
 		}
 
 		w.WriteHeader(http.StatusOK)
