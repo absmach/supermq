@@ -12,37 +12,37 @@ import (
 
 const keysEndpoint = "keys"
 
-func (sdk mfSDK) Issue(token string, k KeyReq) (issueKeyRes, error) {
+func (sdk mfSDK) Issue(token string, k KeyReq) (KeyRes, error) {
 	data, err := json.Marshal(k)
 	if err != nil {
-		return issueKeyRes{}, err
+		return KeyRes{}, err
 	}
 
 	url := fmt.Sprintf("%s/%s", sdk.authURL, keysEndpoint)
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 	if err != nil {
-		return issueKeyRes{}, err
+		return KeyRes{}, err
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(CTJSON))
 	if err != nil {
-		return issueKeyRes{}, err
+		return KeyRes{}, err
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return issueKeyRes{}, err
+		return KeyRes{}, err
 	}
 
 	if resp.StatusCode != http.StatusCreated {
-		return issueKeyRes{}, errors.Wrap(ErrFailedCreation, errors.New(resp.Status))
+		return KeyRes{}, errors.Wrap(ErrFailedCreation, errors.New(resp.Status))
 	}
 
-	var key issueKeyRes
+	var key KeyRes
 	if err := json.Unmarshal(body, &key); err != nil {
-		return issueKeyRes{}, err
+		return KeyRes{}, err
 	}
 
 	return key, nil

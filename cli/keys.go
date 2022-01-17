@@ -14,29 +14,28 @@ import (
 var cmdAPIKeys = []cobra.Command{
 	{
 		Use:   "issue",
-		Short: "issue email type duration <api_key_token>",
+		Short: "issue type duration <api_key_token>",
 		Long:  `Issues a new Key`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 4 {
+			if len(args) != 3 {
 				logUsage(cmd.Short)
 				return
 			}
 
 			var req mfxsdk.KeyReq
-			req.Email = args[0]
-			t, err := strconv.Atoi(args[1])
+			t, err := strconv.Atoi(args[0])
 			if err != nil {
 				logError(err)
 				return
 			}
 			req.Type = uint32(t)
-			d, err := time.ParseDuration(args[2])
+			d, err := time.ParseDuration(args[1])
 			if err != nil {
 				logError(err)
 				return
 			}
 			req.Duration = d
-			resp, err := sdk.Issue(args[3], req)
+			resp, err := sdk.Issue(args[2], req)
 			if err != nil {
 				logError(err)
 				return
