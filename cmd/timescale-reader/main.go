@@ -32,7 +32,6 @@ import (
 
 const (
 	svcName = "timescaledb-reader"
-	sep     = ","
 
 	defLogLevel          = "error"
 	defPort              = "8911"

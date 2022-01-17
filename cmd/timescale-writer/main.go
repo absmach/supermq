@@ -25,7 +25,6 @@ import (
 
 const (
 	svcName = "timescaledb-writer"
-	sep     = ","
 
 	defLogLevel      = "error"
 	defNatsURL       = "nats://localhost:4222"
