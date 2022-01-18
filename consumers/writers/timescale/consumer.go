@@ -39,16 +39,16 @@ func New(db *sqlx.DB) consumers.Consumer {
 	return &timescaleRepo{db: db}
 }
 
-func (pr timescaleRepo) Consume(message interface{}) (err error) {
+func (repo timescaleRepo) Consume(message interface{}) (err error) {
 	switch m := message.(type) {
 	case mfjson.Messages:
-		return pr.saveJSON(m)
+		return repo.saveJSON(m)
 	default:
-		return pr.saveSenml(m)
+		return repo.saveSenml(m)
 	}
 }
 
-func (pr timescaleRepo) saveSenml(messages interface{}) (err error) {
+func (repo timescaleRepo) saveSenml(messages interface{}) (err error) {
 	msgs, ok := messages.([]senml.Message)
 	if !ok {
 		return errSaveMessage
@@ -60,7 +60,7 @@ func (pr timescaleRepo) saveSenml(messages interface{}) (err error) {
           :value, :string_value, :bool_value, :data_value, :sum,
           :time, :update_time);`
 
-	tx, err := pr.db.BeginTxx(context.Background(), nil)
+	tx, err := repo.db.BeginTxx(context.Background(), nil)
 	if err != nil {
 		return errors.Wrap(errSaveMessage, err)
 	}
@@ -94,21 +94,21 @@ func (pr timescaleRepo) saveSenml(messages interface{}) (err error) {
 	return err
 }
 
-func (pr timescaleRepo) saveJSON(msgs mfjson.Messages) error {
-	if err := pr.insertJSON(msgs); err != nil {
+func (repo timescaleRepo) saveJSON(msgs mfjson.Messages) error {
+	if err := repo.insertJSON(msgs); err != nil {
 		if err == errNoTable {
-			if err := pr.createTable(msgs.Format); err != nil {
+			if err := repo.createTable(msgs.Format); err != nil {
 				return err
 			}
-			return pr.insertJSON(msgs)
+			return repo.insertJSON(msgs)
 		}
 		return err
 	}
 	return nil
 }
 
-func (pr timescaleRepo) insertJSON(msgs mfjson.Messages) error {
-	tx, err := pr.db.BeginTxx(context.Background(), nil)
+func (repo timescaleRepo) insertJSON(msgs mfjson.Messages) error {
+	tx, err := repo.db.BeginTxx(context.Background(), nil)
 	if err != nil {
 		return errors.Wrap(errSaveMessage, err)
 	}
@@ -151,7 +151,7 @@ func (pr timescaleRepo) insertJSON(msgs mfjson.Messages) error {
 	return nil
 }
 
-func (pr timescaleRepo) createTable(name string) error {
+func (repo timescaleRepo) createTable(name string) error {
 	q := `CREATE TABLE IF NOT EXISTS %s (
                         created       BIGINT NOT NULL,
                         channel       VARCHAR(254),
@@ -163,7 +163,7 @@ func (pr timescaleRepo) createTable(name string) error {
                     );`
 	q = fmt.Sprintf(q, name)
 
-	_, err := pr.db.Exec(q)
+	_, err := repo.db.Exec(q)
 	return err
 }
 
