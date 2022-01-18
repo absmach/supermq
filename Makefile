@@ -11,12 +11,11 @@ DOCKERS_DEV = $(addprefix docker_dev_,$(SERVICES))
 CGO_ENABLED ?= 0
 GOARCH ?= amd64
 
-VERSION = 0.12.1
 TIME = $(shell date +%F_%T)
 
 define compile_service
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) \
-	go build -mod=vendor -ldflags "-s -w -X 'github.com/mainflux/mainflux.Version=$(VERSION)' -X 'github.com/mainflux/mainflux.BuildTime=$(TIME)'" \
+	go build -mod=vendor -ldflags "-s -w -X 'github.com/mainflux/mainflux.BuildTime=$(TIME)'" \
 	-o ${BUILD_DIR}/mainflux-$(1) cmd/$(1)/main.go
 endef
 
