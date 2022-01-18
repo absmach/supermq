@@ -158,15 +158,15 @@ func (pr postgresRepo) insertJSON(msgs mfjson.Messages) error {
 
 func (pr postgresRepo) createTable(name string) error {
 	q := `CREATE TABLE IF NOT EXISTS %s (
-                        id            UUID,
-                        created       BIGINT,
-                        channel       VARCHAR(254),
-                        subtopic      VARCHAR(254),
-                        publisher     VARCHAR(254),
-                        protocol      TEXT,
-                        payload       JSONB,
-                        PRIMARY KEY (id)
-                    )`
+            id            UUID,
+            created       BIGINT,
+            channel       VARCHAR(254),
+            subtopic      VARCHAR(254),
+            publisher     VARCHAR(254),
+            protocol      TEXT,
+            payload       JSONB,
+            PRIMARY KEY (id)
+        )`
 	q = fmt.Sprintf(q, name)
 
 	_, err := pr.db.Exec(q)

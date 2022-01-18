@@ -39,16 +39,16 @@ func New(db *sqlx.DB) consumers.Consumer {
 	return &timescaleRepo{db: db}
 }
 
-func (repo timescaleRepo) Consume(message interface{}) (err error) {
+func (tr timescaleRepo) Consume(message interface{}) (err error) {
 	switch m := message.(type) {
 	case mfjson.Messages:
-		return repo.saveJSON(m)
+		return tr.saveJSON(m)
 	default:
-		return repo.saveSenml(m)
+		return tr.saveSenml(m)
 	}
 }
 
-func (repo timescaleRepo) saveSenml(messages interface{}) (err error) {
+func (tr timescaleRepo) saveSenml(messages interface{}) (err error) {
 	msgs, ok := messages.([]senml.Message)
 	if !ok {
 		return errSaveMessage
@@ -60,7 +60,7 @@ func (repo timescaleRepo) saveSenml(messages interface{}) (err error) {
           :value, :string_value, :bool_value, :data_value, :sum,
           :time, :update_time);`
 
-	tx, err := repo.db.BeginTxx(context.Background(), nil)
+	tx, err := tr.db.BeginTxx(context.Background(), nil)
 	if err != nil {
 		return errors.Wrap(errSaveMessage, err)
 	}
@@ -94,21 +94,21 @@ func (repo timescaleRepo) saveSenml(messages interface{}) (err error) {
 	return err
 }
 
-func (repo timescaleRepo) saveJSON(msgs mfjson.Messages) error {
-	if err := repo.insertJSON(msgs); err != nil {
+func (tr timescaleRepo) saveJSON(msgs mfjson.Messages) error {
+	if err := tr.insertJSON(msgs); err != nil {
 		if err == errNoTable {
-			if err := repo.createTable(msgs.Format); err != nil {
+			if err := tr.createTable(msgs.Format); err != nil {
 				return err
 			}
-			return repo.insertJSON(msgs)
+			return tr.insertJSON(msgs)
 		}
 		return err
 	}
 	return nil
 }
 
-func (repo timescaleRepo) insertJSON(msgs mfjson.Messages) error {
-	tx, err := repo.db.BeginTxx(context.Background(), nil)
+func (tr timescaleRepo) insertJSON(msgs mfjson.Messages) error {
+	tx, err := tr.db.BeginTxx(context.Background(), nil)
 	if err != nil {
 		return errors.Wrap(errSaveMessage, err)
 	}
@@ -151,19 +151,19 @@ func (repo timescaleRepo) insertJSON(msgs mfjson.Messages) error {
 	return nil
 }
 
-func (repo timescaleRepo) createTable(name string) error {
+func (tr timescaleRepo) createTable(name string) error {
 	q := `CREATE TABLE IF NOT EXISTS %s (
-                        created       BIGINT NOT NULL,
-                        channel       VARCHAR(254),
-                        subtopic      VARCHAR(254),
-                        publisher     VARCHAR(254),
-                        protocol      TEXT,
-                        payload       JSONB,
-                        PRIMARY KEY (created, publisher, subtopic)
-                    );`
+            created       BIGINT NOT NULL,
+            channel       VARCHAR(254),
+            subtopic      VARCHAR(254),
+            publisher     VARCHAR(254),
+            protocol      TEXT,
+            payload       JSONB,
+            PRIMARY KEY (created, publisher, subtopic)
+        );`
 	q = fmt.Sprintf(q, name)
 
-	_, err := repo.db.Exec(q)
+	_, err := tr.db.Exec(q)
 	return err
 }
 
