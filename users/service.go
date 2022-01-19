@@ -224,7 +224,7 @@ func (svc usersService) ListUsers(ctx context.Context, token string, offset, lim
 	}
 
 	if err := svc.authorize(ctx, id.id, "authorities", "member"); err != nil {
-		return UserPage{}, errors.Wrap(ErrUnauthorizedAccess, err)
+		return UserPage{}, errors.Wrap(errors.ErrUnauthorizedAccess, err)
 	}
 	return svc.users.RetrieveAll(ctx, offset, limit, nil, email, m)
 }
