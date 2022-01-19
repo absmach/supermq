@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/mainflux/mainflux"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/stretchr/testify/assert"
 )
@@ -37,8 +38,10 @@ func TestHealth(t *testing.T) {
 	for desc, tc := range cases {
 		h, err := mainfluxSDK.Health()
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", desc, tc.err, err))
-		assert.Equal(t, tc.empty, h.Version == "", fmt.Sprintf("%s: expected non-empty result version, got %s", desc, h.Version))
-		assert.Equal(t, thingsDescription, h.Description, fmt.Sprintf("%s: expected non-empty result description, got %s", desc, h.Description))
-		assert.Equal(t, thingsStatus, h.Status, fmt.Sprintf("%s: expected non-empty result status, got %s", desc, h.Status))
+		assert.Equal(t, thingsStatus, h.Status, fmt.Sprintf("%s: expected %s status, got %s", desc, thingsStatus, h.Status))
+		assert.Equal(t, tc.empty, h.Version == "", fmt.Sprintf("%s: expected non-empty version", desc))
+		assert.Equal(t, mainflux.Commit, h.Commit, fmt.Sprintf("%s: expected non-empty commit", desc))
+		assert.Equal(t, thingsDescription, h.Description, fmt.Sprintf("%s: expected proper description, got %s", desc, h.Description))
+		assert.Equal(t, mainflux.BuildTime, h.BuildTime, fmt.Sprintf("%s: expected default epoch date, got %s", desc, h.BuildTime))
 	}
 }
