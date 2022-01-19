@@ -16,8 +16,7 @@ properties:
   description:
     type: string
     description: Service description.
-    enum:
-      - auth service
+    example: <service_name> service
   build_time:
     type: string
     description: Service build time.
