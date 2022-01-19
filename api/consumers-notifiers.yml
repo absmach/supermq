@@ -136,30 +136,6 @@ components:
         limit:
           type: integer
           description: Maximum number of items to return in one page.
-    HealthInfo:
-      type: object
-      properties:
-        status:
-          type: string
-          description: Service status.
-          enum:
-            - pass
-        version:
-          type: string
-          description: Service version.
-          example: 0.0.1
-        commit:
-          type: string
-          description: Service commit hash.
-          example: 7d6f4dc4f7f0c1fa3dc24eddfb18bb5073ff4f62
-        description:
-          type: string
-          description: Service description.
-          example: postgresdb-writer service
-        build_time:
-          type: string
-          description: Service build time.
-          example: 1970-01-01_00:00:00
 
   parameters:
     Id:
@@ -243,4 +219,4 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/HealthInfo"
+            $ref: "./schemas/HealthInfo.yml"
