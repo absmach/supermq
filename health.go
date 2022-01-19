@@ -17,7 +17,9 @@ const (
 
 var (
 	// Version represents the service version.
-	Version = "0.12.1"
+	Version = "0.0.0"
+	// Commit represents the commit SHA.
+	Commit = "00000000"
 	// BuildTime represents the service build time.
 	BuildTime = "1970-01-01_00:00:00"
 )
@@ -49,7 +51,7 @@ func Health(service string) http.HandlerFunc {
 		res := HealthInfo{
 			Status:      svcStatus,
 			Description: service + description,
-			Version:     Version,
+			Version:     Version + ":" + Commit,
 			BuildTime:   BuildTime,
 		}
 

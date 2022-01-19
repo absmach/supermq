@@ -11,11 +11,12 @@ DOCKERS_DEV = $(addprefix docker_dev_,$(SERVICES))
 CGO_ENABLED ?= 0
 GOARCH ?= amd64
 
-TIME = $(shell date +%F_%T)
-
 define compile_service
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) \
-	go build -mod=vendor -ldflags "-s -w -X 'github.com/mainflux/mainflux.BuildTime=$(TIME)'" \
+	go build -mod=vendor -ldflags "-s -w \
+	-X 'github.com/mainflux/mainflux.BuildTime=$(TIME)' \
+	-X 'github.com/mainflux/mainflux.Version=$(VERSION)' \
+	-X 'github.com/mainflux/mainflux.Commit=$(COMMIT)'" \
 	-o ${BUILD_DIR}/mainflux-$(1) cmd/$(1)/main.go
 endef
 
@@ -27,6 +28,9 @@ define make_docker
 		--build-arg SVC=$(svc) \
 		--build-arg GOARCH=$(GOARCH) \
 		--build-arg GOARM=$(GOARM) \
+		--build-arg VERSION=$(shell git describe --abbrev=0 --tags) \
+		--build-arg COMMIT=$(shell git rev-parse --short HEAD) \
+		--build-arg TIME=$(shell date +%F_%T) \
 		--tag=$(MF_DOCKER_IMAGE_NAME_PREFIX)/$(svc) \
 		-f docker/Dockerfile .
 endef
