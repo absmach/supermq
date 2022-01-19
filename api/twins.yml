@@ -342,12 +342,20 @@ components:
         status:
           type: string
           description: Service status.
+          enum:
+            - "pass"
         version:
           type: string
           description: Service version.
+        commit:
+          type: string
+          description: Service commit.
         description:
           type: string
           description: Service description.
+        build_time:
+          type: string
+          description: Service build time.
 
   requestBodies:
     TwinReq:
