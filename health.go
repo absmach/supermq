@@ -17,10 +17,16 @@ const (
 
 var (
 	// Version represents the service version.
+	// It's meant to be set using go build ldflags:
+	// -ldflags "-X 'github.com/mainflux/mainflux.Version=0.0.0'"
 	Version = "0.0.0"
-	// Commit represents the commit SHA.
-	Commit = "00000000"
-	// BuildTime represents the service build time.
+	// Commit represents the git commit SHA used.
+	// It's meant to be set using go build ldflags:
+	// -ldflags "-X 'github.com/mainflux/mainflux.Commit=ffffffff'"
+	Commit = "ffffffff"
+	// BuildTime contains service build time.
+	// It's meant to be set using go build ldflags:
+	// -ldflags "-X 'github.com/mainflux/mainflux.BuildTime=1970-01-01_00:00:00'"
 	BuildTime = "1970-01-01_00:00:00"
 )
 
@@ -31,6 +37,9 @@ type HealthInfo struct {
 
 	// Version contains current service version.
 	Version string `json:"version"`
+
+	// Commit represents the service build time.
+	Commit string `json:"commit"`
 
 	// Description contains service description.
 	Description string `json:"description"`
@@ -50,8 +59,9 @@ func Health(service string) http.HandlerFunc {
 
 		res := HealthInfo{
 			Status:      svcStatus,
+			Version:     Version,
+			Commit:      Commit,
 			Description: service + description,
-			Version:     Version + ":" + Commit,
 			BuildTime:   BuildTime,
 		}
 

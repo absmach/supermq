@@ -29,7 +29,7 @@ define make_docker
 		--build-arg GOARCH=$(GOARCH) \
 		--build-arg GOARM=$(GOARM) \
 		--build-arg VERSION=$(shell git describe --abbrev=0 --tags) \
-		--build-arg COMMIT=$(shell git rev-parse --short HEAD) \
+		--build-arg COMMIT=$(shell git rev-parse HEAD) \
 		--build-arg TIME=$(shell date +%F_%T) \
 		--tag=$(MF_DOCKER_IMAGE_NAME_PREFIX)/$(svc) \
 		-f docker/Dockerfile .
