@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	errStringToUUID        = errors.New("error converting uuid to string")
+	errStringToUUID        = errors.New("error converting string to uuid")
 	errGetTotal            = errors.New("failed to get total number of groups")
 	errCreateMetadataQuery = errors.New("failed to create query for metadata")
 
