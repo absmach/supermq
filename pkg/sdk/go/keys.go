@@ -6,14 +6,16 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
 const keysEndpoint = "keys"
 
-func (sdk mfSDK) Issue(token string, k KeyReq) (KeyRes, error) {
-	data, err := json.Marshal(k)
+func (sdk mfSDK) Issue(token string, d time.Duration) (KeyRes, error) {
+	datareq := KeyReq{Type: 2, Duration: d}
+	data, err := json.Marshal(datareq)
 	if err != nil {
 		return KeyRes{}, err
 	}

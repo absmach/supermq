@@ -4,38 +4,29 @@
 package cli
 
 import (
-	"strconv"
 	"time"
 
-	mfxsdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/spf13/cobra"
 )
 
 var cmdAPIKeys = []cobra.Command{
 	{
 		Use:   "issue",
-		Short: "issue type duration <api_key_token>",
+		Short: "issue <duration> <user_auth_token>",
 		Long:  `Issues a new Key`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 {
+			if len(args) != 2 {
 				logUsage(cmd.Short)
 				return
 			}
 
-			var req mfxsdk.KeyReq
-			t, err := strconv.Atoi(args[0])
+			d, err := time.ParseDuration(args[0])
 			if err != nil {
 				logError(err)
 				return
 			}
-			req.Type = uint32(t)
-			d, err := time.ParseDuration(args[1])
-			if err != nil {
-				logError(err)
-				return
-			}
-			req.Duration = d
-			resp, err := sdk.Issue(args[2], req)
+
+			resp, err := sdk.Issue(args[1], d)
 			if err != nil {
 				logError(err)
 				return
@@ -65,7 +56,7 @@ var cmdAPIKeys = []cobra.Command{
 	{
 		Use:   "retrieve",
 		Short: "retrieve <key_id> <user_auth_token>",
-		Long:  `Retrieve API key with given id`,
+		Long:  `Retrieves API key with given id`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
 				logUsage(cmd.Short)
@@ -88,9 +79,9 @@ func NewKeysCmd() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "keys",
 		Short: "Keys management",
-		Long:  `Keys management: create, get, update or delete Thing, connect or disconnect Thing from Channel and get the list of Channels connected or disconnected from a Thing`,
+		Long:  `Keys management: issue, revoke, or retrieve API key.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			logUsage("keys [issue | revoke | retrive]")
+			logUsage("keys [issue | revoke | retrieve]")
 		},
 	}
 
