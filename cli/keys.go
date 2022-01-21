@@ -32,7 +32,7 @@ var cmdAPIKeys = []cobra.Command{
 				return
 			}
 
-			logCreated(resp.ID)
+			logJSON(resp)
 		},
 	},
 	{
