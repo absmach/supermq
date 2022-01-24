@@ -11,10 +11,23 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
+type keyReq struct {
+	Type     uint32        `json:"type,omitempty"`
+	Duration time.Duration `json:"duration,omitempty"`
+}
+
 const keysEndpoint = "keys"
+const (
+	// LoginKey is temporary User key received on successfull login.
+	LoginKey uint32 = iota
+	// RecoveryKey represents a key for resseting password.
+	RecoveryKey
+	// APIKey enables the one to act on behalf of the user.
+	APIKey
+)
 
 func (sdk mfSDK) Issue(token string, d time.Duration) (KeyRes, error) {
-	datareq := KeyReq{Type: 2, Duration: d}
+	datareq := keyReq{Type: APIKey, Duration: d}
 	data, err := json.Marshal(datareq)
 	if err != nil {
 		return KeyRes{}, err

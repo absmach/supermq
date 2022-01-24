@@ -118,11 +118,6 @@ type Member struct {
 	Type string
 }
 
-type KeyReq struct {
-	Type     uint32        `json:"type,omitempty"`
-	Duration time.Duration `json:"duration,omitempty"`
-}
-
 type Key struct {
 	ID        string
 	Type      uint32
