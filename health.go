@@ -38,7 +38,7 @@ type HealthInfo struct {
 	// Version contains current service version.
 	Version string `json:"version"`
 
-	// Commit represents the service build time.
+	// Commit represents the git hash commit.
 	Commit string `json:"commit"`
 
 	// Description contains service description.
