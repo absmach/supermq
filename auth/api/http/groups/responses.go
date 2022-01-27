@@ -17,12 +17,12 @@ var (
 )
 
 type memberRes struct {
-	ID   string `json:"id"`
-	Type string `json:"type"`
+	ID string `json:"id"`
 }
 
 type memberPageRes struct {
 	pageRes
+	Type    string      `json:"type"`
 	Members []memberRes `json:"members"`
 }
 

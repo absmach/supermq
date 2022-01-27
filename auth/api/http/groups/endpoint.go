@@ -250,7 +250,7 @@ func listMembersEndpoint(svc auth.Service) endpoint.Endpoint {
 			return memberPageRes{}, err
 		}
 
-		return buildUsersResponse(page), nil
+		return buildUsersResponse(page, req.groupType), nil
 	}
 }
 
@@ -350,7 +350,7 @@ func buildGroupsResponse(gp auth.GroupPage) groupPageRes {
 	return res
 }
 
-func buildUsersResponse(mp auth.MemberPage) memberPageRes {
+func buildUsersResponse(mp auth.MemberPage, groupType string) memberPageRes {
 	res := memberPageRes{
 		pageRes: pageRes{
 			Total:  mp.Total,
@@ -358,13 +358,13 @@ func buildUsersResponse(mp auth.MemberPage) memberPageRes {
 			Limit:  mp.Limit,
 			Name:   mp.Name,
 		},
+		Type:    groupType,
 		Members: []memberRes{},
 	}
 
 	for _, member := range mp.Members {
 		memb := memberRes{
-			ID:   member.ID,
-			Type: member.Type,
+			ID: member.ID,
 		}
 		res.Members = append(res.Members, memb)
 	}
