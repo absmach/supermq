@@ -35,7 +35,7 @@ const (
 // MakeHandler returns a HTTP handler for API endpoints.
 func MakeHandler(tracer opentracing.Tracer, svc twins.Service, logger logger.Logger) http.Handler {
 	opts := []kithttp.ServerOption{
-		kithttp.ServerErrorEncoder((httputil.LoggingErrorEncoder(logger))(encodeError)),
+		kithttp.ServerErrorEncoder(httputil.LoggingErrorEncoder(logger, encodeError)),
 	}
 
 	r := bone.New()

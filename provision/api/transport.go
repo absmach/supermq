@@ -29,7 +29,7 @@ var (
 func MakeHandler(svc provision.Service, logger logger.Logger) http.Handler {
 
 	opts := []kithttp.ServerOption{
-		kithttp.ServerErrorEncoder((httputil.LoggingErrorEncoder(logger))(encodeError)),
+		kithttp.ServerErrorEncoder(httputil.LoggingErrorEncoder(logger, encodeError)),
 	}
 
 	r := bone.New()

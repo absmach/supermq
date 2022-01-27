@@ -23,7 +23,7 @@ const contentType = "application/json"
 // MakeHandler returns a HTTP handler for API endpoints.
 func MakeHandler(svc auth.Service, mux *bone.Mux, tracer opentracing.Tracer, logger logger.Logger) *bone.Mux {
 	opts := []kithttp.ServerOption{
-		kithttp.ServerErrorEncoder((httputil.LoggingErrorEncoder(logger))(encodeError)),
+		kithttp.ServerErrorEncoder(httputil.LoggingErrorEncoder(logger, encodeError)),
 	}
 
 	mux.Post("/policies", kithttp.NewServer(

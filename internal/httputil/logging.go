@@ -15,11 +15,9 @@ import (
 type Middleware func(kithttp.ErrorEncoder) kithttp.ErrorEncoder
 
 // LoggingErrorEncoder is a go-kit error encoder logging decorator.
-func LoggingErrorEncoder(logger logger.Logger) Middleware {
-	return func(encode kithttp.ErrorEncoder) kithttp.ErrorEncoder {
-		return func(ctx context.Context, err error, w http.ResponseWriter) {
-			logger.Error(err.Error())
-			encode(ctx, err, w)
-		}
+func LoggingErrorEncoder(logger logger.Logger, enc kithttp.ErrorEncoder) kithttp.ErrorEncoder {
+	return func(ctx context.Context, err error, w http.ResponseWriter) {
+		logger.Error(err.Error())
+		enc(ctx, err, w)
 	}
 }

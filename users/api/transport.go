@@ -37,7 +37,7 @@ const (
 // MakeHandler returns a HTTP handler for API endpoints.
 func MakeHandler(svc users.Service, tracer opentracing.Tracer, logger logger.Logger) http.Handler {
 	opts := []kithttp.ServerOption{
-		kithttp.ServerErrorEncoder((httputil.LoggingErrorEncoder(logger))(encodeError)),
+		kithttp.ServerErrorEncoder(httputil.LoggingErrorEncoder(logger, encodeError)),
 	}
 
 	mux := bone.New()
