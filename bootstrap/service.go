@@ -373,7 +373,7 @@ func (bs bootstrapService) identify(token string) (string, error) {
 
 	res, err := bs.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
-		return "", errors.ErrUnauthorizedAccess
+		return "", errors.ErrAuthentication
 	}
 
 	return res.GetEmail(), nil

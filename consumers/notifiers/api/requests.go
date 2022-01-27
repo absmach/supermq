@@ -21,7 +21,7 @@ type createSubReq struct {
 
 func (req createSubReq) validate() error {
 	if req.token == "" {
-		return errors.ErrUnauthorizedAccess
+		return errors.ErrAuthentication
 	}
 	if req.Topic == "" {
 		return errInvalidTopic
@@ -39,7 +39,7 @@ type subReq struct {
 
 func (req subReq) validate() error {
 	if req.token == "" {
-		return errors.ErrUnauthorizedAccess
+		return errors.ErrAuthentication
 	}
 	if req.id == "" {
 		return errNotFound
@@ -57,7 +57,7 @@ type listSubsReq struct {
 
 func (req listSubsReq) validate() error {
 	if req.token == "" {
-		return errors.ErrUnauthorizedAccess
+		return errors.ErrAuthentication
 	}
 	return nil
 }

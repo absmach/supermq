@@ -40,7 +40,7 @@ const (
 var (
 	user           = users.User{Email: validEmail, Password: validPass}
 	notFoundRes    = toJSON(errorRes{errors.ErrNotFound.Error()})
-	unauthRes      = toJSON(errorRes{errors.ErrUnauthorizedAccess.Error()})
+	unauthRes      = toJSON(errorRes{errors.ErrAuthentication.Error()})
 	malformedRes   = toJSON(errorRes{errors.ErrMalformedEntity.Error()})
 	weakPassword   = toJSON(errorRes{users.ErrPasswordFormat.Error()})
 	unsupportedRes = toJSON(errorRes{errors.ErrUnsupportedContentType.Error()})

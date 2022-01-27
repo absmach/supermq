@@ -503,7 +503,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	case errors.Error:
 		w.Header().Set("Content-Type", contentType)
 		switch {
-		case errors.Contains(errorVal, errors.ErrUnauthorizedAccess),
+		case errors.Contains(errorVal, errors.ErrAuthentication),
 			errors.Contains(errorVal, things.ErrEntityConnected):
 			w.WriteHeader(http.StatusUnauthorized)
 

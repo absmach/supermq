@@ -62,7 +62,7 @@ func TestCreateSubscription(t *testing.T) {
 			token: "",
 			sub:   notifiers.Subscription{Contact: exampleUser1, Topic: "valid.topic"},
 			id:    "",
-			err:   errors.ErrUnauthorizedAccess,
+			err:   errors.ErrAuthentication,
 		},
 	}
 
@@ -107,7 +107,7 @@ func TestViewSubscription(t *testing.T) {
 			token: "",
 			id:    id,
 			sub:   notifiers.Subscription{},
-			err:   errors.ErrUnauthorizedAccess,
+			err:   errors.ErrAuthentication,
 		},
 	}
 
@@ -186,7 +186,7 @@ func TestListSubscriptions(t *testing.T) {
 				Topic:  "topic.subtopic.13",
 			},
 			page: notifiers.Page{},
-			err:  errors.ErrUnauthorizedAccess,
+			err:  errors.ErrAuthentication,
 		},
 		{
 			desc:  "test with topic",
@@ -263,7 +263,7 @@ func TestRemoveSubscription(t *testing.T) {
 			desc:  "test unauthorized access",
 			token: "",
 			id:    id,
-			err:   errors.ErrUnauthorizedAccess,
+			err:   errors.ErrAuthentication,
 		},
 	}
 

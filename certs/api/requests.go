@@ -37,7 +37,7 @@ type listReq struct {
 
 func (req *listReq) validate() error {
 	if req.token == "" {
-		return errors.ErrUnauthorizedAccess
+		return errors.ErrAuthentication
 	}
 	if req.limit == 0 || req.limit > maxLimitSize {
 		return errors.ErrMalformedEntity
@@ -68,7 +68,7 @@ type revokeReq struct {
 
 func (req *revokeReq) validate() error {
 	if req.token == "" || req.certID == "" {
-		return errors.ErrUnauthorizedAccess
+		return errors.ErrAuthentication
 	}
 
 	return nil

@@ -39,7 +39,7 @@ func (tc thingsClient) CanAccessByKey(ctx context.Context, req *mainflux.AccessB
 	}
 
 	if key == "" {
-		return nil, errors.ErrUnauthorizedAccess
+		return nil, errors.ErrAuthentication
 	}
 
 	id, ok := tc.things[key]

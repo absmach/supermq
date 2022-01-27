@@ -82,7 +82,7 @@ var (
 	}
 
 	bsErrorRes   = toJSON(errorRes{bootstrap.ErrBootstrap.Error()})
-	unauthRes    = toJSON(errorRes{errors.ErrUnauthorizedAccess.Error()})
+	unauthRes    = toJSON(errorRes{errors.ErrAuthentication.Error()})
 	authzRes     = toJSON(errorRes{errors.ErrAuthorization.Error()})
 	malformedRes = toJSON(errorRes{errors.ErrMalformedEntity.Error()})
 	extKeyRes    = toJSON(errorRes{bootstrap.ErrExternalKey.Error()})
