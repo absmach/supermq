@@ -362,8 +362,8 @@ func buildUsersResponse(mp auth.MemberPage, groupType string) memberPageRes {
 		Members: []string{},
 	}
 
-	for _, member := range mp.Members {
-		res.Members = append(res.Members, member.ID)
+	for _, m := range mp.Members {
+		res.Members = append(res.Members, m.ID)
 	}
 
 	return res
