@@ -41,7 +41,7 @@ func main() {
 	}
 
 	// API commands
-	versionCmd := cli.NewVersionCmd()
+	healthCmd := cli.NewHealthCmd()
 	usersCmd := cli.NewUsersCmd()
 	thingsCmd := cli.NewThingsCmd()
 	groupsCmd := cli.NewGroupsCmd()
@@ -50,9 +50,10 @@ func main() {
 	provisionCmd := cli.NewProvisionCmd()
 	bootstrapCmd := cli.NewBootstrapCmd()
 	certsCmd := cli.NewCertsCmd()
+	keysCmd := cli.NewKeysCmd()
 
 	// Root Commands
-	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(healthCmd)
 	rootCmd.AddCommand(usersCmd)
 	rootCmd.AddCommand(groupsCmd)
 	rootCmd.AddCommand(thingsCmd)
@@ -61,6 +62,7 @@ func main() {
 	rootCmd.AddCommand(provisionCmd)
 	rootCmd.AddCommand(bootstrapCmd)
 	rootCmd.AddCommand(certsCmd)
+	rootCmd.AddCommand(keysCmd)
 
 	// Root Flags
 	rootCmd.PersistentFlags().StringVarP(

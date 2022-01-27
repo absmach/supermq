@@ -14,9 +14,11 @@ import (
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/auth"
 	"github.com/mainflux/mainflux/internal/httputil"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/users"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -110,7 +112,7 @@ func MakeHandler(svc users.Service, tracer opentracing.Tracer, logger logger.Log
 		opts...,
 	))
 
-	mux.GetFunc("/version", mainflux.Version("users"))
+	mux.GetFunc("/health", mainflux.Health("users"))
 	mux.Handle("/metrics", promhttp.Handler())
 
 	return mux
@@ -165,7 +167,7 @@ func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
 func decodeUpdateUser(_ context.Context, r *http.Request) (interface{}, error) {
 	var req updateUserReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, errors.Wrap(users.ErrMalformedEntity, err)
+		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
 
 	req.token = r.Header.Get("Authorization")
@@ -290,15 +292,15 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		switch {
 		case errors.Contains(errorVal, errors.ErrInvalidQueryParams):
 			w.WriteHeader(http.StatusBadRequest)
-		case errors.Contains(errorVal, users.ErrMalformedEntity):
+		case errors.Contains(errorVal, errors.ErrMalformedEntity):
 			w.WriteHeader(http.StatusBadRequest)
-		case errors.Contains(errorVal, users.ErrUnauthorizedAccess):
+		case errors.Contains(errorVal, errors.ErrUnauthorizedAccess):
 			w.WriteHeader(http.StatusForbidden)
-		case errors.Contains(errorVal, users.ErrAuthorization):
+		case errors.Contains(errorVal, errors.ErrAuthorization):
 			w.WriteHeader(http.StatusForbidden)
-		case errors.Contains(errorVal, users.ErrConflict):
+		case errors.Contains(errorVal, errors.ErrConflict):
 			w.WriteHeader(http.StatusConflict)
-		case errors.Contains(errorVal, users.ErrGroupConflict):
+		case errors.Contains(errorVal, auth.ErrGroupConflict):
 			w.WriteHeader(http.StatusConflict)
 		case errors.Contains(errorVal, errors.ErrUnsupportedContentType):
 			w.WriteHeader(http.StatusUnsupportedMediaType)
@@ -308,12 +310,14 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, io.EOF):
 			w.WriteHeader(http.StatusBadRequest)
-		case errors.Contains(errorVal, users.ErrUserNotFound):
+		case errors.Contains(errorVal, errors.ErrNotFound):
 			w.WriteHeader(http.StatusBadRequest)
 		case errors.Contains(errorVal, users.ErrRecoveryToken):
 			w.WriteHeader(http.StatusNotFound)
 		case errors.Contains(errorVal, users.ErrPasswordFormat):
 			w.WriteHeader(http.StatusBadRequest)
+		case errors.Contains(errorVal, uuid.ErrGeneratingID):
+			w.WriteHeader(http.StatusInternalServerError)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}

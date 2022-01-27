@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/things"
 	httpapi "github.com/mainflux/mainflux/things/api/things/http"
@@ -50,9 +51,9 @@ var (
 		Metadata: map[string]interface{}{"test": "data"},
 	}
 	invalidName    = strings.Repeat("m", maxNameSize+1)
-	notFoundRes    = toJSON(errorRes{things.ErrNotFound.Error()})
-	unauthzRes     = toJSON(errorRes{things.ErrAuthorization.Error()})
-	unauthRes      = toJSON(errorRes{things.ErrUnauthorizedAccess.Error()})
+	notFoundRes    = toJSON(errorRes{errors.ErrNotFound.Error()})
+	unauthzRes     = toJSON(errorRes{errors.ErrAuthorization.Error()})
+	unauthRes      = toJSON(errorRes{errors.ErrUnauthorizedAccess.Error()})
 	searchThingReq = things.PageMetadata{
 		Limit:  5,
 		Offset: 0,

@@ -69,7 +69,7 @@ func MakeHandler(svc certs.Service, logger logger.Logger) http.Handler {
 	))
 
 	r.Handle("/metrics", promhttp.Handler())
-	r.GetFunc("/version", mainflux.Version("certs"))
+	r.GetFunc("/health", mainflux.Health("certs"))
 
 	return r
 }

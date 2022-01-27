@@ -22,7 +22,7 @@ func MakeHandler(svc auth.Service, tracer opentracing.Tracer, logger logger.Logg
 	mux = keys.MakeHandler(svc, mux, tracer, logger)
 	mux = groups.MakeHandler(svc, mux, tracer, logger)
 	mux = policies.MakeHandler(svc, mux, tracer, logger)
-	mux.GetFunc("/version", mainflux.Version("auth"))
+	mux.GetFunc("/health", mainflux.Health("auth"))
 	mux.Handle("/metrics", promhttp.Handler())
 	return mux
 }

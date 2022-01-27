@@ -6,8 +6,12 @@ import (
 	"time"
 )
 
-const MaxLevel = uint64(5)
-const MinLevel = uint64(1)
+const (
+	// MaxLevel represents the maximum group hierarchy level.
+	MaxLevel = uint64(5)
+	// MinLevel represents the minimum group hierarchy level.
+	MinLevel = uint64(1)
+)
 
 var (
 	// ErrMaxLevelExceeded malformed entity.
@@ -40,12 +44,6 @@ var (
 	// ErrUnassignFromGroup indicates failure to unassign member from a group.
 	ErrUnassignFromGroup = errors.New("failed to unassign member from a group")
 
-	// ErrUnsupportedContentType indicates unacceptable or lack of Content-Type
-	ErrUnsupportedContentType = errors.New("unsupported content type")
-
-	// ErrFailedDecode indicates failed to decode request body
-	ErrFailedDecode = errors.New("failed to decode request body")
-
 	// ErrMissingParent indicates that parent can't be found
 	ErrMissingParent = errors.New("failed to retrieve parent")
 
@@ -54,18 +52,18 @@ var (
 
 	// ErrMemberAlreadyAssigned indicates that members is already assigned.
 	ErrMemberAlreadyAssigned = errors.New("member is already assigned")
-
-	// ErrSelectEntity indicates error while reading entity from database
-	ErrSelectEntity = errors.New("select entity from db error")
 )
 
+// GroupMetadata defines the Metadata type.
 type GroupMetadata map[string]interface{}
 
+// Member represents the member information.
 type Member struct {
 	ID   string
 	Type string
 }
 
+// Group represents the group information.
 type Group struct {
 	ID          string
 	OwnerID     string
@@ -85,6 +83,7 @@ type Group struct {
 	UpdatedAt time.Time
 }
 
+// PageMetadata contains page metadata that helps navigation.
 type PageMetadata struct {
 	Total    uint64
 	Offset   uint64
@@ -96,16 +95,22 @@ type PageMetadata struct {
 	Metadata GroupMetadata
 }
 
+// GroupPage contains page related metadata as well as list of groups that
+// belong to this page.
 type GroupPage struct {
 	PageMetadata
 	Groups []Group
 }
 
+// MemberPage contains page related metadata as well as list of members that
+// belong to this page.
 type MemberPage struct {
 	PageMetadata
 	Members []Member
 }
 
+// GroupService specifies an API that must be fullfiled by the domain service
+// implementation, and all of its decorators (e.g. logging & metrics).
 type GroupService interface {
 	// CreateGroup creates new  group.
 	CreateGroup(ctx context.Context, token string, g Group) (Group, error)
@@ -144,6 +149,7 @@ type GroupService interface {
 	AssignGroupAccessRights(ctx context.Context, token, thingGroupID, userGroupID string) error
 }
 
+// GroupRepository specifies a group persistence API.
 type GroupRepository interface {
 	// Save group
 	Save(ctx context.Context, g Group) (Group, error)

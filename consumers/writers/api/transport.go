@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //go:build !test
-// +build !test
 
 package api
 
@@ -14,10 +13,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// MakeHandler returns a HTTP API handler with version and metrics.
+// MakeHandler returns a HTTP API handler with health check and metrics.
 func MakeHandler(svcName string) http.Handler {
 	r := bone.New()
-	r.GetFunc("/version", mainflux.Version(svcName))
+	r.GetFunc("/health", mainflux.Health(svcName))
 	r.Handle("/metrics", promhttp.Handler())
 
 	return r

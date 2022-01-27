@@ -7,9 +7,9 @@ make cli
 
 ## Usage
 ### Service
-#### Get the version of Mainflux services
+#### Get Mainflux Things services Health Check
 ```bash
-mainflux-cli version
+mainflux-cli health
 ```
 
 ### Users management
@@ -239,4 +239,18 @@ mainflux-cli groups members <group_id> <user_auth_token>
 #### List groups that user belongs to
 ```bash
 mainflux-cli groups membership <user_id> <user_auth_token>
+```
+
+### Keys management
+#### Issue a new Key
+```bash
+mainflux-cli keys issue <duration> <user_auth_token>
+```
+#### Remove API key from database
+```bash
+mainflux-cli keys revoke <key_id> <user_auth_token>
+```
+#### Retrieve API key with given id
+```bash
+mainflux-cli keys retrieve <key_id> <user_auth_token>
 ```

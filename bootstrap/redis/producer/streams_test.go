@@ -135,7 +135,7 @@ func TestAdd(t *testing.T) {
 			desc:   "create invalid config",
 			config: invalidConfig,
 			token:  validToken,
-			err:    bootstrap.ErrMalformedEntity,
+			err:    errors.ErrMalformedEntity,
 			event:  nil,
 		},
 	}
@@ -227,7 +227,7 @@ func TestUpdate(t *testing.T) {
 			desc:   "update non-existing config",
 			config: nonExisting,
 			token:  validToken,
-			err:    bootstrap.ErrNotFound,
+			err:    errors.ErrNotFound,
 			event:  nil,
 		},
 	}
@@ -292,7 +292,7 @@ func TestUpdateConnections(t *testing.T) {
 			id:          saved.MFThing,
 			token:       validToken,
 			connections: []string{"256"},
-			err:         bootstrap.ErrMalformedEntity,
+			err:         errors.ErrMalformedEntity,
 			event:       nil,
 		},
 	}
@@ -373,7 +373,7 @@ func TestRemove(t *testing.T) {
 			desc:  "remove config with invalid credentials",
 			id:    saved.MFThing,
 			token: "",
-			err:   bootstrap.ErrUnauthorizedAccess,
+			err:   errors.ErrUnauthorizedAccess,
 			event: nil,
 		},
 	}
@@ -437,7 +437,7 @@ func TestBootstrap(t *testing.T) {
 			desc:        "bootstrap with an error",
 			externalID:  saved.ExternalID,
 			externalKey: "external",
-			err:         bootstrap.ErrNotFound,
+			err:         errors.ErrNotFound,
 			event: map[string]interface{}{
 				"external_id": saved.ExternalID,
 				"success":     "0",
@@ -509,7 +509,7 @@ func TestChangeState(t *testing.T) {
 			id:    saved.MFThing,
 			token: "",
 			state: bootstrap.Inactive,
-			err:   bootstrap.ErrUnauthorizedAccess,
+			err:   errors.ErrUnauthorizedAccess,
 			event: nil,
 		},
 	}
