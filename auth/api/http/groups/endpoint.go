@@ -358,11 +358,15 @@ func buildUsersResponse(mp auth.MemberPage) memberPageRes {
 			Limit:  mp.Limit,
 			Name:   mp.Name,
 		},
-		Members: []interface{}{},
+		Members: []memberRes{},
 	}
 
-	for _, m := range mp.Members {
-		res.Members = append(res.Members, m)
+	for _, member := range mp.Members {
+		memb := memberRes{
+			ID:   member.ID,
+			Type: member.Type,
+		}
+		res.Members = append(res.Members, memb)
 	}
 
 	return res

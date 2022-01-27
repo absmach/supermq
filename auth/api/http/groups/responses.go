@@ -16,9 +16,14 @@ var (
 	_ mainflux.Response = (*unassignRes)(nil)
 )
 
+type memberRes struct {
+	ID   string `json:"id"`
+	Type string `json:"type"`
+}
+
 type memberPageRes struct {
 	pageRes
-	Members []interface{}
+	Members []memberRes `json:"members"`
 }
 
 func (res memberPageRes) Code() int {
