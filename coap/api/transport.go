@@ -40,10 +40,10 @@ var (
 	service coap.Service
 )
 
-//MakeHTTPHandler creates handler for version endpoint.
+// MakeHandler returns a HTTP handler for API endpoints.
 func MakeHTTPHandler() http.Handler {
 	b := bone.New()
-	b.GetFunc("/version", mainflux.Version(protocol))
+	b.GetFunc("/health", mainflux.Health(protocol))
 	b.Handle("/metrics", promhttp.Handler())
 
 	return b
@@ -111,7 +111,7 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 	}
 	if err != nil {
 		switch {
-		case errors.Contains(err, coap.ErrUnauthorized):
+		case errors.Contains(err, errors.ErrAuthorization):
 			resp.Code = codes.Unauthorized
 			return
 		case errors.Contains(err, coap.ErrUnsubscribe):
@@ -161,13 +161,13 @@ func parseID(path string) string {
 }
 
 func parseKey(msg *mux.Message) (string, error) {
-	auth, err := msg.Options.GetString(message.URIQuery)
+	authKey, err := msg.Options.GetString(message.URIQuery)
 	if err != nil {
 		return "", err
 	}
-	vars := strings.Split(auth, "=")
+	vars := strings.Split(authKey, "=")
 	if len(vars) != 2 || vars[0] != authQuery {
-		return "", coap.ErrUnauthorized
+		return "", errors.ErrAuthorization
 	}
 	return vars[1], nil
 }

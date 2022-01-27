@@ -23,6 +23,7 @@ import (
 	"github.com/mainflux/mainflux/bootstrap"
 	bsapi "github.com/mainflux/mainflux/bootstrap/api"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
+	"github.com/mainflux/mainflux/pkg/errors"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/things"
 	thingsapi "github.com/mainflux/mainflux/things/api/things/http"
@@ -81,9 +82,9 @@ var (
 	}
 
 	bsErrorRes   = toJSON(errorRes{bootstrap.ErrBootstrap.Error()})
-	unauthRes    = toJSON(errorRes{bootstrap.ErrUnauthorizedAccess.Error()})
-	authzRes     = toJSON(errorRes{bootstrap.ErrAuthorization.Error()})
-	malformedRes = toJSON(errorRes{bootstrap.ErrMalformedEntity.Error()})
+	unauthRes    = toJSON(errorRes{errors.ErrUnauthorizedAccess.Error()})
+	authzRes     = toJSON(errorRes{errors.ErrAuthorization.Error()})
+	malformedRes = toJSON(errorRes{errors.ErrMalformedEntity.Error()})
 	extKeyRes    = toJSON(errorRes{bootstrap.ErrExternalKey.Error()})
 	extSecKeyRes = toJSON(errorRes{bootstrap.ErrExternalKeySecure.Error()})
 )
@@ -149,7 +150,7 @@ func dec(in []byte) ([]byte, error) {
 		return nil, err
 	}
 	if len(in) < aes.BlockSize {
-		return nil, bootstrap.ErrMalformedEntity
+		return nil, errors.ErrMalformedEntity
 	}
 	iv := in[:aes.BlockSize]
 	in = in[aes.BlockSize:]

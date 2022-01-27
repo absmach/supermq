@@ -16,22 +16,6 @@ import (
 )
 
 var (
-	// ErrNotFound indicates a non-existent entity request.
-	ErrNotFound = errors.New("non-existent entity")
-
-	// ErrMalformedEntity indicates malformed entity specification.
-	ErrMalformedEntity = errors.New("malformed entity specification")
-
-	// ErrUnauthorizedAccess indicates missing or invalid credentials provided
-	// when accessing a protected resource.
-	ErrUnauthorizedAccess = errors.New("missing or invalid credentials provided")
-
-	// ErrAuthorization indicates a failure occurred while authorizing the entity.
-	ErrAuthorization = errors.New("failed to perform authorization over the entity")
-
-	// ErrConflict indicates that entity with the same ID or external ID already exists.
-	ErrConflict = errors.New("entity already exists")
-
 	// ErrThings indicates failure to communicate with Mainflux Things service.
 	// It can be due to networking error or invalid/unauthorized request.
 	ErrThings = errors.New("failed to receive response from Things service")
@@ -263,7 +247,7 @@ func (bs bootstrapService) UpdateConnections(ctx context.Context, token, id stri
 		}
 		if err := bs.sdk.Connect(conIDs, token); err != nil {
 			if errors.Contains(err, mfsdk.ErrFailedConnect) {
-				return ErrMalformedEntity
+				return errors.ErrMalformedEntity
 			}
 			return ErrThings
 		}
@@ -389,7 +373,7 @@ func (bs bootstrapService) identify(token string) (string, error) {
 
 	res, err := bs.auth.Identify(ctx, &mainflux.Token{Value: token})
 	if err != nil {
-		return "", ErrUnauthorizedAccess
+		return "", errors.ErrUnauthorizedAccess
 	}
 
 	return res.GetEmail(), nil
@@ -410,7 +394,7 @@ func (bs bootstrapService) thing(token, id string) (mfsdk.Thing, error) {
 	thing, err := bs.sdk.Thing(thingID, token)
 	if err != nil {
 		if errors.Contains(err, mfsdk.ErrFailedFetch) {
-			return mfsdk.Thing{}, errors.Wrap(errThingNotFound, ErrNotFound)
+			return mfsdk.Thing{}, errors.Wrap(errThingNotFound, errors.ErrNotFound)
 		}
 
 		if id != "" {
@@ -441,7 +425,7 @@ func (bs bootstrapService) connectionChannels(channels, existing []string, token
 	for id := range add {
 		ch, err := bs.sdk.Channel(id, token)
 		if err != nil {
-			return nil, errors.Wrap(ErrMalformedEntity, err)
+			return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 		}
 
 		ret = append(ret, Channel{
