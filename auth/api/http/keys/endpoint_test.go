@@ -140,7 +140,7 @@ func TestIssue(t *testing.T) {
 			status: http.StatusUnsupportedMediaType,
 		},
 		{
-			desc:   "issue key unauthorized",
+			desc:   "issue key with an invalid token",
 			req:    toJSON(ak),
 			ct:     contentType,
 			token:  "wrong",
@@ -275,7 +275,7 @@ func TestRevoke(t *testing.T) {
 			status: http.StatusNoContent,
 		},
 		{
-			desc:   "revoke a key unauthorized",
+			desc:   "revoke key with invalid token",
 			id:     k.ID,
 			token:  "wrong",
 			status: http.StatusUnauthorized},

@@ -42,7 +42,6 @@ var (
 	errCheckChannels      = errors.New("failed to check if channels exists")
 	errConnectionChannels = errors.New("failed to check channels connections")
 	errUpdateCert         = errors.New("failed to update cert")
-	errDecodeExtKey       = errors.New("failed to decode external key")
 )
 
 var _ Service = (*bootstrapService)(nil)
@@ -478,14 +477,14 @@ func (bs bootstrapService) toIDList(channels []Channel) []string {
 func (bs bootstrapService) dec(in string) (string, error) {
 	ciphertext, err := hex.DecodeString(in)
 	if err != nil {
-		return "", errDecodeExtKey
+		return "", err
 	}
 	block, err := aes.NewCipher(bs.encKey)
 	if err != nil {
-		return "", errDecodeExtKey
+		return "", err
 	}
 	if len(ciphertext) < aes.BlockSize {
-		return "", errDecodeExtKey
+		return "", err
 	}
 	iv := ciphertext[:aes.BlockSize]
 	ciphertext = ciphertext[aes.BlockSize:]

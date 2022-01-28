@@ -54,7 +54,7 @@ func TestIssue(t *testing.T) {
 		id    string
 		err   error
 	}{
-		"issue key unauthorized": {
+		"issue key with an invalid token": {
 			token: "non-existing",
 			id:    "",
 			err:   errors.ErrAuthentication,
