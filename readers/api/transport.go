@@ -44,7 +44,7 @@ const (
 )
 
 var (
-	errUnauthorizedAccess  = errors.New("missing or invalid credentials provided")
+	errEmptyToken          = errors.New("missing token")
 	errCannotAuthorizeUser = errors.New("authorization failed")
 	errThingAccess         = errors.New("thing has no permission")
 	errUserAccess          = errors.New("user has no permission")
@@ -82,7 +82,7 @@ func decodeList(ctx context.Context, r *http.Request) (interface{}, error) {
 	}
 
 	if err := authorize(ctx, r, chanID); err != nil {
-		return nil, err
+		return nil, errors.ErrAuthorization
 	}
 
 	offset, err := httputil.ReadUintQuery(r, offsetKey, defOffset)
@@ -220,7 +220,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 func authorize(ctx context.Context, r *http.Request, chanID string) (err error) {
 	token := r.Header.Get("Authorization")
 	if token == "" {
-		return errors.ErrAuthentication
+		return errEmptyToken
 	}
 	switch {
 	case strings.HasPrefix(token, userToken):
@@ -229,15 +229,15 @@ func authorize(ctx context.Context, r *http.Request, chanID string) (err error) 
 		if err != nil {
 			e, ok := status.FromError(err)
 			if ok && e.Code() == codes.PermissionDenied {
-				return errUnauthorizedAccess
+				return errCannotAuthorizeUser
 			}
-			return errors.Wrap(errUnauthorizedAccess, errCannotAuthorizeUser)
+			return errCannotAuthorizeUser
 		}
 		_, err = thingsAuth.IsChannelOwner(ctx, &mainflux.ChannelOwnerReq{Owner: user.Email, ChanID: chanID})
 		if err != nil {
 			e, ok := status.FromError(err)
 			if ok && e.Code() == codes.PermissionDenied {
-				return errors.Wrap(errUnauthorizedAccess, errUserAccess)
+				return errors.Wrap(errCannotAuthorizeUser, err)
 			}
 			return err
 		}
@@ -245,7 +245,7 @@ func authorize(ctx context.Context, r *http.Request, chanID string) (err error) 
 	default:
 		token = strings.TrimPrefix(token, thingToken)
 		if _, err := thingsAuth.CanAccessByKey(ctx, &mainflux.AccessByKeyReq{Token: token, ChanID: chanID}); err != nil {
-			return errors.Wrap(errUnauthorizedAccess, errThingAccess)
+			return errors.Wrap(errThingAccess, err)
 		}
 		return nil
 	}

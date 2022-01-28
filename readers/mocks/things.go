@@ -51,7 +51,7 @@ func (svc thingsServiceMock) IsChannelOwner(ctx context.Context, in *mainflux.Ch
 			return nil, nil
 		}
 	}
-	return nil, users.ErrUnauthorizedAccess
+	return nil, errors.ErrUnauthorizedAccess
 }
 
 func (svc thingsServiceMock) Identify(context.Context, *mainflux.Token, ...grpc.CallOption) (*mainflux.ThingID, error) {
