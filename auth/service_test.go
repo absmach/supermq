@@ -156,7 +156,7 @@ func TestRevoke(t *testing.T) {
 			err:   nil,
 		},
 		{
-			desc:  "revoke empty login key",
+			desc:  "revoke with empty login key",
 			id:    newKey.ID,
 			token: "",
 			err:   errors.ErrAuthentication,

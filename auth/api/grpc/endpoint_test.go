@@ -230,7 +230,7 @@ func TestAuthorize(t *testing.T) {
 			relation: "unauthorizedRelation",
 			ar:       mainflux.AuthorizeRes{Authorized: false},
 			err:      nil,
-			code:     codes.Unauthenticated,
+			code:     codes.PermissionDenied,
 		},
 		{
 			desc:     "authorize user with unauthorized object",
@@ -240,7 +240,7 @@ func TestAuthorize(t *testing.T) {
 			relation: memberRelation,
 			ar:       mainflux.AuthorizeRes{Authorized: false},
 			err:      nil,
-			code:     codes.Unauthenticated,
+			code:     codes.PermissionDenied,
 		},
 		{
 			desc:     "authorize user with unauthorized subject",
@@ -250,7 +250,7 @@ func TestAuthorize(t *testing.T) {
 			relation: memberRelation,
 			ar:       mainflux.AuthorizeRes{Authorized: false},
 			err:      nil,
-			code:     codes.Unauthenticated,
+			code:     codes.PermissionDenied,
 		},
 		{
 			desc:     "authorize user with invalid ACL",
