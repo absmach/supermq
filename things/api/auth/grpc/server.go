@@ -126,6 +126,8 @@ func encodeError(err error) error {
 		return status.Error(codes.InvalidArgument, "received invalid can access request")
 	case errors.ErrAuthentication:
 		return status.Error(codes.Unauthenticated, "missing or invalid credentials provided")
+	case errors.ErrAuthorization:
+		return status.Error(codes.PermissionDenied, "missing or invalid credentials provided")
 	case things.ErrEntityConnected:
 		return status.Error(codes.PermissionDenied, "entities are not connected")
 	case errors.ErrNotFound:
