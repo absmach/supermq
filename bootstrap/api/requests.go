@@ -137,7 +137,7 @@ type bootstrapReq struct {
 
 func (req bootstrapReq) validate() error {
 	if req.key == "" {
-		return errors.ErrAuthorization
+		return errors.ErrAuthentication
 	}
 
 	if req.id == "" {

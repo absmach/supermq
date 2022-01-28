@@ -5,7 +5,7 @@ package errors
 
 var (
 	// ErrAuthentication indicates failure occurred while authenticating the entity.
-	ErrAuthentication = New("failed to perform authorization over the entit")
+	ErrAuthentication = New("failed to perform authentication over the entity")
 
 	// ErrAuthorization indicates failure occurred while authorizing the entity.
 	ErrAuthorization = New("failed to perform authorization over the entity")

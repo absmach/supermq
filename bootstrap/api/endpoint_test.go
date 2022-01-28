@@ -82,7 +82,7 @@ var (
 	}
 
 	bsErrorRes   = toJSON(errorRes{bootstrap.ErrBootstrap.Error()})
-	unauthRes    = toJSON(errorRes{errors.ErrAuthentication.Error()})
+	authnRes     = toJSON(errorRes{errors.ErrAuthentication.Error()})
 	authzRes     = toJSON(errorRes{errors.ErrAuthorization.Error()})
 	malformedRes = toJSON(errorRes{errors.ErrMalformedEntity.Error()})
 	extKeyRes    = toJSON(errorRes{bootstrap.ErrExternalKey.Error()})
@@ -1111,8 +1111,8 @@ func TestBootstrap(t *testing.T) {
 			desc:        "bootstrap a Thing with an empty key",
 			externalID:  c.ExternalID,
 			externalKey: "",
-			status:      http.StatusForbidden,
-			res:         authzRes,
+			status:      http.StatusUnauthorized,
+			res:         authnRes,
 			secure:      false,
 		},
 		{

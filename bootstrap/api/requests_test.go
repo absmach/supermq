@@ -233,7 +233,7 @@ func TestBootstrapReqValidation(t *testing.T) {
 			desc:      "empty external key",
 			externKey: "",
 			externID:  "id",
-			err:       errors.ErrAuthorization,
+			err:       errors.ErrAuthentication,
 		},
 		{
 			desc:      "empty external id",
