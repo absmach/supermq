@@ -181,7 +181,7 @@ paths:
           $ref: "#/components/responses/BootstrapConfigRes"
         '400':
           description: Failed due to malformed JSON.
-        '403':
+        '401':
           description: Missing or invalid external key provided.
         '404':
           description: Failed to retrieve corresponding config.
