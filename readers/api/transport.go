@@ -48,7 +48,6 @@ var (
 	errCannotAuthorizeUser = errors.New("authorization failed")
 	errThingAccess         = errors.New("thing has no permission")
 	errUserAccess          = errors.New("user has no permission")
-	errWrongToken          = errors.New("incorrect or missing Authorization header")
 	thingsAuth             mainflux.ThingsServiceClient
 	usersAuth              mainflux.AuthServiceClient
 )
