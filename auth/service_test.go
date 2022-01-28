@@ -209,7 +209,7 @@ func TestRetrieve(t *testing.T) {
 			err:   errors.ErrNotFound,
 		},
 		{
-			desc:  "retrieve unauthorized",
+			desc:  "retrieve with wrong login key",
 			id:    apiKey.ID,
 			token: "wrong",
 			err:   errors.ErrAuthentication,
