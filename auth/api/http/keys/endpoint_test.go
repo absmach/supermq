@@ -223,7 +223,7 @@ func TestRetrieve(t *testing.T) {
 			status: http.StatusNotFound,
 		},
 		{
-			desc:   "retrieve a key unauthorized",
+			desc:   "retrieve a key with an invalid token",
 			id:     k.ID,
 			token:  "wrong",
 			status: http.StatusUnauthorized,

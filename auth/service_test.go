@@ -83,7 +83,7 @@ func TestIssue(t *testing.T) {
 			err:   nil,
 		},
 		{
-			desc: "issue API key unauthorized",
+			desc: "issue API key with an invalid token",
 			key: auth.Key{
 				Type:     auth.APIKey,
 				IssuedAt: time.Now(),
