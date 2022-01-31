@@ -20,6 +20,7 @@ const (
 )
 
 var (
+	ErrUnauthorized             = errors.New("unauthorized access")
 	ErrFailedToCreateToken      = errors.New("failed to create access token")
 	ErrEmptyThingsList          = errors.New("things list in configuration empty")
 	ErrEmptyChannelsList        = errors.New("channels list in configuration is empty")
@@ -89,7 +90,7 @@ func New(cfg Config, sdk SDK.SDK, logger logger.Logger) Service {
 // Mapping retrieves current configuration
 func (ps *provisionService) Mapping(token string) (map[string]interface{}, error) {
 	if _, err := ps.sdk.User(token); err != nil {
-		return map[string]interface{}{}, errors.Wrap(errors.ErrAuthorization, err)
+		return map[string]interface{}{}, errors.Wrap(ErrUnauthorized, err)
 	}
 	return ps.conf.Bootstrap.Content, nil
 }
@@ -249,7 +250,7 @@ func (ps *provisionService) Cert(token, thingID, ttl string, keyBits int) (strin
 
 	th, err := ps.sdk.Thing(thingID, token)
 	if err != nil {
-		return "", "", errors.Wrap(SDK.ErrUnauthorized, err)
+		return "", "", errors.Wrap(ErrUnauthorized, err)
 	}
 	cert, err := ps.sdk.IssueCert(th.ID, ps.conf.Cert.KeyBits, ps.conf.Cert.KeyType, ps.conf.Cert.TTL, token)
 	return cert.ClientCert, cert.ClientKey, err
