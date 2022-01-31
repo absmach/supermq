@@ -22,8 +22,6 @@ paths:
           description: Failed due to malformed JSON.
         '401':
           description: Missing or invalid access token provided.
-        '403':
-          description: Unauthorized access token provided.
         '409':
           description: Failed due to using an existing email address.
         '415':
