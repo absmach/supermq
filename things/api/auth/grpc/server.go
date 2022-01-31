@@ -127,7 +127,7 @@ func encodeError(err error) error {
 	case errors.ErrAuthentication:
 		return status.Error(codes.Unauthenticated, "missing or invalid credentials provided")
 	case errors.ErrAuthorization:
-		return status.Error(codes.PermissionDenied, "Unauthorized access token provided")
+		return status.Error(codes.PermissionDenied, "unauthorized access token provided")
 	case things.ErrEntityConnected:
 		return status.Error(codes.PermissionDenied, "entities are not connected")
 	case errors.ErrNotFound:
