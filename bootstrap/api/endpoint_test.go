@@ -227,7 +227,7 @@ func TestAdd(t *testing.T) {
 		location    string
 	}{
 		{
-			desc:        "add a config unauthorized",
+			desc:        "add a config with invalid token",
 			req:         data,
 			auth:        invalidToken,
 			contentType: contentType,
@@ -370,7 +370,7 @@ func TestView(t *testing.T) {
 		res    config
 	}{
 		{
-			desc:   "view a config unauthorized",
+			desc:   "view a config with invalid token",
 			auth:   invalidToken,
 			id:     saved.MFThing,
 			status: http.StatusUnauthorized,
@@ -446,7 +446,7 @@ func TestUpdate(t *testing.T) {
 		status      int
 	}{
 		{
-			desc:        "update unauthorized",
+			desc:        "update with invalid token",
 			req:         data,
 			id:          saved.MFThing,
 			auth:        invalidToken,
@@ -540,7 +540,7 @@ func TestUpdateCert(t *testing.T) {
 		status      int
 	}{
 		{
-			desc:        "update unauthorized",
+			desc:        "update with invalid token",
 			req:         data,
 			id:          saved.MFThing,
 			auth:        invalidToken,
@@ -640,7 +640,7 @@ func TestUpdateConnections(t *testing.T) {
 		status      int
 	}{
 		{
-			desc:        "update connections unauthorized",
+			desc:        "update connections with invalid token",
 			req:         data,
 			id:          saved.MFThing,
 			auth:        invalidToken,
@@ -784,7 +784,7 @@ func TestList(t *testing.T) {
 		res    configPage
 	}{
 		{
-			desc:   "view list unauthorized",
+			desc:   "view list with invalid token",
 			auth:   invalidToken,
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d", path, 0, 10),
 			status: http.StatusUnauthorized,
@@ -992,7 +992,7 @@ func TestRemove(t *testing.T) {
 		status int
 	}{
 		{
-			desc:   "remove unauthorized",
+			desc:   "remove with invalid token",
 			id:     saved.MFThing,
 			auth:   invalidToken,
 			status: http.StatusUnauthorized,
@@ -1187,7 +1187,7 @@ func TestChangeState(t *testing.T) {
 		status      int
 	}{
 		{
-			desc:        "change state unauthorized",
+			desc:        "change state with invalid token",
 			id:          saved.MFThing,
 			auth:        invalidToken,
 			state:       active,

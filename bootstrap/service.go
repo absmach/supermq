@@ -17,7 +17,7 @@ import (
 
 var (
 	// ErrThings indicates failure to communicate with Mainflux Things service.
-	// It can be due to networking error or invalid/unauthorized request.
+	// It can be due to networking error or invalid/unauthenticated request.
 	ErrThings = errors.New("failed to receive response from Things service")
 
 	// ErrExternalKey indicates a non-existent bootstrap configuration for given external key

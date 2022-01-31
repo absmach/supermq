@@ -478,7 +478,7 @@ func TestViewGroup(t *testing.T) {
 			err:     nil,
 		},
 		{
-			desc:    "view group with unauthorized token",
+			desc:    "view group with invalid token",
 			token:   "wrongtoken",
 			groupID: group.ID,
 			err:     errors.ErrAuthentication,

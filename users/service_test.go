@@ -158,13 +158,13 @@ func TestViewUser(t *testing.T) {
 			userID: id,
 			err:    nil,
 		},
-		"view user with unauthorized token": {
+		"view user with empty token": {
 			user:   users.User{},
 			token:  "",
 			userID: id,
 			err:    errors.ErrAuthentication,
 		},
-		"view user with authorized token and invalid user id": {
+		"view user with valid token and invalid user id": {
 			user:   users.User{},
 			token:  token,
 			userID: "",
@@ -246,7 +246,7 @@ func TestListUsers(t *testing.T) {
 			size:  0,
 			err:   nil,
 		},
-		"list user with unauthorized token": {
+		"list user with emtpy token": {
 			token: "",
 			size:  0,
 			err:   errors.ErrAuthentication,

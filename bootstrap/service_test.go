@@ -437,7 +437,7 @@ func TestList(t *testing.T) {
 			err:    nil,
 		},
 		{
-			desc:   "list configs unauthorized",
+			desc:   "list configs with invalid token",
 			config: bootstrap.ConfigsPage{},
 			filter: bootstrap.Filter{},
 			token:  invalidToken,
