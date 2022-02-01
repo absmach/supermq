@@ -14,10 +14,14 @@ type apiReq interface {
 
 type listMessagesReq struct {
 	chanID   string
+	token    string
 	pageMeta readers.PageMetadata
 }
 
 func (req listMessagesReq) validate() error {
+	if req.token == "" {
+		return errors.ErrAuthorization
+	}
 	if req.pageMeta.Limit < 1 || req.pageMeta.Offset < 0 {
 		return errors.ErrInvalidQueryParams
 	}

@@ -63,7 +63,7 @@ func MakeHandler(svc readers.MessageRepository, tc mainflux.ThingsServiceClient,
 
 	mux := bone.New()
 	mux.Get("/channels/:chanID/messages", kithttp.NewServer(
-		listMessagesEndpoint(svc),
+		listMessagesEndpoint(svc, tc, ac),
 		decodeList,
 		encodeResponse,
 		opts...,
@@ -76,15 +76,6 @@ func MakeHandler(svc readers.MessageRepository, tc mainflux.ThingsServiceClient,
 }
 
 func decodeList(ctx context.Context, r *http.Request) (interface{}, error) {
-	chanID := bone.GetValue(r, "chanID")
-	if chanID == "" {
-		return nil, errors.ErrInvalidQueryParams
-	}
-
-	if err := authorize(ctx, r, chanID); err != nil {
-		return nil, errors.ErrAuthorization
-	}
-
 	offset, err := httputil.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
 		return nil, err
@@ -151,7 +142,8 @@ func decodeList(ctx context.Context, r *http.Request) (interface{}, error) {
 	}
 
 	req := listMessagesReq{
-		chanID: chanID,
+		chanID: bone.GetValue(r, "chanID"),
+		token:  r.Header.Get("Authorization"),
 		pageMeta: readers.PageMetadata{
 			Offset:      offset,
 			Limit:       limit,
@@ -217,14 +209,11 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	}
 }
 
-func authorize(ctx context.Context, r *http.Request, chanID string) (err error) {
-	token := r.Header.Get("Authorization")
-	if token == "" {
-		return errEmptyToken
-	}
+func authorize(ctx context.Context, req listMessagesReq, tc mainflux.ThingsServiceClient, ac mainflux.AuthServiceClient) (err error) {
+
 	switch {
-	case strings.HasPrefix(token, userToken):
-		token = strings.TrimPrefix(token, userToken)
+	case strings.HasPrefix(req.token, userToken):
+		token := strings.TrimPrefix(req.token, userToken)
 		user, err := usersAuth.Identify(ctx, &mainflux.Token{Value: token})
 		if err != nil {
 			e, ok := status.FromError(err)
@@ -233,7 +222,7 @@ func authorize(ctx context.Context, r *http.Request, chanID string) (err error) 
 			}
 			return errCannotAuthorizeUser
 		}
-		_, err = thingsAuth.IsChannelOwner(ctx, &mainflux.ChannelOwnerReq{Owner: user.Email, ChanID: chanID})
+		_, err = thingsAuth.IsChannelOwner(ctx, &mainflux.ChannelOwnerReq{Owner: user.Email, ChanID: req.chanID})
 		if err != nil {
 			e, ok := status.FromError(err)
 			if ok && e.Code() == codes.PermissionDenied {
@@ -243,8 +232,8 @@ func authorize(ctx context.Context, r *http.Request, chanID string) (err error) 
 		}
 		return nil
 	default:
-		token = strings.TrimPrefix(token, thingToken)
-		if _, err := thingsAuth.CanAccessByKey(ctx, &mainflux.AccessByKeyReq{Token: token, ChanID: chanID}); err != nil {
+		token := strings.TrimPrefix(req.token, thingToken)
+		if _, err := thingsAuth.CanAccessByKey(ctx, &mainflux.AccessByKeyReq{Token: token, ChanID: req.chanID}); err != nil {
 			return errors.Wrap(errThingAccess, err)
 		}
 		return nil
