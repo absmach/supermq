@@ -24,12 +24,12 @@ const csvExt = ".csv"
 
 var cmdProvision = []cobra.Command{
 	{
-		Use:   "things",
-		Short: "things <things_file> <user_token>",
+		Use:   "things {things_file} {user_token}",
+		Short: "Provision things",
 		Long:  `Bulk create things`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
-				logUsage(cmd.Short)
+				logUsage(cmd.Use)
 				return
 			}
 
@@ -54,12 +54,12 @@ var cmdProvision = []cobra.Command{
 		},
 	},
 	{
-		Use:   "channels",
-		Short: "channels <channels_file> <user_token>",
+		Use:   "channels {channels_file} {user_token}",
+		Short: "Provision channels",
 		Long:  `Bulk create channels`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
-				logUsage(cmd.Short)
+				logUsage(cmd.Use)
 				return
 			}
 
@@ -79,12 +79,12 @@ var cmdProvision = []cobra.Command{
 		},
 	},
 	{
-		Use:   "connect",
-		Short: "connect <connections_file> <user_token>",
+		Use:   "connect {connections_file} {user_token}",
+		Short: "Provision connections",
 		Long:  `Bulk connect things to channels`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
-				logUsage(cmd.Short)
+				logUsage(cmd.Use)
 				return
 			}
 
@@ -114,7 +114,7 @@ var cmdProvision = []cobra.Command{
 			channels := []mfxsdk.Channel{}
 
 			if len(args) != 0 {
-				logUsage(cmd.Short)
+				logUsage(cmd.Use)
 				return
 			}
 
