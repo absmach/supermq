@@ -35,7 +35,7 @@ func (svc thingsServiceMock) CanAccessByKey(ctx context.Context, in *mainflux.Ac
 	}
 
 	if token == "token" {
-		return nil, errUnauthorized
+		return nil, errors.ErrAuthorization
 	}
 
 	return &mainflux.ThingID{Value: token}, nil
@@ -51,7 +51,7 @@ func (svc thingsServiceMock) IsChannelOwner(ctx context.Context, in *mainflux.Ch
 			return nil, nil
 		}
 	}
-	return nil, errors.ErrUnauthorizedAccess
+	return nil, errors.ErrAuthorization
 }
 
 func (svc thingsServiceMock) Identify(context.Context, *mainflux.Token, ...grpc.CallOption) (*mainflux.ThingID, error) {

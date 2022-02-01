@@ -210,7 +210,6 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 }
 
 func authorize(ctx context.Context, req listMessagesReq, tc mainflux.ThingsServiceClient, ac mainflux.AuthServiceClient) (err error) {
-
 	switch {
 	case strings.HasPrefix(req.token, userToken):
 		token := strings.TrimPrefix(req.token, userToken)

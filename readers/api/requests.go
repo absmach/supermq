@@ -19,8 +19,8 @@ type listMessagesReq struct {
 }
 
 func (req listMessagesReq) validate() error {
-	if req.token == "" {
-		return errors.ErrAuthorization
+	if req.token == "" || req.chanID == "" {
+		return errors.ErrAuthentication
 	}
 	if req.pageMeta.Limit < 1 || req.pageMeta.Offset < 0 {
 		return errors.ErrInvalidQueryParams
