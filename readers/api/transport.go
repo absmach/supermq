@@ -213,16 +213,15 @@ func authorize(ctx context.Context, req listMessagesReq, tc mainflux.ThingsServi
 	switch {
 	case strings.HasPrefix(req.token, userToken):
 		token := strings.TrimPrefix(req.token, userToken)
-		user, err := usersAuth.Identify(ctx, &mainflux.Token{Value: token})
-		if err != nil {
+		var user *mainflux.UserIdentity
+		if user, err = usersAuth.Identify(ctx, &mainflux.Token{Value: token}); err != nil {
 			e, ok := status.FromError(err)
 			if ok && e.Code() == codes.PermissionDenied {
 				return errCannotAuthorizeUser
 			}
 			return errCannotAuthorizeUser
 		}
-		_, err = thingsAuth.IsChannelOwner(ctx, &mainflux.ChannelOwnerReq{Owner: user.Email, ChanID: req.chanID})
-		if err != nil {
+		if _, err = thingsAuth.IsChannelOwner(ctx, &mainflux.ChannelOwnerReq{Owner: user.Email, ChanID: req.chanID}); err != nil {
 			e, ok := status.FromError(err)
 			if ok && e.Code() == codes.PermissionDenied {
 				return errors.Wrap(errCannotAuthorizeUser, err)
