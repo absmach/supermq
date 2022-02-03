@@ -194,6 +194,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
 	case errors.Contains(err, nil):
 	case errors.Contains(err, errors.ErrInvalidQueryParams):
+		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, errors.ErrMalformedEntity):
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, errors.ErrAuthentication):
@@ -218,9 +219,9 @@ func authorize(ctx context.Context, req listMessagesReq, tc mainflux.ThingsServi
 		if user, err = usersAuth.Identify(ctx, &mainflux.Token{Value: token}); err != nil {
 			e, ok := status.FromError(err)
 			if ok && e.Code() == codes.PermissionDenied {
-				return errCannotAuthorizeUser
+				return errors.Wrap(errCannotAuthorizeUser, err)
 			}
-			return errCannotAuthorizeUser
+			return err
 		}
 		if _, err = thingsAuth.IsChannelOwner(ctx, &mainflux.ChannelOwnerReq{Owner: user.Email, ChanID: req.chanID}); err != nil {
 			e, ok := status.FromError(err)
