@@ -12,10 +12,9 @@ import (
 
 var cmdGroups = []cobra.Command{
 	{
-		Use:   "create {JSON_group} {user_auth_token}",
+		Use:   "create <JSON_group> <user_auth_token>",
 		Short: "Create group",
-		Long: `Creates new group
-		JSON_group:
+		Long: `Creates new group:
 		{
 			"Name":<group_name>,
 			"Description":<description>,
@@ -44,7 +43,7 @@ var cmdGroups = []cobra.Command{
 		},
 	},
 	{
-		Use:   "get [all | children {group_id} | parents {group_id} | {group_id}] {user_auth_token}",
+		Use:   "get [all | children <group_id> | parents <group_id> | <group_id>] <user_auth_token>",
 		Short: "Get group",
 		Long: `Get all users groups, group children or group by id.
 		all - lists all groups
@@ -107,7 +106,7 @@ var cmdGroups = []cobra.Command{
 		},
 	},
 	{
-		Use:   "assign {member_ids} {member_type} {group_id} {user_auth_token}",
+		Use:   "assign <member_ids> <member_type> <group_id> <user_auth_token>",
 		Short: "Assign member",
 		Long: `Assign members to a group.
 				member_ids - '["member_id",...]`,
@@ -129,7 +128,7 @@ var cmdGroups = []cobra.Command{
 		},
 	},
 	{
-		Use:   "unassign {member_ids} {group_id} {user_auth_token}",
+		Use:   "unassign <member_ids> <group_id> <user_auth_token>",
 		Short: "Unassign member",
 		Long: `Unassign members from a group
 				member_ids - '["member_id",...]`,
@@ -151,7 +150,7 @@ var cmdGroups = []cobra.Command{
 		},
 	},
 	{
-		Use:   "delete {group_id} {user_auth_token}",
+		Use:   "delete <group_id> <user_auth_token>",
 		Short: "Delete group",
 		Long:  `Delete group.`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -167,7 +166,7 @@ var cmdGroups = []cobra.Command{
 		},
 	},
 	{
-		Use:   "members {group_id} {user_auth_token}",
+		Use:   "members <group_id> <user_auth_token>",
 		Short: "Members list",
 		Long:  `Lists all members of a group.`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -184,7 +183,7 @@ var cmdGroups = []cobra.Command{
 		},
 	},
 	{
-		Use:   "membership {member_id} {user_auth_token}",
+		Use:   "membership <member_id> <user_auth_token>",
 		Short: "Membership list",
 		Long:  `List member group's membership`,
 		Run: func(cmd *cobra.Command, args []string) {

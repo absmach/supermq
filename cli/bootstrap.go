@@ -12,7 +12,7 @@ import (
 
 var cmdBootstrap = []cobra.Command{
 	{
-		Use:   "add {JSON_config} {user_auth_token}",
+		Use:   "add <JSON_config> <user_auth_token>",
 		Short: "Add config",
 		Long:  `Adds new Thing Bootstrap Config to the user identified by the provided key`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -37,7 +37,7 @@ var cmdBootstrap = []cobra.Command{
 		},
 	},
 	{
-		Use:   "view {thing_id} {user_auth_token}",
+		Use:   "view <thing_id> <user_auth_token>",
 		Short: "View config",
 		Long:  `Returns Thing Config with given ID belonging to the user identified by the given key`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -56,7 +56,7 @@ var cmdBootstrap = []cobra.Command{
 		},
 	},
 	{
-		Use:   "update {JSON_config} {user_auth_token}",
+		Use:   "update <JSON_config> <user_auth_token>",
 		Short: "Update config",
 		Long:  `Updates editable fields of the provided Config`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -80,7 +80,7 @@ var cmdBootstrap = []cobra.Command{
 		},
 	},
 	{
-		Use:   "remove {thing_id} {user_auth_token}",
+		Use:   "remove <thing_id> <user_auth_token>",
 		Short: "Remove config",
 		Long:  `Removes Config with specified key that belongs to the user identified by the given key`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -98,7 +98,7 @@ var cmdBootstrap = []cobra.Command{
 		},
 	},
 	{
-		Use:   "bootstrap {external_id} {external_key}",
+		Use:   "bootstrap <external_id> <external_key>",
 		Short: "Bootstrap config",
 		Long:  `Returns Config to the Thing with provided external ID using external key`,
 		Run: func(cmd *cobra.Command, args []string) {

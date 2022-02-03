@@ -12,7 +12,7 @@ import (
 
 var cmdChannels = []cobra.Command{
 	{
-		Use:   "create {JSON_channel} {user_auth_token}",
+		Use:   "create <JSON_channel> <user_auth_token>",
 		Short: "Create channel",
 		Long:  `Creates new channel and generates it's UUID`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -37,7 +37,7 @@ var cmdChannels = []cobra.Command{
 		},
 	},
 	{
-		Use:   "get [all | {channel_id}] {user_auth_token}",
+		Use:   "get [all | <channel_id>] <user_auth_token>",
 		Short: "Get channel",
 		Long:  `Gets list of all channels or gets channel by id`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -67,7 +67,7 @@ var cmdChannels = []cobra.Command{
 		},
 	},
 	{
-		Use:   "updatev {JSON_string} {user_auth_token}",
+		Use:   "updatev <JSON_string> <user_auth_token>",
 		Short: "Update channel",
 		Long:  `Updates channel record`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -91,7 +91,7 @@ var cmdChannels = []cobra.Command{
 		},
 	},
 	{
-		Use:   "delete {channel_id} {user_auth_token}",
+		Use:   "delete <channel_id> <user_auth_token>",
 		Short: "Delete channel",
 		Long:  `Delete channel by ID`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -109,7 +109,7 @@ var cmdChannels = []cobra.Command{
 		},
 	},
 	{
-		Use:   "connections {channel_id} {user_auth_token}",
+		Use:   "connections <channel_id> <user_auth_token>",
 		Short: "Connections list",
 		Long:  `List of Things connected to a Channel`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -128,7 +128,7 @@ var cmdChannels = []cobra.Command{
 		},
 	},
 	{
-		Use:   "not-connected {channel_id} {user_auth_token}",
+		Use:   "not-connected <channel_id> <user_auth_token>",
 		Short: "Not-connected list",
 		Long:  `List of Things not connected to a Channel`,
 		Run: func(cmd *cobra.Command, args []string) {

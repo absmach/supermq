@@ -12,7 +12,7 @@ import (
 
 var cmdUsers = []cobra.Command{
 	{
-		Use:   "create {username} {password} {user_auth_token}",
+		Use:   "create <username> <password> <user_auth_token>",
 		Short: "Create user",
 		Long:  `Creates new user`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -38,7 +38,7 @@ var cmdUsers = []cobra.Command{
 		},
 	},
 	{
-		Use:   "get {user_auth_token}",
+		Use:   "get <user_auth_token>",
 		Short: "Get user",
 		Long:  `Returns user object`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -57,7 +57,7 @@ var cmdUsers = []cobra.Command{
 		},
 	},
 	{
-		Use:   "token {username} {password}",
+		Use:   "token <username> <password>",
 		Short: "Get token",
 		Long:  `Generate new token`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -81,7 +81,7 @@ var cmdUsers = []cobra.Command{
 		},
 	},
 	{
-		Use:   "update {JSON_string} {user_auth_token}",
+		Use:   "update <JSON_string> <user_auth_token>",
 		Short: "Update user",
 		Long:  `Update user metadata`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -105,7 +105,7 @@ var cmdUsers = []cobra.Command{
 		},
 	},
 	{
-		Use:   "password {old_password} {password} {user_auth_token}",
+		Use:   "password <old_password> <password> <user_auth_token>",
 		Short: "Update password",
 		Long:  `Update user password`,
 		Run: func(cmd *cobra.Command, args []string) {
