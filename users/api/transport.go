@@ -300,13 +300,16 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	case errors.Contains(err, errors.ErrNotFound):
 		w.WriteHeader(http.StatusNotFound)
+
 	case errors.Contains(err, uuid.ErrGeneratingID):
 		w.WriteHeader(http.StatusInternalServerError)
+
 	case errors.Contains(err, errors.ErrCreateEntity),
 		errors.Contains(err, errors.ErrUpdateEntity),
 		errors.Contains(err, errors.ErrViewEntity),
 		errors.Contains(err, errors.ErrRemoveEntity):
 		w.WriteHeader(http.StatusInternalServerError)
+
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
 	}

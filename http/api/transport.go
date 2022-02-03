@@ -149,6 +149,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	case errors.Contains(err, errMalformedSubtopic),
 		errors.Contains(err, errors.ErrMalformedEntity):
 		w.WriteHeader(http.StatusBadRequest)
+
 	default:
 		switch e, ok := status.FromError(err); {
 		case ok:
