@@ -20,18 +20,6 @@ var (
 	// ErrBadGroupName malformed entity.
 	ErrBadGroupName = errors.New("incorrect group name")
 
-	// ErrFetchGroups indicates failure to fetch groups.
-	ErrFetchGroups = errors.New("failed to fetch groups")
-
-	// ErrUpdateGroup indicates failure to update group.
-	ErrUpdateGroup = errors.New("failed to update group")
-
-	// ErrDeleteGroup indicates failure to delete group.
-	ErrDeleteGroup = errors.New("failed to delete group")
-
-	// ErrGroupNotFound indicates failure to find group.
-	ErrGroupNotFound = errors.New("failed to find group")
-
 	// ErrAssignToGroup indicates failure to assign member to a group.
 	ErrAssignToGroup = errors.New("failed to assign member to a group")
 

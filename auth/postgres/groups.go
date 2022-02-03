@@ -93,7 +93,7 @@ func (gr groupRepository) Update(ctx context.Context, g auth.Group) (auth.Group,
 
 	dbu, err := toDBGroup(g)
 	if err != nil {
-		return auth.Group{}, errors.Wrap(auth.ErrUpdateGroup, err)
+		return auth.Group{}, errors.Wrap(errors.ErrUpdateEntity, err)
 	}
 
 	row, err := gr.db.NamedQueryContext(ctx, q, dbu)
@@ -107,14 +107,14 @@ func (gr groupRepository) Update(ctx context.Context, g auth.Group) (auth.Group,
 				return auth.Group{}, errors.Wrap(errors.ErrConflict, err)
 			}
 		}
-		return auth.Group{}, errors.Wrap(auth.ErrUpdateGroup, errors.New(pqErr.Message))
+		return auth.Group{}, errors.Wrap(errors.ErrUpdateEntity, errors.New(pqErr.Message))
 	}
 
 	defer row.Close()
 	row.Next()
 	dbu = dbGroup{}
 	if err := row.StructScan(&dbu); err != nil {
-		return g, errors.Wrap(auth.ErrUpdateGroup, err)
+		return g, errors.Wrap(errors.ErrUpdateEntity, err)
 	}
 
 	return toGroup(dbu)
@@ -127,7 +127,7 @@ func (gr groupRepository) Delete(ctx context.Context, groupID string) error {
 	}
 	dbg, err := toDBGroup(group)
 	if err != nil {
-		return errors.Wrap(auth.ErrUpdateGroup, err)
+		return errors.Wrap(errors.ErrUpdateEntity, err)
 	}
 
 	res, err := gr.db.NamedExecContext(ctx, qd, dbg)
@@ -145,16 +145,16 @@ func (gr groupRepository) Delete(ctx context.Context, groupID string) error {
 				return errors.Wrap(errors.ErrConflict, err)
 			}
 		}
-		return errors.Wrap(auth.ErrUpdateGroup, errors.New(pqErr.Message))
+		return errors.Wrap(errors.ErrUpdateEntity, errors.New(pqErr.Message))
 	}
 
 	cnt, err := res.RowsAffected()
 	if err != nil {
-		return errors.Wrap(auth.ErrDeleteGroup, err)
+		return errors.Wrap(errors.ErrRemoveEntity, err)
 	}
 
 	if cnt != 1 {
-		return errors.Wrap(auth.ErrDeleteGroup, err)
+		return errors.Wrap(errors.ErrRemoveEntity, err)
 	}
 	return nil
 }
@@ -166,7 +166,7 @@ func (gr groupRepository) RetrieveByID(ctx context.Context, id string) (auth.Gro
 	q := `SELECT id, name, owner_id, parent_id, description, metadata, path, nlevel(path) as level, created_at, updated_at FROM groups WHERE id = $1`
 	if err := gr.db.QueryRowxContext(ctx, q, id).StructScan(&dbu); err != nil {
 		if err == sql.ErrNoRows {
-			return auth.Group{}, errors.Wrap(auth.ErrGroupNotFound, err)
+			return auth.Group{}, errors.Wrap(errors.ErrNotFound, err)
 
 		}
 		return auth.Group{}, errors.Wrap(errors.ErrViewEntity, err)
