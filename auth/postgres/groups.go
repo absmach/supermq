@@ -68,13 +68,13 @@ func (gr groupRepository) Save(ctx context.Context, g auth.Group) (auth.Group, e
 			case errInvalid, errTruncation:
 				return auth.Group{}, errors.Wrap(errors.ErrMalformedEntity, err)
 			case errFK:
-				return auth.Group{}, errors.Wrap(auth.ErrCreateGroup, err)
+				return auth.Group{}, errors.Wrap(errors.ErrCreateEntity, err)
 			case errDuplicate:
-				return auth.Group{}, errors.Wrap(auth.ErrGroupConflict, err)
+				return auth.Group{}, errors.Wrap(errors.ErrConflict, err)
 			}
 		}
 
-		return auth.Group{}, errors.Wrap(auth.ErrCreateGroup, errors.New(pqErr.Message))
+		return auth.Group{}, errors.Wrap(errors.ErrCreateEntity, errors.New(pqErr.Message))
 	}
 
 	defer row.Close()
@@ -104,7 +104,7 @@ func (gr groupRepository) Update(ctx context.Context, g auth.Group) (auth.Group,
 			case errInvalid, errTruncation:
 				return auth.Group{}, errors.Wrap(errors.ErrMalformedEntity, err)
 			case errDuplicate:
-				return auth.Group{}, errors.Wrap(auth.ErrGroupConflict, err)
+				return auth.Group{}, errors.Wrap(errors.ErrConflict, err)
 			}
 		}
 		return auth.Group{}, errors.Wrap(auth.ErrUpdateGroup, errors.New(pqErr.Message))
@@ -142,7 +142,7 @@ func (gr groupRepository) Delete(ctx context.Context, groupID string) error {
 				case groupIDFkeyy:
 					return errors.Wrap(auth.ErrGroupNotEmpty, err)
 				}
-				return errors.Wrap(auth.ErrGroupConflict, err)
+				return errors.Wrap(errors.ErrConflict, err)
 			}
 		}
 		return errors.Wrap(auth.ErrUpdateGroup, errors.New(pqErr.Message))

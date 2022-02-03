@@ -365,7 +365,7 @@ func TestCreateGroup(t *testing.T) {
 				Name:     groupName,
 				ParentID: "xxxxxxxxxx",
 			},
-			err: auth.ErrCreateGroup,
+			err: errors.ErrCreateEntity,
 		},
 	}
 

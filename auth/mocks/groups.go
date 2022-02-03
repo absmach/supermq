@@ -56,14 +56,14 @@ func (grm *groupRepositoryMock) Save(ctx context.Context, group auth.Group) (aut
 	grm.mu.Lock()
 	defer grm.mu.Unlock()
 	if _, ok := grm.groups[group.ID]; ok {
-		return auth.Group{}, auth.ErrGroupConflict
+		return auth.Group{}, errors.ErrConflict
 	}
 	path := group.ID
 
 	if group.ParentID != "" {
 		parent, ok := grm.groups[group.ParentID]
 		if !ok {
-			return auth.Group{}, auth.ErrCreateGroup
+			return auth.Group{}, errors.ErrCreateEntity
 		}
 		if _, ok := grm.children[group.ParentID]; !ok {
 			grm.children[group.ParentID] = make(map[string]auth.Group)

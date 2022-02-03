@@ -20,12 +20,6 @@ var (
 	// ErrBadGroupName malformed entity.
 	ErrBadGroupName = errors.New("incorrect group name")
 
-	// ErrGroupConflict group conflict.
-	ErrGroupConflict = errors.New("group already exists")
-
-	// ErrCreateGroup indicates failure to create group.
-	ErrCreateGroup = errors.New("failed to create group")
-
 	// ErrFetchGroups indicates failure to fetch groups.
 	ErrFetchGroups = errors.New("failed to fetch groups")
 

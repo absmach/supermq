@@ -72,7 +72,7 @@ func TestGroupSave(t *testing.T) {
 				OwnerID: usrID,
 				Name:    groupName,
 			},
-			err: auth.ErrGroupConflict,
+			err: errors.ErrConflict,
 		},
 		{
 			desc: "create group with invalid name",
@@ -121,7 +121,7 @@ func TestGroupSave(t *testing.T) {
 				OwnerID:  usrID,
 				Name:     "wrongParent",
 			},
-			err: auth.ErrCreateGroup,
+			err: errors.ErrCreateEntity,
 		},
 	}
 
