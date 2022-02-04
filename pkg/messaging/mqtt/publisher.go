@@ -8,10 +8,9 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+
 	"github.com/mainflux/mainflux/pkg/messaging"
 )
-
-var _ messaging.Publisher = (*publisher)(nil)
 
 var errPublishTimeout = errors.New("failed to publish due to timeout reached")
 
@@ -40,11 +39,9 @@ func (pub publisher) Publish(topic string, msg messaging.Message) error {
 		return token.Error()
 	}
 	ok := token.WaitTimeout(pub.timeout)
-	if ok && token.Error() != nil {
-		return token.Error()
-	}
 	if !ok {
 		return errPublishTimeout
 	}
-	return nil
+
+	return token.Error()
 }
