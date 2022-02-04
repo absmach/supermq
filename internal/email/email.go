@@ -50,7 +50,7 @@ type Agent struct {
 	auth smtp.Auth
 	addr string
 	tmpl *template.Template
-	dail *gomail.Dialer
+	dial *gomail.Dialer
 }
 
 // New creates new email agent
@@ -71,7 +71,7 @@ func New(c *Config) (*Agent, error) {
 	}
 	d := gomail.NewDialer(c.Host, port, c.Username, c.Password)
 	d.Auth = a.auth
-	a.dail = d
+	a.dial = d
 	a.addr = fmt.Sprintf("%s:%s", c.Host, c.Port)
 
 	tmpl, err := template.ParseFiles(c.Template)
@@ -112,7 +112,7 @@ func (a *Agent) Send(To []string, From, Subject, Header, Content, Footer string)
 	m.SetHeader("Subject", Subject)
 	m.SetBody("text/plain", buff.String())
 
-	if err := a.dail.DialAndSend(m); err != nil {
+	if err := a.dial.DialAndSend(m); err != nil {
 		return errors.Wrap(errSendMail, err)
 	}
 
