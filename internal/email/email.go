@@ -8,10 +8,12 @@ import (
 	"fmt"
 	"net/mail"
 	"net/smtp"
+	"strconv"
 	"text/template"
 
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
+	"gopkg.in/gomail.v2"
 )
 
 var (
@@ -50,6 +52,7 @@ type Agent struct {
 	addr string
 	log  logger.Logger
 	tmpl *template.Template
+	dail *gomail.Dialer
 }
 
 // New creates new email agent
@@ -64,6 +67,13 @@ func New(c *Config) (*Agent, error) {
 			a.auth = smtp.PlainAuth("", c.Username, c.Password, c.Host)
 		}
 	}
+	port, err := strconv.Atoi(c.Port)
+	if err != nil {
+		return a, err
+	}
+	d := gomail.NewDialer(c.Host, port, c.Username, c.Password)
+	d.Auth = a.auth
+	a.dail = d
 	a.addr = fmt.Sprintf("%s:%s", c.Host, c.Port)
 
 	tmpl, err := template.ParseFiles(c.Template)
@@ -98,7 +108,14 @@ func (a *Agent) Send(To []string, From, Subject, Header, Content, Footer string)
 		return errors.Wrap(errExecTemplate, err)
 	}
 
-	if err := smtp.SendMail(a.addr, a.auth, a.conf.FromAddress, To, email.Bytes()); err != nil {
+	m := gomail.NewMessage()
+	m.SetHeader("From", tmpl.From)
+	m.SetHeader("To", To...)
+	m.SetHeader("Subject", Subject)
+	m.SetBody("text/plain", email.String())
+
+	if err := a.dail.DialAndSend(m); err != nil {
+		fmt.Println(err)
 		return errors.Wrap(errSendMail, err)
 	}
 
