@@ -115,7 +115,6 @@ func (a *Agent) Send(To []string, From, Subject, Header, Content, Footer string)
 	m.SetBody("text/plain", email.String())
 
 	if err := a.dail.DialAndSend(m); err != nil {
-		fmt.Println(err)
 		return errors.Wrap(errSendMail, err)
 	}
 
