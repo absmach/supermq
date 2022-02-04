@@ -89,7 +89,7 @@ func (a *Agent) Send(To []string, From, Subject, Header, Content, Footer string)
 	}
 
 	buff := new(bytes.Buffer)
-	tmpl := email{
+	e := email{
 		To:      To,
 		From:    From,
 		Subject: Subject,
@@ -99,15 +99,15 @@ func (a *Agent) Send(To []string, From, Subject, Header, Content, Footer string)
 	}
 	if From == "" {
 		from := mail.Address{Name: a.conf.FromName, Address: a.conf.FromAddress}
-		tmpl.From = from.String()
+		e.From = from.String()
 	}
 
-	if err := a.tmpl.Execute(buff, tmpl); err != nil {
+	if err := a.tmpl.Execute(buff, e); err != nil {
 		return errors.Wrap(errExecTemplate, err)
 	}
 
 	m := gomail.NewMessage()
-	m.SetHeader("From", tmpl.From)
+	m.SetHeader("From", e.From)
 	m.SetHeader("To", To...)
 	m.SetHeader("Subject", Subject)
 	m.SetBody("text/plain", buff.String())
