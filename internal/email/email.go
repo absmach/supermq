@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"text/template"
 
-	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"gopkg.in/gomail.v2"
 )
@@ -24,7 +23,7 @@ var (
 	errSendMail             = errors.New("Sending e-mail failed")
 )
 
-type emailTemplate struct {
+type email struct {
 	To      []string
 	From    string
 	Subject string
@@ -50,7 +49,6 @@ type Agent struct {
 	conf *Config
 	auth smtp.Auth
 	addr string
-	log  logger.Logger
 	tmpl *template.Template
 	dail *gomail.Dialer
 }
@@ -90,8 +88,8 @@ func (a *Agent) Send(To []string, From, Subject, Header, Content, Footer string)
 		return errMissingEmailTemplate
 	}
 
-	email := new(bytes.Buffer)
-	tmpl := emailTemplate{
+	buff := new(bytes.Buffer)
+	tmpl := email{
 		To:      To,
 		From:    From,
 		Subject: Subject,
@@ -104,7 +102,7 @@ func (a *Agent) Send(To []string, From, Subject, Header, Content, Footer string)
 		tmpl.From = from.String()
 	}
 
-	if err := a.tmpl.Execute(email, tmpl); err != nil {
+	if err := a.tmpl.Execute(buff, tmpl); err != nil {
 		return errors.Wrap(errExecTemplate, err)
 	}
 
@@ -112,7 +110,7 @@ func (a *Agent) Send(To []string, From, Subject, Header, Content, Footer string)
 	m.SetHeader("From", tmpl.From)
 	m.SetHeader("To", To...)
 	m.SetHeader("Subject", Subject)
-	m.SetBody("text/plain", email.String())
+	m.SetBody("text/plain", buff.String())
 
 	if err := a.dail.DialAndSend(m); err != nil {
 		return errors.Wrap(errSendMail, err)
