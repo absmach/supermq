@@ -215,8 +215,8 @@ func authorize(ctx context.Context, req listMessagesReq, tc mainflux.ThingsServi
 	switch {
 	case strings.HasPrefix(req.token, userToken):
 		token := strings.TrimPrefix(req.token, userToken)
-		var user *mainflux.UserIdentity
-		if user, err = usersAuth.Identify(ctx, &mainflux.Token{Value: token}); err != nil {
+		user, err := usersAuth.Identify(ctx, &mainflux.Token{Value: token})
+		if err != nil {
 			e, ok := status.FromError(err)
 			if ok && e.Code() == codes.PermissionDenied {
 				return errors.Wrap(errCannotAuthorizeUser, err)
