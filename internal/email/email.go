@@ -5,9 +5,7 @@ package email
 
 import (
 	"bytes"
-	"fmt"
 	"net/mail"
-	"net/smtp"
 	"strconv"
 	"text/template"
 
@@ -38,7 +36,6 @@ type Config struct {
 	Port        string
 	Username    string
 	Password    string
-	Secret      string
 	FromAddress string
 	FromName    string
 	Template    string
@@ -47,8 +44,6 @@ type Config struct {
 // Agent for mailing
 type Agent struct {
 	conf *Config
-	auth smtp.Auth
-	addr string
 	tmpl *template.Template
 	dial *gomail.Dialer
 }
@@ -57,22 +52,12 @@ type Agent struct {
 func New(c *Config) (*Agent, error) {
 	a := &Agent{}
 	a.conf = c
-	if c.Username != "" {
-		switch {
-		case c.Secret != "":
-			a.auth = smtp.CRAMMD5Auth(c.Username, c.Secret)
-		case c.Password != "":
-			a.auth = smtp.PlainAuth("", c.Username, c.Password, c.Host)
-		}
-	}
 	port, err := strconv.Atoi(c.Port)
 	if err != nil {
 		return a, err
 	}
 	d := gomail.NewDialer(c.Host, port, c.Username, c.Password)
-	d.Auth = a.auth
 	a.dial = d
-	a.addr = fmt.Sprintf("%s:%s", c.Host, c.Port)
 
 	tmpl, err := template.ParseFiles(c.Template)
 	if err != nil {
