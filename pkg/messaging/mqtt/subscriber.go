@@ -20,6 +20,8 @@ var (
 	errUnsubscribeTimeout = errors.New("failed to unsubscribe due to timeout reached")
 )
 
+var _ messaging.Subscriber = (*subscriber)(nil)
+
 type subscriber struct {
 	client  mqtt.Client
 	timeout time.Duration

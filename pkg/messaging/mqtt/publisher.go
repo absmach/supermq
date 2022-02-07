@@ -14,6 +14,8 @@ import (
 
 var errPublishTimeout = errors.New("failed to publish due to timeout reached")
 
+var _ messaging.Publisher = (*publisher)(nil)
+
 type publisher struct {
 	client  mqtt.Client
 	timeout time.Duration
