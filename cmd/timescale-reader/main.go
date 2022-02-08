@@ -48,7 +48,7 @@ const (
 	defDBSSLKey          = ""
 	defDBSSLRootCert     = ""
 	defJaegerURL         = ""
-	defThingsAuthURL     = "localhost:8181"
+	defThingsAuthURL     = "localhost:8183"
 	defThingsAuthTimeout = "1s"
 
 	envLogLevel          = "MF_TIMESCALE_READER_LOG_LEVEL"
