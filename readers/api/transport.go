@@ -44,7 +44,6 @@ const (
 )
 
 var (
-	errEmptyToken          = errors.New("missing token")
 	errCannotAuthorizeUser = errors.New("authorization failed")
 	errThingAccess         = errors.New("thing has no permission")
 	errUserAccess          = errors.New("user has no permission")
