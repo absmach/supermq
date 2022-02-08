@@ -193,9 +193,8 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
 	case errors.Contains(err, nil):
-	case errors.Contains(err, errors.ErrInvalidQueryParams):
-		w.WriteHeader(http.StatusBadRequest)
-	case errors.Contains(err, errors.ErrMalformedEntity):
+	case errors.Contains(err, errors.ErrInvalidQueryParams),
+		errors.Contains(err, errors.ErrMalformedEntity):
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, errors.ErrAuthentication):
 		w.WriteHeader(http.StatusUnauthorized)
