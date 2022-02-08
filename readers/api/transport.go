@@ -44,11 +44,10 @@ const (
 )
 
 var (
-	errCannotAuthorizeUser = errors.New("authorization failed")
-	errThingAccess         = errors.New("thing has no permission")
-	errUserAccess          = errors.New("user has no permission")
-	thingsAuth             mainflux.ThingsServiceClient
-	usersAuth              mainflux.AuthServiceClient
+	errThingAccess = errors.New("thing has no permission")
+	errUserAccess  = errors.New("user has no permission")
+	thingsAuth     mainflux.ThingsServiceClient
+	usersAuth      mainflux.AuthServiceClient
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
@@ -217,14 +216,14 @@ func authorize(ctx context.Context, req listMessagesReq, tc mainflux.ThingsServi
 		if err != nil {
 			e, ok := status.FromError(err)
 			if ok && e.Code() == codes.PermissionDenied {
-				return errors.Wrap(errCannotAuthorizeUser, err)
+				return errors.Wrap(errUserAccess, err)
 			}
 			return err
 		}
 		if _, err = thingsAuth.IsChannelOwner(ctx, &mainflux.ChannelOwnerReq{Owner: user.Email, ChanID: req.chanID}); err != nil {
 			e, ok := status.FromError(err)
 			if ok && e.Code() == codes.PermissionDenied {
-				return errors.Wrap(errCannotAuthorizeUser, err)
+				return errors.Wrap(errUserAccess, err)
 			}
 			return err
 		}
