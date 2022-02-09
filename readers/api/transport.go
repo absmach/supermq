@@ -22,25 +22,25 @@ import (
 )
 
 const (
-	contentType    = "application/json"
-	offsetKey      = "offset"
-	limitKey       = "limit"
-	formatKey      = "format"
-	subtopicKey    = "subtopic"
-	publisherKey   = "publisher"
-	protocolKey    = "protocol"
-	nameKey        = "name"
-	valueKey       = "v"
-	stringValueKey = "vs"
-	dataValueKey   = "vd"
-	comparatorKey  = "comparator"
-	fromKey        = "from"
-	toKey          = "to"
-	defLimit       = 10
-	defOffset      = 0
-	defFormat      = "messages"
-	thingToken     = "Thing "
-	userToken      = "Bearer "
+	contentType      = "application/json"
+	offsetKey        = "offset"
+	limitKey         = "limit"
+	formatKey        = "format"
+	subtopicKey      = "subtopic"
+	publisherKey     = "publisher"
+	protocolKey      = "protocol"
+	nameKey          = "name"
+	valueKey         = "v"
+	stringValueKey   = "vs"
+	dataValueKey     = "vd"
+	comparatorKey    = "comparator"
+	fromKey          = "from"
+	toKey            = "to"
+	defLimit         = 10
+	defOffset        = 0
+	defFormat        = "messages"
+	thingTokenPrefix = "Thing "
+	userTokenPrefix  = "Bearer "
 )
 
 var (
@@ -210,8 +210,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 
 func authorize(ctx context.Context, req listMessagesReq, tc mainflux.ThingsServiceClient, ac mainflux.AuthServiceClient) (err error) {
 	switch {
-	case strings.HasPrefix(req.token, userToken):
-		token := strings.TrimPrefix(req.token, userToken)
+	case strings.HasPrefix(req.token, userTokenPrefix):
+		token := strings.TrimPrefix(req.token, userTokenPrefix)
 		user, err := usersAuth.Identify(ctx, &mainflux.Token{Value: token})
 		if err != nil {
 			e, ok := status.FromError(err)
@@ -229,7 +229,7 @@ func authorize(ctx context.Context, req listMessagesReq, tc mainflux.ThingsServi
 		}
 		return nil
 	default:
-		token := strings.TrimPrefix(req.token, thingToken)
+		token := strings.TrimPrefix(req.token, thingTokenPrefix)
 		if _, err := thingsAuth.CanAccessByKey(ctx, &mainflux.AccessByKeyReq{Token: token, ChanID: req.chanID}); err != nil {
 			return errors.Wrap(errThingAccess, err)
 		}
