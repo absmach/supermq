@@ -33,7 +33,7 @@ paths:
           $ref: "#/components/responses/MessagesPageRes"
         '400':
           description: Failed due to malformed query parameters.
-        '403':
+        '401':
           description: Missing or invalid access token provided.
         '500':
           $ref: "#/components/responses/ServiceError"
@@ -109,7 +109,10 @@ components:
   parameters:
     Authorization:
       name: Authorization
-      description: Thing access token.
+      description: | 
+        Thing or User access token: 
+        * For thing access use "Authorization: Thing <thing_key>"
+        * For user access use "Authorization: Bearer <user_token>"
       in: header
       schema:
         type: string
