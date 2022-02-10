@@ -197,7 +197,7 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 }
 
 func initKeto(hostReadAddress, readPort, hostWriteAddress, writePort string, logger logger.Logger) (readerConnection, writerConnection *grpc.ClientConn) {
-	checkConn, err := grpc.Dial(fmt.Sprintf("%s:%s", hostReadAddress, readPort), grpc.WithInsecure())
+	readConn, err := grpc.Dial(fmt.Sprintf("%s:%s", hostReadAddress, readPort), grpc.WithInsecure())
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to dial %s:%s for Keto Read Service: %s", hostReadAddress, readPort, err))
 		os.Exit(1)
@@ -209,7 +209,7 @@ func initKeto(hostReadAddress, readPort, hostWriteAddress, writePort string, log
 		os.Exit(1)
 	}
 
-	return checkConn, writeConn
+	return readConn, writeConn
 }
 
 func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sqlx.DB {
