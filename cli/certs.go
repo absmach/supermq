@@ -18,7 +18,7 @@ func NewCertsCmd() *cobra.Command {
 		Long:  `Issues new certificate for a thing`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
-				logUsage(cmd.Short)
+				logUsage(cmd.Use)
 				return
 			}
 

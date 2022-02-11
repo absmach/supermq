@@ -171,7 +171,7 @@ var cmdGroups = []cobra.Command{
 		Long:  `Lists all members of a group.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
-				logUsage(cmd.Short)
+				logUsage(cmd.Use)
 				return
 			}
 			up, err := sdk.Members(args[0], args[1], uint64(Offset), uint64(Limit))

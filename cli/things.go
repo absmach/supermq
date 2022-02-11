@@ -17,7 +17,7 @@ var cmdThings = []cobra.Command{
 		Long:  `Create new thing, generate his UUID and store it`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
-				logUsage(cmd.Short)
+				logUsage(cmd.Use)
 				return
 			}
 
