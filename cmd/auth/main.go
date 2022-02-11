@@ -132,7 +132,7 @@ func main() {
 
 	readerConn, writerConn := initKeto(cfg.ketoReadHost, cfg.ketoReadPort, cfg.ketoWriteHost, cfg.ketoWritePort, logger)
 
-	svc := newService(db, dbTracer, cfg.oidc, logger, readerConn, writerConn, cfg.loginDuration)
+	svc := newService(db, dbTracer, cfg.oidc, cfg.secret, logger, readerConn, writerConn, cfg.loginDuration)
 	errs := make(chan error, 2)
 
 	go startHTTPServer(tracer, svc, cfg.httpPort, cfg.serverCert, cfg.serverKey, logger, errs)

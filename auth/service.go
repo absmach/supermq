@@ -152,11 +152,11 @@ func (svc service) Identify(ctx context.Context, token string) (Identity, error)
 		claims, _ := parsed.Claims.(jwt.MapClaims)
 		id, ok := claims["sub"].(string)
 		if !ok {
-			return Identity{}, errors.Wrap(ErrUnauthorizedAccess, errors.New("Missing claim sub"))
+			return Identity{}, errors.Wrap(errors.ErrAuthorization, errors.New("Missing claim sub"))
 		}
 		email, ok := claims["email"].(string)
 		if !ok {
-			return Identity{}, errors.Wrap(ErrUnauthorizedAccess, errors.New("Missing email in token"))
+			return Identity{}, errors.Wrap(errors.ErrAuthorization, errors.New("Missing email in token"))
 		}
 
 		return Identity{
