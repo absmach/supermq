@@ -158,6 +158,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 				w.WriteHeader(http.StatusUnauthorized)
 			case codes.PermissionDenied:
 				w.WriteHeader(http.StatusForbidden)
+			case codes.Internal:
+				w.WriteHeader(http.StatusInternalServerError)
 			default:
 				w.WriteHeader(http.StatusInternalServerError)
 			}

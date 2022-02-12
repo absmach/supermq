@@ -61,10 +61,10 @@ func (tr testRequest) make() (*http.Response, error) {
 func TestPublish(t *testing.T) {
 	chanID := "1"
 	contentType := "application/senml+json"
-	thinKey := "thing_key"
+	thingKey := "thing_key"
 	invalidKey := "invalid_key"
 	msg := `[{"n":"current","t":-1,"v":1.6}]`
-	thingsClient := mocks.NewThingsClient(map[string]string{thinKey: chanID})
+	thingsClient := mocks.NewThingsClient(map[string]string{thingKey: chanID})
 	svc := newService(thingsClient)
 	ts := newHTTPServer(svc)
 	defer ts.Close()
@@ -81,10 +81,10 @@ func TestPublish(t *testing.T) {
 			chanID:      chanID,
 			msg:         msg,
 			contentType: contentType,
-			key:         thinKey,
+			key:         thingKey,
 			status:      http.StatusAccepted,
 		},
-		"publish message without key": {
+		"publish message with empty key": {
 			chanID:      chanID,
 			msg:         msg,
 			contentType: contentType,
@@ -95,7 +95,7 @@ func TestPublish(t *testing.T) {
 			chanID:      chanID,
 			msg:         msg,
 			contentType: contentType,
-			key:         thinKey,
+			key:         thingKey,
 			basicAuth:   true,
 			status:      http.StatusAccepted,
 		},
@@ -118,15 +118,22 @@ func TestPublish(t *testing.T) {
 			chanID:      chanID,
 			msg:         msg,
 			contentType: "",
-			key:         thinKey,
+			key:         thingKey,
 			status:      http.StatusUnsupportedMediaType,
 		},
 		"publish message to invalid channel": {
 			chanID:      "",
 			msg:         msg,
 			contentType: contentType,
-			key:         thinKey,
+			key:         thingKey,
 			status:      http.StatusBadRequest,
+		},
+		"publish message unable to authorize": {
+			chanID:      chanID,
+			msg:         msg,
+			contentType: contentType,
+			key:         mocks.ServiceErrToken,
+			status:      http.StatusInternalServerError,
 		},
 	}
 
