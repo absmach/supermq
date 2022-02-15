@@ -5,7 +5,7 @@ package api
 
 import (
 	"context"
-	"io"
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -18,6 +18,7 @@ import (
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
 	adapter "github.com/mainflux/mainflux/http"
+	"github.com/mainflux/mainflux/internal/httputil"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
@@ -27,10 +28,12 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const protocol = "http"
+const (
+	protocol    = "http"
+	contentType = "application/senml+json"
+)
 
 var (
-	errMalformedData     = errors.New("malformed request data")
 	errMalformedSubtopic = errors.New("malformed subtopic")
 )
 
@@ -93,12 +96,15 @@ func parseSubtopic(subtopic string) (string, error) {
 }
 
 func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
-	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
-	if len(channelParts) < 2 {
-		return nil, errMalformedData
+	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
+		return nil, errors.ErrUnsupportedContentType
 	}
 
-	chanID := bone.GetValue(r, "id")
+	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
+	if len(channelParts) < 2 {
+		return nil, errors.ErrMalformedEntity
+	}
+
 	subtopic, err := parseSubtopic(channelParts[2])
 	if err != nil {
 		return nil, err
@@ -108,35 +114,24 @@ func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 		token = pass
 	}
 
-	payload, err := decodePayload(r.Body)
+	payload, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		return nil, err
+		return nil, errors.ErrMalformedEntity
 	}
-
-	msg := messaging.Message{
-		Protocol: protocol,
-		Channel:  chanID,
-		Subtopic: subtopic,
-		Payload:  payload,
-		Created:  time.Now().UnixNano(),
-	}
+	defer r.Body.Close()
 
 	req := publishReq{
-		msg:   msg,
+		msg: messaging.Message{
+			Protocol: protocol,
+			Channel:  bone.GetValue(r, "id"),
+			Subtopic: subtopic,
+			Payload:  payload,
+			Created:  time.Now().UnixNano(),
+		},
 		token: token,
 	}
 
 	return req, nil
-}
-
-func decodePayload(body io.ReadCloser) ([]byte, error) {
-	payload, err := ioutil.ReadAll(body)
-	if err != nil {
-		return nil, errMalformedData
-	}
-	defer body.Close()
-
-	return payload, nil
 }
 
 func encodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
@@ -145,21 +140,39 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 }
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
-	switch err {
-	case errMalformedData, errMalformedSubtopic:
-		w.WriteHeader(http.StatusBadRequest)
-	case errors.ErrAuthentication:
+	switch {
+	case errors.Contains(err, errors.ErrAuthentication):
 		w.WriteHeader(http.StatusUnauthorized)
+	case errors.Contains(err, errors.ErrAuthorization):
+		w.WriteHeader(http.StatusForbidden)
+	case errors.Contains(err, errors.ErrUnsupportedContentType):
+		w.WriteHeader(http.StatusUnsupportedMediaType)
+	case errors.Contains(err, errMalformedSubtopic),
+		errors.Contains(err, errors.ErrMalformedEntity):
+		w.WriteHeader(http.StatusBadRequest)
+
 	default:
-		if e, ok := status.FromError(err); ok {
+		switch e, ok := status.FromError(err); {
+		case ok:
 			switch e.Code() {
 			case codes.Unauthenticated:
 				w.WriteHeader(http.StatusUnauthorized)
+			case codes.PermissionDenied:
+				w.WriteHeader(http.StatusForbidden)
+			case codes.Internal:
+				w.WriteHeader(http.StatusInternalServerError)
 			default:
-				w.WriteHeader(http.StatusServiceUnavailable)
+				w.WriteHeader(http.StatusInternalServerError)
 			}
-			return
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
 		}
-		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	if errorVal, ok := err.(errors.Error); ok {
+		w.Header().Set("Content-Type", contentType)
+		if err := json.NewEncoder(w).Encode(httputil.ErrorRes{Err: errorVal.Msg()}); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 	}
 }

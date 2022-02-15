@@ -17,6 +17,7 @@ import (
 	notifiers "github.com/mainflux/mainflux/consumers/notifiers"
 	httpapi "github.com/mainflux/mainflux/consumers/notifiers/api"
 	"github.com/mainflux/mainflux/consumers/notifiers/mocks"
+	"github.com/mainflux/mainflux/internal/httputil"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -36,9 +37,9 @@ const (
 )
 
 var (
-	notFoundRes = toJSON(errorRes{errors.ErrNotFound.Error()})
-	unauthRes   = toJSON(errorRes{errors.ErrAuthentication.Error()})
-	invalidRes  = toJSON(errorRes{errors.ErrInvalidQueryParams.Error()})
+	notFoundRes = toJSON(httputil.ErrorRes{Err: errors.ErrNotFound.Error()})
+	unauthRes   = toJSON(httputil.ErrorRes{Err: errors.ErrAuthentication.Error()})
+	invalidRes  = toJSON(httputil.ErrorRes{Err: errors.ErrInvalidQueryParams.Error()})
 )
 
 type testRequest struct {
@@ -459,10 +460,6 @@ func makeQuery(m map[string]string) string {
 		return fmt.Sprintf("?%s", ret[1:])
 	}
 	return ""
-}
-
-type errorRes struct {
-	Err string `json:"error"`
 }
 
 type subRes struct {
