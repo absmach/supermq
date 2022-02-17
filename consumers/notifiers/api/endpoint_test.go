@@ -37,9 +37,10 @@ const (
 )
 
 var (
-	notFoundRes = toJSON(httputil.ErrorRes{Err: errors.ErrNotFound.Error()})
-	unauthRes   = toJSON(httputil.ErrorRes{Err: errors.ErrAuthentication.Error()})
-	invalidRes  = toJSON(httputil.ErrorRes{Err: errors.ErrInvalidQueryParams.Error()})
+	notFoundRes   = toJSON(httputil.ErrorRes{Err: errors.ErrNotFound.Error()})
+	unauthRes     = toJSON(httputil.ErrorRes{Err: errors.ErrAuthentication.Error()})
+	invalidRes    = toJSON(httputil.ErrorRes{Err: errors.ErrInvalidQueryParams.Error()})
+	missingTokRes = toJSON(httputil.ErrorRes{Err: httputil.ErrMissingToken.Error()})
 )
 
 type testRequest struct {
@@ -244,7 +245,7 @@ func TestView(t *testing.T) {
 			id:     id,
 			auth:   "",
 			status: http.StatusUnauthorized,
-			res:    unauthRes,
+			res:    missingTokRes,
 		},
 	}
 
@@ -364,7 +365,7 @@ func TestList(t *testing.T) {
 			desc:   "list with empty auth token",
 			auth:   "",
 			status: http.StatusUnauthorized,
-			res:    unauthRes,
+			res:    missingTokRes,
 		},
 	}
 
@@ -420,7 +421,7 @@ func TestRemove(t *testing.T) {
 			desc:   "remove empty id",
 			id:     "",
 			auth:   token,
-			status: http.StatusNotFound,
+			status: http.StatusBadRequest,
 		},
 		{
 			desc:   "view with invalid auth token",
@@ -434,7 +435,7 @@ func TestRemove(t *testing.T) {
 			id:     id,
 			auth:   "",
 			status: http.StatusUnauthorized,
-			res:    unauthRes,
+			res:    missingTokRes,
 		},
 	}
 
