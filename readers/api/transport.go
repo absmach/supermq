@@ -110,7 +110,7 @@ func decodeList(ctx context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	v, err := httputil.ReadFloatQuery(r, valueKey, 0)
+	v, err := apiutil.ReadFloatQuery(r, valueKey, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -130,12 +130,12 @@ func decodeList(ctx context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	from, err := httputil.ReadFloatQuery(r, fromKey, 0)
+	from, err := apiutil.ReadFloatQuery(r, fromKey, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	to, err := httputil.ReadFloatQuery(r, toKey, 0)
+	to, err := apiutil.ReadFloatQuery(r, toKey, 0)
 	if err != nil {
 		return nil, err
 	}

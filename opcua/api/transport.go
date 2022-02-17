@@ -101,7 +101,8 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
 	case errors.Contains(err, errors.ErrInvalidQueryParams),
-		errors.Contains(err, errors.ErrMalformedEntity):
+		errors.Contains(err, errors.ErrMalformedEntity),
+		errors.Contains(err, apiutil.ErrMissingID):
 		w.WriteHeader(http.StatusBadRequest)
 
 	default:

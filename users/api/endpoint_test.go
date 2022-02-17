@@ -40,15 +40,18 @@ const (
 )
 
 var (
-	user           = users.User{Email: validEmail, Password: validPass}
-	notFoundRes    = toJSON(apiutil.ErrorRes{Err: errors.ErrNotFound.Error()})
-	unauthRes      = toJSON(apiutil.ErrorRes{Err: errors.ErrAuthentication.Error()})
-	malformedRes   = toJSON(apiutil.ErrorRes{Err: errors.ErrMalformedEntity.Error()})
-	weakPassword   = toJSON(apiutil.ErrorRes{Err: users.ErrPasswordFormat.Error()})
-	unsupportedRes = toJSON(apiutil.ErrorRes{Err: errors.ErrUnsupportedContentType.Error()})
-	missingTokRes  = toJSON(apiutil.ErrorRes{Err: apiutil.ErrMissingToken.Error()})
-	failDecodeRes  = toJSON(apiutil.ErrorRes{Err: errors.ErrMalformedEntity.Error()})
-	passRegex      = regexp.MustCompile("^.{8,}$")
+	user               = users.User{Email: validEmail, Password: validPass}
+	notFoundRes        = toJSON(apiutil.ErrorRes{Err: errors.ErrNotFound.Error()})
+	unauthRes          = toJSON(apiutil.ErrorRes{Err: errors.ErrAuthentication.Error()})
+	malformedRes       = toJSON(apiutil.ErrorRes{Err: errors.ErrMalformedEntity.Error()})
+	weakPassword       = toJSON(apiutil.ErrorRes{Err: users.ErrPasswordFormat.Error()})
+	unsupportedRes     = toJSON(apiutil.ErrorRes{Err: errors.ErrUnsupportedContentType.Error()})
+	missingTokRes      = toJSON(apiutil.ErrorRes{Err: apiutil.ErrMissingToken.Error()})
+	missingEmailRes    = toJSON(apiutil.ErrorRes{Err: apiutil.ErrMissingEmail.Error()})
+	missingPassRes     = toJSON(apiutil.ErrorRes{Err: apiutil.ErrMissingPass.Error()})
+	invalidRestPassRes = toJSON(apiutil.ErrorRes{Err: apiutil.ErrInvalidResetPass.Error()})
+	failDecodeRes      = toJSON(apiutil.ErrorRes{Err: errors.ErrMalformedEntity.Error()})
+	passRegex          = regexp.MustCompile("^.{8,}$")
 )
 
 type testRequest struct {
@@ -112,6 +115,8 @@ func TestRegister(t *testing.T) {
 	invalidData := toJSON(users.User{Email: invalidEmail, Password: validPass})
 	invalidPasswordData := toJSON(users.User{Email: validEmail, Password: invalidPass})
 	invalidFieldData := fmt.Sprintf(`{"email": "%s", "pass": "%s"}`, user.Email, user.Password)
+	emptyEmailData := `{"email": ""}`
+	emptyHostData := fmt.Sprintf(`{"email": "%s"}`, user.Email)
 
 	mockAuthzDB := map[string][]mocks.SubjectSet{}
 	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: authoritiesObjKey, Relation: memberRelationKey})
@@ -134,7 +139,8 @@ func TestRegister(t *testing.T) {
 		{"register new user with unauthenticated access", userNew, contentType, http.StatusUnauthorized, "wrong"},
 		{"register existing user with unauthenticated access", data, contentType, http.StatusUnauthorized, "wrong"},
 		{"register user with invalid request format", "{", contentType, http.StatusBadRequest, token},
-		{"register user with empty JSON request", "{}", contentType, http.StatusBadRequest, token},
+		{"register user with empty email request", emptyEmailData, contentType, http.StatusBadRequest, token},
+		{"register user with empty host request", emptyHostData, contentType, http.StatusBadRequest, token},
 		{"register user with empty request", "", contentType, http.StatusBadRequest, token},
 		{"register user with invalid field name", invalidFieldData, contentType, http.StatusBadRequest, token},
 		{"register user with missing content type", data, "", http.StatusUnsupportedMediaType, token},
@@ -302,7 +308,7 @@ func TestPasswordResetRequest(t *testing.T) {
 		{"password reset request with valid email", data, contentType, http.StatusCreated, expectedExisting},
 		{"password reset request with invalid email", nonexistentData, contentType, http.StatusNotFound, notFoundRes},
 		{"password reset request with invalid request format", "{", contentType, http.StatusBadRequest, malformedRes},
-		{"password reset request with empty JSON request", "{}", contentType, http.StatusBadRequest, malformedRes},
+		{"password reset request with empty email request", "{}", contentType, http.StatusBadRequest, missingEmailRes},
 		{"password reset request with empty request", "", contentType, http.StatusBadRequest, malformedRes},
 		{"password reset request with missing content type", data, "", http.StatusUnsupportedMediaType, unsupportedRes},
 	}
@@ -377,9 +383,9 @@ func TestPasswordReset(t *testing.T) {
 	}{
 		{"password reset with valid token", reqExisting, contentType, http.StatusCreated, "{}", token},
 		{"password reset with invalid token", reqNoExist, contentType, http.StatusUnauthorized, unauthRes, token},
-		{"password reset with confirm password not matching", reqPassNoMatch, contentType, http.StatusBadRequest, malformedRes, token},
+		{"password reset with confirm password not matching", reqPassNoMatch, contentType, http.StatusBadRequest, invalidRestPassRes, token},
 		{"password reset request with invalid request format", "{", contentType, http.StatusBadRequest, malformedRes, token},
-		{"password reset request with empty JSON request", "{}", contentType, http.StatusBadRequest, malformedRes, token},
+		{"password reset request with empty JSON request", "{}", contentType, http.StatusBadRequest, missingPassRes, token},
 		{"password reset request with empty request", "", contentType, http.StatusBadRequest, malformedRes, token},
 		{"password reset request with missing content type", reqExisting, "", http.StatusUnsupportedMediaType, unsupportedRes, token},
 		{"password reset with weak password", reqPassWeak, contentType, http.StatusBadRequest, weakPassword, token},
@@ -453,7 +459,7 @@ func TestPasswordChange(t *testing.T) {
 		{"password change with empty token", reqNoExist, contentType, http.StatusUnauthorized, missingTokRes, ""},
 		{"password change with invalid old password", reqWrongPass, contentType, http.StatusUnauthorized, unauthRes, token},
 		{"password change with invalid new password", reqWeakPass, contentType, http.StatusBadRequest, weakPassword, token},
-		{"password change with empty JSON request", "{}", contentType, http.StatusBadRequest, malformedRes, token},
+		{"password change with empty JSON request", "{}", contentType, http.StatusBadRequest, missingPassRes, token},
 		{"password change empty request", "", contentType, http.StatusBadRequest, malformedRes, token},
 		{"password change missing content type", dataResExisting, "", http.StatusUnsupportedMediaType, unsupportedRes, token},
 	}

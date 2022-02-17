@@ -287,7 +287,12 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
 	case errors.Contains(err, errors.ErrInvalidQueryParams),
 		errors.Contains(err, errors.ErrMalformedEntity),
-		errors.Contains(err, users.ErrPasswordFormat):
+		errors.Contains(err, users.ErrPasswordFormat),
+		errors.Contains(err, apiutil.ErrMissingEmail),
+		errors.Contains(err, apiutil.ErrMissingHost),
+		errors.Contains(err, apiutil.ErrMissingPass),
+		errors.Contains(err, apiutil.ErrMissingConfPass),
+		errors.Contains(err, apiutil.ErrInvalidResetPass):
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, errors.ErrAuthentication),
 		errors.Contains(err, users.ErrRecoveryToken),

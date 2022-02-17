@@ -5,7 +5,6 @@ package api
 
 import (
 	"github.com/mainflux/mainflux/internal/apiutil"
-	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users"
 )
 
@@ -71,9 +70,14 @@ type passwResetReq struct {
 }
 
 func (req passwResetReq) validate() error {
-	if req.Email == "" || req.Host == "" {
-		return errors.ErrMalformedEntity
+	if req.Email == "" {
+		return apiutil.ErrMissingEmail
 	}
+
+	if req.Host == "" {
+		return apiutil.ErrMissingHost
+	}
+
 	return nil
 }
 
@@ -84,15 +88,22 @@ type resetTokenReq struct {
 }
 
 func (req resetTokenReq) validate() error {
-	if req.Password == "" || req.ConfPass == "" {
-		return errors.ErrMalformedEntity
+	if req.Password == "" {
+		return apiutil.ErrMissingPass
 	}
+
+	if req.ConfPass == "" {
+		return apiutil.ErrMissingConfPass
+	}
+
 	if req.Token == "" {
-		return users.ErrMissingResetToken
+		return apiutil.ErrMissingToken
 	}
+
 	if req.Password != req.ConfPass {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrInvalidResetPass
 	}
+
 	return nil
 }
 
@@ -107,7 +118,7 @@ func (req passwChangeReq) validate() error {
 		return apiutil.ErrMissingToken
 	}
 	if req.OldPassword == "" {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMissingPass
 	}
 	return nil
 }
@@ -126,7 +137,7 @@ func (req listMemberGroupReq) validate() error {
 	}
 
 	if req.groupID == "" {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMissingID
 	}
 
 	return nil

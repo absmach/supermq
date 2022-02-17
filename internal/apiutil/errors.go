@@ -46,4 +46,19 @@ var (
 
 	// ErrInvalidContact indicates an invalid subscription contract.
 	ErrInvalidContact = errors.New("invalid Subscription contact")
+
+	// ErrMissingEmail indicates missing email.
+	ErrMissingEmail = errors.New("missing email")
+
+	// ErrMissingHost indicates missing host.
+	ErrMissingHost = errors.New("missing host")
+
+	// ErrMissingPassword indicates missing password.
+	ErrMissingPass = errors.New("missing password")
+
+	// ErrMissingConfPassword indicates missing conf password.
+	ErrMissingConfPass = errors.New("missing conf password")
+
+	// ErrInvalidResetPass indicates an invalid reset password.
+	ErrInvalidResetPass = errors.New("invalid reset password")
 )
