@@ -4,6 +4,7 @@
 package api
 
 import (
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/readers"
 )
@@ -20,7 +21,7 @@ type listMessagesReq struct {
 
 func (req listMessagesReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 	if req.chanID == "" {
 		return errors.ErrMalformedEntity

@@ -4,6 +4,7 @@
 package api
 
 import (
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users"
 )
@@ -32,7 +33,7 @@ type viewUserReq struct {
 
 func (req viewUserReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 	return nil
 }
@@ -47,7 +48,7 @@ type listUsersReq struct {
 
 func (req listUsersReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 	return nil
 }
@@ -59,7 +60,7 @@ type updateUserReq struct {
 
 func (req updateUserReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 	return nil
 }
@@ -103,7 +104,7 @@ type passwChangeReq struct {
 
 func (req passwChangeReq) validate() error {
 	if req.Token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 	if req.OldPassword == "" {
 		return errors.ErrMalformedEntity
@@ -121,7 +122,7 @@ type listMemberGroupReq struct {
 
 func (req listMemberGroupReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 
 	if req.groupID == "" {

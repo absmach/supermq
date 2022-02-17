@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/mainflux/mainflux/internal/httputil"
+	"github.com/mainflux/mainflux/internal/apiutil"
 )
 
 type provisionReq struct {
@@ -13,11 +13,11 @@ type provisionReq struct {
 
 func (req provisionReq) validate() error {
 	if req.ExternalID == "" {
-		return httputil.ErrMissingID
+		return apiutil.ErrMissingID
 	}
 
 	if req.ExternalKey == "" {
-		return httputil.ErrMissingKey
+		return apiutil.ErrMissingKey
 	}
 
 	return nil
@@ -29,7 +29,7 @@ type mappingReq struct {
 
 func (req mappingReq) validate() error {
 	if req.token == "" {
-		return httputil.ErrMissingToken
+		return apiutil.ErrMissingToken
 	}
 	return nil
 }

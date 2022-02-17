@@ -4,6 +4,7 @@
 package http
 
 import (
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/twins"
 )
@@ -26,7 +27,7 @@ type addTwinReq struct {
 
 func (req addTwinReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 
 	if len(req.Name) > maxNameSize {
@@ -46,7 +47,7 @@ type updateTwinReq struct {
 
 func (req updateTwinReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 
 	if req.id == "" {
@@ -67,7 +68,7 @@ type viewTwinReq struct {
 
 func (req viewTwinReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 
 	if req.id == "" {
@@ -87,7 +88,7 @@ type listReq struct {
 
 func (req *listReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 
 	if req.limit == 0 || req.limit > maxLimitSize {
@@ -110,7 +111,7 @@ type listStatesReq struct {
 
 func (req *listStatesReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 
 	if req.id == "" {

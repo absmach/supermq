@@ -2,6 +2,7 @@ package groups
 
 import (
 	"github.com/mainflux/mainflux/auth"
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
@@ -15,7 +16,7 @@ type createGroupReq struct {
 
 func (req createGroupReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 	if len(req.Name) > maxNameSize || req.Name == "" {
 		return errors.Wrap(errors.ErrMalformedEntity, auth.ErrBadGroupName)
@@ -34,7 +35,7 @@ type updateGroupReq struct {
 
 func (req updateGroupReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 
 	if req.id == "" {
@@ -78,7 +79,7 @@ type listMembersReq struct {
 
 func (req listMembersReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 
 	if req.id == "" {
@@ -98,7 +99,7 @@ type listMembershipsReq struct {
 
 func (req listMembershipsReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 
 	if req.id == "" {
@@ -117,7 +118,7 @@ type assignReq struct {
 
 func (req assignReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 
 	if req.Type == "" || req.groupID == "" || len(req.Members) == 0 {
@@ -135,7 +136,7 @@ type shareGroupAccessReq struct {
 
 func (req shareGroupAccessReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 
 	if req.ThingGroupID == "" || req.userGroupID == "" {
@@ -151,7 +152,7 @@ type unassignReq struct {
 
 func (req unassignReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 
 	if req.groupID == "" || len(req.Members) == 0 {
@@ -168,7 +169,7 @@ type groupReq struct {
 
 func (req groupReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 
 	if req.id == "" {

@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mainflux/mainflux/internal/httputil"
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -52,10 +52,10 @@ var (
 		Metadata: map[string]interface{}{"test": "data"},
 	}
 	invalidName    = strings.Repeat("m", maxNameSize+1)
-	notFoundRes    = toJSON(httputil.ErrorRes{Err: errors.ErrNotFound.Error()})
-	unauthzRes     = toJSON(httputil.ErrorRes{Err: errors.ErrAuthorization.Error()})
-	unauthRes      = toJSON(httputil.ErrorRes{Err: errors.ErrAuthentication.Error()})
-	missingTokRes  = toJSON(httputil.ErrorRes{Err: httputil.ErrMissingToken.Error()})
+	notFoundRes    = toJSON(apiutil.ErrorRes{Err: errors.ErrNotFound.Error()})
+	unauthzRes     = toJSON(apiutil.ErrorRes{Err: errors.ErrAuthorization.Error()})
+	unauthRes      = toJSON(apiutil.ErrorRes{Err: errors.ErrAuthentication.Error()})
+	missingTokRes  = toJSON(apiutil.ErrorRes{Err: apiutil.ErrMissingToken.Error()})
 	searchThingReq = things.PageMetadata{
 		Limit:  5,
 		Offset: 0,

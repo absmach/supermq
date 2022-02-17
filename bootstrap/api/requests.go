@@ -5,6 +5,7 @@ package api
 
 import (
 	"github.com/mainflux/mainflux/bootstrap"
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
@@ -29,7 +30,7 @@ type addReq struct {
 
 func (req addReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 
 	if req.ExternalID == "" || req.ExternalKey == "" {

@@ -13,7 +13,7 @@ import (
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/internal/httputil"
+	"github.com/mainflux/mainflux/internal/apiutil"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -39,7 +39,7 @@ const (
 // MakeHandler returns a HTTP handler for API endpoints.
 func MakeHandler(tracer opentracing.Tracer, svc things.Service, logger log.Logger) http.Handler {
 	opts := []kithttp.ServerOption{
-		kithttp.ServerErrorEncoder(httputil.LoggingErrorEncoder(logger, encodeError)),
+		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, encodeError)),
 	}
 
 	r := bone.New()
@@ -328,36 +328,36 @@ func decodeView(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
-	o, err := httputil.ReadUintQuery(r, offsetKey, defOffset)
+	o, err := apiutil.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
 		return nil, err
 	}
 
-	l, err := httputil.ReadUintQuery(r, limitKey, defLimit)
+	l, err := apiutil.ReadUintQuery(r, limitKey, defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	n, err := httputil.ReadStringQuery(r, nameKey, "")
+	n, err := apiutil.ReadStringQuery(r, nameKey, "")
 	if err != nil {
 		return nil, err
 	}
 
-	or, err := httputil.ReadStringQuery(r, orderKey, "")
+	or, err := apiutil.ReadStringQuery(r, orderKey, "")
 	if err != nil {
 		return nil, err
 	}
 
-	d, err := httputil.ReadStringQuery(r, dirKey, "")
+	d, err := apiutil.ReadStringQuery(r, dirKey, "")
 	if err != nil {
 		return nil, err
 	}
 
-	m, err := httputil.ReadMetadataQuery(r, metadataKey, nil)
+	m, err := apiutil.ReadMetadataQuery(r, metadataKey, nil)
 	if err != nil {
 		return nil, err
 	}
-	shared, err := httputil.ReadBoolQuery(r, sharedKey, false)
+	shared, err := apiutil.ReadBoolQuery(r, sharedKey, false)
 	if err != nil {
 		return nil, err
 	}
@@ -388,27 +388,27 @@ func decodeListByMetadata(_ context.Context, r *http.Request) (interface{}, erro
 }
 
 func decodeListByConnection(_ context.Context, r *http.Request) (interface{}, error) {
-	o, err := httputil.ReadUintQuery(r, offsetKey, defOffset)
+	o, err := apiutil.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
 		return nil, err
 	}
 
-	l, err := httputil.ReadUintQuery(r, limitKey, defLimit)
+	l, err := apiutil.ReadUintQuery(r, limitKey, defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	c, err := httputil.ReadBoolQuery(r, disconnKey, false)
+	c, err := apiutil.ReadBoolQuery(r, disconnKey, false)
 	if err != nil {
 		return nil, err
 	}
 
-	or, err := httputil.ReadStringQuery(r, orderKey, "")
+	or, err := apiutil.ReadStringQuery(r, orderKey, "")
 	if err != nil {
 		return nil, err
 	}
 
-	d, err := httputil.ReadStringQuery(r, dirKey, "")
+	d, err := apiutil.ReadStringQuery(r, dirKey, "")
 	if err != nil {
 		return nil, err
 	}
@@ -452,17 +452,17 @@ func decodeConnectList(_ context.Context, r *http.Request) (interface{}, error) 
 }
 
 func decodeListMembersRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	o, err := httputil.ReadUintQuery(r, offsetKey, defOffset)
+	o, err := apiutil.ReadUintQuery(r, offsetKey, defOffset)
 	if err != nil {
 		return nil, err
 	}
 
-	l, err := httputil.ReadUintQuery(r, limitKey, defLimit)
+	l, err := apiutil.ReadUintQuery(r, limitKey, defLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	m, err := httputil.ReadMetadataQuery(r, metadataKey, nil)
+	m, err := apiutil.ReadMetadataQuery(r, metadataKey, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -500,7 +500,7 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
 	case errors.Contains(err, errors.ErrAuthentication),
-		errors.Contains(err, httputil.ErrMissingToken):
+		errors.Contains(err, apiutil.ErrMissingToken):
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, errors.ErrAuthorization):
 		w.WriteHeader(http.StatusForbidden)
@@ -508,15 +508,15 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	case errors.Contains(err, errors.ErrInvalidQueryParams),
 		errors.Contains(err, errors.ErrMalformedEntity),
-		errors.Contains(err, httputil.ErrNameSize),
-		errors.Contains(err, httputil.ErrEmptyList),
-		errors.Contains(err, httputil.ErrMissingID),
-		errors.Contains(err, httputil.ErrMalformedPolicy),
-		errors.Contains(err, httputil.ErrMissingKey),
-		errors.Contains(err, httputil.ErrLimitSize),
-		errors.Contains(err, httputil.ErrInvalidOrder),
-		errors.Contains(err, httputil.ErrInvalidDirection),
-		errors.Contains(err, httputil.ErrInvalidIDFormat):
+		errors.Contains(err, apiutil.ErrNameSize),
+		errors.Contains(err, apiutil.ErrEmptyList),
+		errors.Contains(err, apiutil.ErrMissingID),
+		errors.Contains(err, apiutil.ErrMalformedPolicy),
+		errors.Contains(err, apiutil.ErrMissingKey),
+		errors.Contains(err, apiutil.ErrLimitSize),
+		errors.Contains(err, apiutil.ErrInvalidOrder),
+		errors.Contains(err, apiutil.ErrInvalidDirection),
+		errors.Contains(err, apiutil.ErrInvalidIDFormat):
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, errors.ErrNotFound):
 		w.WriteHeader(http.StatusNotFound)
@@ -540,7 +540,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 
 	if errorVal, ok := err.(errors.Error); ok {
 		w.Header().Set("Content-Type", contentType)
-		if err := json.NewEncoder(w).Encode(httputil.ErrorRes{Err: errorVal.Msg()}); err != nil {
+		if err := json.NewEncoder(w).Encode(apiutil.ErrorRes{Err: errorVal.Msg()}); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}

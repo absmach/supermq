@@ -23,7 +23,7 @@ import (
 	"github.com/mainflux/mainflux/bootstrap"
 	bsapi "github.com/mainflux/mainflux/bootstrap/api"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
-	"github.com/mainflux/mainflux/internal/httputil"
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
@@ -83,12 +83,12 @@ var (
 		CACert:     "newca",
 	}
 
-	bsErrorRes   = toJSON(httputil.ErrorRes{Err: bootstrap.ErrBootstrap.Error()})
-	authnRes     = toJSON(httputil.ErrorRes{Err: errors.ErrAuthentication.Error()})
-	authzRes     = toJSON(httputil.ErrorRes{Err: errors.ErrAuthorization.Error()})
-	malformedRes = toJSON(httputil.ErrorRes{Err: errors.ErrMalformedEntity.Error()})
-	extKeyRes    = toJSON(httputil.ErrorRes{Err: bootstrap.ErrExternalKey.Error()})
-	extSecKeyRes = toJSON(httputil.ErrorRes{Err: bootstrap.ErrExternalKeySecure.Error()})
+	bsErrorRes   = toJSON(apiutil.ErrorRes{Err: bootstrap.ErrBootstrap.Error()})
+	authnRes     = toJSON(apiutil.ErrorRes{Err: errors.ErrAuthentication.Error()})
+	authzRes     = toJSON(apiutil.ErrorRes{Err: errors.ErrAuthorization.Error()})
+	malformedRes = toJSON(apiutil.ErrorRes{Err: errors.ErrMalformedEntity.Error()})
+	extKeyRes    = toJSON(apiutil.ErrorRes{Err: bootstrap.ErrExternalKey.Error()})
+	extSecKeyRes = toJSON(apiutil.ErrorRes{Err: bootstrap.ErrExternalKeySecure.Error()})
 )
 
 type testRequest struct {

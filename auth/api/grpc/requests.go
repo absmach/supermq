@@ -5,6 +5,7 @@ package grpc
 
 import (
 	"github.com/mainflux/mainflux/auth"
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
@@ -15,7 +16,7 @@ type identityReq struct {
 
 func (req identityReq) validate() error {
 	if req.token == "" {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMissingToken
 	}
 	if req.kind != auth.LoginKey &&
 		req.kind != auth.APIKey &&

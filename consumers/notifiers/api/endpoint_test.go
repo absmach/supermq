@@ -17,7 +17,7 @@ import (
 	notifiers "github.com/mainflux/mainflux/consumers/notifiers"
 	httpapi "github.com/mainflux/mainflux/consumers/notifiers/api"
 	"github.com/mainflux/mainflux/consumers/notifiers/mocks"
-	"github.com/mainflux/mainflux/internal/httputil"
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -37,10 +37,10 @@ const (
 )
 
 var (
-	notFoundRes   = toJSON(httputil.ErrorRes{Err: errors.ErrNotFound.Error()})
-	unauthRes     = toJSON(httputil.ErrorRes{Err: errors.ErrAuthentication.Error()})
-	invalidRes    = toJSON(httputil.ErrorRes{Err: errors.ErrInvalidQueryParams.Error()})
-	missingTokRes = toJSON(httputil.ErrorRes{Err: httputil.ErrMissingToken.Error()})
+	notFoundRes   = toJSON(apiutil.ErrorRes{Err: errors.ErrNotFound.Error()})
+	unauthRes     = toJSON(apiutil.ErrorRes{Err: errors.ErrAuthentication.Error()})
+	invalidRes    = toJSON(apiutil.ErrorRes{Err: errors.ErrInvalidQueryParams.Error()})
+	missingTokRes = toJSON(apiutil.ErrorRes{Err: apiutil.ErrMissingToken.Error()})
 )
 
 type testRequest struct {

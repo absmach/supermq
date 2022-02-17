@@ -4,7 +4,7 @@
 package api
 
 import (
-	"github.com/mainflux/mainflux/internal/httputil"
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/messaging"
 )
 
@@ -15,7 +15,7 @@ type publishReq struct {
 
 func (req publishReq) validate() error {
 	if req.token == "" {
-		return httputil.ErrMissingToken
+		return apiutil.ErrMissingToken
 	}
 
 	return nil

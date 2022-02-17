@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/mainflux/mainflux/bootstrap"
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,7 +23,7 @@ func TestAddReqValidation(t *testing.T) {
 			token:       "",
 			externalID:  "external-id",
 			externalKey: "external-key",
-			err:         errors.ErrAuthentication,
+			err:         apiutil.ErrMissingToken,
 		},
 		{
 			desc:        "empty external ID",

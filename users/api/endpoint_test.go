@@ -16,7 +16,7 @@ import (
 	"testing"
 
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/internal/httputil"
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -41,12 +41,13 @@ const (
 
 var (
 	user           = users.User{Email: validEmail, Password: validPass}
-	notFoundRes    = toJSON(httputil.ErrorRes{Err: errors.ErrNotFound.Error()})
-	unauthRes      = toJSON(httputil.ErrorRes{Err: errors.ErrAuthentication.Error()})
-	malformedRes   = toJSON(httputil.ErrorRes{Err: errors.ErrMalformedEntity.Error()})
-	weakPassword   = toJSON(httputil.ErrorRes{Err: users.ErrPasswordFormat.Error()})
-	unsupportedRes = toJSON(httputil.ErrorRes{Err: errors.ErrUnsupportedContentType.Error()})
-	failDecodeRes  = toJSON(httputil.ErrorRes{Err: errors.ErrMalformedEntity.Error()})
+	notFoundRes    = toJSON(apiutil.ErrorRes{Err: errors.ErrNotFound.Error()})
+	unauthRes      = toJSON(apiutil.ErrorRes{Err: errors.ErrAuthentication.Error()})
+	malformedRes   = toJSON(apiutil.ErrorRes{Err: errors.ErrMalformedEntity.Error()})
+	weakPassword   = toJSON(apiutil.ErrorRes{Err: users.ErrPasswordFormat.Error()})
+	unsupportedRes = toJSON(apiutil.ErrorRes{Err: errors.ErrUnsupportedContentType.Error()})
+	missingTokRes  = toJSON(apiutil.ErrorRes{Err: apiutil.ErrMissingToken.Error()})
+	failDecodeRes  = toJSON(apiutil.ErrorRes{Err: errors.ErrMalformedEntity.Error()})
 	passRegex      = regexp.MustCompile("^.{8,}$")
 )
 
@@ -449,7 +450,7 @@ func TestPasswordChange(t *testing.T) {
 		tok         string
 	}{
 		{"password change with valid token", dataResExisting, contentType, http.StatusCreated, "{}", token},
-		{"password change with invalid token", reqNoExist, contentType, http.StatusUnauthorized, unauthRes, ""},
+		{"password change with empty token", reqNoExist, contentType, http.StatusUnauthorized, missingTokRes, ""},
 		{"password change with invalid old password", reqWrongPass, contentType, http.StatusUnauthorized, unauthRes, token},
 		{"password change with invalid new password", reqWeakPass, contentType, http.StatusBadRequest, weakPassword, token},
 		{"password change with empty JSON request", "{}", contentType, http.StatusBadRequest, malformedRes, token},

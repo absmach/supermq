@@ -4,7 +4,7 @@
 package http
 
 import (
-	"github.com/mainflux/mainflux/internal/httputil"
+	"github.com/mainflux/mainflux/internal/apiutil"
 )
 
 type identifyReq struct {
@@ -13,7 +13,7 @@ type identifyReq struct {
 
 func (req identifyReq) validate() error {
 	if req.Token == "" {
-		return httputil.ErrMissingToken
+		return apiutil.ErrMissingToken
 	}
 
 	return nil
@@ -26,11 +26,11 @@ type canAccessByKeyReq struct {
 
 func (req canAccessByKeyReq) validate() error {
 	if req.Token == "" {
-		return httputil.ErrMissingToken
+		return apiutil.ErrMissingToken
 	}
 
 	if req.chanID == "" {
-		return httputil.ErrMissingID
+		return apiutil.ErrMissingID
 	}
 
 	return nil
@@ -43,7 +43,7 @@ type canAccessByIDReq struct {
 
 func (req canAccessByIDReq) validate() error {
 	if req.ThingID == "" || req.chanID == "" {
-		return httputil.ErrMissingID
+		return apiutil.ErrMissingID
 	}
 
 	return nil

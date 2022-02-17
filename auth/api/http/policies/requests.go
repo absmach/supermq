@@ -1,6 +1,7 @@
 package policies
 
 import (
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
@@ -35,7 +36,7 @@ type policiesReq struct {
 
 func (req policiesReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 
 	if len(req.SubjectIDs) == 0 || len(req.Policies) == 0 || req.Object == "" {
