@@ -1,6 +1,8 @@
 package api
 
-import "github.com/mainflux/mainflux/pkg/errors"
+import (
+	"github.com/mainflux/mainflux/internal/httputil"
+)
 
 type provisionReq struct {
 	token       string
@@ -10,9 +12,14 @@ type provisionReq struct {
 }
 
 func (req provisionReq) validate() error {
-	if req.ExternalID == "" || req.ExternalKey == "" {
-		return errors.ErrMalformedEntity
+	if req.ExternalID == "" {
+		return httputil.ErrMissingID
 	}
+
+	if req.ExternalKey == "" {
+		return httputil.ErrMissingKey
+	}
+
 	return nil
 }
 
@@ -22,7 +29,7 @@ type mappingReq struct {
 
 func (req mappingReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return httputil.ErrMissingToken
 	}
 	return nil
 }

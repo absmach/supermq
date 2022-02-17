@@ -137,10 +137,15 @@ func decodeRevokeCerts(_ context.Context, r *http.Request) (interface{}, error) 
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
+	case errors.Contains(err, errors.ErrAuthentication),
+		errors.Contains(err, httputil.ErrMissingToken):
+		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, errors.ErrUnsupportedContentType):
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	case errors.Contains(err, errors.ErrMalformedEntity),
-		errors.Contains(err, errors.ErrInvalidQueryParams):
+		errors.Contains(err, httputil.ErrMissingID),
+		errors.Contains(err, httputil.ErrMissingCertData),
+		errors.Contains(err, httputil.ErrLimitSize):
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, errors.ErrConflict):
 		w.WriteHeader(http.StatusConflict)

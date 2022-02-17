@@ -91,14 +91,17 @@ func decodeMappingRequest(_ context.Context, r *http.Request) (interface{}, erro
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
+	case errors.Contains(err, errors.ErrAuthentication),
+		errors.Contains(err, httputil.ErrMissingToken):
+		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, errors.ErrUnsupportedContentType):
 		w.WriteHeader(http.StatusUnsupportedMediaType)
-	case errors.Contains(err, errors.ErrMalformedEntity):
+	case errors.Contains(err, errors.ErrMalformedEntity),
+		errors.Contains(err, httputil.ErrMissingID),
+		errors.Contains(err, httputil.ErrMissingKey):
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, errors.ErrConflict):
 		w.WriteHeader(http.StatusConflict)
-	case errors.Contains(err, errors.ErrAuthentication):
-		w.WriteHeader(http.StatusUnauthorized)
 
 	default:
 		w.WriteHeader(http.StatusInternalServerError)

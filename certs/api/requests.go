@@ -4,7 +4,7 @@
 package api
 
 import (
-	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/internal/httputil"
 )
 
 const maxLimitSize = 100
@@ -19,12 +19,17 @@ type addCertsReq struct {
 
 func (req addCertsReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return httputil.ErrMissingToken
 	}
 
-	if req.ThingID == "" || req.TTL == "" || req.KeyType == "" || req.KeyBits == 0 {
-		return errors.ErrMalformedEntity
+	if req.ThingID == "" {
+		return httputil.ErrMissingID
 	}
+
+	if req.TTL == "" || req.KeyType == "" || req.KeyBits == 0 {
+		return httputil.ErrMissingCertData
+	}
+
 	return nil
 }
 
@@ -37,10 +42,10 @@ type listReq struct {
 
 func (req *listReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return httputil.ErrMissingToken
 	}
-	if req.limit == 0 || req.limit > maxLimitSize {
-		return errors.ErrMalformedEntity
+	if req.limit > 1 || req.limit > maxLimitSize {
+		return httputil.ErrLimitSize
 	}
 	return nil
 }
@@ -52,10 +57,10 @@ type viewReq struct {
 
 func (req *viewReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return httputil.ErrMissingToken
 	}
 	if req.serialID == "" {
-		return errors.ErrMalformedEntity
+		return httputil.ErrMissingID
 	}
 
 	return nil
@@ -68,11 +73,11 @@ type revokeReq struct {
 
 func (req *revokeReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return httputil.ErrMissingToken
 	}
 
 	if req.certID == "" {
-		return errors.ErrMalformedEntity
+		return httputil.ErrMissingID
 	}
 
 	return nil
