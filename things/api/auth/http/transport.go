@@ -115,7 +115,8 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
-	case errors.Contains(err, errors.ErrAuthentication):
+	case errors.Contains(err, httputil.ErrMissingToken),
+		errors.Contains(err, errors.ErrAuthentication):
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, errors.ErrNotFound):
 		w.WriteHeader(http.StatusNotFound)
@@ -123,7 +124,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusForbidden)
 	case errors.Contains(err, errors.ErrUnsupportedContentType):
 		w.WriteHeader(http.StatusUnsupportedMediaType)
-	case errors.Contains(err, errors.ErrMalformedEntity):
+	case errors.Contains(err, errors.ErrMalformedEntity),
+		errors.Contains(err, httputil.ErrMissingID):
 		w.WriteHeader(http.StatusBadRequest)
 	default:
 		w.WriteHeader(http.StatusInternalServerError)

@@ -55,6 +55,7 @@ var (
 	notFoundRes    = toJSON(httputil.ErrorRes{Err: errors.ErrNotFound.Error()})
 	unauthzRes     = toJSON(httputil.ErrorRes{Err: errors.ErrAuthorization.Error()})
 	unauthRes      = toJSON(httputil.ErrorRes{Err: errors.ErrAuthentication.Error()})
+	missingTokRes  = toJSON(httputil.ErrorRes{Err: httputil.ErrMissingToken.Error()})
 	searchThingReq = things.PageMetadata{
 		Limit:  5,
 		Offset: 0,
@@ -736,7 +737,7 @@ func TestViewThing(t *testing.T) {
 			id:     th.ID,
 			auth:   "",
 			status: http.StatusUnauthorized,
-			res:    unauthRes,
+			res:    missingTokRes,
 		},
 		{
 			desc:   "view thing by passing invalid id",
@@ -859,9 +860,9 @@ func TestListThings(t *testing.T) {
 		{
 			desc:   "get a list of things with zero limit and offset 1",
 			auth:   token,
-			status: http.StatusOK,
+			status: http.StatusBadRequest,
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d", thingURL, 1, 0),
-			res:    data[1:11],
+			res:    nil,
 		},
 		{
 			desc:   "get a list of things without offset",
@@ -1089,9 +1090,9 @@ func TestSearchThings(t *testing.T) {
 		{
 			desc:   "search things with zero limit",
 			auth:   token,
-			status: http.StatusOK,
+			status: http.StatusBadRequest,
 			req:    zeroLimitData,
-			res:    data[0:10],
+			res:    nil,
 		},
 		{
 			desc:   "search things without offset",
@@ -1780,7 +1781,7 @@ func TestViewChannel(t *testing.T) {
 			id:     sch.ID,
 			auth:   "",
 			status: http.StatusUnauthorized,
-			res:    unauthRes,
+			res:    missingTokRes,
 		},
 		{
 			desc:   "view channel with invalid id",
@@ -1909,9 +1910,9 @@ func TestListChannels(t *testing.T) {
 		{
 			desc:   "get a list of channels with zero limit and offset 1",
 			auth:   token,
-			status: http.StatusOK,
+			status: http.StatusBadRequest,
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d", channelURL, 1, 0),
-			res:    channels[1:11],
+			res:    nil,
 		},
 		{
 			desc:   "get a list of channels with no offset provided",

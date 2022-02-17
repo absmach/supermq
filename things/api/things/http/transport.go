@@ -499,14 +499,24 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
-	case errors.Contains(err, errors.ErrAuthentication):
+	case errors.Contains(err, errors.ErrAuthentication),
+		errors.Contains(err, httputil.ErrMissingToken):
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, errors.ErrAuthorization):
 		w.WriteHeader(http.StatusForbidden)
 	case errors.Contains(err, errors.ErrUnsupportedContentType):
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	case errors.Contains(err, errors.ErrInvalidQueryParams),
-		errors.Contains(err, errors.ErrMalformedEntity):
+		errors.Contains(err, errors.ErrMalformedEntity),
+		errors.Contains(err, httputil.ErrNameSize),
+		errors.Contains(err, httputil.ErrEmptyList),
+		errors.Contains(err, httputil.ErrMissingID),
+		errors.Contains(err, httputil.ErrMalformedPolicy),
+		errors.Contains(err, httputil.ErrMissingKey),
+		errors.Contains(err, httputil.ErrLimitSize),
+		errors.Contains(err, httputil.ErrInvalidOrder),
+		errors.Contains(err, httputil.ErrInvalidDirection),
+		errors.Contains(err, httputil.ErrInvalidIDFormat):
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, errors.ErrNotFound):
 		w.WriteHeader(http.StatusNotFound)

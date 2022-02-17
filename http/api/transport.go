@@ -141,7 +141,8 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
-	case errors.Contains(err, errors.ErrAuthentication):
+	case errors.Contains(err, errors.ErrAuthentication),
+		errors.Contains(err, httputil.ErrMissingToken):
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, errors.ErrAuthorization):
 		w.WriteHeader(http.StatusForbidden)
