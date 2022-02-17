@@ -318,8 +318,8 @@ func TestThings(t *testing.T) {
 			token:    token,
 			offset:   0,
 			limit:    0,
-			err:      nil,
-			response: things[0:10],
+			err:      createError(sdk.ErrFailedFetch, http.StatusBadRequest),
+			response: nil,
 		},
 		{
 			desc:     "get a list of things with limit greater than max",
