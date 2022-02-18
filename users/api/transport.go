@@ -288,15 +288,14 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	case errors.Contains(err, errors.ErrInvalidQueryParams),
 		errors.Contains(err, errors.ErrMalformedEntity),
 		errors.Contains(err, users.ErrPasswordFormat),
-		errors.Contains(err, apiutil.ErrMissingEmail),
-		errors.Contains(err, apiutil.ErrMissingHost),
-		errors.Contains(err, apiutil.ErrMissingPass),
-		errors.Contains(err, apiutil.ErrMissingConfPass),
-		errors.Contains(err, apiutil.ErrInvalidResetPass):
+		err == apiutil.ErrMissingEmail,
+		err == apiutil.ErrMissingHost,
+		err == apiutil.ErrMissingPass,
+		err == apiutil.ErrMissingConfPass,
+		err == apiutil.ErrInvalidResetPass:
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, errors.ErrAuthentication),
-		errors.Contains(err, users.ErrRecoveryToken),
-		errors.Contains(err, apiutil.ErrMissingToken):
+		err == apiutil.ErrMissingToken:
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, errors.ErrAuthorization):
 		w.WriteHeader(http.StatusForbidden)
@@ -308,7 +307,8 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	case errors.Contains(err, errors.ErrNotFound):
 		w.WriteHeader(http.StatusNotFound)
 
-	case errors.Contains(err, uuid.ErrGeneratingID):
+	case errors.Contains(err, uuid.ErrGeneratingID),
+		errors.Contains(err, users.ErrRecoveryToken):
 		w.WriteHeader(http.StatusInternalServerError)
 
 	case errors.Contains(err, errors.ErrCreateEntity),

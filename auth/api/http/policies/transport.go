@@ -77,13 +77,13 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
 	case errors.Contains(err, errors.ErrMalformedEntity),
-		errors.Contains(err, apiutil.ErrEmptyList),
-		errors.Contains(err, apiutil.ErrMissingPolicyObj),
-		errors.Contains(err, apiutil.ErrMissingPolicySub),
-		errors.Contains(err, apiutil.ErrMalformedPolicy):
+		err == apiutil.ErrEmptyList,
+		err == apiutil.ErrMissingPolicyObj,
+		err == apiutil.ErrMissingPolicySub,
+		err == apiutil.ErrMalformedPolicy:
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, errors.ErrAuthentication),
-		errors.Contains(err, apiutil.ErrMissingToken):
+		err == apiutil.ErrMissingToken:
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, errors.ErrNotFound):
 		w.WriteHeader(http.StatusNotFound)

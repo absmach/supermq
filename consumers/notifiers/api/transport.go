@@ -143,15 +143,15 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
 	case errors.Contains(err, errors.ErrMalformedEntity),
-		errors.Contains(err, apiutil.ErrInvalidContact),
-		errors.Contains(err, apiutil.ErrInvalidTopic),
-		errors.Contains(err, apiutil.ErrMissingID),
+		err == apiutil.ErrInvalidContact,
+		err == apiutil.ErrInvalidTopic,
+		err == apiutil.ErrMissingID,
 		errors.Contains(err, errors.ErrInvalidQueryParams):
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, errors.ErrNotFound):
 		w.WriteHeader(http.StatusNotFound)
 	case errors.Contains(err, errors.ErrAuthentication),
-		errors.Contains(err, apiutil.ErrMissingToken):
+		err == apiutil.ErrMissingToken:
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, errors.ErrConflict):
 		w.WriteHeader(http.StatusConflict)

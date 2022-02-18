@@ -238,20 +238,20 @@ func encodeError(err error) error {
 	case errors.Contains(err, nil):
 		return nil
 	case errors.Contains(err, errors.ErrMalformedEntity),
-		errors.Contains(err, apiutil.ErrInvalidAuthKey),
-		errors.Contains(err, apiutil.ErrMissingID),
-		errors.Contains(err, apiutil.ErrMissingMemberType),
-		errors.Contains(err, apiutil.ErrMissingPolicySub),
-		errors.Contains(err, apiutil.ErrMissingPolicyObj),
-		errors.Contains(err, apiutil.ErrMissingPolicyAct):
+		err == apiutil.ErrInvalidAuthKey,
+		err == apiutil.ErrMissingID,
+		err == apiutil.ErrMissingMemberType,
+		err == apiutil.ErrMissingPolicySub,
+		err == apiutil.ErrMissingPolicyObj,
+		err == apiutil.ErrMissingPolicyAct:
 		return status.Error(codes.InvalidArgument, err.Error())
 	case errors.Contains(err, errors.ErrAuthentication),
-		errors.Contains(err, apiutil.ErrMissingEmail):
+		err == apiutil.ErrMissingEmail):
 		return status.Error(codes.Unauthenticated, err.Error())
 	case errors.Contains(err, errors.ErrAuthorization):
 		return status.Error(codes.PermissionDenied, err.Error())
 	case errors.Contains(err, auth.ErrKeyExpired),
-		errors.Contains(err, apiutil.ErrMissingToken):
+		err == apiutil.ErrMissingToken:
 		return status.Error(codes.Unauthenticated, err.Error())
 	default:
 		return status.Error(codes.Internal, "internal server error")

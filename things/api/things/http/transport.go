@@ -500,7 +500,7 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
 	case errors.Contains(err, errors.ErrAuthentication),
-		errors.Contains(err, apiutil.ErrMissingToken):
+		err == apiutil.ErrMissingToken:
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, errors.ErrAuthorization):
 		w.WriteHeader(http.StatusForbidden)
@@ -508,15 +508,15 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	case errors.Contains(err, errors.ErrInvalidQueryParams),
 		errors.Contains(err, errors.ErrMalformedEntity),
-		errors.Contains(err, apiutil.ErrNameSize),
-		errors.Contains(err, apiutil.ErrEmptyList),
-		errors.Contains(err, apiutil.ErrMissingID),
-		errors.Contains(err, apiutil.ErrMalformedPolicy),
-		errors.Contains(err, apiutil.ErrMissingKey),
-		errors.Contains(err, apiutil.ErrLimitSize),
-		errors.Contains(err, apiutil.ErrInvalidOrder),
-		errors.Contains(err, apiutil.ErrInvalidDirection),
-		errors.Contains(err, apiutil.ErrInvalidIDFormat):
+		err == apiutil.ErrNameSize,
+		err == apiutil.ErrEmptyList,
+		err == apiutil.ErrMissingID,
+		err == apiutil.ErrMalformedPolicy,
+		err == apiutil.ErrMissingKey,
+		err == apiutil.ErrLimitSize,
+		err == apiutil.ErrInvalidOrder,
+		err == apiutil.ErrInvalidDirection,
+		err == apiutil.ErrInvalidIDFormat:
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, errors.ErrNotFound):
 		w.WriteHeader(http.StatusNotFound)

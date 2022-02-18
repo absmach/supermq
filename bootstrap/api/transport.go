@@ -255,16 +255,16 @@ func encodeSecureRes(_ context.Context, w http.ResponseWriter, response interfac
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
 	case errors.Contains(err, errors.ErrAuthentication),
-		errors.Contains(err, apiutil.ErrMissingToken),
-		errors.Contains(err, apiutil.ErrMissingKey):
+		err == apiutil.ErrMissingToken,
+		err == apiutil.ErrMissingKey:
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, errors.ErrUnsupportedContentType):
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	case errors.Contains(err, errors.ErrInvalidQueryParams),
 		errors.Contains(err, errors.ErrMalformedEntity),
-		errors.Contains(err, apiutil.ErrMissingID),
-		errors.Contains(err, apiutil.ErrBootstrapState),
-		errors.Contains(err, apiutil.ErrLimitSize):
+		err == apiutil.ErrMissingID,
+		err == apiutil.ErrBootstrapState,
+		err == apiutil.ErrLimitSize:
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, errors.ErrNotFound):
 		w.WriteHeader(http.StatusNotFound)
