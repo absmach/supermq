@@ -107,7 +107,7 @@ func TestIssue(t *testing.T) {
 		status int
 	}{
 		{
-			desc:   "issue login key",
+			desc:   "issue login key with empty token",
 			req:    toJSON(lk),
 			ct:     contentType,
 			token:  "",
@@ -121,11 +121,11 @@ func TestIssue(t *testing.T) {
 			status: http.StatusCreated,
 		},
 		{
-			desc:   "issue recovery key",
+			desc:   "issue recovery key with wrong api type",
 			req:    toJSON(rk),
 			ct:     contentType,
 			token:  loginSecret,
-			status: http.StatusUnauthorized,
+			status: http.StatusBadRequest,
 		},
 		{
 			desc:   "issue login key wrong content type",

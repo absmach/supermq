@@ -83,12 +83,14 @@ var (
 		CACert:     "newca",
 	}
 
-	bsErrorRes   = toJSON(apiutil.ErrorRes{Err: bootstrap.ErrBootstrap.Error()})
-	authnRes     = toJSON(apiutil.ErrorRes{Err: errors.ErrAuthentication.Error()})
-	authzRes     = toJSON(apiutil.ErrorRes{Err: errors.ErrAuthorization.Error()})
-	malformedRes = toJSON(apiutil.ErrorRes{Err: errors.ErrMalformedEntity.Error()})
-	extKeyRes    = toJSON(apiutil.ErrorRes{Err: bootstrap.ErrExternalKey.Error()})
-	extSecKeyRes = toJSON(apiutil.ErrorRes{Err: bootstrap.ErrExternalKeySecure.Error()})
+	bsErrorRes    = toJSON(apiutil.ErrorRes{Err: bootstrap.ErrBootstrap.Error()})
+	authnRes      = toJSON(apiutil.ErrorRes{Err: errors.ErrAuthentication.Error()})
+	authzRes      = toJSON(apiutil.ErrorRes{Err: errors.ErrAuthorization.Error()})
+	malformedRes  = toJSON(apiutil.ErrorRes{Err: errors.ErrMalformedEntity.Error()})
+	extKeyRes     = toJSON(apiutil.ErrorRes{Err: bootstrap.ErrExternalKey.Error()})
+	extSecKeyRes  = toJSON(apiutil.ErrorRes{Err: bootstrap.ErrExternalKeySecure.Error()})
+	missingIDRes  = toJSON(apiutil.ErrorRes{Err: apiutil.ErrMissingID.Error()})
+	missingKeyRes = toJSON(apiutil.ErrorRes{Err: apiutil.ErrMissingKey.Error()})
 )
 
 type testRequest struct {
@@ -1095,7 +1097,7 @@ func TestBootstrap(t *testing.T) {
 			externalID:  "",
 			externalKey: c.ExternalKey,
 			status:      http.StatusBadRequest,
-			res:         malformedRes,
+			res:         missingIDRes,
 			secure:      false,
 		},
 		{
@@ -1111,7 +1113,7 @@ func TestBootstrap(t *testing.T) {
 			externalID:  c.ExternalID,
 			externalKey: "",
 			status:      http.StatusUnauthorized,
-			res:         authnRes,
+			res:         missingKeyRes,
 			secure:      false,
 		},
 		{

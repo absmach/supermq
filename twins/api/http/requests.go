@@ -5,7 +5,6 @@ package http
 
 import (
 	"github.com/mainflux/mainflux/internal/apiutil"
-	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/twins"
 )
 
@@ -31,7 +30,7 @@ func (req addTwinReq) validate() error {
 	}
 
 	if len(req.Name) > maxNameSize {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrNameSize
 	}
 
 	return nil
@@ -51,11 +50,11 @@ func (req updateTwinReq) validate() error {
 	}
 
 	if req.id == "" {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMissingID
 	}
 
 	if len(req.Name) > maxNameSize {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrNameSize
 	}
 
 	return nil
@@ -72,7 +71,7 @@ func (req viewTwinReq) validate() error {
 	}
 
 	if req.id == "" {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMissingID
 	}
 
 	return nil
@@ -91,12 +90,12 @@ func (req *listReq) validate() error {
 		return apiutil.ErrMissingToken
 	}
 
-	if req.limit == 0 || req.limit > maxLimitSize {
-		return errors.ErrMalformedEntity
+	if req.limit < 1 || req.limit > maxLimitSize {
+		return apiutil.ErrLimitSize
 	}
 
 	if len(req.name) > maxNameSize {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrNameSize
 	}
 
 	return nil
@@ -115,11 +114,11 @@ func (req *listStatesReq) validate() error {
 	}
 
 	if req.id == "" {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMissingID
 	}
 
 	if req.limit == 0 || req.limit > maxLimitSize {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrLimitSize
 	}
 
 	return nil

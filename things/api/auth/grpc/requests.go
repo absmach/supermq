@@ -3,16 +3,22 @@
 
 package grpc
 
-import "github.com/mainflux/mainflux/pkg/errors"
+import (
+	"github.com/mainflux/mainflux/internal/apiutil"
+)
 
-type AccessByKeyReq struct {
+type accessByKeyReq struct {
 	thingKey string
 	chanID   string
 }
 
-func (req AccessByKeyReq) validate() error {
-	if req.chanID == "" || req.thingKey == "" {
-		return errors.ErrMalformedEntity
+func (req accessByKeyReq) validate() error {
+	if req.chanID == "" {
+		return apiutil.ErrMissingID
+	}
+
+	if req.thingKey == "" {
+		return apiutil.ErrMissingKey
 	}
 
 	return nil
@@ -25,7 +31,7 @@ type accessByIDReq struct {
 
 func (req accessByIDReq) validate() error {
 	if req.thingID == "" || req.chanID == "" {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMissingID
 	}
 
 	return nil
@@ -38,7 +44,7 @@ type channelOwnerReq struct {
 
 func (req channelOwnerReq) validate() error {
 	if req.owner == "" || req.chanID == "" {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMissingID
 	}
 
 	return nil
@@ -50,7 +56,7 @@ type identifyReq struct {
 
 func (req identifyReq) validate() error {
 	if req.key == "" {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMissingKey
 	}
 
 	return nil

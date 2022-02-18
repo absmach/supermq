@@ -3,7 +3,6 @@ package groups
 import (
 	"github.com/mainflux/mainflux/auth"
 	"github.com/mainflux/mainflux/internal/apiutil"
-	"github.com/mainflux/mainflux/pkg/errors"
 )
 
 type createGroupReq struct {
@@ -19,7 +18,7 @@ func (req createGroupReq) validate() error {
 		return apiutil.ErrMissingToken
 	}
 	if len(req.Name) > maxNameSize || req.Name == "" {
-		return errors.Wrap(errors.ErrMalformedEntity, auth.ErrBadGroupName)
+		return apiutil.ErrNameSize
 	}
 
 	return nil
@@ -39,7 +38,7 @@ func (req updateGroupReq) validate() error {
 	}
 
 	if req.id == "" {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMissingID
 	}
 
 	return nil
@@ -57,11 +56,11 @@ type listGroupsReq struct {
 
 func (req listGroupsReq) validate() error {
 	if req.token == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingToken
 	}
 
 	if req.level > auth.MaxLevel || req.level < auth.MinLevel {
-		return auth.ErrMaxLevelExceeded
+		return apiutil.ErrMaxLevelExceeded
 	}
 
 	return nil
@@ -83,7 +82,7 @@ func (req listMembersReq) validate() error {
 	}
 
 	if req.id == "" {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMissingID
 	}
 
 	return nil
@@ -103,7 +102,7 @@ func (req listMembershipsReq) validate() error {
 	}
 
 	if req.id == "" {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMissingID
 	}
 
 	return nil
@@ -121,8 +120,16 @@ func (req assignReq) validate() error {
 		return apiutil.ErrMissingToken
 	}
 
-	if req.Type == "" || req.groupID == "" || len(req.Members) == 0 {
-		return errors.ErrMalformedEntity
+	if req.Type == "" {
+		return apiutil.ErrMissingMemberType
+	}
+
+	if req.groupID == "" {
+		return apiutil.ErrMissingID
+	}
+
+	if len(req.Members) == 0 {
+		return apiutil.ErrEmptyList
 	}
 
 	return nil
@@ -140,7 +147,7 @@ func (req shareGroupAccessReq) validate() error {
 	}
 
 	if req.ThingGroupID == "" || req.userGroupID == "" {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMissingID
 	}
 
 	return nil
@@ -155,8 +162,12 @@ func (req unassignReq) validate() error {
 		return apiutil.ErrMissingToken
 	}
 
-	if req.groupID == "" || len(req.Members) == 0 {
-		return errors.ErrMalformedEntity
+	if req.groupID == "" {
+		return apiutil.ErrMissingID
+	}
+
+	if len(req.Members) == 0 {
+		return apiutil.ErrEmptyList
 	}
 
 	return nil
@@ -173,7 +184,7 @@ func (req groupReq) validate() error {
 	}
 
 	if req.id == "" {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMissingID
 	}
 
 	return nil

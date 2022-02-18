@@ -28,7 +28,23 @@ func LoggingErrorEncoder(logger logger.Logger, enc kithttp.ErrorEncoder) kithttp
 			ErrInvalidOrder,
 			ErrInvalidDirection,
 			ErrEmptyList,
-			ErrMalformedPolicy:
+			ErrMalformedPolicy,
+			ErrMissingPolicySub,
+			ErrMissingPolicyObj,
+			ErrMissingPolicyAct,
+			ErrMissingCertData,
+			ErrInvalidTopic,
+			ErrInvalidContact,
+			ErrMissingEmail,
+			ErrMissingHost,
+			ErrMissingPass,
+			ErrMissingConfPass,
+			ErrInvalidResetPass,
+			ErrInvalidComparator,
+			ErrMissingMemberType,
+			ErrInvalidAPIKey,
+			ErrMaxLevelExceeded,
+			ErrBootstrapState:
 			logger.Error(err.Error())
 		}
 

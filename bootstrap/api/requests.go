@@ -6,7 +6,6 @@ package api
 import (
 	"github.com/mainflux/mainflux/bootstrap"
 	"github.com/mainflux/mainflux/internal/apiutil"
-	"github.com/mainflux/mainflux/pkg/errors"
 )
 
 const maxLimitSize = 100
@@ -33,8 +32,12 @@ func (req addReq) validate() error {
 		return apiutil.ErrMissingToken
 	}
 
-	if req.ExternalID == "" || req.ExternalKey == "" {
-		return errors.ErrMalformedEntity
+	if req.ExternalID == "" {
+		return apiutil.ErrMissingID
+	}
+
+	if req.ExternalKey == "" {
+		return apiutil.ErrMissingKey
 	}
 
 	return nil
@@ -47,11 +50,11 @@ type entityReq struct {
 
 func (req entityReq) validate() error {
 	if req.key == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingKey
 	}
 
 	if req.id == "" {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMissingID
 	}
 
 	return nil
@@ -66,11 +69,11 @@ type updateReq struct {
 
 func (req updateReq) validate() error {
 	if req.key == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingKey
 	}
 
 	if req.id == "" {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMissingID
 	}
 
 	return nil
@@ -86,11 +89,11 @@ type updateCertReq struct {
 
 func (req updateCertReq) validate() error {
 	if req.key == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingKey
 	}
 
 	if req.thingID == "" {
-		return errors.ErrNotFound
+		return apiutil.ErrMissingID
 	}
 
 	return nil
@@ -104,11 +107,11 @@ type updateConnReq struct {
 
 func (req updateConnReq) validate() error {
 	if req.key == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingKey
 	}
 
 	if req.id == "" {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMissingID
 	}
 
 	return nil
@@ -123,11 +126,11 @@ type listReq struct {
 
 func (req listReq) validate() error {
 	if req.key == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingKey
 	}
 
 	if req.limit > maxLimitSize {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrLimitSize
 	}
 
 	return nil
@@ -140,11 +143,11 @@ type bootstrapReq struct {
 
 func (req bootstrapReq) validate() error {
 	if req.key == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingKey
 	}
 
 	if req.id == "" {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMissingID
 	}
 
 	return nil
@@ -158,16 +161,16 @@ type changeStateReq struct {
 
 func (req changeStateReq) validate() error {
 	if req.key == "" {
-		return errors.ErrAuthentication
+		return apiutil.ErrMissingKey
 	}
 
 	if req.id == "" {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrMissingID
 	}
 
 	if req.State != bootstrap.Inactive &&
 		req.State != bootstrap.Active {
-		return errors.ErrMalformedEntity
+		return apiutil.ErrBootstrapState
 	}
 
 	return nil

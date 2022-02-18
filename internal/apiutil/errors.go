@@ -17,14 +17,20 @@ var (
 	// ErrMissingKey indicates missing entity key.
 	ErrMissingKey = errors.New("missing entity key")
 
+	// ErrInvalidAuthKey indicates invalid auth key.
+	ErrInvalidAuthKey = errors.New("invalid auth key")
+
 	// ErrInvalidIDFormat indicates an invalid ID format.
 	ErrInvalidIDFormat = errors.New("invalid id format provided")
 
 	// ErrNameSize indicates that name size exceeds the max.
-	ErrNameSize = errors.New("name size exceeds the max")
+	ErrNameSize = errors.New("invalid name size")
 
-	// ErrLimitSize indicates that limit size exceeds the max.
-	ErrLimitSize = errors.New("limit size exceeds the max")
+	// ErrLimitSize indicates that an invalid limit.
+	ErrLimitSize = errors.New("invalid limit size")
+
+	// ErrOffsetSize indicates an invalid offset.
+	ErrOffsetSize = errors.New("invalid offset size")
 
 	// ErrInvalidOrder indicates an invalid list order.
 	ErrInvalidOrder = errors.New("invalid list order provided")
@@ -37,6 +43,15 @@ var (
 
 	// ErrMalformedPolicy indicates that policies are malformed.
 	ErrMalformedPolicy = errors.New("falmormed policy")
+
+	// ErrMissingPolicySub indicates that policies are subject.
+	ErrMissingPolicySub = errors.New("falmormed policy subject")
+
+	// ErrMissingPolicyObj indicates missing policies object.
+	ErrMissingPolicyObj = errors.New("falmormed policy object")
+
+	// ErrMissingPolicyAct indicates missing policies action.
+	ErrMissingPolicyAct = errors.New("falmormed policy action")
 
 	// ErrMissingCertData indicates missing cert data (ttl, key_type or key_bits).
 	ErrMissingCertData = errors.New("missing certificate data")
@@ -53,12 +68,27 @@ var (
 	// ErrMissingHost indicates missing host.
 	ErrMissingHost = errors.New("missing host")
 
-	// ErrMissingPassword indicates missing password.
+	// ErrMissingPass indicates missing password.
 	ErrMissingPass = errors.New("missing password")
 
-	// ErrMissingConfPassword indicates missing conf password.
+	// ErrMissingConfPass indicates missing conf password.
 	ErrMissingConfPass = errors.New("missing conf password")
 
 	// ErrInvalidResetPass indicates an invalid reset password.
 	ErrInvalidResetPass = errors.New("invalid reset password")
+
+	// ErrInvalidComparator indicates an invalid comparator.
+	ErrInvalidComparator = errors.New("invalid comparator")
+
+	// ErrMissingMemberType indicates missing group member type.
+	ErrMissingMemberType = errors.New("missing group member type")
+
+	// ErrInvalidAPIKey indicates an invalid API key type.
+	ErrInvalidAPIKey = errors.New("invalid api key type")
+
+	// ErrMaxLevelExceeded indicates an invalid group level.
+	ErrMaxLevelExceeded = errors.New("invalid group level (should be lower than 5)")
+
+	// ErrBootstrapState indicates an invalid boostrap state.
+	ErrBootstrapState = errors.New("invalid bootstrap state")
 )
