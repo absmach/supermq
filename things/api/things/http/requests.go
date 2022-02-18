@@ -43,8 +43,11 @@ func (req createThingReq) validate() error {
 		return apiutil.ErrMissingToken
 	}
 
-	if err := validateUUID(req.ID); req.ID != "" && err != nil {
-		return err
+	// Do the validation only if request contains ID
+	if req.ID != "" {
+		if err := validateUUID(req.ID); err != nil {
+			return err
+		}
 	}
 
 	if len(req.Name) > maxNameSize {
@@ -166,8 +169,11 @@ func (req createChannelReq) validate() error {
 		return apiutil.ErrMissingToken
 	}
 
-	if err := validateUUID(req.ID); req.ID != "" && err != nil {
-		return err
+	// Do the validation only if request contains ID
+	if req.ID != "" {
+		if err := validateUUID(req.ID); err != nil {
+			return err
+		}
 	}
 
 	if len(req.Name) > maxNameSize {

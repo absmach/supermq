@@ -202,7 +202,7 @@ func TestListReqValidation(t *testing.T) {
 			err:    apiutil.ErrLimitSize,
 		},
 		{
-			desc:   "zero limit",
+			desc:   "default limit",
 			key:    "key",
 			offset: 0,
 			limit:  defLimit,
