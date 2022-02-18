@@ -3,9 +3,7 @@
 
 package api
 
-import (
-	"github.com/mainflux/mainflux/internal/apiutil"
-)
+import "github.com/mainflux/mainflux/internal/apiutil"
 
 type createSubReq struct {
 	token   string

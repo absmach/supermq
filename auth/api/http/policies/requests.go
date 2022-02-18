@@ -1,8 +1,6 @@
 package policies
 
-import (
-	"github.com/mainflux/mainflux/internal/apiutil"
-)
+import "github.com/mainflux/mainflux/internal/apiutil"
 
 // Action represents an enum for the policies used in the Mainflux.
 type Action int

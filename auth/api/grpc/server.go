@@ -246,13 +246,12 @@ func encodeError(err error) error {
 		err == apiutil.ErrMissingPolicyAct:
 		return status.Error(codes.InvalidArgument, err.Error())
 	case errors.Contains(err, errors.ErrAuthentication),
-		err == apiutil.ErrMissingEmail):
+		errors.Contains(err, auth.ErrKeyExpired),
+		err == apiutil.ErrMissingEmail,
+		err == apiutil.ErrMissingToken:
 		return status.Error(codes.Unauthenticated, err.Error())
 	case errors.Contains(err, errors.ErrAuthorization):
 		return status.Error(codes.PermissionDenied, err.Error())
-	case errors.Contains(err, auth.ErrKeyExpired),
-		err == apiutil.ErrMissingToken:
-		return status.Error(codes.Unauthenticated, err.Error())
 	default:
 		return status.Error(codes.Internal, "internal server error")
 	}
