@@ -108,13 +108,13 @@ func (req resetTokenReq) validate() error {
 }
 
 type passwChangeReq struct {
-	Token       string `json:"token"`
+	token       string
 	Password    string `json:"password"`
 	OldPassword string `json:"old_password"`
 }
 
 func (req passwChangeReq) validate() error {
-	if req.Token == "" {
+	if req.token == "" {
 		return apiutil.ErrMissingToken
 	}
 	if req.OldPassword == "" {

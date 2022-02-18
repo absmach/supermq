@@ -123,7 +123,7 @@ func (tr testRequest) make() (*http.Response, error) {
 	}
 
 	if tr.token != "" {
-		req.Header.Set("Authorization", tr.token)
+		req.Header.Set("Authorization", apiutil.BearerPrefix+tr.token)
 	}
 
 	if tr.contentType != "" {

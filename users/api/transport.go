@@ -118,16 +118,16 @@ func MakeHandler(svc users.Service, tracer opentracing.Tracer, logger logger.Log
 
 func decodeViewUser(_ context.Context, r *http.Request) (interface{}, error) {
 	req := viewUserReq{
-		token:  r.Header.Get("Authorization"),
+		token:  apiutil.ExtractBearerToken(r),
 		userID: bone.GetValue(r, "userID"),
 	}
+
 	return req, nil
 }
 
 func decodeViewProfile(_ context.Context, r *http.Request) (interface{}, error) {
-	req := viewUserReq{
-		token: r.Header.Get("Authorization"),
-	}
+	req := viewUserReq{token: apiutil.ExtractBearerToken(r)}
+
 	return req, nil
 }
 
@@ -153,7 +153,7 @@ func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
 	}
 
 	req := listUsersReq{
-		token:    r.Header.Get("Authorization"),
+		token:    apiutil.ExtractBearerToken(r),
 		offset:   o,
 		limit:    l,
 		email:    e,
@@ -163,12 +163,11 @@ func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
 }
 
 func decodeUpdateUser(_ context.Context, r *http.Request) (interface{}, error) {
-	var req updateUserReq
+	req := updateUserReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
 
-	req.token = r.Header.Get("Authorization")
 	return req, nil
 }
 
@@ -195,7 +194,12 @@ func decodeCreateUserReq(_ context.Context, r *http.Request) (interface{}, error
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
 
-	return createUserReq{user, r.Header.Get("Authorization")}, nil
+	req := createUserReq{
+		user:  user,
+		token: apiutil.ExtractBearerToken(r),
+	}
+
+	return req, nil
 }
 
 func decodePasswordResetRequest(_ context.Context, r *http.Request) (interface{}, error) {
@@ -231,12 +235,10 @@ func decodePasswordChange(_ context.Context, r *http.Request) (interface{}, erro
 		return nil, errors.ErrUnsupportedContentType
 	}
 
-	var req passwChangeReq
+	req := passwChangeReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
-
-	req.Token = r.Header.Get("Authorization")
 
 	return req, nil
 }
@@ -258,7 +260,7 @@ func decodeListMembersRequest(_ context.Context, r *http.Request) (interface{}, 
 	}
 
 	req := listMemberGroupReq{
-		token:    r.Header.Get("Authorization"),
+		token:    apiutil.ExtractBearerToken(r),
 		groupID:  bone.GetValue(r, "groupId"),
 		offset:   o,
 		limit:    l,

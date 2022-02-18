@@ -95,8 +95,9 @@ func decodeListCerts(_ context.Context, r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	req := listReq{
-		token:   r.Header.Get("Authorization"),
+		token:   apiutil.ExtractBearerToken(r),
 		thingID: bone.GetValue(r, "thingId"),
 		limit:   l,
 		offset:  o,
@@ -106,7 +107,7 @@ func decodeListCerts(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeViewCert(_ context.Context, r *http.Request) (interface{}, error) {
 	req := viewReq{
-		token:    r.Header.Get("Authorization"),
+		token:    apiutil.ExtractBearerToken(r),
 		serialID: bone.GetValue(r, "certId"),
 	}
 
@@ -118,7 +119,7 @@ func decodeCerts(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, errors.ErrUnsupportedContentType
 	}
 
-	req := addCertsReq{token: r.Header.Get("Authorization")}
+	req := addCertsReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}
@@ -128,7 +129,7 @@ func decodeCerts(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeRevokeCerts(_ context.Context, r *http.Request) (interface{}, error) {
 	req := revokeReq{
-		token:  r.Header.Get("Authorization"),
+		token:  apiutil.ExtractBearerToken(r),
 		certID: bone.GetValue(r, "certId"),
 	}
 

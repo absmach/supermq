@@ -92,7 +92,7 @@ func decodeTwinCreation(_ context.Context, r *http.Request) (interface{}, error)
 		return nil, errors.ErrUnsupportedContentType
 	}
 
-	req := addTwinReq{token: r.Header.Get("Authorization")}
+	req := addTwinReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
@@ -106,7 +106,7 @@ func decodeTwinUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 	}
 
 	req := updateTwinReq{
-		token: r.Header.Get("Authorization"),
+		token: apiutil.ExtractBearerToken(r),
 		id:    bone.GetValue(r, "id"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -118,7 +118,7 @@ func decodeTwinUpdate(_ context.Context, r *http.Request) (interface{}, error) {
 
 func decodeView(_ context.Context, r *http.Request) (interface{}, error) {
 	req := viewTwinReq{
-		token: r.Header.Get("Authorization"),
+		token: apiutil.ExtractBearerToken(r),
 		id:    bone.GetValue(r, "id"),
 	}
 
@@ -147,7 +147,7 @@ func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
 	}
 
 	req := listReq{
-		token:    r.Header.Get("Authorization"),
+		token:    apiutil.ExtractBearerToken(r),
 		limit:    l,
 		offset:   o,
 		name:     n,
@@ -169,7 +169,7 @@ func decodeListStates(_ context.Context, r *http.Request) (interface{}, error) {
 	}
 
 	req := listStatesReq{
-		token:  r.Header.Get("Authorization"),
+		token:  apiutil.ExtractBearerToken(r),
 		limit:  l,
 		offset: o,
 		id:     bone.GetValue(r, "id"),

@@ -77,28 +77,26 @@ func decodeCreate(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, errors.ErrUnsupportedContentType
 	}
-	var req createSubReq
+
+	req := createSubReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
 
-	req.token = r.Header.Get("Authorization")
 	return req, nil
 }
 
 func decodeSubscription(_ context.Context, r *http.Request) (interface{}, error) {
 	req := subReq{
 		id:    bone.GetValue(r, "id"),
-		token: r.Header.Get("Authorization"),
+		token: apiutil.ExtractBearerToken(r),
 	}
 
 	return req, nil
 }
 
 func decodeList(_ context.Context, r *http.Request) (interface{}, error) {
-	req := listSubsReq{
-		token: r.Header.Get("Authorization"),
-	}
+	req := listSubsReq{token: apiutil.ExtractBearerToken(r)}
 	vals := bone.GetQuery(r, topicKey)
 	if len(vals) > 0 {
 		req.topic = vals[0]

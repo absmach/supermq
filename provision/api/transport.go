@@ -71,7 +71,7 @@ func decodeProvisionRequest(_ context.Context, r *http.Request) (interface{}, er
 		return nil, errors.ErrUnsupportedContentType
 	}
 
-	req := provisionReq{token: r.Header.Get("Authorization")}
+	req := provisionReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func decodeMappingRequest(_ context.Context, r *http.Request) (interface{}, erro
 		return nil, errors.ErrUnsupportedContentType
 	}
 
-	req := mappingReq{token: r.Header.Get("Authorization")}
+	req := mappingReq{token: apiutil.ExtractBearerToken(r)}
 
 	return req, nil
 }

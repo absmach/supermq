@@ -109,9 +109,14 @@ func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	token := r.Header.Get("Authorization")
-	if _, pass, ok := r.BasicAuth(); ok {
+
+	var token string
+	_, pass, ok := r.BasicAuth()
+	switch {
+	case ok:
 		token = pass
+	case !ok:
+		token = apiutil.ExtractBearerToken(r)
 	}
 
 	payload, err := ioutil.ReadAll(r.Body)

@@ -111,7 +111,7 @@ func decodeAddRequest(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, errors.ErrUnsupportedContentType
 	}
 
-	req := addReq{token: r.Header.Get("Authorization")}
+	req := addReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
@@ -124,8 +124,10 @@ func decodeUpdateRequest(_ context.Context, r *http.Request) (interface{}, error
 		return nil, errors.ErrUnsupportedContentType
 	}
 
-	req := updateReq{key: r.Header.Get("Authorization")}
-	req.id = bone.GetValue(r, "id")
+	req := updateReq{
+		key: apiutil.ExtractBearerToken(r),
+		id:  bone.GetValue(r, "id"),
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
@@ -139,10 +141,9 @@ func decodeUpdateCertRequest(_ context.Context, r *http.Request) (interface{}, e
 	}
 
 	req := updateCertReq{
-		key:     r.Header.Get("Authorization"),
+		key:     apiutil.ExtractBearerToken(r),
 		thingID: bone.GetValue(r, "id"),
 	}
-
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
@@ -155,8 +156,10 @@ func decodeUpdateConnRequest(_ context.Context, r *http.Request) (interface{}, e
 		return nil, errors.ErrUnsupportedContentType
 	}
 
-	req := updateConnReq{key: r.Header.Get("Authorization")}
-	req.id = bone.GetValue(r, "id")
+	req := updateConnReq{
+		key: apiutil.ExtractBearerToken(r),
+		id:  bone.GetValue(r, "id"),
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
@@ -180,11 +183,9 @@ func decodeListRequest(_ context.Context, r *http.Request) (interface{}, error) 
 		return nil, errors.ErrInvalidQueryParams
 	}
 
-	filter := parseFilter(q)
-
 	req := listReq{
-		key:    r.Header.Get("Authorization"),
-		filter: filter,
+		key:    apiutil.ExtractBearerToken(r),
+		filter: parseFilter(q),
 		offset: o,
 		limit:  l,
 	}
@@ -195,7 +196,7 @@ func decodeListRequest(_ context.Context, r *http.Request) (interface{}, error) 
 func decodeBootstrapRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	req := bootstrapReq{
 		id:  bone.GetValue(r, "external_id"),
-		key: r.Header.Get("Authorization"),
+		key: apiutil.ExtractBearerToken(r),
 	}
 
 	return req, nil
@@ -206,8 +207,10 @@ func decodeStateRequest(_ context.Context, r *http.Request) (interface{}, error)
 		return nil, errors.ErrUnsupportedContentType
 	}
 
-	req := changeStateReq{key: r.Header.Get("Authorization")}
-	req.id = bone.GetValue(r, "id")
+	req := changeStateReq{
+		key: apiutil.ExtractBearerToken(r),
+		id:  bone.GetValue(r, "id"),
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
@@ -217,7 +220,7 @@ func decodeStateRequest(_ context.Context, r *http.Request) (interface{}, error)
 
 func decodeEntityRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	req := entityReq{
-		key: r.Header.Get("Authorization"),
+		key: apiutil.ExtractBearerToken(r),
 		id:  bone.GetValue(r, "id"),
 	}
 
