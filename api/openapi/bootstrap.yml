@@ -192,11 +192,11 @@ paths:
     get:
       summary: Retrieves configuration.
       description: |
-        Retrieves a configuration with given external ID and external key.
+        Retrieves a configuration with given external ID and encrypted external key.
       tags:
         - configs
       security:
-        - thingAuth: []
+        - thingEncAuth: []
       parameters:
         - $ref: "#/components/parameters/ExternalId"
       responses:
@@ -526,3 +526,13 @@ components:
       bearerFormat: JWT
       description: |
         * Things access: "Authorization: Thing <thing_key>"
+
+    thingEncAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        * Things access: "Authorization: Thing <thing_enc_key>"
+        Hex-encoded configuration external key encrypted using
+        the AES algorithm and SHA256 sum of the external key
+        itself as an encryption key.
