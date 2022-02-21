@@ -13,8 +13,6 @@ paths:
         the provided access token.
       tags:
         - configs
-      parameters:
-        - $ref: "#/components/parameters/Authorization"
       requestBody:
         $ref: "#/components/requestBodies/ConfigCreateReq"
       responses:
@@ -38,7 +36,6 @@ paths:
       tags:
         - configs
       parameters:
-        - $ref: "#/components/parameters/Authorization"
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
         - $ref: "#/components/parameters/State"
@@ -58,7 +55,6 @@ paths:
       tags:
         - configs
       parameters:
-        - $ref: "#/components/parameters/Authorization"
         - $ref: "#/components/parameters/ConfigId"
       responses:
         '200':
@@ -78,7 +74,6 @@ paths:
       tags:
         - configs
       parameters:
-        - $ref: "#/components/parameters/Authorization"
         - $ref: "#/components/parameters/ConfigId"
       requestBody:
           $ref: "#/components/requestBodies/ConfigUpdateReq"
@@ -103,7 +98,6 @@ paths:
       tags:
         - configs
       parameters:
-        - $ref: "#/components/parameters/Authorization"
         - $ref: "#/components/parameters/ConfigId"
       responses:
         '204':
@@ -123,7 +117,6 @@ paths:
       tags:
         - configs
       parameters:
-        - $ref: "#/components/parameters/Authorization"
         - $ref: "#/components/parameters/ConfigId"
       requestBody:
         $ref: "#/components/requestBodies/ConfigCertUpdateReq"
@@ -149,7 +142,6 @@ paths:
       tags:
         - configs
       parameters:
-        - $ref: "#/components/parameters/Authorization"
         - $ref: "#/components/parameters/ConfigId"
       requestBody:
         $ref: "#/components/requestBodies/ConfigConnUpdateReq"
@@ -214,7 +206,6 @@ paths:
       tags:
         - configs
       parameters:
-        - $ref: "#/components/parameters/Authorization"
         - $ref: "#/components/parameters/ConfigId"
       requestBody:
         $ref: '#/components/requestBodies/ConfigStateUpdateReq'
@@ -344,14 +335,6 @@ components:
         - content
 
   parameters:
-    Authorization:
-      name: Authorization
-      description: User's access token.
-      in: header
-      schema:
-        type: string
-        format: jwt
-      required: true
     ConfigAuth:
       name: configAuthorization
       description: Configuration external key.
@@ -533,3 +516,12 @@ components:
         application/json:
           schema:
             $ref: "./schemas/HealthInfo.yml"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
