@@ -13,8 +13,6 @@ paths:
         the provided access token.
       tags:
         - configs
-      security:
-        - bearerAuth: []
       requestBody:
         $ref: "#/components/requestBodies/ConfigCreateReq"
       responses:
@@ -56,8 +54,6 @@ paths:
       summary: Retrieves config info (with channels).
       tags:
         - configs
-      security:
-        - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/ConfigId"
       responses:
@@ -120,8 +116,6 @@ paths:
         provided in a request payload.
       tags:
         - configs
-      security:
-        - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/ConfigId"
       requestBody:
@@ -147,8 +141,6 @@ paths:
         Thing is connected to.
       tags:
         - configs
-      security:
-        - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/ConfigId"
       requestBody:
@@ -215,8 +207,6 @@ paths:
         and disconnecting corresponding Mainflux Thing to the list of Channels.
       tags:
         - configs
-      security:
-        - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/ConfigId"
       requestBody:
@@ -536,3 +526,6 @@ components:
         Hex-encoded configuration external key encrypted using
         the AES algorithm and SHA256 sum of the external key
         itself as an encryption key.
+
+security:
+  - bearerAuth: []
