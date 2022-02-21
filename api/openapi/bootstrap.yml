@@ -13,6 +13,8 @@ paths:
         the provided access token.
       tags:
         - configs
+      security:
+        - bearerAuth: []
       requestBody:
         $ref: "#/components/requestBodies/ConfigCreateReq"
       responses:
@@ -54,6 +56,8 @@ paths:
       summary: Retrieves config info (with channels).
       tags:
         - configs
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/ConfigId"
       responses:
@@ -116,6 +120,8 @@ paths:
         provided in a request payload.
       tags:
         - configs
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/ConfigId"
       requestBody:
@@ -141,6 +147,8 @@ paths:
         Thing is connected to.
       tags:
         - configs
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/ConfigId"
       requestBody:
@@ -165,8 +173,9 @@ paths:
         Retrieves a configuration with given external ID and external key.
       tags:
         - configs
+      security:
+        - thingAuth: []
       parameters:
-        - $ref: "#/components/parameters/ConfigAuth"
         - $ref: "#/components/parameters/ExternalId"
       responses:
         '200':
@@ -183,11 +192,12 @@ paths:
     get:
       summary: Retrieves configuration.
       description: |
-        Retrieves a configuration with given external ID and encrypted external key.
+        Retrieves a configuration with given external ID and external key.
       tags:
         - configs
+      security:
+        - thingAuth: []
       parameters:
-        - $ref: "#/components/parameters/EncConfigAuth"
         - $ref: "#/components/parameters/ExternalId"
       responses:
         '200':
@@ -205,6 +215,8 @@ paths:
         and disconnecting corresponding Mainflux Thing to the list of Channels.
       tags:
         - configs
+      security:
+        - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/ConfigId"
       requestBody:
@@ -335,23 +347,6 @@ components:
         - content
 
   parameters:
-    ConfigAuth:
-      name: configAuthorization
-      description: Configuration external key.
-      in: header
-      schema:
-        type: string
-      required: true
-    EncConfigAuth:
-      name: configAuthorization
-      description: |
-        Hex-encoded configuration external key encrypted using
-        the AES algorithm and SHA256 sum of the external key
-        itself as an encryption key.
-      in: header
-      schema:
-        type: string
-      required: true
     ConfigId:
       name: configId
       description: Unique Config identifier. It's the ID of the corresponding Thing.
@@ -522,6 +517,12 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: |
+        * Users access: "Authorization: Bearer <user_token>"
 
-security:
-  - bearerAuth: []
+    thingAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        * Things access: "Authorization: Thing <thing_key>"

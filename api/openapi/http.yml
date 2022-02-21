@@ -144,13 +144,19 @@ components:
             $ref: "./schemas/HealthInfo.yml"
 
   securitySchemes:
-    basicAuth:
-      type: http
-      scheme: basic
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: |
+        * Thing access: "Authorization: Thing <thing_key>"
+
+    basicAuth:
+      type: http
+      scheme: basic
+      bearerFormat: JWT
+      description: |
+        * Things access: "Authorization: Basic <thing_key>"
 
 security:
   - bearerAuth: []
