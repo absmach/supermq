@@ -525,14 +525,14 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: |
-        * Things access: "Authorization: Thing <thing_key>"
+        * Things access: "Authorization: Thing <external_key>"
 
     thingEncAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
       description: |
-        * Things access: "Authorization: Thing <thing_enc_key>"
+        * Things access: "Authorization: Thing <external_enc_key>"
         Hex-encoded configuration external key encrypted using
         the AES algorithm and SHA256 sum of the external key
         itself as an encryption key.
