@@ -139,7 +139,7 @@ func decodeRevokeCerts(_ context.Context, r *http.Request) (interface{}, error) 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
 	case errors.Contains(err, errors.ErrAuthentication),
-		err == apiutil.ErrMissingToken:
+		err == apiutil.ErrBearerToken:
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, errors.ErrUnsupportedContentType):
 		w.WriteHeader(http.StatusUnsupportedMediaType)

@@ -15,7 +15,7 @@ type identityReq struct {
 
 func (req identityReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 	if req.kind != auth.LoginKey &&
 		req.kind != auth.APIKey &&
@@ -54,7 +54,7 @@ type assignReq struct {
 
 func (req assignReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 	if req.groupID == "" || req.memberID == "" {
 		return apiutil.ErrMissingID
@@ -72,7 +72,7 @@ type membersReq struct {
 
 func (req membersReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 	if req.groupID == "" {
 		return apiutil.ErrMissingID

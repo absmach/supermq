@@ -29,7 +29,7 @@ type addReq struct {
 
 func (req addReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 
 	if req.ExternalID == "" {

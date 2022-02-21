@@ -248,7 +248,7 @@ func encodeError(err error) error {
 	case errors.Contains(err, errors.ErrAuthentication),
 		errors.Contains(err, auth.ErrKeyExpired),
 		err == apiutil.ErrMissingEmail,
-		err == apiutil.ErrMissingToken:
+		err == apiutil.ErrBearerToken:
 		return status.Error(codes.Unauthenticated, err.Error())
 	case errors.Contains(err, errors.ErrAuthorization):
 		return status.Error(codes.PermissionDenied, err.Error())

@@ -40,7 +40,7 @@ var (
 	notFoundRes   = toJSON(apiutil.ErrorRes{Err: errors.ErrNotFound.Error()})
 	unauthRes     = toJSON(apiutil.ErrorRes{Err: errors.ErrAuthentication.Error()})
 	invalidRes    = toJSON(apiutil.ErrorRes{Err: errors.ErrInvalidQueryParams.Error()})
-	missingTokRes = toJSON(apiutil.ErrorRes{Err: apiutil.ErrMissingToken.Error()})
+	missingTokRes = toJSON(apiutil.ErrorRes{Err: apiutil.ErrBearerToken.Error()})
 )
 
 type testRequest struct {

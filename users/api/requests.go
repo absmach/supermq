@@ -32,7 +32,7 @@ type viewUserReq struct {
 
 func (req viewUserReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 	return nil
 }
@@ -47,7 +47,7 @@ type listUsersReq struct {
 
 func (req listUsersReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 	return nil
 }
@@ -59,7 +59,7 @@ type updateUserReq struct {
 
 func (req updateUserReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 	return nil
 }
@@ -97,7 +97,7 @@ func (req resetTokenReq) validate() error {
 	}
 
 	if req.Token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 
 	if req.Password != req.ConfPass {
@@ -115,7 +115,7 @@ type passwChangeReq struct {
 
 func (req passwChangeReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 	if req.OldPassword == "" {
 		return apiutil.ErrMissingPass
@@ -133,7 +133,7 @@ type listMemberGroupReq struct {
 
 func (req listMemberGroupReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 
 	if req.groupID == "" {

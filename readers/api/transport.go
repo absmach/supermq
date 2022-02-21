@@ -200,7 +200,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		err == apiutil.ErrInvalidComparator:
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, errors.ErrAuthentication),
-		err == apiutil.ErrMissingToken:
+		err == apiutil.ErrBearerToken:
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, readers.ErrReadMessages):
 		w.WriteHeader(http.StatusInternalServerError)

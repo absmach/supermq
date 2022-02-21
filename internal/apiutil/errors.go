@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	// ErrMissingToken indicates missing user token.
-	ErrMissingToken = errors.New("missing user token")
+	// ErrBearerToken indicates missing or invalid bearer token.
+	ErrBearerToken = errors.New("missing or invalid bearer token")
 
 	// ErrMissingID indicates missing entity ID.
 	ErrMissingID = errors.New("missing entity id")

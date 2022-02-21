@@ -13,7 +13,7 @@ type createSubReq struct {
 
 func (req createSubReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 	if req.Topic == "" {
 		return apiutil.ErrInvalidTopic
@@ -31,7 +31,7 @@ type subReq struct {
 
 func (req subReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 	if req.id == "" {
 		return apiutil.ErrMissingID
@@ -49,7 +49,7 @@ type listSubsReq struct {
 
 func (req listSubsReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 	return nil
 }

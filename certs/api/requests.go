@@ -17,7 +17,7 @@ type addCertsReq struct {
 
 func (req addCertsReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 
 	if req.ThingID == "" {
@@ -40,7 +40,7 @@ type listReq struct {
 
 func (req *listReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 	if req.limit > 1 || req.limit > maxLimitSize {
 		return apiutil.ErrLimitSize
@@ -55,7 +55,7 @@ type viewReq struct {
 
 func (req *viewReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 	if req.serialID == "" {
 		return apiutil.ErrMissingID
@@ -71,7 +71,7 @@ type revokeReq struct {
 
 func (req *revokeReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 
 	if req.certID == "" {

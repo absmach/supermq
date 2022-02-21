@@ -258,7 +258,7 @@ func encodeSecureRes(_ context.Context, w http.ResponseWriter, response interfac
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
 	case errors.Contains(err, errors.ErrAuthentication),
-		err == apiutil.ErrMissingToken,
+		err == apiutil.ErrBearerToken,
 		err == apiutil.ErrMissingKey:
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, errors.ErrUnsupportedContentType):

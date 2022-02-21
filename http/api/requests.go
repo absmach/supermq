@@ -15,7 +15,7 @@ type publishReq struct {
 
 func (req publishReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 
 	return nil

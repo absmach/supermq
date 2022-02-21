@@ -11,7 +11,7 @@ type identifyReq struct {
 
 func (req identifyReq) validate() error {
 	if req.Token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 
 	return nil
@@ -24,7 +24,7 @@ type canAccessByKeyReq struct {
 
 func (req canAccessByKeyReq) validate() error {
 	if req.Token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 
 	if req.chanID == "" {

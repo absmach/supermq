@@ -27,7 +27,7 @@ type mappingReq struct {
 
 func (req mappingReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 	return nil
 }

@@ -19,7 +19,7 @@ type issueKeyReq struct {
 // It is not possible to issue Reset key using HTTP API.
 func (req issueKeyReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 
 	if req.Type != auth.APIKey {
@@ -36,7 +36,7 @@ type keyReq struct {
 
 func (req keyReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 
 	if req.id == "" {

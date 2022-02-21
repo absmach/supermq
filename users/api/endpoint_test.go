@@ -46,7 +46,7 @@ var (
 	malformedRes       = toJSON(apiutil.ErrorRes{Err: errors.ErrMalformedEntity.Error()})
 	weakPassword       = toJSON(apiutil.ErrorRes{Err: users.ErrPasswordFormat.Error()})
 	unsupportedRes     = toJSON(apiutil.ErrorRes{Err: errors.ErrUnsupportedContentType.Error()})
-	missingTokRes      = toJSON(apiutil.ErrorRes{Err: apiutil.ErrMissingToken.Error()})
+	missingTokRes      = toJSON(apiutil.ErrorRes{Err: apiutil.ErrBearerToken.Error()})
 	missingEmailRes    = toJSON(apiutil.ErrorRes{Err: apiutil.ErrMissingEmail.Error()})
 	missingPassRes     = toJSON(apiutil.ErrorRes{Err: apiutil.ErrMissingPass.Error()})
 	invalidRestPassRes = toJSON(apiutil.ErrorRes{Err: apiutil.ErrInvalidResetPass.Error()})

@@ -19,7 +19,7 @@ import (
 func LoggingErrorEncoder(logger logger.Logger, enc kithttp.ErrorEncoder) kithttp.ErrorEncoder {
 	return func(ctx context.Context, err error, w http.ResponseWriter) {
 		switch err {
-		case ErrMissingToken,
+		case ErrBearerToken,
 			ErrMissingID,
 			ErrMissingKey,
 			ErrInvalidIDFormat,

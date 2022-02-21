@@ -22,7 +22,7 @@ type listMessagesReq struct {
 
 func (req listMessagesReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 
 	if req.chanID == "" {

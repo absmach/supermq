@@ -33,7 +33,7 @@ type policiesReq struct {
 
 func (req policiesReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrMissingToken
+		return apiutil.ErrBearerToken
 	}
 
 	if len(req.SubjectIDs) == 0 {

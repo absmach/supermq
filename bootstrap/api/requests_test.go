@@ -22,7 +22,7 @@ func TestAddReqValidation(t *testing.T) {
 			token:       "",
 			externalID:  "external-id",
 			externalKey: "external-key",
-			err:         apiutil.ErrMissingToken,
+			err:         apiutil.ErrBearerToken,
 		},
 		{
 			desc:        "empty external ID",
