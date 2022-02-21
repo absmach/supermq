@@ -113,7 +113,7 @@ curl -s -S  -X POST  http://localhost:<MF_PROVISION_HTTP_PORT>/mapping  -H 'Cont
 
 In the case that provision service is not deployed with credentials or API key or you want to use user other than one being set in environment (or config file):
 ```bash
-curl -s -S  -X POST  http://localhost:<MF_PROVISION_HTTP_PORT>/mapping -H "Authorization: <token|api_key>" -H 'Content-Type: application/json' -d '{"external_id": "<external_id>", "external_key": "<external_key>"}'
+curl -s -S  -X POST  http://localhost:<MF_PROVISION_HTTP_PORT>/mapping -H "Authorization: Bearer <token|api_key>" -H 'Content-Type: application/json' -d '{"external_id": "<external_id>", "external_key": "<external_key>"}'
 ```
 
 Or if you want to specify a name for thing different than in `config.toml` you can specify post data as:
@@ -162,7 +162,7 @@ Provision service has `/certs` endpoint that can be used to generate certificate
 - `users_token` - users authentication token or API token
 - `thing_id` - id of the thing for which certificate is going to be generated
 ```bash
-curl -s  -X POST  http://localhost:8190/certs -H "Authorization: <users_token>" -H 'Content-Type: application/json'   -d '{"thing_id": "<thing_id>", "key_bits":4096, "ttl":"2400h" }'
+curl -s  -X POST  http://localhost:8190/certs -H "Authorization: Bearer <users_token>" -H 'Content-Type: application/json'   -d '{"thing_id": "<thing_id>", "key_bits":4096, "ttl":"2400h" }'
 ```
 ```json                                                                                                                            
 {
