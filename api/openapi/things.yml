@@ -40,7 +40,6 @@ paths:
       tags:
         - things
       parameters:
-        - $ref: "#/components/parameters/Authorization"
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
         - $ref: "#/components/parameters/Name"
@@ -252,7 +251,6 @@ paths:
       tags:
         - channels
       parameters:
-        - $ref: "#/components/parameters/Authorization"
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
         - $ref: "#/components/parameters/Name"

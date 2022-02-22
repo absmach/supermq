@@ -62,8 +62,6 @@ paths:
       description: Removes a subscription with the provided id.
       tags:
         - notifiers
-      security:
-        - Authorization: []
       parameters:
         - $ref: "#/components/parameters/Id"
       responses:
@@ -85,11 +83,6 @@ paths:
           $ref: "#/components/responses/ServiceError"
 
 components:
-  securitySchemes:
-    Authorization:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
   schemas:
     Subscription:
       type: object
@@ -220,6 +213,8 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: |
+        * Users access: "Authorization: Bearer <user_token>"
 
 security:
   - bearerAuth: []
