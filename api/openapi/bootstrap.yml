@@ -513,14 +513,14 @@ components:
     thingAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT
+      bearerFormat: uuid
       description: |
         * Things access: "Authorization: Thing <external_key>"
 
     thingEncAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT
+      bearerFormat: aes-sha256-uuid
       description: |
         * Things access: "Authorization: Thing <external_enc_key>"
         Hex-encoded configuration external key encrypted using

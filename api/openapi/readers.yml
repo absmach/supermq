@@ -232,7 +232,7 @@ components:
     thingAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT
+      bearerFormat: uuid
       description: |
         * Things access: "Authorization: Thing <thing_key>"
 

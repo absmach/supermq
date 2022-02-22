@@ -147,16 +147,15 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT
+      bearerFormat: uuid
       description: |
         * Thing access: "Authorization: Thing <thing_key>"
 
     basicAuth:
       type: http
       scheme: basic
-      bearerFormat: JWT
       description: |
-        * Things access: "Authorization: Basic <thing_key>"
+        * Things access: "Authorization: Basic <base64-encoded_credentials>"
 
 security:
   - bearerAuth: []
