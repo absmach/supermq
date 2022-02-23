@@ -142,7 +142,7 @@ func decodeList(ctx context.Context, r *http.Request) (interface{}, error) {
 
 	req := listMessagesReq{
 		chanID: bone.GetValue(r, "chanID"),
-		token:  apiutil.ExtractBearerToken(r),
+		token:  r.Header.Get("Authorization"),
 		pageMeta: readers.PageMetadata{
 			Offset:      offset,
 			Limit:       limit,

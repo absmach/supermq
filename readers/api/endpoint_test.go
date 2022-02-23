@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -69,7 +68,7 @@ func (tr testRequest) make() (*http.Response, error) {
 		return nil, err
 	}
 	if tr.token != "" {
-		req.Header.Set("Authorization", apiutil.BearerPrefix+tr.token)
+		req.Header.Set("Authorization", tr.token)
 	}
 
 	return tr.client.Do(req)
