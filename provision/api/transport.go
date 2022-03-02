@@ -98,7 +98,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	case errors.Contains(err, errors.ErrMalformedEntity),
 		err == apiutil.ErrMissingID,
-		err == apiutil.ErrMissingKey:
+		err == apiutil.ErrBearerKey:
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Contains(err, errors.ErrConflict):
 		w.WriteHeader(http.StatusConflict)

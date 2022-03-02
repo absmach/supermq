@@ -149,7 +149,7 @@ func (req updateKeyReq) validate() error {
 	}
 
 	if req.Key == "" {
-		return apiutil.ErrMissingKey
+		return apiutil.ErrBearerKey
 	}
 
 	return nil

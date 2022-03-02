@@ -22,7 +22,9 @@ func (req issueKeyReq) validate() error {
 		return apiutil.ErrBearerToken
 	}
 
-	if req.Type != auth.APIKey {
+	if req.Type != auth.LoginKey &&
+		req.Type != auth.RecoveryKey &&
+		req.Type != auth.APIKey {
 		return apiutil.ErrInvalidAPIKey
 	}
 

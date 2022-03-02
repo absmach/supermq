@@ -37,7 +37,7 @@ func (req addReq) validate() error {
 	}
 
 	if req.ExternalKey == "" {
-		return apiutil.ErrMissingKey
+		return apiutil.ErrBearerKey
 	}
 
 	return nil
@@ -50,7 +50,7 @@ type entityReq struct {
 
 func (req entityReq) validate() error {
 	if req.key == "" {
-		return apiutil.ErrMissingKey
+		return apiutil.ErrBearerKey
 	}
 
 	if req.id == "" {
@@ -69,7 +69,7 @@ type updateReq struct {
 
 func (req updateReq) validate() error {
 	if req.key == "" {
-		return apiutil.ErrMissingKey
+		return apiutil.ErrBearerKey
 	}
 
 	if req.id == "" {
@@ -89,7 +89,7 @@ type updateCertReq struct {
 
 func (req updateCertReq) validate() error {
 	if req.key == "" {
-		return apiutil.ErrMissingKey
+		return apiutil.ErrBearerKey
 	}
 
 	if req.thingID == "" {
@@ -107,7 +107,7 @@ type updateConnReq struct {
 
 func (req updateConnReq) validate() error {
 	if req.key == "" {
-		return apiutil.ErrMissingKey
+		return apiutil.ErrBearerKey
 	}
 
 	if req.id == "" {
@@ -126,7 +126,7 @@ type listReq struct {
 
 func (req listReq) validate() error {
 	if req.key == "" {
-		return apiutil.ErrMissingKey
+		return apiutil.ErrBearerKey
 	}
 
 	if req.limit > maxLimitSize {
@@ -143,7 +143,7 @@ type bootstrapReq struct {
 
 func (req bootstrapReq) validate() error {
 	if req.key == "" {
-		return apiutil.ErrMissingKey
+		return apiutil.ErrBearerKey
 	}
 
 	if req.id == "" {
@@ -161,7 +161,7 @@ type changeStateReq struct {
 
 func (req changeStateReq) validate() error {
 	if req.key == "" {
-		return apiutil.ErrMissingKey
+		return apiutil.ErrBearerKey
 	}
 
 	if req.id == "" {

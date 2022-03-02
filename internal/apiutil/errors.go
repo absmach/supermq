@@ -3,19 +3,18 @@
 
 package apiutil
 
-import (
-	"github.com/mainflux/mainflux/pkg/errors"
-)
+import "github.com/mainflux/mainflux/pkg/errors"
 
+// Errors used to distingate and log on API request validation
 var (
-	// ErrBearerToken indicates missing or invalid bearer token.
-	ErrBearerToken = errors.New("missing or invalid bearer token")
+	// ErrBearerToken indicates missing or invalid bearer user token.
+	ErrBearerToken = errors.New("missing or invalid bearer user token")
+
+	// ErrBearerKey indicates missing or invalid bearer entity key.
+	ErrBearerKey = errors.New("missing or invalid bearer entity key")
 
 	// ErrMissingID indicates missing entity ID.
 	ErrMissingID = errors.New("missing entity id")
-
-	// ErrMissingKey indicates missing entity key.
-	ErrMissingKey = errors.New("missing entity key")
 
 	// ErrInvalidAuthKey indicates invalid auth key.
 	ErrInvalidAuthKey = errors.New("invalid auth key")

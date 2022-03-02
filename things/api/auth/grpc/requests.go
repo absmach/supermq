@@ -16,7 +16,7 @@ func (req accessByKeyReq) validate() error {
 	}
 
 	if req.thingKey == "" {
-		return apiutil.ErrMissingKey
+		return apiutil.ErrBearerKey
 	}
 
 	return nil
@@ -54,7 +54,7 @@ type identifyReq struct {
 
 func (req identifyReq) validate() error {
 	if req.key == "" {
-		return apiutil.ErrMissingKey
+		return apiutil.ErrBearerKey
 	}
 
 	return nil

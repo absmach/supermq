@@ -125,7 +125,7 @@ func encodeError(err error) error {
 		return nil
 	case errors.ErrMalformedEntity,
 		apiutil.ErrMissingID,
-		apiutil.ErrMissingKey:
+		apiutil.ErrBearerKey:
 		return status.Error(codes.InvalidArgument, "received invalid can access request")
 	case errors.ErrAuthentication:
 		return status.Error(codes.Unauthenticated, "missing or invalid credentials provided")

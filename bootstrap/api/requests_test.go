@@ -36,7 +36,7 @@ func TestAddReqValidation(t *testing.T) {
 			token:       "token",
 			externalID:  "external-id",
 			externalKey: "",
-			err:         apiutil.ErrMissingKey,
+			err:         apiutil.ErrBearerKey,
 		},
 	}
 
@@ -63,7 +63,7 @@ func TestEntityReqValidation(t *testing.T) {
 			desc: "empty key",
 			key:  "",
 			id:   "id",
-			err:  apiutil.ErrMissingKey,
+			err:  apiutil.ErrBearerKey,
 		},
 		{
 			desc: "empty id",
@@ -94,7 +94,7 @@ func TestUpdateReqValidation(t *testing.T) {
 			desc: "empty key",
 			key:  "",
 			id:   "id",
-			err:  apiutil.ErrMissingKey,
+			err:  apiutil.ErrBearerKey,
 		},
 		{
 			desc: "empty id",
@@ -126,7 +126,7 @@ func TestUpdateCertReqValidation(t *testing.T) {
 			desc:    "empty key",
 			key:     "",
 			thingID: "thingID",
-			err:     apiutil.ErrMissingKey,
+			err:     apiutil.ErrBearerKey,
 		},
 		{
 			desc:    "empty thing id",
@@ -158,7 +158,7 @@ func TestUpdateConnReqValidation(t *testing.T) {
 			desc: "empty key",
 			key:  "",
 			id:   "id",
-			err:  apiutil.ErrMissingKey,
+			err:  apiutil.ErrBearerKey,
 		},
 		{
 			desc: "empty id",
@@ -192,7 +192,7 @@ func TestListReqValidation(t *testing.T) {
 			key:    "",
 			offset: 0,
 			limit:  1,
-			err:    apiutil.ErrMissingKey,
+			err:    apiutil.ErrBearerKey,
 		},
 		{
 			desc:   "too large limit",
@@ -233,7 +233,7 @@ func TestBootstrapReqValidation(t *testing.T) {
 			desc:      "empty external key",
 			externKey: "",
 			externID:  "id",
-			err:       apiutil.ErrMissingKey,
+			err:       apiutil.ErrBearerKey,
 		},
 		{
 			desc:      "empty external id",
@@ -267,7 +267,7 @@ func TestChangeStateReqValidation(t *testing.T) {
 			key:   "",
 			id:    "id",
 			state: bootstrap.State(1),
-			err:   apiutil.ErrMissingKey,
+			err:   apiutil.ErrBearerKey,
 		},
 		{
 			desc:  "empty id",

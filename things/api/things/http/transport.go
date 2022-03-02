@@ -514,7 +514,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 		err == apiutil.ErrEmptyList,
 		err == apiutil.ErrMissingID,
 		err == apiutil.ErrMalformedPolicy,
-		err == apiutil.ErrMissingKey,
+		err == apiutil.ErrBearerKey,
 		err == apiutil.ErrLimitSize,
 		err == apiutil.ErrInvalidOrder,
 		err == apiutil.ErrInvalidDirection,

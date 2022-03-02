@@ -21,10 +21,12 @@ func LoggingErrorEncoder(logger logger.Logger, enc kithttp.ErrorEncoder) kithttp
 		switch err {
 		case ErrBearerToken,
 			ErrMissingID,
-			ErrMissingKey,
+			ErrBearerKey,
+			ErrInvalidAuthKey,
 			ErrInvalidIDFormat,
 			ErrNameSize,
 			ErrLimitSize,
+			ErrOffsetSize,
 			ErrInvalidOrder,
 			ErrInvalidDirection,
 			ErrEmptyList,

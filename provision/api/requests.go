@@ -15,7 +15,7 @@ func (req provisionReq) validate() error {
 	}
 
 	if req.ExternalKey == "" {
-		return apiutil.ErrMissingKey
+		return apiutil.ErrBearerKey
 	}
 
 	return nil

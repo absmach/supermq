@@ -90,7 +90,7 @@ var (
 	extKeyRes     = toJSON(apiutil.ErrorRes{Err: bootstrap.ErrExternalKey.Error()})
 	extSecKeyRes  = toJSON(apiutil.ErrorRes{Err: bootstrap.ErrExternalKeySecure.Error()})
 	missingIDRes  = toJSON(apiutil.ErrorRes{Err: apiutil.ErrMissingID.Error()})
-	missingKeyRes = toJSON(apiutil.ErrorRes{Err: apiutil.ErrMissingKey.Error()})
+	missingKeyRes = toJSON(apiutil.ErrorRes{Err: apiutil.ErrBearerKey.Error()})
 )
 
 type testRequest struct {
