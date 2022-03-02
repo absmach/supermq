@@ -70,8 +70,10 @@ func (req createThingsReq) validate() error {
 	}
 
 	for _, thing := range req.Things {
-		if err := validateUUID(thing.ID); thing.ID != "" && err != nil {
-			return err
+		if thing.ID != "" {
+			if err := validateUUID(thing.ID); err != nil {
+				return err
+			}
 		}
 
 		if len(thing.Name) > maxNameSize {
@@ -194,8 +196,10 @@ func (req createChannelsReq) validate() error {
 	}
 
 	for _, channel := range req.Channels {
-		if err := validateUUID(channel.ID); channel.ID != "" && err != nil {
-			return err
+		if channel.ID != "" {
+			if err := validateUUID(channel.ID); err != nil {
+				return err
+			}
 		}
 
 		if len(channel.Name) > maxNameSize {
