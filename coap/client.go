@@ -5,7 +5,9 @@ package coap
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+	"sync/atomic"
 
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -30,25 +32,36 @@ type observers map[string]Observer
 var ErrOption = errors.New("unable to set option")
 
 type client struct {
-	client mux.Client
-	token  message.Token
-	logger logger.Logger
+	client  mux.Client
+	token   message.Token
+	observe uint32
+	logger  logger.Logger
 }
 
 // NewClient instantiates a new Observer.
 func NewClient(mc mux.Client, token message.Token, l logger.Logger) Client {
 	return &client{
-		client: mc,
-		token:  token,
-		logger: l,
+		client:  mc,
+		token:   token,
+		logger:  l,
+		observe: 0,
 	}
 }
 
 func (c *client) Done() <-chan struct{} {
-	return c.client.Context().Done()
+	return c.client.Done()
 }
 
 func (c *client) Cancel() error {
+	m := message.Message{
+		Code:    codes.Content,
+		Token:   c.token,
+		Context: context.Background(),
+		Options: make(message.Options, 0, 16),
+	}
+	if err := c.client.WriteMessage(&m); err != nil {
+		c.logger.Error(fmt.Sprintf("Error sending message: %s.", err))
+	}
 	return c.client.Close()
 }
 
@@ -60,25 +73,29 @@ func (c *client) SendMessage(msg messaging.Message) error {
 	m := message.Message{
 		Code:    codes.Content,
 		Token:   c.token,
-		Context: c.client.Context(),
+		Context: context.Background(),
 		Body:    bytes.NewReader(msg.Payload),
 	}
+	atomic.AddUint32(&c.observe, 1)
 	var opts message.Options
 	var buff []byte
-
+	fmt.Println("Sending message 1")
 	opts, n, err := opts.SetContentFormat(buff, message.TextPlain)
 	if err == message.ErrTooSmall {
 		buff = append(buff, make([]byte, n)...)
-		opts, n, err = opts.SetContentFormat(buff, message.TextPlain)
+		_, _, err = opts.SetContentFormat(buff, message.TextPlain)
 	}
 	if err != nil {
 		c.logger.Error(fmt.Sprintf("Can't set content format: %s.", err))
 		return errors.Wrap(ErrOption, err)
 	}
+	opts = append(opts, message.Option{ID: message.Observe, Value: []byte{byte(c.observe)}})
 	m.Options = opts
-	if err := c.client.WriteMessage(&m); err != nil {
-		c.logger.Error(fmt.Sprintf("Error sending message: %s.", err))
-		return err
-	}
+	fmt.Println("Sending message 2")
+	go func() {
+		if err := c.client.WriteMessage(&m); err != nil {
+			c.logger.Error(fmt.Sprintf("Error sending message: %s.", err))
+		}
+	}()
 	return nil
 }

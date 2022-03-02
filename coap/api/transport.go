@@ -31,7 +31,7 @@ const (
 	authQuery = "auth"
 )
 
-var channelPartRegExp = regexp.MustCompile(`^channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
+var channelPartRegExp = regexp.MustCompile(`/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
 
 var errMalformedSubtopic = errors.New("malformed subtopic")
 
@@ -57,20 +57,24 @@ func MakeCoAPHandler(svc coap.Service, l log.Logger) mux.HandlerFunc {
 	return handler
 }
 
-func sendResp(w mux.ResponseWriter, resp *message.Message) {
-	if err := w.Client().WriteMessage(resp); err != nil {
-		logger.Warn(fmt.Sprintf("Can't set response: %s", err))
+func sendResp(w mux.ResponseWriter, resp *message.Message, send *bool) {
+	if *send {
+		if err := w.Client().WriteMessage(resp); err != nil {
+			logger.Warn(fmt.Sprintf("Can't set response: %s", err))
+		}
 	}
 }
 
 func handler(w mux.ResponseWriter, m *mux.Message) {
+	fmt.Println("Received message:", m)
 	resp := message.Message{
 		Code:    codes.Content,
 		Token:   m.Token,
 		Context: m.Context,
 		Options: make(message.Options, 0, 16),
 	}
-	defer sendResp(w, &resp)
+	send := true
+	defer sendResp(w, &resp, &send)
 	if m.Options == nil {
 		logger.Warn("Nil options")
 		resp.Code = codes.BadOption
@@ -100,9 +104,12 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 		if obs == 0 {
 			c := coap.NewClient(w.Client(), m.Token, logger)
 			err = service.Subscribe(context.Background(), key, msg.Channel, msg.Subtopic, c)
+			resp.Options = append(resp.Options, message.Option{ID: message.Observe})
 			break
 		}
 		service.Unsubscribe(context.Background(), key, msg.Channel, msg.Subtopic, m.Token.String())
+		fmt.Println("SEND")
+		send = false
 	case codes.POST:
 		err = service.Publish(context.Background(), key, msg)
 	default:
@@ -154,13 +161,16 @@ func decodeMessage(msg *mux.Message) (messaging.Message, error) {
 
 func parseID(path string) string {
 	vars := strings.Split(path, "/")
-	if len(vars) > 1 {
-		return vars[1]
+	if len(vars) > 2 {
+		return vars[2]
 	}
 	return ""
 }
 
 func parseKey(msg *mux.Message) (string, error) {
+	if obs, _ := msg.Options.Observe(); obs != 0 && msg.Code == codes.GET {
+		return "", nil
+	}
 	authKey, err := msg.Options.GetString(message.URIQuery)
 	if err != nil {
 		return "", err
