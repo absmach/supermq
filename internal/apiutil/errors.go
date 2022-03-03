@@ -6,8 +6,8 @@ package apiutil
 import "github.com/mainflux/mainflux/pkg/errors"
 
 // Errors defined in this file are used by the LoggingErrorEncoder decorator
-// to distingate and log API request validation errors and avoid that service
-// errors are logged twice…
+// to distinguish and log API request validation errors and avoid that service
+// errors are logged twice.
 var (
 	// ErrBearerToken indicates missing or invalid bearer user token.
 	ErrBearerToken = errors.New("missing or invalid bearer user token")
