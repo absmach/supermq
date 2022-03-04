@@ -166,7 +166,7 @@ paths:
       tags:
         - configs
       security:
-        - thingAuth: []
+        - bootstrapAuth: []
       parameters:
         - $ref: "#/components/parameters/ExternalId"
       responses:
@@ -188,7 +188,7 @@ paths:
       tags:
         - configs
       security:
-        - thingEncAuth: []
+        - bootstrapEncAuth: []
       parameters:
         - $ref: "#/components/parameters/ExternalId"
       responses:
@@ -510,14 +510,14 @@ components:
       description: |
         * Users access: "Authorization: Bearer <user_token>"
 
-    thingAuth:
+    bootstrapAuth:
       type: http
       scheme: bearer
-      bearerFormat: uuid
+      bearerFormat: string
       description: |
         * Things access: "Authorization: Thing <external_key>"
 
-    thingEncAuth:
+    bootstrapEncAuth:
       type: http
       scheme: bearer
       bearerFormat: aes-sha256-uuid

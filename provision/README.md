@@ -87,7 +87,7 @@ Additionally users or API token can be passed in Authorization header, this auth
 
 * `username`, `password` - (`MF_PROVISION_USER`, `MF_PROVISION_PASSWORD` in [.env](../.env), `mf_user`, `mf_pass` in [config.toml](../docker/addons/provision/configs/config.toml))
 * API Key - (`MF_PROVISION_API_KEY` in [.env](../.env) or [config.toml](../docker/addons/provision/configs/config.toml))
-* `Authorization: Token|ApiKey` - request authorization header containing either users token or API key. Check [auth](../auth/README.md).
+* `Authorization: Bearer Token|ApiKey` - request authorization header containing either users token or API key. Check [auth](../auth/README.md).
 
 ## Running
 Provision service can be run as a standalone or in docker composition as addon to the core docker composition.
