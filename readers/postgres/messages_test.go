@@ -317,7 +317,6 @@ func TestReadSenml(t *testing.T) {
 				Messages: fromSenml(stringMsgs[0:limit]),
 			},
 		},
-
 		"read message with string value and equal comparator": {
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
@@ -331,7 +330,6 @@ func TestReadSenml(t *testing.T) {
 				Messages: fromSenml(stringMsgs[0:limit]),
 			},
 		},
-
 		"read message with string value and lower-than comparator": {
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
@@ -345,7 +343,6 @@ func TestReadSenml(t *testing.T) {
 				Messages: fromSenml(stringMsgs[0:limit]),
 			},
 		},
-
 		"read message with string value and lower-than-or-equal comparator": {
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
@@ -359,7 +356,6 @@ func TestReadSenml(t *testing.T) {
 				Messages: fromSenml(stringMsgs[0:limit]),
 			},
 		},
-
 		"read message with string value and greater-than comparator": {
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
@@ -386,7 +382,6 @@ func TestReadSenml(t *testing.T) {
 				Messages: fromSenml(stringMsgs[0:limit]),
 			},
 		},
-
 		"read message with data value": {
 			chanID: chanID,
 			pageMeta: readers.PageMetadata{
