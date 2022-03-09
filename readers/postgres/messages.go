@@ -149,9 +149,11 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) string {
 		case "vb":
 			condition = fmt.Sprintf(`%s AND bool_value = :bool_value`, condition)
 		case "vs":
-			condition = fmt.Sprintf(`%s AND string_value = :string_value`, condition)
+			comparator := readers.ParseValueComparator(query)
+			condition = fmt.Sprintf(`%s AND string_value %s :string_value`, condition, comparator)
 		case "vd":
-			condition = fmt.Sprintf(`%s AND data_value = :data_value`, condition)
+			comparator := readers.ParseValueComparator(query)
+			condition = fmt.Sprintf(`%s AND data_value %s :data_value`, condition, comparator)
 		case "from":
 			condition = fmt.Sprintf(`%s AND time >= :from`, condition)
 		case "to":
