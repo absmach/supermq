@@ -4,8 +4,6 @@
 package coap
 
 import (
-	"fmt"
-
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	broker "github.com/nats-io/nats.go"
@@ -24,7 +22,6 @@ func NewObserver(subject string, c Client, conn *broker.Conn) (Observer, error) 
 			return
 		}
 		// There is no error handling, but the client takes care to log the error.
-		fmt.Println("Calling handler")
 		c.SendMessage(msg)
 	})
 	if err != nil {

@@ -79,7 +79,6 @@ func (c *client) SendMessage(msg messaging.Message) error {
 	atomic.AddUint32(&c.observe, 1)
 	var opts message.Options
 	var buff []byte
-	fmt.Println("Sending message 1")
 	opts, n, err := opts.SetContentFormat(buff, message.TextPlain)
 	if err == message.ErrTooSmall {
 		buff = append(buff, make([]byte, n)...)
@@ -91,7 +90,6 @@ func (c *client) SendMessage(msg messaging.Message) error {
 	}
 	opts = append(opts, message.Option{ID: message.Observe, Value: []byte{byte(c.observe)}})
 	m.Options = opts
-	fmt.Println("Sending message 2")
 	go func() {
 		if err := c.client.WriteMessage(&m); err != nil {
 			c.logger.Error(fmt.Sprintf("Error sending message: %s.", err))

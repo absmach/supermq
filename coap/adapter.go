@@ -10,7 +10,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -56,14 +55,6 @@ func New(auth mainflux.ThingsServiceClient, nc *broker.Conn) Service {
 		observers: make(map[string]observers),
 		obsLock:   sync.Mutex{},
 	}
-	go func() {
-		for {
-			time.Sleep(10 * time.Second)
-			as.obsLock.Lock()
-			fmt.Println("LEN", len(as.observers), as.observers)
-			as.obsLock.Unlock()
-		}
-	}()
 
 	return as
 }
@@ -115,13 +106,13 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic 
 }
 
 func (svc *adapterService) Unsubscribe(ctx context.Context, key, chanID, subtopic, token string) error {
-	// ar := &mainflux.AccessByKeyReq{
-	// 	Token:  key,
-	// 	ChanID: chanID,
-	// }
-	// if _, err := svc.auth.CanAccessByKey(ctx, ar); err != nil {
-	// 	return errors.Wrap(errors.ErrAuthorization, err)
-	// }
+	ar := &mainflux.AccessByKeyReq{
+		Token:  key,
+		ChanID: chanID,
+	}
+	if _, err := svc.auth.CanAccessByKey(ctx, ar); err != nil {
+		return errors.Wrap(errors.ErrAuthorization, err)
+	}
 	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)

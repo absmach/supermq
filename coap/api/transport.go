@@ -66,7 +66,6 @@ func sendResp(w mux.ResponseWriter, resp *message.Message, send *bool) {
 }
 
 func handler(w mux.ResponseWriter, m *mux.Message) {
-	fmt.Println("Received message:", m)
 	resp := message.Message{
 		Code:    codes.Content,
 		Token:   m.Token,
@@ -108,7 +107,6 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 			break
 		}
 		service.Unsubscribe(context.Background(), key, msg.Channel, msg.Subtopic, m.Token.String())
-		fmt.Println("SEND")
 		send = false
 	case codes.POST:
 		err = service.Publish(context.Background(), key, msg)
@@ -168,9 +166,6 @@ func parseID(path string) string {
 }
 
 func parseKey(msg *mux.Message) (string, error) {
-	if obs, _ := msg.Options.Observe(); obs != 0 && msg.Code == codes.GET {
-		return "", nil
-	}
 	authKey, err := msg.Options.GetString(message.URIQuery)
 	if err != nil {
 		return "", err
