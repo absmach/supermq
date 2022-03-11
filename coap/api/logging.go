@@ -67,7 +67,7 @@ func (lm *loggingMiddleware) Unsubscribe(ctx context.Context, key, chanID, subto
 		if subtopic != "" {
 			destChannel = fmt.Sprintf("%s.%s", destChannel, subtopic)
 		}
-		message := fmt.Sprintf("Method unsubscribe for the client %s from the channel %s and subtopic %s took %s to complete without errors.", token, destChannel, subtopic, time.Since(begin))
+		message := fmt.Sprintf("Method unsubscribe for the client %s from the channel %s took %s to complete", token, destChannel, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return

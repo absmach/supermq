@@ -31,7 +31,7 @@ const (
 	authQuery = "auth"
 )
 
-var channelPartRegExp = regexp.MustCompile(`/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
+var channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
 
 var (
 	errMalformedSubtopic = errors.New("malformed subtopic")
@@ -105,7 +105,7 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 		case errors.Contains(err, errors.ErrAuthorization),
 			errors.Contains(err, errors.ErrAuthentication):
 			resp.Code = codes.Unauthorized
-		case errors.Contains(err, coap.ErrUnsubscribe):
+		default:
 			resp.Code = codes.InternalServerError
 		}
 		sendResp(w, &resp)
@@ -135,7 +135,7 @@ func decodeMessage(msg *mux.Message) (messaging.Message, error) {
 		return messaging.Message{}, err
 	}
 	channelParts := channelPartRegExp.FindStringSubmatch(path)
-	if len(channelParts) < 2 {
+	if len(channelParts) < 3 {
 		return messaging.Message{}, errMalformedSubtopic
 	}
 
@@ -145,7 +145,7 @@ func decodeMessage(msg *mux.Message) (messaging.Message, error) {
 	}
 	ret := messaging.Message{
 		Protocol: protocol,
-		Channel:  parseID(path),
+		Channel:  channelParts[1],
 		Subtopic: st,
 		Payload:  []byte{},
 		Created:  time.Now().UnixNano(),
@@ -161,28 +161,19 @@ func decodeMessage(msg *mux.Message) (messaging.Message, error) {
 	return ret, nil
 }
 
-func parseID(path string) string {
-	vars := strings.Split(path, "/")
-	if len(vars) > 2 {
-		return vars[2]
-	}
-	return ""
-}
-
 func parseKey(msg *mux.Message) (string, error) {
-	// if obs, _ := msg.Options.Observe(); obs != 0 && msg.Code == codes.GET {
-	// 	return "", nil
-	// }
-	// authKey, err := msg.Options.GetString(message.URIQuery)
-	// if err != nil {
-	// 	return "", err
-	// }
-	// vars := strings.Split(authKey, "=")
-	// if len(vars) != 2 || vars[0] != authQuery {
-	// 	return "", errors.ErrAuthorization
-	// }
-	// return vars[1], nil
-	return "", nil
+	if obs, _ := msg.Options.Observe(); obs != 0 && msg.Code == codes.GET {
+		return "", nil
+	}
+	authKey, err := msg.Options.GetString(message.URIQuery)
+	if err != nil {
+		return "", err
+	}
+	vars := strings.Split(authKey, "=")
+	if len(vars) != 2 || vars[0] != authQuery {
+		return "", errors.ErrAuthorization
+	}
+	return vars[1], nil
 }
 
 func parseSubtopic(subtopic string) (string, error) {
