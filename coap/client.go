@@ -39,10 +39,10 @@ type client struct {
 }
 
 // NewClient instantiates a new Observer.
-func NewClient(mc mux.Client, token message.Token, l logger.Logger) Client {
+func NewClient(c mux.Client, tkn message.Token, l logger.Logger) Client {
 	return &client{
-		client:  mc,
-		token:   token,
+		client:  c,
+		token:   tkn,
 		logger:  l,
 		observe: 0,
 	}
@@ -62,6 +62,7 @@ func (c *client) Cancel() error {
 	if err := c.client.WriteMessage(&m); err != nil {
 		c.logger.Error(fmt.Sprintf("Error sending message: %s.", err))
 	}
+	fmt.Println("sent done")
 	return c.client.Close()
 }
 
@@ -73,9 +74,33 @@ func (c *client) SendMessage(msg messaging.Message) error {
 	m := message.Message{
 		Code:    codes.Content,
 		Token:   c.token,
-		Context: context.Background(),
+		Context: c.client.Context(),
 		Body:    bytes.NewReader(msg.Payload),
 	}
+
+	// var opts message.Options
+	// var buf []byte
+	// opts, n, err := opts.SetContentFormat(buf, message.TextPlain)
+	// if err == message.ErrTooSmall {
+	// 	buf = append(buf, make([]byte, n)...)
+	// 	opts, _, err = opts.SetContentFormat(buf, message.TextPlain)
+	// }
+	// if err != nil {
+	// 	return fmt.Errorf("cannot set content format to response: %w", err)
+	// }
+	// if obs >= 0 {
+	// 	opts, n, err = opts.SetObserve(buf, uint32(obs))
+	// 	if err == message.ErrTooSmall {
+	// 		buf = append(buf, make([]byte, n)...)
+	// 		opts, _, err = opts.SetObserve(buf, uint32(obs))
+	// 	}
+	// 	if err != nil {
+	// 		return fmt.Errorf("cannot set options to response: %w", err)
+	// 	}
+	// }
+	// m.Options = opts
+	// return cc.WriteMessage(&m)
+
 	atomic.AddUint32(&c.observe, 1)
 	var opts message.Options
 	var buff []byte
@@ -89,11 +114,21 @@ func (c *client) SendMessage(msg messaging.Message) error {
 		return errors.Wrap(ErrOption, err)
 	}
 	opts = append(opts, message.Option{ID: message.Observe, Value: []byte{byte(c.observe)}})
+	opts, n, err = opts.SetObserve(buff, uint32(c.observe))
+	if err == message.ErrTooSmall {
+		buff = append(buff, make([]byte, n)...)
+		opts, _, err = opts.SetObserve(buff, uint32(c.observe))
+	}
+	if err != nil {
+		return fmt.Errorf("cannot set options to response: %w", err)
+	}
+
 	m.Options = opts
-	go func() {
-		if err := c.client.WriteMessage(&m); err != nil {
-			c.logger.Error(fmt.Sprintf("Error sending message: %s.", err))
-		}
-	}()
-	return nil
+	return c.client.WriteMessage(&m)
+	// go func() {
+	// 	if err := c.client.WriteMessage(&m); err != nil {
+	// 		c.logger.Error(fmt.Sprintf("Error sending message: %s.", err))
+	// 	}
+	// }()
+	// return nil
 }

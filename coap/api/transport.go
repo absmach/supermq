@@ -33,7 +33,10 @@ const (
 
 var channelPartRegExp = regexp.MustCompile(`/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
 
-var errMalformedSubtopic = errors.New("malformed subtopic")
+var (
+	errMalformedSubtopic = errors.New("malformed subtopic")
+	errBadOptions        = errors.New("bad options")
+)
 
 var (
 	logger  log.Logger
@@ -57,38 +60,33 @@ func MakeCoAPHandler(svc coap.Service, l log.Logger) mux.HandlerFunc {
 	return handler
 }
 
-func sendResp(w mux.ResponseWriter, resp *message.Message, send *bool) {
-	if *send {
-		if err := w.Client().WriteMessage(resp); err != nil {
-			logger.Warn(fmt.Sprintf("Can't set response: %s", err))
-		}
+func sendResp(w mux.ResponseWriter, resp *message.Message) {
+	if err := w.Client().WriteMessage(resp); err != nil {
+		logger.Warn(fmt.Sprintf("Can't set response: %s", err))
 	}
 }
 
 func handler(w mux.ResponseWriter, m *mux.Message) {
+	fmt.Println("Received message:", m)
 	resp := message.Message{
 		Code:    codes.Content,
 		Token:   m.Token,
 		Context: m.Context,
 		Options: make(message.Options, 0, 16),
 	}
-	send := true
-	defer sendResp(w, &resp, &send)
-	if m.Options == nil {
-		logger.Warn("Nil options")
-		resp.Code = codes.BadOption
-		return
-	}
+
 	msg, err := decodeMessage(m)
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error decoding message: %s", err))
 		resp.Code = codes.BadRequest
+		sendResp(w, &resp)
 		return
 	}
 	key, err := parseKey(m)
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error parsing auth: %s", err))
 		resp.Code = codes.Unauthorized
+		sendResp(w, &resp)
 		return
 	}
 	switch m.Code {
@@ -98,6 +96,7 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 		if err != nil {
 			resp.Code = codes.BadOption
 			logger.Warn(fmt.Sprintf("Error reading observe option: %s", err))
+			sendResp(w, &resp)
 			return
 		}
 		if obs == 0 {
@@ -106,12 +105,14 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 			resp.Options = append(resp.Options, message.Option{ID: message.Observe})
 			break
 		}
-		service.Unsubscribe(context.Background(), key, msg.Channel, msg.Subtopic, m.Token.String())
-		send = false
+		if err := service.Unsubscribe(context.Background(), key, msg.Channel, msg.Subtopic, m.Token.String()); err != nil {
+			return
+		}
 	case codes.POST:
 		err = service.Publish(context.Background(), key, msg)
 	default:
 		resp.Code = codes.NotFound
+		sendResp(w, &resp)
 		return
 	}
 	if err != nil {
@@ -122,10 +123,14 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 		case errors.Contains(err, coap.ErrUnsubscribe):
 			resp.Code = codes.InternalServerError
 		}
+		sendResp(w, &resp)
 	}
 }
 
 func decodeMessage(msg *mux.Message) (messaging.Message, error) {
+	if msg.Options == nil {
+		return messaging.Message{}, errBadOptions
+	}
 	path, err := msg.Options.Path()
 	if err != nil {
 		return messaging.Message{}, err
@@ -166,15 +171,19 @@ func parseID(path string) string {
 }
 
 func parseKey(msg *mux.Message) (string, error) {
-	authKey, err := msg.Options.GetString(message.URIQuery)
-	if err != nil {
-		return "", err
-	}
-	vars := strings.Split(authKey, "=")
-	if len(vars) != 2 || vars[0] != authQuery {
-		return "", errors.ErrAuthorization
-	}
-	return vars[1], nil
+	// if obs, _ := msg.Options.Observe(); obs != 0 && msg.Code == codes.GET {
+	// 	return "", nil
+	// }
+	// authKey, err := msg.Options.GetString(message.URIQuery)
+	// if err != nil {
+	// 	return "", err
+	// }
+	// vars := strings.Split(authKey, "=")
+	// if len(vars) != 2 || vars[0] != authQuery {
+	// 	return "", errors.ErrAuthorization
+	// }
+	// return vars[1], nil
+	return "", nil
 }
 
 func parseSubtopic(subtopic string) (string, error) {
