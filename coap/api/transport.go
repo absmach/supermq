@@ -67,7 +67,6 @@ func sendResp(w mux.ResponseWriter, resp *message.Message) {
 }
 
 func handler(w mux.ResponseWriter, m *mux.Message) {
-	fmt.Println("Received message:", m)
 	resp := message.Message{
 		Code:    codes.Content,
 		Token:   m.Token,
@@ -91,40 +90,40 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 	}
 	switch m.Code {
 	case codes.GET:
-		var obs uint32
-		obs, err = m.Options.Observe()
-		if err != nil {
-			resp.Code = codes.BadOption
-			logger.Warn(fmt.Sprintf("Error reading observe option: %s", err))
-			sendResp(w, &resp)
-			return
-		}
-		if obs == 0 {
-			c := coap.NewClient(w.Client(), m.Token, logger)
-			err = service.Subscribe(context.Background(), key, msg.Channel, msg.Subtopic, c)
-			resp.Options = append(resp.Options, message.Option{ID: message.Observe})
-			break
-		}
-		if err := service.Unsubscribe(context.Background(), key, msg.Channel, msg.Subtopic, m.Token.String()); err != nil {
-			return
-		}
+		err = handleGet(m, w.Client(), msg, key)
 	case codes.POST:
 		err = service.Publish(context.Background(), key, msg)
 	default:
-		resp.Code = codes.NotFound
-		sendResp(w, &resp)
-		return
+		err = errors.ErrNotFound
 	}
 	if err != nil {
 		switch {
-		case errors.Contains(err, errors.ErrAuthorization):
+		case err == errBadOptions:
+			resp.Code = codes.BadOption
+		case err == errors.ErrNotFound:
+			resp.Code = codes.NotFound
+		case errors.Contains(err, errors.ErrAuthorization),
+			errors.Contains(err, errors.ErrAuthentication):
 			resp.Code = codes.Unauthorized
-			return
 		case errors.Contains(err, coap.ErrUnsubscribe):
 			resp.Code = codes.InternalServerError
 		}
 		sendResp(w, &resp)
 	}
+}
+
+func handleGet(m *mux.Message, c mux.Client, msg messaging.Message, key string) error {
+	var obs uint32
+	obs, err := m.Options.Observe()
+	if err != nil {
+		logger.Warn(fmt.Sprintf("Error reading observe option: %s", err))
+		return errBadOptions
+	}
+	if obs == 0 {
+		c := coap.NewClient(c, m.Token, logger)
+		return service.Subscribe(context.Background(), key, msg.Channel, msg.Subtopic, c)
+	}
+	return service.Unsubscribe(context.Background(), key, msg.Channel, msg.Subtopic, m.Token.String())
 }
 
 func decodeMessage(msg *mux.Message) (messaging.Message, error) {
