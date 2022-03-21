@@ -322,6 +322,57 @@ func TestReadSenml(t *testing.T) {
 				Total:    uint64(len(stringMsgs)),
 				Messages: fromSenml(stringMsgs[0:limit]),
 			},
+		}, "read message with string value and lower-than comparator": {
+			chanID: chanID,
+			pageMeta: readers.PageMetadata{
+				Offset:      0,
+				Limit:       limit,
+				StringValue: vs + string(rune(1)),
+				Comparator:  readers.LowerThanKey,
+			},
+			page: readers.MessagesPage{
+				Total:    uint64(len(stringMsgs)),
+				Messages: fromSenml(stringMsgs[0:limit]),
+			},
+		},
+		"read message with string value and lower-than-or-equal comparator": {
+			chanID: chanID,
+			pageMeta: readers.PageMetadata{
+				Offset:      0,
+				Limit:       limit,
+				StringValue: vs + string(rune(1)),
+				Comparator:  readers.LowerThanEqualKey,
+			},
+			page: readers.MessagesPage{
+				Total:    uint64(len(stringMsgs)),
+				Messages: fromSenml(stringMsgs[0:limit]),
+			},
+		},
+		"read message with string value and greater-than comparator": {
+			chanID: chanID,
+			pageMeta: readers.PageMetadata{
+				Offset:      0,
+				Limit:       limit,
+				StringValue: vs[:len(vs)-1],
+				Comparator:  readers.GreaterThanKey,
+			},
+			page: readers.MessagesPage{
+				Total:    uint64(len(stringMsgs)),
+				Messages: fromSenml(stringMsgs[0:limit]),
+			},
+		},
+		"read message with string value and greater-than-or-equal comparator": {
+			chanID: chanID,
+			pageMeta: readers.PageMetadata{
+				Offset:      0,
+				Limit:       limit,
+				StringValue: vs[:len(vs)-1],
+				Comparator:  readers.GreaterThanEqualKey,
+			},
+			page: readers.MessagesPage{
+				Total:    uint64(len(stringMsgs)),
+				Messages: fromSenml(stringMsgs[0:limit]),
+			},
 		},
 		"read message with data value": {
 			chanID: chanID,
