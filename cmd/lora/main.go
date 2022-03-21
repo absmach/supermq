@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 
 	mqttPaho "github.com/eclipse/paho.mqtt.golang"
 	r "github.com/go-redis/redis/v8"
@@ -34,6 +35,7 @@ const (
 	defLoraMsgTopic   = "application/+/device/+/event/up"
 	defLoraMsgUser    = ""
 	defLoraMsgPass    = ""
+	defLoraMsgTimeout = "30s" // 30 seconds
 	defNatsURL        = "nats://localhost:4222"
 	defESURL          = "localhost:6379"
 	defESPass         = ""
@@ -48,6 +50,7 @@ const (
 	envLoraMsgTopic   = "MF_LORA_ADAPTER_MESSAGES_TOPIC"
 	envLoraMsgUser    = "MF_LORA_ADAPTER_MESSAGES_USER"
 	envLoraMsgPass    = "MF_LORA_ADAPTER_MESSAGES_PASS"
+	envLoraMsgTimeout = "MF_LORA_ADAPTER_MESSAGES_TIMEOUT"
 	envNatsURL        = "MF_NATS_URL"
 	envLogLevel       = "MF_LORA_ADAPTER_LOG_LEVEL"
 	envESURL          = "MF_THINGS_ES_URL"
@@ -69,6 +72,7 @@ type config struct {
 	loraMsgUser    string
 	loraMsgPass    string
 	loraMsgTopic   string
+	loraMsgTimeout time.Duration
 	natsURL        string
 	logLevel       string
 	esURL          string
@@ -123,7 +127,7 @@ func main() {
 		}, []string{"method"}),
 	)
 
-	mqttConn := connectToMQTTBroker(cfg.loraMsgURL, cfg.loraMsgUser, cfg.loraMsgPass, logger)
+	mqttConn := connectToMQTTBroker(cfg.loraMsgURL, cfg.loraMsgUser, cfg.loraMsgPass, cfg.loraMsgTimeout, logger)
 
 	go subscribeToLoRaBroker(svc, mqttConn, cfg.loraMsgTopic, logger)
 	go subscribeToThingsES(svc, esConn, cfg.esConsumerName, logger)
@@ -143,12 +147,18 @@ func main() {
 }
 
 func loadConfig() config {
+	mqttTimeout, err := time.ParseDuration(mainflux.Env(envLoraMsgTimeout, defLoraMsgTimeout))
+	if err != nil {
+		log.Fatalf("Invalid %s value: %s", envLoraMsgTimeout, err.Error())
+	}
+
 	return config{
 		httpPort:       mainflux.Env(envHTTPPort, defHTTPPort),
 		loraMsgURL:     mainflux.Env(envLoraMsgURL, defLoraMsgURL),
 		loraMsgTopic:   mainflux.Env(envLoraMsgTopic, defLoraMsgTopic),
 		loraMsgUser:    mainflux.Env(envLoraMsgUser, defLoraMsgUser),
 		loraMsgPass:    mainflux.Env(envLoraMsgPass, defLoraMsgPass),
+		loraMsgTimeout: mqttTimeout,
 		natsURL:        mainflux.Env(envNatsURL, defNatsURL),
 		logLevel:       mainflux.Env(envLogLevel, defLogLevel),
 		esURL:          mainflux.Env(envESURL, defESURL),
@@ -161,7 +171,7 @@ func loadConfig() config {
 	}
 }
 
-func connectToMQTTBroker(url, user, password string, logger logger.Logger) mqttPaho.Client {
+func connectToMQTTBroker(url, user, password string, timeout time.Duration, logger logger.Logger) mqttPaho.Client {
 	opts := mqttPaho.NewClientOptions()
 	opts.AddBroker(url)
 	opts.SetUsername(user)
@@ -175,7 +185,8 @@ func connectToMQTTBroker(url, user, password string, logger logger.Logger) mqttP
 	})
 
 	client := mqttPaho.NewClient(opts)
-	if token := client.Connect(); token.Wait() && token.Error() != nil {
+
+	if token := client.Connect(); token.WaitTimeout(timeout) && token.Error() != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to Lora MQTT broker: %s", token.Error()))
 		os.Exit(1)
 	}
