@@ -11,19 +11,22 @@ The service is configured using the environment variables presented in the
 following table. Note that any unset variables will be replaced with their
 default values.
 
-| Variable                         | Description                          | Default               |
-|----------------------------------|--------------------------------------|-----------------------|
-| MF_LORA_ADAPTER_HTTP_PORT        | Service HTTP port                    | 8180                  |
-| MF_LORA_ADAPTER_LOG_LEVEL        | Service Log level                    | error                 |
-| MF_NATS_URL                      | NATS instance URL                    | nats://localhost:4222 |
-| MF_LORA_ADAPTER_MESSAGES_URL     | LoRa Server MQTT broker URL          | tcp://localhost:1883  |
-| MF_LORA_ADAPTER_ROUTE_MAP_URL    | Route-map database URL               | localhost:6379        |
-| MF_LORA_ADAPTER_ROUTE_MAP_PASS   | Route-map database password          |                       |
-| MF_LORA_ADAPTER_ROUTE_MAP_DB     | Route-map instance                   | 0                     |
-| MF_THINGS_ES_URL                 | Things service event source URL      | localhost:6379        |
-| MF_THINGS_ES_PASS                | Things service event source password |                       |
-| MF_THINGS_ES_DB                  | Things service event source DB       | 0                     |
-| MF_LORA_ADAPTER_EVENT_CONSUMER   | Service event consumer name          | lora                  |
+| Variable                         | Description                          | Default                         |
+|----------------------------------|--------------------------------------|---------------------------------|
+| MF_LORA_ADAPTER_HTTP_PORT        | Service HTTP port                    | 8180                            |
+| MF_LORA_ADAPTER_LOG_LEVEL        | Service Log level                    | error                           |
+| MF_NATS_URL                      | NATS instance URL                    | nats://localhost:4222           |
+| MF_LORA_ADAPTER_MESSAGES_URL     | LoRa Server MQTT broker URL          | tcp://localhost:1883            |
+| MF_LORA_ADAPTER_MESSAGES_TOPIC   | LoRa Server MQTT broker Topic        | application/+/device/+/event/up |
+| MF_LORA_ADAPTER_MESSAGES_USER    | LoRa Server MQTT broker Username     |                                 |
+| MF_LORA_ADAPTER_MESSAGES_PASS    | LoRa Server MQTT broker Password     |                                 |
+| MF_LORA_ADAPTER_ROUTE_MAP_URL    | Route-map database URL               | localhost:6379                  |
+| MF_LORA_ADAPTER_ROUTE_MAP_PASS   | Route-map database password          |                                 |
+| MF_LORA_ADAPTER_ROUTE_MAP_DB     | Route-map instance                   | 0                               |
+| MF_THINGS_ES_URL                 | Things service event source URL      | localhost:6379                  |
+| MF_THINGS_ES_PASS                | Things service event source password |                                 |
+| MF_THINGS_ES_DB                  | Things service event source DB       | 0                               |
+| MF_LORA_ADAPTER_EVENT_CONSUMER   | Service event consumer name          | lora                            |
 
 ## Deployment
 
@@ -48,6 +51,9 @@ make install
 MF_LORA_ADAPTER_LOG_LEVEL=[Lora Adapter Log Level] \
 MF_NATS_URL=[NATS instance URL] \
 MF_LORA_ADAPTER_MESSAGES_URL=[LoRa Server mqtt broker URL] \
+MF_LORA_ADAPTER_MESSAGES_TOPIC=[LoRa Server mqtt broker Topic] \
+MF_LORA_ADAPTER_MESSAGES_USER=[LoRa Server mqtt broker Username] \
+MF_LORA_ADAPTER_MESSAGES_PASS=[LoRa Server mqtt broker Password] \
 MF_LORA_ADAPTER_ROUTE_MAP_URL=[Lora adapter routemap URL] \
 MF_LORA_ADAPTER_ROUTE_MAP_PASS=[Lora adapter routemap password] \
 MF_LORA_ADAPTER_ROUTE_MAP_DB=[Lora adapter routemap instance] \
