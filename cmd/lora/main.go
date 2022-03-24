@@ -35,7 +35,7 @@ const (
 	defLoraMsgTopic   = "application/+/device/+/event/up"
 	defLoraMsgUser    = ""
 	defLoraMsgPass    = ""
-	defLoraMsgTimeout = "30s" // 30 seconds
+	defLoraMsgTimeout = "30s"
 	defNatsURL        = "nats://localhost:4222"
 	defESURL          = "localhost:6379"
 	defESPass         = ""
