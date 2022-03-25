@@ -33,6 +33,12 @@ const (
 
 var channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
 
+const (
+	numGroups    = 3 // entire expression + channel group + subtopic group
+	channelGroup = 2 // channel group is second in channel regexp
+
+)
+
 var (
 	errMalformedSubtopic = errors.New("malformed subtopic")
 	errBadOptions        = errors.New("bad options")
@@ -135,11 +141,11 @@ func decodeMessage(msg *mux.Message) (messaging.Message, error) {
 		return messaging.Message{}, err
 	}
 	channelParts := channelPartRegExp.FindStringSubmatch(path)
-	if len(channelParts) < 3 {
+	if len(channelParts) < numGroups {
 		return messaging.Message{}, errMalformedSubtopic
 	}
 
-	st, err := parseSubtopic(channelParts[2])
+	st, err := parseSubtopic(channelParts[channelGroup])
 	if err != nil {
 		return messaging.Message{}, err
 	}
