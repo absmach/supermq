@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/lora"
@@ -19,24 +20,26 @@ type Subscriber interface {
 }
 
 type broker struct {
-	svc    lora.Service
-	client mqtt.Client
-	logger logger.Logger
+	svc     lora.Service
+	client  mqtt.Client
+	logger  logger.Logger
+	timeout time.Duration
 }
 
 // NewBroker returns new MQTT broker instance.
-func NewBroker(svc lora.Service, client mqtt.Client, log logger.Logger) Subscriber {
+func NewBroker(svc lora.Service, client mqtt.Client, t time.Duration, log logger.Logger) Subscriber {
 	return broker{
-		svc:    svc,
-		client: client,
-		logger: log,
+		svc:     svc,
+		client:  client,
+		logger:  log,
+		timeout: t,
 	}
 }
 
 // Subscribe subscribes to the Lora MQTT message broker
 func (b broker) Subscribe(subject string) error {
 	s := b.client.Subscribe(subject, 0, b.handleMsg)
-	if err := s.Error(); s.Wait() && err != nil {
+	if err := s.Error(); s.WaitTimeout(b.timeout) && err != nil {
 		return err
 	}
 

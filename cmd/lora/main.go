@@ -129,7 +129,7 @@ func main() {
 
 	mqttConn := connectToMQTTBroker(cfg.loraMsgURL, cfg.loraMsgUser, cfg.loraMsgPass, cfg.loraMsgTimeout, logger)
 
-	go subscribeToLoRaBroker(svc, mqttConn, cfg.loraMsgTopic, logger)
+	go subscribeToLoRaBroker(svc, mqttConn, cfg.loraMsgTimeout, cfg.loraMsgTopic, logger)
 	go subscribeToThingsES(svc, esConn, cfg.esConsumerName, logger)
 
 	errs := make(chan error, 2)
@@ -208,8 +208,8 @@ func connectToRedis(redisURL, redisPass, redisDB string, logger logger.Logger) *
 	})
 }
 
-func subscribeToLoRaBroker(svc lora.Service, mc mqttPaho.Client, topic string, logger logger.Logger) {
-	mqtt := mqtt.NewBroker(svc, mc, logger)
+func subscribeToLoRaBroker(svc lora.Service, mc mqttPaho.Client, timeout time.Duration, topic string, logger logger.Logger) {
+	mqtt := mqtt.NewBroker(svc, mc, timeout, logger)
 	logger.Info("Subscribed to Lora MQTT broker")
 	if err := mqtt.Subscribe(topic); err != nil {
 		logger.Error(fmt.Sprintf("Failed to subscribe to Lora MQTT broker: %s", err))
