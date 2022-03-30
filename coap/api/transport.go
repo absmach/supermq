@@ -36,7 +36,6 @@ var channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?]*
 const (
 	numGroups    = 3 // entire expression + channel group + subtopic group
 	channelGroup = 2 // channel group is second in channel regexp
-
 )
 
 var (
