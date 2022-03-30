@@ -27,8 +27,9 @@ import (
 )
 
 const (
-	protocol  = "coap"
-	authQuery = "auth"
+	protocol     = "coap"
+	authQuery    = "auth"
+	startObserve = 0 // observe option value that indicates start of observation
 )
 
 var channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
@@ -124,7 +125,7 @@ func handleGet(m *mux.Message, c mux.Client, msg messaging.Message, key string) 
 		logger.Warn(fmt.Sprintf("Error reading observe option: %s", err))
 		return errBadOptions
 	}
-	if obs == 0 {
+	if obs == startObserve {
 		c := coap.NewClient(c, m.Token, logger)
 		return service.Subscribe(context.Background(), key, msg.Channel, msg.Subtopic, c)
 	}
