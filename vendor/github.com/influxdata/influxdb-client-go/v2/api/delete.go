@@ -6,13 +6,16 @@ package api
 
 import (
 	"context"
-	"github.com/influxdata/influxdb-client-go/v2/domain"
 	"time"
+
+	"github.com/influxdata/influxdb-client-go/v2/domain"
 )
 
 // DeleteAPI provides methods for deleting time series data from buckets.
 // Deleted series are selected by the time range specified by start and stop arguments and optional predicate string which contains condition for selecting data for deletion, such as:
-// 		tag1="value1" and (tag2="value2" and tag3!="value3")
+//
+//	tag1="value1" and (tag2="value2" and tag3!="value3")
+//
 // Empty predicate string means all data from the given time range will be deleted. See https://v2.docs.influxdata.com/v2.0/reference/syntax/delete-predicate/
 // for more info about predicate syntax.
 type DeleteAPI interface {

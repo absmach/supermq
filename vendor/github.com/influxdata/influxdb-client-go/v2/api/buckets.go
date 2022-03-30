@@ -7,6 +7,7 @@ package api
 import (
 	"context"
 	"fmt"
+
 	"github.com/influxdata/influxdb-client-go/v2/domain"
 )
 
