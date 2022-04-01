@@ -130,8 +130,11 @@ type SDK interface {
 	// CreateUser registers mainflux user.
 	CreateUser(token string, user User) (string, error)
 
-	// User returns user object.
-	User(token string) (User, error)
+	// User returns user object by id.
+	User(token, id string) (User, error)
+
+	// Users returns list of users.
+	Users(token string) ([]User, error)
 
 	// CreateToken receives credentials and returns user token.
 	CreateToken(user User) (string, error)
