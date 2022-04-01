@@ -46,8 +46,8 @@ func (sdk mfSDK) CreateUser(token string, u User) (string, error) {
 	return id, nil
 }
 
-func (sdk mfSDK) User(token string) (User, error) {
-	url := fmt.Sprintf("%s/%s", sdk.usersURL, usersEndpoint)
+func (sdk mfSDK) User(user_id, token string) (User, error) {
+	url := fmt.Sprintf("%s/%s/%s", sdk.usersURL, usersEndpoint, user_id)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return User{}, err
@@ -74,6 +74,37 @@ func (sdk mfSDK) User(token string) (User, error) {
 	}
 
 	return u, nil
+}
+
+func (sdk mfSDK) Users(token string) ([]User, error) {
+	url := fmt.Sprintf("%s/%s", sdk.usersURL, usersEndpoint)
+	fmt.Println(url)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return []User{}, err
+	}
+
+	resp, err := sdk.sendRequest(req, token, string(CTJSON))
+	if err != nil {
+		return []User{}, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return []User{}, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return []User{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
+	}
+
+	var u UsersPage
+	if err := json.Unmarshal(body, &u); err != nil {
+		return []User{}, err
+	}
+
+	return u.Users, nil
 }
 
 func (sdk mfSDK) CreateToken(user User) (string, error) {

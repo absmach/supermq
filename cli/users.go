@@ -38,16 +38,24 @@ var cmdUsers = []cobra.Command{
 		},
 	},
 	{
-		Use:   "get <user_auth_token>",
+		Use:   "get [all | <user_id>] <user_auth_token>",
 		Short: "Get user",
 		Long:  `Returns user object`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 1 {
+			if len(args) != 2 {
 				logUsage(cmd.Use)
 				return
 			}
-
-			u, err := sdk.User(args[0])
+			if args[0] == "all" {
+				l, err := sdk.Users(args[1])
+				if err != nil {
+					logError(err)
+					return
+				}
+				logJSON(l)
+				return
+			}
+			u, err := sdk.User(args[0], args[1])
 			if err != nil {
 				logError(err)
 				return
