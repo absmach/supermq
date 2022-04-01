@@ -46,7 +46,7 @@ func (sdk mfSDK) CreateUser(token string, u User) (string, error) {
 	return id, nil
 }
 
-func (sdk mfSDK) User(user_id, token string) (User, error) {
+func (sdk mfSDK) User(userID, token string) (User, error) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.usersURL, usersEndpoint, user_id)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
