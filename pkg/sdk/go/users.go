@@ -76,34 +76,33 @@ func (sdk mfSDK) User(userID, token string) (User, error) {
 	return u, nil
 }
 
-func (sdk mfSDK) Users(token string) ([]User, error) {
+func (sdk mfSDK) Users(token string) (UsersPage, error) {
 	url := fmt.Sprintf("%s/%s", sdk.usersURL, usersEndpoint)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return []User{}, err
+		return UsersPage{}, err
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(CTJSON))
 	if err != nil {
-		return []User{}, err
+		return UsersPage{}, err
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return []User{}, err
+		return UsersPage{}, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return []User{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
+		return UsersPage{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
+	}
+	var up UsersPage
+	if err := json.Unmarshal(body, &up); err != nil {
+		return UsersPage{}, err
 	}
 
-	var u UsersPage
-	if err := json.Unmarshal(body, &u); err != nil {
-		return []User{}, err
-	}
-
-	return u.Users, nil
+	return up, nil
 }
 
 func (sdk mfSDK) CreateToken(user User) (string, error) {

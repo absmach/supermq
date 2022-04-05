@@ -134,7 +134,7 @@ type SDK interface {
 	User(token, id string) (User, error)
 
 	// Users returns list of users.
-	Users(token string) ([]User, error)
+	Users(token string) (UsersPage, error)
 
 	// CreateToken receives credentials and returns user token.
 	CreateToken(user User) (string, error)
