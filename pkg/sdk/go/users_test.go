@@ -213,7 +213,7 @@ func TestUsers(t *testing.T) {
 
 	var users []sdk.User
 
-	for i := 5; i > 1; i-- {
+	for i := 3; i > 1; i-- {
 		email := fmt.Sprintf("test-%d@example.com", i)
 		password := fmt.Sprintf("password%d", i)
 		us := sdk.User{Email: email, Password: password, Metadata: metadata}
