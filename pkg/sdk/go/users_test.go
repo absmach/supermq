@@ -128,6 +128,133 @@ func TestCreateUser(t *testing.T) {
 	}
 }
 
+func TestUser(t *testing.T) {
+	svc := newUserService()
+	ts := newUserServer(svc)
+	defer ts.Close()
+	sdkConf := sdk.Config{
+		UsersURL:        ts.URL,
+		MsgContentType:  contentType,
+		TLSVerification: false,
+	}
+
+	mainfluxSDK := sdk.NewSDK(sdkConf)
+	user := sdk.User{Email: "user@example.com", Password: "password"}
+
+	mockAuthzDB := map[string][]mocks.SubjectSet{}
+	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: "authorities", Relation: "member"})
+	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
+
+	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
+	token := tkn.GetValue()
+	userID, err := mainfluxSDK.CreateUser(token, user)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	usertoken, err := mainfluxSDK.CreateToken(user)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	user.ID = userID
+	user.Password = ""
+
+	cases := []struct {
+		desc     string
+		userID   string
+		token    string
+		err      error
+		response sdk.User
+	}{
+		{
+			desc:     "get existing user",
+			userID:   userID,
+			token:    usertoken,
+			err:      nil,
+			response: user,
+		},
+		{
+			desc:     "get non-existent user",
+			userID:   "43",
+			token:    usertoken,
+			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
+			response: sdk.User{},
+		},
+
+		{
+			desc:     "get user with invalid token",
+			userID:   userID,
+			token:    wrongValue,
+			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
+			response: sdk.User{},
+		},
+	}
+	for _, tc := range cases {
+		respUs, err := mainfluxSDK.User(tc.userID, tc.token)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
+		assert.Equal(t, tc.response, respUs, fmt.Sprintf("%s: expected response user %s, got %s", tc.desc, tc.response, respUs))
+	}
+}
+
+func TestUsers(t *testing.T) {
+	svc := newUserService()
+	ts := newUserServer(svc)
+	defer ts.Close()
+	sdkConf := sdk.Config{
+		UsersURL:        ts.URL,
+		MsgContentType:  contentType,
+		TLSVerification: false,
+	}
+
+	mainfluxSDK := sdk.NewSDK(sdkConf)
+	user := sdk.User{Email: "user@example.com", Password: "password"}
+
+	mockAuthzDB := map[string][]mocks.SubjectSet{}
+	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: "authorities", Relation: "member"})
+	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
+
+	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
+	token := tkn.GetValue()
+
+	var users []sdk.User
+
+	for i := 5; i > 1; i-- {
+		email := fmt.Sprintf("test-%d@example.com", i)
+		password := fmt.Sprintf("password%d", i)
+		us := sdk.User{Email: email, Password: password, Metadata: metadata}
+		userID, err := mainfluxSDK.CreateUser(token, us)
+		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+		us.ID = userID
+		us.Password = ""
+		users = append(users, us)
+	}
+	cases := []struct {
+		desc     string
+		token    string
+		err      error
+		response []sdk.User
+	}{
+		{
+			desc:     "get all users",
+			token:    token,
+			err:      nil,
+			response: users,
+		},
+		{
+			desc:     "get a list of users with invalid token",
+			token:    wrongValue,
+			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
+			response: nil,
+		},
+		{
+			desc:     "get a list of users with empty token",
+			token:    "",
+			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
+			response: nil,
+		},
+	}
+	for _, tc := range cases {
+		respUs, err := mainfluxSDK.Users(tc.token)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
+		assert.Equal(t, tc.response, respUs.Users, fmt.Sprintf("%s: expected response user %s, got %s", tc.desc, tc.response, respUs.Users))
+	}
+}
+
 func TestCreateToken(t *testing.T) {
 	svc := newUserService()
 	ts := newUserServer(svc)
@@ -180,4 +307,138 @@ func TestCreateToken(t *testing.T) {
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.token, token, fmt.Sprintf("%s: expected response: %s, got:  %s", tc.desc, token, tc.token))
 	}
+}
+
+func TestUpdateUser(t *testing.T) {
+	svc := newUserService()
+	ts := newUserServer(svc)
+	defer ts.Close()
+	sdkConf := sdk.Config{
+		UsersURL:        ts.URL,
+		MsgContentType:  contentType,
+		TLSVerification: false,
+	}
+
+	mainfluxSDK := sdk.NewSDK(sdkConf)
+	user := sdk.User{Email: "user@example.com", Password: "password"}
+
+	mockAuthzDB := map[string][]mocks.SubjectSet{}
+	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: "authorities", Relation: "member"})
+	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
+
+	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
+	token := tkn.GetValue()
+	userID, err := mainfluxSDK.CreateUser(token, user)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	usertoken, err := mainfluxSDK.CreateToken(user)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+
+	cases := []struct {
+		desc  string
+		user  sdk.User
+		token string
+		err   error
+	}{
+		{
+			desc:  "update email for user",
+			user:  sdk.User{ID: userID, Email: "user2@example.com", Password: "password"},
+			token: usertoken,
+			err:   nil,
+		},
+		{
+			desc:  "update email for non existing user",
+			user:  sdk.User{ID: "0", Email: "user2@example.com", Password: "password"},
+			token: wrongValue,
+			err:   createError(sdk.ErrFailedUpdate, http.StatusUnauthorized),
+		},
+		{
+			desc:  "update email for user with invalid token",
+			user:  sdk.User{ID: userID, Email: "user2@example.com", Password: "password"},
+			token: wrongValue,
+			err:   createError(sdk.ErrFailedUpdate, http.StatusUnauthorized),
+		},
+		{
+			desc:  "update email for user with empty token",
+			user:  sdk.User{ID: userID, Email: "user2@example.com", Password: "password"},
+			token: "",
+			err:   createError(sdk.ErrFailedUpdate, http.StatusUnauthorized),
+		},
+		{
+			desc:  "update metadata for user",
+			user:  sdk.User{ID: userID, Metadata: metadata, Password: "password"},
+			token: usertoken,
+			err:   nil,
+		},
+	}
+	for _, tc := range cases {
+		err := mainfluxSDK.UpdateUser(tc.user, tc.token)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
+	}
+}
+
+func TestUpdatePassword(t *testing.T) {
+	svc := newUserService()
+	ts := newUserServer(svc)
+	defer ts.Close()
+	sdkConf := sdk.Config{
+		UsersURL:        ts.URL,
+		MsgContentType:  contentType,
+		TLSVerification: false,
+	}
+
+	mainfluxSDK := sdk.NewSDK(sdkConf)
+	user := sdk.User{Email: "user@example.com", Password: "password"}
+
+	mockAuthzDB := map[string][]mocks.SubjectSet{}
+	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: "authorities", Relation: "member"})
+	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
+
+	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
+	token := tkn.GetValue()
+	_, err := mainfluxSDK.CreateUser(token, user)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	usertoken, err := mainfluxSDK.CreateToken(user)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+
+	cases := []struct {
+		desc    string
+		oldPass string
+		newPass string
+		token   string
+		err     error
+	}{
+		{
+			desc:    "update password for user",
+			oldPass: "password",
+			newPass: "password123",
+			token:   usertoken,
+			err:     nil,
+		},
+		{
+			desc:    "update password for user with invalid token",
+			oldPass: "password",
+			newPass: "password123",
+			token:   wrongValue,
+			err:     createError(sdk.ErrFailedUpdate, http.StatusUnauthorized),
+		},
+		{
+			desc:    "update password for user with empty token",
+			oldPass: "password",
+			newPass: "password123",
+			token:   "",
+			err:     createError(sdk.ErrFailedUpdate, http.StatusUnauthorized),
+		},
+	}
+	for _, tc := range cases {
+		err := mainfluxSDK.UpdatePassword(tc.oldPass, tc.newPass, tc.token)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
+	}
+}
+
+func reverse(users []sdk.User) []sdk.User {
+	for i := 0; i < len(users)/2; i++ {
+		j := len(users) - i - 1
+		users[i], users[j] = users[j], users[i]
+	}
+	return users
 }
