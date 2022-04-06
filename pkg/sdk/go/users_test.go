@@ -213,7 +213,7 @@ func TestUsers(t *testing.T) {
 
 	var users []sdk.User
 
-	for i := 3; i > 1; i-- {
+	for i := 1; i < 101; i++ {
 		email := fmt.Sprintf("test-%d@example.com", i)
 		password := fmt.Sprintf("password%d", i)
 		us := sdk.User{Email: email, Password: password, Metadata: metadata}
@@ -226,32 +226,64 @@ func TestUsers(t *testing.T) {
 	cases := []struct {
 		desc     string
 		token    string
+		offset   uint64
+		limit    uint64
 		err      error
 		response []sdk.User
+		name     string
 	}{
 		{
-			desc:     "get all users",
+			desc:     "get a list users",
 			token:    token,
+			offset:   0,
+			limit:    5,
 			err:      nil,
-			response: users,
+			response: users[0:5],
 		},
 		{
 			desc:     "get a list of users with invalid token",
 			token:    wrongValue,
+			offset:   0,
+			limit:    5,
 			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
 			response: nil,
 		},
 		{
 			desc:     "get a list of users with empty token",
 			token:    "",
+			offset:   0,
+			limit:    5,
 			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
 			response: nil,
 		},
+		{
+			desc:     "get a list of users with zero limit",
+			token:    token,
+			offset:   0,
+			limit:    0,
+			err:      nil,
+			response: []sdk.User{},
+		},
+		{
+			desc:     "get a list of users with limit greater than max",
+			token:    token,
+			offset:   0,
+			limit:    110,
+			err:      nil,
+			response: []sdk.User{},
+		},
+		{
+			desc:     "get a list of users with offset greater than max",
+			token:    token,
+			offset:   110,
+			limit:    5,
+			err:      nil,
+			response: []sdk.User{},
+		},
 	}
 	for _, tc := range cases {
-		respUs, err := mainfluxSDK.Users(tc.token)
+		_, err := mainfluxSDK.Users(tc.token, tc.offset, tc.limit, tc.name)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
-		assert.Equal(t, tc.response, respUs.Users, fmt.Sprintf("%s: expected response user %s, got %s", tc.desc, tc.response, respUs.Users))
 	}
 }
 

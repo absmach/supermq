@@ -76,8 +76,10 @@ func (sdk mfSDK) User(userID, token string) (User, error) {
 	return u, nil
 }
 
-func (sdk mfSDK) Users(token string) (UsersPage, error) {
-	url := fmt.Sprintf("%s/%s", sdk.usersURL, usersEndpoint)
+func (sdk mfSDK) Users(token string, offset, limit uint64, name string) (UsersPage, error) {
+	endpoint := fmt.Sprintf("%s?offset=%d&limit=%d&name=%s", usersEndpoint, offset, limit, name)
+	url := fmt.Sprintf("%s/%s", sdk.usersURL, endpoint)
+	
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return UsersPage{}, err

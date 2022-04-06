@@ -47,7 +47,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 			if args[0] == "all" {
-				l, err := sdk.Users(args[1])
+				l, err := sdk.Users(args[1], uint64(Offset), uint64(Limit), Name)
 				if err != nil {
 					logError(err)
 					return
