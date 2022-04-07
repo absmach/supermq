@@ -29,6 +29,12 @@ const (
 
 var (
 	passRegex = regexp.MustCompile("^.{8,}$")
+	// Limit query parameter
+	Limit uint64 = 5
+	// Offset query parameter
+	Offset uint64 = 0
+	// Name query parameter
+	Name string = ""
 )
 
 func newUserService() users.Service {
@@ -235,31 +241,31 @@ func TestUsers(t *testing.T) {
 		{
 			desc:     "get a list users",
 			token:    token,
-			offset:   0,
-			limit:    5,
+			offset:   Offset,
+			limit:    Limit,
 			err:      nil,
-			response: users[0:5],
+			response: users[0:Limit],
 		},
 		{
 			desc:     "get a list of users with invalid token",
 			token:    wrongValue,
-			offset:   0,
-			limit:    5,
+			offset:   Offset,
+			limit:    Limit,
 			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
 			response: nil,
 		},
 		{
 			desc:     "get a list of users with empty token",
 			token:    "",
-			offset:   0,
-			limit:    5,
+			offset:   Offset,
+			limit:    Limit,
 			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
 			response: nil,
 		},
 		{
 			desc:     "get a list of users with zero limit",
 			token:    token,
-			offset:   0,
+			offset:   Offset,
 			limit:    0,
 			err:      nil,
 			response: []sdk.User{},
@@ -267,7 +273,7 @@ func TestUsers(t *testing.T) {
 		{
 			desc:     "get a list of users with limit greater than max",
 			token:    token,
-			offset:   0,
+			offset:   Offset,
 			limit:    110,
 			err:      nil,
 			response: []sdk.User{},
@@ -276,13 +282,13 @@ func TestUsers(t *testing.T) {
 			desc:     "get a list of users with offset greater than max",
 			token:    token,
 			offset:   110,
-			limit:    5,
+			limit:    Limit,
 			err:      nil,
 			response: []sdk.User{},
 		},
 	}
 	for _, tc := range cases {
-		_, err := mainfluxSDK.Users(tc.token, tc.offset, tc.limit, tc.name)
+		_, err := mainfluxSDK.Users(tc.token, tc.offset, tc.limit, Name)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 	}
 }
@@ -465,12 +471,4 @@ func TestUpdatePassword(t *testing.T) {
 		err := mainfluxSDK.UpdatePassword(tc.oldPass, tc.newPass, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 	}
-}
-
-func reverse(users []sdk.User) []sdk.User {
-	for i := 0; i < len(users)/2; i++ {
-		j := len(users) - i - 1
-		users[i], users[j] = users[j], users[i]
-	}
-	return users
 }
