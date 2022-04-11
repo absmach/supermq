@@ -30,11 +30,11 @@ const (
 var (
 	passRegex = regexp.MustCompile("^.{8,}$")
 	// Limit query parameter
-	Limit uint64 = 5
+	limit uint64 = 5
 	// Offset query parameter
-	Offset uint64 = 0
+	offset uint64 = 0
 	// Name query parameter
-	Name string = ""
+	name string = ""
 )
 
 func newUserService() users.Service {
@@ -241,31 +241,31 @@ func TestUsers(t *testing.T) {
 		{
 			desc:     "get a list users",
 			token:    token,
-			offset:   Offset,
-			limit:    Limit,
+			offset:   offset,
+			limit:    limit,
 			err:      nil,
-			response: users[0:Limit],
+			response: users[0:limit],
 		},
 		{
 			desc:     "get a list of users with invalid token",
 			token:    wrongValue,
-			offset:   Offset,
-			limit:    Limit,
+			offset:   offset,
+			limit:    limit,
 			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
 			response: nil,
 		},
 		{
 			desc:     "get a list of users with empty token",
 			token:    "",
-			offset:   Offset,
-			limit:    Limit,
+			offset:   offset,
+			limit:    limit,
 			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
 			response: nil,
 		},
 		{
 			desc:     "get a list of users with zero limit",
 			token:    token,
-			offset:   Offset,
+			offset:   offset,
 			limit:    0,
 			err:      nil,
 			response: []sdk.User{},
@@ -273,7 +273,7 @@ func TestUsers(t *testing.T) {
 		{
 			desc:     "get a list of users with limit greater than max",
 			token:    token,
-			offset:   Offset,
+			offset:   offset,
 			limit:    110,
 			err:      nil,
 			response: []sdk.User{},
@@ -282,13 +282,13 @@ func TestUsers(t *testing.T) {
 			desc:     "get a list of users with offset greater than max",
 			token:    token,
 			offset:   110,
-			limit:    Limit,
+			limit:    limit,
 			err:      nil,
 			response: []sdk.User{},
 		},
 	}
 	for _, tc := range cases {
-		_, err := mainfluxSDK.Users(tc.token, tc.offset, tc.limit, Name)
+		_, err := mainfluxSDK.Users(tc.token, tc.offset, tc.limit, name)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 	}
 }
