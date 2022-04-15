@@ -45,9 +45,14 @@ var cmdChannels = []cobra.Command{
 				logUsage(cmd.Use)
 				return
 			}
-
+			filteredInfo := mfxsdk.Filter{
+				Offset:   uint64(Offset),
+				Limit:    uint64(Limit),
+				Name:     "",
+				Metadata: make(map[string]interface{}),
+			}
 			if args[0] == "all" {
-				l, err := sdk.Channels(args[1], uint64(Offset), uint64(Limit), Name)
+				l, err := sdk.Channels(args[1], filteredInfo)
 				if err != nil {
 					logError(err)
 					return

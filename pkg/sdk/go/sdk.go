@@ -99,9 +99,9 @@ type UserFilter struct {
 
 // Filter contains users information that helps navigation.
 type Filter struct {
-	Total    int64
-	Offset   int64
-	Limit    int64
+	Total    uint64
+	Offset   uint64
+	Limit    uint64
 	Name     string
 	Metadata map[string]interface{}
 }
@@ -172,7 +172,7 @@ type SDK interface {
 	CreateThings(things []Thing, token string) ([]Thing, error)
 
 	// Things returns page of things.
-	Things(token string, offset, limit uint64, name string) (ThingsPage, error)
+	Things(token string, filter Filter) (ThingsPage, error)
 
 	// ThingsByChannel returns page of things that are connected or not connected
 	// to specified channel.
@@ -233,7 +233,7 @@ type SDK interface {
 	CreateChannels(channels []Channel, token string) ([]Channel, error)
 
 	// Channels returns page of channels.
-	Channels(token string, offset, limit uint64, name string) (ChannelsPage, error)
+	Channels(token string, filter Filter) (ChannelsPage, error)
 
 	// ChannelsByThing returns page of channels that are connected or not connected
 	// to specified thing.
@@ -388,4 +388,20 @@ func (sdk mfSDK) parseUserFilteredValues(filter UserFilter) (string, error) {
 	}
 
 	return fmt.Sprintf("offset=%d&limit=%d&email=%s", filter.Offset, filter.Limit, filter.Email), nil
+}
+func (sdk mfSDK) parseFilteredValues(filter Filter) (string, error) {
+	if len(filter.Metadata) > 0 {
+		metadataJson, err := json.Marshal(filter.Metadata)
+		if err != nil {
+			return "", err
+		}
+		jsonStr := string(metadataJson)
+		if filter.Name == "" {
+			return fmt.Sprintf("offset=%d&limit=%d&metadata=%s", filter.Offset, filter.Limit, jsonStr), nil
+		}
+		return fmt.Sprintf("offset=%d&limit=%d&name=%s&metadata=%s", filter.Offset, filter.Limit, filter.Name, jsonStr), nil
+
+	}
+
+	return fmt.Sprintf("offset=%d&limit=%d&name=%s", filter.Offset, filter.Limit, filter.Name), nil
 }

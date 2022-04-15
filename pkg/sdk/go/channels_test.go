@@ -239,6 +239,7 @@ func TestChannels(t *testing.T) {
 		name     string
 		err      error
 		response []sdk.Channel
+		metadata map[string]interface{}
 	}{
 		{
 			desc:     "get a list of channels",
@@ -247,6 +248,7 @@ func TestChannels(t *testing.T) {
 			limit:    limit,
 			err:      nil,
 			response: channels[0:limit],
+			metadata: make(map[string]interface{}),
 		},
 		{
 			desc:     "get a list of channels with invalid token",
@@ -255,6 +257,7 @@ func TestChannels(t *testing.T) {
 			limit:    limit,
 			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
 			response: nil,
+			metadata: make(map[string]interface{}),
 		},
 		{
 			desc:     "get a list of channels with empty token",
@@ -263,6 +266,7 @@ func TestChannels(t *testing.T) {
 			limit:    limit,
 			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
 			response: nil,
+			metadata: make(map[string]interface{}),
 		},
 		{
 			desc:     "get a list of channels without limit, default 10",
@@ -271,6 +275,7 @@ func TestChannels(t *testing.T) {
 			limit:    0,
 			err:      createError(sdk.ErrFailedFetch, http.StatusBadRequest),
 			response: nil,
+			metadata: make(map[string]interface{}),
 		},
 		{
 			desc:     "get a list of channels with limit greater than max",
@@ -279,6 +284,7 @@ func TestChannels(t *testing.T) {
 			limit:    110,
 			err:      createError(sdk.ErrFailedFetch, http.StatusBadRequest),
 			response: nil,
+			metadata: make(map[string]interface{}),
 		},
 		{
 			desc:     "get a list of channels with offset greater than max",
@@ -287,10 +293,18 @@ func TestChannels(t *testing.T) {
 			limit:    limit,
 			err:      nil,
 			response: []sdk.Channel{},
+			metadata: make(map[string]interface{}),
 		},
 	}
 	for _, tc := range cases {
-		page, err := mainfluxSDK.Channels(tc.token, tc.offset, tc.limit, tc.name)
+		filter := sdk.Filter{
+			Total:    uint64(200),
+			Offset:   uint64(tc.offset),
+			Limit:    uint64(tc.limit),
+			Name:     tc.name,
+			Metadata: tc.metadata,
+		}
+		page, err := mainfluxSDK.Channels(tc.token, filter)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page.Channels, fmt.Sprintf("%s: expected response channel %s, got %s", tc.desc, tc.response, page.Channels))
 	}

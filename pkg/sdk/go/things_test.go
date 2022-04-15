@@ -288,6 +288,7 @@ func TestThings(t *testing.T) {
 		err      error
 		response []sdk.Thing
 		name     string
+		metadata map[string]interface{}
 	}{
 		{
 			desc:     "get a list of things",
@@ -296,6 +297,7 @@ func TestThings(t *testing.T) {
 			limit:    limit,
 			err:      nil,
 			response: things[0:limit],
+			metadata: make(map[string]interface{}),
 		},
 		{
 			desc:     "get a list of things with invalid token",
@@ -304,6 +306,7 @@ func TestThings(t *testing.T) {
 			limit:    limit,
 			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
 			response: nil,
+			metadata: make(map[string]interface{}),
 		},
 		{
 			desc:     "get a list of things with empty token",
@@ -312,6 +315,7 @@ func TestThings(t *testing.T) {
 			limit:    limit,
 			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
 			response: nil,
+			metadata: make(map[string]interface{}),
 		},
 		{
 			desc:     "get a list of things with zero limit",
@@ -320,6 +324,7 @@ func TestThings(t *testing.T) {
 			limit:    0,
 			err:      createError(sdk.ErrFailedFetch, http.StatusBadRequest),
 			response: nil,
+			metadata: make(map[string]interface{}),
 		},
 		{
 			desc:     "get a list of things with limit greater than max",
@@ -328,6 +333,7 @@ func TestThings(t *testing.T) {
 			limit:    110,
 			err:      createError(sdk.ErrFailedFetch, http.StatusBadRequest),
 			response: nil,
+			metadata: make(map[string]interface{}),
 		},
 		{
 			desc:     "get a list of things with offset greater than max",
@@ -336,10 +342,18 @@ func TestThings(t *testing.T) {
 			limit:    limit,
 			err:      nil,
 			response: []sdk.Thing{},
+			metadata: make(map[string]interface{}),
 		},
 	}
 	for _, tc := range cases {
-		page, err := mainfluxSDK.Things(tc.token, tc.offset, tc.limit, tc.name)
+		filter := sdk.Filter{
+			Total:    uint64(200),
+			Offset:   uint64(tc.offset),
+			Limit:    uint64(tc.limit),
+			Name:     tc.name,
+			Metadata: tc.metadata,
+		}
+		page, err := mainfluxSDK.Things(tc.token, filter)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page.Things, fmt.Sprintf("%s: expected response channel %s, got %s", tc.desc, tc.response, page.Things))
 	}

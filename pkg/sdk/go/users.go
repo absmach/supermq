@@ -81,7 +81,7 @@ func (sdk mfSDK) Users(token string, userfilter UserFilter) (UsersPage, error) {
 	if err != nil {
 		return UsersPage{}, err
 	}
-	url := fmt.Sprintf("%s/users?%s", sdk.usersURL, endpoint)
+	url := fmt.Sprintf("%s/%s?%s", sdk.usersURL, usersEndpoint, endpoint)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return UsersPage{}, err
