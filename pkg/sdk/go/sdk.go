@@ -375,11 +375,11 @@ func (sdk mfSDK) sendThingRequest(req *http.Request, key, contentType string) (*
 
 func (sdk mfSDK) parseUserFilteredValues(filter UserFilter) (string, error) {
 	if len(filter.Metadata) > 0 {
-		metadataJson, err := json.Marshal(filter.Metadata)
+		metadataJSON, err := json.Marshal(filter.Metadata)
 		if err != nil {
 			return "", err
 		}
-		jsonStr := string(metadataJson)
+		jsonStr := string(metadataJSON)
 		if filter.Email == "" {
 			return fmt.Sprintf("offset=%d&limit=%d&metadata=%s", filter.Offset, filter.Limit, jsonStr), nil
 		}
@@ -391,11 +391,11 @@ func (sdk mfSDK) parseUserFilteredValues(filter UserFilter) (string, error) {
 }
 func (sdk mfSDK) parseFilteredValues(filter Filter) (string, error) {
 	if len(filter.Metadata) > 0 {
-		metadataJson, err := json.Marshal(filter.Metadata)
+		metadataJSON, err := json.Marshal(filter.Metadata)
 		if err != nil {
 			return "", err
 		}
-		jsonStr := string(metadataJson)
+		jsonStr := string(metadataJSON)
 		if filter.Name == "" {
 			return fmt.Sprintf("offset=%d&limit=%d&metadata=%s", filter.Offset, filter.Limit, jsonStr), nil
 		}
