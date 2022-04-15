@@ -5,7 +5,9 @@ package sdk
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -86,6 +88,24 @@ type User struct {
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
+// UserFilter contains users information that helps navigation.
+type UserFilter struct {
+	Total    uint64
+	Offset   uint64
+	Limit    uint64
+	Email    string
+	Metadata map[string]interface{}
+}
+
+// Filter contains users information that helps navigation.
+type Filter struct {
+	Total    int64
+	Offset   int64
+	Limit    int64
+	Name     string
+	Metadata map[string]interface{}
+}
+
 // Group represents mainflux users group.
 type Group struct {
 	ID          string                 `json:"id,omitempty"`
@@ -134,7 +154,7 @@ type SDK interface {
 	User(token, id string) (User, error)
 
 	// Users returns list of users.
-	Users(token string, offset, limit uint64, name string) (UsersPage, error)
+	Users(token string, userfilter UserFilter) (UsersPage, error)
 
 	// CreateToken receives credentials and returns user token.
 	CreateToken(user User) (string, error)
@@ -351,4 +371,21 @@ func (sdk mfSDK) sendThingRequest(req *http.Request, key, contentType string) (*
 	}
 
 	return sdk.client.Do(req)
+}
+
+func (sdk mfSDK) parseUserFilteredValues(filter UserFilter) (string, error) {
+	if len(filter.Metadata) > 0 {
+		metadataJson, err := json.Marshal(filter.Metadata)
+		if err != nil {
+			return "", err
+		}
+		jsonStr := string(metadataJson)
+		if filter.Email == "" {
+			return fmt.Sprintf("offset=%d&limit=%d&metadata=%s", filter.Offset, filter.Limit, jsonStr), nil
+		}
+		return fmt.Sprintf("offset=%d&limit=%d&email=%s&metadata=%s", filter.Offset, filter.Limit, filter.Email, jsonStr), nil
+
+	}
+
+	return fmt.Sprintf("offset=%d&limit=%d&email=%s", filter.Offset, filter.Limit, filter.Email), nil
 }

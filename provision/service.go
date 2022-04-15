@@ -96,7 +96,13 @@ func New(cfg Config, sdk SDK.SDK, logger logger.Logger) Service {
 
 // Mapping retrieves current configuration
 func (ps *provisionService) Mapping(token string) (map[string]interface{}, error) {
-	if _, err := ps.sdk.Users(token, uint64(offset), uint64(limit), name); err != nil {
+	filteredInfo := SDK.UserFilter{
+		Offset:   uint64(offset),
+		Limit:    uint64(limit),
+		Email:    "",
+		Metadata: make(map[string]interface{}),
+	}
+	if _, err := ps.sdk.Users(token, filteredInfo); err != nil {
 		return map[string]interface{}{}, errors.Wrap(ErrUnauthorized, err)
 	}
 	return ps.conf.Bootstrap.Content, nil

@@ -76,10 +76,12 @@ func (sdk mfSDK) User(userID, token string) (User, error) {
 	return u, nil
 }
 
-func (sdk mfSDK) Users(token string, offset, limit uint64, name string) (UsersPage, error) {
-	endpoint := fmt.Sprintf("%s?offset=%d&limit=%d&name=%s", usersEndpoint, offset, limit, name)
-	url := fmt.Sprintf("%s/%s", sdk.usersURL, endpoint)
-	
+func (sdk mfSDK) Users(token string, userfilter UserFilter) (UsersPage, error) {
+	endpoint, err := sdk.parseUserFilteredValues(userfilter)
+	if err != nil {
+		return UsersPage{}, err
+	}
+	url := fmt.Sprintf("%s/users?%s", sdk.usersURL, endpoint)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return UsersPage{}, err
