@@ -334,12 +334,15 @@ func TestUsers(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		filter := sdk.UserFilter{
+		basefilter := sdk.BaseFilter{
 			Total:    uint64(200),
 			Offset:   uint64(tc.offset),
 			Limit:    uint64(tc.limit),
-			Email:    tc.email,
 			Metadata: tc.metadata,
+		}
+		filter := sdk.UserFilter{
+			Email:      tc.email,
+			BaseFilter: basefilter,
 		}
 		_, err := mainfluxSDK.Users(tc.token, filter)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))

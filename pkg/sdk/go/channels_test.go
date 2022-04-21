@@ -297,13 +297,17 @@ func TestChannels(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		filter := sdk.Filter{
+		basefilter := sdk.BaseFilter{
 			Total:    uint64(200),
 			Offset:   uint64(tc.offset),
 			Limit:    uint64(tc.limit),
-			Name:     tc.name,
 			Metadata: tc.metadata,
 		}
+		filter := sdk.GenericFilter{
+			Name:       tc.name,
+			BaseFilter: basefilter,
+		}
+
 		page, err := mainfluxSDK.Channels(tc.token, filter)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page.Channels, fmt.Sprintf("%s: expected response channel %s, got %s", tc.desc, tc.response, page.Channels))

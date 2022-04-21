@@ -76,13 +76,11 @@ func (sdk mfSDK) CreateChannels(chs []Channel, token string) ([]Channel, error) 
 	return ccr.Channels, nil
 }
 
-func (sdk mfSDK) Channels(token string, filter Filter) (ChannelsPage, error) {
-	endpoint, err := sdk.parseFilteredValues(filter)
+func (sdk mfSDK) Channels(token string, filter GenericFilter) (ChannelsPage, error) {
+	url, err := sdk.parseFilteredValues(sdk.thingsURL, channelsEndpoint, filter)
 	if err != nil {
 		return ChannelsPage{}, err
 	}
-	url := fmt.Sprintf("%s/%s?%s", sdk.thingsURL, channelsEndpoint, endpoint)
-
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return ChannelsPage{}, err

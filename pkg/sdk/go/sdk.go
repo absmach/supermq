@@ -88,22 +88,24 @@ type User struct {
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
-// UserFilter contains users information that helps navigation.
-type UserFilter struct {
+// BaseFilter this contains the base information for navigating users, things or channels
+type BaseFilter struct {
 	Total    uint64
 	Offset   uint64
 	Limit    uint64
-	Email    string
 	Metadata map[string]interface{}
 }
 
-// Filter contains users information that helps navigation.
-type Filter struct {
-	Total    uint64
-	Offset   uint64
-	Limit    uint64
-	Name     string
-	Metadata map[string]interface{}
+// UserFilter contains users information that helps navigation.
+type UserFilter struct {
+	Email string
+	BaseFilter
+}
+
+// GenericFilter contains things or channel information that helps navigation.
+type GenericFilter struct {
+	Name string
+	BaseFilter
 }
 
 // Group represents mainflux users group.
@@ -172,7 +174,7 @@ type SDK interface {
 	CreateThings(things []Thing, token string) ([]Thing, error)
 
 	// Things returns page of things.
-	Things(token string, filter Filter) (ThingsPage, error)
+	Things(token string, filter GenericFilter) (ThingsPage, error)
 
 	// ThingsByChannel returns page of things that are connected or not connected
 	// to specified channel.
@@ -233,7 +235,7 @@ type SDK interface {
 	CreateChannels(channels []Channel, token string) ([]Channel, error)
 
 	// Channels returns page of channels.
-	Channels(token string, filter Filter) (ChannelsPage, error)
+	Channels(token string, filter GenericFilter) (ChannelsPage, error)
 
 	// ChannelsByThing returns page of channels that are connected or not connected
 	// to specified thing.
@@ -373,7 +375,7 @@ func (sdk mfSDK) sendThingRequest(req *http.Request, key, contentType string) (*
 	return sdk.client.Do(req)
 }
 
-func (sdk mfSDK) parseUserFilteredValues(filter UserFilter) (string, error) {
+func (sdk mfSDK) parseUserFilteredValues(baseURL, endpoint string, filter UserFilter) (string, error) {
 	if len(filter.Metadata) > 0 {
 		metadataJSON, err := json.Marshal(filter.Metadata)
 		if err != nil {
@@ -381,15 +383,14 @@ func (sdk mfSDK) parseUserFilteredValues(filter UserFilter) (string, error) {
 		}
 		jsonStr := string(metadataJSON)
 		if filter.Email == "" {
-			return fmt.Sprintf("offset=%d&limit=%d&metadata=%s", filter.Offset, filter.Limit, jsonStr), nil
+			return fmt.Sprintf("%s/%s?offset=%d&limit=%d&metadata=%s", baseURL, endpoint, filter.Offset, filter.Limit, jsonStr), nil
 		}
-		return fmt.Sprintf("offset=%d&limit=%d&email=%s&metadata=%s", filter.Offset, filter.Limit, filter.Email, jsonStr), nil
-
+		return fmt.Sprintf("%s/%s?offset=%d&limit=%d&email=%s&metadata=%s", baseURL, endpoint, filter.Offset, filter.Limit, filter.Email, jsonStr), nil
 	}
-
-	return fmt.Sprintf("offset=%d&limit=%d&email=%s", filter.Offset, filter.Limit, filter.Email), nil
+	return fmt.Sprintf("%s/%s?offset=%d&limit=%d&email=%s", baseURL, endpoint, filter.Offset, filter.Limit, filter.Email), nil
 }
-func (sdk mfSDK) parseFilteredValues(filter Filter) (string, error) {
+
+func (sdk mfSDK) parseFilteredValues(baseURL, endpoint string, filter GenericFilter) (string, error) {
 	if len(filter.Metadata) > 0 {
 		metadataJSON, err := json.Marshal(filter.Metadata)
 		if err != nil {
@@ -397,11 +398,9 @@ func (sdk mfSDK) parseFilteredValues(filter Filter) (string, error) {
 		}
 		jsonStr := string(metadataJSON)
 		if filter.Name == "" {
-			return fmt.Sprintf("offset=%d&limit=%d&metadata=%s", filter.Offset, filter.Limit, jsonStr), nil
+			return fmt.Sprintf("%s/%s?offset=%d&limit=%d&metadata=%s", baseURL, endpoint, filter.Offset, filter.Limit, jsonStr), nil
 		}
-		return fmt.Sprintf("offset=%d&limit=%d&name=%s&metadata=%s", filter.Offset, filter.Limit, filter.Name, jsonStr), nil
-
+		return fmt.Sprintf("%s/%s?offset=%d&limit=%d&name=%s&metadata=%s", baseURL, endpoint, filter.Offset, filter.Limit, filter.Name, jsonStr), nil
 	}
-
-	return fmt.Sprintf("offset=%d&limit=%d&name=%s", filter.Offset, filter.Limit, filter.Name), nil
+	return fmt.Sprintf("%s/%s?offset=%d&limit=%d&name=%s", baseURL, endpoint, filter.Offset, filter.Limit, filter.Name), nil
 }

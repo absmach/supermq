@@ -77,11 +77,10 @@ func (sdk mfSDK) User(userID, token string) (User, error) {
 }
 
 func (sdk mfSDK) Users(token string, userfilter UserFilter) (UsersPage, error) {
-	endpoint, err := sdk.parseUserFilteredValues(userfilter)
+	url, err := sdk.parseUserFilteredValues(sdk.usersURL, usersEndpoint, userfilter)
 	if err != nil {
 		return UsersPage{}, err
 	}
-	url := fmt.Sprintf("%s/%s?%s", sdk.usersURL, usersEndpoint, endpoint)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return UsersPage{}, err

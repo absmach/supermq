@@ -80,12 +80,11 @@ func (sdk mfSDK) CreateThings(things []Thing, token string) ([]Thing, error) {
 	return ctr.Things, nil
 }
 
-func (sdk mfSDK) Things(token string, filter Filter) (ThingsPage, error) {
-	endpoint, err := sdk.parseFilteredValues(filter)
+func (sdk mfSDK) Things(token string, filter GenericFilter) (ThingsPage, error) {
+	url, err := sdk.parseFilteredValues(sdk.thingsURL, thingsEndpoint, filter)
 	if err != nil {
 		return ThingsPage{}, err
 	}
-	url := fmt.Sprintf("%s/%s?%s", sdk.thingsURL, thingsEndpoint, endpoint)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {

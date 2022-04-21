@@ -45,14 +45,17 @@ var cmdThings = []cobra.Command{
 				logUsage(cmd.Use)
 				return
 			}
-			filteredInfo := mfxsdk.Filter{
+			basefilter := mfxsdk.BaseFilter{
 				Offset:   uint64(Offset),
 				Limit:    uint64(Limit),
-				Name:     "",
 				Metadata: make(map[string]interface{}),
 			}
+			pageFilters := mfxsdk.GenericFilter{
+				Name:       "",
+				BaseFilter: basefilter,
+			}
 			if args[0] == "all" {
-				l, err := sdk.Things(args[1], filteredInfo)
+				l, err := sdk.Things(args[1], pageFilters)
 				if err != nil {
 					logError(err)
 					return
