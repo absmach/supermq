@@ -72,14 +72,14 @@ services:
     container_name: mainflux-nginx
     restart: on-failure
     volumes:
-      - ./docker/nginx/nginx-${AUTH-key}.conf:/etc/nginx/nginx.conf.template
-      - ./docker/nginx/entrypoint.sh:/entrypoint.sh
-      - ./docker/nginx/snippets:/etc/nginx/snippets
-      - ./docker/ssl/authorization.js:/etc/nginx/authorization.js
-      - ./docker/ssl/certs/mainflux-server.crt:/etc/ssl/certs/mainflux-server.crt
-      - ./docker/ssl/certs/ca.crt:/etc/ssl/certs/ca.crt
-      - ./docker/ssl/certs/mainflux-server.key:/etc/ssl/private/mainflux-server.key
-      - ./docker/ssl/dhparam.pem:/etc/ssl/certs/dhparam.pem
+      - ./nginx/nginx-${AUTH-key}.conf:/etc/nginx/nginx.conf.template
+      - ./nginx/entrypoint.sh:/docker-entrypoint.d/entrypoint.sh
+      - ./nginx/snippets:/etc/nginx/snippets
+      - ./ssl/authorization.js:/etc/nginx/authorization.js
+      - ./ssl/certs/mainflux-server.crt:/etc/ssl/certs/mainflux-server.crt
+      - ./ssl/certs/ca.crt:/etc/ssl/certs/ca.crt
+      - ./ssl/certs/mainflux-server.key:/etc/ssl/private/mainflux-server.key
+      - ./ssl/dhparam.pem:/etc/ssl/certs/dhparam.pem
     ports:
       - ${MF_NGINX_HTTP_PORT}:${MF_NGINX_HTTP_PORT}
       - ${MF_NGINX_SSL_PORT}:${MF_NGINX_SSL_PORT}
@@ -89,7 +89,6 @@ services:
       - mainflux-base-net
     env_file:
       - .env
-    command: /entrypoint.sh
     depends_on:
       - things
       - users
