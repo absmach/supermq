@@ -164,10 +164,11 @@ func loginEndpoint(svc users.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
+
 		if req.token != "" {
 			token, err := svc.LoginWithJWT(ctx, req.token)
 			if err == nil {
-				return token, nil
+				return tokenRes{token}, nil
 			}
 			e = err
 		}

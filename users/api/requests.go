@@ -19,6 +19,9 @@ type userReq struct {
 }
 
 func (req userReq) validate() error {
+	if req.token != "" {
+		return nil
+	}
 	return req.user.Validate()
 }
 

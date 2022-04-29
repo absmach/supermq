@@ -187,7 +187,7 @@ func decodeCredentials(_ context.Context, r *http.Request) (interface{}, error) 
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
 	return userReq{
-		user:  user,
+		user: user,
 	}, nil
 
 }
