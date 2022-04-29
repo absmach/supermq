@@ -175,13 +175,18 @@ func decodeCredentials(_ context.Context, r *http.Request) (interface{}, error) 
 	if !strings.Contains(r.Header.Get("Content-Type"), contentType) {
 		return nil, errors.ErrUnsupportedContentType
 	}
+	token := apiutil.ExtractBearerToken(r)
+	if token != "" {
+		return userReq{
+			token: token,
+		}, nil
+	}
 
 	var user users.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
 	return userReq{
-		token: r.Header.Get("Authorization"),
 		user:  user,
 	}, nil
 
