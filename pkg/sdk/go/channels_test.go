@@ -297,15 +297,14 @@ func TestChannels(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		basefilter := sdk.BaseFilter{
-			Total:    uint64(200),
-			Offset:   uint64(tc.offset),
-			Limit:    uint64(tc.limit),
+		filter := sdk.GenericPageMetadata{
+			GenericPage: sdk.GenericPage{
+				Name:   tc.name,
+				Total:  uint64(200),
+				Offset: uint64(tc.offset),
+				Limit:  uint64(tc.limit),
+			},
 			Metadata: tc.metadata,
-		}
-		filter := sdk.GenericFilter{
-			Name:       tc.name,
-			BaseFilter: basefilter,
 		}
 
 		page, err := mainfluxSDK.Channels(tc.token, filter)

@@ -76,7 +76,7 @@ func (sdk mfSDK) CreateChannels(chs []Channel, token string) ([]Channel, error) 
 	return ccr.Channels, nil
 }
 
-func (sdk mfSDK) Channels(token string, filter GenericFilter) (ChannelsPage, error) {
+func (sdk mfSDK) Channels(token string, filter GenericPageMetadata) (ChannelsPage, error) {
 	url, err := sdk.parseFilteredValues(sdk.thingsURL, channelsEndpoint, filter)
 	if err != nil {
 		return ChannelsPage{}, err

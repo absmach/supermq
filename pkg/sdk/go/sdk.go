@@ -13,6 +13,8 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
+	things "github.com/mainflux/mainflux/things"
+	users "github.com/mainflux/mainflux/users"
 )
 
 const (
@@ -87,25 +89,10 @@ type User struct {
 	Password string                 `json:"password,omitempty"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
-
-// BaseFilter this contains the base information for navigating users, things or channels
-type BaseFilter struct {
-	Total    uint64
-	Offset   uint64
-	Limit    uint64
-	Metadata map[string]interface{}
-}
-
-// UserFilter contains users information that helps navigation.
-type UserFilter struct {
-	Email string
-	BaseFilter
-}
-
-// GenericFilter contains things or channel information that helps navigation.
-type GenericFilter struct {
-	Name string
-	BaseFilter
+type UserPage users.PageMetadata
+type UserPageMetadata struct {
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	UserPage
 }
 
 // Group represents mainflux users group.
@@ -123,6 +110,12 @@ type Thing struct {
 	Name     string                 `json:"name,omitempty"`
 	Key      string                 `json:"key,omitempty"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
+}
+type GenericPage things.PageMetadata
+
+type GenericPageMetadata struct {
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	GenericPage
 }
 
 // Channel represents mainflux channel.
@@ -156,7 +149,7 @@ type SDK interface {
 	User(token, id string) (User, error)
 
 	// Users returns list of users.
-	Users(token string, userfilter UserFilter) (UsersPage, error)
+	Users(token string, filter UserPageMetadata) (UsersPage, error)
 
 	// CreateToken receives credentials and returns user token.
 	CreateToken(user User) (string, error)
@@ -174,7 +167,7 @@ type SDK interface {
 	CreateThings(things []Thing, token string) ([]Thing, error)
 
 	// Things returns page of things.
-	Things(token string, filter GenericFilter) (ThingsPage, error)
+	Things(token string, filter GenericPageMetadata) (ThingsPage, error)
 
 	// ThingsByChannel returns page of things that are connected or not connected
 	// to specified channel.
@@ -235,7 +228,7 @@ type SDK interface {
 	CreateChannels(channels []Channel, token string) ([]Channel, error)
 
 	// Channels returns page of channels.
-	Channels(token string, filter GenericFilter) (ChannelsPage, error)
+	Channels(token string, filter GenericPageMetadata) (ChannelsPage, error)
 
 	// ChannelsByThing returns page of channels that are connected or not connected
 	// to specified thing.
@@ -375,7 +368,7 @@ func (sdk mfSDK) sendThingRequest(req *http.Request, key, contentType string) (*
 	return sdk.client.Do(req)
 }
 
-func (sdk mfSDK) parseUserFilteredValues(baseURL, endpoint string, filter UserFilter) (string, error) {
+func (sdk mfSDK) parseUserFilteredValues(baseURL, endpoint string, filter UserPageMetadata) (string, error) {
 	if len(filter.Metadata) > 0 {
 		metadataJSON, err := json.Marshal(filter.Metadata)
 		if err != nil {
@@ -390,7 +383,7 @@ func (sdk mfSDK) parseUserFilteredValues(baseURL, endpoint string, filter UserFi
 	return fmt.Sprintf("%s/%s?offset=%d&limit=%d&email=%s", baseURL, endpoint, filter.Offset, filter.Limit, filter.Email), nil
 }
 
-func (sdk mfSDK) parseFilteredValues(baseURL, endpoint string, filter GenericFilter) (string, error) {
+func (sdk mfSDK) parseFilteredValues(baseURL, endpoint string, filter GenericPageMetadata) (string, error) {
 	if len(filter.Metadata) > 0 {
 		metadataJSON, err := json.Marshal(filter.Metadata)
 		if err != nil {

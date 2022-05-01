@@ -97,14 +97,13 @@ func New(cfg Config, sdk SDK.SDK, logger logger.Logger) Service {
 
 // Mapping retrieves current configuration
 func (ps *provisionService) Mapping(token string) (map[string]interface{}, error) {
-	basefilter := sdk.BaseFilter{
-		Offset:   uint64(offset),
-		Limit:    uint64(limit),
+	userFilter := sdk.UserPageMetadata{
+		UserPage: sdk.UserPage{
+			Email:  "",
+			Offset: uint64(offset),
+			Limit:  uint64(limit),
+		},
 		Metadata: make(map[string]interface{}),
-	}
-	userFilter := sdk.UserFilter{
-		Email:      "",
-		BaseFilter: basefilter,
 	}
 
 	if _, err := ps.sdk.Users(token, userFilter); err != nil {

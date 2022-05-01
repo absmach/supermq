@@ -45,14 +45,13 @@ var cmdChannels = []cobra.Command{
 				logUsage(cmd.Use)
 				return
 			}
-			basefilter := mfxsdk.BaseFilter{
-				Offset:   uint64(Offset),
-				Limit:    uint64(Limit),
+			pageFilters := mfxsdk.GenericPageMetadata{
+				GenericPage: mfxsdk.GenericPage{
+					Name:   "",
+					Offset: uint64(Offset),
+					Limit:  uint64(Limit),
+				},
 				Metadata: make(map[string]interface{}),
-			}
-			pageFilters := mfxsdk.GenericFilter{
-				Name:       "",
-				BaseFilter: basefilter,
 			}
 
 			if args[0] == "all" {
