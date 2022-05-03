@@ -45,12 +45,10 @@ var cmdThings = []cobra.Command{
 				logUsage(cmd.Use)
 				return
 			}
-			pageFilters := mfxsdk.GenericPageMetadata{
-				GenericPage: mfxsdk.GenericPage{
-					Name:   "",
-					Offset: uint64(Offset),
-					Limit:  uint64(Limit),
-				},
+			pageFilters := mfxsdk.PageMetadata{
+				Name:     "",
+				Offset:   uint64(Offset),
+				Limit:    uint64(Limit),
 				Metadata: make(map[string]interface{}),
 			}
 			if args[0] == "all" {

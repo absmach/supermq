@@ -334,13 +334,11 @@ func TestUsers(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		filter := sdk.UserPageMetadata{
-			UserPage: sdk.UserPage{
-				Email: tc.email,
-				Total: uint64(200),
-				Offset: uint64(tc.offset),
-				Limit: uint64(tc.limit),
-			},
+		filter := sdk.PageMetadata{
+			Email:    tc.email,
+			Total:    uint64(200),
+			Offset:   uint64(tc.offset),
+			Limit:    uint64(tc.limit),
 			Metadata: tc.metadata,
 		}
 		_, err := mainfluxSDK.Users(tc.token, filter)

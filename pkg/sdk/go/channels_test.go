@@ -297,13 +297,11 @@ func TestChannels(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		filter := sdk.GenericPageMetadata{
-			GenericPage: sdk.GenericPage{
-				Name:   tc.name,
-				Total:  uint64(200),
-				Offset: uint64(tc.offset),
-				Limit:  uint64(tc.limit),
-			},
+		filter := sdk.PageMetadata{
+			Name:     tc.name,
+			Total:    uint64(200),
+			Offset:   uint64(tc.offset),
+			Limit:    uint64(tc.limit),
 			Metadata: tc.metadata,
 		}
 

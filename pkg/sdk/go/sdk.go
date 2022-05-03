@@ -13,8 +13,6 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
-	things "github.com/mainflux/mainflux/things"
-	users "github.com/mainflux/mainflux/users"
 )
 
 const (
@@ -89,10 +87,13 @@ type User struct {
 	Password string                 `json:"password,omitempty"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
-type UserPage users.PageMetadata
-type UserPageMetadata struct {
+type PageMetadata struct {
+	Total    uint64                 `json:"total,omitempty"`
+	Offset   uint64                 `json:"offset,omitempty"`
+	Limit    uint64                 `json:"limit,omitempty"`
+	Email    string                 `json:"email,omitempty"`
+	Name     string                 `json:"name,omitempty"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
-	UserPage
 }
 
 // Group represents mainflux users group.
@@ -110,12 +111,6 @@ type Thing struct {
 	Name     string                 `json:"name,omitempty"`
 	Key      string                 `json:"key,omitempty"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
-type GenericPage things.PageMetadata
-
-type GenericPageMetadata struct {
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
-	GenericPage
 }
 
 // Channel represents mainflux channel.
@@ -149,7 +144,7 @@ type SDK interface {
 	User(token, id string) (User, error)
 
 	// Users returns list of users.
-	Users(token string, filter UserPageMetadata) (UsersPage, error)
+	Users(token string, filter PageMetadata) (UsersPage, error)
 
 	// CreateToken receives credentials and returns user token.
 	CreateToken(user User) (string, error)
@@ -167,7 +162,7 @@ type SDK interface {
 	CreateThings(things []Thing, token string) ([]Thing, error)
 
 	// Things returns page of things.
-	Things(token string, filter GenericPageMetadata) (ThingsPage, error)
+	Things(token string, filter PageMetadata) (ThingsPage, error)
 
 	// ThingsByChannel returns page of things that are connected or not connected
 	// to specified channel.
@@ -228,7 +223,7 @@ type SDK interface {
 	CreateChannels(channels []Channel, token string) ([]Channel, error)
 
 	// Channels returns page of channels.
-	Channels(token string, filter GenericPageMetadata) (ChannelsPage, error)
+	Channels(token string, filter PageMetadata) (ChannelsPage, error)
 
 	// ChannelsByThing returns page of channels that are connected or not connected
 	// to specified thing.
@@ -368,32 +363,28 @@ func (sdk mfSDK) sendThingRequest(req *http.Request, key, contentType string) (*
 	return sdk.client.Do(req)
 }
 
-func (sdk mfSDK) parseUserFilteredValues(baseURL, endpoint string, filter UserPageMetadata) (string, error) {
-	if len(filter.Metadata) > 0 {
-		metadataJSON, err := json.Marshal(filter.Metadata)
-		if err != nil {
-			return "", err
-		}
-		jsonStr := string(metadataJSON)
-		if filter.Email == "" {
-			return fmt.Sprintf("%s/%s?offset=%d&limit=%d&metadata=%s", baseURL, endpoint, filter.Offset, filter.Limit, jsonStr), nil
-		}
-		return fmt.Sprintf("%s/%s?offset=%d&limit=%d&email=%s&metadata=%s", baseURL, endpoint, filter.Offset, filter.Limit, filter.Email, jsonStr), nil
+func (sdk mfSDK) parseFilteredValues(baseURL, endpoint string, filter PageMetadata) (string, error) {
+	var resp map[string]interface{}
+	var queryParams string = ""
+	jsonMarshal, err := json.Marshal(filter)
+	if err != nil {
+		return "", err
 	}
-	return fmt.Sprintf("%s/%s?offset=%d&limit=%d&email=%s", baseURL, endpoint, filter.Offset, filter.Limit, filter.Email), nil
-}
-
-func (sdk mfSDK) parseFilteredValues(baseURL, endpoint string, filter GenericPageMetadata) (string, error) {
-	if len(filter.Metadata) > 0 {
-		metadataJSON, err := json.Marshal(filter.Metadata)
-		if err != nil {
-			return "", err
-		}
-		jsonStr := string(metadataJSON)
-		if filter.Name == "" {
-			return fmt.Sprintf("%s/%s?offset=%d&limit=%d&metadata=%s", baseURL, endpoint, filter.Offset, filter.Limit, jsonStr), nil
-		}
-		return fmt.Sprintf("%s/%s?offset=%d&limit=%d&name=%s&metadata=%s", baseURL, endpoint, filter.Offset, filter.Limit, filter.Name, jsonStr), nil
+	err = json.Unmarshal(jsonMarshal, &resp)
+	if err != nil {
+		return "", err
 	}
-	return fmt.Sprintf("%s/%s?offset=%d&limit=%d&name=%s", baseURL, endpoint, filter.Offset, filter.Limit, filter.Name), nil
+	for key, val := range resp {
+		switch key {
+		case "total", "offset", "limit", "name", "email":
+			queryParams = fmt.Sprintf("%s%s=%s&", queryParams, key, fmt.Sprint(val))
+		case "metadata":
+			metadataJSON, err := json.Marshal(filter.Metadata)
+			if err != nil {
+				return "", err
+			}
+			queryParams = fmt.Sprintf("%s%s=%s&", queryParams, key, string(metadataJSON))
+		}
+	}
+	return fmt.Sprintf("%s/%s?%s", baseURL, endpoint, queryParams), nil
 }

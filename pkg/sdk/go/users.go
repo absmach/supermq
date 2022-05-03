@@ -76,8 +76,8 @@ func (sdk mfSDK) User(userID, token string) (User, error) {
 	return u, nil
 }
 
-func (sdk mfSDK) Users(token string, userfilter UserPageMetadata) (UsersPage, error) {
-	url, err := sdk.parseUserFilteredValues(sdk.usersURL, usersEndpoint, userfilter)
+func (sdk mfSDK) Users(token string, userfilter PageMetadata) (UsersPage, error) {
+	url, err := sdk.parseFilteredValues(sdk.usersURL, usersEndpoint, userfilter)
 	if err != nil {
 		return UsersPage{}, err
 	}

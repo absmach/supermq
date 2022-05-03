@@ -46,12 +46,10 @@ var cmdUsers = []cobra.Command{
 				logUsage(cmd.Use)
 				return
 			}
-			pageFilters := mfxsdk.UserPageMetadata{
-				UserPage: mfxsdk.UserPage{
-					Email:  "",
-					Offset: uint64(Offset),
-					Limit:  uint64(Limit),
-				},
+			pageFilters := mfxsdk.PageMetadata{
+				Email:    "",
+				Offset:   uint64(Offset),
+				Limit:    uint64(Limit),
 				Metadata: make(map[string]interface{}),
 			}
 			if args[0] == "all" {
