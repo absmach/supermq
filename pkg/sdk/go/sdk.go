@@ -144,7 +144,7 @@ type SDK interface {
 	User(token, id string) (User, error)
 
 	// Users returns list of users.
-	Users(token string, filter PageMetadata) (UsersPage, error)
+	Users(token string, pm PageMetadata) (UsersPage, error)
 
 	// CreateToken receives credentials and returns user token.
 	CreateToken(user User) (string, error)
@@ -162,7 +162,7 @@ type SDK interface {
 	CreateThings(things []Thing, token string) ([]Thing, error)
 
 	// Things returns page of things.
-	Things(token string, filter PageMetadata) (ThingsPage, error)
+	Things(token string, pm PageMetadata) (ThingsPage, error)
 
 	// ThingsByChannel returns page of things that are connected or not connected
 	// to specified channel.
@@ -223,7 +223,7 @@ type SDK interface {
 	CreateChannels(channels []Channel, token string) ([]Channel, error)
 
 	// Channels returns page of channels.
-	Channels(token string, filter PageMetadata) (ChannelsPage, error)
+	Channels(token string, pm PageMetadata) (ChannelsPage, error)
 
 	// ChannelsByThing returns page of channels that are connected or not connected
 	// to specified thing.
@@ -363,10 +363,10 @@ func (sdk mfSDK) sendThingRequest(req *http.Request, key, contentType string) (*
 	return sdk.client.Do(req)
 }
 
-func (sdk mfSDK) parseFilteredValues(baseURL, endpoint string, filter PageMetadata) (string, error) {
+func (sdk mfSDK) parseQueryParameters(baseURL, endpoint string, pm PageMetadata) (string, error) {
 	var resp map[string]interface{}
 	var queryParams string = ""
-	jsonMarshal, err := json.Marshal(filter)
+	jsonMarshal, err := json.Marshal(pm)
 	if err != nil {
 		return "", err
 	}
@@ -379,7 +379,7 @@ func (sdk mfSDK) parseFilteredValues(baseURL, endpoint string, filter PageMetada
 		case "total", "offset", "limit", "name", "email":
 			queryParams = fmt.Sprintf("%s%s=%s&", queryParams, key, fmt.Sprint(val))
 		case "metadata":
-			metadataJSON, err := json.Marshal(filter.Metadata)
+			metadataJSON, err := json.Marshal(pm.Metadata)
 			if err != nil {
 				return "", err
 			}

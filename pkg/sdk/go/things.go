@@ -80,8 +80,8 @@ func (sdk mfSDK) CreateThings(things []Thing, token string) ([]Thing, error) {
 	return ctr.Things, nil
 }
 
-func (sdk mfSDK) Things(token string, filter PageMetadata) (ThingsPage, error) {
-	url, err := sdk.parseFilteredValues(sdk.thingsURL, thingsEndpoint, filter)
+func (sdk mfSDK) Things(token string, pm PageMetadata) (ThingsPage, error) {
+	url, err := sdk.parseQueryParameters(sdk.thingsURL, thingsEndpoint, pm)
 	if err != nil {
 		return ThingsPage{}, err
 	}
