@@ -88,9 +88,9 @@ type User struct {
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 type PageMetadata struct {
-	Total    uint64                 `json:"total,omitempty"`
-	Offset   uint64                 `json:"offset,omitempty"`
-	Limit    uint64                 `json:"limit,omitempty"`
+	Total    uint64                 `json:"total"`
+	Offset   uint64                 `json:"offset"`
+	Limit    uint64                 `json:"limit"`
 	Email    string                 `json:"email,omitempty"`
 	Name     string                 `json:"name,omitempty"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
