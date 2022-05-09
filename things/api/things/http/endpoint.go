@@ -14,7 +14,6 @@ import (
 func createThingEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(createThingReq)
-
 		if err := req.validate(); err != nil {
 			return nil, err
 		}

@@ -142,13 +142,10 @@ func (svc service) RetrieveKey(ctx context.Context, token, id string) (Key, erro
 }
 
 func (svc service) Identify(ctx context.Context, token string) (Identity, error) {
-	fmt.Println(fmt.Sprintf("identify:%v", token))
 	if svc.oidc {
 		token = strings.ReplaceAll(token, "Bearer ", "")
 		parsed, _ := jwt.Parse(token, nil)
-		fmt.Println(token)
 
-		fmt.Println(fmt.Sprintf("%v", parsed))
 		claims, _ := parsed.Claims.(jwt.MapClaims)
 		id, ok := claims["sub"].(string)
 		if !ok {

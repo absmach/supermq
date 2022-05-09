@@ -297,7 +297,7 @@ func (ts *thingsService) ListThings(ctx context.Context, token string, pm PageMe
 	// If the user is admin, fetch all things from database.
 	if err := ts.authorize(ctx, res.GetId(), authoritiesObject, memberRelationKey); err == nil {
 		pm.FetchSharedThings = true
-		page, err := ts.things.RetrieveAll(ctx, res.GetEmail(), pm)
+		page, err := ts.things.RetrieveAll(ctx, res.GetId(), pm)
 		if err != nil {
 			return Page{}, err
 		}
@@ -439,7 +439,7 @@ func (ts *thingsService) ListChannels(ctx context.Context, token string, pm Page
 	// If the user is admin, fetch all channels from the database.
 	if err := ts.authorize(ctx, res.GetId(), authoritiesObject, memberRelationKey); err == nil {
 		pm.FetchSharedThings = true
-		page, err := ts.channels.RetrieveAll(ctx, res.GetEmail(), pm)
+		page, err := ts.channels.RetrieveAll(ctx, res.GetId(), pm)
 		if err != nil {
 			return ChannelsPage{}, err
 		}

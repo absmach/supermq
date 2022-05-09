@@ -198,8 +198,12 @@ func (svc usersService) LoginWithJWT(ctx context.Context, token string) (string,
 		if err != nil {
 			return "", err
 		}
-
 	}
+
+	if err := svc.claimOwnership(ctx, dbUser.ID, usersObjKey, memberRelationKey); err != nil {
+		return "", err
+	}
+
 	return token, nil
 }
 
