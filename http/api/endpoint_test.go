@@ -63,10 +63,12 @@ func (tr testRequest) make() (*http.Response, error) {
 
 func TestPublish(t *testing.T) {
 	chanID := "1"
-	contentType := "application/senml+json"
+	contentTypeSenML := "application/senml+json"
+	contentTypeJSON := "application/json"
 	thingKey := "thing_key"
 	invalidKey := "invalid_key"
 	msg := `[{"n":"current","t":-1,"v":1.6}]`
+	msgJSON := `{"field1":"val1","field2":"val2"}`
 	thingsClient := mocks.NewThingsClient(map[string]string{thingKey: chanID})
 	svc := newService(thingsClient)
 	ts := newHTTPServer(svc)
@@ -83,21 +85,28 @@ func TestPublish(t *testing.T) {
 		"publish message": {
 			chanID:      chanID,
 			msg:         msg,
-			contentType: contentType,
+			contentType: contentTypeSenML,
+			key:         thingKey,
+			status:      http.StatusAccepted,
+		},
+		"publish message with application/json content-type": {
+			chanID:      chanID,
+			msg:         msgJSON,
+			contentType: contentTypeJSON,
 			key:         thingKey,
 			status:      http.StatusAccepted,
 		},
 		"publish message with empty key": {
 			chanID:      chanID,
 			msg:         msg,
-			contentType: contentType,
+			contentType: contentTypeSenML,
 			key:         "",
 			status:      http.StatusUnauthorized,
 		},
 		"publish message with basic auth": {
 			chanID:      chanID,
 			msg:         msg,
-			contentType: contentType,
+			contentType: contentTypeSenML,
 			key:         thingKey,
 			basicAuth:   true,
 			status:      http.StatusAccepted,
@@ -105,14 +114,14 @@ func TestPublish(t *testing.T) {
 		"publish message with invalid key": {
 			chanID:      chanID,
 			msg:         msg,
-			contentType: contentType,
+			contentType: contentTypeSenML,
 			key:         invalidKey,
 			status:      http.StatusUnauthorized,
 		},
 		"publish message with invalid basic auth": {
 			chanID:      chanID,
 			msg:         msg,
-			contentType: contentType,
+			contentType: contentTypeSenML,
 			key:         invalidKey,
 			basicAuth:   true,
 			status:      http.StatusUnauthorized,
@@ -127,14 +136,14 @@ func TestPublish(t *testing.T) {
 		"publish message to invalid channel": {
 			chanID:      "",
 			msg:         msg,
-			contentType: contentType,
+			contentType: contentTypeSenML,
 			key:         thingKey,
 			status:      http.StatusBadRequest,
 		},
 		"publish message unable to authorize": {
 			chanID:      chanID,
 			msg:         msg,
-			contentType: contentType,
+			contentType: contentTypeSenML,
 			key:         mocks.ServiceErrToken,
 			status:      http.StatusInternalServerError,
 		},
