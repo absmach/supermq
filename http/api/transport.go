@@ -31,6 +31,7 @@ import (
 const (
 	protocol         = "http"
 	contentTypeSenML = "application/senml+json"
+	contentTypeCBOR  = "application/senml+cbor"
 	contentTypeJSON  = "application/json"
 )
 
@@ -98,6 +99,7 @@ func parseSubtopic(subtopic string) (string, error) {
 
 func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), contentTypeSenML) &&
+		!strings.Contains(r.Header.Get("Content-Type"), contentTypeCBOR) &&
 		!strings.Contains(r.Header.Get("Content-Type"), contentTypeJSON) {
 		return nil, errors.ErrUnsupportedContentType
 	}

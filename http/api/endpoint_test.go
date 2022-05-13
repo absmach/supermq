@@ -64,11 +64,13 @@ func (tr testRequest) make() (*http.Response, error) {
 func TestPublish(t *testing.T) {
 	chanID := "1"
 	contentTypeSenML := "application/senml+json"
+	contentTypeCBOR := "application/senml+cbor"
 	contentTypeJSON := "application/json"
 	thingKey := "thing_key"
 	invalidKey := "invalid_key"
 	msg := `[{"n":"current","t":-1,"v":1.6}]`
 	msgJSON := `{"field1":"val1","field2":"val2"}`
+	msgCBOR := `81A3616E6763757272656E746174206176FB3FF999999999999A`
 	thingsClient := mocks.NewThingsClient(map[string]string{thingKey: chanID})
 	svc := newService(thingsClient)
 	ts := newHTTPServer(svc)
@@ -86,6 +88,13 @@ func TestPublish(t *testing.T) {
 			chanID:      chanID,
 			msg:         msg,
 			contentType: contentTypeSenML,
+			key:         thingKey,
+			status:      http.StatusAccepted,
+		},
+		"publish message with application/senml+cbor content-type": {
+			chanID:      chanID,
+			msg:         msgCBOR,
+			contentType: contentTypeCBOR,
 			key:         thingKey,
 			status:      http.StatusAccepted,
 		},
