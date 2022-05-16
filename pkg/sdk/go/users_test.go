@@ -281,7 +281,7 @@ func TestUsers(t *testing.T) {
 			token:  token,
 			offset: offset,
 			limit:  0,
-			err:    createError(sdk.ErrFailedFetch, http.StatusInternalServerError),
+			err:    createError(sdk.ErrFailedFetch, http.StatusBadRequest),
 			email:  email,
 		},
 		{
@@ -289,7 +289,7 @@ func TestUsers(t *testing.T) {
 			token:  token,
 			offset: offset,
 			limit:  110,
-			err:    createError(sdk.ErrFailedFetch, http.StatusInternalServerError),
+			err:    createError(sdk.ErrFailedFetch, http.StatusBadRequest),
 			email:  email,
 		},
 		{
