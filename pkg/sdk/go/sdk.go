@@ -365,7 +365,7 @@ func (sdk mfSDK) sendThingRequest(req *http.Request, key, contentType string) (*
 
 func (sdk mfSDK) parseQueryParameters(baseURL, endpoint string, pm PageMetadata) (string, error) {
 	var resp map[string]interface{}
-	var queryParams string = ""
+	var queryParams string
 	jsonMarshal, err := json.Marshal(pm)
 	if err != nil {
 		return "", err
