@@ -63,8 +63,8 @@ func (tr testRequest) make() (*http.Response, error) {
 
 func TestPublish(t *testing.T) {
 	chanID := "1"
-	contentTypeSenML := "application/senml+json"
-	contentTypeCBOR := "application/senml+cbor"
+	contentTypeSenMLJSON := "application/senml+json"
+	contentTypeSenMLCBOR := "application/senml+cbor"
 	contentTypeJSON := "application/json"
 	thingKey := "thing_key"
 	invalidKey := "invalid_key"
@@ -87,14 +87,14 @@ func TestPublish(t *testing.T) {
 		"publish message": {
 			chanID:      chanID,
 			msg:         msg,
-			contentType: contentTypeSenML,
+			contentType: contentTypeSenMLJSON,
 			key:         thingKey,
 			status:      http.StatusAccepted,
 		},
 		"publish message with application/senml+cbor content-type": {
 			chanID:      chanID,
 			msg:         msgCBOR,
-			contentType: contentTypeCBOR,
+			contentType: contentTypeSenMLCBOR,
 			key:         thingKey,
 			status:      http.StatusAccepted,
 		},
@@ -108,14 +108,14 @@ func TestPublish(t *testing.T) {
 		"publish message with empty key": {
 			chanID:      chanID,
 			msg:         msg,
-			contentType: contentTypeSenML,
+			contentType: contentTypeSenMLJSON,
 			key:         "",
 			status:      http.StatusUnauthorized,
 		},
 		"publish message with basic auth": {
 			chanID:      chanID,
 			msg:         msg,
-			contentType: contentTypeSenML,
+			contentType: contentTypeSenMLJSON,
 			key:         thingKey,
 			basicAuth:   true,
 			status:      http.StatusAccepted,
@@ -123,14 +123,14 @@ func TestPublish(t *testing.T) {
 		"publish message with invalid key": {
 			chanID:      chanID,
 			msg:         msg,
-			contentType: contentTypeSenML,
+			contentType: contentTypeSenMLJSON,
 			key:         invalidKey,
 			status:      http.StatusUnauthorized,
 		},
 		"publish message with invalid basic auth": {
 			chanID:      chanID,
 			msg:         msg,
-			contentType: contentTypeSenML,
+			contentType: contentTypeSenMLJSON,
 			key:         invalidKey,
 			basicAuth:   true,
 			status:      http.StatusUnauthorized,
@@ -145,14 +145,14 @@ func TestPublish(t *testing.T) {
 		"publish message to invalid channel": {
 			chanID:      "",
 			msg:         msg,
-			contentType: contentTypeSenML,
+			contentType: contentTypeSenMLJSON,
 			key:         thingKey,
 			status:      http.StatusBadRequest,
 		},
 		"publish message unable to authorize": {
 			chanID:      chanID,
 			msg:         msg,
-			contentType: contentTypeSenML,
+			contentType: contentTypeSenMLJSON,
 			key:         mocks.ServiceErrToken,
 			status:      http.StatusInternalServerError,
 		},
