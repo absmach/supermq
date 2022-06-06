@@ -91,8 +91,10 @@ type PageMetadata struct {
 	Total    uint64                 `json:"total"`
 	Offset   uint64                 `json:"offset"`
 	Limit    uint64                 `json:"limit"`
+	Level    uint64                 `json:"level,omitempty"`
 	Email    string                 `json:"email,omitempty"`
 	Name     string                 `json:"name,omitempty"`
+	Type     string                 `json:"type,omitempty"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
@@ -103,16 +105,6 @@ type Group struct {
 	Description string                 `json:"description,omitempty"`
 	ParentID    string                 `json:"parent_id,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
-}
-
-type PageMetadata struct {
-	Total    uint64
-	Offset   uint64
-	Limit    uint64
-	Level    uint64
-	Name     string
-	Type     string
-	Metadata map[string]interface{}
 }
 
 // Thing represents mainflux thing.
