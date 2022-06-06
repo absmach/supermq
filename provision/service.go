@@ -7,7 +7,6 @@ import (
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	SDK "github.com/mainflux/mainflux/pkg/sdk/go"
-	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
 )
 
 const (
@@ -97,7 +96,7 @@ func New(cfg Config, sdk SDK.SDK, logger logger.Logger) Service {
 
 // Mapping retrieves current configuration
 func (ps *provisionService) Mapping(token string) (map[string]interface{}, error) {
-	userFilter := sdk.PageMetadata{
+	userFilter := SDK.PageMetadata{
 		Email:    "",
 		Offset:   uint64(offset),
 		Limit:    uint64(limit),
