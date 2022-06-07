@@ -4,7 +4,7 @@ GO_VERSION=1.17
 PROTOC_VERSION=3.12.3
 PROTOC_GEN_VERSION=v1.4.2
 PROTOC_GOFAST_VERSION=v1.3.1
-GRPC_VERSION=v1.29.1
+GRPC_VERSION=v1.47.0
 
 function version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"; }
 
