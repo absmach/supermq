@@ -42,7 +42,7 @@ setup_protoc() {
     sudo mv protoc3/include/* /usr/local/include/
     rm -f PROTOC_ZIP
 
-    go install -u github.com/golang/protobuf/protoc-gen-go@$PROTOC_GEN_VERSION \
+    go install github.com/golang/protobuf/protoc-gen-go@$PROTOC_GEN_VERSION \
             github.com/gogo/protobuf/protoc-gen-gofast@$PROTOC_GOFAST_VERSION \
             google.golang.org/grpc@$GRPC_VERSION
 
