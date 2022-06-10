@@ -40,7 +40,6 @@ var (
 	// Offset query parameter
 	offset uint = 0
 	// Name query parameter
-	name string = ""
 )
 
 var _ Service = (*provisionService)(nil)
