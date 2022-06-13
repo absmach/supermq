@@ -9,6 +9,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/mainflux/mainflux"
@@ -369,7 +371,6 @@ func (sdk mfSDK) withQueryParams(baseURL, endpoint string, pm PageMetadata) (str
 
 func (pm PageMetadata) Query() (string, error) {
 	var resp map[string]interface{}
-	var queryParams string
 	jsonMarshal, err := json.Marshal(pm)
 	if err != nil {
 		return "", err
@@ -378,17 +379,23 @@ func (pm PageMetadata) Query() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	q := url.Values{}
 	for key, val := range resp {
 		switch key {
-		case "total", "offset", "limit", "name", "email":
-			queryParams = fmt.Sprintf("%s%s=%s&", queryParams, key, fmt.Sprint(val))
+		case "name", "email":
+			q.Add(key, fmt.Sprint(val))
+		case "total", "offset", "limit":
+			if _, err := strconv.ParseUint(fmt.Sprint(val), 10, 64); err != nil {
+				return "", err
+			}
+			q.Add(key, fmt.Sprint(val))
 		case "metadata":
-			metadataJSON, err := json.Marshal(pm.Metadata)
+			md, err := json.Marshal(pm.Metadata)
 			if err != nil {
 				return "", err
 			}
-			queryParams = fmt.Sprintf("%s%s=%s&", queryParams, key, string(metadataJSON))
+			q.Add(key, string(md))
 		}
 	}
-	return queryParams, nil
+	return q.Encode(), nil
 }
