@@ -359,7 +359,15 @@ func (sdk mfSDK) sendThingRequest(req *http.Request, key, contentType string) (*
 	return sdk.client.Do(req)
 }
 
-func (sdk mfSDK) parseQueryParameters(baseURL, endpoint string, pm PageMetadata) (string, error) {
+func (sdk mfSDK) withQueryParams(baseURL, endpoint string, pm PageMetadata) (string, error) {
+	q, err := pm.Query()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/%s?%s", baseURL, endpoint, q), nil
+}
+
+func (pm PageMetadata) Query() (string, error) {
 	var resp map[string]interface{}
 	var queryParams string
 	jsonMarshal, err := json.Marshal(pm)
@@ -382,5 +390,5 @@ func (sdk mfSDK) parseQueryParameters(baseURL, endpoint string, pm PageMetadata)
 			queryParams = fmt.Sprintf("%s%s=%s&", queryParams, key, string(metadataJSON))
 		}
 	}
-	return fmt.Sprintf("%s/%s?%s", baseURL, endpoint, queryParams), nil
+	return queryParams, nil
 }

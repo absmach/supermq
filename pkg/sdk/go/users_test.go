@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/mainflux/mainflux"
+	mfauth "github.com/mainflux/mainflux/auth"
 	"github.com/mainflux/mainflux/logger"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -72,7 +73,7 @@ func TestCreateUser(t *testing.T) {
 	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: "authorities", Relation: "member"})
 	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
 
-	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
+	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: mfauth.APIKey})
 	token := tkn.GetValue()
 
 	mainfluxSDK := sdk.NewSDK(sdkConf)
@@ -149,7 +150,7 @@ func TestUser(t *testing.T) {
 	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: "authorities", Relation: "member"})
 	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
 
-	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
+	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: mfauth.APIKey})
 	token := tkn.GetValue()
 	userID, err := mainfluxSDK.CreateUser(token, user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -212,7 +213,7 @@ func TestUsers(t *testing.T) {
 	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: "authorities", Relation: "member"})
 	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
 
-	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
+	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: mfauth.APIKey})
 	token := tkn.GetValue()
 
 	var users []sdk.User
@@ -253,7 +254,7 @@ func TestUsers(t *testing.T) {
 		metadata map[string]interface{}
 	}{
 		{
-			desc:   "get a list users",
+			desc:   "get a list of users",
 			token:  token,
 			offset: offset,
 			limit:  limit,
@@ -363,7 +364,7 @@ func TestCreateToken(t *testing.T) {
 	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: "authorities", Relation: "member"})
 	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
 
-	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
+	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: mfauth.APIKey})
 	token := tkn.GetValue()
 	_, err := mainfluxSDK.CreateUser(token, user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -417,7 +418,7 @@ func TestUpdateUser(t *testing.T) {
 	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: "authorities", Relation: "member"})
 	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
 
-	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
+	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: mfauth.APIKey})
 	token := tkn.GetValue()
 	userID, err := mainfluxSDK.CreateUser(token, user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -484,7 +485,7 @@ func TestUpdatePassword(t *testing.T) {
 	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: "authorities", Relation: "member"})
 	auth := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
 
-	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 0})
+	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: mfauth.APIKey})
 	token := tkn.GetValue()
 	_, err := mainfluxSDK.CreateUser(token, user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))

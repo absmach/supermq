@@ -81,7 +81,7 @@ func (sdk mfSDK) CreateThings(things []Thing, token string) ([]Thing, error) {
 }
 
 func (sdk mfSDK) Things(token string, pm PageMetadata) (ThingsPage, error) {
-	url, err := sdk.parseQueryParameters(sdk.thingsURL, thingsEndpoint, pm)
+	url, err := sdk.withQueryParams(sdk.thingsURL, thingsEndpoint, pm)
 	if err != nil {
 		return ThingsPage{}, err
 	}

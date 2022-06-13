@@ -35,11 +35,8 @@ var (
 	ErrFailedBootstrapValidate  = errors.New("failed to validate bootstrap config creation")
 	ErrGatewayUpdate            = errors.New("failed to updated gateway metadata")
 
-	// Limit query parameter
-	limit uint = 10
-	// Offset query parameter
+	limit  uint = 10
 	offset uint = 0
-	// Name query parameter
 )
 
 var _ Service = (*provisionService)(nil)

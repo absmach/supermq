@@ -77,7 +77,7 @@ func (sdk mfSDK) CreateChannels(chs []Channel, token string) ([]Channel, error) 
 }
 
 func (sdk mfSDK) Channels(token string, pm PageMetadata) (ChannelsPage, error) {
-	url, err := sdk.parseQueryParameters(sdk.thingsURL, channelsEndpoint, pm)
+	url, err := sdk.withQueryParams(sdk.thingsURL, channelsEndpoint, pm)
 	if err != nil {
 		return ChannelsPage{}, err
 	}
