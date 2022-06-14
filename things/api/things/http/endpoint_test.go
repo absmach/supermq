@@ -53,7 +53,6 @@ var (
 	}
 	invalidName    = strings.Repeat("m", maxNameSize+1)
 	notFoundRes    = toJSON(apiutil.ErrorRes{Err: errors.ErrNotFound.Error()})
-	unauthzRes     = toJSON(apiutil.ErrorRes{Err: errors.ErrAuthorization.Error()})
 	unauthRes      = toJSON(apiutil.ErrorRes{Err: errors.ErrAuthentication.Error()})
 	missingTokRes  = toJSON(apiutil.ErrorRes{Err: apiutil.ErrBearerToken.Error()})
 	searchThingReq = things.PageMetadata{
