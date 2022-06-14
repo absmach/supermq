@@ -362,14 +362,14 @@ func (sdk mfSDK) sendThingRequest(req *http.Request, key, contentType string) (*
 }
 
 func (sdk mfSDK) withQueryParams(baseURL, endpoint string, pm PageMetadata) (string, error) {
-	q, err := pm.Query()
+	q, err := pm.query()
 	if err != nil {
 		return "", err
 	}
 	return fmt.Sprintf("%s/%s?%s", baseURL, endpoint, q), nil
 }
 
-func (pm PageMetadata) Query() (string, error) {
+func (pm PageMetadata) query() (string, error) {
 	q := url.Values{}
 	q.Add("total", strconv.FormatUint(pm.Total, 10))
 	q.Add("offset", strconv.FormatUint(pm.Offset, 10))
