@@ -370,32 +370,28 @@ func (sdk mfSDK) withQueryParams(baseURL, endpoint string, pm PageMetadata) (str
 }
 
 func (pm PageMetadata) Query() (string, error) {
-	var resp map[string]interface{}
-	jsonMarshal, err := json.Marshal(pm)
-	if err != nil {
-		return "", err
-	}
-	err = json.Unmarshal(jsonMarshal, &resp)
-	if err != nil {
-		return "", err
-	}
 	q := url.Values{}
-	for key, val := range resp {
-		switch key {
-		case "name", "email":
-			q.Add(key, fmt.Sprint(val))
-		case "total", "offset", "limit":
-			if _, err := strconv.ParseUint(fmt.Sprint(val), 10, 64); err != nil {
-				return "", err
-			}
-			q.Add(key, fmt.Sprint(val))
-		case "metadata":
-			md, err := json.Marshal(pm.Metadata)
-			if err != nil {
-				return "", err
-			}
-			q.Add(key, string(md))
+	q.Add("total", strconv.FormatUint(pm.Total, 10))
+	q.Add("offset", strconv.FormatUint(pm.Offset, 10))
+	q.Add("limit", strconv.FormatUint(pm.Limit, 10))
+	if pm.Level != 0 {
+		q.Add("level", strconv.FormatUint(pm.Level, 10))
+	}
+	if pm.Email != "" {
+		q.Add("email", pm.Email)
+	}
+	if pm.Name != "" {
+		q.Add("name", pm.Name)
+	}
+	if pm.Type != "" {
+		q.Add("type", pm.Type)
+	}
+	if pm.Metadata != nil {
+		md, err := json.Marshal(pm.Metadata)
+		if err != nil {
+			return "", err
 		}
+		q.Add("metadata", string(md))
 	}
 	return q.Encode(), nil
 }
