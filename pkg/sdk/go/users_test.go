@@ -29,11 +29,9 @@ const (
 )
 
 var (
-	passRegex = regexp.MustCompile("^.{8,}$")
-	// Limit query parameter
-	limit uint64 = 5
-	// Offset query parameter
-	offset uint64 = 0
+	passRegex        = regexp.MustCompile("^.{8,}$")
+	limit     uint64 = 5
+	offset    uint64 = 0
 )
 
 func newUserService() users.Service {
@@ -218,29 +216,16 @@ func TestUsers(t *testing.T) {
 
 	var users []sdk.User
 
-	for i := 1; i < 101; i++ {
-		email := fmt.Sprintf("test-%d@example.com", i)
+	for i := 10; i < 100; i++ {
+		email := fmt.Sprintf("user%d@example.com", i)
 		password := fmt.Sprintf("password%d", i)
-		metadata := map[string]interface{}{"name": fmt.Sprintf("test-%d", i)}
+		metadata := map[string]interface{}{"name": fmt.Sprintf("user%d", i)}
 		us := sdk.User{Email: email, Password: password, Metadata: metadata}
 		userID, err := mainfluxSDK.CreateUser(token, us)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		us.ID = userID
 		us.Password = ""
 		users = append(users, us)
-	}
-
-	var users2 []sdk.User
-	for i := 1; i < 5; i++ {
-		email := fmt.Sprintf("test3-%d@mainflux.com", i)
-		password := fmt.Sprintf("password%d", i)
-		metadata := map[string]interface{}{"name": "mainflux"}
-		us := sdk.User{Email: email, Password: password, Metadata: metadata}
-		userID, err := mainfluxSDK.CreateUser(token, us)
-		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-		us.ID = userID
-		us.Password = ""
-		users2 = append(users2, us)
 	}
 
 	cases := []struct {
@@ -254,84 +239,71 @@ func TestUsers(t *testing.T) {
 		metadata map[string]interface{}
 	}{
 		{
-			desc:   "get a list of users",
-			token:  token,
-			offset: offset,
-			limit:  limit,
-			err:    nil,
-			email:  email,
+			desc:     "get a list of users",
+			token:    token,
+			offset:   offset,
+			limit:    limit,
+			err:      nil,
+			email:    "",
+			response: users[offset:limit],
 		},
 		{
-			desc:   "get a list of users with invalid token",
-			token:  wrongValue,
-			offset: offset,
-			limit:  limit,
-			err:    createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
-			email:  email,
+			desc:     "get a list of users with invalid token",
+			token:    wrongValue,
+			offset:   offset,
+			limit:    limit,
+			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
+			email:    "",
+			response: nil,
 		},
 		{
-			desc:   "get a list of users with empty token",
-			token:  "",
-			offset: offset,
-			limit:  limit,
-			err:    createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
-			email:  email,
+			desc:     "get a list of users with empty token",
+			token:    "",
+			offset:   offset,
+			limit:    limit,
+			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
+			email:    "",
+			response: nil,
 		},
 		{
-			desc:   "get a list of users with zero limit",
-			token:  token,
-			offset: offset,
-			limit:  0,
-			err:    createError(sdk.ErrFailedFetch, http.StatusBadRequest),
-			email:  email,
+			desc:     "get a list of users with zero limit",
+			token:    token,
+			offset:   offset,
+			limit:    0,
+			err:      createError(sdk.ErrFailedFetch, http.StatusBadRequest),
+			email:    "",
+			response: nil,
 		},
 		{
-			desc:   "get a list of users with limit greater than max",
-			token:  token,
-			offset: offset,
-			limit:  110,
-			err:    createError(sdk.ErrFailedFetch, http.StatusBadRequest),
-			email:  email,
+			desc:     "get a list of users with limit greater than max",
+			token:    token,
+			offset:   offset,
+			limit:    110,
+			err:      createError(sdk.ErrFailedFetch, http.StatusBadRequest),
+			email:    "",
+			response: []sdk.User(nil),
 		},
 		{
-			desc:     "get a list of users with same email address and no metadata",
+			desc:     "get a list of users with same email address",
 			token:    token,
 			offset:   0,
-			limit:    100,
+			limit:    1,
 			err:      nil,
-			email:    "mainflux.com",
+			email:    "user99@example.com",
 			metadata: make(map[string]interface{}),
+			response: []sdk.User{users[89]},
 		},
 		{
 			desc:   "get a list of users with same email address and metadata",
 			token:  token,
 			offset: 0,
-			limit:  100,
+			limit:  1,
 			err:    nil,
-			email:  "mainflux.com",
+			email:  "user99@example.com",
 			metadata: map[string]interface{}{
-				"name": "mainflux",
+				"name": "user99",
 			},
-		},
-		{
-			desc:   "get a list of users with same metadata and no email address",
-			token:  token,
-			offset: 0,
-			limit:  100,
-			err:    nil,
-			email:  "",
-			metadata: map[string]interface{}{
-				"name": "demo5",
-			},
-		},
-		{
-			desc:     "get a list of users with same no metadata and email address",
-			token:    token,
-			offset:   0,
-			limit:    100,
-			err:      nil,
-			email:    "mainflux.com",
-			metadata: make(map[string]interface{}),
+			response: []sdk.User{users[89]},
 		},
 	}
 	for _, tc := range cases {
@@ -342,8 +314,9 @@ func TestUsers(t *testing.T) {
 			Limit:    uint64(tc.limit),
 			Metadata: tc.metadata,
 		}
-		_, err := mainfluxSDK.Users(tc.token, filter)
+		page, err := mainfluxSDK.Users(tc.token, filter)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
+		assert.Equal(t, tc.response, page.Users, fmt.Sprintf("%s: expected response user %s, got %s", tc.desc, tc.response, page.Users))
 	}
 }
 
@@ -439,7 +412,7 @@ func TestUpdateUser(t *testing.T) {
 		},
 		{
 			desc:  "update email for non existing user",
-			user:  sdk.User{ID: "0", Email: "user2@example.com", Password: "password"},
+			user:  sdk.User{ID: userID, Email: "user3@example.com", Password: "password"},
 			token: wrongValue,
 			err:   createError(sdk.ErrFailedUpdate, http.StatusUnauthorized),
 		},
