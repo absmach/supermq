@@ -411,12 +411,6 @@ func TestUpdateUser(t *testing.T) {
 			err:   nil,
 		},
 		{
-			desc:  "update email for non existing user",
-			user:  sdk.User{ID: userID, Email: "user3@example.com", Password: "password"},
-			token: wrongValue,
-			err:   createError(sdk.ErrFailedUpdate, http.StatusUnauthorized),
-		},
-		{
 			desc:  "update email for user with invalid token",
 			user:  sdk.User{ID: userID, Email: "user2@example.com", Password: "password"},
 			token: wrongValue,
