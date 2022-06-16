@@ -37,23 +37,26 @@ var cmdThings = []cobra.Command{
 		},
 	},
 	{
-		Use:   "get [all | name <thing_name> | metadata <metadata_json_string> | <thing_id>] <user_auth_token>",
+		Use:   "get [all | <thing_id>] <user_auth_token>",
 		Short: "Get things",
 		Long: `Get all things, group by id, group by name or group by metadata.
 		all - lists all things
-		name <thing_name> - list all things with <thing_name> 
-		metadata <metadata_json_string> - list all things with <metadata_json_string>
 		<thing_id> - shows thing with provided <thing_id>`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) < 2 {
+			if len(args) != 2 {
 				logUsage(cmd.Use)
+				return
+			}
+			metadata, err := convertMetadata(Metadata)
+			if err != nil {
+				logError(err)
 				return
 			}
 			pageMetadata := mfxsdk.PageMetadata{
 				Name:     "",
 				Offset:   uint64(Offset),
 				Limit:    uint64(Limit),
-				Metadata: make(map[string]interface{}),
+				Metadata: metadata,
 			}
 			if args[0] == "all" {
 				l, err := sdk.Things(args[1], pageMetadata)
@@ -62,35 +65,6 @@ var cmdThings = []cobra.Command{
 					return
 				}
 				logJSON(l)
-				return
-			}
-			if args[0] == "name" {
-				pageMetadata.Name = args[1]
-				l, err := sdk.Things(args[2], pageMetadata)
-				if err != nil {
-					logError(err)
-					return
-				}
-				logJSON(l)
-				return
-			}
-			if args[0] == "metadata" {
-				var metadata map[string]interface{}
-				if err := json.Unmarshal([]byte(args[1]), &metadata); err != nil {
-					logError(err)
-					return
-				}
-				pageMetadata.Metadata = metadata
-				l, err := sdk.Things(args[2], pageMetadata)
-				if err != nil {
-					logError(err)
-					return
-				}
-				logJSON(l)
-				return
-			}
-			if len(args) > 2 {
-				logUsage(cmd.Use)
 				return
 			}
 			t, err := sdk.Thing(args[0], args[1])

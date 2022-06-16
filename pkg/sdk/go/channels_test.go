@@ -299,7 +299,7 @@ func TestChannels(t *testing.T) {
 	for _, tc := range cases {
 		filter := sdk.PageMetadata{
 			Name:     tc.name,
-			Total:    uint64(200),
+			Total:    total,
 			Offset:   uint64(tc.offset),
 			Limit:    uint64(tc.limit),
 			Metadata: tc.metadata,

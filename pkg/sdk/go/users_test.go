@@ -32,6 +32,7 @@ var (
 	passRegex        = regexp.MustCompile("^.{8,}$")
 	limit     uint64 = 5
 	offset    uint64 = 0
+	total     uint64 = 200
 )
 
 func newUserService() users.Service {
@@ -309,7 +310,7 @@ func TestUsers(t *testing.T) {
 	for _, tc := range cases {
 		filter := sdk.PageMetadata{
 			Email:    tc.email,
-			Total:    uint64(200),
+			Total:    total,
 			Offset:   uint64(tc.offset),
 			Limit:    uint64(tc.limit),
 			Metadata: tc.metadata,
