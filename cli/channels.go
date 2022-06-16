@@ -39,7 +39,7 @@ var cmdChannels = []cobra.Command{
 	{
 		Use:   "get [all | <channel_id>] <user_auth_token>",
 		Short: "Get channel",
-		Long: `Get all channels, group by id, group by name or group by metadata.
+		Long: `Get all channels or get channel by id. Channels can be filtered by name or metadata.
 		all - lists all channels
 		<channel_id> - shows thing with provided <channel_id>`,
 

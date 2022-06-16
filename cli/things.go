@@ -39,7 +39,7 @@ var cmdThings = []cobra.Command{
 	{
 		Use:   "get [all | <thing_id>] <user_auth_token>",
 		Short: "Get things",
-		Long: `Get all things, group by id, group by name or group by metadata.
+		Long: `Get all things or get thing by id. Things can be filtered by name or metadata
 		all - lists all things
 		<thing_id> - shows thing with provided <thing_id>`,
 		Run: func(cmd *cobra.Command, args []string) {
