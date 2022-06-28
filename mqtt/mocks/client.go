@@ -20,7 +20,6 @@ func (cli MockClient) Authorize(ctx context.Context, chanID, thingID string) err
 }
 
 func (cli MockClient) Identify(ctx context.Context, thingKey string) (string, error) {
-
 	if thingKey == "" {
 		return "", errIdentify
 	}
