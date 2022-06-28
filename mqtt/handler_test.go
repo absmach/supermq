@@ -3,6 +3,7 @@ package mqtt
 import (
 	"fmt"
 	"github.com/mainflux/mainflux/pkg/uuid"
+	"github.com/stretchr/testify/require"
 	"log"
 	"testing"
 
@@ -19,18 +20,19 @@ import (
 )
 
 func TestAuthConnect(t *testing.T) {
+	handler := newHandler()
 	cases := []struct {
 		desc    string
 		err     error
 		session *session.Client
 	}{
 		{
-			desc:    "Handle message without active session",
+			desc:    "connect without active session",
 			err:     errInvalidConnect,
 			session: nil,
 		},
 		{
-			desc: "Handle message when thing id is invalid",
+			desc: "connect when id is invalid",
 			err:  errors.New("thing identify error"),
 			session: &session.Client{
 				ID:       "123",
@@ -39,7 +41,7 @@ func TestAuthConnect(t *testing.T) {
 			},
 		},
 		{
-			desc: "Handle message when username is wrong",
+			desc: "connect when username is invalid",
 			err:  errors.ErrAuthentication,
 			session: &session.Client{
 				ID:       "123",
@@ -48,7 +50,7 @@ func TestAuthConnect(t *testing.T) {
 			},
 		},
 		{
-			desc: "Handle message correctly",
+			desc: "connect with right username and password",
 			err:  nil,
 			session: &session.Client{
 				ID:       "123",
@@ -59,12 +61,13 @@ func TestAuthConnect(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := setupTest().AuthConnect(tc.session)
+		err := handler.AuthConnect(tc.session)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
 func TestAuthPublish(t *testing.T) {
+	handler := newHandler()
 	var topic string
 	var payload = []byte("payload")
 
@@ -82,21 +85,21 @@ func TestAuthPublish(t *testing.T) {
 		payload []byte
 	}{
 		{
-			desc:    "Handle publish authorization on client without active session",
+			desc:    "publish without active session",
 			client:  nil,
 			err:     errNilClient,
 			topic:   &topic,
 			payload: payload,
 		},
 		{
-			desc:    "Handle publish authorization on client without topic",
+			desc:    "publish without topic",
 			client:  &sessionClient,
 			err:     errNilTopicPub,
 			topic:   nil,
 			payload: payload,
 		},
 		{
-			desc:    "Handle publish authorization on client correctly",
+			desc:    "publish with active session, valid topic and payload",
 			client:  &sessionClient,
 			err:     errMalformedTopic,
 			topic:   &topic,
@@ -105,13 +108,19 @@ func TestAuthPublish(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := setupTest().AuthPublish(tc.client, tc.topic, &tc.payload)
+		err := handler.AuthPublish(tc.client, tc.topic, &tc.payload)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
 func TestAuthSubscribe(t *testing.T) {
-	var topics = []string{"channels/1/messages/2/ct/3"}
+	handler := newHandler()
+	var idProvider = uuid.NewMock()
+
+	chID, err := idProvider.ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	var topics = []string{"channels/" + chID + "/messages/2/ct/3"}
 	var invalidTopics = []string{"topic"}
 
 	sessionClient := session.Client{
@@ -127,25 +136,25 @@ func TestAuthSubscribe(t *testing.T) {
 		topic  *[]string
 	}{
 		{
-			desc:   "Handle subscribe authorization on client without active session",
+			desc:   "subscribe without active session",
 			client: nil,
 			err:    errNilClient,
 			topic:  &topics,
 		},
 		{
-			desc:   "Handle subscribe authorization on client without topics",
+			desc:   "subscribe without topics",
 			client: &sessionClient,
 			err:    errNilTopicSub,
 			topic:  nil,
 		},
 		{
-			desc:   "Handle subscribe authorization on client with invalid channel",
+			desc:   "subscribe with invalid channel",
 			client: &sessionClient,
 			err:    errMalformedTopic,
 			topic:  &invalidTopics,
 		},
 		{
-			desc:   "Handle subscribe authorization on client correctly",
+			desc:   "subscribe with active session and valid topics",
 			client: &sessionClient,
 			err:    nil,
 			topic:  &topics,
@@ -153,13 +162,12 @@ func TestAuthSubscribe(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := setupTest().AuthSubscribe(tc.client, tc.topic)
+		err := handler.AuthSubscribe(tc.client, tc.topic)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
-func setupTest() session.Handler {
-	idProvider := uuid.NewMock()
+func newHandler() session.Handler {
 	pool, err := dockertest.NewPool("")
 	if err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
@@ -177,5 +185,5 @@ func setupTest() session.Handler {
 	})
 
 	eventStore := redis.NewEventStore(redisClient, "")
-	return NewHandler([]messaging.Publisher{mocks.NewPublisher()}, eventStore, logger.NewMock(), mocks.NewClient(), idProvider)
+	return NewHandler([]messaging.Publisher{mocks.NewPublisher()}, eventStore, logger.NewMock(), mocks.NewClient())
 }

@@ -5,7 +5,6 @@ package mqtt
 
 import (
 	"context"
-	"github.com/mainflux/mainflux"
 	"net/url"
 	"regexp"
 	"strings"
@@ -40,18 +39,16 @@ type handler struct {
 	auth       auth.Client
 	logger     logger.Logger
 	es         redis.EventStore
-	idProvider mainflux.IDProvider
 }
 
 // NewHandler creates new Handler entity
 func NewHandler(publishers []messaging.Publisher, es redis.EventStore,
-	logger logger.Logger, auth auth.Client, idp mainflux.IDProvider) session.Handler {
+	logger logger.Logger, auth auth.Client) session.Handler {
 	return &handler{
 		es:         es,
 		logger:     logger,
 		publishers: publishers,
 		auth:       auth,
-		idProvider: idp,
 	}
 }
 
