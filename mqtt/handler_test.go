@@ -2,21 +2,26 @@ package mqtt
 
 import (
 	"fmt"
-	"github.com/mainflux/mainflux/pkg/uuid"
-	"github.com/stretchr/testify/require"
-	"log"
-	"testing"
-
-	"github.com/mainflux/mainflux/pkg/errors"
-
 	rdb "github.com/go-redis/redis/v8"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/mqtt/mocks"
 	"github.com/mainflux/mainflux/mqtt/redis"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
+	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mproxy/pkg/session"
 	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"log"
+	"testing"
+)
+
+const (
+	id         = "123"
+	username   = "testUsername"
+	usernameOK = "ok"
+	password   = "password"
 )
 
 func TestAuthConnect(t *testing.T) {
@@ -32,30 +37,30 @@ func TestAuthConnect(t *testing.T) {
 			session: nil,
 		},
 		{
-			desc: "connect when id is invalid",
-			err:  errors.New("thing identify error"),
+			desc: "connect with valid id",
+			err:  errors.ErrAuthentication,
 			session: &session.Client{
-				ID:       "123",
-				Username: "testUsername",
+				ID:       id,
+				Username: username,
 				Password: []byte(""),
 			},
 		},
 		{
-			desc: "connect when username is invalid",
+			desc: "connect with valid password and invalid username",
 			err:  errors.ErrAuthentication,
 			session: &session.Client{
-				ID:       "123",
-				Username: "testUsername",
-				Password: []byte("password"),
+				ID:       id,
+				Username: username,
+				Password: []byte(password),
 			},
 		},
 		{
-			desc: "connect with right username and password",
+			desc: "connect with valid username and password",
 			err:  nil,
 			session: &session.Client{
-				ID:       "123",
-				Username: "ok",
-				Password: []byte("password"),
+				ID:       id,
+				Username: usernameOK,
+				Password: []byte(password),
 			},
 		},
 	}
@@ -72,9 +77,9 @@ func TestAuthPublish(t *testing.T) {
 	var payload = []byte("payload")
 
 	sessionClient := session.Client{
-		ID:       "123",
-		Username: "username",
-		Password: []byte("password"),
+		ID:       id,
+		Username: username,
+		Password: []byte(password),
 	}
 
 	cases := []struct {
@@ -124,9 +129,9 @@ func TestAuthSubscribe(t *testing.T) {
 	var invalidTopics = []string{"topic"}
 
 	sessionClient := session.Client{
-		ID:       "123",
-		Username: "username",
-		Password: []byte("password"),
+		ID:       id,
+		Username: username,
+		Password: []byte(password),
 	}
 
 	cases := []struct {

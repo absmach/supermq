@@ -2,12 +2,10 @@ package mocks
 
 import (
 	"context"
-	"errors"
 
 	"github.com/mainflux/mainflux/pkg/auth"
+	"github.com/mainflux/mainflux/pkg/errors"
 )
-
-var errIdentify = errors.New("thing identify error")
 
 type MockClient struct{}
 
@@ -21,7 +19,7 @@ func (cli MockClient) Authorize(ctx context.Context, chanID, thingID string) err
 
 func (cli MockClient) Identify(ctx context.Context, thingKey string) (string, error) {
 	if thingKey == "" {
-		return "", errIdentify
+		return "", errors.ErrAuthentication
 	}
 	return "ok", nil
 }
