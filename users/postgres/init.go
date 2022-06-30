@@ -82,7 +82,7 @@ func migrateDB(db *sqlx.DB) error {
 				Id: "users_5",
 				Up: []string{
 					`ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS
-					 state VARCHAR(10) NOT NULL DEFAULT 'active'`,
+					 state VARCHAR(64) NOT NULL DEFAULT 'active'`,
 				},
 			},
 		},

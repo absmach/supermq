@@ -38,9 +38,7 @@ func NewUserRepo(db Database) users.UserRepository {
 }
 
 func (ur userRepository) Save(ctx context.Context, user users.User) (string, error) {
-	if user.State == "" {
-		user.State = "active"
-	}
+
 	q := `INSERT INTO users (email, password, id, metadata, state) VALUES (:email, :password, :id, :metadata, :state) RETURNING id`
 	if user.ID == "" || user.Email == "" {
 		return "", errors.ErrMalformedEntity

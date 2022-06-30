@@ -149,6 +149,7 @@ func (svc usersService) Register(ctx context.Context, token string, user User) (
 		return "", errors.Wrap(errors.ErrMalformedEntity, err)
 	}
 	user.Password = hash
+	
 	uid, err = svc.users.Save(ctx, user)
 	if err != nil {
 		return "", err
