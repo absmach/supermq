@@ -98,7 +98,7 @@ type PageMetadata struct {
 	Name     string                 `json:"name,omitempty"`
 	Type     string                 `json:"type,omitempty"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
-	State    string                 `json:"state,omitempty"`
+	Status   string                 `json:"status,omitempty"`
 }
 
 // Group represents mainflux users group.
@@ -393,8 +393,8 @@ func (pm PageMetadata) query() (string, error) {
 	if pm.Type != "" {
 		q.Add("type", pm.Type)
 	}
-	if pm.State != "" {
-		q.Add("state", pm.State)
+	if pm.Status != "" {
+		q.Add("status", pm.Status)
 	}
 	if pm.Metadata != nil {
 		md, err := json.Marshal(pm.Metadata)

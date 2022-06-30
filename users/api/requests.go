@@ -64,7 +64,7 @@ func (req listUsersReq) validate() error {
 		return apiutil.ErrEmailSize
 	}
 	if req.state != "all" && req.state != "active" && req.state != "inactive" {
-		return apiutil.ErrActiveState
+		return apiutil.ErrInvalidStatus
 	}
 
 	return nil
@@ -159,7 +159,7 @@ func (req listMemberGroupReq) validate() error {
 		return apiutil.ErrMissingID
 	}
 	if req.state != "all" && req.state != "active" && req.state != "inactive" {
-		return apiutil.ErrActiveState
+		return apiutil.ErrInvalidStatus
 	}
 	return nil
 }

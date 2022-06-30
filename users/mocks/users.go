@@ -110,6 +110,21 @@ func (urm *userRepositoryMock) RetrieveAll(ctx context.Context, state string, of
 		return up, nil
 	}
 
+	if state == "active" || state == "inactive" {
+
+		for _, u := range sortUsers(urm.users) {
+			if i >= offset && i < (limit+offset) {
+				if state == u.State {
+					up.Users = append(up.Users, u)
+				}
+			}
+			i++
+		}
+		up.Offset = offset
+		up.Limit = limit
+		up.Total = uint64(i)
+		return up, nil
+	}
 	for _, u := range sortUsers(urm.users) {
 		if i >= offset && i < (limit+offset) {
 			up.Users = append(up.Users, u)
@@ -141,8 +156,8 @@ func (urm *userRepositoryMock) Deactivate(ctx context.Context, user users.User) 
 	if _, ok := urm.users[user.Email]; !ok {
 		return errors.ErrNotFound
 	}
-
-	delete(urm.users, user.Email)
+	user.State = "inactive"
+	urm.users[user.Email] = user
 	return nil
 }
 func sortUsers(us map[string]users.User) []users.User {

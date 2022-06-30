@@ -153,7 +153,7 @@ func (svc usersService) Register(ctx context.Context, token string, user User) (
 	if user.State == "" {
 		user.State = "active"
 	}
-	
+
 	uid, err = svc.users.Save(ctx, user)
 	if err != nil {
 		return "", err

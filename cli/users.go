@@ -58,7 +58,7 @@ var cmdUsers = []cobra.Command{
 				Offset:   uint64(Offset),
 				Limit:    uint64(Limit),
 				Metadata: metadata,
-				State:    State,
+				Status:   Status,
 			}
 			if args[0] == "all" {
 				l, err := sdk.Users(args[1], pageMetadata)

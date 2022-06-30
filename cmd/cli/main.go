@@ -187,11 +187,11 @@ func main() {
 	)
 
 	rootCmd.PersistentFlags().StringVarP(
-		&cli.State,
-		"state",
+		&cli.Status,
+		"status",
 		"S",
 		"",
-		"State query parameter",
+		"Status query parameter",
 	)
 
 	if err := rootCmd.Execute(); err != nil {

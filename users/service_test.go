@@ -390,3 +390,100 @@ func TestSendPasswordReset(t *testing.T) {
 
 	}
 }
+
+func TestDeactivateUser(t *testing.T) {
+	activeUser1 := users.User{Email: "user1@example.com", Password: "password"}
+	activeUser2 := users.User{Email: "user2@example.com", Password: "password", State: "active"}
+	deactiveUser1 := users.User{Email: "user3@example.com", Password: "password", State: "inactive"}
+
+	svc := newService()
+
+	id, err := svc.Register(context.Background(), user.Email, user)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	user.ID = id
+	user.State = "active"
+	token, err := svc.Login(context.Background(), user)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+
+	id, err = svc.Register(context.Background(), token, activeUser1)
+	require.Nil(t, err, fmt.Sprintf("register activeUser1 error: %s", err))
+	activeUser1.ID = id
+	activeUser1.State = "active"
+
+	id, err = svc.Register(context.Background(), token, activeUser2)
+	require.Nil(t, err, fmt.Sprintf("register activeUser2 error: %s", err))
+	activeUser2.ID = id
+	activeUser2.State = "inactive"
+
+	id, err = svc.Register(context.Background(), token, deactiveUser1)
+	require.Nil(t, err, fmt.Sprintf("register deactiveUser1 error: %s", err))
+	deactiveUser1.ID = id
+	deactiveUser1.State = "inactive"
+
+	cases := []struct {
+		desc  string
+		id    string
+		token string
+		err   error
+	}{
+		{
+			desc:  "deactivate user with wrong credentials",
+			id:    activeUser2.ID,
+			token: "",
+			err:   errors.ErrAuthentication,
+		},
+		{
+			desc:  "deactivate existing user",
+			id:    activeUser2.ID,
+			token: token,
+			err:   nil,
+		},
+		{
+			desc:  "deactivate deactivated user",
+			id:    activeUser2.ID,
+			token: token,
+			err:   nil,
+		},
+		{
+			desc:  "deactivate non-existing user",
+			id:    "",
+			token: token,
+			err:   errors.ErrNotFound,
+		},
+	}
+
+	for _, tc := range cases {
+		err := svc.DeactivateUser(context.Background(), tc.token, tc.id)
+		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+	}
+
+	cases2 := map[string]struct {
+		state    string
+		size     uint64
+		response []users.User
+	}{
+		"list active users": {
+			state:    "active",
+			size:     2,
+			response: []users.User{activeUser1, user},
+		},
+		"list inactive users": {
+			state:    "inactive",
+			size:     2,
+			response: []users.User{activeUser2, deactiveUser1},
+		},
+		"list all users": {
+			state:    "all",
+			size:     4,
+			response: []users.User{activeUser1, activeUser2, deactiveUser1, user},
+		},
+	}
+
+	for desc, tc := range cases2 {
+		page, err := svc.ListUsers(context.Background(), token, tc.state, 0, 100, "", nil)
+		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+		size := uint64(len(page.Users))
+		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", desc, tc.size, size))
+		assert.Equal(t, tc.response, page.Users, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.response, page.Users))
+	}
+}
