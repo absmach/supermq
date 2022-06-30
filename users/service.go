@@ -149,6 +149,10 @@ func (svc usersService) Register(ctx context.Context, token string, user User) (
 		return "", errors.Wrap(errors.ErrMalformedEntity, err)
 	}
 	user.Password = hash
+
+	if user.State == "" {
+		user.State = "active"
+	}
 	
 	uid, err = svc.users.Save(ctx, user)
 	if err != nil {
