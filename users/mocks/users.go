@@ -111,7 +111,7 @@ func (urm *userRepositoryMock) RetrieveAll(ctx context.Context, state string, of
 	}
 
 	if state == "active" || state == "inactive" {
-		for _, u := range urm.users {
+		for _, u := range sortUsers(urm.users) {
 			if i >= offset && i < (limit+offset) {
 				if state == u.State {
 					up.Users = append(up.Users, u)
