@@ -71,7 +71,7 @@ type UserRepository interface {
 	// UpdatePassword updates password for user with given email
 	UpdatePassword(ctx context.Context, email, password string) error
 
-	// ChangeStatus logically deactives the user identified with the provided ID
+	// ChangeStatus changes users state to inactive
 	ChangeStatus(ctx context.Context, u User) error
 }
 

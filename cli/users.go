@@ -146,8 +146,8 @@ var cmdUsers = []cobra.Command{
 	},
 	{
 		Use:   "deactivate <user_id> <user_auth_token>",
-		Short: "Deactivates user",
-		Long:  `Deactivates user`,
+		Short: "Change user status to inactive",
+		Long:  `Change user status to inactive`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
 				logUsage(cmd.Use)
