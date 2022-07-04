@@ -453,9 +453,12 @@ func TestDeactivateUser(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := svc.DeactivateUser(context.Background(), tc.token, tc.id)
+		err := svc.ChangeUserStatus(context.Background(), tc.token, tc.id)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
+
+	_, err = svc.Login(context.Background(), activeUser2)
+	assert.True(t, errors.Contains(err, errors.ErrNotFound), fmt.Sprintf("Login deactivated user: expected %s got %s\n", errors.ErrNotFound, err))
 
 	cases2 := map[string]struct {
 		state    string
@@ -484,6 +487,6 @@ func TestDeactivateUser(t *testing.T) {
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		size := uint64(len(page.Users))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", desc, tc.size, size))
-		assert.Equal(t, tc.response, page.Users, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.response, page.Users))
+		assert.ElementsMatch(t, tc.response, page.Users, fmt.Sprintf("%s: expected %s got %s\n", desc, tc.response, page.Users))
 	}
 }

@@ -75,8 +75,8 @@ type Service interface {
 	// ListMembers retrieves everything that is assigned to a group identified by groupID.
 	ListMembers(ctx context.Context, token, groupID string, state string, offset, limit uint64, meta Metadata) (UserPage, error)
 
-	// DeactivateUser logically deactivates the user identified with the provided ID
-	DeactivateUser(ctx context.Context, token, id string) error
+	// ChangeUserStatus logically deactivates the user identified with the provided ID
+	ChangeUserStatus(ctx context.Context, token, id string) error
 }
 
 // PageMetadata contains page metadata that helps navigation.
@@ -339,7 +339,7 @@ func (svc usersService) ListMembers(ctx context.Context, token, groupID string, 
 	return svc.users.RetrieveAll(ctx, state, offset, limit, userIDs, "", m)
 }
 
-func (svc usersService) DeactivateUser(ctx context.Context, token, id string) error {
+func (svc usersService) ChangeUserStatus(ctx context.Context, token, id string) error {
 	_, err := svc.identify(ctx, token)
 	if err != nil {
 		return err
@@ -350,7 +350,7 @@ func (svc usersService) DeactivateUser(ctx context.Context, token, id string) er
 		return errors.Wrap(errors.ErrAuthentication, err)
 	}
 
-	return svc.users.Deactivate(ctx, dbUser)
+	return svc.users.ChangeStatus(ctx, dbUser)
 }
 
 // Auth helpers

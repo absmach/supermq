@@ -71,8 +71,8 @@ type UserRepository interface {
 	// UpdatePassword updates password for user with given email
 	UpdatePassword(ctx context.Context, email, password string) error
 
-	// Deactivate logically deactives the user identified with the provided ID
-	Deactivate(ctx context.Context, u User) error
+	// ChangeStatus logically deactives the user identified with the provided ID
+	ChangeStatus(ctx context.Context, u User) error
 }
 
 func isEmail(email string) bool {

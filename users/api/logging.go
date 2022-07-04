@@ -170,7 +170,7 @@ func (lm *loggingMiddleware) ListMembers(ctx context.Context, token, groupID str
 	return lm.svc.ListMembers(ctx, token, groupID, state, offset, limit, m)
 }
 
-func (lm *loggingMiddleware) DeactivateUser(ctx context.Context, token string, id string) (err error) {
+func (lm *loggingMiddleware) ChangeUserStatus(ctx context.Context, token string, id string) (err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method remove_user for user %s took %s to complete", id, time.Since(begin))
 		if err != nil {
@@ -180,5 +180,5 @@ func (lm *loggingMiddleware) DeactivateUser(ctx context.Context, token string, i
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.DeactivateUser(ctx, token, id)
+	return lm.svc.ChangeUserStatus(ctx, token, id)
 }

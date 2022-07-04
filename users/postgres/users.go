@@ -234,7 +234,7 @@ func (ur userRepository) UpdatePassword(ctx context.Context, email, password str
 	return nil
 }
 
-func (ur userRepository) Deactivate(ctx context.Context, user users.User) error {
+func (ur userRepository) ChangeStatus(ctx context.Context, user users.User) error {
 	q := `UPDATE users SET state = 'inactive' WHERE email = :email`
 
 	dbu, err := toDBUser(user)

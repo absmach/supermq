@@ -112,8 +112,8 @@ func MakeHandler(svc users.Service, tracer opentracing.Tracer, logger logger.Log
 	))
 
 	mux.Delete("/users/:userID", kithttp.NewServer(
-		kitot.TraceServer(tracer, "remove_user")(deactivateUserEndpoint(svc)),
-		decodeDeactivateUser,
+		kitot.TraceServer(tracer, "change_user_status")(changeUserStatusEndpoint(svc)),
+		decodeChangeUserStatus,
 		encodeResponse,
 		opts...,
 	))
@@ -287,8 +287,8 @@ func decodeListMembersRequest(_ context.Context, r *http.Request) (interface{}, 
 	return req, nil
 }
 
-func decodeDeactivateUser(_ context.Context, r *http.Request) (interface{}, error) {
-	req := removeUserReq{
+func decodeChangeUserStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	req := changeUserStatusReq{
 		token:  apiutil.ExtractBearerToken(r),
 		userID: bone.GetValue(r, "userID"),
 	}

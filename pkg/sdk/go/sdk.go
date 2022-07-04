@@ -154,8 +154,8 @@ type SDK interface {
 	// UpdatePassword updates user password.
 	UpdatePassword(oldPass, newPass, token string) error
 
-	// DeleteUser deactivates the user.
-	DeactivateUser(id, token string) error
+	// ChangeUserStatus changes the status of the user to inactive.
+	ChangeUserStatus(id, token string) error
 
 	// CreateThing registers new thing and returns its id.
 	CreateThing(thing Thing, token string) (string, error)

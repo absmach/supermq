@@ -188,13 +188,13 @@ func listMembersEndpoint(svc users.Service) endpoint.Endpoint {
 	}
 }
 
-func deactivateUserEndpoint(svc users.Service) endpoint.Endpoint {
+func changeUserStatusEndpoint(svc users.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(removeUserReq)
+		req := request.(changeUserStatusReq)
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
-		err := svc.DeactivateUser(ctx, req.token, req.userID)
+		err := svc.ChangeUserStatus(ctx, req.token, req.userID)
 		if err != nil {
 			return nil, err
 		}

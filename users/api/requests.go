@@ -164,12 +164,12 @@ func (req listMemberGroupReq) validate() error {
 	return nil
 }
 
-type removeUserReq struct {
+type changeUserStatusReq struct {
 	token  string
 	userID string
 }
 
-func (req removeUserReq) validate() error {
+func (req changeUserStatusReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}

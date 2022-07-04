@@ -83,12 +83,12 @@ func (urm userRepositoryMiddleware) RetrieveAll(ctx context.Context, state strin
 	return urm.repo.RetrieveAll(ctx, state, offset, limit, ids, email, um)
 }
 
-func (urm userRepositoryMiddleware) Deactivate(ctx context.Context, user users.User) error {
+func (urm userRepositoryMiddleware) ChangeStatus(ctx context.Context, user users.User) error {
 	span := createSpan(ctx, urm.tracer, members)
 	defer span.Finish()
 	ctx = opentracing.ContextWithSpan(ctx, span)
 
-	return urm.repo.Deactivate(ctx, user)
+	return urm.repo.ChangeStatus(ctx, user)
 }
 
 func createSpan(ctx context.Context, tracer opentracing.Tracer, opName string) opentracing.Span {

@@ -111,8 +111,7 @@ func (urm *userRepositoryMock) RetrieveAll(ctx context.Context, state string, of
 	}
 
 	if state == "active" || state == "inactive" {
-
-		for _, u := range sortUsers(urm.users) {
+		for _, u := range urm.users {
 			if i >= offset && i < (limit+offset) {
 				if state == u.State {
 					up.Users = append(up.Users, u)
@@ -149,7 +148,7 @@ func (urm *userRepositoryMock) UpdatePassword(_ context.Context, token, password
 	return nil
 }
 
-func (urm *userRepositoryMock) Deactivate(ctx context.Context, user users.User) error {
+func (urm *userRepositoryMock) ChangeStatus(ctx context.Context, user users.User) error {
 	urm.mu.Lock()
 	defer urm.mu.Unlock()
 

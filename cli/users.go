@@ -154,7 +154,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 
-			if err := sdk.DeactivateUser(args[0], args[1]); err != nil {
+			if err := sdk.ChangeUserStatus(args[0], args[1]); err != nil {
 				logError(err)
 				return
 			}
