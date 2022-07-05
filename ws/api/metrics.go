@@ -1,16 +1,16 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
+//go:build !test
 // +build !test
 
 package api
 
 import (
-	"context"
 	"time"
 
 	"github.com/go-kit/kit/metrics"
-	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/ws"
 )
 
@@ -31,13 +31,17 @@ func MetricsMiddleware(svc ws.Service, counter metrics.Counter, latency metrics.
 	}
 }
 
-func (mm *metricsMiddleware) Publish(ctx context.Context, token string, msg mainflux.Message) error {
+func (mm *metricsMiddleware) Publish(token string, msg messaging.Message) error {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "publish").Add(1)
 		mm.latency.With("method", "publish").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.Publish(ctx, token, msg)
+	return mm.svc.Publish(token, msg)
+}
+
+func (mm *metricsMiddleware) Close() error {
+	return nil
 }
 
 func (mm *metricsMiddleware) Subscribe(chanID, subtopic string, channel *ws.Channel) error {

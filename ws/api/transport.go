@@ -17,6 +17,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/transformers/senml"
 	"github.com/mainflux/mainflux/ws"
@@ -221,7 +222,7 @@ func (sub subscription) broadcast(svc ws.Service, contentType string) {
 			logger.Warn(fmt.Sprintf("Failed to read message: %s", err))
 			return
 		}
-		msg := mainflux.Message{
+		msg := messaging.Message{
 			Channel:     sub.chanID,
 			Subtopic:    sub.subtopic,
 			ContentType: contentType,
@@ -229,7 +230,7 @@ func (sub subscription) broadcast(svc ws.Service, contentType string) {
 			Protocol:    protocol,
 			Payload:     payload,
 		}
-		if err := svc.Publish(context.Background(), "", msg); err != nil {
+		if err := svc.Publish("", msg); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to publish message to NATS: %s", err))
 			if err == ws.ErrFailedConnection {
 				sub.conn.Close()

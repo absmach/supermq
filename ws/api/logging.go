@@ -1,17 +1,17 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
+//go:build !test
 // +build !test
 
 package api
 
 import (
-	"context"
 	"fmt"
 	"time"
 
-	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/ws"
 )
 
@@ -27,7 +27,7 @@ func LoggingMiddleware(svc ws.Service, logger log.Logger) ws.Service {
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) Publish(ctx context.Context, token string, msg mainflux.Message) (err error) {
+func (lm *loggingMiddleware) Publish(token string, msg messaging.Message) (err error) {
 	defer func(begin time.Time) {
 		destChannel := msg.Channel
 		if msg.Subtopic != "" {
@@ -41,7 +41,11 @@ func (lm *loggingMiddleware) Publish(ctx context.Context, token string, msg main
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.Publish(ctx, token, msg)
+	return lm.svc.Publish(token, msg)
+}
+
+func (lm *loggingMiddleware) Close() error {
+	return nil
 }
 
 func (lm *loggingMiddleware) Subscribe(chanID, subtopic string, channel *ws.Channel) (err error) {
