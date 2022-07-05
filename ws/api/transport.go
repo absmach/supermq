@@ -18,8 +18,7 @@ import (
 	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
-	"github.com/mainflux/mainflux/things"
-	"github.com/mainflux/mainflux/transformers/senml"
+	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/ws"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc/codes"
@@ -61,7 +60,7 @@ func MakeHandler(svc ws.Service, tc mainflux.ThingsServiceClient, l log.Logger) 
 	mux := bone.New()
 	mux.GetFunc("/channels/:id/messages", handshake(svc))
 	mux.GetFunc("/channels/:id/messages/*", handshake(svc))
-	mux.GetFunc("/version", mainflux.Version("websocket"))
+	mux.GetFunc("/version", mainflux.Health("websocket"))
 	mux.Handle("/metrics", promhttp.Handler())
 
 	return mux
@@ -72,7 +71,7 @@ func handshake(svc ws.Service) http.HandlerFunc {
 		sub, err := authorize(r)
 		if err != nil {
 			switch err {
-			case things.ErrUnauthorizedAccess:
+			case errUnauthorizedAccess:
 				w.WriteHeader(http.StatusForbidden)
 				return
 			default:
@@ -161,7 +160,7 @@ func authorize(r *http.Request) (subscription, error) {
 		authKeys := bone.GetQuery(r, "authorization")
 		if len(authKeys) == 0 {
 			logger.Debug("Missing authorization key.")
-			return subscription{}, things.ErrUnauthorizedAccess
+			return subscription{}, errUnauthorizedAccess
 		}
 		authKey = authKeys[0]
 	}
@@ -175,7 +174,7 @@ func authorize(r *http.Request) (subscription, error) {
 	if err != nil {
 		e, ok := status.FromError(err)
 		if ok && e.Code() == codes.PermissionDenied {
-			return subscription{}, things.ErrUnauthorizedAccess
+			return subscription{}, errUnauthorizedAccess
 		}
 		return subscription{}, err
 	}
