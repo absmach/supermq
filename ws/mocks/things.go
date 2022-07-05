@@ -23,12 +23,11 @@ const ServiceErrToken = "unavailable"
 
 type thingsClient struct {
 	things map[string]string
-	cc     *grpc.ClientConn
 }
 
 // NewThingsClient returns mock implementation of things service client.
 func NewThingsClient(data map[string]string) mainflux.ThingsServiceClient {
-	return &thingsClient{data, nil}
+	return &thingsClient{data}
 }
 
 func (tc thingsClient) CanAccessByKey(ctx context.Context, req *mainflux.AccessByKeyReq, opts ...grpc.CallOption) (*mainflux.ThingID, error) {
