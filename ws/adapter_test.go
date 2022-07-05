@@ -10,7 +10,7 @@ import (
 
 	"github.com/mainflux/mainflux/ws"
 	"github.com/mainflux/mainflux/ws/mocks"
-	broker "github.com/nats-io/go-nats"
+	broker "github.com/nats-io/nats.go"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/mainflux/mainflux"
@@ -81,7 +81,7 @@ func TestSubscribe(t *testing.T) {
 		err      error
 	}{
 		{
-			desc:    "subscription to valid channel",
+			desc:    "subscribe to valid channel",
 			chanID:  chanID,
 			channel: channel,
 			err:     nil,
