@@ -7,10 +7,12 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
-type MockClient struct{}
+type MockClient struct {
+	key map[string]string
+}
 
-func NewClient() auth.Client {
-	return MockClient{}
+func NewClient(key map[string]string) auth.Client {
+	return MockClient{key: key}
 }
 
 func (cli MockClient) Authorize(ctx context.Context, chanID, thingID string) error {
@@ -18,8 +20,8 @@ func (cli MockClient) Authorize(ctx context.Context, chanID, thingID string) err
 }
 
 func (cli MockClient) Identify(ctx context.Context, thingKey string) (string, error) {
-	if thingKey == "" {
-		return "", errors.ErrAuthentication
+	if id, ok := cli.key[thingKey]; ok {
+		return id, nil
 	}
-	return "ok", nil
+	return "", errors.ErrAuthentication
 }

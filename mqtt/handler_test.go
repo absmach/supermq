@@ -1,7 +1,12 @@
 package mqtt
 
 import (
+	"bytes"
 	"fmt"
+	"log"
+	"os"
+	"testing"
+
 	rdb "github.com/go-redis/redis/v8"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/mqtt/mocks"
@@ -13,15 +18,13 @@ import (
 	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"log"
-	"testing"
 )
 
 const (
-	id         = "123"
-	username   = "testUsername"
-	usernameOK = "ok"
-	password   = "password"
+	id              = "123"
+	username        = "username"
+	invalidUsername = "invalidUsername"
+	password        = "password"
 )
 
 func TestAuthConnect(t *testing.T) {
@@ -50,7 +53,7 @@ func TestAuthConnect(t *testing.T) {
 			err:  errors.ErrAuthentication,
 			session: &session.Client{
 				ID:       id,
-				Username: username,
+				Username: invalidUsername,
 				Password: []byte(password),
 			},
 		},
@@ -59,7 +62,7 @@ func TestAuthConnect(t *testing.T) {
 			err:  nil,
 			session: &session.Client{
 				ID:       id,
-				Username: usernameOK,
+				Username: username,
 				Password: []byte(password),
 			},
 		},
@@ -124,7 +127,6 @@ func TestAuthSubscribe(t *testing.T) {
 
 	chID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-
 	var topics = []string{"channels/" + chID + "/messages/2/ct/3"}
 	var invalidTopics = []string{"topic"}
 
@@ -172,6 +174,45 @@ func TestAuthSubscribe(t *testing.T) {
 	}
 }
 
+func TestPublish(t *testing.T) {
+	handler := newHandler()
+	var memLog bytes.Buffer
+	log.SetOutput(&memLog)
+	defer func() {
+		log.SetOutput(os.Stderr)
+	}()
+
+	sessionClient := session.Client{
+		ID:       id,
+		Username: username,
+		Password: []byte(password),
+	}
+	cases := []struct {
+		desc    string
+		client  *session.Client
+		topic   string
+		payload []byte
+	}{
+		{
+			desc:    "publish without active session",
+			client:  nil,
+			topic:   "topic",
+			payload: []byte("payload"),
+		},
+		{
+			desc:    "publish with invalid channel parts",
+			client:  &sessionClient,
+			topic:   "topic",
+			payload: []byte("payload"),
+		},
+	}
+	for _, tc := range cases {
+		handler.Publish(tc.client, &tc.topic, &tc.payload)
+		t.Log(memLog.String())
+
+	}
+}
+
 func newHandler() session.Handler {
 	pool, err := dockertest.NewPool("")
 	if err != nil {
@@ -190,5 +231,5 @@ func newHandler() session.Handler {
 	})
 
 	eventStore := redis.NewEventStore(redisClient, "")
-	return NewHandler([]messaging.Publisher{mocks.NewPublisher()}, eventStore, logger.NewMock(), mocks.NewClient())
+	return NewHandler([]messaging.Publisher{mocks.NewPublisher()}, eventStore, logger.NewMock(), mocks.NewClient(map[string]string{password: username}))
 }
