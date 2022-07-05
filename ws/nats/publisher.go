@@ -11,10 +11,10 @@ import (
 	"github.com/sony/gobreaker"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/ws"
-	broker "github.com/nats-io/go-nats"
+	broker "github.com/nats-io/nats.go"
 )
 
 const (
@@ -56,7 +56,7 @@ func (pubsub *natsPubSub) fmtSubject(chanID, subtopic string) string {
 	return subject
 }
 
-func (pubsub *natsPubSub) Publish(_ context.Context, _ string, msg mainflux.Message) error {
+func (pubsub *natsPubSub) Publish(_ context.Context, _ string, msg messaging.Message) error {
 	data, err := proto.Marshal(&msg)
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func (pubsub *natsPubSub) Subscribe(chanID, subtopic string, channel *ws.Channel
 			return
 		}
 
-		var m mainflux.Message
+		var m messaging.Message
 		if err := proto.Unmarshal(msg.Data, &m); err != nil {
 			pubsub.logger.Warn(fmt.Sprintf("Failed to deserialize received message: %s", err.Error()))
 			return
