@@ -13,7 +13,7 @@ import (
 	broker "github.com/nats-io/nats.go"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/pkg/messaging"
 )
 
 const (
@@ -22,7 +22,7 @@ const (
 	protocol = "ws"
 )
 
-var msg = mainflux.Message{
+var msg = messaging.Message{
 	Channel:   chanID,
 	Publisher: pubID,
 	Protocol:  protocol,
@@ -41,7 +41,7 @@ func TestPublish(t *testing.T) {
 
 	cases := []struct {
 		desc string
-		msg  mainflux.Message
+		msg  messaging.Message
 		err  error
 	}{
 		{
@@ -51,14 +51,14 @@ func TestPublish(t *testing.T) {
 		},
 		{
 			desc: "publish empty message",
-			msg:  mainflux.Message{},
+			msg:  messaging.Message{},
 			err:  ws.ErrFailedMessagePublish,
 		},
 	}
 
 	for _, tc := range cases {
 		// Check if message was sent.
-		go func(desc string, tcMsg mainflux.Message) {
+		go func(desc string, tcMsg messaging.Message) {
 			receivedMsg := <-channel.Messages
 			assert.Equal(t, tcMsg, receivedMsg, fmt.Sprintf("%s: expected %v got %v\n", desc, tcMsg, receivedMsg))
 		}(tc.desc, tc.msg)

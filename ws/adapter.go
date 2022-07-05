@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/pkg/messaging"
 	broker "github.com/nats-io/nats.go"
 )
 
@@ -35,7 +36,7 @@ type Service interface {
 
 // Channel is used for receiving and sending messages.
 type Channel struct {
-	Messages chan mainflux.Message
+	Messages chan messaging.Message
 	Closed   chan bool
 	closed   bool
 	mutex    sync.Mutex
@@ -44,7 +45,7 @@ type Channel struct {
 // NewChannel instantiates empty channel.
 func NewChannel() *Channel {
 	return &Channel{
-		Messages: make(chan mainflux.Message),
+		Messages: make(chan messaging.Message),
 		Closed:   make(chan bool),
 		closed:   false,
 		mutex:    sync.Mutex{},
@@ -52,7 +53,7 @@ func NewChannel() *Channel {
 }
 
 // Send method send message over Messages channel.
-func (channel *Channel) Send(msg mainflux.Message) {
+func (channel *Channel) Send(msg messaging.Message) {
 	channel.mutex.Lock()
 	defer channel.mutex.Unlock()
 
@@ -83,7 +84,7 @@ func New(pubsub Service) Service {
 	return &adapterService{pubsub: pubsub}
 }
 
-func (as *adapterService) Publish(ctx context.Context, token string, msg mainflux.Message) error {
+func (as *adapterService) Publish(ctx context.Context, token string, msg messaging.Message) error {
 	if err := as.pubsub.Publish(ctx, token, msg); err != nil {
 		switch err {
 		case broker.ErrConnectionClosed, broker.ErrInvalidConnection:
