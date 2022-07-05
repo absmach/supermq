@@ -6,11 +6,9 @@
 package ws
 
 import (
-	"context"
 	"errors"
 	"sync"
 
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	broker "github.com/nats-io/nats.go"
 )
@@ -28,7 +26,7 @@ var (
 
 // Service specifies web socket service API.
 type Service interface {
-	mainflux.MessagePublisher
+	messaging.Publisher
 
 	// Subscribes to channel with specified id.
 	Subscribe(string, string, *Channel) error
@@ -84,8 +82,8 @@ func New(pubsub Service) Service {
 	return &adapterService{pubsub: pubsub}
 }
 
-func (as *adapterService) Publish(ctx context.Context, token string, msg messaging.Message) error {
-	if err := as.pubsub.Publish(ctx, token, msg); err != nil {
+func (as *adapterService) Publish(token string, msg messaging.Message) error {
+	if err := as.pubsub.Publish(token, msg); err != nil {
 		switch err {
 		case broker.ErrConnectionClosed, broker.ErrInvalidConnection:
 			return ErrFailedConnection
@@ -93,6 +91,10 @@ func (as *adapterService) Publish(ctx context.Context, token string, msg messagi
 			return ErrFailedMessagePublish
 		}
 	}
+	return nil
+}
+
+func (as *adapterService) Close() error {
 	return nil
 }
 

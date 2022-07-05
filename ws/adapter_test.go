@@ -4,7 +4,6 @@
 package ws_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -64,7 +63,7 @@ func TestPublish(t *testing.T) {
 		}(tc.desc, tc.msg)
 
 		// Check if publish succeeded.
-		err := svc.Publish(context.Background(), "", tc.msg)
+		err := svc.Publish("", tc.msg)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }

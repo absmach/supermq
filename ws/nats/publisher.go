@@ -5,7 +5,6 @@
 package nats
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/sony/gobreaker"
@@ -56,7 +55,7 @@ func (pubsub *natsPubSub) fmtSubject(chanID, subtopic string) string {
 	return subject
 }
 
-func (pubsub *natsPubSub) Publish(_ context.Context, _ string, msg messaging.Message) error {
+func (pubsub *natsPubSub) Publish(_ string, msg messaging.Message) error {
 	data, err := proto.Marshal(&msg)
 	if err != nil {
 		return err
@@ -64,6 +63,10 @@ func (pubsub *natsPubSub) Publish(_ context.Context, _ string, msg messaging.Mes
 
 	subject := pubsub.fmtSubject(msg.Channel, msg.Subtopic)
 	return pubsub.nc.Publish(subject, data)
+}
+
+func (pubsub *natsPubSub) Close() error {
+	return nil
 }
 
 func (pubsub *natsPubSub) Subscribe(chanID, subtopic string, channel *ws.Channel) error {
