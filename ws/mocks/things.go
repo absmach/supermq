@@ -5,11 +5,11 @@ package mocks
 
 import (
 	"context"
+	"errors"
 
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/things"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -23,11 +23,12 @@ const ServiceErrToken = "unavailable"
 
 type thingsClient struct {
 	things map[string]string
+	cc     *grpc.ClientConn
 }
 
 // NewThingsClient returns mock implementation of things service client.
 func NewThingsClient(data map[string]string) mainflux.ThingsServiceClient {
-	return &thingsClient{data}
+	return &thingsClient{data, nil}
 }
 
 func (tc thingsClient) CanAccessByKey(ctx context.Context, req *mainflux.AccessByKeyReq, opts ...grpc.CallOption) (*mainflux.ThingID, error) {
@@ -40,7 +41,7 @@ func (tc thingsClient) CanAccessByKey(ctx context.Context, req *mainflux.AccessB
 		return nil, status.Error(codes.Internal, "internal server error")
 	}
 	if key == "" {
-		return nil, things.ErrUnauthorizedAccess
+		return nil, errors.New("missing or invalid credentials provided")
 	}
 
 	id, ok := tc.things[key]
@@ -56,5 +57,9 @@ func (tc thingsClient) CanAccessByID(context.Context, *mainflux.AccessByIDReq, .
 }
 
 func (tc thingsClient) Identify(context.Context, *mainflux.Token, ...grpc.CallOption) (*mainflux.ThingID, error) {
+	panic("not implemented")
+}
+
+func (c *thingsClient) IsChannelOwner(ctx context.Context, in *mainflux.ChannelOwnerReq, opts ...grpc.CallOption) (*empty.Empty, error) {
 	panic("not implemented")
 }
