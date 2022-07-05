@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"os"
 	"testing"
 
 	rdb "github.com/go-redis/redis/v8"
@@ -26,6 +25,8 @@ const (
 	invalidUsername = "invalidUsername"
 	password        = "password"
 )
+
+var buf bytes.Buffer
 
 func TestAuthConnect(t *testing.T) {
 	handler := newHandler()
@@ -176,44 +177,47 @@ func TestAuthSubscribe(t *testing.T) {
 
 func TestPublish(t *testing.T) {
 	handler := newHandler()
-	var memLog bytes.Buffer
-	log.SetOutput(&memLog)
-	defer func() {
-		log.SetOutput(os.Stderr)
-	}()
-
+	buf.Reset()
 	sessionClient := session.Client{
 		ID:       id,
 		Username: username,
 		Password: []byte(password),
 	}
+
 	cases := []struct {
-		desc    string
-		client  *session.Client
-		topic   string
-		payload []byte
+		desc     string
+		client   *session.Client
+		topic    string
+		payload  []byte
+		expected string
 	}{
 		{
-			desc:    "publish without active session",
-			client:  nil,
-			topic:   "topic",
-			payload: []byte("payload"),
+			desc:     "publish without active session",
+			client:   nil,
+			topic:    "topic",
+			payload:  []byte("payload"),
+			expected: "Nil client publish",
 		},
 		{
-			desc:    "publish with invalid channel parts",
-			client:  &sessionClient,
-			topic:   "topic",
-			payload: []byte("payload"),
+			desc:     "publish with invalid channel parts",
+			client:   &sessionClient,
+			topic:    "topic",
+			payload:  []byte("payload"),
+			expected: "Publish - client ID 123 to the topic: topic",
 		},
 	}
 	for _, tc := range cases {
 		handler.Publish(tc.client, &tc.topic, &tc.payload)
-		t.Log(memLog.String())
-
+		assert.Contains(t, buf.String(), tc.expected)
 	}
 }
 
 func newHandler() session.Handler {
+	logger, err := logger.New(&buf, "debug")
+	if err != nil {
+		panic(err)
+	}
+
 	pool, err := dockertest.NewPool("")
 	if err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
@@ -231,5 +235,5 @@ func newHandler() session.Handler {
 	})
 
 	eventStore := redis.NewEventStore(redisClient, "")
-	return NewHandler([]messaging.Publisher{mocks.NewPublisher()}, eventStore, logger.NewMock(), mocks.NewClient(map[string]string{password: username}))
+	return NewHandler([]messaging.Publisher{mocks.NewPublisher()}, eventStore, logger, mocks.NewClient(map[string]string{password: username}))
 }
