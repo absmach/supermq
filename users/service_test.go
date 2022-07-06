@@ -393,32 +393,32 @@ func TestSendPasswordReset(t *testing.T) {
 
 func TestDeactivateUser(t *testing.T) {
 	activeUser1 := users.User{Email: "user1@example.com", Password: "password"}
-	activeUser2 := users.User{Email: "user2@example.com", Password: "password", State: "active"}
-	deactiveUser1 := users.User{Email: "user3@example.com", Password: "password", State: "inactive"}
+	activeUser2 := users.User{Email: "user2@example.com", Password: "password", Status: "active"}
+	deactiveUser1 := users.User{Email: "user3@example.com", Password: "password", Status: "inactive"}
 
 	svc := newService()
 
 	id, err := svc.Register(context.Background(), user.Email, user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	user.ID = id
-	user.State = "active"
+	user.Status = "active"
 	token, err := svc.Login(context.Background(), user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	id, err = svc.Register(context.Background(), token, activeUser1)
 	require.Nil(t, err, fmt.Sprintf("register activeUser1 error: %s", err))
 	activeUser1.ID = id
-	activeUser1.State = "active"
+	activeUser1.Status = "active"
 
 	id, err = svc.Register(context.Background(), token, activeUser2)
 	require.Nil(t, err, fmt.Sprintf("register activeUser2 error: %s", err))
 	activeUser2.ID = id
-	activeUser2.State = "inactive"
+	activeUser2.Status = "inactive"
 
 	id, err = svc.Register(context.Background(), token, deactiveUser1)
 	require.Nil(t, err, fmt.Sprintf("register deactiveUser1 error: %s", err))
 	deactiveUser1.ID = id
-	deactiveUser1.State = "inactive"
+	deactiveUser1.Status = "inactive"
 
 	cases := []struct {
 		desc  string
@@ -453,7 +453,7 @@ func TestDeactivateUser(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := svc.ChangeUserStatus(context.Background(), tc.token, tc.id)
+		err := svc.DisableUser(context.Background(), tc.token, tc.id)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 

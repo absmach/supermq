@@ -71,7 +71,7 @@ func TestSingleUserRetrieval(t *testing.T) {
 		ID:       uid,
 		Email:    email,
 		Password: "pass",
-		State:    "active",
+		Status:   "active",
 	}
 
 	_, err = repo.Save(context.Background(), user)
@@ -114,7 +114,7 @@ func TestRetrieveAll(t *testing.T) {
 			ID:       uid,
 			Email:    email,
 			Password: "pass",
-			State:    "active",
+			Status:   "active",
 		}
 		if i < metaNum {
 			user.Metadata = meta

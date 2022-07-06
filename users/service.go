@@ -16,6 +16,8 @@ const (
 	memberRelationKey = "member"
 	authoritiesObjKey = "authorities"
 	usersObjKey       = "users"
+	active            = "active"
+	inactive          = "inactive"
 )
 
 var (
@@ -31,6 +33,12 @@ var (
 
 	// ErrPasswordFormat indicates weak password.
 	ErrPasswordFormat = errors.New("password does not meet the requirements")
+
+	// ErrAlreadyEnabledUser indicates the user is enabled.
+	ErrAlreadyEnabledUser = errors.New("the user is already enabled")
+
+	// ErrAlreadyDisabledUser indicates the user is enabled.
+	ErrAlreadyDisabledUser = errors.New("the user is already enabled")
 )
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -75,8 +83,11 @@ type Service interface {
 	// ListMembers retrieves everything that is assigned to a group identified by groupID.
 	ListMembers(ctx context.Context, token, groupID string, state string, offset, limit uint64, meta Metadata) (UserPage, error)
 
-	// ChangeUserStatus logically deactivates the user identified with the provided ID
-	ChangeUserStatus(ctx context.Context, token, id string) error
+	// EnableUser logically enables the user identified with the provided ID
+	EnableUser(ctx context.Context, token, id string) error
+
+	// DisableUser logically disables the user identified with the provided ID
+	DisableUser(ctx context.Context, token, id string) error
 }
 
 // PageMetadata contains page metadata that helps navigation.
@@ -150,8 +161,8 @@ func (svc usersService) Register(ctx context.Context, token string, user User) (
 	}
 	user.Password = hash
 
-	if user.State == "" {
-		user.State = "active"
+	if user.Status == "" {
+		user.Status = "active"
 	}
 
 	uid, err = svc.users.Save(ctx, user)
@@ -194,7 +205,7 @@ func (svc usersService) ViewUser(ctx context.Context, token, id string) (User, e
 		return User{}, err
 	}
 
-	dbUser, err := svc.users.RetrieveByID(ctx, id)
+	dbUser, err := svc.users.RetrieveByID(ctx, id, active)
 	if err != nil {
 		return User{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
@@ -339,18 +350,38 @@ func (svc usersService) ListMembers(ctx context.Context, token, groupID string, 
 	return svc.users.RetrieveAll(ctx, state, offset, limit, userIDs, "", m)
 }
 
-func (svc usersService) ChangeUserStatus(ctx context.Context, token, id string) error {
+func (svc usersService) EnableUser(ctx context.Context, token, id string) error {
 	_, err := svc.identify(ctx, token)
 	if err != nil {
 		return err
 	}
 
-	dbUser, err := svc.users.RetrieveByID(ctx, id)
+	dbUser, err := svc.users.RetrieveByID(ctx, id, inactive)
 	if err != nil {
 		return errors.Wrap(errors.ErrAuthentication, err)
 	}
+	if &dbUser == nil {
+		return ErrAlreadyEnabledUser
+	}
 
-	return svc.users.ChangeStatus(ctx, dbUser)
+	return svc.users.ChangeStatus(ctx, dbUser, active)
+}
+
+func (svc usersService) DisableUser(ctx context.Context, token, id string) error {
+	_, err := svc.identify(ctx, token)
+	if err != nil {
+		return err
+	}
+
+	dbUser, err := svc.users.RetrieveByID(ctx, id, active)
+	if err != nil {
+		return errors.Wrap(errors.ErrAuthentication, err)
+	}
+	if &dbUser == nil {
+		return ErrAlreadyDisabledUser
+	}
+
+	return svc.users.ChangeStatus(ctx, dbUser, inactive)
 }
 
 // Auth helpers

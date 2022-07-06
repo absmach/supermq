@@ -31,8 +31,8 @@ func (req createUserReq) validate() error {
 }
 
 type viewUserReq struct {
-	token  string
-	userID string
+	token string
+	id    string
 }
 
 func (req viewUserReq) validate() error {
@@ -147,7 +147,7 @@ type listMemberGroupReq struct {
 	offset   uint64
 	limit    uint64
 	metadata users.Metadata
-	groupID  string
+	id       string
 }
 
 func (req listMemberGroupReq) validate() error {
@@ -155,7 +155,7 @@ func (req listMemberGroupReq) validate() error {
 		return apiutil.ErrBearerToken
 	}
 
-	if req.groupID == "" {
+	if req.id == "" {
 		return apiutil.ErrMissingID
 	}
 	if req.state != "all" && req.state != "active" && req.state != "inactive" {
@@ -165,15 +165,15 @@ func (req listMemberGroupReq) validate() error {
 }
 
 type changeUserStatusReq struct {
-	token  string
-	userID string
+	token string
+	id    string
 }
 
 func (req changeUserStatusReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
-	if req.userID == "" {
+	if req.id == "" {
 		return apiutil.ErrMissingID
 	}
 	return nil

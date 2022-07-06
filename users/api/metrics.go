@@ -129,11 +129,20 @@ func (ms *metricsMiddleware) ListMembers(ctx context.Context, token, groupID str
 	return ms.svc.ListMembers(ctx, token, groupID, state, offset, limit, gm)
 }
 
-func (ms *metricsMiddleware) ChangeUserStatus(ctx context.Context, token string, id string) (err error) {
+func (ms *metricsMiddleware) EnableUser(ctx context.Context, token string, id string) (err error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "remove_user").Add(1)
-		ms.latency.With("method", "remove_user").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "enable_user").Add(1)
+		ms.latency.With("method", "enable_user").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return ms.svc.ChangeUserStatus(ctx, token, id)
+	return ms.svc.EnableUser(ctx, token, id)
+}
+
+func (ms *metricsMiddleware) DisableUser(ctx context.Context, token string, id string) (err error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "disable_user").Add(1)
+		ms.latency.With("method", "disable_user").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return ms.svc.DisableUser(ctx, token, id)
 }

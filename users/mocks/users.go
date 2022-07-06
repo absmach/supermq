@@ -79,12 +79,15 @@ func (urm *userRepositoryMock) RetrieveByEmail(ctx context.Context, email string
 	return val, nil
 }
 
-func (urm *userRepositoryMock) RetrieveByID(ctx context.Context, id string) (users.User, error) {
+func (urm *userRepositoryMock) RetrieveByID(ctx context.Context, id, status string) (users.User, error) {
 	urm.mu.Lock()
 	defer urm.mu.Unlock()
 
 	val, ok := urm.usersByID[id]
 	if !ok {
+		return users.User{}, errors.ErrNotFound
+	}
+	if val.Status != status {
 		return users.User{}, errors.ErrNotFound
 	}
 
@@ -113,7 +116,7 @@ func (urm *userRepositoryMock) RetrieveAll(ctx context.Context, state string, of
 	if state == "active" || state == "inactive" {
 		for _, u := range sortUsers(urm.users) {
 			if i >= offset && i < (limit+offset) {
-				if state == u.State {
+				if state == u.Status {
 					up.Users = append(up.Users, u)
 				}
 			}
@@ -148,14 +151,14 @@ func (urm *userRepositoryMock) UpdatePassword(_ context.Context, token, password
 	return nil
 }
 
-func (urm *userRepositoryMock) ChangeStatus(ctx context.Context, user users.User) error {
+func (urm *userRepositoryMock) ChangeStatus(ctx context.Context, user users.User, status string) error {
 	urm.mu.Lock()
 	defer urm.mu.Unlock()
 
 	if _, ok := urm.users[user.Email]; !ok {
 		return errors.ErrNotFound
 	}
-	user.State = "inactive"
+	user.Status = status
 	urm.users[user.Email] = user
 	return nil
 }

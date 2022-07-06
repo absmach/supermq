@@ -29,6 +29,8 @@ const (
 	emailKey    = "email"
 	metadataKey = "metadata"
 	stateKey    = "state"
+	active      = "active"
+	inactive    = "inactive"
 	defOffset   = 0
 	defLimit    = 10
 )
@@ -55,7 +57,7 @@ func MakeHandler(svc users.Service, tracer opentracing.Tracer, logger logger.Log
 		opts...,
 	))
 
-	mux.Get("/users/:userID", kithttp.NewServer(
+	mux.Get("/users/:id", kithttp.NewServer(
 		kitot.TraceServer(tracer, "view_user")(viewUserEndpoint(svc)),
 		decodeViewUser,
 		encodeResponse,
@@ -97,7 +99,7 @@ func MakeHandler(svc users.Service, tracer opentracing.Tracer, logger logger.Log
 		opts...,
 	))
 
-	mux.Get("/groups/:groupId", kithttp.NewServer(
+	mux.Get("/groups/:id", kithttp.NewServer(
 		kitot.TraceServer(tracer, "list_members")(listMembersEndpoint(svc)),
 		decodeListMembersRequest,
 		encodeResponse,
@@ -111,8 +113,15 @@ func MakeHandler(svc users.Service, tracer opentracing.Tracer, logger logger.Log
 		opts...,
 	))
 
-	mux.Delete("/users/:userID", kithttp.NewServer(
-		kitot.TraceServer(tracer, "change_user_status")(changeUserStatusEndpoint(svc)),
+	mux.Post("/users/:id/enable", kithttp.NewServer(
+		kitot.TraceServer(tracer, "enable_user")(enableUserEndpoint(svc)),
+		decodeChangeUserStatus,
+		encodeResponse,
+		opts...,
+	))
+
+	mux.Post("/users/:id/disable", kithttp.NewServer(
+		kitot.TraceServer(tracer, "disable_user")(disableUserEndpoint(svc)),
 		decodeChangeUserStatus,
 		encodeResponse,
 		opts...,
@@ -126,8 +135,8 @@ func MakeHandler(svc users.Service, tracer opentracing.Tracer, logger logger.Log
 
 func decodeViewUser(_ context.Context, r *http.Request) (interface{}, error) {
 	req := viewUserReq{
-		token:  apiutil.ExtractBearerToken(r),
-		userID: bone.GetValue(r, "userID"),
+		token: apiutil.ExtractBearerToken(r),
+		id:    bone.GetValue(r, "id"),
 	}
 
 	return req, nil
@@ -160,7 +169,7 @@ func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	s, err := apiutil.ReadStringQuery(r, stateKey, "active")
+	s, err := apiutil.ReadStringQuery(r, stateKey, active)
 	if err != nil {
 		return nil, err
 	}
@@ -271,7 +280,7 @@ func decodeListMembersRequest(_ context.Context, r *http.Request) (interface{}, 
 	if err != nil {
 		return nil, err
 	}
-	s, err := apiutil.ReadStringQuery(r, stateKey, "active")
+	s, err := apiutil.ReadStringQuery(r, stateKey, active)
 	if err != nil {
 		return nil, err
 	}
@@ -279,7 +288,7 @@ func decodeListMembersRequest(_ context.Context, r *http.Request) (interface{}, 
 	req := listMemberGroupReq{
 		token:    apiutil.ExtractBearerToken(r),
 		state:    s,
-		groupID:  bone.GetValue(r, "groupId"),
+		id:       bone.GetValue(r, "id"),
 		offset:   o,
 		limit:    l,
 		metadata: m,
@@ -289,8 +298,8 @@ func decodeListMembersRequest(_ context.Context, r *http.Request) (interface{}, 
 
 func decodeChangeUserStatus(_ context.Context, r *http.Request) (interface{}, error) {
 	req := changeUserStatusReq{
-		token:  apiutil.ExtractBearerToken(r),
-		userID: bone.GetValue(r, "userID"),
+		token: apiutil.ExtractBearerToken(r),
+		id:    bone.GetValue(r, "id"),
 	}
 
 	return req, nil

@@ -190,10 +190,30 @@ func (sdk mfSDK) UpdatePassword(oldPass, newPass, token string) error {
 	return nil
 }
 
-func (sdk mfSDK) ChangeUserStatus(id, token string) error {
-	url := fmt.Sprintf("%s/%s/%s", sdk.usersURL, usersEndpoint, id)
+func (sdk mfSDK) EnableUser(id, token string) error {
+	url := fmt.Sprintf("%s/%s/%s/enable", sdk.usersURL, usersEndpoint, id)
 
-	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	req, err := http.NewRequest(http.MethodPost, url, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := sdk.sendRequest(req, token, string(CTJSON))
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusNoContent {
+		return errors.Wrap(ErrFailedRemoval, errors.New(resp.Status))
+	}
+
+	return nil
+}
+
+func (sdk mfSDK) DisableUser(id, token string) error {
+	url := fmt.Sprintf("%s/%s/%s/disable", sdk.usersURL, usersEndpoint, id)
+
+	req, err := http.NewRequest(http.MethodPost, url, nil)
 	if err != nil {
 		return err
 	}
