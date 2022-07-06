@@ -81,7 +81,7 @@ func handshake(svc ws.Service) http.HandlerFunc {
 			}
 		}
 
-		ct := contentType(r)
+		// ct := contentType(r)
 
 		channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
 		if len(channelParts) < 2 {
@@ -119,7 +119,7 @@ func handshake(svc ws.Service) http.HandlerFunc {
 		go sub.listen()
 
 		// Start listening for messages from NATS.
-		go sub.broadcast(svc, ct)
+		go sub.broadcast(svc)
 	}
 }
 
@@ -209,7 +209,7 @@ type subscription struct {
 	channel  *ws.Channel
 }
 
-func (sub subscription) broadcast(svc ws.Service, contentType string) {
+func (sub subscription) broadcast(svc ws.Service) {
 	for {
 		_, payload, err := sub.conn.ReadMessage()
 		if websocket.IsUnexpectedCloseError(err) {
@@ -222,12 +222,11 @@ func (sub subscription) broadcast(svc ws.Service, contentType string) {
 			return
 		}
 		msg := messaging.Message{
-			Channel:     sub.chanID,
-			Subtopic:    sub.subtopic,
-			ContentType: contentType,
-			Publisher:   sub.pubID,
-			Protocol:    protocol,
-			Payload:     payload,
+			Channel:   sub.chanID,
+			Subtopic:  sub.subtopic,
+			Publisher: sub.pubID,
+			Protocol:  protocol,
+			Payload:   payload,
 		}
 		if err := svc.Publish("", msg); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to publish message to NATS: %s", err))
@@ -244,10 +243,11 @@ func (sub subscription) broadcast(svc ws.Service, contentType string) {
 
 func (sub subscription) listen() {
 	for msg := range sub.channel.Messages {
-		format, ok := contentTypes[msg.ContentType]
-		if !ok {
-			format = websocket.TextMessage
-		}
+		// format, ok := contentTypes[msg.ContentType]
+		// if !ok {
+		// 	format = websocket.TextMessage
+		// }
+		format := websocket.TextMessage // Supporting only the textmessage format now
 
 		if err := sub.conn.WriteMessage(format, msg.Payload); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to broadcast message to thing: %s", err))
