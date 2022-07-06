@@ -28,6 +28,7 @@ import (
 	jconfig "github.com/uber/jaeger-client-go/config"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const (
@@ -95,7 +96,7 @@ func main() {
 	}()
 
 	go func() {
-		c := make(chan os.Signal)
+		c := make(chan os.Signal, 1) // The channel should be buffered
 		signal.Notify(c, syscall.SIGINT)
 		errs <- fmt.Errorf("%s", <-c)
 	}()
@@ -140,7 +141,7 @@ func connectToThings(cfg config, logger logger.Logger) *grpc.ClientConn {
 		}
 	} else {
 		logger.Info("gRPC communication is not encrypted")
-		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials())) // grpc.WithInsecure was deprecated
 	}
 
 	conn, err := grpc.Dial(cfg.thingsURL, opts...)
