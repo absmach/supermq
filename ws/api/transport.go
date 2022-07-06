@@ -18,7 +18,6 @@ import (
 	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
-	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/ws"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc/codes"
@@ -47,10 +46,10 @@ var (
 	channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
 )
 
-var contentTypes = map[string]int{
-	senml.JSON: websocket.TextMessage,
-	senml.CBOR: websocket.BinaryMessage,
-}
+// var contentTypes = map[string]int{
+// 	senml.JSON: websocket.TextMessage,
+// 	senml.CBOR: websocket.BinaryMessage,
+// }
 
 // MakeHandler returns http handler with handshake endpoint.
 func MakeHandler(svc ws.Service, tc mainflux.ThingsServiceClient, l log.Logger) http.Handler {
@@ -188,18 +187,18 @@ func authorize(r *http.Request) (subscription, error) {
 	return sub, nil
 }
 
-func contentType(r *http.Request) string {
-	ct := r.Header.Get("Content-Type")
-	if ct == "" {
-		ctvals := bone.GetQuery(r, "content-type")
-		if len(ctvals) == 0 {
-			return ""
-		}
-		ct = ctvals[0]
-	}
+// func contentType(r *http.Request) string {
+// 	ct := r.Header.Get("Content-Type")
+// 	if ct == "" {
+// 		ctvals := bone.GetQuery(r, "content-type")
+// 		if len(ctvals) == 0 {
+// 			return ""
+// 		}
+// 		ct = ctvals[0]
+// 	}
 
-	return ct
-}
+// 	return ct
+// }
 
 type subscription struct {
 	pubID    string
