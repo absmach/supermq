@@ -30,8 +30,8 @@ var (
 	// ErrEmailSize indicates that email size exceeds the max.
 	ErrEmailSize = errors.New("invalid email size")
 
-	// ErrInvalidStatus indicates an invalid activity status.
-	ErrInvalidStatus = errors.New("invalid activity status")
+	// ErrInvalidStatus indicates an invalid user account status.
+	ErrInvalidStatus = errors.New("invalid user account status")
 
 	// ErrLimitSize indicates that an invalid limit.
 	ErrLimitSize = errors.New("invalid limit size")

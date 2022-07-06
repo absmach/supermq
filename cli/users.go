@@ -146,8 +146,8 @@ var cmdUsers = []cobra.Command{
 	},
 	{
 		Use:   "enable <user_id> <user_auth_token>",
-		Short: "Change user status to active",
-		Long:  `Change user status to active`,
+		Short: "Change user status to enabled",
+		Long:  `Change user status to enabled`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
 				logUsage(cmd.Use)
@@ -164,15 +164,15 @@ var cmdUsers = []cobra.Command{
 	},
 	{
 		Use:   "disable <user_id> <user_auth_token>",
-		Short: "Change user status to inactive",
-		Long:  `Change user status to inactive`,
+		Short: "Change user status to disabled",
+		Long:  `Change user status to disabled`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 2 {
 				logUsage(cmd.Use)
 				return
 			}
 
-			if err := sdk.EnableUser(args[0], args[1]); err != nil {
+			if err := sdk.DisableUser(args[0], args[1]); err != nil {
 				logError(err)
 				return
 			}

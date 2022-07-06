@@ -63,16 +63,16 @@ type UserRepository interface {
 	RetrieveByEmail(ctx context.Context, email string) (User, error)
 
 	// RetrieveByID retrieves user by its unique identifier ID.
-	RetrieveByID(ctx context.Context, id, status string) (User, error)
+	RetrieveByID(ctx context.Context, id string) (User, error)
 
 	// RetrieveAll retrieves all users for given array of userIDs.
-	RetrieveAll(ctx context.Context, state string, offset, limit uint64, userIDs []string, email string, m Metadata) (UserPage, error)
+	RetrieveAll(ctx context.Context, status string, offset, limit uint64, userIDs []string, email string, m Metadata) (UserPage, error)
 
 	// UpdatePassword updates password for user with given email
 	UpdatePassword(ctx context.Context, email, password string) error
 
-	// ChangeStatus changes users state to inactive
-	ChangeStatus(ctx context.Context, u User, active string) error
+	// ChangeStatus changes users status to enabled or disabled
+	ChangeStatus(ctx context.Context, u User, status string) error
 }
 
 func isEmail(email string) bool {

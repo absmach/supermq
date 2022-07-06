@@ -28,9 +28,7 @@ const (
 	limitKey    = "limit"
 	emailKey    = "email"
 	metadataKey = "metadata"
-	stateKey    = "state"
-	active      = "active"
-	inactive    = "inactive"
+	statusKey   = "status"
 	defOffset   = 0
 	defLimit    = 10
 )
@@ -169,13 +167,13 @@ func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	s, err := apiutil.ReadStringQuery(r, stateKey, active)
+	s, err := apiutil.ReadStringQuery(r, statusKey, users.EnableStatusKey)
 	if err != nil {
 		return nil, err
 	}
 	req := listUsersReq{
 		token:    apiutil.ExtractBearerToken(r),
-		state:    s,
+		status:   s,
 		offset:   o,
 		limit:    l,
 		email:    e,
@@ -280,14 +278,14 @@ func decodeListMembersRequest(_ context.Context, r *http.Request) (interface{}, 
 	if err != nil {
 		return nil, err
 	}
-	s, err := apiutil.ReadStringQuery(r, stateKey, active)
+	s, err := apiutil.ReadStringQuery(r, statusKey, users.EnableStatusKey)
 	if err != nil {
 		return nil, err
 	}
 
 	req := listMemberGroupReq{
 		token:    apiutil.ExtractBearerToken(r),
-		state:    s,
+		status:   s,
 		id:       bone.GetValue(r, "id"),
 		offset:   o,
 		limit:    l,

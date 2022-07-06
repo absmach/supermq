@@ -154,10 +154,10 @@ type SDK interface {
 	// UpdatePassword updates user password.
 	UpdatePassword(oldPass, newPass, token string) error
 
-	// EnableUser changes the status of the user to active.
+	// EnableUser changes the status of the user to enabled.
 	EnableUser(id, token string) error
 
-	// DisableUser changes the status of the user to inactive.
+	// DisableUser changes the status of the user to disabled.
 	DisableUser(id, token string) error
 
 	// CreateThing registers new thing and returns its id.
