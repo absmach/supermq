@@ -71,7 +71,7 @@ type UserRepository interface {
 	// UpdatePassword updates password for user with given email
 	UpdatePassword(ctx context.Context, email, password string) error
 
-	// ChangeStatus changes users status to enabled or disabled
+	// ChangeStatus changes users status to active or inactive
 	ChangeStatus(ctx context.Context, u User, status string) error
 }
 

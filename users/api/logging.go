@@ -170,9 +170,9 @@ func (lm *loggingMiddleware) ListMembers(ctx context.Context, token, groupID str
 	return lm.svc.ListMembers(ctx, token, groupID, pm)
 }
 
-func (lm *loggingMiddleware) EnableUser(ctx context.Context, token string, id string) (err error) {
+func (lm *loggingMiddleware) ActivateUser(ctx context.Context, token string, id string) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method enable_user for user %s took %s to complete", id, time.Since(begin))
+		message := fmt.Sprintf("Method activate_user for user %s took %s to complete", id, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -180,12 +180,12 @@ func (lm *loggingMiddleware) EnableUser(ctx context.Context, token string, id st
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.EnableUser(ctx, token, id)
+	return lm.svc.ActivateUser(ctx, token, id)
 }
 
-func (lm *loggingMiddleware) DisableUser(ctx context.Context, token string, id string) (err error) {
+func (lm *loggingMiddleware) DeactivateUser(ctx context.Context, token string, id string) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method disable_user for user %s took %s to complete", id, time.Since(begin))
+		message := fmt.Sprintf("Method deactivate_user for user %s took %s to complete", id, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -193,5 +193,5 @@ func (lm *loggingMiddleware) DisableUser(ctx context.Context, token string, id s
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 
-	return lm.svc.DisableUser(ctx, token, id)
+	return lm.svc.DeactivateUser(ctx, token, id)
 }
