@@ -44,7 +44,7 @@ func TestAuthConnect(t *testing.T) {
 	}{
 		{
 			desc:    "connect without active session",
-			err:     errInvalidConnect,
+			err:     errMissingClient,
 			session: nil,
 		},
 		{
@@ -97,14 +97,14 @@ func TestAuthPublish(t *testing.T) {
 		{
 			desc:    "publish without active session",
 			client:  nil,
-			err:     errInactiveSession,
+			err:     errMissingClient,
 			topic:   &topic,
 			payload: payload,
 		},
 		{
 			desc:    "publish without topic",
 			client:  &sessionClient,
-			err:     errNilTopicPub,
+			err:     errMissingTopicPub,
 			topic:   nil,
 			payload: payload,
 		},
@@ -141,13 +141,13 @@ func TestAuthSubscribe(t *testing.T) {
 		{
 			desc:   "subscribe without active session",
 			client: nil,
-			err:    errInactiveSession,
+			err:    errMissingClient,
 			topic:  &topics,
 		},
 		{
 			desc:   "subscribe without topics",
 			client: &sessionClient,
-			err:    errNilTopicSub,
+			err:    errMissingTopicSub,
 			topic:  nil,
 		},
 		{
@@ -182,12 +182,12 @@ func TestConnect(t *testing.T) {
 		{
 			desc:     "connect without active session",
 			client:   nil,
-			expected: "Nil client connect",
+			expected: "failed to connect: " + errMissingClient.Error(),
 		},
 		{
 			desc:     "connect with valid session",
 			client:   &sessionClient,
-			expected: "Connect - client with ID: " + clientID,
+			expected: "connected with client_id: " + clientID,
 		},
 	}
 
@@ -213,14 +213,14 @@ func TestPublish(t *testing.T) {
 			client:   nil,
 			topic:    "topic",
 			payload:  []byte("payload"),
-			expected: "Nil client publish",
+			expected: errMissingClient.Error(),
 		},
 		{
 			desc:     "publish with invalid channel parts",
 			client:   &sessionClient,
 			topic:    "topic",
 			payload:  []byte("payload"),
-			expected: "Publish - client ID " + clientID + " to the topic: " + "topic",
+			expected: "published with client_id " + clientID + " to the topic: " + "topic",
 		},
 	}
 
@@ -249,13 +249,13 @@ func TestSubscribe(t *testing.T) {
 			desc:     "subscribe without active session",
 			client:   nil,
 			topic:    topics,
-			expected: "Nil client subscribe",
+			expected: "failed to subscribe: " + errMissingClient.Error(),
 		},
 		{
 			desc:     "subscribe with valid session and topics",
 			client:   &sessionClient,
 			topic:    topics,
-			expected: "Subscribe - client ID: " + clientID + ", to topics: ",
+			expected: "subscribed with client_id: " + clientID + " to topics: ",
 		},
 	}
 
@@ -284,13 +284,13 @@ func TestUnsubscribe(t *testing.T) {
 			desc:     "unsubscribe without active session",
 			client:   nil,
 			topic:    topics,
-			expected: "Nil client unsubscribe",
+			expected: "failed to unsubscribe: " + errMissingClient.Error(),
 		},
 		{
 			desc:     "unsubscribe with valid session and topics",
 			client:   &sessionClient,
 			topic:    topics,
-			expected: "Unsubscribe - client ID: " + clientID + ", form topics: ",
+			expected: "unsubscribe client_id: " + clientID + " from topics: ",
 		},
 	}
 
@@ -319,13 +319,13 @@ func TestDisconnect(t *testing.T) {
 			desc:     "disconect without active session",
 			client:   nil,
 			topic:    topics,
-			expected: "Nil client disconnect",
+			expected: "failed to disconnect: " + errMissingClient.Error(),
 		},
 		{
 			desc:     "disconect with valid session",
 			client:   &sessionClient,
 			topic:    topics,
-			expected: "Disconnect - Client with ID: " + clientID + " and username " + thingID + " disconnected",
+			expected: "disconnected client_id: " + clientID + " and username " + thingID,
 		},
 	}
 
