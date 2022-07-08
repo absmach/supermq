@@ -48,7 +48,16 @@ func TestAuthConnect(t *testing.T) {
 			session: nil,
 		},
 		{
-			desc: "connect with valid id",
+			desc: "connect without clientID",
+			err:  nil,
+			session: &session.Client{
+				ID:       "",
+				Username: thingID,
+				Password: []byte("password"),
+			},
+		},
+		{
+			desc: "connect with invalid password",
 			err:  errors.ErrAuthentication,
 			session: &session.Client{
 				ID:       clientID,
@@ -95,14 +104,14 @@ func TestAuthPublish(t *testing.T) {
 		payload []byte
 	}{
 		{
-			desc:    "publish without active session",
+			desc:    "publish with inactive client",
 			client:  nil,
 			err:     errMissingClient,
 			topic:   &topic,
 			payload: payload,
 		},
 		{
-			desc:    "publish without topic",
+			desc:    "publish with malformed topic",
 			client:  &sessionClient,
 			err:     errMissingTopicPub,
 			topic:   nil,
@@ -173,7 +182,6 @@ func TestAuthSubscribe(t *testing.T) {
 func TestConnect(t *testing.T) {
 	handler := newHandler()
 	buf.Reset()
-
 	cases := []struct {
 		desc     string
 		client   *session.Client
