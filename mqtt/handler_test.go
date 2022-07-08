@@ -21,16 +21,16 @@ import (
 )
 
 const (
-	thingID   = "thingID"
-	username  = "username"
-	invalidID = "invalidID"
-	password  = "password"
+	thingID        = "thingID"
+	clientID       = "clientID"
+	invalidThingID = "invalidThingID"
+	password       = "password"
 )
 
 var buf bytes.Buffer
 var sessionClient = session.Client{
-	ID:       thingID,
-	Username: username,
+	ID:       clientID,
+	Username: thingID,
 	Password: []byte(password),
 }
 
@@ -51,8 +51,8 @@ func TestAuthConnect(t *testing.T) {
 			desc: "connect with valid id",
 			err:  errors.ErrAuthentication,
 			session: &session.Client{
-				ID:       thingID,
-				Username: username,
+				ID:       clientID,
+				Username: thingID,
 				Password: []byte(""),
 			},
 		},
@@ -60,8 +60,8 @@ func TestAuthConnect(t *testing.T) {
 			desc: "connect with valid password and invalid username",
 			err:  errors.ErrAuthentication,
 			session: &session.Client{
-				ID:       thingID,
-				Username: invalidID,
+				ID:       clientID,
+				Username: invalidThingID,
 				Password: []byte(password),
 			},
 		},
@@ -69,8 +69,8 @@ func TestAuthConnect(t *testing.T) {
 			desc: "connect with valid username and password",
 			err:  nil,
 			session: &session.Client{
-				ID:       thingID,
-				Username: username,
+				ID:       clientID,
+				Username: thingID,
 				Password: []byte(password),
 			},
 		},
@@ -187,7 +187,7 @@ func TestConnect(t *testing.T) {
 		{
 			desc:     "connect with valid session",
 			client:   &sessionClient,
-			expected: "Connect - client with ID: " + thingID,
+			expected: "Connect - client with ID: " + clientID,
 		},
 	}
 
@@ -220,7 +220,7 @@ func TestPublish(t *testing.T) {
 			client:   &sessionClient,
 			topic:    "topic",
 			payload:  []byte("payload"),
-			expected: "Publish - client ID thingID to the topic: topic",
+			expected: "Publish - client ID " + clientID + " to the topic: " + "topic",
 		},
 	}
 
@@ -255,7 +255,7 @@ func TestSubscribe(t *testing.T) {
 			desc:     "subscribe with valid session and topics",
 			client:   &sessionClient,
 			topic:    topics,
-			expected: "Subscribe - client ID: " + thingID + ", to topics: ",
+			expected: "Subscribe - client ID: " + clientID + ", to topics: ",
 		},
 	}
 
@@ -290,7 +290,7 @@ func TestUnsubscribe(t *testing.T) {
 			desc:     "unsubscribe with valid session and topics",
 			client:   &sessionClient,
 			topic:    topics,
-			expected: "Unsubscribe - client ID: " + thingID + ", form topics: ",
+			expected: "Unsubscribe - client ID: " + clientID + ", form topics: ",
 		},
 	}
 
@@ -325,7 +325,7 @@ func TestDisconnect(t *testing.T) {
 			desc:     "disconect with valid session",
 			client:   &sessionClient,
 			topic:    topics,
-			expected: "Disconnect - Client with ID: " + thingID + " and username " + username + " disconnected",
+			expected: "Disconnect - Client with ID: " + clientID + " and username " + thingID + " disconnected",
 		},
 	}
 
@@ -341,7 +341,7 @@ func newHandler() session.Handler {
 		log.Fatalf("failed to create logger: %s", err)
 	}
 
-	authClient := mocks.NewClient(map[string]string{password: username})
+	authClient := mocks.NewClient(map[string]string{password: thingID})
 
 	var redisClient *redis.Client
 
