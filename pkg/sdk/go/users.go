@@ -190,8 +190,8 @@ func (sdk mfSDK) UpdatePassword(oldPass, newPass, token string) error {
 	return nil
 }
 
-func (sdk mfSDK) ActivateUser(id, token string) error {
-	url := fmt.Sprintf("%s/%s/%s/activate", sdk.usersURL, usersEndpoint, id)
+func (sdk mfSDK) EnableUser(id, token string) error {
+	url := fmt.Sprintf("%s/%s/%s/enable", sdk.usersURL, usersEndpoint, id)
 
 	req, err := http.NewRequest(http.MethodPost, url, nil)
 	if err != nil {
@@ -210,8 +210,8 @@ func (sdk mfSDK) ActivateUser(id, token string) error {
 	return nil
 }
 
-func (sdk mfSDK) DeactivateUser(id, token string) error {
-	url := fmt.Sprintf("%s/%s/%s/deactivate", sdk.usersURL, usersEndpoint, id)
+func (sdk mfSDK) DisableUser(id, token string) error {
+	url := fmt.Sprintf("%s/%s/%s/disable", sdk.usersURL, usersEndpoint, id)
 
 	req, err := http.NewRequest(http.MethodPost, url, nil)
 	if err != nil {

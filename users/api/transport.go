@@ -111,15 +111,15 @@ func MakeHandler(svc users.Service, tracer opentracing.Tracer, logger logger.Log
 		opts...,
 	))
 
-	mux.Post("/users/:id/activate", kithttp.NewServer(
-		kitot.TraceServer(tracer, "activate_user")(activateUserEndpoint(svc)),
+	mux.Post("/users/:id/enable", kithttp.NewServer(
+		kitot.TraceServer(tracer, "enable_user")(enableUserEndpoint(svc)),
 		decodeChangeUserStatus,
 		encodeResponse,
 		opts...,
 	))
 
-	mux.Post("/users/:id/deactivate", kithttp.NewServer(
-		kitot.TraceServer(tracer, "deactivate_user")(deactivateUserEndpoint(svc)),
+	mux.Post("/users/:id/disable", kithttp.NewServer(
+		kitot.TraceServer(tracer, "disable_user")(disableUserEndpoint(svc)),
 		decodeChangeUserStatus,
 		encodeResponse,
 		opts...,
@@ -167,7 +167,7 @@ func decodeListUsers(_ context.Context, r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	s, err := apiutil.ReadStringQuery(r, statusKey, users.ActiveStatusKey)
+	s, err := apiutil.ReadStringQuery(r, statusKey, users.EnabledStatusKey)
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +278,7 @@ func decodeListMembersRequest(_ context.Context, r *http.Request) (interface{}, 
 	if err != nil {
 		return nil, err
 	}
-	s, err := apiutil.ReadStringQuery(r, statusKey, users.ActiveStatusKey)
+	s, err := apiutil.ReadStringQuery(r, statusKey, users.EnabledStatusKey)
 	if err != nil {
 		return nil, err
 	}

@@ -397,34 +397,34 @@ func TestSendPasswordReset(t *testing.T) {
 	}
 }
 
-func TestDeactivateUser(t *testing.T) {
-	activeUser1 := users.User{Email: "user1@example.com", Password: "password"}
-	activeUser2 := users.User{Email: "user2@example.com", Password: "password", Status: "active"}
-	inactiveUser1 := users.User{Email: "user3@example.com", Password: "password", Status: "inactive"}
+func TestDisableUser(t *testing.T) {
+	enabledUser1 := users.User{Email: "user1@example.com", Password: "password"}
+	enabledUser2 := users.User{Email: "user2@example.com", Password: "password", Status: "enabled"}
+	disabledUser1 := users.User{Email: "user3@example.com", Password: "password", Status: "disabled"}
 
 	svc := newService()
 
 	id, err := svc.Register(context.Background(), user.Email, user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	user.ID = id
-	user.Status = "active"
+	user.Status = "enabled"
 	token, err := svc.Login(context.Background(), user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
-	id, err = svc.Register(context.Background(), token, activeUser1)
-	require.Nil(t, err, fmt.Sprintf("register activeUser1 error: %s", err))
-	activeUser1.ID = id
-	activeUser1.Status = "active"
+	id, err = svc.Register(context.Background(), token, enabledUser1)
+	require.Nil(t, err, fmt.Sprintf("register enabledUser1 error: %s", err))
+	enabledUser1.ID = id
+	enabledUser1.Status = "enabled"
 
-	id, err = svc.Register(context.Background(), token, activeUser2)
-	require.Nil(t, err, fmt.Sprintf("register activeUser2 error: %s", err))
-	activeUser2.ID = id
-	activeUser2.Status = "inactive"
+	id, err = svc.Register(context.Background(), token, enabledUser2)
+	require.Nil(t, err, fmt.Sprintf("register enabledUser2 error: %s", err))
+	enabledUser2.ID = id
+	enabledUser2.Status = "disabled"
 
-	id, err = svc.Register(context.Background(), token, inactiveUser1)
-	require.Nil(t, err, fmt.Sprintf("register inactiveUser1 error: %s", err))
-	inactiveUser1.ID = id
-	inactiveUser1.Status = "inactive"
+	id, err = svc.Register(context.Background(), token, disabledUser1)
+	require.Nil(t, err, fmt.Sprintf("register disabledUser1 error: %s", err))
+	disabledUser1.ID = id
+	disabledUser1.Status = "disabled"
 
 	cases := []struct {
 		desc  string
@@ -433,25 +433,25 @@ func TestDeactivateUser(t *testing.T) {
 		err   error
 	}{
 		{
-			desc:  "deactivate user with wrong credentials",
-			id:    activeUser2.ID,
+			desc:  "disable user with wrong credentials",
+			id:    enabledUser2.ID,
 			token: "",
 			err:   errors.ErrAuthentication,
 		},
 		{
-			desc:  "deactivate existing user",
-			id:    activeUser2.ID,
+			desc:  "disable existing user",
+			id:    enabledUser2.ID,
 			token: token,
 			err:   nil,
 		},
 		{
-			desc:  "deactivate deactivated user",
-			id:    activeUser2.ID,
+			desc:  "disable disabled user",
+			id:    enabledUser2.ID,
 			token: token,
 			err:   nil,
 		},
 		{
-			desc:  "deactivate non-existing user",
+			desc:  "disable non-existing user",
 			id:    "",
 			token: token,
 			err:   errors.ErrNotFound,
@@ -459,32 +459,32 @@ func TestDeactivateUser(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		err := svc.DeactivateUser(context.Background(), tc.token, tc.id)
+		err := svc.DisableUser(context.Background(), tc.token, tc.id)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 
-	_, err = svc.Login(context.Background(), activeUser2)
-	assert.True(t, errors.Contains(err, errors.ErrNotFound), fmt.Sprintf("Login inactive user: expected %s got %s\n", errors.ErrNotFound, err))
+	_, err = svc.Login(context.Background(), enabledUser2)
+	assert.True(t, errors.Contains(err, errors.ErrNotFound), fmt.Sprintf("Login disabled user: expected %s got %s\n", errors.ErrNotFound, err))
 
 	cases2 := map[string]struct {
 		status   string
 		size     uint64
 		response []users.User
 	}{
-		"list active users": {
-			status:   "active",
+		"list enabled users": {
+			status:   "enabled",
 			size:     2,
-			response: []users.User{activeUser1, user},
+			response: []users.User{enabledUser1, user},
 		},
-		"list inactive users": {
-			status:   "inactive",
+		"list disabled users": {
+			status:   "disabled",
 			size:     2,
-			response: []users.User{activeUser2, inactiveUser1},
+			response: []users.User{enabledUser2, disabledUser1},
 		},
-		"list active and inactive users": {
+		"list enabled and disabled users": {
 			status:   "all",
 			size:     4,
-			response: []users.User{activeUser1, activeUser2, inactiveUser1, user},
+			response: []users.User{enabledUser1, enabledUser2, disabledUser1, user},
 		},
 	}
 

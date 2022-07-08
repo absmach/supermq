@@ -110,7 +110,7 @@ func (urm *userRepositoryMock) RetrieveAll(ctx context.Context, status string, o
 		return up, nil
 	}
 
-	if status == users.ActiveStatusKey || status == users.InactiveStatusKey {
+	if status == users.EnabledStatusKey || status == users.DisabledStatusKey {
 		for _, u := range sortUsers(urm.users) {
 			if i >= offset && i < (limit+offset) {
 				if status == u.Status {

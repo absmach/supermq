@@ -87,7 +87,7 @@ func (ur userRepository) Update(ctx context.Context, user users.User) error {
 }
 
 func (ur userRepository) UpdateUser(ctx context.Context, user users.User) error {
-	q := `UPDATE users SET metadata = :metadata WHERE email = :email AND status = 'active'`
+	q := `UPDATE users SET metadata = :metadata WHERE email = :email AND status = 'enabled'`
 
 	dbu, err := toDBUser(user)
 	if err != nil {
@@ -102,7 +102,7 @@ func (ur userRepository) UpdateUser(ctx context.Context, user users.User) error 
 }
 
 func (ur userRepository) RetrieveByEmail(ctx context.Context, email string) (users.User, error) {
-	q := `SELECT id, password, metadata FROM users WHERE email = $1 AND status = 'active'`
+	q := `SELECT id, password, metadata FROM users WHERE email = $1 AND status = 'enabled'`
 
 	dbu := dbUser{
 		Email: email,
@@ -220,7 +220,7 @@ func (ur userRepository) RetrieveAll(ctx context.Context, status string, offset,
 }
 
 func (ur userRepository) UpdatePassword(ctx context.Context, email, password string) error {
-	q := `UPDATE users SET password = :password WHERE status = 'active' AND email = :email`
+	q := `UPDATE users SET password = :password WHERE status = 'enabled' AND email = :email`
 
 	db := dbUser{
 		Email:    email,

@@ -16,8 +16,8 @@ const (
 	memberRelationKey = "member"
 	authoritiesObjKey = "authorities"
 	usersObjKey       = "users"
-	ActiveStatusKey   = "active"
-	InactiveStatusKey = "inactive"
+	EnabledStatusKey  = "enabled"
+	DisabledStatusKey = "disabled"
 	AllStatusKey      = "all"
 )
 
@@ -35,11 +35,11 @@ var (
 	// ErrPasswordFormat indicates weak password.
 	ErrPasswordFormat = errors.New("password does not meet the requirements")
 
-	// ErrAlreadyActivatedUser indicates the user is already activated.
-	ErrAlreadyActivatedUser = errors.New("the user is already activated")
+	// ErrAlreadyEnabledUser indicates the user is already enabled.
+	ErrAlreadyEnabledUser = errors.New("the user is already enabled")
 
-	// ErrAlreadyDeactivatedUser indicates the user is already deactivated.
-	ErrAlreadyDeactivatedUser = errors.New("the user is already deactivated")
+	// ErrAlreadyDisabledUser indicates the user is already disabled.
+	ErrAlreadyDisabledUser = errors.New("the user is already disabled")
 )
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -84,11 +84,11 @@ type Service interface {
 	// ListMembers retrieves everything that is assigned to a group identified by groupID.
 	ListMembers(ctx context.Context, token, groupID string, pm PageMetadata) (UserPage, error)
 
-	// ActivateUser logically activates the user identified with the provided ID
-	ActivateUser(ctx context.Context, token, id string) error
+	// EnableUser logically enableds the user identified with the provided ID
+	EnableUser(ctx context.Context, token, id string) error
 
-	// DeactivateUser logically deactivates the user identified with the provided ID
-	DeactivateUser(ctx context.Context, token, id string) error
+	// DisableUser logically disables the user identified with the provided ID
+	DisableUser(ctx context.Context, token, id string) error
 }
 
 // PageMetadata contains page metadata that helps navigation.
@@ -165,7 +165,7 @@ func (svc usersService) Register(ctx context.Context, token string, user User) (
 	user.Password = hash
 
 	if user.Status == "" {
-		user.Status = ActiveStatusKey
+		user.Status = EnabledStatusKey
 	}
 
 	uid, err = svc.users.Save(ctx, user)
@@ -354,7 +354,7 @@ func (svc usersService) ListMembers(ctx context.Context, token, groupID string, 
 	return svc.users.RetrieveAll(ctx, pm.Status, pm.Offset, pm.Limit, userIDs, pm.Email, pm.Metadata)
 }
 
-func (svc usersService) ActivateUser(ctx context.Context, token, id string) error {
+func (svc usersService) EnableUser(ctx context.Context, token, id string) error {
 	_, err := svc.identify(ctx, token)
 	if err != nil {
 		return err
@@ -364,14 +364,14 @@ func (svc usersService) ActivateUser(ctx context.Context, token, id string) erro
 	if err != nil {
 		return errors.Wrap(errors.ErrAuthentication, err)
 	}
-	if dbUser.Status == ActiveStatusKey {
-		return ErrAlreadyActivatedUser
+	if dbUser.Status == EnabledStatusKey {
+		return ErrAlreadyEnabledUser
 	}
 
-	return svc.users.ChangeStatus(ctx, dbUser, ActiveStatusKey)
+	return svc.users.ChangeStatus(ctx, dbUser, EnabledStatusKey)
 }
 
-func (svc usersService) DeactivateUser(ctx context.Context, token, id string) error {
+func (svc usersService) DisableUser(ctx context.Context, token, id string) error {
 	_, err := svc.identify(ctx, token)
 	if err != nil {
 		return err
@@ -381,11 +381,11 @@ func (svc usersService) DeactivateUser(ctx context.Context, token, id string) er
 	if err != nil {
 		return errors.Wrap(errors.ErrAuthentication, err)
 	}
-	if dbUser.Status == InactiveStatusKey {
-		return ErrAlreadyDeactivatedUser
+	if dbUser.Status == DisabledStatusKey {
+		return ErrAlreadyDisabledUser
 	}
 
-	return svc.users.ChangeStatus(ctx, dbUser, InactiveStatusKey)
+	return svc.users.ChangeStatus(ctx, dbUser, DisabledStatusKey)
 }
 
 // Auth helpers
