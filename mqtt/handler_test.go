@@ -2,16 +2,20 @@ package mqtt
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"testing"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/mqtt/mocks"
+	mqttredis "github.com/mainflux/mainflux/mqtt/redis"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mproxy/pkg/session"
+	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,9 +28,15 @@ const (
 )
 
 var buf bytes.Buffer
+var sessionClient = session.Client{
+	ID:       thingID,
+	Username: username,
+	Password: []byte(password),
+}
 
 func TestAuthConnect(t *testing.T) {
 	handler := newHandler()
+
 	cases := []struct {
 		desc    string
 		err     error
@@ -37,24 +47,24 @@ func TestAuthConnect(t *testing.T) {
 			err:     errInvalidConnect,
 			session: nil,
 		},
-		//{
-		//	desc: "connect with valid id",
-		//	err:  errors.ErrAuthentication,
-		//	session: &session.Client{
-		//		ID:       thingID,
-		//		Username: username,
-		//		Password: []byte(""),
-		//	},
-		//},
-		//{
-		//	desc: "connect with valid password and invalid username",
-		//	err:  errors.ErrAuthentication,
-		//	session: &session.Client{
-		//		ID:       thingID,
-		//		Username: invalidID,
-		//		Password: []byte(password),
-		//	},
-		//},
+		{
+			desc: "connect with valid id",
+			err:  errors.ErrAuthentication,
+			session: &session.Client{
+				ID:       thingID,
+				Username: username,
+				Password: []byte(""),
+			},
+		},
+		{
+			desc: "connect with valid password and invalid username",
+			err:  errors.ErrAuthentication,
+			session: &session.Client{
+				ID:       thingID,
+				Username: invalidID,
+				Password: []byte(password),
+			},
+		},
 		{
 			desc: "connect with valid username and password",
 			err:  nil,
@@ -76,12 +86,6 @@ func TestAuthPublish(t *testing.T) {
 	handler := newHandler()
 	var topic string
 	var payload = []byte("[{'n':'test-name', 'v': 1.2}]")
-
-	sessionClient := session.Client{
-		ID:       thingID,
-		Username: username,
-		Password: []byte(password),
-	}
 
 	cases := []struct {
 		desc    string
@@ -122,17 +126,11 @@ func TestAuthPublish(t *testing.T) {
 func TestAuthSubscribe(t *testing.T) {
 	handler := newHandler()
 	var idProvider = uuid.NewMock()
+	var invalidTopics = []string{"topic"}
 
 	chID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	var topics = []string{"channels/" + chID + "/messages/2/ct/3"}
-	var invalidTopics = []string{"topic"}
-
-	sessionClient := session.Client{
-		ID:       thingID,
-		Username: username,
-		Password: []byte(password),
-	}
 
 	cases := []struct {
 		desc   string
@@ -172,14 +170,36 @@ func TestAuthSubscribe(t *testing.T) {
 	}
 }
 
+func TestConnect(t *testing.T) {
+	handler := newHandler()
+	buf.Reset()
+
+	cases := []struct {
+		desc     string
+		client   *session.Client
+		expected string
+	}{
+		{
+			desc:     "connect without active session",
+			client:   nil,
+			expected: "Nil client connect",
+		},
+		{
+			desc:     "connect with valid session",
+			client:   &sessionClient,
+			expected: "Connect - client with ID: " + thingID,
+		},
+	}
+
+	for _, tc := range cases {
+		handler.Connect(tc.client)
+		assert.Contains(t, buf.String(), tc.expected)
+	}
+}
+
 func TestPublish(t *testing.T) {
 	handler := newHandler()
 	buf.Reset()
-	sessionClient := session.Client{
-		ID:       thingID,
-		Username: username,
-		Password: []byte(password),
-	}
 
 	cases := []struct {
 		desc     string
@@ -203,8 +223,114 @@ func TestPublish(t *testing.T) {
 			expected: "Publish - client ID thingID to the topic: topic",
 		},
 	}
+
 	for _, tc := range cases {
 		handler.Publish(tc.client, &tc.topic, &tc.payload)
+		assert.Contains(t, buf.String(), tc.expected)
+	}
+}
+
+func TestSubscribe(t *testing.T) {
+	handler := newHandler()
+	var idProvider = uuid.NewMock()
+	buf.Reset()
+
+	chID, err := idProvider.ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	var topics = []string{"channels/" + chID + "/messages/2/ct/3"}
+
+	cases := []struct {
+		desc     string
+		client   *session.Client
+		topic    []string
+		expected string
+	}{
+		{
+			desc:     "subscribe without active session",
+			client:   nil,
+			topic:    topics,
+			expected: "Nil client subscribe",
+		},
+		{
+			desc:     "subscribe with valid session and topics",
+			client:   &sessionClient,
+			topic:    topics,
+			expected: "Subscribe - client ID: " + thingID + ", to topics: ",
+		},
+	}
+
+	for _, tc := range cases {
+		handler.Subscribe(tc.client, &tc.topic)
+		assert.Contains(t, buf.String(), tc.expected)
+	}
+}
+
+func TestUnsubscribe(t *testing.T) {
+	handler := newHandler()
+	var idProvider = uuid.NewMock()
+	buf.Reset()
+
+	chID, err := idProvider.ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	var topics = []string{"channels/" + chID + "/messages/2/ct/3"}
+
+	cases := []struct {
+		desc     string
+		client   *session.Client
+		topic    []string
+		expected string
+	}{
+		{
+			desc:     "unsubscribe without active session",
+			client:   nil,
+			topic:    topics,
+			expected: "Nil client unsubscribe",
+		},
+		{
+			desc:     "unsubscribe with valid session and topics",
+			client:   &sessionClient,
+			topic:    topics,
+			expected: "Unsubscribe - client ID: " + thingID + ", form topics: ",
+		},
+	}
+
+	for _, tc := range cases {
+		handler.Unsubscribe(tc.client, &tc.topic)
+		assert.Contains(t, buf.String(), tc.expected)
+	}
+}
+
+func TestDisconnect(t *testing.T) {
+	handler := newHandler()
+	var idProvider = uuid.NewMock()
+	buf.Reset()
+
+	chID, err := idProvider.ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	var topics = []string{"channels/" + chID + "/messages/2/ct/3"}
+
+	cases := []struct {
+		desc     string
+		client   *session.Client
+		topic    []string
+		expected string
+	}{
+		{
+			desc:     "disconect without active session",
+			client:   nil,
+			topic:    topics,
+			expected: "Nil client disconnect",
+		},
+		{
+			desc:     "disconect with valid session",
+			client:   &sessionClient,
+			topic:    topics,
+			expected: "Disconnect - Client with ID: " + thingID + " and username " + username + " disconnected",
+		},
+	}
+
+	for _, tc := range cases {
+		handler.Disconnect(tc.client)
 		assert.Contains(t, buf.String(), tc.expected)
 	}
 }
@@ -216,7 +342,32 @@ func newHandler() session.Handler {
 	}
 
 	authClient := mocks.NewClient(map[string]string{password: username})
-	eventStore := mocks.NewEventStore()
+
+	var redisClient *redis.Client
+
+	pool, err := dockertest.NewPool("")
+	if err != nil {
+		log.Fatalf("Could not connect to docker: %s", err)
+	}
+
+	container, err := pool.Run("redis", "5.0-alpine", nil)
+	if err != nil {
+		log.Fatalf("Could not start container: %s", err)
+	}
+
+	if err := pool.Retry(func() error {
+		redisClient = redis.NewClient(&redis.Options{
+			Addr:     fmt.Sprintf("localhost:%s", container.GetPort("6379/tcp")),
+			Password: "",
+			DB:       0,
+		})
+
+		return redisClient.Ping(context.Background()).Err()
+	}); err != nil {
+		log.Fatalf("Could not connect to docker: %s", err)
+	}
+
+	eventStore := mqttredis.NewEventStore(redisClient, "1")
 
 	return NewHandler([]messaging.Publisher{mocks.NewPublisher()}, eventStore, logger, authClient)
 }

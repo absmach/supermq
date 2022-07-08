@@ -27,7 +27,7 @@ var (
 	errMalformedTopic    = errors.New("malformed topic")
 	errMalformedData     = errors.New("malformed request data")
 	errMalformedSubtopic = errors.New("malformed subtopic")
-	errNilClient         = errors.New("using nil client")
+	errInactiveSession   = errors.New("using nil client")
 	errInvalidConnect    = errors.New("CONNECT request with invalid username or client ID")
 	errNilTopicPub       = errors.New("PUBLISH to nil topic")
 	errNilTopicSub       = errors.New("SUB to nil topic")
@@ -79,7 +79,7 @@ func (h *handler) AuthConnect(c *session.Client) error {
 // prior forwarding to the MQTT broker
 func (h *handler) AuthPublish(c *session.Client, topic *string, payload *[]byte) error {
 	if c == nil {
-		return errNilClient
+		return errInactiveSession
 	}
 	if topic == nil {
 		return errNilTopicPub
@@ -92,7 +92,7 @@ func (h *handler) AuthPublish(c *session.Client, topic *string, payload *[]byte)
 // prior forwarding to the MQTT broker
 func (h *handler) AuthSubscribe(c *session.Client, topics *[]string) error {
 	if c == nil {
-		return errNilClient
+		return errInactiveSession
 	}
 	if topics == nil || *topics == nil {
 		return errNilTopicSub
