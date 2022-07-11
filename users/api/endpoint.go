@@ -207,8 +207,7 @@ func enableUserEndpoint(svc users.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
-		err := svc.EnableUser(ctx, req.token, req.id)
-		if err != nil {
+		if err := svc.EnableUser(ctx, req.token, req.id); err != nil {
 			return nil, err
 		}
 		return deleteRes{}, nil
@@ -221,8 +220,7 @@ func disableUserEndpoint(svc users.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
-		err := svc.DisableUser(ctx, req.token, req.id)
-		if err != nil {
+		if err := svc.DisableUser(ctx, req.token, req.id); err != nil {
 			return nil, err
 		}
 		return deleteRes{}, nil

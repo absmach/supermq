@@ -168,7 +168,7 @@ func TestViewUser(t *testing.T) {
 			user:   users.User{},
 			token:  token,
 			userID: "",
-			err:    errors.ErrAuthentication,
+			err:    errors.ErrNotFound,
 		},
 	}
 

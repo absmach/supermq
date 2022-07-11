@@ -203,14 +203,13 @@ func (svc usersService) Login(ctx context.Context, user User) (string, error) {
 }
 
 func (svc usersService) ViewUser(ctx context.Context, token, id string) (User, error) {
-	_, err := svc.identify(ctx, token)
-	if err != nil {
+	if _, err := svc.identify(ctx, token); err != nil {
 		return User{}, err
 	}
 
 	dbUser, err := svc.users.RetrieveByID(ctx, id)
 	if err != nil {
-		return User{}, errors.Wrap(errors.ErrAuthentication, err)
+		return User{}, errors.Wrap(errors.ErrNotFound, err)
 	}
 
 	return User{
@@ -355,14 +354,13 @@ func (svc usersService) ListMembers(ctx context.Context, token, groupID string, 
 }
 
 func (svc usersService) EnableUser(ctx context.Context, token, id string) error {
-	_, err := svc.identify(ctx, token)
-	if err != nil {
+	if _, err := svc.identify(ctx, token); err != nil {
 		return err
 	}
 
 	dbUser, err := svc.users.RetrieveByID(ctx, id)
 	if err != nil {
-		return errors.Wrap(errors.ErrAuthentication, err)
+		return errors.Wrap(errors.ErrNotFound, err)
 	}
 	if dbUser.Status == EnabledStatusKey {
 		return ErrAlreadyEnabledUser
@@ -372,14 +370,13 @@ func (svc usersService) EnableUser(ctx context.Context, token, id string) error 
 }
 
 func (svc usersService) DisableUser(ctx context.Context, token, id string) error {
-	_, err := svc.identify(ctx, token)
-	if err != nil {
+	if _, err := svc.identify(ctx, token); err != nil {
 		return err
 	}
 
 	dbUser, err := svc.users.RetrieveByID(ctx, id)
 	if err != nil {
-		return errors.Wrap(errors.ErrAuthentication, err)
+		return errors.Wrap(errors.ErrNotFound, err)
 	}
 	if dbUser.Status == DisabledStatusKey {
 		return ErrAlreadyDisabledUser
