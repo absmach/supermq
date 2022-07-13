@@ -21,10 +21,19 @@ import (
 )
 
 const (
-	thingID        = "thingID"
-	clientID       = "clientID"
-	invalidThingID = "invalidThingID"
-	password       = "password"
+	thingID              = "thingID"
+	clientID             = "clientID"
+	invalidThingID       = "invalidThingID"
+	password             = "password"
+	subscribeMsg         = "subscribed with client_id: %s to topics: %s"
+	unsubscribeMsg       = "unsubscribe client_id: %s from topics: %s"
+	failedSubscribeMsg   = "failed to subscribe: %s"
+	failedUnsubscribeMsg = "failed to unsubscribe: %s"
+	connectMsg           = "connected with client_id: %s"
+	disconnectMsg        = "disconnected client_id: %s and username: %s"
+	failedDisconnectMsg  = "failed to disconnect: %s"
+	publishMsg           = "published with client_id: %s to the topic: %s"
+	failedConnectMsg     = "failed to connect: %s"
 )
 
 var buf bytes.Buffer
@@ -44,7 +53,7 @@ func TestAuthConnect(t *testing.T) {
 	}{
 		{
 			desc:    "connect without active session",
-			err:     errMissingClient,
+			err:     errClientNotInitialized,
 			session: nil,
 		},
 		{
@@ -93,8 +102,13 @@ func TestAuthConnect(t *testing.T) {
 
 func TestAuthPublish(t *testing.T) {
 	handler := newHandler()
-	var topic string
+	var invalidTopic = "invalidTopic"
 	var payload = []byte("[{'n':'test-name', 'v': 1.2}]")
+	var idProvider = uuid.NewMock()
+
+	chID, err := idProvider.ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	var topic = "channels/" + chID + "/messages"
 
 	cases := []struct {
 		desc    string
@@ -106,7 +120,7 @@ func TestAuthPublish(t *testing.T) {
 		{
 			desc:    "publish with inactive client",
 			client:  nil,
-			err:     errMissingClient,
+			err:     errClientNotInitialized,
 			topic:   &topic,
 			payload: payload,
 		},
@@ -121,7 +135,7 @@ func TestAuthPublish(t *testing.T) {
 			desc:    "publish with malformed topic",
 			client:  &sessionClient,
 			err:     errMalformedTopic,
-			topic:   &topic,
+			topic:   &invalidTopic,
 			payload: payload,
 		},
 	}
@@ -139,7 +153,7 @@ func TestAuthSubscribe(t *testing.T) {
 
 	chID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	var topics = []string{"channels/" + chID + "/messages/2/ct/3"}
+	var topics = []string{"channels/" + chID + "/messages"}
 
 	cases := []struct {
 		desc   string
@@ -150,7 +164,7 @@ func TestAuthSubscribe(t *testing.T) {
 		{
 			desc:   "subscribe without active session",
 			client: nil,
-			err:    errMissingClient,
+			err:    errClientNotInitialized,
 			topic:  &topics,
 		},
 		{
@@ -190,12 +204,12 @@ func TestConnect(t *testing.T) {
 		{
 			desc:     "connect without active session",
 			client:   nil,
-			expected: "failed to connect: " + errMissingClient.Error(),
+			expected: fmt.Sprintf(failedConnectMsg, errClientNotInitialized.Error()),
 		},
 		{
 			desc:     "connect with valid session",
 			client:   &sessionClient,
-			expected: "connected with client_id: " + clientID,
+			expected: fmt.Sprintf(connectMsg, clientID),
 		},
 	}
 
@@ -207,7 +221,13 @@ func TestConnect(t *testing.T) {
 
 func TestPublish(t *testing.T) {
 	handler := newHandler()
+	var idProvider = uuid.NewMock()
+	var invalidTopic = "invalidTopic"
 	buf.Reset()
+
+	chID, err := idProvider.ID()
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	var topic = "channels/" + chID + "/messages"
 
 	cases := []struct {
 		desc     string
@@ -219,16 +239,16 @@ func TestPublish(t *testing.T) {
 		{
 			desc:     "publish without active session",
 			client:   nil,
-			topic:    "topic",
+			topic:    topic,
 			payload:  []byte("payload"),
-			expected: errMissingClient.Error(),
+			expected: errClientNotInitialized.Error(),
 		},
 		{
-			desc:     "publish with invalid channel parts",
+			desc:     "publish with invalid topic",
 			client:   &sessionClient,
-			topic:    "topic",
+			topic:    invalidTopic,
 			payload:  []byte("payload"),
-			expected: "published with client_id " + clientID + " to the topic: " + "topic",
+			expected: fmt.Sprintf(publishMsg, clientID, invalidTopic),
 		},
 	}
 
@@ -245,7 +265,7 @@ func TestSubscribe(t *testing.T) {
 
 	chID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	var topics = []string{"channels/" + chID + "/messages/2/ct/3"}
+	var topics = []string{"channels/" + chID + "/messages"}
 
 	cases := []struct {
 		desc     string
@@ -257,13 +277,13 @@ func TestSubscribe(t *testing.T) {
 			desc:     "subscribe without active session",
 			client:   nil,
 			topic:    topics,
-			expected: "failed to subscribe: " + errMissingClient.Error(),
+			expected: fmt.Sprintf(failedSubscribeMsg, errClientNotInitialized.Error()),
 		},
 		{
 			desc:     "subscribe with valid session and topics",
 			client:   &sessionClient,
 			topic:    topics,
-			expected: "subscribed with client_id: " + clientID + " to topics: ",
+			expected: fmt.Sprintf(subscribeMsg, clientID, topics[0]),
 		},
 	}
 
@@ -280,7 +300,7 @@ func TestUnsubscribe(t *testing.T) {
 
 	chID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	var topics = []string{"channels/" + chID + "/messages/2/ct/3"}
+	var topics = []string{"channels/" + chID + "/messages"}
 
 	cases := []struct {
 		desc     string
@@ -292,13 +312,13 @@ func TestUnsubscribe(t *testing.T) {
 			desc:     "unsubscribe without active session",
 			client:   nil,
 			topic:    topics,
-			expected: "failed to unsubscribe: " + errMissingClient.Error(),
+			expected: fmt.Sprintf(failedUnsubscribeMsg, errClientNotInitialized.Error()),
 		},
 		{
 			desc:     "unsubscribe with valid session and topics",
 			client:   &sessionClient,
 			topic:    topics,
-			expected: "unsubscribe client_id: " + clientID + " from topics: ",
+			expected: fmt.Sprintf(unsubscribeMsg, clientID, topics[0]),
 		},
 	}
 
@@ -315,7 +335,7 @@ func TestDisconnect(t *testing.T) {
 
 	chID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	var topics = []string{"channels/" + chID + "/messages/2/ct/3"}
+	var topics = []string{"channels/" + chID + "/messages"}
 
 	cases := []struct {
 		desc     string
@@ -327,13 +347,13 @@ func TestDisconnect(t *testing.T) {
 			desc:     "disconect without active session",
 			client:   nil,
 			topic:    topics,
-			expected: "failed to disconnect: " + errMissingClient.Error(),
+			expected: fmt.Sprintf(failedDisconnectMsg, errClientNotInitialized.Error()),
 		},
 		{
 			desc:     "disconect with valid session",
 			client:   &sessionClient,
 			topic:    topics,
-			expected: "disconnected client_id: " + clientID + " and username " + thingID,
+			expected: fmt.Sprintf(disconnectMsg, clientID, thingID),
 		},
 	}
 

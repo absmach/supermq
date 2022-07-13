@@ -23,12 +23,12 @@ var _ session.Handler = (*handler)(nil)
 const protocol = "mqtt"
 
 var (
-	channelRegExp        = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]*)?(\?.*)?$`)
-	errMissingClient     = errors.New("client is missing")
-	errMalformedTopic    = errors.New("malformed topic")
-	errMalformedSubtopic = errors.New("malformed subtopic")
-	errMissingTopicPub   = errors.New("failed to publish due to missing topic")
-	errMissingTopicSub   = errors.New("failed to subscribe due to missing topic")
+	channelRegExp           = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]*)?(\?.*)?$`)
+	errClientNotInitialized = errors.New("client is not initialized")
+	errMalformedTopic       = errors.New("malformed topic")
+	errMalformedSubtopic    = errors.New("malformed subtopic")
+	errMissingTopicPub      = errors.New("failed to publish due to missing topic")
+	errMissingTopicSub      = errors.New("failed to subscribe due to missing topic")
 )
 
 // Event implements events.Event interface
@@ -54,7 +54,7 @@ func NewHandler(publishers []messaging.Publisher, es redis.EventStore,
 // prior forwarding to the MQTT broker
 func (h *handler) AuthConnect(c *session.Client) error {
 	if c == nil {
-		return errMissingClient
+		return errClientNotInitialized
 	}
 
 	thid, err := h.auth.Identify(context.Background(), string(c.Password))
@@ -77,7 +77,7 @@ func (h *handler) AuthConnect(c *session.Client) error {
 // prior forwarding to the MQTT broker
 func (h *handler) AuthPublish(c *session.Client, topic *string, payload *[]byte) error {
 	if c == nil {
-		return errMissingClient
+		return errClientNotInitialized
 	}
 	if topic == nil {
 		return errMissingTopicPub
@@ -90,7 +90,7 @@ func (h *handler) AuthPublish(c *session.Client, topic *string, payload *[]byte)
 // prior forwarding to the MQTT broker
 func (h *handler) AuthSubscribe(c *session.Client, topics *[]string) error {
 	if c == nil {
-		return errMissingClient
+		return errClientNotInitialized
 	}
 	if topics == nil || *topics == nil {
 		return errMissingTopicSub
@@ -109,7 +109,7 @@ func (h *handler) AuthSubscribe(c *session.Client, topics *[]string) error {
 // Connect - after client successfully connected
 func (h *handler) Connect(c *session.Client) {
 	if c == nil {
-		h.logger.Error("failed to connect: " + errMissingClient.Error())
+		h.logger.Error("failed to connect: " + errClientNotInitialized.Error())
 		return
 	}
 	h.logger.Info("connected with client_id: " + c.ID)
@@ -118,10 +118,10 @@ func (h *handler) Connect(c *session.Client) {
 // Publish - after client successfully published
 func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 	if c == nil {
-		h.logger.Error(errMissingClient.Error())
+		h.logger.Error(errClientNotInitialized.Error())
 		return
 	}
-	h.logger.Info("published with client_id " + c.ID + " to the topic: " + *topic)
+	h.logger.Info("published with client_id: " + c.ID + " to the topic: " + *topic)
 	// Topics are in the format:
 	// channels/<channel_id>/messages/<subtopic>/.../ct/<content_type>
 
@@ -159,7 +159,7 @@ func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 // Subscribe - after client successfully subscribed
 func (h *handler) Subscribe(c *session.Client, topics *[]string) {
 	if c == nil {
-		h.logger.Error("failed to subscribe: " + errMissingClient.Error())
+		h.logger.Error("failed to subscribe: " + errClientNotInitialized.Error())
 		return
 	}
 	h.logger.Info("subscribed with client_id: " + c.ID + " to topics: " + strings.Join(*topics, ","))
@@ -168,7 +168,7 @@ func (h *handler) Subscribe(c *session.Client, topics *[]string) {
 // Unsubscribe - after client unsubscribed
 func (h *handler) Unsubscribe(c *session.Client, topics *[]string) {
 	if c == nil {
-		h.logger.Error("failed to unsubscribe: " + errMissingClient.Error())
+		h.logger.Error("failed to unsubscribe: " + errClientNotInitialized.Error())
 		return
 	}
 	h.logger.Info("unsubscribe client_id: " + c.ID + " from topics: " + strings.Join(*topics, ","))
@@ -177,10 +177,10 @@ func (h *handler) Unsubscribe(c *session.Client, topics *[]string) {
 // Disconnect - connection with broker or client lost
 func (h *handler) Disconnect(c *session.Client) {
 	if c == nil {
-		h.logger.Error("failed to disconnect: " + errMissingClient.Error())
+		h.logger.Error("failed to disconnect: " + errClientNotInitialized.Error())
 		return
 	}
-	h.logger.Info("disconnected client_id: " + c.ID + " and username " + c.Username)
+	h.logger.Info("disconnected client_id: " + c.ID + " and username: " + c.Username)
 	if err := h.es.Disconnect(c.Username); err != nil {
 		h.logger.Warn("failed to publish disconnect event: " + err.Error())
 	}
