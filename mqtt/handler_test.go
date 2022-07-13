@@ -111,14 +111,14 @@ func TestAuthPublish(t *testing.T) {
 			payload: payload,
 		},
 		{
-			desc:    "publish with malformed topic",
+			desc:    "publish without topic",
 			client:  &sessionClient,
 			err:     errMissingTopicPub,
 			topic:   nil,
 			payload: payload,
 		},
 		{
-			desc:    "publish with active session, valid topic and payload",
+			desc:    "publish with malformed topic",
 			client:  &sessionClient,
 			err:     errMalformedTopic,
 			topic:   &topic,
