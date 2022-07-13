@@ -21,19 +21,10 @@ import (
 )
 
 const (
-	thingID              = "thingID"
-	clientID             = "clientID"
-	invalidThingID       = "invalidThingID"
-	password             = "password"
-	subscribeMsg         = "subscribed with client_id: %s to topics: %s"
-	unsubscribeMsg       = "unsubscribe client_id: %s from topics: %s"
-	failedSubscribeMsg   = "failed to subscribe: %s"
-	failedUnsubscribeMsg = "failed to unsubscribe: %s"
-	connectMsg           = "connected with client_id: %s"
-	disconnectMsg        = "disconnected client_id: %s and username: %s"
-	failedDisconnectMsg  = "failed to disconnect: %s"
-	publishMsg           = "published with client_id: %s to the topic: %s"
-	failedConnectMsg     = "failed to connect: %s"
+	thingID        = "thingID"
+	clientID       = "clientID"
+	invalidThingID = "invalidThingID"
+	password       = "password"
 )
 
 var buf bytes.Buffer
@@ -204,12 +195,12 @@ func TestConnect(t *testing.T) {
 		{
 			desc:     "connect without active session",
 			client:   nil,
-			expected: fmt.Sprintf(failedConnectMsg, errClientNotInitialized.Error()),
+			expected: fmt.Sprint(errors.Wrap(errFailedConnectMsg, errClientNotInitialized).Error()),
 		},
 		{
 			desc:     "connect with valid session",
 			client:   &sessionClient,
-			expected: fmt.Sprintf(connectMsg, clientID),
+			expected: fmt.Sprintf(infoConnectMsg, clientID),
 		},
 	}
 
@@ -248,7 +239,7 @@ func TestPublish(t *testing.T) {
 			client:   &sessionClient,
 			topic:    invalidTopic,
 			payload:  []byte("payload"),
-			expected: fmt.Sprintf(publishMsg, clientID, invalidTopic),
+			expected: fmt.Sprintf(infoPublishMsg, clientID, invalidTopic),
 		},
 	}
 
@@ -277,13 +268,13 @@ func TestSubscribe(t *testing.T) {
 			desc:     "subscribe without active session",
 			client:   nil,
 			topic:    topics,
-			expected: fmt.Sprintf(failedSubscribeMsg, errClientNotInitialized.Error()),
+			expected: fmt.Sprint(errors.Wrap(errFailedSubscribeMsg, errClientNotInitialized).Error()),
 		},
 		{
 			desc:     "subscribe with valid session and topics",
 			client:   &sessionClient,
 			topic:    topics,
-			expected: fmt.Sprintf(subscribeMsg, clientID, topics[0]),
+			expected: fmt.Sprintf(infoSubscribeMsg, clientID, topics[0]),
 		},
 	}
 
@@ -312,13 +303,13 @@ func TestUnsubscribe(t *testing.T) {
 			desc:     "unsubscribe without active session",
 			client:   nil,
 			topic:    topics,
-			expected: fmt.Sprintf(failedUnsubscribeMsg, errClientNotInitialized.Error()),
+			expected: fmt.Sprint(errors.Wrap(errFailedUnsubscribeMsg, errClientNotInitialized).Error()),
 		},
 		{
 			desc:     "unsubscribe with valid session and topics",
 			client:   &sessionClient,
 			topic:    topics,
-			expected: fmt.Sprintf(unsubscribeMsg, clientID, topics[0]),
+			expected: fmt.Sprintf(infoUnsubscribeMsg, clientID, topics[0]),
 		},
 	}
 
@@ -347,13 +338,13 @@ func TestDisconnect(t *testing.T) {
 			desc:     "disconect without active session",
 			client:   nil,
 			topic:    topics,
-			expected: fmt.Sprintf(failedDisconnectMsg, errClientNotInitialized.Error()),
+			expected: fmt.Sprint(errors.Wrap(errFailedDisconnectMsg, errClientNotInitialized).Error()),
 		},
 		{
 			desc:     "disconect with valid session",
 			client:   &sessionClient,
 			topic:    topics,
-			expected: fmt.Sprintf(disconnectMsg, clientID, thingID),
+			expected: fmt.Sprintf(infoDisconnectMsg, clientID, thingID),
 		},
 	}
 
