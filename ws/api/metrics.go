@@ -1,12 +1,12 @@
 // Copyright (c) Mainflux
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-Licence-Identifier: Apache-2.0
 
 //go:build !test
-// +build !test
 
 package api
 
 import (
+	"context"
 	"time"
 
 	"github.com/go-kit/kit/metrics"
@@ -22,7 +22,7 @@ type metricsMiddleware struct {
 	svc     ws.Service
 }
 
-// MetricsMiddleware instruments adapter by tracking request count and latency.
+// MetricsMiddleware instruments adapter by tracking request count and latency
 func MetricsMiddleware(svc ws.Service, counter metrics.Counter, latency metrics.Histogram) ws.Service {
 	return &metricsMiddleware{
 		counter: counter,
@@ -30,20 +30,29 @@ func MetricsMiddleware(svc ws.Service, counter metrics.Counter, latency metrics.
 		svc:     svc,
 	}
 }
-
-func (mm *metricsMiddleware) Publish(token string, msg messaging.Message) error {
+func (mm *metricsMiddleware) Publish(ctx context.Context, token string, msg messaging.Message) error {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "publish").Add(1)
 		mm.latency.With("method", "publish").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mm.svc.Publish(token, msg)
+	return mm.svc.Publish(ctx, token, msg)
 }
 
-func (mm *metricsMiddleware) Close() error {
-	return nil
+func (mm *metricsMiddleware) Subscribe(ctx context.Context, thingKey, chanID, subtopic string, c ws.Client) error {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "subscribe").Add(1)
+		mm.latency.With("method", "subscribe").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.Subscribe(ctx, thingKey, chanID, subtopic, c)
 }
 
-func (mm *metricsMiddleware) Subscribe(chanID, subtopic string, channel *ws.Channel) error {
-	return mm.svc.Subscribe(chanID, subtopic, channel)
+func (mm *metricsMiddleware) Unsubscribe(ctx context.Context, thingKey, chanID, subtopic string) error {
+	defer func(begin time.Time) {
+		mm.counter.With("method", "subscribe").Add(1)
+		mm.latency.With("method", "subscribe").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mm.svc.Unsubscribe(ctx, thingKey, chanID, subtopic)
 }

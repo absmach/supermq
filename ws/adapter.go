@@ -1,23 +1,25 @@
 // Copyright (c) Mainflux
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-Licence-Identifier: Apache-2.0
 
 // Package ws contains the domain concept definitions needed to support
-// Mainflux ws adapter service functionality.
+// Mainflux ws adapter service functionality
+
 package ws
 
 import (
-	"errors"
-	"sync"
+	"context"
+	"fmt"
 
+	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
-	broker "github.com/nats-io/nats.go"
 )
 
 var (
 	// ErrFailedMessagePublish indicates that message publishing failed.
 	ErrFailedMessagePublish = errors.New("failed to publish message")
 
-	// ErrFailedSubscription indicates that client couldn't subscribe to specified channel.
+	// ErrFailedSubscription indicates that client couldn't subscriber to specified channel
 	ErrFailedSubscription = errors.New("failed to subscribe to a channel")
 
 	// ErrFailedConnection indicates that service couldn't connect to message broker.
@@ -26,82 +28,79 @@ var (
 
 // Service specifies web socket service API.
 type Service interface {
-	messaging.Publisher
+	// Publish Message
+	Publish(ctx context.Context, token string, msg messaging.Message) error
 
-	// Subscribes to channel with specified id.
-	Subscribe(string, string, *Channel) error
-}
+	// Subscribes to a channel with specified id.
+	Subscribe(ctx context.Context, thingKey, chanID, subtopic string, channel Client) error
 
-// Channel is used for receiving and sending messages.
-type Channel struct {
-	Messages chan messaging.Message
-	Closed   chan bool
-	closed   bool
-	mutex    sync.Mutex
-}
-
-// NewChannel instantiates empty channel.
-func NewChannel() *Channel {
-	return &Channel{
-		Messages: make(chan messaging.Message),
-		Closed:   make(chan bool),
-		closed:   false,
-		mutex:    sync.Mutex{},
-	}
-}
-
-// Send method send message over Messages channel.
-func (channel *Channel) Send(msg messaging.Message) {
-	channel.mutex.Lock()
-	defer channel.mutex.Unlock()
-
-	if !channel.closed {
-		channel.Messages <- msg
-	}
-}
-
-// Close channel and stop message transfer.
-func (channel *Channel) Close() {
-	channel.mutex.Lock()
-	defer channel.mutex.Unlock()
-
-	channel.closed = true
-	channel.Closed <- true
-	close(channel.Messages)
-	close(channel.Closed)
+	// Unsubscribe method is used to stop observing resource.
+	Unsubscribe(ctx context.Context, thingKey, chanID, subtopic string) error
 }
 
 var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
-	pubsub Service
+	auth   mainflux.ThingsServiceClient
+	pubsub messaging.PubSub
 }
 
-// New instantiates the WS adapter implementation.
-func New(pubsub Service) Service {
-	return &adapterService{pubsub: pubsub}
-}
-
-func (as *adapterService) Publish(token string, msg messaging.Message) error {
-	if err := as.pubsub.Publish(token, msg); err != nil {
-		switch err {
-		case broker.ErrConnectionClosed, broker.ErrInvalidConnection:
-			return ErrFailedConnection
-		default:
-			return ErrFailedMessagePublish
-		}
+// New instantiates the WS adapter implementation
+func New(auth mainflux.ThingsServiceClient, pubsub messaging.PubSub) Service {
+	return &adapterService{
+		auth:   auth,
+		pubsub: pubsub,
 	}
-	return nil
 }
 
-func (as *adapterService) Close() error {
-	return nil
-}
-
-func (as *adapterService) Subscribe(chanID, subtopic string, channel *Channel) error {
-	if err := as.pubsub.Subscribe(chanID, subtopic, channel); err != nil {
-		return ErrFailedSubscription
+func (svc *adapterService) Publish(ctx context.Context, token string, msg messaging.Message) error {
+	ar := &mainflux.AccessByKeyReq{
+		Token:  token,
+		ChanID: msg.GetChannel(),
 	}
 
-	return nil
+	thid, err := svc.auth.CanAccessByKey(ctx, ar)
+	if err != nil {
+		return errors.Wrap(errors.ErrAuthorization, err)
+	}
+
+	msg.Publisher = thid.GetValue()
+
+	return svc.pubsub.Publish(msg.GetChannel(), msg)
+}
+
+func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subtopic string, c Client) error {
+	ar := &mainflux.AccessByKeyReq{
+		Token:  thingKey,
+		ChanID: chanID,
+	}
+
+	if _, err := svc.auth.CanAccessByKey(ctx, ar); err != nil {
+		return errors.Wrap(errors.ErrAuthorization, err)
+	}
+
+	subject := fmt.Sprintf("%s.%s", "channels", chanID)
+	if subtopic != "" {
+		subject = fmt.Sprintf("%s.%s", subject, subtopic)
+	}
+
+	return svc.pubsub.Subscribe(thingKey, subject, c)
+}
+
+func (svc *adapterService) Unsubscribe(ctx context.Context, thingKey, chanID, subtopic string) error {
+	ar := &mainflux.AccessByKeyReq{
+		Token:  thingKey,
+		ChanID: chanID,
+	}
+
+	if _, err := svc.auth.CanAccessByKey(ctx, ar); err != nil {
+		return errors.Wrap(errors.ErrAuthorization, err)
+	}
+
+	subject := fmt.Sprintf("%s.%s", "channels", chanID)
+	if subtopic != "" {
+		subject = fmt.Sprintf("%s.%s", subject, subtopic)
+	}
+
+	return svc.pubsub.Unsubscribe(thingKey, subject)
 }

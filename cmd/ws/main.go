@@ -1,28 +1,30 @@
 // Copyright (c) Mainflux
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-Licence-Identifier: Apache-2.0
 
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"os/signal"
 	"strconv"
-	"syscall"
 	"time"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/logger"
+	"golang.org/x/sync/errgroup"
+
+	logger "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/pkg/messaging"
+	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	adapter "github.com/mainflux/mainflux/ws"
 	"github.com/mainflux/mainflux/ws/api"
-	"github.com/mainflux/mainflux/ws/nats"
-	broker "github.com/nats-io/nats.go"
 	opentracing "github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	jconfig "github.com/uber/jaeger-client-go/config"
@@ -32,50 +34,46 @@ import (
 )
 
 const (
-	defClientTLS     = "false"
-	defCACerts       = ""
-	defPort          = "8180"
-	defLogLevel      = "error"
-	defNatsURL       = broker.DefaultURL
-	defThingsURL     = "localhost:8181"
-	defJaegerURL     = ""
-	defThingsTimeout = "1" // in seconds
+	defPort              = "8190"
+	defBrokerURL         = "nats://localhost:4222"
+	defLogLevel          = "error"
+	defClientTLS         = "false"
+	defCACerts           = ""
+	defJaegerURL         = ""
+	defThingsAuthURL     = "localhost:8183"
+	defThingsAuthTimeout = "1s"
 
+	envPort          = "MF_WS_ADAPTER_PORT"
+	envBrokerURL     = "MF_BROKER_URL"
+	envLogLevel      = "MF_WS_ADAPTER_LOG_LEVEL"
 	envClientTLS     = "MF_WS_ADAPTER_CLIENT_TLS"
 	envCACerts       = "MF_WS_ADAPTER_CA_CERTS"
-	envPort          = "MF_WS_ADAPTER_PORT"
-	envLogLevel      = "MF_WS_ADAPTER_LOG_LEVEL"
-	envNatsURL       = "MF_NATS_URL"
-	envThingsURL     = "MF_THINGS_URL"
 	envJaegerURL     = "MF_JAEGER_URL"
-	envThingsTimeout = "MF_WS_ADAPTER_THINGS_TIMEOUT"
+	envThingsAuthURL = "MF_THINGS_AUTH_GRPC_URL"
+	envThingsTimeout = "MF_THINGS_AUTH_GRPC_TIMEOUT"
 )
 
 type config struct {
-	clientTLS     bool
-	caCerts       string
-	thingsURL     string
-	natsURL       string
-	logLevel      string
-	port          string
-	jaegerURL     string
-	thingsTimeout time.Duration
+	port              string
+	brokerURL         string
+	logLevel          string
+	clientTLS         bool
+	caCerts           string
+	jaegerURL         string
+	thingsAuthURL     string
+	thingsAuthTimeout time.Duration
 }
 
 func main() {
 	cfg := loadConfig()
 
+	ctx, cancel := context.WithCancel(context.Background())
+	g, ctx := errgroup.WithContext(ctx)
+
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-
-	nc, err := broker.Connect(cfg.natsURL)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to NATS: %s", err))
-		os.Exit(1)
-	}
-	defer nc.Close()
 
 	conn := connectToThings(cfg, logger)
 	defer conn.Close()
@@ -83,26 +81,34 @@ func main() {
 	thingsTracer, thingsCloser := initJaeger("things", cfg.jaegerURL, logger)
 	defer thingsCloser.Close()
 
-	cc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsTimeout)
-	pubsub := nats.New(nc, logger)
-	svc := newService(pubsub, logger)
+	tc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
 
-	errs := make(chan error, 2)
+	nps, err := brokers.NewPubSub(cfg.brokerURL, "", logger)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to connect to message broker: %s", err))
+		os.Exit(1)
+	}
+	defer nps.Close()
 
-	go func() {
-		p := fmt.Sprintf(":%s", cfg.port)
-		logger.Info(fmt.Sprintf("WebSocket adapter service started, exposed port %s", cfg.port))
-		errs <- http.ListenAndServe(p, api.MakeHandler(svc, cc, logger))
-	}()
+	svc := newService(tc, nps, logger)
 
-	go func() {
-		c := make(chan os.Signal, 1) // The channel should be buffered
-		signal.Notify(c, syscall.SIGINT)
-		errs <- fmt.Errorf("%s", <-c)
-	}()
+	g.Go(func() error {
+		// return startWSServer(ctx, cfg, svc, nil, logger)
+		return startWSServer(ctx, cfg, svc, tc, logger)
+	})
 
-	err = <-errs
-	logger.Error(fmt.Sprintf("WebSocket adapter terminated: %s", err))
+	g.Go(func() error {
+		if sig := errors.SignalHandler(ctx); sig != nil {
+			cancel()
+			logger.Info(fmt.Sprintf("WS adapter service shutdown by signal: %s", sig))
+		}
+
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		logger.Error(fmt.Sprintf("WS adapter service terminated: %s", err))
+	}
 }
 
 func loadConfig() config {
@@ -111,20 +117,20 @@ func loadConfig() config {
 		log.Fatalf("Invalid value passed for %s\n", envClientTLS)
 	}
 
-	timeout, err := strconv.ParseInt(mainflux.Env(envThingsTimeout, defThingsTimeout), 10, 64)
+	authTimeout, err := time.ParseDuration(mainflux.Env(envThingsTimeout, defThingsAuthTimeout))
 	if err != nil {
 		log.Fatalf("Invalid %s value: %s", envThingsTimeout, err.Error())
 	}
 
 	return config{
-		clientTLS:     tls,
-		caCerts:       mainflux.Env(envCACerts, defCACerts),
-		thingsURL:     mainflux.Env(envThingsURL, defThingsURL),
-		natsURL:       mainflux.Env(envNatsURL, defNatsURL),
-		logLevel:      mainflux.Env(envLogLevel, defLogLevel),
-		port:          mainflux.Env(envPort, defPort),
-		jaegerURL:     mainflux.Env(envJaegerURL, defJaegerURL),
-		thingsTimeout: time.Duration(timeout) * time.Second,
+		brokerURL:         mainflux.Env(envBrokerURL, defBrokerURL),
+		port:              mainflux.Env(envPort, defPort),
+		logLevel:          mainflux.Env(envLogLevel, defLogLevel),
+		clientTLS:         tls,
+		caCerts:           mainflux.Env(envCACerts, defCACerts),
+		jaegerURL:         mainflux.Env(envJaegerURL, defJaegerURL),
+		thingsAuthURL:     mainflux.Env(envThingsAuthURL, defThingsAuthURL),
+		thingsAuthTimeout: authTimeout,
 	}
 }
 
@@ -144,11 +150,12 @@ func connectToThings(cfg config, logger logger.Logger) *grpc.ClientConn {
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials())) // grpc.WithInsecure was deprecated
 	}
 
-	conn, err := grpc.Dial(cfg.thingsURL, opts...)
+	conn, err := grpc.Dial(cfg.thingsAuthURL, opts...)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to connect to things service: %s", err))
 		os.Exit(1)
 	}
+
 	return conn
 }
 
@@ -176,24 +183,46 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 	return tracer, closer
 }
 
-func newService(pubsub adapter.Service, logger logger.Logger) adapter.Service {
-	svc := adapter.New(pubsub)
+func newService(tc mainflux.ThingsServiceClient, nps messaging.PubSub, logger logger.Logger) adapter.Service {
+	svc := adapter.New(tc, nps)
+
 	svc = api.LoggingMiddleware(svc, logger)
+
 	svc = api.MetricsMiddleware(
 		svc,
 		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 			Namespace: "ws_adapter",
 			Subsystem: "api",
-			Name:      "request_count",
-			Help:      "Number of requests received.",
+			Name:      "reqeust_count",
+			Help:      "Number of requests received",
 		}, []string{"method"}),
 		kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
 			Namespace: "ws_adapter",
 			Subsystem: "api",
-			Name:      "request_latency_microseconds",
-			Help:      "Total duration of requests in microseconds.",
+			Name:      "request_latency_microsecond",
+			Help:      "Total duration of requests in microseconds",
 		}, []string{"method"}),
 	)
 
 	return svc
+}
+
+func startWSServer(ctx context.Context, cfg config, svc adapter.Service, auth mainflux.ThingsServiceClient, l logger.Logger) error {
+	p := fmt.Sprintf(":%s", cfg.port)
+
+	errCh := make(chan error, 2)
+
+	l.Info(fmt.Sprintf("WS adapter service started, exposed port %s", cfg.port))
+
+	go func() {
+		errCh <- http.ListenAndServe(p, api.MakeHandler(svc, auth, l))
+	}()
+
+	select {
+	case <-ctx.Done():
+		l.Info(fmt.Sprintf("WS adapter service shutdown of http at %s", p))
+		return nil
+	case err := <-errCh:
+		return err
+	}
 }
