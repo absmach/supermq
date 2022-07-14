@@ -24,23 +24,27 @@ var _ session.Handler = (*handler)(nil)
 const protocol = "mqtt"
 
 var (
-	channelRegExp              = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]*)?(\?.*)?$`)
-	infoSubscribeMsg           = "subscribed with client_id: %s to topics: %s"
-	infoUnsubscribeMsg         = "unsubscribe client_id: %s from topics: %s"
-	infoConnectMsg             = "connected with client_id: %s"
-	infoDisconnectMsg          = "disconnected client_id: %s and username: %s"
-	infoPublishMsg             = "published with client_id: %s to the topic: %s"
-	errFailedUnsubscribeMsg    = errors.New("failed to unsubscribe:")
-	errFailedDisconnectMsg     = errors.New("failed to disconnect:")
-	errFailedSubscribeMsg      = errors.New("failed to subscribe:")
-	errFailedConnectMsg        = errors.New("failed to connect:")
-	errClientNotInitialized    = errors.New("client is not initialized")
-	errMalformedTopic          = errors.New("malformed topic")
-	errMalformedSubtopic       = errors.New("malformed subtopic")
-	errMissingTopicPub         = errors.New("failed to publish due to missing topic")
-	errMissingTopicSub         = errors.New("failed to subscribe due to missing topic")
-	errFailedPublishConnMsg    = errors.New("failed to publish connect event:")
-	errFailedPublishDisconnMsg = errors.New("failed to publish disconnect event:")
+	channelRegExp                  = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]*)?(\?.*)?$`)
+	infoSubscribeMsg               = "subscribed with client_id: %s to topics: %s"
+	infoUnsubscribeMsg             = "unsubscribe client_id: %s from topics: %s"
+	infoConnectMsg                 = "connected with client_id: %s"
+	infoDisconnectMsg              = "disconnected client_id: %s and username: %s"
+	infoPublishMsg                 = "published with client_id: %s to the topic: %s"
+	infoMalformedTopicMsg          = "Malformed topic: "
+	errFailedUnsubscribeMsg        = errors.New("failed to unsubscribe:")
+	errFailedDisconnectMsg         = errors.New("failed to disconnect:")
+	errFailedSubscribeMsg          = errors.New("failed to subscribe:")
+	errFailedConnectMsg            = errors.New("failed to connect:")
+	errClientNotInitialized        = errors.New("client is not initialized")
+	errMalformedTopic              = errors.New("malformed topic")
+	errMalformedSubtopic           = errors.New("malformed subtopic")
+	errMissingTopicPub             = errors.New("failed to publish due to missing topic")
+	errMissingTopicSub             = errors.New("failed to subscribe due to missing topic")
+	errFailedPublishConnMsg        = errors.New("failed to publish connect event:")
+	errFailedPublishDisconnMsg     = errors.New("failed to publish disconnect event:")
+	errFailedPublishMsg            = errors.New("failed to publish:")
+	errFailedParseSubtopicMsg      = errors.New("failed to parse subtopic:")
+	errFailedPublishToMsgBrokerMsg = errors.New("failed to publish to mainflux message broker")
 )
 
 // Event implements events.Event interface
@@ -139,7 +143,7 @@ func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 
 	channelParts := channelRegExp.FindStringSubmatch(*topic)
 	if len(channelParts) < 2 {
-		h.logger.Error("failed to publish: %s" + errMalformedTopic.Error())
+		h.logger.Error(errors.Wrap(errFailedPublishMsg, errMalformedTopic).Error())
 		return
 	}
 
@@ -148,7 +152,7 @@ func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 
 	subtopic, err := parseSubtopic(subtopic)
 	if err != nil {
-		h.logger.Error("failed to parse subtopic: " + err.Error())
+		h.logger.Error(errors.Wrap(errFailedParseSubtopicMsg, errFailedParseSubtopicMsg).Error())
 		return
 	}
 
@@ -163,7 +167,7 @@ func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 
 	for _, pub := range h.publishers {
 		if err := pub.Publish(msg.Channel, msg); err != nil {
-			h.logger.Error("failed to publish to mainflux message broker" + err.Error())
+			h.logger.Error(errors.Wrap(errFailedPublishToMsgBrokerMsg, err).Error())
 		}
 	}
 }
@@ -202,7 +206,7 @@ func (h *handler) authAccess(username string, topic string) error {
 	// Topics are in the format:
 	// channels/<channel_id>/messages/<subtopic>/.../ct/<content_type>
 	if !channelRegExp.Match([]byte(topic)) {
-		h.logger.Error("Malformed topic: " + topic)
+		h.logger.Info(infoMalformedTopicMsg + topic)
 		return errMalformedTopic
 	}
 
