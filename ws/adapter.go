@@ -31,6 +31,9 @@ type Service interface {
 	// Publish Message
 	Publish(ctx context.Context, token string, msg messaging.Message) error
 
+	// Authorize message is used to authenticate the thingKey and chanID
+	Authorize(ctx context.Context, thingKey, chanID string) (*mainflux.ThingID, error)
+
 	// Subscribes to a channel with specified id.
 	Subscribe(ctx context.Context, thingKey, chanID, subtopic string, channel Client) error
 
@@ -53,15 +56,32 @@ func New(auth mainflux.ThingsServiceClient, pubsub messaging.PubSub) Service {
 	}
 }
 
-func (svc *adapterService) Publish(ctx context.Context, token string, msg messaging.Message) error {
+func (svc *adapterService) Authorize(ctx context.Context, thingKey, chanID string) (*mainflux.ThingID, error) {
 	ar := &mainflux.AccessByKeyReq{
-		Token:  token,
-		ChanID: msg.GetChannel(),
+		Token:  thingKey,
+		ChanID: chanID,
 	}
-
 	thid, err := svc.auth.CanAccessByKey(ctx, ar)
 	if err != nil {
-		return errors.Wrap(errors.ErrAuthorization, err)
+		return nil, errors.Wrap(errors.ErrAuthorization, err)
+	}
+
+	return thid, nil
+}
+
+func (svc *adapterService) Publish(ctx context.Context, thingKey string, msg messaging.Message) error {
+	// ar := &mainflux.AccessByKeyReq{
+	// 	Token:  thingKey,
+	// 	ChanID: msg.GetChannel(),
+	// }
+	// thid, err := svc.auth.CanAccessByKey(ctx, ar)
+	// if err != nil {
+	// 	return errors.Wrap(errors.ErrAuthorization, err)
+	// }
+
+	thid, err := svc.Authorize(ctx, thingKey, msg.GetChannel())
+	if err != nil {
+		return err
 	}
 
 	msg.Publisher = thid.GetValue()
@@ -70,13 +90,18 @@ func (svc *adapterService) Publish(ctx context.Context, token string, msg messag
 }
 
 func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subtopic string, c Client) error {
-	ar := &mainflux.AccessByKeyReq{
-		Token:  thingKey,
-		ChanID: chanID,
-	}
+	// ar := &mainflux.AccessByKeyReq{
+	// 	Token:  thingKey,
+	// 	ChanID: chanID,
+	// }
+	// thid, err := svc.auth.CanAccessByKey(ctx, ar)
+	// if err != nil {
+	// 	return errors.Wrap(errors.ErrAuthorization, err)
+	// }
 
-	if _, err := svc.auth.CanAccessByKey(ctx, ar); err != nil {
-		return errors.Wrap(errors.ErrAuthorization, err)
+	thid, err := svc.Authorize(ctx, thingKey, chanID)
+	if err != nil {
+		return err
 	}
 
 	subject := fmt.Sprintf("%s.%s", "channels", chanID)
@@ -84,17 +109,21 @@ func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subt
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
 
-	return svc.pubsub.Subscribe(thingKey, subject, c)
+	return svc.pubsub.Subscribe(thid.GetValue(), subject, c)
 }
 
 func (svc *adapterService) Unsubscribe(ctx context.Context, thingKey, chanID, subtopic string) error {
-	ar := &mainflux.AccessByKeyReq{
-		Token:  thingKey,
-		ChanID: chanID,
-	}
+	// ar := &mainflux.AccessByKeyReq{
+	// 	Token:  thingKey,
+	// 	ChanID: chanID,
+	// }
+	// if _, err := svc.auth.CanAccessByKey(ctx, ar); err != nil {
+	// 	return errors.Wrap(errors.ErrAuthorization, err)
+	// }
 
-	if _, err := svc.auth.CanAccessByKey(ctx, ar); err != nil {
-		return errors.Wrap(errors.ErrAuthorization, err)
+	_, err := svc.Authorize(ctx, thingKey, chanID)
+	if err != nil {
+		return err
 	}
 
 	subject := fmt.Sprintf("%s.%s", "channels", chanID)

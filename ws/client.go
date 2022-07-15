@@ -15,7 +15,6 @@ import (
 
 // Client wraps WS client.
 type Client interface {
-	Token() string
 	Handle(m messaging.Message) error
 	Cancel() error
 }
@@ -24,26 +23,20 @@ type Connclient struct {
 	client *websocket.Conn
 	token  string
 	logger logger.Logger
-}
 
-// NewClient Instantiates a new Observer.
-func NewClient(c *websocket.Conn, token string, l logger.Logger) Client {
-	return &Connclient{
-		client: c,
-		token:  token,
-		logger: l,
-	}
-}
-
-type Channel struct {
 	Messages chan messaging.Message
 	Closed   chan bool
 	closed   bool
 	mutex    sync.Mutex
 }
 
-func NewChannel() *Channel {
-	return &Channel{
+// NewClient Instantiates a new Observer.
+func NewClient(c *websocket.Conn, token string, l logger.Logger) *Connclient {
+	return &Connclient{
+		client: c,
+		token:  token,
+		logger: l,
+
 		Messages: make(chan messaging.Message),
 		closed:   false,
 		Closed:   make(chan bool),
@@ -63,16 +56,12 @@ func (c *Connclient) Cancel() error {
 	return c.client.Close()
 }
 
-func (c *Connclient) Token() string {
-	return c.token
-}
-
 func (c *Connclient) Handle(msg messaging.Message) error {
 	return c.client.WriteMessage(websocket.TextMessage, msg.Payload)
 }
 
 // Send method sends message over Messages channel.
-func (c *Channel) Send(msg messaging.Message) {
+func (c *Connclient) Send(msg messaging.Message) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -82,7 +71,7 @@ func (c *Channel) Send(msg messaging.Message) {
 }
 
 // Close channel and stop message transfer
-func (c *Channel) Close() {
+func (c *Connclient) Close() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 

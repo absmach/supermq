@@ -24,7 +24,8 @@ import (
 )
 
 const (
-	protocol = "ws"
+	protocol            = "ws"
+	readwriteBufferSize = 1024
 )
 
 var (
@@ -34,27 +35,28 @@ var (
 
 var (
 	upgrader = websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
+		ReadBufferSize:  readwriteBufferSize,
+		WriteBufferSize: readwriteBufferSize,
 		CheckOrigin:     func(r *http.Request) bool { return true },
 	}
-	auth              mainflux.ThingsServiceClient
+	// auth              mainflux.ThingsServiceClient
 	logger            log.Logger
 	channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
+
+	client *ws.Connclient
 )
 
 type subscription struct {
-	pubID    string
+	pubID    string // pubID = thingKey (delete this comment later)
 	chanID   string
 	subtopic string
 	conn     *websocket.Conn
-	// client   *ws.Connclient
-	channel *ws.Channel
+	// channel  *ws.Channel
 }
 
 // MakeHandler returns http handler with handshake endpoint.
 func MakeHandler(svc ws.Service, tc mainflux.ThingsServiceClient, l log.Logger) http.Handler {
-	auth = tc
+	// auth = tc
 	logger = l
 
 	mux := bone.New()
@@ -68,7 +70,7 @@ func MakeHandler(svc ws.Service, tc mainflux.ThingsServiceClient, l log.Logger) 
 
 func handshake(svc ws.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		sub, err := authorize(r)
+		sub, err := getSubscription(r, svc)
 		if err != nil {
 			switch err {
 			case errUnauthorizedAccess:
@@ -81,18 +83,7 @@ func handshake(svc ws.Service) http.HandlerFunc {
 			}
 		}
 
-		channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
-		if len(channelParts) < 2 {
-			logger.Warn("Empty channel id or malformed url")
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		sub.subtopic, err = parseSubTopic(channelParts[2])
-		if err != nil {
-			logger.Warn("Empty channel id or malformed url")
-			w.WriteHeader(http.StatusBadRequest)
-		}
+		getSubstopic(sub, r, w)
 
 		// Create a new ws connection.
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -100,40 +91,32 @@ func handshake(svc ws.Service) http.HandlerFunc {
 			logger.Warn(fmt.Sprintf("Failed to upgrade connection to websocket: %s", err.Error()))
 			return
 		}
-
 		sub.conn = conn
 
-		c := ws.NewClient(conn, sub.pubID, logger)
+		client = ws.NewClient(conn, sub.pubID, logger)
 
 		logger.Debug(fmt.Sprintf("Successfully upgraded communication to WS on channel %s", sub.chanID))
 
-		// Subscribe to the channel
-		if err := svc.Subscribe(context.Background(), sub.pubID, sub.chanID, sub.subtopic, c); err != nil {
-			logger.Warn(fmt.Sprintf("Failed to subscribe to broker: %s", err.Error()))
-			if err == ws.ErrFailedConnection {
-				sub.conn.Close()
-				sub.channel.Closed <- true
-				return
-			}
-		}
-
-		sub.channel = ws.NewChannel()
-
-		wg := new(sync.WaitGroup)
-		wg.Add(2)
-
-		go sub.listen(wg)
-		go sub.broadcast(wg, svc)
-
-		wg.Wait()
-
-		if err := svc.Unsubscribe(context.Background(), sub.pubID, sub.chanID, sub.subtopic); err != nil {
-			logger.Warn(fmt.Sprintf("Failed to unsubscribe from broker: %s", err.Error()))
-			sub.conn.Close()
-			sub.channel.Closed <- true
-			return
-		}
+		// start listen() and broadcast()
+		sub.startListenBroadcast(svc)
 	}
+}
+
+func getSubstopic(sub subscription, r *http.Request, w http.ResponseWriter) {
+	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
+	if len(channelParts) < 2 {
+		logger.Warn("Empty channel id or malformed url")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	subtopic, err := parseSubTopic(channelParts[2])
+	if err != nil {
+		logger.Warn("Empty channel id or malformed url")
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
+	sub.subtopic = subtopic
 }
 
 func parseSubTopic(subtopic string) (string, error) {
@@ -162,12 +145,12 @@ func parseSubTopic(subtopic string) (string, error) {
 		filteredElems = append(filteredElems, elem)
 	}
 
-	subtopic = strings.Join(filteredElems, ",")
+	subtopic = strings.Join(filteredElems, ".")
 
 	return subtopic, nil
 }
 
-func authorize(r *http.Request) (subscription, error) {
+func getSubscription(r *http.Request, svc ws.Service) (subscription, error) {
 	authKey := r.Header.Get("Authorization")
 	if authKey == "" {
 		authKeys := bone.GetQuery(r, "authorization")
@@ -183,17 +166,21 @@ func authorize(r *http.Request) (subscription, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	ar := &mainflux.AccessByKeyReq{
-		Token:  authKey,
-		ChanID: chanID,
-	}
+	// ar := &mainflux.AccessByKeyReq{
+	// 	Token:  authKey,
+	// 	ChanID: chanID,
+	// }
+	// id, err := auth.CanAccessByKey(ctx, ar)
+	// if err != nil {
+	// 	return subscription{}, err
+	// }
 
-	id, err := auth.CanAccessByKey(ctx, ar)
+	thid, err := svc.Authorize(ctx, authKey, chanID)
 	if err != nil {
 		return subscription{}, err
 	}
 
-	logger.Debug(fmt.Sprintf("Successfully authorized client %s on channel %s", id.GetValue(), chanID))
+	logger.Debug(fmt.Sprintf("Successfully authorized client %s on channel %s", thid.GetValue(), chanID))
 
 	sub := subscription{
 		pubID:  authKey,
@@ -203,6 +190,32 @@ func authorize(r *http.Request) (subscription, error) {
 	return sub, nil
 }
 
+func (sub subscription) startListenBroadcast(svc ws.Service) {
+	if err := svc.Subscribe(context.Background(), sub.pubID, sub.chanID, sub.subtopic, client); err != nil {
+		logger.Warn(fmt.Sprintf("Failed to subscribe to broker: %s", err.Error()))
+		if err == ws.ErrFailedConnection {
+			sub.conn.Close()
+			client.Closed <- true
+			return
+		}
+	}
+
+	wg := new(sync.WaitGroup)
+	wg.Add(2)
+
+	go sub.listen(wg)
+	go sub.broadcast(wg, svc)
+
+	wg.Wait()
+
+	if err := svc.Unsubscribe(context.Background(), sub.pubID, sub.chanID, sub.subtopic); err != nil {
+		logger.Warn(fmt.Sprintf("Failed to unsubscribe from broker: %s", err.Error()))
+		sub.conn.Close()
+		client.Closed <- true
+		return
+	}
+}
+
 func (sub subscription) broadcast(wg *sync.WaitGroup, svc ws.Service) {
 	defer wg.Done()
 
@@ -210,7 +223,7 @@ func (sub subscription) broadcast(wg *sync.WaitGroup, svc ws.Service) {
 		_, payload, err := sub.conn.ReadMessage()
 		if websocket.IsUnexpectedCloseError(err) {
 			logger.Debug(fmt.Sprintf("Closing WS connection: %s", err.Error()))
-			sub.channel.Close()
+			client.Close()
 			return
 		}
 		if err != nil {
@@ -230,7 +243,8 @@ func (sub subscription) broadcast(wg *sync.WaitGroup, svc ws.Service) {
 			logger.Warn(fmt.Sprintf("Failed to publish message to broker(NATS): %s", err.Error()))
 			if err == ws.ErrFailedConnection {
 				sub.conn.Close()
-				sub.channel.Closed <- true
+				client.Closed <- true
+				// sub.channel.Closed <- true
 				return
 			}
 		}
@@ -242,7 +256,8 @@ func (sub subscription) broadcast(wg *sync.WaitGroup, svc ws.Service) {
 func (sub subscription) listen(wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	for msg := range sub.channel.Messages {
+	for msg := range client.Messages {
+		// for msg := range sub.channel.Messages {
 		format := websocket.TextMessage
 
 		if err := sub.conn.WriteMessage(format, msg.Payload); err != nil {
