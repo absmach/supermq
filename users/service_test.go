@@ -448,7 +448,7 @@ func TestDisableUser(t *testing.T) {
 			desc:  "disable disabled user",
 			id:    enabledUser2.ID,
 			token: token,
-			err:   nil,
+			err:   users.ErrAlreadyDisabledUser,
 		},
 		{
 			desc:  "disable non-existing user",

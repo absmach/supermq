@@ -148,14 +148,16 @@ func (urm *userRepositoryMock) UpdatePassword(_ context.Context, token, password
 	return nil
 }
 
-func (urm *userRepositoryMock) ChangeStatus(ctx context.Context, user users.User, status string) error {
+func (urm *userRepositoryMock) ChangeStatus(ctx context.Context, id, status string) error {
 	urm.mu.Lock()
 	defer urm.mu.Unlock()
 
-	if _, ok := urm.users[user.Email]; !ok {
+	user, ok := urm.usersByID[id]
+	if !ok {
 		return errors.ErrNotFound
 	}
 	user.Status = status
+	urm.usersByID[id] = user
 	urm.users[user.Email] = user
 	return nil
 }

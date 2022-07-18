@@ -234,12 +234,11 @@ func (ur userRepository) UpdatePassword(ctx context.Context, email, password str
 	return nil
 }
 
-func (ur userRepository) ChangeStatus(ctx context.Context, user users.User, status string) error {
-	q := fmt.Sprintf(`UPDATE users SET status = '%s' WHERE email = :email`, status)
-	fmt.Println(q)
-	dbu, err := toDBUser(user)
-	if err != nil {
-		return errors.Wrap(errors.ErrUpdateEntity, err)
+func (ur userRepository) ChangeStatus(ctx context.Context, id, status string) error {
+	q := fmt.Sprintf(`UPDATE users SET status = '%s' WHERE id = :id`, status)
+
+	dbu := dbUser{
+		ID: id,
 	}
 
 	if _, err := ur.db.NamedExecContext(ctx, q, dbu); err != nil {

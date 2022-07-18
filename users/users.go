@@ -72,7 +72,7 @@ type UserRepository interface {
 	UpdatePassword(ctx context.Context, email, password string) error
 
 	// ChangeStatus changes users status to enabled or disabled
-	ChangeStatus(ctx context.Context, u User, status string) error
+	ChangeStatus(ctx context.Context, id, status string) error
 }
 
 func isEmail(email string) bool {

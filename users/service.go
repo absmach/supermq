@@ -9,6 +9,7 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/auth"
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
@@ -163,9 +164,14 @@ func (svc usersService) Register(ctx context.Context, token string, user User) (
 		return "", errors.Wrap(errors.ErrMalformedEntity, err)
 	}
 	user.Password = hash
-
 	if user.Status == "" {
 		user.Status = EnabledStatusKey
+	}
+
+	if user.Status != AllStatusKey &&
+		user.Status != EnabledStatusKey &&
+		user.Status != DisabledStatusKey {
+		return "", apiutil.ErrInvalidStatus
 	}
 
 	uid, err = svc.users.Save(ctx, user)
@@ -354,22 +360,20 @@ func (svc usersService) ListMembers(ctx context.Context, token, groupID string, 
 }
 
 func (svc usersService) EnableUser(ctx context.Context, token, id string) error {
-	if _, err := svc.identify(ctx, token); err != nil {
+	if err := svc.changeStatus(ctx, token, id, EnabledStatusKey); err != nil {
 		return err
 	}
-
-	dbUser, err := svc.users.RetrieveByID(ctx, id)
-	if err != nil {
-		return errors.Wrap(errors.ErrNotFound, err)
-	}
-	if dbUser.Status == EnabledStatusKey {
-		return ErrAlreadyEnabledUser
-	}
-
-	return svc.users.ChangeStatus(ctx, dbUser, EnabledStatusKey)
+	return nil
 }
 
 func (svc usersService) DisableUser(ctx context.Context, token, id string) error {
+	if err := svc.changeStatus(ctx, token, id, DisabledStatusKey); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (svc usersService) changeStatus(ctx context.Context, token, id, status string) error {
 	if _, err := svc.identify(ctx, token); err != nil {
 		return err
 	}
@@ -378,11 +382,14 @@ func (svc usersService) DisableUser(ctx context.Context, token, id string) error
 	if err != nil {
 		return errors.Wrap(errors.ErrNotFound, err)
 	}
-	if dbUser.Status == DisabledStatusKey {
-		return ErrAlreadyDisabledUser
+	if dbUser.Status == status {
+		if status == DisabledStatusKey {
+			return ErrAlreadyDisabledUser
+		}
+		return ErrAlreadyEnabledUser
 	}
 
-	return svc.users.ChangeStatus(ctx, dbUser, DisabledStatusKey)
+	return svc.users.ChangeStatus(ctx, id, status)
 }
 
 // Auth helpers
