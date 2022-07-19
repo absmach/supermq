@@ -53,7 +53,6 @@ type subscription struct {
 
 // MakeHandler returns http handler with handshake endpoint.
 func MakeHandler(svc ws.Service, tc mainflux.ThingsServiceClient, l log.Logger) http.Handler {
-	// auth = tc
 	logger = l
 
 	mux := bone.New()
@@ -94,7 +93,9 @@ func handshake(svc ws.Service) http.HandlerFunc {
 		})
 
 		sub.conn = conn
-		client = ws.NewClient(conn, sub.thingKey, logger)
+		// client = ws.NewClient(conn, sub.thingKey, logger)
+		client = ws.NewClient(conn, "")
+		//todo: Enter thingID here, instead of empty string, for handle() function
 
 		// Subscribe using the adapterservice
 		if err := svc.Subscribe(context.Background(), sub.thingKey, sub.chanID, sub.subtopic, client); err != nil {
@@ -103,8 +104,6 @@ func handshake(svc ws.Service) http.HandlerFunc {
 			logger.Warn(fmt.Sprintf("Failed to subscribe to broker: %s", err.Error()))
 			if err == ws.ErrFailedConnection {
 				sub.conn.Close()
-				// ch.Close()
-				// ch.Closed <- true
 				return
 			}
 		}

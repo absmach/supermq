@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/gorilla/websocket"
-	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 )
 
@@ -17,37 +16,28 @@ type Client interface {
 }
 
 type Connclient struct {
-	conn     *websocket.Conn
-	thingKey string
-	logger   logger.Logger
+	conn  *websocket.Conn
+	pubID string
+	// logger   logger.Logger
 }
 
-func NewClient(c *websocket.Conn, token string, l logger.Logger) *Connclient {
+func NewClient(c *websocket.Conn, token string) *Connclient {
 	return &Connclient{
-		conn:     c,
-		thingKey: token,
-		logger:   l,
+		conn:  c,
+		pubID: token,
 	}
 }
 
 func (c *Connclient) Cancel() error {
-	// m := messaging.Message{
-	// 	Protocol: "websocket",
-	// 	Created:  time.Now().UnixNano(),
-	// }
-	// if err := c.client.WriteMessage(1, m.Payload); err != nil {
-	// 	c.logger.Error(fmt.Sprintf("Error sending message: %s", err))
-	// }
-
 	return c.conn.Close()
 }
 
 func (c *Connclient) Handle(msg messaging.Message) error {
 	fmt.Println("Using Handle() function")
 	fmt.Println("msg.Pubslisher: ", msg.GetPublisher())
-	fmt.Println("c.token: ", c.thingKey)
+	fmt.Println("c.token: ", c.pubID)
 	fmt.Println("######")
-	if msg.GetPublisher() == c.thingKey {
+	if msg.GetPublisher() == c.pubID {
 		return nil
 	}
 
