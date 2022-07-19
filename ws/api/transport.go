@@ -11,7 +11,6 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/go-zoo/bone"
@@ -39,12 +38,10 @@ var (
 		WriteBufferSize: readwriteBufferSize,
 		CheckOrigin:     func(r *http.Request) bool { return true },
 	}
-	// auth              mainflux.ThingsServiceClient
 	logger            log.Logger
 	channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
 
 	client *ws.Connclient
-	// ch     *channel
 )
 
 type subscription struct {
@@ -85,26 +82,45 @@ func handshake(svc ws.Service) http.HandlerFunc {
 
 		getSubstopic(sub, r, w)
 
-		// Create a new ws connection.
+		// Upgrade to a new ws connection.
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			logger.Warn(fmt.Sprintf("Failed to upgrade connection to websocket: %s", err.Error()))
 			return
 		}
-
+		// Configure the closing of the ws connection
 		conn.SetCloseHandler(func(code int, text string) error {
 			return svc.Unsubscribe(context.Background(), sub.thingKey, sub.chanID, sub.subtopic)
 		})
 
 		sub.conn = conn
-
 		client = ws.NewClient(conn, sub.thingKey, logger)
-		// ch = newChannel()
+
+		// Subscribe using the adapterservice
+		if err := svc.Subscribe(context.Background(), sub.thingKey, sub.chanID, sub.subtopic, client); err != nil {
+			fmt.Println("Failed to subscribe")
+			fmt.Println(err.Error())
+			logger.Warn(fmt.Sprintf("Failed to subscribe to broker: %s", err.Error()))
+			if err == ws.ErrFailedConnection {
+				sub.conn.Close()
+				// ch.Close()
+				// ch.Closed <- true
+				return
+			}
+		}
 
 		logger.Debug(fmt.Sprintf("Successfully upgraded communication to WS on channel %s", sub.chanID))
 
-		// start listen() and broadcast()
-		sub.startListenBroadcast(svc)
+		msgs := make(chan messaging.Message)
+
+		//? Listen for messages received from the chan messages, and publish them to broker
+		go func() {
+			for msg := range msgs {
+				svc.Publish(context.Background(), sub.thingKey, msg)
+			}
+		}()
+
+		go sub.broadcast(msgs)
 	}
 }
 
@@ -177,53 +193,18 @@ func getSubscription(r *http.Request, svc ws.Service) (subscription, error) {
 	return sub, nil
 }
 
-func (sub subscription) startListenBroadcast(svc ws.Service) {
-	if err := svc.Subscribe(context.Background(), sub.thingKey, sub.chanID, sub.subtopic, client); err != nil {
-		fmt.Println("Failed to subscribe")
-		fmt.Println(err.Error())
-		logger.Warn(fmt.Sprintf("Failed to subscribe to broker: %s", err.Error()))
-		if err == ws.ErrFailedConnection {
-			sub.conn.Close()
-			// ch.Close()
-			// ch.Closed <- true
-			return
-		}
-	}
-	// fmt.Println("subscribed")
-
-	wg := new(sync.WaitGroup)
-	wg.Add(1)
-
-	// go sub.listen(wg)
-	go sub.broadcast(wg, svc)
-
-	wg.Wait()
-
-	// fmt.Println("unsubscribing")
-	// if err := svc.Unsubscribe(context.Background(), sub.thingKey, sub.chanID, sub.subtopic); err != nil {
-	// 	logger.Warn(fmt.Sprintf("Failed to unsubscribe from broker: %s", err.Error()))
-	// 	sub.conn.Close()
-	// 	// ch.Close()
-	// 	fmt.Println("ubsubscribed")
-	// 	// ch.Closed <- true
-	// 	return
-	// }
-}
-
-func (sub subscription) broadcast(wg *sync.WaitGroup, svc ws.Service) {
-	defer wg.Done()
+// Can only put value INTO the channel
+func (sub subscription) broadcast(msgs chan<- messaging.Message) {
 
 	for {
-		// if ch.closed {
-		// 	break
-		// }
-
+		//? Read message from the client, and push them to the channel
 		_, payload, err := sub.conn.ReadMessage()
+
 		if websocket.IsUnexpectedCloseError(err) {
 			logger.Debug(fmt.Sprintf("Closing WS connection: %s", err.Error()))
-			// ch.Close()
 			return
 		}
+
 		if err != nil {
 			logger.Warn(fmt.Sprintf("Failed to read message: %s", err.Error()))
 			return
@@ -237,36 +218,11 @@ func (sub subscription) broadcast(wg *sync.WaitGroup, svc ws.Service) {
 			Payload:   payload,
 			Created:   time.Now().UnixNano(),
 		}
+		fmt.Println("##########")
 		fmt.Println("at broadcast(): sub.thingKey = ", sub.thingKey)
+		fmt.Println("at broadcast(): msg.Publisher = ", msg.GetPublisher())
+		fmt.Println("##########")
 
-		if err := svc.Publish(context.Background(), sub.thingKey, msg); err != nil {
-			logger.Warn(fmt.Sprintf("Failed to publish message to broker: %s", err.Error()))
-			if err == ws.ErrFailedConnection {
-				sub.conn.Close()
-				// ch.Close()
-				// ch.Closed <- true
-				return
-			}
-		}
-
-		logger.Debug(fmt.Sprintf("Successfully published message to the channel %s", sub.chanID))
+		msgs <- msg
 	}
 }
-
-// func (sub subscription) listen(wg *sync.WaitGroup) {
-// 	defer wg.Done()
-
-// 	for msg := range ch.Messages {
-// 		if ch.closed {
-// 			break
-// 		}
-
-// 		format := websocket.TextMessage
-
-// 		if err := sub.conn.WriteMessage(format, msg.Payload); err != nil {
-// 			logger.Warn(fmt.Sprintf("Failed to broadcast message to thing: %s", err))
-// 		}
-
-// 		logger.Debug("Wrote message successfully")
-// 	}
-// }
