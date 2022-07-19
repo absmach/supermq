@@ -29,13 +29,10 @@ var (
 // Service specifies web socket service API.
 type Service interface {
 	// Publish Message
-	Publish(ctx context.Context, token string, msg messaging.Message) error
-
-	// Authorize message is used to authenticate the thingKey and chanID
-	Authorize(ctx context.Context, thingKey, chanID string) (*mainflux.ThingID, error)
+	Publish(ctx context.Context, thingKey string, msg messaging.Message) error
 
 	// Subscribes to a channel with specified id.
-	Subscribe(ctx context.Context, thingKey, chanID, subtopic string, channel Client) error
+	Subscribe(ctx context.Context, thingKey, chanID, subtopic string, client Client) error
 
 	// Unsubscribe method is used to stop observing resource.
 	Unsubscribe(ctx context.Context, thingKey, chanID, subtopic string) error
@@ -56,30 +53,8 @@ func New(auth mainflux.ThingsServiceClient, pubsub messaging.PubSub) Service {
 	}
 }
 
-func (svc *adapterService) Authorize(ctx context.Context, thingKey, chanID string) (*mainflux.ThingID, error) {
-	ar := &mainflux.AccessByKeyReq{
-		Token:  thingKey,
-		ChanID: chanID,
-	}
-	thid, err := svc.auth.CanAccessByKey(ctx, ar)
-	if err != nil {
-		return nil, errors.Wrap(errors.ErrAuthorization, err)
-	}
-
-	return thid, nil
-}
-
 func (svc *adapterService) Publish(ctx context.Context, thingKey string, msg messaging.Message) error {
-	// ar := &mainflux.AccessByKeyReq{
-	// 	Token:  thingKey,
-	// 	ChanID: msg.GetChannel(),
-	// }
-	// thid, err := svc.auth.CanAccessByKey(ctx, ar)
-	// if err != nil {
-	// 	return errors.Wrap(errors.ErrAuthorization, err)
-	// }
-
-	thid, err := svc.Authorize(ctx, thingKey, msg.GetChannel())
+	thid, err := svc.authorize(ctx, thingKey, msg.GetChannel())
 	if err != nil {
 		return err
 	}
@@ -90,16 +65,7 @@ func (svc *adapterService) Publish(ctx context.Context, thingKey string, msg mes
 }
 
 func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subtopic string, c Client) error {
-	// ar := &mainflux.AccessByKeyReq{
-	// 	Token:  thingKey,
-	// 	ChanID: chanID,
-	// }
-	// thid, err := svc.auth.CanAccessByKey(ctx, ar)
-	// if err != nil {
-	// 	return errors.Wrap(errors.ErrAuthorization, err)
-	// }
-
-	thid, err := svc.Authorize(ctx, thingKey, chanID)
+	thid, err := svc.authorize(ctx, thingKey, chanID)
 	if err != nil {
 		return err
 	}
@@ -113,15 +79,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subt
 }
 
 func (svc *adapterService) Unsubscribe(ctx context.Context, thingKey, chanID, subtopic string) error {
-	// ar := &mainflux.AccessByKeyReq{
-	// 	Token:  thingKey,
-	// 	ChanID: chanID,
-	// }
-	// if _, err := svc.auth.CanAccessByKey(ctx, ar); err != nil {
-	// 	return errors.Wrap(errors.ErrAuthorization, err)
-	// }
-
-	_, err := svc.Authorize(ctx, thingKey, chanID)
+	thid, err := svc.authorize(ctx, thingKey, chanID)
 	if err != nil {
 		return err
 	}
@@ -131,5 +89,18 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, thingKey, chanID, su
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
 
-	return svc.pubsub.Unsubscribe(thingKey, subject)
+	return svc.pubsub.Unsubscribe(thid.GetValue(), subject)
+}
+
+func (svc *adapterService) authorize(ctx context.Context, thingKey, chanID string) (*mainflux.ThingID, error) {
+	ar := &mainflux.AccessByKeyReq{
+		Token:  thingKey,
+		ChanID: chanID,
+	}
+	thid, err := svc.auth.CanAccessByKey(ctx, ar)
+	if err != nil {
+		return nil, errors.Wrap(errors.ErrAuthorization, err)
+	}
+
+	return thid, nil
 }

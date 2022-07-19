@@ -44,14 +44,14 @@ var (
 	channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
 
 	client *ws.Connclient
+	// ch     *channel
 )
 
 type subscription struct {
-	pubID    string // pubID = thingKey (delete this comment later)
+	thingKey string // pubID = thingKey (delete this comment later)
 	chanID   string
 	subtopic string
 	conn     *websocket.Conn
-	// channel  *ws.Channel
 }
 
 // MakeHandler returns http handler with handshake endpoint.
@@ -91,9 +91,15 @@ func handshake(svc ws.Service) http.HandlerFunc {
 			logger.Warn(fmt.Sprintf("Failed to upgrade connection to websocket: %s", err.Error()))
 			return
 		}
+
+		conn.SetCloseHandler(func(code int, text string) error {
+			return svc.Unsubscribe(context.Background(), sub.thingKey, sub.chanID, sub.subtopic)
+		})
+
 		sub.conn = conn
 
-		client = ws.NewClient(conn, sub.pubID, logger)
+		client = ws.NewClient(conn, sub.thingKey, logger)
+		// ch = newChannel()
 
 		logger.Debug(fmt.Sprintf("Successfully upgraded communication to WS on channel %s", sub.chanID))
 
@@ -163,67 +169,59 @@ func getSubscription(r *http.Request, svc ws.Service) (subscription, error) {
 
 	chanID := bone.GetValue(r, "id")
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	// ar := &mainflux.AccessByKeyReq{
-	// 	Token:  authKey,
-	// 	ChanID: chanID,
-	// }
-	// id, err := auth.CanAccessByKey(ctx, ar)
-	// if err != nil {
-	// 	return subscription{}, err
-	// }
-
-	thid, err := svc.Authorize(ctx, authKey, chanID)
-	if err != nil {
-		return subscription{}, err
-	}
-
-	logger.Debug(fmt.Sprintf("Successfully authorized client %s on channel %s", thid.GetValue(), chanID))
-
 	sub := subscription{
-		pubID:  authKey,
-		chanID: chanID,
+		thingKey: authKey,
+		chanID:   chanID,
 	}
 
 	return sub, nil
 }
 
 func (sub subscription) startListenBroadcast(svc ws.Service) {
-	if err := svc.Subscribe(context.Background(), sub.pubID, sub.chanID, sub.subtopic, client); err != nil {
+	if err := svc.Subscribe(context.Background(), sub.thingKey, sub.chanID, sub.subtopic, client); err != nil {
+		fmt.Println("Failed to subscribe")
+		fmt.Println(err.Error())
 		logger.Warn(fmt.Sprintf("Failed to subscribe to broker: %s", err.Error()))
 		if err == ws.ErrFailedConnection {
 			sub.conn.Close()
-			client.Closed <- true
+			// ch.Close()
+			// ch.Closed <- true
 			return
 		}
 	}
+	// fmt.Println("subscribed")
 
 	wg := new(sync.WaitGroup)
-	wg.Add(2)
+	wg.Add(1)
 
-	go sub.listen(wg)
+	// go sub.listen(wg)
 	go sub.broadcast(wg, svc)
 
 	wg.Wait()
 
-	if err := svc.Unsubscribe(context.Background(), sub.pubID, sub.chanID, sub.subtopic); err != nil {
-		logger.Warn(fmt.Sprintf("Failed to unsubscribe from broker: %s", err.Error()))
-		sub.conn.Close()
-		client.Closed <- true
-		return
-	}
+	// fmt.Println("unsubscribing")
+	// if err := svc.Unsubscribe(context.Background(), sub.thingKey, sub.chanID, sub.subtopic); err != nil {
+	// 	logger.Warn(fmt.Sprintf("Failed to unsubscribe from broker: %s", err.Error()))
+	// 	sub.conn.Close()
+	// 	// ch.Close()
+	// 	fmt.Println("ubsubscribed")
+	// 	// ch.Closed <- true
+	// 	return
+	// }
 }
 
 func (sub subscription) broadcast(wg *sync.WaitGroup, svc ws.Service) {
 	defer wg.Done()
 
 	for {
+		// if ch.closed {
+		// 	break
+		// }
+
 		_, payload, err := sub.conn.ReadMessage()
 		if websocket.IsUnexpectedCloseError(err) {
 			logger.Debug(fmt.Sprintf("Closing WS connection: %s", err.Error()))
-			client.Close()
+			// ch.Close()
 			return
 		}
 		if err != nil {
@@ -232,19 +230,21 @@ func (sub subscription) broadcast(wg *sync.WaitGroup, svc ws.Service) {
 		}
 
 		msg := messaging.Message{
-			Protocol: protocol,
-			Channel:  sub.chanID,
-			Subtopic: sub.subtopic,
-			Payload:  payload,
-			Created:  time.Now().UnixNano(),
+			Channel:   sub.chanID,
+			Subtopic:  sub.subtopic,
+			Publisher: sub.thingKey,
+			Protocol:  protocol,
+			Payload:   payload,
+			Created:   time.Now().UnixNano(),
 		}
+		fmt.Println("at broadcast(): sub.thingKey = ", sub.thingKey)
 
-		if err := svc.Publish(context.Background(), sub.pubID, msg); err != nil {
-			logger.Warn(fmt.Sprintf("Failed to publish message to broker(NATS): %s", err.Error()))
+		if err := svc.Publish(context.Background(), sub.thingKey, msg); err != nil {
+			logger.Warn(fmt.Sprintf("Failed to publish message to broker: %s", err.Error()))
 			if err == ws.ErrFailedConnection {
 				sub.conn.Close()
-				client.Closed <- true
-				// sub.channel.Closed <- true
+				// ch.Close()
+				// ch.Closed <- true
 				return
 			}
 		}
@@ -253,17 +253,20 @@ func (sub subscription) broadcast(wg *sync.WaitGroup, svc ws.Service) {
 	}
 }
 
-func (sub subscription) listen(wg *sync.WaitGroup) {
-	defer wg.Done()
+// func (sub subscription) listen(wg *sync.WaitGroup) {
+// 	defer wg.Done()
 
-	for msg := range client.Messages {
-		// for msg := range sub.channel.Messages {
-		format := websocket.TextMessage
+// 	for msg := range ch.Messages {
+// 		if ch.closed {
+// 			break
+// 		}
 
-		if err := sub.conn.WriteMessage(format, msg.Payload); err != nil {
-			logger.Warn(fmt.Sprintf("Failed to broadcast message to thing: %s", err))
-		}
+// 		format := websocket.TextMessage
 
-		logger.Debug("Wrote message successfully")
-	}
-}
+// 		if err := sub.conn.WriteMessage(format, msg.Payload); err != nil {
+// 			logger.Warn(fmt.Sprintf("Failed to broadcast message to thing: %s", err))
+// 		}
+
+// 		logger.Debug("Wrote message successfully")
+// 	}
+// }

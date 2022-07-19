@@ -16,3 +16,4 @@ ws-adapter:
     - ${MF_WS_ADAPTER_PORT}:${MF_WS_ADAPTER_PORT}
   networks:
     - mainflux-base-net
+    

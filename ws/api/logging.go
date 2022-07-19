@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mainflux/mainflux"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/ws"
@@ -28,18 +27,18 @@ func LoggingMiddleware(svc ws.Service, logger log.Logger) ws.Service {
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) Authorize(ctx context.Context, thingKey, chanID string) (thid *mainflux.ThingID, err error) {
-	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method Authorize for %s,%s took %s to complete", thingKey, chanID, time.Since(begin))
-		if err != nil {
-			lm.logger.Warn(fmt.Sprintf("%s with error: %s", message, err))
-			return
-		}
-		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
-	}(time.Now())
+// func (lm *loggingMiddleware) Authorize(ctx context.Context, thingKey, chanID string) (thid *mainflux.ThingID, err error) {
+// 	defer func(begin time.Time) {
+// 		message := fmt.Sprintf("Method Authorize for %s,%s took %s to complete", thingKey, chanID, time.Since(begin))
+// 		if err != nil {
+// 			lm.logger.Warn(fmt.Sprintf("%s with error: %s", message, err))
+// 			return
+// 		}
+// 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+// 	}(time.Now())
 
-	return lm.svc.Authorize(ctx, thingKey, chanID)
-}
+// 	return lm.svc.authorize(ctx, thingKey, chanID)
+// }
 
 func (lm *loggingMiddleware) Publish(ctx context.Context, thingKey string, msg messaging.Message) (err error) {
 	defer func(begin time.Time) {
