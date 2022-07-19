@@ -32,7 +32,7 @@ type Service interface {
 	Publish(ctx context.Context, thingKey string, msg messaging.Message) error
 
 	// Subscribes to a channel with specified id.
-	Subscribe(ctx context.Context, thingKey, chanID, subtopic string, client Client) error
+	Subscribe(ctx context.Context, thingKey, chanID, subtopic string, client *Connclient) error
 
 	// Unsubscribe method is used to stop observing resource.
 	Unsubscribe(ctx context.Context, thingKey, chanID, subtopic string) error
@@ -64,11 +64,13 @@ func (svc *adapterService) Publish(ctx context.Context, thingKey string, msg mes
 	return svc.pubsub.Publish(msg.GetChannel(), msg)
 }
 
-func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subtopic string, c Client) error {
+func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subtopic string, c *Connclient) error {
 	thid, err := svc.authorize(ctx, thingKey, chanID)
 	if err != nil {
 		return err
 	}
+
+	c.pubID = thid.GetValue()
 
 	subject := fmt.Sprintf("%s.%s", "channels", chanID)
 	if subtopic != "" {

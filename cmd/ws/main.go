@@ -93,8 +93,7 @@ func main() {
 	svc := newService(tc, nps, logger)
 
 	g.Go(func() error {
-		// return startWSServer(ctx, cfg, svc, nil, logger)
-		return startWSServer(ctx, cfg, svc, tc, logger)
+		return startWSServer(ctx, cfg, svc, logger)
 	})
 
 	g.Go(func() error {
@@ -147,7 +146,7 @@ func connectToThings(cfg config, logger logger.Logger) *grpc.ClientConn {
 		}
 	} else {
 		logger.Info("gRPC communication is not encrypted")
-		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials())) // grpc.WithInsecure was deprecated
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 
 	conn, err := grpc.Dial(cfg.thingsAuthURL, opts...)
@@ -207,7 +206,7 @@ func newService(tc mainflux.ThingsServiceClient, nps messaging.PubSub, logger lo
 	return svc
 }
 
-func startWSServer(ctx context.Context, cfg config, svc adapter.Service, auth mainflux.ThingsServiceClient, l logger.Logger) error {
+func startWSServer(ctx context.Context, cfg config, svc adapter.Service, l logger.Logger) error {
 	p := fmt.Sprintf(":%s", cfg.port)
 
 	errCh := make(chan error, 2)
@@ -215,7 +214,7 @@ func startWSServer(ctx context.Context, cfg config, svc adapter.Service, auth ma
 	l.Info(fmt.Sprintf("WS adapter service started, exposed port %s", cfg.port))
 
 	go func() {
-		errCh <- http.ListenAndServe(p, api.MakeHandler(svc, auth, l))
+		errCh <- http.ListenAndServe(p, api.MakeHandler(svc, l))
 	}()
 
 	select {

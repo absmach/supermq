@@ -4,8 +4,6 @@
 package ws
 
 import (
-	"fmt"
-
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux/pkg/messaging"
 )
@@ -18,7 +16,6 @@ type Client interface {
 type Connclient struct {
 	conn  *websocket.Conn
 	pubID string
-	// logger   logger.Logger
 }
 
 func NewClient(c *websocket.Conn, token string) *Connclient {
@@ -33,10 +30,6 @@ func (c *Connclient) Cancel() error {
 }
 
 func (c *Connclient) Handle(msg messaging.Message) error {
-	fmt.Println("Using Handle() function")
-	fmt.Println("msg.Pubslisher: ", msg.GetPublisher())
-	fmt.Println("c.token: ", c.pubID)
-	fmt.Println("######")
 	if msg.GetPublisher() == c.pubID {
 		return nil
 	}
