@@ -195,12 +195,12 @@ func TestConnect(t *testing.T) {
 		{
 			desc:     "connect without active session",
 			client:   nil,
-			expected: fmt.Sprint(errors.Wrap(errFailedConnectMsg, errClientNotInitialized).Error()),
+			expected: fmt.Sprint(errors.Wrap(errFailedConnect, errClientNotInitialized).Error()),
 		},
 		{
 			desc:     "connect with valid session",
 			client:   &sessionClient,
-			expected: fmt.Sprintf(infoConnectMsg, clientID),
+			expected: fmt.Sprintf(infoConnected, clientID),
 		},
 	}
 
@@ -239,7 +239,7 @@ func TestPublish(t *testing.T) {
 			client:   &sessionClient,
 			topic:    invalidTopic,
 			payload:  []byte("payload"),
-			expected: fmt.Sprintf(infoPublishMsg, clientID, invalidTopic),
+			expected: fmt.Sprintf(infoPublished, clientID, invalidTopic),
 		},
 	}
 
@@ -268,13 +268,13 @@ func TestSubscribe(t *testing.T) {
 			desc:     "subscribe without active session",
 			client:   nil,
 			topic:    topics,
-			expected: fmt.Sprint(errors.Wrap(errFailedSubscribeMsg, errClientNotInitialized).Error()),
+			expected: fmt.Sprint(errors.Wrap(errFailedSubscribe, errClientNotInitialized).Error()),
 		},
 		{
 			desc:     "subscribe with valid session and topics",
 			client:   &sessionClient,
 			topic:    topics,
-			expected: fmt.Sprintf(infoSubscribeMsg, clientID, topics[0]),
+			expected: fmt.Sprintf(infoSubscribed, clientID, topics[0]),
 		},
 	}
 
@@ -303,13 +303,13 @@ func TestUnsubscribe(t *testing.T) {
 			desc:     "unsubscribe without active session",
 			client:   nil,
 			topic:    topics,
-			expected: fmt.Sprint(errors.Wrap(errFailedUnsubscribeMsg, errClientNotInitialized).Error()),
+			expected: fmt.Sprint(errors.Wrap(errFailedUnsubscribe, errClientNotInitialized).Error()),
 		},
 		{
 			desc:     "unsubscribe with valid session and topics",
 			client:   &sessionClient,
 			topic:    topics,
-			expected: fmt.Sprintf(infoUnsubscribeMsg, clientID, topics[0]),
+			expected: fmt.Sprintf(infoUnsubscribed, clientID, topics[0]),
 		},
 	}
 
@@ -338,13 +338,13 @@ func TestDisconnect(t *testing.T) {
 			desc:     "disconect without active session",
 			client:   nil,
 			topic:    topics,
-			expected: fmt.Sprint(errors.Wrap(errFailedDisconnectMsg, errClientNotInitialized).Error()),
+			expected: fmt.Sprint(errors.Wrap(errFailedDisconnect, errClientNotInitialized).Error()),
 		},
 		{
 			desc:     "disconect with valid session",
 			client:   &sessionClient,
 			topic:    topics,
-			expected: fmt.Sprintf(infoDisconnectMsg, clientID, thingID),
+			expected: fmt.Sprintf(infoDisconnected, clientID, thingID),
 		},
 	}
 
