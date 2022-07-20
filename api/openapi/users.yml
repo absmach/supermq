@@ -220,7 +220,7 @@ paths:
     post:
       summary: Enables a user account
       description: |
-        Enables a disabled user account  for a given user ID.
+        Enables a disabled user account for a given user ID.
       tags:
         - users
       parameters:
@@ -400,7 +400,7 @@ components:
       in: query
       schema:
         type: string
-        default: active
+        default: enabled
       required: false
   requestBodies:
     UserCreateReq:
