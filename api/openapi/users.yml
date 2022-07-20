@@ -220,11 +220,11 @@ paths:
     post:
       summary: Enables a user account
       description: |
-        Enables a disabled user account given userId.
+        Enables a disabled user account given user ID.
       tags:
         - users
       parameters:
-        - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/UserId"
       responses:       
         '200':
           description: User enabled.
@@ -240,11 +240,11 @@ paths:
     post:
       summary: Disables a user account
       description: |
-        Disables a user account given userId.
+        Disables a user account given user ID.
       tags:
         - users
       parameters:
-        - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/UserId"
       responses:       
         '200':
           description: User disabled.
@@ -359,7 +359,7 @@ components:
         type: string
         minimum: 0
       required: false
-    UserID:
+    UserId:
       name: userId
       description: Unique user identifier.
       in: path
