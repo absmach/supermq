@@ -184,9 +184,7 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 
 func newService(tc mainflux.ThingsServiceClient, nps messaging.PubSub, logger logger.Logger) adapter.Service {
 	svc := adapter.New(tc, nps)
-
 	svc = api.LoggingMiddleware(svc, logger)
-
 	svc = api.MetricsMiddleware(
 		svc,
 		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
@@ -208,9 +206,7 @@ func newService(tc mainflux.ThingsServiceClient, nps messaging.PubSub, logger lo
 
 func startWSServer(ctx context.Context, cfg config, svc adapter.Service, l logger.Logger) error {
 	p := fmt.Sprintf(":%s", cfg.port)
-
 	errCh := make(chan error, 2)
-
 	l.Info(fmt.Sprintf("WS adapter service started, exposed port %s", cfg.port))
 
 	go func() {

@@ -70,7 +70,7 @@ func handshake(svc ws.Service) http.HandlerFunc {
 		// Listen for messages received from the chan messages, and publish them to broker
 		go publish(svc, msgs, req.thingKey)
 
-		go req.broadcast(msgs)
+		go req.listen(msgs)
 	}
 }
 
@@ -80,7 +80,7 @@ func publish(svc ws.Service, msgs <-chan messaging.Message, thingKey string) {
 	}
 }
 
-func getSubstopic(req publishReq, r *http.Request, w http.ResponseWriter) {
+func getSubstopic(req connReq, r *http.Request, w http.ResponseWriter) {
 	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
 	if len(channelParts) < 2 {
 		logger.Warn("Empty channel id or malformed url")
@@ -128,20 +128,20 @@ func parseSubTopic(subtopic string) (string, error) {
 	return subtopic, nil
 }
 
-func decodeRequest(r *http.Request) (publishReq, error) {
+func decodeRequest(r *http.Request) (connReq, error) {
 	authKey := r.Header.Get("Authorization")
 	if authKey == "" {
 		authKeys := bone.GetQuery(r, "authorization")
 		if len(authKeys) == 0 {
 			logger.Debug("Missing authorization key.")
-			return publishReq{}, errUnauthorizedAccess
+			return connReq{}, errUnauthorizedAccess
 		}
 		authKey = authKeys[0]
 	}
 
 	chanID := bone.GetValue(r, "id")
 
-	req := publishReq{
+	req := connReq{
 		thingKey: authKey,
 		chanID:   chanID,
 	}
@@ -149,10 +149,9 @@ func decodeRequest(r *http.Request) (publishReq, error) {
 	return req, nil
 }
 
-func (req publishReq) broadcast(msgs chan<- messaging.Message) {
-
+func (req connReq) listen(msgs chan<- messaging.Message) {
 	for {
-		// Read message from the client, and push them to the msgs channel
+		// Listen for message from the client, and push them to the msgs channel
 		_, payload, err := req.conn.ReadMessage()
 
 		if websocket.IsUnexpectedCloseError(err) {

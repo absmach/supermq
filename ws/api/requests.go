@@ -5,8 +5,8 @@ package api
 
 import "github.com/gorilla/websocket"
 
-type publishReq struct {
-	thingKey string // pubID = thingKey (delete this comment later)
+type connReq struct {
+	thingKey string
 	chanID   string
 	subtopic string
 	conn     *websocket.Conn

@@ -8,11 +8,6 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging"
 )
 
-type Client interface {
-	Handle(m messaging.Message) error
-	Cancel() error
-}
-
 type Connclient struct {
 	conn  *websocket.Conn
 	pubID string

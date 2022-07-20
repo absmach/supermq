@@ -31,15 +31,6 @@ func MetricsMiddleware(svc ws.Service, counter metrics.Counter, latency metrics.
 	}
 }
 
-// func (mm *metricsMiddleware) Authorize(ctx context.Context, thingKey, chanID string) (*mainflux.ThingID, error) {
-// 	defer func(begin time.Time) {
-// 		mm.counter.With("method", "authorize").Add(1)
-// 		mm.latency.With("method", "authorize").Observe(time.Since(begin).Seconds())
-// 	}(time.Now())
-
-// 	return mm.svc.authorize(ctx, thingKey, chanID)
-// }
-
 func (mm *metricsMiddleware) Publish(ctx context.Context, thingKey string, msg messaging.Message) error {
 	defer func(begin time.Time) {
 		mm.counter.With("method", "publish").Add(1)
@@ -60,8 +51,8 @@ func (mm *metricsMiddleware) Subscribe(ctx context.Context, thingKey, chanID, su
 
 func (mm *metricsMiddleware) Unsubscribe(ctx context.Context, thingKey, chanID, subtopic string) error {
 	defer func(begin time.Time) {
-		mm.counter.With("method", "subscribe").Add(1)
-		mm.latency.With("method", "subscribe").Observe(time.Since(begin).Seconds())
+		mm.counter.With("method", "unsubscribe").Add(1)
+		mm.latency.With("method", "unsubscribe").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
 	return mm.svc.Unsubscribe(ctx, thingKey, chanID, subtopic)

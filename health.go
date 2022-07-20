@@ -5,7 +5,6 @@ package mainflux
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -52,10 +51,8 @@ type HealthInfo struct {
 // Health exposes an HTTP handler for retrieving service health.
 func Health(service string) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Do we reach Healh()?")
 		w.Header().Add(contentType, contentTypeJSON)
 		if r.Method != http.MethodGet && r.Method != http.MethodHead {
-			fmt.Println("The r.Method had some errors")
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
@@ -68,14 +65,10 @@ func Health(service string) http.HandlerFunc {
 			BuildTime:   BuildTime,
 		}
 
-		fmt.Println("res is: ", res)
-
 		w.WriteHeader(http.StatusOK)
 
 		if err := json.NewEncoder(w).Encode(res); err != nil {
-			fmt.Println("Internal service error while encoding json")
 			w.WriteHeader(http.StatusInternalServerError)
 		}
-		fmt.Println("Reached the end of Health()")
 	})
 }
