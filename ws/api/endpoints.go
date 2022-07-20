@@ -14,6 +14,7 @@ import (
 
 	"github.com/go-zoo/bone"
 	"github.com/gorilla/websocket"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/ws"
 )
@@ -36,8 +37,6 @@ func handshake(svc ws.Service) http.HandlerFunc {
 				return
 			}
 		}
-
-		getSubstopic(req, r, w)
 
 		// Upgrade to a new ws connection.
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -80,21 +79,39 @@ func publish(svc ws.Service, msgs <-chan messaging.Message, thingKey string) {
 	}
 }
 
-func getSubstopic(req connReq, r *http.Request, w http.ResponseWriter) {
+func decodeRequest(r *http.Request) (connReq, error) {
+	authKey := r.Header.Get("Authorization")
+	if authKey == "" {
+		authKeys := bone.GetQuery(r, "authorization")
+		if len(authKeys) == 0 {
+			logger.Debug("Missing authorization key.")
+			return connReq{}, errUnauthorizedAccess
+		}
+		authKey = authKeys[0]
+	}
+
+	chanID := bone.GetValue(r, "id")
+
+	req := connReq{
+		thingKey: authKey,
+		chanID:   chanID,
+	}
+
+	// Starting parsing subtopic from here
 	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
 	if len(channelParts) < 2 {
 		logger.Warn("Empty channel id or malformed url")
-		w.WriteHeader(http.StatusBadRequest)
-		return
+		return connReq{}, errors.ErrMalformedEntity
 	}
 
 	subtopic, err := parseSubTopic(channelParts[2])
 	if err != nil {
-		logger.Warn("Empty channel id or malformed url")
-		w.WriteHeader(http.StatusBadRequest)
+		return connReq{}, err
 	}
 
 	req.subtopic = subtopic
+
+	return req, nil
 }
 
 func parseSubTopic(subtopic string) (string, error) {
@@ -126,27 +143,6 @@ func parseSubTopic(subtopic string) (string, error) {
 	subtopic = strings.Join(filteredElems, ".")
 
 	return subtopic, nil
-}
-
-func decodeRequest(r *http.Request) (connReq, error) {
-	authKey := r.Header.Get("Authorization")
-	if authKey == "" {
-		authKeys := bone.GetQuery(r, "authorization")
-		if len(authKeys) == 0 {
-			logger.Debug("Missing authorization key.")
-			return connReq{}, errUnauthorizedAccess
-		}
-		authKey = authKeys[0]
-	}
-
-	chanID := bone.GetValue(r, "id")
-
-	req := connReq{
-		thingKey: authKey,
-		chanID:   chanID,
-	}
-
-	return req, nil
 }
 
 func (req connReq) listen(msgs chan<- messaging.Message) {
