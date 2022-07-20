@@ -10,18 +10,14 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/go-zoo/bone"
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/ws"
 )
 
-var (
-	channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
-)
+var channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
 
 func handshake(svc ws.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -45,11 +41,6 @@ func handshake(svc ws.Service) http.HandlerFunc {
 			return
 		}
 
-		// Configure the closing of the ws connection
-		conn.SetCloseHandler(func(code int, text string) error {
-			return svc.Unsubscribe(context.Background(), req.thingKey, req.chanID, req.subtopic)
-		})
-
 		req.conn = conn
 		client := ws.NewClient(conn, "")
 
@@ -63,19 +54,11 @@ func handshake(svc ws.Service) http.HandlerFunc {
 		}
 
 		logger.Debug(fmt.Sprintf("Successfully upgraded communication to WS on channel %s", req.chanID))
-
-		msgs := make(chan messaging.Message)
+		msgs := make(chan []byte)
 
 		// Listen for messages received from the chan messages, and publish them to broker
-		go publish(svc, msgs, req.thingKey)
-
-		go req.listen(msgs)
-	}
-}
-
-func publish(svc ws.Service, msgs <-chan messaging.Message, thingKey string) {
-	for msg := range msgs {
-		svc.Publish(context.Background(), thingKey, msg)
+		go client.Publish(svc, logger, req.thingKey, req.chanID, req.subtopic, msgs)
+		go listen(conn, msgs)
 	}
 }
 
@@ -145,29 +128,23 @@ func parseSubTopic(subtopic string) (string, error) {
 	return subtopic, nil
 }
 
-func (req connReq) listen(msgs chan<- messaging.Message) {
+func listen(conn *websocket.Conn, msgs chan<- []byte) {
 	for {
 		// Listen for message from the client, and push them to the msgs channel
-		_, payload, err := req.conn.ReadMessage()
+		_, payload, err := conn.ReadMessage()
 
 		if websocket.IsUnexpectedCloseError(err) {
 			logger.Debug(fmt.Sprintf("Closing WS connection: %s", err.Error()))
+			close(msgs)
 			return
 		}
 
 		if err != nil {
 			logger.Warn(fmt.Sprintf("Failed to read message: %s", err.Error()))
+			close(msgs)
 			return
 		}
 
-		msg := messaging.Message{
-			Channel:  req.chanID,
-			Subtopic: req.subtopic,
-			Protocol: protocol,
-			Payload:  payload,
-			Created:  time.Now().UnixNano(),
-		}
-
-		msgs <- msg
+		msgs <- payload
 	}
 }

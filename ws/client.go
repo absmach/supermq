@@ -4,28 +4,50 @@
 package ws
 
 import (
+	"context"
+	"fmt"
+	"time"
+
 	"github.com/gorilla/websocket"
+	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 )
 
-type Connclient struct {
-	conn  *websocket.Conn
-	pubID string
+type Client struct {
+	conn *websocket.Conn
+	id   string
 }
 
-func NewClient(c *websocket.Conn, token string) *Connclient {
-	return &Connclient{
-		conn:  c,
-		pubID: token,
+func NewClient(c *websocket.Conn, thingKey string) *Client {
+	return &Client{
+		conn: c,
+		id:   thingKey,
 	}
 }
 
-func (c *Connclient) Cancel() error {
+func (c *Client) Publish(svc Service, logger logger.Logger, thingKey, chanID, subtopic string, msgs <-chan []byte) {
+	for msg := range msgs {
+		m := messaging.Message{
+			Channel:  chanID,
+			Subtopic: subtopic,
+			Protocol: "websocket",
+			Payload:  msg,
+			Created:  time.Now().UnixNano(),
+		}
+		svc.Publish(context.Background(), thingKey, m)
+	}
+	if err := svc.Unsubscribe(context.Background(), thingKey, chanID, subtopic); err != nil {
+		logger.Warn(fmt.Sprintf("Failed to subscribe to broker: %s", err.Error()))
+		c.conn.Close()
+	}
+}
+
+func (c *Client) Cancel() error {
 	return c.conn.Close()
 }
 
-func (c *Connclient) Handle(msg messaging.Message) error {
-	if msg.GetPublisher() == c.pubID {
+func (c *Client) Handle(msg messaging.Message) error {
+	if msg.GetPublisher() == c.id {
 		return nil
 	}
 
