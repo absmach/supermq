@@ -216,13 +216,15 @@ paths:
           description: Missing or invalid content type.
         '500':
           $ref: "#/components/responses/ServiceError"
-  /users/{userID}/enable:
+  /users/{userId}/enable:
     post:
       summary: Enables a user account
       description: |
         Enables a disabled user account given userId.
       tags:
         - users
+      parameters:
+        - $ref: "#/components/parameters/UserID"
       responses:       
         '200':
           description: User enabled.
@@ -234,13 +236,15 @@ paths:
           description: Missing or invalid access token provided.
         '500':
          $ref: "#/components/responses/ServiceError"
-  /users/{userID}/disable:
+  /users/{userId}/disable:
     post:
       summary: Disables a user account
       description: |
         Disables a user account given userId.
       tags:
         - users
+      parameters:
+        - $ref: "#/components/parameters/UserID"
       responses:       
         '200':
           description: User disabled.
