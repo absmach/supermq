@@ -220,7 +220,7 @@ paths:
     post:
       summary: Enables a user account
       description: |
-        Enables a disabled user account given user ID.
+        Enables a disabled user account  for a given user ID.
       tags:
         - users
       parameters:
@@ -240,7 +240,7 @@ paths:
     post:
       summary: Disables a user account
       description: |
-        Disables a user account given user ID.
+        Disables a user account for a given user ID.
       tags:
         - users
       parameters:
@@ -396,7 +396,7 @@ components:
       required: false
     Status:
       name: status
-      description: The status of users to retrieve during retrieval.
+      description: User account status.
       in: query
       schema:
         type: string
