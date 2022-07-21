@@ -24,6 +24,16 @@ var (
 
 	// ErrFailedConnection indicates that service couldn't connect to message broker.
 	ErrFailedConnection = errors.New("failed to connect to message broker")
+
+	// ErrInvalidConnection indicates that client couldn't subscribe to message broker
+	ErrInvalidConnection = errors.New("nats: invalid connection")
+
+	// ErrAlreadySubscribed indicates that client couldn't subscribe, as it was already subscribed
+	ErrAlreadySubscribed = errors.New("already subscribed to topic")
+
+	// ErrEmptyTopic and ErrEmptyID indicate absence of channelID or thingKey in the request
+	ErrEmptyTopic = errors.New("empty topic")
+	ErrEmptyID    = errors.New("empty id")
 )
 
 // Service specifies web socket service API.

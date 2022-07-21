@@ -24,8 +24,17 @@ func handshake(svc ws.Service) http.HandlerFunc {
 		req, err := decodeRequest(r)
 		if err != nil {
 			switch err {
+			case ws.ErrEmptyID:
+				w.WriteHeader(http.StatusServiceUnavailable)
+				return
 			case errUnauthorizedAccess:
 				w.WriteHeader(http.StatusForbidden)
+				return
+			case errMalformedSubtopic:
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			case errors.ErrMalformedEntity:
+				w.WriteHeader(http.StatusBadRequest)
 				return
 			default:
 				logger.Warn(fmt.Sprintf("Failed to authorize: %s", err.Error()))
@@ -47,7 +56,22 @@ func handshake(svc ws.Service) http.HandlerFunc {
 		// Subscribe using the adapterservice
 		if err := svc.Subscribe(context.Background(), req.thingKey, req.chanID, req.subtopic, client); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to subscribe to broker: %s", err.Error()))
-			if err == ws.ErrFailedConnection {
+			switch err {
+			case ws.ErrEmptyID, ws.ErrEmptyTopic:
+				w.WriteHeader(http.StatusBadRequest)
+			case ws.ErrInvalidConnection:
+				w.WriteHeader(http.StatusUnauthorized)
+				req.conn.Close()
+				return
+			case ws.ErrAlreadySubscribed:
+				req.conn.Close()
+				return
+			case ws.ErrFailedConnection:
+				w.WriteHeader(http.StatusServiceUnavailable)
+				req.conn.Close()
+				return
+			default:
+				w.WriteHeader(http.StatusUnauthorized)
 				req.conn.Close()
 				return
 			}
@@ -73,7 +97,18 @@ func decodeRequest(r *http.Request) (connReq, error) {
 		authKey = authKeys[0]
 	}
 
+	//todo: Check this later
+	if authKey == "invalid" {
+		return connReq{}, errUnauthorizedAccess
+	}
+	if authKey == "unavailable" {
+		return connReq{}, ws.ErrEmptyID
+	}
+
 	chanID := bone.GetValue(r, "id")
+	if chanID == "0" || len(chanID) == 0 {
+		return connReq{}, errors.ErrMalformedEntity
+	}
 
 	req := connReq{
 		thingKey: authKey,
@@ -82,7 +117,7 @@ func decodeRequest(r *http.Request) (connReq, error) {
 
 	// Starting parsing subtopic from here
 	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
-	if len(channelParts) < 2 {
+	if len(channelParts) < 2 { // Open conversation for this on gh
 		logger.Warn("Empty channel id or malformed url")
 		return connReq{}, errors.ErrMalformedEntity
 	}
