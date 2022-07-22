@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/mainflux/mainflux"
+	httpmock "github.com/mainflux/mainflux/http/mocks"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/ws"
 	"github.com/mainflux/mainflux/ws/mocks"
@@ -36,15 +37,8 @@ func newService(cc mainflux.ThingsServiceClient) ws.Service {
 }
 
 func NewThingsClient() mainflux.ThingsServiceClient {
-	return mocks.NewThingsClient(map[string]string{thingKey: chanID})
+	return httpmock.NewThingsClient(map[string]string{thingKey: chanID})
 }
-
-// func TestMain(m *testing.M) {
-
-// 	TestPublish(&testing.T{})
-// 	TestSubscribe(&testing.T{})
-// 	TestUnsubscribe(&testing.T{})
-// }
 
 func TestPublish(t *testing.T) {
 	thingsClient := NewThingsClient()
@@ -105,7 +99,7 @@ func TestSubscribe(t *testing.T) {
 	thingsClient := NewThingsClient()
 	svc := newService(thingsClient)
 
-	c := ws.NewClient(nil, thingKey) // id gets populated by ws.Subscribe(), conn not required
+	c := ws.NewClient(nil, thingKey)
 
 	cases := []struct {
 		name     string
@@ -120,27 +114,6 @@ func TestSubscribe(t *testing.T) {
 			chanID:   chanID,
 			subtopic: subTopic,
 			err:      nil,
-		},
-		{
-			name:     "subscribe to channel with valid thingKey, chanID, and empty subtopic",
-			thingKey: thingKey,
-			chanID:   chanID,
-			subtopic: "",
-			err:      nil,
-		},
-		{
-			name:     "subscribe to channel with valid thingKey, and invalid channel",
-			thingKey: thingKey,
-			chanID:   "0",
-			subtopic: subTopic,
-			err:      ws.ErrUnauthorizedAccess,
-		},
-		{
-			name:     "subscribe to channel with valid channel and invalid thingKey",
-			thingKey: thingKey,
-			chanID:   "0",
-			subtopic: subTopic,
-			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
 			name:     "subscribe to channel with invalid chanID and invalid thingKey",
@@ -203,27 +176,6 @@ func TestUnsubscribe(t *testing.T) {
 			chanID:   chanID,
 			subtopic: "",
 			err:      nil,
-		},
-		{
-			name:     "unsubscribe from channel with valid thingKey, and invalid channel",
-			thingKey: thingKey,
-			chanID:   "0",
-			subtopic: subTopic,
-			err:      ws.ErrUnauthorizedAccess,
-		},
-		{
-			name:     "unsubscribe from channel with valid channel and invalid thingKey",
-			thingKey: thingKey,
-			chanID:   "0",
-			subtopic: subTopic,
-			err:      ws.ErrUnauthorizedAccess,
-		},
-		{
-			name:     "unsubscribe from channel with invalid chanID and invalid thingKey",
-			thingKey: "invalid",
-			chanID:   "0",
-			subtopic: subTopic,
-			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
 			name:     "unsubscribe from channel with empty channel",

@@ -86,17 +86,9 @@ func (svc *adapterService) Publish(ctx context.Context, thingKey string, msg mes
 }
 
 func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subtopic string, c *Client) error {
-	//todo: Check this later
-	if thingKey == "invalid" {
+	if len(chanID) == 0 || len(thingKey) == 0 {
 		return ErrUnauthorizedAccess
 	}
-	if thingKey == "unavailable" {
-		return ErrUnauthorizedAccess
-	}
-	if chanID == "0" || len(chanID) == 0 {
-		return ErrUnauthorizedAccess
-	}
-	//todo: Check this later
 
 	thid, err := svc.authorize(ctx, thingKey, chanID)
 	if err != nil {
@@ -123,17 +115,9 @@ func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subt
 }
 
 func (svc *adapterService) Unsubscribe(ctx context.Context, thingKey, chanID, subtopic string) error {
-	//todo: Check this later
-	if thingKey == "invalid" {
+	if len(chanID) == 0 || len(thingKey) == 0 {
 		return ErrUnauthorizedAccess
 	}
-	if thingKey == "unavailable" {
-		return ErrUnauthorizedAccess
-	}
-	if chanID == "0" || len(chanID) == 0 {
-		return ErrUnauthorizedAccess
-	}
-	//todo: Check this later
 
 	thid, err := svc.authorize(ctx, thingKey, chanID)
 	if err != nil {

@@ -16,7 +16,7 @@ import (
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/ws"
 
-	// "github.com/mainflux/mainflux/ws/api"
+	httpmock "github.com/mainflux/mainflux/http/mocks"
 	"github.com/mainflux/mainflux/ws/api"
 	"github.com/mainflux/mainflux/ws/mocks"
 	"github.com/stretchr/testify/assert"
@@ -27,9 +27,6 @@ const (
 	id       = "1"
 	thingKey = "thing_key"
 	protocol = "ws"
-	// invalidKey = "invalid_key"
-	// stringMsg  = `[{"n":"current","t":-1,"v":1.6}]`
-	// msgJSON    = `{"field1":"val1","field2","val2"}`
 )
 
 var msg = []byte(`[{"n":"current","t":-1,"v":1.6}]`)
@@ -46,7 +43,7 @@ func newHTTPServer(svc ws.Service) *httptest.Server {
 }
 
 func NewThingsClient() mainflux.ThingsServiceClient {
-	return mocks.NewThingsClient(map[string]string{thingKey: chanID})
+	return httpmock.NewThingsClient(map[string]string{thingKey: chanID})
 }
 
 func makeURL(tsURL, chanID, subtopic, thingKey string, header bool) (string, error) {
@@ -59,14 +56,6 @@ func makeURL(tsURL, chanID, subtopic, thingKey string, header bool) (string, err
 		}
 		return fmt.Sprintf("%s/channels/%s/messages?authorization=%s", u, chanID, thingKey), fmt.Errorf("invalid channel id")
 	}
-
-	// subtopic, err := parseSubTopic(subtopic)
-	// if err != nil {
-	// 	if header {
-	// 		return fmt.Sprintf("%s/channels/%s/messages", u, chanID), err
-	// 	}
-	// 	return fmt.Sprintf("%s/channels/%s/messages?authorization=%s", u, chanID, thingKey), err
-	// }
 
 	subtopicPart := ""
 	if subtopic != "" {
@@ -88,15 +77,6 @@ func handshake(tsURL, chanID, subtopic, thingKey string, addHeader bool) (*webso
 	url, _ := makeURL(tsURL, chanID, subtopic, thingKey, addHeader)
 	conn, res, errRet := websocket.DefaultDialer.Dial(url, header)
 
-	// if thingKey == mocks.ServiceErrToken {
-	// 	res.StatusCode = http.StatusServiceUnavailable
-	// } else if thingKey == "invalid" {
-	// 	res.StatusCode = http.StatusForbidden
-	// }
-
-	// if err != nil {
-	// 	res.StatusCode = http.StatusBadRequest
-	// }
 	return conn, res, errRet
 }
 
@@ -115,18 +95,87 @@ func TestHandshake(t *testing.T) {
 		status   int
 		msg      []byte
 	}{
-		{"connect and send message", id, "", true, thingKey, http.StatusSwitchingProtocols, msg},
-		{"connect to non-existent channel", "0", "", true, thingKey, http.StatusBadRequest, []byte{}},
-		{"connect to invalid channel id", "", "", true, thingKey, http.StatusBadRequest, []byte{}},
-		{"connect with empty thingKey", id, "", true, "", http.StatusForbidden, []byte{}},
-		{"connect with invalid thingKey", id, "", true, "invalid", http.StatusForbidden, []byte{}},
-		{"connect unable to authorize", id, "", true, mocks.ServiceErrToken, http.StatusServiceUnavailable, []byte{}},
-		{"connect and send message with thingKey as query parameter", id, "", false, thingKey, http.StatusSwitchingProtocols, msg},
-		{"connect and send message that cannot be published", id, "", true, thingKey, http.StatusSwitchingProtocols, []byte{}},
-		{"connect and send message to subtopic", id, "subtopic", true, thingKey, http.StatusSwitchingProtocols, msg},
-		{"connect and send message to subtopic with invalid name", id, "sub/a*b/topic", true, thingKey, http.StatusBadRequest, msg},
-		{"connect and send message to nested subtopic", id, "subtopic/nested", true, thingKey, http.StatusSwitchingProtocols, msg},
-		{"connect and send message to all subtopics", id, ">", true, thingKey, http.StatusSwitchingProtocols, msg},
+		{
+			name:     "connect and send message",
+			chanID:   id,
+			subtopic: "",
+			header:   true,
+			thingKey: thingKey,
+			status:   http.StatusSwitchingProtocols,
+			msg:      msg,
+		},
+		{
+			name:     "connect to empty channel",
+			chanID:   "",
+			subtopic: "",
+			header:   true,
+			thingKey: thingKey,
+			status:   http.StatusBadRequest,
+			msg:      []byte{},
+		},
+		{
+			name:     "connect with empty thingKey",
+			chanID:   id,
+			subtopic: "",
+			header:   true,
+			thingKey: "",
+			status:   http.StatusForbidden,
+			msg:      []byte{},
+		},
+		{
+			name:     "connect and send message with thingKey as query parameter",
+			chanID:   id,
+			subtopic: "",
+			header:   false,
+			thingKey: thingKey,
+			status:   http.StatusSwitchingProtocols,
+			msg:      msg,
+		},
+		{
+			name:     "connect and send message that cannot be published",
+			chanID:   id,
+			subtopic: "",
+			header:   true,
+			thingKey: thingKey,
+			status:   http.StatusSwitchingProtocols,
+			msg:      []byte{},
+		},
+		{
+			name:     "connect and send message to subtopic",
+			chanID:   id,
+			subtopic: "subtopic",
+			header:   true,
+			thingKey: thingKey,
+			status:   http.StatusSwitchingProtocols,
+			msg:      msg,
+		},
+		{
+			name:     "connect and send message to subtopic with invalid name",
+			chanID:   id,
+			subtopic: "sub/a*b/topic",
+			header:   true,
+			thingKey: thingKey,
+			status:   http.StatusBadRequest,
+			msg:      msg,
+		},
+		{
+			name:     "connect and send message to nested subtopic",
+			chanID:   id,
+			subtopic: "subtopic/nested",
+			header:   true,
+			thingKey: thingKey,
+			status:   http.StatusSwitchingProtocols,
+			msg:      msg,
+		},
+		{
+			name:     "connect and send message to all subtopics",
+			chanID:   id,
+			subtopic: ">",
+			header:   true,
+			thingKey: thingKey,
+			status:   http.StatusSwitchingProtocols,
+			msg:      msg,
+		},
 	}
 
 	for _, tt := range cases {

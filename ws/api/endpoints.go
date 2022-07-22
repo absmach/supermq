@@ -53,26 +53,12 @@ func handshake(svc ws.Service) http.HandlerFunc {
 		req.conn = conn
 		client := ws.NewClient(conn, "")
 
-		// Subscribe using the adapterservice
 		if err := svc.Subscribe(context.Background(), req.thingKey, req.chanID, req.subtopic, client); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to subscribe to broker: %s", err.Error()))
-			switch err {
-			case ws.ErrEmptyID, ws.ErrEmptyTopic:
+			if err == ws.ErrEmptyID || err == ws.ErrEmptyTopic {
 				w.WriteHeader(http.StatusBadRequest)
-			case ws.ErrInvalidConnection:
-				w.WriteHeader(http.StatusUnauthorized)
-				req.conn.Close()
-				return
-			case ws.ErrAlreadySubscribed:
-				req.conn.Close()
-				return
-			case ws.ErrFailedConnection:
-				w.WriteHeader(http.StatusServiceUnavailable)
-				req.conn.Close()
-				return
-			default:
-				w.WriteHeader(http.StatusUnauthorized)
-				req.conn.Close()
+			} else {
+				encodeError(&req, w, err)
 				return
 			}
 		}
@@ -97,27 +83,15 @@ func decodeRequest(r *http.Request) (connReq, error) {
 		authKey = authKeys[0]
 	}
 
-	//todo: Check this later
-	if authKey == "invalid" {
-		return connReq{}, errUnauthorizedAccess
-	}
-	if authKey == "unavailable" {
-		return connReq{}, ws.ErrEmptyID
-	}
-
 	chanID := bone.GetValue(r, "id")
-	if chanID == "0" || len(chanID) == 0 {
-		return connReq{}, errors.ErrMalformedEntity
-	}
 
 	req := connReq{
 		thingKey: authKey,
 		chanID:   chanID,
 	}
 
-	// Starting parsing subtopic from here
 	channelParts := channelPartRegExp.FindStringSubmatch(r.RequestURI)
-	if len(channelParts) < 2 { // Open conversation for this on gh
+	if len(channelParts) < 2 {
 		logger.Warn("Empty channel id or malformed url")
 		return connReq{}, errors.ErrMalformedEntity
 	}
@@ -181,5 +155,21 @@ func listen(conn *websocket.Conn, msgs chan<- []byte) {
 		}
 
 		msgs <- payload
+	}
+}
+
+func encodeError(req *connReq, w http.ResponseWriter, err error) {
+	switch err {
+	case ws.ErrInvalidConnection:
+		w.WriteHeader(http.StatusUnauthorized)
+		req.conn.Close()
+	case ws.ErrAlreadySubscribed:
+		req.conn.Close()
+	case ws.ErrFailedConnection:
+		w.WriteHeader(http.StatusServiceUnavailable)
+		req.conn.Close()
+	default:
+		w.WriteHeader(http.StatusUnauthorized)
+		req.conn.Close()
 	}
 }
