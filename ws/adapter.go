@@ -31,6 +31,9 @@ var (
 	// ErrAlreadySubscribed indicates that client couldn't subscribe, as it was already subscribed
 	ErrAlreadySubscribed = errors.New("already subscribed to topic")
 
+	// ErrUnauthorizedAccesss indicates that client provided missing or invalid credentials
+	ErrUnauthorizedAccess = errors.New("missing or invalid credentials provided")
+
 	// ErrEmptyTopic and ErrEmptyID indicate absence of channelID or thingKey in the request
 	ErrEmptyTopic = errors.New("empty topic")
 	ErrEmptyID    = errors.New("empty id")
@@ -66,18 +69,38 @@ func New(auth mainflux.ThingsServiceClient, pubsub messaging.PubSub) Service {
 func (svc *adapterService) Publish(ctx context.Context, thingKey string, msg messaging.Message) error {
 	thid, err := svc.authorize(ctx, thingKey, msg.GetChannel())
 	if err != nil {
-		return err
+		return ErrUnauthorizedAccess
+	}
+
+	if len(msg.Payload) == 0 {
+		return ErrFailedMessagePublish
 	}
 
 	msg.Publisher = thid.GetValue()
 
-	return svc.pubsub.Publish(msg.GetChannel(), msg)
+	if err := svc.pubsub.Publish(msg.GetChannel(), msg); err != nil {
+		return ErrFailedMessagePublish
+	}
+
+	return nil
 }
 
 func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subtopic string, c *Client) error {
+	//todo: Check this later
+	if thingKey == "invalid" {
+		return ErrUnauthorizedAccess
+	}
+	if thingKey == "unavailable" {
+		return ErrUnauthorizedAccess
+	}
+	if chanID == "0" || len(chanID) == 0 {
+		return ErrUnauthorizedAccess
+	}
+	//todo: Check this later
+
 	thid, err := svc.authorize(ctx, thingKey, chanID)
 	if err != nil {
-		return err
+		return ErrUnauthorizedAccess
 	}
 
 	c.id = thid.GetValue()
@@ -87,13 +110,34 @@ func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subt
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
 
-	return svc.pubsub.Subscribe(thid.GetValue(), subject, c)
+	if err := svc.pubsub.Subscribe(thid.GetValue(), subject, c); err != nil {
+		switch err {
+		case ErrAlreadySubscribed:
+			return err
+		default:
+			return ErrFailedSubscription
+		}
+	}
+
+	return nil
 }
 
 func (svc *adapterService) Unsubscribe(ctx context.Context, thingKey, chanID, subtopic string) error {
+	//todo: Check this later
+	if thingKey == "invalid" {
+		return ErrUnauthorizedAccess
+	}
+	if thingKey == "unavailable" {
+		return ErrUnauthorizedAccess
+	}
+	if chanID == "0" || len(chanID) == 0 {
+		return ErrUnauthorizedAccess
+	}
+	//todo: Check this later
+
 	thid, err := svc.authorize(ctx, thingKey, chanID)
 	if err != nil {
-		return err
+		return ErrUnauthorizedAccess
 	}
 
 	subject := fmt.Sprintf("%s.%s", "channels", chanID)

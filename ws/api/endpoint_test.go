@@ -14,7 +14,6 @@ import (
 	"github.com/mainflux/mainflux"
 
 	log "github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/ws"
 
 	// "github.com/mainflux/mainflux/ws/api"
@@ -33,15 +32,7 @@ const (
 	// msgJSON    = `{"field1":"val1","field2","val2"}`
 )
 
-var mssg = []byte(`[{"n":"current","t":-1,"v":1.6}]`)
-
-var msg = messaging.Message{
-	Channel:   chanID,
-	Publisher: id,
-	Subtopic:  "",
-	Protocol:  protocol,
-	Payload:   []byte(`[{"n":"current","t":-5,"v":1.2}]`),
-}
+var msg = []byte(`[{"n":"current","t":-1,"v":1.6}]`)
 
 func newService(cc mainflux.ThingsServiceClient) ws.Service {
 	pubsub := mocks.NewPubSub()
@@ -124,18 +115,18 @@ func TestHandshake(t *testing.T) {
 		status   int
 		msg      []byte
 	}{
-		{"connect and send message", id, "", true, thingKey, http.StatusSwitchingProtocols, mssg},
+		{"connect and send message", id, "", true, thingKey, http.StatusSwitchingProtocols, msg},
 		{"connect to non-existent channel", "0", "", true, thingKey, http.StatusBadRequest, []byte{}},
 		{"connect to invalid channel id", "", "", true, thingKey, http.StatusBadRequest, []byte{}},
 		{"connect with empty thingKey", id, "", true, "", http.StatusForbidden, []byte{}},
 		{"connect with invalid thingKey", id, "", true, "invalid", http.StatusForbidden, []byte{}},
 		{"connect unable to authorize", id, "", true, mocks.ServiceErrToken, http.StatusServiceUnavailable, []byte{}},
-		{"connect and send message with thingKey as query parameter", id, "", false, thingKey, http.StatusSwitchingProtocols, mssg},
+		{"connect and send message with thingKey as query parameter", id, "", false, thingKey, http.StatusSwitchingProtocols, msg},
 		{"connect and send message that cannot be published", id, "", true, thingKey, http.StatusSwitchingProtocols, []byte{}},
-		{"connect and send message to subtopic", id, "subtopic", true, thingKey, http.StatusSwitchingProtocols, mssg},
-		{"connect and send message to subtopic with invalid name", id, "sub/a*b/topic", true, thingKey, http.StatusBadRequest, mssg},
-		{"connect and send message to nested subtopic", id, "subtopic/nested", true, thingKey, http.StatusSwitchingProtocols, mssg},
-		{"connect and send message to all subtopics", id, ">", true, thingKey, http.StatusSwitchingProtocols, mssg},
+		{"connect and send message to subtopic", id, "subtopic", true, thingKey, http.StatusSwitchingProtocols, msg},
+		{"connect and send message to subtopic with invalid name", id, "sub/a*b/topic", true, thingKey, http.StatusBadRequest, msg},
+		{"connect and send message to nested subtopic", id, "subtopic/nested", true, thingKey, http.StatusSwitchingProtocols, msg},
+		{"connect and send message to all subtopics", id, ">", true, thingKey, http.StatusSwitchingProtocols, msg},
 	}
 
 	for _, tt := range cases {
