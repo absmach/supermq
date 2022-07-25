@@ -60,7 +60,6 @@ const (
 	defServerCert     = ""
 	defServerKey      = ""
 	defThingsURL      = "http://localhost"
-	defThingsPrefix   = ""
 	defThingsESURL    = "localhost:6379"
 	defThingsESPass   = ""
 	defThingsESDB     = "0"
@@ -111,7 +110,6 @@ type config struct {
 	serverCert     string
 	serverKey      string
 	thingsURL      string
-	thingsPrefix   string
 	esThingsURL    string
 	esThingsPass   string
 	esThingsDB     string
