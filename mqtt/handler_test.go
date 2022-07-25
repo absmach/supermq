@@ -1,4 +1,4 @@
-package mqtt
+package mqtt_test
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/mqtt"
 	"github.com/mainflux/mainflux/mqtt/mocks"
 	mqttredis "github.com/mainflux/mainflux/mqtt/redis"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -27,12 +28,16 @@ const (
 	password       = "password"
 )
 
-var buf bytes.Buffer
-var sessionClient = session.Client{
-	ID:       clientID,
-	Username: thingID,
-	Password: []byte(password),
-}
+var (
+	invalidTopic  = "invalidTopic"
+	idProvider    = uuid.NewMock()
+	buf           = bytes.Buffer{}
+	sessionClient = session.Client{
+		ID:       clientID,
+		Username: thingID,
+		Password: []byte(password),
+	}
+)
 
 func TestAuthConnect(t *testing.T) {
 	handler := newHandler()
@@ -44,16 +49,16 @@ func TestAuthConnect(t *testing.T) {
 	}{
 		{
 			desc:    "connect without active session",
-			err:     errClientNotInitialized,
+			err:     mqtt.ErrClientNotInitialized,
 			session: nil,
 		},
 		{
 			desc: "connect without clientID",
-			err:  nil,
+			err:  mqtt.ErrMissingClientID,
 			session: &session.Client{
 				ID:       "",
 				Username: thingID,
-				Password: []byte("password"),
+				Password: []byte(password),
 			},
 		},
 		{
@@ -93,9 +98,7 @@ func TestAuthConnect(t *testing.T) {
 
 func TestAuthPublish(t *testing.T) {
 	handler := newHandler()
-	var invalidTopic = "invalidTopic"
 	var payload = []byte("[{'n':'test-name', 'v': 1.2}]")
-	var idProvider = uuid.NewMock()
 
 	chID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -111,21 +114,21 @@ func TestAuthPublish(t *testing.T) {
 		{
 			desc:    "publish with inactive client",
 			client:  nil,
-			err:     errClientNotInitialized,
+			err:     mqtt.ErrClientNotInitialized,
 			topic:   &topic,
 			payload: payload,
 		},
 		{
 			desc:    "publish without topic",
 			client:  &sessionClient,
-			err:     errMissingTopicPub,
+			err:     mqtt.ErrMissingTopicPub,
 			topic:   nil,
 			payload: payload,
 		},
 		{
 			desc:    "publish with malformed topic",
 			client:  &sessionClient,
-			err:     errMalformedTopic,
+			err:     mqtt.ErrMalformedTopic,
 			topic:   &invalidTopic,
 			payload: payload,
 		},
@@ -139,7 +142,6 @@ func TestAuthPublish(t *testing.T) {
 
 func TestAuthSubscribe(t *testing.T) {
 	handler := newHandler()
-	var idProvider = uuid.NewMock()
 	var invalidTopics = []string{"topic"}
 
 	chID, err := idProvider.ID()
@@ -155,19 +157,19 @@ func TestAuthSubscribe(t *testing.T) {
 		{
 			desc:   "subscribe without active session",
 			client: nil,
-			err:    errClientNotInitialized,
+			err:    mqtt.ErrClientNotInitialized,
 			topic:  &topics,
 		},
 		{
 			desc:   "subscribe without topics",
 			client: &sessionClient,
-			err:    errMissingTopicSub,
+			err:    mqtt.ErrMissingTopicSub,
 			topic:  nil,
 		},
 		{
 			desc:   "subscribe with invalid channel",
 			client: &sessionClient,
-			err:    errMalformedTopic,
+			err:    mqtt.ErrMalformedTopic,
 			topic:  &invalidTopics,
 		},
 		{
@@ -195,12 +197,12 @@ func TestConnect(t *testing.T) {
 		{
 			desc:     "connect without active session",
 			client:   nil,
-			expected: fmt.Sprint(errors.Wrap(errFailedConnect, errClientNotInitialized).Error()),
+			expected: fmt.Sprint(errors.Wrap(mqtt.ErrFailedConnect, mqtt.ErrClientNotInitialized).Error()),
 		},
 		{
 			desc:     "connect with valid session",
 			client:   &sessionClient,
-			expected: fmt.Sprintf(infoConnected, clientID),
+			expected: fmt.Sprintf(mqtt.InfoConnected, clientID),
 		},
 	}
 
@@ -212,8 +214,6 @@ func TestConnect(t *testing.T) {
 
 func TestPublish(t *testing.T) {
 	handler := newHandler()
-	var idProvider = uuid.NewMock()
-	var invalidTopic = "invalidTopic"
 	buf.Reset()
 
 	chID, err := idProvider.ID()
@@ -232,14 +232,14 @@ func TestPublish(t *testing.T) {
 			client:   nil,
 			topic:    topic,
 			payload:  []byte("payload"),
-			expected: errClientNotInitialized.Error(),
+			expected: mqtt.ErrClientNotInitialized.Error(),
 		},
 		{
 			desc:     "publish with invalid topic",
 			client:   &sessionClient,
 			topic:    invalidTopic,
 			payload:  []byte("payload"),
-			expected: fmt.Sprintf(infoPublished, clientID, invalidTopic),
+			expected: fmt.Sprintf(mqtt.InfoPublished, clientID, invalidTopic),
 		},
 	}
 
@@ -251,7 +251,6 @@ func TestPublish(t *testing.T) {
 
 func TestSubscribe(t *testing.T) {
 	handler := newHandler()
-	var idProvider = uuid.NewMock()
 	buf.Reset()
 
 	chID, err := idProvider.ID()
@@ -268,13 +267,13 @@ func TestSubscribe(t *testing.T) {
 			desc:     "subscribe without active session",
 			client:   nil,
 			topic:    topics,
-			expected: fmt.Sprint(errors.Wrap(errFailedSubscribe, errClientNotInitialized).Error()),
+			expected: fmt.Sprint(errors.Wrap(mqtt.ErrFailedSubscribe, mqtt.ErrClientNotInitialized).Error()),
 		},
 		{
 			desc:     "subscribe with valid session and topics",
 			client:   &sessionClient,
 			topic:    topics,
-			expected: fmt.Sprintf(infoSubscribed, clientID, topics[0]),
+			expected: fmt.Sprintf(mqtt.InfoSubscribed, clientID, topics[0]),
 		},
 	}
 
@@ -286,7 +285,6 @@ func TestSubscribe(t *testing.T) {
 
 func TestUnsubscribe(t *testing.T) {
 	handler := newHandler()
-	var idProvider = uuid.NewMock()
 	buf.Reset()
 
 	chID, err := idProvider.ID()
@@ -303,13 +301,13 @@ func TestUnsubscribe(t *testing.T) {
 			desc:     "unsubscribe without active session",
 			client:   nil,
 			topic:    topics,
-			expected: fmt.Sprint(errors.Wrap(errFailedUnsubscribe, errClientNotInitialized).Error()),
+			expected: fmt.Sprint(errors.Wrap(mqtt.ErrFailedUnsubscribe, mqtt.ErrClientNotInitialized).Error()),
 		},
 		{
 			desc:     "unsubscribe with valid session and topics",
 			client:   &sessionClient,
 			topic:    topics,
-			expected: fmt.Sprintf(infoUnsubscribed, clientID, topics[0]),
+			expected: fmt.Sprintf(mqtt.InfoUnsubscribed, clientID, topics[0]),
 		},
 	}
 
@@ -321,7 +319,6 @@ func TestUnsubscribe(t *testing.T) {
 
 func TestDisconnect(t *testing.T) {
 	handler := newHandler()
-	var idProvider = uuid.NewMock()
 	buf.Reset()
 
 	chID, err := idProvider.ID()
@@ -338,13 +335,13 @@ func TestDisconnect(t *testing.T) {
 			desc:     "disconect without active session",
 			client:   nil,
 			topic:    topics,
-			expected: fmt.Sprint(errors.Wrap(errFailedDisconnect, errClientNotInitialized).Error()),
+			expected: fmt.Sprint(errors.Wrap(mqtt.ErrFailedDisconnect, mqtt.ErrClientNotInitialized).Error()),
 		},
 		{
 			desc:     "disconect with valid session",
 			client:   &sessionClient,
 			topic:    topics,
-			expected: fmt.Sprintf(infoDisconnected, clientID, thingID),
+			expected: fmt.Sprintf(mqtt.InfoDisconnected, clientID, thingID),
 		},
 	}
 
@@ -388,5 +385,5 @@ func newHandler() session.Handler {
 
 	eventStore := mqttredis.NewEventStore(redisClient, "1")
 
-	return NewHandler([]messaging.Publisher{mocks.NewPublisher()}, eventStore, logger, authClient)
+	return mqtt.NewHandler([]messaging.Publisher{mocks.NewPublisher()}, eventStore, logger, authClient)
 }
