@@ -126,7 +126,10 @@ func (sdk mfSDK) Things(token string, pm PageMetadata) (ThingsPage, error) {
 }
 
 func (sdk mfSDK) ThingsByChannel(token, chanID string, pm PageMetadata) (ThingsPage, error) {
-	url := fmt.Sprintf("%s/channels/%s/things?offset=%d&limit=%d&disconnected=%t", sdk.thingsURL, chanID, pm.Offset, pm.Limit, pm.Disconnected)
+	url, err := sdk.withQueryParams(fmt.Sprintf("%s/channels/%s", sdk.thingsURL, chanID), thingsEndpoint, pm)
+	if err != nil {
+		return ThingsPage{}, err
+	}
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return ThingsPage{}, err

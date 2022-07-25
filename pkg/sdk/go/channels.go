@@ -110,7 +110,10 @@ func (sdk mfSDK) Channels(token string, pm PageMetadata) (ChannelsPage, error) {
 }
 
 func (sdk mfSDK) ChannelsByThing(token, thingID string, pm PageMetadata) (ChannelsPage, error) {
-	url := fmt.Sprintf("%s/things/%s/channels?offset=%d&limit=%d&disconnected=%t", sdk.thingsURL, thingID, pm.Offset, pm.Limit, pm.Disconnected)
+	url, err := sdk.withQueryParams(fmt.Sprintf("%s/things/%s", sdk.thingsURL, thingID), channelsEndpoint, pm)
+	if err != nil {
+		return ChannelsPage{}, err
+	}
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return ChannelsPage{}, err

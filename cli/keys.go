@@ -45,7 +45,7 @@ var cmdAPIKeys = []cobra.Command{
 				return
 			}
 
-			if err := sdk.Revoke(args[0], args[1]); err != nil {
+			if err := sdk.Revoke(args[1], args[0]); err != nil {
 				logError(err)
 				return
 			}
@@ -63,7 +63,7 @@ var cmdAPIKeys = []cobra.Command{
 				return
 			}
 
-			rk, err := sdk.RetrieveKey(args[0], args[1])
+			rk, err := sdk.RetrieveKey(args[1], args[0])
 			if err != nil {
 				logError(err)
 				return
