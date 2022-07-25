@@ -137,7 +137,7 @@ func (ps *provisionService) Provision(token, name, externalID, externalKey strin
 			name = thing.Name
 		}
 		th.Name = name
-		thID, err := ps.sdk.CreateThing(th, token)
+		thID, err := ps.sdk.CreateThing(token, th)
 		if err != nil {
 			res.Error = err.Error()
 			return res, errors.Wrap(ErrFailedThingCreation, err)
@@ -157,7 +157,7 @@ func (ps *provisionService) Provision(token, name, externalID, externalKey strin
 			Name:     channel.Name,
 			Metadata: channel.Metadata,
 		}
-		chCreated, err := ps.sdk.CreateChannel(ch, token)
+		chCreated, err := ps.sdk.CreateChannel(token, ch)
 		if err != nil {
 			return res, err
 		}
@@ -215,7 +215,7 @@ func (ps *provisionService) Provision(token, name, externalID, externalKey strin
 		if ps.conf.Bootstrap.X509Provision {
 			var cert SDK.Cert
 
-			cert, err = ps.sdk.IssueCert(thing.ID, ps.conf.Cert.KeyBits, ps.conf.Cert.KeyType, ps.conf.Cert.TTL, token)
+			cert, err = ps.sdk.IssueCert(token, thing.ID, ps.conf.Cert.KeyBits, ps.conf.Cert.KeyType, ps.conf.Cert.TTL)
 			if err != nil {
 				e := errors.Wrap(err, fmt.Errorf("thing id: %s", thing.ID))
 				return res, errors.Wrap(ErrFailedCertCreation, e)
@@ -262,7 +262,7 @@ func (ps *provisionService) Cert(token, thingID, ttl string, keyBits int) (strin
 	if err != nil {
 		return "", "", errors.Wrap(ErrUnauthorized, err)
 	}
-	cert, err := ps.sdk.IssueCert(th.ID, ps.conf.Cert.KeyBits, ps.conf.Cert.KeyType, ps.conf.Cert.TTL, token)
+	cert, err := ps.sdk.IssueCert(token, th.ID, ps.conf.Cert.KeyBits, ps.conf.Cert.KeyType, ps.conf.Cert.TTL)
 	return cert.ClientCert, cert.ClientKey, err
 }
 
@@ -322,7 +322,7 @@ func (ps *provisionService) updateGateway(token string, bs SDK.BootstrapConfig, 
 	if err := json.Unmarshal(b, &th.Metadata); err != nil {
 		return errors.Wrap(ErrGatewayUpdate, err)
 	}
-	if err := ps.sdk.UpdateThing(th, token); err != nil {
+	if err := ps.sdk.UpdateThing(token, th); err != nil {
 		return errors.Wrap(ErrGatewayUpdate, err)
 	}
 	return nil

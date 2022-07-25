@@ -53,7 +53,7 @@ type Service interface {
 	ViewProfile(ctx context.Context, token string) (User, error)
 
 	// ListUsers retrieves users list for a valid admin token.
-	ListUsers(ctx context.Context, token string, offset, limit uint64, email string, meta Metadata) (UserPage, error)
+	ListUsers(ctx context.Context, token string, pm PageMetadata) (UserPage, error)
 
 	// UpdateUser updates the user metadata.
 	UpdateUser(ctx context.Context, token string, user User) error
@@ -73,15 +73,16 @@ type Service interface {
 	SendPasswordReset(ctx context.Context, host, email, token string) error
 
 	// ListMembers retrieves everything that is assigned to a group identified by groupID.
-	ListMembers(ctx context.Context, token, groupID string, offset, limit uint64, meta Metadata) (UserPage, error)
+	ListMembers(ctx context.Context, token, groupID string, pm PageMetadata) (UserPage, error)
 }
 
 // PageMetadata contains page metadata that helps navigation.
 type PageMetadata struct {
-	Total  uint64
-	Offset uint64
-	Limit  uint64
-	Email  string
+	Total    uint64
+	Offset   uint64
+	Limit    uint64
+	Email    string
+	Metadata Metadata
 }
 
 // GroupPage contains a page of groups.
@@ -217,7 +218,7 @@ func (svc usersService) ViewProfile(ctx context.Context, token string) (User, er
 	}, nil
 }
 
-func (svc usersService) ListUsers(ctx context.Context, token string, offset, limit uint64, email string, m Metadata) (UserPage, error) {
+func (svc usersService) ListUsers(ctx context.Context, token string, pm PageMetadata) (UserPage, error) {
 	id, err := svc.identify(ctx, token)
 	if err != nil {
 		return UserPage{}, err
@@ -226,7 +227,7 @@ func (svc usersService) ListUsers(ctx context.Context, token string, offset, lim
 	if err := svc.authorize(ctx, id.id, "authorities", "member"); err != nil {
 		return UserPage{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
-	return svc.users.RetrieveAll(ctx, offset, limit, nil, email, m)
+	return svc.users.RetrieveAll(ctx, nil, pm)
 }
 
 func (svc usersService) UpdateUser(ctx context.Context, token string, u User) error {
@@ -307,12 +308,12 @@ func (svc usersService) SendPasswordReset(_ context.Context, host, email, token 
 	return svc.email.SendPasswordReset(to, host, token)
 }
 
-func (svc usersService) ListMembers(ctx context.Context, token, groupID string, offset, limit uint64, m Metadata) (UserPage, error) {
+func (svc usersService) ListMembers(ctx context.Context, token, groupID string, pm PageMetadata) (UserPage, error) {
 	if _, err := svc.identify(ctx, token); err != nil {
 		return UserPage{}, err
 	}
 
-	userIDs, err := svc.members(ctx, token, groupID, offset, limit)
+	userIDs, err := svc.members(ctx, token, groupID, pm.Offset, pm.Limit)
 	if err != nil {
 		return UserPage{}, err
 	}
@@ -322,13 +323,13 @@ func (svc usersService) ListMembers(ctx context.Context, token, groupID string, 
 			Users: []User{},
 			PageMetadata: PageMetadata{
 				Total:  0,
-				Offset: offset,
-				Limit:  limit,
+				Offset: pm.Offset,
+				Limit:  pm.Limit,
 			},
 		}, nil
 	}
 
-	return svc.users.RetrieveAll(ctx, offset, limit, userIDs, "", m)
+	return svc.users.RetrieveAll(ctx, userIDs, pm)
 }
 
 // Auth helpers

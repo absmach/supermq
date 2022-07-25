@@ -260,7 +260,13 @@ func TestListUsers(t *testing.T) {
 	}
 
 	for desc, tc := range cases {
-		page, err := svc.ListUsers(context.Background(), tc.token, tc.offset, tc.limit, tc.email, nil)
+		pm := users.PageMetadata{
+			Offset:   tc.offset,
+			Limit:    tc.limit,
+			Email:    tc.email,
+			Metadata: nil,
+		}
+		page, err := svc.ListUsers(context.Background(), tc.token, pm)
 		size := uint64(len(page.Users))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", desc, tc.size, size))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))

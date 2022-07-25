@@ -34,7 +34,7 @@ var cmdGroups = []cobra.Command{
 				logError(err)
 				return
 			}
-			id, err := sdk.CreateGroup(group, args[1])
+			id, err := sdk.CreateGroup(args[1], group)
 			if err != nil {
 				logError(err)
 				return
@@ -59,11 +59,11 @@ var cmdGroups = []cobra.Command{
 					logUsage(cmd.Use)
 					return
 				}
-				meta := mfxsdk.PageMetadata{
+				pm := mfxsdk.PageMetadata{
 					Offset: uint64(Offset),
 					Limit:  uint64(Limit),
 				}
-				l, err := sdk.Groups(meta, args[1])
+				l, err := sdk.Groups(args[1], pm)
 				if err != nil {
 					logError(err)
 					return
@@ -76,7 +76,11 @@ var cmdGroups = []cobra.Command{
 					logUsage(cmd.Use)
 					return
 				}
-				l, err := sdk.Children(args[1], uint64(Offset), uint64(Limit), args[2])
+				pm := mfxsdk.PageMetadata{
+					Offset: uint64(Offset),
+					Limit:  uint64(Limit),
+				}
+				l, err := sdk.Children(args[2], args[1], pm)
 				if err != nil {
 					logError(err)
 					return
@@ -89,7 +93,11 @@ var cmdGroups = []cobra.Command{
 					logUsage(cmd.Use)
 					return
 				}
-				l, err := sdk.Parents(args[1], uint64(Offset), uint64(Limit), args[2])
+				pm := mfxsdk.PageMetadata{
+					Offset: uint64(Offset),
+					Limit:  uint64(Limit),
+				}
+				l, err := sdk.Parents(args[2], args[1], pm)
 				if err != nil {
 					logError(err)
 					return
@@ -101,7 +109,7 @@ var cmdGroups = []cobra.Command{
 				logUsage(cmd.Use)
 				return
 			}
-			t, err := sdk.Group(args[0], args[1])
+			t, err := sdk.Group(args[1], args[0])
 			if err != nil {
 				logError(err)
 				return
@@ -124,7 +132,7 @@ var cmdGroups = []cobra.Command{
 				logError(err)
 				return
 			}
-			if err := sdk.Assign(ids, args[1], args[2], args[3]); err != nil {
+			if err := sdk.Assign(args[3], ids, args[1], args[2]); err != nil {
 				logError(err)
 				return
 			}
@@ -162,7 +170,7 @@ var cmdGroups = []cobra.Command{
 				logUsage(cmd.Use)
 				return
 			}
-			if err := sdk.DeleteGroup(args[0], args[1]); err != nil {
+			if err := sdk.DeleteGroup(args[1], args[0]); err != nil {
 				logError(err)
 				return
 			}
@@ -178,7 +186,11 @@ var cmdGroups = []cobra.Command{
 				logUsage(cmd.Use)
 				return
 			}
-			up, err := sdk.Members(args[0], args[1], uint64(Offset), uint64(Limit))
+			pm := mfxsdk.PageMetadata{
+				Offset: uint64(Offset),
+				Limit:  uint64(Limit),
+			}
+			up, err := sdk.Members(args[1], args[0], pm)
 			if err != nil {
 				logError(err)
 				return
@@ -195,7 +207,11 @@ var cmdGroups = []cobra.Command{
 				logUsage(cmd.Use)
 				return
 			}
-			up, err := sdk.Memberships(args[0], args[1], uint64(Offset), uint64(Limit))
+			pm := mfxsdk.PageMetadata{
+				Offset: uint64(Offset),
+				Limit:  uint64(Limit),
+			}
+			up, err := sdk.Memberships(args[1], args[0], pm)
 			if err != nil {
 				logError(err)
 				return

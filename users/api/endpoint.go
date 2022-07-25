@@ -118,7 +118,13 @@ func listUsersEndpoint(svc users.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return users.UserPage{}, err
 		}
-		up, err := svc.ListUsers(ctx, req.token, req.offset, req.limit, req.email, req.metadata)
+		pm := users.PageMetadata{
+			Offset:   req.offset,
+			Limit:    req.limit,
+			Email:    req.email,
+			Metadata: req.metadata,
+		}
+		up, err := svc.ListUsers(ctx, req.token, pm)
 		if err != nil {
 			return users.UserPage{}, err
 		}
@@ -178,8 +184,12 @@ func listMembersEndpoint(svc users.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return userPageRes{}, errors.Wrap(errors.ErrMalformedEntity, err)
 		}
-
-		page, err := svc.ListMembers(ctx, req.token, req.groupID, req.offset, req.limit, req.metadata)
+		pm := users.PageMetadata{
+			Offset:   req.offset,
+			Limit:    req.limit,
+			Metadata: req.metadata,
+		}
+		page, err := svc.ListMembers(ctx, req.token, req.groupID, pm)
 		if err != nil {
 			return userPageRes{}, err
 		}

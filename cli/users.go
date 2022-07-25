@@ -117,7 +117,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 
-			if err := sdk.UpdateUser(user, args[1]); err != nil {
+			if err := sdk.UpdateUser(args[1], user); err != nil {
 				logError(err)
 				return
 			}
@@ -135,7 +135,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 
-			if err := sdk.UpdatePassword(args[0], args[1], args[2]); err != nil {
+			if err := sdk.UpdatePassword(args[2], args[0], args[1]); err != nil {
 				logError(err)
 				return
 			}

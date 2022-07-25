@@ -137,13 +137,13 @@ func (ur userRepository) RetrieveByID(ctx context.Context, id string) (users.Use
 	return toUser(dbu)
 }
 
-func (ur userRepository) RetrieveAll(ctx context.Context, offset, limit uint64, userIDs []string, email string, um users.Metadata) (users.UserPage, error) {
-	eq, ep, err := createEmailQuery("", email)
+func (ur userRepository) RetrieveAll(ctx context.Context, userIDs []string, pm users.PageMetadata) (users.UserPage, error) {
+	eq, ep, err := createEmailQuery("", pm.Email)
 	if err != nil {
 		return users.UserPage{}, errors.Wrap(errors.ErrViewEntity, err)
 	}
 
-	mq, mp, err := createMetadataQuery("", um)
+	mq, mp, err := createMetadataQuery("", pm.Metadata)
 	if err != nil {
 		return users.UserPage{}, errors.Wrap(errors.ErrViewEntity, err)
 	}
@@ -166,8 +166,8 @@ func (ur userRepository) RetrieveAll(ctx context.Context, offset, limit uint64, 
 
 	q := fmt.Sprintf(`SELECT id, email, metadata FROM users %s ORDER BY email LIMIT :limit OFFSET :offset;`, emq)
 	params := map[string]interface{}{
-		"limit":    limit,
-		"offset":   offset,
+		"limit":    pm.Limit,
+		"offset":   pm.Offset,
 		"email":    ep,
 		"metadata": mp,
 	}
@@ -204,8 +204,8 @@ func (ur userRepository) RetrieveAll(ctx context.Context, offset, limit uint64, 
 		Users: items,
 		PageMetadata: users.PageMetadata{
 			Total:  total,
-			Offset: offset,
-			Limit:  limit,
+			Offset: pm.Offset,
+			Limit:  pm.Limit,
 		},
 	}
 

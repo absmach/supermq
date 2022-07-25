@@ -243,7 +243,7 @@ func (bs bootstrapService) UpdateConnections(ctx context.Context, token, id stri
 			ChannelIDs: []string{c},
 			ThingIDs:   []string{id},
 		}
-		if err := bs.sdk.Connect(conIDs, token); err != nil {
+		if err := bs.sdk.Connect(token, conIDs); err != nil {
 			if errors.Contains(err, mfsdk.ErrFailedConnect) {
 				return errors.ErrMalformedEntity
 			}
@@ -317,7 +317,7 @@ func (bs bootstrapService) ChangeState(ctx context.Context, token, id string, st
 				ChannelIDs: []string{c.ID},
 				ThingIDs:   []string{cfg.MFThing},
 			}
-			if err := bs.sdk.Connect(conIDs, token); err != nil {
+			if err := bs.sdk.Connect(token, conIDs); err != nil {
 				return ErrThings
 			}
 		}
@@ -383,7 +383,7 @@ func (bs bootstrapService) thing(token, id string) (mfsdk.Thing, error) {
 	var err error
 
 	if id == "" {
-		thingID, err = bs.sdk.CreateThing(mfsdk.Thing{}, token)
+		thingID, err = bs.sdk.CreateThing(token, mfsdk.Thing{})
 		if err != nil {
 			return mfsdk.Thing{}, errors.Wrap(errCreateThing, err)
 		}

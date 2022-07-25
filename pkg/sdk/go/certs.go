@@ -19,7 +19,7 @@ type Cert struct {
 	ClientCert string `json:"client_cert,omitempty"`
 }
 
-func (sdk mfSDK) IssueCert(thingID string, keyBits int, keyType, valid, token string) (Cert, error) {
+func (sdk mfSDK) IssueCert(token, thingID string, keyBits int, keyType, valid string) (Cert, error) {
 	var c Cert
 	r := certReq{
 		ThingID: thingID,
@@ -52,7 +52,7 @@ func (sdk mfSDK) IssueCert(thingID string, keyBits int, keyType, valid, token st
 	return c, nil
 }
 
-func (sdk mfSDK) RemoveCert(id, token string) error {
+func (sdk mfSDK) RemoveCert(token, id string) error {
 	res, err := request(http.MethodDelete, token, fmt.Sprintf("%s/%s", sdk.certsURL, id), nil)
 	if res != nil {
 		res.Body.Close()
@@ -70,7 +70,7 @@ func (sdk mfSDK) RemoveCert(id, token string) error {
 	}
 }
 
-func (sdk mfSDK) RevokeCert(thingID, certID string, token string) error {
+func (sdk mfSDK) RevokeCert(token, thingID, certID string) error {
 	panic("not implemented")
 }
 

@@ -91,7 +91,7 @@ func TestSendMessage(t *testing.T) {
 		},
 	}
 	for desc, tc := range cases {
-		err := mainfluxSDK.SendMessage(tc.chanID, tc.msg, tc.auth)
+		err := mainfluxSDK.SendMessage(tc.auth, tc.chanID, tc.msg)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", desc, tc.err, err))
 	}
 }

@@ -90,14 +90,15 @@ type User struct {
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 type PageMetadata struct {
-	Total    uint64                 `json:"total"`
-	Offset   uint64                 `json:"offset"`
-	Limit    uint64                 `json:"limit"`
-	Level    uint64                 `json:"level,omitempty"`
-	Email    string                 `json:"email,omitempty"`
-	Name     string                 `json:"name,omitempty"`
-	Type     string                 `json:"type,omitempty"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	Total        uint64                 `json:"total"`
+	Offset       uint64                 `json:"offset"`
+	Limit        uint64                 `json:"limit"`
+	Level        uint64                 `json:"level,omitempty"`
+	Email        string                 `json:"email,omitempty"`
+	Name         string                 `json:"name,omitempty"`
+	Type         string                 `json:"type,omitempty"`
+	Disconnected bool                   `json:"disconnected,omitempty"`
+	Metadata     map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // Group represents mainflux users group.
@@ -148,102 +149,102 @@ type SDK interface {
 	CreateToken(user User) (string, error)
 
 	// UpdateUser updates existing user.
-	UpdateUser(user User, token string) error
+	UpdateUser(token string, user User) error
 
 	// UpdatePassword updates user password.
-	UpdatePassword(oldPass, newPass, token string) error
+	UpdatePassword(token, oldPass, newPass string) error
 
 	// CreateThing registers new thing and returns its id.
-	CreateThing(thing Thing, token string) (string, error)
+	CreateThing(token string, thing Thing) (string, error)
 
 	// CreateThings registers new things and returns their ids.
-	CreateThings(things []Thing, token string) ([]Thing, error)
+	CreateThings(token string, things []Thing) ([]Thing, error)
 
 	// Things returns page of things.
 	Things(token string, pm PageMetadata) (ThingsPage, error)
 
 	// ThingsByChannel returns page of things that are connected or not connected
 	// to specified channel.
-	ThingsByChannel(token, chanID string, offset, limit uint64, disconnected bool) (ThingsPage, error)
+	ThingsByChannel(token, chanID string, pm PageMetadata) (ThingsPage, error)
 
 	// Thing returns thing object by id.
-	Thing(id, token string) (Thing, error)
+	Thing(token, id string) (Thing, error)
 
 	// UpdateThing updates existing thing.
-	UpdateThing(thing Thing, token string) error
+	UpdateThing(token string, thing Thing) error
 
 	// DeleteThing removes existing thing.
-	DeleteThing(id, token string) error
+	DeleteThing(token, id string) error
 
 	// IdentifyThing validates thing's key and returns its ID
 	IdentifyThing(key string) (string, error)
-
+	
 	// CreateGroup creates new group and returns its id.
-	CreateGroup(group Group, token string) (string, error)
+	CreateGroup(token string, group Group) (string, error)
 
 	// DeleteGroup deletes users group.
-	DeleteGroup(id, token string) error
+	DeleteGroup(token, id string) error
 
 	// Groups returns page of groups.
-	Groups(meta PageMetadata, token string) (GroupsPage, error)
+	Groups(token string, pm PageMetadata) (GroupsPage, error)
 
 	// Parents returns page of users groups.
-	Parents(id string, offset, limit uint64, token string) (GroupsPage, error)
+	Parents(token, id string, pm PageMetadata) (GroupsPage, error)
 
 	// Children returns page of users groups.
-	Children(id string, offset, limit uint64, token string) (GroupsPage, error)
+	Children(token, id string, pm PageMetadata) (GroupsPage, error)
 
 	// Group returns users group object by id.
-	Group(id, token string) (Group, error)
+	Group(token, id string) (Group, error)
 
 	// Assign assigns member of member type (thing or user) to a group.
-	Assign(memberIDs []string, memberType, groupID string, token string) error
+	Assign(token string, memberIDs []string, memberType, groupID string) error
 
 	// Unassign removes member from a group.
 	Unassign(token, groupID string, memberIDs ...string) error
 
 	// Members lists members of a group.
-	Members(groupID, token string, offset, limit uint64) (MembersPage, error)
+	Members(token, groupID string, pm PageMetadata) (MembersPage, error)
 
 	// Memberships lists groups for user.
-	Memberships(userID, token string, offset, limit uint64) (GroupsPage, error)
+	Memberships(token, userID string, pm PageMetadata) (GroupsPage, error)
 
 	// UpdateGroup updates existing group.
-	UpdateGroup(group Group, token string) error
+	UpdateGroup(token string, group Group) error
 
 	// Connect bulk connects things to channels specified by id.
-	Connect(conns ConnectionIDs, token string) error
+	Connect(token string, conns ConnectionIDs) error
 
 	// DisconnectThing disconnect thing from specified channel by id.
-	DisconnectThing(thingID, chanID, token string) error
+	DisconnectThing(token, thingID, chanID string) error
 
 	// CreateChannel creates new channel and returns its id.
-	CreateChannel(channel Channel, token string) (string, error)
+	CreateChannel(token string, channel Channel) (string, error)
 
 	// CreateChannels registers new channels and returns their ids.
-	CreateChannels(channels []Channel, token string) ([]Channel, error)
+	CreateChannels(token string, channels []Channel) ([]Channel, error)
 
 	// Channels returns page of channels.
 	Channels(token string, pm PageMetadata) (ChannelsPage, error)
 
 	// ChannelsByThing returns page of channels that are connected or not connected
 	// to specified thing.
-	ChannelsByThing(token, thingID string, offset, limit uint64, connected bool) (ChannelsPage, error)
+	ChannelsByThing(token, thingID string, pm PageMetadata) (ChannelsPage, error)
 
 	// Channel returns channel data by id.
-	Channel(id, token string) (Channel, error)
+	Channel(token, id string) (Channel, error)
 
 	// UpdateChannel updates existing channel.
-	UpdateChannel(channel Channel, token string) error
+	UpdateChannel(token string, channel Channel) error
 
 	// DeleteChannel removes existing channel.
-	DeleteChannel(id, token string) error
+	DeleteChannel(token, id string) error
 
 	// SendMessage send message to specified channel.
-	SendMessage(chanID, msg, token string) error
+	SendMessage(token, chanID, msg string) error
 
 	// ReadMessages read messages of specified channel.
-	ReadMessages(chanID, token string) (MessagesPage, error)
+	ReadMessages(token, chanID string) (MessagesPage, error)
 
 	// SetContentType sets message content type.
 	SetContentType(ct ContentType) error
@@ -273,13 +274,13 @@ type SDK interface {
 	Whitelist(token string, cfg BootstrapConfig) error
 
 	// IssueCert issues a certificate for a thing required for mtls.
-	IssueCert(thingID string, keyBits int, keyType, valid, token string) (Cert, error)
+	IssueCert(token, thingID string, keyBits int, keyType, valid string) (Cert, error)
 
 	// RemoveCert removes a certificate
-	RemoveCert(id, token string) error
+	RemoveCert(token, id string) error
 
 	// RevokeCert revokes certificate with certID for thing with thingID
-	RevokeCert(thingID, certID, token string) error
+	RevokeCert(token, thingID, certID string) error
 
 	// Issue issues a new key, returning its token value alongside.
 	Issue(token string, duration time.Duration) (KeyRes, error)

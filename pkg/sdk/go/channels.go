@@ -16,7 +16,7 @@ import (
 
 const channelsEndpoint = "channels"
 
-func (sdk mfSDK) CreateChannel(c Channel, token string) (string, error) {
+func (sdk mfSDK) CreateChannel(token string, c Channel) (string, error) {
 	data, err := json.Marshal(c)
 	if err != nil {
 		return "", err
@@ -41,7 +41,7 @@ func (sdk mfSDK) CreateChannel(c Channel, token string) (string, error) {
 	return id, nil
 }
 
-func (sdk mfSDK) CreateChannels(chs []Channel, token string) ([]Channel, error) {
+func (sdk mfSDK) CreateChannels(token string, chs []Channel) ([]Channel, error) {
 	data, err := json.Marshal(chs)
 	if err != nil {
 		return []Channel{}, err
@@ -109,8 +109,8 @@ func (sdk mfSDK) Channels(token string, pm PageMetadata) (ChannelsPage, error) {
 	return cp, nil
 }
 
-func (sdk mfSDK) ChannelsByThing(token, thingID string, offset, limit uint64, disconn bool) (ChannelsPage, error) {
-	url := fmt.Sprintf("%s/things/%s/channels?offset=%d&limit=%d&disconnected=%t", sdk.thingsURL, thingID, offset, limit, disconn)
+func (sdk mfSDK) ChannelsByThing(token, thingID string, pm PageMetadata) (ChannelsPage, error) {
+	url := fmt.Sprintf("%s/things/%s/channels?offset=%d&limit=%d&disconnected=%t", sdk.thingsURL, thingID, pm.Offset, pm.Limit, pm.Disconnected)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return ChannelsPage{}, err
@@ -139,7 +139,7 @@ func (sdk mfSDK) ChannelsByThing(token, thingID string, offset, limit uint64, di
 	return cp, nil
 }
 
-func (sdk mfSDK) Channel(id, token string) (Channel, error) {
+func (sdk mfSDK) Channel(token, id string) (Channel, error) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, channelsEndpoint, id)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -169,7 +169,7 @@ func (sdk mfSDK) Channel(id, token string) (Channel, error) {
 	return c, nil
 }
 
-func (sdk mfSDK) UpdateChannel(c Channel, token string) error {
+func (sdk mfSDK) UpdateChannel(token string, c Channel) error {
 	data, err := json.Marshal(c)
 	if err != nil {
 		return err
@@ -193,7 +193,7 @@ func (sdk mfSDK) UpdateChannel(c Channel, token string) error {
 	return nil
 }
 
-func (sdk mfSDK) DeleteChannel(id, token string) error {
+func (sdk mfSDK) DeleteChannel(token, id string) error {
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, channelsEndpoint, id)
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {

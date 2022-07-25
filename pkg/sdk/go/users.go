@@ -46,7 +46,7 @@ func (sdk mfSDK) CreateUser(token string, u User) (string, error) {
 	return id, nil
 }
 
-func (sdk mfSDK) User(userID, token string) (User, error) {
+func (sdk mfSDK) User(token, userID string) (User, error) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.usersURL, usersEndpoint, userID)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -138,7 +138,7 @@ func (sdk mfSDK) CreateToken(user User) (string, error) {
 	return tr.Token, nil
 }
 
-func (sdk mfSDK) UpdateUser(u User, token string) error {
+func (sdk mfSDK) UpdateUser(token string, u User) error {
 	data, err := json.Marshal(u)
 	if err != nil {
 		return err
@@ -162,7 +162,7 @@ func (sdk mfSDK) UpdateUser(u User, token string) error {
 	return nil
 }
 
-func (sdk mfSDK) UpdatePassword(oldPass, newPass, token string) error {
+func (sdk mfSDK) UpdatePassword(token, oldPass, newPass string) error {
 	ur := UserPasswordReq{
 		OldPassword: oldPass,
 		Password:    newPass,

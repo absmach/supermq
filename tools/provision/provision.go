@@ -130,12 +130,12 @@ func Provision(conf Config) {
 		channels[i] = sdk.Channel{Name: fmt.Sprintf("%s-channel-%d", conf.Prefix, i)}
 	}
 
-	things, err = s.CreateThings(things, token)
+	things, err = s.CreateThings(token, things)
 	if err != nil {
 		log.Fatalf("Failed to create the things: %s", err.Error())
 	}
 
-	channels, err = s.CreateChannels(channels, token)
+	channels, err = s.CreateChannels(token, channels)
 	if err != nil {
 		log.Fatalf("Failed to create the chennels: %s", err.Error())
 	}
@@ -225,7 +225,7 @@ func Provision(conf Config) {
 		ChannelIDs: cIDs,
 		ThingIDs:   tIDs,
 	}
-	if err := s.Connect(conIDs, token); err != nil {
+	if err := s.Connect(token, conIDs); err != nil {
 		log.Fatalf("Failed to connect things %s to channels %s: %s", conIDs.ThingIDs, conIDs.ChannelIDs, err)
 	}
 }

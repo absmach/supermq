@@ -25,7 +25,7 @@ func NewCertsCmd() *cobra.Command {
 			thingID := args[0]
 			valid := strconv.FormatUint(uint64(ttl), 10)
 
-			c, err := sdk.IssueCert(thingID, int(keySize), keyType, valid, args[1])
+			c, err := sdk.IssueCert(args[1], thingID, int(keySize), keyType, valid)
 			if err != nil {
 				logError(err)
 				return

@@ -27,7 +27,7 @@ var cmdChannels = []cobra.Command{
 				return
 			}
 
-			id, err := sdk.CreateChannel(channel, args[1])
+			id, err := sdk.CreateChannel(args[1], channel)
 			if err != nil {
 				logError(err)
 				return
@@ -70,7 +70,7 @@ var cmdChannels = []cobra.Command{
 				logJSON(l)
 				return
 			}
-			c, err := sdk.Channel(args[0], args[1])
+			c, err := sdk.Channel(args[1], args[0])
 			if err != nil {
 				logError(err)
 				return
@@ -95,7 +95,7 @@ var cmdChannels = []cobra.Command{
 				return
 			}
 
-			if err := sdk.UpdateChannel(channel, args[1]); err != nil {
+			if err := sdk.UpdateChannel(args[1], channel); err != nil {
 				logError(err)
 				return
 			}
@@ -113,7 +113,7 @@ var cmdChannels = []cobra.Command{
 				return
 			}
 
-			if err := sdk.DeleteChannel(args[0], args[1]); err != nil {
+			if err := sdk.DeleteChannel(args[1], args[0]); err != nil {
 				logError(err)
 				return
 			}
@@ -130,8 +130,12 @@ var cmdChannels = []cobra.Command{
 				logUsage(cmd.Use)
 				return
 			}
-
-			cl, err := sdk.ThingsByChannel(args[1], args[0], uint64(Offset), uint64(Limit), false)
+			pm := mfxsdk.PageMetadata{
+				Offset:       uint64(Offset),
+				Limit:        uint64(Limit),
+				Disconnected: false,
+			}
+			cl, err := sdk.ThingsByChannel(args[1], args[0], pm)
 			if err != nil {
 				logError(err)
 				return
@@ -149,8 +153,12 @@ var cmdChannels = []cobra.Command{
 				logUsage(cmd.Use)
 				return
 			}
-
-			cl, err := sdk.ThingsByChannel(args[1], args[0], uint64(Offset), uint64(Limit), false)
+			pm := mfxsdk.PageMetadata{
+				Offset:       uint64(Offset),
+				Limit:        uint64(Limit),
+				Disconnected: false,
+			}
+			cl, err := sdk.ThingsByChannel(args[1], args[0], pm)
 			if err != nil {
 				logError(err)
 				return

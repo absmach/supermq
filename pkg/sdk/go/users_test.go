@@ -189,7 +189,7 @@ func TestUser(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		respUs, err := mainfluxSDK.User(tc.userID, tc.token)
+		respUs, err := mainfluxSDK.User(tc.token, tc.userID)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, respUs, fmt.Sprintf("%s: expected response user %s, got %s", tc.desc, tc.response, respUs))
 	}
@@ -431,7 +431,7 @@ func TestUpdateUser(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		err := mainfluxSDK.UpdateUser(tc.user, tc.token)
+		err := mainfluxSDK.UpdateUser(tc.token, tc.user)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 	}
 }
@@ -490,7 +490,7 @@ func TestUpdatePassword(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		err := mainfluxSDK.UpdatePassword(tc.oldPass, tc.newPass, tc.token)
+		err := mainfluxSDK.UpdatePassword(tc.token, tc.oldPass, tc.newPass)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 	}
 }
