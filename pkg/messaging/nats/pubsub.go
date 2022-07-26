@@ -77,7 +77,15 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 	case true:
 		// Check topic ID
 		if _, ok := s[id]; ok {
-			return ErrAlreadySubscribed
+			//todo: Unsubscribe, instead of returning an error
+			err := ps.Unsubscribe(id, topic)
+			if err != nil {
+				return err
+			}
+			//todo: Subsribe again, now that the prev subscription is deleted (unsubscribed)
+			s = make(map[string]subscription)
+			ps.subscriptions[topic] = s
+			// return ErrAlreadySubscribed
 		}
 	default:
 		s = make(map[string]subscription)
