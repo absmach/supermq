@@ -70,24 +70,41 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 		return ErrEmptyTopic
 	}
 	ps.mu.Lock()
-	defer ps.mu.Unlock()
+	//// ps.mu.Unlock()
 	// Check topic
 	s, ok := ps.subscriptions[topic]
+	ps.mu.Unlock()
 	switch ok {
 	case true:
 		// Check topic ID
 		if _, ok := s[id]; ok {
-			//todo: Unsubscribe, instead of returning an error
-			err := ps.Unsubscribe(id, topic)
-			if err != nil {
+			fmt.Println("Subscription already exists")
+
+			current := s[id]
+			if err := current.Unsubscribe(); err != nil {
+				fmt.Println("pubsub.Subscribe() -> Couldn't unsubscribe")
 				return err
 			}
-			//todo: Subsribe again, now that the prev subscription is deleted (unsubscribed)
-			s = make(map[string]subscription)
-			ps.subscriptions[topic] = s
-			// return ErrAlreadySubscribed
+			delete(s, id)
+			if len(s) == 0 {
+				delete(ps.subscriptions, topic)
+			}
+			ps.mu.Lock()
+			defer ps.mu.Unlock()
+			//// err := ps.Unsubscribe(id, topic)
+			//// if err != nil {
+			//// 	fmt.Println("Can't unsubscribe from pubsub either")
+			//// 	return err
+			//// }
+
+			/// Subscribe again? Usually results in error from ws-adapter, so makes this step useless
+			/// s = make(map[string]subscription)
+			/// ps.subscriptions[topic] = s
+			return ErrAlreadySubscribed
 		}
 	default:
+		ps.mu.Lock()
+		defer ps.mu.Unlock()
 		s = make(map[string]subscription)
 		ps.subscriptions[topic] = s
 	}
