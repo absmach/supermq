@@ -87,6 +87,8 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 			}
 			ps.mu.Lock()
 			defer ps.mu.Unlock()
+			s = make(map[string]subscription)
+			ps.subscriptions[topic] = s
 			return ErrAlreadySubscribed
 		}
 	default:
