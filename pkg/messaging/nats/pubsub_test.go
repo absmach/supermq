@@ -110,13 +110,6 @@ func TestPubsub(t *testing.T) {
 			errorMessage: nats.ErrAlreadySubscribed,
 			pubsub:       true,
 		},
-		// {
-		// 	desc:         "Subscribe to a topic with an ID",
-		// 	topic:        fmt.Sprintf("%s.%s", chansPrefix, topic),
-		// 	clientID:     "clientid1",
-		// 	errorMessage: nil,
-		// 	pubsub:       true,
-		// },
 		{
 			desc:         "Unsubscribe from a topic with an ID",
 			topic:        fmt.Sprintf("%s.%s", chansPrefix, topic),
@@ -166,13 +159,6 @@ func TestPubsub(t *testing.T) {
 			errorMessage: nats.ErrAlreadySubscribed,
 			pubsub:       true,
 		},
-		// {
-		// 	desc:         "Subscribe to a topic with a subtopic with an ID",
-		// 	topic:        fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic),
-		// 	clientID:     "clientidd1",
-		// 	errorMessage: nil,
-		// 	pubsub:       true,
-		// },
 		{
 			desc:         "Unsubscribe from a topic with a subtopic with an ID",
 			topic:        fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic),
