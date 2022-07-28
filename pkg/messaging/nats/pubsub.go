@@ -72,25 +72,23 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 
 	alreadySubscribed := false
 	ps.mu.Lock()
+	defer ps.mu.Unlock()
 	// Check topic
 	s, ok := ps.subscriptions[topic]
-	ps.mu.Unlock()
 	switch ok {
 	case true:
 		// Check topic ID
 		if _, ok := s[id]; ok {
+			ps.mu.Unlock()
 			if err := ps.Unsubscribe(id, topic); err != nil {
 				return err
 			}
 			ps.mu.Lock()
-			defer ps.mu.Unlock()
 			s = make(map[string]subscription)
 			ps.subscriptions[topic] = s
 			alreadySubscribed = true
 		}
 	default:
-		ps.mu.Lock()
-		defer ps.mu.Unlock()
 		s = make(map[string]subscription)
 		ps.subscriptions[topic] = s
 	}
