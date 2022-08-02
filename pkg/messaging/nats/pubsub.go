@@ -70,7 +70,6 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 		return ErrEmptyTopic
 	}
 
-	alreadySubscribed := false
 	ps.mu.Lock()
 	defer ps.mu.Unlock()
 	// Check topic
@@ -87,7 +86,6 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 			ps.mu.Lock()
 			s = make(map[string]subscription)
 			ps.subscriptions[topic] = s
-			alreadySubscribed = true
 		}
 	default:
 		s = make(map[string]subscription)
@@ -115,9 +113,6 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 		cancel:       handler.Cancel,
 	}
 
-	if alreadySubscribed {
-		return ErrAlreadySubscribed
-	}
 	return nil
 }
 
