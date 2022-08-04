@@ -42,7 +42,14 @@ func (c *Client) Publish(svc Service, logger logger.Logger, thingKey, chanID, su
 	}
 }
 
+func (c *Client) GetID() string {
+	return c.id
+}
+
 func (c *Client) Cancel() error {
+	if c.conn == nil {
+		return nil
+	}
 	return c.conn.Close()
 }
 
