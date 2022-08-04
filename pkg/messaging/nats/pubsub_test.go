@@ -107,7 +107,7 @@ func TestPubsub(t *testing.T) {
 			desc:         "Subscribe to an already subscribed topic with an ID",
 			topic:        fmt.Sprintf("%s.%s", chansPrefix, topic),
 			clientID:     "clientid1",
-			errorMessage: nats.ErrAlreadySubscribed,
+			errorMessage: nil,
 			pubsub:       true,
 		},
 		{
@@ -156,7 +156,7 @@ func TestPubsub(t *testing.T) {
 			desc:         "Subscribe to an already subscribed topic with a subtopic with an ID",
 			topic:        fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic),
 			clientID:     "clientidd1",
-			errorMessage: nats.ErrAlreadySubscribed,
+			errorMessage: nil,
 			pubsub:       true,
 		},
 		{
