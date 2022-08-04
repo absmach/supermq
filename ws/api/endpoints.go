@@ -30,10 +30,16 @@ func handshake(svc ws.Service) http.HandlerFunc {
 			encodeRequestError(err, w)
 			return
 		}
-
-		client := ws.NewClient(nil, "")
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			logger.Warn(fmt.Sprintf("Failed to upgrade connection to websocket: %s", err.Error()))
+			return
+		}
+		req.conn = conn
+		client := ws.NewClient(conn, "")
 
 		if err := svc.Subscribe(context.Background(), req.thingKey, req.chanID, req.subtopic, client); err != nil {
+			fmt.Println("Error in subscribe")
 			logger.Warn(fmt.Sprintf("Failed to subscribe to broker: %s", err.Error()))
 			if err == ws.ErrEmptyID || err == ws.ErrEmptyTopic {
 				w.WriteHeader(http.StatusBadRequest)
@@ -43,13 +49,15 @@ func handshake(svc ws.Service) http.HandlerFunc {
 			}
 		}
 
-		// Upgrade to a new ws connection.
-		conn, err := upgrader.Upgrade(w, r, nil)
-		if err != nil {
-			logger.Warn(fmt.Sprintf("Failed to upgrade connection to websocket: %s", err.Error()))
-			return
+		// In case previous subscription wasn't closed properly
+		if conn == nil {
+			conn, err = upgrader.Upgrade(w, r, nil)
+			if err != nil {
+				logger.Warn(fmt.Sprintf("Failed to upgrade connection to websocket: %s", err.Error()))
+				return
+			}
+			client = ws.NewClient(conn, client.GetID())
 		}
-		req.conn = conn
 
 		logger.Debug(fmt.Sprintf("Successfully upgraded communication to WS on channel %s", req.chanID))
 		msgs := make(chan []byte)
