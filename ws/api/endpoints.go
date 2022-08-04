@@ -31,14 +31,6 @@ func handshake(svc ws.Service) http.HandlerFunc {
 			return
 		}
 
-		// // Upgrade to a new ws connection.
-		// conn, err := upgrader.Upgrade(w, r, nil)
-		// if err != nil {
-		// 	logger.Warn(fmt.Sprintf("Failed to upgrade connection to websocket: %s", err.Error()))
-		// 	return
-		// }
-
-		// req.conn = conn
 		client := ws.NewClient(nil, "")
 
 		if err := svc.Subscribe(context.Background(), req.thingKey, req.chanID, req.subtopic, client); err != nil {
