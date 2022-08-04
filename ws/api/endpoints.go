@@ -5,6 +5,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -13,8 +14,11 @@ import (
 
 	"github.com/go-zoo/bone"
 	"github.com/gorilla/websocket"
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/ws"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
@@ -23,35 +27,19 @@ func handshake(svc ws.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req, err := decodeRequest(r)
 		if err != nil {
-			switch err {
-			case ws.ErrEmptyID:
-				w.WriteHeader(http.StatusServiceUnavailable)
-				return
-			case errUnauthorizedAccess:
-				w.WriteHeader(http.StatusForbidden)
-				return
-			case errMalformedSubtopic:
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			case errors.ErrMalformedEntity:
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			default:
-				logger.Warn(fmt.Sprintf("Failed to authorize: %s", err.Error()))
-				w.WriteHeader(http.StatusServiceUnavailable)
-				return
-			}
-		}
-
-		// Upgrade to a new ws connection.
-		conn, err := upgrader.Upgrade(w, r, nil)
-		if err != nil {
-			logger.Warn(fmt.Sprintf("Failed to upgrade connection to websocket: %s", err.Error()))
+			encodeRequestError(err, w)
 			return
 		}
 
-		req.conn = conn
-		client := ws.NewClient(conn, "")
+		// // Upgrade to a new ws connection.
+		// conn, err := upgrader.Upgrade(w, r, nil)
+		// if err != nil {
+		// 	logger.Warn(fmt.Sprintf("Failed to upgrade connection to websocket: %s", err.Error()))
+		// 	return
+		// }
+
+		// req.conn = conn
+		client := ws.NewClient(nil, "")
 
 		if err := svc.Subscribe(context.Background(), req.thingKey, req.chanID, req.subtopic, client); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to subscribe to broker: %s", err.Error()))
@@ -62,6 +50,14 @@ func handshake(svc ws.Service) http.HandlerFunc {
 				return
 			}
 		}
+
+		// Upgrade to a new ws connection.
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			logger.Warn(fmt.Sprintf("Failed to upgrade connection to websocket: %s", err.Error()))
+			return
+		}
+		req.conn = conn
 
 		logger.Debug(fmt.Sprintf("Successfully upgraded communication to WS on channel %s", req.chanID))
 		msgs := make(chan []byte)
@@ -158,18 +154,70 @@ func listen(conn *websocket.Conn, msgs chan<- []byte) {
 	}
 }
 
+// func encodeError1(req *connReq, w http.ResponseWriter, err error) {
+// 	switch err {
+// 	case ws.ErrInvalidConnection:
+// 		w.WriteHeader(http.StatusUnauthorized)
+// 		req.conn.Close()
+// 	case ws.ErrAlreadySubscribed:
+// 		req.conn.Close()
+// 	case ws.ErrFailedConnection:
+// 		w.WriteHeader(http.StatusServiceUnavailable)
+// 		req.conn.Close()
+// 	default:
+// 		w.WriteHeader(http.StatusUnauthorized)
+// 		req.conn.Close()
+// 	}
+// }
+
+// New EncodeError
 func encodeError(req *connReq, w http.ResponseWriter, err error) {
 	switch err {
+	case ws.ErrEmptyID, ws.ErrEmptyTopic:
+		w.WriteHeader(http.StatusBadRequest)
 	case ws.ErrInvalidConnection:
 		w.WriteHeader(http.StatusUnauthorized)
-		req.conn.Close()
-	case ws.ErrAlreadySubscribed:
 		req.conn.Close()
 	case ws.ErrFailedConnection:
 		w.WriteHeader(http.StatusServiceUnavailable)
 		req.conn.Close()
 	default:
-		w.WriteHeader(http.StatusUnauthorized)
+		switch e, ok := status.FromError(err); {
+		case ok:
+			switch e.Code() {
+			case codes.Unauthenticated:
+				w.WriteHeader(http.StatusUnauthorized)
+			case codes.PermissionDenied:
+				w.WriteHeader(http.StatusForbidden)
+			case codes.Internal:
+				w.WriteHeader(http.StatusInternalServerError)
+			default:
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+		}
 		req.conn.Close()
+	}
+
+	if errorVal, ok := err.(errors.Error); ok {
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(apiutil.ErrorRes{Err: errorVal.Msg()}); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}
+}
+
+func encodeRequestError(err error, w http.ResponseWriter) {
+	switch err {
+	case ws.ErrEmptyID:
+		w.WriteHeader(http.StatusServiceUnavailable)
+	case errUnauthorizedAccess:
+		w.WriteHeader(http.StatusForbidden)
+	case errMalformedSubtopic:
+		w.WriteHeader(http.StatusBadRequest)
+	case errors.ErrMalformedEntity:
+		w.WriteHeader(http.StatusBadRequest)
+	default:
+		logger.Warn(fmt.Sprintf("Failed to authorize: %s", err.Error()))
+		w.WriteHeader(http.StatusServiceUnavailable)
 	}
 }
