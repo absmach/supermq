@@ -25,10 +25,10 @@ var (
 	errSubscribeTimeout       = errors.New("failed to subscribe due to timeout reached")
 	errUnsubscribeTimeout     = errors.New("failed to unsubscribe due to timeout reached")
 	errUnsubscribeDeleteTopic = errors.New("failed to unsubscribe due to deletion of topic")
-	errAlreadySubscribed      = errors.New("already subscribed to topic")
-	errNotSubscribed          = errors.New("not subscribed")
-	errEmptyTopic             = errors.New("empty topic")
-	errEmptyID                = errors.New("empty ID")
+	// errAlreadySubscribed      = errors.New("already subscribed to topic")
+	errNotSubscribed = errors.New("not subscribed")
+	errEmptyTopic    = errors.New("empty topic")
+	errEmptyID       = errors.New("empty ID")
 )
 
 var _ messaging.PubSub = (*pubsub)(nil)
@@ -80,9 +80,23 @@ func (ps pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) e
 	case true:
 		// Check topic
 		if ok = s.contains(topic); ok {
-			return errAlreadySubscribed
+			// Change the code here
+			// Unlocking, so that Unsubscribe() can access ps.subscriptions
+			ps.mu.Unlock()
+			if err := ps.Unsubscribe(id, topic); err != nil {
+				return err
+			}
+			ps.mu.Lock()
+			client, err := newClient(ps.address, id, ps.timeout)
+			if err != nil {
+				return err
+			}
+			s = subscription{
+				client: client,
+				topics: []string{topic},
+			}
 		}
-		s.topics = append(s.topics, topic)
+		s.topics = append(s.topics, topic) // Check status of this line
 	default:
 		client, err := newClient(ps.address, id, ps.timeout)
 		if err != nil {
