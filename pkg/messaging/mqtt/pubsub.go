@@ -79,7 +79,6 @@ func (ps pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) e
 	case true:
 		// Check topic
 		if ok = s.contains(topic); ok {
-			// Change the code here
 			// Unlocking, so that Unsubscribe() can access ps.subscriptions
 			ps.mu.Unlock()
 			if err := ps.Unsubscribe(id, topic); err != nil {
