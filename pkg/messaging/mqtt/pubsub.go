@@ -25,10 +25,9 @@ var (
 	errSubscribeTimeout       = errors.New("failed to subscribe due to timeout reached")
 	errUnsubscribeTimeout     = errors.New("failed to unsubscribe due to timeout reached")
 	errUnsubscribeDeleteTopic = errors.New("failed to unsubscribe due to deletion of topic")
-	// errAlreadySubscribed      = errors.New("already subscribed to topic")
-	errNotSubscribed = errors.New("not subscribed")
-	errEmptyTopic    = errors.New("empty topic")
-	errEmptyID       = errors.New("empty ID")
+	errNotSubscribed          = errors.New("not subscribed")
+	errEmptyTopic             = errors.New("empty topic")
+	errEmptyID                = errors.New("empty ID")
 )
 
 var _ messaging.PubSub = (*pubsub)(nil)
