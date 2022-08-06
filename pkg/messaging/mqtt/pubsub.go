@@ -94,7 +94,7 @@ func (ps pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) e
 				topics: []string{topic},
 			}
 		}
-		s.topics = append(s.topics, topic) // Check status of this line
+		s.topics = append(s.topics, topic)
 	default:
 		client, err := newClient(ps.address, id, ps.timeout)
 		if err != nil {
