@@ -27,7 +27,7 @@ func handshake(svc ws.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req, err := decodeRequest(r)
 		if err != nil {
-			encodeRequestError(err, w)
+			encodeError(&req, w, err)
 			return
 		}
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -41,12 +41,7 @@ func handshake(svc ws.Service) http.HandlerFunc {
 		if err := svc.Subscribe(context.Background(), req.thingKey, req.chanID, req.subtopic, client); err != nil {
 			fmt.Println("Error in subscribe")
 			logger.Warn(fmt.Sprintf("Failed to subscribe to broker: %s", err.Error()))
-			if err == ws.ErrEmptyID || err == ws.ErrEmptyTopic {
-				w.WriteHeader(http.StatusBadRequest)
-			} else {
-				encodeError(&req, w, err)
-				return
-			}
+			encodeError(&req, w, err)
 		}
 
 		// In case previous subscription wasn't closed properly
@@ -154,48 +149,58 @@ func listen(conn *websocket.Conn, msgs chan<- []byte) {
 	}
 }
 
-// func encodeError1(req *connReq, w http.ResponseWriter, err error) {
-// 	switch err {
-// 	case ws.ErrInvalidConnection:
-// 		w.WriteHeader(http.StatusUnauthorized)
-// 		req.conn.Close()
-// 	case ws.ErrAlreadySubscribed:
-// 		req.conn.Close()
-// 	case ws.ErrFailedConnection:
-// 		w.WriteHeader(http.StatusServiceUnavailable)
-// 		req.conn.Close()
-// 	default:
-// 		w.WriteHeader(http.StatusUnauthorized)
-// 		req.conn.Close()
-// 	}
-// }
-
-// New EncodeError
 func encodeError(req *connReq, w http.ResponseWriter, err error) {
+	statusCode := http.StatusUnauthorized
+	if req.conn == nil {
+		switch err {
+		case ws.ErrEmptyID:
+			statusCode = http.StatusServiceUnavailable
+		case errUnauthorizedAccess:
+			statusCode = http.StatusForbidden
+		case errMalformedSubtopic:
+			statusCode = http.StatusBadRequest
+		case errors.ErrMalformedEntity:
+			statusCode = http.StatusBadRequest
+		default:
+			logger.Warn(fmt.Sprintf("Failed to authorize: %s", err.Error()))
+			statusCode = http.StatusServiceUnavailable
+		}
+		w.WriteHeader(statusCode)
+		return
+	}
+
 	switch err {
 	case ws.ErrEmptyID, ws.ErrEmptyTopic:
-		w.WriteHeader(http.StatusBadRequest)
+		statusCode = http.StatusBadRequest
 	case ws.ErrInvalidConnection:
-		w.WriteHeader(http.StatusUnauthorized)
-		req.conn.Close()
+		statusCode = http.StatusUnauthorized
 	case ws.ErrFailedConnection:
-		w.WriteHeader(http.StatusServiceUnavailable)
-		req.conn.Close()
+		statusCode = http.StatusServiceUnavailable
+	case errUnauthorizedAccess:
+		statusCode = http.StatusForbidden
+	case errMalformedSubtopic:
+		statusCode = http.StatusBadRequest
+	case errors.ErrMalformedEntity:
+		statusCode = http.StatusBadRequest
 	default:
+		logger.Warn(fmt.Sprintf("Failed to authorize: %s", err.Error()))
 		switch e, ok := status.FromError(err); {
 		case ok:
 			switch e.Code() {
 			case codes.Unauthenticated:
-				w.WriteHeader(http.StatusUnauthorized)
+				statusCode = http.StatusUnauthorized
 			case codes.PermissionDenied:
-				w.WriteHeader(http.StatusForbidden)
+				statusCode = http.StatusForbidden
 			case codes.Internal:
-				w.WriteHeader(http.StatusInternalServerError)
+				statusCode = http.StatusInternalServerError
 			default:
-				w.WriteHeader(http.StatusInternalServerError)
+				statusCode = http.StatusInternalServerError
 			}
 		}
-		req.conn.Close()
+		w.WriteHeader(statusCode)
+		if req.conn != nil {
+			req.conn.Close()
+		}
 	}
 
 	if errorVal, ok := err.(errors.Error); ok {
@@ -203,21 +208,5 @@ func encodeError(req *connReq, w http.ResponseWriter, err error) {
 		if err := json.NewEncoder(w).Encode(apiutil.ErrorRes{Err: errorVal.Msg()}); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
-	}
-}
-
-func encodeRequestError(err error, w http.ResponseWriter) {
-	switch err {
-	case ws.ErrEmptyID:
-		w.WriteHeader(http.StatusServiceUnavailable)
-	case errUnauthorizedAccess:
-		w.WriteHeader(http.StatusForbidden)
-	case errMalformedSubtopic:
-		w.WriteHeader(http.StatusBadRequest)
-	case errors.ErrMalformedEntity:
-		w.WriteHeader(http.StatusBadRequest)
-	default:
-		logger.Warn(fmt.Sprintf("Failed to authorize: %s", err.Error()))
-		w.WriteHeader(http.StatusServiceUnavailable)
 	}
 }
