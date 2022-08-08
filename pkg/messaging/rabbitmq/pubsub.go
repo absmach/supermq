@@ -79,7 +79,7 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 	case true:
 		// Check topic ID
 		if _, ok := s[id]; ok {
-			// Unlocking, so that Unsubscribe() can access ps.subscriptions
+			// Unlocking, so Unsubscribe() can access ps.subscriptions
 			ps.mu.Unlock()
 			if err := ps.Unsubscribe(id, topic); err != nil {
 				return err
