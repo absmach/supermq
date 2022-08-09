@@ -86,8 +86,10 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 			}
 			ps.mu.Lock()
 
-			s = make(map[string]subscription)
-			ps.subscriptions[topic] = s
+			if len(s) == 0 {
+				s = make(map[string]subscription)
+				ps.subscriptions[topic] = s
+			}
 		}
 	default:
 		s = make(map[string]subscription)

@@ -85,13 +85,15 @@ func (ps pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) e
 				return err
 			}
 			ps.mu.Lock()
-			client, err := newClient(ps.address, id, ps.timeout)
-			if err != nil {
-				return err
-			}
-			s = subscription{
-				client: client,
-				topics: []string{topic},
+			if len(ps.subscriptions) == 0 {
+				client, err := newClient(ps.address, id, ps.timeout)
+				if err != nil {
+					return err
+				}
+				s = subscription{
+					client: client,
+					topics: []string{topic},
+				}
 			}
 		}
 		s.topics = append(s.topics, topic)
