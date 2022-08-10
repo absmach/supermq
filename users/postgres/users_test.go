@@ -49,6 +49,16 @@ func TestUserSave(t *testing.T) {
 			},
 			err: errors.ErrConflict,
 		},
+		{
+			desc: "invalid user status",
+			user: users.User{
+				ID:       uid,
+				Email:    email,
+				Password: "pass",
+				Status:   "invalid",
+			},
+			err: errors.ErrMalformedEntity,
+		},
 	}
 
 	dbMiddleware := postgres.NewDatabase(db)
