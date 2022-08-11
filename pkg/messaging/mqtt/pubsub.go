@@ -46,6 +46,7 @@ type pubsub struct {
 	subscriptions map[string]subscription
 }
 
+// NewPubSub returns RabbitMQ message publisher/subscriber
 func NewPubSub(url, queue string, timeout time.Duration, logger log.Logger) (messaging.PubSub, error) {
 	client, err := newClient(url, "mqtt-publisher", timeout)
 	if err != nil {
@@ -82,7 +83,7 @@ func (ps pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) e
 			// Unlocking, so that Unsubscribe() can access ps.subscriptions
 			ps.mu.Unlock()
 			if err := ps.Unsubscribe(id, topic); err != nil {
-				ps.mu.Lock() // Lock so that deferred unlock handle it.
+				ps.mu.Lock() // Lock so that deferred unlock handle it
 				return err
 			}
 			ps.mu.Lock()
