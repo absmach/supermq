@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/mainflux/mainflux/auth"
 	httpapi "github.com/mainflux/mainflux/auth/api/http"
 	"github.com/mainflux/mainflux/auth/jwt"
@@ -18,6 +16,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"net/http/httptest"
 )
@@ -42,7 +41,6 @@ var (
 	}
 
 	invalidGroup = sdk.Group{
-		ID:       "testID",
 		Name:     "group",
 		ParentID: "parentId",
 	}
@@ -81,7 +79,8 @@ func TestCreateGroup(t *testing.T) {
 		TLSVerification: true,
 	}
 	mainfluxSDK := sdk.NewSDK(sdkConf)
-	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
+
+	_, token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	cases := []struct {
@@ -93,7 +92,7 @@ func TestCreateGroup(t *testing.T) {
 		{
 			desc:  "create new group",
 			group: group,
-			token: loginSecret,
+			token: token,
 			err:   nil,
 		},
 		{
@@ -103,7 +102,7 @@ func TestCreateGroup(t *testing.T) {
 			err:   createError(sdk.ErrFailedCreation, http.StatusInternalServerError),
 		},
 		{
-			desc:  "create new group with invalid token",
+			desc:  "create new group with wrong credentials",
 			group: group,
 			token: invalidToken,
 			err:   createError(sdk.ErrFailedCreation, http.StatusUnauthorized),
@@ -111,19 +110,19 @@ func TestCreateGroup(t *testing.T) {
 		{
 			desc:  "create new group with invalid parent",
 			group: invalidGroup,
-			token: loginSecret,
+			token: token,
 			err:   createError(sdk.ErrFailedCreation, http.StatusInternalServerError),
 		},
 		{
 			desc:  "create new group without group name",
 			group: noNameGroup,
-			token: loginSecret,
+			token: token,
 			err:   createError(sdk.ErrFailedCreation, http.StatusBadRequest),
 		},
 		{
 			desc:  "create new group with empty group",
 			group: noNameGroup,
-			token: loginSecret,
+			token: token,
 			err:   createError(sdk.ErrFailedCreation, http.StatusBadRequest),
 		},
 	}
@@ -144,10 +143,10 @@ func TestDeleteGroup(t *testing.T) {
 	}
 	mainfluxSDK := sdk.NewSDK(sdkConf)
 
-	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
+	_, token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
-	id, err := mainfluxSDK.CreateGroup(group, loginSecret)
+	id, err := mainfluxSDK.CreateGroup(group, token)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	cases := []struct {
@@ -157,21 +156,21 @@ func TestDeleteGroup(t *testing.T) {
 		err     error
 	}{
 		{
-			desc:    "delete group with invalid token",
+			desc:    "delete group with wrong credentials",
 			groupID: id,
-			token:   "wrongToken",
+			token:   invalidToken,
 			err:     createError(sdk.ErrFailedRemoval, http.StatusUnauthorized),
 		},
 		{
 			desc:    "delete non-existing group",
 			groupID: invalidGroupID,
-			token:   loginSecret,
+			token:   token,
 			err:     createError(sdk.ErrFailedRemoval, http.StatusNotFound),
 		},
 		{
 			desc:    "delete group with invalid id",
 			groupID: "",
-			token:   loginSecret,
+			token:   token,
 			err:     createError(sdk.ErrFailedRemoval, http.StatusBadRequest),
 		},
 		{
@@ -183,13 +182,13 @@ func TestDeleteGroup(t *testing.T) {
 		{
 			desc:    "delete existing group",
 			groupID: id,
-			token:   loginSecret,
+			token:   token,
 			err:     nil,
 		},
 		{
 			desc:    "delete deleted group",
 			groupID: id,
-			token:   loginSecret,
+			token:   token,
 			err:     createError(sdk.ErrFailedRemoval, http.StatusNotFound),
 		},
 	}
@@ -210,10 +209,10 @@ func TestAssign(t *testing.T) {
 	}
 	mainfluxSDK := sdk.NewSDK(sdkConf)
 
-	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
+	_, token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
-	id, err := mainfluxSDK.CreateGroup(group, loginSecret)
+	id, err := mainfluxSDK.CreateGroup(group, token)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	cases := []struct {
@@ -229,7 +228,7 @@ func TestAssign(t *testing.T) {
 			memberIDs:   nil,
 			membersType: membersUserType,
 			groupID:     id,
-			token:       loginSecret,
+			token:       token,
 			err:         createError(sdk.ErrMemberAdd, http.StatusBadRequest),
 		},
 		{
@@ -237,7 +236,7 @@ func TestAssign(t *testing.T) {
 			memberIDs:   memberIDs,
 			membersType: "",
 			groupID:     id,
-			token:       loginSecret,
+			token:       token,
 			err:         createError(sdk.ErrMemberAdd, http.StatusBadRequest),
 		},
 		{
@@ -245,7 +244,7 @@ func TestAssign(t *testing.T) {
 			memberIDs:   memberIDs,
 			membersType: membersUserType,
 			groupID:     "",
-			token:       loginSecret,
+			token:       token,
 			err:         createError(sdk.ErrMemberAdd, http.StatusBadRequest),
 		},
 		{
@@ -257,11 +256,19 @@ func TestAssign(t *testing.T) {
 			err:         createError(sdk.ErrMemberAdd, http.StatusInternalServerError),
 		},
 		{
+			desc:        "assign members to a group with wrong credentials",
+			memberIDs:   memberIDs,
+			membersType: membersUserType,
+			groupID:     id,
+			token:       invalidToken,
+			err:         createError(sdk.ErrMemberAdd, http.StatusUnauthorized),
+		},
+		{
 			desc:        "assign members to a user group",
 			memberIDs:   memberIDs,
 			membersType: membersUserType,
 			groupID:     id,
-			token:       loginSecret,
+			token:       token,
 			err:         nil,
 		},
 		{
@@ -269,7 +276,7 @@ func TestAssign(t *testing.T) {
 			memberIDs:   memberIDs,
 			membersType: membersThingType,
 			groupID:     id,
-			token:       loginSecret,
+			token:       token,
 			err:         nil,
 		},
 	}
@@ -290,13 +297,13 @@ func TestUnassign(t *testing.T) {
 	}
 	mainfluxSDK := sdk.NewSDK(sdkConf)
 
-	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
+	_, token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
-	id, err := mainfluxSDK.CreateGroup(group, loginSecret)
+	id, err := mainfluxSDK.CreateGroup(group, token)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
-	err = mainfluxSDK.Assign(memberIDs, membersUserType, id, loginSecret)
+	err = mainfluxSDK.Assign(memberIDs, membersUserType, id, token)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	cases := []struct {
@@ -316,7 +323,7 @@ func TestUnassign(t *testing.T) {
 			err:         createError(sdk.ErrFailedRemoval, http.StatusInternalServerError),
 		},
 		{
-			desc:        "unassign member from group with invalid token",
+			desc:        "unassign member from group with wrong credentials",
 			memberID:    memberID,
 			membersType: membersUserType,
 			groupID:     id,
@@ -328,7 +335,7 @@ func TestUnassign(t *testing.T) {
 			memberID:    memberID,
 			membersType: membersUserType,
 			groupID:     "",
-			token:       loginSecret,
+			token:       token,
 			err:         createError(sdk.ErrFailedRemoval, http.StatusBadRequest),
 		},
 		{
@@ -336,7 +343,7 @@ func TestUnassign(t *testing.T) {
 			memberID:    "",
 			membersType: membersUserType,
 			groupID:     id,
-			token:       loginSecret,
+			token:       token,
 			err:         createError(sdk.ErrFailedRemoval, http.StatusNotFound),
 		},
 		{
@@ -344,7 +351,7 @@ func TestUnassign(t *testing.T) {
 			memberID:    memberID,
 			membersType: membersUserType,
 			groupID:     id,
-			token:       loginSecret,
+			token:       token,
 			err:         nil,
 		},
 		{
@@ -352,7 +359,7 @@ func TestUnassign(t *testing.T) {
 			memberID:    memberID,
 			membersType: membersUserType,
 			groupID:     id,
-			token:       loginSecret,
+			token:       token,
 			err:         createError(sdk.ErrFailedRemoval, http.StatusNotFound),
 		},
 	}
@@ -362,8 +369,6 @@ func TestUnassign(t *testing.T) {
 	}
 }
 
-// TODO: Add test case for multiple groups.
-// TODO: Add testcase for offset and limit
 func TestMembers(t *testing.T) {
 	svc := newThingAuthService()
 	ts := newThingsAuthServer(svc)
@@ -375,13 +380,13 @@ func TestMembers(t *testing.T) {
 	}
 	mainfluxSDK := sdk.NewSDK(sdkConf)
 
-	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
+	_, token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
-	id, err := mainfluxSDK.CreateGroup(group, loginSecret)
+	id, err := mainfluxSDK.CreateGroup(group, token)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
-	err = mainfluxSDK.Assign(memberIDs, membersUserType, id, loginSecret)
+	err = mainfluxSDK.Assign(memberIDs, membersUserType, id, token)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	cases := []struct {
@@ -397,14 +402,14 @@ func TestMembers(t *testing.T) {
 		{
 			desc:     "get list of all members without group ID",
 			groupID:  "",
-			token:    loginSecret,
+			token:    token,
 			offset:   offset,
 			limit:    limit,
 			response: nil,
 			err:      createError(sdk.ErrFailedFetch, http.StatusBadRequest),
 		},
 		{
-			desc:     "get list of all members with invalid token",
+			desc:     "get list of all members with wrong credentials",
 			groupID:  id,
 			token:    invalidToken,
 			offset:   offset,
@@ -422,9 +427,27 @@ func TestMembers(t *testing.T) {
 			err:      createError(sdk.ErrFailedFetch, http.StatusInternalServerError),
 		},
 		{
+			desc:     "get list of all members with zero limit",
+			groupID:  id,
+			token:    token,
+			offset:   offset,
+			limit:    0,
+			response: []string{},
+			err:      nil,
+		},
+		{
+			desc:     "get list of all members with offset greater then max",
+			groupID:  id,
+			token:    token,
+			offset:   100,
+			limit:    limit,
+			response: []string{},
+			err:      nil,
+		},
+		{
 			desc:     "get list of all members",
 			groupID:  id,
-			token:    loginSecret,
+			token:    token,
 			offset:   offset,
 			limit:    limit,
 			response: memberIDs,
@@ -450,7 +473,6 @@ func TestMembers(t *testing.T) {
 	}
 }
 
-////TODO add testcase for offset and limit(?strange behaviour- not respond for change offset and limit?)
 func TestGroups(t *testing.T) {
 	svc := newThingAuthService()
 	ts := newThingsAuthServer(svc)
@@ -463,13 +485,13 @@ func TestGroups(t *testing.T) {
 	var groups []sdk.Group
 	mainfluxSDK := sdk.NewSDK(sdkConf)
 
-	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
+	_, token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	for i := 1; i < 101; i++ {
 		name := fmt.Sprintf("testGroupName-%d", i)
 		group := sdk.Group{ID: groupID, Name: name}
-		id, err := mainfluxSDK.CreateGroup(group, loginSecret)
+		id, err := mainfluxSDK.CreateGroup(group, token)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		group.ID = id
 		groups = append(groups, group)
@@ -478,7 +500,6 @@ func TestGroups(t *testing.T) {
 	cases := []struct {
 		desc     string
 		token    string
-		name     string
 		offset   uint64
 		limit    uint64
 		metadata map[string]interface{}
@@ -486,7 +507,7 @@ func TestGroups(t *testing.T) {
 		err      error
 	}{
 		{
-			desc:     "get a list of groups with invalid token",
+			desc:     "get a list of groups with wrong credentials",
 			token:    invalidToken,
 			offset:   offset,
 			limit:    limit,
@@ -505,8 +526,8 @@ func TestGroups(t *testing.T) {
 		},
 		{
 			desc:     "get a list of groups without limit",
-			token:    loginSecret,
-			offset:   offset,
+			token:    token,
+			offset:   0,
 			limit:    0,
 			response: nil,
 			metadata: make(map[string]interface{}),
@@ -514,7 +535,7 @@ func TestGroups(t *testing.T) {
 		},
 		{
 			desc:     "get a list of groups with limit greater then max",
-			token:    loginSecret,
+			token:    token,
 			offset:   offset,
 			limit:    1000,
 			response: nil,
@@ -523,7 +544,7 @@ func TestGroups(t *testing.T) {
 		},
 		{
 			desc:     "get a list of groups with offset greater then max",
-			token:    loginSecret,
+			token:    token,
 			offset:   1000,
 			limit:    limit,
 			response: nil,
@@ -532,7 +553,7 @@ func TestGroups(t *testing.T) {
 		},
 		{
 			desc:     "get a list of groups",
-			token:    loginSecret,
+			token:    token,
 			offset:   offset,
 			limit:    limit,
 			response: groups,
@@ -542,7 +563,6 @@ func TestGroups(t *testing.T) {
 	}
 	for _, tc := range cases {
 		filter := sdk.PageMetadata{
-			Name:     tc.name,
 			Total:    total,
 			Offset:   tc.offset,
 			Limit:    tc.limit,
@@ -566,34 +586,24 @@ func TestGroups(t *testing.T) {
 	}
 }
 
-//TODO check for loop for ids
-//?Strange behavior with returning errors
 func TestParents(t *testing.T) {
 	svc := newThingAuthService()
 	ts := newThingsAuthServer(svc)
 	defer ts.Close()
-	var groups []sdk.Group
-	var ids []string
-
 	sdkConf := sdk.Config{
 		AuthURL:         ts.URL,
 		MsgContentType:  contentType,
 		TLSVerification: true,
 	}
-
 	mainfluxSDK := sdk.NewSDK(sdkConf)
-	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
+
+	_, token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
-	for i := 1; i < 2; i++ {
-		name := fmt.Sprintf("testGroupName-%d", i)
-		group := sdk.Group{ID: groupID, Name: name}
-		id, err := mainfluxSDK.CreateGroup(group, loginSecret)
-		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-		group.ID = id
-		ids = append(ids, id)
-		groups = append(groups, group)
-	}
+	id, err := mainfluxSDK.CreateGroup(group, token)
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+
+	group.ID = id
 
 	cases := []struct {
 		desc     string
@@ -606,7 +616,7 @@ func TestParents(t *testing.T) {
 	}{
 		{
 			desc:     "get a non existing group",
-			token:    loginSecret,
+			token:    token,
 			id:       invalidGroupID,
 			offset:   offset,
 			limit:    limit,
@@ -616,47 +626,35 @@ func TestParents(t *testing.T) {
 		{
 			desc:     "get a list of parent groups without token",
 			token:    "",
-			id:       ids[0],
+			id:       id,
 			offset:   offset,
 			limit:    limit,
 			response: nil,
 			err:      createError(sdk.ErrFailedFetch, http.StatusInternalServerError),
 		},
 		{
-			desc:     "get a list of parent groups with invalid token",
+			desc:     "get a list of parent groups with wrong credentials",
 			token:    invalidToken,
-			id:       ids[0],
+			id:       id,
 			offset:   offset,
 			limit:    limit,
 			response: nil,
 			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
 		},
 		{
-			desc:   "get a list of all parent groups",
-			id:     ids[0],
-			token:  loginSecret,
-			offset: offset,
-			limit:  limit,
-			err:    nil,
+			desc:     "get a list of all parent groups",
+			id:       id,
+			token:    token,
+			offset:   offset,
+			limit:    limit,
+			response: []sdk.Group{group},
+			err:      nil,
 		},
 	}
 	for _, tc := range cases {
-
 		page, err := mainfluxSDK.Parents(tc.id, tc.offset, tc.limit, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
-		for _, v := range groups {
-			var c bool
-			for _, h := range page.Groups {
-				if v.ID == h.ID {
-					c = true
-					break
-				}
-			}
-			if !c {
-				assert.Equal(t, tc.response, page.Groups, fmt.Sprintf("%s: expected response member %s, got %s", tc.desc, tc.response, page.Groups))
-
-			}
-		}
+		assert.Equal(t, tc.response, page.Groups, fmt.Sprintf("%s: expected response member %s, got %s", tc.desc, tc.response, page.Groups))
 	}
 }
 
@@ -673,16 +671,16 @@ func TestChildren(t *testing.T) {
 	var groups []sdk.Group
 	mainfluxSDK := sdk.NewSDK(sdkConf)
 
-	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
+	_, token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
-	parentID, err := mainfluxSDK.CreateGroup(group, loginSecret)
+	parentID, err := mainfluxSDK.CreateGroup(group, token)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	for i := 1; i < 101; i++ {
 		name := fmt.Sprintf("testChildGroupName-%d", i)
 		group := sdk.Group{ID: groupID, Name: name, ParentID: parentID}
-		id, err := mainfluxSDK.CreateGroup(group, loginSecret)
+		id, err := mainfluxSDK.CreateGroup(group, token)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		group.ID = id
 		groups = append(groups, group)
@@ -700,7 +698,7 @@ func TestChildren(t *testing.T) {
 		{
 			desc:     "get all children from no existing group",
 			id:       "",
-			token:    loginSecret,
+			token:    token,
 			offset:   offset,
 			limit:    limit,
 			response: []sdk.Group{},
@@ -709,7 +707,7 @@ func TestChildren(t *testing.T) {
 		{
 			desc:     "get all children from invalid group",
 			id:       invalidGroupID,
-			token:    loginSecret,
+			token:    token,
 			offset:   offset,
 			limit:    limit,
 			response: []sdk.Group{},
@@ -725,7 +723,7 @@ func TestChildren(t *testing.T) {
 			err:      createError(sdk.ErrFailedFetch, http.StatusInternalServerError),
 		},
 		{
-			desc:     "get all children groups with invalid token",
+			desc:     "get all children groups with wrong credentials",
 			id:       parentID,
 			token:    invalidToken,
 			offset:   offset,
@@ -734,18 +732,37 @@ func TestChildren(t *testing.T) {
 			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
 		},
 		{
-			desc:     "get all children groups with 0 limit",
+			desc:     "get all children groups with  limit greater then max",
 			id:       parentID,
-			token:    loginSecret,
+			token:    token,
 			offset:   offset,
 			limit:    110,
-			response: groups,
+			response: []sdk.Group{},
 			err:      nil,
 		},
 		{
+			desc:     "get all children groups with zero limit",
+			id:       parentID,
+			token:    token,
+			offset:   offset,
+			limit:    0,
+			response: []sdk.Group{},
+			err:      nil,
+		},
+		{
+			desc:     "get all children groups with offset greater than max",
+			id:       parentID,
+			token:    token,
+			offset:   110,
+			limit:    limit,
+			response: []sdk.Group{},
+			err:      nil,
+		},
+
+		{
 			desc:     "get all children groups",
 			id:       parentID,
-			token:    loginSecret,
+			token:    token,
 			offset:   offset,
 			limit:    limit,
 			response: groups,
@@ -781,10 +798,11 @@ func TestGroup(t *testing.T) {
 		TLSVerification: true,
 	}
 	mainfluxSDK := sdk.NewSDK(sdkConf)
-	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
+
+	_, token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
-	id, err := mainfluxSDK.CreateGroup(group, loginSecret)
+	id, err := mainfluxSDK.CreateGroup(group, token)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	cases := []struct {
@@ -796,19 +814,19 @@ func TestGroup(t *testing.T) {
 		{
 			desc:  "get existing group",
 			id:    id,
-			token: loginSecret,
+			token: token,
 			err:   nil,
 		},
 		{
 			desc:  "get group without id",
 			id:    "",
-			token: loginSecret,
+			token: token,
 			err:   createError(sdk.ErrFailedFetch, http.StatusBadRequest),
 		},
 		{
 			desc:  "get non existing group",
 			id:    invalidGroupID,
-			token: loginSecret,
+			token: token,
 			err:   createError(sdk.ErrFailedFetch, http.StatusNotFound),
 		},
 		{
@@ -818,7 +836,7 @@ func TestGroup(t *testing.T) {
 			err:   createError(sdk.ErrFailedFetch, http.StatusInternalServerError),
 		},
 		{
-			desc:  "get group with invalid token",
+			desc:  "get group with wrong credentials",
 			id:    id,
 			token: invalidToken,
 			err:   createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
@@ -841,10 +859,10 @@ func TestUpdateGroup(t *testing.T) {
 	}
 	mainfluxSDK := sdk.NewSDK(sdkConf)
 
-	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
+	_, token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
-	id, err := mainfluxSDK.CreateGroup(group, loginSecret)
+	id, err := mainfluxSDK.CreateGroup(group, token)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	updatedGroup := sdk.Group{ID: id, Name: "updatedGroup", Description: "testDesc"}
@@ -858,23 +876,23 @@ func TestUpdateGroup(t *testing.T) {
 		{
 			desc:  "update existing group",
 			group: updatedGroup,
-			token: loginSecret,
+			token: token,
 			err:   nil,
 		},
 		{
 			desc:  "update non-existing group",
 			group: sdk.Group{ID: "0", Name: "updatedGroup", Description: "testDesc"},
-			token: loginSecret,
+			token: token,
 			err:   createError(sdk.ErrFailedUpdate, http.StatusNotFound),
 		},
 		{
 			desc:  "update group with invalid id",
 			group: sdk.Group{ID: "", Name: "updatedGroup", Description: "testDesc"},
-			token: loginSecret,
+			token: token,
 			err:   createError(sdk.ErrFailedUpdate, http.StatusBadRequest),
 		},
 		{
-			desc:  "update group with invalid token",
+			desc:  "update group with wrong credentials",
 			group: updatedGroup,
 			token: invalidToken,
 			err:   createError(sdk.ErrFailedUpdate, http.StatusUnauthorized),
@@ -903,7 +921,8 @@ func TestMemberships(t *testing.T) {
 		TLSVerification: true,
 	}
 	mainfluxSDK := sdk.NewSDK(sdkConf)
-	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
+
+	_, token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	var ids []string
@@ -911,7 +930,7 @@ func TestMemberships(t *testing.T) {
 	for i := 1; i < 5; i++ {
 		name := fmt.Sprintf("testGroupName-%d", i)
 		group := sdk.Group{ID: groupID, Name: name}
-		id, err := mainfluxSDK.CreateGroup(group, loginSecret)
+		id, err := mainfluxSDK.CreateGroup(group, token)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		group.ID = id
 		ids = append(ids, id)
@@ -919,7 +938,7 @@ func TestMemberships(t *testing.T) {
 
 	}
 	for _, id := range ids {
-		err := mainfluxSDK.Assign(memberIDs, membersUserType, id, loginSecret)
+		err := mainfluxSDK.Assign(memberIDs, membersUserType, id, token)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	}
@@ -936,7 +955,7 @@ func TestMemberships(t *testing.T) {
 		{
 			desc:     "get memberships for non existing member",
 			userID:   "",
-			token:    loginSecret,
+			token:    token,
 			offset:   offset,
 			limit:    limit,
 			response: nil,
@@ -952,7 +971,7 @@ func TestMemberships(t *testing.T) {
 			err:      createError(sdk.ErrFailedFetch, http.StatusInternalServerError),
 		},
 		{
-			desc:     "get all existing memberships with invalid token",
+			desc:     "get all existing memberships with wrong credentials",
 			userID:   memberID,
 			token:    invalidToken,
 			offset:   offset,
@@ -963,7 +982,7 @@ func TestMemberships(t *testing.T) {
 		{
 			desc:     "get all existing memberships with offset greater than max",
 			userID:   memberID,
-			token:    loginSecret,
+			token:    token,
 			offset:   100,
 			limit:    limit,
 			response: []sdk.Group{},
@@ -972,7 +991,7 @@ func TestMemberships(t *testing.T) {
 		{
 			desc:     "get all existing memberships with zero limit",
 			userID:   memberID,
-			token:    loginSecret,
+			token:    token,
 			offset:   offset,
 			limit:    0,
 			response: []sdk.Group{},
@@ -981,7 +1000,7 @@ func TestMemberships(t *testing.T) {
 		{
 			desc:     "get all first member existing memberships",
 			userID:   memberID,
-			token:    loginSecret,
+			token:    token,
 			offset:   offset,
 			limit:    limit,
 			response: groups,
@@ -990,7 +1009,7 @@ func TestMemberships(t *testing.T) {
 		{
 			desc:     "get all second member existing memberships",
 			userID:   secondMemberID,
-			token:    loginSecret,
+			token:    token,
 			offset:   offset,
 			limit:    limit,
 			response: groups,
