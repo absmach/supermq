@@ -89,7 +89,6 @@ func (ps pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) e
 			if len(ps.subscriptions) == 0 {
 				client, err := newClient(ps.address, id, ps.timeout)
 				if err != nil {
-					ps.mu.Unlock()
 					return err
 				}
 				s = subscription{
