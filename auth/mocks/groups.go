@@ -234,7 +234,10 @@ func (grm *groupRepositoryMock) Members(ctx context.Context, groupID, groupType 
 			members = value
 		}
 	}
-
+	members, ok := grm.members[groupID][groupType]
+	if !ok {
+		return auth.MemberPage{}, errors.ErrNotFound
+	}
 	first := uint64(pm.Offset)
 	last := first + uint64(pm.Limit)
 
