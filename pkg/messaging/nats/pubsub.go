@@ -22,6 +22,7 @@ var (
 	ErrNotSubscribed     = errors.New("not subscribed")
 	ErrEmptyTopic        = errors.New("empty topic")
 	ErrEmptyID           = errors.New("empty id")
+	ErrFailed            = errors.New("failed")
 )
 
 var _ messaging.PubSub = (*pubsub)(nil)
