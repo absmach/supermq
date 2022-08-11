@@ -12,9 +12,7 @@ import (
 	bsapi "github.com/mainflux/mainflux/bootstrap/api"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/pkg/errors"
-	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
-	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
+	"github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/things"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,18 +27,17 @@ const (
 )
 
 var (
-	validToken  = "validToken"
 	channelsNum = 3
 	encKey      = []byte("1234567891011121")
-	channel     = mfsdk.Channel{
+	channel     = sdk.Channel{
 		ID:       "1",
 		Name:     "name",
 		Metadata: map[string]interface{}{"name": "value"},
 	}
-	config = mfsdk.BootstrapConfig{
+	config = sdk.BootstrapConfig{
 		ExternalID:  "external_id",
 		ExternalKey: "external_key",
-		MFChannels:  []mfsdk.Channel{channel},
+		MFChannels:  []sdk.Channel{channel},
 		Content:     "config",
 		MFKey:       "mfKey",
 		State:       0,
@@ -66,10 +63,10 @@ func newBootstrapThingsService(auth mainflux.AuthServiceClient) things.Service {
 
 func newBootstrapService(auth mainflux.AuthServiceClient, url string) bootstrap.Service {
 	things := mocks.NewConfigsRepository()
-	config := mfsdk.Config{
+	config := sdk.Config{
 		ThingsURL: url,
 	}
-	sdk := mfsdk.NewSDK(config)
+	sdk := sdk.NewSDK(config)
 	return bootstrap.New(auth, things, sdk, encKey)
 }
 
@@ -80,22 +77,21 @@ func newBootstrapServer(svc bootstrap.Service) *httptest.Server {
 }
 func TestAddBootstrap(t *testing.T) {
 	auth := mocks.NewAuthClient(map[string]string{token: token})
-
 	ts := newThingsServer(newBootstrapThingsService(auth))
 	svc := newBootstrapService(auth, ts.URL)
 	bs := newBootstrapServer(svc)
 	defer bs.Close()
 
-	sdkConf := mfsdk.Config{
+	sdkConf := sdk.Config{
 		BootstrapURL:    bs.URL,
 		MsgContentType:  contentType,
 		TLSVerification: true,
 	}
-	mainfluxSDK := mfsdk.NewSDK(sdkConf)
+	mainfluxSDK := sdk.NewSDK(sdkConf)
 
 	cases := []struct {
 		desc   string
-		config mfsdk.BootstrapConfig
+		config sdk.BootstrapConfig
 		auth   string
 		err    error
 	}{
@@ -114,7 +110,7 @@ func TestAddBootstrap(t *testing.T) {
 		},
 		{
 			desc:   "add a config with invalid config",
-			config: mfsdk.BootstrapConfig{},
+			config: sdk.BootstrapConfig{},
 			auth:   token,
 			err:    createError(sdk.ErrFailedCreation, http.StatusBadRequest),
 		},
@@ -139,18 +135,17 @@ func TestAddBootstrap(t *testing.T) {
 
 func TestWhitelist(t *testing.T) {
 	auth := mocks.NewAuthClient(map[string]string{token: token})
-
 	ts := newThingsServer(newBootstrapThingsService(auth))
 	svc := newBootstrapService(auth, ts.URL)
 	bs := newBootstrapServer(svc)
 	defer bs.Close()
 
-	sdkConf := mfsdk.Config{
+	sdkConf := sdk.Config{
 		BootstrapURL:    bs.URL,
 		MsgContentType:  contentType,
 		TLSVerification: true,
 	}
-	mainfluxSDK := mfsdk.NewSDK(sdkConf)
+	mainfluxSDK := sdk.NewSDK(sdkConf)
 
 	mfThingID, err := mainfluxSDK.AddBootstrap(token, config)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -162,7 +157,7 @@ func TestWhitelist(t *testing.T) {
 
 	cases := []struct {
 		desc   string
-		config mfsdk.BootstrapConfig
+		config sdk.BootstrapConfig
 		auth   string
 		err    error
 	}{
@@ -205,18 +200,17 @@ func TestWhitelist(t *testing.T) {
 
 func TestViewBootstrap(t *testing.T) {
 	auth := mocks.NewAuthClient(map[string]string{token: token})
-
 	ts := newThingsServer(newBootstrapThingsService(auth))
 	svc := newBootstrapService(auth, ts.URL)
 	bs := newBootstrapServer(svc)
 	defer bs.Close()
 
-	sdkConf := mfsdk.Config{
+	sdkConf := sdk.Config{
 		BootstrapURL:    bs.URL,
 		MsgContentType:  contentType,
 		TLSVerification: true,
 	}
-	mainfluxSDK := mfsdk.NewSDK(sdkConf)
+	mainfluxSDK := sdk.NewSDK(sdkConf)
 
 	thingID, err := mainfluxSDK.AddBootstrap(token, config)
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
@@ -234,7 +228,7 @@ func TestViewBootstrap(t *testing.T) {
 			err:  createError(sdk.ErrFailedFetch, http.StatusNotFound),
 		},
 		{
-			desc: "view a config with invalid token",
+			desc: "view a config with wrong credentials",
 			id:   thingID,
 			auth: invalidToken,
 			err:  createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
@@ -260,18 +254,17 @@ func TestViewBootstrap(t *testing.T) {
 
 func TestUpdateBootstrap(t *testing.T) {
 	auth := mocks.NewAuthClient(map[string]string{token: email})
-
 	ts := newThingsServer(newBootstrapThingsService(auth))
 	svc := newBootstrapService(auth, ts.URL)
 	bs := newBootstrapServer(svc)
 	defer bs.Close()
 
-	sdkConf := mfsdk.Config{
+	sdkConf := sdk.Config{
 		BootstrapURL:    bs.URL,
 		MsgContentType:  contentType,
 		TLSVerification: true,
 	}
-	mainfluxSDK := mfsdk.NewSDK(sdkConf)
+	mainfluxSDK := sdk.NewSDK(sdkConf)
 
 	thingID, err := mainfluxSDK.AddBootstrap(token, config)
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
@@ -287,17 +280,17 @@ func TestUpdateBootstrap(t *testing.T) {
 	cases := []struct {
 		desc   string
 		auth   string
-		config mfsdk.BootstrapConfig
+		config sdk.BootstrapConfig
 		err    error
 	}{
 		{
-			desc:   "update with invalid token",
+			desc:   "update config with wrong credentials",
 			auth:   invalidToken,
 			config: updatedConfig,
 			err:    createError(sdk.ErrFailedUpdate, http.StatusUnauthorized),
 		},
 		{
-			desc:   "update with empty token",
+			desc:   "update config  with empty token",
 			auth:   "",
 			config: updatedConfig,
 			err:    createError(sdk.ErrFailedUpdate, http.StatusUnauthorized),
@@ -323,18 +316,17 @@ func TestUpdateBootstrap(t *testing.T) {
 
 func TestUpdateBootstrapCerts(t *testing.T) {
 	auth := mocks.NewAuthClient(map[string]string{token: email})
-
 	ts := newThingsServer(newBootstrapThingsService(auth))
 	svc := newBootstrapService(auth, ts.URL)
 	bs := newBootstrapServer(svc)
 	defer bs.Close()
 
-	sdkConf := mfsdk.Config{
+	sdkConf := sdk.Config{
 		BootstrapURL:    bs.URL,
 		MsgContentType:  contentType,
 		TLSVerification: true,
 	}
-	mainfluxSDK := mfsdk.NewSDK(sdkConf)
+	mainfluxSDK := sdk.NewSDK(sdkConf)
 
 	_, err := mainfluxSDK.AddBootstrap(token, config)
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
@@ -347,12 +339,11 @@ func TestUpdateBootstrapCerts(t *testing.T) {
 
 	cases := []struct {
 		desc       string
-		auth       string
 		id         string
 		clientCert string
 		clientKey  string
 		caCert     string
-		config     mfsdk.BootstrapConfig
+		auth       string
 		err        error
 	}{
 		{
@@ -365,7 +356,7 @@ func TestUpdateBootstrapCerts(t *testing.T) {
 			err:        createError(sdk.ErrFailedCertUpdate, http.StatusNotFound),
 		},
 		{
-			desc:       "update cert with invalid token",
+			desc:       "update cert with with wrong credentials",
 			id:         updatedConfig.MFKey,
 			clientCert: clientCert,
 			clientKey:  clientKey,
@@ -374,7 +365,7 @@ func TestUpdateBootstrapCerts(t *testing.T) {
 			err:        createError(sdk.ErrFailedCertUpdate, http.StatusUnauthorized),
 		},
 		{
-			desc:       "update certs with an empty token",
+			desc:       "update cert with an empty token",
 			id:         updatedConfig.MFKey,
 			clientCert: clientCert,
 			clientKey:  clientKey,
@@ -383,7 +374,7 @@ func TestUpdateBootstrapCerts(t *testing.T) {
 			err:        createError(sdk.ErrFailedCertUpdate, http.StatusUnauthorized),
 		},
 		{
-			desc:       "update certs for the valid config",
+			desc:       "update cert for the valid config",
 			id:         updatedConfig.MFKey,
 			clientCert: clientCert,
 			clientKey:  clientKey,
@@ -406,12 +397,12 @@ func TestRemoveBootstrap(t *testing.T) {
 	bs := newBootstrapServer(svc)
 	defer bs.Close()
 
-	sdkConf := mfsdk.Config{
+	sdkConf := sdk.Config{
 		BootstrapURL:    bs.URL,
 		MsgContentType:  contentType,
 		TLSVerification: true,
 	}
-	mainfluxSDK := mfsdk.NewSDK(sdkConf)
+	mainfluxSDK := sdk.NewSDK(sdkConf)
 
 	mfThingID, err := mainfluxSDK.AddBootstrap(token, config)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -423,13 +414,13 @@ func TestRemoveBootstrap(t *testing.T) {
 		err   error
 	}{
 		{
-			desc:  "remove with invalid token",
+			desc:  "remove config with wrong credentials",
 			id:    mfThingID,
 			token: invalidToken,
 			err:   createError(sdk.ErrFailedRemoval, http.StatusUnauthorized),
 		},
 		{
-			desc:  "remove with empty token",
+			desc:  "remove config with empty token",
 			id:    mfThingID,
 			token: "",
 			err:   createError(sdk.ErrFailedRemoval, http.StatusUnauthorized),
@@ -447,7 +438,7 @@ func TestRemoveBootstrap(t *testing.T) {
 			err:   nil,
 		},
 		{
-			desc:  "remove removed config",
+			desc:  "remove already removed config",
 			id:    mfThingID,
 			token: token,
 			err:   nil,
@@ -459,7 +450,8 @@ func TestRemoveBootstrap(t *testing.T) {
 	}
 }
 
-func testBootstrap(t *testing.T) {
+/*
+func TestBootstrap(t *testing.T) {
 	auth := mocks.NewAuthClient(map[string]string{token: email})
 
 	ts := newThingsServer(newBootstrapThingsService(auth))
@@ -467,12 +459,12 @@ func testBootstrap(t *testing.T) {
 	bs := newBootstrapServer(svc)
 	defer bs.Close()
 
-	sdkConf := mfsdk.Config{
+	sdkConf := sdk.Config{
 		BootstrapURL:    bs.URL,
 		MsgContentType:  contentType,
 		TLSVerification: true,
 	}
-	mainfluxSDK := mfsdk.NewSDK(sdkConf)
+	mainfluxSDK := sdk.NewSDK(sdkConf)
 
 	mfThingID, err := mainfluxSDK.AddBootstrap(token, config)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -482,25 +474,32 @@ func testBootstrap(t *testing.T) {
 
 	cases := []struct {
 		desc        string
-		config      mfsdk.BootstrapConfig
+		config      sdk.BootstrapConfig
 		externalKey string
 		externalID  string
 		err         error
 	}{
+
+		//{
+		//	desc:        "bootstrap an existing config",
+		//	config:      config,
+		//	externalID:  config.ExternalID,
+		//	externalKey: config.ExternalKey,
+		//	err:         nil,
+		//},
 		{
-			desc:        "bootstrap an existing config",
+			desc:        "bootstrap a Thing with an empty ID",
 			config:      updtConfig,
-			externalID:  config.ExternalID,
-			externalKey: config.ExternalKey,
-			err:         nil,
+			externalID:  "",
+			externalKey: updtConfig.ExternalKey,
+			err:         createError(sdk.ErrFailedFetch, http.StatusBadRequest),
 		},
 	}
 	for _, tc := range cases {
-		fmt.Println(tc.config.ThingID)
 		_, err := mainfluxSDK.Bootstrap(tc.externalKey, tc.externalID)
-		//assert.Equal(t, tc.config, config, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.config, config))
+		//	assert.Equal(t, tc.config, config, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.config, config))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 
 	}
 
-}
+} */
