@@ -46,7 +46,7 @@ type pubsub struct {
 	subscriptions map[string]subscription
 }
 
-// NewPubSub returns RabbitMQ message publisher/subscriber
+// NewPubSub returns MQTT message publisher/subscriber.
 func NewPubSub(url, queue string, timeout time.Duration, logger log.Logger) (messaging.PubSub, error) {
 	client, err := newClient(url, "mqtt-publisher", timeout)
 	if err != nil {
