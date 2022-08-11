@@ -1,12 +1,12 @@
 package sdk_test
 
 import (
-	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"strconv"
@@ -16,11 +16,11 @@ import (
 	"github.com/mainflux/mainflux"
 	bsmocks "github.com/mainflux/mainflux/bootstrap/mocks"
 	"github.com/mainflux/mainflux/certs"
-	api "github.com/mainflux/mainflux/certs/api"
+	"github.com/mainflux/mainflux/certs/api"
 	"github.com/mainflux/mainflux/certs/mocks"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
-	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
+	"github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/things"
 	thmocks "github.com/mainflux/mainflux/things/mocks"
 	"github.com/stretchr/testify/assert"
@@ -54,11 +54,11 @@ func newCertService(tokens map[string]string) (certs.Service, error) {
 
 	policies := []thmocks.MockSubjectSet{{Object: "users", Relation: "member"}}
 	auth := thmocks.NewAuthService(tokens, map[string][]thmocks.MockSubjectSet{email: policies})
-	config := mfsdk.Config{
+	config := sdk.Config{
 		ThingsURL: server.URL,
 	}
 
-	sdk := mfsdk.NewSDK(config)
+	sdk := sdk.NewSDK(config)
 	repo := mocks.NewCertsRepository()
 
 	tlsCert, caCert, err := loadCertificates(caPath, caKeyPath)
@@ -111,18 +111,16 @@ func newCertServer(svc certs.Service) *httptest.Server {
 }
 
 func TestIssueCert(t *testing.T) {
-
-	svc, err := newCertService(map[string]string{token: email})
+	svc, err := newCertService(map[string]string{token: token})
 	require.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
 	cs := newCertServer(svc)
 	defer cs.Close()
-
-	sdkConf := mfsdk.Config{
+	sdkConf := sdk.Config{
 		CertsURL:        cs.URL,
 		MsgContentType:  contentType,
 		TLSVerification: true,
 	}
-	mainfluxSDK := mfsdk.NewSDK(sdkConf)
+	mainfluxSDK := sdk.NewSDK(sdkConf)
 
 	cases := []struct {
 		desc    string
@@ -133,6 +131,79 @@ func TestIssueCert(t *testing.T) {
 		token   string
 		err     error
 	}{
+		{
+			desc:    "issue new cert with wrong credentials",
+			thingID: thingID,
+			keyBits: 2048,
+			keyType: key,
+			ttl:     ttl,
+			token:   invalidToken,
+			err:     createError(sdk.ErrFailedCreation, http.StatusUnauthorized),
+		},
+		{
+			desc:    "issue new cert with empty token",
+			thingID: thingID,
+			keyBits: 2048,
+			keyType: key,
+			ttl:     ttl,
+			token:   "",
+			err:     createError(sdk.ErrFailedCreation, http.StatusUnauthorized),
+		},
+		{
+			desc:    "issue new cert for non-existing thing",
+			thingID: wrongID,
+			keyBits: 2048,
+			keyType: key,
+			ttl:     ttl,
+			token:   token,
+			err:     createError(sdk.ErrFailedCreation, http.StatusInternalServerError),
+		},
+		{
+			desc:    "issue new cert with no thing id",
+			thingID: "",
+			keyBits: 2048,
+			keyType: key,
+			ttl:     ttl,
+			token:   token,
+			err:     createError(sdk.ErrFailedCreation, http.StatusBadRequest),
+		},
+		{
+			desc:    "issue new cert without time to live",
+			thingID: thingID,
+			keyBits: 2048,
+			keyType: key,
+			ttl:     "",
+			token:   token,
+			err:     createError(sdk.ErrFailedCreation, http.StatusBadRequest),
+		},
+		{
+			desc:    "issue new cert with zero key bits",
+			thingID: thingID,
+			keyBits: 0,
+			keyType: key,
+			ttl:     ttl,
+			token:   token,
+			err:     createError(sdk.ErrFailedCreation, http.StatusBadRequest),
+		},
+		{
+			desc:    "issue new cert with invalid key bits",
+			thingID: thingID,
+			keyBits: -2048,
+			keyType: key,
+			ttl:     ttl,
+			token:   token,
+			err:     createError(sdk.ErrFailedCreation, http.StatusInternalServerError),
+		},
+		{
+			desc:    "issue new cert without key type",
+			thingID: thingID,
+			keyBits: 2048,
+			keyType: "",
+			ttl:     ttl,
+			token:   token,
+			err:     createError(sdk.ErrFailedCreation, http.StatusBadRequest),
+		},
+
 		{
 			desc:    "issue new cert",
 			thingID: thingID,
@@ -148,44 +219,67 @@ func TestIssueCert(t *testing.T) {
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 	}
 }
-func TestRemoveCert(t *testing.T) {
+func TestRevokeCert(t *testing.T) {
 	svc, err := newCertService(map[string]string{token: token})
 	require.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
 	cs := newCertServer(svc)
 	defer cs.Close()
-
-	cert, err := svc.IssueCert(context.Background(), token, thingID, ttl, keyBits, key)
-	require.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
-
-	sdkConf := mfsdk.Config{
+	sdkConf := sdk.Config{
 		CertsURL:        cs.URL,
 		MsgContentType:  contentType,
 		TLSVerification: true,
 	}
-	mainfluxSDK := mfsdk.NewSDK(sdkConf)
+	mainfluxSDK := sdk.NewSDK(sdkConf)
+
+	_, err = mainfluxSDK.IssueCert(thingID, keyBits, key, ttl, token)
+	require.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
 
 	cases := []struct {
 		desc    string
 		thingID string
-		keyBits int
-		keyType string
-		ttl     string
 		token   string
 		err     error
 	}{
 		{
-			desc:    "issue new cert",
-			thingID: "1",
-			keyBits: 2048,
-			keyType: "rsa",
-			ttl:     "1h",
-			token:   "token",
+			desc:    "revoke cert with wrong credentials",
+			thingID: thingID,
+			token:   invalidToken,
+			err:     createError(sdk.ErrFailedRemoval, http.StatusUnauthorized),
+		},
+		{
+			desc:    "revoke cert with empty token",
+			thingID: thingID,
+			token:   "",
+			err:     createError(sdk.ErrFailedRemoval, http.StatusUnauthorized),
+		},
+		{
+			desc:    "revoke cert for non existing thing",
+			thingID: wrongID,
+			token:   token,
+			err:     createError(sdk.ErrFailedRemoval, http.StatusInternalServerError),
+		},
+		{
+			desc:    "revoke cert for an empty thing id",
+			thingID: "",
+			token:   token,
+			err:     createError(sdk.ErrFailedRemoval, http.StatusBadRequest),
+		},
+		{
+			desc:    "revoke cert",
+			thingID: thingID,
+			token:   token,
 			err:     nil,
 		},
+		{
+			desc:    "revoke already revoked cert",
+			thingID: thingID,
+			token:   token,
+			err:     createError(sdk.ErrFailedRemoval, http.StatusInternalServerError),
+		},
 	}
-	fmt.Println(cert.ThingID)
+
 	for _, tc := range cases {
-		err = mainfluxSDK.RemoveCert(tc.thingID, tc.token)
+		err = mainfluxSDK.RevokeCert(tc.thingID, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 	}
 }
