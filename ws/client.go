@@ -25,7 +25,7 @@ func NewClient(c *websocket.Conn, thingKey string) *Client {
 	}
 }
 
-func (c *Client) Publish(svc Service, logger logger.Logger, thingKey, chanID, subtopic string, msgs <-chan []byte) {
+func (c *Client) Process(svc Service, logger logger.Logger, thingKey, chanID, subtopic string, msgs <-chan []byte) {
 	for msg := range msgs {
 		m := messaging.Message{
 			Channel:  chanID,

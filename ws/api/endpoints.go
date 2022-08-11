@@ -39,9 +39,9 @@ func handshake(svc ws.Service) http.HandlerFunc {
 		client := ws.NewClient(conn, "")
 
 		if err := svc.Subscribe(context.Background(), req.thingKey, req.chanID, req.subtopic, client); err != nil {
-			fmt.Println("Error in subscribe")
 			logger.Warn(fmt.Sprintf("Failed to subscribe to broker: %s", err.Error()))
-			encodeError(&req, w, err)
+			req.conn.Close()
+			return
 		}
 
 		// In case previous subscription wasn't closed properly
@@ -58,7 +58,7 @@ func handshake(svc ws.Service) http.HandlerFunc {
 		msgs := make(chan []byte)
 
 		// Listen for messages received from the chan messages, and publish them to broker
-		go client.Publish(svc, logger, req.thingKey, req.chanID, req.subtopic, msgs)
+		go client.Process(svc, logger, req.thingKey, req.chanID, req.subtopic, msgs)
 		go listen(conn, msgs)
 	}
 }

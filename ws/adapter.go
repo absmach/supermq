@@ -28,10 +28,7 @@ var (
 	// ErrInvalidConnection indicates that client couldn't subscribe to message broker
 	ErrInvalidConnection = errors.New("nats: invalid connection")
 
-	// ErrAlreadySubscribed indicates that client couldn't subscribe, as it was already subscribed
-	ErrAlreadySubscribed = errors.New("already subscribed to topic")
-
-	// ErrUnauthorizedAccesss indicates that client provided missing or invalid credentials
+	// ErrUnauthorizedAccess indicates that client provided missing or invalid credentials
 	ErrUnauthorizedAccess = errors.New("missing or invalid credentials provided")
 
 	// ErrEmptyTopic and ErrEmptyID indicate absence of channelID or thingKey in the request
@@ -86,7 +83,7 @@ func (svc *adapterService) Publish(ctx context.Context, thingKey string, msg mes
 }
 
 func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subtopic string, c *Client) error {
-	if len(chanID) == 0 || len(thingKey) == 0 {
+	if chanID == "" || thingKey == "" {
 		return ErrUnauthorizedAccess
 	}
 
@@ -103,19 +100,14 @@ func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subt
 	}
 
 	if err := svc.pubsub.Subscribe(thid.GetValue(), subject, c); err != nil {
-		switch err {
-		case ErrAlreadySubscribed:
-			return err
-		default:
-			return ErrFailedSubscription
-		}
+		return ErrFailedSubscription
 	}
 
 	return nil
 }
 
 func (svc *adapterService) Unsubscribe(ctx context.Context, thingKey, chanID, subtopic string) error {
-	if len(chanID) == 0 || len(thingKey) == 0 {
+	if chanID == "" || thingKey == "" {
 		return ErrUnauthorizedAccess
 	}
 
