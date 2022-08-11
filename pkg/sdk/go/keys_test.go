@@ -3,12 +3,13 @@ package sdk_test
 import (
 	"context"
 	"fmt"
-	"github.com/mainflux/mainflux/auth"
-	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/mainflux/mainflux/auth"
+	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestIssue(t *testing.T) {
@@ -72,10 +73,10 @@ func TestRevoke(t *testing.T) {
 	}
 	mainfluxSDK := sdk.NewSDK(sdkConf)
 
-	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
+	_, token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
-	key, err := mainfluxSDK.Issue(loginSecret, loginDuration)
+	key, err := mainfluxSDK.Issue(token, loginDuration)
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 
 	cases := []struct {
@@ -86,7 +87,7 @@ func TestRevoke(t *testing.T) {
 	}{
 		{
 			desc:  "revoke a non-existing key",
-			token: loginSecret,
+			token: token,
 			id:    "",
 			err:   createError(sdk.ErrFailedRemoval, http.StatusBadRequest),
 		},
@@ -104,7 +105,7 @@ func TestRevoke(t *testing.T) {
 		},
 		{
 			desc:  "revoke an existing key",
-			token: loginSecret,
+			token: token,
 			id:    key.ID,
 			err:   nil,
 		},
@@ -153,12 +154,6 @@ func TestRetrieveKey(t *testing.T) {
 		{
 			desc:  "retrieve key with invalid token",
 			token: invalidToken,
-			id:    key.ID,
-			err:   createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
-		},
-		{
-			desc:  "retrieve key with empty token",
-			token: "",
 			id:    key.ID,
 			err:   createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
 		},
