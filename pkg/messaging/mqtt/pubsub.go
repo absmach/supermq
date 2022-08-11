@@ -72,7 +72,6 @@ func (ps pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) e
 		return errEmptyTopic
 	}
 	ps.mu.Lock()
-	defer ps.mu.Unlock()
 	// Check client ID
 	s, ok := ps.subscriptions[id]
 	switch ok {
@@ -82,7 +81,6 @@ func (ps pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) e
 			// Unlocking, so that Unsubscribe() can access ps.subscriptions
 			ps.mu.Unlock()
 			if err := ps.Unsubscribe(id, topic); err != nil {
-				ps.mu.Lock()
 				return err
 			}
 			ps.mu.Lock()
@@ -108,6 +106,8 @@ func (ps pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) e
 			topics: []string{topic},
 		}
 	}
+	defer ps.mu.Unlock()
+
 	token := s.client.Subscribe(topic, qos, ps.mqttHandler(handler))
 	if token.Error() != nil {
 		return token.Error()

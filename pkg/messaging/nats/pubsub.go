@@ -72,7 +72,6 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 	}
 
 	ps.mu.Lock()
-	defer ps.mu.Unlock()
 	// Check topic
 	s, ok := ps.subscriptions[topic]
 	switch ok {
@@ -82,7 +81,6 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 			// Unlocking, so that Unsubscribe() can access ps.subscriptions
 			ps.mu.Unlock()
 			if err := ps.Unsubscribe(id, topic); err != nil {
-				ps.mu.Lock()
 				return err
 			}
 
@@ -97,6 +95,8 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 		s = make(map[string]subscription)
 		ps.subscriptions[topic] = s
 	}
+	defer ps.mu.Unlock()
+
 	nh := ps.natsHandler(handler)
 
 	if ps.queue != "" {
