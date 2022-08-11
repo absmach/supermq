@@ -4,12 +4,7 @@
 package ws
 
 import (
-	"context"
-	"fmt"
-	"time"
-
 	"github.com/gorilla/websocket"
-	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 )
 
@@ -22,23 +17,6 @@ func NewClient(c *websocket.Conn, thingKey string) *Client {
 	return &Client{
 		conn: c,
 		id:   thingKey,
-	}
-}
-
-func (c *Client) Process(svc Service, logger logger.Logger, thingKey, chanID, subtopic string, msgs <-chan []byte) {
-	for msg := range msgs {
-		m := messaging.Message{
-			Channel:  chanID,
-			Subtopic: subtopic,
-			Protocol: "websocket",
-			Payload:  msg,
-			Created:  time.Now().UnixNano(),
-		}
-		svc.Publish(context.Background(), thingKey, m)
-	}
-	if err := svc.Unsubscribe(context.Background(), thingKey, chanID, subtopic); err != nil {
-		logger.Warn(fmt.Sprintf("Failed to subscribe to broker: %s", err.Error()))
-		c.conn.Close()
 	}
 }
 

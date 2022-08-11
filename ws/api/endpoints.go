@@ -11,11 +11,13 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/go-zoo/bone"
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/ws"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -58,7 +60,7 @@ func handshake(svc ws.Service) http.HandlerFunc {
 		msgs := make(chan []byte)
 
 		// Listen for messages received from the chan messages, and publish them to broker
-		go client.Process(svc, logger, req.thingKey, req.chanID, req.subtopic, msgs)
+		go process(svc, &req, msgs)
 		go listen(conn, msgs)
 	}
 }
@@ -146,6 +148,23 @@ func listen(conn *websocket.Conn, msgs chan<- []byte) {
 		}
 
 		msgs <- payload
+	}
+}
+
+func process(svc ws.Service, req *connReq, msgs <-chan []byte) {
+	for msg := range msgs {
+		m := messaging.Message{
+			Channel:  req.chanID,
+			Subtopic: req.subtopic,
+			Protocol: "websocket",
+			Payload:  msg,
+			Created:  time.Now().UnixNano(),
+		}
+		svc.Publish(context.Background(), req.thingKey, m)
+	}
+	if err := svc.Unsubscribe(context.Background(), req.thingKey, req.chanID, req.subtopic); err != nil {
+		logger.Warn(fmt.Sprintf("Failed to subscribe to broker: %s", err.Error()))
+		req.conn.Close()
 	}
 }
 
