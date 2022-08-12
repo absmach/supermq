@@ -84,6 +84,7 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 			}
 
 			ps.mu.Lock()
+			// value of s can changed while the ps mutex is unlocked
 			s = ps.subscriptions[topic]
 		}
 	}
