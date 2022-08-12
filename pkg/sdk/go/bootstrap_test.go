@@ -12,7 +12,7 @@ import (
 	bsapi "github.com/mainflux/mainflux/bootstrap/api"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
 	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/pkg/sdk/go"
+	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/things"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -228,7 +228,7 @@ func TestViewBootstrap(t *testing.T) {
 			err:  createError(sdk.ErrFailedFetch, http.StatusNotFound),
 		},
 		{
-			desc: "view a config with wrong credentials",
+			desc: "view a config with invalid token",
 			id:   thingID,
 			auth: invalidToken,
 			err:  createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
@@ -284,7 +284,7 @@ func TestUpdateBootstrap(t *testing.T) {
 		err    error
 	}{
 		{
-			desc:   "update config with wrong credentials",
+			desc:   "update config with invalid token",
 			auth:   invalidToken,
 			config: updatedConfig,
 			err:    createError(sdk.ErrFailedUpdate, http.StatusUnauthorized),
@@ -356,7 +356,7 @@ func TestUpdateBootstrapCerts(t *testing.T) {
 			err:        createError(sdk.ErrFailedCertUpdate, http.StatusNotFound),
 		},
 		{
-			desc:       "update cert with with wrong credentials",
+			desc:       "update cert with with invalid token",
 			id:         updatedConfig.MFKey,
 			clientCert: clientCert,
 			clientKey:  clientKey,
@@ -414,7 +414,7 @@ func TestRemoveBootstrap(t *testing.T) {
 		err   error
 	}{
 		{
-			desc:  "remove config with wrong credentials",
+			desc:  "remove config with invalid token",
 			id:    mfThingID,
 			token: invalidToken,
 			err:   createError(sdk.ErrFailedRemoval, http.StatusUnauthorized),

@@ -102,7 +102,7 @@ func TestCreateGroup(t *testing.T) {
 			err:   createError(sdk.ErrFailedCreation, http.StatusInternalServerError),
 		},
 		{
-			desc:  "create new group with wrong credentials",
+			desc:  "create new group with invalid token",
 			group: group,
 			token: invalidToken,
 			err:   createError(sdk.ErrFailedCreation, http.StatusUnauthorized),
@@ -156,7 +156,7 @@ func TestDeleteGroup(t *testing.T) {
 		err     error
 	}{
 		{
-			desc:    "delete group with wrong credentials",
+			desc:    "delete group with invalid token",
 			groupID: id,
 			token:   invalidToken,
 			err:     createError(sdk.ErrFailedRemoval, http.StatusUnauthorized),
@@ -256,7 +256,7 @@ func TestAssign(t *testing.T) {
 			err:         createError(sdk.ErrMemberAdd, http.StatusInternalServerError),
 		},
 		{
-			desc:        "assign members to a group with wrong credentials",
+			desc:        "assign members to a group with invalid token",
 			memberIDs:   memberIDs,
 			membersType: membersUserType,
 			groupID:     id,
@@ -323,7 +323,7 @@ func TestUnassign(t *testing.T) {
 			err:         createError(sdk.ErrFailedRemoval, http.StatusInternalServerError),
 		},
 		{
-			desc:        "unassign member from group with wrong credentials",
+			desc:        "unassign member from group with invalid token",
 			memberID:    memberID,
 			membersType: membersUserType,
 			groupID:     id,
@@ -379,6 +379,20 @@ func TestMembers(t *testing.T) {
 		TLSVerification: true,
 	}
 	mainfluxSDK := sdk.NewSDK(sdkConf)
+	nilResponse := sdk.MembersPage{Members: []string(nil), PageRes: sdk.PageRes{Total: 0, Offset: 0, Limit: 0}}
+	emptyResponse := sdk.MembersPage{Members: []string{}, PageRes: sdk.PageRes{Total: 0, Offset: 0, Limit: 0}}
+	membersPage := sdk.MembersPage{
+		Members: memberIDs,
+		PageRes: sdk.PageRes{
+			Total:  uint64(len(memberIDs)),
+			Offset: offset,
+			Limit:  limit,
+		},
+	}
+	greaterThenMaxOffsetResponse := membersPage
+	greaterThenMaxOffsetResponse.Members = []string{}
+	greaterThenMaxOffsetResponse.PageRes.Total = 0
+	greaterThenMaxOffsetResponse.PageRes.Offset = 1000
 
 	_, token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
@@ -396,7 +410,7 @@ func TestMembers(t *testing.T) {
 		token     string
 		offset    uint64
 		limit     uint64
-		response  []string
+		response  sdk.MembersPage
 		err       error
 	}{
 		{
@@ -405,16 +419,16 @@ func TestMembers(t *testing.T) {
 			token:    token,
 			offset:   offset,
 			limit:    limit,
-			response: nil,
+			response: nilResponse,
 			err:      createError(sdk.ErrFailedFetch, http.StatusBadRequest),
 		},
 		{
-			desc:     "get list of all members with wrong credentials",
+			desc:     "get list of all members with invalid token",
 			groupID:  id,
 			token:    invalidToken,
 			offset:   offset,
 			limit:    limit,
-			response: nil,
+			response: nilResponse,
 			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
 		},
 		{
@@ -423,7 +437,7 @@ func TestMembers(t *testing.T) {
 			token:    "",
 			offset:   offset,
 			limit:    limit,
-			response: nil,
+			response: nilResponse,
 			err:      createError(sdk.ErrFailedFetch, http.StatusInternalServerError),
 		},
 		{
@@ -432,16 +446,16 @@ func TestMembers(t *testing.T) {
 			token:    token,
 			offset:   offset,
 			limit:    0,
-			response: []string{},
+			response: emptyResponse,
 			err:      nil,
 		},
 		{
 			desc:     "get list of all members with offset greater then max",
 			groupID:  id,
 			token:    token,
-			offset:   100,
+			offset:   1000,
 			limit:    limit,
-			response: []string{},
+			response: greaterThenMaxOffsetResponse,
 			err:      nil,
 		},
 		{
@@ -450,7 +464,7 @@ func TestMembers(t *testing.T) {
 			token:    token,
 			offset:   offset,
 			limit:    limit,
-			response: memberIDs,
+			response: membersPage,
 			err:      nil,
 		},
 	}
@@ -466,13 +480,11 @@ func TestMembers(t *testing.T) {
 				}
 			}
 			if !c {
-				assert.Equal(t, tc.response, page.Members, fmt.Sprintf("%s: expected response member %v, got %s", tc.desc, tc.response, page.Members))
-
+				assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected response member %v, got %v", tc.desc, tc.response, page))
 			}
 		}
 	}
 }
-
 func TestGroups(t *testing.T) {
 	svc := newThingAuthService()
 	ts := newThingsAuthServer(svc)
@@ -507,7 +519,7 @@ func TestGroups(t *testing.T) {
 		err      error
 	}{
 		{
-			desc:     "get a list of groups with wrong credentials",
+			desc:     "get a list of groups with invalid token",
 			token:    invalidToken,
 			offset:   offset,
 			limit:    limit,
@@ -633,7 +645,7 @@ func TestParents(t *testing.T) {
 			err:      createError(sdk.ErrFailedFetch, http.StatusInternalServerError),
 		},
 		{
-			desc:     "get a list of parent groups with wrong credentials",
+			desc:     "get a list of parent groups with invalid token",
 			token:    invalidToken,
 			id:       id,
 			offset:   offset,
@@ -723,7 +735,7 @@ func TestChildren(t *testing.T) {
 			err:      createError(sdk.ErrFailedFetch, http.StatusInternalServerError),
 		},
 		{
-			desc:     "get all children groups with wrong credentials",
+			desc:     "get all children groups with invalid token",
 			id:       parentID,
 			token:    invalidToken,
 			offset:   offset,
@@ -836,7 +848,7 @@ func TestGroup(t *testing.T) {
 			err:   createError(sdk.ErrFailedFetch, http.StatusInternalServerError),
 		},
 		{
-			desc:  "get group with wrong credentials",
+			desc:  "get group with invalid token",
 			id:    id,
 			token: invalidToken,
 			err:   createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
@@ -892,7 +904,7 @@ func TestUpdateGroup(t *testing.T) {
 			err:   createError(sdk.ErrFailedUpdate, http.StatusBadRequest),
 		},
 		{
-			desc:  "update group with wrong credentials",
+			desc:  "update group with invalid token",
 			group: updatedGroup,
 			token: invalidToken,
 			err:   createError(sdk.ErrFailedUpdate, http.StatusUnauthorized),
@@ -971,7 +983,7 @@ func TestMemberships(t *testing.T) {
 			err:      createError(sdk.ErrFailedFetch, http.StatusInternalServerError),
 		},
 		{
-			desc:     "get all existing memberships with wrong credentials",
+			desc:     "get all existing memberships with invalid token",
 			userID:   memberID,
 			token:    invalidToken,
 			offset:   offset,

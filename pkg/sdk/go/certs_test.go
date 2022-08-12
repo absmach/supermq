@@ -132,7 +132,7 @@ func TestIssueCert(t *testing.T) {
 		err     error
 	}{
 		{
-			desc:    "issue new cert with wrong credentials",
+			desc:    "issue new cert with invalid token",
 			thingID: thingID,
 			keyBits: 2048,
 			keyType: key,
@@ -241,7 +241,7 @@ func TestRevokeCert(t *testing.T) {
 		err     error
 	}{
 		{
-			desc:    "revoke cert with wrong credentials",
+			desc:    "revoke cert with with invalid token",
 			thingID: thingID,
 			token:   invalidToken,
 			err:     createError(sdk.ErrFailedRemoval, http.StatusUnauthorized),

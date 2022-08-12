@@ -22,7 +22,7 @@ type createChannelsRes struct {
 	Channels []Channel `json:"channels"`
 }
 
-type pageRes struct {
+type PageRes struct {
 	Total  uint64 `json:"total"`
 	Offset uint64 `json:"offset"`
 	Limit  uint64 `json:"limit"`
@@ -31,34 +31,34 @@ type pageRes struct {
 // ThingsPage contains list of things in a page with proper metadata.
 type ThingsPage struct {
 	Things []Thing `json:"things"`
-	pageRes
+	PageRes
 }
 
 // ChannelsPage contains list of channels in a page with proper metadata.
 type ChannelsPage struct {
 	Channels []Channel `json:"channels"`
-	pageRes
+	PageRes
 }
 
 // MessagesPage contains list of messages in a page with proper metadata.
 type MessagesPage struct {
 	Messages []senml.Message `json:"messages,omitempty"`
-	pageRes
+	PageRes
 }
 
 type GroupsPage struct {
 	Groups []Group `json:"groups"`
-	pageRes
+	PageRes
 }
 
 type UsersPage struct {
 	Users []User `json:"users"`
-	pageRes
+	PageRes
 }
 
 type MembersPage struct {
 	Members []string `json:"members"`
-	pageRes
+	PageRes
 }
 
 type KeyRes struct {
