@@ -74,9 +74,8 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 	ps.mu.Lock()
 	// Check topic
 	s, ok := ps.subscriptions[topic]
-	switch ok {
-	case true:
-		// Check topic ID
+	if ok {
+		// Check client ID
 		if _, ok := s[id]; ok {
 			// Unlocking, so that Unsubscribe() can access ps.subscriptions
 			ps.mu.Unlock()
@@ -85,17 +84,14 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 			}
 
 			ps.mu.Lock()
-			s, ok = ps.subscriptions[topic]
-			if !ok {
-				s = make(map[string]subscription)
-				ps.subscriptions[topic] = s
-			}
+			s = ps.subscriptions[topic]
 		}
-	default:
+	}
+	defer ps.mu.Unlock()
+	if s == nil {
 		s = make(map[string]subscription)
 		ps.subscriptions[topic] = s
 	}
-	defer ps.mu.Unlock()
 
 	nh := ps.natsHandler(handler)
 
