@@ -82,8 +82,9 @@ func (ps pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) e
 		if ok = s.contains(topic); ok {
 			// Unlocking, so that Unsubscribe() can access ps.subscriptions
 			ps.mu.Unlock()
-			if err := ps.Unsubscribe(id, topic); err != nil {
-				ps.mu.Lock() // Lock so that deferred unlock handle it
+			err := ps.Unsubscribe(id, topic)
+			ps.mu.Lock() // Lock so that deferred unlock handle it
+			if err != nil {
 				return err
 			}
 			ps.mu.Lock()
