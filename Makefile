@@ -9,7 +9,7 @@ SERVICES = users things http coap lora influxdb-writer influxdb-reader mongodb-w
 DOCKERS = $(addprefix docker_,$(SERVICES))
 DOCKERS_DEV = $(addprefix docker_dev_,$(SERVICES))
 CGO_ENABLED ?= 0
-GOARCH ?= amd64
+GOARCH ?= $(shell dpkg --print-architecture)
 VERSION ?= $(shell git describe --abbrev=0 --tags)
 COMMIT ?= $(shell git rev-parse HEAD)
 TIME ?= $(shell date +%F_%T)
