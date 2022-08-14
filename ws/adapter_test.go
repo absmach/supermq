@@ -95,7 +95,7 @@ func TestPublish(t *testing.T) {
 	}
 }
 
-func TestSubscribe(t *testing.T) {
+func TestPubSub(t *testing.T) {
 	thingsClient := NewThingsClient()
 	svc := newService(thingsClient)
 
@@ -106,6 +106,7 @@ func TestSubscribe(t *testing.T) {
 		thingKey string
 		chanID   string
 		subtopic string
+		pubsub   bool
 		err      error
 	}{
 		{
@@ -113,6 +114,15 @@ func TestSubscribe(t *testing.T) {
 			thingKey: thingKey,
 			chanID:   chanID,
 			subtopic: subTopic,
+			pubsub:   true,
+			err:      nil,
+		},
+		{
+			name:     "subscribe again to channel with valid thingKey, chanID, subtopic",
+			thingKey: thingKey,
+			chanID:   chanID,
+			subtopic: subTopic,
+			pubsub:   true,
 			err:      nil,
 		},
 		{
@@ -120,6 +130,7 @@ func TestSubscribe(t *testing.T) {
 			thingKey: "invalid",
 			chanID:   "0",
 			subtopic: subTopic,
+			pubsub:   true,
 			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
@@ -127,6 +138,7 @@ func TestSubscribe(t *testing.T) {
 			thingKey: thingKey,
 			chanID:   "",
 			subtopic: subTopic,
+			pubsub:   true,
 			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
@@ -134,6 +146,7 @@ func TestSubscribe(t *testing.T) {
 			thingKey: "",
 			chanID:   chanID,
 			subtopic: subTopic,
+			pubsub:   true,
 			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
@@ -141,33 +154,15 @@ func TestSubscribe(t *testing.T) {
 			thingKey: "",
 			chanID:   "",
 			subtopic: subTopic,
+			pubsub:   true,
 			err:      ws.ErrUnauthorizedAccess,
 		},
-	}
-
-	for _, tt := range cases {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.err, svc.Subscribe(context.Background(), tt.thingKey, tt.chanID, tt.subtopic, c))
-		})
-	}
-}
-
-func TestUnsubscribe(t *testing.T) {
-	thingsClient := NewThingsClient()
-	svc := newService(thingsClient)
-
-	cases := []struct {
-		name     string
-		thingKey string
-		chanID   string
-		subtopic string
-		err      error
-	}{
 		{
 			name:     "unsubscribe from channel with valid thingKey, chanID, subtopic",
 			thingKey: thingKey,
 			chanID:   chanID,
 			subtopic: subTopic,
+			pubsub:   false,
 			err:      nil,
 		},
 		{
@@ -175,6 +170,7 @@ func TestUnsubscribe(t *testing.T) {
 			thingKey: thingKey,
 			chanID:   chanID,
 			subtopic: "",
+			pubsub:   false,
 			err:      nil,
 		},
 		{
@@ -182,6 +178,7 @@ func TestUnsubscribe(t *testing.T) {
 			thingKey: thingKey,
 			chanID:   "",
 			subtopic: subTopic,
+			pubsub:   false,
 			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
@@ -189,6 +186,7 @@ func TestUnsubscribe(t *testing.T) {
 			thingKey: "",
 			chanID:   chanID,
 			subtopic: subTopic,
+			pubsub:   false,
 			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
@@ -196,13 +194,81 @@ func TestUnsubscribe(t *testing.T) {
 			thingKey: "",
 			chanID:   "",
 			subtopic: subTopic,
+			pubsub:   false,
 			err:      ws.ErrUnauthorizedAccess,
 		},
 	}
 
 	for _, tt := range cases {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.err, svc.Unsubscribe(context.Background(), tt.thingKey, tt.chanID, tt.subtopic))
-		})
+		if tt.pubsub == true {
+			t.Run(tt.name, func(t *testing.T) {
+				assert.Equal(t, tt.err, svc.Subscribe(context.Background(), tt.thingKey, tt.chanID, tt.subtopic, c))
+			})
+		} else {
+			t.Run(tt.name, func(t *testing.T) {
+				assert.Equal(t, tt.err, svc.Unsubscribe(context.Background(), tt.thingKey, tt.chanID, tt.subtopic))
+			})
+		}
 	}
 }
+
+// func TestUnsubscribe(t *testing.T) {
+// 	thingsClient := NewThingsClient()
+// 	svc := newService(thingsClient)
+
+// 	cases := []struct {
+// 		name     string
+// 		thingKey string
+// 		chanID   string
+// 		subtopic string
+// 		pubsub   bool
+// 		err      error
+// 	}{
+// 		{
+// 			name:     "unsubscribe from channel with valid thingKey, chanID, subtopic",
+// 			thingKey: thingKey,
+// 			chanID:   chanID,
+// 			subtopic: subTopic,
+// 			pubsub:   false,
+// 			err:      nil,
+// 		},
+// 		{
+// 			name:     "unsubscribe from channel with valid thingKey, chanID, and empty subtopic",
+// 			thingKey: thingKey,
+// 			chanID:   chanID,
+// 			subtopic: "",
+// 			pubsub:   false,
+// 			err:      nil,
+// 		},
+// 		{
+// 			name:     "unsubscribe from channel with empty channel",
+// 			thingKey: thingKey,
+// 			chanID:   "",
+// 			subtopic: subTopic,
+// 			pubsub:   false,
+// 			err:      ws.ErrUnauthorizedAccess,
+// 		},
+// 		{
+// 			name:     "unsubscribe from channel with empty thingKey",
+// 			thingKey: "",
+// 			chanID:   chanID,
+// 			subtopic: subTopic,
+// 			pubsub:   false,
+// 			err:      ws.ErrUnauthorizedAccess,
+// 		},
+// 		{
+// 			name:     "unsubscribe from channel with empty thingKey and empty channel",
+// 			thingKey: "",
+// 			chanID:   "",
+// 			subtopic: subTopic,
+// 			pubsub:   false,
+// 			err:      ws.ErrUnauthorizedAccess,
+// 		},
+// 	}
+
+// 	for _, tt := range cases {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			assert.Equal(t, tt.err, svc.Unsubscribe(context.Background(), tt.thingKey, tt.chanID, tt.subtopic))
+// 		})
+// 	}
+// }
