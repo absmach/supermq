@@ -29,13 +29,13 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
-	container, err := pool.Run("mqtt", "version", []string{})
+	container, err := pool.Run("eclipse-mosquitto", "2.0", []string{})
 	if err != nil {
 		log.Fatalf("Could not start container: %s", err)
 	}
 	handleInterrupt(pool, container)
 
-	address := fmt.Sprintf("%s:%s", "localhost", container.GetPort("1883/tcp"))
+	address := fmt.Sprintf("%s:%s", "localhost", container.GetPort("1883"))
 	if err := pool.Retry(func() error {
 		publisher, err = mqtt.NewPublisher(address, 30*time.Second)
 		return err
