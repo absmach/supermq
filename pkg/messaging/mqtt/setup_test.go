@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
-	container, err := pool.Run("eclipse-mosquitto", "2.0", []string{})
+	container, err := pool.Run("vernemq/vernemq", "latest", []string{})
 	if err != nil {
 		log.Fatalf("Could not start container: %s", err)
 	}
