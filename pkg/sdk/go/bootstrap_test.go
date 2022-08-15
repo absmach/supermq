@@ -24,6 +24,8 @@ const (
 	clientCert = "newCert"
 	clientKey  = "newKey"
 	caCert     = "newCert"
+	invalidKey = "invalidKey"
+	invalidID  = "invalidID"
 )
 
 var (
@@ -290,7 +292,7 @@ func TestUpdateBootstrap(t *testing.T) {
 			err:    createError(sdk.ErrFailedUpdate, http.StatusUnauthorized),
 		},
 		{
-			desc:   "update config  with empty token",
+			desc:   "update config with empty token",
 			auth:   "",
 			config: updatedConfig,
 			err:    createError(sdk.ErrFailedUpdate, http.StatusUnauthorized),
@@ -450,7 +452,6 @@ func TestRemoveBootstrap(t *testing.T) {
 	}
 }
 
-/*
 func TestBootstrap(t *testing.T) {
 	auth := mocks.NewAuthClient(map[string]string{token: email})
 
@@ -479,27 +480,44 @@ func TestBootstrap(t *testing.T) {
 		externalID  string
 		err         error
 	}{
-
-		//{
-		//	desc:        "bootstrap an existing config",
-		//	config:      config,
-		//	externalID:  config.ExternalID,
-		//	externalKey: config.ExternalKey,
-		//	err:         nil,
-		//},
 		{
-			desc:        "bootstrap a Thing with an empty ID",
+			desc:        "bootstrap an existing config",
 			config:      updtConfig,
+			externalID:  updtConfig.ExternalID,
+			externalKey: updtConfig.ExternalKey,
+			err:         nil,
+		},
+		{
+			desc:        "bootstrap config without external ID",
+			config:      sdk.BootstrapConfig{},
 			externalID:  "",
 			externalKey: updtConfig.ExternalKey,
 			err:         createError(sdk.ErrFailedFetch, http.StatusBadRequest),
 		},
+		{
+			desc:        "bootstrap config with invalid ID",
+			config:      sdk.BootstrapConfig{},
+			externalID:  invalidID,
+			externalKey: updtConfig.ExternalKey,
+			err:         createError(sdk.ErrFailedFetch, http.StatusNotFound),
+		},
+		{
+			desc:        "bootstrap config without extrnal key",
+			config:      sdk.BootstrapConfig{},
+			externalID:  updtConfig.ExternalID,
+			externalKey: "",
+			err:         createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
+		},
+		{
+			desc:        "bootstrap config with invalid key",
+			config:      sdk.BootstrapConfig{},
+			externalID:  updtConfig.ExternalID,
+			externalKey: invalidKey,
+			err:         createError(sdk.ErrFailedFetch, http.StatusForbidden),
+		},
 	}
 	for _, tc := range cases {
 		_, err := mainfluxSDK.Bootstrap(tc.externalKey, tc.externalID)
-		//	assert.Equal(t, tc.config, config, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.config, config))
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 	}
-
-} */
+}
