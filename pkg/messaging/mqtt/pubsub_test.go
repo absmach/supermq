@@ -1,4 +1,4 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-package mqtt
+package mqtt_test
