@@ -379,20 +379,8 @@ func TestMembers(t *testing.T) {
 		TLSVerification: true,
 	}
 	mainfluxSDK := sdk.NewSDK(sdkConf)
-	nilResponse := sdk.MembersPage{Members: []string(nil), PageRes: sdk.PageRes{Total: 0, Offset: 0, Limit: 0}}
-	emptyResponse := sdk.MembersPage{Members: []string{}, PageRes: sdk.PageRes{Total: 0, Offset: 0, Limit: 0}}
-	membersPage := sdk.MembersPage{
-		Members: memberIDs,
-		PageRes: sdk.PageRes{
-			Total:  uint64(len(memberIDs)),
-			Offset: offset,
-			Limit:  limit,
-		},
-	}
-	greaterThenMaxOffsetResponse := membersPage
-	greaterThenMaxOffsetResponse.Members = []string{}
-	greaterThenMaxOffsetResponse.PageRes.Total = 0
-	greaterThenMaxOffsetResponse.PageRes.Offset = 1000
+	emptyMembersResponse := []string{}
+	nilMembersResponse := []string(nil)
 
 	_, token, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: groupID, Subject: email})
 	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
@@ -410,7 +398,7 @@ func TestMembers(t *testing.T) {
 		token     string
 		offset    uint64
 		limit     uint64
-		response  sdk.MembersPage
+		response  []string
 		err       error
 	}{
 		{
@@ -419,7 +407,7 @@ func TestMembers(t *testing.T) {
 			token:    token,
 			offset:   offset,
 			limit:    limit,
-			response: nilResponse,
+			response: nilMembersResponse,
 			err:      createError(sdk.ErrFailedFetch, http.StatusBadRequest),
 		},
 		{
@@ -428,7 +416,7 @@ func TestMembers(t *testing.T) {
 			token:    invalidToken,
 			offset:   offset,
 			limit:    limit,
-			response: nilResponse,
+			response: nilMembersResponse,
 			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
 		},
 		{
@@ -437,7 +425,7 @@ func TestMembers(t *testing.T) {
 			token:    "",
 			offset:   offset,
 			limit:    limit,
-			response: nilResponse,
+			response: nilMembersResponse,
 			err:      createError(sdk.ErrFailedFetch, http.StatusInternalServerError),
 		},
 		{
@@ -446,7 +434,7 @@ func TestMembers(t *testing.T) {
 			token:    token,
 			offset:   offset,
 			limit:    0,
-			response: emptyResponse,
+			response: emptyMembersResponse,
 			err:      nil,
 		},
 		{
@@ -455,7 +443,7 @@ func TestMembers(t *testing.T) {
 			token:    token,
 			offset:   1000,
 			limit:    limit,
-			response: greaterThenMaxOffsetResponse,
+			response: emptyMembersResponse,
 			err:      nil,
 		},
 		{
@@ -464,7 +452,7 @@ func TestMembers(t *testing.T) {
 			token:    token,
 			offset:   offset,
 			limit:    limit,
-			response: membersPage,
+			response: memberIDs,
 			err:      nil,
 		},
 	}
@@ -480,7 +468,7 @@ func TestMembers(t *testing.T) {
 				}
 			}
 			if !c {
-				assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected response member %v, got %v", tc.desc, tc.response, page))
+				assert.Equal(t, tc.response, page.Members, fmt.Sprintf("%s: expected response members %v, got %v", tc.desc, tc.response, page.Members))
 			}
 		}
 	}
@@ -591,7 +579,7 @@ func TestGroups(t *testing.T) {
 				}
 			}
 			if !c {
-				assert.Equal(t, tc.response, page.Groups, fmt.Sprintf("%s: expected response member %s, got %s", tc.desc, tc.response, page.Groups))
+				assert.Equal(t, tc.response, page.Groups, fmt.Sprintf("%s: expected response groups %s, got %s", tc.desc, tc.response, page.Groups))
 
 			}
 		}
@@ -666,7 +654,7 @@ func TestParents(t *testing.T) {
 	for _, tc := range cases {
 		page, err := mainfluxSDK.Parents(tc.id, tc.offset, tc.limit, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
-		assert.Equal(t, tc.response, page.Groups, fmt.Sprintf("%s: expected response member %s, got %s", tc.desc, tc.response, page.Groups))
+		assert.Equal(t, tc.response, page.Groups, fmt.Sprintf("%s: expected response groups %s, got %s", tc.desc, tc.response, page.Groups))
 	}
 }
 
@@ -793,7 +781,7 @@ func TestChildren(t *testing.T) {
 				}
 			}
 			if !c {
-				assert.Equal(t, tc.response, page.Groups, fmt.Sprintf("%s: expected response member %s, got %s", tc.desc, tc.response, page.Groups))
+				assert.Equal(t, tc.response, page.Groups, fmt.Sprintf("%s: expected response groups %s, got %s", tc.desc, tc.response, page.Groups))
 
 			}
 		}
@@ -1040,7 +1028,7 @@ func TestMemberships(t *testing.T) {
 				}
 			}
 			if !c {
-				assert.Equal(t, tc.response, page.Groups, fmt.Sprintf("%s: expected response member %s, got %s", tc.desc, tc.response, page.Groups))
+				assert.Equal(t, tc.response, page.Groups, fmt.Sprintf("%s: expected response groups %s, got %s", tc.desc, tc.response, page.Groups))
 
 			}
 		}

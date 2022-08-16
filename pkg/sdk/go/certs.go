@@ -82,6 +82,5 @@ type certReq struct {
 	KeyBits    int    `json:"key_bits"`
 	KeyType    string `json:"key_type"`
 	Encryption string `json:"encryption"`
-	Valid      string `json:"valid"`
 	TTL        string `json:"ttl"`
 }

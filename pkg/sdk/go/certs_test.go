@@ -20,7 +20,7 @@ import (
 	"github.com/mainflux/mainflux/certs/mocks"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/pkg/sdk/go"
+	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/things"
 	thmocks "github.com/mainflux/mainflux/things/mocks"
 	"github.com/stretchr/testify/assert"
@@ -28,24 +28,23 @@ import (
 )
 
 const (
-	thingsNum         = 1
-	thingKey          = "thingKey"
-	caPath            = "../../../docker/ssl/certs/ca.crt"
-	caKeyPath         = "../../../docker/ssl/certs/ca.key"
-	cfgAuthTimeout    = "1s"
-	cfgLogLevel       = "error"
-	cfgClientTLS      = false
-	cfgServerCert     = ""
-	cfgServerKey      = ""
-	cfgCertsURL       = "http://localhost"
-	cfgJaegerURL      = ""
-	cfgAuthURL        = "localhost:8181"
-	cfgSignHoursValid = "24h"
-	cfgSignRSABits    = 2048
-	thingID           = "1"
-	ttl               = "1h"
-	keyBits           = 2048
-	key               = "rsa"
+	thingsNum      = 1
+	thingKey       = "thingKey"
+	caPath         = "../../../docker/ssl/certs/ca.crt"
+	caKeyPath      = "../../../docker/ssl/certs/ca.key"
+	cfgAuthTimeout = "1s"
+	cfgLogLevel    = "error"
+	cfgClientTLS   = false
+	cfgServerCert  = ""
+	cfgServerKey   = ""
+	cfgCertsURL    = "http://localhost"
+	cfgJaegerURL   = ""
+	cfgAuthURL     = "localhost:8181"
+	thingID        = "1"
+	ttl            = "24h"
+	keyBits        = 2048
+	invalidKeyBits = -1
+	key            = "rsa"
 )
 
 func newCertService(tokens map[string]string) (certs.Service, error) {
@@ -81,11 +80,10 @@ func newCertService(tokens map[string]string) (certs.Service, error) {
 		AuthURL:        cfgAuthURL,
 		SignTLSCert:    tlsCert,
 		SignX509Cert:   caCert,
-		SignHoursValid: cfgSignHoursValid,
-		SignRSABits:    cfgSignRSABits,
+		SignHoursValid: ttl,
+		SignRSABits:    keyBits,
 	}
-
-	pki := mocks.NewPkiAgent(tlsCert, caCert, cfgSignRSABits, cfgSignHoursValid, authTimeout)
+	pki := mocks.NewPkiAgent(tlsCert, caCert, keyBits, ttl, authTimeout)
 
 	return certs.New(auth, repo, sdk, c, pki), nil
 }
@@ -134,7 +132,7 @@ func TestIssueCert(t *testing.T) {
 		{
 			desc:    "issue new cert with invalid token",
 			thingID: thingID,
-			keyBits: 2048,
+			keyBits: keyBits,
 			keyType: key,
 			ttl:     ttl,
 			token:   invalidToken,
@@ -143,7 +141,7 @@ func TestIssueCert(t *testing.T) {
 		{
 			desc:    "issue new cert with empty token",
 			thingID: thingID,
-			keyBits: 2048,
+			keyBits: keyBits,
 			keyType: key,
 			ttl:     ttl,
 			token:   "",
@@ -152,7 +150,7 @@ func TestIssueCert(t *testing.T) {
 		{
 			desc:    "issue new cert for non-existing thing",
 			thingID: wrongID,
-			keyBits: 2048,
+			keyBits: keyBits,
 			keyType: key,
 			ttl:     ttl,
 			token:   token,
@@ -161,7 +159,7 @@ func TestIssueCert(t *testing.T) {
 		{
 			desc:    "issue new cert with no thing id",
 			thingID: "",
-			keyBits: 2048,
+			keyBits: keyBits,
 			keyType: key,
 			ttl:     ttl,
 			token:   token,
@@ -170,7 +168,7 @@ func TestIssueCert(t *testing.T) {
 		{
 			desc:    "issue new cert without time to live",
 			thingID: thingID,
-			keyBits: 2048,
+			keyBits: keyBits,
 			keyType: key,
 			ttl:     "",
 			token:   token,
@@ -188,7 +186,7 @@ func TestIssueCert(t *testing.T) {
 		{
 			desc:    "issue new cert with invalid key bits",
 			thingID: thingID,
-			keyBits: -2048,
+			keyBits: invalidKeyBits,
 			keyType: key,
 			ttl:     ttl,
 			token:   token,
@@ -197,7 +195,7 @@ func TestIssueCert(t *testing.T) {
 		{
 			desc:    "issue new cert without key type",
 			thingID: thingID,
-			keyBits: 2048,
+			keyBits: keyBits,
 			keyType: "",
 			ttl:     ttl,
 			token:   token,
@@ -207,7 +205,7 @@ func TestIssueCert(t *testing.T) {
 		{
 			desc:    "issue new cert",
 			thingID: thingID,
-			keyBits: 2048,
+			keyBits: keyBits,
 			keyType: key,
 			ttl:     ttl,
 			token:   token,
