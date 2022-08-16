@@ -214,7 +214,7 @@ func TestIssueCert(t *testing.T) {
 			status:      http.StatusUnauthorized,
 		},
 		{
-			desc:        "issue new cert with wrong content type",
+			desc:        "issue new cert with empty content type",
 			req:         data,
 			auth:        token,
 			contentType: "",
@@ -290,63 +290,63 @@ func TestListSerials(t *testing.T) {
 		status int
 	}{
 		{
-			desc:   "list all certificate ID's",
+			desc:   "list all cert ID's",
 			url:    serialURL,
 			auth:   token,
 			certs:  certsPageRes{pageRes: pageRes{Total: uint64(certNum), Offset: 0, Limit: certNum}, Certs: issuedCerts},
 			status: http.StatusOK,
 		},
 		{
-			desc:   "list certificate serial ID's with invalid thing ID",
+			desc:   "list cert ID's with invalid thing ID",
 			url:    fmt.Sprintf("%s/%s", serialURL, invalidThingID),
 			auth:   token,
 			certs:  certsPageRes{},
 			status: http.StatusNotFound,
 		},
 		{
-			desc:   "list all certificate ID's with invalid token",
+			desc:   "list all cert ID's with invalid token",
 			url:    serialURL,
 			auth:   invalidToken,
 			certs:  certsPageRes{},
 			status: http.StatusUnauthorized,
 		},
 		{
-			desc:   "list all certificate serial ID's with empty token",
+			desc:   "list all cert ID's with empty token",
 			url:    serialURL,
 			auth:   "",
 			certs:  certsPageRes{},
 			status: http.StatusUnauthorized,
 		},
 		{
-			desc:   "list last certificate ID",
+			desc:   "list last cert ID",
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d", serialURL, 9, 10),
 			auth:   token,
 			certs:  certsPageRes{pageRes: pageRes{Total: uint64(certNum), Offset: certNum - 1, Limit: certNum}, Certs: issuedCerts[9:10]},
 			status: http.StatusOK,
 		},
 		{
-			desc:   "list last five certificate ID's",
+			desc:   "list last five cert ID's",
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d", serialURL, 5, 10),
 			auth:   token,
 			certs:  certsPageRes{pageRes: pageRes{Total: uint64(certNum), Offset: certNum - 5, Limit: certNum}, Certs: issuedCerts[5:10]},
 			status: http.StatusOK,
 		},
 		{
-			desc:   "list all certificates with limit greater then allowed",
+			desc:   "list all certs with limit greater then allowed",
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d", serialURL, 0, 1000),
 			auth:   token,
 			certs:  certsPageRes{},
 			status: http.StatusBadRequest,
 		},
 		{
-			desc:   "list all certificates with invalid limit",
+			desc:   "list all certs with invalid limit",
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d", serialURL, 0, -10),
 			auth:   token,
 			certs:  certsPageRes{},
 			status: http.StatusInternalServerError,
 		},
 		{
-			desc:   "list all certificates with invalid offset",
+			desc:   "list all certs with invalid offset",
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d", serialURL, -10, 10),
 			auth:   token,
 			certs:  certsPageRes{},
@@ -389,31 +389,31 @@ func TestViewCert(t *testing.T) {
 		status int
 	}{
 		{
-			desc:   "list certificate data",
+			desc:   "list cert data",
 			id:     saved.Serial,
 			auth:   token,
 			status: http.StatusOK,
 		},
 		{
-			desc:   "list certificate data with invalid token",
+			desc:   "list cert data with invalid token",
 			id:     saved.Serial,
 			auth:   invalidToken,
 			status: http.StatusUnauthorized,
 		},
 		{
-			desc:   "list certificate data with empty token",
+			desc:   "list cert data with empty token",
 			id:     saved.Serial,
 			auth:   "",
 			status: http.StatusUnauthorized,
 		},
 		{
-			desc:   "list certificate data with invalid certificate ID",
+			desc:   "list cert data with invalid certs ID",
 			id:     wrongCertID,
 			auth:   token,
 			status: http.StatusInternalServerError,
 		},
 		{
-			desc:   "list certificate data with empty certificate ID",
+			desc:   "list cert data with empty certs ID",
 			id:     "",
 			auth:   token,
 			status: http.StatusBadRequest,
@@ -449,25 +449,25 @@ func TestRevokeCert(t *testing.T) {
 		status int
 	}{
 		{
-			desc:   "revoke certificate with invalid token",
+			desc:   "revoke cert with invalid token",
 			id:     saved.ThingID,
 			auth:   invalidToken,
 			status: http.StatusUnauthorized,
 		},
 		{
-			desc:   "revoke certificate with empty token",
+			desc:   "revoke cert with empty token",
 			id:     saved.ThingID,
 			auth:   "",
 			status: http.StatusUnauthorized,
 		},
 		{
-			desc:   "revoke certificate with non-existing thing",
+			desc:   "revoke cert with non-existing thing",
 			id:     invalidThingID,
 			auth:   token,
 			status: http.StatusInternalServerError,
 		},
 		{
-			desc:   "revoke certificate",
+			desc:   "revoke cert",
 			id:     saved.ThingID,
 			auth:   token,
 			status: http.StatusOK,
