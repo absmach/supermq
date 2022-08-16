@@ -86,7 +86,7 @@ func TestRevoke(t *testing.T) {
 		err   error
 	}{
 		{
-			desc:  "revoke a non-existing key",
+			desc:  "revoke key with empty ID",
 			token: token,
 			id:    "",
 			err:   createError(sdk.ErrFailedRemoval, http.StatusBadRequest),
@@ -146,7 +146,7 @@ func TestRetrieveKey(t *testing.T) {
 			err:   createError(sdk.ErrFailedFetch, http.StatusNotFound),
 		},
 		{
-			desc:  "retrieve key without id",
+			desc:  "retrieve key with empty ID",
 			token: token,
 			id:    "",
 			err:   createError(sdk.ErrFailedFetch, http.StatusBadRequest),

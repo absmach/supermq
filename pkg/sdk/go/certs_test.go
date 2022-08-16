@@ -157,7 +157,7 @@ func TestIssueCert(t *testing.T) {
 			err:     createError(sdk.ErrFailedCreation, http.StatusInternalServerError),
 		},
 		{
-			desc:    "issue new cert with no thing id",
+			desc:    "issue new cert with empty thing ID",
 			thingID: "",
 			keyBits: keyBits,
 			keyType: key,
@@ -166,7 +166,7 @@ func TestIssueCert(t *testing.T) {
 			err:     createError(sdk.ErrFailedCreation, http.StatusBadRequest),
 		},
 		{
-			desc:    "issue new cert without time to live",
+			desc:    "issue new cert with empty time to live",
 			thingID: thingID,
 			keyBits: keyBits,
 			keyType: key,
@@ -193,7 +193,7 @@ func TestIssueCert(t *testing.T) {
 			err:     createError(sdk.ErrFailedCreation, http.StatusInternalServerError),
 		},
 		{
-			desc:    "issue new cert without key type",
+			desc:    "issue new cert with empty type",
 			thingID: thingID,
 			keyBits: keyBits,
 			keyType: "",
@@ -257,7 +257,7 @@ func TestRevokeCert(t *testing.T) {
 			err:     createError(sdk.ErrFailedRemoval, http.StatusInternalServerError),
 		},
 		{
-			desc:    "revoke cert for an empty thing id",
+			desc:    "revoke cert for an empty thing ID",
 			thingID: "",
 			token:   token,
 			err:     createError(sdk.ErrFailedRemoval, http.StatusBadRequest),

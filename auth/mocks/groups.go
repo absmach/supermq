@@ -230,13 +230,17 @@ func (grm *groupRepositoryMock) Members(ctx context.Context, groupID, groupType 
 	var items []auth.Member
 	var members map[string]string
 
-	if groupType == "" {
+	switch {
+	case groupType == "":
 		for _, value := range grm.members[groupID] {
 			members = value
 		}
-	} else {
+	case groupType != "":
 		members = grm.members[groupID][groupType]
+	default:
+		return auth.MemberPage{}, errors.ErrNotFound
 	}
+
 	first := uint64(pm.Offset)
 	last := first + uint64(pm.Limit)
 

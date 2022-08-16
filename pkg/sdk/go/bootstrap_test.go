@@ -488,7 +488,7 @@ func TestBootstrap(t *testing.T) {
 			err:         nil,
 		},
 		{
-			desc:        "bootstrap config without external ID",
+			desc:        "bootstrap config with empty external ID",
 			config:      sdk.BootstrapConfig{},
 			externalID:  "",
 			externalKey: updtConfig.ExternalKey,
@@ -502,7 +502,7 @@ func TestBootstrap(t *testing.T) {
 			err:         createError(sdk.ErrFailedFetch, http.StatusNotFound),
 		},
 		{
-			desc:        "bootstrap config without extrnal key",
+			desc:        "bootstrap config with empty extrnal key",
 			config:      sdk.BootstrapConfig{},
 			externalID:  updtConfig.ExternalID,
 			externalKey: "",

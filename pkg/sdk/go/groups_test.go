@@ -168,7 +168,7 @@ func TestDeleteGroup(t *testing.T) {
 			err:     createError(sdk.ErrFailedRemoval, http.StatusNotFound),
 		},
 		{
-			desc:    "delete group with invalid id",
+			desc:    "delete group with empty group ID",
 			groupID: "",
 			token:   token,
 			err:     createError(sdk.ErrFailedRemoval, http.StatusBadRequest),
@@ -224,7 +224,7 @@ func TestAssign(t *testing.T) {
 		err         error
 	}{
 		{
-			desc:        "assign members to a group without memberIDs",
+			desc:        "assign members to a group without member IDs",
 			memberIDs:   nil,
 			membersType: membersUserType,
 			groupID:     id,
@@ -232,7 +232,7 @@ func TestAssign(t *testing.T) {
 			err:         createError(sdk.ErrMemberAdd, http.StatusBadRequest),
 		},
 		{
-			desc:        "assign members to a group without members type",
+			desc:        "assign members to a group with empty members type",
 			memberIDs:   memberIDs,
 			membersType: "",
 			groupID:     id,
@@ -240,7 +240,7 @@ func TestAssign(t *testing.T) {
 			err:         createError(sdk.ErrMemberAdd, http.StatusBadRequest),
 		},
 		{
-			desc:        "assign members to a group without group ID",
+			desc:        "assign members to a group with empty group ID",
 			memberIDs:   memberIDs,
 			membersType: membersUserType,
 			groupID:     "",
@@ -248,7 +248,7 @@ func TestAssign(t *testing.T) {
 			err:         createError(sdk.ErrMemberAdd, http.StatusBadRequest),
 		},
 		{
-			desc:        "assign members to a group without token",
+			desc:        "assign members to a group with empty token",
 			memberIDs:   memberIDs,
 			membersType: membersUserType,
 			groupID:     id,
@@ -315,7 +315,7 @@ func TestUnassign(t *testing.T) {
 		err         error
 	}{
 		{
-			desc:        "unassign member from group without token",
+			desc:        "unassign member from group with empty token",
 			memberID:    memberID,
 			membersType: membersUserType,
 			groupID:     id,
@@ -331,7 +331,7 @@ func TestUnassign(t *testing.T) {
 			err:         createError(sdk.ErrFailedRemoval, http.StatusUnauthorized),
 		},
 		{
-			desc:        "unassign member from group without group ID",
+			desc:        "unassign member from group with empty group ID",
 			memberID:    memberID,
 			membersType: membersUserType,
 			groupID:     "",
@@ -339,7 +339,7 @@ func TestUnassign(t *testing.T) {
 			err:         createError(sdk.ErrFailedRemoval, http.StatusBadRequest),
 		},
 		{
-			desc:        "unassign member from group without member ID",
+			desc:        "unassign member from group with empty member ID",
 			memberID:    "",
 			membersType: membersUserType,
 			groupID:     id,
@@ -402,7 +402,7 @@ func TestMembers(t *testing.T) {
 		err       error
 	}{
 		{
-			desc:     "get list of all members without group ID",
+			desc:     "get list of all members with empty group ID",
 			groupID:  "",
 			token:    token,
 			offset:   offset,
@@ -420,7 +420,7 @@ func TestMembers(t *testing.T) {
 			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
 		},
 		{
-			desc:     "get list of all members without token",
+			desc:     "get list of all members with empty token",
 			groupID:  id,
 			token:    "",
 			offset:   offset,
@@ -624,7 +624,7 @@ func TestParents(t *testing.T) {
 			err:      createError(sdk.ErrFailedFetch, http.StatusNotFound),
 		},
 		{
-			desc:     "get a list of parent groups without token",
+			desc:     "get a list of parent groups with empty token",
 			token:    "",
 			id:       id,
 			offset:   offset,
@@ -696,7 +696,7 @@ func TestChildren(t *testing.T) {
 		err      error
 	}{
 		{
-			desc:     "get all children from no existing group",
+			desc:     "get all children groups with empty ID",
 			id:       "",
 			token:    token,
 			offset:   offset,
@@ -705,7 +705,7 @@ func TestChildren(t *testing.T) {
 			err:      nil,
 		},
 		{
-			desc:     "get all children from invalid group",
+			desc:     "get all children groups from invalid group",
 			id:       invalidGroupID,
 			token:    token,
 			offset:   offset,
@@ -714,7 +714,7 @@ func TestChildren(t *testing.T) {
 			err:      nil,
 		},
 		{
-			desc:     "get all children groups without token",
+			desc:     "get all children groups with empty token",
 			id:       parentID,
 			token:    "",
 			offset:   offset,
@@ -732,7 +732,7 @@ func TestChildren(t *testing.T) {
 			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
 		},
 		{
-			desc:     "get all children groups with  limit greater then max",
+			desc:     "get all children groups with limit greater then max",
 			id:       parentID,
 			token:    token,
 			offset:   offset,
@@ -818,7 +818,7 @@ func TestGroup(t *testing.T) {
 			err:   nil,
 		},
 		{
-			desc:  "get group without id",
+			desc:  "get group with empty ID",
 			id:    "",
 			token: token,
 			err:   createError(sdk.ErrFailedFetch, http.StatusBadRequest),
@@ -830,7 +830,7 @@ func TestGroup(t *testing.T) {
 			err:   createError(sdk.ErrFailedFetch, http.StatusNotFound),
 		},
 		{
-			desc:  "get group without token",
+			desc:  "get group with empty token",
 			id:    id,
 			token: "",
 			err:   createError(sdk.ErrFailedFetch, http.StatusInternalServerError),
@@ -886,7 +886,7 @@ func TestUpdateGroup(t *testing.T) {
 			err:   createError(sdk.ErrFailedUpdate, http.StatusNotFound),
 		},
 		{
-			desc:  "update group with invalid id",
+			desc:  "update group with invalid ID",
 			group: sdk.Group{ID: "", Name: "updatedGroup", Description: "testDesc"},
 			token: token,
 			err:   createError(sdk.ErrFailedUpdate, http.StatusBadRequest),
@@ -953,7 +953,7 @@ func TestMemberships(t *testing.T) {
 		err      error
 	}{
 		{
-			desc:     "get memberships for non existing member",
+			desc:     "get memberships with empty user ID",
 			userID:   "",
 			token:    token,
 			offset:   offset,
@@ -962,7 +962,7 @@ func TestMemberships(t *testing.T) {
 			err:      createError(sdk.ErrFailedFetch, http.StatusBadRequest),
 		},
 		{
-			desc:     "get all existing memberships without token",
+			desc:     "get all existing memberships with empty token",
 			userID:   memberID,
 			token:    "",
 			offset:   offset,
