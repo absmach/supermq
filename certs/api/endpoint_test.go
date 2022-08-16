@@ -183,7 +183,7 @@ func TestIssueCert(t *testing.T) {
 	data := toJSON(addReq)
 	neThingID := addReq
 	neThingID.ThingID = "2"
-	wrongData := toJSON(neThingID)
+	wrongReq := toJSON(neThingID)
 
 	cases := []struct {
 		desc        string
@@ -200,7 +200,7 @@ func TestIssueCert(t *testing.T) {
 			status:      http.StatusCreated,
 		},
 		{
-			desc:        "issue new cert for non existing thing id",
+			desc:        "issue new cert for non existing thing ID",
 			req:         data,
 			auth:        invalidToken,
 			contentType: contentType,
@@ -228,7 +228,7 @@ func TestIssueCert(t *testing.T) {
 			status:      http.StatusInternalServerError,
 		},
 		{
-			desc:        "issue new cert  with invalid request format",
+			desc:        "issue new cert with invalid request format",
 			req:         "}",
 			auth:        token,
 			contentType: contentType,
@@ -243,7 +243,7 @@ func TestIssueCert(t *testing.T) {
 		},
 		{
 			desc:        "issue new cert with wrong thing",
-			req:         wrongData,
+			req:         wrongReq,
 			auth:        token,
 			contentType: contentType,
 			status:      http.StatusInternalServerError,
@@ -275,7 +275,7 @@ func TestListSerials(t *testing.T) {
 	var issuedCerts []certsRes
 	for i := 0; i < certNum; i++ {
 		cert, err := svc.IssueCert(context.Background(), token, thingID, ttl, keyBits, key)
-		require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+		require.Nil(t, err, fmt.Sprintf("Certificate issuing expected to succeed: %s.\n", err))
 		crt := certsRes{
 			Serial: cert.Serial,
 		}
@@ -297,7 +297,7 @@ func TestListSerials(t *testing.T) {
 			status: http.StatusOK,
 		},
 		{
-			desc:   "list certs serial ID's for wrong thing",
+			desc:   "list certs serial ID's with invalid thing ID",
 			url:    fmt.Sprintf("%s/%s", serialURL, invalidThingID),
 			auth:   token,
 			certs:  certsPageRes{},
@@ -339,7 +339,7 @@ func TestListSerials(t *testing.T) {
 			status: http.StatusBadRequest,
 		},
 		{
-			desc:   "list all certs with invalid limit ",
+			desc:   "list all certs with invalid limit",
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d", serialURL, 0, -10),
 			auth:   token,
 			certs:  certsPageRes{},
@@ -407,13 +407,13 @@ func TestViewCert(t *testing.T) {
 			status: http.StatusUnauthorized,
 		},
 		{
-			desc:   "list certificate data with wrong certID",
+			desc:   "list certificate data with invalid certificate ID",
 			id:     wrongCertID,
 			auth:   token,
 			status: http.StatusInternalServerError,
 		},
 		{
-			desc:   "list certificate data with no certID",
+			desc:   "list certificate data with empty certID",
 			id:     "",
 			auth:   token,
 			status: http.StatusBadRequest,
