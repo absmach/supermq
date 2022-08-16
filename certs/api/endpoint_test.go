@@ -181,9 +181,9 @@ func TestIssueCert(t *testing.T) {
 	defer cs.Close()
 
 	data := toJSON(addReq)
-	neThingID := addReq
-	neThingID.ThingID = "2"
-	wrongReq := toJSON(neThingID)
+	wrongAddReq := addReq
+	wrongAddReq.ThingID = "2"
+	wrongData := toJSON(wrongAddReq)
 
 	cases := []struct {
 		desc        string
@@ -243,7 +243,7 @@ func TestIssueCert(t *testing.T) {
 		},
 		{
 			desc:        "issue new cert with wrong thing",
-			req:         wrongReq,
+			req:         wrongData,
 			auth:        token,
 			contentType: contentType,
 			status:      http.StatusInternalServerError,
@@ -290,63 +290,63 @@ func TestListSerials(t *testing.T) {
 		status int
 	}{
 		{
-			desc:   "list all certs ID's",
+			desc:   "list all certificate ID's",
 			url:    serialURL,
 			auth:   token,
 			certs:  certsPageRes{pageRes: pageRes{Total: uint64(certNum), Offset: 0, Limit: certNum}, Certs: issuedCerts},
 			status: http.StatusOK,
 		},
 		{
-			desc:   "list certs serial ID's with invalid thing ID",
+			desc:   "list certificate serial ID's with invalid thing ID",
 			url:    fmt.Sprintf("%s/%s", serialURL, invalidThingID),
 			auth:   token,
 			certs:  certsPageRes{},
 			status: http.StatusNotFound,
 		},
 		{
-			desc:   "list all certs ID's with invalid token",
+			desc:   "list all certificate ID's with invalid token",
 			url:    serialURL,
 			auth:   invalidToken,
 			certs:  certsPageRes{},
 			status: http.StatusUnauthorized,
 		},
 		{
-			desc:   "list all certs serial ID's with empty token",
+			desc:   "list all certificate serial ID's with empty token",
 			url:    serialURL,
 			auth:   "",
 			certs:  certsPageRes{},
 			status: http.StatusUnauthorized,
 		},
 		{
-			desc:   "list last cert ID",
+			desc:   "list last certificate ID",
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d", serialURL, 9, 10),
 			auth:   token,
 			certs:  certsPageRes{pageRes: pageRes{Total: uint64(certNum), Offset: certNum - 1, Limit: certNum}, Certs: issuedCerts[9:10]},
 			status: http.StatusOK,
 		},
 		{
-			desc:   "list last five cert ID's",
+			desc:   "list last five certificate ID's",
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d", serialURL, 5, 10),
 			auth:   token,
 			certs:  certsPageRes{pageRes: pageRes{Total: uint64(certNum), Offset: certNum - 5, Limit: certNum}, Certs: issuedCerts[5:10]},
 			status: http.StatusOK,
 		},
 		{
-			desc:   "list all certs with limit greater then allowed",
+			desc:   "list all certificates with limit greater then allowed",
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d", serialURL, 0, 1000),
 			auth:   token,
 			certs:  certsPageRes{},
 			status: http.StatusBadRequest,
 		},
 		{
-			desc:   "list all certs with invalid limit",
+			desc:   "list all certificates with invalid limit",
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d", serialURL, 0, -10),
 			auth:   token,
 			certs:  certsPageRes{},
 			status: http.StatusInternalServerError,
 		},
 		{
-			desc:   "list all certs with invalid offset",
+			desc:   "list all certificates with invalid offset",
 			url:    fmt.Sprintf("%s?offset=%d&limit=%d", serialURL, -10, 10),
 			auth:   token,
 			certs:  certsPageRes{},
@@ -413,7 +413,7 @@ func TestViewCert(t *testing.T) {
 			status: http.StatusInternalServerError,
 		},
 		{
-			desc:   "list certificate data with empty certID",
+			desc:   "list certificate data with empty certificate ID",
 			id:     "",
 			auth:   token,
 			status: http.StatusBadRequest,
