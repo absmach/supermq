@@ -215,6 +215,10 @@ func (h *handler) authAccess(username string, topic string) error {
 	}
 
 	channelParts := channelRegExp.FindStringSubmatch(topic)
+	if len(channelParts) < 1 {
+		return ErrMalformedTopic
+	}
+
 	chanID := channelParts[1]
 	return h.auth.Authorize(context.Background(), chanID, username)
 }
