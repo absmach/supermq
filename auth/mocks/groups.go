@@ -235,10 +235,8 @@ func (grm *groupRepositoryMock) Members(ctx context.Context, groupID, groupType 
 		for _, value := range grm.members[groupID] {
 			members = value
 		}
-	case groupType != "":
-		members = grm.members[groupID][groupType]
 	default:
-		return auth.MemberPage{}, errors.ErrNotFound
+		members = grm.members[groupID][groupType]
 	}
 
 	first := uint64(pm.Offset)
