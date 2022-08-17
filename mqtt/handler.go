@@ -211,15 +211,10 @@ func (h *handler) authAccess(username string, topic string) error {
 	// Topics are in the format:
 	// channels/<channel_id>/messages/<subtopic>/.../ct/<content_type>
 	if !channelRegExp.Match([]byte(topic)) {
-		h.logger.Info(infoMalformedTopic + topic)
 		return ErrMalformedTopic
 	}
 
 	channelParts := channelRegExp.FindStringSubmatch(topic)
-	if len(channelParts) < 1 {
-		return ErrMalformedTopic
-	}
-
 	chanID := channelParts[1]
 	return h.auth.Authorize(context.Background(), chanID, username)
 }
