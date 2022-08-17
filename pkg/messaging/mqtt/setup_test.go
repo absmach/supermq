@@ -29,13 +29,14 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
-	container, err := pool.Run("vernemq/vernemq", "latest", []string{})
+	container, err := pool.Run("mainflux/vernemq", "0.13.0", []string{"DOCKER_VERNEMQ_ALLOW_ANONYMOUS=on"})
 	if err != nil {
 		log.Fatalf("Could not start container: %s", err)
 	}
 	handleInterrupt(pool, container)
 
-	address := fmt.Sprintf("%s:%s", "localhost", container.GetPort("1883"))
+	address := fmt.Sprintf("%s:%s", "localhost", container.GetPort("1883/tcp"))
+	// pool.MaxWait = 120 * time.Second
 	if err := pool.Retry(func() error {
 		publisher, err = mqtt.NewPublisher(address, 30*time.Second)
 		return err

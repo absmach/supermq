@@ -58,9 +58,10 @@ func NewPubSub(url, queue string, timeout time.Duration, logger log.Logger) (mes
 			client:  client,
 			timeout: timeout,
 		},
-		address:       url,
-		timeout:       timeout,
-		logger:        logger,
+		address: url,
+		timeout: timeout,
+		logger:  logger,
+		// mu:            &sync.RWMutex{},
 		subscriptions: make(map[string]subscription),
 	}
 	return ret, nil
