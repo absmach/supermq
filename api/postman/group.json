@@ -1,0 +1,529 @@
+{
+	"info": {
+		"_postman_id": "7230ab43-8186-40e9-a800-aac544f9e3b3",
+		"name": "Group",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "21188965"
+	},
+	"item": [
+		{
+			"name": "Create Group",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1ODcyMDEsImlhdCI6MTY2MDU1MTIwMSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXIxQGFiYy5jb20iLCJpc3N1ZXJfaWQiOiJiNzBkNmEyZS03NWMwLTQ3ZTAtODIyNC1lZjM4ZjRjNGFhNjYiLCJ0eXBlIjowfQ.Dq1s1FMMxBxaYJOGJamvYrJV1vhRFcklVy-2AaLZOZk"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\": \"group_name_01\", \"description\": \"group_description info\"}"
+				},
+				"url": {
+					"raw": "http://localhost:8189/groups",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8189",
+					"path": [
+						"groups"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List Members",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1ODcyMDEsImlhdCI6MTY2MDU1MTIwMSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXIxQGFiYy5jb20iLCJpc3N1ZXJfaWQiOiJiNzBkNmEyZS03NWMwLTQ3ZTAtODIyNC1lZjM4ZjRjNGFhNjYiLCJ0eXBlIjowfQ.Dq1s1FMMxBxaYJOGJamvYrJV1vhRFcklVy-2AaLZOZk"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8189/groups/01GAG9KQ43PWWWARWZGQ74RNJR/members",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8189",
+					"path": [
+						"groups",
+						"01GAG9KQ43PWWWARWZGQ74RNJR",
+						"members"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Fetch Group",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1ODcyMDEsImlhdCI6MTY2MDU1MTIwMSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXIxQGFiYy5jb20iLCJpc3N1ZXJfaWQiOiJiNzBkNmEyZS03NWMwLTQ3ZTAtODIyNC1lZjM4ZjRjNGFhNjYiLCJ0eXBlIjowfQ.Dq1s1FMMxBxaYJOGJamvYrJV1vhRFcklVy-2AaLZOZk"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8189/groups/01GAG97E67VWGZSV0YRTECZ774",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8189",
+					"path": [
+						"groups",
+						"01GAG97E67VWGZSV0YRTECZ774"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Child",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1ODcyMDEsImlhdCI6MTY2MDU1MTIwMSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXIxQGFiYy5jb20iLCJpc3N1ZXJfaWQiOiJiNzBkNmEyZS03NWMwLTQ3ZTAtODIyNC1lZjM4ZjRjNGFhNjYiLCJ0eXBlIjowfQ.Dq1s1FMMxBxaYJOGJamvYrJV1vhRFcklVy-2AaLZOZk"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\":\"child1\",\"description\":\"group_description info\",\"parent_id\":\"01GAG97E67VWGZSV0YRTECZ774\",\"metadata\":{\"group_attr\":\"attr_value_meta\"}}"
+				},
+				"url": {
+					"raw": "http://localhost:8189/groups",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8189",
+					"path": [
+						"groups"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Fetch Children",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1ODcyMDEsImlhdCI6MTY2MDU1MTIwMSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXIxQGFiYy5jb20iLCJpc3N1ZXJfaWQiOiJiNzBkNmEyZS03NWMwLTQ3ZTAtODIyNC1lZjM4ZjRjNGFhNjYiLCJ0eXBlIjowfQ.Dq1s1FMMxBxaYJOGJamvYrJV1vhRFcklVy-2AaLZOZk"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8189/groups/01GAG97E67VWGZSV0YRTECZ774/children?tree=true&level=5",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8189",
+					"path": [
+						"groups",
+						"01GAG97E67VWGZSV0YRTECZ774",
+						"children"
+					],
+					"query": [
+						{
+							"key": "tree",
+							"value": "true"
+						},
+						{
+							"key": "level",
+							"value": "5"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Fetch Child Group",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1ODcyMDEsImlhdCI6MTY2MDU1MTIwMSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXIxQGFiYy5jb20iLCJpc3N1ZXJfaWQiOiJiNzBkNmEyZS03NWMwLTQ3ZTAtODIyNC1lZjM4ZjRjNGFhNjYiLCJ0eXBlIjowfQ.Dq1s1FMMxBxaYJOGJamvYrJV1vhRFcklVy-2AaLZOZk"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8189/groups/01GAGB1JQ7WPACDA6MVVRWY8V0",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8189",
+					"path": [
+						"groups",
+						"01GAGB1JQ7WPACDA6MVVRWY8V0"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Assigning User To Group",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1ODcyMDEsImlhdCI6MTY2MDU1MTIwMSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXIxQGFiYy5jb20iLCJpc3N1ZXJfaWQiOiJiNzBkNmEyZS03NWMwLTQ3ZTAtODIyNC1lZjM4ZjRjNGFhNjYiLCJ0eXBlIjowfQ.Dq1s1FMMxBxaYJOGJamvYrJV1vhRFcklVy-2AaLZOZk"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"members\":[\"4be156ba-8306-44d5-bfe2-413400bc73af\"],\"type\":\"users\"}"
+				},
+				"url": {
+					"raw": "http://localhost:8189/groups/01GAG97E67VWGZSV0YRTECZ774/members",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8189",
+					"path": [
+						"groups",
+						"01GAG97E67VWGZSV0YRTECZ774",
+						"members"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Assigning Things To Group",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1ODcyMDEsImlhdCI6MTY2MDU1MTIwMSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXIxQGFiYy5jb20iLCJpc3N1ZXJfaWQiOiJiNzBkNmEyZS03NWMwLTQ3ZTAtODIyNC1lZjM4ZjRjNGFhNjYiLCJ0eXBlIjowfQ.Dq1s1FMMxBxaYJOGJamvYrJV1vhRFcklVy-2AaLZOZk"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"members\":[\"5b24f2b6-ec1a-4019-8eec-055fc4fe1ae1\",\"5b24f2b6-ec1a-4019-8eec-055fc4fe1ae2\"],\"type\":\"things\"}"
+				},
+				"url": {
+					"raw": "http://localhost:8189/groups/01GAG97E67VWGZSV0YRTECZ774/members",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8189",
+					"path": [
+						"groups",
+						"01GAG97E67VWGZSV0YRTECZ774",
+						"members"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Fetching Members",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1ODcyMDEsImlhdCI6MTY2MDU1MTIwMSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXIxQGFiYy5jb20iLCJpc3N1ZXJfaWQiOiJiNzBkNmEyZS03NWMwLTQ3ZTAtODIyNC1lZjM4ZjRjNGFhNjYiLCJ0eXBlIjowfQ.Dq1s1FMMxBxaYJOGJamvYrJV1vhRFcklVy-2AaLZOZk"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8189/groups/01GAG97E67VWGZSV0YRTECZ774/members",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8189",
+					"path": [
+						"groups",
+						"01GAG97E67VWGZSV0YRTECZ774",
+						"members"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Fetching From Users Service",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1ODcyMDEsImlhdCI6MTY2MDU1MTIwMSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXIxQGFiYy5jb20iLCJpc3N1ZXJfaWQiOiJiNzBkNmEyZS03NWMwLTQ3ZTAtODIyNC1lZjM4ZjRjNGFhNjYiLCJ0eXBlIjowfQ.Dq1s1FMMxBxaYJOGJamvYrJV1vhRFcklVy-2AaLZOZk"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8189/groups/01GAG97E67VWGZSV0YRTECZ774/members?type=users",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8189",
+					"path": [
+						"groups",
+						"01GAG97E67VWGZSV0YRTECZ774",
+						"members"
+					],
+					"query": [
+						{
+							"key": "type",
+							"value": "users"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Fetching Membership",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1ODcyMDEsImlhdCI6MTY2MDU1MTIwMSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXIxQGFiYy5jb20iLCJpc3N1ZXJfaWQiOiJiNzBkNmEyZS03NWMwLTQ3ZTAtODIyNC1lZjM4ZjRjNGFhNjYiLCJ0eXBlIjowfQ.Dq1s1FMMxBxaYJOGJamvYrJV1vhRFcklVy-2AaLZOZk"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8189/members/4be156ba-8306-44d5-bfe2-413400bc73af/groups",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8189",
+					"path": [
+						"members",
+						"4be156ba-8306-44d5-bfe2-413400bc73af",
+						"groups"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Unassign Thing From Group",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1ODcyMDEsImlhdCI6MTY2MDU1MTIwMSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXIxQGFiYy5jb20iLCJpc3N1ZXJfaWQiOiJiNzBkNmEyZS03NWMwLTQ3ZTAtODIyNC1lZjM4ZjRjNGFhNjYiLCJ0eXBlIjowfQ.Dq1s1FMMxBxaYJOGJamvYrJV1vhRFcklVy-2AaLZOZk"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"members\":[\"5b24f2b6-ec1a-4019-8eec-055fc4fe1ae1\"], \"type\": \"things\"}"
+				},
+				"url": {
+					"raw": "http://localhost:8189/groups/01GAG97E67VWGZSV0YRTECZ774/members",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8189",
+					"path": [
+						"groups",
+						"01GAG97E67VWGZSV0YRTECZ774",
+						"members"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Group Entity For User",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1ODcyMDEsImlhdCI6MTY2MDU1MTIwMSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXIxQGFiYy5jb20iLCJpc3N1ZXJfaWQiOiJiNzBkNmEyZS03NWMwLTQ3ZTAtODIyNC1lZjM4ZjRjNGFhNjYiLCJ0eXBlIjowfQ.Dq1s1FMMxBxaYJOGJamvYrJV1vhRFcklVy-2AaLZOZk"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8189/groups/01GAG97E67VWGZSV0YRTECZ774",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8189",
+					"path": [
+						"groups",
+						"01GAG97E67VWGZSV0YRTECZ774"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Groups And List Requests",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1ODcyMDEsImlhdCI6MTY2MDU1MTIwMSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXIxQGFiYy5jb20iLCJpc3N1ZXJfaWQiOiJiNzBkNmEyZS03NWMwLTQ3ZTAtODIyNC1lZjM4ZjRjNGFhNjYiLCJ0eXBlIjowfQ.Dq1s1FMMxBxaYJOGJamvYrJV1vhRFcklVy-2AaLZOZk"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8189/groups",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8189",
+					"path": [
+						"groups"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Group Entity",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1ODcyMDEsImlhdCI6MTY2MDU1MTIwMSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXIxQGFiYy5jb20iLCJpc3N1ZXJfaWQiOiJiNzBkNmEyZS03NWMwLTQ3ZTAtODIyNC1lZjM4ZjRjNGFhNjYiLCJ0eXBlIjowfQ.Dq1s1FMMxBxaYJOGJamvYrJV1vhRFcklVy-2AaLZOZk"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\": \"first_group\"}"
+				},
+				"url": {
+					"raw": "http://localhost:8189/groups/01GAG97E67VWGZSV0YRTECZ774",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8189",
+					"path": [
+						"groups",
+						"01GAG97E67VWGZSV0YRTECZ774"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Share User Group With Things",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1ODcyMDEsImlhdCI6MTY2MDU1MTIwMSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXIxQGFiYy5jb20iLCJpc3N1ZXJfaWQiOiJiNzBkNmEyZS03NWMwLTQ3ZTAtODIyNC1lZjM4ZjRjNGFhNjYiLCJ0eXBlIjowfQ.Dq1s1FMMxBxaYJOGJamvYrJV1vhRFcklVy-2AaLZOZk"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"thing_group_id\": \"5b24f2b6-ec1a-4019-8eec-055fc4fe1ae1\"}"
+				},
+				"url": {
+					"raw": "http://localhost:8189/groups/4be156ba-8306-44d5-bfe2-413400bc73af/share",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8189",
+					"path": [
+						"groups",
+						"4be156ba-8306-44d5-bfe2-413400bc73af",
+						"share"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Group Entity",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1ODcyMDEsImlhdCI6MTY2MDU1MTIwMSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXIxQGFiYy5jb20iLCJpc3N1ZXJfaWQiOiJiNzBkNmEyZS03NWMwLTQ3ZTAtODIyNC1lZjM4ZjRjNGFhNjYiLCJ0eXBlIjowfQ.Dq1s1FMMxBxaYJOGJamvYrJV1vhRFcklVy-2AaLZOZk"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8189/groups/01GAG9NTK55B0H014QC6Q9TRV3",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8189",
+					"path": [
+						"groups",
+						"01GAG9NTK55B0H014QC6Q9TRV3"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

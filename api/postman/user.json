@@ -1,0 +1,179 @@
+{
+	"info": {
+		"_postman_id": "a159653e-e114-43f6-90a0-676aa3476e00",
+		"name": "User",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "21188965"
+	},
+	"item": [
+		{
+			"name": "Create User",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"email\":\"user@abc.com\", \"password\":\"12345678\"}"
+				},
+				"url": {
+					"raw": "http://localhost:8180/users",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8180",
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Token",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"email\":\"user@user.com\",\"password\":\"12345678\"}"
+				},
+				"url": {
+					"raw": "http://localhost:8180/tokens",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8180",
+					"path": [
+						"tokens"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get User",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1NDQ2MDYsImlhdCI6MTY2MDUwODYwNiwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXJAdXNlci5jb20iLCJpc3N1ZXJfaWQiOiJhZWU3MWZhYy00MzZkLTRkOGItOGI5NC1jMzYxMjQ3MTg4OGIiLCJ0eXBlIjowfQ.FivDQ_U5Y-zQ__UGumZw3Q6ZYzXVuvRNTTFDovlV_LU"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8180/users/4be156ba-8306-44d5-bfe2-413400bc73af",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8180",
+					"path": [
+						"users",
+						"4be156ba-8306-44d5-bfe2-413400bc73af"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Users",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1NDQ2MDYsImlhdCI6MTY2MDUwODYwNiwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXJAdXNlci5jb20iLCJpc3N1ZXJfaWQiOiJhZWU3MWZhYy00MzZkLTRkOGItOGI5NC1jMzYxMjQ3MTg4OGIiLCJ0eXBlIjowfQ.FivDQ_U5Y-zQ__UGumZw3Q6ZYzXVuvRNTTFDovlV_LU"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8180/users",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8180",
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update User",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1NDQ2MDYsImlhdCI6MTY2MDUwODYwNiwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXJAdXNlci5jb20iLCJpc3N1ZXJfaWQiOiJhZWU3MWZhYy00MzZkLTRkOGItOGI5NC1jMzYxMjQ3MTg4OGIiLCJ0eXBlIjowfQ.FivDQ_U5Y-zQ__UGumZw3Q6ZYzXVuvRNTTFDovlV_LU"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"metadata\":{\"new\":\"info\"}}"
+				},
+				"url": {
+					"raw": "http://localhost:8180/users",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8180",
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Change User Password",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1NDQ2MDYsImlhdCI6MTY2MDUwODYwNiwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXJAdXNlci5jb20iLCJpc3N1ZXJfaWQiOiJhZWU3MWZhYy00MzZkLTRkOGItOGI5NC1jMzYxMjQ3MTg4OGIiLCJ0eXBlIjowfQ.FivDQ_U5Y-zQ__UGumZw3Q6ZYzXVuvRNTTFDovlV_LU"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"old_password\":\"12345678\", \"password\":\"87654321\"}"
+				},
+				"url": {
+					"raw": "http://localhost:8180/password",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8180",
+					"path": [
+						"password"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

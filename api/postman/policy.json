@@ -1,0 +1,74 @@
+{
+	"info": {
+		"_postman_id": "43f950f8-89a6-4224-b93f-964d79a38fea",
+		"name": "Policy",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "21188965"
+	},
+	"item": [
+		{
+			"name": "Add Policies",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA2MDE5NTUsImlhdCI6MTY2MDU2NTk1NSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImFkbWluQGV4YW1wbGUuY29tIiwiaXNzdWVyX2lkIjoiNjZjNGQ3M2UtZDczYy00YWRmLWFkNzEtMzAyYzBhNTQ5YzZiIiwidHlwZSI6MH0.sVMyqtLOQhQoeIUjo8UQga1yBQ6eqSZ2-cb-AFZCtiM"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"subjects\":[\"b70d6a2e-75c0-47e0-8224-ef38f4c4aa66\"],\"policies\": [\"member\"], \"object\": \"users\"}"
+				},
+				"url": {
+					"raw": "http://localhost:8189/policies",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8189",
+					"path": [
+						"policies"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Policies",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA2MDE5NTUsImlhdCI6MTY2MDU2NTk1NSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImFkbWluQGV4YW1wbGUuY29tIiwiaXNzdWVyX2lkIjoiNjZjNGQ3M2UtZDczYy00YWRmLWFkNzEtMzAyYzBhNTQ5YzZiIiwidHlwZSI6MH0.sVMyqtLOQhQoeIUjo8UQga1yBQ6eqSZ2-cb-AFZCtiM"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"subjects\": [\"b70d6a2e-75c0-47e0-8224-ef38f4c4aa66\"], \"object\": \"users\", \"policies\": [\"member\"]}"
+				},
+				"url": {
+					"raw": "http://localhost:8189/policies",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8189",
+					"path": [
+						"policies"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
