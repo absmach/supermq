@@ -25,7 +25,6 @@ const protocol = "mqtt"
 
 var (
 	channelRegExp                   = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]*)?(\?.*)?$`)
-	infoMalformedTopic              = "malformed topic "
 	InfoSubscribed                  = "subscribed with client_id %s to topics %s"
 	InfoUnsubscribed                = "unsubscribed client_id %s from topics %s"
 	InfoConnected                   = "connected with client_id %s"
