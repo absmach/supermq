@@ -7,16 +7,16 @@ import (
 )
 
 type MockClient struct {
-	key     map[string]string
-	ctconns map[string]interface{}
+	key   map[string]string
+	conns map[string]interface{}
 }
 
-func NewClient(key map[string]string, ctconns map[string]interface{}) auth.Client {
-	return MockClient{key: key, ctconns: ctconns}
+func NewClient(key map[string]string, conns map[string]interface{}) auth.Client {
+	return MockClient{key: key, conns: conns}
 }
 
 func (cli MockClient) Authorize(ctx context.Context, chanID, thingID string) error {
-	for k, v := range cli.ctconns {
+	for k, v := range cli.conns {
 		if k == chanID && v == thingID {
 			return nil
 		}
