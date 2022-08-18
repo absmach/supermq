@@ -2,21 +2,26 @@ package mocks
 
 import (
 	"context"
-
 	"github.com/mainflux/mainflux/pkg/auth"
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
 type MockClient struct {
-	key map[string]string
+	key     map[string]string
+	ctconns map[string]interface{}
 }
 
-func NewClient(key map[string]string) auth.Client {
-	return MockClient{key: key}
+func NewClient(key map[string]string, ctconns map[string]interface{}) auth.Client {
+	return MockClient{key: key, ctconns: ctconns}
 }
 
 func (cli MockClient) Authorize(ctx context.Context, chanID, thingID string) error {
-	return nil
+	for k, v := range cli.ctconns {
+		if k == chanID && v == thingID {
+			return nil
+		}
+	}
+	return errors.ErrAuthentication
 }
 
 func (cli MockClient) Identify(ctx context.Context, thingKey string) (string, error) {

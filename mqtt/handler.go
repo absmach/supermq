@@ -46,6 +46,7 @@ var (
 	ErrMissingClientID              = errors.New("client_id not found")
 	ErrMissingTopicPub              = errors.New("failed to publish due to missing topic")
 	ErrMissingTopicSub              = errors.New("failed to subscribe due to missing topic")
+	ErrAuthentication               = errors.New("failed to perform authentication over the entity")
 )
 
 // Event implements events.Event interface

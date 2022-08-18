@@ -23,6 +23,8 @@ import (
 
 const (
 	thingID        = "thingID"
+	chanID         = "123e4567-e89b-12d3-a456-000000000001"
+	invalidChanID  = "1"
 	clientID       = "clientID"
 	invalidThingID = "invalidThingID"
 	password       = "password"
@@ -35,6 +37,11 @@ var (
 	sessionClient = session.Client{
 		ID:       clientID,
 		Username: thingID,
+		Password: []byte(password),
+	}
+	invalidThingSessionClient = session.Client{
+		ID:       clientID,
+		Username: invalidThingID,
 		Password: []byte(password),
 	}
 )
@@ -142,11 +149,9 @@ func TestAuthPublish(t *testing.T) {
 
 func TestAuthSubscribe(t *testing.T) {
 	handler := newHandler()
-	var invalidTopics = []string{"topic"}
-
-	chID, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	var topics = []string{"channels/" + chID + "/messages"}
+	var invalidTopics = []string{invalidTopic}
+	var topics = []string{"channels/" + chanID + "/messages"}
+	invalidChanIDTopics := []string{"channels/" + invalidChanID + "/messages"}
 
 	cases := []struct {
 		desc   string
@@ -167,10 +172,22 @@ func TestAuthSubscribe(t *testing.T) {
 			topic:  nil,
 		},
 		{
-			desc:   "subscribe with invalid channel",
+			desc:   "subscribe with invalid topics",
 			client: &sessionClient,
 			err:    mqtt.ErrMalformedTopic,
 			topic:  &invalidTopics,
+		},
+		{
+			desc:   "subscribe with invalid channel ID",
+			client: &sessionClient,
+			err:    mqtt.ErrAuthentication,
+			topic:  &invalidChanIDTopics,
+		},
+		{
+			desc:   "subscribe with invalid thing ID",
+			client: &invalidThingSessionClient,
+			err:    mqtt.ErrAuthentication,
+			topic:  &topics,
 		},
 		{
 			desc:   "subscribe with active session and valid topics",
@@ -357,7 +374,7 @@ func newHandler() session.Handler {
 		log.Fatalf("failed to create logger: %s", err)
 	}
 
-	authClient := mocks.NewClient(map[string]string{password: thingID})
+	authClient := mocks.NewClient(map[string]string{password: thingID}, map[string]interface{}{chanID: thingID})
 
 	var redisClient *redis.Client
 
