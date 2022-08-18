@@ -6,6 +6,7 @@ package mqtt_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/mqtt"
@@ -28,10 +29,13 @@ var (
 
 func TestPublisher(t *testing.T) {
 	// Subscribing with topic, and with subtopic, so that we can publish messages
-	err := pubsub.Subscribe(clientID, fmt.Sprintf("%s.%s", chansPrefix, topic), handler{false})
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	err = pubsub.Subscribe(clientID, fmt.Sprintf("%s.%s.%s.", chansPrefix, topic, subtopic), handler{false})
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	client, err := newClient(address, "", 30*time.Second)
+	// err = pubsub.Subscribe(clientID, fmt.Sprintf("%s.%s", chansPrefix, topic), handler{false})
+	token := client.Subscribe(fmt.Sprintf("%s.%s", chansPrefix, topic), qos, mqttHandler(handler{false}))
+	require.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", err))
+	// err = pubsub.Subscribe(clientID, fmt.Sprintf("%s.%s.%s.", chansPrefix, topic, subtopic), handler{false})
+	token = client.Subscribe(fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic), qos, mqttHandler(handler{false}))
+	require.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := []struct {
 		desc     string
@@ -252,21 +256,102 @@ func TestSubscriber(t *testing.T) {
 	}
 
 	for _, pc := range cases {
-		if pc.pubsub == true {
-			err := pubsub.Subscribe(pc.clientID, pc.topic, pc.handler)
-			if pc.errorMessage == nil {
-				require.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
-			} else {
-				assert.Equal(t, err, pc.errorMessage)
+
+		t.Run(pc.desc, func(t *testing.T) {
+			switch pc.pubsub {
+			case true:
+				err := pubsub.Subscribe(pc.clientID, pc.topic, pc.handler)
+
+				if pc.errorMessage == nil && err != nil {
+					t.Error("got unexpected error: ", err.Error())
+				} else if err.Error() != pc.errorMessage.Error() {
+					t.Errorf("expected %s, got %s", pc.errorMessage.Error(), err.Error())
+				}
+			default:
+				err := pubsub.Unsubscribe(pc.clientID, pc.topic)
+
+				if pc.errorMessage == nil && err != nil {
+					t.Error("got unexpected error: ", err.Error())
+				} else if err.Error() != pc.errorMessage.Error() {
+					t.Errorf("expected %s, got %s", pc.errorMessage.Error(), err.Error())
+				}
+				if pc.errorMessage == nil {
+					require.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
+				} else {
+					assert.Equal(t, err, pc.errorMessage)
+				}
 			}
-		} else {
-			err := pubsub.Unsubscribe(pc.clientID, pc.topic)
-			if pc.errorMessage == nil {
-				require.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
-			} else {
-				assert.Equal(t, err, pc.errorMessage)
-			}
+		})
+
+		// switch pc.pubsub {
+		// case true:
+		// 	err := pubsub.Subscribe(pc.clientID, pc.topic, pc.handler)
+		// 	if pc.errorMessage == nil {
+		// 		require.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
+		// 	} else {
+		// 		assert.Equal(t, err, pc.errorMessage)
+		// 	}
+		// default:
+		// 	err := pubsub.Unsubscribe(pc.clientID, pc.topic)
+		// 	if pc.errorMessage == nil {
+		// 		require.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
+		// 	} else {
+		// 		assert.Equal(t, err, pc.errorMessage)
+		// 	}
+		// }
+	}
+}
+
+func TestPubSub(t *testing.T) {
+	// Subscribing with topic, and with subtopic, so that we can publish messages
+	err := pubsub.Subscribe(clientID, fmt.Sprintf("%s.%s", chansPrefix, topic), handler{false})
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	err = pubsub.Subscribe(clientID, fmt.Sprintf("%s.%s.%s.", chansPrefix, topic, subtopic), handler{false})
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	cases := []struct {
+		desc     string
+		channel  string
+		subtopic string
+		payload  []byte
+	}{
+		{
+			desc:    "publish message with nil payload",
+			payload: nil,
+		},
+		{
+			desc:    "publish message with string payload",
+			payload: data,
+		},
+		{
+			desc:    "publish message with channel",
+			payload: data,
+			channel: channel,
+		},
+		{
+			desc:     "publish message with subtopic",
+			payload:  data,
+			subtopic: subtopic,
+		},
+		{
+			desc:     "publish message with channel and subtopic",
+			payload:  data,
+			channel:  channel,
+			subtopic: subtopic,
+		},
+	}
+
+	for _, tc := range cases {
+		expectedMsg := messaging.Message{
+			Channel:  tc.channel,
+			Subtopic: tc.subtopic,
+			Payload:  tc.payload,
 		}
+		err := publisher.Publish(topic, expectedMsg)
+		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+		receivedMsg := <-msgChan
+		assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
 	}
 }
 

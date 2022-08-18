@@ -47,8 +47,6 @@ type pubsub struct {
 	subscriptions map[string]subscription
 }
 
-// func (ps *pubsub)
-
 // NewPubSub returns MQTT message publisher/subscriber.
 func NewPubSub(url, queue string, timeout time.Duration, logger log.Logger) (messaging.PubSub, error) {
 	client, err := newClient(url, "mqtt-publisher", timeout)
@@ -60,10 +58,10 @@ func NewPubSub(url, queue string, timeout time.Duration, logger log.Logger) (mes
 			client:  client,
 			timeout: timeout,
 		},
-		address:       url,
-		timeout:       timeout,
-		logger:        logger,
-		mu:            &sync.RWMutex{},
+		address: url,
+		timeout: timeout,
+		logger:  logger,
+		// mu:            &sync.RWMutex{},
 		subscriptions: make(map[string]subscription),
 	}
 	return ret, nil
@@ -219,6 +217,6 @@ func (sub subscription) delete(topic string) bool {
 	topics := make([]string, len(sub.topics)-1)
 	copy(topics[:index], sub.topics[:index])
 	copy(topics[index:], sub.topics[index+1:])
-	// sub.topics = topics
+	sub.topics = topics
 	return true
 }
