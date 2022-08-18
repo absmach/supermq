@@ -1,11 +1,253 @@
 {
 	"info": {
-		"_postman_id": "117ce3bd-d933-45f0-82d6-99ec8fdd7d09",
-		"name": "Channel",
+		"_postman_id": "10551864-f1ed-4b85-88ff-47b8e2bab231",
+		"name": "Things",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "21188965"
 	},
 	"item": [
+		{
+			"name": "Create Thing",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1NDQ2MDYsImlhdCI6MTY2MDUwODYwNiwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXJAdXNlci5jb20iLCJpc3N1ZXJfaWQiOiJhZWU3MWZhYy00MzZkLTRkOGItOGI5NC1jMzYxMjQ3MTg4OGIiLCJ0eXBlIjowfQ.FivDQ_U5Y-zQ__UGumZw3Q6ZYzXVuvRNTTFDovlV_LU"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\": \"thing_name_one\"}"
+				},
+				"url": {
+					"raw": "http://localhost:8182/things",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8182",
+					"path": [
+						"things"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Thing With External ID",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1NDQ2MDYsImlhdCI6MTY2MDUwODYwNiwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXJAdXNlci5jb20iLCJpc3N1ZXJfaWQiOiJhZWU3MWZhYy00MzZkLTRkOGItOGI5NC1jMzYxMjQ3MTg4OGIiLCJ0eXBlIjowfQ.FivDQ_U5Y-zQ__UGumZw3Q6ZYzXVuvRNTTFDovlV_LU"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[{\"id\": \"5b24f2b7-ec1a-4019-8eec-054fc4fe2ae2\",\"name\": \"thing_name_from_id\"}]"
+				},
+				"url": {
+					"raw": "http://localhost:8182/things/bulk",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8182",
+					"path": [
+						"things",
+						"bulk"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Things",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1NDQ2MDYsImlhdCI6MTY2MDUwODYwNiwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXJAdXNlci5jb20iLCJpc3N1ZXJfaWQiOiJhZWU3MWZhYy00MzZkLTRkOGItOGI5NC1jMzYxMjQ3MTg4OGIiLCJ0eXBlIjowfQ.FivDQ_U5Y-zQ__UGumZw3Q6ZYzXVuvRNTTFDovlV_LU"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[{\"name\": \"thing_name_100\"}, {\"name\": \"thing_name_200\"}]"
+				},
+				"url": {
+					"raw": "http://localhost:8182/things/bulk",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8182",
+					"path": [
+						"things",
+						"bulk"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Things With External ID",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1NDQ2MDYsImlhdCI6MTY2MDUwODYwNiwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXJAdXNlci5jb20iLCJpc3N1ZXJfaWQiOiJhZWU3MWZhYy00MzZkLTRkOGItOGI5NC1jMzYxMjQ3MTg4OGIiLCJ0eXBlIjowfQ.FivDQ_U5Y-zQ__UGumZw3Q6ZYzXVuvRNTTFDovlV_LU"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[{\"id\": \"5b24f2b6-ec1a-4019-8eec-055fc4fe1ae1\",\"name\": \"thing_name_1000\"},{\"id\": \"5b24f2b6-ec1a-4019-8eec-055fc4fe1ae2\",\"name\": \"thing_name_2000\"}]"
+				},
+				"url": {
+					"raw": "http://localhost:8182/things/bulk",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8182",
+					"path": [
+						"things",
+						"bulk"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Thing",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1NDQ2MDYsImlhdCI6MTY2MDUwODYwNiwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXJAdXNlci5jb20iLCJpc3N1ZXJfaWQiOiJhZWU3MWZhYy00MzZkLTRkOGItOGI5NC1jMzYxMjQ3MTg4OGIiLCJ0eXBlIjowfQ.FivDQ_U5Y-zQ__UGumZw3Q6ZYzXVuvRNTTFDovlV_LU"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8182/things/5b24f2b6-ec1a-4019-8eec-054fc4fe1ae2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8182",
+					"path": [
+						"things",
+						"5b24f2b6-ec1a-4019-8eec-054fc4fe1ae2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List Things",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1NDQ2MDYsImlhdCI6MTY2MDUwODYwNiwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXJAdXNlci5jb20iLCJpc3N1ZXJfaWQiOiJhZWU3MWZhYy00MzZkLTRkOGItOGI5NC1jMzYxMjQ3MTg4OGIiLCJ0eXBlIjowfQ.FivDQ_U5Y-zQ__UGumZw3Q6ZYzXVuvRNTTFDovlV_LU"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8182/things",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8182",
+					"path": [
+						"things"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Thing",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1NDQ2MDYsImlhdCI6MTY2MDUwODYwNiwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXJAdXNlci5jb20iLCJpc3N1ZXJfaWQiOiJhZWU3MWZhYy00MzZkLTRkOGItOGI5NC1jMzYxMjQ3MTg4OGIiLCJ0eXBlIjowfQ.FivDQ_U5Y-zQ__UGumZw3Q6ZYzXVuvRNTTFDovlV_LU"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\": \"thing_name_up\"}"
+				},
+				"url": {
+					"raw": "http://localhost:8182/things/5b24f2b6-ec1a-4019-8eec-054fc4fe1ae2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8182",
+					"path": [
+						"things",
+						"5b24f2b6-ec1a-4019-8eec-054fc4fe1ae2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Thing",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjA1NDQ2MDYsImlhdCI6MTY2MDUwODYwNiwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXJAdXNlci5jb20iLCJpc3N1ZXJfaWQiOiJhZWU3MWZhYy00MzZkLTRkOGItOGI5NC1jMzYxMjQ3MTg4OGIiLCJ0eXBlIjowfQ.FivDQ_U5Y-zQ__UGumZw3Q6ZYzXVuvRNTTFDovlV_LU"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8182/things/5b24f2b6-ec1a-4019-8eec-054fc4fe1ae2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8182",
+					"path": [
+						"things",
+						"5b24f2b6-ec1a-4019-8eec-054fc4fe1ae2"
+					]
+				}
+			},
+			"response": []
+		},
 		{
 			"name": "Create Channel",
 			"request": {
