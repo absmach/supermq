@@ -47,27 +47,29 @@ type pubsub struct {
 	subscriptions map[string]subscription
 }
 
+// func (ps *pubsub)
+
 // NewPubSub returns MQTT message publisher/subscriber.
 func NewPubSub(url, queue string, timeout time.Duration, logger log.Logger) (messaging.PubSub, error) {
 	client, err := newClient(url, "mqtt-publisher", timeout)
 	if err != nil {
 		return nil, err
 	}
-	ret := pubsub{
+	ret := &pubsub{
 		publisher: publisher{
 			client:  client,
 			timeout: timeout,
 		},
-		address: url,
-		timeout: timeout,
-		logger:  logger,
-		// mu:            &sync.RWMutex{},
+		address:       url,
+		timeout:       timeout,
+		logger:        logger,
+		mu:            &sync.RWMutex{},
 		subscriptions: make(map[string]subscription),
 	}
 	return ret, nil
 }
 
-func (ps pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) error {
+func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) error {
 	if id == "" {
 		return ErrEmptyID
 	}
@@ -122,7 +124,7 @@ func (ps pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) e
 	return token.Error()
 }
 
-func (ps pubsub) Unsubscribe(id, topic string) error {
+func (ps *pubsub) Unsubscribe(id, topic string) error {
 	if id == "" {
 		return ErrEmptyID
 	}
@@ -160,7 +162,7 @@ func (ps pubsub) Unsubscribe(id, topic string) error {
 	return token.Error()
 }
 
-func (ps pubsub) mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
+func (ps *pubsub) mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
 	return func(c mqtt.Client, m mqtt.Message) {
 		var msg messaging.Message
 		if err := proto.Unmarshal(m.Payload(), &msg); err != nil {
@@ -217,6 +219,6 @@ func (sub subscription) delete(topic string) bool {
 	topics := make([]string, len(sub.topics)-1)
 	copy(topics[:index], sub.topics[:index])
 	copy(topics[index:], sub.topics[index+1:])
-	sub.topics = topics
+	// sub.topics = topics
 	return true
 }
