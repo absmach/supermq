@@ -214,10 +214,10 @@ func TestConnect(t *testing.T) {
 	handler := newHandler()
 	logBuffer.Reset()
 	cases := []struct {
-		desc     string
-		client   *session.Client
-		expected string
-		err      error
+		desc   string
+		client *session.Client
+		logMsg string
+		err    error
 	}{
 		{
 			desc:   "connect without active session",
@@ -225,15 +225,15 @@ func TestConnect(t *testing.T) {
 			err:    errors.Wrap(mqtt.ErrFailedConnect, mqtt.ErrClientNotInitialized),
 		},
 		{
-			desc:     "connect with active session",
-			client:   &sessionClient,
-			expected: fmt.Sprintf(mqtt.InfoConnected, clientID),
+			desc:   "connect with active session",
+			client: &sessionClient,
+			logMsg: fmt.Sprintf(mqtt.InfoConnected, clientID),
 		},
 	}
 
 	for _, tc := range cases {
 		handler.Connect(tc.client)
-		assert.Contains(t, logBuffer.String(), tc.expected, tc.err)
+		assert.Contains(t, logBuffer.String(), tc.logMsg, tc.err)
 	}
 }
 
@@ -247,12 +247,12 @@ func TestPublish(t *testing.T) {
 	var invalidChannelIDTopic = "channels/**/messages"
 
 	cases := []struct {
-		desc     string
-		client   *session.Client
-		topic    string
-		payload  []byte
-		err      error
-		expected string
+		desc    string
+		client  *session.Client
+		topic   string
+		payload []byte
+		err     error
+		logMsg  string
 	}{
 		{
 			desc:    "publish without active session",
@@ -262,11 +262,11 @@ func TestPublish(t *testing.T) {
 			err:     errors.Wrap(mqtt.ErrFailedPublish, mqtt.ErrClientNotInitialized),
 		},
 		{
-			desc:     "publish with invalid topic",
-			client:   &sessionClient,
-			topic:    invalidTopic,
-			payload:  []byte("payload"),
-			expected: fmt.Sprintf(mqtt.InfoPublished, clientID, invalidTopic),
+			desc:    "publish with invalid topic",
+			client:  &sessionClient,
+			topic:   invalidTopic,
+			payload: []byte("payload"),
+			logMsg:  fmt.Sprintf(mqtt.InfoPublished, clientID, invalidTopic),
 		},
 		{
 			desc:    "publish with invalid channel ID",
@@ -279,7 +279,7 @@ func TestPublish(t *testing.T) {
 
 	for _, tc := range cases {
 		handler.Publish(tc.client, &tc.topic, &tc.payload)
-		assert.Contains(t, logBuffer.String(), tc.expected, tc.err)
+		assert.Contains(t, logBuffer.String(), tc.logMsg, tc.err)
 	}
 }
 
@@ -292,11 +292,11 @@ func TestSubscribe(t *testing.T) {
 	var topics = []string{"channels/" + chID + "/messages"}
 
 	cases := []struct {
-		desc     string
-		client   *session.Client
-		topic    []string
-		err      error
-		expected string
+		desc   string
+		client *session.Client
+		topic  []string
+		err    error
+		logMsg string
 	}{
 		{
 			desc:   "subscribe without active session",
@@ -305,16 +305,16 @@ func TestSubscribe(t *testing.T) {
 			err:    errors.Wrap(mqtt.ErrFailedSubscribe, mqtt.ErrClientNotInitialized),
 		},
 		{
-			desc:     "subscribe with valid session and topics",
-			client:   &sessionClient,
-			topic:    topics,
-			expected: fmt.Sprintf(mqtt.InfoSubscribed, clientID, topics[0]),
+			desc:   "subscribe with valid session and topics",
+			client: &sessionClient,
+			topic:  topics,
+			logMsg: fmt.Sprintf(mqtt.InfoSubscribed, clientID, topics[0]),
 		},
 	}
 
 	for _, tc := range cases {
 		handler.Subscribe(tc.client, &tc.topic)
-		assert.Contains(t, logBuffer.String(), tc.expected, tc.err)
+		assert.Contains(t, logBuffer.String(), tc.logMsg, tc.err)
 	}
 }
 
@@ -327,11 +327,11 @@ func TestUnsubscribe(t *testing.T) {
 	var topics = []string{"channels/" + chID + "/messages"}
 
 	cases := []struct {
-		desc     string
-		client   *session.Client
-		topic    []string
-		expected string
-		err      error
+		desc   string
+		client *session.Client
+		topic  []string
+		logMsg string
+		err    error
 	}{
 		{
 			desc:   "unsubscribe without active session",
@@ -340,16 +340,16 @@ func TestUnsubscribe(t *testing.T) {
 			err:    errors.Wrap(mqtt.ErrFailedDisconnect, mqtt.ErrClientNotInitialized),
 		},
 		{
-			desc:     "unsubscribe with valid session and topics",
-			client:   &sessionClient,
-			topic:    topics,
-			expected: fmt.Sprintf(mqtt.InfoUnsubscribed, clientID, topics[0]),
+			desc:   "unsubscribe with valid session and topics",
+			client: &sessionClient,
+			topic:  topics,
+			logMsg: fmt.Sprintf(mqtt.InfoUnsubscribed, clientID, topics[0]),
 		},
 	}
 
 	for _, tc := range cases {
 		handler.Unsubscribe(tc.client, &tc.topic)
-		assert.Contains(t, logBuffer.String(), tc.expected, tc.err)
+		assert.Contains(t, logBuffer.String(), tc.logMsg, tc.err)
 	}
 }
 
@@ -362,29 +362,29 @@ func TestDisconnect(t *testing.T) {
 	var topics = []string{"channels/" + chID + "/messages"}
 
 	cases := []struct {
-		desc     string
-		client   *session.Client
-		topic    []string
-		expected string
-		err      error
+		desc   string
+		client *session.Client
+		topic  []string
+		logMsg string
+		err    error
 	}{
 		{
-			desc:   "disconect without active session",
+			desc:   "disconnect without active session",
 			client: nil,
 			topic:  topics,
 			err:    errors.Wrap(mqtt.ErrFailedDisconnect, mqtt.ErrClientNotInitialized),
 		},
 		{
-			desc:     "disconect with valid session",
-			client:   &sessionClient,
-			topic:    topics,
-			expected: fmt.Sprintf(mqtt.InfoDisconnected, clientID, thingID),
+			desc:   "disconnect with valid session",
+			client: &sessionClient,
+			topic:  topics,
+			logMsg: fmt.Sprintf(mqtt.InfoDisconnected, clientID, thingID),
 		},
 	}
 
 	for _, tc := range cases {
 		handler.Disconnect(tc.client)
-		assert.Contains(t, logBuffer.String(), tc.expected, tc.err)
+		assert.Contains(t, logBuffer.String(), tc.logMsg, tc.err)
 	}
 }
 
