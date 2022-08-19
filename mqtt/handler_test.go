@@ -217,23 +217,22 @@ func TestConnect(t *testing.T) {
 		desc   string
 		client *session.Client
 		logMsg string
-		err    error
 	}{
 		{
 			desc:   "connect without active session",
 			client: nil,
-			err:    errors.Wrap(mqtt.ErrFailedConnect, mqtt.ErrClientNotInitialized),
+			logMsg: mqtt.LogErrFailedConnect + mqtt.ErrClientNotInitialized.Error(),
 		},
 		{
 			desc:   "connect with active session",
 			client: &sessionClient,
-			logMsg: fmt.Sprintf(mqtt.InfoConnected, clientID),
+			logMsg: fmt.Sprintf(mqtt.LogInfoConnected, clientID),
 		},
 	}
 
 	for _, tc := range cases {
 		handler.Connect(tc.client)
-		assert.Contains(t, logBuffer.String(), tc.logMsg, tc.err)
+		assert.Contains(t, logBuffer.String(), tc.logMsg)
 	}
 }
 
@@ -251,7 +250,6 @@ func TestPublish(t *testing.T) {
 		client  *session.Client
 		topic   string
 		payload []byte
-		err     error
 		logMsg  string
 	}{
 		{
@@ -259,27 +257,27 @@ func TestPublish(t *testing.T) {
 			client:  nil,
 			topic:   topic,
 			payload: []byte("payload"),
-			err:     errors.Wrap(mqtt.ErrFailedPublish, mqtt.ErrClientNotInitialized),
+			logMsg:  mqtt.ErrClientNotInitialized.Error(),
 		},
 		{
 			desc:    "publish with invalid topic",
 			client:  &sessionClient,
 			topic:   invalidTopic,
 			payload: []byte("payload"),
-			logMsg:  fmt.Sprintf(mqtt.InfoPublished, clientID, invalidTopic),
+			logMsg:  fmt.Sprintf(mqtt.LogInfoPublished, clientID, invalidTopic),
 		},
 		{
 			desc:    "publish with invalid channel ID",
 			client:  &sessionClient,
 			topic:   invalidChannelIDTopic,
 			payload: []byte("payload"),
-			err:     errors.Wrap(mqtt.ErrFailedPublish, mqtt.ErrMalformedTopic),
+			logMsg:  errors.Wrap(mqtt.ErrFailedPublish, mqtt.ErrMalformedTopic).Error(),
 		},
 	}
 
 	for _, tc := range cases {
 		handler.Publish(tc.client, &tc.topic, &tc.payload)
-		assert.Contains(t, logBuffer.String(), tc.logMsg, tc.err)
+		assert.Contains(t, logBuffer.String(), tc.logMsg)
 	}
 }
 
@@ -295,26 +293,25 @@ func TestSubscribe(t *testing.T) {
 		desc   string
 		client *session.Client
 		topic  []string
-		err    error
 		logMsg string
 	}{
 		{
 			desc:   "subscribe without active session",
 			client: nil,
 			topic:  topics,
-			err:    errors.Wrap(mqtt.ErrFailedSubscribe, mqtt.ErrClientNotInitialized),
+			logMsg: errors.Wrap(mqtt.ErrFailedSubscribe, mqtt.ErrClientNotInitialized).Error(),
 		},
 		{
 			desc:   "subscribe with valid session and topics",
 			client: &sessionClient,
 			topic:  topics,
-			logMsg: fmt.Sprintf(mqtt.InfoSubscribed, clientID, topics[0]),
+			logMsg: fmt.Sprintf(mqtt.LogInfoSubscribed, clientID, topics[0]),
 		},
 	}
 
 	for _, tc := range cases {
 		handler.Subscribe(tc.client, &tc.topic)
-		assert.Contains(t, logBuffer.String(), tc.logMsg, tc.err)
+		assert.Contains(t, logBuffer.String(), tc.logMsg)
 	}
 }
 
@@ -331,25 +328,24 @@ func TestUnsubscribe(t *testing.T) {
 		client *session.Client
 		topic  []string
 		logMsg string
-		err    error
 	}{
 		{
 			desc:   "unsubscribe without active session",
 			client: nil,
 			topic:  topics,
-			err:    errors.Wrap(mqtt.ErrFailedDisconnect, mqtt.ErrClientNotInitialized),
+			logMsg: errors.Wrap(mqtt.ErrFailedUnsubscribe, mqtt.ErrClientNotInitialized).Error(),
 		},
 		{
 			desc:   "unsubscribe with valid session and topics",
 			client: &sessionClient,
 			topic:  topics,
-			logMsg: fmt.Sprintf(mqtt.InfoUnsubscribed, clientID, topics[0]),
+			logMsg: fmt.Sprintf(mqtt.LogInfoUnsubscribed, clientID, topics[0]),
 		},
 	}
 
 	for _, tc := range cases {
 		handler.Unsubscribe(tc.client, &tc.topic)
-		assert.Contains(t, logBuffer.String(), tc.logMsg, tc.err)
+		assert.Contains(t, logBuffer.String(), tc.logMsg)
 	}
 }
 
@@ -378,7 +374,7 @@ func TestDisconnect(t *testing.T) {
 			desc:   "disconnect with valid session",
 			client: &sessionClient,
 			topic:  topics,
-			logMsg: fmt.Sprintf(mqtt.InfoDisconnected, clientID, thingID),
+			logMsg: fmt.Sprintf(mqtt.LogInfoDisconnected, clientID, thingID),
 		},
 	}
 
