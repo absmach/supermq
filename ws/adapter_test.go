@@ -31,9 +31,9 @@ var msg = messaging.Message{
 	Payload:   []byte(`[{"n":"current","t":-5,"v":1.2}]`),
 }
 
-func newService(cc mainflux.ThingsServiceClient) ws.Service {
+func newService(cc mainflux.ThingsServiceClient) (ws.Service, mocks.MockPubSub) {
 	pubsub := mocks.NewPubSub()
-	return ws.New(cc, pubsub)
+	return ws.New(cc, pubsub), pubsub
 }
 
 func NewThingsClient() mainflux.ThingsServiceClient {
@@ -42,7 +42,7 @@ func NewThingsClient() mainflux.ThingsServiceClient {
 
 func TestPublish(t *testing.T) {
 	thingsClient := NewThingsClient()
-	svc := newService(thingsClient)
+	svc, _ := newService(thingsClient)
 
 	cases := []struct {
 		name     string
@@ -97,7 +97,7 @@ func TestPublish(t *testing.T) {
 
 func TestSubUnsub(t *testing.T) {
 	thingsClient := NewThingsClient()
-	svc := newService(thingsClient)
+	svc, pubsub := newService(thingsClient)
 
 	c := ws.NewClient(nil, thingKey)
 
@@ -107,14 +107,34 @@ func TestSubUnsub(t *testing.T) {
 		chanID   string
 		subtopic string
 		pubsub   bool
+		fail     bool
 		err      error
 	}{
+		{
+			name:     "subscribe to channel with subscribe set to fail",
+			thingKey: thingKey,
+			chanID:   chanID,
+			subtopic: subTopic,
+			pubsub:   true,
+			fail:     true,
+			err:      ws.ErrFailedSubscription,
+		},
+		{
+			name:     "unsubscribe from channel with unsubscribe set to fail",
+			thingKey: thingKey,
+			chanID:   chanID,
+			subtopic: subTopic,
+			pubsub:   false,
+			fail:     true,
+			err:      ws.ErrFailedUnsubscribe,
+		},
 		{
 			name:     "subscribe to channel with valid thingKey, chanID, subtopic",
 			thingKey: thingKey,
 			chanID:   chanID,
 			subtopic: subTopic,
 			pubsub:   true,
+			fail:     false,
 			err:      nil,
 		},
 		{
@@ -123,6 +143,7 @@ func TestSubUnsub(t *testing.T) {
 			chanID:   chanID,
 			subtopic: subTopic,
 			pubsub:   true,
+			fail:     false,
 			err:      nil,
 		},
 		{
@@ -131,6 +152,7 @@ func TestSubUnsub(t *testing.T) {
 			chanID:   "0",
 			subtopic: subTopic,
 			pubsub:   true,
+			fail:     false,
 			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
@@ -139,6 +161,7 @@ func TestSubUnsub(t *testing.T) {
 			chanID:   "",
 			subtopic: subTopic,
 			pubsub:   true,
+			fail:     false,
 			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
@@ -147,6 +170,7 @@ func TestSubUnsub(t *testing.T) {
 			chanID:   chanID,
 			subtopic: subTopic,
 			pubsub:   true,
+			fail:     false,
 			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
@@ -155,6 +179,7 @@ func TestSubUnsub(t *testing.T) {
 			chanID:   "",
 			subtopic: subTopic,
 			pubsub:   true,
+			fail:     false,
 			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
@@ -163,6 +188,7 @@ func TestSubUnsub(t *testing.T) {
 			chanID:   chanID,
 			subtopic: subTopic,
 			pubsub:   false,
+			fail:     false,
 			err:      nil,
 		},
 		{
@@ -171,6 +197,7 @@ func TestSubUnsub(t *testing.T) {
 			chanID:   chanID,
 			subtopic: "",
 			pubsub:   false,
+			fail:     false,
 			err:      nil,
 		},
 		{
@@ -179,6 +206,7 @@ func TestSubUnsub(t *testing.T) {
 			chanID:   "",
 			subtopic: subTopic,
 			pubsub:   false,
+			fail:     false,
 			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
@@ -187,6 +215,7 @@ func TestSubUnsub(t *testing.T) {
 			chanID:   chanID,
 			subtopic: subTopic,
 			pubsub:   false,
+			fail:     false,
 			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
@@ -195,11 +224,13 @@ func TestSubUnsub(t *testing.T) {
 			chanID:   "",
 			subtopic: subTopic,
 			pubsub:   false,
+			fail:     false,
 			err:      ws.ErrUnauthorizedAccess,
 		},
 	}
 
 	for _, tt := range cases {
+		pubsub.SetFail(tt.fail)
 		if tt.pubsub == true {
 			t.Run(tt.name, func(t *testing.T) {
 				assert.Equal(t, tt.err, svc.Subscribe(context.Background(), tt.thingKey, tt.chanID, tt.subtopic, c))
