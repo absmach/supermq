@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "bca7f911-eb44-42c8-84f3-8e7a1080c1bd",
-		"name": "Messages",
+		"name": "Http",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "21188965"
 	},
