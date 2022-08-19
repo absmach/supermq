@@ -33,7 +33,7 @@ var (
 	errMalformedSubtopic            = errors.New("malformed subtopic")
 	errFailedPublishConnectEvent    = errors.New("failed to publish connect event")
 	errFailedPublishDisconnectEvent = errors.New("failed to publish disconnect event")
-	errFailedPublish                = errors.New("failed to publish")
+	ErrFailedPublish                = errors.New("failed to publish")
 	errFailedParseSubtopic          = errors.New("failed to parse subtopic")
 	errFailedPublishToMsgBroker     = errors.New("failed to publish to mainflux message broker")
 	ErrFailedUnsubscribe            = errors.New("failed to unsubscribe")
@@ -148,7 +148,7 @@ func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 
 	channelParts := channelRegExp.FindStringSubmatch(*topic)
 	if len(channelParts) < 2 {
-		h.logger.Error(errors.Wrap(errFailedPublish, ErrMalformedTopic).Error())
+		h.logger.Error(errors.Wrap(ErrFailedPublish, ErrMalformedTopic).Error())
 		return
 	}
 

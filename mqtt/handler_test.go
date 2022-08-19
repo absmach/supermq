@@ -233,7 +233,7 @@ func TestConnect(t *testing.T) {
 
 	for _, tc := range cases {
 		handler.Connect(tc.client)
-		assert.Contains(t, logBuffer.String(), tc.expected, fmt.Sprint(tc.err))
+		assert.Contains(t, logBuffer.String(), tc.expected, tc.err)
 	}
 }
 
@@ -244,20 +244,22 @@ func TestPublish(t *testing.T) {
 	chID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	var topic = "channels/" + chID + "/messages"
+	var invalidChannelIDTopic = "channels/**/messages"
 
 	cases := []struct {
 		desc     string
 		client   *session.Client
 		topic    string
 		payload  []byte
+		err      error
 		expected string
 	}{
 		{
-			desc:     "publish without active session",
-			client:   nil,
-			topic:    topic,
-			payload:  []byte("payload"),
-			expected: mqtt.ErrClientNotInitialized.Error(),
+			desc:    "publish without active session",
+			client:  nil,
+			topic:   topic,
+			payload: []byte("payload"),
+			err:     errors.Wrap(mqtt.ErrFailedPublish, mqtt.ErrClientNotInitialized),
 		},
 		{
 			desc:     "publish with invalid topic",
@@ -266,11 +268,18 @@ func TestPublish(t *testing.T) {
 			payload:  []byte("payload"),
 			expected: fmt.Sprintf(mqtt.InfoPublished, clientID, invalidTopic),
 		},
+		{
+			desc:    "publish with invalid channel ID",
+			client:  &sessionClient,
+			topic:   invalidChannelIDTopic,
+			payload: []byte("payload"),
+			err:     errors.Wrap(mqtt.ErrFailedPublish, mqtt.ErrMalformedTopic),
+		},
 	}
 
 	for _, tc := range cases {
 		handler.Publish(tc.client, &tc.topic, &tc.payload)
-		assert.Contains(t, logBuffer.String(), tc.expected)
+		assert.Contains(t, logBuffer.String(), tc.expected, tc.err)
 	}
 }
 
@@ -286,13 +295,14 @@ func TestSubscribe(t *testing.T) {
 		desc     string
 		client   *session.Client
 		topic    []string
+		err      error
 		expected string
 	}{
 		{
-			desc:     "subscribe without active session",
-			client:   nil,
-			topic:    topics,
-			expected: fmt.Sprint(errors.Wrap(mqtt.ErrFailedSubscribe, mqtt.ErrClientNotInitialized).Error()),
+			desc:   "subscribe without active session",
+			client: nil,
+			topic:  topics,
+			err:    errors.Wrap(mqtt.ErrFailedSubscribe, mqtt.ErrClientNotInitialized),
 		},
 		{
 			desc:     "subscribe with valid session and topics",
@@ -304,7 +314,7 @@ func TestSubscribe(t *testing.T) {
 
 	for _, tc := range cases {
 		handler.Subscribe(tc.client, &tc.topic)
-		assert.Contains(t, logBuffer.String(), tc.expected)
+		assert.Contains(t, logBuffer.String(), tc.expected, tc.err)
 	}
 }
 
@@ -321,12 +331,13 @@ func TestUnsubscribe(t *testing.T) {
 		client   *session.Client
 		topic    []string
 		expected string
+		err      error
 	}{
 		{
-			desc:     "unsubscribe without active session",
-			client:   nil,
-			topic:    topics,
-			expected: fmt.Sprint(errors.Wrap(mqtt.ErrFailedUnsubscribe, mqtt.ErrClientNotInitialized).Error()),
+			desc:   "unsubscribe without active session",
+			client: nil,
+			topic:  topics,
+			err:    errors.Wrap(mqtt.ErrFailedDisconnect, mqtt.ErrClientNotInitialized),
 		},
 		{
 			desc:     "unsubscribe with valid session and topics",
@@ -338,7 +349,7 @@ func TestUnsubscribe(t *testing.T) {
 
 	for _, tc := range cases {
 		handler.Unsubscribe(tc.client, &tc.topic)
-		assert.Contains(t, logBuffer.String(), tc.expected)
+		assert.Contains(t, logBuffer.String(), tc.expected, tc.err)
 	}
 }
 
@@ -355,12 +366,13 @@ func TestDisconnect(t *testing.T) {
 		client   *session.Client
 		topic    []string
 		expected string
+		err      error
 	}{
 		{
-			desc:     "disconect without active session",
-			client:   nil,
-			topic:    topics,
-			expected: fmt.Sprint(errors.Wrap(mqtt.ErrFailedDisconnect, mqtt.ErrClientNotInitialized).Error()),
+			desc:   "disconect without active session",
+			client: nil,
+			topic:  topics,
+			err:    errors.Wrap(mqtt.ErrFailedDisconnect, mqtt.ErrClientNotInitialized),
 		},
 		{
 			desc:     "disconect with valid session",
@@ -372,7 +384,7 @@ func TestDisconnect(t *testing.T) {
 
 	for _, tc := range cases {
 		handler.Disconnect(tc.client)
-		assert.Contains(t, logBuffer.String(), tc.expected)
+		assert.Contains(t, logBuffer.String(), tc.expected, tc.err)
 	}
 }
 
