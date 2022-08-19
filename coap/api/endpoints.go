@@ -7,64 +7,17 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"net/url"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/mainflux/mainflux/coap"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
-
-	"github.com/go-zoo/bone"
-	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/coap"
-	log "github.com/mainflux/mainflux/logger"
 	"github.com/plgd-dev/go-coap/v2/message"
 	"github.com/plgd-dev/go-coap/v2/message/codes"
 	"github.com/plgd-dev/go-coap/v2/mux"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
-
-const (
-	protocol     = "coap"
-	authQuery    = "auth"
-	startObserve = 0 // observe option value that indicates start of observation
-)
-
-var channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
-
-const (
-	numGroups    = 3 // entire expression + channel group + subtopic group
-	channelGroup = 2 // channel group is second in channel regexp
-)
-
-var (
-	errMalformedSubtopic = errors.New("malformed subtopic")
-	errBadOptions        = errors.New("bad options")
-)
-
-var (
-	logger  log.Logger
-	service coap.Service
-)
-
-// MakeHandler returns a HTTP handler for API endpoints.
-func MakeHTTPHandler() http.Handler {
-	b := bone.New()
-	b.GetFunc("/health", mainflux.Health(protocol))
-	b.Handle("/metrics", promhttp.Handler())
-
-	return b
-}
-
-// MakeCoAPHandler creates handler for CoAP messages.
-func MakeCoAPHandler(svc coap.Service, l log.Logger) mux.HandlerFunc {
-	logger = l
-	service = svc
-
-	return handler
-}
 
 func sendResp(w mux.ResponseWriter, resp *message.Message) {
 	if err := w.Client().WriteMessage(resp); err != nil {
@@ -79,17 +32,19 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 		Context: m.Context,
 		Options: make(message.Options, 0, 16),
 	}
-	defer sendResp(w, &resp)
+
 	msg, err := decodeMessage(m)
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error decoding message: %s", err))
 		resp.Code = codes.BadRequest
+		sendResp(w, &resp)
 		return
 	}
 	key, err := parseKey(m)
 	if err != nil {
 		logger.Warn(fmt.Sprintf("Error parsing auth: %s", err))
 		resp.Code = codes.Unauthorized
+		sendResp(w, &resp)
 		return
 	}
 	switch m.Code {
@@ -112,10 +67,11 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 		default:
 			resp.Code = codes.InternalServerError
 		}
+		sendResp(w, &resp)
 	}
 }
 
-func handleGet(m *mux.Message, c mux.Client, msg *messaging.Message, key string) error {
+func handleGet(m *mux.Message, c mux.Client, msg messaging.Message, key string) error {
 	var obs uint32
 	obs, err := m.Options.Observe()
 	if err != nil {
@@ -129,24 +85,24 @@ func handleGet(m *mux.Message, c mux.Client, msg *messaging.Message, key string)
 	return service.Unsubscribe(context.Background(), key, msg.Channel, msg.Subtopic, m.Token.String())
 }
 
-func decodeMessage(msg *mux.Message) (*messaging.Message, error) {
+func decodeMessage(msg *mux.Message) (messaging.Message, error) {
 	if msg.Options == nil {
-		return &messaging.Message{}, errBadOptions
+		return messaging.Message{}, errBadOptions
 	}
 	path, err := msg.Options.Path()
 	if err != nil {
-		return &messaging.Message{}, err
+		return messaging.Message{}, err
 	}
 	channelParts := channelPartRegExp.FindStringSubmatch(path)
 	if len(channelParts) < numGroups {
-		return &messaging.Message{}, errMalformedSubtopic
+		return messaging.Message{}, errMalformedSubtopic
 	}
 
 	st, err := parseSubtopic(channelParts[channelGroup])
 	if err != nil {
-		return &messaging.Message{}, err
+		return messaging.Message{}, err
 	}
-	ret := &messaging.Message{
+	ret := messaging.Message{
 		Protocol: protocol,
 		Channel:  channelParts[1],
 		Subtopic: st,
