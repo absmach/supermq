@@ -33,7 +33,7 @@ const (
 var (
 	invalidTopic  = "invalidTopic"
 	idProvider    = uuid.NewMock()
-	buf           = bytes.Buffer{}
+	logBuffer     = bytes.Buffer{}
 	sessionClient = session.Client{
 		ID:       clientID,
 		Username: thingID,
@@ -139,6 +139,13 @@ func TestAuthPublish(t *testing.T) {
 			topic:   &invalidTopic,
 			payload: payload,
 		},
+		{
+			desc:    "publish successfully",
+			client:  &sessionClient,
+			err:     nil,
+			topic:   &topic,
+			payload: payload,
+		},
 	}
 
 	for _, tc := range cases {
@@ -205,19 +212,20 @@ func TestAuthSubscribe(t *testing.T) {
 
 func TestConnect(t *testing.T) {
 	handler := newHandler()
-	buf.Reset()
+	logBuffer.Reset()
 	cases := []struct {
 		desc     string
 		client   *session.Client
 		expected string
+		err      error
 	}{
 		{
-			desc:     "connect without active session",
-			client:   nil,
-			expected: fmt.Sprint(errors.Wrap(mqtt.ErrFailedConnect, mqtt.ErrClientNotInitialized).Error()),
+			desc:   "connect without active session",
+			client: nil,
+			err:    errors.Wrap(mqtt.ErrFailedConnect, mqtt.ErrClientNotInitialized),
 		},
 		{
-			desc:     "connect with valid session",
+			desc:     "connect with active session",
 			client:   &sessionClient,
 			expected: fmt.Sprintf(mqtt.InfoConnected, clientID),
 		},
@@ -225,13 +233,13 @@ func TestConnect(t *testing.T) {
 
 	for _, tc := range cases {
 		handler.Connect(tc.client)
-		assert.Contains(t, buf.String(), tc.expected)
+		assert.Contains(t, logBuffer.String(), tc.expected, fmt.Sprint(tc.err))
 	}
 }
 
 func TestPublish(t *testing.T) {
 	handler := newHandler()
-	buf.Reset()
+	logBuffer.Reset()
 
 	chID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -262,13 +270,13 @@ func TestPublish(t *testing.T) {
 
 	for _, tc := range cases {
 		handler.Publish(tc.client, &tc.topic, &tc.payload)
-		assert.Contains(t, buf.String(), tc.expected)
+		assert.Contains(t, logBuffer.String(), tc.expected)
 	}
 }
 
 func TestSubscribe(t *testing.T) {
 	handler := newHandler()
-	buf.Reset()
+	logBuffer.Reset()
 
 	chID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -296,13 +304,13 @@ func TestSubscribe(t *testing.T) {
 
 	for _, tc := range cases {
 		handler.Subscribe(tc.client, &tc.topic)
-		assert.Contains(t, buf.String(), tc.expected)
+		assert.Contains(t, logBuffer.String(), tc.expected)
 	}
 }
 
 func TestUnsubscribe(t *testing.T) {
 	handler := newHandler()
-	buf.Reset()
+	logBuffer.Reset()
 
 	chID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -330,13 +338,13 @@ func TestUnsubscribe(t *testing.T) {
 
 	for _, tc := range cases {
 		handler.Unsubscribe(tc.client, &tc.topic)
-		assert.Contains(t, buf.String(), tc.expected)
+		assert.Contains(t, logBuffer.String(), tc.expected)
 	}
 }
 
 func TestDisconnect(t *testing.T) {
 	handler := newHandler()
-	buf.Reset()
+	logBuffer.Reset()
 
 	chID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -364,12 +372,12 @@ func TestDisconnect(t *testing.T) {
 
 	for _, tc := range cases {
 		handler.Disconnect(tc.client)
-		assert.Contains(t, buf.String(), tc.expected)
+		assert.Contains(t, logBuffer.String(), tc.expected)
 	}
 }
 
 func newHandler() session.Handler {
-	logger, err := logger.New(&buf, "debug")
+	logger, err := logger.New(&logBuffer, "debug")
 	if err != nil {
 		log.Fatalf("failed to create logger: %s", err)
 	}
