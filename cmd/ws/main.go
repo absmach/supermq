@@ -34,6 +34,8 @@ import (
 )
 
 const (
+	stopWaitTime = 5 * time.Second
+
 	defPort              = "8190"
 	defBrokerURL         = "nats://localhost:4222"
 	defLogLevel          = "error"
@@ -207,15 +209,22 @@ func newService(tc mainflux.ThingsServiceClient, nps messaging.PubSub, logger lo
 func startWSServer(ctx context.Context, cfg config, svc adapter.Service, l logger.Logger) error {
 	p := fmt.Sprintf(":%s", cfg.port)
 	errCh := make(chan error, 2)
+	server := &http.Server{Addr: p, Handler: api.MakeHandler(svc, l)}
 	l.Info(fmt.Sprintf("WS adapter service started, exposed port %s", cfg.port))
 
 	go func() {
-		errCh <- http.ListenAndServe(p, api.MakeHandler(svc, l))
+		errCh <- server.ListenAndServe()
 	}()
 
 	select {
 	case <-ctx.Done():
-		l.Info(fmt.Sprintf("WS adapter service shutdown of http at %s", p))
+		ctxShutdown, cancelShutdown := context.WithTimeout(context.Background(), stopWaitTime)
+		defer cancelShutdown()
+		if err := server.Shutdown(ctxShutdown); err != nil {
+			l.Error(fmt.Sprintf("WS adapter service error occurred during shutdown at %s: %s", p, err))
+			return fmt.Errorf("WS adapter service error occurred during shutdown at %s: %w", p, err)
+		}
+		l.Info(fmt.Sprintf("WS adapter service shutdown at %s", p))
 		return nil
 	case err := <-errCh:
 		return err
