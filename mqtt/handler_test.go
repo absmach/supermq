@@ -2,21 +2,17 @@ package mqtt_test
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"log"
 	"testing"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/mqtt"
 	"github.com/mainflux/mainflux/mqtt/mocks"
-	mqttredis "github.com/mainflux/mainflux/mqtt/redis"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mproxy/pkg/session"
-	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -390,32 +386,6 @@ func newHandler() session.Handler {
 	}
 
 	authClient := mocks.NewClient(map[string]string{password: thingID}, map[string]interface{}{chanID: thingID})
-
-	var redisClient *redis.Client
-
-	pool, err := dockertest.NewPool("")
-	if err != nil {
-		log.Fatalf("Could not connect to docker: %s", err)
-	}
-
-	container, err := pool.Run("redis", "5.0-alpine", nil)
-	if err != nil {
-		log.Fatalf("Could not start container: %s", err)
-	}
-
-	if err := pool.Retry(func() error {
-		redisClient = redis.NewClient(&redis.Options{
-			Addr:     fmt.Sprintf("localhost:%s", container.GetPort("6379/tcp")),
-			Password: "",
-			DB:       0,
-		})
-
-		return redisClient.Ping(context.Background()).Err()
-	}); err != nil {
-		log.Fatalf("Could not connect to docker: %s", err)
-	}
-
-	eventStore := mqttredis.NewEventStore(redisClient, "1")
-
+	eventStore := mocks.NewEventStore()
 	return mqtt.NewHandler([]messaging.Publisher{mocks.NewPublisher()}, eventStore, logger, authClient)
 }
