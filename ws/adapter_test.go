@@ -85,9 +85,7 @@ func TestPublish(t *testing.T) {
 	}
 
 	for _, tt := range cases {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.err, svc.Publish(context.Background(), tt.thingKey, tt.msg))
-		})
+		assert.Equal(t, tt.err, svc.Publish(context.Background(), tt.thingKey, tt.msg))
 	}
 }
 
@@ -227,14 +225,12 @@ func TestSubUnsub(t *testing.T) {
 
 	for _, tt := range cases {
 		pubsub.SetFail(tt.fail)
-		if tt.pubsub == true {
-			t.Run(tt.name, func(t *testing.T) {
-				assert.Equal(t, tt.err, svc.Subscribe(context.Background(), tt.thingKey, tt.chanID, tt.subtopic, c))
-			})
-		} else {
-			t.Run(tt.name, func(t *testing.T) {
-				assert.Equal(t, tt.err, svc.Unsubscribe(context.Background(), tt.thingKey, tt.chanID, tt.subtopic))
-			})
+		switch tt.pubsub {
+		case true:
+			assert.Equal(t, tt.err, svc.Subscribe(context.Background(), tt.thingKey, tt.chanID, tt.subtopic, c))
+		default:
+			assert.Equal(t, tt.err, svc.Unsubscribe(context.Background(), tt.thingKey, tt.chanID, tt.subtopic))
+
 		}
 	}
 }

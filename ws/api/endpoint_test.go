@@ -175,15 +175,13 @@ func TestHandshake(t *testing.T) {
 	}
 
 	for _, tt := range cases {
-		t.Run(tt.name, func(t *testing.T) {
-			conn, res, err := handshake(ts.URL, tt.chanID, tt.subtopic, tt.thingKey, tt.header)
-			assert.Equal(t, tt.status, res.StatusCode, fmt.Sprintf("expected status code '%d' got '%d'\n", tt.status, res.StatusCode))
-			if err != nil {
-				return
-			}
+		conn, res, err := handshake(ts.URL, tt.chanID, tt.subtopic, tt.thingKey, tt.header)
+		assert.Equal(t, tt.status, res.StatusCode, fmt.Sprintf("expected status code '%d' got '%d'\n", tt.status, res.StatusCode))
+		if err != nil {
+			return
+		}
 
-			err = conn.WriteMessage(websocket.TextMessage, tt.msg)
-			assert.Nil(t, err, fmt.Sprintf("unexpected error %s\n", err))
-		})
+		err = conn.WriteMessage(websocket.TextMessage, tt.msg)
+		assert.Nil(t, err, fmt.Sprintf("unexpected error %s\n", err))
 	}
 }
