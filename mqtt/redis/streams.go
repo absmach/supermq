@@ -29,7 +29,7 @@ type eventStore struct {
 
 // NewEventStore returns wrapper around mProxy service that sends
 // events to event store.
-func NewEventStore(client *redis.Client, instance string) eventStore {
+func NewEventStore(client *redis.Client, instance string) EventStore {
 	return eventStore{
 		client:   client,
 		instance: instance,
