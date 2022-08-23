@@ -13,10 +13,10 @@ type Client struct {
 	id   string
 }
 
-func NewClient(c *websocket.Conn, thingKey string) *Client {
+func NewClient(c *websocket.Conn) *Client {
 	return &Client{
 		conn: c,
-		id:   thingKey,
+		id:   "",
 	}
 }
 
@@ -32,6 +32,7 @@ func (c *Client) Cancel() error {
 }
 
 func (c *Client) Handle(msg messaging.Message) error {
+	// To prevent publisher from receiving its own published message
 	if msg.GetPublisher() == c.id {
 		return nil
 	}

@@ -38,22 +38,12 @@ func handshake(svc ws.Service) http.HandlerFunc {
 			return
 		}
 		req.conn = conn
-		client := ws.NewClient(conn, "")
+		client := ws.NewClient(conn)
 
 		if err := svc.Subscribe(context.Background(), req.thingKey, req.chanID, req.subtopic, client); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to subscribe to broker: %s", err.Error()))
 			req.conn.Close()
 			return
-		}
-
-		// In case previous subscription wasn't closed properly
-		if conn == nil {
-			conn, err = upgrader.Upgrade(w, r, nil)
-			if err != nil {
-				logger.Warn(fmt.Sprintf("Failed to upgrade connection to websocket: %s", err.Error()))
-				return
-			}
-			client = ws.NewClient(conn, client.GetID())
 		}
 
 		logger.Debug(fmt.Sprintf("Successfully upgraded communication to WS on channel %s", req.chanID))

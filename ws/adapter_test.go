@@ -36,12 +36,8 @@ func newService(cc mainflux.ThingsServiceClient) (ws.Service, mocks.MockPubSub) 
 	return ws.New(cc, pubsub), pubsub
 }
 
-func NewThingsClient() mainflux.ThingsServiceClient {
-	return httpmock.NewThingsClient(map[string]string{thingKey: chanID})
-}
-
 func TestPublish(t *testing.T) {
-	thingsClient := NewThingsClient()
+	thingsClient := httpmock.NewThingsClient(map[string]string{thingKey: chanID})
 	svc, _ := newService(thingsClient)
 
 	cases := []struct {
@@ -96,10 +92,10 @@ func TestPublish(t *testing.T) {
 }
 
 func TestSubUnsub(t *testing.T) {
-	thingsClient := NewThingsClient()
+	thingsClient := httpmock.NewThingsClient(map[string]string{thingKey: chanID})
 	svc, pubsub := newService(thingsClient)
 
-	c := ws.NewClient(nil, thingKey)
+	c := ws.NewClient(nil)
 
 	cases := []struct {
 		name     string

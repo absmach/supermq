@@ -42,10 +42,6 @@ func newHTTPServer(svc ws.Service) *httptest.Server {
 	return httptest.NewServer(mux)
 }
 
-func NewThingsClient() mainflux.ThingsServiceClient {
-	return httpmock.NewThingsClient(map[string]string{thingKey: chanID})
-}
-
 func makeURL(tsURL, chanID, subtopic, thingKey string, header bool) (string, error) {
 	u, _ := url.Parse(tsURL)
 	u.Scheme = protocol
@@ -81,7 +77,7 @@ func handshake(tsURL, chanID, subtopic, thingKey string, addHeader bool) (*webso
 }
 
 func TestHandshake(t *testing.T) {
-	thingsClient := NewThingsClient()
+	thingsClient := httpmock.NewThingsClient(map[string]string{thingKey: chanID})
 	svc := newService(thingsClient)
 	ts := newHTTPServer(svc)
 	defer ts.Close()
