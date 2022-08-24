@@ -82,8 +82,8 @@ func TestPublisher(t *testing.T) {
 
 		receivedMsg := <-msgChan
 		fmt.Println(receivedMsg.Payload)
-		assert.GreaterOrEqual(t, 0, len(receivedMsg.Payload))
-		// assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
+		// assert.GreaterOrEqual(t, 0, len(receivedMsg.Payload))
+		assert.Equal(t, expectedMsg, expectedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
 	}
 }
 
