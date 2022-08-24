@@ -20,6 +20,7 @@ import (
 	"github.com/mainflux/mainflux/ws/api"
 	"github.com/mainflux/mainflux/ws/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -89,6 +90,7 @@ func TestHandshake(t *testing.T) {
 		header   bool
 		thingKey string
 		status   int
+		err      error
 		msg      []byte
 	}{
 		{
@@ -177,9 +179,7 @@ func TestHandshake(t *testing.T) {
 	for _, tt := range cases {
 		conn, res, err := handshake(ts.URL, tt.chanID, tt.subtopic, tt.thingKey, tt.header)
 		assert.Equal(t, tt.status, res.StatusCode, fmt.Sprintf("expected status code '%d' got '%d'\n", tt.status, res.StatusCode))
-		if err != nil {
-			return
-		}
+		require.Nil(t, err)
 
 		err = conn.WriteMessage(websocket.TextMessage, tt.msg)
 		assert.Nil(t, err, fmt.Sprintf("unexpected error %s\n", err))
