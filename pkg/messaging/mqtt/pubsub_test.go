@@ -84,6 +84,8 @@ func TestPublisher(t *testing.T) {
 }
 
 func TestSubscriber(t *testing.T) {
+	client, err := newClient(address, "", 30*time.Second)
+	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client: %s", err.Error()))
 	// Test Subscribe and Unsubscribe
 	cases := []struct {
 		desc         string
@@ -260,17 +262,19 @@ func TestSubscriber(t *testing.T) {
 		t.Run(pc.desc, func(t *testing.T) {
 			switch pc.pubsub {
 			case true:
-				err := pubsub.Subscribe(pc.clientID, pc.topic, pc.handler)
+				// err := pubsub.Subscribe(pc.clientID, pc.topic, pc.handler)
+				token := client.Subscribe(fmt.Sprintf("%s.%s", chansPrefix, pc.topic), qos, mqttHandler(pc.handler))
 
-				if pc.errorMessage == nil && err != nil {
+				if pc.errorMessage == nil && token.Error() != nil {
 					t.Error("got unexpected error: ", err.Error())
 				} else if err.Error() != pc.errorMessage.Error() {
 					t.Errorf("expected %s, got %s", pc.errorMessage.Error(), err.Error())
 				}
 			default:
-				err := pubsub.Unsubscribe(pc.clientID, pc.topic)
+				// err := pubsub.Unsubscribe(pc.clientID, pc.topic)
+				token := client.Unsubscribe(pc.topic)
 
-				if pc.errorMessage == nil && err != nil {
+				if pc.errorMessage == nil && token.Error() != nil {
 					t.Error("got unexpected error: ", err.Error())
 				} else if err.Error() != pc.errorMessage.Error() {
 					t.Errorf("expected %s, got %s", pc.errorMessage.Error(), err.Error())
