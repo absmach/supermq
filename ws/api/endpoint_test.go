@@ -178,9 +178,12 @@ func TestHandshake(t *testing.T) {
 	for _, tt := range cases {
 		conn, res, err := handshake(ts.URL, tt.chanID, tt.subtopic, tt.thingKey, tt.header)
 		assert.Equal(t, tt.status, res.StatusCode, fmt.Sprintf("expected status code '%d' got '%d'\n", tt.status, res.StatusCode))
-		assert.Nil(t, err, fmt.Sprintf("unexpected error %s\n", err))
 
-		err = conn.WriteMessage(websocket.TextMessage, tt.msg)
-		assert.Nil(t, err, fmt.Sprintf("unexpected error %s\n", err))
+		if tt.status == http.StatusSwitchingProtocols {
+			assert.Nil(t, err, fmt.Sprintf("unexpected error %s\n", err))
+
+			err = conn.WriteMessage(websocket.TextMessage, tt.msg)
+			assert.Nil(t, err, fmt.Sprintf("unexpected error %s\n", err))
+		}
 	}
 }
