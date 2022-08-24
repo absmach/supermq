@@ -82,14 +82,13 @@ func TestPublisher(t *testing.T) {
 
 		receivedMsg := <-msgChan
 		fmt.Println(receivedMsg.Payload)
-		// assert.GreaterOrEqual(t, 0, len(receivedMsg.Payload))
-		assert.Equal(t, expectedMsg, expectedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
+		assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
 	}
 }
 
 // Tests only the Subscriber
 func TestSubscribe(t *testing.T) {
-	client, err := newClient(address, "", 30*time.Second)
+	client, err := newClient(address, "id", 30*time.Second)
 	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client: %s", err.Error()))
 
 	cases := []struct {
@@ -161,8 +160,6 @@ func TestSubscribe(t *testing.T) {
 	for _, pc := range cases {
 		t.Run(pc.desc, func(t *testing.T) {
 			err := pubsub.Subscribe(pc.clientID, pc.topic, pc.handler)
-			// err := pubsub.Subscribe(pc.clientID, pc.topic, pc.handler)
-
 			switch err {
 			case nil:
 				// if no error, publish message, and receive after subscribing
