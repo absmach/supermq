@@ -22,7 +22,7 @@ var (
 	// ErrFailedSubscription indicates that client couldn't subscribe to specified channel
 	ErrFailedSubscription = errors.New("failed to subscribe to a channel")
 
-	// ErrFailedSubscription indicates that client couldn't unsubscribe from specified channel
+	// ErrFailedUnsubscribe indicates that client couldn't unsubscribe from specified channel
 	ErrFailedUnsubscribe = errors.New("failed to unsubscribe from a channel")
 
 	// ErrFailedConnection indicates that service couldn't connect to message broker.
@@ -34,9 +34,11 @@ var (
 	// ErrUnauthorizedAccess indicates that client provided missing or invalid credentials
 	ErrUnauthorizedAccess = errors.New("missing or invalid credentials provided")
 
-	// ErrEmptyTopic and ErrEmptyID indicate absence of channelID or thingKey in the request
+	// ErrEmptyTopic indicate absence of thingKey in the request
 	ErrEmptyTopic = errors.New("empty topic")
-	ErrEmptyID    = errors.New("empty id")
+
+	// ErrEmptyID indicate absence of channelID in the request
+	ErrEmptyID = errors.New("empty id")
 )
 
 // Service specifies web socket service API.
@@ -66,6 +68,7 @@ func New(auth mainflux.ThingsServiceClient, pubsub messaging.PubSub) Service {
 	}
 }
 
+// Publish publishes the message using the broker
 func (svc *adapterService) Publish(ctx context.Context, thingKey string, msg messaging.Message) error {
 	thid, err := svc.authorize(ctx, thingKey, msg.GetChannel())
 	if err != nil {
@@ -85,6 +88,7 @@ func (svc *adapterService) Publish(ctx context.Context, thingKey string, msg mes
 	return nil
 }
 
+// Subscribe subscribes the thingKey and channelID to the topic
 func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subtopic string, c *Client) error {
 	if chanID == "" || thingKey == "" {
 		return ErrUnauthorizedAccess
@@ -109,6 +113,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subt
 	return nil
 }
 
+// Subscribe subscribes the thingKey and channelID  to the topic
 func (svc *adapterService) Unsubscribe(ctx context.Context, thingKey, chanID, subtopic string) error {
 	if chanID == "" || thingKey == "" {
 		return ErrUnauthorizedAccess

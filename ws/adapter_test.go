@@ -89,7 +89,7 @@ func TestPublish(t *testing.T) {
 	}
 }
 
-func TestSubUnsub(t *testing.T) {
+func TestSubscribe(t *testing.T) {
 	thingsClient := httpmock.NewThingsClient(map[string]string{thingKey: chanID})
 	svc, pubsub := newService(thingsClient)
 
@@ -112,15 +112,6 @@ func TestSubUnsub(t *testing.T) {
 			pubsub:   true,
 			fail:     true,
 			err:      ws.ErrFailedSubscription,
-		},
-		{
-			name:     "unsubscribe from channel with unsubscribe set to fail",
-			thingKey: thingKey,
-			chanID:   chanID,
-			subtopic: subTopic,
-			pubsub:   false,
-			fail:     true,
-			err:      ws.ErrFailedUnsubscribe,
 		},
 		{
 			name:     "subscribe to channel with valid thingKey, chanID, subtopic",
@@ -176,6 +167,36 @@ func TestSubUnsub(t *testing.T) {
 			fail:     false,
 			err:      ws.ErrUnauthorizedAccess,
 		},
+	}
+
+	for _, tt := range cases {
+		pubsub.SetFail(tt.fail)
+		assert.Equal(t, tt.err, svc.Subscribe(context.Background(), tt.thingKey, tt.chanID, tt.subtopic, c))
+	}
+}
+
+func TestUnsubscribe(t *testing.T) {
+	thingsClient := httpmock.NewThingsClient(map[string]string{thingKey: chanID})
+	svc, pubsub := newService(thingsClient)
+
+	cases := []struct {
+		name     string
+		thingKey string
+		chanID   string
+		subtopic string
+		pubsub   bool
+		fail     bool
+		err      error
+	}{
+		{
+			name:     "unsubscribe from channel with unsubscribe set to fail",
+			thingKey: thingKey,
+			chanID:   chanID,
+			subtopic: subTopic,
+			pubsub:   false,
+			fail:     true,
+			err:      ws.ErrFailedUnsubscribe,
+		},
 		{
 			name:     "unsubscribe from channel with valid thingKey, chanID, subtopic",
 			thingKey: thingKey,
@@ -225,12 +246,6 @@ func TestSubUnsub(t *testing.T) {
 
 	for _, tt := range cases {
 		pubsub.SetFail(tt.fail)
-		switch tt.pubsub {
-		case true:
-			assert.Equal(t, tt.err, svc.Subscribe(context.Background(), tt.thingKey, tt.chanID, tt.subtopic, c))
-		default:
-			assert.Equal(t, tt.err, svc.Unsubscribe(context.Background(), tt.thingKey, tt.chanID, tt.subtopic))
-
-		}
+		assert.Equal(t, tt.err, svc.Unsubscribe(context.Background(), tt.thingKey, tt.chanID, tt.subtopic))
 	}
 }
