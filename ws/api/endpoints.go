@@ -182,10 +182,9 @@ func encodeError(req *connReq, w http.ResponseWriter, err error) {
 				statusCode = http.StatusInternalServerError
 			}
 		}
-		w.WriteHeader(statusCode)
 	}
-
 	logger.Warn(fmt.Sprintf("Failed to authorize: %s", err.Error()))
+	w.WriteHeader(statusCode)
 
 	if errorVal, ok := err.(errors.Error); ok {
 		w.Header().Set("Content-Type", "application/json")
