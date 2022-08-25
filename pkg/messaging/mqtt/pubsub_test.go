@@ -78,10 +78,10 @@ func TestPublisher(t *testing.T) {
 			Payload:  tc.payload,
 		}
 		err := publisher.Publish(topic, expectedMsg)
-		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s", tc.desc, err))
 
 		receivedMsg := <-msgChan
-		fmt.Println(receivedMsg.Payload)
+		fmt.Printf("%s: received payload: %s\n\n", tc.desc, receivedMsg.Payload)
 		assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
 	}
 }

@@ -41,7 +41,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
-	container, err := pool.Run("mainflux/vernemq", "0.13.0", []string{"DOCKER_VERNEMQ_ALLOW_ANONYMOUS=on", "ERL_MAX_ETS_TABLES=256000", "ERL_CRASH_DUMP=/erl_crash.dump", "ERL_FULLSWEEP_AFTER=0", "ERL_MAX_PORTS=256000"})
+	container, err := pool.Run("mainflux/vernemq", "0.13.0", []string{"DOCKER_VERNEMQ_ALLOW_ANONYMOUS=on"}) //, "ERL_MAX_ETS_TABLES=256000", "ERL_CRASH_DUMP=/erl_crash.dump", "ERL_FULLSWEEP_AFTER=0", "ERL_MAX_PORTS=256000"})
 	if err != nil {
 		log.Fatalf("Could not start container: %s", err)
 	}
@@ -101,7 +101,8 @@ func mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
 }
 
 func newClient(address, id string, timeout time.Duration) (mqtt.Client, error) {
-	opts := mqtt.NewClientOptions().SetUsername(username).AddBroker(address).SetClientID(id)
+	// opts := mqtt.NewClientOptions().SetUsername(username).AddBroker(address).SetClientID(id)
+	opts := mqtt.NewClientOptions().AddBroker(address)
 	client := mqtt.NewClient(opts)
 	token := client.Connect()
 	if token.Error() != nil {
