@@ -83,7 +83,7 @@ func TestHandshake(t *testing.T) {
 	defer ts.Close()
 
 	cases := []struct {
-		name     string
+		desc     string
 		chanID   string
 		subtopic string
 		header   bool
@@ -93,7 +93,7 @@ func TestHandshake(t *testing.T) {
 		msg      []byte
 	}{
 		{
-			name:     "connect and send message",
+			desc:     "connect and send message",
 			chanID:   id,
 			subtopic: "",
 			header:   true,
@@ -102,7 +102,7 @@ func TestHandshake(t *testing.T) {
 			msg:      msg,
 		},
 		{
-			name:     "connect to empty channel",
+			desc:     "connect to empty channel",
 			chanID:   "",
 			subtopic: "",
 			header:   true,
@@ -111,7 +111,7 @@ func TestHandshake(t *testing.T) {
 			msg:      []byte{},
 		},
 		{
-			name:     "connect with empty thingKey",
+			desc:     "connect with empty thingKey",
 			chanID:   id,
 			subtopic: "",
 			header:   true,
@@ -120,7 +120,7 @@ func TestHandshake(t *testing.T) {
 			msg:      []byte{},
 		},
 		{
-			name:     "connect and send message with thingKey as query parameter",
+			desc:     "connect and send message with thingKey as query parameter",
 			chanID:   id,
 			subtopic: "",
 			header:   false,
@@ -129,7 +129,7 @@ func TestHandshake(t *testing.T) {
 			msg:      msg,
 		},
 		{
-			name:     "connect and send message that cannot be published",
+			desc:     "connect and send message that cannot be published",
 			chanID:   id,
 			subtopic: "",
 			header:   true,
@@ -138,7 +138,7 @@ func TestHandshake(t *testing.T) {
 			msg:      []byte{},
 		},
 		{
-			name:     "connect and send message to subtopic",
+			desc:     "connect and send message to subtopic",
 			chanID:   id,
 			subtopic: "subtopic",
 			header:   true,
@@ -147,7 +147,7 @@ func TestHandshake(t *testing.T) {
 			msg:      msg,
 		},
 		{
-			name:     "connect and send message to subtopic with invalid name",
+			desc:     "connect and send message to subtopic with invalid name",
 			chanID:   id,
 			subtopic: "sub/a*b/topic",
 			header:   true,
@@ -156,7 +156,7 @@ func TestHandshake(t *testing.T) {
 			msg:      msg,
 		},
 		{
-			name:     "connect and send message to nested subtopic",
+			desc:     "connect and send message to nested subtopic",
 			chanID:   id,
 			subtopic: "subtopic/nested",
 			header:   true,
@@ -165,7 +165,7 @@ func TestHandshake(t *testing.T) {
 			msg:      msg,
 		},
 		{
-			name:     "connect and send message to all subtopics",
+			desc:     "connect and send message to all subtopics",
 			chanID:   id,
 			subtopic: ">",
 			header:   true,
@@ -175,15 +175,15 @@ func TestHandshake(t *testing.T) {
 		},
 	}
 
-	for _, tt := range cases {
-		conn, res, err := handshake(ts.URL, tt.chanID, tt.subtopic, tt.thingKey, tt.header)
-		assert.Equal(t, tt.status, res.StatusCode, fmt.Sprintf("expected status code '%d' got '%d'\n", tt.status, res.StatusCode))
+	for _, tc := range cases {
+		conn, res, err := handshake(ts.URL, tc.chanID, tc.subtopic, tc.thingKey, tc.header)
+		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code '%d' got '%d'\n", tc.desc, tc.status, res.StatusCode))
 
-		if tt.status == http.StatusSwitchingProtocols {
-			assert.Nil(t, err, fmt.Sprintf("unexpected error %s\n", err))
+		if tc.status == http.StatusSwitchingProtocols {
+			assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error %s\n", tc.desc, err))
 
-			err = conn.WriteMessage(websocket.TextMessage, tt.msg)
-			assert.Nil(t, err, fmt.Sprintf("unexpected error %s\n", err))
+			err = conn.WriteMessage(websocket.TextMessage, tc.msg)
+			assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error %s\n", tc.desc, err))
 		}
 	}
 }

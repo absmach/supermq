@@ -5,6 +5,7 @@ package ws_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/mainflux/mainflux"
@@ -41,51 +42,52 @@ func TestPublish(t *testing.T) {
 	svc, _ := newService(thingsClient)
 
 	cases := []struct {
-		name     string
+		desc     string
 		thingKey string
 		msg      messaging.Message
 		err      error
 	}{
 		{
-			name:     "publish a valid message with valid thingKey",
+			desc:     "publish a valid message with valid thingKey",
 			thingKey: thingKey,
 			msg:      msg,
 			err:      nil,
 		},
 		{
-			name:     "publish a valid message with empty thingKey",
+			desc:     "publish a valid message with empty thingKey",
 			thingKey: "",
 			msg:      msg,
 			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
-			name:     "publish a valid message with invalid thingKey",
+			desc:     "publish a valid message with invalid thingKey",
 			thingKey: "invalid",
 			msg:      msg,
 			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
-			name:     "publish an empty message with valid thingKey",
+			desc:     "publish an empty message with valid thingKey",
 			thingKey: thingKey,
 			msg:      messaging.Message{},
 			err:      ws.ErrFailedMessagePublish,
 		},
 		{
-			name:     "publish an empty message with empty thingKey",
+			desc:     "publish an empty message with empty thingKey",
 			thingKey: "",
 			msg:      messaging.Message{},
 			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
-			name:     "publish an empty message with invalid thingKey",
+			desc:     "publish an empty message with invalid thingKey",
 			thingKey: "invalid",
 			msg:      messaging.Message{},
 			err:      ws.ErrUnauthorizedAccess,
 		},
 	}
 
-	for _, tt := range cases {
-		assert.Equal(t, tt.err, svc.Publish(context.Background(), tt.thingKey, tt.msg))
+	for _, tc := range cases {
+		err := svc.Publish(context.Background(), tc.thingKey, tc.msg)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
@@ -96,7 +98,7 @@ func TestSubscribe(t *testing.T) {
 	c := ws.NewClient(nil)
 
 	cases := []struct {
-		name     string
+		desc     string
 		thingKey string
 		chanID   string
 		subtopic string
@@ -105,7 +107,7 @@ func TestSubscribe(t *testing.T) {
 		err      error
 	}{
 		{
-			name:     "subscribe to channel with subscribe set to fail",
+			desc:     "subscribe to channel with subscribe set to fail",
 			thingKey: thingKey,
 			chanID:   chanID,
 			subtopic: subTopic,
@@ -114,7 +116,7 @@ func TestSubscribe(t *testing.T) {
 			err:      ws.ErrFailedSubscription,
 		},
 		{
-			name:     "subscribe to channel with valid thingKey, chanID, subtopic",
+			desc:     "subscribe to channel with valid thingKey, chanID, subtopic",
 			thingKey: thingKey,
 			chanID:   chanID,
 			subtopic: subTopic,
@@ -123,7 +125,7 @@ func TestSubscribe(t *testing.T) {
 			err:      nil,
 		},
 		{
-			name:     "subscribe again to channel with valid thingKey, chanID, subtopic",
+			desc:     "subscribe again to channel with valid thingKey, chanID, subtopic",
 			thingKey: thingKey,
 			chanID:   chanID,
 			subtopic: subTopic,
@@ -132,7 +134,7 @@ func TestSubscribe(t *testing.T) {
 			err:      nil,
 		},
 		{
-			name:     "subscribe to channel with invalid chanID and invalid thingKey",
+			desc:     "subscribe to channel with invalid chanID and invalid thingKey",
 			thingKey: "invalid",
 			chanID:   "0",
 			subtopic: subTopic,
@@ -141,7 +143,7 @@ func TestSubscribe(t *testing.T) {
 			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
-			name:     "subscribe to channel with empty channel",
+			desc:     "subscribe to channel with empty channel",
 			thingKey: thingKey,
 			chanID:   "",
 			subtopic: subTopic,
@@ -150,7 +152,7 @@ func TestSubscribe(t *testing.T) {
 			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
-			name:     "subscribe to channel with empty thingKey",
+			desc:     "subscribe to channel with empty thingKey",
 			thingKey: "",
 			chanID:   chanID,
 			subtopic: subTopic,
@@ -159,7 +161,7 @@ func TestSubscribe(t *testing.T) {
 			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
-			name:     "subscribe to channel with empty thingKey and empty channel",
+			desc:     "subscribe to channel with empty thingKey and empty channel",
 			thingKey: "",
 			chanID:   "",
 			subtopic: subTopic,
@@ -169,9 +171,10 @@ func TestSubscribe(t *testing.T) {
 		},
 	}
 
-	for _, tt := range cases {
-		pubsub.SetFail(tt.fail)
-		assert.Equal(t, tt.err, svc.Subscribe(context.Background(), tt.thingKey, tt.chanID, tt.subtopic, c))
+	for _, tc := range cases {
+		pubsub.SetFail(tc.fail)
+		err := svc.Subscribe(context.Background(), tc.thingKey, tc.chanID, tc.subtopic, c)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
 
@@ -180,7 +183,7 @@ func TestUnsubscribe(t *testing.T) {
 	svc, pubsub := newService(thingsClient)
 
 	cases := []struct {
-		name     string
+		desc     string
 		thingKey string
 		chanID   string
 		subtopic string
@@ -189,7 +192,7 @@ func TestUnsubscribe(t *testing.T) {
 		err      error
 	}{
 		{
-			name:     "unsubscribe from channel with unsubscribe set to fail",
+			desc:     "unsubscribe from channel with unsubscribe set to fail",
 			thingKey: thingKey,
 			chanID:   chanID,
 			subtopic: subTopic,
@@ -198,7 +201,7 @@ func TestUnsubscribe(t *testing.T) {
 			err:      ws.ErrFailedUnsubscribe,
 		},
 		{
-			name:     "unsubscribe from channel with valid thingKey, chanID, subtopic",
+			desc:     "unsubscribe from channel with valid thingKey, chanID, subtopic",
 			thingKey: thingKey,
 			chanID:   chanID,
 			subtopic: subTopic,
@@ -207,7 +210,7 @@ func TestUnsubscribe(t *testing.T) {
 			err:      nil,
 		},
 		{
-			name:     "unsubscribe from channel with valid thingKey, chanID, and empty subtopic",
+			desc:     "unsubscribe from channel with valid thingKey, chanID, and empty subtopic",
 			thingKey: thingKey,
 			chanID:   chanID,
 			subtopic: "",
@@ -216,7 +219,7 @@ func TestUnsubscribe(t *testing.T) {
 			err:      nil,
 		},
 		{
-			name:     "unsubscribe from channel with empty channel",
+			desc:     "unsubscribe from channel with empty channel",
 			thingKey: thingKey,
 			chanID:   "",
 			subtopic: subTopic,
@@ -225,7 +228,7 @@ func TestUnsubscribe(t *testing.T) {
 			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
-			name:     "unsubscribe from channel with empty thingKey",
+			desc:     "unsubscribe from channel with empty thingKey",
 			thingKey: "",
 			chanID:   chanID,
 			subtopic: subTopic,
@@ -234,7 +237,7 @@ func TestUnsubscribe(t *testing.T) {
 			err:      ws.ErrUnauthorizedAccess,
 		},
 		{
-			name:     "unsubscribe from channel with empty thingKey and empty channel",
+			desc:     "unsubscribe from channel with empty thingKey and empty channel",
 			thingKey: "",
 			chanID:   "",
 			subtopic: subTopic,
@@ -244,8 +247,9 @@ func TestUnsubscribe(t *testing.T) {
 		},
 	}
 
-	for _, tt := range cases {
-		pubsub.SetFail(tt.fail)
-		assert.Equal(t, tt.err, svc.Unsubscribe(context.Background(), tt.thingKey, tt.chanID, tt.subtopic))
+	for _, tc := range cases {
+		pubsub.SetFail(tc.fail)
+		err := svc.Unsubscribe(context.Background(), tc.thingKey, tc.chanID, tc.subtopic)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }

@@ -160,39 +160,15 @@ func process(svc ws.Service, req *connReq, msgs <-chan []byte) {
 
 func encodeError(req *connReq, w http.ResponseWriter, err error) {
 	statusCode := http.StatusUnauthorized
-	if req.conn == nil {
-		switch err {
-		case ws.ErrEmptyID:
-			statusCode = http.StatusServiceUnavailable
-		case errUnauthorizedAccess:
-			statusCode = http.StatusForbidden
-		case errMalformedSubtopic:
-			statusCode = http.StatusBadRequest
-		case errors.ErrMalformedEntity:
-			statusCode = http.StatusBadRequest
-		default:
-			logger.Warn(fmt.Sprintf("Failed to authorize: %s", err.Error()))
-			statusCode = http.StatusServiceUnavailable
-		}
-		w.WriteHeader(statusCode)
-		return
-	}
 
 	switch err {
 	case ws.ErrEmptyID, ws.ErrEmptyTopic:
 		statusCode = http.StatusBadRequest
-	case ws.ErrInvalidConnection:
-		statusCode = http.StatusUnauthorized
-	case ws.ErrFailedConnection:
-		statusCode = http.StatusServiceUnavailable
 	case errUnauthorizedAccess:
 		statusCode = http.StatusForbidden
-	case errMalformedSubtopic:
-		statusCode = http.StatusBadRequest
-	case errors.ErrMalformedEntity:
+	case errMalformedSubtopic, errors.ErrMalformedEntity:
 		statusCode = http.StatusBadRequest
 	default:
-		logger.Warn(fmt.Sprintf("Failed to authorize: %s", err.Error()))
 		switch e, ok := status.FromError(err); {
 		case ok:
 			switch e.Code() {
@@ -207,10 +183,9 @@ func encodeError(req *connReq, w http.ResponseWriter, err error) {
 			}
 		}
 		w.WriteHeader(statusCode)
-		if req.conn != nil {
-			req.conn.Close()
-		}
 	}
+
+	logger.Warn(fmt.Sprintf("Failed to authorize: %s", err.Error()))
 
 	if errorVal, ok := err.(errors.Error); ok {
 		w.Header().Set("Content-Type", "application/json")
