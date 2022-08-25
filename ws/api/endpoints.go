@@ -5,7 +5,6 @@ package api
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -15,7 +14,6 @@ import (
 
 	"github.com/go-zoo/bone"
 	"github.com/gorilla/websocket"
-	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/ws"
@@ -185,11 +183,4 @@ func encodeError(req *connReq, w http.ResponseWriter, err error) {
 	}
 	logger.Warn(fmt.Sprintf("Failed to authorize: %s", err.Error()))
 	w.WriteHeader(statusCode)
-
-	if errorVal, ok := err.(errors.Error); ok {
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(apiutil.ErrorRes{Err: errorVal.Msg()}); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-	}
 }
