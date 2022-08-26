@@ -78,6 +78,9 @@ func TestPublisher(t *testing.T) {
 			Subtopic: tc.subtopic,
 			Payload:  tc.payload,
 		}
+		fmt.Println("In TestPublish: ", expectedMsg)
+		// The message is defined at this point, but when I send it to Publish below
+		// The publisher.go -> Publish message receives a nil message
 		err := publisher.Publish(topic, expectedMsg)
 		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s\n", tc.desc, err))
 

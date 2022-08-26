@@ -5,6 +5,7 @@ package mqtt
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -36,6 +37,7 @@ func NewPublisher(address string, timeout time.Duration) (messaging.Publisher, e
 }
 
 func (pub publisher) Publish(topic string, msg messaging.Message) error {
+	fmt.Printf("At Publish: message received is \n%+v\n\n", msg)
 	token := pub.client.Publish(topic, qos, false, msg.Payload)
 	if token.Error() != nil {
 		return token.Error()
