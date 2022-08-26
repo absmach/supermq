@@ -31,6 +31,7 @@ var (
 func TestPublisher(t *testing.T) {
 	// Subscribing with topic, and with subtopic, so that we can publish messages
 	client, err := newClient(address, "", 30*time.Second)
+	// defer client.Disconnect(0)
 
 	token := client.Subscribe(topic, qos, mqttHandler(handler{false}))
 	// token := client.Subscribe(fmt.Sprintf("%s.%s", chansPrefix, topic), qos, mqttHandler(handler{false}))
@@ -78,17 +79,17 @@ func TestPublisher(t *testing.T) {
 			Payload:  tc.payload,
 		}
 		err := publisher.Publish(topic, expectedMsg)
-		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s", tc.desc, err))
+		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s\n", tc.desc, err))
 
 		receivedMsg := <-msgChan
-		fmt.Printf("%s: received payload: %s\n\n", tc.desc, receivedMsg.Payload)
+		// fmt.Printf("%s: received payload: %s\n\n", tc.desc, receivedMsg.Payload)
 		assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
 	}
 }
 
 // Tests only the Subscriber
 func TestSubscribe(t *testing.T) {
-	client, err := newClient(address, "id", 30*time.Second)
+	client, err := newClient(address, "", 30*time.Second)
 	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client: %s", err.Error()))
 
 	cases := []struct {
@@ -103,14 +104,14 @@ func TestSubscribe(t *testing.T) {
 			topic:        topic,
 			clientID:     "clientid1",
 			errorMessage: nil,
-			handler:      handler{},
+			handler:      handler{false},
 		},
 		{
 			desc:         "Subscribe to the same topic with a different ID",
 			topic:        topic,
 			clientID:     "clientid2",
 			errorMessage: nil,
-			handler:      handler{},
+			handler:      handler{false},
 		},
 		{
 			desc:  "Subscribe to an already subscribed topic with an ID",
@@ -118,69 +119,67 @@ func TestSubscribe(t *testing.T) {
 			// topic:        fmt.Sprintf("%s.%s", chansPrefix, topic),
 			clientID:     "clientid1",
 			errorMessage: nil,
-			handler:      handler{},
+			handler:      handler{false},
 		},
 		{
 			desc:         "Subscribe to a topic with a subtopic with an ID",
 			topic:        fmt.Sprintf("%s.%s", topic, subtopic),
 			clientID:     "clientid1",
 			errorMessage: nil,
-			handler:      handler{},
+			handler:      handler{false},
 		},
 		{
 			desc:         "Subscribe to the same topic with a subtopic with an ID",
 			topic:        fmt.Sprintf("%s.%s", topic, subtopic),
 			clientID:     "clientid1",
 			errorMessage: nil,
-			handler:      handler{},
+			handler:      handler{false},
 		},
 		{
 			desc:         "Subscribe to an already subscribed topic with a subtopic with an ID",
 			topic:        fmt.Sprintf("%s.%s", topic, subtopic),
 			clientID:     "clientid1",
 			errorMessage: nil,
-			handler:      handler{},
+			handler:      handler{false},
 		},
 		{
 			desc:         "Subscribe to an empty topic with an ID",
 			topic:        "",
 			clientID:     "clientid1",
 			errorMessage: mqtt.ErrEmptyTopic,
-			handler:      handler{},
+			handler:      handler{false},
 		},
 		{
 			desc:         "Subscribe to a topic with empty id",
 			topic:        topic,
 			clientID:     "",
 			errorMessage: mqtt.ErrEmptyID,
-			handler:      handler{},
+			handler:      handler{false},
 		},
 	}
 
 	for _, pc := range cases {
-		t.Run(pc.desc, func(t *testing.T) {
-			err := pubsub.Subscribe(pc.clientID, pc.topic, pc.handler)
-			switch err {
-			case nil:
-				// if no error, publish message, and receive after subscribing
-				expectedMsg := messaging.Message{
-					Channel:  channel,
-					Subtopic: subtopic,
-					Payload:  data,
-				}
-				client.Publish(topic, qos, false, expectedMsg)
-
-				receivedMsg := <-msgChan
-				assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", pc.desc, expectedMsg, receivedMsg))
-			default:
-				switch pc.errorMessage {
-				case nil:
-					t.Error("got unexpected error: ", err.Error())
-				default:
-					assert.Equal(t, err.Error(), pc.errorMessage)
-				}
+		err := pubsub.Subscribe(pc.clientID, pc.topic, pc.handler)
+		switch err {
+		case nil:
+			// if no error, publish message, and receive after subscribing
+			expectedMsg := messaging.Message{
+				Channel:  channel,
+				Subtopic: subtopic,
+				Payload:  data,
 			}
-		})
+			client.Publish(topic, qos, false, expectedMsg)
+
+			receivedMsg := <-msgChan
+			assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", pc.desc, expectedMsg, receivedMsg))
+		default:
+			switch pc.errorMessage {
+			case nil:
+				t.Errorf("%s: got unexpected error: %s", pc.desc, err.Error())
+			default:
+				assert.Equal(t, err.Error(), fmt.Sprintf("%s: %s", pc.desc, pc.errorMessage))
+			}
+		}
 	}
 }
 
@@ -314,23 +313,21 @@ func TestUnsubscribe(t *testing.T) {
 	}
 
 	for _, pc := range cases {
-		t.Run(pc.desc, func(t *testing.T) {
-			err := pubsub.Unsubscribe(pc.clientID, pc.topic)
+		err := pubsub.Unsubscribe(pc.clientID, pc.topic)
 
-			switch err {
-			case nil:
-				if pc.errorMessage != nil {
-					t.Errorf("expected an error: %s, did not receive any", pc.errorMessage.Error())
-				}
-			default:
-				switch pc.errorMessage {
-				case nil:
-					t.Error("got unexpected error: ", err.Error())
-				default:
-					assert.Equal(t, err.Error(), pc.errorMessage)
-				}
+		switch err {
+		case nil:
+			if pc.errorMessage != nil {
+				t.Errorf("%s: expected an error: %s, did not receive any", pc.desc, pc.errorMessage.Error())
 			}
-		})
+		default:
+			switch pc.errorMessage {
+			case nil:
+				t.Errorf("%s: got unexpected error: %s", pc.desc, err.Error())
+			default:
+				assert.Equal(t, err.Error(), fmt.Sprintf("%s: %s", pc.desc, pc.errorMessage))
+			}
+		}
 	}
 }
 
@@ -600,6 +597,7 @@ type handler struct {
 }
 
 func (h handler) Handle(msg messaging.Message) error {
+	// fmt.Printf("message received on handler: %+v\n\n", msg)
 	msgChan <- msg
 	return nil
 }
