@@ -4,6 +4,8 @@
 package ws
 
 import (
+	"fmt"
+
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux/pkg/messaging"
 )
@@ -34,8 +36,9 @@ func (c *Client) Cancel() error {
 func (c *Client) Handle(msg messaging.Message) error {
 	// To prevent publisher from receiving its own published message
 	if msg.GetPublisher() == c.id {
+		fmt.Println("reached nil returning handler")
 		return nil
 	}
-
+	fmt.Println("reached normal handler")
 	return c.conn.WriteMessage(websocket.TextMessage, msg.Payload)
 }

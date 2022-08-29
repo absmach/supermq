@@ -15,6 +15,10 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging"
 )
 
+const (
+	chansPrefix = "channels"
+)
+
 var (
 	// ErrFailedMessagePublish indicates that message publishing failed.
 	ErrFailedMessagePublish = errors.New("failed to publish message")
@@ -101,7 +105,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, thingKey, chanID, subt
 
 	c.id = thid.GetValue()
 
-	subject := fmt.Sprintf("%s.%s", "channels", chanID)
+	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}
@@ -124,7 +128,7 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, thingKey, chanID, su
 		return ErrUnauthorizedAccess
 	}
 
-	subject := fmt.Sprintf("%s.%s", "channels", chanID)
+	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
 	if subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, subtopic)
 	}

@@ -17,13 +17,12 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/ws"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 var channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
 
 func handshake(svc ws.Service) http.HandlerFunc {
+	fmt.Println("reached hanshake func")
 	return func(w http.ResponseWriter, r *http.Request) {
 		req, err := decodeRequest(r)
 		if err != nil {
@@ -167,19 +166,7 @@ func encodeError(req *connReq, w http.ResponseWriter, err error) {
 	case errMalformedSubtopic, errors.ErrMalformedEntity:
 		statusCode = http.StatusBadRequest
 	default:
-		switch e, ok := status.FromError(err); {
-		case ok:
-			switch e.Code() {
-			case codes.Unauthenticated:
-				statusCode = http.StatusUnauthorized
-			case codes.PermissionDenied:
-				statusCode = http.StatusForbidden
-			case codes.Internal:
-				statusCode = http.StatusInternalServerError
-			default:
-				statusCode = http.StatusInternalServerError
-			}
-		}
+		statusCode = http.StatusNotFound
 	}
 	logger.Warn(fmt.Sprintf("Failed to authorize: %s", err.Error()))
 	w.WriteHeader(statusCode)
