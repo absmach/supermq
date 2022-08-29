@@ -17,7 +17,7 @@ type Client struct {
 }
 
 // NewClient returns a new Client object
-func NewClient(c *websocket.Conn) *Client {
+func NewClient(c *websocket.Conn, id ...string) *Client {
 	return &Client{
 		conn: c,
 		id:   "",

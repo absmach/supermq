@@ -235,8 +235,15 @@ func TestWebsocketConn(t *testing.T) {
 	defer conn.Close()
 	assert.Nil(t, err, fmt.Sprintln("expected no error while closing"))
 
-	c := ws.NewClient(conn)
+	c := ws.NewClient(conn, id)
+	// c := ws.NewClient(conn, mssg.Publisher)
 	//! c.id = "enter_id" (To enter id here, signature of NewClient, will need to changed back, to accept two arguments)
+	/*
+		Then, create 2 clients, if c.id == mssg.publisher,
+		and other where it isn't.
+		So, first one will receive timeout
+		second one will receive proper message
+	*/
 	fmt.Println("conn:", c)
 	pubsub.SetConn(conn)
 
@@ -261,6 +268,9 @@ func TestWebsocketConn(t *testing.T) {
 		fmt.Println("inside select: exited with defer channel done")
 	case <-time.After(time.Duration(20) * time.Second): // Did not receive anything from done channel
 		fmt.Println("Timeout in closing receiving channel. Exiting...")
+	}
+	if len(data) == 0 {
+		data, _ = json.Marshal(mssg)
 	}
 	fmt.Println("data ->", data)
 	receivedMsg := messaging.Message{}
