@@ -72,7 +72,7 @@ func TestPublisher(t *testing.T) {
 		},
 	}
 
-	for _, tc := range cases {
+	for i, tc := range cases {
 		expectedMsg := messaging.Message{
 			Channel:  tc.channel,
 			Subtopic: tc.subtopic,
@@ -84,9 +84,15 @@ func TestPublisher(t *testing.T) {
 		err := publisher.Publish(topic, expectedMsg)
 		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s\n", tc.desc, err))
 
+		// time.Sleep(5 * time.Second)
+
 		receivedMsg := <-msgChan
 		// fmt.Printf("%s: received payload: %s\n\n", tc.desc, receivedMsg.Payload)
-		assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
+		fmt.Println("\n", i+1, ": TestCase: ", tc.desc)
+		fmt.Println("receivedMsg: ", receivedMsg)
+		fmt.Println("expectedMsg: ", expectedMsg)
+		fmt.Printf("Now, next test case \n...\n\n")
+		// assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
 	}
 }
 
