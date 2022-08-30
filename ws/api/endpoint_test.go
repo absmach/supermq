@@ -14,7 +14,6 @@ import (
 	"github.com/mainflux/mainflux"
 
 	log "github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/ws"
 
 	httpmock "github.com/mainflux/mainflux/http/mocks"
@@ -23,34 +22,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// const (
-// 	chanID   = "1"
-// 	id       = "1"
-// 	thingKey = "thing_key"
-// 	protocol = "ws"
-// )
-
 const (
-	chanID    = "30315311-56ba-484d-b500-c1e08305511f"
-	id        = "1"
-	thingKey  = "c02ff576-ccd5-40f6-ba5f-c85377aad529"
-	thingKey2 = "120ce059-0a8b-4fe7-8db9-85bdd1d3aece"
-	subTopic  = "subtopic"
-	protocol  = "ws"
-	socketUrl = "ws://localhost:8190/channels/" + chanID + "/messages/?authorization=" + thingKey
+	chanID   = "30315311-56ba-484d-b500-c1e08305511f"
+	id       = "1"
+	thingKey = "c02ff576-ccd5-40f6-ba5f-c85377aad529"
+	protocol = "ws"
 )
 
 var msg = []byte(`[{"n":"current","t":-1,"v":1.6}]`)
-
-var (
-	mssg = messaging.Message{
-		Channel:   chanID,
-		Publisher: "2",
-		Subtopic:  "",
-		Protocol:  protocol,
-		Payload:   []byte(`[{"n":"current","t":-5,"v":1.2}]`),
-	}
-)
 
 func newService(cc mainflux.ThingsServiceClient) (ws.Service, mocks.MockPubSub) {
 	pubsub := mocks.NewPubSub()
