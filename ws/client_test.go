@@ -17,8 +17,9 @@ import (
 )
 
 var (
-	msgChan = make(chan []byte)
-	c       *ws.Client
+	msgChan     = make(chan []byte)
+	c           *ws.Client
+	receivedMsg []byte
 )
 
 var upgrader = websocket.Upgrader{
@@ -58,21 +59,35 @@ func TestHandle(t *testing.T) {
 
 	c = ws.NewClient(wsConn)
 
-	err = c.Handle(msg)
-	assert.Nil(t, err, fmt.Sprintf("expected nil error from handle, got: %s", err))
-
-	receivedMsg := <-msgChan
-	assert.Equal(t, string(msg.Payload), string(receivedMsg), fmt.Sprintf("expected %+v, got %+v", msg, receivedMsg))
-
-	msg.Publisher = ""
-	err = c.Handle(msg)
-	assert.Nil(t, err, fmt.Sprintf("expected nil error from handle, got: %s", err))
-
-	select {
-	case rec := <-msgChan:
-		receivedMsg = rec
-	case <-time.After(time.Duration(5) * time.Second):
-		receivedMsg = []byte{}
+	cases := []struct {
+		desc            string
+		publisher       string
+		expectedPayload []byte
+	}{
+		{
+			desc:            "handling with different id from ws.Client",
+			publisher:       msg.Publisher,
+			expectedPayload: msg.Payload,
+		},
+		{
+			desc:            "handling with same id as ws.Client",
+			publisher:       "",
+			expectedPayload: []byte{},
+		},
 	}
-	assert.Equal(t, 0, len(receivedMsg), fmt.Sprintf("expected empty message, got %+v", receivedMsg))
+
+	for _, tc := range cases {
+		msg.Publisher = tc.publisher
+		err = c.Handle(msg)
+		assert.Nil(t, err, fmt.Sprintf("expected nil error from handle, got: %s", err))
+
+		select {
+		case rec := <-msgChan:
+			receivedMsg = rec
+		case <-time.After(time.Duration(5) * time.Second):
+			receivedMsg = []byte{}
+		}
+		assert.Equal(t, tc.expectedPayload, receivedMsg, fmt.Sprintf("%s: expected %+v, got %+v", tc.desc, msg, receivedMsg))
+		// assert.Equal(t, 0, len(receivedMsg), fmt.Sprintf("expected empty message, got %+v", receivedMsg))
+	}
 }
