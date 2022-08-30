@@ -4,14 +4,11 @@
 package api_test
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
-	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux"
@@ -53,8 +50,6 @@ var (
 		Protocol:  protocol,
 		Payload:   []byte(`[{"n":"current","t":-5,"v":1.2}]`),
 	}
-	msgChan = make(chan []byte)
-	done    = make(chan interface{})
 )
 
 func newService(cc mainflux.ThingsServiceClient) (ws.Service, mocks.MockPubSub) {
@@ -211,95 +206,5 @@ func TestHandshake(t *testing.T) {
 			err = conn.WriteMessage(websocket.TextMessage, tc.msg)
 			assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error %s\n", tc.desc, err))
 		}
-	}
-}
-
-func TestWebsocketConn(t *testing.T) {
-	// server
-	thingsClient := httpmock.NewThingsClient(map[string]string{thingKey: chanID, thingKey2: chanID})
-	svc, pubsub := newService(thingsClient)
-	logger := log.NewMock()
-
-	errCh := make(chan error, 2)
-	server := &http.Server{Addr: ":8190", Handler: api.MakeHandler(svc, logger)}
-	go func() {
-		errCh <- server.ListenAndServe()
-	}()
-
-	// client
-	conn, _, err := websocket.DefaultDialer.Dial(socketUrl, nil)
-	assert.Nil(t, err, fmt.Sprintln("expected nil error when creating new ws connection"))
-	if err != nil {
-		return
-	}
-	defer conn.Close()
-	assert.Nil(t, err, fmt.Sprintln("expected no error while closing"))
-
-	c := ws.NewClient(conn, id)
-	// c := ws.NewClient(conn, mssg.Publisher)
-	//! c.id = "enter_id" (To enter id here, signature of NewClient, will need to changed back, to accept two arguments)
-	/*
-		Then, create 2 clients, if c.id == mssg.publisher,
-		and other where it isn't.
-		So, first one will receive timeout
-		second one will receive proper message
-	*/
-	fmt.Println("conn:", c)
-	pubsub.SetConn(conn)
-
-	// subscribe
-	//? Useless to subscribe, as mockPubSub.Subscribe() just returns nil error
-	// err = svc.Subscribe(context.Background(), thingKey, chanID, "", c)
-	// assert.Nil(t, err, fmt.Sprintln("expected nil error when creating new ws connection. Got: "))
-	// err = svc.Subscribe(context.Background(), thingKey, chanID, subTopic, c)
-	// assert.Nil(t, err, fmt.Sprintln("expected nil error when creating new ws connection"))
-
-	// listen for received messages, then push them to channel
-	go receiveHandler(t, conn)
-
-	err = svc.Publish(context.Background(), thingKey2, mssg)
-	assert.Nil(t, err, fmt.Sprintln("expected nil error when publishing"))
-	data := []byte{}
-	select {
-	case a := <-msgChan:
-		fmt.Println("in select received: ", a)
-		data = a
-	case <-done:
-		fmt.Println("inside select: exited with defer channel done")
-	case <-time.After(time.Duration(20) * time.Second): // Did not receive anything from done channel
-		fmt.Println("Timeout in closing receiving channel. Exiting...")
-	}
-	if len(data) == 0 {
-		data, _ = json.Marshal(mssg)
-	}
-	fmt.Println("data ->", data)
-	receivedMsg := messaging.Message{}
-	err = json.Unmarshal(data, &receivedMsg)
-	assert.Nil(t, err, fmt.Sprintf("expected no error while unmarshalling: %s", err))
-
-	assert.Equal(t, mssg, receivedMsg, fmt.Sprintf("expected %+v, got %+v", mssg, receivedMsg))
-
-	// Write the piece of code below for 4 test cases
-	// 1. Publishing for different clientID -> Get message response from receiveHandler
-	// 2. Publishing for the same clientID -> No response from receiveHandler -> timeout
-	// 3. Add test where websocket.ReadMessage fails
-	// 4. Add test isunexpected close error -> close the websocket connection in between
-
-}
-
-//
-func receiveHandler(t *testing.T, connection *websocket.Conn) {
-	defer close(done)
-
-	for {
-		_, msg, err := connection.ReadMessage()
-		if err != nil {
-			fmt.Println("readmessage error, exiting: ", err.Error(), " <- error")
-			break
-		}
-		// assert.Nil(t, err, fmt.Sprintf("unexpected error while reading ws message: %s", err))
-		fmt.Println("ReadMessage() error -> ", err)
-		fmt.Println("ReadMessage() msg = -> ", string(msg))
-		msgChan <- msg
 	}
 }

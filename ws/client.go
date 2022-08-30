@@ -4,8 +4,6 @@
 package ws
 
 import (
-	"fmt"
-
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux/pkg/messaging"
 )
@@ -17,7 +15,7 @@ type Client struct {
 }
 
 // NewClient returns a new Client object
-func NewClient(c *websocket.Conn, id ...string) *Client {
+func NewClient(c *websocket.Conn) *Client {
 	return &Client{
 		conn: c,
 		id:   "",
@@ -36,9 +34,7 @@ func (c *Client) Cancel() error {
 func (c *Client) Handle(msg messaging.Message) error {
 	// To prevent publisher from receiving its own published message
 	if msg.GetPublisher() == c.id {
-		fmt.Println("reached nil returning handler")
 		return nil
 	}
-	fmt.Println("reached normal handler")
 	return c.conn.WriteMessage(websocket.TextMessage, msg.Payload)
 }
