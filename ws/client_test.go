@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -16,30 +17,32 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const expectedCount = uint64(1)
+
 var (
 	msgChan = make(chan []byte)
 	c       *ws.Client
-)
+	count   uint64
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin:     func(r *http.Request) bool { return true },
-}
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin:     func(r *http.Request) bool { return true },
+	}
+)
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		return
 	}
-	conn.SetReadDeadline(time.Now().Add(5 * time.Second))
 	defer conn.Close()
 	for {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
-			msgChan <- []byte{}
 			break
 		}
+		atomic.AddUint64(&count, 1)
 		msgChan <- message
 	}
 }
@@ -62,20 +65,20 @@ func TestHandle(t *testing.T) {
 	cases := []struct {
 		desc            string
 		publisher       string
-		flagWait        bool
 		expectedPayload []byte
+		expectMsg       bool
 	}{
 		{
 			desc:            "handling with different id from ws.Client",
 			publisher:       msg.Publisher,
-			flagWait:        true,
 			expectedPayload: msg.Payload,
+			expectMsg:       true,
 		},
 		{
-			desc:            "handling with same id as ws.Client (empty as default)",
+			desc:            "handling with same id as ws.Client (empty by default) drops message",
 			publisher:       "",
-			flagWait:        false,
 			expectedPayload: []byte{},
+			expectMsg:       false,
 		},
 	}
 
@@ -83,11 +86,16 @@ func TestHandle(t *testing.T) {
 		msg.Publisher = tc.publisher
 		err = c.Handle(msg)
 		assert.Nil(t, err, fmt.Sprintf("expected nil error from handle, got: %s", err))
-
 		receivedMsg := []byte{}
-		if tc.flagWait {
-			receivedMsg = <-msgChan
+		switch tc.expectMsg {
+		case true:
+			rec := <-msgChan // Wait for the message to be received.
+			receivedMsg = rec
+		case false:
+			time.Sleep(100 * time.Millisecond) // Give time to server to process c.Handle call.
 		}
 		assert.Equal(t, tc.expectedPayload, receivedMsg, fmt.Sprintf("%s: expected %+v, got %+v", tc.desc, msg, receivedMsg))
 	}
+	c := atomic.LoadUint64(&count)
+	assert.Equal(t, expectedCount, c, fmt.Sprintf("expected message count %d, got %d", expectedCount, c))
 }
