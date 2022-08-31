@@ -107,15 +107,6 @@ func TestSubscribe(t *testing.T) {
 		err      error
 	}{
 		{
-			desc:     "subscribe to channel with subscribe set to fail",
-			thingKey: thingKey,
-			chanID:   chanID,
-			subtopic: subTopic,
-			pubsub:   true,
-			fail:     true,
-			err:      ws.ErrFailedSubscription,
-		},
-		{
 			desc:     "subscribe to channel with valid thingKey, chanID, subtopic",
 			thingKey: thingKey,
 			chanID:   chanID,
@@ -132,6 +123,15 @@ func TestSubscribe(t *testing.T) {
 			pubsub:   true,
 			fail:     false,
 			err:      nil,
+		},
+		{
+			desc:     "subscribe to channel with subscribe set to fail",
+			thingKey: thingKey,
+			chanID:   chanID,
+			subtopic: subTopic,
+			pubsub:   true,
+			fail:     true,
+			err:      ws.ErrFailedSubscription,
 		},
 		{
 			desc:     "subscribe to channel with invalid chanID and invalid thingKey",
@@ -192,15 +192,6 @@ func TestUnsubscribe(t *testing.T) {
 		err      error
 	}{
 		{
-			desc:     "unsubscribe from channel with unsubscribe set to fail",
-			thingKey: thingKey,
-			chanID:   chanID,
-			subtopic: subTopic,
-			pubsub:   false,
-			fail:     true,
-			err:      ws.ErrFailedUnsubscribe,
-		},
-		{
 			desc:     "unsubscribe from channel with valid thingKey, chanID, subtopic",
 			thingKey: thingKey,
 			chanID:   chanID,
@@ -217,6 +208,15 @@ func TestUnsubscribe(t *testing.T) {
 			pubsub:   false,
 			fail:     false,
 			err:      nil,
+		},
+		{
+			desc:     "unsubscribe from channel with unsubscribe set to fail",
+			thingKey: thingKey,
+			chanID:   chanID,
+			subtopic: subTopic,
+			pubsub:   false,
+			fail:     true,
+			err:      ws.ErrFailedUnsubscribe,
 		},
 		{
 			desc:     "unsubscribe from channel with empty channel",

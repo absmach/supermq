@@ -48,7 +48,7 @@ func TestHandle(t *testing.T) {
 	defer s.Close()
 
 	// Convert http://127.0.0.1 to ws://127.0.0.
-	u := "ws" + strings.TrimPrefix(s.URL, "http")
+	u := strings.Replace(s.URL, "http", "ws", 1)
 
 	// Connect to the server
 	wsConn, _, err := websocket.DefaultDialer.Dial(u, nil)
@@ -88,6 +88,5 @@ func TestHandle(t *testing.T) {
 			receivedMsg = []byte{}
 		}
 		assert.Equal(t, tc.expectedPayload, receivedMsg, fmt.Sprintf("%s: expected %+v, got %+v", tc.desc, msg, receivedMsg))
-		// assert.Equal(t, 0, len(receivedMsg), fmt.Sprintf("expected empty message, got %+v", receivedMsg))
 	}
 }

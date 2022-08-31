@@ -25,7 +25,7 @@ func handshake(svc ws.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req, err := decodeRequest(r)
 		if err != nil {
-			encodeError(&req, w, err)
+			encodeError(req, w, err)
 			return
 		}
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -37,7 +37,6 @@ func handshake(svc ws.Service) http.HandlerFunc {
 		client := ws.NewClient(conn)
 
 		if err := svc.Subscribe(context.Background(), req.thingKey, req.chanID, req.subtopic, client); err != nil {
-			logger.Warn(fmt.Sprintf("Failed to subscribe to broker: %s", err.Error()))
 			req.conn.Close()
 			return
 		}
@@ -46,7 +45,7 @@ func handshake(svc ws.Service) http.HandlerFunc {
 		msgs := make(chan []byte)
 
 		// Listen for messages received from the chan messages, and publish them to broker
-		go process(svc, &req, msgs)
+		go process(svc, req, msgs)
 		go listen(conn, msgs)
 	}
 }
@@ -137,7 +136,7 @@ func listen(conn *websocket.Conn, msgs chan<- []byte) {
 	}
 }
 
-func process(svc ws.Service, req *connReq, msgs <-chan []byte) {
+func process(svc ws.Service, req connReq, msgs <-chan []byte) {
 	for msg := range msgs {
 		m := messaging.Message{
 			Channel:  req.chanID,
@@ -149,12 +148,11 @@ func process(svc ws.Service, req *connReq, msgs <-chan []byte) {
 		svc.Publish(context.Background(), req.thingKey, m)
 	}
 	if err := svc.Unsubscribe(context.Background(), req.thingKey, req.chanID, req.subtopic); err != nil {
-		logger.Warn(fmt.Sprintf("Failed to subscribe to broker: %s", err.Error()))
 		req.conn.Close()
 	}
 }
 
-func encodeError(req *connReq, w http.ResponseWriter, err error) {
+func encodeError(req connReq, w http.ResponseWriter, err error) {
 	statusCode := http.StatusUnauthorized
 
 	switch err {
