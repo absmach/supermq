@@ -27,6 +27,31 @@ var (
 	data    = []byte("payload")
 )
 
+func TestBroker(t *testing.T) {
+	// Subscribing with topic, and with subtopic, so that we can publish messages
+	client, err := newClient(address, "", 30*time.Second)
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	// defer client.Disconnect(0)
+
+	token := client.Subscribe(topic, qos, mqttHandler(handler{false}))
+	token.Wait()
+	// token := client.Subscribe(fmt.Sprintf("%s.%s", chansPrefix, topic), qos, mqttHandler(handler{false}))
+	require.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
+	token = client.Subscribe(fmt.Sprintf("%s.%s", topic, subtopic), qos, mqttHandler(handler{false}))
+	// token = client.Subscribe(fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic), qos, mqttHandler(handler{false}))
+	require.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
+
+	client2, err := newClient(address, "", 30*time.Second)
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	token = client2.Publish(topic, qos, false, data)
+	token.Wait()
+	fmt.Println(err)
+
+	receivedMsg := <-msgChan
+	fmt.Println("received: ", receivedMsg)
+}
+
 // Tests only the publisher
 func TestPublisher(t *testing.T) {
 	// Subscribing with topic, and with subtopic, so that we can publish messages
@@ -606,7 +631,7 @@ type handler struct {
 }
 
 func (h handler) Handle(msg messaging.Message) error {
-	// fmt.Printf("message received on handler: %+v\n\n", msg)
+	fmt.Printf("message received on handler: %+v\n\n", msg)
 	msgChan <- msg
 	return nil
 }
