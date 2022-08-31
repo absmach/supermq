@@ -60,10 +60,10 @@ func TestPublisher(t *testing.T) {
 
 	token := client.Subscribe(topic, qos, mqttHandler(handler{false}))
 	// token := client.Subscribe(fmt.Sprintf("%s.%s", chansPrefix, topic), qos, mqttHandler(handler{false}))
-	require.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", err))
 	token = client.Subscribe(fmt.Sprintf("%s.%s", topic, subtopic), qos, mqttHandler(handler{false}))
 	// token = client.Subscribe(fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic), qos, mqttHandler(handler{false}))
-	require.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := []struct {
 		desc     string
