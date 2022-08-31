@@ -17,9 +17,8 @@ import (
 )
 
 var (
-	msgChan     = make(chan []byte)
-	c           *ws.Client
-	receivedMsg []byte
+	msgChan = make(chan []byte)
+	c       *ws.Client
 )
 
 var upgrader = websocket.Upgrader{
@@ -33,11 +32,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+	conn.SetReadDeadline(time.Now().Add(5 * time.Second))
 	defer conn.Close()
 	for {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
-			msgChan <- []byte("empty-string")
+			msgChan <- []byte{}
 			break
 		}
 		msgChan <- message
@@ -62,16 +62,19 @@ func TestHandle(t *testing.T) {
 	cases := []struct {
 		desc            string
 		publisher       string
+		flagWait        bool
 		expectedPayload []byte
 	}{
 		{
 			desc:            "handling with different id from ws.Client",
 			publisher:       msg.Publisher,
+			flagWait:        true,
 			expectedPayload: msg.Payload,
 		},
 		{
-			desc:            "handling with same id as ws.Client",
+			desc:            "handling with same id as ws.Client (empty as default)",
 			publisher:       "",
+			flagWait:        false,
 			expectedPayload: []byte{},
 		},
 	}
@@ -81,11 +84,9 @@ func TestHandle(t *testing.T) {
 		err = c.Handle(msg)
 		assert.Nil(t, err, fmt.Sprintf("expected nil error from handle, got: %s", err))
 
-		select {
-		case rec := <-msgChan:
-			receivedMsg = rec
-		case <-time.After(time.Duration(5) * time.Second):
-			receivedMsg = []byte{}
+		receivedMsg := []byte{}
+		if tc.flagWait {
+			receivedMsg = <-msgChan
 		}
 		assert.Equal(t, tc.expectedPayload, receivedMsg, fmt.Sprintf("%s: expected %+v, got %+v", tc.desc, msg, receivedMsg))
 	}
