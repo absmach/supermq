@@ -25,7 +25,7 @@ func handshake(svc ws.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req, err := decodeRequest(r)
 		if err != nil {
-			encodeError(req, w, err)
+			encodeError(w, err)
 			return
 		}
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -152,7 +152,7 @@ func process(svc ws.Service, req connReq, msgs <-chan []byte) {
 	}
 }
 
-func encodeError(req connReq, w http.ResponseWriter, err error) {
+func encodeError(w http.ResponseWriter, err error) {
 	statusCode := http.StatusUnauthorized
 
 	switch err {
