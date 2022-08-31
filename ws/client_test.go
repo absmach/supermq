@@ -50,7 +50,7 @@ func TestHandle(t *testing.T) {
 	s := httptest.NewServer(http.HandlerFunc(handler))
 	defer s.Close()
 
-	// Convert http://127.0.0.1 to ws://127.0.0.
+	// Convert http://127.0.0.1 to ws://127.0.0.1
 	u := strings.Replace(s.URL, "http", "ws", 1)
 
 	// Connect to the server
