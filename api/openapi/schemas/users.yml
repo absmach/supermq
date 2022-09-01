@@ -276,6 +276,7 @@ components:
           type: string
           format: jwt
           description: Generated access token.
+         # example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NjE5MDY3MTQsImlhdCI6MTY2MTg3MDcxNCwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6InVzZXJ4QG1mLmNvbSIsImlzc3Vlcl9pZCI6IjM4ZGZlNTM0LTljZGUtNDJjOC1hMWY2LTkzZTg4YTcxZjA5NSIsInR5cGUiOjB9.cfCzOkm8BEf_-z4hqTjx38zrxffxNFmRjaSvGdGUpK0
       required:
         - token
     UserReqObj:
@@ -284,11 +285,12 @@ components:
         email:
           type: string
           format: email
-          example: "test@example.com"
+          example: "usera@mf.com"
           description: User's email address will be used as its unique identifier
         password:
           type: string
           format: password
+          example: "mfpassword"
           minimum: 8
           description: Free-form account password used for acquiring auth token(s).
       required:
@@ -300,12 +302,12 @@ components:
         id:
           type: string
           format: uuid
-          example: 18167738-f7a8-4e96-a123-58c3cd14de3a
+          example: 8518bc0b-c949-424e-adb9-9eea3f1e791e
           description: User unique identifier.
         email:
           type: string
           format: email
-          example: "test@example.com"
+          example: "usera@mf.com"
           description: User's email address will be used as its unique identifier.
         metadata:
           type: object
@@ -336,6 +338,9 @@ components:
         metadata:
           type: object
           description: Arbitrary, object-encoded user's data.
+          example:  
+            value:
+            info: mfusermetadata
     Error:
       type: object
       properties:
@@ -351,6 +356,7 @@ components:
       schema:
         type: string
       required: true
+      example: MF
     Metadata:
       name: metadata
       description: Metadata filter. Filtering is performed matching the parameter with metadata on top level. Parameter is json.
@@ -358,6 +364,8 @@ components:
       schema:
         type: string
         minimum: 0
+        example:
+          new: userinfor
       required: false
     UserId:
       name: userId
@@ -366,6 +374,7 @@ components:
       schema:
         type: string
         format: uuid
+        example: 8518bc0b-c949-424e-adb9-9eea3f1e791e
       required: true
     GroupId:
       name: groupId
@@ -374,6 +383,7 @@ components:
       schema:
         type: string
         format: ulid
+        example: 01GBQ87TDR9F7YHR9W4V1ZZ9S0
       required: true
     Limit:
       name: limit
@@ -382,7 +392,7 @@ components:
       schema:
         type: integer
         default: 10
-        maximum: 100
+        maximum: 1000
         minimum: 1
       required: false
     Offset:
@@ -400,7 +410,7 @@ components:
       in: query
       schema:
         type: string
-        default: enabled
+        default: disabled
       required: false
   requestBodies:
     UserCreateReq:
@@ -428,6 +438,7 @@ components:
               email:
                 type: string
                 format: email
+                example: usera@mf.com
                 description: User email.
     PasswordReset:
       description: Password reset request data, new password and token that is appended on password reset link received in email.
@@ -440,11 +451,13 @@ components:
                 type: string
                 format: password
                 description: New password.
+                example: wpassword
                 minimum: 8
               confirm_password:
                 type: string
                 format: password
                 description: New confirmation password.
+                example: wpassword
                 minimum: 8
               token:
                 type: string
@@ -462,10 +475,12 @@ components:
                 type: string
                 format: password
                 description: New password.
+                example: passwordmf
               old_password:
                 type: string
                 format: password
                 description: Old password.
+                example: mfpaswword
 
   responses:
     UserCreateRes:

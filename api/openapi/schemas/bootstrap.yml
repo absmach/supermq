@@ -257,18 +257,22 @@ components:
                 type: string
                 format: uuid
                 description: Channel unique identifier.
+                example: 1d9ccdb8-186c-4857-9b9f-02374c99b4ba
               name:
                 type: string
                 description: Name of the Channel.
+                example: channel123
               metadata:
                 type: object
                 description: Custom metadata related to the Channel.
         external_id:
           type: string
           description: External ID (MAC address or some unique identifier).
+          example:
         external_key:
           type: string
           description: External key.
+          example: 
         content:
           type: string
           description: Free-form custom configuration.
@@ -345,6 +349,7 @@ components:
         type: string
         format: uuid
       required: true
+      example: c8329edd-5f6a-4ca9-9e6a-931000f82438
     ExternalId:
       name: externalId
       description: Unique Config identifier provided by external entity.
@@ -352,6 +357,7 @@ components:
       schema:
         type: string
       required: true
+      example: AAGBR85PY6FPM4SBPRR697NQBW
     Limit:
       name: limit
       description: Size of the subset to retrieve.
@@ -385,6 +391,7 @@ components:
       schema:
         type: string
       required: false
+      example: configname
 
   requestBodies:
     ConfigCreateReq:
@@ -398,17 +405,21 @@ components:
               external_id:
                 type: string
                 description: External ID (MAC address or some unique identifier).
+                example: AAGBR85PY6FPM4SBPRR697NQBW
               external_key:
                 type: string
                 description: External key.
+                example: BBGBR85PY6FPM4SBPRR697NQBZ
               thing_id:
                 type: string
                 description: ID of the corresponding Mainflux Thing.
+                example: 9c42461c-445a-4a6e-92a3-2d5adfab94c9
               channels:
                 type: array
                 minItems: 0
                 items:
                   type: string
+                  example: 1d9ccdb8-186c-4857-9b9f-02374c99b4ba
               content:
                 type: string
             required:
@@ -423,8 +434,10 @@ components:
             properties:
               content:
                 type: string
+                example: config content
               name:
                 type: string
+                example: configupdate
             required:
               - content
               - name
@@ -437,10 +450,13 @@ components:
             properties:
               client_cert:
                 type: string
+                example:
               client_key:
                 type: string
+                example:
               ca_cert:
                 type: string
+                example: 
     ConfigConnUpdateReq:
       description: Array if IDs the thing is be connected to.
       content:

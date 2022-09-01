@@ -95,7 +95,7 @@ components:
         owner_id:
           type: string
           format: uuid
-          example: 18167738-f7a8-4e96-a123-58c3cd14de3a
+          example: 8518bc0b-c949-424e-adb9-9eea3f1e791e
           description: An id of the owner who created subscription.
         topic:
           type: string
@@ -103,7 +103,7 @@ components:
           description: Topic to which the user subscribes.
         contact:
           type: string
-          example: user@example.com
+          example: usera@mf.com
           description: The contact of the user to which the notification will be sent.
     Page:
       type: object
