@@ -10,7 +10,6 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/gogo/protobuf/proto"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 )
@@ -160,13 +159,47 @@ func (ps *pubsub) Unsubscribe(id, topic string) error {
 	return token.Error()
 }
 
+// func (ps *pubsub) mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
+// 	return func(c mqtt.Client, m mqtt.Message) {
+// 		var msg messaging.Message
+// 		if err := proto.Unmarshal(m.Payload(), &msg); err != nil {
+// 			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
+// 			return
+// 		}
+// 		if err := h.Handle(msg); err != nil {
+// 			ps.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
+// 		}
+// 	}
+// }
+
+// func newClient(address, id string, timeout time.Duration) (mqtt.Client, error) {
+// 	opts := mqtt.NewClientOptions().SetUsername(username).AddBroker(address).SetClientID(id)
+// 	client := mqtt.NewClient(opts)
+// 	token := client.Connect()
+// 	if token.Error() != nil {
+// 		return nil, token.Error()
+// 	}
+
+// 	ok := token.WaitTimeout(timeout)
+// 	if !ok {
+// 		return nil, ErrConnect
+// 	}
+
+// 	if token.Error() != nil {
+// 		return nil, token.Error()
+// 	}
+
+// 	return client, nil
+// }
+
 func (ps *pubsub) mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
 	return func(c mqtt.Client, m mqtt.Message) {
 		var msg messaging.Message
-		if err := proto.Unmarshal(m.Payload(), &msg); err != nil {
-			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
-			return
-		}
+		msg.Payload = m.Payload()
+		// if err := proto.Unmarshal(m.Payload(), &msg); err != nil {
+		// 	logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
+		// 	return
+		// }
 		if err := h.Handle(msg); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
 		}
@@ -174,7 +207,12 @@ func (ps *pubsub) mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
 }
 
 func newClient(address, id string, timeout time.Duration) (mqtt.Client, error) {
-	opts := mqtt.NewClientOptions().SetUsername(username).AddBroker(address).SetClientID(id)
+	opts := mqtt.NewClientOptions().
+		SetUsername(username).
+		AddBroker(address).
+		SetClientID(id)
+		// SetDefaultPublishHandler(mqttHandler(handler{false}))
+
 	client := mqtt.NewClient(opts)
 	token := client.Connect()
 	if token.Error() != nil {
