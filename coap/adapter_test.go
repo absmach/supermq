@@ -114,7 +114,6 @@ func TestSubscribe(t *testing.T) {
 		thingKey string
 		chanID   string
 		subtopic string
-		pubsub   bool
 		fail     bool
 		err      error
 	}{
@@ -123,7 +122,6 @@ func TestSubscribe(t *testing.T) {
 			thingKey: thingKey,
 			chanID:   chanID,
 			subtopic: subTopic,
-			pubsub:   true,
 			fail:     false,
 			err:      nil,
 		},
@@ -132,7 +130,6 @@ func TestSubscribe(t *testing.T) {
 			thingKey: thingKey,
 			chanID:   chanID,
 			subtopic: subTopic,
-			pubsub:   true,
 			fail:     false,
 			err:      nil,
 		},
@@ -141,7 +138,6 @@ func TestSubscribe(t *testing.T) {
 			thingKey: thingKey,
 			chanID:   chanID,
 			subtopic: subTopic,
-			pubsub:   true,
 			fail:     true,
 			err:      coap.ErrFailedSubscription,
 		},
@@ -150,7 +146,6 @@ func TestSubscribe(t *testing.T) {
 			thingKey: "invalid",
 			chanID:   "0",
 			subtopic: subTopic,
-			pubsub:   true,
 			fail:     false,
 			err:      coap.ErrUnauthorizedAccess,
 		},
@@ -159,7 +154,6 @@ func TestSubscribe(t *testing.T) {
 			thingKey: thingKey,
 			chanID:   "",
 			subtopic: subTopic,
-			pubsub:   true,
 			fail:     false,
 			err:      coap.ErrUnauthorizedAccess,
 		},
@@ -168,7 +162,6 @@ func TestSubscribe(t *testing.T) {
 			thingKey: "",
 			chanID:   chanID,
 			subtopic: subTopic,
-			pubsub:   true,
 			fail:     false,
 			err:      coap.ErrUnauthorizedAccess,
 		},
@@ -177,7 +170,6 @@ func TestSubscribe(t *testing.T) {
 			thingKey: "",
 			chanID:   "",
 			subtopic: subTopic,
-			pubsub:   true,
 			fail:     false,
 			err:      coap.ErrUnauthorizedAccess,
 		},
