@@ -30,8 +30,8 @@ var (
 
 func TestMQTTBroker(t *testing.T) {
 	// Subscribing with topic, and with subtopic, so that we can publish messages
-	// client, err := newClient(address, "", 30*time.Second)
-	// require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	client, err := newClient(address, "", 30*time.Second)
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	token := client.Subscribe(topic, qos, nil)
 	token.Wait()
@@ -98,7 +98,8 @@ func TestMQTTBroker(t *testing.T) {
 // Tests only the publisher
 func TestPublisher(t *testing.T) {
 	// Subscribing with topic, and with subtopic, so that we can publish messages
-	// client, err := newClient(address, "", 30*time.Second)
+	client, err := newClient(address, "", 30*time.Second)
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	token := client.Subscribe(topic, qos, nil)
 	assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
@@ -171,8 +172,8 @@ func TestPublisher(t *testing.T) {
 
 // Tests only the Subscriber
 func TestSubscribe(t *testing.T) {
-	// client, err := newClient(address, "", 30*time.Second)
-	// require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client: %s", err.Error()))
+	client, err := newClient(address, "", 30*time.Second)
+	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client: %s", err.Error()))
 
 	cases := []struct {
 		desc         string

@@ -19,7 +19,7 @@ import (
 var (
 	publisher messaging.Publisher
 	pubsub    messaging.PubSub
-	client    mqtt.Client
+	// client    mqtt.Client
 
 	logger logg.Logger
 
@@ -85,10 +85,10 @@ func TestMain(m *testing.M) {
 		log.Fatalf(err.Error())
 	}
 
-	client, err = newClient(address, "", 30*time.Second)
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
+	// client, err = newClient(address, "", 30*time.Second)
+	// if err != nil {
+	// 	log.Fatalf(err.Error())
+	// }
 
 	defer func() {
 		err = publisher.Close()
