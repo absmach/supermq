@@ -102,7 +102,6 @@ func TestSubscribe(t *testing.T) {
 		thingKey string
 		chanID   string
 		subtopic string
-		pubsub   bool
 		fail     bool
 		err      error
 	}{
@@ -111,7 +110,6 @@ func TestSubscribe(t *testing.T) {
 			thingKey: thingKey,
 			chanID:   chanID,
 			subtopic: subTopic,
-			pubsub:   true,
 			fail:     false,
 			err:      nil,
 		},
@@ -120,7 +118,6 @@ func TestSubscribe(t *testing.T) {
 			thingKey: thingKey,
 			chanID:   chanID,
 			subtopic: subTopic,
-			pubsub:   true,
 			fail:     false,
 			err:      nil,
 		},
@@ -129,7 +126,6 @@ func TestSubscribe(t *testing.T) {
 			thingKey: thingKey,
 			chanID:   chanID,
 			subtopic: subTopic,
-			pubsub:   true,
 			fail:     true,
 			err:      ws.ErrFailedSubscription,
 		},
@@ -138,7 +134,6 @@ func TestSubscribe(t *testing.T) {
 			thingKey: "invalid",
 			chanID:   "0",
 			subtopic: subTopic,
-			pubsub:   true,
 			fail:     false,
 			err:      ws.ErrUnauthorizedAccess,
 		},
@@ -147,7 +142,6 @@ func TestSubscribe(t *testing.T) {
 			thingKey: thingKey,
 			chanID:   "",
 			subtopic: subTopic,
-			pubsub:   true,
 			fail:     false,
 			err:      ws.ErrUnauthorizedAccess,
 		},
@@ -156,7 +150,6 @@ func TestSubscribe(t *testing.T) {
 			thingKey: "",
 			chanID:   chanID,
 			subtopic: subTopic,
-			pubsub:   true,
 			fail:     false,
 			err:      ws.ErrUnauthorizedAccess,
 		},
@@ -165,7 +158,6 @@ func TestSubscribe(t *testing.T) {
 			thingKey: "",
 			chanID:   "",
 			subtopic: subTopic,
-			pubsub:   true,
 			fail:     false,
 			err:      ws.ErrUnauthorizedAccess,
 		},
@@ -187,7 +179,6 @@ func TestUnsubscribe(t *testing.T) {
 		thingKey string
 		chanID   string
 		subtopic string
-		pubsub   bool
 		fail     bool
 		err      error
 	}{
@@ -196,7 +187,6 @@ func TestUnsubscribe(t *testing.T) {
 			thingKey: thingKey,
 			chanID:   chanID,
 			subtopic: subTopic,
-			pubsub:   false,
 			fail:     false,
 			err:      nil,
 		},
@@ -205,7 +195,6 @@ func TestUnsubscribe(t *testing.T) {
 			thingKey: thingKey,
 			chanID:   chanID,
 			subtopic: "",
-			pubsub:   false,
 			fail:     false,
 			err:      nil,
 		},
@@ -214,7 +203,6 @@ func TestUnsubscribe(t *testing.T) {
 			thingKey: thingKey,
 			chanID:   chanID,
 			subtopic: subTopic,
-			pubsub:   false,
 			fail:     true,
 			err:      ws.ErrFailedUnsubscribe,
 		},
@@ -223,7 +211,6 @@ func TestUnsubscribe(t *testing.T) {
 			thingKey: thingKey,
 			chanID:   "",
 			subtopic: subTopic,
-			pubsub:   false,
 			fail:     false,
 			err:      ws.ErrUnauthorizedAccess,
 		},
@@ -232,7 +219,6 @@ func TestUnsubscribe(t *testing.T) {
 			thingKey: "",
 			chanID:   chanID,
 			subtopic: subTopic,
-			pubsub:   false,
 			fail:     false,
 			err:      ws.ErrUnauthorizedAccess,
 		},
@@ -241,7 +227,6 @@ func TestUnsubscribe(t *testing.T) {
 			thingKey: "",
 			chanID:   "",
 			subtopic: subTopic,
-			pubsub:   false,
 			fail:     false,
 			err:      ws.ErrUnauthorizedAccess,
 		},
