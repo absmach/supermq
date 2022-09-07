@@ -40,7 +40,7 @@ type subscription struct {
 type pubsub struct {
 	publisher
 	logger        log.Logger
-	mu            *sync.RWMutex
+	mu            sync.RWMutex
 	address       string
 	timeout       time.Duration
 	subscriptions map[string]subscription
@@ -57,10 +57,9 @@ func NewPubSub(url, queue string, timeout time.Duration, logger log.Logger) (mes
 			client:  client,
 			timeout: timeout,
 		},
-		address: url,
-		timeout: timeout,
-		logger:  logger,
-		// mu:            &sync.RWMutex{},
+		address:       url,
+		timeout:       timeout,
+		logger:        logger,
 		subscriptions: make(map[string]subscription),
 	}
 	return ret, nil
@@ -159,6 +158,7 @@ func (ps *pubsub) Unsubscribe(id, topic string) error {
 	return token.Error()
 }
 
+//? Original
 // func (ps *pubsub) mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
 // 	return func(c mqtt.Client, m mqtt.Message) {
 // 		var msg messaging.Message
@@ -172,47 +172,8 @@ func (ps *pubsub) Unsubscribe(id, topic string) error {
 // 	}
 // }
 
-// func newClient(address, id string, timeout time.Duration) (mqtt.Client, error) {
-// 	opts := mqtt.NewClientOptions().SetUsername(username).AddBroker(address).SetClientID(id)
-// 	client := mqtt.NewClient(opts)
-// 	token := client.Connect()
-// 	if token.Error() != nil {
-// 		return nil, token.Error()
-// 	}
-
-// 	ok := token.WaitTimeout(timeout)
-// 	if !ok {
-// 		return nil, ErrConnect
-// 	}
-
-// 	if token.Error() != nil {
-// 		return nil, token.Error()
-// 	}
-
-// 	return client, nil
-// }
-
-func (ps *pubsub) mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
-	return func(c mqtt.Client, m mqtt.Message) {
-		var msg messaging.Message
-		msg.Payload = m.Payload()
-		// if err := proto.Unmarshal(m.Payload(), &msg); err != nil {
-		// 	logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
-		// 	return
-		// }
-		if err := h.Handle(msg); err != nil {
-			ps.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
-		}
-	}
-}
-
 func newClient(address, id string, timeout time.Duration) (mqtt.Client, error) {
-	opts := mqtt.NewClientOptions().
-		SetUsername(username).
-		AddBroker(address).
-		SetClientID(id)
-		// SetDefaultPublishHandler(mqttHandler(handler{false}))
-
+	opts := mqtt.NewClientOptions().SetUsername(username).AddBroker(address).SetClientID(id)
 	client := mqtt.NewClient(opts)
 	token := client.Connect()
 	if token.Error() != nil {
@@ -229,6 +190,21 @@ func newClient(address, id string, timeout time.Duration) (mqtt.Client, error) {
 	}
 
 	return client, nil
+}
+
+//? Prototype, removed the proto.Unmarshall()
+func (ps *pubsub) mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
+	return func(c mqtt.Client, m mqtt.Message) {
+		var msg messaging.Message
+		msg.Payload = m.Payload()
+		// if err := proto.Unmarshal(m.Payload(), &msg); err != nil {
+		// 	logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
+		// 	return
+		// }
+		if err := h.Handle(msg); err != nil {
+			ps.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
+		}
+	}
 }
 
 // contains checks if a topic is present
