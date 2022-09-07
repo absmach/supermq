@@ -4,7 +4,7 @@
 package api_test
 
 import (
-	"bytes"
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -18,14 +18,9 @@ import (
 	httpmock "github.com/mainflux/mainflux/http/mocks"
 	log "github.com/mainflux/mainflux/logger"
 	gocoap "github.com/plgd-dev/go-coap/v2"
-	"github.com/plgd-dev/go-coap/v2/message"
-	"github.com/plgd-dev/go-coap/v2/message/codes"
-	"github.com/plgd-dev/go-coap/v2/message/pool"
 	"github.com/plgd-dev/go-coap/v2/mux"
 	"github.com/plgd-dev/go-coap/v2/udp"
 	"github.com/plgd-dev/go-coap/v2/udp/client"
-	"github.com/stretchr/testify/assert"
-	"golang.org/x/net/context"
 )
 
 const (
@@ -33,10 +28,12 @@ const (
 	id       = "1"
 	thingKey = "thing_key"
 	protocol = "coap"
-	token    = "token"
 )
 
-var msg = []byte(`[{"n":"current","t":-1,"v":1.6}]`)
+var (
+	msg = []byte(`[{"n":"current","t":-1,"v":1.6}]`)
+	// token = []byte{1}
+)
 
 func newService(cc mainflux.ThingsServiceClient) (coap.Service, mocks.MockPubSub) {
 	pubsub := mocks.NewPubSub()
@@ -78,10 +75,10 @@ func makeURL(tsURL, chanID, subtopic, thingKey string, header bool) (string, err
 	return fmt.Sprintf("%s/channels/%s/messages%s?authorization=%s", u, chanID, subtopicPart, thingKey), nil
 }
 
-func handshake(tsURL, chanID, subtopic, thingKey string, addHeader bool) (*client.ClientConn, error) {
+func handshake(tsURL, chanID, subtopic, thingKey string, addHeader bool) (*client.ClientConn, string, error) {
 	url, _ := makeURL(tsURL, chanID, subtopic, thingKey, addHeader)
-	conn, err := udp.Dial(url)
-	return conn, err
+	conn, err := udp.Dial("localhost:5688")
+	return conn, url, err
 }
 
 func TestHandshake(t *testing.T) {
@@ -186,24 +183,31 @@ func TestHandshake(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		conn, err := handshake(ts.URL, tc.chanID, tc.subtopic, tc.thingKey, tc.header)
-		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code '%d' got '%d'\n", tc.desc, tc.status, res.StatusCode))
-
-		if tc.status == http.StatusSwitchingProtocols {
-			assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error %s\n", tc.desc, err))
-
-			resp := message.Message{
-				Code:    codes.Content,
-				Token:   []byte(token),
-				Context: context.Background(),
-				Options: make(message.Options, 0, 16),
-				Body:    bytes.NewReader(msg),
-			}
-			r := pool.NewMessage()
-			r.SetBody(resp.Body)
-			r.ResetOptionsTo(resp.Options)
-			assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error %s\n", tc.desc, err))
+		conn, url, err := handshake(ts.URL, tc.chanID, tc.subtopic, tc.thingKey, tc.header)
+		fmt.Println(err)
+		if err != nil {
+			continue
 		}
+
+		resp, err := conn.Get(context.Background(), url)
+		fmt.Println(resp, err)
 	}
+
+	// for _, tc := range cases {
+	// 	conn, err := handshake(ts.URL, tc.chanID, tc.subtopic, tc.thingKey, tc.header)
+	// 	assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code '%d' got '%d'\n", tc.desc, tc.status, res.StatusCode))
+
+	// 	if tc.status == http.StatusSwitchingProtocols {
+	// 		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error %s\n", tc.desc, err))
+
+	// 		r := pool.NewMessage()
+	// 		r.SetToken(token)
+	// 		r.SetBody(bytes.NewReader(msg))
+
+	// 		resp, err := conn.Get()
+
+	// 		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error %s\n", tc.desc, err))
+	// 	}
+	// }
 
 }
