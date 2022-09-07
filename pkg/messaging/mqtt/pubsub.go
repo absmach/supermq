@@ -87,7 +87,7 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 			if err != nil {
 				return err
 			}
-			if len(ps.subscriptions) == 0 {
+			if len(ps.subscriptions[id].topics) == 0 {
 				// ps.subscriptions = make(map[string]subscription)
 
 				client, err := newClient(ps.address, id, ps.timeout)
@@ -99,7 +99,7 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 					topics: []string{topic},
 				}
 
-				// ps.subscriptions[id] = s
+				ps.subscriptions[id] = s
 			}
 		}
 		s.topics = append(s.topics, topic)
@@ -112,7 +112,7 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 			client: client,
 			topics: []string{topic},
 		}
-		// ps.subscriptions[id] = s
+		ps.subscriptions[id] = s
 	}
 
 	token := s.client.Subscribe(topic, qos, ps.mqttHandler(handler))
