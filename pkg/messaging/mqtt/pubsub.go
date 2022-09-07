@@ -88,6 +88,8 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 				return err
 			}
 			if len(ps.subscriptions) == 0 {
+				// ps.subscriptions = make(map[string]subscription)
+
 				client, err := newClient(ps.address, id, ps.timeout)
 				if err != nil {
 					return err
@@ -96,6 +98,8 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 					client: client,
 					topics: []string{topic},
 				}
+
+				// ps.subscriptions[id] = s
 			}
 		}
 		s.topics = append(s.topics, topic)
@@ -108,6 +112,7 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 			client: client,
 			topics: []string{topic},
 		}
+		// ps.subscriptions[id] = s
 	}
 
 	token := s.client.Subscribe(topic, qos, ps.mqttHandler(handler))
@@ -223,7 +228,7 @@ func (sub subscription) indexOf(element string) int {
 }
 
 // Deletes a topic from the slice
-func (sub subscription) delete(topic string) bool {
+func (sub *subscription) delete(topic string) bool {
 	index := sub.indexOf(topic)
 	if index == -1 {
 		return false
