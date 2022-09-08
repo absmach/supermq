@@ -234,7 +234,7 @@ func TestSubscribe(t *testing.T) {
 		case nil:
 			assert.Nil(t, err, "%s: got unexpected error: %s", tc.desc, err)
 		default:
-			assert.Equal(t, err.Error(), tc.errorMessage.Error(), fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, err, tc.errorMessage))
+			assert.Equal(t, err, tc.errorMessage, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, err, tc.errorMessage))
 		}
 	}
 }

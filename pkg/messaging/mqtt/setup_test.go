@@ -50,7 +50,7 @@ func TestMain(m *testing.M) {
 	address = fmt.Sprintf("%s:%s", "localhost", container.GetPort("1883/tcp"))
 	// pool.MaxWait = 120 * time.Second
 	if err := pool.Retry(func() error {
-		publisher, err = mqtt_pubsub.NewPublisher(address, 3*time.Second)
+		publisher, err = mqtt_pubsub.NewPublisher(address, 30*time.Second)
 		return err
 	}); err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
@@ -61,7 +61,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf(err.Error())
 	}
 	if err := pool.Retry(func() error {
-		pubsub, err = mqtt_pubsub.NewPubSub(address, "", 3*time.Second, logger)
+		pubsub, err = mqtt_pubsub.NewPubSub(address, "", 30*time.Second, logger)
 		return err
 	}); err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
