@@ -202,8 +202,8 @@ func (ps *pubsub) mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
 	return func(c mqtt.Client, m mqtt.Message) {
 		var msg messaging.Message
 		msg.Payload = m.Payload()
-		// if err := proto.Unmarshal(m.Payload(), &msg); err != nil {
-		// 	logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
+		// if err := json.Unmarshal(m.Payload(), &msg); err != nil {
+		// 	ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
 		// 	return
 		// }
 		if err := h.Handle(msg); err != nil {

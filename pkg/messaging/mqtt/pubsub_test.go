@@ -19,7 +19,6 @@ const (
 	chansPrefix = "channels"
 	channel     = "9b7b1b3f-b1b0-46a8-a717-b8213f9eda3b"
 	subtopic    = "engine"
-	clientID    = "9b7b1b3f-b1b0-46a8-a717-b8213f9eda3b"
 )
 
 var (
@@ -29,6 +28,8 @@ var (
 
 // Tests the MQTT Broker being used for the tests
 func TestMQTTBroker(t *testing.T) {
+	defer time.Sleep(5 * time.Second)
+
 	// Subscribing with topic, and with subtopic, so that we can publish messages
 	client, err := newClient(address, "", 30*time.Second)
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -97,6 +98,8 @@ func TestMQTTBroker(t *testing.T) {
 
 // Tests only the Publisher
 func TestPublisher(t *testing.T) {
+	defer time.Sleep(5 * time.Second)
+
 	// Subscribing with topic, and with subtopic, so that we can publish messages
 	client, err := newClient(address, "", 30*time.Second)
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -165,6 +168,8 @@ func TestPublisher(t *testing.T) {
 
 // Tests only the Subscriber
 func TestSubscribe(t *testing.T) {
+	defer time.Sleep(5 * time.Second)
+
 	cases := []struct {
 		desc         string
 		topic        string
@@ -228,8 +233,6 @@ func TestSubscribe(t *testing.T) {
 		switch tc.errorMessage {
 		case nil:
 			assert.Nil(t, err, "%s: got unexpected error: %s", tc.desc, err)
-			// err := pubsub.Unsubscribe(tc.clientID, tc.topic)
-			// assert.Nil(t, err, "%s: got unexpected error while unsubscribing: %s", tc.desc, err)
 		default:
 			assert.Equal(t, err.Error(), tc.errorMessage.Error(), fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, err, tc.errorMessage))
 		}
@@ -238,6 +241,8 @@ func TestSubscribe(t *testing.T) {
 
 // Tests only the unsubscriber
 func TestUnsubscribe(t *testing.T) {
+	defer time.Sleep(5 * time.Second)
+
 	client, err := newClient(address, "", 30*time.Second)
 	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client: %s", err))
 
@@ -386,6 +391,8 @@ func TestUnsubscribe(t *testing.T) {
 
 // Tests both publisher and subscriber
 func TestPubSub(t *testing.T) {
+	defer time.Sleep(5 * time.Second)
+
 	client, err := newClient(address, "", 30*time.Second)
 	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client: %s", err))
 
@@ -451,7 +458,7 @@ func TestPubSub(t *testing.T) {
 		default:
 			switch tc.errorMessage {
 			case nil:
-				t.Errorf("%s: got unexpected error: %s", tc.desc, err.Error())
+				assert.Nil(t, err, "%s: got unexpected error: %s", tc.desc, err.Error())
 			default:
 				assert.Equal(t, err, tc.errorMessage, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, err, tc.errorMessage))
 			}
@@ -461,6 +468,8 @@ func TestPubSub(t *testing.T) {
 
 // Tests both Subscribe and Unsubscribe
 func TestSubUnsub(t *testing.T) {
+	defer time.Sleep(5 * time.Second)
+
 	cases := []struct {
 		desc         string
 		topic        string
@@ -557,22 +566,6 @@ func TestSubUnsub(t *testing.T) {
 			pubsub:       false,
 			handler:      handler{false},
 		},
-		// {
-		// 	desc:         "Subscribe to a new topic with an ID",
-		// 	topic:        fmt.Sprintf("%s.%s", chansPrefix, topic+"2"),
-		// 	clientID:     "clientid4",
-		// 	errorMessage: nil,
-		// 	pubsub:       true,
-		// 	handler:      handler{true},
-		// },
-		// {
-		// 	desc:         "Unsubscribe from a topic with an ID with failing handler",
-		// 	topic:        fmt.Sprintf("%s.%s", chansPrefix, topic+"2"),
-		// 	clientID:     "clientid4",
-		// 	errorMessage: mqtt_pubsub.ErrFailed,
-		// 	pubsub:       false,
-		// 	handler:      handler{true},
-		// },
 	}
 
 	for _, pc := range cases {
