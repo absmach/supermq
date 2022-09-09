@@ -28,10 +28,10 @@ var (
 
 // Tests the MQTT Broker being used for the tests
 func TestMQTTBroker(t *testing.T) {
-	defer time.Sleep(5 * time.Second)
-
 	// Subscribing with topic, and with subtopic, so that we can publish messages
-	client, err := newClient(address, "", 30*time.Second)
+	client, err := newClient(address, "clientID", 30*time.Second)
+	defer client.Unsubscribe()
+	defer client.Disconnect(5)
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	token := client.Subscribe(topic, qos, mqttHandler(handler{false}))
@@ -98,10 +98,10 @@ func TestMQTTBroker(t *testing.T) {
 
 // Tests only the Publisher
 func TestPublisher(t *testing.T) {
-	defer time.Sleep(5 * time.Second)
-
 	// Subscribing with topic, and with subtopic, so that we can publish messages
-	client, err := newClient(address, "", 30*time.Second)
+	client, err := newClient(address, "clientID1", 30*time.Second)
+	defer client.Unsubscribe()
+	defer client.Disconnect(5)
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	token := client.Subscribe(topic, qos, nil)
@@ -168,8 +168,6 @@ func TestPublisher(t *testing.T) {
 
 // Tests only the Subscriber
 func TestSubscribe(t *testing.T) {
-	defer time.Sleep(5 * time.Second)
-
 	cases := []struct {
 		desc         string
 		topic        string
@@ -241,9 +239,9 @@ func TestSubscribe(t *testing.T) {
 
 // Tests only the unsubscriber
 func TestUnsubscribe(t *testing.T) {
-	defer time.Sleep(5 * time.Second)
-
-	client, err := newClient(address, "", 30*time.Second)
+	client, err := newClient(address, "clientID2", 30*time.Second)
+	defer client.Unsubscribe()
+	defer client.Disconnect(5)
 	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client: %s", err))
 
 	subs := []struct {
@@ -391,9 +389,9 @@ func TestUnsubscribe(t *testing.T) {
 
 // Tests both publisher and subscriber
 func TestPubSub(t *testing.T) {
-	defer time.Sleep(5 * time.Second)
-
 	client, err := newClient(address, "", 30*time.Second)
+	defer client.Unsubscribe()
+	defer client.Disconnect(5)
 	require.Nil(t, err, fmt.Sprintf("got unexpected error while creating client: %s", err))
 
 	cases := []struct {
@@ -406,28 +404,28 @@ func TestPubSub(t *testing.T) {
 		{
 			desc:         "Subscribe to a topic with an ID",
 			topic:        topic,
-			clientID:     "clientid1",
+			clientID:     "clientid7",
 			errorMessage: nil,
 			handler:      handler{false},
 		},
 		{
 			desc:         "Subscribe to the same topic with a different ID",
 			topic:        topic,
-			clientID:     "clientid2",
+			clientID:     "clientid8",
 			errorMessage: nil,
 			handler:      handler{false},
 		},
 		{
 			desc:         "Subscribe to a topic with a subtopic with an ID",
 			topic:        fmt.Sprintf("%s.%s", topic, subtopic),
-			clientID:     "clientid1",
+			clientID:     "clientid7",
 			errorMessage: nil,
 			handler:      handler{false},
 		},
 		{
 			desc:         "Subscribe to an empty topic with an ID",
 			topic:        "",
-			clientID:     "clientid1",
+			clientID:     "clientid7",
 			errorMessage: mqtt_pubsub.ErrEmptyTopic,
 			handler:      handler{false},
 		},
@@ -468,7 +466,6 @@ func TestPubSub(t *testing.T) {
 
 // Tests both Subscribe and Unsubscribe
 func TestSubUnsub(t *testing.T) {
-	defer time.Sleep(5 * time.Second)
 
 	cases := []struct {
 		desc         string
@@ -481,7 +478,7 @@ func TestSubUnsub(t *testing.T) {
 		{
 			desc:         "Subscribe to a topic with an ID",
 			topic:        fmt.Sprintf("%s.%s", chansPrefix, topic),
-			clientID:     "clientid1",
+			clientID:     "clientid4",
 			errorMessage: nil,
 			pubsub:       true,
 			handler:      handler{false},
@@ -489,7 +486,7 @@ func TestSubUnsub(t *testing.T) {
 		{
 			desc:         "Unsubscribe from a topic with an ID",
 			topic:        fmt.Sprintf("%s.%s", chansPrefix, topic),
-			clientID:     "clientid1",
+			clientID:     "clientid4",
 			errorMessage: nil,
 			pubsub:       false,
 			handler:      handler{false},
@@ -497,7 +494,7 @@ func TestSubUnsub(t *testing.T) {
 		{
 			desc:         "Unsubscribe from a non-existent topic with an ID",
 			topic:        "h",
-			clientID:     "clientid1",
+			clientID:     "clientid4",
 			errorMessage: mqtt_pubsub.ErrNotSubscribed,
 			pubsub:       false,
 			handler:      handler{false},
@@ -505,7 +502,7 @@ func TestSubUnsub(t *testing.T) {
 		{
 			desc:         "Unsubscribe from an already unsubscribed topic with an ID",
 			topic:        fmt.Sprintf("%s.%s", chansPrefix, topic),
-			clientID:     "clientid1",
+			clientID:     "clientid4",
 			errorMessage: mqtt_pubsub.ErrNotSubscribed,
 			pubsub:       false,
 			handler:      handler{false},
@@ -513,7 +510,7 @@ func TestSubUnsub(t *testing.T) {
 		{
 			desc:         "Subscribe to a topic with a subtopic with an ID",
 			topic:        fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic),
-			clientID:     "clientidd1",
+			clientID:     "clientidd4",
 			errorMessage: nil,
 			pubsub:       true,
 			handler:      handler{false},
@@ -521,7 +518,7 @@ func TestSubUnsub(t *testing.T) {
 		{
 			desc:         "Unsubscribe from a topic with a subtopic with an ID",
 			topic:        fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic),
-			clientID:     "clientidd1",
+			clientID:     "clientidd4",
 			errorMessage: nil,
 			pubsub:       false,
 			handler:      handler{false},
@@ -529,7 +526,7 @@ func TestSubUnsub(t *testing.T) {
 		{
 			desc:         "Unsubscribe from an already unsubscribed topic with a subtopic with an ID",
 			topic:        fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic),
-			clientID:     "clientid1",
+			clientID:     "clientid4",
 			errorMessage: mqtt_pubsub.ErrNotSubscribed,
 			pubsub:       false,
 			handler:      handler{false},
@@ -537,7 +534,7 @@ func TestSubUnsub(t *testing.T) {
 		{
 			desc:         "Subscribe to an empty topic with an ID",
 			topic:        "",
-			clientID:     "clientid1",
+			clientID:     "clientid4",
 			errorMessage: mqtt_pubsub.ErrEmptyTopic,
 			pubsub:       true,
 			handler:      handler{false},
@@ -545,7 +542,7 @@ func TestSubUnsub(t *testing.T) {
 		{
 			desc:         "Unsubscribe from an empty topic with an ID",
 			topic:        "",
-			clientID:     "clientid1",
+			clientID:     "clientid4",
 			errorMessage: mqtt_pubsub.ErrEmptyTopic,
 			pubsub:       false,
 			handler:      handler{false},

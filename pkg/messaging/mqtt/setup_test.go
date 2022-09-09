@@ -41,14 +41,13 @@ func TestMain(m *testing.M) {
 	}
 
 	container, err := pool.Run("eclipse-mosquitto", "1.6.13", nil)
-	// container, err := pool.Run("mainflux/vernemq", "0.13.0", []string{"DOCKER_VERNEMQ_ALLOW_ANONYMOUS=on", "ERL_MAX_ETS_TABLES=256000", "ERL_CRASH_DUMP=/erl_crash.dump", "ERL_FULLSWEEP_AFTER=0", "ERL_MAX_PORTS=256000"})
 	if err != nil {
 		log.Fatalf("Could not start container: %s", err)
 	}
 	handleInterrupt(m, pool, container)
 
 	address = fmt.Sprintf("%s:%s", "localhost", container.GetPort("1883/tcp"))
-	// pool.MaxWait = 120 * time.Second
+	pool.MaxWait = 120 * time.Second
 	if err := pool.Retry(func() error {
 		publisher, err = mqtt_pubsub.NewPublisher(address, 30*time.Second)
 		return err
@@ -74,26 +73,6 @@ func TestMain(m *testing.M) {
 
 	os.Exit(code)
 
-	//////////////////////////////////////////////////////////
-	//! Localhost mqtt broker code above
-	//////////////////////////////////////////////////////////
-
-	//////////////////////////////////////////////////////////
-	//! Online mqtt broker code below
-	//////////////////////////////////////////////////////////
-	// logger, err := logg.New(os.Stdout, "error")
-	// if err != nil {
-	// 	log.Fatalf(err.Error())
-	// }
-	// publisher, err = mqtt_pubsub.NewPublisher(address, 3*time.Second)
-	// if err != nil {
-	// 	log.Fatalf(err.Error())
-	// }
-	// pubsub, err = mqtt_pubsub.NewPubSub(address, "", 3*time.Second, logger)
-	// if err != nil {
-	// 	log.Fatalf(err.Error())
-	// }
-
 	defer func() {
 		err = publisher.Close()
 		if err != nil {
@@ -104,10 +83,6 @@ func TestMain(m *testing.M) {
 			log.Fatalf(err.Error())
 		}
 	}()
-
-	// code := m.Run()
-	// os.Exit(code)
-
 }
 
 func handleInterrupt(m *testing.M, pool *dockertest.Pool, container *dockertest.Resource) {

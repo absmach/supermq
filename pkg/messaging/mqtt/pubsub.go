@@ -178,7 +178,16 @@ func (ps *pubsub) Unsubscribe(id, topic string) error {
 // }
 
 func newClient(address, id string, timeout time.Duration) (mqtt.Client, error) {
-	opts := mqtt.NewClientOptions().SetUsername(username).AddBroker(address).SetClientID(id)
+	opts := mqtt.NewClientOptions().
+		SetUsername(username).
+		AddBroker(address).
+		SetClientID(id).
+		SetConnectionLostHandler(func(c mqtt.Client, err error) {
+			time.Sleep(500 * time.Millisecond)
+		}).
+		SetReconnectingHandler(func(c mqtt.Client, options *mqtt.ClientOptions) {
+			time.Sleep(500 * time.Millisecond)
+		})
 	client := mqtt.NewClient(opts)
 	token := client.Connect()
 	if token.Error() != nil {
