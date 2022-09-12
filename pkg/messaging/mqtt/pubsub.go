@@ -10,6 +10,7 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gogo/protobuf/proto"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 )
@@ -163,20 +164,6 @@ func (ps *pubsub) Unsubscribe(id, topic string) error {
 	return token.Error()
 }
 
-//? Original
-// func (ps *pubsub) mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
-// 	return func(c mqtt.Client, m mqtt.Message) {
-// 		var msg messaging.Message
-// 		if err := proto.Unmarshal(m.Payload(), &msg); err != nil {
-// 			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
-// 			return
-// 		}
-// 		if err := h.Handle(msg); err != nil {
-// 			ps.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
-// 		}
-// 	}
-// }
-
 func newClient(address, id string, timeout time.Duration) (mqtt.Client, error) {
 	opts := mqtt.NewClientOptions().
 		SetUsername(username).
@@ -206,15 +193,27 @@ func newClient(address, id string, timeout time.Duration) (mqtt.Client, error) {
 	return client, nil
 }
 
-//? Prototype, removed the proto.Unmarshall()
 func (ps *pubsub) mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
 	return func(c mqtt.Client, m mqtt.Message) {
+		fmt.Printf("\n\nsetup test handler called\n\n")
 		var msg messaging.Message
-		msg.Payload = m.Payload()
-		// if err := json.Unmarshal(m.Payload(), &msg); err != nil {
-		// 	ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
-		// 	return
-		// }
+		if err := proto.Unmarshal(m.Payload(), &msg); err != nil {
+			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
+			fmt.Println()
+			fmt.Println("############################")
+			fmt.Println("Error while unmarshalling: ", err)
+			fmt.Println("############################")
+			fmt.Println("############################")
+			fmt.Println(m.Payload())
+			fmt.Println(string(m.Payload()))
+			fmt.Println("############################")
+			fmt.Println()
+			msg.Payload = m.Payload()
+			if err := h.Handle(msg); err != nil {
+				ps.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
+			}
+			return
+		}
 		if err := h.Handle(msg); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
 		}

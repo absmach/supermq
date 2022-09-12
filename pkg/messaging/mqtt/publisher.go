@@ -5,10 +5,11 @@ package mqtt
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-
+	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux/pkg/messaging"
 )
 
@@ -36,7 +37,17 @@ func NewPublisher(address string, timeout time.Duration) (messaging.Publisher, e
 }
 
 func (pub publisher) Publish(topic string, msg messaging.Message) error {
-	token := pub.client.Publish(topic, qos, false, msg.Payload)
+	if topic == "" {
+		return ErrEmptyTopic
+	}
+	data, err := proto.Marshal(&msg)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Orig Data = ", msg)
+	fmt.Println("Marhsalled Data = ", data)
+	fmt.Println("Marshalled Data to string = ", string(data))
+	token := pub.client.Publish(topic, qos, false, data)
 	if token.Error() != nil {
 		return token.Error()
 	}

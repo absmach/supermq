@@ -13,6 +13,7 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gogo/protobuf/proto"
 	logg "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	mqtt_pubsub "github.com/mainflux/mainflux/pkg/messaging/mqtt"
@@ -99,12 +100,25 @@ func handleInterrupt(m *testing.M, pool *dockertest.Pool, container *dockertest.
 
 func mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
 	return func(c mqtt.Client, m mqtt.Message) {
+		fmt.Printf("\n\nsetup test handler called\n\n")
 		var msg messaging.Message
-		msg.Payload = m.Payload()
-		// if err := proto.Unmarshal(m.Payload(), &msg); err != nil {
-		// 	logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
-		// 	return
-		// }
+		if err := proto.Unmarshal(m.Payload(), &msg); err != nil {
+			logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
+			fmt.Println()
+			fmt.Println("############################")
+			fmt.Println("Error while unmarshalling: ", err)
+			fmt.Println("############################")
+			fmt.Println("############################")
+			fmt.Println("mqtt m.Payload", m.Payload())
+			fmt.Println("mqtt m.Payload to string", string(m.Payload()))
+			fmt.Println("############################")
+			fmt.Println()
+			msg.Payload = m.Payload()
+			if err := h.Handle(msg); err != nil {
+				logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
+			}
+			return
+		}
 		if err := h.Handle(msg); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
 		}
@@ -116,7 +130,13 @@ func newClient(address, id string, timeout time.Duration) (mqtt.Client, error) {
 		SetUsername(username).
 		AddBroker(address).
 		SetClientID(id).
-		SetDefaultPublishHandler(mqttHandler(handler{false}))
+		SetDefaultPublishHandler(mqttHandler(handler{false})).
+		SetConnectionLostHandler(func(c mqtt.Client, err error) {
+			time.Sleep(500 * time.Millisecond)
+		}).
+		SetReconnectingHandler(func(c mqtt.Client, options *mqtt.ClientOptions) {
+			time.Sleep(500 * time.Millisecond)
+		})
 
 	client := mqtt.NewClient(opts)
 	token := client.Connect()
