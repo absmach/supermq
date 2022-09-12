@@ -5,7 +5,6 @@ package mqtt
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -44,9 +43,6 @@ func (pub publisher) Publish(topic string, msg messaging.Message) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Orig Data = ", msg)
-	fmt.Println("Marhsalled Data = ", data)
-	fmt.Println("Marshalled Data to string = ", string(data))
 	token := pub.client.Publish(topic, qos, false, data)
 	if token.Error() != nil {
 		return token.Error()

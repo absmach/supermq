@@ -47,16 +47,16 @@ func TestMQTTBroker(t *testing.T) {
 		topic   string
 		message []byte
 	}{
-		// {
-		// 	desc:    "publish nil message to topic",
-		// 	topic:   topic,
-		// 	message: nil,
-		// },
-		// {
-		// 	desc:    "publish nil message to topic.subtopic",
-		// 	topic:   fmt.Sprintf("%s.%s", topic, subtopic),
-		// 	message: nil,
-		// },
+		{
+			desc:    "publish nil message to topic",
+			topic:   topic,
+			message: nil,
+		},
+		{
+			desc:    "publish nil message to topic.subtopic",
+			topic:   fmt.Sprintf("%s.%s", topic, subtopic),
+			message: nil,
+		},
 		{
 			desc:    "publishing to topic",
 			topic:   topic,
@@ -69,16 +69,7 @@ func TestMQTTBroker(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		fmt.Println()
-		fmt.Println("######")
-		fmt.Println("desc: ", tc.desc)
-		fmt.Println("######")
-		fmt.Println()
-		// expectedMsg := messaging.Message{
-		// 	Payload: tc.message,
-		// }
 		token = client.Publish(tc.topic, qos, false, tc.message)
-		// token = client.Publish(tc.topic, qos, false, expectedMsg)
 		token.Wait()
 		receivedMsg := <-msgChan
 		if tc.message == nil {
@@ -143,11 +134,6 @@ func TestPublisher(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		fmt.Println()
-		fmt.Println("######")
-		fmt.Println("desc: ", tc.desc)
-		fmt.Println("######")
-		fmt.Println()
 		expectedMsg := messaging.Message{
 			Channel:  tc.channel,
 			Subtopic: tc.subtopic,

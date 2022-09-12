@@ -195,19 +195,9 @@ func newClient(address, id string, timeout time.Duration) (mqtt.Client, error) {
 
 func (ps *pubsub) mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
 	return func(c mqtt.Client, m mqtt.Message) {
-		fmt.Printf("\n\nsetup test handler called\n\n")
 		var msg messaging.Message
 		if err := proto.Unmarshal(m.Payload(), &msg); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
-			fmt.Println()
-			fmt.Println("############################")
-			fmt.Println("Error while unmarshalling: ", err)
-			fmt.Println("############################")
-			fmt.Println("############################")
-			fmt.Println(m.Payload())
-			fmt.Println(string(m.Payload()))
-			fmt.Println("############################")
-			fmt.Println()
 			msg.Payload = m.Payload()
 			if err := h.Handle(msg); err != nil {
 				ps.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))

@@ -100,19 +100,9 @@ func handleInterrupt(m *testing.M, pool *dockertest.Pool, container *dockertest.
 
 func mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
 	return func(c mqtt.Client, m mqtt.Message) {
-		fmt.Printf("\n\nsetup test handler called\n\n")
 		var msg messaging.Message
 		if err := proto.Unmarshal(m.Payload(), &msg); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
-			fmt.Println()
-			fmt.Println("############################")
-			fmt.Println("Error while unmarshalling: ", err)
-			fmt.Println("############################")
-			fmt.Println("############################")
-			fmt.Println("mqtt m.Payload", m.Payload())
-			fmt.Println("mqtt m.Payload to string", string(m.Payload()))
-			fmt.Println("############################")
-			fmt.Println()
 			msg.Payload = m.Payload()
 			if err := h.Handle(msg); err != nil {
 				logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
