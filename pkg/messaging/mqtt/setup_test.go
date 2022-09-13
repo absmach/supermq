@@ -23,10 +23,8 @@ import (
 var (
 	publisher messaging.Publisher
 	pubsub    messaging.PubSub
-
-	logger logg.Logger
-
-	address string
+	logger    logg.Logger
+	address   string
 )
 
 const (
@@ -35,7 +33,6 @@ const (
 )
 
 func TestMain(m *testing.M) {
-
 	pool, err := dockertest.NewPool("")
 	if err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
@@ -45,6 +42,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatalf("Could not start container: %s", err)
 	}
+
 	handleInterrupt(m, pool, container)
 
 	address = fmt.Sprintf("%s:%s", "localhost", container.GetPort("1883/tcp"))
