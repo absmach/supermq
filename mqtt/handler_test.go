@@ -11,17 +11,16 @@ import (
 	"github.com/mainflux/mainflux/mqtt/mocks"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
-	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mproxy/pkg/session"
 	"github.com/stretchr/testify/assert"
 )
 
 const (
 	thingID               = "513d02d2-16c1-4f23-98be-9e12f8fee898"
+	invalidThingID        = "invalidThingID"
 	chanID                = "123e4567-e89b-12d3-a456-000000000001"
 	invalidChanID         = "1"
 	clientID              = "clientID"
-	invalidThingID        = "invalidThingID"
 	password              = "password"
 	subtopic              = "testSubtopic"
 	invalidChannelIDTopic = "channels/**/messages"
@@ -32,13 +31,11 @@ const (
 
 var (
 	invalidTopic        = "invalidTopic"
-	idProvider          = uuid.NewMock()
 	payload             = []byte("[{'n':'test-name', 'v': 1.2}]")
 	topics              = []string{"channels/" + chanID + "/messages"}
 	invalidTopics       = []string{invalidTopic}
 	invalidChanIDTopics = []string{"channels/" + invalidChanID + "/messages"}
 	topic               = "channels/" + chanID + "/messages"
-
 	//Test log messages for cases the handler does not provide a return value.
 	logBuffer     = bytes.Buffer{}
 	sessionClient = session.Client{
