@@ -67,6 +67,15 @@ func NewPubSub(url, queue string, timeout time.Duration, logger log.Logger) (mes
 }
 
 func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) error {
+	fmt.Println("#####")
+	fmt.Printf("Subscriptions map BEFORE subscribing is:\n %+v\n", ps.subscriptions)
+	fmt.Println("#####")
+	defer func() {
+		fmt.Println("#####")
+		fmt.Printf("Subscriptions map AFTER subscribing is:\n %+v\n", ps.subscriptions)
+		fmt.Println("#####")
+	}()
+
 	if id == "" {
 		return ErrEmptyID
 	}
@@ -80,7 +89,9 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 	switch ok {
 	case true:
 		// Check topic
+		fmt.Println("Found client already")
 		if ok = s.contains(topic); ok {
+			fmt.Println("Found topic already")
 			// Unlocking, so that Unsubscribe() can access ps.subscriptions
 			ps.mu.Unlock()
 			err := ps.Unsubscribe(id, topic)
@@ -89,19 +100,21 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 				return err
 			}
 			if len(ps.subscriptions[id].topics) == 0 {
+				fmt.Println("Removed prev, now topics[] is empty")
 				client, err := newClient(ps.address, id, ps.timeout)
 				if err != nil {
 					return err
 				}
 				s = subscription{
 					client: client,
-					topics: []string{topic},
+					topics: []string{},
 				}
-
-				ps.subscriptions[id] = s
 			}
 		}
 		s.topics = append(s.topics, topic)
+		ps.subscriptions[id] = s
+		fmt.Println("new topic, after adding:")
+		fmt.Println("s.topics = ", s.topics)
 	default:
 		client, err := newClient(ps.address, id, ps.timeout)
 		if err != nil {

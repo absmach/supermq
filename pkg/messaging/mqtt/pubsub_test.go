@@ -159,6 +159,10 @@ func TestSubscribe(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
+		fmt.Println("#####")
+		fmt.Println("TestCase: ", tc.desc)
+		fmt.Println("#####")
+
 		err := pubsub.Subscribe(tc.clientID, tc.topic, tc.handler)
 		assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, err, tc.err))
 	}
