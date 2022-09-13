@@ -18,19 +18,21 @@ import (
 )
 
 const (
-	thingID        = "thingID"
-	chanID         = "123e4567-e89b-12d3-a456-000000000001"
-	invalidChanID  = "1"
-	clientID       = "clientID"
-	invalidThingID = "invalidThingID"
-	password       = "password"
-	subtopic       = "testSubtopic"
+	thingID               = "thingID"
+	chanID                = "123e4567-e89b-12d3-a456-000000000001"
+	invalidChanID         = "1"
+	clientID              = "clientID"
+	invalidThingID        = "invalidThingID"
+	password              = "password"
+	subtopic              = "testSubtopic"
+	invalidChannelIDTopic = "channels/**/messages"
 )
 
 var (
 	invalidTopic = "invalidTopic"
 	idProvider   = uuid.NewMock()
-	//	Test log messages for cases the handler does not provide a return value.
+	payload      = []byte("[{'n':'test-name', 'v': 1.2}]")
+	//Test log messages for cases the handler does not provide a return value.
 	logBuffer     = bytes.Buffer{}
 	sessionClient = session.Client{
 		ID:       clientID,
@@ -103,11 +105,10 @@ func TestAuthConnect(t *testing.T) {
 
 func TestAuthPublish(t *testing.T) {
 	handler := newHandler()
-	var payload = []byte("[{'n':'test-name', 'v': 1.2}]")
 
 	chID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	var topic = "channels/" + chID + "/messages"
+	topic := "channels/" + chID + "/messages"
 
 	cases := []struct {
 		desc    string
@@ -154,8 +155,8 @@ func TestAuthPublish(t *testing.T) {
 
 func TestAuthSubscribe(t *testing.T) {
 	handler := newHandler()
-	var invalidTopics = []string{invalidTopic}
-	var topics = []string{"channels/" + chanID + "/messages"}
+	invalidTopics := []string{invalidTopic}
+	topics := []string{"channels/" + chanID + "/messages"}
 	invalidChanIDTopics := []string{"channels/" + invalidChanID + "/messages"}
 
 	cases := []struct {
@@ -240,11 +241,10 @@ func TestPublish(t *testing.T) {
 
 	chID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	var topic = "channels/" + chID + "/messages"
-	var malformedSubtopics = "channels/" + chID + "/messages/testSubtopic%"
-	var wrongCharSubtopics = "channels/" + chID + "/messages/testSubtopic>"
-	var validSubtopic = "channels/" + chID + "/messages/testSubtopic"
-	var invalidChannelIDTopic = "channels/**/messages"
+	topic := "channels/" + chID + "/messages"
+	malformedSubtopics := "channels/" + chID + "/messages/testSubtopic%"
+	wrongCharSubtopics := "channels/" + chID + "/messages/testSubtopic>"
+	validSubtopic := "channels/" + chID + "/messages/testSubtopic"
 
 	cases := []struct {
 		desc    string
@@ -257,49 +257,49 @@ func TestPublish(t *testing.T) {
 			desc:    "publish without active session",
 			client:  nil,
 			topic:   topic,
-			payload: []byte("payload"),
+			payload: payload,
 			logMsg:  mqtt.ErrClientNotInitialized.Error(),
 		},
 		{
 			desc:    "publish with invalid topic",
 			client:  &sessionClient,
 			topic:   invalidTopic,
-			payload: []byte("payload"),
+			payload: payload,
 			logMsg:  fmt.Sprintf(mqtt.LogInfoPublished, clientID, invalidTopic),
 		},
 		{
 			desc:    "publish with invalid channel ID",
 			client:  &sessionClient,
 			topic:   invalidChannelIDTopic,
-			payload: []byte("payload"),
+			payload: payload,
 			logMsg:  mqtt.LogErrFailedPublish + mqtt.ErrMalformedTopic.Error(),
 		},
 		{
 			desc:    "publish with malformed subtopic",
 			client:  &sessionClient,
 			topic:   malformedSubtopics,
-			payload: []byte("payload"),
+			payload: payload,
 			logMsg:  mqtt.ErrMalformedSubtopic.Error(),
 		},
 		{
 			desc:    "publish with subtopic containing wrong character",
 			client:  &sessionClient,
 			topic:   wrongCharSubtopics,
-			payload: []byte("payload"),
+			payload: payload,
 			logMsg:  mqtt.ErrMalformedSubtopic.Error(),
 		},
 		{
 			desc:    "publish with subtopic",
 			client:  &sessionClient,
 			topic:   validSubtopic,
-			payload: []byte("payload"),
+			payload: payload,
 			logMsg:  subtopic,
 		},
 		{
 			desc:    "publish without subtopic",
 			client:  &sessionClient,
 			topic:   topic,
-			payload: []byte("payload"),
+			payload: payload,
 			logMsg:  "",
 		},
 	}
@@ -316,7 +316,7 @@ func TestSubscribe(t *testing.T) {
 
 	chID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	var topics = []string{"channels/" + chID + "/messages"}
+	topics := []string{"channels/" + chID + "/messages"}
 
 	cases := []struct {
 		desc   string
@@ -350,7 +350,7 @@ func TestUnsubscribe(t *testing.T) {
 
 	chID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	var topics = []string{"channels/" + chID + "/messages"}
+	topics := []string{"channels/" + chID + "/messages"}
 
 	cases := []struct {
 		desc   string
@@ -384,7 +384,7 @@ func TestDisconnect(t *testing.T) {
 
 	chID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	var topics = []string{"channels/" + chID + "/messages"}
+	topics := []string{"channels/" + chID + "/messages"}
 
 	cases := []struct {
 		desc   string
