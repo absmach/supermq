@@ -23,18 +23,16 @@ const (
 	password              = "password"
 	subtopic              = "testSubtopic"
 	invalidChannelIDTopic = "channels/**/messages"
-	malformedSubtopics    = "channels/" + chanID + "/messages/" + subtopic + "%"
-	wrongCharSubtopics    = "channels/" + chanID + "/messages/" + subtopic + ">"
-	validSubtopic         = "channels/" + chanID + "/messages/" + subtopic
 )
 
 var (
+	topicMsg            = "channels/%s/messages"
+	topic               = fmt.Sprintf(topicMsg, chanID)
 	invalidTopic        = "invalidTopic"
 	payload             = []byte("[{'n':'test-name', 'v': 1.2}]")
-	topics              = []string{"channels/" + chanID + "/messages"}
+	topics              = []string{topic}
 	invalidTopics       = []string{invalidTopic}
-	invalidChanIDTopics = []string{"channels/" + invalidID + "/messages"}
-	topic               = "channels/" + chanID + "/messages"
+	invalidChanIDTopics = []string{fmt.Sprintf(topicMsg, invalidTopic)}
 	//Test log messages for cases the handler does not provide a return value.
 	logBuffer     = bytes.Buffer{}
 	sessionClient = session.Client{
@@ -227,6 +225,10 @@ func TestConnect(t *testing.T) {
 func TestPublish(t *testing.T) {
 	handler := newHandler()
 	logBuffer.Reset()
+
+	malformedSubtopics := topic + "/" + subtopic + "%"
+	wrongCharSubtopics := topic + "/" + subtopic + ">"
+	validSubtopic := topic + "/" + subtopic
 
 	cases := []struct {
 		desc    string
