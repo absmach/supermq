@@ -81,22 +81,14 @@ func TestAuthConnect(t *testing.T) {
 			},
 		},
 		{
-			desc: "connect with valid password and invalid username",
-			err:  errors.ErrAuthentication,
-			session: &session.Client{
-				ID:       clientID,
-				Username: invalidID,
-				Password: []byte(password),
-			},
+			desc:    "connect with valid password and invalid username",
+			err:     errors.ErrAuthentication,
+			session: &invalidThingSessionClient,
 		},
 		{
-			desc: "connect with valid username and password",
-			err:  nil,
-			session: &session.Client{
-				ID:       clientID,
-				Username: thingID,
-				Password: []byte(password),
-			},
+			desc:    "connect with valid username and password",
+			err:     nil,
+			session: &sessionClient,
 		},
 	}
 
