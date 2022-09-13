@@ -40,7 +40,7 @@ func TestPublisher(t *testing.T) {
 	assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
 
 	// publish with empty topic
-	err = publisher.Publish("", messaging.Message{Payload: data})
+	err = pubsub.Publish("", messaging.Message{Payload: data})
 	assert.Equal(t, err, mqtt_pubsub.ErrEmptyTopic, fmt.Sprintf("Publish with empty topic: expected: %s, got: %s", mqtt_pubsub.ErrEmptyTopic, err))
 
 	cases := []struct {
@@ -81,7 +81,7 @@ func TestPublisher(t *testing.T) {
 			Subtopic: tc.subtopic,
 			Payload:  tc.payload,
 		}
-		err := publisher.Publish(topic, expectedMsg)
+		err := pubsub.Publish(topic, expectedMsg)
 		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s\n", tc.desc, err))
 
 		receivedMsg := <-msgChan

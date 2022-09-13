@@ -21,10 +21,9 @@ import (
 )
 
 var (
-	publisher messaging.Publisher
-	pubsub    messaging.PubSub
-	logger    logg.Logger
-	address   string
+	pubsub  messaging.PubSub
+	logger  logg.Logger
+	address string
 )
 
 const (
@@ -47,17 +46,12 @@ func TestMain(m *testing.M) {
 
 	address = fmt.Sprintf("%s:%s", "localhost", container.GetPort("1883/tcp"))
 	pool.MaxWait = 120 * time.Second
-	if err := pool.Retry(func() error {
-		publisher, err = mqtt_pubsub.NewPublisher(address, 30*time.Second)
-		return err
-	}); err != nil {
-		log.Fatalf("Could not connect to docker: %s", err)
-	}
 
 	logger, err = logg.New(os.Stdout, "error")
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
+
 	if err := pool.Retry(func() error {
 		pubsub, err = mqtt_pubsub.NewPubSub(address, "", 30*time.Second, logger)
 		return err
@@ -73,10 +67,6 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 
 	defer func() {
-		err = publisher.Close()
-		if err != nil {
-			log.Fatalf(err.Error())
-		}
 		err = pubsub.Close()
 		if err != nil {
 			log.Fatalf(err.Error())
