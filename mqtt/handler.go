@@ -21,10 +21,8 @@ import (
 
 var _ session.Handler = (*handler)(nil)
 
-const protocol = "mqtt"
-
-var (
-	channelRegExp                      = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]*)?(\?.*)?$`)
+const (
+	protocol                           = "mqtt"
 	LogInfoSubscribed                  = "subscribed with client_id %s to topics %s"
 	LogInfoUnsubscribed                = "unsubscribed client_id %s from topics %s"
 	LogInfoConnected                   = "connected with client_id %s"
@@ -39,13 +37,17 @@ var (
 	logErrFailedParseSubtopic          = "failed to parse subtopic: "
 	LogErrFailedPublishConnectEvent    = "failed to publish connect event: "
 	LogErrFailedPublishToMsgBroker     = "failed to publish to mainflux message broker: "
-	errMalformedSubtopic               = errors.New("malformed subtopic")
-	ErrClientNotInitialized            = errors.New("client is not initialized")
-	ErrMalformedTopic                  = errors.New("malformed topic")
-	ErrMissingClientID                 = errors.New("client_id not found")
-	ErrMissingTopicPub                 = errors.New("failed to publish due to missing topic")
-	ErrMissingTopicSub                 = errors.New("failed to subscribe due to missing topic")
-	ErrAuthentication                  = errors.New("failed to perform authentication over the entity")
+)
+
+var (
+	channelRegExp           = regexp.MustCompile(`^\/?channels\/([\w\-]+)\/messages(\/[^?]*)?(\?.*)?$`)
+	ErrMalformedSubtopic    = errors.New("malformed subtopic")
+	ErrClientNotInitialized = errors.New("client is not initialized")
+	ErrMalformedTopic       = errors.New("malformed topic")
+	ErrMissingClientID      = errors.New("client_id not found")
+	ErrMissingTopicPub      = errors.New("failed to publish due to missing topic")
+	ErrMissingTopicSub      = errors.New("failed to subscribe due to missing topic")
+	ErrAuthentication       = errors.New("failed to perform authentication over the entity")
 )
 
 // Event implements events.Event interface
@@ -230,7 +232,7 @@ func parseSubtopic(subtopic string) (string, error) {
 
 	subtopic, err := url.QueryUnescape(subtopic)
 	if err != nil {
-		return "", errMalformedSubtopic
+		return "", ErrMalformedSubtopic
 	}
 	subtopic = strings.Replace(subtopic, "/", ".", -1)
 
@@ -242,7 +244,7 @@ func parseSubtopic(subtopic string) (string, error) {
 		}
 
 		if len(elem) > 1 && (strings.Contains(elem, "*") || strings.Contains(elem, ">")) {
-			return "", errMalformedSubtopic
+			return "", ErrMalformedSubtopic
 		}
 
 		filteredElems = append(filteredElems, elem)

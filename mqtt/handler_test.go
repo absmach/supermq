@@ -24,11 +24,13 @@ const (
 	clientID       = "clientID"
 	invalidThingID = "invalidThingID"
 	password       = "password"
+	subtopic       = "testSubtopic"
 )
 
 var (
-	invalidTopic  = "invalidTopic"
-	idProvider    = uuid.NewMock()
+	invalidTopic = "invalidTopic"
+	idProvider   = uuid.NewMock()
+	//	Test log messages for cases the handler does not provide a return value.
 	logBuffer     = bytes.Buffer{}
 	sessionClient = session.Client{
 		ID:       clientID,
@@ -239,6 +241,9 @@ func TestPublish(t *testing.T) {
 	chID, err := idProvider.ID()
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	var topic = "channels/" + chID + "/messages"
+	var malformedSubtopics = "channels/" + chID + "/messages/testSubtopic%"
+	var wrongCharSubtopics = "channels/" + chID + "/messages/testSubtopic>"
+	var validSubtopic = "channels/" + chID + "/messages/testSubtopic"
 	var invalidChannelIDTopic = "channels/**/messages"
 
 	cases := []struct {
@@ -268,6 +273,34 @@ func TestPublish(t *testing.T) {
 			topic:   invalidChannelIDTopic,
 			payload: []byte("payload"),
 			logMsg:  mqtt.LogErrFailedPublish + mqtt.ErrMalformedTopic.Error(),
+		},
+		{
+			desc:    "publish with malformed subtopic",
+			client:  &sessionClient,
+			topic:   malformedSubtopics,
+			payload: []byte("payload"),
+			logMsg:  mqtt.ErrMalformedSubtopic.Error(),
+		},
+		{
+			desc:    "publish with subtopic containing wrong character",
+			client:  &sessionClient,
+			topic:   wrongCharSubtopics,
+			payload: []byte("payload"),
+			logMsg:  mqtt.ErrMalformedSubtopic.Error(),
+		},
+		{
+			desc:    "publish with subtopic",
+			client:  &sessionClient,
+			topic:   validSubtopic,
+			payload: []byte("payload"),
+			logMsg:  subtopic,
+		},
+		{
+			desc:    "publish without subtopic",
+			client:  &sessionClient,
+			topic:   topic,
+			payload: []byte("payload"),
+			logMsg:  "",
 		},
 	}
 
