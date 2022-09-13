@@ -17,9 +17,8 @@ import (
 
 const (
 	thingID               = "513d02d2-16c1-4f23-98be-9e12f8fee898"
-	invalidThingID        = "invalidThingID"
 	chanID                = "123e4567-e89b-12d3-a456-000000000001"
-	invalidChanID         = "1"
+	invalidID             = "invalidID"
 	clientID              = "clientID"
 	password              = "password"
 	subtopic              = "testSubtopic"
@@ -34,7 +33,7 @@ var (
 	payload             = []byte("[{'n':'test-name', 'v': 1.2}]")
 	topics              = []string{"channels/" + chanID + "/messages"}
 	invalidTopics       = []string{invalidTopic}
-	invalidChanIDTopics = []string{"channels/" + invalidChanID + "/messages"}
+	invalidChanIDTopics = []string{"channels/" + invalidID + "/messages"}
 	topic               = "channels/" + chanID + "/messages"
 	//Test log messages for cases the handler does not provide a return value.
 	logBuffer     = bytes.Buffer{}
@@ -45,7 +44,7 @@ var (
 	}
 	invalidThingSessionClient = session.Client{
 		ID:       clientID,
-		Username: invalidThingID,
+		Username: invalidID,
 		Password: []byte(password),
 	}
 )
@@ -86,7 +85,7 @@ func TestAuthConnect(t *testing.T) {
 			err:  errors.ErrAuthentication,
 			session: &session.Client{
 				ID:       clientID,
-				Username: invalidThingID,
+				Username: invalidID,
 				Password: []byte(password),
 			},
 		},
