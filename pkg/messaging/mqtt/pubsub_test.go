@@ -102,8 +102,13 @@ func TestPublisher(t *testing.T) {
 	token = client.Subscribe(fmt.Sprintf("%s.%s", topic, subtopic), qos, nil)
 	assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
 
+	// publish with empty topic
+	err = publisher.Publish("", messaging.Message{Payload: data})
+	assert.Equal(t, err, mqtt_pubsub.ErrEmptyTopic, fmt.Sprintf("Publish with empty topic: expected: %s, got: %s", mqtt_pubsub.ErrEmptyTopic, err))
+
 	cases := []struct {
 		desc     string
+		topic    string
 		channel  string
 		subtopic string
 		payload  []byte
@@ -351,13 +356,13 @@ func TestUnsubscribe(t *testing.T) {
 			desc:     "Unsubscribe from a topic with an ID with failing handler",
 			topic:    fmt.Sprintf("%s%s", topic, "2"),
 			clientID: "clientid5",
-			err:      mqtt_pubsub.ErrFailed,
+			err:      mqtt_pubsub.ErrFailedHandleMessage,
 		},
 		{
 			desc:     "Unsubscribe from a topic with an ID with failing handler",
 			topic:    fmt.Sprintf("%s%s.%s", topic, "2", subtopic),
 			clientID: "clientid5",
-			err:      mqtt_pubsub.ErrFailed,
+			err:      mqtt_pubsub.ErrFailedHandleMessage,
 		},
 	}
 	for _, tc := range cases {
@@ -593,7 +598,7 @@ func (h handler) Handle(msg messaging.Message) error {
 
 func (h handler) Cancel() error {
 	if h.fail {
-		return mqtt_pubsub.ErrFailed
+		return mqtt_pubsub.ErrFailedHandleMessage
 	}
 	return nil
 }

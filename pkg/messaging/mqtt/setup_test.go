@@ -26,7 +26,7 @@ var (
 
 	logger logg.Logger
 
-	address = "tcp://mqtt.eclipseprojects.io:1883"
+	address string
 )
 
 const (

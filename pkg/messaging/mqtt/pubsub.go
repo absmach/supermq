@@ -28,7 +28,7 @@ var (
 	ErrNotSubscribed          = errors.New("not subscribed")
 	ErrEmptyTopic             = errors.New("empty topic")
 	ErrEmptyID                = errors.New("empty ID")
-	ErrFailed                 = errors.New("failed")
+	ErrFailedHandleMessage    = errors.New("failed to handle mainflux message")
 )
 
 var _ messaging.PubSub = (*pubsub)(nil)
@@ -89,8 +89,6 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 				return err
 			}
 			if len(ps.subscriptions[id].topics) == 0 {
-				// ps.subscriptions = make(map[string]subscription)
-
 				client, err := newClient(ps.address, id, ps.timeout)
 				if err != nil {
 					return err
