@@ -14,11 +14,10 @@ import (
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mproxy/pkg/session"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 const (
-	thingID               = "thingID"
+	thingID               = "513d02d2-16c1-4f23-98be-9e12f8fee898"
 	chanID                = "123e4567-e89b-12d3-a456-000000000001"
 	invalidChanID         = "1"
 	clientID              = "clientID"
@@ -26,12 +25,20 @@ const (
 	password              = "password"
 	subtopic              = "testSubtopic"
 	invalidChannelIDTopic = "channels/**/messages"
+	malformedSubtopics    = "channels/" + chanID + "/messages/" + subtopic + "%"
+	wrongCharSubtopics    = "channels/" + chanID + "/messages/" + subtopic + ">"
+	validSubtopic         = "channels/" + chanID + "/messages/" + subtopic
 )
 
 var (
-	invalidTopic = "invalidTopic"
-	idProvider   = uuid.NewMock()
-	payload      = []byte("[{'n':'test-name', 'v': 1.2}]")
+	invalidTopic        = "invalidTopic"
+	idProvider          = uuid.NewMock()
+	payload             = []byte("[{'n':'test-name', 'v': 1.2}]")
+	topics              = []string{"channels/" + chanID + "/messages"}
+	invalidTopics       = []string{invalidTopic}
+	invalidChanIDTopics = []string{"channels/" + invalidChanID + "/messages"}
+	topic               = "channels/" + chanID + "/messages"
+
 	//Test log messages for cases the handler does not provide a return value.
 	logBuffer     = bytes.Buffer{}
 	sessionClient = session.Client{
@@ -106,10 +113,6 @@ func TestAuthConnect(t *testing.T) {
 func TestAuthPublish(t *testing.T) {
 	handler := newHandler()
 
-	chID, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	topic := "channels/" + chID + "/messages"
-
 	cases := []struct {
 		desc    string
 		client  *session.Client
@@ -155,9 +158,6 @@ func TestAuthPublish(t *testing.T) {
 
 func TestAuthSubscribe(t *testing.T) {
 	handler := newHandler()
-	invalidTopics := []string{invalidTopic}
-	topics := []string{"channels/" + chanID + "/messages"}
-	invalidChanIDTopics := []string{"channels/" + invalidChanID + "/messages"}
 
 	cases := []struct {
 		desc   string
@@ -212,6 +212,7 @@ func TestAuthSubscribe(t *testing.T) {
 func TestConnect(t *testing.T) {
 	handler := newHandler()
 	logBuffer.Reset()
+
 	cases := []struct {
 		desc   string
 		client *session.Client
@@ -238,13 +239,6 @@ func TestConnect(t *testing.T) {
 func TestPublish(t *testing.T) {
 	handler := newHandler()
 	logBuffer.Reset()
-
-	chID, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	topic := "channels/" + chID + "/messages"
-	malformedSubtopics := "channels/" + chID + "/messages/testSubtopic%"
-	wrongCharSubtopics := "channels/" + chID + "/messages/testSubtopic>"
-	validSubtopic := "channels/" + chID + "/messages/testSubtopic"
 
 	cases := []struct {
 		desc    string
@@ -314,10 +308,6 @@ func TestSubscribe(t *testing.T) {
 	handler := newHandler()
 	logBuffer.Reset()
 
-	chID, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	topics := []string{"channels/" + chID + "/messages"}
-
 	cases := []struct {
 		desc   string
 		client *session.Client
@@ -348,10 +338,6 @@ func TestUnsubscribe(t *testing.T) {
 	handler := newHandler()
 	logBuffer.Reset()
 
-	chID, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	topics := []string{"channels/" + chID + "/messages"}
-
 	cases := []struct {
 		desc   string
 		client *session.Client
@@ -381,10 +367,6 @@ func TestUnsubscribe(t *testing.T) {
 func TestDisconnect(t *testing.T) {
 	handler := newHandler()
 	logBuffer.Reset()
-
-	chID, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	topics := []string{"channels/" + chID + "/messages"}
 
 	cases := []struct {
 		desc   string
