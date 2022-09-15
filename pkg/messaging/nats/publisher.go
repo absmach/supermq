@@ -33,21 +33,39 @@ func NewPublisher(url string) (messaging.Publisher, error) {
 }
 
 func (pub *publisher) Publish(topic string, msg messaging.Message) error {
+	fmt.Println()
+	fmt.Println("Reached pubsub.publish")
+	fmt.Println()
+
 	if topic == "" {
 		return ErrEmptyTopic
 	}
 	data, err := proto.Marshal(&msg)
+	fmt.Println()
+	fmt.Println("Marshal error ->", err)
+	fmt.Println()
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("Data after marshall ->", data)
+	fmt.Println("Data after marshall to string ->", string(data))
+	fmt.Println()
 
 	subject := fmt.Sprintf("%s.%s", chansPrefix, topic)
 	if msg.Subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, msg.Subtopic)
 	}
 	if err := pub.conn.Publish(subject, data); err != nil {
+		fmt.Println()
+		fmt.Println("pub.conn.Publish() error -> ", err)
+		fmt.Println()
+
 		return err
 	}
+	fmt.Println()
+	fmt.Println("Published successfully")
+	fmt.Println()
 
 	return nil
 }

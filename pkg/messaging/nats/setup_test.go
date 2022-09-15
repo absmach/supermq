@@ -11,15 +11,18 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/mainflux/mainflux/logger"
+	"github.com/gogo/protobuf/proto"
+	logg "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/nats"
+	broker "github.com/nats-io/nats.go"
 	dockertest "github.com/ory/dockertest/v3"
 )
 
 var (
-	publisher messaging.Publisher
-	pubsub    messaging.PubSub
+	pubsub  messaging.PubSub
+	address string
+	logger  logg.Logger
 )
 
 func TestMain(m *testing.M) {
@@ -34,15 +37,9 @@ func TestMain(m *testing.M) {
 	}
 	handleInterrupt(pool, container)
 
-	address := fmt.Sprintf("%s:%s", "localhost", container.GetPort("4222/tcp"))
-	if err := pool.Retry(func() error {
-		publisher, err = nats.NewPublisher(address)
-		return err
-	}); err != nil {
-		log.Fatalf("Could not connect to docker: %s", err)
-	}
+	address = fmt.Sprintf("%s:%s", "localhost", container.GetPort("4222/tcp"))
 
-	logger, err := logger.New(os.Stdout, "error")
+	logger, err = logg.New(os.Stdout, "error")
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -59,6 +56,28 @@ func TestMain(m *testing.M) {
 	}
 
 	os.Exit(code)
+}
+
+func newConn() (*broker.Conn, error) {
+	conn, err := broker.Connect(address)
+	if err != nil {
+		return nil, err
+	}
+
+	return conn, nil
+}
+
+func natsHandler(h messaging.MessageHandler) broker.MsgHandler {
+	return func(m *broker.Msg) {
+		var msg messaging.Message
+		if err := proto.Unmarshal(m.Data, &msg); err != nil {
+			logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
+			return
+		}
+		if err := h.Handle(msg); err != nil {
+			logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
+		}
+	}
 }
 
 func handleInterrupt(pool *dockertest.Pool, container *dockertest.Resource) {
