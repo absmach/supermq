@@ -155,6 +155,8 @@ func (ps *pubsub) Unsubscribe(id, topic string) error {
 	if ok := s.delete(topic); !ok {
 		return ErrUnsubscribeDeleteTopic
 	}
+	ps.subscriptions[id] = s
+
 	if len(s.topics) == 0 {
 		delete(ps.subscriptions, id)
 	}
