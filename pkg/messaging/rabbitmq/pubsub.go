@@ -17,7 +17,7 @@ import (
 const (
 	chansPrefix = "channels"
 	// SubjectAllChannels represents subject to subscribe for all the channels.
-	SubjectAllChannels = "channels.>"
+	SubjectAllChannels = "channels.#"
 	exchangeName       = "mainflux-exchange"
 )
 
@@ -51,7 +51,7 @@ func NewPubSub(url, queue string, logger log.Logger) (messaging.PubSub, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := ch.ExchangeDeclare(exchangeName, amqp.ExchangeDirect, true, false, false, false, nil); err != nil {
+	if err := ch.ExchangeDeclare(exchangeName, amqp.ExchangeTopic, true, false, false, false, nil); err != nil {
 		return nil, err
 	}
 	ret := &pubsub{
@@ -73,6 +73,7 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 		return ErrEmptyTopic
 	}
 	ps.mu.Lock()
+
 	// Check topic
 	s, ok := ps.subscriptions[topic]
 	if ok {

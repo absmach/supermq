@@ -5,6 +5,7 @@ package rabbitmq
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux/pkg/messaging"
@@ -29,7 +30,7 @@ func NewPublisher(url string) (messaging.Publisher, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := ch.ExchangeDeclare(exchangeName, amqp.ExchangeDirect, true, false, false, false, nil); err != nil {
+	if err := ch.ExchangeDeclare(exchangeName, amqp.ExchangeTopic, true, false, false, false, nil); err != nil {
 		return nil, err
 	}
 	ret := &publisher{
@@ -47,10 +48,8 @@ func (pub *publisher) Publish(topic string, msg messaging.Message) error {
 	if err != nil {
 		return err
 	}
-	subject := fmt.Sprintf("%s.%s", chansPrefix, topic)
-	if msg.Subtopic != "" {
-		subject = fmt.Sprintf("%s.%s", subject, msg.Subtopic)
-	}
+	subject := formatTopic(topic, msg)
+
 	err = pub.ch.Publish(
 		exchangeName,
 		subject,
@@ -72,4 +71,14 @@ func (pub *publisher) Publish(topic string, msg messaging.Message) error {
 
 func (pub *publisher) Close() error {
 	return pub.conn.Close()
+}
+
+func formatTopic(topic string, message messaging.Message) string {
+	subject := fmt.Sprintf("%s.%s", chansPrefix, topic)
+	if message.Subtopic != "" {
+		subject = fmt.Sprintf("%s.%s", subject, message.Subtopic)
+	}
+	subject = strings.Replace(subject, "/", ".", -1)
+	subject = strings.Replace(subject, ">", "#", -1)
+	return subject
 }
