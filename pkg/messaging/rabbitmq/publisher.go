@@ -78,7 +78,6 @@ func formatTopic(topic string, message messaging.Message) string {
 	if message.Subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, message.Subtopic)
 	}
-	subject = strings.Replace(subject, "/", ".", -1)
 	subject = strings.Replace(subject, ">", "#", -1)
 	return subject
 }
