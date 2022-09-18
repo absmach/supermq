@@ -227,8 +227,6 @@ func TestPubSub(t *testing.T) {
 			}
 			err := pubsub.Publish(topic, expectedMsg)
 			assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s\n", tc.desc, err))
-			// token := client.Publish(tc.topic, qos, false, expectedMsg.Payload)
-			// token.Wait()
 
 			receivedMsg := <-msgChan
 			assert.Equal(t, expectedMsg.Payload, receivedMsg.Payload, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
@@ -362,12 +360,6 @@ func TestSubUnsub(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		fmt.Println("###")
-		fmt.Println("TestCase: ", tc.desc)
-		if tc.err != nil {
-			fmt.Println("No change expected")
-		}
-		fmt.Println("###")
 		switch tc.pubsub {
 		case true:
 			err := pubsub.Subscribe(tc.clientID, tc.topic, tc.handler)
@@ -523,12 +515,6 @@ func TestAll(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		fmt.Println("###")
-		fmt.Println("TestCase: ", tc.desc)
-		if tc.err != nil {
-			fmt.Println("No change expected")
-		}
-		fmt.Println("###")
 		switch tc.pubsub {
 		case true:
 			err := pubsub.Subscribe(tc.clientID, tc.topic, tc.handler)
