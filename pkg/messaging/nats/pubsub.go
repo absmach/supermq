@@ -97,6 +97,7 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 	nh := ps.natsHandler(handler)
 
 	if ps.queue != "" {
+		fmt.Println("quesubscribing")
 		sub, err := ps.conn.QueueSubscribe(topic, ps.queue, nh)
 		if err != nil {
 			return err
@@ -108,7 +109,9 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 		return nil
 	}
 	sub, err := ps.conn.Subscribe(topic, nh)
+	fmt.Println("subscribing")
 	if err != nil {
+		fmt.Println(err, " <- This error from ps.conn.Subscribe")
 		return err
 	}
 	s[id] = subscription{
@@ -155,7 +158,7 @@ func (ps *pubsub) Unsubscribe(id, topic string) error {
 
 func (ps *pubsub) natsHandler(h messaging.MessageHandler) broker.MsgHandler {
 	fmt.Println()
-	fmt.Println("Reached nats handler")
+	fmt.Println("Reached pubsub nats handler")
 	fmt.Println()
 
 	return func(m *broker.Msg) {
@@ -172,10 +175,12 @@ func (ps *pubsub) natsHandler(h messaging.MessageHandler) broker.MsgHandler {
 		fmt.Println()
 		if err := h.Handle(msg); err != nil {
 			fmt.Println()
-			fmt.Println("inside h.handle")
+			fmt.Println("h.handle -> error ->", err)
 			fmt.Println()
-
 			ps.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
 		}
+		fmt.Println()
+		fmt.Println("back from h.handle")
+		fmt.Println()
 	}
 }

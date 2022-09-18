@@ -10,15 +10,15 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/rabbitmq"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 const (
-	topic       = "topic"
-	chansPrefix = "channels"
-	channel     = "9b7b1b3f-b1b0-46a8-a717-b8213f9eda3b"
-	subtopic    = "engine"
-	clientID    = "9b7b1b3f-b1b0-46a8-a717-b8213f9eda3b"
+	topic        = "topic"
+	chansPrefix  = "channels"
+	channel      = "9b7b1b3f-b1b0-46a8-a717-b8213f9eda3b"
+	subtopic     = "engine"
+	clientID     = "9b7b1b3f-b1b0-46a8-a717-b8213f9eda3b"
+	exchangeName = "mainflux-exchange"
 )
 
 var (
@@ -27,10 +27,22 @@ var (
 )
 
 func TestPublisher(t *testing.T) {
-	err := pubsub.Subscribe(clientID, fmt.Sprintf("%s.%s", chansPrefix, topic), handler{})
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	err = pubsub.Subscribe(clientID, fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic), handler{})
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	// Subscribing with topic, and with subtopic, so that we can publish messages
+	conn, ch, err := newConn()
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	// rabbitTopic := fmt.Sprintf("%s.%s", chansPrefix, topic)
+	topicChan := subscribe(t, ch, fmt.Sprintf("%s.%s", chansPrefix, topic))
+	subtopicChan := subscribe(t, ch, fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic))
+
+	go rabbitHandler(topicChan, handler{})
+	go rabbitHandler(subtopicChan, handler{})
+
+	t.Cleanup(func() {
+		conn.Close()
+		ch.Close()
+	})
+
 	cases := []struct {
 		desc     string
 		channel  string
@@ -64,20 +76,88 @@ func TestPublisher(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		fmt.Println("###")
+		fmt.Println("TestCase: ", tc.desc)
+		fmt.Println("###")
 		expectedMsg := messaging.Message{
 			Channel:  tc.channel,
 			Subtopic: tc.subtopic,
 			Payload:  tc.payload,
 		}
-		err := publisher.Publish(topic, expectedMsg)
-		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+		err = pubsub.Publish(topic, expectedMsg)
+		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s", tc.desc, err))
 
+		fmt.Println("... receiving message from msgChan ...")
 		receivedMsg := <-msgChan
 		assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
 	}
 }
 
-func TestPubsub(t *testing.T) {
+func TestSubscribe(t *testing.T) {
+	cases := []struct {
+		desc     string
+		topic    string
+		clientID string
+		err      error
+		handler  messaging.MessageHandler
+	}{
+		{
+			desc:     "Subscribe to a topic with an ID",
+			topic:    topic,
+			clientID: "clientid1",
+			err:      nil,
+			handler:  handler{false},
+		},
+		{
+			desc:     "Subscribe to the same topic with a different ID",
+			topic:    topic,
+			clientID: "clientid2",
+			err:      nil,
+			handler:  handler{false},
+		},
+		{
+			desc:     "Subscribe to an already subscribed topic with an ID",
+			topic:    topic,
+			clientID: "clientid1",
+			err:      nil,
+			handler:  handler{false},
+		},
+		{
+			desc:     "Subscribe to a topic with a subtopic with an ID",
+			topic:    fmt.Sprintf("%s.%s", topic, subtopic),
+			clientID: "clientid1",
+			err:      nil,
+			handler:  handler{false},
+		},
+		{
+			desc:     "Subscribe to an already subscribed topic with a subtopic with an ID",
+			topic:    fmt.Sprintf("%s.%s", topic, subtopic),
+			clientID: "clientid1",
+			err:      nil,
+			handler:  handler{false},
+		},
+		{
+			desc:     "Subscribe to an empty topic with an ID",
+			topic:    "",
+			clientID: "clientid1",
+			err:      rabbitmq.ErrEmptyTopic,
+			handler:  handler{false},
+		},
+		{
+			desc:     "Subscribe to a topic with empty id",
+			topic:    topic,
+			clientID: "",
+			err:      rabbitmq.ErrEmptyID,
+			handler:  handler{false},
+		},
+	}
+	for _, tc := range cases {
+		err := pubsub.Subscribe(tc.clientID, tc.topic, tc.handler)
+		assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, err, tc.err))
+	}
+}
+
+func TestSubUnsub(t *testing.T) {
 	// Test Subscribe and Unsubscribe
 	subcases := []struct {
 		desc         string
@@ -249,22 +329,108 @@ func TestPubsub(t *testing.T) {
 		},
 	}
 
-	for _, pc := range subcases {
-		if pc.pubsub == true {
-			err := pubsub.Subscribe(pc.clientID, pc.topic, pc.handler)
-			if pc.errorMessage == nil {
-				require.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
-			} else {
-				assert.Equal(t, err, pc.errorMessage)
-			}
-		} else {
-			err := pubsub.Unsubscribe(pc.clientID, pc.topic)
-			if pc.errorMessage == nil {
-				require.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
-			} else {
-				assert.Equal(t, err, pc.errorMessage)
-			}
+	for _, tc := range subcases {
+		switch tc.pubsub {
+		case true:
+			err := pubsub.Subscribe(tc.clientID, tc.topic, tc.handler)
+			assert.Equal(t, err, tc.errorMessage, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, tc.errorMessage, err))
+		default:
+			err := pubsub.Unsubscribe(tc.clientID, tc.topic)
+			assert.Equal(t, err, tc.errorMessage, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, tc.errorMessage, err))
 		}
+	}
+}
+
+func TestPubSub(t *testing.T) {
+	cases := []struct {
+		desc     string
+		topic    string
+		clientID string
+		err      error
+		handler  messaging.MessageHandler
+	}{
+		{
+			desc:     "Subscribe to a topic with an ID",
+			topic:    topic,
+			clientID: "clientid7",
+			err:      nil,
+			handler:  handler{false},
+		},
+		{
+			desc:     "Subscribe to the same topic with a different ID",
+			topic:    topic,
+			clientID: "clientid8",
+			err:      nil,
+			handler:  handler{false},
+		},
+		{
+			desc:     "Subscribe to a topic with a subtopic with an ID",
+			topic:    fmt.Sprintf("%s.%s", topic, subtopic),
+			clientID: "clientid7",
+			err:      nil,
+			handler:  handler{false},
+		},
+		{
+			desc:     "Subscribe to an empty topic with an ID",
+			topic:    "",
+			clientID: "clientid7",
+			err:      rabbitmq.ErrEmptyTopic,
+			handler:  handler{false},
+		},
+		{
+			desc:     "Subscribe to a topic with empty id",
+			topic:    topic,
+			clientID: "",
+			err:      rabbitmq.ErrEmptyID,
+			handler:  handler{false},
+		},
+	}
+	for _, tc := range cases {
+		fmt.Println()
+		fmt.Println("####")
+		fmt.Println("Test Case: ", tc.desc)
+		fmt.Println("####")
+		fmt.Println()
+
+		err := pubsub.Subscribe(tc.clientID, fmt.Sprintf("%s.%s", chansPrefix, tc.topic), tc.handler)
+		// err := pubsub.Subscribe(tc.clientID, tc.topic, handler{false})
+		switch tc.err {
+		case nil:
+			fmt.Println()
+			fmt.Println("pubsub.Subscribe() error ->", err)
+			fmt.Println()
+
+			assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", tc.desc, err))
+
+			// if no error, publish message, and receive after subscribing
+			expectedMsg := messaging.Message{
+				Channel:  channel,
+				Subtopic: subtopic,
+				Payload:  data,
+			}
+			fmt.Println()
+			fmt.Println("expectedMsg -> ", expectedMsg)
+			fmt.Println()
+
+			err = pubsub.Publish(tc.topic, expectedMsg)
+			fmt.Println()
+			fmt.Println("pubsub.Publish() error ->", err)
+			fmt.Println()
+			assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", tc.desc, err))
+
+			fmt.Println("Now, waiting for message on channel")
+			receivedMsg := <-msgChan
+			fmt.Println()
+			fmt.Println("receivedMsg -> ", receivedMsg)
+			fmt.Println()
+
+			assert.Equal(t, expectedMsg.Payload, receivedMsg.Payload, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
+		default:
+			assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, err, tc.err))
+		}
+
+		err = pubsub.Unsubscribe(tc.clientID, fmt.Sprintf("%s.%s", chansPrefix, tc.topic))
+		assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", tc.desc, err))
 	}
 }
 
@@ -273,7 +439,12 @@ type handler struct {
 }
 
 func (h handler) Handle(msg messaging.Message) error {
+	fmt.Println()
+	fmt.Println("Inside pubsub_test.go -> Handle")
+	fmt.Println("msg => ", msg)
+	fmt.Println()
 	msgChan <- msg
+	fmt.Println("msg sent to msgChan")
 	return nil
 }
 

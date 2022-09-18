@@ -17,12 +17,14 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging/rabbitmq"
 	dockertest "github.com/ory/dockertest/v3"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
 	publisher messaging.Publisher
 	pubsub    messaging.PubSub
 	logger    logg.Logger
+	address   string
 )
 
 func TestMain(m *testing.M) {
@@ -37,7 +39,7 @@ func TestMain(m *testing.M) {
 	}
 	handleInterrupt(pool, container)
 
-	address := fmt.Sprintf("amqp://%s:%s", "localhost", container.GetPort("5672/tcp"))
+	address = fmt.Sprintf("amqp://%s:%s", "localhost", container.GetPort("5672/tcp"))
 	if err := pool.Retry(func() error {
 		publisher, err = rabbitmq.NewPublisher(address)
 		return err
@@ -64,6 +66,22 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+func newConn() (*amqp.Connection, *amqp.Channel, error) {
+	conn, err := amqp.Dial(address)
+	if err != nil {
+		return nil, nil, err
+	}
+	ch, err := conn.Channel()
+	if err != nil {
+		return nil, nil, err
+	}
+	if err := ch.ExchangeDeclare(exchangeName, amqp.ExchangeDirect, true, false, false, false, nil); err != nil {
+		return nil, nil, err
+	}
+
+	return conn, ch, nil
+}
+
 func rabbitHandler(deliveries <-chan amqp.Delivery, h messaging.MessageHandler) {
 	for d := range deliveries {
 		var msg messaging.Message
@@ -76,6 +94,20 @@ func rabbitHandler(deliveries <-chan amqp.Delivery, h messaging.MessageHandler) 
 			return
 		}
 	}
+}
+
+func subscribe(t *testing.T, ch *amqp.Channel, topic string) <-chan amqp.Delivery {
+	_, err := ch.QueueDeclare(topic, true, true, true, false, nil)
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	err = ch.QueueBind(topic, topic, exchangeName, false, nil)
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	clientID := fmt.Sprintf("%s-%s", topic, clientID)
+	msgs, err := ch.Consume(topic, clientID, true, false, false, false, nil)
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	return msgs
 }
 
 func handleInterrupt(pool *dockertest.Pool, container *dockertest.Resource) {

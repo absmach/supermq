@@ -68,15 +68,31 @@ func newConn() (*broker.Conn, error) {
 }
 
 func natsHandler(h messaging.MessageHandler) broker.MsgHandler {
+	fmt.Println()
+	fmt.Println("Reached setup_test nats handler")
+	fmt.Println()
+
 	return func(m *broker.Msg) {
 		var msg messaging.Message
 		if err := proto.Unmarshal(m.Data, &msg); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
+			fmt.Println()
+			fmt.Println("error while unmarshal in natsHandler ->", err)
+			fmt.Println()
 			return
 		}
+		fmt.Println()
+		fmt.Println("reached h.handle")
+		fmt.Println()
 		if err := h.Handle(msg); err != nil {
+			fmt.Println()
+			fmt.Println("h.handle -> error ->", err)
+			fmt.Println()
 			logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
 		}
+		fmt.Println()
+		fmt.Println("back from h.handle")
+		fmt.Println()
 	}
 }
 
