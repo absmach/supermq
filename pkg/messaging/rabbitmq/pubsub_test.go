@@ -392,8 +392,11 @@ func TestPubSub(t *testing.T) {
 		fmt.Println("####")
 		fmt.Println()
 
-		err := pubsub.Subscribe(tc.clientID, fmt.Sprintf("%s.%s", chansPrefix, tc.topic), tc.handler)
-		// err := pubsub.Subscribe(tc.clientID, tc.topic, handler{false})
+		subject := ""
+		if tc.topic != "" {
+			subject = fmt.Sprintf("%s.%s", chansPrefix, tc.topic)
+		}
+		err := pubsub.Subscribe(tc.clientID, subject, tc.handler)
 		switch tc.err {
 		case nil:
 			fmt.Println()
@@ -404,9 +407,8 @@ func TestPubSub(t *testing.T) {
 
 			// if no error, publish message, and receive after subscribing
 			expectedMsg := messaging.Message{
-				Channel:  channel,
-				Subtopic: subtopic,
-				Payload:  data,
+				Channel: channel,
+				Payload: data,
 			}
 			fmt.Println()
 			fmt.Println("expectedMsg -> ", expectedMsg)
@@ -425,12 +427,12 @@ func TestPubSub(t *testing.T) {
 			fmt.Println()
 
 			assert.Equal(t, expectedMsg.Payload, receivedMsg.Payload, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
-		default:
-			assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, err, tc.err))
-		}
 
-		err = pubsub.Unsubscribe(tc.clientID, fmt.Sprintf("%s.%s", chansPrefix, tc.topic))
-		assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", tc.desc, err))
+			err = pubsub.Unsubscribe(tc.clientID, fmt.Sprintf("%s.%s", chansPrefix, tc.topic))
+			assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", tc.desc, err))
+		default:
+			assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, err, tc.err))
+		}
 	}
 }
 

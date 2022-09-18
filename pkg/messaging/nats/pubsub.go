@@ -97,7 +97,6 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 	nh := ps.natsHandler(handler)
 
 	if ps.queue != "" {
-		fmt.Println("quesubscribing")
 		sub, err := ps.conn.QueueSubscribe(topic, ps.queue, nh)
 		if err != nil {
 			return err
@@ -109,7 +108,6 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 		return nil
 	}
 	sub, err := ps.conn.Subscribe(topic, nh)
-	fmt.Println("subscribing")
 	if err != nil {
 		fmt.Println(err, " <- This error from ps.conn.Subscribe")
 		return err

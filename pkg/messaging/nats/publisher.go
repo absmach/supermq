@@ -41,21 +41,26 @@ func (pub *publisher) Publish(topic string, msg messaging.Message) error {
 		return ErrEmptyTopic
 	}
 	data, err := proto.Marshal(&msg)
-	fmt.Println()
-	fmt.Println("Marshal error ->", err)
-	fmt.Println()
+	// fmt.Println()
+	// fmt.Println("Marshal error ->", err)
+	// fmt.Println()
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("Data after marshall ->", data)
-	fmt.Println("Data after marshall to string ->", string(data))
-	fmt.Println()
+	// fmt.Println("Data after marshall ->", data)
+	// fmt.Println("Data after marshall to string ->", string(data))
+	// fmt.Println()
 
 	subject := fmt.Sprintf("%s.%s", chansPrefix, topic)
 	if msg.Subtopic != "" {
 		subject = fmt.Sprintf("%s.%s", subject, msg.Subtopic)
 	}
+
+	fmt.Println()
+	fmt.Println("Publishing to -> ", subject)
+	fmt.Println()
+
 	if err := pub.conn.Publish(subject, data); err != nil {
 		fmt.Println()
 		fmt.Println("pub.conn.Publish() error -> ", err)
