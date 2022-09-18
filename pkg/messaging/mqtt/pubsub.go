@@ -67,6 +67,13 @@ func NewPubSub(url, queue string, timeout time.Duration, logger log.Logger) (mes
 }
 
 func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) error {
+	fmt.Println("Map before entering subscribe")
+	fmt.Printf("\n\n%+v\n\n", ps.subscriptions)
+	defer func() {
+		fmt.Println("Map after leaving subscribe")
+		fmt.Printf("\n%+v\n\n", ps.subscriptions)
+	}()
+
 	if id == "" {
 		return ErrEmptyID
 	}
@@ -120,10 +127,17 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 	if ok := token.WaitTimeout(ps.timeout); !ok {
 		return ErrSubscribeTimeout
 	}
+	fmt.Println("Leaving without error")
 	return token.Error()
 }
 
 func (ps *pubsub) Unsubscribe(id, topic string) error {
+	fmt.Println("Map before entering unsubscribe")
+	fmt.Printf("\n%+v\n\n", ps.subscriptions)
+	defer func() {
+		fmt.Println("Map after leaving unsubscribe")
+		fmt.Printf("\n\n%+v\n\n", ps.subscriptions)
+	}()
 	if id == "" {
 		return ErrEmptyID
 	}
@@ -160,6 +174,7 @@ func (ps *pubsub) Unsubscribe(id, topic string) error {
 	if len(s.topics) == 0 {
 		delete(ps.subscriptions, id)
 	}
+	fmt.Println("Leaving without error")
 	return token.Error()
 }
 
