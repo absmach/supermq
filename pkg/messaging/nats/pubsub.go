@@ -109,7 +109,6 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 	}
 	sub, err := ps.conn.Subscribe(topic, nh)
 	if err != nil {
-		fmt.Println(err, " <- This error from ps.conn.Subscribe")
 		return err
 	}
 	s[id] = subscription{
@@ -155,30 +154,14 @@ func (ps *pubsub) Unsubscribe(id, topic string) error {
 }
 
 func (ps *pubsub) natsHandler(h messaging.MessageHandler) broker.MsgHandler {
-	fmt.Println()
-	fmt.Println("Reached pubsub nats handler")
-	fmt.Println()
-
 	return func(m *broker.Msg) {
 		var msg messaging.Message
 		if err := proto.Unmarshal(m.Data, &msg); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
-			fmt.Println()
-			fmt.Println("error while unmarshal in natsHandler ->", err)
-			fmt.Println()
 			return
 		}
-		fmt.Println()
-		fmt.Println("reached h.handle")
-		fmt.Println()
 		if err := h.Handle(msg); err != nil {
-			fmt.Println()
-			fmt.Println("h.handle -> error ->", err)
-			fmt.Println()
 			ps.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
 		}
-		fmt.Println()
-		fmt.Println("back from h.handle")
-		fmt.Println()
 	}
 }

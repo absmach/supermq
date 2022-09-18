@@ -379,12 +379,6 @@ func TestPubSub(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		fmt.Println()
-		fmt.Println("####")
-		fmt.Println("Test Case: ", tc.desc)
-		fmt.Println("####")
-		fmt.Println()
-
 		subject := ""
 		if tc.topic != "" {
 			subject = fmt.Sprintf("%s.%s", chansPrefix, tc.topic)
@@ -393,10 +387,6 @@ func TestPubSub(t *testing.T) {
 
 		switch tc.err {
 		case nil:
-			fmt.Println()
-			fmt.Println("pubsub.Subscribe() error ->", err)
-			fmt.Println()
-
 			assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", tc.desc, err))
 
 			// if no error, publish message, and receive after subscribing
@@ -404,23 +394,11 @@ func TestPubSub(t *testing.T) {
 				Channel: channel,
 				Payload: data,
 			}
-			fmt.Println()
-			fmt.Println("expectedMsg -> ", expectedMsg)
-			fmt.Println()
 
 			err = pubsub.Publish(tc.topic, expectedMsg)
-			// err = pubsub.Publish(fmt.Sprintf("%s.%s", chansPrefix, tc.topic), expectedMsg)
-			fmt.Println()
-			fmt.Println("pubsub.Publish() error ->", err)
-			fmt.Println()
 			assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", tc.desc, err))
 
-			fmt.Println("Now, waiting for message on channel")
 			receivedMsg := <-msgChan
-			fmt.Println()
-			fmt.Println("receivedMsg -> ", receivedMsg)
-			fmt.Println()
-
 			assert.Equal(t, expectedMsg.Payload, receivedMsg.Payload, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
 
 			err = pubsub.Unsubscribe(tc.clientID, fmt.Sprintf("%s.%s", chansPrefix, tc.topic))
@@ -436,10 +414,6 @@ type handler struct {
 }
 
 func (h handler) Handle(msg messaging.Message) error {
-	fmt.Println()
-	fmt.Println("Inside pubsub.go -> Handle")
-	fmt.Println("msg => ", msg)
-	fmt.Println()
 	msgChan <- msg
 	return nil
 }
