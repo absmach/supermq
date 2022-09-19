@@ -88,8 +88,9 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 			if err != nil {
 				return err
 			}
+			// ps.subscriptions[id] was updated after call to Unsubscribe(), but s is a copy, so it wasn't updated
 			s = ps.subscriptions[id]
-			if len(ps.subscriptions[id].topics) == 0 {
+			if len(s.topics) == 0 {
 				client, err := newClient(ps.address, id, ps.timeout)
 				if err != nil {
 					return err
@@ -198,10 +199,6 @@ func (ps *pubsub) mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
 		var msg messaging.Message
 		if err := proto.Unmarshal(m.Payload(), &msg); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
-			msg.Payload = m.Payload()
-			if err := h.Handle(msg); err != nil {
-				ps.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
-			}
 			return
 		}
 		if err := h.Handle(msg); err != nil {
