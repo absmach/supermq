@@ -371,6 +371,7 @@ func TestSubUnsub(t *testing.T) {
 	}
 }
 
+// Test Subscribe, Unsubscribe and Publish functions together (Test Entire PubSub interface)
 func TestAll(t *testing.T) {
 	client, err := newClient(address, "", 30*time.Second)
 	t.Cleanup(func() {
@@ -390,7 +391,7 @@ func TestAll(t *testing.T) {
 		{
 			desc:     "Subscribe to a topic with an ID",
 			topic:    fmt.Sprintf("%s.%s", chansPrefix, topic),
-			clientID: "1",
+			clientID: "clientID1",
 			err:      nil,
 			pubsub:   true,
 			handler:  handler{false},
@@ -399,7 +400,7 @@ func TestAll(t *testing.T) {
 		{
 			desc:     "Subscribe to the same topic with a different ID",
 			topic:    fmt.Sprintf("%s.%s", chansPrefix, topic),
-			clientID: "2",
+			clientID: "clientID2",
 			err:      nil,
 			pubsub:   true,
 			handler:  handler{false},
@@ -408,7 +409,7 @@ func TestAll(t *testing.T) {
 		{
 			desc:     "Subscribe to an already subscribed topic with an ID",
 			topic:    fmt.Sprintf("%s.%s", chansPrefix, topic),
-			clientID: "1",
+			clientID: "clientID1",
 			err:      nil,
 			pubsub:   true,
 			handler:  handler{false},
@@ -417,7 +418,7 @@ func TestAll(t *testing.T) {
 		{
 			desc:     "Subscribe to the same topic with a different ID",
 			topic:    fmt.Sprintf("%s.%s", chansPrefix, topic),
-			clientID: "3",
+			clientID: "clientID3",
 			err:      nil,
 			pubsub:   true,
 			handler:  handler{false},
@@ -426,7 +427,7 @@ func TestAll(t *testing.T) {
 		{
 			desc:     "Unsubscribe from a topic with an ID",
 			topic:    fmt.Sprintf("%s.%s", chansPrefix, topic),
-			clientID: "1",
+			clientID: "clientID1",
 			err:      nil,
 			pubsub:   false,
 			handler:  handler{false},
@@ -434,8 +435,8 @@ func TestAll(t *testing.T) {
 		},
 		{
 			desc:     "Unsubscribe from a non-existent topic with an ID",
-			topic:    "h",
-			clientID: "7",
+			topic:    "nonExistentTopic",
+			clientID: "clientID7",
 			err:      mqtt_pubsub.ErrNotSubscribed,
 			pubsub:   false,
 			handler:  handler{false},
@@ -444,7 +445,7 @@ func TestAll(t *testing.T) {
 		{
 			desc:     "Unsubscribe from an already unsubscribed topic with an ID",
 			topic:    fmt.Sprintf("%s.%s", chansPrefix, topic),
-			clientID: "1",
+			clientID: "clientID1",
 			err:      mqtt_pubsub.ErrNotSubscribed,
 			pubsub:   false,
 			handler:  handler{false},
@@ -453,7 +454,7 @@ func TestAll(t *testing.T) {
 		{
 			desc:     "Subscribe to a topic with a subtopic with an ID",
 			topic:    fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic),
-			clientID: "1",
+			clientID: "clientID1",
 			err:      nil,
 			pubsub:   true,
 			handler:  handler{false},
@@ -462,7 +463,7 @@ func TestAll(t *testing.T) {
 		{
 			desc:     "Subscribe to a topic with a subtopic with diff ID",
 			topic:    fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic),
-			clientID: "2",
+			clientID: "clientID2",
 			err:      nil,
 			pubsub:   true,
 			handler:  handler{false},
@@ -471,7 +472,7 @@ func TestAll(t *testing.T) {
 		{
 			desc:     "Subscribe to a topic with a subtopic with more diff ID",
 			topic:    fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic),
-			clientID: "3",
+			clientID: "clientID3",
 			err:      nil,
 			pubsub:   true,
 			handler:  handler{false},
@@ -480,7 +481,7 @@ func TestAll(t *testing.T) {
 		{
 			desc:     "Subscribe to an already subscribed topic with a subtopic with an ID",
 			topic:    fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic),
-			clientID: "1",
+			clientID: "clientID1",
 			err:      nil,
 			pubsub:   true,
 			handler:  handler{false},
@@ -489,7 +490,7 @@ func TestAll(t *testing.T) {
 		{
 			desc:     "Unsubscribe from a topic with a subtopic with an ID",
 			topic:    fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic),
-			clientID: "1",
+			clientID: "clientID1",
 			err:      nil,
 			pubsub:   false,
 			handler:  handler{false},
@@ -498,7 +499,7 @@ func TestAll(t *testing.T) {
 		{
 			desc:     "Unsubscribe from an already unsubscribed topic with a subtopic with an ID",
 			topic:    fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic),
-			clientID: "1",
+			clientID: "clientID1",
 			err:      mqtt_pubsub.ErrNotSubscribed,
 			pubsub:   false,
 			handler:  handler{false},
@@ -507,7 +508,7 @@ func TestAll(t *testing.T) {
 		{
 			desc:     "Subscribe to an empty topic with an ID",
 			topic:    "",
-			clientID: "clientid4",
+			clientID: "clientID4",
 			err:      mqtt_pubsub.ErrEmptyTopic,
 			pubsub:   true,
 			handler:  handler{false},
@@ -516,7 +517,7 @@ func TestAll(t *testing.T) {
 		{
 			desc:     "Unsubscribe from an empty topic with an ID",
 			topic:    "",
-			clientID: "clientid4",
+			clientID: "clientID4",
 			err:      mqtt_pubsub.ErrEmptyTopic,
 			pubsub:   false,
 			handler:  handler{false},
