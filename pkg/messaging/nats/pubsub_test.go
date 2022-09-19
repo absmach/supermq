@@ -10,6 +10,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/nats"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -27,9 +28,9 @@ var (
 
 func TestPublisher(t *testing.T) {
 	err := pubsub.Subscribe(clientID, fmt.Sprintf("%s.%s", chansPrefix, topic), handler{})
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	err = pubsub.Subscribe(clientID, fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic), handler{})
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := []struct {
 		desc     string
@@ -69,10 +70,10 @@ func TestPublisher(t *testing.T) {
 			Subtopic: tc.subtopic,
 			Payload:  tc.payload,
 		}
-		assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 		err = pubsub.Publish(topic, expectedMsg)
-		assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+		require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 		receivedMsg := <-msgChan
 		assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
@@ -255,14 +256,14 @@ func TestPubsub(t *testing.T) {
 		if pc.pubsub == true {
 			err := pubsub.Subscribe(pc.clientID, pc.topic, pc.handler)
 			if pc.errorMessage == nil {
-				assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
+				require.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
 			} else {
 				assert.Equal(t, err, pc.errorMessage)
 			}
 		} else {
 			err := pubsub.Unsubscribe(pc.clientID, pc.topic)
 			if pc.errorMessage == nil {
-				assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
+				require.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
 			} else {
 				assert.Equal(t, err, pc.errorMessage)
 			}

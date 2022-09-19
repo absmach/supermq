@@ -88,6 +88,7 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 			if err != nil {
 				return err
 			}
+			s = ps.subscriptions[id]
 			if len(ps.subscriptions[id].topics) == 0 {
 				client, err := newClient(ps.address, id, ps.timeout)
 				if err != nil {
