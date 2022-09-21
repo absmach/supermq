@@ -74,6 +74,7 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 	}
 	ps.mu.Lock()
 
+	topic = formatTopic(topic)
 	// Check topic
 	s, ok := ps.subscriptions[topic]
 	if ok {
@@ -96,7 +97,7 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 		ps.subscriptions[topic] = s
 	}
 
-	_, err := ps.ch.QueueDeclare(topic, true, true, false, false, nil)
+	_, err := ps.ch.QueueDeclare(topic, true, false, false, false, nil)
 	if err != nil {
 		return err
 	}
@@ -131,6 +132,7 @@ func (ps *pubsub) Unsubscribe(id, topic string) error {
 	ps.mu.Lock()
 	defer ps.mu.Unlock()
 
+	topic = formatTopic(topic)
 	// Check topic
 	s, ok := ps.subscriptions[topic]
 	if !ok {

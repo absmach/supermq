@@ -48,7 +48,11 @@ func (pub *publisher) Publish(topic string, msg messaging.Message) error {
 	if err != nil {
 		return err
 	}
-	subject := formatTopic(topic, msg)
+	subject := fmt.Sprintf("%s.%s", chansPrefix, topic)
+	if msg.Subtopic != "" {
+		subject = fmt.Sprintf("%s.%s", subject, msg.Subtopic)
+	}
+	subject = formatTopic(subject)
 
 	err = pub.ch.Publish(
 		exchangeName,
@@ -56,10 +60,12 @@ func (pub *publisher) Publish(topic string, msg messaging.Message) error {
 		false,
 		false,
 		amqp.Publishing{
-			Headers:     amqp.Table{},
-			ContentType: "application/octet-stream",
-			AppId:       "mainflux-publisher",
-			Body:        data,
+			Headers:      amqp.Table{},
+			ContentType:  "application/octet-stream",
+			AppId:        "mainflux-publisher",
+			DeliveryMode: 2,
+			Priority:     9,
+			Body:         data,
 		})
 
 	if err != nil {
@@ -70,14 +76,12 @@ func (pub *publisher) Publish(topic string, msg messaging.Message) error {
 }
 
 func (pub *publisher) Close() error {
+	if err := pub.ch.Close(); err != nil {
+		return err
+	}
 	return pub.conn.Close()
 }
 
-func formatTopic(topic string, message messaging.Message) string {
-	subject := fmt.Sprintf("%s.%s", chansPrefix, topic)
-	if message.Subtopic != "" {
-		subject = fmt.Sprintf("%s.%s", subject, message.Subtopic)
-	}
-	subject = strings.Replace(subject, ">", "#", -1)
-	return subject
+func formatTopic(topic string) string {
+	return strings.Replace(topic, ">", "#", -1)
 }
