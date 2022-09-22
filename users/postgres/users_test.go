@@ -35,6 +35,7 @@ func TestUserSave(t *testing.T) {
 				ID:       uid,
 				Email:    email,
 				Password: "pass",
+				Status:   users.EnabledStatusKey,
 			},
 			err: nil,
 		},
@@ -44,8 +45,19 @@ func TestUserSave(t *testing.T) {
 				ID:       uid,
 				Email:    email,
 				Password: "pass",
+				Status:   users.EnabledStatusKey,
 			},
 			err: errors.ErrConflict,
+		},
+		{
+			desc: "invalid user status",
+			user: users.User{
+				ID:       uid,
+				Email:    email,
+				Password: "pass",
+				Status:   "invalid",
+			},
+			err: errors.ErrMalformedEntity,
 		},
 	}
 
@@ -71,6 +83,7 @@ func TestSingleUserRetrieval(t *testing.T) {
 		ID:       uid,
 		Email:    email,
 		Password: "pass",
+		Status:   users.EnabledStatusKey,
 	}
 
 	_, err = repo.Save(context.Background(), user)
@@ -113,6 +126,7 @@ func TestRetrieveAll(t *testing.T) {
 			ID:       uid,
 			Email:    email,
 			Password: "pass",
+			Status:   users.EnabledStatusKey,
 		}
 		if i < metaNum {
 			user.Metadata = meta

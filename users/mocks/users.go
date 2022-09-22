@@ -110,6 +110,20 @@ func (urm *userRepositoryMock) RetrieveAll(ctx context.Context, ids []string, pm
 		return up, nil
 	}
 
+	if pm.Status == users.EnabledStatusKey || pm.Status == users.DisabledStatusKey {
+		for _, u := range sortUsers(urm.users) {
+			if i >= pm.Offset && i < (pm.Limit+pm.Offset) {
+				if pm.Status == u.Status {
+					up.Users = append(up.Users, u)
+				}
+			}
+			i++
+		}
+		up.Offset = pm.Offset
+		up.Limit = pm.Limit
+		up.Total = uint64(i)
+		return up, nil
+	}
 	for _, u := range sortUsers(urm.users) {
 		if i >= pm.Offset && i < (pm.Limit+pm.Offset) {
 			up.Users = append(up.Users, u)
@@ -134,6 +148,19 @@ func (urm *userRepositoryMock) UpdatePassword(_ context.Context, token, password
 	return nil
 }
 
+func (urm *userRepositoryMock) ChangeStatus(ctx context.Context, id, status string) error {
+	urm.mu.Lock()
+	defer urm.mu.Unlock()
+
+	user, ok := urm.usersByID[id]
+	if !ok {
+		return errors.ErrNotFound
+	}
+	user.Status = status
+	urm.usersByID[id] = user
+	urm.users[user.Email] = user
+	return nil
+}
 func sortUsers(us map[string]users.User) []users.User {
 	users := []users.User{}
 	ids := make([]string, 0, len(us))

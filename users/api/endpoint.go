@@ -81,7 +81,7 @@ func viewUserEndpoint(svc users.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		u, err := svc.ViewUser(ctx, req.token, req.userID)
+		u, err := svc.ViewUser(ctx, req.token, req.id)
 		if err != nil {
 			return nil, err
 		}
@@ -122,6 +122,7 @@ func listUsersEndpoint(svc users.Service) endpoint.Endpoint {
 			Offset:   req.offset,
 			Limit:    req.limit,
 			Email:    req.email,
+			Status:   req.status,
 			Metadata: req.metadata,
 		}
 		up, err := svc.ListUsers(ctx, req.token, pm)
@@ -184,17 +185,45 @@ func listMembersEndpoint(svc users.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return userPageRes{}, errors.Wrap(errors.ErrMalformedEntity, err)
 		}
+
 		pm := users.PageMetadata{
 			Offset:   req.offset,
 			Limit:    req.limit,
+			Status:   req.status,
 			Metadata: req.metadata,
 		}
-		page, err := svc.ListMembers(ctx, req.token, req.groupID, pm)
+		page, err := svc.ListMembers(ctx, req.token, req.id, pm)
 		if err != nil {
 			return userPageRes{}, err
 		}
 
 		return buildUsersResponse(page), nil
+	}
+}
+
+func enableUserEndpoint(svc users.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(changeUserStatusReq)
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+		if err := svc.EnableUser(ctx, req.token, req.id); err != nil {
+			return nil, err
+		}
+		return deleteRes{}, nil
+	}
+}
+
+func disableUserEndpoint(svc users.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(changeUserStatusReq)
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+		if err := svc.DisableUser(ctx, req.token, req.id); err != nil {
+			return nil, err
+		}
+		return deleteRes{}, nil
 	}
 }
 

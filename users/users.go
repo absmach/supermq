@@ -39,6 +39,7 @@ type User struct {
 	Email    string
 	Password string
 	Metadata Metadata
+	Status   string
 }
 
 // Validate returns an error if user representation is invalid.
@@ -69,6 +70,9 @@ type UserRepository interface {
 
 	// UpdatePassword updates password for user with given email
 	UpdatePassword(ctx context.Context, email, password string) error
+
+	// ChangeStatus changes users status to enabled or disabled
+	ChangeStatus(ctx context.Context, id, status string) error
 }
 
 func isEmail(email string) bool {

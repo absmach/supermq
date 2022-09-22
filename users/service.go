@@ -9,6 +9,7 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/auth"
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
@@ -16,6 +17,9 @@ const (
 	memberRelationKey = "member"
 	authoritiesObjKey = "authorities"
 	usersObjKey       = "users"
+	EnabledStatusKey  = "enabled"
+	DisabledStatusKey = "disabled"
+	AllStatusKey      = "all"
 )
 
 var (
@@ -31,6 +35,12 @@ var (
 
 	// ErrPasswordFormat indicates weak password.
 	ErrPasswordFormat = errors.New("password does not meet the requirements")
+
+	// ErrAlreadyEnabledUser indicates the user is already enabled.
+	ErrAlreadyEnabledUser = errors.New("the user is already enabled")
+
+	// ErrAlreadyDisabledUser indicates the user is already disabled.
+	ErrAlreadyDisabledUser = errors.New("the user is already disabled")
 )
 
 // Service specifies an API that must be fullfiled by the domain service
@@ -74,6 +84,12 @@ type Service interface {
 
 	// ListMembers retrieves everything that is assigned to a group identified by groupID.
 	ListMembers(ctx context.Context, token, groupID string, pm PageMetadata) (UserPage, error)
+
+	// EnableUser logically enableds the user identified with the provided ID
+	EnableUser(ctx context.Context, token, id string) error
+
+	// DisableUser logically disables the user identified with the provided ID
+	DisableUser(ctx context.Context, token, id string) error
 }
 
 // PageMetadata contains page metadata that helps navigation.
@@ -82,6 +98,7 @@ type PageMetadata struct {
 	Offset   uint64
 	Limit    uint64
 	Email    string
+	Status   string
 	Metadata Metadata
 }
 
@@ -147,6 +164,16 @@ func (svc usersService) Register(ctx context.Context, token string, user User) (
 		return "", errors.Wrap(errors.ErrMalformedEntity, err)
 	}
 	user.Password = hash
+	if user.Status == "" {
+		user.Status = EnabledStatusKey
+	}
+
+	if user.Status != AllStatusKey &&
+		user.Status != EnabledStatusKey &&
+		user.Status != DisabledStatusKey {
+		return "", apiutil.ErrInvalidStatus
+	}
+
 	uid, err = svc.users.Save(ctx, user)
 	if err != nil {
 		return "", err
@@ -182,14 +209,13 @@ func (svc usersService) Login(ctx context.Context, user User) (string, error) {
 }
 
 func (svc usersService) ViewUser(ctx context.Context, token, id string) (User, error) {
-	_, err := svc.identify(ctx, token)
-	if err != nil {
+	if _, err := svc.identify(ctx, token); err != nil {
 		return User{}, err
 	}
 
 	dbUser, err := svc.users.RetrieveByID(ctx, id)
 	if err != nil {
-		return User{}, errors.Wrap(errors.ErrAuthentication, err)
+		return User{}, errors.Wrap(errors.ErrNotFound, err)
 	}
 
 	return User{
@@ -197,6 +223,7 @@ func (svc usersService) ViewUser(ctx context.Context, token, id string) (User, e
 		Email:    dbUser.Email,
 		Password: "",
 		Metadata: dbUser.Metadata,
+		Status:   dbUser.Status,
 	}, nil
 }
 
@@ -330,6 +357,39 @@ func (svc usersService) ListMembers(ctx context.Context, token, groupID string, 
 	}
 
 	return svc.users.RetrieveAll(ctx, userIDs, pm)
+}
+
+func (svc usersService) EnableUser(ctx context.Context, token, id string) error {
+	if err := svc.changeStatus(ctx, token, id, EnabledStatusKey); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (svc usersService) DisableUser(ctx context.Context, token, id string) error {
+	if err := svc.changeStatus(ctx, token, id, DisabledStatusKey); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (svc usersService) changeStatus(ctx context.Context, token, id, status string) error {
+	if _, err := svc.identify(ctx, token); err != nil {
+		return err
+	}
+
+	dbUser, err := svc.users.RetrieveByID(ctx, id)
+	if err != nil {
+		return errors.Wrap(errors.ErrNotFound, err)
+	}
+	if dbUser.Status == status {
+		if status == DisabledStatusKey {
+			return ErrAlreadyDisabledUser
+		}
+		return ErrAlreadyEnabledUser
+	}
+
+	return svc.users.ChangeStatus(ctx, id, status)
 }
 
 // Auth helpers

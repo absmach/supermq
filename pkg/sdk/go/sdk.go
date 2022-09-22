@@ -99,6 +99,7 @@ type PageMetadata struct {
 	Type         string                 `json:"type,omitempty"`
 	Disconnected bool                   `json:"disconnected,omitempty"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	Status       string                 `json:"status,omitempty"`
 }
 
 // Group represents mainflux users group.
@@ -154,6 +155,12 @@ type SDK interface {
 	// UpdatePassword updates user password.
 	UpdatePassword(token, oldPass, newPass string) error
 
+	// EnableUser changes the status of the user to enabled.
+	EnableUser(id, token string) error
+
+	// DisableUser changes the status of the user to disabled.
+	DisableUser(id, token string) error
+
 	// CreateThing registers new thing and returns its id.
 	CreateThing(token string, thing Thing) (string, error)
 
@@ -178,7 +185,7 @@ type SDK interface {
 
 	// IdentifyThing validates thing's key and returns its ID
 	IdentifyThing(key string) (string, error)
-	
+
 	// CreateGroup creates new group and returns its id.
 	CreateGroup(token string, group Group) (string, error)
 
@@ -390,6 +397,9 @@ func (pm PageMetadata) query() (string, error) {
 	}
 	if pm.Type != "" {
 		q.Add("type", pm.Type)
+	}
+	if pm.Status != "" {
+		q.Add("status", pm.Status)
 	}
 	if pm.Metadata != nil {
 		md, err := json.Marshal(pm.Metadata)

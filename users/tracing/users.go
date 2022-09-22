@@ -83,6 +83,14 @@ func (urm userRepositoryMiddleware) RetrieveAll(ctx context.Context, ids []strin
 	return urm.repo.RetrieveAll(ctx, ids, pm)
 }
 
+func (urm userRepositoryMiddleware) ChangeStatus(ctx context.Context, id, status string) error {
+	span := createSpan(ctx, urm.tracer, members)
+	defer span.Finish()
+	ctx = opentracing.ContextWithSpan(ctx, span)
+
+	return urm.repo.ChangeStatus(ctx, id, status)
+}
+
 func createSpan(ctx context.Context, tracer opentracing.Tracer, opName string) opentracing.Span {
 	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
 		return tracer.StartSpan(
