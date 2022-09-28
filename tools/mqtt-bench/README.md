@@ -47,6 +47,10 @@ Two output formats supported: human-readable plain text and JSON.
 Before use you need a `mfconn.toml` - a TOML file that describes Mainflux connection data (channels, thingIDs, thingKeys, certs).
 You can use `provision` tool (in tools/provision) to create this TOML config file.
 
+```bash
+./provision -u test@mainflux.com -p test1234 --host http://127.0.0.1 --num 100 > ../mqtt-bench/mfconn.toml
+```
+
 Example use and output
 
 Without mtls:
