@@ -97,8 +97,7 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 		ps.subscriptions[topic] = s
 	}
 
-	_, err := ps.ch.QueueDeclare(topic, true, false, false, false, nil)
-	if err != nil {
+	if _, err := ps.ch.QueueDeclare(topic, true, false, false, false, nil); err != nil {
 		return err
 	}
 	if err := ps.ch.QueueBind(topic, topic, exchangeName, false, nil); err != nil {
