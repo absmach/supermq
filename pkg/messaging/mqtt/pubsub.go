@@ -75,34 +75,16 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 	}
 	ps.mu.Lock()
 	defer ps.mu.Unlock()
-	// Check client ID
+
 	s, ok := ps.subscriptions[id]
+	// If the client exists, check if it's subscribed to the topic and unsubscribe if needed.
 	switch ok {
 	case true:
-		// Check topic
-		if ok = s.contains(topic); ok {
-			// Unlocking, so that Unsubscribe() can access ps.subscriptions
-			ps.mu.Unlock()
-			err := ps.Unsubscribe(id, topic)
-			ps.mu.Lock() // Lock so that deferred unlock handle it
-			if err != nil {
+		if ok := s.contains(topic); ok {
+			if err := s.unsubscribe(topic, ps.timeout); err != nil {
 				return err
 			}
-			// ps.subscriptions[id] was updated after call to Unsubscribe(), but s is a copy, so it wasn't updated
-			s = ps.subscriptions[id]
-			if len(s.topics) == 0 {
-				client, err := newClient(ps.address, id, ps.timeout)
-				if err != nil {
-					return err
-				}
-				s = subscription{
-					client: client,
-					topics: []string{},
-				}
-			}
 		}
-		s.topics = append(s.topics, topic)
-		ps.subscriptions[id] = s
 	default:
 		client, err := newClient(ps.address, id, ps.timeout)
 		if err != nil {
@@ -110,10 +92,11 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 		}
 		s = subscription{
 			client: client,
-			topics: []string{topic},
+			topics: []string{},
 		}
-		ps.subscriptions[id] = s
 	}
+	s.topics = append(s.topics, topic)
+	ps.subscriptions[id] = s
 
 	token := s.client.Subscribe(topic, qos, ps.mqttHandler(handler))
 	if token.Error() != nil {
@@ -134,33 +117,34 @@ func (ps *pubsub) Unsubscribe(id, topic string) error {
 	}
 	ps.mu.Lock()
 	defer ps.mu.Unlock()
-	// Check client ID
+
 	s, ok := ps.subscriptions[id]
-	switch ok {
-	case true:
-		// Check topic
-		if ok := s.contains(topic); !ok {
-			return ErrNotSubscribed
-		}
-	default:
+	if !ok || !s.contains(topic) {
 		return ErrNotSubscribed
 	}
-	token := s.client.Unsubscribe(topic)
-	if token.Error() != nil {
-		return token.Error()
-	}
 
-	ok = token.WaitTimeout(ps.timeout)
-	if !ok {
-		return ErrUnsubscribeTimeout
-	}
-	if ok := s.delete(topic); !ok {
-		return ErrUnsubscribeDeleteTopic
+	if err := s.unsubscribe(topic, ps.timeout); err != nil {
+		return err
 	}
 	ps.subscriptions[id] = s
 
 	if len(s.topics) == 0 {
 		delete(ps.subscriptions, id)
+	}
+	return nil
+}
+
+func (s *subscription) unsubscribe(topic string, timeout time.Duration) error {
+	token := s.client.Unsubscribe(topic)
+	if token.Error() != nil {
+		return token.Error()
+	}
+
+	if ok := token.WaitTimeout(timeout); !ok {
+		return ErrUnsubscribeTimeout
+	}
+	if ok := s.delete(topic); !ok {
+		return ErrUnsubscribeDeleteTopic
 	}
 	return token.Error()
 }
