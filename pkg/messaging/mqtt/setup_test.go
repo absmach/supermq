@@ -53,7 +53,7 @@ func TestMain(m *testing.M) {
 	}
 
 	if err := pool.Retry(func() error {
-		pubsub, err = mqtt_pubsub.NewPubSub(address, "", 30*time.Second, logger)
+		pubsub, err = mqtt_pubsub.NewPubSub(address, "CLIENTID", 30*time.Second, logger)
 		return err
 	}); err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
@@ -108,13 +108,7 @@ func newClient(address, id string, timeout time.Duration) (mqtt.Client, error) {
 		SetUsername(username).
 		AddBroker(address).
 		SetClientID(id).
-		SetDefaultPublishHandler(mqttHandler(handler{false})).
-		SetConnectionLostHandler(func(c mqtt.Client, err error) {
-			time.Sleep(500 * time.Millisecond)
-		}).
-		SetReconnectingHandler(func(c mqtt.Client, options *mqtt.ClientOptions) {
-			time.Sleep(500 * time.Millisecond)
-		})
+		SetDefaultPublishHandler(mqttHandler(handler{false, id}))
 
 	client := mqtt.NewClient(opts)
 	token := client.Connect()
