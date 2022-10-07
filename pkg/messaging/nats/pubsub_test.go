@@ -150,7 +150,7 @@ func TestSubscribe(t *testing.T) {
 	}
 }
 
-func TestSubUnsub(t *testing.T) {
+func TestUnsubscribe(t *testing.T) {
 	// Test Subscribe and Unsubscribe
 	subcases := []struct {
 		desc         string
