@@ -36,6 +36,7 @@ var _ messaging.PubSub = (*pubsub)(nil)
 type subscription struct {
 	client mqtt.Client
 	topics []string
+	cancel func() error
 }
 
 type pubsub struct {
@@ -93,6 +94,7 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 		s = subscription{
 			client: client,
 			topics: []string{},
+			cancel: handler.Cancel,
 		}
 	}
 	s.topics = append(s.topics, topic)
@@ -121,6 +123,12 @@ func (ps *pubsub) Unsubscribe(id, topic string) error {
 	s, ok := ps.subscriptions[id]
 	if !ok || !s.contains(topic) {
 		return ErrNotSubscribed
+	}
+
+	if s.cancel != nil {
+		if err := s.cancel(); err != nil {
+			return err
+		}
 	}
 
 	if err := s.unsubscribe(topic, ps.timeout); err != nil {

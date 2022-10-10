@@ -25,14 +25,9 @@ var (
 	data    = []byte("payload")
 )
 
-//? Use client to subscribe, Publish() to send messages
 func TestPublisher(t *testing.T) {
 	// Subscribing with topic, and with subtopic, so that we can publish messages
 	client, err := newClient(address, "clientID1", 30*time.Second)
-	t.Cleanup(func() {
-		client.Unsubscribe()
-		client.Disconnect(5)
-	})
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	token := client.Subscribe(topic, qos, nil)
@@ -40,13 +35,24 @@ func TestPublisher(t *testing.T) {
 	token = client.Subscribe(fmt.Sprintf("%s.%s", topic, subtopic), qos, nil)
 	assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
 
+	t.Cleanup(func() {
+		token := client.Unsubscribe(topic)
+		token.Wait()
+		assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
+
+		token = client.Unsubscribe(fmt.Sprintf("%s.%s", topic, subtopic))
+		token.Wait()
+		assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
+
+		client.Disconnect(5)
+	})
+
 	// publish with empty topic
 	err = pubsub.Publish("", messaging.Message{Payload: data})
 	assert.Equal(t, err, mqtt_pubsub.ErrEmptyTopic, fmt.Sprintf("Publish with empty topic: expected: %s, got: %s", mqtt_pubsub.ErrEmptyTopic, err))
 
 	cases := []struct {
 		desc     string
-		topic    string
 		channel  string
 		subtopic string
 		payload  []byte
@@ -102,7 +108,6 @@ func TestPublisher(t *testing.T) {
 	assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
 }
 
-//todo: Add client.Publish() -> Token to check if Subscribe() actually worked.
 func TestSubscribe(t *testing.T) {
 	// Creating client to Publish messages to subscribed topic.
 	client, err := newClient(address, "clientIDD", 30*time.Second)
@@ -193,7 +198,6 @@ func TestSubscribe(t *testing.T) {
 	}
 }
 
-//? Should Test Publish() + Subscribe()
 func TestPubSub(t *testing.T) {
 	cases := []struct {
 		desc     string
@@ -242,18 +246,20 @@ func TestPubSub(t *testing.T) {
 		err := pubsub.Subscribe(tc.clientID, tc.topic, tc.handler)
 		switch err {
 		case nil:
-			// if no error, publish message, and receive after subscribing
+			// use pubsub to subscribe to a topic, and then publish messages to that topic.
 			expectedMsg := messaging.Message{
-				Publisher: tc.clientID,
+				Publisher: "clientID",
 				Channel:   channel,
 				Subtopic:  subtopic,
 				Payload:   data,
 			}
+
+			// publish message, and then receive it on message Channel
 			err := pubsub.Publish(topic, expectedMsg)
 			assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s\n", tc.desc, err))
 
 			receivedMsg := <-msgChan
-			assert.Equal(t, expectedMsg.Payload, receivedMsg.Payload, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
+			assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
 		default:
 			assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, err, tc.err))
 		}
@@ -357,15 +363,47 @@ func TestUnsubscribe(t *testing.T) {
 			pubsub:   false,
 			handler:  handler{false, ""},
 		},
+		{
+			desc:     "Subscribe to a new topic with an ID",
+			topic:    fmt.Sprintf("%s.%s", chansPrefix, topic+"2"),
+			clientID: "clientid5",
+			err:      nil,
+			pubsub:   true,
+			handler:  handler{true, "clientid5"},
+		},
+		{
+			desc:     "Unsubscribe from a topic with an ID with failing handler",
+			topic:    fmt.Sprintf("%s.%s", chansPrefix, topic+"2"),
+			clientID: "clientid5",
+			err:      mqtt_pubsub.ErrFailedHandleMessage,
+			pubsub:   false,
+			handler:  handler{true, "clientid5"},
+		},
+		{
+			desc:     "Subscribe to a new topic with subtopic with an ID",
+			topic:    fmt.Sprintf("%s.%s", chansPrefix, topic+"2"),
+			clientID: "clientid5",
+			err:      nil,
+			pubsub:   true,
+			handler:  handler{true, "clientid5"},
+		},
+		{
+			desc:     "Unsubscribe from a topic with subtopic with an ID with failing handler",
+			topic:    fmt.Sprintf("%s.%s", chansPrefix, topic+"2"),
+			clientID: "clientid5",
+			err:      mqtt_pubsub.ErrFailedHandleMessage,
+			pubsub:   false,
+			handler:  handler{true, "clientid5"},
+		},
 	}
 	for _, tc := range cases {
 		switch tc.pubsub {
 		case true:
 			err := pubsub.Subscribe(tc.clientID, tc.topic, tc.handler)
-			assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, tc.err, err))
+			assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, tc.err, err))
 		default:
 			err := pubsub.Unsubscribe(tc.clientID, tc.topic)
-			assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, tc.err, err))
+			assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, tc.err, err))
 		}
 	}
 }
