@@ -75,9 +75,10 @@ func TestPublisher(t *testing.T) {
 
 	for _, tc := range cases {
 		expectedMsg := messaging.Message{
-			Channel:  tc.channel,
-			Subtopic: tc.subtopic,
-			Payload:  tc.payload,
+			Publisher: clientID,
+			Channel:   tc.channel,
+			Subtopic:  tc.subtopic,
+			Payload:   tc.payload,
 		}
 		err = pubsub.Publish(topic, expectedMsg)
 		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s", tc.desc, err))
