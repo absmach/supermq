@@ -125,12 +125,6 @@ func (ps *pubsub) Unsubscribe(id, topic string) error {
 		return ErrNotSubscribed
 	}
 
-	if s.cancel != nil {
-		if err := s.cancel(); err != nil {
-			return err
-		}
-	}
-
 	if err := s.unsubscribe(topic, ps.timeout); err != nil {
 		return err
 	}
@@ -143,6 +137,12 @@ func (ps *pubsub) Unsubscribe(id, topic string) error {
 }
 
 func (s *subscription) unsubscribe(topic string, timeout time.Duration) error {
+	if s.cancel != nil {
+		if err := s.cancel(); err != nil {
+			return err
+		}
+	}
+
 	token := s.client.Unsubscribe(topic)
 	if token.Error() != nil {
 		return token.Error()

@@ -36,11 +36,7 @@ func TestPublisher(t *testing.T) {
 	assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
 
 	t.Cleanup(func() {
-		token := client.Unsubscribe(topic)
-		token.Wait()
-		assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
-
-		token = client.Unsubscribe(fmt.Sprintf("%s.%s", topic, subtopic))
+		token := client.Unsubscribe(topic, fmt.Sprintf("%s.%s", topic, subtopic))
 		token.Wait()
 		assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
 
@@ -99,13 +95,6 @@ func TestPublisher(t *testing.T) {
 			assert.Equal(t, tc.payload, receivedMsg.Payload, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, tc.payload, receivedMsg.Payload))
 		}
 	}
-
-	token = client.Unsubscribe(topic)
-	token.Wait()
-	assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
-	token = client.Unsubscribe(fmt.Sprintf("%s.%s", topic, subtopic))
-	token.Wait()
-	assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
 }
 
 func TestSubscribe(t *testing.T) {
@@ -366,7 +355,7 @@ func TestUnsubscribe(t *testing.T) {
 		{
 			desc:     "Subscribe to a new topic with an ID",
 			topic:    fmt.Sprintf("%s.%s", chansPrefix, topic+"2"),
-			clientID: "clientid5",
+			clientID: "clientid55",
 			err:      nil,
 			pubsub:   true,
 			handler:  handler{true, "clientid5"},
@@ -374,23 +363,23 @@ func TestUnsubscribe(t *testing.T) {
 		{
 			desc:     "Unsubscribe from a topic with an ID with failing handler",
 			topic:    fmt.Sprintf("%s.%s", chansPrefix, topic+"2"),
-			clientID: "clientid5",
+			clientID: "clientid55",
 			err:      mqtt_pubsub.ErrFailedHandleMessage,
 			pubsub:   false,
 			handler:  handler{true, "clientid5"},
 		},
 		{
 			desc:     "Subscribe to a new topic with subtopic with an ID",
-			topic:    fmt.Sprintf("%s.%s", chansPrefix, topic+"2"),
-			clientID: "clientid5",
+			topic:    fmt.Sprintf("%s.%s.%s", chansPrefix, topic+"2", subtopic),
+			clientID: "clientid55",
 			err:      nil,
 			pubsub:   true,
 			handler:  handler{true, "clientid5"},
 		},
 		{
 			desc:     "Unsubscribe from a topic with subtopic with an ID with failing handler",
-			topic:    fmt.Sprintf("%s.%s", chansPrefix, topic+"2"),
-			clientID: "clientid5",
+			topic:    fmt.Sprintf("%s.%s.%s", chansPrefix, topic+"2", subtopic),
+			clientID: "clientid55",
 			err:      mqtt_pubsub.ErrFailedHandleMessage,
 			pubsub:   false,
 			handler:  handler{true, "clientid5"},
