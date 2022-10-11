@@ -44,7 +44,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf(err.Error())
 	}
 	if err := pool.Retry(func() error {
-		pubsub, err = nats.NewPubSub(address, "CLIENTID", logger)
+		pubsub, err = nats.NewPubSub(address, "mainflux", logger)
 		return err
 	}); err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
