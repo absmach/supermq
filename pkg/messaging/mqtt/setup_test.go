@@ -53,7 +53,7 @@ func TestMain(m *testing.M) {
 	}
 
 	if err := pool.Retry(func() error {
-		pubsub, err = mqtt_pubsub.NewPubSub(address, "CLIENTID", 30*time.Second, logger)
+		pubsub, err = mqtt_pubsub.NewPubSub(address, "mainflux", 30*time.Second, logger)
 		return err
 	}); err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
