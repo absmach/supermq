@@ -21,7 +21,6 @@ const (
 )
 
 var (
-	// msgChan = make(chan messaging.Message)
 	data = []byte("payload")
 )
 
