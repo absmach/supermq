@@ -107,8 +107,7 @@ func newClient(address, id string, timeout time.Duration) (mqtt.Client, error) {
 	opts := mqtt.NewClientOptions().
 		SetUsername(username).
 		AddBroker(address).
-		SetClientID(id).
-		SetDefaultPublishHandler(mqttHandler(handler{false, id}))
+		SetClientID(id)
 
 	client := mqtt.NewClient(opts)
 	token := client.Connect()
