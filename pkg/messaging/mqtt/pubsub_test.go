@@ -45,7 +45,7 @@ func TestPublisher(t *testing.T) {
 		msgChan <- m.Payload()
 	})
 	if ok := token.WaitTimeout(100 * time.Millisecond); !ok {
-		assert.Fail(t, fmt.Sprintf("failed to subscribe to topic %s", topic))
+		assert.Fail(t, fmt.Sprintf("failed to subscribe to topic %s", fmt.Sprintf("%s.%s", topic, subtopic)))
 	}
 	assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
 
@@ -103,7 +103,7 @@ func TestPublisher(t *testing.T) {
 		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s\n", tc.desc, err))
 
 		data, err := proto.Marshal(&expectedMsg)
-		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s\n", tc.desc, err))
+		assert.Nil(t, err, fmt.Sprintf("%s: failed to serialize protobuf error: %s\n", tc.desc, err))
 
 		receivedMsg := <-msgChan
 		assert.Equal(t, data, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, data, receivedMsg))
@@ -191,7 +191,7 @@ func TestSubscribe(t *testing.T) {
 				Payload:   data,
 			}
 			data, err := proto.Marshal(&expectedMsg)
-			assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+			assert.Nil(t, err, fmt.Sprintf("%s: failed to serialize protobuf error: %s\n", tc.desc, err))
 
 			token := client.Publish(tc.topic, qos, false, data)
 			token.WaitTimeout(100 * time.Millisecond)
@@ -262,7 +262,7 @@ func TestPubSub(t *testing.T) {
 				Payload:   data,
 			}
 
-			// publish message, and then receive it on message Channel
+			// publish message, and then receive it on message channel
 			err := pubsub.Publish(topic, expectedMsg)
 			assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s\n", tc.desc, err))
 
