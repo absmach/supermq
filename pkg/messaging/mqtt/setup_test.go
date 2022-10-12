@@ -13,7 +13,6 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/gogo/protobuf/proto"
 	mainflux_log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	mqtt_pubsub "github.com/mainflux/mainflux/pkg/messaging/mqtt"
@@ -84,19 +83,6 @@ func handleInterrupt(m *testing.M, pool *dockertest.Pool, container *dockertest.
 		}
 		os.Exit(0)
 	}()
-}
-
-func mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
-	return func(c mqtt.Client, m mqtt.Message) {
-		var msg messaging.Message
-		if err := proto.Unmarshal(m.Payload(), &msg); err != nil {
-			logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
-			return
-		}
-		if err := h.Handle(msg); err != nil {
-			logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
-		}
-	}
 }
 
 func newClient(address, id string, timeout time.Duration) (mqtt.Client, error) {
