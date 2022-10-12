@@ -161,13 +161,7 @@ func newClient(address, id string, timeout time.Duration) (mqtt.Client, error) {
 	opts := mqtt.NewClientOptions().
 		SetUsername(username).
 		AddBroker(address).
-		SetClientID(id).
-		SetConnectionLostHandler(func(c mqtt.Client, err error) {
-			time.Sleep(500 * time.Millisecond)
-		}).
-		SetReconnectingHandler(func(c mqtt.Client, options *mqtt.ClientOptions) {
-			time.Sleep(500 * time.Millisecond)
-		})
+		SetClientID(id)
 	client := mqtt.NewClient(opts)
 	token := client.Connect()
 	if token.Error() != nil {
