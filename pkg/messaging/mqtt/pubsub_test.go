@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	mqtt_pubsub "github.com/mainflux/mainflux/pkg/messaging/mqtt"
@@ -26,19 +27,23 @@ var (
 )
 
 func TestPublisher(t *testing.T) {
-	msgChan := make(chan messaging.Message)
+	msgChan := make(chan []byte)
 
 	// Subscribing with topic, and with subtopic, so that we can publish messages
 	client, err := newClient(address, "clientID1", 30*time.Second)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	token := client.Subscribe(topic, qos, mqttHandler(handler{false, "clientID1", msgChan}))
+	token := client.Subscribe(topic, qos, func(c mqtt.Client, m mqtt.Message) {
+		msgChan <- m.Payload()
+	})
 	if ok := token.WaitTimeout(100 * time.Millisecond); !ok {
 		assert.Fail(t, fmt.Sprintf("failed to subscribe to topic %s", topic))
 	}
 	assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
 
-	token = client.Subscribe(fmt.Sprintf("%s.%s", topic, subtopic), qos, mqttHandler(handler{false, "clientID1", msgChan}))
+	token = client.Subscribe(fmt.Sprintf("%s.%s", topic, subtopic), qos, func(c mqtt.Client, m mqtt.Message) {
+		msgChan <- m.Payload()
+	})
 	if ok := token.WaitTimeout(100 * time.Millisecond); !ok {
 		assert.Fail(t, fmt.Sprintf("failed to subscribe to topic %s", topic))
 	}
@@ -97,8 +102,11 @@ func TestPublisher(t *testing.T) {
 		err := pubsub.Publish(topic, expectedMsg)
 		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s\n", tc.desc, err))
 
+		data, err := proto.Marshal(&expectedMsg)
+		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s\n", tc.desc, err))
+
 		receivedMsg := <-msgChan
-		assert.Equal(t, tc.payload, receivedMsg.Payload, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, tc.payload, receivedMsg.Payload))
+		assert.Equal(t, data, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, data, receivedMsg))
 	}
 }
 
