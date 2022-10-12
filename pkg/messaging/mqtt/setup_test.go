@@ -14,7 +14,7 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gogo/protobuf/proto"
-	logg "github.com/mainflux/mainflux/logger"
+	mainflux_log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	mqtt_pubsub "github.com/mainflux/mainflux/pkg/messaging/mqtt"
 	"github.com/ory/dockertest/v3"
@@ -22,7 +22,7 @@ import (
 
 var (
 	pubsub  messaging.PubSub
-	logger  logg.Logger
+	logger  mainflux_log.Logger
 	address string
 )
 
@@ -47,7 +47,7 @@ func TestMain(m *testing.M) {
 	address = fmt.Sprintf("%s:%s", "localhost", container.GetPort("1883/tcp"))
 	pool.MaxWait = 120 * time.Second
 
-	logger, err = logg.New(os.Stdout, "error")
+	logger, err = mainflux_log.New(os.Stdout, mainflux_log.Debug.String())
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -91,10 +91,6 @@ func mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
 		var msg messaging.Message
 		if err := proto.Unmarshal(m.Payload(), &msg); err != nil {
 			logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
-			msg.Payload = m.Payload()
-			if err := h.Handle(msg); err != nil {
-				logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
-			}
 			return
 		}
 		if err := h.Handle(msg); err != nil {

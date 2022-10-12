@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	mqtt_pubsub "github.com/mainflux/mainflux/pkg/messaging/mqtt"
 	"github.com/stretchr/testify/assert"
@@ -31,9 +32,9 @@ func TestPublisher(t *testing.T) {
 	client, err := newClient(address, "clientID1", 30*time.Second)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	token := client.Subscribe(topic, qos, mqttHandler(handler{false, "clientID1", &msgChan}))
+	token := client.Subscribe(topic, qos, mqttHandler(handler{false, "clientID1", msgChan}))
 	assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
-	token = client.Subscribe(fmt.Sprintf("%s.%s", topic, subtopic), qos, mqttHandler(handler{false, "clientID1", &msgChan}))
+	token = client.Subscribe(fmt.Sprintf("%s.%s", topic, subtopic), qos, mqttHandler(handler{false, "clientID1", msgChan}))
 	assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
 
 	t.Cleanup(func() {
@@ -122,49 +123,49 @@ func TestSubscribe(t *testing.T) {
 			topic:    topic,
 			clientID: "clientid1",
 			err:      nil,
-			handler:  handler{false, "clientid1", &msgChan},
+			handler:  handler{false, "clientid1", msgChan},
 		},
 		{
 			desc:     "Subscribe to the same topic with a different ID",
 			topic:    topic,
 			clientID: "clientid2",
 			err:      nil,
-			handler:  handler{false, "clientid2", &msgChan},
+			handler:  handler{false, "clientid2", msgChan},
 		},
 		{
 			desc:     "Subscribe to an already subscribed topic with an ID",
 			topic:    topic,
 			clientID: "clientid1",
 			err:      nil,
-			handler:  handler{false, "clientid1", &msgChan},
+			handler:  handler{false, "clientid1", msgChan},
 		},
 		{
 			desc:     "Subscribe to a topic with a subtopic with an ID",
 			topic:    fmt.Sprintf("%s.%s", topic, subtopic),
 			clientID: "clientid1",
 			err:      nil,
-			handler:  handler{false, "clientid1", &msgChan},
+			handler:  handler{false, "clientid1", msgChan},
 		},
 		{
 			desc:     "Subscribe to an already subscribed topic with a subtopic with an ID",
 			topic:    fmt.Sprintf("%s.%s", topic, subtopic),
 			clientID: "clientid1",
 			err:      nil,
-			handler:  handler{false, "clientid1", &msgChan},
+			handler:  handler{false, "clientid1", msgChan},
 		},
 		{
 			desc:     "Subscribe to an empty topic with an ID",
 			topic:    "",
 			clientID: "clientid1",
 			err:      mqtt_pubsub.ErrEmptyTopic,
-			handler:  handler{false, "clientid1", &msgChan},
+			handler:  handler{false, "clientid1", msgChan},
 		},
 		{
 			desc:     "Subscribe to a topic with empty id",
 			topic:    topic,
 			clientID: "",
 			err:      mqtt_pubsub.ErrEmptyID,
-			handler:  handler{false, "", &msgChan},
+			handler:  handler{false, "", msgChan},
 		},
 	}
 	for _, tc := range cases {
@@ -172,18 +173,18 @@ func TestSubscribe(t *testing.T) {
 		assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, err, tc.err))
 
 		if tc.err == nil {
-			token := client.Subscribe(tc.topic, qos, mqttHandler(handler{false, "clientID1", &msgChan}))
-			assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
-
 			expectedMsg := messaging.Message{
-				Publisher: "clientIDD",
+				Publisher: "clientID1",
 				Channel:   channel,
 				Subtopic:  subtopic,
 				Payload:   data,
 			}
-			token = client.Publish(tc.topic, qos, false, expectedMsg.Payload)
+			data, err := proto.Marshal(&expectedMsg)
+			assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+			token := client.Publish(tc.topic, qos, false, data)
+			token.WaitTimeout(500)
 			assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
-			token.Wait()
 
 			receivedMsg := <-msgChan
 			assert.Equal(t, expectedMsg.Payload, receivedMsg.Payload, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
@@ -206,35 +207,35 @@ func TestPubSub(t *testing.T) {
 			topic:    topic,
 			clientID: "clientid7",
 			err:      nil,
-			handler:  handler{false, "clientid7", &msgChan},
+			handler:  handler{false, "clientid7", msgChan},
 		},
 		{
 			desc:     "Subscribe to the same topic with a different ID",
 			topic:    topic,
 			clientID: "clientid8",
 			err:      nil,
-			handler:  handler{false, "clientid8", &msgChan},
+			handler:  handler{false, "clientid8", msgChan},
 		},
 		{
 			desc:     "Subscribe to a topic with a subtopic with an ID",
 			topic:    fmt.Sprintf("%s.%s", topic, subtopic),
 			clientID: "clientid7",
 			err:      nil,
-			handler:  handler{false, "clientid7", &msgChan},
+			handler:  handler{false, "clientid7", msgChan},
 		},
 		{
 			desc:     "Subscribe to an empty topic with an ID",
 			topic:    "",
 			clientID: "clientid7",
 			err:      mqtt_pubsub.ErrEmptyTopic,
-			handler:  handler{false, "clientid7", &msgChan},
+			handler:  handler{false, "clientid7", msgChan},
 		},
 		{
 			desc:     "Subscribe to a topic with empty id",
 			topic:    topic,
 			clientID: "",
 			err:      mqtt_pubsub.ErrEmptyID,
-			handler:  handler{false, "", &msgChan},
+			handler:  handler{false, "", msgChan},
 		},
 	}
 	for _, tc := range cases {
@@ -278,7 +279,7 @@ func TestUnsubscribe(t *testing.T) {
 			clientID: "clientid4",
 			err:      nil,
 			pubsub:   true,
-			handler:  handler{false, "clientid4", &msgChan},
+			handler:  handler{false, "clientid4", msgChan},
 		},
 		{
 			desc:     "Subscribe to the same topic with a different ID",
@@ -286,7 +287,7 @@ func TestUnsubscribe(t *testing.T) {
 			clientID: "clientid9",
 			err:      nil,
 			pubsub:   true,
-			handler:  handler{false, "clientid9", &msgChan},
+			handler:  handler{false, "clientid9", msgChan},
 		},
 		{
 			desc:     "Unsubscribe from a topic with an ID",
@@ -294,7 +295,7 @@ func TestUnsubscribe(t *testing.T) {
 			clientID: "clientid4",
 			err:      nil,
 			pubsub:   false,
-			handler:  handler{false, "clientid4", &msgChan},
+			handler:  handler{false, "clientid4", msgChan},
 		},
 		{
 			desc:     "Unsubscribe from same topic with different ID",
@@ -302,7 +303,7 @@ func TestUnsubscribe(t *testing.T) {
 			clientID: "clientid9",
 			err:      nil,
 			pubsub:   false,
-			handler:  handler{false, "clientid9", &msgChan},
+			handler:  handler{false, "clientid9", msgChan},
 		},
 		{
 			desc:     "Unsubscribe from a non-existent topic with an ID",
@@ -310,7 +311,7 @@ func TestUnsubscribe(t *testing.T) {
 			clientID: "clientid4",
 			err:      mqtt_pubsub.ErrNotSubscribed,
 			pubsub:   false,
-			handler:  handler{false, "clientid4", &msgChan},
+			handler:  handler{false, "clientid4", msgChan},
 		},
 		{
 			desc:     "Unsubscribe from an already unsubscribed topic with an ID",
@@ -318,7 +319,7 @@ func TestUnsubscribe(t *testing.T) {
 			clientID: "clientid4",
 			err:      mqtt_pubsub.ErrNotSubscribed,
 			pubsub:   false,
-			handler:  handler{false, "clientid4", &msgChan},
+			handler:  handler{false, "clientid4", msgChan},
 		},
 		{
 			desc:     "Subscribe to a topic with a subtopic with an ID",
@@ -326,7 +327,7 @@ func TestUnsubscribe(t *testing.T) {
 			clientID: "clientidd4",
 			err:      nil,
 			pubsub:   true,
-			handler:  handler{false, "clientidd4", &msgChan},
+			handler:  handler{false, "clientidd4", msgChan},
 		},
 		{
 			desc:     "Unsubscribe from a topic with a subtopic with an ID",
@@ -334,7 +335,7 @@ func TestUnsubscribe(t *testing.T) {
 			clientID: "clientidd4",
 			err:      nil,
 			pubsub:   false,
-			handler:  handler{false, "clientidd4", &msgChan},
+			handler:  handler{false, "clientidd4", msgChan},
 		},
 		{
 			desc:     "Unsubscribe from an already unsubscribed topic with a subtopic with an ID",
@@ -342,7 +343,7 @@ func TestUnsubscribe(t *testing.T) {
 			clientID: "clientid4",
 			err:      mqtt_pubsub.ErrNotSubscribed,
 			pubsub:   false,
-			handler:  handler{false, "clientid4", &msgChan},
+			handler:  handler{false, "clientid4", msgChan},
 		},
 		{
 			desc:     "Unsubscribe from an empty topic with an ID",
@@ -350,7 +351,7 @@ func TestUnsubscribe(t *testing.T) {
 			clientID: "clientid4",
 			err:      mqtt_pubsub.ErrEmptyTopic,
 			pubsub:   false,
-			handler:  handler{false, "clientid4", &msgChan},
+			handler:  handler{false, "clientid4", msgChan},
 		},
 		{
 			desc:     "Unsubscribe from a topic with empty ID",
@@ -358,7 +359,7 @@ func TestUnsubscribe(t *testing.T) {
 			clientID: "",
 			err:      mqtt_pubsub.ErrEmptyID,
 			pubsub:   false,
-			handler:  handler{false, "", &msgChan},
+			handler:  handler{false, "", msgChan},
 		},
 		{
 			desc:     "Subscribe to a new topic with an ID",
@@ -366,7 +367,7 @@ func TestUnsubscribe(t *testing.T) {
 			clientID: "clientid55",
 			err:      nil,
 			pubsub:   true,
-			handler:  handler{true, "clientid5", &msgChan},
+			handler:  handler{true, "clientid5", msgChan},
 		},
 		{
 			desc:     "Unsubscribe from a topic with an ID with failing handler",
@@ -374,7 +375,7 @@ func TestUnsubscribe(t *testing.T) {
 			clientID: "clientid55",
 			err:      mqtt_pubsub.ErrFailedHandleMessage,
 			pubsub:   false,
-			handler:  handler{true, "clientid5", &msgChan},
+			handler:  handler{true, "clientid5", msgChan},
 		},
 		{
 			desc:     "Subscribe to a new topic with subtopic with an ID",
@@ -382,7 +383,7 @@ func TestUnsubscribe(t *testing.T) {
 			clientID: "clientid55",
 			err:      nil,
 			pubsub:   true,
-			handler:  handler{true, "clientid5", &msgChan},
+			handler:  handler{true, "clientid5", msgChan},
 		},
 		{
 			desc:     "Unsubscribe from a topic with subtopic with an ID with failing handler",
@@ -390,7 +391,7 @@ func TestUnsubscribe(t *testing.T) {
 			clientID: "clientid55",
 			err:      mqtt_pubsub.ErrFailedHandleMessage,
 			pubsub:   false,
-			handler:  handler{true, "clientid5", &msgChan},
+			handler:  handler{true, "clientid5", msgChan},
 		},
 	}
 	for _, tc := range cases {
@@ -408,12 +409,12 @@ func TestUnsubscribe(t *testing.T) {
 type handler struct {
 	fail      bool
 	publisher string
-	msgChan   *chan (messaging.Message)
+	msgChan   chan (messaging.Message)
 }
 
 func (h handler) Handle(msg messaging.Message) error {
 	if msg.Publisher != h.publisher {
-		*h.msgChan <- msg
+		h.msgChan <- msg
 	}
 	return nil
 }
