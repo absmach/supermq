@@ -33,8 +33,15 @@ func TestPublisher(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	token := client.Subscribe(topic, qos, mqttHandler(handler{false, "clientID1", msgChan}))
+	if ok := token.WaitTimeout(100 * time.Millisecond); !ok {
+		assert.Fail(t, fmt.Sprintf("failed to subscribe to topic %s", topic))
+	}
 	assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
+
 	token = client.Subscribe(fmt.Sprintf("%s.%s", topic, subtopic), qos, mqttHandler(handler{false, "clientID1", msgChan}))
+	if ok := token.WaitTimeout(100 * time.Millisecond); !ok {
+		assert.Fail(t, fmt.Sprintf("failed to subscribe to topic %s", topic))
+	}
 	assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
 
 	t.Cleanup(func() {
@@ -42,7 +49,7 @@ func TestPublisher(t *testing.T) {
 		token.WaitTimeout(100 * time.Millisecond)
 		assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
 
-		client.Disconnect(5)
+		client.Disconnect(100)
 	})
 
 	// publish with empty topic
@@ -91,11 +98,7 @@ func TestPublisher(t *testing.T) {
 		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s\n", tc.desc, err))
 
 		receivedMsg := <-msgChan
-		if tc.payload == nil {
-			assert.Equal(t, 0, len(receivedMsg.Payload), fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, tc.payload, receivedMsg.Payload))
-		} else {
-			assert.Equal(t, tc.payload, receivedMsg.Payload, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, tc.payload, receivedMsg.Payload))
-		}
+		assert.Equal(t, tc.payload, receivedMsg.Payload, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, tc.payload, receivedMsg.Payload))
 	}
 }
 
@@ -108,7 +111,7 @@ func TestSubscribe(t *testing.T) {
 
 	t.Cleanup(func() {
 		client.Unsubscribe()
-		client.Disconnect(5)
+		client.Disconnect(100)
 	})
 
 	cases := []struct {
