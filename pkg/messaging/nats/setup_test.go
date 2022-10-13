@@ -11,7 +11,6 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
 	logg "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/nats"
@@ -65,19 +64,6 @@ func newConn() (*broker.Conn, error) {
 	}
 
 	return conn, nil
-}
-
-func natsHandler(h messaging.MessageHandler) broker.MsgHandler {
-	return func(m *broker.Msg) {
-		var msg messaging.Message
-		if err := proto.Unmarshal(m.Data, &msg); err != nil {
-			logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
-			return
-		}
-		if err := h.Handle(msg); err != nil {
-			logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
-		}
-	}
 }
 
 func handleInterrupt(pool *dockertest.Pool, container *dockertest.Resource) {

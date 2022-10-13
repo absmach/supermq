@@ -18,11 +18,11 @@ import (
 const chansPrefix = "channels"
 
 var (
-	ErrAlreadySubscribed = errors.New("already subscribed to topic")
-	ErrNotSubscribed     = errors.New("not subscribed")
-	ErrEmptyTopic        = errors.New("empty topic")
-	ErrEmptyID           = errors.New("empty id")
-	ErrFailed            = errors.New("failed")
+	ErrAlreadySubscribed   = errors.New("already subscribed to topic")
+	ErrNotSubscribed       = errors.New("not subscribed")
+	ErrEmptyTopic          = errors.New("empty topic")
+	ErrEmptyID             = errors.New("empty id")
+	ErrFailedHandleMessage = errors.New("failed to handle mainflux message")
 )
 
 var _ messaging.PubSub = (*pubsub)(nil)
