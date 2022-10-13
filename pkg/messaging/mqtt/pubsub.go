@@ -23,18 +23,25 @@ const (
 var (
 	// ErrConnect indicates that connection to MQTT broker failed
 	ErrConnect = errors.New("failed to connect to MQTT broker")
+
 	// ErrSubscribeTimeout indicates that the subscription failed due to timeout.
 	ErrSubscribeTimeout = errors.New("failed to subscribe due to timeout reached")
+
 	// ErrUnsubscribeTimeout indicates that unsubscribe failed due to timeout.
 	ErrUnsubscribeTimeout = errors.New("failed to unsubscribe due to timeout reached")
+
 	// ErrUnsubscribeDeleteTopic indicates that unsubscribe failed because the topic was deleted.
 	ErrUnsubscribeDeleteTopic = errors.New("failed to unsubscribe due to deletion of topic")
+
 	// ErrNotSubscribed indicates that the topic is not subscribed to.
 	ErrNotSubscribed = errors.New("not subscribed")
+
 	// ErrEmptyTopic indicates the absence of topic.
 	ErrEmptyTopic = errors.New("empty topic")
+
 	// ErrEmptyID indicates the absence of ID.
 	ErrEmptyID = errors.New("empty ID")
+
 	// ErrFailedHandleMessage indicates that the message couldn't be handled.
 	ErrFailedHandleMessage = errors.New("failed to handle mainflux message")
 )
