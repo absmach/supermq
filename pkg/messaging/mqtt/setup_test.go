@@ -26,8 +26,13 @@ var (
 )
 
 const (
-	username = "mainflux-mqtt"
-	qos      = 2
+	username      = "mainflux-mqtt"
+	qos           = 2
+	port          = "1883/tcp"
+	broker        = "eclipse-mosquitto"
+	brokerVersion = "1.6.13"
+	brokerTimeout = 30 * time.Second
+	poolMaxWait   = 120 * time.Second
 )
 
 func TestMain(m *testing.M) {
@@ -36,15 +41,15 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
-	container, err := pool.Run("eclipse-mosquitto", "1.6.13", nil)
+	container, err := pool.Run(broker, brokerVersion, nil)
 	if err != nil {
 		log.Fatalf("Could not start container: %s", err)
 	}
 
 	handleInterrupt(m, pool, container)
 
-	address = fmt.Sprintf("%s:%s", "localhost", container.GetPort("1883/tcp"))
-	pool.MaxWait = 120 * time.Second
+	address = fmt.Sprintf("%s:%s", "localhost", container.GetPort(port))
+	pool.MaxWait = poolMaxWait
 
 	logger, err = mainflux_log.New(os.Stdout, mainflux_log.Debug.String())
 	if err != nil {
@@ -52,7 +57,7 @@ func TestMain(m *testing.M) {
 	}
 
 	if err := pool.Retry(func() error {
-		pubsub, err = mqtt_pubsub.NewPubSub(address, "mainflux", 30*time.Second, logger)
+		pubsub, err = mqtt_pubsub.NewPubSub(address, "mainflux", brokerTimeout, logger)
 		return err
 	}); err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
