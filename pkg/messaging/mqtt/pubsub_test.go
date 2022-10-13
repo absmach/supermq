@@ -16,10 +16,11 @@ import (
 )
 
 const (
-	topic       = "topic"
-	chansPrefix = "channels"
-	channel     = "9b7b1b3f-b1b0-46a8-a717-b8213f9eda3b"
-	subtopic    = "engine"
+	topic        = "topic"
+	chansPrefix  = "channels"
+	channel      = "9b7b1b3f-b1b0-46a8-a717-b8213f9eda3b"
+	subtopic     = "engine"
+	tokenTimeout = 100 * time.Millisecond
 )
 
 var (
@@ -30,13 +31,13 @@ func TestPublisher(t *testing.T) {
 	msgChan := make(chan []byte)
 
 	// Subscribing with topic, and with subtopic, so that we can publish messages.
-	client, err := newClient(address, "clientID1", 30*time.Second)
+	client, err := newClient(address, "clientID1", brokerTimeout)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	token := client.Subscribe(topic, qos, func(c mqtt.Client, m mqtt.Message) {
 		msgChan <- m.Payload()
 	})
-	if ok := token.WaitTimeout(100 * time.Millisecond); !ok {
+	if ok := token.WaitTimeout(tokenTimeout); !ok {
 		assert.Fail(t, fmt.Sprintf("failed to subscribe to topic %s", topic))
 	}
 	assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
@@ -44,14 +45,14 @@ func TestPublisher(t *testing.T) {
 	token = client.Subscribe(fmt.Sprintf("%s.%s", topic, subtopic), qos, func(c mqtt.Client, m mqtt.Message) {
 		msgChan <- m.Payload()
 	})
-	if ok := token.WaitTimeout(100 * time.Millisecond); !ok {
+	if ok := token.WaitTimeout(tokenTimeout); !ok {
 		assert.Fail(t, fmt.Sprintf("failed to subscribe to topic %s", fmt.Sprintf("%s.%s", topic, subtopic)))
 	}
 	assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
 
 	t.Cleanup(func() {
 		token := client.Unsubscribe(topic, fmt.Sprintf("%s.%s", topic, subtopic))
-		token.WaitTimeout(100 * time.Millisecond)
+		token.WaitTimeout(tokenTimeout)
 		assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
 
 		client.Disconnect(100)
@@ -114,7 +115,7 @@ func TestSubscribe(t *testing.T) {
 	msgChan := make(chan messaging.Message)
 
 	// Creating client to Publish messages to subscribed topic.
-	client, err := newClient(address, "mainflux", 30*time.Second)
+	client, err := newClient(address, "mainflux", brokerTimeout)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	t.Cleanup(func() {
@@ -194,7 +195,7 @@ func TestSubscribe(t *testing.T) {
 			assert.Nil(t, err, fmt.Sprintf("%s: failed to serialize protobuf error: %s\n", tc.desc, err))
 
 			token := client.Publish(tc.topic, qos, false, data)
-			token.WaitTimeout(100 * time.Millisecond)
+			token.WaitTimeout(tokenTimeout)
 			assert.Nil(t, token.Error(), fmt.Sprintf("got unexpected error: %s", token.Error()))
 
 			receivedMsg := <-msgChan
