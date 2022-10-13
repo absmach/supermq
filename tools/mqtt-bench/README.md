@@ -48,7 +48,7 @@ Before use you need a `mfconn.toml` - a TOML file that describes Mainflux connec
 You can use `provision` tool (in tools/provision) to create this TOML config file.
 
 ```bash
-./provision -u test@mainflux.com -p test1234 --host http://127.0.0.1 --num 100 > ../mqtt-bench/mfconn.toml
+go run tools/provision/cmd/main.go -u test@mainflux.com -p test1234 --host http://127.0.0.1 --num 100 > tools/mqtt-bench/mfconn.toml 
 ```
 
 Example use and output
