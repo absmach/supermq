@@ -21,14 +21,22 @@ const (
 )
 
 var (
-	ErrConnect                = errors.New("failed to connect to MQTT broker")
-	ErrSubscribeTimeout       = errors.New("failed to subscribe due to timeout reached")
-	ErrUnsubscribeTimeout     = errors.New("failed to unsubscribe due to timeout reached")
+	// ErrConnect indicates that connection to MQTT broker failed
+	ErrConnect = errors.New("failed to connect to MQTT broker")
+	// ErrSubscribeTimeout indicates that the subscription failed due to timeout.
+	ErrSubscribeTimeout = errors.New("failed to subscribe due to timeout reached")
+	// ErrUnsubscribeTimeout indicates that unsubscribe failed due to timeout.
+	ErrUnsubscribeTimeout = errors.New("failed to unsubscribe due to timeout reached")
+	// ErrUnsubscribeDeleteTopic indicates that unsubscribe failed because the topic was deleted.
 	ErrUnsubscribeDeleteTopic = errors.New("failed to unsubscribe due to deletion of topic")
-	ErrNotSubscribed          = errors.New("not subscribed")
-	ErrEmptyTopic             = errors.New("empty topic")
-	ErrEmptyID                = errors.New("empty ID")
-	ErrFailedHandleMessage    = errors.New("failed to handle mainflux message")
+	// ErrNotSubscribed indicates that the topic is not subscribed to.
+	ErrNotSubscribed = errors.New("not subscribed")
+	// ErrEmptyTopic indicates the absence of topic.
+	ErrEmptyTopic = errors.New("empty topic")
+	// ErrEmptyID indicates the absence of ID.
+	ErrEmptyID = errors.New("empty ID")
+	// ErrFailedHandleMessage indicates that the message couldn't be handled.
+	ErrFailedHandleMessage = errors.New("failed to handle mainflux message")
 )
 
 var _ messaging.PubSub = (*pubsub)(nil)
@@ -193,14 +201,14 @@ func (ps *pubsub) mqttHandler(h messaging.MessageHandler) mqtt.MessageHandler {
 	}
 }
 
-// contains checks if a topic is present
-func (sub subscription) contains(topic string) bool {
-	return sub.indexOf(topic) != -1
+// Contains checks if a topic is present.
+func (s subscription) contains(topic string) bool {
+	return s.indexOf(topic) != -1
 }
 
-// Finds the index of an item in the topics
-func (sub subscription) indexOf(element string) int {
-	for k, v := range sub.topics {
+// Finds the index of an item in the topics.
+func (s subscription) indexOf(element string) int {
+	for k, v := range s.topics {
 		if element == v {
 			return k
 		}
@@ -208,15 +216,15 @@ func (sub subscription) indexOf(element string) int {
 	return -1
 }
 
-// Deletes a topic from the slice
-func (sub *subscription) delete(topic string) bool {
-	index := sub.indexOf(topic)
+// Deletes a topic from the slice.
+func (s *subscription) delete(topic string) bool {
+	index := s.indexOf(topic)
 	if index == -1 {
 		return false
 	}
-	topics := make([]string, len(sub.topics)-1)
-	copy(topics[:index], sub.topics[:index])
-	copy(topics[index:], sub.topics[index+1:])
-	sub.topics = topics
+	topics := make([]string, len(s.topics)-1)
+	copy(topics[:index], s.topics[:index])
+	copy(topics[index:], s.topics[index+1:])
+	s.topics = topics
 	return true
 }

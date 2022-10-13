@@ -29,7 +29,7 @@ var (
 func TestPublisher(t *testing.T) {
 	msgChan := make(chan []byte)
 
-	// Subscribing with topic, and with subtopic, so that we can publish messages
+	// Subscribing with topic, and with subtopic, so that we can publish messages.
 	client, err := newClient(address, "clientID1", 30*time.Second)
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
@@ -57,7 +57,7 @@ func TestPublisher(t *testing.T) {
 		client.Disconnect(100)
 	})
 
-	// publish with empty topic
+	// Test publish with an empty topic.
 	err = pubsub.Publish("", messaging.Message{Payload: data})
 	assert.Equal(t, err, mqtt_pubsub.ErrEmptyTopic, fmt.Sprintf("Publish with empty topic: expected: %s, got: %s", mqtt_pubsub.ErrEmptyTopic, err))
 
@@ -254,7 +254,7 @@ func TestPubSub(t *testing.T) {
 		assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, err, tc.err))
 
 		if tc.err == nil {
-			// use pubsub to subscribe to a topic, and then publish messages to that topic.
+			// Use pubsub to subscribe to a topic, and then publish messages to that topic.
 			expectedMsg := messaging.Message{
 				Publisher: "clientID",
 				Channel:   channel,
@@ -262,7 +262,7 @@ func TestPubSub(t *testing.T) {
 				Payload:   data,
 			}
 
-			// publish message, and then receive it on message channel
+			// Publish message, and then receive it on message channel.
 			err := pubsub.Publish(topic, expectedMsg)
 			assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s\n", tc.desc, err))
 
@@ -280,7 +280,7 @@ func TestUnsubscribe(t *testing.T) {
 		topic     string
 		clientID  string
 		err       error
-		subscribe bool //true for subscribe and false for unsubscribe
+		subscribe bool // True for subscribe and false for unsubscribe.
 		handler   messaging.MessageHandler
 	}{
 		{
