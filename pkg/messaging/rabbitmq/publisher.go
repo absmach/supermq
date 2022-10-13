@@ -60,12 +60,10 @@ func (pub *publisher) Publish(topic string, msg messaging.Message) error {
 		false,
 		false,
 		amqp.Publishing{
-			Headers:      amqp.Table{},
-			ContentType:  "application/octet-stream",
-			AppId:        "mainflux-publisher",
-			DeliveryMode: 2,
-			Priority:     9,
-			Body:         data,
+			Headers:     amqp.Table{},
+			ContentType: "application/octet-stream",
+			AppId:       "mainflux-publisher",
+			Body:        data,
 		})
 
 	if err != nil {
