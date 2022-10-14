@@ -181,6 +181,12 @@ func TestSubscribe(t *testing.T) {
 			data, err := proto.Marshal(&expectedMsg)
 			assert.Nil(t, err, fmt.Sprintf("%s: failed to serialize protobuf error: %s\n", tc.desc, err))
 
+			// msg := broker.Msg{
+			// 	Subject: tc.topic,
+			// 	Data:    data,
+			// }
+
+			// err = conn.PublishMsg(&msg)
 			err = conn.Publish(tc.topic, data)
 			assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
