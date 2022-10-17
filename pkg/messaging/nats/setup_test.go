@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"testing"
 
-	logg "github.com/mainflux/mainflux/logger"
+	mainflux_log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/nats"
 	broker "github.com/nats-io/nats.go"
@@ -21,7 +21,7 @@ import (
 var (
 	pubsub  messaging.PubSub
 	address string
-	logger  logg.Logger
+	logger  mainflux_log.Logger
 )
 
 func TestMain(m *testing.M) {
@@ -38,7 +38,7 @@ func TestMain(m *testing.M) {
 
 	address = fmt.Sprintf("%s:%s", "localhost", container.GetPort("4222/tcp"))
 
-	logger, err = logg.New(os.Stdout, "error")
+	logger, err = mainflux_log.New(os.Stdout, mainflux_log.Debug.String())
 	if err != nil {
 		log.Fatalf(err.Error())
 	}

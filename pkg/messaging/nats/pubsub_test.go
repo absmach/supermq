@@ -29,7 +29,7 @@ var (
 func TestPublisher(t *testing.T) {
 	msgChan := make(chan []byte)
 
-	// Subscribing with topic, and with subtopic, so that we can publish messages
+	// Subscribing with topic, and with subtopic, so that we can publish messages.
 	conn, err := newConn()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
@@ -101,7 +101,7 @@ func TestPublisher(t *testing.T) {
 func TestSubscribe(t *testing.T) {
 	msgChan := make(chan messaging.Message)
 
-	// create connection to publish messages to the subscribed topic
+	// Create connection to publish messages to the subscribed topic.
 	conn, err := newConn()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
@@ -172,29 +172,19 @@ func TestSubscribe(t *testing.T) {
 
 		if tc.err == nil {
 			expectedMsg := messaging.Message{
-				Publisher: "CLIENTID",
+				Publisher: "CLIENTIIDD",
 				Channel:   channel,
-				Subtopic:  subtopic,
 				Payload:   data,
 			}
 
 			data, err := proto.Marshal(&expectedMsg)
 			assert.Nil(t, err, fmt.Sprintf("%s: failed to serialize protobuf error: %s\n", tc.desc, err))
 
-			// msg := broker.Msg{
-			// 	Subject: tc.topic,
-			// 	Data:    data,
-			// }
-
-			// err = conn.PublishMsg(&msg)
 			err = conn.Publish(tc.topic, data)
 			assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 			receivedMsg := <-msgChan
 			assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
-
-			err = pubsub.Subscribe(tc.clientID, tc.topic, tc.handler)
-			assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 		}
 	}
 }
@@ -254,14 +244,14 @@ func TestPubSub(t *testing.T) {
 		assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, err, tc.err))
 
 		if tc.err == nil {
-			// use pubsub to subscribe to a topic, and then publish messages to that topic.
+			// Use pubsub to subscribe to a topic, and then publish messages to that topic.
 			expectedMsg := messaging.Message{
 				Publisher: "clientID",
 				Channel:   channel,
 				Payload:   data,
 			}
 
-			// publish message, and then receive it on message channel
+			//Publish message, and then receive it on message channel.
 			err := pubsub.Publish(tc.topic, expectedMsg)
 			assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s\n", tc.desc, err))
 
@@ -279,7 +269,7 @@ func TestUnsubscribe(t *testing.T) {
 		topic     string
 		clientID  string
 		err       error
-		subscribe bool //true for subscribe and false for unsubscribe
+		subscribe bool // True for subscribe and false for unsubscribe.
 		handler   messaging.MessageHandler
 	}{
 		{
@@ -422,9 +412,9 @@ type handler struct {
 }
 
 func (h handler) Handle(msg messaging.Message) error {
-	// if msg.Publisher != h.publisher {
-	h.msgChan <- msg
-	// }
+	if msg.Publisher != h.publisher {
+		h.msgChan <- msg
+	}
 	return nil
 }
 
