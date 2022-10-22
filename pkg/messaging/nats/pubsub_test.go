@@ -172,7 +172,7 @@ func TestSubscribe(t *testing.T) {
 
 		if tc.err == nil {
 			expectedMsg := messaging.Message{
-				Publisher: "CLIENTIIDD",
+				Publisher: "CLIENTID",
 				Channel:   channel,
 				Payload:   data,
 			}
@@ -180,7 +180,7 @@ func TestSubscribe(t *testing.T) {
 			data, err := proto.Marshal(&expectedMsg)
 			assert.Nil(t, err, fmt.Sprintf("%s: failed to serialize protobuf error: %s\n", tc.desc, err))
 
-			err = conn.Publish(tc.topic, data)
+			err = conn.Publish(fmt.Sprintf("%s.%s", chansPrefix, tc.topic), data)
 			assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 			receivedMsg := <-msgChan

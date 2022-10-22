@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
-	logg "github.com/mainflux/mainflux/logger"
+	mainflux_log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/rabbitmq"
 	dockertest "github.com/ory/dockertest/v3"
@@ -23,7 +23,7 @@ import (
 var (
 	publisher messaging.Publisher
 	pubsub    messaging.PubSub
-	logger    logg.Logger
+	logger    mainflux_log.Logger
 	address   string
 )
 
@@ -47,7 +47,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
-	logger, err = logg.New(os.Stdout, "error")
+	logger, err = mainflux_log.New(os.Stdout, mainflux_log.Debug.String())
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
