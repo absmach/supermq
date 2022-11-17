@@ -21,8 +21,9 @@ import (
 
 var _ session.Handler = (*handler)(nil)
 
+const protocol = "mqtt"
+
 const (
-	protocol                           = "mqtt"
 	LogInfoSubscribed                  = "subscribed with client_id %s to topics %s"
 	LogInfoUnsubscribed                = "unsubscribed client_id %s from topics %s"
 	LogInfoConnected                   = "connected with client_id %s"
