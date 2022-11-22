@@ -5,11 +5,12 @@ package sdk_test
 
 import (
 	"fmt"
-	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/pkg/errors"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/things"
@@ -107,14 +108,14 @@ func TestCreateThing(t *testing.T) {
 			desc:     "create new thing with empty token",
 			thing:    th1,
 			token:    "",
-			err:      createError(sdk.ErrFailedCreation, http.StatusUnauthorized),
+			err:      apiutil.ErrBearerToken,
 			location: "",
 		},
 		{
 			desc:     "create new thing with invalid token",
 			thing:    th1,
 			token:    wrongValue,
-			err:      createError(sdk.ErrFailedCreation, http.StatusUnauthorized),
+			err:      errors.ErrAuthentication,
 			location: "",
 		},
 	}
@@ -170,21 +171,21 @@ func TestCreateThings(t *testing.T) {
 			desc:   "create new things with empty things",
 			things: []sdk.Thing{},
 			token:  token,
-			err:    createError(sdk.ErrFailedCreation, http.StatusBadRequest),
+			err:    apiutil.ErrEmptyList,
 			res:    []sdk.Thing{},
 		},
 		{
 			desc:   "create new thing with empty token",
 			things: things,
 			token:  "",
-			err:    createError(sdk.ErrFailedCreation, http.StatusUnauthorized),
+			err:    apiutil.ErrBearerToken,
 			res:    []sdk.Thing{},
 		},
 		{
 			desc:   "create new thing with invalid token",
 			things: things,
 			token:  wrongValue,
-			err:    createError(sdk.ErrFailedCreation, http.StatusUnauthorized),
+			err:    errors.ErrAuthentication,
 			res:    []sdk.Thing{},
 		},
 		{
@@ -198,7 +199,7 @@ func TestCreateThings(t *testing.T) {
 			desc:   "create new things with wrong external UUID",
 			things: thsWrongExtID,
 			token:  token,
-			err:    createError(sdk.ErrFailedCreation, http.StatusBadRequest),
+			err:    apiutil.ErrInvalidIDFormat,
 			res:    []sdk.Thing{},
 		},
 	}
@@ -246,14 +247,14 @@ func TestThing(t *testing.T) {
 			desc:     "get non-existent thing",
 			thID:     "43",
 			token:    token,
-			err:      createError(sdk.ErrFailedFetch, http.StatusNotFound),
+			err:      errors.ErrNotFound,
 			response: sdk.Thing{},
 		},
 		{
 			desc:     "get thing with invalid token",
 			thID:     id,
 			token:    wrongValue,
-			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
+			err:      errors.ErrAuthentication,
 			response: sdk.Thing{},
 		},
 	}
@@ -311,7 +312,7 @@ func TestThings(t *testing.T) {
 			token:    wrongValue,
 			offset:   offset,
 			limit:    limit,
-			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
+			err:      errors.ErrAuthentication,
 			response: nil,
 			metadata: make(map[string]interface{}),
 		},
@@ -320,7 +321,7 @@ func TestThings(t *testing.T) {
 			token:    "",
 			offset:   offset,
 			limit:    limit,
-			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
+			err:      apiutil.ErrBearerToken,
 			response: nil,
 			metadata: make(map[string]interface{}),
 		},
@@ -329,7 +330,7 @@ func TestThings(t *testing.T) {
 			token:    token,
 			offset:   0,
 			limit:    0,
-			err:      createError(sdk.ErrFailedFetch, http.StatusBadRequest),
+			err:      apiutil.ErrLimitSize,
 			response: nil,
 			metadata: make(map[string]interface{}),
 		},
@@ -338,7 +339,7 @@ func TestThings(t *testing.T) {
 			token:    token,
 			offset:   offset,
 			limit:    110,
-			err:      createError(sdk.ErrFailedFetch, http.StatusBadRequest),
+			err:      apiutil.ErrLimitSize,
 			response: nil,
 			metadata: make(map[string]interface{}),
 		},
@@ -438,7 +439,7 @@ func TestThingsByChannel(t *testing.T) {
 			token:    wrongValue,
 			offset:   offset,
 			limit:    limit,
-			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
+			err:      errors.ErrAuthentication,
 			response: nil,
 		},
 		{
@@ -447,7 +448,7 @@ func TestThingsByChannel(t *testing.T) {
 			token:    "",
 			offset:   offset,
 			limit:    limit,
-			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
+			err:      apiutil.ErrBearerToken,
 			response: nil,
 		},
 		{
@@ -456,7 +457,7 @@ func TestThingsByChannel(t *testing.T) {
 			token:    token,
 			offset:   offset,
 			limit:    0,
-			err:      createError(sdk.ErrFailedFetch, http.StatusBadRequest),
+			err:      apiutil.ErrLimitSize,
 			response: nil,
 		},
 		{
@@ -465,7 +466,7 @@ func TestThingsByChannel(t *testing.T) {
 			token:    token,
 			offset:   offset,
 			limit:    110,
-			err:      createError(sdk.ErrFailedFetch, http.StatusBadRequest),
+			err:      apiutil.ErrLimitSize,
 			response: nil,
 		},
 		{
@@ -483,7 +484,7 @@ func TestThingsByChannel(t *testing.T) {
 			token:    wrongValue,
 			offset:   offset,
 			limit:    0,
-			err:      createError(sdk.ErrFailedFetch, http.StatusBadRequest),
+			err:      apiutil.ErrLimitSize,
 			response: nil,
 		},
 		{
@@ -543,17 +544,17 @@ func TestUpdateThing(t *testing.T) {
 				Metadata: metadata,
 			},
 			token: token,
-			err:   createError(sdk.ErrFailedUpdate, http.StatusForbidden),
+			err:   errors.ErrAuthorization,
 		},
 		{
-			desc: "update channel with invalid id",
+			desc: "update channel with an empty id",
 			thing: sdk.Thing{
 				ID:       "",
 				Name:     "test_device",
 				Metadata: metadata,
 			},
 			token: token,
-			err:   createError(sdk.ErrFailedUpdate, http.StatusBadRequest),
+			err:   apiutil.ErrMissingID,
 		},
 		{
 			desc: "update channel with invalid token",
@@ -563,7 +564,7 @@ func TestUpdateThing(t *testing.T) {
 				Metadata: metadata2,
 			},
 			token: wrongValue,
-			err:   createError(sdk.ErrFailedUpdate, http.StatusUnauthorized),
+			err:   errors.ErrAuthentication,
 		},
 		{
 			desc: "update channel with empty token",
@@ -573,7 +574,7 @@ func TestUpdateThing(t *testing.T) {
 				Metadata: metadata2,
 			},
 			token: "",
-			err:   createError(sdk.ErrFailedUpdate, http.StatusUnauthorized),
+			err:   apiutil.ErrBearerToken,
 		},
 	}
 
@@ -607,25 +608,25 @@ func TestDeleteThing(t *testing.T) {
 			desc:    "delete thing with invalid token",
 			thingID: id,
 			token:   wrongValue,
-			err:     createError(sdk.ErrFailedRemoval, http.StatusUnauthorized),
+			err:     errors.ErrAuthentication,
 		},
 		{
 			desc:    "delete non-existing thing",
 			thingID: "2",
 			token:   token,
-			err:     createError(sdk.ErrFailedRemoval, http.StatusNotFound),
+			err:     errors.ErrNotFound,
 		},
 		{
 			desc:    "delete thing with invalid id",
 			thingID: "",
 			token:   token,
-			err:     createError(sdk.ErrFailedRemoval, http.StatusBadRequest),
+			err:     apiutil.ErrMissingID,
 		},
 		{
 			desc:    "delete thing with empty token",
 			thingID: id,
 			token:   "",
-			err:     createError(sdk.ErrFailedRemoval, http.StatusUnauthorized),
+			err:     apiutil.ErrBearerToken,
 		},
 		{
 			desc:    "delete existing thing",
@@ -679,21 +680,21 @@ func TestIdentifyThing(t *testing.T) {
 		response string
 	}{
 		{
-			desc:     "identify thing with valid key",
+			desc:     "identify thing with a valid key",
 			thingKey: thing.Key,
 			err:      nil,
 			response: id,
 		},
 		{
-			desc:     "identify thing with invalid key",
+			desc:     "identify thing with an invalid key",
 			thingKey: badKey,
-			err:      createError(sdk.ErrFailedFetch, http.StatusNotFound),
+			err:      errors.ErrNotFound,
 			response: "",
 		},
 		{
-			desc:     "identify thing with empty key",
+			desc:     "identify thing with an empty key",
 			thingKey: "",
-			err:      createError(sdk.ErrFailedFetch, http.StatusUnauthorized),
+			err:      apiutil.ErrBearerKey,
 			response: "",
 		},
 	}
@@ -749,28 +750,28 @@ func TestConnectThing(t *testing.T) {
 			thingID: thingID,
 			chanID:  "9",
 			token:   token,
-			err:     createError(sdk.ErrFailedConnect, http.StatusNotFound),
+			err:     errors.ErrNotFound,
 		},
 		{
 			desc:    "connect non-existing thing to existing channel",
 			thingID: "9",
 			chanID:  chanID1,
 			token:   token,
-			err:     createError(sdk.ErrFailedConnect, http.StatusNotFound),
+			err:     errors.ErrNotFound,
 		},
 		{
 			desc:    "connect existing thing to channel with invalid ID",
 			thingID: thingID,
 			chanID:  "",
 			token:   token,
-			err:     createError(sdk.ErrFailedConnect, http.StatusBadRequest),
+			err:     apiutil.ErrMissingID,
 		},
 		{
-			desc:    "connect thing with invalid ID to existing channel",
+			desc:    "connect thing with missing ID to existing channel",
 			thingID: "",
 			chanID:  chanID1,
 			token:   token,
-			err:     createError(sdk.ErrFailedConnect, http.StatusBadRequest),
+			err:     apiutil.ErrMissingID,
 		},
 
 		{
@@ -778,21 +779,21 @@ func TestConnectThing(t *testing.T) {
 			thingID: thingID,
 			chanID:  chanID1,
 			token:   wrongValue,
-			err:     createError(sdk.ErrFailedConnect, http.StatusUnauthorized),
+			err:     errors.ErrAuthentication,
 		},
 		{
 			desc:    "connect existing thing to existing channel with empty token",
 			thingID: thingID,
 			chanID:  chanID1,
 			token:   "",
-			err:     createError(sdk.ErrFailedConnect, http.StatusUnauthorized),
+			err:     apiutil.ErrBearerToken,
 		},
 		{
 			desc:    "connect thing from owner to channel of other user",
 			thingID: thingID,
 			chanID:  chanID2,
 			token:   token,
-			err:     createError(sdk.ErrFailedConnect, http.StatusNotFound),
+			err:     errors.ErrNotFound,
 		},
 	}
 
@@ -802,108 +803,6 @@ func TestConnectThing(t *testing.T) {
 			ThingIDs:   []string{tc.thingID},
 		}
 		err := mainfluxSDK.Connect(conIDs, tc.token)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
-	}
-}
-
-func TestConnect(t *testing.T) {
-	svc := newThingsService(map[string]string{
-		token:      email,
-		otherToken: otherEmail,
-	})
-
-	ts := newThingsServer(svc)
-	defer ts.Close()
-	sdkConf := sdk.Config{
-		ThingsURL:       ts.URL,
-		MsgContentType:  contentType,
-		TLSVerification: false,
-	}
-
-	mainfluxSDK := sdk.NewSDK(sdkConf)
-	thingID, err := mainfluxSDK.CreateThing(th1, token)
-	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-
-	chanID1, err := mainfluxSDK.CreateChannel(ch2, token)
-	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-
-	chanID2, err := mainfluxSDK.CreateChannel(ch3, otherToken)
-	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
-
-	cases := []struct {
-		desc    string
-		thingID string
-		chanID  string
-		token   string
-		err     error
-	}{
-		{
-			desc:    "connect existing things to existing channels",
-			thingID: thingID,
-			chanID:  chanID1,
-			token:   token,
-			err:     nil,
-		},
-
-		{
-			desc:    "connect existing things to non-existing channels",
-			thingID: thingID,
-			chanID:  badID,
-			token:   token,
-			err:     createError(sdk.ErrFailedConnect, http.StatusNotFound),
-		},
-		{
-			desc:    "connect non-existing things to existing channels",
-			thingID: badID,
-			chanID:  chanID1,
-			token:   token,
-			err:     createError(sdk.ErrFailedConnect, http.StatusNotFound),
-		},
-		{
-			desc:    "connect existing things to channels with invalid ID",
-			thingID: thingID,
-			chanID:  emptyValue,
-			token:   token,
-			err:     createError(sdk.ErrFailedConnect, http.StatusBadRequest),
-		},
-		{
-			desc:    "connect things with invalid ID to existing channels",
-			thingID: emptyValue,
-			chanID:  chanID1,
-			token:   token,
-			err:     createError(sdk.ErrFailedConnect, http.StatusBadRequest),
-		},
-
-		{
-			desc:    "connect existing things to existing channels with invalid token",
-			thingID: thingID,
-			chanID:  chanID1,
-			token:   wrongValue,
-			err:     createError(sdk.ErrFailedConnect, http.StatusUnauthorized),
-		},
-		{
-			desc:    "connect existing things to existing channels with empty token",
-			thingID: thingID,
-			chanID:  chanID1,
-			token:   emptyValue,
-			err:     createError(sdk.ErrFailedConnect, http.StatusUnauthorized),
-		},
-		{
-			desc:    "connect things from owner to channels of other user",
-			thingID: thingID,
-			chanID:  chanID2,
-			token:   token,
-			err:     createError(sdk.ErrFailedConnect, http.StatusNotFound),
-		},
-	}
-
-	for _, tc := range cases {
-		connIDs := sdk.ConnectionIDs{
-			[]string{tc.thingID},
-			[]string{tc.chanID},
-		}
-
-		err := mainfluxSDK.Connect(connIDs, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 	}
 }
@@ -959,49 +858,49 @@ func TestDisconnectThing(t *testing.T) {
 			thingID: thingID,
 			chanID:  "9",
 			token:   token,
-			err:     createError(sdk.ErrFailedDisconnect, http.StatusNotFound),
+			err:     errors.ErrNotFound,
 		},
 		{
 			desc:    "disconnect non-existing thing from existing channel",
 			thingID: "9",
 			chanID:  chanID1,
 			token:   token,
-			err:     createError(sdk.ErrFailedDisconnect, http.StatusNotFound),
+			err:     errors.ErrNotFound,
 		},
 		{
 			desc:    "disconnect existing thing from channel with invalid ID",
 			thingID: thingID,
 			chanID:  "",
 			token:   token,
-			err:     createError(sdk.ErrFailedDisconnect, http.StatusBadRequest),
+			err:     apiutil.ErrMissingID,
 		},
 		{
 			desc:    "disconnect thing with invalid ID from existing channel",
 			thingID: "",
 			chanID:  chanID1,
 			token:   token,
-			err:     createError(sdk.ErrFailedDisconnect, http.StatusBadRequest),
+			err:     apiutil.ErrMissingID,
 		},
 		{
 			desc:    "disconnect existing thing from existing channel with invalid token",
 			thingID: thingID,
 			chanID:  chanID1,
 			token:   wrongValue,
-			err:     createError(sdk.ErrFailedDisconnect, http.StatusUnauthorized),
+			err:     errors.ErrAuthentication,
 		},
 		{
 			desc:    "disconnect existing thing from existing channel with empty token",
 			thingID: thingID,
 			chanID:  chanID1,
 			token:   "",
-			err:     createError(sdk.ErrFailedDisconnect, http.StatusUnauthorized),
+			err:     apiutil.ErrBearerToken,
 		},
 		{
 			desc:    "disconnect owner's thing from someone elses channel",
 			thingID: thingID,
 			chanID:  chanID2,
 			token:   token,
-			err:     createError(sdk.ErrFailedDisconnect, http.StatusNotFound),
+			err:     errors.ErrNotFound,
 		},
 	}
 
