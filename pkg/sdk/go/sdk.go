@@ -6,7 +6,6 @@ package sdk
 import (
 	"crypto/tls"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
+	"github.com/mainflux/mainflux/pkg/errors"
 )
 
 const (
@@ -27,6 +27,8 @@ const (
 	// CTBinary represents binary content type.
 	CTBinary ContentType = "application/octet-stream"
 )
+
+var errEncodeError = errors.New("failed to encode response error")
 
 var (
 	// ErrFailedCreation indicates that entity creation failed.
@@ -407,4 +409,21 @@ func (pm PageMetadata) query() (string, error) {
 		q.Add("metadata", string(md))
 	}
 	return q.Encode(), nil
+}
+
+func encodeError(body []byte, status ...int) error {
+	e := struct {
+		Err string `json:"error"`
+	}{}
+
+	if err := json.Unmarshal(body, &e); err != nil {
+		return errors.Wrap(errEncodeError, err)
+	}
+
+	if len(status) > 0 {
+		httpStatus := fmt.Sprintf("%d %s", status[0], http.StatusText(status[0]))
+		return errors.Wrap(errors.New(e.Err), errors.New(httpStatus))
+	}
+
+	return errors.New(e.Err)
 }

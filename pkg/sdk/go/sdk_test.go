@@ -10,7 +10,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
-func createError(e error, statusCode int) error {
-	httpStatus := fmt.Sprintf("%d %s", statusCode, http.StatusText(statusCode))
+func createError(e error, statusCode ...int) error {
+	httpStatus := fmt.Sprintf("%d %s", statusCode[0], http.StatusText(statusCode[0]))
 	return errors.Wrap(e, errors.New(httpStatus))
 }

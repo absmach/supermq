@@ -10,7 +10,6 @@ import (
 	"net/http"
 
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/pkg/errors"
 )
 
 func (sdk mfSDK) Health() (mainflux.HealthInfo, error) {
@@ -28,7 +27,7 @@ func (sdk mfSDK) Health() (mainflux.HealthInfo, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return mainflux.HealthInfo{}, errors.Wrap(ErrFetchHealth, errors.New(resp.Status))
+		return mainflux.HealthInfo{}, encodeError(body, resp.StatusCode)
 	}
 
 	var h mainflux.HealthInfo

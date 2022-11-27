@@ -9,8 +9,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-
-	"github.com/mainflux/mainflux/pkg/errors"
 )
 
 func (sdk mfSDK) SendMessage(chanName, msg, key string) error {
@@ -32,9 +30,15 @@ func (sdk mfSDK) SendMessage(chanName, msg, key string) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 
 	if resp.StatusCode != http.StatusAccepted {
-		return errors.Wrap(ErrFailedPublish, errors.New(resp.Status))
+		return encodeError(body, resp.StatusCode)
 	}
 
 	return nil
@@ -49,6 +53,7 @@ func (sdk mfSDK) ReadMessages(chanName, token string) (MessagesPage, error) {
 	}
 
 	url := fmt.Sprintf("%s/channels/%s/messages%s", sdk.readerURL, chanID, subtopicPart)
+
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return MessagesPage{}, err
@@ -58,6 +63,7 @@ func (sdk mfSDK) ReadMessages(chanName, token string) (MessagesPage, error) {
 	if err != nil {
 		return MessagesPage{}, err
 	}
+	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -65,7 +71,7 @@ func (sdk mfSDK) ReadMessages(chanName, token string) (MessagesPage, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return MessagesPage{}, errors.Wrap(ErrFailedRead, errors.New(resp.Status))
+		return MessagesPage{}, encodeError(body, resp.StatusCode)
 	}
 
 	var mp MessagesPage
@@ -76,12 +82,11 @@ func (sdk mfSDK) ReadMessages(chanName, token string) (MessagesPage, error) {
 	return mp, nil
 }
 
-func (sdk mfSDK) SetContentType(ct ContentType) error {
+func (sdk *mfSDK) SetContentType(ct ContentType) error {
 	if ct != CTJSON && ct != CTJSONSenML && ct != CTBinary {
 		return ErrInvalidContentType
 	}
 
 	sdk.msgContentType = ct
-
 	return nil
 }

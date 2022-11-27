@@ -10,8 +10,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-
-	"github.com/mainflux/mainflux/pkg/errors"
 )
 
 const (
@@ -47,8 +45,13 @@ func (sdk mfSDK) CreateThing(t Thing, token string) (string, error) {
 	}
 	defer resp.Body.Close()
 
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
 	if resp.StatusCode != http.StatusCreated {
-		return "", errors.Wrap(ErrFailedCreation, errors.New(resp.Status))
+		return "", encodeError(body, resp.StatusCode)
 	}
 
 	id := strings.TrimPrefix(resp.Header.Get("Location"), fmt.Sprintf("/%s/", thingsEndpoint))
@@ -73,14 +76,13 @@ func (sdk mfSDK) CreateThings(things []Thing, token string) ([]Thing, error) {
 		return []Thing{}, err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated {
-		return []Thing{}, errors.Wrap(ErrFailedCreation, errors.New(resp.Status))
-	}
-
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return []Thing{}, err
+	}
+
+	if resp.StatusCode != http.StatusCreated {
+		return []Thing{}, encodeError(body, resp.StatusCode)
 	}
 
 	var ctr createThingsRes
@@ -93,6 +95,7 @@ func (sdk mfSDK) CreateThings(things []Thing, token string) ([]Thing, error) {
 
 func (sdk mfSDK) Things(token string, pm PageMetadata) (ThingsPage, error) {
 	url, err := sdk.withQueryParams(sdk.thingsURL, thingsEndpoint, pm)
+
 	if err != nil {
 		return ThingsPage{}, err
 	}
@@ -114,7 +117,7 @@ func (sdk mfSDK) Things(token string, pm PageMetadata) (ThingsPage, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return ThingsPage{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
+		return ThingsPage{}, encodeError(body, resp.StatusCode)
 	}
 
 	var tp ThingsPage
@@ -127,6 +130,7 @@ func (sdk mfSDK) Things(token string, pm PageMetadata) (ThingsPage, error) {
 
 func (sdk mfSDK) ThingsByChannel(token, chanID string, offset, limit uint64, disconn bool) (ThingsPage, error) {
 	url := fmt.Sprintf("%s/channels/%s/things?offset=%d&limit=%d&disconnected=%t", sdk.thingsURL, chanID, offset, limit, disconn)
+
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return ThingsPage{}, err
@@ -144,7 +148,7 @@ func (sdk mfSDK) ThingsByChannel(token, chanID string, offset, limit uint64, dis
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return ThingsPage{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
+		return ThingsPage{}, encodeError(body, resp.StatusCode)
 	}
 
 	var tp ThingsPage
@@ -175,7 +179,7 @@ func (sdk mfSDK) Thing(id, token string) (Thing, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return Thing{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
+		return Thing{}, encodeError(body, resp.StatusCode)
 	}
 
 	var t Thing
@@ -203,9 +207,15 @@ func (sdk mfSDK) UpdateThing(t Thing, token string) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 
 	if resp.StatusCode != http.StatusOK {
-		return errors.Wrap(ErrFailedUpdate, errors.New(resp.Status))
+		return encodeError(body, resp.StatusCode)
 	}
 
 	return nil
@@ -223,9 +233,15 @@ func (sdk mfSDK) DeleteThing(id, token string) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 
 	if resp.StatusCode != http.StatusNoContent {
-		return errors.Wrap(ErrFailedRemoval, errors.New(resp.Status))
+		return encodeError(body, resp.StatusCode)
 	}
 
 	return nil
@@ -237,6 +253,7 @@ func (sdk mfSDK) IdentifyThing(key string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	url := fmt.Sprintf("%s/%s", sdk.thingsURL, identifyEndpoint)
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
@@ -256,7 +273,7 @@ func (sdk mfSDK) IdentifyThing(key string) (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
+		return "", encodeError(body, resp.StatusCode)
 	}
 
 	var i identifyThingResp
@@ -274,6 +291,7 @@ func (sdk mfSDK) Connect(connIDs ConnectionIDs, token string) error {
 	}
 
 	url := fmt.Sprintf("%s/%s", sdk.thingsURL, connectEndpoint)
+
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 	if err != nil {
 		return err
@@ -283,9 +301,15 @@ func (sdk mfSDK) Connect(connIDs ConnectionIDs, token string) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 
 	if resp.StatusCode != http.StatusOK {
-		return errors.Wrap(ErrFailedConnect, errors.New(resp.Status))
+		return encodeError(body, resp.StatusCode)
 	}
 
 	return nil
@@ -302,9 +326,15 @@ func (sdk mfSDK) DisconnectThing(thingID, chanID, token string) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 
 	if resp.StatusCode != http.StatusNoContent {
-		return errors.Wrap(ErrFailedDisconnect, errors.New(resp.Status))
+		return encodeError(body, resp.StatusCode)
 	}
 
 	return nil

@@ -10,8 +10,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-
-	"github.com/mainflux/mainflux/pkg/errors"
 )
 
 const (
@@ -28,6 +26,7 @@ func (sdk mfSDK) CreateUser(token string, u User) (string, error) {
 	}
 
 	url := fmt.Sprintf("%s/%s", sdk.usersURL, usersEndpoint)
+
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 	if err != nil {
 		return "", err
@@ -37,9 +36,15 @@ func (sdk mfSDK) CreateUser(token string, u User) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
 
 	if resp.StatusCode != http.StatusCreated {
-		return "", errors.Wrap(ErrFailedCreation, errors.New(resp.Status))
+		return "", encodeError(body, resp.StatusCode)
 	}
 
 	id := strings.TrimPrefix(resp.Header.Get("Location"), fmt.Sprintf("/%s/", usersEndpoint))
@@ -48,6 +53,7 @@ func (sdk mfSDK) CreateUser(token string, u User) (string, error) {
 
 func (sdk mfSDK) User(userID, token string) (User, error) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.usersURL, usersEndpoint, userID)
+
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return User{}, err
@@ -65,7 +71,7 @@ func (sdk mfSDK) User(userID, token string) (User, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return User{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
+		return User{}, encodeError(body, resp.StatusCode)
 	}
 
 	var u User
@@ -78,6 +84,7 @@ func (sdk mfSDK) User(userID, token string) (User, error) {
 
 func (sdk mfSDK) Users(token string, pm PageMetadata) (UsersPage, error) {
 	url, err := sdk.withQueryParams(sdk.usersURL, usersEndpoint, pm)
+
 	if err != nil {
 		return UsersPage{}, err
 	}
@@ -98,7 +105,7 @@ func (sdk mfSDK) Users(token string, pm PageMetadata) (UsersPage, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return UsersPage{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
+		return UsersPage{}, encodeError(body, resp.StatusCode)
 	}
 	var up UsersPage
 	if err := json.Unmarshal(body, &up); err != nil {
@@ -115,6 +122,7 @@ func (sdk mfSDK) CreateToken(user User) (string, error) {
 	}
 
 	url := fmt.Sprintf("%s/%s", sdk.usersURL, tokensEndpoint)
+
 	resp, err := sdk.client.Post(url, string(CTJSON), bytes.NewReader(data))
 	if err != nil {
 		return "", err
@@ -127,7 +135,7 @@ func (sdk mfSDK) CreateToken(user User) (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusCreated {
-		return "", errors.Wrap(ErrFailedCreation, errors.New(resp.Status))
+		return "", encodeError(body, resp.StatusCode)
 	}
 
 	var tr tokenRes
@@ -145,6 +153,7 @@ func (sdk mfSDK) UpdateUser(u User, token string) error {
 	}
 
 	url := fmt.Sprintf("%s/%s", sdk.usersURL, usersEndpoint)
+
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
 	if err != nil {
 		return err
@@ -154,9 +163,15 @@ func (sdk mfSDK) UpdateUser(u User, token string) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 
 	if resp.StatusCode != http.StatusOK {
-		return errors.Wrap(ErrFailedUpdate, errors.New(resp.Status))
+		return encodeError(body, resp.StatusCode)
 	}
 
 	return nil
@@ -173,6 +188,7 @@ func (sdk mfSDK) UpdatePassword(oldPass, newPass, token string) error {
 	}
 
 	url := fmt.Sprintf("%s/%s", sdk.usersURL, passwordEndpoint)
+
 	req, err := http.NewRequest(http.MethodPatch, url, bytes.NewReader(data))
 	if err != nil {
 		return err
@@ -182,9 +198,15 @@ func (sdk mfSDK) UpdatePassword(oldPass, newPass, token string) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 
 	if resp.StatusCode != http.StatusCreated {
-		return errors.Wrap(ErrFailedUpdate, errors.New(resp.Status))
+		return encodeError(body, resp.StatusCode)
 	}
 
 	return nil
@@ -202,9 +224,15 @@ func (sdk mfSDK) EnableUser(id, token string) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 
 	if resp.StatusCode != http.StatusNoContent {
-		return errors.Wrap(ErrFailedRemoval, errors.New(resp.Status))
+		return encodeError(body, resp.StatusCode)
 	}
 
 	return nil
@@ -222,9 +250,14 @@ func (sdk mfSDK) DisableUser(id, token string) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 	if resp.StatusCode != http.StatusNoContent {
-		return errors.Wrap(ErrFailedRemoval, errors.New(resp.Status))
+		return encodeError(body, resp.StatusCode)
 	}
 
 	return nil

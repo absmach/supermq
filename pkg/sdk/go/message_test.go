@@ -13,7 +13,9 @@ import (
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/http/mocks"
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/pkg/errors"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
@@ -63,13 +65,13 @@ func TestSendMessage(t *testing.T) {
 			chanID: chanID,
 			msg:    msg,
 			auth:   "",
-			err:    createError(sdk.ErrFailedPublish, http.StatusUnauthorized),
+			err:    createError(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		"publish message with invalid authorization token": {
 			chanID: chanID,
 			msg:    msg,
 			auth:   invalidToken,
-			err:    createError(sdk.ErrFailedPublish, http.StatusUnauthorized),
+			err:    errors.New("failed to encode response error : unexpected end of JSON input"),
 		},
 		"publish message with wrong content type": {
 			chanID: chanID,
@@ -81,18 +83,22 @@ func TestSendMessage(t *testing.T) {
 			chanID: "",
 			msg:    msg,
 			auth:   atoken,
-			err:    createError(sdk.ErrFailedPublish, http.StatusBadRequest),
+			err:    createError(errors.ErrMalformedEntity, http.StatusBadRequest),
 		},
 		"publish message unable to authorize": {
 			chanID: chanID,
 			msg:    msg,
 			auth:   "invalid-token",
-			err:    createError(sdk.ErrFailedPublish, http.StatusUnauthorized),
+			err:    errors.New("failed to encode response error : unexpected end of JSON input"),
 		},
 	}
 	for desc, tc := range cases {
 		err := mainfluxSDK.SendMessage(tc.chanID, tc.msg, tc.auth)
-		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", desc, tc.err, err))
+		if tc.err == nil {
+			assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s", desc, err))
+		} else {
+			assert.Equal(t, tc.err.Error(), err.Error(), fmt.Sprintf("%s: expected error %s, got %s", desc, tc.err, err))
+		}
 	}
 }
 

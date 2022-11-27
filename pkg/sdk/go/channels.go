@@ -10,8 +10,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-
-	"github.com/mainflux/mainflux/pkg/errors"
 )
 
 const channelsEndpoint = "channels"
@@ -23,6 +21,7 @@ func (sdk mfSDK) CreateChannel(c Channel, token string) (string, error) {
 	}
 
 	url := fmt.Sprintf("%s/%s", sdk.thingsURL, channelsEndpoint)
+
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 	if err != nil {
 		return "", err
@@ -32,9 +31,15 @@ func (sdk mfSDK) CreateChannel(c Channel, token string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
 
 	if resp.StatusCode != http.StatusCreated {
-		return "", errors.Wrap(ErrFailedCreation, errors.New(resp.Status))
+		return "", encodeError(body, resp.StatusCode)
 	}
 
 	id := strings.TrimPrefix(resp.Header.Get("Location"), fmt.Sprintf("/%s/", channelsEndpoint))
@@ -48,6 +53,7 @@ func (sdk mfSDK) CreateChannels(chs []Channel, token string) ([]Channel, error) 
 	}
 
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, channelsEndpoint, "bulk")
+
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 	if err != nil {
 		return []Channel{}, err
@@ -59,13 +65,13 @@ func (sdk mfSDK) CreateChannels(chs []Channel, token string) ([]Channel, error) 
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusCreated {
-		return []Channel{}, errors.Wrap(ErrFailedCreation, errors.New(resp.Status))
-	}
-
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return []Channel{}, err
+	}
+
+	if resp.StatusCode != http.StatusCreated {
+		return []Channel{}, encodeError(body, resp.StatusCode)
 	}
 
 	var ccr createChannelsRes
@@ -78,9 +84,11 @@ func (sdk mfSDK) CreateChannels(chs []Channel, token string) ([]Channel, error) 
 
 func (sdk mfSDK) Channels(token string, pm PageMetadata) (ChannelsPage, error) {
 	url, err := sdk.withQueryParams(sdk.thingsURL, channelsEndpoint, pm)
+
 	if err != nil {
 		return ChannelsPage{}, err
 	}
+
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return ChannelsPage{}, err
@@ -98,7 +106,7 @@ func (sdk mfSDK) Channels(token string, pm PageMetadata) (ChannelsPage, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return ChannelsPage{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
+		return ChannelsPage{}, encodeError(body, resp.StatusCode)
 	}
 
 	var cp ChannelsPage
@@ -111,6 +119,7 @@ func (sdk mfSDK) Channels(token string, pm PageMetadata) (ChannelsPage, error) {
 
 func (sdk mfSDK) ChannelsByThing(token, thingID string, offset, limit uint64, disconn bool) (ChannelsPage, error) {
 	url := fmt.Sprintf("%s/things/%s/channels?offset=%d&limit=%d&disconnected=%t", sdk.thingsURL, thingID, offset, limit, disconn)
+
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return ChannelsPage{}, err
@@ -128,7 +137,7 @@ func (sdk mfSDK) ChannelsByThing(token, thingID string, offset, limit uint64, di
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return ChannelsPage{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
+		return ChannelsPage{}, encodeError(body, resp.StatusCode)
 	}
 
 	var cp ChannelsPage
@@ -141,6 +150,7 @@ func (sdk mfSDK) ChannelsByThing(token, thingID string, offset, limit uint64, di
 
 func (sdk mfSDK) Channel(id, token string) (Channel, error) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, channelsEndpoint, id)
+
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return Channel{}, err
@@ -158,7 +168,7 @@ func (sdk mfSDK) Channel(id, token string) (Channel, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return Channel{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
+		return Channel{}, encodeError(body, resp.StatusCode)
 	}
 
 	var c Channel
@@ -176,6 +186,7 @@ func (sdk mfSDK) UpdateChannel(c Channel, token string) error {
 	}
 
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, channelsEndpoint, c.ID)
+
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
 	if err != nil {
 		return err
@@ -185,9 +196,15 @@ func (sdk mfSDK) UpdateChannel(c Channel, token string) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 
 	if resp.StatusCode != http.StatusOK {
-		return errors.Wrap(ErrFailedUpdate, errors.New(resp.Status))
+		return encodeError(body, resp.StatusCode)
 	}
 
 	return nil
@@ -195,6 +212,7 @@ func (sdk mfSDK) UpdateChannel(c Channel, token string) error {
 
 func (sdk mfSDK) DeleteChannel(id, token string) error {
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, channelsEndpoint, id)
+
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return err
@@ -204,9 +222,15 @@ func (sdk mfSDK) DeleteChannel(id, token string) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 
 	if resp.StatusCode != http.StatusNoContent {
-		return errors.Wrap(ErrFailedRemoval, errors.New(resp.Status))
+		return encodeError(body, resp.StatusCode)
 	}
 
 	return nil
