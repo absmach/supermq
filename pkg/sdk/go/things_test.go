@@ -31,9 +31,7 @@ const (
 	token       = "token"
 	otherToken  = "other_token"
 	wrongValue  = "wrong_value"
-	badID       = "999"
 	badKey      = "999"
-	emptyValue  = ""
 )
 
 var (
