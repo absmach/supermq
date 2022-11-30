@@ -231,7 +231,7 @@ func (bs bootstrapService) UpdateConnections(ctx context.Context, token, id stri
 
 	for _, c := range disconnect {
 		if err := bs.sdk.DisconnectThing(id, c, token); err != nil {
-			if errors.Contains(err, mfsdk.ErrFailedDisconnect) {
+			if errors.Contains(err, errors.ErrNotFound) {
 				continue
 			}
 			return ErrThings
@@ -324,7 +324,7 @@ func (bs bootstrapService) ChangeState(ctx context.Context, token, id string, st
 	case Inactive:
 		for _, c := range cfg.MFChannels {
 			if err := bs.sdk.DisconnectThing(cfg.MFThing, c.ID, token); err != nil {
-				if errors.Contains(err, mfsdk.ErrFailedDisconnect) {
+				if errors.Contains(err, errors.ErrNotFound) {
 					continue
 				}
 				return ErrThings

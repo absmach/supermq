@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things"
 )
 
@@ -14,7 +15,7 @@ func identifyEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(identifyReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.ErrAuthentication
 		}
 
 		id, err := svc.Identify(ctx, req.Token)
@@ -34,7 +35,7 @@ func canAccessByKeyEndpoint(svc things.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(canAccessByKeyReq)
 		if err := req.validate(); err != nil {
-			return nil, err
+			return nil, errors.ErrAuthentication
 		}
 
 		id, err := svc.CanAccessByKey(ctx, req.chanID, req.Token)
