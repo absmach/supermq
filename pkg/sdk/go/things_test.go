@@ -693,7 +693,7 @@ func TestIdentifyThing(t *testing.T) {
 		{
 			desc:     "identify thing with an empty key",
 			thingKey: "",
-			err:      createError(apiutil.ErrBearerKey, http.StatusInternalServerError),
+			err:      createError(errors.ErrAuthentication, http.StatusUnauthorized),
 			response: "",
 		},
 	}
