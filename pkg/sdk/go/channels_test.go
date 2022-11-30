@@ -564,10 +564,5 @@ func TestDeleteChannel(t *testing.T) {
 	for _, tc := range cases {
 		err := mainfluxSDK.DeleteChannel(tc.chanID, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
-		// fmt.Println()
-		// if err != nil {
-		// 	fmt.Println(err.Error())
-		// }
-		// fmt.Println()
 	}
 }
