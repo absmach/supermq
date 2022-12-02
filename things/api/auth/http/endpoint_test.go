@@ -211,7 +211,7 @@ func TestCanAccessByKey(t *testing.T) {
 			contentType: contentType,
 			chanID:      "",
 			req:         data,
-			status:      http.StatusUnauthorized,
+			status:      http.StatusBadRequest,
 		},
 	}
 
