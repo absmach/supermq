@@ -65,7 +65,7 @@ func TestSendMessage(t *testing.T) {
 			chanID: chanID,
 			msg:    msg,
 			auth:   "",
-			err:    createError(apiutil.ErrBearerToken, http.StatusUnauthorized),
+			err:    errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken.Error(), http.StatusUnauthorized),
 		},
 		"publish message with invalid authorization token": {
 			chanID: chanID,
@@ -83,7 +83,7 @@ func TestSendMessage(t *testing.T) {
 			chanID: "",
 			msg:    msg,
 			auth:   atoken,
-			err:    createError(errors.ErrMalformedEntity, http.StatusBadRequest),
+			err:    errors.NewSDKErrorWithStatus(errors.ErrMalformedEntity.Error(), http.StatusBadRequest),
 		},
 		"publish message unable to authorize": {
 			chanID: chanID,
