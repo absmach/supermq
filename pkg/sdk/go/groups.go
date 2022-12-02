@@ -12,6 +12,8 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/mainflux/mainflux/pkg/errors"
 )
 
 const (
@@ -38,12 +40,8 @@ func (sdk mfSDK) CreateGroup(g Group, token string) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
+	if err = errors.CheckError(resp, http.StatusCreated); err != nil {
 		return "", err
-	}
-	if resp.StatusCode != http.StatusCreated {
-		return "", encodeError(body, resp.StatusCode)
 	}
 
 	id := strings.TrimPrefix(resp.Header.Get("Location"), fmt.Sprintf("/%s/", groupsEndpoint))
@@ -63,16 +61,7 @@ func (sdk mfSDK) DeleteGroup(id, token string) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusNoContent {
-		return encodeError(body, resp.StatusCode)
-	}
-
-	return nil
+	return errors.CheckError(resp, http.StatusNoContent)
 }
 
 func (sdk mfSDK) Assign(memberIDs []string, memberType, groupID string, token string) error {
@@ -100,16 +89,7 @@ func (sdk mfSDK) Assign(memberIDs []string, memberType, groupID string, token st
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return encodeError(body, resp.StatusCode)
-	}
-
-	return nil
+	return errors.CheckError(resp, http.StatusOK)
 }
 
 func (sdk mfSDK) Unassign(token, groupID string, memberIDs ...string) error {
@@ -136,16 +116,7 @@ func (sdk mfSDK) Unassign(token, groupID string, memberIDs ...string) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusNoContent {
-		return encodeError(body, resp.StatusCode)
-	}
-
-	return nil
+	return errors.CheckError(resp, http.StatusNoContent)
 }
 
 func (sdk mfSDK) Members(groupID, token string, offset, limit uint64) (MembersPage, error) {
@@ -288,16 +259,7 @@ func (sdk mfSDK) UpdateGroup(t Group, token string) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return encodeError(body, resp.StatusCode)
-	}
-
-	return nil
+	return errors.CheckError(resp, http.StatusOK)
 }
 
 func (sdk mfSDK) Memberships(memberID, token string, offset, limit uint64) (GroupsPage, error) {

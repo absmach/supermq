@@ -10,6 +10,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/mainflux/mainflux/pkg/errors"
 )
 
 const (
@@ -38,13 +40,8 @@ func (sdk mfSDK) CreateUser(token string, u User) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
+	if err = errors.CheckError(resp, http.StatusCreated); err != nil {
 		return "", err
-	}
-
-	if resp.StatusCode != http.StatusCreated {
-		return "", encodeError(body, resp.StatusCode)
 	}
 
 	id := strings.TrimPrefix(resp.Header.Get("Location"), fmt.Sprintf("/%s/", usersEndpoint))
@@ -165,16 +162,7 @@ func (sdk mfSDK) UpdateUser(u User, token string) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return encodeError(body, resp.StatusCode)
-	}
-
-	return nil
+	return errors.CheckError(resp, http.StatusOK)
 }
 
 func (sdk mfSDK) UpdatePassword(oldPass, newPass, token string) error {
@@ -200,16 +188,7 @@ func (sdk mfSDK) UpdatePassword(oldPass, newPass, token string) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusCreated {
-		return encodeError(body, resp.StatusCode)
-	}
-
-	return nil
+	return errors.CheckError(resp, http.StatusCreated)
 }
 
 func (sdk mfSDK) EnableUser(id, token string) error {
@@ -226,16 +205,7 @@ func (sdk mfSDK) EnableUser(id, token string) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusNoContent {
-		return encodeError(body, resp.StatusCode)
-	}
-
-	return nil
+	return errors.CheckError(resp, http.StatusNoContent)
 }
 
 func (sdk mfSDK) DisableUser(id, token string) error {
@@ -252,13 +222,5 @@ func (sdk mfSDK) DisableUser(id, token string) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusNoContent {
-		return encodeError(body, resp.StatusCode)
-	}
-
-	return nil
+	return errors.CheckError(resp, http.StatusNoContent)
 }

@@ -10,6 +10,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/mainflux/mainflux/pkg/errors"
 )
 
 const channelsEndpoint = "channels"
@@ -33,13 +35,8 @@ func (sdk mfSDK) CreateChannel(c Channel, token string) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
+	if err = errors.CheckError(resp, http.StatusCreated); err != nil {
 		return "", err
-	}
-
-	if resp.StatusCode != http.StatusCreated {
-		return "", encodeError(body, resp.StatusCode)
 	}
 
 	id := strings.TrimPrefix(resp.Header.Get("Location"), fmt.Sprintf("/%s/", channelsEndpoint))
@@ -198,16 +195,7 @@ func (sdk mfSDK) UpdateChannel(c Channel, token string) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return encodeError(body, resp.StatusCode)
-	}
-
-	return nil
+	return errors.CheckError(resp, http.StatusOK)
 }
 
 func (sdk mfSDK) DeleteChannel(id, token string) error {
@@ -224,14 +212,5 @@ func (sdk mfSDK) DeleteChannel(id, token string) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusNoContent {
-		return encodeError(body, resp.StatusCode)
-	}
-
-	return nil
+	return errors.CheckError(resp, http.StatusNoContent)
 }

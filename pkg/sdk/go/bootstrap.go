@@ -99,16 +99,7 @@ func (sdk mfSDK) Whitelist(token string, cfg BootstrapConfig) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		return encodeError(body, resp.StatusCode)
-	}
-
-	return nil
+	return errors.CheckError(resp, http.StatusCreated, http.StatusOK)
 }
 
 func (sdk mfSDK) ViewBootstrap(token, id string) (BootstrapConfig, error) {
@@ -160,16 +151,7 @@ func (sdk mfSDK) UpdateBootstrap(token string, cfg BootstrapConfig) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return encodeError(body, resp.StatusCode)
-	}
-
-	return nil
+	return errors.CheckError(resp, http.StatusOK)
 }
 func (sdk mfSDK) UpdateBootstrapCerts(token, id, clientCert, clientKey, ca string) error {
 	url := fmt.Sprintf("%s/%s/%s", sdk.bootstrapURL, bootstrapCertsEndpoint, id)
@@ -194,16 +176,7 @@ func (sdk mfSDK) UpdateBootstrapCerts(token, id, clientCert, clientKey, ca strin
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return encodeError(body, resp.StatusCode)
-	}
-
-	return nil
+	return errors.CheckError(resp, http.StatusOK)
 }
 
 func (sdk mfSDK) RemoveBootstrap(token, id string) error {
@@ -219,16 +192,7 @@ func (sdk mfSDK) RemoveBootstrap(token, id string) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusNoContent {
-		return encodeError(body, resp.StatusCode)
-	}
-
-	return nil
+	return errors.CheckError(resp, http.StatusNoContent)
 }
 
 func (sdk mfSDK) Bootstrap(externalKey, externalID string) (BootstrapConfig, error) {

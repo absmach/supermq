@@ -10,6 +10,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/mainflux/mainflux/pkg/errors"
 )
 
 type keyReq struct {
@@ -78,16 +80,7 @@ func (sdk mfSDK) Revoke(id, token string) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusNoContent {
-		return encodeError(body, resp.StatusCode)
-	}
-
-	return nil
+	return errors.CheckError(resp, http.StatusNoContent)
 }
 
 func (sdk mfSDK) RetrieveKey(id, token string) (retrieveKeyRes, error) {

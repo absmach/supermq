@@ -10,6 +10,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/mainflux/mainflux/pkg/errors"
 )
 
 const (
@@ -45,13 +47,8 @@ func (sdk mfSDK) CreateThing(t Thing, token string) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
+	if err = errors.CheckError(resp, http.StatusCreated); err != nil {
 		return "", err
-	}
-
-	if resp.StatusCode != http.StatusCreated {
-		return "", encodeError(body, resp.StatusCode)
 	}
 
 	id := strings.TrimPrefix(resp.Header.Get("Location"), fmt.Sprintf("/%s/", thingsEndpoint))
@@ -76,6 +73,7 @@ func (sdk mfSDK) CreateThings(things []Thing, token string) ([]Thing, error) {
 		return []Thing{}, err
 	}
 	defer resp.Body.Close()
+
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return []Thing{}, err
@@ -209,16 +207,7 @@ func (sdk mfSDK) UpdateThing(t Thing, token string) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return encodeError(body, resp.StatusCode)
-	}
-
-	return nil
+	return errors.CheckError(resp, http.StatusOK)
 }
 
 func (sdk mfSDK) DeleteThing(id, token string) error {
@@ -235,16 +224,7 @@ func (sdk mfSDK) DeleteThing(id, token string) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusNoContent {
-		return encodeError(body, resp.StatusCode)
-	}
-
-	return nil
+	return errors.CheckError(resp, http.StatusNoContent)
 }
 
 func (sdk mfSDK) IdentifyThing(key string) (string, error) {
@@ -303,16 +283,7 @@ func (sdk mfSDK) Connect(connIDs ConnectionIDs, token string) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return encodeError(body, resp.StatusCode)
-	}
-
-	return nil
+	return errors.CheckError(resp, http.StatusOK)
 }
 
 func (sdk mfSDK) DisconnectThing(thingID, chanID, token string) error {
@@ -328,14 +299,5 @@ func (sdk mfSDK) DisconnectThing(thingID, chanID, token string) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusNoContent {
-		return encodeError(body, resp.StatusCode)
-	}
-
-	return nil
+	return errors.CheckError(resp, http.StatusNoContent)
 }
