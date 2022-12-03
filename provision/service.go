@@ -311,9 +311,9 @@ func (ps *provisionService) updateGateway(token string, bs SDK.BootstrapConfig, 
 	gw.CfgID = bs.MFThing
 	gw.Type = gateway
 
-	th, err := ps.sdk.Thing(bs.MFThing, token)
-	if err != nil {
-		return errors.Wrap(ErrGatewayUpdate, err)
+	th, sdkerr := ps.sdk.Thing(bs.MFThing, token)
+	if sdkerr != nil {
+		return errors.Wrap(ErrGatewayUpdate, sdkerr)
 	}
 	b, err := json.Marshal(gw)
 	if err != nil {

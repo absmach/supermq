@@ -12,12 +12,6 @@ import (
 var errEncodeError = errors.NewSDKError("failed to encode response error")
 
 var (
-	// ErrFailedCreation indicates that entity creation failed.
-	ErrFailedCreation = errors.NewSDKError("failed to create entity")
-
-	// ErrFailedUpdate indicates that entity update failed.
-	ErrFailedUpdate = errors.NewSDKError("failed to update entity")
-
 	// ErrFailedFetch indicates that fetching of entity data failed.
 	ErrFailedFetch = errors.NewSDKError("failed to fetch entity")
 

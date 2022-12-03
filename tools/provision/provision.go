@@ -90,14 +90,15 @@ func Provision(conf Config) {
 	}
 
 	// Login user
-	token, err := s.CreateToken(user)
-	if err != nil {
-		log.Fatalf("Unable to login user: %s", err.Error())
+	token, sdkerr := s.CreateToken(user)
+	if sdkerr != nil {
+		log.Fatalf("Unable to login user: %s", sdkerr.Error())
 		return
 	}
 
 	var tlsCert tls.Certificate
 	var caCert *x509.Certificate
+	var err error
 
 	if conf.SSL {
 		tlsCert, err = tls.LoadX509KeyPair(conf.CA, conf.CAKey)
@@ -119,7 +120,6 @@ func Provision(conf Config) {
 		if err != nil {
 			log.Fatalf("Failed to decode certificate - %s", err.Error())
 		}
-
 	}
 
 	//  Create things and channels
@@ -135,14 +135,14 @@ func Provision(conf Config) {
 		channels[i] = sdk.Channel{Name: fmt.Sprintf("%s-channel-%d", conf.Prefix, i)}
 	}
 
-	things, err = s.CreateThings(things, token)
-	if err != nil {
-		log.Fatalf("Failed to create the things: %s", err.Error())
+	things, sdkerr = s.CreateThings(things, token)
+	if sdkerr != nil {
+		log.Fatalf("Failed to create the things: %s", sdkerr.Error())
 	}
 
-	channels, err = s.CreateChannels(channels, token)
-	if err != nil {
-		log.Fatalf("Failed to create the chennels: %s", err.Error())
+	channels, sdkerr = s.CreateChannels(channels, token)
+	if sdkerr != nil {
+		log.Fatalf("Failed to create the chennels: %s", sdkerr.Error())
 	}
 
 	for _, t := range things {
@@ -159,7 +159,7 @@ func Provision(conf Config) {
 
 		if conf.SSL {
 			var priv interface{}
-			priv, err = rsa.GenerateKey(rand.Reader, rsaBits)
+			priv, _ = rsa.GenerateKey(rand.Reader, rsaBits)
 
 			notBefore := time.Now()
 			validFor, err := time.ParseDuration(ttl)
