@@ -15,27 +15,14 @@ var (
 	// ErrFailedFetch indicates that fetching of entity data failed.
 	ErrFailedFetch = errors.NewSDKError("failed to fetch entity")
 
-	// ErrFailedRemoval indicates that entity removal failed.
-	ErrFailedRemoval = errors.NewSDKError("failed to remove entity")
-
 	// ErrFailedConnect indicates that connecting thing to channel failed.
 	ErrFailedConnect = errors.NewSDKError("failed to connect thing to channel")
 
 	// ErrFailedDisconnect indicates that disconnecting thing from a channel failed.
 	ErrFailedDisconnect = errors.NewSDKError("failed to disconnect thing from channel")
 
-	// ErrFailedPublish indicates that publishing message failed.
-	ErrFailedPublish = errors.NewSDKError("failed to publish message")
-
-	// ErrFailedRead indicates that read messages failed.
-	ErrFailedRead = errors.NewSDKError("failed to read messages")
-
-	// ErrInvalidContentType indicates that non-existent message content type
-	// was passed.
+	// ErrInvalidContentType indicates that non-existent message content type was passed.
 	ErrInvalidContentType = errors.NewSDKError("Unknown Content Type")
-
-	// ErrFetchHealth indicates that fetching of health check failed.
-	ErrFetchHealth = errors.NewSDKError("failed to fetch health check")
 
 	// ErrFailedWhitelist failed to whitelist configs
 	ErrFailedWhitelist = errors.NewSDKError("failed to whitelist")
