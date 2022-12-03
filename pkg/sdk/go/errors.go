@@ -59,13 +59,13 @@ var (
 	ErrMemberAdd = errors.NewSDKError("failed to add member to group")
 )
 
-func encodeError(body []byte, status int) error {
+func encodeError(body []byte, status int) errors.SDKError {
 	e := struct {
 		Err string `json:"error"`
 	}{}
 
 	if err := json.Unmarshal(body, &e); err != nil {
-		return errors.Wrap(errEncodeError, err)
+		return errors.NewSDKError(errors.Wrap(errEncodeError, err).Error())
 	}
 
 	if status != 0 {

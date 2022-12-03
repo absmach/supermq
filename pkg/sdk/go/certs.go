@@ -22,7 +22,7 @@ type Cert struct {
 	ClientCert string `json:"client_cert,omitempty"`
 }
 
-func (sdk mfSDK) IssueCert(thingID string, keyBits int, keyType, valid, token string) (Cert, error) {
+func (sdk mfSDK) IssueCert(thingID string, keyBits int, keyType, valid, token string) (Cert, errors.SDKError) {
 	var c Cert
 	r := certReq{
 		ThingID: thingID,
@@ -32,13 +32,13 @@ func (sdk mfSDK) IssueCert(thingID string, keyBits int, keyType, valid, token st
 	}
 	d, err := json.Marshal(r)
 	if err != nil {
-		return Cert{}, err
+		return Cert{}, errors.NewSDKError(err.Error())
 	}
 
 	url := fmt.Sprintf("%s/%s", sdk.certsURL, certsEndpoint)
 	res, err := request(http.MethodPost, token, url, d)
 	if err != nil {
-		return Cert{}, err
+		return Cert{}, errors.NewSDKError(err.Error())
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
@@ -47,47 +47,47 @@ func (sdk mfSDK) IssueCert(thingID string, keyBits int, keyType, valid, token st
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		println(err.Error())
-		return Cert{}, err
+		return Cert{}, errors.NewSDKError(err.Error())
 	}
 	if err := json.Unmarshal(body, &c); err != nil {
-		return Cert{}, err
+		return Cert{}, errors.NewSDKError(err.Error())
 	}
 	return c, nil
 }
 
-func (sdk mfSDK) RemoveCert(id, token string) error {
+func (sdk mfSDK) RemoveCert(id, token string) errors.SDKError {
 	res, err := request(http.MethodDelete, token, fmt.Sprintf("%s/%s", sdk.certsURL, id), nil)
 	if res != nil {
 		res.Body.Close()
 	}
 	if err != nil {
-		return err
+		return errors.NewSDKError(err.Error())
 	}
 	switch res.StatusCode {
 	case http.StatusNoContent:
 		return nil
 	case http.StatusForbidden:
-		return errors.ErrAuthorization
+		return errors.NewSDKError(errors.ErrAuthorization.Error())
 	default:
 		return ErrCertsRemove
 	}
 }
 
-func (sdk mfSDK) RevokeCert(thingID, certID string, token string) error {
+func (sdk mfSDK) RevokeCert(thingID, certID string, token string) errors.SDKError {
 	panic("not implemented")
 }
 
-func request(method, jwt, url string, data []byte) (*http.Response, error) {
+func request(method, jwt, url string, data []byte) (*http.Response, errors.SDKError) {
 	req, err := http.NewRequest(method, url, bytes.NewReader(data))
 	if err != nil {
-		return nil, err
+		return nil, errors.NewSDKError(err.Error())
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", jwt)
 	c := &http.Client{}
 	res, err := c.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, errors.NewSDKError(err.Error())
 	}
 
 	return res, nil

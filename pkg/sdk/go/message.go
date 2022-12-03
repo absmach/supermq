@@ -9,9 +9,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/mainflux/mainflux/pkg/errors"
 )
 
-func (sdk mfSDK) SendMessage(chanName, msg, key string) error {
+func (sdk mfSDK) SendMessage(chanName, msg, key string) errors.SDKError {
 	chanNameParts := strings.SplitN(chanName, ".", 2)
 	chanID := chanNameParts[0]
 	subtopicPart := ""
@@ -23,18 +25,18 @@ func (sdk mfSDK) SendMessage(chanName, msg, key string) error {
 
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(msg))
 	if err != nil {
-		return err
+		return errors.NewSDKError(err.Error())
 	}
 
 	resp, err := sdk.sendThingRequest(req, key, string(sdk.msgContentType))
 	if err != nil {
-		return err
+		return errors.NewSDKError(err.Error())
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return errors.NewSDKError(err.Error())
 	}
 
 	if resp.StatusCode != http.StatusAccepted {
@@ -44,7 +46,7 @@ func (sdk mfSDK) SendMessage(chanName, msg, key string) error {
 	return nil
 }
 
-func (sdk mfSDK) ReadMessages(chanName, token string) (MessagesPage, error) {
+func (sdk mfSDK) ReadMessages(chanName, token string) (MessagesPage, errors.SDKError) {
 	chanNameParts := strings.SplitN(chanName, ".", 2)
 	chanID := chanNameParts[0]
 	subtopicPart := ""
@@ -56,18 +58,18 @@ func (sdk mfSDK) ReadMessages(chanName, token string) (MessagesPage, error) {
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return MessagesPage{}, err
+		return MessagesPage{}, errors.NewSDKError(err.Error())
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(sdk.msgContentType))
 	if err != nil {
-		return MessagesPage{}, err
+		return MessagesPage{}, errors.NewSDKError(err.Error())
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return MessagesPage{}, err
+		return MessagesPage{}, errors.NewSDKError(err.Error())
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -76,13 +78,13 @@ func (sdk mfSDK) ReadMessages(chanName, token string) (MessagesPage, error) {
 
 	var mp MessagesPage
 	if err := json.Unmarshal(body, &mp); err != nil {
-		return MessagesPage{}, err
+		return MessagesPage{}, errors.NewSDKError(err.Error())
 	}
 
 	return mp, nil
 }
 
-func (sdk *mfSDK) SetContentType(ct ContentType) error {
+func (sdk *mfSDK) SetContentType(ct ContentType) errors.SDKError {
 	if ct != CTJSON && ct != CTJSONSenML && ct != CTBinary {
 		return ErrInvalidContentType
 	}

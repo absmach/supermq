@@ -82,7 +82,7 @@ func TestCreateUser(t *testing.T) {
 		desc  string
 		user  sdk.User
 		token string
-		err   error
+		err   errors.SDKError
 	}{
 		{
 			desc:  "register new user",
@@ -164,7 +164,7 @@ func TestUser(t *testing.T) {
 		desc     string
 		userID   string
 		token    string
-		err      error
+		err      errors.SDKError
 		response sdk.User
 	}{
 		{
@@ -236,7 +236,7 @@ func TestUsers(t *testing.T) {
 		token    string
 		offset   uint64
 		limit    uint64
-		err      error
+		err      errors.SDKError
 		response []sdk.User
 		email    string
 		metadata map[string]interface{}
@@ -349,7 +349,7 @@ func TestCreateToken(t *testing.T) {
 		desc  string
 		user  sdk.User
 		token string
-		err   error
+		err   errors.SDKError
 	}{
 		{
 			desc:  "create token for user",
@@ -405,7 +405,7 @@ func TestUpdateUser(t *testing.T) {
 		desc  string
 		user  sdk.User
 		token string
-		err   error
+		err   errors.SDKError
 	}{
 		{
 			desc:  "update email for user",
@@ -467,7 +467,7 @@ func TestUpdatePassword(t *testing.T) {
 		oldPass string
 		newPass string
 		token   string
-		err     error
+		err     errors.SDKError
 	}{
 		{
 			desc:    "update password for user",

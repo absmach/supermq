@@ -30,29 +30,29 @@ const (
 	APIKey
 )
 
-func (sdk mfSDK) Issue(token string, d time.Duration) (KeyRes, error) {
+func (sdk mfSDK) Issue(token string, d time.Duration) (KeyRes, errors.SDKError) {
 	datareq := keyReq{Type: APIKey, Duration: d}
 	data, err := json.Marshal(datareq)
 	if err != nil {
-		return KeyRes{}, err
+		return KeyRes{}, errors.NewSDKError(err.Error())
 	}
 
 	url := fmt.Sprintf("%s/%s", sdk.authURL, keysEndpoint)
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 	if err != nil {
-		return KeyRes{}, err
+		return KeyRes{}, errors.NewSDKError(err.Error())
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(CTJSON))
 	if err != nil {
-		return KeyRes{}, err
+		return KeyRes{}, errors.NewSDKError(err.Error())
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return KeyRes{}, err
+		return KeyRes{}, errors.NewSDKError(err.Error())
 	}
 
 	if resp.StatusCode != http.StatusCreated {
@@ -61,44 +61,44 @@ func (sdk mfSDK) Issue(token string, d time.Duration) (KeyRes, error) {
 
 	var key KeyRes
 	if err := json.Unmarshal(body, &key); err != nil {
-		return KeyRes{}, err
+		return KeyRes{}, errors.NewSDKError(err.Error())
 	}
 
 	return key, nil
 }
 
-func (sdk mfSDK) Revoke(id, token string) error {
+func (sdk mfSDK) Revoke(id, token string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s", sdk.authURL, keysEndpoint, id)
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
-		return err
+		return errors.NewSDKError(err.Error())
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(CTJSON))
 	if err != nil {
-		return err
+		return errors.NewSDKError(err.Error())
 	}
 	defer resp.Body.Close()
 
 	return errors.CheckError(resp, http.StatusNoContent)
 }
 
-func (sdk mfSDK) RetrieveKey(id, token string) (retrieveKeyRes, error) {
+func (sdk mfSDK) RetrieveKey(id, token string) (retrieveKeyRes, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.authURL, keysEndpoint, id)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return retrieveKeyRes{}, err
+		return retrieveKeyRes{}, errors.NewSDKError(err.Error())
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(CTJSON))
 	if err != nil {
-		return retrieveKeyRes{}, err
+		return retrieveKeyRes{}, errors.NewSDKError(err.Error())
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return retrieveKeyRes{}, err
+		return retrieveKeyRes{}, errors.NewSDKError(err.Error())
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -107,7 +107,7 @@ func (sdk mfSDK) RetrieveKey(id, token string) (retrieveKeyRes, error) {
 
 	var key retrieveKeyRes
 	if err := json.Unmarshal(body, &key); err != nil {
-		return retrieveKeyRes{}, err
+		return retrieveKeyRes{}, errors.NewSDKError(err.Error())
 	}
 
 	return key, nil

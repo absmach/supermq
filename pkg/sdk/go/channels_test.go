@@ -43,7 +43,7 @@ func TestCreateChannel(t *testing.T) {
 		desc    string
 		channel sdk.Channel
 		token   string
-		err     error
+		err     errors.SDKError
 		empty   bool
 	}{
 		{
@@ -119,7 +119,7 @@ func TestCreateChannels(t *testing.T) {
 		desc     string
 		channels []sdk.Channel
 		token    string
-		err      error
+		err      errors.SDKError
 		res      []sdk.Channel
 	}{
 		{
@@ -153,6 +153,10 @@ func TestCreateChannels(t *testing.T) {
 	}
 	for _, tc := range cases {
 		res, err := mainfluxSDK.CreateChannels(tc.channels, tc.token)
+		fmt.Println()
+		fmt.Println("expected: ", tc.err)
+		fmt.Println("received: ", err)
+		fmt.Println()
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 
 		for idx := range tc.res {
@@ -179,7 +183,7 @@ func TestChannel(t *testing.T) {
 		desc     string
 		chanID   string
 		token    string
-		err      error
+		err      errors.SDKError
 		response sdk.Channel
 	}{
 		{
@@ -239,7 +243,7 @@ func TestChannels(t *testing.T) {
 		offset   uint64
 		limit    uint64
 		name     string
-		err      error
+		err      errors.SDKError
 		response []sdk.Channel
 		metadata map[string]interface{}
 	}{
@@ -360,7 +364,7 @@ func TestChannelsByThing(t *testing.T) {
 		offset       uint64
 		limit        uint64
 		disconnected bool
-		err          error
+		err          errors.SDKError
 		response     []sdk.Channel
 	}{
 		{
@@ -463,7 +467,7 @@ func TestUpdateChannel(t *testing.T) {
 		desc    string
 		channel sdk.Channel
 		token   string
-		err     error
+		err     errors.SDKError
 	}{
 		{
 			desc:    "update existing channel",
@@ -521,7 +525,7 @@ func TestDeleteChannel(t *testing.T) {
 		desc   string
 		chanID string
 		token  string
-		err    error
+		err    errors.SDKError
 	}{
 		{
 			desc:   "delete channel with invalid token",

@@ -53,7 +53,7 @@ func TestSendMessage(t *testing.T) {
 		chanID string
 		msg    string
 		auth   string
-		err    error
+		err    errors.SDKError
 	}{
 		"publish message": {
 			chanID: chanID,
@@ -71,7 +71,7 @@ func TestSendMessage(t *testing.T) {
 			chanID: chanID,
 			msg:    msg,
 			auth:   invalidToken,
-			err:    errors.New("failed to encode response error : unexpected end of JSON input"),
+			err:    errors.NewSDKError("failed to encode response error : unexpected end of JSON input"),
 		},
 		"publish message with wrong content type": {
 			chanID: chanID,
@@ -89,7 +89,7 @@ func TestSendMessage(t *testing.T) {
 			chanID: chanID,
 			msg:    msg,
 			auth:   "invalid-token",
-			err:    errors.New("failed to encode response error : unexpected end of JSON input"),
+			err:    errors.NewSDKError("failed to encode response error : unexpected end of JSON input"),
 		},
 	}
 	for desc, tc := range cases {
@@ -121,7 +121,7 @@ func TestSetContentType(t *testing.T) {
 	cases := []struct {
 		desc  string
 		cType sdk.ContentType
-		err   error
+		err   errors.SDKError
 	}{
 		{
 			desc:  "set senml+json content type",

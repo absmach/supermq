@@ -28,6 +28,24 @@ type sdkError struct {
 	statusCode int
 }
 
+func (ce *sdkError) Error() string {
+	if ce == nil {
+		return ""
+	}
+	if ce.err == nil {
+		return ce.msg
+	}
+	return ce.msg + " : " + ce.err.Error()
+}
+
+func (ce *sdkError) Msg() string {
+	return ce.msg
+}
+
+func (ce *sdkError) Err() Error {
+	return ce.err
+}
+
 func (ce *sdkError) StatusCode() int {
 	return ce.statusCode
 }
@@ -54,7 +72,7 @@ func NewSDKErrorWithStatus(msg string, statusCode int) SDKError {
 }
 
 // CheckError will check for error in http response.
-func CheckError(resp *http.Response, expectedStatusCodes ...int) error {
+func CheckError(resp *http.Response, expectedStatusCodes ...int) SDKError {
 	for _, expectedStatusCode := range expectedStatusCodes {
 		if resp.StatusCode == expectedStatusCode {
 			return nil
@@ -64,14 +82,14 @@ func CheckError(resp *http.Response, expectedStatusCodes ...int) error {
 	b, bErr := io.ReadAll(resp.Body)
 	if bErr != nil {
 		e := Wrap(errFailedToReadBody, bErr)
-		return Wrap(NewSDKErrorWithStatus("", resp.StatusCode), e)
+		return NewSDKError(Wrap(NewSDKErrorWithStatus("", resp.StatusCode), e).Error())
 	}
 
 	var content map[string]interface{}
 	err := json.Unmarshal(b, &content)
 	if err != nil {
 		e := Wrap(errRespBodyNotJSON, New(string(b)))
-		return Wrap(NewSDKErrorWithStatus("", resp.StatusCode), e)
+		return NewSDKError(Wrap(NewSDKErrorWithStatus("", resp.StatusCode), e).Error())
 	}
 
 	if msg, ok := content["error"]; ok {
@@ -81,5 +99,5 @@ func CheckError(resp *http.Response, expectedStatusCodes ...int) error {
 		return NewSDKErrorWithStatus("unknown error", resp.StatusCode)
 	}
 	e := Wrap(errJSONKeyNotFound, New(string(b)))
-	return Wrap(NewSDKErrorWithStatus("", resp.StatusCode), e)
+	return NewSDKError(Wrap(NewSDKErrorWithStatus("", resp.StatusCode), e).Error())
 }

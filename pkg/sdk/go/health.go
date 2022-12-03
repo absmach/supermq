@@ -10,20 +10,21 @@ import (
 	"net/http"
 
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/pkg/errors"
 )
 
-func (sdk mfSDK) Health() (mainflux.HealthInfo, error) {
+func (sdk mfSDK) Health() (mainflux.HealthInfo, errors.SDKError) {
 	url := fmt.Sprintf("%s/health", sdk.thingsURL)
 
 	resp, err := sdk.client.Get(url)
 	if err != nil {
-		return mainflux.HealthInfo{}, err
+		return mainflux.HealthInfo{}, errors.NewSDKError(err.Error())
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return mainflux.HealthInfo{}, err
+		return mainflux.HealthInfo{}, errors.NewSDKError(err.Error())
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -32,7 +33,7 @@ func (sdk mfSDK) Health() (mainflux.HealthInfo, error) {
 
 	var h mainflux.HealthInfo
 	if err := json.Unmarshal(body, &h); err != nil {
-		return mainflux.HealthInfo{}, err
+		return mainflux.HealthInfo{}, errors.NewSDKError(err.Error())
 	}
 
 	return h, nil
