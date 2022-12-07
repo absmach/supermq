@@ -35,9 +35,6 @@ var (
 
 	// ErrFailedCertUpdate failed to update certs in bootstrap config
 	ErrFailedCertUpdate = errors.NewSDKError("failed to update certs in bootstrap config")
-
-	// ErrMemberAdd failed to add member to a group.
-	ErrMemberAdd = errors.NewSDKError("failed to add member to group")
 )
 
 func encodeError(body []byte, status int) errors.SDKError {
