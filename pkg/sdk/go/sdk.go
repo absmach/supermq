@@ -299,7 +299,7 @@ func NewSDK(conf Config) SDK {
 	}
 }
 
-func (sdk mfSDK) sendRequest(req *http.Request, token, contentType string) (*http.Response, errors.SDKError) {
+func (sdk mfSDK) sendRequest(req *http.Request, token, contentType string) (*http.Response, error) {
 	if token != "" {
 		req.Header.Set("Authorization", apiutil.BearerPrefix+token)
 	}
@@ -316,7 +316,7 @@ func (sdk mfSDK) sendRequest(req *http.Request, token, contentType string) (*htt
 	return resp, errors.NewSDKError(err.Error())
 }
 
-func (sdk mfSDK) sendThingRequest(req *http.Request, key, contentType string) (*http.Response, errors.SDKError) {
+func (sdk mfSDK) sendThingRequest(req *http.Request, key, contentType string) (*http.Response, error) {
 	if key != "" {
 		req.Header.Set("Authorization", apiutil.ThingPrefix+key)
 	}
@@ -333,7 +333,7 @@ func (sdk mfSDK) sendThingRequest(req *http.Request, key, contentType string) (*
 	return resp, errors.NewSDKError(err.Error())
 }
 
-func (sdk mfSDK) withQueryParams(baseURL, endpoint string, pm PageMetadata) (string, errors.SDKError) {
+func (sdk mfSDK) withQueryParams(baseURL, endpoint string, pm PageMetadata) (string, error) {
 	q, err := pm.query()
 	if err != nil {
 		return "", err
@@ -341,7 +341,7 @@ func (sdk mfSDK) withQueryParams(baseURL, endpoint string, pm PageMetadata) (str
 	return fmt.Sprintf("%s/%s?%s", baseURL, endpoint, q), nil
 }
 
-func (pm PageMetadata) query() (string, errors.SDKError) {
+func (pm PageMetadata) query() (string, error) {
 	q := url.Values{}
 	q.Add("total", strconv.FormatUint(pm.Total, 10))
 	q.Add("offset", strconv.FormatUint(pm.Offset, 10))

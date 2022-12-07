@@ -92,10 +92,10 @@ func (sdk mfSDK) CreateThings(things []Thing, token string) ([]Thing, errors.SDK
 }
 
 func (sdk mfSDK) Things(token string, pm PageMetadata) (ThingsPage, errors.SDKError) {
-	url, sdkerr := sdk.withQueryParams(sdk.thingsURL, thingsEndpoint, pm)
+	url, err := sdk.withQueryParams(sdk.thingsURL, thingsEndpoint, pm)
 
-	if sdkerr != nil {
-		return ThingsPage{}, sdkerr
+	if err != nil {
+		return ThingsPage{}, errors.NewSDKError(err.Error())
 	}
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
