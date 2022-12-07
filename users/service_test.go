@@ -262,7 +262,7 @@ func TestListUsers(t *testing.T) {
 			limit:  nUsers,
 			size:   nUsers - 6,
 		},
-		"list users of non existence ": {
+		"list using non-existent user": {
 			token: token,
 			email: nonExistingUser.Email,
 			err:   errors.ErrNotFound,
