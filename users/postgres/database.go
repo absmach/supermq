@@ -5,8 +5,6 @@ import (
 	"database/sql"
 
 	"github.com/jmoiron/sqlx"
-	// "github.com/lib/pq"
-
 	"github.com/opentracing/opentracing-go"
 )
 
