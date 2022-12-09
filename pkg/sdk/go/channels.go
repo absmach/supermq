@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -62,17 +61,12 @@ func (sdk mfSDK) CreateChannels(chs []Channel, token string) ([]Channel, errors.
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return []Channel{}, errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusCreated {
-		return []Channel{}, encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusCreated); err != nil {
+		return []Channel{}, err
 	}
 
 	var ccr createChannelsRes
-	if err := json.Unmarshal(body, &ccr); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&ccr); err != nil {
 		return []Channel{}, errors.NewSDKError(err.Error())
 	}
 
@@ -97,17 +91,12 @@ func (sdk mfSDK) Channels(token string, pm PageMetadata) (ChannelsPage, errors.S
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return ChannelsPage{}, errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return ChannelsPage{}, encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusOK); err != nil {
+		return ChannelsPage{}, err
 	}
 
 	var cp ChannelsPage
-	if err := json.Unmarshal(body, &cp); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&cp); err != nil {
 		return ChannelsPage{}, errors.NewSDKError(err.Error())
 	}
 
@@ -128,17 +117,12 @@ func (sdk mfSDK) ChannelsByThing(token, thingID string, offset, limit uint64, di
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return ChannelsPage{}, errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return ChannelsPage{}, encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusOK); err != nil {
+		return ChannelsPage{}, err
 	}
 
 	var cp ChannelsPage
-	if err := json.Unmarshal(body, &cp); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&cp); err != nil {
 		return ChannelsPage{}, errors.NewSDKError(err.Error())
 	}
 
@@ -159,17 +143,12 @@ func (sdk mfSDK) Channel(id, token string) (Channel, errors.SDKError) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return Channel{}, errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return Channel{}, encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusOK); err != nil {
+		return Channel{}, err
 	}
 
 	var c Channel
-	if err := json.Unmarshal(body, &c); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&c); err != nil {
 		return Channel{}, errors.NewSDKError(err.Error())
 	}
 

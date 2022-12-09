@@ -5,14 +5,11 @@ package errors
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 )
 
 var (
-	errFailedToReadBody = New("failed to read http response body")
-	errRespBodyNotJSON  = New("response body is not a valid JSON")
-	errJSONKeyNotFound  = New("response body expected error message json key not found")
+	errJSONKeyNotFound = New("response body expected error message json key not found")
 )
 
 // SDKError is an error type for Mainflux SDK.
@@ -79,17 +76,9 @@ func CheckError(resp *http.Response, expectedStatusCodes ...int) SDKError {
 		}
 	}
 
-	b, bErr := io.ReadAll(resp.Body)
-	if bErr != nil {
-		e := Wrap(errFailedToReadBody, bErr)
-		return NewSDKError(Wrap(NewSDKErrorWithStatus("", resp.StatusCode), e).Error())
-	}
-
 	var content map[string]interface{}
-	err := json.Unmarshal(b, &content)
-	if err != nil {
-		e := Wrap(errRespBodyNotJSON, New(string(b)))
-		return NewSDKError(Wrap(NewSDKErrorWithStatus("", resp.StatusCode), e).Error())
+	if err := json.NewDecoder(resp.Body).Decode(&content); err != nil {
+		return NewSDKErrorWithStatus(err.Error(), resp.StatusCode)
 	}
 
 	if msg, ok := content["error"]; ok {
@@ -98,6 +87,6 @@ func CheckError(resp *http.Response, expectedStatusCodes ...int) SDKError {
 		}
 		return NewSDKErrorWithStatus("unknown error", resp.StatusCode)
 	}
-	e := Wrap(errJSONKeyNotFound, New(string(b)))
-	return NewSDKError(Wrap(NewSDKErrorWithStatus("", resp.StatusCode), e).Error())
+	return NewSDKErrorWithStatus(errJSONKeyNotFound.Error(), resp.StatusCode)
+
 }

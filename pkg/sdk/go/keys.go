@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -50,17 +49,12 @@ func (sdk mfSDK) Issue(token string, d time.Duration) (KeyRes, errors.SDKError) 
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return KeyRes{}, errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusCreated {
-		return KeyRes{}, encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusCreated); err != nil {
+		return KeyRes{}, err
 	}
 
 	var key KeyRes
-	if err := json.Unmarshal(body, &key); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&key); err != nil {
 		return KeyRes{}, errors.NewSDKError(err.Error())
 	}
 
@@ -96,17 +90,12 @@ func (sdk mfSDK) RetrieveKey(id, token string) (retrieveKeyRes, errors.SDKError)
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return retrieveKeyRes{}, errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return retrieveKeyRes{}, encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusOK); err != nil {
+		return retrieveKeyRes{}, err
 	}
 
 	var key retrieveKeyRes
-	if err := json.Unmarshal(body, &key); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&key); err != nil {
 		return retrieveKeyRes{}, errors.NewSDKError(err.Error())
 	}
 

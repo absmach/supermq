@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -62,17 +61,12 @@ func (sdk mfSDK) User(userID, token string) (User, errors.SDKError) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return User{}, errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return User{}, encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusOK); err != nil {
+		return User{}, err
 	}
 
 	var u User
-	if err := json.Unmarshal(body, &u); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&u); err != nil {
 		return User{}, errors.NewSDKError(err.Error())
 	}
 
@@ -96,16 +90,12 @@ func (sdk mfSDK) Users(token string, pm PageMetadata) (UsersPage, errors.SDKErro
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return UsersPage{}, errors.NewSDKError(err.Error())
+	if err := errors.CheckError(resp, http.StatusOK); err != nil {
+		return UsersPage{}, err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return UsersPage{}, encodeError(body, resp.StatusCode)
-	}
 	var up UsersPage
-	if err := json.Unmarshal(body, &up); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&up); err != nil {
 		return UsersPage{}, errors.NewSDKError(err.Error())
 	}
 
@@ -126,17 +116,12 @@ func (sdk mfSDK) CreateToken(user User) (string, errors.SDKError) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusCreated {
-		return "", encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusCreated); err != nil {
+		return "", err
 	}
 
 	var tr tokenRes
-	if err := json.Unmarshal(body, &tr); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&tr); err != nil {
 		return "", errors.NewSDKError(err.Error())
 	}
 

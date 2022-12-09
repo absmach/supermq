@@ -6,7 +6,6 @@ package sdk
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/mainflux/mainflux"
@@ -22,17 +21,12 @@ func (sdk mfSDK) Health() (mainflux.HealthInfo, errors.SDKError) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return mainflux.HealthInfo{}, errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return mainflux.HealthInfo{}, encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusOK); err != nil {
+		return mainflux.HealthInfo{}, err
 	}
 
 	var h mainflux.HealthInfo
-	if err := json.Unmarshal(body, &h); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&h); err != nil {
 		return mainflux.HealthInfo{}, errors.NewSDKError(err.Error())
 	}
 

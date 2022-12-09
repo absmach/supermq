@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -132,17 +131,12 @@ func (sdk mfSDK) Members(groupID, token string, offset, limit uint64) (MembersPa
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return MembersPage{}, errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return MembersPage{}, encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusOK); err != nil {
+		return MembersPage{}, err
 	}
 
 	var tp MembersPage
-	if err := json.Unmarshal(body, &tp); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&tp); err != nil {
 		return MembersPage{}, errors.NewSDKError(err.Error())
 	}
 
@@ -195,17 +189,21 @@ func (sdk mfSDK) getGroups(token, url string) (GroupsPage, errors.SDKError) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return GroupsPage{}, errors.NewSDKError(err.Error())
+	if err := errors.CheckError(resp, http.StatusOK); err != nil {
+		return GroupsPage{}, err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return GroupsPage{}, encodeError(body, resp.StatusCode)
-	}
+	// body, err := ioutil.ReadAll(resp.Body)
+	// if err != nil {
+	// 	return GroupsPage{}, errors.NewSDKError(err.Error())
+	// }
+
+	// if resp.StatusCode != http.StatusOK {
+	// 	return GroupsPage{}, encodeError(body, resp.StatusCode)
+	// }
 
 	var tp GroupsPage
-	if err := json.Unmarshal(body, &tp); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&tp); err != nil {
 		return GroupsPage{}, errors.NewSDKError(err.Error())
 	}
 	return tp, nil
@@ -224,17 +222,12 @@ func (sdk mfSDK) Group(id, token string) (Group, errors.SDKError) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return Group{}, errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return Group{}, encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusOK); err != nil {
+		return Group{}, err
 	}
 
 	var t Group
-	if err := json.Unmarshal(body, &t); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&t); err != nil {
 		return Group{}, errors.NewSDKError(err.Error())
 	}
 
@@ -275,17 +268,12 @@ func (sdk mfSDK) Memberships(memberID, token string, offset, limit uint64) (Grou
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return GroupsPage{}, errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return GroupsPage{}, encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusOK); err != nil {
+		return GroupsPage{}, err
 	}
 
 	var tp GroupsPage
-	if err := json.Unmarshal(body, &tp); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&tp); err != nil {
 		return GroupsPage{}, errors.NewSDKError(err.Error())
 	}
 

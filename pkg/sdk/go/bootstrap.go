@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -64,13 +63,8 @@ func (sdk mfSDK) AddBootstrap(token string, cfg BootstrapConfig) (string, errors
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		return "", encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusOK, http.StatusCreated); err != nil {
+		return "", err
 	}
 
 	id := strings.TrimPrefix(resp.Header.Get("Location"), "/things/configs/")
@@ -115,17 +109,12 @@ func (sdk mfSDK) ViewBootstrap(token, id string) (BootstrapConfig, errors.SDKErr
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return BootstrapConfig{}, errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return BootstrapConfig{}, encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusOK); err != nil {
+		return BootstrapConfig{}, err
 	}
 
 	var bc BootstrapConfig
-	if err := json.Unmarshal(body, &bc); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&bc); err != nil {
 		return BootstrapConfig{}, errors.NewSDKError(err.Error())
 	}
 
@@ -208,17 +197,12 @@ func (sdk mfSDK) Bootstrap(externalKey, externalID string) (BootstrapConfig, err
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return BootstrapConfig{}, errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return BootstrapConfig{}, encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusOK); err != nil {
+		return BootstrapConfig{}, err
 	}
 
 	var bc BootstrapConfig
-	if err := json.Unmarshal(body, &bc); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&bc); err != nil {
 		return BootstrapConfig{}, errors.NewSDKError(err.Error())
 	}
 

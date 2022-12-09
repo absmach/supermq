@@ -4,12 +4,8 @@
 package sdk
 
 import (
-	"encoding/json"
-
 	"github.com/mainflux/mainflux/pkg/errors"
 )
-
-var errEncodeError = errors.NewSDKError("failed to encode response error")
 
 var (
 	// ErrFailedFetch indicates that fetching of entity data failed.
@@ -37,18 +33,18 @@ var (
 	ErrFailedCertUpdate = errors.NewSDKError("failed to update certs in bootstrap config")
 )
 
-func encodeError(body []byte, status int) errors.SDKError {
-	e := struct {
-		Err string `json:"error"`
-	}{}
+// func encodeError(body []byte, status int) errors.SDKError {
+// 	e := struct {
+// 		Err string `json:"error"`
+// 	}{}
 
-	if err := json.Unmarshal(body, &e); err != nil {
-		return errors.NewSDKError(errors.Wrap(errEncodeError, err).Error())
-	}
+// 	if err := json.Unmarshal(body, &e); err != nil {
+// 		return errors.NewSDKError(errors.Wrap(errEncodeError, err).Error())
+// 	}
 
-	if status != 0 {
-		return errors.NewSDKErrorWithStatus(e.Err, status)
-	}
+// 	if status != 0 {
+// 		return errors.NewSDKErrorWithStatus(e.Err, status)
+// 	}
 
-	return errors.NewSDKError(e.Err)
-}
+// 	return errors.NewSDKError(e.Err)
+// }

@@ -6,7 +6,6 @@ package sdk
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -34,13 +33,8 @@ func (sdk mfSDK) SendMessage(chanName, msg, key string) errors.SDKError {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusAccepted {
-		return encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusAccepted); err != nil {
+		return err
 	}
 
 	return nil
@@ -67,17 +61,12 @@ func (sdk mfSDK) ReadMessages(chanName, token string) (MessagesPage, errors.SDKE
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return MessagesPage{}, errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return MessagesPage{}, encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusOK); err != nil {
+		return MessagesPage{}, err
 	}
 
 	var mp MessagesPage
-	if err := json.Unmarshal(body, &mp); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&mp); err != nil {
 		return MessagesPage{}, errors.NewSDKError(err.Error())
 	}
 

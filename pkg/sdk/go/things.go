@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -47,8 +46,8 @@ func (sdk mfSDK) CreateThing(t Thing, token string) (string, errors.SDKError) {
 	}
 	defer resp.Body.Close()
 
-	if sdkerr := errors.CheckError(resp, http.StatusCreated); sdkerr != nil {
-		return "", sdkerr
+	if err := errors.CheckError(resp, http.StatusCreated); err != nil {
+		return "", err
 	}
 
 	id := strings.TrimPrefix(resp.Header.Get("Location"), fmt.Sprintf("/%s/", thingsEndpoint))
@@ -74,17 +73,12 @@ func (sdk mfSDK) CreateThings(things []Thing, token string) ([]Thing, errors.SDK
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return []Thing{}, errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusCreated {
-		return []Thing{}, encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusCreated); err != nil {
+		return []Thing{}, err
 	}
 
 	var ctr createThingsRes
-	if err := json.Unmarshal(body, &ctr); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&ctr); err != nil {
 		return []Thing{}, errors.NewSDKError(err.Error())
 	}
 
@@ -109,17 +103,12 @@ func (sdk mfSDK) Things(token string, pm PageMetadata) (ThingsPage, errors.SDKEr
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return ThingsPage{}, errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return ThingsPage{}, encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusOK); err != nil {
+		return ThingsPage{}, err
 	}
 
 	var tp ThingsPage
-	if err := json.Unmarshal(body, &tp); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&tp); err != nil {
 		return ThingsPage{}, errors.NewSDKError(err.Error())
 	}
 
@@ -140,17 +129,12 @@ func (sdk mfSDK) ThingsByChannel(token, chanID string, offset, limit uint64, dis
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return ThingsPage{}, errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return ThingsPage{}, encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusOK); err != nil {
+		return ThingsPage{}, err
 	}
 
 	var tp ThingsPage
-	if err := json.Unmarshal(body, &tp); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&tp); err != nil {
 		return ThingsPage{}, errors.NewSDKError(err.Error())
 	}
 
@@ -171,17 +155,12 @@ func (sdk mfSDK) Thing(id, token string) (Thing, errors.SDKError) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return Thing{}, errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return Thing{}, encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusOK); err != nil {
+		return Thing{}, err
 	}
 
 	var t Thing
-	if err := json.Unmarshal(body, &t); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&t); err != nil {
 		return Thing{}, errors.NewSDKError(err.Error())
 	}
 
@@ -247,17 +226,12 @@ func (sdk mfSDK) IdentifyThing(key string) (string, errors.SDKError) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", errors.NewSDKError(err.Error())
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", encodeError(body, resp.StatusCode)
+	if err := errors.CheckError(resp, http.StatusOK); err != nil {
+		return "", err
 	}
 
 	var i identifyThingResp
-	if err := json.Unmarshal(body, &i); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&i); err != nil {
 		return "", errors.NewSDKError(err.Error())
 	}
 

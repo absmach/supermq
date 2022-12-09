@@ -71,7 +71,7 @@ func TestSendMessage(t *testing.T) {
 			chanID: chanID,
 			msg:    msg,
 			auth:   invalidToken,
-			err:    errors.NewSDKError("failed to encode response error : unexpected end of JSON input"),
+			err:    errors.NewSDKError("EOF"),
 		},
 		"publish message with wrong content type": {
 			chanID: chanID,
@@ -89,7 +89,7 @@ func TestSendMessage(t *testing.T) {
 			chanID: chanID,
 			msg:    msg,
 			auth:   "invalid-token",
-			err:    errors.NewSDKError("failed to encode response error : unexpected end of JSON input"),
+			err:    errors.NewSDKError("EOF"),
 		},
 	}
 	for desc, tc := range cases {
