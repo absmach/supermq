@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/gofrs/uuid"
-	"github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things"
 )
@@ -52,13 +52,15 @@ func (cr channelRepository) Save(ctx context.Context, channels ...things.Channel
 		_, err = tx.NamedExecContext(ctx, q, dbch)
 		if err != nil {
 			tx.Rollback()
-			pqErr, ok := err.(*pq.Error)
+			pqErr, ok := err.(*pgconn.PgError)
 			if ok {
-				switch pqErr.Code.Name() {
-				case errInvalid, errTruncation:
-					return []things.Channel{}, errors.ErrMalformedEntity
+				switch pqErr.Code {
+				case errInvalid:
+					return []things.Channel{}, errors.Wrap(errors.ErrMalformedEntity, err)
 				case errDuplicate:
-					return []things.Channel{}, errors.ErrConflict
+					return []things.Channel{}, errors.Wrap(errors.ErrConflict, err)
+				case errTooLong:
+					return []things.Channel{}, errors.Wrap(errors.ErrMalformedEntity, err)
 				}
 			}
 			return []things.Channel{}, errors.Wrap(errors.ErrCreateEntity, err)
@@ -79,11 +81,13 @@ func (cr channelRepository) Update(ctx context.Context, channel things.Channel) 
 
 	res, err := cr.db.NamedExecContext(ctx, q, dbch)
 	if err != nil {
-		pqErr, ok := err.(*pq.Error)
+		pqErr, ok := err.(*pgconn.PgError)
 		if ok {
-			switch pqErr.Code.Name() {
-			case errInvalid, errTruncation:
-				return errors.ErrMalformedEntity
+			switch pqErr.Code {
+			case errInvalid:
+				return errors.Wrap(errors.ErrMalformedEntity, err)
+			case errTooLong:
+				return errors.Wrap(errors.ErrMalformedEntity, err)
 			}
 		}
 
@@ -108,9 +112,11 @@ func (cr channelRepository) RetrieveByID(ctx context.Context, owner, id string) 
 	dbch := dbChannel{
 		ID: id,
 	}
+
 	if err := cr.db.QueryRowxContext(ctx, q, id).StructScan(&dbch); err != nil {
-		pqErr, ok := err.(*pq.Error)
-		if err == sql.ErrNoRows || ok && errInvalid == pqErr.Code.Name() {
+		pqErr, ok := err.(*pgconn.PgError)
+		//  If there is no result or ID is in an invalid format, return ErrNotFound.
+		if err == sql.ErrNoRows || ok && errInvalid == pqErr.Code {
 			return things.Channel{}, errors.ErrNotFound
 		}
 		return things.Channel{}, errors.Wrap(errors.ErrViewEntity, err)
@@ -308,9 +314,9 @@ func (cr channelRepository) Connect(ctx context.Context, owner string, chIDs, th
 			_, err := tx.NamedExecContext(ctx, q, dbco)
 			if err != nil {
 				tx.Rollback()
-				pqErr, ok := err.(*pq.Error)
+				pqErr, ok := err.(*pgconn.PgError)
 				if ok {
-					switch pqErr.Code.Name() {
+					switch pqErr.Code {
 					case errFK:
 						return errors.ErrNotFound
 					case errDuplicate:
@@ -351,9 +357,9 @@ func (cr channelRepository) Disconnect(ctx context.Context, owner string, chIDs,
 			res, err := tx.NamedExecContext(ctx, q, dbco)
 			if err != nil {
 				tx.Rollback()
-				pqErr, ok := err.(*pq.Error)
+				pqErr, ok := err.(*pgconn.PgError)
 				if ok {
-					switch pqErr.Code.Name() {
+					switch pqErr.Code {
 					case errFK:
 						return errors.ErrNotFound
 					case errDuplicate:

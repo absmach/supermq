@@ -10,20 +10,20 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/mainflux/mainflux/auth"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users"
 )
 
+// Postgres error codes:
+// https://www.postgresql.org/docs/current/errcodes-appendix.html
 const (
-	errInvalid    = "invalid_text_representation"
-	errTruncation = "string_data_right_truncation"
+	errDuplicate = "23505" // unique violation
+	errInvalid   = "22P02" // invalid input value for enum
 )
 
 var _ users.UserRepository = (*userRepository)(nil)
-
-const errDuplicate = "unique_violation"
 
 type userRepository struct {
 	db Database
@@ -49,11 +49,12 @@ func (ur userRepository) Save(ctx context.Context, user users.User) (string, err
 	}
 
 	row, err := ur.db.NamedQueryContext(ctx, q, dbu)
+
 	if err != nil {
-		pqErr, ok := err.(*pq.Error)
+		pqErr, ok := err.(*pgconn.PgError)
 		if ok {
-			switch pqErr.Code.Name() {
-			case errInvalid, errTruncation:
+			switch pqErr.Code {
+			case errInvalid:
 				return "", errors.Wrap(errors.ErrMalformedEntity, err)
 			case errDuplicate:
 				return "", errors.Wrap(errors.ErrConflict, err)
