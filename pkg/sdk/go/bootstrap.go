@@ -74,22 +74,22 @@ func (sdk mfSDK) AddBootstrap(token string, cfg BootstrapConfig) (string, errors
 func (sdk mfSDK) Whitelist(token string, cfg BootstrapConfig) errors.SDKError {
 	data, err := json.Marshal(BootstrapConfig{State: cfg.State})
 	if err != nil {
-		return errors.NewSDKError(errors.Wrap(ErrFailedWhitelist, err))
+		return errors.NewSDKError(err)
 	}
 
 	if cfg.MFThing == "" {
-		return ErrFailedWhitelist
+		return errors.NewSDKError(errors.ErrNotFoundParam)
 	}
 
 	url := fmt.Sprintf("%s/%s/%s", sdk.bootstrapURL, whitelistEndpoint, cfg.MFThing)
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
 	if err != nil {
-		return errors.NewSDKError(errors.Wrap(ErrFailedWhitelist, err))
+		return errors.NewSDKError(err)
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(CTJSON))
 	if err != nil {
-		return errors.NewSDKError(errors.Wrap(ErrFailedWhitelist, err))
+		return errors.NewSDKError(err)
 	}
 	defer resp.Body.Close()
 

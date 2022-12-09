@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -23,7 +22,6 @@ type Cert struct {
 }
 
 func (sdk mfSDK) IssueCert(thingID string, keyBits int, keyType, valid, token string) (Cert, errors.SDKError) {
-	var c Cert
 	r := certReq{
 		ThingID: thingID,
 		KeyBits: keyBits,
@@ -36,20 +34,18 @@ func (sdk mfSDK) IssueCert(thingID string, keyBits int, keyType, valid, token st
 	}
 
 	url := fmt.Sprintf("%s/%s", sdk.certsURL, certsEndpoint)
-	res, err := request(http.MethodPost, token, url, d)
+	resp, err := request(http.MethodPost, token, url, d)
 	if err != nil {
 		return Cert{}, errors.NewSDKError(err)
 	}
-	defer res.Body.Close()
-	if res.StatusCode != http.StatusOK {
-		return Cert{}, ErrCerts
+	defer resp.Body.Close()
+
+	if err := errors.CheckError(resp, http.StatusOK); err != nil {
+		return Cert{}, err
 	}
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		println(err.Error())
-		return Cert{}, errors.NewSDKError(err)
-	}
-	if err := json.Unmarshal(body, &c); err != nil {
+
+	var c Cert
+	if err := json.NewDecoder(resp.Body).Decode(&c); err != nil {
 		return Cert{}, errors.NewSDKError(err)
 	}
 	return c, nil
