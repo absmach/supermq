@@ -344,10 +344,11 @@ func clean(ps *provisionService, things []SDK.Thing, channels []SDK.Channel, tok
 }
 
 func (ps *provisionService) recover(e *error, ths *[]SDK.Thing, chs *[]SDK.Channel, tkn *string) {
-	things, channels, token, err := *ths, *chs, *tkn, *e
 	if e == nil {
 		return
 	}
+	things, channels, token, err := *ths, *chs, *tkn, *e
+
 	if errors.Contains(err, ErrFailedThingRetrieval) || errors.Contains(err, ErrFailedChannelCreation) {
 		for _, th := range things {
 			ps.errLog(ps.sdk.DeleteThing(th.ID, token))

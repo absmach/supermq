@@ -39,8 +39,8 @@ func (sdk mfSDK) CreateUser(token string, u User) (string, errors.SDKError) {
 	}
 	defer resp.Body.Close()
 
-	if sdkerr := errors.CheckError(resp, http.StatusCreated); sdkerr != nil {
-		return "", sdkerr
+	if err := errors.CheckError(resp, http.StatusCreated); err != nil {
+		return "", err
 	}
 
 	id := strings.TrimPrefix(resp.Header.Get("Location"), fmt.Sprintf("/%s/", usersEndpoint))
@@ -74,10 +74,11 @@ func (sdk mfSDK) User(userID, token string) (User, errors.SDKError) {
 }
 
 func (sdk mfSDK) Users(token string, pm PageMetadata) (UsersPage, errors.SDKError) {
-	url, sdkerr := sdk.withQueryParams(sdk.usersURL, usersEndpoint, pm)
+	var url string
+	var err error
 
-	if sdkerr != nil {
-		return UsersPage{}, errors.NewSDKError(sdkerr.Error())
+	if url, err = sdk.withQueryParams(sdk.usersURL, usersEndpoint, pm); err != nil {
+		return UsersPage{}, errors.NewSDKError(err.Error())
 	}
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {

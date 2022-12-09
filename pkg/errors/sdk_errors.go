@@ -8,8 +8,10 @@ import (
 	"net/http"
 )
 
-var (
-	errJSONKeyNotFound = New("response body expected error message json key not found")
+const (
+	JSONKeyNotFound = "response body expected error message json key not found"
+	unknownErr      = "unknown error"
+	err             = "error"
 )
 
 // SDKError is an error type for Mainflux SDK.
@@ -81,12 +83,12 @@ func CheckError(resp *http.Response, expectedStatusCodes ...int) SDKError {
 		return NewSDKErrorWithStatus(err.Error(), resp.StatusCode)
 	}
 
-	if msg, ok := content["error"]; ok {
+	if msg, ok := content[err]; ok {
 		if v, ok := msg.(string); ok {
 			return NewSDKErrorWithStatus(v, resp.StatusCode)
 		}
-		return NewSDKErrorWithStatus("unknown error", resp.StatusCode)
+		return NewSDKErrorWithStatus(unknownErr, resp.StatusCode)
 	}
-	return NewSDKErrorWithStatus(errJSONKeyNotFound.Error(), resp.StatusCode)
 
+	return NewSDKErrorWithStatus(JSONKeyNotFound, resp.StatusCode)
 }

@@ -34,8 +34,8 @@ func (sdk mfSDK) CreateChannel(c Channel, token string) (string, errors.SDKError
 	}
 	defer resp.Body.Close()
 
-	if sdkerr := errors.CheckError(resp, http.StatusCreated); sdkerr != nil {
-		return "", sdkerr
+	if err := errors.CheckError(resp, http.StatusCreated); err != nil {
+		return "", err
 	}
 
 	id := strings.TrimPrefix(resp.Header.Get("Location"), fmt.Sprintf("/%s/", channelsEndpoint))
@@ -74,10 +74,11 @@ func (sdk mfSDK) CreateChannels(chs []Channel, token string) ([]Channel, errors.
 }
 
 func (sdk mfSDK) Channels(token string, pm PageMetadata) (ChannelsPage, errors.SDKError) {
-	url, sdkerr := sdk.withQueryParams(sdk.thingsURL, channelsEndpoint, pm)
+	var url string
+	var err error
 
-	if sdkerr != nil {
-		return ChannelsPage{}, errors.NewSDKError(sdkerr.Error())
+	if url, err = sdk.withQueryParams(sdk.thingsURL, channelsEndpoint, pm); err != nil {
+		return ChannelsPage{}, errors.NewSDKError(err.Error())
 	}
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
