@@ -9,42 +9,26 @@ import (
 
 var (
 	// ErrFailedFetch indicates that fetching of entity data failed.
-	ErrFailedFetch = errors.NewSDKError("failed to fetch entity")
+	ErrFailedFetch = errors.NewSDKError(errors.New("failed to fetch entity"))
 
 	// ErrFailedConnect indicates that connecting thing to channel failed.
-	ErrFailedConnect = errors.NewSDKError("failed to connect thing to channel")
+	ErrFailedConnect = errors.NewSDKError(errors.New("failed to connect thing to channel"))
 
 	// ErrFailedDisconnect indicates that disconnecting thing from a channel failed.
-	ErrFailedDisconnect = errors.NewSDKError("failed to disconnect thing from channel")
+	ErrFailedDisconnect = errors.NewSDKError(errors.New("failed to disconnect thing from channel"))
 
 	// ErrInvalidContentType indicates that non-existent message content type was passed.
-	ErrInvalidContentType = errors.NewSDKError("Unknown Content Type")
+	ErrInvalidContentType = errors.NewSDKError(errors.New("Unknown Content Type"))
 
 	// ErrFailedWhitelist failed to whitelist configs
-	ErrFailedWhitelist = errors.NewSDKError("failed to whitelist")
+	ErrFailedWhitelist = errors.NewSDKError(errors.New("failed to whitelist"))
 
 	// ErrCerts indicates error fetching certificates.
-	ErrCerts = errors.NewSDKError("failed to fetch certs data")
+	ErrCerts = errors.NewSDKError(errors.New("failed to fetch certs data"))
 
 	// ErrCertsRemove indicates failure while cleaning up from the Certs service.
-	ErrCertsRemove = errors.NewSDKError("failed to remove certificate")
+	ErrCertsRemove = errors.NewSDKError(errors.New("failed to remove certificate"))
 
 	// ErrFailedCertUpdate failed to update certs in bootstrap config
-	ErrFailedCertUpdate = errors.NewSDKError("failed to update certs in bootstrap config")
+	ErrFailedCertUpdate = errors.NewSDKError(errors.New("failed to update certs in bootstrap config"))
 )
-
-// func encodeError(body []byte, status int) errors.SDKError {
-// 	e := struct {
-// 		Err string `json:"error"`
-// 	}{}
-
-// 	if err := json.Unmarshal(body, &e); err != nil {
-// 		return errors.NewSDKError(errors.Wrap(errEncodeError, err).Error())
-// 	}
-
-// 	if status != 0 {
-// 		return errors.NewSDKErrorWithStatus(e.Err, status)
-// 	}
-
-// 	return errors.NewSDKError(e.Err)
-// }

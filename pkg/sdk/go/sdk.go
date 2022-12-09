@@ -313,7 +313,7 @@ func (sdk mfSDK) sendRequest(req *http.Request, token, contentType string) (*htt
 		return resp, nil
 	}
 
-	return resp, errors.NewSDKError(err.Error())
+	return resp, errors.NewSDKError(err)
 }
 
 func (sdk mfSDK) sendThingRequest(req *http.Request, key, contentType string) (*http.Response, error) {
@@ -330,7 +330,7 @@ func (sdk mfSDK) sendThingRequest(req *http.Request, key, contentType string) (*
 		return resp, nil
 	}
 
-	return resp, errors.NewSDKError(err.Error())
+	return resp, errors.NewSDKError(err)
 }
 
 func (sdk mfSDK) withQueryParams(baseURL, endpoint string, pm PageMetadata) (string, error) {
@@ -364,7 +364,7 @@ func (pm PageMetadata) query() (string, error) {
 	if pm.Metadata != nil {
 		md, err := json.Marshal(pm.Metadata)
 		if err != nil {
-			return "", errors.NewSDKError(err.Error())
+			return "", errors.NewSDKError(err)
 		}
 		q.Add("metadata", string(md))
 	}

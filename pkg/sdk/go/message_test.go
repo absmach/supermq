@@ -21,6 +21,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const eof = "EOF"
+
 func newMessageService(cc mainflux.ThingsServiceClient) adapter.Service {
 	pub := mocks.NewPublisher()
 	return adapter.New(pub, cc)
@@ -65,13 +67,13 @@ func TestSendMessage(t *testing.T) {
 			chanID: chanID,
 			msg:    msg,
 			auth:   "",
-			err:    errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken.Error(), http.StatusUnauthorized),
+			err:    errors.NewSDKErrorWithStatus(apiutil.ErrBearerToken, http.StatusUnauthorized),
 		},
 		"publish message with invalid authorization token": {
 			chanID: chanID,
 			msg:    msg,
 			auth:   invalidToken,
-			err:    errors.NewSDKError("EOF"),
+			err:    errors.NewSDKError(errors.New(eof)),
 		},
 		"publish message with wrong content type": {
 			chanID: chanID,
@@ -83,13 +85,13 @@ func TestSendMessage(t *testing.T) {
 			chanID: "",
 			msg:    msg,
 			auth:   atoken,
-			err:    errors.NewSDKErrorWithStatus(errors.ErrMalformedEntity.Error(), http.StatusBadRequest),
+			err:    errors.NewSDKErrorWithStatus(errors.ErrMalformedEntity, http.StatusBadRequest),
 		},
 		"publish message unable to authorize": {
 			chanID: chanID,
 			msg:    msg,
 			auth:   "invalid-token",
-			err:    errors.NewSDKError("EOF"),
+			err:    errors.NewSDKError(errors.New(eof)),
 		},
 	}
 	for desc, tc := range cases {

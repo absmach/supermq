@@ -24,12 +24,12 @@ func (sdk mfSDK) SendMessage(chanName, msg, key string) errors.SDKError {
 
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(msg))
 	if err != nil {
-		return errors.NewSDKError(err.Error())
+		return errors.NewSDKError(err)
 	}
 
 	resp, err := sdk.sendThingRequest(req, key, string(sdk.msgContentType))
 	if err != nil {
-		return errors.NewSDKError(err.Error())
+		return errors.NewSDKError(err)
 	}
 	defer resp.Body.Close()
 
@@ -52,12 +52,12 @@ func (sdk mfSDK) ReadMessages(chanName, token string) (MessagesPage, errors.SDKE
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return MessagesPage{}, errors.NewSDKError(err.Error())
+		return MessagesPage{}, errors.NewSDKError(err)
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(sdk.msgContentType))
 	if err != nil {
-		return MessagesPage{}, errors.NewSDKError(err.Error())
+		return MessagesPage{}, errors.NewSDKError(err)
 	}
 	defer resp.Body.Close()
 
@@ -67,7 +67,7 @@ func (sdk mfSDK) ReadMessages(chanName, token string) (MessagesPage, errors.SDKE
 
 	var mp MessagesPage
 	if err := json.NewDecoder(resp.Body).Decode(&mp); err != nil {
-		return MessagesPage{}, errors.NewSDKError(err.Error())
+		return MessagesPage{}, errors.NewSDKError(err)
 	}
 
 	return mp, nil

@@ -33,19 +33,19 @@ func (sdk mfSDK) Issue(token string, d time.Duration) (KeyRes, errors.SDKError) 
 	datareq := keyReq{Type: APIKey, Duration: d}
 	data, err := json.Marshal(datareq)
 	if err != nil {
-		return KeyRes{}, errors.NewSDKError(err.Error())
+		return KeyRes{}, errors.NewSDKError(err)
 	}
 
 	url := fmt.Sprintf("%s/%s", sdk.authURL, keysEndpoint)
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 	if err != nil {
-		return KeyRes{}, errors.NewSDKError(err.Error())
+		return KeyRes{}, errors.NewSDKError(err)
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(CTJSON))
 	if err != nil {
-		return KeyRes{}, errors.NewSDKError(err.Error())
+		return KeyRes{}, errors.NewSDKError(err)
 	}
 	defer resp.Body.Close()
 
@@ -55,7 +55,7 @@ func (sdk mfSDK) Issue(token string, d time.Duration) (KeyRes, errors.SDKError) 
 
 	var key KeyRes
 	if err := json.NewDecoder(resp.Body).Decode(&key); err != nil {
-		return KeyRes{}, errors.NewSDKError(err.Error())
+		return KeyRes{}, errors.NewSDKError(err)
 	}
 
 	return key, nil
@@ -65,12 +65,12 @@ func (sdk mfSDK) Revoke(id, token string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s", sdk.authURL, keysEndpoint, id)
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
-		return errors.NewSDKError(err.Error())
+		return errors.NewSDKError(err)
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(CTJSON))
 	if err != nil {
-		return errors.NewSDKError(err.Error())
+		return errors.NewSDKError(err)
 	}
 	defer resp.Body.Close()
 
@@ -81,12 +81,12 @@ func (sdk mfSDK) RetrieveKey(id, token string) (retrieveKeyRes, errors.SDKError)
 	url := fmt.Sprintf("%s/%s/%s", sdk.authURL, keysEndpoint, id)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return retrieveKeyRes{}, errors.NewSDKError(err.Error())
+		return retrieveKeyRes{}, errors.NewSDKError(err)
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(CTJSON))
 	if err != nil {
-		return retrieveKeyRes{}, errors.NewSDKError(err.Error())
+		return retrieveKeyRes{}, errors.NewSDKError(err)
 	}
 	defer resp.Body.Close()
 
@@ -96,7 +96,7 @@ func (sdk mfSDK) RetrieveKey(id, token string) (retrieveKeyRes, errors.SDKError)
 
 	var key retrieveKeyRes
 	if err := json.NewDecoder(resp.Body).Decode(&key); err != nil {
-		return retrieveKeyRes{}, errors.NewSDKError(err.Error())
+		return retrieveKeyRes{}, errors.NewSDKError(err)
 	}
 
 	return key, nil

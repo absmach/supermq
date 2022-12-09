@@ -5,6 +5,7 @@ package errors
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 )
 
@@ -50,21 +51,21 @@ func (ce *sdkError) StatusCode() int {
 }
 
 // NewSDKError returns an SDK Error that formats as the given text.
-func NewSDKError(text string) SDKError {
+func NewSDKError(err error) SDKError {
 	return &sdkError{
 		customError: &customError{
-			msg: text,
+			msg: err.Error(),
 			err: nil,
 		},
 	}
 }
 
 // NewSDKErrorWithStatus returns an SDK Error setting the status code.
-func NewSDKErrorWithStatus(msg string, statusCode int) SDKError {
+func NewSDKErrorWithStatus(err error, statusCode int) SDKError {
 	return &sdkError{
 		statusCode: statusCode,
 		customError: &customError{
-			msg: msg,
+			msg: err.Error(),
 			err: nil,
 		},
 	}
@@ -80,15 +81,15 @@ func CheckError(resp *http.Response, expectedStatusCodes ...int) SDKError {
 
 	var content map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&content); err != nil {
-		return NewSDKErrorWithStatus(err.Error(), resp.StatusCode)
+		return NewSDKErrorWithStatus(err, resp.StatusCode)
 	}
 
 	if msg, ok := content[err]; ok {
 		if v, ok := msg.(string); ok {
-			return NewSDKErrorWithStatus(v, resp.StatusCode)
+			return NewSDKErrorWithStatus(errors.New(v), resp.StatusCode)
 		}
-		return NewSDKErrorWithStatus(unknownErr, resp.StatusCode)
+		return NewSDKErrorWithStatus(errors.New(unknownErr), resp.StatusCode)
 	}
 
-	return NewSDKErrorWithStatus(JSONKeyNotFound, resp.StatusCode)
+	return NewSDKErrorWithStatus(errors.New(JSONKeyNotFound), resp.StatusCode)
 }

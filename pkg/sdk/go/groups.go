@@ -24,23 +24,23 @@ const (
 func (sdk mfSDK) CreateGroup(g Group, token string) (string, errors.SDKError) {
 	data, err := json.Marshal(g)
 	if err != nil {
-		return "", errors.NewSDKError(err.Error())
+		return "", errors.NewSDKError(err)
 	}
 
 	url := fmt.Sprintf("%s/%s", sdk.authURL, groupsEndpoint)
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 	if err != nil {
-		return "", errors.NewSDKError(err.Error())
+		return "", errors.NewSDKError(err)
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(CTJSON))
 	if err != nil {
-		return "", errors.NewSDKError(err.Error())
+		return "", errors.NewSDKError(err)
 	}
 	defer resp.Body.Close()
 
 	if err = errors.CheckError(resp, http.StatusCreated); err != nil {
-		return "", errors.NewSDKError(err.Error())
+		return "", errors.NewSDKError(err)
 	}
 
 	id := strings.TrimPrefix(resp.Header.Get("Location"), fmt.Sprintf("/%s/", groupsEndpoint))
@@ -51,12 +51,12 @@ func (sdk mfSDK) DeleteGroup(id, token string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s", sdk.authURL, groupsEndpoint, id)
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
-		return errors.NewSDKError(err.Error())
+		return errors.NewSDKError(err)
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(CTJSON))
 	if err != nil {
-		return errors.NewSDKError(err.Error())
+		return errors.NewSDKError(err)
 	}
 	defer resp.Body.Close()
 
@@ -74,17 +74,17 @@ func (sdk mfSDK) Assign(memberIDs []string, memberType, groupID string, token st
 
 	data, err := json.Marshal(assignReq)
 	if err != nil {
-		return errors.NewSDKError(err.Error())
+		return errors.NewSDKError(err)
 	}
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 	if err != nil {
-		return errors.NewSDKError(err.Error())
+		return errors.NewSDKError(err)
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(CTJSON))
 	if err != nil {
-		return errors.NewSDKError(err.Error())
+		return errors.NewSDKError(err)
 	}
 	defer resp.Body.Close()
 
@@ -101,17 +101,17 @@ func (sdk mfSDK) Unassign(token, groupID string, memberIDs ...string) errors.SDK
 
 	data, err := json.Marshal(assignReq)
 	if err != nil {
-		return errors.NewSDKError(err.Error())
+		return errors.NewSDKError(err)
 	}
 
 	req, err := http.NewRequest(http.MethodDelete, url, bytes.NewReader(data))
 	if err != nil {
-		return errors.NewSDKError(err.Error())
+		return errors.NewSDKError(err)
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(CTJSON))
 	if err != nil {
-		return errors.NewSDKError(err.Error())
+		return errors.NewSDKError(err)
 	}
 	defer resp.Body.Close()
 
@@ -122,12 +122,12 @@ func (sdk mfSDK) Members(groupID, token string, offset, limit uint64) (MembersPa
 	url := fmt.Sprintf("%s/%s/%s/members?offset=%d&limit=%d&", sdk.authURL, groupsEndpoint, groupID, offset, limit)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return MembersPage{}, errors.NewSDKError(err.Error())
+		return MembersPage{}, errors.NewSDKError(err)
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(CTJSON))
 	if err != nil {
-		return MembersPage{}, errors.NewSDKError(err.Error())
+		return MembersPage{}, errors.NewSDKError(err)
 	}
 	defer resp.Body.Close()
 
@@ -137,7 +137,7 @@ func (sdk mfSDK) Members(groupID, token string, offset, limit uint64) (MembersPa
 
 	var tp MembersPage
 	if err := json.NewDecoder(resp.Body).Decode(&tp); err != nil {
-		return MembersPage{}, errors.NewSDKError(err.Error())
+		return MembersPage{}, errors.NewSDKError(err)
 	}
 
 	return tp, nil
@@ -146,7 +146,7 @@ func (sdk mfSDK) Members(groupID, token string, offset, limit uint64) (MembersPa
 func (sdk mfSDK) Groups(meta PageMetadata, token string) (GroupsPage, errors.SDKError) {
 	u, err := url.Parse(sdk.authURL)
 	if err != nil {
-		return GroupsPage{}, errors.NewSDKError(err.Error())
+		return GroupsPage{}, errors.NewSDKError(err)
 	}
 	u.Path = groupsEndpoint
 	q := u.Query()
@@ -180,12 +180,12 @@ func (sdk mfSDK) Children(id string, offset, limit uint64, token string) (Groups
 func (sdk mfSDK) getGroups(token, url string) (GroupsPage, errors.SDKError) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return GroupsPage{}, errors.NewSDKError(err.Error())
+		return GroupsPage{}, errors.NewSDKError(err)
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(CTJSON))
 	if err != nil {
-		return GroupsPage{}, errors.NewSDKError(err.Error())
+		return GroupsPage{}, errors.NewSDKError(err)
 	}
 	defer resp.Body.Close()
 
@@ -193,18 +193,9 @@ func (sdk mfSDK) getGroups(token, url string) (GroupsPage, errors.SDKError) {
 		return GroupsPage{}, err
 	}
 
-	// body, err := ioutil.ReadAll(resp.Body)
-	// if err != nil {
-	// 	return GroupsPage{}, errors.NewSDKError(err.Error())
-	// }
-
-	// if resp.StatusCode != http.StatusOK {
-	// 	return GroupsPage{}, encodeError(body, resp.StatusCode)
-	// }
-
 	var tp GroupsPage
 	if err := json.NewDecoder(resp.Body).Decode(&tp); err != nil {
-		return GroupsPage{}, errors.NewSDKError(err.Error())
+		return GroupsPage{}, errors.NewSDKError(err)
 	}
 	return tp, nil
 }
@@ -213,12 +204,12 @@ func (sdk mfSDK) Group(id, token string) (Group, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.authURL, groupsEndpoint, id)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return Group{}, errors.NewSDKError(err.Error())
+		return Group{}, errors.NewSDKError(err)
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(CTJSON))
 	if err != nil {
-		return Group{}, errors.NewSDKError(err.Error())
+		return Group{}, errors.NewSDKError(err)
 	}
 	defer resp.Body.Close()
 
@@ -228,7 +219,7 @@ func (sdk mfSDK) Group(id, token string) (Group, errors.SDKError) {
 
 	var t Group
 	if err := json.NewDecoder(resp.Body).Decode(&t); err != nil {
-		return Group{}, errors.NewSDKError(err.Error())
+		return Group{}, errors.NewSDKError(err)
 	}
 
 	return t, nil
@@ -237,18 +228,18 @@ func (sdk mfSDK) Group(id, token string) (Group, errors.SDKError) {
 func (sdk mfSDK) UpdateGroup(t Group, token string) errors.SDKError {
 	data, err := json.Marshal(t)
 	if err != nil {
-		return errors.NewSDKError(err.Error())
+		return errors.NewSDKError(err)
 	}
 
 	url := fmt.Sprintf("%s/%s/%s", sdk.authURL, groupsEndpoint, t.ID)
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
 	if err != nil {
-		return errors.NewSDKError(err.Error())
+		return errors.NewSDKError(err)
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(CTJSON))
 	if err != nil {
-		return errors.NewSDKError(err.Error())
+		return errors.NewSDKError(err)
 	}
 	defer resp.Body.Close()
 
@@ -259,12 +250,12 @@ func (sdk mfSDK) Memberships(memberID, token string, offset, limit uint64) (Grou
 	url := fmt.Sprintf("%s/%s/%s/groups?offset=%d&limit=%d&", sdk.authURL, membersEndpoint, memberID, offset, limit)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return GroupsPage{}, errors.NewSDKError(err.Error())
+		return GroupsPage{}, errors.NewSDKError(err)
 	}
 
 	resp, err := sdk.sendRequest(req, token, string(CTJSON))
 	if err != nil {
-		return GroupsPage{}, errors.NewSDKError(err.Error())
+		return GroupsPage{}, errors.NewSDKError(err)
 	}
 	defer resp.Body.Close()
 
@@ -274,7 +265,7 @@ func (sdk mfSDK) Memberships(memberID, token string, offset, limit uint64) (Grou
 
 	var tp GroupsPage
 	if err := json.NewDecoder(resp.Body).Decode(&tp); err != nil {
-		return GroupsPage{}, errors.NewSDKError(err.Error())
+		return GroupsPage{}, errors.NewSDKError(err)
 	}
 
 	return tp, nil

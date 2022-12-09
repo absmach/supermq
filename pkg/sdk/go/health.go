@@ -17,7 +17,7 @@ func (sdk mfSDK) Health() (mainflux.HealthInfo, errors.SDKError) {
 
 	resp, err := sdk.client.Get(url)
 	if err != nil {
-		return mainflux.HealthInfo{}, errors.NewSDKError(err.Error())
+		return mainflux.HealthInfo{}, errors.NewSDKError(err)
 	}
 	defer resp.Body.Close()
 
@@ -27,7 +27,7 @@ func (sdk mfSDK) Health() (mainflux.HealthInfo, errors.SDKError) {
 
 	var h mainflux.HealthInfo
 	if err := json.NewDecoder(resp.Body).Decode(&h); err != nil {
-		return mainflux.HealthInfo{}, errors.NewSDKError(err.Error())
+		return mainflux.HealthInfo{}, errors.NewSDKError(err)
 	}
 
 	return h, nil
