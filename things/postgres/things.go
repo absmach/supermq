@@ -23,8 +23,8 @@ import (
 const (
 	errDuplicate = "23505" // unique violation
 	errInvalid   = "22P02" // invalid input value
-	errFK        = "23503"
-	errTooLong   = "22001"
+	errFK        = "23503" // foreign key violation
+	errTooLong   = "22001" // varchar size violation
 )
 
 var _ things.ThingRepository = (*thingRepository)(nil)

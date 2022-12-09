@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/mainflux/mainflux/auth"
 	"github.com/mainflux/mainflux/pkg/errors"
 )
@@ -17,9 +17,13 @@ var (
 )
 var _ auth.KeyRepository = (*repo)(nil)
 
+// Postgres error codes:
+// https://www.postgresql.org/docs/current/errcodes-appendix.html
 const (
-	errDuplicate = "unique_violation"
-	errInvalid   = "invalid_text_representation"
+	errDuplicate = "23505" // unique violation
+	errInvalid   = "22P02" // invalid input value
+	errFK        = "23503" // foreign key violation
+	errTooLong   = "22001" // varchar size violation
 )
 
 type repo struct {
@@ -40,11 +44,8 @@ func (kr repo) Save(ctx context.Context, key auth.Key) (string, error) {
 	dbKey := toDBKey(key)
 	if _, err := kr.db.NamedExecContext(ctx, q, dbKey); err != nil {
 
-		pqErr, ok := err.(*pq.Error)
-		if ok {
-			if pqErr.Code.Name() == errDuplicate {
-				return "", errors.Wrap(errors.ErrConflict, pqErr)
-			}
+		if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == errDuplicate {
+			return "", errors.Wrap(errors.ErrConflict, err)
 		}
 
 		return "", errors.Wrap(errSave, err)
@@ -57,8 +58,8 @@ func (kr repo) Retrieve(ctx context.Context, issuerID, id string) (auth.Key, err
 	q := `SELECT id, type, issuer_id, subject, issued_at, expires_at FROM keys WHERE issuer_id = $1 AND id = $2`
 	key := dbKey{}
 	if err := kr.db.QueryRowxContext(ctx, q, issuerID, id).StructScan(&key); err != nil {
-		pqErr, ok := err.(*pq.Error)
-		if err == sql.ErrNoRows || ok && errInvalid == pqErr.Code.Name() {
+		pgErr, ok := err.(*pgconn.PgError)
+		if err == sql.ErrNoRows || ok && errInvalid == pgErr.Code {
 			return auth.Key{}, errors.Wrap(errors.ErrNotFound, err)
 		}
 
