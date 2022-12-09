@@ -8,17 +8,19 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq" // required for DB access
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jmoiron/sqlx" // required for DB access
 	"github.com/mainflux/mainflux/consumers"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfjson "github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 )
 
+// Postgres error codes:
+// https://www.postgresql.org/docs/current/errcodes-appendix.html
 const (
-	errInvalid        = "invalid_text_representation"
-	errUndefinedTable = "undefined_table"
+	errInvalid        = "22P02" // invalid input value
+	errUndefinedTable = "42P01" // relation does not exist
 )
 
 var (
@@ -80,9 +82,9 @@ func (tr timescaleRepo) saveSenml(messages interface{}) (err error) {
 	for _, msg := range msgs {
 		m := senmlMessage{Message: msg}
 		if _, err := tx.NamedExec(q, m); err != nil {
-			pqErr, ok := err.(*pq.Error)
+			pgErr, ok := err.(*pgconn.PgError)
 			if ok {
-				switch pqErr.Code.Name() {
+				switch pgErr.Code {
 				case errInvalid:
 					return errors.Wrap(errSaveMessage, errInvalidMessage)
 				}
@@ -136,9 +138,9 @@ func (tr timescaleRepo) insertJSON(msgs mfjson.Messages) error {
 			return errors.Wrap(errSaveMessage, err)
 		}
 		if _, err = tx.NamedExec(q, dbmsg); err != nil {
-			pqErr, ok := err.(*pq.Error)
+			pgErr, ok := err.(*pgconn.PgError)
 			if ok {
-				switch pqErr.Code.Name() {
+				switch pgErr.Code {
 				case errInvalid:
 					return errors.Wrap(errSaveMessage, errInvalidMessage)
 				case errUndefinedTable:

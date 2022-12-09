@@ -12,7 +12,6 @@ import (
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 	"github.com/mainflux/mainflux/bootstrap"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -349,8 +348,13 @@ func (cr configRepository) ListExisting(owner string, ids []string) ([]bootstrap
 		return channels, nil
 	}
 
+	var chans pgtype.TextArray
+	if err := chans.Set(ids); err != nil {
+		return []bootstrap.Channel{}, err
+	}
+
 	q := "SELECT mainflux_channel, name, metadata FROM channels WHERE owner = $1 AND mainflux_channel = ANY ($2)"
-	rows, err := cr.db.Queryx(q, owner, pq.Array(ids))
+	rows, err := cr.db.Queryx(q, owner, chans)
 	if err != nil {
 		return []bootstrap.Channel{}, errors.Wrap(errors.ErrViewEntity, err)
 	}
