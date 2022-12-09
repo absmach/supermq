@@ -269,12 +269,18 @@ github.com/inconshreveable/mousetrap
 github.com/influxdata/influxdb/client/v2
 github.com/influxdata/influxdb/models
 github.com/influxdata/influxdb/pkg/escape
+# github.com/jackc/pgio v1.0.0
+## explicit; go 1.12
+github.com/jackc/pgio
 # github.com/jackc/pgpassfile v1.0.0
 ## explicit; go 1.12
 github.com/jackc/pgpassfile
 # github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b
 ## explicit; go 1.14
 github.com/jackc/pgservicefile
+# github.com/jackc/pgtype v1.13.0
+## explicit; go 1.13
+github.com/jackc/pgtype
 # github.com/jackc/pgx/v5 v5.2.0
 ## explicit; go 1.18
 github.com/jackc/pgx/v5
