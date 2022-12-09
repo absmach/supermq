@@ -52,20 +52,18 @@ func (sdk mfSDK) IssueCert(thingID string, keyBits int, keyType, valid, token st
 }
 
 func (sdk mfSDK) RemoveCert(id, token string) errors.SDKError {
-	res, err := request(http.MethodDelete, token, fmt.Sprintf("%s/%s", sdk.certsURL, id), nil)
-	if res != nil {
-		res.Body.Close()
+	resp, err := request(http.MethodDelete, token, fmt.Sprintf("%s/%s", sdk.certsURL, id), nil)
+	if resp != nil {
+		resp.Body.Close()
 	}
 	if err != nil {
 		return errors.NewSDKError(err)
 	}
-	switch res.StatusCode {
-	case http.StatusNoContent:
-		return nil
+	switch resp.StatusCode {
 	case http.StatusForbidden:
 		return errors.NewSDKError(errors.ErrAuthorization)
 	default:
-		return ErrCertsRemove
+		return errors.CheckError(resp, http.StatusNoContent)
 	}
 }
 

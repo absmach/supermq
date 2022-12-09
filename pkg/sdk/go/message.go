@@ -75,7 +75,7 @@ func (sdk mfSDK) ReadMessages(chanName, token string) (MessagesPage, errors.SDKE
 
 func (sdk *mfSDK) SetContentType(ct ContentType) errors.SDKError {
 	if ct != CTJSON && ct != CTJSONSenML && ct != CTBinary {
-		return ErrInvalidContentType
+		return errors.NewSDKError(errors.ErrUnsupportedContentType)
 	}
 
 	sdk.msgContentType = ct

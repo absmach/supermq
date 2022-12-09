@@ -244,7 +244,7 @@ func (bs bootstrapService) UpdateConnections(ctx context.Context, token, id stri
 			ThingIDs:   []string{id},
 		}
 		if err := bs.sdk.Connect(conIDs, token); err != nil {
-			if errors.Contains(err, mfsdk.ErrFailedConnect) {
+			if errors.Contains(err, errors.ErrFailedConnect) {
 				return errors.ErrMalformedEntity
 			}
 			return ErrThings
@@ -391,7 +391,7 @@ func (bs bootstrapService) thing(token, id string) (mfsdk.Thing, error) {
 
 	thing, err := bs.sdk.Thing(thingID, token)
 	if err != nil {
-		if errors.Contains(err, mfsdk.ErrFailedFetch) {
+		if errors.Contains(err, errors.ErrFailedFetch) {
 			return mfsdk.Thing{}, errors.Wrap(errThingNotFound, errors.ErrNotFound)
 		}
 
