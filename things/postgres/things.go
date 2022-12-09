@@ -58,9 +58,9 @@ func (tr thingRepository) Save(ctx context.Context, ths ...things.Thing) ([]thin
 
 		if _, err := tx.NamedExecContext(ctx, q, dbth); err != nil {
 			tx.Rollback()
-			pqErr, ok := err.(*pgconn.PgError)
+			pgErr, ok := err.(*pgconn.PgError)
 			if ok {
-				switch pqErr.Code {
+				switch pgErr.Code {
 				case errInvalid:
 					return []things.Thing{}, errors.Wrap(errors.ErrMalformedEntity, err)
 				case errDuplicate:
@@ -91,9 +91,9 @@ func (tr thingRepository) Update(ctx context.Context, t things.Thing) error {
 
 	res, errdb := tr.db.NamedExecContext(ctx, q, dbth)
 	if errdb != nil {
-		pqErr, ok := errdb.(*pgconn.PgError)
+		pgErr, ok := errdb.(*pgconn.PgError)
 		if ok {
-			switch pqErr.Code {
+			switch pgErr.Code {
 			case errInvalid:
 				return errors.Wrap(errors.ErrMalformedEntity, errdb)
 			case errTooLong:
@@ -127,9 +127,9 @@ func (tr thingRepository) UpdateKey(ctx context.Context, owner, id, key string) 
 
 	res, err := tr.db.NamedExecContext(ctx, q, dbth)
 	if err != nil {
-		pqErr, ok := err.(*pgconn.PgError)
+		pgErr, ok := err.(*pgconn.PgError)
 		if ok {
-			switch pqErr.Code {
+			switch pgErr.Code {
 			case errInvalid:
 				return errors.Wrap(errors.ErrMalformedEntity, err)
 			case errDuplicate:
@@ -160,9 +160,9 @@ func (tr thingRepository) RetrieveByID(ctx context.Context, owner, id string) (t
 	dbth := dbThing{ID: id}
 
 	if err := tr.db.QueryRowxContext(ctx, q, id).StructScan(&dbth); err != nil {
-		pqErr, ok := err.(*pgconn.PgError)
+		pgErr, ok := err.(*pgconn.PgError)
 		//  If there is no result or ID is in an invalid format, return ErrNotFound.
-		if err == sql.ErrNoRows || ok && errInvalid == pqErr.Code {
+		if err == sql.ErrNoRows || ok && errInvalid == pgErr.Code {
 			return things.Thing{}, errors.Wrap(errors.ErrNotFound, err)
 		}
 		return things.Thing{}, errors.Wrap(errors.ErrViewEntity, err)

@@ -52,9 +52,9 @@ func (cr channelRepository) Save(ctx context.Context, channels ...things.Channel
 		_, err = tx.NamedExecContext(ctx, q, dbch)
 		if err != nil {
 			tx.Rollback()
-			pqErr, ok := err.(*pgconn.PgError)
+			pgErr, ok := err.(*pgconn.PgError)
 			if ok {
-				switch pqErr.Code {
+				switch pgErr.Code {
 				case errInvalid:
 					return []things.Channel{}, errors.Wrap(errors.ErrMalformedEntity, err)
 				case errDuplicate:
@@ -81,9 +81,9 @@ func (cr channelRepository) Update(ctx context.Context, channel things.Channel) 
 
 	res, err := cr.db.NamedExecContext(ctx, q, dbch)
 	if err != nil {
-		pqErr, ok := err.(*pgconn.PgError)
+		pgErr, ok := err.(*pgconn.PgError)
 		if ok {
-			switch pqErr.Code {
+			switch pgErr.Code {
 			case errInvalid:
 				return errors.Wrap(errors.ErrMalformedEntity, err)
 			case errTooLong:
@@ -114,9 +114,9 @@ func (cr channelRepository) RetrieveByID(ctx context.Context, owner, id string) 
 	}
 
 	if err := cr.db.QueryRowxContext(ctx, q, id).StructScan(&dbch); err != nil {
-		pqErr, ok := err.(*pgconn.PgError)
+		pgErr, ok := err.(*pgconn.PgError)
 		//  If there is no result or ID is in an invalid format, return ErrNotFound.
-		if err == sql.ErrNoRows || ok && errInvalid == pqErr.Code {
+		if err == sql.ErrNoRows || ok && errInvalid == pgErr.Code {
 			return things.Channel{}, errors.ErrNotFound
 		}
 		return things.Channel{}, errors.Wrap(errors.ErrViewEntity, err)
@@ -314,9 +314,9 @@ func (cr channelRepository) Connect(ctx context.Context, owner string, chIDs, th
 			_, err := tx.NamedExecContext(ctx, q, dbco)
 			if err != nil {
 				tx.Rollback()
-				pqErr, ok := err.(*pgconn.PgError)
+				pgErr, ok := err.(*pgconn.PgError)
 				if ok {
-					switch pqErr.Code {
+					switch pgErr.Code {
 					case errFK:
 						return errors.ErrNotFound
 					case errDuplicate:
@@ -357,9 +357,9 @@ func (cr channelRepository) Disconnect(ctx context.Context, owner string, chIDs,
 			res, err := tx.NamedExecContext(ctx, q, dbco)
 			if err != nil {
 				tx.Rollback()
-				pqErr, ok := err.(*pgconn.PgError)
+				pgErr, ok := err.(*pgconn.PgError)
 				if ok {
-					switch pqErr.Code {
+					switch pgErr.Code {
 					case errFK:
 						return errors.ErrNotFound
 					case errDuplicate:

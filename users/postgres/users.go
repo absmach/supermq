@@ -51,9 +51,9 @@ func (ur userRepository) Save(ctx context.Context, user users.User) (string, err
 	row, err := ur.db.NamedQueryContext(ctx, q, dbu)
 
 	if err != nil {
-		pqErr, ok := err.(*pgconn.PgError)
+		pgErr, ok := err.(*pgconn.PgError)
 		if ok {
-			switch pqErr.Code {
+			switch pgErr.Code {
 			case errInvalid:
 				return "", errors.Wrap(errors.ErrMalformedEntity, err)
 			case errDuplicate:
