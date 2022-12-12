@@ -16,10 +16,6 @@ import (
 
 var _ notifiers.SubscriptionsRepository = (*subscriptionsRepo)(nil)
 
-// Postgres error codes:
-// https://www.postgresql.org/docs/current/errcodes-appendix.html
-const errDuplicate = "23505" // unique violation
-
 type subscriptionsRepo struct {
 	db Database
 }

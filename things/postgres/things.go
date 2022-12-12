@@ -17,15 +17,6 @@ import (
 	"github.com/mainflux/mainflux/things"
 )
 
-// Postgres error codes:
-// https://www.postgresql.org/docs/current/errcodes-appendix.html
-const (
-	errDuplicate = "23505" // unique violation
-	errInvalid   = "22P02" // invalid input value
-	errFK        = "23503" // foreign key violation
-	errTooLong   = "22001" // varchar size violation
-)
-
 var _ things.ThingRepository = (*thingRepository)(nil)
 
 type thingRepository struct {

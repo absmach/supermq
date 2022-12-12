@@ -28,13 +28,6 @@ var (
 const cleanupQuery = `DELETE FROM channels ch WHERE NOT EXISTS (
 						 SELECT channel_id FROM connections c WHERE ch.mainflux_channel = c.channel_id);`
 
-// Postgres error codes:
-// https://www.postgresql.org/docs/current/errcodes-appendix.html
-const (
-	errDuplicate = "23505" // unique violation
-	errFK        = "23503"
-)
-
 var _ bootstrap.ConfigRepository = (*configRepository)(nil)
 
 type configRepository struct {

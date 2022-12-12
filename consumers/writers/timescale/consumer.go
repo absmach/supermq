@@ -16,13 +16,6 @@ import (
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 )
 
-// Postgres error codes:
-// https://www.postgresql.org/docs/current/errcodes-appendix.html
-const (
-	errInvalid        = "22P02" // invalid input value
-	errUndefinedTable = "42P01" // relation does not exist
-)
-
 var (
 	errInvalidMessage = errors.New("invalid message representation")
 	errSaveMessage    = errors.New("failed to save message to timescale database")

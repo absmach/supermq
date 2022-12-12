@@ -12,6 +12,13 @@ import (
 	migrate "github.com/rubenv/sql-migrate"
 )
 
+// Postgres error codes:
+// https://www.postgresql.org/docs/current/errcodes-appendix.html
+const (
+	errDuplicate = "23505" // unique violation
+	errInvalid   = "22P02" // invalid input value for enum
+)
+
 // Config defines the options that are used when connecting to a PostgreSQL instance
 type Config struct {
 	Host        string

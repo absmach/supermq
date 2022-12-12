@@ -16,13 +16,6 @@ import (
 	"github.com/mainflux/mainflux/users"
 )
 
-// Postgres error codes:
-// https://www.postgresql.org/docs/current/errcodes-appendix.html
-const (
-	errDuplicate = "23505" // unique violation
-	errInvalid   = "22P02" // invalid input value for enum
-)
-
 var _ users.UserRepository = (*userRepository)(nil)
 
 type userRepository struct {
