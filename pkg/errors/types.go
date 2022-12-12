@@ -42,10 +42,4 @@ var (
 
 	// ErrScanMetadata indicates problem with metadata in db
 	ErrScanMetadata = New("failed to scan metadata in db")
-
-	// ErrFailedFetch indicates that fetching of entity data failed.
-	ErrFailedFetch = New("failed to fetch entity")
-
-	// ErrFailedConnect indicates that connecting thing to channel failed.
-	ErrFailedConnect = New("failed to connect thing to channel")
 )

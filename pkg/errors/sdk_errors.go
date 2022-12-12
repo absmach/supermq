@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	JSONKeyNotFound = errors.New("response body expected error message json key not found")
-	UnknownErr      = errors.New("unknown error")
+	ErrJSONKeyNotFound = errors.New("response body expected error message json key not found")
+	ErrUnknown         = errors.New("unknown error")
 )
 
 const err = "error"
@@ -89,8 +89,8 @@ func CheckError(resp *http.Response, expectedStatusCodes ...int) SDKError {
 		if v, ok := msg.(string); ok {
 			return NewSDKErrorWithStatus(errors.New(v), resp.StatusCode)
 		}
-		return NewSDKErrorWithStatus(UnknownErr, resp.StatusCode)
+		return NewSDKErrorWithStatus(ErrUnknown, resp.StatusCode)
 	}
 
-	return NewSDKErrorWithStatus(JSONKeyNotFound, resp.StatusCode)
+	return NewSDKErrorWithStatus(ErrJSONKeyNotFound, resp.StatusCode)
 }

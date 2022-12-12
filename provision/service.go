@@ -23,6 +23,7 @@ var (
 	ErrUnauthorized             = errors.New("unauthorized access")
 	ErrFailedToCreateToken      = errors.New("failed to create access token")
 	ErrEmptyThingsList          = errors.New("things list in configuration empty")
+	ErrThingUpdate              = errors.New("failed to update thing")
 	ErrEmptyChannelsList        = errors.New("channels list in configuration is empty")
 	ErrFailedChannelCreation    = errors.New("failed to create channel")
 	ErrFailedChannelRetrieval   = errors.New("failed to retrieve channel")
@@ -34,7 +35,6 @@ var (
 	ErrFailedBootstrap          = errors.New("failed to create bootstrap config")
 	ErrFailedBootstrapValidate  = errors.New("failed to validate bootstrap config creation")
 	ErrGatewayUpdate            = errors.New("failed to updated gateway metadata")
-	ErrFailedWhitelist          = errors.New("failed to whitelist")
 
 	limit  uint = 10
 	offset uint = 0
@@ -240,7 +240,7 @@ func (ps *provisionService) Provision(token, name, externalID, externalKey strin
 			}
 			if err := ps.sdk.Whitelist(token, wlReq); err != nil {
 				res.Error = err.Error()
-				return res, ErrFailedWhitelist
+				return res, ErrThingUpdate
 			}
 			res.Whitelisted[thing.ID] = true
 		}
@@ -384,7 +384,7 @@ func (ps *provisionService) recover(e *error, ths *[]SDK.Thing, chs *[]SDK.Chann
 		}
 	}
 
-	if errors.Contains(err, ErrFailedWhitelist) || errors.Contains(err, ErrGatewayUpdate) {
+	if errors.Contains(err, ErrThingUpdate) || errors.Contains(err, ErrGatewayUpdate) {
 		clean(ps, things, channels, token)
 		for _, th := range things {
 			if ps.conf.Bootstrap.X509Provision && needsBootstrap(th) {
