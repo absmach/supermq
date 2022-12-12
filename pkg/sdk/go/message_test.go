@@ -73,7 +73,7 @@ func TestSendMessage(t *testing.T) {
 			chanID: chanID,
 			msg:    msg,
 			auth:   invalidToken,
-			err:    errors.NewSDKError(errors.New(eof)),
+			err:    errors.NewSDKErrorWithStatus(errors.New(eof), http.StatusUnauthorized),
 		},
 		"publish message with wrong content type": {
 			chanID: chanID,
@@ -91,7 +91,7 @@ func TestSendMessage(t *testing.T) {
 			chanID: chanID,
 			msg:    msg,
 			auth:   "invalid-token",
-			err:    errors.NewSDKError(errors.New(eof)),
+			err:    errors.NewSDKErrorWithStatus(errors.New(eof), http.StatusUnauthorized),
 		},
 	}
 	for desc, tc := range cases {
@@ -99,7 +99,7 @@ func TestSendMessage(t *testing.T) {
 		if tc.err == nil {
 			assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s", desc, err))
 		} else {
-			assert.Equal(t, tc.err.Error(), err.Error(), fmt.Sprintf("%s: expected error %s, got %s", desc, tc.err, err))
+			assert.Equal(t, tc.err.Error(), err.Error(), fmt.Sprintf("%s: expected error %s, got %s", desc, err, tc.err))
 		}
 	}
 }

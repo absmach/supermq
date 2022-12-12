@@ -6,6 +6,7 @@ package errors
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 )
 
@@ -33,18 +34,10 @@ func (ce *sdkError) Error() string {
 	if ce == nil {
 		return ""
 	}
-	if ce.err == nil {
-		return ce.msg
+	if ce.customError == nil {
+		return http.StatusText(ce.statusCode)
 	}
-	return ce.msg + " : " + ce.err.Error()
-}
-
-func (ce *sdkError) Msg() string {
-	return ce.msg
-}
-
-func (ce *sdkError) Err() Error {
-	return ce.err
+	return fmt.Sprintf("Status: %s: %s", http.StatusText(ce.statusCode), ce.customError.Error())
 }
 
 func (ce *sdkError) StatusCode() int {
@@ -58,6 +51,7 @@ func NewSDKError(err error) SDKError {
 			msg: err.Error(),
 			err: nil,
 		},
+		statusCode: 0,
 	}
 }
 
