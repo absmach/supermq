@@ -82,39 +82,20 @@ func (sdk mfSDK) Whitelist(token string, cfg BootstrapConfig) errors.SDKError {
 	}
 
 	url := fmt.Sprintf("%s/%s/%s", sdk.bootstrapURL, whitelistEndpoint, cfg.MFThing)
-	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
 
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	return errors.CheckError(resp, http.StatusCreated, http.StatusOK)
+	_, sdkerr := sdk.sendRequestAndGetBodyOrError(http.MethodPut, url, data, token, string(CTJSON), http.StatusCreated, http.StatusOK)
+	return sdkerr
 }
 
 func (sdk mfSDK) ViewBootstrap(token, id string) (BootstrapConfig, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.bootstrapURL, configsEndpoint, id)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	body, err := sdk.sendRequestAndGetBodyOrError(http.MethodGet, url, nil, token, string(CTJSON), http.StatusOK)
 	if err != nil {
-		return BootstrapConfig{}, errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return BootstrapConfig{}, errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	if err := errors.CheckError(resp, http.StatusOK); err != nil {
 		return BootstrapConfig{}, err
 	}
 
 	var bc BootstrapConfig
-	if err := json.NewDecoder(resp.Body).Decode(&bc); err != nil {
+	if err := json.Unmarshal(body, &bc); err != nil {
 		return BootstrapConfig{}, errors.NewSDKError(err)
 	}
 
@@ -128,19 +109,8 @@ func (sdk mfSDK) UpdateBootstrap(token string, cfg BootstrapConfig) errors.SDKEr
 	}
 
 	url := fmt.Sprintf("%s/%s/%s", sdk.bootstrapURL, configsEndpoint, cfg.MFThing)
-
-	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	return errors.CheckError(resp, http.StatusOK)
+	_, sdkerr := sdk.sendRequestAndGetBodyOrError(http.MethodPut, url, data, token, string(CTJSON), http.StatusOK)
+	return sdkerr
 }
 func (sdk mfSDK) UpdateBootstrapCerts(token, id, clientCert, clientKey, ca string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s", sdk.bootstrapURL, bootstrapCertsEndpoint, id)
@@ -154,55 +124,26 @@ func (sdk mfSDK) UpdateBootstrapCerts(token, id, clientCert, clientKey, ca strin
 	if err != nil {
 		return errors.NewSDKError(err)
 	}
-	req, err := http.NewRequest(http.MethodPatch, url, bytes.NewReader(data))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
 
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	return errors.CheckError(resp, http.StatusOK)
+	_, sdkerr := sdk.sendRequestAndGetBodyOrError(http.MethodPatch, url, data, token, string(CTJSON), http.StatusOK)
+	return sdkerr
 }
 
 func (sdk mfSDK) RemoveBootstrap(token, id string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s", sdk.bootstrapURL, configsEndpoint, id)
-	req, err := http.NewRequest(http.MethodDelete, url, nil)
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	return errors.CheckError(resp, http.StatusNoContent)
+	_, err := sdk.sendRequestAndGetBodyOrError(http.MethodDelete, url, nil, token, string(CTJSON), http.StatusNoContent)
+	return err
 }
 
 func (sdk mfSDK) Bootstrap(externalKey, externalID string) (BootstrapConfig, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.bootstrapURL, bootstrapEndpoint, externalID)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	body, err := sdk.sendRequestAndGetBodyOrError(http.MethodGet, url, nil, externalKey, string(CTJSON), http.StatusOK)
 	if err != nil {
-		return BootstrapConfig{}, errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, externalKey, string(CTJSON))
-	if err != nil {
-		return BootstrapConfig{}, errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	if err := errors.CheckError(resp, http.StatusOK); err != nil {
 		return BootstrapConfig{}, err
 	}
 
 	var bc BootstrapConfig
-	if err := json.NewDecoder(resp.Body).Decode(&bc); err != nil {
+	if err := json.Unmarshal(body, &bc); err != nil {
 		return BootstrapConfig{}, errors.NewSDKError(err)
 	}
 

@@ -4,7 +4,6 @@
 package sdk
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -38,23 +37,13 @@ func (sdk mfSDK) Issue(token string, d time.Duration) (KeyRes, errors.SDKError) 
 
 	url := fmt.Sprintf("%s/%s", sdk.authURL, keysEndpoint)
 
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
-	if err != nil {
-		return KeyRes{}, errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return KeyRes{}, errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	if err := errors.CheckError(resp, http.StatusCreated); err != nil {
-		return KeyRes{}, err
+	body, sdkerr := sdk.sendRequestAndGetBodyOrError(http.MethodPost, url, data, token, string(CTJSON), http.StatusCreated)
+	if sdkerr != nil {
+		return KeyRes{}, sdkerr
 	}
 
 	var key KeyRes
-	if err := json.NewDecoder(resp.Body).Decode(&key); err != nil {
+	if err := json.Unmarshal(body, &key); err != nil {
 		return KeyRes{}, errors.NewSDKError(err)
 	}
 
@@ -63,39 +52,19 @@ func (sdk mfSDK) Issue(token string, d time.Duration) (KeyRes, errors.SDKError) 
 
 func (sdk mfSDK) Revoke(id, token string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s", sdk.authURL, keysEndpoint, id)
-	req, err := http.NewRequest(http.MethodDelete, url, nil)
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	return errors.CheckError(resp, http.StatusNoContent)
+	_, err := sdk.sendRequestAndGetBodyOrError(http.MethodDelete, url, nil, token, string(CTJSON), http.StatusNoContent)
+	return err
 }
 
 func (sdk mfSDK) RetrieveKey(id, token string) (retrieveKeyRes, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.authURL, keysEndpoint, id)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	body, err := sdk.sendRequestAndGetBodyOrError(http.MethodGet, url, nil, token, string(CTJSON), http.StatusOK)
 	if err != nil {
-		return retrieveKeyRes{}, errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return retrieveKeyRes{}, errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	if err := errors.CheckError(resp, http.StatusOK); err != nil {
 		return retrieveKeyRes{}, err
 	}
 
 	var key retrieveKeyRes
-	if err := json.NewDecoder(resp.Body).Decode(&key); err != nil {
+	if err := json.Unmarshal(body, &key); err != nil {
 		return retrieveKeyRes{}, errors.NewSDKError(err)
 	}
 

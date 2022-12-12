@@ -62,23 +62,13 @@ func (sdk mfSDK) CreateThings(things []Thing, token string) ([]Thing, errors.SDK
 
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, thingsEndpoint, "bulk")
 
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
-	if err != nil {
-		return []Thing{}, errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return []Thing{}, errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	if err := errors.CheckError(resp, http.StatusCreated); err != nil {
-		return []Thing{}, err
+	body, sdkerr := sdk.sendRequestAndGetBodyOrError(http.MethodPost, url, data, token, string(CTJSON), http.StatusCreated)
+	if sdkerr != nil {
+		return []Thing{}, sdkerr
 	}
 
 	var ctr createThingsRes
-	if err := json.NewDecoder(resp.Body).Decode(&ctr); err != nil {
+	if err := json.Unmarshal(body, &ctr); err != nil {
 		return []Thing{}, errors.NewSDKError(err)
 	}
 
@@ -92,23 +82,13 @@ func (sdk mfSDK) Things(token string, pm PageMetadata) (ThingsPage, errors.SDKEr
 		return ThingsPage{}, errors.NewSDKError(err)
 	}
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return ThingsPage{}, errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return ThingsPage{}, errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	if err := errors.CheckError(resp, http.StatusOK); err != nil {
-		return ThingsPage{}, err
+	body, sdkerr := sdk.sendRequestAndGetBodyOrError(http.MethodGet, url, nil, token, string(CTJSON), http.StatusOK)
+	if sdkerr != nil {
+		return ThingsPage{}, sdkerr
 	}
 
 	var tp ThingsPage
-	if err := json.NewDecoder(resp.Body).Decode(&tp); err != nil {
+	if err := json.Unmarshal(body, &tp); err != nil {
 		return ThingsPage{}, errors.NewSDKError(err)
 	}
 
@@ -118,23 +98,13 @@ func (sdk mfSDK) Things(token string, pm PageMetadata) (ThingsPage, errors.SDKEr
 func (sdk mfSDK) ThingsByChannel(token, chanID string, offset, limit uint64, disconn bool) (ThingsPage, errors.SDKError) {
 	url := fmt.Sprintf("%s/channels/%s/things?offset=%d&limit=%d&disconnected=%t", sdk.thingsURL, chanID, offset, limit, disconn)
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	body, err := sdk.sendRequestAndGetBodyOrError(http.MethodGet, url, nil, token, string(CTJSON), http.StatusOK)
 	if err != nil {
-		return ThingsPage{}, errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return ThingsPage{}, errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	if err := errors.CheckError(resp, http.StatusOK); err != nil {
 		return ThingsPage{}, err
 	}
 
 	var tp ThingsPage
-	if err := json.NewDecoder(resp.Body).Decode(&tp); err != nil {
+	if err := json.Unmarshal(body, &tp); err != nil {
 		return ThingsPage{}, errors.NewSDKError(err)
 	}
 
@@ -144,23 +114,13 @@ func (sdk mfSDK) ThingsByChannel(token, chanID string, offset, limit uint64, dis
 func (sdk mfSDK) Thing(id, token string) (Thing, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, thingsEndpoint, id)
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	body, err := sdk.sendRequestAndGetBodyOrError(http.MethodGet, url, nil, token, string(CTJSON), http.StatusOK)
 	if err != nil {
-		return Thing{}, errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return Thing{}, errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	if err := errors.CheckError(resp, http.StatusOK); err != nil {
 		return Thing{}, err
 	}
 
 	var t Thing
-	if err := json.NewDecoder(resp.Body).Decode(&t); err != nil {
+	if err := json.Unmarshal(body, &t); err != nil {
 		return Thing{}, errors.NewSDKError(err)
 	}
 
@@ -175,35 +135,15 @@ func (sdk mfSDK) UpdateThing(t Thing, token string) errors.SDKError {
 
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, thingsEndpoint, t.ID)
 
-	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	return errors.CheckError(resp, http.StatusOK)
+	_, sdkerr := sdk.sendRequestAndGetBodyOrError(http.MethodPut, url, data, token, string(CTJSON), http.StatusOK)
+	return sdkerr
 }
 
 func (sdk mfSDK) DeleteThing(id, token string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, thingsEndpoint, id)
 
-	req, err := http.NewRequest(http.MethodDelete, url, nil)
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	return errors.CheckError(resp, http.StatusNoContent)
+	_, err := sdk.sendRequestAndGetBodyOrError(http.MethodDelete, url, nil, token, string(CTJSON), http.StatusNoContent)
+	return err
 }
 
 func (sdk mfSDK) IdentifyThing(key string) (string, errors.SDKError) {
@@ -215,23 +155,13 @@ func (sdk mfSDK) IdentifyThing(key string) (string, errors.SDKError) {
 
 	url := fmt.Sprintf("%s/%s", sdk.thingsURL, identifyEndpoint)
 
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
-	if err != nil {
-		return "", errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, "", string(CTJSON))
-	if err != nil {
-		return "", errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	if err := errors.CheckError(resp, http.StatusOK); err != nil {
-		return "", err
+	body, sdkerr := sdk.sendRequestAndGetBodyOrError(http.MethodPost, url, data, "", string(CTJSON), http.StatusOK)
+	if sdkerr != nil {
+		return "", sdkerr
 	}
 
 	var i identifyThingResp
-	if err := json.NewDecoder(resp.Body).Decode(&i); err != nil {
+	if err := json.Unmarshal(body, &i); err != nil {
 		return "", errors.NewSDKError(err)
 	}
 
@@ -246,32 +176,13 @@ func (sdk mfSDK) Connect(connIDs ConnectionIDs, token string) errors.SDKError {
 
 	url := fmt.Sprintf("%s/%s", sdk.thingsURL, connectEndpoint)
 
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	return errors.CheckError(resp, http.StatusOK)
+	_, sdkerr := sdk.sendRequestAndGetBodyOrError(http.MethodPost, url, data, token, string(CTJSON), http.StatusOK)
+	return sdkerr
 }
 
 func (sdk mfSDK) DisconnectThing(thingID, chanID, token string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.thingsURL, channelsEndpoint, chanID, thingsEndpoint, thingID)
-	req, err := http.NewRequest(http.MethodDelete, url, nil)
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
 
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	return errors.CheckError(resp, http.StatusNoContent)
+	_, err := sdk.sendRequestAndGetBodyOrError(http.MethodDelete, url, nil, token, string(CTJSON), http.StatusNoContent)
+	return err
 }

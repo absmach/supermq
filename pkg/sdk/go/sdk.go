@@ -4,9 +4,11 @@
 package sdk
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -297,6 +299,38 @@ func NewSDK(conf Config) SDK {
 			},
 		},
 	}
+}
+
+func (sdk mfSDK) sendRequestAndGetBodyOrError(method, url string, data []byte, token, contentType string, expectedResponseCode ...int) ([]byte, errors.SDKError) {
+	req, err := http.NewRequest(method, url, bytes.NewReader(data))
+	if err != nil {
+		return []byte{}, errors.NewSDKError(err)
+	}
+
+	if token != "" {
+		req.Header.Set("Authorization", apiutil.BearerPrefix+token)
+	}
+	if contentType != "" {
+		req.Header.Add("Content-Type", contentType)
+	}
+
+	resp, err := sdk.client.Do(req)
+	if err != nil {
+		return []byte{}, errors.NewSDKError(err)
+	}
+	defer resp.Body.Close()
+
+	sdkerr := errors.CheckError(resp, expectedResponseCode...)
+	if sdkerr != nil {
+		return []byte{}, sdkerr
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return []byte{}, errors.NewSDKError(err)
+	}
+
+	return body, nil
 }
 
 func (sdk mfSDK) sendRequest(req *http.Request, token, contentType string) (*http.Response, error) {

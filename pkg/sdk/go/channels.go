@@ -81,23 +81,13 @@ func (sdk mfSDK) Channels(token string, pm PageMetadata) (ChannelsPage, errors.S
 		return ChannelsPage{}, errors.NewSDKError(err)
 	}
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return ChannelsPage{}, errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return ChannelsPage{}, errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	if err := errors.CheckError(resp, http.StatusOK); err != nil {
-		return ChannelsPage{}, err
+	body, sdkerr := sdk.sendRequestAndGetBodyOrError(http.MethodGet, url, nil, token, string(CTJSON), http.StatusOK)
+	if sdkerr != nil {
+		return ChannelsPage{}, sdkerr
 	}
 
 	var cp ChannelsPage
-	if err := json.NewDecoder(resp.Body).Decode(&cp); err != nil {
+	if err = json.Unmarshal(body, &cp); err != nil {
 		return ChannelsPage{}, errors.NewSDKError(err)
 	}
 
@@ -107,23 +97,13 @@ func (sdk mfSDK) Channels(token string, pm PageMetadata) (ChannelsPage, errors.S
 func (sdk mfSDK) ChannelsByThing(token, thingID string, offset, limit uint64, disconn bool) (ChannelsPage, errors.SDKError) {
 	url := fmt.Sprintf("%s/things/%s/channels?offset=%d&limit=%d&disconnected=%t", sdk.thingsURL, thingID, offset, limit, disconn)
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	body, err := sdk.sendRequestAndGetBodyOrError(http.MethodGet, url, nil, token, string(CTJSON), http.StatusOK)
 	if err != nil {
-		return ChannelsPage{}, errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return ChannelsPage{}, errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	if err := errors.CheckError(resp, http.StatusOK); err != nil {
 		return ChannelsPage{}, err
 	}
 
 	var cp ChannelsPage
-	if err := json.NewDecoder(resp.Body).Decode(&cp); err != nil {
+	if err := json.Unmarshal(body, &cp); err != nil {
 		return ChannelsPage{}, errors.NewSDKError(err)
 	}
 
@@ -133,23 +113,13 @@ func (sdk mfSDK) ChannelsByThing(token, thingID string, offset, limit uint64, di
 func (sdk mfSDK) Channel(id, token string) (Channel, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, channelsEndpoint, id)
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	body, err := sdk.sendRequestAndGetBodyOrError(http.MethodGet, url, nil, token, string(CTJSON), http.StatusOK)
 	if err != nil {
-		return Channel{}, errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return Channel{}, errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	if err := errors.CheckError(resp, http.StatusOK); err != nil {
 		return Channel{}, err
 	}
 
 	var c Channel
-	if err := json.NewDecoder(resp.Body).Decode(&c); err != nil {
+	if err := json.Unmarshal(body, &c); err != nil {
 		return Channel{}, errors.NewSDKError(err)
 	}
 
@@ -164,33 +134,13 @@ func (sdk mfSDK) UpdateChannel(c Channel, token string) errors.SDKError {
 
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, channelsEndpoint, c.ID)
 
-	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	return errors.CheckError(resp, http.StatusOK)
+	_, sdkerr := sdk.sendRequestAndGetBodyOrError(http.MethodPut, url, data, token, string(CTJSON), http.StatusOK)
+	return sdkerr
 }
 
 func (sdk mfSDK) DeleteChannel(id, token string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, channelsEndpoint, id)
 
-	req, err := http.NewRequest(http.MethodDelete, url, nil)
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	return errors.CheckError(resp, http.StatusNoContent)
+	_, err := sdk.sendRequestAndGetBodyOrError(http.MethodDelete, url, nil, token, string(CTJSON), http.StatusNoContent)
+	return err
 }

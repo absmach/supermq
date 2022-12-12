@@ -50,23 +50,13 @@ func (sdk mfSDK) CreateUser(token string, u User) (string, errors.SDKError) {
 func (sdk mfSDK) User(userID, token string) (User, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.usersURL, usersEndpoint, userID)
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	body, err := sdk.sendRequestAndGetBodyOrError(http.MethodGet, url, nil, token, string(CTJSON), http.StatusOK)
 	if err != nil {
-		return User{}, errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return User{}, errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	if err := errors.CheckError(resp, http.StatusOK); err != nil {
 		return User{}, err
 	}
 
 	var u User
-	if err := json.NewDecoder(resp.Body).Decode(&u); err != nil {
+	if err := json.Unmarshal(body, &u); err != nil {
 		return User{}, errors.NewSDKError(err)
 	}
 
@@ -80,23 +70,14 @@ func (sdk mfSDK) Users(token string, pm PageMetadata) (UsersPage, errors.SDKErro
 	if url, err = sdk.withQueryParams(sdk.usersURL, usersEndpoint, pm); err != nil {
 		return UsersPage{}, errors.NewSDKError(err)
 	}
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return UsersPage{}, errors.NewSDKError(err)
-	}
 
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return UsersPage{}, errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	if err := errors.CheckError(resp, http.StatusOK); err != nil {
-		return UsersPage{}, err
+	body, sdkerr := sdk.sendRequestAndGetBodyOrError(http.MethodGet, url, nil, token, string(CTJSON), http.StatusOK)
+	if sdkerr != nil {
+		return UsersPage{}, sdkerr
 	}
 
 	var up UsersPage
-	if err := json.NewDecoder(resp.Body).Decode(&up); err != nil {
+	if err := json.Unmarshal(body, &up); err != nil {
 		return UsersPage{}, errors.NewSDKError(err)
 	}
 
@@ -111,18 +92,13 @@ func (sdk mfSDK) CreateToken(user User) (string, errors.SDKError) {
 
 	url := fmt.Sprintf("%s/%s", sdk.usersURL, tokensEndpoint)
 
-	resp, err := sdk.client.Post(url, string(CTJSON), bytes.NewReader(data))
-	if err != nil {
-		return "", errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	if err := errors.CheckError(resp, http.StatusCreated); err != nil {
-		return "", err
+	body, sdkerr := sdk.sendRequestAndGetBodyOrError(http.MethodPost, url, data, "", string(CTJSON), http.StatusCreated)
+	if sdkerr != nil {
+		return "", sdkerr
 	}
 
 	var tr tokenRes
-	if err := json.NewDecoder(resp.Body).Decode(&tr); err != nil {
+	if err := json.Unmarshal(body, &tr); err != nil {
 		return "", errors.NewSDKError(err)
 	}
 
@@ -137,18 +113,8 @@ func (sdk mfSDK) UpdateUser(u User, token string) errors.SDKError {
 
 	url := fmt.Sprintf("%s/%s", sdk.usersURL, usersEndpoint)
 
-	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	return errors.CheckError(resp, http.StatusOK)
+	_, sdkerr := sdk.sendRequestAndGetBodyOrError(http.MethodPut, url, data, token, string(CTJSON), http.StatusOK)
+	return sdkerr
 }
 
 func (sdk mfSDK) UpdatePassword(oldPass, newPass, token string) errors.SDKError {
@@ -163,50 +129,18 @@ func (sdk mfSDK) UpdatePassword(oldPass, newPass, token string) errors.SDKError 
 
 	url := fmt.Sprintf("%s/%s", sdk.usersURL, passwordEndpoint)
 
-	req, err := http.NewRequest(http.MethodPatch, url, bytes.NewReader(data))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	return errors.CheckError(resp, http.StatusCreated)
+	_, sdkerr := sdk.sendRequestAndGetBodyOrError(http.MethodPatch, url, data, token, string(CTJSON), http.StatusCreated)
+	return sdkerr
 }
 
 func (sdk mfSDK) EnableUser(id, token string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s/enable", sdk.usersURL, usersEndpoint, id)
-
-	req, err := http.NewRequest(http.MethodPost, url, nil)
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	return errors.CheckError(resp, http.StatusNoContent)
+	_, err := sdk.sendRequestAndGetBodyOrError(http.MethodPost, url, nil, token, string(CTJSON), http.StatusNoContent)
+	return err
 }
 
 func (sdk mfSDK) DisableUser(id, token string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s/disable", sdk.usersURL, usersEndpoint, id)
-
-	req, err := http.NewRequest(http.MethodPost, url, nil)
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	return errors.CheckError(resp, http.StatusNoContent)
+	_, err := sdk.sendRequestAndGetBodyOrError(http.MethodPost, url, nil, token, string(CTJSON), http.StatusNoContent)
+	return err
 }

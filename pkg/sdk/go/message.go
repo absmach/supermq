@@ -50,23 +50,13 @@ func (sdk mfSDK) ReadMessages(chanName, token string) (MessagesPage, errors.SDKE
 
 	url := fmt.Sprintf("%s/channels/%s/messages%s", sdk.readerURL, chanID, subtopicPart)
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	body, err := sdk.sendRequestAndGetBodyOrError(http.MethodGet, url, nil, token, string(sdk.msgContentType), http.StatusOK)
 	if err != nil {
-		return MessagesPage{}, errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(sdk.msgContentType))
-	if err != nil {
-		return MessagesPage{}, errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	if err := errors.CheckError(resp, http.StatusOK); err != nil {
 		return MessagesPage{}, err
 	}
 
 	var mp MessagesPage
-	if err := json.NewDecoder(resp.Body).Decode(&mp); err != nil {
+	if err := json.Unmarshal(body, &mp); err != nil {
 		return MessagesPage{}, errors.NewSDKError(err)
 	}
 
