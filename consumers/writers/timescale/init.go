@@ -11,13 +11,6 @@ import (
 	migrate "github.com/rubenv/sql-migrate"
 )
 
-// Postgres error codes:
-// https://www.postgresql.org/docs/current/errcodes-appendix.html
-const (
-	errInvalid        = "22P02" // invalid input value
-	errUndefinedTable = "42P01" // relation does not exist
-)
-
 // Config defines the options that are used when connecting to a TimescaleSQL instance
 type Config struct {
 	Host        string

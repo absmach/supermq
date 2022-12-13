@@ -12,6 +12,7 @@ import (
 
 	"github.com/gofrs/uuid"
 
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things"
@@ -51,11 +52,11 @@ func (tr thingRepository) Save(ctx context.Context, ths ...things.Thing) ([]thin
 			pgErr, ok := err.(*pgconn.PgError)
 			if ok {
 				switch pgErr.Code {
-				case errInvalid:
+				case pgerrcode.InvalidTextRepresentation:
 					return []things.Thing{}, errors.Wrap(errors.ErrMalformedEntity, err)
-				case errDuplicate:
+				case pgerrcode.UniqueViolation:
 					return []things.Thing{}, errors.Wrap(errors.ErrConflict, err)
-				case errTooLong:
+				case pgerrcode.StringDataRightTruncationDataException:
 					return []things.Thing{}, errors.Wrap(errors.ErrMalformedEntity, err)
 				}
 			}
@@ -84,9 +85,9 @@ func (tr thingRepository) Update(ctx context.Context, t things.Thing) error {
 		pgErr, ok := errdb.(*pgconn.PgError)
 		if ok {
 			switch pgErr.Code {
-			case errInvalid:
+			case pgerrcode.InvalidTextRepresentation:
 				return errors.Wrap(errors.ErrMalformedEntity, errdb)
-			case errTooLong:
+			case pgerrcode.StringDataRightTruncationDataException:
 				return errors.Wrap(errors.ErrMalformedEntity, err)
 			}
 		}
@@ -120,11 +121,11 @@ func (tr thingRepository) UpdateKey(ctx context.Context, owner, id, key string) 
 		pgErr, ok := err.(*pgconn.PgError)
 		if ok {
 			switch pgErr.Code {
-			case errInvalid:
+			case pgerrcode.InvalidTextRepresentation:
 				return errors.Wrap(errors.ErrMalformedEntity, err)
-			case errDuplicate:
+			case pgerrcode.UniqueViolation:
 				return errors.Wrap(errors.ErrConflict, err)
-			case errTooLong:
+			case pgerrcode.StringDataRightTruncationDataException:
 				return errors.Wrap(errors.ErrMalformedEntity, err)
 			}
 		}
@@ -152,7 +153,7 @@ func (tr thingRepository) RetrieveByID(ctx context.Context, owner, id string) (t
 	if err := tr.db.QueryRowxContext(ctx, q, id).StructScan(&dbth); err != nil {
 		pgErr, ok := err.(*pgconn.PgError)
 		//  If there is no result or ID is in an invalid format, return ErrNotFound.
-		if err == sql.ErrNoRows || ok && errInvalid == pgErr.Code {
+		if err == sql.ErrNoRows || ok && pgerrcode.InvalidTextRepresentation == pgErr.Code {
 			return things.Thing{}, errors.Wrap(errors.ErrNotFound, err)
 		}
 		return things.Thing{}, errors.Wrap(errors.ErrViewEntity, err)

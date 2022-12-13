@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/mainflux/mainflux/auth"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -47,9 +48,9 @@ func (ur userRepository) Save(ctx context.Context, user users.User) (string, err
 		pgErr, ok := err.(*pgconn.PgError)
 		if ok {
 			switch pgErr.Code {
-			case errInvalid:
+			case pgerrcode.InvalidTextRepresentation:
 				return "", errors.Wrap(errors.ErrMalformedEntity, err)
-			case errDuplicate:
+			case pgerrcode.UniqueViolation:
 				return "", errors.Wrap(errors.ErrConflict, err)
 			}
 		}

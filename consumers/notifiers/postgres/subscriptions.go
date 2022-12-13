@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	notifiers "github.com/mainflux/mainflux/consumers/notifiers"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -39,7 +40,7 @@ func (repo subscriptionsRepo) Save(ctx context.Context, sub notifiers.Subscripti
 
 	row, err := repo.db.NamedQueryContext(ctx, q, dbSub)
 	if err != nil {
-		if pqErr, ok := err.(*pgconn.PgError); ok && pqErr.Code == errDuplicate {
+		if pqErr, ok := err.(*pgconn.PgError); ok && pqErr.Code == pgerrcode.UniqueViolation {
 			return "", errors.Wrap(errors.ErrConflict, err)
 		}
 		return "", errors.Wrap(errors.ErrCreateEntity, err)

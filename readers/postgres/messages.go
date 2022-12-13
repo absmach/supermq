@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx" // required for DB access
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -59,7 +60,7 @@ func (tr postgresRepository) ReadAll(chanID string, rpm readers.PageMetadata) (r
 	rows, err := tr.db.NamedQuery(q, params)
 	if err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok {
-			if pgErr.Code == errUndefinedTable {
+			if pgErr.Code == pgerrcode.UndefinedTable {
 				return readers.MessagesPage{}, nil
 			}
 		}

@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things"
@@ -55,11 +56,11 @@ func (cr channelRepository) Save(ctx context.Context, channels ...things.Channel
 			pgErr, ok := err.(*pgconn.PgError)
 			if ok {
 				switch pgErr.Code {
-				case errInvalid:
+				case pgerrcode.InvalidTextRepresentation:
 					return []things.Channel{}, errors.Wrap(errors.ErrMalformedEntity, err)
-				case errDuplicate:
+				case pgerrcode.UniqueViolation:
 					return []things.Channel{}, errors.Wrap(errors.ErrConflict, err)
-				case errTooLong:
+				case pgerrcode.StringDataRightTruncationDataException:
 					return []things.Channel{}, errors.Wrap(errors.ErrMalformedEntity, err)
 				}
 			}
@@ -84,9 +85,9 @@ func (cr channelRepository) Update(ctx context.Context, channel things.Channel) 
 		pgErr, ok := err.(*pgconn.PgError)
 		if ok {
 			switch pgErr.Code {
-			case errInvalid:
+			case pgerrcode.InvalidTextRepresentation:
 				return errors.Wrap(errors.ErrMalformedEntity, err)
-			case errTooLong:
+			case pgerrcode.StringDataRightTruncationDataException:
 				return errors.Wrap(errors.ErrMalformedEntity, err)
 			}
 		}
@@ -116,7 +117,7 @@ func (cr channelRepository) RetrieveByID(ctx context.Context, owner, id string) 
 	if err := cr.db.QueryRowxContext(ctx, q, id).StructScan(&dbch); err != nil {
 		pgErr, ok := err.(*pgconn.PgError)
 		//  If there is no result or ID is in an invalid format, return ErrNotFound.
-		if err == sql.ErrNoRows || ok && errInvalid == pgErr.Code {
+		if err == sql.ErrNoRows || ok && pgerrcode.InvalidTextRepresentation == pgErr.Code {
 			return things.Channel{}, errors.ErrNotFound
 		}
 		return things.Channel{}, errors.Wrap(errors.ErrViewEntity, err)
@@ -317,9 +318,9 @@ func (cr channelRepository) Connect(ctx context.Context, owner string, chIDs, th
 				pgErr, ok := err.(*pgconn.PgError)
 				if ok {
 					switch pgErr.Code {
-					case errFK:
+					case pgerrcode.ForeignKeyViolation:
 						return errors.ErrNotFound
-					case errDuplicate:
+					case pgerrcode.UniqueViolation:
 						return errors.ErrConflict
 					}
 				}
@@ -360,9 +361,9 @@ func (cr channelRepository) Disconnect(ctx context.Context, owner string, chIDs,
 				pgErr, ok := err.(*pgconn.PgError)
 				if ok {
 					switch pgErr.Code {
-					case errFK:
+					case pgerrcode.ForeignKeyViolation:
 						return errors.ErrNotFound
-					case errDuplicate:
+					case pgerrcode.UniqueViolation:
 						return errors.ErrConflict
 					}
 				}

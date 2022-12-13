@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
@@ -54,7 +55,7 @@ func (cr configRepository) Save(cfg bootstrap.Config, chsConnIDs []string) (stri
 
 	if _, err := tx.NamedExec(q, dbcfg); err != nil {
 		e := err
-		if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == errDuplicate {
+		if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == pgerrcode.UniqueViolation {
 			e = errors.ErrConflict
 		}
 
@@ -286,7 +287,7 @@ func (cr configRepository) UpdateConnections(owner, id string, channels []bootst
 
 	if err := updateConnections(owner, id, connections, tx); err != nil {
 		if e, ok := err.(*pgconn.PgError); ok {
-			if e.Code == errFK {
+			if e.Code == pgerrcode.ForeignKeyViolation {
 				return errors.ErrNotFound
 			}
 		}
@@ -461,7 +462,7 @@ func insertChannels(owner string, channels []bootstrap.Channel, tx *sqlx.Tx) err
 		  VALUES (:mainflux_channel, :owner, :name, :metadata)`
 	if _, err := tx.NamedExec(q, chans); err != nil {
 		e := err
-		if pqErr, ok := err.(*pgconn.PgError); ok && pqErr.Code == errDuplicate {
+		if pqErr, ok := err.(*pgconn.PgError); ok && pqErr.Code == pgerrcode.UniqueViolation {
 			e = errors.ErrConflict
 		}
 		return e

@@ -9,19 +9,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib" // required for SQL access
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux/certs"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
-)
-
-// Postgres error codes:
-// https://www.postgresql.org/docs/current/errcodes-appendix.html
-const (
-	errDuplicate = "23505" // unique violation
-	errInvalid   = "22P02" // invalid input value for enum
 )
 
 var _ certs.Repository = (*certsRepository)(nil)
@@ -91,7 +85,7 @@ func (cr certsRepository) Save(ctx context.Context, cert certs.Cert) (string, er
 
 	if _, err := tx.NamedExec(q, dbcrt); err != nil {
 		e := err
-		if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == errDuplicate {
+		if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == pgerrcode.UniqueViolation {
 			e = errors.New("error conflict")
 		}
 
@@ -164,7 +158,7 @@ func (cr certsRepository) RetrieveBySerial(ctx context.Context, ownerID, serialI
 	if err := cr.db.QueryRowxContext(ctx, q, ownerID, serialID).StructScan(&dbcrt); err != nil {
 
 		pqErr, ok := err.(*pgconn.PgError)
-		if err == sql.ErrNoRows || ok && errInvalid == pqErr.Code {
+		if err == sql.ErrNoRows || ok && pgerrcode.InvalidTextRepresentation == pqErr.Code {
 			return c, errors.Wrap(errors.ErrNotFound, err)
 		}
 

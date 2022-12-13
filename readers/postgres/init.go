@@ -14,10 +14,6 @@ import (
 // Table for SenML messages
 const defTable = "messages"
 
-// Postgres error codes:
-// https://www.postgresql.org/docs/current/errcodes-appendix.html
-const errUndefinedTable = "42P01" // relation does not exist
-
 // Config defines the options that are used when connecting to a PostgreSQL instance
 type Config struct {
 	Host        string

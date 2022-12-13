@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx" // required for DB access
 	"github.com/mainflux/mainflux/consumers"
@@ -78,7 +79,7 @@ func (tr timescaleRepo) saveSenml(messages interface{}) (err error) {
 			pgErr, ok := err.(*pgconn.PgError)
 			if ok {
 				switch pgErr.Code {
-				case errInvalid:
+				case pgerrcode.InvalidTextRepresentation:
 					return errors.Wrap(errSaveMessage, errInvalidMessage)
 				}
 			}
@@ -134,9 +135,9 @@ func (tr timescaleRepo) insertJSON(msgs mfjson.Messages) error {
 			pgErr, ok := err.(*pgconn.PgError)
 			if ok {
 				switch pgErr.Code {
-				case errInvalid:
+				case pgerrcode.InvalidTextRepresentation:
 					return errors.Wrap(errSaveMessage, errInvalidMessage)
-				case errUndefinedTable:
+				case pgerrcode.UndefinedTable:
 					return errNoTable
 				}
 			}

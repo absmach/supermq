@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx" // required for DB access
 	"github.com/mainflux/mainflux/consumers"
@@ -83,7 +84,7 @@ func (pr postgresRepo) saveSenml(messages interface{}) (err error) {
 			pgErr, ok := err.(*pgconn.PgError)
 			if ok {
 				switch pgErr.Code {
-				case errInvalid:
+				case pgerrcode.InvalidTextRepresentation:
 					return errors.Wrap(errSaveMessage, errInvalidMessage)
 				}
 			}
@@ -140,9 +141,9 @@ func (pr postgresRepo) insertJSON(msgs mfjson.Messages) error {
 			pgErr, ok := err.(*pgconn.PgError)
 			if ok {
 				switch pgErr.Code {
-				case errInvalid:
+				case pgerrcode.InvalidTextRepresentation:
 					return errors.Wrap(errSaveMessage, errInvalidMessage)
-				case errUndefinedTable:
+				case pgerrcode.UndefinedTable:
 					return errNoTable
 				}
 			}

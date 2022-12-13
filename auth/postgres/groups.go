@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
 
@@ -62,13 +63,13 @@ func (gr groupRepository) Save(ctx context.Context, g auth.Group) (auth.Group, e
 		pgErr, ok := err.(*pgconn.PgError)
 		if ok {
 			switch pgErr.Code {
-			case errInvalid:
+			case pgerrcode.InvalidTextRepresentation:
 				return auth.Group{}, errors.Wrap(errors.ErrMalformedEntity, err)
-			case errFK:
+			case pgerrcode.ForeignKeyViolation:
 				return auth.Group{}, errors.Wrap(errors.ErrCreateEntity, err)
-			case errDuplicate:
+			case pgerrcode.UniqueViolation:
 				return auth.Group{}, errors.Wrap(errors.ErrConflict, err)
-			case errTooLong:
+			case pgerrcode.StringDataRightTruncationDataException:
 				return auth.Group{}, errors.Wrap(errors.ErrMalformedEntity, err)
 			}
 		}
@@ -100,11 +101,11 @@ func (gr groupRepository) Update(ctx context.Context, g auth.Group) (auth.Group,
 		pgErr, ok := err.(*pgconn.PgError)
 		if ok {
 			switch pgErr.Code {
-			case errInvalid:
+			case pgerrcode.InvalidTextRepresentation:
 				return auth.Group{}, errors.Wrap(errors.ErrMalformedEntity, err)
-			case errDuplicate:
+			case pgerrcode.UniqueViolation:
 				return auth.Group{}, errors.Wrap(errors.ErrConflict, err)
-			case errTooLong:
+			case pgerrcode.StringDataRightTruncationDataException:
 				return auth.Group{}, errors.Wrap(errors.ErrMalformedEntity, err)
 			}
 		}
@@ -136,9 +137,9 @@ func (gr groupRepository) Delete(ctx context.Context, groupID string) error {
 		pqErr, ok := err.(*pgconn.PgError)
 		if ok {
 			switch pqErr.Code {
-			case errInvalid:
+			case pgerrcode.InvalidTextRepresentation:
 				return errors.Wrap(errors.ErrMalformedEntity, err)
-			case errFK:
+			case pgerrcode.ForeignKeyViolation:
 				switch pqErr.ConstraintName {
 				case groupIDFkeyy:
 					return errors.Wrap(auth.ErrGroupNotEmpty, err)
@@ -443,11 +444,11 @@ func (gr groupRepository) Assign(ctx context.Context, groupID, groupType string,
 			pgErr, ok := err.(*pgconn.PgError)
 			if ok {
 				switch pgErr.Code {
-				case errInvalid:
+				case pgerrcode.InvalidTextRepresentation:
 					return errors.Wrap(errors.ErrMalformedEntity, err)
-				case errFK:
+				case pgerrcode.ForeignKeyViolation:
 					return errors.Wrap(errors.ErrConflict, errors.New(pgErr.Detail))
-				case errDuplicate:
+				case pgerrcode.UniqueViolation:
 					return errors.Wrap(auth.ErrMemberAlreadyAssigned, errors.New(pgErr.Detail))
 				}
 			}
@@ -482,9 +483,9 @@ func (gr groupRepository) Unassign(ctx context.Context, groupID string, ids ...s
 			pgErr, ok := err.(*pgconn.PgError)
 			if ok {
 				switch pgErr.Code {
-				case errInvalid:
+				case pgerrcode.InvalidTextRepresentation:
 					return errors.Wrap(errors.ErrMalformedEntity, err)
-				case errDuplicate:
+				case pgerrcode.UniqueViolation:
 					return errors.Wrap(errors.ErrConflict, err)
 				}
 			}

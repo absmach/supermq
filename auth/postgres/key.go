@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/mainflux/mainflux/auth"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -35,7 +36,7 @@ func (kr repo) Save(ctx context.Context, key auth.Key) (string, error) {
 	dbKey := toDBKey(key)
 	if _, err := kr.db.NamedExecContext(ctx, q, dbKey); err != nil {
 
-		if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == errDuplicate {
+		if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == pgerrcode.UniqueViolation {
 			return "", errors.Wrap(errors.ErrConflict, err)
 		}
 
@@ -50,7 +51,7 @@ func (kr repo) Retrieve(ctx context.Context, issuerID, id string) (auth.Key, err
 	key := dbKey{}
 	if err := kr.db.QueryRowxContext(ctx, q, issuerID, id).StructScan(&key); err != nil {
 		pgErr, ok := err.(*pgconn.PgError)
-		if err == sql.ErrNoRows || ok && errInvalid == pgErr.Code {
+		if err == sql.ErrNoRows || ok && pgerrcode.InvalidTextRepresentation == pgErr.Code {
 			return auth.Key{}, errors.Wrap(errors.ErrNotFound, err)
 		}
 
