@@ -15,7 +15,7 @@ import (
 // https://www.postgresql.org/docs/current/errcodes-appendix.html
 const (
 	errDuplicate = "23505" // unique violation
-	errFK        = "23503"
+	errFK        = "23503" // foreign key violation
 )
 
 // Config defines the options that are used when connecting to a PostgreSQL instance
