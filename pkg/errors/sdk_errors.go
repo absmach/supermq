@@ -13,7 +13,6 @@ import (
 const err = "error"
 
 var (
-
 	// ErrJSONErrKey indicates response body did not contain erorr message.
 	errJSONErrKey = New("response body expected error message json key not found")
 
