@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
@@ -22,22 +23,24 @@ func (sdk mfSDK) SendMessage(chanName, msg, key string) errors.SDKError {
 
 	url := fmt.Sprintf("%s/channels/%s/messages/%s", sdk.httpAdapterURL, chanID, subtopicPart)
 
-	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(msg))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
+	_, _, err := sdk.processRequest(http.MethodPost, url, []byte(msg), apiutil.ThingPrefix+key, string(CTJSON), http.StatusAccepted)
+	return err
+	// req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(msg))
+	// if err != nil {
+	// 	return errors.NewSDKError(err)
+	// }
 
-	resp, err := sdk.sendThingRequest(req, key, string(sdk.msgContentType))
-	if err != nil {
-		return errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
+	// resp, err := sdk.sendThingRequest(req, key, string(sdk.msgContentType))
+	// if err != nil {
+	// 	return errors.NewSDKError(err)
+	// }
+	// defer resp.Body.Close()
 
-	if err := errors.CheckError(resp, http.StatusAccepted); err != nil {
-		return err
-	}
+	// if err := errors.CheckError(resp, http.StatusAccepted); err != nil {
+	// 	return err
+	// }
 
-	return nil
+	// return nil
 }
 
 func (sdk mfSDK) ReadMessages(chanName, token string) (MessagesPage, errors.SDKError) {

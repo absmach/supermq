@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/mainflux/mainflux"
@@ -301,23 +302,6 @@ func NewSDK(conf Config) SDK {
 	}
 }
 
-func (sdk mfSDK) sendThingRequest(req *http.Request, key, contentType string) (*http.Response, error) {
-	if key != "" {
-		req.Header.Set("Authorization", apiutil.ThingPrefix+key)
-	}
-
-	if contentType != "" {
-		req.Header.Add("Content-Type", contentType)
-	}
-
-	resp, err := sdk.client.Do(req)
-	if err == nil {
-		return resp, nil
-	}
-
-	return resp, errors.NewSDKError(err)
-}
-
 func (sdk mfSDK) processRequest(method, url string, data []byte, token, contentType string, expectedResponseCode ...int) ([]byte, map[string][]string, errors.SDKError) {
 	req, err := http.NewRequest(method, url, bytes.NewReader(data))
 	if err != nil {
@@ -325,7 +309,11 @@ func (sdk mfSDK) processRequest(method, url string, data []byte, token, contentT
 	}
 
 	if token != "" {
-		req.Header.Set("Authorization", apiutil.BearerPrefix+token)
+		if strings.Contains(token, apiutil.ThingPrefix) {
+			req.Header.Set("Authorization", token)
+		} else {
+			req.Header.Set("Authorization", apiutil.BearerPrefix+token)
+		}
 	}
 	if contentType != "" {
 		req.Header.Add("Content-Type", contentType)
