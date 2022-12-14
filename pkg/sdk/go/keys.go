@@ -37,7 +37,7 @@ func (sdk mfSDK) Issue(token string, d time.Duration) (KeyRes, errors.SDKError) 
 
 	url := fmt.Sprintf("%s/%s", sdk.authURL, keysEndpoint)
 
-	body, sdkerr := sdk.processRequestBody(http.MethodPost, url, data, token, string(CTJSON), http.StatusCreated)
+	body, _, sdkerr := sdk.processRequest(http.MethodPost, url, data, token, string(CTJSON), http.StatusCreated)
 	if sdkerr != nil {
 		return KeyRes{}, sdkerr
 	}
@@ -52,13 +52,13 @@ func (sdk mfSDK) Issue(token string, d time.Duration) (KeyRes, errors.SDKError) 
 
 func (sdk mfSDK) Revoke(id, token string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s", sdk.authURL, keysEndpoint, id)
-	_, err := sdk.processRequestBody(http.MethodDelete, url, nil, token, string(CTJSON), http.StatusNoContent)
+	_, _, err := sdk.processRequest(http.MethodDelete, url, nil, token, string(CTJSON), http.StatusNoContent)
 	return err
 }
 
 func (sdk mfSDK) RetrieveKey(id, token string) (retrieveKeyRes, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.authURL, keysEndpoint, id)
-	body, err := sdk.processRequestBody(http.MethodGet, url, nil, token, string(CTJSON), http.StatusOK)
+	body, _, err := sdk.processRequest(http.MethodGet, url, nil, token, string(CTJSON), http.StatusOK)
 	if err != nil {
 		return retrieveKeyRes{}, err
 	}

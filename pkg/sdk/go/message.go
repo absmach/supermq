@@ -50,7 +50,7 @@ func (sdk mfSDK) ReadMessages(chanName, token string) (MessagesPage, errors.SDKE
 
 	url := fmt.Sprintf("%s/channels/%s/messages%s", sdk.readerURL, chanID, subtopicPart)
 
-	body, err := sdk.processRequestBody(http.MethodGet, url, nil, token, string(sdk.msgContentType), http.StatusOK)
+	body, _, err := sdk.processRequest(http.MethodGet, url, nil, token, string(sdk.msgContentType), http.StatusOK)
 	if err != nil {
 		return MessagesPage{}, err
 	}

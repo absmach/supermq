@@ -301,69 +301,6 @@ func NewSDK(conf Config) SDK {
 	}
 }
 
-func (sdk mfSDK) processRequestBody(method, url string, data []byte, token, contentType string, expectedResponseCode ...int) ([]byte, errors.SDKError) {
-	req, err := http.NewRequest(method, url, bytes.NewReader(data))
-	if err != nil {
-		return []byte{}, errors.NewSDKError(err)
-	}
-
-	if token != "" {
-		req.Header.Set("Authorization", apiutil.BearerPrefix+token)
-	}
-	if contentType != "" {
-		req.Header.Add("Content-Type", contentType)
-	}
-
-	resp, err := sdk.client.Do(req)
-	if err != nil {
-		return []byte{}, errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	sdkerr := errors.CheckError(resp, expectedResponseCode...)
-	if sdkerr != nil {
-		return []byte{}, sdkerr
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return []byte{}, errors.NewSDKError(err)
-	}
-
-	return body, nil
-}
-
-func (sdk mfSDK) processRequestHeaders(method, url string, data []byte, token, contentType string, expectedResponseCode ...int) (http.Header, errors.SDKError) {
-	req, err := http.NewRequest(method, url, bytes.NewReader(data))
-	if err != nil {
-		return make(http.Header), errors.NewSDKError(err)
-	}
-
-	if token != "" {
-		req.Header.Set("Authorization", apiutil.BearerPrefix+token)
-	}
-	if contentType != "" {
-		req.Header.Add("Content-Type", contentType)
-	}
-
-	resp, err := sdk.client.Do(req)
-	if err != nil {
-		return make(http.Header), errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	sdkerr := errors.CheckError(resp, expectedResponseCode...)
-	if sdkerr != nil {
-		return make(http.Header), sdkerr
-	}
-
-	if _, err := ioutil.ReadAll(resp.Body); err != nil {
-		return make(http.Header), errors.NewSDKError(err)
-	}
-
-	return resp.Header, nil
-}
-
 func (sdk mfSDK) sendThingRequest(req *http.Request, key, contentType string) (*http.Response, error) {
 	if key != "" {
 		req.Header.Set("Authorization", apiutil.ThingPrefix+key)
@@ -379,6 +316,38 @@ func (sdk mfSDK) sendThingRequest(req *http.Request, key, contentType string) (*
 	}
 
 	return resp, errors.NewSDKError(err)
+}
+
+func (sdk mfSDK) processRequest(method, url string, data []byte, token, contentType string, expectedResponseCode ...int) ([]byte, map[string][]string, errors.SDKError) {
+	req, err := http.NewRequest(method, url, bytes.NewReader(data))
+	if err != nil {
+		return []byte{}, make(map[string][]string), errors.NewSDKError(err)
+	}
+
+	if token != "" {
+		req.Header.Set("Authorization", apiutil.BearerPrefix+token)
+	}
+	if contentType != "" {
+		req.Header.Add("Content-Type", contentType)
+	}
+
+	resp, err := sdk.client.Do(req)
+	if err != nil {
+		return []byte{}, make(map[string][]string), errors.NewSDKError(err)
+	}
+	defer resp.Body.Close()
+
+	sdkerr := errors.CheckError(resp, expectedResponseCode...)
+	if sdkerr != nil {
+		return []byte{}, make(map[string][]string), sdkerr
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return []byte{}, make(map[string][]string), errors.NewSDKError(err)
+	}
+
+	return body, resp.Header, nil
 }
 
 func (sdk mfSDK) withQueryParams(baseURL, endpoint string, pm PageMetadata) (string, error) {
