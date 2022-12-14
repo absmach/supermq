@@ -26,7 +26,7 @@ func (sdk mfSDK) CreateUser(token string, u User) (string, errors.SDKError) {
 	}
 	url := fmt.Sprintf("%s/%s", sdk.usersURL, usersEndpoint)
 
-	headers, sdkerr := sdk.sendRequestAndGetHeadersOrError(http.MethodPost, url, data, token, string(CTJSON), http.StatusCreated)
+	headers, sdkerr := sdk.processRequestHeaders(http.MethodPost, url, data, token, string(CTJSON), http.StatusCreated)
 	if sdkerr != nil {
 		return "", sdkerr
 	}
@@ -38,7 +38,7 @@ func (sdk mfSDK) CreateUser(token string, u User) (string, errors.SDKError) {
 func (sdk mfSDK) User(userID, token string) (User, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.usersURL, usersEndpoint, userID)
 
-	body, err := sdk.sendRequestAndGetBodyOrError(http.MethodGet, url, nil, token, string(CTJSON), http.StatusOK)
+	body, err := sdk.processRequestBody(http.MethodGet, url, nil, token, string(CTJSON), http.StatusOK)
 	if err != nil {
 		return User{}, err
 	}
@@ -59,7 +59,7 @@ func (sdk mfSDK) Users(token string, pm PageMetadata) (UsersPage, errors.SDKErro
 		return UsersPage{}, errors.NewSDKError(err)
 	}
 
-	body, sdkerr := sdk.sendRequestAndGetBodyOrError(http.MethodGet, url, nil, token, string(CTJSON), http.StatusOK)
+	body, sdkerr := sdk.processRequestBody(http.MethodGet, url, nil, token, string(CTJSON), http.StatusOK)
 	if sdkerr != nil {
 		return UsersPage{}, sdkerr
 	}
@@ -80,7 +80,7 @@ func (sdk mfSDK) CreateToken(user User) (string, errors.SDKError) {
 
 	url := fmt.Sprintf("%s/%s", sdk.usersURL, tokensEndpoint)
 
-	body, sdkerr := sdk.sendRequestAndGetBodyOrError(http.MethodPost, url, data, "", string(CTJSON), http.StatusCreated)
+	body, sdkerr := sdk.processRequestBody(http.MethodPost, url, data, "", string(CTJSON), http.StatusCreated)
 	if sdkerr != nil {
 		return "", sdkerr
 	}
@@ -101,7 +101,7 @@ func (sdk mfSDK) UpdateUser(u User, token string) errors.SDKError {
 
 	url := fmt.Sprintf("%s/%s", sdk.usersURL, usersEndpoint)
 
-	_, sdkerr := sdk.sendRequestAndGetBodyOrError(http.MethodPut, url, data, token, string(CTJSON), http.StatusOK)
+	_, sdkerr := sdk.processRequestBody(http.MethodPut, url, data, token, string(CTJSON), http.StatusOK)
 	return sdkerr
 }
 
@@ -117,18 +117,18 @@ func (sdk mfSDK) UpdatePassword(oldPass, newPass, token string) errors.SDKError 
 
 	url := fmt.Sprintf("%s/%s", sdk.usersURL, passwordEndpoint)
 
-	_, sdkerr := sdk.sendRequestAndGetBodyOrError(http.MethodPatch, url, data, token, string(CTJSON), http.StatusCreated)
+	_, sdkerr := sdk.processRequestBody(http.MethodPatch, url, data, token, string(CTJSON), http.StatusCreated)
 	return sdkerr
 }
 
 func (sdk mfSDK) EnableUser(id, token string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s/enable", sdk.usersURL, usersEndpoint, id)
-	_, err := sdk.sendRequestAndGetBodyOrError(http.MethodPost, url, nil, token, string(CTJSON), http.StatusNoContent)
+	_, err := sdk.processRequestBody(http.MethodPost, url, nil, token, string(CTJSON), http.StatusNoContent)
 	return err
 }
 
 func (sdk mfSDK) DisableUser(id, token string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s/disable", sdk.usersURL, usersEndpoint, id)
-	_, err := sdk.sendRequestAndGetBodyOrError(http.MethodPost, url, nil, token, string(CTJSON), http.StatusNoContent)
+	_, err := sdk.processRequestBody(http.MethodPost, url, nil, token, string(CTJSON), http.StatusNoContent)
 	return err
 }

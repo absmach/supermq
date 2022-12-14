@@ -301,7 +301,7 @@ func NewSDK(conf Config) SDK {
 	}
 }
 
-func (sdk mfSDK) sendRequestAndGetBodyOrError(method, url string, data []byte, token, contentType string, expectedResponseCode ...int) ([]byte, errors.SDKError) {
+func (sdk mfSDK) processRequestBody(method, url string, data []byte, token, contentType string, expectedResponseCode ...int) ([]byte, errors.SDKError) {
 	req, err := http.NewRequest(method, url, bytes.NewReader(data))
 	if err != nil {
 		return []byte{}, errors.NewSDKError(err)
@@ -333,7 +333,7 @@ func (sdk mfSDK) sendRequestAndGetBodyOrError(method, url string, data []byte, t
 	return body, nil
 }
 
-func (sdk mfSDK) sendRequestAndGetHeadersOrError(method, url string, data []byte, token, contentType string, expectedResponseCode ...int) (http.Header, errors.SDKError) {
+func (sdk mfSDK) processRequestHeaders(method, url string, data []byte, token, contentType string, expectedResponseCode ...int) (http.Header, errors.SDKError) {
 	req, err := http.NewRequest(method, url, bytes.NewReader(data))
 	if err != nil {
 		return make(http.Header), errors.NewSDKError(err)
