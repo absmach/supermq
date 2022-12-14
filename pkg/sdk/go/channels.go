@@ -4,7 +4,6 @@
 package sdk
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -20,25 +19,14 @@ func (sdk mfSDK) CreateChannel(c Channel, token string) (string, errors.SDKError
 	if err != nil {
 		return "", errors.NewSDKError(err)
 	}
-
 	url := fmt.Sprintf("%s/%s", sdk.thingsURL, channelsEndpoint)
 
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
-	if err != nil {
-		return "", errors.NewSDKError(err)
+	headers, sdkerr := sdk.sendRequestAndGetHeadersOrError(http.MethodPost, url, data, token, string(CTJSON), http.StatusCreated)
+	if sdkerr != nil {
+		return "", sdkerr
 	}
 
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return "", errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	if err := errors.CheckError(resp, http.StatusCreated); err != nil {
-		return "", err
-	}
-
-	id := strings.TrimPrefix(resp.Header.Get("Location"), fmt.Sprintf("/%s/", channelsEndpoint))
+	id := strings.TrimPrefix(headers.Get("Location"), fmt.Sprintf("/%s/", channelsEndpoint))
 	return id, nil
 }
 
@@ -50,23 +38,13 @@ func (sdk mfSDK) CreateChannels(chs []Channel, token string) ([]Channel, errors.
 
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, channelsEndpoint, "bulk")
 
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
-	if err != nil {
-		return []Channel{}, errors.NewSDKError(err)
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return []Channel{}, errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	if err := errors.CheckError(resp, http.StatusCreated); err != nil {
-		return []Channel{}, err
+	body, sdkerr := sdk.sendRequestAndGetBodyOrError(http.MethodPost, url, data, token, string(CTJSON), http.StatusCreated)
+	if sdkerr != nil {
+		return []Channel{}, sdkerr
 	}
 
 	var ccr createChannelsRes
-	if err := json.NewDecoder(resp.Body).Decode(&ccr); err != nil {
+	if err := json.Unmarshal(body, &ccr); err != nil {
 		return []Channel{}, errors.NewSDKError(err)
 	}
 

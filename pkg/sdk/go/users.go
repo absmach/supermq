@@ -4,7 +4,6 @@
 package sdk
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -25,25 +24,14 @@ func (sdk mfSDK) CreateUser(token string, u User) (string, errors.SDKError) {
 	if err != nil {
 		return "", errors.NewSDKError(err)
 	}
-
 	url := fmt.Sprintf("%s/%s", sdk.usersURL, usersEndpoint)
 
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
-	if err != nil {
-		return "", errors.NewSDKError(err)
+	headers, sdkerr := sdk.sendRequestAndGetHeadersOrError(http.MethodPost, url, data, token, string(CTJSON), http.StatusCreated)
+	if sdkerr != nil {
+		return "", sdkerr
 	}
 
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return "", errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	if err := errors.CheckError(resp, http.StatusCreated); err != nil {
-		return "", err
-	}
-
-	id := strings.TrimPrefix(resp.Header.Get("Location"), fmt.Sprintf("/%s/", usersEndpoint))
+	id := strings.TrimPrefix(headers.Get("Location"), fmt.Sprintf("/%s/", usersEndpoint))
 	return id, nil
 }
 

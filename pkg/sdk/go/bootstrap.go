@@ -4,7 +4,6 @@
 package sdk
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -52,22 +51,13 @@ func (sdk mfSDK) AddBootstrap(token string, cfg BootstrapConfig) (string, errors
 	}
 
 	url := fmt.Sprintf("%s/%s", sdk.bootstrapURL, configsEndpoint)
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
-	if err != nil {
-		return "", errors.NewSDKError(err)
+
+	headers, sdkerr := sdk.sendRequestAndGetHeadersOrError(http.MethodPost, url, data, token, string(CTJSON), http.StatusOK, http.StatusCreated)
+	if sdkerr != nil {
+		return "", sdkerr
 	}
 
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return "", errors.NewSDKError(err)
-	}
-	defer resp.Body.Close()
-
-	if err := errors.CheckError(resp, http.StatusOK, http.StatusCreated); err != nil {
-		return "", err
-	}
-
-	id := strings.TrimPrefix(resp.Header.Get("Location"), "/things/configs/")
+	id := strings.TrimPrefix(headers.Get("Location"), "/things/configs/")
 	return id, nil
 }
 

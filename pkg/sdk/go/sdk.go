@@ -333,21 +333,35 @@ func (sdk mfSDK) sendRequestAndGetBodyOrError(method, url string, data []byte, t
 	return body, nil
 }
 
-func (sdk mfSDK) sendRequest(req *http.Request, token, contentType string) (*http.Response, error) {
+func (sdk mfSDK) sendRequestAndGetHeadersOrError(method, url string, data []byte, token, contentType string, expectedResponseCode ...int) (http.Header, errors.SDKError) {
+	req, err := http.NewRequest(method, url, bytes.NewReader(data))
+	if err != nil {
+		return make(http.Header), errors.NewSDKError(err)
+	}
+
 	if token != "" {
 		req.Header.Set("Authorization", apiutil.BearerPrefix+token)
 	}
-
 	if contentType != "" {
 		req.Header.Add("Content-Type", contentType)
 	}
 
 	resp, err := sdk.client.Do(req)
-	if err == nil {
-		return resp, nil
+	if err != nil {
+		return make(http.Header), errors.NewSDKError(err)
+	}
+	defer resp.Body.Close()
+
+	sdkerr := errors.CheckError(resp, expectedResponseCode...)
+	if sdkerr != nil {
+		return make(http.Header), sdkerr
 	}
 
-	return resp, errors.NewSDKError(err)
+	if _, err := ioutil.ReadAll(resp.Body); err != nil {
+		return make(http.Header), errors.NewSDKError(err)
+	}
+
+	return resp.Header, nil
 }
 
 func (sdk mfSDK) sendThingRequest(req *http.Request, key, contentType string) (*http.Response, error) {
