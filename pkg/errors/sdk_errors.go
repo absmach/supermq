@@ -12,6 +12,15 @@ import (
 
 const err = "error"
 
+var (
+
+	// ErrJSONErrKey indicates response body did not contain erorr message.
+	errJSONErrKey = New("response body expected error message json key not found")
+
+	// ErrUnknown indicates that an unknown error was found in the response body.
+	errUnknown = New("unknown error")
+)
+
 // SDKError is an error type for Mainflux SDK.
 type SDKError interface {
 	Error
@@ -61,9 +70,9 @@ func NewSDKErrorWithStatus(err error, statusCode int) SDKError {
 	}
 }
 
-// CheckError will check the http response status code and matches it with the given status codes.
+// CheckError will check the HTTP response status code and matches it with the given status codes.
 // Since multiple status codes can be valid, we can pass multiple status codes to the function.
-// The function then checks for errors in the http response.
+// The function then checks for errors in the HTTP response.
 func CheckError(resp *http.Response, expectedStatusCodes ...int) SDKError {
 	for _, expectedStatusCode := range expectedStatusCodes {
 		if resp.StatusCode == expectedStatusCode {
@@ -80,8 +89,8 @@ func CheckError(resp *http.Response, expectedStatusCodes ...int) SDKError {
 		if v, ok := msg.(string); ok {
 			return NewSDKErrorWithStatus(errors.New(v), resp.StatusCode)
 		}
-		return NewSDKErrorWithStatus(ErrUnknown, resp.StatusCode)
+		return NewSDKErrorWithStatus(errUnknown, resp.StatusCode)
 	}
 
-	return NewSDKErrorWithStatus(ErrJSONErrKey, resp.StatusCode)
+	return NewSDKErrorWithStatus(errJSONErrKey, resp.StatusCode)
 }

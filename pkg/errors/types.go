@@ -42,10 +42,4 @@ var (
 
 	// ErrScanMetadata indicates problem with metadata in db.
 	ErrScanMetadata = New("failed to scan metadata in db")
-
-	// ErrJSONErrKey indicates response body did not contain erorr message.
-	ErrJSONErrKey = New("response body expected error message json key not found")
-
-	// ErrUnknown indicates that an unknown error was found in the response body.
-	ErrUnknown = New("unknown error")
 )
