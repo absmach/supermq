@@ -14,7 +14,7 @@ const err = "error"
 
 var (
 	// ErrJSONErrKey indicates response body did not contain erorr message.
-	errJSONErrKey = New("response body expected error message json key not found")
+	errJSONKey = New("response body expected error message json key not found")
 
 	// ErrUnknown indicates that an unknown error was found in the response body.
 	errUnknown = New("unknown error")
@@ -91,5 +91,5 @@ func CheckError(resp *http.Response, expectedStatusCodes ...int) SDKError {
 		return NewSDKErrorWithStatus(errUnknown, resp.StatusCode)
 	}
 
-	return NewSDKErrorWithStatus(errJSONErrKey, resp.StatusCode)
+	return NewSDKErrorWithStatus(errJSONKey, resp.StatusCode)
 }

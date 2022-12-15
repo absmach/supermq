@@ -23,7 +23,7 @@ func (sdk mfSDK) SendMessage(chanName, msg, key string) errors.SDKError {
 
 	url := fmt.Sprintf("%s/channels/%s/messages/%s", sdk.httpAdapterURL, chanID, subtopicPart)
 
-	_, _, err := sdk.processRequest(http.MethodPost, url, []byte(msg), apiutil.ThingPrefix+key, string(CTJSON), http.StatusAccepted)
+	_, _, err := sdk.processRequest(http.MethodPost, url, apiutil.ThingPrefix+key, string(CTJSON), []byte(msg), http.StatusAccepted)
 	return err
 }
 
@@ -37,7 +37,7 @@ func (sdk mfSDK) ReadMessages(chanName, token string) (MessagesPage, errors.SDKE
 
 	url := fmt.Sprintf("%s/channels/%s/messages%s", sdk.readerURL, chanID, subtopicPart)
 
-	body, _, err := sdk.processRequest(http.MethodGet, url, nil, token, string(sdk.msgContentType), http.StatusOK)
+	_, body, err := sdk.processRequest(http.MethodGet, url, token, string(sdk.msgContentType), nil, http.StatusOK)
 	if err != nil {
 		return MessagesPage{}, err
 	}

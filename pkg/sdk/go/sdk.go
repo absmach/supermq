@@ -304,10 +304,10 @@ func NewSDK(conf Config) SDK {
 
 // processRequest creates and send a new HTTP request, and checks for errors in the HTTP response.
 // It then returns the response headers, the response body, and the associated error(s) (if any).
-func (sdk mfSDK) processRequest(method, url string, data []byte, token, contentType string, expectedResponseCode ...int) ([]byte, http.Header, errors.SDKError) {
+func (sdk mfSDK) processRequest(method, url, token, contentType string, data []byte, expectedRespCodes ...int) (http.Header, []byte, errors.SDKError) {
 	req, err := http.NewRequest(method, url, bytes.NewReader(data))
 	if err != nil {
-		return []byte{}, make(http.Header), errors.NewSDKError(err)
+		return make(http.Header), []byte{}, errors.NewSDKError(err)
 	}
 
 	if token != "" {
@@ -322,21 +322,21 @@ func (sdk mfSDK) processRequest(method, url string, data []byte, token, contentT
 
 	resp, err := sdk.client.Do(req)
 	if err != nil {
-		return []byte{}, make(http.Header), errors.NewSDKError(err)
+		return make(http.Header), []byte{}, errors.NewSDKError(err)
 	}
 	defer resp.Body.Close()
 
-	sdkerr := errors.CheckError(resp, expectedResponseCode...)
+	sdkerr := errors.CheckError(resp, expectedRespCodes...)
 	if sdkerr != nil {
-		return []byte{}, make(http.Header), sdkerr
+		return make(http.Header), []byte{}, sdkerr
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return []byte{}, make(http.Header), errors.NewSDKError(err)
+		return make(http.Header), []byte{}, errors.NewSDKError(err)
 	}
 
-	return body, resp.Header, nil
+	return resp.Header, body, nil
 }
 
 func (sdk mfSDK) withQueryParams(baseURL, endpoint string, pm PageMetadata) (string, error) {
