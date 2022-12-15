@@ -25,22 +25,6 @@ func (sdk mfSDK) SendMessage(chanName, msg, key string) errors.SDKError {
 
 	_, _, err := sdk.processRequest(http.MethodPost, url, []byte(msg), apiutil.ThingPrefix+key, string(CTJSON), http.StatusAccepted)
 	return err
-	// req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(msg))
-	// if err != nil {
-	// 	return errors.NewSDKError(err)
-	// }
-
-	// resp, err := sdk.sendThingRequest(req, key, string(sdk.msgContentType))
-	// if err != nil {
-	// 	return errors.NewSDKError(err)
-	// }
-	// defer resp.Body.Close()
-
-	// if err := errors.CheckError(resp, http.StatusAccepted); err != nil {
-	// 	return err
-	// }
-
-	// return nil
 }
 
 func (sdk mfSDK) ReadMessages(chanName, token string) (MessagesPage, errors.SDKError) {

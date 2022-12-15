@@ -26,7 +26,7 @@ func (sdk mfSDK) CreateChannel(c Channel, token string) (string, errors.SDKError
 		return "", sdkerr
 	}
 
-	id := strings.TrimPrefix(headers["Location"][0], fmt.Sprintf("/%s/", channelsEndpoint))
+	id := strings.TrimPrefix(headers.Get("Location"), fmt.Sprintf("/%s/", channelsEndpoint))
 	return id, nil
 }
 

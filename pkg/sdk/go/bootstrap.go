@@ -57,7 +57,7 @@ func (sdk mfSDK) AddBootstrap(token string, cfg BootstrapConfig) (string, errors
 		return "", sdkerr
 	}
 
-	id := strings.TrimPrefix(headers["Location"][0], "/things/configs/")
+	id := strings.TrimPrefix(headers.Get("Location"), "/things/configs/")
 	return id, nil
 }
 

@@ -302,18 +302,19 @@ func NewSDK(conf Config) SDK {
 	}
 }
 
-func (sdk mfSDK) processRequest(method, url string, data []byte, token, contentType string, expectedResponseCode ...int) ([]byte, map[string][]string, errors.SDKError) {
+// processRequest creates and send a new HTTP request, and checks for errors in the HTTP response.
+// It then returns the response headers, the response body, and the associated error(s) (if any).
+func (sdk mfSDK) processRequest(method, url string, data []byte, token, contentType string, expectedResponseCode ...int) ([]byte, http.Header, errors.SDKError) {
 	req, err := http.NewRequest(method, url, bytes.NewReader(data))
 	if err != nil {
-		return []byte{}, make(map[string][]string), errors.NewSDKError(err)
+		return []byte{}, make(http.Header), errors.NewSDKError(err)
 	}
 
 	if token != "" {
-		if strings.Contains(token, apiutil.ThingPrefix) {
-			req.Header.Set("Authorization", token)
-		} else {
-			req.Header.Set("Authorization", apiutil.BearerPrefix+token)
+		if !strings.Contains(token, apiutil.ThingPrefix) {
+			token = apiutil.BearerPrefix + token
 		}
+		req.Header.Set("Authorization", token)
 	}
 	if contentType != "" {
 		req.Header.Add("Content-Type", contentType)
@@ -321,18 +322,18 @@ func (sdk mfSDK) processRequest(method, url string, data []byte, token, contentT
 
 	resp, err := sdk.client.Do(req)
 	if err != nil {
-		return []byte{}, make(map[string][]string), errors.NewSDKError(err)
+		return []byte{}, make(http.Header), errors.NewSDKError(err)
 	}
 	defer resp.Body.Close()
 
 	sdkerr := errors.CheckError(resp, expectedResponseCode...)
 	if sdkerr != nil {
-		return []byte{}, make(map[string][]string), sdkerr
+		return []byte{}, make(http.Header), sdkerr
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return []byte{}, make(map[string][]string), errors.NewSDKError(err)
+		return []byte{}, make(http.Header), errors.NewSDKError(err)
 	}
 
 	return body, resp.Header, nil

@@ -38,7 +38,7 @@ func (sdk mfSDK) CreateThing(t Thing, token string) (string, errors.SDKError) {
 		return "", sdkerr
 	}
 
-	id := strings.TrimPrefix(headers["Location"][0], fmt.Sprintf("/%s/", thingsEndpoint))
+	id := strings.TrimPrefix(headers.Get("Location"), fmt.Sprintf("/%s/", thingsEndpoint))
 	return id, nil
 }
 
