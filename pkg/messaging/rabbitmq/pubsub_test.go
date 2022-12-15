@@ -4,6 +4,7 @@
 package rabbitmq_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -174,7 +175,8 @@ func TestSubscribe(t *testing.T) {
 			data, err := proto.Marshal(&expectedMsg)
 			assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-			err = ch.Publish(
+			err = ch.PublishWithContext(
+				context.Background(),
 				exchangeName,
 				tc.topic,
 				false,
