@@ -167,7 +167,11 @@ func TestSubscribe(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		err := pubsub.Subscribe(tc.clientID, tc.topic, tc.handler)
+		subject := ""
+		if tc.topic != "" {
+			subject = fmt.Sprintf("%s.%s", chansPrefix, tc.topic)
+		}
+		err := pubsub.Subscribe(tc.clientID, subject, tc.handler)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, tc.err, err))
 
 		if tc.err == nil {
@@ -177,14 +181,28 @@ func TestSubscribe(t *testing.T) {
 				Payload:   data,
 			}
 
-			data, err := proto.Marshal(&expectedMsg)
-			assert.Nil(t, err, fmt.Sprintf("%s: failed to serialize protobuf error: %s\n", tc.desc, err))
+			topicSub, err := conn.Subscribe(subject, func(m *broker.Msg) {
+				var msg messaging.Message
+				if err := proto.Unmarshal(m.Data, &msg); err != nil {
+					fmt.Println()
+					fmt.Println("topicSub in test : Error at unmarshalling data : ", err)
+					fmt.Println()
+					return
+				}
+				msgChan <- msg
+			})
 
-			err = conn.Publish(fmt.Sprintf("%s.%s", chansPrefix, tc.topic), data)
 			assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
+			msgdata, err := proto.Marshal(&expectedMsg)
+			assert.Nil(t, err, fmt.Sprintf("%s: failed to serialize protobuf error: %s\n", tc.desc, err))
+
+			err = conn.Publish(subject, msgdata)
+			assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 			receivedMsg := <-msgChan
 			assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
+
+			topicSub.Unsubscribe()
 		}
 	}
 }

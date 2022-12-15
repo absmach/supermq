@@ -18,6 +18,12 @@ import (
 	dockertest "github.com/ory/dockertest/v3"
 )
 
+const (
+	port          = "4222/tcp"
+	brokerName    = "nats"
+	brokerVersion = "1.3.0"
+)
+
 var (
 	pubsub  messaging.PubSub
 	address string
@@ -30,20 +36,20 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
-	container, err := pool.Run("nats", "1.3.0", []string{})
+	container, err := pool.Run(brokerName, brokerVersion, []string{})
 	if err != nil {
 		log.Fatalf("Could not start container: %s", err)
 	}
 	handleInterrupt(pool, container)
 
-	address = fmt.Sprintf("%s:%s", "localhost", container.GetPort("4222/tcp"))
+	address = fmt.Sprintf("%s:%s", "localhost", container.GetPort(port))
 
 	logger, err = mainflux_log.New(os.Stdout, mainflux_log.Debug.String())
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 	if err := pool.Retry(func() error {
-		pubsub, err = nats.NewPubSub(address, "mainflux", logger)
+		pubsub, err = nats.NewPubSub(address, "", logger)
 		return err
 	}); err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
