@@ -184,9 +184,6 @@ func TestSubscribe(t *testing.T) {
 			topicSub, err := conn.Subscribe(subject, func(m *broker.Msg) {
 				var msg messaging.Message
 				if err := proto.Unmarshal(m.Data, &msg); err != nil {
-					fmt.Println()
-					fmt.Println("topicSub in test : Error at unmarshalling data : ", err)
-					fmt.Println()
 					return
 				}
 				msgChan <- msg

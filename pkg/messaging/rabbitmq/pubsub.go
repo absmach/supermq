@@ -66,30 +66,6 @@ func NewPubSub(url, queue string, logger log.Logger) (messaging.PubSub, error) {
 }
 
 func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) error {
-	//* Subscription map is working correctly
-	// fmt.Println()
-	// fmt.Println()
-	// fmt.Println("Subscribption map BEFORE subscribing :- ")
-	// fmt.Println("###")
-	// fmt.Println()
-	// fmt.Println(ps.subscriptions)
-	// fmt.Println()
-	// fmt.Println("###")
-	// fmt.Println()
-	// fmt.Println()
-
-	// defer func() {
-	// 	fmt.Println()
-	// 	fmt.Println()
-	// 	fmt.Println("Subscribption map AFTER subscribing :- ")
-	// 	fmt.Println("###")
-	// 	fmt.Println()
-	// 	fmt.Println(ps.subscriptions)
-	// 	fmt.Println()
-	// 	fmt.Println("###")
-	// 	fmt.Println()
-	// 	fmt.Println()
-	// }()
 	if id == "" {
 		return ErrEmptyID
 	}
