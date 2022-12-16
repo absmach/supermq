@@ -4,6 +4,7 @@
 package nats_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -25,6 +26,8 @@ const (
 var (
 	data = []byte("payload")
 )
+
+var errFailedHandleMessage = errors.New("failed to handle mainflux message")
 
 func TestPublisher(t *testing.T) {
 	msgChan := make(chan []byte)
@@ -202,6 +205,100 @@ func TestSubscribe(t *testing.T) {
 			topicSub.Unsubscribe()
 		}
 	}
+
+	queuecases := []struct {
+		desc     string
+		topic    string
+		clientID string
+		err      error
+		handler  messaging.MessageHandler
+	}{
+		{
+			desc:     "Subscribe to a topic with an ID",
+			topic:    topic,
+			clientID: "clientid1",
+			err:      nil,
+			handler:  handler{false, "clientid1", msgChan},
+		},
+		{
+			desc:     "Subscribe to the same topic with a different ID",
+			topic:    topic,
+			clientID: "clientid2",
+			err:      nil,
+			handler:  handler{false, "clientid2", msgChan},
+		},
+		{
+			desc:     "Subscribe to an already subscribed topic with an ID",
+			topic:    topic,
+			clientID: "clientid1",
+			err:      nil,
+			handler:  handler{false, "clientid1", msgChan},
+		},
+		{
+			desc:     "Subscribe to a topic with a subtopic with an ID",
+			topic:    fmt.Sprintf("%s.%s", topic, subtopic),
+			clientID: "clientid1",
+			err:      nil,
+			handler:  handler{false, "clientid1", msgChan},
+		},
+		{
+			desc:     "Subscribe to an already subscribed topic with a subtopic with an ID",
+			topic:    fmt.Sprintf("%s.%s", topic, subtopic),
+			clientID: "clientid1",
+			err:      nil,
+			handler:  handler{false, "clientid1", msgChan},
+		},
+		{
+			desc:     "Subscribe to an empty topic with an ID",
+			topic:    "",
+			clientID: "clientid1",
+			err:      nats.ErrEmptyTopic,
+			handler:  handler{false, "clientid1", msgChan},
+		},
+		{
+			desc:     "Subscribe to a topic with empty id",
+			topic:    topic,
+			clientID: "",
+			err:      nats.ErrEmptyID,
+			handler:  handler{false, "", msgChan},
+		},
+	}
+	for _, tc := range queuecases {
+		subject := ""
+		if tc.topic != "" {
+			subject = fmt.Sprintf("%s.%s", chansPrefix, tc.topic)
+		}
+		err := queuePubsub.Subscribe(tc.clientID, subject, tc.handler)
+		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, tc.err, err))
+
+		if tc.err == nil {
+			expectedMsg := messaging.Message{
+				Publisher: "CLIENTID",
+				Channel:   channel,
+				Payload:   data,
+			}
+
+			topicSub, err := conn.Subscribe(subject, func(m *broker.Msg) {
+				var msg messaging.Message
+				if err := proto.Unmarshal(m.Data, &msg); err != nil {
+					return
+				}
+				msgChan <- msg
+			})
+
+			assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+			msgdata, err := proto.Marshal(&expectedMsg)
+			assert.Nil(t, err, fmt.Sprintf("%s: failed to serialize protobuf error: %s\n", tc.desc, err))
+
+			err = conn.Publish(subject, msgdata)
+			assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+			receivedMsg := <-msgChan
+			assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
+
+			topicSub.Unsubscribe()
+		}
+	}
 }
 
 func TestPubSub(t *testing.T) {
@@ -251,6 +348,74 @@ func TestPubSub(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
+		subject := ""
+		if tc.topic != "" {
+			subject = fmt.Sprintf("%s.%s", chansPrefix, tc.topic)
+		}
+		err := pubsub.Subscribe(tc.clientID, subject, tc.handler)
+		assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, err, tc.err))
+
+		if tc.err == nil {
+			// Use pubsub to subscribe to a topic, and then publish messages to that topic.
+			expectedMsg := messaging.Message{
+				Publisher: "clientID",
+				Channel:   channel,
+				Payload:   data,
+			}
+
+			//Publish message, and then receive it on message channel.
+			err := pubsub.Publish(tc.topic, expectedMsg)
+			assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s\n", tc.desc, err))
+
+			receivedMsg := <-msgChan
+			assert.Equal(t, expectedMsg, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
+		}
+	}
+
+	queuecases := []struct {
+		desc     string
+		topic    string
+		clientID string
+		err      error
+		handler  messaging.MessageHandler
+	}{
+		{
+			desc:     "Subscribe to a topic with an ID",
+			topic:    topic,
+			clientID: "clientid7",
+			err:      nil,
+			handler:  handler{false, "clientid7", msgChan},
+		},
+		{
+			desc:     "Subscribe to the same topic with a different ID",
+			topic:    topic,
+			clientID: "clientid8",
+			err:      nil,
+			handler:  handler{false, "clientid8", msgChan},
+		},
+		{
+			desc:     "Subscribe to a topic with a subtopic with an ID",
+			topic:    fmt.Sprintf("%s.%s", topic, subtopic),
+			clientID: "clientid7",
+			err:      nil,
+			handler:  handler{false, "clientid7", msgChan},
+		},
+		{
+			desc:     "Subscribe to an empty topic with an ID",
+			topic:    "",
+			clientID: "clientid7",
+			err:      nats.ErrEmptyTopic,
+			handler:  handler{false, "clientid7", msgChan},
+		},
+		{
+			desc:     "Subscribe to a topic with empty id",
+			topic:    topic,
+			clientID: "",
+			err:      nats.ErrEmptyID,
+			handler:  handler{false, "", msgChan},
+		},
+	}
+	for _, tc := range queuecases {
 		subject := ""
 		if tc.topic != "" {
 			subject = fmt.Sprintf("%s.%s", chansPrefix, tc.topic)
@@ -387,7 +552,7 @@ func TestUnsubscribe(t *testing.T) {
 			desc:      "Unsubscribe from a topic with an ID with failing handler",
 			topic:     fmt.Sprintf("%s.%s", chansPrefix, topic+"2"),
 			clientID:  "clientid55",
-			err:       nats.ErrFailedHandleMessage,
+			err:       errFailedHandleMessage,
 			subscribe: false,
 			handler:   handler{true, "clientid5", msgChan},
 		},
@@ -403,7 +568,7 @@ func TestUnsubscribe(t *testing.T) {
 			desc:      "Unsubscribe from a topic with subtopic with an ID with failing handler",
 			topic:     fmt.Sprintf("%s.%s.%s", chansPrefix, topic+"2", subtopic),
 			clientID:  "clientid55",
-			err:       nats.ErrFailedHandleMessage,
+			err:       errFailedHandleMessage,
 			subscribe: false,
 			handler:   handler{true, "clientid5", msgChan},
 		},
@@ -435,7 +600,7 @@ func (h handler) Handle(msg messaging.Message) error {
 
 func (h handler) Cancel() error {
 	if h.fail {
-		return nats.ErrFailedHandleMessage
+		return errFailedHandleMessage
 	}
 	return nil
 }

@@ -18,11 +18,14 @@ import (
 const chansPrefix = "channels"
 
 var (
-	ErrAlreadySubscribed   = errors.New("already subscribed to topic")
-	ErrNotSubscribed       = errors.New("not subscribed")
-	ErrEmptyTopic          = errors.New("empty topic")
-	ErrEmptyID             = errors.New("empty id")
-	ErrFailedHandleMessage = errors.New("failed to handle mainflux message")
+	// ErrNotSubscribed indicates that the topic is not subscribed to.
+	ErrNotSubscribed = errors.New("not subscribed")
+
+	// ErrEmptyTopic indicates the absence of topic.
+	ErrEmptyTopic = errors.New("empty topic")
+
+	// ErrEmptyID indicates the absence of ID.
+	ErrEmptyID = errors.New("empty ID")
 )
 
 var _ messaging.PubSub = (*pubsub)(nil)
@@ -96,21 +99,23 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 
 	nh := ps.natsHandler(handler)
 
-	if ps.queue != "" {
-		sub, err := ps.conn.QueueSubscribe(topic, ps.queue, nh)
+	var sub *broker.Subscription
+	var err error
+
+	switch ps.queue {
+	case "":
+		sub, err = ps.conn.Subscribe(topic, nh)
 		if err != nil {
 			return err
 		}
-		s[id] = subscription{
-			Subscription: sub,
-			cancel:       handler.Cancel,
+
+	default:
+		sub, err = ps.conn.QueueSubscribe(topic, ps.queue, nh)
+		if err != nil {
+			return err
 		}
-		return nil
 	}
-	sub, err := ps.conn.Subscribe(topic, nh)
-	if err != nil {
-		return err
-	}
+
 	s[id] = subscription{
 		Subscription: sub,
 		cancel:       handler.Cancel,

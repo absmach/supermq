@@ -5,12 +5,12 @@ package rabbitmq_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux/pkg/messaging"
-	"github.com/mainflux/mainflux/pkg/messaging/nats"
 	"github.com/mainflux/mainflux/pkg/messaging/rabbitmq"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
@@ -29,6 +29,8 @@ var (
 	msgChan = make(chan messaging.Message)
 	data    = []byte("payload")
 )
+
+var errFailedHandleMessage = errors.New("failed to handle mainflux message")
 
 func TestPublisher(t *testing.T) {
 	// Subscribing with topic, and with subtopic, so that we can publish messages.
@@ -241,7 +243,7 @@ func TestUnsubscribe(t *testing.T) {
 			desc:      "Unsubscribe from a non-existent topic with an ID",
 			topic:     "h",
 			clientID:  "clientid4",
-			err:       nats.ErrNotSubscribed,
+			err:       rabbitmq.ErrNotSubscribed,
 			subscribe: false,
 			handler:   handler{false, "clientid4"},
 		},
@@ -249,7 +251,7 @@ func TestUnsubscribe(t *testing.T) {
 			desc:      "Unsubscribe from an already unsubscribed topic with an ID",
 			topic:     fmt.Sprintf("%s.%s", chansPrefix, topic),
 			clientID:  "clientid4",
-			err:       nats.ErrNotSubscribed,
+			err:       rabbitmq.ErrNotSubscribed,
 			subscribe: false,
 			handler:   handler{false, "clientid4"},
 		},
@@ -273,7 +275,7 @@ func TestUnsubscribe(t *testing.T) {
 			desc:      "Unsubscribe from an already unsubscribed topic with a subtopic with an ID",
 			topic:     fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic),
 			clientID:  "clientid4",
-			err:       nats.ErrNotSubscribed,
+			err:       rabbitmq.ErrNotSubscribed,
 			subscribe: false,
 			handler:   handler{false, "clientid4"},
 		},
@@ -281,7 +283,7 @@ func TestUnsubscribe(t *testing.T) {
 			desc:      "Unsubscribe from an empty topic with an ID",
 			topic:     "",
 			clientID:  "clientid4",
-			err:       nats.ErrEmptyTopic,
+			err:       rabbitmq.ErrEmptyTopic,
 			subscribe: false,
 			handler:   handler{false, "clientid4"},
 		},
@@ -289,9 +291,41 @@ func TestUnsubscribe(t *testing.T) {
 			desc:      "Unsubscribe from a topic with empty ID",
 			topic:     fmt.Sprintf("%s.%s", chansPrefix, topic),
 			clientID:  "",
-			err:       nats.ErrEmptyID,
+			err:       rabbitmq.ErrEmptyID,
 			subscribe: false,
 			handler:   handler{false, ""},
+		},
+		{
+			desc:      "Subscribe to a new topic with an ID",
+			topic:     fmt.Sprintf("%s.%s", chansPrefix, topic+"2"),
+			clientID:  "clientid55",
+			err:       nil,
+			subscribe: true,
+			handler:   handler{true, "clientid5"},
+		},
+		{
+			desc:      "Unsubscribe from a topic with an ID with failing handler",
+			topic:     fmt.Sprintf("%s.%s", chansPrefix, topic+"2"),
+			clientID:  "clientid55",
+			err:       errFailedHandleMessage,
+			subscribe: false,
+			handler:   handler{true, "clientid5"},
+		},
+		{
+			desc:      "Subscribe to a new topic with subtopic with an ID",
+			topic:     fmt.Sprintf("%s.%s.%s", chansPrefix, topic+"2", subtopic),
+			clientID:  "clientid55",
+			err:       nil,
+			subscribe: true,
+			handler:   handler{true, "clientid5"},
+		},
+		{
+			desc:      "Unsubscribe from a topic with subtopic with an ID with failing handler",
+			topic:     fmt.Sprintf("%s.%s.%s", chansPrefix, topic+"2", subtopic),
+			clientID:  "clientid55",
+			err:       errFailedHandleMessage,
+			subscribe: false,
+			handler:   handler{true, "clientid5"},
 		},
 	}
 
@@ -396,7 +430,7 @@ func (h handler) Handle(msg messaging.Message) error {
 
 func (h handler) Cancel() error {
 	if h.fail {
-		return rabbitmq.ErrFailed
+		return errFailedHandleMessage
 	}
 	return nil
 }

@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"testing"
 
-	mainflux_log "github.com/mainflux/mainflux/logger"
+	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/nats"
 	broker "github.com/nats-io/nats.go"
@@ -22,12 +22,14 @@ const (
 	port          = "4222/tcp"
 	brokerName    = "nats"
 	brokerVersion = "1.3.0"
+	queue         = "mainflux-nats"
 )
 
 var (
-	pubsub  messaging.PubSub
-	address string
-	logger  mainflux_log.Logger
+	pubsub      messaging.PubSub
+	queuePubsub messaging.PubSub
+	address     string
+	logger      mflog.Logger
 )
 
 func TestMain(m *testing.M) {
@@ -44,12 +46,19 @@ func TestMain(m *testing.M) {
 
 	address = fmt.Sprintf("%s:%s", "localhost", container.GetPort(port))
 
-	logger, err = mainflux_log.New(os.Stdout, mainflux_log.Debug.String())
+	logger, err = mflog.New(os.Stdout, mflog.Debug.String())
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 	if err := pool.Retry(func() error {
 		pubsub, err = nats.NewPubSub(address, "", logger)
+		return err
+	}); err != nil {
+		log.Fatalf("Could not connect to docker: %s", err)
+	}
+
+	if err := pool.Retry(func() error {
+		queuePubsub, err = nats.NewPubSub(address, queue, logger)
 		return err
 	}); err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)
