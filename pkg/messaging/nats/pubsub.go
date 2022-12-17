@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -51,7 +52,18 @@ type pubsub struct {
 // here: https://docs.nats.io/developing-with-nats/receiving/queues.
 // If the queue is empty, Subscribe will be used.
 func NewPubSub(url, queue string, logger log.Logger) (messaging.PubSub, error) {
-	conn, err := broker.Connect(url)
+	opts := broker.Options{
+		Url:              url,
+		AllowReconnect:   true,
+		MaxReconnect:     10,
+		ReconnectWait:    200 * time.Millisecond,
+		Timeout:          1 * time.Second,
+		ReconnectBufSize: 5 * 1024 * 1024,
+		PingInterval:     1 * time.Second,
+		MaxPingsOut:      5,
+	}
+
+	conn, err := opts.Connect()
 	if err != nil {
 		return nil, err
 	}
