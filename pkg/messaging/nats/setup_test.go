@@ -74,15 +74,25 @@ func TestMain(m *testing.M) {
 }
 
 func newConn() (*broker.Conn, error) {
+	// opts := broker.Options{
+	// 	Url:              address,
+	// 	AllowReconnect:   true,
+	// 	MaxReconnect:     10,
+	// 	ReconnectWait:    200 * time.Millisecond,
+	// 	Timeout:          1 * time.Second,
+	// 	ReconnectBufSize: 5 * 1024 * 1024,
+	// 	PingInterval:     1 * time.Second,
+	// 	MaxPingsOut:      5,
+	// }
 	opts := broker.Options{
-		Url:              address,
-		AllowReconnect:   true,
-		MaxReconnect:     10,
-		ReconnectWait:    200 * time.Millisecond,
-		Timeout:          1 * time.Second,
-		ReconnectBufSize: 5 * 1024 * 1024,
-		PingInterval:     1 * time.Second,
-		MaxPingsOut:      5,
+		Url:            address,
+		AllowReconnect: false,
+		// MaxReconnect:     10,
+		// ReconnectWait:    200 * time.Millisecond,
+		Timeout: 1 * time.Second,
+		// ReconnectBufSize: 5 * 1024 * 1024,
+		// PingInterval:     1 * time.Second,
+		// MaxPingsOut:      5,
 	}
 
 	conn, err := opts.Connect()

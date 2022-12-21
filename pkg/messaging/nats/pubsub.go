@@ -53,16 +53,15 @@ type pubsub struct {
 // If the queue is empty, Subscribe will be used.
 func NewPubSub(url, queue string, logger log.Logger) (messaging.PubSub, error) {
 	opts := broker.Options{
-		Url:              url,
-		AllowReconnect:   true,
-		MaxReconnect:     10,
-		ReconnectWait:    200 * time.Millisecond,
-		Timeout:          1 * time.Second,
-		ReconnectBufSize: 5 * 1024 * 1024,
-		PingInterval:     1 * time.Second,
-		MaxPingsOut:      5,
+		Url:            url,
+		AllowReconnect: false,
+		// MaxReconnect:     10,
+		// ReconnectWait:    200 * time.Millisecond,
+		Timeout: 1 * time.Second,
+		// ReconnectBufSize: 5 * 1024 * 1024,
+		// PingInterval:     1 * time.Second,
+		// MaxPingsOut:      5,
 	}
-
 	conn, err := opts.Connect()
 	if err != nil {
 		return nil, err
@@ -120,10 +119,22 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 		if err != nil {
 			return err
 		}
+		msgLimit := int(1e7)
+		bytesLimit := int(1e10)
+
+		if err = sub.SetPendingLimits(msgLimit, bytesLimit); err != nil {
+			return err
+		}
 
 	default:
 		sub, err = ps.conn.QueueSubscribe(topic, ps.queue, nh)
 		if err != nil {
+			return err
+		}
+		msgLimit := int(1e7)
+		bytesLimit := int(1e10)
+
+		if err = sub.SetPendingLimits(msgLimit, bytesLimit); err != nil {
 			return err
 		}
 	}

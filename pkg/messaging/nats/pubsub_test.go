@@ -44,6 +44,18 @@ func TestPublisher(t *testing.T) {
 		msgChan <- m.Data
 	})
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	// topicSub, err := conn.ChanSubscribe(fmt.Sprintf("%s.%s", chansPrefix, topic), make(chan *broker.Msg))
+	// assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	// subtopicSub, err := conn.ChanSubscribe(fmt.Sprintf("%s.%s.%s", chansPrefix, topic, subtopic), make(chan *broker.Msg))
+	// assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
+	msgLimit := int(1e7)
+	bytesLimit := int(1e10)
+
+	err = topicSub.SetPendingLimits(msgLimit, bytesLimit)
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	err = subtopicSub.SetPendingLimits(msgLimit, bytesLimit)
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	t.Cleanup(func() {
 		topicSub.Unsubscribe()
@@ -84,6 +96,9 @@ func TestPublisher(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		// fmt.Println()
+		// fmt.Println("test : ", tc.desc)
+		// fmt.Println()
 		expectedMsg := messaging.Message{
 			Publisher: clientID,
 			Channel:   tc.channel,
@@ -96,6 +111,17 @@ func TestPublisher(t *testing.T) {
 		data, err := proto.Marshal(&expectedMsg)
 		assert.Nil(t, err, fmt.Sprintf("%s: failed to serialize protobuf error: %s\n", tc.desc, err))
 
+		// select {
+		// case receivedMsg := <-msgChan:
+		// 	assert.Equal(t, data, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
+		// case <-time.After(1 * time.Second):
+		// 	fmt.Println("##")
+		// 	fmt.Println("FAIL FAIL FAIL FAIL")
+		// 	fmt.Println(conn.IsConnected())
+		// 	fmt.Println(conn.IsReconnecting())
+		// 	fmt.Println("##")
+		// 	t.Fail()
+		// }
 		receivedMsg := <-msgChan
 		assert.Equal(t, data, receivedMsg, fmt.Sprintf("%s: expected %+v got %+v\n", tc.desc, expectedMsg, receivedMsg))
 	}
@@ -191,7 +217,12 @@ func TestSubscribe(t *testing.T) {
 				}
 				msgChan <- msg
 			})
+			assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
+			msgLimit := int(1e7)
+			bytesLimit := int(1e10)
+
+			err = topicSub.SetPendingLimits(msgLimit, bytesLimit)
 			assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 			msgdata, err := proto.Marshal(&expectedMsg)
