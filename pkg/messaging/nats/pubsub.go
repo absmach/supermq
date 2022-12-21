@@ -48,7 +48,7 @@ type pubsub struct {
 // here: https://docs.nats.io/developing-with-nats/receiving/queues.
 // If the queue is empty, Subscribe will be used.
 func NewPubSub(url, queue string, logger log.Logger) (messaging.PubSub, error) {
-	conn, err := broker.Connect(url)
+	conn, err := broker.Connect(url, broker.MaxReconnects(-1))
 	if err != nil {
 		return nil, err
 	}

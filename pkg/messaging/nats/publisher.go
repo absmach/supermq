@@ -22,7 +22,7 @@ type publisher struct {
 
 // NewPublisher returns NATS message Publisher.
 func NewPublisher(url string) (messaging.Publisher, error) {
-	conn, err := broker.Connect(url)
+	conn, err := broker.Connect(url, broker.MaxReconnects(-1))
 	if err != nil {
 		return nil, err
 	}
