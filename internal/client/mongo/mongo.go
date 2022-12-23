@@ -13,7 +13,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func ConnectToMongoDB(host, port, name string, logger logger.Logger) *mongo.Database {
+// Connect create connection to MongoDB
+func Connect(host, port, name string, logger logger.Logger) *mongo.Database {
 	addr := fmt.Sprintf("mongodb://%s:%s", host, port)
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
 	if err != nil {

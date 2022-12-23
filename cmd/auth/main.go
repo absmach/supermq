@@ -19,8 +19,9 @@ import (
 	authRepo "github.com/mainflux/mainflux/auth/postgres"
 	"github.com/mainflux/mainflux/auth/tracing"
 	"github.com/mainflux/mainflux/internal"
-	internalauth "github.com/mainflux/mainflux/internal/auth"
-	"github.com/mainflux/mainflux/internal/db/postgres"
+	grpcClient "github.com/mainflux/mainflux/internal/client/grpc"
+	jaegerClient "github.com/mainflux/mainflux/internal/client/jaeger"
+	pgClient "github.com/mainflux/mainflux/internal/client/postgres"
 	"github.com/mainflux/mainflux/internal/server"
 	grpcserver "github.com/mainflux/mainflux/internal/server/grpc"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
@@ -35,6 +36,7 @@ import (
 const (
 	svcName          = "auth"
 	defListenAddress = ""
+	envPreFix        = "MF_AUTH_"
 )
 
 type config struct {
@@ -54,12 +56,12 @@ type config struct {
 
 func main() {
 	cfg := config{}
-	dbConfig := postgres.Config{}
+	dbConfig := pgClient.Config{}
 
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to load %s configuration : %s", svcName, err.Error()))
 	}
-	if err := env.Parse(&dbConfig); err != nil {
+	if err := env.Parse(&dbConfig, env.Options{Prefix: envPreFix}); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to load %s database configuration : %s", svcName, err.Error()))
 	}
 
@@ -70,19 +72,32 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	db, err := postgres.SetupDB(dbConfig, *authRepo.Migration())
+	db, err := pgClient.SetupDB(dbConfig, *authRepo.Migration())
 	if err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to setup %s database : %s", svcName, err.Error()))
+		log.Fatalf("Failed to setup %s database : %s", svcName, err.Error())
 	}
 	defer db.Close()
 
-	tracer, closer := internalauth.Jaeger("auth", cfg.JaegerURL, logger)
+	tracer, closer, err := jaegerClient.NewTracer("auth", cfg.JaegerURL)
+	if err != nil {
+		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+	}
 	defer closer.Close()
 
-	dbTracer, dbCloser := internalauth.Jaeger("auth_db", cfg.JaegerURL, logger)
+	dbTracer, dbCloser, err := jaegerClient.NewTracer("auth_db", cfg.JaegerURL)
+	if err != nil {
+		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+	}
 	defer dbCloser.Close()
 
-	readerConn, writerConn := internalauth.Keto(cfg.KetoReadHost, cfg.KetoReadPort, cfg.KetoWriteHost, cfg.KetoWritePort, logger)
+	readerConn, _, err := grpcClient.Connect(grpcClient.Config{ClientTLS: false, URL: fmt.Sprintf("%s:%s", cfg.KetoReadHost, cfg.KetoReadPort)})
+	if err != nil {
+		log.Fatalf("Failed to connect to keto gRPC: %s", err.Error())
+	}
+	writerConn, _, err := grpcClient.Connect(grpcClient.Config{ClientTLS: false, URL: fmt.Sprintf("%s:%s", cfg.KetoWriteHost, cfg.KetoWritePort)})
+	if err != nil {
+		log.Fatalf("Failed to connect to keto gRPC: %s", err.Error())
+	}
 
 	svc := newService(db, dbTracer, cfg.Secret, logger, readerConn, writerConn, cfg.LoginDuration)
 

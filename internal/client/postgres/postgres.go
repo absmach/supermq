@@ -9,18 +9,19 @@ import (
 )
 
 type Config struct {
-	Host        string `env:"MF_AUTH_DB_HOST"           envDefault:"localhost"`
-	Port        string `env:"MF_AUTH_DB_PORT"           envDefault:"5432"`
-	User        string `env:"MF_AUTH_DB_USER"           envDefault:"mainflux"`
-	Pass        string `env:"MF_AUTH_DB_PASS"           envDefault:"mainflux"`
-	Name        string `env:"MF_AUTH_DB"                envDefault:"auth"`
-	SSLMode     string `env:"MF_AUTH_DB_SSL_MODE"       envDefault:"disable"`
-	SSLCert     string `env:"MF_AUTH_DB_SSL_CERT"       envDefault:""`
-	SSLKey      string `env:"MF_AUTH_DB_SSL_KEY"        envDefault:""`
-	SSLRootCert string `env:"MF_AUTH_DB_SSL_ROOT_CERT"  envDefault:""`
+	Host        string `env:"DB_HOST"           envDefault:"localhost"`
+	Port        string `env:"DB_PORT"           envDefault:"5432"`
+	User        string `env:"DB_USER"           envDefault:"mainflux"`
+	Pass        string `env:"DB_PASS"           envDefault:"mainflux"`
+	Name        string `env:"DB"                envDefault:"auth"`
+	SSLMode     string `env:"DB_SSL_MODE"       envDefault:"disable"`
+	SSLCert     string `env:"DB_SSL_CERT"       envDefault:""`
+	SSLKey      string `env:"DB_SSL_KEY"        envDefault:""`
+	SSLRootCert string `env:"DB_SSL_ROOT_CERT"  envDefault:""`
 }
 
-// SetupDB create connection to database and migrate
+// SetupDB creates a connection to the PostgreSQL instance and applies any
+// unapplied database migrations. A non-nil error is returned to indicate failure.
 func SetupDB(cfg Config, migrations migrate.MemoryMigrationSource) (*sqlx.DB, error) {
 	db, err := Connect(cfg)
 	if err != nil {
@@ -32,8 +33,7 @@ func SetupDB(cfg Config, migrations migrate.MemoryMigrationSource) (*sqlx.DB, er
 	return db, nil
 }
 
-// Connect creates a connection to the PostgreSQL instance and applies any
-// unapplied database migrations. A non-nil error is returned to indicate failure.
+// Connect creates a connection to the PostgreSQL instance
 func Connect(cfg Config) (*sqlx.DB, error) {
 	url := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s sslcert=%s sslkey=%s sslrootcert=%s", cfg.Host, cfg.Port, cfg.User, cfg.Name, cfg.Pass, cfg.SSLMode, cfg.SSLCert, cfg.SSLKey, cfg.SSLRootCert)
 
@@ -45,6 +45,7 @@ func Connect(cfg Config) (*sqlx.DB, error) {
 	return db, nil
 }
 
+// Migrate applies any unapplied database migrations
 func MigrateDB(db *sqlx.DB, migrations migrate.MemoryMigrationSource) error {
 	_, err := migrate.Exec(db.DB, "postgres", migrations, migrate.Up)
 	return err

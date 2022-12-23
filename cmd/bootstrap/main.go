@@ -4,140 +4,116 @@ package main
 
 import (
 	"context"
-	"crypto/aes"
-	"encoding/hex"
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"time"
 
-	authapi "github.com/mainflux/mainflux/auth/api/grpc"
-	rediscons "github.com/mainflux/mainflux/bootstrap/redis/consumer"
-	redisprod "github.com/mainflux/mainflux/bootstrap/redis/producer"
-	"github.com/mainflux/mainflux/internal"
-	internalauth "github.com/mainflux/mainflux/internal/auth"
-	internaldb "github.com/mainflux/mainflux/internal/db"
-	"github.com/mainflux/mainflux/internal/server"
-	httpserver "github.com/mainflux/mainflux/internal/server/http"
-	"github.com/mainflux/mainflux/logger"
-	"golang.org/x/sync/errgroup"
-
+	"github.com/caarlos0/env/v6"
 	r "github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
+	authapi "github.com/mainflux/mainflux/auth/api/grpc"
 	"github.com/mainflux/mainflux/bootstrap"
 	api "github.com/mainflux/mainflux/bootstrap/api"
-	"github.com/mainflux/mainflux/bootstrap/postgres"
+	bootstrapRepo "github.com/mainflux/mainflux/bootstrap/postgres"
+	rediscons "github.com/mainflux/mainflux/bootstrap/redis/consumer"
+	redisprod "github.com/mainflux/mainflux/bootstrap/redis/producer"
+	"github.com/mainflux/mainflux/internal"
+	grpcClient "github.com/mainflux/mainflux/internal/client/grpc"
+	jaegerClient "github.com/mainflux/mainflux/internal/client/jaeger"
+	pgClient "github.com/mainflux/mainflux/internal/client/postgres"
+	redisClient "github.com/mainflux/mainflux/internal/client/redis"
+	"github.com/mainflux/mainflux/internal/server"
+	httpserver "github.com/mainflux/mainflux/internal/server/http"
+	"github.com/mainflux/mainflux/logger"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
+	"golang.org/x/sync/errgroup"
 )
 
 const (
-	svcName = "bootstrap"
-
-	defLogLevel       = "error"
-	defDBHost         = "localhost"
-	defDBPort         = "5432"
-	defDBUser         = "mainflux"
-	defDBPass         = "mainflux"
-	defDB             = "bootstrap"
-	defDBSSLMode      = "disable"
-	defDBSSLCert      = ""
-	defDBSSLKey       = ""
-	defDBSSLRootCert  = ""
-	defEncryptKey     = "12345678910111213141516171819202"
-	defClientTLS      = "false"
-	defCACerts        = ""
-	defPort           = "8180"
-	defServerCert     = ""
-	defServerKey      = ""
-	defThingsURL      = "http://localhost"
-	defThingsESURL    = "localhost:6379"
-	defThingsESPass   = ""
-	defThingsESDB     = "0"
-	defESURL          = "localhost:6379"
-	defESPass         = ""
-	defESDB           = "0"
-	defESConsumerName = "bootstrap"
-	defJaegerURL      = ""
-	defAuthURL        = "localhost:8181"
-	defAuthTimeout    = "1s"
-
-	envLogLevel       = "MF_BOOTSTRAP_LOG_LEVEL"
-	envDBHost         = "MF_BOOTSTRAP_DB_HOST"
-	envDBPort         = "MF_BOOTSTRAP_DB_PORT"
-	envDBUser         = "MF_BOOTSTRAP_DB_USER"
-	envDBPass         = "MF_BOOTSTRAP_DB_PASS"
-	envDB             = "MF_BOOTSTRAP_DB"
-	envDBSSLMode      = "MF_BOOTSTRAP_DB_SSL_MODE"
-	envDBSSLCert      = "MF_BOOTSTRAP_DB_SSL_CERT"
-	envDBSSLKey       = "MF_BOOTSTRAP_DB_SSL_KEY"
-	envDBSSLRootCert  = "MF_BOOTSTRAP_DB_SSL_ROOT_CERT"
-	envEncryptKey     = "MF_BOOTSTRAP_ENCRYPT_KEY"
-	envClientTLS      = "MF_BOOTSTRAP_CLIENT_TLS"
-	envCACerts        = "MF_BOOTSTRAP_CA_CERTS"
-	envPort           = "MF_BOOTSTRAP_PORT"
-	envServerCert     = "MF_BOOTSTRAP_SERVER_CERT"
-	envServerKey      = "MF_BOOTSTRAP_SERVER_KEY"
-	envThingsURL      = "MF_THINGS_URL"
-	envThingsESURL    = "MF_THINGS_ES_URL"
-	envThingsESPass   = "MF_THINGS_ES_PASS"
-	envThingsESDB     = "MF_THINGS_ES_DB"
-	envESURL          = "MF_BOOTSTRAP_ES_URL"
-	envESPass         = "MF_BOOTSTRAP_ES_PASS"
-	envESDB           = "MF_BOOTSTRAP_ES_DB"
-	envESConsumerName = "MF_BOOTSTRAP_EVENT_CONSUMER"
-	envJaegerURL      = "MF_JAEGER_URL"
-	envAuthURL        = "MF_AUTH_GRPC_URL"
-	envAuthTimeout    = "MF_AUTH_GRPC_TIMEOUT"
+	svcName       = "bootstrap"
+	envPreFix     = "MF_BOOTSTRAP_"
+	thingESPrefix = "MF_THINGS_"
 )
 
 type config struct {
-	logLevel       string
-	dbConfig       postgres.Config
-	clientTLS      bool
-	encKey         []byte
-	caCerts        string
-	httpPort       string
-	serverCert     string
-	serverKey      string
-	thingsURL      string
-	esThingsURL    string
-	esThingsPass   string
-	esThingsDB     string
-	esURL          string
-	esPass         string
-	esDB           string
-	esConsumerName string
-	jaegerURL      string
-	authURL        string
-	authTimeout    time.Duration
+	logLevel       string        `env:"MF_BOOTSTRAP_LOG_LEVEL"        default:"debug"`
+	clientTLS      bool          `env:"MF_BOOTSTRAP_CLIENT_TLS"       default:"false"`
+	encKey         []byte        `env:"MF_BOOTSTRAP_ENCRYPT_KEY"      default:"12345678910111213141516171819202"`
+	caCerts        string        `env:"MF_BOOTSTRAP_CA_CERTS"         default:""`
+	httpPort       string        `env:"MF_BOOTSTRAP_PORT"             default:"8180"`
+	serverCert     string        `env:"MF_BOOTSTRAP_SERVER_CERT"      default:""`
+	serverKey      string        `env:"MF_BOOTSTRAP_SERVER_KEY"       default:""`
+	thingsURL      string        `env:"MF_THINGS_URL"                 default:"http://localhost"`
+	esConsumerName string        `env:"MF_BOOTSTRAP_EVENT_CONSUMER"   default:"bootstrap"`
+	jaegerURL      string        `env:"MF_JAEGER_URL"                 default:""`
+	authURL        string        `env:"MF_AUTH_GRPC_URL"              default:"localhost:8181"`
+	authTimeout    time.Duration `env:"MF_AUTH_GRPC_TIMEOUT"          default:"1s"`
 }
 
 func main() {
-	cfg := loadConfig()
+	cfg := config{}
+	dbConfig := pgClient.Config{}
+	thingESConfig := redisClient.Config{}
+	bootstrapESConfig := redisClient.Config{}
 	ctx, cancel := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
+
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to load %s configuration : %s", svcName, err.Error()))
+	}
+	if err := env.Parse(&dbConfig, env.Options{Prefix: envPreFix}); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to load %s database configuration : %s", svcName, err.Error()))
+	}
+
+	if err := env.Parse(&bootstrapESConfig, env.Options{Prefix: envPreFix}); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to load %s bootstrap event store configuration : %s", svcName, err.Error()))
+	}
+
+	if err := env.Parse(&thingESConfig, env.Options{Prefix: thingESPrefix}); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to load %s things event store configuration : %s", svcName, err.Error()))
+	}
 
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 
-	db := connectToDB(cfg.dbConfig, logger)
+	db, err := pgClient.SetupDB(dbConfig, *bootstrapRepo.Migration())
+	if err != nil {
+		log.Fatalf("Failed to setup %s database : %s", svcName, err.Error())
+	}
 	defer db.Close()
 
-	thingsESConn := internaldb.ConnectToRedis(cfg.esThingsURL, cfg.esThingsPass, cfg.esThingsDB, logger)
-	defer thingsESConn.Close()
-
-	esClient := internaldb.ConnectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
+	esClient, err := redisClient.Connect(bootstrapESConfig)
+	if err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to setup %s bootstrap event store redis client : %s", svcName, err.Error()))
+	}
 	defer esClient.Close()
 
-	authTracer, authCloser := internalauth.Jaeger("auth", cfg.jaegerURL, logger)
+	thingsESConn, err := redisClient.Connect(thingESConfig)
+	if err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to setup %s things event store redis client : %s", svcName, err.Error()))
+	}
+	defer thingsESConn.Close()
+
+	authTracer, authCloser, err := jaegerClient.NewTracer("auth", cfg.jaegerURL)
+	if err != nil {
+		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+	}
 	defer authCloser.Close()
 
-	authConn := internalauth.ConnectToAuth(cfg.clientTLS, cfg.caCerts, cfg.authURL, svcName, logger)
+	authConn, secure, err := grpcClient.Connect(grpcClient.Config{ClientTLS: cfg.clientTLS, CACerts: cfg.caCerts, URL: cfg.authURL})
+	if err != nil {
+		log.Fatalf("Failed to connect with auth gRPC : %s ", err.Error())
+	}
 	defer authConn.Close()
+	secureMsg := "without TLS"
+	if secure {
+		secureMsg = "with TLS"
+	}
+	logger.Info(fmt.Sprintf("Connected to auth gRPC %s", secureMsg))
 
 	auth := authapi.NewClient(authTracer, authConn, cfg.authTimeout)
 
@@ -159,72 +135,8 @@ func main() {
 	}
 }
 
-func loadConfig() config {
-	tls, err := strconv.ParseBool(mainflux.Env(envClientTLS, defClientTLS))
-	if err != nil {
-		tls = false
-	}
-	dbConfig := postgres.Config{
-		Host:        mainflux.Env(envDBHost, defDBHost),
-		Port:        mainflux.Env(envDBPort, defDBPort),
-		User:        mainflux.Env(envDBUser, defDBUser),
-		Pass:        mainflux.Env(envDBPass, defDBPass),
-		Name:        mainflux.Env(envDB, defDB),
-		SSLMode:     mainflux.Env(envDBSSLMode, defDBSSLMode),
-		SSLCert:     mainflux.Env(envDBSSLCert, defDBSSLCert),
-		SSLKey:      mainflux.Env(envDBSSLKey, defDBSSLKey),
-		SSLRootCert: mainflux.Env(envDBSSLRootCert, defDBSSLRootCert),
-	}
-
-	authTimeout, err := time.ParseDuration(mainflux.Env(envAuthTimeout, defAuthTimeout))
-	if err != nil {
-		log.Fatalf("Invalid %s value: %s", envAuthTimeout, err.Error())
-	}
-	encKey, err := hex.DecodeString(mainflux.Env(envEncryptKey, defEncryptKey))
-	if err != nil {
-		log.Fatalf("Invalid %s value: %s", envEncryptKey, err.Error())
-	}
-	if err := os.Unsetenv(envEncryptKey); err != nil {
-		log.Fatalf("Unable to unset %s value: %s", envEncryptKey, err.Error())
-	}
-	if _, err := aes.NewCipher(encKey); err != nil {
-		log.Fatalf("Invalid %s value: %s", envEncryptKey, err.Error())
-	}
-
-	return config{
-		logLevel:       mainflux.Env(envLogLevel, defLogLevel),
-		dbConfig:       dbConfig,
-		clientTLS:      tls,
-		encKey:         encKey,
-		caCerts:        mainflux.Env(envCACerts, defCACerts),
-		httpPort:       mainflux.Env(envPort, defPort),
-		serverCert:     mainflux.Env(envServerCert, defServerCert),
-		serverKey:      mainflux.Env(envServerKey, defServerKey),
-		thingsURL:      mainflux.Env(envThingsURL, defThingsURL),
-		esThingsURL:    mainflux.Env(envThingsESURL, defThingsESURL),
-		esThingsPass:   mainflux.Env(envThingsESPass, defThingsESPass),
-		esThingsDB:     mainflux.Env(envThingsESDB, defThingsESDB),
-		esURL:          mainflux.Env(envESURL, defESURL),
-		esPass:         mainflux.Env(envESPass, defESPass),
-		esDB:           mainflux.Env(envESDB, defESDB),
-		esConsumerName: mainflux.Env(envESConsumerName, defESConsumerName),
-		jaegerURL:      mainflux.Env(envJaegerURL, defJaegerURL),
-		authURL:        mainflux.Env(envAuthURL, defAuthURL),
-		authTimeout:    authTimeout,
-	}
-}
-
-func connectToDB(cfg postgres.Config, logger logger.Logger) *sqlx.DB {
-	db, err := postgres.Connect(cfg)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to postgres: %s", err))
-		os.Exit(1)
-	}
-	return db
-}
-
 func newService(auth mainflux.AuthServiceClient, db *sqlx.DB, logger logger.Logger, esClient *r.Client, cfg config) bootstrap.Service {
-	thingsRepo := postgres.NewConfigRepository(db, logger)
+	thingsRepo := bootstrapRepo.NewConfigRepository(db, logger)
 
 	config := mfsdk.Config{
 		ThingsURL: cfg.thingsURL,

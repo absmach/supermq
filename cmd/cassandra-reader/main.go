@@ -28,16 +28,12 @@ import (
 )
 
 const (
-	svcName      = "cassandra-reader"
+	svcName = "cassandra-reader"
 
-	sep                  = ","
-	defLogLevel          = "error"
-	defPort              = "8180"
-	defCluster           = "127.0.0.1"
-	defKeyspace          = "mainflux"
-	defDBUser            = "mainflux"
-	defDBPass            = "mainflux"
-	defDBPort            = "9042"
+	sep         = ","
+	defLogLevel = "error"
+	defPort     = "8180"
+
 	defClientTLS         = "false"
 	defCACerts           = ""
 	defServerCert        = ""
@@ -48,13 +44,9 @@ const (
 	defUsersAuthURL      = "localhost:8181"
 	defUsersAuthTimeout  = "1s"
 
-	envLogLevel          = "MF_CASSANDRA_READER_LOG_LEVEL"
-	envPort              = "MF_CASSANDRA_READER_PORT"
-	envCluster           = "MF_CASSANDRA_READER_DB_CLUSTER"
-	envKeyspace          = "MF_CASSANDRA_READER_DB_KEYSPACE"
-	envDBUser            = "MF_CASSANDRA_READER_DB_USER"
-	envDBPass            = "MF_CASSANDRA_READER_DB_PASS"
-	envDBPort            = "MF_CASSANDRA_READER_DB_PORT"
+	envLogLevel = "MF_CASSANDRA_READER_LOG_LEVEL"
+	envPort     = "MF_CASSANDRA_READER_PORT"
+
 	envClientTLS         = "MF_CASSANDRA_READER_CLIENT_TLS"
 	envCACerts           = "MF_CASSANDRA_READER_CA_CERTS"
 	envServerCert        = "MF_CASSANDRA_READER_SERVER_CERT"
@@ -67,18 +59,17 @@ const (
 )
 
 type config struct {
-	logLevel          string
-	port              string
-	dbCfg             cassandra.DBConfig
-	clientTLS         bool
-	caCerts           string
-	serverCert        string
-	serverKey         string
-	jaegerURL         string
-	thingsAuthURL     string
-	usersAuthURL      string
-	thingsAuthTimeout time.Duration
-	usersAuthTimeout  time.Duration
+	logLevel          string        `env:"MF_CASSANDRA_READER_LOG_LEVEL"     default:"debug" `
+	port              string        `env:"MF_CASSANDRA_READER_PORT"     default:"8180" `
+	clientTLS         bool          `env:"DB_CLUSTER"     default:"false" `
+	caCerts           string        `env:"DB_CLUSTER"     default:"" `
+	serverCert        string        `env:"DB_CLUSTER"     default:"" `
+	serverKey         string        `env:"DB_CLUSTER"     default:"" `
+	jaegerURL         string        `env:"DB_CLUSTER"     default:"" `
+	thingsAuthURL     string        `env:"DB_CLUSTER"     default:"" `
+	usersAuthURL      string        `env:"DB_CLUSTER"     default:"" `
+	thingsAuthTimeout time.Duration `env:"DB_CLUSTER"     default:"" `
+	usersAuthTimeout  time.Duration `env:"DB_CLUSTER"     default:"" `
 }
 
 func main() {
