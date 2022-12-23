@@ -9,7 +9,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/caarlos0/env/v6"
 	r "github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
@@ -24,6 +23,7 @@ import (
 	jaegerClient "github.com/mainflux/mainflux/internal/client/jaeger"
 	pgClient "github.com/mainflux/mainflux/internal/client/postgres"
 	redisClient "github.com/mainflux/mainflux/internal/client/redis"
+	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
 	"github.com/mainflux/mainflux/logger"
@@ -32,16 +32,18 @@ import (
 )
 
 const (
-	svcName       = "bootstrap"
-	envPreFix     = "MF_BOOTSTRAP_"
-	thingESPrefix = "MF_THINGS_"
+	svcName        = "bootstrap"
+	envPreFix      = "MF_BOOTSTRAP_"
+	envThingPrefix = "MF_THINGS_"
+	envAuthPrefix  = "MF_AUTH_"
 )
 
 type config struct {
-	logLevel       string        `env:"MF_BOOTSTRAP_LOG_LEVEL"        default:"debug"`
-	clientTLS      bool          `env:"MF_BOOTSTRAP_CLIENT_TLS"       default:"false"`
-	encKey         []byte        `env:"MF_BOOTSTRAP_ENCRYPT_KEY"      default:"12345678910111213141516171819202"`
-	caCerts        string        `env:"MF_BOOTSTRAP_CA_CERTS"         default:""`
+	logLevel string `env:"MF_BOOTSTRAP_LOG_LEVEL"        default:"debug"`
+	// clientTLS      bool          `env:"MF_BOOTSTRAP_CLIENT_TLS"       default:"false"`
+	// clientTLS      bool          `env:"MF_BOOTSTRAP_CLIENT_TLS"       default:"false"`
+	encKey []byte `env:"MF_BOOTSTRAP_ENCRYPT_KEY"      default:"12345678910111213141516171819202"`
+	// caCerts        string        `env:"MF_BOOTSTRAP_CA_CERTS"         default:""`
 	httpPort       string        `env:"MF_BOOTSTRAP_PORT"             default:"8180"`
 	serverCert     string        `env:"MF_BOOTSTRAP_SERVER_CERT"      default:""`
 	serverKey      string        `env:"MF_BOOTSTRAP_SERVER_KEY"       default:""`
@@ -57,6 +59,8 @@ func main() {
 	dbConfig := pgClient.Config{}
 	thingESConfig := redisClient.Config{}
 	bootstrapESConfig := redisClient.Config{}
+	authGrpcConfig := grpcClient.Config{}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
 
@@ -71,8 +75,12 @@ func main() {
 		log.Fatalf(fmt.Sprintf("Failed to load %s bootstrap event store configuration : %s", svcName, err.Error()))
 	}
 
-	if err := env.Parse(&thingESConfig, env.Options{Prefix: thingESPrefix}); err != nil {
+	if err := env.Parse(&thingESConfig, env.Options{Prefix: envThingPrefix}); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to load %s things event store configuration : %s", svcName, err.Error()))
+	}
+
+	if err := env.Parse(&authGrpcConfig, env.Options{Prefix: envPreFix, AltPrefix: envAuthPrefix}); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to load %s configuration : %s", svcName, err.Error()))
 	}
 
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
@@ -104,7 +112,7 @@ func main() {
 	}
 	defer authCloser.Close()
 
-	authConn, secure, err := grpcClient.Connect(grpcClient.Config{ClientTLS: cfg.clientTLS, CACerts: cfg.caCerts, URL: cfg.authURL})
+	authConn, secure, err := grpcClient.Connect(authGrpcConfig)
 	if err != nil {
 		log.Fatalf("Failed to connect with auth gRPC : %s ", err.Error())
 	}
