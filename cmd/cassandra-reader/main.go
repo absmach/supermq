@@ -8,15 +8,14 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/gocql/gocql"
-	"github.com/mainflux/mainflux"
 	authapi "github.com/mainflux/mainflux/auth/api/grpc"
 	"github.com/mainflux/mainflux/internal"
-	internalauth "github.com/mainflux/mainflux/internal/auth"
+	cassandraClient "github.com/mainflux/mainflux/internal/client/cassandra"
+	grpcClient "github.com/mainflux/mainflux/internal/client/grpc"
+	jaegerClient "github.com/mainflux/mainflux/internal/client/jaeger"
+	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
 	"github.com/mainflux/mainflux/logger"
@@ -28,81 +27,121 @@ import (
 )
 
 const (
-	svcName = "cassandra-reader"
-
-	sep         = ","
-	defLogLevel = "error"
-	defPort     = "8180"
-
-	defClientTLS         = "false"
-	defCACerts           = ""
-	defServerCert        = ""
-	defServerKey         = ""
-	defJaegerURL         = ""
-	defThingsAuthURL     = "localhost:8183"
-	defThingsAuthTimeout = "1s"
-	defUsersAuthURL      = "localhost:8181"
-	defUsersAuthTimeout  = "1s"
-
-	envLogLevel = "MF_CASSANDRA_READER_LOG_LEVEL"
-	envPort     = "MF_CASSANDRA_READER_PORT"
-
-	envClientTLS         = "MF_CASSANDRA_READER_CLIENT_TLS"
-	envCACerts           = "MF_CASSANDRA_READER_CA_CERTS"
-	envServerCert        = "MF_CASSANDRA_READER_SERVER_CERT"
-	envServerKey         = "MF_CASSANDRA_READER_SERVER_KEY"
-	envJaegerURL         = "MF_JAEGER_URL"
-	envThingsAuthURL     = "MF_THINGS_AUTH_GRPC_URL"
-	envThingsAuthTimeout = "MF_THINGS_AUTH_GRPC_TIMEOUT"
-	envUsersAuthURL      = "MF_AUTH_GRPC_URL"
-	envUsersAuthTimeout  = "MF_AUTH_GRPC_TIMEOUT"
+	svcName        = "cassandra-reader"
+	envPrefix      = "MF_CASSANDRA_READER_"
+	envPrefixHttp  = "MF_CASSANDRA_READER_HTTP_"
+	envThingPrefix = "MF_THINGS_"
+	envAuthPrefix  = "MF_AUTH_"
+	sep            = ","
+	defLogLevel    = "error"
+	defPort        = "8180"
 )
 
 type config struct {
-	logLevel          string        `env:"MF_CASSANDRA_READER_LOG_LEVEL"     default:"debug" `
-	port              string        `env:"MF_CASSANDRA_READER_PORT"     default:"8180" `
-	clientTLS         bool          `env:"DB_CLUSTER"     default:"false" `
-	caCerts           string        `env:"DB_CLUSTER"     default:"" `
-	serverCert        string        `env:"DB_CLUSTER"     default:"" `
-	serverKey         string        `env:"DB_CLUSTER"     default:"" `
-	jaegerURL         string        `env:"DB_CLUSTER"     default:"" `
-	thingsAuthURL     string        `env:"DB_CLUSTER"     default:"" `
-	usersAuthURL      string        `env:"DB_CLUSTER"     default:"" `
-	thingsAuthTimeout time.Duration `env:"DB_CLUSTER"     default:"" `
-	usersAuthTimeout  time.Duration `env:"DB_CLUSTER"     default:"" `
+	logLevel  string `env:"MF_CASSANDRA_READER_LOG_LEVEL"     default:"debug" `
+	jaegerURL string `env:"MF_JAEGER_URL"                     default:"" `
 }
 
 func main() {
-	cfg := loadConfig()
 	ctx, cancel := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
 
+	// create cassandra reader service configurations
+	cfg := config{}
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatalf("Failed to load %s service configuration : %s", svcName, err.Error())
+	}
+
+	// create new logger
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 
-	session := connectToCassandra(cfg.dbCfg, logger)
-	defer session.Close()
+	///////////////// CASSANDRA CLIENT /////////////////////////
+	// create new cassandra config
+	cassandraConfig := cassandraClient.Config{}
+	// load cassandra config from environment
+	if err := env.Parse(&cassandraConfig, env.Options{Prefix: envPrefix}); err != nil {
+		log.Fatalf("Failed to load Cassandra database configuration : %s", err.Error())
+	}
+	// create new to cassandra client
+	cassaSession, err := cassandraClient.Connect(cassandraConfig)
+	if err != nil {
+		log.Fatalf("Failed to connect to Cassandra database : %s", err.Error())
+	}
+	defer cassaSession.Close()
 
-	conn := internalauth.ConnectToThings(cfg.clientTLS, cfg.caCerts, cfg.thingsAuthURL, svcName, logger)
-	defer conn.Close()
-
-	thingsTracer, thingsCloser := internalauth.Jaeger("things", cfg.jaegerURL, logger)
+	///////////////// THING GRPC CLIENT /////////////////////////
+	// create thing grpc config
+	thingGrpcConfig := grpcClient.Config{}
+	// load things grpc client config from environment
+	if err := env.Parse(&thingGrpcConfig, env.Options{Prefix: envPrefix, AltPrefix: envThingPrefix}); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to thing grpc client configuration : %s", err.Error()))
+	}
+	// connect to thing grpc server
+	thingGrpcClient, secure, err := grpcClient.Connect(thingGrpcConfig)
+	if err != nil {
+		log.Fatalf("Failed to connect to things gRPC server : %s ", err.Error())
+	}
+	defer thingGrpcClient.Close()
+	secureMsg := "without TLS"
+	if secure {
+		secureMsg = "with TLS"
+	}
+	logger.Info(fmt.Sprintf("Connected to things gRPC server %s", secureMsg))
+	// initialize things tracer for things grpc client
+	thingsTracer, thingsCloser, err := jaegerClient.NewTracer("things", cfg.jaegerURL)
+	if err != nil {
+		log.Fatalf("Failed to initialize to jaeger : %s ", err.Error())
+	}
 	defer thingsCloser.Close()
+	// create new thing grpc client
+	tc := thingsapi.NewClient(thingGrpcClient, thingsTracer, thingGrpcConfig.Timeout)
 
-	tc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
-	authTracer, authCloser := internalauth.Jaeger("auth", cfg.jaegerURL, logger)
+	///////////////// AUTH GRPC CLIENT //////////////////////////
+	// loading auth grpc config
+	authGrpcConfig := grpcClient.Config{}
+	if err := env.Parse(&authGrpcConfig, env.Options{Prefix: envPrefix, AltPrefix: envThingPrefix}); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to auth grpc client configuration : %s", err.Error()))
+	}
+
+	// connect to auth grpc server
+	authGrpcClient, secure, err := grpcClient.Connect(thingGrpcConfig)
+	if err != nil {
+		log.Fatalf("Failed to connect to things gRPC : %s ", err.Error())
+	}
+	defer authGrpcClient.Close()
+	secureMsg = "without TLS"
+	if secure {
+		secureMsg = "with TLS"
+	}
+	logger.Info(fmt.Sprintf("Connected to auth gRPC %s", secureMsg))
+
+	// initialize auth tracer for auth grpc client
+	authTracer, authCloser, err := jaegerClient.NewTracer("auth", cfg.jaegerURL)
+	if err != nil {
+		log.Fatalf("Failed to initialize to jaeger : %s ", err.Error())
+	}
 	defer authCloser.Close()
 
-	authConn := internalauth.ConnectToAuth(cfg.clientTLS, cfg.caCerts, cfg.usersAuthURL, svcName, logger)
-	defer authConn.Close()
+	// create new auth grpc client
+	auth := authapi.NewClient(authTracer, authGrpcClient, authGrpcConfig.Timeout)
 
-	auth := authapi.NewClient(authTracer, authConn, cfg.usersAuthTimeout)
+	////////// CASSANDRA READER REPO /////////////
+	repo := newService(cassaSession, logger)
 
-	repo := newService(session, logger)
+	///////////////// HTTP SERVER //////////////////////////
+	// create new http server config
+	httpServerConfig := server.Config{}
+	// load http server config from environment variables
+	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefix, AltPrefix: envPrefixHttp}); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to load %s HTTP server configuration : %s", svcName, err.Error()))
+	}
+	// create new http server
+	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(repo, tc, auth, svcName, logger), logger)
 
-	hs := httpserver.New(ctx, cancel, svcName, "", cfg.port, api.MakeHandler(repo, tc, auth, svcName, logger), cfg.serverCert, cfg.serverKey, logger)
+	//Start servers
 	g.Go(func() error {
 		return hs.Start()
 	})
@@ -116,66 +155,10 @@ func main() {
 	}
 }
 
-func loadConfig() config {
-	dbPort, err := strconv.Atoi(mainflux.Env(envDBPort, defDBPort))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	dbCfg := cassandra.DBConfig{
-		Hosts:    strings.Split(mainflux.Env(envCluster, defCluster), sep),
-		Keyspace: mainflux.Env(envKeyspace, defKeyspace),
-		User:     mainflux.Env(envDBUser, defDBUser),
-		Pass:     mainflux.Env(envDBPass, defDBPass),
-		Port:     dbPort,
-	}
-
-	tls, err := strconv.ParseBool(mainflux.Env(envClientTLS, defClientTLS))
-	if err != nil {
-		log.Fatalf("Invalid value passed for %s\n", envClientTLS)
-	}
-
-	authTimeout, err := time.ParseDuration(mainflux.Env(envThingsAuthTimeout, defThingsAuthTimeout))
-	if err != nil {
-		log.Fatalf("Invalid %s value: %s", envThingsAuthTimeout, err.Error())
-	}
-
-	usersAuthTimeout, err := time.ParseDuration(mainflux.Env(envUsersAuthTimeout, defUsersAuthTimeout))
-	if err != nil {
-		log.Fatalf("Invalid %s value: %s", envThingsAuthTimeout, err.Error())
-	}
-
-	return config{
-		logLevel:          mainflux.Env(envLogLevel, defLogLevel),
-		port:              mainflux.Env(envPort, defPort),
-		dbCfg:             dbCfg,
-		clientTLS:         tls,
-		caCerts:           mainflux.Env(envCACerts, defCACerts),
-		serverCert:        mainflux.Env(envServerCert, defServerCert),
-		serverKey:         mainflux.Env(envServerKey, defServerKey),
-		jaegerURL:         mainflux.Env(envJaegerURL, defJaegerURL),
-		thingsAuthURL:     mainflux.Env(envThingsAuthURL, defThingsAuthURL),
-		usersAuthURL:      mainflux.Env(envUsersAuthURL, defUsersAuthURL),
-		usersAuthTimeout:  usersAuthTimeout,
-		thingsAuthTimeout: authTimeout,
-	}
-}
-
-func connectToCassandra(dbCfg cassandra.DBConfig, logger logger.Logger) *gocql.Session {
-	session, err := cassandra.Connect(dbCfg)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to Cassandra cluster: %s", err))
-		os.Exit(1)
-	}
-
-	return session
-}
-
-func newService(session *gocql.Session, logger logger.Logger) readers.MessageRepository {
-	repo := cassandra.New(session)
+func newService(cassaSession *gocql.Session, logger logger.Logger) readers.MessageRepository {
+	repo := cassandra.New(cassaSession)
 	repo = api.LoggingMiddleware(repo, logger)
 	counter, latency := internal.MakeMetrics("cassandra", "message_reader")
 	repo = api.MetricsMiddleware(repo, counter, latency)
-
 	return repo
 }

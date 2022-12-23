@@ -7,7 +7,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/caarlos0/env/v6"
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/auth"
@@ -22,6 +21,7 @@ import (
 	grpcClient "github.com/mainflux/mainflux/internal/client/grpc"
 	jaegerClient "github.com/mainflux/mainflux/internal/client/jaeger"
 	pgClient "github.com/mainflux/mainflux/internal/client/postgres"
+	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	grpcserver "github.com/mainflux/mainflux/internal/server/grpc"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
@@ -36,16 +36,14 @@ import (
 const (
 	svcName          = "auth"
 	defListenAddress = ""
-	envPreFix        = "MF_AUTH_"
+	envPrefix        = "MF_AUTH_"
+	envPrefixHttp    = "MF_AUTH_HTTP_"
+	envPrefixGrpc    = "MF_AUTH_GRPC_"
 )
 
 type config struct {
 	LogLevel      string        `env:"MF_AUTH_LOG_LEVEL"             default:"debug"`
-	HttpPort      string        `env:"MF_AUTH_HTTP_PORT"             default:"6180"`
-	GrpcPort      string        `env:"MF_AUTH_GRPC_PORT"             default:"6181"`
 	Secret        string        `env:"MF_AUTH_SECRET"                default:"auth"`
-	ServerCert    string        `env:"MF_AUTH_SERVER_CERT"           default:""`
-	ServerKey     string        `env:"MF_AUTH_SERVER_KEY"            default:""`
 	JaegerURL     string        `env:"MF_JAEGER_URL"                 default:""`
 	KetoReadHost  string        `env:"MF_KETO_READ_REMOTE_HOST"      default:"mainflux-keto"`
 	KetoWriteHost string        `env:"MF_KETO_WRITE_REMOTE_HOST"     default:"mainflux-keto"`
@@ -55,45 +53,56 @@ type config struct {
 }
 
 func main() {
-	cfg := config{}
-	dbConfig := pgClient.Config{}
+	ctx, cancel := context.WithCancel(context.Background())
+	g, ctx := errgroup.WithContext(ctx)
 
+	// create auth service configurations
+	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to load %s configuration : %s", svcName, err.Error()))
 	}
-	if err := env.Parse(&dbConfig, env.Options{Prefix: envPreFix}); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to load %s database configuration : %s", svcName, err.Error()))
-	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	g, ctx := errgroup.WithContext(ctx)
+	// create new logger
 	logger, err := logger.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 
+	///////////////// POSTGRES CLIENT /////////////////////////
+	// create new postgres config
+	dbConfig := pgClient.Config{}
+	// load postgres config from environment
+	if err := env.Parse(&dbConfig, env.Options{Prefix: envPrefix}); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to load %s database configuration : %s", svcName, err.Error()))
+	}
+	// create new postgres client
 	db, err := pgClient.SetupDB(dbConfig, *authRepo.Migration())
 	if err != nil {
 		log.Fatalf("Failed to setup %s database : %s", svcName, err.Error())
 	}
 	defer db.Close()
 
-	tracer, closer, err := jaegerClient.NewTracer("auth", cfg.JaegerURL)
-	if err != nil {
-		log.Fatalf("Failed to init Jaeger: %s", err.Error())
-	}
-	defer closer.Close()
-
+	///////////////// AUTH SERVICE /////////////////////////
+	// create new tracker for database
 	dbTracer, dbCloser, err := jaegerClient.NewTracer("auth_db", cfg.JaegerURL)
 	if err != nil {
 		log.Fatalf("Failed to init Jaeger: %s", err.Error())
 	}
 	defer dbCloser.Close()
 
+	// create new jaeger tracer
+	tracer, closer, err := jaegerClient.NewTracer("auth", cfg.JaegerURL)
+	if err != nil {
+		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+	}
+	defer closer.Close()
+
+	//create keto read grpc client
 	readerConn, _, err := grpcClient.Connect(grpcClient.Config{ClientTLS: false, URL: fmt.Sprintf("%s:%s", cfg.KetoReadHost, cfg.KetoReadPort)})
 	if err != nil {
 		log.Fatalf("Failed to connect to keto gRPC: %s", err.Error())
 	}
+	//create keto write grpc client
 	writerConn, _, err := grpcClient.Connect(grpcClient.Config{ClientTLS: false, URL: fmt.Sprintf("%s:%s", cfg.KetoWriteHost, cfg.KetoWritePort)})
 	if err != nil {
 		log.Fatalf("Failed to connect to keto gRPC: %s", err.Error())
@@ -101,12 +110,30 @@ func main() {
 
 	svc := newService(db, dbTracer, cfg.Secret, logger, readerConn, writerConn, cfg.LoginDuration)
 
+	///////////////// HTTP SERVER //////////////////////////
+	// create new http server config
+	httpServerConfig := server.Config{}
+	// load http server config from environment variables
+	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefix, AltPrefix: envPrefixHttp}); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to load %s HTTP server configuration : %s", svcName, err.Error()))
+	}
+	// create new http server
+	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svc, tracer, logger), logger)
+
+	///////////////// GRPC SERVER //////////////////////////
+	// create new grpc server config
+	grpcServerConfig := server.Config{}
+	// load grpc server config from environment variables
+	if err := env.Parse(&grpcServerConfig, env.Options{Prefix: envPrefix, AltPrefix: envPrefixGrpc}); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to load %s gRPC server configuration : %s", svcName, err.Error()))
+	}
 	registerAuthServiceServer := func(srv *grpc.Server) {
 		mainflux.RegisterAuthServiceServer(srv, grpcapi.NewServer(tracer, svc))
 	}
+	// create new grpc server
+	gs := grpcserver.New(ctx, cancel, svcName, grpcServerConfig, registerAuthServiceServer, logger)
 
-	hs := httpserver.New(ctx, cancel, svcName, defListenAddress, cfg.HttpPort, httpapi.MakeHandler(svc, tracer, logger), cfg.ServerCert, cfg.ServerKey, logger)
-	gs := grpcserver.New(ctx, cancel, svcName, defListenAddress, cfg.GrpcPort, registerAuthServiceServer, cfg.ServerCert, cfg.ServerKey, logger)
+	//Start servers
 	g.Go(func() error {
 		return hs.Start()
 	})

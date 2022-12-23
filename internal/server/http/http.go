@@ -23,20 +23,17 @@ type Server struct {
 
 var _ mfserver.Server = (*Server)(nil)
 
-func New(ctx context.Context, cancel context.CancelFunc, name string, host string, port string, handler http.Handler, certPath string, keyPath string, logger logger.Logger) mfserver.Server {
-	listenFullAddress := fmt.Sprintf("%s:%s", host, port)
+func New(ctx context.Context, cancel context.CancelFunc, name string, config mfserver.Config, handler http.Handler, logger logger.Logger) mfserver.Server {
+	listenFullAddress := fmt.Sprintf("%s:%s", config.Host, config.Port)
 	server := &http.Server{Addr: listenFullAddress, Handler: handler}
 	return &Server{
 		BaseServer: mfserver.BaseServer{
-			Ctx:      ctx,
-			Cancel:   cancel,
-			Name:     name,
-			Address:  listenFullAddress,
-			Host:     host,
-			Port:     port,
-			CertFile: certPath,
-			KeyFile:  keyPath,
-			Logger:   logger,
+			Ctx:     ctx,
+			Cancel:  cancel,
+			Name:    name,
+			Address: listenFullAddress,
+			Config:  config,
+			Logger:  logger,
 		},
 		server: server,
 	}
@@ -46,11 +43,11 @@ func (s *Server) Start() error {
 	errCh := make(chan error)
 	s.Protocol = httpProtocol
 	switch {
-	case s.CertFile != "" || s.KeyFile != "":
+	case s.Config.CertFile != "" || s.Config.KeyFile != "":
 		s.Protocol = httpsProtocol
-		s.Logger.Info(fmt.Sprintf("%s service %s server listening at %s with TLS cert %s and key %s", s.Name, s.Protocol, s.Address, s.CertFile, s.KeyFile))
+		s.Logger.Info(fmt.Sprintf("%s service %s server listening at %s with TLS cert %s and key %s", s.Name, s.Protocol, s.Address, s.Config.CertFile, s.Config.KeyFile))
 		go func() {
-			errCh <- s.server.ListenAndServeTLS(s.CertFile, s.KeyFile)
+			errCh <- s.server.ListenAndServeTLS(s.Config.CertFile, s.Config.KeyFile)
 		}()
 	default:
 		s.Logger.Info(fmt.Sprintf("%s service %s server listening at %s without TLS", s.Name, s.Protocol, s.Address))
@@ -71,9 +68,9 @@ func (s *Server) Stop() error {
 	ctxShutdown, cancelShutdown := context.WithTimeout(context.Background(), stopWaitTime)
 	defer cancelShutdown()
 	if err := s.server.Shutdown(ctxShutdown); err != nil {
-		s.Logger.Error(fmt.Sprintf("%s service %s server error occurred during shutdown at %s: %s", s.Name, s.Protocol, s.Port, err))
-		return fmt.Errorf("%s service %s server error occurred during shutdown at %s: %w", s.Name, s.Protocol, s.Port, err)
+		s.Logger.Error(fmt.Sprintf("%s service %s server error occurred during shutdown at %s: %s", s.Name, s.Protocol, s.Address, err))
+		return fmt.Errorf("%s service %s server error occurred during shutdown at %s: %w", s.Name, s.Protocol, s.Address, err)
 	}
-	s.Logger.Info(fmt.Sprintf("%s %s service shutdown of http at %s", s.Name, s.Protocol, s.Port))
+	s.Logger.Info(fmt.Sprintf("%s %s service shutdown of http at %s", s.Name, s.Protocol, s.Address))
 	return nil
 }

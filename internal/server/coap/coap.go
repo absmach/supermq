@@ -22,14 +22,15 @@ type Server struct {
 
 var _ server.Server = (*Server)(nil)
 
-func New(ctx context.Context, cancel context.CancelFunc, name string, address string, port string, handler mux.HandlerFunc, logger logger.Logger) server.Server {
+func New(ctx context.Context, cancel context.CancelFunc, name string, address string, config server.Config, handler mux.HandlerFunc, logger logger.Logger) server.Server {
+	listenFullAddress := fmt.Sprintf("%s:%s", config.Host, config.Port)
 	return &Server{
 		BaseServer: server.BaseServer{
 			Ctx:     ctx,
 			Cancel:  cancel,
 			Name:    name,
-			Address: address,
-			Port:    fmt.Sprintf(":%s", port),
+			Address: listenFullAddress,
+			Config:  config,
 			Logger:  logger,
 		},
 		handler: handler,
@@ -38,9 +39,9 @@ func New(ctx context.Context, cancel context.CancelFunc, name string, address st
 
 func (s *Server) Start() error {
 	errCh := make(chan error)
-	s.Logger.Info(fmt.Sprintf("%s service started using http, exposed port %s", s.Name, s.Port))
+	s.Logger.Info(fmt.Sprintf("%s service started using http, exposed port %s", s.Name, s.Address))
 	go func() {
-		errCh <- gocoap.ListenAndServe("udp", s.Port, s.handler)
+		errCh <- gocoap.ListenAndServe("udp", s.Address, s.handler)
 	}()
 
 	select {
@@ -60,6 +61,6 @@ func (s *Server) Stop() error {
 	case <-c:
 	case <-time.After(stopWaitTime):
 	}
-	s.Logger.Info(fmt.Sprintf("%s service shutdown of http at %s", s.Name, s.Port))
+	s.Logger.Info(fmt.Sprintf("%s service shutdown of http at %s", s.Name, s.Address))
 	return nil
 }

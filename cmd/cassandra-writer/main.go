@@ -58,10 +58,14 @@ type config struct {
 }
 
 func main() {
-	cfg := loadConfig()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
 
+	// create cassandra writer service configurations
+	cfg := loadConfig()
+
+	// create new logger
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
 	if err != nil {
 		log.Fatalf(err.Error())

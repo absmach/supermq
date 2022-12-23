@@ -15,15 +15,19 @@ type Server interface {
 	Stop() error
 }
 
+type Config struct {
+	Host     string `env:"HOST"          default:""`
+	Port     string `env:"PORT"          default:"8080"`
+	CertFile string `env:"SERVER_CERT"   default:""`
+	KeyFile  string `env:"SERVER_KEY"    default:""`
+}
+
 type BaseServer struct {
 	Ctx      context.Context
 	Cancel   context.CancelFunc
 	Name     string
 	Address  string
-	Host     string
-	Port     string
-	CertFile string
-	KeyFile  string
+	Config   Config
 	Logger   logger.Logger
 	Protocol string
 }

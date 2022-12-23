@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	r "github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
@@ -33,25 +32,18 @@ import (
 
 const (
 	svcName        = "bootstrap"
-	envPreFix      = "MF_BOOTSTRAP_"
+	envPrefix      = "MF_BOOTSTRAP_"
+	envPrefixHttp  = "MF_BOOTSTRAP_HTTP_"
 	envThingPrefix = "MF_THINGS_"
 	envAuthPrefix  = "MF_AUTH_"
 )
 
 type config struct {
-	logLevel string `env:"MF_BOOTSTRAP_LOG_LEVEL"        default:"debug"`
-	// clientTLS      bool          `env:"MF_BOOTSTRAP_CLIENT_TLS"       default:"false"`
-	// clientTLS      bool          `env:"MF_BOOTSTRAP_CLIENT_TLS"       default:"false"`
-	encKey []byte `env:"MF_BOOTSTRAP_ENCRYPT_KEY"      default:"12345678910111213141516171819202"`
-	// caCerts        string        `env:"MF_BOOTSTRAP_CA_CERTS"         default:""`
-	httpPort       string        `env:"MF_BOOTSTRAP_PORT"             default:"8180"`
-	serverCert     string        `env:"MF_BOOTSTRAP_SERVER_CERT"      default:""`
-	serverKey      string        `env:"MF_BOOTSTRAP_SERVER_KEY"       default:""`
-	thingsURL      string        `env:"MF_THINGS_URL"                 default:"http://localhost"`
-	esConsumerName string        `env:"MF_BOOTSTRAP_EVENT_CONSUMER"   default:"bootstrap"`
-	jaegerURL      string        `env:"MF_JAEGER_URL"                 default:""`
-	authURL        string        `env:"MF_AUTH_GRPC_URL"              default:"localhost:8181"`
-	authTimeout    time.Duration `env:"MF_AUTH_GRPC_TIMEOUT"          default:"1s"`
+	logLevel       string `env:"MF_BOOTSTRAP_LOG_LEVEL"        default:"debug"`
+	encKey         []byte `env:"MF_BOOTSTRAP_ENCRYPT_KEY"      default:"12345678910111213141516171819202"`
+	thingsURL      string `env:"MF_THINGS_URL"                 default:"http://localhost"`
+	esConsumerName string `env:"MF_BOOTSTRAP_EVENT_CONSUMER"   default:"bootstrap"`
+	jaegerURL      string `env:"MF_JAEGER_URL"                 default:""`
 }
 
 func main() {
@@ -60,6 +52,7 @@ func main() {
 	thingESConfig := redisClient.Config{}
 	bootstrapESConfig := redisClient.Config{}
 	authGrpcConfig := grpcClient.Config{}
+	httpServerConfig := server.Config{}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
@@ -67,11 +60,11 @@ func main() {
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to load %s configuration : %s", svcName, err.Error()))
 	}
-	if err := env.Parse(&dbConfig, env.Options{Prefix: envPreFix}); err != nil {
+	if err := env.Parse(&dbConfig, env.Options{Prefix: envPrefix}); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to load %s database configuration : %s", svcName, err.Error()))
 	}
 
-	if err := env.Parse(&bootstrapESConfig, env.Options{Prefix: envPreFix}); err != nil {
+	if err := env.Parse(&bootstrapESConfig, env.Options{Prefix: envPrefix}); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to load %s bootstrap event store configuration : %s", svcName, err.Error()))
 	}
 
@@ -79,8 +72,12 @@ func main() {
 		log.Fatalf(fmt.Sprintf("Failed to load %s things event store configuration : %s", svcName, err.Error()))
 	}
 
-	if err := env.Parse(&authGrpcConfig, env.Options{Prefix: envPreFix, AltPrefix: envAuthPrefix}); err != nil {
+	if err := env.Parse(&authGrpcConfig, env.Options{Prefix: envPrefix, AltPrefix: envAuthPrefix}); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to load %s configuration : %s", svcName, err.Error()))
+	}
+
+	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefix, AltPrefix: envPrefixHttp}); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to load %s HTTP server configuration : %s", svcName, err.Error()))
 	}
 
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
@@ -123,11 +120,11 @@ func main() {
 	}
 	logger.Info(fmt.Sprintf("Connected to auth gRPC %s", secureMsg))
 
-	auth := authapi.NewClient(authTracer, authConn, cfg.authTimeout)
+	auth := authapi.NewClient(authTracer, authConn, authGrpcConfig.Timeout)
 
 	svc := newService(auth, db, logger, esClient, cfg)
 
-	hs := httpserver.New(ctx, cancel, svcName, "", cfg.httpPort, api.MakeHandler(svc, bootstrap.NewConfigReader(cfg.encKey), logger), cfg.serverCert, cfg.serverKey, logger)
+	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, bootstrap.NewConfigReader(cfg.encKey), logger), logger)
 	g.Go(func() error {
 		return hs.Start()
 	})

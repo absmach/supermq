@@ -4,15 +4,18 @@
 package grpc
 
 import (
+	"time"
+
 	gogrpc "google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Config struct {
-	ClientTLS bool   `env:"CLIENT_TLS"  default:""`
-	CACerts   string `env:"CA_CERTS"    default:""`
-	URL       string `env:"URL"         default:""`
+	ClientTLS bool          `env:"CLIENT_TLS"    default:""`
+	CACerts   string        `env:"CA_CERTS"      default:""`
+	URL       string        `env:"GRPC_URL"      default:""`
+	Timeout   time.Duration `env:"GRPC_TIMEOUT"  default:"1s"`
 }
 
 func Connect(cfg Config) (*gogrpc.ClientConn, bool, error) {
