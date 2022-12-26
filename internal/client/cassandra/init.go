@@ -9,11 +9,11 @@ import (
 
 // Config contains Cassandra DB specific parameters.
 type Config struct {
-	Hosts    []string `env:"DB_CLUSTER"     default:"127.0.0.1" envSeparator:","`
-	Keyspace string   `env:"DB_KEYSPACE"    default:"mainflux"`
-	User     string   `env:"DB_USER"        default:"mainflux"`
-	Pass     string   `env:"DB_PASS"        default:"mainflux"`
-	Port     int      `env:"DB_PORT"        default:"9042"`
+	Hosts    []string `env:"DB_CLUSTER"     envDefault:"127.0.0.1" envSeparator:","`
+	Keyspace string   `env:"DB_KEYSPACE"    envDefault:"mainflux"`
+	User     string   `env:"DB_USER"        envDefault:"mainflux"`
+	Pass     string   `env:"DB_PASS"        envDefault:"mainflux"`
+	Port     int      `env:"DB_PORT"        envDefault:"9042"`
 }
 
 // Connect establishes connection to the Cassandra cluster.

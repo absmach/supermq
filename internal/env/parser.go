@@ -58,29 +58,23 @@ func parseGrpcConfig(cfg *grpc.Config, altPrefix string, opts ...env.Options) er
 	if err := env.Parse(cfg, opts...); err != nil {
 		return err
 	}
-	caCerts := cfg.CACerts
-	clientTLS := cfg.ClientTLS
-	url := cfg.URL
-
+	altOpts := []env.Options{}
 	for _, opt := range opts {
 		if opt.Prefix != "" {
 			opt.Prefix = altPrefix
 		}
+		altOpts = append(altOpts, opt)
 	}
-	if err := env.Parse(cfg, opts...); err != nil {
+	altCfg := grpc.Config{}
+	if err := env.Parse(&altCfg, altOpts...); err != nil {
 		return err
 	}
-
-	if cfg.CACerts == "" && caCerts != "" {
-		cfg.CACerts = caCerts
+	if cfg.CACerts == "" && altCfg.CACerts != "" {
+		cfg.CACerts = altCfg.CACerts
+	}
+	if !cfg.ClientTLS && altCfg.ClientTLS {
+		cfg.ClientTLS = altCfg.ClientTLS
 	}
 
-	if !cfg.ClientTLS && clientTLS {
-		cfg.CACerts = caCerts
-	}
-
-	if cfg.URL == "" && url != "" {
-		cfg.CACerts = caCerts
-	}
 	return nil
 }

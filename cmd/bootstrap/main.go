@@ -39,11 +39,11 @@ const (
 )
 
 type config struct {
-	logLevel       string `env:"MF_BOOTSTRAP_LOG_LEVEL"        default:"debug"`
-	encKey         []byte `env:"MF_BOOTSTRAP_ENCRYPT_KEY"      default:"12345678910111213141516171819202"`
-	thingsURL      string `env:"MF_THINGS_URL"                 default:"http://localhost"`
-	esConsumerName string `env:"MF_BOOTSTRAP_EVENT_CONSUMER"   default:"bootstrap"`
-	jaegerURL      string `env:"MF_JAEGER_URL"                 default:""`
+	logLevel       string `env:"MF_BOOTSTRAP_LOG_LEVEL"        envDefault:"debug"`
+	encKey         []byte `env:"MF_BOOTSTRAP_ENCRYPT_KEY"      envDefault:"12345678910111213141516171819202"`
+	thingsURL      string `env:"MF_THINGS_URL"                 envDefault:"http://localhost"`
+	esConsumerName string `env:"MF_BOOTSTRAP_EVENT_CONSUMER"   envDefault:"bootstrap"`
+	jaegerURL      string `env:"MF_JAEGER_URL"                 envDefault:""`
 }
 
 func main() {

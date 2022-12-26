@@ -12,10 +12,10 @@ import (
 )
 
 type Config struct {
-	ClientTLS bool          `env:"CLIENT_TLS"    default:""`
-	CACerts   string        `env:"CA_CERTS"      default:""`
-	URL       string        `env:"GRPC_URL"      default:""`
-	Timeout   time.Duration `env:"GRPC_TIMEOUT"  default:"1s"`
+	ClientTLS bool          `env:"CLIENT_TLS"    envDefault:"false"`
+	CACerts   string        `env:"CA_CERTS"      envDefault:""`
+	URL       string        `env:"URL"           envDefault:""`
+	Timeout   time.Duration `env:"TIMEOUT"       envDefault:"1s"`
 }
 
 func Connect(cfg Config) (*gogrpc.ClientConn, bool, error) {

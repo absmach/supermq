@@ -16,10 +16,10 @@ type Server interface {
 }
 
 type Config struct {
-	Host     string `env:"HOST"          default:""`
-	Port     string `env:"PORT"          default:"8080"`
-	CertFile string `env:"SERVER_CERT"   default:""`
-	KeyFile  string `env:"SERVER_KEY"    default:""`
+	Host     string `env:"HOST"          envDefault:""`
+	Port     string `env:"PORT"          envDefault:"8080"`
+	CertFile string `env:"SERVER_CERT"   envDefault:""`
+	KeyFile  string `env:"SERVER_KEY"    envDefault:""`
 }
 
 type BaseServer struct {

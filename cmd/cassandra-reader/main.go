@@ -38,8 +38,8 @@ const (
 )
 
 type config struct {
-	logLevel  string `env:"MF_CASSANDRA_READER_LOG_LEVEL"     default:"debug" `
-	jaegerURL string `env:"MF_JAEGER_URL"                     default:"" `
+	logLevel  string `env:"MF_CASSANDRA_READER_LOG_LEVEL"     envDefault:"debug" `
+	jaegerURL string `env:"MF_JAEGER_URL"                     envDefault:"" `
 }
 
 func main() {
@@ -48,6 +48,7 @@ func main() {
 
 	// create cassandra reader service configurations
 	cfg := config{}
+	// load cassandra reader service configurations from environment
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("Failed to load %s service configuration : %s", svcName, err.Error())
 	}
