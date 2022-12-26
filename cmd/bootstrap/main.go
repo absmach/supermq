@@ -119,7 +119,7 @@ func main() {
 
 	///////////////// HTTP SERVER /////////////////////////
 	httpServerConfig := server.Config{}
-	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefix, AltPrefix: envPrefixHttp}); err != nil {
+	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to load %s HTTP server configuration : %s", svcName, err.Error()))
 	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, bootstrap.NewConfigReader(cfg.encKey), logger), logger)
@@ -133,7 +133,7 @@ func main() {
 	///////////////// SUBSCRIBE TO THINGS EVENT STORE/////////////////////////
 	// create new redis client config for things event store
 	thingESConfig := redisClient.Config{}
-	if err := env.Parse(&thingESConfig, env.Options{Prefix: envThingsAuthGrpcPrefix, AltPrefix: envPrefix}); err != nil {
+	if err := env.Parse(&thingESConfig, env.Options{Prefix: envPrefix, AltPrefix: envThingsAuthGrpcPrefix}); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to load %s things event store configuration : %s", svcName, err.Error()))
 	}
 	// create new redis client for things event store

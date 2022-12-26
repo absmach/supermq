@@ -115,7 +115,7 @@ func main() {
 	// create new http server config
 	httpServerConfig := server.Config{}
 	// load http server config from environment variables
-	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefix, AltPrefix: envPrefixHttp}); err != nil {
+	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to load %s HTTP server configuration : %s", svcName, err.Error()))
 	}
 	// create new http server
@@ -125,7 +125,7 @@ func main() {
 	// create new grpc server config
 	grpcServerConfig := server.Config{}
 	// load grpc server config from environment variables
-	if err := env.Parse(&grpcServerConfig, env.Options{Prefix: envPrefix, AltPrefix: envPrefixGrpc}); err != nil {
+	if err := env.Parse(&grpcServerConfig, env.Options{Prefix: envPrefixGrpc, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to load %s gRPC server configuration : %s", svcName, err.Error()))
 	}
 	registerAuthServiceServer := func(srv *grpc.Server) {
