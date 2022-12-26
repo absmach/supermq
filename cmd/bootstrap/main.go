@@ -31,11 +31,11 @@ import (
 )
 
 const (
-	svcName        = "bootstrap"
-	envPrefix      = "MF_BOOTSTRAP_"
-	envPrefixHttp  = "MF_BOOTSTRAP_HTTP_"
-	envThingPrefix = "MF_THINGS_"
-	envAuthPrefix  = "MF_AUTH_"
+	svcName                 = "bootstrap"
+	envPrefix               = "MF_BOOTSTRAP_"
+	envPrefixHttp           = "MF_BOOTSTRAP_HTTP_"
+	envThingsAuthGrpcPrefix = "MF_THINGS_AUTH_GRPC_"
+	envAuthGrpcPrefix       = "MF_AUTH_GRPC_"
 )
 
 type config struct {
@@ -91,7 +91,7 @@ func main() {
 	// create new auth grpc client config
 	authGrpcConfig := grpcClient.Config{}
 	// load auth grpc client config from environment
-	if err := env.Parse(&authGrpcConfig, env.Options{Prefix: envPrefix, AltPrefix: envAuthPrefix}); err != nil {
+	if err := env.Parse(&authGrpcConfig, env.Options{Prefix: envAuthGrpcPrefix, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to load %s configuration : %s", svcName, err.Error()))
 	}
 	// create new auth grpc client
@@ -133,7 +133,7 @@ func main() {
 	///////////////// SUBSCRIBE TO THINGS EVENT STORE/////////////////////////
 	// create new redis client config for things event store
 	thingESConfig := redisClient.Config{}
-	if err := env.Parse(&thingESConfig, env.Options{Prefix: envThingPrefix}); err != nil {
+	if err := env.Parse(&thingESConfig, env.Options{Prefix: envThingsAuthGrpcPrefix, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to load %s things event store configuration : %s", svcName, err.Error()))
 	}
 	// create new redis client for things event store

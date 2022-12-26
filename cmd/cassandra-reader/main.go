@@ -27,14 +27,14 @@ import (
 )
 
 const (
-	svcName        = "cassandra-reader"
-	envPrefix      = "MF_CASSANDRA_READER_"
-	envPrefixHttp  = "MF_CASSANDRA_READER_HTTP_"
-	envThingPrefix = "MF_THINGS_"
-	envAuthPrefix  = "MF_AUTH_"
-	sep            = ","
-	defLogLevel    = "error"
-	defPort        = "8180"
+	svcName                 = "cassandra-reader"
+	envPrefix               = "MF_CASSANDRA_READER_"
+	envPrefixHttp           = "MF_CASSANDRA_READER_HTTP_"
+	envThingsAuthGrpcPrefix = "MF_THINGS_AUTH_GRPC_"
+	envAuthGrpcPrefix       = "MF_AUTH_GRPC_"
+	sep                     = ","
+	defLogLevel             = "error"
+	defPort                 = "8180"
 )
 
 type config struct {
@@ -77,7 +77,7 @@ func main() {
 	// create thing grpc config
 	thingGrpcConfig := grpcClient.Config{}
 	// load things grpc client config from environment
-	if err := env.Parse(&thingGrpcConfig, env.Options{Prefix: envPrefix, AltPrefix: envThingPrefix}); err != nil {
+	if err := env.Parse(&thingGrpcConfig, env.Options{Prefix: envThingsAuthGrpcPrefix, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to thing grpc client configuration : %s", err.Error()))
 	}
 	// connect to thing grpc server
@@ -103,7 +103,7 @@ func main() {
 	///////////////// AUTH GRPC CLIENT //////////////////////////
 	// loading auth grpc config
 	authGrpcConfig := grpcClient.Config{}
-	if err := env.Parse(&authGrpcConfig, env.Options{Prefix: envPrefix, AltPrefix: envThingPrefix}); err != nil {
+	if err := env.Parse(&authGrpcConfig, env.Options{Prefix: envAuthGrpcPrefix, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to auth grpc client configuration : %s", err.Error()))
 	}
 
