@@ -68,7 +68,6 @@ func main() {
 
 	// create new auth grpc client
 	auth, authGrpcClient, authTracerCloser, authGrpcSecure, err := authClient.Setup(envPrefix, cfg.jaegerURL)
-
 	if err != nil {
 		log.Fatal(err.Error())
 	}

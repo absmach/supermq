@@ -8,25 +8,26 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
-	"time"
 
 	"github.com/mainflux/mainflux"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/internal"
 	internalauth "github.com/mainflux/mainflux/internal/auth"
+	thingsClient "github.com/mainflux/mainflux/internal/client/grpc/things"
+	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
-	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	"golang.org/x/sync/errgroup"
 )
 
 const (
-	svcName = "http_adapter"
+	svcName       = "http_adapter"
+	envPrefix     = "MF_HTTP_ADAPTER_"
+	envPrefixHttp = "MF_HTTP_ADAPTER_HTTP_"
 
 	defLogLevel          = "error"
 	defClientTLS         = "false"
@@ -48,34 +49,32 @@ const (
 )
 
 type config struct {
-	brokerURL         string
-	logLevel          string
-	port              string
-	clientTLS         bool
-	caCerts           string
-	jaegerURL         string
-	thingsAuthURL     string
-	thingsAuthTimeout time.Duration
+	brokerURL string
+	logLevel  string
+	jaegerURL string
 }
 
 func main() {
-	cfg := loadConfig()
 	ctx, cancel := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
+
+	cfg := config{}
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatalf("Failed to load %s service configuration : %s", svcName, err.Error())
+	}
 
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 
-	conn := internalauth.ConnectToThings(cfg.clientTLS, cfg.caCerts, cfg.thingsAuthURL, svcName, logger)
-	defer conn.Close()
-
-	tracer, closer := internalauth.Jaeger("http_adapter", cfg.jaegerURL, logger)
-	defer closer.Close()
-
-	thingsTracer, thingsCloser := internalauth.Jaeger("things", cfg.jaegerURL, logger)
-	defer thingsCloser.Close()
+	tc, thingsGrpcClient, thingsTracerCloser, thingsGrpcSecure, err := thingsClient.Setup(envPrefix, cfg.jaegerURL)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	defer thingsGrpcClient.Close()
+	defer thingsTracerCloser.Close()
+	logger.Info("Successfully connected to things grpc server " + thingsGrpcSecure)
 
 	pub, err := brokers.NewPublisher(cfg.brokerURL)
 	if err != nil {
@@ -84,11 +83,17 @@ func main() {
 	}
 	defer pub.Close()
 
-	tc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
-
 	svc := newService(pub, tc, logger)
 
-	hs := httpserver.New(ctx, cancel, svcName, "", cfg.port, api.MakeHandler(svc, tracer, logger), "", "", logger)
+	tracer, closer := internalauth.Jaeger("http_adapter", cfg.jaegerURL, logger)
+	defer closer.Close()
+
+	httpServerConfig := server.Config{}
+	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to load %s HTTP server configuration : %s", svcName, err.Error()))
+	}
+
+	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, tracer, logger), logger)
 	g.Go(func() error {
 		return hs.Start()
 	})
@@ -100,30 +105,6 @@ func main() {
 	if err := g.Wait(); err != nil {
 		logger.Error(fmt.Sprintf("HTTP adapter service terminated: %s", err))
 	}
-
-}
-
-func loadConfig() config {
-	tls, err := strconv.ParseBool(mainflux.Env(envClientTLS, defClientTLS))
-	if err != nil {
-		log.Fatalf("Invalid value passed for %s\n", envClientTLS)
-	}
-
-	authTimeout, err := time.ParseDuration(mainflux.Env(envThingsAuthTimeout, defThingsAuthTimeout))
-	if err != nil {
-		log.Fatalf("Invalid %s value: %s", envThingsAuthTimeout, err.Error())
-	}
-
-	return config{
-		brokerURL:         mainflux.Env(envBrokerURL, defBrokerURL),
-		logLevel:          mainflux.Env(envLogLevel, defLogLevel),
-		port:              mainflux.Env(envPort, defPort),
-		clientTLS:         tls,
-		caCerts:           mainflux.Env(envCACerts, defCACerts),
-		jaegerURL:         mainflux.Env(envJaegerURL, defJaegerURL),
-		thingsAuthURL:     mainflux.Env(envThingsAuthURL, defThingsAuthURL),
-		thingsAuthTimeout: authTimeout,
-	}
 }
 
 func newService(pub messaging.Publisher, tc mainflux.ThingsServiceClient, logger logger.Logger) adapter.Service {
@@ -131,6 +112,5 @@ func newService(pub messaging.Publisher, tc mainflux.ThingsServiceClient, logger
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics(svcName, "api")
 	svc = api.MetricsMiddleware(svc, counter, latency)
-
 	return svc
 }
