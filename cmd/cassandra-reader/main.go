@@ -108,7 +108,7 @@ func main() {
 	}
 
 	// connect to auth grpc server
-	authGrpcClient, secure, err := grpcClient.Connect(thingGrpcConfig)
+	authGrpcClient, secure, err := grpcClient.Connect(authGrpcConfig)
 	if err != nil {
 		log.Fatalf("Failed to connect to things gRPC : %s ", err.Error())
 	}
