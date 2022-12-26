@@ -47,37 +47,12 @@ type config struct {
 }
 
 func main() {
-	cfg := config{}
-	dbConfig := pgClient.Config{}
-	thingESConfig := redisClient.Config{}
-	bootstrapESConfig := redisClient.Config{}
-	authGrpcConfig := grpcClient.Config{}
-	httpServerConfig := server.Config{}
-
 	ctx, cancel := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
 
+	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to load %s configuration : %s", svcName, err.Error()))
-	}
-	if err := env.Parse(&dbConfig, env.Options{Prefix: envPrefix}); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to load %s database configuration : %s", svcName, err.Error()))
-	}
-
-	if err := env.Parse(&bootstrapESConfig, env.Options{Prefix: envPrefix}); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to load %s bootstrap event store configuration : %s", svcName, err.Error()))
-	}
-
-	if err := env.Parse(&thingESConfig, env.Options{Prefix: envThingPrefix}); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to load %s things event store configuration : %s", svcName, err.Error()))
-	}
-
-	if err := env.Parse(&authGrpcConfig, env.Options{Prefix: envPrefix, AltPrefix: envAuthPrefix}); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to load %s configuration : %s", svcName, err.Error()))
-	}
-
-	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefix, AltPrefix: envPrefixHttp}); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to load %s HTTP server configuration : %s", svcName, err.Error()))
 	}
 
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
@@ -85,30 +60,41 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
+	///////////////// POSTGRES CLIENT /////////////////////////
+	// create new postgres config
+	dbConfig := pgClient.Config{}
+	// load postgres config from environment
+	if err := env.Parse(&dbConfig, env.Options{Prefix: envPrefix}); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to load %s database configuration : %s", svcName, err.Error()))
+	}
+	// create new postgres client
 	db, err := pgClient.SetupDB(dbConfig, *bootstrapRepo.Migration())
 	if err != nil {
 		log.Fatalf("Failed to setup %s database : %s", svcName, err.Error())
 	}
 	defer db.Close()
 
+	///////////////// EVENT STORE REDIS CLIENT /////////////////////////
+	// create new redis client config for bootstrap event store
+	bootstrapESConfig := redisClient.Config{}
+	if err := env.Parse(&bootstrapESConfig, env.Options{Prefix: envPrefix}); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to load %s bootstrap event store configuration : %s", svcName, err.Error()))
+	}
+	// create new redis client for bootstrap event store
 	esClient, err := redisClient.Connect(bootstrapESConfig)
 	if err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to setup %s bootstrap event store redis client : %s", svcName, err.Error()))
 	}
 	defer esClient.Close()
 
-	thingsESConn, err := redisClient.Connect(thingESConfig)
-	if err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to setup %s things event store redis client : %s", svcName, err.Error()))
+	///////////////// AUTH - GRPC CLIENT /////////////////////////
+	// create new auth grpc client config
+	authGrpcConfig := grpcClient.Config{}
+	// load auth grpc client config from environment
+	if err := env.Parse(&authGrpcConfig, env.Options{Prefix: envPrefix, AltPrefix: envAuthPrefix}); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to load %s configuration : %s", svcName, err.Error()))
 	}
-	defer thingsESConn.Close()
-
-	authTracer, authCloser, err := jaegerClient.NewTracer("auth", cfg.jaegerURL)
-	if err != nil {
-		log.Fatalf("Failed to init Jaeger: %s", err.Error())
-	}
-	defer authCloser.Close()
-
+	// create new auth grpc client
 	authConn, secure, err := grpcClient.Connect(authGrpcConfig)
 	if err != nil {
 		log.Fatalf("Failed to connect with auth gRPC : %s ", err.Error())
@@ -119,21 +105,45 @@ func main() {
 		secureMsg = "with TLS"
 	}
 	logger.Info(fmt.Sprintf("Connected to auth gRPC %s", secureMsg))
-
+	// create new auth grpc client tracer
+	authTracer, authCloser, err := jaegerClient.NewTracer("auth", cfg.jaegerURL)
+	if err != nil {
+		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+	}
+	defer authCloser.Close()
+	// create new auth grpc client api
 	auth := authapi.NewClient(authTracer, authConn, authGrpcConfig.Timeout)
 
+	///////////////// BOOTSTRAP SERVICE /////////////////////////
 	svc := newService(auth, db, logger, esClient, cfg)
 
+	///////////////// HTTP SERVER /////////////////////////
+	httpServerConfig := server.Config{}
+	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefix, AltPrefix: envPrefixHttp}); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to load %s HTTP server configuration : %s", svcName, err.Error()))
+	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, bootstrap.NewConfigReader(cfg.encKey), logger), logger)
 	g.Go(func() error {
 		return hs.Start()
 	})
-
-	go subscribeToThingsES(svc, thingsESConn, cfg.esConsumerName, logger)
-
 	g.Go(func() error {
 		return server.StopSignalHandler(ctx, cancel, logger, svcName, hs)
 	})
+
+	///////////////// SUBSCRIBE TO THINGS EVENT STORE/////////////////////////
+	// create new redis client config for things event store
+	thingESConfig := redisClient.Config{}
+	if err := env.Parse(&thingESConfig, env.Options{Prefix: envThingPrefix}); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to load %s things event store configuration : %s", svcName, err.Error()))
+	}
+	// create new redis client for things event store
+	thingsESClient, err := redisClient.Connect(thingESConfig)
+	if err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to setup %s things event store redis client : %s", svcName, err.Error()))
+	}
+	defer thingsESClient.Close()
+	// subscribe to things event store
+	go subscribeToThingsES(svc, thingsESClient, cfg.esConsumerName, logger)
 
 	if err := g.Wait(); err != nil {
 		logger.Error(fmt.Sprintf("Bootstrap service terminated: %s", err))

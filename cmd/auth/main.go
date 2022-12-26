@@ -58,6 +58,7 @@ func main() {
 
 	// create auth service configurations
 	cfg := config{}
+	// load auth service configurations from environment
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to load %s configuration : %s", svcName, err.Error()))
 	}
