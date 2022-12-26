@@ -13,7 +13,7 @@ import (
 	"github.com/mainflux/mainflux/certs/postgres"
 	"github.com/mainflux/mainflux/internal"
 	internalauth "github.com/mainflux/mainflux/internal/auth"
-	authGrpcClient "github.com/mainflux/mainflux/internal/client/grpc/auth"
+	authClient "github.com/mainflux/mainflux/internal/client/grpc/auth"
 	pgClient "github.com/mainflux/mainflux/internal/client/postgres"
 	"github.com/mainflux/mainflux/internal/email"
 	"github.com/mainflux/mainflux/internal/env"
@@ -83,7 +83,7 @@ func main() {
 	}
 	defer db.Close()
 
-	auth, authGrpcClient, authGrpcTracerCloser, authGrpcSecure, err := authGrpcClient.Setup(envPrefix, cfg.jaegerURL)
+	auth, authGrpcClient, authGrpcTracerCloser, authGrpcSecure, err := authClient.Setup(envPrefix, cfg.jaegerURL)
 	if err != nil {
 		log.Fatal(err)
 	}
