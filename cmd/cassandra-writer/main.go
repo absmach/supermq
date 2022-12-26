@@ -53,17 +53,10 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	///////////////// CASSANDRA CLIENT /////////////////////////
-	// create new cassandra config
-	cassandraConfig := cassandraClient.Config{}
-	// load cassandra config from environment
-	if err := env.Parse(&cassandraConfig, env.Options{Prefix: envPrefix}); err != nil {
-		log.Fatalf("Failed to load Cassandra database configuration : %s", err.Error())
-	}
 	// create new to cassandra client
-	cassaSession, err := cassandraClient.Connect(cassandraConfig)
+	cassaSession, err := cassandraClient.Setup(envPrefix)
 	if err != nil {
-		log.Fatalf("Failed to connect to Cassandra database : %s", err.Error())
+		log.Fatal(err.Error())
 	}
 	defer cassaSession.Close()
 

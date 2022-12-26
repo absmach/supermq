@@ -5,7 +5,15 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib" // required for SQL access
 	"github.com/jmoiron/sqlx"
+	"github.com/mainflux/mainflux/internal/env"
+	"github.com/mainflux/mainflux/pkg/errors"
 	migrate "github.com/rubenv/sql-migrate"
+)
+
+var (
+	errConfig    = errors.New("failed to load postgresql configuration")
+	errConnect   = errors.New("failed to connect to postgresql server")
+	errMigration = errors.New("failed to apply migrations")
 )
 
 type Config struct {
@@ -18,6 +26,23 @@ type Config struct {
 	SSLCert     string `env:"DB_SSL_CERT"       envDefault:""`
 	SSLKey      string `env:"DB_SSL_KEY"        envDefault:""`
 	SSLRootCert string `env:"DB_SSL_ROOT_CERT"  envDefault:""`
+}
+
+// Setup creates a connection to the PostgreSQL instance and applies any
+// unapplied database migrations. A non-nil error is returned to indicate failure.
+func Setup(prefix string, migrations migrate.MemoryMigrationSource) (*sqlx.DB, error) {
+	cfg := Config{}
+	if err := env.Parse(&cfg, env.Options{Prefix: prefix}); err != nil {
+		return nil, errors.Wrap(errConfig, err)
+	}
+	db, err := Connect(cfg)
+	if err != nil {
+		return nil, errors.Wrap(errConnect, err)
+	}
+	if err := MigrateDB(db, migrations); err != nil {
+		return nil, errors.Wrap(errMigration, err)
+	}
+	return db, nil
 }
 
 // SetupDB creates a connection to the PostgreSQL instance and applies any

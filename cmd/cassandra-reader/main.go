@@ -10,11 +10,10 @@ import (
 	"os"
 
 	"github.com/gocql/gocql"
-	authapi "github.com/mainflux/mainflux/auth/api/grpc"
 	"github.com/mainflux/mainflux/internal"
 	cassandraClient "github.com/mainflux/mainflux/internal/client/cassandra"
-	grpcClient "github.com/mainflux/mainflux/internal/client/grpc"
-	jaegerClient "github.com/mainflux/mainflux/internal/client/jaeger"
+	authClient "github.com/mainflux/mainflux/internal/client/grpc/auth"
+	thingsClient "github.com/mainflux/mainflux/internal/client/grpc/things"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
@@ -22,7 +21,6 @@ import (
 	"github.com/mainflux/mainflux/readers"
 	"github.com/mainflux/mainflux/readers/api"
 	"github.com/mainflux/mainflux/readers/cassandra"
-	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -59,77 +57,33 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	///////////////// CASSANDRA CLIENT /////////////////////////
-	// create new cassandra config
-	cassandraConfig := cassandraClient.Config{}
-	// load cassandra config from environment
-	if err := env.Parse(&cassandraConfig, env.Options{Prefix: envPrefix}); err != nil {
-		log.Fatalf("Failed to load Cassandra database configuration : %s", err.Error())
-	}
-	// create new to cassandra client
-	cassaSession, err := cassandraClient.Connect(cassandraConfig)
+	// create new thing grpc client
+	tc, thingsGrpcClient, thingsTracerCloser, thingsGrpcSecure, err := thingsClient.Setup(envPrefix, cfg.jaegerURL)
 	if err != nil {
-		log.Fatalf("Failed to connect to Cassandra database : %s", err.Error())
+		log.Fatal(err.Error())
+	}
+	defer thingsGrpcClient.Close()
+	defer thingsTracerCloser.Close()
+	logger.Info("Successfully connected to things grpc server " + thingsGrpcSecure)
+
+	// create new auth grpc client
+	auth, authGrpcClient, authTracerCloser, authGrpcSecure, err := authClient.Setup(envPrefix, cfg.jaegerURL)
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	defer authGrpcClient.Close()
+	defer authTracerCloser.Close()
+	logger.Info("Successfully connected to auth grpc server " + authGrpcSecure)
+
+	////////// CASSANDRA READER REPO /////////////
+	// create new cassandra client
+	cassaSession, err := cassandraClient.Setup(envPrefix)
+	if err != nil {
+		log.Fatal(err.Error())
 	}
 	defer cassaSession.Close()
 
-	///////////////// THING GRPC CLIENT /////////////////////////
-	// create thing grpc config
-	thingGrpcConfig := grpcClient.Config{}
-	// load things grpc client config from environment
-	if err := env.Parse(&thingGrpcConfig, env.Options{Prefix: envThingsAuthGrpcPrefix, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to thing grpc client configuration : %s", err.Error()))
-	}
-	// connect to thing grpc server
-	thingGrpcClient, secure, err := grpcClient.Connect(thingGrpcConfig)
-	if err != nil {
-		log.Fatalf("Failed to connect to things gRPC server : %s ", err.Error())
-	}
-	defer thingGrpcClient.Close()
-	secureMsg := "without TLS"
-	if secure {
-		secureMsg = "with TLS"
-	}
-	logger.Info(fmt.Sprintf("Connected to things gRPC server %s", secureMsg))
-	// initialize things tracer for things grpc client
-	thingsTracer, thingsCloser, err := jaegerClient.NewTracer("things", cfg.jaegerURL)
-	if err != nil {
-		log.Fatalf("Failed to initialize to jaeger : %s ", err.Error())
-	}
-	defer thingsCloser.Close()
-	// create new thing grpc client
-	tc := thingsapi.NewClient(thingGrpcClient, thingsTracer, thingGrpcConfig.Timeout)
-
-	///////////////// AUTH GRPC CLIENT //////////////////////////
-	// loading auth grpc config
-	authGrpcConfig := grpcClient.Config{}
-	if err := env.Parse(&authGrpcConfig, env.Options{Prefix: envAuthGrpcPrefix, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to auth grpc client configuration : %s", err.Error()))
-	}
-
-	// connect to auth grpc server
-	authGrpcClient, secure, err := grpcClient.Connect(authGrpcConfig)
-	if err != nil {
-		log.Fatalf("Failed to connect to things gRPC : %s ", err.Error())
-	}
-	defer authGrpcClient.Close()
-	secureMsg = "without TLS"
-	if secure {
-		secureMsg = "with TLS"
-	}
-	logger.Info(fmt.Sprintf("Connected to auth gRPC %s", secureMsg))
-
-	// initialize auth tracer for auth grpc client
-	authTracer, authCloser, err := jaegerClient.NewTracer("auth", cfg.jaegerURL)
-	if err != nil {
-		log.Fatalf("Failed to initialize to jaeger : %s ", err.Error())
-	}
-	defer authCloser.Close()
-
-	// create new auth grpc client
-	auth := authapi.NewClient(authTracer, authGrpcClient, authGrpcConfig.Timeout)
-
-	////////// CASSANDRA READER REPO /////////////
 	repo := newService(cassaSession, logger)
 
 	///////////////// HTTP SERVER //////////////////////////

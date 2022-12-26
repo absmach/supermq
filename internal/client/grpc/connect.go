@@ -4,11 +4,21 @@
 package grpc
 
 import (
+	"io"
+	"io/ioutil"
 	"time"
 
+	jaegerClient "github.com/mainflux/mainflux/internal/client/jaeger"
+	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/opentracing/opentracing-go"
 	gogrpc "google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+)
+
+var (
+	errGrpcConnect = errors.New("failed to connect to grpc server")
+	errJaeger      = errors.New("failed to initialize jaeger ")
 )
 
 type Config struct {
@@ -39,4 +49,23 @@ func Connect(cfg Config) (*gogrpc.ClientConn, bool, error) {
 		return nil, secure, err
 	}
 	return conn, secure, nil
+}
+
+func Setup(config Config, svcName, jaegerURL string) (*gogrpc.ClientConn, opentracing.Tracer, io.Closer, bool, error) {
+	secure := false
+
+	// connect to auth grpc server
+	grpcClient, secure, err := Connect(config)
+	if err != nil {
+		return nil, nil, ioutil.NopCloser(nil), false, errors.Wrap(errGrpcConnect, err)
+	}
+
+	// initialize auth tracer for auth grpc client
+	tracer, tracerCloser, err := jaegerClient.NewTracer(svcName, jaegerURL)
+	if err != nil {
+		grpcClient.Close()
+		return nil, nil, ioutil.NopCloser(nil), false, errors.Wrap(errJaeger, err)
+	}
+
+	return grpcClient, tracer, tracerCloser, secure, nil
 }

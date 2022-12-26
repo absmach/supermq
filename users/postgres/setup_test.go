@@ -15,6 +15,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib" // required for SQL access
 	"github.com/jmoiron/sqlx"
 
+	pgClient "github.com/mainflux/mainflux/internal/client/postgres"
 	"github.com/mainflux/mainflux/users/postgres"
 	dockertest "github.com/ory/dockertest/v3"
 )
@@ -50,7 +51,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
-	dbConfig := postgres.Config{
+	dbConfig := pgClient.Config{
 		Host:        "localhost",
 		Port:        port,
 		User:        "test",
@@ -62,7 +63,7 @@ func TestMain(m *testing.M) {
 		SSLRootCert: "",
 	}
 
-	if db, err = postgres.Connect(dbConfig); err != nil {
+	if db, err = pgClient.SetupDB(dbConfig, *postgres.Migration()); err != nil {
 		log.Fatalf("Could not setup test DB connection: %s", err)
 	}
 

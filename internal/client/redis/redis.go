@@ -7,6 +7,13 @@ import (
 	"strconv"
 
 	r "github.com/go-redis/redis/v8"
+	"github.com/mainflux/mainflux/internal/env"
+	"github.com/mainflux/mainflux/pkg/errors"
+)
+
+var (
+	errConfig  = errors.New("failed to load redis client configuration")
+	errConnect = errors.New("failed to connect to redis server")
 )
 
 // Config of RedisDB
@@ -14,6 +21,19 @@ type Config struct {
 	URL  string `env:"ES_URL"    envDefault:"localhost:6379"`
 	Pass string `env:"ES_PASS"   envDefault:""`
 	DB   string `env:"ES_DB"     envDefault:"0"`
+}
+
+// Setup load config from environment and creates new  connection to the Redis Server.
+func Setup(prefix string) (*r.Client, error) {
+	cfg := Config{}
+	if err := env.Parse(&cfg, env.Options{Prefix: prefix}); err != nil {
+		return nil, errors.Wrap(errConfig, err)
+	}
+	client, err := Connect(cfg)
+	if err != nil {
+		return nil, errors.Wrap(errConnect, err)
+	}
+	return client, nil
 }
 
 // Connect create connection to RedisDB

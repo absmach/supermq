@@ -9,6 +9,7 @@ import (
 	"time"
 
 	cwriter "github.com/mainflux/mainflux/consumers/writers/cassandra"
+	cclient "github.com/mainflux/mainflux/internal/client/cassandra"
 	"github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -45,7 +46,7 @@ var (
 )
 
 func TestReadSenml(t *testing.T) {
-	session, err := creader.Connect(creader.DBConfig{
+	session, err := cclient.Connect(cclient.Config{
 		Hosts:    []string{addr},
 		Keyspace: keyspace,
 	})
@@ -385,7 +386,7 @@ func TestReadSenml(t *testing.T) {
 }
 
 func TestReadJSON(t *testing.T) {
-	session, err := creader.Connect(creader.DBConfig{
+	session, err := cclient.Connect(cclient.Config{
 		Hosts:    []string{addr},
 		Keyspace: keyspace,
 	})

@@ -84,20 +84,12 @@ func main() {
 	defer db.Close()
 
 	///////////////// AUTH SERVICE /////////////////////////
-	// create new tracker for database
+	// create new tracer for repo database
 	dbTracer, dbCloser, err := jaegerClient.NewTracer("auth_db", cfg.JaegerURL)
 	if err != nil {
 		log.Fatalf("Failed to init Jaeger: %s", err.Error())
 	}
 	defer dbCloser.Close()
-
-	// create new jaeger tracer
-	tracer, closer, err := jaegerClient.NewTracer("auth", cfg.JaegerURL)
-	if err != nil {
-		log.Fatalf("Failed to init Jaeger: %s", err.Error())
-	}
-	defer closer.Close()
-
 	//create keto read grpc client
 	readerConn, _, err := grpcClient.Connect(grpcClient.Config{ClientTLS: false, URL: fmt.Sprintf("%s:%s", cfg.KetoReadHost, cfg.KetoReadPort)})
 	if err != nil {
@@ -112,6 +104,12 @@ func main() {
 	svc := newService(db, dbTracer, cfg.Secret, logger, readerConn, writerConn, cfg.LoginDuration)
 
 	///////////////// HTTP SERVER //////////////////////////
+	// create new http handler tracer
+	tracer, closer, err := jaegerClient.NewTracer("auth", cfg.JaegerURL)
+	if err != nil {
+		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+	}
+	defer closer.Close()
 	// create new http server config
 	httpServerConfig := server.Config{}
 	// load http server config from environment variables

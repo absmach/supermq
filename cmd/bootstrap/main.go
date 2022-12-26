@@ -11,15 +11,13 @@ import (
 	r "github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
-	authapi "github.com/mainflux/mainflux/auth/api/grpc"
 	"github.com/mainflux/mainflux/bootstrap"
 	api "github.com/mainflux/mainflux/bootstrap/api"
 	bootstrapRepo "github.com/mainflux/mainflux/bootstrap/postgres"
 	rediscons "github.com/mainflux/mainflux/bootstrap/redis/consumer"
 	redisprod "github.com/mainflux/mainflux/bootstrap/redis/producer"
 	"github.com/mainflux/mainflux/internal"
-	grpcClient "github.com/mainflux/mainflux/internal/client/grpc"
-	jaegerClient "github.com/mainflux/mainflux/internal/client/jaeger"
+	authClient "github.com/mainflux/mainflux/internal/client/grpc/auth"
 	pgClient "github.com/mainflux/mainflux/internal/client/postgres"
 	redisClient "github.com/mainflux/mainflux/internal/client/redis"
 	"github.com/mainflux/mainflux/internal/env"
@@ -57,62 +55,34 @@ func main() {
 
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Fatal(err.Error())
 	}
 
 	///////////////// POSTGRES CLIENT /////////////////////////
-	// create new postgres config
-	dbConfig := pgClient.Config{}
-	// load postgres config from environment
-	if err := env.Parse(&dbConfig, env.Options{Prefix: envPrefix}); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to load %s database configuration : %s", svcName, err.Error()))
-	}
 	// create new postgres client
-	db, err := pgClient.SetupDB(dbConfig, *bootstrapRepo.Migration())
+	db, err := pgClient.Setup(envPrefix, *bootstrapRepo.Migration())
 	if err != nil {
-		log.Fatalf("Failed to setup %s database : %s", svcName, err.Error())
+		log.Fatal(err.Error())
 	}
 	defer db.Close()
 
 	///////////////// EVENT STORE REDIS CLIENT /////////////////////////
-	// create new redis client config for bootstrap event store
-	bootstrapESConfig := redisClient.Config{}
-	if err := env.Parse(&bootstrapESConfig, env.Options{Prefix: envPrefix}); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to load %s bootstrap event store configuration : %s", svcName, err.Error()))
-	}
 	// create new redis client for bootstrap event store
-	esClient, err := redisClient.Connect(bootstrapESConfig)
+	esClient, err := redisClient.Setup(envPrefix)
 	if err != nil {
 		log.Fatalf(fmt.Sprintf("Failed to setup %s bootstrap event store redis client : %s", svcName, err.Error()))
 	}
 	defer esClient.Close()
 
 	///////////////// AUTH - GRPC CLIENT /////////////////////////
-	// create new auth grpc client config
-	authGrpcConfig := grpcClient.Config{}
-	// load auth grpc client config from environment
-	if err := env.Parse(&authGrpcConfig, env.Options{Prefix: envAuthGrpcPrefix, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to load %s configuration : %s", svcName, err.Error()))
-	}
-	// create new auth grpc client
-	authConn, secure, err := grpcClient.Connect(authGrpcConfig)
-	if err != nil {
-		log.Fatalf("Failed to connect with auth gRPC : %s ", err.Error())
-	}
-	defer authConn.Close()
-	secureMsg := "without TLS"
-	if secure {
-		secureMsg = "with TLS"
-	}
-	logger.Info(fmt.Sprintf("Connected to auth gRPC %s", secureMsg))
-	// create new auth grpc client tracer
-	authTracer, authCloser, err := jaegerClient.NewTracer("auth", cfg.jaegerURL)
-	if err != nil {
-		log.Fatalf("Failed to init Jaeger: %s", err.Error())
-	}
-	defer authCloser.Close()
 	// create new auth grpc client api
-	auth := authapi.NewClient(authTracer, authConn, authGrpcConfig.Timeout)
+	auth, authGrpcClient, authGrpcTracerCloser, authGrpcSecure, err := authClient.Setup(envPrefix, cfg.jaegerURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer authGrpcClient.Close()
+	defer authGrpcTracerCloser.Close()
+	logger.Info("Successfully connected to auth grpc server " + authGrpcSecure)
 
 	///////////////// BOOTSTRAP SERVICE /////////////////////////
 	svc := newService(auth, db, logger, esClient, cfg)
@@ -131,15 +101,9 @@ func main() {
 	})
 
 	///////////////// SUBSCRIBE TO THINGS EVENT STORE/////////////////////////
-	// create new redis client config for things event store
-	thingESConfig := redisClient.Config{}
-	if err := env.Parse(&thingESConfig, env.Options{Prefix: envPrefix, AltPrefix: envThingsAuthGrpcPrefix}); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to load %s things event store configuration : %s", svcName, err.Error()))
-	}
-	// create new redis client for things event store
-	thingsESClient, err := redisClient.Connect(thingESConfig)
+	thingsESClient, err := redisClient.Setup(envPrefix)
 	if err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to setup %s things event store redis client : %s", svcName, err.Error()))
+		log.Fatalf(err.Error())
 	}
 	defer thingsESClient.Close()
 	// subscribe to things event store

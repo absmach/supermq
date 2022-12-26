@@ -5,6 +5,13 @@ package cassandra
 
 import (
 	"github.com/gocql/gocql"
+	"github.com/mainflux/mainflux/internal/env"
+	"github.com/mainflux/mainflux/pkg/errors"
+)
+
+var (
+	errConfig  = errors.New("failed to load Cassandra configuration")
+	errConnect = errors.New("failed to connect to Cassandra database")
 )
 
 // Config contains Cassandra DB specific parameters.
@@ -14,6 +21,20 @@ type Config struct {
 	User     string   `env:"DB_USER"        envDefault:"mainflux"`
 	Pass     string   `env:"DB_PASS"        envDefault:"mainflux"`
 	Port     int      `env:"DB_PORT"        envDefault:"9042"`
+}
+
+//Setup
+
+func Setup(envPrefix string) (*gocql.Session, error) {
+	config := Config{}
+	if err := env.Parse(&config, env.Options{Prefix: envPrefix}); err != nil {
+		return nil, errors.Wrap(errConfig, err)
+	}
+	cassSess, err := Connect(config)
+	if err != nil {
+		errors.Wrap(errConnect, err)
+	}
+	return cassSess, nil
 }
 
 // Connect establishes connection to the Cassandra cluster.
