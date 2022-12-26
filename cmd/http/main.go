@@ -31,9 +31,9 @@ const (
 )
 
 type config struct {
-	brokerURL string
-	logLevel  string
-	jaegerURL string
+	logLevel  string `env:"MF_HTTP_ADAPTER_LOG_LEVEL"   envDefault:"debug"`
+	brokerURL string `env:"MF_BROKER_URL"               envDefault:"nats://localhost:4222" `
+	jaegerURL string `env:"MF_JAEGER_URL"               envDefault:""`
 }
 
 func main() {
