@@ -3,6 +3,7 @@ package env
 import (
 	"github.com/caarlos0/env/v6"
 	"github.com/mainflux/mainflux/internal/client/grpc"
+	"github.com/mainflux/mainflux/internal/server"
 )
 
 type Options struct {
@@ -49,6 +50,8 @@ func Parse(v interface{}, opts ...Options) error {
 	switch cfg := v.(type) {
 	case *grpc.Config:
 		return parseGrpcConfig(cfg, altPrefix, actOpt...)
+	case *server.Config:
+		return parseServerConfig(cfg, altPrefix, actOpt...)
 	default:
 		return env.Parse(v, actOpt...)
 	}
@@ -58,23 +61,53 @@ func parseGrpcConfig(cfg *grpc.Config, altPrefix string, opts ...env.Options) er
 	if err := env.Parse(cfg, opts...); err != nil {
 		return err
 	}
-	altOpts := []env.Options{}
-	for _, opt := range opts {
-		if opt.Prefix != "" {
-			opt.Prefix = altPrefix
+
+	if !cfg.ClientTLS || cfg.CACerts == "" {
+		altOpts := []env.Options{}
+		for _, opt := range opts {
+			if opt.Prefix != "" {
+				opt.Prefix = altPrefix
+			}
+			altOpts = append(altOpts, opt)
 		}
-		altOpts = append(altOpts, opt)
-	}
-	altCfg := grpc.Config{}
-	if err := env.Parse(&altCfg, altOpts...); err != nil {
-		return err
-	}
-	if cfg.CACerts == "" && altCfg.CACerts != "" {
-		cfg.CACerts = altCfg.CACerts
-	}
-	if !cfg.ClientTLS && altCfg.ClientTLS {
-		cfg.ClientTLS = altCfg.ClientTLS
+		altCfg := grpc.Config{}
+		if err := env.Parse(&altCfg, altOpts...); err != nil {
+			return err
+		}
+		if cfg.CACerts == "" && altCfg.CACerts != "" {
+			cfg.CACerts = altCfg.CACerts
+		}
+		if !cfg.ClientTLS && altCfg.ClientTLS {
+			cfg.ClientTLS = altCfg.ClientTLS
+		}
 	}
 
+	return nil
+}
+
+func parseServerConfig(cfg *server.Config, altPrefix string, opts ...env.Options) error {
+	if err := env.Parse(cfg, opts...); err != nil {
+		return err
+	}
+
+	if cfg.CertFile == "" || cfg.KeyFile == "" {
+		altOpts := []env.Options{}
+		for _, opt := range opts {
+			if opt.Prefix != "" {
+				opt.Prefix = altPrefix
+			}
+			altOpts = append(altOpts, opt)
+		}
+		altCfg := server.Config{}
+		if err := env.Parse(&altCfg, altOpts...); err != nil {
+			return err
+		}
+		if cfg.CertFile == "" && altCfg.CertFile != "" {
+			cfg.CertFile = altCfg.CertFile
+		}
+		if cfg.KeyFile == "" && altCfg.KeyFile != "" {
+			cfg.KeyFile = altCfg.KeyFile
+		}
+	}
 	return nil
 }
