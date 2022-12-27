@@ -70,16 +70,10 @@ func main() {
 	}
 
 	///////////////// POSTGRES CLIENT /////////////////////////
-	// create new postgres config
-	dbConfig := pgClient.Config{}
-	// load postgres config from environment
-	if err := env.Parse(&dbConfig, env.Options{Prefix: envPrefix}); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to load %s database configuration : %s", svcName, err.Error()))
-	}
 	// create new postgres client
-	db, err := pgClient.SetupDB(dbConfig, *authPg.Migration())
+	db, err := pgClient.Setup(envPrefix, *authPg.Migration())
 	if err != nil {
-		log.Fatalf("Failed to setup %s database : %s", svcName, err.Error())
+		log.Fatalf("Failed to setup postgres database : %s", err.Error())
 	}
 	defer db.Close()
 

@@ -13,8 +13,8 @@ import (
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/internal"
-	internalauth "github.com/mainflux/mainflux/internal/auth"
 	thingsClient "github.com/mainflux/mainflux/internal/client/grpc/things"
+	jaegerClient "github.com/mainflux/mainflux/internal/client/jaeger"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
@@ -67,7 +67,10 @@ func main() {
 
 	svc := newService(pub, tc, logger)
 
-	tracer, closer := internalauth.Jaeger("http_adapter", cfg.jaegerURL, logger)
+	tracer, closer, err := jaegerClient.NewTracer("http_adapter", cfg.jaegerURL)
+	if err != nil {
+		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+	}
 	defer closer.Close()
 
 	httpServerConfig := server.Config{}

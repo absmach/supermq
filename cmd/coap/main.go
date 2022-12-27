@@ -82,7 +82,6 @@ func main() {
 		os.Exit(1)
 	}
 	defer nps.Close()
-	defer nps.Close()
 
 	svc := coap.New(tc, nps)
 
@@ -103,9 +102,6 @@ func main() {
 		return server.StopSignalHandler(ctx, cancel, logger, svcName, hs, cs)
 	})
 
-	if err := g.Wait(); err != nil {
-		logger.Error(fmt.Sprintf("CoAP adapter service terminated: %s", err))
-	}
 	if err := g.Wait(); err != nil {
 		logger.Error(fmt.Sprintf("CoAP adapter service terminated: %s", err))
 	}

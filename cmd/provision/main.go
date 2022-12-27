@@ -113,7 +113,9 @@ func main() {
 	svc := provision.New(cfg, SDK, logger)
 	svc = api.NewLoggingMiddleware(svc, logger)
 
-	hs := httpserver.New(ctx, cancel, svcName, "", cfg.Server.HTTPPort, api.MakeHandler(svc, logger), cfg.Server.ServerCert, cfg.Server.ServerKey, logger)
+	httpServerConfig := server.Config{Host: "", Port: cfg.Server.HTTPPort, KeyFile: cfg.Server.ServerKey, CertFile: cfg.Server.ServerCert}
+
+	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, logger), logger)
 	g.Go(func() error {
 		return hs.Start()
 	})

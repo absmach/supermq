@@ -22,7 +22,7 @@ type Server struct {
 
 var _ server.Server = (*Server)(nil)
 
-func New(ctx context.Context, cancel context.CancelFunc, name string, address string, config server.Config, handler mux.HandlerFunc, logger logger.Logger) server.Server {
+func New(ctx context.Context, cancel context.CancelFunc, name string, config server.Config, handler mux.HandlerFunc, logger logger.Logger) server.Server {
 	listenFullAddress := fmt.Sprintf("%s:%s", config.Host, config.Port)
 	return &Server{
 		BaseServer: server.BaseServer{
