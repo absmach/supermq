@@ -8,21 +8,21 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
-	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
-	authapi "github.com/mainflux/mainflux/auth/api/grpc"
 	"github.com/mainflux/mainflux/consumers"
 	"github.com/mainflux/mainflux/consumers/notifiers"
 	"github.com/mainflux/mainflux/consumers/notifiers/api"
-	"github.com/mainflux/mainflux/consumers/notifiers/postgres"
+	notifierPg "github.com/mainflux/mainflux/consumers/notifiers/postgres"
 	"github.com/mainflux/mainflux/consumers/notifiers/smtp"
 	"github.com/mainflux/mainflux/consumers/notifiers/tracing"
 	"github.com/mainflux/mainflux/internal"
 	internalauth "github.com/mainflux/mainflux/internal/auth"
+	authClient "github.com/mainflux/mainflux/internal/client/grpc/auth"
+	pgClient "github.com/mainflux/mainflux/internal/client/postgres"
 	"github.com/mainflux/mainflux/internal/email"
+	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
 	"github.com/mainflux/mainflux/logger"
@@ -33,114 +33,57 @@ import (
 )
 
 const (
-	svcName          = "smtp-notifier"
-	defLogLevel      = "error"
-	defDBHost        = "localhost"
-	defDBPort        = "5432"
-	defDBUser        = "mainflux"
-	defDBPass        = "mainflux"
-	defDB            = "subscriptions"
-	defConfigPath    = "/config.toml"
-	defDBSSLMode     = "disable"
-	defDBSSLCert     = ""
-	defDBSSLKey      = ""
-	defDBSSLRootCert = ""
-	defHTTPPort      = "8906"
-	defServerCert    = ""
-	defServerKey     = ""
-	defFrom          = ""
-	defJaegerURL     = ""
-	defBrokerURL     = "nats://localhost:4222"
-
-	defEmailHost        = "localhost"
-	defEmailPort        = "25"
-	defEmailUsername    = "root"
-	defEmailPassword    = ""
-	defEmailFromAddress = ""
-	defEmailFromName    = ""
-	defEmailTemplate    = "email.tmpl"
-
-	defAuthTLS     = "false"
-	defAuthCACerts = ""
-	defAuthURL     = "localhost:8181"
-	defAuthTimeout = "1s"
-
-	envLogLevel      = "MF_SMTP_NOTIFIER_LOG_LEVEL"
-	envDBHost        = "MF_SMTP_NOTIFIER_DB_HOST"
-	envDBPort        = "MF_SMTP_NOTIFIER_DB_PORT"
-	envDBUser        = "MF_SMTP_NOTIFIER_DB_USER"
-	envDBPass        = "MF_SMTP_NOTIFIER_DB_PASS"
-	envDB            = "MF_SMTP_NOTIFIER_DB"
-	envConfigPath    = "MF_SMTP_NOTIFIER_CONFIG_PATH"
-	envDBSSLMode     = "MF_SMTP_NOTIFIER_DB_SSL_MODE"
-	envDBSSLCert     = "MF_SMTP_NOTIFIER_DB_SSL_CERT"
-	envDBSSLKey      = "MF_SMTP_NOTIFIER_DB_SSL_KEY"
-	envDBSSLRootCert = "MF_SMTP_NOTIFIER_DB_SSL_ROOT_CERT"
-	envHTTPPort      = "MF_SMTP_NOTIFIER_PORT"
-	envServerCert    = "MF_SMTP_NOTIFIER_SERVER_CERT"
-	envServerKey     = "MF_SMTP_NOTIFIER_SERVER_KEY"
-	envFrom          = "MF_SMTP_NOTIFIER_FROM_ADDR"
-	envJaegerURL     = "MF_JAEGER_URL"
-	envBrokerURL     = "MF_BROKER_URL"
-
-	envEmailHost        = "MF_EMAIL_HOST"
-	envEmailPort        = "MF_EMAIL_PORT"
-	envEmailUsername    = "MF_EMAIL_USERNAME"
-	envEmailPassword    = "MF_EMAIL_PASSWORD"
-	envEmailFromAddress = "MF_EMAIL_FROM_ADDRESS"
-	envEmailFromName    = "MF_EMAIL_FROM_NAME"
-	envEmailTemplate    = "MF_SMTP_NOTIFIER_TEMPLATE"
-
-	envAuthTLS     = "MF_AUTH_CLIENT_TLS"
-	envAuthCACerts = "MF_AUTH_CA_CERTS"
-	envAuthURL     = "MF_AUTH_GRPC_URL"
-	envAuthTimeout = "MF_AUTH_GRPC_TIMEOUT"
+	svcName       = "smtp-notifier"
+	envPrefix     = "MF_SMTP_NOTIFIER_"
+	envPrefixHttp = "MF_SMTP_NOTIFIER_HTTP_"
 )
 
 type config struct {
-	brokerURL   string
-	configPath  string
-	logLevel    string
-	dbConfig    postgres.Config
-	emailConf   email.Config
-	from        string
-	httpPort    string
-	serverCert  string
-	serverKey   string
-	jaegerURL   string
-	authTLS     bool
-	authCACerts string
-	authURL     string
-	authTimeout time.Duration
+	logLevel   string `env:"MF_SMTP_NOTIFIER_LOG_LEVEL"   envDefault:"debug"`
+	configPath string `env:"MF_SMTP_NOTIFIER_CONFIG_PATH"   envDefault:"/config.toml"`
+	from       string `env:"MF_SMTP_NOTIFIER_FROM_ADDR"   envDefault:""`
+	brokerURL  string `env:"MF_BROKER_URL"                envDefault:"nats://localhost:4222"`
+	jaegerURL  string `env:"MF_JAEGER_URL"                envDefault:""`
 }
 
 func main() {
-	cfg := loadConfig()
 	ctx, cancel := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
+
+	cfg := config{}
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatalf("Failed to load %s configuration : %s", svcName, err.Error())
+	}
 
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 
-	db := connectToDB(cfg.dbConfig, logger)
+	db, err := pgClient.Setup(envPrefix, *notifierPg.Migration())
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer db.Close()
+
+	ec := email.Config{}
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatalf("Failed to load email configuration : %s", err.Error())
+	}
 
 	pubSub, err := brokers.NewPubSub(cfg.brokerURL, "", logger)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to message broker: %s", err))
-		os.Exit(1)
+		log.Fatalf("Failed to connect to message broker: %s", err)
 	}
 	defer pubSub.Close()
 
-	authTracer, closer := internalauth.Jaeger("auth", cfg.jaegerURL, logger)
-	defer closer.Close()
-
-	authConn := internalauth.ConnectToAuth(cfg.authTLS, cfg.authCACerts, cfg.authURL, svcName, logger)
-	defer authConn.Close()
-
-	auth := authapi.NewClient(authTracer, authConn, cfg.authTimeout)
+	auth, authGrpcClient, authGrpcTracerCloser, authGrpcSecure, err := authClient.Setup(envPrefix, cfg.jaegerURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer authGrpcClient.Close()
+	defer authGrpcTracerCloser.Close()
+	logger.Info("Successfully connected to auth grpc server " + authGrpcSecure)
 
 	tracer, closer := internalauth.Jaeger("smtp-notifier", cfg.jaegerURL, logger)
 	defer closer.Close()
@@ -148,13 +91,18 @@ func main() {
 	dbTracer, dbCloser := internalauth.Jaeger("smtp-notifier_db", cfg.jaegerURL, logger)
 	defer dbCloser.Close()
 
-	svc := newService(db, dbTracer, auth, cfg, logger)
+	svc := newService(db, dbTracer, auth, cfg, ec, logger)
 
 	if err = consumers.Start(svcName, pubSub, svc, cfg.configPath, logger); err != nil {
-		logger.Error(fmt.Sprintf("Failed to create Postgres writer: %s", err))
+		log.Fatalf("Failed to create Postgres writer: %s", err)
 	}
 
-	hs := httpserver.New(ctx, cancel, svcName, "", cfg.httpPort, api.MakeHandler(svc, tracer, logger), cfg.serverCert, cfg.serverKey, logger)
+	httpServerConfig := server.Config{}
+	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
+		log.Fatalf("Failed to load %s HTTP server configuration : %s", svcName, err.Error())
+	}
+
+	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, tracer, logger), logger)
 	g.Go(func() error {
 		return hs.Start()
 	})
@@ -169,73 +117,12 @@ func main() {
 
 }
 
-func loadConfig() config {
-	authTimeout, err := time.ParseDuration(mainflux.Env(envAuthTimeout, defAuthTimeout))
-	if err != nil {
-		log.Fatalf("Invalid %s value: %s", envAuthTimeout, err.Error())
-	}
-
-	tls, err := strconv.ParseBool(mainflux.Env(envAuthTLS, defAuthTLS))
-	if err != nil {
-		log.Fatalf("Invalid value passed for %s\n", envAuthTLS)
-	}
-
-	dbConfig := postgres.Config{
-		Host:        mainflux.Env(envDBHost, defDBHost),
-		Port:        mainflux.Env(envDBPort, defDBPort),
-		User:        mainflux.Env(envDBUser, defDBUser),
-		Pass:        mainflux.Env(envDBPass, defDBPass),
-		Name:        mainflux.Env(envDB, defDB),
-		SSLMode:     mainflux.Env(envDBSSLMode, defDBSSLMode),
-		SSLCert:     mainflux.Env(envDBSSLCert, defDBSSLCert),
-		SSLKey:      mainflux.Env(envDBSSLKey, defDBSSLKey),
-		SSLRootCert: mainflux.Env(envDBSSLRootCert, defDBSSLRootCert),
-	}
-
-	emailConf := email.Config{
-		FromAddress: mainflux.Env(envEmailFromAddress, defEmailFromAddress),
-		FromName:    mainflux.Env(envEmailFromName, defEmailFromName),
-		Host:        mainflux.Env(envEmailHost, defEmailHost),
-		Port:        mainflux.Env(envEmailPort, defEmailPort),
-		Username:    mainflux.Env(envEmailUsername, defEmailUsername),
-		Password:    mainflux.Env(envEmailPassword, defEmailPassword),
-		Template:    mainflux.Env(envEmailTemplate, defEmailTemplate),
-	}
-
-	return config{
-		logLevel:    mainflux.Env(envLogLevel, defLogLevel),
-		brokerURL:   mainflux.Env(envBrokerURL, defBrokerURL),
-		configPath:  mainflux.Env(envConfigPath, defConfigPath),
-		dbConfig:    dbConfig,
-		emailConf:   emailConf,
-		from:        mainflux.Env(envFrom, defFrom),
-		httpPort:    mainflux.Env(envHTTPPort, defHTTPPort),
-		serverCert:  mainflux.Env(envServerCert, defServerCert),
-		serverKey:   mainflux.Env(envServerKey, defServerKey),
-		jaegerURL:   mainflux.Env(envJaegerURL, defJaegerURL),
-		authTLS:     tls,
-		authCACerts: mainflux.Env(envAuthCACerts, defAuthCACerts),
-		authURL:     mainflux.Env(envAuthURL, defAuthURL),
-		authTimeout: authTimeout,
-	}
-
-}
-
-func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sqlx.DB {
-	db, err := postgres.Connect(dbConfig)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to postgres: %s", err))
-		os.Exit(1)
-	}
-	return db
-}
-
-func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServiceClient, c config, logger logger.Logger) notifiers.Service {
-	database := postgres.NewDatabase(db)
-	repo := tracing.New(postgres.New(database), tracer)
+func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServiceClient, c config, ec email.Config, logger logger.Logger) notifiers.Service {
+	database := notifierPg.NewDatabase(db)
+	repo := tracing.New(notifierPg.New(database), tracer)
 	idp := ulid.New()
 
-	agent, err := email.New(&c.emailConf)
+	agent, err := email.New(&ec)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to create email agent: %s", err))
 		os.Exit(1)
