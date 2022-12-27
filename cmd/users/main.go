@@ -11,7 +11,6 @@ import (
 	"regexp"
 
 	"github.com/mainflux/mainflux/internal"
-	internalauth "github.com/mainflux/mainflux/internal/auth"
 	authClient "github.com/mainflux/mainflux/internal/client/grpc/auth"
 	pgClient "github.com/mainflux/mainflux/internal/client/postgres"
 	"github.com/mainflux/mainflux/internal/email"
@@ -98,7 +97,10 @@ func main() {
 
 	svc := newService(db, dbTracer, auth, cfg, ec, logger)
 
-	tracer, closer := internalauth.Jaeger("users", cfg.jaegerURL, logger)
+	tracer, closer, err := jaegerClient.NewTracer("users", cfg.jaegerURL)
+	if err != nil {
+		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+	}
 	defer closer.Close()
 
 	httpServerConfig := server.Config{}

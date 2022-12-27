@@ -18,8 +18,8 @@ import (
 	"github.com/mainflux/mainflux/consumers/notifiers/smtp"
 	"github.com/mainflux/mainflux/consumers/notifiers/tracing"
 	"github.com/mainflux/mainflux/internal"
-	internalauth "github.com/mainflux/mainflux/internal/auth"
 	authClient "github.com/mainflux/mainflux/internal/client/grpc/auth"
+	jagerClient "github.com/mainflux/mainflux/internal/client/jaeger"
 	pgClient "github.com/mainflux/mainflux/internal/client/postgres"
 	"github.com/mainflux/mainflux/internal/email"
 	"github.com/mainflux/mainflux/internal/env"
@@ -85,10 +85,16 @@ func main() {
 	defer authGrpcTracerCloser.Close()
 	logger.Info("Successfully connected to auth grpc server " + authGrpcSecure)
 
-	tracer, closer := internalauth.Jaeger("smtp-notifier", cfg.jaegerURL, logger)
+	tracer, closer, err := jagerClient.NewTracer("smtp-notifier", cfg.jaegerURL)
+	if err != nil {
+		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+	}
 	defer closer.Close()
 
-	dbTracer, dbCloser := internalauth.Jaeger("smtp-notifier_db", cfg.jaegerURL, logger)
+	dbTracer, dbCloser, err := jagerClient.NewTracer("smtp-notifier_db", cfg.jaegerURL)
+	if err != nil {
+		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+	}
 	defer dbCloser.Close()
 
 	svc := newService(db, dbTracer, auth, cfg, ec, logger)

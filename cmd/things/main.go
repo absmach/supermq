@@ -13,8 +13,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal"
-	internalauth "github.com/mainflux/mainflux/internal/auth"
 	authClient "github.com/mainflux/mainflux/internal/client/grpc/auth"
+	jaegerClient "github.com/mainflux/mainflux/internal/client/jaeger"
 	pgClient "github.com/mainflux/mainflux/internal/client/postgres"
 	redisClient "github.com/mainflux/mainflux/internal/client/redis"
 	"github.com/mainflux/mainflux/internal/env"
@@ -103,18 +103,27 @@ func main() {
 	logger.Info("Successfully connected to auth grpc server " + authGrpcSecure)
 
 	// create tracer for things database
-	dbTracer, dbCloser := internalauth.Jaeger("things_db", cfg.jaegerURL, logger)
+	dbTracer, dbCloser, err := jaegerClient.NewTracer("things_db", cfg.jaegerURL)
+	if err != nil {
+		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+	}
 	defer dbCloser.Close()
 
 	// create tracer for things cache
-	cacheTracer, cacheCloser := internalauth.Jaeger("things_cache", cfg.jaegerURL, logger)
+	cacheTracer, cacheCloser, err := jaegerClient.NewTracer("things_cache", cfg.jaegerURL)
+	if err != nil {
+		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+	}
 	defer cacheCloser.Close()
 
 	//create new things service
 	svc := newService(auth, dbTracer, cacheTracer, db, cacheClient, esClient, logger)
 
 	// create tracer for HTTP handler things
-	thingsTracer, thingsCloser := internalauth.Jaeger("things", cfg.jaegerURL, logger)
+	thingsTracer, thingsCloser, err := jaegerClient.NewTracer("things", cfg.jaegerURL)
+	if err != nil {
+		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+	}
 	defer thingsCloser.Close()
 
 	/////////////////// THINGS HTTP SERVER /////////////////////
