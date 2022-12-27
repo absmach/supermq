@@ -15,7 +15,7 @@ import (
 	httpapi "github.com/mainflux/mainflux/auth/api/http"
 	"github.com/mainflux/mainflux/auth/jwt"
 	"github.com/mainflux/mainflux/auth/keto"
-	authRepo "github.com/mainflux/mainflux/auth/postgres"
+	authPg "github.com/mainflux/mainflux/auth/postgres"
 	"github.com/mainflux/mainflux/auth/tracing"
 	"github.com/mainflux/mainflux/internal"
 	grpcClient "github.com/mainflux/mainflux/internal/client/grpc"
@@ -77,7 +77,7 @@ func main() {
 		log.Fatalf(fmt.Sprintf("Failed to load %s database configuration : %s", svcName, err.Error()))
 	}
 	// create new postgres client
-	db, err := pgClient.SetupDB(dbConfig, *authRepo.Migration())
+	db, err := pgClient.SetupDB(dbConfig, *authPg.Migration())
 	if err != nil {
 		log.Fatalf("Failed to setup %s database : %s", svcName, err.Error())
 	}
@@ -149,10 +149,10 @@ func main() {
 }
 
 func newService(db *sqlx.DB, tracer opentracing.Tracer, secret string, logger logger.Logger, readerConn, writerConn *grpc.ClientConn, duration time.Duration) auth.Service {
-	database := authRepo.NewDatabase(db)
-	keysRepo := tracing.New(authRepo.New(database), tracer)
+	database := authPg.NewDatabase(db)
+	keysRepo := tracing.New(authPg.New(database), tracer)
 
-	groupsRepo := authRepo.NewGroupRepo(database)
+	groupsRepo := authPg.NewGroupRepo(database)
 	groupsRepo = tracing.GroupRepositoryMiddleware(tracer, groupsRepo)
 
 	pa := keto.NewPolicyAgent(acl.NewCheckServiceClient(readerConn), acl.NewWriteServiceClient(writerConn), acl.NewReadServiceClient(readerConn))

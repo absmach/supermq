@@ -13,7 +13,7 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/bootstrap"
 	api "github.com/mainflux/mainflux/bootstrap/api"
-	bootstrapRepo "github.com/mainflux/mainflux/bootstrap/postgres"
+	bootstrapPg "github.com/mainflux/mainflux/bootstrap/postgres"
 	rediscons "github.com/mainflux/mainflux/bootstrap/redis/consumer"
 	redisprod "github.com/mainflux/mainflux/bootstrap/redis/producer"
 	"github.com/mainflux/mainflux/internal"
@@ -60,7 +60,7 @@ func main() {
 
 	///////////////// POSTGRES CLIENT /////////////////////////
 	// create new postgres client
-	db, err := pgClient.Setup(envPrefix, *bootstrapRepo.Migration())
+	db, err := pgClient.Setup(envPrefix, *bootstrapPg.Migration())
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -115,7 +115,7 @@ func main() {
 }
 
 func newService(auth mainflux.AuthServiceClient, db *sqlx.DB, logger logger.Logger, esClient *r.Client, cfg config) bootstrap.Service {
-	thingsRepo := bootstrapRepo.NewConfigRepository(db, logger)
+	repoConfig := bootstrapPg.NewConfigRepository(db, logger)
 
 	config := mfsdk.Config{
 		ThingsURL: cfg.thingsURL,
@@ -123,7 +123,7 @@ func newService(auth mainflux.AuthServiceClient, db *sqlx.DB, logger logger.Logg
 
 	sdk := mfsdk.NewSDK(config)
 
-	svc := bootstrap.New(auth, thingsRepo, sdk, cfg.encKey)
+	svc := bootstrap.New(auth, repoConfig, sdk, cfg.encKey)
 	svc = redisprod.NewEventStoreMiddleware(svc, esClient)
 	svc = api.NewLoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics(svcName, "api")

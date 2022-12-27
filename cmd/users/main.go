@@ -10,7 +10,6 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/mainflux/mainflux/certs/postgres"
 	"github.com/mainflux/mainflux/internal"
 	internalauth "github.com/mainflux/mainflux/internal/auth"
 	authClient "github.com/mainflux/mainflux/internal/client/grpc/auth"
@@ -32,7 +31,7 @@ import (
 	jaegerClient "github.com/mainflux/mainflux/internal/client/jaeger"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/users/api"
-	userRepo "github.com/mainflux/mainflux/users/postgres"
+	usersPg "github.com/mainflux/mainflux/users/postgres"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
@@ -77,7 +76,7 @@ func main() {
 		log.Fatalf("Failed to load email configuration : %s", err.Error())
 	}
 
-	db, err := pgClient.Setup(envPrefix, *userRepo.Migration())
+	db, err := pgClient.Setup(envPrefix, *usersPg.Migration())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -121,19 +120,10 @@ func main() {
 	}
 }
 
-func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sqlx.DB {
-	db, err := postgres.Connect(dbConfig)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to postgres: %s", err))
-		os.Exit(1)
-	}
-	return db
-}
-
 func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServiceClient, c config, ec email.Config, logger logger.Logger) users.Service {
-	database := userRepo.NewDatabase(db)
+	database := usersPg.NewDatabase(db)
 	hasher := bcrypt.New()
-	userRepo := tracing.UserRepositoryMiddleware(userRepo.NewUserRepo(database), tracer)
+	userRepo := tracing.UserRepositoryMiddleware(usersPg.NewUserRepo(database), tracer)
 
 	emailer, err := emailer.New(c.resetURL, &ec)
 	if err != nil {
