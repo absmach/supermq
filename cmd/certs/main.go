@@ -7,7 +7,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/mainflux/mainflux/certs"
 	"github.com/mainflux/mainflux/certs/api"
 	vault "github.com/mainflux/mainflux/certs/pki"
-	"github.com/mainflux/mainflux/certs/postgres"
 	certsPg "github.com/mainflux/mainflux/certs/postgres"
 	"github.com/mainflux/mainflux/internal"
 	"github.com/mainflux/mainflux/internal/env"
@@ -54,7 +52,7 @@ type config struct {
 	// Sign and issue certificates without 3rd party PKI
 	signCAPath    string `env:"MF_CERTS_SIGN_CA_PATH"        envDefault:"ca.crt"`
 	signCAKeyPath string `env:"MF_CERTS_SIGN_CA_KEY_PATH"    envDefault:"ca.key"`
-	// used in pki mock
+	// used in pki mock , need to clean up certs in separate PR
 	signRSABits    int    `env:"MF_CERTS_SIGN_RSA_BITS"       envDefault:""`
 	signHoursValid string `env:"MF_CERTS_SIGN_HOURS_VALID"    envDefault:"2048h"`
 
@@ -129,7 +127,7 @@ func main() {
 }
 
 func newService(auth mainflux.AuthServiceClient, db *sqlx.DB, logger logger.Logger, esClient *redis.Client, tlsCert tls.Certificate, x509Cert *x509.Certificate, cfg config, pkiAgent vault.Agent) certs.Service {
-	certsRepo := postgres.NewRepository(db, logger)
+	certsRepo := certsPg.NewRepository(db, logger)
 	config := mfsdk.Config{
 		CertsURL:  cfg.certsURL,
 		ThingsURL: cfg.thingsURL,
@@ -163,7 +161,7 @@ func loadCertificates(conf config) (tls.Certificate, *x509.Certificate, error) {
 		return tlsCert, caCert, errors.Wrap(errFailedCertLoading, err)
 	}
 
-	b, err := ioutil.ReadFile(conf.signCAPath)
+	b, err := os.ReadFile(conf.signCAPath)
 	if err != nil {
 		return tlsCert, caCert, errors.Wrap(errFailedCertLoading, err)
 	}
