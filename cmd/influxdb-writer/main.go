@@ -10,11 +10,12 @@ import (
 	"os"
 
 	influxdata "github.com/influxdata/influxdb/client/v2"
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/consumers"
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	"github.com/mainflux/mainflux/consumers/writers/influxdb"
 	"github.com/mainflux/mainflux/internal"
+	influxClient "github.com/mainflux/mainflux/internal/client/influxdb"
+	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
 	"github.com/mainflux/mainflux/logger"
@@ -23,45 +24,26 @@ import (
 )
 
 const (
-	svcName = "influxdb-writer"
-
-	defBrokerURL  = "nats://localhost:4222"
-	defLogLevel   = "error"
-	defPort       = "8180"
-	defDB         = "mainflux"
-	defDBHost     = "localhost"
-	defDBPort     = "8086"
-	defDBUser     = "mainflux"
-	defDBPass     = "mainflux"
-	defConfigPath = "/config.toml"
-
-	envBrokerURL  = "MF_BROKER_URL"
-	envLogLevel   = "MF_INFLUX_WRITER_LOG_LEVEL"
-	envPort       = "MF_INFLUX_WRITER_PORT"
-	envDB         = "MF_INFLUXDB_DB"
-	envDBHost     = "MF_INFLUXDB_HOST"
-	envDBPort     = "MF_INFLUXDB_PORT"
-	envDBUser     = "MF_INFLUXDB_ADMIN_USER"
-	envDBPass     = "MF_INFLUXDB_ADMIN_PASSWORD"
-	envConfigPath = "MF_INFLUX_WRITER_CONFIG_PATH"
+	svcName           = "influxdb-writer"
+	envPrefix         = "MF_INFLUX_WRITER_"
+	envPrefixHttp     = "MF_INFLUX_WRITER_HTTP_"
+	envPrefixInfluxdb = "MF_INFLUXDB_"
 )
 
 type config struct {
-	brokerURL  string
-	logLevel   string
-	port       string
-	dbName     string
-	dbHost     string
-	dbPort     string
-	dbUser     string
-	dbPass     string
-	configPath string
+	brokerURL  string `env:"MF_BROKER_URL"                    envDefault:"nats://localhost:4222"`
+	logLevel   string `env:"MF_INFLUX_WRITER_LOG_LEVEL"     envDefault:"debug"`
+	configPath string `env:"MF_INFLUX_WRITER_CONFIG_PATH"   envDefault:"/config.toml"`
 }
 
 func main() {
-	cfg, clientCfg := loadConfigs()
 	ctx, cancel := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
+
+	cfg := config{}
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatalf("Failed to load %s configuration : %s", svcName, err.Error())
+	}
 
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
 	if err != nil {
@@ -75,20 +57,28 @@ func main() {
 	}
 	defer pubSub.Close()
 
-	client, err := influxdata.NewHTTPClient(clientCfg)
+	influxdbConfig := influxClient.Config{}
+	if err := env.Parse(&influxdbConfig, env.Options{Prefix: envPrefixInfluxdb}); err != nil {
+		log.Fatalf("failed to load InfluxDB client configuration from environment variable : %s", err.Error())
+	}
+	client, err := influxClient.Connect(influxdbConfig)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to create InfluxDB client: %s", err))
-		os.Exit(1)
+		log.Fatalf("failed to connect to InfluxDB : %s", err.Error())
 	}
 	defer client.Close()
 
-	repo := newService(client, cfg.dbName, logger)
+	repo := newService(client, influxdbConfig.DbName, logger)
 
 	if err := consumers.Start(svcName, pubSub, repo, cfg.configPath, logger); err != nil {
-		logger.Error(fmt.Sprintf("Failed to start InfluxDB writer: %s", err))
-		os.Exit(1)
+		log.Fatalf("Failed to start InfluxDB writer: %s", err.Error())
 	}
-	hs := httpserver.New(ctx, cancel, svcName, "", cfg.port, api.MakeHandler(svcName), "", "", logger)
+
+	httpServerConfig := server.Config{}
+	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
+		log.Fatalf(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err.Error()))
+	}
+	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svcName), logger)
+
 	g.Go(func() error {
 		return hs.Start()
 	})
@@ -100,28 +90,6 @@ func main() {
 	if err := g.Wait(); err != nil {
 		logger.Error(fmt.Sprintf("InfluxDB reader service terminated: %s", err))
 	}
-}
-
-func loadConfigs() (config, influxdata.HTTPConfig) {
-	cfg := config{
-		brokerURL:  mainflux.Env(envBrokerURL, defBrokerURL),
-		logLevel:   mainflux.Env(envLogLevel, defLogLevel),
-		port:       mainflux.Env(envPort, defPort),
-		dbName:     mainflux.Env(envDB, defDB),
-		dbHost:     mainflux.Env(envDBHost, defDBHost),
-		dbPort:     mainflux.Env(envDBPort, defDBPort),
-		dbUser:     mainflux.Env(envDBUser, defDBUser),
-		dbPass:     mainflux.Env(envDBPass, defDBPass),
-		configPath: mainflux.Env(envConfigPath, defConfigPath),
-	}
-
-	clientCfg := influxdata.HTTPConfig{
-		Addr:     fmt.Sprintf("http://%s:%s", cfg.dbHost, cfg.dbPort),
-		Username: cfg.dbUser,
-		Password: cfg.dbPass,
-	}
-
-	return cfg, clientCfg
 }
 
 func newService(client influxdata.Client, dbName string, logger logger.Logger) consumers.Consumer {

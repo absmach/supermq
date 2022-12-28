@@ -29,11 +29,7 @@ func Setup(envPrefix string) (*gocql.Session, error) {
 	if err := env.Parse(&config, env.Options{Prefix: envPrefix}); err != nil {
 		return nil, errors.Wrap(errConfig, err)
 	}
-	cassSess, err := Connect(config)
-	if err != nil {
-		errors.Wrap(errConnect, err)
-	}
-	return cassSess, nil
+	return Connect(config)
 }
 
 // Connect establishes connection to the Cassandra cluster.
@@ -47,5 +43,9 @@ func Connect(cfg Config) (*gocql.Session, error) {
 	}
 	cluster.Port = cfg.Port
 
-	return cluster.CreateSession()
+	cassSess, err := cluster.CreateSession()
+	if err != nil {
+		errors.Wrap(errConnect, err)
+	}
+	return cassSess, nil
 }

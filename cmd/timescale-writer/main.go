@@ -30,7 +30,7 @@ const (
 )
 
 type config struct {
-	brokerURL  string `env:"MF_BROKER_URL"                   envDefault:"nats://localhost:4222" `
+	brokerURL  string `env:"MF_BROKER_URL"                   envDefault:"nats://localhost:4222"`
 	logLevel   string `env:"MF_TIMESCALE_WRITER_LOG_LEVEL"   envDefault:"debug"`
 	configPath string `env:"MF_TIMESCALE_WRITER_CONFIG_PATH" envDefault:"/config.toml"`
 }

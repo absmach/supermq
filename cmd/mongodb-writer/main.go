@@ -9,12 +9,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/consumers"
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	"github.com/mainflux/mainflux/consumers/writers/mongodb"
 	"github.com/mainflux/mainflux/internal"
-	internaldb "github.com/mainflux/mainflux/internal/db"
+	mongoClient "github.com/mainflux/mainflux/internal/client/mongo"
+	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
 	"github.com/mainflux/mainflux/logger"
@@ -24,39 +24,25 @@ import (
 )
 
 const (
-	svcName = "mongodb-writer"
-
-	defLogLevel   = "error"
-	defBrokerURL  = "nats://localhost:4222"
-	defPort       = "8180"
-	defDB         = "mainflux"
-	defDBHost     = "localhost"
-	defDBPort     = "27017"
-	defConfigPath = "/config.toml"
-
-	envBrokerURL  = "MF_BROKER_URL"
-	envLogLevel   = "MF_MONGO_WRITER_LOG_LEVEL"
-	envPort       = "MF_MONGO_WRITER_PORT"
-	envDB         = "MF_MONGO_WRITER_DB"
-	envDBHost     = "MF_MONGO_WRITER_DB_HOST"
-	envDBPort     = "MF_MONGO_WRITER_DB_PORT"
-	envConfigPath = "MF_MONGO_WRITER_CONFIG_PATH"
+	svcName       = "mongodb-writer"
+	envPrefix     = "MF_MONGO_WRITER_"
+	envPrefixHttp = "MF_MONGO_WRITER_HTTP_"
 )
 
 type config struct {
-	brokerURL  string
-	logLevel   string
-	port       string
-	dbName     string
-	dbHost     string
-	dbPort     string
-	configPath string
+	brokerURL  string `env:"MF_BROKER_URL"                 envDefault:"nats://localhost:4222"`
+	logLevel   string `env:"MF_MONGO_WRITER_LOG_LEVEL"     envDefault:"debug"`
+	configPath string `env:"MF_MONGO_WRITER_CONFIG_PATH"   envDefault:"/config.toml"`
 }
 
 func main() {
-	cfg := loadConfigs()
 	ctx, cancel := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
+
+	cfg := config{}
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatalf("failed to load %s configuration : %s", svcName, err.Error())
+	}
 
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
 	if err != nil {
@@ -65,21 +51,26 @@ func main() {
 
 	pubSub, err := brokers.NewPubSub(cfg.brokerURL, "", logger)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to message broker: %s", err))
-		os.Exit(1)
+		log.Fatalf("Failed to connect to message broker: %s", err.Error())
 	}
 	defer pubSub.Close()
 
-	db := internaldb.ConnectToMongoDB(cfg.dbHost, cfg.dbPort, cfg.dbName, logger)
+	db, err := mongoClient.Setup(envPrefix)
+	if err != nil {
+		log.Fatalf("Failed to setup mongo database : %s", err.Error())
+	}
 
 	repo := newService(db, logger)
 
 	if err := consumers.Start(svcName, pubSub, repo, cfg.configPath, logger); err != nil {
-		logger.Error(fmt.Sprintf("Failed to start MongoDB writer: %s", err))
-		os.Exit(1)
+		log.Fatalf("Failed to start MongoDB writer: %s", err.Error())
 	}
 
-	hs := httpserver.New(ctx, cancel, svcName, "", cfg.port, api.MakeHandler(svcName), "", "", logger)
+	httpServerConfig := server.Config{}
+	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
+		log.Fatalf("Failed to load %s HTTP server configuration : %s", svcName, err.Error())
+	}
+	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svcName), logger)
 	g.Go(func() error {
 		return hs.Start()
 	})
@@ -90,18 +81,6 @@ func main() {
 
 	if err := g.Wait(); err != nil {
 		logger.Error(fmt.Sprintf("MongoDB writer service terminated: %s", err))
-	}
-}
-
-func loadConfigs() config {
-	return config{
-		brokerURL:  mainflux.Env(envBrokerURL, defBrokerURL),
-		logLevel:   mainflux.Env(envLogLevel, defLogLevel),
-		port:       mainflux.Env(envPort, defPort),
-		dbName:     mainflux.Env(envDB, defDB),
-		dbHost:     mainflux.Env(envDBHost, defDBHost),
-		dbPort:     mainflux.Env(envDBPort, defDBPort),
-		configPath: mainflux.Env(envConfigPath, defConfigPath),
 	}
 }
 
