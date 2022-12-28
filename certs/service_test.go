@@ -82,23 +82,9 @@ func newService(tokens map[string]string) (certs.Service, error) {
 		return nil, err
 	}
 
-	c := certs.Config{
-		LogLevel:       cfgLogLevel,
-		ClientTLS:      cfgClientTLS,
-		ServerCert:     cfgServerCert,
-		ServerKey:      cfgServerKey,
-		CertsURL:       cfgCertsURL,
-		JaegerURL:      cfgJaegerURL,
-		AuthURL:        cfgAuthURL,
-		SignTLSCert:    tlsCert,
-		SignX509Cert:   caCert,
-		SignHoursValid: cfgSignHoursValid,
-		SignRSABits:    cfgSignRSABits,
-	}
-
 	pki := mocks.NewPkiAgent(tlsCert, caCert, cfgSignRSABits, cfgSignHoursValid, authTimeout)
 
-	return certs.New(auth, repo, sdk, c, pki), nil
+	return certs.New(auth, repo, sdk, pki), nil
 }
 
 func newThingsService(auth mainflux.AuthServiceClient) things.Service {
