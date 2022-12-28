@@ -57,7 +57,7 @@ func main() {
 
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("Failed to load %s configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s configuration : %s", svcName, err.Error())
 	}
 
 	logger, err := mflog.New(os.Stdout, cfg.logLevel)
@@ -78,29 +78,29 @@ func main() {
 
 	nps, err := brokers.NewPubSub(cfg.brokerURL, "mqtt", logger)
 	if err != nil {
-		log.Fatalf("Failed to connect to message broker: %s", err.Error())
+		log.Fatalf("failed to connect to message broker: %s", err.Error())
 	}
 	defer nps.Close()
 
 	mpub, err := mqttpub.NewPublisher(fmt.Sprintf("%s:%s", cfg.mqttTargetHost, cfg.mqttTargetPort), cfg.mqttForwarderTimeout)
 	if err != nil {
-		log.Fatalf("Failed to create MQTT publisher: %s", err.Error())
+		log.Fatalf("failed to create MQTT publisher: %s", err.Error())
 	}
 
 	fwd := mqtt.NewForwarder(brokers.SubjectAllChannels, logger)
 	if err := fwd.Forward(svcName, nps, mpub); err != nil {
-		log.Fatalf("Failed to forward message broker messages: %s", err)
+		log.Fatalf("failed to forward message broker messages: %s", err)
 	}
 
 	np, err := brokers.NewPublisher(cfg.brokerURL)
 	if err != nil {
-		log.Fatalf("Failed to connect to message broker: %s", err.Error())
+		log.Fatalf("failed to connect to message broker: %s", err.Error())
 	}
 	defer np.Close()
 
 	ec, err := redisClient.Setup(envPrefixES)
 	if err != nil {
-		log.Fatalf("Failed to setup %s event store redis client : %s", svcName, err.Error())
+		log.Fatalf("failed to setup %s event store redis client : %s", svcName, err.Error())
 	}
 	defer ec.Close()
 
@@ -108,7 +108,7 @@ func main() {
 
 	ac, err := redisClient.Setup(envPrefixAuthCache)
 	if err != nil {
-		log.Fatalf("Failed to setup %s event store redis client : %s", svcName, err.Error())
+		log.Fatalf("failed to setup %s event store redis client : %s", svcName, err.Error())
 	}
 	defer ac.Close()
 

@@ -48,7 +48,7 @@ func main() {
 	cfg := config{}
 	// load cassandra reader service configurations from environment
 	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("Failed to load %s service configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s service configuration : %s", svcName, err.Error())
 	}
 
 	// create new logger
@@ -90,7 +90,7 @@ func main() {
 	httpServerConfig := server.Config{}
 	// load http server config from environment variables
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf("Failed to load %s HTTP server configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
 	// create new http server
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(repo, tc, auth, svcName, logger), logger)

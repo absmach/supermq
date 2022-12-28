@@ -95,7 +95,7 @@ func main() {
 
 	httpServerConfig := server.Config{}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf("Failed to load %s HTTP server configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
 	hs := httpserver.New(httpCtx, httpCancel, svcName, httpServerConfig, api.MakeHandler(svc, logger), logger)
 

@@ -41,7 +41,7 @@ func main() {
 
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("Failed to load %s configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s configuration : %s", svcName, err.Error())
 	}
 
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
@@ -59,7 +59,7 @@ func main() {
 
 	nps, err := brokers.NewPubSub(cfg.brokerURL, "", logger)
 	if err != nil {
-		log.Fatalf("Failed to connect to message broker: %s", err.Error())
+		log.Fatalf("failed to connect to message broker: %s", err.Error())
 	}
 	defer nps.Close()
 

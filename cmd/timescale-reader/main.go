@@ -42,7 +42,7 @@ func main() {
 
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("Failed to load %s service configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s service configuration : %s", svcName, err.Error())
 	}
 
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
@@ -76,7 +76,7 @@ func main() {
 
 	httpServerConfig := server.Config{}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf("Failed to load %s HTTP server configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(repo, tc, auth, svcName, logger), logger)
 	g.Go(func() error {

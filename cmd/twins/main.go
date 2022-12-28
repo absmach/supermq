@@ -73,18 +73,18 @@ func main() {
 
 	cacheTracer, cacheCloser, err := jaegerClient.NewTracer("twins_cache", cfg.jaegerURL)
 	if err != nil {
-		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}
 	defer cacheCloser.Close()
 
 	db, err := mongoClient.Setup(envPrefix)
 	if err != nil {
-		log.Fatalf("Failed to setup postgres database : %s", err.Error())
+		log.Fatalf("failed to setup postgres database : %s", err.Error())
 	}
 
 	dbTracer, dbCloser, err := jaegerClient.NewTracer("twins_db", cfg.jaegerURL)
 	if err != nil {
-		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}
 	defer dbCloser.Close()
 
@@ -105,7 +105,7 @@ func main() {
 
 	pubSub, err := brokers.NewPubSub(cfg.brokerURL, queue, logger)
 	if err != nil {
-		log.Fatalf("Failed to connect to message broker: %s", err.Error())
+		log.Fatalf("failed to connect to message broker: %s", err.Error())
 	}
 	defer pubSub.Close()
 
@@ -113,13 +113,13 @@ func main() {
 
 	tracer, closer, err := jaegerClient.NewTracer("twins", cfg.jaegerURL)
 	if err != nil {
-		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}
 	defer closer.Close()
 
 	httpServerConfig := server.Config{}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf("Failed to load %s HTTP server configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
 
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, twapi.MakeHandler(tracer, svc, logger), logger)

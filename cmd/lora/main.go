@@ -67,13 +67,13 @@ func main() {
 
 	rmConn, err := redisClient.Setup(envPrefixRouteMap)
 	if err != nil {
-		log.Fatalf("Failed to setup route map redis client : %s", err.Error())
+		log.Fatalf("failed to setup route map redis client : %s", err.Error())
 	}
 	defer rmConn.Close()
 
 	pub, err := brokers.NewPublisher(cfg.brokerURL)
 	if err != nil {
-		log.Fatalf("Failed to connect to message broker: %s", err.Error())
+		log.Fatalf("failed to connect to message broker: %s", err.Error())
 	}
 	defer pub.Close()
 
@@ -81,7 +81,7 @@ func main() {
 
 	esConn, err := redisClient.Setup(envPrefixThingsES)
 	if err != nil {
-		log.Fatalf("Failed to setup things event store redis client : %s", err.Error())
+		log.Fatalf("failed to setup things event store redis client : %s", err.Error())
 	}
 	defer esConn.Close()
 
@@ -92,7 +92,7 @@ func main() {
 
 	httpServerConfig := server.Config{}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf("Failed to load %s HTTP server configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(), logger)
 
@@ -124,7 +124,7 @@ func connectToMQTTBroker(url, user, password string, timeout time.Duration, logg
 	client := mqttPaho.NewClient(opts)
 
 	if token := client.Connect(); token.WaitTimeout(timeout) && token.Error() != nil {
-		log.Fatalf("Failed to connect to Lora MQTT broker: %s", token.Error())
+		log.Fatalf("failed to connect to Lora MQTT broker: %s", token.Error())
 	}
 
 	return client
@@ -134,7 +134,7 @@ func subscribeToLoRaBroker(svc lora.Service, mc mqttPaho.Client, timeout time.Du
 	mqtt := mqtt.NewBroker(svc, mc, timeout, logger)
 	logger.Info("Subscribed to Lora MQTT broker")
 	if err := mqtt.Subscribe(topic); err != nil {
-		log.Fatalf("Failed to subscribe to Lora MQTT broker: %s", err.Error())
+		log.Fatalf("failed to subscribe to Lora MQTT broker: %s", err.Error())
 	}
 }
 

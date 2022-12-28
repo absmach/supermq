@@ -42,7 +42,7 @@ func main() {
 
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("Failed to load %s service configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s service configuration : %s", svcName, err.Error())
 	}
 
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
@@ -60,7 +60,7 @@ func main() {
 
 	pub, err := brokers.NewPublisher(cfg.brokerURL)
 	if err != nil {
-		log.Fatalf("Failed to connect to message broker: %s", err.Error())
+		log.Fatalf("failed to connect to message broker: %s", err.Error())
 	}
 	defer pub.Close()
 
@@ -68,13 +68,13 @@ func main() {
 
 	tracer, closer, err := jaegerClient.NewTracer("http_adapter", cfg.jaegerURL)
 	if err != nil {
-		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}
 	defer closer.Close()
 
 	httpServerConfig := server.Config{}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf("Failed to load %s HTTP server configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
 
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, tracer, logger), logger)

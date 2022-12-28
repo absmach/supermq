@@ -105,14 +105,14 @@ func main() {
 	// create tracer for things database
 	dbTracer, dbCloser, err := jaegerClient.NewTracer("things_db", cfg.jaegerURL)
 	if err != nil {
-		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}
 	defer dbCloser.Close()
 
 	// create tracer for things cache
 	cacheTracer, cacheCloser, err := jaegerClient.NewTracer("things_cache", cfg.jaegerURL)
 	if err != nil {
-		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}
 	defer cacheCloser.Close()
 
@@ -122,7 +122,7 @@ func main() {
 	// create tracer for HTTP handler things
 	thingsTracer, thingsCloser, err := jaegerClient.NewTracer("things", cfg.jaegerURL)
 	if err != nil {
-		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}
 	defer thingsCloser.Close()
 
@@ -131,7 +131,7 @@ func main() {
 	httpServerConfig := server.Config{}
 	// load grpc server config from environment variables
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf("Failed to load %s gRPC server configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s gRPC server configuration : %s", svcName, err.Error())
 	}
 
 	hs1 := httpserver.New(ctx, cancel, "thing-http", httpServerConfig, thhttpapi.MakeHandler(thingsTracer, svc, logger), logger)
@@ -141,7 +141,7 @@ func main() {
 	authHttpServerConfig := server.Config{}
 	// load grpc server config from environment variables
 	if err := env.Parse(&authHttpServerConfig, env.Options{Prefix: envPrefixAuthHttp, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf("Failed to load %s gRPC server configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s gRPC server configuration : %s", svcName, err.Error())
 	}
 	hs2 := httpserver.New(ctx, cancel, "auth-http", authHttpServerConfig, authhttpapi.MakeHandler(thingsTracer, svc, logger), logger)
 
@@ -155,7 +155,7 @@ func main() {
 	grpcServerConfig := server.Config{}
 	// load grpc server config from environment variables
 	if err := env.Parse(&grpcServerConfig, env.Options{Prefix: envPrefixAuthGrpc, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf("Failed to load %s gRPC server configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s gRPC server configuration : %s", svcName, err.Error())
 	}
 	//Create new things auth grpc server
 	gs := grpcserver.New(ctx, cancel, svcName, grpcServerConfig, registerThingsServiceServer, logger)

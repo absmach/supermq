@@ -57,7 +57,7 @@ func main() {
 
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("Failed to load %s configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s configuration : %s", svcName, err.Error())
 	}
 	passRegex, err := regexp.Compile(cfg.passRegexText)
 	if err != nil {
@@ -72,7 +72,7 @@ func main() {
 
 	ec := email.Config{}
 	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("Failed to load email configuration : %s", err.Error())
+		log.Fatalf("failed to load email configuration : %s", err.Error())
 	}
 
 	db, err := pgClient.Setup(envPrefix, *usersPg.Migration())
@@ -91,7 +91,7 @@ func main() {
 
 	dbTracer, dbCloser, err := jaegerClient.NewTracer("auth_db", cfg.jaegerURL)
 	if err != nil {
-		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}
 	defer dbCloser.Close()
 
@@ -99,13 +99,13 @@ func main() {
 
 	tracer, closer, err := jaegerClient.NewTracer("users", cfg.jaegerURL)
 	if err != nil {
-		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}
 	defer closer.Close()
 
 	httpServerConfig := server.Config{}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf("Failed to load %s HTTP server configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
 
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, tracer, logger), logger)

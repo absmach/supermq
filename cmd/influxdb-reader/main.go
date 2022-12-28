@@ -39,7 +39,7 @@ func main() {
 
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("Failed to load %s configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s configuration : %s", svcName, err.Error())
 	}
 
 	logger, err := logger.New(os.Stdout, cfg.logLevel)

@@ -69,7 +69,7 @@ func main() {
 
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("Failed to load %s configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s configuration : %s", svcName, err.Error())
 	}
 
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
@@ -88,7 +88,7 @@ func main() {
 
 	pkiClient, err := vault.NewVaultClient(cfg.pkiToken, cfg.pkiHost, cfg.pkiPath, cfg.pkiRole)
 	if err != nil {
-		log.Fatalf("Failed to configure client for PKI engine")
+		log.Fatalf("failed to configure client for PKI engine")
 	}
 
 	db, err := pgClient.Setup(envPrefix, *certsPg.Migration())

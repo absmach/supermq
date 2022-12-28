@@ -52,7 +52,7 @@ func main() {
 
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("Failed to load %s configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s configuration : %s", svcName, err.Error())
 	}
 
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
@@ -68,12 +68,12 @@ func main() {
 
 	smppConfig := mfsmpp.Config{}
 	if err := env.Parse(&smppConfig); err != nil {
-		log.Fatalf("Failed to load SMPP configuration from environment : %s", err.Error())
+		log.Fatalf("failed to load SMPP configuration from environment : %s", err.Error())
 	}
 
 	pubSub, err := brokers.NewPubSub(cfg.brokerURL, "", logger)
 	if err != nil {
-		log.Fatalf("Failed to connect to message broker: %s", err.Error())
+		log.Fatalf("failed to connect to message broker: %s", err.Error())
 	}
 	defer pubSub.Close()
 
@@ -87,25 +87,25 @@ func main() {
 
 	tracer, closer, err := jaegerClient.NewTracer("smpp-notifier", cfg.jaegerURL)
 	if err != nil {
-		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}
 	defer closer.Close()
 
 	dbTracer, dbCloser, err := jaegerClient.NewTracer("smpp-notifier_db", cfg.jaegerURL)
 	if err != nil {
-		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}
 	defer dbCloser.Close()
 
 	svc := newService(db, dbTracer, auth, cfg, smppConfig, logger)
 
 	if err = consumers.Start(svcName, pubSub, svc, cfg.configPath, logger); err != nil {
-		log.Fatalf("Failed to create Postgres writer: %s", err.Error())
+		log.Fatalf("failed to create Postgres writer: %s", err.Error())
 	}
 
 	httpServerConfig := server.Config{}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf("Failed to load %s HTTP server configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, tracer, logger), logger)
 

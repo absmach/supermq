@@ -51,24 +51,24 @@ func main() {
 
 	pubSub, err := brokers.NewPubSub(cfg.brokerURL, "", logger)
 	if err != nil {
-		log.Fatalf("Failed to connect to message broker: %s", err.Error())
+		log.Fatalf("failed to connect to message broker: %s", err.Error())
 	}
 	defer pubSub.Close()
 
 	db, err := mongoClient.Setup(envPrefix)
 	if err != nil {
-		log.Fatalf("Failed to setup mongo database : %s", err.Error())
+		log.Fatalf("failed to setup mongo database : %s", err.Error())
 	}
 
 	repo := newService(db, logger)
 
 	if err := consumers.Start(svcName, pubSub, repo, cfg.configPath, logger); err != nil {
-		log.Fatalf("Failed to start MongoDB writer: %s", err.Error())
+		log.Fatalf("failed to start MongoDB writer: %s", err.Error())
 	}
 
 	httpServerConfig := server.Config{}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf("Failed to load %s HTTP server configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svcName), logger)
 	g.Go(func() error {
