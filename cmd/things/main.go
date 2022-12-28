@@ -42,8 +42,6 @@ const (
 	envPrefixCache    = "MF_THINGS_CACHE_"
 	envPrefixES       = "MF_THINGS_ES_"
 	envPrefixHttp     = "MF_THINGS_HTTP_"
-	envPrefixGrpc     = "MF_THINGS_GRPC_" //nolint:golint,unused
-	envPrefixAuth     = "MF_THINGS_AUTH_" //nolint:golint,unused
 	envPrefixAuthHttp = "MF_THINGS_AUTH_HTTP_"
 	envPrefixAuthGrpc = "MF_THINGS_AUTH_GRPC_"
 )

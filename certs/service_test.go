@@ -9,7 +9,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"net/http/httptest"
 	"os"
 	"strconv"
@@ -44,13 +43,6 @@ const (
 	key        = "rsa"
 	certNum    = 10
 
-	cfgLogLevel    = "error"             //nolint:golint,unused
-	cfgClientTLS   = false               //nolint:golint,unused
-	cfgServerCert  = ""                  //nolint:golint,unused
-	cfgServerKey   = ""                  //nolint:golint,unused
-	cfgCertsURL    = "http://localhost"  //nolint:golint,unused
-	cfgJaegerURL   = ""                  //nolint:golint,unused
-	cfgAuthURL     = "localhost:8181"    //nolint:golint,unused
 	cfgAuthTimeout = "1s"
 
 	caPath            = "../docker/ssl/certs/ca.crt"
@@ -426,7 +418,7 @@ func loadCertificates(caPath, caKeyPath string) (tls.Certificate, *x509.Certific
 		return tlsCert, caCert, errors.Wrap(err, err)
 	}
 
-	b, err := ioutil.ReadFile(caPath)
+	b, err := os.ReadFile(caPath)
 	if err != nil {
 		return tlsCert, caCert, err
 	}
