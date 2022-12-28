@@ -28,24 +28,6 @@ const (
 	svcName       = "ws-adapter"
 	envPrefix     = "MF_WS_ADAPTER_"
 	envPrefixHttp = "MF_WS_ADAPTER_HTTP_"
-
-	defPort              = "8190"
-	defBrokerURL         = "nats://localhost:4222"
-	defLogLevel          = "error"
-	defClientTLS         = "false"
-	defCACerts           = ""
-	defJaegerURL         = ""
-	defThingsAuthURL     = "localhost:8183"
-	defThingsAuthTimeout = "1s"
-
-	envPort          = "MF_WS_ADAPTER_PORT"
-	envBrokerURL     = "MF_BROKER_URL"
-	envLogLevel      = "MF_WS_ADAPTER_LOG_LEVEL"
-	envClientTLS     = "MF_WS_ADAPTER_CLIENT_TLS"
-	envCACerts       = "MF_WS_ADAPTER_CA_CERTS"
-	envJaegerURL     = "MF_JAEGER_URL"
-	envThingsAuthURL = "MF_THINGS_AUTH_GRPC_URL"
-	envThingsTimeout = "MF_THINGS_AUTH_GRPC_TIMEOUT"
 )
 
 type config struct {
