@@ -93,6 +93,8 @@ func main() {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, bootstrap.NewConfigReader(cfg.encKey), logger), logger)
+
+	//Start servers
 	g.Go(func() error {
 		return hs.Start()
 	})

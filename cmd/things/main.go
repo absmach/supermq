@@ -133,7 +133,6 @@ func main() {
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s gRPC server configuration : %s", svcName, err.Error())
 	}
-
 	hs1 := httpserver.New(ctx, cancel, "thing-http", httpServerConfig, thhttpapi.MakeHandler(thingsTracer, svc, logger), logger)
 
 	/////////////////// THINGS AUTH HTTP SERVER /////////////////////

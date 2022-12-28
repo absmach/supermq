@@ -83,6 +83,8 @@ func main() {
 	}
 	// create new http server
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svcName), logger)
+
+	//Start servers
 	g.Go(func() error {
 		return hs.Start()
 	})
