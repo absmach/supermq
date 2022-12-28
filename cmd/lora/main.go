@@ -12,9 +12,8 @@ import (
 
 	mqttPaho "github.com/eclipse/paho.mqtt.golang"
 	r "github.com/go-redis/redis/v8"
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal"
-	internaldb "github.com/mainflux/mainflux/internal/db"
+	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
 	"github.com/mainflux/mainflux/logger"
@@ -25,43 +24,16 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	"golang.org/x/sync/errgroup"
 
+	redisClient "github.com/mainflux/mainflux/internal/client/redis"
 	"github.com/mainflux/mainflux/lora/redis"
 )
 
 const (
-	svcName = "lora-adapter"
-
-	defLogLevel       = "error"
-	defHTTPPort       = "8180"
-	defLoraMsgURL     = "tcp://localhost:1883"
-	defBrokerURL      = "nats://localhost:4222"
-	defLoraMsgTopic   = "application/+/device/+/event/up"
-	defLoraMsgUser    = ""
-	defLoraMsgPass    = ""
-	defLoraMsgTimeout = "30s"
-	defESURL          = "localhost:6379"
-	defESPass         = ""
-	defESDB           = "0"
-	defESConsumerName = "lora"
-	defRouteMapURL    = "localhost:6379"
-	defRouteMapPass   = ""
-	defRouteMapDB     = "0"
-
-	envHTTPPort       = "MF_LORA_ADAPTER_HTTP_PORT"
-	envLoraMsgURL     = "MF_LORA_ADAPTER_MESSAGES_URL"
-	envBrokerURL      = "MF_BROKER_URL"
-	envLoraMsgTopic   = "MF_LORA_ADAPTER_MESSAGES_TOPIC"
-	envLoraMsgUser    = "MF_LORA_ADAPTER_MESSAGES_USER"
-	envLoraMsgPass    = "MF_LORA_ADAPTER_MESSAGES_PASS"
-	envLoraMsgTimeout = "MF_LORA_ADAPTER_MESSAGES_TIMEOUT"
-	envLogLevel       = "MF_LORA_ADAPTER_LOG_LEVEL"
-	envESURL          = "MF_THINGS_ES_URL"
-	envESPass         = "MF_THINGS_ES_PASS"
-	envESDB           = "MF_THINGS_ES_DB"
-	envESConsumerName = "MF_LORA_ADAPTER_EVENT_CONSUMER"
-	envRouteMapURL    = "MF_LORA_ADAPTER_ROUTE_MAP_URL"
-	envRouteMapPass   = "MF_LORA_ADAPTER_ROUTE_MAP_PASS"
-	envRouteMapDB     = "MF_LORA_ADAPTER_ROUTE_MAP_DB"
+	svcName           = "lora-adapter"
+	envPrefix         = "MF_LORA_ADAPTER_"
+	envPrefixHttp     = "MF_LORA_ADAPTER_HTTP_"
+	envPrefixRouteMap = "MF_LORA_ADAPTER_ROUTE_MAP_"
+	envPrefixThingsES = "MF_THINGS_ES_"
 
 	thingsRMPrefix   = "thing"
 	channelsRMPrefix = "channel"
@@ -69,38 +41,35 @@ const (
 )
 
 type config struct {
-	httpPort       string
-	loraMsgURL     string
-	brokerURL      string
-	loraMsgUser    string
-	loraMsgPass    string
-	loraMsgTopic   string
-	loraMsgTimeout time.Duration
-	logLevel       string
-	esURL          string
-	esPass         string
-	esDB           string
-	esConsumerName string
-	routeMapURL    string
-	routeMapPass   string
-	routeMapDB     string
+	logLevel       string        `env:"MF_BOOTSTRAP_LOG_LEVEL"              envDefault:"debug"`
+	loraMsgURL     string        `env:"MF_LORA_ADAPTER_MESSAGES_URL"        envDefault:"debug"`
+	loraMsgUser    string        `env:"MF_LORA_ADAPTER_MESSAGES_USER"       envDefault:"debug"`
+	loraMsgPass    string        `env:"MF_LORA_ADAPTER_MESSAGES_PASS"       envDefault:"debug"`
+	loraMsgTopic   string        `env:"MF_LORA_ADAPTER_MESSAGES_TOPIC"      envDefault:"debug"`
+	loraMsgTimeout time.Duration `env:"MF_LORA_ADAPTER_MESSAGES_TIMEOUT"    envDefault:"debug"`
+	esConsumerName string        `env:"MF_LORA_ADAPTER_EVENT_CONSUMER"      envDefault:"debug"`
+	brokerURL      string        `env:"MF_BROKER_URL"                       envDefault:"debug"`
 }
 
 func main() {
-	cfg := loadConfig()
 	ctx, cancel := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
+
+	cfg := config{}
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatalf("failed to load %s configuration : %s", svcName, err.Error())
+	}
 
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 
-	rmConn := internaldb.ConnectToRedis(cfg.routeMapURL, cfg.routeMapPass, cfg.routeMapDB, logger)
+	rmConn, err := redisClient.Setup(envPrefixRouteMap)
+	if err != nil {
+		log.Fatalf("Failed to setup route map redis client : %s", err.Error())
+	}
 	defer rmConn.Close()
-
-	esConn := internaldb.ConnectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
-	defer esConn.Close()
 
 	pub, err := brokers.NewPublisher(cfg.brokerURL)
 	if err != nil {
@@ -111,12 +80,23 @@ func main() {
 
 	svc := newService(pub, rmConn, thingsRMPrefix, channelsRMPrefix, connsRMPrefix, logger)
 
+	esConn, err := redisClient.Setup(envPrefixThingsES)
+	if err != nil {
+		log.Fatalf("Failed to setup things event store redis client : %s", err.Error())
+	}
+	defer esConn.Close()
+
 	mqttConn := connectToMQTTBroker(cfg.loraMsgURL, cfg.loraMsgUser, cfg.loraMsgPass, cfg.loraMsgTimeout, logger)
 
 	go subscribeToLoRaBroker(svc, mqttConn, cfg.loraMsgTimeout, cfg.loraMsgTopic, logger)
 	go subscribeToThingsES(svc, esConn, cfg.esConsumerName, logger)
 
-	hs := httpserver.New(ctx, cancel, svcName, "", cfg.httpPort, api.MakeHandler(), "", "", logger)
+	httpServerConfig := server.Config{}
+	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
+		log.Fatalf("Failed to load %s HTTP server configuration : %s", svcName, err.Error())
+	}
+	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(), logger)
+
 	g.Go(func() error {
 		return hs.Start()
 	})
@@ -127,31 +107,6 @@ func main() {
 
 	if err := g.Wait(); err != nil {
 		logger.Error(fmt.Sprintf("LoRa adapter terminated: %s", err))
-	}
-}
-
-func loadConfig() config {
-	mqttTimeout, err := time.ParseDuration(mainflux.Env(envLoraMsgTimeout, defLoraMsgTimeout))
-	if err != nil {
-		log.Fatalf("Invalid %s value: %s", envLoraMsgTimeout, err.Error())
-	}
-
-	return config{
-		httpPort:       mainflux.Env(envHTTPPort, defHTTPPort),
-		loraMsgURL:     mainflux.Env(envLoraMsgURL, defLoraMsgURL),
-		brokerURL:      mainflux.Env(envBrokerURL, defBrokerURL),
-		loraMsgTopic:   mainflux.Env(envLoraMsgTopic, defLoraMsgTopic),
-		loraMsgUser:    mainflux.Env(envLoraMsgUser, defLoraMsgUser),
-		loraMsgPass:    mainflux.Env(envLoraMsgPass, defLoraMsgPass),
-		loraMsgTimeout: mqttTimeout,
-		logLevel:       mainflux.Env(envLogLevel, defLogLevel),
-		esURL:          mainflux.Env(envESURL, defESURL),
-		esPass:         mainflux.Env(envESPass, defESPass),
-		esDB:           mainflux.Env(envESDB, defESDB),
-		esConsumerName: mainflux.Env(envESConsumerName, defESConsumerName),
-		routeMapURL:    mainflux.Env(envRouteMapURL, defRouteMapURL),
-		routeMapPass:   mainflux.Env(envRouteMapPass, defRouteMapPass),
-		routeMapDB:     mainflux.Env(envRouteMapDB, defRouteMapDB),
 	}
 }
 
