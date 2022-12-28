@@ -60,8 +60,7 @@ func main() {
 
 	pub, err := brokers.NewPublisher(cfg.brokerURL)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to message broker: %s", err))
-		os.Exit(1)
+		log.Fatalf("Failed to connect to message broker: %s", err.Error())
 	}
 	defer pub.Close()
 

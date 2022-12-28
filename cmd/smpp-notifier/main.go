@@ -15,7 +15,6 @@ import (
 	"github.com/mainflux/mainflux/consumers/notifiers"
 	"github.com/mainflux/mainflux/consumers/notifiers/api"
 	notifierPg "github.com/mainflux/mainflux/consumers/notifiers/postgres"
-	"github.com/mainflux/mainflux/consumers/notifiers/smpp"
 	"github.com/mainflux/mainflux/internal"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
@@ -67,21 +66,20 @@ func main() {
 	}
 	defer db.Close()
 
-	smppConfig := smpp.Config{}
+	smppConfig := mfsmpp.Config{}
 	if err := env.Parse(&smppConfig); err != nil {
 		log.Fatalf("Failed to load SMPP configuration from environment : %s", err.Error())
 	}
 
 	pubSub, err := brokers.NewPubSub(cfg.brokerURL, "", logger)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to message broker: %s", err))
-		os.Exit(1)
+		log.Fatalf("Failed to connect to message broker: %s", err.Error())
 	}
 	defer pubSub.Close()
 
 	auth, authGrpcClient, authGrpcTracerCloser, authGrpcSecure, err := authClient.Setup(envPrefix, cfg.jaegerURL)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf(err.Error())
 	}
 	defer authGrpcClient.Close()
 	defer authGrpcTracerCloser.Close()
@@ -125,7 +123,7 @@ func main() {
 
 }
 
-func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServiceClient, c config, sc smpp.Config, logger logger.Logger) notifiers.Service {
+func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServiceClient, c config, sc mfsmpp.Config, logger logger.Logger) notifiers.Service {
 	database := notifierPg.NewDatabase(db)
 	repo := tracing.New(notifierPg.New(database), tracer)
 	idp := ulid.New()

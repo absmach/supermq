@@ -130,8 +130,7 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServic
 
 	agent, err := email.New(&ec)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to create email agent: %s", err))
-		os.Exit(1)
+		log.Fatalf("Failed to create email agent: %s", err.Error())
 	}
 
 	notifier := smtp.New(agent)

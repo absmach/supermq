@@ -50,7 +50,7 @@ func main() {
 
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to load %s configuration : %s", svcName, err.Error()))
+		log.Fatalf("Failed to load %s configuration : %s", svcName, err.Error())
 	}
 
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
@@ -70,7 +70,7 @@ func main() {
 	// create new redis client for bootstrap event store
 	esClient, err := redisClient.Setup(envPrefix)
 	if err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to setup %s bootstrap event store redis client : %s", svcName, err.Error()))
+		log.Fatalf("Failed to setup %s bootstrap event store redis client : %s", svcName, err.Error())
 	}
 	defer esClient.Close()
 
@@ -90,7 +90,7 @@ func main() {
 	///////////////// HTTP SERVER /////////////////////////
 	httpServerConfig := server.Config{}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to load %s HTTP server configuration : %s", svcName, err.Error()))
+		log.Fatalf("Failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, bootstrap.NewConfigReader(cfg.encKey), logger), logger)
 	g.Go(func() error {

@@ -105,7 +105,7 @@ func main() {
 
 	httpServerConfig := server.Config{}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to load %s HTTP server configuration : %s", svcName, err.Error()))
+		log.Fatalf("Failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
 
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, tracer, logger), logger)
@@ -140,8 +140,7 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServic
 	svc = api.MetricsMiddleware(svc, counter, latency)
 
 	if err := createAdmin(svc, userRepo, c, auth); err != nil {
-		logger.Error("failed to create admin user: " + err.Error())
-		os.Exit(1)
+		log.Fatalf("failed to create admin user: " + err.Error())
 	}
 
 	switch c.selfRegister {
@@ -155,12 +154,10 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServic
 			// Add a policy that allows anybody to create a user
 			apr, err := auth.AddPolicy(context.Background(), &mainflux.AddPolicyReq{Obj: "user", Act: "create", Sub: "*"})
 			if err != nil {
-				logger.Error("failed to add the policy related to MF_USERS_ALLOW_SELF_REGISTER: " + err.Error())
-				os.Exit(1)
+				log.Fatalf("failed to add the policy related to MF_USERS_ALLOW_SELF_REGISTER: " + err.Error())
 			}
 			if !apr.GetAuthorized() {
-				logger.Error("failed to authorized the policy result related to MF_USERS_ALLOW_SELF_REGISTER: " + errors.ErrAuthorization.Error())
-				os.Exit(1)
+				log.Fatalf("failed to authorized the policy result related to MF_USERS_ALLOW_SELF_REGISTER: " + errors.ErrAuthorization.Error())
 			}
 		}
 	default:
@@ -169,12 +166,10 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServic
 		// allows everybody to create a new user.
 		dpr, err := auth.DeletePolicy(context.Background(), &mainflux.DeletePolicyReq{Obj: "user", Act: "create", Sub: "*"})
 		if err != nil {
-			logger.Error("failed to delete a policy: " + err.Error())
-			os.Exit(1)
+			log.Fatalf("failed to delete a policy: " + err.Error())
 		}
 		if !dpr.GetDeleted() {
-			logger.Error("deleting a policy expected to succeed.")
-			os.Exit(1)
+			log.Fatalf("deleting a policy expected to succeed.")
 		}
 	}
 

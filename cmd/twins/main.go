@@ -119,7 +119,7 @@ func main() {
 
 	httpServerConfig := server.Config{}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to load %s HTTP server configuration : %s", svcName, err.Error()))
+		log.Fatalf("Failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
 
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, twapi.MakeHandler(tracer, svc, logger), logger)
@@ -153,8 +153,7 @@ func newService(id string, ps messaging.PubSub, chanID string, users mainflux.Au
 	svc = api.MetricsMiddleware(svc, counter, latency)
 	err := ps.Subscribe(id, brokers.SubjectAllChannels, handle(logger, chanID, svc))
 	if err != nil {
-		logger.Error(err.Error())
-		os.Exit(1)
+		log.Fatalf(err.Error())
 	}
 	return svc
 }

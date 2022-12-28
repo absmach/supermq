@@ -131,7 +131,7 @@ func main() {
 	httpServerConfig := server.Config{}
 	// load grpc server config from environment variables
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to load %s gRPC server configuration : %s", svcName, err.Error()))
+		log.Fatalf("Failed to load %s gRPC server configuration : %s", svcName, err.Error())
 	}
 
 	hs1 := httpserver.New(ctx, cancel, "thing-http", httpServerConfig, thhttpapi.MakeHandler(thingsTracer, svc, logger), logger)
@@ -141,7 +141,7 @@ func main() {
 	authHttpServerConfig := server.Config{}
 	// load grpc server config from environment variables
 	if err := env.Parse(&authHttpServerConfig, env.Options{Prefix: envPrefixAuthHttp, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to load %s gRPC server configuration : %s", svcName, err.Error()))
+		log.Fatalf("Failed to load %s gRPC server configuration : %s", svcName, err.Error())
 	}
 	hs2 := httpserver.New(ctx, cancel, "auth-http", authHttpServerConfig, authhttpapi.MakeHandler(thingsTracer, svc, logger), logger)
 
@@ -155,7 +155,7 @@ func main() {
 	grpcServerConfig := server.Config{}
 	// load grpc server config from environment variables
 	if err := env.Parse(&grpcServerConfig, env.Options{Prefix: envPrefixAuthGrpc, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to load %s gRPC server configuration : %s", svcName, err.Error()))
+		log.Fatalf("Failed to load %s gRPC server configuration : %s", svcName, err.Error())
 	}
 	//Create new things auth grpc server
 	gs := grpcserver.New(ctx, cancel, svcName, grpcServerConfig, registerThingsServiceServer, logger)

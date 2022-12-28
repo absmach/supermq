@@ -73,8 +73,7 @@ func main() {
 
 	pub, err := brokers.NewPublisher(cfg.brokerURL)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to message broker: %s", err))
-		os.Exit(1)
+		log.Fatalf("Failed to connect to message broker: %s", err.Error())
 	}
 	defer pub.Close()
 
@@ -119,15 +118,13 @@ func connectToMQTTBroker(url, user, password string, timeout time.Duration, logg
 		logger.Info("Connected to Lora MQTT broker")
 	})
 	opts.SetConnectionLostHandler(func(c mqttPaho.Client, err error) {
-		logger.Error(fmt.Sprintf("MQTT connection lost: %s", err.Error()))
-		os.Exit(1)
+		log.Fatalf("MQTT connection lost: %s", err.Error())
 	})
 
 	client := mqttPaho.NewClient(opts)
 
 	if token := client.Connect(); token.WaitTimeout(timeout) && token.Error() != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to Lora MQTT broker: %s", token.Error()))
-		os.Exit(1)
+		log.Fatalf("Failed to connect to Lora MQTT broker: %s", token.Error())
 	}
 
 	return client
@@ -137,8 +134,7 @@ func subscribeToLoRaBroker(svc lora.Service, mc mqttPaho.Client, timeout time.Du
 	mqtt := mqtt.NewBroker(svc, mc, timeout, logger)
 	logger.Info("Subscribed to Lora MQTT broker")
 	if err := mqtt.Subscribe(topic); err != nil {
-		logger.Error(fmt.Sprintf("Failed to subscribe to Lora MQTT broker: %s", err))
-		os.Exit(1)
+		log.Fatalf("Failed to subscribe to Lora MQTT broker: %s", err.Error())
 	}
 }
 

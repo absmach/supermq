@@ -125,8 +125,7 @@ func main() {
 
 		err := backoff.RetryNotify(healthcheck(cfg), backoff.NewExponentialBackOff(), notify)
 		if err != nil {
-			logger.Info(fmt.Sprintf("MQTT healthcheck limit exceeded, exiting. %s ", err.Error()))
-			os.Exit(1)
+			log.Fatalf("MQTT healthcheck limit exceeded, exiting. %s ", err.Error())
 		}
 	}
 
@@ -138,27 +137,23 @@ func main() {
 
 	nps, err := brokers.NewPubSub(cfg.brokerURL, "mqtt", logger)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to message broker: %s", err))
-		os.Exit(1)
+		log.Fatalf("Failed to connect to message broker: %s", err.Error())
 	}
 	defer nps.Close()
 
 	mpub, err := mqttpub.NewPublisher(fmt.Sprintf("%s:%s", cfg.mqttTargetHost, cfg.mqttTargetPort), cfg.mqttForwarderTimeout)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to create MQTT publisher: %s", err))
-		os.Exit(1)
+		log.Fatalf("Failed to create MQTT publisher: %s", err.Error())
 	}
 
 	fwd := mqtt.NewForwarder(brokers.SubjectAllChannels, logger)
 	if err := fwd.Forward(svcName, nps, mpub); err != nil {
-		logger.Error(fmt.Sprintf("Failed to forward message broker messages: %s", err))
-		os.Exit(1)
+		log.Fatalf("Failed to forward message broker messages: %s", err)
 	}
 
 	np, err := brokers.NewPublisher(cfg.brokerURL)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to message broker: %s", err))
-		os.Exit(1)
+		log.Fatalf("Failed to connect to message broker: %s", err.Error())
 	}
 	defer np.Close()
 

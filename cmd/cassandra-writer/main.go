@@ -66,7 +66,7 @@ func main() {
 	// create new pub sub broker
 	pubSub, err := brokers.NewPubSub(cfg.brokerURL, "", logger)
 	if err != nil {
-		log.Fatalf("Failed to connect to message broker: %s", err)
+		log.Fatalf("Failed to connect to message broker: %s", err.Error())
 	}
 	defer pubSub.Close()
 	// Start consumer
@@ -79,7 +79,7 @@ func main() {
 	httpServerConfig := server.Config{}
 	// load http server config from environment variables
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefix, AltPrefix: envPrefixHttp}); err != nil {
-		log.Fatalf(fmt.Sprintf("Failed to load %s HTTP server configuration : %s", svcName, err.Error()))
+		log.Fatalf("Failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
 	// create new http server
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svcName), logger)
