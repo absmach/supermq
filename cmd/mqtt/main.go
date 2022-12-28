@@ -30,7 +30,7 @@ import (
 const (
 	svcName            = "mqtt"
 	envPrefix          = "MF_MQTT_ADAPTER_"
-	envPrefixHttp      = "MF_MQTT_ADAPTER_HTTP_"
+	envPrefixHttp      = "MF_MQTT_ADAPTER_HTTP_" //nolint:golint,unused
 	envPrefixES        = "MF_MQTT_ADAPTER_ES_"
 	envPrefixAuthCache = "MF_AUTH_CACHE_"
 )

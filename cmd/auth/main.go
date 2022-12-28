@@ -35,7 +35,6 @@ import (
 
 const (
 	svcName          = "auth"
-	defListenAddress = ""
 	envPrefix        = "MF_AUTH_"
 	envPrefixHttp    = "MF_AUTH_HTTP_"
 	envPrefixGrpc    = "MF_AUTH_GRPC_"

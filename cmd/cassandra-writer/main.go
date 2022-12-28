@@ -25,7 +25,6 @@ import (
 
 const (
 	svcName       = "cassandra-writer"
-	sep           = ","
 	envPrefix     = "MF_CASSANDRA_WRITER_"
 	envPrefixHttp = "MF_CASSANDRA_WRITER_HTTP_"
 )

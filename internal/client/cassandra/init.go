@@ -45,7 +45,7 @@ func Connect(cfg Config) (*gocql.Session, error) {
 
 	cassSess, err := cluster.CreateSession()
 	if err != nil {
-		errors.Wrap(errConnect, err)
+		return nil, errors.Wrap(errConnect, err)
 	}
 	return cassSess, nil
 }

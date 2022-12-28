@@ -28,11 +28,8 @@ const (
 	svcName                 = "cassandra-reader"
 	envPrefix               = "MF_CASSANDRA_READER_"
 	envPrefixHttp           = "MF_CASSANDRA_READER_HTTP_"
-	envThingsAuthGrpcPrefix = "MF_THINGS_AUTH_GRPC_"
-	envAuthGrpcPrefix       = "MF_AUTH_GRPC_"
-	sep                     = ","
-	defLogLevel             = "error"
-	defPort                 = "8180"
+	envThingsAuthGrpcPrefix = "MF_THINGS_AUTH_GRPC_" //nolint:golint,unused
+	envAuthGrpcPrefix       = "MF_AUTH_GRPC_" //nolint:golint,unused
 )
 
 type config struct {

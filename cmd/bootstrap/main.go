@@ -32,8 +32,8 @@ const (
 	svcName                 = "bootstrap"
 	envPrefix               = "MF_BOOTSTRAP_"
 	envPrefixHttp           = "MF_BOOTSTRAP_HTTP_"
-	envThingsAuthGrpcPrefix = "MF_THINGS_AUTH_GRPC_"
-	envAuthGrpcPrefix       = "MF_AUTH_GRPC_"
+	envThingsAuthGrpcPrefix = "MF_THINGS_AUTH_GRPC_" //nolint:golint,unused
+	envAuthGrpcPrefix       = "MF_AUTH_GRPC_" //nolint:golint,unused
 )
 
 type config struct {

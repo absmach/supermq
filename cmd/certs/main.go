@@ -53,8 +53,8 @@ type config struct {
 	signCAPath    string `env:"MF_CERTS_SIGN_CA_PATH"        envDefault:"ca.crt"`
 	signCAKeyPath string `env:"MF_CERTS_SIGN_CA_KEY_PATH"    envDefault:"ca.key"`
 	// used in pki mock , need to clean up certs in separate PR
-	signRSABits    int    `env:"MF_CERTS_SIGN_RSA_BITS"       envDefault:""`
-	signHoursValid string `env:"MF_CERTS_SIGN_HOURS_VALID"    envDefault:"2048h"`
+	signRSABits    int    `env:"MF_CERTS_SIGN_RSA_BITS"       envDefault:""` //nolint:golint,unused
+	signHoursValid string `env:"MF_CERTS_SIGN_HOURS_VALID"    envDefault:"2048h"` //nolint:golint,unused
 
 	// 3rd party PKI API access settings
 	pkiPath  string `env:"MF_CERTS_VAULT_HOST"         envDefault:"pki_int"`
