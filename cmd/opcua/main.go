@@ -10,9 +10,9 @@ import (
 	"os"
 
 	r "github.com/go-redis/redis/v8"
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal"
-	internaldb "github.com/mainflux/mainflux/internal/db"
+	redisClient "github.com/mainflux/mainflux/internal/client/redis"
+	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
 	"github.com/mainflux/mainflux/logger"
@@ -26,39 +26,11 @@ import (
 )
 
 const (
-	svcName = "opc-ua-adapter"
-
-	defLogLevel       = "error"
-	defHTTPPort       = "8180"
-	defOPCIntervalMs  = "1000"
-	defOPCPolicy      = ""
-	defOPCMode        = ""
-	defOPCCertFile    = ""
-	defOPCKeyFile     = ""
-	defBrokerURL      = "nats://localhost:4222"
-	defESURL          = "localhost:6379"
-	defESPass         = ""
-	defESDB           = "0"
-	defESConsumerName = "opcua"
-	defRouteMapURL    = "localhost:6379"
-	defRouteMapPass   = ""
-	defRouteMapDB     = "0"
-
-	envLogLevel       = "MF_OPCUA_ADAPTER_LOG_LEVEL"
-	envHTTPPort       = "MF_OPCUA_ADAPTER_HTTP_PORT"
-	envOPCIntervalMs  = "MF_OPCUA_ADAPTER_INTERVAL_MS"
-	envOPCPolicy      = "MF_OPCUA_ADAPTER_POLICY"
-	envOPCMode        = "MF_OPCUA_ADAPTER_MODE"
-	envOPCCertFile    = "MF_OPCUA_ADAPTER_CERT_FILE"
-	envOPCKeyFile     = "MF_OPCUA_ADAPTER_KEY_FILE"
-	envBrokerURL      = "MF_BROKER_URL"
-	envESURL          = "MF_THINGS_ES_URL"
-	envESPass         = "MF_THINGS_ES_PASS"
-	envESDB           = "MF_THINGS_ES_DB"
-	envESConsumerName = "MF_OPCUA_ADAPTER_EVENT_CONSUMER"
-	envRouteMapURL    = "MF_OPCUA_ADAPTER_ROUTE_MAP_URL"
-	envRouteMapPass   = "MF_OPCUA_ADAPTER_ROUTE_MAP_PASS"
-	envRouteMapDB     = "MF_OPCUA_ADAPTER_ROUTE_MAP_DB"
+	svcName           = "opc-ua-adapter"
+	envPrefix         = "MF_OPCUA_ADAPTER_"
+	envPrefixES       = "MF_OPCUA_ADAPTER_ES_"
+	envPrefixHttp     = "MF_OPCUA_ADAPTER_HTTP_"
+	envPrefixRouteMap = "MF_OPCUA_ADAPTER_ROUTE_MAP_"
 
 	thingsRMPrefix     = "thing"
 	channelsRMPrefix   = "channel"
@@ -66,42 +38,49 @@ const (
 )
 
 type config struct {
-	httpPort       string
-	opcuaConfig    opcua.Config
-	brokerURL      string
-	logLevel       string
-	esURL          string
-	esPass         string
-	esDB           string
-	esConsumerName string
-	routeMapURL    string
-	routeMapPass   string
-	routeMapDB     string
+	logLevel       string `env:"MF_OPCUA_ADAPTER_LOG_LEVEL"          envDefault:"debug"`
+	esConsumerName string `env:"MF_OPCUA_ADAPTER_EVENT_CONSUMER"     envDefault:""`
+	brokerURL      string `env:"MF_BROKER_URL"                       envDefault:"nats://localhost:4222"`
 }
 
 func main() {
-	cfg := loadConfig()
 	httpCtx, httpCancel := context.WithCancel(context.Background())
 	g, httpCtx := errgroup.WithContext(httpCtx)
+
+	cfg := config{}
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatalf("failed to load %s configuration : %s", svcName, err.Error())
+	}
+
+	opcConfig := opcua.Config{}
+	if err := env.Parse(&opcConfig); err != nil {
+		log.Fatalf("failed to load %s opcua client configuration : %s", svcName, err.Error())
+	}
 
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 
-	rmConn := internaldb.ConnectToRedis(cfg.routeMapURL, cfg.routeMapPass, cfg.routeMapDB, logger)
+	rmConn, err := redisClient.Setup(envPrefixRouteMap)
+	if err != nil {
+		log.Fatalf("failed to setup %s bootstrap event store redis client : %s", svcName, err.Error())
+	}
 	defer rmConn.Close()
 
 	thingRM := newRouteMapRepositoy(rmConn, thingsRMPrefix, logger)
 	chanRM := newRouteMapRepositoy(rmConn, channelsRMPrefix, logger)
 	connRM := newRouteMapRepositoy(rmConn, connectionRMPrefix, logger)
 
-	esConn := internaldb.ConnectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
+	esConn, err := redisClient.Setup(envPrefixES)
+	if err != nil {
+		log.Fatalf("failed to setup %s bootstrap event store redis client : %s", svcName, err.Error())
+	}
 	defer esConn.Close()
 
 	pubSub, err := brokers.NewPubSub(cfg.brokerURL, "", logger)
 	if err != nil {
-		log.Fatalf("Failed to connect to message broker: %s", err.Error())
+		log.Fatalf("failed to connect to message broker: %s", err.Error())
 	}
 	defer pubSub.Close()
 
@@ -109,12 +88,17 @@ func main() {
 	sub := gopcua.NewSubscriber(ctx, pubSub, thingRM, chanRM, connRM, logger)
 	browser := gopcua.NewBrowser(ctx, logger)
 
-	svc := newService(sub, browser, thingRM, chanRM, connRM, cfg.opcuaConfig, logger)
+	svc := newService(sub, browser, thingRM, chanRM, connRM, opcConfig, logger)
 
-	go subscribeToStoredSubs(sub, cfg.opcuaConfig, logger)
+	go subscribeToStoredSubs(sub, opcConfig, logger)
 	go subscribeToThingsES(svc, esConn, cfg.esConsumerName, logger)
 
-	hs := httpserver.New(httpCtx, httpCancel, svcName, "", cfg.httpPort, api.MakeHandler(svc, logger), cfg.opcuaConfig.CertFile, cfg.opcuaConfig.KeyFile, logger)
+	httpServerConfig := server.Config{}
+	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
+		log.Fatalf("Failed to load %s HTTP server configuration : %s", svcName, err.Error())
+	}
+	hs := httpserver.New(httpCtx, httpCancel, svcName, httpServerConfig, api.MakeHandler(svc, logger), logger)
+
 	g.Go(func() error {
 		return hs.Start()
 	})
@@ -125,29 +109,6 @@ func main() {
 
 	if err := g.Wait(); err != nil {
 		logger.Error(fmt.Sprintf("OPC-UA adapter service terminated: %s", err))
-	}
-}
-
-func loadConfig() config {
-	oc := opcua.Config{
-		Interval: mainflux.Env(envOPCIntervalMs, defOPCIntervalMs),
-		Policy:   mainflux.Env(envOPCPolicy, defOPCPolicy),
-		Mode:     mainflux.Env(envOPCMode, defOPCMode),
-		CertFile: mainflux.Env(envOPCCertFile, defOPCCertFile),
-		KeyFile:  mainflux.Env(envOPCKeyFile, defOPCKeyFile),
-	}
-	return config{
-		httpPort:       mainflux.Env(envHTTPPort, defHTTPPort),
-		opcuaConfig:    oc,
-		brokerURL:      mainflux.Env(envBrokerURL, defBrokerURL),
-		logLevel:       mainflux.Env(envLogLevel, defLogLevel),
-		esURL:          mainflux.Env(envESURL, defESURL),
-		esPass:         mainflux.Env(envESPass, defESPass),
-		esDB:           mainflux.Env(envESDB, defESDB),
-		esConsumerName: mainflux.Env(envESConsumerName, defESConsumerName),
-		routeMapURL:    mainflux.Env(envRouteMapURL, defRouteMapURL),
-		routeMapPass:   mainflux.Env(envRouteMapPass, defRouteMapPass),
-		routeMapDB:     mainflux.Env(envRouteMapDB, defRouteMapDB),
 	}
 }
 
