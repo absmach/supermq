@@ -8,15 +8,15 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
-	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/mainflux/mainflux"
-	authapi "github.com/mainflux/mainflux/auth/api/grpc"
 	"github.com/mainflux/mainflux/internal"
-	internalauth "github.com/mainflux/mainflux/internal/auth"
-	internaldb "github.com/mainflux/mainflux/internal/db"
+	authClient "github.com/mainflux/mainflux/internal/client/grpc/auth"
+	jaegerClient "github.com/mainflux/mainflux/internal/client/jaeger"
+	mongoClient "github.com/mainflux/mainflux/internal/client/mongo"
+	redisClient "github.com/mainflux/mainflux/internal/client/redis"
+	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
 	"github.com/mainflux/mainflux/logger"
@@ -36,109 +36,93 @@ import (
 )
 
 const (
-	svcName            = "twins"
-	queue              = "twins"
-	defLogLevel        = "error"
-	defHTTPPort        = "8180"
-	defJaegerURL       = ""
-	defServerCert      = ""
-	defServerKey       = ""
-	defDB              = "mainflux-twins"
-	defDBHost          = "localhost"
-	defDBPort          = "27017"
-	defCacheURL        = "localhost:6379"
-	defCachePass       = ""
-	defCacheDB         = "0"
-	defStandaloneEmail = ""
-	defStandaloneToken = ""
-	defClientTLS       = "false"
-	defCACerts         = ""
-	defChannelID       = ""
-	defBrokerURL       = "nats://localhost:4222"
-	defAuthURL         = "localhost:8181"
-	defAuthTimeout     = "1s"
-
-	envLogLevel        = "MF_TWINS_LOG_LEVEL"
-	envHTTPPort        = "MF_TWINS_HTTP_PORT"
-	envJaegerURL       = "MF_JAEGER_URL"
-	envServerCert      = "MF_TWINS_SERVER_CERT"
-	envServerKey       = "MF_TWINS_SERVER_KEY"
-	envDB              = "MF_TWINS_DB"
-	envDBHost          = "MF_TWINS_DB_HOST"
-	envDBPort          = "MF_TWINS_DB_PORT"
-	envCacheURL        = "MF_TWINS_CACHE_URL"
-	envCachePass       = "MF_TWINS_CACHE_PASS"
-	envCacheDB         = "MF_TWINS_CACHE_DB"
-	envStandaloneEmail = "MF_TWINS_STANDALONE_EMAIL"
-	envStandaloneToken = "MF_TWINS_STANDALONE_TOKEN"
-	envClientTLS       = "MF_TWINS_CLIENT_TLS"
-	envCACerts         = "MF_TWINS_CA_CERTS"
-	envChannelID       = "MF_TWINS_CHANNEL_ID"
-	envBrokerURL       = "MF_BROKER_URL"
-	envAuthURL         = "MF_AUTH_GRPC_URL"
-	envAuthTimeout     = "MF_AUTH_GRPC_TIMEOUT"
+	svcName        = "twins"
+	queue          = "twins"
+	envPrefix      = "MF_TWINS_"
+	envPrefixHttp  = "MF_TWINS_HTTP_"
+	envPrefixCache = "MF_TWINS_CACHE_"
 )
 
 type config struct {
-	logLevel        string
-	httpPort        string
-	jaegerURL       string
-	serverCert      string
-	serverKey       string
-	dbCfg           twmongodb.Config
-	cacheURL        string
-	cachePass       string
-	cacheDB         string
-	standaloneEmail string
-	standaloneToken string
-	clientTLS       bool
-	caCerts         string
-	channelID       string
-	brokerURL       string
-
-	authURL     string
-	authTimeout time.Duration
+	logLevel        string `env:"MF_TWINS_LOG_LEVEL"          envDefault:"debug"`
+	standaloneEmail string `env:"MF_TWINS_STANDALONE_EMAIL"   envDefault:""`
+	standaloneToken string `env:"MF_TWINS_STANDALONE_TOKEN"   envDefault:""`
+	channelID       string `env:"MF_TWINS_CHANNEL_ID"         envDefault:""`
+	jaegerURL       string `env:"MF_JAEGER_URL"               envDefault:""`
+	brokerURL       string `env:"MF_BROKER_URL"               envDefault:"nats://localhost:4222"`
 }
 
 func main() {
-	cfg := loadConfig()
 	ctx, cancel := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
 
+	cfg := config{}
+	if err := env.Parse(&cfg, env.Options{Prefix: envPrefix}); err != nil {
+		log.Fatalf("failed to load %s configuration : %s", svcName, err.Error())
+	}
 	logger, err := logger.New(os.Stdout, cfg.logLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 
-	cacheClient := internaldb.ConnectToRedis(cfg.cacheURL, cfg.cachePass, cfg.cacheDB, logger)
-	cacheTracer, cacheCloser := internalauth.Jaeger("twins_cache", cfg.jaegerURL, logger)
+	cacheClient, err := redisClient.Setup(envPrefixCache)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	defer cacheClient.Close()
+
+	cacheTracer, cacheCloser, err := jaegerClient.NewTracer("twins_cache", cfg.jaegerURL)
+	if err != nil {
+		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+	}
 	defer cacheCloser.Close()
 
-	db, err := twmongodb.Connect(cfg.dbCfg, logger)
+	db, err := mongoClient.Setup(envPrefix)
 	if err != nil {
-		logger.Error(err.Error())
-		os.Exit(1)
+		log.Fatalf("Failed to setup postgres database : %s", err.Error())
 	}
-	dbTracer, dbCloser := internalauth.Jaeger("twins_db", cfg.jaegerURL, logger)
+
+	dbTracer, dbCloser, err := jaegerClient.NewTracer("twins_db", cfg.jaegerURL)
+	if err != nil {
+		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+	}
 	defer dbCloser.Close()
 
-	authTracer, authCloser := internalauth.Jaeger("auth", cfg.jaegerURL, logger)
-	defer authCloser.Close()
-	auth, _ := createAuthClient(cfg, authTracer, logger)
+	var auth mainflux.AuthServiceClient
+	switch cfg.standaloneEmail != "" && cfg.standaloneToken != "" {
+	case true:
+		auth = localusers.NewAuthService(cfg.standaloneEmail, cfg.standaloneToken)
+	default:
+		authServiceClient, authGrpcClient, authTracerCloser, authGrpcSecure, err := authClient.Setup(envPrefix, cfg.jaegerURL)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		defer authGrpcClient.Close()
+		defer authTracerCloser.Close()
+		auth = authServiceClient
+		logger.Info("Successfully connected to auth grpc server " + authGrpcSecure)
+	}
 
 	pubSub, err := brokers.NewPubSub(cfg.brokerURL, queue, logger)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to message broker: %s", err))
-		os.Exit(1)
+		log.Fatalf("Failed to connect to message broker: %s", err.Error())
 	}
 	defer pubSub.Close()
 
 	svc := newService(svcName, pubSub, cfg.channelID, auth, dbTracer, db, cacheTracer, cacheClient, logger)
 
-	tracer, closer := internalauth.Jaeger("twins", cfg.jaegerURL, logger)
+	tracer, closer, err := jaegerClient.NewTracer("twins", cfg.jaegerURL)
+	if err != nil {
+		log.Fatalf("Failed to init Jaeger: %s", err.Error())
+	}
 	defer closer.Close()
 
-	hs := httpserver.New(ctx, cancel, svcName, "", cfg.httpPort, twapi.MakeHandler(tracer, svc, logger), cfg.serverCert, cfg.serverKey, logger)
+	httpServerConfig := server.Config{}
+	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
+		log.Fatalf(fmt.Sprintf("Failed to load %s HTTP server configuration : %s", svcName, err.Error()))
+	}
+
+	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, twapi.MakeHandler(tracer, svc, logger), logger)
 	g.Go(func() error {
 		return hs.Start()
 	})
@@ -150,53 +134,6 @@ func main() {
 	if err := g.Wait(); err != nil {
 		logger.Error(fmt.Sprintf("Twins service terminated: %s", err))
 	}
-}
-
-func loadConfig() config {
-	tls, err := strconv.ParseBool(mainflux.Env(envClientTLS, defClientTLS))
-	if err != nil {
-		log.Fatalf("Invalid value passed for %s\n", envClientTLS)
-	}
-
-	authTimeout, err := time.ParseDuration(mainflux.Env(envAuthTimeout, defAuthTimeout))
-	if err != nil {
-		log.Fatalf("Invalid %s value: %s", envAuthTimeout, err.Error())
-	}
-
-	dbCfg := twmongodb.Config{
-		Name: mainflux.Env(envDB, defDB),
-		Host: mainflux.Env(envDBHost, defDBHost),
-		Port: mainflux.Env(envDBPort, defDBPort),
-	}
-
-	return config{
-		logLevel:        mainflux.Env(envLogLevel, defLogLevel),
-		httpPort:        mainflux.Env(envHTTPPort, defHTTPPort),
-		serverCert:      mainflux.Env(envServerCert, defServerCert),
-		serverKey:       mainflux.Env(envServerKey, defServerKey),
-		jaegerURL:       mainflux.Env(envJaegerURL, defJaegerURL),
-		dbCfg:           dbCfg,
-		cacheURL:        mainflux.Env(envCacheURL, defCacheURL),
-		cachePass:       mainflux.Env(envCachePass, defCachePass),
-		cacheDB:         mainflux.Env(envCacheDB, defCacheDB),
-		standaloneEmail: mainflux.Env(envStandaloneEmail, defStandaloneEmail),
-		standaloneToken: mainflux.Env(envStandaloneToken, defStandaloneToken),
-		clientTLS:       tls,
-		caCerts:         mainflux.Env(envCACerts, defCACerts),
-		channelID:       mainflux.Env(envChannelID, defChannelID),
-		brokerURL:       mainflux.Env(envBrokerURL, defBrokerURL),
-		authURL:         mainflux.Env(envAuthURL, defAuthURL),
-		authTimeout:     authTimeout,
-	}
-}
-
-func createAuthClient(cfg config, tracer opentracing.Tracer, logger logger.Logger) (mainflux.AuthServiceClient, func() error) {
-	if cfg.standaloneEmail != "" && cfg.standaloneToken != "" {
-		return localusers.NewAuthService(cfg.standaloneEmail, cfg.standaloneToken), nil
-	}
-
-	conn := internalauth.ConnectToAuth(cfg.clientTLS, cfg.caCerts, cfg.authURL, svcName, logger)
-	return authapi.NewClient(tracer, conn, cfg.authTimeout), conn.Close
 }
 
 func newService(id string, ps messaging.PubSub, chanID string, users mainflux.AuthServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, cacheTracer opentracing.Tracer, cacheClient *redis.Client, logger logger.Logger) twins.Service {

@@ -1,26 +1,51 @@
 // Copyright (c) Mainflux
 // SPDX-License-Identifier: Apache-2.0
 
-package db
+package mongodb
 
 import (
 	"context"
 	"fmt"
-	"os"
 
-	"github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/internal/env"
+	"github.com/mainflux/mainflux/pkg/errors"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// Connect create connection to MongoDB
-func Connect(host, port, name string, logger logger.Logger) *mongo.Database {
-	addr := fmt.Sprintf("mongodb://%s:%s", host, port)
+var (
+	errConfig  = errors.New("failed to load mongodb configuration")
+	errConnect = errors.New("failed to connect to mongodb server")
+)
+
+// Config defines the options that are used when connecting to a MongoDB instance
+type Config struct {
+	Host string `env:"HOST"               envDefault:"27017"`
+	Port string `env:"PORT"               envDefault:"localhost"`
+	DB   string `env:"DB"               envDefault:"mainflux"`
+}
+
+// Connect creates a connection to the MongoDB instance
+func Connect(cfg Config) (*mongo.Database, error) {
+	addr := fmt.Sprintf("mongodb://%s:%s", cfg.Host, cfg.Port)
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
 	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to connect to database: %s", err))
-		os.Exit(1)
+		return nil, errors.Wrap(errConnect, err)
 	}
 
-	return client.Database(name)
+	db := client.Database(cfg.DB)
+	return db, nil
+}
+
+// Setup gets configuration from environment and connect to mongodb
+func Setup(envPrefix string) (*mongo.Database, error) {
+	cfg := Config{}
+	if err := env.Parse(&cfg, env.Options{Prefix: envPrefix}); err != nil {
+		return nil, errors.Wrap(errConfig, err)
+	}
+	db, err := Connect(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return db, nil
 }

@@ -23,8 +23,7 @@ type Config struct {
 	Port     int      `env:"DB_PORT"        envDefault:"9042"`
 }
 
-//Setup
-
+// Setup load configuration from environment and creates new cassandra connection
 func Setup(envPrefix string) (*gocql.Session, error) {
 	config := Config{}
 	if err := env.Parse(&config, env.Options{Prefix: envPrefix}); err != nil {
