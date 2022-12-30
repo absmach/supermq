@@ -112,5 +112,5 @@ func (c *Client)Secure()string {
 	if c.secure {
 		return "with TLS"
 	}
-	return "Without TLS"
+	return "without TLS"
 }
