@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/gogo/protobuf/proto"
 
@@ -18,15 +17,11 @@ import (
 
 const chansPrefix = "channels"
 
+// Publisher and Subscriber errors.
 var (
-	// ErrNotSubscribed indicates that the topic is not subscribed to.
 	ErrNotSubscribed = errors.New("not subscribed")
-
-	// ErrEmptyTopic indicates the absence of topic.
-	ErrEmptyTopic = errors.New("empty topic")
-
-	// ErrEmptyID indicates the absence of ID.
-	ErrEmptyID = errors.New("empty ID")
+	ErrEmptyTopic    = errors.New("empty topic")
+	ErrEmptyID       = errors.New("empty id")
 )
 
 var _ messaging.PubSub = (*pubsub)(nil)
@@ -52,17 +47,7 @@ type pubsub struct {
 // here: https://docs.nats.io/developing-with-nats/receiving/queues.
 // If the queue is empty, Subscribe will be used.
 func NewPubSub(url, queue string, logger log.Logger) (messaging.PubSub, error) {
-	opts := broker.Options{
-		Url:            url,
-		AllowReconnect: false,
-		// MaxReconnect:     10,
-		// ReconnectWait:    200 * time.Millisecond,
-		Timeout: 1 * time.Second,
-		// ReconnectBufSize: 5 * 1024 * 1024,
-		// PingInterval:     1 * time.Second,
-		// MaxPingsOut:      5,
-	}
-	conn, err := opts.Connect()
+	conn, err := broker.Connect(url, broker.MaxReconnects(maxReconnects))
 	if err != nil {
 		return nil, err
 	}
@@ -110,35 +95,21 @@ func (ps *pubsub) Subscribe(id, topic string, handler messaging.MessageHandler) 
 
 	nh := ps.natsHandler(handler)
 
-	var sub *broker.Subscription
-	var err error
-
-	switch ps.queue {
-	case "":
-		sub, err = ps.conn.Subscribe(topic, nh)
+	if ps.queue != "" {
+		sub, err := ps.conn.QueueSubscribe(topic, ps.queue, nh)
 		if err != nil {
 			return err
 		}
-		msgLimit := int(1e7)
-		bytesLimit := int(1e10)
-
-		if err = sub.SetPendingLimits(msgLimit, bytesLimit); err != nil {
-			return err
+		s[id] = subscription{
+			Subscription: sub,
+			cancel:       handler.Cancel,
 		}
-
-	default:
-		sub, err = ps.conn.QueueSubscribe(topic, ps.queue, nh)
-		if err != nil {
-			return err
-		}
-		msgLimit := int(1e7)
-		bytesLimit := int(1e10)
-
-		if err = sub.SetPendingLimits(msgLimit, bytesLimit); err != nil {
-			return err
-		}
+		return nil
 	}
-
+	sub, err := ps.conn.Subscribe(topic, nh)
+	if err != nil {
+		return err
+	}
 	s[id] = subscription{
 		Subscription: sub,
 		cancel:       handler.Cancel,
