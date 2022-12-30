@@ -47,10 +47,10 @@ const (
 )
 
 type config struct {
-	logLevel        string `env:"MF_THINGS_LOG_LEVEL"          envDefault:"debug"`
-	standaloneEmail string `env:"MF_THINGS_STANDALONE_EMAIL"   envDefault:"debug"` //nolint:golint,unused
-	standaloneToken string `env:"MF_THINGS_STANDALONE_TOKEN"   envDefault:"debug"` //nolint:golint,unused
-	jaegerURL       string `env:"MF_JAEGER_URL"                envDefault:""`
+	LogLevel        string `env:"MF_THINGS_LOG_LEVEL"          envDefault:"debug"`
+	StandaloneEmail string `env:"MF_THINGS_STANDALONE_EMAIL"   envDefault:"debug"` //nolint:golint,unused
+	StandaloneToken string `env:"MF_THINGS_STANDALONE_TOKEN"   envDefault:"debug"` //nolint:golint,unused
+	JaegerURL       string `env:"MF_JAEGER_URL"                envDefault:""`
 }
 
 func main() {
@@ -65,7 +65,8 @@ func main() {
 	}
 
 	// create new logger
-	logger, err := logger.New(os.Stdout, cfg.logLevel)
+	fmt.Println(cfg)
+	logger, err := logger.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -92,23 +93,22 @@ func main() {
 	defer esClient.Close()
 
 	// Setup new auth grpc client
-	auth, authGrpcClient, authGrpcTracerCloser, authGrpcSecure, err := authClient.Setup(envPrefix, cfg.jaegerURL)
+	auth, authHandler, err := authClient.Setup(envPrefix, cfg.JaegerURL)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer authGrpcClient.Close()
-	defer authGrpcTracerCloser.Close()
-	logger.Info("Successfully connected to auth grpc server " + authGrpcSecure)
+	defer authHandler.Close()
+	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
 	// create tracer for things database
-	dbTracer, dbCloser, err := jaegerClient.NewTracer("things_db", cfg.jaegerURL)
+	dbTracer, dbCloser, err := jaegerClient.NewTracer("things_db", cfg.JaegerURL)
 	if err != nil {
 		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}
 	defer dbCloser.Close()
 
 	// create tracer for things cache
-	cacheTracer, cacheCloser, err := jaegerClient.NewTracer("things_cache", cfg.jaegerURL)
+	cacheTracer, cacheCloser, err := jaegerClient.NewTracer("things_cache", cfg.JaegerURL)
 	if err != nil {
 		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}
@@ -118,7 +118,7 @@ func main() {
 	svc := newService(auth, dbTracer, cacheTracer, db, cacheClient, esClient, logger)
 
 	// create tracer for HTTP handler things
-	thingsTracer, thingsCloser, err := jaegerClient.NewTracer("things", cfg.jaegerURL)
+	thingsTracer, thingsCloser, err := jaegerClient.NewTracer("things", cfg.JaegerURL)
 	if err != nil {
 		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}

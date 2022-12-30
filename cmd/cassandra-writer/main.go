@@ -30,9 +30,9 @@ const (
 )
 
 type config struct {
-	brokerURL  string `env:"MF_BROKER_URL"                     envDefault:"nats://localhost:4222" `
-	logLevel   string `env:"MF_CASSANDRA_WRITER_LOG_LEVEL"     envDefault:"debug" `
-	configPath string `env:"MF_CASSANDRA_WRITER_CONFIG_PATH"   envDefault:"/config.toml" `
+	BrokerURL  string `env:"MF_BROKER_URL"                     envDefault:"nats://localhost:4222" `
+	LogLevel   string `env:"MF_CASSANDRA_WRITER_LOG_LEVEL"     envDefault:"debug" `
+	ConfigPath string `env:"MF_CASSANDRA_WRITER_CONFIG_PATH"   envDefault:"/config.toml" `
 }
 
 func main() {
@@ -47,7 +47,7 @@ func main() {
 	}
 
 	// create new logger
-	logger, err := logger.New(os.Stdout, cfg.logLevel)
+	logger, err := logger.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -63,13 +63,13 @@ func main() {
 	repo := newService(cassaSession, logger)
 
 	// create new pub sub broker
-	pubSub, err := brokers.NewPubSub(cfg.brokerURL, "", logger)
+	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)
 	if err != nil {
 		log.Fatalf("failed to connect to message broker: %s", err.Error())
 	}
 	defer pubSub.Close()
 	// Start consumer
-	if err := consumers.Start(svcName, pubSub, repo, cfg.configPath, logger); err != nil {
+	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to create Cassandra writer: %s", err))
 	}
 

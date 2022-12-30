@@ -38,9 +38,9 @@ const (
 )
 
 type config struct {
-	logLevel       string `env:"MF_OPCUA_ADAPTER_LOG_LEVEL"          envDefault:"debug"`
-	esConsumerName string `env:"MF_OPCUA_ADAPTER_EVENT_CONSUMER"     envDefault:""`
-	brokerURL      string `env:"MF_BROKER_URL"                       envDefault:"nats://localhost:4222"`
+	LogLevel       string `env:"MF_OPCUA_ADAPTER_LOG_LEVEL"          envDefault:"debug"`
+	EsConsumerName string `env:"MF_OPCUA_ADAPTER_EVENT_CONSUMER"     envDefault:""`
+	BrokerURL      string `env:"MF_BROKER_URL"                       envDefault:"nats://localhost:4222"`
 }
 
 func main() {
@@ -57,7 +57,7 @@ func main() {
 		log.Fatalf("failed to load %s opcua client configuration : %s", svcName, err.Error())
 	}
 
-	logger, err := logger.New(os.Stdout, cfg.logLevel)
+	logger, err := logger.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -78,7 +78,7 @@ func main() {
 	}
 	defer esConn.Close()
 
-	pubSub, err := brokers.NewPubSub(cfg.brokerURL, "", logger)
+	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)
 	if err != nil {
 		log.Fatalf("failed to connect to message broker: %s", err.Error())
 	}
@@ -91,7 +91,7 @@ func main() {
 	svc := newService(sub, browser, thingRM, chanRM, connRM, opcConfig, logger)
 
 	go subscribeToStoredSubs(sub, opcConfig, logger)
-	go subscribeToThingsES(svc, esConn, cfg.esConsumerName, logger)
+	go subscribeToThingsES(svc, esConn, cfg.EsConsumerName, logger)
 
 	httpServerConfig := server.Config{}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {

@@ -41,14 +41,14 @@ const (
 )
 
 type config struct {
-	logLevel      string `env:"MF_USERS_LOG_LEVEL"               envDefault:"debug"`
-	adminEmail    string `env:"MF_USERS_ADMIN_EMAIL"             envDefault:""`
-	adminPassword string `env:"MF_USERS_ADMIN_PASSWORD"          envDefault:""`
-	passRegexText string `env:"MF_USERS_PASS_REGEX"              envDefault:"^.{8,}$"`
-	selfRegister  bool   `env:"MF_USERS_ALLOW_SELF_REGISTER"     envDefault:"true"`
-	jaegerURL     string `env:"MF_JAEGER_URL"                    envDefault:""`
-	resetURL      string `env:"MF_TOKEN_RESET_ENDPOINT"          envDefault:"email.tmpl"`
-	passRegex     *regexp.Regexp
+	LogLevel      string `env:"MF_USERS_LOG_LEVEL"               envDefault:"debug"`
+	AdminEmail    string `env:"MF_USERS_ADMIN_EMAIL"             envDefault:""`
+	AdminPassword string `env:"MF_USERS_ADMIN_PASSWORD"          envDefault:""`
+	PassRegexText string `env:"MF_USERS_PASS_REGEX"              envDefault:"^.{8,}$"`
+	SelfRegister  bool   `env:"MF_USERS_ALLOW_SELF_REGISTER"     envDefault:"true"`
+	JaegerURL     string `env:"MF_JAEGER_URL"                    envDefault:""`
+	ResetURL      string `env:"MF_TOKEN_RESET_ENDPOINT"          envDefault:"email.tmpl"`
+	PassRegex     *regexp.Regexp
 }
 
 func main() {
@@ -59,19 +59,19 @@ func main() {
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("failed to load %s configuration : %s", svcName, err.Error())
 	}
-	passRegex, err := regexp.Compile(cfg.passRegexText)
+	passRegex, err := regexp.Compile(cfg.PassRegexText)
 	if err != nil {
-		log.Fatalf("Invalid password validation rules %s\n", cfg.passRegexText)
+		log.Fatalf("Invalid password validation rules %s\n", cfg.PassRegexText)
 	}
-	cfg.passRegex = passRegex
+	cfg.PassRegex = passRegex
 
-	logger, err := logger.New(os.Stdout, cfg.logLevel)
+	logger, err := logger.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 
 	ec := email.Config{}
-	if err := env.Parse(&cfg); err != nil {
+	if err := env.Parse(&ec); err != nil {
 		log.Fatalf("failed to load email configuration : %s", err.Error())
 	}
 
@@ -81,15 +81,14 @@ func main() {
 	}
 	defer db.Close()
 
-	auth, authGrpcClient, authGrpcTracerCloser, authGrpcSecure, err := authClient.Setup(envPrefix, cfg.jaegerURL)
+	auth, authHandler, err := authClient.Setup(envPrefix, cfg.JaegerURL)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer authGrpcClient.Close()
-	defer authGrpcTracerCloser.Close()
-	logger.Info("Successfully connected to auth grpc server " + authGrpcSecure)
+	defer authHandler.Close()
+	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
-	dbTracer, dbCloser, err := jaegerClient.NewTracer("auth_db", cfg.jaegerURL)
+	dbTracer, dbCloser, err := jaegerClient.NewTracer("auth_db", cfg.JaegerURL)
 	if err != nil {
 		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}
@@ -97,7 +96,7 @@ func main() {
 
 	svc := newService(db, dbTracer, auth, cfg, ec, logger)
 
-	tracer, closer, err := jaegerClient.NewTracer("users", cfg.jaegerURL)
+	tracer, closer, err := jaegerClient.NewTracer("users", cfg.JaegerURL)
 	if err != nil {
 		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}
@@ -127,14 +126,14 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServic
 	hasher := bcrypt.New()
 	userRepo := tracing.UserRepositoryMiddleware(usersPg.NewUserRepo(database), tracer)
 
-	emailer, err := emailer.New(c.resetURL, &ec)
+	emailer, err := emailer.New(c.ResetURL, &ec)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to configure e-mailing util: %s", err.Error()))
 	}
 
 	idProvider := uuid.New()
 
-	svc := users.New(userRepo, hasher, auth, emailer, idProvider, c.passRegex)
+	svc := users.New(userRepo, hasher, auth, emailer, idProvider, c.PassRegex)
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics(svcName, "api")
 	svc = api.MetricsMiddleware(svc, counter, latency)
@@ -143,7 +142,7 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServic
 		log.Fatalf("failed to create admin user: " + err.Error())
 	}
 
-	switch c.selfRegister {
+	switch c.SelfRegister {
 	case true:
 		// If MF_USERS_ALLOW_SELF_REGISTER environment variable is "true",
 		// everybody can create a new user. Here, check the existence of that
@@ -178,8 +177,8 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServic
 
 func createAdmin(svc users.Service, userRepo users.UserRepository, c config, auth mainflux.AuthServiceClient) error {
 	user := users.User{
-		Email:    c.adminEmail,
-		Password: c.adminPassword,
+		Email:    c.AdminEmail,
+		Password: c.AdminPassword,
 	}
 
 	if admin, err := userRepo.RetrieveByEmail(context.Background(), user.Email); err == nil {

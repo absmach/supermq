@@ -44,12 +44,12 @@ const (
 )
 
 type config struct {
-	logLevel        string `env:"MF_TWINS_LOG_LEVEL"          envDefault:"debug"`
-	standaloneEmail string `env:"MF_TWINS_STANDALONE_EMAIL"   envDefault:""`
-	standaloneToken string `env:"MF_TWINS_STANDALONE_TOKEN"   envDefault:""`
-	channelID       string `env:"MF_TWINS_CHANNEL_ID"         envDefault:""`
-	jaegerURL       string `env:"MF_JAEGER_URL"               envDefault:""`
-	brokerURL       string `env:"MF_BROKER_URL"               envDefault:"nats://localhost:4222"`
+	LogLevel        string `env:"MF_TWINS_LOG_LEVEL"          envDefault:"debug"`
+	StandaloneEmail string `env:"MF_TWINS_STANDALONE_EMAIL"   envDefault:""`
+	StandaloneToken string `env:"MF_TWINS_STANDALONE_TOKEN"   envDefault:""`
+	ChannelID       string `env:"MF_TWINS_CHANNEL_ID"         envDefault:""`
+	JaegerURL       string `env:"MF_JAEGER_URL"               envDefault:""`
+	BrokerURL       string `env:"MF_BROKER_URL"               envDefault:"nats://localhost:4222"`
 }
 
 func main() {
@@ -60,7 +60,7 @@ func main() {
 	if err := env.Parse(&cfg, env.Options{Prefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s configuration : %s", svcName, err.Error())
 	}
-	logger, err := logger.New(os.Stdout, cfg.logLevel)
+	logger, err := logger.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -71,7 +71,7 @@ func main() {
 	}
 	defer cacheClient.Close()
 
-	cacheTracer, cacheCloser, err := jaegerClient.NewTracer("twins_cache", cfg.jaegerURL)
+	cacheTracer, cacheCloser, err := jaegerClient.NewTracer("twins_cache", cfg.JaegerURL)
 	if err != nil {
 		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}
@@ -82,36 +82,35 @@ func main() {
 		log.Fatalf("failed to setup postgres database : %s", err.Error())
 	}
 
-	dbTracer, dbCloser, err := jaegerClient.NewTracer("twins_db", cfg.jaegerURL)
+	dbTracer, dbCloser, err := jaegerClient.NewTracer("twins_db", cfg.JaegerURL)
 	if err != nil {
 		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}
 	defer dbCloser.Close()
 
 	var auth mainflux.AuthServiceClient
-	switch cfg.standaloneEmail != "" && cfg.standaloneToken != "" {
+	switch cfg.StandaloneEmail != "" && cfg.StandaloneToken != "" {
 	case true:
-		auth = localusers.NewAuthService(cfg.standaloneEmail, cfg.standaloneToken)
+		auth = localusers.NewAuthService(cfg.StandaloneEmail, cfg.StandaloneToken)
 	default:
-		authServiceClient, authGrpcClient, authTracerCloser, authGrpcSecure, err := authClient.Setup(envPrefix, cfg.jaegerURL)
+		authServiceClient, authHandler, err := authClient.Setup(envPrefix, cfg.JaegerURL)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
-		defer authGrpcClient.Close()
-		defer authTracerCloser.Close()
+		defer authHandler.Close()
 		auth = authServiceClient
-		logger.Info("Successfully connected to auth grpc server " + authGrpcSecure)
+		logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 	}
 
-	pubSub, err := brokers.NewPubSub(cfg.brokerURL, queue, logger)
+	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, queue, logger)
 	if err != nil {
 		log.Fatalf("failed to connect to message broker: %s", err.Error())
 	}
 	defer pubSub.Close()
 
-	svc := newService(svcName, pubSub, cfg.channelID, auth, dbTracer, db, cacheTracer, cacheClient, logger)
+	svc := newService(svcName, pubSub, cfg.ChannelID, auth, dbTracer, db, cacheTracer, cacheClient, logger)
 
-	tracer, closer, err := jaegerClient.NewTracer("twins", cfg.jaegerURL)
+	tracer, closer, err := jaegerClient.NewTracer("twins", cfg.JaegerURL)
 	if err != nil {
 		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}

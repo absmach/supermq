@@ -39,11 +39,11 @@ const (
 )
 
 type config struct {
-	logLevel   string `env:"MF_SMPP_NOTIFIER_LOG_LEVEL"   envDefault:"debug"`
-	from       string `env:"MF_SMPP_NOTIFIER_FROM_ADDR"   envDefault:""`
-	configPath string `env:"MF_SMPP_NOTIFIER_CONFIG_PATH" envDefault:"/config.toml"`
-	brokerURL  string `env:"MF_BROKER_URL"                envDefault:"nats://localhost:4222"`
-	jaegerURL  string `env:"MF_JAEGER_URL"                envDefault:""`
+	LogLevel   string `env:"MF_SMPP_NOTIFIER_LOG_LEVEL"   envDefault:"debug"`
+	From       string `env:"MF_SMPP_NOTIFIER_FROM_ADDR"   envDefault:""`
+	ConfigPath string `env:"MF_SMPP_NOTIFIER_CONFIG_PATH" envDefault:"/config.toml"`
+	BrokerURL  string `env:"MF_BROKER_URL"                envDefault:"nats://localhost:4222"`
+	JaegerURL  string `env:"MF_JAEGER_URL"                envDefault:""`
 }
 
 func main() {
@@ -55,7 +55,7 @@ func main() {
 		log.Fatalf("failed to load %s configuration : %s", svcName, err.Error())
 	}
 
-	logger, err := logger.New(os.Stdout, cfg.logLevel)
+	logger, err := logger.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -71,27 +71,26 @@ func main() {
 		log.Fatalf("failed to load SMPP configuration from environment : %s", err.Error())
 	}
 
-	pubSub, err := brokers.NewPubSub(cfg.brokerURL, "", logger)
+	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)
 	if err != nil {
 		log.Fatalf("failed to connect to message broker: %s", err.Error())
 	}
 	defer pubSub.Close()
 
-	auth, authGrpcClient, authGrpcTracerCloser, authGrpcSecure, err := authClient.Setup(envPrefix, cfg.jaegerURL)
+	auth, authHandler, err := authClient.Setup(envPrefix, cfg.JaegerURL)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	defer authGrpcClient.Close()
-	defer authGrpcTracerCloser.Close()
-	logger.Info("Successfully connected to auth grpc server " + authGrpcSecure)
+	defer authHandler.Close()
+	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
-	tracer, closer, err := jaegerClient.NewTracer("smpp-notifier", cfg.jaegerURL)
+	tracer, closer, err := jaegerClient.NewTracer("smpp-notifier", cfg.JaegerURL)
 	if err != nil {
 		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}
 	defer closer.Close()
 
-	dbTracer, dbCloser, err := jaegerClient.NewTracer("smpp-notifier_db", cfg.jaegerURL)
+	dbTracer, dbCloser, err := jaegerClient.NewTracer("smpp-notifier_db", cfg.JaegerURL)
 	if err != nil {
 		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}
@@ -99,7 +98,7 @@ func main() {
 
 	svc := newService(db, dbTracer, auth, cfg, smppConfig, logger)
 
-	if err = consumers.Start(svcName, pubSub, svc, cfg.configPath, logger); err != nil {
+	if err = consumers.Start(svcName, pubSub, svc, cfg.ConfigPath, logger); err != nil {
 		log.Fatalf("failed to create Postgres writer: %s", err.Error())
 	}
 
@@ -128,7 +127,7 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServic
 	repo := tracing.New(notifierPg.New(database), tracer)
 	idp := ulid.New()
 	notifier := mfsmpp.New(sc)
-	svc := notifiers.New(auth, repo, idp, notifier, c.from)
+	svc := notifiers.New(auth, repo, idp, notifier, c.From)
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics("notifier", "smpp")
 	svc = api.MetricsMiddleware(svc, counter, latency)

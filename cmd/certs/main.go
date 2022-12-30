@@ -44,23 +44,23 @@ var (
 )
 
 type config struct {
-	logLevel  string `env:"MF_CERTS_LOG_LEVEL"        envDefault:"debug"`
-	certsURL  string `env:"MF_SDK_CERTS_URL"          envDefault:"http://localhost"`
-	thingsURL string `env:"MF_THINGS_URL"             envDefault:"http://things:8182"`
-	jaegerURL string `env:"MF_JAEGER_URL"             envDefault:""`
+	LogLevel  string `env:"MF_CERTS_LOG_LEVEL"        envDefault:"debug"`
+	CertsURL  string `env:"MF_SDK_CERTS_URL"          envDefault:"http://localhost"`
+	ThingsURL string `env:"MF_THINGS_URL"             envDefault:"http://things:8182"`
+	JaegerURL string `env:"MF_JAEGER_URL"             envDefault:""`
 
 	// Sign and issue certificates without 3rd party PKI
-	signCAPath    string `env:"MF_CERTS_SIGN_CA_PATH"        envDefault:"ca.crt"`
-	signCAKeyPath string `env:"MF_CERTS_SIGN_CA_KEY_PATH"    envDefault:"ca.key"`
+	SignCAPath    string `env:"MF_CERTS_SIGN_CA_PATH"        envDefault:"ca.crt"`
+	SignCAKeyPath string `env:"MF_CERTS_SIGN_CA_KEY_PATH"    envDefault:"ca.key"`
 	// used in pki mock , need to clean up certs in separate PR
-	signRSABits    int    `env:"MF_CERTS_SIGN_RSA_BITS"       envDefault:""` //nolint:golint,unused
-	signHoursValid string `env:"MF_CERTS_SIGN_HOURS_VALID"    envDefault:"2048h"` //nolint:golint,unused
+	SignRSABits    int    `env:"MF_CERTS_SIGN_RSA_BITS"       envDefault:""` //nolint:golint,unused
+	SignHoursValid string `env:"MF_CERTS_SIGN_HOURS_VALID"    envDefault:"2048h"` //nolint:golint,unused
 
 	// 3rd party PKI API access settings
-	pkiPath  string `env:"MF_CERTS_VAULT_HOST"         envDefault:"pki_int"`
-	pkiToken string `env:"MF_VAULT_PKI_INT_PATH"       envDefault:""`
-	pkiHost  string `env:"MF_VAULT_CA_ROLE_NAME"       envDefault:""`
-	pkiRole  string `env:"MF_VAULT_TOKEN"              envDefault:"mainflux"`
+	PkiPath  string `env:"MF_CERTS_VAULT_HOST"         envDefault:"pki_int"`
+	PkiToken string `env:"MF_VAULT_PKI_INT_PATH"       envDefault:""`
+	PkiHost  string `env:"MF_VAULT_CA_ROLE_NAME"       envDefault:""`
+	PkiRole  string `env:"MF_VAULT_TOKEN"              envDefault:"mainflux"`
 }
 
 func main() {
@@ -72,7 +72,7 @@ func main() {
 		log.Fatalf("failed to load %s configuration : %s", svcName, err.Error())
 	}
 
-	logger, err := logger.New(os.Stdout, cfg.logLevel)
+	logger, err := logger.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -82,11 +82,11 @@ func main() {
 		logger.Error("Failed to load CA certificates for issuing client certs")
 	}
 
-	if cfg.pkiHost == "" {
+	if cfg.PkiHost == "" {
 		log.Fatalf("No host specified for PKI engine")
 	}
 
-	pkiClient, err := vault.NewVaultClient(cfg.pkiToken, cfg.pkiHost, cfg.pkiPath, cfg.pkiRole)
+	pkiClient, err := vault.NewVaultClient(cfg.PkiToken, cfg.PkiHost, cfg.PkiPath, cfg.PkiRole)
 	if err != nil {
 		log.Fatalf("failed to configure client for PKI engine")
 	}
@@ -97,13 +97,12 @@ func main() {
 	}
 	defer db.Close()
 
-	auth, authGrpcClient, authTracerCloser, authGrpcSecure, err := authClient.Setup(envPrefix, cfg.jaegerURL)
+	auth, authHandler, err := authClient.Setup(envPrefix, cfg.JaegerURL)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	defer authGrpcClient.Close()
-	defer authTracerCloser.Close()
-	logger.Info("Successfully connected to auth grpc server " + authGrpcSecure)
+	defer authHandler.Close()
+	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
 	svc := newService(auth, db, logger, nil, tlsCert, caCert, cfg, pkiClient)
 
@@ -129,8 +128,8 @@ func main() {
 func newService(auth mainflux.AuthServiceClient, db *sqlx.DB, logger logger.Logger, esClient *redis.Client, tlsCert tls.Certificate, x509Cert *x509.Certificate, cfg config, pkiAgent vault.Agent) certs.Service {
 	certsRepo := certsPg.NewRepository(db, logger)
 	config := mfsdk.Config{
-		CertsURL:  cfg.certsURL,
-		ThingsURL: cfg.thingsURL,
+		CertsURL:  cfg.CertsURL,
+		ThingsURL: cfg.ThingsURL,
 	}
 	sdk := mfsdk.NewSDK(config)
 	svc := certs.New(auth, certsRepo, sdk, pkiAgent)
@@ -144,24 +143,24 @@ func loadCertificates(conf config) (tls.Certificate, *x509.Certificate, error) {
 	var tlsCert tls.Certificate
 	var caCert *x509.Certificate
 
-	if conf.signCAPath == "" || conf.signCAKeyPath == "" {
+	if conf.SignCAPath == "" || conf.SignCAKeyPath == "" {
 		return tlsCert, caCert, nil
 	}
 
-	if _, err := os.Stat(conf.signCAPath); os.IsNotExist(err) {
+	if _, err := os.Stat(conf.SignCAPath); os.IsNotExist(err) {
 		return tlsCert, caCert, errCACertificateNotExist
 	}
 
-	if _, err := os.Stat(conf.signCAKeyPath); os.IsNotExist(err) {
+	if _, err := os.Stat(conf.SignCAKeyPath); os.IsNotExist(err) {
 		return tlsCert, caCert, errCAKeyNotExist
 	}
 
-	tlsCert, err := tls.LoadX509KeyPair(conf.signCAPath, conf.signCAKeyPath)
+	tlsCert, err := tls.LoadX509KeyPair(conf.SignCAPath, conf.SignCAKeyPath)
 	if err != nil {
 		return tlsCert, caCert, errors.Wrap(errFailedCertLoading, err)
 	}
 
-	b, err := os.ReadFile(conf.signCAPath)
+	b, err := os.ReadFile(conf.SignCAPath)
 	if err != nil {
 		return tlsCert, caCert, errors.Wrap(errFailedCertLoading, err)
 	}

@@ -35,11 +35,11 @@ const (
 )
 
 type config struct {
-	logLevel       string `env:"MF_BOOTSTRAP_LOG_LEVEL"        envDefault:"debug"`
-	encKey         []byte `env:"MF_BOOTSTRAP_ENCRYPT_KEY"      envDefault:"12345678910111213141516171819202"`
-	thingsURL      string `env:"MF_THINGS_URL"                 envDefault:"http://localhost"`
-	esConsumerName string `env:"MF_BOOTSTRAP_EVENT_CONSUMER"   envDefault:"bootstrap"`
-	jaegerURL      string `env:"MF_JAEGER_URL"                 envDefault:""`
+	LogLevel       string `env:"MF_BOOTSTRAP_LOG_LEVEL"        envDefault:"debug"`
+	EncKey         []byte `env:"MF_BOOTSTRAP_ENCRYPT_KEY"      envDefault:"12345678910111213141516171819202"`
+	ThingsURL      string `env:"MF_THINGS_URL"                 envDefault:"http://localhost"`
+	EsConsumerName string `env:"MF_BOOTSTRAP_EVENT_CONSUMER"   envDefault:"bootstrap"`
+	JaegerURL      string `env:"MF_JAEGER_URL"                 envDefault:""`
 }
 
 func main() {
@@ -51,7 +51,7 @@ func main() {
 		log.Fatalf("failed to load %s configuration : %s", svcName, err.Error())
 	}
 
-	logger, err := logger.New(os.Stdout, cfg.logLevel)
+	logger, err := logger.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -74,13 +74,12 @@ func main() {
 
 	///////////////// AUTH - GRPC CLIENT /////////////////////////
 	// create new auth grpc client api
-	auth, authGrpcClient, authGrpcTracerCloser, authGrpcSecure, err := authClient.Setup(envPrefix, cfg.jaegerURL)
+	auth, authHandler, err := authClient.Setup(envPrefix, cfg.JaegerURL)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer authGrpcClient.Close()
-	defer authGrpcTracerCloser.Close()
-	logger.Info("Successfully connected to auth grpc server " + authGrpcSecure)
+	defer authHandler.Close()
+	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
 	///////////////// BOOTSTRAP SERVICE /////////////////////////
 	svc := newService(auth, db, logger, esClient, cfg)
@@ -90,7 +89,7 @@ func main() {
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
-	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, bootstrap.NewConfigReader(cfg.encKey), logger), logger)
+	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, bootstrap.NewConfigReader(cfg.EncKey), logger), logger)
 
 	//Start servers
 	g.Go(func() error {
@@ -107,7 +106,7 @@ func main() {
 	}
 	defer thingsESClient.Close()
 	// subscribe to things event store
-	go subscribeToThingsES(svc, thingsESClient, cfg.esConsumerName, logger)
+	go subscribeToThingsES(svc, thingsESClient, cfg.EsConsumerName, logger)
 
 	if err := g.Wait(); err != nil {
 		logger.Error(fmt.Sprintf("Bootstrap service terminated: %s", err))
@@ -118,12 +117,12 @@ func newService(auth mainflux.AuthServiceClient, db *sqlx.DB, logger logger.Logg
 	repoConfig := bootstrapPg.NewConfigRepository(db, logger)
 
 	config := mfsdk.Config{
-		ThingsURL: cfg.thingsURL,
+		ThingsURL: cfg.ThingsURL,
 	}
 
 	sdk := mfsdk.NewSDK(config)
 
-	svc := bootstrap.New(auth, repoConfig, sdk, cfg.encKey)
+	svc := bootstrap.New(auth, repoConfig, sdk, cfg.EncKey)
 	svc = redisprod.NewEventStoreMiddleware(svc, esClient)
 	svc = api.NewLoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics(svcName, "api")

@@ -30,9 +30,9 @@ const (
 )
 
 type config struct {
-	logLevel  string `env:"MF_INFLUX_READER_LOG_LEVEL"  envDefault:"debug"`
-	brokerURL string `env:"MF_BROKER_URL"               envDefault:"nats://localhost:4222"`
-	jaegerURL string `env:"MF_JAEGER_URL"               envDefault:""`
+	LogLevel  string `env:"MF_INFLUX_READER_LOG_LEVEL"  envDefault:"debug"`
+	BrokerURL string `env:"MF_BROKER_URL"               envDefault:"nats://localhost:4222"`
+	JaegerURL string `env:"MF_JAEGER_URL"               envDefault:""`
 }
 
 func main() {
@@ -44,20 +44,19 @@ func main() {
 		log.Fatalf("failed to load %s configuration : %s", svcName, err.Error())
 	}
 
-	logger, err := logger.New(os.Stdout, cfg.logLevel)
+	logger, err := logger.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 
-	tc, thingsGrpcClient, thingsTracerCloser, thingsGrpcSecure, err := thingsClient.Setup(envPrefix, cfg.jaegerURL)
+	tc, tcHandler, err := thingsClient.Setup(envPrefix, cfg.JaegerURL)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	defer thingsGrpcClient.Close()
-	defer thingsTracerCloser.Close()
-	logger.Info("Successfully connected to things grpc server " + thingsGrpcSecure)
+	defer tcHandler.Close()
+	logger.Info("Successfully connected to things grpc server " + tcHandler.Secure())
 
-	nps, err := brokers.NewPubSub(cfg.brokerURL, "", logger)
+	nps, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)
 	if err != nil {
 		log.Fatalf("failed to connect to message broker: %s", err.Error())
 	}

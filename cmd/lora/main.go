@@ -41,14 +41,14 @@ const (
 )
 
 type config struct {
-	logLevel       string        `env:"MF_BOOTSTRAP_LOG_LEVEL"              envDefault:"debug"`
-	loraMsgURL     string        `env:"MF_LORA_ADAPTER_MESSAGES_URL"        envDefault:"debug"`
-	loraMsgUser    string        `env:"MF_LORA_ADAPTER_MESSAGES_USER"       envDefault:"debug"`
-	loraMsgPass    string        `env:"MF_LORA_ADAPTER_MESSAGES_PASS"       envDefault:"debug"`
-	loraMsgTopic   string        `env:"MF_LORA_ADAPTER_MESSAGES_TOPIC"      envDefault:"debug"`
-	loraMsgTimeout time.Duration `env:"MF_LORA_ADAPTER_MESSAGES_TIMEOUT"    envDefault:"debug"`
-	esConsumerName string        `env:"MF_LORA_ADAPTER_EVENT_CONSUMER"      envDefault:"debug"`
-	brokerURL      string        `env:"MF_BROKER_URL"                       envDefault:"debug"`
+	LogLevel       string        `env:"MF_BOOTSTRAP_LOG_LEVEL"              envDefault:"debug"`
+	LoraMsgURL     string        `env:"MF_LORA_ADAPTER_MESSAGES_URL"        envDefault:"debug"`
+	LoraMsgUser    string        `env:"MF_LORA_ADAPTER_MESSAGES_USER"       envDefault:"debug"`
+	LoraMsgPass    string        `env:"MF_LORA_ADAPTER_MESSAGES_PASS"       envDefault:"debug"`
+	LoraMsgTopic   string        `env:"MF_LORA_ADAPTER_MESSAGES_TOPIC"      envDefault:"debug"`
+	LoraMsgTimeout time.Duration `env:"MF_LORA_ADAPTER_MESSAGES_TIMEOUT"    envDefault:"debug"`
+	EsConsumerName string        `env:"MF_LORA_ADAPTER_EVENT_CONSUMER"      envDefault:"debug"`
+	BrokerURL      string        `env:"MF_BROKER_URL"                       envDefault:"debug"`
 }
 
 func main() {
@@ -60,7 +60,7 @@ func main() {
 		log.Fatalf("failed to load %s configuration : %s", svcName, err.Error())
 	}
 
-	logger, err := logger.New(os.Stdout, cfg.logLevel)
+	logger, err := logger.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -71,7 +71,7 @@ func main() {
 	}
 	defer rmConn.Close()
 
-	pub, err := brokers.NewPublisher(cfg.brokerURL)
+	pub, err := brokers.NewPublisher(cfg.BrokerURL)
 	if err != nil {
 		log.Fatalf("failed to connect to message broker: %s", err.Error())
 	}
@@ -85,10 +85,10 @@ func main() {
 	}
 	defer esConn.Close()
 
-	mqttConn := connectToMQTTBroker(cfg.loraMsgURL, cfg.loraMsgUser, cfg.loraMsgPass, cfg.loraMsgTimeout, logger)
+	mqttConn := connectToMQTTBroker(cfg.LoraMsgURL, cfg.LoraMsgUser, cfg.LoraMsgPass, cfg.LoraMsgTimeout, logger)
 
-	go subscribeToLoRaBroker(svc, mqttConn, cfg.loraMsgTimeout, cfg.loraMsgTopic, logger)
-	go subscribeToThingsES(svc, esConn, cfg.esConsumerName, logger)
+	go subscribeToLoRaBroker(svc, mqttConn, cfg.LoraMsgTimeout, cfg.LoraMsgTopic, logger)
+	go subscribeToThingsES(svc, esConn, cfg.EsConsumerName, logger)
 
 	httpServerConfig := server.Config{}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {

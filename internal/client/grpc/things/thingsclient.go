@@ -1,11 +1,7 @@
 package things
 
 import (
-	"io"
-	"io/ioutil"
-
 	"github.com/mainflux/mainflux/pkg/errors"
-	gogrpc "google.golang.org/grpc"
 
 	"github.com/mainflux/mainflux"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"
@@ -21,20 +17,16 @@ var (
 	errGrpcConfig = errors.New("failed to load grpc configuration")
 )
 
-func Setup(envPrefix, jaegerURL string) (mainflux.ThingsServiceClient, *gogrpc.ClientConn, io.Closer, string, error) {
+func Setup(envPrefix, jaegerURL string) (mainflux.ThingsServiceClient, grpcClient.ClientHandler,  error) {
 	config := grpcClient.Config{}
 	if err := env.Parse(&config, env.Options{Prefix: envThingsAuthGrpcPrefix, AltPrefix: envPrefix}); err != nil {
-		return nil, nil, ioutil.NopCloser(nil), "", errors.Wrap(errGrpcConfig, err)
+		return nil, nil, errors.Wrap(errGrpcConfig, err)
 	}
 
-	grpcClient, tracer, tracerCloser, secure, err := grpcClient.Setup(config, "things", jaegerURL)
+	c , ch,  err := grpcClient.Setup(config, "things", jaegerURL)
 	if err != nil {
-		return nil, nil, ioutil.NopCloser(nil), "", err
+		return nil, nil, err
 	}
 
-	message := "without TLS"
-	if secure {
-		message = "with TLS"
-	}
-	return thingsapi.NewClient(grpcClient, tracer, config.Timeout), grpcClient, tracerCloser, message, nil
+	return thingsapi.NewClient(c.ClientConn, c.Tracer, config.Timeout), ch, nil
 }

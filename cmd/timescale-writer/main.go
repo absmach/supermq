@@ -30,9 +30,9 @@ const (
 )
 
 type config struct {
-	brokerURL  string `env:"MF_BROKER_URL"                   envDefault:"nats://localhost:4222"`
-	logLevel   string `env:"MF_TIMESCALE_WRITER_LOG_LEVEL"   envDefault:"debug"`
-	configPath string `env:"MF_TIMESCALE_WRITER_CONFIG_PATH" envDefault:"/config.toml"`
+	BrokerURL  string `env:"MF_BROKER_URL"                   envDefault:"nats://localhost:4222"`
+	LogLevel   string `env:"MF_TIMESCALE_WRITER_LOG_LEVEL"   envDefault:"debug"`
+	ConfigPath string `env:"MF_TIMESCALE_WRITER_CONFIG_PATH" envDefault:"/config.toml"`
 }
 
 func main() {
@@ -44,7 +44,7 @@ func main() {
 		log.Fatalf("failed to load %s service configuration : %s", svcName, err.Error())
 	}
 
-	logger, err := logger.New(os.Stdout, cfg.logLevel)
+	logger, err := logger.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -57,13 +57,13 @@ func main() {
 
 	repo := newService(db, logger)
 
-	pubSub, err := brokers.NewPubSub(cfg.brokerURL, "", logger)
+	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)
 	if err != nil {
 		log.Fatalf("failed to connect to message broker: %s", err.Error())
 	}
 	defer pubSub.Close()
 
-	if err = consumers.Start(svcName, pubSub, repo, cfg.configPath, logger); err != nil {
+	if err = consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
 		log.Fatalf("failed to create Timescale writer: %s", err.Error())
 	}
 

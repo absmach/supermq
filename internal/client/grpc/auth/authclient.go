@@ -1,11 +1,7 @@
 package auth
 
 import (
-	"io"
-	"io/ioutil"
-
 	"github.com/mainflux/mainflux/pkg/errors"
-	gogrpc "google.golang.org/grpc"
 
 	"github.com/mainflux/mainflux"
 	authapi "github.com/mainflux/mainflux/auth/api/grpc"
@@ -21,20 +17,16 @@ var (
 	errGrpcConfig = errors.New("failed to load grpc configuration")
 )
 
-func Setup(envPrefix, jaegerURL string) (mainflux.AuthServiceClient, *gogrpc.ClientConn, io.Closer, string, error) {
+func Setup(envPrefix, jaegerURL string) (mainflux.AuthServiceClient, grpcClient.ClientHandler, error) {
 	config := grpcClient.Config{}
 	if err := env.Parse(&config, env.Options{Prefix: envAuthGrpcPrefix, AltPrefix: envPrefix}); err != nil {
-		return nil, nil, ioutil.NopCloser(nil), "", errors.Wrap(errGrpcConfig, err)
+		return nil, nil, errors.Wrap(errGrpcConfig, err)
 	}
 
-	grpcClient, tracer, tracerCloser, secure, err := grpcClient.Setup(config, "auth", jaegerURL)
+	c, ch, err := grpcClient.Setup(config, "auth", jaegerURL)
 	if err != nil {
-		return nil, nil, ioutil.NopCloser(nil), "", err
+		return nil, nil,  err
 	}
 
-	message := "without TLS"
-	if secure {
-		message = "with TLS"
-	}
-	return authapi.NewClient(tracer, grpcClient, config.Timeout), grpcClient, tracerCloser, message, nil
+	return authapi.NewClient(c.Tracer, c.ClientConn, config.Timeout), ch, nil
 }

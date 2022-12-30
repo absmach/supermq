@@ -29,8 +29,8 @@ const (
 )
 
 type config struct {
-	logLevel  string `env:"MF_INFLUX_READER_LOG_LEVEL"  envDefault:"debug"`
-	jaegerURL string `env:"MF_JAEGER_URL"               envDefault:""`
+	LogLevel  string `env:"MF_INFLUX_READER_LOG_LEVEL"  envDefault:"debug"`
+	JaegerURL string `env:"MF_JAEGER_URL"               envDefault:""`
 }
 
 func main() {
@@ -42,26 +42,24 @@ func main() {
 		log.Fatalf("failed to load %s configuration : %s", svcName, err.Error())
 	}
 
-	logger, err := logger.New(os.Stdout, cfg.logLevel)
+	logger, err := logger.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 
-	tc, thingsGrpcClient, thingsTracerCloser, thingsGrpcSecure, err := thingsClient.Setup(envPrefix, cfg.jaegerURL)
+	tc, tcHandler, err := thingsClient.Setup(envPrefix, cfg.JaegerURL)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	defer thingsGrpcClient.Close()
-	defer thingsTracerCloser.Close()
-	logger.Info("Successfully connected to things grpc server " + thingsGrpcSecure)
+	defer tcHandler.Close()
+	logger.Info("Successfully connected to things grpc server " + tcHandler.Secure())
 
-	auth, authGrpcClient, authTracerCloser, authGrpcSecure, err := authClient.Setup(envPrefix, cfg.jaegerURL)
+	auth, authHandler, err := authClient.Setup(envPrefix, cfg.JaegerURL)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	defer authGrpcClient.Close()
-	defer authTracerCloser.Close()
-	logger.Info("Successfully connected to auth grpc server " + authGrpcSecure)
+	defer authHandler.Close()
+	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
 	influxdbConfig := influxClient.Config{}
 	if err := env.Parse(&influxdbConfig, env.Options{Prefix: envPrefixInfluxdb}); err != nil {
