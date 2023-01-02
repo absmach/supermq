@@ -45,9 +45,9 @@ type config struct {
 	Secret        string        `env:"MF_AUTH_SECRET"                envDefault:"auth"`
 	JaegerURL     string        `env:"MF_JAEGER_URL"                 envDefault:""`
 	KetoReadHost  string        `env:"MF_KETO_READ_REMOTE_HOST"      envDefault:"mainflux-keto"`
+	KetoReadPort  string        `env:"MF_KETO_READ_REMOTE_PORT"      envDefault:"4466"`
 	KetoWriteHost string        `env:"MF_KETO_WRITE_REMOTE_HOST"     envDefault:"mainflux-keto"`
-	KetoWritePort string        `env:"MF_KETO_READ_REMOTE_PORT"      envDefault:"4466"`
-	KetoReadPort  string        `env:"MF_KETO_WRITE_REMOTE_PORT"     envDefault:"4467"`
+	KetoWritePort string        `env:"MF_KETO_WRITE_REMOTE_PORT"     envDefault:"4467"`
 	LoginDuration time.Duration `env:"MF_AUTH_LOGIN_TOKEN_DURATION"  envDefault:"10h"`
 }
 
