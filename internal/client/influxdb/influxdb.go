@@ -11,7 +11,7 @@ import (
 
 var (
 	errConnect = errors.New("failed to create InfluxDB client")
-	errConfig  = errors.New("failed to load  InfluxDB client configuration from environment variable")
+	errConfig  = errors.New("failed to load InfluxDB client configuration from environment variable")
 )
 
 type Config struct {
