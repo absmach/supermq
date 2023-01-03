@@ -23,7 +23,7 @@ func Setup(envPrefix, jaegerURL string) (mainflux.AuthServiceClient, grpcClient.
 
 	c, ch, err := grpcClient.Setup(config, "auth", jaegerURL)
 	if err != nil {
-		return nil, nil,  err
+		return nil, nil, err
 	}
 
 	return authapi.NewClient(c.Tracer, c.ClientConn, config.Timeout), ch, nil
