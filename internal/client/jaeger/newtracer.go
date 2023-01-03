@@ -12,8 +12,10 @@ import (
 	jconfig "github.com/uber/jaeger-client-go/config"
 )
 
-var errNoUrl = errors.New("URL is empty")
-var errNoSvcName = errors.New("Service Name is empty")
+var (
+	errNoUrl     = errors.New("URL is empty")
+	errNoSvcName = errors.New("Service Name is empty")
+)
 
 // NewTracer initializes Jaeger
 func NewTracer(svcName, url string) (opentracing.Tracer, io.Closer, error) {
@@ -36,5 +38,4 @@ func NewTracer(svcName, url string) (opentracing.Tracer, io.Closer, error) {
 			LogSpans:           true,
 		},
 	}.NewTracer()
-
 }
