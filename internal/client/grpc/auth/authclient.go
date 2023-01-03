@@ -13,9 +13,7 @@ import (
 
 const envAuthGrpcPrefix = "MF_AUTH_GRPC_"
 
-var (
-	errGrpcConfig = errors.New("failed to load grpc configuration")
-)
+var errGrpcConfig = errors.New("failed to load grpc configuration")
 
 func Setup(envPrefix, jaegerURL string) (mainflux.AuthServiceClient, grpcClient.ClientHandler, error) {
 	config := grpcClient.Config{}
