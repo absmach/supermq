@@ -13,17 +13,15 @@ import (
 
 const envThingsAuthGrpcPrefix = "MF_THINGS_AUTH_GRPC_"
 
-var (
-	errGrpcConfig = errors.New("failed to load grpc configuration")
-)
+var errGrpcConfig = errors.New("failed to load grpc configuration")
 
-func Setup(envPrefix, jaegerURL string) (mainflux.ThingsServiceClient, grpcClient.ClientHandler,  error) {
+func Setup(envPrefix, jaegerURL string) (mainflux.ThingsServiceClient, grpcClient.ClientHandler, error) {
 	config := grpcClient.Config{}
 	if err := env.Parse(&config, env.Options{Prefix: envThingsAuthGrpcPrefix, AltPrefix: envPrefix}); err != nil {
 		return nil, nil, errors.Wrap(errGrpcConfig, err)
 	}
 
-	c , ch,  err := grpcClient.Setup(config, "things", jaegerURL)
+	c, ch, err := grpcClient.Setup(config, "things", jaegerURL)
 	if err != nil {
 		return nil, nil, err
 	}
