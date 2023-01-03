@@ -18,8 +18,8 @@ import (
 var (
 	errGrpcConnect = errors.New("failed to connect to grpc server")
 	errJaeger      = errors.New("failed to initialize jaeger ")
-	errGrpcClose = errors.New("failed to close grpc connection")
-	errJaegerClose = errors.New("failed to close jaeger connection")	
+	errGrpcClose   = errors.New("failed to close grpc connection")
+	errJaegerClose = errors.New("failed to close jaeger connection")
 )
 
 type Config struct {
@@ -30,15 +30,15 @@ type Config struct {
 }
 
 type ClientHandler interface {
-	Close() error 
+	Close() error
 	IsSecure() bool
-	Secure()string
+	Secure() string
 }
 
 type Client struct {
 	*gogrpc.ClientConn
 	opentracing.Tracer
-			io.Closer
+	io.Closer
 	secure bool
 }
 
@@ -77,7 +77,7 @@ func Setup(config Config, svcName, jaegerURL string) (*Client, ClientHandler, er
 	// connect to auth grpc server
 	grpcClient, secure, err := Connect(config)
 	if err != nil {
-		return nil, nil,  errors.Wrap(errGrpcConnect, err)
+		return nil, nil, errors.Wrap(errGrpcConnect, err)
 	}
 
 	// initialize auth tracer for auth grpc client
@@ -86,29 +86,29 @@ func Setup(config Config, svcName, jaegerURL string) (*Client, ClientHandler, er
 		grpcClient.Close()
 		return nil, nil, errors.Wrap(errJaeger, err)
 	}
-	c := &Client{grpcClient, tracer,tracerCloser, secure}
+	c := &Client{grpcClient, tracer, tracerCloser, secure}
 
-	return c , NewClientHandler(c), nil
+	return c, NewClientHandler(c), nil
 }
 
-func(c *Client)Close() error {
-	var retErr error 
+func (c *Client) Close() error {
+	var retErr error
 	err := c.ClientConn.Close()
 	if err != nil {
 		retErr = errors.Wrap(errGrpcClose, err)
 	}
-	err =  c.Closer.Close()
+	err = c.Closer.Close()
 	if err != nil {
-		retErr = errors.Wrap(retErr, errors.Wrap(errJaegerClose, err ))
+		retErr = errors.Wrap(retErr, errors.Wrap(errJaegerClose, err))
 	}
-	return retErr 
+	return retErr
 }
 
-func (c *Client)IsSecure()bool {
+func (c *Client) IsSecure() bool {
 	return c.secure
 }
 
-func (c *Client)Secure()string {
+func (c *Client) Secure() string {
 	if c.secure {
 		return "with TLS"
 	}
