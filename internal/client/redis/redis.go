@@ -23,7 +23,7 @@ type Config struct {
 	DB   string `env:"ES_DB"     envDefault:"0"`
 }
 
-// Setup load config from environment and creates new  connection to the Redis Server.
+// Setup load configuration from environment, creates new RedisDB client and connect to RedisDB Server.
 func Setup(prefix string) (*r.Client, error) {
 	cfg := Config{}
 	if err := env.Parse(&cfg, env.Options{Prefix: prefix}); err != nil {
@@ -36,7 +36,7 @@ func Setup(prefix string) (*r.Client, error) {
 	return client, nil
 }
 
-// Connect create connection to RedisDB
+// Connect create new RedisDB client and connect to RedisDB server.
 func Connect(cfg Config) (*r.Client, error) {
 	db, err := strconv.Atoi(cfg.DB)
 	if err != nil {
