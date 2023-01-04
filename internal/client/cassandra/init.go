@@ -18,8 +18,8 @@ var (
 type Config struct {
 	Hosts    []string `env:"DB_CLUSTER"     envDefault:"127.0.0.1" envSeparator:","`
 	Keyspace string   `env:"DB_KEYSPACE"    envDefault:"mainflux"`
-	User     string   `env:"DB_USER"        envDefault:"mainflux"`
-	Pass     string   `env:"DB_PASS"        envDefault:"mainflux"`
+	User     string   `env:"DB_USER"        envDefault:""`
+	Pass     string   `env:"DB_PASS"        envDefault:""`
 	Port     int      `env:"DB_PORT"        envDefault:"9042"`
 }
 
