@@ -46,7 +46,7 @@ type config struct {
 	AdminPassword string `env:"MF_USERS_ADMIN_PASSWORD"          envDefault:""`
 	PassRegexText string `env:"MF_USERS_PASS_REGEX"              envDefault:"^.{8,}$"`
 	SelfRegister  bool   `env:"MF_USERS_ALLOW_SELF_REGISTER"     envDefault:"true"`
-	JaegerURL     string `env:"MF_JAEGER_URL"                    envDefault:""`
+	JaegerURL     string `env:"MF_JAEGER_URL"                    envDefault:"localhost:6831"`
 	ResetURL      string `env:"MF_TOKEN_RESET_ENDPOINT"          envDefault:"email.tmpl"`
 	PassRegex     *regexp.Regexp
 }

@@ -34,16 +34,16 @@ import (
 )
 
 const (
-	svcName          = "auth"
-	envPrefix        = "MF_AUTH_"
-	envPrefixHttp    = "MF_AUTH_HTTP_"
-	envPrefixGrpc    = "MF_AUTH_GRPC_"
+	svcName       = "auth"
+	envPrefix     = "MF_AUTH_"
+	envPrefixHttp = "MF_AUTH_HTTP_"
+	envPrefixGrpc = "MF_AUTH_GRPC_"
 )
 
 type config struct {
 	LogLevel      string        `env:"MF_AUTH_LOG_LEVEL"             envDefault:"debug"`
 	Secret        string        `env:"MF_AUTH_SECRET"                envDefault:"auth"`
-	JaegerURL     string        `env:"MF_JAEGER_URL"                 envDefault:""`
+	JaegerURL     string        `env:"MF_JAEGER_URL"                 envDefault:"localhost:6831"`
 	KetoReadHost  string        `env:"MF_KETO_READ_REMOTE_HOST"      envDefault:"mainflux-keto"`
 	KetoReadPort  string        `env:"MF_KETO_READ_REMOTE_PORT"      envDefault:"4466"`
 	KetoWriteHost string        `env:"MF_KETO_WRITE_REMOTE_HOST"     envDefault:"mainflux-keto"`

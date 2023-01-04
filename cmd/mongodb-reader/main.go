@@ -32,7 +32,7 @@ const (
 
 type config struct {
 	LogLevel  string `env:"MF_MONGO_READER_LOG_LEVEL"   envDefault:"debug"`
-	JaegerURL string `env:"MF_JAEGER_URL"               envDefault:"debug"`
+	JaegerURL string `env:"MF_JAEGER_URL"               envDefault:"localhost:6831"`
 }
 
 func main() {

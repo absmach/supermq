@@ -48,7 +48,7 @@ type config struct {
 	StandaloneEmail string `env:"MF_TWINS_STANDALONE_EMAIL"   envDefault:""`
 	StandaloneToken string `env:"MF_TWINS_STANDALONE_TOKEN"   envDefault:""`
 	ChannelID       string `env:"MF_TWINS_CHANNEL_ID"         envDefault:""`
-	JaegerURL       string `env:"MF_JAEGER_URL"               envDefault:""`
+	JaegerURL       string `env:"MF_JAEGER_URL"               envDefault:"localhost:6831"`
 	BrokerURL       string `env:"MF_BROKER_URL"               envDefault:"nats://localhost:4222"`
 }
 

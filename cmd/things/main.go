@@ -48,9 +48,9 @@ const (
 
 type config struct {
 	LogLevel        string `env:"MF_THINGS_LOG_LEVEL"          envDefault:"debug"`
-	StandaloneEmail string `env:"MF_THINGS_STANDALONE_EMAIL"   envDefault:"debug"` //nolint:golint,unused
-	StandaloneToken string `env:"MF_THINGS_STANDALONE_TOKEN"   envDefault:"debug"` //nolint:golint,unused
-	JaegerURL       string `env:"MF_JAEGER_URL"                envDefault:""`
+	StandaloneEmail string `env:"MF_THINGS_STANDALONE_EMAIL"   envDefault:"debug"`
+	StandaloneToken string `env:"MF_THINGS_STANDALONE_TOKEN"   envDefault:"debug"`
+	JaegerURL       string `env:"MF_JAEGER_URL"                envDefault:"localhost:6831"`
 }
 
 func main() {

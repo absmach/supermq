@@ -29,9 +29,9 @@ import (
 )
 
 const (
-	svcName                 = "bootstrap"
-	envPrefix               = "MF_BOOTSTRAP_"
-	envPrefixHttp           = "MF_BOOTSTRAP_HTTP_"
+	svcName       = "bootstrap"
+	envPrefix     = "MF_BOOTSTRAP_"
+	envPrefixHttp = "MF_BOOTSTRAP_HTTP_"
 )
 
 type config struct {
@@ -39,7 +39,7 @@ type config struct {
 	EncKey         []byte `env:"MF_BOOTSTRAP_ENCRYPT_KEY"      envDefault:"12345678910111213141516171819202"`
 	ThingsURL      string `env:"MF_THINGS_URL"                 envDefault:"http://localhost"`
 	EsConsumerName string `env:"MF_BOOTSTRAP_EVENT_CONSUMER"   envDefault:"bootstrap"`
-	JaegerURL      string `env:"MF_JAEGER_URL"                 envDefault:""`
+	JaegerURL      string `env:"MF_JAEGER_URL"                 envDefault:"localhost:6831"`
 }
 
 func main() {

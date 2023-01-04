@@ -47,13 +47,13 @@ type config struct {
 	LogLevel  string `env:"MF_CERTS_LOG_LEVEL"        envDefault:"debug"`
 	CertsURL  string `env:"MF_SDK_CERTS_URL"          envDefault:"http://localhost"`
 	ThingsURL string `env:"MF_THINGS_URL"             envDefault:"http://things:8182"`
-	JaegerURL string `env:"MF_JAEGER_URL"             envDefault:""`
+	JaegerURL string `env:"MF_JAEGER_URL"             envDefault:"localhost:6831"`
 
 	// Sign and issue certificates without 3rd party PKI
 	SignCAPath    string `env:"MF_CERTS_SIGN_CA_PATH"        envDefault:"ca.crt"`
 	SignCAKeyPath string `env:"MF_CERTS_SIGN_CA_KEY_PATH"    envDefault:"ca.key"`
 	// used in pki mock , need to clean up certs in separate PR
-	SignRSABits    int    `env:"MF_CERTS_SIGN_RSA_BITS"       envDefault:""` //nolint:golint,unused
+	SignRSABits    int    `env:"MF_CERTS_SIGN_RSA_BITS"       envDefault:""`      //nolint:golint,unused
 	SignHoursValid string `env:"MF_CERTS_SIGN_HOURS_VALID"    envDefault:"2048h"` //nolint:golint,unused
 
 	// 3rd party PKI API access settings

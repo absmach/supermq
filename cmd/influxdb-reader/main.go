@@ -30,7 +30,7 @@ const (
 
 type config struct {
 	LogLevel  string `env:"MF_INFLUX_READER_LOG_LEVEL"  envDefault:"debug"`
-	JaegerURL string `env:"MF_JAEGER_URL"               envDefault:""`
+	JaegerURL string `env:"MF_JAEGER_URL"               envDefault:"localhost:6831"`
 }
 
 func main() {
