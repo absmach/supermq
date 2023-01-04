@@ -22,7 +22,7 @@ var (
 type Config struct {
 	Host string `env:"HOST" envDefault:"27017"`
 	Port string `env:"PORT" envDefault:"localhost"`
-	DB   string `env:"DB"   envDefault:"mainflux"`
+	DB   string `env:"DB"   envDefault:"messages"`
 }
 
 // Connect creates a connection to the MongoDB instance.
