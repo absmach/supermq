@@ -31,18 +31,17 @@ type Config struct {
 // Setup creates a connection to the PostgreSQL instance and applies any
 // unapplied database migrations. A non-nil error is returned to indicate failure.
 func Setup(prefix string, migrations migrate.MemoryMigrationSource) (*sqlx.DB, error) {
-	cfg := Config{}
+	return SetupWithDefConfig(prefix, migrations, Config{})
+}
+
+// SetupWithDefConfig creates a connection to the PostgreSQL instance and applies any
+// unapplied database migrations. A non-nil error is returned to indicate failure.
+func SetupWithDefConfig(prefix string, migrations migrate.MemoryMigrationSource, defConfig Config) (*sqlx.DB, error) {
+	cfg := defConfig
 	if err := env.Parse(&cfg, env.Options{Prefix: prefix}); err != nil {
 		return nil, errors.Wrap(errConfig, err)
 	}
-	db, err := Connect(cfg)
-	if err != nil {
-		return nil, errors.Wrap(errConnect, err)
-	}
-	if err := MigrateDB(db, migrations); err != nil {
-		return nil, errors.Wrap(errMigration, err)
-	}
-	return db, nil
+	return SetupDB(cfg, migrations)
 }
 
 // SetupDB creates a connection to the PostgreSQL instance and applies any
@@ -64,7 +63,7 @@ func Connect(cfg Config) (*sqlx.DB, error) {
 
 	db, err := sqlx.Open("pgx", url)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(errConnect, err)
 	}
 
 	return db, nil
@@ -73,5 +72,8 @@ func Connect(cfg Config) (*sqlx.DB, error) {
 // MigrateDB applies any unapplied database migrations.
 func MigrateDB(db *sqlx.DB, migrations migrate.MemoryMigrationSource) error {
 	_, err := migrate.Exec(db.DB, "postgres", migrations, migrate.Up)
-	return err
+	if err != nil {
+		return errors.Wrap(errMigration, err)
+	}
+	return nil
 }
