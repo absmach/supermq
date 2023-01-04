@@ -32,6 +32,7 @@ const (
 	svcName       = "bootstrap"
 	envPrefix     = "MF_BOOTSTRAP_"
 	envPrefixHttp = "MF_BOOTSTRAP_HTTP_"
+	defDB         = "bootstrap"
 )
 
 type config struct {
@@ -57,8 +58,10 @@ func main() {
 	}
 
 	///////////////// POSTGRES CLIENT /////////////////////////
+	// Create postgres client configuration with default values for database
+	dbConfig := pgClient.Config{Name: defDB}
 	// create new postgres client
-	db, err := pgClient.Setup(envPrefix, *bootstrapPg.Migration())
+	db, err := pgClient.SetupWithDefConfig(envPrefix, *bootstrapPg.Migration(), dbConfig)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

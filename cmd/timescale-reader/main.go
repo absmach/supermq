@@ -29,6 +29,7 @@ const (
 	svcName       = "timescaledb-reader"
 	envPrefix     = "MF_TIMESCALE_READER_"
 	envPrefixHttp = "MF_TIMESCALE_READER_HTTP_"
+	defDB         = "messages"
 )
 
 type config struct {
@@ -50,7 +51,8 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	db, err := pgClient.Setup(envPrefix, migrate.MemoryMigrationSource{})
+	dbConfig := pgClient.Config{Name: defDB}
+	db, err := pgClient.SetupWithDefConfig(envPrefix, migrate.MemoryMigrationSource{}, dbConfig)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

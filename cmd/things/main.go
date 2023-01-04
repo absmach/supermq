@@ -44,6 +44,7 @@ const (
 	envPrefixHttp     = "MF_THINGS_HTTP_"
 	envPrefixAuthHttp = "MF_THINGS_AUTH_HTTP_"
 	envPrefixAuthGrpc = "MF_THINGS_AUTH_GRPC_"
+	defDB             = "things"
 )
 
 type config struct {
@@ -72,7 +73,8 @@ func main() {
 	}
 
 	// Setup new database for things
-	db, err := pgClient.Setup(envPrefix, *thingsPg.Migration())
+	dbConfig := pgClient.Config{Name: defDB}
+	db, err := pgClient.SetupWithDefConfig(envPrefix, *thingsPg.Migration(), dbConfig)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

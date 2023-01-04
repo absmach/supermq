@@ -34,6 +34,7 @@ const (
 	svcName       = "certs"
 	envPrefix     = "MF_CERTS_"
 	envPrefixHttp = "MF_CERTS_HTTP_"
+	defDB         = "certs"
 )
 
 var (
@@ -53,8 +54,8 @@ type config struct {
 	SignCAPath    string `env:"MF_CERTS_SIGN_CA_PATH"        envDefault:"ca.crt"`
 	SignCAKeyPath string `env:"MF_CERTS_SIGN_CA_KEY_PATH"    envDefault:"ca.key"`
 	// used in pki mock , need to clean up certs in separate PR
-	SignRSABits    int    `env:"MF_CERTS_SIGN_RSA_BITS"       envDefault:""`      //nolint:golint,unused
-	SignHoursValid string `env:"MF_CERTS_SIGN_HOURS_VALID"    envDefault:"2048h"` //nolint:golint,unused
+	SignRSABits    int    `env:"MF_CERTS_SIGN_RSA_BITS"       envDefault:""`
+	SignHoursValid string `env:"MF_CERTS_SIGN_HOURS_VALID"    envDefault:"2048h"`
 
 	// 3rd party PKI API access settings
 	PkiPath  string `env:"MF_CERTS_VAULT_HOST"         envDefault:"pki_int"`
@@ -91,7 +92,8 @@ func main() {
 		log.Fatalf("failed to configure client for PKI engine")
 	}
 
-	db, err := pgClient.Setup(envPrefix, *certsPg.Migration())
+	dbConfig := pgClient.Config{Name: defDB}
+	db, err := pgClient.SetupWithDefConfig(envPrefix, *certsPg.Migration(), dbConfig)
 	if err != nil {
 		log.Fatal(err)
 	}

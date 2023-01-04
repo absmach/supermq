@@ -38,6 +38,7 @@ const (
 	envPrefix     = "MF_AUTH_"
 	envPrefixHttp = "MF_AUTH_HTTP_"
 	envPrefixGrpc = "MF_AUTH_GRPC_"
+	defDB         = "auth"
 )
 
 type config struct {
@@ -69,8 +70,10 @@ func main() {
 	}
 
 	///////////////// POSTGRES CLIENT /////////////////////////
+	// Create postgres client configuration with default values for database
+	dbConfig := pgClient.Config{Name: defDB}
 	// create new postgres client
-	db, err := pgClient.Setup(envPrefix, *authPg.Migration())
+	db, err := pgClient.SetupWithDefConfig(envPrefix, *authPg.Migration(), dbConfig)
 	if err != nil {
 		log.Fatalf("failed to setup postgres database : %s", err.Error())
 	}

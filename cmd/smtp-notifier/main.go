@@ -36,6 +36,7 @@ const (
 	svcName       = "smtp-notifier"
 	envPrefix     = "MF_SMTP_NOTIFIER_"
 	envPrefixHttp = "MF_SMTP_NOTIFIER_HTTP_"
+	defDB         = "subscriptions"
 )
 
 type config struct {
@@ -60,7 +61,8 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	db, err := pgClient.Setup(envPrefix, *notifierPg.Migration())
+	dbConfig := pgClient.Config{Name: defDB}
+	db, err := pgClient.SetupWithDefConfig(envPrefix, *notifierPg.Migration(), dbConfig)
 	if err != nil {
 		log.Fatal(err)
 	}

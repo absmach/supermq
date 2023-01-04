@@ -29,6 +29,7 @@ const (
 	svcName       = "postgres-reader"
 	envPrefix     = "MF_POSTGRES_READER_"
 	envPrefixHttp = "MF_POSTGRES_READER_HTTP_"
+	defDB         = "messages"
 )
 
 type config struct {
@@ -64,7 +65,8 @@ func main() {
 	defer authHandler.Close()
 	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
-	db, err := pgClient.Setup(envPrefix, migrate.MemoryMigrationSource{})
+	dbConfig := pgClient.Config{Name: defDB}
+	db, err := pgClient.SetupWithDefConfig(envPrefix, migrate.MemoryMigrationSource{}, dbConfig)
 	if err != nil {
 		log.Fatalf("failed to setup postgres database : %s", err.Error())
 	}

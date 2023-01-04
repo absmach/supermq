@@ -38,6 +38,7 @@ const (
 	svcName       = "users"
 	envPrefix     = "MF_USERS_"
 	envPrefixHttp = "MF_USERS_HTTP_"
+	defDB         = "users"
 )
 
 type config struct {
@@ -75,7 +76,8 @@ func main() {
 		log.Fatalf("failed to load email configuration : %s", err.Error())
 	}
 
-	db, err := pgClient.Setup(envPrefix, *usersPg.Migration())
+	dbConfig := pgClient.Config{Name: defDB}
+	db, err := pgClient.SetupWithDefConfig(envPrefix, *usersPg.Migration(), dbConfig)
 	if err != nil {
 		log.Fatal(err)
 	}

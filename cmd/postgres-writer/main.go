@@ -27,6 +27,7 @@ const (
 	svcName       = "postgres-writer"
 	envPrefix     = "MF_POSTGRES_WRITER_"
 	envPrefixHttp = "MF_POSTGRES_WRITER_HTTP_"
+	defDB         = "messages"
 )
 
 type config struct {
@@ -55,7 +56,8 @@ func main() {
 	}
 	defer pubSub.Close()
 
-	db, err := pgClient.Setup(envPrefix, *writerPg.Migration())
+	dbConfig := pgClient.Config{Name: defDB}
+	db, err := pgClient.SetupWithDefConfig(envPrefix, *writerPg.Migration(), dbConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
