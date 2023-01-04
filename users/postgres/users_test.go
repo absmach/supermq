@@ -237,6 +237,7 @@ func TestRetrieveAll(t *testing.T) {
 			Limit:    tc.limit,
 			Email:    tc.email,
 			Metadata: tc.metadata,
+			Status:   users.EnabledStatusKey,
 		}
 		page, err := userRepo.RetrieveAll(context.Background(), tc.ids, pm)
 		size := uint64(len(page.Users))
