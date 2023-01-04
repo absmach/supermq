@@ -28,7 +28,7 @@ var cmdUsers = []cobra.Command{
 				Email:    args[0],
 				Password: args[1],
 			}
-			id, err := sdk.CreateUser(args[2], user)
+			id, err := sdk.CreateUser(user, args[2])
 			if err != nil {
 				logError(err)
 				return
@@ -61,7 +61,7 @@ var cmdUsers = []cobra.Command{
 				Status:   Status,
 			}
 			if args[0] == "all" {
-				l, err := sdk.Users(args[1], pageMetadata)
+				l, err := sdk.Users(pageMetadata, args[1])
 				if err != nil {
 					logError(err)
 					return
@@ -118,7 +118,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 
-			if err := sdk.UpdateUser(args[1], user); err != nil {
+			if err := sdk.UpdateUser(user, args[1]); err != nil {
 				logError(err)
 				return
 			}
@@ -136,7 +136,7 @@ var cmdUsers = []cobra.Command{
 				return
 			}
 
-			if err := sdk.UpdatePassword(args[2], args[0], args[1]); err != nil {
+			if err := sdk.UpdatePassword(args[0], args[1], args[2]); err != nil {
 				logError(err)
 				return
 			}

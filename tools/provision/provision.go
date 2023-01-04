@@ -83,7 +83,7 @@ func Provision(conf Config) {
 	}
 
 	// Create new user
-	if _, err := s.CreateUser("", user); err != nil {
+	if _, err := s.CreateUser(user, ""); err != nil {
 		log.Fatalf("Unable to create new user: %s", err.Error())
 		return
 
@@ -136,12 +136,12 @@ func Provision(conf Config) {
 		channels[i] = sdk.Channel{Name: fmt.Sprintf("%s-channel-%d", conf.Prefix, i)}
 	}
 
-	things, err = s.CreateThings(token, things)
+	things, err = s.CreateThings(things, token)
 	if err != nil {
 		log.Fatalf("Failed to create the things: %s", err.Error())
 	}
 
-	channels, err = s.CreateChannels(token, channels)
+	channels, err = s.CreateChannels(channels, token)
 	if err != nil {
 		log.Fatalf("Failed to create the chennels: %s", err.Error())
 	}
@@ -231,7 +231,7 @@ func Provision(conf Config) {
 		ChannelIDs: cIDs,
 		ThingIDs:   tIDs,
 	}
-	if err := s.Connect(token, conIDs); err != nil {
+	if err := s.Connect(conIDs, token); err != nil {
 		log.Fatalf("Failed to connect things %s to channels %s: %s", conIDs.ThingIDs, conIDs.ChannelIDs, err)
 	}
 }

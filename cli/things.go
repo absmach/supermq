@@ -27,7 +27,7 @@ var cmdThings = []cobra.Command{
 				return
 			}
 
-			id, err := sdk.CreateThing(args[1], thing)
+			id, err := sdk.CreateThing(thing, args[1])
 			if err != nil {
 				logError(err)
 				return
@@ -59,7 +59,7 @@ var cmdThings = []cobra.Command{
 				Metadata: metadata,
 			}
 			if args[0] == "all" {
-				l, err := sdk.Things(args[1], pageMetadata)
+				l, err := sdk.Things(pageMetadata, args[1])
 				if err != nil {
 					logError(err)
 					return
@@ -67,7 +67,7 @@ var cmdThings = []cobra.Command{
 				logJSON(l)
 				return
 			}
-			t, err := sdk.Thing(args[1], args[0])
+			t, err := sdk.Thing(args[0], args[1])
 			if err != nil {
 				logError(err)
 				return
@@ -86,7 +86,7 @@ var cmdThings = []cobra.Command{
 				return
 			}
 
-			if err := sdk.DeleteThing(args[1], args[0]); err != nil {
+			if err := sdk.DeleteThing(args[0], args[1]); err != nil {
 				logError(err)
 				return
 			}
@@ -129,7 +129,7 @@ var cmdThings = []cobra.Command{
 				return
 			}
 
-			if err := sdk.UpdateThing(args[1], thing); err != nil {
+			if err := sdk.UpdateThing(thing, args[1]); err != nil {
 				logError(err)
 				return
 			}
@@ -151,7 +151,7 @@ var cmdThings = []cobra.Command{
 				ChannelIDs: []string{args[1]},
 				ThingIDs:   []string{args[0]},
 			}
-			if err := sdk.Connect(args[2], connIDs); err != nil {
+			if err := sdk.Connect(connIDs, args[2]); err != nil {
 				logError(err)
 				return
 			}
@@ -169,7 +169,7 @@ var cmdThings = []cobra.Command{
 				return
 			}
 
-			if err := sdk.DisconnectThing(args[2], args[0], args[1]); err != nil {
+			if err := sdk.DisconnectThing(args[0], args[1], args[2]); err != nil {
 				logError(err)
 				return
 			}
@@ -191,7 +191,7 @@ var cmdThings = []cobra.Command{
 				Limit:        uint64(Limit),
 				Disconnected: true,
 			}
-			cl, err := sdk.ChannelsByThing(args[1], args[0], pm)
+			cl, err := sdk.ChannelsByThing(args[0], pm, args[1])
 			if err != nil {
 				logError(err)
 				return
@@ -214,7 +214,7 @@ var cmdThings = []cobra.Command{
 				Limit:        uint64(Limit),
 				Disconnected: false,
 			}
-			cl, err := sdk.ChannelsByThing(args[1], args[0], pm)
+			cl, err := sdk.ChannelsByThing(args[0], pm, args[1])
 			if err != nil {
 				logError(err)
 				return

@@ -27,7 +27,7 @@ var cmdChannels = []cobra.Command{
 				return
 			}
 
-			id, err := sdk.CreateChannel(args[1], channel)
+			id, err := sdk.CreateChannel(channel, args[1])
 			if err != nil {
 				logError(err)
 				return
@@ -61,7 +61,7 @@ var cmdChannels = []cobra.Command{
 			}
 
 			if args[0] == "all" {
-				l, err := sdk.Channels(args[1], pageMetadata)
+				l, err := sdk.Channels(pageMetadata, args[1])
 				if err != nil {
 					logError(err)
 					return
@@ -70,7 +70,7 @@ var cmdChannels = []cobra.Command{
 				logJSON(l)
 				return
 			}
-			c, err := sdk.Channel(args[1], args[0])
+			c, err := sdk.Channel(args[0], args[1])
 			if err != nil {
 				logError(err)
 				return
@@ -95,7 +95,7 @@ var cmdChannels = []cobra.Command{
 				return
 			}
 
-			if err := sdk.UpdateChannel(args[1], channel); err != nil {
+			if err := sdk.UpdateChannel(channel, args[1]); err != nil {
 				logError(err)
 				return
 			}
@@ -113,7 +113,7 @@ var cmdChannels = []cobra.Command{
 				return
 			}
 
-			if err := sdk.DeleteChannel(args[1], args[0]); err != nil {
+			if err := sdk.DeleteChannel(args[0], args[1]); err != nil {
 				logError(err)
 				return
 			}
@@ -135,7 +135,7 @@ var cmdChannels = []cobra.Command{
 				Limit:        uint64(Limit),
 				Disconnected: false,
 			}
-			cl, err := sdk.ThingsByChannel(args[1], args[0], pm)
+			cl, err := sdk.ThingsByChannel(args[0], pm, args[1])
 			if err != nil {
 				logError(err)
 				return
@@ -158,7 +158,7 @@ var cmdChannels = []cobra.Command{
 				Limit:        uint64(Limit),
 				Disconnected: false,
 			}
-			cl, err := sdk.ThingsByChannel(args[1], args[0], pm)
+			cl, err := sdk.ThingsByChannel(args[0], pm, args[1])
 			if err != nil {
 				logError(err)
 				return

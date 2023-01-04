@@ -95,7 +95,7 @@ func TestSendMessage(t *testing.T) {
 		},
 	}
 	for desc, tc := range cases {
-		err := mainfluxSDK.SendMessage(tc.auth, tc.chanID, tc.msg)
+		err := mainfluxSDK.SendMessage(tc.chanID, tc.msg, tc.auth)
 		if tc.err == nil {
 			assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s", desc, err))
 		} else {

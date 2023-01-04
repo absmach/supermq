@@ -28,7 +28,7 @@ const (
 	APIKey
 )
 
-func (sdk mfSDK) Issue(token string, d time.Duration) (KeyRes, errors.SDKError) {
+func (sdk mfSDK) Issue(d time.Duration, token string) (KeyRes, errors.SDKError) {
 	datareq := keyReq{Type: APIKey, Duration: d}
 	data, err := json.Marshal(datareq)
 	if err != nil {
@@ -50,13 +50,13 @@ func (sdk mfSDK) Issue(token string, d time.Duration) (KeyRes, errors.SDKError) 
 	return key, nil
 }
 
-func (sdk mfSDK) Revoke(token, id string) errors.SDKError {
+func (sdk mfSDK) Revoke(id, token string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s", sdk.authURL, keysEndpoint, id)
 	_, _, err := sdk.processRequest(http.MethodDelete, url, token, string(CTJSON), nil, http.StatusNoContent)
 	return err
 }
 
-func (sdk mfSDK) RetrieveKey(token, id string) (retrieveKeyRes, errors.SDKError) {
+func (sdk mfSDK) RetrieveKey(id, token string) (retrieveKeyRes, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.authURL, keysEndpoint, id)
 	_, body, err := sdk.processRequest(http.MethodGet, url, token, string(CTJSON), nil, http.StatusOK)
 	if err != nil {

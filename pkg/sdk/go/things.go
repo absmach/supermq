@@ -26,7 +26,7 @@ type identifyThingResp struct {
 	ID string `json:"id,omitempty"`
 }
 
-func (sdk mfSDK) CreateThing(token string, t Thing) (string, errors.SDKError) {
+func (sdk mfSDK) CreateThing(t Thing, token string) (string, errors.SDKError) {
 	data, err := json.Marshal(t)
 	if err != nil {
 		return "", errors.NewSDKError(err)
@@ -42,7 +42,7 @@ func (sdk mfSDK) CreateThing(token string, t Thing) (string, errors.SDKError) {
 	return id, nil
 }
 
-func (sdk mfSDK) CreateThings(token string, things []Thing) ([]Thing, errors.SDKError) {
+func (sdk mfSDK) CreateThings(things []Thing, token string) ([]Thing, errors.SDKError) {
 	data, err := json.Marshal(things)
 	if err != nil {
 		return []Thing{}, errors.NewSDKError(err)
@@ -63,7 +63,7 @@ func (sdk mfSDK) CreateThings(token string, things []Thing) ([]Thing, errors.SDK
 	return ctr.Things, nil
 }
 
-func (sdk mfSDK) Things(token string, pm PageMetadata) (ThingsPage, errors.SDKError) {
+func (sdk mfSDK) Things(pm PageMetadata, token string) (ThingsPage, errors.SDKError) {
 	url, err := sdk.withQueryParams(sdk.thingsURL, thingsEndpoint, pm)
 	if err != nil {
 		return ThingsPage{}, errors.NewSDKError(err)
@@ -82,7 +82,7 @@ func (sdk mfSDK) Things(token string, pm PageMetadata) (ThingsPage, errors.SDKEr
 	return tp, nil
 }
 
-func (sdk mfSDK) ThingsByChannel(token, chanID string, pm PageMetadata) (ThingsPage, errors.SDKError) {
+func (sdk mfSDK) ThingsByChannel(chanID string, pm PageMetadata, token string) (ThingsPage, errors.SDKError) {
 	url, err := sdk.withQueryParams(fmt.Sprintf("%s/channels/%s", sdk.thingsURL, chanID), thingsEndpoint, pm)
 	if err != nil {
 		return ThingsPage{}, errors.NewSDKError(err)
@@ -100,7 +100,7 @@ func (sdk mfSDK) ThingsByChannel(token, chanID string, pm PageMetadata) (ThingsP
 	return tp, nil
 }
 
-func (sdk mfSDK) Thing(token, id string) (Thing, errors.SDKError) {
+func (sdk mfSDK) Thing(id, token string) (Thing, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, thingsEndpoint, id)
 
 	_, body, err := sdk.processRequest(http.MethodGet, url, token, string(CTJSON), nil, http.StatusOK)
@@ -116,7 +116,7 @@ func (sdk mfSDK) Thing(token, id string) (Thing, errors.SDKError) {
 	return t, nil
 }
 
-func (sdk mfSDK) UpdateThing(token string, t Thing) errors.SDKError {
+func (sdk mfSDK) UpdateThing(t Thing, token string) errors.SDKError {
 	data, err := json.Marshal(t)
 	if err != nil {
 		return errors.NewSDKError(err)
@@ -128,7 +128,7 @@ func (sdk mfSDK) UpdateThing(token string, t Thing) errors.SDKError {
 	return sdkerr
 }
 
-func (sdk mfSDK) DeleteThing(token, id string) errors.SDKError {
+func (sdk mfSDK) DeleteThing(id, token string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, thingsEndpoint, id)
 
 	_, _, err := sdk.processRequest(http.MethodDelete, url, token, string(CTJSON), nil, http.StatusNoContent)
@@ -157,7 +157,7 @@ func (sdk mfSDK) IdentifyThing(key string) (string, errors.SDKError) {
 	return i.ID, nil
 }
 
-func (sdk mfSDK) Connect(token string, connIDs ConnectionIDs) errors.SDKError {
+func (sdk mfSDK) Connect(connIDs ConnectionIDs, token string) errors.SDKError {
 	data, err := json.Marshal(connIDs)
 	if err != nil {
 		return errors.NewSDKError(err)
@@ -169,7 +169,7 @@ func (sdk mfSDK) Connect(token string, connIDs ConnectionIDs) errors.SDKError {
 	return sdkerr
 }
 
-func (sdk mfSDK) DisconnectThing(token, thingID, chanID string) errors.SDKError {
+func (sdk mfSDK) DisconnectThing(thingID, chanID, token string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.thingsURL, channelsEndpoint, chanID, thingsEndpoint, thingID)
 
 	_, _, err := sdk.processRequest(http.MethodDelete, url, token, string(CTJSON), nil, http.StatusNoContent)

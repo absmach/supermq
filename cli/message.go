@@ -16,7 +16,7 @@ var cmdMessages = []cobra.Command{
 				return
 			}
 
-			if err := sdk.SendMessage(args[2], args[0], args[1]); err != nil {
+			if err := sdk.SendMessage(args[0], args[1], args[2]); err != nil {
 				logError(err)
 				return
 			}
@@ -34,7 +34,7 @@ var cmdMessages = []cobra.Command{
 				return
 			}
 
-			m, err := sdk.ReadMessages(args[1], args[0])
+			m, err := sdk.ReadMessages(args[0], args[1])
 			if err != nil {
 				logError(err)
 				return

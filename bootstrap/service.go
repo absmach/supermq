@@ -152,7 +152,7 @@ func (bs bootstrapService) Add(ctx context.Context, token string, cfg Config) (C
 	saved, err := bs.configs.Save(cfg, toConnect)
 	if err != nil {
 		if id == "" {
-			if errT := bs.sdk.DeleteThing(token, cfg.MFThing); errT != nil {
+			if errT := bs.sdk.DeleteThing(cfg.MFThing, token); errT != nil {
 				err = errors.Wrap(err, errT)
 			}
 		}
@@ -229,7 +229,7 @@ func (bs bootstrapService) UpdateConnections(ctx context.Context, token, id stri
 	}
 
 	for _, c := range disconnect {
-		if err := bs.sdk.DisconnectThing(token, id, c); err != nil {
+		if err := bs.sdk.DisconnectThing(id, c, token); err != nil {
 			if errors.Contains(err, errors.ErrNotFound) {
 				continue
 			}
@@ -242,7 +242,7 @@ func (bs bootstrapService) UpdateConnections(ctx context.Context, token, id stri
 			ChannelIDs: []string{c},
 			ThingIDs:   []string{id},
 		}
-		if err := bs.sdk.Connect(token, conIDs); err != nil {
+		if err := bs.sdk.Connect(conIDs, token); err != nil {
 			return ErrThings
 		}
 	}
@@ -313,13 +313,13 @@ func (bs bootstrapService) ChangeState(ctx context.Context, token, id string, st
 				ChannelIDs: []string{c.ID},
 				ThingIDs:   []string{cfg.MFThing},
 			}
-			if err := bs.sdk.Connect(token, conIDs); err != nil {
+			if err := bs.sdk.Connect(conIDs, token); err != nil {
 				return ErrThings
 			}
 		}
 	case Inactive:
 		for _, c := range cfg.MFChannels {
-			if err := bs.sdk.DisconnectThing(token, cfg.MFThing, c.ID); err != nil {
+			if err := bs.sdk.DisconnectThing(cfg.MFThing, c.ID, token); err != nil {
 				if errors.Contains(err, errors.ErrNotFound) {
 					continue
 				}
@@ -379,16 +379,16 @@ func (bs bootstrapService) thing(token, id string) (mfsdk.Thing, error) {
 	var err error
 
 	if id == "" {
-		thingID, err = bs.sdk.CreateThing(token, mfsdk.Thing{})
+		thingID, err = bs.sdk.CreateThing(mfsdk.Thing{}, token)
 		if err != nil {
 			return mfsdk.Thing{}, errors.Wrap(errCreateThing, err)
 		}
 	}
 
-	thing, err := bs.sdk.Thing(token, thingID)
+	thing, err := bs.sdk.Thing(thingID, token)
 	if err != nil {
 		if id != "" {
-			if errT := bs.sdk.DeleteThing(token, thingID); errT != nil {
+			if errT := bs.sdk.DeleteThing(thingID, token); errT != nil {
 				err = errors.Wrap(err, errT)
 			}
 		}
@@ -413,7 +413,7 @@ func (bs bootstrapService) connectionChannels(channels, existing []string, token
 
 	var ret []Channel
 	for id := range add {
-		ch, err := bs.sdk.Channel(token, id)
+		ch, err := bs.sdk.Channel(id, token)
 		if err != nil {
 			return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 		}

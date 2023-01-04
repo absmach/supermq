@@ -129,7 +129,7 @@ func TestCreateUser(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, err := mainfluxSDK.CreateUser(tc.token, tc.user)
+		_, err := mainfluxSDK.CreateUser(tc.user, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 	}
 }
@@ -153,7 +153,7 @@ func TestUser(t *testing.T) {
 
 	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: mfauth.APIKey})
 	token := tkn.GetValue()
-	userID, err := mainfluxSDK.CreateUser(token, user)
+	userID, err := mainfluxSDK.CreateUser(user, token)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	usertoken, err := mainfluxSDK.CreateToken(user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -191,7 +191,7 @@ func TestUser(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		respUs, err := mainfluxSDK.User(tc.token, tc.userID)
+		respUs, err := mainfluxSDK.User(tc.userID, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, respUs, fmt.Sprintf("%s: expected response user %s, got %s", tc.desc, tc.response, respUs))
 	}
@@ -224,7 +224,7 @@ func TestUsers(t *testing.T) {
 		password := fmt.Sprintf("password%d", i)
 		metadata := map[string]interface{}{"name": fmt.Sprintf("user%d", i)}
 		us := sdk.User{Email: email, Password: password, Metadata: metadata}
-		userID, err := mainfluxSDK.CreateUser(token, us)
+		userID, err := mainfluxSDK.CreateUser(us, token)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		us.ID = userID
 		us.Password = ""
@@ -317,7 +317,7 @@ func TestUsers(t *testing.T) {
 			Limit:    uint64(tc.limit),
 			Metadata: tc.metadata,
 		}
-		page, err := mainfluxSDK.Users(tc.token, filter)
+		page, err := mainfluxSDK.Users(filter, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page.Users, fmt.Sprintf("%s: expected response user %s, got %s", tc.desc, tc.response, page.Users))
 	}
@@ -342,7 +342,7 @@ func TestCreateToken(t *testing.T) {
 
 	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: mfauth.APIKey})
 	token := tkn.GetValue()
-	_, err := mainfluxSDK.CreateUser(token, user)
+	_, err := mainfluxSDK.CreateUser(user, token)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	cases := []struct {
@@ -396,7 +396,7 @@ func TestUpdateUser(t *testing.T) {
 
 	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: mfauth.APIKey})
 	token := tkn.GetValue()
-	userID, err := mainfluxSDK.CreateUser(token, user)
+	userID, err := mainfluxSDK.CreateUser(user, token)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	usertoken, err := mainfluxSDK.CreateToken(user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -433,7 +433,7 @@ func TestUpdateUser(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		err := mainfluxSDK.UpdateUser(tc.token, tc.user)
+		err := mainfluxSDK.UpdateUser(tc.user, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 	}
 }
@@ -457,7 +457,7 @@ func TestUpdatePassword(t *testing.T) {
 
 	tkn, _ := auth.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: mfauth.APIKey})
 	token := tkn.GetValue()
-	_, err := mainfluxSDK.CreateUser(token, user)
+	_, err := mainfluxSDK.CreateUser(user, token)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	usertoken, err := mainfluxSDK.CreateToken(user)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -492,7 +492,7 @@ func TestUpdatePassword(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		err := mainfluxSDK.UpdatePassword(tc.token, tc.oldPass, tc.newPass)
+		err := mainfluxSDK.UpdatePassword(tc.oldPass, tc.newPass, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 	}
 }

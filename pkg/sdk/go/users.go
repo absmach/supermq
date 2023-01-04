@@ -19,7 +19,7 @@ const (
 	membersEndpoint  = "members"
 )
 
-func (sdk mfSDK) CreateUser(token string, u User) (string, errors.SDKError) {
+func (sdk mfSDK) CreateUser(u User, token string) (string, errors.SDKError) {
 	data, err := json.Marshal(u)
 	if err != nil {
 		return "", errors.NewSDKError(err)
@@ -35,7 +35,7 @@ func (sdk mfSDK) CreateUser(token string, u User) (string, errors.SDKError) {
 	return id, nil
 }
 
-func (sdk mfSDK) User(token, userID string) (User, errors.SDKError) {
+func (sdk mfSDK) User(userID, token string) (User, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.usersURL, usersEndpoint, userID)
 
 	_, body, err := sdk.processRequest(http.MethodGet, url, token, string(CTJSON), nil, http.StatusOK)
@@ -51,7 +51,7 @@ func (sdk mfSDK) User(token, userID string) (User, errors.SDKError) {
 	return u, nil
 }
 
-func (sdk mfSDK) Users(token string, pm PageMetadata) (UsersPage, errors.SDKError) {
+func (sdk mfSDK) Users(pm PageMetadata, token string) (UsersPage, errors.SDKError) {
 	var url string
 	var err error
 
@@ -93,7 +93,7 @@ func (sdk mfSDK) CreateToken(user User) (string, errors.SDKError) {
 	return tr.Token, nil
 }
 
-func (sdk mfSDK) UpdateUser(token string, u User) errors.SDKError {
+func (sdk mfSDK) UpdateUser(u User, token string) errors.SDKError {
 	data, err := json.Marshal(u)
 	if err != nil {
 		return errors.NewSDKError(err)
@@ -105,7 +105,7 @@ func (sdk mfSDK) UpdateUser(token string, u User) errors.SDKError {
 	return sdkerr
 }
 
-func (sdk mfSDK) UpdatePassword(token, oldPass, newPass string) errors.SDKError {
+func (sdk mfSDK) UpdatePassword(oldPass, newPass, token string) errors.SDKError {
 	ur := UserPasswordReq{
 		OldPassword: oldPass,
 		Password:    newPass,

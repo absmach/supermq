@@ -34,7 +34,7 @@ var cmdGroups = []cobra.Command{
 				logError(err)
 				return
 			}
-			id, err := sdk.CreateGroup(args[1], group)
+			id, err := sdk.CreateGroup(group, args[1])
 			if err != nil {
 				logError(err)
 				return
@@ -63,7 +63,7 @@ var cmdGroups = []cobra.Command{
 					Offset: uint64(Offset),
 					Limit:  uint64(Limit),
 				}
-				l, err := sdk.Groups(args[1], pm)
+				l, err := sdk.Groups(pm, args[1])
 				if err != nil {
 					logError(err)
 					return
@@ -80,7 +80,7 @@ var cmdGroups = []cobra.Command{
 					Offset: uint64(Offset),
 					Limit:  uint64(Limit),
 				}
-				l, err := sdk.Children(args[2], args[1], pm)
+				l, err := sdk.Children(args[1], pm, args[2])
 				if err != nil {
 					logError(err)
 					return
@@ -97,7 +97,7 @@ var cmdGroups = []cobra.Command{
 					Offset: uint64(Offset),
 					Limit:  uint64(Limit),
 				}
-				l, err := sdk.Parents(args[2], args[1], pm)
+				l, err := sdk.Parents(args[1], pm, args[2])
 				if err != nil {
 					logError(err)
 					return
@@ -109,7 +109,7 @@ var cmdGroups = []cobra.Command{
 				logUsage(cmd.Use)
 				return
 			}
-			t, err := sdk.Group(args[1], args[0])
+			t, err := sdk.Group(args[0], args[1])
 			if err != nil {
 				logError(err)
 				return
@@ -132,7 +132,7 @@ var cmdGroups = []cobra.Command{
 				logError(err)
 				return
 			}
-			if err := sdk.Assign(args[3], ids, args[1], args[2]); err != nil {
+			if err := sdk.Assign(ids, args[1], args[2], args[3]); err != nil {
 				logError(err)
 				return
 			}
@@ -154,7 +154,7 @@ var cmdGroups = []cobra.Command{
 				logError(err)
 				return
 			}
-			if err := sdk.Unassign(args[2], args[1], ids...); err != nil {
+			if err := sdk.Unassign(args[1], ids, args[2]); err != nil {
 				logError(err)
 				return
 			}
@@ -170,7 +170,7 @@ var cmdGroups = []cobra.Command{
 				logUsage(cmd.Use)
 				return
 			}
-			if err := sdk.DeleteGroup(args[1], args[0]); err != nil {
+			if err := sdk.DeleteGroup(args[0], args[1]); err != nil {
 				logError(err)
 				return
 			}
@@ -190,7 +190,7 @@ var cmdGroups = []cobra.Command{
 				Offset: uint64(Offset),
 				Limit:  uint64(Limit),
 			}
-			up, err := sdk.Members(args[1], args[0], pm)
+			up, err := sdk.Members(args[0], pm, args[1])
 			if err != nil {
 				logError(err)
 				return
@@ -211,7 +211,7 @@ var cmdGroups = []cobra.Command{
 				Offset: uint64(Offset),
 				Limit:  uint64(Limit),
 			}
-			up, err := sdk.Memberships(args[1], args[0], pm)
+			up, err := sdk.Memberships(args[0], pm, args[1])
 			if err != nil {
 				logError(err)
 				return
