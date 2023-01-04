@@ -31,9 +31,9 @@ const (
 )
 
 type config struct {
-	LogLevel  string `env:"MF_WS_ADAPTER_LOG_LEVEL"   envDefault:"debug" `
-	BrokerURL string `env:"MF_BROKER_URL"             envDefault:"nats://localhost:4222" `
-	JaegerURL string `env:"MF_JAEGER_URL"             envDefault:"" `
+	LogLevel  string `env:"MF_WS_ADAPTER_LOG_LEVEL"   envDefault:"debug"`
+	BrokerURL string `env:"MF_BROKER_URL"             envDefault:"nats://localhost:4222"`
+	JaegerURL string `env:"MF_JAEGER_URL"             envDefault:""`
 }
 
 func main() {
@@ -54,7 +54,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	defer internal.Close(logger,tcHandler)
+	defer internal.Close(logger, tcHandler)
 	logger.Info("Successfully connected to things grpc server " + tcHandler.Secure())
 
 	nps, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)

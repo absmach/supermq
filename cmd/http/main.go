@@ -32,7 +32,7 @@ const (
 
 type config struct {
 	LogLevel  string `env:"MF_HTTP_ADAPTER_LOG_LEVEL"   envDefault:"debug"`
-	BrokerURL string `env:"MF_BROKER_URL"               envDefault:"nats://localhost:4222" `
+	BrokerURL string `env:"MF_BROKER_URL"               envDefault:"nats://localhost:4222"`
 	JaegerURL string `env:"MF_JAEGER_URL"               envDefault:""`
 }
 

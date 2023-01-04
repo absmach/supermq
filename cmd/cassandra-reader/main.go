@@ -25,14 +25,14 @@ import (
 )
 
 const (
-	svcName                 = "cassandra-reader"
-	envPrefix               = "MF_CASSANDRA_READER_"
-	envPrefixHttp           = "MF_CASSANDRA_READER_HTTP_"
+	svcName       = "cassandra-reader"
+	envPrefix     = "MF_CASSANDRA_READER_"
+	envPrefixHttp = "MF_CASSANDRA_READER_HTTP_"
 )
 
 type config struct {
-	LogLevel  string `env:"MF_CASSANDRA_READER_LOG_LEVEL"     envDefault:"debug" `
-	JaegerURL string `env:"MF_JAEGER_URL"                     envDefault:"" `
+	LogLevel  string `env:"MF_CASSANDRA_READER_LOG_LEVEL"     envDefault:"debug"`
+	JaegerURL string `env:"MF_JAEGER_URL"                     envDefault:""`
 }
 
 func main() {

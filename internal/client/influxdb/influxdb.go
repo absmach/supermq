@@ -22,7 +22,7 @@ type Config struct {
 	Password           string        `env:"ADMIN_PASSWORD"        envDefault:"mainflux"`
 	DbName             string        `env:"DB"                    envDefault:"mainflux"`
 	UserAgent          string        `env:"USER_AGENT"            envDefault:"InfluxDBClient"`
-	Timeout            time.Duration `env:"TIMEOUT" `
+	Timeout            time.Duration `env:"TIMEOUT"`
 	InsecureSkipVerify bool          `env:"INSECURE_SKIP_VERIFY"  envDefault:"false"`
 }
 

@@ -30,9 +30,9 @@ const (
 )
 
 type config struct {
-	BrokerURL  string `env:"MF_BROKER_URL"                     envDefault:"nats://localhost:4222" `
-	LogLevel   string `env:"MF_CASSANDRA_WRITER_LOG_LEVEL"     envDefault:"debug" `
-	ConfigPath string `env:"MF_CASSANDRA_WRITER_CONFIG_PATH"   envDefault:"/config.toml" `
+	BrokerURL  string `env:"MF_BROKER_URL"                     envDefault:"nats://localhost:4222"`
+	LogLevel   string `env:"MF_CASSANDRA_WRITER_LOG_LEVEL"     envDefault:"debug"`
+	ConfigPath string `env:"MF_CASSANDRA_WRITER_CONFIG_PATH"   envDefault:"/config.toml"`
 }
 
 func main() {
