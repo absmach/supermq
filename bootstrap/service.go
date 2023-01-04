@@ -38,7 +38,6 @@ var (
 	errRemoveChannel      = errors.New("failed to remove channel")
 	errCreateThing        = errors.New("failed to create thing")
 	errDisconnectThing    = errors.New("failed to disconnect thing")
-	errThingNotFound      = errors.New("thing not found")
 	errCheckChannels      = errors.New("failed to check if channels exists")
 	errConnectionChannels = errors.New("failed to check channels connections")
 	errUpdateCert         = errors.New("failed to update cert")
@@ -231,7 +230,7 @@ func (bs bootstrapService) UpdateConnections(ctx context.Context, token, id stri
 
 	for _, c := range disconnect {
 		if err := bs.sdk.DisconnectThing(token, id, c); err != nil {
-			if errors.Contains(err, mfsdk.ErrFailedDisconnect) {
+			if errors.Contains(err, errors.ErrNotFound) {
 				continue
 			}
 			return ErrThings
@@ -244,9 +243,6 @@ func (bs bootstrapService) UpdateConnections(ctx context.Context, token, id stri
 			ThingIDs:   []string{id},
 		}
 		if err := bs.sdk.Connect(token, conIDs); err != nil {
-			if errors.Contains(err, mfsdk.ErrFailedConnect) {
-				return errors.ErrMalformedEntity
-			}
 			return ErrThings
 		}
 	}
@@ -324,7 +320,7 @@ func (bs bootstrapService) ChangeState(ctx context.Context, token, id string, st
 	case Inactive:
 		for _, c := range cfg.MFChannels {
 			if err := bs.sdk.DisconnectThing(token, cfg.MFThing, c.ID); err != nil {
-				if errors.Contains(err, mfsdk.ErrFailedDisconnect) {
+				if errors.Contains(err, errors.ErrNotFound) {
 					continue
 				}
 				return ErrThings
@@ -391,10 +387,6 @@ func (bs bootstrapService) thing(token, id string) (mfsdk.Thing, error) {
 
 	thing, err := bs.sdk.Thing(token, thingID)
 	if err != nil {
-		if errors.Contains(err, mfsdk.ErrFailedFetch) {
-			return mfsdk.Thing{}, errors.Wrap(errThingNotFound, errors.ErrNotFound)
-		}
-
 		if id != "" {
 			if errT := bs.sdk.DeleteThing(token, thingID); errT != nil {
 				err = errors.Wrap(err, errT)

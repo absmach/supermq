@@ -4,10 +4,8 @@
 package sdk
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -28,287 +26,152 @@ type identifyThingResp struct {
 	ID string `json:"id,omitempty"`
 }
 
-func (sdk mfSDK) CreateThing(token string, t Thing) (string, error) {
+func (sdk mfSDK) CreateThing(token string, t Thing) (string, errors.SDKError) {
 	data, err := json.Marshal(t)
 	if err != nil {
-		return "", err
+		return "", errors.NewSDKError(err)
 	}
-
 	url := fmt.Sprintf("%s/%s", sdk.thingsURL, thingsEndpoint)
 
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
-	if err != nil {
-		return "", err
+	headers, _, sdkerr := sdk.processRequest(http.MethodPost, url, token, string(CTJSON), data, http.StatusCreated)
+	if sdkerr != nil {
+		return "", sdkerr
 	}
 
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated {
-		return "", errors.Wrap(ErrFailedCreation, errors.New(resp.Status))
-	}
-
-	id := strings.TrimPrefix(resp.Header.Get("Location"), fmt.Sprintf("/%s/", thingsEndpoint))
+	id := strings.TrimPrefix(headers.Get("Location"), fmt.Sprintf("/%s/", thingsEndpoint))
 	return id, nil
 }
 
-func (sdk mfSDK) CreateThings(token string, things []Thing) ([]Thing, error) {
+func (sdk mfSDK) CreateThings(token string, things []Thing) ([]Thing, errors.SDKError) {
 	data, err := json.Marshal(things)
 	if err != nil {
-		return []Thing{}, err
+		return []Thing{}, errors.NewSDKError(err)
 	}
 
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, thingsEndpoint, "bulk")
 
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
-	if err != nil {
-		return []Thing{}, err
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return []Thing{}, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated {
-		return []Thing{}, errors.Wrap(ErrFailedCreation, errors.New(resp.Status))
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return []Thing{}, err
+	_, body, sdkerr := sdk.processRequest(http.MethodPost, url, token, string(CTJSON), data, http.StatusCreated)
+	if sdkerr != nil {
+		return []Thing{}, sdkerr
 	}
 
 	var ctr createThingsRes
 	if err := json.Unmarshal(body, &ctr); err != nil {
-		return []Thing{}, err
+		return []Thing{}, errors.NewSDKError(err)
 	}
 
 	return ctr.Things, nil
 }
 
-func (sdk mfSDK) Things(token string, pm PageMetadata) (ThingsPage, error) {
+func (sdk mfSDK) Things(token string, pm PageMetadata) (ThingsPage, errors.SDKError) {
 	url, err := sdk.withQueryParams(sdk.thingsURL, thingsEndpoint, pm)
 	if err != nil {
-		return ThingsPage{}, err
+		return ThingsPage{}, errors.NewSDKError(err)
 	}
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return ThingsPage{}, err
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return ThingsPage{}, err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return ThingsPage{}, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return ThingsPage{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
+	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, string(CTJSON), nil, http.StatusOK)
+	if sdkerr != nil {
+		return ThingsPage{}, sdkerr
 	}
 
 	var tp ThingsPage
 	if err := json.Unmarshal(body, &tp); err != nil {
-		return ThingsPage{}, err
+		return ThingsPage{}, errors.NewSDKError(err)
 	}
 
 	return tp, nil
 }
 
-func (sdk mfSDK) ThingsByChannel(token, chanID string, pm PageMetadata) (ThingsPage, error) {
+func (sdk mfSDK) ThingsByChannel(token, chanID string, pm PageMetadata) (ThingsPage, errors.SDKError) {
 	url, err := sdk.withQueryParams(fmt.Sprintf("%s/channels/%s", sdk.thingsURL, chanID), thingsEndpoint, pm)
 	if err != nil {
-		return ThingsPage{}, err
+		return ThingsPage{}, errors.NewSDKError(err)
 	}
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return ThingsPage{}, err
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return ThingsPage{}, err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return ThingsPage{}, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return ThingsPage{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
+	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, string(CTJSON), nil, http.StatusOK)
+	if sdkerr != nil {
+		return ThingsPage{}, sdkerr
 	}
 
 	var tp ThingsPage
 	if err := json.Unmarshal(body, &tp); err != nil {
-		return ThingsPage{}, err
+		return ThingsPage{}, errors.NewSDKError(err)
 	}
 
 	return tp, nil
 }
 
-func (sdk mfSDK) Thing(token, id string) (Thing, error) {
+func (sdk mfSDK) Thing(token, id string) (Thing, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, thingsEndpoint, id)
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	_, body, err := sdk.processRequest(http.MethodGet, url, token, string(CTJSON), nil, http.StatusOK)
 	if err != nil {
 		return Thing{}, err
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return Thing{}, err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return Thing{}, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return Thing{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
 	}
 
 	var t Thing
 	if err := json.Unmarshal(body, &t); err != nil {
-		return Thing{}, err
+		return Thing{}, errors.NewSDKError(err)
 	}
 
 	return t, nil
 }
 
-func (sdk mfSDK) UpdateThing(token string, t Thing) error {
+func (sdk mfSDK) UpdateThing(token string, t Thing) errors.SDKError {
 	data, err := json.Marshal(t)
 	if err != nil {
-		return err
+		return errors.NewSDKError(err)
 	}
 
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, thingsEndpoint, t.ID)
 
-	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
-	if err != nil {
-		return err
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return errors.Wrap(ErrFailedUpdate, errors.New(resp.Status))
-	}
-
-	return nil
+	_, _, sdkerr := sdk.processRequest(http.MethodPut, url, token, string(CTJSON), data, http.StatusOK)
+	return sdkerr
 }
 
-func (sdk mfSDK) DeleteThing(token, id string) error {
+func (sdk mfSDK) DeleteThing(token, id string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, thingsEndpoint, id)
 
-	req, err := http.NewRequest(http.MethodDelete, url, nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusNoContent {
-		return errors.Wrap(ErrFailedRemoval, errors.New(resp.Status))
-	}
-
-	return nil
+	_, _, err := sdk.processRequest(http.MethodDelete, url, token, string(CTJSON), nil, http.StatusNoContent)
+	return err
 }
 
-func (sdk mfSDK) IdentifyThing(key string) (string, error) {
+func (sdk mfSDK) IdentifyThing(key string) (string, errors.SDKError) {
 	idReq := identifyThingReq{Token: key}
 	data, err := json.Marshal(idReq)
 	if err != nil {
-		return "", err
+		return "", errors.NewSDKError(err)
 	}
+
 	url := fmt.Sprintf("%s/%s", sdk.thingsURL, identifyEndpoint)
 
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
-	if err != nil {
-		return "", err
-	}
-
-	resp, err := sdk.sendRequest(req, "", string(CTJSON))
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
+	_, body, sdkerr := sdk.processRequest(http.MethodPost, url, "", string(CTJSON), data, http.StatusOK)
+	if sdkerr != nil {
+		return "", sdkerr
 	}
 
 	var i identifyThingResp
 	if err := json.Unmarshal(body, &i); err != nil {
-		return "", err
+		return "", errors.NewSDKError(err)
 	}
 
-	return i.ID, err
+	return i.ID, nil
 }
 
-func (sdk mfSDK) Connect(token string, connIDs ConnectionIDs) error {
+func (sdk mfSDK) Connect(token string, connIDs ConnectionIDs) errors.SDKError {
 	data, err := json.Marshal(connIDs)
 	if err != nil {
-		return err
+		return errors.NewSDKError(err)
 	}
 
 	url := fmt.Sprintf("%s/%s", sdk.thingsURL, connectEndpoint)
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
-	if err != nil {
-		return err
-	}
 
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return errors.Wrap(ErrFailedConnect, errors.New(resp.Status))
-	}
-
-	return nil
+	_, _, sdkerr := sdk.processRequest(http.MethodPost, url, token, string(CTJSON), data, http.StatusOK)
+	return sdkerr
 }
 
-func (sdk mfSDK) DisconnectThing(token, thingID, chanID string) error {
+func (sdk mfSDK) DisconnectThing(token, thingID, chanID string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.thingsURL, channelsEndpoint, chanID, thingsEndpoint, thingID)
-	req, err := http.NewRequest(http.MethodDelete, url, nil)
-	if err != nil {
-		return err
-	}
 
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusNoContent {
-		return errors.Wrap(ErrFailedDisconnect, errors.New(resp.Status))
-	}
-
-	return nil
+	_, _, err := sdk.processRequest(http.MethodDelete, url, token, string(CTJSON), nil, http.StatusNoContent)
+	return err
 }
