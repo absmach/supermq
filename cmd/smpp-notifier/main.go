@@ -33,14 +33,15 @@ import (
 )
 
 const (
-	svcName       = "smpp-notifier"
-	envPrefix     = "MF_SMPP_NOTIFIER_"
-	envPrefixHttp = "MF_SMPP_NOTIFIER_HTTP_"
-	defDB         = "subscriptions"
+	svcName        = "smpp-notifier"
+	envPrefix      = "MF_SMPP_NOTIFIER_"
+	envPrefixHttp  = "MF_SMPP_NOTIFIER_HTTP_"
+	defDB          = "subscriptions"
+	defSvcHttpPort = "8180"
 )
 
 type config struct {
-	LogLevel   string `env:"MF_SMPP_NOTIFIER_LOG_LEVEL"   envDefault:"debug"`
+	LogLevel   string `env:"MF_SMPP_NOTIFIER_LOG_LEVEL"   envDefault:"info"`
 	From       string `env:"MF_SMPP_NOTIFIER_FROM_ADDR"   envDefault:""`
 	ConfigPath string `env:"MF_SMPP_NOTIFIER_CONFIG_PATH" envDefault:"/config.toml"`
 	BrokerURL  string `env:"MF_BROKER_URL"                envDefault:"nats://localhost:4222"`
@@ -104,7 +105,7 @@ func main() {
 		log.Fatalf("failed to create Postgres writer: %s", err.Error())
 	}
 
-	httpServerConfig := server.Config{}
+	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
