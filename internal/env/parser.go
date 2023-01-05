@@ -90,7 +90,7 @@ func parseServerConfig(cfg *server.Config, altPrefix string, opts ...env.Options
 		return err
 	}
 
-	if cfg.CertFile == "" || cfg.KeyFile == "" {
+	if cfg.CertFile == "" || cfg.KeyFile == "" || cfg.Port == "" {
 		altOpts := []env.Options{}
 		for _, opt := range opts {
 			if opt.Prefix != "" {
@@ -107,6 +107,9 @@ func parseServerConfig(cfg *server.Config, altPrefix string, opts ...env.Options
 		}
 		if cfg.KeyFile == "" && altCfg.KeyFile != "" {
 			cfg.KeyFile = altCfg.KeyFile
+		}
+		if cfg.Port == "" && altCfg.Port != "" {
+			cfg.Port = altCfg.Port
 		}
 	}
 	return nil

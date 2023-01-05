@@ -21,7 +21,7 @@ type Config struct {
 	Port        string `env:"DB_PORT"           envDefault:"5432"`
 	User        string `env:"DB_USER"           envDefault:"mainflux"`
 	Pass        string `env:"DB_PASS"           envDefault:"mainflux"`
-	Name        string `env:"DB"                envDefault:"mainflux"`
+	Name        string `env:"DB"                envDefault:""`
 	SSLMode     string `env:"DB_SSL_MODE"       envDefault:"disable"`
 	SSLCert     string `env:"DB_SSL_CERT"       envDefault:""`
 	SSLKey      string `env:"DB_SSL_KEY"        envDefault:""`
