@@ -24,15 +24,16 @@ import (
 )
 
 const (
-	svcName       = "mongodb-writer"
-	envPrefix     = "MF_MONGO_WRITER_"
-	envPrefixHttp = "MF_MONGO_WRITER_HTTP_"
+	svcName        = "mongodb-writer"
+	envPrefix      = "MF_MONGO_WRITER_"
+	envPrefixHttp  = "MF_MONGO_WRITER_HTTP_"
+	defSvcHttpPort = "8180"
 )
 
 type config struct {
-	BrokerURL  string `env:"MF_BROKER_URL"                 envDefault:"nats://localhost:4222"`
-	LogLevel   string `env:"MF_MONGO_WRITER_LOG_LEVEL"     envDefault:"debug"`
+	LogLevel   string `env:"MF_MONGO_WRITER_LOG_LEVEL"     envDefault:"info"`
 	ConfigPath string `env:"MF_MONGO_WRITER_CONFIG_PATH"   envDefault:"/config.toml"`
+	BrokerURL  string `env:"MF_BROKER_URL"                 envDefault:"nats://localhost:4222"`
 }
 
 func main() {
@@ -66,7 +67,7 @@ func main() {
 		log.Fatalf("failed to start MongoDB writer: %s", err.Error())
 	}
 
-	httpServerConfig := server.Config{}
+	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
