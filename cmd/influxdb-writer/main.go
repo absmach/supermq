@@ -28,12 +28,13 @@ const (
 	envPrefix         = "MF_INFLUX_WRITER_"
 	envPrefixHttp     = "MF_INFLUX_WRITER_HTTP_"
 	envPrefixInfluxdb = "MF_INFLUXDB_"
+	defSvcHttpPort    = "8180"
 )
 
 type config struct {
-	BrokerURL  string `env:"MF_BROKER_URL"                    envDefault:"nats://localhost:4222"`
-	LogLevel   string `env:"MF_INFLUX_WRITER_LOG_LEVEL"     envDefault:"debug"`
+	LogLevel   string `env:"MF_INFLUX_WRITER_LOG_LEVEL"     envDefault:"info"`
 	ConfigPath string `env:"MF_INFLUX_WRITER_CONFIG_PATH"   envDefault:"/config.toml"`
+	BrokerURL  string `env:"MF_BROKER_URL"                  envDefault:"nats://localhost:4222"`
 }
 
 func main() {
