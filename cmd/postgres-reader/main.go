@@ -26,14 +26,15 @@ import (
 )
 
 const (
-	svcName       = "postgres-reader"
-	envPrefix     = "MF_POSTGRES_READER_"
-	envPrefixHttp = "MF_POSTGRES_READER_HTTP_"
-	defDB         = "messages"
+	svcName        = "postgres-reader"
+	envPrefix      = "MF_POSTGRES_READER_"
+	envPrefixHttp  = "MF_POSTGRES_READER_HTTP_"
+	defDB          = "messages"
+	defSvcHttpPort = "8180"
 )
 
 type config struct {
-	LogLevel  string `env:"MF_POSTGRES_READER_LOG_LEVEL"     envDefault:"debug"`
+	LogLevel  string `env:"MF_POSTGRES_READER_LOG_LEVEL"     envDefault:"info"`
 	JaegerURL string `env:"MF_JAEGER_URL"                    envDefault:"localhost:6831"`
 }
 
@@ -74,7 +75,7 @@ func main() {
 
 	repo := newService(db, logger)
 
-	httpServerConfig := server.Config{}
+	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
