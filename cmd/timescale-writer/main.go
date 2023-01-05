@@ -24,16 +24,17 @@ import (
 )
 
 const (
-	svcName       = "timescaledb-writer"
-	envPrefix     = "MF_TIMESCALE_WRITER_"
-	envPrefixHttp = "MF_TIMESCALE_WRITER_HTTP_"
-	defDB         = "messages"
+	svcName        = "timescaledb-writer"
+	envPrefix      = "MF_TIMESCALE_WRITER_"
+	envPrefixHttp  = "MF_TIMESCALE_WRITER_HTTP_"
+	defDB          = "messages"
+	defSvcHttpPort = "8180"
 )
 
 type config struct {
-	BrokerURL  string `env:"MF_BROKER_URL"                   envDefault:"nats://localhost:4222"`
-	LogLevel   string `env:"MF_TIMESCALE_WRITER_LOG_LEVEL"   envDefault:"debug"`
+	LogLevel   string `env:"MF_TIMESCALE_WRITER_LOG_LEVEL"   envDefault:"info"`
 	ConfigPath string `env:"MF_TIMESCALE_WRITER_CONFIG_PATH" envDefault:"/config.toml"`
+	BrokerURL  string `env:"MF_BROKER_URL"                   envDefault:"nats://localhost:4222"`
 }
 
 func main() {
@@ -69,7 +70,7 @@ func main() {
 		log.Fatalf("failed to create Timescale writer: %s", err.Error())
 	}
 
-	httpServerConfig := server.Config{}
+	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
