@@ -29,17 +29,18 @@ import (
 )
 
 const (
-	svcName       = "bootstrap"
-	envPrefix     = "MF_BOOTSTRAP_"
-	envPrefixHttp = "MF_BOOTSTRAP_HTTP_"
-	defDB         = "bootstrap"
+	svcName        = "bootstrap"
+	envPrefix      = "MF_BOOTSTRAP_"
+	envPrefixHttp  = "MF_BOOTSTRAP_HTTP_"
+	defDB          = "bootstrap"
+	defSvcHttpPort = "8180"
 )
 
 type config struct {
-	LogLevel       string `env:"MF_BOOTSTRAP_LOG_LEVEL"        envDefault:"debug"`
+	LogLevel       string `env:"MF_BOOTSTRAP_LOG_LEVEL"        envDefault:"info"`
 	EncKey         []byte `env:"MF_BOOTSTRAP_ENCRYPT_KEY"      envDefault:"12345678910111213141516171819202"`
-	ThingsURL      string `env:"MF_THINGS_URL"                 envDefault:"http://localhost"`
 	EsConsumerName string `env:"MF_BOOTSTRAP_EVENT_CONSUMER"   envDefault:"bootstrap"`
+	ThingsURL      string `env:"MF_THINGS_URL"                 envDefault:"http://localhost"`
 	JaegerURL      string `env:"MF_JAEGER_URL"                 envDefault:"localhost:6831"`
 }
 
@@ -88,7 +89,7 @@ func main() {
 	svc := newService(auth, db, logger, esClient, cfg)
 
 	///////////////// HTTP SERVER /////////////////////////
-	httpServerConfig := server.Config{}
+	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
