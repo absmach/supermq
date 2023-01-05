@@ -34,22 +34,24 @@ import (
 )
 
 const (
-	svcName       = "auth"
-	envPrefix     = "MF_AUTH_"
-	envPrefixHttp = "MF_AUTH_HTTP_"
-	envPrefixGrpc = "MF_AUTH_GRPC_"
-	defDB         = "auth"
+	svcName        = "auth"
+	envPrefix      = "MF_AUTH_"
+	envPrefixHttp  = "MF_AUTH_HTTP_"
+	envPrefixGrpc  = "MF_AUTH_GRPC_"
+	defDB          = "auth"
+	defSvcHttpPort = "8180"
+	defSvcGrpcPort = "8181"
 )
 
 type config struct {
-	LogLevel      string        `env:"MF_AUTH_LOG_LEVEL"             envDefault:"debug"`
+	LogLevel      string        `env:"MF_AUTH_LOG_LEVEL"             envDefault:"info"`
 	Secret        string        `env:"MF_AUTH_SECRET"                envDefault:"auth"`
-	JaegerURL     string        `env:"MF_JAEGER_URL"                 envDefault:"localhost:6831"`
 	KetoReadHost  string        `env:"MF_KETO_READ_REMOTE_HOST"      envDefault:"mainflux-keto"`
 	KetoReadPort  string        `env:"MF_KETO_READ_REMOTE_PORT"      envDefault:"4466"`
 	KetoWriteHost string        `env:"MF_KETO_WRITE_REMOTE_HOST"     envDefault:"mainflux-keto"`
 	KetoWritePort string        `env:"MF_KETO_WRITE_REMOTE_PORT"     envDefault:"4467"`
 	LoginDuration time.Duration `env:"MF_AUTH_LOGIN_TOKEN_DURATION"  envDefault:"10h"`
+	JaegerURL     string        `env:"MF_JAEGER_URL"                 envDefault:"localhost:6831"`
 }
 
 func main() {
@@ -107,7 +109,7 @@ func main() {
 	}
 	defer closer.Close()
 	// create new http server config
-	httpServerConfig := server.Config{}
+	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	// load http server config from environment variables
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
@@ -117,7 +119,7 @@ func main() {
 
 	///////////////// GRPC SERVER //////////////////////////
 	// create new grpc server config
-	grpcServerConfig := server.Config{}
+	grpcServerConfig := server.Config{Port: defSvcGrpcPort}
 	// load grpc server config from environment variables
 	if err := env.Parse(&grpcServerConfig, env.Options{Prefix: envPrefixGrpc, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s gRPC server configuration : %s", svcName, err.Error())
