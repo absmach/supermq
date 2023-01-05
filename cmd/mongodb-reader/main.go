@@ -25,13 +25,14 @@ import (
 )
 
 const (
-	svcName       = "mongodb-reader"
-	envPrefix     = "MF_MONGO_READER_"
-	envPrefixHttp = "MF_MONGO_READER_HTTP_"
+	svcName        = "mongodb-reader"
+	envPrefix      = "MF_MONGO_READER_"
+	envPrefixHttp  = "MF_MONGO_READER_HTTP_"
+	defSvcHttpPort = "8180"
 )
 
 type config struct {
-	LogLevel  string `env:"MF_MONGO_READER_LOG_LEVEL"   envDefault:"debug"`
+	LogLevel  string `env:"MF_MONGO_READER_LOG_LEVEL"   envDefault:"info"`
 	JaegerURL string `env:"MF_JAEGER_URL"               envDefault:"localhost:6831"`
 }
 
@@ -70,7 +71,7 @@ func main() {
 	defer authHandler.Close()
 	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
-	httpServerConfig := server.Config{}
+	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
