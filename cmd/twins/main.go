@@ -41,15 +41,16 @@ const (
 	envPrefix      = "MF_TWINS_"
 	envPrefixHttp  = "MF_TWINS_HTTP_"
 	envPrefixCache = "MF_TWINS_CACHE_"
+	defSvcHttpPort = "8180"
 )
 
 type config struct {
-	LogLevel        string `env:"MF_TWINS_LOG_LEVEL"          envDefault:"debug"`
+	LogLevel        string `env:"MF_TWINS_LOG_LEVEL"          envDefault:"info"`
 	StandaloneEmail string `env:"MF_TWINS_STANDALONE_EMAIL"   envDefault:""`
 	StandaloneToken string `env:"MF_TWINS_STANDALONE_TOKEN"   envDefault:""`
 	ChannelID       string `env:"MF_TWINS_CHANNEL_ID"         envDefault:""`
-	JaegerURL       string `env:"MF_JAEGER_URL"               envDefault:"localhost:6831"`
 	BrokerURL       string `env:"MF_BROKER_URL"               envDefault:"nats://localhost:4222"`
+	JaegerURL       string `env:"MF_JAEGER_URL"               envDefault:"localhost:6831"`
 }
 
 func main() {
@@ -116,7 +117,7 @@ func main() {
 	}
 	defer closer.Close()
 
-	httpServerConfig := server.Config{}
+	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
