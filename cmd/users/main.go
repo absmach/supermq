@@ -35,20 +35,21 @@ import (
 )
 
 const (
-	svcName       = "users"
-	envPrefix     = "MF_USERS_"
-	envPrefixHttp = "MF_USERS_HTTP_"
-	defDB         = "users"
+	svcName        = "users"
+	envPrefix      = "MF_USERS_"
+	envPrefixHttp  = "MF_USERS_HTTP_"
+	defDB          = "users"
+	defSvcHttpPort = "8180"
 )
 
 type config struct {
-	LogLevel      string `env:"MF_USERS_LOG_LEVEL"               envDefault:"debug"`
+	LogLevel      string `env:"MF_USERS_LOG_LEVEL"               envDefault:"info"`
 	AdminEmail    string `env:"MF_USERS_ADMIN_EMAIL"             envDefault:""`
 	AdminPassword string `env:"MF_USERS_ADMIN_PASSWORD"          envDefault:""`
 	PassRegexText string `env:"MF_USERS_PASS_REGEX"              envDefault:"^.{8,}$"`
 	SelfRegister  bool   `env:"MF_USERS_ALLOW_SELF_REGISTER"     envDefault:"true"`
-	JaegerURL     string `env:"MF_JAEGER_URL"                    envDefault:"localhost:6831"`
 	ResetURL      string `env:"MF_TOKEN_RESET_ENDPOINT"          envDefault:"email.tmpl"`
+	JaegerURL     string `env:"MF_JAEGER_URL"                    envDefault:"localhost:6831"`
 	PassRegex     *regexp.Regexp
 }
 
@@ -104,7 +105,7 @@ func main() {
 	}
 	defer closer.Close()
 
-	httpServerConfig := server.Config{}
+	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
