@@ -31,6 +31,7 @@ import (
 const (
 	svcName        = "bootstrap"
 	envPrefix      = "MF_BOOTSTRAP_"
+	envPrefixES    = "MF_BOOTSTRAP_ES_"
 	envPrefixHttp  = "MF_BOOTSTRAP_HTTP_"
 	defDB          = "bootstrap"
 	defSvcHttpPort = "8180"
@@ -70,7 +71,7 @@ func main() {
 
 	///////////////// EVENT STORE REDIS CLIENT /////////////////////////
 	// create new redis client for bootstrap event store
-	esClient, err := redisClient.Setup(envPrefix)
+	esClient, err := redisClient.Setup(envPrefixES)
 	if err != nil {
 		log.Fatalf("failed to setup %s bootstrap event store redis client : %s", svcName, err.Error())
 	}

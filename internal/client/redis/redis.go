@@ -18,9 +18,9 @@ var (
 
 // Config of RedisDB
 type Config struct {
-	URL  string `env:"ES_URL"    envDefault:"localhost:6379"`
-	Pass string `env:"ES_PASS"   envDefault:""`
-	DB   string `env:"ES_DB"     envDefault:"0"`
+	URL  string `env:"URL"    envDefault:"localhost:6379"`
+	Pass string `env:"PASS"   envDefault:""`
+	DB   string `env:"DB"     envDefault:"0"`
 }
 
 // Setup load configuration from environment, creates new RedisDB client and connect to RedisDB Server.
