@@ -25,13 +25,14 @@ import (
 )
 
 const (
-	svcName       = "http_adapter"
-	envPrefix     = "MF_HTTP_ADAPTER_"
-	envPrefixHttp = "MF_HTTP_ADAPTER_HTTP_"
+	svcName        = "http_adapter"
+	envPrefix      = "MF_HTTP_ADAPTER_"
+	envPrefixHttp  = "MF_HTTP_ADAPTER_HTTP_"
+	defSvcHttpPort = "8180"
 )
 
 type config struct {
-	LogLevel  string `env:"MF_HTTP_ADAPTER_LOG_LEVEL"   envDefault:"debug"`
+	LogLevel  string `env:"MF_HTTP_ADAPTER_LOG_LEVEL"   envDefault:"info"`
 	BrokerURL string `env:"MF_BROKER_URL"               envDefault:"nats://localhost:4222"`
 	JaegerURL string `env:"MF_JAEGER_URL"               envDefault:"localhost:6831"`
 }
