@@ -31,10 +31,11 @@ import (
 )
 
 const (
-	svcName       = "certs"
-	envPrefix     = "MF_CERTS_"
-	envPrefixHttp = "MF_CERTS_HTTP_"
-	defDB         = "certs"
+	svcName        = "certs"
+	envPrefix      = "MF_CERTS_"
+	envPrefixHttp  = "MF_CERTS_HTTP_"
+	defDB          = "certs"
+	defSvcHttpPort = "8204"
 )
 
 var (
@@ -45,7 +46,7 @@ var (
 )
 
 type config struct {
-	LogLevel  string `env:"MF_CERTS_LOG_LEVEL"        envDefault:"debug"`
+	LogLevel  string `env:"MF_CERTS_LOG_LEVEL"        envDefault:"info"`
 	CertsURL  string `env:"MF_SDK_CERTS_URL"          envDefault:"http://localhost"`
 	ThingsURL string `env:"MF_THINGS_URL"             envDefault:"http://things:8182"`
 	JaegerURL string `env:"MF_JAEGER_URL"             envDefault:"localhost:6831"`
@@ -108,7 +109,7 @@ func main() {
 
 	svc := newService(auth, db, logger, nil, tlsCert, caCert, cfg, pkiClient)
 
-	httpServerConfig := server.Config{}
+	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
