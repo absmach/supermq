@@ -25,13 +25,14 @@ import (
 )
 
 const (
-	svcName       = "cassandra-reader"
-	envPrefix     = "MF_CASSANDRA_READER_"
-	envPrefixHttp = "MF_CASSANDRA_READER_HTTP_"
+	svcName        = "cassandra-reader"
+	envPrefix      = "MF_CASSANDRA_READER_"
+	envPrefixHttp  = "MF_CASSANDRA_READER_HTTP_"
+	defSvcHttpPort = "8180"
 )
 
 type config struct {
-	LogLevel  string `env:"MF_CASSANDRA_READER_LOG_LEVEL"     envDefault:"debug"`
+	LogLevel  string `env:"MF_CASSANDRA_READER_LOG_LEVEL"     envDefault:"info"`
 	JaegerURL string `env:"MF_JAEGER_URL"                     envDefault:"localhost:6831"`
 }
 
@@ -80,7 +81,7 @@ func main() {
 
 	///////////////// HTTP SERVER //////////////////////////
 	// create new http server config
-	httpServerConfig := server.Config{}
+	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	// load http server config from environment variables
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
