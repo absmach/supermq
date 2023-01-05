@@ -25,13 +25,14 @@ import (
 )
 
 const (
-	svcName       = "ws-adapter"
-	envPrefix     = "MF_WS_ADAPTER_"
-	envPrefixHttp = "MF_WS_ADAPTER_HTTP_"
+	svcName        = "ws-adapter"
+	envPrefix      = "MF_WS_ADAPTER_"
+	envPrefixHttp  = "MF_WS_ADAPTER_HTTP_"
+	defSvcHttpPort = "8190"
 )
 
 type config struct {
-	LogLevel  string `env:"MF_WS_ADAPTER_LOG_LEVEL"   envDefault:"debug"`
+	LogLevel  string `env:"MF_WS_ADAPTER_LOG_LEVEL"   envDefault:"info"`
 	BrokerURL string `env:"MF_BROKER_URL"             envDefault:"nats://localhost:4222"`
 	JaegerURL string `env:"MF_JAEGER_URL"             envDefault:"localhost:6831"`
 }
@@ -66,7 +67,7 @@ func main() {
 
 	svc := newService(tc, nps, logger)
 
-	httpServerConfig := server.Config{}
+	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
