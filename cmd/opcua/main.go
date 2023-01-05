@@ -31,6 +31,7 @@ const (
 	envPrefixES       = "MF_OPCUA_ADAPTER_ES_"
 	envPrefixHttp     = "MF_OPCUA_ADAPTER_HTTP_"
 	envPrefixRouteMap = "MF_OPCUA_ADAPTER_ROUTE_MAP_"
+	defSvcHttpPort    = "8180"
 
 	thingsRMPrefix     = "thing"
 	channelsRMPrefix   = "channel"
@@ -38,7 +39,7 @@ const (
 )
 
 type config struct {
-	LogLevel       string `env:"MF_OPCUA_ADAPTER_LOG_LEVEL"          envDefault:"debug"`
+	LogLevel       string `env:"MF_OPCUA_ADAPTER_LOG_LEVEL"          envDefault:"info"`
 	EsConsumerName string `env:"MF_OPCUA_ADAPTER_EVENT_CONSUMER"     envDefault:""`
 	BrokerURL      string `env:"MF_BROKER_URL"                       envDefault:"nats://localhost:4222"`
 }
@@ -93,7 +94,7 @@ func main() {
 	go subscribeToStoredSubs(sub, opcConfig, logger)
 	go subscribeToThingsES(svc, esConn, cfg.EsConsumerName, logger)
 
-	httpServerConfig := server.Config{}
+	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
