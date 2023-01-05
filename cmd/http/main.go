@@ -72,7 +72,7 @@ func main() {
 	}
 	defer closer.Close()
 
-	httpServerConfig := server.Config{}
+	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}

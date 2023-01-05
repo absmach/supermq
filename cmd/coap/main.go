@@ -77,7 +77,7 @@ func main() {
 	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHTTPHandler(), logger)
 
-	coapServerConfig := server.Config{Port: defSvcHttpPort}
+	coapServerConfig := server.Config{Port: defSvcCoapPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixCoap, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s CoAP server configuration : %s", svcName, err.Error())
 	}
