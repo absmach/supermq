@@ -34,6 +34,7 @@ const (
 	envPrefixHttp     = "MF_LORA_ADAPTER_HTTP_"
 	envPrefixRouteMap = "MF_LORA_ADAPTER_ROUTE_MAP_"
 	envPrefixThingsES = "MF_THINGS_ES_"
+	defSvcHttpPort    = "8180"
 
 	thingsRMPrefix   = "thing"
 	channelsRMPrefix = "channel"
@@ -41,14 +42,14 @@ const (
 )
 
 type config struct {
-	LogLevel       string        `env:"MF_BOOTSTRAP_LOG_LEVEL"              envDefault:"debug"`
-	LoraMsgURL     string        `env:"MF_LORA_ADAPTER_MESSAGES_URL"        envDefault:"debug"`
-	LoraMsgUser    string        `env:"MF_LORA_ADAPTER_MESSAGES_USER"       envDefault:"debug"`
-	LoraMsgPass    string        `env:"MF_LORA_ADAPTER_MESSAGES_PASS"       envDefault:"debug"`
-	LoraMsgTopic   string        `env:"MF_LORA_ADAPTER_MESSAGES_TOPIC"      envDefault:"debug"`
-	LoraMsgTimeout time.Duration `env:"MF_LORA_ADAPTER_MESSAGES_TIMEOUT"    envDefault:"debug"`
-	EsConsumerName string        `env:"MF_LORA_ADAPTER_EVENT_CONSUMER"      envDefault:"debug"`
-	BrokerURL      string        `env:"MF_BROKER_URL"                       envDefault:"debug"`
+	LogLevel       string        `env:"MF_BOOTSTRAP_LOG_LEVEL"              envDefault:"info"`
+	LoraMsgURL     string        `env:"MF_LORA_ADAPTER_MESSAGES_URL"        envDefault:"tcp://localhost:1883"`
+	LoraMsgUser    string        `env:"MF_LORA_ADAPTER_MESSAGES_USER"       envDefault:""`
+	LoraMsgPass    string        `env:"MF_LORA_ADAPTER_MESSAGES_PASS"       envDefault:""`
+	LoraMsgTopic   string        `env:"MF_LORA_ADAPTER_MESSAGES_TOPIC"      envDefault:"application/+/device/+/event/up"`
+	LoraMsgTimeout time.Duration `env:"MF_LORA_ADAPTER_MESSAGES_TIMEOUT"    envDefault:"30s"`
+	EsConsumerName string        `env:"MF_LORA_ADAPTER_EVENT_CONSUMER"      envDefault:"lora"`
+	BrokerURL      string        `env:"MF_BROKER_URL"                       envDefault:"nats://localhost:4222"`
 }
 
 func main() {
@@ -90,7 +91,7 @@ func main() {
 	go subscribeToLoRaBroker(svc, mqttConn, cfg.LoraMsgTimeout, cfg.LoraMsgTopic, logger)
 	go subscribeToThingsES(svc, esConn, cfg.EsConsumerName, logger)
 
-	httpServerConfig := server.Config{}
+	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
