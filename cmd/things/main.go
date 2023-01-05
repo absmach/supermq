@@ -37,20 +37,23 @@ import (
 )
 
 const (
-	svcName           = "things"
-	envPrefix         = "MF_THINGS_"
-	envPrefixCache    = "MF_THINGS_CACHE_"
-	envPrefixES       = "MF_THINGS_ES_"
-	envPrefixHttp     = "MF_THINGS_HTTP_"
-	envPrefixAuthHttp = "MF_THINGS_AUTH_HTTP_"
-	envPrefixAuthGrpc = "MF_THINGS_AUTH_GRPC_"
-	defDB             = "things"
+	svcName            = "things"
+	envPrefix          = "MF_THINGS_"
+	envPrefixCache     = "MF_THINGS_CACHE_"
+	envPrefixES        = "MF_THINGS_ES_"
+	envPrefixHttp      = "MF_THINGS_HTTP_"
+	envPrefixAuthHttp  = "MF_THINGS_AUTH_HTTP_"
+	envPrefixAuthGrpc  = "MF_THINGS_AUTH_GRPC_"
+	defDB              = "things"
+	defSvcHttpPort     = "8182"
+	defSvcAuthHttpPort = "8989"
+	defSvcAuthGrpcPort = "8181"
 )
 
 type config struct {
-	LogLevel        string `env:"MF_THINGS_LOG_LEVEL"          envDefault:"debug"`
-	StandaloneEmail string `env:"MF_THINGS_STANDALONE_EMAIL"   envDefault:"debug"`
-	StandaloneToken string `env:"MF_THINGS_STANDALONE_TOKEN"   envDefault:"debug"`
+	LogLevel        string `env:"MF_THINGS_LOG_LEVEL"          envDefault:"info"`
+	StandaloneEmail string `env:"MF_THINGS_STANDALONE_EMAIL"   envDefault:""`
+	StandaloneToken string `env:"MF_THINGS_STANDALONE_TOKEN"   envDefault:""`
 	JaegerURL       string `env:"MF_JAEGER_URL"                envDefault:"localhost:6831"`
 }
 
@@ -128,7 +131,7 @@ func main() {
 
 	/////////////////// THINGS HTTP SERVER /////////////////////
 	// create new HTTP  server config
-	httpServerConfig := server.Config{}
+	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	// load grpc server config from environment variables
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s gRPC server configuration : %s", svcName, err.Error())
@@ -137,7 +140,7 @@ func main() {
 
 	/////////////////// THINGS AUTH HTTP SERVER /////////////////////
 	// create new things auth http server config
-	authHttpServerConfig := server.Config{}
+	authHttpServerConfig := server.Config{Port: defSvcAuthHttpPort}
 	// load grpc server config from environment variables
 	if err := env.Parse(&authHttpServerConfig, env.Options{Prefix: envPrefixAuthHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s gRPC server configuration : %s", svcName, err.Error())
@@ -151,7 +154,7 @@ func main() {
 
 	}
 	// create new grpc server config
-	grpcServerConfig := server.Config{}
+	grpcServerConfig := server.Config{Port: defSvcAuthGrpcPort}
 	// load grpc server config from environment variables
 	if err := env.Parse(&grpcServerConfig, env.Options{Prefix: envPrefixAuthGrpc, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s gRPC server configuration : %s", svcName, err.Error())
