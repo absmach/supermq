@@ -62,39 +62,45 @@ printf "Got the MF_TOKEN : $MF_TOKEN \n"
 
 #! TASK -> Automate below step instead of manually typing
 
+# SERVICES = auth bootstrap certs consumers-notifiers http provision readers things twins users websockets
+
+cd ./scripts
+make test
+cd -
+
 # Run the schemathesis container
-echo "running tests for auth service"
-st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/auth.yml
+# echo "running tests for auth service"
+# st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/auth.yml
 
-echo "running tests for bootstrap service"
-st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/bootstrap.yml
+# echo "running tests for bootstrap service"
+# st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/bootstrap.yml
 
-echo "running tests for certs service"
-st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/certs.yml
+# echo "running tests for certs service"
+# st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/certs.yml
 
-echo "running tests for consumers-notifiers service"
-st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/consumers-notifiers.yml
+# echo "running tests for consumers-notifiers service"
+# st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/consumers-notifiers.yml
 
-echo "running tests for http service"
-st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/http.yml
+# echo "running tests for http service"
+# st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/http.yml
 
-echo "running tests for provision service"
-st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/provision.yml
+# echo "running tests for provision service"
+# st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/provision.yml
 
-echo "running tests for readers service"
-st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/readers.yml
+# echo "running tests for readers service"
+# st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/readers.yml
 
-echo "running tests for things service"
-st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/things.yml
+# echo "running tests for things service"
+# st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/things.yml
 
-echo "running tests for twins service"
-st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/twins.yml
+# echo "running tests for twins service"
+# st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/twins.yml
 
-echo "running tests for users service"
-st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/users.yml
+# echo "running tests for users service"
+# st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/users.yml
 
-echo "running tests for websocket service"
-st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/websocket.yml
+# echo "running tests for websocket service"
+# st run --base-url=http://localhost -H "Authorization: $MF_TOKEN" --validate-schema=true ./api/openapi/websocket.yml
 
 
 # sudo docker run --network="host" schemathesis/schemathesis:stable \
