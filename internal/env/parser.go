@@ -86,11 +86,12 @@ func parseGrpcConfig(cfg *grpc.Config, altPrefix string, opts ...env.Options) er
 }
 
 func parseServerConfig(cfg *server.Config, altPrefix string, opts ...env.Options) error {
+	copyConfig := cfg
 	if err := env.Parse(cfg, opts...); err != nil {
 		return err
 	}
 
-	if cfg.CertFile == "" || cfg.KeyFile == "" || cfg.Port == "" {
+	if cfg.CertFile == "" || cfg.KeyFile == "" || cfg.Port == "" || cfg.Port == copyConfig.Port {
 		altOpts := []env.Options{}
 		for _, opt := range opts {
 			if opt.Prefix != "" {
@@ -108,7 +109,7 @@ func parseServerConfig(cfg *server.Config, altPrefix string, opts ...env.Options
 		if cfg.KeyFile == "" && altCfg.KeyFile != "" {
 			cfg.KeyFile = altCfg.KeyFile
 		}
-		if cfg.Port == "" && altCfg.Port != "" {
+		if (cfg.Port == "" || cfg.Port == copyConfig.Port) && altCfg.Port != "" {
 			cfg.Port = altCfg.Port
 		}
 	}
