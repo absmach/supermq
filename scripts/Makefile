@@ -3,7 +3,7 @@
 
 #TODO: Makefile to set up list of all 
 
-test: test0 test3 test4 test5 test6 test7 test9 test10 test11 test8 test1 remove
+test: test0 test2 test3 test4 test5 test6 test7 test9 test10 test11 test8 test1 remove
 
 test0:
 	echo token is $(MF_TOKEN) base path is $(MF_BASE_PATH)
@@ -13,12 +13,13 @@ test1:
 		run -w 4 /mnt/auth.yml -H "Authorization: $(MF_TOKEN)" --base-url=http://localhost
 
 test2:
-	sudo docker run --rm -v $(MF_BASE_PATH)/api/openapi:/mnt --network="host" schemathesis/schemathesis:stable \
-		run -w 4 /mnt/bootstrap.yml -H "Authorization: $(MF_TOKEN)" --base-url=http://localhost
+	sudo docker run --name=stapi -d -v $(MF_BASE_PATH)/api/openapi:/mnt --network="host" schemathesis/schemathesis:stable \
+		run -w 4 /mnt/bootstrap.yml -H "Authorization: $(MF_TOKEN)" --report=mnt/01.txt --base-url=http://localhost --show-errors-tracebacks \
+		&& sudo docker cp stapi:/mnt/01.txt $(MF_BASE_PATH)/api/reports/certs-report.txt
 
 test3:
 	sudo docker run --rm -v $(MF_BASE_PATH)/api/openapi:/mnt --network="host" schemathesis/schemathesis:stable \
-		run -w 4 /mnt/certs.yml -H "Authorization: $(MF_TOKEN)" --base-url=http://localhost --validate-schema=true --show-errors-tracebacks
+		run -w 4 /mnt/certs.yml -H "Authorization: $(MF_TOKEN)" --report="$(MF_BASE_PATH)/api/reports/certs-report.txt" --base-url=http://localhost --validate-schema=true --show-errors-tracebacks
 
 test4:
 	sudo docker run --rm -v $(MF_BASE_PATH)/api/openapi:/mnt --network="host" schemathesis/schemathesis:stable \
