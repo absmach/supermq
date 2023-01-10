@@ -69,7 +69,7 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	// Setup new postgres client.
+	// Create new postgres client.
 	dbConfig := pgClient.Config{Name: defDB}
 	db, err := pgClient.SetupWithConfig(envPrefix, *authPg.Migration(), dbConfig)
 	if err != nil {
