@@ -40,7 +40,7 @@ const (
 
 type config struct {
 	LogLevel       string `env:"MF_OPCUA_ADAPTER_LOG_LEVEL"          envDefault:"info"`
-	EsConsumerName string `env:"MF_OPCUA_ADAPTER_EVENT_CONSUMER"     envDefault:""`
+	ESConsumerName string `env:"MF_OPCUA_ADAPTER_EVENT_CONSUMER"     envDefault:""`
 	BrokerURL      string `env:"MF_BROKER_URL"                       envDefault:"nats://localhost:4222"`
 }
 
@@ -92,7 +92,7 @@ func main() {
 	svc := newService(sub, browser, thingRM, chanRM, connRM, opcConfig, logger)
 
 	go subscribeToStoredSubs(sub, opcConfig, logger)
-	go subscribeToThingsES(svc, esConn, cfg.EsConsumerName, logger)
+	go subscribeToThingsES(svc, esConn, cfg.ESConsumerName, logger)
 
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {

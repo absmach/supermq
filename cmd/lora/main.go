@@ -48,7 +48,7 @@ type config struct {
 	LoraMsgPass    string        `env:"MF_LORA_ADAPTER_MESSAGES_PASS"       envDefault:""`
 	LoraMsgTopic   string        `env:"MF_LORA_ADAPTER_MESSAGES_TOPIC"      envDefault:"application/+/device/+/event/up"`
 	LoraMsgTimeout time.Duration `env:"MF_LORA_ADAPTER_MESSAGES_TIMEOUT"    envDefault:"30s"`
-	EsConsumerName string        `env:"MF_LORA_ADAPTER_EVENT_CONSUMER"      envDefault:"lora"`
+	ESConsumerName string        `env:"MF_LORA_ADAPTER_EVENT_CONSUMER"      envDefault:"lora"`
 	BrokerURL      string        `env:"MF_BROKER_URL"                       envDefault:"nats://localhost:4222"`
 }
 
@@ -89,7 +89,7 @@ func main() {
 	mqttConn := connectToMQTTBroker(cfg.LoraMsgURL, cfg.LoraMsgUser, cfg.LoraMsgPass, cfg.LoraMsgTimeout, logger)
 
 	go subscribeToLoRaBroker(svc, mqttConn, cfg.LoraMsgTimeout, cfg.LoraMsgTopic, logger)
-	go subscribeToThingsES(svc, esConn, cfg.EsConsumerName, logger)
+	go subscribeToThingsES(svc, esConn, cfg.ESConsumerName, logger)
 
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {

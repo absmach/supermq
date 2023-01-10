@@ -40,7 +40,7 @@ const (
 type config struct {
 	LogLevel       string `env:"MF_BOOTSTRAP_LOG_LEVEL"        envDefault:"info"`
 	EncKey         []byte `env:"MF_BOOTSTRAP_ENCRYPT_KEY"      envDefault:"12345678910111213141516171819202"`
-	EsConsumerName string `env:"MF_BOOTSTRAP_EVENT_CONSUMER"   envDefault:"bootstrap"`
+	ESConsumerName string `env:"MF_BOOTSTRAP_EVENT_CONSUMER"   envDefault:"bootstrap"`
 	ThingsURL      string `env:"MF_THINGS_URL"                 envDefault:"http://localhost"`
 	JaegerURL      string `env:"MF_JAEGER_URL"                 envDefault:"localhost:6831"`
 }
@@ -111,7 +111,7 @@ func main() {
 	}
 	defer thingsESClient.Close()
 	// subscribe to things event store
-	go subscribeToThingsES(svc, thingsESClient, cfg.EsConsumerName, logger)
+	go subscribeToThingsES(svc, thingsESClient, cfg.ESConsumerName, logger)
 
 	if err := g.Wait(); err != nil {
 		logger.Error(fmt.Sprintf("Bootstrap service terminated: %s", err))
