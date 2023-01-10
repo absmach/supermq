@@ -31,12 +31,12 @@ type Config struct {
 // Setup creates a connection to the PostgreSQL instance and applies any
 // unapplied database migrations. A non-nil error is returned to indicate failure.
 func Setup(prefix string, migrations migrate.MemoryMigrationSource) (*sqlx.DB, error) {
-	return SetupWithDefConfig(prefix, migrations, Config{})
+	return SetupWithConfig(prefix, migrations, Config{})
 }
 
-// SetupWithDefConfig creates a connection to the PostgreSQL instance and applies any
+// SetupWithConfig creates a connection to the PostgreSQL instance and applies any
 // unapplied database migrations. A non-nil error is returned to indicate failure.
-func SetupWithDefConfig(prefix string, migrations migrate.MemoryMigrationSource, defConfig Config) (*sqlx.DB, error) {
+func SetupWithConfig(prefix string, migrations migrate.MemoryMigrationSource, defConfig Config) (*sqlx.DB, error) {
 	cfg := defConfig
 	if err := env.Parse(&cfg, env.Options{Prefix: prefix}); err != nil {
 		return nil, errors.Wrap(errConfig, err)

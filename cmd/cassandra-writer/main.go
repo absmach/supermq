@@ -42,7 +42,7 @@ func main() {
 
 	// Create new cassandra writer service configurations.
 	cfg := config{}
-	// Load cassandra writer service configurations from environment.
+
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("failed to load %s service configuration : %s", svcName, err.Error())
 	}
@@ -59,7 +59,7 @@ func main() {
 	}
 	defer csdSession.Close()
 
-	// Cassandra writer repo.
+	// Create new cassandra-writer repo.
 	repo := newService(csdSession, logger)
 
 	// Create new pub sub broker.
@@ -68,19 +68,19 @@ func main() {
 		log.Fatalf("failed to connect to message broker: %s", err.Error())
 	}
 	defer pubSub.Close()
-	// Start consumer.
+
+	// Start new consumer.
 	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to create Cassandra writer: %s", err))
 	}
 
-	// HTTP server.
-	// Create new http server config.
+	// Create new http server.
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
-	// Load http server config from environment variables
+
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefix, AltPrefix: envPrefixHttp}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
-	// Create new http server.
+
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svcName), logger)
 
 	// Start servers.

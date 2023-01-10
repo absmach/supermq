@@ -67,7 +67,7 @@ func main() {
 	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
 	dbConfig := pgClient.Config{Name: defDB}
-	db, err := pgClient.SetupWithDefConfig(envPrefix, migrate.MemoryMigrationSource{}, dbConfig)
+	db, err := pgClient.SetupWithConfig(envPrefix, migrate.MemoryMigrationSource{}, dbConfig)
 	if err != nil {
 		log.Fatalf("failed to setup postgres database : %s", err.Error())
 	}

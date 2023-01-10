@@ -77,7 +77,7 @@ func main() {
 
 	// Setup new database for things
 	dbConfig := pgClient.Config{Name: defDB}
-	db, err := pgClient.SetupWithDefConfig(envPrefix, *thingsPg.Migration(), dbConfig)
+	db, err := pgClient.SetupWithConfig(envPrefix, *thingsPg.Migration(), dbConfig)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

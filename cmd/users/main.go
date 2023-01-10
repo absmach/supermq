@@ -78,7 +78,7 @@ func main() {
 	}
 
 	dbConfig := pgClient.Config{Name: defDB}
-	db, err := pgClient.SetupWithDefConfig(envPrefix, *usersPg.Migration(), dbConfig)
+	db, err := pgClient.SetupWithConfig(envPrefix, *usersPg.Migration(), dbConfig)
 	if err != nil {
 		log.Fatal(err)
 	}

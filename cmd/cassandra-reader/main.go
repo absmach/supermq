@@ -42,7 +42,7 @@ func main() {
 
 	// Create cassandra reader service configurations.
 	cfg := config{}
-	// Load cassandra reader service configurations from environment.
+
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("failed to load %s service configuration : %s", svcName, err.Error())
 	}
@@ -68,7 +68,6 @@ func main() {
 	defer authHandler.Close()
 	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
-	// Cassandra reader repo.
 	// Create new cassandra client.
 	csdSession, err := cassandraClient.Setup(envPrefix)
 	if err != nil {
@@ -76,16 +75,16 @@ func main() {
 	}
 	defer csdSession.Close()
 
+	// Create new service
 	repo := newService(csdSession, logger)
 
-	// HTTP server.
-	// Create new http server config.
+	// Create new http server.
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
-	// Load http server config from environment variables.
+
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
-	// Create new http server.
+
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(repo, tc, auth, svcName, logger), logger)
 
 	// Start servers.

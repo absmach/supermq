@@ -58,7 +58,7 @@ func main() {
 	defer pubSub.Close()
 
 	dbConfig := pgClient.Config{Name: defDB}
-	db, err := pgClient.SetupWithDefConfig(envPrefix, *writerPg.Migration(), dbConfig)
+	db, err := pgClient.SetupWithConfig(envPrefix, *writerPg.Migration(), dbConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
