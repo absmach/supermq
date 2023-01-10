@@ -16,7 +16,7 @@ var (
 	errConnect = errors.New("failed to connect to redis server")
 )
 
-// Config of RedisDB
+// Config of RedisDB.
 type Config struct {
 	URL  string `env:"URL"    envDefault:"localhost:6379"`
 	Pass string `env:"PASS"   envDefault:""`

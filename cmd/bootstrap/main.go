@@ -59,26 +59,26 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	// Postgres client
-	// Create postgres client configuration with default values for database
+	// Postgres client.
+	// Create postgres client configuration with default values for database.
 	dbConfig := pgClient.Config{Name: defDB}
-	// create new postgres client
+	// Create new postgres client.
 	db, err := pgClient.SetupWithDefConfig(envPrefix, *bootstrapPg.Migration(), dbConfig)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	defer db.Close()
 
-	// Event store redis client
-	// create new redis client for bootstrap event store
+	// Event store redis client.
+	// Create new redis client for bootstrap event store.
 	esClient, err := redisClient.Setup(envPrefixES)
 	if err != nil {
 		log.Fatalf("failed to setup %s bootstrap event store redis client : %s", svcName, err.Error())
 	}
 	defer esClient.Close()
 
-	// Auth - gRPC client
-	// create new auth grpc client api
+	// Auth - gRPC client.
+	// Create new auth grpc client api.
 	auth, authHandler, err := authClient.Setup(envPrefix, cfg.JaegerURL)
 	if err != nil {
 		log.Fatal(err)
@@ -86,17 +86,17 @@ func main() {
 	defer authHandler.Close()
 	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
-	// Bootstrap service
+	// Bootstrap service.
 	svc := newService(auth, db, logger, esClient, cfg)
 
-	// HTTP server
+	// HTTP server.
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, bootstrap.NewConfigReader(cfg.EncKey), logger), logger)
 
-	//Start servers
+	// Start servers.
 	g.Go(func() error {
 		return hs.Start()
 	})
@@ -104,13 +104,13 @@ func main() {
 		return server.StopSignalHandler(ctx, cancel, logger, svcName, hs)
 	})
 
-	// Subscribe to things event store
+	// Subscribe to things event store.
 	thingsESClient, err := redisClient.Setup(envPrefix)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 	defer thingsESClient.Close()
-	// subscribe to things event store
+	// Subscribe to things event store.
 	go subscribeToThingsES(svc, thingsESClient, cfg.ESConsumerName, logger)
 
 	if err := g.Wait(); err != nil {

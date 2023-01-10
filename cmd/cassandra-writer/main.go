@@ -40,51 +40,50 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
 
-	// create new cassandra writer service configurations
+	// Create new cassandra writer service configurations.
 	cfg := config{}
-	// load cassandra writer service configurations from environment
+	// Load cassandra writer service configurations from environment.
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("failed to load %s service configuration : %s", svcName, err.Error())
 	}
 
-	// create new logger
 	logger, err := logger.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 
-	// create new to cassandra client
+	// Create new to cassandra client.
 	csdSession, err := cassandraClient.Setup(envPrefix)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	defer csdSession.Close()
 
-	// Cassandra writer repo
+	// Cassandra writer repo.
 	repo := newService(csdSession, logger)
 
-	// create new pub sub broker
+	// Create new pub sub broker.
 	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)
 	if err != nil {
 		log.Fatalf("failed to connect to message broker: %s", err.Error())
 	}
 	defer pubSub.Close()
-	// Start consumer
+	// Start consumer.
 	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to create Cassandra writer: %s", err))
 	}
 
-	// HTTP server
-	// create new http server config
+	// HTTP server.
+	// Create new http server config.
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
-	// load http server config from environment variables
+	// Load http server config from environment variables
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefix, AltPrefix: envPrefixHttp}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
-	// create new http server
+	// Create new http server.
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svcName), logger)
 
-	//Start servers
+	// Start servers.
 	g.Go(func() error {
 		return hs.Start()
 	})
