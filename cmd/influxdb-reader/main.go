@@ -10,7 +10,7 @@ import (
 	"github.com/mainflux/mainflux/internal"
 	authClient "github.com/mainflux/mainflux/internal/client/grpc/auth"
 	thingsClient "github.com/mainflux/mainflux/internal/client/grpc/things"
-	influxClient "github.com/mainflux/mainflux/internal/client/influxdb"
+	influxDBClient "github.com/mainflux/mainflux/internal/client/influxdb"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
@@ -62,17 +62,17 @@ func main() {
 	defer authHandler.Close()
 	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
-	influxdbConfig := influxClient.Config{}
-	if err := env.Parse(&influxdbConfig, env.Options{Prefix: envPrefixInfluxdb}); err != nil {
+	influxDBConfig := influxDBClient.Config{}
+	if err := env.Parse(&influxDBConfig, env.Options{Prefix: envPrefixInfluxdb}); err != nil {
 		log.Fatalf("failed to load InfluxDB client configuration from environment variable : %s", err.Error())
 	}
-	client, err := influxClient.Connect(influxdbConfig)
+	client, err := influxDBClient.Connect(influxDBConfig)
 	if err != nil {
 		log.Fatalf("failed to connect to InfluxDB : %s", err.Error())
 	}
 	defer client.Close()
 
-	repo := newService(client, influxdbConfig.DbName, logger)
+	repo := newService(client, influxDBConfig.DbName, logger)
 
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {

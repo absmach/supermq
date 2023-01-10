@@ -14,7 +14,7 @@ import (
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	"github.com/mainflux/mainflux/consumers/writers/influxdb"
 	"github.com/mainflux/mainflux/internal"
-	influxClient "github.com/mainflux/mainflux/internal/client/influxdb"
+	influxDBClient "github.com/mainflux/mainflux/internal/client/influxdb"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
@@ -57,17 +57,17 @@ func main() {
 	}
 	defer pubSub.Close()
 
-	influxdbConfig := influxClient.Config{}
-	if err := env.Parse(&influxdbConfig, env.Options{Prefix: envPrefixInfluxdb}); err != nil {
+	influxDBConfig := influxDBClient.Config{}
+	if err := env.Parse(&influxDBConfig, env.Options{Prefix: envPrefixInfluxdb}); err != nil {
 		log.Fatalf("failed to load InfluxDB client configuration from environment variable : %s", err.Error())
 	}
-	client, err := influxClient.Connect(influxdbConfig)
+	client, err := influxDBClient.Connect(influxDBConfig)
 	if err != nil {
 		log.Fatalf("failed to connect to InfluxDB : %s", err.Error())
 	}
 	defer client.Close()
 
-	repo := newService(client, influxdbConfig.DbName, logger)
+	repo := newService(client, influxDBConfig.DbName, logger)
 
 	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
 		log.Fatalf("failed to start InfluxDB writer: %s", err.Error())
