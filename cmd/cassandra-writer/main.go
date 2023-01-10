@@ -54,14 +54,14 @@ func main() {
 	}
 
 	// create new to cassandra client
-	cassaSession, err := cassandraClient.Setup(envPrefix)
+	csdSession, err := cassandraClient.Setup(envPrefix)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	defer cassaSession.Close()
+	defer csdSession.Close()
 
 	// Cassandra writer repo
-	repo := newService(cassaSession, logger)
+	repo := newService(csdSession, logger)
 
 	// create new pub sub broker
 	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)

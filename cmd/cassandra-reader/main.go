@@ -71,13 +71,13 @@ func main() {
 
 	// Cassandra reader repo
 	// create new cassandra client
-	cassaSession, err := cassandraClient.Setup(envPrefix)
+	csdSession, err := cassandraClient.Setup(envPrefix)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	defer cassaSession.Close()
+	defer csdSession.Close()
 
-	repo := newService(cassaSession, logger)
+	repo := newService(csdSession, logger)
 
 	// HTTP server
 	// create new http server config
@@ -103,8 +103,8 @@ func main() {
 	}
 }
 
-func newService(cassaSession *gocql.Session, logger logger.Logger) readers.MessageRepository {
-	repo := cassandra.New(cassaSession)
+func newService(csdSession *gocql.Session, logger logger.Logger) readers.MessageRepository {
+	repo := cassandra.New(csdSession)
 	repo = api.LoggingMiddleware(repo, logger)
 	counter, latency := internal.MakeMetrics("cassandra", "message_reader")
 	repo = api.MetricsMiddleware(repo, counter, latency)
