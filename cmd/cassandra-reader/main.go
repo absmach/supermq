@@ -69,7 +69,7 @@ func main() {
 	defer authHandler.Close()
 	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
-	////////// CASSANDRA READER REPO /////////////
+	// Cassandra reader repo
 	// create new cassandra client
 	cassaSession, err := cassandraClient.Setup(envPrefix)
 	if err != nil {
@@ -79,7 +79,7 @@ func main() {
 
 	repo := newService(cassaSession, logger)
 
-	///////////////// HTTP SERVER //////////////////////////
+	// HTTP server
 	// create new http server config
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	// load http server config from environment variables

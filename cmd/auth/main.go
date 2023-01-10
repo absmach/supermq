@@ -71,7 +71,7 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	///////////////// POSTGRES CLIENT /////////////////////////
+	// Postgres client
 	// Create postgres client configuration with default values for database
 	dbConfig := pgClient.Config{Name: defDB}
 	// create new postgres client
@@ -81,7 +81,7 @@ func main() {
 	}
 	defer db.Close()
 
-	///////////////// AUTH SERVICE /////////////////////////
+	// Auth service
 	// create new tracer for repo database
 	dbTracer, dbCloser, err := jaegerClient.NewTracer("auth_db", cfg.JaegerURL)
 	if err != nil {
@@ -101,7 +101,7 @@ func main() {
 
 	svc := newService(db, dbTracer, cfg.Secret, logger, readerConn, writerConn, cfg.LoginDuration)
 
-	///////////////// HTTP SERVER //////////////////////////
+	// HTTP server
 	// create new http handler tracer
 	tracer, closer, err := jaegerClient.NewTracer("auth", cfg.JaegerURL)
 	if err != nil {
@@ -117,7 +117,7 @@ func main() {
 	// create new http server
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svc, tracer, logger), logger)
 
-	///////////////// GRPC SERVER //////////////////////////
+	// gRPC server
 	// create new grpc server config
 	grpcServerConfig := server.Config{Port: defSvcGrpcPort}
 	// load grpc server config from environment variables

@@ -60,7 +60,7 @@ func main() {
 	}
 	defer cassaSession.Close()
 
-	////////// CASSANDRA WRITER REPO /////////////
+	// Cassandra writer repo
 	repo := newService(cassaSession, logger)
 
 	// create new pub sub broker
@@ -74,7 +74,7 @@ func main() {
 		logger.Error(fmt.Sprintf("Failed to create Cassandra writer: %s", err))
 	}
 
-	///////////////// HTTP SERVER //////////////////////////
+	// HTTP server
 	// create new http server config
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	// load http server config from environment variables
