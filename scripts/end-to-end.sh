@@ -49,12 +49,12 @@ printf "Got the MF_TOKEN : $MF_TOKEN \n"
 
 #! TASK -> Automate below step instead of manually typing
 
-cd ./scripts
-make test
-cd -
+# cd ./scripts
+# make test
+# cd -
 
-echo deleting the stapi container
-sudo docker rm stapi
+# echo deleting the stapi container
+# sudo docker rm stapi
 
-echo stopping the running containers
-sudo docker-compose -f docker/docker-compose.yml down
+# echo stopping the running containers
+# sudo docker-compose -f docker/docker-compose.yml down
