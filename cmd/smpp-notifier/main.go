@@ -41,11 +41,11 @@ const (
 )
 
 type config struct {
-	LogLevel   string `env:"MF_SMPP_NOTIFIER_LOG_LEVEL"   envDefault:"info"`
-	From       string `env:"MF_SMPP_NOTIFIER_FROM_ADDR"   envDefault:""`
-	ConfigPath string `env:"MF_SMPP_NOTIFIER_CONFIG_PATH" envDefault:"/config.toml"`
-	BrokerURL  string `env:"MF_BROKER_URL"                envDefault:"nats://localhost:4222"`
-	JaegerURL  string `env:"MF_JAEGER_URL"                envDefault:"localhost:6831"`
+	LogLevel   string `env:"MF_SMPP_NOTIFIER_LOG_LEVEL,notEmpty"   envDefault:"info"`
+	From       string `env:"MF_SMPP_NOTIFIER_FROM_ADDR"            envDefault:""`
+	ConfigPath string `env:"MF_SMPP_NOTIFIER_CONFIG_PATH,notEmpty" envDefault:"/config.toml"`
+	BrokerURL  string `env:"MF_BROKER_URL,notEmpty"                envDefault:"nats://localhost:4222"`
+	JaegerURL  string `env:"MF_JAEGER_URL,notEmpty"                envDefault:"localhost:6831"`
 }
 
 func main() {

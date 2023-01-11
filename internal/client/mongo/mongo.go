@@ -20,9 +20,9 @@ var (
 
 // Config defines the options that are used when connecting to a MongoDB instance.
 type Config struct {
-	Host string `env:"HOST" envDefault:"27017"`
-	Port string `env:"PORT" envDefault:"localhost"`
-	DB   string `env:"DB"   envDefault:"messages"`
+	Host string `env:"HOST,notEmpty" envDefault:"27017"`
+	Port string `env:"PORT,notEmpty" envDefault:"localhost"`
+	DB   string `env:"DB,notEmpty"   envDefault:"messages"`
 }
 
 // Connect creates a connection to the MongoDB instance.

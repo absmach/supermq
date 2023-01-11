@@ -44,14 +44,14 @@ const (
 )
 
 type config struct {
-	LogLevel      string        `env:"MF_AUTH_LOG_LEVEL"             envDefault:"info"`
-	Secret        string        `env:"MF_AUTH_SECRET"                envDefault:"auth"`
-	KetoReadHost  string        `env:"MF_KETO_READ_REMOTE_HOST"      envDefault:"mainflux-keto"`
-	KetoReadPort  string        `env:"MF_KETO_READ_REMOTE_PORT"      envDefault:"4466"`
-	KetoWriteHost string        `env:"MF_KETO_WRITE_REMOTE_HOST"     envDefault:"mainflux-keto"`
-	KetoWritePort string        `env:"MF_KETO_WRITE_REMOTE_PORT"     envDefault:"4467"`
-	LoginDuration time.Duration `env:"MF_AUTH_LOGIN_TOKEN_DURATION"  envDefault:"10h"`
-	JaegerURL     string        `env:"MF_JAEGER_URL"                 envDefault:"localhost:6831"`
+	LogLevel      string        `env:"MF_AUTH_LOG_LEVEL,notEmpty"             envDefault:"info"`
+	Secret        string        `env:"MF_AUTH_SECRET,notEmpty"                envDefault:"auth"`
+	KetoReadHost  string        `env:"MF_KETO_READ_REMOTE_HOST,notEmpty"      envDefault:"mainflux-keto"`
+	KetoReadPort  string        `env:"MF_KETO_READ_REMOTE_PORT,notEmpty"      envDefault:"4466"`
+	KetoWriteHost string        `env:"MF_KETO_WRITE_REMOTE_HOST,notEmpty"     envDefault:"mainflux-keto"`
+	KetoWritePort string        `env:"MF_KETO_WRITE_REMOTE_PORT,notEmpty"     envDefault:"4467"`
+	LoginDuration time.Duration `env:"MF_AUTH_LOGIN_TOKEN_DURATION,notEmpty"  envDefault:"10h"`
+	JaegerURL     string        `env:"MF_JAEGER_URL,notEmpty"                 envDefault:"localhost:6831"`
 }
 
 func main() {

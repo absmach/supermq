@@ -43,13 +43,13 @@ const (
 )
 
 type config struct {
-	LogLevel      string `env:"MF_USERS_LOG_LEVEL"               envDefault:"info"`
-	AdminEmail    string `env:"MF_USERS_ADMIN_EMAIL"             envDefault:""`
-	AdminPassword string `env:"MF_USERS_ADMIN_PASSWORD"          envDefault:""`
-	PassRegexText string `env:"MF_USERS_PASS_REGEX"              envDefault:"^.{8,}$"`
-	SelfRegister  bool   `env:"MF_USERS_ALLOW_SELF_REGISTER"     envDefault:"true"`
-	ResetURL      string `env:"MF_TOKEN_RESET_ENDPOINT"          envDefault:"email.tmpl"`
-	JaegerURL     string `env:"MF_JAEGER_URL"                    envDefault:"localhost:6831"`
+	LogLevel      string `env:"MF_USERS_LOG_LEVEL,notEmpty"               envDefault:"info"`
+	AdminEmail    string `env:"MF_USERS_ADMIN_EMAIL"                      envDefault:""`
+	AdminPassword string `env:"MF_USERS_ADMIN_PASSWORD"                   envDefault:""`
+	PassRegexText string `env:"MF_USERS_PASS_REGEX,notEmpty"              envDefault:"^.{8,}$"`
+	SelfRegister  bool   `env:"MF_USERS_ALLOW_SELF_REGISTER,notEmpty"     envDefault:"true"`
+	ResetURL      string `env:"MF_TOKEN_RESET_ENDPOINT,notEmpty"          envDefault:"email.tmpl"`
+	JaegerURL     string `env:"MF_JAEGER_URL,notEmpty"                    envDefault:"localhost:6831"`
 	PassRegex     *regexp.Regexp
 }
 

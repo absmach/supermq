@@ -51,10 +51,10 @@ const (
 )
 
 type config struct {
-	LogLevel        string `env:"MF_THINGS_LOG_LEVEL"          envDefault:"info"`
-	StandaloneEmail string `env:"MF_THINGS_STANDALONE_EMAIL"   envDefault:""`
-	StandaloneToken string `env:"MF_THINGS_STANDALONE_TOKEN"   envDefault:""`
-	JaegerURL       string `env:"MF_JAEGER_URL"                envDefault:"localhost:6831"`
+	LogLevel        string `env:"MF_THINGS_LOG_LEVEL,notEmpty"          envDefault:"info"`
+	StandaloneEmail string `env:"MF_THINGS_STANDALONE_EMAIL"            envDefault:""`
+	StandaloneToken string `env:"MF_THINGS_STANDALONE_TOKEN"            envDefault:""`
+	JaegerURL       string `env:"MF_JAEGER_URL,notEmpty"                envDefault:"localhost:6831"`
 }
 
 func main() {

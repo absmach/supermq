@@ -34,8 +34,8 @@ const (
 )
 
 type config struct {
-	LogLevel  string `env:"MF_POSTGRES_READER_LOG_LEVEL"     envDefault:"info"`
-	JaegerURL string `env:"MF_JAEGER_URL"                    envDefault:"localhost:6831"`
+	LogLevel  string `env:"MF_POSTGRES_READER_LOG_LEVEL,notEmpty"     envDefault:"info"`
+	JaegerURL string `env:"MF_JAEGER_URL,notEmpty"                    envDefault:"localhost:6831"`
 }
 
 func main() {

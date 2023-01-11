@@ -32,9 +32,9 @@ const (
 )
 
 type config struct {
-	LogLevel   string `env:"MF_POSTGRES_WRITER_LOG_LEVEL"     envDefault:"info"`
-	ConfigPath string `env:"MF_POSTGRES_WRITER_CONFIG_PATH"   envDefault:"/config.toml"`
-	BrokerURL  string `env:"MF_BROKER_URL"                    envDefault:"nats://localhost:4222"`
+	LogLevel   string `env:"MF_POSTGRES_WRITER_LOG_LEVEL,notEmpty"     envDefault:"info"`
+	ConfigPath string `env:"MF_POSTGRES_WRITER_CONFIG_PATH"            envDefault:"/config.toml"`
+	BrokerURL  string `env:"MF_BROKER_URL,notEmpty"                    envDefault:"nats://localhost:4222"`
 }
 
 func main() {

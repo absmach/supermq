@@ -46,23 +46,23 @@ var (
 )
 
 type config struct {
-	LogLevel  string `env:"MF_CERTS_LOG_LEVEL"        envDefault:"info"`
-	CertsURL  string `env:"MF_SDK_CERTS_URL"          envDefault:"http://localhost"`
-	ThingsURL string `env:"MF_THINGS_URL"             envDefault:"http://things:8182"`
-	JaegerURL string `env:"MF_JAEGER_URL"             envDefault:"localhost:6831"`
+	LogLevel  string `env:"MF_CERTS_LOG_LEVEL,notEmpty"        envDefault:"info"`
+	CertsURL  string `env:"MF_SDK_CERTS_URL,notEmpty"          envDefault:"http://localhost"`
+	ThingsURL string `env:"MF_THINGS_URL,notEmpty"             envDefault:"http://things:8182"`
+	JaegerURL string `env:"MF_JAEGER_URL,notEmpty"             envDefault:"localhost:6831"`
 
 	// Sign and issue certificates without 3rd party PKI
-	SignCAPath    string `env:"MF_CERTS_SIGN_CA_PATH"        envDefault:"ca.crt"`
-	SignCAKeyPath string `env:"MF_CERTS_SIGN_CA_KEY_PATH"    envDefault:"ca.key"`
+	SignCAPath    string `env:"MF_CERTS_SIGN_CA_PATH,notEmpty"        envDefault:"ca.crt"`
+	SignCAKeyPath string `env:"MF_CERTS_SIGN_CA_KEY_PATH,notEmpty"    envDefault:"ca.key"`
 	// used in pki mock , need to clean up certs in separate PR
-	SignRSABits    int    `env:"MF_CERTS_SIGN_RSA_BITS"       envDefault:""`
-	SignHoursValid string `env:"MF_CERTS_SIGN_HOURS_VALID"    envDefault:"2048h"`
+	SignRSABits    int    `env:"MF_CERTS_SIGN_RSA_BITS,"               envDefault:""`
+	SignHoursValid string `env:"MF_CERTS_SIGN_HOURS_VALID,notEmpty"    envDefault:"2048h"`
 
 	// 3rd party PKI API access settings
-	PkiPath  string `env:"MF_CERTS_VAULT_HOST"         envDefault:"pki_int"`
-	PkiToken string `env:"MF_VAULT_PKI_INT_PATH"       envDefault:""`
-	PkiHost  string `env:"MF_VAULT_CA_ROLE_NAME"       envDefault:""`
-	PkiRole  string `env:"MF_VAULT_TOKEN"              envDefault:"mainflux"`
+	PkiPath  string `env:"MF_CERTS_VAULT_HOST,notEmpty"         envDefault:"pki_int"`
+	PkiToken string `env:"MF_VAULT_PKI_INT_PATH,"               envDefault:""`
+	PkiHost  string `env:"MF_VAULT_CA_ROLE_NAME"                envDefault:""`
+	PkiRole  string `env:"MF_VAULT_TOKEN,notEmpty"              envDefault:"mainflux"`
 }
 
 func main() {

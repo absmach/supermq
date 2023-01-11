@@ -45,12 +45,12 @@ const (
 )
 
 type config struct {
-	LogLevel        string `env:"MF_TWINS_LOG_LEVEL"          envDefault:"info"`
-	StandaloneEmail string `env:"MF_TWINS_STANDALONE_EMAIL"   envDefault:""`
-	StandaloneToken string `env:"MF_TWINS_STANDALONE_TOKEN"   envDefault:""`
-	ChannelID       string `env:"MF_TWINS_CHANNEL_ID"         envDefault:""`
-	BrokerURL       string `env:"MF_BROKER_URL"               envDefault:"nats://localhost:4222"`
-	JaegerURL       string `env:"MF_JAEGER_URL"               envDefault:"localhost:6831"`
+	LogLevel        string `env:"MF_TWINS_LOG_LEVEL,notEmpty"          envDefault:"info"`
+	StandaloneEmail string `env:"MF_TWINS_STANDALONE_EMAIL"            envDefault:""`
+	StandaloneToken string `env:"MF_TWINS_STANDALONE_TOKEN"            envDefault:""`
+	ChannelID       string `env:"MF_TWINS_CHANNEL_ID"                  envDefault:""`
+	BrokerURL       string `env:"MF_BROKER_URL,notEmpty"               envDefault:"nats://localhost:4222"`
+	JaegerURL       string `env:"MF_JAEGER_URL,notEmpty"               envDefault:"localhost:6831"`
 }
 
 func main() {
