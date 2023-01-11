@@ -39,7 +39,7 @@ const (
 
 type config struct {
 	LogLevel       string `env:"MF_BOOTSTRAP_LOG_LEVEL"        envDefault:"info"`
-	EncKey         []byte `env:"MF_BOOTSTRAP_ENCRYPT_KEY"      envDefault:"12345678910111213141516171819202"`
+	EncKey         string `env:"MF_BOOTSTRAP_ENCRYPT_KEY"      envDefault:"12345678910111213141516171819202"`
 	ESConsumerName string `env:"MF_BOOTSTRAP_EVENT_CONSUMER"   envDefault:"bootstrap"`
 	ThingsURL      string `env:"MF_THINGS_URL"                 envDefault:"http://localhost"`
 	JaegerURL      string `env:"MF_JAEGER_URL"                 envDefault:"localhost:6831"`
@@ -91,7 +91,7 @@ func main() {
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s HTTP server configuration : %s", svcName, err.Error())
 	}
-	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, bootstrap.NewConfigReader(cfg.EncKey), logger), logger)
+	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, bootstrap.NewConfigReader([]byte(cfg.EncKey)), logger), logger)
 
 	// Start servers.
 	g.Go(func() error {
@@ -102,7 +102,7 @@ func main() {
 	})
 
 	// Subscribe to things event store.
-	thingsESClient, err := redisClient.Setup(envPrefix)
+	thingsESClient, err := redisClient.Setup(envPrefixES)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -124,7 +124,7 @@ func newService(auth mainflux.AuthServiceClient, db *sqlx.DB, logger logger.Logg
 
 	sdk := mfsdk.NewSDK(config)
 
-	svc := bootstrap.New(auth, repoConfig, sdk, cfg.EncKey)
+	svc := bootstrap.New(auth, repoConfig, sdk, []byte(cfg.EncKey))
 	svc = redisprod.NewEventStoreMiddleware(svc, esClient)
 	svc = api.NewLoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics(svcName, "api")
