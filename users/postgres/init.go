@@ -7,6 +7,7 @@ import (
 	migrate "github.com/rubenv/sql-migrate"
 )
 
+// Migration of user service.
 func Migration() *migrate.MemoryMigrationSource {
 	return &migrate.MemoryMigrationSource{
 		Migrations: []*migrate.Migration{
