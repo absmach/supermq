@@ -8,16 +8,7 @@
 # Uses Schemathesis to check the openAPI configuration with the actual endpoints
 ###
 
-chmod 776 end-to-end.sh
-
 cd ..
-
-echo running all docker containers now
-sudo make run
-
-echo "now provisioning for MF_TOKEN"
-
-# 
 
 EMAIL=example@eg.com
 PASSWORD=12345678
@@ -44,17 +35,3 @@ export MF_BASE_PATH=$(pwd)
 
 echo setting mf auth bearer token
 export MF_TOKEN=$JWTTOKEN
-#TODO: Define rest of the constants like {id} or {key} , etc.
-printf "Got the MF_TOKEN : $MF_TOKEN \n"
-
-#! TASK -> Automate below step instead of manually typing
-
-# cd ./scripts
-# make test
-# cd -
-
-# echo deleting the stapi container
-# sudo docker rm stapi
-
-# echo stopping the running containers
-# sudo docker-compose -f docker/docker-compose.yml down
