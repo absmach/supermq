@@ -25,6 +25,9 @@ jobs:
   api-tests:
     runs-on: ubuntu-20.04
     steps:
+      - name: checkout repo
+        uses: actions/checkout@v2
+        
       - name: start containers
         run: make run
 
