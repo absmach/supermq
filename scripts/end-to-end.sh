@@ -10,6 +10,9 @@
 
 cd ..
 
+make dockers
+make rundetached
+
 EMAIL=example@eg.com
 PASSWORD=12345678
 DEVICE=mf-device
@@ -30,8 +33,8 @@ curl -s -S --cacert docker/ssl/certs/mainflux-server.crt --insecure -X POST -H "
 DEVICETOKEN=$(curl -s -S --cacert docker/ssl/certs/mainflux-server.crt --insecure -H "Authorization: Bearer $JWTTOKEN" https://localhost/things/1 | grep -Po "key\":\"\K(.*)(?=\")")
 printf "Device token is $DEVICETOKEN \n"
 
-echo setting mf base path
+echo setting mf base path $(pwd)
 export MF_BASE_PATH=$(pwd)
 
-echo setting mf auth bearer token
+echo setting mf auth bearer token $(JWTTOKEN)
 export MF_TOKEN=$JWTTOKEN

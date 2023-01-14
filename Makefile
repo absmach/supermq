@@ -124,6 +124,8 @@ $(DOCKERS):
 $(DOCKERS_DEV):
 	$(call make_docker_dev,$(@))
 
+stop:
+	docker-compose -f docker/docker-compose.yml down
 dockers: $(DOCKERS)
 dockers_dev: $(DOCKERS_DEV)
 
@@ -186,6 +188,7 @@ endif
 run: check_certs
 	sed -i "s,file: brokers/.*.yml,file: brokers/${MF_BROKER_TYPE}.yml," docker/docker-compose.yml
 	sed -i "s,MF_BROKER_URL=.*,MF_BROKER_URL=$$\{MF_$(shell echo ${MF_BROKER_TYPE} | tr 'a-z' 'A-Z')_URL\}," docker/.env
+<<<<<<< HEAD
 	docker-compose -f docker/docker-compose.yml -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
 
 run_addons: check_certs
@@ -193,3 +196,17 @@ run_addons: check_certs
 	@for SVC in $(RUN_ADDON_ARGS); do \
 		MF_ADDONS_CERTS_PATH_PREFIX="../."  docker-compose -f docker/addons/$$SVC/docker-compose.yml -p $(DOCKER_PROJECT) --env-file ./docker/.env $(DOCKER_COMPOSE_COMMAND) $(args) & \
 	done
+=======
+	docker-compose -f docker/docker-compose.yml up
+
+endtoend:
+	cd scripts && . ./end-to-end.sh
+
+rundetached:
+	sed -i "s,file: brokers/.*.yml,file: brokers/${MF_BROKER_TYPE}.yml," docker/docker-compose.yml
+	sed -i "s,MF_BROKER_URL=.*,MF_BROKER_URL=$$\{MF_$(shell echo ${MF_BROKER_TYPE} | tr 'a-z' 'A-Z')_URL\}," docker/.env
+	docker-compose -f docker/docker-compose.yml up -d
+
+composedown:
+	docker-compose -f docker/docker-compose.yml down
+>>>>>>> fc84e2cd (update gh config)

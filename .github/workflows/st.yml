@@ -1,30 +1,8 @@
-name: Deploy GitHub Pages
+name: Test OpenAPI using Schemathesis
 
-on:
-  push:
-    branches:
-      - master
+on: [push, pull_request] 
 
 jobs:
-  swagger-ui:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Swagger UI action
-        id: swagger-ui-action
-        uses: blokovi/swagger-ui-action@main
-        with:
-          dir: './api/openapi'
-          pattern: '*.yml'
-          debug: 'true'
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: swagger-ui
-          cname: api.mainflux.io
-          
   api-tests:
     runs-on: ubuntu-20.04
     steps:
@@ -32,118 +10,141 @@ jobs:
         uses: actions/checkout@v2
         
       - name: start containers
-        run: make run
+        run: make endtoend
 
       # Auth.yml
       - name: Run st for auth.yml
+        if: always()
         uses: schemathesis/action@v1
         with:
           # API schema location
           schema: './api/openapi/auth.yml'
           base-url: 'http://localhost'
+          args: '-H Authorization: $MF_TOKEN'
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Bootstrap.yml
       - name: Run st for bootstrap.yml
+        if: always()
         uses: schemathesis/action@v1
         with:
           # API schema location
           schema: './api/openapi/bootstrap.yml'
           base-url: 'http://localhost'
+          args: '-H Authorization: $MF_TOKEN'
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
         
       # Certs.yml
       - name: Run st for certs.yml
+        if: always()
         uses: schemathesis/action@v1
         with:
           # API schema location
           schema: './api/openapi/certs.yml'
           base-url: 'http://localhost'
+          args: '-H Authorization: $MF_TOKEN'
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Consumers-notifiers.yml
       - name: Run st for consumers-notifiers.yml
+        if: always()
         uses: schemathesis/action@v1
         with:
           # API schema location
           schema: './api/openapi/consumers-notifiers.yml'
           base-url: 'http://localhost'
+          args: '-H Authorization: $MF_TOKEN'
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
       
       # Http.yml
       - name: Run st for http.yml
+        if: always()
         uses: schemathesis/action@v1
         with:
           # API schema location
           schema: './api/openapi/http.yml'
           base-url: 'http://localhost'
+          args: '-H Authorization: $MF_TOKEN'
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Provision.yml
       - name: Run st for provision.yml
+        if: always()
         uses: schemathesis/action@v1
         with:
           # API schema location
           schema: './api/openapi/provision.yml'
           base-url: 'http://localhost'
+          args: '-H Authorization: $MF_TOKEN'
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Readers.yml
       - name: Run st for readers.yml
+        if: always()
         uses: schemathesis/action@v1
         with:
           # API schema location
           schema: './api/openapi/readers.yml'
           base-url: 'http://localhost'
+          args: '-H Authorization: $MF_TOKEN'
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Things.yml
       - name: Run st for things.yml
+        if: always()
         uses: schemathesis/action@v1
         with:
           # API schema location
           schema: './api/openapi/things.yml'
           base-url: 'http://localhost'
+          args: '-H Authorization: $MF_TOKEN'
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Twins.yml
       - name: Run st for twins.yml
+        if: always()
         uses: schemathesis/action@v1
         with:
           # API schema location
           schema: './api/openapi/twins.yml'
           base-url: 'http://localhost'
+          args: '-H Authorization: $MF_TOKEN'
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Users.yml
       - name: Run st for users.yml
+        if: always()
         uses: schemathesis/action@v1
         with:
           # API schema location
           schema: './api/openapi/users.yml'
           base-url: 'http://localhost'
+          args: '-H Authorization: $MF_TOKEN'
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Websocket.yml
       - name: Run st for websocket.yml
+        if: always()
         uses: schemathesis/action@v1
         with:
           # API schema location
           schema: './api/openapi/websocket.yml'
           base-url: 'http://localhost'
+          args: '-H Authorization: $MF_TOKEN'
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
 
       - name: Stop the running docker containers
-        run: sudo docker-compose -f docker/docker-compose.yml down 
+        if: always()
+        run: composedown 
