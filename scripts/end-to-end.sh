@@ -22,7 +22,7 @@ printf "Provisioning user with email $EMAIL and password $PASSWORD \n"
 curl -s -S --insecure -X POST -H "Content-Type: application/json" http://localhost/users -d '{"email":"'"$EMAIL"'", "password":"'"$PASSWORD"'"}'
 
 #get jwt token
-JWTTOKEN=$(curl -s -S -X POST -H "Content-Type: application/json" http://localhost/tokens -d '{"email":"'"$EMAIL"'", "password":"'"$PASSWORD"'"}' | grep -Po "token\":\"\K(.*)(?=\")")
+JWTTOKEN=$(curl -s -S -i -X POST -H "Content-Type: application/json" http://localhost/tokens -d '{"email":"'"$EMAIL"'", "password":"'"$PASSWORD"'"}' | grep -Po "token\":\"\K(.*)(?=\")")
 printf "JWT TOKEN for user is $JWTTOKEN \n"
 
 echo setting mf base path $(pwd)
