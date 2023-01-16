@@ -18,23 +18,17 @@ PASSWORD=12345678
 DEVICE=mf-device
 
 #provision user:
-printf "Provisoning user with email $EMAIL and password $PASSWORD \n"
-curl -s -S --cacert docker/ssl/certs/mainflux-server.crt --insecure -X POST -H "Content-Type: application/json" https://localhost/users -d '{"email":"'"$EMAIL"'", "password":"'"$PASSWORD"'"}'
+printf "Provisioning user with email $EMAIL and password $PASSWORD \n"
+curl -s -S --insecure -X POST -H "Content-Type: application/json" http://localhost/users -d '{"email":"'"$EMAIL"'", "password":"'"$PASSWORD"'"}'
 
 #get jwt token
-JWTTOKEN=$(curl -s -S --cacert docker/ssl/certs/mainflux-server.crt --insecure -X POST -H "Content-Type: application/json" https://localhost/tokens -d '{"email":"'"$EMAIL"'", "password":"'"$PASSWORD"'"}' | grep -Po "token\":\"\K(.*)(?=\")")
+JWTTOKEN=$(curl -s -S -X POST -H "Content-Type: application/json" http://localhost/tokens -d '{"email":"'"$EMAIL"'", "password":"'"$PASSWORD"'"}' | grep -Po "token\":\"\K(.*)(?=\")")
 printf "JWT TOKEN for user is $JWTTOKEN \n"
-
-#provision thing
-printf "Provisioning thing with name $DEVICE \n"
-curl -s -S --cacert docker/ssl/certs/mainflux-server.crt --insecure -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $JWTTOKEN" https://localhost/things -d '{"name":"'"$DEVICE"'"}'
-
-#get thing token
-DEVICETOKEN=$(curl -s -S --cacert docker/ssl/certs/mainflux-server.crt --insecure -H "Authorization: Bearer $JWTTOKEN" https://localhost/things/1 | grep -Po "key\":\"\K(.*)(?=\")")
-printf "Device token is $DEVICETOKEN \n"
 
 echo setting mf base path $(pwd)
 export MF_BASE_PATH=$(pwd)
 
-echo setting mf auth bearer token $(JWTTOKEN)
+# MF_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzM4ODg4NjIsImlhdCI6MTY3Mzg1Mjg2MiwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImV4YW1wbGVAZWcuY29tIiwiaXNzdWVyX2lkIjoiNzE0NTk5MmYtMzZkZi00NjE5LWE1YzQtOGJkMzg2YjI3YmE5IiwidHlwZSI6MH0.B1CSAPQawWH2UWt3qiD0KfufWuqgNjTaunr0fq4jAVA
+
+echo setting mf auth bearer token $JWTTOKEN
 export MF_TOKEN=$JWTTOKEN

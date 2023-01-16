@@ -8,7 +8,7 @@ jobs:
     steps:
       - name: checkout repo
         uses: actions/checkout@v2
-        
+      
       - name: start containers
         run: make endtoend
 
@@ -147,4 +147,4 @@ jobs:
 
       - name: Stop the running docker containers
         if: always()
-        run: composedown 
+        run: make composedown 
