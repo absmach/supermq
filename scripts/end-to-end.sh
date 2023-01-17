@@ -11,8 +11,8 @@
 echo go to root directory
 cd ..
 
-echo build images locallu
-make dockers
+echo build images locally
+make -j 2 && make dockers_dev -j 2
 
 echo run all the containers
 make run ARGS="-d"
@@ -31,5 +31,6 @@ printf "JWT TOKEN for user is $JWTTOKEN \n"
 echo setting mf base path $(pwd)
 export MF_BASE_PATH=$(pwd)
 
-echo setting mf auth bearer token $(JWTTOKEN)
-export MF_TOKEN=$(JWTTOKEN)
+printf "setting mf auth bearer token $JWTTOKEN \n"
+MF_TOKEN=$JWTTOKEN
+export MF_TOKEN
