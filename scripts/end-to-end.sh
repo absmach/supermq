@@ -34,3 +34,4 @@ export MF_BASE_PATH=$(pwd)
 printf "setting mf auth bearer token $JWTTOKEN \n"
 MF_TOKEN=$JWTTOKEN
 export MF_TOKEN
+source .bashrc
