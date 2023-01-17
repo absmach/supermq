@@ -15,17 +15,19 @@ jobs:
       - name: run containers
         run: make endtoend
       
+      # - name: Set token env variable
+      #   run: echo "MF_TOKEN=$(echo $MF_TOKEN)" >> $GITHUB_ENV
+      # - name: Test
+      #   run: echo $MF_TOKEN
       
       # Auth.yml
       - name: Run st for auth.yml
         if: always()
         uses: schemathesis/action@v1
         with:
-          # API schema location
           schema: './api/openapi/auth.yml'
           base-url: 'http://localhost'
           args: -H Authorization:${{ env.MF_TOKEN }}
-          # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Bootstrap.yml
@@ -33,11 +35,9 @@ jobs:
         if: always()
         uses: schemathesis/action@v1
         with:
-          # API schema location
           schema: './api/openapi/bootstrap.yml'
           base-url: 'http://localhost'
           args: -H Authorization:${{ env.MF_TOKEN }}
-          # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
         
       # Certs.yml
@@ -45,11 +45,9 @@ jobs:
         if: always()
         uses: schemathesis/action@v1
         with:
-          # API schema location
           schema: './api/openapi/certs.yml'
           base-url: 'http://localhost'
           args: -H Authorization:${{ env.MF_TOKEN }}
-          # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Consumers-notifiers.yml
@@ -57,11 +55,9 @@ jobs:
         if: always()
         uses: schemathesis/action@v1
         with:
-          # API schema location
           schema: './api/openapi/consumers-notifiers.yml'
           base-url: 'http://localhost'
           args: -H Authorization:${{ env.MF_TOKEN }}
-          # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
       
       # Http.yml
@@ -69,11 +65,9 @@ jobs:
         if: always()
         uses: schemathesis/action@v1
         with:
-          # API schema location
           schema: './api/openapi/http.yml'
           base-url: 'http://localhost'
           args: -H Authorization:${{ env.MF_TOKEN }}
-          # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Provision.yml
@@ -81,11 +75,9 @@ jobs:
         if: always()
         uses: schemathesis/action@v1
         with:
-          # API schema location
           schema: './api/openapi/provision.yml'
           base-url: 'http://localhost'
           args: -H Authorization:${{ env.MF_TOKEN }}
-          # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Readers.yml
@@ -93,11 +85,9 @@ jobs:
         if: always()
         uses: schemathesis/action@v1
         with:
-          # API schema location
           schema: './api/openapi/readers.yml'
           base-url: 'http://localhost'
           args: -H Authorization:${{ env.MF_TOKEN }}
-          # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Things.yml
@@ -105,11 +95,9 @@ jobs:
         if: always()
         uses: schemathesis/action@v1
         with:
-          # API schema location
           schema: './api/openapi/things.yml'
           base-url: 'http://localhost'
           args: -H Authorization:${{ env.MF_TOKEN }}
-          # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Twins.yml
@@ -117,11 +105,9 @@ jobs:
         if: always()
         uses: schemathesis/action@v1
         with:
-          # API schema location
           schema: './api/openapi/twins.yml'
           base-url: 'http://localhost'
           args: -H Authorization:${{ env.MF_TOKEN }}
-          # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Users.yml
@@ -129,11 +115,9 @@ jobs:
         if: always()
         uses: schemathesis/action@v1
         with:
-          # API schema location
           schema: './api/openapi/users.yml'
           base-url: 'http://localhost'
           args: -H Authorization:${{ env.MF_TOKEN }}
-          # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
       # Websocket.yml
@@ -141,14 +125,12 @@ jobs:
         if: always()
         uses: schemathesis/action@v1
         with:
-          # API schema location
           schema: './api/openapi/websocket.yml'
           base-url: 'http://localhost'
           args: -H Authorization:${{ env.MF_TOKEN }}
-          # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
 
       - name: Stop the running docker containers
         if: always()
-        run: make composedown 
+        run: make stop 

@@ -189,6 +189,7 @@ run: check_certs
 	sed -i "s,file: brokers/.*.yml,file: brokers/${MF_BROKER_TYPE}.yml," docker/docker-compose.yml
 	sed -i "s,MF_BROKER_URL=.*,MF_BROKER_URL=$$\{MF_$(shell echo ${MF_BROKER_TYPE} | tr 'a-z' 'A-Z')_URL\}," docker/.env
 <<<<<<< HEAD
+<<<<<<< HEAD
 	docker-compose -f docker/docker-compose.yml -p $(DOCKER_PROJECT) $(DOCKER_COMPOSE_COMMAND) $(args)
 
 run_addons: check_certs
@@ -210,3 +211,9 @@ rundetached:
 composedown:
 	docker-compose -f docker/docker-compose.yml down
 >>>>>>> fc84e2cd (update gh config)
+=======
+	docker-compose -f docker/docker-compose.yml up $(ARGS)
+
+endtoend:
+	cd scripts && . ./end-to-end.sh
+>>>>>>> e9beaa74e (update makefile)
