@@ -46,7 +46,6 @@ const (
 	caPath            = "../docker/ssl/certs/ca.crt"
 	caKeyPath         = "../docker/ssl/certs/ca.key"
 	cfgSignHoursValid = "24h"
-	cfgSignRSABits    = 2048
 )
 
 func newService(tokens map[string]string) (certs.Service, error) {
