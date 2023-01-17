@@ -2,6 +2,9 @@ name: Test OpenAPI using Schemathesis
 
 on: [push, pull_request] 
 
+env:
+  MF_TOKEN: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzM5MTgxNjUsImlhdCI6MTY3Mzg4MjE2NSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImV4YW1wbGVAZWcuY29tIiwiaXNzdWVyX2lkIjoiNzE0NTk5MmYtMzZkZi00NjE5LWE1YzQtOGJkMzg2YjI3YmE5IiwidHlwZSI6MH0.W7Ra3ChV0PPfTTJGJX4hAW_1Gq2zK0RR9qJJm3sk5tw"
+
 jobs:
   api-tests:
     runs-on: ubuntu-20.04
