@@ -3,7 +3,7 @@ name: Test OpenAPI using Schemathesis
 on: [push, pull_request] 
 
 env:
-  MF_TOKEN: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzM5MTgxNjUsImlhdCI6MTY3Mzg4MjE2NSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImV4YW1wbGVAZWcuY29tIiwiaXNzdWVyX2lkIjoiNzE0NTk5MmYtMzZkZi00NjE5LWE1YzQtOGJkMzg2YjI3YmE5IiwidHlwZSI6MH0.W7Ra3ChV0PPfTTJGJX4hAW_1Gq2zK0RR9qJJm3sk5tw"
+  MF_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzM5MTgxNjUsImlhdCI6MTY3Mzg4MjE2NSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImV4YW1wbGVAZWcuY29tIiwiaXNzdWVyX2lkIjoiNzE0NTk5MmYtMzZkZi00NjE5LWE1YzQtOGJkMzg2YjI3YmE5IiwidHlwZSI6MH0.W7Ra3ChV0PPfTTJGJX4hAW_1Gq2zK0RR9qJJm3sk5tw'
 
 jobs:
   api-tests:
@@ -12,9 +12,10 @@ jobs:
       - name: checkout repo
         uses: actions/checkout@v2
       
-      - name: start containers
+      - name: run containers
         run: make endtoend
-
+      
+      
       # Auth.yml
       - name: Run st for auth.yml
         if: always()
@@ -23,7 +24,7 @@ jobs:
           # API schema location
           schema: './api/openapi/auth.yml'
           base-url: 'http://localhost'
-          args: '-H Authorization: $MF_TOKEN'
+          args: -H Authorization:${{ env.MF_TOKEN }}
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
@@ -35,7 +36,7 @@ jobs:
           # API schema location
           schema: './api/openapi/bootstrap.yml'
           base-url: 'http://localhost'
-          args: '-H Authorization: $MF_TOKEN'
+          args: -H Authorization:${{ env.MF_TOKEN }}
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
         
@@ -47,7 +48,7 @@ jobs:
           # API schema location
           schema: './api/openapi/certs.yml'
           base-url: 'http://localhost'
-          args: '-H Authorization: $MF_TOKEN'
+          args: -H Authorization:${{ env.MF_TOKEN }}
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
@@ -59,7 +60,7 @@ jobs:
           # API schema location
           schema: './api/openapi/consumers-notifiers.yml'
           base-url: 'http://localhost'
-          args: '-H Authorization: $MF_TOKEN'
+          args: -H Authorization:${{ env.MF_TOKEN }}
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
       
@@ -71,7 +72,7 @@ jobs:
           # API schema location
           schema: './api/openapi/http.yml'
           base-url: 'http://localhost'
-          args: '-H Authorization: $MF_TOKEN'
+          args: -H Authorization:${{ env.MF_TOKEN }}
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
@@ -83,7 +84,7 @@ jobs:
           # API schema location
           schema: './api/openapi/provision.yml'
           base-url: 'http://localhost'
-          args: '-H Authorization: $MF_TOKEN'
+          args: -H Authorization:${{ env.MF_TOKEN }}
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
@@ -95,7 +96,7 @@ jobs:
           # API schema location
           schema: './api/openapi/readers.yml'
           base-url: 'http://localhost'
-          args: '-H Authorization: $MF_TOKEN'
+          args: -H Authorization:${{ env.MF_TOKEN }}
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
@@ -107,7 +108,7 @@ jobs:
           # API schema location
           schema: './api/openapi/things.yml'
           base-url: 'http://localhost'
-          args: '-H Authorization: $MF_TOKEN'
+          args: -H Authorization:${{ env.MF_TOKEN }}
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
@@ -119,7 +120,7 @@ jobs:
           # API schema location
           schema: './api/openapi/twins.yml'
           base-url: 'http://localhost'
-          args: '-H Authorization: $MF_TOKEN'
+          args: -H Authorization:${{ env.MF_TOKEN }}
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
@@ -131,7 +132,7 @@ jobs:
           # API schema location
           schema: './api/openapi/users.yml'
           base-url: 'http://localhost'
-          args: '-H Authorization: $MF_TOKEN'
+          args: -H Authorization:${{ env.MF_TOKEN }}
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
@@ -143,7 +144,7 @@ jobs:
           # API schema location
           schema: './api/openapi/websocket.yml'
           base-url: 'http://localhost'
-          args: '-H Authorization: $MF_TOKEN'
+          args: -H Authorization:${{ env.MF_TOKEN }}
           # Set your token from secrets
           token: ${{ secrets.SCHEMATHESIS_TOKEN }}
 
