@@ -3,7 +3,7 @@ name: Test OpenAPI using Schemathesis
 on: [push, pull_request] 
 
 env:
-  MF_TOKEN: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzM5MTgxNjUsImlhdCI6MTY3Mzg4MjE2NSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImV4YW1wbGVAZWcuY29tIiwiaXNzdWVyX2lkIjoiNzE0NTk5MmYtMzZkZi00NjE5LWE1YzQtOGJkMzg2YjI3YmE5IiwidHlwZSI6MH0.W7Ra3ChV0PPfTTJGJX4hAW_1Gq2zK0RR9qJJm3sk5tw
+  MF_TOKEN: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzM5MTgxNjUsImlhdCI6MTY3Mzg4MjE2NSwiaXNzIjoibWFpbmZsdXguYXV0aCIsInN1YiI6ImV4YW1wbGVAZWcuY29tIiwiaXNzdWVyX2lkIjoiNzE0NTk5MmYtMzZkZi00NjE5LWE1YzQtOGJkMzg2YjI3YmE5IiwidHlwZSI6MH0.W7Ra3ChV0PPfTTJGJX4hAW_1Gq2zK0RR9qJJm3sk5tw"
   EMAIL: example@eg.com
   PASSWORD: 12345678
   DEVICE: mf-device
@@ -20,7 +20,7 @@ jobs:
       
       - name: create images
         if: always()
-        run: make -j 2 && make dockers_dev -j 2
+        run: make dockers
 
       - name: run containers
         if: always()
@@ -29,12 +29,12 @@ jobs:
       - name: REST API with curl to provision user
         if: always()
         run: |
-          curl -s -S --insecure -X POST -H "Content-Type: application/json" http://localhost:8180/users -d '{"email":"'"$EMAIL"'", "password":"'"$PASSWORD"'"}'
+          curl -s -S -i -X POST -H "Content-Type: application/json" http://localhost:8180/users -d '{"email":"example@eg.com", "password":"12345678"}'
       
       - name: REST API with curl to set mf token
         if: always()
         run: |
-          echo "MF_TOKEN=$(curl -s -S -i -X POST -H "Content-Type: application/json" http://localhost:8180/tokens -d '{"email":"'"$EMAIL"'", "password":"'"$PASSWORD"'"}' | grep -Po "token\":\"\K(.*)(?=\")")" >> $GITHUB_ENV
+          echo "MF_TOKEN=$(curl -s -S -i -X POST -H "Content-Type: application/json" http://localhost:8180/tokens -d '{"email":"example@eg.com", "password":"12345678"}' | grep -Po "token\":\"\K(.*)(?=\")")" >> $GITHUB_ENV
       
       - name: print mf token
         if: always()
