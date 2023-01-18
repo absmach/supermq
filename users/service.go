@@ -5,6 +5,7 @@ package users
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 
 	"github.com/mainflux/mainflux"
@@ -176,6 +177,11 @@ func (svc usersService) Register(ctx context.Context, token string, user User) (
 
 	uid, err = svc.users.Save(ctx, user)
 	if err != nil {
+		if err2 := svc.revokeOwnership(ctx, user.ID, usersObjKey, memberRelationKey); err2 != nil {
+			return "", errors.Wrap(
+				fmt.Errorf("'%s'\nWhile handling this error, a new one occurred while revoking ownership", err), err2,
+			)
+		}
 		return "", err
 	}
 	return uid, nil
@@ -443,6 +449,19 @@ func (svc usersService) claimOwnership(ctx context.Context, subject, object, rel
 	}
 	if !res.GetAuthorized() {
 		return errors.ErrAuthorization
+	}
+	return nil
+}
+
+func (svc usersService) revokeOwnership(ctx context.Context, subject, object, relation string) error {
+	req := &mainflux.DeletePolicyReq{
+		Sub: subject,
+		Obj: object,
+		Act: relation,
+	}
+	_, err := svc.auth.DeletePolicy(ctx, req)
+	if err != nil {
+		return errors.Wrap(errors.ErrAuthorization, err)
 	}
 	return nil
 }
