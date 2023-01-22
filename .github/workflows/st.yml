@@ -26,7 +26,7 @@ jobs:
         if: always()
         run: make run ARGS="-d"
 
-      - name: REST API with curl to provision user
+       - name: REST API with curl to provision user
         if: always()
         run: |
           curl -s -S -i -X POST -H "Content-Type: application/json" http://localhost:8180/users -d '{"email":"example@eg.com", "password":"12345678"}'
