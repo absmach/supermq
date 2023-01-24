@@ -12,6 +12,7 @@ import (
 var (
 	errConfig  = errors.New("failed to load Cassandra configuration")
 	errConnect = errors.New("failed to connect to Cassandra database")
+	errInit    = errors.New("failed to execute initialization query in Cassandra ")
 )
 
 // Config contains Cassandra DB specific parameters.
@@ -25,11 +26,25 @@ type Config struct {
 
 // Setup load configuration from environment and creates new cassandra connection.
 func Setup(envPrefix string) (*gocql.Session, error) {
+	return SetupDB(envPrefix, "")
+}
+
+// SetupDB load configuration from environment, creates new cassandra connection and executes the initial query in database.
+func SetupDB(envPrefix string, initQuery string) (*gocql.Session, error) {
 	config := Config{}
 	if err := env.Parse(&config, env.Options{Prefix: envPrefix}); err != nil {
 		return nil, errors.Wrap(errConfig, err)
 	}
-	return Connect(config)
+	cs, err := Connect(config)
+	if err != nil {
+		return nil, err
+	}
+	if initQuery != "" {
+		if err := InitDB(cs, initQuery); err != nil {
+			return nil, errors.Wrap(errInit, err)
+		}
+	}
+	return cs, nil
 }
 
 // Connect establishes connection to the Cassandra cluster.
@@ -48,4 +63,8 @@ func Connect(cfg Config) (*gocql.Session, error) {
 		return nil, errors.Wrap(errConnect, err)
 	}
 	return cassSess, nil
+}
+
+func InitDB(cs *gocql.Session, query string) error {
+	return cs.Query(query).Exec()
 }

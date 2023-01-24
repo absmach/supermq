@@ -8,8 +8,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mainflux/mainflux/consumers/writers/cassandra"
 	cwriter "github.com/mainflux/mainflux/consumers/writers/cassandra"
-	cclient "github.com/mainflux/mainflux/internal/client/cassandra"
+	casClient "github.com/mainflux/mainflux/internal/client/cassandra"
 	"github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -46,12 +47,14 @@ var (
 )
 
 func TestReadSenml(t *testing.T) {
-	session, err := cclient.Connect(cclient.Config{
+	session, err := casClient.Connect(casClient.Config{
 		Hosts:    []string{addr},
 		Keyspace: keyspace,
 	})
 	require.Nil(t, err, fmt.Sprintf("failed to connect to Cassandra: %s", err))
 	defer session.Close()
+	err = casClient.InitDB(session, cassandra.TABLE)
+	require.Nil(t, err, fmt.Sprintf("failed to initialize to Cassandra: %s", err))
 	writer := cwriter.New(session)
 
 	chanID, err := idProvider.ID()
@@ -386,7 +389,7 @@ func TestReadSenml(t *testing.T) {
 }
 
 func TestReadJSON(t *testing.T) {
-	session, err := cclient.Connect(cclient.Config{
+	session, err := casClient.Connect(casClient.Config{
 		Hosts:    []string{addr},
 		Keyspace: keyspace,
 	})
