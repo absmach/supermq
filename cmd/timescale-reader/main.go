@@ -21,7 +21,6 @@ import (
 	"github.com/mainflux/mainflux/readers"
 	"github.com/mainflux/mainflux/readers/api"
 	"github.com/mainflux/mainflux/readers/timescale"
-	migrate "github.com/rubenv/sql-migrate"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -34,8 +33,8 @@ const (
 )
 
 type config struct {
-	LogLevel  string `env:"MF_TIMESCALE_READER_LOG_LEVEL,notEmpty"   envDefault:"info"`
-	JaegerURL string `env:"MF_JAEGER_URL,notEmpty"                   envDefault:"localhost:6831"`
+	LogLevel  string `env:"MF_TIMESCALE_READER_LOG_LEVEL"   envDefault:"info"`
+	JaegerURL string `env:"MF_JAEGER_URL"                   envDefault:"localhost:6831"`
 }
 
 func main() {
@@ -53,7 +52,10 @@ func main() {
 	}
 
 	dbConfig := pgClient.Config{Name: defDB}
-	db, err := pgClient.SetupWithConfig(envPrefix, migrate.MemoryMigrationSource{}, dbConfig)
+	if err := dbConfig.LoadEnv(envPrefix); err != nil {
+		log.Fatal(err.Error())
+	}
+	db, err := pgClient.Connect(dbConfig)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

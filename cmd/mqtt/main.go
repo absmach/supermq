@@ -35,19 +35,19 @@ const (
 )
 
 type config struct {
-	LogLevel              string        `env:"MF_MQTT_ADAPTER_LOG_LEVEL,notEmpty"                    envDefault:"info"`
-	MqttPort              string        `env:"MF_MQTT_ADAPTER_MQTT_PORT,notEmpty"                    envDefault:"1883"`
-	MqttTargetHost        string        `env:"MF_MQTT_ADAPTER_MQTT_TARGET_HOST,notEmpty"             envDefault:"localhost"`
-	MqttTargetPort        string        `env:"MF_MQTT_ADAPTER_MQTT_TARGET_PORT,notEmpty"             envDefault:"1883"`
-	MqttForwarderTimeout  time.Duration `env:"MF_MQTT_ADAPTER_FORWARDER_TIMEOUT,notEmpty"            envDefault:"30s"`
-	MqttTargetHealthCheck string        `env:"MF_MQTT_ADAPTER_MQTT_TARGET_HEALTH_CHECK"              envDefault:""`
-	HttpPort              string        `env:"MF_MQTT_ADAPTER_WS_PORT,notEmpty"                      envDefault:"8080"`
-	HttpTargetHost        string        `env:"MF_MQTT_ADAPTER_WS_TARGET_HOST,notEmpty"               envDefault:"localhost"`
-	HttpTargetPort        string        `env:"MF_MQTT_ADAPTER_WS_TARGET_PORT,notEmpty"               envDefault:"8080"`
-	HttpTargetPath        string        `env:"MF_MQTT_ADAPTER_WS_TARGET_PATH,notEmpty"               envDefault:"/mqtt"`
-	Instance              string        `env:"MF_MQTT_ADAPTER_INSTANCE"                              envDefault:""`
-	JaegerURL             string        `env:"MF_JAEGER_URL,notEmpty"                                envDefault:"localhost:6831"`
-	BrokerURL             string        `env:"MF_BROKER_URL,notEmpty"                                envDefault:"nats://localhost:4222"`
+	LogLevel              string        `env:"MF_MQTT_ADAPTER_LOG_LEVEL"                    envDefault:"info"`
+	MqttPort              string        `env:"MF_MQTT_ADAPTER_MQTT_PORT"                    envDefault:"1883"`
+	MqttTargetHost        string        `env:"MF_MQTT_ADAPTER_MQTT_TARGET_HOST"             envDefault:"localhost"`
+	MqttTargetPort        string        `env:"MF_MQTT_ADAPTER_MQTT_TARGET_PORT"             envDefault:"1883"`
+	MqttForwarderTimeout  time.Duration `env:"MF_MQTT_ADAPTER_FORWARDER_TIMEOUT"            envDefault:"30s"`
+	MqttTargetHealthCheck string        `env:"MF_MQTT_ADAPTER_MQTT_TARGET_HEALTH_CHECK"     envDefault:""`
+	HttpPort              string        `env:"MF_MQTT_ADAPTER_WS_PORT"                      envDefault:"8080"`
+	HttpTargetHost        string        `env:"MF_MQTT_ADAPTER_WS_TARGET_HOST"               envDefault:"localhost"`
+	HttpTargetPort        string        `env:"MF_MQTT_ADAPTER_WS_TARGET_PORT"               envDefault:"8080"`
+	HttpTargetPath        string        `env:"MF_MQTT_ADAPTER_WS_TARGET_PATH"               envDefault:"/mqtt"`
+	Instance              string        `env:"MF_MQTT_ADAPTER_INSTANCE"                     envDefault:""`
+	JaegerURL             string        `env:"MF_JAEGER_URL"                                envDefault:"localhost:6831"`
+	BrokerURL             string        `env:"MF_BROKER_URL"                                envDefault:"nats://localhost:4222"`
 }
 
 func main() {

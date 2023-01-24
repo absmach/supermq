@@ -15,15 +15,15 @@ var (
 )
 
 type Config struct {
-	Protocol           string        `env:"PROTOCOL,notEmpty"              envDefault:"http"`
-	Host               string        `env:"HOST,notEmpty"                  envDefault:"localhost"`
-	Port               string        `env:"PORT,notEmpty"                  envDefault:"8086"`
-	Username           string        `env:"ADMIN_USER,notEmpty"            envDefault:"mainflux"`
-	Password           string        `env:"ADMIN_PASSWORD,notEmpty"        envDefault:"mainflux"`
-	DbName             string        `env:"DB,notEmpty"                    envDefault:"mainflux"`
-	UserAgent          string        `env:"USER_AGENT,notEmpty"            envDefault:"InfluxDBClient"`
+	Protocol           string        `env:"PROTOCOL"              envDefault:"http"`
+	Host               string        `env:"HOST"                  envDefault:"localhost"`
+	Port               string        `env:"PORT"                  envDefault:"8086"`
+	Username           string        `env:"ADMIN_USER"            envDefault:"mainflux"`
+	Password           string        `env:"ADMIN_PASSWORD"        envDefault:"mainflux"`
+	DbName             string        `env:"DB"                    envDefault:"mainflux"`
+	UserAgent          string        `env:"USER_AGENT"            envDefault:"InfluxDBClient"`
 	Timeout            time.Duration `env:"TIMEOUT"` // Influxdb client configuration by default there is no timeout duration , this field will not have fallback default timeout duration Reference: https://pkg.go.dev/github.com/influxdata/influxdb@v1.10.0/client/v2#HTTPConfig
-	InsecureSkipVerify bool          `env:"INSECURE_SKIP_VERIFY,notEmpty"  envDefault:"false"`
+	InsecureSkipVerify bool          `env:"INSECURE_SKIP_VERIFY"  envDefault:"false"`
 }
 
 // Setup load configuration from environment variable, create InfluxDB client and connect to InfluxDB server.

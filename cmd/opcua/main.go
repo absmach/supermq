@@ -39,9 +39,9 @@ const (
 )
 
 type config struct {
-	LogLevel       string `env:"MF_OPCUA_ADAPTER_LOG_LEVEL,notEmpty"          envDefault:"info"`
-	ESConsumerName string `env:"MF_OPCUA_ADAPTER_EVENT_CONSUMER"              envDefault:""`
-	BrokerURL      string `env:"MF_BROKER_URL,notEmpty"                       envDefault:"nats://localhost:4222"`
+	LogLevel       string `env:"MF_OPCUA_ADAPTER_LOG_LEVEL"          envDefault:"info"`
+	ESConsumerName string `env:"MF_OPCUA_ADAPTER_EVENT_CONSUMER"     envDefault:""`
+	BrokerURL      string `env:"MF_BROKER_URL"                       envDefault:"nats://localhost:4222"`
 }
 
 func main() {

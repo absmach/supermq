@@ -19,9 +19,9 @@ github.com/armon/go-radix
 # github.com/beorn7/perks v1.0.1
 ## explicit; go 1.11
 github.com/beorn7/perks/quantile
-# github.com/caarlos0/env/v6 v6.10.1
+# github.com/caarlos0/env/v7 v7.0.0
 ## explicit; go 1.17
-github.com/caarlos0/env/v6
+github.com/caarlos0/env/v7
 # github.com/cenkalti/backoff/v3 v3.2.2
 ## explicit; go 1.12
 github.com/cenkalti/backoff/v3

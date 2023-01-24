@@ -42,14 +42,14 @@ const (
 )
 
 type config struct {
-	LogLevel       string        `env:"MF_BOOTSTRAP_LOG_LEVEL,notEmpty"              envDefault:"info"`
-	LoraMsgURL     string        `env:"MF_LORA_ADAPTER_MESSAGES_URL,notEmpty"        envDefault:"tcp://localhost:1883"`
-	LoraMsgUser    string        `env:"MF_LORA_ADAPTER_MESSAGES_USER"                envDefault:""`
-	LoraMsgPass    string        `env:"MF_LORA_ADAPTER_MESSAGES_PASS"                envDefault:""`
-	LoraMsgTopic   string        `env:"MF_LORA_ADAPTER_MESSAGES_TOPIC,notEmpty"      envDefault:"application/+/device/+/event/up"`
-	LoraMsgTimeout time.Duration `env:"MF_LORA_ADAPTER_MESSAGES_TIMEOUT,notEmpty"    envDefault:"30s"`
-	ESConsumerName string        `env:"MF_LORA_ADAPTER_EVENT_CONSUMER,notEmpty"      envDefault:"lora"`
-	BrokerURL      string        `env:"MF_BROKER_URL,notEmpty"                       envDefault:"nats://localhost:4222"`
+	LogLevel       string        `env:"MF_BOOTSTRAP_LOG_LEVEL"              envDefault:"info"`
+	LoraMsgURL     string        `env:"MF_LORA_ADAPTER_MESSAGES_URL"        envDefault:"tcp://localhost:1883"`
+	LoraMsgUser    string        `env:"MF_LORA_ADAPTER_MESSAGES_USER"       envDefault:""`
+	LoraMsgPass    string        `env:"MF_LORA_ADAPTER_MESSAGES_PASS"       envDefault:""`
+	LoraMsgTopic   string        `env:"MF_LORA_ADAPTER_MESSAGES_TOPIC"      envDefault:"application/+/device/+/event/up"`
+	LoraMsgTimeout time.Duration `env:"MF_LORA_ADAPTER_MESSAGES_TIMEOUT"    envDefault:"30s"`
+	ESConsumerName string        `env:"MF_LORA_ADAPTER_EVENT_CONSUMER"      envDefault:"lora"`
+	BrokerURL      string        `env:"MF_BROKER_URL"                       envDefault:"nats://localhost:4222"`
 }
 
 func main() {

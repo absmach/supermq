@@ -38,11 +38,11 @@ const (
 )
 
 type config struct {
-	LogLevel       string `env:"MF_BOOTSTRAP_LOG_LEVEL,notEmpty"        envDefault:"info"`
-	EncKey         string `env:"MF_BOOTSTRAP_ENCRYPT_KEY,notEmpty"      envDefault:"12345678910111213141516171819202"`
-	ESConsumerName string `env:"MF_BOOTSTRAP_EVENT_CONSUMER,notEmpty"   envDefault:"bootstrap"`
-	ThingsURL      string `env:"MF_THINGS_URL,notEmpty"                 envDefault:"http://localhost"`
-	JaegerURL      string `env:"MF_JAEGER_URL,notEmpty"                 envDefault:"localhost:6831"`
+	LogLevel       string `env:"MF_BOOTSTRAP_LOG_LEVEL"        envDefault:"info"`
+	EncKey         string `env:"MF_BOOTSTRAP_ENCRYPT_KEY"      envDefault:"12345678910111213141516171819202"`
+	ESConsumerName string `env:"MF_BOOTSTRAP_EVENT_CONSUMER"   envDefault:"bootstrap"`
+	ThingsURL      string `env:"MF_THINGS_URL"                 envDefault:"http://localhost"`
+	JaegerURL      string `env:"MF_JAEGER_URL"                 envDefault:"localhost:6831"`
 }
 
 func main() {

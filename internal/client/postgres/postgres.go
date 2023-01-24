@@ -77,3 +77,10 @@ func MigrateDB(db *sqlx.DB, migrations migrate.MemoryMigrationSource) error {
 	}
 	return nil
 }
+
+func (c *Config) LoadEnv(prefix string) error {
+	if err := env.Parse(c, env.Options{Prefix: prefix}); err != nil {
+		return errors.Wrap(errConfig, err)
+	}
+	return nil
+}
