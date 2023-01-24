@@ -26,6 +26,7 @@ import (
 const (
 	svcName        = "mongodb-writer"
 	envPrefix      = "MF_MONGO_WRITER_"
+	envPrefixDB    = "MF_MONGO_WRITER_DB_"
 	envPrefixHttp  = "MF_MONGO_WRITER_HTTP_"
 	defSvcHttpPort = "8180"
 )
@@ -56,7 +57,7 @@ func main() {
 	}
 	defer pubSub.Close()
 
-	db, err := mongoClient.Setup(envPrefix)
+	db, err := mongoClient.Setup(envPrefixDB)
 	if err != nil {
 		log.Fatalf("failed to setup mongo database : %s", err.Error())
 	}

@@ -27,6 +27,7 @@ import (
 const (
 	svcName        = "mongodb-reader"
 	envPrefix      = "MF_MONGO_READER_"
+	envPrefixDB    = "MF_MONGO_READER_DB_"
 	envPrefixHttp  = "MF_MONGO_READER_HTTP_"
 	defSvcHttpPort = "8180"
 )
@@ -50,7 +51,7 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	db, err := mongoClient.Setup(envPrefix)
+	db, err := mongoClient.Setup(envPrefixDB)
 	if err != nil {
 		log.Fatalf("failed to setup mongo database : %s", err.Error())
 	}
