@@ -53,7 +53,7 @@ func main() {
 	}
 
 	// Create new to cassandra client.
-	csdSession, err := cassandraClient.SetupDB(envPrefix, cassandra.TABLE)
+	csdSession, err := cassandraClient.SetupDB(envPrefix, cassandra.Table)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

@@ -4,8 +4,8 @@
 package cassandra
 
 const (
-	// TABLE contains query for default table created in cassandra db
-	TABLE = `CREATE TABLE IF NOT EXISTS messages (
+	// Table contains query for default table created in cassandra db
+	Table = `CREATE TABLE IF NOT EXISTS messages (
         id uuid,
         channel text,
         subtopic text,

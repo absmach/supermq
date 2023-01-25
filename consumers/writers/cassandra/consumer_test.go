@@ -40,7 +40,7 @@ func TestSaveSenml(t *testing.T) {
 		Keyspace: keyspace,
 	})
 	require.Nil(t, err, fmt.Sprintf("failed to connect to Cassandra: %s", err))
-	err = casClient.InitDB(session, cassandra.TABLE)
+	err = casClient.InitDB(session, cassandra.Table)
 	require.Nil(t, err, fmt.Sprintf("failed to initialize to Cassandra: %s", err))
 	repo := cassandra.New(session)
 	now := time.Now().Unix()
