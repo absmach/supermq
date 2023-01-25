@@ -5,7 +5,7 @@ package postgres
 
 import migrate "github.com/rubenv/sql-migrate"
 
-// Migration of auth service.
+// Migration of Auth service.
 func Migration() *migrate.MemoryMigrationSource {
 	return &migrate.MemoryMigrationSource{
 		Migrations: []*migrate.Migration{

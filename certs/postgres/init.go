@@ -5,12 +5,9 @@
 
 package postgres
 
-import (
-	// required for SQL access
-	migrate "github.com/rubenv/sql-migrate"
-)
+import migrate "github.com/rubenv/sql-migrate"
 
-// Migration of certs service.
+// Migration of Certs service.
 func Migration() *migrate.MemoryMigrationSource {
 	return &migrate.MemoryMigrationSource{
 		Migrations: []*migrate.Migration{

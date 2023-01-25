@@ -11,7 +11,6 @@ import (
 	"os"
 	"testing"
 
-	// required for SQL access
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux/readers/postgres"
 	dockertest "github.com/ory/dockertest/v3"
