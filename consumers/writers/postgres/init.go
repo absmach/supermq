@@ -3,9 +3,7 @@
 
 package postgres
 
-import (
-	migrate "github.com/rubenv/sql-migrate"
-)
+import migrate "github.com/rubenv/sql-migrate"
 
 func Migration() *migrate.MemoryMigrationSource {
 	return &migrate.MemoryMigrationSource{

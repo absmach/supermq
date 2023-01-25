@@ -3,9 +3,7 @@
 
 package postgres
 
-import (
-	migrate "github.com/rubenv/sql-migrate"
-)
+import migrate "github.com/rubenv/sql-migrate"
 
 // Migration of auth service.
 func Migration() *migrate.MemoryMigrationSource {
@@ -24,9 +22,9 @@ func Migration() *migrate.MemoryMigrationSource {
 						PRIMARY KEY (id, issuer_id)
 					)`,
 					`CREATE EXTENSION IF NOT EXISTS LTREE`,
-					`CREATE TABLE IF NOT EXISTS groups ( 
+					`CREATE TABLE IF NOT EXISTS groups (
 						id          VARCHAR(254) UNIQUE NOT NULL,
-						parent_id   VARCHAR(254), 
+						parent_id   VARCHAR(254),
 						owner_id    VARCHAR(254),
 						name        VARCHAR(254) NOT NULL,
 						description VARCHAR(1024),
@@ -48,7 +46,7 @@ func Migration() *migrate.MemoryMigrationSource {
 				   )`,
 					`CREATE INDEX path_gist_idx ON groups USING GIST (path);`,
 					`CREATE OR REPLACE FUNCTION inherit_group()
-					 RETURNS trigger 
+					 RETURNS trigger
 					 LANGUAGE PLPGSQL
 					 AS
 					 $$

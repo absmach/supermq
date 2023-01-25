@@ -12,7 +12,7 @@ import (
 	"os"
 	"testing"
 
-	_ "github.com/jackc/pgx/v5/stdlib" // required for SQL access
+	// required for SQL access
 	"github.com/jmoiron/sqlx"
 	authRepo "github.com/mainflux/mainflux/auth/postgres"
 	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"

@@ -3,9 +3,7 @@
 
 package postgres
 
-import (
-	migrate "github.com/rubenv/sql-migrate"
-)
+import migrate "github.com/rubenv/sql-migrate"
 
 // Migration of bootstrap service.
 func Migration() *migrate.MemoryMigrationSource {

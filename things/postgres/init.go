@@ -4,7 +4,7 @@
 package postgres
 
 import (
-	_ "github.com/jackc/pgx/v5/stdlib" // required for SQL access
+	// required for SQL access
 	migrate "github.com/rubenv/sql-migrate"
 )
 
