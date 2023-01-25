@@ -1,0 +1,91 @@
+version: '3'
+
+tasks:
+    run:
+        desc: "Run Mainflux with mTLS mode."
+        cmds:
+            - sudo AUTH=x509 docker-compose up -d
+        dir: docker
+        silent: true
+    run-no-mtls:
+        desc: "Run Mainflux without mTLS mode."
+        cmds:
+            - sudo docker-compose up -d
+        dir: docker
+        silent: true
+    stop:
+        desc: "Stop Mainflux."
+        cmds:
+            - sudo docker-compose down
+        dir: docker
+        silent: true
+    user_create:
+        desc: "Create a new user. Provide: email, password."
+        cmds:
+            - curl {{.POST}} {{.HOST_SERVER}}/users -d '{"email":"{{.email}}", "password":"{{.password}}"}'
+        silent: true
+    login:
+        desc: "Log the user in to get a token. Provide: user, password."
+        cmds:
+            - curl {{.POST}} {{.HOST_SERVER}}/tokens -d '{"email":"{{.email}}", "password":"{{.password}}"}'
+        silent: true
+    thing_create:
+        desc: "Create a new thing. Provide: thing_name, user_token."
+        cmds:
+            - curl {{.POST}} {{.AUTH}} {{.HOST_SERVER}}/things -d '{"name":"{{.thing_name}}"}'
+        silent: true
+    thing_list:
+        desc: "List all the things created by user. Provide: user_token."
+        cmds:
+            - curl {{.GET}} {{.AUTH}} {{.HOST_SERVER}}/things
+        silent: true
+    channel_create:
+        desc: "Create a new channel. Provide: channel_name, user_token."
+        cmds:
+            - curl {{.POST}} {{.AUTH}} {{.HOST_SERVER}}/channels -d '{"name":"{{.channel_name}}"}'
+        silent: true
+    channel_list:
+        desc: "List all the channels created by user. Provide: user_token."
+        cmds:
+            - curl {{.GET}} {{.AUTH}} {{.HOST_SERVER}}/channels
+        silent: true
+    channel_connect_thing:
+        desc: "Connect a thing to a channel. Provide: channel_id, thing_id, user_token."
+        cmds:
+            - curl {{.POST}} {{.AUTH}} {{.HOST_SERVER}}/connect -d '{"channel_ids":["{{.channel_id}}"],"thing_ids":["{{.thing_id}}"]}'
+        silent: true
+    tls_renew:
+        desc: "Renew CA and server certs. Delete any existing certs, including thing certs."
+        cmds:
+            - make clean_certs
+            - make ca
+            - make server_cert
+        dir: docker/ssl
+        silent: true
+    tls_thing:
+        desc: "Renew/Create TLS certs for a thing. Provide: thing_key."
+        cmds:
+            - make thing_cert THING_KEY={{.thing_key}} CRT_FILE_NAME={{.thing_key}}
+        dir: docker/ssl
+        silent: true
+    sub:
+        desc: "Subscribe to a channel as a thing using Mosquitto. Provide: thing_name, thing_id, thing_key, channel_id."
+        cmds:
+            - mosquitto_sub -i {{.thing_name}} -u {{.thing_id}} -P {{.thing_key}} -t channels/{{.channel_id}}/messages -h {{.HOSTNAME}} -p {{.MQTTS_PORT}}
+                --cafile certs/ca.crt --cert certs/{{.thing_key}}.crt --key certs/{{.thing_key}}.key
+        dir: docker/ssl
+        silent: true
+    pub:
+        desc: "Publish to a channel as a thing using Mosquitto. Provide: thing_name, thing_id, thing_key, channel_id, message."
+        cmds:
+            - mosquitto_pub -i {{.thing_name}} -u {{.thing_id}} -P {{.thing_key}} -t channels/{{.channel_id}}/messages -h {{.HOSTNAME}} -p {{.MQTTS_PORT}}
+                --cafile certs/ca.crt --cert certs/{{.thing_key}}.crt --key certs/{{.thing_key}}.key -m '{{.message}}'
+        dir: docker/ssl
+        silent: true
+vars:
+    POST: -s -S -i -X POST -H "Content-Type:application/json"
+    GET: -s -S -i -X GET
+    AUTH: -H "Authorization:Bearer {{.user_token}}"
+    HOSTNAME: localhost
+    HOST_SERVER: http://{{.HOSTNAME}}
+    MQTTS_PORT: 8883
