@@ -10,9 +10,9 @@ import (
 	"os"
 
 	"github.com/mainflux/mainflux/internal"
-	authClient "github.com/mainflux/mainflux/internal/client/grpc/auth"
-	thingsClient "github.com/mainflux/mainflux/internal/client/grpc/things"
-	mongoClient "github.com/mainflux/mainflux/internal/client/mongo"
+	authClient "github.com/mainflux/mainflux/internal/clients/grpc/auth"
+	thingsClient "github.com/mainflux/mainflux/internal/clients/grpc/things"
+	mongoClient "github.com/mainflux/mainflux/internal/clients/mongo"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"

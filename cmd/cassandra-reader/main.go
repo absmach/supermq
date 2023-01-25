@@ -11,9 +11,9 @@ import (
 
 	"github.com/gocql/gocql"
 	"github.com/mainflux/mainflux/internal"
-	cassandraClient "github.com/mainflux/mainflux/internal/client/cassandra"
-	authClient "github.com/mainflux/mainflux/internal/client/grpc/auth"
-	thingsClient "github.com/mainflux/mainflux/internal/client/grpc/things"
+	cassandraClient "github.com/mainflux/mainflux/internal/clients/cassandra"
+	authClient "github.com/mainflux/mainflux/internal/clients/grpc/auth"
+	thingsClient "github.com/mainflux/mainflux/internal/clients/grpc/things"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"

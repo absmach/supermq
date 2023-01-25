@@ -10,7 +10,7 @@ import (
 
 	"github.com/mainflux/mainflux/consumers/writers/cassandra"
 	cwriter "github.com/mainflux/mainflux/consumers/writers/cassandra"
-	casClient "github.com/mainflux/mainflux/internal/client/cassandra"
+	casClient "github.com/mainflux/mainflux/internal/clients/cassandra"
 	"github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/pkg/uuid"

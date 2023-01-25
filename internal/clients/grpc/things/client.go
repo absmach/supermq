@@ -2,7 +2,7 @@ package things
 
 import (
 	"github.com/mainflux/mainflux"
-	grpcClient "github.com/mainflux/mainflux/internal/client/grpc"
+	grpcClient "github.com/mainflux/mainflux/internal/clients/grpc"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/pkg/errors"
 	thingsapi "github.com/mainflux/mainflux/things/api/auth/grpc"

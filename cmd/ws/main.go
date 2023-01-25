@@ -13,7 +13,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/mainflux/mainflux/internal"
-	thingsClient "github.com/mainflux/mainflux/internal/client/grpc/things"
+	thingsClient "github.com/mainflux/mainflux/internal/clients/grpc/things"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"

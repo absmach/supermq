@@ -11,7 +11,7 @@ import (
 
 	r "github.com/go-redis/redis/v8"
 	"github.com/mainflux/mainflux/internal"
-	redisClient "github.com/mainflux/mainflux/internal/client/redis"
+	redisClient "github.com/mainflux/mainflux/internal/clients/redis"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"

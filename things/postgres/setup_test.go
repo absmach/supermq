@@ -13,7 +13,7 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib" // required for SQL access
 	"github.com/jmoiron/sqlx"
-	pgClient "github.com/mainflux/mainflux/internal/client/postgres"
+	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
 	"github.com/mainflux/mainflux/things/postgres"
 	dockertest "github.com/ory/dockertest/v3"
 )

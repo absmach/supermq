@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
-	thingsClient "github.com/mainflux/mainflux/internal/client/grpc/things"
-	redisClient "github.com/mainflux/mainflux/internal/client/redis"
+	thingsClient "github.com/mainflux/mainflux/internal/clients/grpc/things"
+	redisClient "github.com/mainflux/mainflux/internal/clients/redis"
 	"github.com/mainflux/mainflux/internal/env"
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/mqtt"

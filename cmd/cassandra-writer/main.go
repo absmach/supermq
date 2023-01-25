@@ -14,7 +14,7 @@ import (
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	"github.com/mainflux/mainflux/consumers/writers/cassandra"
 	"github.com/mainflux/mainflux/internal"
-	cassandraClient "github.com/mainflux/mainflux/internal/client/cassandra"
+	cassandraClient "github.com/mainflux/mainflux/internal/clients/cassandra"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"

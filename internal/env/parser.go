@@ -2,7 +2,7 @@ package env
 
 import (
 	"github.com/caarlos0/env/v7"
-	"github.com/mainflux/mainflux/internal/client/grpc"
+	"github.com/mainflux/mainflux/internal/clients/grpc"
 	"github.com/mainflux/mainflux/internal/server"
 )
 

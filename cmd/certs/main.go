@@ -24,8 +24,8 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/jmoiron/sqlx"
-	authClient "github.com/mainflux/mainflux/internal/client/grpc/auth"
-	pgClient "github.com/mainflux/mainflux/internal/client/postgres"
+	authClient "github.com/mainflux/mainflux/internal/clients/grpc/auth"
+	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
 )

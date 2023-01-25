@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/gocql/gocql"
-	casClient "github.com/mainflux/mainflux/internal/client/cassandra"
+	casClient "github.com/mainflux/mainflux/internal/clients/cassandra"
 	log "github.com/mainflux/mainflux/logger"
 	dockertest "github.com/ory/dockertest/v3"
 )

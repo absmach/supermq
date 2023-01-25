@@ -23,9 +23,9 @@ import (
 
 	mfsmpp "github.com/mainflux/mainflux/consumers/notifiers/smpp"
 	"github.com/mainflux/mainflux/consumers/notifiers/tracing"
-	authClient "github.com/mainflux/mainflux/internal/client/grpc/auth"
-	jaegerClient "github.com/mainflux/mainflux/internal/client/jaeger"
-	pgClient "github.com/mainflux/mainflux/internal/client/postgres"
+	authClient "github.com/mainflux/mainflux/internal/clients/grpc/auth"
+	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
+	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	"github.com/mainflux/mainflux/pkg/ulid"

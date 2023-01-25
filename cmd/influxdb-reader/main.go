@@ -8,9 +8,9 @@ import (
 
 	influxdata "github.com/influxdata/influxdb/client/v2"
 	"github.com/mainflux/mainflux/internal"
-	authClient "github.com/mainflux/mainflux/internal/client/grpc/auth"
-	thingsClient "github.com/mainflux/mainflux/internal/client/grpc/things"
-	influxDBClient "github.com/mainflux/mainflux/internal/client/influxdb"
+	authClient "github.com/mainflux/mainflux/internal/clients/grpc/auth"
+	thingsClient "github.com/mainflux/mainflux/internal/clients/grpc/things"
+	influxDBClient "github.com/mainflux/mainflux/internal/clients/influxdb"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"

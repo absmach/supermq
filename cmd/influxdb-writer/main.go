@@ -14,7 +14,7 @@ import (
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	"github.com/mainflux/mainflux/consumers/writers/influxdb"
 	"github.com/mainflux/mainflux/internal"
-	influxDBClient "github.com/mainflux/mainflux/internal/client/influxdb"
+	influxDBClient "github.com/mainflux/mainflux/internal/clients/influxdb"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"

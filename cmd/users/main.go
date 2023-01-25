@@ -11,8 +11,8 @@ import (
 	"regexp"
 
 	"github.com/mainflux/mainflux/internal"
-	authClient "github.com/mainflux/mainflux/internal/client/grpc/auth"
-	pgClient "github.com/mainflux/mainflux/internal/client/postgres"
+	authClient "github.com/mainflux/mainflux/internal/clients/grpc/auth"
+	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
 	"github.com/mainflux/mainflux/internal/email"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
@@ -27,7 +27,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
-	jaegerClient "github.com/mainflux/mainflux/internal/client/jaeger"
+	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/users/api"
 	usersPg "github.com/mainflux/mainflux/users/postgres"

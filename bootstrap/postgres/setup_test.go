@@ -11,7 +11,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib" // required for SQL access
 	"github.com/jmoiron/sqlx"
 	bootstrapRepo "github.com/mainflux/mainflux/bootstrap/postgres"
-	pgClient "github.com/mainflux/mainflux/internal/client/postgres"
+	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
 
 	"github.com/mainflux/mainflux/logger"
 	dockertest "github.com/ory/dockertest/v3"

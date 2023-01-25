@@ -24,7 +24,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	"golang.org/x/sync/errgroup"
 
-	redisClient "github.com/mainflux/mainflux/internal/client/redis"
+	redisClient "github.com/mainflux/mainflux/internal/clients/redis"
 	"github.com/mainflux/mainflux/lora/redis"
 )
 

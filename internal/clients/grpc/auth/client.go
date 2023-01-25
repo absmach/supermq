@@ -3,7 +3,7 @@ package auth
 import (
 	"github.com/mainflux/mainflux"
 	authapi "github.com/mainflux/mainflux/auth/api/grpc"
-	grpcClient "github.com/mainflux/mainflux/internal/client/grpc"
+	grpcClient "github.com/mainflux/mainflux/internal/clients/grpc"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/pkg/errors"
 )

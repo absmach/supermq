@@ -10,7 +10,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/mainflux/mainflux/consumers/writers/cassandra"
-	casClient "github.com/mainflux/mainflux/internal/client/cassandra"
+	casClient "github.com/mainflux/mainflux/internal/clients/cassandra"
 	"github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/stretchr/testify/assert"

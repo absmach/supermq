@@ -11,9 +11,9 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux/internal"
-	authClient "github.com/mainflux/mainflux/internal/client/grpc/auth"
-	thingsClient "github.com/mainflux/mainflux/internal/client/grpc/things"
-	pgClient "github.com/mainflux/mainflux/internal/client/postgres"
+	authClient "github.com/mainflux/mainflux/internal/clients/grpc/auth"
+	thingsClient "github.com/mainflux/mainflux/internal/clients/grpc/things"
+	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"

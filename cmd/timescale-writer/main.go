@@ -14,7 +14,7 @@ import (
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	"github.com/mainflux/mainflux/consumers/writers/timescale"
 	"github.com/mainflux/mainflux/internal"
-	pgClient "github.com/mainflux/mainflux/internal/client/postgres"
+	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"

@@ -12,7 +12,7 @@ import (
 	"github.com/mainflux/mainflux/coap"
 	"github.com/mainflux/mainflux/coap/api"
 	"github.com/mainflux/mainflux/internal"
-	thingsClient "github.com/mainflux/mainflux/internal/client/grpc/things"
+	thingsClient "github.com/mainflux/mainflux/internal/clients/grpc/things"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	coapserver "github.com/mainflux/mainflux/internal/server/coap"

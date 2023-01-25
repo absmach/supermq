@@ -7,7 +7,7 @@ import (
 	"io"
 	"time"
 
-	jaegerClient "github.com/mainflux/mainflux/internal/client/jaeger"
+	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/opentracing/opentracing-go"
 	gogrpc "google.golang.org/grpc"
