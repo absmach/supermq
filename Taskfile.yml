@@ -19,6 +19,26 @@ tasks:
             - sudo docker-compose down
         dir: docker
         silent: true
+    run-influxdb-writer:
+        desc: "Run the influxdb-writer."
+        cmds:
+            - sudo docker-compose -f addons/influxdb-writer/docker-compose.yml --env-file ./.env up -d
+        dir: docker
+    stop-influxdb-writer:
+        desc: "Stop the influxdb-writer."
+        cmds:
+            - sudo docker-compose -f addons/influxdb-writer/docker-compose.yml --env-file ./.env down
+        dir: docker
+    run-influxdb-reader:
+        desc: "Run the influxdb-reader."
+        cmds:
+            - sudo docker-compose -f addons/influxdb-reader/docker-compose.yml --env-file ./.env up -d
+        dir: docker
+    stop-influxdb-reader:
+        desc: "Stop the influxdb-reader."
+        cmds:
+            - sudo docker-compose -f addons/influxdb-reader/docker-compose.yml --env-file ./.env down
+        dir: docker
     user_create:
         desc: "Create a new user. Provide: email, password."
         cmds:
