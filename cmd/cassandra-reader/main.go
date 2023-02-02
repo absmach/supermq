@@ -40,7 +40,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
 
-	// Create cassandra reader service configurations.
+	// Create cassandra reader service configurations
 	cfg := config{}
 
 	if err := env.Parse(&cfg); err != nil {
@@ -52,7 +52,7 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	// Create new thing grpc client.
+	// Create new thing grpc client
 	tc, tcHandler, err := thingsClient.Setup(envPrefix, cfg.JaegerURL)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -60,7 +60,7 @@ func main() {
 	defer tcHandler.Close()
 	logger.Info("Successfully connected to things grpc server " + tcHandler.Secure())
 
-	// Create new auth grpc client.
+	// Create new auth grpc client
 	auth, authHandler, err := authClient.Setup(envPrefix, cfg.JaegerURL)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -68,7 +68,7 @@ func main() {
 	defer authHandler.Close()
 	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
-	// Create new cassandra client.
+	// Create new cassandra client
 	csdSession, err := cassandraClient.Setup(envPrefix)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -78,7 +78,7 @@ func main() {
 	// Create new service
 	repo := newService(csdSession, logger)
 
-	// Create new http server.
+	// Create new http server
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
 
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
@@ -87,7 +87,7 @@ func main() {
 
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(repo, tc, auth, svcName, logger), logger)
 
-	// Start servers.
+	// Start servers
 	g.Go(func() error {
 		return hs.Start()
 	})

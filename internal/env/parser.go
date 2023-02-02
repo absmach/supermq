@@ -7,22 +7,22 @@ import (
 )
 
 type Options struct {
-	// Environment keys and values that will be accessible for the service.
+	// Environment keys and values that will be accessible for the service
 	Environment map[string]string
 
-	// TagName specifies another tagname to use rather than the default env.
+	// TagName specifies another tagname to use rather than the default env
 	TagName string
 
-	// RequiredIfNoDef automatically sets all env as required if they do not declare 'envDefault'.
+	// RequiredIfNoDef automatically sets all env as required if they do not declare 'envDefault'
 	RequiredIfNoDef bool
 
-	// OnSet allows to run a function when a value is set.
+	// OnSet allows to run a function when a value is set
 	OnSet env.OnSetFn
 
-	// Prefix define a prefix for each key.
+	// Prefix define a prefix for each key
 	Prefix string
 
-	// AltPrefix define a alternate prefix for each key.
+	// AltPrefix define a alternate prefix for each key
 	AltPrefix string
 }
 

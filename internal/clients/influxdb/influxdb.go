@@ -26,7 +26,7 @@ type Config struct {
 	InsecureSkipVerify bool          `env:"INSECURE_SKIP_VERIFY"  envDefault:"false"`
 }
 
-// Setup load configuration from environment variable, create InfluxDB client and connect to InfluxDB server.
+// Setup load configuration from environment variable, create InfluxDB client and connect to InfluxDB server
 func Setup(envPrefix string) (client.HTTPClient, error) {
 	config := Config{}
 	if err := env.Parse(&config, env.Options{Prefix: envPrefix}); err != nil {
@@ -35,7 +35,7 @@ func Setup(envPrefix string) (client.HTTPClient, error) {
 	return Connect(config)
 }
 
-// Connect create InfluxDB client and connect to InfluxDB server.
+// Connect create InfluxDB client and connect to InfluxDB server
 func Connect(config Config) (client.HTTPClient, error) {
 	address := fmt.Sprintf("%s://%s:%s", config.Protocol, config.Host, config.Port)
 	clientConfig := client.HTTPConfig{

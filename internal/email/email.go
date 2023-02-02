@@ -30,7 +30,7 @@ type email struct {
 	Footer  string
 }
 
-// Config email agent configuration.
+// Config email agent configuration
 type Config struct {
 	Host        string `env:"MF_EMAIL_HOST"         envDefault:"localhost"`
 	Port        string `env:"MF_EMAIL_PORT"         envDefault:"25"`

@@ -58,7 +58,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
 
-	// Create auth service configurations.
+	// Create auth service configurations
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("failed to load %s configuration : %s", svcName, err.Error())
@@ -69,7 +69,7 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	// Create new postgres client.
+	// Create new postgres client
 	dbConfig := pgClient.Config{Name: defDB}
 	db, err := pgClient.SetupWithConfig(envPrefix, *authPg.Migration(), dbConfig)
 	if err != nil {
@@ -77,20 +77,20 @@ func main() {
 	}
 	defer db.Close()
 
-	// Create new tracer for database.
+	// Create new tracer for database
 	dbTracer, dbCloser, err := jaegerClient.NewTracer("auth_db", cfg.JaegerURL)
 	if err != nil {
 		log.Fatalf("failed to init Jaeger: %s", err.Error())
 	}
 	defer dbCloser.Close()
 
-	// Create new keto reader grpc client.
+	// Create new keto reader grpc client
 	readerConn, _, err := grpcClient.Connect(grpcClient.Config{ClientTLS: false, URL: fmt.Sprintf("%s:%s", cfg.KetoReadHost, cfg.KetoReadPort)})
 	if err != nil {
 		log.Fatalf("failed to connect to keto gRPC: %s", err.Error())
 	}
 
-	// Create new keto writer grpc client.
+	// Create new keto writer grpc client
 	writerConn, _, err := grpcClient.Connect(grpcClient.Config{ClientTLS: false, URL: fmt.Sprintf("%s:%s", cfg.KetoWriteHost, cfg.KetoWritePort)})
 	if err != nil {
 		log.Fatalf("failed to connect to keto gRPC: %s", err.Error())
@@ -98,7 +98,7 @@ func main() {
 
 	svc := newService(db, dbTracer, cfg.Secret, logger, readerConn, writerConn, cfg.LoginDuration)
 
-	// Create new HTTP Server.
+	// Create new HTTP Server
 	tracer, closer, err := jaegerClient.NewTracer("auth", cfg.JaegerURL)
 	if err != nil {
 		log.Fatalf("failed to init Jaeger: %s", err.Error())
@@ -113,7 +113,7 @@ func main() {
 
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, httpapi.MakeHandler(svc, tracer, logger), logger)
 
-	// Create new grpc server.
+	// Create new grpc server
 	grpcServerConfig := server.Config{Port: defSvcGrpcPort}
 
 	if err := env.Parse(&grpcServerConfig, env.Options{Prefix: envPrefixGrpc, AltPrefix: envPrefix}); err != nil {
@@ -125,7 +125,7 @@ func main() {
 
 	gs := grpcserver.New(ctx, cancel, svcName, grpcServerConfig, registerAuthServiceServer, logger)
 
-	// Start servers.
+	// Start servers
 	g.Go(func() error {
 		return hs.Start()
 	})

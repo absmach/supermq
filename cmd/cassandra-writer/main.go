@@ -40,7 +40,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	g, ctx := errgroup.WithContext(ctx)
 
-	// Create new cassandra writer service configurations.
+	// Create new cassandra writer service configurations
 	cfg := config{}
 
 	if err := env.Parse(&cfg); err != nil {
@@ -52,29 +52,29 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	// Create new to cassandra client.
+	// Create new to cassandra client
 	csdSession, err := cassandraClient.SetupDB(envPrefix, cassandra.Table)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	defer csdSession.Close()
 
-	// Create new cassandra-writer repo.
+	// Create new cassandra-writer repo
 	repo := newService(csdSession, logger)
 
-	// Create new pub sub broker.
+	// Create new pub sub broker
 	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)
 	if err != nil {
 		log.Fatalf("failed to connect to message broker: %s", err.Error())
 	}
 	defer pubSub.Close()
 
-	// Start new consumer.
+	// Start new consumer
 	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
 		logger.Error(fmt.Sprintf("Failed to create Cassandra writer: %s", err))
 	}
 
-	// Create new http server.
+	// Create new http server
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
 
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefix, AltPrefix: envPrefixHttp}); err != nil {
@@ -83,7 +83,7 @@ func main() {
 
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svcName), logger)
 
-	// Start servers.
+	// Start servers
 	g.Go(func() error {
 		return hs.Start()
 	})

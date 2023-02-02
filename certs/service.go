@@ -51,7 +51,7 @@ type certsService struct {
 	pki       pki.Agent
 }
 
-// New returns new Certs service.
+// New returns new Certs service
 func New(auth mainflux.AuthServiceClient, certs Repository, sdk mfsdk.SDK, pki pki.Agent) Service {
 	return &certsService{
 		certsRepo: certs,

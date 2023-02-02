@@ -17,7 +17,7 @@ var (
 	errNoSvcName = errors.New("Service Name is empty")
 )
 
-// NewTracer initializes Jaeger.
+// NewTracer initializes Jaeger
 func NewTracer(svcName, url string) (opentracing.Tracer, io.Closer, error) {
 	if url == "" {
 		return opentracing.NoopTracer{}, ioutil.NopCloser(nil), errNoUrl

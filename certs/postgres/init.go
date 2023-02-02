@@ -7,7 +7,7 @@ package postgres
 
 import migrate "github.com/rubenv/sql-migrate"
 
-// Migration of Certs service.
+// Migration of Certs service
 func Migration() *migrate.MemoryMigrationSource {
 	return &migrate.MemoryMigrationSource{
 		Migrations: []*migrate.Migration{
