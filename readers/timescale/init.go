@@ -6,7 +6,6 @@ package timescale
 import (
 	"fmt"
 
-	// required for SQL access
 	"github.com/jmoiron/sqlx"
 	migrate "github.com/rubenv/sql-migrate"
 )

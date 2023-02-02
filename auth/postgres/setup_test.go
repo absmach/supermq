@@ -12,7 +12,6 @@ import (
 	"os"
 	"testing"
 
-	// required for SQL access
 	"github.com/jmoiron/sqlx"
 	authRepo "github.com/mainflux/mainflux/auth/postgres"
 	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
