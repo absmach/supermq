@@ -159,12 +159,12 @@ func newService(id string, ps messaging.PubSub, chanID string, users mainflux.Au
 }
 
 func handle(logger logger.Logger, chanID string, svc twins.Service) handlerFunc {
-	return func(msg messaging.Message) error {
+	return func(msg *messaging.Message) error {
 		if msg.Channel == chanID {
 			return nil
 		}
 
-		if err := svc.SaveStates(&msg); err != nil {
+		if err := svc.SaveStates(msg); err != nil {
 			logger.Error(fmt.Sprintf("State save failed: %s", err))
 			return err
 		}
@@ -173,9 +173,9 @@ func handle(logger logger.Logger, chanID string, svc twins.Service) handlerFunc 
 	}
 }
 
-type handlerFunc func(msg messaging.Message) error
+type handlerFunc func(msg *messaging.Message) error
 
-func (h handlerFunc) Handle(msg messaging.Message) error {
+func (h handlerFunc) Handle(msg *messaging.Message) error {
 	return h(msg)
 }
 
