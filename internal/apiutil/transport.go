@@ -18,35 +18,38 @@ import (
 // LoggingErrorEncoder is a go-kit error encoder logging decorator.
 func LoggingErrorEncoder(logger logger.Logger, enc kithttp.ErrorEncoder) kithttp.ErrorEncoder {
 	return func(ctx context.Context, err error, w http.ResponseWriter) {
-		switch err {
-		case ErrBearerToken,
-			ErrMissingID,
-			ErrBearerKey,
-			ErrInvalidAuthKey,
-			ErrInvalidIDFormat,
-			ErrNameSize,
-			ErrLimitSize,
-			ErrOffsetSize,
-			ErrInvalidOrder,
-			ErrInvalidDirection,
-			ErrEmptyList,
-			ErrMalformedPolicy,
-			ErrMissingPolicySub,
-			ErrMissingPolicyObj,
-			ErrMissingPolicyAct,
-			ErrMissingCertData,
-			ErrInvalidTopic,
-			ErrInvalidContact,
-			ErrMissingEmail,
-			ErrMissingHost,
-			ErrMissingPass,
-			ErrMissingConfPass,
-			ErrInvalidResetPass,
-			ErrInvalidComparator,
-			ErrMissingMemberType,
-			ErrInvalidAPIKey,
-			ErrMaxLevelExceeded,
-			ErrBootstrapState:
+		switch {
+		case errors.Contains(err, ErrBearerToken),
+			errors.Contains(err, ErrMissingID),
+			errors.Contains(err, ErrBearerKey),
+			errors.Contains(err, ErrInvalidAuthKey),
+			errors.Contains(err, ErrInvalidIDFormat),
+			errors.Contains(err, ErrNameSize),
+			errors.Contains(err, ErrLimitSize),
+			errors.Contains(err, ErrOffsetSize),
+			errors.Contains(err, ErrInvalidOrder),
+			errors.Contains(err, ErrInvalidDirection),
+			errors.Contains(err, ErrEmptyList),
+			errors.Contains(err, ErrMalformedPolicy),
+			errors.Contains(err, ErrMissingPolicySub),
+			errors.Contains(err, ErrMissingPolicyObj),
+			errors.Contains(err, ErrMissingPolicyAct),
+			errors.Contains(err, ErrMissingCertData),
+			errors.Contains(err, ErrInvalidTopic),
+			errors.Contains(err, ErrInvalidContact),
+			errors.Contains(err, ErrMissingEmail),
+			errors.Contains(err, ErrMissingHost),
+			errors.Contains(err, ErrMissingPass),
+			errors.Contains(err, ErrMissingConfPass),
+			errors.Contains(err, ErrInvalidResetPass),
+			errors.Contains(err, ErrInvalidComparator),
+			errors.Contains(err, ErrMissingMemberType),
+			errors.Contains(err, ErrMaxLevelExceeded),
+			errors.Contains(err, ErrInvalidAPIKey),
+			errors.Contains(err, ErrInvalidLevel),
+			errors.Contains(err, ErrBootstrapState),
+			errors.Contains(err, ErrInvalidQueryParams),
+			errors.Contains(err, ErrMalformedEntity):
 			logger.Error(err.Error())
 		}
 
@@ -145,4 +148,37 @@ func ReadFloatQuery(r *http.Request, key string, def float64) (float64, error) {
 	}
 
 	return val, nil
+}
+
+type number interface {
+	int64 | float64 | uint16 | uint64
+}
+
+// ReadNumQuery returns a numeric value.
+func ReadNumQuery[N number](r *http.Request, key string, def N) (N, error) {
+	vals := bone.GetQuery(r, key)
+	if len(vals) > 1 {
+		return 0, errors.ErrInvalidQueryParams
+	}
+	if len(vals) == 0 {
+		return def, nil
+	}
+	val := vals[0]
+
+	switch any(def).(type) {
+	case int64:
+		v, err := strconv.ParseInt(val, 10, 64)
+		return N(v), err
+	case uint64:
+		v, err := strconv.ParseUint(val, 10, 64)
+		return N(v), err
+	case uint16:
+		v, err := strconv.ParseUint(val, 10, 16)
+		return N(v), err
+	case float64:
+		v, err := strconv.ParseFloat(val, 64)
+		return N(v), err
+	default:
+		return def, nil
+	}
 }

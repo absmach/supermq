@@ -8,6 +8,7 @@ networks:
     driver: bridge
 
 volumes:
+  mainflux-clients-db-volume:
   mainflux-auth-db-volume:
   mainflux-users-db-volume:
   mainflux-things-db-volume:
@@ -251,8 +252,51 @@ services:
     networks:
       - mainflux-base-net
 
+  clients-db:
+    image: postgres:15.1-alpine
+    container_name: mainflux-clients-db
+    restart: on-failure
+    environment:
+      POSTGRES_USER: ${MF_CLIENTS_DB_USER}
+      POSTGRES_PASSWORD: ${MF_CLIENTS_DB_PASS}
+      POSTGRES_DB: ${MF_CLIENTS_DB}
+    networks:
+      - mainflux-base-net
+    volumes:
+      - mainflux-clients-db-volume:/var/lib/postgresql/data
+
+  clients:
+    image: mainflux/clients:${MF_RELEASE_TAG}
+    container_name: mainflux-clients
+    depends_on:
+      - clients-db
+    restart: on-failure
+    environment:
+      MF_CLIENTS_LOG_LEVEL: ${MF_CLIENTS_LOG_LEVEL}
+      MF_CLIENTS_DB_HOST: clients-db
+      MF_CLIENTS_DB_PORT: ${MF_CLIENTS_DB_PORT}
+      MF_CLIENTS_DB_USER: ${MF_CLIENTS_DB_USER}
+      MF_CLIENTS_DB_PASS: ${MF_CLIENTS_DB_PASS}
+      MF_CLIENTS_DB: ${MF_CLIENTS_DB}
+      MF_CLIENTS_DB_SSL_MODE: ${MF_CLIENTS_DB_SSL_MODE}
+      MF_CLIENTS_DB_SSL_CERT: ${MF_CLIENTS_DB_SSL_CERT}
+      MF_CLIENTS_DB_SSL_KEY: ${MF_CLIENTS_DB_SSL_KEY}
+      MF_CLIENTS_DB_SSL_ROOT_CERT: ${MF_CLIENTS_DB_SSL_ROOT_CERT}
+      MF_CLIENTS_HTTP_PORT: ${MF_CLIENTS_HTTP_PORT}
+      MF_CLIENTS_GRPC_PORT: ${MF_CLIENTS_GRPC_PORT}
+      MF_CLIENTS_JAEGER_URL: ${MF_CLIENTS_JAEGER_URL}
+      MF_CLIENTS_GRPC_URL: ${MF_CLIENTS_GRPC_URL}
+      MF_CLIENTS_GRPC_TIMEOUT: ${MF_CLIENTS_GRPC_TIMEOUT}
+      MF_CLIENTS_SERVER_CERT: ${MF_CLIENTS_SERVER_CERT}
+      MF_CLIENTS_SERVER_KEY: ${MF_CLIENTS_SERVER_KEY}
+    ports:
+      - ${MF_CLIENTS_HTTP_PORT}:${MF_CLIENTS_HTTP_PORT}
+      - ${MF_CLIENTS_GRPC_PORT}:${MF_CLIENTS_GRPC_PORT}
+    networks:
+      - mainflux-base-net
+  
   jaeger:
-    image: jaegertracing/all-in-one:1.20
+    image: jaegertracing/all-in-one:1.38.0
     container_name: mainflux-jaeger
     ports:
       - ${MF_JAEGER_PORT}:${MF_JAEGER_PORT}/udp
