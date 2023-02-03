@@ -78,7 +78,6 @@ func (svc service) CreateThings(ctx context.Context, token string, clis ...mfcli
 			return []mfclients.Client{}, apiutil.ErrInvalidStatus
 		}
 		cli.CreatedAt = time.Now()
-
 		clients = append(clients, cli)
 	}
 	return svc.clients.Save(ctx, clients...)

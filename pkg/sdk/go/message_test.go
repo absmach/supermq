@@ -29,7 +29,6 @@ func newMessageService(cc policies.ThingsServiceClient) adapter.Service {
 
 func newMessageServer(svc adapter.Service) *httptest.Server {
 	mux := api.MakeHandler(svc)
-
 	return httptest.NewServer(mux)
 }
 

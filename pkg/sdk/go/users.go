@@ -49,10 +49,10 @@ func (sdk mfSDK) CreateUser(user User, token string) (User, errors.SDKError) {
 	if err := json.Unmarshal(body, &user); err != nil {
 		return User{}, errors.NewSDKError(err)
 	}
-
 	return user, nil
 }
 
+// Users returns page of users.
 func (sdk mfSDK) Users(pm PageMetadata, token string) (UsersPage, errors.SDKError) {
 	url, err := sdk.withQueryParams(sdk.usersURL, usersEndpoint, pm)
 	if err != nil {
@@ -140,7 +140,7 @@ func (sdk mfSDK) UpdateUser(user User, token string) (User, errors.SDKError) {
 	if err := json.Unmarshal(body, &user); err != nil {
 		return User{}, errors.NewSDKError(err)
 	}
-	
+
 	return user, nil
 }
 
@@ -161,7 +161,7 @@ func (sdk mfSDK) UpdateUserTags(user User, token string) (User, errors.SDKError)
 	if err := json.Unmarshal(body, &user); err != nil {
 		return User{}, errors.NewSDKError(err)
 	}
-	
+
 	return user, nil
 }
 

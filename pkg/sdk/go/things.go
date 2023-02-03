@@ -72,6 +72,7 @@ func (sdk mfSDK) CreateThings(things []Thing, token string) ([]Thing, errors.SDK
 	return ctr.Things, nil
 }
 
+// Things returns page of clients.
 func (sdk mfSDK) Things(pm PageMetadata, token string) (ThingsPage, errors.SDKError) {
 	url, err := sdk.withQueryParams(sdk.thingsURL, thingsEndpoint, pm)
 	if err != nil {
@@ -91,6 +92,7 @@ func (sdk mfSDK) Things(pm PageMetadata, token string) (ThingsPage, errors.SDKEr
 	return cp, nil
 }
 
+// ThingsByChannel retrieves everything that is assigned to a group identified by groupID.
 func (sdk mfSDK) ThingsByChannel(chanID string, pm PageMetadata, token string) (ThingsPage, errors.SDKError) {
 	url, err := sdk.withQueryParams(sdk.thingsURL, fmt.Sprintf("channels/%s/%s", chanID, thingsEndpoint), pm)
 	if err != nil {
@@ -110,6 +112,7 @@ func (sdk mfSDK) ThingsByChannel(chanID string, pm PageMetadata, token string) (
 	return tp, nil
 }
 
+// Thing returns client object by id.
 func (sdk mfSDK) Thing(id, token string) (Thing, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, thingsEndpoint, id)
 

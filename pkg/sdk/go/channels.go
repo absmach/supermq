@@ -12,6 +12,22 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
+// Channel represents mainflux channel.
+type Channel struct {
+	ID          string     `json:"id"`
+	OwnerID     string     `json:"owner_id,omitempty"`
+	ParentID    string     `json:"parent_id,omitempty"`
+	Name        string     `json:"name,omitempty"`
+	Description string     `json:"description,omitempty"`
+	Metadata    Metadata   `json:"metadata,omitempty"`
+	Level       int        `json:"level,omitempty"`
+	Path        string     `json:"path,omitempty"`
+	Children    []*Channel `json:"children,omitempty"`
+	CreatedAt   time.Time  `json:"created_at,omitempty"`
+	UpdatedAt   time.Time  `json:"updated_at,omitempty"`
+	Status      string     `json:"status,omitempty"`
+}
+
 const channelsEndpoint = "channels"
 
 // Channel represents mainflux channel.
