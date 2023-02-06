@@ -10,7 +10,7 @@ import (
 	"os"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/clients/policies"
 	"github.com/mainflux/mainflux/consumers"
 	"github.com/mainflux/mainflux/consumers/notifiers"
 	"github.com/mainflux/mainflux/consumers/notifiers/api"
@@ -125,7 +125,7 @@ func main() {
 
 }
 
-func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServiceClient, c config, ec email.Config, logger logger.Logger) notifiers.Service {
+func newService(db *sqlx.DB, tracer opentracing.Tracer, auth policies.AuthServiceClient, c config, ec email.Config, logger logger.Logger) notifiers.Service {
 	database := notifierPg.NewDatabase(db)
 	repo := tracing.New(notifierPg.New(database), tracer)
 	idp := ulid.New()

@@ -2,6 +2,7 @@ package clients
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"github.com/mainflux/mainflux"
@@ -25,6 +26,19 @@ var (
 
 	// ErrStatusAlreadyAssigned indicated that the client or group has already been assigned the status.
 	ErrStatusAlreadyAssigned = errors.New("status already assigned")
+
+	// ErrMissingResetToken indicates malformed or missing reset token
+	// for reseting password.
+	ErrMissingResetToken = errors.New("missing reset token")
+
+	// ErrRecoveryToken indicates error in generating password recovery token.
+	ErrRecoveryToken = errors.New("failed to generate password recovery token")
+
+	// ErrGetToken indicates error in getting signed token.
+	ErrGetToken = errors.New("failed to fetch signed token")
+
+	// ErrPasswordFormat indicates weak password.
+	ErrPasswordFormat = errors.New("password does not meet the requirements")
 )
 
 // Service unites Clients and Group services.
@@ -39,16 +53,19 @@ type service struct {
 	idProvider mainflux.IDProvider
 	hasher     Hasher
 	tokens     jwt.TokenRepository
+	email      Emailer
+	passRegex  *regexp.Regexp
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(c ClientRepository, p policies.PolicyRepository, t jwt.TokenRepository, h Hasher, idp mainflux.IDProvider) Service {
+func NewService(c ClientRepository, p policies.PolicyRepository, t jwt.TokenRepository, h Hasher, idp mainflux.IDProvider, pr *regexp.Regexp) Service {
 	return service{
 		clients:    c,
 		policies:   p,
 		hasher:     h,
 		tokens:     t,
 		idProvider: idp,
+		passRegex:  pr,
 	}
 }
 
@@ -59,9 +76,9 @@ func (svc service) RegisterClient(ctx context.Context, token string, cli Client)
 	}
 
 	// We don't check the error currently since we can register client with empty token
-	ownerID, _ := svc.identify(ctx, token)
-	if ownerID != "" && cli.Owner == "" {
-		cli.Owner = ownerID
+	owner, _ := svc.Identify(ctx, token)
+	if owner.ID != "" && cli.Owner == "" {
+		cli.Owner = owner.ID
 	}
 	if cli.Credentials.Secret == "" {
 		return Client{}, apiutil.ErrMissingSecret
@@ -114,31 +131,39 @@ func (svc service) RefreshToken(ctx context.Context, accessToken string) (jwt.To
 }
 
 func (svc service) ViewClient(ctx context.Context, token string, id string) (Client, error) {
-	subject, err := svc.identify(ctx, token)
+	ir, err := svc.Identify(ctx, token)
 	if err != nil {
 		return Client{}, err
 	}
-	if subject == id {
+	if ir.ID == id {
 		return svc.clients.RetrieveByID(ctx, id)
 	}
 
-	if err := svc.policies.Evaluate(ctx, "client", policies.Policy{Subject: subject, Object: id, Actions: []string{"c_list"}}); err != nil {
+	if err := svc.policies.Evaluate(ctx, "client", policies.Policy{Subject: ir.ID, Object: id, Actions: []string{"c_list"}}); err != nil {
 		return Client{}, err
 	}
 
 	return svc.clients.RetrieveByID(ctx, id)
 }
 
+func (svc service) ViewProfile(ctx context.Context, token string) (Client, error) {
+	ir, err := svc.Identify(ctx, token)
+	if err != nil {
+		return Client{}, err
+	}
+	return svc.clients.RetrieveByID(ctx, ir.ID)
+}
+
 func (svc service) ListClients(ctx context.Context, token string, pm Page) (ClientsPage, error) {
-	id, err := svc.identify(ctx, token)
+	ir, err := svc.Identify(ctx, token)
 	if err != nil {
 		return ClientsPage{}, err
 	}
 	if pm.SharedBy == MyKey {
-		pm.SharedBy = id
+		pm.SharedBy = ir.ID
 	}
 	if pm.OwnerID == MyKey {
-		pm.OwnerID = id
+		pm.OwnerID = ir.ID
 	}
 	pm.Action = "c_list"
 	clients, err := svc.clients.RetrieveAll(ctx, pm)
@@ -146,7 +171,7 @@ func (svc service) ListClients(ctx context.Context, token string, pm Page) (Clie
 		return ClientsPage{}, err
 	}
 	for i, client := range clients.Clients {
-		if client.ID == id {
+		if client.ID == ir.ID {
 			clients.Clients = append(clients.Clients[:i], clients.Clients[i+1:]...)
 			if clients.Total != 0 {
 				clients.Total = clients.Total - 1
@@ -200,26 +225,62 @@ func (svc service) UpdateClientIdentity(ctx context.Context, token, id, identity
 	return svc.clients.UpdateIdentity(ctx, cli)
 }
 
-func (svc service) UpdateClientSecret(ctx context.Context, token, oldSecret, newSecret string) (Client, error) {
-	id, err := svc.identify(ctx, token)
+func (svc service) GenerateResetToken(ctx context.Context, email, host string) error {
+	client, err := svc.clients.RetrieveByIdentity(ctx, email)
+	if err != nil || client.Credentials.Identity == "" {
+		return errors.ErrNotFound
+	}
+	t, err := svc.IssueToken(ctx, client.Credentials.Identity, client.Credentials.Secret)
 	if err != nil {
-		return Client{}, err
+		return errors.Wrap(ErrRecoveryToken, err)
 	}
-	dbClient, err := svc.clients.RetrieveByID(ctx, id)
-	if err != nil {
-		return Client{}, err
-	}
-	if err := svc.hasher.Compare(oldSecret, dbClient.Credentials.Secret); err != nil {
-		return Client{}, errors.Wrap(errors.ErrAuthentication, err)
-	}
+	return svc.SendPasswordReset(ctx, host, email, t.AccessToken)
+}
 
-	c := Client{
+func (svc service) ResetSecret(ctx context.Context, resetToken, secret string) error {
+	ir, err := svc.Identify(ctx, resetToken)
+	if err != nil {
+		return errors.Wrap(errors.ErrAuthentication, err)
+	}
+	c, err := svc.clients.RetrieveByID(ctx, ir.ID)
+	if err != nil {
+		return err
+	}
+	if c.Credentials.Identity == "" {
+		return errors.ErrNotFound
+	}
+	if !svc.passRegex.MatchString(secret) {
+		return ErrPasswordFormat
+	}
+	secret, err = svc.hasher.Hash(secret)
+	if err != nil {
+		return err
+	}
+	c = Client{
 		Credentials: Credentials{
-			Identity: dbClient.Credentials.Identity,
-			Secret:   oldSecret,
+			Identity: c.Credentials.Identity,
+			Secret:   secret,
 		},
 	}
-	if _, err := svc.IssueToken(ctx, c.Credentials.Identity, c.Credentials.Secret); err != nil {
+	if _, err := svc.clients.UpdateSecret(ctx, c); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (svc service) UpdateClientSecret(ctx context.Context, token, oldSecret, newSecret string) (Client, error) {
+	ir, err := svc.Identify(ctx, token)
+	if err != nil {
+		return Client{}, err
+	}
+	// if !svc.passRegex.MatchString(newSecret) {
+	// 	return Client{}, ErrPasswordFormat
+	// }
+	dbClient, err := svc.clients.RetrieveByID(ctx, ir.ID)
+	if err != nil {
+		return Client{}, err
+	}
+	if _, err := svc.IssueToken(ctx, dbClient.Credentials.Identity, oldSecret); err != nil {
 		return Client{}, errors.ErrAuthentication
 	}
 	newSecret, err = svc.hasher.Hash(newSecret)
@@ -228,6 +289,11 @@ func (svc service) UpdateClientSecret(ctx context.Context, token, oldSecret, new
 	}
 	dbClient.Credentials.Secret = newSecret
 	return svc.clients.UpdateSecret(ctx, dbClient)
+}
+
+func (svc service) SendPasswordReset(_ context.Context, host, email, token string) error {
+	to := []string{email}
+	return svc.email.SendPasswordReset(to, host, token)
 }
 
 func (svc service) UpdateClientOwner(ctx context.Context, token string, cli Client) (Client, error) {
@@ -269,11 +335,11 @@ func (svc service) DisableClient(ctx context.Context, token, id string) (Client,
 }
 
 func (svc service) ListMembers(ctx context.Context, token, groupID string, pm Page) (MembersPage, error) {
-	id, err := svc.identify(ctx, token)
+	ir, err := svc.Identify(ctx, token)
 	if err != nil {
 		return MembersPage{}, err
 	}
-	pm.Subject = id
+	pm.Subject = ir.ID
 	pm.Action = "g_list"
 
 	return svc.clients.Members(ctx, groupID, pm)
@@ -295,22 +361,22 @@ func (svc service) authorize(ctx context.Context, entityType string, p policies.
 	if err := p.Validate(); err != nil {
 		return err
 	}
-	id, err := svc.identify(ctx, p.Subject)
+	ir, err := svc.Identify(ctx, p.Subject)
 	if err != nil {
 		return err
 	}
-	p.Subject = id
+	p.Subject = ir.ID
 	return svc.policies.Evaluate(ctx, entityType, p)
 }
 
-func (svc service) identify(ctx context.Context, tkn string) (string, error) {
+func (svc service) Identify(ctx context.Context, tkn string) (UserIdentity, error) {
 	claims, err := svc.tokens.Parse(ctx, tkn)
 	if err != nil {
-		return "", errors.Wrap(errors.ErrAuthentication, err)
+		return UserIdentity{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
 	if claims.Type != jwt.AccessToken {
-		return "", errors.ErrAuthentication
+		return UserIdentity{}, errors.ErrAuthentication
 	}
 
-	return claims.ClientID, nil
+	return UserIdentity{ID: claims.ClientID, Email: claims.Email}, nil
 }

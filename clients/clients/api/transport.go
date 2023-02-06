@@ -24,98 +24,119 @@ func MakeClientsHandler(svc clients.Service, mux *bone.Mux, logger logger.Logger
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
 
-	mux.Post("/clients", kithttp.NewServer(
+	mux.Post("/users", kithttp.NewServer(
 		otelkit.EndpointMiddleware(otelkit.WithOperation("register_client"))(registrationEndpoint(svc)),
 		decodeCreateClientReq,
 		api.EncodeResponse,
 		opts...,
 	))
 
-	mux.Get("/clients/:id", kithttp.NewServer(
+	mux.Get("/users/profile", kithttp.NewServer(
+		otelkit.EndpointMiddleware(otelkit.WithOperation("view_profile"))(viewProfileEndpoint(svc)),
+		decodeViewProfile,
+		api.EncodeResponse,
+		opts...,
+	))
+
+	mux.Get("/users/:id", kithttp.NewServer(
 		otelkit.EndpointMiddleware(otelkit.WithOperation("view_client"))(viewClientEndpoint(svc)),
 		decodeViewClient,
 		api.EncodeResponse,
 		opts...,
 	))
 
-	mux.Get("/clients", kithttp.NewServer(
+	mux.Get("/users", kithttp.NewServer(
 		otelkit.EndpointMiddleware(otelkit.WithOperation("list_clients"))(listClientsEndpoint(svc)),
 		decodeListClients,
 		api.EncodeResponse,
 		opts...,
 	))
 
-	mux.Get("/clients/groups/:groupID/members", kithttp.NewServer(
+	mux.Get("/groups/:id/members", kithttp.NewServer(
 		otelkit.EndpointMiddleware(otelkit.WithOperation("list_members"))(listMembersEndpoint(svc)),
 		decodeListMembersRequest,
 		api.EncodeResponse,
 		opts...,
 	))
 
-	mux.Patch("/clients/:id", kithttp.NewServer(
+	mux.Patch("/users/:id", kithttp.NewServer(
 		otelkit.EndpointMiddleware(otelkit.WithOperation("update_client_name_and_metadata"))(updateClientEndpoint(svc)),
 		decodeUpdateClient,
 		api.EncodeResponse,
 		opts...,
 	))
 
-	mux.Patch("/clients/:id/tags", kithttp.NewServer(
+	mux.Patch("/users/:id/tags", kithttp.NewServer(
 		otelkit.EndpointMiddleware(otelkit.WithOperation("update_client_tags"))(updateClientTagsEndpoint(svc)),
 		decodeUpdateClientTags,
 		api.EncodeResponse,
 		opts...,
 	))
 
-	mux.Patch("/clients/:id/identity", kithttp.NewServer(
+	mux.Patch("/users/:id/identity", kithttp.NewServer(
 		otelkit.EndpointMiddleware(otelkit.WithOperation("update_client_identity"))(updateClientIdentityEndpoint(svc)),
 		decodeUpdateClientCredentials,
 		api.EncodeResponse,
 		opts...,
 	))
 
-	mux.Patch("/clients/:id/secret", kithttp.NewServer(
+	mux.Post("/password/reset-request", kithttp.NewServer(
+		otelkit.EndpointMiddleware(otelkit.WithOperation("password_reset_req"))(passwordResetRequestEndpoint(svc)),
+		decodePasswordResetRequest,
+		api.EncodeResponse,
+		opts...,
+	))
+
+	mux.Put("/password/reset", kithttp.NewServer(
+		otelkit.EndpointMiddleware(otelkit.WithOperation("password_reset"))(passwordResetEndpoint(svc)),
+		decodePasswordReset,
+		api.EncodeResponse,
+		opts...,
+	))
+
+	mux.Patch("/users/:id/secret", kithttp.NewServer(
 		otelkit.EndpointMiddleware(otelkit.WithOperation("update_client_secret"))(updateClientSecretEndpoint(svc)),
 		decodeUpdateClientCredentials,
 		api.EncodeResponse,
 		opts...,
 	))
 
-	mux.Patch("/clients/:id/owner", kithttp.NewServer(
+	mux.Patch("/users/:id/owner", kithttp.NewServer(
 		otelkit.EndpointMiddleware(otelkit.WithOperation("update_client_owner"))(updateClientOwnerEndpoint(svc)),
 		decodeUpdateClientOwner,
 		api.EncodeResponse,
 		opts...,
 	))
 
-	mux.Post("/clients/tokens/issue", kithttp.NewServer(
+	mux.Post("/users/tokens/issue", kithttp.NewServer(
 		otelkit.EndpointMiddleware(otelkit.WithOperation("issue_token"))(issueTokenEndpoint(svc)),
 		decodeCredentials,
 		api.EncodeResponse,
 		opts...,
 	))
 
-	mux.Post("/clients/tokens/refresh", kithttp.NewServer(
+	mux.Post("/users/tokens/refresh", kithttp.NewServer(
 		otelkit.EndpointMiddleware(otelkit.WithOperation("refresh_token"))(refreshTokenEndpoint(svc)),
 		decodeRefreshToken,
 		api.EncodeResponse,
 		opts...,
 	))
 
-	mux.Post("/clients/:id/enable", kithttp.NewServer(
+	mux.Post("/users/:id/enable", kithttp.NewServer(
 		otelkit.EndpointMiddleware(otelkit.WithOperation("enable_client"))(enableClientEndpoint(svc)),
 		decodeChangeClientStatus,
 		api.EncodeResponse,
 		opts...,
 	))
 
-	mux.Post("/clients/:id/disable", kithttp.NewServer(
+	mux.Post("/users/:id/disable", kithttp.NewServer(
 		otelkit.EndpointMiddleware(otelkit.WithOperation("disable_client"))(disableClientEndpoint(svc)),
 		decodeChangeClientStatus,
 		api.EncodeResponse,
 		opts...,
 	))
 
-	mux.GetFunc("/health", mainflux.Health("clients"))
+	mux.GetFunc("/health", mainflux.Health("users"))
 	mux.Handle("/metrics", promhttp.Handler())
 }
 
@@ -124,6 +145,12 @@ func decodeViewClient(_ context.Context, r *http.Request) (interface{}, error) {
 		token: apiutil.ExtractBearerToken(r),
 		id:    bone.GetValue(r, "id"),
 	}
+
+	return req, nil
+}
+
+func decodeViewProfile(_ context.Context, r *http.Request) (interface{}, error) {
+	req := viewClientReq{token: apiutil.ExtractBearerToken(r)}
 
 	return req, nil
 }
@@ -226,6 +253,34 @@ func decodeUpdateClientCredentials(_ context.Context, r *http.Request) (interfac
 	return req, nil
 }
 
+func decodePasswordResetRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
+		return nil, errors.ErrUnsupportedContentType
+	}
+
+	var req passwResetReq
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
+	}
+
+	req.Host = r.Header.Get("Referer")
+	return req, nil
+}
+
+func decodePasswordReset(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
+		return nil, errors.ErrUnsupportedContentType
+	}
+
+	var req resetTokenReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
+	}
+
+	return req, nil
+}
+
 func decodeUpdateClientOwner(_ context.Context, r *http.Request) (interface{}, error) {
 	req := updateClientOwnerReq{
 		token: apiutil.ExtractBearerToken(r),
@@ -310,7 +365,7 @@ func decodeListMembersRequest(_ context.Context, r *http.Request) (interface{}, 
 			Limit:    l,
 			Metadata: m,
 		},
-		groupID: bone.GetValue(r, "groupID"),
+		groupID: bone.GetValue(r, "id"),
 	}
 	return req, nil
 }

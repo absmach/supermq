@@ -31,3 +31,56 @@ func (req authReq) validate() error {
 
 	return nil
 }
+
+type identityReq struct {
+	token string
+}
+
+func (req identityReq) validate() error {
+	if req.token == "" {
+		return apiutil.ErrBearerToken
+	}
+
+	return nil
+}
+
+type issueReq struct {
+	id    string
+	email string
+}
+
+func (req issueReq) validate() error {
+	if req.email == "" {
+		return apiutil.ErrMissingEmail
+	}
+
+	return nil
+}
+
+type policyReq struct {
+	Sub string
+	Obj string
+	Act string
+}
+
+func (req policyReq) validate() error {
+	if req.Sub == "" {
+		return apiutil.ErrMissingPolicySub
+	}
+
+	if req.Obj == "" {
+		return apiutil.ErrMissingPolicyObj
+	}
+
+	if req.Act == "" {
+		return apiutil.ErrMissingPolicyAct
+	}
+
+	return nil
+}
+
+type listPoliciesReq struct {
+	Sub string
+	Obj string
+	Act string
+}

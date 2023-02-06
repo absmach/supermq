@@ -3,8 +3,28 @@ package clients
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"regexp"
 	"strings"
 	"time"
+
+	"github.com/mainflux/mainflux/pkg/errors"
+	"golang.org/x/net/idna"
+)
+
+const (
+	maxLocalLen  = 64
+	maxDomainLen = 255
+	maxTLDLen    = 24 // longest TLD currently in existence
+
+	atSeparator  = "@"
+	dotSeparator = "."
+)
+
+var (
+	userRegexp    = regexp.MustCompile("^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~.-]+$")
+	hostRegexp    = regexp.MustCompile(`^[^\s]+\.[^\s]+$`)
+	userDotRegexp = regexp.MustCompile("(^[.]{1})|([.]{1}$)|([.]{2,})")
 )
 
 // Credentials represent client credentials: its
@@ -26,6 +46,11 @@ type Client struct {
 	CreatedAt   time.Time   `json:"created_at"`
 	UpdatedAt   time.Time   `json:"updated_at"`
 	Status      Status      `json:"status"` // 1 for enabled, 0 for disabled
+}
+
+type UserIdentity struct {
+	ID    string
+	Email string
 }
 
 // ClientsPage contains page related metadata as well as list
@@ -93,6 +118,9 @@ type ClientService interface {
 	// ViewClient retrieves client info for a given client ID and an authorized token.
 	ViewClient(ctx context.Context, token, id string) (Client, error)
 
+	// ViewProfile retrieves client info for a given token.
+	ViewProfile(ctx context.Context, token string) (Client, error)
+
 	// ListClients retrieves clients list for a valid auth token.
 	ListClients(ctx context.Context, token string, pm Page) (ClientsPage, error)
 
@@ -108,8 +136,19 @@ type ClientService interface {
 	// UpdateClientIdentity updates the client's identity
 	UpdateClientIdentity(ctx context.Context, token, id, identity string) (Client, error)
 
+	// GenerateResetToken email where mail will be sent.
+	// host is used for generating reset link.
+	GenerateResetToken(ctx context.Context, email, host string) error
+
 	// UpdateClientSecret updates the client's secret
 	UpdateClientSecret(ctx context.Context, token, oldSecret, newSecret string) (Client, error)
+
+	// ResetSecret change users secret in reset flow.
+	// token can be authentication token or secret reset token.
+	ResetSecret(ctx context.Context, resetToken, secret string) error
+
+	// SendPasswordReset sends reset password link to email.
+	SendPasswordReset(ctx context.Context, host, email, token string) error
 
 	// UpdateClientOwner updates the client's owner.
 	UpdateClientOwner(ctx context.Context, token string, client Client) (Client, error)
@@ -119,6 +158,9 @@ type ClientService interface {
 
 	// DisableClient logically disables the client identified with the provided ID
 	DisableClient(ctx context.Context, token, id string) (Client, error)
+
+	// Identify returns the client email and id from the given token
+	Identify(ctx context.Context, tkn string) (UserIdentity, error)
 }
 
 // Custom Marshaller for Client
@@ -132,4 +174,73 @@ func (s *Status) UnmarshalJSON(data []byte) error {
 	val, err := ToStatus(str)
 	*s = val
 	return err
+}
+
+// Validate returns an error if client representation is invalid.
+func (u Client) Validate() error {
+	if !isEmail(u.Credentials.Identity) {
+		return errors.ErrMalformedEntity
+	}
+	return nil
+}
+
+func isEmail(email string) bool {
+	if email == "" {
+		return false
+	}
+
+	es := strings.Split(email, atSeparator)
+	if len(es) != 2 {
+		return false
+	}
+	local, host := es[0], es[1]
+
+	if local == "" || len(local) > maxLocalLen {
+		return false
+	}
+
+	hs := strings.Split(host, dotSeparator)
+	if len(hs) < 2 {
+		return false
+	}
+	domain, ext := hs[0], hs[1]
+
+	// Check subdomain and validate
+	if len(hs) > 2 {
+		if domain == "" {
+			return false
+		}
+
+		for i := 1; i < len(hs)-1; i++ {
+			sub := hs[i]
+			if sub == "" {
+				return false
+			}
+			domain = fmt.Sprintf("%s.%s", domain, sub)
+		}
+
+		ext = hs[len(hs)-1]
+	}
+
+	if domain == "" || len(domain) > maxDomainLen {
+		return false
+	}
+	if ext == "" || len(ext) > maxTLDLen {
+		return false
+	}
+
+	punyLocal, err := idna.ToASCII(local)
+	if err != nil {
+		return false
+	}
+	punyHost, err := idna.ToASCII(host)
+	if err != nil {
+		return false
+	}
+
+	if userDotRegexp.MatchString(punyLocal) || !userRegexp.MatchString(punyLocal) || !hostRegexp.MatchString(punyHost) {
+		return false
+	}
+
+	return true
 }

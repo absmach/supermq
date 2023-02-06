@@ -14,7 +14,6 @@ require (
 	github.com/go-zoo/bone v1.3.0
 	github.com/gocql/gocql v1.2.1
 	github.com/gofrs/uuid v4.3.0+incompatible
-	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/golang/protobuf v1.5.2
 	github.com/gopcua/opcua v0.1.6
 	github.com/gorilla/websocket v1.5.0
@@ -33,7 +32,6 @@ require (
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/ory/dockertest/v3 v3.9.1
-	github.com/ory/keto/proto/ory/keto/acl/v1alpha1 v0.0.0-20210616104402-80e043246cf9
 	github.com/pelletier/go-toml v1.9.5
 	github.com/plgd-dev/go-coap/v2 v2.6.0
 	github.com/prometheus/client_golang v1.13.0

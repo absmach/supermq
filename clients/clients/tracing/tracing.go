@@ -81,6 +81,38 @@ func (tm *tracingMiddleware) UpdateClientSecret(ctx context.Context, token, oldS
 
 }
 
+func (tm *tracingMiddleware) GenerateResetToken(ctx context.Context, email, host string) error {
+	ctx, span := tm.tracer.Start(ctx, "svc_generate_reset_token")
+	defer span.End()
+
+	return tm.svc.GenerateResetToken(ctx, email, host)
+
+}
+
+func (tm *tracingMiddleware) ResetSecret(ctx context.Context, token, secret string) error {
+	ctx, span := tm.tracer.Start(ctx, "svc_reset_secret")
+	defer span.End()
+
+	return tm.svc.ResetSecret(ctx, token, secret)
+
+}
+
+func (tm *tracingMiddleware) SendPasswordReset(ctx context.Context, host, email, token string) error {
+	ctx, span := tm.tracer.Start(ctx, "svc_send_password_reset")
+	defer span.End()
+
+	return tm.svc.SendPasswordReset(ctx, host, email, token)
+
+}
+
+func (tm *tracingMiddleware) ViewProfile(ctx context.Context, token string) (clients.Client, error) {
+	ctx, span := tm.tracer.Start(ctx, "svc_view_profile")
+	defer span.End()
+
+	return tm.svc.ViewProfile(ctx, token)
+
+}
+
 func (tm *tracingMiddleware) UpdateClientOwner(ctx context.Context, token string, cli clients.Client) (clients.Client, error) {
 	ctx, span := tm.tracer.Start(ctx, "svc_update_client_owner", trace.WithAttributes(attribute.StringSlice("Tags", cli.Tags)))
 	defer span.End()
@@ -108,4 +140,11 @@ func (tm *tracingMiddleware) ListMembers(ctx context.Context, token, groupID str
 
 	return tm.svc.ListMembers(ctx, token, groupID, pm)
 
+}
+
+func (tm *tracingMiddleware) Identify(ctx context.Context, token string) (clients.UserIdentity, error) {
+	ctx, span := tm.tracer.Start(ctx, "svc_identify", trace.WithAttributes(attribute.String("token", token)))
+	defer span.End()
+
+	return tm.svc.Identify(ctx, token)
 }

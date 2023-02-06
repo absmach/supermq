@@ -13,13 +13,23 @@ import (
 
 var _ policies.AuthServiceClient = (*authServiceMock)(nil)
 
-type authServiceMock struct {
-	users map[string]string
+type SubjectSet struct {
+	Object   string
+	Relation string
 }
 
-// NewAuth creates mock of auth service.
-func NewAuth(users map[string]string) policies.AuthServiceClient {
-	return &authServiceMock{users}
+type authServiceMock struct {
+	users map[string]string
+	authz map[string][]SubjectSet
+}
+
+func (svc authServiceMock) ListPolicies(ctx context.Context, in *policies.ListPoliciesReq, opts ...grpc.CallOption) (*policies.ListPoliciesRes, error) {
+	panic("not implemented")
+}
+
+// NewAuthService creates mock of users service.
+func NewAuthService(users map[string]string, authzDB map[string][]SubjectSet) policies.AuthServiceClient {
+	return &authServiceMock{users, authzDB}
 }
 
 func (svc authServiceMock) Identify(ctx context.Context, in *policies.Token, opts ...grpc.CallOption) (*policies.UserIdentity, error) {
@@ -40,17 +50,22 @@ func (svc authServiceMock) Issue(ctx context.Context, in *policies.IssueReq, opt
 }
 
 func (svc authServiceMock) Authorize(ctx context.Context, req *policies.AuthorizeReq, _ ...grpc.CallOption) (r *policies.AuthorizeRes, err error) {
-	panic("not implemented")
+	if sub, ok := svc.authz[req.GetSub()]; ok {
+		for _, v := range sub {
+			if v.Relation == req.GetAct() && v.Object == req.GetObj() {
+				return &policies.AuthorizeRes{Authorized: true}, nil
+			}
+		}
+	}
+	return &policies.AuthorizeRes{Authorized: false}, nil
 }
 
 func (svc authServiceMock) AddPolicy(ctx context.Context, in *policies.AddPolicyReq, opts ...grpc.CallOption) (*policies.AddPolicyRes, error) {
-	panic("not implemented")
+	svc.authz[in.GetSub()] = append(svc.authz[in.GetSub()], SubjectSet{Object: in.GetObj(), Relation: in.GetAct()})
+	return &policies.AddPolicyRes{Authorized: true}, nil
 }
 
 func (svc authServiceMock) DeletePolicy(ctx context.Context, in *policies.DeletePolicyReq, opts ...grpc.CallOption) (*policies.DeletePolicyRes, error) {
-	panic("not implemented")
-}
-
-func (svc authServiceMock) ListPolicies(ctx context.Context, in *policies.ListPoliciesReq, opts ...grpc.CallOption) (*policies.ListPoliciesRes, error) {
-	panic("not implemented")
+	// Not implemented
+	return &policies.DeletePolicyRes{Deleted: true}, nil
 }

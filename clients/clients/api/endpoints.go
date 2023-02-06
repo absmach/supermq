@@ -41,6 +41,23 @@ func viewClientEndpoint(svc clients.Service) endpoint.Endpoint {
 	}
 }
 
+func viewProfileEndpoint(svc clients.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(viewClientReq)
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+
+		c, err := svc.ViewProfile(ctx, req.token)
+		if err != nil {
+			return nil, err
+		}
+		return viewClientRes{
+			Client: c,
+		}, nil
+	}
+}
+
 func listClientsEndpoint(svc clients.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listClientsReq)
@@ -143,6 +160,50 @@ func updateClientIdentityEndpoint(svc clients.Service) endpoint.Endpoint {
 			return nil, err
 		}
 		return updateClientRes{Client: client}, nil
+	}
+}
+
+// Password reset request endpoint.
+// When successful password reset link is generated.
+// Link is generated using MF_TOKEN_RESET_ENDPOINT env.
+// and value from Referer header for host.
+// {Referer}+{MF_TOKEN_RESET_ENDPOINT}+{token=TOKEN}
+// http://mainflux.com/reset-request?token=xxxxxxxxxxx.
+// Email with a link is being sent to the user.
+// When user clicks on a link it should get the ui with form to
+// enter new password, when form is submitted token and new password
+// must be sent as PUT request to 'password/reset' passwordResetEndpoint
+func passwordResetRequestEndpoint(svc clients.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(passwResetReq)
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+		res := passwResetReqRes{}
+		email := req.Email
+		if err := svc.GenerateResetToken(ctx, email, req.Host); err != nil {
+			return nil, err
+		}
+		res.Msg = MailSent
+
+		return res, nil
+	}
+}
+
+// This is endpoint that actually sets new password in password reset flow.
+// When user clicks on a link in email finally ends on this endpoint as explained in
+// the comment above.
+func passwordResetEndpoint(svc clients.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(resetTokenReq)
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+		res := passwChangeRes{}
+		if err := svc.ResetSecret(ctx, req.Token, req.Password); err != nil {
+			return nil, err
+		}
+		return res, nil
 	}
 }
 

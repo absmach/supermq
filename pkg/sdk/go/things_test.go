@@ -28,7 +28,6 @@ const (
 	email       = "user@example.com"
 	adminEmail  = "admin@example.com"
 	otherEmail  = "other_user@example.com"
-	token       = "token"
 	otherToken  = "other_token"
 	wrongValue  = "wrong_value"
 	badKey      = "999"

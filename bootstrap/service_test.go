@@ -18,9 +18,9 @@ import (
 	"github.com/opentracing/opentracing-go/mocktracer"
 
 	"github.com/gofrs/uuid"
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/bootstrap"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
+	"github.com/mainflux/mainflux/clients/policies"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
@@ -55,7 +55,7 @@ var (
 	}
 )
 
-func newService(auth mainflux.AuthServiceClient, url string) bootstrap.Service {
+func newService(auth policies.AuthServiceClient, url string) bootstrap.Service {
 	things := mocks.NewConfigsRepository()
 	config := mfsdk.Config{
 		ThingsURL: url,
@@ -65,7 +65,7 @@ func newService(auth mainflux.AuthServiceClient, url string) bootstrap.Service {
 	return bootstrap.New(auth, things, sdk, encKey)
 }
 
-func newThingsService(auth mainflux.AuthServiceClient) things.Service {
+func newThingsService(auth policies.AuthServiceClient) things.Service {
 	channels := make(map[string]things.Channel, channelsNum)
 	for i := 0; i < channelsNum; i++ {
 		id := strconv.Itoa(i + 1)

@@ -73,13 +73,15 @@ func Provision(conf Config) {
 	s := sdk.NewSDK(sdkConf)
 
 	user := sdk.User{
-		Email:    conf.Username,
-		Password: conf.Password,
+		Credentials: sdk.Credentials{
+			Identity: conf.Username,
+			Secret:   conf.Password,
+		},
 	}
 
-	if user.Email == "" {
-		user.Email = fmt.Sprintf("%s@email.com", namesgenerator.GetRandomName(0))
-		user.Password = defPass
+	if user.Credentials.Identity == "" {
+		user.Credentials.Identity = fmt.Sprintf("%s@email.com", namesgenerator.GetRandomName(0))
+		user.Credentials.Secret = defPass
 	}
 
 	// Create new user

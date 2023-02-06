@@ -52,7 +52,7 @@ func CreateTwin(channels []string, subtopics []string) twins.Twin {
 }
 
 // CreateSenML creates SenML record array
-func CreateSenML(n int, recs []senml.Record) {
+func CreateSenML(recs []senml.Record) {
 	for i, rec := range recs {
 		rec.BaseTime = float64(time.Now().Unix())
 		rec.Time = float64(i)

@@ -42,7 +42,7 @@ func MakeGroupsHandler(svc groups.Service, mux *bone.Mux, logger logger.Logger) 
 		opts...,
 	))
 
-	mux.Get("/:clientID/memberships", kithttp.NewServer(
+	mux.Get("/users/:id/memberships", kithttp.NewServer(
 		otelkit.EndpointMiddleware(otelkit.WithOperation("list_memberships"))(listMembershipsEndpoint(svc)),
 		decodeListMembershipRequest,
 		api.EncodeResponse,
@@ -55,6 +55,21 @@ func MakeGroupsHandler(svc groups.Service, mux *bone.Mux, logger logger.Logger) 
 		api.EncodeResponse,
 		opts...,
 	))
+
+	mux.Get("/groups/:id/children", kithttp.NewServer(
+		otelkit.EndpointMiddleware(otelkit.WithOperation("list_children"))(listGroupsEndpoint(svc)),
+		decodeListChildrenRequest,
+		api.EncodeResponse,
+		opts...,
+	))
+
+	mux.Get("/groups/:id/parents", kithttp.NewServer(
+		otelkit.EndpointMiddleware(otelkit.WithOperation("list_parents"))(listGroupsEndpoint(svc)),
+		decodeListParentsRequest,
+		api.EncodeResponse,
+		opts...,
+	))
+
 	mux.Post("/groups/:id/enable", kithttp.NewServer(
 		otelkit.EndpointMiddleware(otelkit.WithOperation("enable_group"))(enableGroupEndpoint(svc)),
 		decodeChangeGroupStatus,
@@ -113,7 +128,7 @@ func decodeListMembershipRequest(_ context.Context, r *http.Request) (interface{
 	}
 	req := listMembershipReq{
 		token:    apiutil.ExtractBearerToken(r),
-		clientID: bone.GetValue(r, "clientID"),
+		clientID: bone.GetValue(r, "id"),
 		GroupsPage: groups.GroupsPage{
 			Level: level,
 			ID:    parentID,
@@ -192,6 +207,120 @@ func decodeListGroupsRequest(_ context.Context, r *http.Request) (interface{}, e
 				Status:   st,
 			},
 			Direction: dir,
+		},
+	}
+	return req, nil
+}
+
+func decodeListParentsRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	s, err := apiutil.ReadStringQuery(r, api.StatusKey, api.DefGroupStatus)
+	if err != nil {
+		return nil, err
+	}
+	level, err := apiutil.ReadNumQuery[uint64](r, api.LevelKey, api.DefLevel)
+	if err != nil {
+		return nil, err
+	}
+	offset, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
+	if err != nil {
+		return nil, err
+	}
+	limit, err := apiutil.ReadNumQuery[uint64](r, api.LimitKey, api.DefLimit)
+	if err != nil {
+		return nil, err
+	}
+	ownerID, err := apiutil.ReadStringQuery(r, api.OwnerKey, "")
+	if err != nil {
+		return nil, err
+	}
+	name, err := apiutil.ReadStringQuery(r, api.NameKey, "")
+	if err != nil {
+		return nil, err
+	}
+	meta, err := apiutil.ReadMetadataQuery(r, api.MetadataKey, nil)
+	if err != nil {
+		return nil, err
+	}
+	tree, err := apiutil.ReadBoolQuery(r, api.TreeKey, false)
+	if err != nil {
+		return nil, err
+	}
+	st, err := groups.ToStatus(s)
+	if err != nil {
+		return nil, err
+	}
+	req := listGroupsReq{
+		token: apiutil.ExtractBearerToken(r),
+		tree:  tree,
+		GroupsPage: groups.GroupsPage{
+			Level: level,
+			ID:    bone.GetValue(r, "id"),
+			Page: groups.Page{
+				Offset:   offset,
+				Limit:    limit,
+				OwnerID:  ownerID,
+				Name:     name,
+				Metadata: meta,
+				Status:   st,
+			},
+			Direction: 1,
+		},
+	}
+	return req, nil
+}
+
+func decodeListChildrenRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	s, err := apiutil.ReadStringQuery(r, api.StatusKey, api.DefGroupStatus)
+	if err != nil {
+		return nil, err
+	}
+	level, err := apiutil.ReadNumQuery[uint64](r, api.LevelKey, api.DefLevel)
+	if err != nil {
+		return nil, err
+	}
+	offset, err := apiutil.ReadNumQuery[uint64](r, api.OffsetKey, api.DefOffset)
+	if err != nil {
+		return nil, err
+	}
+	limit, err := apiutil.ReadNumQuery[uint64](r, api.LimitKey, api.DefLimit)
+	if err != nil {
+		return nil, err
+	}
+	ownerID, err := apiutil.ReadStringQuery(r, api.OwnerKey, "")
+	if err != nil {
+		return nil, err
+	}
+	name, err := apiutil.ReadStringQuery(r, api.NameKey, "")
+	if err != nil {
+		return nil, err
+	}
+	meta, err := apiutil.ReadMetadataQuery(r, api.MetadataKey, nil)
+	if err != nil {
+		return nil, err
+	}
+	tree, err := apiutil.ReadBoolQuery(r, api.TreeKey, false)
+	if err != nil {
+		return nil, err
+	}
+	st, err := groups.ToStatus(s)
+	if err != nil {
+		return nil, err
+	}
+	req := listGroupsReq{
+		token: apiutil.ExtractBearerToken(r),
+		tree:  tree,
+		GroupsPage: groups.GroupsPage{
+			Level: level,
+			ID:    bone.GetValue(r, "id"),
+			Page: groups.Page{
+				Offset:   offset,
+				Limit:    limit,
+				OwnerID:  ownerID,
+				Name:     name,
+				Metadata: meta,
+				Status:   st,
+			},
+			Direction: -1,
 		},
 	}
 	return req, nil

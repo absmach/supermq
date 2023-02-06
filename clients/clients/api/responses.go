@@ -8,6 +8,9 @@ import (
 	"github.com/mainflux/mainflux/clients/clients"
 )
 
+// MailSent message response when link is sent
+const MailSent = "Email with reset link is sent"
+
 var (
 	_ mainflux.Response = (*tokenRes)(nil)
 	_ mainflux.Response = (*viewClientRes)(nil)
@@ -22,8 +25,6 @@ type pageRes struct {
 	Limit  uint64 `json:"limit,omitempty"`
 	Offset uint64 `json:"offset,omitempty"`
 	Total  uint64 `json:"total"`
-	Level  uint64 `json:"level"`
-	Name   string `json:"name"`
 }
 
 type createClientRes struct {
@@ -42,7 +43,7 @@ func (res createClientRes) Code() int {
 func (res createClientRes) Headers() map[string]string {
 	if res.created {
 		return map[string]string{
-			"Location": fmt.Sprintf("/clients/%s", res.ID),
+			"Location": fmt.Sprintf("/users/%s", res.ID),
 		}
 	}
 
@@ -105,7 +106,7 @@ func (res viewClientRes) Empty() bool {
 
 type clientsPageRes struct {
 	pageRes
-	Clients []viewClientRes `json:"clients"`
+	Clients []viewClientRes `json:"users"`
 }
 
 func (res clientsPageRes) Code() int {
@@ -166,5 +167,36 @@ func (res deleteClientRes) Headers() map[string]string {
 }
 
 func (res deleteClientRes) Empty() bool {
+	return false
+}
+
+type passwResetReqRes struct {
+	Msg string `json:"msg"`
+}
+
+func (res passwResetReqRes) Code() int {
+	return http.StatusCreated
+}
+
+func (res passwResetReqRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res passwResetReqRes) Empty() bool {
+	return false
+}
+
+type passwChangeRes struct {
+}
+
+func (res passwChangeRes) Code() int {
+	return http.StatusCreated
+}
+
+func (res passwChangeRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res passwChangeRes) Empty() bool {
 	return false
 }

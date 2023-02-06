@@ -3,6 +3,7 @@ package clients_test
 import (
 	context "context"
 	fmt "fmt"
+	"regexp"
 	"testing"
 	"time"
 
@@ -36,6 +37,7 @@ var (
 	}
 	inValidToken   = "invalidToken"
 	withinDuration = 5 * time.Second
+	passRegex      = regexp.MustCompile("^.{8,}$")
 )
 
 func generateValidToken(t *testing.T, clientID string, svc clients.Service, cRepo *mocks.ClientRepository) string {
@@ -62,7 +64,7 @@ func TestRegisterClient(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret))
-	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider)
+	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider, passRegex)
 
 	cases := []struct {
 		desc   string
@@ -269,7 +271,7 @@ func TestViewClient(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret))
-	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider)
+	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider, passRegex)
 
 	cases := []struct {
 		desc     string
@@ -323,7 +325,7 @@ func TestListClients(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret))
-	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider)
+	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider, passRegex)
 
 	var nClients = uint64(200)
 	var aClients = []clients.Client{}
@@ -604,7 +606,7 @@ func TestUpdateClient(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret))
-	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider)
+	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider, passRegex)
 
 	client1 := client
 	client2 := client
@@ -673,7 +675,7 @@ func TestUpdateClientTags(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret))
-	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider)
+	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider, passRegex)
 
 	client.Tags = []string{"updated"}
 
@@ -725,7 +727,7 @@ func TestUpdateClientIdentity(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret))
-	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider)
+	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider, passRegex)
 
 	client2 := client
 	client2.Credentials.Identity = "updated@example.com"
@@ -781,7 +783,7 @@ func TestUpdateClientOwner(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret))
-	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider)
+	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider, passRegex)
 
 	client.Owner = "newowner@mail.com"
 
@@ -833,7 +835,7 @@ func TestUpdateClientSecret(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret))
-	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider)
+	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider, passRegex)
 
 	rClient := client
 	rClient.Credentials.Secret, _ = phasher.Hash(client.Credentials.Secret)
@@ -894,7 +896,7 @@ func TestEnableClient(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret))
-	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider)
+	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider, passRegex)
 
 	enabledClient1 := clients.Client{ID: testsutil.GenerateUUID(t, idProvider), Credentials: clients.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: clients.EnabledStatus}
 	disabledClient1 := clients.Client{ID: testsutil.GenerateUUID(t, idProvider), Credentials: clients.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: clients.DisabledStatus}
@@ -1014,7 +1016,7 @@ func TestDisableClient(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret))
-	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider)
+	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider, passRegex)
 
 	enabledClient1 := clients.Client{ID: testsutil.GenerateUUID(t, idProvider), Credentials: clients.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: clients.EnabledStatus}
 	disabledClient1 := clients.Client{ID: testsutil.GenerateUUID(t, idProvider), Credentials: clients.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: clients.DisabledStatus}
@@ -1133,7 +1135,7 @@ func TestListMembers(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret))
-	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider)
+	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider, passRegex)
 
 	var nClients = uint64(10)
 	var aClients = []clients.Client{}
@@ -1247,7 +1249,7 @@ func TestIssueToken(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret))
-	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider)
+	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider, passRegex)
 
 	rClient := client
 	rClient2 := client
@@ -1298,7 +1300,7 @@ func TestRefreshToken(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
 	tokenizer := jwt.NewTokenRepo([]byte(secret))
-	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider)
+	svc := clients.NewService(cRepo, pRepo, tokenizer, phasher, idProvider, passRegex)
 
 	rClient := client
 	rClient.Credentials.Secret, _ = phasher.Hash(client.Credentials.Secret)

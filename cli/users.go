@@ -6,6 +6,7 @@ package cli
 import (
 	"encoding/json"
 
+	"github.com/mainflux/mainflux/clients/clients"
 	mfxsdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/spf13/cobra"
 )
@@ -25,8 +26,11 @@ var cmdUsers = []cobra.Command{
 			}
 
 			user := mfxsdk.User{
-				Email:    args[0],
-				Password: args[1],
+				Credentials: mfxsdk.Credentials{
+					Identity: args[0],
+					Secret:   args[1],
+				},
+				Status: clients.EnabledStatus.String(),
 			}
 			id, err := sdk.CreateUser(user, args[2])
 			if err != nil {
@@ -89,8 +93,10 @@ var cmdUsers = []cobra.Command{
 			}
 
 			user := mfxsdk.User{
-				Email:    args[0],
-				Password: args[1],
+				Credentials: mfxsdk.Credentials{
+					Identity: args[0],
+					Secret:   args[1],
+				},
 			}
 			token, err := sdk.CreateToken(user)
 			if err != nil {
@@ -127,16 +133,16 @@ var cmdUsers = []cobra.Command{
 		},
 	},
 	{
-		Use:   "password <old_password> <password> <user_auth_token>",
+		Use:   "password <user_id> <old_password> <password> <user_auth_token>",
 		Short: "Update password",
 		Long:  `Update user password`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 {
+			if len(args) != 4 {
 				logUsage(cmd.Use)
 				return
 			}
 
-			if err := sdk.UpdatePassword(args[0], args[1], args[2]); err != nil {
+			if err := sdk.UpdatePassword(args[0], args[1], args[2], args[3]); err != nil {
 				logError(err)
 				return
 			}

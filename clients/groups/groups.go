@@ -28,7 +28,7 @@ type GroupsPage struct {
 	Path      string
 	Level     uint64
 	ID        string
-	Direction int64 // ancestors (-1) or descendants (+1)
+	Direction int64 // ancestors (+1) or descendants (-1)
 	Groups    []Group
 }
 

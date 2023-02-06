@@ -12,14 +12,14 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux"
+	authmocks "github.com/mainflux/mainflux/clients/clients/mocks"
+	"github.com/mainflux/mainflux/clients/policies"
 	"github.com/mainflux/mainflux/internal/apiutil"
-	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/readers"
 	"github.com/mainflux/mainflux/readers/api"
 	"github.com/mainflux/mainflux/readers/mocks"
-	authmocks "github.com/mainflux/mainflux/users/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -48,9 +48,8 @@ var (
 	idProvider = uuid.New()
 )
 
-func newServer(repo readers.MessageRepository, tc mainflux.ThingsServiceClient, ac mainflux.AuthServiceClient) *httptest.Server {
-	logger := logger.NewMock()
-	mux := api.MakeHandler(repo, tc, ac, svcName, logger)
+func newServer(repo readers.MessageRepository, tc mainflux.ThingsServiceClient, ac policies.AuthServiceClient) *httptest.Server {
+	mux := api.MakeHandler(repo, tc, ac, svcName)
 	return httptest.NewServer(mux)
 }
 

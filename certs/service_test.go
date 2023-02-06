@@ -16,10 +16,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mainflux/mainflux"
 	bsmocks "github.com/mainflux/mainflux/bootstrap/mocks"
 	"github.com/mainflux/mainflux/certs"
 	"github.com/mainflux/mainflux/certs/mocks"
+	"github.com/mainflux/mainflux/clients/policies"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
@@ -76,7 +76,7 @@ func newService(tokens map[string]string) (certs.Service, error) {
 	return certs.New(auth, repo, sdk, pki), nil
 }
 
-func newThingsService(auth mainflux.AuthServiceClient) things.Service {
+func newThingsService(auth policies.AuthServiceClient) things.Service {
 	ths := make(map[string]things.Thing, thingsNum)
 	for i := 0; i < thingsNum; i++ {
 		id := strconv.Itoa(i + 1)

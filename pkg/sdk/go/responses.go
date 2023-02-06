@@ -11,7 +11,9 @@ import (
 )
 
 type tokenRes struct {
-	Token string `json:"token,omitempty"`
+	AccessToken  string `json:"access_token,omitempty"`
+	RefreshToken string `json:"refresh_token,omitempty"`
+	AccessType   string `json:"access_type,omitempty"`
 }
 
 type createThingsRes struct {

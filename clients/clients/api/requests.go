@@ -6,7 +6,10 @@ import (
 	"github.com/mainflux/mainflux/internal/apiutil"
 )
 
-const maxLimitSize = 100
+const (
+	maxLimitSize = 100
+	maxEmailSize = 1024
+)
 
 type createClientReq struct {
 	client clients.Client
@@ -17,7 +20,7 @@ func (req createClientReq) validate() error {
 	if len(req.client.Name) > api.MaxNameSize {
 		return apiutil.ErrNameSize
 	}
-	return nil
+	return req.client.Validate()
 }
 
 type viewClientReq struct {
@@ -26,6 +29,9 @@ type viewClientReq struct {
 }
 
 func (req viewClientReq) validate() error {
+	if req.token == "" {
+		return apiutil.ErrBearerToken
+	}
 	return nil
 }
 
@@ -43,6 +49,9 @@ type listClientsReq struct {
 }
 
 func (req listClientsReq) validate() error {
+	if req.token == "" {
+		return apiutil.ErrBearerToken
+	}
 	if req.limit > maxLimitSize || req.limit < 1 {
 		return apiutil.ErrLimitSize
 	}
@@ -179,5 +188,48 @@ func (req tokenReq) validate() error {
 	if req.RefreshToken == "" {
 		return apiutil.ErrBearerToken
 	}
+	return nil
+}
+
+type passwResetReq struct {
+	Email string `json:"email"`
+	Host  string `json:"host"`
+}
+
+func (req passwResetReq) validate() error {
+	if req.Email == "" {
+		return apiutil.ErrMissingEmail
+	}
+
+	if req.Host == "" {
+		return apiutil.ErrMissingHost
+	}
+
+	return nil
+}
+
+type resetTokenReq struct {
+	Token    string `json:"token"`
+	Password string `json:"password"`
+	ConfPass string `json:"confirm_password"`
+}
+
+func (req resetTokenReq) validate() error {
+	if req.Password == "" {
+		return apiutil.ErrMissingPass
+	}
+
+	if req.ConfPass == "" {
+		return apiutil.ErrMissingConfPass
+	}
+
+	if req.Token == "" {
+		return apiutil.ErrBearerToken
+	}
+
+	if req.Password != req.ConfPass {
+		return apiutil.ErrInvalidResetPass
+	}
+
 	return nil
 }

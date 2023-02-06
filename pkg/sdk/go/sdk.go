@@ -36,14 +36,48 @@ type ContentType string
 
 var _ SDK = (*mfSDK)(nil)
 
+var (
+	// ErrFailedCreation indicates that entity creation failed.
+	ErrFailedCreation = errors.New("failed to create entity in the db")
+
+	// ErrFailedList indicates that entities list failed.
+	ErrFailedList = errors.New("failed to list entities")
+
+	// ErrFailedUpdate indicates that entity update failed.
+	ErrFailedUpdate = errors.New("failed to update entity")
+
+	// ErrFailedFetch indicates that fetching of entity data failed.
+	ErrFailedFetch = errors.New("failed to fetch entity")
+
+	// ErrFailedRemoval indicates that entity removal failed.
+	ErrFailedRemoval = errors.New("failed to remove entity")
+
+	// ErrFailedEnable indicates that client enable failed.
+	ErrFailedEnable = errors.New("failed to enable client")
+
+	// ErrFailedDisable indicates that client disable failed.
+	ErrFailedDisable = errors.New("failed to disable client")
+)
+
 // User represents mainflux user its credentials.
 type User struct {
-	ID       string                 `json:"id,omitempty"`
-	Email    string                 `json:"email,omitempty"`
-	Groups   []string               `json:"groups,omitempty"`
-	Password string                 `json:"password,omitempty"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	ID          string                 `json:"id,omitempty"`
+	Name        string                 `json:"name,omitempty"`
+	Credentials Credentials            `json:"credentials,omitempty"`
+	Tags        []string               `json:"tags,omitempty"`
+	Owner       string                 `json:"owner,omitempty"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Status      string                 `json:"status,omitempty"`
 }
+
+// Credentials represent client credentials: it contains
+// "identity" which can be a username, email, generated name;
+// and "secret" which can be a password or access token.
+type Credentials struct {
+	Identity string `json:"identity"` // username or generated login ID
+	Secret   string `json:"secret"`   // password or token
+}
+
 type PageMetadata struct {
 	Total        uint64                 `json:"total"`
 	Offset       uint64                 `json:"offset"`
@@ -55,6 +89,8 @@ type PageMetadata struct {
 	Disconnected bool                   `json:"disconnected,omitempty"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
 	Status       string                 `json:"status,omitempty"`
+	Action       string
+	Tag          string
 }
 
 // Group represents mainflux users group.
@@ -107,8 +143,20 @@ type SDK interface {
 	// UpdateUser updates existing user.
 	UpdateUser(user User, token string) errors.SDKError
 
+	// UpdateUserTags updates the user's tags.
+	UpdateUserTags(user User, token string) errors.SDKError
+
+	// UpdateUserIdentity updates the user's identity
+	UpdateUserIdentity(user User, token string) errors.SDKError
+
+	// UpdateUserOwner updates the user's owner.
+	UpdateUserOwner(user User, token string) errors.SDKError
+
 	// UpdatePassword updates user password.
-	UpdatePassword(oldPass, newPass, token string) errors.SDKError
+	UpdatePassword(id, oldPass, newPass, token string) errors.SDKError
+
+	// ListMembers retrieves everything that is assigned to a group identified by groupID.
+	ListMembers(groupID string, meta PageMetadata, token string) (MembersPage, errors.SDKError)
 
 	// EnableUser changes the status of the user to enabled.
 	EnableUser(id, token string) errors.SDKError
@@ -243,15 +291,6 @@ type SDK interface {
 
 	// RevokeCert revokes certificate for thing with thingID
 	RevokeCert(thingID, token string) (time.Time, errors.SDKError)
-
-	// Issue issues a new key, returning its token value alongside.
-	Issue(duration time.Duration, token string) (KeyRes, errors.SDKError)
-
-	// Revoke removes the key with the provided ID that is issued by the user identified by the provided key.
-	Revoke(id, token string) errors.SDKError
-
-	// RetrieveKey retrieves data for the key identified by the provided ID, that is issued by the user identified by the provided key.
-	RetrieveKey(id, token string) (retrieveKeyRes, errors.SDKError)
 }
 
 type mfSDK struct {
