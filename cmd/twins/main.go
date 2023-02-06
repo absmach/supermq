@@ -17,7 +17,8 @@ import (
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/go-redis/redis/v8"
 	"github.com/mainflux/mainflux"
-	authapi "github.com/mainflux/mainflux/auth/api/grpc"
+	"github.com/mainflux/mainflux/clients/policies"
+	authapi "github.com/mainflux/mainflux/clients/policies/api/grpc"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
@@ -127,9 +128,7 @@ func main() {
 	dbTracer, dbCloser := initJaeger("twins_db", cfg.jaegerURL, logger)
 	defer dbCloser.Close()
 
-	authTracer, authCloser := initJaeger("auth", cfg.jaegerURL, logger)
-	defer authCloser.Close()
-	auth, _ := createAuthClient(cfg, authTracer, logger)
+	auth, _ := createAuthClient(cfg, logger)
 
 	pubSub, err := brokers.NewPubSub(cfg.brokerURL, queue, logger)
 	if err != nil {
@@ -222,13 +221,13 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 	return tracer, closer
 }
 
-func createAuthClient(cfg config, tracer opentracing.Tracer, logger logger.Logger) (mainflux.AuthServiceClient, func() error) {
+func createAuthClient(cfg config, logger logger.Logger) (policies.AuthServiceClient, func() error) {
 	if cfg.standaloneEmail != "" && cfg.standaloneToken != "" {
 		return localusers.NewAuthService(cfg.standaloneEmail, cfg.standaloneToken), nil
 	}
 
 	conn := connectToAuth(cfg, logger)
-	return authapi.NewClient(tracer, conn, cfg.authTimeout), conn.Close
+	return authapi.NewClient(conn, cfg.authTimeout), conn.Close
 }
 
 func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
@@ -270,7 +269,7 @@ func connectToRedis(cacheURL, cachePass, cacheDB string, logger logger.Logger) *
 	})
 }
 
-func newService(id string, ps messaging.PubSub, chanID string, users mainflux.AuthServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, cacheTracer opentracing.Tracer, cacheClient *redis.Client, logger logger.Logger) twins.Service {
+func newService(id string, ps messaging.PubSub, chanID string, users policies.AuthServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, cacheTracer opentracing.Tracer, cacheClient *redis.Client, logger logger.Logger) twins.Service {
 	twinRepo := twmongodb.NewTwinRepository(db)
 	twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, twinRepo)
 
@@ -307,12 +306,12 @@ func newService(id string, ps messaging.PubSub, chanID string, users mainflux.Au
 }
 
 func handle(logger logger.Logger, chanID string, svc twins.Service) handlerFunc {
-	return func(msg messaging.Message) error {
+	return func(msg *messaging.Message) error {
 		if msg.Channel == chanID {
 			return nil
 		}
 
-		if err := svc.SaveStates(&msg); err != nil {
+		if err := svc.SaveStates(msg); err != nil {
 			logger.Error(fmt.Sprintf("State save failed: %s", err))
 			return err
 		}
@@ -355,9 +354,9 @@ func startHTTPServer(ctx context.Context, handler http.Handler, port string, cfg
 	}
 }
 
-type handlerFunc func(msg messaging.Message) error
+type handlerFunc func(msg *messaging.Message) error
 
-func (h handlerFunc) Handle(msg messaging.Message) error {
+func (h handlerFunc) Handle(msg *messaging.Message) error {
 	return h(msg)
 }
 

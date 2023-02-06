@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/gogo/protobuf/proto"
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -22,13 +22,15 @@ const (
 )
 
 var (
-	ErrAlreadySubscribed = errors.New("already subscribed to topic")
-	ErrNotSubscribed     = errors.New("not subscribed")
-	ErrEmptyTopic        = errors.New("empty topic")
-	ErrEmptyID           = errors.New("empty id")
-	ErrFailed            = errors.New("failed")
-)
+	// ErrNotSubscribed indicates that the topic is not subscribed to.
+	ErrNotSubscribed = errors.New("not subscribed")
 
+	// ErrEmptyTopic indicates the absence of topic.
+	ErrEmptyTopic = errors.New("empty topic")
+
+	// ErrEmptyID indicates the absence of ID.
+	ErrEmptyID = errors.New("empty ID")
+)
 var _ messaging.PubSub = (*pubsub)(nil)
 
 type subscription struct {
@@ -165,7 +167,7 @@ func (ps *pubsub) handle(deliveries <-chan amqp.Delivery, h messaging.MessageHan
 			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
 			return
 		}
-		if err := h.Handle(msg); err != nil {
+		if err := h.Handle(&msg); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
 			return
 		}

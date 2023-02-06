@@ -18,7 +18,8 @@ import (
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/gocql/gocql"
 	"github.com/mainflux/mainflux"
-	authapi "github.com/mainflux/mainflux/auth/api/grpc"
+	"github.com/mainflux/mainflux/clients/policies"
+	authapi "github.com/mainflux/mainflux/clients/policies/api/grpc"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/readers"
@@ -107,13 +108,11 @@ func main() {
 	defer thingsCloser.Close()
 
 	tc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
-	authTracer, authCloser := initJaeger("auth", cfg.jaegerURL, logger)
-	defer authCloser.Close()
 
 	authConn := connectToAuth(cfg, logger)
 	defer authConn.Close()
 
-	auth := authapi.NewClient(authTracer, authConn, cfg.usersAuthTimeout)
+	auth := authapi.NewClient(authConn, cfg.usersAuthTimeout)
 
 	repo := newService(session, logger)
 
@@ -285,10 +284,10 @@ func newService(session *gocql.Session, logger logger.Logger) readers.MessageRep
 	return repo
 }
 
-func startHTTPServer(ctx context.Context, repo readers.MessageRepository, tc mainflux.ThingsServiceClient, ac mainflux.AuthServiceClient, cfg config, logger logger.Logger) error {
+func startHTTPServer(ctx context.Context, repo readers.MessageRepository, tc mainflux.ThingsServiceClient, ac policies.AuthServiceClient, cfg config, logger logger.Logger) error {
 	p := fmt.Sprintf(":%s", cfg.port)
 	errCh := make(chan error)
-	server := &http.Server{Addr: p, Handler: api.MakeHandler(repo, tc, ac, "cassandra-reader", logger)}
+	server := &http.Server{Addr: p, Handler: api.MakeHandler(repo, tc, ac, "cassandra-reader")}
 	switch {
 	case cfg.serverCert != "" || cfg.serverKey != "":
 		logger.Info(fmt.Sprintf("Cassandra reader service started using https on port %s with cert %s key %s", cfg.port, cfg.serverCert, cfg.serverKey))

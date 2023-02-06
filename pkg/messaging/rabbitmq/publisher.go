@@ -4,12 +4,13 @@
 package rabbitmq
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"google.golang.org/protobuf/proto"
 )
 
 var _ messaging.Publisher = (*publisher)(nil)
@@ -40,11 +41,11 @@ func NewPublisher(url string) (messaging.Publisher, error) {
 	return ret, nil
 }
 
-func (pub *publisher) Publish(topic string, msg messaging.Message) error {
+func (pub *publisher) Publish(topic string, msg *messaging.Message) error {
 	if topic == "" {
 		return ErrEmptyTopic
 	}
-	data, err := proto.Marshal(&msg)
+	data, err := proto.Marshal(msg)
 	if err != nil {
 		return err
 	}
@@ -54,7 +55,8 @@ func (pub *publisher) Publish(topic string, msg messaging.Message) error {
 	}
 	subject = formatTopic(subject)
 
-	err = pub.ch.Publish(
+	err = pub.ch.PublishWithContext(
+		context.Background(),
 		exchangeName,
 		subject,
 		false,

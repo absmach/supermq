@@ -9,8 +9,8 @@ import (
 	"crypto/x509"
 	"time"
 
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/certs/pki"
+	"github.com/mainflux/mainflux/clients/policies"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
 )
@@ -31,7 +31,7 @@ var _ Service = (*certsService)(nil)
 // implementation, and all of its decorators (e.g. logging & metrics).
 type Service interface {
 	// IssueCert issues certificate for given thing id if access is granted with token
-	IssueCert(ctx context.Context, token, thingID, ttl string, keyBits int, keyType string) (Cert, error)
+	IssueCert(ctx context.Context, token, thingID, ttl string) (Cert, error)
 
 	// ListCerts lists certificates issued for a given thing ID
 	ListCerts(ctx context.Context, token, thingID string, offset, limit uint64) (Page, error)
@@ -69,7 +69,7 @@ type Config struct {
 }
 
 type certsService struct {
-	auth      mainflux.AuthServiceClient
+	auth      policies.AuthServiceClient
 	certsRepo Repository
 	sdk       mfsdk.SDK
 	conf      Config
@@ -77,7 +77,7 @@ type certsService struct {
 }
 
 // New returns new Certs service.
-func New(auth mainflux.AuthServiceClient, certs Repository, sdk mfsdk.SDK, config Config, pki pki.Agent) Service {
+func New(auth policies.AuthServiceClient, certs Repository, sdk mfsdk.SDK, config Config, pki pki.Agent) Service {
 	return &certsService{
 		certsRepo: certs,
 		sdk:       sdk,
@@ -105,8 +105,8 @@ type Cert struct {
 	Expire         time.Time `json:"expire" mapstructure:"-"`
 }
 
-func (cs *certsService) IssueCert(ctx context.Context, token, thingID string, ttl string, keyBits int, keyType string) (Cert, error) {
-	owner, err := cs.auth.Identify(ctx, &mainflux.Token{Value: token})
+func (cs *certsService) IssueCert(ctx context.Context, token, thingID string, ttl string) (Cert, error) {
+	owner, err := cs.auth.Identify(ctx, &policies.Token{Value: token})
 	if err != nil {
 		return Cert{}, err
 	}
@@ -116,7 +116,7 @@ func (cs *certsService) IssueCert(ctx context.Context, token, thingID string, tt
 		return Cert{}, errors.Wrap(ErrFailedCertCreation, err)
 	}
 
-	cert, err := cs.pki.IssueCert(thing.Key, ttl, keyType, keyBits)
+	cert, err := cs.pki.IssueCert(thing.Key, ttl)
 	if err != nil {
 		return Cert{}, errors.Wrap(ErrFailedCertCreation, err)
 	}
@@ -130,7 +130,7 @@ func (cs *certsService) IssueCert(ctx context.Context, token, thingID string, tt
 		ClientKey:      cert.ClientKey,
 		PrivateKeyType: cert.PrivateKeyType,
 		Serial:         cert.Serial,
-		Expire:         cert.Expire,
+		Expire:         time.Unix(0, int64(cert.Expire)*int64(time.Second)),
 	}
 
 	_, err = cs.certsRepo.Save(context.Background(), c)
@@ -139,7 +139,7 @@ func (cs *certsService) IssueCert(ctx context.Context, token, thingID string, tt
 
 func (cs *certsService) RevokeCert(ctx context.Context, token, thingID string) (Revoke, error) {
 	var revoke Revoke
-	u, err := cs.auth.Identify(ctx, &mainflux.Token{Value: token})
+	u, err := cs.auth.Identify(ctx, &policies.Token{Value: token})
 	if err != nil {
 		return revoke, err
 	}
@@ -170,7 +170,7 @@ func (cs *certsService) RevokeCert(ctx context.Context, token, thingID string) (
 }
 
 func (cs *certsService) ListCerts(ctx context.Context, token, thingID string, offset, limit uint64) (Page, error) {
-	u, err := cs.auth.Identify(ctx, &mainflux.Token{Value: token})
+	u, err := cs.auth.Identify(ctx, &policies.Token{Value: token})
 	if err != nil {
 		return Page{}, err
 	}
@@ -193,7 +193,7 @@ func (cs *certsService) ListCerts(ctx context.Context, token, thingID string, of
 }
 
 func (cs *certsService) ListSerials(ctx context.Context, token, thingID string, offset, limit uint64) (Page, error) {
-	u, err := cs.auth.Identify(ctx, &mainflux.Token{Value: token})
+	u, err := cs.auth.Identify(ctx, &policies.Token{Value: token})
 	if err != nil {
 		return Page{}, err
 	}
@@ -202,7 +202,7 @@ func (cs *certsService) ListSerials(ctx context.Context, token, thingID string, 
 }
 
 func (cs *certsService) ViewCert(ctx context.Context, token, serialID string) (Cert, error) {
-	u, err := cs.auth.Identify(ctx, &mainflux.Token{Value: token})
+	u, err := cs.auth.Identify(ctx, &policies.Token{Value: token})
 	if err != nil {
 		return Cert{}, err
 	}

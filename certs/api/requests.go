@@ -3,15 +3,17 @@
 
 package api
 
-import "github.com/mainflux/mainflux/internal/apiutil"
+import (
+	"time"
+
+	"github.com/mainflux/mainflux/internal/apiutil"
+)
 
 const maxLimitSize = 100
 
 type addCertsReq struct {
 	token   string
 	ThingID string `json:"thing_id"`
-	KeyBits int    `json:"key_bits"`
-	KeyType string `json:"key_type"`
 	TTL     string `json:"ttl"`
 }
 
@@ -24,8 +26,12 @@ func (req addCertsReq) validate() error {
 		return apiutil.ErrMissingID
 	}
 
-	if req.TTL == "" || req.KeyType == "" || req.KeyBits == 0 {
+	if req.TTL == "" {
 		return apiutil.ErrMissingCertData
+	}
+
+	if _, err := time.ParseDuration(req.TTL); err != nil {
+		return apiutil.ErrInvalidCertData
 	}
 
 	return nil

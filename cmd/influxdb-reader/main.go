@@ -14,7 +14,8 @@ import (
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	influxdata "github.com/influxdata/influxdb/client/v2"
 	"github.com/mainflux/mainflux"
-	authapi "github.com/mainflux/mainflux/auth/api/grpc"
+	"github.com/mainflux/mainflux/clients/policies"
+	authapi "github.com/mainflux/mainflux/clients/policies/api/grpc"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/readers"
@@ -103,13 +104,10 @@ func main() {
 
 	tc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
 
-	authTracer, authCloser := initJaeger("auth", cfg.jaegerURL, logger)
-	defer authCloser.Close()
-
 	authConn := connectToAuth(cfg, logger)
 	defer authConn.Close()
 
-	auth := authapi.NewClient(authTracer, authConn, cfg.usersAuthTimeout)
+	auth := authapi.NewClient(authConn, cfg.usersAuthTimeout)
 
 	client, err := influxdata.NewHTTPClient(clientCfg)
 	if err != nil {
@@ -279,10 +277,10 @@ func newService(client influxdata.Client, dbName string, logger logger.Logger) r
 	return repo
 }
 
-func startHTTPServer(ctx context.Context, repo readers.MessageRepository, tc mainflux.ThingsServiceClient, ac mainflux.AuthServiceClient, cfg config, logger logger.Logger) error {
+func startHTTPServer(ctx context.Context, repo readers.MessageRepository, tc mainflux.ThingsServiceClient, ac policies.AuthServiceClient, cfg config, logger logger.Logger) error {
 	p := fmt.Sprintf(":%s", cfg.port)
 	errCh := make(chan error)
-	server := &http.Server{Addr: p, Handler: api.MakeHandler(repo, tc, ac, "influxdb-reader", logger)}
+	server := &http.Server{Addr: p, Handler: api.MakeHandler(repo, tc, ac, "influxdb-reader")}
 	switch {
 	case cfg.serverCert != "" || cfg.serverKey != "":
 		logger.Info(fmt.Sprintf("InfluxDB reader service started using https on port %s with cert %s key %s",

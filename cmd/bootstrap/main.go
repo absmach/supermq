@@ -15,9 +15,10 @@ import (
 	"strconv"
 	"time"
 
-	authapi "github.com/mainflux/mainflux/auth/api/grpc"
 	rediscons "github.com/mainflux/mainflux/bootstrap/redis/consumer"
 	redisprod "github.com/mainflux/mainflux/bootstrap/redis/producer"
+	"github.com/mainflux/mainflux/clients/policies"
+	authapi "github.com/mainflux/mainflux/clients/policies/api/grpc"
 	"github.com/mainflux/mainflux/logger"
 	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/sync/errgroup"
@@ -141,13 +142,10 @@ func main() {
 	esClient := connectToRedis(cfg.esURL, cfg.esPass, cfg.esDB, logger)
 	defer esClient.Close()
 
-	authTracer, authCloser := initJaeger("auth", cfg.jaegerURL, logger)
-	defer authCloser.Close()
-
 	authConn := connectToAuth(cfg, logger)
 	defer authConn.Close()
 
-	auth := authapi.NewClient(authTracer, authConn, cfg.authTimeout)
+	auth := authapi.NewClient(authConn, cfg.authTimeout)
 
 	svc := newService(auth, db, logger, esClient, cfg)
 
@@ -272,7 +270,7 @@ func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, 
 	return tracer, closer
 }
 
-func newService(auth mainflux.AuthServiceClient, db *sqlx.DB, logger mflog.Logger, esClient *r.Client, cfg config) bootstrap.Service {
+func newService(auth policies.AuthServiceClient, db *sqlx.DB, logger mflog.Logger, esClient *r.Client, cfg config) bootstrap.Service {
 	thingsRepo := postgres.NewConfigRepository(db, logger)
 
 	config := mfsdk.Config{

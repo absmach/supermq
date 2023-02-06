@@ -19,3 +19,8 @@ type ConnectionIDs struct {
 	ChannelIDs []string `json:"channel_ids"`
 	ThingIDs   []string `json:"thing_ids"`
 }
+
+type tokenReq struct {
+	Identity string `json:"identity"`
+	Secret   string `json:"secret"`
+}

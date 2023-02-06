@@ -19,10 +19,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/bootstrap"
 	bsapi "github.com/mainflux/mainflux/bootstrap/api"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
+	"github.com/mainflux/mainflux/clients/policies"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -163,7 +163,7 @@ func dec(in []byte) ([]byte, error) {
 	return in, nil
 }
 
-func newService(auth mainflux.AuthServiceClient, url string) bootstrap.Service {
+func newService(auth policies.AuthServiceClient, url string) bootstrap.Service {
 	things := mocks.NewConfigsRepository()
 	config := mfsdk.Config{
 		ThingsURL: url,
@@ -186,7 +186,7 @@ func generateChannels() map[string]things.Channel {
 	return channels
 }
 
-func newThingsService(auth mainflux.AuthServiceClient) things.Service {
+func newThingsService(auth policies.AuthServiceClient) things.Service {
 	return mocks.NewThingsService(map[string]things.Thing{}, generateChannels(), auth)
 }
 

@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package policies;
+
+option go_package = "./policies";
+
+service AuthService {
+    rpc Authorize(AuthorizeReq) returns (AuthorizeRes) {}
+    rpc Issue(IssueReq) returns (Token) {}
+    rpc Identify(Token) returns (UserIdentity) {}
+    rpc AddPolicy(AddPolicyReq) returns (AddPolicyRes) {}
+    rpc DeletePolicy(DeletePolicyReq) returns (DeletePolicyRes) {}
+    rpc ListPolicies(ListPoliciesReq) returns (ListPoliciesRes) {}
+}
+
+message AuthorizeReq {
+    string sub        = 1;
+    string obj        = 2;
+    string act        = 3;
+    string entityType = 4;
+}
+
+message AuthorizeRes {
+    bool authorized = 1;
+}
+
+message IssueReq {
+    string id    = 1;
+    string email = 2;
+    uint32 type  = 3;
+}
+
+message Token {
+    string value = 1;
+}
+
+message UserIdentity {
+    string id    = 1;
+    string email = 2;
+}
+
+message AddPolicyReq {
+    string sub = 1;
+    string obj = 2;
+    string act = 3;
+}
+
+message AddPolicyRes {
+    bool authorized = 1;
+}
+
+message DeletePolicyReq {
+    string sub = 1;
+    string obj = 2;
+    string act = 3;
+}
+
+message DeletePolicyRes {
+    bool deleted = 1;
+}
+
+message ListPoliciesReq {
+    string sub = 1;
+    string obj = 2;
+    string act = 3;
+}
+
+message ListPoliciesRes {
+    repeated string policies = 1;
+}

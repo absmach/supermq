@@ -73,21 +73,25 @@ func Provision(conf Config) {
 	s := sdk.NewSDK(sdkConf)
 
 	user := sdk.User{
-		Email:    conf.Username,
-		Password: conf.Password,
+		Credentials: sdk.Credentials{
+			Identity: conf.Username,
+			Secret:   conf.Password,
+		},
 	}
 
-	if user.Email == "" {
-		user.Email = fmt.Sprintf("%s@email.com", namesgenerator.GetRandomName(0))
-		user.Password = defPass
+	if user.Credentials.Identity == "" {
+		user.Credentials.Identity = fmt.Sprintf("%s@email.com", namesgenerator.GetRandomName(0))
+		user.Credentials.Secret = defPass
 	}
 
 	// Create new user
-	if _, err := s.CreateUser("", user); err != nil {
+	if _, err := s.CreateUser(user, ""); err != nil {
 		log.Fatalf("Unable to create new user: %s", err.Error())
 		return
 
 	}
+
+	var err error
 
 	// Login user
 	token, err := s.CreateToken(user)
@@ -119,7 +123,6 @@ func Provision(conf Config) {
 		if err != nil {
 			log.Fatalf("Failed to decode certificate - %s", err.Error())
 		}
-
 	}
 
 	//  Create things and channels
@@ -159,7 +162,7 @@ func Provision(conf Config) {
 
 		if conf.SSL {
 			var priv interface{}
-			priv, err = rsa.GenerateKey(rand.Reader, rsaBits)
+			priv, _ = rsa.GenerateKey(rand.Reader, rsaBits)
 
 			notBefore := time.Now()
 			validFor, err := time.ParseDuration(ttl)

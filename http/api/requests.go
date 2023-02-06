@@ -9,13 +9,13 @@ import (
 )
 
 type publishReq struct {
-	msg   messaging.Message
+	msg   *messaging.Message
 	token string
 }
 
 func (req publishReq) validate() error {
 	if req.token == "" {
-		return apiutil.ErrBearerToken
+		return apiutil.ErrBearerKey
 	}
 
 	return nil

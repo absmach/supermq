@@ -11,7 +11,9 @@ import (
 )
 
 type tokenRes struct {
-	Token string `json:"token,omitempty"`
+	AccessToken  string `json:"access_token,omitempty"`
+	RefreshToken string `json:"refresh_token,omitempty"`
+	AccessType   string `json:"access_type,omitempty"`
 }
 
 type createThingsRes struct {
@@ -98,4 +100,8 @@ func (res retrieveKeyRes) Headers() map[string]string {
 
 func (res retrieveKeyRes) Empty() bool {
 	return false
+}
+
+type revokeCertsRes struct {
+	RevocationTime time.Time `json:"revocation_time"`
 }

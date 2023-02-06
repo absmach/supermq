@@ -17,7 +17,8 @@ import (
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
-	authapi "github.com/mainflux/mainflux/auth/api/grpc"
+	"github.com/mainflux/mainflux/clients/policies"
+	authapi "github.com/mainflux/mainflux/clients/policies/api/grpc"
 	"github.com/mainflux/mainflux/consumers"
 	"github.com/mainflux/mainflux/consumers/notifiers"
 	"github.com/mainflux/mainflux/consumers/notifiers/api"
@@ -142,10 +143,7 @@ func main() {
 	}
 	defer pubSub.Close()
 
-	authTracer, closer := initJaeger("auth", cfg.jaegerURL, logger)
-	defer closer.Close()
-
-	auth, close := connectToAuth(cfg, authTracer, logger)
+	auth, close := connectToAuth(cfg, logger)
 	if close != nil {
 		defer close()
 	}
@@ -283,7 +281,7 @@ func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sqlx.DB {
 	return db
 }
 
-func connectToAuth(cfg config, tracer opentracing.Tracer, logger logger.Logger) (mainflux.AuthServiceClient, func() error) {
+func connectToAuth(cfg config, logger logger.Logger) (policies.AuthServiceClient, func() error) {
 	var opts []grpc.DialOption
 	if cfg.authTLS {
 		if cfg.authCACerts != "" {
@@ -305,10 +303,10 @@ func connectToAuth(cfg config, tracer opentracing.Tracer, logger logger.Logger) 
 		os.Exit(1)
 	}
 
-	return authapi.NewClient(tracer, conn, cfg.authTimeout), conn.Close
+	return authapi.NewClient(conn, cfg.authTimeout), conn.Close
 }
 
-func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServiceClient, c config, logger logger.Logger) notifiers.Service {
+func newService(db *sqlx.DB, tracer opentracing.Tracer, auth policies.AuthServiceClient, c config, logger logger.Logger) notifiers.Service {
 	database := postgres.NewDatabase(db)
 	repo := tracing.New(postgres.New(database), tracer)
 	idp := ulid.New()

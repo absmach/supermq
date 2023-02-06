@@ -122,10 +122,12 @@ var cmdProvision = []cobra.Command{
 			un := fmt.Sprintf("%s@email.com", namesgenerator.GetRandomName(0))
 			// Create test user
 			user := mfxsdk.User{
-				Email:    un,
-				Password: "12345678",
+				Credentials: mfxsdk.Credentials{
+					Identity: un,
+					Secret:   "12345678",
+				},
 			}
-			if _, err := sdk.CreateUser("", user); err != nil {
+			if _, err := sdk.CreateUser(user, ""); err != nil {
 				logError(err)
 				return
 			}

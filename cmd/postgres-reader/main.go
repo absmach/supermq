@@ -17,7 +17,8 @@ import (
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
-	authapi "github.com/mainflux/mainflux/auth/api/grpc"
+	"github.com/mainflux/mainflux/clients/policies"
+	authapi "github.com/mainflux/mainflux/clients/policies/api/grpc"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/readers"
@@ -106,13 +107,10 @@ func main() {
 
 	tc := thingsapi.NewClient(conn, thingsTracer, cfg.thingsAuthTimeout)
 
-	authTracer, authCloser := initJaeger("auth", cfg.jaegerURL, logger)
-	defer authCloser.Close()
-
 	authConn := connectToAuth(cfg, logger)
 	defer authConn.Close()
 
-	auth := authapi.NewClient(authTracer, authConn, cfg.usersAuthTimeout)
+	auth := authapi.NewClient(authConn, cfg.usersAuthTimeout)
 
 	db := connectToDB(cfg.dbConfig, logger)
 	defer db.Close()
@@ -284,10 +282,10 @@ func newService(db *sqlx.DB, logger logger.Logger) readers.MessageRepository {
 	return svc
 }
 
-func startHTTPServer(ctx context.Context, repo readers.MessageRepository, tc mainflux.ThingsServiceClient, ac mainflux.AuthServiceClient, port string, logger logger.Logger) error {
+func startHTTPServer(ctx context.Context, repo readers.MessageRepository, tc mainflux.ThingsServiceClient, ac policies.AuthServiceClient, port string, logger logger.Logger) error {
 	p := fmt.Sprintf(":%s", port)
 	errCh := make(chan error)
-	server := &http.Server{Addr: p, Handler: api.MakeHandler(repo, tc, ac, svcName, logger)}
+	server := &http.Server{Addr: p, Handler: api.MakeHandler(repo, tc, ac, svcName)}
 
 	logger.Info(fmt.Sprintf("Postgres reader service started, exposed port %s", port))
 	go func() {

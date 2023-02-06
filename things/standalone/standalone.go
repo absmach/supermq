@@ -6,15 +6,14 @@ package standalone
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/clients/policies"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"google.golang.org/grpc"
 )
 
 var errUnsupported = errors.New("not supported in standalone mode")
 
-var _ mainflux.AuthServiceClient = (*singleUserRepo)(nil)
+var _ policies.AuthServiceClient = (*singleUserRepo)(nil)
 
 type singleUserRepo struct {
 	email string
@@ -22,58 +21,50 @@ type singleUserRepo struct {
 }
 
 // NewAuthService creates single user repository for constrained environments.
-func NewAuthService(email, token string) mainflux.AuthServiceClient {
+func NewAuthService(email, token string) policies.AuthServiceClient {
 	return singleUserRepo{
 		email: email,
 		token: token,
 	}
 }
 
-func (repo singleUserRepo) Issue(ctx context.Context, req *mainflux.IssueReq, opts ...grpc.CallOption) (*mainflux.Token, error) {
+func (repo singleUserRepo) Issue(ctx context.Context, req *policies.IssueReq, opts ...grpc.CallOption) (*policies.Token, error) {
 	if repo.token != req.GetEmail() {
 		return nil, errors.ErrAuthentication
 	}
 
-	return &mainflux.Token{Value: repo.token}, nil
+	return &policies.Token{Value: repo.token}, nil
 }
 
-func (repo singleUserRepo) Identify(ctx context.Context, token *mainflux.Token, opts ...grpc.CallOption) (*mainflux.UserIdentity, error) {
+func (repo singleUserRepo) Identify(ctx context.Context, token *policies.Token, opts ...grpc.CallOption) (*policies.UserIdentity, error) {
 	if repo.token != token.GetValue() {
 		return nil, errors.ErrAuthentication
 	}
 
-	return &mainflux.UserIdentity{Id: repo.email, Email: repo.email}, nil
+	return &policies.UserIdentity{Id: repo.email, Email: repo.email}, nil
 }
 
-func (repo singleUserRepo) Authorize(ctx context.Context, req *mainflux.AuthorizeReq, _ ...grpc.CallOption) (r *mainflux.AuthorizeRes, err error) {
+func (repo singleUserRepo) Authorize(ctx context.Context, req *policies.AuthorizeReq, _ ...grpc.CallOption) (r *policies.AuthorizeRes, err error) {
 	if repo.email != req.Sub {
-		return &mainflux.AuthorizeRes{}, errUnsupported
+		return &policies.AuthorizeRes{}, errUnsupported
 	}
-	return &mainflux.AuthorizeRes{Authorized: true}, nil
+	return &policies.AuthorizeRes{Authorized: true}, nil
 }
 
-func (repo singleUserRepo) AddPolicy(ctx context.Context, req *mainflux.AddPolicyReq, opts ...grpc.CallOption) (*mainflux.AddPolicyRes, error) {
+func (repo singleUserRepo) AddPolicy(ctx context.Context, req *policies.AddPolicyReq, opts ...grpc.CallOption) (*policies.AddPolicyRes, error) {
 	if repo.email != req.Sub {
-		return &mainflux.AddPolicyRes{}, errUnsupported
+		return &policies.AddPolicyRes{}, errUnsupported
 	}
-	return &mainflux.AddPolicyRes{Authorized: true}, nil
+	return &policies.AddPolicyRes{Authorized: true}, nil
 }
 
-func (repo singleUserRepo) DeletePolicy(ctx context.Context, req *mainflux.DeletePolicyReq, opts ...grpc.CallOption) (*mainflux.DeletePolicyRes, error) {
+func (repo singleUserRepo) DeletePolicy(ctx context.Context, req *policies.DeletePolicyReq, opts ...grpc.CallOption) (*policies.DeletePolicyRes, error) {
 	if repo.email != req.Sub {
-		return &mainflux.DeletePolicyRes{}, errUnsupported
+		return &policies.DeletePolicyRes{}, errUnsupported
 	}
-	return &mainflux.DeletePolicyRes{Deleted: true}, nil
+	return &policies.DeletePolicyRes{Deleted: true}, nil
 }
 
-func (repo singleUserRepo) ListPolicies(ctx context.Context, in *mainflux.ListPoliciesReq, opts ...grpc.CallOption) (*mainflux.ListPoliciesRes, error) {
-	return &mainflux.ListPoliciesRes{}, errUnsupported
-}
-
-func (repo singleUserRepo) Members(ctx context.Context, req *mainflux.MembersReq, _ ...grpc.CallOption) (r *mainflux.MembersRes, err error) {
-	return &mainflux.MembersRes{}, errUnsupported
-}
-
-func (repo singleUserRepo) Assign(ctx context.Context, req *mainflux.Assignment, _ ...grpc.CallOption) (r *empty.Empty, err error) {
-	return &empty.Empty{}, errUnsupported
+func (repo singleUserRepo) ListPolicies(ctx context.Context, in *policies.ListPoliciesReq, opts ...grpc.CallOption) (*policies.ListPoliciesRes, error) {
+	return &policies.ListPoliciesRes{}, errUnsupported
 }

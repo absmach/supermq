@@ -60,8 +60,11 @@ var (
 	// ErrMissingPolicyAct indicates missing policies action.
 	ErrMissingPolicyAct = errors.New("falmormed policy action")
 
-	// ErrMissingCertData indicates missing cert data (ttl, key_type or key_bits).
+	// ErrMissingCertData indicates missing cert data (ttl).
 	ErrMissingCertData = errors.New("missing certificate data")
+
+	// ErrInvalidCertData indicates invalid cert data (ttl).
+	ErrInvalidCertData = errors.New("invalid certificate data")
 
 	// ErrInvalidTopic indicates an invalid subscription topic.
 	ErrInvalidTopic = errors.New("invalid Subscription topic")
@@ -98,4 +101,43 @@ var (
 
 	// ErrBootstrapState indicates an invalid boostrap state.
 	ErrBootstrapState = errors.New("invalid bootstrap state")
+
+	// ErrMissingIdentity indicates missing entity Identity.
+	ErrMissingIdentity = errors.New("missing entity identity")
+
+	// ErrMissingSecret indicates missing secret.
+	ErrMissingSecret = errors.New("missing secret")
+
+	// ErrMissingOwner indicates missing entity owner.
+	ErrMissingOwner = errors.New("missing entity owner")
+
+	// ErrMissingPolicyOwner indicated malformed policy owner
+	ErrMissingPolicyOwner = errors.New("malformed policy owner")
+
+	// ErrMissingPolicyEntityType indicates malformed policy entity type
+	ErrMissingPolicyEntityType = errors.New("malformed or missing entity type")
+
+	// ErrHigherPolicyRank indicates that policies is not the same ranking with parsed policy.
+	ErrHigherPolicyRank = errors.New("policy is of a higher rank that of the client")
+
+	// ErrMissingName indicates missing identity name.
+	ErrMissingName = errors.New("missing identity name")
+
+	// ErrInvalidSecret indicates invalid secret.
+	ErrInvalidSecret = errors.New("missing secret")
+
+	// ErrInvalidLevel indicates an invalid group level.
+	ErrInvalidLevel = errors.New("invalid group level (should be between 0 and 5)")
+
+	// ErrNotFoundParam indicates that the parameter was not found in the query
+	ErrNotFoundParam = errors.New("parameter not found in the query")
+
+	// ErrMalformedEntity indicates a malformed entity specification
+	ErrMalformedEntity = errors.New("malformed entity specification")
+
+	// ErrInvalidQueryParams indicates invalid query parameters
+	ErrInvalidQueryParams = errors.New("invalid query parameters")
+
+	// ErrInvalidVisibilityType indicates invalid visibility type
+	ErrInvalidVisibilityType = errors.New("invalid visibility type")
 )

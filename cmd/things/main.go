@@ -19,7 +19,8 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
-	authapi "github.com/mainflux/mainflux/auth/api/grpc"
+	"github.com/mainflux/mainflux/clients/policies"
+	authapi "github.com/mainflux/mainflux/clients/policies/api/grpc"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -62,14 +63,14 @@ const (
 	defESPass          = ""
 	defESDB            = "0"
 	defHTTPPort        = "8182"
-	defAuthHTTPPort    = "8989"
-	defAuthGRPCPort    = "8181"
+	defAuthHTTPPort    = "9191"
+	defAuthGRPCPort    = "9192"
 	defServerCert      = ""
 	defServerKey       = ""
 	defStandaloneEmail = ""
 	defStandaloneToken = ""
 	defJaegerURL       = ""
-	defAuthURL         = "localhost:8181"
+	defAuthURL         = "localhost:9192"
 	defAuthTimeout     = "1s"
 
 	envLogLevel        = "MF_THINGS_LOG_LEVEL"
@@ -98,7 +99,7 @@ const (
 	envStandaloneEmail = "MF_THINGS_STANDALONE_EMAIL"
 	envStandaloneToken = "MF_THINGS_STANDALONE_TOKEN"
 	envJaegerURL       = "MF_JAEGER_URL"
-	envAuthURL         = "MF_AUTH_GRPC_URL"
+	envAuthURL         = "MF_CLIENTS_GRPC_URL"
 	envAuthTimeout     = "MF_AUTH_GRPC_TIMEOUT"
 )
 
@@ -145,10 +146,7 @@ func main() {
 	db := connectToDB(cfg.dbConfig, logger)
 	defer db.Close()
 
-	authTracer, authCloser := initJaeger("auth", cfg.jaegerURL, logger)
-	defer authCloser.Close()
-
-	auth, close := createAuthClient(cfg, authTracer, logger)
+	auth, close := createAuthClient(cfg, logger)
 	if close != nil {
 		defer close()
 	}
@@ -280,13 +278,13 @@ func connectToDB(dbConfig postgres.Config, logger logger.Logger) *sqlx.DB {
 	return db
 }
 
-func createAuthClient(cfg config, tracer opentracing.Tracer, logger logger.Logger) (mainflux.AuthServiceClient, func() error) {
+func createAuthClient(cfg config, logger logger.Logger) (policies.AuthServiceClient, func() error) {
 	if cfg.standaloneEmail != "" && cfg.standaloneToken != "" {
 		return localusers.NewAuthService(cfg.standaloneEmail, cfg.standaloneToken), nil
 	}
 
 	conn := connectToAuth(cfg, logger)
-	return authapi.NewClient(tracer, conn, cfg.authTimeout), conn.Close
+	return authapi.NewClient(conn, cfg.authTimeout), conn.Close
 }
 
 func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
@@ -314,7 +312,7 @@ func connectToAuth(cfg config, logger logger.Logger) *grpc.ClientConn {
 	return conn
 }
 
-func newService(auth mainflux.AuthServiceClient, dbTracer opentracing.Tracer, cacheTracer opentracing.Tracer, db *sqlx.DB, cacheClient *redis.Client, esClient *redis.Client, logger logger.Logger) things.Service {
+func newService(auth policies.AuthServiceClient, dbTracer opentracing.Tracer, cacheTracer opentracing.Tracer, db *sqlx.DB, cacheClient *redis.Client, esClient *redis.Client, logger logger.Logger) things.Service {
 	database := postgres.NewDatabase(db)
 
 	thingsRepo := postgres.NewThingRepository(database)

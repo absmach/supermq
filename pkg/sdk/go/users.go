@@ -3,229 +3,123 @@
 
 package sdk
 
-import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
-	"strings"
+// const (
+// 	usersEndpoint    = "users"
+// 	tokensEndpoint   = "tokens/issue"
+// 	passwordEndpoint = "password"
+// 	membersEndpoint  = "members"
+// )
 
-	"github.com/mainflux/mainflux/pkg/errors"
-)
+// func (sdk mfSDK) CreateUser(u User, token string) (string, errors.SDKError) {
+// 	data, err := json.Marshal(u)
+// 	if err != nil {
+// 		return "", errors.NewSDKError(err)
+// 	}
+// 	url := fmt.Sprintf("%s/%s", sdk.usersURL, usersEndpoint)
 
-const (
-	usersEndpoint    = "users"
-	tokensEndpoint   = "tokens"
-	passwordEndpoint = "password"
-	membersEndpoint  = "members"
-)
+// 	headers, _, sdkerr := sdk.processRequest(http.MethodPost, url, token, string(CTJSON), data, http.StatusCreated)
+// 	if sdkerr != nil {
+// 		return "", sdkerr
+// 	}
 
-func (sdk mfSDK) CreateUser(token string, u User) (string, error) {
-	data, err := json.Marshal(u)
-	if err != nil {
-		return "", err
-	}
+// 	id := strings.TrimPrefix(headers.Get("Location"), fmt.Sprintf("/%s/", usersEndpoint))
+// 	return id, nil
+// }
 
-	url := fmt.Sprintf("%s/%s", sdk.usersURL, usersEndpoint)
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
-	if err != nil {
-		return "", err
-	}
+// func (sdk mfSDK) User(userID, token string) (User, errors.SDKError) {
+// 	url := fmt.Sprintf("%s/%s/%s", sdk.usersURL, usersEndpoint, userID)
 
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return "", err
-	}
+// 	_, body, err := sdk.processRequest(http.MethodGet, url, token, string(CTJSON), nil, http.StatusOK)
+// 	if err != nil {
+// 		return User{}, err
+// 	}
 
-	if resp.StatusCode != http.StatusCreated {
-		return "", errors.Wrap(ErrFailedCreation, errors.New(resp.Status))
-	}
+// 	var u User
+// 	if err := json.Unmarshal(body, &u); err != nil {
+// 		return User{}, errors.NewSDKError(err)
+// 	}
 
-	id := strings.TrimPrefix(resp.Header.Get("Location"), fmt.Sprintf("/%s/", usersEndpoint))
-	return id, nil
-}
+// 	return u, nil
+// }
 
-func (sdk mfSDK) User(userID, token string) (User, error) {
-	url := fmt.Sprintf("%s/%s/%s", sdk.usersURL, usersEndpoint, userID)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return User{}, err
-	}
+// func (sdk mfSDK) Users(pm PageMetadata, token string) (UsersPage, errors.SDKError) {
+// 	var url string
+// 	var err error
 
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return User{}, err
-	}
-	defer resp.Body.Close()
+// 	if url, err = sdk.withQueryParams(sdk.usersURL, usersEndpoint, pm); err != nil {
+// 		return UsersPage{}, errors.NewSDKError(err)
+// 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return User{}, err
-	}
+// 	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, string(CTJSON), nil, http.StatusOK)
+// 	if sdkerr != nil {
+// 		return UsersPage{}, sdkerr
+// 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return User{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
-	}
+// 	var up UsersPage
+// 	if err := json.Unmarshal(body, &up); err != nil {
+// 		return UsersPage{}, errors.NewSDKError(err)
+// 	}
 
-	var u User
-	if err := json.Unmarshal(body, &u); err != nil {
-		return User{}, err
-	}
+// 	return up, nil
+// }
 
-	return u, nil
-}
+// func (sdk mfSDK) CreateToken(user User) (string, errors.SDKError) {
+// 	data, err := json.Marshal(user)
+// 	if err != nil {
+// 		return "", errors.NewSDKError(err)
+// 	}
 
-func (sdk mfSDK) Users(token string, pm PageMetadata) (UsersPage, error) {
-	url, err := sdk.withQueryParams(sdk.usersURL, usersEndpoint, pm)
-	if err != nil {
-		return UsersPage{}, err
-	}
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return UsersPage{}, err
-	}
+// 	url := fmt.Sprintf("%s/%s", sdk.usersURL, tokensEndpoint)
 
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return UsersPage{}, err
-	}
-	defer resp.Body.Close()
+// 	_, body, sdkerr := sdk.processRequest(http.MethodPost, url, "", string(CTJSON), data, http.StatusCreated)
+// 	if sdkerr != nil {
+// 		return "", sdkerr
+// 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return UsersPage{}, err
-	}
+// 	var tr tokenRes
+// 	if err := json.Unmarshal(body, &tr); err != nil {
+// 		return "", errors.NewSDKError(err)
+// 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return UsersPage{}, errors.Wrap(ErrFailedFetch, errors.New(resp.Status))
-	}
-	var up UsersPage
-	if err := json.Unmarshal(body, &up); err != nil {
-		return UsersPage{}, err
-	}
+// 	return tr.Token, nil
+// }
 
-	return up, nil
-}
+// func (sdk mfSDK) UpdateUser(u User, token string) errors.SDKError {
+// 	data, err := json.Marshal(u)
+// 	if err != nil {
+// 		return errors.NewSDKError(err)
+// 	}
 
-func (sdk mfSDK) CreateToken(user User) (string, error) {
-	data, err := json.Marshal(user)
-	if err != nil {
-		return "", err
-	}
+// 	url := fmt.Sprintf("%s/%s", sdk.usersURL, usersEndpoint)
 
-	url := fmt.Sprintf("%s/%s", sdk.usersURL, tokensEndpoint)
-	resp, err := sdk.client.Post(url, string(CTJSON), bytes.NewReader(data))
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
+// 	_, _, sdkerr := sdk.processRequest(http.MethodPut, url, token, string(CTJSON), data, http.StatusOK)
+// 	return sdkerr
+// }
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
+// func (sdk mfSDK) UpdatePassword(oldPass, newPass, token string) errors.SDKError {
+// 	ur := UserPasswordReq{
+// 		OldPassword: oldPass,
+// 		Password:    newPass,
+// 	}
+// 	data, err := json.Marshal(ur)
+// 	if err != nil {
+// 		return errors.NewSDKError(err)
+// 	}
 
-	if resp.StatusCode != http.StatusCreated {
-		return "", errors.Wrap(ErrFailedCreation, errors.New(resp.Status))
-	}
+// 	url := fmt.Sprintf("%s/%s/", sdk.usersURL, passwordEndpoint)
 
-	var tr tokenRes
-	if err := json.Unmarshal(body, &tr); err != nil {
-		return "", err
-	}
+// 	_, _, sdkerr := sdk.processRequest(http.MethodPatch, url, token, string(CTJSON), data, http.StatusCreated)
+// 	return sdkerr
+// }
 
-	return tr.Token, nil
-}
+// func (sdk mfSDK) EnableUser(id, token string) errors.SDKError {
+// 	url := fmt.Sprintf("%s/%s/%s/enable", sdk.usersURL, usersEndpoint, id)
+// 	_, _, err := sdk.processRequest(http.MethodPost, url, token, string(CTJSON), nil, http.StatusNoContent)
+// 	return err
+// }
 
-func (sdk mfSDK) UpdateUser(u User, token string) error {
-	data, err := json.Marshal(u)
-	if err != nil {
-		return err
-	}
-
-	url := fmt.Sprintf("%s/%s", sdk.usersURL, usersEndpoint)
-	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
-	if err != nil {
-		return err
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return errors.Wrap(ErrFailedUpdate, errors.New(resp.Status))
-	}
-
-	return nil
-}
-
-func (sdk mfSDK) UpdatePassword(oldPass, newPass, token string) error {
-	ur := UserPasswordReq{
-		OldPassword: oldPass,
-		Password:    newPass,
-	}
-	data, err := json.Marshal(ur)
-	if err != nil {
-		return err
-	}
-
-	url := fmt.Sprintf("%s/%s", sdk.usersURL, passwordEndpoint)
-	req, err := http.NewRequest(http.MethodPatch, url, bytes.NewReader(data))
-	if err != nil {
-		return err
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusCreated {
-		return errors.Wrap(ErrFailedUpdate, errors.New(resp.Status))
-	}
-
-	return nil
-}
-
-func (sdk mfSDK) EnableUser(id, token string) error {
-	url := fmt.Sprintf("%s/%s/%s/enable", sdk.usersURL, usersEndpoint, id)
-
-	req, err := http.NewRequest(http.MethodPost, url, nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusNoContent {
-		return errors.Wrap(ErrFailedRemoval, errors.New(resp.Status))
-	}
-
-	return nil
-}
-
-func (sdk mfSDK) DisableUser(id, token string) error {
-	url := fmt.Sprintf("%s/%s/%s/disable", sdk.usersURL, usersEndpoint, id)
-
-	req, err := http.NewRequest(http.MethodPost, url, nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := sdk.sendRequest(req, token, string(CTJSON))
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusNoContent {
-		return errors.Wrap(ErrFailedRemoval, errors.New(resp.Status))
-	}
-
-	return nil
-}
+// func (sdk mfSDK) DisableUser(id, token string) errors.SDKError {
+// 	url := fmt.Sprintf("%s/%s/%s/disable", sdk.usersURL, usersEndpoint, id)
+// 	_, _, err := sdk.processRequest(http.MethodPost, url, token, string(CTJSON), nil, http.StatusNoContent)
+// 	return err
+// }

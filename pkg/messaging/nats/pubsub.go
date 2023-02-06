@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/gogo/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
@@ -17,12 +17,11 @@ import (
 
 const chansPrefix = "channels"
 
+// Publisher and Subscriber errors.
 var (
-	ErrAlreadySubscribed = errors.New("already subscribed to topic")
-	ErrNotSubscribed     = errors.New("not subscribed")
-	ErrEmptyTopic        = errors.New("empty topic")
-	ErrEmptyID           = errors.New("empty id")
-	ErrFailed            = errors.New("failed")
+	ErrNotSubscribed = errors.New("not subscribed")
+	ErrEmptyTopic    = errors.New("empty topic")
+	ErrEmptyID       = errors.New("empty id")
 )
 
 var _ messaging.PubSub = (*pubsub)(nil)
@@ -48,10 +47,11 @@ type pubsub struct {
 // here: https://docs.nats.io/developing-with-nats/receiving/queues.
 // If the queue is empty, Subscribe will be used.
 func NewPubSub(url, queue string, logger log.Logger) (messaging.PubSub, error) {
-	conn, err := broker.Connect(url)
+	conn, err := broker.Connect(url, broker.MaxReconnects(maxReconnects))
 	if err != nil {
 		return nil, err
 	}
+
 	ret := &pubsub{
 		publisher: publisher{
 			conn: conn,
@@ -146,6 +146,7 @@ func (ps *pubsub) Unsubscribe(id, topic string) error {
 	if err := current.Unsubscribe(); err != nil {
 		return err
 	}
+
 	delete(s, id)
 	if len(s) == 0 {
 		delete(ps.subscriptions, topic)
@@ -160,7 +161,7 @@ func (ps *pubsub) natsHandler(h messaging.MessageHandler) broker.MsgHandler {
 			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
 			return
 		}
-		if err := h.Handle(msg); err != nil {
+		if err := h.Handle(&msg); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
 		}
 	}

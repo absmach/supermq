@@ -129,7 +129,7 @@ func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	defer r.Body.Close()
 
 	req := publishReq{
-		msg: messaging.Message{
+		msg: &messaging.Message{
 			Protocol: protocol,
 			Channel:  bone.GetValue(r, "id"),
 			Subtopic: subtopic,
@@ -150,6 +150,7 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	switch {
 	case errors.Contains(err, errors.ErrAuthentication),
+		err == apiutil.ErrBearerKey,
 		err == apiutil.ErrBearerToken:
 		w.WriteHeader(http.StatusUnauthorized)
 	case errors.Contains(err, errors.ErrAuthorization):
