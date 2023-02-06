@@ -8,10 +8,6 @@ import (
 	"log"
 	"os"
 
-	r "github.com/go-redis/redis/v8"
-	"github.com/jmoiron/sqlx"
-	"github.com/mainflux/mainflux/bootstrap"
-	api "github.com/mainflux/mainflux/bootstrap/api"
 	bootstrapPg "github.com/mainflux/mainflux/bootstrap/postgres"
 	rediscons "github.com/mainflux/mainflux/bootstrap/redis/consumer"
 	redisprod "github.com/mainflux/mainflux/bootstrap/redis/producer"
@@ -24,8 +20,13 @@ import (
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
 	"github.com/mainflux/mainflux/logger"
-	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"golang.org/x/sync/errgroup"
+
+	r "github.com/go-redis/redis/v8"
+	"github.com/jmoiron/sqlx"
+	"github.com/mainflux/mainflux/bootstrap"
+	api "github.com/mainflux/mainflux/bootstrap/api"
+	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
 )
 
 const (

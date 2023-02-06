@@ -273,9 +273,9 @@ func (svc service) UpdateClientSecret(ctx context.Context, token, oldSecret, new
 	if err != nil {
 		return Client{}, err
 	}
-	// if !svc.passRegex.MatchString(newSecret) {
-	// 	return Client{}, ErrPasswordFormat
-	// }
+	if !svc.passRegex.MatchString(newSecret) {
+		return Client{}, ErrPasswordFormat
+	}
 	dbClient, err := svc.clients.RetrieveByID(ctx, ir.ID)
 	if err != nil {
 		return Client{}, err
