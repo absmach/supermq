@@ -2,7 +2,6 @@ package policies
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/mainflux/mainflux"
@@ -45,10 +44,6 @@ func (svc service) Authorize(ctx context.Context, entityType string, p Policy) e
 		return err
 	}
 	p.Subject = id
-	fmt.Println(p)
-
-	// (SELECT subject FROM policies WHERE subject = 'd3e307dc-80af-48fc-bfde-ded1f83dedee' AND object = 'thing' AND 'c_add'=ANY(actions))
-	// UNION (SELECT id as subject FROM groups WHERE owner_id = :subject AND id = :object) LIMIT 1
 
 	return svc.policies.Evaluate(ctx, entityType, p)
 }
