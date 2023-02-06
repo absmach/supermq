@@ -12,12 +12,7 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib" // required for SQL access
 	"github.com/jmoiron/sqlx"
-<<<<<<<< HEAD:clients/groups/postgres/setup_test.go
 	"github.com/mainflux/mainflux/clients/postgres"
-========
-
-	"github.com/mainflux/mainflux/users/postgres"
->>>>>>>> 31972552e221669f8563c75a61394059e3b9afb3:users/postgres/setup_test.go
 	dockertest "github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"go.opentelemetry.io/otel"

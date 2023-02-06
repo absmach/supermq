@@ -7,8 +7,6 @@ import (
 	"crypto/aes"
 	"encoding/hex"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -20,7 +18,6 @@ import (
 	"github.com/mainflux/mainflux/clients/policies"
 	authapi "github.com/mainflux/mainflux/clients/policies/api/grpc"
 	"github.com/mainflux/mainflux/logger"
-	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/sync/errgroup"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
@@ -34,7 +31,6 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
-	jconfig "github.com/uber/jaeger-client-go/config"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -244,30 +240,6 @@ func connectToRedis(redisURL, redisPass, redisDB string, logger mflog.Logger) *r
 		Password: redisPass,
 		DB:       db,
 	})
-}
-
-func initJaeger(svcName, url string, logger logger.Logger) (opentracing.Tracer, io.Closer) {
-	if url == "" {
-		return opentracing.NoopTracer{}, ioutil.NopCloser(nil)
-	}
-
-	tracer, closer, err := jconfig.Configuration{
-		ServiceName: svcName,
-		Sampler: &jconfig.SamplerConfig{
-			Type:  "const",
-			Param: 1,
-		},
-		Reporter: &jconfig.ReporterConfig{
-			LocalAgentHostPort: url,
-			LogSpans:           true,
-		},
-	}.NewTracer()
-	if err != nil {
-		logger.Error(fmt.Sprintf("Failed to init Jaeger client: %s", err))
-		os.Exit(1)
-	}
-
-	return tracer, closer
 }
 
 func newService(auth policies.AuthServiceClient, db *sqlx.DB, logger mflog.Logger, esClient *r.Client, cfg config) bootstrap.Service {

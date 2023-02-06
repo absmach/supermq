@@ -8,7 +8,6 @@ import (
 
 const (
 	maxLimitSize = 100
-	maxEmailSize = 1024
 )
 
 type createClientReq struct {
