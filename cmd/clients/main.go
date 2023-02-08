@@ -389,6 +389,7 @@ func createAdmin(c config, crepo clients.ClientRepository, hsr clients.Hasher, s
 		},
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
+		Role:      clients.AdminRole,
 		Status:    clients.EnabledStatus,
 	}
 

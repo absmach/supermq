@@ -33,6 +33,9 @@ var (
 	// ErrInvalidStatus indicates an invalid user account status.
 	ErrInvalidStatus = errors.New("invalid user account status")
 
+	// ErrInvalidRole indicates that an invalid role.
+	ErrInvalidRole = errors.New("invalid client role")
+
 	// ErrLimitSize indicates that an invalid limit.
 	ErrLimitSize = errors.New("invalid limit size")
 

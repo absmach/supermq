@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgtype"
+	"github.com/mainflux/mainflux/clients/clients"
 	"github.com/mainflux/mainflux/clients/policies"
 	"github.com/mainflux/mainflux/clients/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -45,6 +46,20 @@ func (pr policyRepository) Save(ctx context.Context, policy policies.Policy) err
 	}
 
 	defer row.Close()
+
+	return nil
+}
+
+func (pr policyRepository) CheckAdmin(ctx context.Context, id string) error {
+	q := fmt.Sprintf(`SELECT id FROM clients WHERE id = '%s' AND role = '%d';`, id, clients.AdminRole)
+
+	var clientID string
+	if err := pr.db.QueryRowxContext(ctx, q).Scan(&clientID); err != nil {
+		return errors.Wrap(errors.ErrAuthorization, err)
+	}
+	if clientID == "" {
+		return errors.ErrAuthorization
+	}
 
 	return nil
 }

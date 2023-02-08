@@ -40,3 +40,9 @@ func (m *PolicyRepository) Evaluate(ctx context.Context, entityType string, p po
 
 	return ret.Error(0)
 }
+
+func (m *PolicyRepository) CheckAdmin(ctx context.Context, id string) error {
+	ret := m.Called(ctx, id)
+
+	return ret.Error(0)
+}
