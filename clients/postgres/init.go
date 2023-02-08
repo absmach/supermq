@@ -53,7 +53,8 @@ func migrateDB(db *sqlx.DB) error {
 						metadata    JSONB,
 						created_at  TIMESTAMP,
 						updated_at  TIMESTAMP,
-						status      SMALLINT NOT NULL CHECK (status >= 0) DEFAULT 1
+						status      SMALLINT NOT NULL CHECK (status >= 0) DEFAULT 1,
+						role        SMALLINT CHECK (status >= 0) DEFAULT 0						
 					)`,
 					`CREATE TABLE IF NOT EXISTS groups (
 						id          VARCHAR(254) PRIMARY KEY,

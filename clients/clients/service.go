@@ -91,7 +91,9 @@ func (svc service) RegisterClient(ctx context.Context, token string, cli Client)
 	if cli.Status != DisabledStatus && cli.Status != EnabledStatus {
 		return Client{}, apiutil.ErrInvalidStatus
 	}
-
+	if cli.Role != UserRole && cli.Role != AdminRole {
+		return Client{}, apiutil.ErrInvalidRole
+	}
 	cli.ID = clientID
 	cli.CreatedAt = time.Now()
 	cli.UpdatedAt = cli.CreatedAt

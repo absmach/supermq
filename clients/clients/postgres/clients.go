@@ -30,12 +30,12 @@ func NewClientRepo(db postgres.Database) clients.ClientRepository {
 }
 
 func (repo clientRepo) Save(ctx context.Context, c clients.Client) (clients.Client, error) {
-	q := `INSERT INTO clients (id, name, tags, owner, identity, secret, metadata, created_at, updated_at, status)
-        VALUES (:id, :name, :tags, :owner, :identity, :secret, :metadata, :created_at, :updated_at, :status)
+	q := `INSERT INTO clients (id, name, tags, owner, identity, secret, metadata, created_at, updated_at, status, role)
+        VALUES (:id, :name, :tags, :owner, :identity, :secret, :metadata, :created_at, :updated_at, :status, :role)
         RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`
 	if c.Owner == "" {
-		q = `INSERT INTO clients (id, name, tags, identity, secret, metadata, created_at, updated_at, status)
-        VALUES (:id, :name, :tags, :identity, :secret, :metadata, :created_at, :updated_at, :status)
+		q = `INSERT INTO clients (id, name, tags, identity, secret, metadata, created_at, updated_at, status, role)
+        VALUES (:id, :name, :tags, :identity, :secret, :metadata, :created_at, :updated_at, :status, :role)
         RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`
 	}
 	dbc, err := toDBClient(c)
@@ -386,6 +386,7 @@ type dbClient struct {
 	UpdatedAt time.Time        `db:"updated_at"`
 	Groups    []groups.Group   `db:"groups"`
 	Status    clients.Status   `db:"status"`
+	Role      clients.Role     `db:"role"`
 }
 
 func toDBClient(c clients.Client) (dbClient, error) {
@@ -413,6 +414,7 @@ func toDBClient(c clients.Client) (dbClient, error) {
 		CreatedAt: c.CreatedAt,
 		UpdatedAt: c.UpdatedAt,
 		Status:    c.Status,
+		Role:      c.Role,
 	}, nil
 }
 

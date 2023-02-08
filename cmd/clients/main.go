@@ -426,6 +426,7 @@ func createAdmin(c config, crepo clients.ClientRepository, hsr clients.Hasher, s
 		},
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
+		Role:      clients.AdminRole,
 		Status:    clients.EnabledStatus,
 	}
 
@@ -437,19 +438,10 @@ func createAdmin(c config, crepo clients.ClientRepository, hsr clients.Hasher, s
 	if _, err = crepo.Save(context.Background(), client); err != nil {
 		return err
 	}
-	tkn, err := svc.IssueToken(context.Background(), c.adminIdentity, c.adminSecret)
+	_, err = svc.IssueToken(context.Background(), c.adminIdentity, c.adminSecret)
 	if err != nil {
 		return err
 	}
-	// Add policy for things
-	pr := policies.Policy{Subject: client.ID, Object: "things", Actions: []string{"c_add", "c_list", "c_update", "c_delete"}}
-	if err := psvc.AddPolicy(context.Background(), tkn.AccessToken, pr); err != nil {
-		return err
-	}
-	// Add policy for channels
-	pr = policies.Policy{Subject: client.ID, Object: "channels", Actions: []string{"c_add", "c_list", "c_update", "c_delete"}}
-	if err := psvc.AddPolicy(context.Background(), tkn.AccessToken, pr); err != nil {
-		return err
-	}
+
 	return nil
 }
