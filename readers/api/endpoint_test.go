@@ -20,6 +20,7 @@ import (
 	"github.com/mainflux/mainflux/readers"
 	"github.com/mainflux/mainflux/readers/api"
 	"github.com/mainflux/mainflux/readers/mocks"
+	"github.com/mainflux/mainflux/things"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -131,7 +132,8 @@ func TestReadAll(t *testing.T) {
 
 	thSvc := mocks.NewThingsService(map[string]string{email: chanID})
 	mockAuthzDB := map[string][]authmocks.SubjectSet{}
-	mockAuthzDB[email] = append(mockAuthzDB[email], authmocks.SubjectSet{Object: "authorities", Relation: "member"})
+	mockAuthzDB["token"] = append(mockAuthzDB[email], authmocks.SubjectSet{Subject: "token", Relation: things.AdminRelationKey})
+
 	usrSvc := authmocks.NewAuthService(map[string]string{userToken: email}, mockAuthzDB)
 
 	repo := mocks.NewMessageRepository(chanID, fromSenml(messages))

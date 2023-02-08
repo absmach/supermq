@@ -148,10 +148,11 @@ func TestAddPolicy(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repo1Call := pRepo.On("Evaluate", context.Background(), "client", mock.Anything).Return(nil)
-		repoCall := pRepo.On("Update", context.Background(), tc.policy).Return(tc.err)
-		repoCall1 := pRepo.On("Save", context.Background(), mock.Anything).Return(tc.err)
-		repoCall2 := pRepo.On("Retrieve", context.Background(), mock.Anything).Return(tc.page, nil)
+		repoCall := pRepo.On("CheckAdmin", context.Background(), mock.Anything).Return(nil)
+		repoCall1 := pRepo.On("Evaluate", context.Background(), "client", mock.Anything).Return(nil)
+		repoCall2 := pRepo.On("Update", context.Background(), tc.policy).Return(tc.err)
+		repoCall3 := pRepo.On("Save", context.Background(), mock.Anything).Return(tc.err)
+		repoCall4 := pRepo.On("Retrieve", context.Background(), mock.Anything).Return(tc.page, nil)
 		err := svc.AddPolicy(context.Background(), tc.token, tc.policy)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if err == nil {
@@ -163,7 +164,8 @@ func TestAddPolicy(t *testing.T) {
 		repoCall.Unset()
 		repoCall1.Unset()
 		repoCall2.Unset()
-		repo1Call.Unset()
+		repoCall3.Unset()
+		repoCall4.Unset()
 	}
 
 }
@@ -208,10 +210,12 @@ func TestAuthorize(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", context.Background(), tc.domain, mock.Anything).Return(tc.err)
+		repoCall := pRepo.On("CheckAdmin", context.Background(), mock.Anything).Return(tc.err)
+		repoCall1 := pRepo.On("Evaluate", context.Background(), tc.domain, mock.Anything).Return(tc.err)
 		err := svc.Authorize(context.Background(), tc.domain, tc.policy)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		repoCall.Unset()
+		repoCall1.Unset()
 	}
 
 }

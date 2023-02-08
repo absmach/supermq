@@ -38,10 +38,8 @@ var (
 )
 
 func newService(tokens map[string]string) things.Service {
-	userPolicy := mocks.MockSubjectSet{Object: "users", Relation: "member"}
-	adminPolicy := mocks.MockSubjectSet{Object: "authorities", Relation: "member"}
-	auth := mocks.NewAuthService(tokens, map[string][]mocks.MockSubjectSet{
-		adminEmail: {userPolicy, adminPolicy}, email: {userPolicy}})
+	adminPolicy := mocks.MockSubjectSet{Subject: "token", Relation: things.AdminRelationKey}
+	auth := mocks.NewAuthService(tokens, map[string][]mocks.MockSubjectSet{token: {adminPolicy}})
 	conns := make(chan mocks.Connection)
 	thingsRepo := mocks.NewThingRepository(conns)
 	channelsRepo := mocks.NewChannelRepository(thingsRepo, conns)
@@ -57,6 +55,7 @@ func TestInit(t *testing.T) {
 		thingList[i].Name = fmt.Sprintf("name-%d", i+1)
 		thingList[i].ID = fmt.Sprintf("%s%012d", prefix, i+1)
 		thingList[i].Key = fmt.Sprintf("%s1%011d", prefix, i+1)
+		thingList[i].Owner = token
 	}
 }
 
@@ -130,7 +129,7 @@ func TestUpdateThing(t *testing.T) {
 			desc:  "update non-existing thing",
 			thing: other,
 			token: token,
-			err:   errors.ErrAuthorization,
+			err:   errors.ErrNotFound,
 		},
 	}
 
@@ -173,7 +172,7 @@ func TestUpdateKey(t *testing.T) {
 			token: token,
 			id:    wrongID,
 			key:   wrongValue,
-			err:   errors.ErrAuthorization,
+			err:   errors.ErrNotFound,
 		},
 	}
 
@@ -195,7 +194,7 @@ func TestShareThing(t *testing.T) {
 		token    string
 		thingID  string
 		policies []string
-		userIDs  []string
+		userID   string
 		err      error
 	}{
 		{
@@ -203,7 +202,7 @@ func TestShareThing(t *testing.T) {
 			token:    token,
 			thingID:  th.ID,
 			policies: policies,
-			userIDs:  []string{email2},
+			userID:   email2,
 			err:      nil,
 		},
 		{
@@ -211,7 +210,7 @@ func TestShareThing(t *testing.T) {
 			token:    token2,
 			thingID:  th.ID,
 			policies: policies,
-			userIDs:  []string{email2},
+			userID:   email2,
 			err:      errors.ErrAuthorization,
 		},
 		{
@@ -219,21 +218,21 @@ func TestShareThing(t *testing.T) {
 			token:    wrongValue,
 			thingID:  th.ID,
 			policies: policies,
-			userIDs:  []string{email2},
-			err:      errors.ErrAuthentication,
+			userID:   email2,
+			err:      errors.ErrAuthorization,
 		},
 		{
 			desc:     "share a thing with partially invalid policies",
 			token:    token,
 			thingID:  th.ID,
 			policies: []string{"", "read"},
-			userIDs:  []string{email2},
-			err:      fmt.Errorf("cannot claim ownership on object '%s' by user '%s': %s", th.ID, email2, errors.ErrMalformedEntity),
+			userID:   email2,
+			err:      nil,
 		},
 	}
 
 	for _, tc := range cases {
-		err := svc.ShareThing(context.Background(), tc.token, tc.thingID, tc.policies, tc.userIDs)
+		err := svc.ShareThing(context.Background(), tc.token, tc.thingID, tc.policies, tc.userID)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 
@@ -571,7 +570,9 @@ func TestListThingsByChannel(t *testing.T) {
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", desc, tc.err, err))
 
 		// Check if Things by Channel list have been sorted properly
-		testSortThings(t, tc.pageMetadata, page.Things)
+		if len(page.Things) > 0 {
+			testSortThings(t, tc.pageMetadata, page.Things)
+		}
 	}
 }
 
@@ -609,7 +610,7 @@ func TestRemoveThing(t *testing.T) {
 			desc:  "remove non-existing thing",
 			id:    wrongID,
 			token: token,
-			err:   errors.ErrAuthorization,
+			err:   nil,
 		},
 	}
 

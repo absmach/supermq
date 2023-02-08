@@ -14,7 +14,7 @@ import (
 var _ policies.AuthServiceClient = (*authServiceMock)(nil)
 
 type MockSubjectSet struct {
-	Object   string
+	Subject  string
 	Relation []string
 }
 
@@ -56,7 +56,7 @@ func (svc authServiceMock) Issue(ctx context.Context, in *policies.IssueReq, opt
 func (svc authServiceMock) Authorize(ctx context.Context, req *policies.AuthorizeReq, _ ...grpc.CallOption) (r *policies.AuthorizeRes, err error) {
 	for _, policy := range svc.policies[req.GetSub()] {
 		for _, r := range policy.Relation {
-			if r == req.GetAct() && policy.Object == req.GetObj() {
+			if r == req.GetAct() && policy.Subject == req.GetSub() {
 				return &policies.AuthorizeRes{Authorized: true}, nil
 			}
 		}
@@ -69,8 +69,8 @@ func (svc authServiceMock) AddPolicy(ctx context.Context, in *policies.AddPolicy
 		return &policies.AddPolicyRes{}, errors.ErrMalformedEntity
 	}
 
-	obj := in.GetObj()
-	svc.policies[in.GetSub()] = append(svc.policies[in.GetSub()], MockSubjectSet{Object: obj, Relation: in.GetAct()})
+	sub := in.GetSub()
+	svc.policies[in.GetSub()] = append(svc.policies[in.GetSub()], MockSubjectSet{Subject: sub, Relation: in.GetAct()})
 	return &policies.AddPolicyRes{Authorized: true}, nil
 }
 
