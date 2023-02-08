@@ -22,5 +22,5 @@ type deletePolicyRes struct {
 }
 
 type listPoliciesRes struct {
-	policies []string
+	objects []string
 }

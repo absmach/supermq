@@ -141,7 +141,7 @@ func encodeIdentifyResponse(_ context.Context, grpcRes interface{}) (interface{}
 
 func decodeAddPolicyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*policies.AddPolicyReq)
-	return policyReq{Sub: req.GetSub(), Obj: req.GetObj(), Act: req.GetAct()}, nil
+	return addPolicyReq{Token: req.GetToken(), Sub: req.GetSub(), Obj: req.GetObj(), Act: req.GetAct()}, nil
 }
 
 func encodeAddPolicyResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
@@ -166,7 +166,7 @@ func decodeListPoliciesRequest(_ context.Context, grpcReq interface{}) (interfac
 
 func encodeListPoliciesResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(listPoliciesRes)
-	return &policies.ListPoliciesRes{Policies: res.policies}, nil
+	return &policies.ListPoliciesRes{Objects: res.objects}, nil
 }
 
 func encodeError(err error) error {
@@ -176,6 +176,7 @@ func encodeError(err error) error {
 	case errors.Contains(err, errors.ErrMalformedEntity),
 		err == apiutil.ErrInvalidAuthKey,
 		err == apiutil.ErrMissingID,
+		err == apiutil.ErrBearerToken,
 		err == apiutil.ErrMissingPolicySub,
 		err == apiutil.ErrMissingPolicyObj,
 		err == apiutil.ErrMissingPolicyAct,

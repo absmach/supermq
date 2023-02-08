@@ -15,7 +15,7 @@ var _ policies.AuthServiceClient = (*authServiceMock)(nil)
 
 type MockSubjectSet struct {
 	Object   string
-	Relation string
+	Relation []string
 }
 
 type authServiceMock struct {
@@ -26,7 +26,7 @@ type authServiceMock struct {
 func (svc authServiceMock) ListPolicies(ctx context.Context, in *policies.ListPoliciesReq, opts ...grpc.CallOption) (*policies.ListPoliciesRes, error) {
 	res := policies.ListPoliciesRes{}
 	for key := range svc.policies {
-		res.Policies = append(res.Policies, key)
+		res.Objects = append(res.Objects, key)
 	}
 	return &res, nil
 }
@@ -55,15 +55,17 @@ func (svc authServiceMock) Issue(ctx context.Context, in *policies.IssueReq, opt
 
 func (svc authServiceMock) Authorize(ctx context.Context, req *policies.AuthorizeReq, _ ...grpc.CallOption) (r *policies.AuthorizeRes, err error) {
 	for _, policy := range svc.policies[req.GetSub()] {
-		if policy.Relation == req.GetAct() && policy.Object == req.GetObj() {
-			return &policies.AuthorizeRes{Authorized: true}, nil
+		for _, r := range policy.Relation {
+			if r == req.GetAct() && policy.Object == req.GetObj() {
+				return &policies.AuthorizeRes{Authorized: true}, nil
+			}
 		}
 	}
 	return nil, errors.ErrAuthorization
 }
 
 func (svc authServiceMock) AddPolicy(ctx context.Context, in *policies.AddPolicyReq, opts ...grpc.CallOption) (*policies.AddPolicyRes, error) {
-	if in.GetAct() == "" || in.GetObj() == "" || in.GetSub() == "" {
+	if len(in.GetAct()) == 0 || in.GetObj() == "" || in.GetSub() == "" {
 		return &policies.AddPolicyRes{}, errors.ErrMalformedEntity
 	}
 

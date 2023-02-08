@@ -62,12 +62,12 @@ func identifyEndpoint(svc clients.Service) endpoint.Endpoint {
 
 func addPolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(policyReq)
+		req := request.(addPolicyReq)
 		if err := req.validate(); err != nil {
 			return addPolicyRes{}, err
 		}
 
-		err := svc.AddPolicy(ctx, "", policies.Policy{Subject: req.Sub, Object: req.Obj, Actions: []string{req.Act}})
+		err := svc.AddPolicy(ctx, req.Token, policies.Policy{Subject: req.Sub, Object: req.Obj, Actions: req.Act})
 		if err != nil {
 			return addPolicyRes{}, err
 		}
@@ -98,6 +98,10 @@ func listPoliciesEndpoint(svc policies.Service) endpoint.Endpoint {
 		if err != nil {
 			return deletePolicyRes{}, err
 		}
-		return listPoliciesRes{policies: page.Policies[0].Actions}, nil
+		var objects []string
+		for _, p := range page.Policies {
+			objects = append(objects, p.Object)
+		}
+		return listPoliciesRes{objects: objects}, nil
 	}
 }

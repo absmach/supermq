@@ -44,6 +44,9 @@ func (svc service) Authorize(ctx context.Context, entityType string, p Policy) e
 	if err != nil {
 		return err
 	}
+	if err = svc.policies.CheckAdmin(ctx, id); err == nil {
+		return nil
+	}
 	p.Subject = id
 	fmt.Println(p)
 

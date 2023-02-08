@@ -87,7 +87,7 @@ func (req createThingsReq) validate() error {
 type shareThingReq struct {
 	token    string
 	thingID  string
-	UserIDs  []string `json:"user_ids"`
+	UserID   string   `json:"user_id"`
 	Policies []string `json:"policies"`
 }
 
@@ -96,7 +96,7 @@ func (req shareThingReq) validate() error {
 		return apiutil.ErrBearerToken
 	}
 
-	if req.thingID == "" || len(req.UserIDs) == 0 {
+	if req.thingID == "" || req.UserID == "" {
 		return apiutil.ErrMissingID
 	}
 

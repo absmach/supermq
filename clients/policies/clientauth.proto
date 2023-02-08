@@ -40,9 +40,10 @@ message UserIdentity {
 }
 
 message AddPolicyReq {
-    string sub = 1;
-    string obj = 2;
-    string act = 3;
+    string token        = 1;
+    string sub          = 2;
+    string obj          = 3;
+    repeated string act = 4;
 }
 
 message AddPolicyRes {
@@ -66,5 +67,5 @@ message ListPoliciesReq {
 }
 
 message ListPoliciesRes {
-    repeated string policies = 1;
+    repeated string objects = 1;
 }
