@@ -14,7 +14,7 @@ import (
 var _ policies.AuthServiceClient = (*authServiceMock)(nil)
 
 type SubjectSet struct {
-	Object   string
+	Subject  string
 	Relation []string
 }
 
@@ -24,7 +24,11 @@ type authServiceMock struct {
 }
 
 func (svc authServiceMock) ListPolicies(ctx context.Context, in *policies.ListPoliciesReq, opts ...grpc.CallOption) (*policies.ListPoliciesRes, error) {
-	panic("not implemented")
+	res := policies.ListPoliciesRes{}
+	for key := range svc.authz {
+		res.Objects = append(res.Objects, key)
+	}
+	return &res, nil
 }
 
 // NewAuthService creates mock of users service.
@@ -50,12 +54,10 @@ func (svc authServiceMock) Issue(ctx context.Context, in *policies.IssueReq, opt
 }
 
 func (svc authServiceMock) Authorize(ctx context.Context, req *policies.AuthorizeReq, _ ...grpc.CallOption) (r *policies.AuthorizeRes, err error) {
-	if sub, ok := svc.authz[req.GetSub()]; ok {
-		for _, v := range sub {
-			for _, r := range v.Relation {
-				if r == req.GetAct() && v.Object == req.GetObj() {
-					return &policies.AuthorizeRes{Authorized: true}, nil
-				}
+	for _, policy := range svc.authz[req.GetSub()] {
+		for _, r := range policy.Relation {
+			if r == req.GetAct() && policy.Subject == req.GetSub() {
+				return &policies.AuthorizeRes{Authorized: true}, nil
 			}
 		}
 	}
@@ -63,7 +65,11 @@ func (svc authServiceMock) Authorize(ctx context.Context, req *policies.Authoriz
 }
 
 func (svc authServiceMock) AddPolicy(ctx context.Context, in *policies.AddPolicyReq, opts ...grpc.CallOption) (*policies.AddPolicyRes, error) {
-	svc.authz[in.GetSub()] = append(svc.authz[in.GetSub()], SubjectSet{Object: in.GetObj(), Relation: in.GetAct()})
+	if len(in.GetAct()) == 0 || in.GetObj() == "" || in.GetSub() == "" {
+		return &policies.AddPolicyRes{}, errors.ErrMalformedEntity
+	}
+
+	svc.authz[in.GetSub()] = append(svc.authz[in.GetSub()], SubjectSet{Subject: in.GetSub(), Relation: in.GetAct()})
 	return &policies.AddPolicyRes{Authorized: true}, nil
 }
 

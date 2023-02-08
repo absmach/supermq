@@ -85,10 +85,8 @@ func (tr testRequest) make() (*http.Response, error) {
 }
 
 func newService(tokens map[string]string) things.Service {
-	userPolicy := mocks.MockSubjectSet{Object: "users", Relation: "member"}
-	adminPolicy := mocks.MockSubjectSet{Object: "authorities", Relation: "member"}
-	auth := mocks.NewAuthService(tokens, map[string][]mocks.MockSubjectSet{
-		adminEmail: {userPolicy, adminPolicy}, email: {userPolicy}})
+	adminPolicy := mocks.MockSubjectSet{Subject: "token", Relation: things.AdminRelationKey}
+	auth := mocks.NewAuthService(tokens, map[string][]mocks.MockSubjectSet{token: {adminPolicy}})
 	conns := make(chan mocks.Connection)
 	thingsRepo := mocks.NewThingRepository(conns)
 	channelsRepo := mocks.NewChannelRepository(thingsRepo, conns)
@@ -374,7 +372,7 @@ func TestUpdateThing(t *testing.T) {
 			id:          strconv.FormatUint(wrongID, 10),
 			contentType: contentType,
 			auth:        token,
-			status:      http.StatusForbidden,
+			status:      http.StatusNotFound,
 		},
 		{
 			desc:        "update thing with invalid id",
@@ -382,7 +380,7 @@ func TestUpdateThing(t *testing.T) {
 			id:          "invalid",
 			contentType: contentType,
 			auth:        token,
-			status:      http.StatusForbidden,
+			status:      http.StatusNotFound,
 		},
 		{
 			desc:        "update thing with invalid user token",
@@ -450,18 +448,18 @@ func TestUpdateThing(t *testing.T) {
 
 func TestShareThing(t *testing.T) {
 	token2 := "token2"
-	svc := newService(map[string]string{token: email, token2: "user@ex.com"})
+	svc := newService(map[string]string{token: email, token2: "token2"})
 	ts := newServer(svc)
 	defer ts.Close()
 
 	type shareThingReq struct {
-		UserIDs  []string `json:"user_ids"`
+		UserID   string   `json:"user_id"`
 		Policies []string `json:"policies"`
 	}
 
-	data := toJSON(shareThingReq{UserIDs: []string{"token2"}, Policies: []string{"read"}})
+	data := toJSON(shareThingReq{UserID: "token2", Policies: []string{"read"}})
 	invalidData := toJSON(shareThingReq{})
-	invalidPolicies := toJSON(shareThingReq{UserIDs: []string{"token2"}, Policies: []string{"wrong"}})
+	invalidPolicies := toJSON(shareThingReq{UserID: "token2", Policies: []string{"wrong"}})
 
 	ths, err := svc.CreateThings(context.Background(), token, thing)
 	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
@@ -537,7 +535,7 @@ func TestShareThing(t *testing.T) {
 			thingID:     th.ID,
 			contentType: contentType,
 			token:       "invalid",
-			status:      http.StatusUnauthorized,
+			status:      http.StatusForbidden,
 		},
 		{
 			desc:        "share a thing with unauthorized access",
@@ -1376,7 +1374,7 @@ func TestRemoveThing(t *testing.T) {
 			desc:   "delete non-existent thing",
 			id:     strconv.FormatUint(wrongID, 10),
 			auth:   token,
-			status: http.StatusNotFound,
+			status: http.StatusNoContent,
 		},
 		{
 			desc:   "delete thing with invalid token",

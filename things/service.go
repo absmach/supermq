@@ -24,7 +24,7 @@ const (
 	entityType        = "group"
 )
 
-var adminRelationKey = []string{createKey, updateRelationKey, listRelationKey, deleteRelationKey, readRelationKey, writeRelationKey}
+var AdminRelationKey = []string{createKey, updateRelationKey, listRelationKey, deleteRelationKey, readRelationKey, writeRelationKey}
 
 // Service specifies an API that must be fullfiled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
@@ -201,7 +201,7 @@ func (ts *thingsService) createThing(ctx context.Context, token string, thing *T
 		return Thing{}, errors.ErrCreateEntity
 	}
 
-	if err := ts.claimOwnership(ctx, token, ths[0].ID, adminRelationKey, identity.GetId()); err != nil {
+	if err := ts.claimOwnership(ctx, token, ths[0].ID, AdminRelationKey, identity.GetId()); err != nil {
 		return Thing{}, err
 	}
 
@@ -380,7 +380,7 @@ func (ts *thingsService) createChannel(ctx context.Context, token string, channe
 		return Channel{}, errors.ErrCreateEntity
 	}
 
-	if err := ts.claimOwnership(ctx, token, chs[0].ID, adminRelationKey, identity.GetId()); err != nil {
+	if err := ts.claimOwnership(ctx, token, chs[0].ID, AdminRelationKey, identity.GetId()); err != nil {
 		return Channel{}, err
 	}
 	return chs[0], nil
