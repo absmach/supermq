@@ -15,7 +15,7 @@ var _ policies.AuthServiceClient = (*authServiceMock)(nil)
 
 type SubjectSet struct {
 	Object   string
-	Relation string
+	Relation []string
 }
 
 type authServiceMock struct {
@@ -52,8 +52,10 @@ func (svc authServiceMock) Issue(ctx context.Context, in *policies.IssueReq, opt
 func (svc authServiceMock) Authorize(ctx context.Context, req *policies.AuthorizeReq, _ ...grpc.CallOption) (r *policies.AuthorizeRes, err error) {
 	if sub, ok := svc.authz[req.GetSub()]; ok {
 		for _, v := range sub {
-			if v.Relation == req.GetAct() && v.Object == req.GetObj() {
-				return &policies.AuthorizeRes{Authorized: true}, nil
+			for _, r := range v.Relation {
+				if r == req.GetAct() && v.Object == req.GetObj() {
+					return &policies.AuthorizeRes{Authorized: true}, nil
+				}
 			}
 		}
 	}

@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-kit/kit/endpoint"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/clients/policies"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/go-kit/kit/otelkit"
 	"google.golang.org/grpc"
@@ -59,7 +58,7 @@ func NewClient(conn *grpc.ClientConn, timeout time.Duration) policies.AuthServic
 			"AddPolicy",
 			encodeAddPolicyRequest,
 			decodeAddPolicyResponse,
-			mainflux.AddPolicyRes{},
+			policies.AddPolicyRes{},
 		).Endpoint()),
 		deletePolicy: otelkit.EndpointMiddleware(otelkit.WithOperation("delete_policy"))(kitgrpc.NewClient(
 			conn,
@@ -67,7 +66,7 @@ func NewClient(conn *grpc.ClientConn, timeout time.Duration) policies.AuthServic
 			"DeletePolicy",
 			encodeDeletePolicyRequest,
 			decodeDeletePolicyResponse,
-			mainflux.DeletePolicyRes{},
+			policies.DeletePolicyRes{},
 		).Endpoint()),
 		listPolicies: otelkit.EndpointMiddleware(otelkit.WithOperation("list_policies"))(kitgrpc.NewClient(
 			conn,
@@ -75,7 +74,7 @@ func NewClient(conn *grpc.ClientConn, timeout time.Duration) policies.AuthServic
 			"ListPolicies",
 			encodeListPoliciesRequest,
 			decodeListPoliciesResponse,
-			mainflux.ListPoliciesRes{},
+			policies.ListPoliciesRes{},
 		).Endpoint()),
 
 		timeout: timeout,
@@ -160,7 +159,7 @@ func (client grpcClient) AddPolicy(ctx context.Context, in *policies.AddPolicyRe
 	ctx, close := context.WithTimeout(ctx, client.timeout)
 	defer close()
 
-	res, err := client.addPolicy(ctx, policyReq{Act: in.GetAct(), Obj: in.GetObj(), Sub: in.GetSub()})
+	res, err := client.addPolicy(ctx, addPolicyReq{Token: in.GetToken(), Act: in.GetAct(), Obj: in.GetObj(), Sub: in.GetSub()})
 	if err != nil {
 		return &policies.AddPolicyRes{}, err
 	}
@@ -175,11 +174,12 @@ func decodeAddPolicyResponse(_ context.Context, grpcRes interface{}) (interface{
 }
 
 func encodeAddPolicyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(policyReq)
+	req := grpcReq.(addPolicyReq)
 	return &policies.AddPolicyReq{
-		Sub: req.Sub,
-		Obj: req.Obj,
-		Act: req.Act,
+		Token: req.Token,
+		Sub:   req.Sub,
+		Obj:   req.Obj,
+		Act:   req.Act,
 	}, nil
 }
 
@@ -220,12 +220,12 @@ func (client grpcClient) ListPolicies(ctx context.Context, in *policies.ListPoli
 	}
 
 	lpr := res.(listPoliciesRes)
-	return &policies.ListPoliciesRes{Policies: lpr.policies}, err
+	return &policies.ListPoliciesRes{Objects: lpr.objects}, err
 }
 
 func decodeListPoliciesResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(*policies.ListPoliciesRes)
-	return listPoliciesRes{policies: res.GetPolicies()}, nil
+	return listPoliciesRes{objects: res.GetObjects()}, nil
 }
 
 func encodeListPoliciesRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {

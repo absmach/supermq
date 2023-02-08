@@ -57,6 +57,32 @@ func (req issueReq) validate() error {
 	return nil
 }
 
+type addPolicyReq struct {
+	Token string
+	Sub   string
+	Obj   string
+	Act   []string
+}
+
+func (req addPolicyReq) validate() error {
+	if req.Token == "" {
+		return apiutil.ErrBearerToken
+	}
+	if req.Sub == "" {
+		return apiutil.ErrMissingPolicySub
+	}
+
+	if req.Obj == "" {
+		return apiutil.ErrMissingPolicyObj
+	}
+
+	if len(req.Act) == 0 {
+		return apiutil.ErrMissingPolicyAct
+	}
+
+	return nil
+}
+
 type policyReq struct {
 	Sub string
 	Obj string

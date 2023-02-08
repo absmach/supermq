@@ -33,6 +33,9 @@ type PolicyRepository interface {
 	// error in case of failures.
 	Save(ctx context.Context, p Policy) error
 
+	// CheckAdmin checks if the user is an admin user
+	CheckAdmin(ctx context.Context, id string) error
+
 	// Evaluate is used to evaluate if you have the correct permissions.
 	// We evaluate if we are in the same group first then evaluate if the
 	// object has that action over the subject
