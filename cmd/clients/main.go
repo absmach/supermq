@@ -7,6 +7,8 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"regexp"
+	"strconv"
 	"time"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
@@ -68,6 +70,11 @@ const (
 	defServerCert    = ""
 	defServerKey     = ""
 	defJaegerURL     = "http://localhost:6831"
+	defKeysTLS       = "false"
+	defKeysCACerts   = ""
+	defKeysURL       = "localhost:9194"
+	defKeysTimeout   = "1s"
+	defPassRegex     = "^.{8,}$"
 
 	envLogLevel      = "MF_CLIENTS_LOG_LEVEL"
 	envSecretKey     = "MF_CLIENTS_SECRET_KEY"
@@ -87,6 +94,11 @@ const (
 	envServerCert    = "MF_CLIENTS_SERVER_CERT"
 	envServerKey     = "MF_CLIENTS_SERVER_KEY"
 	envJaegerURL     = "MF_CLIENTS_JAEGER_URL"
+	envKeysTLS       = "MF_KEYS_CLIENT_TLS"
+	envKeysCACerts   = "MF_KEYS_CA_CERTS"
+	envKeysURL       = "MF_KEYS_GRPC_URL"
+	envKeysTimeout   = "MF_KEYS_GRPC_TIMEOUT"
+	envPassRegex     = "MF_USERS_PASS_REGEX"
 )
 
 type config struct {
@@ -100,6 +112,11 @@ type config struct {
 	serverCert    string
 	serverKey     string
 	jaegerURL     string
+	keysTLS       bool
+	keysCACerts   string
+	keysURL       string
+	keysTimeout   time.Duration
+	passRegex     *regexp.Regexp
 }
 
 func main() {
@@ -131,7 +148,7 @@ func main() {
 		return startHTTPServer(ctx, csvc, gsvc, psvc, cfg.httpPort, cfg.serverCert, cfg.serverKey, logger)
 	})
 	g.Go(func() error {
-		return startGRPCServer(ctx, psvc, cfg.grpcPort, cfg.serverCert, cfg.serverKey, logger)
+		return startGRPCServer(ctx, csvc, psvc, cfg.grpcPort, cfg.serverCert, cfg.serverKey, logger)
 	})
 
 	g.Go(func() error {
@@ -148,6 +165,21 @@ func main() {
 }
 
 func loadConfig() config {
+	keysTimeout, err := time.ParseDuration(mainflux.Env(envKeysTimeout, defKeysTimeout))
+	if err != nil {
+		log.Fatalf("Invalid %s value: %s", envKeysTimeout, err.Error())
+	}
+
+	tls, err := strconv.ParseBool(mainflux.Env(envKeysTLS, defKeysTLS))
+	if err != nil {
+		log.Fatalf("Invalid value passed for %s\n", envKeysTLS)
+	}
+
+	passRegex, err := regexp.Compile(mainflux.Env(envPassRegex, defPassRegex))
+	if err != nil {
+		log.Fatalf("Invalid password validation rules %s\n", envPassRegex)
+	}
+
 	dbConfig := postgres.Config{
 		Host:        mainflux.Env(envDBHost, defDBHost),
 		Port:        mainflux.Env(envDBPort, defDBPort),
@@ -171,6 +203,11 @@ func loadConfig() config {
 		serverCert:    mainflux.Env(envServerCert, defServerCert),
 		serverKey:     mainflux.Env(envServerKey, defServerKey),
 		jaegerURL:     mainflux.Env(envJaegerURL, defJaegerURL),
+		keysTLS:       tls,
+		keysCACerts:   mainflux.Env(envKeysCACerts, defKeysCACerts),
+		keysURL:       mainflux.Env(envKeysURL, defKeysURL),
+		keysTimeout:   keysTimeout,
+		passRegex:     passRegex,
 	}
 
 }
@@ -216,7 +253,7 @@ func newService(db *sqlx.DB, tracer trace.Tracer, c config, logger logger.Logger
 	tokenizer := jwt.NewTokenRepo([]byte(c.secretKey))
 	tokenizer = jwt.NewTokenRepoMiddleware(tokenizer, tracer)
 
-	csvc := clients.NewService(cRepo, pRepo, tokenizer, hsr, idp)
+	csvc := clients.NewService(cRepo, pRepo, tokenizer, hsr, idp, c.passRegex)
 	gsvc := groups.NewService(gRepo, pRepo, tokenizer, idp)
 	psvc := policies.NewService(pRepo, tokenizer, idp)
 
@@ -319,7 +356,7 @@ func startHTTPServer(ctx context.Context, csvc clients.Service, gsvc groups.Serv
 
 }
 
-func startGRPCServer(ctx context.Context, svc policies.Service, port string, certFile string, keyFile string, logger logger.Logger) error {
+func startGRPCServer(ctx context.Context, csvc clients.Service, psvc policies.Service, port string, certFile string, keyFile string, logger logger.Logger) error {
 	p := fmt.Sprintf(":%s", port)
 	errCh := make(chan error)
 
@@ -343,7 +380,7 @@ func startGRPCServer(ctx context.Context, svc policies.Service, port string, cer
 	}
 
 	reflection.Register(server)
-	policies.RegisterAuthServiceServer(server, grpcapi.NewServer(svc))
+	policies.RegisterAuthServiceServer(server, grpcapi.NewServer(csvc, psvc))
 	logger.Info(fmt.Sprintf("Clients gRPC service started, exposed port %s", port))
 	go func() {
 		errCh <- server.Serve(listener)
