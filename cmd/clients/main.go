@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"regexp"
-	"strconv"
 	"time"
 
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
@@ -17,6 +16,7 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/clients/clients"
 	capi "github.com/mainflux/mainflux/clients/clients/api"
+	"github.com/mainflux/mainflux/clients/clients/emailer"
 	cpostgres "github.com/mainflux/mainflux/clients/clients/postgres"
 	ctracing "github.com/mainflux/mainflux/clients/clients/tracing"
 	"github.com/mainflux/mainflux/clients/groups"
@@ -31,6 +31,7 @@ import (
 	ppostgres "github.com/mainflux/mainflux/clients/policies/postgres"
 	ppracing "github.com/mainflux/mainflux/clients/policies/tracing"
 	"github.com/mainflux/mainflux/clients/postgres"
+	"github.com/mainflux/mainflux/internal/email"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -52,53 +53,61 @@ const (
 	svcName      = "clients"
 	stopWaitTime = 5 * time.Second
 
-	defLogLevel      = "debug"
-	defSecretKey     = "clientsecret"
-	defAdminIdentity = "admin@example.com"
-	defAdminSecret   = "12345678"
-	defDBHost        = "localhost"
-	defDBPort        = "5432"
-	defDBUser        = "mainflux"
-	defDBPass        = "mainflux"
-	defDB            = "clients"
-	defDBSSLMode     = "disable"
-	defDBSSLCert     = ""
-	defDBSSLKey      = ""
-	defDBSSLRootCert = ""
-	defHTTPPort      = "9191"
-	defGRPCPort      = "9192"
-	defServerCert    = ""
-	defServerKey     = ""
-	defJaegerURL     = "http://localhost:6831"
-	defKeysTLS       = "false"
-	defKeysCACerts   = ""
-	defKeysURL       = "localhost:9194"
-	defKeysTimeout   = "1s"
-	defPassRegex     = "^.{8,}$"
+	defLogLevel           = "debug"
+	defSecretKey          = "clientsecret"
+	defAdminIdentity      = "admin@example.com"
+	defAdminSecret        = "12345678"
+	defDBHost             = "localhost"
+	defDBPort             = "5432"
+	defDBUser             = "mainflux"
+	defDBPass             = "mainflux"
+	defDB                 = "clients"
+	defDBSSLMode          = "disable"
+	defDBSSLCert          = ""
+	defDBSSLKey           = ""
+	defDBSSLRootCert      = ""
+	defHTTPPort           = "9191"
+	defGRPCPort           = "9192"
+	defServerCert         = ""
+	defServerKey          = ""
+	defJaegerURL          = "http://localhost:6831"
+	defPassRegex          = "^.{8,}$"
+	defEmailHost          = "localhost"
+	defEmailPort          = "25"
+	defEmailUsername      = "root"
+	defEmailPassword      = ""
+	defEmailFromAddress   = ""
+	defEmailFromName      = ""
+	defEmailTemplate      = "email.tmpl"
+	defTokenResetEndpoint = "/reset-request" // URL where user lands after click on the reset link from email
 
-	envLogLevel      = "MF_CLIENTS_LOG_LEVEL"
-	envSecretKey     = "MF_CLIENTS_SECRET_KEY"
-	envAdminIdentity = "MF_CLIENTS_ADMIN_EMAIL"
-	envAdminSecret   = "MF_CLIENTS_ADMIN_PASSWORD"
-	envDBHost        = "MF_CLIENTS_DB_HOST"
-	envDBPort        = "MF_CLIENTS_DB_PORT"
-	envDBUser        = "MF_CLIENTS_DB_USER"
-	envDBPass        = "MF_CLIENTS_DB_PASS"
-	envDB            = "MF_CLIENTS_DB"
-	envDBSSLMode     = "MF_CLIENTS_DB_SSL_MODE"
-	envDBSSLCert     = "MF_CLIENTS_DB_SSL_CERT"
-	envDBSSLKey      = "MF_CLIENTS_DB_SSL_KEY"
-	envDBSSLRootCert = "MF_CLIENTS_DB_SSL_ROOT_CERT"
-	envHTTPPort      = "MF_CLIENTS_HTTP_PORT"
-	envGRPCPort      = "MF_CLIENTS_GRPC_PORT"
-	envServerCert    = "MF_CLIENTS_SERVER_CERT"
-	envServerKey     = "MF_CLIENTS_SERVER_KEY"
-	envJaegerURL     = "MF_CLIENTS_JAEGER_URL"
-	envKeysTLS       = "MF_KEYS_CLIENT_TLS"
-	envKeysCACerts   = "MF_KEYS_CA_CERTS"
-	envKeysURL       = "MF_KEYS_GRPC_URL"
-	envKeysTimeout   = "MF_KEYS_GRPC_TIMEOUT"
-	envPassRegex     = "MF_USERS_PASS_REGEX"
+	envLogLevel           = "MF_CLIENTS_LOG_LEVEL"
+	envSecretKey          = "MF_CLIENTS_SECRET_KEY"
+	envAdminIdentity      = "MF_CLIENTS_ADMIN_EMAIL"
+	envAdminSecret        = "MF_CLIENTS_ADMIN_PASSWORD"
+	envDBHost             = "MF_CLIENTS_DB_HOST"
+	envDBPort             = "MF_CLIENTS_DB_PORT"
+	envDBUser             = "MF_CLIENTS_DB_USER"
+	envDBPass             = "MF_CLIENTS_DB_PASS"
+	envDB                 = "MF_CLIENTS_DB"
+	envDBSSLMode          = "MF_CLIENTS_DB_SSL_MODE"
+	envDBSSLCert          = "MF_CLIENTS_DB_SSL_CERT"
+	envDBSSLKey           = "MF_CLIENTS_DB_SSL_KEY"
+	envDBSSLRootCert      = "MF_CLIENTS_DB_SSL_ROOT_CERT"
+	envHTTPPort           = "MF_CLIENTS_HTTP_PORT"
+	envGRPCPort           = "MF_CLIENTS_GRPC_PORT"
+	envServerCert         = "MF_CLIENTS_SERVER_CERT"
+	envServerKey          = "MF_CLIENTS_SERVER_KEY"
+	envJaegerURL          = "MF_CLIENTS_JAEGER_URL"
+	envPassRegex          = "MF_USERS_PASS_REGEX"
+	envEmailHost          = "MF_EMAIL_HOST"
+	envEmailPort          = "MF_EMAIL_PORT"
+	envEmailUsername      = "MF_EMAIL_USERNAME"
+	envEmailPassword      = "MF_EMAIL_PASSWORD"
+	envEmailFromAddress   = "MF_EMAIL_FROM_ADDRESS"
+	envEmailFromName      = "MF_EMAIL_FROM_NAME"
+	envEmailTemplate      = "MF_EMAIL_TEMPLATE"
+	envTokenResetEndpoint = "MF_TOKEN_RESET_ENDPOINT"
 )
 
 type config struct {
@@ -107,15 +116,13 @@ type config struct {
 	adminIdentity string
 	adminSecret   string
 	dbConfig      postgres.Config
+	emailConf     email.Config
+	resetURL      string
 	httpPort      string
 	grpcPort      string
 	serverCert    string
 	serverKey     string
 	jaegerURL     string
-	keysTLS       bool
-	keysCACerts   string
-	keysURL       string
-	keysTimeout   time.Duration
 	passRegex     *regexp.Regexp
 }
 
@@ -165,19 +172,19 @@ func main() {
 }
 
 func loadConfig() config {
-	keysTimeout, err := time.ParseDuration(mainflux.Env(envKeysTimeout, defKeysTimeout))
-	if err != nil {
-		log.Fatalf("Invalid %s value: %s", envKeysTimeout, err.Error())
-	}
-
-	tls, err := strconv.ParseBool(mainflux.Env(envKeysTLS, defKeysTLS))
-	if err != nil {
-		log.Fatalf("Invalid value passed for %s\n", envKeysTLS)
-	}
-
 	passRegex, err := regexp.Compile(mainflux.Env(envPassRegex, defPassRegex))
 	if err != nil {
 		log.Fatalf("Invalid password validation rules %s\n", envPassRegex)
+	}
+
+	emailConf := email.Config{
+		FromAddress: mainflux.Env(envEmailFromAddress, defEmailFromAddress),
+		FromName:    mainflux.Env(envEmailFromName, defEmailFromName),
+		Host:        mainflux.Env(envEmailHost, defEmailHost),
+		Port:        mainflux.Env(envEmailPort, defEmailPort),
+		Username:    mainflux.Env(envEmailUsername, defEmailUsername),
+		Password:    mainflux.Env(envEmailPassword, defEmailPassword),
+		Template:    mainflux.Env(envEmailTemplate, defEmailTemplate),
 	}
 
 	dbConfig := postgres.Config{
@@ -198,15 +205,13 @@ func loadConfig() config {
 		adminIdentity: mainflux.Env(envAdminIdentity, defAdminIdentity),
 		adminSecret:   mainflux.Env(envAdminSecret, defAdminSecret),
 		dbConfig:      dbConfig,
+		emailConf:     emailConf,
+		resetURL:      mainflux.Env(envTokenResetEndpoint, defTokenResetEndpoint),
 		httpPort:      mainflux.Env(envHTTPPort, defHTTPPort),
 		grpcPort:      mainflux.Env(envGRPCPort, defGRPCPort),
 		serverCert:    mainflux.Env(envServerCert, defServerCert),
 		serverKey:     mainflux.Env(envServerKey, defServerKey),
 		jaegerURL:     mainflux.Env(envJaegerURL, defJaegerURL),
-		keysTLS:       tls,
-		keysCACerts:   mainflux.Env(envKeysCACerts, defKeysCACerts),
-		keysURL:       mainflux.Env(envKeysURL, defKeysURL),
-		keysTimeout:   keysTimeout,
 		passRegex:     passRegex,
 	}
 
@@ -253,7 +258,12 @@ func newService(db *sqlx.DB, tracer trace.Tracer, c config, logger logger.Logger
 	tokenizer := jwt.NewTokenRepo([]byte(c.secretKey))
 	tokenizer = jwt.NewTokenRepoMiddleware(tokenizer, tracer)
 
-	csvc := clients.NewService(cRepo, pRepo, tokenizer, hsr, idp, c.passRegex)
+	emailer, err := emailer.New(c.resetURL, &c.emailConf)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to configure e-mailing util: %s", err.Error()))
+	}
+
+	csvc := clients.NewService(cRepo, pRepo, tokenizer, emailer, hsr, idp, c.passRegex)
 	gsvc := groups.NewService(gRepo, pRepo, tokenizer, idp)
 	psvc := policies.NewService(pRepo, tokenizer, idp)
 

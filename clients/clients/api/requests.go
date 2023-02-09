@@ -6,9 +6,7 @@ import (
 	"github.com/mainflux/mainflux/internal/apiutil"
 )
 
-const (
-	maxLimitSize = 100
-)
+const maxLimitSize = 100
 
 type createClientReq struct {
 	client clients.Client

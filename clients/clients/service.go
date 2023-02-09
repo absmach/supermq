@@ -58,12 +58,13 @@ type service struct {
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(c ClientRepository, p policies.PolicyRepository, t jwt.TokenRepository, h Hasher, idp mainflux.IDProvider, pr *regexp.Regexp) Service {
+func NewService(c ClientRepository, p policies.PolicyRepository, t jwt.TokenRepository, e Emailer, h Hasher, idp mainflux.IDProvider, pr *regexp.Regexp) Service {
 	return service{
 		clients:    c,
 		policies:   p,
 		hasher:     h,
 		tokens:     t,
+		email:      e,
 		idProvider: idp,
 		passRegex:  pr,
 	}
