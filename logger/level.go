@@ -9,8 +9,10 @@ import (
 )
 
 const (
+	// Fatal level is used when logging errors that causes the program to exit.
+	Fatal Level = iota + 1
 	// Error level is used when logging errors.
-	Error Level = iota + 1
+	Error
 	// Warn level is used when logging warnings.
 	Warn
 	// Info level is used when logging info data.
