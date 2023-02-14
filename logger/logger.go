@@ -23,7 +23,7 @@ type Logger interface {
 	// Error logs any object in JSON format on error level.
 	Error(string)
 	// Fatal logs any object in JSON format on error level and calls os.Exit(1).
-	Fatal(string)
+	Fatal(string) func()
 }
 
 var _ Logger = (*logger)(nil)
@@ -69,9 +69,10 @@ func (l logger) Error(msg string) {
 	}
 }
 
-func (l logger) Fatal(msg string) {
-	defer os.Exit(1)
+func (l logger) Fatal(msg string) func() {
 	if Fatal.isAllowed(l.level) {
 		l.kitLogger.Log("level", Fatal.String(), "message", msg)
 	}
+
+	return func() { os.Exit(1) }
 }
