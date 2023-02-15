@@ -10,7 +10,6 @@ import (
 	"os"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/mainflux/mainflux/clients/policies"
 	"github.com/mainflux/mainflux/consumers"
 	"github.com/mainflux/mainflux/consumers/notifiers"
 	"github.com/mainflux/mainflux/consumers/notifiers/api"
@@ -28,6 +27,7 @@ import (
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	"github.com/mainflux/mainflux/pkg/ulid"
+	"github.com/mainflux/mainflux/users/policies"
 	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/sync/errgroup"
 )

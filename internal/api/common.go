@@ -7,11 +7,11 @@ import (
 	"net/http"
 
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/clients/clients"
-	"github.com/mainflux/mainflux/clients/groups"
-	"github.com/mainflux/mainflux/clients/postgres"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/users/clients"
+	"github.com/mainflux/mainflux/users/groups"
+	"github.com/mainflux/mainflux/users/postgres"
 )
 
 const (

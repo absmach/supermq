@@ -8,10 +8,10 @@ import (
 	"fmt"
 
 	"github.com/mainflux/mainflux"
-	"github.com/mainflux/mainflux/clients/policies"
 	"github.com/mainflux/mainflux/consumers"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
+	"github.com/mainflux/mainflux/users/policies"
 )
 
 var (

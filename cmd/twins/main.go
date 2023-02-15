@@ -10,7 +10,6 @@ import (
 	"os"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/mainflux/mainflux/clients/policies"
 	"github.com/mainflux/mainflux/internal"
 	authClient "github.com/mainflux/mainflux/internal/clients/grpc/auth"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
@@ -30,6 +29,7 @@ import (
 	twmongodb "github.com/mainflux/mainflux/twins/mongodb"
 	rediscache "github.com/mainflux/mainflux/twins/redis"
 	"github.com/mainflux/mainflux/twins/tracing"
+	"github.com/mainflux/mainflux/users/policies"
 	opentracing "github.com/opentracing/opentracing-go"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/sync/errgroup"

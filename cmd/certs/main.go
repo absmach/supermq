@@ -14,12 +14,12 @@ import (
 	"github.com/mainflux/mainflux/certs/api"
 	vault "github.com/mainflux/mainflux/certs/pki"
 	certsPg "github.com/mainflux/mainflux/certs/postgres"
-	"github.com/mainflux/mainflux/clients/policies"
 	"github.com/mainflux/mainflux/internal"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
 	"github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/users/policies"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/jmoiron/sqlx"

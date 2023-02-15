@@ -12,8 +12,6 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux"
-	authmocks "github.com/mainflux/mainflux/clients/clients/mocks"
-	"github.com/mainflux/mainflux/clients/policies"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -21,6 +19,8 @@ import (
 	"github.com/mainflux/mainflux/readers/api"
 	"github.com/mainflux/mainflux/readers/mocks"
 	"github.com/mainflux/mainflux/things"
+	authmocks "github.com/mainflux/mainflux/users/clients/mocks"
+	"github.com/mainflux/mainflux/users/policies"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

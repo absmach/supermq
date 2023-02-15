@@ -8,11 +8,10 @@ networks:
     driver: bridge
 
 volumes:
-  mainflux-clients-db-volume:
   mainflux-users-db-volume:
   mainflux-things-db-volume:
   mainflux-keto-db-volume:
-  mainflux-client-redis-volume:
+  mainflux-users-redis-volume:
   mainflux-es-redis-volume:
   mainflux-mqtt-broker-volume:
 
@@ -41,7 +40,7 @@ services:
       - .env
     depends_on:
       - things
-      - clients
+      - users
       - mqtt-adapter
       - http-adapter
       - ws-adapter
@@ -75,7 +74,7 @@ services:
     container_name: mainflux-things
     depends_on:
       - things-db
-      - clients
+      - users
     restart: on-failure
     environment:
       MF_THINGS_LOG_LEVEL: ${MF_THINGS_LOG_LEVEL}
@@ -84,13 +83,12 @@ services:
       MF_THINGS_DB_USER: ${MF_THINGS_DB_USER}
       MF_THINGS_DB_PASS: ${MF_THINGS_DB_PASS}
       MF_THINGS_DB: ${MF_THINGS_DB}
-      MF_THINGS_CACHE_URL: client-redis:${MF_REDIS_TCP_PORT}
+      MF_THINGS_CACHE_URL: users-redis:${MF_REDIS_TCP_PORT}
       MF_THINGS_ES_URL: es-redis:${MF_REDIS_TCP_PORT}
       MF_THINGS_HTTP_PORT: ${MF_THINGS_HTTP_PORT}
       MF_THINGS_AUTH_HTTP_PORT: ${MF_THINGS_AUTH_HTTP_PORT}
       MF_THINGS_AUTH_GRPC_PORT: ${MF_THINGS_AUTH_GRPC_PORT}
-      MF_AUTH_GRPC_URL: ${MF_CLIENTS_GRPC_URL}
-      MF_CLIENTS_GRPC_URL: ${MF_CLIENTS_GRPC_URL}
+      MF_AUTH_GRPC_URL: ${MF_USERS_GRPC_URL}
       MF_AUTH_GRPC_TIMEOUT: ${MF_AUTH_GRPC_TIMEOUT}
     ports:
       - ${MF_THINGS_HTTP_PORT}:${MF_THINGS_HTTP_PORT}
@@ -99,46 +97,60 @@ services:
     networks:
       - mainflux-base-net
 
-  clients-db:
+  users-db:
     image: postgres:15.1-alpine
-    container_name: mainflux-clients-db
+    container_name: mainflux-users-db
     restart: on-failure
     environment:
-      POSTGRES_USER: ${MF_CLIENTS_DB_USER}
-      POSTGRES_PASSWORD: ${MF_CLIENTS_DB_PASS}
-      POSTGRES_DB: ${MF_CLIENTS_DB}
+      POSTGRES_USER: ${MF_USERS_DB_USER}
+      POSTGRES_PASSWORD: ${MF_USERS_DB_PASS}
+      POSTGRES_DB: ${MF_USERS_DB}
     networks:
       - mainflux-base-net
     volumes:
-      - mainflux-clients-db-volume:/var/lib/postgresql/data
+      - mainflux-users-db-volume:/var/lib/postgresql/data
 
-  clients:
-    image: mainflux/clients:${MF_RELEASE_TAG}
-    container_name: mainflux-clients
+  users-redis:
+    image: redis:6.2.2-alpine
+    container_name: mainflux-users-redis
+    restart: on-failure
+    networks:
+      - mainflux-base-net
+    volumes:
+      - mainflux-users-redis-volume:/data
+
+  users:
+    image: mainflux/users:${MF_RELEASE_TAG}
+    container_name: mainflux-users
     depends_on:
-      - clients-db
+      - users-db
     restart: on-failure
     environment:
-      MF_CLIENTS_LOG_LEVEL: ${MF_CLIENTS_LOG_LEVEL}
-      MF_CLIENTS_DB_HOST: clients-db
-      MF_CLIENTS_DB_PORT: ${MF_CLIENTS_DB_PORT}
-      MF_CLIENTS_DB_USER: ${MF_CLIENTS_DB_USER}
-      MF_CLIENTS_DB_PASS: ${MF_CLIENTS_DB_PASS}
-      MF_CLIENTS_DB: ${MF_CLIENTS_DB}
-      MF_CLIENTS_DB_SSL_MODE: ${MF_CLIENTS_DB_SSL_MODE}
-      MF_CLIENTS_DB_SSL_CERT: ${MF_CLIENTS_DB_SSL_CERT}
-      MF_CLIENTS_DB_SSL_KEY: ${MF_CLIENTS_DB_SSL_KEY}
-      MF_CLIENTS_DB_SSL_ROOT_CERT: ${MF_CLIENTS_DB_SSL_ROOT_CERT}
-      MF_CLIENTS_HTTP_PORT: ${MF_CLIENTS_HTTP_PORT}
-      MF_CLIENTS_GRPC_PORT: ${MF_CLIENTS_GRPC_PORT}
-      MF_CLIENTS_JAEGER_URL: ${MF_CLIENTS_JAEGER_URL}
-      MF_CLIENTS_GRPC_URL: ${MF_CLIENTS_GRPC_URL}
-      MF_CLIENTS_GRPC_TIMEOUT: ${MF_CLIENTS_GRPC_TIMEOUT}
-      MF_CLIENTS_SERVER_CERT: ${MF_CLIENTS_SERVER_CERT}
-      MF_CLIENTS_SERVER_KEY: ${MF_CLIENTS_SERVER_KEY}
+      MF_USERS_LOG_LEVEL: ${MF_USERS_LOG_LEVEL}
+      MF_USERS_DB_HOST: users-db
+      MF_USERS_DB_PORT: ${MF_USERS_DB_PORT}
+      MF_USERS_DB_USER: ${MF_USERS_DB_USER}
+      MF_USERS_DB_PASS: ${MF_USERS_DB_PASS}
+      MF_USERS_DB: ${MF_USERS_DB}
+      MF_USERS_DB_SSL_MODE: ${MF_USERS_DB_SSL_MODE}
+      MF_USERS_DB_SSL_CERT: ${MF_USERS_DB_SSL_CERT}
+      MF_USERS_DB_SSL_KEY: ${MF_USERS_DB_SSL_KEY}
+      MF_USERS_DB_SSL_ROOT_CERT: ${MF_USERS_DB_SSL_ROOT_CERT}
+      MF_USERS_HTTP_PORT: ${MF_USERS_HTTP_PORT}
+      MF_USERS_GRPC_PORT: ${MF_USERS_GRPC_PORT}
+      MF_USERS_JAEGER_URL: ${MF_USERS_JAEGER_URL}
+      MF_USERS_GRPC_URL: ${MF_USERS_GRPC_URL}
+      MF_USERS_GRPC_TIMEOUT: ${MF_USERS_GRPC_TIMEOUT}
+      MF_USERS_SERVER_CERT: ${MF_USERS_SERVER_CERT}
+      MF_USERS_SERVER_KEY: ${MF_USERS_SERVER_KEY}
+      MF_USERS_SECRET_KEY: ${MF_USERS_SECRET_KEY}
+      MF_USERS_ADMIN_EMAIL: ${MF_USERS_ADMIN_EMAIL}
+      MF_USERS_ADMIN_PASSWORD: ${MF_USERS_ADMIN_PASSWORD}
+      MF_USERS_RESET_PWD_TEMPLATE: ${MF_USERS_RESET_PWD_TEMPLATE}
+      MF_USERS_PASS_REGEX: ${MF_USERS_PASS_REGEX}
     ports:
-      - ${MF_CLIENTS_HTTP_PORT}:${MF_CLIENTS_HTTP_PORT}
-      - ${MF_CLIENTS_GRPC_PORT}:${MF_CLIENTS_GRPC_PORT}
+      - ${MF_USERS_HTTP_PORT}:${MF_USERS_HTTP_PORT}
+      - ${MF_USERS_GRPC_PORT}:${MF_USERS_GRPC_PORT}
     networks:
       - mainflux-base-net
   
@@ -187,7 +199,7 @@ services:
       MF_JAEGER_URL: ${MF_JAEGER_URL}
       MF_THINGS_AUTH_GRPC_URL: ${MF_THINGS_AUTH_GRPC_URL}
       MF_THINGS_AUTH_GRPC_TIMEOUT: ${MF_THINGS_AUTH_GRPC_TIMEOUT}
-      MF_AUTH_CACHE_URL: auth-redis:${MF_REDIS_TCP_PORT}
+      MF_AUTH_CACHE_URL: users-redis:${MF_REDIS_TCP_PORT}
     networks:
       - mainflux-base-net
 

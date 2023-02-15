@@ -22,7 +22,7 @@ import (
 	"github.com/mainflux/mainflux/bootstrap"
 	bsapi "github.com/mainflux/mainflux/bootstrap/api"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
-	"github.com/mainflux/mainflux/clients/policies"
+	"github.com/mainflux/mainflux/users/policies"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"

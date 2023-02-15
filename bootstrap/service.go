@@ -10,7 +10,7 @@ import (
 	"encoding/hex"
 	"time"
 
-	"github.com/mainflux/mainflux/clients/policies"
+	"github.com/mainflux/mainflux/users/policies"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
 )

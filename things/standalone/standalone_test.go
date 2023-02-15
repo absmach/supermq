@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/mainflux/mainflux/clients/policies"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/standalone"
+	"github.com/mainflux/mainflux/users/policies"
 	"github.com/stretchr/testify/assert"
 )
 

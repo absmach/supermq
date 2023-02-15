@@ -11,7 +11,6 @@ import (
 	bootstrapPg "github.com/mainflux/mainflux/bootstrap/postgres"
 	rediscons "github.com/mainflux/mainflux/bootstrap/redis/consumer"
 	redisprod "github.com/mainflux/mainflux/bootstrap/redis/producer"
-	"github.com/mainflux/mainflux/clients/policies"
 	"github.com/mainflux/mainflux/internal"
 	authClient "github.com/mainflux/mainflux/internal/clients/grpc/auth"
 	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
@@ -20,6 +19,7 @@ import (
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
 	"github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/users/policies"
 	"golang.org/x/sync/errgroup"
 
 	r "github.com/go-redis/redis/v8"

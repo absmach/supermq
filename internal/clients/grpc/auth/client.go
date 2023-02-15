@@ -1,11 +1,11 @@
 package auth
 
 import (
-	"github.com/mainflux/mainflux/clients/policies"
-	authapi "github.com/mainflux/mainflux/clients/policies/api/grpc"
 	grpcClient "github.com/mainflux/mainflux/internal/clients/grpc"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/users/policies"
+	authapi "github.com/mainflux/mainflux/users/policies/api/grpc"
 )
 
 const envAuthGrpcPrefix = "MF_AUTH_GRPC_"

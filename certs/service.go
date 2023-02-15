@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux/certs/pki"
-	"github.com/mainflux/mainflux/clients/policies"
+	"github.com/mainflux/mainflux/users/policies"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
 )

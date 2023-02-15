@@ -6,8 +6,8 @@ package things
 import (
 	"context"
 
-	"github.com/mainflux/mainflux/clients/policies"
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/users/policies"
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/pkg/ulid"

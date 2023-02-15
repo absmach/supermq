@@ -20,7 +20,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/mainflux/mainflux/bootstrap"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
-	"github.com/mainflux/mainflux/clients/policies"
+	"github.com/mainflux/mainflux/users/policies"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"

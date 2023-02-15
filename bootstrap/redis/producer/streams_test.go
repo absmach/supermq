@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/mainflux/mainflux/clients/policies"
+	"github.com/mainflux/mainflux/users/policies"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/opentracing/opentracing-go/mocktracer"

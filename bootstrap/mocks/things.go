@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/mainflux/mainflux/clients/policies"
+	"github.com/mainflux/mainflux/users/policies"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things"
 )
