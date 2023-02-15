@@ -140,12 +140,6 @@ func main() {
 		return hsc.Start()
 	})
 	g.Go(func() error {
-		return hsg.Start()
-	})
-	g.Go(func() error {
-		return hsp.Start()
-	})
-	g.Go(func() error {
 		return gs.Start()
 	})
 
