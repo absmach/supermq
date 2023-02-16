@@ -3,9 +3,9 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"math"
 	"net/http"
 
+	"github.com/gofrs/uuid"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -47,8 +47,25 @@ const (
 	ContentType = "application/json"
 
 	// MaxNameSize limits name size to prevent making them too complex.
-	MaxNameSize = math.MaxUint8
+	MaxLimitSize = 100
+	MaxNameSize  = 1024
+	NameOrder    = "name"
+	IDOrder      = "id"
+	AscDir       = "asc"
+	DescDir      = "desc"
+	ReadPolicy   = "read"
+	WritePolicy  = "write"
+	DeletePolicy = "delete"
 )
+
+func ValidateUUID(extID string) (err error) {
+	id, err := uuid.FromString(extID)
+	if id.String() != extID || err != nil {
+		return apiutil.ErrInvalidIDFormat
+	}
+
+	return nil
+}
 
 // EncodeResponse encodes successful response.
 func EncodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
