@@ -3,8 +3,8 @@ package mocks
 import (
 	"context"
 
-	"github.com/mainflux/mainflux/clients/groups"
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/things/groups"
 	"github.com/stretchr/testify/mock"
 )
 

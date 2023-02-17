@@ -22,7 +22,7 @@ func LoggingMiddleware(svc clients.Service, logger log.Logger) clients.Service {
 
 func (lm *loggingMiddleware) CreateThings(ctx context.Context, token string, clients ...clients.Client) (cs []clients.Client, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method create_thing of identity %s with token %s took %s to complete", cs[0].Credentials.Identity, token, time.Since(begin))
+		message := fmt.Sprintf("Method create_thing %d things with token %s took %s to complete", len(cs), token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return

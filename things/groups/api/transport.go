@@ -121,7 +121,7 @@ func decodeListMembershipRequest(_ context.Context, r *http.Request) (interface{
 	}
 	req := listMembershipReq{
 		token:    apiutil.ExtractBearerToken(r),
-		clientID: bone.GetValue(r, "clientID"),
+		clientID: bone.GetValue(r, "id"),
 		GroupsPage: groups.GroupsPage{
 			Level: level,
 			ID:    parentID,

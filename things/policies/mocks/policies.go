@@ -3,7 +3,7 @@ package mocks
 import (
 	"context"
 
-	"github.com/mainflux/mainflux/clients/policies"
+	"github.com/mainflux/mainflux/things/policies"
 	"github.com/stretchr/testify/mock"
 )
 

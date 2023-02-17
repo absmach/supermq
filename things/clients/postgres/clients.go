@@ -32,11 +32,11 @@ func NewClientRepo(db postgres.Database) clients.ClientRepository {
 func (repo clientRepo) Save(ctx context.Context, c clients.Client) (clients.Client, error) {
 	q := `INSERT INTO clients (id, name, tags, owner, identity, secret, metadata, created_at, updated_at, status)
         VALUES (:id, :name, :tags, :owner, :identity, :secret, :metadata, :created_at, :updated_at, :status)
-        RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`
+        RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`
 	if c.Owner == "" {
 		q = `INSERT INTO clients (id, name, tags, identity, secret, metadata, created_at, updated_at, status)
         VALUES (:id, :name, :tags, :identity, :secret, :metadata, :created_at, :updated_at, :status)
-        RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`
+        RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`
 	}
 	dbc, err := toDBClient(c)
 	if err != nil {
@@ -104,7 +104,7 @@ func (repo clientRepo) RetrieveAll(ctx context.Context, pm clients.Page) (client
 		return clients.ClientsPage{}, errors.Wrap(errors.ErrViewEntity, err)
 	}
 
-	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags, c.identity, c.metadata, COALESCE(c.owner, '') AS owner, c.status, c.created_at
+	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags, c.identity, c.secret, c.metadata, COALESCE(c.owner, '') AS owner, c.status, c.created_at
 						FROM clients c %s ORDER BY c.created_at LIMIT :limit OFFSET :offset;`, query)
 
 	dbPage, err := toDBClientsPage(pm)
@@ -156,7 +156,7 @@ func (repo clientRepo) Members(ctx context.Context, groupID string, pm clients.P
 		return clients.MembersPage{}, err
 	}
 
-	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags, c.metadata, c.identity, c.status, c.created_at FROM clients c
+	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags, c.metadata, c.identity, c.secret, c.status, c.created_at FROM clients c
 		INNER JOIN policies ON c.id=policies.subject %s AND policies.object = :group_id
 		AND EXISTS (SELECT 1 FROM policies WHERE policies.subject = '%s' AND '%s'=ANY(actions))
 	  	ORDER BY c.created_at LIMIT :limit OFFSET :offset;`, emq, pm.Subject, pm.Action)
@@ -217,7 +217,7 @@ func (repo clientRepo) Update(ctx context.Context, client clients.Client) (clien
 	}
 	q := fmt.Sprintf(`UPDATE clients SET %s updated_at = :updated_at
         WHERE id = :id AND status = %d
-        RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`,
+        RETURNING id, name, tags, identity, secret,  metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`,
 		upq, clients.EnabledStatus)
 
 	dbu, err := toDBClient(client)
@@ -245,7 +245,7 @@ func (repo clientRepo) Update(ctx context.Context, client clients.Client) (clien
 func (repo clientRepo) UpdateTags(ctx context.Context, client clients.Client) (clients.Client, error) {
 	q := fmt.Sprintf(`UPDATE clients SET tags = :tags, updated_at = :updated_at
         WHERE id = :id AND status = %d
-        RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`,
+        RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`,
 		clients.EnabledStatus)
 
 	dbu, err := toDBClient(client)
@@ -272,7 +272,7 @@ func (repo clientRepo) UpdateTags(ctx context.Context, client clients.Client) (c
 func (repo clientRepo) UpdateIdentity(ctx context.Context, client clients.Client) (clients.Client, error) {
 	q := fmt.Sprintf(`UPDATE clients SET identity = :identity, updated_at = :updated_at
         WHERE id = :id AND status = %d
-        RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`,
+        RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`,
 		clients.EnabledStatus)
 
 	dbc, err := toDBClient(client)
@@ -298,8 +298,8 @@ func (repo clientRepo) UpdateIdentity(ctx context.Context, client clients.Client
 
 func (repo clientRepo) UpdateSecret(ctx context.Context, client clients.Client) (clients.Client, error) {
 	q := fmt.Sprintf(`UPDATE clients SET secret = :secret, updated_at = :updated_at
-        WHERE owner = :owner AND status = %d
-        RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`,
+        WHERE owner = :owner AND id = :id AND status = %d
+        RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`,
 		clients.EnabledStatus)
 
 	dbc, err := toDBClient(client)
@@ -326,7 +326,7 @@ func (repo clientRepo) UpdateSecret(ctx context.Context, client clients.Client) 
 func (repo clientRepo) UpdateOwner(ctx context.Context, client clients.Client) (clients.Client, error) {
 	q := fmt.Sprintf(`UPDATE clients SET owner = :owner, updated_at = :updated_at
         WHERE id = :id AND status = %d
-        RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`,
+        RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`,
 		clients.EnabledStatus)
 
 	dbc, err := toDBClient(client)
@@ -352,7 +352,7 @@ func (repo clientRepo) UpdateOwner(ctx context.Context, client clients.Client) (
 
 func (repo clientRepo) ChangeStatus(ctx context.Context, id string, status clients.Status) (clients.Client, error) {
 	q := fmt.Sprintf(`UPDATE clients SET status = %d WHERE id = :id
-        RETURNING id, name, tags, identity, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`, status)
+        RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`, status)
 
 	dbc := dbClient{
 		ID: id,

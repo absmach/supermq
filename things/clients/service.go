@@ -224,7 +224,7 @@ func (svc service) UpdateClientSecret(ctx context.Context, token, id, key string
 		return Client{}, err
 	}
 	if dbClient.Owner != res.GetEmail() {
-		return Client{}, err
+		return Client{}, errors.New("not owner")
 	}
 	dbClient.Credentials.Secret = key
 	return svc.clients.UpdateSecret(ctx, dbClient)

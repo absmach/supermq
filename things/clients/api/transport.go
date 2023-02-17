@@ -282,7 +282,7 @@ func decodeCreateClientsReq(_ context.Context, r *http.Request) (interface{}, er
 		return nil, errors.ErrUnsupportedContentType
 	}
 
-	var c createClientsReq
+	c := createClientsReq{token: apiutil.ExtractBearerToken(r)}
 	if err := json.NewDecoder(r.Body).Decode(&c.Clients); err != nil {
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
