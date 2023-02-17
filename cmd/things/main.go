@@ -1,6 +1,3 @@
-// Copyright (c) Mainflux
-// SPDX-License-Identifier: Apache-2.0
-
 package main
 
 import (
@@ -8,13 +5,13 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/go-zoo/bone"
 	"github.com/jmoiron/sqlx"
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal"
 	authClient "github.com/mainflux/mainflux/internal/clients/grpc/auth"
-	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
 	redisClient "github.com/mainflux/mainflux/internal/clients/redis"
 	"github.com/mainflux/mainflux/internal/env"
@@ -23,21 +20,37 @@ import (
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/uuid"
-	"github.com/mainflux/mainflux/things"
-	"github.com/mainflux/mainflux/things/api"
-	authgrpcapi "github.com/mainflux/mainflux/things/api/auth/grpc"
-	authhttpapi "github.com/mainflux/mainflux/things/api/auth/http"
-	thhttpapi "github.com/mainflux/mainflux/things/api/things/http"
+	"github.com/mainflux/mainflux/things/clients"
+	capi "github.com/mainflux/mainflux/things/clients/api"
+	cpostgres "github.com/mainflux/mainflux/things/clients/postgres"
+	redisthcache "github.com/mainflux/mainflux/things/clients/redis"
+	ctracing "github.com/mainflux/mainflux/things/clients/tracing"
+	"github.com/mainflux/mainflux/things/groups"
+	gapi "github.com/mainflux/mainflux/things/groups/api"
+	gpostgres "github.com/mainflux/mainflux/things/groups/postgres"
+	gtracing "github.com/mainflux/mainflux/things/groups/tracing"
+	tpolicies "github.com/mainflux/mainflux/things/policies"
+	grpcapi "github.com/mainflux/mainflux/things/policies/api/grpc"
+	papi "github.com/mainflux/mainflux/things/policies/api/http"
+	ppostgres "github.com/mainflux/mainflux/things/policies/postgres"
+	redischcache "github.com/mainflux/mainflux/things/policies/redis"
+	ppracing "github.com/mainflux/mainflux/things/policies/tracing"
+	"github.com/mainflux/mainflux/things/postgres"
 	thingsPg "github.com/mainflux/mainflux/things/postgres"
-	rediscache "github.com/mainflux/mainflux/things/redis"
-	"github.com/mainflux/mainflux/things/tracing"
-	"github.com/mainflux/mainflux/users/policies"
-	opentracing "github.com/opentracing/opentracing-go"
+	upolicies "github.com/mainflux/mainflux/users/policies"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/jaeger"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
+	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 )
 
 const (
+	stopWaitTime       = 5 * time.Second
 	svcName            = "things"
 	envPrefix          = "MF_THINGS_"
 	envPrefixCache     = "MF_THINGS_CACHE_"
@@ -55,7 +68,7 @@ type config struct {
 	LogLevel        string `env:"MF_THINGS_LOG_LEVEL"          envDefault:"info"`
 	StandaloneEmail string `env:"MF_THINGS_STANDALONE_EMAIL"   envDefault:""`
 	StandaloneToken string `env:"MF_THINGS_STANDALONE_TOKEN"   envDefault:""`
-	JaegerURL       string `env:"MF_JAEGER_URL"                envDefault:"localhost:6831"`
+	JaegerURL       string `env:"MF_JAEGER_URL"                envDefault:"http://jaeger:14268/api/traces"`
 }
 
 func main() {
@@ -72,7 +85,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to init logger: %s", err)
 	}
-
 	// Create new database for things
 	dbConfig := pgClient.Config{Name: defDB}
 	db, err := pgClient.SetupWithConfig(envPrefix, *thingsPg.Migration(), dbConfig)
@@ -81,19 +93,23 @@ func main() {
 	}
 	defer db.Close()
 
+	tp, err := initJaeger(svcName, cfg.JaegerURL)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to init Jaeger: %s", err))
+	}
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			logger.Error(fmt.Sprintf("Error shutting down tracer provider: %v", err))
+		}
+	}()
+	tracer := otel.Tracer(svcName)
+
 	// Setup new redis cache client
 	cacheClient, err := redisClient.Setup(envPrefixCache)
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
 	defer cacheClient.Close()
-
-	// Setup new redis event store client
-	esClient, err := redisClient.Setup(envPrefixES)
-	if err != nil {
-		logger.Fatal(err.Error())
-	}
-	defer esClient.Close()
 
 	// Setup new auth grpc client
 	auth, authHandler, err := authClient.Setup(envPrefix, cfg.JaegerURL)
@@ -103,48 +119,29 @@ func main() {
 	defer authHandler.Close()
 	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
-	// Create tracer for things database
-	dbTracer, dbCloser, err := jaegerClient.NewTracer("things_db", cfg.JaegerURL)
-	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
-	}
-	defer dbCloser.Close()
+	csvc, gsvc, psvc := newService(db, auth, cacheClient, tracer, cfg, logger)
 
-	// Create tracer for things cache
-	cacheTracer, cacheCloser, err := jaegerClient.NewTracer("things_cache", cfg.JaegerURL)
-	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
-	}
-	defer cacheCloser.Close()
-
-	// Create new service
-	svc := newService(auth, dbTracer, cacheTracer, db, cacheClient, esClient, logger)
-
-	// Create tracer for HTTP handler things
-	thingsTracer, thingsCloser, err := jaegerClient.NewTracer("things", cfg.JaegerURL)
-	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
-	}
-	defer thingsCloser.Close()
-
-	// Create new HTTP server
+	mux := bone.New()
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to load %s gRPC server configuration : %s", svcName, err))
 	}
-	hs1 := httpserver.New(ctx, cancel, "thing-http", httpServerConfig, thhttpapi.MakeHandler(thingsTracer, svc, logger), logger)
+	hsc := httpserver.New(ctx, cancel, "things-clients", httpServerConfig, capi.MakeClientsHandler(csvc, mux, logger), logger)
 
-	// Create new things auth http server
-	authHttpServerConfig := server.Config{Port: defSvcAuthHttpPort}
-	if err := env.Parse(&authHttpServerConfig, env.Options{Prefix: envPrefixAuthHttp, AltPrefix: envPrefix}); err != nil {
-		logger.Fatal(fmt.Sprintf("failed to load %s gRPC server configuration : %s", svcName, err))
+	httpServerConfig = server.Config{Port: defSvcHttpPort}
+	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
+		log.Fatalf("failed to load %s gRPC server configuration : %s", svcName, err.Error())
 	}
-	hs2 := httpserver.New(ctx, cancel, "auth-http", authHttpServerConfig, authhttpapi.MakeHandler(thingsTracer, svc, logger), logger)
+	hsg := httpserver.New(ctx, cancel, "things-groups", httpServerConfig, gapi.MakeGroupsHandler(gsvc, mux, logger), logger)
 
-	// Create new grpc server
+	httpServerConfig = server.Config{Port: defSvcHttpPort}
+	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
+		log.Fatalf("failed to load %s gRPC server configuration : %s", svcName, err.Error())
+	}
+	hsp := httpserver.New(ctx, cancel, "things-policies", httpServerConfig, papi.MakePolicyHandler(csvc, psvc, mux, logger), logger)
+
 	registerThingsServiceServer := func(srv *grpc.Server) {
-		mainflux.RegisterThingsServiceServer(srv, authgrpcapi.NewServer(thingsTracer, svc))
-
+		tpolicies.RegisterThingsServiceServer(srv, grpcapi.NewServer(csvc, gsvc, psvc))
 	}
 	grpcServerConfig := server.Config{Port: defSvcAuthGrpcPort}
 	if err := env.Parse(&grpcServerConfig, env.Options{Prefix: envPrefixAuthGrpc, AltPrefix: envPrefix}); err != nil {
@@ -154,45 +151,71 @@ func main() {
 
 	//Start all servers
 	g.Go(func() error {
-		return hs1.Start()
-	})
-	g.Go(func() error {
-		return hs2.Start()
+		return hsp.Start()
 	})
 	g.Go(func() error {
 		return gs.Start()
 	})
 
 	g.Go(func() error {
-		return server.StopSignalHandler(ctx, cancel, logger, svcName, hs1, hs2, gs)
+		return server.StopSignalHandler(ctx, cancel, logger, svcName, hsc, hsg, hsp, gs)
 	})
 
 	if err := g.Wait(); err != nil {
-		logger.Error(fmt.Sprintf("Things service terminated: %s", err))
+		logger.Error(fmt.Sprintf("%s service terminated: %s", svcName, err))
 	}
 }
 
-func newService(auth policies.AuthServiceClient, dbTracer opentracing.Tracer, cacheTracer opentracing.Tracer, db *sqlx.DB, cacheClient *redis.Client, esClient *redis.Client, logger mflog.Logger) things.Service {
-	database := thingsPg.NewDatabase(db)
+func initJaeger(svcName, url string) (*tracesdk.TracerProvider, error) {
+	exporter, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(url)))
+	if err != nil {
+		return nil, err
+	}
+	tp := tracesdk.NewTracerProvider(
+		tracesdk.WithSampler(tracesdk.AlwaysSample()),
+		tracesdk.WithBatcher(exporter),
+		tracesdk.WithSpanProcessor(tracesdk.NewBatchSpanProcessor(exporter)),
+		tracesdk.WithResource(resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceNameKey.String(svcName),
+		)),
+	)
+	otel.SetTracerProvider(tp)
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 
-	thingsRepo := thingsPg.NewThingRepository(database)
-	thingsRepo = tracing.ThingRepositoryMiddleware(dbTracer, thingsRepo)
+	return tp, nil
+}
 
-	channelsRepo := thingsPg.NewChannelRepository(database)
-	channelsRepo = tracing.ChannelRepositoryMiddleware(dbTracer, channelsRepo)
+func newService(db *sqlx.DB, auth upolicies.AuthServiceClient, cacheClient *redis.Client, tracer trace.Tracer, c config, logger logger.Logger) (clients.Service, groups.GroupService, tpolicies.PolicyService) {
+	database := postgres.NewDatabase(db, tracer)
+	cRepo := cpostgres.NewClientRepo(database)
+	gRepo := gpostgres.NewGroupRepo(database)
+	pRepo := ppostgres.NewPolicyRepo(database)
 
-	chanCache := rediscache.NewChannelCache(cacheClient)
-	chanCache = tracing.ChannelCacheMiddleware(cacheTracer, chanCache)
+	idp := uuid.New()
 
-	thingCache := rediscache.NewThingCache(cacheClient)
-	thingCache = tracing.ThingCacheMiddleware(cacheTracer, thingCache)
-	idProvider := uuid.New()
+	chanCache := redischcache.NewChannelCache(cacheClient)
 
-	svc := things.New(auth, thingsRepo, channelsRepo, chanCache, thingCache, idProvider)
-	svc = rediscache.NewEventStoreMiddleware(svc, esClient)
-	svc = api.LoggingMiddleware(svc, logger)
+	thingCache := redisthcache.NewThingCache(cacheClient)
+
+	csvc := clients.NewService(auth, cRepo, thingCache, pRepo, idp)
+	gsvc := groups.NewService(auth, gRepo, pRepo, idp)
+	psvc := tpolicies.NewService(auth, pRepo, thingCache, chanCache, idp)
+
+	csvc = ctracing.TracingMiddleware(csvc, tracer)
+	csvc = capi.LoggingMiddleware(csvc, logger)
 	counter, latency := internal.MakeMetrics(svcName, "api")
-	svc = api.MetricsMiddleware(svc, counter, latency)
+	csvc = capi.MetricsMiddleware(csvc, counter, latency)
 
-	return svc
+	gsvc = gtracing.TracingMiddleware(gsvc, tracer)
+	gsvc = gapi.LoggingMiddleware(gsvc, logger)
+	counter, latency = internal.MakeMetrics(fmt.Sprintf("%s_groups", svcName), "api")
+	gsvc = gapi.MetricsMiddleware(gsvc, counter, latency)
+
+	psvc = ppracing.TracingMiddleware(psvc, tracer)
+	psvc = papi.LoggingMiddleware(psvc, logger)
+	counter, latency = internal.MakeMetrics(fmt.Sprintf("%s_policies", svcName), "api")
+	psvc = papi.MetricsMiddleware(psvc, counter, latency)
+
+	return csvc, gsvc, psvc
 }

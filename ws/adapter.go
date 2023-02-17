@@ -10,9 +10,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
+	"github.com/mainflux/mainflux/things/policies"
 )
 
 const (
@@ -60,12 +60,12 @@ type Service interface {
 var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
-	auth   mainflux.ThingsServiceClient
+	auth   policies.ThingsServiceClient
 	pubsub messaging.PubSub
 }
 
 // New instantiates the WS adapter implementation
-func New(auth mainflux.ThingsServiceClient, pubsub messaging.PubSub) Service {
+func New(auth policies.ThingsServiceClient, pubsub messaging.PubSub) Service {
 	return &adapterService{
 		auth:   auth,
 		pubsub: pubsub,
@@ -136,8 +136,8 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, thingKey, chanID, su
 	return svc.pubsub.Unsubscribe(thid.GetValue(), subject)
 }
 
-func (svc *adapterService) authorize(ctx context.Context, thingKey, chanID string) (*mainflux.ThingID, error) {
-	ar := &mainflux.AccessByKeyReq{
+func (svc *adapterService) authorize(ctx context.Context, thingKey, chanID string) (*policies.ThingID, error) {
+	ar := &policies.AccessByKeyReq{
 		Token:  thingKey,
 		ChanID: chanID,
 	}

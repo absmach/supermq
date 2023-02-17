@@ -19,6 +19,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux/bootstrap"
 	bsapi "github.com/mainflux/mainflux/bootstrap/api"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
@@ -27,9 +28,9 @@ import (
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
-	"github.com/mainflux/mainflux/things"
-	thingsapi "github.com/mainflux/mainflux/things/api/things/http"
-	"github.com/opentracing/opentracing-go/mocktracer"
+	"github.com/mainflux/mainflux/things/clients"
+	thingsapi "github.com/mainflux/mainflux/things/clients/api"
+	"github.com/mainflux/mainflux/things/groups"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -173,11 +174,11 @@ func newService(auth policies.AuthServiceClient, url string) bootstrap.Service {
 	return bootstrap.New(auth, things, sdk, encKey)
 }
 
-func generateChannels() map[string]things.Channel {
-	channels := make(map[string]things.Channel, channelsNum)
+func generateChannels() map[string]groups.Group {
+	channels := make(map[string]groups.Group, channelsNum)
 	for i := 0; i < channelsNum; i++ {
 		id := strconv.Itoa(i + 1)
-		channels[id] = things.Channel{
+		channels[id] = groups.Group{
 			ID:       id,
 			Owner:    email,
 			Metadata: metadata,
@@ -186,13 +187,14 @@ func generateChannels() map[string]things.Channel {
 	return channels
 }
 
-func newThingsService(auth policies.AuthServiceClient) things.Service {
-	return mocks.NewThingsService(map[string]things.Thing{}, generateChannels(), auth)
+func newThingsService(auth policies.AuthServiceClient) clients.Service {
+	return mocks.NewThingsService(map[string]clients.Client{}, generateChannels(), auth)
 }
 
-func newThingsServer(svc things.Service) *httptest.Server {
+func newThingsServer(svc clients.Service) *httptest.Server {
 	logger := logger.NewMock()
-	mux := thingsapi.MakeHandler(mocktracer.New(), svc, logger)
+	mux := bone.New()
+	thingsapi.MakeClientsHandler(svc, mux, logger)
 	return httptest.NewServer(mux)
 }
 

@@ -57,7 +57,7 @@ func TestReadConfig(t *testing.T) {
 		CACert:     "ca_cert",
 		MFKey:      "mf_key",
 		MFChannels: []bootstrap.Channel{
-			bootstrap.Channel{
+			{
 				ID:       "mf_id",
 				Name:     "mf_name",
 				Metadata: map[string]interface{}{"key": "value}"},

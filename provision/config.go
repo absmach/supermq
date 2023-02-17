@@ -8,7 +8,8 @@ import (
 	"io/ioutil"
 
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/things"
+	"github.com/mainflux/mainflux/things/clients"
+	"github.com/mainflux/mainflux/things/groups"
 	"github.com/pelletier/go-toml"
 )
 
@@ -59,8 +60,8 @@ type Config struct {
 	File      string           `toml:"file"`
 	Server    ServiceConf      `toml:"server" mapstructure:"server"`
 	Bootstrap Bootstrap        `toml:"bootstrap" mapstructure:"bootstrap"`
-	Things    []things.Thing   `toml:"things" mapstructure:"things"`
-	Channels  []things.Channel `toml:"channels" mapstructure:"channels"`
+	Things    []clients.Client `toml:"things" mapstructure:"things"`
+	Channels  []groups.Group   `toml:"channels" mapstructure:"channels"`
 	Cert      Cert             `toml:"cert" mapstructure:"cert"`
 }
 

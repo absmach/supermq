@@ -9,7 +9,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/mainflux/mainflux"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/http/mocks"
@@ -17,13 +16,14 @@ import (
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
+	"github.com/mainflux/mainflux/things/policies"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 )
 
 const eof = "EOF"
 
-func newMessageService(cc mainflux.ThingsServiceClient) adapter.Service {
+func newMessageService(cc policies.ThingsServiceClient) adapter.Service {
 	pub := mocks.NewPublisher()
 	return adapter.New(pub, cc)
 }

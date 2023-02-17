@@ -16,6 +16,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-zoo/bone"
 	bsmocks "github.com/mainflux/mainflux/bootstrap/mocks"
 	"github.com/mainflux/mainflux/certs"
 	"github.com/mainflux/mainflux/certs/mocks"
@@ -23,10 +24,10 @@ import (
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
-	"github.com/mainflux/mainflux/things"
-	httpapi "github.com/mainflux/mainflux/things/api/things/http"
-	thmocks "github.com/mainflux/mainflux/things/mocks"
-	"github.com/opentracing/opentracing-go/mocktracer"
+	"github.com/mainflux/mainflux/things/clients"
+	httpapi "github.com/mainflux/mainflux/things/clients/api"
+	thmocks "github.com/mainflux/mainflux/things/clients/mocks"
+	"github.com/mainflux/mainflux/things/groups"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -77,18 +78,20 @@ func newService(tokens map[string]string) (certs.Service, error) {
 	return certs.New(auth, repo, sdk, pki), nil
 }
 
-func newThingsService(auth policies.AuthServiceClient) things.Service {
-	ths := make(map[string]things.Thing, thingsNum)
+func newThingsService(auth policies.AuthServiceClient) clients.Service {
+	ths := make(map[string]clients.Client, thingsNum)
 	for i := 0; i < thingsNum; i++ {
 		id := strconv.Itoa(i + 1)
-		ths[id] = things.Thing{
-			ID:    id,
-			Key:   thingKey,
+		ths[id] = clients.Client{
+			ID: id,
+			Credentials: clients.Credentials{
+				Secret: thingKey,
+			},
 			Owner: email,
 		}
 	}
 
-	return bsmocks.NewThingsService(ths, map[string]things.Channel{}, auth)
+	return bsmocks.NewThingsService(ths, map[string]groups.Group{}, auth)
 }
 
 func TestIssueCert(t *testing.T) {
@@ -364,9 +367,10 @@ func TestViewCert(t *testing.T) {
 	}
 }
 
-func newThingsServer(svc things.Service) *httptest.Server {
+func newThingsServer(svc clients.Service) *httptest.Server {
 	logger := logger.NewMock()
-	mux := httpapi.MakeHandler(mocktracer.New(), svc, logger)
+	mux := bone.New()
+	httpapi.MakeClientsHandler(svc, mux, logger)
 	return httptest.NewServer(mux)
 }
 

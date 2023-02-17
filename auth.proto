@@ -9,13 +9,6 @@ import "google/protobuf/empty.proto";
 
 option go_package = "./mainflux";
 
-service ThingsService {
-    rpc CanAccessByKey(AccessByKeyReq) returns (ThingID) {}
-    rpc IsChannelOwner(ChannelOwnerReq) returns (google.protobuf.Empty) {}
-    rpc CanAccessByID(AccessByIDReq) returns (google.protobuf.Empty) {}
-    rpc Identify(Token) returns (ThingID) {}
-}
-
 service AuthService {
     rpc Issue(IssueReq) returns (Token) {}
     rpc Identify(Token) returns (UserIdentity) {}
@@ -25,29 +18,6 @@ service AuthService {
     rpc ListPolicies(ListPoliciesReq) returns (ListPoliciesRes) {}
     rpc Assign(Assignment) returns(google.protobuf.Empty) {}
     rpc Members(MembersReq) returns (MembersRes) {}
-}
-
-message AccessByKeyReq {
-    string token  = 1;
-    string chanID = 2;
-}
-
-message ChannelOwnerReq {
-    string owner  = 1;
-    string chanID = 2;
-}
-
-message ThingID {
-    string value = 1;
-}
-
-message ChannelID {
-    string value = 1;
-}
-
-message AccessByIDReq {
-    string thingID = 1;
-    string chanID  = 2;
 }
 
 // If a token is not carrying any information itself, the type

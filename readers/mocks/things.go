@@ -8,23 +8,23 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/things/policies"
 	"google.golang.org/grpc"
 )
 
-var _ mainflux.ThingsServiceClient = (*thingsServiceMock)(nil)
+var _ policies.ThingsServiceClient = (*thingsServiceMock)(nil)
 
 type thingsServiceMock struct {
 	channels map[string]string
 }
 
 // NewThingsService returns mock implementation of things service
-func NewThingsService(channels map[string]string) mainflux.ThingsServiceClient {
+func NewThingsService(channels map[string]string) policies.ThingsServiceClient {
 	return &thingsServiceMock{channels}
 }
 
-func (svc thingsServiceMock) CanAccessByKey(ctx context.Context, in *mainflux.AccessByKeyReq, opts ...grpc.CallOption) (*mainflux.ThingID, error) {
+func (svc thingsServiceMock) CanAccessByKey(ctx context.Context, in *policies.AccessByKeyReq, opts ...grpc.CallOption) (*policies.ThingID, error) {
 	token := in.GetToken()
 	if token == "invalid" {
 		return nil, errors.ErrAuthentication
@@ -38,14 +38,14 @@ func (svc thingsServiceMock) CanAccessByKey(ctx context.Context, in *mainflux.Ac
 		return nil, errors.ErrAuthorization
 	}
 
-	return &mainflux.ThingID{Value: token}, nil
+	return &policies.ThingID{Value: token}, nil
 }
 
-func (svc thingsServiceMock) CanAccessByID(context.Context, *mainflux.AccessByIDReq, ...grpc.CallOption) (*empty.Empty, error) {
+func (svc thingsServiceMock) CanAccessByID(context.Context, *policies.AccessByIDReq, ...grpc.CallOption) (*empty.Empty, error) {
 	panic("not implemented")
 }
 
-func (svc thingsServiceMock) IsChannelOwner(ctx context.Context, in *mainflux.ChannelOwnerReq, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (svc thingsServiceMock) IsChannelOwner(ctx context.Context, in *policies.ChannelOwnerReq, opts ...grpc.CallOption) (*empty.Empty, error) {
 	if id, ok := svc.channels[in.GetOwner()]; ok {
 		if id == in.ChanID {
 			return nil, nil
@@ -54,6 +54,6 @@ func (svc thingsServiceMock) IsChannelOwner(ctx context.Context, in *mainflux.Ch
 	return nil, errors.ErrAuthorization
 }
 
-func (svc thingsServiceMock) Identify(context.Context, *mainflux.Token, ...grpc.CallOption) (*mainflux.ThingID, error) {
+func (svc thingsServiceMock) Identify(context.Context, *policies.Token, ...grpc.CallOption) (*policies.ThingID, error) {
 	panic("not implemented")
 }

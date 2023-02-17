@@ -22,7 +22,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	"github.com/mainflux/mainflux/pkg/uuid"
-	localusers "github.com/mainflux/mainflux/things/standalone"
+	localusers "github.com/mainflux/mainflux/things/clients/standalone"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/api"
 	twapi "github.com/mainflux/mainflux/twins/api/http"

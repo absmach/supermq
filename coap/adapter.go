@@ -12,8 +12,8 @@ import (
 	"sync"
 
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/things/policies"
 
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/pkg/messaging"
 )
 
@@ -39,13 +39,13 @@ var _ Service = (*adapterService)(nil)
 
 // Observers is a map of maps,
 type adapterService struct {
-	auth    mainflux.ThingsServiceClient
+	auth    policies.ThingsServiceClient
 	pubsub  messaging.PubSub
 	obsLock sync.Mutex
 }
 
 // New instantiates the CoAP adapter implementation.
-func New(auth mainflux.ThingsServiceClient, pubsub messaging.PubSub) Service {
+func New(auth policies.ThingsServiceClient, pubsub messaging.PubSub) Service {
 	as := &adapterService{
 		auth:    auth,
 		pubsub:  pubsub,
@@ -56,7 +56,7 @@ func New(auth mainflux.ThingsServiceClient, pubsub messaging.PubSub) Service {
 }
 
 func (svc *adapterService) Publish(ctx context.Context, key string, msg *messaging.Message) error {
-	ar := &mainflux.AccessByKeyReq{
+	ar := &policies.AccessByKeyReq{
 		Token:  key,
 		ChanID: msg.Channel,
 	}
@@ -70,7 +70,7 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 }
 
 func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic string, c Client) error {
-	ar := &mainflux.AccessByKeyReq{
+	ar := &policies.AccessByKeyReq{
 		Token:  key,
 		ChanID: chanID,
 	}
@@ -85,7 +85,7 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic 
 }
 
 func (svc *adapterService) Unsubscribe(ctx context.Context, key, chanID, subtopic, token string) error {
-	ar := &mainflux.AccessByKeyReq{
+	ar := &policies.AccessByKeyReq{
 		Token:  key,
 		ChanID: chanID,
 	}

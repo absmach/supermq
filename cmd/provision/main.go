@@ -17,7 +17,8 @@ import (
 	mfSDK "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/provision"
 	"github.com/mainflux/mainflux/provision/api"
-	"github.com/mainflux/mainflux/things"
+	"github.com/mainflux/mainflux/things/clients"
+	"github.com/mainflux/mainflux/things/groups"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -196,7 +197,7 @@ func loadConfig() (provision.Config, error) {
 		},
 
 		// This is default conf for provision if there is no config file
-		Channels: []things.Channel{
+		Channels: []groups.Group{
 			{
 				Name:     "control-channel",
 				Metadata: map[string]interface{}{"type": "control"},
@@ -205,7 +206,7 @@ func loadConfig() (provision.Config, error) {
 				Metadata: map[string]interface{}{"type": "data"},
 			},
 		},
-		Things: []things.Thing{
+		Things: []clients.Client{
 			{
 				Name:     "thing",
 				Metadata: map[string]interface{}{"external_id": "xxxxxx"},

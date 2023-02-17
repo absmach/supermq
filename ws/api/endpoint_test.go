@@ -11,9 +11,9 @@ import (
 	"testing"
 
 	"github.com/gorilla/websocket"
-	"github.com/mainflux/mainflux"
 
 	log "github.com/mainflux/mainflux/logger"
+	"github.com/mainflux/mainflux/things/policies"
 	"github.com/mainflux/mainflux/ws"
 
 	httpmock "github.com/mainflux/mainflux/http/mocks"
@@ -31,7 +31,7 @@ const (
 
 var msg = []byte(`[{"n":"current","t":-1,"v":1.6}]`)
 
-func newService(cc mainflux.ThingsServiceClient) (ws.Service, mocks.MockPubSub) {
+func newService(cc policies.ThingsServiceClient) (ws.Service, mocks.MockPubSub) {
 	pubsub := mocks.NewPubSub()
 	return ws.New(cc, pubsub), pubsub
 }

@@ -8,8 +8,8 @@ package http
 import (
 	"context"
 
-	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/pkg/messaging"
+	"github.com/mainflux/mainflux/things/policies"
 )
 
 // Service specifies coap service API.
@@ -22,11 +22,11 @@ var _ Service = (*adapterService)(nil)
 
 type adapterService struct {
 	publisher messaging.Publisher
-	things    mainflux.ThingsServiceClient
+	things    policies.ThingsServiceClient
 }
 
 // New instantiates the HTTP adapter implementation.
-func New(publisher messaging.Publisher, things mainflux.ThingsServiceClient) Service {
+func New(publisher messaging.Publisher, things policies.ThingsServiceClient) Service {
 	return &adapterService{
 		publisher: publisher,
 		things:    things,
@@ -34,7 +34,7 @@ func New(publisher messaging.Publisher, things mainflux.ThingsServiceClient) Ser
 }
 
 func (as *adapterService) Publish(ctx context.Context, token string, msg *messaging.Message) error {
-	ar := &mainflux.AccessByKeyReq{
+	ar := &policies.AccessByKeyReq{
 		Token:  token,
 		ChanID: msg.Channel,
 	}

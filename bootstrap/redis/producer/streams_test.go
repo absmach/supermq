@@ -14,16 +14,17 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/mainflux/mainflux/users/policies"
+	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/opentracing/opentracing-go/mocktracer"
 
 	"github.com/mainflux/mainflux/bootstrap"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
 	"github.com/mainflux/mainflux/bootstrap/redis/producer"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
-	"github.com/mainflux/mainflux/things"
-	httpapi "github.com/mainflux/mainflux/things/api/things/http"
+	"github.com/mainflux/mainflux/things/clients"
+	httpapi "github.com/mainflux/mainflux/things/clients/api"
+	"github.com/mainflux/mainflux/things/groups"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -73,23 +74,24 @@ func newService(auth policies.AuthServiceClient, url string) bootstrap.Service {
 	return bootstrap.New(auth, configs, sdk, encKey)
 }
 
-func newThingsService(auth policies.AuthServiceClient) things.Service {
-	channels := make(map[string]things.Channel, channelsNum)
+func newThingsService(auth policies.AuthServiceClient) clients.Service {
+	channels := make(map[string]groups.Group, channelsNum)
 	for i := 0; i < channelsNum; i++ {
 		id := strconv.Itoa(i + 1)
-		channels[id] = things.Channel{
+		channels[id] = groups.Group{
 			ID:       id,
 			Owner:    email,
 			Metadata: map[string]interface{}{"meta": "data"},
 		}
 	}
 
-	return mocks.NewThingsService(map[string]things.Thing{}, channels, auth)
+	return mocks.NewThingsService(map[string]clients.Client{}, channels, auth)
 }
 
-func newThingsServer(svc things.Service) *httptest.Server {
+func newThingsServer(svc clients.Service) *httptest.Server {
 	logger := logger.NewMock()
-	mux := httpapi.MakeHandler(mocktracer.New(), svc, logger)
+	mux := bone.New()
+	httpapi.MakeClientsHandler(svc, mux, logger)
 	return httptest.NewServer(mux)
 }
 func TestAdd(t *testing.T) {

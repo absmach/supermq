@@ -9,9 +9,9 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/users/clients"
-	"github.com/mainflux/mainflux/users/groups"
-	"github.com/mainflux/mainflux/users/postgres"
+	uclients "github.com/mainflux/mainflux/users/clients"
+	ugroups "github.com/mainflux/mainflux/users/groups"
+	upostgres "github.com/mainflux/mainflux/users/postgres"
 )
 
 const (
@@ -38,8 +38,8 @@ const (
 	DefLimit         = 10
 	DefLevel         = 0
 	DefStatus        = "enabled"
-	DefClientStatus  = clients.Enabled
-	DefGroupStatus   = groups.Enabled
+	DefClientStatus  = uclients.Enabled
+	DefGroupStatus   = ugroups.Enabled
 	SharedVisibility = "shared"
 	MyVisibility     = "mine"
 	AllVisibility    = "all"
@@ -103,7 +103,7 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusConflict)
 	case errors.Contains(err, errors.ErrAuthorization):
 		w.WriteHeader(http.StatusForbidden)
-	case errors.Contains(err, postgres.ErrMemberAlreadyAssigned):
+	case errors.Contains(err, upostgres.ErrMemberAlreadyAssigned):
 		w.WriteHeader(http.StatusConflict)
 	case errors.Contains(err, errors.ErrUnsupportedContentType):
 		w.WriteHeader(http.StatusUnsupportedMediaType)

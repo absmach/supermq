@@ -9,7 +9,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/mainflux/mainflux"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/internal"
@@ -21,6 +20,7 @@ import (
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
+	"github.com/mainflux/mainflux/things/policies"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -91,7 +91,7 @@ func main() {
 	}
 }
 
-func newService(pub messaging.Publisher, tc mainflux.ThingsServiceClient, logger mflog.Logger) adapter.Service {
+func newService(pub messaging.Publisher, tc policies.ThingsServiceClient, logger logger.Logger) adapter.Service {
 	svc := adapter.New(pub, tc)
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics(svcName, "api")
