@@ -54,6 +54,6 @@ func (svc thingsServiceMock) IsChannelOwner(ctx context.Context, in *policies.Ch
 	return nil, errors.ErrAuthorization
 }
 
-func (svc thingsServiceMock) Identify(context.Context, *policies.Token, ...grpc.CallOption) (*policies.ThingID, error) {
+func (svc thingsServiceMock) Identify(context.Context, *policies.Key, ...grpc.CallOption) (*policies.ThingID, error) {
 	panic("not implemented")
 }

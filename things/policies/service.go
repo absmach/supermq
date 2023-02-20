@@ -7,6 +7,7 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
+	upolicies "github.com/mainflux/mainflux/users/policies"
 )
 
 // Possible token types are access and refresh tokens.
@@ -20,7 +21,7 @@ type Service interface {
 }
 
 type service struct {
-	auth         mainflux.AuthServiceClient
+	auth         upolicies.AuthServiceClient
 	policies     PolicyRepository
 	channelCache ChannelCache
 	thingCache   ThingCache
@@ -28,7 +29,7 @@ type service struct {
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(auth mainflux.AuthServiceClient, p PolicyRepository, tcache ThingCache, ccache ChannelCache, idp mainflux.IDProvider) Service {
+func NewService(auth upolicies.AuthServiceClient, p PolicyRepository, tcache ThingCache, ccache ChannelCache, idp mainflux.IDProvider) Service {
 	return service{
 		auth:         auth,
 		policies:     p,
@@ -42,7 +43,7 @@ func (svc service) Authorize(ctx context.Context, entityType string, p Policy) e
 	if err := p.Validate(); err != nil {
 		return err
 	}
-	res, err := svc.auth.Identify(ctx, &mainflux.Token{Value: p.Subject})
+	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: p.Subject})
 	if err != nil {
 		return errors.Wrap(errors.ErrAuthentication, err)
 	}
@@ -50,7 +51,7 @@ func (svc service) Authorize(ctx context.Context, entityType string, p Policy) e
 	return svc.policies.Evaluate(ctx, entityType, p)
 }
 func (svc service) UpdatePolicy(ctx context.Context, token string, p Policy) error {
-	res, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token})
+	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
 	if err != nil {
 		return errors.Wrap(errors.ErrAuthentication, err)
 	}
@@ -66,7 +67,7 @@ func (svc service) UpdatePolicy(ctx context.Context, token string, p Policy) err
 }
 
 func (svc service) AddPolicy(ctx context.Context, token string, p Policy) error {
-	res, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token})
+	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
 	if err != nil {
 		return errors.Wrap(errors.ErrAuthentication, err)
 	}
@@ -83,7 +84,7 @@ func (svc service) AddPolicy(ctx context.Context, token string, p Policy) error 
 }
 
 func (svc service) DeletePolicy(ctx context.Context, token string, p Policy) error {
-	if _, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token}); err != nil {
+	if _, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token}); err != nil {
 		return errors.Wrap(errors.ErrAuthentication, err)
 	}
 
@@ -95,7 +96,7 @@ func (svc service) DeletePolicy(ctx context.Context, token string, p Policy) err
 }
 
 func (svc service) ListPolicy(ctx context.Context, token string, pm Page) (PolicyPage, error) {
-	if _, err := svc.auth.Identify(ctx, &mainflux.Token{Value: token}); err != nil {
+	if _, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token}); err != nil {
 		return PolicyPage{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
 	if err := pm.Validate(); err != nil {

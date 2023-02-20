@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/mainflux/mainflux/users/policies"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/clients"
 	"github.com/mainflux/mainflux/things/groups"
+	"github.com/mainflux/mainflux/users/policies"
 )
 
 var _ clients.Service = (*mainfluxThings)(nil)
@@ -214,7 +214,7 @@ func (svc *mainfluxThings) Identify(context.Context, string) (string, error) {
 	panic("not implemented")
 }
 
-func (svc *mainfluxThings) ShareThing(ctx context.Context, token, thingID string, actions []string, userID string) error {
+func (svc *mainfluxThings) ShareThing(ctx context.Context, token, thingID string, actions []string, userIDs []string) error {
 	panic("not implemented")
 }
 

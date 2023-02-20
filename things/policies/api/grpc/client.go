@@ -103,7 +103,7 @@ func (client grpcClient) IsChannelOwner(ctx context.Context, req *policies.Chann
 	return &empty.Empty{}, er.err
 }
 
-func (client grpcClient) Identify(ctx context.Context, req *policies.Token, _ ...grpc.CallOption) (*policies.ThingID, error) {
+func (client grpcClient) Identify(ctx context.Context, req *policies.Key, _ ...grpc.CallOption) (*policies.ThingID, error) {
 	ctx, cancel := context.WithTimeout(ctx, client.timeout)
 	defer cancel()
 
@@ -133,7 +133,7 @@ func encodeIsChannelOwner(_ context.Context, grpcReq interface{}) (interface{}, 
 
 func encodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(identifyReq)
-	return &policies.Token{Value: req.key}, nil
+	return &policies.Key{Value: req.key}, nil
 }
 
 func decodeIdentityResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {

@@ -12,7 +12,6 @@ import (
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
-	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/readers"
 	rpolicies "github.com/mainflux/mainflux/things/policies"
@@ -49,9 +48,7 @@ var (
 )
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc readers.MessageRepository, tc rpolicies.ThingsServiceClient, ac upolicies.AuthServiceClient, svcName string, logger logger.Logger) http.Handler {
-	thingsAuth = tc
-	usersAuth = ac
+func MakeHandler(svc readers.MessageRepository, tc rpolicies.ThingsServiceClient, ac upolicies.AuthServiceClient, svcName string) http.Handler {
 
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),

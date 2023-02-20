@@ -78,7 +78,7 @@ func (gs *grpcServer) IsChannelOwner(ctx context.Context, req *policies.ChannelO
 	return res.(*empty.Empty), nil
 }
 
-func (gs *grpcServer) Identify(ctx context.Context, req *policies.Token) (*policies.ThingID, error) {
+func (gs *grpcServer) Identify(ctx context.Context, req *policies.Key) (*policies.ThingID, error) {
 	_, res, err := gs.identify.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, encodeError(err)
@@ -103,7 +103,7 @@ func decodeIsChannelOwnerRequest(_ context.Context, grpcReq interface{}) (interf
 }
 
 func decodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*policies.Token)
+	req := grpcReq.(*policies.Key)
 	return identifyReq{key: req.GetValue()}, nil
 }
 

@@ -38,7 +38,7 @@ func (c client) Identify(ctx context.Context, thingKey string) (string, error) {
 	tkey := keyPrefix + ":" + thingKey
 	thingID, err := c.redisClient.Get(ctx, tkey).Result()
 	if err != nil {
-		t := &policies.Token{
+		t := &policies.Key{
 			Value: string(thingKey),
 		}
 

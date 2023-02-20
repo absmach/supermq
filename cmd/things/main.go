@@ -68,7 +68,7 @@ type config struct {
 	LogLevel        string `env:"MF_THINGS_LOG_LEVEL"          envDefault:"info"`
 	StandaloneEmail string `env:"MF_THINGS_STANDALONE_EMAIL"   envDefault:""`
 	StandaloneToken string `env:"MF_THINGS_STANDALONE_TOKEN"   envDefault:""`
-	JaegerURL       string `env:"MF_JAEGER_URL"                envDefault:"http://localhost:6831"`
+	JaegerURL       string `env:"MF_JAEGER_URL"                envDefault:"localhost:6831"`
 }
 
 func main() {
@@ -198,7 +198,7 @@ func newService(db *sqlx.DB, auth upolicies.AuthServiceClient, cacheClient *redi
 
 	thingCache := redisthcache.NewThingCache(cacheClient)
 
-	csvc := clients.NewService(auth, cRepo, thingCache, pRepo, idp)
+	csvc := clients.NewService(auth, cRepo, thingCache, idp)
 	gsvc := groups.NewService(auth, gRepo, pRepo, idp)
 	psvc := tpolicies.NewService(auth, pRepo, thingCache, chanCache, idp)
 

@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package policies;
+
+option go_package = "./policies";
+
+import "google/protobuf/empty.proto";
+
+
+service ThingsService {
+    rpc CanAccessByKey(AccessByKeyReq) returns (ThingID) {}
+    rpc IsChannelOwner(ChannelOwnerReq) returns (google.protobuf.Empty) {}
+    rpc CanAccessByID(AccessByIDReq) returns (google.protobuf.Empty) {}
+    rpc Identify(Key) returns (ThingID) {}
+}
+
+message AccessByKeyReq {
+    string token  = 1;
+    string chanID = 2;
+}
+
+message ChannelOwnerReq {
+    string owner  = 1;
+    string chanID = 2;
+}
+
+message ThingID {
+    string value = 1;
+}
+
+message ChannelID {
+    string value = 1;
+}
+
+message AccessByIDReq {
+    string thingID = 1;
+    string chanID  = 2;
+}
+
+// If a key is not carrying any information itself, the type
+// field can be used to determine how to validate the token.
+// Also, different tokens can be encoded in different ways.
+message Key {
+    string value = 1;
+}

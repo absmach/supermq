@@ -58,6 +58,6 @@ func (tc thingsClient) IsChannelOwner(context.Context, *policies.ChannelOwnerReq
 	panic("not implemented")
 }
 
-func (tc thingsClient) Identify(ctx context.Context, req *policies.Token, opts ...grpc.CallOption) (*policies.ThingID, error) {
+func (tc thingsClient) Identify(ctx context.Context, req *policies.Key, opts ...grpc.CallOption) (*policies.ThingID, error) {
 	panic("not implemented")
 }
