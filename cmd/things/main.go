@@ -68,7 +68,7 @@ type config struct {
 	LogLevel        string `env:"MF_THINGS_LOG_LEVEL"          envDefault:"info"`
 	StandaloneEmail string `env:"MF_THINGS_STANDALONE_EMAIL"   envDefault:""`
 	StandaloneToken string `env:"MF_THINGS_STANDALONE_TOKEN"   envDefault:""`
-	JaegerURL       string `env:"MF_JAEGER_URL"                envDefault:"http://jaeger:14268/api/traces"`
+	JaegerURL       string `env:"MF_JAEGER_URL"                envDefault:"http://localhost:6831"`
 }
 
 func main() {
