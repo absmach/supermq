@@ -106,6 +106,7 @@ func (svc service) ViewClient(ctx context.Context, token string, id string) (Cli
 }
 
 func (svc service) ListClients(ctx context.Context, token string, pm Page) (ClientsPage, error) {
+	fmt.Println(pm)
 	res, err := svc.auth.Identify(ctx, &policies.Token{Value: token})
 	if err != nil {
 		return ClientsPage{}, errors.Wrap(errors.ErrAuthentication, err)
@@ -114,7 +115,7 @@ func (svc service) ListClients(ctx context.Context, token string, pm Page) (Clie
 	subject := res.GetId()
 	// If the user is admin, fetch all things from database.
 	if err := svc.authorize(ctx, token, thingsObjectKey, listRelationKey); err == nil {
-		pm.FetchSharedThings = true
+		pm.OwnerID = ""
 		page, err := svc.clients.RetrieveAll(ctx, pm)
 		if err != nil {
 			return ClientsPage{}, err
@@ -181,24 +182,19 @@ func (svc service) UpdateClientTags(ctx context.Context, token string, cli Clien
 }
 
 func (svc service) UpdateClientSecret(ctx context.Context, token, id, key string) (Client, error) {
-	res, err := svc.auth.Identify(ctx, &policies.Token{Value: token})
-	if err != nil {
-		return Client{}, errors.Wrap(errors.ErrAuthentication, err)
-	}
-
 	if err := svc.authorize(ctx, token, id, updateRelationKey); err != nil {
 		return Client{}, err
 	}
 
-	dbClient, err := svc.clients.RetrieveByID(ctx, id)
-	if err != nil {
-		return Client{}, err
+	client := Client{
+		ID: id,
+		Credentials: Credentials{
+			Secret: key,
+		},
+		UpdatedAt: time.Now(),
 	}
-	if dbClient.Owner != res.GetEmail() {
-		return Client{}, errors.New("not owner")
-	}
-	dbClient.Credentials.Secret = key
-	return svc.clients.UpdateSecret(ctx, dbClient)
+
+	return svc.clients.UpdateSecret(ctx, client)
 }
 
 func (svc service) UpdateClientOwner(ctx context.Context, token string, cli Client) (Client, error) {
@@ -216,11 +212,7 @@ func (svc service) UpdateClientOwner(ctx context.Context, token string, cli Clie
 }
 
 func (svc service) EnableClient(ctx context.Context, token, id string) (Client, error) {
-	if err := svc.authorize(ctx, token, id, updateRelationKey); err != nil {
-		return Client{}, err
-	}
-
-	client, err := svc.changeClientStatus(ctx, id, EnabledStatus)
+	client, err := svc.changeClientStatus(ctx, token, id, EnabledStatus)
 	if err != nil {
 		return Client{}, errors.Wrap(ErrEnableClient, err)
 	}
@@ -229,11 +221,7 @@ func (svc service) EnableClient(ctx context.Context, token, id string) (Client, 
 }
 
 func (svc service) DisableClient(ctx context.Context, token, id string) (Client, error) {
-	if err := svc.authorize(ctx, token, id, deleteRelationKey); err != nil {
-		return Client{}, err
-	}
-
-	client, err := svc.changeClientStatus(ctx, id, DisabledStatus)
+	client, err := svc.changeClientStatus(ctx, token, id, DisabledStatus)
 	if err != nil {
 		return Client{}, errors.Wrap(ErrDisableClient, err)
 	}
@@ -269,7 +257,10 @@ func (svc service) Identify(ctx context.Context, key string) (string, error) {
 	return client.ID, nil
 }
 
-func (svc service) changeClientStatus(ctx context.Context, id string, status Status) (Client, error) {
+func (svc service) changeClientStatus(ctx context.Context, token, id string, status Status) (Client, error) {
+	if err := svc.authorize(ctx, token, id, deleteRelationKey); err != nil {
+		return Client{}, err
+	}
 	dbClient, err := svc.clients.RetrieveByID(ctx, id)
 	if err != nil {
 		return Client{}, err
@@ -302,7 +293,7 @@ func (svc service) ShareThing(ctx context.Context, token, thingID string, action
 	if err := svc.authorize(ctx, token, thingID, updateRelationKey); err != nil {
 		return err
 	}
-	return svc.claimOwnership(ctx, thingID, actions, userIDs)
+	return svc.claimOwnership(ctx, thingID, AdminRelationKey, userIDs)
 }
 
 func (svc service) claimOwnership(ctx context.Context, objectID string, actions, userIDs []string) error {
