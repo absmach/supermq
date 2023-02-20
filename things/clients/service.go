@@ -123,23 +123,6 @@ func (svc service) ListClients(ctx context.Context, token string, pm Page) (Clie
 		return page, err
 	}
 
-	// If the user is not admin, check 'shared' parameter from page metadata.
-	// If user provides 'shared' key, fetch things from policies. Otherwise,
-	// fetch things from the database based on thing's 'owner' field.
-	if pm.FetchSharedThings {
-		req := &policies.ListPoliciesReq{Act: "read", Sub: subject}
-		lpr, err := svc.auth.ListPolicies(ctx, req)
-		if err != nil {
-			return ClientsPage{}, err
-		}
-
-		var page ClientsPage
-		for _, thingID := range lpr.Objects {
-			page.Clients = append(page.Clients, Client{ID: thingID})
-		}
-		return page, nil
-	}
-
 	if pm.SharedBy == MyKey {
 		pm.SharedBy = subject
 	}
