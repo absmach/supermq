@@ -156,10 +156,6 @@ func (trm *thingRepositoryMock) RetrieveAll(_ context.Context, pm clients.Page) 
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
-	if pm.Limit < 0 {
-		return clients.ClientsPage{}, nil
-	}
-
 	first := uint64(pm.Offset) + 1
 	last := first + uint64(pm.Limit)
 
@@ -167,7 +163,7 @@ func (trm *thingRepositoryMock) RetrieveAll(_ context.Context, pm clients.Page) 
 
 	// This obscure way to examine map keys is enforced by the key structure
 	// itself (see mocks/commons.go).
-	prefix := fmt.Sprintf("%s-")
+	prefix := "owner"
 	for k, v := range trm.things {
 		id := parseID(v.ID)
 		if strings.HasPrefix(k, prefix) && id >= first && id < last {

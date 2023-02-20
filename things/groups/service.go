@@ -18,8 +18,6 @@ const (
 	updateRelationKey = "c_update"
 	listRelationKey   = "c_list"
 	deleteRelationKey = "c_delete"
-	readRelationKey   = "m_read"
-	writeRelationKey  = "m_write"
 	entityType        = "group"
 )
 
