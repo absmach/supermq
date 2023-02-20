@@ -46,7 +46,7 @@ type MembersPage struct {
 type ClientRepository interface {
 	// Save persists the client account. A non-nil error is returned to indicate
 	// operation failure.
-	Save(ctx context.Context, client Client) (Client, error)
+	Save(ctx context.Context, client ...Client) ([]Client, error)
 
 	// RetrieveByID retrieves client by its unique ID.
 	RetrieveByID(ctx context.Context, id string) (Client, error)

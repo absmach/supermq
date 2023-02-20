@@ -9,10 +9,8 @@ import (
 )
 
 var (
-	_ mainflux.Response = (*tokenRes)(nil)
 	_ mainflux.Response = (*viewClientRes)(nil)
 	_ mainflux.Response = (*createClientRes)(nil)
-	_ mainflux.Response = (*createClientsRes)(nil)
 	_ mainflux.Response = (*deleteClientRes)(nil)
 	_ mainflux.Response = (*clientsPageRes)(nil)
 	_ mainflux.Response = (*viewMembersRes)(nil)
@@ -22,9 +20,7 @@ var (
 type pageRes struct {
 	Limit  uint64 `json:"limit,omitempty"`
 	Offset uint64 `json:"offset,omitempty"`
-	Total  uint64 `json:"total"`
-	Level  uint64 `json:"level"`
-	Name   string `json:"name"`
+	Total  uint64 `json:"total,omitempty"`
 }
 
 type createClientRes struct {
@@ -52,45 +48,6 @@ func (res createClientRes) Headers() map[string]string {
 
 func (res createClientRes) Empty() bool {
 	return false
-}
-
-type createClientsRes struct {
-	clients []clients.Client
-	created bool
-}
-
-func (res createClientsRes) Code() int {
-	if res.created {
-		return http.StatusCreated
-	}
-
-	return http.StatusOK
-}
-
-func (res createClientsRes) Headers() map[string]string {
-	return map[string]string{}
-}
-
-func (res createClientsRes) Empty() bool {
-	return false
-}
-
-type tokenRes struct {
-	AccessToken  string `json:"access_token,omitempty"`
-	RefreshToken string `json:"refresh_token,omitempty"`
-	AccessType   string `json:"access_type,omitempty"`
-}
-
-func (res tokenRes) Code() int {
-	return http.StatusCreated
-}
-
-func (res tokenRes) Headers() map[string]string {
-	return map[string]string{}
-}
-
-func (res tokenRes) Empty() bool {
-	return res.AccessToken == "" || res.RefreshToken == ""
 }
 
 type updateClientRes struct {
@@ -127,7 +84,7 @@ func (res viewClientRes) Empty() bool {
 
 type clientsPageRes struct {
 	pageRes
-	Clients []viewClientRes `json:"clients"`
+	Clients []viewClientRes `json:"things"`
 }
 
 func (res clientsPageRes) Code() int {

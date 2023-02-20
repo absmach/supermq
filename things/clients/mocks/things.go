@@ -49,23 +49,24 @@ func NewThingRepository(conns chan Connection) clients.ClientRepository {
 	return repo
 }
 
-func (trm *thingRepositoryMock) Save(_ context.Context, ths clients.Client) (clients.Client, error) {
+func (trm *thingRepositoryMock) Save(_ context.Context, clis ...clients.Client) ([]clients.Client, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
-	for _, th := range trm.things {
-		if th.Credentials.Secret == ths.Credentials.Secret {
-			return clients.Client{}, errors.ErrConflict
+	for _, cli := range clis {
+		for _, th := range trm.things {
+			if th.Credentials.Secret == cli.Credentials.Secret {
+				return []clients.Client{}, errors.ErrConflict
+			}
 		}
-	}
 
-	trm.counter++
-	if ths.ID == "" {
-		ths.ID = fmt.Sprintf("%03d", trm.counter)
+		trm.counter++
+		if cli.ID == "" {
+			cli.ID = fmt.Sprintf("%03d", trm.counter)
+		}
+		trm.things[key(cli.Owner, cli.ID)] = cli
 	}
-	trm.things[key(ths.Owner, ths.ID)] = ths
-
-	return ths, nil
+	return clis, nil
 }
 
 func (trm *thingRepositoryMock) Update(_ context.Context, thing clients.Client) (clients.Client, error) {

@@ -83,24 +83,17 @@ func (svc service) CreateThings(ctx context.Context, token string, clis ...Clien
 			}
 			cli.Credentials.Secret = key
 		}
-
 		if cli.Owner == "" {
 			cli.Owner = res.Email
 		}
 		if cli.Status != DisabledStatus && cli.Status != EnabledStatus {
 			return []Client{}, apiutil.ErrInvalidStatus
 		}
-
 		cli.CreatedAt = time.Now()
 		cli.UpdatedAt = cli.CreatedAt
-
-		c, err := svc.clients.Save(ctx, cli)
-		if err != nil {
-			return []Client{}, err
-		}
-		clients = append(clients, c)
+		clients = append(clients, cli)
 	}
-	return clients, nil
+	return svc.clients.Save(ctx, clients...)
 }
 
 func (svc service) ViewClient(ctx context.Context, token string, id string) (Client, error) {

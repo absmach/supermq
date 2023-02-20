@@ -30,13 +30,22 @@ func registrationsEndpoint(svc clients.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(createClientsReq)
 		if err := req.validate(); err != nil {
-			return createClientsRes{}, err
+			return clientsPageRes{}, err
 		}
-		cs, err := svc.CreateThings(ctx, req.token, req.Clients...)
+		page, err := svc.CreateThings(ctx, req.token, req.Clients...)
 		if err != nil {
-			return createClientsRes{}, err
+			return clientsPageRes{}, err
 		}
-		return createClientsRes{clients: cs, created: true}, nil
+		res := clientsPageRes{
+			pageRes: pageRes{
+				Total: uint64(len(page)),
+			},
+			Clients: []viewClientRes{},
+		}
+		for _, c := range page {
+			res.Clients = append(res.Clients, viewClientRes{Client: c})
+		}
+		return res, nil
 	}
 }
 

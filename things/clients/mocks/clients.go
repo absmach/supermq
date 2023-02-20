@@ -65,16 +65,17 @@ func (m *ClientRepository) RetrieveBySecret(ctx context.Context, secret string) 
 	return ret.Get(0).(clients.Client), ret.Error(1)
 }
 
-func (m *ClientRepository) Save(ctx context.Context, client clients.Client) (clients.Client, error) {
-	ret := m.Called(ctx, client)
-	if client.Owner == WrongID {
-		return clients.Client{}, errors.ErrMalformedEntity
+func (m *ClientRepository) Save(ctx context.Context, clis ...clients.Client) ([]clients.Client, error) {
+	ret := m.Called(ctx, clis)
+	for _, cli := range clis {
+		if cli.Owner == WrongID {
+			return []clients.Client{}, errors.ErrMalformedEntity
+		}
+		if cli.Credentials.Secret == "" {
+			return []clients.Client{}, errors.ErrMalformedEntity
+		}
 	}
-	if client.Credentials.Secret == "" {
-		return clients.Client{}, errors.ErrMalformedEntity
-	}
-
-	return client, ret.Error(1)
+	return clis, ret.Error(1)
 }
 
 func (m *ClientRepository) Update(ctx context.Context, client clients.Client) (clients.Client, error) {

@@ -29,33 +29,32 @@ func NewClientRepo(db postgres.Database) clients.ClientRepository {
 	}
 }
 
-func (repo clientRepo) Save(ctx context.Context, c clients.Client) (clients.Client, error) {
-	q := `INSERT INTO clients (id, name, tags, owner, identity, secret, metadata, created_at, updated_at, status)
+func (repo clientRepo) Save(ctx context.Context, cs ...clients.Client) ([]clients.Client, error) {
+	tx, err := repo.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return []clients.Client{}, errors.Wrap(errors.ErrCreateEntity, err)
+	}
+
+	for _, cli := range cs {
+		q := `INSERT INTO clients (id, name, tags, owner, identity, secret, metadata, created_at, updated_at, status)
         VALUES (:id, :name, :tags, :owner, :identity, :secret, :metadata, :created_at, :updated_at, :status)
-        RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`
-	if c.Owner == "" {
-		q = `INSERT INTO clients (id, name, tags, identity, secret, metadata, created_at, updated_at, status)
-        VALUES (:id, :name, :tags, :identity, :secret, :metadata, :created_at, :updated_at, :status)
-        RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`
+        RETURNING id, name, tags, owner, identity, secret, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`
+
+		dbcli, err := toDBClient(cli)
+		if err != nil {
+			return []clients.Client{}, errors.Wrap(errors.ErrCreateEntity, err)
+		}
+
+		if _, err := tx.NamedExecContext(ctx, q, dbcli); err != nil {
+			tx.Rollback()
+			return []clients.Client{}, postgres.HandleError(err, errors.ErrCreateEntity)
+		}
 	}
-	dbc, err := toDBClient(c)
-	if err != nil {
-		return clients.Client{}, errors.Wrap(errors.ErrCreateEntity, err)
+	if err = tx.Commit(); err != nil {
+		return []clients.Client{}, errors.Wrap(errors.ErrCreateEntity, err)
 	}
 
-	row, err := repo.db.NamedQueryContext(ctx, q, dbc)
-	if err != nil {
-		return clients.Client{}, postgres.HandleError(err, errors.ErrCreateEntity)
-	}
-
-	defer row.Close()
-	row.Next()
-	var rClient dbClient
-	if err := row.StructScan(&rClient); err != nil {
-		return clients.Client{}, err
-	}
-
-	return toClient(rClient)
+	return cs, nil
 }
 
 func (repo clientRepo) RetrieveByID(ctx context.Context, id string) (clients.Client, error) {
