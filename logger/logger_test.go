@@ -60,22 +60,26 @@ func TestDebug(t *testing.T) {
 			desc:   "debug log ordinary string",
 			input:  "input_string",
 			level:  log.Debug.String(),
-			output: logMsg{log.Debug.String(), "input_string", ""}},
+			output: logMsg{log.Debug.String(), "input_string", ""},
+		},
 		{
 			desc:   "debug log empty string",
 			input:  "",
 			level:  log.Debug.String(),
-			output: logMsg{log.Debug.String(), "", ""}},
+			output: logMsg{log.Debug.String(), "", ""},
+		},
 		{
 			desc:   "debug ordinary string lvl not allowed",
 			input:  "input_string",
 			level:  log.Info.String(),
-			output: logMsg{"", "", ""}},
+			output: logMsg{"", "", ""},
+		},
 		{
 			desc:   "debug empty string lvl not allowed",
 			input:  "",
 			level:  log.Info.String(),
-			output: logMsg{"", "", ""}},
+			output: logMsg{"", "", ""},
+		},
 	}
 
 	for _, tc := range cases {
@@ -99,22 +103,26 @@ func TestInfo(t *testing.T) {
 			desc:   "info log ordinary string",
 			input:  "input_string",
 			level:  log.Info.String(),
-			output: logMsg{log.Info.String(), "input_string", ""}},
+			output: logMsg{log.Info.String(), "input_string", ""},
+		},
 		{
 			desc:   "info log empty string",
 			input:  "",
 			level:  log.Info.String(),
-			output: logMsg{log.Info.String(), "", ""}},
+			output: logMsg{log.Info.String(), "", ""},
+		},
 		{
 			desc:   "info ordinary string lvl not allowed",
 			input:  "input_string",
 			level:  log.Warn.String(),
-			output: logMsg{"", "", ""}},
+			output: logMsg{"", "", ""},
+		},
 		{
 			desc:   "info empty string lvl not allowed",
 			input:  "",
 			level:  log.Warn.String(),
-			output: logMsg{"", "", ""}},
+			output: logMsg{"", "", ""},
+		},
 	}
 
 	for _, tc := range cases {
@@ -138,22 +146,26 @@ func TestWarn(t *testing.T) {
 			desc:   "warn log ordinary string",
 			input:  "input_string",
 			level:  log.Warn.String(),
-			output: logMsg{log.Warn.String(), "input_string", ""}},
+			output: logMsg{log.Warn.String(), "input_string", ""},
+		},
 		{
 			desc:   "warn log empty string",
 			input:  "",
 			level:  log.Warn.String(),
-			output: logMsg{log.Warn.String(), "", ""}},
+			output: logMsg{log.Warn.String(), "", ""},
+		},
 		{
 			desc:   "warn ordinary string lvl not allowed",
 			input:  "input_string",
 			level:  log.Error.String(),
-			output: logMsg{"", "", ""}},
+			output: logMsg{"", "", ""},
+		},
 		{
 			desc:   "warn empty string lvl not allowed",
 			input:  "",
 			level:  log.Error.String(),
-			output: logMsg{"", "", ""}},
+			output: logMsg{"", "", ""},
+		},
 	}
 
 	for _, tc := range cases {
@@ -175,11 +187,13 @@ func TestError(t *testing.T) {
 		{
 			desc:   "error log ordinary string",
 			input:  "input_string",
-			output: logMsg{log.Error.String(), "input_string", ""}},
+			output: logMsg{log.Error.String(), "input_string", ""},
+		},
 		{
 			desc:   "error log empty string",
 			input:  "",
-			output: logMsg{log.Error.String(), "", ""}},
+			output: logMsg{log.Error.String(), "", ""},
+		},
 	}
 
 	writer := mockWriter{}
@@ -212,11 +226,13 @@ func TestFatal(t *testing.T) {
 		{
 			desc:   "error log ordinary string",
 			input:  "input_string",
-			output: logMsg{"", "", "input_string"}},
+			output: logMsg{"", "", "input_string"},
+		},
 		{
 			desc:   "error log empty string",
 			input:  "",
-			output: logMsg{"", "", ""}},
+			output: logMsg{"", "", ""},
+		},
 	}
 	writer := mockWriter{}
 	for _, tc := range cases {
