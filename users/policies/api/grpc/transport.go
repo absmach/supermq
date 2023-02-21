@@ -151,7 +151,7 @@ func encodeAddPolicyResponse(_ context.Context, grpcRes interface{}) (interface{
 
 func decodeDeletePolicyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*policies.DeletePolicyReq)
-	return policyReq{Sub: req.GetSub(), Obj: req.GetObj(), Act: req.GetAct()}, nil
+	return policyReq{Token: req.GetToken(), Sub: req.GetSub(), Obj: req.GetObj(), Act: req.GetAct()}, nil
 }
 
 func encodeDeletePolicyResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
@@ -161,7 +161,7 @@ func encodeDeletePolicyResponse(_ context.Context, grpcRes interface{}) (interfa
 
 func decodeListPoliciesRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*policies.ListPoliciesReq)
-	return listPoliciesReq{Sub: req.GetSub(), Obj: req.GetObj(), Act: req.GetAct()}, nil
+	return listPoliciesReq{Token: req.GetToken(), Sub: req.GetSub(), Obj: req.GetObj(), Act: req.GetAct()}, nil
 }
 
 func encodeListPoliciesResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
@@ -179,7 +179,7 @@ func encodeError(err error) error {
 		err == apiutil.ErrBearerToken,
 		err == apiutil.ErrMissingPolicySub,
 		err == apiutil.ErrMissingPolicyObj,
-		err == apiutil.ErrMissingPolicyAct,
+		err == apiutil.ErrMalformedPolicyAct,
 		err == apiutil.ErrMalformedPolicy,
 		err == apiutil.ErrMissingPolicyOwner,
 		err == apiutil.ErrHigherPolicyRank:

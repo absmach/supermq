@@ -23,7 +23,7 @@ func (req authReq) validate() error {
 		return apiutil.ErrMissingPolicyObj
 	}
 	if req.Act == "" {
-		return apiutil.ErrMissingPolicyAct
+		return apiutil.ErrMalformedPolicyAct
 	}
 	if req.EntityType == "" {
 		return apiutil.ErrMissingPolicyEntityType
@@ -77,16 +77,17 @@ func (req addPolicyReq) validate() error {
 	}
 
 	if len(req.Act) == 0 {
-		return apiutil.ErrMissingPolicyAct
+		return apiutil.ErrMalformedPolicyAct
 	}
 
 	return nil
 }
 
 type policyReq struct {
-	Sub string
-	Obj string
-	Act string
+	Token string
+	Sub   string
+	Obj   string
+	Act   string
 }
 
 func (req policyReq) validate() error {
@@ -99,14 +100,15 @@ func (req policyReq) validate() error {
 	}
 
 	if req.Act == "" {
-		return apiutil.ErrMissingPolicyAct
+		return apiutil.ErrMalformedPolicyAct
 	}
 
 	return nil
 }
 
 type listPoliciesReq struct {
-	Sub string
-	Obj string
-	Act string
+	Token string
+	Sub   string
+	Obj   string
+	Act   string
 }

@@ -114,7 +114,7 @@ func TestAddPolicy(t *testing.T) {
 				Actions: []string{"wrong"},
 				Subject: "sub3",
 			},
-			err:   apiutil.ErrMissingPolicyAct,
+			err:   apiutil.ErrMalformedPolicyAct,
 			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo),
 		},
 		{
@@ -144,7 +144,7 @@ func TestAddPolicy(t *testing.T) {
 				Subject: "sub5",
 				Object:  "obj5",
 			},
-			err:   apiutil.ErrMissingPolicyAct,
+			err:   apiutil.ErrMalformedPolicyAct,
 			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo),
 		},
 	}
@@ -320,7 +320,7 @@ func TestListPolicies(t *testing.T) {
 				Action: "wrong",
 			},
 			response: policies.PolicyPage{},
-			err:      apiutil.ErrMissingPolicyAct,
+			err:      apiutil.ErrMalformedPolicyAct,
 		},
 	}
 
@@ -366,7 +366,7 @@ func TestUpdatePolicies(t *testing.T) {
 			desc:   "update policy action with wrong policy action",
 			action: []string{"wrong"},
 			token:  generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo),
-			err:    apiutil.ErrMissingPolicyAct,
+			err:    apiutil.ErrMalformedPolicyAct,
 		},
 	}
 

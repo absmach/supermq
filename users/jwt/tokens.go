@@ -35,6 +35,7 @@ func (repo tokenRepo) Issue(ctx context.Context, claim Claims) (Token, error) {
 		Issuer(issuerName).
 		IssuedAt(time.Now()).
 		Subject(claim.ClientID).
+		Claim("identity", claim.Email).
 		Claim("type", AccessToken).
 		Claim("role", claim.Role).
 		Claim("tag", claim.Tag).
@@ -51,6 +52,7 @@ func (repo tokenRepo) Issue(ctx context.Context, claim Claims) (Token, error) {
 		Issuer(issuerName).
 		IssuedAt(time.Now()).
 		Subject(claim.ClientID).
+		Claim("identity", claim.Email).
 		Claim("type", RefreshToken).
 		Claim("role", claim.Role).
 		Claim("tag", claim.Tag).
@@ -84,6 +86,10 @@ func (repo tokenRepo) Parse(ctx context.Context, accessToken string) (Claims, er
 	if !ok {
 		return Claims{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
+	identity, ok := token.Get("identity")
+	if !ok {
+		return Claims{}, errors.Wrap(errors.ErrAuthentication, err)
+	}
 	role, ok := token.Get("role")
 	if !ok {
 		return Claims{}, errors.Wrap(errors.ErrAuthentication, err)
@@ -94,6 +100,7 @@ func (repo tokenRepo) Parse(ctx context.Context, accessToken string) (Claims, er
 	}
 	claim := Claims{
 		ClientID: token.Subject(),
+		Email:    identity.(string),
 		Role:     role.(string),
 		Tag:      tag.(string),
 		Type:     tType.(string),

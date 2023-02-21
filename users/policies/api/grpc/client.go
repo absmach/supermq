@@ -187,7 +187,7 @@ func (client grpcClient) DeletePolicy(ctx context.Context, in *policies.DeletePo
 	ctx, close := context.WithTimeout(ctx, client.timeout)
 	defer close()
 
-	res, err := client.deletePolicy(ctx, policyReq{Act: in.GetAct(), Obj: in.GetObj(), Sub: in.GetSub()})
+	res, err := client.deletePolicy(ctx, policyReq{Token: in.GetToken(), Act: in.GetAct(), Obj: in.GetObj(), Sub: in.GetSub()})
 	if err != nil {
 		return &policies.DeletePolicyRes{}, err
 	}
@@ -204,9 +204,10 @@ func decodeDeletePolicyResponse(_ context.Context, grpcRes interface{}) (interfa
 func encodeDeletePolicyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(policyReq)
 	return &policies.DeletePolicyReq{
-		Sub: req.Sub,
-		Obj: req.Obj,
-		Act: req.Act,
+		Token: req.Token,
+		Sub:   req.Sub,
+		Obj:   req.Obj,
+		Act:   req.Act,
 	}, nil
 }
 
@@ -214,7 +215,7 @@ func (client grpcClient) ListPolicies(ctx context.Context, in *policies.ListPoli
 	ctx, close := context.WithTimeout(ctx, client.timeout)
 	defer close()
 
-	res, err := client.listPolicies(ctx, listPoliciesReq{Obj: in.GetObj(), Act: in.GetAct(), Sub: in.GetSub()})
+	res, err := client.listPolicies(ctx, listPoliciesReq{Token: in.GetToken(), Obj: in.GetObj(), Act: in.GetAct(), Sub: in.GetSub()})
 	if err != nil {
 		return &policies.ListPoliciesRes{}, err
 	}
@@ -231,8 +232,9 @@ func decodeListPoliciesResponse(_ context.Context, grpcRes interface{}) (interfa
 func encodeListPoliciesRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(listPoliciesReq)
 	return &policies.ListPoliciesReq{
-		Sub: req.Sub,
-		Obj: req.Obj,
-		Act: req.Act,
+		Token: req.Token,
+		Sub:   req.Sub,
+		Obj:   req.Obj,
+		Act:   req.Act,
 	}, nil
 }

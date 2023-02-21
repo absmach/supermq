@@ -113,6 +113,7 @@ func (svc service) IssueToken(ctx context.Context, identity, secret string) (jwt
 
 	claims := jwt.Claims{
 		ClientID: dbUser.ID,
+		Email:    dbUser.Credentials.Identity,
 	}
 
 	return svc.tokens.Issue(ctx, claims)

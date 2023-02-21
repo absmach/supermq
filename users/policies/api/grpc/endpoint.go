@@ -82,7 +82,7 @@ func deletePolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 			return deletePolicyRes{}, err
 		}
 
-		err := svc.DeletePolicy(ctx, "", policies.Policy{Subject: req.Sub, Object: req.Obj, Actions: []string{req.Act}})
+		err := svc.DeletePolicy(ctx, req.Token, policies.Policy{Subject: req.Sub, Object: req.Obj, Actions: []string{req.Act}})
 		if err != nil {
 			return deletePolicyRes{}, err
 		}
@@ -93,10 +93,9 @@ func deletePolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 func listPoliciesEndpoint(svc policies.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listPoliciesReq)
-
-		page, err := svc.ListPolicy(ctx, "", policies.Page{Subject: req.Sub, Object: req.Obj, Action: req.Act})
+		page, err := svc.ListPolicy(ctx, req.Token, policies.Page{Subject: req.Sub, Object: req.Obj, Action: req.Act, Limit: 10})
 		if err != nil {
-			return deletePolicyRes{}, err
+			return listPoliciesRes{}, err
 		}
 		var objects []string
 		for _, p := range page.Policies {

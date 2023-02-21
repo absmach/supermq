@@ -105,9 +105,9 @@ func (svc service) DeletePolicy(ctx context.Context, token string, p Policy) err
 }
 
 func (svc service) ListPolicy(ctx context.Context, token string, pm Page) (PolicyPage, error) {
-	if _, err := svc.identify(ctx, token); err != nil {
-		return PolicyPage{}, err
-	}
+	// if _, err := svc.identify(ctx, token); err != nil {
+	// 	return PolicyPage{}, err
+	// }
 	if err := pm.Validate(); err != nil {
 		return PolicyPage{}, err
 	}

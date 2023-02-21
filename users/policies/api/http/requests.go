@@ -15,7 +15,7 @@ type authorizeReq struct {
 func (req authorizeReq) validate() error {
 	for _, a := range req.Actions {
 		if ok := policies.ValidateAction(a); !ok {
-			return apiutil.ErrMissingPolicyAct
+			return apiutil.ErrMalformedPolicyAct
 		}
 	}
 	if req.Subject == "" {
@@ -38,7 +38,7 @@ type createPolicyReq struct {
 func (req createPolicyReq) validate() error {
 	for _, a := range req.Actions {
 		if ok := policies.ValidateAction(a); !ok {
-			return apiutil.ErrMissingPolicyAct
+			return apiutil.ErrMalformedPolicyAct
 		}
 	}
 	if req.Subject == "" {
@@ -60,7 +60,7 @@ type updatePolicyReq struct {
 func (req updatePolicyReq) validate() error {
 	for _, a := range req.Actions {
 		if ok := policies.ValidateAction(a); !ok {
-			return apiutil.ErrMissingPolicyAct
+			return apiutil.ErrMalformedPolicyAct
 		}
 	}
 	if req.Subject == "" {
@@ -86,7 +86,7 @@ type listPolicyReq struct {
 func (req listPolicyReq) validate() error {
 	if req.Actions != "" {
 		if ok := policies.ValidateAction(req.Actions); !ok {
-			return apiutil.ErrMissingPolicyAct
+			return apiutil.ErrMalformedPolicyAct
 		}
 	}
 	return nil

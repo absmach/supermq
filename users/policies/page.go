@@ -26,7 +26,7 @@ type Page struct {
 func (p Page) Validate() error {
 	if p.Action != "" {
 		if ok := ValidateAction(p.Action); !ok {
-			return apiutil.ErrMissingPolicyAct
+			return apiutil.ErrMalformedPolicyAct
 		}
 	}
 	return nil

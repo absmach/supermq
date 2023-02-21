@@ -327,7 +327,7 @@ func TestPoliciesUpdate(t *testing.T) {
 				Object:  pid,
 				Actions: []string{"c_delete"},
 			},
-			err: apiutil.ErrMissingPolicyAct,
+			err: apiutil.ErrMalformedPolicyAct,
 		},
 	}
 

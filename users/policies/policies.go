@@ -85,11 +85,11 @@ func (p Policy) Validate() error {
 		return apiutil.ErrMissingPolicyObj
 	}
 	if len(p.Actions) == 0 {
-		return apiutil.ErrMissingPolicyAct
+		return apiutil.ErrMalformedPolicyAct
 	}
 	for _, p := range p.Actions {
 		if ok := ValidateAction(p); !ok {
-			return apiutil.ErrMissingPolicyAct
+			return apiutil.ErrMalformedPolicyAct
 		}
 	}
 	return nil
