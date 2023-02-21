@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+
 	"github.com/mainflux/mainflux/pkg/auth"
 	"github.com/mainflux/mainflux/pkg/errors"
 )
@@ -15,7 +16,7 @@ func NewClient(key map[string]string, conns map[string]interface{}) auth.Client 
 	return MockClient{key: key, conns: conns}
 }
 
-func (cli MockClient) Authorize(ctx context.Context, chanID, thingID string) error {
+func (cli MockClient) Authorize(ctx context.Context, chanID, thingID, action string) error {
 	for k, v := range cli.conns {
 		if k == chanID && v == thingID {
 			return nil

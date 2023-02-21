@@ -21,6 +21,9 @@ const (
 	MetadataKey      = "metadata"
 	ParentKey        = "parent_id"
 	OwnerKey         = "owner_id"
+	ClientKey        = "client"
+	GroupKey         = "group"
+	ActionKey        = "action"
 	IdentifierKey    = "identifier"
 	TagKey           = "tag"
 	NameKey          = "name"
@@ -33,6 +36,7 @@ const (
 	DirKey           = "dir"
 	VisibilityKey    = "visibility"
 	SharedByKey      = "shared_by"
+	SharedKey        = "shared"
 	DefTotal         = uint64(100)
 	DefOffset        = 0
 	DefLimit         = 10
@@ -53,9 +57,6 @@ const (
 	IDOrder      = "id"
 	AscDir       = "asc"
 	DescDir      = "desc"
-	ReadPolicy   = "read"
-	WritePolicy  = "write"
-	DeletePolicy = "delete"
 )
 
 func ValidateUUID(extID string) (err error) {

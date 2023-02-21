@@ -12,7 +12,7 @@ import (
 
 // Client represents Auth cache.
 type Client interface {
-	Authorize(ctx context.Context, chanID, thingID string) error
+	Authorize(ctx context.Context, chanID, thingID, action string) error
 	Identify(ctx context.Context, thingKey string) (string, error)
 }
 
@@ -51,15 +51,17 @@ func (c client) Identify(ctx context.Context, thingKey string) (string, error) {
 	return thingID, nil
 }
 
-func (c client) Authorize(ctx context.Context, chanID, thingID string) error {
+func (c client) Authorize(ctx context.Context, chanID, thingID, action string) error {
 	if c.redisClient.SIsMember(ctx, chanPrefix+":"+chanID, thingID).Val() {
 		return nil
 	}
 
-	ar := &policies.AccessByIDReq{
-		ThingID: thingID,
-		ChanID:  chanID,
+	ar := &policies.TAuthorizeReq{
+		Sub:        thingID,
+		Obj:        chanID,
+		Act:        action,
+		EntityType: policies.GroupEntityType,
 	}
-	_, err := c.thingsClient.CanAccessByID(ctx, ar)
+	_, err := c.thingsClient.Authorize(ctx, ar)
 	return err
 }

@@ -137,11 +137,13 @@ func (svc *adapterService) Unsubscribe(ctx context.Context, thingKey, chanID, su
 }
 
 func (svc *adapterService) authorize(ctx context.Context, thingKey, chanID string) (*policies.ThingID, error) {
-	ar := &policies.AccessByKeyReq{
-		Token:  thingKey,
-		ChanID: chanID,
+	ar := &policies.TAuthorizeReq{
+		Sub:        thingKey,
+		Obj:        chanID,
+		Act:        policies.ReadAction,
+		EntityType: policies.GroupEntityType,
 	}
-	thid, err := svc.auth.CanAccessByKey(ctx, ar)
+	thid, err := svc.auth.AuthorizeByKey(ctx, ar)
 	if err != nil {
 		return nil, errors.Wrap(errors.ErrAuthorization, err)
 	}

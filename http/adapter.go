@@ -34,11 +34,13 @@ func New(publisher messaging.Publisher, things policies.ThingsServiceClient) Ser
 }
 
 func (as *adapterService) Publish(ctx context.Context, token string, msg *messaging.Message) error {
-	ar := &policies.AccessByKeyReq{
-		Token:  token,
-		ChanID: msg.Channel,
+	ar := &policies.TAuthorizeReq{
+		Sub:        token,
+		Obj:        msg.Channel,
+		Act:        policies.ReadAction,
+		EntityType: policies.GroupEntityType,
 	}
-	thid, err := as.things.CanAccessByKey(ctx, ar)
+	thid, err := as.things.AuthorizeByKey(ctx, ar)
 	if err != nil {
 		return err
 	}

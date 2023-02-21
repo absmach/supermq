@@ -52,16 +52,16 @@ var (
 	ErrEmptyList = errors.New("empty list provided")
 
 	// ErrMalformedPolicy indicates that policies are malformed.
-	ErrMalformedPolicy = errors.New("falmormed policy")
+	ErrMalformedPolicy = errors.New("malfalmormed policy")
 
 	// ErrMissingPolicySub indicates that policies are subject.
-	ErrMissingPolicySub = errors.New("falmormed policy subject")
+	ErrMissingPolicySub = errors.New("malfalmormed policy subject")
 
 	// ErrMissingPolicyObj indicates missing policies object.
-	ErrMissingPolicyObj = errors.New("falmormed policy object")
+	ErrMissingPolicyObj = errors.New("malfalmormed policy object")
 
-	// ErrMissingPolicyAct indicates missing policies action.
-	ErrMissingPolicyAct = errors.New("falmormed policy action")
+	// ErrMalformedPolicyAct indicates missing policies action.
+	ErrMalformedPolicyAct = errors.New("malfalmormed policy action")
 
 	// ErrMissingCertData indicates missing cert data (ttl).
 	ErrMissingCertData = errors.New("missing certificate data")

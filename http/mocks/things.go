@@ -6,7 +6,6 @@ package mocks
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/policies"
 	"google.golang.org/grpc"
@@ -28,8 +27,8 @@ func NewThingsClient(data map[string]string) policies.ThingsServiceClient {
 	return &thingsClient{data}
 }
 
-func (tc thingsClient) CanAccessByKey(ctx context.Context, req *policies.AccessByKeyReq, opts ...grpc.CallOption) (*policies.ThingID, error) {
-	key := req.GetToken()
+func (tc thingsClient) AuthorizeByKey(ctx context.Context, req *policies.TAuthorizeReq, opts ...grpc.CallOption) (*policies.ThingID, error) {
+	key := req.GetSub()
 
 	// Since there is no appropriate way to simulate internal server error,
 	// we had to use this obscure approach. ErrorToken simulates gRPC
@@ -50,11 +49,7 @@ func (tc thingsClient) CanAccessByKey(ctx context.Context, req *policies.AccessB
 	return &policies.ThingID{Value: id}, nil
 }
 
-func (tc thingsClient) CanAccessByID(context.Context, *policies.AccessByIDReq, ...grpc.CallOption) (*empty.Empty, error) {
-	panic("not implemented")
-}
-
-func (tc thingsClient) IsChannelOwner(context.Context, *policies.ChannelOwnerReq, ...grpc.CallOption) (*empty.Empty, error) {
+func (tc thingsClient) Authorize(context.Context, *policies.TAuthorizeReq, ...grpc.CallOption) (*policies.TAuthorizeRes, error) {
 	panic("not implemented")
 }
 

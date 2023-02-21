@@ -33,7 +33,7 @@ func LoggingErrorEncoder(logger logger.Logger, enc kithttp.ErrorEncoder) kithttp
 			errors.Contains(err, ErrMalformedPolicy),
 			errors.Contains(err, ErrMissingPolicySub),
 			errors.Contains(err, ErrMissingPolicyObj),
-			errors.Contains(err, ErrMissingPolicyAct),
+			errors.Contains(err, ErrMalformedPolicyAct),
 			errors.Contains(err, ErrMissingCertData),
 			errors.Contains(err, ErrInvalidTopic),
 			errors.Contains(err, ErrInvalidContact),

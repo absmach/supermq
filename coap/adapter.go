@@ -56,11 +56,13 @@ func New(auth policies.ThingsServiceClient, pubsub messaging.PubSub) Service {
 }
 
 func (svc *adapterService) Publish(ctx context.Context, key string, msg *messaging.Message) error {
-	ar := &policies.AccessByKeyReq{
-		Token:  key,
-		ChanID: msg.Channel,
+	ar := &policies.TAuthorizeReq{
+		Sub:        key,
+		Obj:        msg.Channel,
+		Act:        policies.WriteAction,
+		EntityType: policies.GroupEntityType,
 	}
-	thid, err := svc.auth.CanAccessByKey(ctx, ar)
+	thid, err := svc.auth.AuthorizeByKey(ctx, ar)
 	if err != nil {
 		return errors.Wrap(errors.ErrAuthorization, err)
 	}
@@ -70,11 +72,13 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 }
 
 func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic string, c Client) error {
-	ar := &policies.AccessByKeyReq{
-		Token:  key,
-		ChanID: chanID,
+	ar := &policies.TAuthorizeReq{
+		Sub:        key,
+		Obj:        chanID,
+		Act:        policies.ReadAction,
+		EntityType: policies.GroupEntityType,
 	}
-	if _, err := svc.auth.CanAccessByKey(ctx, ar); err != nil {
+	if _, err := svc.auth.AuthorizeByKey(ctx, ar); err != nil {
 		return errors.Wrap(errors.ErrAuthorization, err)
 	}
 	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
@@ -85,11 +89,13 @@ func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic 
 }
 
 func (svc *adapterService) Unsubscribe(ctx context.Context, key, chanID, subtopic, token string) error {
-	ar := &policies.AccessByKeyReq{
-		Token:  key,
-		ChanID: chanID,
+	ar := &policies.TAuthorizeReq{
+		Sub:        key,
+		Obj:        chanID,
+		Act:        policies.ReadAction,
+		EntityType: policies.GroupEntityType,
 	}
-	if _, err := svc.auth.CanAccessByKey(ctx, ar); err != nil {
+	if _, err := svc.auth.AuthorizeByKey(ctx, ar); err != nil {
 		return errors.Wrap(errors.ErrAuthorization, err)
 	}
 	subject := fmt.Sprintf("%s.%s", chansPrefix, chanID)
