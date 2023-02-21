@@ -70,9 +70,6 @@ func (l logger) Error(msg string) {
 }
 
 func (l logger) Fatal(msg string) func() {
-	if Fatal.isAllowed(l.level) {
-		l.kitLogger.Log("level", Fatal.String(), "message", msg)
-	}
-
+	l.kitLogger.Log("level", l.level.String(), "message", msg)
 	return func() { os.Exit(1) }
 }
