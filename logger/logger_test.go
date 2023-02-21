@@ -248,8 +248,8 @@ func TestFatal(t *testing.T) {
 		if e, ok := err.(*exec.ExitError); ok && !e.Success() {
 			res, err := writer.Read()
 			require.Nil(t, err, "required successful buffer read")
-			assert.Equal(t, e.ExitCode(), 1, fmt.Sprintf("%s: expected exit code %d, got %d", tc.desc, 1, e.ExitCode()))
-			assert.Equal(t, res, tc.output, fmt.Sprintf("%s: expected output %s got %s", tc.desc, tc.output, res))
+			assert.Equal(t, 1, e.ExitCode(), fmt.Sprintf("%s: expected exit code %d, got %d", tc.desc, 1, e.ExitCode()))
+			assert.Equal(t, tc.output, res, fmt.Sprintf("%s: expected output %s got %s", tc.desc, tc.output, res))
 			continue
 		}
 		t.Fatal("subprocess ran successfully, want non-zero exit status")
