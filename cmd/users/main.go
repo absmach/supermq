@@ -49,6 +49,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 const (
@@ -127,6 +128,7 @@ func main() {
 
 	// Create new grpc server
 	registerAuthServiceServer := func(srv *grpc.Server) {
+		reflection.Register(srv)
 		policies.RegisterAuthServiceServer(srv, grpcapi.NewServer(csvc, psvc))
 
 	}

@@ -47,6 +47,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 const (
@@ -118,7 +119,7 @@ func main() {
 	defer authHandler.Close()
 	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
-	csvc, gsvc, psvc := newService(db, auth, cacheClient, tracer, cfg, logger)
+	csvc, gsvc, psvc := newService(db, auth, cacheClient, tracer, logger)
 
 	mux := bone.New()
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
@@ -140,7 +141,8 @@ func main() {
 	hsp := httpserver.New(ctx, cancel, "things-policies", httpServerConfig, papi.MakePolicyHandler(csvc, psvc, mux, logger), logger)
 
 	registerThingsServiceServer := func(srv *grpc.Server) {
-		tpolicies.RegisterThingsServiceServer(srv, grpcapi.NewServer(csvc, gsvc, psvc))
+		reflection.Register(srv)
+		tpolicies.RegisterThingsServiceServer(srv, grpcapi.NewServer(csvc, psvc))
 	}
 	grpcServerConfig := server.Config{Port: defSvcAuthGrpcPort}
 	if err := env.Parse(&grpcServerConfig, env.Options{Prefix: envPrefixAuthGrpc, AltPrefix: envPrefix}); err != nil {
@@ -185,7 +187,7 @@ func initJaeger(svcName, url string) (*tracesdk.TracerProvider, error) {
 	return tp, nil
 }
 
-func newService(db *sqlx.DB, auth upolicies.AuthServiceClient, cacheClient *redis.Client, tracer trace.Tracer, c config, logger logger.Logger) (clients.Service, groups.GroupService, tpolicies.PolicyService) {
+func newService(db *sqlx.DB, auth upolicies.AuthServiceClient, cacheClient *redis.Client, tracer trace.Tracer, logger logger.Logger) (clients.Service, groups.GroupService, tpolicies.PolicyService) {
 	database := postgres.NewDatabase(db, tracer)
 	cRepo := cpostgres.NewClientRepo(database)
 	gRepo := gpostgres.NewGroupRepo(database)
@@ -193,13 +195,12 @@ func newService(db *sqlx.DB, auth upolicies.AuthServiceClient, cacheClient *redi
 
 	idp := uuid.New()
 
-	chanCache := redischcache.NewChannelCache(cacheClient)
-
+	policyCache := redischcache.NewPolicyCache(cacheClient)
 	thingCache := redisthcache.NewThingCache(cacheClient)
 
 	csvc := clients.NewService(auth, cRepo, thingCache, idp)
 	gsvc := groups.NewService(auth, gRepo, pRepo, idp)
-	psvc := tpolicies.NewService(auth, pRepo, thingCache, chanCache, idp)
+	psvc := tpolicies.NewService(auth, pRepo, thingCache, policyCache, idp)
 
 	csvc = ctracing.TracingMiddleware(csvc, tracer)
 	csvc = capi.LoggingMiddleware(csvc, logger)
