@@ -19,12 +19,39 @@ func TracingMiddleware(psvc policies.Service, tracer trace.Tracer) policies.Serv
 	return &tracingMiddleware{tracer, psvc}
 }
 
-func (tm *tracingMiddleware) AddPolicy(ctx context.Context, token string, p policies.Policy) error {
+func (tm *tracingMiddleware) Authorize(ctx context.Context, entityType string, p policies.Policy) error {
+	ctx, span := tm.tracer.Start(ctx, "svc_authorize", trace.WithAttributes(attribute.String("Subject", p.Subject), attribute.String("Object", p.Object), attribute.StringSlice("Actions", p.Actions)))
+	defer span.End()
+
+	return tm.psvc.Authorize(ctx, entityType, p)
+}
+
+func (tm *tracingMiddleware) AuthorizeByKey(ctx context.Context, entityType string, p policies.Policy) (string, error) {
+	ctx, span := tm.tracer.Start(ctx, "svc_authorize_by_key", trace.WithAttributes(attribute.String("Subject", p.Subject), attribute.String("Object", p.Object), attribute.StringSlice("Actions", p.Actions)))
+	defer span.End()
+
+	return tm.psvc.AuthorizeByKey(ctx, entityType, p)
+}
+
+func (tm *tracingMiddleware) AddPolicy(ctx context.Context, token string, p policies.Policy) (policies.Policy, error) {
 	ctx, span := tm.tracer.Start(ctx, "svc_add_policy", trace.WithAttributes(attribute.StringSlice("Actions", p.Actions)))
 	defer span.End()
 
 	return tm.psvc.AddPolicy(ctx, token, p)
+}
 
+func (tm *tracingMiddleware) UpdatePolicy(ctx context.Context, token string, p policies.Policy) (policies.Policy, error) {
+	ctx, span := tm.tracer.Start(ctx, "svc_update_policy", trace.WithAttributes(attribute.StringSlice("Actions", p.Actions)))
+	defer span.End()
+
+	return tm.psvc.UpdatePolicy(ctx, token, p)
+}
+
+func (tm *tracingMiddleware) ListPolicies(ctx context.Context, token string, p policies.Page) (policies.PolicyPage, error) {
+	ctx, span := tm.tracer.Start(ctx, "svc_list_policies", trace.WithAttributes(attribute.String("Actions", p.Action)))
+	defer span.End()
+
+	return tm.psvc.ListPolicies(ctx, token, p)
 }
 
 func (tm *tracingMiddleware) DeletePolicy(ctx context.Context, token string, p policies.Policy) error {
@@ -32,20 +59,4 @@ func (tm *tracingMiddleware) DeletePolicy(ctx context.Context, token string, p p
 	defer span.End()
 
 	return tm.psvc.DeletePolicy(ctx, token, p)
-
-}
-
-func (tm *tracingMiddleware) CanAccessByID(ctx context.Context, chanID, thingID string) error {
-	ctx, span := tm.tracer.Start(ctx, "svc_access_by_id", trace.WithAttributes(attribute.String("channelID", chanID), attribute.String("thingID", thingID)))
-	defer span.End()
-
-	return tm.psvc.CanAccessByID(ctx, chanID, thingID)
-
-}
-func (tm *tracingMiddleware) CanAccessByKey(ctx context.Context, chanID, thingKey string) (string, error) {
-	ctx, span := tm.tracer.Start(ctx, "svc_access_by_key", trace.WithAttributes(attribute.String("channelID", chanID), attribute.String("Key", thingKey)))
-	defer span.End()
-
-	return tm.psvc.CanAccessByKey(ctx, chanID, thingKey)
-
 }

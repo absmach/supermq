@@ -72,14 +72,15 @@ func listClientsEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 
 		pm := clients.Page{
-			SharedBy: req.sharedBy,
-			Status:   req.status,
-			Offset:   req.offset,
-			Limit:    req.limit,
-			OwnerID:  req.owner,
-			Name:     req.name,
-			Tag:      req.tag,
-			Metadata: req.metadata,
+			SharedBy:          req.sharedBy,
+			Status:            req.status,
+			Offset:            req.offset,
+			Limit:             req.limit,
+			Owner:             req.owner,
+			Name:              req.name,
+			Tag:               req.tag,
+			Metadata:          req.metadata,
+			FetchSharedThings: req.shared,
 		}
 		page, err := svc.ListClients(ctx, req.token, pm)
 		if err != nil {
@@ -164,7 +165,7 @@ func shareThingEndpoint(svc clients.Service) endpoint.Endpoint {
 		if err := svc.ShareThing(ctx, req.token, req.thingID, req.Policies, req.UserIDs); err != nil {
 			return nil, err
 		}
-		return updateClientRes{}, nil
+		return shareThingRes{}, nil
 	}
 }
 

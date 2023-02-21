@@ -5,46 +5,43 @@ import (
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/mainflux/mainflux/things/clients"
-	"github.com/mainflux/mainflux/things/groups"
 	"github.com/mainflux/mainflux/things/policies"
 )
 
-func canAccessEndpoint(svc policies.Service) endpoint.Endpoint {
+func authorizeEndpoint(svc policies.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(accessByKeyReq)
+		req := request.(authorizeReq)
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
+		policy := policies.Policy{
+			Subject: req.clientID,
+			Object:  req.groupID,
+			Actions: []string{req.action},
+		}
+		if err := svc.Authorize(ctx, req.entityType, policy); err != nil {
+			return authorizeRes{}, err
+		}
+		return authorizeRes{authorized: true}, nil
+	}
+}
 
-		id, err := svc.CanAccessByKey(ctx, req.chanID, req.thingKey)
+func authorizeByKeyEndpoint(svc policies.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(authorizeReq)
+		if err := req.validate(); err != nil {
+			return nil, err
+		}
+		policy := policies.Policy{
+			Subject: req.clientID,
+			Object:  req.groupID,
+			Actions: []string{req.action},
+		}
+		clientID, err := svc.AuthorizeByKey(ctx, req.entityType, policy)
 		if err != nil {
 			return identityRes{}, err
 		}
-		return identityRes{id: id}, nil
-	}
-}
-
-func canAccessByIDEndpoint(svc policies.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(accessByIDReq)
-		if err := req.validate(); err != nil {
-			return nil, err
-		}
-
-		err := svc.CanAccessByID(ctx, req.chanID, req.thingID)
-		return emptyRes{err: err}, err
-	}
-}
-
-func isChannelOwnerEndpoint(svc groups.Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(channelOwnerReq)
-		if err := req.validate(); err != nil {
-			return nil, err
-		}
-
-		err := svc.IsChannelOwner(ctx, req.owner, req.chanID)
-		return emptyRes{err: err}, err
+		return identityRes{id: clientID}, nil
 	}
 }
 

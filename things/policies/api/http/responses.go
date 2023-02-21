@@ -1,25 +1,26 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/mainflux/mainflux"
+	"github.com/mainflux/mainflux/things/policies"
 )
 
 var (
-	_ mainflux.Response = (*addPolicyRes)(nil)
+	_ mainflux.Response = (*policyRes)(nil)
+	_ mainflux.Response = (*listPolicyRes)(nil)
 	_ mainflux.Response = (*identityRes)(nil)
-	_ mainflux.Response = (*canAccessByIDRes)(nil)
+	_ mainflux.Response = (*authorizeRes)(nil)
 	_ mainflux.Response = (*deletePolicyRes)(nil)
 )
 
-type addPolicyRes struct {
-	id      string
+type policyRes struct {
+	policies.Policy
 	created bool
 }
 
-func (res addPolicyRes) Code() int {
+func (res policyRes) Code() int {
 	if res.created {
 		return http.StatusCreated
 	}
@@ -27,18 +28,28 @@ func (res addPolicyRes) Code() int {
 	return http.StatusOK
 }
 
-func (res addPolicyRes) Headers() map[string]string {
-	if res.created {
-		return map[string]string{
-			"Location": fmt.Sprintf("/groups/%s", res.id),
-		}
-	}
-
+func (res policyRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res addPolicyRes) Empty() bool {
-	return true
+func (res policyRes) Empty() bool {
+	return false
+}
+
+type listPolicyRes struct {
+	policies.PolicyPage
+}
+
+func (res listPolicyRes) Code() int {
+	return http.StatusOK
+}
+
+func (res listPolicyRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res listPolicyRes) Empty() bool {
+	return false
 }
 
 type deletePolicyRes struct{}
@@ -71,16 +82,16 @@ func (res identityRes) Empty() bool {
 	return false
 }
 
-type canAccessByIDRes struct{}
+type authorizeRes struct{}
 
-func (res canAccessByIDRes) Code() int {
+func (res authorizeRes) Code() int {
 	return http.StatusOK
 }
 
-func (res canAccessByIDRes) Headers() map[string]string {
+func (res authorizeRes) Headers() map[string]string {
 	return map[string]string{}
 }
 
-func (res canAccessByIDRes) Empty() bool {
+func (res authorizeRes) Empty() bool {
 	return true
 }

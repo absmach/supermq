@@ -74,6 +74,7 @@ type listClientsReq struct {
 	sharedBy   string
 	visibility string
 	metadata   clients.Metadata
+	shared     bool
 }
 
 func (req listClientsReq) validate() error {
@@ -226,10 +227,5 @@ func (req shareThingReq) validate() error {
 		return apiutil.ErrEmptyList
 	}
 
-	for _, p := range req.Policies {
-		if p != api.ReadPolicy && p != api.WritePolicy && p != api.DeletePolicy {
-			return apiutil.ErrMalformedPolicy
-		}
-	}
 	return nil
 }

@@ -38,30 +38,35 @@ func NewDatabase(db *sqlx.DB, tracer trace.Tracer) Database {
 func (d database) NamedQueryContext(ctx context.Context, query string, args interface{}) (*sqlx.Rows, error) {
 	ctx, span := addSpanTags(ctx, d.tracer, "NamedQueryContext", query)
 	defer span.End()
+	fmt.Println(query)
 	return d.db.NamedQueryContext(ctx, query, args)
 }
 
 func (d database) NamedExecContext(ctx context.Context, query string, args interface{}) (sql.Result, error) {
 	ctx, span := addSpanTags(ctx, d.tracer, "NamedExecContext", query)
 	defer span.End()
+	fmt.Println(query)
 	return d.db.NamedExecContext(ctx, query, args)
 }
 
 func (d database) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	ctx, span := addSpanTags(ctx, d.tracer, "ExecContext", query)
 	defer span.End()
+	fmt.Println(query)
 	return d.db.ExecContext(ctx, query, args...)
 }
 
 func (d database) QueryRowxContext(ctx context.Context, query string, args ...interface{}) *sqlx.Row {
 	ctx, span := addSpanTags(ctx, d.tracer, "QueryRowxContext", query)
 	defer span.End()
+	fmt.Println(query)
 	return d.db.QueryRowxContext(ctx, query, args...)
 }
 
 func (d database) QueryxContext(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error) {
 	ctx, span := addSpanTags(ctx, d.tracer, "QueryxContext", query)
 	defer span.End()
+	fmt.Println(query)
 	return d.db.QueryxContext(ctx, query, args...)
 }
 

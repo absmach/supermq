@@ -8,7 +8,7 @@ import (
 )
 
 // PolicyTypes contains a list of the available policy types currently supported
-var PolicyTypes = []string{"c_delete", "c_update", "c_add", "c_list", "g_delete", "g_update", "g_add", "g_list", "m_write", "m_read"}
+var PolicyTypes = []string{WriteAction, ReadAction}
 
 // Policy represents an argument struct for making a policy related function calls.
 type Policy struct {
@@ -31,7 +31,7 @@ type PolicyRepository interface {
 	// Save creates a policy for the given Subject, so that, after
 	// Save, `Subject` has a `relation` on `group_id`. Returns a non-nil
 	// error in case of failures.
-	Save(ctx context.Context, p Policy) error
+	Save(ctx context.Context, p Policy) (Policy, error)
 
 	// Evaluate is used to evaluate if you have the correct permissions.
 	// We evaluate if we are in the same group first then evaluate if the
@@ -39,64 +39,54 @@ type PolicyRepository interface {
 	Evaluate(ctx context.Context, entityType string, p Policy) error
 
 	// Update updates the policy type.
-	Update(ctx context.Context, p Policy) error
+	Update(ctx context.Context, p Policy) (Policy, error)
 
 	// Retrieve retrieves policy for a given input.
 	Retrieve(ctx context.Context, pm Page) (PolicyPage, error)
 
 	// Delete deletes the policy
 	Delete(ctx context.Context, p Policy) error
-
-	HasThingByID(ctx context.Context, chanID, thingID string) error
-
-	HasThing(ctx context.Context, chanID, thingKey string) (string, error)
 }
 
 // PolicyService represents a authorization service. It exposes
 // functionalities through `auth` to perform authorization.
 type PolicyService interface {
+	// Authorize checks authorization of the given `subject`. Basically,
+	// Authorize verifies that Is `subject` allowed to `relation` on
+	// `object`. Authorize returns a non-nil error if the subject has
+	// no relation on the object (which simply means the operation is
+	// denied).
+	Authorize(ctx context.Context, entityType string, p Policy) error
+
 	// AddPolicy creates a policy for the given subject, so that, after
 	// AddPolicy, `subject` has a `relation` on `object`. Returns a non-nil
 	// error in case of failures.
-	AddPolicy(ctx context.Context, token string, p Policy) error
+	AddPolicy(ctx context.Context, token string, p Policy) (Policy, error)
 
 	// DeletePolicy removes a policy.
 	DeletePolicy(ctx context.Context, token string, p Policy) error
 
-	// CanAccessByKey determines whether the channel can be accessed using the
+	// UpdatePolicy updates an existing policy
+	UpdatePolicy(ctx context.Context, token string, p Policy) (Policy, error)
+
+	// ListPolicies lists existing policies
+	ListPolicies(ctx context.Context, token string, p Page) (PolicyPage, error)
+
+	// AuthorizeByKey determines whether the group can be accessed using the
 	// provided key and returns thing's id if access is allowed.
-	CanAccessByKey(ctx context.Context, chanID, key string) (string, error)
-
-	// CanAccessByID determines whether the channel can be accessed by
-	// the given thing and returns error if it cannot.
-	CanAccessByID(ctx context.Context, chanID, thingID string) error
+	AuthorizeByKey(ctx context.Context, entityType string, p Policy) (string, error)
 }
 
-// ChannelCache contains channel-thing connection caching interface.
-type ChannelCache interface {
-	// Connect channel thing connection.
-	Connect(context.Context, string, string) error
+// PolicyCache contains channel-thing connection caching interface.
+type PolicyCache interface {
+	// AddPolicy connects group to a client with the specified action.
+	AddPolicy(ctx context.Context, policy Policy) error
 
-	// HasThing checks if thing is connected to channel.
-	HasThing(context.Context, string, string) bool
+	// Evaluate checks if a client is connected to group.
+	Evaluate(ctx context.Context, policy Policy) bool
 
-	// Disconnects thing from channel.
-	Disconnect(context.Context, string, string) error
-
-	// Removes channel from cache.
-	Remove(context.Context, string) error
-}
-
-// ThingCache contains thing caching interface.
-type ThingCache interface {
-	// Save stores pair thing key, thing id.
-	Save(context.Context, string, string) error
-
-	// ID returns thing ID for given key.
-	ID(context.Context, string) (string, error)
-
-	// Removes thing from cache.
-	Remove(context.Context, string) error
+	// DeletePolicy deletes a client connection to a group.
+	DeletePolicy(ctx context.Context, policy Policy) error
 }
 
 // Validate returns an error if policy representation is invalid.
@@ -108,11 +98,11 @@ func (p Policy) Validate() error {
 		return apiutil.ErrMissingPolicyObj
 	}
 	if len(p.Actions) == 0 {
-		return apiutil.ErrMissingPolicyAct
+		return apiutil.ErrMalformedPolicyAct
 	}
 	for _, p := range p.Actions {
 		if ok := ValidateAction(p); !ok {
-			return apiutil.ErrMissingPolicyAct
+			return apiutil.ErrMalformedPolicyAct
 		}
 	}
 	return nil

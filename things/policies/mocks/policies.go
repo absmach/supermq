@@ -23,16 +23,16 @@ func (m *PolicyRepository) Retrieve(ctx context.Context, pm policies.Page) (poli
 	return ret.Get(0).(policies.PolicyPage), ret.Error(1)
 }
 
-func (m *PolicyRepository) Save(ctx context.Context, p policies.Policy) error {
+func (m *PolicyRepository) Save(ctx context.Context, p policies.Policy) (policies.Policy, error) {
 	ret := m.Called(ctx, p)
 
-	return ret.Error(0)
+	return ret.Get(0).(policies.Policy), ret.Error(1)
 }
 
-func (m *PolicyRepository) Update(ctx context.Context, p policies.Policy) error {
+func (m *PolicyRepository) Update(ctx context.Context, p policies.Policy) (policies.Policy, error) {
 	ret := m.Called(ctx, p)
 
-	return ret.Error(0)
+	return ret.Get(0).(policies.Policy), ret.Error(1)
 }
 
 func (m *PolicyRepository) Evaluate(ctx context.Context, entityType string, p policies.Policy) error {

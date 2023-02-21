@@ -15,6 +15,7 @@ var (
 	_ mainflux.Response = (*clientsPageRes)(nil)
 	_ mainflux.Response = (*viewMembersRes)(nil)
 	_ mainflux.Response = (*memberPageRes)(nil)
+	_ mainflux.Response = (*shareThingRes)(nil)
 )
 
 type pageRes struct {
@@ -39,7 +40,7 @@ func (res createClientRes) Code() int {
 func (res createClientRes) Headers() map[string]string {
 	if res.created {
 		return map[string]string{
-			"Location": fmt.Sprintf("/clients/%s", res.ID),
+			"Location": fmt.Sprintf("/things/%s", res.ID),
 		}
 	}
 
@@ -145,5 +146,19 @@ func (res deleteClientRes) Headers() map[string]string {
 }
 
 func (res deleteClientRes) Empty() bool {
+	return false
+}
+
+type shareThingRes struct{}
+
+func (res shareThingRes) Code() int {
+	return http.StatusOK
+}
+
+func (res shareThingRes) Headers() map[string]string {
+	return map[string]string{}
+}
+
+func (res shareThingRes) Empty() bool {
 	return false
 }

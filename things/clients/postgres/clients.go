@@ -36,9 +36,9 @@ func (repo clientRepo) Save(ctx context.Context, cs ...clients.Client) ([]client
 	}
 
 	for _, cli := range cs {
-		q := `INSERT INTO clients (id, name, tags, owner, identity, secret, metadata, created_at, updated_at, status)
-        VALUES (:id, :name, :tags, :owner, :identity, :secret, :metadata, :created_at, :updated_at, :status)
-        RETURNING id, name, tags, owner, identity, secret, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`
+		q := `INSERT INTO clients (id, name, tags, owner_id, identity, secret, metadata, created_at, updated_at, status)
+        VALUES (:id, :name, :tags, :owner_id, :identity, :secret, :metadata, :created_at, :updated_at, :status)
+        RETURNING id, name, tags, owner_id, identity, secret, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at, updated_at`
 
 		dbcli, err := toDBClient(cli)
 		if err != nil {
@@ -58,7 +58,7 @@ func (repo clientRepo) Save(ctx context.Context, cs ...clients.Client) ([]client
 }
 
 func (repo clientRepo) RetrieveByID(ctx context.Context, id string) (clients.Client, error) {
-	q := `SELECT id, name, tags, COALESCE(owner, '') AS owner, identity, secret, metadata, created_at, updated_at, status 
+	q := `SELECT id, name, tags, COALESCE(owner_id, '') AS owner_id, identity, secret, metadata, created_at, updated_at, status 
         FROM clients
         WHERE id = $1`
 
@@ -78,7 +78,7 @@ func (repo clientRepo) RetrieveByID(ctx context.Context, id string) (clients.Cli
 }
 
 func (repo clientRepo) RetrieveBySecret(ctx context.Context, key string) (clients.Client, error) {
-	q := fmt.Sprintf(`SELECT id, name, tags, COALESCE(owner, '') AS owner, identity, secret, metadata, created_at, updated_at, status
+	q := fmt.Sprintf(`SELECT id, name, tags, COALESCE(owner_id, '') AS owner_id, identity, secret, metadata, created_at, updated_at, status
         FROM clients
         WHERE secret = $1 AND status = %d`, clients.EnabledStatus)
 
@@ -103,7 +103,7 @@ func (repo clientRepo) RetrieveAll(ctx context.Context, pm clients.Page) (client
 		return clients.ClientsPage{}, errors.Wrap(errors.ErrViewEntity, err)
 	}
 
-	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags, c.identity, c.secret, c.metadata, COALESCE(c.owner, '') AS owner, c.status, c.created_at
+	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags, c.identity, c.secret, c.metadata, COALESCE(c.owner_id, '') AS owner_id, c.status, c.created_at
 						FROM clients c %s ORDER BY c.created_at LIMIT :limit OFFSET :offset;`, query)
 
 	dbPage, err := toDBClientsPage(pm)
@@ -216,7 +216,7 @@ func (repo clientRepo) Update(ctx context.Context, client clients.Client) (clien
 	}
 	q := fmt.Sprintf(`UPDATE clients SET %s updated_at = :updated_at
         WHERE id = :id AND status = %d
-        RETURNING id, name, tags, identity, secret,  metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`,
+        RETURNING id, name, tags, identity, secret,  metadata, COALESCE(owner_id, '') AS owner_id, status, created_at, updated_at`,
 		upq, clients.EnabledStatus)
 
 	dbu, err := toDBClient(client)
@@ -244,7 +244,7 @@ func (repo clientRepo) Update(ctx context.Context, client clients.Client) (clien
 func (repo clientRepo) UpdateTags(ctx context.Context, client clients.Client) (clients.Client, error) {
 	q := fmt.Sprintf(`UPDATE clients SET tags = :tags, updated_at = :updated_at
         WHERE id = :id AND status = %d
-        RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`,
+        RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at, updated_at`,
 		clients.EnabledStatus)
 
 	dbu, err := toDBClient(client)
@@ -271,7 +271,7 @@ func (repo clientRepo) UpdateTags(ctx context.Context, client clients.Client) (c
 func (repo clientRepo) UpdateIdentity(ctx context.Context, client clients.Client) (clients.Client, error) {
 	q := fmt.Sprintf(`UPDATE clients SET identity = :identity, updated_at = :updated_at
         WHERE id = :id AND status = %d
-        RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`,
+        RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at, updated_at`,
 		clients.EnabledStatus)
 
 	dbc, err := toDBClient(client)
@@ -297,8 +297,8 @@ func (repo clientRepo) UpdateIdentity(ctx context.Context, client clients.Client
 
 func (repo clientRepo) UpdateSecret(ctx context.Context, client clients.Client) (clients.Client, error) {
 	q := fmt.Sprintf(`UPDATE clients SET secret = :secret, updated_at = :updated_at
-        WHERE owner = :owner AND id = :id AND status = %d
-        RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`,
+        WHERE id = :id AND status = %d
+        RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at, updated_at`,
 		clients.EnabledStatus)
 
 	dbc, err := toDBClient(client)
@@ -323,9 +323,9 @@ func (repo clientRepo) UpdateSecret(ctx context.Context, client clients.Client) 
 }
 
 func (repo clientRepo) UpdateOwner(ctx context.Context, client clients.Client) (clients.Client, error) {
-	q := fmt.Sprintf(`UPDATE clients SET owner = :owner, updated_at = :updated_at
+	q := fmt.Sprintf(`UPDATE clients SET owner_id = :owner_id, updated_at = :updated_at
         WHERE id = :id AND status = %d
-        RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`,
+        RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at, updated_at`,
 		clients.EnabledStatus)
 
 	dbc, err := toDBClient(client)
@@ -351,7 +351,7 @@ func (repo clientRepo) UpdateOwner(ctx context.Context, client clients.Client) (
 
 func (repo clientRepo) ChangeStatus(ctx context.Context, id string, status clients.Status) (clients.Client, error) {
 	q := fmt.Sprintf(`UPDATE clients SET status = %d WHERE id = :id
-        RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner, '') AS owner, status, created_at, updated_at`, status)
+        RETURNING id, name, tags, identity, secret, metadata, COALESCE(owner_id, '') AS owner_id, status, created_at, updated_at`, status)
 
 	dbc := dbClient{
 		ID: id,
@@ -378,7 +378,7 @@ type dbClient struct {
 	Name      string           `db:"name,omitempty"`
 	Tags      pgtype.TextArray `db:"tags,omitempty"`
 	Identity  string           `db:"identity"`
-	Owner     string           `db:"owner,omitempty"` // nullable
+	Owner     string           `db:"owner_id,omitempty"` // nullable
 	Secret    string           `db:"secret"`
 	Metadata  []byte           `db:"metadata,omitempty"`
 	CreatedAt time.Time        `db:"created_at"`
@@ -453,6 +453,9 @@ func pageQuery(pm clients.Page) (string, error) {
 	if mq != "" {
 		query = append(query, mq)
 	}
+	if len(pm.IDs) != 0 {
+		query = append(query, fmt.Sprintf("id IN ('%s')", strings.Join(pm.IDs, "','")))
+	}
 	if pm.Name != "" {
 		query = append(query, fmt.Sprintf("c.name = '%s'", pm.Name))
 	}
@@ -463,17 +466,17 @@ func pageQuery(pm clients.Page) (string, error) {
 		query = append(query, fmt.Sprintf("c.status = %d", pm.Status))
 	}
 	// For listing clients that the specified client owns but not sharedby
-	if pm.OwnerID != "" && pm.SharedBy == "" {
-		query = append(query, fmt.Sprintf("c.owner = '%s'", pm.OwnerID))
+	if pm.Owner != "" && pm.SharedBy == "" {
+		query = append(query, fmt.Sprintf("c.owner_id = '%s'", pm.Owner))
 	}
 
 	// For listing clients that the specified client owns and that are shared with the specified client
-	if pm.OwnerID != "" && pm.SharedBy != "" {
-		query = append(query, fmt.Sprintf("(c.owner = '%s' OR policies.object IN (SELECT object FROM policies WHERE subject = '%s' AND '%s'=ANY(actions)))", pm.OwnerID, pm.SharedBy, pm.Action))
+	if pm.Owner != "" && pm.SharedBy != "" {
+		query = append(query, fmt.Sprintf("(c.owner_id = '%s' OR policies.object IN (SELECT object FROM policies WHERE subject = '%s' AND '%s'=ANY(actions)))", pm.Owner, pm.SharedBy, pm.Action))
 	}
 	// For listing clients that the specified client is shared with
-	if pm.SharedBy != "" && pm.OwnerID == "" {
-		query = append(query, fmt.Sprintf("c.owner != '%s' AND (policies.object IN (SELECT object FROM policies WHERE subject = '%s' AND '%s'=ANY(actions)))", pm.SharedBy, pm.SharedBy, pm.Action))
+	if pm.SharedBy != "" && pm.Owner == "" {
+		query = append(query, fmt.Sprintf("c.owner_id != '%s' AND (policies.object IN (SELECT object FROM policies WHERE subject = '%s' AND '%s'=ANY(actions)))", pm.SharedBy, pm.SharedBy, pm.Action))
 	}
 	if len(query) > 0 {
 		emq = fmt.Sprintf("WHERE %s", strings.Join(query, " AND "))
@@ -493,7 +496,7 @@ func toDBClientsPage(pm clients.Page) (dbClientsPage, error) {
 	return dbClientsPage{
 		Name:     pm.Name,
 		Metadata: data,
-		Owner:    pm.OwnerID,
+		Owner:    pm.Owner,
 		Total:    pm.Total,
 		Offset:   pm.Offset,
 		Limit:    pm.Limit,
@@ -505,7 +508,7 @@ func toDBClientsPage(pm clients.Page) (dbClientsPage, error) {
 type dbClientsPage struct {
 	GroupID  string         `db:"group_id"`
 	Name     string         `db:"name"`
-	Owner    string         `db:"owner"`
+	Owner    string         `db:"owner_id"`
 	Identity string         `db:"identity"`
 	Metadata []byte         `db:"metadata"`
 	Tag      string         `db:"tag"`

@@ -3,12 +3,10 @@ package redis
 import "encoding/json"
 
 const (
-	thingPrefix     = "thing."
-	thingCreate     = thingPrefix + "create"
-	thingUpdate     = thingPrefix + "update"
-	thingRemove     = thingPrefix + "remove"
-	thingConnect    = thingPrefix + "connect"
-	thingDisconnect = thingPrefix + "disconnect"
+	thingPrefix = "thing."
+	thingCreate = thingPrefix + "create"
+	thingUpdate = thingPrefix + "update"
+	thingRemove = thingPrefix + "remove"
 )
 
 type event interface {

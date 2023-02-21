@@ -6,20 +6,18 @@ import (
 
 	"github.com/go-kit/kit/endpoint"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mainflux/mainflux/things/policies"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/go-kit/kit/otelkit"
 	"google.golang.org/grpc"
 )
 
-const svcName = "policies.AuthService"
+const svcName = "policies.ThingsService"
 
 var _ policies.ThingsServiceClient = (*grpcClient)(nil)
 
 type grpcClient struct {
-	canAccessByKey endpoint.Endpoint
-	canAccessByID  endpoint.Endpoint
-	isChannelOwner endpoint.Endpoint
+	authorize      endpoint.Endpoint
+	authorizeByKey endpoint.Endpoint
 	identify       endpoint.Endpoint
 	timeout        time.Duration
 }
@@ -27,29 +25,21 @@ type grpcClient struct {
 // NewClient returns new gRPC client instance.
 func NewClient(conn *grpc.ClientConn, timeout time.Duration) policies.ThingsServiceClient {
 	return &grpcClient{
-		canAccessByKey: otelkit.EndpointMiddleware(otelkit.WithOperation("can_access"))(kitgrpc.NewClient(
+		authorizeByKey: otelkit.EndpointMiddleware(otelkit.WithOperation("authorize_by_key"))(kitgrpc.NewClient(
 			conn,
 			svcName,
-			"CanAccessByKey",
-			encodeCanAccessByKeyRequest,
+			"AuthorizeByKey",
+			encodeAuthorizeRequest,
 			decodeIdentityResponse,
 			policies.ThingID{},
 		).Endpoint()),
-		canAccessByID: otelkit.EndpointMiddleware(otelkit.WithOperation("can_access_by_id"))(kitgrpc.NewClient(
+		authorize: otelkit.EndpointMiddleware(otelkit.WithOperation("authorize"))(kitgrpc.NewClient(
 			conn,
 			svcName,
-			"CanAccessByID",
-			encodeCanAccessByIDRequest,
-			decodeEmptyResponse,
-			empty.Empty{},
-		).Endpoint()),
-		isChannelOwner: otelkit.EndpointMiddleware(otelkit.WithOperation("is_channel_owner"))(kitgrpc.NewClient(
-			conn,
-			svcName,
-			"IsChannelOwner",
-			encodeIsChannelOwner,
-			decodeEmptyResponse,
-			empty.Empty{},
+			"Authorize",
+			encodeAuthorizeRequest,
+			decodeAuthorizeResponse,
+			policies.TAuthorizeRes{},
 		).Endpoint()),
 		identify: otelkit.EndpointMiddleware(otelkit.WithOperation("identify"))(kitgrpc.NewClient(
 			conn,
@@ -64,15 +54,17 @@ func NewClient(conn *grpc.ClientConn, timeout time.Duration) policies.ThingsServ
 	}
 }
 
-func (client grpcClient) CanAccessByKey(ctx context.Context, req *policies.AccessByKeyReq, _ ...grpc.CallOption) (*policies.ThingID, error) {
+func (client grpcClient) AuthorizeByKey(ctx context.Context, req *policies.TAuthorizeReq, _ ...grpc.CallOption) (*policies.ThingID, error) {
 	ctx, cancel := context.WithTimeout(ctx, client.timeout)
 	defer cancel()
 
-	ar := accessByKeyReq{
-		thingKey: req.GetToken(),
-		chanID:   req.GetChanID(),
+	ar := authorizeReq{
+		entityType: req.GetEntityType(),
+		clientID:   req.GetSub(),
+		groupID:    req.GetObj(),
+		action:     req.GetAct(),
 	}
-	res, err := client.canAccessByKey(ctx, ar)
+	res, err := client.authorizeByKey(ctx, ar)
 	if err != nil {
 		return nil, err
 	}
@@ -81,26 +73,23 @@ func (client grpcClient) CanAccessByKey(ctx context.Context, req *policies.Acces
 	return &policies.ThingID{Value: ir.id}, nil
 }
 
-func (client grpcClient) CanAccessByID(ctx context.Context, req *policies.AccessByIDReq, _ ...grpc.CallOption) (*empty.Empty, error) {
-	ar := accessByIDReq{thingID: req.GetThingID(), chanID: req.GetChanID()}
-	res, err := client.canAccessByID(ctx, ar)
+func (client grpcClient) Authorize(ctx context.Context, req *policies.TAuthorizeReq, _ ...grpc.CallOption) (*policies.TAuthorizeRes, error) {
+	ctx, cancel := context.WithTimeout(ctx, client.timeout)
+	defer cancel()
+
+	ar := authorizeReq{
+		entityType: req.GetEntityType(),
+		clientID:   req.GetSub(),
+		groupID:    req.GetObj(),
+		action:     req.GetAct(),
+	}
+	res, err := client.authorize(ctx, ar)
 	if err != nil {
 		return nil, err
 	}
 
-	er := res.(emptyRes)
-	return &empty.Empty{}, er.err
-}
-
-func (client grpcClient) IsChannelOwner(ctx context.Context, req *policies.ChannelOwnerReq, _ ...grpc.CallOption) (*empty.Empty, error) {
-	ar := channelOwnerReq{owner: req.GetOwner(), chanID: req.GetChanID()}
-	res, err := client.isChannelOwner(ctx, ar)
-	if err != nil {
-		return nil, err
-	}
-
-	er := res.(emptyRes)
-	return &empty.Empty{}, er.err
+	ir := res.(authorizeRes)
+	return &policies.TAuthorizeRes{Authorized: ir.authorized}, nil
 }
 
 func (client grpcClient) Identify(ctx context.Context, req *policies.Key, _ ...grpc.CallOption) (*policies.ThingID, error) {
@@ -116,19 +105,9 @@ func (client grpcClient) Identify(ctx context.Context, req *policies.Key, _ ...g
 	return &policies.ThingID{Value: ir.id}, nil
 }
 
-func encodeCanAccessByKeyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(accessByKeyReq)
-	return &policies.AccessByKeyReq{Token: req.thingKey, ChanID: req.chanID}, nil
-}
-
-func encodeCanAccessByIDRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(accessByIDReq)
-	return &policies.AccessByIDReq{ThingID: req.thingID, ChanID: req.chanID}, nil
-}
-
-func encodeIsChannelOwner(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(channelOwnerReq)
-	return &policies.ChannelOwnerReq{Owner: req.owner, ChanID: req.chanID}, nil
+func encodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(authorizeReq)
+	return &policies.TAuthorizeReq{Sub: req.clientID, Obj: req.groupID, Act: req.action, EntityType: req.entityType}, nil
 }
 
 func encodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
@@ -141,6 +120,7 @@ func decodeIdentityResponse(_ context.Context, grpcRes interface{}) (interface{}
 	return identityRes{id: res.GetValue()}, nil
 }
 
-func decodeEmptyResponse(_ context.Context, _ interface{}) (interface{}, error) {
-	return emptyRes{}, nil
+func decodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(*policies.TAuthorizeRes)
+	return authorizeRes{authorized: res.GetAuthorized()}, nil
 }

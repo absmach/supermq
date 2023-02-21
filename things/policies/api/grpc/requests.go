@@ -2,46 +2,25 @@ package grpc
 
 import (
 	"github.com/mainflux/mainflux/internal/apiutil"
+	"github.com/mainflux/mainflux/things/policies"
 )
 
-type accessByKeyReq struct {
-	thingKey string
-	chanID   string
+type authorizeReq struct {
+	entityType string
+	clientID   string
+	groupID    string
+	action     string
 }
 
-func (req accessByKeyReq) validate() error {
-	if req.chanID == "" {
-		return apiutil.ErrMissingID
+func (req authorizeReq) validate() error {
+	if req.clientID == "" {
+		return apiutil.ErrMissingPolicySub
 	}
-
-	if req.thingKey == "" {
-		return apiutil.ErrBearerKey
+	if req.groupID == "" {
+		return apiutil.ErrMissingPolicyObj
 	}
-
-	return nil
-}
-
-type accessByIDReq struct {
-	thingID string
-	chanID  string
-}
-
-func (req accessByIDReq) validate() error {
-	if req.thingID == "" || req.chanID == "" {
-		return apiutil.ErrMissingID
-	}
-
-	return nil
-}
-
-type channelOwnerReq struct {
-	owner  string
-	chanID string
-}
-
-func (req channelOwnerReq) validate() error {
-	if req.owner == "" || req.chanID == "" {
-		return apiutil.ErrMissingID
+	if ok := policies.ValidateAction(req.action); !ok {
+		return apiutil.ErrMalformedPolicyAct
 	}
 
 	return nil

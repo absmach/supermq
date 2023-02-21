@@ -64,7 +64,7 @@ func (svc service) CreateGroups(ctx context.Context, token string, gs ...Group) 
 			g.ID = groupID
 		}
 		if g.Owner == "" {
-			g.Owner = res.GetEmail()
+			g.Owner = res.GetId()
 		}
 
 		if g.Status != EnabledStatus && g.Status != DisabledStatus {

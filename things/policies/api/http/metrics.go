@@ -25,12 +25,28 @@ func MetricsMiddleware(svc policies.Service, counter metrics.Counter, latency me
 	}
 }
 
-func (ms *metricsMiddleware) AddPolicy(ctx context.Context, token string, p policies.Policy) (err error) {
+func (ms *metricsMiddleware) AddPolicy(ctx context.Context, token string, p policies.Policy) (policy policies.Policy, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "add_policy").Add(1)
 		ms.latency.With("method", "add_policy").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 	return ms.svc.AddPolicy(ctx, token, p)
+}
+
+func (ms *metricsMiddleware) UpdatePolicy(ctx context.Context, token string, p policies.Policy) (policy policies.Policy, err error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "update_policy").Add(1)
+		ms.latency.With("method", "update_policy").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.UpdatePolicy(ctx, token, p)
+}
+
+func (ms *metricsMiddleware) ListPolicies(ctx context.Context, token string, p policies.Page) (policypage policies.PolicyPage, err error) {
+	defer func(begin time.Time) {
+		ms.counter.With("method", "list_policies").Add(1)
+		ms.latency.With("method", "list_policies").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return ms.svc.ListPolicies(ctx, token, p)
 }
 
 func (ms *metricsMiddleware) DeletePolicy(ctx context.Context, token string, p policies.Policy) (err error) {
@@ -41,18 +57,18 @@ func (ms *metricsMiddleware) DeletePolicy(ctx context.Context, token string, p p
 	return ms.svc.DeletePolicy(ctx, token, p)
 }
 
-func (ms *metricsMiddleware) CanAccessByKey(ctx context.Context, chanID, key string) (id string, err error) {
+func (ms *metricsMiddleware) AuthorizeByKey(ctx context.Context, entityType string, p policies.Policy) (id string, err error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "access_by_key").Add(1)
-		ms.latency.With("method", "access_by_key").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "authorize_by_key").Add(1)
+		ms.latency.With("method", "authorize_by_key").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.CanAccessByKey(ctx, chanID, key)
+	return ms.svc.AuthorizeByKey(ctx, entityType, p)
 }
 
-func (ms *metricsMiddleware) CanAccessByID(ctx context.Context, chanID, thingID string) (err error) {
+func (ms *metricsMiddleware) Authorize(ctx context.Context, entityType string, p policies.Policy) (err error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "access_by_id").Add(1)
-		ms.latency.With("method", "access_by_id").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "authorize").Add(1)
+		ms.latency.With("method", "authorize").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.CanAccessByID(ctx, chanID, thingID)
+	return ms.svc.Authorize(ctx, entityType, p)
 }

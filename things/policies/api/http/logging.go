@@ -20,7 +20,31 @@ func LoggingMiddleware(svc policies.Service, logger log.Logger) policies.Service
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) AddPolicy(ctx context.Context, token string, p policies.Policy) (err error) {
+func (lm *loggingMiddleware) Authorize(ctx context.Context, entityType string, p policies.Policy) (err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method authorize for group %s by client %s took %s to complete", p.Object, p.Subject, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+	return lm.svc.Authorize(ctx, entityType, p)
+}
+
+func (lm *loggingMiddleware) AuthorizeByKey(ctx context.Context, entityType string, p policies.Policy) (id string, err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method authorize_by_key for group %s by client %s took %s to complete", p.Object, p.Subject, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+	return lm.svc.AuthorizeByKey(ctx, entityType, p)
+}
+
+func (lm *loggingMiddleware) AddPolicy(ctx context.Context, token string, p policies.Policy) (policy policies.Policy, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method add_policy for client %s and token %s took %s to complete", p.Subject, token, time.Since(begin))
 		if err != nil {
@@ -30,6 +54,30 @@ func (lm *loggingMiddleware) AddPolicy(ctx context.Context, token string, p poli
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 	return lm.svc.AddPolicy(ctx, token, p)
+}
+
+func (lm *loggingMiddleware) UpdatePolicy(ctx context.Context, token string, p policies.Policy) (policy policies.Policy, err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method update_policy for client %s and token %s took %s to complete", p.Subject, token, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+	return lm.svc.UpdatePolicy(ctx, token, p)
+}
+
+func (lm *loggingMiddleware) ListPolicies(ctx context.Context, token string, p policies.Page) (policypage policies.PolicyPage, err error) {
+	defer func(begin time.Time) {
+		message := fmt.Sprintf("Method add_policy for client %s and token %s took %s to complete", p.Subject, token, time.Since(begin))
+		if err != nil {
+			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
+			return
+		}
+		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
+	}(time.Now())
+	return lm.svc.ListPolicies(ctx, token, p)
 }
 
 func (lm *loggingMiddleware) DeletePolicy(ctx context.Context, token string, p policies.Policy) (err error) {
@@ -42,28 +90,4 @@ func (lm *loggingMiddleware) DeletePolicy(ctx context.Context, token string, p p
 		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
 	}(time.Now())
 	return lm.svc.DeletePolicy(ctx, token, p)
-}
-
-func (lm *loggingMiddleware) CanAccessByKey(ctx context.Context, chanID, key string) (id string, err error) {
-	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method access_by_id for channel %s in key %s took %s to complete", chanID, key, time.Since(begin))
-		if err != nil {
-			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
-			return
-		}
-		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
-	}(time.Now())
-	return lm.svc.CanAccessByKey(ctx, chanID, key)
-}
-
-func (lm *loggingMiddleware) CanAccessByID(ctx context.Context, chanID, thingID string) (err error) {
-	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method access_by_id for channel %s in thing %s took %s to complete", chanID, thingID, time.Since(begin))
-		if err != nil {
-			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
-			return
-		}
-		lm.logger.Info(fmt.Sprintf("%s without errors.", message))
-	}(time.Now())
-	return lm.svc.CanAccessByID(ctx, chanID, thingID)
 }

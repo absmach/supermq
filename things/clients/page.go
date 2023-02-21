@@ -14,10 +14,11 @@ type Page struct {
 	Metadata          Metadata `json:"metadata,omitempty"`
 	Disconnected      bool     // Used for connected or disconnected lists
 	FetchSharedThings bool     // Used for identifying fetching either all or shared things.
-	OwnerID           string
+	Owner             string
 	Tag               string
 	SharedBy          string
 	Status            Status
 	Action            string
 	Subject           string
+	IDs               []string
 }

@@ -122,7 +122,7 @@ func decodeViewClient(_ context.Context, r *http.Request) (interface{}, error) {
 	return req, nil
 }
 
-func decodeShareThing(ctx context.Context, r *http.Request) (interface{}, error) {
+func decodeShareThing(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.ErrUnsupportedContentType
 	}
@@ -169,6 +169,10 @@ func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) 
 	if err != nil {
 		return nil, err
 	}
+	shared, err := apiutil.ReadBoolQuery(r, api.SharedKey, false)
+	if err != nil {
+		return nil, err
+	}
 	visibility, err := apiutil.ReadStringQuery(r, api.VisibilityKey, api.MyVisibility)
 	if err != nil {
 		return nil, err
@@ -195,6 +199,7 @@ func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) 
 		name:     n,
 		tag:      t,
 		sharedBy: sid,
+		shared:   shared,
 		owner:    oid,
 	}
 	return req, nil

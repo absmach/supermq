@@ -11,7 +11,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -23,9 +22,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ThingsServiceClient interface {
-	CanAccessByKey(ctx context.Context, in *AccessByKeyReq, opts ...grpc.CallOption) (*ThingID, error)
-	IsChannelOwner(ctx context.Context, in *ChannelOwnerReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	CanAccessByID(ctx context.Context, in *AccessByIDReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Authorize(ctx context.Context, in *TAuthorizeReq, opts ...grpc.CallOption) (*TAuthorizeRes, error)
+	AuthorizeByKey(ctx context.Context, in *TAuthorizeReq, opts ...grpc.CallOption) (*ThingID, error)
 	Identify(ctx context.Context, in *Key, opts ...grpc.CallOption) (*ThingID, error)
 }
 
@@ -37,27 +35,18 @@ func NewThingsServiceClient(cc grpc.ClientConnInterface) ThingsServiceClient {
 	return &thingsServiceClient{cc}
 }
 
-func (c *thingsServiceClient) CanAccessByKey(ctx context.Context, in *AccessByKeyReq, opts ...grpc.CallOption) (*ThingID, error) {
+func (c *thingsServiceClient) Authorize(ctx context.Context, in *TAuthorizeReq, opts ...grpc.CallOption) (*TAuthorizeRes, error) {
+	out := new(TAuthorizeRes)
+	err := c.cc.Invoke(ctx, "/policies.ThingsService/Authorize", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *thingsServiceClient) AuthorizeByKey(ctx context.Context, in *TAuthorizeReq, opts ...grpc.CallOption) (*ThingID, error) {
 	out := new(ThingID)
-	err := c.cc.Invoke(ctx, "/policies.ThingsService/CanAccessByKey", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *thingsServiceClient) IsChannelOwner(ctx context.Context, in *ChannelOwnerReq, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/policies.ThingsService/IsChannelOwner", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *thingsServiceClient) CanAccessByID(ctx context.Context, in *AccessByIDReq, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/policies.ThingsService/CanAccessByID", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/policies.ThingsService/AuthorizeByKey", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -77,9 +66,8 @@ func (c *thingsServiceClient) Identify(ctx context.Context, in *Key, opts ...grp
 // All implementations must embed UnimplementedThingsServiceServer
 // for forward compatibility
 type ThingsServiceServer interface {
-	CanAccessByKey(context.Context, *AccessByKeyReq) (*ThingID, error)
-	IsChannelOwner(context.Context, *ChannelOwnerReq) (*emptypb.Empty, error)
-	CanAccessByID(context.Context, *AccessByIDReq) (*emptypb.Empty, error)
+	Authorize(context.Context, *TAuthorizeReq) (*TAuthorizeRes, error)
+	AuthorizeByKey(context.Context, *TAuthorizeReq) (*ThingID, error)
 	Identify(context.Context, *Key) (*ThingID, error)
 	mustEmbedUnimplementedThingsServiceServer()
 }
@@ -88,14 +76,11 @@ type ThingsServiceServer interface {
 type UnimplementedThingsServiceServer struct {
 }
 
-func (UnimplementedThingsServiceServer) CanAccessByKey(context.Context, *AccessByKeyReq) (*ThingID, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CanAccessByKey not implemented")
+func (UnimplementedThingsServiceServer) Authorize(context.Context, *TAuthorizeReq) (*TAuthorizeRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Authorize not implemented")
 }
-func (UnimplementedThingsServiceServer) IsChannelOwner(context.Context, *ChannelOwnerReq) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method IsChannelOwner not implemented")
-}
-func (UnimplementedThingsServiceServer) CanAccessByID(context.Context, *AccessByIDReq) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CanAccessByID not implemented")
+func (UnimplementedThingsServiceServer) AuthorizeByKey(context.Context, *TAuthorizeReq) (*ThingID, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AuthorizeByKey not implemented")
 }
 func (UnimplementedThingsServiceServer) Identify(context.Context, *Key) (*ThingID, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Identify not implemented")
@@ -113,56 +98,38 @@ func RegisterThingsServiceServer(s grpc.ServiceRegistrar, srv ThingsServiceServe
 	s.RegisterService(&ThingsService_ServiceDesc, srv)
 }
 
-func _ThingsService_CanAccessByKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AccessByKeyReq)
+func _ThingsService_Authorize_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TAuthorizeReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ThingsServiceServer).CanAccessByKey(ctx, in)
+		return srv.(ThingsServiceServer).Authorize(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/policies.ThingsService/CanAccessByKey",
+		FullMethod: "/policies.ThingsService/Authorize",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ThingsServiceServer).CanAccessByKey(ctx, req.(*AccessByKeyReq))
+		return srv.(ThingsServiceServer).Authorize(ctx, req.(*TAuthorizeReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ThingsService_IsChannelOwner_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ChannelOwnerReq)
+func _ThingsService_AuthorizeByKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TAuthorizeReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ThingsServiceServer).IsChannelOwner(ctx, in)
+		return srv.(ThingsServiceServer).AuthorizeByKey(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/policies.ThingsService/IsChannelOwner",
+		FullMethod: "/policies.ThingsService/AuthorizeByKey",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ThingsServiceServer).IsChannelOwner(ctx, req.(*ChannelOwnerReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ThingsService_CanAccessByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AccessByIDReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ThingsServiceServer).CanAccessByID(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/policies.ThingsService/CanAccessByID",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ThingsServiceServer).CanAccessByID(ctx, req.(*AccessByIDReq))
+		return srv.(ThingsServiceServer).AuthorizeByKey(ctx, req.(*TAuthorizeReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -193,16 +160,12 @@ var ThingsService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*ThingsServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CanAccessByKey",
-			Handler:    _ThingsService_CanAccessByKey_Handler,
+			MethodName: "Authorize",
+			Handler:    _ThingsService_Authorize_Handler,
 		},
 		{
-			MethodName: "IsChannelOwner",
-			Handler:    _ThingsService_IsChannelOwner_Handler,
-		},
-		{
-			MethodName: "CanAccessByID",
-			Handler:    _ThingsService_CanAccessByID_Handler,
+			MethodName: "AuthorizeByKey",
+			Handler:    _ThingsService_AuthorizeByKey_Handler,
 		},
 		{
 			MethodName: "Identify",

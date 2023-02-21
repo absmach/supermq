@@ -1,32 +1,32 @@
 package api
 
 import (
+	"github.com/mainflux/mainflux/internal/api"
 	"github.com/mainflux/mainflux/internal/apiutil"
 )
 
 type createPolicyReq struct {
-	token   string
-	Owner   string `json:"owner,omitempty"`
-	ThingID string `json:"thing,omitempty"`
-	ChanID  string `json:"channel,omitempty"`
+	token    string
+	Owner    string `json:"owner,omitempty"`
+	ClientID string `json:"client,omitempty"`
+	GroupID  string `json:"group,omitempty"`
 }
 
 func (req createPolicyReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
-
-	if req.ChanID == "" || req.ThingID == "" {
+	if req.GroupID == "" || req.ClientID == "" {
 		return apiutil.ErrMissingID
 	}
 	return nil
 }
 
 type createPoliciesReq struct {
-	token      string
-	Owner      string   `json:"owner,omitempty"`
-	ThingIDs   []string `json:"thing_ids,omitempty"`
-	ChannelIDs []string `json:"channel_ids,omitempty"`
+	token     string
+	Owner     string   `json:"owner,omitempty"`
+	ClientIDs []string `json:"client_ids,omitempty"`
+	GroupIDs  []string `json:"group_ids,omitempty"`
 }
 
 func (req createPoliciesReq) validate() error {
@@ -34,16 +34,16 @@ func (req createPoliciesReq) validate() error {
 		return apiutil.ErrBearerToken
 	}
 
-	if len(req.ChannelIDs) == 0 || len(req.ThingIDs) == 0 {
+	if len(req.GroupIDs) == 0 || len(req.ClientIDs) == 0 {
 		return apiutil.ErrEmptyList
 	}
 
-	for _, chID := range req.ChannelIDs {
+	for _, chID := range req.GroupIDs {
 		if chID == "" {
 			return apiutil.ErrMissingID
 		}
 	}
-	for _, thingID := range req.ThingIDs {
+	for _, thingID := range req.ClientIDs {
 		if thingID == "" {
 			return apiutil.ErrMissingID
 		}
@@ -63,31 +63,52 @@ func (req identifyReq) validate() error {
 	return nil
 }
 
-type canAccessByKeyReq struct {
-	chanID string
-	Token  string `json:"token"`
+type authorizeReq struct {
+	ClientID   string `json:"client_id"`
+	GroupID    string `json:"group_id"`
+	Action     string `json:"action"`
+	EntityType string `json:"entity_type"`
 }
 
-func (req canAccessByKeyReq) validate() error {
-	if req.Token == "" {
-		return apiutil.ErrBearerKey
-	}
-
-	if req.chanID == "" {
+func (req authorizeReq) validate() error {
+	if req.ClientID == "" || req.GroupID == "" {
 		return apiutil.ErrMissingID
 	}
 
 	return nil
 }
 
-type canAccessByIDReq struct {
-	chanID  string
-	ThingID string `json:"thing_id"`
+type policyReq struct {
+	token    string
+	Owner    string `json:"owner,omitempty"`
+	ClientID string `json:"client,omitempty"`
+	GroupID  string `json:"group,omitempty"`
+	Action   string `json:"action,omitempty"`
 }
 
-func (req canAccessByIDReq) validate() error {
-	if req.ThingID == "" || req.chanID == "" {
-		return apiutil.ErrMissingID
+func (req policyReq) validate() error {
+	if req.token == "" {
+		return apiutil.ErrBearerToken
+	}
+	return nil
+}
+
+type listPoliciesReq struct {
+	token  string
+	offset uint64
+	limit  uint64
+	client string
+	group  string
+	action string
+	owner  string
+}
+
+func (req listPoliciesReq) validate() error {
+	if req.token == "" {
+		return apiutil.ErrBearerToken
+	}
+	if req.limit > api.MaxLimitSize || req.limit < 1 {
+		return apiutil.ErrLimitSize
 	}
 
 	return nil

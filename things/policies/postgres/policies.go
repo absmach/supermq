@@ -30,23 +30,29 @@ func NewPolicyRepo(db postgres.Database) policies.PolicyRepository {
 	}
 }
 
-func (pr policyRepository) Save(ctx context.Context, policy policies.Policy) error {
+func (pr policyRepository) Save(ctx context.Context, policy policies.Policy) (policies.Policy, error) {
 	q := `INSERT INTO policies (owner_id, subject, object, actions, created_at, updated_at)
-		VALUES (:owner_id, :subject, :object, :actions, :created_at, :updated_at)`
+		VALUES (:owner_id, :subject, :object, :actions, :created_at, :updated_at)
+		RETURNING owner_id, subject, object, actions, created_at, updated_at;`
 
 	dbp, err := toDBPolicy(policy)
 	if err != nil {
-		return errors.Wrap(errors.ErrCreateEntity, err)
+		return policies.Policy{}, errors.Wrap(errors.ErrCreateEntity, err)
 	}
 
 	row, err := pr.db.NamedQueryContext(ctx, q, dbp)
 	if err != nil {
-		return postgres.HandleError(err, errors.ErrCreateEntity)
+		return policies.Policy{}, postgres.HandleError(err, errors.ErrCreateEntity)
 	}
 
 	defer row.Close()
+	row.Next()
+	dbp = dbPolicy{}
+	if err := row.StructScan(&dbp); err != nil {
+		return policies.Policy{}, err
+	}
 
-	return nil
+	return toPolicy(dbp)
 }
 
 func (pr policyRepository) Evaluate(ctx context.Context, entityType string, policy policies.Policy) error {
@@ -87,55 +93,29 @@ func (pr policyRepository) Evaluate(ctx context.Context, entityType string, poli
 	return nil
 }
 
-func (pr policyRepository) HasThing(ctx context.Context, chanID, thingKey string) (string, error) {
-	var thingID string
-	q := `SELECT id FROM clients WHERE key = $1`
-	if err := pr.db.QueryRowxContext(ctx, q, thingKey).Scan(&thingID); err != nil {
-		return "", errors.Wrap(errors.ErrViewEntity, err)
-	}
-
-	if err := pr.hasThing(ctx, chanID, thingID); err != nil {
-		return "", err
-	}
-
-	return thingID, nil
-}
-
-func (pr policyRepository) HasThingByID(ctx context.Context, chanID, thingID string) error {
-	return pr.hasThing(ctx, chanID, thingID)
-}
-
-func (pr policyRepository) hasThing(ctx context.Context, chanID, thingID string) error {
-	q := `SELECT EXISTS (SELECT 1 FROM policies WHERE object = $1 AND subject = $2);`
-	exists := false
-	if err := pr.db.QueryRowxContext(ctx, q, chanID, thingID).Scan(&exists); err != nil {
-		return errors.Wrap(errors.ErrViewEntity, err)
-	}
-
-	if !exists {
-		return errors.ErrNotFound
-	}
-
-	return nil
-}
-
-func (pr policyRepository) Update(ctx context.Context, policy policies.Policy) error {
-	if err := policy.Validate(); err != nil {
-		return errors.Wrap(errors.ErrCreateEntity, err)
-	}
+func (pr policyRepository) Update(ctx context.Context, policy policies.Policy) (policies.Policy, error) {
 	q := `UPDATE policies SET actions = :actions, updated_at = :updated_at
 		WHERE subject = :subject AND object = :object`
 
-	dbu, err := toDBPolicy(policy)
+	dbp, err := toDBPolicy(policy)
 	if err != nil {
-		return errors.Wrap(errors.ErrUpdateEntity, err)
+		return policies.Policy{}, errors.Wrap(errors.ErrUpdateEntity, err)
 	}
 
-	if _, err := pr.db.NamedExecContext(ctx, q, dbu); err != nil {
-		return errors.Wrap(errors.ErrUpdateEntity, err)
+	row, err := pr.db.NamedQueryContext(ctx, q, dbp)
+	if err != nil {
+		return policies.Policy{}, postgres.HandleError(err, errors.ErrUpdateEntity)
 	}
 
-	return nil
+	defer row.Close()
+	if ok := row.Next(); !ok {
+		return policies.Policy{}, errors.Wrap(errors.ErrNotFound, row.Err())
+	}
+	dbp = dbPolicy{}
+	if err := row.StructScan(&dbp); err != nil {
+		return policies.Policy{}, errors.Wrap(err, errors.ErrUpdateEntity)
+	}
+	return toPolicy(dbp)
 }
 
 func (pr policyRepository) Retrieve(ctx context.Context, pm policies.Page) (policies.PolicyPage, error) {

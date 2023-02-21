@@ -84,7 +84,7 @@ func (svc service) CreateThings(ctx context.Context, token string, clis ...Clien
 			cli.Credentials.Secret = key
 		}
 		if cli.Owner == "" {
-			cli.Owner = res.Email
+			cli.Owner = res.GetId()
 		}
 		if cli.Status != DisabledStatus && cli.Status != EnabledStatus {
 			return []Client{}, apiutil.ErrInvalidStatus
@@ -104,7 +104,6 @@ func (svc service) ViewClient(ctx context.Context, token string, id string) (Cli
 }
 
 func (svc service) ListClients(ctx context.Context, token string, pm Page) (ClientsPage, error) {
-	fmt.Println(pm)
 	res, err := svc.auth.Identify(ctx, &policies.Token{Value: token})
 	if err != nil {
 		return ClientsPage{}, errors.Wrap(errors.ErrAuthentication, err)
@@ -113,22 +112,31 @@ func (svc service) ListClients(ctx context.Context, token string, pm Page) (Clie
 	subject := res.GetId()
 	// If the user is admin, fetch all things from database.
 	if err := svc.authorize(ctx, token, thingsObjectKey, listRelationKey); err == nil {
-		pm.OwnerID = ""
-		page, err := svc.clients.RetrieveAll(ctx, pm)
+		pm.Owner = ""
+		return svc.clients.RetrieveAll(ctx, pm)
+	}
+
+	// If the user is not admin, check 'shared' parameter from page metadata.
+	// If user provides 'shared' key, fetch things from policies. Otherwise,
+	// fetch things from the database based on thing's 'owner' field.
+	if pm.FetchSharedThings {
+		req := &policies.ListPoliciesReq{Token: token, Act: listRelationKey, Sub: subject}
+		lpr, err := svc.auth.ListPolicies(ctx, req)
 		if err != nil {
 			return ClientsPage{}, err
 		}
-		return page, err
+		pm.Owner = ""
+		pm.IDs = lpr.Objects
+		return svc.clients.RetrieveAll(ctx, pm)
 	}
-
 	if pm.SharedBy == MyKey {
 		pm.SharedBy = subject
 	}
-	if pm.OwnerID == MyKey {
-		pm.OwnerID = subject
+	if pm.Owner == MyKey {
+		pm.Owner = subject
 	}
 	pm.Action = "c_list"
-	pm.OwnerID = res.GetEmail()
+	pm.Owner = res.GetId()
 
 	return svc.clients.RetrieveAll(ctx, pm)
 }
@@ -274,20 +282,14 @@ func (svc service) ShareThing(ctx context.Context, token, thingID string, action
 	if err := svc.authorize(ctx, token, thingID, updateRelationKey); err != nil {
 		return err
 	}
-	return svc.claimOwnership(ctx, thingID, AdminRelationKey, userIDs)
-}
-
-func (svc service) claimOwnership(ctx context.Context, objectID string, actions, userIDs []string) error {
 	var errs error
 	for _, userID := range userIDs {
-		for _, action := range actions {
-			apr, err := svc.auth.AddPolicy(ctx, &policies.AddPolicyReq{Obj: objectID, Act: []string{action}, Sub: userID})
-			if err != nil {
-				errs = errors.Wrap(fmt.Errorf("cannot claim ownership on object '%s' by user '%s': %s", objectID, userID, err), errs)
-			}
-			if !apr.GetAuthorized() {
-				errs = errors.Wrap(fmt.Errorf("cannot claim ownership on object '%s' by user '%s': unauthorized", objectID, userID), errs)
-			}
+		apr, err := svc.auth.AddPolicy(ctx, &policies.AddPolicyReq{Token: token, Sub: userID, Obj: thingID, Act: actions})
+		if err != nil {
+			errs = errors.Wrap(fmt.Errorf("cannot claim ownership on object '%s' by user '%s': %s", thingID, userID, err), errs)
+		}
+		if !apr.GetAuthorized() {
+			errs = errors.Wrap(fmt.Errorf("cannot claim ownership on object '%s' by user '%s': unauthorized", thingID, userID), errs)
 		}
 	}
 	return errs

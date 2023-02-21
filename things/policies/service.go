@@ -7,12 +7,16 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/things/clients"
 	upolicies "github.com/mainflux/mainflux/users/policies"
 )
 
 // Possible token types are access and refresh tokens.
 const (
-	AccessToken = "access"
+	ReadAction       = "m_read"
+	WriteAction      = "m_write"
+	ClientEntityType = "client"
+	GroupEntityType  = "group"
 )
 
 // Service unites Clients and Group services.
@@ -21,21 +25,21 @@ type Service interface {
 }
 
 type service struct {
-	auth         upolicies.AuthServiceClient
-	policies     PolicyRepository
-	channelCache ChannelCache
-	thingCache   ThingCache
-	idProvider   mainflux.IDProvider
+	auth        upolicies.AuthServiceClient
+	policies    PolicyRepository
+	policyCache PolicyCache
+	thingCache  clients.ThingCache
+	idProvider  mainflux.IDProvider
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(auth upolicies.AuthServiceClient, p PolicyRepository, tcache ThingCache, ccache ChannelCache, idp mainflux.IDProvider) Service {
+func NewService(auth upolicies.AuthServiceClient, p PolicyRepository, tcache clients.ThingCache, ccache PolicyCache, idp mainflux.IDProvider) Service {
 	return service{
-		auth:         auth,
-		policies:     p,
-		thingCache:   tcache,
-		channelCache: ccache,
-		idProvider:   idp,
+		auth:        auth,
+		policies:    p,
+		thingCache:  tcache,
+		policyCache: ccache,
+		idProvider:  idp,
 	}
 }
 
@@ -43,59 +47,67 @@ func (svc service) Authorize(ctx context.Context, entityType string, p Policy) e
 	if err := p.Validate(); err != nil {
 		return err
 	}
-	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: p.Subject})
-	if err != nil {
-		return errors.Wrap(errors.ErrAuthentication, err)
+	if connected := svc.policyCache.Evaluate(ctx, p); connected {
+		return nil
 	}
-	p.Subject = res.GetId()
-	return svc.policies.Evaluate(ctx, entityType, p)
-}
-func (svc service) UpdatePolicy(ctx context.Context, token string, p Policy) error {
-	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
-	if err != nil {
-		return errors.Wrap(errors.ErrAuthentication, err)
-	}
-	if err := p.Validate(); err != nil {
+	if err := svc.policies.Evaluate(ctx, entityType, p); err != nil {
 		return err
 	}
-	if err := svc.checkActionRank(ctx, res.GetId(), p); err != nil {
+	if err := svc.policyCache.AddPolicy(ctx, p); err != nil {
 		return err
 	}
-	p.UpdatedAt = time.Now()
-
-	return svc.policies.Update(ctx, p)
+	return nil
 }
 
-func (svc service) AddPolicy(ctx context.Context, token string, p Policy) error {
+func (svc service) AuthorizeByKey(ctx context.Context, entityType string, p Policy) (string, error) {
+	thingID, err := svc.thingCache.ID(ctx, p.Subject)
+	if err != nil {
+		return "", err
+	}
+	p.Subject = thingID
+	if err := svc.Authorize(ctx, entityType, p); err != nil {
+		return "", err
+	}
+	return thingID, nil
+}
+
+func (svc service) AddPolicy(ctx context.Context, token string, p Policy) (Policy, error) {
 	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
 	if err != nil {
-		return errors.Wrap(errors.ErrAuthentication, err)
+		return Policy{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
 
 	if err := p.Validate(); err != nil {
-		return err
+		return Policy{}, err
 	}
 
 	p.OwnerID = res.GetId()
 	p.CreatedAt = time.Now()
 	p.UpdatedAt = p.CreatedAt
 
+	if err := svc.policyCache.AddPolicy(ctx, p); err != nil {
+		return Policy{}, err
+	}
 	return svc.policies.Save(ctx, p)
 }
 
-func (svc service) DeletePolicy(ctx context.Context, token string, p Policy) error {
-	if _, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token}); err != nil {
-		return errors.Wrap(errors.ErrAuthentication, err)
+func (svc service) UpdatePolicy(ctx context.Context, token string, p Policy) (Policy, error) {
+	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
+	if err != nil {
+		return Policy{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
-
-	if err := svc.channelCache.Disconnect(ctx, p.Object, p.Subject); err != nil {
-		return err
+	if err := p.Validate(); err != nil {
+		return Policy{}, err
 	}
+	if err := svc.checkActionRank(ctx, res.GetId(), p); err != nil {
+		return Policy{}, err
+	}
+	p.UpdatedAt = time.Now()
 
-	return svc.policies.Delete(ctx, p)
+	return svc.policies.Update(ctx, p)
 }
 
-func (svc service) ListPolicy(ctx context.Context, token string, pm Page) (PolicyPage, error) {
+func (svc service) ListPolicies(ctx context.Context, token string, pm Page) (PolicyPage, error) {
 	if _, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token}); err != nil {
 		return PolicyPage{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
@@ -111,74 +123,38 @@ func (svc service) ListPolicy(ctx context.Context, token string, pm Page) (Polic
 	return page, err
 }
 
-// checkActionRank check if an action is in the provide list of actions
+func (svc service) DeletePolicy(ctx context.Context, token string, p Policy) error {
+	if _, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token}); err != nil {
+		return errors.Wrap(errors.ErrAuthentication, err)
+	}
+
+	if err := svc.policyCache.DeletePolicy(ctx, p); err != nil {
+		return err
+	}
+	return svc.policies.Delete(ctx, p)
+}
+
+// checkActionRank check if client updating the policy has the sufficient priviledges
+// WriteAction has a higher priority to ReadAction
 func (svc service) checkActionRank(ctx context.Context, clientID string, p Policy) error {
-	page, err := svc.policies.Retrieve(ctx, Page{Subject: clientID, Object: p.Object})
+	page, err := svc.policies.Retrieve(ctx, Page{Subject: clientID, Object: p.Object, Total: 1})
 	if err != nil {
 		return err
 	}
 	if len(page.Policies) != 0 {
-		for _, a := range p.Actions {
-			var found = false
-			for _, v := range page.Policies[0].Actions {
-				if v == a {
-					found = true
-					break
-				}
-			}
-			if !found {
-				return apiutil.ErrHigherPolicyRank
+		// Check if the client is the owner
+		if page.Policies[0].OwnerID == clientID {
+			return nil
+		}
+
+		// If I am not the owner I can't add a policy of a higher priority
+		for _, act := range page.Policies[0].Actions {
+			if act == WriteAction {
+				return nil
 			}
 		}
 	}
 
-	return nil
+	return apiutil.ErrHigherPolicyRank
 
-}
-
-func (svc service) CanAccessByKey(ctx context.Context, chanID, thingKey string) (string, error) {
-	thingID, err := svc.hasThing(ctx, chanID, thingKey)
-	if err == nil {
-		return thingID, nil
-	}
-
-	thingID, err = svc.policies.HasThing(ctx, chanID, thingKey)
-	if err != nil {
-		return "", err
-	}
-
-	if err := svc.thingCache.Save(ctx, thingKey, thingID); err != nil {
-		return "", err
-	}
-	if err := svc.channelCache.Connect(ctx, chanID, thingID); err != nil {
-		return "", err
-	}
-	return thingID, nil
-}
-
-func (svc service) CanAccessByID(ctx context.Context, chanID, thingID string) error {
-	if connected := svc.channelCache.HasThing(ctx, chanID, thingID); connected {
-		return nil
-	}
-
-	if err := svc.policies.HasThingByID(ctx, chanID, thingID); err != nil {
-		return err
-	}
-
-	if err := svc.channelCache.Connect(ctx, chanID, thingID); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (svc service) hasThing(ctx context.Context, chanID, thingKey string) (string, error) {
-	thingID, err := svc.thingCache.ID(ctx, thingKey)
-	if err != nil {
-		return "", err
-	}
-
-	if connected := svc.channelCache.HasThing(ctx, chanID, thingID); !connected {
-		return "", errors.ErrAuthorization
-	}
-	return thingID, nil
 }

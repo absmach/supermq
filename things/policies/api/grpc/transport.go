@@ -4,11 +4,9 @@ import (
 	"context"
 
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/clients"
-	"github.com/mainflux/mainflux/things/groups"
 	"github.com/mainflux/mainflux/things/policies"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/go-kit/kit/otelkit"
 	"google.golang.org/grpc/codes"
@@ -18,30 +16,24 @@ import (
 var _ policies.ThingsServiceServer = (*grpcServer)(nil)
 
 type grpcServer struct {
-	canAccessByKey kitgrpc.Handler
-	canAccessByID  kitgrpc.Handler
-	isChannelOwner kitgrpc.Handler
+	authorizeByKey kitgrpc.Handler
+	authorize      kitgrpc.Handler
 	identify       kitgrpc.Handler
 	policies.UnimplementedThingsServiceServer
 }
 
 // NewServer returns new ThingsServiceServer instance.
-func NewServer(csvc clients.Service, gsvc groups.Service, psvc policies.Service) policies.ThingsServiceServer {
+func NewServer(csvc clients.Service, psvc policies.Service) policies.ThingsServiceServer {
 	return &grpcServer{
-		canAccessByKey: kitgrpc.NewServer(
-			otelkit.EndpointMiddleware(otelkit.WithOperation("can_access_by_key"))(canAccessEndpoint(psvc)),
-			decodeCanAccessByKeyRequest,
+		authorizeByKey: kitgrpc.NewServer(
+			otelkit.EndpointMiddleware(otelkit.WithOperation("can_access_by_key"))(authorizeByKeyEndpoint(psvc)),
+			decodeAuthorizeByKeyRequest,
 			encodeIdentityResponse,
 		),
-		canAccessByID: kitgrpc.NewServer(
-			otelkit.EndpointMiddleware(otelkit.WithOperation("can_access_by_id"))(canAccessByIDEndpoint(psvc)),
-			decodeCanAccessByIDRequest,
-			encodeEmptyResponse,
-		),
-		isChannelOwner: kitgrpc.NewServer(
-			otelkit.EndpointMiddleware(otelkit.WithOperation("is_channel_owner"))(isChannelOwnerEndpoint(gsvc)),
-			decodeIsChannelOwnerRequest,
-			encodeEmptyResponse,
+		authorize: kitgrpc.NewServer(
+			otelkit.EndpointMiddleware(otelkit.WithOperation("can_access_by_id"))(authorizeEndpoint(psvc)),
+			decodeAuthorizeRequest,
+			encodeAuthorizeResponse,
 		),
 		identify: kitgrpc.NewServer(
 			otelkit.EndpointMiddleware(otelkit.WithOperation("identify"))(identifyEndpoint(csvc)),
@@ -51,8 +43,8 @@ func NewServer(csvc clients.Service, gsvc groups.Service, psvc policies.Service)
 	}
 }
 
-func (gs *grpcServer) CanAccessByKey(ctx context.Context, req *policies.AccessByKeyReq) (*policies.ThingID, error) {
-	_, res, err := gs.canAccessByKey.ServeGRPC(ctx, req)
+func (gs *grpcServer) AuthorizeKey(ctx context.Context, req *policies.TAuthorizeReq) (*policies.ThingID, error) {
+	_, res, err := gs.authorizeByKey.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, encodeError(err)
 	}
@@ -60,22 +52,13 @@ func (gs *grpcServer) CanAccessByKey(ctx context.Context, req *policies.AccessBy
 	return res.(*policies.ThingID), nil
 }
 
-func (gs *grpcServer) CanAccessByID(ctx context.Context, req *policies.AccessByIDReq) (*empty.Empty, error) {
-	_, res, err := gs.canAccessByID.ServeGRPC(ctx, req)
+func (gs *grpcServer) Authorize(ctx context.Context, req *policies.TAuthorizeReq) (*policies.TAuthorizeRes, error) {
+	_, res, err := gs.authorize.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, encodeError(err)
 	}
 
-	return res.(*empty.Empty), nil
-}
-
-func (gs *grpcServer) IsChannelOwner(ctx context.Context, req *policies.ChannelOwnerReq) (*empty.Empty, error) {
-	_, res, err := gs.isChannelOwner.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, encodeError(err)
-	}
-
-	return res.(*empty.Empty), nil
+	return res.(*policies.TAuthorizeRes), nil
 }
 
 func (gs *grpcServer) Identify(ctx context.Context, req *policies.Key) (*policies.ThingID, error) {
@@ -87,19 +70,14 @@ func (gs *grpcServer) Identify(ctx context.Context, req *policies.Key) (*policie
 	return res.(*policies.ThingID), nil
 }
 
-func decodeCanAccessByKeyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*policies.AccessByKeyReq)
-	return accessByKeyReq{thingKey: req.GetToken(), chanID: req.GetChanID()}, nil
+func decodeAuthorizeByKeyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*policies.TAuthorizeReq)
+	return authorizeReq{entityType: req.GetEntityType(), clientID: req.GetSub(), groupID: req.GetObj(), action: req.GetAct()}, nil
 }
 
-func decodeCanAccessByIDRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*policies.AccessByIDReq)
-	return accessByIDReq{thingID: req.GetThingID(), chanID: req.GetChanID()}, nil
-}
-
-func decodeIsChannelOwnerRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*policies.ChannelOwnerReq)
-	return channelOwnerReq{owner: req.GetOwner(), chanID: req.GetChanID()}, nil
+func decodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*policies.TAuthorizeReq)
+	return authorizeReq{entityType: req.GetEntityType(), clientID: req.GetSub(), groupID: req.GetObj(), action: req.GetAct()}, nil
 }
 
 func decodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
@@ -112,9 +90,9 @@ func encodeIdentityResponse(_ context.Context, grpcRes interface{}) (interface{}
 	return &policies.ThingID{Value: res.id}, nil
 }
 
-func encodeEmptyResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
-	res := grpcRes.(emptyRes)
-	return &empty.Empty{}, encodeError(res.err)
+func encodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
+	res := grpcRes.(authorizeRes)
+	return &policies.TAuthorizeRes{Authorized: res.authorized}, nil
 }
 
 func encodeError(err error) error {
@@ -126,9 +104,10 @@ func encodeError(err error) error {
 		err == apiutil.ErrMissingID,
 		err == apiutil.ErrMissingPolicySub,
 		err == apiutil.ErrMissingPolicyObj,
-		err == apiutil.ErrMissingPolicyAct,
+		err == apiutil.ErrMalformedPolicyAct,
 		err == apiutil.ErrMalformedPolicy,
 		err == apiutil.ErrMissingPolicyOwner,
+		err == apiutil.ErrBearerKey,
 		err == apiutil.ErrHigherPolicyRank:
 		return status.Error(codes.InvalidArgument, err.Error())
 	case errors.Contains(err, errors.ErrAuthentication),
@@ -136,6 +115,8 @@ func encodeError(err error) error {
 		return status.Error(codes.Unauthenticated, err.Error())
 	case errors.Contains(err, errors.ErrAuthorization):
 		return status.Error(codes.PermissionDenied, err.Error())
+	case errors.Contains(err, errors.ErrNotFound):
+		return status.Error(codes.NotFound, "entity does not exist")
 	default:
 		return status.Error(codes.Internal, "internal server error")
 	}
