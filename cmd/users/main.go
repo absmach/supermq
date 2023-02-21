@@ -28,7 +28,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
-	"github.com/mainflux/mainflux/logger"
+	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/users/api"
 	usersPg "github.com/mainflux/mainflux/users/postgres"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -62,7 +62,7 @@ func main() {
 		log.Fatalf("failed to load %s configuration : %s", svcName, err)
 	}
 
-	logger, err := logger.New(os.Stdout, cfg.LogLevel)
+	logger, err := mflog.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("failed to init logger: %s", err))
 	}
@@ -124,7 +124,7 @@ func main() {
 	}
 }
 
-func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServiceClient, c config, ec email.Config, logger logger.Logger) users.Service {
+func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServiceClient, c config, ec email.Config, logger mflog.Logger) users.Service {
 	database := usersPg.NewDatabase(db)
 	hasher := bcrypt.New()
 	userRepo := tracing.UserRepositoryMiddleware(usersPg.NewUserRepo(database), tracer)

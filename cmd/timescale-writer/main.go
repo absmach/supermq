@@ -18,7 +18,7 @@ import (
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
-	"github.com/mainflux/mainflux/logger"
+	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	"golang.org/x/sync/errgroup"
 )
@@ -46,7 +46,7 @@ func main() {
 		log.Fatalf("failed to load %s service configuration : %s", svcName, err)
 	}
 
-	logger, err := logger.New(os.Stdout, cfg.LogLevel)
+	logger, err := mflog.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -89,7 +89,7 @@ func main() {
 	}
 }
 
-func newService(db *sqlx.DB, logger logger.Logger) consumers.Consumer {
+func newService(db *sqlx.DB, logger mflog.Logger) consumers.Consumer {
 	svc := timescale.New(db)
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics("timescale", "message_writer")

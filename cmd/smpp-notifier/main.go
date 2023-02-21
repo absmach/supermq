@@ -26,7 +26,7 @@ import (
 	authClient "github.com/mainflux/mainflux/internal/clients/grpc/auth"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
-	"github.com/mainflux/mainflux/logger"
+	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	"github.com/mainflux/mainflux/pkg/ulid"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -57,7 +57,7 @@ func main() {
 		log.Fatalf("failed to load %s configuration : %s", svcName, err)
 	}
 
-	logger, err := logger.New(os.Stdout, cfg.LogLevel)
+	logger, err := mflog.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("failed to init logger: %s", err))
 	}
@@ -125,7 +125,7 @@ func main() {
 
 }
 
-func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServiceClient, c config, sc mfsmpp.Config, logger logger.Logger) notifiers.Service {
+func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServiceClient, c config, sc mfsmpp.Config, logger mflog.Logger) notifiers.Service {
 	database := notifierPg.NewDatabase(db)
 	repo := tracing.New(notifierPg.New(database), tracer)
 	idp := ulid.New()

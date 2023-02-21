@@ -17,7 +17,7 @@ import (
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
-	"github.com/mainflux/mainflux/logger"
+	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/readers"
 	"github.com/mainflux/mainflux/readers/api"
 	"github.com/mainflux/mainflux/readers/cassandra"
@@ -47,7 +47,7 @@ func main() {
 		log.Fatalf("failed to load %s service configuration : %s", svcName, err)
 	}
 
-	logger, err := logger.New(os.Stdout, cfg.LogLevel)
+	logger, err := mflog.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -101,7 +101,7 @@ func main() {
 	}
 }
 
-func newService(csdSession *gocql.Session, logger logger.Logger) readers.MessageRepository {
+func newService(csdSession *gocql.Session, logger mflog.Logger) readers.MessageRepository {
 	repo := cassandra.New(csdSession)
 	repo = api.LoggingMiddleware(repo, logger)
 	counter, latency := internal.MakeMetrics("cassandra", "message_reader")

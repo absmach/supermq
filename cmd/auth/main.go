@@ -25,7 +25,7 @@ import (
 	"github.com/mainflux/mainflux/internal/server"
 	grpcserver "github.com/mainflux/mainflux/internal/server/grpc"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
-	"github.com/mainflux/mainflux/logger"
+	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/opentracing/opentracing-go"
 	acl "github.com/ory/keto/proto/ory/keto/acl/v1alpha1"
@@ -64,7 +64,7 @@ func main() {
 		log.Fatalf("failed to load %s configuration : %s", svcName, err)
 	}
 
-	logger, err := logger.New(os.Stdout, cfg.LogLevel)
+	logger, err := mflog.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("failed to init logger: %s", err))
 	}
@@ -141,7 +141,7 @@ func main() {
 	}
 }
 
-func newService(db *sqlx.DB, tracer opentracing.Tracer, secret string, logger logger.Logger, readerConn, writerConn *grpc.ClientConn, duration time.Duration) auth.Service {
+func newService(db *sqlx.DB, tracer opentracing.Tracer, secret string, logger mflog.Logger, readerConn, writerConn *grpc.ClientConn, duration time.Duration) auth.Service {
 	database := authPg.NewDatabase(db)
 	keysRepo := tracing.New(authPg.New(database), tracer)
 

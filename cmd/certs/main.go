@@ -20,7 +20,7 @@ import (
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
-	"github.com/mainflux/mainflux/logger"
+	mflog "github.com/mainflux/mainflux/logger"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/jmoiron/sqlx"
@@ -74,7 +74,7 @@ func main() {
 		log.Fatalf("failed to load %s configuration : %s", svcName, err)
 	}
 
-	logger, err := logger.New(os.Stdout, cfg.LogLevel)
+	logger, err := mflog.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("failed to init logger: %s", err))
 	}
@@ -128,7 +128,7 @@ func main() {
 	}
 }
 
-func newService(auth mainflux.AuthServiceClient, db *sqlx.DB, logger logger.Logger, esClient *redis.Client, tlsCert tls.Certificate, x509Cert *x509.Certificate, cfg config, pkiAgent vault.Agent) certs.Service {
+func newService(auth mainflux.AuthServiceClient, db *sqlx.DB, logger mflog.Logger, esClient *redis.Client, tlsCert tls.Certificate, x509Cert *x509.Certificate, cfg config, pkiAgent vault.Agent) certs.Service {
 	certsRepo := certsPg.NewRepository(db, logger)
 	config := mfsdk.Config{
 		CertsURL:  cfg.CertsURL,
@@ -142,7 +142,7 @@ func newService(auth mainflux.AuthServiceClient, db *sqlx.DB, logger logger.Logg
 	return svc
 }
 
-func loadCertificates(conf config, logger logger.Logger) (tls.Certificate, *x509.Certificate, error) {
+func loadCertificates(conf config, logger mflog.Logger) (tls.Certificate, *x509.Certificate, error) {
 	var tlsCert tls.Certificate
 	var caCert *x509.Certificate
 

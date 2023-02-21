@@ -15,7 +15,7 @@ import (
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
-	"github.com/mainflux/mainflux/logger"
+	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/opcua"
 	"github.com/mainflux/mainflux/opcua/api"
 	"github.com/mainflux/mainflux/opcua/db"
@@ -58,7 +58,7 @@ func main() {
 		log.Fatalf("failed to load %s opcua client configuration : %s", svcName, err)
 	}
 
-	logger, err := logger.New(os.Stdout, cfg.LogLevel)
+	logger, err := mflog.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("failed to init logger: %s", err))
 	}
@@ -113,7 +113,7 @@ func main() {
 	}
 }
 
-func subscribeToStoredSubs(sub opcua.Subscriber, cfg opcua.Config, logger logger.Logger) {
+func subscribeToStoredSubs(sub opcua.Subscriber, cfg opcua.Config, logger mflog.Logger) {
 	// Get all stored subscriptions
 	nodes, err := db.ReadAll()
 	if err != nil {
@@ -131,19 +131,19 @@ func subscribeToStoredSubs(sub opcua.Subscriber, cfg opcua.Config, logger logger
 	}
 }
 
-func subscribeToThingsES(svc opcua.Service, client *r.Client, prefix string, logger logger.Logger) {
+func subscribeToThingsES(svc opcua.Service, client *r.Client, prefix string, logger mflog.Logger) {
 	eventStore := redis.NewEventStore(svc, client, prefix, logger)
 	if err := eventStore.Subscribe(context.Background(), "mainflux.things"); err != nil {
 		logger.Warn(fmt.Sprintf("Failed to subscribe to Redis event source: %s", err))
 	}
 }
 
-func newRouteMapRepositoy(client *r.Client, prefix string, logger logger.Logger) opcua.RouteMapRepository {
+func newRouteMapRepositoy(client *r.Client, prefix string, logger mflog.Logger) opcua.RouteMapRepository {
 	logger.Info(fmt.Sprintf("Connected to %s Redis Route-map", prefix))
 	return redis.NewRouteMapRepository(client, prefix)
 }
 
-func newService(sub opcua.Subscriber, browser opcua.Browser, thingRM, chanRM, connRM opcua.RouteMapRepository, opcuaConfig opcua.Config, logger logger.Logger) opcua.Service {
+func newService(sub opcua.Subscriber, browser opcua.Browser, thingRM, chanRM, connRM opcua.RouteMapRepository, opcuaConfig opcua.Config, logger mflog.Logger) opcua.Service {
 	svc := opcua.New(sub, browser, thingRM, chanRM, connRM, opcuaConfig, logger)
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics(svcName, "api")
