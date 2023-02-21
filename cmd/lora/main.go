@@ -63,7 +63,7 @@ func main() {
 
 	logger, err := mflog.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("failed to init logger: %s", err))
+		log.Fatalf("failed to init logger: %s", err)
 	}
 
 	rmConn, err := redisClient.Setup(envPrefixRouteMap)
