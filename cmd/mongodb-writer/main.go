@@ -43,34 +43,34 @@ func main() {
 
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("failed to load %s configuration : %s", svcName, err.Error())
+		log.Fatalf("failed to load %s configuration : %s", svcName, err)
 	}
 
 	logger, err := logger.New(os.Stdout, cfg.LogLevel)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Sprintf("failed to init logger: %s", err))
 	}
 
 	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)
 	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err.Error()))()
+		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
 	defer pubSub.Close()
 
 	db, err := mongoClient.Setup(envPrefixDB)
 	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to setup mongo database : %s", err.Error()))()
+		logger.Fatal(fmt.Sprintf("failed to setup mongo database : %s", err))
 	}
 
 	repo := newService(db, logger)
 
 	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
-		logger.Fatal(fmt.Sprintf("failed to start MongoDB writer: %s", err.Error()))()
+		logger.Fatal(fmt.Sprintf("failed to start MongoDB writer: %s", err))
 	}
 
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
-		logger.Fatal(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err.Error()))()
+		logger.Fatal(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))
 	}
 	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svcName), logger)
 
