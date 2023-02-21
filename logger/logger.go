@@ -47,25 +47,25 @@ func New(out io.Writer, levelText string) (Logger, error) {
 
 func (l logger) Debug(msg string) {
 	if Debug.isAllowed(l.level) {
-		l.kitLogger.Log("level", Debug.String(), "message", msg)
+		_ = l.kitLogger.Log("level", Debug.String(), "message", msg)
 	}
 }
 
 func (l logger) Info(msg string) {
 	if Info.isAllowed(l.level) {
-		l.kitLogger.Log("level", Info.String(), "message", msg)
+		_ = l.kitLogger.Log("level", Info.String(), "message", msg)
 	}
 }
 
 func (l logger) Warn(msg string) {
 	if Warn.isAllowed(l.level) {
-		l.kitLogger.Log("level", Warn.String(), "message", msg)
+		_ = l.kitLogger.Log("level", Warn.String(), "message", msg)
 	}
 }
 
 func (l logger) Error(msg string) {
 	if Error.isAllowed(l.level) {
-		l.kitLogger.Log("level", Error.String(), "message", msg)
+		_ = l.kitLogger.Log("level", Error.String(), "message", msg)
 	}
 }
 

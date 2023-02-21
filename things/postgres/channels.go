@@ -52,7 +52,10 @@ func (cr channelRepository) Save(ctx context.Context, channels ...things.Channel
 
 		_, err = tx.NamedExecContext(ctx, q, dbch)
 		if err != nil {
-			tx.Rollback()
+			err = tx.Rollback()
+			if err != nil {
+				return []things.Channel{}, errors.Wrap(errors.ErrCreateEntity, err)
+			}
 			pgErr, ok := err.(*pgconn.PgError)
 			if ok {
 				switch pgErr.Code {
@@ -291,8 +294,9 @@ func (cr channelRepository) Remove(ctx context.Context, owner, id string) error 
 		Owner: owner,
 	}
 	q := `DELETE FROM channels WHERE id = :id AND owner = :owner`
-	cr.db.NamedExecContext(ctx, q, dbch)
-	return nil
+
+	_, err := cr.db.NamedExecContext(ctx, q, dbch)
+	return err
 }
 
 func (cr channelRepository) Connect(ctx context.Context, owner string, chIDs, thIDs []string) error {
@@ -314,7 +318,11 @@ func (cr channelRepository) Connect(ctx context.Context, owner string, chIDs, th
 
 			_, err := tx.NamedExecContext(ctx, q, dbco)
 			if err != nil {
-				tx.Rollback()
+				err = tx.Rollback()
+				if err != nil {
+					return errors.Wrap(things.ErrConnect, err)
+				}
+
 				pgErr, ok := err.(*pgconn.PgError)
 				if ok {
 					switch pgErr.Code {
@@ -357,7 +365,11 @@ func (cr channelRepository) Disconnect(ctx context.Context, owner string, chIDs,
 
 			res, err := tx.NamedExecContext(ctx, q, dbco)
 			if err != nil {
-				tx.Rollback()
+				err = tx.Rollback()
+				if err != nil {
+					return errors.Wrap(things.ErrConnect, err)
+				}
+
 				pgErr, ok := err.(*pgconn.PgError)
 				if ok {
 					switch pgErr.Code {

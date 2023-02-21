@@ -172,7 +172,9 @@ func TestSingleChannelRetrieval(t *testing.T) {
 	}
 	chs, _ := chanRepo.Save(context.Background(), ch)
 	ch.ID = chs[0].ID
-	chanRepo.Connect(context.Background(), email, []string{ch.ID}, []string{th.ID})
+
+	err = chanRepo.Connect(context.Background(), email, []string{ch.ID}, []string{th.ID})
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error while connecting to service: %s", err))
 
 	nonexistentChanID, err := idProvider.ID()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -256,7 +258,8 @@ func TestMultiChannelRetrieval(t *testing.T) {
 			ch.Name = name
 		}
 
-		chanRepo.Save(context.Background(), ch)
+		_, err = chanRepo.Save(context.Background(), ch)
+		assert.Nil(t, err, fmt.Sprintf("got unexpected error while saving channels: %s", err))
 	}
 
 	cases := []struct {
@@ -702,7 +705,9 @@ func TestDisconnect(t *testing.T) {
 	})
 	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	chID = chs[0].ID
-	chanRepo.Connect(context.Background(), email, []string{chID}, []string{thID})
+
+	err = chanRepo.Connect(context.Background(), email, []string{chID}, []string{thID})
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error while connecting to service: %s", err))
 
 	nonexistentThingID, err := idProvider.ID()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -788,7 +793,9 @@ func TestHasThing(t *testing.T) {
 	})
 	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	chID = chs[0].ID
-	chanRepo.Connect(context.Background(), email, []string{chID}, []string{thID})
+
+	err = chanRepo.Connect(context.Background(), email, []string{chID}, []string{thID})
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error while connecting to service: %s", err))
 
 	nonexistentChanID, err := idProvider.ID()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -866,7 +873,9 @@ func TestHasThingByID(t *testing.T) {
 	})
 	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	chID = chs[0].ID
-	chanRepo.Connect(context.Background(), email, []string{chID}, []string{thID})
+
+	err = chanRepo.Connect(context.Background(), email, []string{chID}, []string{thID})
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error while connecting to service: %s", err))
 
 	nonexistentChanID, err := idProvider.ID()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
