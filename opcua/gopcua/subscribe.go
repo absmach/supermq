@@ -111,7 +111,12 @@ func (c client) Subscribe(ctx context.Context, cfg opcua.Config) error {
 	if err != nil {
 		return errors.Wrap(errFailedSub, err)
 	}
-	defer sub.Cancel()
+	defer func() {
+		err = sub.Cancel()
+		if err != nil {
+			c.logger.Error(fmt.Sprintf("subscription could not be cancelled: %s", err))
+		}
+	}()
 
 	if err := c.runHandler(ctx, sub, cfg.ServerURI, cfg.NodeID); err != nil {
 		c.logger.Warn(fmt.Sprintf("Unsubscribed from OPC-UA node %s.%s: %s", cfg.ServerURI, cfg.NodeID, err))

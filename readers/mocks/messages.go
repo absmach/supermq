@@ -39,8 +39,14 @@ func (repo *messageRepositoryMock) ReadAll(chanID string, rpm readers.PageMetada
 	}
 
 	var query map[string]interface{}
-	meta, _ := json.Marshal(rpm)
-	json.Unmarshal(meta, &query)
+	meta, err := json.Marshal(rpm)
+	if err != nil {
+		return readers.MessagesPage{}, err
+	}
+	err = json.Unmarshal(meta, &query)
+	if err != nil {
+		return readers.MessagesPage{}, err
+	}
 
 	var msgs []readers.Message
 	for _, m := range repo.messages[chanID] {

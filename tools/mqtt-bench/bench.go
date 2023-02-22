@@ -26,7 +26,13 @@ func Benchmark(cfg Config) {
 	var caByte []byte
 	if cfg.MQTT.TLS.MTLS {
 		caFile, err := os.Open(cfg.MQTT.TLS.CA)
-		defer caFile.Close()
+
+		defer func() {
+			err = caFile.Close()
+			if err != nil {
+				fmt.Println(err)
+			}
+		}()
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -110,7 +116,10 @@ func getBytePayload(size int, m message) (handler, error) {
 		sz := size - n
 		for {
 			b = make([]byte, sz)
-			rand.Read(b)
+			_, err = rand.Read(b)
+			if err != nil {
+				return nil, err
+			}
 			m.Payload = b
 			content, err := json.Marshal(&m)
 			if err != nil {

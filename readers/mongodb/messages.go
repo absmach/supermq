@@ -101,7 +101,10 @@ func fmtCondition(chanID string, rpm readers.PageMetadata) bson.D {
 	if err != nil {
 		return filter
 	}
-	json.Unmarshal(meta, &query)
+	err = json.Unmarshal(meta, &query)
+	if err != nil {
+		return filter
+	}
 
 	for name, value := range query {
 		switch name {

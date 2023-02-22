@@ -54,5 +54,8 @@ func (b broker) handleMsg(c mqtt.Client, msg mqtt.Message) {
 		return
 	}
 
-	b.svc.Publish(context.Background(), &m)
+	err := b.svc.Publish(context.Background(), &m)
+	if err != nil {
+		b.logger.Error(fmt.Sprintf("got error while publishing messages: %s", err))
+	}
 }

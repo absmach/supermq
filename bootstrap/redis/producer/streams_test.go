@@ -25,6 +25,7 @@ import (
 	"github.com/mainflux/mainflux/things"
 	httpapi "github.com/mainflux/mainflux/things/api/things/http"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -92,7 +93,9 @@ func newThingsServer(svc things.Service) *httptest.Server {
 	return httptest.NewServer(mux)
 }
 func TestAdd(t *testing.T) {
-	redisClient.FlushAll(context.Background()).Err()
+	err := redisClient.FlushAll(context.Background()).Err()
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+
 	users := mocks.NewAuthClient(map[string]string{validToken: email})
 
 	server := newThingsServer(newThingsService(users))
@@ -105,6 +108,7 @@ func TestAdd(t *testing.T) {
 	}
 
 	invalidConfig := config
+	invalidConfig.MFChannels = []bootstrap.Channel{{ID: "empty"}}
 	invalidConfig.MFChannels = []bootstrap.Channel{{ID: "empty"}}
 
 	cases := []struct {
@@ -179,7 +183,8 @@ func TestView(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	redisClient.FlushAll(context.Background()).Err()
+	err := redisClient.FlushAll(context.Background()).Err()
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	users := mocks.NewAuthClient(map[string]string{validToken: email})
 	server := newThingsServer(newThingsService(users))
@@ -192,8 +197,10 @@ func TestUpdate(t *testing.T) {
 	ch.ID = "2"
 	c.MFChannels = append(c.MFChannels, ch)
 	saved, err := svc.Add(context.Background(), validToken, c)
-	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
-	redisClient.FlushAll(context.Background()).Err()
+	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+
+	err = redisClient.FlushAll(context.Background()).Err()
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	modified := saved
 	modified.Content = "new-config"
@@ -254,7 +261,8 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestUpdateConnections(t *testing.T) {
-	redisClient.FlushAll(context.Background()).Err()
+	err := redisClient.FlushAll(context.Background()).Err()
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	users := mocks.NewAuthClient(map[string]string{validToken: email})
 	server := newThingsServer(newThingsService(users))
@@ -262,8 +270,9 @@ func TestUpdateConnections(t *testing.T) {
 	svc = producer.NewEventStoreMiddleware(svc, redisClient)
 
 	saved, err := svc.Add(context.Background(), validToken, config)
-	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
-	redisClient.FlushAll(context.Background()).Err()
+	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	err = redisClient.FlushAll(context.Background()).Err()
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := []struct {
 		desc        string
@@ -336,7 +345,8 @@ func TestList(t *testing.T) {
 }
 
 func TestRemove(t *testing.T) {
-	redisClient.FlushAll(context.Background()).Err()
+	err := redisClient.FlushAll(context.Background()).Err()
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	users := mocks.NewAuthClient(map[string]string{validToken: email})
 	server := newThingsServer(newThingsService(users))
@@ -346,8 +356,9 @@ func TestRemove(t *testing.T) {
 	c := config
 
 	saved, err := svc.Add(context.Background(), validToken, c)
-	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
-	redisClient.FlushAll(context.Background()).Err()
+	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	err = redisClient.FlushAll(context.Background()).Err()
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := []struct {
 		desc  string
@@ -399,7 +410,8 @@ func TestRemove(t *testing.T) {
 }
 
 func TestBootstrap(t *testing.T) {
-	redisClient.FlushAll(context.Background()).Err()
+	err := redisClient.FlushAll(context.Background()).Err()
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	users := mocks.NewAuthClient(map[string]string{validToken: email})
 	server := newThingsServer(newThingsService(users))
@@ -409,8 +421,9 @@ func TestBootstrap(t *testing.T) {
 	c := config
 
 	saved, err := svc.Add(context.Background(), validToken, c)
-	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
-	redisClient.FlushAll(context.Background()).Err()
+	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	err = redisClient.FlushAll(context.Background()).Err()
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := []struct {
 		desc        string
@@ -468,7 +481,8 @@ func TestBootstrap(t *testing.T) {
 }
 
 func TestChangeState(t *testing.T) {
-	redisClient.FlushAll(context.Background()).Err()
+	err := redisClient.FlushAll(context.Background()).Err()
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	users := mocks.NewAuthClient(map[string]string{validToken: email})
 	server := newThingsServer(newThingsService(users))
@@ -478,8 +492,9 @@ func TestChangeState(t *testing.T) {
 	c := config
 
 	saved, err := svc.Add(context.Background(), validToken, c)
-	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
-	redisClient.FlushAll(context.Background()).Err()
+	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	err = redisClient.FlushAll(context.Background()).Err()
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	cases := []struct {
 		desc  string
