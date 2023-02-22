@@ -7,30 +7,30 @@ import (
 	"time"
 
 	"github.com/jackc/pgtype"
+	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/policies"
-	"github.com/mainflux/mainflux/things/postgres"
 )
 
-var _ policies.PolicyRepository = (*policyRepository)(nil)
+var _ policies.Repository = (*prepo)(nil)
 
 var (
 	// ErrInvalidEntityType indicates that the entity type is invalid.
 	ErrInvalidEntityType = errors.New("invalid entity type")
 )
 
-type policyRepository struct {
+type prepo struct {
 	db postgres.Database
 }
 
-// NewPolicyRepo instantiates a PostgreSQL implementation of policy repository.
-func NewPolicyRepo(db postgres.Database) policies.PolicyRepository {
-	return &policyRepository{
+// NewRepository instantiates a PostgreSQL implementation of policy repository.
+func NewRepository(db postgres.Database) policies.Repository {
+	return &prepo{
 		db: db,
 	}
 }
 
-func (pr policyRepository) Save(ctx context.Context, policy policies.Policy) (policies.Policy, error) {
+func (pr prepo) Save(ctx context.Context, policy policies.Policy) (policies.Policy, error) {
 	q := `INSERT INTO policies (owner_id, subject, object, actions, created_at, updated_at)
 		VALUES (:owner_id, :subject, :object, :actions, :created_at, :updated_at)
 		RETURNING owner_id, subject, object, actions, created_at, updated_at;`
@@ -55,7 +55,7 @@ func (pr policyRepository) Save(ctx context.Context, policy policies.Policy) (po
 	return toPolicy(dbp)
 }
 
-func (pr policyRepository) Evaluate(ctx context.Context, entityType string, policy policies.Policy) error {
+func (pr prepo) Evaluate(ctx context.Context, entityType string, policy policies.Policy) error {
 	q := ""
 	switch entityType {
 	case "client":
@@ -93,7 +93,7 @@ func (pr policyRepository) Evaluate(ctx context.Context, entityType string, poli
 	return nil
 }
 
-func (pr policyRepository) Update(ctx context.Context, policy policies.Policy) (policies.Policy, error) {
+func (pr prepo) Update(ctx context.Context, policy policies.Policy) (policies.Policy, error) {
 	q := `UPDATE policies SET actions = :actions, updated_at = :updated_at
 		WHERE subject = :subject AND object = :object`
 
@@ -118,7 +118,7 @@ func (pr policyRepository) Update(ctx context.Context, policy policies.Policy) (
 	return toPolicy(dbp)
 }
 
-func (pr policyRepository) Retrieve(ctx context.Context, pm policies.Page) (policies.PolicyPage, error) {
+func (pr prepo) Retrieve(ctx context.Context, pm policies.Page) (policies.PolicyPage, error) {
 	var query []string
 	var emq string
 
@@ -185,7 +185,7 @@ func (pr policyRepository) Retrieve(ctx context.Context, pm policies.Page) (poli
 	return page, nil
 }
 
-func (pr policyRepository) Delete(ctx context.Context, p policies.Policy) error {
+func (pr prepo) Delete(ctx context.Context, p policies.Policy) error {
 	dbp := dbPolicy{
 		Subject: p.Subject,
 		Object:  p.Object,

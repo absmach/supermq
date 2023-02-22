@@ -38,7 +38,7 @@ import (
 	papi "github.com/mainflux/mainflux/users/policies/api/http"
 	ppostgres "github.com/mainflux/mainflux/users/policies/postgres"
 	ptracing "github.com/mainflux/mainflux/users/policies/tracing"
-	"github.com/mainflux/mainflux/users/postgres"
+	"github.com/mainflux/mainflux/internal/postgres"
 	clientsPg "github.com/mainflux/mainflux/users/postgres"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/jaeger"

@@ -19,21 +19,16 @@ const (
 	GroupEntityType  = "group"
 )
 
-// Service unites Clients and Group services.
-type Service interface {
-	PolicyService
-}
-
 type service struct {
 	auth        upolicies.AuthServiceClient
-	policies    PolicyRepository
-	policyCache PolicyCache
-	thingCache  clients.ThingCache
+	policies    Repository
+	policyCache Cache
+	thingCache  clients.ClientCache
 	idProvider  mainflux.IDProvider
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(auth upolicies.AuthServiceClient, p PolicyRepository, tcache clients.ThingCache, ccache PolicyCache, idp mainflux.IDProvider) Service {
+func NewService(auth upolicies.AuthServiceClient, p Repository, tcache clients.ClientCache, ccache Cache, idp mainflux.IDProvider) Service {
 	return service{
 		auth:        auth,
 		policies:    p,

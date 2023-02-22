@@ -9,27 +9,27 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/groups"
-	"github.com/mainflux/mainflux/things/postgres"
 )
 
-var _ groups.GroupRepository = (*groupRepository)(nil)
+var _ groups.Repository = (*grepo)(nil)
 
-type groupRepository struct {
+type grepo struct {
 	db postgres.Database
 }
 
-// NewGroupRepo instantiates a PostgreSQL implementation of group
+// NewRepository instantiates a PostgreSQL implementation of group
 // repository.
-func NewGroupRepo(db postgres.Database) groups.GroupRepository {
-	return &groupRepository{
+func NewRepository(db postgres.Database) groups.Repository {
+	return &grepo{
 		db: db,
 	}
 }
 
 // TODO - check parent group write access.
-func (repo groupRepository) Save(ctx context.Context, g groups.Group) (groups.Group, error) {
+func (repo grepo) Save(ctx context.Context, g groups.Group) (groups.Group, error) {
 	q := `INSERT INTO groups (name, description, id, owner_id, metadata, created_at, updated_at, status)
 		VALUES (:name, :description, :id, :owner_id, :metadata, :created_at, :updated_at, :status)
 		RETURNING id, name, description, owner_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, updated_at, status;`
@@ -57,7 +57,7 @@ func (repo groupRepository) Save(ctx context.Context, g groups.Group) (groups.Gr
 	return toGroup(dbg)
 }
 
-func (repo groupRepository) RetrieveByID(ctx context.Context, id string) (groups.Group, error) {
+func (repo grepo) RetrieveByID(ctx context.Context, id string) (groups.Group, error) {
 	dbu := dbGroup{
 		ID: id,
 	}
@@ -73,7 +73,7 @@ func (repo groupRepository) RetrieveByID(ctx context.Context, id string) (groups
 	return toGroup(dbu)
 }
 
-func (repo groupRepository) RetrieveAll(ctx context.Context, gm groups.GroupsPage) (groups.GroupsPage, error) {
+func (repo grepo) RetrieveAll(ctx context.Context, gm groups.GroupsPage) (groups.GroupsPage, error) {
 	var q string
 	query, err := buildQuery(gm)
 	if err != nil {
@@ -121,7 +121,7 @@ func (repo groupRepository) RetrieveAll(ctx context.Context, gm groups.GroupsPag
 	return page, nil
 }
 
-func (repo groupRepository) Memberships(ctx context.Context, clientID string, gm groups.GroupsPage) (groups.MembershipsPage, error) {
+func (repo grepo) Memberships(ctx context.Context, clientID string, gm groups.GroupsPage) (groups.MembershipsPage, error) {
 	var q string
 	query, err := buildQuery(gm)
 	if err != nil {
@@ -183,7 +183,7 @@ func (repo groupRepository) Memberships(ctx context.Context, clientID string, gm
 	return page, nil
 }
 
-func (repo groupRepository) Update(ctx context.Context, g groups.Group) (groups.Group, error) {
+func (repo grepo) Update(ctx context.Context, g groups.Group) (groups.Group, error) {
 	var query []string
 	var upq string
 	if g.Name != "" {
@@ -223,7 +223,7 @@ func (repo groupRepository) Update(ctx context.Context, g groups.Group) (groups.
 	return toGroup(dbu)
 }
 
-func (repo groupRepository) ChangeStatus(ctx context.Context, id string, status groups.Status) (groups.Group, error) {
+func (repo grepo) ChangeStatus(ctx context.Context, id string, status groups.Status) (groups.Group, error) {
 	qc := fmt.Sprintf(`UPDATE groups SET status = %d WHERE id = :id RETURNING id, name, description, owner_id, COALESCE(parent_id, '') AS parent_id, metadata, created_at, updated_at, status`, status)
 
 	dbg := dbGroup{
@@ -346,7 +346,7 @@ func toGroup(g dbGroup) (groups.Group, error) {
 	}, nil
 }
 
-func (gr groupRepository) processRows(rows *sqlx.Rows) ([]groups.Group, error) {
+func (gr grepo) processRows(rows *sqlx.Rows) ([]groups.Group, error) {
 	var items []groups.Group
 	for rows.Next() {
 		dbg := dbGroup{}

@@ -10,13 +10,13 @@ import (
 
 const WrongID = "wrongID"
 
-var _ clients.ClientRepository = (*ClientRepository)(nil)
+var _ clients.Repository = (*crepo)(nil)
 
-type ClientRepository struct {
+type crepo struct {
 	mock.Mock
 }
 
-func (m *ClientRepository) ChangeStatus(ctx context.Context, id string, status clients.Status) (clients.Client, error) {
+func (m *crepo) ChangeStatus(ctx context.Context, id string, status clients.Status) (clients.Client, error) {
 	ret := m.Called(ctx, id, status)
 
 	if id == WrongID {
@@ -30,7 +30,7 @@ func (m *ClientRepository) ChangeStatus(ctx context.Context, id string, status c
 	return ret.Get(0).(clients.Client), ret.Error(1)
 }
 
-func (m *ClientRepository) Members(ctx context.Context, groupID string, pm clients.Page) (clients.MembersPage, error) {
+func (m *crepo) Members(ctx context.Context, groupID string, pm clients.Page) (clients.MembersPage, error) {
 	ret := m.Called(ctx, groupID, pm)
 	if groupID == WrongID {
 		return clients.MembersPage{}, errors.ErrNotFound
@@ -39,13 +39,13 @@ func (m *ClientRepository) Members(ctx context.Context, groupID string, pm clien
 	return ret.Get(0).(clients.MembersPage), ret.Error(1)
 }
 
-func (m *ClientRepository) RetrieveAll(ctx context.Context, pm clients.Page) (clients.ClientsPage, error) {
+func (m *crepo) RetrieveAll(ctx context.Context, pm clients.Page) (clients.ClientsPage, error) {
 	ret := m.Called(ctx, pm)
 
 	return ret.Get(0).(clients.ClientsPage), ret.Error(1)
 }
 
-func (m *ClientRepository) RetrieveByID(ctx context.Context, id string) (clients.Client, error) {
+func (m *crepo) RetrieveByID(ctx context.Context, id string) (clients.Client, error) {
 	ret := m.Called(ctx, id)
 
 	if id == WrongID {
@@ -55,7 +55,7 @@ func (m *ClientRepository) RetrieveByID(ctx context.Context, id string) (clients
 	return ret.Get(0).(clients.Client), ret.Error(1)
 }
 
-func (m *ClientRepository) RetrieveBySecret(ctx context.Context, secret string) (clients.Client, error) {
+func (m *crepo) RetrieveBySecret(ctx context.Context, secret string) (clients.Client, error) {
 	ret := m.Called(ctx, secret)
 
 	if secret == "" {
@@ -65,7 +65,7 @@ func (m *ClientRepository) RetrieveBySecret(ctx context.Context, secret string) 
 	return ret.Get(0).(clients.Client), ret.Error(1)
 }
 
-func (m *ClientRepository) Save(ctx context.Context, clis ...clients.Client) ([]clients.Client, error) {
+func (m *crepo) Save(ctx context.Context, clis ...clients.Client) ([]clients.Client, error) {
 	ret := m.Called(ctx, clis)
 	for _, cli := range clis {
 		if cli.Owner == WrongID {
@@ -78,7 +78,7 @@ func (m *ClientRepository) Save(ctx context.Context, clis ...clients.Client) ([]
 	return clis, ret.Error(1)
 }
 
-func (m *ClientRepository) Update(ctx context.Context, client clients.Client) (clients.Client, error) {
+func (m *crepo) Update(ctx context.Context, client clients.Client) (clients.Client, error) {
 	ret := m.Called(ctx, client)
 
 	if client.ID == WrongID {
@@ -87,7 +87,7 @@ func (m *ClientRepository) Update(ctx context.Context, client clients.Client) (c
 	return ret.Get(0).(clients.Client), ret.Error(1)
 }
 
-func (m *ClientRepository) UpdateIdentity(ctx context.Context, client clients.Client) (clients.Client, error) {
+func (m *crepo) UpdateIdentity(ctx context.Context, client clients.Client) (clients.Client, error) {
 	ret := m.Called(ctx, client)
 
 	if client.ID == WrongID {
@@ -100,7 +100,7 @@ func (m *ClientRepository) UpdateIdentity(ctx context.Context, client clients.Cl
 	return ret.Get(0).(clients.Client), ret.Error(1)
 }
 
-func (m *ClientRepository) UpdateSecret(ctx context.Context, client clients.Client) (clients.Client, error) {
+func (m *crepo) UpdateSecret(ctx context.Context, client clients.Client) (clients.Client, error) {
 	ret := m.Called(ctx, client)
 
 	if client.ID == WrongID {
@@ -113,7 +113,7 @@ func (m *ClientRepository) UpdateSecret(ctx context.Context, client clients.Clie
 	return ret.Get(0).(clients.Client), ret.Error(1)
 }
 
-func (m *ClientRepository) UpdateTags(ctx context.Context, client clients.Client) (clients.Client, error) {
+func (m *crepo) UpdateTags(ctx context.Context, client clients.Client) (clients.Client, error) {
 	ret := m.Called(ctx, client)
 
 	if client.ID == WrongID {
@@ -123,7 +123,7 @@ func (m *ClientRepository) UpdateTags(ctx context.Context, client clients.Client
 	return ret.Get(0).(clients.Client), ret.Error(1)
 }
 
-func (m *ClientRepository) UpdateOwner(ctx context.Context, client clients.Client) (clients.Client, error) {
+func (m *crepo) UpdateOwner(ctx context.Context, client clients.Client) (clients.Client, error) {
 	ret := m.Called(ctx, client)
 
 	if client.ID == WrongID {

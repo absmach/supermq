@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/jackc/pgtype" // required for SQL access
+	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users/clients"
 	"github.com/mainflux/mainflux/users/groups"
-	"github.com/mainflux/mainflux/users/postgres"
 )
 
 var _ clients.ClientRepository = (*clientRepo)(nil)

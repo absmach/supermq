@@ -27,8 +27,8 @@ func (req createGroupReq) validate() error {
 }
 
 type createGroupsReq struct {
-	token    string
-	Channels []groups.Group
+	token  string
+	Groups []groups.Group
 }
 
 func (req createGroupsReq) validate() error {
@@ -36,11 +36,11 @@ func (req createGroupsReq) validate() error {
 		return apiutil.ErrBearerToken
 	}
 
-	if len(req.Channels) <= 0 {
+	if len(req.Groups) <= 0 {
 		return apiutil.ErrEmptyList
 	}
 
-	for _, channel := range req.Channels {
+	for _, channel := range req.Groups {
 		if channel.ID != "" {
 			if err := api.ValidateUUID(channel.ID); err != nil {
 				return err
@@ -116,15 +116,6 @@ func (req listMembershipReq) validate() error {
 		return apiutil.ErrNameSize
 	}
 
-	if req.Order != "" &&
-		req.Order != api.NameOrder && req.Order != api.IDOrder {
-		return apiutil.ErrInvalidOrder
-	}
-
-	if req.Dir != "" &&
-		req.Dir != api.AscDir && req.Dir != api.DescDir {
-		return apiutil.ErrInvalidDirection
-	}
 	return nil
 }
 

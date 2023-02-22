@@ -43,13 +43,13 @@ func NewServer(csvc clients.Service, psvc policies.Service) policies.ThingsServi
 	}
 }
 
-func (gs *grpcServer) AuthorizeKey(ctx context.Context, req *policies.TAuthorizeReq) (*policies.ThingID, error) {
+func (gs *grpcServer) AuthorizeKey(ctx context.Context, req *policies.TAuthorizeReq) (*policies.ClientID, error) {
 	_, res, err := gs.authorizeByKey.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, encodeError(err)
 	}
 
-	return res.(*policies.ThingID), nil
+	return res.(*policies.ClientID), nil
 }
 
 func (gs *grpcServer) Authorize(ctx context.Context, req *policies.TAuthorizeReq) (*policies.TAuthorizeRes, error) {
@@ -61,13 +61,13 @@ func (gs *grpcServer) Authorize(ctx context.Context, req *policies.TAuthorizeReq
 	return res.(*policies.TAuthorizeRes), nil
 }
 
-func (gs *grpcServer) Identify(ctx context.Context, req *policies.Key) (*policies.ThingID, error) {
+func (gs *grpcServer) Identify(ctx context.Context, req *policies.Key) (*policies.ClientID, error) {
 	_, res, err := gs.identify.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, encodeError(err)
 	}
 
-	return res.(*policies.ThingID), nil
+	return res.(*policies.ClientID), nil
 }
 
 func decodeAuthorizeByKeyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
@@ -87,7 +87,7 @@ func decodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{},
 
 func encodeIdentityResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(identityRes)
-	return &policies.ThingID{Value: res.id}, nil
+	return &policies.ClientID{Value: res.id}, nil
 }
 
 func encodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {

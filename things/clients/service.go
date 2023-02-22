@@ -37,25 +37,20 @@ var (
 	ErrStatusAlreadyAssigned = errors.New("status already assigned")
 )
 
-// Service unites Clients and Group services.
-type Service interface {
-	ClientService
-}
-
 type service struct {
-	auth       policies.AuthServiceClient
-	clients    ClientRepository
-	thingCache ThingCache
-	idProvider mainflux.IDProvider
+	auth        policies.AuthServiceClient
+	clients     Repository
+	clientCache ClientCache
+	idProvider  mainflux.IDProvider
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(auth policies.AuthServiceClient, c ClientRepository, tcache ThingCache, idp mainflux.IDProvider) Service {
+func NewService(auth policies.AuthServiceClient, c Repository, tcache ClientCache, idp mainflux.IDProvider) Service {
 	return service{
-		auth:       auth,
-		clients:    c,
-		thingCache: tcache,
-		idProvider: idp,
+		auth:        auth,
+		clients:     c,
+		clientCache: tcache,
+		idProvider:  idp,
 	}
 }
 
@@ -207,33 +202,31 @@ func (svc service) DisableClient(ctx context.Context, token, id string) (Client,
 	return client, nil
 }
 
-func (svc service) ListThingsByChannel(ctx context.Context, token, channelID string, pm Page) (MembersPage, error) {
+func (svc service) ListClientsByGroup(ctx context.Context, token, groupID string, pm Page) (MembersPage, error) {
 	res, err := svc.auth.Identify(ctx, &policies.Token{Value: token})
 	if err != nil {
 		return MembersPage{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
 	// If the user is admin, fetch all things connected to the channel.
 	if err := svc.authorize(ctx, token, thingsObjectKey, listRelationKey); err == nil {
-		return svc.clients.Members(ctx, channelID, pm)
+		return svc.clients.Members(ctx, groupID, pm)
 	}
 	pm.Subject = res.GetId()
 	pm.Action = "g_list"
 
-	return svc.clients.Members(ctx, channelID, pm)
+	return svc.clients.Members(ctx, groupID, pm)
 }
 
 func (svc service) Identify(ctx context.Context, key string) (string, error) {
-	id, err := svc.thingCache.ID(ctx, key)
+	id, err := svc.clientCache.ID(ctx, key)
 	if err == nil {
 		return id, nil
 	}
-
 	client, err := svc.clients.RetrieveBySecret(ctx, key)
 	if err != nil {
 		return "", err
 	}
-
-	if err := svc.thingCache.Save(ctx, key, client.ID); err != nil {
+	if err := svc.clientCache.Save(ctx, key, client.ID); err != nil {
 		return "", err
 	}
 	return client.ID, nil
@@ -271,18 +264,18 @@ func (svc service) authorize(ctx context.Context, subject, object string, relati
 	return nil
 }
 
-func (svc service) ShareThing(ctx context.Context, token, thingID string, actions, userIDs []string) error {
-	if err := svc.authorize(ctx, token, thingID, updateRelationKey); err != nil {
+func (svc service) ShareClient(ctx context.Context, token, clientID string, actions, userIDs []string) error {
+	if err := svc.authorize(ctx, token, clientID, updateRelationKey); err != nil {
 		return err
 	}
 	var errs error
 	for _, userID := range userIDs {
-		apr, err := svc.auth.AddPolicy(ctx, &policies.AddPolicyReq{Token: token, Sub: userID, Obj: thingID, Act: actions})
+		apr, err := svc.auth.AddPolicy(ctx, &policies.AddPolicyReq{Token: token, Sub: userID, Obj: clientID, Act: actions})
 		if err != nil {
-			errs = errors.Wrap(fmt.Errorf("cannot claim ownership on object '%s' by user '%s': %s", thingID, userID, err), errs)
+			errs = errors.Wrap(fmt.Errorf("cannot claim ownership on object '%s' by user '%s': %s", clientID, userID, err), errs)
 		}
 		if !apr.GetAuthorized() {
-			errs = errors.Wrap(fmt.Errorf("cannot claim ownership on object '%s' by user '%s': unauthorized", thingID, userID), errs)
+			errs = errors.Wrap(fmt.Errorf("cannot claim ownership on object '%s' by user '%s': unauthorized", clientID, userID), errs)
 		}
 	}
 	return errs

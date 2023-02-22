@@ -8,10 +8,10 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
+	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
 	uclients "github.com/mainflux/mainflux/users/clients"
 	ugroups "github.com/mainflux/mainflux/users/groups"
-	upostgres "github.com/mainflux/mainflux/users/postgres"
 )
 
 const (
@@ -36,7 +36,6 @@ const (
 	DirKey           = "dir"
 	VisibilityKey    = "visibility"
 	SharedByKey      = "shared_by"
-	SharedKey        = "shared"
 	DefTotal         = uint64(100)
 	DefOffset        = 0
 	DefLimit         = 10
@@ -104,7 +103,7 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 		w.WriteHeader(http.StatusConflict)
 	case errors.Contains(err, errors.ErrAuthorization):
 		w.WriteHeader(http.StatusForbidden)
-	case errors.Contains(err, upostgres.ErrMemberAlreadyAssigned):
+	case errors.Contains(err, postgres.ErrMemberAlreadyAssigned):
 		w.WriteHeader(http.StatusConflict)
 	case errors.Contains(err, errors.ErrUnsupportedContentType):
 		w.WriteHeader(http.StatusUnsupportedMediaType)

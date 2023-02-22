@@ -9,21 +9,21 @@ import (
 	"time"
 
 	"github.com/jackc/pgtype" // required for SQL access
+	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/clients"
 	"github.com/mainflux/mainflux/things/groups"
-	"github.com/mainflux/mainflux/things/postgres"
 )
 
-var _ clients.ClientRepository = (*clientRepo)(nil)
+var _ clients.Repository = (*clientRepo)(nil)
 
 type clientRepo struct {
 	db postgres.Database
 }
 
-// NewClientRepo instantiates a PostgreSQL
+// NewRepository instantiates a PostgreSQL
 // implementation of Clients repository.
-func NewClientRepo(db postgres.Database) clients.ClientRepository {
+func NewRepository(db postgres.Database) clients.Repository {
 	return &clientRepo{
 		db: db,
 	}

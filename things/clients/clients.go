@@ -42,8 +42,8 @@ type MembersPage struct {
 	Members []Client
 }
 
-// ClientRepository specifies an account persistence API.
-type ClientRepository interface {
+// Repository specifies an account persistence API.
+type Repository interface {
 	// Save persists the client account. A non-nil error is returned to indicate
 	// operation failure.
 	Save(ctx context.Context, client ...Client) ([]Client, error)
@@ -76,10 +76,10 @@ type ClientRepository interface {
 	ChangeStatus(ctx context.Context, id string, status Status) (Client, error)
 }
 
-// ClientService specifies an API that must be fullfiled by the domain service
+// Service specifies an API that must be fullfiled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
-type ClientService interface {
-	// CreateThing creates new client. In case of the failed registration, a
+type Service interface {
+	// CreateThings creates new client. In case of the failed registration, a
 	// non-nil error value is returned.
 	CreateThings(ctx context.Context, token string, client ...Client) ([]Client, error)
 
@@ -89,10 +89,10 @@ type ClientService interface {
 	// ListClients retrieves clients list for a valid auth token.
 	ListClients(ctx context.Context, token string, pm Page) (ClientsPage, error)
 
-	// ListThingsByChannel retrieves data about subset of things that are
+	// ListClientsByGroup retrieves data about subset of things that are
 	// connected or not connected to specified channel and belong to the user identified by
 	// the provided key.
-	ListThingsByChannel(ctx context.Context, token, channelID string, pm Page) (MembersPage, error)
+	ListClientsByGroup(ctx context.Context, token, groupID string, pm Page) (MembersPage, error)
 
 	// UpdateClient updates the client's name and metadata.
 	UpdateClient(ctx context.Context, token string, client Client) (Client, error)
@@ -112,17 +112,17 @@ type ClientService interface {
 	// DisableClient logically disables the client identified with the provided ID
 	DisableClient(ctx context.Context, token, id string) (Client, error)
 
-	// ShareThing gives actions associated with the thing to the given user IDs.
+	// ShareClient gives actions associated with the thing to the given user IDs.
 	// The requester user identified by the token has to have a "write" relation
 	// on the thing in order to share the thing.
-	ShareThing(ctx context.Context, token, thingID string, actions, userIDs []string) error
+	ShareClient(ctx context.Context, token, clientID string, actions, userIDs []string) error
 
 	// Identify returns thing ID for given thing key.
 	Identify(ctx context.Context, key string) (string, error)
 }
 
-// ThingCache contains thing caching interface.
-type ThingCache interface {
+// ClientCache contains thing caching interface.
+type ClientCache interface {
 	// Save stores pair thing key, thing id.
 	Save(context.Context, string, string) error
 

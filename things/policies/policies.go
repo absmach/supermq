@@ -27,8 +27,8 @@ type PolicyPage struct {
 	Policies []Policy
 }
 
-// PolicyRepository specifies an account persistence API.
-type PolicyRepository interface {
+// Repository specifies an account persistence API.
+type Repository interface {
 	// Save creates a policy for the given Subject, so that, after
 	// Save, `Subject` has a `relation` on `group_id`. Returns a non-nil
 	// error in case of failures.
@@ -49,9 +49,9 @@ type PolicyRepository interface {
 	Delete(ctx context.Context, p Policy) error
 }
 
-// PolicyService represents a authorization service. It exposes
+// Service represents a authorization service. It exposes
 // functionalities through `auth` to perform authorization.
-type PolicyService interface {
+type Service interface {
 	// Authorize checks authorization of the given `subject`. Basically,
 	// Authorize verifies that Is `subject` allowed to `relation` on
 	// `object`. Authorize returns a non-nil error if the subject has
@@ -78,8 +78,8 @@ type PolicyService interface {
 	AuthorizeByKey(ctx context.Context, entityType string, p Policy) (string, error)
 }
 
-// PolicyCache contains channel-thing connection caching interface.
-type PolicyCache interface {
+// Cache contains channel-thing connection caching interface.
+type Cache interface {
 	// AddPolicy connects group to a client with the specified action.
 	AddPolicy(ctx context.Context, policy Policy) error
 

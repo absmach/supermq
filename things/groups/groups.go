@@ -51,8 +51,8 @@ type Group struct {
 	Status      Status    `json:"status"`
 }
 
-// GroupRepository specifies a group persistence API.
-type GroupRepository interface {
+// Repository specifies a group persistence API.
+type Repository interface {
 	// Save group.
 	Save(ctx context.Context, g Group) (Group, error)
 
@@ -72,9 +72,9 @@ type GroupRepository interface {
 	ChangeStatus(ctx context.Context, id string, status Status) (Group, error)
 }
 
-// GroupService specifies an API that must be fulfilled by the domain service
+// Service specifies an API that must be fulfilled by the domain service
 // implementation, and all of its decorators (e.g. logging & metrics).
-type GroupService interface {
+type Service interface {
 	// CreateGroup creates new  group.
 	CreateGroups(ctx context.Context, token string, gs ...Group) ([]Group, error)
 
@@ -95,10 +95,6 @@ type GroupService interface {
 
 	// DisableGroup logically disables the group identified with the provided ID.
 	DisableGroup(ctx context.Context, token, id string) (Group, error)
-
-	// IsChannelOwner determines whether the channel can be accessed by
-	// the given user and returns error if it cannot.
-	IsChannelOwner(ctx context.Context, owner, chanID string) error
 }
 
 // Custom Marshaller for Group

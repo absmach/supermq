@@ -70,10 +70,3 @@ func (tm *tracingMiddleware) DisableGroup(ctx context.Context, token, id string)
 
 	return tm.gsvc.DisableGroup(ctx, token, id)
 }
-
-func (tm *tracingMiddleware) IsChannelOwner(ctx context.Context, owner, id string) error {
-	ctx, span := tm.tracer.Start(ctx, "svc_check_channel_owner", trace.WithAttributes(attribute.String("ID", id)))
-	defer span.End()
-
-	return tm.gsvc.IsChannelOwner(ctx, owner, id)
-}

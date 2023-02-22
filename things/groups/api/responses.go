@@ -36,7 +36,7 @@ func (res viewMembershipRes) Empty() bool {
 
 type membershipPageRes struct {
 	pageRes
-	Memberships []viewMembershipRes `json:"memberships"`
+	Memberships []viewMembershipRes `json:"channels"`
 }
 
 func (res membershipPageRes) Code() int {
@@ -83,7 +83,7 @@ func (res createGroupRes) Code() int {
 func (res createGroupRes) Headers() map[string]string {
 	if res.created {
 		return map[string]string{
-			"Location": fmt.Sprintf("/groups/%s", res.ID),
+			"Location": fmt.Sprintf("/channels/%s", res.ID),
 		}
 	}
 
@@ -96,15 +96,13 @@ func (res createGroupRes) Empty() bool {
 
 type groupPageRes struct {
 	pageRes
-	Groups []viewGroupRes `json:"groups"`
+	Groups []viewGroupRes `json:"channels"`
 }
 
 type pageRes struct {
 	Limit  uint64 `json:"limit,omitempty"`
 	Offset uint64 `json:"offset,omitempty"`
-	Total  uint64 `json:"total"`
-	Level  uint64 `json:"level"`
-	Name   string `json:"name"`
+	Total  uint64 `json:"total,omitempty"`
 }
 
 func (res groupPageRes) Code() int {

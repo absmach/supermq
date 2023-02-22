@@ -22,19 +22,19 @@ func NewThingsService(channels map[string]string) policies.ThingsServiceClient {
 	return &thingsServiceMock{channels}
 }
 
-func (svc thingsServiceMock) AuthorizeByKey(ctx context.Context, in *policies.TAuthorizeReq, opts ...grpc.CallOption) (*policies.ThingID, error) {
+func (svc thingsServiceMock) AuthorizeByKey(ctx context.Context, in *policies.TAuthorizeReq, opts ...grpc.CallOption) (*policies.ClientID, error) {
 	token := in.GetSub()
 	if token == "invalid" || token == "" {
 		return nil, errors.ErrAuthentication
 	}
 
-	return &policies.ThingID{Value: token}, nil
+	return &policies.ClientID{Value: token}, nil
 }
 
 func (svc thingsServiceMock) Authorize(context.Context, *policies.TAuthorizeReq, ...grpc.CallOption) (*policies.TAuthorizeRes, error) {
-	panic("not implemented")
+	return &policies.TAuthorizeRes{Authorized: true}, nil
 }
 
-func (svc thingsServiceMock) Identify(context.Context, *policies.Key, ...grpc.CallOption) (*policies.ThingID, error) {
+func (svc thingsServiceMock) Identify(context.Context, *policies.Key, ...grpc.CallOption) (*policies.ClientID, error) {
 	panic("not implemented")
 }

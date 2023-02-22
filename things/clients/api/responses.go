@@ -118,7 +118,7 @@ func (res viewMembersRes) Empty() bool {
 
 type memberPageRes struct {
 	pageRes
-	Members []viewMembersRes `json:"members"`
+	Members []viewMembersRes `json:"things"`
 }
 
 func (res memberPageRes) Code() int {

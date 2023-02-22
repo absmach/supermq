@@ -18,91 +18,91 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/github.com/go-kit/kit/otelkit"
 )
 
-// MakeClientsHandler returns a HTTP handler for API endpoints.
-func MakeClientsHandler(svc clients.Service, mux *bone.Mux, logger logger.Logger) http.Handler {
+// MakeHandler returns a HTTP handler for API endpoints.
+func MakeHandler(svc clients.Service, mux *bone.Mux, logger logger.Logger) http.Handler {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(apiutil.LoggingErrorEncoder(logger, api.EncodeError)),
 	}
 
 	mux.Post("/things", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("create_thing"))(registrationEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("create_thing"))(createClientEndpoint(svc)),
 		decodeCreateClientReq,
 		api.EncodeResponse,
 		opts...,
 	))
 
 	mux.Post("/things/bulk", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("create_things"))(registrationsEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("create_things"))(createClientsEndpoint(svc)),
 		decodeCreateClientsReq,
 		api.EncodeResponse,
 		opts...,
 	))
 
 	mux.Get("/things/:id", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("view_client"))(viewClientEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("view_thing"))(viewClientEndpoint(svc)),
 		decodeViewClient,
 		api.EncodeResponse,
 		opts...,
 	))
 
 	mux.Get("/things", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("list_clients"))(listClientsEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("list_things"))(listClientsEndpoint(svc)),
 		decodeListClients,
 		api.EncodeResponse,
 		opts...,
 	))
 
 	mux.Get("/channels/:id/things", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("list_members"))(listMembersEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("list_things_by_channel"))(listMembersEndpoint(svc)),
 		decodeListMembersRequest,
 		api.EncodeResponse,
 		opts...,
 	))
 
 	mux.Patch("/things/:id", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("update_client_name_and_metadata"))(updateClientEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("update_thing_name_and_metadata"))(updateClientEndpoint(svc)),
 		decodeUpdateClient,
 		api.EncodeResponse,
 		opts...,
 	))
 
 	mux.Patch("/things/:id/tags", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("update_client_tags"))(updateClientTagsEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("update_thing_tags"))(updateClientTagsEndpoint(svc)),
 		decodeUpdateClientTags,
 		api.EncodeResponse,
 		opts...,
 	))
 
 	mux.Post("/things/:id/share", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("share_thing"))(shareThingEndpoint(svc)),
-		decodeShareThing,
+		otelkit.EndpointMiddleware(otelkit.WithOperation("share_thing"))(shareClientEndpoint(svc)),
+		decodeShareClient,
 		api.EncodeResponse,
 		opts...,
 	))
 
 	mux.Patch("/things/:id/key", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("update_client_key"))(updateClientSecretEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("update_thing_secret"))(updateClientSecretEndpoint(svc)),
 		decodeUpdateClientCredentials,
 		api.EncodeResponse,
 		opts...,
 	))
 
 	mux.Patch("/things/:id/owner", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("update_client_owner"))(updateClientOwnerEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("update_thing_owner"))(updateClientOwnerEndpoint(svc)),
 		decodeUpdateClientOwner,
 		api.EncodeResponse,
 		opts...,
 	))
 
 	mux.Post("/things/:id/enable", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("enable_client"))(enableClientEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("enable_thing"))(enableClientEndpoint(svc)),
 		decodeChangeClientStatus,
 		api.EncodeResponse,
 		opts...,
 	))
 
 	mux.Post("/things/:id/disable", kithttp.NewServer(
-		otelkit.EndpointMiddleware(otelkit.WithOperation("disable_client"))(disableClientEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("disable_thing"))(disableClientEndpoint(svc)),
 		decodeChangeClientStatus,
 		api.EncodeResponse,
 		opts...,
@@ -122,14 +122,14 @@ func decodeViewClient(_ context.Context, r *http.Request) (interface{}, error) {
 	return req, nil
 }
 
-func decodeShareThing(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeShareClient(_ context.Context, r *http.Request) (interface{}, error) {
 	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
 		return nil, errors.ErrUnsupportedContentType
 	}
 
-	req := shareThingReq{
-		token:   apiutil.ExtractBearerToken(r),
-		thingID: bone.GetValue(r, "id"),
+	req := shareClientReq{
+		token:    apiutil.ExtractBearerToken(r),
+		clientID: bone.GetValue(r, "id"),
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, errors.Wrap(errors.ErrMalformedEntity, err)
@@ -156,7 +156,6 @@ func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) 
 	if err != nil {
 		return nil, err
 	}
-
 	n, err := apiutil.ReadStringQuery(r, api.NameKey, "")
 	if err != nil {
 		return nil, err
@@ -166,10 +165,6 @@ func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) 
 		return nil, err
 	}
 	oid, err := apiutil.ReadStringQuery(r, api.OwnerKey, "")
-	if err != nil {
-		return nil, err
-	}
-	shared, err := apiutil.ReadBoolQuery(r, api.SharedKey, false)
 	if err != nil {
 		return nil, err
 	}
@@ -199,7 +194,6 @@ func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) 
 		name:     n,
 		tag:      t,
 		sharedBy: sid,
-		shared:   shared,
 		owner:    oid,
 	}
 	return req, nil

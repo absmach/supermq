@@ -6,8 +6,8 @@ option go_package = "./policies";
 
 service ThingsService {
     rpc Authorize(TAuthorizeReq) returns (TAuthorizeRes) {}
-    rpc AuthorizeByKey(TAuthorizeReq) returns (ThingID) {}
-    rpc Identify(Key) returns (ThingID) {}
+    rpc AuthorizeByKey(TAuthorizeReq) returns (ClientID) {}
+    rpc Identify(Key) returns (ClientID) {}
 }
 
 message TAuthorizeReq {
@@ -21,7 +21,7 @@ message TAuthorizeRes {
     bool authorized = 1;
 }
 
-message ThingID {
+message ClientID {
     string value = 1;
 }
 

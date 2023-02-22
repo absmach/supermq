@@ -34,7 +34,7 @@ func (tm *tracingMiddleware) AuthorizeByKey(ctx context.Context, entityType stri
 }
 
 func (tm *tracingMiddleware) AddPolicy(ctx context.Context, token string, p policies.Policy) (policies.Policy, error) {
-	ctx, span := tm.tracer.Start(ctx, "svc_add_policy", trace.WithAttributes(attribute.StringSlice("Actions", p.Actions)))
+	ctx, span := tm.tracer.Start(ctx, "svc_connect", trace.WithAttributes(attribute.StringSlice("Actions", p.Actions)))
 	defer span.End()
 
 	return tm.psvc.AddPolicy(ctx, token, p)
@@ -55,7 +55,7 @@ func (tm *tracingMiddleware) ListPolicies(ctx context.Context, token string, p p
 }
 
 func (tm *tracingMiddleware) DeletePolicy(ctx context.Context, token string, p policies.Policy) error {
-	ctx, span := tm.tracer.Start(ctx, "svc_delete_policy", trace.WithAttributes(attribute.String("Subject", p.Subject), attribute.String("Object", p.Object)))
+	ctx, span := tm.tracer.Start(ctx, "svc_disconnect", trace.WithAttributes(attribute.String("Subject", p.Subject), attribute.String("Object", p.Object)))
 	defer span.End()
 
 	return tm.psvc.DeletePolicy(ctx, token, p)

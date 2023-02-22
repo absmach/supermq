@@ -23,8 +23,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ThingsServiceClient interface {
 	Authorize(ctx context.Context, in *TAuthorizeReq, opts ...grpc.CallOption) (*TAuthorizeRes, error)
-	AuthorizeByKey(ctx context.Context, in *TAuthorizeReq, opts ...grpc.CallOption) (*ThingID, error)
-	Identify(ctx context.Context, in *Key, opts ...grpc.CallOption) (*ThingID, error)
+	AuthorizeByKey(ctx context.Context, in *TAuthorizeReq, opts ...grpc.CallOption) (*ClientID, error)
+	Identify(ctx context.Context, in *Key, opts ...grpc.CallOption) (*ClientID, error)
 }
 
 type thingsServiceClient struct {
@@ -44,8 +44,8 @@ func (c *thingsServiceClient) Authorize(ctx context.Context, in *TAuthorizeReq, 
 	return out, nil
 }
 
-func (c *thingsServiceClient) AuthorizeByKey(ctx context.Context, in *TAuthorizeReq, opts ...grpc.CallOption) (*ThingID, error) {
-	out := new(ThingID)
+func (c *thingsServiceClient) AuthorizeByKey(ctx context.Context, in *TAuthorizeReq, opts ...grpc.CallOption) (*ClientID, error) {
+	out := new(ClientID)
 	err := c.cc.Invoke(ctx, "/policies.ThingsService/AuthorizeByKey", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -53,8 +53,8 @@ func (c *thingsServiceClient) AuthorizeByKey(ctx context.Context, in *TAuthorize
 	return out, nil
 }
 
-func (c *thingsServiceClient) Identify(ctx context.Context, in *Key, opts ...grpc.CallOption) (*ThingID, error) {
-	out := new(ThingID)
+func (c *thingsServiceClient) Identify(ctx context.Context, in *Key, opts ...grpc.CallOption) (*ClientID, error) {
+	out := new(ClientID)
 	err := c.cc.Invoke(ctx, "/policies.ThingsService/Identify", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -67,8 +67,8 @@ func (c *thingsServiceClient) Identify(ctx context.Context, in *Key, opts ...grp
 // for forward compatibility
 type ThingsServiceServer interface {
 	Authorize(context.Context, *TAuthorizeReq) (*TAuthorizeRes, error)
-	AuthorizeByKey(context.Context, *TAuthorizeReq) (*ThingID, error)
-	Identify(context.Context, *Key) (*ThingID, error)
+	AuthorizeByKey(context.Context, *TAuthorizeReq) (*ClientID, error)
+	Identify(context.Context, *Key) (*ClientID, error)
 	mustEmbedUnimplementedThingsServiceServer()
 }
 
@@ -79,10 +79,10 @@ type UnimplementedThingsServiceServer struct {
 func (UnimplementedThingsServiceServer) Authorize(context.Context, *TAuthorizeReq) (*TAuthorizeRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Authorize not implemented")
 }
-func (UnimplementedThingsServiceServer) AuthorizeByKey(context.Context, *TAuthorizeReq) (*ThingID, error) {
+func (UnimplementedThingsServiceServer) AuthorizeByKey(context.Context, *TAuthorizeReq) (*ClientID, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AuthorizeByKey not implemented")
 }
-func (UnimplementedThingsServiceServer) Identify(context.Context, *Key) (*ThingID, error) {
+func (UnimplementedThingsServiceServer) Identify(context.Context, *Key) (*ClientID, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Identify not implemented")
 }
 func (UnimplementedThingsServiceServer) mustEmbedUnimplementedThingsServiceServer() {}

@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/jackc/pgtype"
+	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users/clients"
 	"github.com/mainflux/mainflux/users/policies"
-	"github.com/mainflux/mainflux/users/postgres"
 )
 
 var _ policies.PolicyRepository = (*policyRepository)(nil)

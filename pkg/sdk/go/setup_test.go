@@ -6,14 +6,8 @@ import (
 )
 
 const (
-	Identity = "identity"
-	token    = "token"
-)
-
-var (
-	limit  uint64 = 5
-	offset uint64 = 0
-	total  uint64 = 200
+	Identity    = "identity"
+	contentType = "application/senml+json"
 )
 
 func TestMain(m *testing.M) {

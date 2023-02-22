@@ -14,10 +14,10 @@ import (
 // Possible token types are access and refresh tokens.
 const (
 	thingsObjectKey   = "things"
-	createKey         = "c_add"
-	updateRelationKey = "c_update"
-	listRelationKey   = "c_list"
-	deleteRelationKey = "c_delete"
+	createKey         = "g_add"
+	updateRelationKey = "g_update"
+	listRelationKey   = "g_list"
+	deleteRelationKey = "g_delete"
 	entityType        = "group"
 )
 
@@ -25,23 +25,24 @@ var (
 	// ErrInvalidStatus indicates invalid status.
 	ErrInvalidStatus = errors.New("invalid groups status")
 
-	// ErrStatusAlreadyAssigned indicated that the client or group has already been assigned the status.
+	// ErrEnableGroup indicates error in enabling group.
+	ErrEnableGroup = errors.New("failed to enable group")
+
+	// ErrDisableGroup indicates error in disabling group.
+	ErrDisableGroup = errors.New("failed to disable group")
+
+	// ErrStatusAlreadyAssigned indicated that the group has already been assigned the status.
 	ErrStatusAlreadyAssigned = errors.New("status already assigned")
 )
 
-// Service unites Clients and Group services.
-type Service interface {
-	GroupService
-}
-
 type service struct {
 	auth       upolicies.AuthServiceClient
-	groups     GroupRepository
+	groups     Repository
 	idProvider mainflux.IDProvider
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(auth upolicies.AuthServiceClient, g GroupRepository, p policies.PolicyRepository, idp mainflux.IDProvider) Service {
+func NewService(auth upolicies.AuthServiceClient, g Repository, p policies.Repository, idp mainflux.IDProvider) Service {
 	return service{
 		auth:       auth,
 		groups:     g,
@@ -53,6 +54,9 @@ func (svc service) CreateGroups(ctx context.Context, token string, gs ...Group) 
 	res, err := svc.auth.Identify(ctx, &upolicies.Token{Value: token})
 	if err != nil {
 		return []Group{}, errors.Wrap(errors.ErrAuthentication, err)
+	}
+	if err := svc.authorize(ctx, token, thingsObjectKey, createKey); err != nil {
+		return []Group{}, err
 	}
 	var grps []Group
 	for _, g := range gs {
@@ -144,37 +148,34 @@ func (svc service) UpdateGroup(ctx context.Context, token string, g Group) (Grou
 }
 
 func (svc service) EnableGroup(ctx context.Context, token, id string) (Group, error) {
-	if err := svc.authorize(ctx, token, id, deleteRelationKey); err != nil {
-		return Group{}, errors.Wrap(errors.ErrNotFound, err)
-	}
-
-	group, err := svc.changeGroupStatus(ctx, id, EnabledStatus)
+	group, err := svc.changeGroupStatus(ctx, token, id, EnabledStatus)
 	if err != nil {
-		return Group{}, err
+		return Group{}, errors.Wrap(ErrEnableGroup, err)
 	}
 	return group, nil
 }
 
 func (svc service) DisableGroup(ctx context.Context, token, id string) (Group, error) {
-	if err := svc.authorize(ctx, token, id, deleteRelationKey); err != nil {
-		return Group{}, errors.Wrap(errors.ErrNotFound, err)
-	}
-	group, err := svc.changeGroupStatus(ctx, id, DisabledStatus)
+	group, err := svc.changeGroupStatus(ctx, token, id, DisabledStatus)
 	if err != nil {
-		return Group{}, err
+		return Group{}, errors.Wrap(ErrDisableGroup, err)
 	}
 	return group, nil
 }
 
-func (svc service) IsChannelOwner(ctx context.Context, owner, chanID string) error {
-	g, err := svc.groups.RetrieveByID(ctx, chanID)
+func (svc service) changeGroupStatus(ctx context.Context, token, id string, status Status) (Group, error) {
+	if err := svc.authorize(ctx, token, id, deleteRelationKey); err != nil {
+		return Group{}, errors.Wrap(errors.ErrNotFound, err)
+	}
+	dbGroup, err := svc.groups.RetrieveByID(ctx, id)
 	if err != nil {
-		return err
+		return Group{}, err
 	}
-	if g.Owner != owner {
-		return errors.New("not owner")
+	if dbGroup.Status == status {
+		return Group{}, ErrStatusAlreadyAssigned
 	}
-	return nil
+
+	return svc.groups.ChangeStatus(ctx, id, status)
 }
 
 func (svc service) authorize(ctx context.Context, subject, object string, relation string) error {
@@ -192,16 +193,4 @@ func (svc service) authorize(ctx context.Context, subject, object string, relati
 		return errors.ErrAuthorization
 	}
 	return nil
-}
-
-func (svc service) changeGroupStatus(ctx context.Context, id string, status Status) (Group, error) {
-	dbGroup, err := svc.groups.RetrieveByID(ctx, id)
-	if err != nil {
-		return Group{}, err
-	}
-	if dbGroup.Status == status {
-		return Group{}, ErrStatusAlreadyAssigned
-	}
-
-	return svc.groups.ChangeStatus(ctx, id, status)
 }

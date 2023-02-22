@@ -13,7 +13,7 @@ import (
 	"github.com/mainflux/mainflux/things/clients"
 )
 
-var _ clients.ClientRepository = (*thingRepositoryMock)(nil)
+var _ clients.Repository = (*clientRepoMock)(nil)
 
 type Connection struct {
 	chanID    string
@@ -21,7 +21,7 @@ type Connection struct {
 	connected bool
 }
 
-type thingRepositoryMock struct {
+type clientRepoMock struct {
 	mu      sync.Mutex
 	counter uint64
 	conns   chan Connection
@@ -30,13 +30,13 @@ type thingRepositoryMock struct {
 }
 
 // NewThingRepository creates in-memory thing repository.
-func NewThingRepository(conns chan Connection) clients.ClientRepository {
-	repo := &thingRepositoryMock{
+func NewThingRepository(conns chan Connection) clients.Repository {
+	repo := &clientRepoMock{
 		conns:  conns,
 		things: make(map[string]clients.Client),
 		tconns: make(map[string]map[string]clients.Client),
 	}
-	go func(conns chan Connection, repo *thingRepositoryMock) {
+	go func(conns chan Connection, repo *clientRepoMock) {
 		for conn := range conns {
 			if !conn.connected {
 				repo.disconnect(conn)
@@ -49,7 +49,7 @@ func NewThingRepository(conns chan Connection) clients.ClientRepository {
 	return repo
 }
 
-func (trm *thingRepositoryMock) Save(_ context.Context, clis ...clients.Client) ([]clients.Client, error) {
+func (trm *clientRepoMock) Save(_ context.Context, clis ...clients.Client) ([]clients.Client, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -69,7 +69,7 @@ func (trm *thingRepositoryMock) Save(_ context.Context, clis ...clients.Client) 
 	return clis, nil
 }
 
-func (trm *thingRepositoryMock) Update(_ context.Context, thing clients.Client) (clients.Client, error) {
+func (trm *clientRepoMock) Update(_ context.Context, thing clients.Client) (clients.Client, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -84,7 +84,7 @@ func (trm *thingRepositoryMock) Update(_ context.Context, thing clients.Client) 
 	return trm.things[dbKey], nil
 }
 
-func (trm *thingRepositoryMock) UpdateSecret(_ context.Context, client clients.Client) (clients.Client, error) {
+func (trm *clientRepoMock) UpdateSecret(_ context.Context, client clients.Client) (clients.Client, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -107,7 +107,7 @@ func (trm *thingRepositoryMock) UpdateSecret(_ context.Context, client clients.C
 	return trm.things[dbKey], nil
 }
 
-func (trm *thingRepositoryMock) UpdateOwner(_ context.Context, client clients.Client) (clients.Client, error) {
+func (trm *clientRepoMock) UpdateOwner(_ context.Context, client clients.Client) (clients.Client, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -124,7 +124,7 @@ func (trm *thingRepositoryMock) UpdateOwner(_ context.Context, client clients.Cl
 	return trm.things[dbKey], nil
 }
 
-func (trm *thingRepositoryMock) UpdateTags(_ context.Context, client clients.Client) (clients.Client, error) {
+func (trm *clientRepoMock) UpdateTags(_ context.Context, client clients.Client) (clients.Client, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -141,7 +141,7 @@ func (trm *thingRepositoryMock) UpdateTags(_ context.Context, client clients.Cli
 	return trm.things[dbKey], nil
 }
 
-func (trm *thingRepositoryMock) RetrieveByID(_ context.Context, id string) (clients.Client, error) {
+func (trm *clientRepoMock) RetrieveByID(_ context.Context, id string) (clients.Client, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -152,7 +152,7 @@ func (trm *thingRepositoryMock) RetrieveByID(_ context.Context, id string) (clie
 	return clients.Client{}, errors.ErrNotFound
 }
 
-func (trm *thingRepositoryMock) RetrieveAll(_ context.Context, pm clients.Page) (clients.ClientsPage, error) {
+func (trm *clientRepoMock) RetrieveAll(_ context.Context, pm clients.Page) (clients.ClientsPage, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -186,7 +186,7 @@ func (trm *thingRepositoryMock) RetrieveAll(_ context.Context, pm clients.Page) 
 	return page, nil
 }
 
-func (trm *thingRepositoryMock) Members(_ context.Context, chID string, pm clients.Page) (clients.MembersPage, error) {
+func (trm *clientRepoMock) Members(_ context.Context, chID string, pm clients.Page) (clients.MembersPage, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -242,7 +242,7 @@ func (trm *thingRepositoryMock) Members(_ context.Context, chID string, pm clien
 	return page, nil
 }
 
-func (trm *thingRepositoryMock) ChangeStatus(_ context.Context, id string, status clients.Status) (clients.Client, error) {
+func (trm *clientRepoMock) ChangeStatus(_ context.Context, id string, status clients.Status) (clients.Client, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 	th := trm.things[id]
@@ -251,7 +251,7 @@ func (trm *thingRepositoryMock) ChangeStatus(_ context.Context, id string, statu
 	return th, nil
 }
 
-func (trm *thingRepositoryMock) RetrieveBySecret(_ context.Context, key string) (clients.Client, error) {
+func (trm *clientRepoMock) RetrieveBySecret(_ context.Context, key string) (clients.Client, error) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -264,7 +264,7 @@ func (trm *thingRepositoryMock) RetrieveBySecret(_ context.Context, key string) 
 	return clients.Client{}, errors.ErrNotFound
 }
 
-func (trm *thingRepositoryMock) connect(conn Connection) {
+func (trm *clientRepoMock) connect(conn Connection) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -274,7 +274,7 @@ func (trm *thingRepositoryMock) connect(conn Connection) {
 	trm.tconns[conn.chanID][conn.thing.ID] = conn.thing
 }
 
-func (trm *thingRepositoryMock) disconnect(conn Connection) {
+func (trm *clientRepoMock) disconnect(conn Connection) {
 	trm.mu.Lock()
 	defer trm.mu.Unlock()
 
@@ -285,19 +285,19 @@ func (trm *thingRepositoryMock) disconnect(conn Connection) {
 	delete(trm.tconns[conn.chanID], conn.thing.ID)
 }
 
-type thingCacheMock struct {
+type clientCacheMock struct {
 	mu     sync.Mutex
 	things map[string]string
 }
 
-// NewThingCache returns mock cache instance.
-func NewThingCache() clients.ThingCache {
-	return &thingCacheMock{
+// NewClientCache returns mock cache instance.
+func NewClientCache() clients.ClientCache {
+	return &clientCacheMock{
 		things: make(map[string]string),
 	}
 }
 
-func (tcm *thingCacheMock) Save(_ context.Context, key, id string) error {
+func (tcm *clientCacheMock) Save(_ context.Context, key, id string) error {
 	tcm.mu.Lock()
 	defer tcm.mu.Unlock()
 
@@ -305,7 +305,7 @@ func (tcm *thingCacheMock) Save(_ context.Context, key, id string) error {
 	return nil
 }
 
-func (tcm *thingCacheMock) ID(_ context.Context, key string) (string, error) {
+func (tcm *clientCacheMock) ID(_ context.Context, key string) (string, error) {
 	tcm.mu.Lock()
 	defer tcm.mu.Unlock()
 
@@ -317,7 +317,7 @@ func (tcm *thingCacheMock) ID(_ context.Context, key string) (string, error) {
 	return id, nil
 }
 
-func (tcm *thingCacheMock) Remove(_ context.Context, id string) error {
+func (tcm *clientCacheMock) Remove(_ context.Context, id string) error {
 	tcm.mu.Lock()
 	defer tcm.mu.Unlock()
 

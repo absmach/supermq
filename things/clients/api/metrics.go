@@ -27,90 +27,90 @@ func MetricsMiddleware(svc clients.Service, counter metrics.Counter, latency met
 
 func (ms *metricsMiddleware) CreateThings(ctx context.Context, token string, clients ...clients.Client) ([]clients.Client, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "register_client").Add(1)
-		ms.latency.With("method", "register_client").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "register_things").Add(1)
+		ms.latency.With("method", "register_things").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 	return ms.svc.CreateThings(ctx, token, clients...)
 }
 
 func (ms *metricsMiddleware) ViewClient(ctx context.Context, token, id string) (clients.Client, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "view_client").Add(1)
-		ms.latency.With("method", "view_client").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "view_thing").Add(1)
+		ms.latency.With("method", "view_thing").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 	return ms.svc.ViewClient(ctx, token, id)
 }
 
 func (ms *metricsMiddleware) ListClients(ctx context.Context, token string, pm clients.Page) (clients.ClientsPage, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "list_clients").Add(1)
-		ms.latency.With("method", "list_clients").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "list_things").Add(1)
+		ms.latency.With("method", "list_things").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 	return ms.svc.ListClients(ctx, token, pm)
 }
 
 func (ms *metricsMiddleware) UpdateClient(ctx context.Context, token string, client clients.Client) (clients.Client, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "update_client_name_and_metadata").Add(1)
-		ms.latency.With("method", "update_client_name_and_metadata").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "update_thing_name_and_metadata").Add(1)
+		ms.latency.With("method", "update_thing_name_and_metadata").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 	return ms.svc.UpdateClient(ctx, token, client)
 }
 
 func (ms *metricsMiddleware) UpdateClientTags(ctx context.Context, token string, client clients.Client) (clients.Client, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "update_client_tags").Add(1)
-		ms.latency.With("method", "update_client_tags").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "update_thing_tags").Add(1)
+		ms.latency.With("method", "update_thing_tags").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 	return ms.svc.UpdateClientTags(ctx, token, client)
 }
 
-func (ms *metricsMiddleware) ShareThing(ctx context.Context, token, id string, actions, userIDs []string) error {
+func (ms *metricsMiddleware) ShareClient(ctx context.Context, token, id string, actions, userIDs []string) error {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "share_thing").Add(1)
 		ms.latency.With("method", "share_thing").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.ShareThing(ctx, token, id, actions, userIDs)
+	return ms.svc.ShareClient(ctx, token, id, actions, userIDs)
 }
 
 func (ms *metricsMiddleware) UpdateClientSecret(ctx context.Context, token, oldSecret, newSecret string) (clients.Client, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "update_client_secret").Add(1)
-		ms.latency.With("method", "update_client_secret").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "update_thing_secret").Add(1)
+		ms.latency.With("method", "update_thing_secret").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 	return ms.svc.UpdateClientSecret(ctx, token, oldSecret, newSecret)
 }
 
 func (ms *metricsMiddleware) UpdateClientOwner(ctx context.Context, token string, client clients.Client) (clients.Client, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "update_client_owner").Add(1)
-		ms.latency.With("method", "update_client_owner").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "update_thing_owner").Add(1)
+		ms.latency.With("method", "update_thing_owner").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 	return ms.svc.UpdateClientOwner(ctx, token, client)
 }
 
 func (ms *metricsMiddleware) EnableClient(ctx context.Context, token string, id string) (clients.Client, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "enable_client").Add(1)
-		ms.latency.With("method", "enable_client").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "enable_thing").Add(1)
+		ms.latency.With("method", "enable_thing").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 	return ms.svc.EnableClient(ctx, token, id)
 }
 
 func (ms *metricsMiddleware) DisableClient(ctx context.Context, token string, id string) (clients.Client, error) {
 	defer func(begin time.Time) {
-		ms.counter.With("method", "disable_client").Add(1)
-		ms.latency.With("method", "disable_client").Observe(time.Since(begin).Seconds())
+		ms.counter.With("method", "disable_thing").Add(1)
+		ms.latency.With("method", "disable_thing").Observe(time.Since(begin).Seconds())
 	}(time.Now())
 	return ms.svc.DisableClient(ctx, token, id)
 }
 
-func (ms *metricsMiddleware) ListThingsByChannel(ctx context.Context, token, groupID string, pm clients.Page) (mp clients.MembersPage, err error) {
+func (ms *metricsMiddleware) ListClientsByGroup(ctx context.Context, token, groupID string, pm clients.Page) (mp clients.MembersPage, err error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "list_things_by_channel").Add(1)
 		ms.latency.With("method", "list_things_by_channel").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return ms.svc.ListThingsByChannel(ctx, token, groupID, pm)
+	return ms.svc.ListClientsByGroup(ctx, token, groupID, pm)
 }
 
 func (ms *metricsMiddleware) Identify(ctx context.Context, key string) (string, error) {

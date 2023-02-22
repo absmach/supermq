@@ -31,7 +31,7 @@ func NewClient(conn *grpc.ClientConn, timeout time.Duration) policies.ThingsServ
 			"AuthorizeByKey",
 			encodeAuthorizeRequest,
 			decodeIdentityResponse,
-			policies.ThingID{},
+			policies.ClientID{},
 		).Endpoint()),
 		authorize: otelkit.EndpointMiddleware(otelkit.WithOperation("authorize"))(kitgrpc.NewClient(
 			conn,
@@ -47,14 +47,14 @@ func NewClient(conn *grpc.ClientConn, timeout time.Duration) policies.ThingsServ
 			"Identify",
 			encodeIdentifyRequest,
 			decodeIdentityResponse,
-			policies.ThingID{},
+			policies.ClientID{},
 		).Endpoint()),
 
 		timeout: timeout,
 	}
 }
 
-func (client grpcClient) AuthorizeByKey(ctx context.Context, req *policies.TAuthorizeReq, _ ...grpc.CallOption) (*policies.ThingID, error) {
+func (client grpcClient) AuthorizeByKey(ctx context.Context, req *policies.TAuthorizeReq, _ ...grpc.CallOption) (*policies.ClientID, error) {
 	ctx, cancel := context.WithTimeout(ctx, client.timeout)
 	defer cancel()
 
@@ -70,7 +70,7 @@ func (client grpcClient) AuthorizeByKey(ctx context.Context, req *policies.TAuth
 	}
 
 	ir := res.(identityRes)
-	return &policies.ThingID{Value: ir.id}, nil
+	return &policies.ClientID{Value: ir.id}, nil
 }
 
 func (client grpcClient) Authorize(ctx context.Context, req *policies.TAuthorizeReq, _ ...grpc.CallOption) (*policies.TAuthorizeRes, error) {
@@ -92,7 +92,7 @@ func (client grpcClient) Authorize(ctx context.Context, req *policies.TAuthorize
 	return &policies.TAuthorizeRes{Authorized: ir.authorized}, nil
 }
 
-func (client grpcClient) Identify(ctx context.Context, req *policies.Key, _ ...grpc.CallOption) (*policies.ThingID, error) {
+func (client grpcClient) Identify(ctx context.Context, req *policies.Key, _ ...grpc.CallOption) (*policies.ClientID, error) {
 	ctx, cancel := context.WithTimeout(ctx, client.timeout)
 	defer cancel()
 
@@ -102,7 +102,7 @@ func (client grpcClient) Identify(ctx context.Context, req *policies.Key, _ ...g
 	}
 
 	ir := res.(identityRes)
-	return &policies.ThingID{Value: ir.id}, nil
+	return &policies.ClientID{Value: ir.id}, nil
 }
 
 func encodeAuthorizeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
@@ -116,7 +116,7 @@ func encodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{},
 }
 
 func decodeIdentityResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
-	res := grpcRes.(*policies.ThingID)
+	res := grpcRes.(*policies.ClientID)
 	return identityRes{id: res.GetValue()}, nil
 }
 

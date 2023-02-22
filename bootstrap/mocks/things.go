@@ -11,7 +11,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/clients"
 	"github.com/mainflux/mainflux/things/groups"
-	"github.com/mainflux/mainflux/users/policies"
+	upolicies "github.com/mainflux/mainflux/users/policies"
 )
 
 var _ clients.Service = (*mainfluxThings)(nil)
@@ -21,13 +21,13 @@ type mainfluxThings struct {
 	counter     uint64
 	things      map[string]clients.Client
 	channels    map[string]groups.Group
-	auth        policies.AuthServiceClient
+	auth        upolicies.AuthServiceClient
 	connections map[string][]string
 }
 
 // NewThingsService returns Mainflux Things service mock.
 // Only methods used by SDK are mocked.
-func NewThingsService(things map[string]clients.Client, channels map[string]groups.Group, auth policies.AuthServiceClient) clients.Service {
+func NewThingsService(things map[string]clients.Client, channels map[string]groups.Group, auth upolicies.AuthServiceClient) clients.Service {
 	return &mainfluxThings{
 		things:      things,
 		channels:    channels,
@@ -40,7 +40,7 @@ func (svc *mainfluxThings) CreateThings(_ context.Context, owner string, ths ...
 	svc.mu.Lock()
 	defer svc.mu.Unlock()
 
-	userID, err := svc.auth.Identify(context.Background(), &policies.Token{Value: owner})
+	userID, err := svc.auth.Identify(context.Background(), &upolicies.Token{Value: owner})
 	if err != nil {
 		return []clients.Client{}, errors.ErrAuthentication
 	}
@@ -59,7 +59,7 @@ func (svc *mainfluxThings) ViewClient(_ context.Context, owner, id string) (clie
 	svc.mu.Lock()
 	defer svc.mu.Unlock()
 
-	userID, err := svc.auth.Identify(context.Background(), &policies.Token{Value: owner})
+	userID, err := svc.auth.Identify(context.Background(), &upolicies.Token{Value: owner})
 	if err != nil {
 		return clients.Client{}, errors.ErrAuthentication
 	}
@@ -76,7 +76,7 @@ func (svc *mainfluxThings) Connect(_ context.Context, owner string, chIDs, thIDs
 	svc.mu.Lock()
 	defer svc.mu.Unlock()
 
-	userID, err := svc.auth.Identify(context.Background(), &policies.Token{Value: owner})
+	userID, err := svc.auth.Identify(context.Background(), &upolicies.Token{Value: owner})
 	if err != nil {
 		return errors.ErrAuthentication
 	}
@@ -94,7 +94,7 @@ func (svc *mainfluxThings) Disconnect(_ context.Context, owner string, chIDs, th
 	svc.mu.Lock()
 	defer svc.mu.Unlock()
 
-	userID, err := svc.auth.Identify(context.Background(), &policies.Token{Value: owner})
+	userID, err := svc.auth.Identify(context.Background(), &upolicies.Token{Value: owner})
 	if err != nil {
 		return errors.ErrAuthentication
 	}
@@ -125,12 +125,42 @@ func (svc *mainfluxThings) Disconnect(_ context.Context, owner string, chIDs, th
 	return nil
 }
 
-func (svc *mainfluxThings) DisableClient(_ context.Context, owner, id string) (clients.Client, error) {
-	panic("not implemented")
+func (svc *mainfluxThings) EnableClient(ctx context.Context, token, id string) (clients.Client, error) {
+	svc.mu.Lock()
+	defer svc.mu.Unlock()
+
+	userID, err := svc.auth.Identify(context.Background(), &upolicies.Token{Value: token})
+	if err != nil {
+		return clients.Client{}, errors.ErrAuthentication
+	}
+
+	if t, ok := svc.things[id]; !ok || t.Owner != userID.Email {
+		return clients.Client{}, errors.ErrNotFound
+	}
+	if t, ok := svc.things[id]; ok && t.Owner == userID.Email {
+		t.Status = clients.EnabledStatus
+		return t, nil
+	}
+	return clients.Client{}, nil
 }
 
-func (svc *mainfluxThings) EnableClient(_ context.Context, owner, id string) (clients.Client, error) {
-	panic("not implemented")
+func (svc *mainfluxThings) DisableClient(ctx context.Context, token, id string) (clients.Client, error) {
+	svc.mu.Lock()
+	defer svc.mu.Unlock()
+
+	userID, err := svc.auth.Identify(context.Background(), &upolicies.Token{Value: token})
+	if err != nil {
+		return clients.Client{}, errors.ErrAuthentication
+	}
+
+	if t, ok := svc.things[id]; !ok || t.Owner != userID.Email {
+		return clients.Client{}, errors.ErrNotFound
+	}
+	if t, ok := svc.things[id]; ok && t.Owner == userID.Email {
+		t.Status = clients.DisabledStatus
+		return t, nil
+	}
+	return clients.Client{}, nil
 }
 
 func (svc *mainfluxThings) ViewChannel(_ context.Context, owner, id string) (groups.Group, error) {
@@ -144,6 +174,10 @@ func (svc *mainfluxThings) UpdateClient(context.Context, string, clients.Client)
 	panic("not implemented")
 }
 
+func (svc *mainfluxThings) UpdateClientSecret(context.Context, string, string, string) (clients.Client, error) {
+	panic("not implemented")
+}
+
 func (svc *mainfluxThings) UpdateClientOwner(context.Context, string, clients.Client) (clients.Client, error) {
 	panic("not implemented")
 }
@@ -152,19 +186,15 @@ func (svc *mainfluxThings) UpdateClientTags(context.Context, string, clients.Cli
 	panic("not implemented")
 }
 
-func (svc *mainfluxThings) UpdateClientSecret(context.Context, string, string, string) (clients.Client, error) {
-	panic("not implemented")
-}
-
 func (svc *mainfluxThings) ListClients(context.Context, string, clients.Page) (clients.ClientsPage, error) {
 	panic("not implemented")
 }
 
-func (svc *mainfluxThings) ListChannelsByThing(context.Context, string, string, groups.Page) (groups.MembershipsPage, error) {
+func (svc *mainfluxThings) ListGroupsByThing(context.Context, string, string, clients.Page) (groups.GroupsPage, error) {
 	panic("not implemented")
 }
 
-func (svc *mainfluxThings) ListThingsByChannel(context.Context, string, string, clients.Page) (clients.MembersPage, error) {
+func (svc *mainfluxThings) ListClientsByGroup(context.Context, string, string, clients.Page) (clients.MembersPage, error) {
 	panic("not implemented")
 }
 
@@ -172,7 +202,7 @@ func (svc *mainfluxThings) CreateChannels(_ context.Context, owner string, chs .
 	svc.mu.Lock()
 	defer svc.mu.Unlock()
 
-	userID, err := svc.auth.Identify(context.Background(), &policies.Token{Value: owner})
+	userID, err := svc.auth.Identify(context.Background(), &upolicies.Token{Value: owner})
 	if err != nil {
 		return []groups.Group{}, errors.ErrAuthentication
 	}
@@ -190,7 +220,7 @@ func (svc *mainfluxThings) UpdateChannel(context.Context, string, groups.Group) 
 	panic("not implemented")
 }
 
-func (svc *mainfluxThings) ListGroups(context.Context, string, groups.Page) (groups.GroupsPage, error) {
+func (svc *mainfluxThings) ListChannels(context.Context, string, clients.Page) (groups.GroupsPage, error) {
 	panic("not implemented")
 }
 
@@ -214,20 +244,6 @@ func (svc *mainfluxThings) Identify(context.Context, string) (string, error) {
 	panic("not implemented")
 }
 
-func (svc *mainfluxThings) ShareThing(ctx context.Context, token, thingID string, actions []string, userIDs []string) error {
-	panic("not implemented")
-}
-
-func findIndex(list []string, val string) int {
-	for i, v := range list {
-		if v == val {
-			return i
-		}
-	}
-
-	return -1
-}
-
-func (svc *mainfluxThings) ListMembers(ctx context.Context, token, groupID string, pm clients.Page) (clients.MembersPage, error) {
+func (svc *mainfluxThings) ShareClient(ctx context.Context, token, thingID string, actions, userIDs []string) error {
 	panic("not implemented")
 }

@@ -119,8 +119,8 @@ func (es eventStore) UpdateClientSecret(ctx context.Context, token, id, key stri
 	return es.svc.UpdateClientSecret(ctx, token, id, key)
 }
 
-func (es eventStore) ShareThing(ctx context.Context, token, thingID string, actions, userIDs []string) error {
-	return es.svc.ShareThing(ctx, token, thingID, actions, userIDs)
+func (es eventStore) ShareClient(ctx context.Context, token, thingID string, actions, userIDs []string) error {
+	return es.svc.ShareClient(ctx, token, thingID, actions, userIDs)
 }
 
 func (es eventStore) ViewClient(ctx context.Context, token, id string) (clients.Client, error) {
@@ -131,8 +131,8 @@ func (es eventStore) ListClients(ctx context.Context, token string, pm clients.P
 	return es.svc.ListClients(ctx, token, pm)
 }
 
-func (es eventStore) ListThingsByChannel(ctx context.Context, token, chID string, pm clients.Page) (clients.MembersPage, error) {
-	return es.svc.ListThingsByChannel(ctx, token, chID, pm)
+func (es eventStore) ListClientsByGroup(ctx context.Context, token, chID string, pm clients.Page) (clients.MembersPage, error) {
+	return es.svc.ListClientsByGroup(ctx, token, chID, pm)
 }
 
 func (es eventStore) EnableClient(ctx context.Context, token, id string) (clients.Client, error) {

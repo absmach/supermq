@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/go-zoo/bone"
@@ -15,6 +14,7 @@ import (
 	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
 	redisClient "github.com/mainflux/mainflux/internal/clients/redis"
 	"github.com/mainflux/mainflux/internal/env"
+	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/internal/server"
 	grpcserver "github.com/mainflux/mainflux/internal/server/grpc"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
@@ -35,7 +35,6 @@ import (
 	ppostgres "github.com/mainflux/mainflux/things/policies/postgres"
 	redischcache "github.com/mainflux/mainflux/things/policies/redis"
 	ppracing "github.com/mainflux/mainflux/things/policies/tracing"
-	"github.com/mainflux/mainflux/things/postgres"
 	thingsPg "github.com/mainflux/mainflux/things/postgres"
 	upolicies "github.com/mainflux/mainflux/users/policies"
 	"go.opentelemetry.io/otel"
@@ -51,13 +50,10 @@ import (
 )
 
 const (
-	stopWaitTime       = 5 * time.Second
 	svcName            = "things"
 	envPrefix          = "MF_THINGS_"
 	envPrefixCache     = "MF_THINGS_CACHE_"
-	envPrefixES        = "MF_THINGS_ES_"
 	envPrefixHttp      = "MF_THINGS_HTTP_"
-	envPrefixAuthHttp  = "MF_THINGS_AUTH_HTTP_"
 	envPrefixAuthGrpc  = "MF_THINGS_AUTH_GRPC_"
 	defDB              = "things"
 	defSvcHttpPort     = "8182"
@@ -126,13 +122,13 @@ func main() {
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to load %s gRPC server configuration : %s", svcName, err))
 	}
-	hsc := httpserver.New(ctx, cancel, "things-clients", httpServerConfig, capi.MakeClientsHandler(csvc, mux, logger), logger)
+	hsc := httpserver.New(ctx, cancel, "things-clients", httpServerConfig, capi.MakeHandler(csvc, mux, logger), logger)
 
 	httpServerConfig = server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		log.Fatalf("failed to load %s gRPC server configuration : %s", svcName, err.Error())
 	}
-	hsg := httpserver.New(ctx, cancel, "things-groups", httpServerConfig, gapi.MakeGroupsHandler(gsvc, mux, logger), logger)
+	hsg := httpserver.New(ctx, cancel, "things-groups", httpServerConfig, gapi.MakeHandler(gsvc, mux, logger), logger)
 
 	httpServerConfig = server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
@@ -187,16 +183,16 @@ func initJaeger(svcName, url string) (*tracesdk.TracerProvider, error) {
 	return tp, nil
 }
 
-func newService(db *sqlx.DB, auth upolicies.AuthServiceClient, cacheClient *redis.Client, tracer trace.Tracer, logger logger.Logger) (clients.Service, groups.GroupService, tpolicies.PolicyService) {
+func newService(db *sqlx.DB, auth upolicies.AuthServiceClient, cacheClient *redis.Client, tracer trace.Tracer, logger logger.Logger) (clients.Service, groups.Service, tpolicies.Service) {
 	database := postgres.NewDatabase(db, tracer)
-	cRepo := cpostgres.NewClientRepo(database)
-	gRepo := gpostgres.NewGroupRepo(database)
-	pRepo := ppostgres.NewPolicyRepo(database)
+	cRepo := cpostgres.NewRepository(database)
+	gRepo := gpostgres.NewRepository(database)
+	pRepo := ppostgres.NewRepository(database)
 
 	idp := uuid.New()
 
-	policyCache := redischcache.NewPolicyCache(cacheClient)
-	thingCache := redisthcache.NewThingCache(cacheClient)
+	policyCache := redischcache.NewCache(cacheClient)
+	thingCache := redisthcache.NewCache(cacheClient)
 
 	csvc := clients.NewService(auth, cRepo, thingCache, idp)
 	gsvc := groups.NewService(auth, gRepo, pRepo, idp)

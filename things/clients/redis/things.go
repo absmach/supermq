@@ -17,14 +17,14 @@ const (
 	idPrefix  = "thing"
 )
 
-var _ clients.ThingCache = (*thingCache)(nil)
+var _ clients.ClientCache = (*thingCache)(nil)
 
 type thingCache struct {
 	client *redis.Client
 }
 
-// NewThingCache returns redis thing cache implementation.
-func NewThingCache(client *redis.Client) clients.ThingCache {
+// NewCache returns redis thing cache implementation.
+func NewCache(client *redis.Client) clients.ClientCache {
 	return &thingCache{
 		client: client,
 	}

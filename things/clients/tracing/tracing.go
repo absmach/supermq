@@ -81,18 +81,18 @@ func (tm *tracingMiddleware) DisableClient(ctx context.Context, token, id string
 	return tm.svc.DisableClient(ctx, token, id)
 }
 
-func (tm *tracingMiddleware) ListThingsByChannel(ctx context.Context, token, groupID string, pm clients.Page) (clients.MembersPage, error) {
+func (tm *tracingMiddleware) ListClientsByGroup(ctx context.Context, token, groupID string, pm clients.Page) (clients.MembersPage, error) {
 	ctx, span := tm.tracer.Start(ctx, "svc_list_things_by_channel")
 	defer span.End()
 
-	return tm.svc.ListThingsByChannel(ctx, token, groupID, pm)
+	return tm.svc.ListClientsByGroup(ctx, token, groupID, pm)
 
 }
 
-func (tm *tracingMiddleware) ShareThing(ctx context.Context, token string, thingID string, actions, userIDs []string) error {
+func (tm *tracingMiddleware) ShareClient(ctx context.Context, token string, thingID string, actions, userIDs []string) error {
 	ctx, span := tm.tracer.Start(ctx, "svc_view_client", trace.WithAttributes(attribute.String("ID", thingID)))
 	defer span.End()
-	return tm.svc.ShareThing(ctx, token, thingID, actions, userIDs)
+	return tm.svc.ShareClient(ctx, token, thingID, actions, userIDs)
 }
 
 func (tm *tracingMiddleware) Identify(ctx context.Context, key string) (string, error) {

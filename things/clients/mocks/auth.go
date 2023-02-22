@@ -23,14 +23,6 @@ type authServiceMock struct {
 	policies map[string][]MockSubjectSet
 }
 
-func (svc authServiceMock) ListPolicies(ctx context.Context, in *policies.ListPoliciesReq, opts ...grpc.CallOption) (*policies.ListPoliciesRes, error) {
-	res := policies.ListPoliciesRes{}
-	for key := range svc.policies {
-		res.Objects = append(res.Objects, key)
-	}
-	return &res, nil
-}
-
 // NewAuthService creates mock of users service.
 func NewAuthService(users map[string]string, policies map[string][]MockSubjectSet) policies.AuthServiceClient {
 	return &authServiceMock{users, policies}
@@ -73,6 +65,14 @@ func (svc authServiceMock) AddPolicy(ctx context.Context, in *policies.AddPolicy
 	obj := in.GetObj()
 	svc.policies[in.GetSub()] = append(svc.policies[in.GetSub()], MockSubjectSet{Object: obj, Relation: in.GetAct()})
 	return &policies.AddPolicyRes{Authorized: true}, nil
+}
+
+func (svc authServiceMock) ListPolicies(ctx context.Context, in *policies.ListPoliciesReq, opts ...grpc.CallOption) (*policies.ListPoliciesRes, error) {
+	res := policies.ListPoliciesRes{}
+	for key := range svc.policies {
+		res.Objects = append(res.Objects, key)
+	}
+	return &res, nil
 }
 
 func (svc authServiceMock) DeletePolicy(ctx context.Context, in *policies.DeletePolicyReq, opts ...grpc.CallOption) (*policies.DeletePolicyRes, error) {

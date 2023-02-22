@@ -74,7 +74,6 @@ type listClientsReq struct {
 	sharedBy   string
 	visibility string
 	metadata   clients.Metadata
-	shared     bool
 }
 
 func (req listClientsReq) validate() error {
@@ -175,9 +174,9 @@ func (req updateClientOwnerReq) validate() error {
 }
 
 type updateClientCredentialsReq struct {
-	token string
-	id    string
-	Key   string `json:"key,omitempty"`
+	token  string
+	id     string
+	Secret string `json:"key,omitempty"`
 }
 
 func (req updateClientCredentialsReq) validate() error {
@@ -188,7 +187,7 @@ func (req updateClientCredentialsReq) validate() error {
 		return apiutil.ErrMissingID
 	}
 
-	if req.Key == "" {
+	if req.Secret == "" {
 		return apiutil.ErrBearerKey
 	}
 
@@ -207,19 +206,19 @@ func (req changeClientStatusReq) validate() error {
 	return nil
 }
 
-type shareThingReq struct {
+type shareClientReq struct {
 	token    string
-	thingID  string
+	clientID string
 	UserIDs  []string `json:"user_ids"`
 	Policies []string `json:"policies"`
 }
 
-func (req shareThingReq) validate() error {
+func (req shareClientReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
 
-	if req.thingID == "" || len(req.UserIDs) == 0 {
+	if req.clientID == "" || len(req.UserIDs) == 0 {
 		return apiutil.ErrMissingID
 	}
 

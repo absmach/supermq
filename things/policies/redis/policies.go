@@ -14,18 +14,18 @@ import (
 
 const groupPrefix = "group"
 
-var _ policies.PolicyCache = (*policiesCache)(nil)
+var _ policies.Cache = (*pcache)(nil)
 
-type policiesCache struct {
+type pcache struct {
 	client *redis.Client
 }
 
-// NewPolicyCache returns redis policy cache implementation.
-func NewPolicyCache(client *redis.Client) policies.PolicyCache {
-	return policiesCache{client: client}
+// NewCache returns redis policy cache implementation.
+func NewCache(client *redis.Client) policies.Cache {
+	return pcache{client: client}
 }
 
-func (cc policiesCache) AddPolicy(ctx context.Context, policy policies.Policy) error {
+func (cc pcache) AddPolicy(ctx context.Context, policy policies.Policy) error {
 	obj, subs := kv(policy)
 	for _, sub := range subs {
 		if err := cc.client.SAdd(ctx, obj, sub).Err(); err != nil {
@@ -35,12 +35,12 @@ func (cc policiesCache) AddPolicy(ctx context.Context, policy policies.Policy) e
 	return nil
 }
 
-func (cc policiesCache) Evaluate(ctx context.Context, policy policies.Policy) bool {
+func (cc pcache) Evaluate(ctx context.Context, policy policies.Policy) bool {
 	obj, subs := kv(policy)
 	return cc.client.SIsMember(ctx, obj, subs[0]).Val()
 }
 
-func (cc policiesCache) DeletePolicy(ctx context.Context, policy policies.Policy) error {
+func (cc pcache) DeletePolicy(ctx context.Context, policy policies.Policy) error {
 	obj, _ := kv(policy)
 	if err := cc.client.Del(ctx, obj).Err(); err != nil {
 		return errors.Wrap(errors.ErrRemoveEntity, err)

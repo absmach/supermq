@@ -7,7 +7,7 @@ import (
 	"github.com/mainflux/mainflux/things/clients"
 )
 
-func registrationEndpoint(svc clients.Service) endpoint.Endpoint {
+func createClientEndpoint(svc clients.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(createClientReq)
 		if err := req.validate(); err != nil {
@@ -26,7 +26,7 @@ func registrationEndpoint(svc clients.Service) endpoint.Endpoint {
 	}
 }
 
-func registrationsEndpoint(svc clients.Service) endpoint.Endpoint {
+func createClientsEndpoint(svc clients.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(createClientsReq)
 		if err := req.validate(); err != nil {
@@ -72,15 +72,14 @@ func listClientsEndpoint(svc clients.Service) endpoint.Endpoint {
 		}
 
 		pm := clients.Page{
-			SharedBy:          req.sharedBy,
-			Status:            req.status,
-			Offset:            req.offset,
-			Limit:             req.limit,
-			Owner:             req.owner,
-			Name:              req.name,
-			Tag:               req.tag,
-			Metadata:          req.metadata,
-			FetchSharedThings: req.shared,
+			SharedBy: req.sharedBy,
+			Status:   req.status,
+			Offset:   req.offset,
+			Limit:    req.limit,
+			Owner:    req.owner,
+			Name:     req.name,
+			Tag:      req.tag,
+			Metadata: req.metadata,
 		}
 		page, err := svc.ListClients(ctx, req.token, pm)
 		if err != nil {
@@ -109,7 +108,7 @@ func listMembersEndpoint(svc clients.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return memberPageRes{}, err
 		}
-		page, err := svc.ListThingsByChannel(ctx, req.token, req.groupID, req.Page)
+		page, err := svc.ListClientsByGroup(ctx, req.token, req.groupID, req.Page)
 		if err != nil {
 			return memberPageRes{}, err
 		}
@@ -156,13 +155,13 @@ func updateClientTagsEndpoint(svc clients.Service) endpoint.Endpoint {
 	}
 }
 
-func shareThingEndpoint(svc clients.Service) endpoint.Endpoint {
+func shareClientEndpoint(svc clients.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(shareThingReq)
+		req := request.(shareClientReq)
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
-		if err := svc.ShareThing(ctx, req.token, req.thingID, req.Policies, req.UserIDs); err != nil {
+		if err := svc.ShareClient(ctx, req.token, req.clientID, req.Policies, req.UserIDs); err != nil {
 			return nil, err
 		}
 		return shareThingRes{}, nil
@@ -175,7 +174,7 @@ func updateClientSecretEndpoint(svc clients.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return nil, err
 		}
-		client, err := svc.UpdateClientSecret(ctx, req.token, req.id, req.Key)
+		client, err := svc.UpdateClientSecret(ctx, req.token, req.id, req.Secret)
 		if err != nil {
 			return nil, err
 		}

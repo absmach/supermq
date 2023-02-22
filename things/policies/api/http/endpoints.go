@@ -116,7 +116,7 @@ func connectThingsEndpoint(svc policies.Service) endpoint.Endpoint {
 
 func updatePolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		cr := request.(createPolicyReq)
+		cr := request.(policyReq)
 
 		if err := cr.validate(); err != nil {
 			return nil, err

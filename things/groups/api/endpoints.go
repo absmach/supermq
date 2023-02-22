@@ -30,7 +30,7 @@ func createGroupsEndpoint(svc groups.Service) endpoint.Endpoint {
 			return groupPageRes{}, err
 		}
 
-		gs, err := svc.CreateGroups(ctx, req.token, req.Channels...)
+		gs, err := svc.CreateGroups(ctx, req.token, req.Groups...)
 		if err != nil {
 			return groupPageRes{}, err
 		}
@@ -175,7 +175,6 @@ func buildGroupsResponseTree(page groups.GroupsPage) groupPageRes {
 			Limit:  page.Limit,
 			Offset: page.Offset,
 			Total:  page.Total,
-			Level:  page.Level,
 		},
 		Groups: []viewGroupRes{},
 	}
@@ -208,7 +207,6 @@ func buildGroupsResponse(gp groups.GroupsPage) groupPageRes {
 	res := groupPageRes{
 		pageRes: pageRes{
 			Total: gp.Total,
-			Level: gp.Level,
 		},
 		Groups: []viewGroupRes{},
 	}

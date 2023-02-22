@@ -12,7 +12,8 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
-	"github.com/mainflux/mainflux/things/postgres"
+	"github.com/mainflux/mainflux/internal/postgres"
+	tpostgres "github.com/mainflux/mainflux/things/postgres"
 	dockertest "github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"go.opentelemetry.io/otel"
@@ -74,7 +75,7 @@ func TestMain(m *testing.M) {
 		SSLRootCert: "",
 	}
 
-	if db, err = pgClient.SetupDB(dbConfig, *postgres.Migration()); err != nil {
+	if db, err = pgClient.SetupDB(dbConfig, *tpostgres.Migration()); err != nil {
 		log.Fatalf("Could not setup test DB connection: %s", err)
 	}
 	database = postgres.NewDatabase(db, tracer)

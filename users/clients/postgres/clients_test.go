@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -15,7 +16,6 @@ import (
 	gpostgres "github.com/mainflux/mainflux/users/groups/postgres"
 	"github.com/mainflux/mainflux/users/policies"
 	ppostgres "github.com/mainflux/mainflux/users/policies/postgres"
-	"github.com/mainflux/mainflux/users/postgres"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
