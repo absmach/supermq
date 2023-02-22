@@ -94,7 +94,7 @@ func (lm *loggingMiddleware) DisableGroup(ctx context.Context, token string, id 
 
 func (lm *loggingMiddleware) ListMemberships(ctx context.Context, token, clientID string, cp groups.GroupsPage) (mp groups.MembershipsPage, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method list_memberships for group %s and token %s took %s to complete", clientID, token, time.Since(begin))
+		message := fmt.Sprintf("Method list_memberships for client %s and token %s took %s to complete", clientID, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return

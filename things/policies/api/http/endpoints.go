@@ -70,10 +70,13 @@ func connectEndpoint(svc policies.Service) endpoint.Endpoint {
 		if err := cr.validate(); err != nil {
 			return nil, err
 		}
+		if len(cr.Actions) == 0 {
+			cr.Actions = policies.PolicyTypes
+		}
 		policy := policies.Policy{
 			Subject: cr.ClientID,
 			Object:  cr.GroupID,
-			Actions: policies.PolicyTypes,
+			Actions: cr.Actions,
 		}
 		policy, err := svc.AddPolicy(ctx, cr.token, policy)
 		if err != nil {
@@ -93,10 +96,13 @@ func connectThingsEndpoint(svc policies.Service) endpoint.Endpoint {
 		}
 		for _, tid := range cr.ClientIDs {
 			for _, cid := range cr.GroupIDs {
+				if len(cr.Actions) == 0 {
+					cr.Actions = policies.PolicyTypes
+				}
 				policy := policies.Policy{
 					Subject: tid,
 					Object:  cid,
-					Actions: policies.PolicyTypes,
+					Actions: cr.Actions,
 				}
 				if _, err := svc.AddPolicy(ctx, cr.token, policy); err != nil {
 					return nil, err

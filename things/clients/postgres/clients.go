@@ -155,10 +155,14 @@ func (repo clientRepo) Members(ctx context.Context, groupID string, pm clients.P
 		return clients.MembersPage{}, err
 	}
 
+	aq := ""
+	// If not admin, the client needs to have a g_list action on the group
+	if pm.Subject != "" {
+		aq = fmt.Sprintf("AND EXISTS (SELECT 1 FROM policies WHERE policies.subject = '%s' AND policies.object = :group_id AND '%s'=ANY(actions))", pm.Subject, pm.Action)
+	}
+
 	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags, c.metadata, c.identity, c.secret, c.status, c.created_at FROM clients c
-		INNER JOIN policies ON c.id=policies.subject %s AND policies.object = :group_id
-		AND EXISTS (SELECT 1 FROM policies WHERE policies.subject = '%s' AND '%s'=ANY(actions))
-	  	ORDER BY c.created_at LIMIT :limit OFFSET :offset;`, emq, pm.Subject, pm.Action)
+		INNER JOIN policies ON c.id=policies.subject %s AND policies.object = :group_id %s ORDER BY c.created_at LIMIT :limit OFFSET :offset;`, emq, aq)
 	dbPage, err := toDBClientsPage(pm)
 	if err != nil {
 		return clients.MembersPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)
@@ -472,17 +476,14 @@ func pageQuery(pm clients.Page) (string, error) {
 
 	// For listing clients that the specified client owns and that are shared with the specified client
 	if pm.Owner != "" && pm.SharedBy != "" {
-		query = append(query, fmt.Sprintf("(c.owner_id = '%s' OR policies.object IN (SELECT object FROM policies WHERE subject = '%s' AND '%s'=ANY(actions)))", pm.Owner, pm.SharedBy, pm.Action))
+		query = append(query, fmt.Sprintf("(c.owner_id = '%s' OR c.id IN (SELECT subject FROM policies WHERE object IN (SELECT object FROM policies WHERE subject = '%s' AND '%s'=ANY(actions))))", pm.Owner, pm.SharedBy, pm.Action))
 	}
 	// For listing clients that the specified client is shared with
 	if pm.SharedBy != "" && pm.Owner == "" {
-		query = append(query, fmt.Sprintf("c.owner_id != '%s' AND (policies.object IN (SELECT object FROM policies WHERE subject = '%s' AND '%s'=ANY(actions)))", pm.SharedBy, pm.SharedBy, pm.Action))
+		query = append(query, fmt.Sprintf("c.owner_id != '%s' AND (c.id IN (SELECT subject FROM policies WHERE object IN (SELECT object FROM policies WHERE subject = '%s' AND '%s'=ANY(actions))))", pm.SharedBy, pm.SharedBy, pm.Action))
 	}
 	if len(query) > 0 {
 		emq = fmt.Sprintf("WHERE %s", strings.Join(query, " AND "))
-		if strings.Contains(emq, "policies") {
-			emq = fmt.Sprintf("JOIN policies ON policies.subject = c.id %s", emq)
-		}
 	}
 	return emq, nil
 

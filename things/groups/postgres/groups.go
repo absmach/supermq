@@ -131,12 +131,16 @@ func (repo groupRepository) Memberships(ctx context.Context, clientID string, gm
 		q = buildHierachy(gm)
 	}
 	if gm.ID == "" {
-		q = `SELECT DISTINCT g.id, g.owner_id, COALESCE(g.parent_id, '') AS parent_id, g.name, g.description,
+		q = `SELECT g.id, g.owner_id, COALESCE(g.parent_id, '') AS parent_id, g.name, g.description,
 		g.metadata, g.created_at, g.updated_at, g.status FROM groups g`
 	}
-	q = fmt.Sprintf(`%s INNER JOIN policies ON g.id=policies.object %s AND policies.subject = :client_id
-			AND policies.object IN (SELECT object FROM policies WHERE subject = '%s' AND '%s'=ANY(actions))
-			ORDER BY g.updated_at LIMIT :limit OFFSET :offset;`, q, query, gm.Subject, gm.Action)
+	aq := ""
+	// If not admin, the client needs to have a g_list action on the group
+	if gm.Subject != "" {
+		aq = fmt.Sprintf("AND policies.object IN (SELECT object FROM policies WHERE subject = '%s' AND '%s'=ANY(actions))", gm.Subject, gm.Action)
+	}
+	q = fmt.Sprintf(`%s INNER JOIN policies ON g.id=policies.object %s AND policies.subject = :client_id %s 
+					ORDER BY g.updated_at LIMIT :limit OFFSET :offset;`, q, query, aq)
 
 	dbPage, err := toDBGroupPage(gm)
 	if err != nil {

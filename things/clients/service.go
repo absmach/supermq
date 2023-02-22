@@ -109,34 +109,23 @@ func (svc service) ListClients(ctx context.Context, token string, pm Page) (Clie
 		return ClientsPage{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
 
-	subject := res.GetId()
 	// If the user is admin, fetch all things from database.
 	if err := svc.authorize(ctx, token, thingsObjectKey, listRelationKey); err == nil {
 		pm.Owner = ""
+		pm.SharedBy = ""
 		return svc.clients.RetrieveAll(ctx, pm)
 	}
 
-	// If the user is not admin, check 'shared' parameter from page metadata.
-	// If user provides 'shared' key, fetch things from policies. Otherwise,
+	// If the user is not admin, check 'sharedby' parameter from page metadata.
+	// If user provides 'sharedby' key, fetch things from policies. Otherwise,
 	// fetch things from the database based on thing's 'owner' field.
-	if pm.FetchSharedThings {
-		req := &policies.ListPoliciesReq{Token: token, Act: listRelationKey, Sub: subject}
-		lpr, err := svc.auth.ListPolicies(ctx, req)
-		if err != nil {
-			return ClientsPage{}, err
-		}
-		pm.Owner = ""
-		pm.IDs = lpr.Objects
-		return svc.clients.RetrieveAll(ctx, pm)
-	}
 	if pm.SharedBy == MyKey {
-		pm.SharedBy = subject
+		pm.SharedBy = res.GetId()
 	}
 	if pm.Owner == MyKey {
-		pm.Owner = subject
+		pm.Owner = res.GetId()
 	}
 	pm.Action = "c_list"
-	pm.Owner = res.GetId()
 
 	return svc.clients.RetrieveAll(ctx, pm)
 }
@@ -222,6 +211,10 @@ func (svc service) ListThingsByChannel(ctx context.Context, token, channelID str
 	res, err := svc.auth.Identify(ctx, &policies.Token{Value: token})
 	if err != nil {
 		return MembersPage{}, errors.Wrap(errors.ErrAuthentication, err)
+	}
+	// If the user is admin, fetch all things connected to the channel.
+	if err := svc.authorize(ctx, token, thingsObjectKey, listRelationKey); err == nil {
+		return svc.clients.Members(ctx, channelID, pm)
 	}
 	pm.Subject = res.GetId()
 	pm.Action = "g_list"

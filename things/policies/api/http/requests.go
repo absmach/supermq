@@ -7,9 +7,10 @@ import (
 
 type createPolicyReq struct {
 	token    string
-	Owner    string `json:"owner,omitempty"`
-	ClientID string `json:"client,omitempty"`
-	GroupID  string `json:"group,omitempty"`
+	Owner    string   `json:"owner,omitempty"`
+	ClientID string   `json:"client,omitempty"`
+	GroupID  string   `json:"group,omitempty"`
+	Actions  []string `json:"actions,omitempty"`
 }
 
 func (req createPolicyReq) validate() error {
@@ -27,6 +28,7 @@ type createPoliciesReq struct {
 	Owner     string   `json:"owner,omitempty"`
 	ClientIDs []string `json:"client_ids,omitempty"`
 	GroupIDs  []string `json:"group_ids,omitempty"`
+	Actions   []string `json:"actions,omitempty"`
 }
 
 func (req createPoliciesReq) validate() error {
