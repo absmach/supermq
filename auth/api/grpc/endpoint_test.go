@@ -6,15 +6,12 @@ package grpc_test
 import (
 	"context"
 	"fmt"
-	"net"
 	"testing"
 	"time"
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/auth"
 	grpcapi "github.com/mainflux/mainflux/auth/api/grpc"
-	"github.com/mainflux/mainflux/auth/jwt"
-	"github.com/mainflux/mainflux/auth/mocks"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
@@ -43,27 +40,6 @@ const (
 )
 
 var svc auth.Service
-
-func newService() auth.Service {
-	repo := mocks.NewKeyRepository()
-	groupRepo := mocks.NewGroupRepository()
-	idProvider := uuid.NewMock()
-
-	mockAuthzDB := map[string][]mocks.MockSubjectSet{}
-	mockAuthzDB[id] = append(mockAuthzDB[id], mocks.MockSubjectSet{Object: authoritiesObj, Relation: memberRelation})
-	ketoMock := mocks.NewKetoMock(mockAuthzDB)
-
-	t := jwt.New(secret)
-
-	return auth.New(repo, groupRepo, idProvider, t, ketoMock, loginDuration)
-}
-
-func startGRPCServer(svc auth.Service, port int) {
-	listener, _ := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	server := grpc.NewServer()
-	mainflux.RegisterAuthServiceServer(server, grpcapi.NewServer(mocktracer.New(), svc))
-	go server.Serve(listener)
-}
 
 func TestIssue(t *testing.T) {
 	authAddr := fmt.Sprintf("localhost:%d", port)
@@ -452,7 +428,8 @@ func TestMembers(t *testing.T) {
 	}
 
 	authAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error while creating client connection: %s", err))
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	for _, tc := range cases {
