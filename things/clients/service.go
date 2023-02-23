@@ -59,9 +59,6 @@ func (svc service) CreateThings(ctx context.Context, token string, clis ...Clien
 	if err != nil {
 		return []Client{}, err
 	}
-	if err := svc.authorize(ctx, token, thingsObjectKey, createKey); err != nil {
-		return []Client{}, err
-	}
 	var clients []Client
 	for _, cli := range clis {
 		if cli.ID == "" {
