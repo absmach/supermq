@@ -17,6 +17,7 @@ import (
 	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
 	"github.com/mainflux/mainflux/internal/email"
 	"github.com/mainflux/mainflux/internal/env"
+	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/internal/server"
 	grpcserver "github.com/mainflux/mainflux/internal/server/grpc"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
@@ -38,7 +39,6 @@ import (
 	papi "github.com/mainflux/mainflux/users/policies/api/http"
 	ppostgres "github.com/mainflux/mainflux/users/policies/postgres"
 	ptracing "github.com/mainflux/mainflux/users/policies/tracing"
-	"github.com/mainflux/mainflux/internal/postgres"
 	clientsPg "github.com/mainflux/mainflux/users/postgres"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/jaeger"
@@ -63,14 +63,16 @@ const (
 )
 
 type config struct {
-	LogLevel      string `env:"MF_USERS_LOG_LEVEL"               envDefault:"info"`
-	SecretKey     string `env:"MF_USERS_SECRET_KEY"              envDefault:"secret"`
-	AdminEmail    string `env:"MF_USERS_ADMIN_EMAIL"             envDefault:""`
-	AdminPassword string `env:"MF_USERS_ADMIN_PASSWORD"          envDefault:""`
-	PassRegexText string `env:"MF_USERS_PASS_REGEX"              envDefault:"^.{8,}$"`
-	ResetURL      string `env:"MF_TOKEN_RESET_ENDPOINT"          envDefault:"/reset-request"`
-	JaegerURL     string `env:"MF_JAEGER_URL"                    envDefault:"localhost:6831"`
-	PassRegex     *regexp.Regexp
+	LogLevel        string `env:"MF_USERS_LOG_LEVEL"               	envDefault:"info"`
+	SecretKey       string `env:"MF_USERS_SECRET_KEY"              	envDefault:"secret"`
+	AdminEmail      string `env:"MF_USERS_ADMIN_EMAIL"             	envDefault:""`
+	AdminPassword   string `env:"MF_USERS_ADMIN_PASSWORD"          	envDefault:""`
+	PassRegexText   string `env:"MF_USERS_PASS_REGEX"              	envDefault:"^.{8,}$"`
+	AccessDuration  string `env:"MF_USERS_ACCESS_TOKEN_DURATION"	envDefault:"15m"`
+	RefreshDuration string `env:"MF_USERS_REFRESH_TOKEN_DURATION"	envDefault:"24h"`
+	ResetURL        string `env:"MF_TOKEN_RESET_ENDPOINT"          	envDefault:"/reset-request"`
+	JaegerURL       string `env:"MF_JAEGER_URL"              		envDefault:"localhost:6831"`
+	PassRegex       *regexp.Regexp
 }
 
 func main() {
@@ -183,7 +185,15 @@ func newService(db *sqlx.DB, tracer trace.Tracer, c config, ec email.Config, log
 	idp := uuid.New()
 	hsr := hasher.New()
 
-	tokenizer := jwt.NewTokenRepo([]byte(c.SecretKey))
+	aDuration, err := time.ParseDuration(c.AccessDuration)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to parse access token duration: %s", err.Error()))
+	}
+	rDuration, err := time.ParseDuration(c.RefreshDuration)
+	if err != nil {
+		logger.Error(fmt.Sprintf("Failed to parse refresh token duration: %s", err.Error()))
+	}
+	tokenizer := jwt.NewTokenRepo([]byte(c.SecretKey), aDuration, rDuration)
 	tokenizer = jwt.NewTokenRepoMiddleware(tokenizer, tracer)
 
 	emailer, err := emailer.New(c.ResetURL, &ec)

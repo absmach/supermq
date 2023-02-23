@@ -5,6 +5,7 @@ import (
 	fmt "fmt"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/internal/testsutil"
@@ -23,13 +24,15 @@ import (
 )
 
 var (
-	idProvider     = uuid.New()
-	phasher        = hasher.New()
-	secret         = "strongsecret"
-	inValidToken   = "invalidToken"
-	memberActions  = []string{"g_list"}
-	authoritiesObj = "authorities"
-	passRegex      = regexp.MustCompile("^.{8,}$")
+	idProvider      = uuid.New()
+	phasher         = hasher.New()
+	secret          = "strongsecret"
+	inValidToken    = "invalidToken"
+	memberActions   = []string{"g_list"}
+	authoritiesObj  = "authorities"
+	passRegex       = regexp.MustCompile("^.{8,}$")
+	accessDuration  = time.Minute * 1
+	refreshDuration = time.Minute * 10
 )
 
 func generateValidToken(t *testing.T, clientID string, svc clients.Service, cRepo *cmocks.ClientRepository) string {
@@ -55,7 +58,7 @@ func generateValidToken(t *testing.T, clientID string, svc clients.Service, cRep
 func TestAddPolicy(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
-	tokenizer := jwt.NewTokenRepo([]byte(secret))
+	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
 	csvc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 	svc := policies.NewService(pRepo, tokenizer, idProvider)
@@ -175,7 +178,7 @@ func TestAddPolicy(t *testing.T) {
 func TestAuthorize(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
-	tokenizer := jwt.NewTokenRepo([]byte(secret))
+	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
 	csvc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 	svc := policies.NewService(pRepo, tokenizer, idProvider)
@@ -226,7 +229,7 @@ func TestAuthorize(t *testing.T) {
 func TestDeletePolicy(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
-	tokenizer := jwt.NewTokenRepo([]byte(secret))
+	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
 	csvc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 	svc := policies.NewService(pRepo, tokenizer, idProvider)
@@ -244,7 +247,7 @@ func TestDeletePolicy(t *testing.T) {
 func TestListPolicies(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
-	tokenizer := jwt.NewTokenRepo([]byte(secret))
+	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
 	csvc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 	svc := policies.NewService(pRepo, tokenizer, idProvider)
@@ -337,7 +340,7 @@ func TestListPolicies(t *testing.T) {
 func TestUpdatePolicies(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
-	tokenizer := jwt.NewTokenRepo([]byte(secret))
+	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := mocks.NewEmailer()
 	csvc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 	svc := policies.NewService(pRepo, tokenizer, idProvider)

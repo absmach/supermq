@@ -13,24 +13,23 @@ const issuerName = "clients.auth"
 
 var _ TokenRepository = (*tokenRepo)(nil)
 
-var (
-	accessDuration  time.Duration = time.Hour * 15
-	refreshDuration time.Duration = time.Hour * 24
-)
-
 type tokenRepo struct {
-	secret []byte
+	secret          []byte
+	accessDuration  time.Duration
+	refreshDuration time.Duration
 }
 
 // NewTokenRepo instantiates an implementation of Token repository.
-func NewTokenRepo(secret []byte) TokenRepository {
+func NewTokenRepo(secret []byte, aduration, rduration time.Duration) TokenRepository {
 	return &tokenRepo{
-		secret: secret,
+		secret:          secret,
+		accessDuration:  aduration,
+		refreshDuration: rduration,
 	}
 }
 
 func (repo tokenRepo) Issue(ctx context.Context, claim Claims) (Token, error) {
-	aexpiry := time.Now().Add(accessDuration)
+	aexpiry := time.Now().Add(repo.accessDuration)
 	accessToken, err := jwt.NewBuilder().
 		Issuer(issuerName).
 		IssuedAt(time.Now()).
@@ -56,7 +55,7 @@ func (repo tokenRepo) Issue(ctx context.Context, claim Claims) (Token, error) {
 		Claim("type", RefreshToken).
 		Claim("role", claim.Role).
 		Claim("tag", claim.Tag).
-		Expiration(time.Now().Add(refreshDuration)).
+		Expiration(time.Now().Add(repo.refreshDuration)).
 		Build()
 	if err != nil {
 		return Token{}, errors.Wrap(errors.ErrAuthentication, err)

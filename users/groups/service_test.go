@@ -37,8 +37,10 @@ var (
 		Metadata:    validGMetadata,
 		Status:      groups.EnabledStatus,
 	}
-	withinDuration = 5 * time.Second
-	passRegex      = regexp.MustCompile("^.{8,}$")
+	withinDuration  = 5 * time.Second
+	passRegex       = regexp.MustCompile("^.{8,}$")
+	accessDuration  = time.Minute * 1
+	refreshDuration = time.Minute * 10
 )
 
 func generateValidToken(t *testing.T, clientID string, svc clients.Service, cRepo *cmocks.ClientRepository) string {
@@ -65,7 +67,7 @@ func TestCreateGroup(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	gRepo := new(gmocks.GroupRepository)
 	pRepo := new(pmocks.PolicyRepository)
-	tokenizer := jwt.NewTokenRepo([]byte(secret))
+	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := cmocks.NewEmailer()
 	csvc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 	svc := groups.NewService(gRepo, pRepo, tokenizer, idProvider)
@@ -141,7 +143,7 @@ func TestUpdateGroup(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	gRepo := new(gmocks.GroupRepository)
 	pRepo := new(pmocks.PolicyRepository)
-	tokenizer := jwt.NewTokenRepo([]byte(secret))
+	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := cmocks.NewEmailer()
 	csvc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 	svc := groups.NewService(gRepo, pRepo, tokenizer, idProvider)
@@ -280,7 +282,7 @@ func TestViewGroup(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	gRepo := new(gmocks.GroupRepository)
 	pRepo := new(pmocks.PolicyRepository)
-	tokenizer := jwt.NewTokenRepo([]byte(secret))
+	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := cmocks.NewEmailer()
 	csvc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 	svc := groups.NewService(gRepo, pRepo, tokenizer, idProvider)
@@ -333,7 +335,7 @@ func TestListGroups(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	gRepo := new(gmocks.GroupRepository)
 	pRepo := new(pmocks.PolicyRepository)
-	tokenizer := jwt.NewTokenRepo([]byte(secret))
+	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := cmocks.NewEmailer()
 	csvc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 	svc := groups.NewService(gRepo, pRepo, tokenizer, idProvider)
@@ -423,7 +425,7 @@ func TestEnableGroup(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	gRepo := new(gmocks.GroupRepository)
 	pRepo := new(pmocks.PolicyRepository)
-	tokenizer := jwt.NewTokenRepo([]byte(secret))
+	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := cmocks.NewEmailer()
 	csvc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 	svc := groups.NewService(gRepo, pRepo, tokenizer, idProvider)
@@ -548,7 +550,7 @@ func TestDisableGroup(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	gRepo := new(gmocks.GroupRepository)
 	pRepo := new(pmocks.PolicyRepository)
-	tokenizer := jwt.NewTokenRepo([]byte(secret))
+	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := cmocks.NewEmailer()
 	csvc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 	svc := groups.NewService(gRepo, pRepo, tokenizer, idProvider)
@@ -673,7 +675,7 @@ func TestListMemberships(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	gRepo := new(gmocks.GroupRepository)
 	pRepo := new(pmocks.PolicyRepository)
-	tokenizer := jwt.NewTokenRepo([]byte(secret))
+	tokenizer := jwt.NewTokenRepo([]byte(secret), accessDuration, refreshDuration)
 	e := cmocks.NewEmailer()
 	csvc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 	svc := groups.NewService(gRepo, pRepo, tokenizer, idProvider)
