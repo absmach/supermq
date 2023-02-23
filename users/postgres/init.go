@@ -22,7 +22,7 @@ func Migration() *migrate.MemoryMigrationSource {
 						metadata    JSONB,
 						created_at  TIMESTAMP,
 						updated_at  TIMESTAMP,
-						status      SMALLINT NOT NULL CHECK (status >= 0) DEFAULT 1,
+						status      SMALLINT NOT NULL CHECK (status >= 0) DEFAULT 0,
 						role        SMALLINT CHECK (status >= 0) DEFAULT 0						
 					)`,
 					`CREATE TABLE IF NOT EXISTS groups (

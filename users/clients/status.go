@@ -7,8 +7,8 @@ type Status uint8
 
 // Possible Client status values
 const (
-	DisabledStatus Status = iota
-	EnabledStatus
+	EnabledStatus Status = iota
+	DisabledStatus
 
 	// AllStatus is used for querying purposes to list clients irrespective
 	// of their status - both enabled and disabled. It is never stored in the
