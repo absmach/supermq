@@ -91,7 +91,7 @@ func main() {
 	}
 }
 
-func newService(pub messaging.Publisher, tc policies.ThingsServiceClient, logger logger.Logger) adapter.Service {
+func newService(pub messaging.Publisher, tc policies.ThingsServiceClient, logger mflog.Logger) adapter.Service {
 	svc := adapter.New(pub, tc)
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics(svcName, "api")
