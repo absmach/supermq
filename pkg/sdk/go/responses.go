@@ -10,12 +10,6 @@ import (
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 )
 
-type tokenRes struct {
-	AccessToken  string `json:"access_token,omitempty"`
-	RefreshToken string `json:"refresh_token,omitempty"`
-	AccessType   string `json:"access_type,omitempty"`
-}
-
 type createThingsRes struct {
 	Things []Thing `json:"things"`
 }
@@ -59,10 +53,23 @@ type UsersPage struct {
 }
 
 type MembersPage struct {
-	Members []string `json:"members"`
+	Members []User `json:"members"`
 	pageRes
 }
 
+// MembershipsPage contains page related metadata as well as list of memberships that
+// belong to this page.
+type MembershipsPage struct {
+	pageRes
+	Memberships []Group `json:"memberships"`
+}
+
+// PolicyPage contains page related metadata as well as list
+// of Policies that belong to the page.
+type PolicyPage struct {
+	PageMetadata
+	Policies []Policy
+}
 type KeyRes struct {
 	ID        string     `json:"id,omitempty"`
 	Value     string     `json:"value,omitempty"`

@@ -59,77 +59,39 @@ var (
 	ErrFailedDisable = errors.New("failed to disable client")
 )
 
-// User represents mainflux user its credentials.
-type User struct {
-	ID          string                 `json:"id,omitempty"`
-	Name        string                 `json:"name,omitempty"`
-	Credentials Credentials            `json:"credentials,omitempty"`
-	Tags        []string               `json:"tags,omitempty"`
-	Owner       string                 `json:"owner,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
-	Status      string                 `json:"status,omitempty"`
+type PageMetadata struct {
+	Total        uint64   `json:"total"`
+	Offset       uint64   `json:"offset"`
+	Limit        uint64   `json:"limit"`
+	Level        uint64   `json:"level,omitempty"`
+	Email        string   `json:"email,omitempty"`
+	Name         string   `json:"name,omitempty"`
+	Type         string   `json:"type,omitempty"`
+	Disconnected bool     `json:"disconnected,omitempty"`
+	Metadata     Metadata `json:"metadata,omitempty"`
+	Status       string   `json:"status,omitempty"`
+	Action       string   `json:"action,omitempty"`
+	Subject      string   `json:"subject,omitempty"`
+	Object       string   `json:"object,omitempty"`
+	Tag          string   `json:"tag,omitempty"`
+	Owner        string   `json:"owner,omitempty"`
+	SharedBy     string   `json:"shared_by,omitempty"`
+	Visibility   string   `json:"visibility,omitempty"`
+	OwnerID      string   `json:"owner_id,omitempty"`
 }
 
 // Credentials represent client credentials: it contains
 // "identity" which can be a username, email, generated name;
 // and "secret" which can be a password or access token.
 type Credentials struct {
-	Identity string `json:"identity"` // username or generated login ID
-	Secret   string `json:"secret"`   // password or token
-}
-
-type PageMetadata struct {
-	Total        uint64                 `json:"total"`
-	Offset       uint64                 `json:"offset"`
-	Limit        uint64                 `json:"limit"`
-	Level        uint64                 `json:"level,omitempty"`
-	Email        string                 `json:"email,omitempty"`
-	Name         string                 `json:"name,omitempty"`
-	Type         string                 `json:"type,omitempty"`
-	Disconnected bool                   `json:"disconnected,omitempty"`
-	Metadata     map[string]interface{} `json:"metadata,omitempty"`
-	Status       string                 `json:"status,omitempty"`
-	Action       string
-	Tag          string
-}
-
-// Group represents mainflux users group.
-type Group struct {
-	ID          string                 `json:"id,omitempty"`
-	Name        string                 `json:"name,omitempty"`
-	Description string                 `json:"description,omitempty"`
-	ParentID    string                 `json:"parent_id,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
-}
-
-// Thing represents mainflux thing.
-type Thing struct {
-	ID       string                 `json:"id,omitempty"`
-	Name     string                 `json:"name,omitempty"`
-	Key      string                 `json:"key,omitempty"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
-
-// Channel represents mainflux channel.
-type Channel struct {
-	ID       string                 `json:"id,omitempty"`
-	Name     string                 `json:"name,omitempty"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
-
-type Key struct {
-	ID        string
-	Type      uint32
-	IssuerID  string
-	Subject   string
-	IssuedAt  time.Time
-	ExpiresAt time.Time
+	Identity string `json:"identity,omitempty"` // username or generated login ID
+	Secret   string `json:"secret,omitempty"`   // password or token
 }
 
 // SDK contains Mainflux API.
 type SDK interface {
 	// CreateUser registers mainflux user.
-	CreateUser(user User, token string) (string, errors.SDKError)
+	CreateUser(user User, token string) (User, errors.SDKError)
 
 	// User returns user object by id.
 	User(id, token string) (User, errors.SDKError)
@@ -137,35 +99,41 @@ type SDK interface {
 	// Users returns list of users.
 	Users(pm PageMetadata, token string) (UsersPage, errors.SDKError)
 
-	// CreateToken receives credentials and returns user token.
-	CreateToken(user User) (string, errors.SDKError)
+	// Members retrieves everything that is assigned to a group identified by groupID.
+	Members(groupID string, meta PageMetadata, token string) (MembersPage, errors.SDKError)
+
+	// UserProfile returns user logged in.
+	UserProfile(token string) (User, errors.SDKError)
 
 	// UpdateUser updates existing user.
-	UpdateUser(user User, token string) errors.SDKError
+	UpdateUser(user User, token string) (User, errors.SDKError)
 
 	// UpdateUserTags updates the user's tags.
-	UpdateUserTags(user User, token string) errors.SDKError
+	UpdateUserTags(user User, token string) (User, errors.SDKError)
 
 	// UpdateUserIdentity updates the user's identity
-	UpdateUserIdentity(user User, token string) errors.SDKError
+	UpdateUserIdentity(user User, token string) (User, errors.SDKError)
 
 	// UpdateUserOwner updates the user's owner.
-	UpdateUserOwner(user User, token string) errors.SDKError
+	UpdateUserOwner(user User, token string) (User, errors.SDKError)
 
 	// UpdatePassword updates user password.
-	UpdatePassword(id, oldPass, newPass, token string) errors.SDKError
-
-	// ListMembers retrieves everything that is assigned to a group identified by groupID.
-	ListMembers(groupID string, meta PageMetadata, token string) (MembersPage, errors.SDKError)
+	UpdatePassword(id, oldPass, newPass, token string) (User, errors.SDKError)
 
 	// EnableUser changes the status of the user to enabled.
-	EnableUser(id, token string) errors.SDKError
+	EnableUser(id, token string) (User, errors.SDKError)
 
 	// DisableUser changes the status of the user to disabled.
-	DisableUser(id, token string) errors.SDKError
+	DisableUser(id, token string) (User, errors.SDKError)
+
+	// CreateToken receives credentials and returns user token.
+	CreateToken(user User) (Token, errors.SDKError)
+
+	// RefreshToken receives credentials and returns user token.
+	RefreshToken(token string) (Token, errors.SDKError)
 
 	// CreateThing registers new thing and returns its id.
-	CreateThing(thing Thing, token string) (string, errors.SDKError)
+	CreateThing(thing Thing, token string) (Thing, errors.SDKError)
 
 	// CreateThings registers new things and returns their ids.
 	CreateThings(things []Thing, token string) ([]Thing, errors.SDKError)
@@ -181,19 +149,34 @@ type SDK interface {
 	Thing(id, token string) (Thing, errors.SDKError)
 
 	// UpdateThing updates existing thing.
-	UpdateThing(thing Thing, token string) errors.SDKError
+	UpdateThing(thing Thing, token string) (Thing, errors.SDKError)
 
-	// DeleteThing removes existing thing.
-	DeleteThing(id, token string) errors.SDKError
+	// UpdateThingTags updates the client's tags.
+	UpdateThingTags(thing Thing, token string) (Thing, errors.SDKError)
 
-	// IdentifyThing validates thing's key and returns its ID
-	IdentifyThing(key string) (string, errors.SDKError)
+	// UpdateThingIdentity updates the client's identity
+	UpdateThingIdentity(thing Thing, token string) (Thing, errors.SDKError)
+
+	// UpdateThingSecret updates the client's secret
+	UpdateThingSecret(id, oldSecret, newSecret, token string) (Thing, errors.SDKError)
+
+	// UpdateThingOwner updates the client's owner.
+	UpdateThingOwner(thing Thing, token string) (Thing, errors.SDKError)
+
+	// EnableThing changes client status to enabled.
+	EnableThing(id, token string) (Thing, errors.SDKError)
+
+	// DisableThing changes client status to disabled - soft delete.
+	DisableThing(id, token string) (Thing, errors.SDKError)
+
+	// // IdentifyThing validates thing's key and returns its ID
+	// IdentifyThing(key string) (string, errors.SDKError)
 
 	// CreateGroup creates new group and returns its id.
-	CreateGroup(group Group, token string) (string, errors.SDKError)
+	CreateGroup(group Group, token string) (Group, errors.SDKError)
 
-	// DeleteGroup deletes users group.
-	DeleteGroup(id, token string) errors.SDKError
+	// Memberships
+	Memberships(clientID string, pm PageMetadata, token string) (MembershipsPage, errors.SDKError)
 
 	// Groups returns page of groups.
 	Groups(pm PageMetadata, token string) (GroupsPage, errors.SDKError)
@@ -207,29 +190,17 @@ type SDK interface {
 	// Group returns users group object by id.
 	Group(id, token string) (Group, errors.SDKError)
 
-	// Assign assigns member of member type (thing or user) to a group.
-	Assign(memberIDs []string, memberType, groupID, token string) errors.SDKError
-
-	// Unassign removes member from a group.
-	Unassign(groupID string, memberIDs []string, token string) errors.SDKError
-
-	// Members lists members of a group.
-	Members(groupID string, pm PageMetadata, token string) (MembersPage, errors.SDKError)
-
-	// Memberships lists groups for user.
-	Memberships(userID string, pm PageMetadata, token string) (GroupsPage, errors.SDKError)
-
 	// UpdateGroup updates existing group.
-	UpdateGroup(group Group, token string) errors.SDKError
+	UpdateGroup(group Group, token string) (Group, errors.SDKError)
 
-	// Connect bulk connects things to channels specified by id.
-	Connect(conns ConnectionIDs, token string) errors.SDKError
+	// EnableGroup changes group status to enabled.
+	EnableGroup(id, token string) (Group, errors.SDKError)
 
-	// DisconnectThing disconnect thing from specified channel by id.
-	DisconnectThing(thingID, chanID, token string) errors.SDKError
+	// DisableGroup changes group status to disabled - soft delete.
+	DisableGroup(id, token string) (Group, errors.SDKError)
 
 	// CreateChannel creates new channel and returns its id.
-	CreateChannel(channel Channel, token string) (string, errors.SDKError)
+	CreateChannel(channel Channel, token string) (Channel, errors.SDKError)
 
 	// CreateChannels registers new channels and returns their ids.
 	CreateChannels(channels []Channel, token string) ([]Channel, errors.SDKError)
@@ -245,10 +216,45 @@ type SDK interface {
 	Channel(id, token string) (Channel, errors.SDKError)
 
 	// UpdateChannel updates existing channel.
-	UpdateChannel(channel Channel, token string) errors.SDKError
+	UpdateChannel(channel Channel, token string) (Channel, errors.SDKError)
 
-	// DeleteChannel removes existing channel.
-	DeleteChannel(id, token string) errors.SDKError
+	// EnableChannel changes channel status to enabled.
+	EnableChannel(id, token string) (Channel, errors.SDKError)
+
+	// DisableChannel changes channel status to disabled - soft delete.
+	DisableChannel(id, token string) (Channel, errors.SDKError)
+
+	// AddPolicy creates a policy for the given subject, so that, after
+	// AddPolicy, `subject` has a `relation` on `object`. Returns a non-nil
+	// error in case of failures.
+	AddPolicy(p Policy, token string) (Policy, errors.SDKError)
+
+	// UpdatePolicy updates policies based on the given policy structure.
+	UpdatePolicy(p Policy, token string) (Policy, errors.SDKError)
+
+	// ListPolicies lists policies based on the given policy structure.
+	ListPolicies(pm PageMetadata, token string) (PolicyPage, errors.SDKError)
+
+	// DeletePolicy removes a policy.
+	DeletePolicy(p Policy, token string) errors.SDKError
+
+	// Assign assigns member of member type (thing or user) to a group.
+	Assign(memberType []string, memberID, groupID, token string) errors.SDKError
+
+	// Unassign removes member from a group.
+	Unassign(memberType []string, groupID string, memberID string, token string) errors.SDKError
+
+	// Connect bulk connects things to channels specified by id.
+	Connect(conns ConnectionIDs, token string) errors.SDKError
+
+	// Disconnect
+	Disconnect(connIDs ConnectionIDs, token string) errors.SDKError
+
+	// ConnectThing
+	ConnectThing(thingID, chanID, token string) errors.SDKError
+
+	// DisconnectThing disconnect thing from specified channel by id.
+	DisconnectThing(thingID, chanID, token string) errors.SDKError
 
 	// SendMessage send message to specified channel.
 	SendMessage(chanID, msg, key string) errors.SDKError
@@ -407,6 +413,12 @@ func (pm PageMetadata) query() (string, error) {
 	}
 	if pm.Status != "" {
 		q.Add("status", pm.Status)
+	}
+	if pm.Level != 0 {
+		q.Add("level", strconv.FormatUint(pm.Level, 10))
+	}
+	if pm.Name != "" {
+		q.Add("name", pm.Name)
 	}
 	if pm.Metadata != nil {
 		md, err := json.Marshal(pm.Metadata)

@@ -3,9 +3,17 @@
 
 package sdk
 
-type assignRequest struct {
-	Type    string   `json:"type,omitempty"`
-	Members []string `json:"members"`
+// updateClientSecretReq is used to update the client secret
+type updateClientSecretReq struct {
+	OldSecret string `json:"old_secret,omitempty"`
+	NewSecret string `json:"new_secret,omitempty"`
+}
+
+// updateClientIdentityReq is used to update the client identity
+type updateClientIdentityReq struct {
+	token    string
+	id       string
+	Identity string `json:"identity,omitempty"`
 }
 
 // UserPasswordReq contains old and new passwords
@@ -18,6 +26,7 @@ type UserPasswordReq struct {
 type ConnectionIDs struct {
 	ChannelIDs []string `json:"channel_ids"`
 	ThingIDs   []string `json:"thing_ids"`
+	Actions    []string `json:"actions,omitempty"`
 }
 
 type tokenReq struct {
