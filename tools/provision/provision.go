@@ -138,12 +138,12 @@ func Provision(conf Config) {
 		channels[i] = sdk.Channel{Name: fmt.Sprintf("%s-channel-%d", conf.Prefix, i)}
 	}
 
-	things, err = s.CreateThings(things, token)
+	things, err = s.CreateThings(things, token.AccessToken)
 	if err != nil {
 		log.Fatalf("Failed to create the things: %s", err.Error())
 	}
 
-	channels, err = s.CreateChannels(channels, token)
+	channels, err = s.CreateChannels(channels, token.AccessToken)
 	if err != nil {
 		log.Fatalf("Failed to create the chennels: %s", err.Error())
 	}
@@ -181,7 +181,7 @@ func Provision(conf Config) {
 				SerialNumber: serialNumber,
 				Subject: pkix.Name{
 					Organization:       []string{"Mainflux"},
-					CommonName:         things[i].Key,
+					CommonName:         things[i].Credentials.Secret,
 					OrganizationalUnit: []string{"mainflux"},
 				},
 				NotBefore: notBefore,
@@ -215,7 +215,7 @@ func Provision(conf Config) {
 		}
 
 		// Print output
-		fmt.Printf("[[things]]\nthing_id = \"%s\"\nthing_key = \"%s\"\n", things[i].ID, things[i].Key)
+		fmt.Printf("[[things]]\nthing_id = \"%s\"\nthing_key = \"%s\"\n", things[i].ID, things[i].Credentials.Secret)
 		if conf.SSL {
 			fmt.Printf("mtls_cert = \"\"\"%s\"\"\"\n", cert)
 			fmt.Printf("mtls_key = \"\"\"%s\"\"\"\n", key)
@@ -233,7 +233,7 @@ func Provision(conf Config) {
 		ChannelIDs: cIDs,
 		ThingIDs:   tIDs,
 	}
-	if err := s.Connect(conIDs, token); err != nil {
+	if err := s.Connect(conIDs, token.AccessToken); err != nil {
 		log.Fatalf("Failed to connect things %s to channels %s: %s", conIDs.ThingIDs, conIDs.ChannelIDs, err)
 	}
 }

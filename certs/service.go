@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux/certs/pki"
-	"github.com/mainflux/mainflux/users/policies"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
+	"github.com/mainflux/mainflux/users/policies"
 )
 
 var (
@@ -90,7 +90,7 @@ func (cs *certsService) IssueCert(ctx context.Context, token, thingID string, tt
 		return Cert{}, errors.Wrap(ErrFailedCertCreation, err)
 	}
 
-	cert, err := cs.pki.IssueCert(thing.Key, ttl)
+	cert, err := cs.pki.IssueCert(thing.Credentials.Secret, ttl)
 	if err != nil {
 		return Cert{}, errors.Wrap(ErrFailedCertCreation, err)
 	}

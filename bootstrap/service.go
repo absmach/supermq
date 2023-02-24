@@ -10,9 +10,10 @@ import (
 	"encoding/hex"
 	"time"
 
-	"github.com/mainflux/mainflux/users/policies"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
+	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
+	"github.com/mainflux/mainflux/users/policies"
 )
 
 var (
@@ -147,12 +148,12 @@ func (bs bootstrapService) Add(ctx context.Context, token string, cfg Config) (C
 	cfg.MFThing = mfThing.ID
 	cfg.Owner = owner
 	cfg.State = Inactive
-	cfg.MFKey = mfThing.Key
+	cfg.MFKey = mfThing.Credentials.Secret
 
 	saved, err := bs.configs.Save(cfg, toConnect)
 	if err != nil {
 		if id == "" {
-			if errT := bs.sdk.DeleteThing(cfg.MFThing, token); errT != nil {
+			if _, errT := bs.sdk.DisableThing(cfg.MFThing, token); errT != nil {
 				err = errors.Wrap(err, errT)
 			}
 		}
@@ -375,20 +376,20 @@ func (bs bootstrapService) identify(token string) (string, error) {
 
 // Method thing retrieves Mainflux Thing creating one if an empty ID is passed.
 func (bs bootstrapService) thing(token, id string) (mfsdk.Thing, error) {
-	thingID := id
+	var thing sdk.Thing
 	var err error
 
 	if id == "" {
-		thingID, err = bs.sdk.CreateThing(mfsdk.Thing{}, token)
+		thing, err = bs.sdk.CreateThing(mfsdk.Thing{}, token)
 		if err != nil {
 			return mfsdk.Thing{}, errors.Wrap(errCreateThing, err)
 		}
 	}
 
-	thing, err := bs.sdk.Thing(thingID, token)
+	thing, err = bs.sdk.Thing(thing.ID, token)
 	if err != nil {
 		if id != "" {
-			if errT := bs.sdk.DeleteThing(thingID, token); errT != nil {
+			if _, errT := bs.sdk.DisableThing(thing.ID, token); errT != nil {
 				err = errors.Wrap(err, errT)
 			}
 		}
