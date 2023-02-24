@@ -371,6 +371,5 @@ func decodeChangeGroupStatus(_ context.Context, r *http.Request) (interface{}, e
 		token: apiutil.ExtractBearerToken(r),
 		id:    bone.GetValue(r, "id"),
 	}
-
 	return req, nil
 }

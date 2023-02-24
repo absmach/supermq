@@ -141,7 +141,7 @@ func (sdk mfSDK) Connect(connIDs ConnectionIDs, token string) errors.SDKError {
 
 	url := fmt.Sprintf("%s/%s", sdk.thingsURL, connectEndpoint)
 
-	_, _, sdkerr := sdk.processRequest(http.MethodPost, url, token, string(CTJSON), data, http.StatusOK)
+	_, _, sdkerr := sdk.processRequest(http.MethodPost, url, token, string(CTJSON), data, http.StatusCreated)
 	return sdkerr
 }
 
@@ -152,8 +152,7 @@ func (sdk mfSDK) Disconnect(connIDs ConnectionIDs, token string) errors.SDKError
 	}
 
 	url := fmt.Sprintf("%s/%s", sdk.thingsURL, disconnectEndpoint)
-
-	_, _, sdkerr := sdk.processRequest(http.MethodPost, url, token, string(CTJSON), data, http.StatusOK)
+	_, _, sdkerr := sdk.processRequest(http.MethodDelete, url, token, string(CTJSON), data, http.StatusNoContent)
 	return sdkerr
 }
 
@@ -167,6 +166,6 @@ func (sdk mfSDK) ConnectThing(thingID, chanID, token string) errors.SDKError {
 func (sdk mfSDK) DisconnectThing(thingID, chanID, token string) errors.SDKError {
 	url := fmt.Sprintf("%s/%s/%s/%s/%s", sdk.thingsURL, channelsEndpoint, chanID, thingsEndpoint, thingID)
 
-	_, _, err := sdk.processRequest(http.MethodDelete, url, token, string(CTJSON), nil, http.StatusNoContent)
+	_, _, err := sdk.processRequest(http.MethodDelete, url, token, string(CTJSON), []byte{}, http.StatusNoContent)
 	return err
 }

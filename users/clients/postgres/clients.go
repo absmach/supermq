@@ -156,10 +156,14 @@ func (repo clientRepo) Members(ctx context.Context, groupID string, pm clients.P
 		return clients.MembersPage{}, err
 	}
 
+	aq := ""
+	// If not admin, the client needs to have a g_list action on the group
+	if pm.Subject != "" {
+		aq = fmt.Sprintf(`AND EXISTS (SELECT 1 FROM policies WHERE policies.subject = '%s' AND '%s'=ANY(actions))`, pm.Subject, pm.Action)
+	}
 	q := fmt.Sprintf(`SELECT c.id, c.name, c.tags, c.metadata, c.identity, c.status, c.created_at FROM clients c
-		INNER JOIN policies ON c.id=policies.subject %s AND policies.object = :group_id
-		AND EXISTS (SELECT 1 FROM policies WHERE policies.subject = '%s' AND '%s'=ANY(actions))
-	  	ORDER BY c.created_at LIMIT :limit OFFSET :offset;`, emq, pm.Subject, pm.Action)
+		INNER JOIN policies ON c.id=policies.subject %s AND policies.object = :group_id %s
+	  	ORDER BY c.created_at LIMIT :limit OFFSET :offset;`, emq, aq)
 	dbPage, err := toDBClientsPage(pm)
 	if err != nil {
 		return clients.MembersPage{}, errors.Wrap(postgres.ErrFailedToRetrieveAll, err)

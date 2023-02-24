@@ -13,9 +13,15 @@ import (
 
 // Possible token types are access and refresh tokens.
 const (
-	RefreshToken = "refresh"
-	AccessToken  = "access"
-	MyKey        = "mine"
+	RefreshToken      = "refresh"
+	AccessToken       = "access"
+	MyKey             = "mine"
+	groupsObjectKey   = "groups"
+	createKey         = "c_add"
+	updateRelationKey = "c_update"
+	listRelationKey   = "c_list"
+	deleteRelationKey = "c_delete"
+	entityType        = "group"
 )
 
 var (
@@ -71,7 +77,7 @@ func (svc service) CreateGroup(ctx context.Context, token string, g Group) (Grou
 }
 
 func (svc service) ViewGroup(ctx context.Context, token string, id string) (Group, error) {
-	if err := svc.authorize(ctx, "group", policies.Policy{Subject: token, Object: id, Actions: []string{"g_list"}}); err != nil {
+	if err := svc.authorize(ctx, entityType, policies.Policy{Subject: token, Object: id, Actions: []string{listRelationKey}}); err != nil {
 		return Group{}, err
 	}
 
@@ -85,7 +91,7 @@ func (svc service) ListGroups(ctx context.Context, token string, gm GroupsPage) 
 	}
 	gm.Subject = id
 	gm.OwnerID = id
-	gm.Action = "g_list"
+	gm.Action = listRelationKey
 	return svc.groups.RetrieveAll(ctx, gm)
 }
 
@@ -94,13 +100,18 @@ func (svc service) ListMemberships(ctx context.Context, token, clientID string, 
 	if err != nil {
 		return MembershipsPage{}, err
 	}
+	// If the user is admin, fetch all members from the database.
+	if err := svc.authorize(ctx, entityType, policies.Policy{Subject: token, Object: groupsObjectKey, Actions: []string{listRelationKey}}); err == nil {
+		return svc.groups.Memberships(ctx, clientID, gm)
+	}
+
 	gm.Subject = id
-	gm.Action = "g_list"
+	gm.Action = listRelationKey
 	return svc.groups.Memberships(ctx, clientID, gm)
 }
 
 func (svc service) UpdateGroup(ctx context.Context, token string, g Group) (Group, error) {
-	if err := svc.authorize(ctx, "group", policies.Policy{Subject: token, Object: g.ID, Actions: []string{"g_update"}}); err != nil {
+	if err := svc.authorize(ctx, entityType, policies.Policy{Subject: token, Object: g.ID, Actions: []string{updateRelationKey}}); err != nil {
 		return Group{}, err
 	}
 	g.UpdatedAt = time.Now()
@@ -109,7 +120,7 @@ func (svc service) UpdateGroup(ctx context.Context, token string, g Group) (Grou
 }
 
 func (svc service) EnableGroup(ctx context.Context, token, id string) (Group, error) {
-	if err := svc.authorize(ctx, "group", policies.Policy{Subject: token, Object: id, Actions: []string{"g_delete"}}); err != nil {
+	if err := svc.authorize(ctx, entityType, policies.Policy{Subject: token, Object: id, Actions: []string{deleteRelationKey}}); err != nil {
 		return Group{}, err
 	}
 	group, err := svc.changeGroupStatus(ctx, id, EnabledStatus)
@@ -120,7 +131,7 @@ func (svc service) EnableGroup(ctx context.Context, token, id string) (Group, er
 }
 
 func (svc service) DisableGroup(ctx context.Context, token, id string) (Group, error) {
-	if err := svc.authorize(ctx, "group", policies.Policy{Subject: token, Object: id, Actions: []string{"g_delete"}}); err != nil {
+	if err := svc.authorize(ctx, entityType, policies.Policy{Subject: token, Object: id, Actions: []string{deleteRelationKey}}); err != nil {
 		return Group{}, err
 	}
 	group, err := svc.changeGroupStatus(ctx, id, DisabledStatus)
@@ -137,6 +148,9 @@ func (svc service) authorize(ctx context.Context, entityType string, p policies.
 	id, err := svc.identify(ctx, p.Subject)
 	if err != nil {
 		return err
+	}
+	if err = svc.policies.CheckAdmin(ctx, id); err == nil {
+		return nil
 	}
 	p.Subject = id
 	return svc.policies.Evaluate(ctx, entityType, p)

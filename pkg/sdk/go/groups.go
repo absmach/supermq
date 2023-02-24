@@ -150,16 +150,16 @@ func (sdk mfSDK) UpdateGroup(g Group, token string) (Group, errors.SDKError) {
 }
 
 // EnableGroup removes the group identified with the provided ID.
-func (sdk mfSDK) EnableGroup(token, id string) (Group, errors.SDKError) {
-	return sdk.changeGroupStatus(token, id, enableEndpoint)
+func (sdk mfSDK) EnableGroup(id, token string) (Group, errors.SDKError) {
+	return sdk.changeGroupStatus(id, enableEndpoint, token)
 }
 
 // DisableGroup removes the group identified with the provided ID.
-func (sdk mfSDK) DisableGroup(token, id string) (Group, errors.SDKError) {
-	return sdk.changeGroupStatus(token, id, disableEndpoint)
+func (sdk mfSDK) DisableGroup(id, token string) (Group, errors.SDKError) {
+	return sdk.changeGroupStatus(id, disableEndpoint, token)
 }
 
-func (sdk mfSDK) changeGroupStatus(token, id, status string) (Group, errors.SDKError) {
+func (sdk mfSDK) changeGroupStatus(id, status, token string) (Group, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s/%s", sdk.usersURL, groupsEndpoint, id, status)
 	_, body, err := sdk.processRequest(http.MethodPost, url, token, string(CTJSON), nil, http.StatusOK)
 	if err != nil {

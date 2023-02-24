@@ -28,8 +28,8 @@ type UserPasswordReq struct {
 
 // ConnectionIDs contains ID lists of things and channels to be connected
 type ConnectionIDs struct {
-	ChannelIDs []string `json:"channel_ids"`
-	ThingIDs   []string `json:"thing_ids"`
+	ChannelIDs []string `json:"group_ids"`
+	ThingIDs   []string `json:"client_ids"`
 	Actions    []string `json:"actions,omitempty"`
 }
 

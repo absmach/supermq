@@ -285,7 +285,11 @@ var cmdThings = []cobra.Command{
 				return
 			}
 
-			if err := sdk.DisconnectThing(args[0], args[1], args[2]); err != nil {
+			connIDs := mfxsdk.ConnectionIDs{
+				ThingIDs:   []string{args[0]},
+				ChannelIDs: []string{args[1]},
+			}
+			if err := sdk.Disconnect(connIDs, args[2]); err != nil {
 				logError(err)
 				return
 			}
@@ -306,29 +310,6 @@ var cmdThings = []cobra.Command{
 				Offset:       uint64(Offset),
 				Limit:        uint64(Limit),
 				Disconnected: false,
-			}
-			cl, err := sdk.ChannelsByThing(args[0], pm, args[1])
-			if err != nil {
-				logError(err)
-				return
-			}
-
-			logJSON(cl)
-		},
-	},
-	{
-		Use:   "not-connected <thing_id> <user_auth_token>",
-		Short: "Not-connected list",
-		Long:  `List of Channels not connected to a Thing`,
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 2 {
-				logUsage(cmd.Use)
-				return
-			}
-			pm := mfxsdk.PageMetadata{
-				Offset:       uint64(Offset),
-				Limit:        uint64(Limit),
-				Disconnected: true,
 			}
 			cl, err := sdk.ChannelsByThing(args[0], pm, args[1])
 			if err != nil {

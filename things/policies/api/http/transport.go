@@ -29,7 +29,7 @@ func MakePolicyHandler(csvc clients.Service, psvc policies.Service, mux *bone.Mu
 		opts...,
 	))
 
-	mux.Put("/disconnect", kithttp.NewServer(
+	mux.Delete("/disconnect", kithttp.NewServer(
 		otelkit.EndpointMiddleware(otelkit.WithOperation("disconnect"))(disconnectThingsEndpoint(psvc)),
 		decodeConnectList,
 		api.EncodeResponse,

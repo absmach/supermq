@@ -14,18 +14,18 @@ import (
 
 // Channel represents mainflux channel.
 type Channel struct {
-	ID          string    `json:"id"`
-	OwnerID     string    `json:"owner_id,omitempty"`
-	ParentID    string    `json:"parent_id,omitempty"`
-	Name        string    `json:"name,omitempty"`
-	Description string    `json:"description,omitempty"`
-	Metadata    Metadata  `json:"metadata,omitempty"`
-	Level       int       `json:"level,omitempty"`
-	Path        string    `json:"path,omitempty"`
-	Children    []*Group  `json:"children,omitempty"`
-	CreatedAt   time.Time `json:"created_at,omitempty"`
-	UpdatedAt   time.Time `json:"updated_at,omitempty"`
-	Status      string    `json:"status,omitempty"`
+	ID          string     `json:"id"`
+	OwnerID     string     `json:"owner_id,omitempty"`
+	ParentID    string     `json:"parent_id,omitempty"`
+	Name        string     `json:"name,omitempty"`
+	Description string     `json:"description,omitempty"`
+	Metadata    Metadata   `json:"metadata,omitempty"`
+	Level       int        `json:"level,omitempty"`
+	Path        string     `json:"path,omitempty"`
+	Children    []*Channel `json:"children,omitempty"`
+	CreatedAt   time.Time  `json:"created_at,omitempty"`
+	UpdatedAt   time.Time  `json:"updated_at,omitempty"`
+	Status      string     `json:"status,omitempty"`
 }
 
 const channelsEndpoint = "channels"
@@ -146,17 +146,18 @@ func (sdk mfSDK) UpdateChannel(c Channel, token string) (Channel, errors.SDKErro
 }
 
 // EnableChannel enables the channel identified with the provided ID.
-func (sdk mfSDK) EnableChannel(token, id string) (Channel, errors.SDKError) {
-	return sdk.changeChannelStatus(token, id, enableEndpoint)
+func (sdk mfSDK) EnableChannel(id, token string) (Channel, errors.SDKError) {
+	return sdk.changeChannelStatus(id, enableEndpoint, token)
 }
 
 // DisableChannel enabled the channel identified with the provided ID.
-func (sdk mfSDK) DisableChannel(token, id string) (Channel, errors.SDKError) {
-	return sdk.changeChannelStatus(token, id, disableEndpoint)
+func (sdk mfSDK) DisableChannel(id, token string) (Channel, errors.SDKError) {
+	return sdk.changeChannelStatus(id, disableEndpoint, token)
 }
 
-func (sdk mfSDK) changeChannelStatus(token, id, status string) (Channel, errors.SDKError) {
-	url := fmt.Sprintf("%s/%s/%s/%s", sdk.thingsURL, groupsEndpoint, id, status)
+func (sdk mfSDK) changeChannelStatus(id, status, token string) (Channel, errors.SDKError) {
+	url := fmt.Sprintf("%s/%s/%s/%s", sdk.thingsURL, channelsEndpoint, id, status)
+	fmt.Println(url)
 	_, body, err := sdk.processRequest(http.MethodPost, url, token, string(CTJSON), nil, http.StatusOK)
 	if err != nil {
 		return Channel{}, err

@@ -165,7 +165,6 @@ func disconnectEndpoint(svc policies.Service) endpoint.Endpoint {
 		if err := cr.validate(); err != nil {
 			return nil, err
 		}
-
 		policy := policies.Policy{
 			Subject: cr.ClientID,
 			Object:  cr.GroupID,

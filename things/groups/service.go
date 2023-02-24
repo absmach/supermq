@@ -2,6 +2,7 @@ package groups
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/mainflux/mainflux"
@@ -171,6 +172,7 @@ func (svc service) changeGroupStatus(ctx context.Context, token, id string, stat
 	if err != nil {
 		return Group{}, err
 	}
+	fmt.Println(dbGroup)
 	if dbGroup.Status == status {
 		return Group{}, ErrStatusAlreadyAssigned
 	}
