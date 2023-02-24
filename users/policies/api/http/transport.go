@@ -88,7 +88,6 @@ func decodePolicyCreate(_ context.Context, r *http.Request) (interface{}, error)
 		Object:  m.Object,
 		Actions: m.Actions,
 	}
-
 	return req, nil
 }
 

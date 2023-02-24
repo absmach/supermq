@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 
 	mfxsdk "github.com/mainflux/mainflux/pkg/sdk/go"
+	"github.com/mainflux/mainflux/things/clients"
 	"github.com/spf13/cobra"
 )
 
@@ -26,14 +27,14 @@ var cmdThings = []cobra.Command{
 				logError(err)
 				return
 			}
-
-			id, err := sdk.CreateThing(thing, args[1])
+			thing.Status = clients.EnabledStatus.String()
+			thing, err := sdk.CreateThing(thing, args[1])
 			if err != nil {
 				logError(err)
 				return
 			}
 
-			logCreated(id)
+			logJSON(thing)
 		},
 	},
 	{
@@ -77,24 +78,6 @@ var cmdThings = []cobra.Command{
 		},
 	},
 	{
-		Use:   "delete <thing_id> <user_auth_token>",
-		Short: "Delete thing",
-		Long:  `Removes thing from database`,
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 2 {
-				logUsage(cmd.Use)
-				return
-			}
-
-			if err := sdk.DeleteThing(args[0], args[1]); err != nil {
-				logError(err)
-				return
-			}
-
-			logOK()
-		},
-	},
-	{
 		Use:   "identify <thing_key>",
 		Short: "Identify thing",
 		Long:  "Validates thing's key and returns its ID",
@@ -129,12 +112,145 @@ var cmdThings = []cobra.Command{
 				return
 			}
 
-			if err := sdk.UpdateThing(thing, args[1]); err != nil {
+			thing, err := sdk.UpdateThing(thing, args[1])
+			if err != nil {
 				logError(err)
 				return
 			}
 
-			logOK()
+			logJSON(thing)
+		},
+	},
+	{
+		Use:   "updatetags <thing_id> <tags> <user_auth_token>",
+		Short: "Update thing tags",
+		Long:  `Update thing record`,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) != 3 {
+				logUsage(cmd.Use)
+				return
+			}
+
+			var thing mfxsdk.Thing
+			if err := json.Unmarshal([]byte(args[1]), &thing.Tags); err != nil {
+				logError(err)
+				return
+			}
+			thing.ID = args[0]
+			thing, err := sdk.UpdateThingTags(thing, args[2])
+			if err != nil {
+				logError(err)
+				return
+			}
+
+			logJSON(thing)
+		},
+	},
+	{
+		Use:   "updateidentity <thing_id> <identity> <user_auth_token>",
+		Short: "Update thing identity",
+		Long:  `Update thing record`,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) != 3 {
+				logUsage(cmd.Use)
+				return
+			}
+
+			var thing mfxsdk.Thing
+			if err := json.Unmarshal([]byte(args[1]), &thing.Credentials.Identity); err != nil {
+				logError(err)
+				return
+			}
+			thing.ID = args[0]
+			thing, err := sdk.UpdateThingIdentity(thing, args[2])
+			if err != nil {
+				logError(err)
+				return
+			}
+
+			logJSON(thing)
+		},
+	},
+	{
+		Use:   "updatesecret <thing_id> <secret> <user_auth_token>",
+		Short: "Update thing tags",
+		Long:  `Update thing record`,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) != 3 {
+				logUsage(cmd.Use)
+				return
+			}
+
+			thing, err := sdk.UpdateThingSecret(args[0], args[1], args[2])
+			if err != nil {
+				logError(err)
+				return
+			}
+
+			logJSON(thing)
+		},
+	},
+	{
+		Use:   "updateowner <thing_id> <tags> <user_auth_token>",
+		Short: "Update thing owner",
+		Long:  `Update thing record`,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) != 3 {
+				logUsage(cmd.Use)
+				return
+			}
+
+			var thing mfxsdk.Thing
+			if err := json.Unmarshal([]byte(args[1]), &thing.Owner); err != nil {
+				logError(err)
+				return
+			}
+			thing.ID = args[0]
+			thing, err := sdk.UpdateThingOwner(thing, args[2])
+			if err != nil {
+				logError(err)
+				return
+			}
+
+			logJSON(thing)
+		},
+	},
+	{
+		Use:   "enable <thing_id> <user_auth_token>",
+		Short: "Change thing status to enabled",
+		Long:  `Change thing status to enabled`,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) != 2 {
+				logUsage(cmd.Use)
+				return
+			}
+
+			thing, err := sdk.EnableThing(args[0], args[1])
+			if err != nil {
+				logError(err)
+				return
+			}
+
+			logJSON(thing)
+		},
+	},
+	{
+		Use:   "disable <thing_id> <user_auth_token>",
+		Short: "Change thing status to disabled",
+		Long:  `Change thing status to disabled`,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) != 2 {
+				logUsage(cmd.Use)
+				return
+			}
+
+			thing, err := sdk.DisableThing(args[0], args[1])
+			if err != nil {
+				logError(err)
+				return
+			}
+
+			logJSON(thing)
 		},
 	},
 	{

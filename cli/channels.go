@@ -27,13 +27,13 @@ var cmdChannels = []cobra.Command{
 				return
 			}
 
-			id, err := sdk.CreateChannel(channel, args[1])
+			channel, err := sdk.CreateChannel(channel, args[1])
 			if err != nil {
 				logError(err)
 				return
 			}
 
-			logCreated(id)
+			logJSON(channel)
 		},
 	},
 	{
@@ -95,30 +95,13 @@ var cmdChannels = []cobra.Command{
 				return
 			}
 
-			if err := sdk.UpdateChannel(channel, args[1]); err != nil {
+			channel, err := sdk.UpdateChannel(channel, args[1])
+			if err != nil {
 				logError(err)
 				return
 			}
 
-			logOK()
-		},
-	},
-	{
-		Use:   "delete <channel_id> <user_auth_token>",
-		Short: "Delete channel",
-		Long:  `Delete channel by ID`,
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 2 {
-				logUsage(cmd.Use)
-				return
-			}
-
-			if err := sdk.DeleteChannel(args[0], args[1]); err != nil {
-				logError(err)
-				return
-			}
-
-			logOK()
+			logJSON(channel)
 		},
 	},
 	{

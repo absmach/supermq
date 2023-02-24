@@ -21,14 +21,15 @@ const (
 // User represents mainflux user its credentials.
 type User struct {
 	ID          string      `json:"id"`
-	Name        string      `json:"name"`
+	Name        string      `json:"name,omitempty"`
 	Credentials Credentials `json:"credentials"`
 	Tags        []string    `json:"tags,omitempty"`
 	Owner       string      `json:"owner,omitempty"`
-	Metadata    Metadata    `json:"metadata"`
-	CreatedAt   time.Time   `json:"created_at"`
-	UpdatedAt   time.Time   `json:"updated_at"`
-	Status      string      `json:"status"`
+	Metadata    Metadata    `json:"metadata,omitempty"`
+	CreatedAt   time.Time   `json:"created_at,omitempty"`
+	UpdatedAt   time.Time   `json:"updated_at,omitempty"`
+	Status      string      `json:"status,omitempty"`
+	Role        string      `json:"role,omitempty"`
 }
 
 // CreateUser creates a new client returning its id.
@@ -78,7 +79,7 @@ func (sdk mfSDK) Members(groupID string, meta PageMetadata, token string) (Membe
 	if err != nil {
 		return MembersPage{}, errors.NewSDKError(err)
 	}
-
+	fmt.Println(url)
 	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, string(CTJSON), nil, http.StatusOK)
 	if sdkerr != nil {
 		return MembersPage{}, sdkerr

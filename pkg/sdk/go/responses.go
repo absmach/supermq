@@ -92,3 +92,7 @@ func (res KeyRes) Empty() bool {
 type revokeCertsRes struct {
 	RevocationTime time.Time `json:"revocation_time"`
 }
+
+type identifyThingResp struct {
+	ID string `json:"id,omitempty"`
+}

@@ -148,7 +148,7 @@ var cmdProvision = []cobra.Command{
 
 				things = append(things, t)
 			}
-			things, err = sdk.CreateThings(things, ut)
+			things, err = sdk.CreateThings(things, ut.AccessToken)
 			if err != nil {
 				logError(err)
 				return
@@ -164,7 +164,7 @@ var cmdProvision = []cobra.Command{
 
 				channels = append(channels, c)
 			}
-			channels, err = sdk.CreateChannels(channels, ut)
+			channels, err = sdk.CreateChannels(channels, ut.AccessToken)
 			if err != nil {
 				logError(err)
 				return
@@ -175,7 +175,7 @@ var cmdProvision = []cobra.Command{
 				ChannelIDs: []string{channels[0].ID, channels[1].ID},
 				ThingIDs:   []string{things[0].ID},
 			}
-			if err := sdk.Connect(conIDs, ut); err != nil {
+			if err := sdk.Connect(conIDs, ut.AccessToken); err != nil {
 				logError(err)
 				return
 			}
@@ -184,7 +184,7 @@ var cmdProvision = []cobra.Command{
 				ChannelIDs: []string{channels[0].ID},
 				ThingIDs:   []string{things[1].ID},
 			}
-			if err := sdk.Connect(conIDs, ut); err != nil {
+			if err := sdk.Connect(conIDs, ut.AccessToken); err != nil {
 				logError(err)
 				return
 			}

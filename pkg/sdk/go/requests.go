@@ -9,6 +9,10 @@ type updateClientSecretReq struct {
 	NewSecret string `json:"new_secret,omitempty"`
 }
 
+type updateThingSecretReq struct {
+	Secret string `json:"key,omitempty"`
+}
+
 // updateClientIdentityReq is used to update the client identity
 type updateClientIdentityReq struct {
 	token    string
@@ -32,4 +36,8 @@ type ConnectionIDs struct {
 type tokenReq struct {
 	Identity string `json:"identity"`
 	Secret   string `json:"secret"`
+}
+
+type identifyThingReq struct {
+	Token string `json:"token,omitempty"`
 }

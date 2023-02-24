@@ -43,7 +43,7 @@ func (sdk mfSDK) CreateToken(user User) (Token, errors.SDKError) {
 
 // RefreshToken refreshes expired access tokens.
 func (sdk mfSDK) RefreshToken(token string) (Token, errors.SDKError) {
-	url := fmt.Sprintf("%s/%s/%s/refresh", sdk.usersURL, usersEndpoint, refreshTokenEndpoint)
+	url := fmt.Sprintf("%s/%s/%s", sdk.usersURL, usersEndpoint, refreshTokenEndpoint)
 
 	_, body, sdkerr := sdk.processRequest(http.MethodPost, url, token, string(CTJSON), []byte{}, http.StatusCreated)
 	if sdkerr != nil {

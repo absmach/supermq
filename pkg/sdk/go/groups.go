@@ -24,17 +24,17 @@ const (
 // Paths are unique per owner.
 type Group struct {
 	ID          string    `json:"id"`
-	OwnerID     string    `json:"owner_id"`
-	ParentID    string    `json:"parent_id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Metadata    Metadata  `json:"metadata"`
-	Level       int       `json:"level"`
-	Path        string    `json:"path"`
-	Children    []*Group  `json:"children"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	Status      string    `json:"status"`
+	OwnerID     string    `json:"owner_id,omitempty"`
+	ParentID    string    `json:"parent_id,omitempty"`
+	Name        string    `json:"name,omitempty"`
+	Description string    `json:"description,omitempty"`
+	Metadata    Metadata  `json:"metadata,omitempty"`
+	Level       int       `json:"level,omitempty"`
+	Path        string    `json:"path,omitempty"`
+	Children    []*Group  `json:"children,omitempty"`
+	CreatedAt   time.Time `json:"created_at,omitempty"`
+	UpdatedAt   time.Time `json:"updated_at,omitempty"`
+	Status      string    `json:"status,omitempty"`
 }
 
 func (sdk mfSDK) CreateGroup(g Group, token string) (Group, errors.SDKError) {
@@ -61,6 +61,7 @@ func (sdk mfSDK) Memberships(clientID string, pm PageMetadata, token string) (Me
 	if err != nil {
 		return MembershipsPage{}, errors.NewSDKError(err)
 	}
+	fmt.Println(url)
 	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, string(CTJSON), nil, http.StatusOK)
 	if sdkerr != nil {
 		return MembershipsPage{}, sdkerr

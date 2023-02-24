@@ -19,14 +19,14 @@ const (
 // Thing represents mainflux thing.
 type Thing struct {
 	ID          string                 `json:"id"`
-	Name        string                 `json:"name"`
+	Name        string                 `json:"name,omitempty"`
 	Credentials Credentials            `json:"credentials"`
 	Tags        []string               `json:"tags,omitempty"`
 	Owner       string                 `json:"owner,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata"`
-	CreatedAt   time.Time              `json:"created_at"`
-	UpdatedAt   time.Time              `json:"updated_at"`
-	Status      string                 `json:"status"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	CreatedAt   time.Time              `json:"created_at,omitempty"`
+	UpdatedAt   time.Time              `json:"updated_at,omitempty"`
+	Status      string                 `json:"status,omitempty"`
 }
 
 // CreateThing creates a new client returning its id.
@@ -198,15 +198,15 @@ func (sdk mfSDK) UpdateThingIdentity(t Thing, token string) (Thing, errors.SDKEr
 }
 
 // UpdateThingSecret updates the client's secret
-func (sdk mfSDK) UpdateThingSecret(id, oldSecret, newSecret, token string) (Thing, errors.SDKError) {
-	var ucsr = updateClientSecretReq{OldSecret: oldSecret, NewSecret: newSecret}
+func (sdk mfSDK) UpdateThingSecret(id, secret, token string) (Thing, errors.SDKError) {
+	var ucsr = updateThingSecretReq{Secret: secret}
 
 	data, err := json.Marshal(ucsr)
 	if err != nil {
 		return Thing{}, errors.NewSDKError(err)
 	}
 
-	url := fmt.Sprintf("%s/%s/%s/secret", sdk.thingsURL, thingsEndpoint, id)
+	url := fmt.Sprintf("%s/%s/%s/key", sdk.thingsURL, thingsEndpoint, id)
 
 	_, body, sdkerr := sdk.processRequest(http.MethodPatch, url, token, string(CTJSON), data, http.StatusOK)
 	if sdkerr != nil {
@@ -266,4 +266,25 @@ func (sdk mfSDK) changeThingStatus(id, status, token string) (Thing, errors.SDKE
 	}
 
 	return t, nil
+}
+
+func (sdk mfSDK) IdentifyThing(key string) (string, errors.SDKError) {
+	idReq := identifyThingReq{Token: key}
+	data, err := json.Marshal(idReq)
+	if err != nil {
+		return "", errors.NewSDKError(err)
+	}
+
+	url := fmt.Sprintf("%s/%s", sdk.thingsURL, identifyEndpoint)
+	_, body, sdkerr := sdk.processRequest(http.MethodPost, url, "", string(CTJSON), data, http.StatusOK)
+	if sdkerr != nil {
+		return "", sdkerr
+	}
+
+	var i identifyThingResp
+	if err := json.Unmarshal(body, &i); err != nil {
+		return "", errors.NewSDKError(err)
+	}
+
+	return i.ID, nil
 }

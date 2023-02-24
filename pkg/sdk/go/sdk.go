@@ -158,7 +158,7 @@ type SDK interface {
 	UpdateThingIdentity(thing Thing, token string) (Thing, errors.SDKError)
 
 	// UpdateThingSecret updates the client's secret
-	UpdateThingSecret(id, oldSecret, newSecret, token string) (Thing, errors.SDKError)
+	UpdateThingSecret(id, secret, token string) (Thing, errors.SDKError)
 
 	// UpdateThingOwner updates the client's owner.
 	UpdateThingOwner(thing Thing, token string) (Thing, errors.SDKError)
@@ -169,8 +169,8 @@ type SDK interface {
 	// DisableThing changes client status to disabled - soft delete.
 	DisableThing(id, token string) (Thing, errors.SDKError)
 
-	// // IdentifyThing validates thing's key and returns its ID
-	// IdentifyThing(key string) (string, errors.SDKError)
+	// IdentifyThing validates thing's key and returns its ID
+	IdentifyThing(key string) (string, errors.SDKError)
 
 	// CreateGroup creates new group and returns its id.
 	CreateGroup(group Group, token string) (Group, errors.SDKError)
@@ -398,7 +398,6 @@ func (pm PageMetadata) query() (string, error) {
 	q.Add("total", strconv.FormatUint(pm.Total, 10))
 	q.Add("offset", strconv.FormatUint(pm.Offset, 10))
 	q.Add("limit", strconv.FormatUint(pm.Limit, 10))
-	q.Add("disconnected", strconv.FormatBool(pm.Disconnected))
 	if pm.Level != 0 {
 		q.Add("level", strconv.FormatUint(pm.Level, 10))
 	}
@@ -413,9 +412,6 @@ func (pm PageMetadata) query() (string, error) {
 	}
 	if pm.Status != "" {
 		q.Add("status", pm.Status)
-	}
-	if pm.Level != 0 {
-		q.Add("level", strconv.FormatUint(pm.Level, 10))
 	}
 	if pm.Name != "" {
 		q.Add("name", pm.Name)

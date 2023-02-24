@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 
 	mfxsdk "github.com/mainflux/mainflux/pkg/sdk/go"
+	"github.com/mainflux/mainflux/users/groups"
 	"github.com/spf13/cobra"
 )
 
@@ -34,12 +35,13 @@ var cmdGroups = []cobra.Command{
 				logError(err)
 				return
 			}
-			id, err := sdk.CreateGroup(group, args[1])
+			group.Status = groups.EnabledStatus.String()
+			group, err := sdk.CreateGroup(group, args[1])
 			if err != nil {
 				logError(err)
 				return
 			}
-			logCreated(id)
+			logJSON(group)
 		},
 	},
 	{
@@ -118,7 +120,7 @@ var cmdGroups = []cobra.Command{
 		},
 	},
 	{
-		Use:   "assign <member_ids> <member_type> <group_id> <user_auth_token>",
+		Use:   "assign <member_type> <member_id> <group_id> <user_auth_token>",
 		Short: "Assign member",
 		Long: `Assign members to a group.
 				member_ids - '["member_id",...]`,
@@ -127,12 +129,12 @@ var cmdGroups = []cobra.Command{
 				logUsage(cmd.Use)
 				return
 			}
-			var ids []string
-			if err := json.Unmarshal([]byte(args[0]), &ids); err != nil {
+			var types []string
+			if err := json.Unmarshal([]byte(args[0]), &types); err != nil {
 				logError(err)
 				return
 			}
-			if err := sdk.Assign(ids, args[1], args[2], args[3]); err != nil {
+			if err := sdk.Assign(types, args[1], args[2], args[3]); err != nil {
 				logError(err)
 				return
 			}
@@ -140,37 +142,21 @@ var cmdGroups = []cobra.Command{
 		},
 	},
 	{
-		Use:   "unassign <member_ids> <group_id> <user_auth_token>",
+		Use:   "unassign <member_type> <group_id> <member_id> <user_auth_token>",
 		Short: "Unassign member",
 		Long: `Unassign members from a group
 				member_ids - '["member_id",...]`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 3 {
+			if len(args) != 4 {
 				logUsage(cmd.Use)
 				return
 			}
-			var ids []string
-			if err := json.Unmarshal([]byte(args[0]), &ids); err != nil {
+			var types []string
+			if err := json.Unmarshal([]byte(args[0]), &types); err != nil {
 				logError(err)
 				return
 			}
-			if err := sdk.Unassign(args[1], ids, args[2]); err != nil {
-				logError(err)
-				return
-			}
-			logOK()
-		},
-	},
-	{
-		Use:   "delete <group_id> <user_auth_token>",
-		Short: "Delete group",
-		Long:  `Delete group.`,
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 2 {
-				logUsage(cmd.Use)
-				return
-			}
-			if err := sdk.DeleteGroup(args[0], args[1]); err != nil {
+			if err := sdk.Unassign(types, args[1], args[2], args[3]); err != nil {
 				logError(err)
 				return
 			}
@@ -189,6 +175,7 @@ var cmdGroups = []cobra.Command{
 			pm := mfxsdk.PageMetadata{
 				Offset: uint64(Offset),
 				Limit:  uint64(Limit),
+				Status: Status,
 			}
 			up, err := sdk.Members(args[0], pm, args[1])
 			if err != nil {
@@ -217,6 +204,44 @@ var cmdGroups = []cobra.Command{
 				return
 			}
 			logJSON(up)
+		},
+	},
+	{
+		Use:   "enable <group_id> <user_auth_token>",
+		Short: "Change group status to enabled",
+		Long:  `Change group status to enabled`,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) != 2 {
+				logUsage(cmd.Use)
+				return
+			}
+
+			group, err := sdk.EnableGroup(args[0], args[1])
+			if err != nil {
+				logError(err)
+				return
+			}
+
+			logJSON(group)
+		},
+	},
+	{
+		Use:   "disable <group_id> <user_auth_token>",
+		Short: "Change group status to disabled",
+		Long:  `Change group status to disabled`,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) != 2 {
+				logUsage(cmd.Use)
+				return
+			}
+
+			group, err := sdk.DisableGroup(args[0], args[1])
+			if err != nil {
+				logError(err)
+				return
+			}
+
+			logJSON(group)
 		},
 	},
 }
