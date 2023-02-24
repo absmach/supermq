@@ -13,7 +13,6 @@ import (
 	"github.com/mainflux/mainflux/bootstrap/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 const numConfigs = 10
@@ -39,7 +38,7 @@ var (
 func TestSave(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	require.Nil(t, err, "Channels cleanup expected to succeed.")
+	assert.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	diff := "different"
 
@@ -90,29 +89,32 @@ func TestSave(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		_, err := repo.Save(tc.config, tc.connections)
+		id, err := repo.Save(tc.config, tc.connections)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		if err == nil {
+			assert.Equal(t, id, tc.config.MFThing, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.config.MFThing, id))
+		}
 	}
 }
 
 func TestRetrieveByID(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	require.Nil(t, err, "Channels cleanup expected to succeed.")
+	assert.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
-	require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
 	c.MFKey = uid.String()
 	c.MFThing = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	id, err := repo.Save(c, channels)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	nonexistentConfID, err := uuid.NewV4()
-	require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
 
 	cases := []struct {
 		desc  string
@@ -154,14 +156,14 @@ func TestRetrieveByID(t *testing.T) {
 func TestRetrieveAll(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	require.Nil(t, err, "Channels cleanup expected to succeed.")
+	assert.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	for i := 0; i < numConfigs; i++ {
 		c := config
-		// Use UUID to prevent conflict errors.
 
+		// Use UUID to prevent conflict errors.
 		uid, err := uuid.NewV4()
-		require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
+		assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
 		c.ExternalID = uid.String()
 		c.Name = fmt.Sprintf("name %d", i)
 		c.MFThing = uid.String()
@@ -176,7 +178,7 @@ func TestRetrieveAll(t *testing.T) {
 		}
 
 		_, err = repo.Save(c, channels)
-		require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+		assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 	}
 
 	cases := []struct {
@@ -235,18 +237,18 @@ func TestRetrieveAll(t *testing.T) {
 func TestRetrieveByExternalID(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	require.Nil(t, err, "Channels cleanup expected to succeed.")
+	assert.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
-	require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
 	c.MFKey = uid.String()
 	c.MFThing = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	_, err = repo.Save(c, channels)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	cases := []struct {
 		desc       string
@@ -273,18 +275,18 @@ func TestRetrieveByExternalID(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	require.Nil(t, err, "Channels cleanup expected to succeed.")
+	assert.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
-	require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
 	c.MFKey = uid.String()
 	c.MFThing = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	_, err = repo.Save(c, channels)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	c.Content = "new content"
 	c.Name = "new name"
@@ -318,18 +320,18 @@ func TestUpdate(t *testing.T) {
 func TestUpdateCert(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	require.Nil(t, err, "Channels cleanup expected to succeed.")
+	assert.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
-	require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
 	c.MFKey = uid.String()
 	c.MFThing = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	_, err = repo.Save(c, channels)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	c.Content = "new content"
 	c.Name = "new name"
@@ -374,28 +376,28 @@ func TestUpdateCert(t *testing.T) {
 func TestUpdateConnections(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	require.Nil(t, err, "Channels cleanup expected to succeed.")
+	assert.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
-	require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
 	c.MFKey = uid.String()
 	c.MFThing = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	_, err = repo.Save(c, channels)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 	// Use UUID to prevent conflicts.
 	uid, err = uuid.NewV4()
-	require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
 	c.MFKey = uid.String()
 	c.MFThing = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	c.MFChannels = []bootstrap.Channel{}
 	c2, err := repo.Save(c, []string{channels[0]})
-	require.Nil(t, err, fmt.Sprintf("Saving a config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving a config expected to succeed: %s.\n", err))
 
 	cases := []struct {
 		desc        string
@@ -447,45 +449,45 @@ func TestUpdateConnections(t *testing.T) {
 func TestRemove(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	require.Nil(t, err, "Channels cleanup expected to succeed.")
+	assert.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
-	require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
 	c.MFKey = uid.String()
 	c.MFThing = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	id, err := repo.Save(c, channels)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	// Removal works the same for both existing and non-existing
 	// (removed) config
 	for i := 0; i < 2; i++ {
 		err := repo.Remove(c.Owner, id)
-		require.Nil(t, err, fmt.Sprintf("%d: failed to remove config due to: %s", i, err))
+		assert.Nil(t, err, fmt.Sprintf("%d: failed to remove config due to: %s", i, err))
 
 		_, err = repo.RetrieveByID(c.Owner, id)
-		require.True(t, errors.Contains(err, errors.ErrNotFound), fmt.Sprintf("%d: expected %s got %s", i, errors.ErrNotFound, err))
+		assert.True(t, errors.Contains(err, errors.ErrNotFound), fmt.Sprintf("%d: expected %s got %s", i, errors.ErrNotFound, err))
 	}
 }
 
 func TestChangeState(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	require.Nil(t, err, "Channels cleanup expected to succeed.")
+	assert.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
-	require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
 	c.MFKey = uid.String()
 	c.MFThing = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	saved, err := repo.Save(c, channels)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	cases := []struct {
 		desc  string
@@ -530,18 +532,18 @@ func TestChangeState(t *testing.T) {
 func TestListExisting(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	require.Nil(t, err, "Channels cleanup expected to succeed.")
+	assert.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
-	require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
 	c.MFKey = uid.String()
 	c.MFThing = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	_, err = repo.Save(c, channels)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	var chs []bootstrap.Channel
 	chs = append(chs, config.MFChannels...)
@@ -574,25 +576,25 @@ func TestListExisting(t *testing.T) {
 	for _, tc := range cases {
 		existing, err := repo.ListExisting(tc.owner, tc.connections)
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error: %s", tc.desc, err))
-		assert.ElementsMatch(t, tc.existing, existing, fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.existing, existing))
+		assert.ElementsMatch(t, tc.existing, existing, fmt.Sprintf("%s: Got non-matching elements.", tc.desc))
 	}
 }
 
 func TestRemoveThing(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	require.Nil(t, err, "Channels cleanup expected to succeed.")
+	assert.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
-	require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
 	c.MFKey = uid.String()
 	c.MFThing = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	saved, err := repo.Save(c, channels)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 	for i := 0; i < 2; i++ {
 		err := repo.RemoveThing(saved)
 		assert.Nil(t, err, fmt.Sprintf("an unexpected error occured: %s\n", err))
@@ -602,18 +604,18 @@ func TestRemoveThing(t *testing.T) {
 func TestUpdateChannel(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	require.Nil(t, err, "Channels cleanup expected to succeed.")
+	assert.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
-	require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
 	c.MFKey = uid.String()
 	c.MFThing = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	_, err = repo.Save(c, channels)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	id := c.MFChannels[0].ID
 	update := bootstrap.Channel{
@@ -625,7 +627,7 @@ func TestUpdateChannel(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("updating config expected to succeed: %s.\n", err))
 
 	cfg, err := repo.RetrieveByID(c.Owner, c.MFThing)
-	require.Nil(t, err, fmt.Sprintf("Retrieving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Retrieving config expected to succeed: %s.\n", err))
 	var retreved bootstrap.Channel
 	for _, c := range cfg.MFChannels {
 		if c.ID == id {
@@ -640,47 +642,47 @@ func TestUpdateChannel(t *testing.T) {
 func TestRemoveChannel(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	require.Nil(t, err, "Channels cleanup expected to succeed.")
+	assert.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	uid, err := uuid.NewV4()
-	require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
 	c.MFKey = uid.String()
 	c.MFThing = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	_, err = repo.Save(c, channels)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	err = repo.RemoveChannel(c.MFChannels[0].ID)
-	require.Nil(t, err, fmt.Sprintf("Retrieving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Retrieving config expected to succeed: %s.\n", err))
 
 	cfg, err := repo.RetrieveByID(c.Owner, c.MFThing)
-	require.Nil(t, err, fmt.Sprintf("Retrieving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Retrieving config expected to succeed: %s.\n", err))
 	assert.NotContains(t, cfg.MFChannels, c.MFChannels[0], fmt.Sprintf("expected to remove channel %s from %s", c.MFChannels[0], cfg.MFChannels))
 }
 
 func TestDisconnectThing(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	require.Nil(t, err, "Channels cleanup expected to succeed.")
+	assert.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
-	require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
 	c.MFKey = uid.String()
 	c.MFThing = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	saved, err := repo.Save(c, channels)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	err = repo.DisconnectThing(c.MFChannels[0].ID, saved)
-	require.Nil(t, err, fmt.Sprintf("Retrieving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Retrieving config expected to succeed: %s.\n", err))
 
 	cfg, err := repo.RetrieveByID(c.Owner, c.MFThing)
-	require.Nil(t, err, fmt.Sprintf("Retrieving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Retrieving config expected to succeed: %s.\n", err))
 	assert.Equal(t, cfg.State, bootstrap.Inactive, fmt.Sprintf("expected ti be inactive when a connection is removed from %s", cfg))
 }
 

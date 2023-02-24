@@ -10,7 +10,6 @@ import (
 
 	"github.com/mainflux/mainflux/things/redis"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestConnect(t *testing.T) {
@@ -48,7 +47,7 @@ func TestHasThing(t *testing.T) {
 	tid := "321"
 
 	err := channelCache.Connect(context.Background(), cid, tid)
-	require.Nil(t, err, fmt.Sprintf("connect thing to channel: fail to connect due to: %s\n", err))
+	assert.Nil(t, err, fmt.Sprintf("connect thing to channel: fail to connect due to: %s\n", err))
 
 	cases := map[string]struct {
 		cid       string
@@ -85,7 +84,7 @@ func TestDisconnect(t *testing.T) {
 	tid2 := "322"
 
 	err := channelCache.Connect(context.Background(), cid, tid)
-	require.Nil(t, err, fmt.Sprintf("connect thing to channel: fail to connect due to: %s\n", err))
+	assert.Nil(t, err, fmt.Sprintf("connect thing to channel: fail to connect due to: %s\n", err))
 
 	cases := []struct {
 		desc      string
@@ -123,7 +122,7 @@ func TestRemove(t *testing.T) {
 	tid := "321"
 
 	err := channelCache.Connect(context.Background(), cid, tid)
-	require.Nil(t, err, fmt.Sprintf("connect thing to channel: fail to connect due to: %s\n", err))
+	assert.Nil(t, err, fmt.Sprintf("connect thing to channel: fail to connect due to: %s\n", err))
 
 	cases := []struct {
 		desc      string

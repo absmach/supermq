@@ -14,7 +14,6 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -77,7 +76,7 @@ func TestViewSubscription(t *testing.T) {
 	svc := newService()
 	sub := notifiers.Subscription{Contact: exampleUser1, Topic: "valid.topic"}
 	id, err := svc.CreateSubscription(context.Background(), exampleUser1, sub)
-	require.Nil(t, err, "Saving a Subscription must succeed")
+	assert.Nil(t, err, "Saving a Subscription must succeed")
 	sub.ID = id
 	sub.OwnerID = exampleUser1
 
@@ -133,7 +132,7 @@ func TestListSubscriptions(t *testing.T) {
 		}
 		tmp.Topic = fmt.Sprintf("%s.%d", topic, i)
 		id, err := svc.CreateSubscription(context.Background(), token, tmp)
-		require.Nil(t, err, "Saving a Subscription must succeed")
+		assert.Nil(t, err, "Saving a Subscription must succeed")
 		tmp.ID = id
 		subs = append(subs, tmp)
 	}
@@ -229,7 +228,7 @@ func TestListSubscriptions(t *testing.T) {
 	for _, tc := range cases {
 		page, err := svc.ListSubscriptions(context.Background(), tc.token, tc.pageMeta)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		assert.Equal(t, tc.page, page, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.page, page))
+		assert.Equal(t, tc.page, page, fmt.Sprintf("%s: got unexpected page\n", tc.desc))
 	}
 }
 
@@ -237,7 +236,7 @@ func TestRemoveSubscription(t *testing.T) {
 	svc := newService()
 	sub := notifiers.Subscription{Contact: exampleUser1, Topic: "valid.topic"}
 	id, err := svc.CreateSubscription(context.Background(), exampleUser1, sub)
-	require.Nil(t, err, "Saving a Subscription must succeed")
+	assert.Nil(t, err, "Saving a Subscription must succeed")
 	sub.ID = id
 	sub.OwnerID = exampleUser1
 
@@ -287,13 +286,13 @@ func TestConsume(t *testing.T) {
 			tmp.Topic = fmt.Sprintf("%s-2", sub.Topic)
 		}
 		_, err := svc.CreateSubscription(context.Background(), exampleUser1, tmp)
-		require.Nil(t, err, "Saving a Subscription must succeed")
+		assert.Nil(t, err, "Saving a Subscription must succeed")
 	}
 
 	sub.Contact = invalidUser
 	sub.Topic = fmt.Sprintf("%s-2", sub.Topic)
 	_, err := svc.CreateSubscription(context.Background(), exampleUser1, sub)
-	require.Nil(t, err, "Saving a Subscription must succeed")
+	assert.Nil(t, err, "Saving a Subscription must succeed")
 
 	msg := messaging.Message{
 		Channel:  "topic",
@@ -312,6 +311,7 @@ func TestConsume(t *testing.T) {
 		{
 			desc: "test success",
 			msg:  &msg,
+			err:  nil,
 		},
 		{
 			desc: "test fail",

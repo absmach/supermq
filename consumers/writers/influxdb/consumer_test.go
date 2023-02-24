@@ -140,24 +140,22 @@ func TestSaveSenml(t *testing.T) {
 		}
 
 		for _, tc := range cases {
-			err := resetBucket()
+			// Clean previously saved messages.
+			_, err := queryDB(dropMsgs)
 			assert.Nil(t, err, fmt.Sprintf("Cleaning data from InfluxDB expected to succeed: %s.\n", err))
+
 			now := time.Now().UnixNano()
+			msg := senml.Message{
+				Channel:    "45",
+				Publisher:  "2580",
+				Protocol:   "http",
+				Name:       "test name",
+				Unit:       "km",
+				UpdateTime: 5456565466,
+			}
 			var msgs []senml.Message
 
-			chanID, err := idProvider.ID()
-			assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
-			pubID, err := idProvider.ID()
-			assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
 			for i := 0; i < tc.msgsNum; i++ {
-				msg := senml.Message{
-					Channel:    chanID,
-					Publisher:  pubID,
-					Protocol:   "http",
-					Name:       "test name",
-					Unit:       "km",
-					UpdateTime: 5456565466,
-				}
 				// Mix possible values as well as value sum.
 				count := i % valueFields
 				switch count {
@@ -194,9 +192,9 @@ func TestSaveJSON(t *testing.T) {
 		// Testing both async and sync
 		repo := writer.New(client, repoCfg, i == 0)
 
-		chanID, err := idProvider.ID()
+		chid, err := uuid.NewV4()
 		assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-		pubID, err := idProvider.ID()
+		pubid, err := uuid.NewV4()
 		assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 		msg := json.Message{

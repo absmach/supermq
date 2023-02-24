@@ -12,7 +12,6 @@ import (
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/mainflux/twins/mongodb"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -20,13 +19,13 @@ import (
 
 func TestStateSave(t *testing.T) {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
-	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
 
 	db := client.Database(testDB)
 	repo := mongodb.NewStateRepository(db)
 
 	twid, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	var id int64
 	state := twins.State{
@@ -55,7 +54,7 @@ func TestStateSave(t *testing.T) {
 
 func TestStatesRetrieveAll(t *testing.T) {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
-	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
 
 	db := client.Database(testDB)
 	db.Collection("states").DeleteMany(context.Background(), bson.D{})
@@ -63,7 +62,7 @@ func TestStatesRetrieveAll(t *testing.T) {
 	repo := mongodb.NewStateRepository(db)
 
 	twid, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	n := uint64(10)
 	for i := uint64(0); i < n; i++ {
@@ -117,7 +116,7 @@ func TestStatesRetrieveAll(t *testing.T) {
 
 func TestStatesRetrieveLast(t *testing.T) {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
-	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
 
 	db := client.Database(testDB)
 	db.Collection("states").DeleteMany(context.Background(), bson.D{})
@@ -125,7 +124,7 @@ func TestStatesRetrieveLast(t *testing.T) {
 	repo := mongodb.NewStateRepository(db)
 
 	twid, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	n := int64(10)
 	for i := int64(1); i <= n; i++ {

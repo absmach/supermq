@@ -14,7 +14,6 @@ import (
 	"github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -39,9 +38,9 @@ func TestSaveSenml(t *testing.T) {
 		Hosts:    []string{addr},
 		Keyspace: keyspace,
 	})
-	require.Nil(t, err, fmt.Sprintf("failed to connect to Cassandra: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("failed to connect to Cassandra: %s", err))
 	err = casClient.InitDB(session, cassandra.Table)
-	require.Nil(t, err, fmt.Sprintf("failed to initialize to Cassandra: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("failed to initialize to Cassandra: %s", err))
 	repo := cassandra.New(session)
 	now := time.Now().Unix()
 	msg := senml.Message{
@@ -81,12 +80,12 @@ func TestSaveJSON(t *testing.T) {
 		Hosts:    []string{addr},
 		Keyspace: keyspace,
 	})
-	require.Nil(t, err, fmt.Sprintf("failed to connect to Cassandra: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("failed to connect to Cassandra: %s", err))
 	repo := cassandra.New(session)
 	chid, err := uuid.NewV4()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	pubid, err := uuid.NewV4()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	msg := json.Message{
 		Channel:   chid.String(),

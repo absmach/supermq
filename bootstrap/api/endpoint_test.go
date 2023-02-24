@@ -31,7 +31,6 @@ import (
 	thingsapi "github.com/mainflux/mainflux/things/api/things/http"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -350,7 +349,7 @@ func TestView(t *testing.T) {
 	}
 
 	saved, err := svc.Add(context.Background(), validToken, c)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	var channels []channel
 	for _, ch := range saved.MFChannels {
@@ -439,7 +438,7 @@ func TestUpdate(t *testing.T) {
 	c := newConfig([]bootstrap.Channel{{ID: "1"}})
 
 	saved, err := svc.Add(context.Background(), validToken, c)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	data := toJSON(updateReq)
 
@@ -533,7 +532,7 @@ func TestUpdateCert(t *testing.T) {
 	c := newConfig([]bootstrap.Channel{{ID: "1"}})
 
 	saved, err := svc.Add(context.Background(), validToken, c)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	data := toJSON(updateReq)
 
@@ -628,7 +627,7 @@ func TestUpdateConnections(t *testing.T) {
 	c := newConfig([]bootstrap.Channel{{ID: "1"}})
 
 	saved, err := svc.Add(context.Background(), validToken, c)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	data := toJSON(updateReq)
 
@@ -747,7 +746,7 @@ func TestList(t *testing.T) {
 		c.ExternalKey = fmt.Sprintf("%s%s", addExternalKey, strconv.Itoa(i))
 
 		saved, err := svc.Add(context.Background(), validToken, c)
-		require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+		assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 		var channels []channel
 		for _, ch := range saved.MFChannels {
@@ -773,7 +772,7 @@ func TestList(t *testing.T) {
 			state = bootstrap.Inactive
 		}
 		err := svc.ChangeState(context.Background(), validToken, list[i].MFThing, state)
-		require.Nil(t, err, fmt.Sprintf("Changing state expected to succeed: %s.\n", err))
+		assert.Nil(t, err, fmt.Sprintf("Changing state expected to succeed: %s.\n", err))
 		list[i].State = state
 		if state == bootstrap.Inactive {
 			inactive = append(inactive, list[i])
@@ -984,7 +983,7 @@ func TestRemove(t *testing.T) {
 	c := newConfig([]bootstrap.Channel{{ID: "1"}})
 
 	saved, err := svc.Add(context.Background(), validToken, c)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	cases := []struct {
 		desc   string
@@ -1046,10 +1045,10 @@ func TestBootstrap(t *testing.T) {
 	c := newConfig([]bootstrap.Channel{{ID: "1"}})
 
 	saved, err := svc.Add(context.Background(), validToken, c)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	encExternKey, err := enc([]byte(c.ExternalKey))
-	require.Nil(t, err, fmt.Sprintf("Encrypting config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Encrypting config expected to succeed: %s.\n", err))
 
 	var channels []channel
 	for _, ch := range saved.MFChannels {
@@ -1157,6 +1156,7 @@ func TestBootstrap(t *testing.T) {
 		assert.Nil(t, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		if tc.secure && tc.status == http.StatusOK {
 			body, err = dec(body)
+			assert.Nil(t, err, fmt.Sprintf("%sGot unexpected error: %s\n", tc.desc, err))
 		}
 
 		data := strings.Trim(string(body), "\n")
@@ -1174,7 +1174,7 @@ func TestChangeState(t *testing.T) {
 	c := newConfig([]bootstrap.Channel{{ID: "1"}})
 
 	saved, err := svc.Add(context.Background(), validToken, c)
-	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	inactive := fmt.Sprintf("{\"state\": %d}", bootstrap.Inactive)
 	active := fmt.Sprintf("{\"state\": %d}", bootstrap.Active)

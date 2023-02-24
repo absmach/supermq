@@ -13,7 +13,6 @@ import (
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/senml"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/mainflux/mainflux/twins/mocks"
 )
@@ -47,15 +46,15 @@ func TestListStates(t *testing.T) {
 	}
 	def := mocks.CreateDefinition(channels[0:2], subtopics[0:2])
 	tw, err := svc.AddTwin(context.Background(), token, twin, def)
-	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	attr := def.Attributes[0]
 
 	var recs = make([]senml.Record, numRecs)
 	mocks.CreateSenML(numRecs, recs)
 	message, err := mocks.CreateMessage(attr, recs)
-	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	err = svc.SaveStates(message)
-	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	var data []stateRes
 	for i := 0; i < len(recs); i++ {
@@ -196,7 +195,7 @@ func TestListStates(t *testing.T) {
 		}
 
 		assert.Equal(t, tc.status, res.StatusCode, fmt.Sprintf("%s: expected status code %d got %d", tc.desc, tc.status, res.StatusCode))
-		assert.ElementsMatch(t, tc.res, resData.States, fmt.Sprintf("%s: expected body %v got %v", tc.desc, tc.res, resData.States))
+		assert.ElementsMatch(t, tc.res, resData.States, fmt.Sprintf("%s: got incorrect body from response", tc.desc))
 	}
 }
 
