@@ -14,7 +14,6 @@ import (
 	"github.com/mainflux/mainflux/auth/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -34,7 +33,7 @@ var (
 
 func generateGroupID(t *testing.T) string {
 	grpID, err := ulidProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	return grpID
 }
 
@@ -44,10 +43,10 @@ func TestGroupSave(t *testing.T) {
 	groupRepo := postgres.NewGroupRepo(dbMiddleware)
 
 	usrID, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	wrongID, err := ulidProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	grpID := generateGroupID(t)
 
@@ -138,9 +137,9 @@ func TestGroupRetrieveByID(t *testing.T) {
 	groupRepo := postgres.NewGroupRepo(dbMiddleware)
 
 	uid, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
-	require.Nil(t, err, fmt.Sprintf("group id unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("group id unexpected error: %s", err))
 	group1 := auth.Group{
 		ID:      generateGroupID(t),
 		Name:    groupName + "TestGroupRetrieveByID1",
@@ -148,10 +147,10 @@ func TestGroupRetrieveByID(t *testing.T) {
 	}
 
 	_, err = groupRepo.Save(context.Background(), group1)
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	retrieved, err := groupRepo.RetrieveByID(context.Background(), group1.ID)
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	assert.True(t, retrieved.ID == group1.ID, fmt.Sprintf("Save group, ID: expected %s got %s\n", group1.ID, retrieved.ID))
 
 	// Round to milliseconds as otherwise saving and retriving from DB
@@ -169,10 +168,10 @@ func TestGroupRetrieveByID(t *testing.T) {
 	}
 
 	_, err = groupRepo.Save(context.Background(), group2)
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	retrieved, err = groupRepo.RetrieveByID(context.Background(), group2.ID)
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	assert.True(t, retrieved.ID == group2.ID, fmt.Sprintf("Save group, ID: expected %s got %s\n", group2.ID, retrieved.ID))
 	assert.True(t, retrieved.CreatedAt.Equal(creationTime), fmt.Sprintf("Save group, CreatedAt: expected %s got %s\n", creationTime, retrieved.CreatedAt))
 	assert.True(t, retrieved.UpdatedAt.Equal(creationTime), fmt.Sprintf("Save group, UpdatedAt: expected %s got %s\n", creationTime, retrieved.UpdatedAt))
@@ -191,7 +190,7 @@ func TestGroupUpdate(t *testing.T) {
 	groupRepo := postgres.NewGroupRepo(dbMiddleware)
 
 	uid, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	creationTime := time.Now().UTC()
 	updateTime := time.Now().UTC()
@@ -208,10 +207,10 @@ func TestGroupUpdate(t *testing.T) {
 	}
 
 	_, err = groupRepo.Save(context.Background(), group)
-	require.Nil(t, err, fmt.Sprintf("group save got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("group save got unexpected error: %s", err))
 
 	retrieved, err := groupRepo.RetrieveByID(context.Background(), group.ID)
-	require.Nil(t, err, fmt.Sprintf("group save got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("group save got unexpected error: %s", err))
 
 	cases := []struct {
 		desc          string
@@ -282,7 +281,7 @@ func TestGroupDelete(t *testing.T) {
 	groupRepo := postgres.NewGroupRepo(dbMiddleware)
 
 	uid, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	creationTime := time.Now().UTC()
 	groupParent := auth.Group{
@@ -294,7 +293,7 @@ func TestGroupDelete(t *testing.T) {
 	}
 
 	groupParent, err = groupRepo.Save(context.Background(), groupParent)
-	require.Nil(t, err, fmt.Sprintf("group save got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("group save got unexpected error: %s", err))
 
 	creationTime = time.Now().UTC()
 	groupChild1 := auth.Group{
@@ -321,20 +320,20 @@ func TestGroupDelete(t *testing.T) {
 	}
 
 	groupChild1, err = groupRepo.Save(context.Background(), groupChild1)
-	require.Nil(t, err, fmt.Sprintf("group save got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("group save got unexpected error: %s", err))
 
 	groupChild2, err = groupRepo.Save(context.Background(), groupChild2)
-	require.Nil(t, err, fmt.Sprintf("group save got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("group save got unexpected error: %s", err))
 
 	gp, err := groupRepo.RetrieveAllChildren(context.Background(), groupParent.ID, meta)
 	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("Retrieve children for parent: expected %v got %v\n", nil, err))
 	assert.True(t, gp.Total == 3, fmt.Sprintf("Number of children + parent: expected %d got %d\n", 3, gp.Total))
 
 	thingID, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("thing id create unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("thing id create unexpected error: %s", err))
 
 	err = groupRepo.Assign(context.Background(), groupChild1.ID, "things", thingID)
-	require.Nil(t, err, fmt.Sprintf("thing assign got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("thing assign got unexpected error: %s", err))
 
 	err = groupRepo.Delete(context.Background(), groupChild1.ID)
 	assert.True(t, errors.Contains(err, auth.ErrGroupNotEmpty), fmt.Sprintf("delete non empty group: expected %v got %v\n", auth.ErrGroupNotEmpty, err))
@@ -350,7 +349,7 @@ func TestGroupDelete(t *testing.T) {
 	assert.True(t, gp.Total == 2, fmt.Sprintf("number of children + parent: expected %d got %d\n", 2, gp.Total))
 
 	err = groupRepo.Unassign(context.Background(), groupChild1.ID, thingID)
-	require.Nil(t, err, fmt.Sprintf("failed to remove thing from a group error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("failed to remove thing from a group error: %s", err))
 
 	err = groupRepo.Delete(context.Background(), groupParent.ID)
 	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("delete parent with children with no members: expected %v got %v\n", nil, err))
@@ -364,7 +363,7 @@ func TestRetrieveAll(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
 	groupRepo := postgres.NewGroupRepo(dbMiddleware)
 	uid, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	metadata := auth.PageMetadata{
 		Metadata: auth.GroupMetadata{
@@ -399,7 +398,7 @@ func TestRetrieveAll(t *testing.T) {
 		}
 
 		_, err = groupRepo.Save(context.Background(), group)
-		require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+		assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 		parentID = group.ID
 	}
 
@@ -468,7 +467,7 @@ func TestRetrieveAllParents(t *testing.T) {
 	groupRepo := postgres.NewGroupRepo(dbMiddleware)
 
 	uid, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	metadata := auth.GroupMetadata{
 		"field": "value",
@@ -478,7 +477,7 @@ func TestRetrieveAllParents(t *testing.T) {
 	}
 
 	p, err := groupRepo.RetrieveAll(context.Background(), auth.PageMetadata{Level: auth.MaxLevel})
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	assert.Equal(t, uint64(0), p.Total, fmt.Sprintf("expected total %d got %d\n", 0, p.Total))
 
 	metaNum := uint64(3)
@@ -504,7 +503,7 @@ func TestRetrieveAllParents(t *testing.T) {
 			parentMiddle = group.ID
 		}
 		_, err = groupRepo.Save(context.Background(), group)
-		require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+		assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 		parentID = group.ID
 	}
 
@@ -571,7 +570,7 @@ func TestRetrieveAllChildren(t *testing.T) {
 	groupRepo := postgres.NewGroupRepo(dbMiddleware)
 
 	uid, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	metadata := auth.GroupMetadata{
 		"field": "value",
@@ -605,13 +604,13 @@ func TestRetrieveAllChildren(t *testing.T) {
 			parentMiddle = group.ID
 		}
 		_, err = groupRepo.Save(context.Background(), group)
-		require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+		assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 		parentID = group.ID
 		groupID = generateGroupID(t)
 	}
 
 	p, err := groupRepo.RetrieveAll(context.Background(), auth.PageMetadata{Level: auth.MaxLevel})
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	assert.Equal(t, n, p.Total, fmt.Sprintf("expected total %d got %d\n", n, p.Total))
 
 	cases := map[string]struct {
@@ -688,7 +687,7 @@ func TestAssign(t *testing.T) {
 	groupRepo := postgres.NewGroupRepo(dbMiddleware)
 
 	uid, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	creationTime := time.Now().UTC()
 	group := auth.Group{
@@ -705,16 +704,16 @@ func TestAssign(t *testing.T) {
 	}
 
 	group, err = groupRepo.Save(context.Background(), group)
-	require.Nil(t, err, fmt.Sprintf("group save got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("group save got unexpected error: %s", err))
 
 	mid, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	err = groupRepo.Assign(context.Background(), group.ID, "things", mid)
-	require.Nil(t, err, fmt.Sprintf("member assign save unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("member assign save unexpected error: %s", err))
 
 	mp, err := groupRepo.Members(context.Background(), group.ID, "things", pm)
-	require.Nil(t, err, fmt.Sprintf("member assign save unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("member assign save unexpected error: %s", err))
 	assert.True(t, mp.Total == 1, fmt.Sprintf("retrieve members of a group: expected %d got %d\n", 1, mp.Total))
 
 	err = groupRepo.Assign(context.Background(), group.ID, "things", mid)
@@ -727,7 +726,7 @@ func TestUnassign(t *testing.T) {
 	groupRepo := postgres.NewGroupRepo(dbMiddleware)
 
 	uid, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	creationTime := time.Now().UTC()
 	group := auth.Group{
@@ -744,34 +743,34 @@ func TestUnassign(t *testing.T) {
 	}
 
 	group, err = groupRepo.Save(context.Background(), group)
-	require.Nil(t, err, fmt.Sprintf("group save got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("group save got unexpected error: %s", err))
 
 	mid, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	err = groupRepo.Assign(context.Background(), group.ID, "things", mid)
-	require.Nil(t, err, fmt.Sprintf("member assign unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("member assign unexpected error: %s", err))
 
 	mid, err = idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	err = groupRepo.Assign(context.Background(), group.ID, "things", mid)
-	require.Nil(t, err, fmt.Sprintf("member assign unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("member assign unexpected error: %s", err))
 
 	mp, err := groupRepo.Members(context.Background(), group.ID, "things", pm)
-	require.Nil(t, err, fmt.Sprintf("member assign save unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("member assign save unexpected error: %s", err))
 	assert.True(t, mp.Total == 2, fmt.Sprintf("retrieve members of a group: expected %d got %d\n", 2, mp.Total))
 
 	err = groupRepo.Unassign(context.Background(), group.ID, mid)
-	require.Nil(t, err, fmt.Sprintf("member unassign save unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("member unassign save unexpected error: %s", err))
 
 	mp, err = groupRepo.Members(context.Background(), group.ID, "things", pm)
-	require.Nil(t, err, fmt.Sprintf("members retrieve unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("members retrieve unexpected error: %s", err))
 	assert.True(t, mp.Total == 1, fmt.Sprintf("retrieve members of a group: expected %d got %d\n", 1, mp.Total))
 }
 
 func cleanUp(t *testing.T) {
 	_, err := db.Exec("delete from group_relations")
-	require.Nil(t, err, fmt.Sprintf("clean relations unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("clean relations unexpected error: %s", err))
 	_, err = db.Exec("delete from groups")
-	require.Nil(t, err, fmt.Sprintf("clean groups unexpected error: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("clean groups unexpected error: %s", err))
 }

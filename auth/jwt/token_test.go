@@ -12,7 +12,6 @@ import (
 	"github.com/mainflux/mainflux/auth/jwt"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 const secret = "test"
@@ -54,18 +53,18 @@ func TestParse(t *testing.T) {
 	tokenizer := jwt.New(secret)
 
 	token, err := tokenizer.Issue(key())
-	require.Nil(t, err, fmt.Sprintf("issuing key expected to succeed: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("issuing key expected to succeed: %s", err))
 
 	apiKey := key()
 	apiKey.Type = auth.APIKey
 	apiKey.ExpiresAt = time.Now().UTC().Add(-1 * time.Minute).Round(time.Second)
 	apiToken, err := tokenizer.Issue(apiKey)
-	require.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("issuing user key expected to succeed: %s", err))
 
 	expKey := key()
 	expKey.ExpiresAt = time.Now().UTC().Add(-1 * time.Minute).Round(time.Second)
 	expToken, err := tokenizer.Issue(expKey)
-	require.Nil(t, err, fmt.Sprintf("issuing expired key expected to succeed: %s", err))
+	assert.Nil(t, err, fmt.Sprintf("issuing expired key expected to succeed: %s", err))
 
 	cases := []struct {
 		desc  string
