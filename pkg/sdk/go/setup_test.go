@@ -64,6 +64,7 @@ func generateValidToken(t *testing.T, svc clients.Service, cRepo *umocks.ClientR
 			Identity: "validtoken",
 			Secret:   secret,
 		},
+		Role:   clients.AdminRole,
 		Status: clients.EnabledStatus,
 	}
 	rclient := client
@@ -129,17 +130,6 @@ func convertPolicy(sp sdk.Policy) policies.Policy {
 	}
 }
 
-func convertMembersPage(m sdk.MembersPage) clients.MembersPage {
-	return clients.MembersPage{
-		Page: clients.Page{
-			Limit:  m.Limit,
-			Total:  m.Total,
-			Offset: m.Offset,
-		},
-		Members: convertMembers(m.Members),
-	}
-}
-
 func convertMembershipsPage(m sdk.MembershipsPage) groups.MembershipsPage {
 	return groups.MembershipsPage{
 		Page: groups.Page{
@@ -153,7 +143,7 @@ func convertMembershipsPage(m sdk.MembershipsPage) groups.MembershipsPage {
 
 func convertClientPage(p sdk.PageMetadata) clients.Page {
 	if p.Status == "" {
-		p.Status = clients.DisabledStatus.String()
+		p.Status = clients.EnabledStatus.String()
 	}
 	status, err := clients.ToStatus(p.Status)
 	if err != nil {
@@ -171,36 +161,6 @@ func convertClientPage(p sdk.PageMetadata) clients.Page {
 	}
 }
 
-func convertGroupPage(p sdk.PageMetadata) groups.Page {
-	if p.Status == "" {
-		p.Status = groups.DisabledStatus.String()
-	}
-	status, err := groups.ToStatus(p.Status)
-	if err != nil {
-		return groups.Page{}
-	}
-	return groups.Page{
-		Status:   status,
-		Total:    p.Total,
-		Offset:   p.Offset,
-		Limit:    p.Limit,
-		Name:     p.Name,
-		Action:   p.Action,
-		Tag:      p.Tag,
-		Metadata: groups.Metadata(p.Metadata),
-	}
-}
-
-func convertPoliciesPage(p sdk.PageMetadata) policies.Page {
-	return policies.Page{
-		Total:  p.Total,
-		Offset: p.Offset,
-		Limit:  p.Limit,
-		Action: p.Action,
-		Tag:    p.Tag,
-	}
-}
-
 func convertMemberships(gs []sdk.Group) []groups.Group {
 	cg := []groups.Group{}
 	for _, g := range gs {
@@ -210,18 +170,9 @@ func convertMemberships(gs []sdk.Group) []groups.Group {
 	return cg
 }
 
-func convertMembers(gs []sdk.User) []clients.Client {
-	cg := []clients.Client{}
-	for _, g := range gs {
-		cg = append(cg, convertClient(g))
-	}
-
-	return cg
-}
-
 func convertGroup(g sdk.Group) groups.Group {
 	if g.Status == "" {
-		g.Status = groups.DisabledStatus.String()
+		g.Status = groups.EnabledStatus.String()
 	}
 	status, err := groups.ToStatus(g.Status)
 	if err != nil {
@@ -260,7 +211,7 @@ func convertChildren(gs []*sdk.Group) []*groups.Group {
 
 func convertClient(c sdk.User) clients.Client {
 	if c.Status == "" {
-		c.Status = clients.DisabledStatus.String()
+		c.Status = clients.EnabledStatus.String()
 	}
 	status, err := clients.ToStatus(c.Status)
 	if err != nil {

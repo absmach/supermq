@@ -26,46 +26,36 @@ type Policy struct {
 // AddPolicy creates a policy for the given subject, so that, after
 // AddPolicy, `subject` has a `relation` on `object`. Returns a non-nil
 // error in case of failures.
-func (sdk mfSDK) AddPolicy(p Policy, token string) (Policy, errors.SDKError) {
+func (sdk mfSDK) AddPolicy(p Policy, token string) errors.SDKError {
 	data, err := json.Marshal(p)
 	if err != nil {
-		return Policy{}, errors.NewSDKError(err)
+		return errors.NewSDKError(err)
 	}
 
 	url := fmt.Sprintf("%s/%s", sdk.usersURL, policiesEndpoint)
-	_, body, sdkerr := sdk.processRequest(http.MethodPost, url, token, string(CTJSON), data, http.StatusCreated)
+	_, _, sdkerr := sdk.processRequest(http.MethodPost, url, token, string(CTJSON), data, http.StatusCreated)
 	if sdkerr != nil {
-		return Policy{}, sdkerr
+		return sdkerr
 	}
 
-	p = Policy{}
-	if err := json.Unmarshal(body, &p); err != nil {
-		return Policy{}, errors.NewSDKError(err)
-	}
-
-	return p, nil
+	return nil
 }
 
 // UpdatePolicy updates policies based on the given policy structure.
-func (sdk mfSDK) UpdatePolicy(p Policy, token string) (Policy, errors.SDKError) {
+func (sdk mfSDK) UpdatePolicy(p Policy, token string) errors.SDKError {
 	data, err := json.Marshal(p)
 	if err != nil {
-		return Policy{}, errors.NewSDKError(err)
+		return errors.NewSDKError(err)
 	}
 
 	url := fmt.Sprintf("%s/%s", sdk.usersURL, policiesEndpoint)
 
-	_, body, sdkerr := sdk.processRequest(http.MethodPut, url, token, string(CTJSON), data, http.StatusNoContent)
+	_, _, sdkerr := sdk.processRequest(http.MethodPut, url, token, string(CTJSON), data, http.StatusNoContent)
 	if sdkerr != nil {
-		return Policy{}, sdkerr
+		return sdkerr
 	}
 
-	p = Policy{}
-	if err := json.Unmarshal(body, &p); err != nil {
-		return Policy{}, errors.NewSDKError(err)
-	}
-
-	return p, nil
+	return nil
 }
 
 // ListPolicies lists policies based on the given policy structure.

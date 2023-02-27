@@ -37,7 +37,7 @@ func (req updateGroupReq) validate() error {
 	if req.id == "" {
 		return apiutil.ErrMissingID
 	}
-	if len(req.Name) > api.MaxNameSize || req.Name == "" {
+	if len(req.Name) > api.MaxNameSize {
 		return apiutil.ErrNameSize
 	}
 	return nil

@@ -15,7 +15,6 @@ import (
 const (
 	MyKey             = "mine"
 	clientsObjectKey  = "clients"
-	createKey         = "c_add"
 	updateRelationKey = "c_update"
 	listRelationKey   = "c_list"
 	deleteRelationKey = "c_delete"

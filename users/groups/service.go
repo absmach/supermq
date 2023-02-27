@@ -17,7 +17,6 @@ const (
 	AccessToken       = "access"
 	MyKey             = "mine"
 	groupsObjectKey   = "groups"
-	createKey         = "c_add"
 	updateRelationKey = "c_update"
 	listRelationKey   = "c_list"
 	deleteRelationKey = "c_delete"

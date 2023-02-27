@@ -63,15 +63,15 @@ const (
 )
 
 type config struct {
-	LogLevel        string `env:"MF_USERS_LOG_LEVEL"               	envDefault:"info"`
-	SecretKey       string `env:"MF_USERS_SECRET_KEY"              	envDefault:"secret"`
-	AdminEmail      string `env:"MF_USERS_ADMIN_EMAIL"             	envDefault:""`
-	AdminPassword   string `env:"MF_USERS_ADMIN_PASSWORD"          	envDefault:""`
-	PassRegexText   string `env:"MF_USERS_PASS_REGEX"              	envDefault:"^.{8,}$"`
-	AccessDuration  string `env:"MF_USERS_ACCESS_TOKEN_DURATION"	envDefault:"15m"`
-	RefreshDuration string `env:"MF_USERS_REFRESH_TOKEN_DURATION"	envDefault:"24h"`
-	ResetURL        string `env:"MF_TOKEN_RESET_ENDPOINT"          	envDefault:"/reset-request"`
-	JaegerURL       string `env:"MF_JAEGER_URL"              		envDefault:"localhost:6831"`
+	LogLevel        string `env:"MF_USERS_LOG_LEVEL"              envDefault:"info"`
+	SecretKey       string `env:"MF_USERS_SECRET_KEY"             envDefault:"secret"`
+	AdminEmail      string `env:"MF_USERS_ADMIN_EMAIL"            envDefault:""`
+	AdminPassword   string `env:"MF_USERS_ADMIN_PASSWORD"         envDefault:""`
+	PassRegexText   string `env:"MF_USERS_PASS_REGEX"             envDefault:"^.{8,}$"`
+	AccessDuration  string `env:"MF_USERS_ACCESS_TOKEN_DURATION"  envDefault:"15m"`
+	RefreshDuration string `env:"MF_USERS_REFRESH_TOKEN_DURATION" envDefault:"24h"`
+	ResetURL        string `env:"MF_TOKEN_RESET_ENDPOINT"         envDefault:"/reset-request"`
+	JaegerURL       string `env:"MF_JAEGER_URL"                   envDefault:"localhost:6831"`
 	PassRegex       *regexp.Regexp
 }
 

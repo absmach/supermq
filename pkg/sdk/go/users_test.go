@@ -41,7 +41,7 @@ func TestCreateClient(t *testing.T) {
 	defer ts.Close()
 
 	user := sdk.User{
-		Credentials: sdk.Credentials{Identity: "identity", Secret: "secret"},
+		Credentials: sdk.Credentials{Identity: "admin@example.com", Secret: "secret"},
 		Status:      clients.EnabledStatus.String(),
 	}
 	conf := sdk.Config{
@@ -78,7 +78,7 @@ func TestCreateClient(t *testing.T) {
 			},
 			response: sdk.User{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedCreation, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.ErrMalformedEntity, http.StatusBadRequest),
 		},
 		{
 			desc: "register user with empty secret",
@@ -88,7 +88,7 @@ func TestCreateClient(t *testing.T) {
 			},
 			response: sdk.User{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingSecret, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(errors.ErrMalformedEntity, http.StatusBadRequest),
 		},
 		{
 			desc: "register user with no secret",
@@ -98,7 +98,7 @@ func TestCreateClient(t *testing.T) {
 			},
 			response: sdk.User{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingSecret, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(errors.ErrMalformedEntity, http.StatusBadRequest),
 		},
 		{
 			desc: "register user with empty identity",
@@ -126,7 +126,7 @@ func TestCreateClient(t *testing.T) {
 			client:   sdk.User{},
 			response: sdk.User{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingSecret, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMalformedEntity, http.StatusBadRequest),
 		},
 		{
 			desc: "register user with every field defined",
@@ -470,7 +470,7 @@ func TestListMembers(t *testing.T) {
 			token:    invalidToken,
 			groupID:  testsutil.GenerateUUID(t, idProvider),
 			page:     sdk.PageMetadata{},
-			response: []sdk.User{},
+			response: []sdk.User(nil),
 			err:      errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
 		},
 		{
@@ -478,22 +478,23 @@ func TestListMembers(t *testing.T) {
 			token:    generateValidToken(t, svc, cRepo),
 			groupID:  mocks.WrongID,
 			page:     sdk.PageMetadata{},
-			response: []sdk.User{},
+			response: []sdk.User(nil),
 			err:      errors.NewSDKErrorWithStatus(errors.ErrNotFound, http.StatusNotFound),
 		},
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("Members", mock.Anything, mock.Anything, mock.Anything).Return(clients.MembersPage{Members: convertClients(tc.response)}, tc.err)
+		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
+		repoCall1 := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		repoCall2 := cRepo.On("Members", mock.Anything, mock.Anything, mock.Anything).Return(clients.MembersPage{Members: convertClients(tc.response)}, tc.err)
 
 		membersPage, err := clientSDK.Members(tc.groupID, tc.page, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
-		assert.Equal(t, tc.response, membersPage, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, membersPage))
+		assert.Equal(t, tc.response, membersPage.Members, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, membersPage.Members))
 
 		repoCall.Unset()
 		repoCall1.Unset()
-
+		repoCall2.Unset()
 	}
 }
 
@@ -536,7 +537,7 @@ func TestClient(t *testing.T) {
 			desc:     "view client with an invalid token",
 			response: sdk.User{},
 			token:    invalidToken,
-			clientID: user.ID,
+			clientID: generateUUID(t),
 			err:      errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
 		},
 		{
@@ -559,7 +560,7 @@ func TestClient(t *testing.T) {
 		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 		repoCall1 := cRepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
 
-		rClient, err := clientSDK.User(tc.token, tc.clientID)
+		rClient, err := clientSDK.User(tc.clientID, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, rClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, rClient))
 
@@ -629,15 +630,17 @@ func TestUpdateClient(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("Update", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
+		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
+		repoCall1 := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		repoCall2 := cRepo.On("Update", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
 
 		uClient, err := clientSDK.UpdateUser(tc.client, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, uClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, uClient))
 
-		repoCall1.Unset()
 		repoCall.Unset()
+		repoCall1.Unset()
+		repoCall2.Unset()
 	}
 }
 
@@ -701,15 +704,17 @@ func TestUpdateClientTags(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("UpdateTags", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
+		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
+		repoCall1 := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		repoCall2 := cRepo.On("UpdateTags", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
 
 		uClient, err := clientSDK.UpdateUserTags(tc.client, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, uClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, uClient))
 
-		repoCall1.Unset()
 		repoCall.Unset()
+		repoCall1.Unset()
+		repoCall2.Unset()
 	}
 }
 
@@ -771,17 +776,19 @@ func TestUpdateClientIdentity(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(convertClient(tc.client), tc.err)
-		repoCall2 := cRepo.On("UpdateIdentity", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
+		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
+		repoCall1 := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		repoCall2 := cRepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(convertClient(tc.client), tc.err)
+		repoCall3 := cRepo.On("UpdateIdentity", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
 
 		uClient, err := clientSDK.UpdateUserIdentity(tc.client, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, uClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, uClient))
 
+		repoCall.Unset()
 		repoCall1.Unset()
 		repoCall2.Unset()
-		repoCall.Unset()
+		repoCall3.Unset()
 	}
 }
 
@@ -843,17 +850,19 @@ func TestUpdateClientSecret(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
-		repoCall2 := cRepo.On("RetrieveByIdentity", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
-		repoCall3 := cRepo.On("UpdateSecret", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
+		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
+		repoCall1 := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		repoCall2 := cRepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
+		repoCall3 := cRepo.On("RetrieveByIdentity", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
+		repoCall4 := cRepo.On("UpdateSecret", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
 		uClient, err := clientSDK.UpdatePassword(user.ID, tc.oldSecret, tc.newSecret, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, uClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, uClient))
+		repoCall.Unset()
 		repoCall1.Unset()
 		repoCall2.Unset()
 		repoCall3.Unset()
-		repoCall.Unset()
+		repoCall4.Unset()
 	}
 }
 
@@ -915,15 +924,17 @@ func TestUpdateClientOwner(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("UpdateOwner", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
+		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
+		repoCall1 := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		repoCall2 := cRepo.On("UpdateOwner", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
 
 		uClient, err := clientSDK.UpdateUserOwner(tc.client, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, uClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, uClient))
 
-		repoCall1.Unset()
 		repoCall.Unset()
+		repoCall1.Unset()
+		repoCall2.Unset()
 	}
 }
 
@@ -982,17 +993,19 @@ func TestEnableClient(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(convertClient(tc.client), tc.err)
-		repoCall2 := cRepo.On("ChangeStatus", mock.Anything, mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
+		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
+		repoCall1 := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		repoCall2 := cRepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(convertClient(tc.client), tc.err)
+		repoCall3 := cRepo.On("ChangeStatus", mock.Anything, mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
 
 		eClient, err := clientSDK.EnableUser(tc.id, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, eClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, eClient))
 
+		repoCall.Unset()
 		repoCall1.Unset()
 		repoCall2.Unset()
-		repoCall.Unset()
+		repoCall3.Unset()
 	}
 
 	cases2 := []struct {
@@ -1105,17 +1118,19 @@ func TestDisableClient(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(convertClient(tc.client), tc.err)
-		repoCall2 := cRepo.On("ChangeStatus", mock.Anything, mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
+		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
+		repoCall1 := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		repoCall2 := cRepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(convertClient(tc.client), tc.err)
+		repoCall3 := cRepo.On("ChangeStatus", mock.Anything, mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
 
 		dClient, err := clientSDK.DisableUser(tc.id, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, dClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, dClient))
 
+		repoCall.Unset()
 		repoCall1.Unset()
 		repoCall2.Unset()
-		repoCall.Unset()
+		repoCall3.Unset()
 	}
 
 	cases2 := []struct {
