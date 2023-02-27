@@ -76,7 +76,7 @@ func (repo groupRepository) RetrieveByID(ctx context.Context, id string) (groups
 	row.Next()
 	dbg = dbGroup{}
 	if err := row.StructScan(&dbg); err != nil {
-		return groups.Group{}, err
+		return groups.Group{}, errors.Wrap(errors.ErrNotFound, err)
 	}
 
 	return toGroup(dbg)

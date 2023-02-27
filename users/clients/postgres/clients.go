@@ -78,7 +78,7 @@ func (repo clientRepo) RetrieveByID(ctx context.Context, id string) (clients.Cli
 	row.Next()
 	dbc = dbClient{}
 	if err := row.StructScan(&dbc); err != nil {
-		return clients.Client{}, err
+		return clients.Client{}, errors.Wrap(errors.ErrNotFound, err)
 	}
 
 	return toClient(dbc)
@@ -105,7 +105,7 @@ func (repo clientRepo) RetrieveByIdentity(ctx context.Context, identity string) 
 	row.Next()
 	dbc = dbClient{}
 	if err := row.StructScan(&dbc); err != nil {
-		return clients.Client{}, err
+		return clients.Client{}, errors.Wrap(errors.ErrNotFound, err)
 	}
 
 	return toClient(dbc)
