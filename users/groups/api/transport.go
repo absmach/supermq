@@ -359,6 +359,9 @@ func decodeGroupUpdate(_ context.Context, r *http.Request) (interface{}, error) 
 }
 
 func decodeGroupRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
+		return nil, errors.ErrUnsupportedContentType
+	}
 	req := groupReq{
 		token: apiutil.ExtractBearerToken(r),
 		id:    bone.GetValue(r, "id"),

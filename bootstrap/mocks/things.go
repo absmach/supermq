@@ -46,7 +46,7 @@ func (svc *mainfluxThings) CreateThings(_ context.Context, owner string, ths ...
 	}
 	for i := range ths {
 		svc.counter++
-		ths[i].Owner = userID.Email
+		ths[i].Owner = userID.GetId()
 		ths[i].ID = strconv.FormatUint(svc.counter, 10)
 		ths[i].Credentials.Secret = ths[i].ID
 		svc.things[ths[i].ID] = ths[i]
@@ -64,7 +64,7 @@ func (svc *mainfluxThings) ViewClient(_ context.Context, owner, id string) (clie
 		return clients.Client{}, errors.ErrAuthentication
 	}
 
-	if t, ok := svc.things[id]; ok && t.Owner == userID.Email {
+	if t, ok := svc.things[id]; ok && t.Owner == userID.GetId() {
 		return t, nil
 
 	}
@@ -81,7 +81,7 @@ func (svc *mainfluxThings) Connect(_ context.Context, owner string, chIDs, thIDs
 		return errors.ErrAuthentication
 	}
 	for _, chID := range chIDs {
-		if svc.channels[chID].Owner != userID.Email {
+		if svc.channels[chID].Owner != userID.GetId() {
 			return errors.ErrAuthentication
 		}
 		svc.connections[chID] = append(svc.connections[chID], thIDs...)
@@ -100,7 +100,7 @@ func (svc *mainfluxThings) Disconnect(_ context.Context, owner string, chIDs, th
 	}
 
 	for _, chID := range chIDs {
-		if svc.channels[chID].Owner != userID.Email {
+		if svc.channels[chID].Owner != userID.GetId() {
 			return errors.ErrAuthentication
 		}
 
@@ -134,10 +134,10 @@ func (svc *mainfluxThings) EnableClient(ctx context.Context, token, id string) (
 		return clients.Client{}, errors.ErrAuthentication
 	}
 
-	if t, ok := svc.things[id]; !ok || t.Owner != userID.Email {
+	if t, ok := svc.things[id]; !ok || t.Owner != userID.GetId() {
 		return clients.Client{}, errors.ErrNotFound
 	}
-	if t, ok := svc.things[id]; ok && t.Owner == userID.Email {
+	if t, ok := svc.things[id]; ok && t.Owner == userID.GetId() {
 		t.Status = clients.EnabledStatus
 		return t, nil
 	}
@@ -153,10 +153,10 @@ func (svc *mainfluxThings) DisableClient(ctx context.Context, token, id string) 
 		return clients.Client{}, errors.ErrAuthentication
 	}
 
-	if t, ok := svc.things[id]; !ok || t.Owner != userID.Email {
+	if t, ok := svc.things[id]; !ok || t.Owner != userID.GetId() {
 		return clients.Client{}, errors.ErrNotFound
 	}
-	if t, ok := svc.things[id]; ok && t.Owner == userID.Email {
+	if t, ok := svc.things[id]; ok && t.Owner == userID.GetId() {
 		t.Status = clients.DisabledStatus
 		return t, nil
 	}
@@ -208,7 +208,7 @@ func (svc *mainfluxThings) CreateChannels(_ context.Context, owner string, chs .
 	}
 	for i := range chs {
 		svc.counter++
-		chs[i].Owner = userID.Email
+		chs[i].Owner = userID.GetId()
 		chs[i].ID = strconv.FormatUint(svc.counter, 10)
 		svc.channels[chs[i].ID] = chs[i]
 	}

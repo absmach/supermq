@@ -7,19 +7,14 @@ type Metadata map[string]interface{}
 
 // Page contains page metadata that helps navigation.
 type Page struct {
-	Total      uint64
-	Offset     uint64
-	Limit      uint64
-	Level      uint64
-	Name       string
-	Identifier string
-	OwnerID    string
-	Subject    string
-	Object     string
-	Action     string
-	Tag        string
-	Metadata   Metadata
-	SharedBy   string
+	Total   uint64
+	Offset  uint64
+	Limit   uint64
+	OwnerID string
+	Subject string
+	Object  string
+	Action  string
+	Tag     string
 }
 
 // Validate check page actions.

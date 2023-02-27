@@ -24,7 +24,7 @@ var (
 type pageRes struct {
 	Limit  uint64 `json:"limit,omitempty"`
 	Offset uint64 `json:"offset,omitempty"`
-	Total  uint64 `json:"total"`
+	Total  uint64 `json:"total,omitempty"`
 }
 
 type createClientRes struct {

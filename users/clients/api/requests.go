@@ -29,6 +29,9 @@ func (req viewClientReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
+	if req.id == "" {
+		return apiutil.ErrMissingID
+	}
 	return nil
 }
 
@@ -39,9 +42,10 @@ type listClientsReq struct {
 	limit      uint64
 	name       string
 	tag        string
+	identity   string
+	visibility string
 	owner      string
 	sharedBy   string
-	visibility string
 	metadata   clients.Metadata
 }
 
@@ -82,16 +86,14 @@ func (req listMembersReq) validate() error {
 type updateClientReq struct {
 	token    string
 	id       string
-	Name     string                 `json:"name,omitempty"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
-	Tags     []string               `json:"tags,omitempty"`
+	Name     string           `json:"name,omitempty"`
+	Metadata clients.Metadata `json:"metadata,omitempty"`
 }
 
 func (req updateClientReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
-
 	if req.id == "" {
 		return apiutil.ErrMissingID
 	}
@@ -109,7 +111,6 @@ func (req updateClientTagsReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
-
 	if req.id == "" {
 		return apiutil.ErrMissingID
 	}
@@ -129,9 +130,7 @@ func (req updateClientOwnerReq) validate() error {
 	if req.id == "" {
 		return apiutil.ErrMissingID
 	}
-	if req.Owner == "" {
-		return apiutil.ErrMissingOwner
-	}
+
 	return nil
 }
 
@@ -147,6 +146,9 @@ func (req updateClientCredentialsReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
+	if req.id == "" {
+		return apiutil.ErrMissingID
+	}
 	return nil
 }
 
@@ -156,6 +158,9 @@ type changeClientStatusReq struct {
 }
 
 func (req changeClientStatusReq) validate() error {
+	if req.token == "" {
+		return apiutil.ErrBearerToken
+	}
 	if req.id == "" {
 		return apiutil.ErrMissingID
 	}

@@ -142,7 +142,7 @@ func (tm *tracingMiddleware) ListMembers(ctx context.Context, token, groupID str
 
 }
 
-func (tm *tracingMiddleware) Identify(ctx context.Context, token string) (clients.UserIdentity, error) {
+func (tm *tracingMiddleware) Identify(ctx context.Context, token string) (string, error) {
 	ctx, span := tm.tracer.Start(ctx, "svc_identify", trace.WithAttributes(attribute.String("token", token)))
 	defer span.End()
 

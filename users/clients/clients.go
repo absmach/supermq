@@ -49,11 +49,6 @@ type Client struct {
 	Role        Role        `json:"role,omitempty"` // 1 for admin, 0 for normal user
 }
 
-type UserIdentity struct {
-	ID    string
-	Email string
-}
-
 // ClientsPage contains page related metadata as well as list
 // of Clients that belong to the page.
 type ClientsPage struct {
@@ -161,7 +156,7 @@ type ClientService interface {
 	DisableClient(ctx context.Context, token, id string) (Client, error)
 
 	// Identify returns the client email and id from the given token
-	Identify(ctx context.Context, tkn string) (UserIdentity, error)
+	Identify(ctx context.Context, tkn string) (string, error)
 }
 
 // Custom Marshaller for Client

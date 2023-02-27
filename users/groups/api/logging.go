@@ -20,9 +20,9 @@ func LoggingMiddleware(svc groups.Service, logger log.Logger) groups.Service {
 	return &loggingMiddleware{logger, svc}
 }
 
-func (lm *loggingMiddleware) CreateGroup(ctx context.Context, token string, group groups.Group) (rGroup groups.Group, err error) {
+func (lm *loggingMiddleware) CreateGroup(ctx context.Context, token string, group groups.Group) (g groups.Group, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method create_group for group %s and token %s took %s to complete", group.Name, token, time.Since(begin))
+		message := fmt.Sprintf("Method create_group for group %s of id %s and token %s took %s to complete", g.Name, g.ID, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -32,9 +32,9 @@ func (lm *loggingMiddleware) CreateGroup(ctx context.Context, token string, grou
 	return lm.svc.CreateGroup(ctx, token, group)
 }
 
-func (lm *loggingMiddleware) UpdateGroup(ctx context.Context, token string, group groups.Group) (rGroup groups.Group, err error) {
+func (lm *loggingMiddleware) UpdateGroup(ctx context.Context, token string, group groups.Group) (g groups.Group, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method update_group for group %s and token %s took %s to complete", group.Name, token, time.Since(begin))
+		message := fmt.Sprintf("Method update_group for group %s of id %s and token %s took %s to complete", g.Name, g.ID, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -46,7 +46,7 @@ func (lm *loggingMiddleware) UpdateGroup(ctx context.Context, token string, grou
 
 func (lm *loggingMiddleware) ViewGroup(ctx context.Context, token, id string) (g groups.Group, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method view_group for group %s and token %s took %s to complete", g.Name, token, time.Since(begin))
+		message := fmt.Sprintf("Method view_group for group %s and id %s and token %s took %s to complete", g.Name, g.ID, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -58,7 +58,7 @@ func (lm *loggingMiddleware) ViewGroup(ctx context.Context, token, id string) (g
 
 func (lm *loggingMiddleware) ListGroups(ctx context.Context, token string, gp groups.GroupsPage) (cg groups.GroupsPage, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method list_groups for token %s took %s to complete", token, time.Since(begin))
+		message := fmt.Sprintf("Method list_groups %d groups for token %s took %s to complete", cg.Total, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -70,7 +70,7 @@ func (lm *loggingMiddleware) ListGroups(ctx context.Context, token string, gp gr
 
 func (lm *loggingMiddleware) EnableGroup(ctx context.Context, token string, id string) (g groups.Group, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method enable_group for client %s took %s to complete", id, time.Since(begin))
+		message := fmt.Sprintf("Method enable_group for group %s took %s to complete", g.ID, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -82,7 +82,7 @@ func (lm *loggingMiddleware) EnableGroup(ctx context.Context, token string, id s
 
 func (lm *loggingMiddleware) DisableGroup(ctx context.Context, token string, id string) (g groups.Group, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method disable_group for client %s took %s to complete", id, time.Since(begin))
+		message := fmt.Sprintf("Method disable_group for group %s took %s to complete", g.ID, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return

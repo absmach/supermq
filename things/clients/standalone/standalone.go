@@ -41,7 +41,7 @@ func (repo singleUserRepo) Identify(ctx context.Context, token *policies.Token, 
 		return nil, errors.ErrAuthentication
 	}
 
-	return &policies.UserIdentity{Id: repo.email, Email: repo.email}, nil
+	return &policies.UserIdentity{Id: repo.email}, nil
 }
 
 func (repo singleUserRepo) Authorize(ctx context.Context, req *policies.AuthorizeReq, _ ...grpc.CallOption) (r *policies.AuthorizeRes, err error) {

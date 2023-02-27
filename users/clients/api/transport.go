@@ -180,6 +180,10 @@ func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) 
 	if err != nil {
 		return nil, err
 	}
+	i, err := apiutil.ReadStringQuery(r, api.IdentityKey, "")
+	if err != nil {
+		return nil, err
+	}
 	t, err := apiutil.ReadStringQuery(r, api.TagKey, "")
 	if err != nil {
 		return nil, err
@@ -212,6 +216,7 @@ func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) 
 		limit:    l,
 		metadata: m,
 		name:     n,
+		identity: i,
 		tag:      t,
 		sharedBy: sid,
 		owner:    oid,
@@ -220,6 +225,9 @@ func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) 
 }
 
 func decodeUpdateClient(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
+		return nil, errors.ErrUnsupportedContentType
+	}
 	req := updateClientReq{
 		token: apiutil.ExtractBearerToken(r),
 		id:    bone.GetValue(r, "id"),
@@ -232,6 +240,9 @@ func decodeUpdateClient(_ context.Context, r *http.Request) (interface{}, error)
 }
 
 func decodeUpdateClientTags(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
+		return nil, errors.ErrUnsupportedContentType
+	}
 	req := updateClientTagsReq{
 		token: apiutil.ExtractBearerToken(r),
 		id:    bone.GetValue(r, "id"),
@@ -244,6 +255,9 @@ func decodeUpdateClientTags(_ context.Context, r *http.Request) (interface{}, er
 }
 
 func decodeUpdateClientCredentials(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
+		return nil, errors.ErrUnsupportedContentType
+	}
 	req := updateClientCredentialsReq{
 		token: apiutil.ExtractBearerToken(r),
 		id:    bone.GetValue(r, "id"),
@@ -284,6 +298,9 @@ func decodePasswordReset(_ context.Context, r *http.Request) (interface{}, error
 }
 
 func decodeUpdateClientOwner(_ context.Context, r *http.Request) (interface{}, error) {
+	if !strings.Contains(r.Header.Get("Content-Type"), api.ContentType) {
+		return nil, errors.ErrUnsupportedContentType
+	}
 	req := updateClientOwnerReq{
 		token: apiutil.ExtractBearerToken(r),
 		id:    bone.GetValue(r, "id"),
@@ -355,6 +372,22 @@ func decodeListMembersRequest(_ context.Context, r *http.Request) (interface{}, 
 	if err != nil {
 		return nil, err
 	}
+	n, err := apiutil.ReadStringQuery(r, api.NameKey, "")
+	if err != nil {
+		return nil, err
+	}
+	i, err := apiutil.ReadStringQuery(r, api.IdentityKey, "")
+	if err != nil {
+		return nil, err
+	}
+	t, err := apiutil.ReadStringQuery(r, api.TagKey, "")
+	if err != nil {
+		return nil, err
+	}
+	oid, err := apiutil.ReadStringQuery(r, api.OwnerKey, "")
+	if err != nil {
+		return nil, err
+	}
 	st, err := clients.ToStatus(s)
 	if err != nil {
 		return nil, err
@@ -366,6 +399,10 @@ func decodeListMembersRequest(_ context.Context, r *http.Request) (interface{}, 
 			Offset:   o,
 			Limit:    l,
 			Metadata: m,
+			Identity: i,
+			Name:     n,
+			Tag:      t,
+			Owner:    oid,
 		},
 		groupID: bone.GetValue(r, "id"),
 	}

@@ -36,8 +36,6 @@ func (repo tokenRepo) Issue(ctx context.Context, claim Claims) (Token, error) {
 		Subject(claim.ClientID).
 		Claim("identity", claim.Email).
 		Claim("type", AccessToken).
-		Claim("role", claim.Role).
-		Claim("tag", claim.Tag).
 		Expiration(aexpiry).
 		Build()
 	if err != nil {
@@ -53,8 +51,6 @@ func (repo tokenRepo) Issue(ctx context.Context, claim Claims) (Token, error) {
 		Subject(claim.ClientID).
 		Claim("identity", claim.Email).
 		Claim("type", RefreshToken).
-		Claim("role", claim.Role).
-		Claim("tag", claim.Tag).
 		Expiration(time.Now().Add(repo.refreshDuration)).
 		Build()
 	if err != nil {
@@ -89,19 +85,9 @@ func (repo tokenRepo) Parse(ctx context.Context, accessToken string) (Claims, er
 	if !ok {
 		return Claims{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
-	role, ok := token.Get("role")
-	if !ok {
-		return Claims{}, errors.Wrap(errors.ErrAuthentication, err)
-	}
-	tag, ok := token.Get("tag")
-	if !ok {
-		return Claims{}, errors.Wrap(errors.ErrAuthentication, err)
-	}
 	claim := Claims{
 		ClientID: token.Subject(),
 		Email:    identity.(string),
-		Role:     role.(string),
-		Tag:      tag.(string),
 		Type:     tType.(string),
 	}
 	return claim, nil

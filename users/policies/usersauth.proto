@@ -25,9 +25,9 @@ message AuthorizeRes {
 }
 
 message IssueReq {
-    string id    = 1;
-    string email = 2;
-    uint32 type  = 3;
+    string email    = 1;
+    string password = 2;
+    uint32 type     = 3;
 }
 
 message Token {
@@ -36,7 +36,6 @@ message Token {
 
 message UserIdentity {
     string id    = 1;
-    string email = 2;
 }
 
 message AddPolicyReq {

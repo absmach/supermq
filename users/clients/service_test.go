@@ -458,10 +458,10 @@ func TestListClients(t *testing.T) {
 			desc:  "list clients that I own",
 			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
 			page: clients.Page{
-				Offset:  6,
-				Limit:   nClients,
-				OwnerID: clients.MyKey,
-				Status:  clients.EnabledStatus,
+				Offset: 6,
+				Limit:  nClients,
+				Owner:  clients.MyKey,
+				Status: clients.EnabledStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -477,11 +477,11 @@ func TestListClients(t *testing.T) {
 			desc:  "list clients that I own with a specific name",
 			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
 			page: clients.Page{
-				Offset:  6,
-				Limit:   nClients,
-				OwnerID: clients.MyKey,
-				Name:    "TestListClients3",
-				Status:  clients.AllStatus,
+				Offset: 6,
+				Limit:  nClients,
+				Owner:  clients.MyKey,
+				Name:   "TestListClients3",
+				Status: clients.AllStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -497,11 +497,11 @@ func TestListClients(t *testing.T) {
 			desc:  "list clients that I own with an invalid name",
 			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
 			page: clients.Page{
-				Offset:  6,
-				Limit:   nClients,
-				OwnerID: clients.MyKey,
-				Name:    "notpresentclient",
-				Status:  clients.AllStatus,
+				Offset: 6,
+				Limit:  nClients,
+				Owner:  clients.MyKey,
+				Name:   "notpresentclient",
+				Status: clients.AllStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -519,7 +519,7 @@ func TestListClients(t *testing.T) {
 			page: clients.Page{
 				Offset:   6,
 				Limit:    nClients,
-				OwnerID:  clients.MyKey,
+				Owner:    clients.MyKey,
 				SharedBy: clients.MyKey,
 				Status:   clients.AllStatus,
 			},
@@ -540,7 +540,7 @@ func TestListClients(t *testing.T) {
 				Offset:   6,
 				Limit:    nClients,
 				SharedBy: clients.MyKey,
-				OwnerID:  clients.MyKey,
+				Owner:    clients.MyKey,
 				Name:     "TestListClients3",
 				Status:   clients.AllStatus,
 			},
@@ -561,7 +561,7 @@ func TestListClients(t *testing.T) {
 				Offset:   6,
 				Limit:    nClients,
 				SharedBy: clients.MyKey,
-				OwnerID:  clients.MyKey,
+				Owner:    clients.MyKey,
 				Name:     "notpresentclient",
 				Status:   clients.AllStatus,
 			},

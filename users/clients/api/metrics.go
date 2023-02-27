@@ -162,7 +162,7 @@ func (ms *metricsMiddleware) ListMembers(ctx context.Context, token, groupID str
 	return ms.svc.ListMembers(ctx, token, groupID, pm)
 }
 
-func (ms *metricsMiddleware) Identify(ctx context.Context, token string) (clients.UserIdentity, error) {
+func (ms *metricsMiddleware) Identify(ctx context.Context, token string) (string, error) {
 	defer func(begin time.Time) {
 		ms.counter.With("method", "identify").Add(1)
 		ms.latency.With("method", "identify").Observe(time.Since(begin).Seconds())

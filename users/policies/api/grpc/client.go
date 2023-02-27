@@ -113,7 +113,7 @@ func (client grpcClient) Issue(ctx context.Context, req *policies.IssueReq, _ ..
 	ctx, close := context.WithTimeout(ctx, client.timeout)
 	defer close()
 
-	res, err := client.issue(ctx, issueReq{id: req.GetId(), email: req.GetEmail()})
+	res, err := client.issue(ctx, issueReq{email: req.GetEmail(), password: req.GetPassword()})
 	if err != nil {
 		return nil, err
 	}
@@ -124,12 +124,12 @@ func (client grpcClient) Issue(ctx context.Context, req *policies.IssueReq, _ ..
 
 func encodeIssueRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(issueReq)
-	return &policies.IssueReq{Id: req.id, Email: req.email}, nil
+	return &policies.IssueReq{Email: req.email, Password: req.password}, nil
 }
 
 func decodeIssueResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(*policies.UserIdentity)
-	return identityRes{id: res.GetId(), email: res.GetEmail()}, nil
+	return identityRes{id: res.GetId()}, nil
 }
 
 func (client grpcClient) Identify(ctx context.Context, token *policies.Token, _ ...grpc.CallOption) (*policies.UserIdentity, error) {
@@ -142,7 +142,7 @@ func (client grpcClient) Identify(ctx context.Context, token *policies.Token, _ 
 	}
 
 	ir := res.(identityRes)
-	return &policies.UserIdentity{Id: ir.id, Email: ir.email}, nil
+	return &policies.UserIdentity{Id: ir.id}, nil
 }
 
 func encodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
@@ -152,7 +152,7 @@ func encodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{},
 
 func decodeIdentifyResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(*policies.UserIdentity)
-	return identityRes{id: res.GetId(), email: res.GetEmail()}, nil
+	return identityRes{id: res.GetId()}, nil
 }
 
 func (client grpcClient) AddPolicy(ctx context.Context, in *policies.AddPolicyReq, opts ...grpc.CallOption) (*policies.AddPolicyRes, error) {

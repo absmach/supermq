@@ -9,7 +9,8 @@ type Page struct {
 	Offset   uint64
 	Limit    uint64
 	Name     string
-	OwnerID  string
+	Identity string
+	Owner    string
 	Tag      string
 	Metadata Metadata
 	SharedBy string

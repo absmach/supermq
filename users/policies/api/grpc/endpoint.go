@@ -31,7 +31,7 @@ func issueEndpoint(svc clients.Service) endpoint.Endpoint {
 			return issueRes{}, err
 		}
 
-		tkn, err := svc.IssueToken(ctx, req.email, "")
+		tkn, err := svc.IssueToken(ctx, req.email, req.password)
 		if err != nil {
 			return issueRes{}, err
 		}
@@ -47,14 +47,13 @@ func identifyEndpoint(svc clients.Service) endpoint.Endpoint {
 			return identityRes{}, err
 		}
 
-		ir, err := svc.Identify(ctx, req.token)
+		id, err := svc.Identify(ctx, req.token)
 		if err != nil {
 			return identityRes{}, err
 		}
 
 		ret := identityRes{
-			id:    ir.ID,
-			email: ir.Email,
+			id: id,
 		}
 		return ret, nil
 	}

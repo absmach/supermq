@@ -6,8 +6,8 @@ package mocks
 import (
 	"context"
 
-	"github.com/mainflux/mainflux/users/policies"
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/mainflux/mainflux/users/policies"
 	"google.golang.org/grpc"
 )
 
@@ -24,7 +24,7 @@ func NewAuthClient(users map[string]string) policies.AuthServiceClient {
 
 func (svc serviceMock) Identify(ctx context.Context, in *policies.Token, opts ...grpc.CallOption) (*policies.UserIdentity, error) {
 	if id, ok := svc.users[in.Value]; ok {
-		return &policies.UserIdentity{Email: id, Id: id}, nil
+		return &policies.UserIdentity{Id: id}, nil
 	}
 	return nil, errors.ErrAuthentication
 }

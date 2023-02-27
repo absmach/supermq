@@ -24,6 +24,7 @@ const (
 	ClientKey        = "client"
 	GroupKey         = "group"
 	ActionKey        = "action"
+	IdentityKey      = "identifier"
 	IdentifierKey    = "identifier"
 	TagKey           = "tag"
 	NameKey          = "name"

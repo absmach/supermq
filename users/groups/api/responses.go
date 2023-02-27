@@ -102,9 +102,8 @@ type groupPageRes struct {
 type pageRes struct {
 	Limit  uint64 `json:"limit,omitempty"`
 	Offset uint64 `json:"offset,omitempty"`
-	Total  uint64 `json:"total"`
-	Level  uint64 `json:"level"`
-	Name   string `json:"name"`
+	Total  uint64 `json:"total,omitempty"`
+	Level  uint64 `json:"level,omitempty"`
 }
 
 func (res groupPageRes) Code() int {

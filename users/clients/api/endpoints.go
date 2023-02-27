@@ -33,11 +33,11 @@ func viewClientEndpoint(svc clients.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		c, err := svc.ViewClient(ctx, req.token, req.id)
+		client, err := svc.ViewClient(ctx, req.token, req.id)
 		if err != nil {
 			return nil, err
 		}
-		return viewClientRes{Client: c}, nil
+		return viewClientRes{Client: client}, nil
 	}
 }
 
@@ -48,12 +48,12 @@ func viewProfileEndpoint(svc clients.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		c, err := svc.ViewProfile(ctx, req.token)
+		client, err := svc.ViewProfile(ctx, req.token)
 		if err != nil {
 			return nil, err
 		}
 		return viewClientRes{
-			Client: c,
+			Client: client,
 		}, nil
 	}
 }
@@ -70,7 +70,7 @@ func listClientsEndpoint(svc clients.Service) endpoint.Endpoint {
 			Status:   req.status,
 			Offset:   req.offset,
 			Limit:    req.limit,
-			OwnerID:  req.owner,
+			Owner:    req.owner,
 			Name:     req.name,
 			Tag:      req.tag,
 			Metadata: req.metadata,
@@ -88,8 +88,8 @@ func listClientsEndpoint(svc clients.Service) endpoint.Endpoint {
 			},
 			Clients: []viewClientRes{},
 		}
-		for _, c := range page.Clients {
-			res.Clients = append(res.Clients, viewClientRes{Client: c})
+		for _, client := range page.Clients {
+			res.Clients = append(res.Clients, viewClientRes{Client: client})
 		}
 
 		return res, nil
@@ -117,12 +117,12 @@ func updateClientEndpoint(svc clients.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		cli := clients.Client{
+		client := clients.Client{
 			ID:       req.id,
 			Name:     req.Name,
 			Metadata: req.Metadata,
 		}
-		client, err := svc.UpdateClient(ctx, req.token, cli)
+		client, err := svc.UpdateClient(ctx, req.token, client)
 		if err != nil {
 			return nil, err
 		}
@@ -137,11 +137,11 @@ func updateClientTagsEndpoint(svc clients.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		cli := clients.Client{
+		client := clients.Client{
 			ID:   req.id,
 			Tags: req.Tags,
 		}
-		client, err := svc.UpdateClientTags(ctx, req.token, cli)
+		client, err := svc.UpdateClientTags(ctx, req.token, client)
 		if err != nil {
 			return nil, err
 		}
@@ -228,12 +228,12 @@ func updateClientOwnerEndpoint(svc clients.Service) endpoint.Endpoint {
 			return nil, err
 		}
 
-		cli := clients.Client{
+		client := clients.Client{
 			ID:    req.id,
 			Owner: req.Owner,
 		}
 
-		client, err := svc.UpdateClientOwner(ctx, req.token, cli)
+		client, err := svc.UpdateClientOwner(ctx, req.token, client)
 		if err != nil {
 			return nil, err
 		}
@@ -252,7 +252,6 @@ func issueTokenEndpoint(svc clients.Service) endpoint.Endpoint {
 		if err != nil {
 			return nil, err
 		}
-
 		return tokenRes{
 			AccessToken:  token.AccessToken,
 			RefreshToken: token.RefreshToken,
@@ -318,8 +317,8 @@ func buildMembersResponse(cp clients.MembersPage) memberPageRes {
 		},
 		Members: []viewMembersRes{},
 	}
-	for _, c := range cp.Members {
-		res.Members = append(res.Members, viewMembersRes{Client: c})
+	for _, client := range cp.Members {
+		res.Members = append(res.Members, viewMembersRes{Client: client})
 	}
 	return res
 }

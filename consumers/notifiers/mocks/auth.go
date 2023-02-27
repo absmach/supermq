@@ -24,7 +24,7 @@ func NewAuth(users map[string]string) policies.AuthServiceClient {
 
 func (svc authServiceMock) Identify(ctx context.Context, in *policies.Token, opts ...grpc.CallOption) (*policies.UserIdentity, error) {
 	if id, ok := svc.users[in.Value]; ok {
-		return &policies.UserIdentity{Id: id, Email: id}, nil
+		return &policies.UserIdentity{Id: id}, nil
 	}
 	return nil, errors.ErrAuthentication
 }

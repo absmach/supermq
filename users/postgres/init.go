@@ -52,7 +52,7 @@ func Migration() *migrate.MemoryMigrationSource {
 				Down: []string{
 					`DROP TABLE IF EXISTS clients`,
 					`DROP TABLE IF EXISTS groups`,
-					`DROP TABLE IF EXISTS memberships`,
+					`DROP TABLE IF EXISTS policies`,
 				},
 			},
 		},

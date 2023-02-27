@@ -45,15 +45,17 @@ func (req identityReq) validate() error {
 }
 
 type issueReq struct {
-	id    string
-	email string
+	email    string
+	password string
 }
 
 func (req issueReq) validate() error {
 	if req.email == "" {
 		return apiutil.ErrMissingEmail
 	}
-
+	if req.password == "" {
+		return apiutil.ErrMissingPass
+	}
 	return nil
 }
 

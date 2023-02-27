@@ -196,7 +196,6 @@ func convertPoliciesPage(p sdk.PageMetadata) policies.Page {
 		Total:  p.Total,
 		Offset: p.Offset,
 		Limit:  p.Limit,
-		Name:   p.Name,
 		Action: p.Action,
 		Tag:    p.Tag,
 	}
