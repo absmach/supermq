@@ -43,7 +43,7 @@ func NewServer(csvc clients.Service, psvc policies.Service) policies.ThingsServi
 	}
 }
 
-func (gs *grpcServer) AuthorizeKey(ctx context.Context, req *policies.TAuthorizeReq) (*policies.ClientID, error) {
+func (gs *grpcServer) AuthorizeByKey(ctx context.Context, req *policies.TAuthorizeReq) (*policies.ClientID, error) {
 	_, res, err := gs.authorizeByKey.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, encodeError(err)
