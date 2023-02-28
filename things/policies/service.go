@@ -55,8 +55,11 @@ func (svc service) Authorize(ctx context.Context, entityType string, p Policy) e
 }
 
 func (svc service) AuthorizeByKey(ctx context.Context, entityType string, p Policy) (string, error) {
-	thingID, err := svc.thingCache.ID(ctx, p.Subject)
-	if err != nil {
+	thingID, err := svc.hasThing(ctx, p)
+	if err == nil {
+		return thingID, nil
+	}
+	if err := svc.thingCache.Save(ctx, p.Subject, thingID); err != nil {
 		return "", err
 	}
 	p.Subject = thingID
@@ -152,4 +155,16 @@ func (svc service) checkActionRank(ctx context.Context, clientID string, p Polic
 
 	return apiutil.ErrHigherPolicyRank
 
+}
+
+func (svc service) hasThing(ctx context.Context, p Policy) (string, error) {
+	thingID, err := svc.thingCache.ID(ctx, p.Subject)
+	if err != nil {
+		return "", err
+	}
+	p.Subject = thingID
+	if connected := svc.policyCache.Evaluate(ctx, p); !connected {
+		return "", errors.ErrAuthorization
+	}
+	return thingID, nil
 }
