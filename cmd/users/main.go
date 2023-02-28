@@ -123,12 +123,11 @@ func main() {
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err.Error()))
 	}
-	m := bone.New()
-	hsc := httpserver.New(ctx, cancel, svcName, httpServerConfig, capi.MakeClientsHandler(csvc, m, logger), logger)
-	hsg := httpserver.New(ctx, cancel, svcName, httpServerConfig, gapi.MakeGroupsHandler(gsvc, m, logger), logger)
-	hsp := httpserver.New(ctx, cancel, svcName, httpServerConfig, papi.MakePolicyHandler(psvc, m, logger), logger)
+	mux := bone.New()
+	hsc := httpserver.New(ctx, cancel, svcName, httpServerConfig, capi.MakeClientsHandler(csvc, mux, logger), logger)
+	hsg := httpserver.New(ctx, cancel, svcName, httpServerConfig, gapi.MakeGroupsHandler(gsvc, mux, logger), logger)
+	hsp := httpserver.New(ctx, cancel, svcName, httpServerConfig, papi.MakePolicyHandler(psvc, mux, logger), logger)
 
-	// Create new grpc server
 	registerAuthServiceServer := func(srv *grpc.Server) {
 		reflection.Register(srv)
 		policies.RegisterAuthServiceServer(srv, grpcapi.NewServer(csvc, psvc))
@@ -141,7 +140,7 @@ func main() {
 	gs := grpcserver.New(ctx, cancel, svcName, grpcServerConfig, registerAuthServiceServer, logger)
 
 	g.Go(func() error {
-		return hsc.Start()
+		return hsp.Start()
 	})
 	g.Go(func() error {
 		return gs.Start()

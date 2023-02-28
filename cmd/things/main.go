@@ -108,7 +108,7 @@ func main() {
 	defer cacheClient.Close()
 
 	// Setup new auth grpc client
-	auth, authHandler, err := authClient.Setup(envPrefix, cfg.JaegerURL)
+	auth, authHandler, err := authClient.Setup(envPrefix, "localhost:6831")
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
@@ -117,23 +117,13 @@ func main() {
 
 	csvc, gsvc, psvc := newService(db, auth, cacheClient, tracer, logger)
 
-	mux := bone.New()
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to load %s gRPC server configuration : %s", svcName, err))
 	}
+	mux := bone.New()
 	hsc := httpserver.New(ctx, cancel, "things-clients", httpServerConfig, capi.MakeHandler(csvc, mux, logger), logger)
-
-	httpServerConfig = server.Config{Port: defSvcHttpPort}
-	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf("failed to load %s gRPC server configuration : %s", svcName, err.Error())
-	}
 	hsg := httpserver.New(ctx, cancel, "things-groups", httpServerConfig, gapi.MakeHandler(gsvc, mux, logger), logger)
-
-	httpServerConfig = server.Config{Port: defSvcHttpPort}
-	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
-		log.Fatalf("failed to load %s gRPC server configuration : %s", svcName, err.Error())
-	}
 	hsp := httpserver.New(ctx, cancel, "things-policies", httpServerConfig, papi.MakePolicyHandler(csvc, psvc, mux, logger), logger)
 
 	registerThingsServiceServer := func(srv *grpc.Server) {
