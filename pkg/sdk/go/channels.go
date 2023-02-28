@@ -58,7 +58,7 @@ func (sdk mfSDK) CreateChannels(chs []Channel, token string) ([]Channel, errors.
 
 	url := fmt.Sprintf("%s/%s/%s", sdk.thingsURL, channelsEndpoint, "bulk")
 
-	_, body, sdkerr := sdk.processRequest(http.MethodPost, url, token, string(CTJSON), data, http.StatusCreated)
+	_, body, sdkerr := sdk.processRequest(http.MethodPost, url, token, string(CTJSON), data, http.StatusOK)
 	if sdkerr != nil {
 		return []Channel{}, sdkerr
 	}

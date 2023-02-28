@@ -119,19 +119,23 @@ var cmdProvision = []cobra.Command{
 			}
 
 			rand.Seed(time.Now().UnixNano())
-			un := fmt.Sprintf("%s@email.com", namesgenerator.GetRandomName(0))
+			name := namesgenerator.GetRandomName(0)
 			// Create test user
 			user := mfxsdk.User{
+				Name: name,
 				Credentials: mfxsdk.Credentials{
-					Identity: un,
+					Identity: fmt.Sprintf("%s@email.com", name),
 					Secret:   "12345678",
 				},
+				Status: mfxsdk.EnabledStatus,
 			}
-			if _, err := sdk.CreateUser(user, ""); err != nil {
+			user, err := sdk.CreateUser(user, "")
+			if err != nil {
 				logError(err)
 				return
 			}
 
+			user.Credentials.Secret = "12345678"
 			ut, err := sdk.CreateToken(user)
 			if err != nil {
 				logError(err)
@@ -141,9 +145,9 @@ var cmdProvision = []cobra.Command{
 			// Create things
 			for i := 0; i < numThings; i++ {
 				n := fmt.Sprintf("d%d", i)
-
 				t := mfxsdk.Thing{
-					Name: n,
+					Name:   n,
+					Status: mfxsdk.EnabledStatus,
 				}
 
 				things = append(things, t)
@@ -159,7 +163,8 @@ var cmdProvision = []cobra.Command{
 				n := fmt.Sprintf("c%d", i)
 
 				c := mfxsdk.Channel{
-					Name: n,
+					Name:   n,
+					Status: mfxsdk.EnabledStatus,
 				}
 
 				channels = append(channels, c)

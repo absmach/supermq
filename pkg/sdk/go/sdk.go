@@ -29,6 +29,12 @@ const (
 
 	// CTBinary represents binary content type.
 	CTBinary ContentType = "application/octet-stream"
+
+	// EnabledStatus represents enable status for a client
+	EnabledStatus = "enabled"
+
+	// DisabledStatus represents disabled status for a client
+	DisabledStatus = "enabled"
 )
 
 // ContentType represents all possible content types.
