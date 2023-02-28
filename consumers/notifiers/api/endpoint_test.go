@@ -21,7 +21,6 @@ import (
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
-	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -77,7 +76,7 @@ func newService(tokens map[string]string) notifiers.Service {
 
 func newServer(svc notifiers.Service) *httptest.Server {
 	logger := logger.NewMock()
-	mux := httpapi.MakeHandler(svc, mocktracer.New(), logger)
+	mux := httpapi.MakeHandler(svc, logger)
 	return httptest.NewServer(mux)
 }
 

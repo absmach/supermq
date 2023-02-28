@@ -13,7 +13,6 @@ import (
 	"github.com/mainflux/mainflux/http/api"
 	"github.com/mainflux/mainflux/internal"
 	thingsClient "github.com/mainflux/mainflux/internal/clients/grpc/things"
-	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
@@ -34,7 +33,7 @@ const (
 type config struct {
 	LogLevel  string `env:"MF_HTTP_ADAPTER_LOG_LEVEL"   envDefault:"info"`
 	BrokerURL string `env:"MF_BROKER_URL"               envDefault:"nats://localhost:4222"`
-	JaegerURL string `env:"MF_JAEGER_URL"               envDefault:"localhost:6831"`
+	JaegerURL string `env:"MF_JAEGER_URL"               envDefault:"http://jaeger:14268/api/traces"`
 }
 
 func main() {
@@ -66,17 +65,11 @@ func main() {
 
 	svc := newService(pub, tc, logger)
 
-	tracer, closer, err := jaegerClient.NewTracer("http_adapter", cfg.JaegerURL)
-	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
-	}
-	defer closer.Close()
-
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))
 	}
-	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, tracer, logger), logger)
+	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, logger), logger)
 
 	g.Go(func() error {
 		return hs.Start()

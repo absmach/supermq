@@ -55,9 +55,7 @@ func (svc service) CreateGroups(ctx context.Context, token string, gs ...Group) 
 	if err != nil {
 		return []Group{}, errors.Wrap(errors.ErrAuthentication, err)
 	}
-	if err := svc.authorize(ctx, token, thingsObjectKey, createKey); err != nil {
-		return []Group{}, err
-	}
+
 	var grps []Group
 	for _, g := range gs {
 		if g.ID == "" {

@@ -48,7 +48,7 @@ type config struct {
 	LogLevel  string `env:"MF_CERTS_LOG_LEVEL"        envDefault:"info"`
 	CertsURL  string `env:"MF_SDK_CERTS_URL"          envDefault:"http://localhost"`
 	ThingsURL string `env:"MF_THINGS_URL"             envDefault:"http://things:8182"`
-	JaegerURL string `env:"MF_JAEGER_URL"             envDefault:"localhost:6831"`
+	JaegerURL string `env:"MF_JAEGER_URL"             envDefault:"http://jaeger:14268/api/traces"`
 
 	// Sign and issue certificates without 3rd party PKI
 	SignCAPath    string `env:"MF_CERTS_SIGN_CA_PATH"        envDefault:"ca.crt"`

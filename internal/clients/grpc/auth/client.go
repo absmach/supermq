@@ -19,7 +19,7 @@ func Setup(envPrefix, jaegerURL string) (policies.AuthServiceClient, grpcClient.
 		return nil, nil, errors.Wrap(errGrpcConfig, err)
 	}
 
-	c, ch, err := grpcClient.Setup(config, "auth", jaegerURL)
+	c, ch, err := grpcClient.Setup(config, "users", jaegerURL)
 	if err != nil {
 		return nil, nil, err
 	}

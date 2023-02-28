@@ -34,7 +34,7 @@ const (
 type config struct {
 	LogLevel  string `env:"MF_WS_ADAPTER_LOG_LEVEL"   envDefault:"info"`
 	BrokerURL string `env:"MF_BROKER_URL"             envDefault:"nats://localhost:4222"`
-	JaegerURL string `env:"MF_JAEGER_URL"             envDefault:"localhost:6831"`
+	JaegerURL string `env:"MF_JAEGER_URL"             envDefault:"http://jaeger:14268/api/traces"`
 }
 
 func main() {

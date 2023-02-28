@@ -17,7 +17,6 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/things/policies"
-	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,7 +29,7 @@ func newMessageService(cc policies.ThingsServiceClient) adapter.Service {
 
 func newMessageServer(svc adapter.Service) *httptest.Server {
 	logger := logger.NewMock()
-	mux := api.MakeHandler(svc, mocktracer.New(), logger)
+	mux := api.MakeHandler(svc, logger)
 	return httptest.NewServer(mux)
 }
 

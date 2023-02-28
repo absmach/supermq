@@ -36,31 +36,31 @@ func NewDatabase(db *sqlx.DB, tracer trace.Tracer) Database {
 }
 
 func (d database) NamedQueryContext(ctx context.Context, query string, args interface{}) (*sqlx.Rows, error) {
-	ctx, span := addSpanTags(ctx, d.tracer, "NamedQueryContext", query)
+	ctx, span := d.addSpanTags(ctx, "NamedQueryContext", query)
 	defer span.End()
 	return d.db.NamedQueryContext(ctx, query, args)
 }
 
 func (d database) NamedExecContext(ctx context.Context, query string, args interface{}) (sql.Result, error) {
-	ctx, span := addSpanTags(ctx, d.tracer, "NamedExecContext", query)
+	ctx, span := d.addSpanTags(ctx, "NamedExecContext", query)
 	defer span.End()
 	return d.db.NamedExecContext(ctx, query, args)
 }
 
 func (d database) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
-	ctx, span := addSpanTags(ctx, d.tracer, "ExecContext", query)
+	ctx, span := d.addSpanTags(ctx, "ExecContext", query)
 	defer span.End()
 	return d.db.ExecContext(ctx, query, args...)
 }
 
 func (d database) QueryRowxContext(ctx context.Context, query string, args ...interface{}) *sqlx.Row {
-	ctx, span := addSpanTags(ctx, d.tracer, "QueryRowxContext", query)
+	ctx, span := d.addSpanTags(ctx, "QueryRowxContext", query)
 	defer span.End()
 	return d.db.QueryRowxContext(ctx, query, args...)
 }
 
 func (d database) QueryxContext(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error) {
-	ctx, span := addSpanTags(ctx, d.tracer, "QueryxContext", query)
+	ctx, span := d.addSpanTags(ctx, "QueryxContext", query)
 	defer span.End()
 	return d.db.QueryxContext(ctx, query, args...)
 }
@@ -78,8 +78,8 @@ func (d database) BeginTxx(ctx context.Context, opts *sql.TxOptions) (*sqlx.Tx, 
 	return d.db.BeginTxx(ctx, opts)
 }
 
-func addSpanTags(ctx context.Context, tracer trace.Tracer, method, query string) (context.Context, trace.Span) {
-	ctx, span := tracer.Start(ctx,
+func (d database) addSpanTags(ctx context.Context, method, query string) (context.Context, trace.Span) {
+	ctx, span := d.tracer.Start(ctx,
 		fmt.Sprintf("sql_%s", method),
 		trace.WithAttributes(
 			attribute.String("sql.statement", query),

@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	kitot "github.com/go-kit/kit/tracing/opentracing"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux"
@@ -22,8 +21,8 @@ import (
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
-	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/go-kit/kit/otelkit"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -42,21 +41,21 @@ var (
 var channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc adapter.Service, tracer opentracing.Tracer, logger logger.Logger) http.Handler {
+func MakeHandler(svc adapter.Service, logger logger.Logger) http.Handler {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),
 	}
 
 	r := bone.New()
 	r.Post("/channels/:id/messages", kithttp.NewServer(
-		kitot.TraceServer(tracer, "publish")(sendMessageEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("publish"))(sendMessageEndpoint(svc)),
 		decodeRequest,
 		encodeResponse,
 		opts...,
 	))
 
 	r.Post("/channels/:id/messages/*", kithttp.NewServer(
-		kitot.TraceServer(tracer, "publish")(sendMessageEndpoint(svc)),
+		otelkit.EndpointMiddleware(otelkit.WithOperation("publish"))(sendMessageEndpoint(svc)),
 		decodeRequest,
 		encodeResponse,
 		opts...,

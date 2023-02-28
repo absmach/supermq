@@ -28,7 +28,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	"github.com/mainflux/mainflux/pkg/ulid"
 	"github.com/mainflux/mainflux/users/policies"
-	opentracing "github.com/opentracing/opentracing-go"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -45,7 +45,7 @@ type config struct {
 	ConfigPath string `env:"MF_SMTP_NOTIFIER_CONFIG_PATH" envDefault:"/config.toml"`
 	From       string `env:"MF_SMTP_NOTIFIER_FROM_ADDR"   envDefault:""`
 	BrokerURL  string `env:"MF_BROKER_URL"                envDefault:"nats://localhost:4222"`
-	JaegerURL  string `env:"MF_JAEGER_URL"                envDefault:"localhost:6831"`
+	JaegerURL  string `env:"MF_JAEGER_URL"                envDefault:"http://jaeger:14268/api/traces"`
 }
 
 func main() {
@@ -87,19 +87,18 @@ func main() {
 	defer authHandler.Close()
 	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
-	tracer, closer, err := jagerClient.NewTracer("smtp-notifier", cfg.JaegerURL)
+	tp, err := jagerClient.NewTracer("smtp-notifier_db", cfg.JaegerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
 	}
-	defer closer.Close()
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			logger.Error(fmt.Sprintf("Error shutting down tracer provider: %v", err))
+		}
+	}()
+	tracer := tp.Tracer(svcName)
 
-	dbTracer, dbCloser, err := jagerClient.NewTracer("smtp-notifier_db", cfg.JaegerURL)
-	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
-	}
-	defer dbCloser.Close()
-
-	svc := newService(db, dbTracer, auth, cfg, ec, logger)
+	svc := newService(db, tracer, auth, cfg, ec, logger)
 
 	if err = consumers.Start(svcName, pubSub, svc, cfg.ConfigPath, logger); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to create Postgres writer: %s", err))
@@ -109,7 +108,7 @@ func main() {
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))
 	}
-	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, tracer, logger), logger)
+	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, api.MakeHandler(svc, logger), logger)
 
 	g.Go(func() error {
 		return hs.Start()
@@ -125,8 +124,8 @@ func main() {
 
 }
 
-func newService(db *sqlx.DB, tracer opentracing.Tracer, auth policies.AuthServiceClient, c config, ec email.Config, logger mflog.Logger) notifiers.Service {
-	database := notifierPg.NewDatabase(db)
+func newService(db *sqlx.DB, tracer trace.Tracer, auth policies.AuthServiceClient, c config, ec email.Config, logger mflog.Logger) notifiers.Service {
+	database := notifierPg.NewDatabase(db, tracer)
 	repo := tracing.New(notifierPg.New(database), tracer)
 	idp := ulid.New()
 

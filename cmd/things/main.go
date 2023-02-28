@@ -11,6 +11,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux/internal"
 	authClient "github.com/mainflux/mainflux/internal/clients/grpc/auth"
+	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
 	redisClient "github.com/mainflux/mainflux/internal/clients/redis"
 	"github.com/mainflux/mainflux/internal/env"
@@ -37,12 +38,6 @@ import (
 	ppracing "github.com/mainflux/mainflux/things/policies/tracing"
 	thingsPg "github.com/mainflux/mainflux/things/postgres"
 	upolicies "github.com/mainflux/mainflux/users/policies"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/jaeger"
-	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/resource"
-	tracesdk "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
@@ -64,7 +59,7 @@ type config struct {
 	LogLevel        string `env:"MF_THINGS_LOG_LEVEL"          envDefault:"info"`
 	StandaloneEmail string `env:"MF_THINGS_STANDALONE_EMAIL"   envDefault:""`
 	StandaloneToken string `env:"MF_THINGS_STANDALONE_TOKEN"   envDefault:""`
-	JaegerURL       string `env:"MF_JAEGER_URL"                envDefault:"localhost:6831"`
+	JaegerURL       string `env:"MF_JAEGER_URL"                envDefault:"http://jaeger:14268/api/traces"`
 }
 
 func main() {
@@ -89,7 +84,7 @@ func main() {
 	}
 	defer db.Close()
 
-	tp, err := initJaeger(svcName, cfg.JaegerURL)
+	tp, err := jaegerClient.NewTracer(svcName, cfg.JaegerURL)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Failed to init Jaeger: %s", err))
 	}
@@ -98,7 +93,7 @@ func main() {
 			logger.Error(fmt.Sprintf("Error shutting down tracer provider: %v", err))
 		}
 	}()
-	tracer := otel.Tracer(svcName)
+	tracer := tp.Tracer(svcName)
 
 	// Setup new redis cache client
 	cacheClient, err := redisClient.Setup(envPrefixCache)
@@ -151,26 +146,6 @@ func main() {
 	if err := g.Wait(); err != nil {
 		logger.Error(fmt.Sprintf("%s service terminated: %s", svcName, err))
 	}
-}
-
-func initJaeger(svcName, url string) (*tracesdk.TracerProvider, error) {
-	exporter, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(url)))
-	if err != nil {
-		return nil, err
-	}
-	tp := tracesdk.NewTracerProvider(
-		tracesdk.WithSampler(tracesdk.AlwaysSample()),
-		tracesdk.WithBatcher(exporter),
-		tracesdk.WithSpanProcessor(tracesdk.NewBatchSpanProcessor(exporter)),
-		tracesdk.WithResource(resource.NewWithAttributes(
-			semconv.SchemaURL,
-			semconv.ServiceNameKey.String(svcName),
-		)),
-	)
-	otel.SetTracerProvider(tp)
-	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
-
-	return tp, nil
 }
 
 func newService(db *sqlx.DB, auth upolicies.AuthServiceClient, cacheClient *redis.Client, tracer trace.Tracer, logger mflog.Logger) (clients.Service, groups.Service, tpolicies.Service) {

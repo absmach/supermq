@@ -43,7 +43,7 @@ type config struct {
 	EncKey         string `env:"MF_BOOTSTRAP_ENCRYPT_KEY"      envDefault:"12345678910111213141516171819202"`
 	ESConsumerName string `env:"MF_BOOTSTRAP_EVENT_CONSUMER"   envDefault:"bootstrap"`
 	ThingsURL      string `env:"MF_THINGS_URL"                 envDefault:"http://localhost"`
-	JaegerURL      string `env:"MF_JAEGER_URL"                 envDefault:"localhost:6831"`
+	JaegerURL      string `env:"MF_JAEGER_URL"                 envDefault:"http://jaeger:14268/api/traces"`
 }
 
 func main() {

@@ -30,8 +30,8 @@ import (
 	rediscache "github.com/mainflux/mainflux/twins/redis"
 	"github.com/mainflux/mainflux/twins/tracing"
 	"github.com/mainflux/mainflux/users/policies"
-	opentracing "github.com/opentracing/opentracing-go"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -50,7 +50,7 @@ type config struct {
 	StandaloneToken string `env:"MF_TWINS_STANDALONE_TOKEN"   envDefault:""`
 	ChannelID       string `env:"MF_TWINS_CHANNEL_ID"         envDefault:""`
 	BrokerURL       string `env:"MF_BROKER_URL"               envDefault:"nats://localhost:4222"`
-	JaegerURL       string `env:"MF_JAEGER_URL"               envDefault:"localhost:6831"`
+	JaegerURL       string `env:"MF_JAEGER_URL"               envDefault:"http://jaeger:14268/api/traces"`
 }
 
 func main() {
@@ -73,22 +73,21 @@ func main() {
 	}
 	defer cacheClient.Close()
 
-	cacheTracer, cacheCloser, err := jaegerClient.NewTracer("twins_cache", cfg.JaegerURL)
-	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
-	}
-	defer cacheCloser.Close()
-
 	db, err := mongoClient.Setup(envPrefix)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to setup postgres database : %s", err))
 	}
 
-	dbTracer, dbCloser, err := jaegerClient.NewTracer("twins_db", cfg.JaegerURL)
+	tp, err := jaegerClient.NewTracer("twins_db", cfg.JaegerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
 	}
-	defer dbCloser.Close()
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			logger.Error(fmt.Sprintf("Error shutting down tracer provider: %v", err))
+		}
+	}()
+	tracer := tp.Tracer(svcName)
 
 	var auth policies.AuthServiceClient
 	switch cfg.StandaloneEmail != "" && cfg.StandaloneToken != "" {
@@ -110,19 +109,13 @@ func main() {
 	}
 	defer pubSub.Close()
 
-	svc := newService(svcName, pubSub, cfg.ChannelID, auth, dbTracer, db, cacheTracer, cacheClient, logger)
-
-	tracer, closer, err := jaegerClient.NewTracer("twins", cfg.JaegerURL)
-	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
-	}
-	defer closer.Close()
+	svc := newService(svcName, pubSub, cfg.ChannelID, auth, tracer, db, cacheClient, logger)
 
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to load %s HTTP server configuration : %s", svcName, err))
 	}
-	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, twapi.MakeHandler(tracer, svc, logger), logger)
+	hs := httpserver.New(ctx, cancel, svcName, httpServerConfig, twapi.MakeHandler(svc, logger), logger)
 
 	g.Go(func() error {
 		return hs.Start()
@@ -137,16 +130,16 @@ func main() {
 	}
 }
 
-func newService(id string, ps messaging.PubSub, chanID string, users policies.AuthServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, cacheTracer opentracing.Tracer, cacheClient *redis.Client, logger mflog.Logger) twins.Service {
+func newService(id string, ps messaging.PubSub, chanID string, users policies.AuthServiceClient, tracer trace.Tracer, db *mongo.Database, cacheClient *redis.Client, logger mflog.Logger) twins.Service {
 	twinRepo := twmongodb.NewTwinRepository(db)
-	twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, twinRepo)
+	twinRepo = tracing.TwinRepositoryMiddleware(tracer, twinRepo)
 
 	stateRepo := twmongodb.NewStateRepository(db)
-	stateRepo = tracing.StateRepositoryMiddleware(dbTracer, stateRepo)
+	stateRepo = tracing.StateRepositoryMiddleware(tracer, stateRepo)
 
 	idProvider := uuid.New()
 	twinCache := rediscache.NewTwinCache(cacheClient)
-	twinCache = tracing.TwinCacheMiddleware(cacheTracer, twinCache)
+	twinCache = tracing.TwinCacheMiddleware(tracer, twinCache)
 
 	svc := twins.New(ps, users, twinRepo, twinCache, stateRepo, idProvider, chanID, logger)
 	svc = api.LoggingMiddleware(svc, logger)

@@ -5,11 +5,13 @@ package jaeger
 
 import (
 	"errors"
-	"io"
-	"io/ioutil"
 
-	"github.com/opentracing/opentracing-go"
-	jconfig "github.com/uber/jaeger-client-go/config"
+	jaegerp "go.opentelemetry.io/contrib/propagators/jaeger"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/jaeger"
+	"go.opentelemetry.io/otel/sdk/resource"
+	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
 )
 
 var (
@@ -18,24 +20,30 @@ var (
 )
 
 // NewTracer initializes Jaeger
-func NewTracer(svcName, url string) (opentracing.Tracer, io.Closer, error) {
+func NewTracer(svcName, url string) (*tracesdk.TracerProvider, error) {
 	if url == "" {
-		return opentracing.NoopTracer{}, ioutil.NopCloser(nil), errNoUrl
+		return nil, errNoUrl
 	}
 
 	if svcName == "" {
-		return opentracing.NoopTracer{}, ioutil.NopCloser(nil), errNoSvcName
+		return nil, errNoSvcName
 	}
 
-	return jconfig.Configuration{
-		ServiceName: svcName,
-		Sampler: &jconfig.SamplerConfig{
-			Type:  "const",
-			Param: 1,
-		},
-		Reporter: &jconfig.ReporterConfig{
-			LocalAgentHostPort: url,
-			LogSpans:           true,
-		},
-	}.NewTracer()
+	exporter, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(url)))
+	if err != nil {
+		return nil, err
+	}
+	tp := tracesdk.NewTracerProvider(
+		tracesdk.WithSampler(tracesdk.AlwaysSample()),
+		tracesdk.WithBatcher(exporter),
+		tracesdk.WithSpanProcessor(tracesdk.NewBatchSpanProcessor(exporter)),
+		tracesdk.WithResource(resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceNameKey.String(svcName),
+		)),
+	)
+	otel.SetTracerProvider(tp)
+	otel.SetTextMapPropagator(jaegerp.Jaeger{})
+
+	return tp, nil
 }
