@@ -16,6 +16,7 @@ import (
 	preader "github.com/mainflux/mainflux/readers/postgres"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -99,7 +100,7 @@ func TestReadSenml(t *testing.T) {
 	}
 
 	err = writer.Consume(messages)
-	assert.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
 
 	reader := preader.New(db)
 
@@ -408,7 +409,7 @@ func TestReadJSON(t *testing.T) {
 		msgs1 = append(msgs1, m)
 	}
 	err = writer.Consume(messages1)
-	assert.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
 
 	id2, err := idProvider.ID()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -438,7 +439,7 @@ func TestReadJSON(t *testing.T) {
 		msgs2 = append(msgs2, m)
 	}
 	err = writer.Consume(messages2)
-	assert.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
 
 	httpMsgs := []map[string]interface{}{}
 	for i := 0; i < msgsNum; i += 2 {

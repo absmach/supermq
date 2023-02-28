@@ -13,6 +13,7 @@ import (
 	"github.com/mainflux/mainflux/twins/mocks"
 	"github.com/mainflux/senml"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -68,7 +69,7 @@ func TestUpdateTwin(t *testing.T) {
 
 	other.ID = wrongID
 	saved, err := svc.AddTwin(context.Background(), token, twin, def)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 
 	saved.Name = twinName
 
@@ -109,7 +110,7 @@ func TestViewTwin(t *testing.T) {
 	twin := twins.Twin{}
 	def := twins.Definition{}
 	saved, err := svc.AddTwin(context.Background(), token, twin, def)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 
 	cases := []struct {
 		desc  string
@@ -212,7 +213,7 @@ func TestRemoveTwin(t *testing.T) {
 	twin := twins.Twin{}
 	def := twins.Definition{}
 	saved, err := svc.AddTwin(context.Background(), token, twin, def)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 
 	cases := []struct {
 		desc  string
@@ -260,11 +261,11 @@ func TestSaveStates(t *testing.T) {
 	attr := def.Attributes[0]
 	attrSansTwin := mocks.CreateDefinition(channels[2:3], subtopics[2:3]).Attributes[0]
 	tw, err := svc.AddTwin(context.Background(), token, twin, def)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	defWildcard := mocks.CreateDefinition(channels[0:2], []string{twins.SubtopicWildcard, twins.SubtopicWildcard})
 	twWildcard, err := svc.AddTwin(context.Background(), token, twin, defWildcard)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	var recs = make([]senml.Record, numRecs)
 	mocks.CreateSenML(numRecs, recs)
@@ -333,19 +334,19 @@ func TestListStates(t *testing.T) {
 	def := mocks.CreateDefinition(channels[0:2], subtopics[0:2])
 	attr := def.Attributes[0]
 	tw, err := svc.AddTwin(context.Background(), token, twin, def)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	tw2, err := svc.AddTwin(context.Background(), token,
 		twins.Twin{Owner: email},
 		mocks.CreateDefinition(channels[2:3], subtopics[2:3]))
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	var recs = make([]senml.Record, numRecs)
 	mocks.CreateSenML(numRecs, recs)
 	message, err := mocks.CreateMessage(attr, recs)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	err = svc.SaveStates(message)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	cases := []struct {
 		desc   string

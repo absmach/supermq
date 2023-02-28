@@ -16,6 +16,7 @@ import (
 	"github.com/mainflux/mainflux/readers"
 	mreader "github.com/mainflux/mainflux/readers/mongodb"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -51,7 +52,7 @@ var (
 
 func TestReadSenml(t *testing.T) {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
-	assert.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
+	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
 
 	db := client.Database(testDB)
 	writer := mwriter.New(db)
@@ -109,7 +110,7 @@ func TestReadSenml(t *testing.T) {
 		messages = append(messages, msg)
 	}
 	err = writer.Consume(messages)
-	assert.Nil(t, err, fmt.Sprintf("failed to store message to MongoDB: %s", err))
+	require.Nil(t, err, fmt.Sprintf("failed to store message to MongoDB: %s", err))
 	reader := mreader.New(db)
 
 	cases := map[string]struct {
@@ -382,13 +383,13 @@ func TestReadSenml(t *testing.T) {
 
 func TestReadJSON(t *testing.T) {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
-	assert.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
+	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
 
 	db := client.Database(testDB)
 	writer := mwriter.New(db)
 
 	id1, err := idProvider.ID()
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	m := json.Message{
 		Channel:   id1,
 		Publisher: id1,
@@ -416,7 +417,7 @@ func TestReadJSON(t *testing.T) {
 		msgs1 = append(msgs1, m)
 	}
 	err = writer.Consume(messages1)
-	assert.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
 
 	id2, err := idProvider.ID()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -449,7 +450,7 @@ func TestReadJSON(t *testing.T) {
 		msgs2 = append(msgs2, m)
 	}
 	err = writer.Consume(messages2)
-	assert.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
 
 	httpMsgs := []map[string]interface{}{}
 	for i := 0; i < msgsNum; i += 2 {

@@ -539,8 +539,10 @@ func test(t *testing.T, expected, actual map[string]interface{}, description str
 		ts1 := expected["timestamp"].(int64)
 		ts2, err := strconv.ParseInt(actual["timestamp"].(string), 10, 64)
 		assert.Nil(t, err, fmt.Sprintf("%s: expected to get a valid timestamp, got %s", description, err))
+
 		val := ts1 == ts2 || ts2 <= ts1+defaultTimout
 		assert.True(t, val, fmt.Sprintf("%s: timestamp is not in valid range", description))
+
 		delete(expected, "timestamp")
 		delete(actual, "timestamp")
 		assert.Equal(t, expected, actual, fmt.Sprintf("%s: expected %v got %v\n", description, expected, actual))

@@ -19,6 +19,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const valueFields = 5
@@ -142,7 +143,7 @@ func TestSaveSenml(t *testing.T) {
 		for _, tc := range cases {
 			// Clean previously saved messages.
 			_, err := queryDB(dropMsgs)
-			assert.Nil(t, err, fmt.Sprintf("Cleaning data from InfluxDB expected to succeed: %s.\n", err))
+			require.Nil(t, err, fmt.Sprintf("Cleaning data from InfluxDB expected to succeed: %s.\n", err))
 
 			now := time.Now().UnixNano()
 			msg := senml.Message{

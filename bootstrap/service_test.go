@@ -27,6 +27,7 @@ import (
 	"github.com/mainflux/mainflux/things"
 	httpapi "github.com/mainflux/mainflux/things/api/things/http"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -759,7 +760,7 @@ func TestDisconnectThingsHandler(t *testing.T) {
 	svc := newService(users, server.URL)
 
 	saved, err := svc.Add(context.Background(), validToken, config)
-	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	cases := []struct {
 		desc      string

@@ -21,6 +21,7 @@ import (
 	httpapi "github.com/mainflux/mainflux/things/api/auth/http"
 	"github.com/mainflux/mainflux/things/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -90,7 +91,7 @@ func TestIdentify(t *testing.T) {
 	defer ts.Close()
 
 	ths, err := svc.CreateThings(context.Background(), token, thing)
-	assert.Nil(t, err, fmt.Sprintf("failed to create thing: %s", err))
+	require.Nil(t, err, fmt.Sprintf("failed to create thing: %s", err))
 	th := ths[0]
 
 	ir := identifyReq{Token: th.Key}
@@ -156,15 +157,15 @@ func TestCanAccessByKey(t *testing.T) {
 	defer ts.Close()
 
 	ths, err := svc.CreateThings(context.Background(), token, thing)
-	assert.Nil(t, err, fmt.Sprintf("failed to create thing: %s", err))
+	require.Nil(t, err, fmt.Sprintf("failed to create thing: %s", err))
 	th := ths[0]
 
 	chs, err := svc.CreateChannels(context.Background(), token, channel)
-	assert.Nil(t, err, fmt.Sprintf("failed to create channel: %s", err))
+	require.Nil(t, err, fmt.Sprintf("failed to create channel: %s", err))
 	ch := chs[0]
 
 	err = svc.Connect(context.Background(), token, []string{ch.ID}, []string{th.ID})
-	assert.Nil(t, err, fmt.Sprintf("failed to connect thing and channel: %s", err))
+	require.Nil(t, err, fmt.Sprintf("failed to connect thing and channel: %s", err))
 
 	data := toJSON(canAccessByKeyReq{
 		Token: th.Key,
@@ -248,15 +249,15 @@ func TestCanAccessByID(t *testing.T) {
 	defer ts.Close()
 
 	ths, err := svc.CreateThings(context.Background(), token, thing)
-	assert.Nil(t, err, fmt.Sprintf("failed to create thing: %s", err))
+	require.Nil(t, err, fmt.Sprintf("failed to create thing: %s", err))
 	th := ths[0]
 
 	chs, err := svc.CreateChannels(context.Background(), token, channel)
-	assert.Nil(t, err, fmt.Sprintf("failed to create channel: %s", err))
+	require.Nil(t, err, fmt.Sprintf("failed to create channel: %s", err))
 	ch := chs[0]
 
 	err = svc.Connect(context.Background(), token, []string{ch.ID}, []string{th.ID})
-	assert.Nil(t, err, fmt.Sprintf("failed to connect thing and channel: %s", err))
+	require.Nil(t, err, fmt.Sprintf("failed to connect thing and channel: %s", err))
 
 	data := toJSON(canAccessByIDReq{
 		ThingID: th.ID,

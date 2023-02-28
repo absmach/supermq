@@ -28,6 +28,7 @@ import (
 	thmocks "github.com/mainflux/mainflux/things/mocks"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -91,7 +92,7 @@ func newThingsService(auth mainflux.AuthServiceClient) things.Service {
 
 func TestIssueCert(t *testing.T) {
 	svc, err := newService(map[string]string{token: email})
-	assert.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
 
 	cases := []struct {
 		token   string
@@ -137,10 +138,10 @@ func TestIssueCert(t *testing.T) {
 
 func TestRevokeCert(t *testing.T) {
 	svc, err := newService(map[string]string{token: email})
-	assert.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
 
 	_, err = svc.IssueCert(context.Background(), token, thingID, ttl)
-	assert.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
 
 	cases := []struct {
 		token   string
@@ -177,11 +178,11 @@ func TestRevokeCert(t *testing.T) {
 
 func TestListCerts(t *testing.T) {
 	svc, err := newService(map[string]string{token: email})
-	assert.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
 
 	for i := 0; i < certNum; i++ {
 		_, err = svc.IssueCert(context.Background(), token, thingID, ttl)
-		assert.Nil(t, err, fmt.Sprintf("unexpected cert creation error: %s\n", err))
+		require.Nil(t, err, fmt.Sprintf("unexpected cert creation error: %s\n", err))
 	}
 
 	cases := []struct {
@@ -241,7 +242,7 @@ func TestListCerts(t *testing.T) {
 
 func TestListSerials(t *testing.T) {
 	svc, err := newService(map[string]string{token: email})
-	assert.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
 
 	var issuedCerts []certs.Cert
 	for i := 0; i < certNum; i++ {
@@ -313,10 +314,10 @@ func TestListSerials(t *testing.T) {
 
 func TestViewCert(t *testing.T) {
 	svc, err := newService(map[string]string{token: email})
-	assert.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected service creation error: %s\n", err))
 
 	ic, err := svc.IssueCert(context.Background(), token, thingID, ttl)
-	assert.Nil(t, err, fmt.Sprintf("unexpected cert creation error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected cert creation error: %s\n", err))
 
 	cert := certs.Cert{
 		ThingID:    thingID,

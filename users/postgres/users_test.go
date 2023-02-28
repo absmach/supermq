@@ -13,6 +13,7 @@ import (
 	"github.com/mainflux/mainflux/users"
 	"github.com/mainflux/mainflux/users/postgres"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var idProvider = uuid.New()
@@ -92,7 +93,7 @@ func TestSingleUserRetrieval(t *testing.T) {
 	}
 
 	_, err = repo.Save(context.Background(), user)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	cases := []struct {
 		desc     string

@@ -14,6 +14,7 @@ import (
 	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/things/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -103,7 +104,7 @@ func TestCreateThings(t *testing.T) {
 func TestUpdateThing(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 	ths, err := svc.CreateThings(context.Background(), token, thingList[0])
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	th := ths[0]
 	other := things.Thing{ID: wrongID, Key: "x"}
 
@@ -143,7 +144,7 @@ func TestUpdateKey(t *testing.T) {
 	key := "new-key"
 	svc := newService(map[string]string{token: email})
 	ths, err := svc.CreateThings(context.Background(), token, thing)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	th := ths[0]
 
 	cases := []struct {
@@ -185,7 +186,7 @@ func TestUpdateKey(t *testing.T) {
 func TestShareThing(t *testing.T) {
 	svc := newService(map[string]string{token: email, token2: email2})
 	ths, err := svc.CreateThings(context.Background(), token, thingList[0])
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	th := ths[0]
 	policies := []string{"read"}
 
@@ -241,7 +242,7 @@ func TestShareThing(t *testing.T) {
 func TestViewThing(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 	ths, err := svc.CreateThings(context.Background(), token, thingList[0])
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	th := ths[0]
 
 	cases := []struct {
@@ -295,7 +296,7 @@ func TestListThings(t *testing.T) {
 	}
 
 	_, err := svc.CreateThings(context.Background(), token, ths...)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	cases := []struct {
 		desc         string
@@ -416,7 +417,7 @@ func TestListThingsByChannel(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 
 	chs, err := svc.CreateChannels(context.Background(), token, channel)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	ch := chs[0]
 
 	thsDisconNum := uint64(4)
@@ -428,7 +429,7 @@ func TestListThingsByChannel(t *testing.T) {
 	}
 
 	thsc, err := svc.CreateThings(context.Background(), token, ths...)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	var thIDs []string
 	for _, thID := range thsc {
@@ -437,7 +438,7 @@ func TestListThingsByChannel(t *testing.T) {
 	chIDs := []string{chs[0].ID}
 
 	err = svc.Connect(context.Background(), token, chIDs, thIDs[0:n-thsDisconNum])
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 
 	// Wait for things and channels to connect
 	time.Sleep(time.Second)
@@ -609,7 +610,7 @@ func TestListThingsByChannel(t *testing.T) {
 func TestRemoveThing(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 	ths, err := svc.CreateThings(context.Background(), token, thingList[0])
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	sth := ths[0]
 
 	cases := []struct {
@@ -694,7 +695,7 @@ func TestCreateChannels(t *testing.T) {
 func TestUpdateChannel(t *testing.T) {
 	svc := newService(map[string]string{token: adminEmail})
 	chs, err := svc.CreateChannels(context.Background(), token, channel)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	ch := chs[0]
 	other := things.Channel{ID: wrongID}
 
@@ -733,7 +734,7 @@ func TestUpdateChannel(t *testing.T) {
 func TestViewChannel(t *testing.T) {
 	svc := newService(map[string]string{token: adminEmail})
 	chs, err := svc.CreateChannels(context.Background(), token, channel)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	ch := chs[0]
 
 	cases := []struct {
@@ -795,7 +796,7 @@ func TestListChannels(t *testing.T) {
 	}
 
 	_, err := svc.CreateChannels(context.Background(), token, chs...)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	cases := []struct {
 		desc         string
@@ -938,7 +939,7 @@ func TestListChannelsByThing(t *testing.T) {
 	svc := newService(map[string]string{token: email})
 
 	ths, err := svc.CreateThings(context.Background(), token, thingList[0])
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	th := ths[0]
 
 	chsDisconNum := uint64(4)
@@ -951,7 +952,7 @@ func TestListChannelsByThing(t *testing.T) {
 	}
 
 	chsc, err := svc.CreateChannels(context.Background(), token, chs...)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	var chIDs []string
 	for _, chID := range chsc {
@@ -960,7 +961,7 @@ func TestListChannelsByThing(t *testing.T) {
 	thIDs := []string{ths[0].ID}
 
 	err = svc.Connect(context.Background(), token, chIDs[0:n-chsDisconNum], thIDs)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 
 	// Wait for things and channels to connect.
 	time.Sleep(time.Second)
@@ -1132,7 +1133,7 @@ func TestListChannelsByThing(t *testing.T) {
 func TestRemoveChannel(t *testing.T) {
 	svc := newService(map[string]string{token: adminEmail})
 	chs, err := svc.CreateChannels(context.Background(), token, channel)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	ch := chs[0]
 
 	cases := []struct {

@@ -14,6 +14,7 @@ import (
 	ireader "github.com/mainflux/mainflux/readers/influxdb"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -110,8 +111,7 @@ func TestReadSenml(t *testing.T) {
 	}
 
 	err = writer.Consume(messages)
-	assert.Nil(t, err, fmt.Sprintf("failed to store message to InfluxDB: %s", err))
-	assert.Nil(t, err, fmt.Sprintf("failed to store message to InfluxDB: %s", err))
+	require.Nil(t, err, fmt.Sprintf("failed to store message to InfluxDB: %s", err))
 
 	reader := ireader.New(client, repoCfg)
 
@@ -433,7 +433,7 @@ func TestReadJSON(t *testing.T) {
 		msgs1 = append(msgs1, m)
 	}
 	err = writer.Consume(messages1)
-	assert.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
 
 	id2, err := idProvider.ID()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))

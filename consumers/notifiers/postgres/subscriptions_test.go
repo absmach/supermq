@@ -12,6 +12,7 @@ import (
 	"github.com/mainflux/mainflux/consumers/notifiers/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -72,7 +73,7 @@ func TestView(t *testing.T) {
 	repo := postgres.New(dbMiddleware)
 
 	id, err := idProvider.ID()
-	assert.Nil(t, err, fmt.Sprintf("got an error creating id: %s", err))
+	require.Nil(t, err, fmt.Sprintf("got an error creating id: %s", err))
 
 	sub := notifiers.Subscription{
 		OwnerID: id,
@@ -82,8 +83,8 @@ func TestView(t *testing.T) {
 	}
 
 	ret, err := repo.Save(context.Background(), sub)
-	assert.Nil(t, err, fmt.Sprintf("creating subscription must not fail: %s", err))
-	assert.Equal(t, id, ret, fmt.Sprintf("provided id %s must be the same as the returned id %s", id, ret))
+	require.Nil(t, err, fmt.Sprintf("creating subscription must not fail: %s", err))
+	require.Equal(t, id, ret, fmt.Sprintf("provided id %s must be the same as the returned id %s", id, ret))
 
 	cases := []struct {
 		desc string
@@ -115,7 +116,7 @@ func TestView(t *testing.T) {
 
 func TestRetrieveAll(t *testing.T) {
 	_, err := db.Exec("DELETE FROM subscriptions")
-	assert.Nil(t, err, fmt.Sprintf("cleanup must not fail: %s", err))
+	require.Nil(t, err, fmt.Sprintf("cleanup must not fail: %s", err))
 
 	dbMiddleware := postgres.NewDatabase(db)
 	repo := postgres.New(dbMiddleware)
@@ -133,8 +134,8 @@ func TestRetrieveAll(t *testing.T) {
 		}
 
 		ret, err := repo.Save(context.Background(), sub)
-		assert.Nil(t, err, fmt.Sprintf("creating subscription must not fail: %s", err))
-		assert.Equal(t, id, ret, fmt.Sprintf("provided id %s must be the same as the returned id %s", id, ret))
+		require.Nil(t, err, fmt.Sprintf("creating subscription must not fail: %s", err))
+		require.Equal(t, id, ret, fmt.Sprintf("provided id %s must be the same as the returned id %s", id, ret))
 		subs = append(subs, sub)
 	}
 
@@ -224,7 +225,7 @@ func TestRemove(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
 	repo := postgres.New(dbMiddleware)
 	id, err := idProvider.ID()
-	assert.Nil(t, err, fmt.Sprintf("got an error creating id: %s", err))
+	require.Nil(t, err, fmt.Sprintf("got an error creating id: %s", err))
 	sub := notifiers.Subscription{
 		OwnerID: id,
 		ID:      id,
@@ -233,8 +234,8 @@ func TestRemove(t *testing.T) {
 	}
 
 	ret, err := repo.Save(context.Background(), sub)
-	assert.Nil(t, err, fmt.Sprintf("creating subscription must not fail: %s", err))
-	assert.Equal(t, id, ret, fmt.Sprintf("provided id %s must be the same as the returned id %s", id, ret))
+	require.Nil(t, err, fmt.Sprintf("creating subscription must not fail: %s", err))
+	require.Equal(t, id, ret, fmt.Sprintf("provided id %s must be the same as the returned id %s", id, ret))
 
 	cases := []struct {
 		desc string

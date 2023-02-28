@@ -15,6 +15,7 @@ import (
 	"github.com/mainflux/mainflux/things"
 	"github.com/mainflux/mainflux/things/postgres"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const maxNameSize = 1024
@@ -352,7 +353,7 @@ func TestThingRetrieveByKey(t *testing.T) {
 	}
 
 	ths, err := thingRepo.Save(context.Background(), th)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	th.ID = ths[0].ID
 
 	cases := []struct {
@@ -385,7 +386,7 @@ func TestThingRetrieveByKey(t *testing.T) {
 func TestMultiThingRetrieval(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
 	err := cleanTestTable(context.Background(), "things", dbMiddleware)
-	assert.Nil(t, err, fmt.Sprintf("cleaning table 'things' expected to success %v", err))
+	require.Nil(t, err, fmt.Sprintf("cleaning table 'things' expected to success %v", err))
 	thingRepo := postgres.NewThingRepository(dbMiddleware)
 
 	email := "thing-multi-retrieval@example.com"
@@ -586,7 +587,7 @@ func TestMultiThingRetrievalByChannel(t *testing.T) {
 		ID:    chID,
 		Owner: email,
 	})
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	for i := uint64(0); i < n; i++ {
 		thID, err := idProvider.ID()

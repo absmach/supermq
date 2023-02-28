@@ -26,6 +26,7 @@ import (
 	"github.com/mainflux/mainflux/users/mocks"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -264,7 +265,7 @@ func TestLogin(t *testing.T) {
 		Password: validPass,
 	})
 	_, err := svc.Register(context.Background(), token, user)
-	assert.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
 
 	cases := []struct {
 		desc        string
@@ -364,7 +365,7 @@ func TestUser(t *testing.T) {
 	token := tkn.GetValue()
 
 	userID, err := svc.Register(context.Background(), token, user)
-	assert.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
 
 	cases := []struct {
 		desc       string
@@ -430,7 +431,7 @@ func TestPasswordResetRequest(t *testing.T) {
 	token := tkn.GetValue()
 
 	_, err := svc.Register(context.Background(), token, user)
-	assert.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
 
 	cases := []struct {
 		desc        string
@@ -488,7 +489,7 @@ func TestPasswordReset(t *testing.T) {
 	token := tkn.GetValue()
 
 	_, err = svc.Register(context.Background(), token, user)
-	assert.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
 
 	reqData.Password = user.Password
 	reqData.ConfPass = user.Password
@@ -565,7 +566,7 @@ func TestPasswordChange(t *testing.T) {
 	}{}
 
 	_, err := svc.Register(context.Background(), token, user)
-	assert.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("register user got unexpected error: %s", err))
 
 	reqData.Password = user.Password
 	reqData.OldPassw = user.Password

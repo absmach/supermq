@@ -13,6 +13,7 @@ import (
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/senml"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/mainflux/mainflux/twins/mocks"
 )
@@ -46,15 +47,15 @@ func TestListStates(t *testing.T) {
 	}
 	def := mocks.CreateDefinition(channels[0:2], subtopics[0:2])
 	tw, err := svc.AddTwin(context.Background(), token, twin, def)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	attr := def.Attributes[0]
 
 	var recs = make([]senml.Record, numRecs)
 	mocks.CreateSenML(numRecs, recs)
 	message, err := mocks.CreateMessage(attr, recs)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 	err = svc.SaveStates(message)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	var data []stateRes
 	for i := 0; i < len(recs); i++ {

@@ -15,6 +15,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var idProvider = uuid.New()
@@ -126,7 +127,7 @@ func TestIssue(t *testing.T) {
 func TestRevoke(t *testing.T) {
 	svc := newService()
 	_, secret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
-	assert.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
+	require.Nil(t, err, fmt.Sprintf("Issuing login key expected to succeed: %s", err))
 	key := auth.Key{
 		Type:     auth.APIKey,
 		IssuedAt: time.Now(),
@@ -134,7 +135,7 @@ func TestRevoke(t *testing.T) {
 		Subject:  email,
 	}
 	newKey, _, err := svc.Issue(context.Background(), secret, key)
-	assert.Nil(t, err, fmt.Sprintf("Issuing user's key expected to succeed: %s", err))
+	require.Nil(t, err, fmt.Sprintf("Issuing user's key expected to succeed: %s", err))
 
 	cases := []struct {
 		desc  string

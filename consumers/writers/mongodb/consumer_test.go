@@ -12,6 +12,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/mainflux/mainflux/consumers/writers/mongodb"
 	"github.com/mainflux/mainflux/pkg/transformers/json"
@@ -44,7 +45,7 @@ var (
 
 func TestSaveSenml(t *testing.T) {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
-	assert.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
+	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
 
 	db := client.Database(testDB)
 	repo := mongodb.New(db)
@@ -83,7 +84,7 @@ func TestSaveSenml(t *testing.T) {
 	}
 
 	err = repo.Consume(msgs)
-	assert.Nil(t, err, fmt.Sprintf("Save operation expected to succeed: %s.\n", err))
+	require.Nil(t, err, fmt.Sprintf("Save operation expected to succeed: %s.\n", err))
 
 	count, err := db.Collection(collection).CountDocuments(context.Background(), bson.D{})
 	assert.Nil(t, err, fmt.Sprintf("Querying database expected to succeed: %s.\n", err))
@@ -92,7 +93,7 @@ func TestSaveSenml(t *testing.T) {
 
 func TestSaveJSON(t *testing.T) {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(addr))
-	assert.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
+	require.Nil(t, err, fmt.Sprintf("Creating new MongoDB client expected to succeed: %s.\n", err))
 
 	db := client.Database(testDB)
 	repo := mongodb.New(db)

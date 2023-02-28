@@ -21,6 +21,7 @@ import (
 	"github.com/mainflux/mainflux/twins/mocks"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -209,7 +210,7 @@ func TestUpdateTwin(t *testing.T) {
 	twin := twins.Twin{}
 	def := twins.Definition{}
 	stw, err := svc.AddTwin(context.Background(), token, twin, def)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	twin.Name = twinName
 	data, err := toJSON(twin)
@@ -324,7 +325,7 @@ func TestViewTwin(t *testing.T) {
 	def := twins.Definition{}
 	twin := twins.Twin{}
 	stw, err := svc.AddTwin(context.Background(), token, twin, def)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	twres := twinRes{
 		Owner:    stw.Owner,
@@ -579,7 +580,7 @@ func TestRemoveTwin(t *testing.T) {
 	def := twins.Definition{}
 	twin := twins.Twin{}
 	stw, err := svc.AddTwin(context.Background(), token, twin, def)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	cases := []struct {
 		desc   string

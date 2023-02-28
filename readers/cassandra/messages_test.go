@@ -16,6 +16,7 @@ import (
 	"github.com/mainflux/mainflux/readers"
 	creader "github.com/mainflux/mainflux/readers/cassandra"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -49,11 +50,10 @@ func TestReadSenml(t *testing.T) {
 		Hosts:    []string{addr},
 		Keyspace: keyspace,
 	})
-	assert.Nil(t, err, fmt.Sprintf("failed to connect to Cassandra: %s", err))
-	assert.Nil(t, err, fmt.Sprintf("failed to connect to Cassandra: %s", err))
+	require.Nil(t, err, fmt.Sprintf("failed to connect to Cassandra: %s", err))
 	defer session.Close()
 	err = casClient.InitDB(session, cwriter.Table)
-	assert.Nil(t, err, fmt.Sprintf("failed to initialize to Cassandra: %s", err))
+	require.Nil(t, err, fmt.Sprintf("failed to initialize to Cassandra: %s", err))
 	writer := cwriter.New(session)
 
 	chanID, err := idProvider.ID()
@@ -115,8 +115,7 @@ func TestReadSenml(t *testing.T) {
 	}
 
 	err = writer.Consume(messages)
-	assert.Nil(t, err, fmt.Sprintf("failed to store message to Cassandra: %s", err))
-	assert.Nil(t, err, fmt.Sprintf("failed to store message to Cassandra: %s", err))
+	require.Nil(t, err, fmt.Sprintf("failed to store message to Cassandra: %s", err))
 
 	reader := creader.New(session)
 
@@ -419,14 +418,12 @@ func TestReadJSON(t *testing.T) {
 		Hosts:    []string{addr},
 		Keyspace: keyspace,
 	})
-	assert.Nil(t, err, fmt.Sprintf("failed to connect to Cassandra: %s", err))
-	assert.Nil(t, err, fmt.Sprintf("failed to connect to Cassandra: %s", err))
+	require.Nil(t, err, fmt.Sprintf("failed to connect to Cassandra: %s", err))
 	defer session.Close()
 	writer := cwriter.New(session)
 
 	id1, err := idProvider.ID()
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	m := json.Message{
 		Channel:   id1,
 		Publisher: id1,
@@ -454,11 +451,10 @@ func TestReadJSON(t *testing.T) {
 		msgs1 = append(msgs1, m)
 	}
 	err = writer.Consume(messages1)
-	assert.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
 
 	id2, err := idProvider.ID()
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	m = json.Message{
 		Channel:   id2,
 		Publisher: id2,
@@ -488,7 +484,7 @@ func TestReadJSON(t *testing.T) {
 		msgs2 = append(msgs2, m)
 	}
 	err = writer.Consume(messages2)
-	assert.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("expected no error got %s\n", err))
 
 	httpMsgs := []map[string]interface{}{}
 	for i := 0; i < msgsNum; i += 2 {

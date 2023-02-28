@@ -16,6 +16,7 @@ import (
 
 	"github.com/mainflux/mainflux/users/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const wrong string = "wrong-value"
@@ -93,7 +94,7 @@ func TestRegister(t *testing.T) {
 func TestLogin(t *testing.T) {
 	svc := newService()
 	_, err := svc.Register(context.Background(), user.Email, user)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	noAuthUser := users.User{
 		Email:    "email@test.com",
@@ -151,7 +152,7 @@ func TestViewUser(t *testing.T) {
 	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	token, err := svc.Login(context.Background(), user)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	u := user
 	u.Password = ""
@@ -195,10 +196,10 @@ func TestViewUser(t *testing.T) {
 func TestViewProfile(t *testing.T) {
 	svc := newService()
 	_, err := svc.Register(context.Background(), user.Email, user)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	token, err := svc.Login(context.Background(), user)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	u := user
 	u.Password = ""
@@ -233,10 +234,10 @@ func TestListUsers(t *testing.T) {
 	svc := newService()
 
 	_, err := svc.Register(context.Background(), user.Email, user)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	token, err := svc.Login(context.Background(), user)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	var nUsers = uint64(10)
 
@@ -312,10 +313,10 @@ func TestUpdateUser(t *testing.T) {
 	svc := newService()
 
 	_, err := svc.Register(context.Background(), user.Email, user)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	token, err := svc.Login(context.Background(), user)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	user.Metadata = map[string]interface{}{"role": "test"}
 
@@ -348,7 +349,7 @@ func TestUpdateUser(t *testing.T) {
 func TestGenerateResetToken(t *testing.T) {
 	svc := newService()
 	_, err := svc.Register(context.Background(), user.Email, user)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	cases := []struct {
 		desc  string
@@ -376,7 +377,7 @@ func TestGenerateResetToken(t *testing.T) {
 func TestChangePassword(t *testing.T) {
 	svc := newService()
 	_, err := svc.Register(context.Background(), user.Email, user)
-	assert.Nil(t, err, fmt.Sprintf("register user error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("register user error: %s", err))
 	token, _ := svc.Login(context.Background(), user)
 
 	cases := []struct {
@@ -419,14 +420,14 @@ func TestChangePassword(t *testing.T) {
 func TestResetPassword(t *testing.T) {
 	svc := newService()
 	_, err := svc.Register(context.Background(), user.Email, user)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	mockAuthzDB := map[string][]mocks.SubjectSet{}
 	mockAuthzDB[user.Email] = append(mockAuthzDB[user.Email], mocks.SubjectSet{Object: "authorities", Relation: "member"})
 	authSvc := mocks.NewAuthService(map[string]string{user.Email: user.Email}, mockAuthzDB)
 
 	resetToken, err := authSvc.Issue(context.Background(), &mainflux.IssueReq{Id: user.ID, Email: user.Email, Type: 2})
-	assert.Nil(t, err, fmt.Sprintf("Generating reset token expected to succeed: %s", err))
+	require.Nil(t, err, fmt.Sprintf("Generating reset token expected to succeed: %s", err))
 	cases := []struct {
 		desc     string
 		token    string
@@ -462,7 +463,7 @@ func TestResetPassword(t *testing.T) {
 func TestSendPasswordReset(t *testing.T) {
 	svc := newService()
 	_, err := svc.Register(context.Background(), user.Email, user)
-	assert.Nil(t, err, fmt.Sprintf("register user error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("register user error: %s", err))
 	token, _ := svc.Login(context.Background(), user)
 
 	cases := []struct {
@@ -497,7 +498,7 @@ func TestDisableUser(t *testing.T) {
 	user.ID = id
 	user.Status = "enabled"
 	token, err := svc.Login(context.Background(), user)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 
 	id, err = svc.Register(context.Background(), token, enabledUser1)
 	assert.Nil(t, err, fmt.Sprintf("register enabledUser1 error: %s", err))
@@ -505,12 +506,12 @@ func TestDisableUser(t *testing.T) {
 	enabledUser1.Status = "enabled"
 
 	id, err = svc.Register(context.Background(), token, enabledUser2)
-	assert.Nil(t, err, fmt.Sprintf("register enabledUser2 error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("register enabledUser2 error: %s", err))
 	enabledUser2.ID = id
 	enabledUser2.Status = "disabled"
 
 	id, err = svc.Register(context.Background(), token, disabledUser1)
-	assert.Nil(t, err, fmt.Sprintf("register disabledUser1 error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("register disabledUser1 error: %s", err))
 	disabledUser1.ID = id
 	disabledUser1.Status = "disabled"
 

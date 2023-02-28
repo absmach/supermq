@@ -15,6 +15,7 @@ import (
 	"github.com/mainflux/mainflux/things"
 	grpcapi "github.com/mainflux/mainflux/things/api/auth/grpc"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -30,19 +31,19 @@ var (
 
 func TestCanAccessByKey(t *testing.T) {
 	ths, err := svc.CreateThings(context.Background(), token, thing, thing)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	th1 := ths[0]
 	th2 := ths[1]
 
 	chs, err := svc.CreateChannels(context.Background(), token, channel)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	ch := chs[0]
 	err = svc.Connect(context.Background(), token, []string{ch.ID}, []string{th1.ID})
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 
 	usersAddr := fmt.Sprintf("localhost:%d", port)
 	conn, err := grpc.Dial(usersAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	cli := grpcapi.NewClient(conn, mocktracer.New(), time.Second)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -90,20 +91,20 @@ func TestCanAccessByKey(t *testing.T) {
 
 func TestCanAccessByID(t *testing.T) {
 	ths, err := svc.CreateThings(context.Background(), token, thing)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	th1 := ths[0]
 	ths, err = svc.CreateThings(context.Background(), token, thing)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	th2 := ths[0]
 
 	chs, err := svc.CreateChannels(context.Background(), token, channel)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	ch := chs[0]
 	svc.Connect(context.Background(), token, []string{ch.ID}, []string{th2.ID})
 
 	usersAddr := fmt.Sprintf("localhost:%d", port)
 	conn, err := grpc.Dial(usersAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	cli := grpcapi.NewClient(conn, mocktracer.New(), time.Second)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -150,12 +151,12 @@ func TestCanAccessByID(t *testing.T) {
 
 func TestIdentify(t *testing.T) {
 	ths, err := svc.CreateThings(context.Background(), token, thing)
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	sth := ths[0]
 
 	usersAddr := fmt.Sprintf("localhost:%d", port)
 	conn, err := grpc.Dial(usersAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	assert.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("unexpected error: %s\n", err))
 	cli := grpcapi.NewClient(conn, mocktracer.New(), time.Second)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()

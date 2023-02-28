@@ -13,6 +13,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/things/redis"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var idProvider = uuid.New()
@@ -20,12 +21,12 @@ var idProvider = uuid.New()
 func TestThingSave(t *testing.T) {
 	thingCache := redis.NewThingCache(redisClient)
 	key, err := idProvider.ID()
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	id := "123"
 	id2 := "124"
 
 	err = thingCache.Save(context.Background(), key, id2)
-	assert.Nil(t, err, fmt.Sprintf("Save thing to cache: expected nil got %s", err))
+	require.Nil(t, err, fmt.Sprintf("Save thing to cache: expected nil got %s", err))
 
 	cases := []struct {
 		desc string

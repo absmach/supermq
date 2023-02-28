@@ -14,6 +14,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -76,7 +77,7 @@ func TestViewSubscription(t *testing.T) {
 	svc := newService()
 	sub := notifiers.Subscription{Contact: exampleUser1, Topic: "valid.topic"}
 	id, err := svc.CreateSubscription(context.Background(), exampleUser1, sub)
-	assert.Nil(t, err, "Saving a Subscription must succeed")
+	require.Nil(t, err, "Saving a Subscription must succeed")
 	sub.ID = id
 	sub.OwnerID = exampleUser1
 
@@ -132,7 +133,7 @@ func TestListSubscriptions(t *testing.T) {
 		}
 		tmp.Topic = fmt.Sprintf("%s.%d", topic, i)
 		id, err := svc.CreateSubscription(context.Background(), token, tmp)
-		assert.Nil(t, err, "Saving a Subscription must succeed")
+		require.Nil(t, err, "Saving a Subscription must succeed")
 		tmp.ID = id
 		subs = append(subs, tmp)
 	}
@@ -236,7 +237,7 @@ func TestRemoveSubscription(t *testing.T) {
 	svc := newService()
 	sub := notifiers.Subscription{Contact: exampleUser1, Topic: "valid.topic"}
 	id, err := svc.CreateSubscription(context.Background(), exampleUser1, sub)
-	assert.Nil(t, err, "Saving a Subscription must succeed")
+	require.Nil(t, err, "Saving a Subscription must succeed")
 	sub.ID = id
 	sub.OwnerID = exampleUser1
 
@@ -286,13 +287,13 @@ func TestConsume(t *testing.T) {
 			tmp.Topic = fmt.Sprintf("%s-2", sub.Topic)
 		}
 		_, err := svc.CreateSubscription(context.Background(), exampleUser1, tmp)
-		assert.Nil(t, err, "Saving a Subscription must succeed")
+		require.Nil(t, err, "Saving a Subscription must succeed")
 	}
 
 	sub.Contact = invalidUser
 	sub.Topic = fmt.Sprintf("%s-2", sub.Topic)
 	_, err := svc.CreateSubscription(context.Background(), exampleUser1, sub)
-	assert.Nil(t, err, "Saving a Subscription must succeed")
+	require.Nil(t, err, "Saving a Subscription must succeed")
 
 	msg := messaging.Message{
 		Channel:  "topic",

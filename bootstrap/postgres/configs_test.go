@@ -13,6 +13,7 @@ import (
 	"github.com/mainflux/mainflux/bootstrap/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const numConfigs = 10
@@ -38,7 +39,7 @@ var (
 func TestSave(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	assert.Nil(t, err, "Channels cleanup expected to succeed.")
+	require.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	diff := "different"
 
@@ -100,7 +101,7 @@ func TestSave(t *testing.T) {
 func TestRetrieveByID(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	assert.Nil(t, err, "Channels cleanup expected to succeed.")
+	require.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
@@ -156,7 +157,7 @@ func TestRetrieveByID(t *testing.T) {
 func TestRetrieveAll(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	assert.Nil(t, err, "Channels cleanup expected to succeed.")
+	require.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	for i := 0; i < numConfigs; i++ {
 		c := config
@@ -237,7 +238,7 @@ func TestRetrieveAll(t *testing.T) {
 func TestRetrieveByExternalID(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	assert.Nil(t, err, "Channels cleanup expected to succeed.")
+	require.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
@@ -275,7 +276,7 @@ func TestRetrieveByExternalID(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	assert.Nil(t, err, "Channels cleanup expected to succeed.")
+	require.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
@@ -320,7 +321,7 @@ func TestUpdate(t *testing.T) {
 func TestUpdateCert(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	assert.Nil(t, err, "Channels cleanup expected to succeed.")
+	require.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
@@ -376,7 +377,7 @@ func TestUpdateCert(t *testing.T) {
 func TestUpdateConnections(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	assert.Nil(t, err, "Channels cleanup expected to succeed.")
+	require.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
@@ -449,7 +450,7 @@ func TestUpdateConnections(t *testing.T) {
 func TestRemove(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	assert.Nil(t, err, "Channels cleanup expected to succeed.")
+	require.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
@@ -476,7 +477,7 @@ func TestRemove(t *testing.T) {
 func TestChangeState(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	assert.Nil(t, err, "Channels cleanup expected to succeed.")
+	require.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
@@ -532,7 +533,7 @@ func TestChangeState(t *testing.T) {
 func TestListExisting(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	assert.Nil(t, err, "Channels cleanup expected to succeed.")
+	require.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
@@ -583,7 +584,7 @@ func TestListExisting(t *testing.T) {
 func TestRemoveThing(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	assert.Nil(t, err, "Channels cleanup expected to succeed.")
+	require.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
@@ -604,7 +605,7 @@ func TestRemoveThing(t *testing.T) {
 func TestUpdateChannel(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	assert.Nil(t, err, "Channels cleanup expected to succeed.")
+	require.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.
@@ -642,7 +643,7 @@ func TestUpdateChannel(t *testing.T) {
 func TestRemoveChannel(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	assert.Nil(t, err, "Channels cleanup expected to succeed.")
+	require.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	uid, err := uuid.NewV4()
@@ -665,7 +666,7 @@ func TestRemoveChannel(t *testing.T) {
 func TestDisconnectThing(t *testing.T) {
 	repo := postgres.NewConfigRepository(db, testLog)
 	err := deleteChannels(repo)
-	assert.Nil(t, err, "Channels cleanup expected to succeed.")
+	require.Nil(t, err, "Channels cleanup expected to succeed.")
 
 	c := config
 	// Use UUID to prevent conflicts.

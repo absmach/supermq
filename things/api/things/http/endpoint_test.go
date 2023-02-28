@@ -25,6 +25,7 @@ import (
 	"github.com/mainflux/mainflux/things/mocks"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -324,7 +325,7 @@ func TestUpdateThing(t *testing.T) {
 
 	data := toJSON(thing)
 	ths, err := svc.CreateThings(context.Background(), token, thing)
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
 	th1 := ths[0]
 
 	th2 := thing
@@ -452,7 +453,7 @@ func TestShareThing(t *testing.T) {
 	invalidPolicies := toJSON(shareThingReq{UserIDs: []string{"token2"}, Policies: []string{"wrong"}})
 
 	ths, err := svc.CreateThings(context.Background(), token, thing)
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
 	th := ths[0]
 
 	cases := []struct {
@@ -561,7 +562,7 @@ func TestUpdateKey(t *testing.T) {
 	th := thing
 	th.Key = "key"
 	ths, err := svc.CreateThings(context.Background(), token, th)
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
 	th = ths[0]
 
 	th.Key = "new-key"
@@ -682,7 +683,7 @@ func TestViewThing(t *testing.T) {
 	defer ts.Close()
 
 	ths, err := svc.CreateThings(context.Background(), token, thing)
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	th := ths[0]
 
 	data := toJSON(thingRes{
@@ -1167,7 +1168,7 @@ func TestListThingsByChannel(t *testing.T) {
 	defer ts.Close()
 
 	chs, err := svc.CreateChannels(context.Background(), token, channel)
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	ch := chs[0]
 
 	data := []thingRes{}
@@ -1351,7 +1352,7 @@ func TestRemoveThing(t *testing.T) {
 	defer ts.Close()
 
 	ths, err := svc.CreateThings(context.Background(), token, thing)
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
 	th := ths[0]
 
 	cases := []struct {
@@ -1597,7 +1598,7 @@ func TestUpdateChannel(t *testing.T) {
 	defer ts.Close()
 
 	chs, err := svc.CreateChannels(context.Background(), token, channel)
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
 	ch := chs[0]
 
 	c := channel
@@ -1718,11 +1719,11 @@ func TestViewChannel(t *testing.T) {
 	defer ts.Close()
 
 	chs, err := svc.CreateChannels(context.Background(), token, channel)
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
 	sch := chs[0]
 
 	ths, err := svc.CreateThings(context.Background(), token, thing)
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
 	th := ths[0]
 	svc.Connect(context.Background(), token, []string{sch.ID}, []string{th.ID})
 
@@ -2017,7 +2018,7 @@ func TestListChannelsByThing(t *testing.T) {
 	defer ts.Close()
 
 	ths, err := svc.CreateThings(context.Background(), token, thing)
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	th := ths[0]
 
 	channels := []channelRes{}
@@ -2357,20 +2358,20 @@ func TestCreateConnections(t *testing.T) {
 	defer ts.Close()
 
 	ths, err := svc.CreateThings(context.Background(), token, thing)
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
 	thIDs := []string{}
 	for _, th := range ths {
 		thIDs = append(thIDs, th.ID)
 	}
 
 	chs, err := svc.CreateChannels(context.Background(), token, channel)
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
 	chIDs1 := []string{}
 	for _, ch := range chs {
 		chIDs1 = append(chIDs1, ch.ID)
 	}
 	chs, err = svc.CreateChannels(context.Background(), otherToken, channel)
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
 	chIDs2 := []string{}
 	for _, ch := range chs {
 		chIDs2 = append(chIDs2, ch.ID)
@@ -2546,28 +2547,28 @@ func TestDisconnectList(t *testing.T) {
 	defer ts.Close()
 
 	ths, err := svc.CreateThings(context.Background(), token, thing)
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
 	thIDs := []string{}
 	for _, th := range ths {
 		thIDs = append(thIDs, th.ID)
 	}
 
 	chs, err := svc.CreateChannels(context.Background(), token, channel)
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
 	chIDs1 := []string{}
 	for _, ch := range chs {
 		chIDs1 = append(chIDs1, ch.ID)
 	}
 
 	chs, err = svc.CreateChannels(context.Background(), otherToken, channel)
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
 	chIDs2 := []string{}
 	for _, ch := range chs {
 		chIDs2 = append(chIDs2, ch.ID)
 	}
 
 	err = svc.Connect(context.Background(), token, chIDs1, thIDs)
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s\n", err))
 
 	cases := []struct {
 		desc        string
