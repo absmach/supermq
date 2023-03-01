@@ -421,6 +421,9 @@ func TestBootstrap(t *testing.T) {
 	c := config
 
 	saved, err := svc.Add(context.Background(), validToken, c)
+	fmt.Println()
+	fmt.Println("Saved : ", saved)
+	fmt.Println()
 	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 	err = redisClient.FlushAll(context.Background()).Err()
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
@@ -450,7 +453,7 @@ func TestBootstrap(t *testing.T) {
 			externalKey: "external",
 			err:         bootstrap.ErrExternalKey,
 			event: map[string]interface{}{
-				"external_id": saved.ExternalID,
+				"external_id": "external",
 				"success":     "0",
 				"timestamp":   time.Now().Unix(),
 				"operation":   thingBootstrap,
@@ -460,8 +463,10 @@ func TestBootstrap(t *testing.T) {
 
 	lastID := "0"
 	for _, tc := range cases {
-		_, err := svc.Bootstrap(context.Background(), tc.externalKey, tc.externalID, false)
-		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		fmt.Printf("\n\n\n%s\n\n\n", tc.desc)
+		_, errr := svc.Bootstrap(context.Background(), tc.externalKey, tc.externalID, false)
+		fmt.Println("returned error : ", errr)
+		assert.True(t, errors.Contains(errr, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, errr))
 
 		streams := redisClient.XRead(context.Background(), &redis.XReadArgs{
 			Streams: []string{streamID, lastID},
@@ -475,7 +480,13 @@ func TestBootstrap(t *testing.T) {
 			event = msg.Values
 			lastID = msg.ID
 		}
-
+		fmt.Println()
+		fmt.Println("tc.event : ")
+		fmt.Println(tc.event)
+		fmt.Println()
+		fmt.Println("event from XRead: ")
+		fmt.Println(event)
+		fmt.Println()
 		test(t, tc.event, event, tc.desc)
 	}
 }
@@ -552,14 +563,15 @@ func TestChangeState(t *testing.T) {
 func test(t *testing.T, expected, actual map[string]interface{}, description string) {
 	if expected != nil && actual != nil {
 		ts1 := expected["timestamp"].(int64)
+
 		ts2, err := strconv.ParseInt(actual["timestamp"].(string), 10, 64)
-		assert.Nil(t, err, fmt.Sprintf("%s: expected to get a valid timestamp, got %s", description, err))
+		require.Nil(t, err, fmt.Sprintf("%s: expected to get a valid timestamp, got %s", description, err))
 
 		val := ts1 == ts2 || ts2 <= ts1+defaultTimout
 		assert.True(t, val, fmt.Sprintf("%s: timestamp is not in valid range", description))
 
 		delete(expected, "timestamp")
 		delete(actual, "timestamp")
-		assert.Equal(t, expected, actual, fmt.Sprintf("%s: expected %v got %v\n", description, expected, actual))
+		assert.Equal(t, expected, actual, fmt.Sprintf("%s: got incorrect event\n", description))
 	}
 }

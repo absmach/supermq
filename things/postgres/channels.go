@@ -40,6 +40,9 @@ func NewChannelRepository(db Database) things.ChannelRepository {
 
 func (cr channelRepository) Save(ctx context.Context, channels ...things.Channel) ([]things.Channel, error) {
 	tx, err := cr.db.BeginTxx(ctx, nil)
+	fmt.Println()
+	fmt.Println("1 : ", err)
+	fmt.Println()
 	if err != nil {
 		return nil, errors.Wrap(errors.ErrCreateEntity, err)
 	}
@@ -51,27 +54,51 @@ func (cr channelRepository) Save(ctx context.Context, channels ...things.Channel
 		dbch := toDBChannel(channel)
 
 		_, err = tx.NamedExecContext(ctx, q, dbch)
+		fmt.Println()
+		fmt.Println("namedexeccontext error : ", err)
+		fmt.Println()
 		if err != nil {
-			err = tx.Rollback()
-			if err != nil {
+			if err := tx.Rollback(); err != nil {
 				return []things.Channel{}, errors.Wrap(errors.ErrCreateEntity, err)
 			}
+			// rollBackerr := tx.Rollback()
+			// fmt.Println()
+			// fmt.Println("2 : ", rollBackerr)
+			// fmt.Println()
+			// if rollBackerr != nil {
+			// 	return []things.Channel{}, errors.Wrap(errors.ErrCreateEntity, err)
+			// }
 			pgErr, ok := err.(*pgconn.PgError)
 			if ok {
 				switch pgErr.Code {
 				case pgerrcode.InvalidTextRepresentation:
+					fmt.Println()
+					fmt.Println("returning switch case 1")
+					fmt.Println()
 					return []things.Channel{}, errors.Wrap(errors.ErrMalformedEntity, err)
 				case pgerrcode.UniqueViolation:
+					fmt.Println()
+					fmt.Println("returning switch case 2")
+					fmt.Println()
 					return []things.Channel{}, errors.Wrap(errors.ErrConflict, err)
 				case pgerrcode.StringDataRightTruncationDataException:
+					fmt.Println()
+					fmt.Println("returning switch case 3")
+					fmt.Println()
 					return []things.Channel{}, errors.Wrap(errors.ErrMalformedEntity, err)
 				}
 			}
+			fmt.Println()
+			fmt.Println("returning after switch case, not ok")
+			fmt.Println()
 			return []things.Channel{}, errors.Wrap(errors.ErrCreateEntity, err)
 		}
 	}
 
 	if err = tx.Commit(); err != nil {
+		fmt.Println()
+		fmt.Println("4 : ", err)
+		fmt.Println()
 		return []things.Channel{}, errors.Wrap(errors.ErrCreateEntity, err)
 	}
 
@@ -130,12 +157,18 @@ func (cr channelRepository) RetrieveByID(ctx context.Context, owner, id string) 
 }
 
 func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, pm things.PageMetadata) (things.ChannelsPage, error) {
+	fmt.Println()
+	fmt.Println("Is tjjhfkfk")
+	fmt.Println()
 	nq, name := getNameQuery(pm.Name)
 	oq := getOrderQuery(pm.Order)
 	dq := getDirQuery(pm.Dir)
 	ownerQuery := getOwnerQuery(pm.FetchSharedThings)
 	meta, mq, err := getMetadataQuery(pm.Metadata)
 	if err != nil {
+		fmt.Println()
+		fmt.Println("1 : ", err)
+		fmt.Println()
 		return things.ChannelsPage{}, errors.Wrap(errors.ErrViewEntity, err)
 	}
 
@@ -167,6 +200,9 @@ func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, pm th
 	}
 	rows, err := cr.db.NamedQueryContext(ctx, q, params)
 	if err != nil {
+		fmt.Println()
+		fmt.Println("2 : ", err)
+		fmt.Println()
 		return things.ChannelsPage{}, errors.Wrap(errors.ErrViewEntity, err)
 	}
 	defer rows.Close()
@@ -175,6 +211,9 @@ func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, pm th
 	for rows.Next() {
 		dbch := dbChannel{Owner: owner}
 		if err := rows.StructScan(&dbch); err != nil {
+			fmt.Println()
+			fmt.Println("3 : ", err)
+			fmt.Println()
 			return things.ChannelsPage{}, errors.Wrap(errors.ErrViewEntity, err)
 		}
 		ch := toChannel(dbch)
@@ -186,6 +225,9 @@ func (cr channelRepository) RetrieveAll(ctx context.Context, owner string, pm th
 
 	total, err := total(ctx, cr.db, cq, params)
 	if err != nil {
+		fmt.Println()
+		fmt.Println("4 : ", err)
+		fmt.Println()
 		return things.ChannelsPage{}, errors.Wrap(errors.ErrViewEntity, err)
 	}
 
@@ -318,8 +360,7 @@ func (cr channelRepository) Connect(ctx context.Context, owner string, chIDs, th
 
 			_, err := tx.NamedExecContext(ctx, q, dbco)
 			if err != nil {
-				err = tx.Rollback()
-				if err != nil {
+				if err := tx.Rollback(); err != nil {
 					return errors.Wrap(things.ErrConnect, err)
 				}
 
