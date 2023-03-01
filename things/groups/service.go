@@ -14,7 +14,6 @@ import (
 // Possible token types are access and refresh tokens.
 const (
 	thingsObjectKey   = "things"
-	createKey         = "g_add"
 	updateRelationKey = "g_update"
 	listRelationKey   = "g_list"
 	deleteRelationKey = "g_delete"
