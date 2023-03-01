@@ -165,9 +165,14 @@ func disconnectEndpoint(svc policies.Service) endpoint.Endpoint {
 		if err := cr.validate(); err != nil {
 			return nil, err
 		}
+
+		if len(cr.Actions) == 0 {
+			cr.Actions = policies.PolicyTypes
+		}
 		policy := policies.Policy{
 			Subject: cr.ClientID,
 			Object:  cr.GroupID,
+			Actions: cr.Actions,
 		}
 		if err := svc.DeletePolicy(ctx, cr.token, policy); err != nil {
 			return nil, err

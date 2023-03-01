@@ -23,14 +23,18 @@ import (
 	"github.com/mainflux/mainflux/bootstrap"
 	bsapi "github.com/mainflux/mainflux/bootstrap/api"
 	"github.com/mainflux/mainflux/bootstrap/mocks"
-	"github.com/mainflux/mainflux/users/policies"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	mfsdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/things/clients"
-	thingsapi "github.com/mainflux/mainflux/things/clients/api"
+	capi "github.com/mainflux/mainflux/things/clients/api"
 	"github.com/mainflux/mainflux/things/groups"
+	gapi "github.com/mainflux/mainflux/things/groups/api"
+	tpolicies "github.com/mainflux/mainflux/things/policies"
+	papi "github.com/mainflux/mainflux/things/policies/api/http"
+	"github.com/mainflux/mainflux/users/policies"
+	upolicies "github.com/mainflux/mainflux/users/policies"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -187,14 +191,19 @@ func generateChannels() map[string]groups.Group {
 	return channels
 }
 
-func newThingsService(auth policies.AuthServiceClient) clients.Service {
-	return mocks.NewThingsService(map[string]clients.Client{}, generateChannels(), auth)
+func newThingsService(auth upolicies.AuthServiceClient) (clients.Service, groups.Service, tpolicies.Service) {
+	csvc := mocks.NewThingsService(map[string]clients.Client{}, auth)
+	gsvc := mocks.NewChannelsService(generateChannels(), auth)
+	psvc := mocks.NewPoliciesService(auth)
+	return csvc, gsvc, psvc
 }
 
-func newThingsServer(svc clients.Service) *httptest.Server {
+func newThingsServer(csvc clients.Service, gsvc groups.Service, psvc tpolicies.Service) *httptest.Server {
 	logger := logger.NewMock()
 	mux := bone.New()
-	thingsapi.MakeHandler(svc, mux, logger)
+	capi.MakeHandler(csvc, mux, logger)
+	gapi.MakeHandler(gsvc, mux, logger)
+	papi.MakePolicyHandler(csvc, psvc, mux, logger)
 	return httptest.NewServer(mux)
 }
 

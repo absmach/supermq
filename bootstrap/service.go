@@ -140,7 +140,7 @@ func (bs bootstrapService) Add(ctx context.Context, token string, cfg Config) (C
 	}
 
 	id := cfg.MFThing
-	mfThing, err := bs.thing(token, id)
+	mfThing, err := bs.thing(id, token)
 	if err != nil {
 		return Config{}, errors.Wrap(errAddBootstrap, err)
 	}
@@ -375,7 +375,7 @@ func (bs bootstrapService) identify(token string) (string, error) {
 }
 
 // Method thing retrieves Mainflux Thing creating one if an empty ID is passed.
-func (bs bootstrapService) thing(token, id string) (mfsdk.Thing, error) {
+func (bs bootstrapService) thing(id, token string) (mfsdk.Thing, error) {
 	var thing sdk.Thing
 	var err error
 
