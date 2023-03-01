@@ -26,7 +26,6 @@ import (
 	"github.com/mainflux/mainflux/things/clients"
 	httpapi "github.com/mainflux/mainflux/things/clients/api"
 	thmocks "github.com/mainflux/mainflux/things/clients/mocks"
-	"github.com/mainflux/mainflux/things/groups"
 	"github.com/mainflux/mainflux/users/policies"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -91,7 +90,7 @@ func newThingsService(auth policies.AuthServiceClient) clients.Service {
 		}
 	}
 
-	return bsmocks.NewThingsService(ths, map[string]groups.Group{}, auth)
+	return bsmocks.NewThingsService(ths, auth)
 }
 
 func TestIssueCert(t *testing.T) {
