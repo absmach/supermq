@@ -50,3 +50,6 @@ func CleanUpDB(t *testing.T, db *sqlx.DB) {
 	_, err = db.Exec("DELETE FROM clients")
 	require.Nil(t, err, fmt.Sprintf("clean clients unexpected error: %s", err))
 }
+
+
+curl --request POST --url 'https://transcribe.whisperapi.com' --header 'Authorization: Bearer 9ZHL6QGV31CCIQGNPA2SELYHNIQF6E8Q' -F "file=@YOUR_FILE_PATH" -F "diarization=false" -F "numSpeakers=1" -F "fileType=YOUR_FILE_TYPE" -F "language=en" -F "task=transcribe"

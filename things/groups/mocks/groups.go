@@ -10,13 +10,13 @@ import (
 
 const WrongID = "wrongID"
 
-var _ groups.Repository = (*grepo)(nil)
+var _ groups.Repository = (*GroupRepository)(nil)
 
-type grepo struct {
+type GroupRepository struct {
 	mock.Mock
 }
 
-func (m *grepo) Delete(ctx context.Context, id string) error {
+func (m *GroupRepository) Delete(ctx context.Context, id string) error {
 	ret := m.Called(ctx, id)
 	if id == WrongID {
 		return errors.ErrNotFound
@@ -25,7 +25,7 @@ func (m *grepo) Delete(ctx context.Context, id string) error {
 	return ret.Error(0)
 }
 
-func (m *grepo) ChangeStatus(ctx context.Context, id string, status groups.Status) (groups.Group, error) {
+func (m *GroupRepository) ChangeStatus(ctx context.Context, id string, status groups.Status) (groups.Group, error) {
 	ret := m.Called(ctx, id, status)
 
 	if id == WrongID {
@@ -38,7 +38,7 @@ func (m *grepo) ChangeStatus(ctx context.Context, id string, status groups.Statu
 	return ret.Get(0).(groups.Group), ret.Error(1)
 }
 
-func (m *grepo) Memberships(ctx context.Context, clientID string, gm groups.GroupsPage) (groups.MembershipsPage, error) {
+func (m *GroupRepository) Memberships(ctx context.Context, clientID string, gm groups.GroupsPage) (groups.MembershipsPage, error) {
 	ret := m.Called(ctx, clientID, gm)
 
 	if clientID == WrongID {
@@ -48,13 +48,13 @@ func (m *grepo) Memberships(ctx context.Context, clientID string, gm groups.Grou
 	return ret.Get(0).(groups.MembershipsPage), ret.Error(1)
 }
 
-func (m *grepo) RetrieveAll(ctx context.Context, gm groups.GroupsPage) (groups.GroupsPage, error) {
+func (m *GroupRepository) RetrieveAll(ctx context.Context, gm groups.GroupsPage) (groups.GroupsPage, error) {
 	ret := m.Called(ctx, gm)
 
 	return ret.Get(0).(groups.GroupsPage), ret.Error(1)
 }
 
-func (m *grepo) RetrieveByID(ctx context.Context, id string) (groups.Group, error) {
+func (m *GroupRepository) RetrieveByID(ctx context.Context, id string) (groups.Group, error) {
 	ret := m.Called(ctx, id)
 	if id == WrongID {
 		return groups.Group{}, errors.ErrNotFound
@@ -63,7 +63,7 @@ func (m *grepo) RetrieveByID(ctx context.Context, id string) (groups.Group, erro
 	return ret.Get(0).(groups.Group), ret.Error(1)
 }
 
-func (m *grepo) Save(ctx context.Context, g groups.Group) (groups.Group, error) {
+func (m *GroupRepository) Save(ctx context.Context, g groups.Group) (groups.Group, error) {
 	ret := m.Called(ctx, g)
 	if g.Parent == WrongID {
 		return groups.Group{}, errors.ErrCreateEntity
@@ -75,7 +75,7 @@ func (m *grepo) Save(ctx context.Context, g groups.Group) (groups.Group, error) 
 	return g, ret.Error(1)
 }
 
-func (m *grepo) Update(ctx context.Context, g groups.Group) (groups.Group, error) {
+func (m *GroupRepository) Update(ctx context.Context, g groups.Group) (groups.Group, error) {
 	ret := m.Called(ctx, g)
 	if g.ID == WrongID {
 		return groups.Group{}, errors.ErrNotFound

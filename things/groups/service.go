@@ -7,7 +7,6 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/mainflux/mainflux/things/policies"
 	upolicies "github.com/mainflux/mainflux/users/policies"
 )
 
@@ -41,7 +40,7 @@ type service struct {
 }
 
 // NewService returns a new Clients service implementation.
-func NewService(auth upolicies.AuthServiceClient, g Repository, p policies.Repository, idp mainflux.IDProvider) Service {
+func NewService(auth upolicies.AuthServiceClient, g Repository, idp mainflux.IDProvider) Service {
 	return service{
 		auth:       auth,
 		groups:     g,
