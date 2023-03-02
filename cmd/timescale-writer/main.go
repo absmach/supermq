@@ -28,7 +28,7 @@ const (
 	envPrefix      = "MF_TIMESCALE_WRITER_"
 	envPrefixHttp  = "MF_TIMESCALE_WRITER_HTTP_"
 	defDB          = "messages"
-	defSvcHttpPort = "8180"
+	defSvcHttpPort = "9019"
 )
 
 type config struct {

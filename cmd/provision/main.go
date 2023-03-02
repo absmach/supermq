@@ -31,7 +31,7 @@ const (
 	defServerKey       = ""
 	defThingsURL       = "http://localhost"
 	defUsersURL        = "http://localhost"
-	defHTTPPort        = "8190"
+	defHTTPPort        = "9001"
 	defMfUser          = "test@example.com"
 	defMfPass          = "test"
 	defMfAPIKey        = ""

@@ -45,9 +45,9 @@ const (
 	envPrefixAuthHttp  = "MF_THINGS_AUTH_HTTP_"
 	envPrefixAuthGrpc  = "MF_THINGS_AUTH_GRPC_"
 	defDB              = "things"
-	defSvcHttpPort     = "8182"
-	defSvcAuthHttpPort = "8989"
-	defSvcAuthGrpcPort = "8181"
+	defSvcHttpPort     = "9002"
+	defSvcAuthHttpPort = "9003"
+	defSvcAuthGrpcPort = "7001"
 )
 
 type config struct {
