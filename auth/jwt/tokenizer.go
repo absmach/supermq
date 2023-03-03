@@ -6,7 +6,7 @@ package jwt
 import (
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/mainflux/mainflux/auth"
 	"github.com/mainflux/mainflux/pkg/errors"
 )
@@ -14,7 +14,7 @@ import (
 const issuerName = "mainflux.auth"
 
 type claims struct {
-	jwt.RegisteredClaims
+	jwt.StandardClaims
 	IssuerID string  `json:"issuer_id,omitempty"`
 	Type     *uint32 `json:"type,omitempty"`
 }
@@ -24,7 +24,7 @@ func (c claims) Valid() error {
 		return errors.ErrMalformedEntity
 	}
 
-	return c.RegisteredClaims.ExpiresAt.GobDecode([]byte{}) //.Valid()
+	return c.StandardClaims.Valid()
 }
 
 type tokenizer struct {
@@ -38,20 +38,20 @@ func New(secret string) auth.Tokenizer {
 
 func (svc tokenizer) Issue(key auth.Key) (string, error) {
 	claims := claims{
-		RegisteredClaims: jwt.RegisteredClaims{
+		StandardClaims: jwt.StandardClaims{
 			Issuer:   issuerName,
 			Subject:  key.Subject,
-			IssuedAt: &jwt.NumericDate{Time: key.IssuedAt.UTC()},
+			IssuedAt: key.IssuedAt.UTC().Unix(),
 		},
 		IssuerID: key.IssuerID,
 		Type:     &key.Type,
 	}
 
 	if !key.ExpiresAt.IsZero() {
-		claims.ExpiresAt = &jwt.NumericDate{Time: key.ExpiresAt.UTC()}
+		claims.ExpiresAt = key.ExpiresAt.UTC().Unix()
 	}
 	if key.ID != "" {
-		claims.ID = key.ID
+		claims.Id = key.ID
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -68,7 +68,7 @@ func (svc tokenizer) Parse(token string) (auth.Key, error) {
 	})
 
 	if err != nil {
-		if errors.Contains(err, jwt.ErrTokenExpired) {
+		if e, ok := err.(*jwt.ValidationError); ok && e.Errors == jwt.ValidationErrorExpired {
 			// Expired User key needs to be revoked.
 			if c.Type != nil && *c.Type == auth.APIKey {
 				return c.toKey(), auth.ErrAPIKeyExpired
@@ -83,13 +83,13 @@ func (svc tokenizer) Parse(token string) (auth.Key, error) {
 
 func (c claims) toKey() auth.Key {
 	key := auth.Key{
-		ID:       c.ID,
+		ID:       c.Id,
 		IssuerID: c.IssuerID,
 		Subject:  c.Subject,
-		IssuedAt: time.Unix(c.IssuedAt.Unix(), 0).UTC(),
+		IssuedAt: time.Unix(c.IssuedAt, 0).UTC(),
 	}
-	if c.ExpiresAt.Unix() != 0 {
-		key.ExpiresAt = time.Unix(c.ExpiresAt.Unix(), 0).UTC()
+	if c.ExpiresAt != 0 {
+		key.ExpiresAt = time.Unix(c.ExpiresAt, 0).UTC()
 	}
 
 	// Default type is 0.
