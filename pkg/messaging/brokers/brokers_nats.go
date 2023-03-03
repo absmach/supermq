@@ -12,6 +12,7 @@ import (
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/nats"
+	"github.com/opentracing/opentracing-go"
 )
 
 // SubjectAllChannels represents subject to subscribe for all the channels.
@@ -21,8 +22,8 @@ func init() {
 	log.Println("The binary was build using Nats as the message broker")
 }
 
-func NewPublisher(url string) (messaging.Publisher, error) {
-	pb, err := nats.NewPublisher(url)
+func NewPublisher(url string, tracer opentracing.Tracer) (messaging.Publisher, error) {
+	pb, err := nats.NewPublisher(url, tracer)
 	if err != nil {
 		return nil, err
 	}
@@ -30,8 +31,8 @@ func NewPublisher(url string) (messaging.Publisher, error) {
 
 }
 
-func NewPubSub(url, queue string, logger logger.Logger) (messaging.PubSub, error) {
-	pb, err := nats.NewPubSub(url, queue, logger)
+func NewPubSub(url, queue string, logger logger.Logger, tracer opentracing.Tracer) (messaging.PubSub, error) {
+	pb, err := nats.NewPubSub(url, queue, logger, tracer)
 	if err != nil {
 		return nil, err
 	}

@@ -13,6 +13,8 @@ import (
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	broker "github.com/nats-io/nats.go"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 )
 
 const chansPrefix = "channels"
@@ -46,7 +48,7 @@ type pubsub struct {
 // from ordinary subscribe. For more information, please take a look
 // here: https://docs.nats.io/developing-with-nats/receiving/queues.
 // If the queue is empty, Subscribe will be used.
-func NewPubSub(url, queue string, logger log.Logger) (messaging.PubSub, error) {
+func NewPubSub(url, queue string, logger log.Logger, tracer opentracing.Tracer) (messaging.PubSub, error) {
 	conn, err := broker.Connect(url, broker.MaxReconnects(maxReconnects))
 	if err != nil {
 		return nil, err
@@ -54,7 +56,8 @@ func NewPubSub(url, queue string, logger log.Logger) (messaging.PubSub, error) {
 
 	ret := &pubsub{
 		publisher: publisher{
-			conn: conn,
+			conn:   conn,
+			tracer: tracer,
 		},
 		queue:         queue,
 		logger:        logger,
@@ -156,11 +159,21 @@ func (ps *pubsub) Unsubscribe(id, topic string) error {
 
 func (ps *pubsub) natsHandler(h messaging.MessageHandler) broker.MsgHandler {
 	return func(m *broker.Msg) {
+		var span opentracing.Span
+		defer span.Finish()
+		sc, err := ps.tracer.Extract(opentracing.Binary, m.Data)
+		if err != nil {
+			ps.logger.Warn(fmt.Sprintf("failed to get span context, %s", err.Error()))
+		} else {
+			span = ps.tracer.StartSpan("Received Message", ext.SpanKindConsumer, opentracing.FollowsFrom(sc))
+		}
+
 		var msg messaging.Message
 		if err := proto.Unmarshal(m.Data, &msg); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
 			return
 		}
+		ext.MessageBusDestination.Set(span, msg.Subtopic)
 		if err := h.Handle(&msg); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
 		}
