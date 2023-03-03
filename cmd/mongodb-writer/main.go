@@ -28,7 +28,7 @@ const (
 	envPrefix      = "MF_MONGO_WRITER_"
 	envPrefixDB    = "MF_MONGO_WRITER_DB_"
 	envPrefixHttp  = "MF_MONGO_WRITER_HTTP_"
-	defSvcHttpPort = "9013"
+	defSvcHttpPort = "9009"
 )
 
 type config struct {

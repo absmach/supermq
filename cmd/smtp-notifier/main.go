@@ -37,7 +37,7 @@ const (
 	envPrefix      = "MF_SMTP_NOTIFIER_"
 	envPrefixHttp  = "MF_SMTP_NOTIFIER_HTTP_"
 	defDB          = "subscriptions"
-	defSvcHttpPort = "9017"
+	defSvcHttpPort = "9016"
 )
 
 type config struct {

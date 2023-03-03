@@ -29,7 +29,7 @@ const (
 	envPrefix      = "MF_MONGO_READER_"
 	envPrefixDB    = "MF_MONGO_READER_DB_"
 	envPrefixHttp  = "MF_MONGO_READER_HTTP_"
-	defSvcHttpPort = "9012"
+	defSvcHttpPort = "9008"
 )
 
 type config struct {

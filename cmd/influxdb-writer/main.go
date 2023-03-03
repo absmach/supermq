@@ -28,7 +28,7 @@ const (
 	envPrefix         = "MF_INFLUX_WRITER_"
 	envPrefixHttp     = "MF_INFLUX_WRITER_HTTP_"
 	envPrefixInfluxdb = "MF_INFLUXDB_"
-	defSvcHttpPort    = "9010"
+	defSvcHttpPort    = "9007"
 )
 
 type config struct {

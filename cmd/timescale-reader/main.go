@@ -29,7 +29,7 @@ const (
 	envPrefix      = "MF_TIMESCALE_READER_"
 	envPrefixHttp  = "MF_TIMESCALE_READER_HTTP_"
 	defDB          = "messages"
-	defSvcHttpPort = "9018"
+	defSvcHttpPort = "9012"
 )
 
 type config struct {

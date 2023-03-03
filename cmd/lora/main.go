@@ -34,7 +34,7 @@ const (
 	envPrefixHttp     = "MF_LORA_ADAPTER_HTTP_"
 	envPrefixRouteMap = "MF_LORA_ADAPTER_ROUTE_MAP_"
 	envPrefixThingsES = "MF_THINGS_ES_"
-	defSvcHttpPort    = "9011"
+	defSvcHttpPort    = "9018"
 
 	thingsRMPrefix   = "thing"
 	channelsRMPrefix = "channel"

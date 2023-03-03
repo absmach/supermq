@@ -29,7 +29,7 @@ const (
 	envPrefix      = "MF_POSTGRES_READER_"
 	envPrefixHttp  = "MF_POSTGRES_READER_HTTP_"
 	defDB          = "messages"
-	defSvcHttpPort = "9014"
+	defSvcHttpPort = "9010"
 )
 
 type config struct {

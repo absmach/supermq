@@ -26,7 +26,7 @@ const (
 	envPrefix         = "MF_INFLUX_READER_"
 	envPrefixHttp     = "MF_INFLUX_READER_HTTP_"
 	envPrefixInfluxdb = "MF_INFLUXDB_"
-	defSvcHttpPort    = "9009"
+	defSvcHttpPort    = "9006"
 )
 
 type config struct {
