@@ -19,7 +19,7 @@ import (
 	"github.com/mainflux/mainflux/consumers/notifiers/tracing"
 	"github.com/mainflux/mainflux/internal"
 	authClient "github.com/mainflux/mainflux/internal/clients/grpc/auth"
-	jagerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
+	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
 	"github.com/mainflux/mainflux/internal/email"
 	"github.com/mainflux/mainflux/internal/env"
@@ -74,7 +74,14 @@ func main() {
 		logger.Fatal(fmt.Sprintf("failed to load email configuration : %s", err))
 	}
 
-	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)
+	// PUB SUB tracer
+	tracer, traceCloser, err := jaegerClient.NewTracer("nats_pubsub", cfg.JaegerURL)
+	if err != nil {
+		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
+	}
+	defer traceCloser.Close()
+
+	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger, tracer)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
@@ -87,13 +94,13 @@ func main() {
 	defer authHandler.Close()
 	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
-	tracer, closer, err := jagerClient.NewTracer("smtp-notifier", cfg.JaegerURL)
+	tracer, closer, err := jaegerClient.NewTracer("smtp-notifier", cfg.JaegerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
 	}
 	defer closer.Close()
 
-	dbTracer, dbCloser, err := jagerClient.NewTracer("smtp-notifier_db", cfg.JaegerURL)
+	dbTracer, dbCloser, err := jaegerClient.NewTracer("smtp-notifier_db", cfg.JaegerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
 	}

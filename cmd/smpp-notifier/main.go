@@ -74,7 +74,14 @@ func main() {
 		logger.Fatal(fmt.Sprintf("failed to load SMPP configuration from environment : %s", err))
 	}
 
-	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)
+	// PUB SUB tracer
+	tracer, traceCloser, err := jaegerClient.NewTracer("nats_pubsub", cfg.JaegerURL)
+	if err != nil {
+		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
+	}
+	defer traceCloser.Close()
+
+	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger, tracer)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}

@@ -13,6 +13,7 @@ import (
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	"github.com/mainflux/mainflux/consumers/writers/influxdb"
 	influxDBClient "github.com/mainflux/mainflux/internal/clients/influxdb"
+	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
@@ -33,6 +34,7 @@ type config struct {
 	LogLevel   string `env:"MF_INFLUX_WRITER_LOG_LEVEL"     envDefault:"info"`
 	ConfigPath string `env:"MF_INFLUX_WRITER_CONFIG_PATH"   envDefault:"/config.toml"`
 	BrokerURL  string `env:"MF_BROKER_URL"                  envDefault:"nats://localhost:4222"`
+	JaegerURL  string `env:"MF_JAEGER_URL"               envDefault:"localhost:6831"`
 }
 
 func main() {
@@ -49,7 +51,14 @@ func main() {
 		log.Fatalf("failed to init logger: %s", err)
 	}
 
-	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)
+	// PUB SUB tracer
+	tracer, traceCloser, err := jaegerClient.NewTracer("nats_pubsub", cfg.JaegerURL)
+	if err != nil {
+		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
+	}
+	defer traceCloser.Close()
+
+	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger, tracer)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}

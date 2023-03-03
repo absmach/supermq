@@ -24,6 +24,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	"golang.org/x/sync/errgroup"
 
+	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	redisClient "github.com/mainflux/mainflux/internal/clients/redis"
 	"github.com/mainflux/mainflux/lora/redis"
 )
@@ -50,6 +51,7 @@ type config struct {
 	LoraMsgTimeout time.Duration `env:"MF_LORA_ADAPTER_MESSAGES_TIMEOUT"    envDefault:"30s"`
 	ESConsumerName string        `env:"MF_LORA_ADAPTER_EVENT_CONSUMER"      envDefault:"lora"`
 	BrokerURL      string        `env:"MF_BROKER_URL"                       envDefault:"nats://localhost:4222"`
+	JaegerURL      string        `env:"MF_JAEGER_URL"               envDefault:"localhost:6831"`
 }
 
 func main() {
@@ -72,7 +74,14 @@ func main() {
 	}
 	defer rmConn.Close()
 
-	pub, err := brokers.NewPublisher(cfg.BrokerURL)
+	// PUB SUB tracer
+	tracer, traceCloser, err := jaegerClient.NewTracer("nats_pubsub", cfg.JaegerURL)
+	if err != nil {
+		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
+	}
+	defer traceCloser.Close()
+
+	pub, err := brokers.NewPublisher(cfg.BrokerURL, tracer)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}

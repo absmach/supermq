@@ -15,6 +15,7 @@ import (
 	"github.com/mainflux/mainflux/consumers/writers/cassandra"
 	"github.com/mainflux/mainflux/internal"
 	cassandraClient "github.com/mainflux/mainflux/internal/clients/cassandra"
+	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
@@ -34,6 +35,7 @@ type config struct {
 	LogLevel   string `env:"MF_CASSANDRA_WRITER_LOG_LEVEL"     envDefault:"info"`
 	ConfigPath string `env:"MF_CASSANDRA_WRITER_CONFIG_PATH"   envDefault:"/config.toml"`
 	BrokerURL  string `env:"MF_BROKER_URL"                     envDefault:"nats://localhost:4222"`
+	JaegerURL  string `env:"MF_JAEGER_URL"                    envDefault:"localhost:6831"`
 }
 
 func main() {
@@ -61,8 +63,15 @@ func main() {
 	// Create new cassandra-writer repo
 	repo := newService(csdSession, logger)
 
+	// PUB SUB tracer
+	tracer, traceCloser, err := jaegerClient.NewTracer("nats_pubsub", cfg.JaegerURL)
+	if err != nil {
+		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
+	}
+	defer traceCloser.Close()
+
 	// Create new pub sub broker
-	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)
+	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger, tracer)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}

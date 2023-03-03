@@ -14,6 +14,7 @@ import (
 
 	"github.com/mainflux/mainflux/internal"
 	thingsClient "github.com/mainflux/mainflux/internal/clients/grpc/things"
+	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	"github.com/mainflux/mainflux/internal/env"
 	"github.com/mainflux/mainflux/internal/server"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
@@ -58,7 +59,14 @@ func main() {
 	defer internal.Close(logger, tcHandler)
 	logger.Info("Successfully connected to things grpc server " + tcHandler.Secure())
 
-	nps, err := brokers.NewPubSub(cfg.BrokerURL, "", logger)
+	// PUB SUB tracer
+	tracer, traceCloser, err := jaegerClient.NewTracer("nats_pubsub", cfg.JaegerURL)
+	if err != nil {
+		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
+	}
+	defer traceCloser.Close()
+
+	nps, err := brokers.NewPubSub(cfg.BrokerURL, "", logger, tracer)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("Failed to connect to message broker: %s", err))
 

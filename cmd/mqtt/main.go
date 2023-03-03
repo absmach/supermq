@@ -11,6 +11,7 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	thingsClient "github.com/mainflux/mainflux/internal/clients/grpc/things"
+	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	redisClient "github.com/mainflux/mainflux/internal/clients/redis"
 	"github.com/mainflux/mainflux/internal/env"
 	mflog "github.com/mainflux/mainflux/logger"
@@ -75,7 +76,14 @@ func main() {
 		}
 	}
 
-	nps, err := brokers.NewPubSub(cfg.BrokerURL, "mqtt", logger)
+	// PUB SUB tracer
+	tracer, traceCloser, err := jaegerClient.NewTracer("nats_pubsub", cfg.JaegerURL)
+	if err != nil {
+		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
+	}
+	defer traceCloser.Close()
+
+	nps, err := brokers.NewPubSub(cfg.BrokerURL, "mqtt", logger, tracer)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
@@ -91,7 +99,7 @@ func main() {
 		logger.Fatal(fmt.Sprintf("failed to forward message broker messages: %s", err))
 	}
 
-	np, err := brokers.NewPublisher(cfg.BrokerURL)
+	np, err := brokers.NewPublisher(cfg.BrokerURL, tracer)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
