@@ -44,7 +44,8 @@ func Migration() *migrate.MemoryMigrationSource {
 						actions		TEXT[] NOT NULL,
 						created_at	TIMESTAMP,
 						updated_at	TIMESTAMP,
-						FOREIGN KEY	(object) REFERENCES groups (id) ON DELETE CASCADE ON UPDATE CASCADE
+						FOREIGN KEY	(object) REFERENCES groups (id) ON DELETE CASCADE ON UPDATE CASCADE,
+						PRIMARY KEY (subject, object, actions)
 					)`,
 				},
 				Down: []string{

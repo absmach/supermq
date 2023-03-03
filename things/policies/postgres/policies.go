@@ -63,7 +63,7 @@ func (pr prepo) Evaluate(ctx context.Context, entityType string, policy policies
 		// or subject is the owner of the object
 		q = fmt.Sprintf(`(SELECT subject FROM policies WHERE (subject = :subject AND object IN (
 				SELECT object FROM policies WHERE subject = '%s') AND '%s'=ANY(actions))) UNION
-				(SELECT id as subject FROM clients WHERE owner = :subject AND id = '%s') LIMIT 1`, policy.Object, policy.Actions[0], policy.Object)
+				(SELECT id as subject FROM clients WHERE owner_id = :subject AND id = '%s') LIMIT 1`, policy.Object, policy.Actions[0], policy.Object)
 	case "group":
 		// Evaluates if client is connected to the specified group and has the required action
 		q = fmt.Sprintf(`(SELECT subject FROM policies WHERE subject = :subject AND object = :object AND '%s'=ANY(actions))
@@ -95,7 +95,8 @@ func (pr prepo) Evaluate(ctx context.Context, entityType string, policy policies
 
 func (pr prepo) Update(ctx context.Context, policy policies.Policy) (policies.Policy, error) {
 	q := `UPDATE policies SET actions = :actions, updated_at = :updated_at
-		WHERE subject = :subject AND object = :object`
+		WHERE subject = :subject AND object = :object
+		RETURNING owner_id, subject, object, actions, created_at, updated_at;`
 
 	dbp, err := toDBPolicy(policy)
 	if err != nil {
