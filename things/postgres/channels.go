@@ -439,13 +439,13 @@ type dbMetadata map[string]interface{}
 // If error occurs on casting data then m points to empty metadata.
 func (m *dbMetadata) Scan(value interface{}) error {
 	if value == nil {
-		m = nil
+		*m = dbMetadata{}
 		return nil
 	}
 
 	b, ok := value.([]byte)
 	if !ok {
-		m = &dbMetadata{}
+		*m = dbMetadata{}
 		return errors.ErrScanMetadata
 	}
 
