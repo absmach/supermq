@@ -4,6 +4,7 @@
 package nats
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/mainflux/mainflux/pkg/messaging"
@@ -51,16 +52,22 @@ func (pub *publisher) Publish(topic string, msg *messaging.Message) error {
 	if topic == "" {
 		return ErrEmptyTopic
 	}
+
+	span := pub.tracer.StartSpan(publishOP, ext.SpanKindProducer)
+	ext.MessageBusDestination.Set(span, msg.Subtopic)
+	defer span.Finish()
+
+	dataBuffer := bytes.NewBuffer(msg.Span)
+
+	if err := pub.tracer.Inject(span.Context(), opentracing.Binary, dataBuffer); err != nil {
+		return err
+	}
+	msg.Span = dataBuffer.Bytes()
+
 	data, err := proto.Marshal(msg)
 	if err != nil {
 		return err
 	}
-
-	span := opentracing.StartSpan(publishOP, ext.SpanKindProducer)
-	ext.MessageBusDestination.Set(span, topic)
-	defer span.Finish()
-
-	pub.tracer.Inject(span.Context(), opentracing.Binary, data)
 
 	subject := fmt.Sprintf("%s.%s", chansPrefix, topic)
 	if msg.Subtopic != "" {

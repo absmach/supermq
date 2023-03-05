@@ -4,6 +4,7 @@
 package nats
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"sync"
@@ -159,21 +160,22 @@ func (ps *pubsub) Unsubscribe(id, topic string) error {
 
 func (ps *pubsub) natsHandler(h messaging.MessageHandler) broker.MsgHandler {
 	return func(m *broker.Msg) {
-		var span opentracing.Span
-		defer span.Finish()
-		sc, err := ps.tracer.Extract(opentracing.Binary, m.Data)
-		if err != nil {
-			ps.logger.Warn(fmt.Sprintf("failed to get span context, %s", err.Error()))
-		} else {
-			span = ps.tracer.StartSpan("Received Message", ext.SpanKindConsumer, opentracing.FollowsFrom(sc))
-		}
-
 		var msg messaging.Message
 		if err := proto.Unmarshal(m.Data, &msg); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
 			return
 		}
-		ext.MessageBusDestination.Set(span, msg.Subtopic)
+		dataBuffer := bytes.NewBuffer(msg.Span)
+
+		sc, err := ps.tracer.Extract(opentracing.Binary, dataBuffer)
+		if err != nil {
+			ps.logger.Warn(fmt.Sprintf("failed to get span context, %s", err.Error()))
+		} else {
+			span := ps.tracer.StartSpan("Received Message", ext.SpanKindConsumer, opentracing.FollowsFrom(sc))
+			ext.MessageBusDestination.Set(span, msg.Subtopic)
+			defer span.Finish()
+		}
+
 		if err := h.Handle(&msg); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Failed to handle Mainflux message: %s", err))
 		}
