@@ -141,14 +141,19 @@ func TestAddPolicy(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Update", mock.Anything, mock.Anything).Return(tc.err)
-		repoCall1 := pRepo.On("Save", mock.Anything, mock.Anything).Return(tc.err)
-		repoCall2 := pRepo.On("Retrieve", mock.Anything, mock.Anything).Return(convertPolicyPage(tc.page), nil)
-
+		repoCall := pRepo.On("Retrieve", mock.Anything, mock.Anything).Return(convertPolicyPage(tc.page), nil)
+		repoCall1 := pRepo.On("Update", mock.Anything, mock.Anything).Return(tc.err)
+		repoCall2 := pRepo.On("Save", mock.Anything, mock.Anything).Return(tc.err)
 		err := policySDK.AddPolicy(tc.policy, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		repoCall1.Parent.AssertCalled(t, "Save", mock.Anything, mock.Anything)
-
+		if tc.err == nil {
+			repoCall.Parent.AssertCalled(t, "Retrieve", mock.Anything, mock.Anything)
+			repoCall2.Parent.AssertCalled(t, "Save", mock.Anything, mock.Anything)
+			if tc.desc == "add existing policy" {
+				repoCall1.Parent.AssertCalled(t, "Update", mock.Anything, mock.Anything)
+			}
+		}
 		repoCall.Unset()
 		repoCall1.Unset()
 		repoCall2.Unset()
@@ -205,13 +210,11 @@ func TestUpdatePolicy(t *testing.T) {
 	for _, tc := range cases {
 		policy.Actions = tc.action
 		policy.CreatedAt = time.Now()
-
 		repoCall := pRepo.On("Retrieve", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(policies.PolicyPage{}, nil)
 		repoCall1 := pRepo.On("Update", mock.Anything, mock.Anything).Return(tc.err)
-
 		err := policySDK.UpdatePolicy(policy, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
-
+		repoCall1.Parent.AssertCalled(t, "Update", mock.Anything, mock.Anything)
 		repoCall.Unset()
 		repoCall1.Unset()
 	}
@@ -340,11 +343,10 @@ func TestListPolicies(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := pRepo.On("Retrieve", mock.Anything, mock.Anything).Return(convertPolicyPage(sdk.PolicyPage{Policies: tc.response}), tc.err)
-
 		pp, err := policySDK.ListPolicies(tc.page, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, pp.Policies, fmt.Sprintf("%s: expected %v, got %v", tc.desc, tc.response, pp))
-
+		repoCall.Parent.AssertCalled(t, "Retrieve", mock.Anything, mock.Anything)
 		repoCall.Unset()
 	}
 }
@@ -368,21 +370,18 @@ func TestDeletePolicy(t *testing.T) {
 	pr := sdk.Policy{Object: authoritiesObj, Actions: []string{"m_read", "g_add", "c_delete"}, Subject: sub}
 	cpr := sdk.Policy{Object: authoritiesObj, Actions: []string{"m_read", "g_add", "c_delete"}, Subject: sub}
 
-	repoCall4 := pRepo.On("Retrieve", mock.Anything, mock.Anything).Return(convertPolicyPage(sdk.PolicyPage{Policies: []sdk.Policy{cpr}}), nil)
-	repoCall3 := pRepo.On("Delete", mock.Anything, mock.Anything).Return(nil)
-
+	repoCall := pRepo.On("Retrieve", mock.Anything, mock.Anything).Return(convertPolicyPage(sdk.PolicyPage{Policies: []sdk.Policy{cpr}}), nil)
+	repoCall1 := pRepo.On("Delete", mock.Anything, mock.Anything).Return(nil)
 	err := policySDK.DeletePolicy(pr, generateValidToken(t, csvc, cRepo))
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	repoCall1.Parent.AssertCalled(t, "Delete", mock.Anything, mock.Anything)
+	repoCall1.Unset()
+	repoCall.Unset()
 
-	repoCall3.Unset()
-	repoCall4.Unset()
-
-	repoCall4 = pRepo.On("Retrieve", mock.Anything, mock.Anything).Return(convertPolicyPage(sdk.PolicyPage{Policies: []sdk.Policy{cpr}}), nil)
-	repoCall3 = pRepo.On("Delete", mock.Anything, mock.Anything).Return(sdk.ErrFailedRemoval)
-
+	repoCall = pRepo.On("Retrieve", mock.Anything, mock.Anything).Return(convertPolicyPage(sdk.PolicyPage{Policies: []sdk.Policy{cpr}}), nil)
+	repoCall1 = pRepo.On("Delete", mock.Anything, mock.Anything).Return(sdk.ErrFailedRemoval)
 	err = policySDK.DeletePolicy(pr, invalidToken)
 	assert.Equal(t, err, errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized), fmt.Sprintf("expected %s got %s", pr, err))
-
-	repoCall3.Unset()
-	repoCall4.Unset()
+	repoCall1.Unset()
+	repoCall.Unset()
 }

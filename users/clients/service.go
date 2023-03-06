@@ -232,6 +232,7 @@ func (svc service) UpdateClientIdentity(ctx context.Context, token, id, identity
 		Credentials: Credentials{
 			Identity: identity,
 		},
+		UpdatedAt: time.Now(),
 	}
 	return svc.clients.UpdateIdentity(ctx, cli)
 }

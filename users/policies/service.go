@@ -79,7 +79,20 @@ func (svc service) AddPolicy(ctx context.Context, token string, p Policy) error 
 	if err != nil {
 		return err
 	}
-	if len(page.Policies) != 0 {
+	if len(page.Policies) == 1 {
+		// Update policy, add the new actions
+		for _, ra := range page.Policies[0].Actions {
+			var found = false
+			for _, na := range p.Actions {
+				if ra == na {
+					found = true
+					break
+				}
+			}
+			if !found {
+				p.Actions = append(p.Actions, ra)
+			}
+		}
 		return svc.policies.Update(ctx, p)
 	}
 	if err := svc.checkActionRank(ctx, id, p); err != nil {

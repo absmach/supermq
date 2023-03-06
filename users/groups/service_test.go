@@ -56,7 +56,7 @@ func generateValidToken(t *testing.T, clientID string, svc clients.Service, cRep
 	rClient := client
 	rClient.Credentials.Secret, _ = phasher.Hash(client.Credentials.Secret)
 
-	repoCall := cRepo.On("RetrieveByIdentity", context.Background(), mock.Anything).Return(rClient, nil)
+	repoCall := cRepo.On("RetrieveByIdentity", context.Background(), client.Credentials.Identity).Return(rClient, nil)
 	token, err := svc.IssueToken(context.Background(), client.Credentials.Identity, client.Credentials.Secret)
 	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("Create token expected nil got %s\n", err))
 	repoCall.Unset()
@@ -120,8 +120,7 @@ func TestCreateGroup(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", context.Background(), "group", mock.Anything).Return(nil)
-		repoCall1 := gRepo.On("Save", context.Background(), mock.Anything).Return(tc.group, tc.err)
+		repoCall := gRepo.On("Save", context.Background(), mock.Anything).Return(tc.group, tc.err)
 		createdAt := time.Now()
 		expected, err := svc.CreateGroup(context.Background(), generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo), tc.group)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
@@ -135,7 +134,6 @@ func TestCreateGroup(t *testing.T) {
 			assert.Equal(t, tc.group, expected, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.group, expected))
 		}
 		repoCall.Unset()
-		repoCall1.Unset()
 	}
 }
 
@@ -268,14 +266,16 @@ func TestUpdateGroup(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := pRepo.On("CheckAdmin", context.Background(), mock.Anything).Return(nil)
-		repoCall1 := pRepo.On("Evaluate", context.Background(), "group", mock.Anything).Return(nil)
-		repoCall2 := gRepo.On("Update", context.Background(), mock.Anything).Return(tc.response, tc.err)
+		repoCall1 := gRepo.On("Update", context.Background(), mock.Anything).Return(tc.response, tc.err)
 		expectedGroup, err := svc.UpdateGroup(context.Background(), tc.token, tc.group)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, expectedGroup, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, expectedGroup))
+		if tc.err == nil {
+			repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
+			repoCall1.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything)
+		}
 		repoCall.Unset()
 		repoCall1.Unset()
-		repoCall2.Unset()
 	}
 
 }
@@ -324,14 +324,16 @@ func TestViewGroup(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := pRepo.On("CheckAdmin", context.Background(), mock.Anything).Return(nil)
-		repoCall1 := pRepo.On("Evaluate", context.Background(), "group", mock.Anything).Return(nil)
-		repoCall2 := gRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(tc.response, tc.err)
+		repoCall1 := gRepo.On("RetrieveByID", context.Background(), tc.groupID).Return(tc.response, tc.err)
 		expected, err := svc.ViewGroup(context.Background(), tc.token, tc.groupID)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, expected, tc.response, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, expected, tc.response))
+		if tc.err == nil {
+			repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
+			repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.groupID)
+		}
 		repoCall.Unset()
 		repoCall1.Unset()
-		repoCall2.Unset()
 	}
 }
 
@@ -414,13 +416,14 @@ func TestListGroups(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", context.Background(), "group", mock.Anything).Return(nil)
-		repoCall1 := gRepo.On("RetrieveAll", context.Background(), mock.Anything).Return(tc.response, tc.err)
+		repoCall := gRepo.On("RetrieveAll", context.Background(), mock.Anything).Return(tc.response, tc.err)
 		page, err := svc.ListGroups(context.Background(), tc.token, tc.page)
 		assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		if tc.err == nil {
+			repoCall.Parent.AssertCalled(t, "RetrieveAll", context.Background(), mock.Anything)
+		}
 		repoCall.Unset()
-		repoCall1.Unset()
 	}
 
 }
@@ -475,15 +478,17 @@ func TestEnableGroup(t *testing.T) {
 
 	for _, tc := range casesEnabled {
 		repoCall := pRepo.On("CheckAdmin", context.Background(), mock.Anything).Return(nil)
-		repoCall1 := pRepo.On("Evaluate", context.Background(), "group", mock.Anything).Return(nil)
-		repoCall2 := gRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(tc.group, tc.err)
-		repoCall3 := gRepo.On("ChangeStatus", context.Background(), mock.Anything, mock.Anything).Return(tc.response, tc.err)
+		repoCall1 := gRepo.On("RetrieveByID", context.Background(), tc.id).Return(tc.group, tc.err)
+		repoCall2 := gRepo.On("ChangeStatus", context.Background(), tc.id, groups.EnabledStatus).Return(tc.response, tc.err)
 		_, err := svc.EnableGroup(context.Background(), tc.token, tc.id)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		if tc.err == nil {
+			repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.id)
+			repoCall2.Parent.AssertCalled(t, "ChangeStatus", context.Background(), tc.id, groups.EnabledStatus)
+		}
 		repoCall.Unset()
 		repoCall1.Unset()
 		repoCall2.Unset()
-		repoCall3.Unset()
 	}
 
 	casesDisabled := []struct {
@@ -541,14 +546,12 @@ func TestEnableGroup(t *testing.T) {
 				Status: tc.status,
 			},
 		}
-		repoCall := pRepo.On("Evaluate", context.Background(), "group", mock.Anything).Return(nil)
-		repoCall1 := gRepo.On("RetrieveAll", context.Background(), mock.Anything).Return(tc.response, nil)
+		repoCall := gRepo.On("RetrieveAll", context.Background(), mock.Anything).Return(tc.response, nil)
 		page, err := svc.ListGroups(context.Background(), generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo), pm)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		size := uint64(len(page.Groups))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", tc.desc, tc.size, size))
 		repoCall.Unset()
-		repoCall1.Unset()
 	}
 }
 
@@ -602,15 +605,17 @@ func TestDisableGroup(t *testing.T) {
 
 	for _, tc := range casesDisabled {
 		repoCall := pRepo.On("CheckAdmin", context.Background(), mock.Anything).Return(nil)
-		repoCall1 := pRepo.On("Evaluate", context.Background(), "group", mock.Anything).Return(nil)
-		repoCall2 := gRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(tc.group, tc.err)
-		repoCall3 := gRepo.On("ChangeStatus", context.Background(), mock.Anything, mock.Anything).Return(tc.response, tc.err)
+		repoCall1 := gRepo.On("RetrieveByID", context.Background(), tc.id).Return(tc.group, tc.err)
+		repoCall2 := gRepo.On("ChangeStatus", context.Background(), tc.id, groups.DisabledStatus).Return(tc.response, tc.err)
 		_, err := svc.DisableGroup(context.Background(), tc.token, tc.id)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		if tc.err == nil {
+			repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.id)
+			repoCall2.Parent.AssertCalled(t, "ChangeStatus", context.Background(), tc.id, groups.DisabledStatus)
+		}
 		repoCall.Unset()
 		repoCall1.Unset()
 		repoCall2.Unset()
-		repoCall3.Unset()
 	}
 
 	casesEnabled := []struct {
@@ -668,14 +673,12 @@ func TestDisableGroup(t *testing.T) {
 				Status: tc.status,
 			},
 		}
-		repoCall := pRepo.On("Evaluate", context.Background(), "group", mock.Anything).Return(nil)
-		repoCall1 := gRepo.On("RetrieveAll", context.Background(), mock.Anything).Return(tc.response, nil)
+		repoCall := gRepo.On("RetrieveAll", context.Background(), mock.Anything).Return(tc.response, nil)
 		page, err := svc.ListGroups(context.Background(), generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo), pm)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		size := uint64(len(page.Groups))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", tc.desc, tc.size, size))
 		repoCall.Unset()
-		repoCall1.Unset()
 	}
 }
 
@@ -795,6 +798,9 @@ func TestListMemberships(t *testing.T) {
 		page, err := svc.ListMemberships(context.Background(), tc.token, tc.clientID, tc.page)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
+		if tc.err == nil {
+			repoCall1.Parent.AssertCalled(t, "Memberships", context.Background(), tc.clientID, tc.page)
+		}
 		repoCall.Unset()
 		repoCall1.Unset()
 	}

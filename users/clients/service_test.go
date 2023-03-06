@@ -55,9 +55,10 @@ func generateValidToken(t *testing.T, clientID string, svc clients.Service, cRep
 	rClient := client
 	rClient.Credentials.Secret, _ = phasher.Hash(client.Credentials.Secret)
 
-	repoCall := cRepo.On("RetrieveByIdentity", context.Background(), mock.Anything).Return(rClient, nil)
+	repoCall := cRepo.On("RetrieveByIdentity", context.Background(), client.Credentials.Identity).Return(rClient, nil)
 	token, err := svc.IssueToken(context.Background(), client.Credentials.Identity, client.Credentials.Secret)
 	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("Create token expected nil got %s\n", err))
+	repoCall.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), client.Credentials.Identity)
 	repoCall.Unset()
 	return token.AccessToken
 }
@@ -266,6 +267,7 @@ func TestRegisterClient(t *testing.T) {
 			tc.client.Owner = expected.Owner
 			assert.Equal(t, tc.client, expected, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.client, expected))
 		}
+		repoCall.Parent.AssertCalled(t, "Save", context.Background(), mock.Anything)
 		repoCall.Unset()
 	}
 }
@@ -316,11 +318,15 @@ func TestViewClient(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := pRepo.On("Evaluate", context.Background(), "client", mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(tc.response, tc.err)
+		repoCall1 := cRepo.On("RetrieveByID", context.Background(), tc.clientID).Return(tc.response, tc.err)
 		rClient, err := svc.ViewClient(context.Background(), tc.token, tc.clientID)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, rClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, rClient))
 		repoCall.Unset()
+		if tc.err == nil {
+			repoCall.Parent.AssertCalled(t, "Evaluate", context.Background(), "client", mock.Anything)
+			repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.clientID)
+		}
 		repoCall1.Unset()
 	}
 }
@@ -597,13 +603,14 @@ func TestListClients(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", context.Background(), "group", mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("RetrieveAll", context.Background(), mock.Anything).Return(tc.response, tc.err)
+		repoCall := cRepo.On("RetrieveAll", context.Background(), mock.Anything).Return(tc.response, tc.err)
 		page, err := svc.ListClients(context.Background(), tc.token, tc.page)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
+		if tc.err == nil {
+			repoCall.Parent.AssertCalled(t, "RetrieveAll", context.Background(), mock.Anything)
+		}
 		repoCall.Unset()
-		repoCall1.Unset()
 	}
 }
 
@@ -668,14 +675,16 @@ func TestUpdateClient(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := pRepo.On("CheckAdmin", context.Background(), mock.Anything).Return(nil)
-		repoCall1 := pRepo.On("Evaluate", context.Background(), "client", mock.Anything).Return(nil)
-		repoCall2 := cRepo.On("Update", context.Background(), mock.Anything).Return(tc.response, tc.err)
+		repoCall1 := cRepo.On("Update", context.Background(), mock.Anything).Return(tc.response, tc.err)
 		updatedClient, err := svc.UpdateClient(context.Background(), tc.token, tc.client)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, updatedClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, updatedClient))
+		if tc.err == nil {
+			repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
+			repoCall1.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything)
+		}
 		repoCall.Unset()
 		repoCall1.Unset()
-		repoCall2.Unset()
 	}
 }
 
@@ -723,14 +732,16 @@ func TestUpdateClientTags(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := pRepo.On("CheckAdmin", context.Background(), mock.Anything).Return(nil)
-		repoCall1 := pRepo.On("Evaluate", context.Background(), "client", mock.Anything).Return(nil)
-		repoCall2 := cRepo.On("UpdateTags", context.Background(), mock.Anything).Return(tc.response, tc.err)
+		repoCall1 := cRepo.On("UpdateTags", context.Background(), mock.Anything).Return(tc.response, tc.err)
 		updatedClient, err := svc.UpdateClientTags(context.Background(), tc.token, tc.client)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, updatedClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, updatedClient))
+		if tc.err == nil {
+			repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
+			repoCall1.Parent.AssertCalled(t, "UpdateTags", context.Background(), mock.Anything)
+		}
 		repoCall.Unset()
 		repoCall1.Unset()
-		repoCall2.Unset()
 	}
 }
 
@@ -780,16 +791,16 @@ func TestUpdateClientIdentity(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := pRepo.On("CheckAdmin", context.Background(), mock.Anything).Return(nil)
-		repoCall1 := pRepo.On("Evaluate", context.Background(), "client", mock.Anything).Return(nil)
-		repoCall2 := cRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(tc.response, tc.err)
-		repoCall3 := cRepo.On("UpdateIdentity", context.Background(), mock.Anything).Return(tc.response, tc.err)
+		repoCall1 := cRepo.On("UpdateIdentity", context.Background(), mock.Anything).Return(tc.response, tc.err)
 		updatedClient, err := svc.UpdateClientIdentity(context.Background(), tc.token, tc.id, tc.identity)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, updatedClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, updatedClient))
+		if tc.err == nil {
+			repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
+			repoCall1.Parent.AssertCalled(t, "UpdateIdentity", context.Background(), mock.Anything)
+		}
 		repoCall.Unset()
 		repoCall1.Unset()
-		repoCall2.Unset()
-		repoCall3.Unset()
 	}
 }
 
@@ -837,14 +848,16 @@ func TestUpdateClientOwner(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := pRepo.On("CheckAdmin", context.Background(), mock.Anything).Return(nil)
-		repoCall1 := pRepo.On("Evaluate", context.Background(), "client", mock.Anything).Return(nil)
-		repoCall2 := cRepo.On("UpdateOwner", context.Background(), mock.Anything).Return(tc.response, tc.err)
+		repoCall1 := cRepo.On("UpdateOwner", context.Background(), mock.Anything).Return(tc.response, tc.err)
 		updatedClient, err := svc.UpdateClientOwner(context.Background(), tc.token, tc.client)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, updatedClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, updatedClient))
+		if tc.err == nil {
+			repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
+			repoCall1.Parent.AssertCalled(t, "UpdateOwner", context.Background(), mock.Anything)
+		}
 		repoCall.Unset()
 		repoCall1.Unset()
-		repoCall2.Unset()
 	}
 }
 
@@ -858,7 +871,7 @@ func TestUpdateClientSecret(t *testing.T) {
 	rClient := client
 	rClient.Credentials.Secret, _ = phasher.Hash(client.Credentials.Secret)
 
-	repoCall := cRepo.On("RetrieveByIdentity", context.Background(), mock.Anything).Return(rClient, nil)
+	repoCall := cRepo.On("RetrieveByIdentity", context.Background(), client.Credentials.Identity).Return(rClient, nil)
 	token, err := svc.IssueToken(context.Background(), client.Credentials.Identity, client.Credentials.Secret)
 	assert.Nil(t, err, fmt.Sprintf("Issue token expected nil got %s\n", err))
 	repoCall.Unset()
@@ -898,17 +911,20 @@ func TestUpdateClientSecret(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("CheckAdmin", context.Background(), mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(tc.response, tc.err)
-		repoCall2 := cRepo.On("RetrieveByIdentity", context.Background(), mock.Anything).Return(tc.response, tc.err)
-		repoCall3 := cRepo.On("UpdateSecret", context.Background(), mock.Anything).Return(tc.response, tc.err)
+		repoCall := cRepo.On("RetrieveByID", context.Background(), client.ID).Return(tc.response, tc.err)
+		repoCall1 := cRepo.On("RetrieveByIdentity", context.Background(), client.Credentials.Identity).Return(tc.response, tc.err)
+		repoCall2 := cRepo.On("UpdateSecret", context.Background(), mock.Anything).Return(tc.response, tc.err)
 		updatedClient, err := svc.UpdateClientSecret(context.Background(), tc.token, tc.oldSecret, tc.newSecret)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, updatedClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, updatedClient))
+		if tc.err == nil {
+			repoCall.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.response.ID)
+			repoCall1.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), tc.response.Credentials.Identity)
+			repoCall2.Parent.AssertCalled(t, "UpdateSecret", context.Background(), mock.Anything)
+		}
 		repoCall.Unset()
 		repoCall1.Unset()
 		repoCall2.Unset()
-		repoCall3.Unset()
 	}
 }
 
@@ -960,15 +976,18 @@ func TestEnableClient(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := pRepo.On("CheckAdmin", context.Background(), mock.Anything).Return(nil)
-		repoCall1 := pRepo.On("Evaluate", context.Background(), "client", mock.Anything).Return(nil)
-		repoCall2 := cRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(tc.client, tc.err)
-		repoCall3 := cRepo.On("ChangeStatus", context.Background(), mock.Anything, mock.Anything).Return(tc.response, tc.err)
+		repoCall1 := cRepo.On("RetrieveByID", context.Background(), tc.id).Return(tc.client, tc.err)
+		repoCall2 := cRepo.On("ChangeStatus", context.Background(), tc.id, clients.EnabledStatus).Return(tc.response, tc.err)
 		_, err := svc.EnableClient(context.Background(), tc.token, tc.id)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		if tc.err == nil {
+			repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
+			repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.id)
+			repoCall2.Parent.AssertCalled(t, "ChangeStatus", context.Background(), tc.id, clients.EnabledStatus)
+		}
 		repoCall.Unset()
 		repoCall1.Unset()
 		repoCall2.Unset()
-		repoCall3.Unset()
 	}
 
 	cases2 := []struct {
@@ -1023,15 +1042,14 @@ func TestEnableClient(t *testing.T) {
 			Offset: 0,
 			Limit:  100,
 			Status: tc.status,
+			Action: "c_list",
 		}
-		repoCall := pRepo.On("Evaluate", context.Background(), "group", mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("RetrieveAll", context.Background(), mock.Anything).Return(tc.response, nil)
+		repoCall := cRepo.On("RetrieveAll", context.Background(), pm).Return(tc.response, nil)
 		page, err := svc.ListClients(context.Background(), generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo), pm)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		size := uint64(len(page.Clients))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", tc.desc, tc.size, size))
 		repoCall.Unset()
-		repoCall1.Unset()
 	}
 }
 
@@ -1083,15 +1101,18 @@ func TestDisableClient(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := pRepo.On("CheckAdmin", context.Background(), mock.Anything).Return(nil)
-		repoCall1 := pRepo.On("Evaluate", context.Background(), "client", mock.Anything).Return(nil)
-		repoCall2 := cRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(tc.client, tc.err)
-		repoCall3 := cRepo.On("ChangeStatus", context.Background(), mock.Anything, mock.Anything).Return(tc.response, tc.err)
+		repoCall1 := cRepo.On("RetrieveByID", context.Background(), tc.id).Return(tc.client, tc.err)
+		repoCall2 := cRepo.On("ChangeStatus", context.Background(), tc.id, clients.DisabledStatus).Return(tc.response, tc.err)
 		_, err := svc.DisableClient(context.Background(), tc.token, tc.id)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		if tc.err == nil {
+			repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
+			repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.id)
+			repoCall2.Parent.AssertCalled(t, "ChangeStatus", context.Background(), tc.id, clients.DisabledStatus)
+		}
 		repoCall.Unset()
 		repoCall1.Unset()
 		repoCall2.Unset()
-		repoCall3.Unset()
 	}
 
 	cases2 := []struct {
@@ -1146,15 +1167,14 @@ func TestDisableClient(t *testing.T) {
 			Offset: 0,
 			Limit:  100,
 			Status: tc.status,
+			Action: "c_list",
 		}
-		repoCall := pRepo.On("Evaluate", context.Background(), "group", mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("RetrieveAll", context.Background(), mock.Anything).Return(tc.response, nil)
+		repoCall := cRepo.On("RetrieveAll", context.Background(), pm).Return(tc.response, nil)
 		page, err := svc.ListClients(context.Background(), generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo), pm)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		size := uint64(len(page.Clients))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", tc.desc, tc.size, size))
 		repoCall.Unset()
-		repoCall1.Unset()
 	}
 }
 
@@ -1265,11 +1285,15 @@ func TestListMembers(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("CheckAdmin", context.Background(), mock.Anything).Return(nil)
+		repoCall := pRepo.On("CheckAdmin", context.Background(), validID).Return(nil)
 		repoCall1 := cRepo.On("Members", context.Background(), tc.groupID, tc.page).Return(tc.response, tc.err)
 		page, err := svc.ListMembers(context.Background(), tc.token, tc.groupID, tc.page)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
+		if tc.err == nil {
+			repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), validID)
+			repoCall1.Parent.AssertCalled(t, "Members", context.Background(), tc.groupID, tc.page)
+		}
 		repoCall.Unset()
 		repoCall1.Unset()
 	}
@@ -1316,12 +1340,13 @@ func TestIssueToken(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := cRepo.On("RetrieveByIdentity", context.Background(), mock.Anything).Return(tc.rClient, tc.err)
+		repoCall := cRepo.On("RetrieveByIdentity", context.Background(), tc.client.Credentials.Identity).Return(tc.rClient, tc.err)
 		token, err := svc.IssueToken(context.Background(), tc.client.Credentials.Identity, tc.client.Credentials.Secret)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if err == nil {
 			assert.NotEmpty(t, token.AccessToken, fmt.Sprintf("%s: expected %s not to be empty\n", tc.desc, token.AccessToken))
 			assert.NotEmpty(t, token.RefreshToken, fmt.Sprintf("%s: expected %s not to be empty\n", tc.desc, token.RefreshToken))
+			repoCall.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), tc.client.Credentials.Identity)
 		}
 		repoCall.Unset()
 	}
@@ -1337,7 +1362,7 @@ func TestRefreshToken(t *testing.T) {
 	rClient := client
 	rClient.Credentials.Secret, _ = phasher.Hash(client.Credentials.Secret)
 
-	repoCall := cRepo.On("RetrieveByIdentity", context.Background(), mock.Anything).Return(rClient, nil)
+	repoCall := cRepo.On("RetrieveByIdentity", context.Background(), client.Credentials.Identity).Return(rClient, nil)
 	token, err := svc.IssueToken(context.Background(), client.Credentials.Identity, client.Credentials.Secret)
 	assert.Nil(t, err, fmt.Sprintf("Issue token expected nil got %s\n", err))
 	repoCall.Unset()
@@ -1381,13 +1406,15 @@ func TestRefreshToken(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall1 := cRepo.On("RetrieveByIdentity", context.Background(), mock.Anything).Return(tc.client, nil)
+		repoCall1 := cRepo.On("RetrieveByIdentity", context.Background(), tc.client.Credentials.Identity).Return(tc.client, nil)
 		repoCall2 := cRepo.On("RetrieveByID", context.Background(), mock.Anything).Return(tc.client, tc.err)
 		token, err := svc.RefreshToken(context.Background(), tc.token)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if err == nil {
 			assert.NotEmpty(t, token.AccessToken, fmt.Sprintf("%s: expected %s not to be empty\n", tc.desc, token.AccessToken))
 			assert.NotEmpty(t, token.RefreshToken, fmt.Sprintf("%s: expected %s not to be empty\n", tc.desc, token.RefreshToken))
+			repoCall1.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), tc.client.Credentials.Identity)
+			repoCall2.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.client.ID)
 		}
 		repoCall1.Unset()
 		repoCall2.Unset()
