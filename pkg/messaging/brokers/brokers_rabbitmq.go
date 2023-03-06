@@ -12,6 +12,7 @@ import (
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/rabbitmq"
+	"github.com/opentracing/opentracing-go"
 )
 
 // SubjectAllChannels represents subject to subscribe for all the channels.
