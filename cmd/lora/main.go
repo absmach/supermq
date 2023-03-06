@@ -22,6 +22,7 @@ import (
 	"github.com/mainflux/mainflux/lora/mqtt"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
+	"github.com/opentracing/opentracing-go"
 	"golang.org/x/sync/errgroup"
 
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
@@ -81,13 +82,20 @@ func main() {
 	}
 	defer traceCloser.Close()
 
+	// lora tracer
+	loraTracer, loraTraceCloser, err := jaegerClient.NewTracer("lora_adapter", cfg.JaegerURL)
+	if err != nil {
+		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
+	}
+	defer loraTraceCloser.Close()
+
 	pub, err := brokers.NewPublisher(cfg.BrokerURL, tracer)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
 	defer pub.Close()
 
-	svc := newService(pub, rmConn, thingsRMPrefix, channelsRMPrefix, connsRMPrefix, logger)
+	svc := newService(pub, rmConn, thingsRMPrefix, channelsRMPrefix, connsRMPrefix, logger, loraTracer)
 
 	esConn, err := redisClient.Setup(envPrefixThingsES)
 	if err != nil {
@@ -161,12 +169,12 @@ func newRouteMapRepository(client *r.Client, prefix string, logger mflog.Logger)
 	return redis.NewRouteMapRepository(client, prefix)
 }
 
-func newService(pub messaging.Publisher, rmConn *r.Client, thingsRMPrefix, channelsRMPrefix, connsRMPrefix string, logger mflog.Logger) lora.Service {
+func newService(pub messaging.Publisher, rmConn *r.Client, thingsRMPrefix, channelsRMPrefix, connsRMPrefix string, logger mflog.Logger, tracer opentracing.Tracer) lora.Service {
 	thingsRM := newRouteMapRepository(rmConn, thingsRMPrefix, logger)
 	chansRM := newRouteMapRepository(rmConn, channelsRMPrefix, logger)
 	connsRM := newRouteMapRepository(rmConn, connsRMPrefix, logger)
 
-	svc := lora.New(pub, thingsRM, chansRM, connsRM)
+	svc := lora.New(pub, thingsRM, chansRM, connsRM, tracer)
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics(svcName, "api")
 	svc = api.MetricsMiddleware(svc, counter, latency)

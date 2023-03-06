@@ -15,6 +15,7 @@ import (
 	"github.com/mainflux/mainflux/opcua"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
+	"github.com/opentracing/opentracing-go"
 )
 
 const protocol = "opcua"
@@ -44,6 +45,7 @@ type client struct {
 	channelsRM opcua.RouteMapRepository
 	connectRM  opcua.RouteMapRepository
 	logger     logger.Logger
+	tracer     opentracing.Tracer
 }
 
 type message struct {
@@ -56,7 +58,7 @@ type message struct {
 }
 
 // NewSubscriber returns new OPC-UA client instance.
-func NewSubscriber(ctx context.Context, publisher messaging.Publisher, thingsRM, channelsRM, connectRM opcua.RouteMapRepository, log logger.Logger) opcua.Subscriber {
+func NewSubscriber(ctx context.Context, publisher messaging.Publisher, thingsRM, channelsRM, connectRM opcua.RouteMapRepository, log logger.Logger, tracer opentracing.Tracer) opcua.Subscriber {
 	return client{
 		ctx:        ctx,
 		publisher:  publisher,
@@ -64,6 +66,7 @@ func NewSubscriber(ctx context.Context, publisher messaging.Publisher, thingsRM,
 		channelsRM: channelsRM,
 		connectRM:  connectRM,
 		logger:     log,
+		tracer:     tracer,
 	}
 }
 
@@ -205,6 +208,8 @@ func (c client) runHandler(ctx context.Context, sub *opcuaGopcua.Subscription, u
 
 // Publish forwards messages from the OPC-UA Server to Mainflux Message broker
 func (c client) publish(ctx context.Context, token string, m message) error {
+	span := c.tracer.StartSpan("opcua publish")
+	defer span.Finish()
 	// Get route-map of the OPC-UA ServerURI
 	chanID, err := c.channelsRM.Get(ctx, m.ServerURI)
 	if err != nil {
@@ -236,7 +241,7 @@ func (c client) publish(ctx context.Context, token string, m message) error {
 		Created:   time.Now().UnixNano(),
 	}
 
-	if err := c.publisher.Publish(msg.Channel, &msg); err != nil {
+	if err := c.publisher.Publish(msg.Channel, &msg, span.Context()); err != nil {
 		return err
 	}
 

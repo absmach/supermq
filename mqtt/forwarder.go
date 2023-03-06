@@ -9,6 +9,7 @@ import (
 
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
+	"github.com/opentracing/opentracing-go"
 )
 
 const (
@@ -26,22 +27,26 @@ type Forwarder interface {
 type forwarder struct {
 	topic  string
 	logger log.Logger
+	tracer opentracing.Tracer
 }
 
 // NewForwarder returns new Forwarder implementation.
-func NewForwarder(topic string, logger log.Logger) Forwarder {
+func NewForwarder(topic string, logger log.Logger, tracer opentracing.Tracer) Forwarder {
 	return forwarder{
 		topic:  topic,
 		logger: logger,
+		tracer: tracer,
 	}
 }
 
 func (f forwarder) Forward(id string, sub messaging.Subscriber, pub messaging.Publisher) error {
-	return sub.Subscribe(id, f.topic, handle(pub, f.logger))
+	return sub.Subscribe(id, f.topic, handle(pub, f.logger, f.tracer))
 }
 
-func handle(pub messaging.Publisher, logger log.Logger) handleFunc {
+func handle(pub messaging.Publisher, logger log.Logger, tracer opentracing.Tracer) handleFunc {
 	return func(msg *messaging.Message) error {
+		span := tracer.StartSpan("mqtt forwarder publish")
+		defer span.Finish()
 		if msg.Protocol == protocol {
 			return nil
 		}
@@ -52,7 +57,7 @@ func handle(pub messaging.Publisher, logger log.Logger) handleFunc {
 			topic += "/" + strings.ReplaceAll(msg.Subtopic, ".", "/")
 		}
 		go func() {
-			if err := pub.Publish(topic, msg); err != nil {
+			if err := pub.Publish(topic, msg, span.Context()); err != nil {
 				logger.Warn(fmt.Sprintf("Failed to forward message: %s", err))
 			}
 		}()

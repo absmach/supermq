@@ -12,6 +12,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	mqtt_pubsub "github.com/mainflux/mainflux/pkg/messaging/mqtt"
+	"github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
 )
@@ -62,8 +63,10 @@ func TestPublisher(t *testing.T) {
 		client.Disconnect(100)
 	})
 
+	tracer := opentracing.NoopTracer{}
+	span := tracer.StartSpan("")
 	// Test publish with an empty topic.
-	err = pubsub.Publish("", &messaging.Message{Payload: data})
+	err = pubsub.Publish("", &messaging.Message{Payload: data}, span.Context())
 	assert.Equal(t, err, mqtt_pubsub.ErrEmptyTopic, fmt.Sprintf("Publish with empty topic: expected: %s, got: %s", mqtt_pubsub.ErrEmptyTopic, err))
 
 	cases := []struct {
@@ -104,7 +107,8 @@ func TestPublisher(t *testing.T) {
 			Subtopic:  tc.subtopic,
 			Payload:   tc.payload,
 		}
-		err := pubsub.Publish(topic, &expectedMsg)
+
+		err := pubsub.Publish(topic, &expectedMsg, span.Context())
 		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s\n", tc.desc, err))
 
 		data, err := proto.Marshal(&expectedMsg)
@@ -272,8 +276,12 @@ func TestPubSub(t *testing.T) {
 				Payload:   data,
 			}
 
+			tracer := opentracing.NoopTracer{}
+			span := tracer.StartSpan("")
+			defer span.Finish()
+
 			// Publish message, and then receive it on message channel.
-			err := pubsub.Publish(topic, &expectedMsg)
+			err := pubsub.Publish(topic, &expectedMsg, span.Context())
 			assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s\n", tc.desc, err))
 
 			receivedMsg := <-msgChan

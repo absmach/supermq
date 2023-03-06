@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"github.com/mainflux/mainflux"
+	"github.com/opentracing/opentracing-go"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/mainflux/mainflux/internal"
@@ -66,6 +67,13 @@ func main() {
 	}
 	defer traceCloser.Close()
 
+	// ws tracer
+	wsTracer, wsTraceCloser, err := jaegerClient.NewTracer("ws_adapter", cfg.JaegerURL)
+	if err != nil {
+		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
+	}
+	defer wsTraceCloser.Close()
+
 	nps, err := brokers.NewPubSub(cfg.BrokerURL, "", logger, tracer)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("Failed to connect to message broker: %s", err))
@@ -73,7 +81,7 @@ func main() {
 	}
 	defer nps.Close()
 
-	svc := newService(tc, nps, logger)
+	svc := newService(tc, nps, logger, wsTracer)
 
 	httpServerConfig := server.Config{Port: defSvcHttpPort}
 	if err := env.Parse(&httpServerConfig, env.Options{Prefix: envPrefixHttp, AltPrefix: envPrefix}); err != nil {
@@ -94,8 +102,8 @@ func main() {
 	}
 }
 
-func newService(tc mainflux.ThingsServiceClient, nps messaging.PubSub, logger mflog.Logger) adapter.Service {
-	svc := adapter.New(tc, nps)
+func newService(tc mainflux.ThingsServiceClient, nps messaging.PubSub, logger mflog.Logger, tracer opentracing.Tracer) adapter.Service {
+	svc := adapter.New(tc, nps, tracer)
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics("ws_adapter", "api")
 	svc = api.MetricsMiddleware(svc, counter, latency)

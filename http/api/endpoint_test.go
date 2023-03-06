@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 
 	"github.com/mainflux/mainflux"
@@ -24,7 +25,8 @@ import (
 
 func newService(cc mainflux.ThingsServiceClient) adapter.Service {
 	pub := mocks.NewPublisher()
-	return adapter.New(pub, cc)
+	tracer := opentracing.NoopTracer{}
+	return adapter.New(pub, cc, tracer)
 }
 
 func newHTTPServer(svc adapter.Service) *httptest.Server {

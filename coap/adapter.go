@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/mainflux/mainflux/pkg/errors"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/pkg/messaging"
@@ -42,20 +43,24 @@ type adapterService struct {
 	auth    mainflux.ThingsServiceClient
 	pubsub  messaging.PubSub
 	obsLock sync.Mutex
+	tracer  opentracing.Tracer
 }
 
 // New instantiates the CoAP adapter implementation.
-func New(auth mainflux.ThingsServiceClient, pubsub messaging.PubSub) Service {
+func New(auth mainflux.ThingsServiceClient, pubsub messaging.PubSub, tracer opentracing.Tracer) Service {
 	as := &adapterService{
 		auth:    auth,
 		pubsub:  pubsub,
 		obsLock: sync.Mutex{},
+		tracer:  tracer,
 	}
 
 	return as
 }
 
 func (svc *adapterService) Publish(ctx context.Context, key string, msg *messaging.Message) error {
+	span := svc.tracer.StartSpan("coap publish")
+	defer span.Finish()
 	ar := &mainflux.AccessByKeyReq{
 		Token:  key,
 		ChanID: msg.Channel,
@@ -66,7 +71,7 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 	}
 	msg.Publisher = thid.GetValue()
 
-	return svc.pubsub.Publish(msg.Channel, msg)
+	return svc.pubsub.Publish(msg.Channel, msg, span.Context())
 }
 
 func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic string, c Client) error {

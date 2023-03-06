@@ -48,12 +48,12 @@ func NewPublisher(url string, tracer opentracing.Tracer) (messaging.Publisher, e
 	return ret, nil
 }
 
-func (pub *publisher) Publish(topic string, msg *messaging.Message) error {
+func (pub *publisher) Publish(topic string, msg *messaging.Message, spanContext opentracing.SpanContext) error {
 	if topic == "" {
 		return ErrEmptyTopic
 	}
 
-	span := pub.tracer.StartSpan(publishOP, ext.SpanKindProducer)
+	span := pub.tracer.StartSpan(publishOP, ext.SpanKindProducer, opentracing.ChildOf(spanContext))
 	ext.MessageBusDestination.Set(span, msg.Subtopic)
 	defer span.Finish()
 

@@ -66,13 +66,20 @@ func main() {
 	}
 	defer traceCloser.Close()
 
+	// Coap tracer
+	coapTracer, coapTraceCloser, err := jaegerClient.NewTracer("coap_adapter", cfg.JaegerURL)
+	if err != nil {
+		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
+	}
+	defer coapTraceCloser.Close()
+
 	nps, err := brokers.NewPubSub(cfg.BrokerURL, "", logger, tracer)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
 	defer nps.Close()
 
-	svc := coap.New(tc, nps)
+	svc := coap.New(tc, nps, coapTracer)
 
 	svc = api.LoggingMiddleware(svc, logger)
 

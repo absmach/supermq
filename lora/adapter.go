@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux/pkg/messaging"
+	"github.com/opentracing/opentracing-go"
 )
 
 const protocol = "lora"
@@ -65,20 +66,24 @@ type adapterService struct {
 	thingsRM   RouteMapRepository
 	channelsRM RouteMapRepository
 	connectRM  RouteMapRepository
+	tracer     opentracing.Tracer
 }
 
 // New instantiates the LoRa adapter implementation.
-func New(publisher messaging.Publisher, thingsRM, channelsRM, connectRM RouteMapRepository) Service {
+func New(publisher messaging.Publisher, thingsRM, channelsRM, connectRM RouteMapRepository, tracer opentracing.Tracer) Service {
 	return &adapterService{
 		publisher:  publisher,
 		thingsRM:   thingsRM,
 		channelsRM: channelsRM,
 		connectRM:  connectRM,
+		tracer:     tracer,
 	}
 }
 
 // Publish forwards messages from Lora MQTT broker to Mainflux Message broker
 func (as *adapterService) Publish(ctx context.Context, m *Message) error {
+	span := as.tracer.StartSpan("lora publish")
+	defer span.Finish()
 	// Get route map of lora application
 	thingID, err := as.thingsRM.Get(ctx, m.DevEUI)
 	if err != nil {
@@ -122,7 +127,7 @@ func (as *adapterService) Publish(ctx context.Context, m *Message) error {
 		Created:   time.Now().UnixNano(),
 	}
 
-	return as.publisher.Publish(msg.Channel, &msg)
+	return as.publisher.Publish(msg.Channel, &msg, span.Context())
 }
 
 func (as *adapterService) CreateThing(ctx context.Context, thingID string, devEUI string) error {

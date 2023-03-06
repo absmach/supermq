@@ -9,6 +9,7 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/mainflux/mainflux/pkg/messaging"
+	"github.com/opentracing/opentracing-go"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -35,7 +36,7 @@ func NewPublisher(address string, timeout time.Duration) (messaging.Publisher, e
 	return ret, nil
 }
 
-func (pub publisher) Publish(topic string, msg *messaging.Message) error {
+func (pub publisher) Publish(topic string, msg *messaging.Message, spanContext opentracing.SpanContext) error {
 	if topic == "" {
 		return ErrEmptyTopic
 	}

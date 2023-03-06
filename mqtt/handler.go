@@ -17,6 +17,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mproxy/pkg/session"
+	"github.com/opentracing/opentracing-go"
 )
 
 var _ session.Handler = (*handler)(nil)
@@ -57,16 +58,18 @@ type handler struct {
 	auth       auth.Client
 	logger     logger.Logger
 	es         redis.EventStore
+	tracer     opentracing.Tracer
 }
 
 // NewHandler creates new Handler entity
 func NewHandler(publishers []messaging.Publisher, es redis.EventStore,
-	logger logger.Logger, auth auth.Client) session.Handler {
+	logger logger.Logger, auth auth.Client, tracer opentracing.Tracer) session.Handler {
 	return &handler{
 		es:         es,
 		logger:     logger,
 		publishers: publishers,
 		auth:       auth,
+		tracer:     tracer,
 	}
 }
 
@@ -141,6 +144,8 @@ func (h *handler) Connect(c *session.Client) {
 
 // Publish - after client successfully published
 func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
+	span := h.tracer.StartSpan("mqtt publish")
+	defer span.Finish()
 	if c == nil {
 		h.logger.Error(LogErrFailedPublish + ErrClientNotInitialized.Error())
 		return
@@ -174,7 +179,7 @@ func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 	}
 
 	for _, pub := range h.publishers {
-		if err := pub.Publish(msg.Channel, &msg); err != nil {
+		if err := pub.Publish(msg.Channel, &msg, span.Context()); err != nil {
 			h.logger.Error(LogErrFailedPublishToMsgBroker + err.Error())
 		}
 	}

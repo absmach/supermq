@@ -10,12 +10,13 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/ws"
+	"github.com/opentracing/opentracing-go"
 )
 
 var _ messaging.PubSub = (*mockPubSub)(nil)
 
 type MockPubSub interface {
-	Publish(string, *messaging.Message) error
+	Publish(string, *messaging.Message, opentracing.SpanContext) error
 	Subscribe(string, string, messaging.MessageHandler) error
 	Unsubscribe(string, string) error
 	SetFail(bool)
@@ -32,7 +33,7 @@ type mockPubSub struct {
 func NewPubSub() MockPubSub {
 	return &mockPubSub{false, nil}
 }
-func (pubsub *mockPubSub) Publish(s string, msg *messaging.Message) error {
+func (pubsub *mockPubSub) Publish(s string, msg *messaging.Message, spanContext opentracing.SpanContext) error {
 	if pubsub.conn != nil {
 		data, err := json.Marshal(msg)
 		if err != nil {

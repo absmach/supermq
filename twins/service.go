@@ -13,6 +13,7 @@ import (
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/senml"
@@ -81,12 +82,13 @@ type twinsService struct {
 	channelID  string
 	twinCache  TwinCache
 	logger     logger.Logger
+	tracer     opentracing.Tracer
 }
 
 var _ Service = (*twinsService)(nil)
 
 // New instantiates the twins service implementation.
-func New(publisher messaging.Publisher, auth mainflux.AuthServiceClient, twins TwinRepository, tcache TwinCache, sr StateRepository, idp mainflux.IDProvider, chann string, logger logger.Logger) Service {
+func New(publisher messaging.Publisher, auth mainflux.AuthServiceClient, twins TwinRepository, tcache TwinCache, sr StateRepository, idp mainflux.IDProvider, chann string, logger logger.Logger, tracer opentracing.Tracer) Service {
 	return &twinsService{
 		publisher:  publisher,
 		auth:       auth,
@@ -96,6 +98,7 @@ func New(publisher messaging.Publisher, auth mainflux.AuthServiceClient, twins T
 		idProvider: idp,
 		channelID:  chann,
 		logger:     logger,
+		tracer:     tracer,
 	}
 }
 
@@ -397,6 +400,8 @@ func findAttribute(name string, attrs []Attribute) (idx int) {
 }
 
 func (ts *twinsService) publish(twinID *string, err *error, succOp, failOp string, payload *[]byte) {
+	span := ts.tracer.StartSpan("twins publish")
+	defer span.Finish()
 	if ts.channelID == "" {
 		return
 	}
@@ -421,7 +426,7 @@ func (ts *twinsService) publish(twinID *string, err *error, succOp, failOp strin
 		Created:   time.Now().UnixNano(),
 	}
 
-	if err := ts.publisher.Publish(msg.Channel, &msg); err != nil {
+	if err := ts.publisher.Publish(msg.Channel, &msg, span.Context()); err != nil {
 		ts.logger.Warn(fmt.Sprintf("Failed to publish notification on Message Broker: %s", err))
 	}
 }

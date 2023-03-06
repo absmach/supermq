@@ -1,6 +1,9 @@
 package mocks
 
-import "github.com/mainflux/mainflux/pkg/messaging"
+import (
+	"github.com/mainflux/mainflux/pkg/messaging"
+	"github.com/opentracing/opentracing-go"
+)
 
 type MockPublisher struct{}
 
@@ -9,7 +12,7 @@ func NewPublisher() messaging.Publisher {
 	return MockPublisher{}
 }
 
-func (pub MockPublisher) Publish(topic string, msg *messaging.Message) error {
+func (pub MockPublisher) Publish(topic string, msg *messaging.Message, spanContext opentracing.SpanContext) error {
 	return nil
 }
 

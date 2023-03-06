@@ -83,6 +83,13 @@ func main() {
 	}
 	defer traceCloser.Close()
 
+	// mqtt tracer
+	mqttTracer, mqttTraceCloser, err := jaegerClient.NewTracer("mqtt_adapter", cfg.JaegerURL)
+	if err != nil {
+		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
+	}
+	defer mqttTraceCloser.Close()
+
 	nps, err := brokers.NewPubSub(cfg.BrokerURL, "mqtt", logger, tracer)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
@@ -94,7 +101,7 @@ func main() {
 		logger.Fatal(fmt.Sprintf("failed to create MQTT publisher: %s", err))
 	}
 
-	fwd := mqtt.NewForwarder(brokers.SubjectAllChannels, logger)
+	fwd := mqtt.NewForwarder(brokers.SubjectAllChannels, logger, mqttTracer)
 	if err := fwd.Forward(svcName, nps, mpub); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to forward message broker messages: %s", err))
 	}
@@ -128,7 +135,7 @@ func main() {
 
 	authClient := auth.New(ac, tc)
 
-	h := mqtt.NewHandler([]messaging.Publisher{np}, es, logger, authClient)
+	h := mqtt.NewHandler([]messaging.Publisher{np}, es, logger, authClient, mqttTracer)
 
 	logger.Info(fmt.Sprintf("Starting MQTT proxy on port %s", cfg.MqttPort))
 	g.Go(func() error {

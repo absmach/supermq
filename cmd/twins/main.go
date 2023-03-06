@@ -117,7 +117,7 @@ func main() {
 	}
 	defer pubSub.Close()
 
-	svc := newService(svcName, pubSub, cfg.ChannelID, auth, dbTracer, db, cacheTracer, cacheClient, logger)
+	svc := newService(svcName, pubSub, cfg.ChannelID, auth, dbTracer, db, cacheTracer, cacheClient, logger, tracer)
 
 	tracer, closer, err := jaegerClient.NewTracer("twins", cfg.JaegerURL)
 	if err != nil {
@@ -144,7 +144,7 @@ func main() {
 	}
 }
 
-func newService(id string, ps messaging.PubSub, chanID string, users mainflux.AuthServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, cacheTracer opentracing.Tracer, cacheClient *redis.Client, logger mflog.Logger) twins.Service {
+func newService(id string, ps messaging.PubSub, chanID string, users mainflux.AuthServiceClient, dbTracer opentracing.Tracer, db *mongo.Database, cacheTracer opentracing.Tracer, cacheClient *redis.Client, logger mflog.Logger, tracer opentracing.Tracer) twins.Service {
 	twinRepo := twmongodb.NewTwinRepository(db)
 	twinRepo = tracing.TwinRepositoryMiddleware(dbTracer, twinRepo)
 
@@ -155,7 +155,7 @@ func newService(id string, ps messaging.PubSub, chanID string, users mainflux.Au
 	twinCache := rediscache.NewTwinCache(cacheClient)
 	twinCache = tracing.TwinCacheMiddleware(cacheTracer, twinCache)
 
-	svc := twins.New(ps, users, twinRepo, twinCache, stateRepo, idProvider, chanID, logger)
+	svc := twins.New(ps, users, twinRepo, twinCache, stateRepo, idProvider, chanID, logger, tracer)
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics(svcName, "api")
 	svc = api.MetricsMiddleware(svc, counter, latency)

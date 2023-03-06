@@ -13,6 +13,7 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
+	"github.com/opentracing/opentracing-go"
 )
 
 const (
@@ -62,18 +63,22 @@ var _ Service = (*adapterService)(nil)
 type adapterService struct {
 	auth   mainflux.ThingsServiceClient
 	pubsub messaging.PubSub
+	tracer opentracing.Tracer
 }
 
 // New instantiates the WS adapter implementation
-func New(auth mainflux.ThingsServiceClient, pubsub messaging.PubSub) Service {
+func New(auth mainflux.ThingsServiceClient, pubsub messaging.PubSub, tracer opentracing.Tracer) Service {
 	return &adapterService{
 		auth:   auth,
 		pubsub: pubsub,
+		tracer: tracer,
 	}
 }
 
 // Publish publishes the message using the broker
 func (svc *adapterService) Publish(ctx context.Context, thingKey string, msg *messaging.Message) error {
+	span := svc.tracer.StartSpan("ws publish")
+	defer span.Finish()
 	thid, err := svc.authorize(ctx, thingKey, msg.GetChannel())
 	if err != nil {
 		return ErrUnauthorizedAccess
@@ -85,7 +90,7 @@ func (svc *adapterService) Publish(ctx context.Context, thingKey string, msg *me
 
 	msg.Publisher = thid.GetValue()
 
-	if err := svc.pubsub.Publish(msg.GetChannel(), msg); err != nil {
+	if err := svc.pubsub.Publish(msg.GetChannel(), msg, span.Context()); err != nil {
 		return ErrFailedMessagePublish
 	}
 
