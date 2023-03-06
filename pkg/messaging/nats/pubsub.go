@@ -171,7 +171,7 @@ func (ps *pubsub) natsHandler(h messaging.MessageHandler) broker.MsgHandler {
 		if err != nil {
 			ps.logger.Warn(fmt.Sprintf("failed to get span context, %s", err.Error()))
 		} else {
-			span := ps.tracer.StartSpan("Received Message", ext.SpanKindConsumer, opentracing.FollowsFrom(sc))
+			span := ps.tracer.StartSpan(subscribeOP, ext.SpanKindConsumer, opentracing.FollowsFrom(sc))
 			ext.MessageBusDestination.Set(span, msg.Subtopic)
 			defer span.Finish()
 		}
