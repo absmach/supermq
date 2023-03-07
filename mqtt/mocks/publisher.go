@@ -1,8 +1,6 @@
 package mocks
 
-import (
-	"github.com/mainflux/mainflux/pkg/messaging"
-)
+import "github.com/mainflux/mainflux/pkg/messaging"
 
 type MockPublisher struct{}
 

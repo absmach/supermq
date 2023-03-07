@@ -14,5 +14,5 @@ message Message {
 	string protocol  = 4;
 	bytes  payload   = 5;
 	int64  created   = 6; // Unix timestamp in nanoseconds
-	bytes span = 7;
+	bytes  span      = 7;
 }
