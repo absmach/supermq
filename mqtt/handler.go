@@ -144,8 +144,6 @@ func (h *handler) Connect(c *session.Client) {
 
 // Publish - after client successfully published
 func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
-	span := h.tracer.StartSpan("mqtt publish")
-	defer span.Finish()
 	if c == nil {
 		h.logger.Error(LogErrFailedPublish + ErrClientNotInitialized.Error())
 		return
@@ -179,7 +177,7 @@ func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 	}
 
 	for _, pub := range h.publishers {
-		if err := pub.Publish(msg.Channel, &msg, span.Context()); err != nil {
+		if err := pub.Publish(msg.Channel, &msg); err != nil {
 			h.logger.Error(LogErrFailedPublishToMsgBroker + err.Error())
 		}
 	}

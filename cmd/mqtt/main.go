@@ -22,6 +22,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	mqttpub "github.com/mainflux/mainflux/pkg/messaging/mqtt"
+	"github.com/mainflux/mainflux/pkg/messaging/nats/tracing"
 	mp "github.com/mainflux/mproxy/pkg/mqtt"
 	"github.com/mainflux/mproxy/pkg/session"
 	ws "github.com/mainflux/mproxy/pkg/websocket"
@@ -101,15 +102,16 @@ func main() {
 		logger.Fatal(fmt.Sprintf("failed to create MQTT publisher: %s", err))
 	}
 
-	fwd := mqtt.NewForwarder(brokers.SubjectAllChannels, logger, mqttTracer)
+	fwd := mqtt.NewForwarder(brokers.SubjectAllChannels, logger)
 	if err := fwd.Forward(svcName, nps, mpub); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to forward message broker messages: %s", err))
 	}
 
-	np, err := brokers.NewPublisher(cfg.BrokerURL, tracer)
+	np, err := brokers.NewPublisher(cfg.BrokerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
+	np = tracing.NewPublisherMiddleware(np, tracer)
 	defer np.Close()
 
 	ec, err := redisClient.Setup(envPrefixES)
