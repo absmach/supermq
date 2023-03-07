@@ -17,7 +17,6 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mproxy/pkg/session"
-	"github.com/opentracing/opentracing-go"
 )
 
 var _ session.Handler = (*handler)(nil)
@@ -58,18 +57,16 @@ type handler struct {
 	auth       auth.Client
 	logger     logger.Logger
 	es         redis.EventStore
-	tracer     opentracing.Tracer
 }
 
 // NewHandler creates new Handler entity
 func NewHandler(publishers []messaging.Publisher, es redis.EventStore,
-	logger logger.Logger, auth auth.Client, tracer opentracing.Tracer) session.Handler {
+	logger logger.Logger, auth auth.Client) session.Handler {
 	return &handler{
 		es:         es,
 		logger:     logger,
 		publishers: publishers,
 		auth:       auth,
-		tracer:     tracer,
 	}
 }
 
