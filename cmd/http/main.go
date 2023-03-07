@@ -73,7 +73,7 @@ func main() {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
 
-	pub = natstracing.NewPublisherMiddleware(pub, pbTracer)
+	pub = natstracing.New(pub, pbTracer)
 	defer pub.Close()
 
 	tracer, closer, err := jaegerClient.NewTracer("http_adapter", cfg.JaegerURL)

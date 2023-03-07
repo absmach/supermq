@@ -20,7 +20,7 @@ type publisherMiddleware struct {
 	tracer    opentracing.Tracer
 }
 
-func NewPublisherMiddleware(publisher messaging.Publisher, tracer opentracing.Tracer) *publisherMiddleware {
+func New(publisher messaging.Publisher, tracer opentracing.Tracer) *publisherMiddleware {
 	return &publisherMiddleware{
 		publisher: publisher,
 		tracer:    tracer,

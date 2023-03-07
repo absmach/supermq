@@ -16,7 +16,7 @@ type tracingServiceMiddleware struct {
 	svc    coap.Service
 }
 
-func NewTracingMiddleware(tracer opentracing.Tracer, svc coap.Service) *tracingServiceMiddleware {
+func New(tracer opentracing.Tracer, svc coap.Service) *tracingServiceMiddleware {
 	return &tracingServiceMiddleware{
 		tracer: tracer,
 		svc:    svc,

@@ -86,7 +86,7 @@ func main() {
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
-	pub = tracing.NewPublisherMiddleware(pub, tracer)
+	pub = tracing.New(pub, tracer)
 	defer pub.Close()
 
 	svc := newService(pub, rmConn, thingsRMPrefix, channelsRMPrefix, connsRMPrefix, logger)

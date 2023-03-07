@@ -111,7 +111,7 @@ func main() {
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
-	np = tracing.NewPublisherMiddleware(np, tracer)
+	np = tracing.New(np, tracer)
 	defer np.Close()
 
 	ec, err := redisClient.Setup(envPrefixES)

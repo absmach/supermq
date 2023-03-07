@@ -82,7 +82,7 @@ func main() {
 
 	svc := coap.New(tc, nps)
 
-	svc = tracing.NewTracingMiddleware(coapTracer, svc)
+	svc = tracing.New(coapTracer, svc)
 
 	svc = api.LoggingMiddleware(svc, logger)
 
