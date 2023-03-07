@@ -4,13 +4,10 @@
 package nats
 
 import (
-	"bytes"
 	"fmt"
 
 	"github.com/mainflux/mainflux/pkg/messaging"
 	broker "github.com/nats-io/nats.go"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -23,46 +20,32 @@ var _ messaging.Publisher = (*publisher)(nil)
 
 // traced ops
 const (
-	publishOP   = "publish_op"
 	subscribeOP = "subscribe_op"
 )
 
 type publisher struct {
-	conn   *broker.Conn
-	tracer opentracing.Tracer
+	conn *broker.Conn
 }
 
 // Publisher wraps messaging Publisher exposing
 // Close() method for NATS connection.
 
 // NewPublisher returns NATS message Publisher.
-func NewPublisher(url string, tracer opentracing.Tracer) (messaging.Publisher, error) {
+func NewPublisher(url string) (messaging.Publisher, error) {
 	conn, err := broker.Connect(url, broker.MaxReconnects(maxReconnects))
 	if err != nil {
 		return nil, err
 	}
 	ret := &publisher{
-		conn:   conn,
-		tracer: tracer,
+		conn: conn,
 	}
 	return ret, nil
 }
 
-func (pub *publisher) Publish(topic string, msg *messaging.Message, spanContext opentracing.SpanContext) error {
+func (pub *publisher) Publish(topic string, msg *messaging.Message) error {
 	if topic == "" {
 		return ErrEmptyTopic
 	}
-
-	span := pub.tracer.StartSpan(publishOP, ext.SpanKindProducer, opentracing.ChildOf(spanContext))
-	ext.MessageBusDestination.Set(span, msg.Subtopic)
-	defer span.Finish()
-
-	dataBuffer := bytes.NewBuffer(msg.Span)
-
-	if err := pub.tracer.Inject(span.Context(), opentracing.Binary, dataBuffer); err != nil {
-		return err
-	}
-	msg.Span = dataBuffer.Bytes()
 
 	data, err := proto.Marshal(msg)
 	if err != nil {

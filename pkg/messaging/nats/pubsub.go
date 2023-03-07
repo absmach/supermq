@@ -39,6 +39,7 @@ type pubsub struct {
 	logger        log.Logger
 	mu            sync.Mutex
 	queue         string
+	tracer        opentracing.Tracer
 	subscriptions map[string]map[string]subscription
 }
 
@@ -57,9 +58,9 @@ func NewPubSub(url, queue string, logger log.Logger, tracer opentracing.Tracer) 
 
 	ret := &pubsub{
 		publisher: publisher{
-			conn:   conn,
-			tracer: tracer,
+			conn: conn,
 		},
+		tracer:        tracer,
 		queue:         queue,
 		logger:        logger,
 		subscriptions: make(map[string]map[string]subscription),

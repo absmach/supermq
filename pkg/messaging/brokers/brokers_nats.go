@@ -22,8 +22,8 @@ func init() {
 	log.Println("The binary was build using Nats as the message broker")
 }
 
-func NewPublisher(url string, tracer opentracing.Tracer) (messaging.Publisher, error) {
-	pb, err := nats.NewPublisher(url, tracer)
+func NewPublisher(url string) (messaging.Publisher, error) {
+	pb, err := nats.NewPublisher(url)
 	if err != nil {
 		return nil, err
 	}

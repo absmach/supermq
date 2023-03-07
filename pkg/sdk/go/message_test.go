@@ -17,7 +17,6 @@ import (
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
-	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,8 +25,7 @@ const eof = "EOF"
 
 func newMessageService(cc mainflux.ThingsServiceClient) adapter.Service {
 	pub := mocks.NewPublisher()
-	tracer := opentracing.NoopTracer{}
-	return adapter.New(pub, cc, tracer)
+	return adapter.New(pub, cc)
 }
 
 func newMessageServer(svc adapter.Service) *httptest.Server {

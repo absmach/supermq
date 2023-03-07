@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/mainflux/mainflux/pkg/messaging"
-	"github.com/opentracing/opentracing-go"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"google.golang.org/protobuf/proto"
 )
@@ -42,7 +41,7 @@ func NewPublisher(url string) (messaging.Publisher, error) {
 	return ret, nil
 }
 
-func (pub *publisher) Publish(topic string, msg *messaging.Message, spanContext opentracing.SpanContext) error {
+func (pub *publisher) Publish(topic string, msg *messaging.Message) error {
 	if topic == "" {
 		return ErrEmptyTopic
 	}

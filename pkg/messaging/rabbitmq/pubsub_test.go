@@ -11,7 +11,6 @@ import (
 
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/rabbitmq"
-	"github.com/opentracing/opentracing-go"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
@@ -88,10 +87,7 @@ func TestPublisher(t *testing.T) {
 			Subtopic:  tc.subtopic,
 			Payload:   tc.payload,
 		}
-		tracer := opentracing.NoopTracer{}
-		span := tracer.StartSpan("")
-		defer span.Finish()
-		err = pubsub.Publish(topic, &expectedMsg, span.Context())
+		err = pubsub.Publish(topic, &expectedMsg)
 		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s", tc.desc, err))
 
 		receivedMsg := <-msgChan
@@ -416,11 +412,7 @@ func TestPubSub(t *testing.T) {
 				Payload: data,
 			}
 
-			tracer := opentracing.NoopTracer{}
-			span := tracer.StartSpan("")
-			defer span.Finish()
-
-			err = pubsub.Publish(tc.topic, &expectedMsg, span.Context())
+			err = pubsub.Publish(tc.topic, &expectedMsg)
 			assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", tc.desc, err))
 
 			receivedMsg := <-msgChan
