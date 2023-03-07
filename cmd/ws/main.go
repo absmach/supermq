@@ -24,6 +24,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	adapter "github.com/mainflux/mainflux/ws"
 	"github.com/mainflux/mainflux/ws/api"
+	"github.com/mainflux/mainflux/ws/tracing"
 )
 
 const (
@@ -103,7 +104,8 @@ func main() {
 }
 
 func newService(tc mainflux.ThingsServiceClient, nps messaging.PubSub, logger mflog.Logger, tracer opentracing.Tracer) adapter.Service {
-	svc := adapter.New(tc, nps, tracer)
+	svc := adapter.New(tc, nps)
+	svc = tracing.New(tracer, svc)
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics("ws_adapter", "api")
 	svc = api.MetricsMiddleware(svc, counter, latency)

@@ -13,7 +13,6 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/ws"
 	"github.com/mainflux/mainflux/ws/mocks"
-	"github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -35,8 +34,7 @@ var msg = messaging.Message{
 
 func newService(cc mainflux.ThingsServiceClient) (ws.Service, mocks.MockPubSub) {
 	pubsub := mocks.NewPubSub()
-	tracer := opentracing.NoopTracer{}
-	return ws.New(cc, pubsub, tracer), pubsub
+	return ws.New(cc, pubsub), pubsub
 }
 
 func TestPublish(t *testing.T) {

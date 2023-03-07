@@ -12,7 +12,6 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/mainflux/mainflux"
-	"github.com/opentracing/opentracing-go"
 
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/ws"
@@ -34,8 +33,7 @@ var msg = []byte(`[{"n":"current","t":-1,"v":1.6}]`)
 
 func newService(cc mainflux.ThingsServiceClient) (ws.Service, mocks.MockPubSub) {
 	pubsub := mocks.NewPubSub()
-	tracer := opentracing.NoopTracer{}
-	return ws.New(cc, pubsub, tracer), pubsub
+	return ws.New(cc, pubsub), pubsub
 }
 
 func newHTTPServer(svc ws.Service) *httptest.Server {
