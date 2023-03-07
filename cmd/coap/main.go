@@ -11,6 +11,7 @@ import (
 
 	"github.com/mainflux/mainflux/coap"
 	"github.com/mainflux/mainflux/coap/api"
+	"github.com/mainflux/mainflux/coap/tracing"
 	"github.com/mainflux/mainflux/internal"
 	thingsClient "github.com/mainflux/mainflux/internal/clients/grpc/things"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
@@ -79,7 +80,9 @@ func main() {
 	}
 	defer nps.Close()
 
-	svc := coap.New(tc, nps, coapTracer)
+	svc := coap.New(tc, nps)
+
+	svc = tracing.NewTracingMiddleware(coapTracer, svc)
 
 	svc = api.LoggingMiddleware(svc, logger)
 
