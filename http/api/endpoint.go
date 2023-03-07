@@ -12,6 +12,7 @@ import (
 
 func sendMessageEndpoint(svc http.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
+
 		req := request.(publishReq)
 
 		if err := req.validate(); err != nil {

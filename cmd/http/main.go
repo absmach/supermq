@@ -12,6 +12,7 @@ import (
 	"github.com/mainflux/mainflux"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/http/api"
+	"github.com/mainflux/mainflux/http/tracing"
 	"github.com/mainflux/mainflux/internal"
 	thingsClient "github.com/mainflux/mainflux/internal/clients/grpc/things"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
@@ -100,7 +101,8 @@ func main() {
 }
 
 func newService(pub messaging.Publisher, tc mainflux.ThingsServiceClient, logger mflog.Logger, tracer opentracing.Tracer) adapter.Service {
-	svc := adapter.New(pub, tc, tracer)
+	svc := adapter.New(pub, tc)
+	svc = tracing.New(tracer, svc)
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics(svcName, "api")
 	svc = api.MetricsMiddleware(svc, counter, latency)
