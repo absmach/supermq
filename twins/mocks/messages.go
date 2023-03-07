@@ -6,7 +6,6 @@ package mocks
 import (
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
-	"github.com/opentracing/opentracing-go"
 )
 
 var _ messaging.Publisher = (*mockBroker)(nil)
@@ -22,7 +21,7 @@ func NewBroker(sub map[string]string) messaging.Publisher {
 	}
 }
 
-func (mb mockBroker) Publish(topic string, msg *messaging.Message, spanContext opentracing.SpanContext) error {
+func (mb mockBroker) Publish(topic string, msg *messaging.Message) error {
 	if len(msg.Payload) == 0 {
 		return errors.New("failed to publish")
 	}

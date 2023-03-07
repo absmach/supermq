@@ -9,7 +9,6 @@ import (
 	"github.com/mainflux/mainflux/pkg/uuid"
 	"github.com/mainflux/mainflux/twins"
 	"github.com/mainflux/senml"
-	"github.com/opentracing/opentracing-go"
 )
 
 const publisher = "twins"
@@ -25,9 +24,8 @@ func NewService(tokens map[string]string) twins.Service {
 	idProvider := uuid.NewMock()
 	subs := map[string]string{"chanID": "chanID"}
 	broker := NewBroker(subs)
-	tracer := opentracing.NoopTracer{}
 
-	return twins.New(broker, auth, twinsRepo, twinCache, statesRepo, idProvider, "chanID", nil, tracer)
+	return twins.New(broker, auth, twinsRepo, twinCache, statesRepo, idProvider, "chanID", nil)
 }
 
 // CreateDefinition creates twin definition

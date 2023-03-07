@@ -88,13 +88,6 @@ func main() {
 	}
 	defer traceCloser.Close()
 
-	// opcua tracer
-	opcuaTracer, opcuaTraceCloser, err := jaegerClient.NewTracer("nats_pubsub", cfg.JaegerURL)
-	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
-	}
-	defer opcuaTraceCloser.Close()
-
 	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger, tracer)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
@@ -102,7 +95,7 @@ func main() {
 	defer pubSub.Close()
 
 	ctx := context.Background()
-	sub := gopcua.NewSubscriber(ctx, pubSub, thingRM, chanRM, connRM, logger, opcuaTracer)
+	sub := gopcua.NewSubscriber(ctx, pubSub, thingRM, chanRM, connRM, logger)
 	browser := gopcua.NewBrowser(ctx, logger)
 
 	svc := newService(sub, browser, thingRM, chanRM, connRM, opcConfig, logger)

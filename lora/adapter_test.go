@@ -12,7 +12,6 @@ import (
 	"github.com/mainflux/mainflux/lora"
 	"github.com/mainflux/mainflux/lora/mocks"
 	"github.com/mainflux/mainflux/pkg/errors"
-	"github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -33,9 +32,8 @@ func newService() lora.Service {
 	thingsRM := mocks.NewRouteMap()
 	channelsRM := mocks.NewRouteMap()
 	connsRM := mocks.NewRouteMap()
-	tracer := opentracing.NoopTracer{}
 
-	return lora.New(pub, thingsRM, channelsRM, connsRM, tracer)
+	return lora.New(pub, thingsRM, channelsRM, connsRM)
 }
 
 func TestPublish(t *testing.T) {

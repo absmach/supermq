@@ -22,6 +22,7 @@ import (
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
+	natstracing "github.com/mainflux/mainflux/pkg/messaging/nats/tracing"
 	"github.com/opentracing/opentracing-go"
 	"golang.org/x/sync/errgroup"
 )
@@ -67,10 +68,12 @@ func main() {
 	}
 	defer traceCloser.Close()
 
-	pub, err := brokers.NewPublisher(cfg.BrokerURL, pbTracer)
+	pub, err := brokers.NewPublisher(cfg.BrokerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
+
+	pub = natstracing.NewPublisherMiddleware(pub, pbTracer)
 	defer pub.Close()
 
 	tracer, closer, err := jaegerClient.NewTracer("http_adapter", cfg.JaegerURL)
