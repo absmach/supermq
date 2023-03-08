@@ -12,6 +12,7 @@ import (
 	"github.com/mainflux/mainflux/consumers"
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	"github.com/mainflux/mainflux/consumers/writers/mongodb"
+	"github.com/mainflux/mainflux/consumers/writers/tracing"
 	"github.com/mainflux/mainflux/internal"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	mongoClient "github.com/mainflux/mainflux/internal/clients/mongo"
@@ -71,7 +72,7 @@ func main() {
 		logger.Fatal(fmt.Sprintf("failed to setup mongo database : %s", err))
 	}
 
-	repo := newService(db, logger)
+	repo := newService(db, logger, tracer)
 
 	if err := consumers.Start(svcName, pubSub, repo, cfg.ConfigPath, logger); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to start MongoDB writer: %s", err))
@@ -98,6 +99,7 @@ func main() {
 
 func newService(db *mongo.Database, logger mflog.Logger) consumers.BlockingConsumer {
 	repo := mongodb.New(db)
+	repo = tracing.New(tracer, repo)
 	repo = api.LoggingMiddleware(repo, logger)
 	counter, latency := internal.MakeMetrics("mongodb", "message_writer")
 	repo = api.MetricsMiddleware(repo, counter, latency)

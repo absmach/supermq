@@ -55,6 +55,7 @@ func (ts *transformerService) Transform(msg *messaging.Message) (interface{}, er
 		Protocol:  msg.Protocol,
 		Channel:   msg.Channel,
 		Subtopic:  msg.Subtopic,
+		Span:      msg.Span,
 	}
 
 	if ret.Subtopic == "" {

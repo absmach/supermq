@@ -13,6 +13,7 @@ import (
 	"github.com/mainflux/mainflux/consumers"
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	"github.com/mainflux/mainflux/consumers/writers/timescale"
+	"github.com/mainflux/mainflux/consumers/writers/tracing"
 	"github.com/mainflux/mainflux/internal"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	pgClient "github.com/mainflux/mainflux/internal/clients/postgres"
@@ -60,14 +61,14 @@ func main() {
 	}
 	defer db.Close()
 
-	repo := newService(db, logger)
-
 	// PUB SUB tracer
 	tracer, traceCloser, err := jaegerClient.NewTracer(svcName, cfg.JaegerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
 	}
 	defer traceCloser.Close()
+
+	repo := newService(db, logger, tracer)
 
 	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger, tracer)
 	if err != nil {
@@ -100,6 +101,7 @@ func main() {
 
 func newService(db *sqlx.DB, logger mflog.Logger) consumers.BlockingConsumer {
 	svc := timescale.New(db)
+	svc = tracing.New(tracer, svc)
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics("timescale", "message_writer")
 	svc = api.MetricsMiddleware(svc, counter, latency)

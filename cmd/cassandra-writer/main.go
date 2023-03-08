@@ -13,6 +13,7 @@ import (
 	"github.com/mainflux/mainflux/consumers"
 	"github.com/mainflux/mainflux/consumers/writers/api"
 	"github.com/mainflux/mainflux/consumers/writers/cassandra"
+	"github.com/mainflux/mainflux/consumers/writers/tracing"
 	"github.com/mainflux/mainflux/internal"
 	cassandraClient "github.com/mainflux/mainflux/internal/clients/cassandra"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
@@ -60,15 +61,15 @@ func main() {
 	}
 	defer csdSession.Close()
 
-	// Create new cassandra-writer repo
-	repo := newService(csdSession, logger)
-
 	// PUB SUB tracer
 	tracer, traceCloser, err := jaegerClient.NewTracer(svcName, cfg.JaegerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
 	}
 	defer traceCloser.Close()
+
+	// Create new cassandra-writer repo
+	repo := newService(csdSession, logger, tracer)
 
 	// Create new pub sub broker
 	pubSub, err := brokers.NewPubSub(cfg.BrokerURL, "", logger, tracer)
@@ -108,6 +109,7 @@ func main() {
 
 func newService(session *gocql.Session, logger mflog.Logger) consumers.BlockingConsumer {
 	repo := cassandra.New(session)
+	repo = tracing.New(tracer, repo)
 	repo = api.LoggingMiddleware(repo, logger)
 	counter, latency := internal.MakeMetrics("cassandra", "message_writer")
 	repo = api.MetricsMiddleware(repo, counter, latency)
