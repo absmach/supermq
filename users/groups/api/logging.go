@@ -22,7 +22,7 @@ func LoggingMiddleware(svc groups.Service, logger log.Logger) groups.Service {
 
 func (lm *loggingMiddleware) CreateGroup(ctx context.Context, token string, group groups.Group) (g groups.Group, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method create_group for group %s of id %s and token %s took %s to complete", g.Name, g.ID, token, time.Since(begin))
+		message := fmt.Sprintf("Method create_group for group %s with id %s using token %s took %s to complete", g.Name, g.ID, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -34,7 +34,7 @@ func (lm *loggingMiddleware) CreateGroup(ctx context.Context, token string, grou
 
 func (lm *loggingMiddleware) UpdateGroup(ctx context.Context, token string, group groups.Group) (g groups.Group, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method update_group for group %s of id %s and token %s took %s to complete", g.Name, g.ID, token, time.Since(begin))
+		message := fmt.Sprintf("Method update_group for group %s with id %s using token %s took %s to complete", g.Name, g.ID, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -46,7 +46,7 @@ func (lm *loggingMiddleware) UpdateGroup(ctx context.Context, token string, grou
 
 func (lm *loggingMiddleware) ViewGroup(ctx context.Context, token, id string) (g groups.Group, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method view_group for group %s and id %s and token %s took %s to complete", g.Name, g.ID, token, time.Since(begin))
+		message := fmt.Sprintf("Method view_group for group %s with id %s using token %s took %s to complete", g.Name, g.ID, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -58,7 +58,7 @@ func (lm *loggingMiddleware) ViewGroup(ctx context.Context, token, id string) (g
 
 func (lm *loggingMiddleware) ListGroups(ctx context.Context, token string, gp groups.GroupsPage) (cg groups.GroupsPage, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method list_groups %d groups for token %s took %s to complete", cg.Total, token, time.Since(begin))
+		message := fmt.Sprintf("Method list_groups %d groups using token %s took %s to complete", cg.Total, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -70,7 +70,7 @@ func (lm *loggingMiddleware) ListGroups(ctx context.Context, token string, gp gr
 
 func (lm *loggingMiddleware) EnableGroup(ctx context.Context, token string, id string) (g groups.Group, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method enable_group for group %s took %s to complete", g.ID, time.Since(begin))
+		message := fmt.Sprintf("Method enable_group for group with id %s using token %s took %s to complete", g.ID, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -82,7 +82,7 @@ func (lm *loggingMiddleware) EnableGroup(ctx context.Context, token string, id s
 
 func (lm *loggingMiddleware) DisableGroup(ctx context.Context, token string, id string) (g groups.Group, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method disable_group for group %s took %s to complete", g.ID, time.Since(begin))
+		message := fmt.Sprintf("Method disable_group for group with id %s using token %s took %s to complete", g.ID, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -94,7 +94,7 @@ func (lm *loggingMiddleware) DisableGroup(ctx context.Context, token string, id 
 
 func (lm *loggingMiddleware) ListMemberships(ctx context.Context, token, clientID string, cp groups.GroupsPage) (mp groups.MembershipsPage, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method list_memberships for group %s and token %s took %s to complete", clientID, token, time.Since(begin))
+		message := fmt.Sprintf("Method list_memberships for client with id %s using token %s took %s to complete", clientID, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
