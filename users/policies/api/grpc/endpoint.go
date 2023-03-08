@@ -15,8 +15,8 @@ func authorizeEndpoint(svc policies.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return authorizeRes{}, err
 		}
-
-		err := svc.Authorize(ctx, req.EntityType, policies.Policy{Subject: req.Sub, Object: req.Obj, Actions: []string{req.Act}})
+		policy := policies.Policy{Subject: req.Sub, Object: req.Obj, Actions: []string{req.Act}}
+		err := svc.Authorize(ctx, req.EntityType, policy)
 		if err != nil {
 			return authorizeRes{}, err
 		}
@@ -65,8 +65,8 @@ func addPolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 		if err := req.validate(); err != nil {
 			return addPolicyRes{}, err
 		}
-
-		err := svc.AddPolicy(ctx, req.Token, policies.Policy{Subject: req.Sub, Object: req.Obj, Actions: req.Act})
+		policy := policies.Policy{Subject: req.Sub, Object: req.Obj, Actions: req.Act}
+		err := svc.AddPolicy(ctx, req.Token, policy)
 		if err != nil {
 			return addPolicyRes{}, err
 		}
@@ -81,7 +81,8 @@ func deletePolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 			return deletePolicyRes{}, err
 		}
 
-		err := svc.DeletePolicy(ctx, req.Token, policies.Policy{Subject: req.Sub, Object: req.Obj, Actions: []string{req.Act}})
+		policy := policies.Policy{Subject: req.Sub, Object: req.Obj, Actions: []string{req.Act}}
+		err := svc.DeletePolicy(ctx, req.Token, policy)
 		if err != nil {
 			return deletePolicyRes{}, err
 		}
@@ -92,7 +93,8 @@ func deletePolicyEndpoint(svc policies.Service) endpoint.Endpoint {
 func listPoliciesEndpoint(svc policies.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(listPoliciesReq)
-		page, err := svc.ListPolicy(ctx, req.Token, policies.Page{Subject: req.Sub, Object: req.Obj, Action: req.Act, Limit: 10})
+		pp := policies.Page{Subject: req.Sub, Object: req.Obj, Action: req.Act, Limit: 10}
+		page, err := svc.ListPolicy(ctx, req.Token, pp)
 		if err != nil {
 			return listPoliciesRes{}, err
 		}
