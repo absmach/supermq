@@ -22,6 +22,7 @@ const (
 	ParentKey        = "parent_id"
 	OwnerKey         = "owner_id"
 	ClientKey        = "client"
+	IdentityKey      = "identity"
 	GroupKey         = "group"
 	ActionKey        = "action"
 	TagKey           = "tag"
