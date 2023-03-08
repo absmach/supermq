@@ -58,7 +58,9 @@ func generateValidToken(t *testing.T, clientID string, svc clients.Service, cRep
 	repoCall := cRepo.On("RetrieveByIdentity", context.Background(), client.Credentials.Identity).Return(rClient, nil)
 	token, err := svc.IssueToken(context.Background(), client.Credentials.Identity, client.Credentials.Secret)
 	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("Create token expected nil got %s\n", err))
-	repoCall.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), client.Credentials.Identity)
+	if !repoCall.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), client.Credentials.Identity) {
+		assert.Fail(t, "RetrieveByIdentity was not called on creating token")
+	}
 	repoCall.Unset()
 	return token.AccessToken
 }
@@ -266,8 +268,10 @@ func TestRegisterClient(t *testing.T) {
 			tc.client.Credentials.Secret = expected.Credentials.Secret
 			tc.client.Owner = expected.Owner
 			assert.Equal(t, tc.client, expected, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.client, expected))
+			if !repoCall.Parent.AssertCalled(t, "Save", context.Background(), mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("Save was not called on %s", tc.desc))
+			}
 		}
-		repoCall.Parent.AssertCalled(t, "Save", context.Background(), mock.Anything)
 		repoCall.Unset()
 	}
 }
@@ -324,8 +328,12 @@ func TestViewClient(t *testing.T) {
 		assert.Equal(t, tc.response, rClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, rClient))
 		repoCall.Unset()
 		if tc.err == nil {
-			repoCall.Parent.AssertCalled(t, "Evaluate", context.Background(), "client", mock.Anything)
-			repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.clientID)
+			if !repoCall.Parent.AssertCalled(t, "Evaluate", context.Background(), "client", mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("Evaluate was not called on %s", tc.desc))
+			}
+			if !repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.clientID) {
+				assert.Fail(t, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
+			}
 		}
 		repoCall1.Unset()
 	}
@@ -608,7 +616,9 @@ func TestListClients(t *testing.T) {
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
 		if tc.err == nil {
-			repoCall.Parent.AssertCalled(t, "RetrieveAll", context.Background(), mock.Anything)
+			if !repoCall.Parent.AssertCalled(t, "RetrieveAll", context.Background(), mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("RetrieveAll was not called on %s", tc.desc))
+			}
 		}
 		repoCall.Unset()
 	}
@@ -680,8 +690,12 @@ func TestUpdateClient(t *testing.T) {
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, updatedClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, updatedClient))
 		if tc.err == nil {
-			repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
-			repoCall1.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything)
+			if !repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			}
+			if !repoCall1.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("Update was not called on %s", tc.desc))
+			}
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -737,8 +751,12 @@ func TestUpdateClientTags(t *testing.T) {
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, updatedClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, updatedClient))
 		if tc.err == nil {
-			repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
-			repoCall1.Parent.AssertCalled(t, "UpdateTags", context.Background(), mock.Anything)
+			if !repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			}
+			if !repoCall1.Parent.AssertCalled(t, "UpdateTags", context.Background(), mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("UpdateTags was not called on %s", tc.desc))
+			}
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -796,8 +814,12 @@ func TestUpdateClientIdentity(t *testing.T) {
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, updatedClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, updatedClient))
 		if tc.err == nil {
-			repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
-			repoCall1.Parent.AssertCalled(t, "UpdateIdentity", context.Background(), mock.Anything)
+			if !repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			}
+			if !repoCall1.Parent.AssertCalled(t, "UpdateIdentity", context.Background(), mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("UpdateIdentity was not called on %s", tc.desc))
+			}
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -853,8 +875,12 @@ func TestUpdateClientOwner(t *testing.T) {
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, updatedClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, updatedClient))
 		if tc.err == nil {
-			repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
-			repoCall1.Parent.AssertCalled(t, "UpdateOwner", context.Background(), mock.Anything)
+			if !repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			}
+			if !repoCall1.Parent.AssertCalled(t, "UpdateOwner", context.Background(), mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("UpdateOwner was not called on %s", tc.desc))
+			}
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -918,9 +944,15 @@ func TestUpdateClientSecret(t *testing.T) {
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, updatedClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, updatedClient))
 		if tc.err == nil {
-			repoCall.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.response.ID)
-			repoCall1.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), tc.response.Credentials.Identity)
-			repoCall2.Parent.AssertCalled(t, "UpdateSecret", context.Background(), mock.Anything)
+			if !repoCall.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.response.ID) {
+				assert.Fail(t, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
+			}
+			if !repoCall1.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), tc.response.Credentials.Identity) {
+				assert.Fail(t, fmt.Sprintf("RetrieveByIdentity was not called on %s", tc.desc))
+			}
+			if !repoCall2.Parent.AssertCalled(t, "UpdateSecret", context.Background(), mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("UpdateSecret was not called on %s", tc.desc))
+			}
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -981,9 +1013,15 @@ func TestEnableClient(t *testing.T) {
 		_, err := svc.EnableClient(context.Background(), tc.token, tc.id)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if tc.err == nil {
-			repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
-			repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.id)
-			repoCall2.Parent.AssertCalled(t, "ChangeStatus", context.Background(), tc.id, clients.EnabledStatus)
+			if !repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			}
+			if !repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.id) {
+				assert.Fail(t, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
+			}
+			if !repoCall2.Parent.AssertCalled(t, "ChangeStatus", context.Background(), tc.id, clients.EnabledStatus) {
+				assert.Fail(t, fmt.Sprintf("ChangeStatus was not called on %s", tc.desc))
+			}
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -1106,9 +1144,15 @@ func TestDisableClient(t *testing.T) {
 		_, err := svc.DisableClient(context.Background(), tc.token, tc.id)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if tc.err == nil {
-			repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
-			repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.id)
-			repoCall2.Parent.AssertCalled(t, "ChangeStatus", context.Background(), tc.id, clients.DisabledStatus)
+			if !repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			}
+			if !repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.id) {
+				assert.Fail(t, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
+			}
+			if !repoCall2.Parent.AssertCalled(t, "ChangeStatus", context.Background(), tc.id, clients.DisabledStatus) {
+				assert.Fail(t, fmt.Sprintf("ChangeStatus was not called on %s", tc.desc))
+			}
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -1291,8 +1335,12 @@ func TestListMembers(t *testing.T) {
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
 		if tc.err == nil {
-			repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), validID)
-			repoCall1.Parent.AssertCalled(t, "Members", context.Background(), tc.groupID, tc.page)
+			if !repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), validID) {
+				assert.Fail(t, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			}
+			if !repoCall1.Parent.AssertCalled(t, "Members", context.Background(), tc.groupID, tc.page) {
+				assert.Fail(t, fmt.Sprintf("Members was not called on %s", tc.desc))
+			}
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -1346,7 +1394,9 @@ func TestIssueToken(t *testing.T) {
 		if err == nil {
 			assert.NotEmpty(t, token.AccessToken, fmt.Sprintf("%s: expected %s not to be empty\n", tc.desc, token.AccessToken))
 			assert.NotEmpty(t, token.RefreshToken, fmt.Sprintf("%s: expected %s not to be empty\n", tc.desc, token.RefreshToken))
-			repoCall.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), tc.client.Credentials.Identity)
+			if !repoCall.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), tc.client.Credentials.Identity) {
+				assert.Fail(t, fmt.Sprintf("RetrieveByIdentity was not called on %s", tc.desc))
+			}
 		}
 		repoCall.Unset()
 	}
@@ -1413,8 +1463,12 @@ func TestRefreshToken(t *testing.T) {
 		if err == nil {
 			assert.NotEmpty(t, token.AccessToken, fmt.Sprintf("%s: expected %s not to be empty\n", tc.desc, token.AccessToken))
 			assert.NotEmpty(t, token.RefreshToken, fmt.Sprintf("%s: expected %s not to be empty\n", tc.desc, token.RefreshToken))
-			repoCall1.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), tc.client.Credentials.Identity)
-			repoCall2.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.client.ID)
+			if !repoCall1.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), tc.client.Credentials.Identity) {
+				assert.Fail(t, fmt.Sprintf("RetrieveByIdentity was not called on %s", tc.desc))
+			}
+			if !repoCall2.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.client.ID) {
+				assert.Fail(t, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
+			}
 		}
 		repoCall1.Unset()
 		repoCall2.Unset()

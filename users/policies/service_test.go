@@ -51,6 +51,9 @@ func generateValidToken(t *testing.T, clientID string, svc clients.Service, cRep
 	repoCall := cRepo.On("RetrieveByIdentity", context.Background(), client.Credentials.Identity).Return(rClient, nil)
 	token, err := svc.IssueToken(context.Background(), client.Credentials.Identity, client.Credentials.Secret)
 	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("Create token expected nil got %s\n", err))
+	if !repoCall.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), client.Credentials.Identity) {
+		assert.Fail(t, "RetrieveByIdentity was not called on creating token")
+	}
 	repoCall.Unset()
 	return token.AccessToken
 }
@@ -161,18 +164,25 @@ func TestAddPolicy(t *testing.T) {
 		repoCall1 := pRepo.On("Retrieve", context.Background(), mock.Anything).Return(tc.page, nil)
 		repoCall2 := pRepo.On("Update", context.Background(), mock.Anything).Return(tc.err)
 		repoCall3 := pRepo.On("Save", context.Background(), mock.Anything).Return(tc.err)
-		fmt.Println(tc.policy)
 		err := svc.AddPolicy(context.Background(), tc.token, tc.policy)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if err == nil {
 			tc.policy.Subject = tc.token
 			err = svc.Authorize(context.Background(), "client", tc.policy)
 			require.Nil(t, err, fmt.Sprintf("checking shared %v policy expected to be succeed: %#v", tc.policy, err))
-			repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
-			repoCall1.Parent.AssertCalled(t, "Retrieve", context.Background(), mock.Anything)
-			repoCall3.Parent.AssertCalled(t, "Save", context.Background(), mock.Anything)
+			if !repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			}
+			if !repoCall1.Parent.AssertCalled(t, "Retrieve", context.Background(), mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("Retrieve was not called on %s", tc.desc))
+			}
+			if !repoCall3.Parent.AssertCalled(t, "Save", context.Background(), mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("Save was not called on %s", tc.desc))
+			}
 			if tc.desc == "add existing policy" {
-				repoCall2.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything)
+				if !repoCall2.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything) {
+					assert.Fail(t, fmt.Sprintf("Update was not called on %s", tc.desc))
+				}
 			}
 		}
 		repoCall.Unset()
@@ -241,7 +251,9 @@ func TestAuthorize(t *testing.T) {
 		err := svc.Authorize(context.Background(), tc.domain, tc.policy)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if tc.err == nil {
-			repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
+			if !repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			}
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -263,6 +275,12 @@ func TestDeletePolicy(t *testing.T) {
 	repoCall1 := pRepo.On("Retrieve", context.Background(), mock.Anything).Return(policies.PolicyPage{Policies: []policies.Policy{pr}}, nil)
 	err := svc.DeletePolicy(context.Background(), generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo), pr)
 	require.Nil(t, err, fmt.Sprintf("deleting %v policy expected to succeed: %s", pr, err))
+	if !repoCall.Parent.AssertCalled(t, "Delete", context.Background(), pr) {
+		assert.Fail(t, "Delete was not called on deleting policy")
+	}
+	if !repoCall1.Parent.AssertCalled(t, "Retrieve", context.Background(), mock.Anything) {
+		assert.Fail(t, "Retrieve was not called on deleting policy")
+	}
 	repoCall.Unset()
 	repoCall1.Unset()
 }
@@ -355,6 +373,11 @@ func TestListPolicies(t *testing.T) {
 		page, err := svc.ListPolicy(context.Background(), tc.token, tc.page)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected size %v got %v\n", tc.desc, tc.response, page))
+		if tc.err == nil {
+			if !repoCall.Parent.AssertCalled(t, "Retrieve", context.Background(), tc.page) {
+				assert.Fail(t, fmt.Sprintf("Retrieve was not called on %s", tc.desc))
+			}
+		}
 		repoCall.Unset()
 	}
 
@@ -402,7 +425,11 @@ func TestUpdatePolicies(t *testing.T) {
 		repoCall1 := pRepo.On("Update", context.Background(), mock.Anything).Return(tc.err)
 		err := svc.UpdatePolicy(context.Background(), tc.token, policy)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		repoCall1.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything)
+		if tc.err == nil {
+			if !repoCall1.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("Update was not called on %s", tc.desc))
+			}
+		}
 		repoCall.Unset()
 		repoCall1.Unset()
 	}

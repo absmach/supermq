@@ -59,7 +59,7 @@ func TestCreateGroup(t *testing.T) {
 		err   errors.SDKError
 	}{
 		{
-			desc:  "register new group",
+			desc:  "create group successfully",
 			group: group,
 			token: token,
 			err:   nil,
@@ -104,7 +104,7 @@ func TestCreateGroup(t *testing.T) {
 			err: errors.NewSDKErrorWithStatus(apiutil.ErrNameSize, http.StatusBadRequest),
 		},
 		{
-			desc: "register a group with every field defined",
+			desc: "create a group with every field defined",
 			group: sdk.Group{
 				ID:          generateUUID(t),
 				OwnerID:     "owner",
@@ -128,6 +128,9 @@ func TestCreateGroup(t *testing.T) {
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: unexpected error %s", tc.desc, err))
 		if err == nil {
 			assert.NotEmpty(t, rGroup, fmt.Sprintf("%s: expected not nil on client ID", tc.desc))
+			if !repoCall.Parent.AssertCalled(t, "Save", mock.Anything, mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("Save was not called on %s", tc.desc))
+			}
 		}
 		repoCall.Unset()
 	}
@@ -161,19 +164,18 @@ func TestListGroups(t *testing.T) {
 	}
 
 	cases := []struct {
-		desc       string
-		token      string
-		status     groups.Status
-		total      uint64
-		offset     uint64
-		limit      uint64
-		level      int
-		name       string
-		identifier string
-		ownerID    string
-		metadata   sdk.Metadata
-		err        errors.SDKError
-		response   []sdk.Group
+		desc     string
+		token    string
+		status   groups.Status
+		total    uint64
+		offset   uint64
+		limit    uint64
+		level    int
+		name     string
+		ownerID  string
+		metadata sdk.Metadata
+		err      errors.SDKError
+		response []sdk.Group
 	}{
 		{
 			desc:     "get a list of groups",
@@ -217,57 +219,31 @@ func TestListGroups(t *testing.T) {
 			response: []sdk.Group(nil),
 		},
 		{
-			desc:       "get a list of groups with same identifier",
-			token:      token,
-			offset:     0,
-			limit:      1,
-			err:        nil,
-			identifier: Identity,
-			metadata:   sdk.Metadata{},
-			response:   []sdk.Group{grps[89]},
-		},
-		{
-			desc:       "get a list of groups with same identifier and metadata",
-			token:      token,
-			offset:     0,
-			limit:      1,
-			err:        nil,
-			identifier: Identity,
-			metadata: sdk.Metadata{
-				"name": "user99",
-			},
+			desc:     "get a list of groups with given name",
+			token:    token,
+			offset:   0,
+			limit:    1,
+			err:      nil,
+			metadata: sdk.Metadata{},
 			response: []sdk.Group{grps[89]},
 		},
 		{
-			desc:       "get a list of groups with given name",
-			token:      token,
-			offset:     0,
-			limit:      1,
-			err:        nil,
-			identifier: Identity,
-			metadata:   sdk.Metadata{},
-			response:   []sdk.Group{grps[89]},
-		},
-		{
-			desc:       "get a list of groups with level",
-			token:      token,
-			offset:     0,
-			limit:      1,
-			level:      1,
-			err:        nil,
-			identifier: Identity,
-
+			desc:     "get a list of groups with level",
+			token:    token,
+			offset:   0,
+			limit:    1,
+			level:    1,
+			err:      nil,
 			response: []sdk.Group{grps[0]},
 		},
 		{
-			desc:       "get a list of groups with metadata",
-			token:      token,
-			offset:     0,
-			limit:      1,
-			err:        nil,
-			identifier: Identity,
-			metadata:   sdk.Metadata{},
-			response:   []sdk.Group{grps[89]},
+			desc:     "get a list of groups with metadata",
+			token:    token,
+			offset:   0,
+			limit:    1,
+			err:      nil,
+			metadata: sdk.Metadata{},
+			response: []sdk.Group{grps[89]},
 		},
 	}
 
@@ -277,6 +253,11 @@ func TestListGroups(t *testing.T) {
 		page, err := groupSDK.Groups(pm, generateValidToken(t, csvc, cRepo))
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, len(tc.response), len(page.Groups), fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
+		if tc.err == nil {
+			if !repoCall.Parent.AssertCalled(t, "RetrieveAll", mock.Anything, mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("RetrieveAll was not called on %s", tc.desc))
+			}
+		}
 		repoCall.Unset()
 	}
 }
@@ -350,8 +331,12 @@ func TestViewGroup(t *testing.T) {
 		}
 		assert.Equal(t, tc.response, grp, fmt.Sprintf("%s: expected metadata %v got %v\n", tc.desc, tc.response, grp))
 		if tc.err == nil {
-			repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything)
-			repoCall1.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, tc.groupID)
+			if !repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			}
+			if !repoCall1.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, tc.groupID) {
+				assert.Fail(t, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
+			}
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -505,8 +490,12 @@ func TestUpdateGroup(t *testing.T) {
 		_, err := groupSDK.UpdateGroup(tc.group, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		if tc.err == nil {
-			repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything)
-			repoCall1.Parent.AssertCalled(t, "Update", mock.Anything, mock.Anything)
+			if !repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			}
+			if !repoCall1.Parent.AssertCalled(t, "Update", mock.Anything, mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
+			}
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -637,8 +626,12 @@ func TestListMemberships(t *testing.T) {
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page.Memberships, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page.Memberships))
 		if tc.err == nil {
-			repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything)
-			repoCall1.Parent.AssertCalled(t, "Memberships", mock.Anything, tc.clientID, mock.Anything)
+			if !repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			}
+			if !repoCall1.Parent.AssertCalled(t, "Memberships", mock.Anything, tc.clientID, mock.Anything) {
+				assert.Fail(t, fmt.Sprintf("Memberships was not called on %s", tc.desc))
+			}
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -676,8 +669,12 @@ func TestEnableGroup(t *testing.T) {
 	repoCall2 := gRepo.On("ChangeStatus", mock.Anything, mock.Anything).Return(sdk.ErrFailedRemoval)
 	_, err := groupSDK.EnableGroup("wrongID", generateValidToken(t, csvc, cRepo))
 	assert.Equal(t, err, errors.NewSDKErrorWithStatus(errors.ErrNotFound, http.StatusNotFound), fmt.Sprintf("Enable group with wrong id: expected %v got %v", errors.ErrNotFound, err))
-	repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything)
-	repoCall1.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, "wrongID")
+	if !repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything) {
+		assert.Fail(t, "CheckAdmin was not called on enabling group")
+	}
+	if !repoCall1.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, "wrongID") {
+		assert.Fail(t, "RetrieveByID was not called on enabling group")
+	}
 	repoCall.Unset()
 	repoCall1.Unset()
 	repoCall2.Unset()
@@ -697,9 +694,15 @@ func TestEnableGroup(t *testing.T) {
 	res, err := groupSDK.EnableGroup(group.ID, generateValidToken(t, csvc, cRepo))
 	assert.Nil(t, err, fmt.Sprintf("Enable group with correct id: expected %v got %v", nil, err))
 	assert.Equal(t, group, res, fmt.Sprintf("Enable group with correct id: expected %v got %v", group, res))
-	repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything)
-	repoCall1.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, group.ID)
-	repoCall2.Parent.AssertCalled(t, "ChangeStatus", mock.Anything, group.ID, groups.EnabledStatus)
+	if !repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything) {
+		assert.Fail(t, "CheckAdmin was not called on enabling group")
+	}
+	if !repoCall1.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, group.ID) {
+		assert.Fail(t, "RetrieveByID was not called on enabling group")
+	}
+	if !repoCall2.Parent.AssertCalled(t, "ChangeStatus", mock.Anything, group.ID, groups.EnabledStatus) {
+		assert.Fail(t, "ChangeStatus was not called on enabling group")
+	}
 	repoCall.Unset()
 	repoCall1.Unset()
 	repoCall2.Unset()
@@ -736,8 +739,12 @@ func TestDisableGroup(t *testing.T) {
 	repoCall2 := gRepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(nil)
 	_, err := groupSDK.DisableGroup("wrongID", generateValidToken(t, csvc, cRepo))
 	assert.Equal(t, err, errors.NewSDKErrorWithStatus(errors.ErrNotFound, http.StatusNotFound), fmt.Sprintf("Disable group with wrong id: expected %v got %v", errors.ErrNotFound, err))
-	repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything)
-	repoCall1.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, "wrongID")
+	if !repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything) {
+		assert.Fail(t, "CheckAdmin was not called on disabling group with wrong id")
+	}
+	if !repoCall1.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, "wrongID") {
+		assert.Fail(t, "Memberships was not called on disabling group with wrong id")
+	}
 	repoCall.Unset()
 	repoCall1.Unset()
 	repoCall2.Unset()
@@ -757,9 +764,15 @@ func TestDisableGroup(t *testing.T) {
 	res, err := groupSDK.DisableGroup(group.ID, generateValidToken(t, csvc, cRepo))
 	assert.Nil(t, err, fmt.Sprintf("Disable group with correct id: expected %v got %v", nil, err))
 	assert.Equal(t, group, res, fmt.Sprintf("Disable group with correct id: expected %v got %v", group, res))
-	repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything)
-	repoCall1.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, group.ID)
-	repoCall2.Parent.AssertCalled(t, "ChangeStatus", mock.Anything, group.ID, groups.DisabledStatus)
+	if !repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything) {
+		assert.Fail(t, "CheckAdmin was not called on disabling group with correct id")
+	}
+	if !repoCall1.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, group.ID) {
+		assert.Fail(t, "RetrieveByID was not called on disabling group with correct id")
+	}
+	if !repoCall2.Parent.AssertCalled(t, "ChangeStatus", mock.Anything, group.ID, groups.DisabledStatus) {
+		assert.Fail(t, "ChangeStatus was not called on disabling group with correct id")
+	}
 	repoCall.Unset()
 	repoCall1.Unset()
 	repoCall2.Unset()
