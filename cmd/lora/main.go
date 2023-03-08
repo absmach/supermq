@@ -22,7 +22,6 @@ import (
 	"github.com/mainflux/mainflux/lora/mqtt"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
-	"github.com/mainflux/mainflux/pkg/messaging/nats/tracing"
 	"golang.org/x/sync/errgroup"
 
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
@@ -76,17 +75,16 @@ func main() {
 	defer rmConn.Close()
 
 	// PUB SUB tracer
-	tracer, traceCloser, err := jaegerClient.NewTracer("nats_pubsub", cfg.JaegerURL)
+	tracer, traceCloser, err := jaegerClient.NewTracer(svcName, cfg.JaegerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
 	}
 	defer traceCloser.Close()
 
-	pub, err := brokers.NewPublisher(cfg.BrokerURL)
+	pub, err := brokers.NewPublisher(cfg.BrokerURL, tracer)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
-	pub = tracing.New(pub, tracer)
 	defer pub.Close()
 
 	svc := newService(pub, rmConn, thingsRMPrefix, channelsRMPrefix, connsRMPrefix, logger)

@@ -22,7 +22,6 @@ import (
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
-	natstracing "github.com/mainflux/mainflux/pkg/messaging/nats/tracing"
 	"github.com/opentracing/opentracing-go"
 	"golang.org/x/sync/errgroup"
 )
@@ -62,18 +61,17 @@ func main() {
 	logger.Info("Successfully connected to things grpc server " + tcHandler.Secure())
 
 	// PUB SUB tracer
-	pbTracer, traceCloser, err := jaegerClient.NewTracer("nats_pubsub", cfg.JaegerURL)
+	pbTracer, traceCloser, err := jaegerClient.NewTracer(svcName, cfg.JaegerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
 	}
 	defer traceCloser.Close()
 
-	pub, err := brokers.NewPublisher(cfg.BrokerURL)
+	pub, err := brokers.NewPublisher(cfg.BrokerURL, pbTracer)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect to message broker: %s", err))
 	}
 
-	pub = natstracing.New(pub, pbTracer)
 	defer pub.Close()
 
 	tracer, closer, err := jaegerClient.NewTracer("http_adapter", cfg.JaegerURL)

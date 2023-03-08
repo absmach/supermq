@@ -12,6 +12,7 @@ import (
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/nats"
+	"github.com/mainflux/mainflux/pkg/messaging/nats/tracing"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -22,11 +23,12 @@ func init() {
 	log.Println("The binary was build using Nats as the message broker")
 }
 
-func NewPublisher(url string) (messaging.Publisher, error) {
+func NewPublisher(url string, tracer opentracing.Tracer) (messaging.Publisher, error) {
 	pb, err := nats.NewPublisher(url)
 	if err != nil {
 		return nil, err
 	}
+	pb = tracing.New(pb, tracer)
 	return pb, nil
 
 }
