@@ -22,7 +22,7 @@ func init() {
 	log.Println("The binary was build using RabbitMQ as the message broker")
 }
 
-func NewPublisher(url string, tracer opentracing.Tracer) (messaging.Publisher, error) {
+func NewPublisher(url string, _ opentracing.Tracer) (messaging.Publisher, error) {
 	pb, err := rabbitmq.NewPublisher(url)
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func NewPublisher(url string, tracer opentracing.Tracer) (messaging.Publisher, e
 	return pb, nil
 }
 
-func NewPubSub(url, queue string, logger logger.Logger, tracer opentracing.Tracer) (messaging.PubSub, error) {
+func NewPubSub(url, queue string, logger logger.Logger, _ opentracing.Tracer) (messaging.PubSub, error) {
 	pb, err := rabbitmq.NewPubSub(url, queue, logger)
 	if err != nil {
 		return nil, err
