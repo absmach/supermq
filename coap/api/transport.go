@@ -113,6 +113,7 @@ func handler(w mux.ResponseWriter, m *mux.Message) {
 			resp.Code = codes.InternalServerError
 		}
 	}
+	sendResp(w, &resp)
 }
 
 func handleGet(m *mux.Message, c mux.Client, msg *messaging.Message, key string) error {

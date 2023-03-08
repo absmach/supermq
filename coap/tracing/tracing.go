@@ -25,9 +25,13 @@ func New(tracer opentracing.Tracer, svc coap.Service) *tracingServiceMiddleware 
 
 // Publish implements coap.Service
 func (tm *tracingServiceMiddleware) Publish(ctx context.Context, key string, msg *messaging.Message) error {
-	coapSpan := opentracing.SpanFromContext(ctx)
+	var spanCtx opentracing.SpanContext = nil
 
-	span := tm.tracer.StartSpan("coap publish", opentracing.ChildOf(coapSpan.Context()))
+	if coapSpan := opentracing.SpanFromContext(ctx); coapSpan != nil {
+		spanCtx = coapSpan.Context()
+	}
+
+	span := tm.tracer.StartSpan("coap publish", opentracing.ChildOf(spanCtx))
 	defer span.Finish()
 	dataBuffer := bytes.NewBuffer(msg.Span)
 
