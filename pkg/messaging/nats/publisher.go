@@ -18,11 +18,6 @@ const maxReconnects = -1
 
 var _ messaging.Publisher = (*publisher)(nil)
 
-// traced ops
-const (
-	subscribeOP = "subscribe_op"
-)
-
 type publisher struct {
 	conn *broker.Conn
 }

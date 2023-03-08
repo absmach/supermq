@@ -18,7 +18,10 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 )
 
-const chansPrefix = "channels"
+const (
+	chansPrefix = "channels"
+	subscribeOP = "subscribe_op" //traced op
+)
 
 // Publisher and Subscriber errors.
 var (
