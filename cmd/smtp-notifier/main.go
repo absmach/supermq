@@ -106,7 +106,7 @@ func main() {
 	}
 	defer dbCloser.Close()
 
-	svc := newService(db, dbTracer, auth, cfg, ec, logger)
+	svc := newService(db, dbTracer, auth, cfg, ec, logger, tracer)
 
 	if err = consumers.Start(svcName, pubSub, svc, cfg.ConfigPath, logger); err != nil {
 		logger.Fatal(fmt.Sprintf("failed to create Postgres writer: %s", err))
@@ -132,7 +132,7 @@ func main() {
 
 }
 
-func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServiceClient, c config, ec email.Config, logger mflog.Logger) notifiers.Service {
+func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServiceClient, c config, ec email.Config, logger mflog.Logger, svcTracer opentracing.Tracer) notifiers.Service {
 	database := notifierPg.NewDatabase(db)
 	repo := tracing.New(notifierPg.New(database), tracer)
 	idp := ulid.New()
@@ -143,6 +143,7 @@ func newService(db *sqlx.DB, tracer opentracing.Tracer, auth mainflux.AuthServic
 	}
 
 	notifier := smtp.New(agent)
+	notifier = tracing.NewNotifier(notifier, svcTracer)
 	svc := notifiers.New(auth, repo, idp, notifier, c.From)
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics("notifier", "smtp")

@@ -15,5 +15,5 @@ type Message struct {
 	DataValue   *string  `json:"data_value,omitempty" db:"data_value" bson:"data_value,omitempty"`
 	BoolValue   *bool    `json:"bool_value,omitempty" db:"bool_value" bson:"bool_value,omitempty"`
 	Sum         *float64 `json:"sum,omitempty" db:"sum" bson:"sum,omitempty"`
-	Span        []byte   `json:"_"  db:"_" bson:"_"`
+	Span        []byte   `json:"-"  db:"-" bson:"-"`
 }

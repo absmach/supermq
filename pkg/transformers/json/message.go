@@ -14,7 +14,7 @@ type Message struct {
 	Publisher string  `json:"publisher,omitempty" db:"publisher" bson:"publisher"`
 	Protocol  string  `json:"protocol,omitempty" db:"protocol" bson:"protocol"`
 	Payload   Payload `json:"payload,omitempty" db:"payload" bson:"payload,omitempty"`
-	Span      []byte  `json:"_"  db:"_" bson:"_"`
+	Span      []byte  `json:"-"  db:"-" bson:"-"`
 }
 
 // Messages represents a list of JSON messages.
