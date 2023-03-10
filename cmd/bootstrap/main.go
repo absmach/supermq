@@ -34,7 +34,7 @@ const (
 	envPrefixES    = "MF_BOOTSTRAP_ES_"
 	envPrefixHttp  = "MF_BOOTSTRAP_HTTP_"
 	defDB          = "bootstrap"
-	defSvcHttpPort = "9014"
+	defSvcHttpPort = "9013"
 )
 
 type config struct {

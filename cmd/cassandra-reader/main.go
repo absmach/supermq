@@ -28,7 +28,7 @@ const (
 	svcName        = "cassandra-reader"
 	envPrefix      = "MF_CASSANDRA_READER_"
 	envPrefixHttp  = "MF_CASSANDRA_READER_HTTP_"
-	defSvcHttpPort = "9004"
+	defSvcHttpPort = "9003"
 )
 
 type config struct {

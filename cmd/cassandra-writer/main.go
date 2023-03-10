@@ -27,7 +27,7 @@ const (
 	svcName        = "cassandra-writer"
 	envPrefix      = "MF_CASSANDRA_WRITER_"
 	envPrefixHttp  = "MF_CASSANDRA_WRITER_HTTP_"
-	defSvcHttpPort = "9005"
+	defSvcHttpPort = "9004"
 )
 
 type config struct {

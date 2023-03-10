@@ -47,7 +47,7 @@ const (
 	defDB              = "things"
 	defSvcHttpPort     = "9001"
 	defSvcAuthHttpPort = "9002"
-	defSvcAuthGrpcPort = "7001"
+	defSvcAuthGrpcPort = "7000"
 )
 
 type config struct {

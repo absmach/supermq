@@ -39,8 +39,8 @@ const (
 	envPrefixHttp  = "MF_AUTH_HTTP_"
 	envPrefixGrpc  = "MF_AUTH_GRPC_"
 	defDB          = "auth"
-	defSvcHttpPort = "9000"
-	defSvcGrpcPort = "7000"
+	defSvcHttpPort = "9020"
+	defSvcGrpcPort = "7001"
 )
 
 type config struct {
