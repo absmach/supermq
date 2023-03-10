@@ -9,9 +9,7 @@ import (
 )
 
 // traced ops
-const (
-	publishOP = "publish_op"
-)
+const publishOP = "publish_op"
 
 var _ messaging.Publisher = (*publisherMiddleware)(nil)
 

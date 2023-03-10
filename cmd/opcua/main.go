@@ -81,7 +81,6 @@ func main() {
 	}
 	defer esConn.Close()
 
-	// PUB SUB tracer
 	tracer, traceCloser, err := jaegerClient.NewTracer(svcName, cfg.JaegerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))

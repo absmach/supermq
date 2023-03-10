@@ -54,7 +54,6 @@ func main() {
 		log.Fatalf("failed to init logger: %s", err)
 	}
 
-	// PUB SUB tracer
 	tracer, traceCloser, err := jaegerClient.NewTracer(svcName, cfg.JaegerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
