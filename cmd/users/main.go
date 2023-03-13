@@ -39,7 +39,7 @@ const (
 	envPrefix      = "MF_USERS_"
 	envPrefixHttp  = "MF_USERS_HTTP_"
 	defDB          = "users"
-	defSvcHttpPort = "9000"
+	defSvcHttpPort = "9002"
 )
 
 type config struct {
