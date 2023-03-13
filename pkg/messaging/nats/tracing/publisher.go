@@ -34,14 +34,13 @@ func (pm *publisherMiddleware) Close() error {
 func (pm *publisherMiddleware) Publish(topic string, msg *messaging.Message) error {
 	var sc opentracing.SpanContext = nil
 	var err error
+	var spanBytes []byte
 	//extract span context from message
-	if len(msg.Span) != 0 {
-		parentSCBuffer := bytes.NewBuffer(msg.Span)
-		sc, err = pm.tracer.Extract(opentracing.Binary, parentSCBuffer)
+	parentSCBuffer := bytes.NewBuffer(spanBytes)
+	sc, err = pm.tracer.Extract(opentracing.Binary, parentSCBuffer)
 
-		if err != nil && err != opentracing.ErrSpanContextNotFound {
-			return err
-		}
+	if err != nil && err != opentracing.ErrSpanContextNotFound {
+		return err
 	}
 
 	// start new span
@@ -54,6 +53,6 @@ func (pm *publisherMiddleware) Publish(topic string, msg *messaging.Message) err
 	if err := pm.tracer.Inject(span.Context(), opentracing.Binary, dataBuffer); err != nil {
 		return err
 	}
-	msg.Span = dataBuffer.Bytes()
+	//msg.Span = dataBuffer.Bytes()
 	return pm.publisher.Publish(topic, msg)
 }
