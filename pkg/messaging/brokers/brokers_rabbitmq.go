@@ -12,6 +12,7 @@ import (
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/rabbitmq"
+	"github.com/mainflux/mainflux/pkg/messaging/tracing"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -22,11 +23,12 @@ func init() {
 	log.Println("The binary was build using RabbitMQ as the message broker")
 }
 
-func NewPublisher(url string, _ opentracing.Tracer) (messaging.Publisher, error) {
+func NewPublisher(url string, tracer opentracing.Tracer) (messaging.Publisher, error) {
 	pb, err := rabbitmq.NewPublisher(url)
 	if err != nil {
 		return nil, err
 	}
+	pb = tracing.New(pb, tracer)
 	return pb, nil
 }
 
@@ -35,5 +37,6 @@ func NewPubSub(url, queue string, logger logger.Logger, _ opentracing.Tracer) (m
 	if err != nil {
 		return nil, err
 	}
+	pb = tracing.NewPubSub(pb, tracer)
 	return pb, nil
 }

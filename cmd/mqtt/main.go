@@ -22,6 +22,7 @@ import (
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/brokers"
 	mqttpub "github.com/mainflux/mainflux/pkg/messaging/mqtt"
+	"github.com/mainflux/mainflux/pkg/messaging/tracing"
 	mp "github.com/mainflux/mproxy/pkg/mqtt"
 	"github.com/mainflux/mproxy/pkg/session"
 	ws "github.com/mainflux/mproxy/pkg/websocket"
@@ -92,6 +93,7 @@ func main() {
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to create MQTT publisher: %s", err))
 	}
+	mpub = tracing.New(mpub, tracer)
 
 	fwd := mqtt.NewForwarder(brokers.SubjectAllChannels, logger)
 	if err := fwd.Forward(svcName, nps, mpub); err != nil {

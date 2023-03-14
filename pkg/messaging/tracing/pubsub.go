@@ -17,6 +17,16 @@ type pubsubMiddleware struct {
 	tracer opentracing.Tracer
 }
 
+// Subscribe implements messaging.PubSub
+func (pm *pubsubMiddleware) Subscribe(id string, topic string, handler messaging.MessageHandler) error {
+	return pm.pubsub.Subscribe(id, topic, pm.handle(handler))
+}
+
+// Unsubscribe implements messaging.PubSub
+func (pm *pubsubMiddleware) Unsubscribe(id string, topic string) error {
+	return pm.pubsub.Unsubscribe(id, topic)
+}
+
 func NewPubSub(pubsub messaging.PubSub, tracer opentracing.Tracer) messaging.PubSub {
 	return &pubsubMiddleware{
 		pubsub: pubsub,
@@ -38,16 +48,6 @@ func (ps *pubsubMiddleware) Publish(ctx context.Context, topic string, msg *mess
 	ctx = opentracing.ContextWithSpan(ctx, span)
 
 	return ps.pubsub.Publish(ctx, topic, msg)
-}
-
-// Subscribe implements messaging.PubSub
-func (ps *pubsubMiddleware) Subscribe(id string, topic string, handler messaging.MessageHandler) error {
-	return ps.pubsub.Subscribe(id, topic, ps.handle(handler))
-}
-
-// Unsubscribe implements messaging.PubSub
-func (ps *pubsubMiddleware) Unsubscribe(id string, topic string) error {
-	return ps.pubsub.Unsubscribe(id, topic)
 }
 
 func (ps *pubsubMiddleware) handle(h messaging.MessageHandler) handleFunc {

@@ -12,7 +12,7 @@ import (
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/nats"
-	"github.com/mainflux/mainflux/pkg/messaging/nats/tracing"
+	"github.com/mainflux/mainflux/pkg/messaging/tracing"
 	"github.com/opentracing/opentracing-go"
 )
 
