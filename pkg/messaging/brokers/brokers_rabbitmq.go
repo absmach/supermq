@@ -32,7 +32,7 @@ func NewPublisher(url string, tracer opentracing.Tracer) (messaging.Publisher, e
 	return pb, nil
 }
 
-func NewPubSub(url, queue string, logger logger.Logger, _ opentracing.Tracer) (messaging.PubSub, error) {
+func NewPubSub(url, queue string, logger logger.Logger, tracer opentracing.Tracer) (messaging.PubSub, error) {
 	pb, err := rabbitmq.NewPubSub(url, queue, logger)
 	if err != nil {
 		return nil, err
