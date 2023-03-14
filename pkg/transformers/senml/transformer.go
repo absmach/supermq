@@ -77,7 +77,6 @@ func (t transformer) Transform(msg *messaging.Message) (interface{}, error) {
 			DataValue:   v.DataValue,
 			StringValue: v.StringValue,
 			Sum:         v.Sum,
-			Span:        msg.Span,
 		}
 	}
 

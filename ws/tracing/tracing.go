@@ -1,7 +1,6 @@
 package tracing
 
 import (
-	"bytes"
 	"context"
 
 	"github.com/mainflux/mainflux/pkg/messaging"
@@ -10,6 +9,8 @@ import (
 )
 
 var _ ws.Service = (*tracingMiddleware)(nil)
+
+const publish_op = "ws_publish"
 
 type tracingMiddleware struct {
 	tracer opentracing.Tracer
@@ -27,17 +28,12 @@ func New(tracer opentracing.Tracer, svc ws.Service) *tracingMiddleware {
 func (tm *tracingMiddleware) Publish(ctx context.Context, thingKey string, msg *messaging.Message) error {
 	var spanCtx opentracing.SpanContext = nil
 
-	if coapSpan := opentracing.SpanFromContext(ctx); coapSpan != nil {
-		spanCtx = coapSpan.Context()
+	if wsSpan := opentracing.SpanFromContext(ctx); wsSpan != nil {
+		spanCtx = wsSpan.Context()
 	}
-	span := tm.tracer.StartSpan("ws_publish", opentracing.ChildOf(spanCtx))
+	span := tm.tracer.StartSpan(publish_op, opentracing.ChildOf(spanCtx))
 	defer span.Finish()
-	dataBuffer := bytes.NewBuffer(msg.Span)
-
-	if err := tm.tracer.Inject(span.Context(), opentracing.Binary, dataBuffer); err != nil {
-		return err
-	}
-	msg.Span = dataBuffer.Bytes()
+	ctx = opentracing.ContextWithSpan(ctx, span)
 	return tm.svc.Publish(ctx, thingKey, msg)
 }
 

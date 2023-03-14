@@ -1,12 +1,11 @@
 package tracing
 
 import (
-	"bytes"
-
 	"github.com/mainflux/mainflux/consumers"
 	mfjson "github.com/mainflux/mainflux/pkg/transformers/json"
 	"github.com/mainflux/mainflux/pkg/transformers/senml"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 )
 
 var _ consumers.Consumer = (*tracingMiddleware)(nil)
@@ -29,32 +28,18 @@ func New(tracer opentracing.Tracer, consumer consumers.Consumer) consumers.Consu
 func (tm *tracingMiddleware) Consume(message interface{}) error {
 	switch m := message.(type) {
 	case mfjson.Messages:
-		for _, mes := range m.Data {
-			span, err := tm.getSpanFromBytes(mes.Span)
-			if err != nil {
-				return err
-			}
+		for _, msg := range m.Data {
+			span := tm.tracer.StartSpan(consume_op, ext.SpanKindConsumer)
 			defer span.Finish()
+			ext.MessageBusDestination.Set(span, msg.Subtopic)
 		}
 	case []senml.Message:
-		for _, mes := range m {
-			span, err := tm.getSpanFromBytes(mes.Span)
-			if err != nil {
-				return err
-			}
+		for _, msg := range m {
+			span := tm.tracer.StartSpan(consume_op, ext.SpanKindConsumer)
 			defer span.Finish()
+			ext.MessageBusDestination.Set(span, msg.Subtopic)
 		}
 	default:
 	}
-	return tm.Consume(message)
-}
-
-func (tm *tracingMiddleware) getSpanFromBytes(span []byte) (opentracing.Span, error) {
-	buf := bytes.NewBuffer(span)
-
-	sc, err := tm.tracer.Extract(opentracing.Binary, buf)
-	if err != nil && err != opentracing.ErrSpanContextNotFound {
-		return nil, err
-	}
-	return tm.tracer.StartSpan(consume_op, opentracing.ChildOf(sc)), nil
+	return tm.consumer.Consume(message)
 }

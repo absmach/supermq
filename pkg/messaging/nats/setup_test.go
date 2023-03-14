@@ -14,7 +14,6 @@ import (
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/mainflux/mainflux/pkg/messaging/nats"
-	"github.com/opentracing/opentracing-go"
 	dockertest "github.com/ory/dockertest/v3"
 )
 
@@ -35,8 +34,6 @@ func TestMain(m *testing.M) {
 	}
 	handleInterrupt(pool, container)
 
-	tracer := opentracing.NoopTracer{}
-
 	address := fmt.Sprintf("%s:%s", "localhost", container.GetPort("4222/tcp"))
 	if err := pool.Retry(func() error {
 		publisher, err = nats.NewPublisher(address)
@@ -50,7 +47,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf(err.Error())
 	}
 	if err := pool.Retry(func() error {
-		pubsub, err = nats.NewPubSub(address, "", logger, tracer)
+		pubsub, err = nats.NewPubSub(address, "", logger)
 		return err
 	}); err != nil {
 		log.Fatalf("Could not connect to docker: %s", err)

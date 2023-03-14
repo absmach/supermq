@@ -1,7 +1,6 @@
 package tracing
 
 import (
-	"bytes"
 	"context"
 
 	"github.com/mainflux/mainflux/http"
@@ -10,6 +9,8 @@ import (
 )
 
 var _ http.Service = (*serviceMiddleware)(nil)
+
+const publish_op = "http_publish"
 
 type serviceMiddleware struct {
 	tracer opentracing.Tracer
@@ -27,16 +28,12 @@ func New(tracer opentracing.Tracer, svc http.Service) *serviceMiddleware {
 func (sm *serviceMiddleware) Publish(ctx context.Context, token string, msg *messaging.Message) error {
 	var spanCtx opentracing.SpanContext = nil
 
-	if coapSpan := opentracing.SpanFromContext(ctx); coapSpan != nil {
-		spanCtx = coapSpan.Context()
+	if httpSpan := opentracing.SpanFromContext(ctx); httpSpan != nil {
+		spanCtx = httpSpan.Context()
 	}
-	span := sm.tracer.StartSpan("http publish", opentracing.ChildOf(spanCtx))
+	span := sm.tracer.StartSpan(publish_op, opentracing.ChildOf(spanCtx))
 	defer span.Finish()
-	dataBuffer := bytes.NewBuffer(msg.Span)
 
-	if err := sm.tracer.Inject(span.Context(), opentracing.Binary, dataBuffer); err != nil {
-		return err
-	}
-	msg.Span = dataBuffer.Bytes()
+	ctx = opentracing.ContextWithSpan(ctx, span)
 	return sm.svc.Publish(ctx, token, msg)
 }

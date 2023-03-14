@@ -174,7 +174,8 @@ func (h *handler) Publish(c *session.Client, topic *string, payload *[]byte) {
 	}
 
 	for _, pub := range h.publishers {
-		if err := pub.Publish(msg.Channel, &msg); err != nil {
+		ctx := context.TODO()
+		if err := pub.Publish(ctx, msg.Channel, &msg); err != nil {
 			h.logger.Error(LogErrFailedPublishToMsgBroker + err.Error())
 		}
 	}

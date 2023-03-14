@@ -87,7 +87,7 @@ func TestPublisher(t *testing.T) {
 			Subtopic:  tc.subtopic,
 			Payload:   tc.payload,
 		}
-		err = pubsub.Publish(topic, &expectedMsg)
+		err = pubsub.Publish(context.Background(), topic, &expectedMsg)
 		assert.Nil(t, err, fmt.Sprintf("%s: got unexpected error: %s", tc.desc, err))
 
 		receivedMsg := <-msgChan
@@ -412,7 +412,7 @@ func TestPubSub(t *testing.T) {
 				Payload: data,
 			}
 
-			err = pubsub.Publish(tc.topic, &expectedMsg)
+			err = pubsub.Publish(context.Background(), tc.topic, &expectedMsg)
 			assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", tc.desc, err))
 
 			receivedMsg := <-msgChan

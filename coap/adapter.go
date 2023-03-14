@@ -66,7 +66,7 @@ func (svc *adapterService) Publish(ctx context.Context, key string, msg *messagi
 	}
 	msg.Publisher = thid.GetValue()
 
-	return svc.pubsub.Publish(msg.Channel, msg)
+	return svc.pubsub.Publish(ctx, msg.Channel, msg)
 }
 
 func (svc *adapterService) Subscribe(ctx context.Context, key, chanID, subtopic string, c Client) error {

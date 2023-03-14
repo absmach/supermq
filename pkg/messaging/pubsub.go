@@ -3,10 +3,12 @@
 
 package messaging
 
+import "context"
+
 // Publisher specifies message publishing API.
 type Publisher interface {
 	// Publishes message to the stream.
-	Publish(topic string, msg *Message) error
+	Publish(ctx context.Context, topic string, msg *Message) error
 
 	// Close gracefully closes message publisher's connection.
 	Close() error

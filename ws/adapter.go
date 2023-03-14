@@ -85,7 +85,7 @@ func (svc *adapterService) Publish(ctx context.Context, thingKey string, msg *me
 
 	msg.Publisher = thid.GetValue()
 
-	if err := svc.pubsub.Publish(msg.GetChannel(), msg); err != nil {
+	if err := svc.pubsub.Publish(ctx, msg.GetChannel(), msg); err != nil {
 		return ErrFailedMessagePublish
 	}
 

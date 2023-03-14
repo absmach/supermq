@@ -1,7 +1,7 @@
 package tracing
 
 import (
-	"bytes"
+	"context"
 
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/opentracing/opentracing-go"
@@ -31,28 +31,12 @@ func (pm *publisherMiddleware) Close() error {
 }
 
 // Publish implements messaging.Publisher
-func (pm *publisherMiddleware) Publish(topic string, msg *messaging.Message) error {
-	var sc opentracing.SpanContext = nil
-	var err error
-	var spanBytes []byte
-	//extract span context from message
-	parentSCBuffer := bytes.NewBuffer(spanBytes)
-	sc, err = pm.tracer.Extract(opentracing.Binary, parentSCBuffer)
-
-	if err != nil && err != opentracing.ErrSpanContextNotFound {
-		return err
-	}
-
-	// start new span
-	span := pm.tracer.StartSpan(publishOP, ext.SpanKindProducer, opentracing.ChildOf(sc))
+func (pm *publisherMiddleware) Publish(ctx context.Context, topic string, msg *messaging.Message) error {
+	span, _ := opentracing.StartSpanFromContextWithTracer(ctx, pm.tracer, publishOP)
 	ext.MessageBusDestination.Set(span, msg.Subtopic)
 	defer span.Finish()
 
-	dataBuffer := bytes.NewBuffer([]byte{})
+	ctx = opentracing.ContextWithSpan(ctx, span)
 
-	if err := pm.tracer.Inject(span.Context(), opentracing.Binary, dataBuffer); err != nil {
-		return err
-	}
-	//msg.Span = dataBuffer.Bytes()
-	return pm.publisher.Publish(topic, msg)
+	return pm.publisher.Publish(ctx, topic, msg)
 }

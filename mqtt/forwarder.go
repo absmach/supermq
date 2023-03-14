@@ -4,6 +4,7 @@
 package mqtt
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -52,7 +53,8 @@ func handle(pub messaging.Publisher, logger log.Logger) handleFunc {
 			topic += "/" + strings.ReplaceAll(msg.Subtopic, ".", "/")
 		}
 		go func() {
-			if err := pub.Publish(topic, msg); err != nil {
+			ctx := context.TODO()
+			if err := pub.Publish(ctx, topic, msg); err != nil {
 				logger.Warn(fmt.Sprintf("Failed to forward message: %s", err))
 			}
 		}()

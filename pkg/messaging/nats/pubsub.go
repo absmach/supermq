@@ -4,7 +4,6 @@
 package nats
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"sync"
@@ -14,14 +13,9 @@ import (
 	log "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	broker "github.com/nats-io/nats.go"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
 )
 
-const (
-	chansPrefix = "channels"
-	subscribeOP = "subscribe_op" //traced op
-)
+const chansPrefix = "channels"
 
 // Publisher and Subscriber errors.
 var (
@@ -42,7 +36,6 @@ type pubsub struct {
 	logger        log.Logger
 	mu            sync.Mutex
 	queue         string
-	tracer        opentracing.Tracer
 	subscriptions map[string]map[string]subscription
 }
 
@@ -53,7 +46,7 @@ type pubsub struct {
 // from ordinary subscribe. For more information, please take a look
 // here: https://docs.nats.io/developing-with-nats/receiving/queues.
 // If the queue is empty, Subscribe will be used.
-func NewPubSub(url, queue string, logger log.Logger, tracer opentracing.Tracer) (messaging.PubSub, error) {
+func NewPubSub(url, queue string, logger log.Logger) (messaging.PubSub, error) {
 	conn, err := broker.Connect(url, broker.MaxReconnects(maxReconnects))
 	if err != nil {
 		return nil, err
@@ -63,7 +56,6 @@ func NewPubSub(url, queue string, logger log.Logger, tracer opentracing.Tracer) 
 		publisher: publisher{
 			conn: conn,
 		},
-		tracer:        tracer,
 		queue:         queue,
 		logger:        logger,
 		subscriptions: make(map[string]map[string]subscription),
@@ -168,16 +160,6 @@ func (ps *pubsub) natsHandler(h messaging.MessageHandler) broker.MsgHandler {
 		if err := proto.Unmarshal(m.Data, &msg); err != nil {
 			ps.logger.Warn(fmt.Sprintf("Failed to unmarshal received message: %s", err))
 			return
-		}
-		dataBuffer := bytes.NewBuffer(msg.Span)
-
-		sc, err := ps.tracer.Extract(opentracing.Binary, dataBuffer)
-		if err != nil {
-			ps.logger.Warn(fmt.Sprintf("failed to get span context, %s", err.Error()))
-		} else {
-			span := ps.tracer.StartSpan(subscribeOP, ext.SpanKindConsumer, opentracing.FollowsFrom(sc))
-			ext.MessageBusDestination.Set(span, msg.Subtopic)
-			defer span.Finish()
 		}
 
 		if err := h.Handle(&msg); err != nil {

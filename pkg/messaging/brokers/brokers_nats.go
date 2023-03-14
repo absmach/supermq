@@ -34,9 +34,10 @@ func NewPublisher(url string, tracer opentracing.Tracer) (messaging.Publisher, e
 }
 
 func NewPubSub(url, queue string, logger logger.Logger, tracer opentracing.Tracer) (messaging.PubSub, error) {
-	pb, err := nats.NewPubSub(url, queue, logger, tracer)
+	pb, err := nats.NewPubSub(url, queue, logger)
 	if err != nil {
 		return nil, err
 	}
+	pb = tracing.NewPubSub(pb, tracer)
 	return pb, nil
 }

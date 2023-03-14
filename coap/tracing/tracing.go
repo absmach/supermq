@@ -1,7 +1,6 @@
 package tracing
 
 import (
-	"bytes"
 	"context"
 
 	"github.com/mainflux/mainflux/coap"
@@ -10,6 +9,8 @@ import (
 )
 
 var _ coap.Service = (*tracingServiceMiddleware)(nil)
+
+const publish_op = "coap_publish"
 
 type tracingServiceMiddleware struct {
 	tracer opentracing.Tracer
@@ -31,14 +32,10 @@ func (tm *tracingServiceMiddleware) Publish(ctx context.Context, key string, msg
 		spanCtx = coapSpan.Context()
 	}
 
-	span := tm.tracer.StartSpan("coap publish", opentracing.ChildOf(spanCtx))
+	span := tm.tracer.StartSpan(publish_op, opentracing.ChildOf(spanCtx))
 	defer span.Finish()
-	dataBuffer := bytes.NewBuffer(msg.Span)
 
-	if err := tm.tracer.Inject(span.Context(), opentracing.Binary, dataBuffer); err != nil {
-		return err
-	}
-	msg.Span = dataBuffer.Bytes()
+	ctx = opentracing.ContextWithSpan(ctx, span)
 
 	return tm.svc.Publish(ctx, key, msg)
 }
