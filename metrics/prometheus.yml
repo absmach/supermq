@@ -6,4 +6,4 @@ scrape_configs:
   - job_name: 'mainflux'
 
     static_configs:
-    - targets: ['localhost:9002', 'localhost:9000', 'localhost:8184', 'localhost:8185', 'localhost:8186', 'localhost:9017']
+    - targets: ['localhost:9002', 'localhost:9000', 'localhost:8080', 'localhost:8185', 'localhost:8186', 'localhost:9017', "localhost:5683", "localhost:8188"]
