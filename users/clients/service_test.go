@@ -42,29 +42,6 @@ var (
 	refreshDuration = time.Minute * 10
 )
 
-func generateValidToken(t *testing.T, clientID string, svc clients.Service, cRepo *mocks.ClientRepository) string {
-	client := clients.Client{
-		ID:   clientID,
-		Name: "validtoken",
-		Credentials: clients.Credentials{
-			Identity: "validtoken",
-			Secret:   secret,
-		},
-		Status: clients.EnabledStatus,
-	}
-	rClient := client
-	rClient.Credentials.Secret, _ = phasher.Hash(client.Credentials.Secret)
-
-	repoCall := cRepo.On("RetrieveByIdentity", context.Background(), client.Credentials.Identity).Return(rClient, nil)
-	token, err := svc.IssueToken(context.Background(), client.Credentials.Identity, client.Credentials.Secret)
-	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("Create token expected nil got %s\n", err))
-	if !repoCall.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), client.Credentials.Identity) {
-		assert.Fail(t, "RetrieveByIdentity was not called on creating token")
-	}
-	repoCall.Unset()
-	return token.AccessToken
-}
-
 func TestRegisterClient(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
@@ -81,13 +58,13 @@ func TestRegisterClient(t *testing.T) {
 		{
 			desc:   "register new client",
 			client: client,
-			token:  generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token:  testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			err:    nil,
 		},
 		{
 			desc:   "register existing client",
 			client: client,
-			token:  generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token:  testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			err:    errors.ErrConflict,
 		},
 		{
@@ -101,7 +78,7 @@ func TestRegisterClient(t *testing.T) {
 				Status: clients.EnabledStatus,
 			},
 			err:   nil,
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 		},
 		{
 			desc: "register a new disabled client with name",
@@ -113,7 +90,7 @@ func TestRegisterClient(t *testing.T) {
 				},
 			},
 			err:   nil,
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 		},
 		{
 			desc: "register a new enabled client with tags",
@@ -126,7 +103,7 @@ func TestRegisterClient(t *testing.T) {
 				Status: clients.EnabledStatus,
 			},
 			err:   nil,
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 		},
 		{
 			desc: "register a new disabled client with tags",
@@ -139,7 +116,7 @@ func TestRegisterClient(t *testing.T) {
 				Status: clients.DisabledStatus,
 			},
 			err:   nil,
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 		},
 		{
 			desc: "register a new enabled client with metadata",
@@ -152,7 +129,7 @@ func TestRegisterClient(t *testing.T) {
 				Status:   clients.EnabledStatus,
 			},
 			err:   nil,
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 		},
 		{
 			desc: "register a new disabled client with metadata",
@@ -164,7 +141,7 @@ func TestRegisterClient(t *testing.T) {
 				Metadata: validCMetadata,
 			},
 			err:   nil,
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 		},
 		{
 			desc: "register a new disabled client",
@@ -175,7 +152,7 @@ func TestRegisterClient(t *testing.T) {
 				},
 			},
 			err:   nil,
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 		},
 		{
 			desc: "register a new client with valid disabled status",
@@ -187,7 +164,7 @@ func TestRegisterClient(t *testing.T) {
 				Status: clients.DisabledStatus,
 			},
 			err:   nil,
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 		},
 		{
 			desc: "register a new client with all fields",
@@ -204,7 +181,7 @@ func TestRegisterClient(t *testing.T) {
 				Status: clients.EnabledStatus,
 			},
 			err:   nil,
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 		},
 		{
 			desc: "register a new client with missing identity",
@@ -215,7 +192,7 @@ func TestRegisterClient(t *testing.T) {
 				},
 			},
 			err:   errors.ErrMalformedEntity,
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 		},
 		{
 			desc: "register a new client with invalid owner",
@@ -227,7 +204,7 @@ func TestRegisterClient(t *testing.T) {
 				},
 			},
 			err:   errors.ErrMalformedEntity,
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 		},
 		{
 			desc: "register a new client with empty secret",
@@ -238,7 +215,7 @@ func TestRegisterClient(t *testing.T) {
 				},
 			},
 			err:   apiutil.ErrMissingSecret,
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 		},
 		{
 			desc: "register a new client with invalid status",
@@ -250,7 +227,7 @@ func TestRegisterClient(t *testing.T) {
 				Status: clients.AllStatus,
 			},
 			err:   apiutil.ErrInvalidStatus,
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 		},
 	}
 
@@ -268,9 +245,8 @@ func TestRegisterClient(t *testing.T) {
 			tc.client.Credentials.Secret = expected.Credentials.Secret
 			tc.client.Owner = expected.Owner
 			assert.Equal(t, tc.client, expected, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.client, expected))
-			if !repoCall.Parent.AssertCalled(t, "Save", context.Background(), mock.Anything) {
-				assert.Fail(t, fmt.Sprintf("Save was not called on %s", tc.desc))
-			}
+			ok := repoCall.Parent.AssertCalled(t, "Save", context.Background(), mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("Save was not called on %s", tc.desc))
 		}
 		repoCall.Unset()
 	}
@@ -293,7 +269,7 @@ func TestViewClient(t *testing.T) {
 		{
 			desc:     "view client successfully",
 			response: client,
-			token:    generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			clientID: client.ID,
 			err:      nil,
 		},
@@ -307,7 +283,7 @@ func TestViewClient(t *testing.T) {
 		{
 			desc:     "view client with valid token and invalid client id",
 			response: clients.Client{},
-			token:    generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			clientID: mocks.WrongID,
 			err:      errors.ErrNotFound,
 		},
@@ -328,12 +304,10 @@ func TestViewClient(t *testing.T) {
 		assert.Equal(t, tc.response, rClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, rClient))
 		repoCall.Unset()
 		if tc.err == nil {
-			if !repoCall.Parent.AssertCalled(t, "Evaluate", context.Background(), "client", mock.Anything) {
-				assert.Fail(t, fmt.Sprintf("Evaluate was not called on %s", tc.desc))
-			}
-			if !repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.clientID) {
-				assert.Fail(t, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
-			}
+			ok := repoCall.Parent.AssertCalled(t, "Evaluate", context.Background(), "client", mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("Evaluate was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.clientID)
+			assert.True(t, ok, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
 		}
 		repoCall1.Unset()
 	}
@@ -377,7 +351,7 @@ func TestListClients(t *testing.T) {
 	}{
 		{
 			desc:  "list clients with authorized token",
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 
 			page: clients.Page{
 				Status: clients.AllStatus,
@@ -411,7 +385,7 @@ func TestListClients(t *testing.T) {
 		},
 		{
 			desc:  "list clients that are shared with me",
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			page: clients.Page{
 				Offset:   6,
 				Limit:    nClients,
@@ -430,7 +404,7 @@ func TestListClients(t *testing.T) {
 		},
 		{
 			desc:  "list clients that are shared with me with a specific name",
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			page: clients.Page{
 				Offset:   6,
 				Limit:    nClients,
@@ -450,7 +424,7 @@ func TestListClients(t *testing.T) {
 		},
 		{
 			desc:  "list clients that are shared with me with an invalid name",
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			page: clients.Page{
 				Offset:   6,
 				Limit:    nClients,
@@ -470,7 +444,7 @@ func TestListClients(t *testing.T) {
 		},
 		{
 			desc:  "list clients that I own",
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			page: clients.Page{
 				Offset: 6,
 				Limit:  nClients,
@@ -489,7 +463,7 @@ func TestListClients(t *testing.T) {
 		},
 		{
 			desc:  "list clients that I own with a specific name",
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			page: clients.Page{
 				Offset: 6,
 				Limit:  nClients,
@@ -509,7 +483,7 @@ func TestListClients(t *testing.T) {
 		},
 		{
 			desc:  "list clients that I own with an invalid name",
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			page: clients.Page{
 				Offset: 6,
 				Limit:  nClients,
@@ -529,7 +503,7 @@ func TestListClients(t *testing.T) {
 		},
 		{
 			desc:  "list clients that I own and are shared with me",
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			page: clients.Page{
 				Offset:   6,
 				Limit:    nClients,
@@ -549,7 +523,7 @@ func TestListClients(t *testing.T) {
 		},
 		{
 			desc:  "list clients that I own and are shared with me with a specific name",
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			page: clients.Page{
 				Offset:   6,
 				Limit:    nClients,
@@ -570,7 +544,7 @@ func TestListClients(t *testing.T) {
 		},
 		{
 			desc:  "list clients that I own and are shared with me with an invalid name",
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			page: clients.Page{
 				Offset:   6,
 				Limit:    nClients,
@@ -591,7 +565,7 @@ func TestListClients(t *testing.T) {
 		},
 		{
 			desc:  "list clients with offset and limit",
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 
 			page: clients.Page{
 				Offset: 6,
@@ -616,9 +590,8 @@ func TestListClients(t *testing.T) {
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
 		if tc.err == nil {
-			if !repoCall.Parent.AssertCalled(t, "RetrieveAll", context.Background(), mock.Anything) {
-				assert.Fail(t, fmt.Sprintf("RetrieveAll was not called on %s", tc.desc))
-			}
+			ok := repoCall.Parent.AssertCalled(t, "RetrieveAll", context.Background(), mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("RetrieveAll was not called on %s", tc.desc))
 		}
 		repoCall.Unset()
 	}
@@ -647,7 +620,7 @@ func TestUpdateClient(t *testing.T) {
 			desc:     "update client name with valid token",
 			client:   client1,
 			response: client1,
-			token:    generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			err:      nil,
 		},
 		{
@@ -671,7 +644,7 @@ func TestUpdateClient(t *testing.T) {
 			desc:     "update client metadata with valid token",
 			client:   client2,
 			response: client2,
-			token:    generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			err:      nil,
 		},
 		{
@@ -690,12 +663,10 @@ func TestUpdateClient(t *testing.T) {
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, updatedClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, updatedClient))
 		if tc.err == nil {
-			if !repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything) {
-				assert.Fail(t, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
-			}
-			if !repoCall1.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything) {
-				assert.Fail(t, fmt.Sprintf("Update was not called on %s", tc.desc))
-			}
+			ok := repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("Update was not called on %s", tc.desc))
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -721,7 +692,7 @@ func TestUpdateClientTags(t *testing.T) {
 		{
 			desc:     "update client tags with valid token",
 			client:   client,
-			token:    generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			response: client,
 			err:      nil,
 		},
@@ -751,12 +722,10 @@ func TestUpdateClientTags(t *testing.T) {
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, updatedClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, updatedClient))
 		if tc.err == nil {
-			if !repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything) {
-				assert.Fail(t, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
-			}
-			if !repoCall1.Parent.AssertCalled(t, "UpdateTags", context.Background(), mock.Anything) {
-				assert.Fail(t, fmt.Sprintf("UpdateTags was not called on %s", tc.desc))
-			}
+			ok := repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "UpdateTags", context.Background(), mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("UpdateTags was not called on %s", tc.desc))
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -784,7 +753,7 @@ func TestUpdateClientIdentity(t *testing.T) {
 		{
 			desc:     "update client identity with valid token",
 			identity: "updated@example.com",
-			token:    generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			id:       client.ID,
 			response: client2,
 			err:      nil,
@@ -792,7 +761,7 @@ func TestUpdateClientIdentity(t *testing.T) {
 		{
 			desc:     "update client identity with invalid id",
 			identity: "updated@example.com",
-			token:    generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			id:       mocks.WrongID,
 			response: clients.Client{},
 			err:      errors.ErrNotFound,
@@ -814,12 +783,10 @@ func TestUpdateClientIdentity(t *testing.T) {
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, updatedClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, updatedClient))
 		if tc.err == nil {
-			if !repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything) {
-				assert.Fail(t, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
-			}
-			if !repoCall1.Parent.AssertCalled(t, "UpdateIdentity", context.Background(), mock.Anything) {
-				assert.Fail(t, fmt.Sprintf("UpdateIdentity was not called on %s", tc.desc))
-			}
+			ok := repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "UpdateIdentity", context.Background(), mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("UpdateIdentity was not called on %s", tc.desc))
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -845,7 +812,7 @@ func TestUpdateClientOwner(t *testing.T) {
 		{
 			desc:     "update client owner with valid token",
 			client:   client,
-			token:    generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			response: client,
 			err:      nil,
 		},
@@ -875,12 +842,10 @@ func TestUpdateClientOwner(t *testing.T) {
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, updatedClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, updatedClient))
 		if tc.err == nil {
-			if !repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything) {
-				assert.Fail(t, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
-			}
-			if !repoCall1.Parent.AssertCalled(t, "UpdateOwner", context.Background(), mock.Anything) {
-				assert.Fail(t, fmt.Sprintf("UpdateOwner was not called on %s", tc.desc))
-			}
+			ok := repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "UpdateOwner", context.Background(), mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("UpdateOwner was not called on %s", tc.desc))
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -944,15 +909,12 @@ func TestUpdateClientSecret(t *testing.T) {
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, updatedClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, updatedClient))
 		if tc.err == nil {
-			if !repoCall.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.response.ID) {
-				assert.Fail(t, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
-			}
-			if !repoCall1.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), tc.response.Credentials.Identity) {
-				assert.Fail(t, fmt.Sprintf("RetrieveByIdentity was not called on %s", tc.desc))
-			}
-			if !repoCall2.Parent.AssertCalled(t, "UpdateSecret", context.Background(), mock.Anything) {
-				assert.Fail(t, fmt.Sprintf("UpdateSecret was not called on %s", tc.desc))
-			}
+			ok := repoCall.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.response.ID)
+			assert.True(t, ok, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), tc.response.Credentials.Identity)
+			assert.True(t, ok, fmt.Sprintf("RetrieveByIdentity was not called on %s", tc.desc))
+			ok = repoCall2.Parent.AssertCalled(t, "UpdateSecret", context.Background(), mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("UpdateSecret was not called on %s", tc.desc))
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -983,7 +945,7 @@ func TestEnableClient(t *testing.T) {
 		{
 			desc:     "enable disabled client",
 			id:       disabledClient1.ID,
-			token:    generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			client:   disabledClient1,
 			response: endisabledClient1,
 			err:      nil,
@@ -991,7 +953,7 @@ func TestEnableClient(t *testing.T) {
 		{
 			desc:     "enable enabled client",
 			id:       enabledClient1.ID,
-			token:    generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			client:   enabledClient1,
 			response: enabledClient1,
 			err:      clients.ErrStatusAlreadyAssigned,
@@ -999,7 +961,7 @@ func TestEnableClient(t *testing.T) {
 		{
 			desc:     "enable non-existing client",
 			id:       mocks.WrongID,
-			token:    generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			client:   clients.Client{},
 			response: clients.Client{},
 			err:      errors.ErrNotFound,
@@ -1013,15 +975,12 @@ func TestEnableClient(t *testing.T) {
 		_, err := svc.EnableClient(context.Background(), tc.token, tc.id)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if tc.err == nil {
-			if !repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything) {
-				assert.Fail(t, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
-			}
-			if !repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.id) {
-				assert.Fail(t, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
-			}
-			if !repoCall2.Parent.AssertCalled(t, "ChangeStatus", context.Background(), tc.id, clients.EnabledStatus) {
-				assert.Fail(t, fmt.Sprintf("ChangeStatus was not called on %s", tc.desc))
-			}
+			ok := repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.id)
+			assert.True(t, ok, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
+			ok = repoCall2.Parent.AssertCalled(t, "ChangeStatus", context.Background(), tc.id, clients.EnabledStatus)
+			assert.True(t, ok, fmt.Sprintf("ChangeStatus was not called on %s", tc.desc))
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -1083,7 +1042,7 @@ func TestEnableClient(t *testing.T) {
 			Action: "c_list",
 		}
 		repoCall := cRepo.On("RetrieveAll", context.Background(), pm).Return(tc.response, nil)
-		page, err := svc.ListClients(context.Background(), generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo), pm)
+		page, err := svc.ListClients(context.Background(), testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher), pm)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		size := uint64(len(page.Clients))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", tc.desc, tc.size, size))
@@ -1114,7 +1073,7 @@ func TestDisableClient(t *testing.T) {
 		{
 			desc:     "disable enabled client",
 			id:       enabledClient1.ID,
-			token:    generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			client:   enabledClient1,
 			response: disenabledClient1,
 			err:      nil,
@@ -1122,7 +1081,7 @@ func TestDisableClient(t *testing.T) {
 		{
 			desc:     "disable disabled client",
 			id:       disabledClient1.ID,
-			token:    generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			client:   disabledClient1,
 			response: clients.Client{},
 			err:      clients.ErrStatusAlreadyAssigned,
@@ -1131,7 +1090,7 @@ func TestDisableClient(t *testing.T) {
 			desc:     "disable non-existing client",
 			id:       mocks.WrongID,
 			client:   clients.Client{},
-			token:    generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			response: clients.Client{},
 			err:      errors.ErrNotFound,
 		},
@@ -1144,15 +1103,12 @@ func TestDisableClient(t *testing.T) {
 		_, err := svc.DisableClient(context.Background(), tc.token, tc.id)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if tc.err == nil {
-			if !repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything) {
-				assert.Fail(t, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
-			}
-			if !repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.id) {
-				assert.Fail(t, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
-			}
-			if !repoCall2.Parent.AssertCalled(t, "ChangeStatus", context.Background(), tc.id, clients.DisabledStatus) {
-				assert.Fail(t, fmt.Sprintf("ChangeStatus was not called on %s", tc.desc))
-			}
+			ok := repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.id)
+			assert.True(t, ok, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
+			ok = repoCall2.Parent.AssertCalled(t, "ChangeStatus", context.Background(), tc.id, clients.DisabledStatus)
+			assert.True(t, ok, fmt.Sprintf("ChangeStatus was not called on %s", tc.desc))
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -1214,7 +1170,7 @@ func TestDisableClient(t *testing.T) {
 			Action: "c_list",
 		}
 		repoCall := cRepo.On("RetrieveAll", context.Background(), pm).Return(tc.response, nil)
-		page, err := svc.ListClients(context.Background(), generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo), pm)
+		page, err := svc.ListClients(context.Background(), testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher), pm)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		size := uint64(len(page.Clients))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", tc.desc, tc.size, size))
@@ -1246,7 +1202,7 @@ func TestListMembers(t *testing.T) {
 		aClients = append(aClients, client)
 	}
 	validID := testsutil.GenerateUUID(t, idProvider)
-	validToken := generateValidToken(t, validID, svc, cRepo)
+	validToken := testsutil.GenerateValidToken(t, validID, svc, cRepo, phasher)
 
 	cases := []struct {
 		desc     string
@@ -1335,12 +1291,10 @@ func TestListMembers(t *testing.T) {
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
 		if tc.err == nil {
-			if !repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), validID) {
-				assert.Fail(t, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
-			}
-			if !repoCall1.Parent.AssertCalled(t, "Members", context.Background(), tc.groupID, tc.page) {
-				assert.Fail(t, fmt.Sprintf("Members was not called on %s", tc.desc))
-			}
+			ok := repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), validID)
+			assert.True(t, ok, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "Members", context.Background(), tc.groupID, tc.page)
+			assert.True(t, ok, fmt.Sprintf("Members was not called on %s", tc.desc))
 		}
 		repoCall.Unset()
 		repoCall1.Unset()
@@ -1394,9 +1348,8 @@ func TestIssueToken(t *testing.T) {
 		if err == nil {
 			assert.NotEmpty(t, token.AccessToken, fmt.Sprintf("%s: expected %s not to be empty\n", tc.desc, token.AccessToken))
 			assert.NotEmpty(t, token.RefreshToken, fmt.Sprintf("%s: expected %s not to be empty\n", tc.desc, token.RefreshToken))
-			if !repoCall.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), tc.client.Credentials.Identity) {
-				assert.Fail(t, fmt.Sprintf("RetrieveByIdentity was not called on %s", tc.desc))
-			}
+			ok := repoCall.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), tc.client.Credentials.Identity)
+			assert.True(t, ok, fmt.Sprintf("RetrieveByIdentity was not called on %s", tc.desc))
 		}
 		repoCall.Unset()
 	}
@@ -1449,7 +1402,7 @@ func TestRefreshToken(t *testing.T) {
 		},
 		{
 			desc:   "refresh token with invalid token for an existing client",
-			token:  generateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo),
+			token:  testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), svc, cRepo, phasher),
 			client: client,
 			err:    errors.ErrAuthentication,
 		},
@@ -1463,12 +1416,10 @@ func TestRefreshToken(t *testing.T) {
 		if err == nil {
 			assert.NotEmpty(t, token.AccessToken, fmt.Sprintf("%s: expected %s not to be empty\n", tc.desc, token.AccessToken))
 			assert.NotEmpty(t, token.RefreshToken, fmt.Sprintf("%s: expected %s not to be empty\n", tc.desc, token.RefreshToken))
-			if !repoCall1.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), tc.client.Credentials.Identity) {
-				assert.Fail(t, fmt.Sprintf("RetrieveByIdentity was not called on %s", tc.desc))
-			}
-			if !repoCall2.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.client.ID) {
-				assert.Fail(t, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
-			}
+			ok := repoCall1.Parent.AssertCalled(t, "RetrieveByIdentity", context.Background(), tc.client.Credentials.Identity)
+			assert.True(t, ok, fmt.Sprintf("RetrieveByIdentity was not called on %s", tc.desc))
+			ok = repoCall2.Parent.AssertCalled(t, "RetrieveByID", context.Background(), tc.client.ID)
+			assert.True(t, ok, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
 		}
 		repoCall1.Unset()
 		repoCall2.Unset()

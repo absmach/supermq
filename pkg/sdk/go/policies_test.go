@@ -146,12 +146,14 @@ func TestAddPolicy(t *testing.T) {
 		repoCall2 := pRepo.On("Save", mock.Anything, mock.Anything).Return(tc.err)
 		err := policySDK.AddPolicy(tc.policy, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
-		repoCall1.Parent.AssertCalled(t, "Save", mock.Anything, mock.Anything)
 		if tc.err == nil {
-			repoCall.Parent.AssertCalled(t, "Retrieve", mock.Anything, mock.Anything)
-			repoCall2.Parent.AssertCalled(t, "Save", mock.Anything, mock.Anything)
+			ok := repoCall.Parent.AssertCalled(t, "Retrieve", mock.Anything, mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("Retrieve was not called on %s", tc.desc))
+			ok = repoCall2.Parent.AssertCalled(t, "Save", mock.Anything, mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("Save was not called on %s", tc.desc))
 			if tc.desc == "add existing policy" {
-				repoCall1.Parent.AssertCalled(t, "Update", mock.Anything, mock.Anything)
+				ok = repoCall1.Parent.AssertCalled(t, "Update", mock.Anything, mock.Anything)
+				assert.True(t, ok, fmt.Sprintf("Update was not called on %s", tc.desc))
 			}
 		}
 		repoCall.Unset()
@@ -214,7 +216,8 @@ func TestUpdatePolicy(t *testing.T) {
 		repoCall1 := pRepo.On("Update", mock.Anything, mock.Anything).Return(tc.err)
 		err := policySDK.UpdatePolicy(policy, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
-		repoCall1.Parent.AssertCalled(t, "Update", mock.Anything, mock.Anything)
+		ok := repoCall1.Parent.AssertCalled(t, "Update", mock.Anything, mock.Anything)
+		assert.True(t, ok, fmt.Sprintf("Update was not called on %s", tc.desc))
 		repoCall.Unset()
 		repoCall1.Unset()
 	}
@@ -346,7 +349,8 @@ func TestListPolicies(t *testing.T) {
 		pp, err := policySDK.ListPolicies(tc.page, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, pp.Policies, fmt.Sprintf("%s: expected %v, got %v", tc.desc, tc.response, pp))
-		repoCall.Parent.AssertCalled(t, "Retrieve", mock.Anything, mock.Anything)
+		ok := repoCall.Parent.AssertCalled(t, "Retrieve", mock.Anything, mock.Anything)
+		assert.True(t, ok, fmt.Sprintf("Retrieve was not called on %s", tc.desc))
 		repoCall.Unset()
 	}
 }
@@ -374,7 +378,8 @@ func TestDeletePolicy(t *testing.T) {
 	repoCall1 := pRepo.On("Delete", mock.Anything, mock.Anything).Return(nil)
 	err := policySDK.DeletePolicy(pr, generateValidToken(t, csvc, cRepo))
 	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	repoCall1.Parent.AssertCalled(t, "Delete", mock.Anything, mock.Anything)
+	ok := repoCall1.Parent.AssertCalled(t, "Delete", mock.Anything, mock.Anything)
+	assert.True(t, ok, "Delete was not called on valid policy")
 	repoCall1.Unset()
 	repoCall.Unset()
 
@@ -382,6 +387,8 @@ func TestDeletePolicy(t *testing.T) {
 	repoCall1 = pRepo.On("Delete", mock.Anything, mock.Anything).Return(sdk.ErrFailedRemoval)
 	err = policySDK.DeletePolicy(pr, invalidToken)
 	assert.Equal(t, err, errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized), fmt.Sprintf("expected %s got %s", pr, err))
+	ok = repoCall.Parent.AssertCalled(t, "Delete", mock.Anything, mock.Anything)
+	assert.True(t, ok, "Delete was not called on invalid policy")
 	repoCall1.Unset()
 	repoCall.Unset()
 }
