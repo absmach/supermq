@@ -5,8 +5,7 @@ type authorizeRes struct {
 }
 
 type identityRes struct {
-	id    string
-	email string
+	id string
 }
 
 type issueRes struct {

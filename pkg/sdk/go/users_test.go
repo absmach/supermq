@@ -24,6 +24,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+var id = generateUUID(&testing.T{})
+
 func newClientServer(svc clients.Service) *httptest.Server {
 	logger := logger.NewMock()
 	mux := bone.New()
@@ -41,7 +43,7 @@ func TestCreateClient(t *testing.T) {
 	defer ts.Close()
 
 	user := sdk.User{
-		Credentials: sdk.Credentials{Identity: "identity", Secret: "secret"},
+		Credentials: sdk.Credentials{Identity: "admin@example.com", Secret: "secret"},
 		Status:      clients.EnabledStatus.String(),
 	}
 	conf := sdk.Config{
@@ -74,38 +76,44 @@ func TestCreateClient(t *testing.T) {
 			desc: "register user with invalid identity",
 			client: sdk.User{
 				Credentials: sdk.Credentials{
-					Identity: invalidIdentity, Secret: "password"},
+					Identity: invalidIdentity,
+					Secret:   "password",
+				},
 			},
 			response: sdk.User{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(sdk.ErrFailedCreation, http.StatusInternalServerError),
+			err:      errors.NewSDKErrorWithStatus(errors.ErrMalformedEntity, http.StatusBadRequest),
 		},
 		{
 			desc: "register user with empty secret",
 			client: sdk.User{
 				Credentials: sdk.Credentials{
-					Identity: Identity + "2", Secret: ""},
+					Identity: Identity + "2",
+					Secret:   "",
+				},
 			},
 			response: sdk.User{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingSecret, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(errors.ErrMalformedEntity, http.StatusBadRequest),
 		},
 		{
 			desc: "register user with no secret",
 			client: sdk.User{
 				Credentials: sdk.Credentials{
-					Identity: Identity + "2"},
+					Identity: Identity + "2",
+				},
 			},
 			response: sdk.User{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingSecret, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(errors.ErrMalformedEntity, http.StatusBadRequest),
 		},
 		{
 			desc: "register user with empty identity",
 			client: sdk.User{
 				Credentials: sdk.Credentials{
 					Identity: "",
-					Secret:   secret},
+					Secret:   secret,
+				},
 			},
 			response: sdk.User{},
 			token:    token,
@@ -115,7 +123,8 @@ func TestCreateClient(t *testing.T) {
 			desc: "register user with no identity",
 			client: sdk.User{
 				Credentials: sdk.Credentials{
-					Secret: secret},
+					Secret: secret,
+				},
 			},
 			response: sdk.User{},
 			token:    token,
@@ -126,15 +135,15 @@ func TestCreateClient(t *testing.T) {
 			client:   sdk.User{},
 			response: sdk.User{},
 			token:    token,
-			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMissingSecret, http.StatusBadRequest),
+			err:      errors.NewSDKErrorWithStatus(apiutil.ErrMalformedEntity, http.StatusBadRequest),
 		},
 		{
 			desc: "register user with every field defined",
 			client: sdk.User{
-				ID:          generateUUID(t),
+				ID:          id,
 				Name:        "name",
 				Tags:        []string{"tag1", "tag2"},
-				Owner:       "owner",
+				Owner:       id,
 				Credentials: user.Credentials,
 				Metadata:    validMetadata,
 				CreatedAt:   time.Now(),
@@ -142,10 +151,10 @@ func TestCreateClient(t *testing.T) {
 				Status:      clients.EnabledStatus.String(),
 			},
 			response: sdk.User{
-				ID:          generateUUID(t),
+				ID:          id,
 				Name:        "name",
 				Tags:        []string{"tag1", "tag2"},
-				Owner:       "owner",
+				Owner:       id,
 				Credentials: user.Credentials,
 				Metadata:    validMetadata,
 				CreatedAt:   time.Now(),
@@ -157,9 +166,7 @@ func TestCreateClient(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("Save", mock.Anything, mock.Anything).Return(tc.response, tc.err)
-
+		repoCall := cRepo.On("Save", mock.Anything, mock.Anything).Return(tc.response, tc.err)
 		rClient, err := clientSDK.CreateUser(tc.client, tc.token)
 		tc.response.ID = rClient.ID
 		tc.response.CreatedAt = rClient.CreatedAt
@@ -167,9 +174,11 @@ func TestCreateClient(t *testing.T) {
 		rClient.Credentials.Secret = tc.response.Credentials.Secret
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, rClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, rClient))
-
+		if tc.err == nil {
+			ok := repoCall.Parent.AssertCalled(t, "Save", mock.Anything, mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("Save was not called on %s", tc.desc))
+		}
 		repoCall.Unset()
-		repoCall1.Unset()
 	}
 }
 
@@ -346,15 +355,15 @@ func TestListClients(t *testing.T) {
 			Tag:      tc.tag,
 		}
 
-		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("RetrieveAll", mock.Anything, mock.Anything).Return(clients.ClientsPage{Page: convertClientPage(pm), Clients: convertClients(tc.response)}, tc.err)
-
+		repoCall := cRepo.On("RetrieveAll", mock.Anything, mock.Anything).Return(clients.ClientsPage{Page: convertClientPage(pm), Clients: convertClients(tc.response)}, tc.err)
 		page, err := clientSDK.Users(pm, generateValidToken(t, svc, cRepo))
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page.Users, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, page))
-
+		if tc.err == nil {
+			ok := repoCall.Parent.AssertCalled(t, "RetrieveAll", mock.Anything, mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("RetrieveAll was not called on %s", tc.desc))
+		}
 		repoCall.Unset()
-		repoCall1.Unset()
 	}
 }
 
@@ -470,7 +479,7 @@ func TestListMembers(t *testing.T) {
 			token:    invalidToken,
 			groupID:  testsutil.GenerateUUID(t, idProvider),
 			page:     sdk.PageMetadata{},
-			response: []sdk.User{},
+			response: []sdk.User(nil),
 			err:      errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
 		},
 		{
@@ -478,22 +487,25 @@ func TestListMembers(t *testing.T) {
 			token:    generateValidToken(t, svc, cRepo),
 			groupID:  mocks.WrongID,
 			page:     sdk.PageMetadata{},
-			response: []sdk.User{},
+			response: []sdk.User(nil),
 			err:      errors.NewSDKErrorWithStatus(errors.ErrNotFound, http.StatusNotFound),
 		},
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("Members", mock.Anything, mock.Anything, mock.Anything).Return(clients.MembersPage{Members: convertClients(tc.response)}, tc.err)
-
+		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
+		repoCall1 := cRepo.On("Members", mock.Anything, tc.groupID, mock.Anything).Return(clients.MembersPage{Members: convertClients(tc.response)}, tc.err)
 		membersPage, err := clientSDK.Members(tc.groupID, tc.page, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
-		assert.Equal(t, tc.response, membersPage, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, membersPage))
-
+		assert.Equal(t, tc.response, membersPage.Members, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, membersPage.Members))
+		if tc.err == nil {
+			ok := repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "Members", mock.Anything, tc.groupID, mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("Members was not called on %s", tc.desc))
+		}
 		repoCall.Unset()
 		repoCall1.Unset()
-
 	}
 }
 
@@ -536,7 +548,7 @@ func TestClient(t *testing.T) {
 			desc:     "view client with an invalid token",
 			response: sdk.User{},
 			token:    invalidToken,
-			clientID: user.ID,
+			clientID: generateUUID(t),
 			err:      errors.NewSDKErrorWithStatus(errors.ErrAuthentication, http.StatusUnauthorized),
 		},
 		{
@@ -557,12 +569,16 @@ func TestClient(t *testing.T) {
 
 	for _, tc := range cases {
 		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
-
-		rClient, err := clientSDK.User(tc.token, tc.clientID)
+		repoCall1 := cRepo.On("RetrieveByID", mock.Anything, tc.clientID).Return(convertClient(tc.response), tc.err)
+		rClient, err := clientSDK.User(tc.clientID, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, rClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, rClient))
-
+		if tc.err == nil {
+			ok := repoCall.Parent.AssertCalled(t, "Evaluate", mock.Anything, mock.Anything, mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("Evaluate was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, tc.clientID)
+			assert.True(t, ok, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
+		}
 		repoCall1.Unset()
 		repoCall.Unset()
 	}
@@ -629,15 +645,19 @@ func TestUpdateClient(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
 		repoCall1 := cRepo.On("Update", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
-
 		uClient, err := clientSDK.UpdateUser(tc.client, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, uClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, uClient))
-
-		repoCall1.Unset()
+		if tc.err == nil {
+			ok := repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "Update", mock.Anything, mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("Update was not called on %s", tc.desc))
+		}
 		repoCall.Unset()
+		repoCall1.Unset()
 	}
 }
 
@@ -701,15 +721,19 @@ func TestUpdateClientTags(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
 		repoCall1 := cRepo.On("UpdateTags", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
-
 		uClient, err := clientSDK.UpdateUserTags(tc.client, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, uClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, uClient))
-
-		repoCall1.Unset()
+		if tc.err == nil {
+			ok := repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "UpdateTags", mock.Anything, mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("UpdateTags was not called on %s", tc.desc))
+		}
 		repoCall.Unset()
+		repoCall1.Unset()
 	}
 }
 
@@ -771,17 +795,19 @@ func TestUpdateClientIdentity(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(convertClient(tc.client), tc.err)
-		repoCall2 := cRepo.On("UpdateIdentity", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
-
+		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
+		repoCall1 := cRepo.On("UpdateIdentity", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
 		uClient, err := clientSDK.UpdateUserIdentity(tc.client, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, uClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, uClient))
-
-		repoCall1.Unset()
-		repoCall2.Unset()
+		if tc.err == nil {
+			ok := repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "UpdateIdentity", mock.Anything, mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("UpdateIdentity was not called on %s", tc.desc))
+		}
 		repoCall.Unset()
+		repoCall1.Unset()
 	}
 }
 
@@ -803,7 +829,7 @@ func TestUpdateClientSecret(t *testing.T) {
 	rclient := user
 	rclient.Credentials.Secret, _ = phasher.Hash(user.Credentials.Secret)
 
-	repoCall := cRepo.On("RetrieveByIdentity", context.Background(), mock.Anything).Return(convertClient(rclient), nil)
+	repoCall := cRepo.On("RetrieveByIdentity", context.Background(), user.Credentials.Identity).Return(convertClient(rclient), nil)
 	token, err := svc.IssueToken(context.Background(), user.Credentials.Identity, user.Credentials.Secret)
 	assert.Nil(t, err, fmt.Sprintf("Issue token expected nil got %s\n", err))
 	repoCall.Unset()
@@ -843,17 +869,23 @@ func TestUpdateClientSecret(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
-		repoCall2 := cRepo.On("RetrieveByIdentity", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
-		repoCall3 := cRepo.On("UpdateSecret", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
+		repoCall := cRepo.On("RetrieveByID", mock.Anything, user.ID).Return(convertClient(tc.response), tc.err)
+		repoCall1 := cRepo.On("RetrieveByIdentity", mock.Anything, user.Credentials.Identity).Return(convertClient(tc.response), tc.err)
+		repoCall2 := cRepo.On("UpdateSecret", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
 		uClient, err := clientSDK.UpdatePassword(user.ID, tc.oldSecret, tc.newSecret, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, uClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, uClient))
+		if tc.err == nil {
+			ok := repoCall.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, user.ID)
+			assert.True(t, ok, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "RetrieveByIdentity", mock.Anything, user.Credentials.Identity)
+			assert.True(t, ok, fmt.Sprintf("RetrieveByIdentity was not called on %s", tc.desc))
+			ok = repoCall2.Parent.AssertCalled(t, "UpdateSecret", mock.Anything, mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("UpdateSecret was not called on %s", tc.desc))
+		}
+		repoCall.Unset()
 		repoCall1.Unset()
 		repoCall2.Unset()
-		repoCall3.Unset()
-		repoCall.Unset()
 	}
 }
 
@@ -915,15 +947,19 @@ func TestUpdateClientOwner(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
 		repoCall1 := cRepo.On("UpdateOwner", mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
-
 		uClient, err := clientSDK.UpdateUserOwner(tc.client, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, uClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, uClient))
-
-		repoCall1.Unset()
+		if tc.err == nil {
+			ok := repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "UpdateOwner", mock.Anything, mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("UpdateOwner was not called on %s", tc.desc))
+		}
 		repoCall.Unset()
+		repoCall1.Unset()
 	}
 }
 
@@ -982,17 +1018,23 @@ func TestEnableClient(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(convertClient(tc.client), tc.err)
-		repoCall2 := cRepo.On("ChangeStatus", mock.Anything, mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
-
+		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
+		repoCall1 := cRepo.On("RetrieveByID", mock.Anything, tc.id).Return(convertClient(tc.client), tc.err)
+		repoCall2 := cRepo.On("ChangeStatus", mock.Anything, tc.id, clients.EnabledStatus).Return(convertClient(tc.response), tc.err)
 		eClient, err := clientSDK.EnableUser(tc.id, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, eClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, eClient))
-
+		if tc.err == nil {
+			ok := repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, tc.id)
+			assert.True(t, ok, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
+			ok = repoCall2.Parent.AssertCalled(t, "ChangeStatus", mock.Anything, tc.id, clients.EnabledStatus)
+			assert.True(t, ok, fmt.Sprintf("ChangeStatus was not called on %s", tc.desc))
+		}
+		repoCall.Unset()
 		repoCall1.Unset()
 		repoCall2.Unset()
-		repoCall.Unset()
 	}
 
 	cases2 := []struct {
@@ -1037,15 +1079,11 @@ func TestEnableClient(t *testing.T) {
 			Status: tc.status,
 		}
 
-		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("RetrieveAll", mock.Anything, mock.Anything).Return(convertClientsPage(tc.response), nil)
-
+		repoCall := cRepo.On("RetrieveAll", mock.Anything, mock.Anything).Return(convertClientsPage(tc.response), nil)
 		clientsPage, err := clientSDK.Users(pm, generateValidToken(t, svc, cRepo))
 		assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		size := uint64(len(clientsPage.Users))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", tc.desc, tc.size, size))
-
-		repoCall1.Unset()
 		repoCall.Unset()
 	}
 }
@@ -1105,17 +1143,23 @@ func TestDisableClient(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("RetrieveByID", mock.Anything, mock.Anything).Return(convertClient(tc.client), tc.err)
-		repoCall2 := cRepo.On("ChangeStatus", mock.Anything, mock.Anything, mock.Anything).Return(convertClient(tc.response), tc.err)
-
+		repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
+		repoCall1 := cRepo.On("RetrieveByID", mock.Anything, tc.id).Return(convertClient(tc.client), tc.err)
+		repoCall2 := cRepo.On("ChangeStatus", mock.Anything, tc.id, clients.DisabledStatus).Return(convertClient(tc.response), tc.err)
 		dClient, err := clientSDK.DisableUser(tc.id, tc.token)
 		assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected error %s, got %s", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, dClient, fmt.Sprintf("%s: expected %v got %v\n", tc.desc, tc.response, dClient))
-
+		if tc.err == nil {
+			ok := repoCall.Parent.AssertCalled(t, "CheckAdmin", mock.Anything, mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "RetrieveByID", mock.Anything, tc.id)
+			assert.True(t, ok, fmt.Sprintf("RetrieveByID was not called on %s", tc.desc))
+			ok = repoCall2.Parent.AssertCalled(t, "ChangeStatus", mock.Anything, tc.id, clients.DisabledStatus)
+			assert.True(t, ok, fmt.Sprintf("ChangeStatus was not called on %s", tc.desc))
+		}
+		repoCall.Unset()
 		repoCall1.Unset()
 		repoCall2.Unset()
-		repoCall.Unset()
 	}
 
 	cases2 := []struct {
@@ -1159,15 +1203,11 @@ func TestDisableClient(t *testing.T) {
 			Limit:  100,
 			Status: tc.status,
 		}
-		repoCall := pRepo.On("Evaluate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		repoCall1 := cRepo.On("RetrieveAll", mock.Anything, mock.Anything).Return(convertClientsPage(tc.response), nil)
-
+		repoCall := cRepo.On("RetrieveAll", mock.Anything, mock.Anything).Return(convertClientsPage(tc.response), nil)
 		page, err := clientSDK.Users(pm, generateValidToken(t, svc, cRepo))
 		assert.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
 		size := uint64(len(page.Users))
 		assert.Equal(t, tc.size, size, fmt.Sprintf("%s: expected size %d got %d\n", tc.desc, tc.size, size))
-
-		repoCall1.Unset()
 		repoCall.Unset()
 	}
 }

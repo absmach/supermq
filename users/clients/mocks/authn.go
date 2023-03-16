@@ -38,7 +38,7 @@ func NewAuthService(users map[string]string, authzDB map[string][]SubjectSet) po
 
 func (svc authServiceMock) Identify(ctx context.Context, in *policies.Token, opts ...grpc.CallOption) (*policies.UserIdentity, error) {
 	if id, ok := svc.users[in.Value]; ok {
-		return &policies.UserIdentity{Id: id, Email: id}, nil
+		return &policies.UserIdentity{Id: id}, nil
 	}
 	return nil, errors.ErrAuthentication
 }
@@ -74,6 +74,9 @@ func (svc authServiceMock) AddPolicy(ctx context.Context, in *policies.AddPolicy
 }
 
 func (svc authServiceMock) DeletePolicy(ctx context.Context, in *policies.DeletePolicyReq, opts ...grpc.CallOption) (*policies.DeletePolicyRes, error) {
-	// Not implemented
+	if in.GetObj() == "" || in.GetSub() == "" {
+		return &policies.DeletePolicyRes{}, errors.ErrMalformedEntity
+	}
+	delete(svc.authz, in.GetSub())
 	return &policies.DeletePolicyRes{Deleted: true}, nil
 }

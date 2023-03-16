@@ -135,7 +135,7 @@ func decodeListPoliciesRequest(_ context.Context, r *http.Request) (interface{},
 	if err != nil {
 		return nil, err
 	}
-	policy, err := apiutil.ReadStringQuery(r, api.PolicyKey, "")
+	action, err := apiutil.ReadStringQuery(r, api.ActionKey, "")
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func decodeListPoliciesRequest(_ context.Context, r *http.Request) (interface{},
 		OwnerID: ownerID,
 		Subject: subject,
 		Object:  object,
-		Actions: policy,
+		Actions: action,
 	}
 	return req, nil
 }

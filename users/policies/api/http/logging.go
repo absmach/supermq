@@ -34,7 +34,7 @@ func (lm *loggingMiddleware) Authorize(ctx context.Context, domain string, p pol
 
 func (lm *loggingMiddleware) AddPolicy(ctx context.Context, token string, p policies.Policy) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method add_policy for client %s and token %s took %s to complete", p.Subject, token, time.Since(begin))
+		message := fmt.Sprintf("Method add_policy for client %s using token %s took %s to complete", p.Subject, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -46,7 +46,7 @@ func (lm *loggingMiddleware) AddPolicy(ctx context.Context, token string, p poli
 
 func (lm *loggingMiddleware) UpdatePolicy(ctx context.Context, token string, p policies.Policy) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method update_policy for client %s and token %s took %s to complete", p.Subject, token, time.Since(begin))
+		message := fmt.Sprintf("Method update_policy for client %s using token %s took %s to complete", p.Subject, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -58,7 +58,7 @@ func (lm *loggingMiddleware) UpdatePolicy(ctx context.Context, token string, p p
 
 func (lm *loggingMiddleware) ListPolicy(ctx context.Context, token string, cp policies.Page) (cg policies.PolicyPage, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method list_policy for client %s and token %s took %s to complete", cp.Subject, token, time.Since(begin))
+		message := fmt.Sprintf("Method list_policy for client %s using token %s took %s to complete", cp.Subject, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -70,7 +70,7 @@ func (lm *loggingMiddleware) ListPolicy(ctx context.Context, token string, cp po
 
 func (lm *loggingMiddleware) DeletePolicy(ctx context.Context, token string, p policies.Policy) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method delete_policy for client %s in object %s and token %s took %s to complete", p.Subject, p.Object, token, time.Since(begin))
+		message := fmt.Sprintf("Method delete_policy for client %s using token %s took %s to complete", p.Subject, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return

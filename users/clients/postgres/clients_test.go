@@ -415,11 +415,11 @@ func TestClientsRetrieveAll(t *testing.T) {
 		},
 		"retrieve all clients by owner": {
 			pm: clients.Page{
-				Offset:  0,
-				Limit:   nClients,
-				Total:   nClients,
-				OwnerID: ownerID,
-				Status:  clients.AllStatus,
+				Offset: 0,
+				Limit:  nClients,
+				Total:  nClients,
+				Owner:  ownerID,
+				Status: clients.AllStatus,
 			},
 			response: []clients.Client{expectedClients[10], expectedClients[20], expectedClients[30], expectedClients[40], expectedClients[50], expectedClients[60],
 				expectedClients[70], expectedClients[80], expectedClients[90], expectedClients[100], expectedClients[110], expectedClients[120], expectedClients[130],
@@ -429,11 +429,11 @@ func TestClientsRetrieveAll(t *testing.T) {
 		},
 		"retrieve clients by wrong owner": {
 			pm: clients.Page{
-				Offset:  0,
-				Limit:   nClients,
-				Total:   nClients,
-				OwnerID: wrongID,
-				Status:  clients.AllStatus,
+				Offset: 0,
+				Limit:  nClients,
+				Total:  nClients,
+				Owner:  wrongID,
+				Status: clients.AllStatus,
 			},
 			response: []clients.Client{},
 			size:     0,

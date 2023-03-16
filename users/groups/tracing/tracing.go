@@ -19,12 +19,6 @@ func TracingMiddleware(gsvc groups.Service, tracer trace.Tracer) groups.Service 
 	return &tracingMiddleware{tracer, gsvc}
 }
 
-func (tm *tracingMiddleware) ListMemberships(ctx context.Context, token, clientID string, gm groups.GroupsPage) (groups.MembershipsPage, error) {
-	ctx, span := tm.tracer.Start(ctx, "svc_list_memberships")
-	defer span.End()
-	return tm.gsvc.ListMemberships(ctx, token, clientID, gm)
-}
-
 func (tm *tracingMiddleware) CreateGroup(ctx context.Context, token string, g groups.Group) (groups.Group, error) {
 	ctx, span := tm.tracer.Start(ctx, "svc_create_group", trace.WithAttributes(attribute.String("Name", g.Name)))
 	defer span.End()
@@ -47,6 +41,12 @@ func (tm *tracingMiddleware) ListGroups(ctx context.Context, token string, gm gr
 
 	return tm.gsvc.ListGroups(ctx, token, gm)
 
+}
+
+func (tm *tracingMiddleware) ListMemberships(ctx context.Context, token, clientID string, gm groups.GroupsPage) (groups.MembershipsPage, error) {
+	ctx, span := tm.tracer.Start(ctx, "svc_list_memberships")
+	defer span.End()
+	return tm.gsvc.ListMemberships(ctx, token, clientID, gm)
 }
 
 func (tm *tracingMiddleware) UpdateGroup(ctx context.Context, token string, g groups.Group) (groups.Group, error) {

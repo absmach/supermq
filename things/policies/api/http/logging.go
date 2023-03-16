@@ -22,7 +22,7 @@ func LoggingMiddleware(svc policies.Service, logger log.Logger) policies.Service
 
 func (lm *loggingMiddleware) Authorize(ctx context.Context, entityType string, p policies.Policy) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method authorize for group %s by client %s took %s to complete", p.Object, p.Subject, time.Since(begin))
+		message := fmt.Sprintf("Method authorize for channel with id %s by client with id %s took %s to complete", p.Object, p.Subject, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -34,7 +34,7 @@ func (lm *loggingMiddleware) Authorize(ctx context.Context, entityType string, p
 
 func (lm *loggingMiddleware) AuthorizeByKey(ctx context.Context, entityType string, p policies.Policy) (id string, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method authorize_by_key for group %s by client %s took %s to complete", p.Object, p.Subject, time.Since(begin))
+		message := fmt.Sprintf("Method authorize_by_key for channel with id %s by client with id %s took %s to complete", p.Object, p.Subject, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -46,7 +46,7 @@ func (lm *loggingMiddleware) AuthorizeByKey(ctx context.Context, entityType stri
 
 func (lm *loggingMiddleware) AddPolicy(ctx context.Context, token string, p policies.Policy) (policy policies.Policy, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method add_policy for client %s and token %s took %s to complete", p.Subject, token, time.Since(begin))
+		message := fmt.Sprintf("Method add_policy for client with id %s using token %s took %s to complete", p.Subject, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -58,7 +58,7 @@ func (lm *loggingMiddleware) AddPolicy(ctx context.Context, token string, p poli
 
 func (lm *loggingMiddleware) UpdatePolicy(ctx context.Context, token string, p policies.Policy) (policy policies.Policy, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method update_policy for client %s and token %s took %s to complete", p.Subject, token, time.Since(begin))
+		message := fmt.Sprintf("Method update_policy for client with id %s using token %s took %s to complete", p.Subject, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -70,7 +70,7 @@ func (lm *loggingMiddleware) UpdatePolicy(ctx context.Context, token string, p p
 
 func (lm *loggingMiddleware) ListPolicies(ctx context.Context, token string, p policies.Page) (policypage policies.PolicyPage, err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method add_policy for client %s and token %s took %s to complete", p.Subject, token, time.Since(begin))
+		message := fmt.Sprintf("Method add_policy for client with id %s using token %s took %s to complete", p.Subject, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return
@@ -82,7 +82,7 @@ func (lm *loggingMiddleware) ListPolicies(ctx context.Context, token string, p p
 
 func (lm *loggingMiddleware) DeletePolicy(ctx context.Context, token string, p policies.Policy) (err error) {
 	defer func(begin time.Time) {
-		message := fmt.Sprintf("Method delete_policy for client %s in object %s and token %s took %s to complete", p.Subject, p.Object, token, time.Since(begin))
+		message := fmt.Sprintf("Method delete_policy for client with id %s using token %s took %s to complete", p.Subject, token, time.Since(begin))
 		if err != nil {
 			lm.logger.Warn(fmt.Sprintf("%s with error: %s.", message, err))
 			return

@@ -79,7 +79,7 @@ func (sdk mfSDK) Members(groupID string, meta PageMetadata, token string) (Membe
 	if err != nil {
 		return MembersPage{}, errors.NewSDKError(err)
 	}
-	fmt.Println(url)
+
 	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, string(CTJSON), nil, http.StatusOK)
 	if sdkerr != nil {
 		return MembersPage{}, sdkerr

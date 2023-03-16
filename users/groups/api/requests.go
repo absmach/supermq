@@ -12,6 +12,9 @@ type createGroupReq struct {
 }
 
 func (req createGroupReq) validate() error {
+	if req.token == "" {
+		return apiutil.ErrBearerToken
+	}
 	if len(req.Name) > api.MaxNameSize || req.Name == "" {
 		return apiutil.ErrNameSize
 	}
@@ -31,11 +34,12 @@ func (req updateGroupReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
-
 	if req.id == "" {
 		return apiutil.ErrMissingID
 	}
-
+	if len(req.Name) > api.MaxNameSize {
+		return apiutil.ErrNameSize
+	}
 	return nil
 }
 
@@ -48,6 +52,9 @@ type listGroupsReq struct {
 }
 
 func (req listGroupsReq) validate() error {
+	if req.token == "" {
+		return apiutil.ErrBearerToken
+	}
 	if req.Level < groups.MinLevel || req.Level > groups.MaxLevel {
 		return apiutil.ErrInvalidLevel
 	}
@@ -65,7 +72,6 @@ func (req listMembershipReq) validate() error {
 	if req.token == "" {
 		return apiutil.ErrBearerToken
 	}
-
 	if req.clientID == "" {
 		return apiutil.ErrMissingID
 	}
@@ -79,6 +85,9 @@ type groupReq struct {
 }
 
 func (req groupReq) validate() error {
+	if req.token == "" {
+		return apiutil.ErrBearerToken
+	}
 	if req.id == "" {
 		return apiutil.ErrMissingID
 	}
@@ -92,6 +101,9 @@ type changeGroupStatusReq struct {
 }
 
 func (req changeGroupStatusReq) validate() error {
+	if req.token == "" {
+		return apiutil.ErrBearerToken
+	}
 	if req.id == "" {
 		return apiutil.ErrMissingID
 	}

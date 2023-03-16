@@ -227,10 +227,10 @@ type SDK interface {
 	// AddPolicy creates a policy for the given subject, so that, after
 	// AddPolicy, `subject` has a `relation` on `object`. Returns a non-nil
 	// error in case of failures.
-	AddPolicy(p Policy, token string) (Policy, errors.SDKError)
+	AddPolicy(p Policy, token string) errors.SDKError
 
 	// UpdatePolicy updates policies based on the given policy structure.
-	UpdatePolicy(p Policy, token string) (Policy, errors.SDKError)
+	UpdatePolicy(p Policy, token string) errors.SDKError
 
 	// ListPolicies lists policies based on the given policy structure.
 	ListPolicies(pm PageMetadata, token string) (PolicyPage, errors.SDKError)
@@ -412,9 +412,6 @@ func (pm PageMetadata) query() (string, error) {
 	}
 	if pm.Status != "" {
 		q.Add("status", pm.Status)
-	}
-	if pm.Name != "" {
-		q.Add("name", pm.Name)
 	}
 	if pm.Metadata != nil {
 		md, err := json.Marshal(pm.Metadata)

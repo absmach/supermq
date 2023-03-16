@@ -35,26 +35,6 @@ var (
 	refreshDuration = time.Minute * 10
 )
 
-func generateValidToken(t *testing.T, clientID string, svc clients.Service, cRepo *cmocks.ClientRepository) string {
-	client := clients.Client{
-		ID:   clientID,
-		Name: "validtoken",
-		Credentials: clients.Credentials{
-			Identity: "validtoken",
-			Secret:   secret,
-		},
-		Status: clients.EnabledStatus,
-	}
-	rClient := client
-	rClient.Credentials.Secret, _ = phasher.Hash(client.Credentials.Secret)
-
-	repoCall := cRepo.On("RetrieveByIdentity", context.Background(), mock.Anything).Return(rClient, nil)
-	token, err := svc.IssueToken(context.Background(), client.Credentials.Identity, client.Credentials.Secret)
-	assert.True(t, errors.Contains(err, nil), fmt.Sprintf("Create token expected nil got %s\n", err))
-	repoCall.Unset()
-	return token.AccessToken
-}
-
 func TestAddPolicy(t *testing.T) {
 	cRepo := new(cmocks.ClientRepository)
 	pRepo := new(pmocks.PolicyRepository)
@@ -63,7 +43,7 @@ func TestAddPolicy(t *testing.T) {
 	csvc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 	svc := policies.NewService(pRepo, tokenizer, idProvider)
 
-	policy := policies.Policy{Object: "obj1", Actions: []string{"m_read"}, Subject: "sub1"}
+	policy := policies.Policy{Object: testsutil.GenerateUUID(t, idProvider), Subject: testsutil.GenerateUUID(t, idProvider), Actions: []string{"m_read"}}
 
 	cases := []struct {
 		desc   string
@@ -76,101 +56,112 @@ func TestAddPolicy(t *testing.T) {
 			desc:   "add new policy",
 			policy: policy,
 			page:   policies.PolicyPage{},
-			token:  generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo),
+			token:  testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 			err:    nil,
 		},
 		{
-			desc:   "add existing policy",
-			policy: policy,
-			page:   policies.PolicyPage{Policies: []policies.Policy{policy}},
-			token:  generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo),
-			err:    errors.ErrConflict,
+			desc: "add existing policy",
+			policy: policies.Policy{
+				Object:  policy.Object,
+				Subject: policy.Subject,
+				Actions: []string{"m_write"},
+			},
+			page:  policies.PolicyPage{Policies: []policies.Policy{policy}},
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
+			err:   errors.ErrConflict,
 		},
 		{
 			desc: "add a new policy with owner",
 			page: policies.PolicyPage{},
 			policy: policies.Policy{
 				OwnerID: testsutil.GenerateUUID(t, idProvider),
-				Object:  "objwithowner",
+				Subject: testsutil.GenerateUUID(t, idProvider),
+				Object:  testsutil.GenerateUUID(t, idProvider),
 				Actions: []string{"m_read"},
-				Subject: "subwithowner",
 			},
 			err:   nil,
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 		},
 		{
 			desc: "add a new policy with more actions",
 			page: policies.PolicyPage{},
 			policy: policies.Policy{
-				Object:  "obj2",
+				Subject: testsutil.GenerateUUID(t, idProvider),
+				Object:  testsutil.GenerateUUID(t, idProvider),
 				Actions: []string{"c_delete", "c_update", "c_add", "c_list"},
-				Subject: "sub2",
 			},
 			err:   nil,
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 		},
 		{
 			desc: "add a new policy with wrong action",
 			page: policies.PolicyPage{},
 			policy: policies.Policy{
-				Object:  "obj3",
+				Subject: testsutil.GenerateUUID(t, idProvider),
+				Object:  testsutil.GenerateUUID(t, idProvider),
 				Actions: []string{"wrong"},
-				Subject: "sub3",
 			},
 			err:   apiutil.ErrMalformedPolicyAct,
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 		},
 		{
 			desc: "add a new policy with empty object",
 			page: policies.PolicyPage{},
 			policy: policies.Policy{
+				Subject: testsutil.GenerateUUID(t, idProvider),
 				Actions: []string{"c_delete"},
-				Subject: "sub4",
 			},
 			err:   apiutil.ErrMissingPolicyObj,
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 		},
 		{
 			desc: "add a new policy with empty subject",
 			page: policies.PolicyPage{},
 			policy: policies.Policy{
+				Object:  testsutil.GenerateUUID(t, idProvider),
 				Actions: []string{"c_delete"},
-				Object:  "obj4",
 			},
 			err:   apiutil.ErrMissingPolicySub,
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 		},
 		{
 			desc: "add a new policy with empty action",
 			page: policies.PolicyPage{},
 			policy: policies.Policy{
-				Subject: "sub5",
-				Object:  "obj5",
+				Subject: testsutil.GenerateUUID(t, idProvider),
+				Object:  testsutil.GenerateUUID(t, idProvider),
 			},
 			err:   apiutil.ErrMalformedPolicyAct,
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 		},
 	}
 
 	for _, tc := range cases {
 		repoCall := pRepo.On("CheckAdmin", context.Background(), mock.Anything).Return(nil)
-		repoCall1 := pRepo.On("Evaluate", context.Background(), "client", mock.Anything).Return(nil)
-		repoCall2 := pRepo.On("Update", context.Background(), tc.policy).Return(tc.err)
+		repoCall1 := pRepo.On("Retrieve", context.Background(), mock.Anything).Return(tc.page, nil)
+		repoCall2 := pRepo.On("Update", context.Background(), mock.Anything).Return(tc.err)
 		repoCall3 := pRepo.On("Save", context.Background(), mock.Anything).Return(tc.err)
-		repoCall4 := pRepo.On("Retrieve", context.Background(), mock.Anything).Return(tc.page, nil)
 		err := svc.AddPolicy(context.Background(), tc.token, tc.policy)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		if err == nil {
 			tc.policy.Subject = tc.token
 			err = svc.Authorize(context.Background(), "client", tc.policy)
 			require.Nil(t, err, fmt.Sprintf("checking shared %v policy expected to be succeed: %#v", tc.policy, err))
+			ok := repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+			ok = repoCall1.Parent.AssertCalled(t, "Retrieve", context.Background(), mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("Retrieve was not called on %s", tc.desc))
+			ok = repoCall3.Parent.AssertCalled(t, "Save", context.Background(), mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("Save was not called on %s", tc.desc))
+			if tc.desc == "add existing policy" {
+				ok = repoCall2.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything)
+				assert.True(t, ok, fmt.Sprintf("Update was not called on %s", tc.desc))
+			}
 		}
-		repoCall1.Parent.AssertCalled(t, "Save", context.Background(), mock.Anything)
 		repoCall.Unset()
 		repoCall1.Unset()
 		repoCall2.Unset()
 		repoCall3.Unset()
-		repoCall4.Unset()
 	}
 
 }
@@ -190,26 +181,38 @@ func TestAuthorize(t *testing.T) {
 		err    error
 	}{
 		{
-			desc:   "check valid policy in client domain",
-			policy: policies.Policy{Object: "client1", Actions: []string{"c_update"}, Subject: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo)},
+			desc: "check valid policy in client domain",
+			policy: policies.Policy{
+				Object:  testsutil.GenerateUUID(t, idProvider),
+				Actions: []string{"c_update"},
+				Subject: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher)},
 			domain: "client",
 			err:    nil,
 		},
 		{
-			desc:   "check valid policy in group domain",
-			policy: policies.Policy{Object: "client1", Actions: []string{"g_update"}, Subject: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo)},
+			desc: "check valid policy in group domain",
+			policy: policies.Policy{
+				Object:  testsutil.GenerateUUID(t, idProvider),
+				Actions: []string{"g_update"},
+				Subject: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher)},
 			domain: "group",
 			err:    errors.ErrConflict,
 		},
 		{
-			desc:   "check invalid policy in client domain",
-			policy: policies.Policy{Object: "client3", Actions: []string{"c_update"}, Subject: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo)},
+			desc: "check invalid policy in client domain",
+			policy: policies.Policy{
+				Object:  testsutil.GenerateUUID(t, idProvider),
+				Actions: []string{"c_update"},
+				Subject: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher)},
 			domain: "client",
 			err:    nil,
 		},
 		{
-			desc:   "check invalid policy in group domain",
-			policy: policies.Policy{Object: "client3", Actions: []string{"g_update"}, Subject: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo)},
+			desc: "check invalid policy in group domain",
+			policy: policies.Policy{
+				Object:  testsutil.GenerateUUID(t, idProvider),
+				Actions: []string{"g_update"},
+				Subject: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher)},
 			domain: "group",
 			err:    nil,
 		},
@@ -220,6 +223,10 @@ func TestAuthorize(t *testing.T) {
 		repoCall1 := pRepo.On("Evaluate", context.Background(), tc.domain, mock.Anything).Return(tc.err)
 		err := svc.Authorize(context.Background(), tc.domain, tc.policy)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
+		if tc.err == nil {
+			ok := repoCall.Parent.AssertCalled(t, "CheckAdmin", context.Background(), mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("CheckAdmin was not called on %s", tc.desc))
+		}
 		repoCall.Unset()
 		repoCall1.Unset()
 	}
@@ -236,10 +243,14 @@ func TestDeletePolicy(t *testing.T) {
 
 	pr := policies.Policy{Object: authoritiesObj, Actions: memberActions, Subject: testsutil.GenerateUUID(t, idProvider)}
 
-	repoCall := pRepo.On("Delete", context.Background(), mock.Anything).Return(nil)
+	repoCall := pRepo.On("Delete", context.Background(), pr).Return(nil)
 	repoCall1 := pRepo.On("Retrieve", context.Background(), mock.Anything).Return(policies.PolicyPage{Policies: []policies.Policy{pr}}, nil)
-	err := svc.DeletePolicy(context.Background(), generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo), pr)
+	err := svc.DeletePolicy(context.Background(), testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher), pr)
 	require.Nil(t, err, fmt.Sprintf("deleting %v policy expected to succeed: %s", pr, err))
+	ok := repoCall.Parent.AssertCalled(t, "Delete", context.Background(), pr)
+	assert.True(t, ok, "Delete was not called on deleting policy")
+	ok = repoCall1.Parent.AssertCalled(t, "Retrieve", context.Background(), mock.Anything)
+	assert.True(t, ok, "Retrieve was not called on deleting policy")
 	repoCall.Unset()
 	repoCall1.Unset()
 }
@@ -281,7 +292,7 @@ func TestListPolicies(t *testing.T) {
 	}{
 		{
 			desc:  "list policies with authorized token",
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 			err:   nil,
 			response: policies.PolicyPage{
 				Page: policies.Page{
@@ -303,7 +314,7 @@ func TestListPolicies(t *testing.T) {
 		},
 		{
 			desc:  "list policies with offset and limit",
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 			page: policies.Page{
 				Offset: 6,
 				Limit:  nPolicy,
@@ -318,7 +329,7 @@ func TestListPolicies(t *testing.T) {
 		},
 		{
 			desc:  "list policies with wrong action",
-			token: generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo),
+			token: testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 			page: policies.Page{
 				Action: "wrong",
 			},
@@ -332,6 +343,10 @@ func TestListPolicies(t *testing.T) {
 		page, err := svc.ListPolicy(context.Background(), tc.token, tc.page)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
 		assert.Equal(t, tc.response, page, fmt.Sprintf("%s: expected size %v got %v\n", tc.desc, tc.response, page))
+		if tc.err == nil {
+			ok := repoCall.Parent.AssertCalled(t, "Retrieve", context.Background(), tc.page)
+			assert.True(t, ok, fmt.Sprintf("Retrieve was not called on %s", tc.desc))
+		}
 		repoCall.Unset()
 	}
 
@@ -356,7 +371,7 @@ func TestUpdatePolicies(t *testing.T) {
 		{
 			desc:   "update policy actions with valid token",
 			action: []string{"m_write"},
-			token:  generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo),
+			token:  testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 			err:    nil,
 		},
 		{
@@ -368,7 +383,7 @@ func TestUpdatePolicies(t *testing.T) {
 		{
 			desc:   "update policy action with wrong policy action",
 			action: []string{"wrong"},
-			token:  generateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo),
+			token:  testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 			err:    apiutil.ErrMalformedPolicyAct,
 		},
 	}
@@ -379,7 +394,10 @@ func TestUpdatePolicies(t *testing.T) {
 		repoCall1 := pRepo.On("Update", context.Background(), mock.Anything).Return(tc.err)
 		err := svc.UpdatePolicy(context.Background(), tc.token, policy)
 		assert.True(t, errors.Contains(err, tc.err), fmt.Sprintf("%s: expected %s got %s\n", tc.desc, tc.err, err))
-		repoCall1.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything)
+		if tc.err == nil {
+			ok := repoCall1.Parent.AssertCalled(t, "Update", context.Background(), mock.Anything)
+			assert.True(t, ok, fmt.Sprintf("Update was not called on %s", tc.desc))
+		}
 		repoCall.Unset()
 		repoCall1.Unset()
 	}

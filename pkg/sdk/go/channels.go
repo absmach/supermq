@@ -157,7 +157,7 @@ func (sdk mfSDK) DisableChannel(id, token string) (Channel, errors.SDKError) {
 
 func (sdk mfSDK) changeChannelStatus(id, status, token string) (Channel, errors.SDKError) {
 	url := fmt.Sprintf("%s/%s/%s/%s", sdk.thingsURL, channelsEndpoint, id, status)
-	fmt.Println(url)
+
 	_, body, err := sdk.processRequest(http.MethodPost, url, token, string(CTJSON), nil, http.StatusOK)
 	if err != nil {
 		return Channel{}, err

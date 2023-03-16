@@ -15,11 +15,10 @@ import (
 const (
 	MyKey             = "mine"
 	clientsObjectKey  = "clients"
-	createKey         = "c_add"
 	updateRelationKey = "c_update"
 	listRelationKey   = "c_list"
 	deleteRelationKey = "c_delete"
-	entityType        = "clients"
+	entityType        = "client"
 )
 
 var (
@@ -85,9 +84,9 @@ func (svc service) RegisterClient(ctx context.Context, token string, cli Client)
 	}
 
 	// We don't check the error currently since we can register client with empty token
-	owner, _ := svc.Identify(ctx, token)
-	if owner.ID != "" && cli.Owner == "" {
-		cli.Owner = owner.ID
+	ownerID, _ := svc.Identify(ctx, token)
+	if ownerID != "" && cli.Owner == "" {
+		cli.Owner = ownerID
 	}
 	if cli.Credentials.Secret == "" {
 		return Client{}, apiutil.ErrMissingSecret
@@ -147,11 +146,11 @@ func (svc service) ViewClient(ctx context.Context, token string, id string) (Cli
 	if err != nil {
 		return Client{}, err
 	}
-	if ir.ID == id {
+	if ir == id {
 		return svc.clients.RetrieveByID(ctx, id)
 	}
 
-	if err := svc.policies.Evaluate(ctx, entityType, policies.Policy{Subject: ir.ID, Object: id, Actions: []string{listRelationKey}}); err != nil {
+	if err := svc.policies.Evaluate(ctx, entityType, policies.Policy{Subject: ir, Object: id, Actions: []string{listRelationKey}}); err != nil {
 		return Client{}, err
 	}
 
@@ -159,23 +158,23 @@ func (svc service) ViewClient(ctx context.Context, token string, id string) (Cli
 }
 
 func (svc service) ViewProfile(ctx context.Context, token string) (Client, error) {
-	ir, err := svc.Identify(ctx, token)
+	id, err := svc.Identify(ctx, token)
 	if err != nil {
 		return Client{}, err
 	}
-	return svc.clients.RetrieveByID(ctx, ir.ID)
+	return svc.clients.RetrieveByID(ctx, id)
 }
 
 func (svc service) ListClients(ctx context.Context, token string, pm Page) (ClientsPage, error) {
-	ir, err := svc.Identify(ctx, token)
+	id, err := svc.Identify(ctx, token)
 	if err != nil {
 		return ClientsPage{}, err
 	}
 	if pm.SharedBy == MyKey {
-		pm.SharedBy = ir.ID
+		pm.SharedBy = id
 	}
-	if pm.OwnerID == MyKey {
-		pm.OwnerID = ir.ID
+	if pm.Owner == MyKey {
+		pm.Owner = id
 	}
 	pm.Action = "c_list"
 	clients, err := svc.clients.RetrieveAll(ctx, pm)
@@ -183,7 +182,7 @@ func (svc service) ListClients(ctx context.Context, token string, pm Page) (Clie
 		return ClientsPage{}, err
 	}
 	for i, client := range clients.Clients {
-		if client.ID == ir.ID {
+		if client.ID == id {
 			clients.Clients = append(clients.Clients[:i], clients.Clients[i+1:]...)
 			if clients.Total != 0 {
 				clients.Total = clients.Total - 1
@@ -233,6 +232,7 @@ func (svc service) UpdateClientIdentity(ctx context.Context, token, id, identity
 		Credentials: Credentials{
 			Identity: identity,
 		},
+		UpdatedAt: time.Now(),
 	}
 	return svc.clients.UpdateIdentity(ctx, cli)
 }
@@ -250,11 +250,11 @@ func (svc service) GenerateResetToken(ctx context.Context, email, host string) e
 }
 
 func (svc service) ResetSecret(ctx context.Context, resetToken, secret string) error {
-	ir, err := svc.Identify(ctx, resetToken)
+	id, err := svc.Identify(ctx, resetToken)
 	if err != nil {
 		return errors.Wrap(errors.ErrAuthentication, err)
 	}
-	c, err := svc.clients.RetrieveByID(ctx, ir.ID)
+	c, err := svc.clients.RetrieveByID(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -281,14 +281,14 @@ func (svc service) ResetSecret(ctx context.Context, resetToken, secret string) e
 }
 
 func (svc service) UpdateClientSecret(ctx context.Context, token, oldSecret, newSecret string) (Client, error) {
-	ir, err := svc.Identify(ctx, token)
+	id, err := svc.Identify(ctx, token)
 	if err != nil {
 		return Client{}, err
 	}
 	if !svc.passRegex.MatchString(newSecret) {
 		return Client{}, ErrPasswordFormat
 	}
-	dbClient, err := svc.clients.RetrieveByID(ctx, ir.ID)
+	dbClient, err := svc.clients.RetrieveByID(ctx, id)
 	if err != nil {
 		return Client{}, err
 	}
@@ -347,7 +347,7 @@ func (svc service) DisableClient(ctx context.Context, token, id string) (Client,
 }
 
 func (svc service) ListMembers(ctx context.Context, token, groupID string, pm Page) (MembersPage, error) {
-	ir, err := svc.Identify(ctx, token)
+	id, err := svc.Identify(ctx, token)
 	if err != nil {
 		return MembersPage{}, err
 	}
@@ -355,7 +355,7 @@ func (svc service) ListMembers(ctx context.Context, token, groupID string, pm Pa
 	if err := svc.authorize(ctx, entityType, policies.Policy{Subject: token, Object: clientsObjectKey, Actions: []string{listRelationKey}}); err == nil {
 		return svc.clients.Members(ctx, groupID, pm)
 	}
-	pm.Subject = ir.ID
+	pm.Subject = id
 	pm.Action = "g_list"
 
 	return svc.clients.Members(ctx, groupID, pm)
@@ -377,25 +377,25 @@ func (svc service) authorize(ctx context.Context, entityType string, p policies.
 	if err := p.Validate(); err != nil {
 		return err
 	}
-	ir, err := svc.Identify(ctx, p.Subject)
+	id, err := svc.Identify(ctx, p.Subject)
 	if err != nil {
 		return err
 	}
-	if err = svc.policies.CheckAdmin(ctx, ir.ID); err == nil {
+	if err = svc.policies.CheckAdmin(ctx, id); err == nil {
 		return nil
 	}
-	p.Subject = ir.ID
+	p.Subject = id
 	return svc.policies.Evaluate(ctx, entityType, p)
 }
 
-func (svc service) Identify(ctx context.Context, tkn string) (UserIdentity, error) {
+func (svc service) Identify(ctx context.Context, tkn string) (string, error) {
 	claims, err := svc.tokens.Parse(ctx, tkn)
 	if err != nil {
-		return UserIdentity{}, errors.Wrap(errors.ErrAuthentication, err)
+		return "", errors.Wrap(errors.ErrAuthentication, err)
 	}
 	if claims.Type != jwt.AccessToken {
-		return UserIdentity{}, errors.ErrAuthentication
+		return "", errors.ErrAuthentication
 	}
 
-	return UserIdentity{ID: claims.ClientID, Email: claims.Email}, nil
+	return claims.ClientID, nil
 }

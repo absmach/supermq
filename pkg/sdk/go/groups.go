@@ -61,7 +61,7 @@ func (sdk mfSDK) Memberships(clientID string, pm PageMetadata, token string) (Me
 	if err != nil {
 		return MembershipsPage{}, errors.NewSDKError(err)
 	}
-	fmt.Println(url)
+
 	_, body, sdkerr := sdk.processRequest(http.MethodGet, url, token, string(CTJSON), nil, http.StatusOK)
 	if sdkerr != nil {
 		return MembershipsPage{}, sdkerr

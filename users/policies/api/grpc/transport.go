@@ -121,7 +121,7 @@ func encodeAuthorizeResponse(_ context.Context, grpcRes interface{}) (interface{
 
 func decodeIssueRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*policies.IssueReq)
-	return issueReq{id: req.GetId(), email: req.GetEmail()}, nil
+	return issueReq{email: req.GetEmail(), password: req.GetPassword()}, nil
 }
 
 func encodeIssueResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
@@ -136,7 +136,7 @@ func decodeIdentifyRequest(_ context.Context, grpcReq interface{}) (interface{},
 
 func encodeIdentifyResponse(_ context.Context, grpcRes interface{}) (interface{}, error) {
 	res := grpcRes.(identityRes)
-	return &policies.UserIdentity{Id: res.id, Email: res.email}, nil
+	return &policies.UserIdentity{Id: res.id}, nil
 }
 
 func decodeAddPolicyRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
