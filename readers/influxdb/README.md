@@ -17,15 +17,23 @@ default values.
 | MF_INFLUXDB_ADMIN_USER       | Default user of InfluxDB database                   | mainflux       |
 | MF_INFLUXDB_ADMIN_PASSWORD   | Default password of InfluxDB user                   | mainflux       |
 | MF_INFLUXDB_DB               | InfluxDB database name                              | mainflux       |
-| MF_INFLUX_READER_CLIENT_TLS  | Flag that indicates if TLS should be turned on      | false          |
-| MF_INFLUX_READER_CA_CERTS    | Path to trusted CAs in PEM format                   |                |
-| MF_INFLUX_READER_SERVER_CERT | Path to server certificate in pem format            |                |
-| MF_INFLUX_READER_SERVER_KEY  | Path to server key in pem format                    |                |
-| MF_JAEGER_URL                | Jaeger server URL                                   | localhost:6831 |
-| MF_THINGS_AUTH_GRPC_URL      | Things service Auth gRPC URL                        | localhost:7000 |
-| MF_THINGS_AUTH_GRPC_TIMEOUT  | Things service Auth gRPC request timeout in seconds | 1s             |
-| MF_AUTH_GRPC_URL             | Auth service gRPC URL                               | localhost:7001 |
-| MF_AUTH_GRPC_TIMEOUT         | Auth service gRPC request timeout in seconds        | 1s             |
+| MF_INFLUXDB_HOST             | InfluxDB host name                                  | mainflux-influxdb |
+| MF_INFLUXDB_PROTOCOL         | InfluxDB protocol                                   | http              |
+| MF_INFLUXDB_TIMEOUT          | InfluxDB client connection readiness timeout        | 1s                |
+| MF_INFLUXDB_ORG              | InfluxDB organization name                          | mainflux          |
+| MF_INFLUXDB_BUCKET           | InfluxDB bucket name                                | mainflux-bucket   |
+| MF_INFLUXDB_TOKEN            | InfluxDB API token                                  | mainflux-token    |
+| MF_INFLUXDB_HTTP_ENABLED     | InfluxDB http enabled status                        | true              |
+| MF_INFLUXDB_INIT_MODE        | InfluxDB initialization mode                        | setup             |
+| MF_INFLUX_READER_CLIENT_TLS  | Flag that indicates if TLS should be turned on      | false             |
+| MF_INFLUX_READER_CA_CERTS    | Path to trusted CAs in PEM format                   |                   |
+| MF_INFLUX_READER_SERVER_CERT | Path to server certificate in pem format            |                   |
+| MF_INFLUX_READER_SERVER_KEY  | Path to server key in pem format                    |                   |
+| MF_JAEGER_URL                | Jaeger server URL                                   | localhost:6831    |
+| MF_THINGS_AUTH_GRPC_URL      | Things service Auth gRPC URL                        | localhost:7000    |
+| MF_THINGS_AUTH_GRPC_TIMEOUT  | Things service Auth gRPC request timeout in seconds | 1s                |
+| MF_AUTH_GRPC_URL             | Auth service gRPC URL                               | localhost:7001    |
+| MF_AUTH_GRPC_TIMEOUT         | Auth service gRPC request timeout in seconds        | 1s                |
 
 
 ## Deployment
