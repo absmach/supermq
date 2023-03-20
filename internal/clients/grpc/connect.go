@@ -11,7 +11,6 @@ import (
 	"github.com/mainflux/mainflux/pkg/errors"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
-	"google.golang.org/grpc"
 	gogrpc "google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
@@ -65,7 +64,7 @@ func Connect(cfg Config) (*gogrpc.ClientConn, bool, error) {
 		secure = true
 	}
 
-	opts = append(opts, gogrpc.WithTransportCredentials(tc), grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()))
+	opts = append(opts, gogrpc.WithTransportCredentials(tc), gogrpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()))
 
 	conn, err := gogrpc.Dial(cfg.URL, opts...)
 	if err != nil {
