@@ -18,7 +18,6 @@ import (
 	"github.com/mainflux/mainflux"
 	adapter "github.com/mainflux/mainflux/http"
 	"github.com/mainflux/mainflux/internal/apiutil"
-	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/messaging"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -41,7 +40,7 @@ var (
 var channelPartRegExp = regexp.MustCompile(`^/channels/([\w\-]+)/messages(/[^?]*)?(\?.*)?$`)
 
 // MakeHandler returns a HTTP handler for API endpoints.
-func MakeHandler(svc adapter.Service, logger logger.Logger) http.Handler {
+func MakeHandler(svc adapter.Service) http.Handler {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorEncoder(encodeError),
 	}
@@ -96,7 +95,7 @@ func parseSubtopic(subtopic string) (string, error) {
 	return subtopic, nil
 }
 
-func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	ct := r.Header.Get("Content-Type")
 	if ct != ctSenmlJSON && ct != ctJSON && ct != ctSenmlCBOR {
 		return nil, errors.ErrUnsupportedContentType
@@ -141,7 +140,7 @@ func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	return req, nil
 }
 
-func encodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
+func encodeResponse(_ context.Context, w http.ResponseWriter, _ interface{}) error {
 	w.WriteHeader(http.StatusAccepted)
 	return nil
 }
