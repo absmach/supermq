@@ -68,7 +68,7 @@ func (lm *loggingMiddleware) ListGroups(ctx context.Context, token string, gp gr
 	return lm.svc.ListGroups(ctx, token, gp)
 }
 
-func (lm *loggingMiddleware) EnableGroup(ctx context.Context, token string, id string) (g groups.Group, err error) {
+func (lm *loggingMiddleware) EnableGroup(ctx context.Context, token, id string) (g groups.Group, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method enable_group for group with id %s using token %s took %s to complete", g.ID, token, time.Since(begin))
 		if err != nil {
@@ -80,7 +80,7 @@ func (lm *loggingMiddleware) EnableGroup(ctx context.Context, token string, id s
 	return lm.svc.EnableGroup(ctx, token, id)
 }
 
-func (lm *loggingMiddleware) DisableGroup(ctx context.Context, token string, id string) (g groups.Group, err error) {
+func (lm *loggingMiddleware) DisableGroup(ctx context.Context, token, id string) (g groups.Group, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method disable_group for group with id %s using token %s took %s to complete", g.ID, token, time.Since(begin))
 		if err != nil {

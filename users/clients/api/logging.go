@@ -188,7 +188,7 @@ func (lm *loggingMiddleware) UpdateClientOwner(ctx context.Context, token string
 	return lm.svc.UpdateClientOwner(ctx, token, client)
 }
 
-func (lm *loggingMiddleware) EnableClient(ctx context.Context, token string, id string) (c clients.Client, err error) {
+func (lm *loggingMiddleware) EnableClient(ctx context.Context, token, id string) (c clients.Client, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method enable_client for client with id %s using token %s took %s to complete", c.ID, token, time.Since(begin))
 		if err != nil {
@@ -200,7 +200,7 @@ func (lm *loggingMiddleware) EnableClient(ctx context.Context, token string, id 
 	return lm.svc.EnableClient(ctx, token, id)
 }
 
-func (lm *loggingMiddleware) DisableClient(ctx context.Context, token string, id string) (c clients.Client, err error) {
+func (lm *loggingMiddleware) DisableClient(ctx context.Context, token, id string) (c clients.Client, err error) {
 	defer func(begin time.Time) {
 		message := fmt.Sprintf("Method disable_client for client with id %s using token %s took %s to complete", c.ID, token, time.Since(begin))
 		if err != nil {
