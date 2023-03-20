@@ -87,7 +87,7 @@ func main() {
 	defer authHandler.Close()
 	logger.Info("Successfully connected to auth grpc server " + authHandler.Secure())
 
-	tp, err := jagerClient.NewTracer("smtp-notifier_db", cfg.JaegerURL)
+	tp, err := jagerClient.NewProvider("smtp-notifier_db", cfg.JaegerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
 	}

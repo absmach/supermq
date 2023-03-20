@@ -66,14 +66,7 @@ func (d database) QueryxContext(ctx context.Context, query string, args ...inter
 }
 
 func (d database) BeginTxx(ctx context.Context, opts *sql.TxOptions) (*sqlx.Tx, error) {
-	ctx, span := d.tracer.Start(ctx,
-		"sql_beginTxx",
-		trace.WithAttributes(
-			attribute.String("span.kind", "client"),
-			attribute.String("peer.service", "postgres"),
-			attribute.String("db.type", "sql"),
-		),
-	)
+	ctx, span := d.addSpanTags(ctx, "sql_beginTxx", "")
 	defer span.End()
 	return d.db.BeginTxx(ctx, opts)
 }

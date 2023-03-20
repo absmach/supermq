@@ -84,7 +84,7 @@ func Setup(config Config, svcName, jaegerURL string) (*Client, ClientHandler, er
 	}
 
 	// initialize auth tracer for auth grpc client
-	tp, err := jaegerClient.NewTracer(svcName, jaegerURL)
+	tp, err := jaegerClient.NewProvider(svcName, jaegerURL)
 	if err != nil {
 		grpcClient.Close()
 		return nil, nil, errors.Wrap(errJaeger, err)

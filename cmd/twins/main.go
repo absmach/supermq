@@ -78,7 +78,7 @@ func main() {
 		logger.Fatal(fmt.Sprintf("failed to setup postgres database : %s", err))
 	}
 
-	tp, err := jaegerClient.NewTracer("twins_db", cfg.JaegerURL)
+	tp, err := jaegerClient.NewProvider("twins_db", cfg.JaegerURL)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to init Jaeger: %s", err))
 	}
