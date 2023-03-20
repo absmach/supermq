@@ -17,7 +17,6 @@ import (
 	cmocks "github.com/mainflux/mainflux/users/clients/mocks"
 	"github.com/mainflux/mainflux/users/groups"
 	"github.com/mainflux/mainflux/users/groups/api"
-	"github.com/mainflux/mainflux/users/groups/mocks"
 	gmocks "github.com/mainflux/mainflux/users/groups/mocks"
 	"github.com/mainflux/mainflux/users/jwt"
 	pmocks "github.com/mainflux/mainflux/users/policies/mocks"
@@ -82,7 +81,7 @@ func TestCreateGroup(t *testing.T) {
 			desc: "create group with invalid parent",
 			group: sdk.Group{
 				Name:     gName,
-				ParentID: mocks.WrongID,
+				ParentID: gmocks.WrongID,
 				Status:   groups.EnabledStatus.String(),
 			},
 			err: errors.NewSDKErrorWithStatus(errors.ErrCreateEntity, http.StatusInternalServerError),
@@ -91,7 +90,7 @@ func TestCreateGroup(t *testing.T) {
 			desc: "create group with invalid owner",
 			group: sdk.Group{
 				Name:    gName,
-				OwnerID: mocks.WrongID,
+				OwnerID: gmocks.WrongID,
 				Status:  groups.EnabledStatus.String(),
 			},
 			err: errors.NewSDKErrorWithStatus(sdk.ErrFailedCreation, http.StatusInternalServerError),
@@ -310,7 +309,7 @@ func TestViewGroup(t *testing.T) {
 		{
 			desc:     "view group for wrong id",
 			token:    generateValidToken(t, csvc, cRepo),
-			groupID:  mocks.WrongID,
+			groupID:  gmocks.WrongID,
 			response: sdk.Group{Children: []*sdk.Group{}},
 			err:      errors.NewSDKErrorWithStatus(errors.ErrNotFound, http.StatusNotFound),
 		},
@@ -417,7 +416,7 @@ func TestUpdateGroup(t *testing.T) {
 		{
 			desc: "update group name with invalid group id",
 			group: sdk.Group{
-				ID:   mocks.WrongID,
+				ID:   gmocks.WrongID,
 				Name: "NewName",
 			},
 			response: sdk.Group{},
@@ -427,7 +426,7 @@ func TestUpdateGroup(t *testing.T) {
 		{
 			desc: "update group description with invalid group id",
 			group: sdk.Group{
-				ID:          mocks.WrongID,
+				ID:          gmocks.WrongID,
 				Description: "NewDescription",
 			},
 			response: sdk.Group{},
@@ -437,7 +436,7 @@ func TestUpdateGroup(t *testing.T) {
 		{
 			desc: "update group metadata with invalid group id",
 			group: sdk.Group{
-				ID: mocks.WrongID,
+				ID: gmocks.WrongID,
 				Metadata: sdk.Metadata{
 					"field": "value2",
 				},
@@ -606,7 +605,7 @@ func TestListMemberships(t *testing.T) {
 		{
 			desc:     "list clients with an invalid id",
 			token:    generateValidToken(t, csvc, cRepo),
-			clientID: mocks.WrongID,
+			clientID: gmocks.WrongID,
 			page:     sdk.PageMetadata{},
 			response: []sdk.Group(nil),
 			err:      errors.NewSDKErrorWithStatus(errors.ErrNotFound, http.StatusNotFound),
