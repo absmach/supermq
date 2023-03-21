@@ -21,7 +21,7 @@ type mainfluxPolicies struct {
 	connections map[string]tpolicies.Policy
 }
 
-// NewPoliciesService returns Mainflux Things service mock.
+// NewPoliciesService returns Mainflux Things Policies service mock.
 // Only methods used by SDK are mocked.
 func NewPoliciesService(auth upolicies.AuthServiceClient) tpolicies.Service {
 	return &mainfluxPolicies{

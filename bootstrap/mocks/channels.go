@@ -22,7 +22,7 @@ type mainfluxChannels struct {
 	auth     upolicies.AuthServiceClient
 }
 
-// NewChannelsService returns Mainflux Things service mock.
+// NewChannelsService returns Mainflux Channels service mock.
 // Only methods used by SDK are mocked.
 func NewChannelsService(channels map[string]groups.Group, auth upolicies.AuthServiceClient) groups.Service {
 	return &mainfluxChannels{
