@@ -17,8 +17,8 @@ var _ messaging.PubSub = (*mockPubSub)(nil)
 
 type MockPubSub interface {
 	Publish(context.Context, string, *messaging.Message) error
-	Subscribe(string, string, messaging.MessageHandler) error
-	Unsubscribe(string, string) error
+	Subscribe(context.Context, string, string, messaging.MessageHandler) error
+	Unsubscribe(context.Context, string, string) error
 	SetFail(bool)
 	SetConn(*websocket.Conn)
 	Close() error
@@ -48,14 +48,14 @@ func (pubsub *mockPubSub) Publish(ctx context.Context, s string, msg *messaging.
 	return nil
 }
 
-func (pubsub *mockPubSub) Subscribe(string, string, messaging.MessageHandler) error {
+func (pubsub *mockPubSub) Subscribe(context.Context, string, string, messaging.MessageHandler) error {
 	if pubsub.fail {
 		return ws.ErrFailedSubscription
 	}
 	return nil
 }
 
-func (pubsub *mockPubSub) Unsubscribe(string, string) error {
+func (pubsub *mockPubSub) Unsubscribe(context.Context, string, string) error {
 	if pubsub.fail {
 		return ws.ErrFailedUnsubscribe
 	}

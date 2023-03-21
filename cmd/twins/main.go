@@ -158,7 +158,7 @@ func newService(id string, ps messaging.PubSub, chanID string, users mainflux.Au
 	svc = api.LoggingMiddleware(svc, logger)
 	counter, latency := internal.MakeMetrics(svcName, "api")
 	svc = api.MetricsMiddleware(svc, counter, latency)
-	err := ps.Subscribe(id, brokers.SubjectAllChannels, handle(logger, chanID, svc))
+	err := ps.Subscribe(context.Background(), id, brokers.SubjectAllChannels, handle(logger, chanID, svc))
 	if err != nil {
 		logger.Fatal(err.Error())
 	}

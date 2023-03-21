@@ -38,7 +38,7 @@ func NewForwarder(topic string, logger log.Logger) Forwarder {
 }
 
 func (f forwarder) Forward(id string, sub messaging.Subscriber, pub messaging.Publisher) error {
-	return sub.Subscribe(id, f.topic, handle(pub, f.logger))
+	return sub.Subscribe(context.Background(), id, f.topic, handle(pub, f.logger))
 }
 
 func handle(pub messaging.Publisher, logger log.Logger) handleFunc {

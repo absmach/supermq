@@ -187,7 +187,7 @@ func TestSubscribe(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		err = pubsub.Subscribe(tc.clientID, tc.topic, tc.handler)
+		err = pubsub.Subscribe(context.TODO(), tc.clientID, tc.topic, tc.handler)
 		assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, err, tc.err))
 
 		if tc.err == nil {
@@ -262,7 +262,7 @@ func TestPubSub(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		err := pubsub.Subscribe(tc.clientID, tc.topic, tc.handler)
+		err := pubsub.Subscribe(context.TODO(), tc.clientID, tc.topic, tc.handler)
 		assert.Equal(t, err, tc.err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, err, tc.err))
 
 		if tc.err == nil {
@@ -424,10 +424,10 @@ func TestUnsubscribe(t *testing.T) {
 	for _, tc := range cases {
 		switch tc.subscribe {
 		case true:
-			err := pubsub.Subscribe(tc.clientID, tc.topic, tc.handler)
+			err := pubsub.Subscribe(context.TODO(), tc.clientID, tc.topic, tc.handler)
 			assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, tc.err, err))
 		default:
-			err := pubsub.Unsubscribe(tc.clientID, tc.topic)
+			err := pubsub.Unsubscribe(context.TODO(), tc.clientID, tc.topic)
 			assert.Equal(t, tc.err, err, fmt.Sprintf("%s: expected: %s, but got: %s", tc.desc, tc.err, err))
 		}
 	}

@@ -4,6 +4,7 @@
 package nats_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
@@ -260,14 +261,14 @@ func TestPubsub(t *testing.T) {
 
 	for _, pc := range subcases {
 		if pc.pubsub == true {
-			err := pubsub.Subscribe(pc.clientID, pc.topic, pc.handler)
+			err := pubsub.Subscribe(context.TODO(), pc.clientID, pc.topic, pc.handler)
 			if pc.errorMessage == nil {
 				assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
 			} else {
 				assert.Equal(t, err, pc.errorMessage)
 			}
 		} else {
-			err := pubsub.Unsubscribe(pc.clientID, pc.topic)
+			err := pubsub.Unsubscribe(context.TODO(), pc.clientID, pc.topic)
 			if pc.errorMessage == nil {
 				assert.Nil(t, err, fmt.Sprintf("%s got unexpected error: %s", pc.desc, err))
 			} else {

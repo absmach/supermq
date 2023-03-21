@@ -8,7 +8,11 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 )
 
-const subscribeOP = "subscribe_op" //traced op
+const (
+	subscribeOP   = "subscribe_op"
+	unsubscribeOp = "unsubscribe_op"
+	handleOp      = "handle_op"
+)
 
 var _ messaging.PubSub = (*pubsubMiddleware)(nil)
 
@@ -18,13 +22,19 @@ type pubsubMiddleware struct {
 }
 
 // Subscribe implements messaging.PubSub
-func (pm *pubsubMiddleware) Subscribe(id string, topic string, handler messaging.MessageHandler) error {
-	return pm.pubsub.Subscribe(id, topic, pm.handle(handler))
+func (pm *pubsubMiddleware) Subscribe(ctx context.Context, id string, topic string, handler messaging.MessageHandler) error {
+	span, _ := opentracing.StartSpanFromContextWithTracer(ctx, pm.tracer, subscribeOP)
+	defer span.Finish()
+	ctx = opentracing.ContextWithSpan(ctx, span)
+	return pm.pubsub.Subscribe(ctx, id, topic, pm.handle(handler))
 }
 
 // Unsubscribe implements messaging.PubSub
-func (pm *pubsubMiddleware) Unsubscribe(id string, topic string) error {
-	return pm.pubsub.Unsubscribe(id, topic)
+func (pm *pubsubMiddleware) Unsubscribe(ctx context.Context, id string, topic string) error {
+	span, _ := opentracing.StartSpanFromContextWithTracer(ctx, pm.tracer, unsubscribeOp)
+	defer span.Finish()
+	ctx = opentracing.ContextWithSpan(ctx, span)
+	return pm.pubsub.Unsubscribe(ctx, id, topic)
 }
 
 func NewPubSub(pubsub messaging.PubSub, tracer opentracing.Tracer) messaging.PubSub {
@@ -52,7 +62,7 @@ func (ps *pubsubMiddleware) Publish(ctx context.Context, topic string, msg *mess
 
 func (ps *pubsubMiddleware) handle(h messaging.MessageHandler) handleFunc {
 	return func(msg *messaging.Message) error {
-		span := ps.tracer.StartSpan(subscribeOP, ext.SpanKindConsumer)
+		span := ps.tracer.StartSpan(handleOp, ext.SpanKindConsumer)
 		ext.MessageBusDestination.Set(span, msg.Subtopic)
 		defer span.Finish()
 		return h.Handle(msg)
