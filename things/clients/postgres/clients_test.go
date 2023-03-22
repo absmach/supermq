@@ -20,9 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	maxNameSize = 1024
-)
+const maxNameSize = 1024
 
 var (
 	idProvider     = uuid.New()
