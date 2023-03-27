@@ -50,6 +50,7 @@ func (hs *homingService) CallHome(ctx context.Context) {
 			var err error
 			data.Service = hs.serviceName
 			data.Version = hs.version
+			data.LastSeen = time.Now()
 			for _, endpoint := range ipEndpoints {
 				data.IpAddress, err = getIP(endpoint)
 				if err != nil {
@@ -79,9 +80,10 @@ func (hs *homingService) Stop() {
 }
 
 type telemetryData struct {
-	Service   string `json:"service"`
-	IpAddress string `json:"ip_address"`
-	Version   string `json:"mainflux_version"`
+	Service   string    `json:"service"`
+	IpAddress string    `json:"ip_address"`
+	Version   string    `json:"mainflux_version"`
+	LastSeen  time.Time `json:"last_seen"`
 }
 
 func getIP(endpoint string) (string, error) {
