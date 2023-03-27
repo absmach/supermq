@@ -1,0 +1,48 @@
+# Copyright (c) Mainflux
+# SPDX-License-Identifier: Apache-2.0
+
+# This docker-compose file contains optional Prometheus and Grafana service for Mainflux platform.
+# Since this service is optional, this file is dependent of docker-compose.yml file
+# from <project_root>/docker. In order to run this service, execute command:
+# docker-compose -f docker/docker-compose.yml -f docker/addons/prometheus/docker-compose.yml up
+# from project root.
+
+version: "3.7"
+
+networks:
+  docker_mainflux-base-net:
+    external: true
+
+volumes:
+  mainflux-prometheus-volume:
+
+services:
+  promethues:
+    image: prom/prometheus:v2.42.0
+    container_name: mainflux-prometheus
+    restart: on-failure
+    ports:
+      - ${MF_PROMETHEUS_PORT}:${MF_PROMETHEUS_PORT}
+    networks:
+      - docker_mainflux-base-net
+    volumes:
+      - ../metrics/prometheus.yml:/etc/prometheus/prometheus.yml
+      - mainflux-prometheus-volume:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'  
+
+  grafana:
+    image: grafana/grafana
+    container_name: mainflux-grafana
+    depends_on:
+      - promethues
+    restart: on-failure
+    ports:
+      - ${MF_GRAFANA_PORT}:${MF_GRAFANA_PORT}
+    environment:
+      - GF_SECURITY_ADMIN_USER=${MF_GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${MF_GRAFANA_ADMIN_PASSWORD}      
+    networks:
+      - docker_mainflux-base-net
+    volumes:
+      - ./grafana:/etc/grafana/provisioning/datasources
