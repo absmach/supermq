@@ -17,6 +17,7 @@ import (
 	thingsClient "github.com/mainflux/mainflux/internal/clients/grpc/things"
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	"github.com/mainflux/mainflux/internal/env"
+	"github.com/mainflux/mainflux/internal/homing"
 	"github.com/mainflux/mainflux/internal/server"
 	coapserver "github.com/mainflux/mainflux/internal/server/coap"
 	httpserver "github.com/mainflux/mainflux/internal/server/http"
@@ -100,6 +101,10 @@ func main() {
 		logger.Fatal(fmt.Sprintf("failed to load %s CoAP server configuration : %s", svcName, err))
 	}
 	cs := coapserver.New(ctx, cancel, svcName, coapServerConfig, api.MakeCoAPHandler(svc, logger), logger)
+
+	homeSvc := homing.New(svcName, cfg.MFRelease, logger, cancel)
+
+	go homeSvc.CallHome(ctx)
 
 	g.Go(func() error {
 		return hs.Start()

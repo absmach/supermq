@@ -14,14 +14,22 @@ import (
 )
 
 const (
-	HomeUrl = "localhost:9022"
+	HomeUrl      = "localhost:9022"
+	stopWaitTime = 5 * time.Second
 )
 
-func New(svc, version string, homingLogger logger.Logger) *homingService {
+var ipEndpoints = []string{
+	"https://checkip.amazonaws.com/",
+	"https://ipinfo.io/ip",
+	"https://api.ipify.org/",
+}
+
+func New(svc, version string, homingLogger logger.Logger, cancel context.CancelFunc) *homingService {
 	return &homingService{
 		serviceName:  svc,
 		version:      version,
 		homingLogger: homingLogger,
+		cancel:       cancel,
 	}
 }
 
@@ -29,24 +37,28 @@ type homingService struct {
 	serviceName  string
 	version      string
 	homingLogger logger.Logger
+	cancel       context.CancelFunc
 }
 
 func (hs *homingService) CallHome(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			return
+			hs.Stop()
 		default:
 			var data telemetryData
+			var err error
 			data.Service = hs.serviceName
 			data.Version = hs.version
-			ip, err := getIP()
-			if err != nil {
-				hs.homingLogger.Warn(errors.Wrap(fmt.Errorf("error getting ip address"), err).Error())
-				continue
+			for _, endpoint := range ipEndpoints {
+				data.IpAddress, err = getIP(endpoint)
+				if err != nil {
+					hs.homingLogger.Warn(errors.Wrap(fmt.Errorf("error getting ip address"), err).Error())
+					continue
+				}
+				break
 			}
-			data.IpAddress = ip
-			if err = sendTelemetry(&data); err != nil {
+			if err = sendTelemetry(&data); err != nil && data.IpAddress != "" {
 				hs.homingLogger.Warn(errors.Wrap(fmt.Errorf("error sending telemtry data"), err).Error())
 				continue
 			}
@@ -55,14 +67,25 @@ func (hs *homingService) CallHome(ctx context.Context) {
 	}
 }
 
+func (hs *homingService) Stop() {
+	defer hs.cancel()
+	c := make(chan bool)
+	defer close(c)
+	select {
+	case <-c:
+	case <-time.After(stopWaitTime):
+	}
+	hs.homingLogger.Info("call home service shutdown")
+}
+
 type telemetryData struct {
 	Service   string `json:"service"`
 	IpAddress string `json:"ip_address"`
 	Version   string `json:"mainflux_version"`
 }
 
-func getIP() (string, error) {
-	req, err := http.NewRequest(http.MethodGet, "https://checkip.amazonaws.com/", nil)
+func getIP(endpoint string) (string, error) {
+	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return "", err
 	}

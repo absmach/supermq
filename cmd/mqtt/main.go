@@ -18,6 +18,7 @@ import (
 	jaegerClient "github.com/mainflux/mainflux/internal/clients/jaeger"
 	redisClient "github.com/mainflux/mainflux/internal/clients/redis"
 	"github.com/mainflux/mainflux/internal/env"
+	"github.com/mainflux/mainflux/internal/homing"
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/mqtt"
 	mqttredis "github.com/mainflux/mainflux/mqtt/redis"
@@ -54,6 +55,7 @@ type config struct {
 	Instance              string        `env:"MF_MQTT_ADAPTER_INSTANCE"                     envDefault:""`
 	JaegerURL             string        `env:"MF_JAEGER_URL"                                envDefault:"http://jaeger:14268/api/traces"`
 	BrokerURL             string        `env:"MF_BROKER_URL"                                envDefault:"nats://localhost:4222"`
+	MFRelease             string        `env:"MF_RELEASE_TAG"`
 }
 
 func main() {
@@ -141,6 +143,10 @@ func main() {
 
 	h := mqtt.NewHandler([]messaging.Publisher{np}, es, logger, tc)
 	h = mqtttracing.NewHandler(tracer, h)
+
+	homeSvc := homing.New(svcName, cfg.MFRelease, logger, cancel)
+
+	go homeSvc.CallHome(ctx)
 
 	logger.Info(fmt.Sprintf("Starting MQTT proxy on port %s", cfg.MqttPort))
 	g.Go(func() error {
