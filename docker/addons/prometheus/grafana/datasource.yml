@@ -7,3 +7,4 @@ datasources:
   isDefault: true
   access: proxy
   editable: true
+  

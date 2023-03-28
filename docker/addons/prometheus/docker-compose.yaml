@@ -46,3 +46,4 @@ services:
       - docker_mainflux-base-net
     volumes:
       - ./grafana:/etc/grafana/provisioning/datasources
+      
