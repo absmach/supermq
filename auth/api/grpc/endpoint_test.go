@@ -21,6 +21,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 )
 
@@ -66,7 +67,7 @@ func startGRPCServer(svc auth.Service, port int) {
 
 func TestIssue(t *testing.T) {
 	authAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(authAddr, grpc.WithInsecure())
+	conn, _ := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	cases := []struct {
@@ -129,16 +130,16 @@ func TestIssue(t *testing.T) {
 
 func TestIdentify(t *testing.T) {
 	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
-	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
+	require.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
 
 	_, recoverySecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.RecoveryKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
-	assert.Nil(t, err, fmt.Sprintf("Issuing recovery key expected to succeed: %s", err))
+	require.Nil(t, err, fmt.Sprintf("Issuing recovery key expected to succeed: %s", err))
 
 	_, apiSecret, err := svc.Issue(context.Background(), loginSecret, auth.Key{Type: auth.APIKey, IssuedAt: time.Now(), ExpiresAt: time.Now().Add(time.Minute), IssuerID: id, Subject: email})
-	assert.Nil(t, err, fmt.Sprintf("Issuing API key expected to succeed: %s", err))
+	require.Nil(t, err, fmt.Sprintf("Issuing API key expected to succeed: %s", err))
 
 	authAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(authAddr, grpc.WithInsecure())
+	conn, _ := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	cases := []struct {
@@ -198,10 +199,10 @@ func TestIdentify(t *testing.T) {
 
 func TestAuthorize(t *testing.T) {
 	_, loginSecret, err := svc.Issue(context.Background(), "", auth.Key{Type: auth.LoginKey, IssuedAt: time.Now(), IssuerID: id, Subject: email})
-	assert.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
+	require.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
 
 	authAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(authAddr, grpc.WithInsecure())
+	conn, _ := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	cases := []struct {
@@ -282,7 +283,7 @@ func TestAddPolicy(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
 
 	authAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(authAddr, grpc.WithInsecure())
+	conn, _ := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	groupAdminObj := "groupadmin"
@@ -335,7 +336,7 @@ func TestDeletePolicy(t *testing.T) {
 	require.Nil(t, err, fmt.Sprintf("Issuing user key expected to succeed: %s", err))
 
 	authAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(authAddr, grpc.WithInsecure())
+	conn, _ := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	readRelation := "read"
@@ -451,7 +452,7 @@ func TestMembers(t *testing.T) {
 	}
 
 	authAddr := fmt.Sprintf("localhost:%d", port)
-	conn, _ := grpc.Dial(authAddr, grpc.WithInsecure())
+	conn, _ := grpc.Dial(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	client := grpcapi.NewClient(mocktracer.New(), conn, time.Second)
 
 	for _, tc := range cases {

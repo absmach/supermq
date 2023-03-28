@@ -31,6 +31,7 @@ import (
 	thingsapi "github.com/mainflux/mainflux/things/api/things/http"
 	"github.com/opentracing/opentracing-go/mocktracer"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -1174,7 +1175,7 @@ func TestChangeState(t *testing.T) {
 	c := newConfig([]bootstrap.Channel{{ID: "1"}})
 
 	saved, err := svc.Add(context.Background(), validToken, c)
-	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	inactive := fmt.Sprintf("{\"state\": %d}", bootstrap.Inactive)
 	active := fmt.Sprintf("{\"state\": %d}", bootstrap.Active)

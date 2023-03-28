@@ -106,16 +106,16 @@ func TestRetrieveByID(t *testing.T) {
 	c := config
 	// Use UUID to prevent conflicts.
 	uid, err := uuid.NewV4()
-	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
+	require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
 	c.MFKey = uid.String()
 	c.MFThing = uid.String()
 	c.ExternalID = uid.String()
 	c.ExternalKey = uid.String()
 	id, err := repo.Save(c, channels)
-	assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+	require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 
 	nonexistentConfID, err := uuid.NewV4()
-	assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
+	require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
 
 	cases := []struct {
 		desc  string
@@ -164,7 +164,7 @@ func TestRetrieveAll(t *testing.T) {
 
 		// Use UUID to prevent conflict errors.
 		uid, err := uuid.NewV4()
-		assert.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
+		require.Nil(t, err, fmt.Sprintf("Got unexpected error: %s.\n", err))
 		c.ExternalID = uid.String()
 		c.Name = fmt.Sprintf("name %d", i)
 		c.MFThing = uid.String()
@@ -179,7 +179,7 @@ func TestRetrieveAll(t *testing.T) {
 		}
 
 		_, err = repo.Save(c, channels)
-		assert.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
+		require.Nil(t, err, fmt.Sprintf("Saving config expected to succeed: %s.\n", err))
 	}
 
 	cases := []struct {

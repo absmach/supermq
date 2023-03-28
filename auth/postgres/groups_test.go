@@ -34,7 +34,7 @@ var (
 
 func generateGroupID(t *testing.T) string {
 	grpID, err := ulidProvider.ID()
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 	return grpID
 }
 
@@ -43,11 +43,9 @@ func TestGroupSave(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
 	groupRepo := postgres.NewGroupRepo(dbMiddleware)
 
-	usrID, err := idProvider.ID()
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	usrID := generateGroupID(t)
 
-	wrongID, err := ulidProvider.ID()
-	assert.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
+	wrongID := generateGroupID(t)
 
 	grpID := generateGroupID(t)
 
@@ -137,9 +135,7 @@ func TestGroupRetrieveByID(t *testing.T) {
 	dbMiddleware := postgres.NewDatabase(db)
 	groupRepo := postgres.NewGroupRepo(dbMiddleware)
 
-	uid, err := idProvider.ID()
-	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
-	require.Nil(t, err, fmt.Sprintf("group id unexpected error: %s", err))
+	uid := generateGroupID(t)
 
 	group1 := auth.Group{
 		ID:      generateGroupID(t),
@@ -147,7 +143,7 @@ func TestGroupRetrieveByID(t *testing.T) {
 		OwnerID: uid,
 	}
 
-	_, err = groupRepo.Save(context.Background(), group1)
+	_, err := groupRepo.Save(context.Background(), group1)
 	require.Nil(t, err, fmt.Sprintf("got unexpected error: %s", err))
 
 	retrieved, err := groupRepo.RetrieveByID(context.Background(), group1.ID)
