@@ -9,8 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mainflux/mainflux/logger"
-	"github.com/mainflux/mainflux/pkg/errors"
+	mflog "github.com/mainflux/mainflux/logger"
 )
 
 const (
@@ -24,20 +23,20 @@ var ipEndpoints = []string{
 	"https://api.ipify.org/",
 }
 
-func New(svc, version string, homingLogger logger.Logger, cancel context.CancelFunc) *homingService {
+func New(svc, version string, homingLogger mflog.Logger, cancel context.CancelFunc) *homingService {
 	return &homingService{
-		serviceName:  svc,
-		version:      version,
-		homingLogger: homingLogger,
-		cancel:       cancel,
+		serviceName: svc,
+		version:     version,
+		logger:      homingLogger,
+		cancel:      cancel,
 	}
 }
 
 type homingService struct {
-	serviceName  string
-	version      string
-	homingLogger logger.Logger
-	cancel       context.CancelFunc
+	serviceName string
+	version     string
+	logger      mflog.Logger
+	cancel      context.CancelFunc
 }
 
 func (hs *homingService) CallHome(ctx context.Context) {
@@ -54,13 +53,13 @@ func (hs *homingService) CallHome(ctx context.Context) {
 			for _, endpoint := range ipEndpoints {
 				data.IpAddress, err = getIP(endpoint)
 				if err != nil {
-					hs.homingLogger.Warn(errors.Wrap(fmt.Errorf("error getting ip address"), err).Error())
+					hs.logger.Warn(fmt.Sprintf("failed to get ip address with error: %v", err))
 					continue
 				}
 				break
 			}
-			if err = sendTelemetry(&data); err != nil && data.IpAddress != "" {
-				hs.homingLogger.Warn(errors.Wrap(fmt.Errorf("error sending telemtry data"), err).Error())
+			if err = data.send(); err != nil && data.IpAddress != "" {
+				hs.logger.Warn(fmt.Sprintf("failed to send telemtry data with error: %v", err))
 				continue
 			}
 		}
@@ -76,7 +75,7 @@ func (hs *homingService) Stop() {
 	case <-c:
 	case <-time.After(stopWaitTime):
 	}
-	hs.homingLogger.Info("call home service shutdown")
+	hs.logger.Info("call home service shutdown")
 }
 
 type telemetryData struct {
@@ -103,7 +102,7 @@ func getIP(endpoint string) (string, error) {
 	return string(b), nil
 }
 
-func sendTelemetry(telDat *telemetryData) error {
+func (telDat *telemetryData) send() error {
 	b, err := json.Marshal(telDat)
 	if err != nil {
 		return err
