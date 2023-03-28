@@ -26,13 +26,13 @@ services:
     networks:
       - docker_mainflux-base-net
     volumes:
-      - ../metrics/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./metrics/:/etc/prometheus
       - mainflux-prometheus-volume:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'  
 
   grafana:
-    image: grafana/grafana
+    image: grafana/grafana:v8.2.6
     container_name: mainflux-grafana
     depends_on:
       - promethues
