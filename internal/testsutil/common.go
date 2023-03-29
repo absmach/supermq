@@ -7,6 +7,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/mainflux/mainflux"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users/clients"
 	cmocks "github.com/mainflux/mainflux/users/clients/mocks"
@@ -28,7 +29,7 @@ func GenerateValidToken(t *testing.T, clientID string, svc clients.Service, cRep
 			Identity: "validtoken",
 			Secret:   "secret",
 		},
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 	rClient := client
 	rClient.Credentials.Secret, _ = phasher.Hash(client.Credentials.Secret)

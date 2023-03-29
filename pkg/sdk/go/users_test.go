@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux/internal/apiutil"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -44,7 +45,7 @@ func TestCreateClient(t *testing.T) {
 
 	user := sdk.User{
 		Credentials: sdk.Credentials{Identity: "admin@example.com", Secret: "secret"},
-		Status:      clients.EnabledStatus.String(),
+		Status:      mfclients.EnabledStatus.String(),
 	}
 	conf := sdk.Config{
 		UsersURL: ts.URL,
@@ -148,7 +149,7 @@ func TestCreateClient(t *testing.T) {
 				Metadata:    validMetadata,
 				CreatedAt:   time.Now(),
 				UpdatedAt:   time.Now(),
-				Status:      clients.EnabledStatus.String(),
+				Status:      mfclients.EnabledStatus.String(),
 			},
 			response: sdk.User{
 				ID:          id,
@@ -159,7 +160,7 @@ func TestCreateClient(t *testing.T) {
 				Metadata:    validMetadata,
 				CreatedAt:   time.Now(),
 				UpdatedAt:   time.Now(),
-				Status:      clients.EnabledStatus.String(),
+				Status:      mfclients.EnabledStatus.String(),
 			},
 			token: token,
 			err:   nil,
@@ -206,11 +207,11 @@ func TestListClients(t *testing.T) {
 				Secret:   fmt.Sprintf("password_%d", i),
 			},
 			Metadata: sdk.Metadata{"name": fmt.Sprintf("client_%d", i)},
-			Status:   clients.EnabledStatus.String(),
+			Status:   mfclients.EnabledStatus.String(),
 		}
 		if i == 50 {
 			cl.Owner = "clientowner"
-			cl.Status = clients.DisabledStatus.String()
+			cl.Status = mfclients.DisabledStatus.String()
 			cl.Tags = []string{"tag1", "tag2"}
 		}
 		cls = append(cls, cl)
@@ -328,7 +329,7 @@ func TestListClients(t *testing.T) {
 			token:    generateValidToken(t, svc, cRepo),
 			offset:   0,
 			limit:    1,
-			status:   clients.DisabledStatus.String(),
+			status:   mfclients.DisabledStatus.String(),
 			response: []sdk.User{cls[50]},
 			err:      nil,
 		},
@@ -393,7 +394,7 @@ func TestListMembers(t *testing.T) {
 			},
 			Tags:     []string{"tag1", "tag2"},
 			Metadata: sdk.Metadata{"role": "client"},
-			Status:   clients.EnabledStatus.String(),
+			Status:   mfclients.EnabledStatus.String(),
 		}
 		aClients = append(aClients, client)
 	}
@@ -523,7 +524,7 @@ func TestClient(t *testing.T) {
 		Tags:        []string{"tag1", "tag2"},
 		Credentials: sdk.Credentials{Identity: "clientidentity", Secret: secret},
 		Metadata:    validMetadata,
-		Status:      clients.EnabledStatus.String(),
+		Status:      mfclients.EnabledStatus.String(),
 	}
 	conf := sdk.Config{
 		UsersURL: ts.URL,
@@ -604,7 +605,7 @@ func TestUpdateClient(t *testing.T) {
 		Tags:        []string{"tag1", "tag2"},
 		Credentials: sdk.Credentials{Identity: "clientidentity", Secret: secret},
 		Metadata:    validMetadata,
-		Status:      clients.EnabledStatus.String(),
+		Status:      mfclients.EnabledStatus.String(),
 	}
 
 	client1 := user
@@ -681,7 +682,7 @@ func TestUpdateClientTags(t *testing.T) {
 		Tags:        []string{"tag1", "tag2"},
 		Credentials: sdk.Credentials{Identity: "clientidentity", Secret: secret},
 		Metadata:    validMetadata,
-		Status:      clients.EnabledStatus.String(),
+		Status:      mfclients.EnabledStatus.String(),
 	}
 
 	client1 := user
@@ -757,7 +758,7 @@ func TestUpdateClientIdentity(t *testing.T) {
 		Tags:        []string{"tag1", "tag2"},
 		Credentials: sdk.Credentials{Identity: "updatedclientidentity", Secret: secret},
 		Metadata:    validMetadata,
-		Status:      clients.EnabledStatus.String(),
+		Status:      mfclients.EnabledStatus.String(),
 	}
 
 	client2 := user
@@ -909,7 +910,7 @@ func TestUpdateClientOwner(t *testing.T) {
 		Tags:        []string{"tag1", "tag2"},
 		Credentials: sdk.Credentials{Identity: "clientidentity", Secret: secret},
 		Metadata:    validMetadata,
-		Status:      clients.EnabledStatus.String(),
+		Status:      mfclients.EnabledStatus.String(),
 		Owner:       "owner",
 	}
 
@@ -977,10 +978,10 @@ func TestEnableClient(t *testing.T) {
 	}
 	clientSDK := sdk.NewSDK(conf)
 
-	enabledClient1 := sdk.User{ID: testsutil.GenerateUUID(t, idProvider), Credentials: sdk.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: clients.EnabledStatus.String()}
-	disabledClient1 := sdk.User{ID: testsutil.GenerateUUID(t, idProvider), Credentials: sdk.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: clients.DisabledStatus.String()}
+	enabledClient1 := sdk.User{ID: testsutil.GenerateUUID(t, idProvider), Credentials: sdk.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: mfclients.EnabledStatus.String()}
+	disabledClient1 := sdk.User{ID: testsutil.GenerateUUID(t, idProvider), Credentials: sdk.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: mfclients.DisabledStatus.String()}
 	endisabledClient1 := disabledClient1
-	endisabledClient1.Status = clients.EnabledStatus.String()
+	endisabledClient1.Status = mfclients.EnabledStatus.String()
 	endisabledClient1.ID = testsutil.GenerateUUID(t, idProvider)
 
 	cases := []struct {
@@ -1047,7 +1048,7 @@ func TestEnableClient(t *testing.T) {
 	}{
 		{
 			desc:   "list enabled clients",
-			status: clients.EnabledStatus.String(),
+			status: mfclients.EnabledStatus.String(),
 			size:   2,
 			response: sdk.UsersPage{
 				Users: []sdk.User{enabledClient1, endisabledClient1},
@@ -1055,7 +1056,7 @@ func TestEnableClient(t *testing.T) {
 		},
 		{
 			desc:   "list disabled clients",
-			status: clients.DisabledStatus.String(),
+			status: mfclients.DisabledStatus.String(),
 			size:   1,
 			response: sdk.UsersPage{
 				Users: []sdk.User{disabledClient1},
@@ -1063,7 +1064,7 @@ func TestEnableClient(t *testing.T) {
 		},
 		{
 			desc:   "list enabled and disabled clients",
-			status: clients.AllStatus.String(),
+			status: mfclients.AllStatus.String(),
 			size:   3,
 			response: sdk.UsersPage{
 				Users: []sdk.User{enabledClient1, disabledClient1, endisabledClient1},
@@ -1102,10 +1103,10 @@ func TestDisableClient(t *testing.T) {
 	}
 	clientSDK := sdk.NewSDK(conf)
 
-	enabledClient1 := sdk.User{ID: testsutil.GenerateUUID(t, idProvider), Credentials: sdk.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: clients.EnabledStatus.String()}
-	disabledClient1 := sdk.User{ID: testsutil.GenerateUUID(t, idProvider), Credentials: sdk.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: clients.DisabledStatus.String()}
+	enabledClient1 := sdk.User{ID: testsutil.GenerateUUID(t, idProvider), Credentials: sdk.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: mfclients.EnabledStatus.String()}
+	disabledClient1 := sdk.User{ID: testsutil.GenerateUUID(t, idProvider), Credentials: sdk.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: mfclients.DisabledStatus.String()}
 	disenabledClient1 := enabledClient1
-	disenabledClient1.Status = clients.DisabledStatus.String()
+	disenabledClient1.Status = mfclients.DisabledStatus.String()
 	disenabledClient1.ID = testsutil.GenerateUUID(t, idProvider)
 
 	cases := []struct {
@@ -1172,7 +1173,7 @@ func TestDisableClient(t *testing.T) {
 	}{
 		{
 			desc:   "list enabled clients",
-			status: clients.EnabledStatus.String(),
+			status: mfclients.EnabledStatus.String(),
 			size:   2,
 			response: sdk.UsersPage{
 				Users: []sdk.User{enabledClient1, disenabledClient1},
@@ -1180,7 +1181,7 @@ func TestDisableClient(t *testing.T) {
 		},
 		{
 			desc:   "list disabled clients",
-			status: clients.DisabledStatus.String(),
+			status: mfclients.DisabledStatus.String(),
 			size:   1,
 			response: sdk.UsersPage{
 				Users: []sdk.User{disabledClient1},
@@ -1188,7 +1189,7 @@ func TestDisableClient(t *testing.T) {
 		},
 		{
 			desc:   "list enabled and disabled clients",
-			status: clients.AllStatus.String(),
+			status: mfclients.AllStatus.String(),
 			size:   3,
 			response: sdk.UsersPage{
 				Users: []sdk.User{enabledClient1, disabledClient1, disenabledClient1},

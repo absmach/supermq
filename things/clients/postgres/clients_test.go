@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -53,7 +54,7 @@ func TestClientsSave(t *testing.T) {
 					Secret:   testsutil.GenerateUUID(t, idProvider),
 				},
 				Metadata: clients.Metadata{},
-				Status:   clients.EnabledStatus,
+				Status:   mfclients.EnabledStatus,
 			},
 			err: nil,
 		},
@@ -68,7 +69,7 @@ func TestClientsSave(t *testing.T) {
 					Secret:   testsutil.GenerateUUID(t, idProvider),
 				},
 				Metadata: clients.Metadata{},
-				Status:   clients.EnabledStatus,
+				Status:   mfclients.EnabledStatus,
 			},
 			err: nil,
 		},
@@ -82,7 +83,7 @@ func TestClientsSave(t *testing.T) {
 					Secret:   testsutil.GenerateUUID(t, idProvider),
 				},
 				Metadata: clients.Metadata{},
-				Status:   clients.EnabledStatus,
+				Status:   mfclients.EnabledStatus,
 			},
 			err: errors.ErrCreateEntity,
 		},
@@ -96,7 +97,7 @@ func TestClientsSave(t *testing.T) {
 					Secret:   testsutil.GenerateUUID(t, idProvider),
 				},
 				Metadata: clients.Metadata{},
-				Status:   clients.EnabledStatus,
+				Status:   mfclients.EnabledStatus,
 			},
 			err: errors.ErrCreateEntity,
 		},
@@ -110,7 +111,7 @@ func TestClientsSave(t *testing.T) {
 					Secret:   testsutil.GenerateUUID(t, idProvider),
 				},
 				Metadata: clients.Metadata{},
-				Status:   clients.EnabledStatus,
+				Status:   mfclients.EnabledStatus,
 			},
 			err: errors.ErrCreateEntity,
 		},
@@ -124,7 +125,7 @@ func TestClientsSave(t *testing.T) {
 					Secret:   testsutil.GenerateUUID(t, idProvider),
 				},
 				Metadata: clients.Metadata{},
-				Status:   clients.EnabledStatus,
+				Status:   mfclients.EnabledStatus,
 			},
 			err: errors.ErrCreateEntity,
 		},
@@ -175,7 +176,7 @@ func TestClientsRetrieveByID(t *testing.T) {
 			Identity: clientIdentity,
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 
 	_, err := repo.Save(context.Background(), client)
@@ -236,7 +237,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Secret:   testsutil.GenerateUUID(t, idProvider),
 			},
 			Metadata: clients.Metadata{},
-			Status:   clients.EnabledStatus,
+			Status:   mfclients.EnabledStatus,
 		}
 		if i == 1 {
 			ownerID = client.ID
@@ -247,7 +248,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 			client.Tags = []string{"Test"}
 		}
 		if i%50 == 0 {
-			client.Status = clients.DisabledStatus
+			client.Status = mfclients.DisabledStatus
 		}
 		_, err := repo.Save(context.Background(), client)
 		require.Nil(t, err, fmt.Sprintf("unexpected error: %s", err))
@@ -275,7 +276,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 			pm: clients.Page{
 				Offset: 0,
 				Limit:  nClients,
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
 			response: expectedClients,
 			size:     200,
@@ -284,7 +285,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 			pm: clients.Page{
 				Offset: 0,
 				Limit:  50,
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
 			response: expectedClients[0:50],
 			size:     50,
@@ -293,7 +294,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 			pm: clients.Page{
 				Offset: 50,
 				Limit:  nClients,
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
 			response: expectedClients[50:200],
 			size:     150,
@@ -302,7 +303,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 			pm: clients.Page{
 				Offset: 50,
 				Limit:  50,
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
 			response: expectedClients[50:100],
 			size:     50,
@@ -311,7 +312,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 			pm: clients.Page{
 				Offset: 170,
 				Limit:  50,
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
 			response: expectedClients[170:200],
 			size:     30,
@@ -322,7 +323,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Limit:    nClients,
 				Total:    nClients,
 				Metadata: meta,
-				Status:   clients.AllStatus,
+				Status:   mfclients.AllStatus,
 			},
 			response: []clients.Client{expectedClients[0], expectedClients[10], expectedClients[20], expectedClients[30], expectedClients[40], expectedClients[50], expectedClients[60],
 				expectedClients[70], expectedClients[80], expectedClients[90], expectedClients[100], expectedClients[110], expectedClients[120], expectedClients[130],
@@ -336,7 +337,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Limit:    nClients,
 				Total:    nClients,
 				Metadata: wrongMeta,
-				Status:   clients.AllStatus,
+				Status:   mfclients.AllStatus,
 			},
 			response: []clients.Client{},
 			size:     0,
@@ -347,7 +348,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Limit:  nClients,
 				Total:  nClients,
 				Name:   "TestRetrieveAll3@example.com",
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
 			response: []clients.Client{expectedClients[3]},
 			size:     1,
@@ -358,7 +359,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Limit:  nClients,
 				Total:  nClients,
 				Name:   wrongName,
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
 			response: []clients.Client{},
 			size:     0,
@@ -369,7 +370,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Limit:  nClients,
 				Total:  nClients,
 				Owner:  ownerID,
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
 			response: []clients.Client{expectedClients[10], expectedClients[20], expectedClients[30], expectedClients[40], expectedClients[50], expectedClients[60],
 				expectedClients[70], expectedClients[80], expectedClients[90], expectedClients[100], expectedClients[110], expectedClients[120], expectedClients[130],
@@ -383,7 +384,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Limit:  nClients,
 				Total:  nClients,
 				Owner:  wrongID,
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
 			response: []clients.Client{},
 			size:     0,
@@ -393,7 +394,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Offset: 0,
 				Limit:  nClients,
 				Total:  nClients,
-				Status: clients.DisabledStatus,
+				Status: mfclients.DisabledStatus,
 			},
 			response: []clients.Client{expectedClients[0], expectedClients[50], expectedClients[100], expectedClients[150]},
 			size:     4,
@@ -403,7 +404,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Offset: 0,
 				Limit:  nClients,
 				Total:  nClients,
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
 			response: expectedClients,
 			size:     200,
@@ -424,7 +425,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Limit:  nClients,
 				Total:  nClients,
 				Tag:    "Test",
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
 			response: []clients.Client{expectedClients[0], expectedClients[10], expectedClients[20], expectedClients[30], expectedClients[40], expectedClients[50], expectedClients[60],
 				expectedClients[70], expectedClients[80], expectedClients[90], expectedClients[100], expectedClients[110], expectedClients[120], expectedClients[130],
@@ -438,7 +439,7 @@ func TestClientsRetrieveAll(t *testing.T) {
 				Limit:  nClients,
 				Total:  nClients,
 				Tag:    "wrongTags",
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
 			response: []clients.Client{},
 			size:     0,
@@ -469,7 +470,7 @@ func TestClientsUpdateMetadata(t *testing.T) {
 			"name": "enabled-client",
 		},
 		Tags:   []string{"enabled", "tag1"},
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 
 	client2 := clients.Client{
@@ -483,7 +484,7 @@ func TestClientsUpdateMetadata(t *testing.T) {
 			"name": "disabled-client",
 		},
 		Tags:   []string{"disabled", "tag1"},
-		Status: clients.DisabledStatus,
+		Status: mfclients.DisabledStatus,
 	}
 
 	_, err := repo.Save(context.Background(), client1)
@@ -622,7 +623,7 @@ func TestClientsUpdateTags(t *testing.T) {
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
 		Tags:   []string{"test", "enabled"},
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 	client2 := clients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
@@ -632,7 +633,7 @@ func TestClientsUpdateTags(t *testing.T) {
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
 		Tags:   []string{"test", "disabled"},
-		Status: clients.DisabledStatus,
+		Status: mfclients.DisabledStatus,
 	}
 
 	_, err := repo.Save(context.Background(), client1)
@@ -696,7 +697,7 @@ func TestClientsUpdateSecret(t *testing.T) {
 			Identity: "client1-update@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 	client2 := clients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
@@ -705,7 +706,7 @@ func TestClientsUpdateSecret(t *testing.T) {
 			Identity: "client2-update@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Status: clients.DisabledStatus,
+		Status: mfclients.DisabledStatus,
 	}
 
 	rClient1, err := repo.Save(context.Background(), client1)
@@ -782,7 +783,7 @@ func TestClientsUpdateOwner(t *testing.T) {
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
 		Owner:  testsutil.GenerateUUID(t, idProvider),
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 	client2 := clients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
@@ -792,7 +793,7 @@ func TestClientsUpdateOwner(t *testing.T) {
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
 		Owner:  testsutil.GenerateUUID(t, idProvider),
-		Status: clients.DisabledStatus,
+		Status: mfclients.DisabledStatus,
 	}
 
 	_, err := repo.Save(context.Background(), client1)
@@ -856,7 +857,7 @@ func TestClientsChangeStatus(t *testing.T) {
 			Identity: "client1-update@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 
 	_, err := repo.Save(context.Background(), client1)

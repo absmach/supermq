@@ -19,6 +19,7 @@ import (
 	ppostgres "github.com/mainflux/mainflux/things/policies/postgres"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 )
 
 const (
@@ -480,7 +481,7 @@ func TestClientsMemberships(t *testing.T) {
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
 		Metadata: clients.Metadata{},
-		Status:   clients.EnabledStatus,
+		Status:   mfclients.EnabledStatus,
 	}
 	clientB := clients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
@@ -490,7 +491,7 @@ func TestClientsMemberships(t *testing.T) {
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
 		Metadata: clients.Metadata{},
-		Status:   clients.EnabledStatus,
+		Status:   mfclients.EnabledStatus,
 	}
 	group := groups.Group{
 		ID:       testsutil.GenerateUUID(t, idProvider),

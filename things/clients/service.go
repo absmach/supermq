@@ -7,6 +7,7 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users/policies"
 )
@@ -22,20 +23,6 @@ const (
 )
 
 var AdminRelationKey = []string{createKey, updateRelationKey, listRelationKey, deleteRelationKey}
-
-var (
-	// ErrInvalidStatus indicates invalid status.
-	ErrInvalidStatus = errors.New("invalid client status")
-
-	// ErrEnableClient indicates error in enabling client.
-	ErrEnableClient = errors.New("failed to enable client")
-
-	// ErrDisableClient indicates error in disabling client.
-	ErrDisableClient = errors.New("failed to disable client")
-
-	// ErrStatusAlreadyAssigned indicated that the client or group has already been assigned the status.
-	ErrStatusAlreadyAssigned = errors.New("status already assigned")
-)
 
 type service struct {
 	auth        policies.AuthServiceClient
@@ -78,7 +65,7 @@ func (svc service) CreateThings(ctx context.Context, token string, clis ...Clien
 		if cli.Owner == "" {
 			cli.Owner = res.GetId()
 		}
-		if cli.Status != DisabledStatus && cli.Status != EnabledStatus {
+		if cli.Status != mfclients.DisabledStatus && cli.Status != mfclients.EnabledStatus {
 			return []Client{}, apiutil.ErrInvalidStatus
 		}
 		cli.CreatedAt = time.Now()
@@ -210,7 +197,7 @@ func (svc service) EnableClient(ctx context.Context, token, id string) (Client, 
 	}
 	client, err := svc.changeClientStatus(ctx, token, client)
 	if err != nil {
-		return Client{}, errors.Wrap(ErrEnableClient, err)
+		return Client{}, errors.Wrap(mfclients.ErrEnableClient, err)
 	}
 
 	return client, nil
@@ -224,7 +211,7 @@ func (svc service) DisableClient(ctx context.Context, token, id string) (Client,
 	}
 	client, err := svc.changeClientStatus(ctx, token, client)
 	if err != nil {
-		return Client{}, errors.Wrap(ErrDisableClient, err)
+		return Client{}, errors.Wrap(mfclients.ErrDisableClient, err)
 	}
 
 	return client, nil

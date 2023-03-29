@@ -1,6 +1,9 @@
 package clients
 
-import "github.com/mainflux/mainflux/internal/apiutil"
+import (
+	"github.com/mainflux/mainflux/internal/apiutil"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
+)
 
 // Role represents Client role.
 type Role uint8
@@ -25,7 +28,7 @@ func (cs Role) String() string {
 	case UserRole:
 		return User
 	default:
-		return Unknown
+		return mfclients.Unknown
 	}
 }
 

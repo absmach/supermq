@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -87,7 +88,7 @@ func TestPoliciesEvaluate(t *testing.T) {
 			Identity: "connectedclients-clientA@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 	client2 := clients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
@@ -96,7 +97,7 @@ func TestPoliciesEvaluate(t *testing.T) {
 			Identity: "connectedclients-clientB@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 	group := groups.Group{
 		ID:   testsutil.GenerateUUID(t, idProvider),
@@ -170,7 +171,7 @@ func TestPoliciesRetrieve(t *testing.T) {
 			Identity: "single-policy-retrieval@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 
 	_, err := crepo.Save(context.Background(), client)
@@ -226,7 +227,7 @@ func TestPoliciesUpdate(t *testing.T) {
 			Identity: "policy-update@example.com",
 			Secret:   "pass",
 		},
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 
 	_, err := crepo.Save(context.Background(), client)
@@ -351,7 +352,7 @@ func TestPoliciesRetrievalAll(t *testing.T) {
 			Identity: "policyA-retrievalall@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 	clientB := clients.Client{
 		ID:   testsutil.GenerateUUID(t, idProvider),
@@ -360,7 +361,7 @@ func TestPoliciesRetrievalAll(t *testing.T) {
 			Identity: "policyB-retrievalall@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 
 	_, err := crepo.Save(context.Background(), clientA)
@@ -607,7 +608,7 @@ func TestPoliciesDelete(t *testing.T) {
 			Identity: "policy-delete@example.com",
 			Secret:   testsutil.GenerateUUID(t, idProvider),
 		},
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 
 	subject, err := crepo.Save(context.Background(), client)

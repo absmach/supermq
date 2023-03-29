@@ -7,6 +7,8 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
+	"github.com/mainflux/mainflux/internal/mainflux/clients"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users/jwt"
 	"github.com/mainflux/mainflux/users/policies"
@@ -19,33 +21,6 @@ const (
 	listRelationKey   = "c_list"
 	deleteRelationKey = "c_delete"
 	entityType        = "client"
-)
-
-var (
-	// ErrInvalidStatus indicates invalid status.
-	ErrInvalidStatus = errors.New("invalid client status")
-
-	// ErrEnableClient indicates error in enabling client.
-	ErrEnableClient = errors.New("failed to enable client")
-
-	// ErrDisableClient indicates error in disabling client.
-	ErrDisableClient = errors.New("failed to disable client")
-
-	// ErrStatusAlreadyAssigned indicated that the client or group has already been assigned the status.
-	ErrStatusAlreadyAssigned = errors.New("status already assigned")
-
-	// ErrMissingResetToken indicates malformed or missing reset token
-	// for reseting password.
-	ErrMissingResetToken = errors.New("missing reset token")
-
-	// ErrRecoveryToken indicates error in generating password recovery token.
-	ErrRecoveryToken = errors.New("failed to generate password recovery token")
-
-	// ErrGetToken indicates error in getting signed token.
-	ErrGetToken = errors.New("failed to fetch signed token")
-
-	// ErrPasswordFormat indicates weak password.
-	ErrPasswordFormat = errors.New("password does not meet the requirements")
 )
 
 // Service unites Clients and Group services.
@@ -96,7 +71,7 @@ func (svc service) RegisterClient(ctx context.Context, token string, cli Client)
 		return Client{}, errors.Wrap(errors.ErrMalformedEntity, err)
 	}
 	cli.Credentials.Secret = hash
-	if cli.Status != DisabledStatus && cli.Status != EnabledStatus {
+	if cli.Status != mfclients.DisabledStatus && cli.Status != mfclients.EnabledStatus {
 		return Client{}, apiutil.ErrInvalidStatus
 	}
 	if cli.Role != UserRole && cli.Role != AdminRole {
@@ -258,7 +233,7 @@ func (svc service) GenerateResetToken(ctx context.Context, email, host string) e
 	}
 	t, err := svc.IssueToken(ctx, client.Credentials.Identity, client.Credentials.Secret)
 	if err != nil {
-		return errors.Wrap(ErrRecoveryToken, err)
+		return errors.Wrap(clients.ErrRecoveryToken, err)
 	}
 	return svc.SendPasswordReset(ctx, host, email, t.AccessToken)
 }
@@ -276,7 +251,7 @@ func (svc service) ResetSecret(ctx context.Context, resetToken, secret string) e
 		return errors.ErrNotFound
 	}
 	if !svc.passRegex.MatchString(secret) {
-		return ErrPasswordFormat
+		return clients.ErrPasswordFormat
 	}
 	secret, err = svc.hasher.Hash(secret)
 	if err != nil {
@@ -302,7 +277,7 @@ func (svc service) UpdateClientSecret(ctx context.Context, token, oldSecret, new
 		return Client{}, err
 	}
 	if !svc.passRegex.MatchString(newSecret) {
-		return Client{}, ErrPasswordFormat
+		return Client{}, clients.ErrPasswordFormat
 	}
 	dbClient, err := svc.clients.RetrieveByID(ctx, id)
 	if err != nil {
@@ -354,7 +329,7 @@ func (svc service) EnableClient(ctx context.Context, token, id string) (Client, 
 	}
 	client, err := svc.changeClientStatus(ctx, token, client)
 	if err != nil {
-		return Client{}, errors.Wrap(ErrEnableClient, err)
+		return Client{}, errors.Wrap(clients.ErrEnableClient, err)
 	}
 
 	return client, nil
@@ -368,7 +343,7 @@ func (svc service) DisableClient(ctx context.Context, token, id string) (Client,
 	}
 	client, err := svc.changeClientStatus(ctx, token, client)
 	if err != nil {
-		return Client{}, errors.Wrap(ErrDisableClient, err)
+		return Client{}, errors.Wrap(clients.ErrDisableClient, err)
 	}
 
 	return client, nil

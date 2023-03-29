@@ -1,6 +1,11 @@
 package clients
 
-import "github.com/mainflux/mainflux/internal/apiutil"
+import (
+	"encoding/json"
+	"strings"
+
+	"github.com/mainflux/mainflux/internal/apiutil"
+)
 
 // Status represents Client status.
 type Status uint8
@@ -50,4 +55,17 @@ func ToStatus(status string) (Status, error) {
 		return AllStatus, nil
 	}
 	return Status(0), apiutil.ErrInvalidStatus
+}
+
+// Custom Marshaller for Client
+func (s Status) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.String())
+}
+
+// Custom Unmarshaler for Client
+func (s *Status) UnmarshalJSON(data []byte) error {
+	str := strings.Trim(string(data), "\"")
+	val, err := ToStatus(str)
+	*s = val
+	return err
 }

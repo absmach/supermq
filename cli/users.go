@@ -6,8 +6,8 @@ package cli
 import (
 	"encoding/json"
 
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	mfxsdk "github.com/mainflux/mainflux/pkg/sdk/go"
-	"github.com/mainflux/mainflux/users/clients"
 	"github.com/spf13/cobra"
 )
 
@@ -31,7 +31,7 @@ var cmdUsers = []cobra.Command{
 					Identity: args[1],
 					Secret:   args[2],
 				},
-				Status: clients.EnabledStatus.String(),
+				Status: mfclients.EnabledStatus.String(),
 			}
 			user, err := sdk.CreateUser(user, args[3])
 			if err != nil {

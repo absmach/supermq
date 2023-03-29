@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"sync"
 
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/clients"
 	upolicies "github.com/mainflux/mainflux/users/policies"
@@ -80,7 +81,7 @@ func (svc *mainfluxThings) EnableClient(ctx context.Context, token, id string) (
 		return clients.Client{}, errors.ErrNotFound
 	}
 	if t, ok := svc.things[id]; ok && t.Owner == userID.GetId() {
-		t.Status = clients.EnabledStatus
+		t.Status = mfclients.EnabledStatus
 		return t, nil
 	}
 	return clients.Client{}, nil
@@ -99,7 +100,7 @@ func (svc *mainfluxThings) DisableClient(ctx context.Context, token, id string) 
 		return clients.Client{}, errors.ErrNotFound
 	}
 	if t, ok := svc.things[id]; ok && t.Owner == userID.GetId() {
-		t.Status = clients.DisabledStatus
+		t.Status = mfclients.DisabledStatus
 		return t, nil
 	}
 	return clients.Client{}, nil

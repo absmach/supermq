@@ -2,8 +2,6 @@ package clients
 
 import (
 	"context"
-	"encoding/json"
-	"strings"
 	"time"
 )
 
@@ -132,17 +130,4 @@ type ClientCache interface {
 
 	// Removes thing from cache.
 	Remove(context.Context, string) error
-}
-
-// Custom Marshaller for Client
-func (s Status) MarshalJSON() ([]byte, error) {
-	return json.Marshal(s.String())
-}
-
-// Custom Unmarshaller for Client
-func (s *Status) UnmarshalJSON(data []byte) error {
-	str := strings.Trim(string(data), "\"")
-	val, err := ToStatus(str)
-	*s = val
-	return err
 }

@@ -160,21 +160,8 @@ type ClientService interface {
 	Identify(ctx context.Context, tkn string) (string, error)
 }
 
-// Custom Marshaller for Client
-func (s Status) MarshalJSON() ([]byte, error) {
-	return json.Marshal(s.String())
-}
-
 func (r Role) MarshalJSON() ([]byte, error) {
 	return json.Marshal(r.String())
-}
-
-// Custom Unmarshaller for Client
-func (s *Status) UnmarshalJSON(data []byte) error {
-	str := strings.Trim(string(data), "\"")
-	val, err := ToStatus(str)
-	*s = val
-	return err
 }
 
 func (r *Role) UnmarshalJSON(data []byte) error {

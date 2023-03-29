@@ -8,10 +8,9 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
-	uclients "github.com/mainflux/mainflux/users/clients"
-	ugroups "github.com/mainflux/mainflux/users/groups"
 )
 
 const (
@@ -40,8 +39,8 @@ const (
 	DefLimit         = 10
 	DefLevel         = 0
 	DefStatus        = "enabled"
-	DefClientStatus  = uclients.Enabled
-	DefGroupStatus   = ugroups.Enabled
+	DefClientStatus  = mfclients.Enabled
+	DefGroupStatus   = mfclients.Enabled
 	SharedVisibility = "shared"
 	MyVisibility     = "mine"
 	AllVisibility    = "all"

@@ -10,6 +10,7 @@ import (
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux/internal/api"
 	"github.com/mainflux/mainflux/internal/apiutil"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users/groups"
@@ -124,7 +125,7 @@ func decodeListMembershipRequest(_ context.Context, r *http.Request) (interface{
 	if err != nil {
 		return nil, err
 	}
-	st, err := groups.ToStatus(s)
+	st, err := mfclients.ToStatus(s)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +191,7 @@ func decodeListGroupsRequest(_ context.Context, r *http.Request) (interface{}, e
 	if err != nil {
 		return nil, err
 	}
-	st, err := groups.ToStatus(s)
+	st, err := mfclients.ToStatus(s)
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +248,7 @@ func decodeListParentsRequest(_ context.Context, r *http.Request) (interface{}, 
 	if err != nil {
 		return nil, err
 	}
-	st, err := groups.ToStatus(s)
+	st, err := mfclients.ToStatus(s)
 	if err != nil {
 		return nil, err
 	}
@@ -304,7 +305,7 @@ func decodeListChildrenRequest(_ context.Context, r *http.Request) (interface{},
 	if err != nil {
 		return nil, err
 	}
-	st, err := groups.ToStatus(s)
+	st, err := mfclients.ToStatus(s)
 	if err != nil {
 		return nil, err
 	}

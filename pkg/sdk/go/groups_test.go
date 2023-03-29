@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-zoo/bone"
 	"github.com/mainflux/mainflux/internal/apiutil"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	"github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
@@ -44,7 +45,7 @@ func TestCreateGroup(t *testing.T) {
 	group := sdk.Group{
 		Name:     "groupName",
 		Metadata: validMetadata,
-		Status:   groups.EnabledStatus.String(),
+		Status:   mfclients.EnabledStatus.String(),
 	}
 
 	conf := sdk.Config{
@@ -73,7 +74,7 @@ func TestCreateGroup(t *testing.T) {
 			group: sdk.Group{
 				Name:     gName,
 				ParentID: testsutil.GenerateUUID(t, idProvider),
-				Status:   groups.EnabledStatus.String(),
+				Status:   mfclients.EnabledStatus.String(),
 			},
 			err: nil,
 		},
@@ -82,7 +83,7 @@ func TestCreateGroup(t *testing.T) {
 			group: sdk.Group{
 				Name:     gName,
 				ParentID: gmocks.WrongID,
-				Status:   groups.EnabledStatus.String(),
+				Status:   mfclients.EnabledStatus.String(),
 			},
 			err: errors.NewSDKErrorWithStatus(errors.ErrCreateEntity, http.StatusInternalServerError),
 		},
@@ -91,14 +92,14 @@ func TestCreateGroup(t *testing.T) {
 			group: sdk.Group{
 				Name:    gName,
 				OwnerID: gmocks.WrongID,
-				Status:  groups.EnabledStatus.String(),
+				Status:  mfclients.EnabledStatus.String(),
 			},
 			err: errors.NewSDKErrorWithStatus(sdk.ErrFailedCreation, http.StatusInternalServerError),
 		},
 		{
 			desc: "create group with missing name",
 			group: sdk.Group{
-				Status: groups.EnabledStatus.String(),
+				Status: mfclients.EnabledStatus.String(),
 			},
 			err: errors.NewSDKErrorWithStatus(apiutil.ErrNameSize, http.StatusBadRequest),
 		},
@@ -115,7 +116,7 @@ func TestCreateGroup(t *testing.T) {
 				Children:    []*sdk.Group{&group},
 				CreatedAt:   time.Now(),
 				UpdatedAt:   time.Now(),
-				Status:      groups.EnabledStatus.String(),
+				Status:      mfclients.EnabledStatus.String(),
 			},
 			token: token,
 			err:   nil,
@@ -156,7 +157,7 @@ func TestListGroups(t *testing.T) {
 			ID:       generateUUID(t),
 			Name:     fmt.Sprintf("group_%d", i),
 			Metadata: sdk.Metadata{"name": fmt.Sprintf("user_%d", i)},
-			Status:   groups.EnabledStatus.String(),
+			Status:   mfclients.EnabledStatus.String(),
 		}
 		grps = append(grps, gr)
 	}
@@ -164,7 +165,7 @@ func TestListGroups(t *testing.T) {
 	cases := []struct {
 		desc     string
 		token    string
-		status   groups.Status
+		status   mfclients.Status
 		total    uint64
 		offset   uint64
 		limit    uint64
@@ -275,7 +276,7 @@ func TestViewGroup(t *testing.T) {
 		Description: description,
 		Metadata:    validMetadata,
 		Children:    []*sdk.Group{},
-		Status:      groups.EnabledStatus.String(),
+		Status:      mfclients.EnabledStatus.String(),
 	}
 
 	conf := sdk.Config{
@@ -518,7 +519,7 @@ func TestListMemberships(t *testing.T) {
 		group := sdk.Group{
 			Name:     fmt.Sprintf("membership_%d@example.com", i),
 			Metadata: sdk.Metadata{"role": "group"},
-			Status:   groups.EnabledStatus.String(),
+			Status:   mfclients.EnabledStatus.String(),
 		}
 		aGroups = append(aGroups, group)
 	}
@@ -547,7 +548,7 @@ func TestListMemberships(t *testing.T) {
 				Offset: 6,
 				Total:  nGroups,
 				Limit:  nGroups,
-				Status: clients.AllStatus.String(),
+				Status: mfclients.AllStatus.String(),
 			},
 			response: aGroups[6 : nGroups-1],
 			err:      nil,
@@ -561,7 +562,7 @@ func TestListMemberships(t *testing.T) {
 				Offset: 6,
 				Total:  nGroups,
 				Limit:  nGroups,
-				Status: clients.AllStatus.String(),
+				Status: mfclients.AllStatus.String(),
 			},
 			response: aGroups[6 : nGroups-1],
 			err:      nil,
@@ -575,7 +576,7 @@ func TestListMemberships(t *testing.T) {
 				Offset: 6,
 				Total:  nGroups,
 				Limit:  nGroups,
-				Status: clients.AllStatus.String(),
+				Status: mfclients.AllStatus.String(),
 			},
 			response: aGroups[6 : nGroups-1],
 			err:      nil,
@@ -589,7 +590,7 @@ func TestListMemberships(t *testing.T) {
 				Offset:   6,
 				Total:    nGroups,
 				Limit:    nGroups,
-				Status:   clients.AllStatus.String(),
+				Status:   mfclients.AllStatus.String(),
 			},
 			response: aGroups[6 : nGroups-1],
 			err:      nil,
@@ -652,7 +653,7 @@ func TestEnableGroup(t *testing.T) {
 		OwnerID:   generateUUID(t),
 		CreatedAt: creationTime,
 		UpdatedAt: creationTime,
-		Status:    clients.Disabled,
+		Status:    mfclients.Disabled,
 	}
 
 	repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
@@ -674,7 +675,7 @@ func TestEnableGroup(t *testing.T) {
 		OwnerID:   group.OwnerID,
 		CreatedAt: creationTime,
 		UpdatedAt: creationTime,
-		Status:    groups.DisabledStatus,
+		Status:    mfclients.DisabledStatus,
 	}
 
 	repoCall = pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
@@ -717,7 +718,7 @@ func TestDisableGroup(t *testing.T) {
 		OwnerID:   generateUUID(t),
 		CreatedAt: creationTime,
 		UpdatedAt: creationTime,
-		Status:    clients.Enabled,
+		Status:    mfclients.Enabled,
 	}
 
 	repoCall := pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)
@@ -739,7 +740,7 @@ func TestDisableGroup(t *testing.T) {
 		OwnerID:   group.OwnerID,
 		CreatedAt: creationTime,
 		UpdatedAt: creationTime,
-		Status:    groups.EnabledStatus,
+		Status:    mfclients.EnabledStatus,
 	}
 
 	repoCall = pRepo.On("CheckAdmin", mock.Anything, mock.Anything).Return(nil)

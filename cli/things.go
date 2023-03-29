@@ -6,8 +6,8 @@ package cli
 import (
 	"encoding/json"
 
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	mfxsdk "github.com/mainflux/mainflux/pkg/sdk/go"
-	"github.com/mainflux/mainflux/things/clients"
 	"github.com/spf13/cobra"
 )
 
@@ -27,7 +27,7 @@ var cmdThings = []cobra.Command{
 				logError(err)
 				return
 			}
-			thing.Status = clients.EnabledStatus.String()
+			thing.Status = mfclients.EnabledStatus.String()
 			thing, err := sdk.CreateThing(thing, args[1])
 			if err != nil {
 				logError(err)

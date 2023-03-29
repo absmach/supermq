@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users/groups"
@@ -288,7 +289,7 @@ func buildQuery(gm groups.GroupsPage) (string, error) {
 	if gm.Name != "" {
 		queries = append(queries, "g.name = :name")
 	}
-	if gm.Status != groups.AllStatus {
+	if gm.Status != mfclients.AllStatus {
 		queries = append(queries, "g.status = :status")
 	}
 
@@ -422,18 +423,18 @@ func toDBGroupPage(pm groups.GroupsPage) (dbGroupPage, error) {
 }
 
 type dbGroupPage struct {
-	ClientID string        `db:"client_id"`
-	ID       string        `db:"id"`
-	Name     string        `db:"name"`
-	ParentID string        `db:"parent_id"`
-	OwnerID  string        `db:"owner_id"`
-	Metadata []byte        `db:"metadata"`
-	Path     string        `db:"path"`
-	Level    uint64        `db:"level"`
-	Total    uint64        `db:"total"`
-	Limit    uint64        `db:"limit"`
-	Offset   uint64        `db:"offset"`
-	Subject  string        `db:"subject"`
-	Action   string        `db:"action"`
-	Status   groups.Status `db:"status"`
+	ClientID string           `db:"client_id"`
+	ID       string           `db:"id"`
+	Name     string           `db:"name"`
+	ParentID string           `db:"parent_id"`
+	OwnerID  string           `db:"owner_id"`
+	Metadata []byte           `db:"metadata"`
+	Path     string           `db:"path"`
+	Level    uint64           `db:"level"`
+	Total    uint64           `db:"total"`
+	Limit    uint64           `db:"limit"`
+	Offset   uint64           `db:"offset"`
+	Subject  string           `db:"subject"`
+	Action   string           `db:"action"`
+	Status   mfclients.Status `db:"status"`
 }

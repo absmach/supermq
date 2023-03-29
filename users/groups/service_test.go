@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -35,7 +36,7 @@ var (
 		Name:        gName,
 		Description: description,
 		Metadata:    validGMetadata,
-		Status:      groups.EnabledStatus,
+		Status:      mfclients.EnabledStatus,
 	}
 	withinDuration  = 5 * time.Second
 	passRegex       = regexp.MustCompile("^.{8,}$")
@@ -72,7 +73,7 @@ func TestCreateGroup(t *testing.T) {
 			group: groups.Group{
 				Name:     gName,
 				ParentID: testsutil.GenerateUUID(t, idProvider),
-				Status:   groups.EnabledStatus,
+				Status:   mfclients.EnabledStatus,
 			},
 			err: nil,
 		},
@@ -425,10 +426,10 @@ func TestEnableGroup(t *testing.T) {
 	csvc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 	svc := groups.NewService(gRepo, pRepo, tokenizer, idProvider)
 
-	enabledGroup1 := groups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group1", Status: groups.EnabledStatus}
-	disabledGroup := groups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group2", Status: groups.DisabledStatus}
+	enabledGroup1 := groups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group1", Status: mfclients.EnabledStatus}
+	disabledGroup := groups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group2", Status: mfclients.DisabledStatus}
 	disabledGroup1 := disabledGroup
-	disabledGroup1.Status = groups.EnabledStatus
+	disabledGroup1.Status = mfclients.EnabledStatus
 
 	casesEnabled := []struct {
 		desc     string
@@ -452,7 +453,7 @@ func TestEnableGroup(t *testing.T) {
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 			group:    enabledGroup1,
 			response: enabledGroup1,
-			err:      clients.ErrStatusAlreadyAssigned,
+			err:      mfclients.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:     "enable non-existing group",
@@ -483,13 +484,13 @@ func TestEnableGroup(t *testing.T) {
 
 	casesDisabled := []struct {
 		desc     string
-		status   groups.Status
+		status   mfclients.Status
 		size     uint64
 		response groups.GroupsPage
 	}{
 		{
 			desc:   "list activated groups",
-			status: groups.EnabledStatus,
+			status: mfclients.EnabledStatus,
 			size:   2,
 			response: groups.GroupsPage{
 				Page: groups.Page{
@@ -502,7 +503,7 @@ func TestEnableGroup(t *testing.T) {
 		},
 		{
 			desc:   "list deactivated groups",
-			status: groups.DisabledStatus,
+			status: mfclients.DisabledStatus,
 			size:   1,
 			response: groups.GroupsPage{
 				Page: groups.Page{
@@ -515,7 +516,7 @@ func TestEnableGroup(t *testing.T) {
 		},
 		{
 			desc:   "list activated and deactivated groups",
-			status: groups.AllStatus,
+			status: mfclients.AllStatus,
 			size:   3,
 			response: groups.GroupsPage{
 				Page: groups.Page{
@@ -554,10 +555,10 @@ func TestDisableGroup(t *testing.T) {
 	csvc := clients.NewService(cRepo, pRepo, tokenizer, e, phasher, idProvider, passRegex)
 	svc := groups.NewService(gRepo, pRepo, tokenizer, idProvider)
 
-	enabledGroup1 := groups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group1", Status: groups.EnabledStatus}
-	disabledGroup := groups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group2", Status: groups.DisabledStatus}
+	enabledGroup1 := groups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group1", Status: mfclients.EnabledStatus}
+	disabledGroup := groups.Group{ID: testsutil.GenerateUUID(t, idProvider), Name: "group2", Status: mfclients.DisabledStatus}
 	disabledGroup1 := enabledGroup1
-	disabledGroup1.Status = groups.DisabledStatus
+	disabledGroup1.Status = mfclients.DisabledStatus
 
 	casesDisabled := []struct {
 		desc     string
@@ -581,7 +582,7 @@ func TestDisableGroup(t *testing.T) {
 			token:    testsutil.GenerateValidToken(t, testsutil.GenerateUUID(t, idProvider), csvc, cRepo, phasher),
 			group:    disabledGroup,
 			response: groups.Group{},
-			err:      clients.ErrStatusAlreadyAssigned,
+			err:      mfclients.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:     "disable non-existing group",
@@ -612,13 +613,13 @@ func TestDisableGroup(t *testing.T) {
 
 	casesEnabled := []struct {
 		desc     string
-		status   groups.Status
+		status   mfclients.Status
 		size     uint64
 		response groups.GroupsPage
 	}{
 		{
 			desc:   "list activated groups",
-			status: groups.EnabledStatus,
+			status: mfclients.EnabledStatus,
 			size:   1,
 			response: groups.GroupsPage{
 				Page: groups.Page{
@@ -631,7 +632,7 @@ func TestDisableGroup(t *testing.T) {
 		},
 		{
 			desc:   "list deactivated groups",
-			status: groups.DisabledStatus,
+			status: mfclients.DisabledStatus,
 			size:   2,
 			response: groups.GroupsPage{
 				Page: groups.Page{
@@ -644,7 +645,7 @@ func TestDisableGroup(t *testing.T) {
 		},
 		{
 			desc:   "list activated and deactivated groups",
-			status: groups.AllStatus,
+			status: mfclients.AllStatus,
 			size:   3,
 			response: groups.GroupsPage{
 				Page: groups.Page{
@@ -732,7 +733,7 @@ func TestListMemberships(t *testing.T) {
 					Offset:  6,
 					Total:   nGroups,
 					Limit:   nGroups,
-					Status:  groups.AllStatus,
+					Status:  mfclients.AllStatus,
 					Subject: validID,
 					Action:  "g_list",
 				},

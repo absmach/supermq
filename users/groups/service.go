@@ -6,6 +6,7 @@ import (
 
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/apiutil"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users/jwt"
 	"github.com/mainflux/mainflux/users/policies"
@@ -62,7 +63,7 @@ func (svc service) CreateGroup(ctx context.Context, token string, g Group) (Grou
 	if err != nil {
 		return Group{}, err
 	}
-	if g.Status != EnabledStatus && g.Status != DisabledStatus {
+	if g.Status != mfclients.EnabledStatus && g.Status != mfclients.DisabledStatus {
 		return Group{}, apiutil.ErrInvalidStatus
 	}
 	if g.OwnerID == "" {

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgtype" // required for SQL access
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/internal/postgres"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/users/clients"
@@ -85,7 +86,7 @@ func (repo clientRepo) RetrieveByIdentity(ctx context.Context, identity string) 
 
 	dbc := dbClient{
 		Identity: identity,
-		Status:   clients.EnabledStatus,
+		Status:   mfclients.EnabledStatus,
 	}
 
 	row, err := repo.db.NamedQueryContext(ctx, q, dbc)
@@ -311,7 +312,7 @@ type dbClient struct {
 	UpdatedAt sql.NullTime     `db:"updated_at,omitempty"`
 	UpdatedBy *string          `db:"updated_by,omitempty"`
 	Groups    []groups.Group   `db:"groups,omitempty"`
-	Status    clients.Status   `db:"status"`
+	Status    mfclients.Status `db:"status"`
 	Role      clients.Role     `db:"role"`
 }
 
@@ -417,7 +418,7 @@ func pageQuery(pm clients.Page) (string, error) {
 	if pm.Tag != "" {
 		query = append(query, ":tag = ANY(c.tags)")
 	}
-	if pm.Status != clients.AllStatus {
+	if pm.Status != mfclients.AllStatus {
 		query = append(query, "c.status = :status")
 	}
 	// For listing clients that the specified client owns but not sharedby
@@ -465,17 +466,17 @@ func toDBClientsPage(pm clients.Page) (dbClientsPage, error) {
 }
 
 type dbClientsPage struct {
-	Total    uint64         `db:"total"`
-	Limit    uint64         `db:"limit"`
-	Offset   uint64         `db:"offset"`
-	Name     string         `db:"name"`
-	Owner    string         `db:"owner"`
-	Identity string         `db:"identity"`
-	Metadata []byte         `db:"metadata"`
-	Tag      string         `db:"tag"`
-	Status   clients.Status `db:"status"`
-	GroupID  string         `db:"group_id"`
-	SharedBy string         `db:"shared_by"`
-	Subject  string         `db:"subject"`
-	Action   string         `db:"action"`
+	Total    uint64           `db:"total"`
+	Limit    uint64           `db:"limit"`
+	Offset   uint64           `db:"offset"`
+	Name     string           `db:"name"`
+	Owner    string           `db:"owner"`
+	Identity string           `db:"identity"`
+	Metadata []byte           `db:"metadata"`
+	Tag      string           `db:"tag"`
+	Status   mfclients.Status `db:"status"`
+	GroupID  string           `db:"group_id"`
+	SharedBy string           `db:"shared_by"`
+	Subject  string           `db:"subject"`
+	Action   string           `db:"action"`
 }

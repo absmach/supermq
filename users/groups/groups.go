@@ -2,8 +2,6 @@ package groups
 
 import (
 	"context"
-	"encoding/json"
-	"strings"
 	"time"
 )
 
@@ -96,17 +94,4 @@ type GroupService interface {
 
 	// DisableGroup logically disables the group identified with the provided ID.
 	DisableGroup(ctx context.Context, token, id string) (Group, error)
-}
-
-// Custom Marshaller for Group
-func (s Status) MarshalJSON() ([]byte, error) {
-	return json.Marshal(s.String())
-}
-
-// Custom Unmarshaller for Group
-func (s *Status) UnmarshalJSON(data []byte) error {
-	str := strings.Trim(string(data), "\"")
-	val, err := ToStatus(str)
-	*s = val
-	return err
 }

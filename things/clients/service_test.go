@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux/internal/apiutil"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/internal/testsutil"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -29,7 +30,7 @@ var (
 		Tags:        []string{"tag1", "tag2"},
 		Credentials: clients.Credentials{Identity: "clientidentity", Secret: secret},
 		Metadata:    validCMetadata,
-		Status:      clients.EnabledStatus,
+		Status:      mfclients.EnabledStatus,
 	}
 	inValidToken   = "invalidToken"
 	withinDuration = 5 * time.Second
@@ -76,7 +77,7 @@ func TestRegisterClient(t *testing.T) {
 					Identity: "newclientwithname@example.com",
 					Secret:   secret,
 				},
-				Status: clients.EnabledStatus,
+				Status: mfclients.EnabledStatus,
 			},
 			err:   nil,
 			token: token,
@@ -101,7 +102,7 @@ func TestRegisterClient(t *testing.T) {
 					Identity: "newclientwithtags@example.com",
 					Secret:   secret,
 				},
-				Status: clients.EnabledStatus,
+				Status: mfclients.EnabledStatus,
 			},
 			err:   nil,
 			token: token,
@@ -114,7 +115,7 @@ func TestRegisterClient(t *testing.T) {
 					Identity: "newclientwithtags@example.com",
 					Secret:   secret,
 				},
-				Status: clients.DisabledStatus,
+				Status: mfclients.DisabledStatus,
 			},
 			err:   nil,
 			token: token,
@@ -127,7 +128,7 @@ func TestRegisterClient(t *testing.T) {
 					Secret:   secret,
 				},
 				Metadata: validCMetadata,
-				Status:   clients.EnabledStatus,
+				Status:   mfclients.EnabledStatus,
 			},
 			err:   nil,
 			token: token,
@@ -162,7 +163,7 @@ func TestRegisterClient(t *testing.T) {
 					Identity: "newclientwithvalidstatus@example.com",
 					Secret:   secret,
 				},
-				Status: clients.DisabledStatus,
+				Status: mfclients.DisabledStatus,
 			},
 			err:   nil,
 			token: token,
@@ -179,7 +180,7 @@ func TestRegisterClient(t *testing.T) {
 				Metadata: clients.Metadata{
 					"name": "newclientwithallfields",
 				},
-				Status: clients.EnabledStatus,
+				Status: mfclients.EnabledStatus,
 			},
 			err:   nil,
 			token: token,
@@ -225,7 +226,7 @@ func TestRegisterClient(t *testing.T) {
 					Identity: "newclientwithinvalidstatus@example.com",
 					Secret:   secret,
 				},
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
 			err:   apiutil.ErrInvalidStatus,
 			token: token,
@@ -338,7 +339,7 @@ func TestListClients(t *testing.T) {
 			token: token,
 
 			page: clients.Page{
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
 			size: 0,
 			response: clients.ClientsPage{
@@ -355,7 +356,7 @@ func TestListClients(t *testing.T) {
 			desc:  "list clients with an invalid token",
 			token: inValidToken,
 			page: clients.Page{
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
 			size: 0,
 			response: clients.ClientsPage{
@@ -374,7 +375,7 @@ func TestListClients(t *testing.T) {
 				Offset:   6,
 				Limit:    nClients,
 				SharedBy: clients.MyKey,
-				Status:   clients.EnabledStatus,
+				Status:   mfclients.EnabledStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -394,7 +395,7 @@ func TestListClients(t *testing.T) {
 				Limit:    nClients,
 				SharedBy: clients.MyKey,
 				Name:     "TestListClients3",
-				Status:   clients.EnabledStatus,
+				Status:   mfclients.EnabledStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -414,7 +415,7 @@ func TestListClients(t *testing.T) {
 				Limit:    nClients,
 				SharedBy: clients.MyKey,
 				Name:     "notpresentclient",
-				Status:   clients.EnabledStatus,
+				Status:   mfclients.EnabledStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -433,7 +434,7 @@ func TestListClients(t *testing.T) {
 				Offset: 6,
 				Limit:  nClients,
 				Owner:  clients.MyKey,
-				Status: clients.EnabledStatus,
+				Status: mfclients.EnabledStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -453,7 +454,7 @@ func TestListClients(t *testing.T) {
 				Limit:  nClients,
 				Owner:  clients.MyKey,
 				Name:   "TestListClients3",
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -473,7 +474,7 @@ func TestListClients(t *testing.T) {
 				Limit:  nClients,
 				Owner:  clients.MyKey,
 				Name:   "notpresentclient",
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -493,7 +494,7 @@ func TestListClients(t *testing.T) {
 				Limit:    nClients,
 				Owner:    clients.MyKey,
 				SharedBy: clients.MyKey,
-				Status:   clients.AllStatus,
+				Status:   mfclients.AllStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -514,7 +515,7 @@ func TestListClients(t *testing.T) {
 				SharedBy: clients.MyKey,
 				Owner:    clients.MyKey,
 				Name:     "TestListClients3",
-				Status:   clients.AllStatus,
+				Status:   mfclients.AllStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -535,7 +536,7 @@ func TestListClients(t *testing.T) {
 				SharedBy: clients.MyKey,
 				Owner:    clients.MyKey,
 				Name:     "notpresentclient",
-				Status:   clients.AllStatus,
+				Status:   mfclients.AllStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -554,7 +555,7 @@ func TestListClients(t *testing.T) {
 			page: clients.Page{
 				Offset: 6,
 				Limit:  nClients,
-				Status: clients.AllStatus,
+				Status: mfclients.AllStatus,
 			},
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -788,10 +789,10 @@ func TestUpdateClientSecret(t *testing.T) {
 func TestEnableClient(t *testing.T) {
 	svc, cRepo := newService(map[string]string{token: adminEmail})
 
-	enabledClient1 := clients.Client{ID: ID, Credentials: clients.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: clients.EnabledStatus}
-	disabledClient1 := clients.Client{ID: ID, Credentials: clients.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: clients.DisabledStatus}
+	enabledClient1 := clients.Client{ID: ID, Credentials: clients.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: mfclients.EnabledStatus}
+	disabledClient1 := clients.Client{ID: ID, Credentials: clients.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: mfclients.DisabledStatus}
 	endisabledClient1 := disabledClient1
-	endisabledClient1.Status = clients.EnabledStatus
+	endisabledClient1.Status = mfclients.EnabledStatus
 
 	cases := []struct {
 		desc     string
@@ -815,7 +816,7 @@ func TestEnableClient(t *testing.T) {
 			token:    token,
 			client:   enabledClient1,
 			response: enabledClient1,
-			err:      clients.ErrStatusAlreadyAssigned,
+			err:      mfclients.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:     "enable non-existing client",
@@ -838,13 +839,13 @@ func TestEnableClient(t *testing.T) {
 
 	cases2 := []struct {
 		desc     string
-		status   clients.Status
+		status   mfclients.Status
 		size     uint64
 		response clients.ClientsPage
 	}{
 		{
 			desc:   "list enabled clients",
-			status: clients.EnabledStatus,
+			status: mfclients.EnabledStatus,
 			size:   2,
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -857,7 +858,7 @@ func TestEnableClient(t *testing.T) {
 		},
 		{
 			desc:   "list disabled clients",
-			status: clients.DisabledStatus,
+			status: mfclients.DisabledStatus,
 			size:   1,
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -870,7 +871,7 @@ func TestEnableClient(t *testing.T) {
 		},
 		{
 			desc:   "list enabled and disabled clients",
-			status: clients.AllStatus,
+			status: mfclients.AllStatus,
 			size:   3,
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -903,10 +904,10 @@ func TestEnableClient(t *testing.T) {
 func TestDisableClient(t *testing.T) {
 	svc, cRepo := newService(map[string]string{token: adminEmail})
 
-	enabledClient1 := clients.Client{ID: ID, Credentials: clients.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: clients.EnabledStatus}
-	disabledClient1 := clients.Client{ID: ID, Credentials: clients.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: clients.DisabledStatus}
+	enabledClient1 := clients.Client{ID: ID, Credentials: clients.Credentials{Identity: "client1@example.com", Secret: "password"}, Status: mfclients.EnabledStatus}
+	disabledClient1 := clients.Client{ID: ID, Credentials: clients.Credentials{Identity: "client3@example.com", Secret: "password"}, Status: mfclients.DisabledStatus}
 	disenabledClient1 := enabledClient1
-	disenabledClient1.Status = clients.DisabledStatus
+	disenabledClient1.Status = mfclients.DisabledStatus
 
 	cases := []struct {
 		desc     string
@@ -930,7 +931,7 @@ func TestDisableClient(t *testing.T) {
 			token:    token,
 			client:   disabledClient1,
 			response: clients.Client{},
-			err:      clients.ErrStatusAlreadyAssigned,
+			err:      mfclients.ErrStatusAlreadyAssigned,
 		},
 		{
 			desc:     "disable non-existing client",
@@ -952,13 +953,13 @@ func TestDisableClient(t *testing.T) {
 
 	cases2 := []struct {
 		desc     string
-		status   clients.Status
+		status   mfclients.Status
 		size     uint64
 		response clients.ClientsPage
 	}{
 		{
 			desc:   "list enabled clients",
-			status: clients.EnabledStatus,
+			status: mfclients.EnabledStatus,
 			size:   1,
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -971,7 +972,7 @@ func TestDisableClient(t *testing.T) {
 		},
 		{
 			desc:   "list disabled clients",
-			status: clients.DisabledStatus,
+			status: mfclients.DisabledStatus,
 			size:   2,
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -984,7 +985,7 @@ func TestDisableClient(t *testing.T) {
 		},
 		{
 			desc:   "list enabled and disabled clients",
-			status: clients.AllStatus,
+			status: mfclients.AllStatus,
 			size:   3,
 			response: clients.ClientsPage{
 				Page: clients.Page{
@@ -1069,7 +1070,7 @@ func TestListMembers(t *testing.T) {
 			page: clients.Page{
 				Offset:  6,
 				Limit:   nClients,
-				Status:  clients.AllStatus,
+				Status:  mfclients.AllStatus,
 				Subject: adminEmail,
 				Owner:   adminEmail,
 				Action:  "g_list",

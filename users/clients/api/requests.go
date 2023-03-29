@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/mainflux/mainflux/internal/api"
 	"github.com/mainflux/mainflux/internal/apiutil"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/users/clients"
 )
 
@@ -37,7 +38,7 @@ func (req viewClientReq) validate() error {
 
 type listClientsReq struct {
 	token      string
-	status     clients.Status
+	status     mfclients.Status
 	offset     uint64
 	limit      uint64
 	name       string

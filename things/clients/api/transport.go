@@ -11,6 +11,7 @@ import (
 	"github.com/mainflux/mainflux"
 	"github.com/mainflux/mainflux/internal/api"
 	"github.com/mainflux/mainflux/internal/apiutil"
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	mflog "github.com/mainflux/mainflux/logger"
 	"github.com/mainflux/mainflux/pkg/errors"
 	"github.com/mainflux/mainflux/things/clients"
@@ -177,7 +178,7 @@ func decodeListClients(_ context.Context, r *http.Request) (interface{}, error) 
 		sid = api.MyVisibility
 		oid = api.MyVisibility
 	}
-	st, err := clients.ToStatus(s)
+	st, err := mfclients.ToStatus(s)
 	if err != nil {
 		return nil, err
 	}
@@ -311,7 +312,7 @@ func decodeListMembersRequest(_ context.Context, r *http.Request) (interface{}, 
 	if err != nil {
 		return nil, err
 	}
-	st, err := clients.ToStatus(s)
+	st, err := mfclients.ToStatus(s)
 	if err != nil {
 		return nil, err
 	}

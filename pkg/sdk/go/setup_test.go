@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	mfclients "github.com/mainflux/mainflux/internal/mainflux/clients"
 	"github.com/mainflux/mainflux/pkg/errors"
 	sdk "github.com/mainflux/mainflux/pkg/sdk/go"
 	"github.com/mainflux/mainflux/pkg/uuid"
@@ -38,7 +39,7 @@ var (
 		Tags:        []string{"tag1", "tag2"},
 		Credentials: sdk.Credentials{Identity: "clientidentity", Secret: secret},
 		Metadata:    validMetadata,
-		Status:      clients.EnabledStatus.String(),
+		Status:      mfclients.EnabledStatus.String(),
 	}
 	description = "shortdescription"
 	gName       = "groupname"
@@ -65,7 +66,7 @@ func generateValidToken(t *testing.T, svc clients.Service, cRepo *umocks.ClientR
 			Secret:   secret,
 		},
 		Role:   clients.AdminRole,
-		Status: clients.EnabledStatus,
+		Status: mfclients.EnabledStatus,
 	}
 	rclient := client
 	rclient.Credentials.Secret, _ = phasher.Hash(client.Credentials.Secret)
@@ -143,9 +144,9 @@ func convertMembershipsPage(m sdk.MembershipsPage) groups.MembershipsPage {
 
 func convertClientPage(p sdk.PageMetadata) clients.Page {
 	if p.Status == "" {
-		p.Status = clients.EnabledStatus.String()
+		p.Status = mfclients.EnabledStatus.String()
 	}
-	status, err := clients.ToStatus(p.Status)
+	status, err := mfclients.ToStatus(p.Status)
 	if err != nil {
 		return clients.Page{}
 	}
@@ -172,9 +173,9 @@ func convertMemberships(gs []sdk.Group) []groups.Group {
 
 func convertGroup(g sdk.Group) groups.Group {
 	if g.Status == "" {
-		g.Status = groups.EnabledStatus.String()
+		g.Status = mfclients.EnabledStatus.String()
 	}
-	status, err := groups.ToStatus(g.Status)
+	status, err := mfclients.ToStatus(g.Status)
 	if err != nil {
 		return groups.Group{}
 	}
@@ -211,9 +212,9 @@ func convertChildren(gs []*sdk.Group) []*groups.Group {
 
 func convertClient(c sdk.User) clients.Client {
 	if c.Status == "" {
-		c.Status = clients.EnabledStatus.String()
+		c.Status = mfclients.EnabledStatus.String()
 	}
-	status, err := clients.ToStatus(c.Status)
+	status, err := mfclients.ToStatus(c.Status)
 	if err != nil {
 		return clients.Client{}
 	}
